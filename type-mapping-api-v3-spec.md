@@ -978,19 +978,17 @@ This section provides a comprehensive analysis of ALL legacy ILLink custom steps
 
 **Critical Insight:** Most legacy steps only call `AddPreservedMethod()`, NOT `Mark()`. They don't root new types - they only preserve additional members on types that are ALREADY marked through normal code references.
 
-#### 15.7.2 Complete Step Inventory
+#### 15.7.2 Step Categories
 
-| Step | Category | Calls Mark()? | What It Does |
-|------|----------|---------------|--------------|
-| `MarkJavaObjects` | MarkHandler | **YES** | Unconditionally marks types with component attributes and custom views |
-| `PreserveJavaInterfaces` | MarkHandler | No | Preserves all methods on already-marked IJavaObject interfaces |
-| `PreserveRegistrations` | MarkHandler | No | Preserves handler/connector methods when [Register] methods are marked |
-| `PreserveApplications` | MarkHandler | No | Preserves BackupAgent/ManageSpaceActivity from [Application] |
-| `PreserveJavaExceptions` | MarkHandler | No | Preserves string(message) constructor on exception types |
-| `PreserveExportedTypes` | SubStep | **YES** | Marks [Export] and [ExportField] attributed members |
-| `FixAbstractMethodsStep` | Step | No | Fixes abstract method implementations (not related to preservation) |
-| `StripEmbeddedLibraries` | Step | No | Removes embedded native libraries (not related to preservation) |
-| `GenerateProguardConfiguration` | Step | No | Generates ProGuard config (not related to preservation) |
+ILLink custom steps fall into two categories:
+
+1. **Preservation Steps** - Call `Annotations.Mark()` or `AddPreservedMethod()` to affect trimming
+2. **Non-Preservation Steps** - Modify assemblies or generate outputs, but don't affect what gets trimmed
+
+Only preservation steps need V3 replacements. Non-preservation steps either:
+- Become post-trimming MSBuild tasks (work on already-trimmed assemblies)
+- Are deemed unnecessary for modern scenarios
+- Are unrelated to TypeMap and continue to work as-is
 
 #### 15.7.3 Detailed Analysis: MarkJavaObjects (THE Key Step)
 
@@ -1196,18 +1194,39 @@ if (exportFieldName != null) {
 
 **Status:** ✅ `[Export]` and `[ExportField]` are now handled in the generator.
 
-#### 15.7.9 Summary: V3 Replacement Strategy
+#### 15.7.9 Complete ILLink Custom Steps Inventory
 
-| Legacy Step | V3 Replacement | Status |
-|-------------|----------------|--------|
-| `MarkJavaObjects.ProcessAssembly` (component attrs) | Unconditional TypeMapAttribute for types with [Activity], etc. | ✅ Implemented |
-| `MarkJavaObjects.ProcessAssembly` (custom views) | Read customview-map.txt, generate unconditional TypeMapAttribute | ✅ Implemented |
-| `MarkJavaObjects.ProcessType` | Proxy refs activation ctor → automatic preservation | ✅ Implemented |
-| `PreserveJavaInterfaces` | Proxy marshal methods call interface methods → automatic | ✅ Implemented |
-| `PreserveRegistrations` | Proxy uses GetFunctionPointer/calls handler → automatic | ✅ Implemented |
-| `PreserveApplications` | TypeMapAssociationAttribute for BackupAgent/ManageSpaceActivity | ✅ Implemented |
-| `PreserveJavaExceptions` | Proxy calls string ctor | ✅ Implemented |
-| `PreserveExportedTypes` | Generator collects [Export] and [ExportField] methods | ✅ Implemented |
+This table lists ALL custom ILLink steps used in .NET for Android and their V3 replacement strategy:
+
+| Step | Replacement | Notes |
+|------|-------------|-------|
+| **Preservation Steps (type/method marking):** | | |
+| `MarkJavaObjects.ProcessAssembly` (custom views) | TypeMap unconditional attribute | V3 reads customview-map.txt |
+| `MarkJavaObjects.ProcessAssembly` (HttpHandler) | TypeMap unconditional attribute | **TODO:** V3 needs to handle `AndroidHttpClientHandlerType` |
+| `MarkJavaObjects.ProcessAssembly` (IJniNameProvider) | TypeMap unconditional attribute | **TODO:** V3 needs to scan for `IJniNameProviderAttribute` |
+| `MarkJavaObjects.ProcessType` | Proxy class references | Proxy refs activation ctor → automatic |
+| `PreserveJavaInterfaces` | Proxy class references | Proxy marshal methods call interface methods |
+| `PreserveRegistrations` | Proxy class references | Proxy uses GetFunctionPointer/calls handler |
+| `PreserveApplications` | TypeMapAssociationAttribute | BackupAgent/ManageSpaceActivity cross-ref |
+| `PreserveJavaExceptions` | Proxy class references | Proxy calls string ctor |
+| `PreserveExportedTypes` | TypeMap unconditional attribute | Generator collects [Export]/[ExportField] |
+| **Non-Preservation Steps:** | | |
+| `GenerateTypeMapAttributesStep` | N/A (this IS the V3 step) | MonoVM only, runs before MarkStep |
+| `FixAbstractMethodsStep` | Likely unnecessary | Legacy compat (2017), start WITHOUT |
+| `AddKeepAlivesStep` | Likely unnecessary | Legacy compat, modern SDK has KeepAlive |
+| `StripEmbeddedLibraries` | Post-trimming MSBuild task | Remove embedded jars/zips after extraction |
+| `GenerateProguardConfiguration` | Post-trimming MSBuild task | Scan surviving types, generate -keep rules |
+| `RemoveResourceDesignerStep` | Unrelated to TypeMap | Resource.designer.cs optimization |
+| `GetAssembliesStep` | Unrelated to TypeMap | Support for RemoveResourceDesignerStep |
+| `FixLegacyResourceDesignerStep` | Unrelated to TypeMap | Legacy designer fixup |
+
+**Replacement Categories:**
+- **TypeMap unconditional attribute**: 2-arg `TypeMapAttribute` ensures type survives trimming unconditionally
+- **Proxy class references**: Proxy type has hard code references → normal trimmer dependency tracking
+- **TypeMapAssociationAttribute**: Preserves associated type when primary type is activated
+- **Post-trimming MSBuild task**: Run after ILLink/ILC, scan surviving assemblies
+- **Likely unnecessary**: Legacy compatibility, start without and add back only if customers report issues
+- **Unrelated to TypeMap**: These steps handle resource optimization, not type preservation
 
 #### 15.7.10 Why Proxy References Replace Preservation Steps
 
