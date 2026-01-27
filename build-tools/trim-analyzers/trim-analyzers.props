@@ -3,11 +3,8 @@
   <PropertyGroup>
     <!-- Sets assembly metadata, enable analyzers -->
     <IsTrimmable>true</IsTrimmable>
-    <!-- Workaround analyzer errors in .NET 11 -->
-    <EnableTrimAnalyzer>false</EnableTrimAnalyzer>
-    <EnableSingleFileAnalyzer>false</EnableSingleFileAnalyzer>
-    <EnableAotAnalyzer>false</EnableAotAnalyzer>
-    <NoWarn>$(NoWarn);AD0001</NoWarn>
+    <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
+    <EnableAotAnalyzer>true</EnableAotAnalyzer>
     <!-- TODO: enable in the future -->
     <!-- Enable analyzers for transitive references: https://github.com/dotnet/runtime/pull/118180 -->
     <!-- <VerifyReferenceTrimCompatibility>true</VerifyReferenceTrimCompatibility>
