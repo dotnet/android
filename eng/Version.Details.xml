@@ -30,9 +30,9 @@
       <Sha>2b2a06c8a4d45ec0781266ffa3f3852a052f0fbb</Sha>
     </Dependency>
     <!-- Previous .NET Android version(s) -->
-    <Dependency Name="Microsoft.NET.Sdk.Android.Manifest-10.0.100" Version="36.1.2">
+    <Dependency Name="Microsoft.NET.Sdk.Android.Manifest-10.0.100" Version="36.1.12">
       <Uri>https://github.com/dotnet/android</Uri>
-      <Sha>01024bb616e7b80417a2c6d320885bfdb956f20a</Sha>
+      <Sha>d611c1210ffde26280ee0faddd04e7621af41f1e</Sha>
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
