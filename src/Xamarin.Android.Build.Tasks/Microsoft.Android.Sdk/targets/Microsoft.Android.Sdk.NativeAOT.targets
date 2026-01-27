@@ -130,7 +130,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <PropertyGroup>
       <!-- Turn trimmer warnings back to original value -->
       <SuppressTrimAnalysisWarnings>$(_OriginalSuppressTrimAnalysisWarnings)</SuppressTrimAnalysisWarnings>
-      <_XANativeAotHostName>libnaot-android.$(Configuration.ToLower())-static-$(Configuration.ToLower()).a</_XANativeAotHostName>
+      <_XANativeAotHostName>libnaot-android.release-static-release.a</_XANativeAotHostName>
     </PropertyGroup>
     <ItemGroup>
       <!-- Android needs a proper soname property or it will refuse to load the library -->
