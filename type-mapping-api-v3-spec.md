@@ -965,7 +965,97 @@ class MainActivity_Proxy {
 
 ---
 
-### 15.7 Type Detection Rules: Unconditional vs Trimmable
+### 15.7 Legacy Trimmer Step Semantics (IMPORTANT)
+
+Understanding how the legacy ILLink custom steps work is critical for migration. There are two fundamentally different operations:
+
+#### Marking vs Preserving
+
+| Operation | Method | Effect | When Called |
+|-----------|--------|--------|-------------|
+| **Mark** | `Annotations.Mark(type)` | Roots a type - it WILL be in final output | Unconditionally during assembly processing |
+| **Preserve** | `Annotations.AddPreservedMethod(type, method)` | Keeps method IF type is already marked | Only after type is already marked |
+
+**Key Insight:** Most legacy steps do NOT mark types unconditionally. They only preserve additional members on types that are ALREADY marked through normal code references.
+
+#### MarkJavaObjects: The Only Unconditional Marker
+
+`MarkJavaObjects` is the only step that calls `Annotations.Mark()` to unconditionally root types:
+
+```csharp
+// ProcessAssembly - called once per assembly, unconditionally marks types
+public void ProcessAssembly(AssemblyDefinition assembly, ...) {
+    foreach (var type in assembly.MainModule.Types) {
+        // 1. Custom HttpMessageHandler from settings
+        if (assemblyQualifiedName == androidHttpClientHandlerType) {
+            Annotations.Mark(type);  // UNCONDITIONAL!
+            continue;
+        }
+        
+        // 2. Custom views from layout XML files
+        if (customViewMap.ContainsKey(type.FullName)) {
+            Annotations.Mark(type);  // UNCONDITIONAL!
+            continue;
+        }
+        
+        // 3. Types with [Activity], [Service], etc. attributes
+        if (ShouldPreserveBasedOnAttributes(type)) {
+            Annotations.Mark(type);  // UNCONDITIONAL!
+            continue;
+        }
+    }
+}
+
+// ProcessType - called when type is ALREADY MARKED, preserves members
+public void ProcessType(TypeDefinition type) {
+    // Only called if type is already marked!
+    PreserveJavaObjectImplementation(type);  // Uses AddPreservedMethod
+    if (IsImplementor(type))
+        PreserveImplementor(type);  // Uses AddPreservedMethod
+}
+```
+
+**Attributes that trigger unconditional marking (`ShouldPreserveBasedOnAttributes`):**
+- `Android.App.ActivityAttribute`
+- `Android.App.ApplicationAttribute`
+- `Android.App.InstrumentationAttribute`
+- `Android.App.ServiceAttribute`
+- `Android.Content.BroadcastReceiverAttribute`
+- `Android.Content.ContentProviderAttribute`
+
+#### Other Steps: Preserve Only, Don't Mark
+
+| Step | Does it Mark? | What it does |
+|------|---------------|--------------|
+| `PreserveJavaInterfaces` | NO | Preserves interface methods on already-marked interfaces |
+| `PreserveRegistrations` | NO | Preserves handler/connector methods on already-marked methods |
+| `PreserveApplications` | NO | Preserves backup agent types referenced in [Application] |
+| `PreserveJavaExceptions` | NO | Preserves string ctor on exception types |
+
+**This means:** If a type like `IContentHandler` or `OnClickListenerImplementor` is NOT referenced by user code, it is NOT marked, and none of these preservation steps run for it. The type is trimmed away.
+
+#### Custom Views from Layout XML
+
+**CRITICAL:** `MarkJavaObjects` unconditionally marks types found in Android layout XML files:
+
+```xml
+<!-- layout.xml -->
+<com.example.MyCustomView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content" />
+```
+
+The build process:
+1. `GenerateLayoutBindings` task parses layout XML files
+2. Creates `AndroidCustomViewMapFile` with type names
+3. `MarkJavaObjects.ProcessAssembly` reads this file
+4. Calls `Annotations.Mark()` for each type in the map
+
+**V3 Requirement:** The TypeMap generator must also process layout files and generate unconditional TypeMapAttribute entries for custom views.
+
+---
+
+### 15.8 Type Detection Rules: Unconditional vs Trimmable
 
 This section defines the **exact rules** for determining which types are preserved **unconditionally** vs which are **trimmable**.
 
@@ -980,100 +1070,98 @@ This section defines the **exact rules** for determining which types are preserv
 
 | Detection Criteria | Preservation | Reason |
 |-------------------|--------------|--------|
-| `[Register]` with `DoNotGenerateAcw = false` or unset | **Unconditional** | JCW - Java/Android may create |
-| Inherits from Android component base class | **Unconditional** | System creates these |
-| Inherits from `Java.Lang.Throwable` | **Unconditional** | May be thrown from Java |
-| Implements `IJavaObject` interface with `[Register]` | **Unconditional** | Java code may call |
+| User type with `[Activity]`, `[Service]`, etc. attribute | **Unconditional** | Android creates these |
+| User type subclassing Android component (Activity, etc.) | **Unconditional** | Android creates these |
+| Custom view referenced in layout XML | **Unconditional** | Android inflates these |
+| Interface with `[Register]` | **Trimmable** | Only if .NET implements/uses |
+| Implementor type (ends in "Implementor") | **Trimmable** | Only if C# event is used |
 | `[Register]` with `DoNotGenerateAcw = true` | **Trimmable** | MCW - only if .NET uses |
+| Invoker type | **Not in TypeMap** | Share JNI name with interface |
+
+**Key Insight:** In the legacy system, most types are only preserved if they're referenced by user code. The legacy `MarkJavaObjects` only unconditionally marks:
+1. Types with `[Activity]`, `[Service]`, `[BroadcastReceiver]`, `[ContentProvider]`, `[Application]`, `[Instrumentation]` attributes
+2. Custom views from layout XML files
+3. Custom HttpMessageHandler from settings
+
+All other types (interfaces, MCWs, Implementors) are only preserved if user code references them.
 
 #### Detailed Detection Rules
 
-##### Rule 1: Java Callable Wrapper (JCW) Types → Unconditional
+##### Rule 1: User-Defined Android Component Types → Unconditional
 
-A type is preserved **unconditionally** if it:
+Types with these attributes are marked UNCONDITIONALLY by `MarkJavaObjects`:
 
-1. Has `[Register("java/class/name")]` attribute, AND
-2. Does NOT have `DoNotGenerateAcw = true`
+| Attribute | Base Class | Reason |
+|-----------|------------|--------|
+| `[Activity]` | `Android.App.Activity` | Created by Android |
+| `[Application]` | `Android.App.Application` | Created at startup |
+| `[Service]` | `Android.App.Service` | Created by system |
+| `[BroadcastReceiver]` | `Android.Content.BroadcastReceiver` | Created on broadcast |
+| `[ContentProvider]` | `Android.Content.ContentProvider` | Created on first query |
+| `[Instrumentation]` | `Android.App.Instrumentation` | Created by test runner |
 
 ```csharp
-// This type is preserved UNCONDITIONALLY
-[Register("com/example/MainActivity")]
+// UNCONDITIONAL - has [Activity] attribute
+[Activity(Label = "My App", MainLauncher = true)]
 public class MainActivity : Activity { }
-
-// Detection: Has [Register], DoNotGenerateAcw not set (defaults to false)
-// Result: [assembly: TypeMap<JavaObjects>("com/example/MainActivity", typeof(MainActivity_Proxy))]
 ```
 
-##### Rule 2: Android Component Types → Unconditional
+##### Rule 2: Custom Views from Layout XML → Unconditional
 
-Any type inheriting from these base classes is ALWAYS preserved unconditionally:
+Types referenced in Android layout XML files are marked UNCONDITIONALLY:
 
-| Base Class | Reason |
-|------------|--------|
-| `Android.App.Activity` | Created by Android when navigating |
-| `Android.App.Application` | Created at app startup |
-| `Android.App.Service` | Created by system when starting service |
-| `Android.Content.BroadcastReceiver` | Created by system on broadcast |
-| `Android.Content.ContentProvider` | Created by system on first query |
-| `Android.App.Fragment` (deprecated) | Created by FragmentManager |
-| `AndroidX.Fragment.App.Fragment` | Created by FragmentManager |
-| `Android.App.Backup.BackupAgent` | Created by system for backup |
+```xml
+<!-- layout.xml -->
+<com.example.MyCustomButton
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content" />
+```
 
 ```csharp
-// All these are preserved UNCONDITIONALLY
-public class MyActivity : Activity { }          // Unconditional
-public class MyApp : Application { }            // Unconditional
-public class MyService : Service { }            // Unconditional
-public class MyReceiver : BroadcastReceiver { } // Unconditional
-public class MyProvider : ContentProvider { }   // Unconditional
-public class MyBackupAgent : BackupAgent { }    // Unconditional
+// UNCONDITIONAL - referenced in layout XML
+[Register("com/example/MyCustomButton")]
+public class MyCustomButton : Button { }
 ```
 
-##### Rule 3: Exception Types → Unconditional
+**V3 Requirement:** The TypeMap generator must process the custom view map file and generate unconditional entries.
 
-Any type inheriting from `Java.Lang.Throwable` is preserved unconditionally:
+##### Rule 3: Interfaces → TRIMMABLE
+
+Java interfaces are **trimmable** - only preserved if .NET code uses them:
 
 ```csharp
-// Preserved UNCONDITIONALLY because exceptions can be thrown from Java at any time
-[Register("com/example/MyException")]
-public class MyException : Java.Lang.Exception { }
+// TRIMMABLE - interfaces are MCW bindings for existing Java interfaces
+[Register("org/xml/sax/ContentHandler", "", "Org.Xml.Sax.IContentHandlerInvoker")]
+public interface IContentHandler : IJavaObject { }
 
-// Result: [assembly: TypeMap<JavaObjects>("com/example/MyException", typeof(MyException_Proxy))]
+// Only preserved if user code:
+// - Implements IContentHandler
+// - Uses a type that implements IContentHandler
+// - Calls a method that takes/returns IContentHandler
 ```
 
-##### Rule 4: Java Interface Implementations → Unconditional
+**Reasoning:** Interfaces don't have `DoNotGenerateAcw=true` in their `[Register]` attribute, but they are still MCW bindings. Android never creates interface instances directly - they're always created from .NET code.
 
-Any interface that:
-1. Implements `IJavaObject`, AND  
-2. Has a `[Register]` attribute
+##### Rule 4: Implementor Types → TRIMMABLE
 
-Is preserved unconditionally:
+Types ending in "Implementor" are helper classes for C# events. They are **trimmable**:
 
 ```csharp
-// Preserved UNCONDITIONALLY - Java code may call these methods
-[Register("com/example/IMyCallback")]
-public interface IMyCallback : IJavaObject {
-    void OnComplete();
-}
-
-// Result: [assembly: TypeMap<JavaObjects>("com/example/IMyCallback", typeof(IMyCallback_Proxy))]
+// TRIMMABLE - only needed if C# event is used
+[Register("mono/android/view/View_OnClickListenerImplementor")]
+internal class OnClickListenerImplementor : Java.Lang.Object, View.IOnClickListener { }
 ```
 
-##### Rule 5: Managed Callable Wrapper (MCW) Types → Trimmable
-
-A type is **trimmable** (only preserved if used) if it:
-
-1. Has `[Register("java/class/name", DoNotGenerateAcw = true)]`, OR
-2. Is a binding for an existing Java SDK class (not user-defined)
-
+These are created from .NET code when subscribing to events:
 ```csharp
-// TRIMMABLE - only preserved if .NET code uses it
-[Register("android/widget/TextView", DoNotGenerateAcw = true)]
-public class TextView : View { }
-
-// Detection: DoNotGenerateAcw = true means this is a pure binding
-// Result: [assembly: TypeMap<JavaObjects>("android/widget/TextView", typeof(TextView_Proxy), typeof(TextView))]
+button.Click += (s, e) => { };  // Creates OnClickListenerImplementor
 ```
+
+If no code uses the event, the Implementor is trimmed away.
+
+##### Rule 5: Managed Callable Wrapper (MCW) Types → TRIMMABLE
+
+Types with `DoNotGenerateAcw = true` are **trimmable**:
 
 #### Detection Algorithm
 

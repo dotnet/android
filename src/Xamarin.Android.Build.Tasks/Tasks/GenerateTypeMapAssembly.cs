@@ -2066,13 +2066,18 @@ internal class TypeMapAssemblyGenerator
 				// The proxy types are in the _Microsoft.Android.TypeMaps namespace within the _Microsoft.Android.TypeMaps assembly
 				string qualifiedProxyTypeName = $"_Microsoft.Android.TypeMaps.{proxyTypeName}, _Microsoft.Android.TypeMaps";
 				
-				// JCW types: Unconditional - Android may create them anytime via reflection
+				// Unconditional types: Android may create them anytime via JNI/reflection
+				//   - User-defined types that subclass Java classes (Activities, Services, etc.)
 				//   - Must have DoNotGenerateAcw=false (generates Java Callable Wrapper)
 				//   - Must NOT be an interface (interfaces don't generate JCWs, they have Invokers)
-				// MCW types: Trimmable - only needed if .NET code references them
+				//   - Must NOT be an Implementor (these are only needed if C# event is used)
+				//
+				// Trimmable types: Only preserved if .NET code references them
 				//   - All interfaces (they wrap existing Java interfaces)
-				//   - Types with DoNotGenerateAcw=true (wrap existing Java classes)
-				bool isUnconditional = !peer.DoNotGenerateAcw && !peer.IsInterface;
+				//   - Types with DoNotGenerateAcw=true (MCW - wrap existing Java classes)
+				//   - Implementor types (only needed if corresponding C# event is used)
+				bool isImplementor = peer.ManagedTypeName.EndsWith ("Implementor", StringComparison.Ordinal);
+				bool isUnconditional = !peer.DoNotGenerateAcw && !peer.IsInterface && !isImplementor;
 				typeMapAttrs.Add ((entryJniName, qualifiedProxyTypeName, isUnconditional ? null : targetTypeName, isUnconditional));
 				
 				if (aliasHolderName != null) {
