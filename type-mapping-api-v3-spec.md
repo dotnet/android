@@ -1211,7 +1211,6 @@ This table lists ALL custom ILLink steps used in .NET for Android and their V3 r
 | `PreserveJavaExceptions` | Marking | During MarkStep | Proxy class refs | Proxy calls string ctor |
 | `PreserveExportedTypes` | Marking | During MarkStep | TypeMap unconditional attr | Generator collects [Export]/[ExportField] |
 | **Non-Preservation Steps:** | | | | |
-| `GenerateTypeMapAttributesStep` | CodeGen | Before MarkStep | N/A (this IS V3) | MonoVM only, generates TypeMap attrs |
 | `FixAbstractMethodsStep` | IL Patching | During MarkStep | Likely unnecessary | Legacy compat (2017), start WITHOUT |
 | `AddKeepAlivesStep` | IL Patching | After CleanStep | Likely unnecessary | Legacy compat, modern SDK has KeepAlive |
 | `StripEmbeddedLibraries` | IL Patching | After CleanStep | Post-trimming task | Remove embedded jars/zips |

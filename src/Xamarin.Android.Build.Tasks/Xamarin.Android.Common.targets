@@ -1606,7 +1606,7 @@ because xbuild doesn't support framework reference assemblies.
       EnableNativeRuntimeLinking="$(_AndroidEnableNativeRuntimeLinking)">
   </GenerateJavaStubs>
 
-  <!-- TypeMap PoC: Commenting out old marshal methods rewriting - replaced by GenerateTypeMapAttributesStep linker step -->
+  <!-- TypeMap PoC: Commenting out old marshal methods rewriting - replaced by GenerateTypeMapAssembly MSBuild task -->
   <!--
   <RewriteMarshalMethods
       Condition=" '$(_AndroidUseMarshalMethods)' == 'true' And '$(AndroidIncludeDebugSymbols)' == 'false' "

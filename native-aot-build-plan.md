@@ -123,7 +123,6 @@ Active work to migrate ILLink custom steps to MSBuild tasks:
 
 | Step | Modifies IL? | Can Migrate to AssemblyModifierPipeline? | Needed for NativeAOT? |
 |------|-------------|------------------------------------------|----------------------|
-| `GenerateTypeMapAttributesStep` | No (analysis) | N/A (MonoVM only) | ❌ NO |
 | `PreserveSubStepDispatcher` | No | Eliminate (use TrimmerRootDescriptor) | ❌ NO |
 | `MarkJavaObjects` | No | Eliminate (use TrimmerRootDescriptor) | ❌ NO (ILC trims) |
 | `PreserveJavaExceptions` | No | Eliminate (use TrimmerRootDescriptor) | ❌ NO |
