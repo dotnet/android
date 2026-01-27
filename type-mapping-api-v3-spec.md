@@ -1529,6 +1529,83 @@ Is this type referenced in [Application] BackupAgent/ManageSpaceActivity?
 4. **No custom ILLink steps** - Can be deleted entirely
 5. **NativeAOT compatible** - Enables skipping ILLink for NativeAOT builds
 
+### 15.9 Non-Preservation ILLink Steps
+
+These steps are NOT related to type/method preservation and are NOT replaced by TypeMap V3:
+
+#### 15.9.1 AddKeepAlivesStep
+
+**Purpose:** Adds `GC.KeepAlive(parameter)` calls at the end of methods with `[Register]` attribute.
+
+**Why it exists:** When a .NET method passes a Java object's `Handle` (IntPtr) to JNI, the GC might collect the wrapper object before the JNI call completes. `KeepAlive` prevents this.
+
+**Where KeepAlive is needed:**
+```csharp
+// MCW method (outgoing call from .NET to Java)
+public void DoSomething(View host) {
+    __args[0] = new JniArgumentValue(host.Handle);  // Only IntPtr kept
+    _members.InstanceMethods.InvokeVirtualVoidMethod(__id, this, __args);
+} finally {
+    GC.KeepAlive(host);  // Prevents GC during JNI call
+}
+```
+
+**Where KeepAlive is NOT needed:**
+```csharp
+// Native callback (incoming call from Java to .NET)
+static void n_OnClick(IntPtr jnienv, IntPtr native__this, IntPtr native_v) {
+    var __this = GetObject<IOnClickListener>(native__this);
+    var v = GetObject<View>(native_v);
+    __this.OnClick(v);
+    // No KeepAlive needed - Java holds the reference
+}
+```
+
+**Modern .NET for Android:** The MCW generator (`Java.Interop.Tools.Generator`) already emits `GC.KeepAlive` calls:
+- Location: `tools/generator/SourceWriters/Extensions/SourceWriterExtensions.cs`
+- Method: `Parameter.ShouldGenerateKeepAlive()` determines which parameters need KeepAlive
+- Skips: primitives, enums, strings
+
+**When AddKeepAlivesStep runs:**
+```csharp
+// Only for legacy assemblies NOT built against .NET for Android
+if (MonoAndroidHelper.IsDotNetAndroidAssembly(assembly))
+    return false;  // Already has KeepAlive compiled in
+```
+
+**Customer fix:** Rebuild the library with the current .NET for Android SDK. The MCW generator will automatically include `GC.KeepAlive` calls.
+
+**V3 Impact:** Not affected. UCO methods we generate take `IntPtr` parameters (not managed objects), so no KeepAlive is needed. The step remains for legacy assembly compatibility.
+
+#### 15.9.2 FixAbstractMethodsStep
+
+**Purpose:** Adds stub implementations for abstract Java methods that weren't overridden in .NET.
+
+**V3 Impact:** Still needed. This is IL modification, not preservation.
+
+#### 15.9.3 StripEmbeddedLibraries
+
+**Purpose:** Removes embedded native libraries (.so files) from assemblies after they've been extracted.
+
+**V3 Impact:** Still needed. Can be converted to MSBuild task.
+
+#### 15.9.4 GenerateProguardConfiguration
+
+**Purpose:** Generates ProGuard/R8 configuration to keep Java classes that have .NET bindings.
+
+**V3 Plan:** Convert to post-trimming MSBuild task that:
+1. Scans trimmed assemblies for surviving types with `[Register]`
+2. Generates `-keep class` rules only for surviving types
+3. Also generates list of `.o` files to link (same surviving types list)
+
+See section 15.3 "Post-Trimming Filtering" for details.
+
+#### 15.9.5 RemoveResourceDesignerStep / FixLegacyResourceDesignerStep
+
+**Purpose:** Handles Resource.designer.cs optimization and legacy compatibility.
+
+**V3 Impact:** Still needed. Not related to TypeMap.
+
 ---
 
 ## 16. Error Handling
