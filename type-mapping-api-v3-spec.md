@@ -1089,16 +1089,18 @@ All other types (interfaces, MCWs, Implementors) are only preserved if user code
 
 ##### Rule 1: User-Defined Android Component Types → Unconditional
 
-Types with these attributes are marked UNCONDITIONALLY by `MarkJavaObjects`:
+Types with these attributes are marked UNCONDITIONALLY. This is the **exhaustive list** of attributes that trigger unconditional preservation:
 
-| Attribute | Base Class | Reason |
-|-----------|------------|--------|
-| `[Activity]` | `Android.App.Activity` | Created by Android |
-| `[Application]` | `Android.App.Application` | Created at startup |
-| `[Service]` | `Android.App.Service` | Created by system |
-| `[BroadcastReceiver]` | `Android.Content.BroadcastReceiver` | Created on broadcast |
-| `[ContentProvider]` | `Android.Content.ContentProvider` | Created on first query |
-| `[Instrumentation]` | `Android.App.Instrumentation` | Created by test runner |
+| Attribute (Full Name) | Short Form | Base Class | Why Unconditional |
+|-----------------------|------------|------------|-------------------|
+| `Android.App.ActivityAttribute` | `[Activity]` | `Android.App.Activity` | Android creates via Intent navigation |
+| `Android.App.ApplicationAttribute` | `[Application]` | `Android.App.Application` | Android creates at app startup |
+| `Android.App.ServiceAttribute` | `[Service]` | `Android.App.Service` | Android creates on startService/bindService |
+| `Android.Content.BroadcastReceiverAttribute` | `[BroadcastReceiver]` | `Android.Content.BroadcastReceiver` | Android creates on broadcast |
+| `Android.Content.ContentProviderAttribute` | `[ContentProvider]` | `Android.Content.ContentProvider` | Android creates on first query |
+| `Android.App.InstrumentationAttribute` | `[Instrumentation]` | `Android.App.Instrumentation` | Test runner creates |
+
+**Note:** `Android.Runtime.RegisterAttribute` is NOT in this list. While it implements `IJniNameProviderAttribute`, it's present on ALL Java peer types and doesn't by itself make a type unconditional.
 
 ```csharp
 // UNCONDITIONAL - has [Activity] attribute
