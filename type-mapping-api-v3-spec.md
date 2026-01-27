@@ -1575,13 +1575,35 @@ if (MonoAndroidHelper.IsDotNetAndroidAssembly(assembly))
 
 **Customer fix:** Rebuild the library with the current .NET for Android SDK. The MCW generator will automatically include `GC.KeepAlive` calls.
 
-**V3 Impact:** Not affected. UCO methods we generate take `IntPtr` parameters (not managed objects), so no KeepAlive is needed. The step remains for legacy assembly compatibility.
+**V3 Strategy:** Start WITHOUT this step. If customers report issues with legacy libraries, implement as a separate post-restore assembly rewriting step (outside of ILLink).
 
 #### 15.9.2 FixAbstractMethodsStep
 
-**Purpose:** Adds stub implementations for abstract Java methods that weren't overridden in .NET.
+**Purpose:** Fixes C#/Java impedance mismatch for interface versioning.
 
-**V3 Impact:** Still needed. This is IL modification, not preservation.
+**The problem:**
+- Java allows adding methods to interfaces without breaking existing implementations (throws `AbstractMethodError` at runtime)
+- C# requires all interface methods to be implemented (throws `TypeLoadException` at type load)
+
+**Scenario:**
+1. Library built against API-10 implements `ICursor` with API-10 methods
+2. App targets API-11+ where `ICursor` has new methods (e.g., `GetType()`)
+3. Without this step: `TypeLoadException` when type loads
+4. With this step: Missing methods are injected with `throw new Java.Lang.AbstractMethodError()`
+
+**History:** Introduced in Xamarin.Android 6.1 (2017) for binary compatibility with older libraries.
+
+**Is it still relevant?**
+- Only affects libraries built against older `$(TargetFrameworkVersion)` used in newer apps
+- C# now has Default Interface Methods (DIM) which could reduce the need
+- Modern bindings may use DIM for new interface members
+- The step already implements `IAssemblyModifierPipelineStep` for use outside ILLink
+
+**V3 Strategy:** Start WITHOUT this step. This is a legacy compatibility feature from 9+ years ago. If customers report `TypeLoadException` with older libraries:
+1. First recommendation: Rebuild the library with current SDK
+2. If not possible: Implement as a separate post-restore assembly rewriting step (outside of ILLink)
+
+The step can be added back as needed - it's IL modification, not preservation, so it's independent of TypeMap V3.
 
 #### 15.9.3 StripEmbeddedLibraries
 
