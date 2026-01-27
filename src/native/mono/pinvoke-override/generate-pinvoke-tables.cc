@@ -198,6 +198,7 @@ const std::vector<std::string> dotnet_pinvoke_names = {
 	"SystemNative_FcntlSetFD",
 	"SystemNative_FcntlSetIsNonBlocking",
 	"SystemNative_FcntlSetPipeSz",
+	"SystemNative_FileSystemSupportsLocking",
 	"SystemNative_FLock",
 	"SystemNative_ForkAndExecProcess",
 	"SystemNative_Free",

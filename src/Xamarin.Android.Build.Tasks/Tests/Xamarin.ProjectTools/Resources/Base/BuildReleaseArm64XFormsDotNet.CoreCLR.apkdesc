@@ -5,7 +5,7 @@
       "Size": 6652
     },
     "classes.dex": {
-      "Size": 9448760
+      "Size": 9447644
     },
     "classes2.dex": {
       "Size": 156448
@@ -32,31 +32,31 @@
       "Size": 2396
     },
     "lib/arm64-v8a/libassembly-store.so": {
-      "Size": 14221080
+      "Size": 14041376
     },
     "lib/arm64-v8a/libclrjit.so": {
-      "Size": 3180136
+      "Size": 3141224
     },
     "lib/arm64-v8a/libcoreclr.so": {
-      "Size": 5835752
+      "Size": 5736320
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 1375432
+      "Size": 1375784
     },
     "lib/arm64-v8a/libmscordaccore.so": {
-      "Size": 2534624
+      "Size": 2442416
     },
     "lib/arm64-v8a/libmscordbi.so": {
-      "Size": 1909056
+      "Size": 1894280
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
       "Size": 71936
     },
     "lib/arm64-v8a/libSystem.IO.Compression.Native.so": {
-      "Size": 758968
+      "Size": 1281696
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 105408
+      "Size": 105664
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
       "Size": 165536
@@ -215,10 +215,10 @@
       "Size": 6
     },
     "META-INF/BNDLTOOL.RSA": {
-      "Size": 1221
+      "Size": 1223
     },
     "META-INF/BNDLTOOL.SF": {
-      "Size": 90357
+      "Size": 90346
     },
     "META-INF/com.android.tools/proguard/coroutines.pro": {
       "Size": 1345
@@ -245,7 +245,7 @@
       "Size": 5
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 90230
+      "Size": 90219
     },
     "META-INF/maven/com.google.guava/listenablefuture/pom.properties": {
       "Size": 96
@@ -2285,5 +2285,5 @@
       "Size": 812848
     }
   },
-  "PackageSize": 22619078
+  "PackageSize": 22766523
 }
