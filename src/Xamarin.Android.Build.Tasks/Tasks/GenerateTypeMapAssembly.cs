@@ -1349,22 +1349,6 @@ internal class JavaPeerScanner
 	}
 
 	/// <summary>
-	/// Checks if a type implements a given interface (checks direct interfaces only, not inherited).
-	/// </summary>
-	bool ImplementsInterface (MetadataReader reader, TypeDefinition typeDef, string interfaceName)
-	{
-		foreach (var ifaceHandle in typeDef.GetInterfaceImplementations ()) {
-			var iface = reader.GetInterfaceImplementation (ifaceHandle);
-			var (ifaceName, _) = GetFullTypeNameAndAssembly (reader, iface.Interface);
-			if (ifaceName == interfaceName)
-				return true;
-		}
-
-		// TODO: Also check inherited interfaces from base types for complete validation
-		return false;
-	}
-
-	/// <summary>
 	/// For a method that doesn't have [Register] directly, check if it overrides a registered method
 	/// in a base type and add the marshal method entry if so.
 	/// This handles user types that override Activity.OnCreate, etc.
