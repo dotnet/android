@@ -177,6 +177,8 @@ $@"<Project>
 	<PropertyGroup>
 		<Configuration>{Configuration}</Configuration>
 		<DisableTransitiveFrameworkReferenceDownloads>true</DisableTransitiveFrameworkReferenceDownloads>
+		<!-- Prevent .NET SDK from adding the host RID to RuntimeIdentifiers, see: https://github.com/dotnet/android/issues/10722 -->
+		<UseDefaultPublishRuntimeIdentifier>false</UseDefaultPublishRuntimeIdentifier>
 	</PropertyGroup>
 </Project>"
 			});
