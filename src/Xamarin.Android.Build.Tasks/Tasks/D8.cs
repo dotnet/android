@@ -163,16 +163,12 @@ namespace Xamarin.Android.Tasks
 		}
 
 		/// <summary>
-		/// Writes a single argument to the response file, quoting if necessary for paths with spaces.
+		/// Writes a single argument to the response file.
+		/// R8/D8 response files treat each line as a complete argument, so no quoting is needed.
 		/// </summary>
 		protected void WriteArg (StreamWriter writer, string arg)
 		{
-			// Quote paths that contain spaces
-			if (arg.Contains (" ")) {
-				writer.WriteLine ($"\"{arg}\"");
-			} else {
-				writer.WriteLine (arg);
-			}
+			writer.WriteLine (arg);
 			Log.LogDebugMessage ($"  {arg}");
 		}
 

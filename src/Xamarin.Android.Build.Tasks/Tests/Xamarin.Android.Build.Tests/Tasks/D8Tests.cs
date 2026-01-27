@@ -96,10 +96,11 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		/// <summary>
-		/// Tests that paths with spaces are quoted in the response file.
+		/// Tests that paths with spaces are written correctly to the response file.
+		/// R8/D8 response files treat each line as a complete argument, so no quoting is needed.
 		/// </summary>
 		[Test]
-		public void ResponseFileQuotesPathsWithSpaces ()
+		public void ResponseFileHandlesPathsWithSpaces ()
 		{
 			var pathWithSpaces = Path.Combine (tempDir, "path with spaces");
 			Directory.CreateDirectory (pathWithSpaces);
@@ -127,8 +128,8 @@ namespace Xamarin.Android.Build.Tests
 				FileAssert.Exists (responseFilePath, "Response file should exist");
 				string responseFileContent = File.ReadAllText (responseFilePath);
 
-				// Paths with spaces should be quoted
-				Assert.IsTrue (responseFileContent.Contains ("\""), "Response file should contain quoted paths");
+				// Paths with spaces should NOT be quoted (R8/D8 treats each line as a complete argument)
+				Assert.IsFalse (responseFileContent.Contains ("\""), "Response file should not contain quoted paths");
 				Assert.IsTrue (responseFileContent.Contains ("path with spaces"), "Response file should contain the path with spaces");
 
 			} finally {
