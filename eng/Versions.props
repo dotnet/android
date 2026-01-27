@@ -7,6 +7,8 @@
     <MicrosoftNETCoreAppRefPackageVersion>11.0.0-alpha.1.26064.107</MicrosoftNETCoreAppRefPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetApiCompatPackageVersion>
     <MicrosoftDotNetBuildTasksFeedPackageVersion>11.0.0-beta.26064.107</MicrosoftDotNetBuildTasksFeedPackageVersion>
+    <!-- Last version built for net10.0, needed for CI steps that only have the .NET 10 SDK installed (e.g., BAR manifest publishing) -->
+    <MicrosoftDotNetBuildTasksFeedPackageVersionNet10>11.0.0-beta.26060.102</MicrosoftDotNetBuildTasksFeedPackageVersionNet10>
     <MicrosoftNETWorkloadMonoToolChainCurrentManifest110100alpha1PackageVersion>11.0.0-alpha.1.26064.107</MicrosoftNETWorkloadMonoToolChainCurrentManifest110100alpha1PackageVersion>
     <MicrosoftNETWorkloadEmscriptenCurrentManifest110100alpha1PackageVersion>11.0.100-alpha.1.26064.107</MicrosoftNETWorkloadEmscriptenCurrentManifest110100alpha1PackageVersion>
     <MicrosoftNETWorkloadMonoToolChainPackageVersion>$(MicrosoftNETWorkloadMonoToolChainCurrentManifest110100alpha1PackageVersion)</MicrosoftNETWorkloadMonoToolChainPackageVersion>
