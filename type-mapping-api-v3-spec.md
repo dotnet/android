@@ -1198,35 +1198,46 @@ if (exportFieldName != null) {
 
 This table lists ALL custom ILLink steps used in .NET for Android and their V3 replacement strategy:
 
-| Step | Replacement | Notes |
-|------|-------------|-------|
-| **Preservation Steps (type/method marking):** | | |
-| `MarkJavaObjects.ProcessAssembly` (custom views) | TypeMap unconditional attribute | V3 reads customview-map.txt |
-| `MarkJavaObjects.ProcessAssembly` (HttpHandler) | TypeMap unconditional attribute | **TODO:** V3 needs to handle `AndroidHttpClientHandlerType` |
-| `MarkJavaObjects.ProcessAssembly` (IJniNameProvider) | TypeMap unconditional attribute | **TODO:** V3 needs to scan for `IJniNameProviderAttribute` |
-| `MarkJavaObjects.ProcessType` | Proxy class references | Proxy refs activation ctor → automatic |
-| `PreserveJavaInterfaces` | Proxy class references | Proxy marshal methods call interface methods |
-| `PreserveRegistrations` | Proxy class references | Proxy uses GetFunctionPointer/calls handler |
-| `PreserveApplications` | TypeMapAssociationAttribute | BackupAgent/ManageSpaceActivity cross-ref |
-| `PreserveJavaExceptions` | Proxy class references | Proxy calls string ctor |
-| `PreserveExportedTypes` | TypeMap unconditional attribute | Generator collects [Export]/[ExportField] |
-| **Non-Preservation Steps:** | | |
-| `GenerateTypeMapAttributesStep` | N/A (this IS the V3 step) | MonoVM only, runs before MarkStep |
-| `FixAbstractMethodsStep` | Likely unnecessary | Legacy compat (2017), start WITHOUT |
-| `AddKeepAlivesStep` | Likely unnecessary | Legacy compat, modern SDK has KeepAlive |
-| `StripEmbeddedLibraries` | Post-trimming MSBuild task | Remove embedded jars/zips after extraction |
-| `GenerateProguardConfiguration` | Post-trimming MSBuild task | Scan surviving types, generate -keep rules |
-| `RemoveResourceDesignerStep` | Unrelated to TypeMap | Resource.designer.cs optimization |
-| `GetAssembliesStep` | Unrelated to TypeMap | Support for RemoveResourceDesignerStep |
-| `FixLegacyResourceDesignerStep` | Unrelated to TypeMap | Legacy designer fixup |
+| Step | Type | Phase | Replacement | Notes |
+|------|------|-------|-------------|-------|
+| **Preservation Steps:** | | | | |
+| `MarkJavaObjects.ProcessAssembly` (custom views) | Marking | During MarkStep | TypeMap unconditional attr | V3 reads customview-map.txt |
+| `MarkJavaObjects.ProcessAssembly` (HttpHandler) | Marking | During MarkStep | TypeMap unconditional attr | **TODO:** Handle `AndroidHttpClientHandlerType` |
+| `MarkJavaObjects.ProcessAssembly` (IJniNameProvider) | Marking | During MarkStep | TypeMap unconditional attr | **TODO:** Scan for `IJniNameProviderAttribute` |
+| `MarkJavaObjects.ProcessType` | Marking | During MarkStep | Proxy class refs | Proxy refs activation ctor → automatic |
+| `PreserveJavaInterfaces` | Marking | During MarkStep | Proxy class refs | Proxy marshal methods call interface methods |
+| `PreserveRegistrations` | Marking | During MarkStep | Proxy class refs | Proxy uses GetFunctionPointer/calls handler |
+| `PreserveApplications` | Marking | During MarkStep | TypeMapAssociationAttr | BackupAgent/ManageSpaceActivity cross-ref |
+| `PreserveJavaExceptions` | Marking | During MarkStep | Proxy class refs | Proxy calls string ctor |
+| `PreserveExportedTypes` | Marking | During MarkStep | TypeMap unconditional attr | Generator collects [Export]/[ExportField] |
+| **Non-Preservation Steps:** | | | | |
+| `GenerateTypeMapAttributesStep` | CodeGen | Before MarkStep | N/A (this IS V3) | MonoVM only, generates TypeMap attrs |
+| `FixAbstractMethodsStep` | IL Patching | During MarkStep | Likely unnecessary | Legacy compat (2017), start WITHOUT |
+| `AddKeepAlivesStep` | IL Patching | After CleanStep | Likely unnecessary | Legacy compat, modern SDK has KeepAlive |
+| `StripEmbeddedLibraries` | IL Patching | After CleanStep | Post-trimming task | Remove embedded jars/zips |
+| `GenerateProguardConfiguration` | CodeGen | After CleanStep | Post-trimming task | Scan surviving types, generate -keep rules |
+| `RemoveResourceDesignerStep` | IL Patching | After CleanStep | Unrelated | Resource.designer.cs optimization |
+| `GetAssembliesStep` | Utility | After CleanStep | Unrelated | Support for RemoveResourceDesignerStep |
+| `FixLegacyResourceDesignerStep` | IL Patching | Before MarkStep | Unrelated | Legacy designer fixup |
+
+**Step Types:**
+- **Marking**: Calls `Annotations.Mark()` or `AddPreservedMethod()` to influence what survives trimming
+- **IL Patching**: Modifies method bodies, adds/removes types or resources
+- **CodeGen**: Generates new code or configuration files
+- **Utility**: Helper step that collects data for other steps
+
+**Trimmer Phases:**
+- **Before MarkStep**: Assembly scanning/modification before the trimmer decides what to keep
+- **During MarkStep**: Runs as MarkHandler/SubStep, can mark additional types/methods
+- **After CleanStep**: Runs on already-trimmed assemblies (only surviving types/methods)
 
 **Replacement Categories:**
-- **TypeMap unconditional attribute**: 2-arg `TypeMapAttribute` ensures type survives trimming unconditionally
-- **Proxy class references**: Proxy type has hard code references → normal trimmer dependency tracking
-- **TypeMapAssociationAttribute**: Preserves associated type when primary type is activated
-- **Post-trimming MSBuild task**: Run after ILLink/ILC, scan surviving assemblies
+- **TypeMap unconditional attr**: 2-arg `TypeMapAttribute` ensures type survives trimming unconditionally
+- **Proxy class refs**: Proxy type has hard code references → normal trimmer dependency tracking
+- **TypeMapAssociationAttr**: Preserves associated type when primary type is activated
+- **Post-trimming task**: MSBuild task runs after ILLink/ILC on surviving assemblies
 - **Likely unnecessary**: Legacy compatibility, start without and add back only if customers report issues
-- **Unrelated to TypeMap**: These steps handle resource optimization, not type preservation
+- **Unrelated**: These steps handle resource optimization, not type preservation
 
 #### 15.7.10 Why Proxy References Replace Preservation Steps
 
