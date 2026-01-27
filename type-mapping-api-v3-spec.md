@@ -1221,7 +1221,7 @@ if (exportFieldName != null) {
 | Legacy Step | V3 Replacement | Status |
 |-------------|----------------|--------|
 | `MarkJavaObjects.ProcessAssembly` (component attrs) | Unconditional TypeMapAttribute for types with [Activity], etc. | ✅ Implemented |
-| `MarkJavaObjects.ProcessAssembly` (custom views) | Read customview-map.txt, generate unconditional TypeMapAttribute | ✅ Implemented (wiring pending) |
+| `MarkJavaObjects.ProcessAssembly` (custom views) | Read customview-map.txt, generate unconditional TypeMapAttribute | ✅ Implemented |
 | `MarkJavaObjects.ProcessType` | Proxy refs activation ctor → automatic preservation | ✅ Implemented |
 | `PreserveJavaInterfaces` | Proxy marshal methods call interface methods → automatic | ✅ Implemented |
 | `PreserveRegistrations` | Proxy uses GetFunctionPointer/calls handler → automatic | ✅ Implemented |
@@ -1514,14 +1514,31 @@ This is cleaner than embedding `typeof(MyBackupAgent)` in the Application proxy 
 
 #### Decision: unconditional vs trimmable
 
+The actual logic implemented in the generator:
+
+```csharp
+bool isImplementor = peer.ManagedTypeName.EndsWith("Implementor", StringComparison.Ordinal);
+bool isCustomView = _customViewTypes.Contains(peer.ManagedTypeName);
+bool isUnconditional = isCustomView || (!peer.DoNotGenerateAcw && !peer.IsInterface && !isImplementor);
 ```
-Is this type registered in AndroidManifest.xml?
-└─ YES → unconditional (unconditional) - Android can create it anytime
-└─ NO → Is this a JCW (user's .NET type with Java wrapper)?
-        └─ YES → unconditional (unconditional) - Java code might call it
-        └─ NO → Is this an MCW (binding for existing Java class)?
-                └─ YES → trimmable (conditional) - only if .NET code uses it
-                └─ NO → unconditional (unconditional) - default to safe
+
+Decision tree:
+```
+Is this type a custom view from layout XML?
+└─ YES → unconditional - Android inflates views from XML
+
+Is this type an interface?
+└─ YES → trimmable - Android never instantiates interfaces directly
+
+Is this type an Implementor (name ends with "Implementor")?
+└─ YES → trimmable - Only needed if interface is used from .NET
+
+Does the type have DoNotGenerateAcw = true?
+└─ YES → trimmable (MCW) - Only if .NET code uses the Java class
+└─ NO → unconditional (JCW) - Java code might instantiate it
+
+Is this type referenced in [Application] BackupAgent/ManageSpaceActivity?
+└─ YES → unconditional - Android creates these at runtime (TODO: implement)
 ```
 
 #### Benefits
