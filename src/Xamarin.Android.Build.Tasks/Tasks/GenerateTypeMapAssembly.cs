@@ -2092,13 +2092,21 @@ internal class TypeMapAssemblyGenerator
 	var attrStopwatch = Stopwatch.StartNew ();
 	int unconditionalCount = 0;
 	int trimmableCount = 0;
+	var unconditionalExamples = new List<string> ();
+	var trimmableExamples = new List<string> ();
 	foreach (var (jniName, proxyType, targetType, isUnconditional) in typeMapAttrs) {
 		if (isUnconditional) {
 			AddTypeMapAttributeUnconditional (jniName, proxyType);
 			unconditionalCount++;
+			if (unconditionalExamples.Count < 5) {
+				unconditionalExamples.Add (jniName);
+			}
 		} else {
 			AddTypeMapAttributeTrimmable (jniName, proxyType, targetType!);
 			trimmableCount++;
+			if (trimmableExamples.Count < 5) {
+				trimmableExamples.Add (jniName);
+			}
 		}
 	}
 	
@@ -2115,6 +2123,12 @@ internal class TypeMapAssemblyGenerator
 	
 	attrStopwatch.Stop ();
 	_log.LogMessage (MessageImportance.High, $"[GTMA-Gen] Attributes: {attrStopwatch.ElapsedMilliseconds}ms ({unconditionalCount} unconditional, {trimmableCount} trimmable, {aliasMappings.Count} aliases)");
+	if (unconditionalExamples.Count > 0) {
+		_log.LogMessage (MessageImportance.High, $"[GTMA-Gen]   Unconditional examples (JCW - Android creates): {string.Join (", ", unconditionalExamples)}");
+	}
+	if (trimmableExamples.Count > 0) {
+		_log.LogMessage (MessageImportance.High, $"[GTMA-Gen]   Trimmable examples (MCW - .NET uses): {string.Join (", ", trimmableExamples)}");
+	}
 	
 	// 11. Write the PE file
 	var peStopwatch = Stopwatch.StartNew ();
