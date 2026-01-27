@@ -2311,9 +2311,6 @@ internal class TypeMapAssemblyGenerator
 	// 9. Apply self-attribute to each proxy type
 	ApplySelfAttributes ();
 	
-	// TODO: 10. Generate trimmer trap method that roots all proxy types (deferred until trimming issue is solved)
-	// GenerateTrimmerTrapMethod ();
-	
 	attrStopwatch.Stop ();
 	_log.LogMessage (MessageImportance.High, $"[GTMA-Gen] Attributes: {attrStopwatch.ElapsedMilliseconds}ms ({unconditionalCount} unconditional, {trimmableCount} trimmable, {aliasMappings.Count} aliases)");
 	

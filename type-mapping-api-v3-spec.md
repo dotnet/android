@@ -1202,7 +1202,7 @@ This table lists ALL custom ILLink steps used in .NET for Android and their trim
 |------|------|-------|-------------|-------|
 | **Preservation Steps:** | | | | |
 | `MarkJavaObjects.ProcessAssembly` (custom views) | Marking | During MarkStep | TypeMap unconditional attr | Trimmable type map reads customview-map.txt |
-| `MarkJavaObjects.ProcessAssembly` (HttpHandler) | Marking | During MarkStep | TypeMap unconditional attr | **TODO:** Handle `AndroidHttpClientHandlerType` |
+| `MarkJavaObjects.ProcessAssembly` (HttpHandler) | Marking | During MarkStep | N/A | Deprecate `AndroidHttpClientHandlerType` (see [#10002](https://github.com/dotnet/android/pull/10002)) |
 | `MarkJavaObjects.ProcessAssembly` (IJniNameProvider) | Marking | During MarkStep | TypeMap unconditional attr | Already handled - these ARE the component attrs |
 | `MarkJavaObjects.ProcessType` | Marking | During MarkStep | Proxy class refs | Proxy refs activation ctor → automatic |
 | `PreserveJavaInterfaces` | Marking | During MarkStep | Proxy class refs | Proxy marshal methods call interface methods |
