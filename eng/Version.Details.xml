@@ -1,24 +1,24 @@
 <Dependencies>
   <ProductDependencies>
-    <Dependency Name="Microsoft.NET.Sdk" Version="10.0.100-preview.1.25106.28">
-      <Uri>https://github.com/dotnet/sdk</Uri>
-      <Sha>e1a2886f5628dfdf192225870a62a1d029da68fb</Sha>
+    <Dependency Name="Microsoft.NET.Sdk" Version="11.0.100-preview.1.26076.102">
+      <Uri>https://github.com/dotnet/dotnet</Uri>
+      <Sha>93b03446d269bf71bb3ab1cce56e696913709c8a</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="10.0.0-preview.1.25080.5" CoherentParentDependency="Microsoft.NET.Sdk">
-      <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>b98cabca124ca73be9247c5f7b6796c6ce55e816</Sha>
+    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="11.0.0-preview.1.26076.102" CoherentParentDependency="Microsoft.NET.Sdk">
+      <Uri>https://github.com/dotnet/dotnet</Uri>
+      <Sha>93b03446d269bf71bb3ab1cce56e696913709c8a</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NETCore.App.Ref" Version="10.0.0-preview.1.25080.5" CoherentParentDependency="Microsoft.NET.Sdk">
-      <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>b98cabca124ca73be9247c5f7b6796c6ce55e816</Sha>
+    <Dependency Name="Microsoft.NETCore.App.Ref" Version="11.0.0-preview.1.26076.102" CoherentParentDependency="Microsoft.NET.Sdk">
+      <Uri>https://github.com/dotnet/dotnet</Uri>
+      <Sha>93b03446d269bf71bb3ab1cce56e696913709c8a</Sha>
     </Dependency>
     <Dependency Name="Microsoft.NET.Workload.Emscripten.Current.Manifest-10.0.100.Transport" Version="10.0.0-preview.1.25077.1" CoherentParentDependency="Microsoft.NETCore.App.Ref">
       <Uri>https://github.com/dotnet/emsdk</Uri>
       <Sha>3ac196ac425223d11490e759c2641256ce746f21</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.5-alpha.24627.1" CoherentParentDependency="Microsoft.NET.ILLink.Tasks">
-      <Uri>https://github.com/dotnet/cecil</Uri>
-      <Sha>9e8bd520939ddfee686261267a1646c1b113d9e1</Sha>
+    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.5-preview.26076.102" CoherentParentDependency="Microsoft.NET.ILLink.Tasks">
+      <Uri>https://github.com/dotnet/dotnet</Uri>
+      <Sha>93b03446d269bf71bb3ab1cce56e696913709c8a</Sha>
     </Dependency>
     <!-- Previous .NET Android version -->
     <Dependency Name="Microsoft.Android.Sdk.Windows" Version="35.0.24">
@@ -31,9 +31,9 @@
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>70831f0d126fe88b81d7dc8de11358e17a5ce364</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="9.0.0-beta.24408.2">
-      <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>60ae233c3d77f11c5fdb53e570b64d503b13ba59</Sha>
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="11.0.0-beta.26076.102">
+      <Uri>https://github.com/dotnet/dotnet</Uri>
+      <Sha>93b03446d269bf71bb3ab1cce56e696913709c8a</Sha>
     </Dependency>
     <Dependency Name="Microsoft.TemplateEngine.Tasks" Version="7.0.100-rc.1.22410.7">
       <Uri>https://github.com/dotnet/templating</Uri>
