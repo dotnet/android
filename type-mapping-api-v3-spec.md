@@ -1213,11 +1213,11 @@ This table lists ALL custom ILLink steps used in .NET for Android and their V3 r
 | **Non-Preservation Steps:** | | | | |
 | `FixAbstractMethodsStep` | IL Patching | During MarkStep | Likely unnecessary | Legacy compat (2017), start WITHOUT |
 | `AddKeepAlivesStep` | IL Patching | After CleanStep | Likely unnecessary | Legacy compat, modern SDK has KeepAlive |
-| `StripEmbeddedLibraries` | IL Patching | After CleanStep | Post-trimming task | Remove embedded jars/zips |
-| `GenerateProguardConfiguration` | CodeGen | After CleanStep | Post-trimming task | Scan surviving types, generate -keep rules |
-| `RemoveResourceDesignerStep` | IL Patching | After CleanStep | Unrelated | Resource.designer.cs optimization |
-| `GetAssembliesStep` | Utility | After CleanStep | Unrelated | Support for RemoveResourceDesignerStep |
-| `FixLegacyResourceDesignerStep` | IL Patching | Before MarkStep | Unrelated | Legacy designer fixup |
+| `StripEmbeddedLibraries` | IL Patching | After CleanStep | Unrelated - post-trimming | Remove embedded jars/zips |
+| `GenerateProguardConfiguration` | CodeGen | After CleanStep | Unrelated - post-trimming | Scan surviving types, generate -keep rules |
+| `RemoveResourceDesignerStep` | IL Patching | After CleanStep | Unrelated - not trimming | Resource.designer.cs optimization |
+| `GetAssembliesStep` | Utility | After CleanStep | Unrelated - not trimming | Support for RemoveResourceDesignerStep |
+| `FixLegacyResourceDesignerStep` | IL Patching | Before MarkStep | Unrelated - not trimming | Legacy designer fixup |
 
 **Step Types:**
 - **Marking**: Calls `Annotations.Mark()` or `AddPreservedMethod()` to influence what survives trimming
@@ -1234,9 +1234,9 @@ This table lists ALL custom ILLink steps used in .NET for Android and their V3 r
 - **TypeMap unconditional attr**: 2-arg `TypeMapAttribute` ensures type survives trimming unconditionally
 - **Proxy class refs**: Proxy type has hard code references → normal trimmer dependency tracking
 - **TypeMapAssociationAttr**: Preserves associated type when primary type is activated
-- **Post-trimming task**: MSBuild task runs after ILLink/ILC on surviving assemblies
 - **Likely unnecessary**: Legacy compatibility, start without and add back only if customers report issues
-- **Unrelated**: These steps handle resource optimization, not type preservation
+- **Unrelated - post-trimming**: Works on already-trimmed assemblies, not related to V3 type preservation
+- **Unrelated - not trimming**: These steps handle resource optimization, not type preservation
 
 #### 15.7.10 Why Proxy References Replace Preservation Steps
 
