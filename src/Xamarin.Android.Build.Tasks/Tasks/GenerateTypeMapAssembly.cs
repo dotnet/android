@@ -2027,11 +2027,14 @@ internal class TypeMapAssemblyGenerator
 		if (peers.Count > 1) {
 			// Generate Alias holder type using first peer's managed name as base
 			aliasHolderName = peers[0].ManagedTypeName.Replace ('.', '_').Replace ('+', '_') + "_Aliases";
+			string qualifiedAliasHolderName = $"_Microsoft.Android.TypeMaps.{aliasHolderName}, _Microsoft.Android.TypeMaps";
 			GenerateAliasHolderType (aliasHolderName);
 			
-			// Alias holders use unconditional mapping - they always need to be preserved
-			// [assembly: TypeMap<Java.Lang.Object>(JavaName, typeof(AliasHolder))]
-			typeMapAttrs.Add ((jniName, aliasHolderName, null, isUnconditional: true));
+			// Alias holders are trimmable - they're preserved via TypeMapAssociationAttribute references
+			// from the aliased types. If any aliased type is used, the association references the
+			// alias holder, which preserves it.
+			// [assembly: TypeMap<Java.Lang.Object>(JavaName, typeof(AliasHolder), typeof(AliasHolder))]
+			typeMapAttrs.Add ((jniName, qualifiedAliasHolderName, qualifiedAliasHolderName, isUnconditional: false));
 		}
 
 		for (int i = 0; i < peers.Count; i++) {
