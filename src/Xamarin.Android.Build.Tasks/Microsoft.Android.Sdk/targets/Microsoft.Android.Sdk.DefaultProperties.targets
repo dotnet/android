@@ -13,6 +13,8 @@
     <AndroidUseIntermediateDesignerFile Condition=" '$(AndroidUseDesignerAssembly)' == 'True' ">false</AndroidUseIntermediateDesignerFile>
     <AndroidUseIntermediateDesignerFile Condition=" '$(AndroidUseIntermediateDesignerFile)' == '' ">$(AndroidGenerateResourceDesigner)</AndroidUseIntermediateDesignerFile>
     <AllowSelfContainedWithoutRuntimeIdentifier Condition =" '$(AllowSelfContainedWithoutRuntimeIdentifier)' == '' ">true</AllowSelfContainedWithoutRuntimeIdentifier>
+    <!-- Prevent .NET SDK from adding the host RID to RuntimeIdentifiers, see: https://github.com/dotnet/android/issues/10722 -->
+    <UseDefaultPublishRuntimeIdentifier Condition=" '$(UseDefaultPublishRuntimeIdentifier)' == '' ">false</UseDefaultPublishRuntimeIdentifier>
     <SelfContained Condition=" '$(SelfContained)' == '' ">true</SelfContained>
     <GenerateDependencyFile Condition=" '$(GenerateDependencyFile)' == '' ">false</GenerateDependencyFile>
     <CopyLocalLockFileAssemblies Condition=" '$(CopyLocalLockFileAssemblies)' == '' ">false</CopyLocalLockFileAssemblies>
