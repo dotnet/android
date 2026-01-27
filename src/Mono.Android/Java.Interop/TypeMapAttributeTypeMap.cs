@@ -39,8 +39,8 @@ namespace Android.Runtime
 
 		public TypeMapAttributeTypeMap ()
 		{
-			var typeMapAssembly = Assembly.Load (TypeMapsAssemblyName);
-			Assembly.SetEntryAssembly (typeMapAssembly);
+			// TypeMapping.GetOrCreateExternalTypeMapping is an intrinsic that the trimmer/ILC
+			// replaces with the actual type map data at compile time. No Assembly.Load needed.
 			_externalTypeMap = TypeMapping.GetOrCreateExternalTypeMapping<Java.Lang.Object> ();
 		}
 

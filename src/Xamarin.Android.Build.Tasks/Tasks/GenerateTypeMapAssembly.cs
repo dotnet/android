@@ -1951,6 +1951,7 @@ internal class TypeMapAssemblyGenerator
 	MemberReferenceHandle _intPtrZeroFieldRef;
 	MemberReferenceHandle _aliasesTypeMapAssocAttrCtorRef;
 	MemberReferenceHandle _typeMapAttrCtorRef;
+	MemberReferenceHandle _typeMapAttrCtorRef2Arg; // 2-arg unconditional variant
 	MemberReferenceHandle _assemblyMetadataAttrCtorRef;
 
 	// UCO related member references
@@ -1999,7 +2000,8 @@ internal class TypeMapAssemblyGenerator
 	
 	// 7. Generate proxy types and collect TypeMap attributes
 	var proxyStopwatch = Stopwatch.StartNew ();
-	var typeMapAttrs = new List<(string jniName, string proxyTypeName, string targetTypeName)> ();
+	// isUnconditional: true for JCW types (DoNotGenerateAcw=false), false for MCW types (DoNotGenerateAcw=true)
+	var typeMapAttrs = new List<(string jniName, string proxyTypeName, string? targetTypeName, bool isUnconditional)> ();
 	var aliasMappings = new List<(string source, string aliasHolder)> ();
 	
 	// Filter out Invokers - they don't need TypeMap entries
@@ -2027,8 +2029,9 @@ internal class TypeMapAssemblyGenerator
 			aliasHolderName = peers[0].ManagedTypeName.Replace ('.', '_').Replace ('+', '_') + "_Aliases";
 			GenerateAliasHolderType (aliasHolderName);
 			
-			// [assembly: TypeMap<Java.Lang.Object>(JavaName, typeof(AliasHolder), typeof(AliasHolder))]
-			typeMapAttrs.Add ((jniName, aliasHolderName, aliasHolderName));
+			// Alias holders use unconditional mapping - they always need to be preserved
+			// [assembly: TypeMap<Java.Lang.Object>(JavaName, typeof(AliasHolder))]
+			typeMapAttrs.Add ((jniName, aliasHolderName, null, isUnconditional: true));
 		}
 
 		for (int i = 0; i < peers.Count; i++) {
@@ -2063,7 +2066,10 @@ internal class TypeMapAssemblyGenerator
 				// The proxy types are in the _Microsoft.Android.TypeMaps namespace within the _Microsoft.Android.TypeMaps assembly
 				string qualifiedProxyTypeName = $"_Microsoft.Android.TypeMaps.{proxyTypeName}, _Microsoft.Android.TypeMaps";
 				
-				typeMapAttrs.Add ((entryJniName, qualifiedProxyTypeName, targetTypeName));
+				// JCW types (DoNotGenerateAcw=false): Unconditional - Android may create them anytime
+				// MCW types (DoNotGenerateAcw=true): Trimmable - only if .NET code uses them
+				bool isUnconditional = !peer.DoNotGenerateAcw;
+				typeMapAttrs.Add ((entryJniName, qualifiedProxyTypeName, isUnconditional ? null : targetTypeName, isUnconditional));
 				
 				if (aliasHolderName != null) {
 					// Qualify alias holder with namespace and assembly
@@ -2084,8 +2090,16 @@ internal class TypeMapAssemblyGenerator
 	
 	// 8. Add TypeMapAttribute entries (assembly-level custom attributes)
 	var attrStopwatch = Stopwatch.StartNew ();
-	foreach (var (jniName, proxyType, targetType) in typeMapAttrs) {
-		AddTypeMapAttribute (jniName, proxyType, targetType);
+	int unconditionalCount = 0;
+	int trimmableCount = 0;
+	foreach (var (jniName, proxyType, targetType, isUnconditional) in typeMapAttrs) {
+		if (isUnconditional) {
+			AddTypeMapAttributeUnconditional (jniName, proxyType);
+			unconditionalCount++;
+		} else {
+			AddTypeMapAttributeTrimmable (jniName, proxyType, targetType!);
+			trimmableCount++;
+		}
 	}
 	
 	// 8b. Generate TypeMapAssociation attributes for Aliases (needed for trimmer)
@@ -2100,7 +2114,7 @@ internal class TypeMapAssemblyGenerator
 	// GenerateTrimmerTrapMethod ();
 	
 	attrStopwatch.Stop ();
-	_log.LogMessage (MessageImportance.High, $"[GTMA-Gen] Attributes: {attrStopwatch.ElapsedMilliseconds}ms ({typeMapAttrs.Count} type maps, {aliasMappings.Count} aliases)");
+	_log.LogMessage (MessageImportance.High, $"[GTMA-Gen] Attributes: {attrStopwatch.ElapsedMilliseconds}ms ({unconditionalCount} unconditional, {trimmableCount} trimmable, {aliasMappings.Count} aliases)");
 	
 	// 11. Write the PE file
 	var peStopwatch = Stopwatch.StartNew ();
@@ -3263,6 +3277,19 @@ public class {{className}}
         name: _metadata.GetOrAddString (".ctor"),
         signature: _metadata.GetOrAddBlob (typeMapCtorSigBlob));
 
+    // TypeMapAttribute<Java.Lang.Object>..ctor(string, Type) - 2-arg unconditional variant
+    var typeMapCtorSig2ArgBlob = new BlobBuilder ();
+    new BlobEncoder (typeMapCtorSig2ArgBlob).MethodSignature (isInstanceMethod: true)
+        .Parameters (2, returnType => returnType.Void (), parameters => {
+            parameters.AddParameter ().Type ().String ();
+            parameters.AddParameter ().Type ().Type (_typeTypeRef, false);
+        });
+
+    _typeMapAttrCtorRef2Arg = _metadata.AddMemberReference (
+        parent: typeMapSpec,
+        name: _metadata.GetOrAddString (".ctor"),
+        signature: _metadata.GetOrAddBlob (typeMapCtorSig2ArgBlob));
+
 	// TypeMapAssociationAttribute<AliasesUniverse>..ctor(Type, Type)
 	var aliasesTypeMapSpecBlob = new BlobBuilder ();
 	var aliasesSpecEncoder = new BlobEncoder (aliasesTypeMapSpecBlob).TypeSpecificationSignature ();
@@ -4329,9 +4356,10 @@ public class {{className}}
 			value: _metadata.GetOrAddBlob (attrBlob));
 	}
 	
-	void AddTypeMapAttribute (string jniName, string proxyTypeName, string targetTypeName)
+	void AddTypeMapAttributeTrimmable (string jniName, string proxyTypeName, string targetTypeName)
 	{
 		// [assembly: TypeMapAttribute<Java.Lang.Object>(jniName, typeof(proxyType), typeof(targetType))]
+		// Trimmable: proxy preserved only if targetType is used by the app
 		var attrBlob = new BlobBuilder ();
 		attrBlob.WriteUInt16 (1); // Prolog
 		
@@ -4344,6 +4372,24 @@ public class {{className}}
 		_metadata.AddCustomAttribute (
 			parent: EntityHandle.AssemblyDefinition,
 			constructor: _typeMapAttrCtorRef,
+			value: _metadata.GetOrAddBlob (attrBlob));
+	}
+
+	void AddTypeMapAttributeUnconditional (string jniName, string proxyTypeName)
+	{
+		// [assembly: TypeMapAttribute<Java.Lang.Object>(jniName, typeof(proxyType))]
+		// Unconditional: proxy always preserved - used for JCW types (Android may create anytime)
+		var attrBlob = new BlobBuilder ();
+		attrBlob.WriteUInt16 (1); // Prolog
+		
+		attrBlob.WriteSerializedString (jniName);
+		attrBlob.WriteSerializedString (proxyTypeName);
+		
+		attrBlob.WriteUInt16 (0); // Named args count
+		
+		_metadata.AddCustomAttribute (
+			parent: EntityHandle.AssemblyDefinition,
+			constructor: _typeMapAttrCtorRef2Arg,
 			value: _metadata.GetOrAddBlob (attrBlob));
 	}
 

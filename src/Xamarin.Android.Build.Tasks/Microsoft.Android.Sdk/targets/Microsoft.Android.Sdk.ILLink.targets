@@ -19,16 +19,28 @@ This file contains the .NET 5-specific targets to customize ILLink
   -->
   <Target Name="_GenerateTypeMapAssembly"
       Condition=" '$(PublishTrimmed)' == 'true' "
-      AfterTargets="ComputeResolvedFilesToPublishList"
-      BeforeTargets="_PrepareLinking">
+      DependsOnTargets="_ComputeManagedAssemblyToLink"
+      BeforeTargets="_RunILLink">
     <PropertyGroup>
       <_TypeMapAssemblyOutputDir>$(IntermediateOutputPath)typemap\</_TypeMapAssemblyOutputDir>
       <_TypeMapJavaSourceOutputDir>$(_AndroidIntermediateJavaSourceDirectory)</_TypeMapJavaSourceOutputDir>
       <_TypeMapLlvmIrOutputDir>$(IntermediateOutputPath)android\</_TypeMapLlvmIrOutputDir>
     </PropertyGroup>
     
+    <!-- Build list of assemblies to scan: prefer ManagedAssemblyToLink, otherwise collect from intermediate -->
+    <ItemGroup>
+      <_TypeMapInputAssemblies Include="@(ManagedAssemblyToLink)" Condition=" '@(ManagedAssemblyToLink)' != '' " />
+      <!-- Fallback: gather published assemblies from intermediate directory -->
+      <_TypeMapInputAssemblies Include="$(IntermediateOutputPath)*.dll" Condition=" '@(ManagedAssemblyToLink)' == '' " />
+      <_TypeMapInputAssemblies Include="@(ReferencePath)" Condition=" '@(ManagedAssemblyToLink)' == '' and '%(ReferencePath.FileName)' == 'Mono.Android' " />
+    </ItemGroup>
+    
+    <Message Importance="high" Text="[GTMA] ManagedAssemblyToLink count: @(ManagedAssemblyToLink->Count())" />
+    <Message Importance="high" Text="[GTMA] _TypeMapInputAssemblies count: @(_TypeMapInputAssemblies->Count())" />
+    <Message Importance="high" Text="[GTMA] Input assemblies: @(_TypeMapInputAssemblies->'%(FileName)')" Condition=" '@(_TypeMapInputAssemblies->Count())' != '0' " />
+    
     <GenerateTypeMapAssembly
-        ResolvedAssemblies="@(ResolvedFileToPublish)"
+        ResolvedAssemblies="@(_TypeMapInputAssemblies)"
         OutputDirectory="$(_TypeMapAssemblyOutputDir)"
         JavaSourceOutputDirectory="$(_TypeMapJavaSourceOutputDir)"
         LlvmIrOutputDirectory="$(_TypeMapLlvmIrOutputDir)"
@@ -105,10 +117,16 @@ This file contains the .NET 5-specific targets to customize ILLink
       <!-- Custom MarkHandlers that run during MarkStep -->
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="Microsoft.Android.Sdk.ILLink.PreserveSubStepDispatcher" />
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="MonoDroid.Tuner.MarkJavaObjects" />
+      <!-- DISABLED: Replaced by TypeMapAttribute unconditional/trimmable preservation strategy
+           See type-mapping-api-v3-spec.md for details on how preservation is now handled:
+           - JCW types (DoNotGenerateAcw=false) use 2-arg unconditional TypeMapAttribute
+           - MCW types (DoNotGenerateAcw=true) use 3-arg trimmable TypeMapAttribute
+           - Proxy types directly reference activation ctors, string ctors, and interface methods
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="MonoDroid.Tuner.PreserveJavaExceptions" />
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="MonoDroid.Tuner.PreserveApplications" />
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="Microsoft.Android.Sdk.ILLink.PreserveRegistrations" />
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="Microsoft.Android.Sdk.ILLink.PreserveJavaInterfaces" />
+      -->
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="MonoDroid.Tuner.FixAbstractMethodsStep" />
       <!-- Custom steps that run after MarkStep -->
       <_TrimmerCustomSteps
