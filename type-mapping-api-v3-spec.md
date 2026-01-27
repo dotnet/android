@@ -501,6 +501,47 @@ static extern void CallBaseActivationCtor(Activity instance, IntPtr handle, JniH
 
 **Note:** When using base class constructor via `UnsafeAccessor`, derived type field initializers do NOT run. This matches legacy behavior.
 
+### 9.4 JI Constructor Handle Cleanup
+
+For JI-style constructors, the `CreateInstance` method must:
+1. Create `JniObjectReference` from handle: `new JniObjectReference(handle)`
+2. Call the constructor with `JniObjectReferenceOptions.Copy`
+3. After constructor returns, call `JNIEnv.DeleteRef(handle, transfer)` to clean up
+
+```csharp
+// JI-style CreateInstance pattern:
+public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
+{
+    var reference = new JniObjectReference(handle);
+    var result = CreateInstanceUnsafe(ref reference, JniObjectReferenceOptions.Copy);
+    JNIEnv.DeleteRef(handle, transfer);  // Clean up original handle
+    return result;
+}
+```
+
+**Build-time constant reading:** The `JniObjectReferenceOptions.Copy` value should be read from the Java.Interop assembly at build time using `MetadataReader`, not hardcoded. This ensures the generated IL stays in sync if the enum definition ever changes:
+
+```csharp
+// In JavaPeerScanner, when processing Java.Interop assembly:
+void ReadJniObjectReferenceOptionsValues(MetadataReader reader)
+{
+    // Find JniObjectReferenceOptions enum
+    // Read the "Copy" field's constant value
+    // Store for use during IL generation
+}
+```
+
+**Known issue (legacy behavior):** If the constructor throws an exception, the handle leaks. The legacy `LlvmIrTypeMap.CreateProxy` has the same issue. A future improvement could wrap the constructor call in try-finally to ensure cleanup:
+
+```csharp
+// Potential improvement for final implementation:
+try {
+    result = CreateInstanceUnsafe(ref reference, JniObjectReferenceOptions.Copy);
+} finally {
+    JNIEnv.DeleteRef(handle, transfer);
+}
+```
+
 ---
 
 ## 10. Export Attribute Support

@@ -137,7 +137,7 @@ public class GenerateTypeMapAssembly : AndroidTask
 			string assemblyPath = Path.Combine (OutputDirectory, "_Microsoft.Android.TypeMaps.dll");
 
 			var genStopwatch = Stopwatch.StartNew ();
-			var generator = new TypeMapAssemblyGenerator (Log, customViewTypes);
+			var generator = new TypeMapAssemblyGenerator (Log, customViewTypes, scanner.JniObjectReferenceOptionsCopy);
 			var generatedJavaFiles = generator.Generate (assemblyPath, javaPeers, JavaSourceOutputDirectory, LlvmIrOutputDirectory);
 			genStopwatch.Stop ();
 			Log.LogMessage (MessageImportance.High, $"[GTMA] Code generation completed in {genStopwatch.ElapsedMilliseconds}ms");
@@ -184,6 +184,21 @@ public class GenerateTypeMapAssembly : AndroidTask
 }
 
 /// <summary>
+/// The style of activation constructor a type has.
+/// </summary>
+internal enum ActivationConstructorStyle
+{
+	/// <summary>No activation constructor found.</summary>
+	None,
+
+	/// <summary>Xamarin.Android style: (IntPtr handle, JniHandleOwnership transfer)</summary>
+	XI,
+
+	/// <summary>Java.Interop style: (ref JniObjectReference reference, JniObjectReferenceOptions options)</summary>
+	JI,
+}
+
+/// <summary>
 /// Represents a Java peer type found during assembly scanning.
 /// </summary>
 internal class JavaPeerInfo
@@ -221,9 +236,9 @@ internal class JavaPeerInfo
 	public string? BaseAssemblyName { get; set; }
 
 	/// <summary>
-	/// True if the type has an activation constructor (IntPtr, JniHandleOwnership).
+	/// The style of activation constructor this type has (XI, JI, or None).
 	/// </summary>
-	public bool HasActivationConstructor { get; set; }
+	public ActivationConstructorStyle ActivationConstructorStyle { get; set; }
 
 	/// <summary>
 	/// If this type doesn't have its own activation constructor, this contains
@@ -402,6 +417,12 @@ internal class JavaPeerScanner
 	// Cache of whether assembly references Mono.Android
 	readonly ConcurrentDictionary<string, bool> _referencesMonoAndroidCache = new ();
 
+	/// <summary>
+	/// JniObjectReferenceOptions.Copy enum value read from Java.Interop assembly.
+	/// This ensures we don't hardcode values that could change.
+	/// </summary>
+	public int JniObjectReferenceOptionsCopy { get; private set; } = 1;
+
 	public JavaPeerScanner (TaskLoggingHelper log, bool errorOnCustomJavaObject)
 	{
 		_log = log;
@@ -560,7 +581,7 @@ internal class JavaPeerScanner
 		}
 
 		foreach (var peer in results) {
-			if (peer.HasActivationConstructor)
+			if (peer.ActivationConstructorStyle != ActivationConstructorStyle.None)
 				continue; // Already has its own ctor
 			if (peer.IsInterface)
 				continue; // Interfaces use invokers
@@ -573,7 +594,7 @@ internal class JavaPeerScanner
 			
 			while (currentBase is not null) {
 				if (typesByName.TryGetValue (currentBase, out var basePeer)) {
-					if (basePeer.HasActivationConstructor) {
+					if (basePeer.ActivationConstructorStyle != ActivationConstructorStyle.None) {
 						peer.ActivationCtorBaseTypeName = basePeer.ManagedTypeName;
 						peer.ActivationCtorBaseAssemblyName = basePeer.AssemblyName;
 						_log.LogMessage (MessageImportance.High, $"    {peer.ManagedTypeName}: will use base ctor from {basePeer.ManagedTypeName}");
@@ -630,6 +651,11 @@ internal class JavaPeerScanner
 			return results;
 		}
 
+		// Read JniObjectReferenceOptions.Copy value from Java.Interop assembly
+		if (assemblyName == "Java.Interop") {
+			ReadJniObjectReferenceOptionsValues (metadataReader);
+		}
+
 		foreach (var typeDefHandle in metadataReader.TypeDefinitions) {
 			var typeDef = metadataReader.GetTypeDefinition (typeDefHandle);
 			
@@ -684,8 +710,8 @@ internal class JavaPeerScanner
 			}
 		}
 
-		// Check for activation constructor: (IntPtr, JniHandleOwnership)
-		bool hasActivationCtor = HasActivationConstructor (reader, typeDef);
+		// Check for activation constructor: XI style or JI style
+		var activationCtorStyle = GetActivationConstructorStyle (reader, typeDef);
 
 		// Collect marshal methods and implemented interfaces
 		var (marshalMethods, implementedInterfaces) = CollectMarshalMethodsAndInterfaces (reader, typeDef);
@@ -702,7 +728,7 @@ internal class JavaPeerScanner
 			InvokerAssemblyName = invokerAssemblyName,
 			BaseManagedTypeName = baseTypeName,
 			BaseAssemblyName = baseAssemblyName,
-			HasActivationConstructor = hasActivationCtor,
+			ActivationConstructorStyle = activationCtorStyle,
 			MarshalMethods = marshalMethods,
 			ImplementedJavaInterfaces = implementedInterfaces,
 			AssociatedTypes = associatedTypes,
@@ -759,7 +785,7 @@ internal class JavaPeerScanner
 		}
 
 		// Check for activation constructor
-		bool hasActivationCtor = HasActivationConstructor (reader, typeDef);
+		var activationCtorStyle = GetActivationConstructorStyle (reader, typeDef);
 
 		// Collect marshal methods and implemented interfaces
 		var (marshalMethods, implementedInterfaces) = CollectMarshalMethodsAndInterfaces (reader, typeDef);
@@ -776,7 +802,7 @@ internal class JavaPeerScanner
 			InvokerAssemblyName = invokerAssemblyName,
 			BaseManagedTypeName = baseTypeName,
 			BaseAssemblyName = baseAssemblyName,
-			HasActivationConstructor = hasActivationCtor,
+			ActivationConstructorStyle = activationCtorStyle,
 			MarshalMethods = marshalMethods,
 			ImplementedJavaInterfaces = implementedInterfaces,
 			AssociatedTypes = associatedTypes,
@@ -1197,6 +1223,46 @@ internal class JavaPeerScanner
 	}
 
 	/// <summary>
+	/// Reads JniObjectReferenceOptions enum values from Java.Interop assembly.
+	/// This ensures we don't hardcode enum values that could change.
+	/// </summary>
+	void ReadJniObjectReferenceOptionsValues (MetadataReader reader)
+	{
+		foreach (var typeDefHandle in reader.TypeDefinitions) {
+			var typeDef = reader.GetTypeDefinition (typeDefHandle);
+			string ns = reader.GetString (typeDef.Namespace);
+			string name = reader.GetString (typeDef.Name);
+			
+			if (ns != "Java.Interop" || name != "JniObjectReferenceOptions")
+				continue;
+			
+			// Found the enum - read its fields
+			foreach (var fieldHandle in typeDef.GetFields ()) {
+				var field = reader.GetFieldDefinition (fieldHandle);
+				string fieldName = reader.GetString (field.Name);
+				
+				// Skip special enum fields (value__)
+				if (fieldName == "value__")
+					continue;
+				
+				// Read the constant value
+				if (!field.GetDefaultValue ().IsNil) {
+					var constantHandle = field.GetDefaultValue ();
+					var constant = reader.GetConstant (constantHandle);
+					var blobReader = reader.GetBlobReader (constant.Value);
+					int value = blobReader.ReadInt32 ();
+					
+					if (fieldName == "Copy") {
+						JniObjectReferenceOptionsCopy = value;
+						_log.LogDebugMessage ($"Read JniObjectReferenceOptions.Copy = {value} from Java.Interop assembly");
+						return;
+					}
+				}
+			}
+		}
+	}
+
+	/// <summary>
 	/// Gets or builds a cache of type name -> TypeDefinitionHandle for fast lookups.
 	/// </summary>
 	Dictionary<string, TypeDefinitionHandle> GetTypeDefinitionCache (MetadataReader reader)
@@ -1219,9 +1285,11 @@ internal class JavaPeerScanner
 	}
 
 	/// <summary>
-	/// Checks if the type has an activation constructor: (IntPtr, JniHandleOwnership)
+	/// Checks if the type has an activation constructor and returns its style.
+	/// XI style: (IntPtr handle, JniHandleOwnership transfer)
+	/// JI style: (ref JniObjectReference reference, JniObjectReferenceOptions options)
 	/// </summary>
-	bool HasActivationConstructor (MetadataReader reader, TypeDefinition typeDef)
+	ActivationConstructorStyle GetActivationConstructorStyle (MetadataReader reader, TypeDefinition typeDef)
 	{
 		foreach (var methodHandle in typeDef.GetMethods ()) {
 			var method = reader.GetMethodDefinition (methodHandle);
@@ -1230,7 +1298,7 @@ internal class JavaPeerScanner
 			if (methodName != ".ctor")
 				continue;
 
-			// Check parameters: (IntPtr, JniHandleOwnership)
+			// Check parameters
 			var signature = method.DecodeSignature (new SignatureTypeProvider (reader), genericContext: null);
 			if (signature.ParameterTypes.Length != 2)
 				continue;
@@ -1238,11 +1306,19 @@ internal class JavaPeerScanner
 			var p0 = signature.ParameterTypes[0];
 			var p1 = signature.ParameterTypes[1];
 
+			// XI style: (IntPtr, JniHandleOwnership)
 			if (p0 == "System.IntPtr" && p1 == "Android.Runtime.JniHandleOwnership") {
-				return true;
+				return ActivationConstructorStyle.XI;
+			}
+
+			// JI style: (ref JniObjectReference, JniObjectReferenceOptions)
+			// Note: "ref" parameters are represented with "&" suffix in the type name
+			if ((p0 == "Java.Interop.JniObjectReference&" || p0 == "Java.Interop.JniObjectReference") &&
+			    p1 == "Java.Interop.JniObjectReferenceOptions") {
+				return ActivationConstructorStyle.JI;
 			}
 		}
-		return false;
+		return ActivationConstructorStyle.None;
 	}
 
 	/// <summary>
@@ -2089,6 +2165,8 @@ internal class TypeMapAssemblyGenerator
 	TypeReferenceHandle _javaPeerProxyTypeRef;
 	TypeReferenceHandle _iJavaPeerableTypeRef;
 	TypeReferenceHandle _jniHandleOwnershipTypeRef;
+	TypeReferenceHandle _jniObjectReferenceTypeRef;
+	TypeReferenceHandle _jniObjectReferenceOptionsTypeRef;
 	TypeReferenceHandle _typeMapAttrTypeRef;
 	TypeReferenceHandle _typeMapAssocAttrTypeRef;
 	TypeReferenceHandle _typeMapAsmTargetAttrTypeRef;
@@ -2122,6 +2200,11 @@ internal class TypeMapAssemblyGenerator
 	MemberReferenceHandle _throwableFromExceptionRef;
 	MemberReferenceHandle _notSupportedExceptionCtorRef;
 	MemberReferenceHandle _getUninitializedObjectRef;
+	MemberReferenceHandle _jniEnvDeleteRefRef;
+	MemberReferenceHandle _jniObjectReferenceCtorRef;
+
+	// JI constructor constants (read from Java.Interop assembly at build time)
+	readonly int _jniObjectReferenceOptionsCopy;
 
 	// Signature blobs (cached)
 	BlobHandle _voidMethodSig;
@@ -2139,10 +2222,11 @@ internal class TypeMapAssemblyGenerator
 	// Custom view types from layout XML that should be preserved unconditionally
 	readonly HashSet<string> _customViewTypes;
 	
-	public TypeMapAssemblyGenerator (TaskLoggingHelper log, HashSet<string>? customViewTypes = null)
+	public TypeMapAssemblyGenerator (TaskLoggingHelper log, HashSet<string>? customViewTypes = null, int jniObjectReferenceOptionsCopy = 1)
 	{
 	_log = log;
 	_customViewTypes = customViewTypes ?? new HashSet<string> (StringComparer.Ordinal);
+	_jniObjectReferenceOptionsCopy = jniObjectReferenceOptionsCopy;
 	_metadata = new MetadataBuilder ();
 	_ilStream = new BlobBuilder ();
 	_methodBodyStream = new MethodBodyStreamEncoder (_ilStream);
@@ -3286,6 +3370,17 @@ public class {{className}}
 	resolutionScope: _monoAndroidRef,
 	@namespace: _metadata.GetOrAddString ("Android.Runtime"),
 	name: _metadata.GetOrAddString ("JniHandleOwnership"));
+
+	// Java.Interop JI-style constructor types
+	_jniObjectReferenceTypeRef = _metadata.AddTypeReference (
+	resolutionScope: _javaInteropRef,
+	@namespace: _metadata.GetOrAddString ("Java.Interop"),
+	name: _metadata.GetOrAddString ("JniObjectReference"));
+
+	_jniObjectReferenceOptionsTypeRef = _metadata.AddTypeReference (
+	resolutionScope: _javaInteropRef,
+	@namespace: _metadata.GetOrAddString ("Java.Interop"),
+	name: _metadata.GetOrAddString ("JniObjectReferenceOptions"));
 	
 	_javaLangObjectTypeRef = _metadata.AddTypeReference (
 	resolutionScope: _monoAndroidRef,
@@ -3602,6 +3697,39 @@ public class {{className}}
 		parent: _runtimeHelpersTypeRef,
 		name: _metadata.GetOrAddString ("GetUninitializedObject"),
 		signature: _metadata.GetOrAddBlob (getUninitSigBlob));
+
+	// JniObjectReference..ctor(IntPtr) - constructor for creating JniObjectReference from handle
+	var jniObjRefCtorSigBlob = new BlobBuilder ();
+	new BlobEncoder (jniObjRefCtorSigBlob)
+		.MethodSignature (isInstanceMethod: true)
+		.Parameters (1,
+			returnType => returnType.Void (),
+			parameters => parameters.AddParameter ().Type ().IntPtr ());
+	_jniObjectReferenceCtorRef = _metadata.AddMemberReference (
+		parent: _jniObjectReferenceTypeRef,
+		name: _metadata.GetOrAddString (".ctor"),
+		signature: _metadata.GetOrAddBlob (jniObjRefCtorSigBlob));
+
+	// JNIEnv type reference
+	var jniEnvTypeRef = _metadata.AddTypeReference (
+		resolutionScope: _monoAndroidRef,
+		@namespace: _metadata.GetOrAddString ("Android.Runtime"),
+		name: _metadata.GetOrAddString ("JNIEnv"));
+
+	// JNIEnv.DeleteRef(IntPtr, JniHandleOwnership) -> void
+	var deleteRefSigBlob = new BlobBuilder ();
+	new BlobEncoder (deleteRefSigBlob)
+		.MethodSignature (isInstanceMethod: false)
+		.Parameters (2,
+			returnType => returnType.Void (),
+			parameters => {
+				parameters.AddParameter ().Type ().IntPtr ();
+				parameters.AddParameter ().Type ().Type (_jniHandleOwnershipTypeRef, isValueType: true);
+			});
+	_jniEnvDeleteRefRef = _metadata.AddMemberReference (
+		parent: jniEnvTypeRef,
+		name: _metadata.GetOrAddString ("DeleteRef"),
+		signature: _metadata.GetOrAddBlob (deleteRefSigBlob));
 	}
 
 	void CreateSignatureBlobs ()
@@ -3713,7 +3841,7 @@ public class {{className}}
 
 		// 4. UnsafeAccessor static method for calling protected constructor
 		MethodDefinitionHandle? unsafeAccessorMethodDef = null;
-		if (peer.HasActivationConstructor) {
+		if (peer.ActivationConstructorStyle != ActivationConstructorStyle.None) {
 			unsafeAccessorMethodDef = GenerateUnsafeAccessorMethod (peer, targetTypeRef);
 		}
 
@@ -3974,7 +4102,7 @@ public class {{className}}
 	bool HasActivationPath (JavaPeerInfo peer)
 	{
 		// Type has its own activation constructor
-		if (peer.HasActivationConstructor)
+		if (peer.ActivationConstructorStyle != ActivationConstructorStyle.None)
 			return true;
 		
 		// Type has a base class with activation constructor
@@ -4185,19 +4313,40 @@ public class {{className}}
 	/// <summary>
 	/// Generates a static method with [UnsafeAccessor(UnsafeAccessorKind.Constructor)] attribute
 	/// that can call the protected activation constructor.
+	/// Supports both XI style (IntPtr, JniHandleOwnership) and JI style (ref JniObjectReference, JniObjectReferenceOptions).
 	/// </summary>
 	MethodDefinitionHandle GenerateUnsafeAccessorMethod (JavaPeerInfo peer, TypeReferenceHandle targetTypeRef)
 	{
-		// Method signature: static extern TargetType CreateInstanceUnsafe(IntPtr handle, JniHandleOwnership transfer)
+		// Method signature depends on constructor style
 		var sigBlob = new BlobBuilder ();
-		new BlobEncoder (sigBlob)
-			.MethodSignature (isInstanceMethod: false)
-			.Parameters (2,
-				returnType => returnType.Type ().Type (targetTypeRef, isValueType: false),
-				parameters => {
-					parameters.AddParameter ().Type ().IntPtr ();
-					parameters.AddParameter ().Type ().Type (_jniHandleOwnershipTypeRef, isValueType: true);
-				});
+		string param1Name, param2Name;
+
+		if (peer.ActivationConstructorStyle == ActivationConstructorStyle.JI) {
+			// JI style: static extern TargetType CreateInstanceUnsafe(ref JniObjectReference reference, JniObjectReferenceOptions options)
+			new BlobEncoder (sigBlob)
+				.MethodSignature (isInstanceMethod: false)
+				.Parameters (2,
+					returnType => returnType.Type ().Type (targetTypeRef, isValueType: false),
+					parameters => {
+						// ref JniObjectReference - byref value type
+						parameters.AddParameter ().Type ().Type (_jniObjectReferenceTypeRef, isValueType: true);
+						parameters.AddParameter ().Type ().Type (_jniObjectReferenceOptionsTypeRef, isValueType: true);
+					});
+			param1Name = "reference";
+			param2Name = "options";
+		} else {
+			// XI style: static extern TargetType CreateInstanceUnsafe(IntPtr handle, JniHandleOwnership transfer)
+			new BlobEncoder (sigBlob)
+				.MethodSignature (isInstanceMethod: false)
+				.Parameters (2,
+					returnType => returnType.Type ().Type (targetTypeRef, isValueType: false),
+					parameters => {
+						parameters.AddParameter ().Type ().IntPtr ();
+						parameters.AddParameter ().Type ().Type (_jniHandleOwnershipTypeRef, isValueType: true);
+					});
+			param1Name = "handle";
+			param2Name = "transfer";
+		}
 
 		// UnsafeAccessor methods have no body - the runtime fills it in at JIT time
 		var methodDef = _metadata.AddMethodDefinition (
@@ -4211,13 +4360,13 @@ public class {{className}}
 		// Add parameter definitions
 		_metadata.AddParameter (
 			attributes: ParameterAttributes.None,
-			name: _metadata.GetOrAddString ("handle"),
+			name: _metadata.GetOrAddString (param1Name),
 			sequenceNumber: 1);
 		_nextParamDefRowId++;
 
 		_metadata.AddParameter (
 			attributes: ParameterAttributes.None,
-			name: _metadata.GetOrAddString ("transfer"),
+			name: _metadata.GetOrAddString (param2Name),
 			sequenceNumber: 2);
 		_nextParamDefRowId++;
 		_nextMethodDefRowId++;
@@ -4369,8 +4518,8 @@ public class {{className}}
 		var codeBuilder = new BlobBuilder ();
 		var encoder = new InstructionEncoder (codeBuilder);
 
-		if (peer.HasActivationConstructor && unsafeAccessorMethod.HasValue) {
-			// Generate: return CreateInstanceUnsafe(handle, transfer);
+		if (peer.ActivationConstructorStyle == ActivationConstructorStyle.XI && unsafeAccessorMethod.HasValue) {
+			// XI style: Generate: return CreateInstanceUnsafe(handle, transfer);
 			// The UnsafeAccessor method handles calling the protected constructor
 			
 			// ldarg.1 (handle)
@@ -4381,6 +4530,47 @@ public class {{className}}
 			encoder.Call (unsafeAccessorMethod.Value);
 			// ret
 			encoder.OpCode (ILOpCode.Ret);
+		} else if (peer.ActivationConstructorStyle == ActivationConstructorStyle.JI && unsafeAccessorMethod.HasValue) {
+			// JI style: Create JniObjectReference from handle, call constructor with Copy option,
+			// then clean up the original handle via JNIEnv.DeleteRef.
+			//
+			// Generated IL equivalent (matches LlvmIrTypeMap.CreateProxy pattern):
+			//   var reference = new JniObjectReference(handle);
+			//   var result = CreateInstanceUnsafe(ref reference, JniObjectReferenceOptions.Copy);
+			//   JNIEnv.DeleteRef(handle, transfer);
+			//   return result;
+			
+			// We need locals: JniObjectReference (slot 0), IJavaPeerable result (slot 1)
+			var localsSigBlob = new BlobBuilder ();
+			var localsEncoder = new BlobEncoder (localsSigBlob).LocalVariableSignature (2);
+			localsEncoder.AddVariable ().Type ().Type (_jniObjectReferenceTypeRef, isValueType: true);
+			localsEncoder.AddVariable ().Type ().Type (_iJavaPeerableTypeRef, isValueType: false);
+			var localsSig = _metadata.AddStandaloneSignature (_metadata.GetOrAddBlob (localsSigBlob));
+			
+			// var reference = new JniObjectReference(handle);
+			encoder.OpCode (ILOpCode.Ldloca_s);
+			encoder.CodeBuilder.WriteByte (0);  // address of local 0
+			encoder.OpCode (ILOpCode.Ldarg_1);  // handle
+			encoder.Call (_jniObjectReferenceCtorRef);
+			
+			// var result = CreateInstanceUnsafe(ref reference, JniObjectReferenceOptions.Copy);
+			encoder.OpCode (ILOpCode.Ldloca_s);
+			encoder.CodeBuilder.WriteByte (0);  // ref to local 0
+			encoder.LoadConstantI4 (_jniObjectReferenceOptionsCopy);  // JniObjectReferenceOptions.Copy (read from assembly)
+			encoder.Call (unsafeAccessorMethod.Value);
+			encoder.StoreLocal (1);  // stloc.1 (result)
+			
+			// JNIEnv.DeleteRef(handle, transfer);
+			encoder.OpCode (ILOpCode.Ldarg_1);  // handle
+			encoder.OpCode (ILOpCode.Ldarg_2);  // transfer
+			encoder.Call (_jniEnvDeleteRefRef);
+			
+			// return result;
+			encoder.LoadLocal (1);  // ldloc.1
+			encoder.OpCode (ILOpCode.Ret);
+			
+			// Return with locals
+			return _methodBodyStream.AddMethodBody (encoder, maxStack: 8, localVariablesSignature: localsSig);
 		} else if (!string.IsNullOrEmpty (peer.ActivationCtorBaseTypeName)) {
 			// Type doesn't have its own activation ctor, but a base class does.
 			// Use GetUninitializedObject + call base ctor pattern:
