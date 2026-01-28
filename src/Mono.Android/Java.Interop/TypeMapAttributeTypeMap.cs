@@ -28,15 +28,7 @@ namespace Android.Runtime
 
 		public TypeMapAttributeTypeMap ()
 		{
-			WorkaroundForTheTimeBeing ();
 			_externalTypeMap = TypeMapping.GetOrCreateExternalTypeMapping<Java.Lang.Object> ();
-
-			static void WorkaroundForTheTimeBeing ()
-			{
-				var typeMappingEntryAssembly = AppContext.GetData ("System.Runtime.InteropServices.TypeMappingEntryAssembly");
-				var asm = System.Reflection.Assembly.Load (typeMappingEntryAssembly);
-				Assembly.SetExecutingAssembly (asm);
-			}
 		}
 
 		/// <inheritdoc/>
