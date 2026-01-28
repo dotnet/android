@@ -60,7 +60,7 @@ namespace Android.AppTests
 		}
 	}
 
-#if ANDROID_30
+#if __ANDROID_30__
 	[Application (Debuggable=true)]
 #endif
 	public class App : Application {
