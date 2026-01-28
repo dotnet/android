@@ -487,23 +487,30 @@ foreach (var ctor in type.GetActivationConstructors())
 4. If no ctor found → emit build error
 ```
 
-### 9.3 UnsafeAccessor for Protected Constructors
+### 9.3 IgnoresAccessChecksTo for Protected Constructors
 
-When the activation constructor is protected or in a base class:
+When the activation constructor is protected or in a base class, the TypeMaps assembly uses `IgnoresAccessChecksToAttribute` to bypass access checks:
 
 ```csharp
+// Assembly-level attribute enables access to Mono.Android internals
+[assembly: IgnoresAccessChecksTo("Mono.Android")]
+
+// Direct newobj call works despite protected constructor
 public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
 {
-    var instance = (MyActivity)RuntimeHelpers.GetUninitializedObject(typeof(MyActivity));
-    CallBaseActivationCtor((Activity)instance, handle, transfer);
-    return instance;
+    return new Activity(handle, transfer);  // Direct call, not UnsafeAccessor
 }
-
-[UnsafeAccessor(UnsafeAccessorKind.Method, Name = ".ctor")]
-static extern void CallBaseActivationCtor(Activity instance, IntPtr handle, JniHandleOwnership transfer);
 ```
 
-**Note:** When using base class constructor via `UnsafeAccessor`, derived type field initializers do NOT run. This matches legacy behavior.
+**IL generated**:
+```il
+ldarg.1          // handle
+ldarg.2          // transfer
+newobj instance void [Mono.Android]Android.App.Activity::.ctor(native int, valuetype JniHandleOwnership)
+ret
+```
+
+**Note:** When using base class constructor, derived type field initializers do NOT run. This matches legacy behavior. See Section 20.6 for full details on IgnoresAccessChecksTo.
 
 ### 9.4 JI Constructor Handle Cleanup
 
@@ -1737,7 +1744,7 @@ See section 15.3 "Post-Trimming Filtering" for details.
 
 ### 17.2 Constructor Handling
 
-- [ ] UnsafeAccessor for protected/base constructors
+- [x] IgnoresAccessChecksTo for protected/base constructors (replaced UnsafeAccessor)
 - [ ] XI + JI constructor support
 - [ ] Constructor search up hierarchy
 
@@ -1944,6 +1951,28 @@ Decision logic:
 - Faster codegen and smaller binaries
 - Runtime only checks for callbacks on types that actually have them
 
+### A.11 Callback Type Resolution for Base Class Methods
+
+**Original Design:** The spec mentioned walking up the base class chain to find `[Register]` attributes but didn't specify how to determine the callback type.
+
+**What Happened:** The `[Register]` connector string for methods in the same class doesn't include type information:
+```
+GetOnCreate_Landroid_os_Bundle_Handler    // No ":Type, Assembly" suffix
+```
+
+When `ParseConnectorType()` returned `(null, null)`, the code fell back to the user type (`MainActivity`) instead of the base type (`Activity`) where the callback is defined.
+
+**Resolution:** When finding a Register attribute during base class chain walk, use that base class as the callback type:
+```csharp
+var (callbackTypeName, callbackAssemblyName) = ParseConnectorType(connector);
+if (callbackTypeName == null) {
+    callbackTypeName = baseTypeName;
+    callbackAssemblyName = baseAssemblyName;
+}
+```
+
+**Impact:** Critical fix - without this, UnsafeAccessor targets the wrong type, causing `MissingMethodException` at runtime.
+
 ---
 
 ## 19. Toolchain Requirements
@@ -1995,5 +2024,224 @@ The .NET SDK's `Microsoft.NET.ILLink.targets` automatically adds the flag:
 
 ---
 
-*Document version: 1.1*
-*Last updated: 2026-01-27*
+## 20. Open Issues and TODOs
+
+### 20.1 Array Type Handling
+
+**Status**: Needs Investigation
+
+The legacy native typemap includes entries for Java array types:
+
+| JNI Signature | Java Type | .NET Equivalent |
+|---------------|-----------|-----------------|
+| `[B` | byte[] | byte[] |
+| `[C` | char[] | char[] |
+| `[D` | double[] | double[] |
+| `[F` | float[] | float[] |
+| `[I` | int[] | int[] |
+| `[J` | long[] | long[] |
+| `[S` | short[] | short[] |
+| `[Z` | boolean[] | bool[] |
+| `[Ljava/lang/Object;` | Object[] | Java.Lang.Object[] |
+
+The new TypeMapAttribute system **does not currently include array types**.
+
+**Questions to Investigate**:
+
+1. When are array typemap entries used in the legacy system?
+2. Does `JNIEnv.GetObjectClass()` on array instances need typemap lookup?
+3. Are arrays handled through explicit JNI array APIs that bypass the typemap?
+4. Do JNI callbacks with array parameters require array type entries?
+5. What happens if exception handling encounters array types?
+
+**Current Hypothesis**: Array handling may work without typemap entries because:
+- Primitive arrays are marshaled through explicit JNI array APIs (`GetByteArrayElements`, etc.)
+- Type compatibility uses `IsAssignableFrom` on the Java side
+- Object arrays use `GetObjectArrayElement` which returns individual objects
+
+**Action Items**:
+- [ ] Test app with array parameters in JNI callbacks
+- [ ] Review `AndroidValueManager` for array-specific handling
+- [ ] Verify exception handling with array types in stack traces
+- [ ] Determine if TypeMapAttribute needs array type support
+
+### 20.2 ILLink UnsafeAccessor Constructor Marking
+
+**Status**: Known limitation, workaround available
+
+ILLink marks **all constructors** when it sees `[UnsafeAccessor(UnsafeAccessorKind.Constructor)]`, regardless of signature matching. This is intentional per ILLink design (Cecil resolution limitations).
+
+**Workaround**: Use `ldftn + calli` instead of UnsafeAccessor for constructor calls:
+```il
+ldtoken TargetType
+call Type.GetTypeFromHandle
+call RuntimeHelpers.GetUninitializedObject
+castclass TargetType
+dup
+ldarg.1  ; handle
+ldarg.2  ; transfer
+ldftn instance void TargetType::.ctor(IntPtr, JniHandleOwnership)
+calli instance void(IntPtr, JniHandleOwnership)
+ret
+```
+
+**Limitation**: `ldftn + calli` cannot bypass access checks at runtime. Protected constructors fail with `MethodAccessException`. 
+
+**Solution**: Use `IgnoresAccessChecksToAttribute` (see Section 20.6).
+
+**Result with UnsafeAccessor**: 54 types preserved
+**Result with ldftn+calli + IgnoresAccessChecksTo**: 26 types preserved (better than legacy's 37)
+
+**Future**: Consider filing an issue with dotnet/runtime to add signature matching to `ProcessConstructorAccessor` in ILLink.
+
+### 20.3 Callback Type Resolution for Inherited Methods
+
+**Status**: Fixed
+
+When a user type overrides a method from a base class (e.g., `MainActivity` overrides `Activity.OnCreate`), the `n_*` callback method is defined in the **base class**, not the user class.
+
+**Bug Found**: The `[Register]` connector string for methods in the same class does not include type information:
+```
+GetOnCreate_Landroid_os_Bundle_Handler    // No ":Type, Assembly" suffix
+```
+
+When walking up the base class chain and finding this connector, `ParseConnectorType()` returned `(null, null)`, causing the code to fall back to the user type (`MainActivity`) instead of the base type (`Activity`).
+
+**Fix**: When a Register attribute is found in a base class during hierarchy walk, use that base class as the callback type:
+```csharp
+var (callbackTypeName, callbackAssemblyName) = ParseConnectorType(connector);
+// If connector doesn't specify type, the callback is in the base type where we found it
+if (callbackTypeName == null) {
+    callbackTypeName = baseTypeName;
+    callbackAssemblyName = baseAssemblyName;
+}
+```
+
+**Impact**: Critical fix - callbacks would fail to resolve without this.
+
+### 20.4 Shared Callback Wrappers (Future Optimization)
+
+**Status**: Proposed, not implemented
+
+**Observation**: Multiple user types overriding the same base class method (e.g., `Activity.OnCreate`) all need the same callback wrapper. Currently we generate a separate wrapper for each user type.
+
+**Current approach**:
+```
+MainActivity_Proxy.n_onCreate_mm_0 → calls Activity.n_OnCreate_Landroid_os_Bundle_
+MyOtherActivity_Proxy.n_onCreate_mm_0 → calls Activity.n_OnCreate_Landroid_os_Bundle_
+```
+
+**Proposed optimization**:
+```
+Activity_Proxy.n_onCreate_mm_0 → calls Activity.n_OnCreate_Landroid_os_Bundle_
+MainActivity, MyOtherActivity both reference Activity_Proxy.n_onCreate_mm_0
+```
+
+**Why this works**:
+- The `n_*` callbacks are static methods that take `(jnienv, native_this, ...)`
+- They use `GetObject<T>(native_this)` to get the managed instance
+- They call the virtual instance method which dispatches to the correct override
+- Virtual dispatch ensures the right user code runs regardless of which proxy hosts the wrapper
+
+**Benefits**:
+- Reduces code duplication - one callback wrapper per base class method
+- Smaller TypeMaps assembly
+- Better for trimming - fewer methods to analyze
+
+**Implementation approaches**:
+1. Generate UCO wrappers only for the declaring type (where the virtual method is first defined)
+2. Derived proxy's `GetFunctionPointer` delegates to base proxy for inherited methods
+3. Or: Native code references base class proxy directly
+
+**Technical challenges**:
+- Currently `GetFunctionPointer(int methodIndex)` uses indices 0, 1, 2... per proxy class
+- Native LLVM IR needs to know which proxy has the wrapper and what method index
+- Consistent method indices across hierarchy or delegation pattern needed
+
+### 20.5 UnsafeAccessor for Static Method Callbacks
+
+**Status**: Resolved - replaced with IgnoresAccessChecksTo
+
+**Original Problem**: UCO wrappers need to call the `n_*` static callback methods defined in MCW base classes (e.g., `Activity.n_OnCreate_Landroid_os_Bundle_`). These methods may be `private` or `internal`, requiring access bypass from the TypeMaps assembly.
+
+**Original approach**: `[UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]` - but this had issues with ILLink marking and runtime resolution.
+
+**Solution**: Use `IgnoresAccessChecksToAttribute` instead (see Section 20.6).
+
+### 20.6 IgnoresAccessChecksTo for Cross-Assembly Access
+
+**Status**: Implemented and working
+
+**Problem**: The TypeMaps assembly needs to:
+1. Call protected constructors (XI-style: `(IntPtr, JniHandleOwnership)`)
+2. Call private/internal `n_*` callback methods in Mono.Android
+
+Both `ldftn + calli` and direct `call`/`newobj` fail with `MethodAccessException` because the TypeMaps assembly cannot access protected/internal members of other assemblies.
+
+**Solution**: Use `IgnoresAccessChecksToAttribute` - a CLR-recognized attribute that allows an assembly to bypass access checks when calling into another assembly.
+
+**Implementation**:
+```csharp
+// Defined in TypeMaps assembly (not in BCL, but recognized by CLR)
+namespace System.Runtime.CompilerServices
+{
+    [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+    internal sealed class IgnoresAccessChecksToAttribute : Attribute
+    {
+        public IgnoresAccessChecksToAttribute(string assemblyName) 
+        { 
+            AssemblyName = assemblyName; 
+        }
+        public string AssemblyName { get; }
+    }
+}
+
+// Applied at assembly level
+[assembly: IgnoresAccessChecksTo("Mono.Android")]
+[assembly: IgnoresAccessChecksTo("Java.Interop")]
+```
+
+**Generated IL for callbacks** (direct call, no UnsafeAccessor):
+```il
+// Callback wrapper for n_OnCreate
+.method public hidebysig static void 
+    n_OnCreate_mm_0(native int jnienv, native int native__this, native int bundle) 
+    cil managed
+{
+    ldarg.0          // jnienv
+    ldarg.1          // native__this
+    ldarg.2          // bundle
+    call void [Mono.Android]Android.App.Activity::n_OnCreate_Landroid_os_Bundle_(
+        native int, native int, native int)
+    ret
+}
+```
+
+**Generated IL for constructors** (direct newobj):
+```il
+.method public hidebysig static object 
+    CreateInstance(native int handle, valuetype JniHandleOwnership transfer) 
+    cil managed
+{
+    ldarg.0          // handle
+    ldarg.1          // transfer
+    newobj instance void [Mono.Android]Android.App.Activity::.ctor(
+        native int, valuetype JniHandleOwnership)
+    ret
+}
+```
+
+**Critical ordering requirement**: `DefineIgnoresAccessChecksToAttribute()` must be called AFTER `AddTypeReferences()` to ensure `_attributeUsageTypeRef` and `_attributeTargetsTypeRef` are initialized. Calling it before causes TypeReference row 0 (invalid) to be used in the `[AttributeUsage]` custom attribute, which crashes ILLink with IL1012.
+
+**Advantages over UnsafeAccessor**:
+1. **Better trimming**: ILLink doesn't mark extra types/constructors
+2. **Simpler IL**: Direct `call`/`newobj` instead of accessor methods
+3. **Runtime compatible**: Works with CoreCLR on Android
+4. **No signature matching issues**: Direct calls use exact signatures
+
+**Result**: 26 types preserved (vs 54 with UnsafeAccessor, vs 37 legacy)
+
+---
+
+*Document version: 1.4*
+*Last updated: 2026-01-28*
