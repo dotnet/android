@@ -589,6 +589,9 @@ public class Foo {{
 			yield return new object[] { "8.8.0", "8.10.2" };
 			// AGP 8.9.0 with Gradle 8.11 (minimum required for AGP 8.9)
 			yield return new object[] { "8.9.0", "8.11.1" };
+			// AGP 9.0.0 with Gradle 9.1 (minimum required for AGP 9.0)
+			// This tests the Gradle 9.x stricter Kotlin type checking fix
+			yield return new object[] { "9.0.0", "9.1" };
 		}
 
 		/// <summary>
