@@ -2,6 +2,7 @@ using Microsoft.Build.Framework;
 using NUnit.Framework;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
@@ -9,6 +10,7 @@ namespace Xamarin.Android.Build.Tests
 	[TestFixture]
 	public class CopyResourceTests
 	{
+		static readonly Assembly ExecutingAssembly = typeof (CopyResource).Assembly;
 		string tempFile;
 		List<BuildErrorEventArgs> errors;
 		List<BuildMessageEventArgs> messages;
@@ -34,6 +36,29 @@ namespace Xamarin.Android.Build.Tests
 			new object[] { "machine.config" },
 			new object[] { "MonoRuntimeProvider.Bundled.java" },
 		};
+
+		/// <summary>
+		/// Verifies that net.android.init.gradle.kts uses Kotlin's safe call pattern
+		/// to handle nullable String? return from projectProperties map access.
+		/// This is required for compatibility with Gradle 9.x which has stricter
+		/// Kotlin type checking where file() requires non-nullable Any parameter.
+		/// See: https://github.com/dotnet/android/issues/9818
+		/// </summary>
+		[Test]
+		public void NetAndroidInitGradleKts_UsesNullSafePattern ()
+		{
+			const string resourceName = "net.android.init.gradle.kts";
+			using (var stream = ExecutingAssembly.GetManifestResourceStream (resourceName))
+			using (var reader = new StreamReader (stream)) {
+				var content = reader.ReadToEnd ();
+				// The script should use ?.let {} pattern for null-safe access
+				// This ensures compatibility with Gradle 9.x which rejects nullable types passed to file()
+				StringAssert.Contains ("?.let {", content, "Script should use Kotlin's safe call pattern (?.let) for Gradle 9.x compatibility");
+				// The script should NOT pass nullable directly to file() like: file(gradle.startParameter.projectProperties["..."])
+				StringAssert.DoesNotContain ("file(gradle.startParameter.projectProperties[", content,
+					"Script should not pass nullable projectProperties value directly to file() as this fails on Gradle 9.x");
+			}
+		}
 
 		[Test]
 		[TestCaseSource (nameof (EmbeddedResources))]
