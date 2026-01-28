@@ -456,7 +456,7 @@ internal class JavaPeerScanner
 	{
 		var totalStopwatch = Stopwatch.StartNew ();
 
-		_log.LogMessage (MessageImportance.High, $"[GTMA-Scan] Starting scan of {assemblies.Length} assemblies...");
+		_log.LogMessage (MessageImportance.Low, $"[GTMA-Scan] Starting scan of {assemblies.Length} assemblies...");
 		
 		// First pass: load all assemblies into cache (parallelized)
 		var loadStopwatch = Stopwatch.StartNew ();
@@ -473,7 +473,7 @@ internal class JavaPeerScanner
 			}
 		});
 		loadStopwatch.Stop ();
-		_log.LogMessage (MessageImportance.High, $"[GTMA-Scan] Loaded {_assemblyCache.Count} assemblies into cache in {loadStopwatch.ElapsedMilliseconds}ms");
+		_log.LogMessage (MessageImportance.Low, $"[GTMA-Scan] Loaded {_assemblyCache.Count} assemblies into cache in {loadStopwatch.ElapsedMilliseconds}ms");
 		
 		// Second pass: scan for Java peers (parallelized)
 		var scanStopwatch = Stopwatch.StartNew ();
@@ -490,7 +490,7 @@ internal class JavaPeerScanner
 				}
 			} catch (Exception ex) {
 				// Log exceptions instead of silently ignoring
-				_log.LogMessage (MessageImportance.High, $"[GTMA-Scan] Exception scanning {Path.GetFileName (path)}: {ex.Message}");
+				_log.LogMessage (MessageImportance.Low, $"[GTMA-Scan] Exception scanning {Path.GetFileName (path)}: {ex.Message}");
 			}
 		});
 		
@@ -500,21 +500,21 @@ internal class JavaPeerScanner
 		foreach (var (path, peers, elapsedMs) in scanResults.OrderByDescending (r => r.Peers.Count)) {
 			results.AddRange (peers);
 			assembliesWithPeers++;
-			_log.LogMessage (MessageImportance.High, $"[GTMA-Scan]   {Path.GetFileNameWithoutExtension (path)}: {peers.Count} types in {elapsedMs}ms ({(double)elapsedMs / peers.Count:F2}ms/type)");
+			_log.LogMessage (MessageImportance.Low, $"[GTMA-Scan]   {Path.GetFileNameWithoutExtension (path)}: {peers.Count} types in {elapsedMs}ms ({(double)elapsedMs / peers.Count:F2}ms/type)");
 		}
 		
 		scanStopwatch.Stop ();
-		_log.LogMessage (MessageImportance.High, $"[GTMA-Scan] Assembly scanning: {scanStopwatch.ElapsedMilliseconds}ms ({assembliesWithPeers} assemblies with peers)");
+		_log.LogMessage (MessageImportance.Low, $"[GTMA-Scan] Assembly scanning: {scanStopwatch.ElapsedMilliseconds}ms ({assembliesWithPeers} assemblies with peers)");
 
 		// Post-process: resolve activation constructor base types for types that don't have their own
 		var resolveStopwatch = Stopwatch.StartNew ();
 		ResolveActivationConstructorBaseTypes (results);
 		ResolveBaseJavaNames (results);
 		resolveStopwatch.Stop ();
-		_log.LogMessage (MessageImportance.High, $"[GTMA-Scan] Post-processing: {resolveStopwatch.ElapsedMilliseconds}ms");
+		_log.LogMessage (MessageImportance.Low, $"[GTMA-Scan] Post-processing: {resolveStopwatch.ElapsedMilliseconds}ms");
 
 		totalStopwatch.Stop ();
-		_log.LogMessage (MessageImportance.High, $"[GTMA-Scan] Total scan time: {totalStopwatch.ElapsedMilliseconds}ms, found {results.Count} types");
+		_log.LogMessage (MessageImportance.Low, $"[GTMA-Scan] Total scan time: {totalStopwatch.ElapsedMilliseconds}ms, found {results.Count} types");
 
 		return results;
 	}
@@ -852,7 +852,7 @@ internal class JavaPeerScanner
 					componentJavaName = componentJavaName!.Replace ('.', '/');
 				}
 				
-				_log.LogMessage (MessageImportance.High, $"      {typeName}: Found component attr {attrTypeName}, JavaName={componentJavaName}, AssociatedTypes={associatedTypes.Count}");
+				_log.LogMessage (MessageImportance.Low, $"      {typeName}: Found component attr {attrTypeName}, JavaName={componentJavaName}, AssociatedTypes={associatedTypes.Count}");
 				// Component attributes don't have DoNotGenerateAcw
 				return (componentJavaName, false, associatedTypes);
 			}
@@ -2280,7 +2280,7 @@ internal class TypeMapAssemblyGenerator
 		CreateSignatureBlobs ();
 		AddAssemblyAttribute ();
 		setupStopwatch.Stop ();
-		_log.LogMessage (MessageImportance.High, $"[GTMA-Gen] Setup (module, refs, sigs): {setupStopwatch.ElapsedMilliseconds}ms");
+		_log.LogMessage (MessageImportance.Low, $"[GTMA-Gen] Setup (module, refs, sigs): {setupStopwatch.ElapsedMilliseconds}ms");
 	
 	// 7. Generate proxy types and collect TypeMap attributes
 	var proxyStopwatch = Stopwatch.StartNew ();
@@ -2293,7 +2293,7 @@ internal class TypeMapAssemblyGenerator
 	int invokerCount = javaPeers.Count (p => IsInvokerType (p));
 	var filteredPeers = javaPeers.Where (p => !IsInvokerType (p)).ToList ();
 	if (invokerCount > 0) {
-		_log.LogMessage (MessageImportance.High, $"[GTMA-Gen] Skipped {invokerCount} Invoker types from TypeMap (no JCW/proxy needed)");
+		_log.LogMessage (MessageImportance.Low, $"[GTMA-Gen] Skipped {invokerCount} Invoker types from TypeMap (no JCW/proxy needed)");
 	}
 	
 	// Group peers by JavaName to handle aliases
@@ -2357,21 +2357,23 @@ internal class TypeMapAssemblyGenerator
 				//   - User-defined types that subclass Java classes (Activities, Services, etc.)
 				//   - Must have DoNotGenerateAcw=false (generates Java Callable Wrapper)
 				//   - Must NOT be an interface (interfaces don't generate JCWs, they have Invokers)
-				//   - Must NOT be an Implementor (these are only needed if C# event is used)
+				//   - Must NOT be an Implementor/EventDispatcher (these are only created from .NET)
 				//   - OR: Custom view types referenced in layout XML (Android inflates these)
 				//
 				// Trimmable types: Only preserved if .NET code references them
 				//   - All interfaces (they wrap existing Java interfaces)
 				//   - Types with DoNotGenerateAcw=true (MCW - wrap existing Java classes)
-				//   - Implementor types (only needed if corresponding C# event is used)
-				bool isImplementor = peer.ManagedTypeName.EndsWith ("Implementor", StringComparison.Ordinal);
+				//   - Implementor/EventDispatcher types (only created from .NET when C# event is subscribed)
+				//
+				// Implementor detection heuristic:
+				//   Type name ends with EventDispatcher or Implementor suffix.
+				//   These types are generated by the binding generator and are only instantiated from .NET.
+				//   Note: We don't include "Invoker" suffix as those are needed for interface marshaling.
+				bool isImplementorType = peer.ManagedTypeName.EndsWith ("EventDispatcher", StringComparison.Ordinal) ||
+				                         peer.ManagedTypeName.EndsWith ("Implementor", StringComparison.Ordinal);
 				bool isCustomView = _customViewTypes.Contains (peer.ManagedTypeName);
-				bool isUnconditional = isCustomView || (!peer.DoNotGenerateAcw && !peer.IsInterface && !isImplementor);
-				
-				if (isCustomView) {
-					_log.LogMessage (MessageImportance.Low, $"[GTMA-Attr] UNCONDITIONAL (custom view): {jniName}");
-				}
-				
+				bool isUnconditional = isCustomView || (!peer.DoNotGenerateAcw && !peer.IsInterface && !isImplementorType);
+
 				typeMapAttrs.Add ((entryJniName, qualifiedProxyTypeName, isUnconditional ? null : targetTypeName, isUnconditional));
 				
 				if (aliasHolderName != null) {
@@ -2386,9 +2388,9 @@ internal class TypeMapAssemblyGenerator
 		}
 	}
 	proxyStopwatch.Stop ();
-	_log.LogMessage (MessageImportance.High, $"[GTMA-Gen] Proxy generation: {proxyStopwatch.ElapsedMilliseconds}ms ({proxyCount} proxies, {(double)proxyStopwatch.ElapsedMilliseconds / Math.Max (1, proxyCount):F2}ms/proxy)");
+	_log.LogMessage (MessageImportance.Low, $"[GTMA-Gen] Proxy generation: {proxyStopwatch.ElapsedMilliseconds}ms ({proxyCount} proxies, {(double)proxyStopwatch.ElapsedMilliseconds / Math.Max (1, proxyCount):F2}ms/proxy)");
 	if (slowestProxyName != null) {
-		_log.LogMessage (MessageImportance.High, $"[GTMA-Gen]   Slowest proxy: {slowestProxyName} ({slowestProxyMs}ms)");
+		_log.LogMessage (MessageImportance.Low, $"[GTMA-Gen]   Slowest proxy: {slowestProxyName} ({slowestProxyMs}ms)");
 	}
 	
 	// 8. Add TypeMapAttribute entries (assembly-level custom attributes)
@@ -2422,7 +2424,7 @@ internal class TypeMapAssemblyGenerator
 			foreach (var associatedType in peer.AssociatedTypes) {
 				AddApplicationAssociationAttribute (peer.ManagedTypeName, associatedType);
 				associationCount++;
-				_log.LogMessage (MessageImportance.High, $"[GTMA-Assoc] {peer.ManagedTypeName} -> {associatedType}");
+				_log.LogMessage (MessageImportance.Low, $"[GTMA-Assoc] {peer.ManagedTypeName} -> {associatedType}");
 			}
 		}
 	}
@@ -2431,28 +2433,28 @@ internal class TypeMapAssemblyGenerator
 	ApplySelfAttributes ();
 	
 	attrStopwatch.Stop ();
-	_log.LogMessage (MessageImportance.High, $"[GTMA-Gen] Attributes: {attrStopwatch.ElapsedMilliseconds}ms ({unconditionalCount} unconditional, {trimmableCount} trimmable, {aliasMappings.Count} aliases)");
+	_log.LogMessage (MessageImportance.Low, $"[GTMA-Gen] Attributes: {attrStopwatch.ElapsedMilliseconds}ms ({unconditionalCount} unconditional, {trimmableCount} trimmable, {aliasMappings.Count} aliases)");
 	
 	// 11. Write the PE file
 	var peStopwatch = Stopwatch.StartNew ();
 	WritePEFile (outputPath);
 	peStopwatch.Stop ();
-	_log.LogMessage (MessageImportance.High, $"[GTMA-Gen] PE file write: {peStopwatch.ElapsedMilliseconds}ms");
+	_log.LogMessage (MessageImportance.Low, $"[GTMA-Gen] PE file write: {peStopwatch.ElapsedMilliseconds}ms");
 
 		// 12. Generate Java source files
 		var javaStopwatch = Stopwatch.StartNew ();
 		var generatedJavaFiles = GenerateJavaSourceFiles (javaPeers, javaSourceDir);
 		javaStopwatch.Stop ();
-		_log.LogMessage (MessageImportance.High, $"[GTMA-Gen] Java files: {javaStopwatch.ElapsedMilliseconds}ms ({generatedJavaFiles.Count} files)");
+		_log.LogMessage (MessageImportance.Low, $"[GTMA-Gen] Java files: {javaStopwatch.ElapsedMilliseconds}ms ({generatedJavaFiles.Count} files)");
 
 		// 13. Generate LLVM IR files
 		var llvmStopwatch = Stopwatch.StartNew ();
 		GenerateLlvmIrFiles (javaPeers, llvmIrDir);
 		llvmStopwatch.Stop ();
-		_log.LogMessage (MessageImportance.High, $"[GTMA-Gen] LLVM IR files: {llvmStopwatch.ElapsedMilliseconds}ms");
+		_log.LogMessage (MessageImportance.Low, $"[GTMA-Gen] LLVM IR files: {llvmStopwatch.ElapsedMilliseconds}ms");
 	
 	totalStopwatch.Stop ();
-	_log.LogMessage (MessageImportance.High, $"[GTMA-Gen] Total generation: {totalStopwatch.ElapsedMilliseconds}ms");
+	_log.LogMessage (MessageImportance.Low, $"[GTMA-Gen] Total generation: {totalStopwatch.ElapsedMilliseconds}ms");
 
 		return generatedJavaFiles;
 	}
