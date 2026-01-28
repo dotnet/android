@@ -35,8 +35,9 @@
       <_MonoAndroidJar>$(OutputPath)mono.android.jar</_MonoAndroidJar>
       <_MonoAndroidRuntimeJar>$(MicrosoftAndroidSdkOutDir)java_runtime.jar</_MonoAndroidRuntimeJar>
     </PropertyGroup>
-    <Message Text="# jonp: what's *in* _AndroidJar=`$(_AndroidJar)`?" />
+    <Message Condition=" '$(AndroidNoisyJCW)' == 'true' " Text="# jonp: what's *in* _AndroidJar=`$(_AndroidJar)`?" />
     <Exec
+        Condition=" '$(AndroidNoisyJCW)' == 'true' "
         Command="&quot;$(JarPath)&quot; tf $(_AndroidJar)"
     />
     <Exec
