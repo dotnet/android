@@ -107,6 +107,14 @@ namespace Xamarin.Android.Tools
 			if (Directory.Exists (dir))
 				return dir;
 
+			// Only fall back to major API level if we weren't explicitly requesting a minor version.
+			// For example, if "36.1" was requested but android-36.1 doesn't exist, don't fall back to android-36
+			// because the minor version may have APIs that the major version doesn't have.
+			// See: https://github.com/dotnet/android/issues/10720
+			if (Version.TryParse (id, out var version) && version.Minor != 0) {
+				return null;
+			}
+
 			var level   = versions.GetApiLevelFromId (id);
 			dir         = level.HasValue ? GetPlatformDirectory (level.Value) : null;
 			if (dir != null && Directory.Exists (dir))

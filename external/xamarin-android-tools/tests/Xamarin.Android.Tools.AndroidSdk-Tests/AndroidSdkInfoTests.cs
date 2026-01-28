@@ -594,6 +594,46 @@ namespace Xamarin.Android.Tools.Tests
 		}
 
 		[Test]
+		public void TryGetPlatformDirectoryFromApiLevel_MinorVersionDoesNotFallback ()
+		{
+			// Verifies that when requesting a minor API level (like 36.1), we don't fall back
+			// to the major version (36) if the minor version platform is not installed.
+			// See: https://github.com/dotnet/android/issues/10720
+			CreateSdks (out string root, out string jdk, out string ndk, out string sdk);
+
+			// Only create android-36, not android-36.1
+			var platformsPath = Path.Combine (sdk, "platforms");
+			var platform36Path = Path.Combine (platformsPath, "android-36");
+			Directory.CreateDirectory (platform36Path);
+			File.WriteAllText (Path.Combine (platform36Path, "android.jar"), "");
+
+			var logs = new StringWriter ();
+			Action<TraceLevel, string> logger = (level, message) => {
+				logs.WriteLine ($"[{level}] {message}");
+			};
+
+			try {
+				var info = new AndroidSdkInfo (logger, androidSdkPath: sdk, androidNdkPath: ndk, javaSdkPath: jdk);
+				var versions = new AndroidVersions (new [] {
+					new AndroidVersion (36, "16.0"),
+					new AndroidVersion (new Version (36, 1), "16.0"),
+				});
+
+				// Requesting "36" should find android-36
+				var dir36 = info.TryGetPlatformDirectoryFromApiLevel ("36", versions);
+				Assert.IsNotNull (dir36, "Should find android-36");
+				Assert.AreEqual (platform36Path, dir36);
+
+				// Requesting "36.1" should NOT fall back to android-36
+				var dir361 = info.TryGetPlatformDirectoryFromApiLevel ("36.1", versions);
+				Assert.IsNull (dir361, "Should NOT fall back to android-36 when android-36.1 is requested but not installed");
+			}
+			finally {
+				Directory.Delete (root, recursive: true);
+			}
+		}
+
+		[Test]
 		public void GetBuildToolsPaths_StableVersionsFirst ()
 		{
 			CreateSdks (out string root, out string jdk, out string ndk, out string sdk);
