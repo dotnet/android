@@ -6,12 +6,6 @@
     <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\HelloLibrary\HelloLibrary.DotNet.csproj" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Remove="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="Mono.Android.Export" />
   </ItemGroup>
 </Project>
