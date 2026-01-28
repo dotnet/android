@@ -4224,8 +4224,11 @@ public class {{className}}
 			int numActivationCtors = constructorMarshalMethods.Count > 0 ? constructorMarshalMethods.Count : 1; // At least one default ctor
 
 			for (int ctorIdx = 0; ctorIdx < numActivationCtors; ctorIdx++) {
+				// Get constructor info if available
+				MarshalMethodInfo? ctorInfo = ctorIdx < constructorMarshalMethods.Count ? constructorMarshalMethods[ctorIdx] : null;
+				
 				// Generate activation constructor UCO wrapper
-				var activationWrapper = GenerateActivationCtorUcoWrapper (peer, targetTypeRef, ctorIdx, localsSig);
+				var activationWrapper = GenerateActivationCtorUcoWrapper (peer, targetTypeRef, ctorIdx, ctorInfo);
 				wrapperHandles.Add (activationWrapper);
 			}
 		}
@@ -4262,31 +4265,122 @@ public class {{className}}
 	}
 
 	/// <summary>
-	/// Generates a UCO wrapper for an activation constructor (nc_activate_X).
-	/// This wrapper creates the managed object via CreateInstance and registers it.
+	/// Determines if a type can be activated from JNI based on its constructor info.
+	/// A type can be activated if:
+	/// 1. It has an XI or JI style activation constructor (checked via ActivationConstructorStyle)
+	/// 2. OR it has a base class with an activation constructor
+	/// 3. OR it's an interface/abstract with an invoker
+	/// 
+	/// However, if the registered constructor has parameters that don't match what JNI can provide,
+	/// it cannot be activated (e.g., a constructor that takes Stream instead of IntPtr).
 	/// </summary>
-	MethodDefinitionHandle GenerateActivationCtorUcoWrapper (JavaPeerInfo peer, TypeReferenceHandle targetTypeRef, int ctorIdx, StandaloneSignatureHandle localsSig)
+	bool CanActivateFromJni (JavaPeerInfo peer, MarshalMethodInfo? ctorInfo)
+	{
+		// If we have specific constructor info, check if the managed parameters are JNI-compatible
+		if (ctorInfo != null && ctorInfo.ParameterTypeNames.Length > 0) {
+			// The registered constructor has managed parameters.
+			// Check if these are XI-style (IntPtr, JniHandleOwnership) or JI-style parameters.
+			// If not, we can't call this constructor from JNI.
+			
+			// For now, check if the parameters match known activation patterns
+			var paramTypes = ctorInfo.ParameterTypeNames;
+			
+			// XI style: (IntPtr, JniHandleOwnership)
+			if (paramTypes.Length == 2 && 
+			    paramTypes[0] == "System.IntPtr" && 
+			    paramTypes[1] == "Android.Runtime.JniHandleOwnership") {
+				return true;
+			}
+			
+			// JI style: (ref JniObjectReference, JniObjectReferenceOptions)
+			if (paramTypes.Length == 2 && 
+			    (paramTypes[0] == "Java.Interop.JniObjectReference&" || paramTypes[0] == "Java.Interop.JniObjectReference") &&
+			    paramTypes[1] == "Java.Interop.JniObjectReferenceOptions") {
+				return true;
+			}
+			
+			// Constructor has incompatible parameters - cannot activate from JNI
+			return false;
+		}
+		
+		// No specific constructor info - check if the type has an activation path
+		if (peer.ActivationConstructorStyle != ActivationConstructorStyle.None)
+			return true;
+		
+		if (!string.IsNullOrEmpty (peer.ActivationCtorBaseTypeName))
+			return true;
+		
+		if ((peer.IsInterface || peer.IsAbstract) && !string.IsNullOrEmpty (peer.InvokerTypeName))
+			return true;
+		
+		return false;
+	}
+
+	/// <summary>
+	/// Generates a UCO wrapper for an activation constructor (nc_activate_X).
+	/// This wrapper creates the managed object by calling the activation constructor directly.
+	/// </summary>
+	MethodDefinitionHandle GenerateActivationCtorUcoWrapper (JavaPeerInfo peer, TypeReferenceHandle targetTypeRef, int ctorIdx, MarshalMethodInfo? ctorInfo)
 	{
 		string wrapperName = $"nc_activate_{ctorIdx}";
+		
+		// Determine if we can actually activate this type.
+		// Check if the registered constructor has parameters that match what we can provide from JNI.
+		bool canActivate = CanActivateFromJni (peer, ctorInfo);
+		
+		// Create constructor reference based on activation style (only if we can activate)
+		MemberReferenceHandle? ctorRef = null;
+		if (canActivate) {
+			if (peer.ActivationConstructorStyle == ActivationConstructorStyle.XI) {
+				var ctorSigBlob = new BlobBuilder ();
+				new BlobEncoder (ctorSigBlob)
+					.MethodSignature (isInstanceMethod: true)
+					.Parameters (2,
+						returnType => returnType.Void (),
+						parameters => {
+							parameters.AddParameter ().Type ().IntPtr ();
+							parameters.AddParameter ().Type ().Type (_jniHandleOwnershipTypeRef, isValueType: true);
+						});
+				ctorRef = _metadata.AddMemberReference (
+					parent: targetTypeRef,
+					name: _metadata.GetOrAddString (".ctor"),
+					signature: _metadata.GetOrAddBlob (ctorSigBlob));
+			} else if (peer.ActivationConstructorStyle == ActivationConstructorStyle.JI) {
+				var ctorSigBlob = new BlobBuilder ();
+				new BlobEncoder (ctorSigBlob)
+					.MethodSignature (isInstanceMethod: true)
+					.Parameters (2,
+						returnType => returnType.Void (),
+						parameters => {
+							var p1 = parameters.AddParameter ();
+							p1.Type ().Type (_jniObjectReferenceTypeRef, isValueType: true);
+							parameters.AddParameter ().Type ().Type (_jniObjectReferenceOptionsTypeRef, isValueType: true);
+						});
+				ctorRef = _metadata.AddMemberReference (
+					parent: targetTypeRef,
+					name: _metadata.GetOrAddString (".ctor"),
+					signature: _metadata.GetOrAddBlob (ctorSigBlob));
+			}
+		}
 
 		// Activation constructor signature: (IntPtr jnienv, IntPtr obj) -> void
-		// But wrapper returns IntPtr for consistency
 		int paramCount = 2;
 
-		// Create method signature: static IntPtr wrapper(IntPtr jnienv, IntPtr obj)
+		// Create method signature: static void wrapper(IntPtr jnienv, IntPtr obj)
 		var wrapperSigBlob = new BlobBuilder ();
 		var sigEncoder = new BlobEncoder (wrapperSigBlob).MethodSignature (isInstanceMethod: false);
 		sigEncoder.Parameters (paramCount,
-			returnType => returnType.Type ().IntPtr (),
+			returnType => returnType.Void (),
 			parameters => {
 				parameters.AddParameter ().Type ().IntPtr (); // jnienv
 				parameters.AddParameter ().Type ().IntPtr (); // obj
 			});
 
 		// Generate wrapper body
-		// The activation wrapper needs to:
-		// 1. Call this.CreateInstance(handle, transfer) to create the managed object
-		// 2. Return IntPtr.Zero
+		// The activation wrapper creates the managed object directly:
+		// - XI style: new TargetType(obj, JniHandleOwnership.DoNotTransfer)
+		// - JI style: new TargetType(ref new JniObjectReference(obj), JniObjectReferenceOptions.Copy)
+		// - Base class: GetUninitializedObject + call base ctor
 		var wrapperBodyBlob = new BlobBuilder ();
 		var controlFlowBuilder = new ControlFlowBuilder ();
 		var wrapperEncoder = new InstructionEncoder (wrapperBodyBlob, controlFlowBuilder);
@@ -4301,20 +4395,113 @@ public class {{className}}
 		// Try block start
 		wrapperEncoder.MarkLabel (tryStartLabel);
 
-		// Get the proxy instance (this) - we need to call CreateInstance on the proxy
-		// Actually, activation is a static method that gets jnienv and obj (the Java handle)
-		// We need to use TypeMap.CreatePeer or similar to create the managed object
-		// 
-		// For now, emit a simple return IntPtr.Zero - the activation is handled by
-		// the runtime when it looks up the type and calls CreateInstance directly.
-		// This is a placeholder - proper activation requires calling CreatePeer.
-		
-		// Load IntPtr.Zero as return value
-		wrapperEncoder.LoadConstantI4 (0);
-		wrapperEncoder.OpCode (ILOpCode.Conv_i);
-		wrapperEncoder.StoreLocal (0);
+		// Generate activation code based on constructor style
+		// ldarg.1 is the Java object handle (obj)
+		// We use JniHandleOwnership.DoNotTransfer (0) because Java owns the reference
+		if (!canActivate) {
+			// Type cannot be activated from JNI (constructor has incompatible parameters)
+			wrapperEncoder.LoadString (_metadata.GetOrAddUserString ($"Type {peer.ManagedTypeName} cannot be activated from Java. The registered constructor has parameters that cannot be provided from JNI."));
+			wrapperEncoder.OpCode (ILOpCode.Newobj);
+			wrapperEncoder.Token (_notSupportedExceptionCtorRef);
+			wrapperEncoder.OpCode (ILOpCode.Throw);
+		} else if (peer.ActivationConstructorStyle == ActivationConstructorStyle.XI && ctorRef.HasValue) {
+			// XI style: new TargetType(obj, JniHandleOwnership.DoNotTransfer)
+			wrapperEncoder.OpCode (ILOpCode.Ldarg_1);  // obj (handle)
+			wrapperEncoder.LoadConstantI4 (0);         // JniHandleOwnership.DoNotTransfer = 0
+			wrapperEncoder.OpCode (ILOpCode.Newobj);
+			wrapperEncoder.Token (ctorRef.Value);
+			wrapperEncoder.OpCode (ILOpCode.Pop);      // Discard result (activation doesn't return)
+		} else if (peer.ActivationConstructorStyle == ActivationConstructorStyle.JI && ctorRef.HasValue) {
+			// JI style: Need locals for JniObjectReference
+			// var reference = new JniObjectReference(obj);
+			// new TargetType(ref reference, JniObjectReferenceOptions.Copy);
+			// Note: We use a separate locals signature for JI style
+			wrapperEncoder.OpCode (ILOpCode.Ldloca_s);
+			wrapperEncoder.CodeBuilder.WriteByte (1);  // address of local 1 (JniObjectReference)
+			wrapperEncoder.OpCode (ILOpCode.Ldarg_1);  // obj (handle)
+			wrapperEncoder.Call (_jniObjectReferenceCtorRef);
+			
+			wrapperEncoder.OpCode (ILOpCode.Ldloca_s);
+			wrapperEncoder.CodeBuilder.WriteByte (1);  // ref to local 1
+			wrapperEncoder.LoadConstantI4 (_jniObjectReferenceOptionsCopy);
+			wrapperEncoder.OpCode (ILOpCode.Newobj);
+			wrapperEncoder.Token (ctorRef.Value);
+			wrapperEncoder.OpCode (ILOpCode.Pop);      // Discard result
+		} else if (!string.IsNullOrEmpty (peer.ActivationCtorBaseTypeName)) {
+			// Base class activation: GetUninitializedObject + call base ctor
+			var baseTypeRef = AddExternalTypeReference (peer.ActivationCtorBaseAssemblyName!, peer.ActivationCtorBaseTypeName!);
+			
+			// Create base ctor reference: BaseType(IntPtr, JniHandleOwnership)
+			var ctorSigBlob = new BlobBuilder ();
+			new BlobEncoder (ctorSigBlob)
+				.MethodSignature (isInstanceMethod: true)
+				.Parameters (2,
+					returnType => returnType.Void (),
+					parameters => {
+						parameters.AddParameter ().Type ().IntPtr ();
+						parameters.AddParameter ().Type ().Type (_jniHandleOwnershipTypeRef, isValueType: true);
+					});
+			var baseCtorRef = _metadata.AddMemberReference (
+				parent: baseTypeRef,
+				name: _metadata.GetOrAddString (".ctor"),
+				signature: _metadata.GetOrAddBlob (ctorSigBlob));
+			
+			// Create Type.GetTypeFromHandle reference
+			var getTypeFromHandleSig = new BlobBuilder ();
+			new BlobEncoder (getTypeFromHandleSig)
+				.MethodSignature (isInstanceMethod: false)
+				.Parameters (1,
+					returnType => returnType.Type ().Type (_typeTypeRef, isValueType: false),
+					parameters => parameters.AddParameter ().Type ().Type (_runtimeTypeHandleTypeRef, isValueType: true));
+			var getTypeFromHandleRef = _metadata.AddMemberReference (
+				parent: _typeTypeRef,
+				name: _metadata.GetOrAddString ("GetTypeFromHandle"),
+				signature: _metadata.GetOrAddBlob (getTypeFromHandleSig));
+			
+			// var obj = (TargetType)RuntimeHelpers.GetUninitializedObject(typeof(TargetType));
+			wrapperEncoder.OpCode (ILOpCode.Ldtoken);
+			wrapperEncoder.Token (targetTypeRef);
+			wrapperEncoder.Call (getTypeFromHandleRef);
+			wrapperEncoder.Call (_getUninitializedObjectRef);
+			wrapperEncoder.OpCode (ILOpCode.Castclass);
+			wrapperEncoder.Token (targetTypeRef);
+			
+			// BaseType..ctor(obj, handle, DoNotTransfer)
+			wrapperEncoder.OpCode (ILOpCode.Ldarg_1);  // obj (handle)
+			wrapperEncoder.LoadConstantI4 (0);         // JniHandleOwnership.DoNotTransfer = 0
+			wrapperEncoder.Call (baseCtorRef);         // call (not callvirt) base ctor
+		} else if ((peer.IsInterface || peer.IsAbstract) && !string.IsNullOrEmpty (peer.InvokerTypeName)) {
+			// Invoker activation
+			var invokerTypeRef = AddExternalTypeReference (peer.InvokerAssemblyName!, peer.InvokerTypeName!);
+			
+			var ctorSigBlob = new BlobBuilder ();
+			new BlobEncoder (ctorSigBlob)
+				.MethodSignature (isInstanceMethod: true)
+				.Parameters (2,
+					returnType => returnType.Void (),
+					parameters => {
+						parameters.AddParameter ().Type ().IntPtr ();
+						parameters.AddParameter ().Type ().Type (_jniHandleOwnershipTypeRef, isValueType: true);
+					});
+			var invokerCtorRef = _metadata.AddMemberReference (
+				parent: invokerTypeRef,
+				name: _metadata.GetOrAddString (".ctor"),
+				signature: _metadata.GetOrAddBlob (ctorSigBlob));
+			
+			wrapperEncoder.OpCode (ILOpCode.Ldarg_1);  // obj (handle)
+			wrapperEncoder.LoadConstantI4 (0);         // JniHandleOwnership.DoNotTransfer = 0
+			wrapperEncoder.OpCode (ILOpCode.Newobj);
+			wrapperEncoder.Token (invokerCtorRef);
+			wrapperEncoder.OpCode (ILOpCode.Pop);      // Discard result
+		} else {
+			// No activation path - throw NotSupportedException
+			wrapperEncoder.LoadString (_metadata.GetOrAddUserString ($"No activation constructor found for {peer.ManagedTypeName}"));
+			wrapperEncoder.OpCode (ILOpCode.Newobj);
+			wrapperEncoder.Token (_notSupportedExceptionCtorRef);
+			wrapperEncoder.OpCode (ILOpCode.Throw);
+		}
 
-		// Leave try block
+		// Leave try block (void method, no return value)
 		wrapperEncoder.Branch (ILOpCode.Leave, endLabel);
 		wrapperEncoder.MarkLabel (tryEndLabel);
 
@@ -4322,26 +4509,22 @@ public class {{className}}
 		wrapperEncoder.MarkLabel (handlerStartLabel);
 		wrapperEncoder.Call (_throwableFromExceptionRef);
 		wrapperEncoder.Call (_raiseThrowableRef);
-		wrapperEncoder.LoadConstantI4 (0);
-		wrapperEncoder.OpCode (ILOpCode.Conv_i);
-		wrapperEncoder.StoreLocal (0);
 		wrapperEncoder.Branch (ILOpCode.Leave, endLabel);
 		wrapperEncoder.MarkLabel (handlerEndLabel);
 
-		// Return
+		// Return (void)
 		wrapperEncoder.MarkLabel (endLabel);
-		wrapperEncoder.LoadLocal (0);
 		wrapperEncoder.OpCode (ILOpCode.Ret);
 
 		// Add exception region
 		controlFlowBuilder.AddCatchRegion (tryStartLabel, tryEndLabel, handlerStartLabel, handlerEndLabel, _exceptionTypeRef);
 
-		// Add method body
+		// Add method body (no locals needed for void method)
 		int wrapperBodyOffset = _methodBodyStream.AddMethodBody (
 			wrapperEncoder,
 			maxStack: 4,
-			localVariablesSignature: localsSig,
-			attributes: MethodBodyAttributes.InitLocals);
+			localVariablesSignature: default,
+			attributes: MethodBodyAttributes.None);
 
 		// Create method definition
 		var wrapperDef = _metadata.AddMethodDefinition (

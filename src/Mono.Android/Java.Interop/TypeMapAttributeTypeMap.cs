@@ -4,9 +4,11 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Android.OS;
 using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
 
@@ -18,6 +20,8 @@ namespace Android.Runtime
 	/// </summary>
 	class TypeMapAttributeTypeMap : ITypeMap
 	{
+		const string TypeMapsAssemblyName = "_Microsoft.Android.TypeMaps";
+
 		readonly IReadOnlyDictionary<string, Type> _externalTypeMap;
 
 		readonly ConcurrentDictionary<Type, JavaPeerProxy?> _proxyInstances = new ();
@@ -28,6 +32,21 @@ namespace Android.Runtime
 
 		public TypeMapAttributeTypeMap ()
 		{
+			WorkaroundForILLink ();
+
+			// DO NOT REMOVE: This method is used to correctly load type maps until we get newer
+			// builds of the runtime which automatically loads it based on AppContext settings.
+			void WorkaroundForILLink ()
+			{
+				// Load the TypeMaps assembly and set it as the entry assembly so that
+				// TypeMapLazyDictionary will scan it for TypeMapAttribute entries.
+				var typeMapsAssembly = Assembly.Load (TypeMapsAssemblyName);
+				Logger.Log (LogLevel.Debug, "monodroid-typemap", $"Loaded TypeMaps assembly: {typeMapsAssembly.FullName}");
+
+				Assembly.SetEntryAssembly (typeMapsAssembly);
+				Logger.Log (LogLevel.Debug, "monodroid-typemap", "SetEntryAssembly called successfully");
+			}
+
 			_externalTypeMap = TypeMapping.GetOrCreateExternalTypeMapping<Java.Lang.Object> ();
 		}
 

@@ -130,13 +130,14 @@ This file contains the .NET 5-specific targets to customize ILLink
         -->
       <!-- add our custom steps -->
       <!-- Custom MarkHandlers that run during MarkStep -->
-      <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="Microsoft.Android.Sdk.ILLink.PreserveSubStepDispatcher" />
-      <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="MonoDroid.Tuner.MarkJavaObjects" />
-      <!-- DISABLED: Replaced by TypeMapAttribute unconditional/trimmable preservation strategy
+      <!-- DISABLED: MarkJavaObjects and Preserve* steps replaced by TypeMapAttribute preservation strategy
            See type-mapping-api-v3-spec.md for details on how preservation is now handled:
            - JCW types (DoNotGenerateAcw=false) use 2-arg unconditional TypeMapAttribute
            - MCW types (DoNotGenerateAcw=true) use 3-arg trimmable TypeMapAttribute
            - Proxy types directly reference activation ctors, string ctors, and interface methods
+           See also: Documentation/guides/illink-constructor-marking-limitation.md
+      <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="Microsoft.Android.Sdk.ILLink.PreserveSubStepDispatcher" />
+      <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="MonoDroid.Tuner.MarkJavaObjects" />
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="MonoDroid.Tuner.PreserveJavaExceptions" />
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="MonoDroid.Tuner.PreserveApplications" />
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="Microsoft.Android.Sdk.ILLink.PreserveRegistrations" />
@@ -181,6 +182,7 @@ This file contains the .NET 5-specific targets to customize ILLink
       <TrimmerRootDescriptor Include="@(LinkDescription)" />
       <TrimmerRootAssembly Include="Microsoft.Android.Runtime.NativeAOT" Condition=" '$(_AndroidRuntime)' == 'NativeAOT' " RootMode="All" />
     </ItemGroup>
+    <Message Importance="high" Text="DEBUG: TypeMapEntryAssembly='$(TypeMapEntryAssembly)'" />
   </Target>
 
   <Target Name="_FixRootAssembly" AfterTargets="PrepareForILLink">
