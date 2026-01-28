@@ -802,6 +802,9 @@ because xbuild doesn't support framework reference assemblies.
 		<AProfUtilToolPath Condition=" '$(AProfUtilToolPath)' == '' ">$(MonoAndroidBinDirectory)</AProfUtilToolPath>
 		<_DefaultLintToolPath>$(_AndroidSdkDirectory)\cmdline-tools\$(AndroidCommandLineToolsVersion)\bin</_DefaultLintToolPath>
 		<LintToolPath Condition=" '$(LintToolPath)' == '' And Exists ($(_DefaultLintToolPath)) ">$(_DefaultLintToolPath)</LintToolPath>
+		<EmulatorToolPath Condition=" '$(EmulatorToolPath)' == '' ">$(_AndroidSdkDirectory)emulator\</EmulatorToolPath>
+		<EmulatorToolExe Condition=" '$(EmulatorToolExe)' == '' And $([MSBuild]::IsOSPlatform('windows')) ">emulator.exe</EmulatorToolExe>
+		<EmulatorToolExe Condition=" '$(EmulatorToolExe)' == '' And !$([MSBuild]::IsOSPlatform('windows')) ">emulator</EmulatorToolExe>
 	</PropertyGroup>
 
 	<!-- Get the defined constants for this API Level -->
