@@ -1518,6 +1518,11 @@ internal class JavaPeerScanner
 						if (!existingMethods.Contains (key)) {
 							existingMethods.Add (key);
 							var (callbackTypeName, callbackAssemblyName) = ParseConnectorType (connector);
+							// If connector doesn't specify type, the callback is in the base type where we found it
+							if (callbackTypeName == null) {
+								callbackTypeName = baseTypeName;
+								callbackAssemblyName = baseAssemblyName;
+							}
 							methods.Add (new MarshalMethodInfo {
 								JniName = jniName,
 								JniSignature = jniSignature,
@@ -1848,6 +1853,10 @@ internal class JavaPeerScanner
 		// First, check if the interface has a [Register] attribute to get its Java name
 		var (ifaceJavaName, _, _) = GetRegisterAttributeValue (reader, ifaceTypeDef);
 		
+		// Get the interface type name and assembly for fallback when connector doesn't specify type
+		string ifaceTypeName = GetFullTypeName (reader, ifaceTypeDef);
+		string ifaceAssemblyName = GetAssemblyName (reader);
+		
 		// Reuse SignatureTypeProvider for all signature decoding
 		var sigProvider = new SignatureTypeProvider (reader);
 		
@@ -1891,6 +1900,11 @@ internal class JavaPeerScanner
 
 			// Parse the connector to get the callback type (e.g., IOnClickListenerInvoker)
 			var (callbackTypeName, callbackAssemblyName) = ParseConnectorType (connector);
+			// If connector doesn't specify type, the callback is in the interface type itself
+			if (callbackTypeName == null) {
+				callbackTypeName = ifaceTypeName;
+				callbackAssemblyName = ifaceAssemblyName;
+			}
 
 			methods.Add (new MarshalMethodInfo {
 				JniName = jniName,
@@ -2004,13 +2018,15 @@ internal class JavaPeerScanner
 	/// </summary>
 	string? GetNativeCallbackName (string connector, string jniName)
 	{
-		// Connector format: "Get{MethodName}Handler:Type, Assembly"
-		// Example: "GetOnClick_Landroid_view_View_Handler:Android.Views.View+IOnClickListenerInvoker, Mono.Android"
-		// We extract the method name from between "Get" and "Handler:"
+		// Connector format can be:
+		// 1. "GetOnCreate_Landroid_os_Bundle_Handler" (no type specified, callback in same type)
+		// 2. "GetOnClick_Landroid_view_View_Handler:Android.Views.View+IOnClickListenerInvoker, Mono.Android" (type specified)
+		// We extract the method name from between "Get" and "Handler"
 		// The native callback is n_{MethodName}
 		
-		if (connector.StartsWith ("Get") && connector.Contains ("Handler:")) {
-			int handlerIndex = connector.IndexOf ("Handler:");
+		if (connector.StartsWith ("Get") && connector.Contains ("Handler")) {
+			// Find "Handler" - it may be followed by ":" or be at the end
+			int handlerIndex = connector.IndexOf ("Handler");
 			if (handlerIndex > 3) {
 				string methodName = connector.Substring (3, handlerIndex - 3);
 				return $"n_{methodName}";
@@ -2134,6 +2150,13 @@ internal class JavaPeerScanner
 		return name;
 	}
 
+	string GetFullTypeName (MetadataReader reader, TypeDefinition typeDef)
+	{
+		string ns = reader.GetString (typeDef.Namespace);
+		string name = reader.GetString (typeDef.Name);
+		return string.IsNullOrEmpty (ns) ? name : $"{ns}.{name}";
+	}
+
 	(string? TypeName, string? AssemblyName) GetFullTypeNameAndAssembly (MetadataReader reader, EntityHandle handle)
 	{
 		try {
@@ -2254,6 +2277,10 @@ internal class TypeMapAssemblyGenerator
 	// Generated proxy type definitions (for self-application)
 	readonly List<(TypeDefinitionHandle TypeDef, BlobHandle CtorSig)> _proxyTypes = new ();
 	
+	// IgnoresAccessChecksTo attribute for bypassing access checks
+	TypeDefinitionHandle _ignoresAccessChecksToAttrTypeDef;
+	MethodDefinitionHandle _ignoresAccessChecksToAttrCtorDef;
+	
 	// Custom view types from layout XML that should be preserved unconditionally
 	readonly HashSet<string> _customViewTypes;
 	
@@ -2276,6 +2303,13 @@ internal class TypeMapAssemblyGenerator
 		CreateModuleAndAssembly ();
 		AddAssemblyReferences ();
 		AddTypeReferences ();
+		
+		// Add IgnoresAccessChecksToAttribute - this allows us to bypass access checks
+		// when calling internal/private members in other assemblies (like Mono.Android)
+		// The CLR recognizes this attribute even though it's not in the BCL
+		// Note: Must be called after AddTypeReferences() as it uses _attributeUsageTypeRef
+		DefineIgnoresAccessChecksToAttribute ();
+		
 		AddMemberReferences ();
 		CreateSignatureBlobs ();
 		AddAssemblyAttribute ();
@@ -3895,14 +3929,46 @@ public class {{className}}
 			_nextMethodDefRowId++;
 		}
 
-		// 4. UnsafeAccessor static method for calling protected constructor
-		MethodDefinitionHandle? unsafeAccessorMethodDef = null;
-		if (peer.ActivationConstructorStyle != ActivationConstructorStyle.None) {
-			unsafeAccessorMethodDef = GenerateUnsafeAccessorMethod (peer, targetTypeRef);
+		// 4. Create a direct reference to the activation constructor
+		// With [assembly: IgnoresAccessChecksTo("Mono.Android")], we can call protected constructors directly
+		MemberReferenceHandle? ctorRef = null;
+		if (peer.ActivationConstructorStyle == ActivationConstructorStyle.XI) {
+			// XI style: ctor(IntPtr, JniHandleOwnership)
+			var ctorSigBlob = new BlobBuilder ();
+			new BlobEncoder (ctorSigBlob)
+				.MethodSignature (isInstanceMethod: true)
+				.Parameters (2,
+					returnType => returnType.Void (),
+					parameters => {
+						parameters.AddParameter ().Type ().IntPtr ();
+						parameters.AddParameter ().Type ().Type (_jniHandleOwnershipTypeRef, isValueType: true);
+					});
+			ctorRef = _metadata.AddMemberReference (
+				parent: targetTypeRef,
+				name: _metadata.GetOrAddString (".ctor"),
+				signature: _metadata.GetOrAddBlob (ctorSigBlob));
+		} else if (peer.ActivationConstructorStyle == ActivationConstructorStyle.JI) {
+			// JI style: ctor(ref JniObjectReference, JniObjectReferenceOptions)
+			var ctorSigBlob = new BlobBuilder ();
+			new BlobEncoder (ctorSigBlob)
+				.MethodSignature (isInstanceMethod: true)
+				.Parameters (2,
+					returnType => returnType.Void (),
+					parameters => {
+						// First param is ref JniObjectReference
+						var p1 = parameters.AddParameter ();
+						p1.Type ().Type (_jniObjectReferenceTypeRef, isValueType: true);
+						// Second param is JniObjectReferenceOptions
+						parameters.AddParameter ().Type ().Type (_jniObjectReferenceOptionsTypeRef, isValueType: true);
+					});
+			ctorRef = _metadata.AddMemberReference (
+				parent: targetTypeRef,
+				name: _metadata.GetOrAddString (".ctor"),
+				signature: _metadata.GetOrAddBlob (ctorSigBlob));
 		}
 
 		// 5. CreateInstance override
-		int createInstanceBodyOffset = GenerateCreateInstanceBody (peer, targetTypeRef, unsafeAccessorMethodDef);
+		int createInstanceBodyOffset = GenerateCreateInstanceBody (peer, targetTypeRef, ctorRef);
 		var createInstanceDef = _metadata.AddMethodDefinition (
 			attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
 			implAttributes: MethodImplAttributes.IL | MethodImplAttributes.Managed,
@@ -4036,15 +4102,29 @@ public class {{className}}
 				callbackTypeRef = targetTypeRef;
 			}
 			
-			// Generate an UnsafeAccessor to call the private static callback method
-			// This is needed because the callback may be private/internal in another assembly
-			string accessorName = $"{wrapperName}_accessor";
-			var unsafeAccessorDef = GenerateUnsafeAccessorForStaticMethod (
-				accessorName,
-				mm.NativeCallbackName,
-				callbackTypeRef,
-				paramCount,
-				callbackReturnsVoid);
+			// Create a direct reference to the n_* callback method
+			// With [assembly: IgnoresAccessChecksTo("Mono.Android")], we can call private/internal methods directly
+			var callbackMethodSigBlob = new BlobBuilder ();
+			new BlobEncoder (callbackMethodSigBlob)
+				.MethodSignature (isInstanceMethod: false)
+				.Parameters (paramCount,
+					returnType => {
+						if (callbackReturnsVoid) {
+							returnType.Void ();
+						} else {
+							returnType.Type ().IntPtr ();
+						}
+					},
+					parameters => {
+						for (int p = 0; p < paramCount; p++) {
+							parameters.AddParameter ().Type ().IntPtr ();
+						}
+					});
+			
+			var callbackMethodRef = _metadata.AddMemberReference (
+				parent: callbackTypeRef,
+				name: _metadata.GetOrAddString (mm.NativeCallbackName),
+				signature: _metadata.GetOrAddBlob (callbackMethodSigBlob));
 
 			// Generate wrapper body with control flow (needed for try/catch and branches)
 			// Use ControlFlowBuilder with labels for proper branch fixup and exception regions
@@ -4062,14 +4142,12 @@ public class {{className}}
 			// Try block start
 			wrapperEncoder.MarkLabel (tryStartLabel);
 
-			// Call the UnsafeAccessor which will call the actual callback
-			// First argument to UnsafeAccessor is null (type marker for static method)
-			wrapperEncoder.OpCode (ILOpCode.Ldnull);
-			// Then load the actual callback arguments
+			// Call the n_* callback method directly
+			// IgnoresAccessChecksTo allows us to bypass access checks
 			for (int p = 0; p < paramCount; p++) {
 				wrapperEncoder.LoadArgument (p);
 			}
-			wrapperEncoder.Call (unsafeAccessorDef);
+			wrapperEncoder.Call (callbackMethodRef);
 
 			// If callback returns void, we need to load a default IntPtr value for the wrapper return
 			if (callbackReturnsVoid) {
@@ -4574,30 +4652,32 @@ public class {{className}}
 		return methodDef;
 	}
 
-	int GenerateCreateInstanceBody (JavaPeerInfo peer, TypeReferenceHandle targetTypeRef, MethodDefinitionHandle? unsafeAccessorMethod)
+	int GenerateCreateInstanceBody (JavaPeerInfo peer, TypeReferenceHandle targetTypeRef, MemberReferenceHandle? ctorRef)
 	{
 		var codeBuilder = new BlobBuilder ();
 		var encoder = new InstructionEncoder (codeBuilder);
 
-		if (peer.ActivationConstructorStyle == ActivationConstructorStyle.XI && unsafeAccessorMethod.HasValue) {
-			// XI style: Generate: return CreateInstanceUnsafe(handle, transfer);
-			// The UnsafeAccessor method handles calling the protected constructor
+		if (peer.ActivationConstructorStyle == ActivationConstructorStyle.XI && ctorRef.HasValue) {
+			// XI style: Call the activation constructor directly with newobj
+			// With IgnoresAccessChecksTo, we can call protected constructors directly
+			//   return new TargetType(handle, transfer);
 			
 			// ldarg.1 (handle)
 			encoder.OpCode (ILOpCode.Ldarg_1);
 			// ldarg.2 (transfer)
 			encoder.OpCode (ILOpCode.Ldarg_2);
-			// call static CreateInstanceUnsafe(IntPtr, JniHandleOwnership)
-			encoder.Call (unsafeAccessorMethod.Value);
+			// newobj TargetType(IntPtr, JniHandleOwnership)
+			encoder.OpCode (ILOpCode.Newobj);
+			encoder.Token (ctorRef.Value);
 			// ret
 			encoder.OpCode (ILOpCode.Ret);
-		} else if (peer.ActivationConstructorStyle == ActivationConstructorStyle.JI && unsafeAccessorMethod.HasValue) {
+		} else if (peer.ActivationConstructorStyle == ActivationConstructorStyle.JI && ctorRef.HasValue) {
 			// JI style: Create JniObjectReference from handle, call constructor with Copy option,
 			// then clean up the original handle via JNIEnv.DeleteRef.
 			//
 			// Generated IL equivalent (matches LlvmIrTypeMap.CreateProxy pattern):
 			//   var reference = new JniObjectReference(handle);
-			//   var result = CreateInstanceUnsafe(ref reference, JniObjectReferenceOptions.Copy);
+			//   var result = new TargetType(ref reference, JniObjectReferenceOptions.Copy);
 			//   JNIEnv.DeleteRef(handle, transfer);
 			//   return result;
 			
@@ -4614,11 +4694,12 @@ public class {{className}}
 			encoder.OpCode (ILOpCode.Ldarg_1);  // handle
 			encoder.Call (_jniObjectReferenceCtorRef);
 			
-			// var result = CreateInstanceUnsafe(ref reference, JniObjectReferenceOptions.Copy);
+			// var result = new TargetType(ref reference, JniObjectReferenceOptions.Copy);
 			encoder.OpCode (ILOpCode.Ldloca_s);
 			encoder.CodeBuilder.WriteByte (0);  // ref to local 0
 			encoder.LoadConstantI4 (_jniObjectReferenceOptionsCopy);  // JniObjectReferenceOptions.Copy (read from assembly)
-			encoder.Call (unsafeAccessorMethod.Value);
+			encoder.OpCode (ILOpCode.Newobj);
+			encoder.Token (ctorRef.Value);
 			encoder.StoreLocal (1);  // stloc.1 (result)
 			
 			// JNIEnv.DeleteRef(handle, transfer);
@@ -4791,6 +4872,158 @@ public class {{className}}
 		// - Unconditional (2-arg): proxy always preserved for JCW types
 		// - Trimmable (3-arg): proxy preserved only if target type is used for MCW types
 		AddAssemblyMetadataAttribute ("IsTrimmable", "True");
+		
+		// Add IgnoresAccessChecksTo for assemblies we need to call into
+		// This allows ldftn+calli to bypass access checks for protected/internal members
+		AddIgnoresAccessChecksToAttribute ("Mono.Android");
+		AddIgnoresAccessChecksToAttribute ("Java.Interop");
+	}
+	
+	void DefineIgnoresAccessChecksToAttribute ()
+	{
+		// Define the IgnoresAccessChecksToAttribute type
+		// This attribute is recognized by the CLR even though it's not in the BCL
+		// [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+		// internal sealed class IgnoresAccessChecksToAttribute : Attribute
+		// {
+		//     public IgnoresAccessChecksToAttribute(string assemblyName) { AssemblyName = assemblyName; }
+		//     public string AssemblyName { get; }
+		// }
+		
+		// First, we need a reference to System.Attribute
+		var attributeTypeRef = _metadata.AddTypeReference (
+			resolutionScope: _corlibRef,
+			@namespace: _metadata.GetOrAddString ("System"),
+			name: _metadata.GetOrAddString ("Attribute"));
+		
+		// Track method and field positions for this type
+		int typeMethodStart = _nextMethodDefRowId;
+		int typeFieldStart = _nextFieldDefRowId;
+		
+		// Add the backing field for AssemblyName property
+		var stringTypeRef = _metadata.AddTypeReference (
+			resolutionScope: _corlibRef,
+			@namespace: _metadata.GetOrAddString ("System"),
+			name: _metadata.GetOrAddString ("String"));
+		
+		var fieldSigBlob = new BlobBuilder ();
+		new BlobEncoder (fieldSigBlob).FieldSignature ().Type (stringTypeRef, isValueType: false);
+		
+		_metadata.AddFieldDefinition (
+			attributes: FieldAttributes.Private | FieldAttributes.InitOnly,
+			name: _metadata.GetOrAddString ("<AssemblyName>k__BackingField"),
+			signature: _metadata.GetOrAddBlob (fieldSigBlob));
+		var assemblyNameFieldDef = MetadataTokens.FieldDefinitionHandle (_nextFieldDefRowId);
+		_nextFieldDefRowId++;
+		
+		// Add constructor: public IgnoresAccessChecksToAttribute(string assemblyName)
+		var ctorSigBlob = new BlobBuilder ();
+		new BlobEncoder (ctorSigBlob)
+			.MethodSignature (isInstanceMethod: true)
+			.Parameters (1,
+				returnType => returnType.Void (),
+				parameters => {
+					parameters.AddParameter ().Type ().Type (stringTypeRef, isValueType: false);
+				});
+		var ctorSig = _metadata.GetOrAddBlob (ctorSigBlob);
+		
+		// Constructor body: this._assemblyName = assemblyName; base();
+		var ctorBodyBlob = new BlobBuilder ();
+		var ctorEncoder = new InstructionEncoder (ctorBodyBlob);
+		
+		// Call base constructor: base()
+		var attributeCtorSigBlob = new BlobBuilder ();
+		new BlobEncoder (attributeCtorSigBlob)
+			.MethodSignature (isInstanceMethod: true)
+			.Parameters (0, returnType => returnType.Void (), parameters => { });
+		var attributeCtorRef = _metadata.AddMemberReference (
+			parent: attributeTypeRef,
+			name: _metadata.GetOrAddString (".ctor"),
+			signature: _metadata.GetOrAddBlob (attributeCtorSigBlob));
+		
+		ctorEncoder.LoadArgument (0); // this
+		ctorEncoder.Call (attributeCtorRef);
+		
+		// Store assemblyName to field: this.<AssemblyName>k__BackingField = assemblyName
+		ctorEncoder.LoadArgument (0); // this
+		ctorEncoder.LoadArgument (1); // assemblyName
+		ctorEncoder.OpCode (ILOpCode.Stfld);
+		ctorEncoder.Token (assemblyNameFieldDef);
+		
+		ctorEncoder.OpCode (ILOpCode.Ret);
+		
+		int ctorBodyOffset = _methodBodyStream.AddMethodBody (ctorEncoder);
+		
+		var ctorDef = _metadata.AddMethodDefinition (
+			attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
+			implAttributes: MethodImplAttributes.IL | MethodImplAttributes.Managed,
+			name: _metadata.GetOrAddString (".ctor"),
+			signature: ctorSig,
+			bodyOffset: ctorBodyOffset,
+			parameterList: MetadataTokens.ParameterHandle (_nextParamDefRowId));
+		
+		_metadata.AddParameter (
+			attributes: ParameterAttributes.None,
+			name: _metadata.GetOrAddString ("assemblyName"),
+			sequenceNumber: 1);
+		_nextParamDefRowId++;
+		_nextMethodDefRowId++;
+		
+		// Add the type definition
+		_ignoresAccessChecksToAttrTypeDef = _metadata.AddTypeDefinition (
+			attributes: TypeAttributes.NotPublic | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+			@namespace: _metadata.GetOrAddString ("System.Runtime.CompilerServices"),
+			name: _metadata.GetOrAddString ("IgnoresAccessChecksToAttribute"),
+			baseType: attributeTypeRef,
+			fieldList: MetadataTokens.FieldDefinitionHandle (typeFieldStart),
+			methodList: MetadataTokens.MethodDefinitionHandle (typeMethodStart));
+		
+		// Add [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+		var attrUsageCtorSigBlob = new BlobBuilder ();
+		new BlobEncoder (attrUsageCtorSigBlob)
+			.MethodSignature (isInstanceMethod: true)
+			.Parameters (1,
+				returnType => returnType.Void (),
+				parameters => {
+					parameters.AddParameter ().Type ().Type (_attributeTargetsTypeRef, isValueType: true);
+				});
+		var attrUsageCtorRef = _metadata.AddMemberReference (
+			parent: _attributeUsageTypeRef,
+			name: _metadata.GetOrAddString (".ctor"),
+			signature: _metadata.GetOrAddBlob (attrUsageCtorSigBlob));
+		
+		// AttributeUsage blob: targets=Assembly (1), AllowMultiple=true
+		var attrUsageBlob = new BlobBuilder ();
+		attrUsageBlob.WriteUInt16 (1); // Prolog
+		attrUsageBlob.WriteInt32 (1);  // AttributeTargets.Assembly = 1
+		attrUsageBlob.WriteUInt16 (1); // Named args count = 1
+		attrUsageBlob.WriteByte (0x54); // PROPERTY
+		attrUsageBlob.WriteByte (0x02); // ELEMENT_TYPE_BOOLEAN
+		attrUsageBlob.WriteByte ((byte) "AllowMultiple".Length);
+		attrUsageBlob.WriteBytes (System.Text.Encoding.UTF8.GetBytes ("AllowMultiple"));
+		attrUsageBlob.WriteByte (1); // true
+		
+		_metadata.AddCustomAttribute (
+			parent: _ignoresAccessChecksToAttrTypeDef,
+			constructor: attrUsageCtorRef,
+			value: _metadata.GetOrAddBlob (attrUsageBlob));
+		
+		// Store the constructor definition handle for adding assembly-level attributes
+		_ignoresAccessChecksToAttrCtorDef = MetadataTokens.MethodDefinitionHandle (typeMethodStart);
+	}
+	
+	void AddIgnoresAccessChecksToAttribute (string assemblyName)
+	{
+		// [assembly: IgnoresAccessChecksTo("assemblyName")]
+		var attrBlob = new BlobBuilder ();
+		attrBlob.WriteUInt16 (1); // Prolog
+		attrBlob.WriteSerializedString (assemblyName);
+		attrBlob.WriteUInt16 (0); // Named args count
+		
+		_metadata.AddCustomAttribute (
+			parent: EntityHandle.AssemblyDefinition,
+			constructor: _ignoresAccessChecksToAttrCtorDef,
+			value: _metadata.GetOrAddBlob (attrBlob));
 	}
 	
 	void AddAssemblyMetadataAttribute (string key, string value)
