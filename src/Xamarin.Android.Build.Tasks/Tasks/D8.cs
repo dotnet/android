@@ -70,6 +70,7 @@ namespace Xamarin.Android.Tasks
 		{
 			var cmd = new CommandLineBuilder ();
 
+			// Only JVM arguments go on the command line, everything else goes in the response file
 			if (!JavaOptions.IsNullOrEmpty ()) {
 				cmd.AppendSwitch (JavaOptions);
 			}
@@ -77,48 +78,15 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("-classpath ", JarPath);
 			cmd.AppendSwitch (MainClass);
 
-			if (!ExtraArguments.IsNullOrEmpty ())
-				cmd.AppendSwitch (ExtraArguments); // it should contain "--dex".
-			if (Debug)
-				cmd.AppendSwitch ("--debug");
-			else
-				cmd.AppendSwitch ("--release");
-
-			//NOTE: if this is blank, we can omit --min-api in this call
-			if (!AndroidManifestFile.IsNullOrEmpty ()) {
-				var doc = AndroidAppManifest.Load (AndroidManifestFile, MonoAndroidHelper.SupportedVersions);
-				if (doc.MinSdkVersion.HasValue) {
-					MinSdkVersion = doc.MinSdkVersion.Value;
-					cmd.AppendSwitchIfNotNull ("--min-api ", MinSdkVersion.ToString ());
-				}
-			}
-
-			if (!EnableDesugar)
-				cmd.AppendSwitch ("--no-desugaring");
-
-			cmd.AppendSwitchIfNotNull ("--output ", OutputDirectory);
-
-			// Create response file with jar libraries and inputs to avoid command line length limits
+			// Create response file with all D8/R8 arguments to avoid command line length limits
 			responseFilePath = CreateResponseFile ();
 			cmd.AppendSwitch ($"@{responseFilePath}");
-
-			if (MapDiagnostics != null) {
-				foreach (var diagnostic in MapDiagnostics) {
-					var from = diagnostic.ItemSpec;
-					var to = diagnostic.GetMetadata ("To");
-					if (from.IsNullOrEmpty () || to.IsNullOrEmpty ())
-						continue;
-					cmd.AppendSwitch ("--map-diagnostics");
-					cmd.AppendSwitch (from);
-					cmd.AppendSwitch (to);
-				}
-			}
 
 			return cmd;
 		}
 
 		/// <summary>
-		/// Creates a response file containing --lib and input jar arguments for R8/D8.
+		/// Creates a response file containing all D8/R8 arguments.
 		/// This avoids command line length limits that can occur with many jar libraries.
 		/// </summary>
 		protected virtual string CreateResponseFile ()
@@ -128,6 +96,46 @@ namespace Xamarin.Android.Tasks
 
 			using var response = new StreamWriter (responseFile, append: false, encoding: Files.UTF8withoutBOM);
 
+			// D8/R8 switches
+			if (!ExtraArguments.IsNullOrEmpty ())
+				WriteArg (response, ExtraArguments); // it should contain "--dex".
+			if (Debug)
+				WriteArg (response, "--debug");
+			else
+				WriteArg (response, "--release");
+
+			//NOTE: if this is blank, we can omit --min-api in this call
+			if (!AndroidManifestFile.IsNullOrEmpty ()) {
+				var doc = AndroidAppManifest.Load (AndroidManifestFile, MonoAndroidHelper.SupportedVersions);
+				if (doc.MinSdkVersion.HasValue) {
+					MinSdkVersion = doc.MinSdkVersion.Value;
+					WriteArg (response, "--min-api");
+					WriteArg (response, MinSdkVersion.ToString ());
+				}
+			}
+
+			if (!EnableDesugar)
+				WriteArg (response, "--no-desugaring");
+
+			if (!OutputDirectory.IsNullOrEmpty ()) {
+				WriteArg (response, "--output");
+				WriteArg (response, OutputDirectory);
+			}
+
+			// --map-diagnostics
+			if (MapDiagnostics != null) {
+				foreach (var diagnostic in MapDiagnostics) {
+					var from = diagnostic.ItemSpec;
+					var to = diagnostic.GetMetadata ("To");
+					if (from.IsNullOrEmpty () || to.IsNullOrEmpty ())
+						continue;
+					WriteArg (response, "--map-diagnostics");
+					WriteArg (response, from);
+					WriteArg (response, to);
+				}
+			}
+
+			// --lib and input jars
 			var injars = new List<string> ();
 			var libjars = new List<string> ();
 			if (AlternativeJarLibrariesToEmbed?.Length > 0) {
