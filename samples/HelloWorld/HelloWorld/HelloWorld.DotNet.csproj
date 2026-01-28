@@ -4,6 +4,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>HelloWorld</RootNamespace>
     <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
+    <TrimMode>full</TrimMode>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Properties\AssemblyInfo.cs" />
