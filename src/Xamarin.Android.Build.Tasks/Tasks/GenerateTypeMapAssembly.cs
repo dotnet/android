@@ -4029,10 +4029,15 @@ public class {{className}}
 			return wrapperHandles;
 		}
 
-		// Ensure we have a local variable signature for the return value (IntPtr)
+		// Local variable signature for methods returning IntPtr (one IntPtr local for the result)
 		var localsBlob = new BlobBuilder ();
 		new BlobEncoder (localsBlob).LocalVariableSignature (1).AddVariable ().Type ().IntPtr ();
-		var localsSig = _metadata.AddStandaloneSignature (_metadata.GetOrAddBlob (localsBlob));
+		var localsSigIntPtr = _metadata.AddStandaloneSignature (_metadata.GetOrAddBlob (localsBlob));
+
+		// Empty local variable signature for void methods (no locals needed)
+		var emptyLocalsBlob = new BlobBuilder ();
+		new BlobEncoder (emptyLocalsBlob).LocalVariableSignature (0);
+		var localsSigVoid = _metadata.AddStandaloneSignature (_metadata.GetOrAddBlob (emptyLocalsBlob));
 
 		// Step 1: Generate UCO wrappers for regular marshal methods (n_methodName)
 		// These come FIRST in the LLVM IR stub index order (indices 0..n-1)
@@ -4051,11 +4056,22 @@ public class {{className}}
 			int jniParamCount = CountJniParameters (mm.JniSignature);
 			int paramCount = 2 + jniParamCount; // jnienv + obj + JNI params
 
-			// Create method signature: static IntPtr wrapper(IntPtr jnienv, IntPtr obj, ...)
+			// Parse the JNI signature to determine callback return type
+			// Format: "(params)returntype" - e.g., "(Landroid/os/Bundle;)V"
+			bool callbackReturnsVoid = mm.JniSignature.EndsWith (")V");
+
+			// Create method signature - wrapper and callback have the same return type
+			// Void methods return void, non-void methods return IntPtr
 			var wrapperSigBlob = new BlobBuilder ();
 			var sigEncoder = new BlobEncoder (wrapperSigBlob).MethodSignature (isInstanceMethod: false);
 			sigEncoder.Parameters (paramCount,
-				returnType => returnType.Type ().IntPtr (),
+				returnType => {
+					if (callbackReturnsVoid) {
+						returnType.Void ();
+					} else {
+						returnType.Type ().IntPtr ();
+					}
+				},
 				parameters => {
 					// First two are always jnienv and obj (IntPtr)
 					parameters.AddParameter ().Type ().IntPtr ();
@@ -4066,11 +4082,7 @@ public class {{className}}
 					}
 				});
 
-			// Parse the JNI signature to determine callback return type
-			// Format: "(params)returntype" - e.g., "(Landroid/os/Bundle;)V"
-			bool callbackReturnsVoid = mm.JniSignature.EndsWith (")V");
-
-			// Create callback signature (may differ from wrapper - e.g., callback returns void, wrapper returns IntPtr)
+			// Create callback signature (same as wrapper signature)
 			var callbackSigBlob = new BlobBuilder ();
 			var callbackSigEncoder = new BlobEncoder (callbackSigBlob).MethodSignature (isInstanceMethod: false);
 			callbackSigEncoder.Parameters (paramCount,
@@ -4149,12 +4161,10 @@ public class {{className}}
 			}
 			wrapperEncoder.Call (callbackMethodRef);
 
-			// If callback returns void, we need to load a default IntPtr value for the wrapper return
-			if (callbackReturnsVoid) {
-				wrapperEncoder.LoadConstantI4 (0);
-				wrapperEncoder.OpCode (ILOpCode.Conv_i);
+			// For non-void methods, store the result in local 0
+			if (!callbackReturnsVoid) {
+				wrapperEncoder.StoreLocal (0);
 			}
-			wrapperEncoder.StoreLocal (0);
 
 			// Leave try block
 			wrapperEncoder.Branch (ILOpCode.Leave, endLabel);
@@ -4164,15 +4174,20 @@ public class {{className}}
 			wrapperEncoder.MarkLabel (handlerStartLabel);
 			wrapperEncoder.Call (_throwableFromExceptionRef);
 			wrapperEncoder.Call (_raiseThrowableRef);
-			wrapperEncoder.LoadConstantI4 (0);
-			wrapperEncoder.OpCode (ILOpCode.Conv_i);
-			wrapperEncoder.StoreLocal (0);
+			// For non-void methods, store IntPtr.Zero as default return value
+			if (!callbackReturnsVoid) {
+				wrapperEncoder.LoadConstantI4 (0);
+				wrapperEncoder.OpCode (ILOpCode.Conv_i);
+				wrapperEncoder.StoreLocal (0);
+			}
 			wrapperEncoder.Branch (ILOpCode.Leave, endLabel);
 			wrapperEncoder.MarkLabel (handlerEndLabel);
 
 			// Return
 			wrapperEncoder.MarkLabel (endLabel);
-			wrapperEncoder.LoadLocal (0);
+			if (!callbackReturnsVoid) {
+				wrapperEncoder.LoadLocal (0);
+			}
 			wrapperEncoder.OpCode (ILOpCode.Ret);
 
 			controlFlowBuilder.AddCatchRegion (tryStartLabel, tryEndLabel, handlerStartLabel, handlerEndLabel, _exceptionTypeRef);
@@ -4180,7 +4195,7 @@ public class {{className}}
 			int wrapperBodyOffset = _methodBodyStream.AddMethodBody (
 				wrapperEncoder,
 				maxStack: paramCount + 2,
-				localVariablesSignature: localsSig,
+				localVariablesSignature: callbackReturnsVoid ? localsSigVoid : localsSigIntPtr,
 				attributes: MethodBodyAttributes.InitLocals);
 
 			var wrapperDef = _metadata.AddMethodDefinition (
