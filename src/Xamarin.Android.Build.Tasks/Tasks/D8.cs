@@ -51,7 +51,7 @@ namespace Xamarin.Android.Tasks
 			try {
 				return base.RunTask ();
 			} finally {
-				if (responseFilePath is { Length: > 0 } && File.Exists (responseFilePath)) {
+				if (!responseFilePath.IsNullOrEmpty () && File.Exists (responseFilePath)) {
 					File.Delete (responseFilePath);
 				}
 			}
@@ -70,14 +70,14 @@ namespace Xamarin.Android.Tasks
 		{
 			var cmd = new CommandLineBuilder ();
 
-			if (JavaOptions is { Length: > 0 }) {
+			if (!JavaOptions.IsNullOrEmpty ()) {
 				cmd.AppendSwitch (JavaOptions);
 			}
 			cmd.AppendSwitchIfNotNull ("-Xmx", JavaMaximumHeapSize);
 			cmd.AppendSwitchIfNotNull ("-classpath ", JarPath);
 			cmd.AppendSwitch (MainClass);
 
-			if (ExtraArguments is { Length: > 0 })
+			if (!ExtraArguments.IsNullOrEmpty ())
 				cmd.AppendSwitch (ExtraArguments); // it should contain "--dex".
 			if (Debug)
 				cmd.AppendSwitch ("--debug");
@@ -85,7 +85,7 @@ namespace Xamarin.Android.Tasks
 				cmd.AppendSwitch ("--release");
 
 			//NOTE: if this is blank, we can omit --min-api in this call
-			if (AndroidManifestFile is { Length: > 0 }) {
+			if (!AndroidManifestFile.IsNullOrEmpty ()) {
 				var doc = AndroidAppManifest.Load (AndroidManifestFile, MonoAndroidHelper.SupportedVersions);
 				if (doc.MinSdkVersion.HasValue) {
 					MinSdkVersion = doc.MinSdkVersion.Value;
@@ -106,7 +106,7 @@ namespace Xamarin.Android.Tasks
 				foreach (var diagnostic in MapDiagnostics) {
 					var from = diagnostic.ItemSpec;
 					var to = diagnostic.GetMetadata ("To");
-					if (from is not { Length: > 0 } || to is not { Length: > 0 })
+					if (from.IsNullOrEmpty () || to.IsNullOrEmpty ())
 						continue;
 					cmd.AppendSwitch ("--map-diagnostics");
 					cmd.AppendSwitch (from);
@@ -137,7 +137,7 @@ namespace Xamarin.Android.Tasks
 				}
 			} else if (JavaLibrariesToEmbed != null) {
 				Log.LogDebugMessage ("  processing ClassesZip, JavaLibrariesToEmbed...");
-				if (ClassesZip is { Length: > 0 } && File.Exists (ClassesZip)) {
+				if (!ClassesZip.IsNullOrEmpty () && File.Exists (ClassesZip)) {
 					injars.Add (ClassesZip);
 				}
 				foreach (var jar in JavaLibrariesToEmbed) {
