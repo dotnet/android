@@ -574,5 +574,58 @@ public class Foo {{
 			FileAssert.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{moduleName}-release.aar"));
 		}
 
+		/// <summary>
+		/// Test case data for AGP/Gradle version combinations.
+		/// Gradle 9.x has stricter Kotlin type checking for null safety.
+		/// See: https://github.com/dotnet/android/issues/9818
+		/// </summary>
+		static IEnumerable<object[]> GetAgpGradleVersionTestData ()
+		{
+			// AGP 8.5.0 with Gradle 8.7 (minimum required for AGP 8.5)
+			yield return new object[] { "8.5.0", "8.7" };
+			// AGP 8.7.0 with Gradle 8.9 (minimum required for AGP 8.7)
+			yield return new object[] { "8.7.0", "8.9" };
+			// AGP 8.8.0 with Gradle 8.10 (minimum required for AGP 8.8)
+			yield return new object[] { "8.8.0", "8.10.2" };
+			// AGP 8.9.0 with Gradle 8.11 (minimum required for AGP 8.9)
+			yield return new object[] { "8.9.0", "8.11.1" };
+		}
+
+		/// <summary>
+		/// Verifies that .NET Android binding projects work with various AGP and Gradle versions.
+		/// This test ensures compatibility with Gradle's evolving Kotlin type checking behavior,
+		/// particularly the stricter null safety checks introduced in Gradle 9.x.
+		/// </summary>
+		[Test]
+		[TestCaseSource (nameof (GetAgpGradleVersionTestData))]
+		public void BindLibraryWithMultipleGradleVersions (string agpVersion, string gradleVersion)
+		{
+			var gradleProject = AndroidGradleProject.CreateDefault (GradleTestProjectDir, agpVersion, gradleVersion);
+			var moduleName = gradleProject.Modules.First ().Name;
+
+			var proj = new XamarinAndroidBindingProject {
+				Jars = {
+					new BuildItem (KnownProperties.AndroidGradleProject, gradleProject.BuildFilePath) {
+						Metadata = {
+							{ "ModuleName", moduleName },
+							{ "Bind", "true" },
+							{ "Configuration", "Release" },
+						},
+					},
+				},
+				Sources = {
+					new BuildItem.Source ("Foo.cs") {
+						TextContent = () => @$"public class Foo {{ public Foo () {{ System.Console.WriteLine (GradleTest.{moduleName}Class.GetString(""TestString"")); }} }}"
+					},
+				},
+				MetadataXml = $@"<metadata><attr path=""/api/package[@name='{gradleProject.Modules.First ().PackageName}']"" name=""managedName"">GradleTest</attr></metadata>",
+			};
+
+			using var builder = CreateDllBuilder ();
+			builder.Verbosity = LoggerVerbosity.Detailed;
+			Assert.IsTrue (builder.Build (proj), $"Build with AGP {agpVersion} and Gradle {gradleVersion} should have succeeded.");
+			FileAssert.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{moduleName}-release.aar"));
+		}
+
 	}
 }
