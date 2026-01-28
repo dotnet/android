@@ -191,6 +191,13 @@
     <AndroidSupportedTargetAotAbisSplit>$(AndroidSupportedTargetAotAbis.Split(':'))</AndroidSupportedTargetAotAbisSplit>
   </PropertyGroup>
 
+  <!-- Noise generators -->
+  <PropertyGroup>
+    <!-- Setting this to `true` makes the GenerateJavaCallableWrappers target to output list of everything that's found
+         in android.jar; Enabled by default only on CI  -->
+    <AndroidNoisyJCW Condition=" '$(AndroidNoisyJCW)' == '' and '$(RunningOnCI)' == 'true' ">true</AndroidNoisyJCW>
+  </PropertyGroup>
+
   <!-- Unit Test Properties -->
   <PropertyGroup>
     <!-- When changing the version below, please also update the 'build-tools/scripts/nunit3-console*' scripts -->
