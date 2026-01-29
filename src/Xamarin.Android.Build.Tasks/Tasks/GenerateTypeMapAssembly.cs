@@ -2615,8 +2615,10 @@ declare void @abort() noreturn
 		var constructors = peer.ConstructorMarshalMethods;
 		var regularMethods = peer.RegularMarshalMethods;
 
-		// If no constructors, we still need one nc_activate for the default constructor
-		int numActivateMethods = constructors.Count > 0 ? constructors.Count : 1;
+		// Only generate activation methods for constructors we know about.
+		// Don't generate a default nc_activate_0 - it may not be valid if the base class
+		// doesn't have a no-arg constructor.
+		int numActivateMethods = constructors.Count;
 
 		// Total function pointers: regular methods + activation methods
 		int totalFnPointers = regularMethods.Count + numActivateMethods;
@@ -2710,40 +2712,17 @@ call:
 
 		int activateBaseIndex = regularMethods.Count;
 
-		if (constructors.Count == 0) {
-			string nativeSymbol = MakeJniActivateSymbol (peer.JavaName, "nc_activate_0", "()V");
-			int fnPtrIndex = activateBaseIndex;
-			
+		// Only generate activation methods for constructors we know about.
+		// Don't generate a default nc_activate_0 - types without exported constructors
+		// may only be usable for callbacks (via GetObject<T>).
+		for (int ctorIdx = 0; ctorIdx < constructors.Count; ctorIdx++) {
+			var ctor = constructors [ctorIdx];
+			string nativeSymbol = MakeJniActivateSymbol (peer.JavaName, $"nc_activate_{ctorIdx}", ctor.JniSignature);
+			string llvmParams = JniSignatureToLlvmParams (ctor.JniSignature);
+			string llvmArgs = JniSignatureToLlvmArgs (ctor.JniSignature);
+			int fnPtrIndex = activateBaseIndex + ctorIdx;
+
 			writer.Write ($$"""
-
-; nc_activate_0 - default constructor activation
-define default void @{{nativeSymbol}}(ptr %env, ptr %obj) #0 {
-entry:
-  %cached_ptr = load ptr, ptr @fn_ptr_{{fnPtrIndex}}, align 8
-  %is_null = icmp eq ptr %cached_ptr, null
-  br i1 %is_null, label %resolve, label %call
-
-resolve:
-  %get_fn = load ptr, ptr @typemap_get_function_pointer, align 8
-  call void %get_fn(ptr @class_name, i32 {{classNameLength}}, i32 {{fnPtrIndex}}, ptr @fn_ptr_{{fnPtrIndex}})
-  %resolved_ptr = load ptr, ptr @fn_ptr_{{fnPtrIndex}}, align 8
-  br label %call
-
-call:
-  %fn = phi ptr [ %cached_ptr, %entry ], [ %resolved_ptr, %resolve ]
-  tail call void %fn(ptr %env, ptr %obj)
-  ret void
-}
-""");
-		} else {
-			for (int ctorIdx = 0; ctorIdx < constructors.Count; ctorIdx++) {
-				var ctor = constructors [ctorIdx];
-				string nativeSymbol = MakeJniActivateSymbol (peer.JavaName, $"nc_activate_{ctorIdx}", ctor.JniSignature);
-				string llvmParams = JniSignatureToLlvmParams (ctor.JniSignature);
-				string llvmArgs = JniSignatureToLlvmArgs (ctor.JniSignature);
-				int fnPtrIndex = activateBaseIndex + ctorIdx;
-				
-				writer.Write ($$"""
 
 ; nc_activate_{{ctorIdx}} - constructor activation for {{ctor.JniSignature}}
 define default void @{{nativeSymbol}}(ptr %env, ptr %obj{{llvmParams}}) #0 {
@@ -2764,7 +2743,6 @@ call:
   ret void
 }
 """);
-			}
 		}
 
 		writer.Write ("""
@@ -3055,17 +3033,14 @@ attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memor
 		var nativeCtorDeclarations = new StringBuilder ();
 		int ctorIndex = 0;
 
-		// If no constructors with marshal methods, generate a default constructor
+		// If no constructors with marshal methods, check if we can generate a default constructor.
+		// We can only do this if the base class has a no-arg constructor.
+		// For now, skip default constructor generation - types without exported constructors
+		// may still work if they're only used for callbacks (overriding virtual methods).
 		if (constructors.Count == 0) {
-			constructorDeclarations.AppendLine ($$"""
-    // Default constructor with native activation
-    public {{className}} ()
-    {
-        super ();
-        if (getClass () == {{className}}.class) { nc_activate_0 (); }
-    }
-""");
-			nativeCtorDeclarations.AppendLine ("    private native void nc_activate_0 ();");
+			// Don't generate a default no-arg constructor - it may not be valid
+			// if the base class doesn't have a no-arg constructor.
+			// These types are still usable for callbacks via GetObject<T>().
 		} else {
 			// Generate each constructor
 			foreach (var ctor in constructors) {
