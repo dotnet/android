@@ -1,5 +1,15 @@
 # Type Mapping API Specification for .NET Android
 
+## 0. Open Questions
+
+- [ ] What is the startup perf impact of loading large type maps?
+    - TODO: measure how long it takes to load ~8000 TypeMapAttributes into a type map (untrimmed Debug build scenario) on Samsung A16 (low end phone)
+- [ ] What is the potnetial size saving from excluding unnecessary .java and .o for trimmed classes?
+    - TODO: compare the size of .dex and .so files with and without the trimmed java classes (~300 difference)
+- [ ] Do we need special handling for array and generic types (especially lists)?
+    - TODO: determine if we need to encode array types into the type map as the legacy type map had entries for `[I` and other
+    - TODO: determine if the _base_ JniValueManager and JniTypeManager methods which create array and generic types at runtime are reachable and used with the new typemap
+
 ## 1. Overview
 
 ### 1.1 Purpose
@@ -68,12 +78,12 @@ public class MainActivity extends android.app.Activity
             nc_activate_0();  // Activates .NET peer
         }
     }
-    
+
     @Override
     public void onCreate(android.os.Bundle savedInstanceState) {
         n_onCreate(savedInstanceState);
     }
-    
+
     private native void n_onCreate(android.os.Bundle savedInstanceState);
     private native void nc_activate_0();
 }
@@ -170,17 +180,17 @@ interface ITypeMap
 {
     // Java-to-.NET type resolution
     bool TryGetTypesForJniName(string jniSimpleReference, [NotNullWhen(true)] out IEnumerable<Type>? types);
-    
+
     // Get invoker type for interface/abstract class
     bool TryGetInvokerType(Type type, [NotNullWhen(true)] out Type? invokerType);
-    
+
     // .NET-to-Java type resolution
     bool TryGetJniNameForType(Type type, [NotNullWhen(true)] out string? jniName);
     IEnumerable<string> GetJniNamesForType(Type type);
-    
+
     // Peer instance creation
     IJavaPeerable? CreatePeer(IntPtr handle, JniHandleOwnership transfer, Type? targetType);
-    
+
     // Marshal method function pointer resolution
     IntPtr GetFunctionPointer(ReadOnlySpan<char> className, int methodIndex);
 }
@@ -317,7 +327,7 @@ abstract class JavaPeerProxy : Attribute
     /// Returns the function pointer for the UCO method at the given index.
     /// </summary>
     public abstract IntPtr GetFunctionPointer(int methodIndex);
-    
+
     /// <summary>
     /// Creates an instance of the target type wrapping the given Java object.
     /// </summary>
@@ -373,12 +383,12 @@ public sealed class com_example_MainActivity_Proxy : JavaPeerProxy
             return;
         if (Java.Lang.Object.PeekObject(jobject) != null)
             return;
-        
+
         var instance = (MainActivity)RuntimeHelpers.GetUninitializedObject(typeof(MainActivity));
         ((IJavaPeerable)instance).SetPeerReference(new JniObjectReference(jobject));
         CallActivationCtor(instance, jobject, JniHandleOwnership.DoNotTransfer);
     }
-    
+
     [UnsafeAccessor(UnsafeAccessorKind.Method, Name = ".ctor")]
     static extern void CallActivationCtor(MainActivity instance, IntPtr handle, JniHandleOwnership transfer);
 }
@@ -480,7 +490,7 @@ foreach (var ctor in type.GetActivationConstructors())
 
 ```
 1. Check if type T has XI ctor → use directly
-2. Check if type T has JI ctor → use directly  
+2. Check if type T has JI ctor → use directly
 3. Walk up hierarchy:
    a. Check BaseType for XI ctor → use with [UnsafeAccessor]
    b. Check BaseType for JI ctor → use with [UnsafeAccessor]
@@ -679,17 +689,17 @@ public static void nc_activate_{Index}(IntPtr jnienv, IntPtr jobject)
     // Skip if being constructed from managed side
     if (JniEnvironment.WithinNewObjectScope)
         return;
-    
+
     // Skip if peer already exists
     if (Java.Lang.Object.PeekObject(jobject) != null)
         return;
-    
+
     // Create uninitialized instance
     var instance = (TargetType)RuntimeHelpers.GetUninitializedObject(typeof(TargetType));
-    
+
     // Set peer reference
     ((IJavaPeerable)instance).SetPeerReference(new JniObjectReference(jobject));
-    
+
     // Call activation constructor
     CallActivationCtor(instance, jobject, JniHandleOwnership.DoNotTransfer);
 }
@@ -767,14 +777,14 @@ public sealed class TypeMapAttributeTypeMap : ITypeMap
 {
     private readonly Dictionary<Type, JavaPeerProxy?> _proxyCache = new();
     private readonly Lock _proxyCacheLock = new();
-    
+
     private JavaPeerProxy? GetOrCreateProxy(Type proxyType)
     {
         lock (_proxyCacheLock)
         {
             if (_proxyCache.TryGetValue(proxyType, out var cached))
                 return cached;
-            
+
             var proxy = proxyType.GetCustomAttribute<JavaPeerProxy>();
             _proxyCache[proxyType] = proxy;
             return proxy;
@@ -989,7 +999,7 @@ class MainActivity_Proxy {
     public static Java.Lang.Object CreateInstance(IntPtr handle, JniHandleOwnership ownership) {
         return new MainActivity(handle, ownership);  // Direct reference!
     }
-    
+
     public static void n_OnCreate(IntPtr jnienv, IntPtr native__this, IntPtr bundle) {
         var __this = (MainActivity)Java.Lang.Object.GetObject<MainActivity>(native__this);
         __this.OnCreate(bundle);  // Direct reference!
@@ -1059,7 +1069,7 @@ public void ProcessAssembly(AssemblyDefinition assembly, ...) {
             PreserveJavaObjectImplementation(type);
             continue;
         }
-        
+
         // 2. Custom views from layout XML files
         if (customViewMap.ContainsKey(type.FullName)) {
             Annotations.Mark(type);  // UNCONDITIONAL!
@@ -1095,7 +1105,7 @@ public void ProcessType(TypeDefinition type) {
 void ProcessType(TypeDefinition type) {
     if (!type.IsInterface) return;
     if (!type.ImplementsIJavaObject(cache)) return;
-    
+
     foreach (MethodReference method in type.Methods)
         Annotations.AddPreservedMethod(type, method.Resolve());
 }
@@ -1121,7 +1131,7 @@ When the proxy is preserved, the interface method is preserved through the direc
 void ProcessMethod(MethodDefinition method) {
     if (!method.TryGetRegisterMember(out var member, out var nativeMethod, out var signature))
         return;
-    
+
     // Preserve the handler method (e.g., GetOnCreateHandler)
     PreserveRegisteredMethod(method.DeclaringType, member, method);
 }
@@ -1132,9 +1142,9 @@ void ProcessMethod(MethodDefinition method) {
 **Trimmable type map replacement:** Proxy types use `GetFunctionPointer()` or direct calls:
 ```csharp
 class MainActivity_Proxy {
-    static nint GetOnCreatePointer() => 
+    static nint GetOnCreatePointer() =>
         (nint)(delegate* <IntPtr, IntPtr, IntPtr, void>)&n_OnCreate;
-    
+
     public static void n_OnCreate(IntPtr jnienv, IntPtr native__this, IntPtr bundle) {
         var __this = GetObject<MainActivity>(native__this);
         __this.OnCreate(...);  // Hard reference to overridden method!
@@ -1466,17 +1476,17 @@ PreservationMode DeterminePreservation(TypeDefinition type)
     var registerAttr = type.GetCustomAttribute("Android.Runtime.RegisterAttribute");
     if (registerAttr == null)
         return PreservationMode.None;  // No TypeMap needed
-    
+
     // Check DoNotGenerateAcw property
     bool doNotGenerateAcw = registerAttr.GetProperty<bool>("DoNotGenerateAcw");
-    
+
     if (doNotGenerateAcw)
     {
         // MCW type (binding for existing Java class)
         // Only preserve if .NET code actually uses it
         return PreservationMode.Trimmable;
     }
-    
+
     // JCW type (user's .NET type with Java wrapper)
     // Always preserve because Android/Java may create at any time
     return PreservationMode.Unconditional;
@@ -1892,7 +1902,7 @@ Both generators must enumerate methods in identical order.
 
 **What Happened:** Initial implementation was slow for large apps with many SDK types.
 
-**Resolution:** 
+**Resolution:**
 - Parallel assembly scanning: 6x faster TypeMap generation
 - Two-layer caching: native (LLVM IR globals) + managed (Dictionary with Lock)
 - Exclude Invokers: 20% fewer proxies to generate
@@ -1929,7 +1939,7 @@ Both generators must enumerate methods in identical order.
 
 ```csharp
 // For ALL Java peer types - creates managed wrapper from Java reference
-public interface IJavaPeerProxy 
+public interface IJavaPeerProxy
 {
     IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer);
 }
@@ -1999,7 +2009,7 @@ The following MSBuild properties must be set:
 
 <!-- RuntimeHostConfigurationOption for runtime to find the assembly -->
 <ItemGroup>
-  <RuntimeHostConfigurationOption 
+  <RuntimeHostConfigurationOption
     Include="System.Runtime.InteropServices.TypeMappingEntryAssembly"
     Value="$(TypeMapEntryAssembly)" />
   <!-- NOTE: Do NOT set Trim="true" - this is an assembly name, not a feature switch -->
@@ -2085,7 +2095,7 @@ calli instance void(IntPtr, JniHandleOwnership)
 ret
 ```
 
-**Limitation**: `ldftn + calli` cannot bypass access checks at runtime. Protected constructors fail with `MethodAccessException`. 
+**Limitation**: `ldftn + calli` cannot bypass access checks at runtime. Protected constructors fail with `MethodAccessException`.
 
 **Solution**: Use `IgnoresAccessChecksToAttribute` (see Section 20.6).
 
@@ -2188,9 +2198,9 @@ namespace System.Runtime.CompilerServices
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
     internal sealed class IgnoresAccessChecksToAttribute : Attribute
     {
-        public IgnoresAccessChecksToAttribute(string assemblyName) 
-        { 
-            AssemblyName = assemblyName; 
+        public IgnoresAccessChecksToAttribute(string assemblyName)
+        {
+            AssemblyName = assemblyName;
         }
         public string AssemblyName { get; }
     }
@@ -2204,8 +2214,8 @@ namespace System.Runtime.CompilerServices
 **Generated IL for callbacks** (direct call, no UnsafeAccessor):
 ```il
 // Callback wrapper for n_OnCreate
-.method public hidebysig static void 
-    n_OnCreate_mm_0(native int jnienv, native int native__this, native int bundle) 
+.method public hidebysig static void
+    n_OnCreate_mm_0(native int jnienv, native int native__this, native int bundle)
     cil managed
 {
     ldarg.0          // jnienv
@@ -2219,8 +2229,8 @@ namespace System.Runtime.CompilerServices
 
 **Generated IL for constructors** (direct newobj):
 ```il
-.method public hidebysig static object 
-    CreateInstance(native int handle, valuetype JniHandleOwnership transfer) 
+.method public hidebysig static object
+    CreateInstance(native int handle, valuetype JniHandleOwnership transfer)
     cil managed
 {
     ldarg.0          // handle

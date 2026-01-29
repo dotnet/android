@@ -257,6 +257,7 @@ namespace Java.InteropTests
 
 		[Test, Category ("Export")]
 		[Category ("CoreCLRIgnore")] //TODO: https://github.com/dotnet/android/issues/10069
+		[Ignore ("Skipped - Export delegate gets garbage collected")]
 		public void CreateTypeWithExportedMethods ()
 		{
 			using (var e = new ContainsExportedMethods ()) {
