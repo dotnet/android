@@ -66,7 +66,6 @@ namespace Java.LangTests
 		}
 
 		[Test]
-		[Ignore ("Pre-existing bug: JCW not generated for CreateInstance_OverrideAbsListView_Adapter - missing setSelection override")]
 		public void JnienvCreateInstance_RegistersMultipleInstances ()
 		{
 			using (var adapter = new CreateInstance_OverrideAbsListView_Adapter (Application.Context)) {
@@ -87,16 +86,12 @@ namespace Java.LangTests
 			value.Dispose ();
 		}
 
-		// TODO: fix on CoreCLR once new managed type maps are implemented. Currently fails with
-		//       java/lang/Object is typemap'd to Java.InteropTests.JavaLangRemappingTestObject, not Java.Lang.Object, Mono.Android!
+		// This test verifies that java/lang/Object maps to Java.Lang.Object from Mono.Android
+		// Previously broken on CoreCLR when JavaLangRemappingTestObject was being picked up first,
+		// but now the TypeMap v3 correctly skips duplicate mappings.
 		[Test]
 		public void java_lang_Object_Is_Java_Lang_Object ()
 		{
-			if (AppContext.TryGetSwitch ("Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime", out bool isCoreCLR) && isCoreCLR) {
-				Assert.Ignore ("Currently broken on CoreCLR");
-				return;
-			}
-
 			var jloType = global::Java.Interop.JniEnvironment.Runtime.TypeManager.GetType (new JniTypeSignature ("java/lang/Object"));
 			Assert.AreSame (typeof (Java.Lang.Object), jloType,
 					$"`java/lang/Object` is typemap'd to `{jloType}`, not `Java.Lang.Object, Mono.Android`!");
@@ -113,8 +108,8 @@ namespace Java.LangTests
 	 * NOTE: This test class is currently broken due to missing JCW constructor generation.
 	 * Skipping JCW generation to unblock TypeMap testing.
 	 */
-	// FIXME: This test class needs to be fixed - commenting out Register to skip JCW generation
-	// [Register (CreateInstance_OverrideAbsListView_Adapter.JcwType)]
+	// Note: This test class requires a JCW with proper setSelection override
+	[Register (CreateInstance_OverrideAbsListView_Adapter.JcwType)]
 	public class CreateInstance_OverrideAbsListView_Adapter : AbsListView {
 
 		/* (IntPtr, JniHandleOwnership) ctor is reqiured because AbsListView

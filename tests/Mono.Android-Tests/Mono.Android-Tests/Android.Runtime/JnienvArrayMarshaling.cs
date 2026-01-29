@@ -321,7 +321,6 @@ namespace Android.RuntimeTests {
 		}
 
 		[Test]
-		[Ignore ("Skipped - CreateInstance_OverrideAbsListView_Adapter JCW type not generated")]
 		public void NewArray_UseJcwTypeWhenRenamed ()
 		{
 			IntPtr lref = JNIEnv.NewArray<CreateInstance_OverrideAbsListView_Adapter>(new CreateInstance_OverrideAbsListView_Adapter[0]);
