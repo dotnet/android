@@ -8,6 +8,11 @@
         Condition=" $([MSBuild]::VersionLessThanOrEquals($(TargetFrameworkVersion), '8.0')) " />
   </ImportGroup>
 
+  <!-- Workaround for: https://github.com/dotnet/android/issues/10722 -->
+  <PropertyGroup Condition=" '$(TargetPlatformIdentifier)' == 'android' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '9.0')) ">
+    <UseDefaultPublishRuntimeIdentifier Condition=" '$(UseDefaultPublishRuntimeIdentifier)' == '' ">false</UseDefaultPublishRuntimeIdentifier>
+  </PropertyGroup>
+
   <ItemGroup Condition=" '$(TargetPlatformIdentifier)' == 'android' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '9.0')) ">
     <KnownFrameworkReference
         Update="Microsoft.Android"
