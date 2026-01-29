@@ -213,7 +213,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		[Ignore ("This crashes on the emulator")]
+		[Ignore ("This crashes on the emulator - ART aborts when NewObjectArray is called with invalid parameters")]
 		public void NewObjectArrayWithBadValues ()
 		{
 			try {
