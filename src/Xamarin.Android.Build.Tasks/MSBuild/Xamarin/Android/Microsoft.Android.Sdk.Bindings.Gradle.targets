@@ -16,6 +16,8 @@ This file contains MSBuild targets that support building and operating on Androi
     <_AGPOutDirAbs Condition=" !$([System.IO.Path]::IsPathRooted('$(_AGPOutDirAbs)')) ">$(MSBuildProjectDirectory)/$(_AGPOutDirAbs)</_AGPOutDirAbs>
     <_AGPInitScriptPath>$(_AGPOutDirAbs)net.android.init.gradle.kts</_AGPInitScriptPath>
     <_BuildAndroidGradleProjectsStamp>$(_AndroidStampDirectory)_BuildAndroidGradleProjects.stamp</_BuildAndroidGradleProjectsStamp>
+    <!-- Allow users to provide their own init.gradle.kts file as an escape hatch -->
+    <AndroidGradleInitScriptPath Condition=" '$(AndroidGradleInitScriptPath)' == '' "></AndroidGradleInitScriptPath>
   </PropertyGroup>
 
   <ItemDefinitionGroup>
@@ -74,9 +76,17 @@ This file contains MSBuild targets that support building and operating on Androi
     <RemoveDir Directories="@(AndroidGradleProject->'%(OutputPath)outputs')" />
 
     <!-- Create the net.android.init.gradle.kts script used to override the Gradle project output directory -->
+    <!-- Use user-provided file if AndroidGradleInitScriptPath is set, otherwise use built-in resource -->
     <CopyResource
+        Condition=" '$(AndroidGradleInitScriptPath)' == '' "
         ResourceName="net.android.init.gradle.kts"
         OutputPath="$(_AGPInitScriptPath)"
+    />
+    <Copy
+        Condition=" '$(AndroidGradleInitScriptPath)' != '' "
+        SourceFiles="$(AndroidGradleInitScriptPath)"
+        DestinationFiles="$(_AGPInitScriptPath)"
+        SkipUnchangedFiles="true"
     />
 
     <!-- Run assemble task for project outputs, android app and library project outputs are currently supported -->
