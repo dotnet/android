@@ -16,7 +16,7 @@ namespace Java.Interop
 	/// so by making the proxy an attribute applied to the target type, we can use <c>GetCustomAttribute&lt;JavaPeerProxy&gt;()</c>
 	/// to get the proxy instance without using <c>Activator.CreateInstance()</c>.
 	/// 
-	/// Example generated proxy:
+	/// Example generated proxy for a concrete type:
 	/// <code>
 	/// // Generated attribute applied to the target type
 	/// [ActivityProxy]
@@ -30,10 +30,27 @@ namespace Java.Interop
 	///         => new Activity(handle, transfer);
 	/// }
 	/// </code>
+	/// 
+	/// Example generated proxy for an interface/abstract type:
+	/// <code>
+	/// // Generated proxy for interface - returns InvokerType
+	/// [IComparableProxy]
+	/// interface IComparable { ... }
+	/// 
+	/// [AttributeUsage(AttributeTargets.Interface, Inherited = false)]
+	/// sealed class IComparableProxy : JavaPeerProxy
+	/// {
+	///     public override Type? InvokerType => typeof(IComparableInvoker);
+	///     public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
+	///         => new IComparableInvoker(handle, transfer);
+	/// }
+	/// </code>
 	/// </remarks>
 	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
 	public abstract class JavaPeerProxy : Attribute
 	{
+		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+
 		/// <summary>
 		/// Creates an instance of the target type using the JNI handle and ownership semantics.
 		/// This is used for AOT-safe instance creation without reflection.
@@ -42,34 +59,17 @@ namespace Java.Interop
 		/// <param name="transfer">How to handle JNI reference ownership.</param>
 		/// <returns>A new instance of the target type wrapping the JNI handle.</returns>
 		public abstract IJavaPeerable CreateInstance (IntPtr handle, JniHandleOwnership transfer);
-	}
 
-	/// <summary>
-	/// Attribute applied to abstract classes and interfaces to provide AOT-safe access to their invoker types.
-	/// The invoker type is a concrete implementation that can wrap a JNI handle for an abstract/interface type.
-	/// </summary>
-	/// <typeparam name="TInvoker">The invoker type (e.g., IComparableInvoker for IComparable).</typeparam>
-	/// <remarks>
-	/// This attribute is generated at build time and applied to abstract classes and interfaces.
-	/// It provides a trim-safe and AOT-safe way to get the invoker type without runtime reflection.
-	/// 
-	/// Example:
-	/// <code>
-	/// [JavaPeerProxyWithInvoker&lt;IComparableInvoker&gt;]
-	/// public interface IComparable { ... }
-	/// </code>
-	/// </remarks>
-	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
-	public sealed class JavaPeerProxyWithInvokerAttribute<
-		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-		TInvoker
-	> : Attribute
-		where TInvoker : IJavaPeerable
-	{
 		/// <summary>
-		/// Gets the invoker type for the abstract class or interface.
+		/// Gets the invoker type for abstract classes and interfaces.
+		/// Returns null for concrete types that can be directly instantiated.
 		/// </summary>
-		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-		public Type InvokerType => typeof (TInvoker);
+		/// <remarks>
+		/// This property is overridden in generated proxies for interfaces and abstract classes
+		/// to return their corresponding invoker type (e.g., IComparableInvoker for IComparable).
+		/// The invoker type is a concrete implementation that can wrap a JNI handle.
+		/// </remarks>
+		[return: DynamicallyAccessedMembers (Constructors)]
+		public virtual Type? InvokerType => null;
 	}
 }

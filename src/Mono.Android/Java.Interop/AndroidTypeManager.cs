@@ -36,9 +36,9 @@ namespace Android.Runtime
 				return null;
 			}
 
-			// First, try to get invoker type from the JavaPeerProxyWithInvokerAttribute<TInvoker>
+			// First, try to get invoker type from the JavaPeerProxy attribute
 			// This is the AOT-safe and trim-safe approach for TypeMap v3
-			var invokerType = GetInvokerTypeFromAttribute (type);
+			var invokerType = GetInvokerTypeFromProxy (type);
 			if (invokerType != null) {
 				return invokerType;
 			}
@@ -50,29 +50,13 @@ namespace Android.Runtime
 		}
 
 		[return: DynamicallyAccessedMembers (Constructors)]
-		static Type? GetInvokerTypeFromAttribute (
+		static Type? GetInvokerTypeFromProxy (
 			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.All)]
 			Type type)
 		{
-			// Look for JavaPeerProxyWithInvokerAttribute<TInvoker> on the type
-			// The attribute is a generic type, so we need to find it by its generic type definition
-			foreach (var attr in type.GetCustomAttributes (inherit: false)) {
-				var attrType = attr.GetType ();
-				if (!attrType.IsGenericType) {
-					continue;
-				}
-
-				var genericDef = attrType.GetGenericTypeDefinition ();
-				if (genericDef == typeof (JavaPeerProxyWithInvokerAttribute<>)) {
-					// Get the InvokerType property from the attribute
-					var invokerTypeProperty = attrType.GetProperty (nameof (JavaPeerProxyWithInvokerAttribute<IJavaPeerable>.InvokerType));
-					if (invokerTypeProperty != null) {
-						return invokerTypeProperty.GetValue (attr) as Type;
-					}
-				}
-			}
-
-			return null;
+			// Look for JavaPeerProxy on the type and check its InvokerType property
+			var proxy = (JavaPeerProxy?) Attribute.GetCustomAttribute (type, typeof (JavaPeerProxy), inherit: false);
+			return proxy?.InvokerType;
 		}
 
 		public override void RegisterNativeMembers (

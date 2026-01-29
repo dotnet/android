@@ -4056,6 +4056,11 @@ public class {{className}}
 		_nextParamDefRowId++;
 		_nextMethodDefRowId++;
 
+		// 6. InvokerType property getter override (for interfaces/abstract types with invokers)
+		if ((peer.IsInterface || peer.IsAbstract) && !string.IsNullOrEmpty (peer.InvokerTypeName)) {
+			GenerateInvokerTypeProperty (peer);
+		}
+
 		// Create the type definition
 		var typeDef = _metadata.AddTypeDefinition (
 			attributes: TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
@@ -4077,6 +4082,62 @@ public class {{className}}
 		_proxyTypes.Add ((typeDef, _voidMethodSig));
 
 		return typeDef;
+	}
+
+	/// <summary>
+	/// Generates the InvokerType property getter that returns typeof(InvokerType).
+	/// This allows the runtime to get the invoker type without reflection.
+	/// </summary>
+	void GenerateInvokerTypeProperty (JavaPeerInfo peer)
+	{
+		var invokerTypeRef = AddExternalTypeReference (peer.InvokerAssemblyName!, peer.InvokerTypeName!);
+
+		// Create method signature: Type get_InvokerType()
+		var getterSigBlob = new BlobBuilder ();
+		new BlobEncoder (getterSigBlob)
+			.MethodSignature (isInstanceMethod: true)
+			.Parameters (0,
+				returnType => returnType.Type ().Type (_typeTypeRef, isValueType: false),
+				parameters => { });
+		var getterSig = _metadata.GetOrAddBlob (getterSigBlob);
+
+		// Generate method body: return typeof(InvokerType);
+		var encoder = new InstructionEncoder (new BlobBuilder ());
+
+		// ldtoken InvokerType
+		encoder.OpCode (ILOpCode.Ldtoken);
+		encoder.Token (invokerTypeRef);
+
+		// call Type.GetTypeFromHandle(RuntimeTypeHandle)
+		var getTypeFromHandleSigBlob = new BlobBuilder ();
+		new BlobEncoder (getTypeFromHandleSigBlob)
+			.MethodSignature (isInstanceMethod: false)
+			.Parameters (1,
+				returnType => returnType.Type ().Type (_typeTypeRef, isValueType: false),
+				parameters => parameters.AddParameter ().Type ().Type (_runtimeTypeHandleTypeRef, isValueType: true));
+		var getTypeFromHandleRef = _metadata.AddMemberReference (
+			parent: _typeTypeRef,
+			name: _metadata.GetOrAddString ("GetTypeFromHandle"),
+			signature: _metadata.GetOrAddBlob (getTypeFromHandleSigBlob));
+
+		encoder.Call (getTypeFromHandleRef);
+		encoder.OpCode (ILOpCode.Ret);
+
+		int bodyOffset = _methodBodyStream.AddMethodBody (
+			encoder,
+			maxStack: 1,
+			localVariablesSignature: default,
+			attributes: MethodBodyAttributes.None);
+
+		// Create method definition
+		_metadata.AddMethodDefinition (
+			attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual | MethodAttributes.SpecialName,
+			implAttributes: MethodImplAttributes.IL | MethodImplAttributes.Managed,
+			name: _metadata.GetOrAddString ("get_InvokerType"),
+			signature: getterSig,
+			bodyOffset: bodyOffset,
+			parameterList: MetadataTokens.ParameterHandle (_nextParamDefRowId));
+		_nextMethodDefRowId++;
 	}
 
 	/// <summary>
