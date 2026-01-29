@@ -162,7 +162,9 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 
-		string TargetSdkVersionName => VersionResolver.GetIdFromApiLevel (TargetSdkVersion);
+		// For numeric API levels, use the value directly to avoid issues with GetIdFromApiLevel
+	// returning the installed version's Id (e.g., "36.1") instead of the API level ("36").
+	string TargetSdkVersionName => int.TryParse (TargetSdkVersion, out _) ? TargetSdkVersion : VersionResolver.GetIdFromApiLevel (TargetSdkVersion);
 
 		string MinSdkVersionName =>
 			string.IsNullOrEmpty (MinSdkVersion) ?
