@@ -809,8 +809,8 @@ internal class JavaPeerScanner
 		newPeer.PartitionMarshalMethods ();
 		results.Add (newPeer);
 		
-		// Use Low importance to reduce logging overhead - only shows with -v:detailed
-		_log.LogMessage (MessageImportance.Low, $"    Added Java peer: {fullName} -> '{javaName}' (in {assemblyName}, DoNotGenerateAcw={doNotGenerateAcw}, MarshalMethods={marshalMethods.Count}, Interfaces={implementedInterfaces.Count}, AssociatedTypes={associatedTypes.Count})");
+		// Log every peer - changed to High for debugging
+		_log.LogMessage (MessageImportance.High, $"    Added Java peer: {fullName} -> '{javaName}' (in {assemblyName}, DoNotGenerateAcw={doNotGenerateAcw}, MarshalMethods={marshalMethods.Count})");
 
 		// Process nested types
 		foreach (var nestedHandle in typeDef.GetNestedTypes ()) {

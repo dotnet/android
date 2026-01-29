@@ -48,6 +48,16 @@ namespace Android.Runtime
 			}
 
 			_externalTypeMap = TypeMapping.GetOrCreateExternalTypeMapping<Java.Lang.Object> ();
+			
+			// Debug: log all keys in the external type map
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"_externalTypeMap has {_externalTypeMap.Count} entries");
+			int logged = 0;
+			foreach (var kvp in _externalTypeMap) {
+				if (logged < 20 || kvp.Key.Contains ("MainActivity") || kvp.Key.Contains ("HelloWorld")) {
+					Logger.Log (LogLevel.Info, "monodroid-typemap", $"  [{logged}] '{kvp.Key}' -> {kvp.Value?.FullName ?? "NULL"}");
+					logged++;
+				}
+			}
 		}
 
 		/// <inheritdoc/>
