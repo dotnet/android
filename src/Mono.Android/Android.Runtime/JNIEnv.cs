@@ -31,12 +31,12 @@ namespace Android.Runtime {
 			Array.CreateInstance (elementType, length);
 			#pragma warning restore IL3050
 
-		static Type MakeArrayType (Type type) =>
-			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
-			// IL3050 disabled in source: if someone uses NativeAOT, they will get the warning.
-			#pragma warning disable IL3050
-			type.MakeArrayType ();
-			#pragma warning restore IL3050
+		static Type MakeArrayType (Type type)
+		{
+			// TypeMap v3: MakeArrayType is not supported - all array types must be pre-registered
+			throw new NotSupportedException (
+				$"MakeArrayType is not supported with TypeMap v3. Type '{type.FullName}' array must be pre-registered.");
+		}
 
 		internal static IntPtr IdentityHash (IntPtr v)
 		{

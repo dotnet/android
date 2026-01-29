@@ -119,31 +119,15 @@ namespace Java.Interop {
 			static Type? AssemblyGetType (Assembly assembly, string typeName) =>
 				assembly.GetType (typeName);
 
-			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
-			// IL3050 disabled in source: if someone uses NativeAOT, they will get the warning.
-			[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = InvokerTypes)]
-			[UnconditionalSuppressMessage ("Trimming", "IL2068", Justification = InvokerTypes)]
-			[return: DynamicallyAccessedMembers (Constructors)]
-			static Type MakeGenericType (Type type, params Type [] typeArguments) =>
-				#pragma warning disable IL3050
-				type.MakeGenericType (typeArguments);
-				#pragma warning restore IL3050
-
 			const string suffix = "Invoker";
 			
 			Type[] arguments = type.GetGenericArguments ();
 			if (arguments.Length == 0)
 				return AssemblyGetType (type.Assembly, type + suffix);
-			Type definition = type.GetGenericTypeDefinition ();
-			int bt = definition.FullName!.IndexOf ("`", StringComparison.Ordinal);
-			if (bt == -1)
-				throw new NotSupportedException ("Generic type doesn't follow generic type naming convention! " + type.FullName);
-			Type? suffixDefinition = AssemblyGetType (
-					definition.Assembly,
-					definition.FullName.Substring (0, bt) + suffix + definition.FullName.Substring (bt));
-			if (suffixDefinition == null)
-				return null;
-			return MakeGenericType (suffixDefinition, arguments);
+			// TypeMap v3: Generic invoker types must be pre-registered, MakeGenericType is not supported
+			throw new NotSupportedException (
+				$"Generic invoker type construction is not supported with TypeMap v3. " +
+				$"Type '{type.FullName}' invoker must be pre-registered.");
 		}
 	}
 }

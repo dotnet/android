@@ -22,6 +22,7 @@ namespace Android.Runtime
 		};
 
 		readonly ITypeMap _typeMap;
+		static bool _loggedTypeMapV3Active;
 
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 		const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
@@ -30,19 +31,26 @@ namespace Android.Runtime
 		public TypeMapTypeManager (ITypeMap typeMap)
 		{
 			_typeMap = typeMap ?? throw new ArgumentNullException (nameof (typeMap));
+			
+			// Log once that TypeMap v3 is active
+			if (!_loggedTypeMapV3Active) {
+				_loggedTypeMapV3Active = true;
+				Logger.Log (LogLevel.Info, "monodroid-typemap", 
+					"*** TYPEMAP V3 ACTIVE *** TypeMapTypeManager initialized with " + typeMap.GetType ().Name);
+			}
 		}
 
 		/// <summary>
-		/// Override GetTypes to log when array types are requested (which trigger MakeArrayType/MakeGenericType in base class).
-		/// We want to eventually pre-generate all array types in the typemap.
+		/// Override GetTypes to throw when array types are requested.
+		/// TypeMap v3 does not support runtime type construction.
 		/// </summary>
 		public override IEnumerable<Type> GetTypes (JniTypeSignature typeSignature)
 		{
-			// Log when array types are requested - these trigger type manipulation in the base class
+			// TypeMap v3: Array types must be pre-registered, runtime construction is not supported
 			if (typeSignature.ArrayRank > 0) {
-				Logger.Log (LogLevel.Warn, "monodroid-typemap",
-					$"GetTypes called with array type: {typeSignature.Name} (rank={typeSignature.ArrayRank}). " +
-					$"This triggers MakeArrayType/MakeGenericType. Stack: {Environment.StackTrace}");
+				throw new NotSupportedException (
+					$"Array type lookup is not supported with TypeMap v3. " +
+					$"Type '{typeSignature.Name}' (rank={typeSignature.ArrayRank}) must be pre-registered.");
 			}
 
 			return base.GetTypes (typeSignature);
