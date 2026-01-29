@@ -547,6 +547,7 @@ internal class JavaPeerScanner
 	/// <summary>
 	/// Resolve the BaseJavaName for each type by looking up the base type's JavaName.
 	/// This is needed for JCW generation to have the correct "extends" clause.
+	/// Walks up the inheritance hierarchy to find the first ancestor with a [Register] attribute.
 	/// </summary>
 	void ResolveBaseJavaNames (List<JavaPeerInfo> results)
 	{
@@ -559,15 +560,83 @@ internal class JavaPeerScanner
 			if (peer.IsInterface || string.IsNullOrEmpty (peer.BaseManagedTypeName))
 				continue;
 
-			if (typesByManagedName.TryGetValue (peer.BaseManagedTypeName!, out var basePeer)) {
-				peer.BaseJavaName = basePeer.JavaName;
-				_log.LogMessage (MessageImportance.High, $"    {peer.ManagedTypeName}: base Java type is {peer.BaseJavaName}");
-			} else {
-				// Base type not in our scanned results - default to java/lang/Object
-				peer.BaseJavaName = "java/lang/Object";
-				_log.LogMessage (MessageImportance.High, $"    {peer.ManagedTypeName}: base type {peer.BaseManagedTypeName} not in TypeMap, defaulting to java/lang/Object");
+			// Walk up the inheritance chain to find first ancestor with a JavaName
+			string? currentTypeName = peer.BaseManagedTypeName;
+			string? currentAssemblyName = peer.BaseAssemblyName;
+			string? foundJavaName = null;
+
+			_log.LogMessage (MessageImportance.High, $"  Resolving base Java type for {peer.ManagedTypeName}, starting with base {currentTypeName} in {currentAssemblyName}");
+
+			while (currentTypeName is not null) {
+				_log.LogMessage (MessageImportance.High, $"    Checking {currentTypeName} in {currentAssemblyName}...");
+				
+				// First, check if the type is in our TypeMap results
+				if (typesByManagedName.TryGetValue (currentTypeName, out var basePeer)) {
+					foundJavaName = basePeer.JavaName;
+					_log.LogMessage (MessageImportance.High, $"    -> Found in TypeMap: {foundJavaName}");
+					break;
+				}
+
+				// Not in TypeMap results - look up the type in metadata to find its [Register] attribute
+				// and continue walking up the hierarchy
+				var (javaName, nextTypeName, nextAssemblyName) = FindRegisterAttributeInType (currentTypeName, currentAssemblyName);
+				if (javaName is not null) {
+					foundJavaName = javaName;
+					_log.LogMessage (MessageImportance.High, $"    -> Found [Register] attribute: {foundJavaName}");
+					break;
+				}
+
+				_log.LogMessage (MessageImportance.High, $"    -> Not found, next base: {nextTypeName} in {nextAssemblyName}");
+				
+				// Continue up the hierarchy
+				currentTypeName = nextTypeName;
+				currentAssemblyName = nextAssemblyName;
 			}
+
+			peer.BaseJavaName = foundJavaName ?? "java/lang/Object";
+			_log.LogMessage (MessageImportance.High, $"    {peer.ManagedTypeName}: base Java type is {peer.BaseJavaName}");
 		}
+	}
+
+	/// <summary>
+	/// Looks up a type by name in the cached assemblies and returns its [Register] attribute value
+	/// and base type information for continuing the hierarchy walk.
+	/// </summary>
+	(string? JavaName, string? BaseTypeName, string? BaseAssemblyName) FindRegisterAttributeInType (string typeName, string? assemblyName)
+	{
+		if (assemblyName.IsNullOrEmpty ()) {
+			_log.LogMessage (MessageImportance.High, $"      FindRegisterAttributeInType: assemblyName is null/empty for {typeName}");
+			return (null, null, null);
+		}
+
+		var reader = GetMetadataReader (assemblyName!);
+		if (reader is null) {
+			_log.LogMessage (MessageImportance.High, $"      FindRegisterAttributeInType: reader is null for assembly {assemblyName}");
+			return (null, null, null);
+		}
+
+		var typeDefCache = GetTypeDefinitionCache (reader);
+		if (!typeDefCache.TryGetValue (typeName, out var typeDefHandle)) {
+			_log.LogMessage (MessageImportance.High, $"      FindRegisterAttributeInType: type {typeName} not found in {assemblyName}");
+			return (null, null, null);
+		}
+
+		var typeDef = reader.GetTypeDefinition (typeDefHandle);
+
+		// Check for [Register] attribute
+		var (javaName, _, _) = GetRegisterAttributeValue (reader, typeDef);
+		if (!javaName.IsNullOrEmpty ())
+			return (javaName, null, null); // Found it!
+
+		// No [Register] attribute - get the base type to continue walking
+		if (!typeDef.BaseType.IsNil) {
+			var (baseTypeName, baseAssemblyName) = GetFullTypeNameAndAssembly (reader, typeDef.BaseType);
+			_log.LogMessage (MessageImportance.High, $"      FindRegisterAttributeInType: no [Register] on {typeName}, base is {baseTypeName} in {baseAssemblyName}");
+			return (null, baseTypeName, baseAssemblyName);
+		}
+
+		_log.LogMessage (MessageImportance.High, $"      FindRegisterAttributeInType: {typeName} has no base type");
+		return (null, null, null);
 	}
 
 	/// <summary>
@@ -2180,6 +2249,27 @@ internal class JavaPeerScanner
 				string fullName = string.IsNullOrEmpty (ns) ? name : $"{ns}.{name}";
 				// TypeDefinition is in the current assembly
 				return (fullName, GetAssemblyName (reader));
+			} else if (handle.Kind == HandleKind.TypeSpecification) {
+				// TypeSpecification is used for generic instantiations like TestInstrumentation<T>
+				// We need to decode the blob to find the underlying generic type
+				var typeSpec = reader.GetTypeSpecification ((TypeSpecificationHandle)handle);
+				var blobReader = reader.GetBlobReader (typeSpec.Signature);
+				
+				// Read the signature header
+				var signatureTypeCode = blobReader.ReadSignatureTypeCode ();
+				if (signatureTypeCode == SignatureTypeCode.GenericTypeInstance) {
+					// Read the generic type (GENERICINST followed by class/valuetype and type handle)
+					var elementType = blobReader.ReadSignatureTypeCode ();
+					EntityHandle genericTypeHandle;
+					if (elementType == SignatureTypeCode.TypeHandle) {
+						genericTypeHandle = blobReader.ReadTypeHandle ();
+					} else {
+						// Could be Class or ValueType marker followed by handle
+						genericTypeHandle = blobReader.ReadTypeHandle ();
+					}
+					// Recursively get the name of the generic type definition
+					return GetFullTypeNameAndAssembly (reader, genericTypeHandle);
+				}
 			}
 		} catch {
 			// Ignore errors, return null
