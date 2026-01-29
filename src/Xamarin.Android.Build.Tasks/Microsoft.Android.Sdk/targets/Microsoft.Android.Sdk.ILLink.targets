@@ -18,24 +18,20 @@ This file contains the .NET 5-specific targets to customize ILLink
     so that type mappings affect trimming decisions.
   -->
   <Target Name="_GenerateTypeMapAssembly"
-      Condition=" '$(PublishTrimmed)' == 'true' "
-      DependsOnTargets="_ComputeManagedAssemblyToLink"
-      BeforeTargets="_RunILLink">
+      DependsOnTargets="_ResolveAssemblies"
+      BeforeTargets="_GenerateJavaStubs">
     <PropertyGroup>
       <_TypeMapAssemblyOutputDir>$(IntermediateOutputPath)typemap\</_TypeMapAssemblyOutputDir>
       <_TypeMapJavaSourceOutputDir>$(_AndroidIntermediateJavaSourceDirectory)</_TypeMapJavaSourceOutputDir>
       <_TypeMapLlvmIrOutputDir>$(IntermediateOutputPath)android\</_TypeMapLlvmIrOutputDir>
     </PropertyGroup>
     
-    <!-- Build list of assemblies to scan: prefer ManagedAssemblyToLink, otherwise collect from intermediate -->
+    <!-- Build list of assemblies to scan: use ResolvedAssemblies from _ResolveAssemblies -->
     <ItemGroup>
-      <_TypeMapInputAssemblies Include="@(ManagedAssemblyToLink)" Condition=" '@(ManagedAssemblyToLink)' != '' " />
-      <!-- Fallback: gather published assemblies from intermediate directory -->
-      <_TypeMapInputAssemblies Include="$(IntermediateOutputPath)*.dll" Condition=" '@(ManagedAssemblyToLink)' == '' " />
-      <_TypeMapInputAssemblies Include="@(ReferencePath)" Condition=" '@(ManagedAssemblyToLink)' == '' and '%(ReferencePath.FileName)' == 'Mono.Android' " />
+      <_TypeMapInputAssemblies Include="@(ResolvedAssemblies)" />
     </ItemGroup>
     
-    <Message Importance="high" Text="[GTMA] ManagedAssemblyToLink count: @(ManagedAssemblyToLink->Count())" />
+    <Message Importance="high" Text="[GTMA] ResolvedAssemblies count: @(ResolvedAssemblies->Count())" />
     <Message Importance="high" Text="[GTMA] _TypeMapInputAssemblies count: @(_TypeMapInputAssemblies->Count())" />
     <Message Importance="high" Text="[GTMA] Input assemblies: @(_TypeMapInputAssemblies->'%(FileName)')" Condition=" '@(_TypeMapInputAssemblies->Count())' != '0' " />
     
