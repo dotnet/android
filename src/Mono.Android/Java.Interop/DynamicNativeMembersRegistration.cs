@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Java.Interop.Tools.TypeNameMappings;
@@ -29,6 +30,10 @@ namespace Java.Interop
 
 		static MethodInfo? dynamic_callback_gen;
 
+		// Keep delegates alive to prevent GC from collecting them while they're registered with JNI
+		// This is necessary because RegisterNatives only stores a function pointer, not a reference
+		static readonly List<Delegate> _registeredDelegates = new List<Delegate> ();
+
 		// See ExportAttribute.cs
 		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Mono.Android.Export.dll is preserved when [Export] is used via [DynamicDependency].")]
 		[UnconditionalSuppressMessage ("Trimming", "IL2075", Justification = "Mono.Android.Export.dll is preserved when [Export] is used via [DynamicDependency].")]
@@ -53,14 +58,8 @@ namespace Java.Interop
 				[DynamicallyAccessedMembers (MethodsAndPrivateNested)] Type type,
 				ReadOnlySpan<char> methods)
 		{
-			// POC: Completely disable dynamic registration on CoreCLR
-			// All native methods are resolved via TypeMaps and get_function_pointer
-			// TODO: [Export] support needs to be revisited in a future iteration
-			if (Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime) {
-				Android.Runtime.Logger.Log (Android.Runtime.LogLevel.Debug, "monodroid", 
-					$"DynamicNativeMembersRegistration: DISABLED for {type.FullName} (CoreCLR uses TypeMaps)");
-				return;
-			}
+			// Note: Dynamic registration for [Export] methods requires keeping delegates alive
+			// to prevent GC from collecting them. This is tracked in https://github.com/dotnet/android/issues/10069
 
 			int methodCount = CountMethods (methods);
 			if (methodCount < 1) {
@@ -117,6 +116,10 @@ namespace Java.Interop
 					if (callback != null) {
 						needToRegisterNatives = true;
 						natives [nativesIndex++] = new JniNativeMethodRegistration (name.ToString (), signature.ToString (), callback);
+						// Keep delegate alive to prevent GC from collecting it
+						lock (_registeredDelegates) {
+							_registeredDelegates.Add (callback);
+						}
 						Android.Runtime.Logger.Log (Android.Runtime.LogLevel.Info, "monodroid", $"DynamicNativeMembersRegistration: registered {name.ToString ()} for {type.FullName}");
 					}
 				}

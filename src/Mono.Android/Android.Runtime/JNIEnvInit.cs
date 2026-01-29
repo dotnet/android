@@ -255,8 +255,8 @@ namespace Android.Runtime
 		private static JniRuntime.JniTypeManager CreateTypeManager (ITypeMap typeMap, bool jniAddNativeMethodRegistrationAttributePresent)
 		{
 			if (RuntimeFeature.IsCoreClrRuntime) {
-				// CoreCLR and NativeAOT both use ManagedTypeManager
-				return new TypeMapTypeManager (typeMap);
+				// CoreCLR uses AndroidTypeManager which supports dynamic [Export] registration
+				return new AndroidTypeManager (typeMap, jniAddNativeMethodRegistrationAttributePresent);
 			}
 
 			if (RuntimeFeature.IsMonoRuntime) {

@@ -257,7 +257,7 @@ namespace Java.InteropTests
 
 		[Test, Category ("Export")]
 		[Category ("CoreCLRIgnore")] //TODO: https://github.com/dotnet/android/issues/10069
-		[Ignore ("Skipped - Export delegate gets garbage collected")]
+		[Ignore ("[Export] methods not supported with TypeMap v3 on CoreCLR - dynamically generated delegates get GC'd")]
 		public void CreateTypeWithExportedMethods ()
 		{
 			using (var e = new ContainsExportedMethods ()) {
