@@ -63,7 +63,7 @@ static partial class JavaInteropRuntime
 			var options = new NativeAotRuntimeOptions {
 				EnvironmentPointer          = jnienv,
 				ClassLoader                 = new JniObjectReference (classLoader, JniObjectReferenceType.Global),
-				TypeManager                 = new AndroidTypeManager (typeMap, jniAddNativeMethodRegistrationAttributePresent: false), // TODO ??
+				TypeManager                 = new AndroidTypeManager (typeMap),
 				ValueManager                = new ManagedValueManager (typeMap),
 				UseMarshalMemberBuilder     = false,
 				JniGlobalReferenceLogWriter = settings.GrefLog,

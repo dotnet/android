@@ -2651,6 +2651,13 @@ internal class TypeMapAssemblyGenerator
 
 	void GenerateLlvmIrFiles (List<JavaPeerInfo> javaPeers, string llvmIrDir)
 	{
+		_log.LogMessage (MessageImportance.High, $"[GTMA-LLVM] GenerateLlvmIrFiles: javaPeers.Count={javaPeers.Count}, llvmIrDir='{llvmIrDir}'");
+		
+		if (string.IsNullOrEmpty (llvmIrDir)) {
+			_log.LogMessage (MessageImportance.High, $"[GTMA-LLVM] Skipping LLVM IR generation - llvmIrDir is empty");
+			return;
+		}
+		
 		int count = 0;
 		foreach (var peer in javaPeers) {
 			if (!NeedsJcwGeneration (peer))
@@ -2662,7 +2669,7 @@ internal class TypeMapAssemblyGenerator
 		
 		GenerateLlvmIrInitFile (llvmIrDir);
 		
-		_log.LogDebugMessage ($"Generated {count} LLVM IR files");
+		_log.LogMessage (MessageImportance.High, $"[GTMA-LLVM] Generated {count} LLVM IR files in {llvmIrDir}");
 	}
 
 	void GenerateLlvmIrInitFile (string outputPath)

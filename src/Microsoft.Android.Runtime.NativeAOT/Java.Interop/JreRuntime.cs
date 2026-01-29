@@ -61,7 +61,7 @@ namespace Java.Interop {
 #if NET
 			// Create type map and managers for NativeAOT
 			var typeMap = new TypeMapAttributeTypeMap ();
-			builder.TypeManager     ??= new Android.Runtime.AndroidTypeManager (typeMap, jniAddNativeMethodRegistrationAttributePresent: false);
+			builder.TypeManager     ??= new Android.Runtime.AndroidTypeManager (typeMap);
 			builder.ValueManager    ??= new ManagedValueManager (typeMap);
 #endif  // NET
 
