@@ -35,13 +35,13 @@
       "Size": 25424
     },
     "lib/arm64-v8a/lib_Java.Interop.dll.so": {
-      "Size": 96664
+      "Size": 96656
     },
     "lib/arm64-v8a/lib_Mono.Android.dll.so": {
-      "Size": 540368
+      "Size": 540296
     },
     "lib/arm64-v8a/lib_Mono.Android.Runtime.dll.so": {
-      "Size": 23880
+      "Size": 23800
     },
     "lib/arm64-v8a/lib_mscorlib.dll.so": {
       "Size": 21464
@@ -62,7 +62,7 @@
       "Size": 19624
     },
     "lib/arm64-v8a/lib_System.ComponentModel.Primitives.dll.so": {
-      "Size": 21360
+      "Size": 21352
     },
     "lib/arm64-v8a/lib_System.ComponentModel.TypeConverter.dll.so": {
       "Size": 43664
@@ -116,7 +116,7 @@
       "Size": 27040
     },
     "lib/arm64-v8a/lib_System.Private.CoreLib.dll.so": {
-      "Size": 994880
+      "Size": 994584
     },
     "lib/arm64-v8a/lib_System.Private.DataContractSerialization.dll.so": {
       "Size": 217984
@@ -140,7 +140,7 @@
       "Size": 61504
     },
     "lib/arm64-v8a/lib_System.Runtime.Serialization.dll.so": {
-      "Size": 19400
+      "Size": 19392
     },
     "lib/arm64-v8a/lib_System.Runtime.Serialization.Formatters.dll.so": {
       "Size": 20368
@@ -149,13 +149,13 @@
       "Size": 21488
     },
     "lib/arm64-v8a/lib_System.Security.Cryptography.dll.so": {
-      "Size": 82168
+      "Size": 82176
     },
     "lib/arm64-v8a/lib_System.Text.RegularExpressions.dll.so": {
-      "Size": 191272
+      "Size": 191264
     },
     "lib/arm64-v8a/lib_System.Xml.dll.so": {
-      "Size": 19288
+      "Size": 19280
     },
     "lib/arm64-v8a/lib_System.Xml.Linq.dll.so": {
       "Size": 19296
@@ -239,7 +239,7 @@
       "Size": 36616
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 1386232
+      "Size": 1466544
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
       "Size": 3123608
@@ -257,7 +257,7 @@
       "Size": 165536
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 350616
+      "Size": 350584
     },
     "META-INF/androidx.activity_activity.version": {
       "Size": 6
@@ -2480,5 +2480,5 @@
       "Size": 812848
     }
   },
-  "PackageSize": 11127869
+  "PackageSize": 11152445
 }
