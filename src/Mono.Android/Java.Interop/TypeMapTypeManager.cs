@@ -32,6 +32,22 @@ namespace Android.Runtime
 			_typeMap = typeMap ?? throw new ArgumentNullException (nameof (typeMap));
 		}
 
+		/// <summary>
+		/// Override GetTypes to log when array types are requested (which trigger MakeArrayType/MakeGenericType in base class).
+		/// We want to eventually pre-generate all array types in the typemap.
+		/// </summary>
+		public override IEnumerable<Type> GetTypes (JniTypeSignature typeSignature)
+		{
+			// Log when array types are requested - these trigger type manipulation in the base class
+			if (typeSignature.ArrayRank > 0) {
+				Logger.Log (LogLevel.Warn, "monodroid-typemap",
+					$"GetTypes called with array type: {typeSignature.Name} (rank={typeSignature.ArrayRank}). " +
+					$"This triggers MakeArrayType/MakeGenericType. Stack: {Environment.StackTrace}");
+			}
+
+			return base.GetTypes (typeSignature);
+		}
+
 		protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
 		{
 			if (_typeMap.TryGetTypesForJniName (jniSimpleReference, out IEnumerable<Type>? types)) {

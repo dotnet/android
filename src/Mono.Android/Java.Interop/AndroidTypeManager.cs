@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using Java.Interop;
@@ -31,9 +32,44 @@ namespace Android.Runtime
 			[DynamicallyAccessedMembers (Constructors)]
 			Type type)
 		{
-			if (type.IsInterface || type.IsAbstract) {
-				return JavaObjectExtensions.GetInvokerType (type)
-					?? base.GetInvokerTypeCore (type);
+			if (!type.IsInterface && !type.IsAbstract) {
+				return null;
+			}
+
+			// First, try to get invoker type from the JavaPeerProxyWithInvokerAttribute<TInvoker>
+			// This is the AOT-safe and trim-safe approach for TypeMap v3
+			var invokerType = GetInvokerTypeFromAttribute (type);
+			if (invokerType != null) {
+				return invokerType;
+			}
+
+			// Fallback: use reflection-based lookup (legacy path)
+			// TODO: Log warning when this path is taken - we want to eliminate it
+			Logger.Log (LogLevel.Warn, "monodroid-typemap", $"GetInvokerTypeCore: falling back to reflection for type '{type.FullName}'");
+			return JavaObjectExtensions.GetInvokerType (type);
+		}
+
+		[return: DynamicallyAccessedMembers (Constructors)]
+		static Type? GetInvokerTypeFromAttribute (
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.All)]
+			Type type)
+		{
+			// Look for JavaPeerProxyWithInvokerAttribute<TInvoker> on the type
+			// The attribute is a generic type, so we need to find it by its generic type definition
+			foreach (var attr in type.GetCustomAttributes (inherit: false)) {
+				var attrType = attr.GetType ();
+				if (!attrType.IsGenericType) {
+					continue;
+				}
+
+				var genericDef = attrType.GetGenericTypeDefinition ();
+				if (genericDef == typeof (JavaPeerProxyWithInvokerAttribute<>)) {
+					// Get the InvokerType property from the attribute
+					var invokerTypeProperty = attrType.GetProperty (nameof (JavaPeerProxyWithInvokerAttribute<IJavaPeerable>.InvokerType));
+					if (invokerTypeProperty != null) {
+						return invokerTypeProperty.GetValue (attr) as Type;
+					}
+				}
 			}
 
 			return null;

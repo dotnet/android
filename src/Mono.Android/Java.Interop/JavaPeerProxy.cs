@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using Android.Runtime;
 
 namespace Java.Interop
@@ -41,5 +42,34 @@ namespace Java.Interop
 		/// <param name="transfer">How to handle JNI reference ownership.</param>
 		/// <returns>A new instance of the target type wrapping the JNI handle.</returns>
 		public abstract IJavaPeerable CreateInstance (IntPtr handle, JniHandleOwnership transfer);
+	}
+
+	/// <summary>
+	/// Attribute applied to abstract classes and interfaces to provide AOT-safe access to their invoker types.
+	/// The invoker type is a concrete implementation that can wrap a JNI handle for an abstract/interface type.
+	/// </summary>
+	/// <typeparam name="TInvoker">The invoker type (e.g., IComparableInvoker for IComparable).</typeparam>
+	/// <remarks>
+	/// This attribute is generated at build time and applied to abstract classes and interfaces.
+	/// It provides a trim-safe and AOT-safe way to get the invoker type without runtime reflection.
+	/// 
+	/// Example:
+	/// <code>
+	/// [JavaPeerProxyWithInvoker&lt;IComparableInvoker&gt;]
+	/// public interface IComparable { ... }
+	/// </code>
+	/// </remarks>
+	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
+	public sealed class JavaPeerProxyWithInvokerAttribute<
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+		TInvoker
+	> : Attribute
+		where TInvoker : IJavaPeerable
+	{
+		/// <summary>
+		/// Gets the invoker type for the abstract class or interface.
+		/// </summary>
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+		public Type InvokerType => typeof (TInvoker);
 	}
 }
