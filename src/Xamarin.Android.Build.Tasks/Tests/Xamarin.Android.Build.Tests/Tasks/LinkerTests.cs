@@ -225,7 +225,11 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void PreserveCustomHttpClientHandlers ([Values (TrimMode.Partial, TrimMode.Full)] TrimMode trimMode, [Values] AndroidRuntime runtime)
+		[TestCase (TrimMode.Partial, AndroidRuntime.MonoVM)]
+		[TestCase (TrimMode.Full, AndroidRuntime.MonoVM)]
+		[TestCase (TrimMode.Partial, AndroidRuntime.CoreCLR)]
+		[TestCase (TrimMode.Full, AndroidRuntime.CoreCLR)]
+		public void PreserveCustomHttpClientHandlers (TrimMode trimMode, AndroidRuntime runtime)
 		{
 			PreserveCustomHttpClientHandler ("Xamarin.Android.Net.AndroidMessageHandler", "",
 				$"temp/PreserveAndroidMessageHandler{trimMode}{runtime}", "android-arm64/linked/Mono.Android.dll", trimMode, runtime);
