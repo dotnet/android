@@ -15,16 +15,13 @@ namespace Android.Runtime
 	/// </summary>
 	class AndroidTypeManager : TypeMapTypeManager
 	{
-		readonly bool _jniAddNativeMethodRegistrationAttributePresent;
-
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 		const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
 		const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
 
-		public AndroidTypeManager (ITypeMap typeMap, bool jniAddNativeMethodRegistrationAttributePresent)
+		public AndroidTypeManager (ITypeMap typeMap)
 			: base(typeMap)
 		{
-			_jniAddNativeMethodRegistrationAttributePresent = jniAddNativeMethodRegistrationAttributePresent;
 		}
 
 		[return: DynamicallyAccessedMembers (Constructors)]
@@ -64,18 +61,10 @@ namespace Android.Runtime
 				[DynamicallyAccessedMembers (MethodsAndPrivateNested)] Type type,
 				ReadOnlySpan<char> methods)
 		{
-			try {
-				if (methods.IsEmpty) {
-					if (_jniAddNativeMethodRegistrationAttributePresent)
-						base.RegisterNativeMembers (nativeClass, type, methods);
-					return;
-				}
-
-				Logger.Log (LogLevel.Info, "monodroid", $"RegisterNativeMembers: type={type.FullName}, methods={methods.ToString ()}");
-				DynamicNativeMembersRegistration.RegisterNativeMembers (nativeClass, type, methods);
-			} catch (Exception e) {
-				JniEnvironment.Runtime.RaisePendingException (e);
-			}
+			// Note: Dynamic native member registration ([Export] attribute) is NOT supported with TypeMap v3.
+			// [Export] requires Mono.Android.Export which uses Reflection.Emit to generate delegates at runtime,
+			// which is incompatible with NativeAOT and trimming. Use [JavaCallable] with source generators instead.
+			throw new NotSupportedException ($"Dynamic native member registration is not supported with TypeMap v3. Type: {type.FullName}");
 		}
 	}
 }

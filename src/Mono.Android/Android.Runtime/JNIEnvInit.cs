@@ -152,7 +152,7 @@ namespace Android.Runtime
 			}
 
 			// Create unified managers using the type map
-			var typeManager = CreateTypeManager (TypeMap, args->jniAddNativeMethodRegistrationAttributePresent != 0);
+			var typeManager = CreateTypeManager (TypeMap);
 			var valueManager = CreateValueManager (TypeMap);
 
 			androidRuntime = new AndroidRuntime (
@@ -252,15 +252,15 @@ namespace Android.Runtime
 			}
 		}
 
-		private static JniRuntime.JniTypeManager CreateTypeManager (ITypeMap typeMap, bool jniAddNativeMethodRegistrationAttributePresent)
+		private static JniRuntime.JniTypeManager CreateTypeManager (ITypeMap typeMap)
 		{
 			if (RuntimeFeature.IsCoreClrRuntime) {
-				// CoreCLR uses AndroidTypeManager which supports dynamic [Export] registration
-				return new AndroidTypeManager (typeMap, jniAddNativeMethodRegistrationAttributePresent);
+				// CoreCLR uses AndroidTypeManager - note that [Export] is NOT supported with TypeMap v3
+				return new AndroidTypeManager (typeMap);
 			}
 
 			if (RuntimeFeature.IsMonoRuntime) {
-				return new AndroidTypeManager (typeMap, jniAddNativeMethodRegistrationAttributePresent);
+				return new AndroidTypeManager (typeMap);
 			}
 
 			throw new NotSupportedException ("Internal error: unknown runtime not supported");

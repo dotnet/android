@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using Java.Interop.Tools.TypeNameMappings;
 
 namespace Java.Interop
@@ -30,9 +31,11 @@ namespace Java.Interop
 
 		static MethodInfo? dynamic_callback_gen;
 
-		// Keep delegates alive to prevent GC from collecting them while they're registered with JNI
-		// This is necessary because RegisterNatives only stores a function pointer, not a reference
-		static readonly List<Delegate> _registeredDelegates = new List<Delegate> ();
+		// Keep delegates alive to prevent GC from collecting them while they're registered with JNI.
+		// Using GCHandle.Alloc with Normal type to prevent GC from collecting the delegates.
+		// This is necessary because RegisterNatives only stores a function pointer, not a reference.
+		// The List keeps references to the handles so they're not freed.
+		static readonly List<GCHandle> _registeredDelegateHandles = new List<GCHandle> ();
 
 		// See ExportAttribute.cs
 		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Mono.Android.Export.dll is preserved when [Export] is used via [DynamicDependency].")]
@@ -116,9 +119,10 @@ namespace Java.Interop
 					if (callback != null) {
 						needToRegisterNatives = true;
 						natives [nativesIndex++] = new JniNativeMethodRegistration (name.ToString (), signature.ToString (), callback);
-						// Keep delegate alive to prevent GC from collecting it
-						lock (_registeredDelegates) {
-							_registeredDelegates.Add (callback);
+						// Keep delegate alive using GCHandle to prevent GC from collecting it
+						// GCHandle.Alloc with GCHandleType.Normal prevents the delegate from being collected
+						lock (_registeredDelegateHandles) {
+							_registeredDelegateHandles.Add (GCHandle.Alloc (callback));
 						}
 						Android.Runtime.Logger.Log (Android.Runtime.LogLevel.Info, "monodroid", $"DynamicNativeMembersRegistration: registered {name.ToString ()} for {type.FullName}");
 					}

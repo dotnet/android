@@ -256,8 +256,7 @@ namespace Java.InteropTests
 		}
 
 		[Test, Category ("Export")]
-		[Category ("CoreCLRIgnore")] //TODO: https://github.com/dotnet/android/issues/10069
-		[Ignore ("[Export] methods not supported with TypeMap v3 on CoreCLR - dynamically generated delegates get GC'd")]
+		[Ignore ("[Export] is not supported with TypeMap v3 - use [JavaCallable] with source generators instead")]
 		public void CreateTypeWithExportedMethods ()
 		{
 			using (var e = new ContainsExportedMethods ()) {
@@ -270,7 +269,7 @@ namespace Java.InteropTests
 		}
 
 		[Test, Category ("Export")]
-		[Category ("CoreCLRIgnore")] //TODO: https://github.com/dotnet/android/issues/10069
+		[Ignore ("[Export] is not supported with TypeMap v3 - use [JavaCallable] with source generators instead")]
 		public void ActivatedDirectObjectSubclassesShouldBeRegistered ()
 		{
 			if (Build.VERSION.SdkInt <= BuildVersionCodes.GingerbreadMr1)
