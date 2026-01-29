@@ -15,6 +15,7 @@ using Android.Views;
 using Java.Net;
 using Java.Security;
 using Javax.Net.Ssl;
+using Microsoft.Android.Runtime;
 
 namespace Android.Runtime {
 
@@ -245,6 +246,16 @@ namespace Android.Runtime {
 		// DO NOT REMOVE
 		[DynamicDependency (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, typeof (Xamarin.Android.Net.AndroidMessageHandler))]
 		static HttpMessageHandler GetHttpMessageHandler ()
+		{
+			if (!RuntimeFeature.XaHttpClientHandlerType) {
+				return new Xamarin.Android.Net.AndroidMessageHandler ();
+			}
+
+			return GetHttpMessageHandlerFromEnvironment ();
+		}
+
+		[RequiresUnreferencedCode ("The handler type specified in XA_HTTP_CLIENT_HANDLER_TYPE might be removed by the trimmer.")]
+		static HttpMessageHandler GetHttpMessageHandlerFromEnvironment ()
 		{
 			[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Preserved by the MarkJavaObjects trimmer step.")]
 			[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
