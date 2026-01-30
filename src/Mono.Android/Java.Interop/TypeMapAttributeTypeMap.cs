@@ -11,6 +11,7 @@ using System.Threading;
 using Android.OS;
 using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
+using Microsoft.Android.Runtime;
 
 namespace Android.Runtime
 {
@@ -34,6 +35,12 @@ namespace Android.Runtime
 		{
 			WorkaroundForILLink ();
 
+			if (RuntimeFeature.IsCoreClrRuntime) {
+				_externalTypeMap = TypeMapping.GetOrCreateExternalTypeMapping<Java.Lang.Object> ();
+			} else {
+				_externalTypeMap = WorkaroundForMonoCollectTypeMapEntries ();
+			}
+
 			// DO NOT REMOVE: This method is used to correctly load type maps until we get newer
 			// builds of the runtime which automatically loads it based on AppContext settings.
 			void WorkaroundForILLink ()
@@ -41,22 +48,53 @@ namespace Android.Runtime
 				// Load the TypeMaps assembly and set it as the entry assembly so that
 				// TypeMapLazyDictionary will scan it for TypeMapAttribute entries.
 				var typeMapsAssembly = Assembly.Load (TypeMapsAssemblyName);
-				Logger.Log (LogLevel.Debug, "monodroid-typemap", $"Loaded TypeMaps assembly: {typeMapsAssembly.FullName}");
+				Logger.Log (LogLevel.Info, "monodroid-typemap", $"Loaded TypeMaps assembly: {typeMapsAssembly.FullName}");
 
 				Assembly.SetEntryAssembly (typeMapsAssembly);
-				Logger.Log (LogLevel.Debug, "monodroid-typemap", "SetEntryAssembly called successfully");
+				Logger.Log (LogLevel.Info, "monodroid-typemap", "SetEntryAssembly called successfully");
 			}
 
-			_externalTypeMap = TypeMapping.GetOrCreateExternalTypeMapping<Java.Lang.Object> ();
-			
-			// Debug: log all keys in the external type map
-			Logger.Log (LogLevel.Info, "monodroid-typemap", $"_externalTypeMap has {_externalTypeMap.Count} entries");
-			int logged = 0;
-			foreach (var kvp in _externalTypeMap) {
-				if (logged < 20 || kvp.Key.Contains ("MainActivity") || kvp.Key.Contains ("HelloWorld")) {
-					Logger.Log (LogLevel.Info, "monodroid-typemap", $"  [{logged}] '{kvp.Key}' -> {kvp.Value?.FullName ?? "NULL"}");
-					logged++;
+			// Workaround for Mono VM - scans the generated type maps assembly attributes
+			// We parse the attributes manually because:
+			// 1. TypeMapAttribute<T> doesn't expose its values as public properties
+			// 2. GetCustomAttributesData fails when 3rd argument references types in the same assembly
+			static IReadOnlyDictionary<string, Type> WorkaroundForMonoCollectTypeMapEntries ()
+			{
+				var typeMapsAssembly = Assembly.Load (TypeMapsAssemblyName);
+				var result = new Dictionary<string, Type> (StringComparer.Ordinal);
+				var typeMapAttrType = typeof (TypeMapAttribute<>);
+
+				foreach (var attrData in typeMapsAssembly.GetCustomAttributesData ()) {
+					// Check if this is a TypeMapAttribute<T> (generic type)
+					if (!attrData.AttributeType.IsGenericType)
+						continue;
+					if (attrData.AttributeType.GetGenericTypeDefinition () != typeMapAttrType)
+						continue;
+
+					try {
+						// TypeMapAttribute has 2 or 3 arguments:
+						// - string value (JNI name)
+						// - Type target
+						// - Type trimTarget (optional)
+						var args = attrData.ConstructorArguments;
+						if (args.Count < 2)
+							continue;
+
+						var jniName = args[0].Value as string;
+						var targetType = args[1].Value as Type;
+
+						if (jniName != null && targetType != null) {
+							result[jniName] = targetType;
+						}
+					} catch (Exception ex) {
+						// Skip entries that fail to resolve (e.g., alias holder types)
+						Logger.Log (LogLevel.Info, "monodroid-typemap", 
+							$"Skipping TypeMapAttribute that failed to resolve: {ex.Message}");
+					}
 				}
+
+				Logger.Log (LogLevel.Info, "monodroid-typemap", $"Collected {result.Count} TypeMap entries for MonoVM");
+				return result;
 			}
 		}
 
@@ -148,11 +186,33 @@ namespace Android.Runtime
 			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
 			string? class_name = GetClassNameFromJavaClassHandle (class_ptr);
 
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"CreatePeer: class_name='{class_name}', targetType={targetType?.FullName}");
+
 			if (class_name != null) {
 				type = _classToTypeCache.GetOrAdd (class_name, _ => FindTypeInHierarchy (class_ptr, class_name));
 
+				Logger.Log (LogLevel.Info, "monodroid-typemap", $"CreatePeer: FindTypeInHierarchy returned type={type?.FullName}");
+
+				if (type != null && type.IsGenericTypeDefinition) {
+					// TODO: This MakeGenericType is AOT-unsafe. In the future, we should generate
+					// closed generic type entries at build time (e.g., GenericHolder<Object>).
+					// For now, fall back to closing with Java.Lang.Object.
+					var args = type.GetGenericArguments ();
+					var typeArgs = new Type [args.Length];
+					for (int i = 0; i < args.Length; i++) typeArgs[i] = typeof (Java.Lang.Object);
+					try {
+						Logger.Log (LogLevel.Warn, "monodroid-typemap", $"Closing generic type {type.FullName} with Object - consider generating pre-closed types");
+						type = type.MakeGenericType (typeArgs);
+					} catch (Exception e) {
+						Logger.Log (LogLevel.Warn, "monodroid-typemap", $"Failed to close generic type {type.FullName}: {e.Message}");
+					}
+				}
+
 				if (type != null && typeof (JavaPeerProxy).IsAssignableFrom (type)) {
 					proxyType = type;
+					Logger.Log (LogLevel.Info, "monodroid-typemap", $"CreatePeer: Found proxyType={proxyType.FullName}");
+				} else {
+					Logger.Log (LogLevel.Info, "monodroid-typemap", $"CreatePeer: type is NOT a JavaPeerProxy (type={type?.FullName}, isProxy={type != null && typeof (JavaPeerProxy).IsAssignableFrom (type)})");
 				}
 			}
 
@@ -163,11 +223,7 @@ namespace Android.Runtime
 
 			// If we found a proxy type, prefer targetType if provided
 			if (proxyType != null) {
-				if (targetType != null) {
-					type = targetType;
-				} else {
-					type = proxyType;
-				}
+				type = targetType ?? proxyType;
 			} else if (targetType != null && (type == null || !targetType.IsAssignableFrom (type))) {
 				type = targetType;
 			}
@@ -213,6 +269,10 @@ namespace Android.Runtime
 		/// <returns>The found .NET type, or null if no type is registered for any class in the hierarchy.</returns>
 		Type? FindTypeInHierarchy (IntPtr class_ptr, string class_name)
 		{
+			if (class_name.StartsWith ("[", StringComparison.Ordinal)) {
+				return GetArrayType (class_name);
+			}
+
 			Type? foundType = null;
 			IntPtr currentPtr = class_ptr;
 			string? currentName = class_name;
@@ -245,6 +305,44 @@ namespace Android.Runtime
 			return foundType;
 		}
 
+		Type? GetArrayType (string jniName)
+		{
+			if (jniName.StartsWith ("[[", StringComparison.Ordinal)) {
+				// Nested arrays not supported yet
+				return null;
+			}
+
+			// Primitive arrays use hardcoded types (no TypeMap lookup needed)
+			switch (jniName) {
+				case "[Z": return typeof (JavaArray<bool>);
+				case "[B": return typeof (JavaArray<byte>);
+				case "[C": return typeof (JavaArray<char>);
+				case "[S": return typeof (JavaArray<short>);
+				case "[I": return typeof (JavaArray<int>);
+				case "[J": return typeof (JavaArray<long>);
+				case "[F": return typeof (JavaArray<float>);
+				case "[D": return typeof (JavaArray<double>);
+			}
+
+			// Object arrays: lookup in typemap for pre-generated JavaObjectArray<T> proxy
+			// The generator creates entries like: [Landroid/view/View; -> JavaObjectArray<View>
+			if (_externalTypeMap.TryGetValue (jniName, out Type? arrayType)) {
+				Logger.Log (LogLevel.Info, "monodroid-typemap", $"GetArrayType: Found {jniName} -> {arrayType.FullName}");
+				return arrayType;
+			}
+
+			// Fallback for java/lang/String arrays
+			if (jniName.StartsWith ("[L", StringComparison.Ordinal) && jniName.EndsWith (";", StringComparison.Ordinal)) {
+				string elementJni = jniName.Substring (2, jniName.Length - 3);
+				if (string.Equals (elementJni, "java/lang/String", StringComparison.Ordinal))
+					return typeof (JavaArray<string>);
+			}
+
+			// No entry found - this means the element type isn't in our typemap
+			Logger.Log (LogLevel.Warn, "monodroid-typemap", $"GetArrayType: No typemap entry for {jniName}");
+			return null;
+		}
+
 		bool IsJavaTypeAssignableFrom (IntPtr handle, string jniName)
 		{
 			// Use cached global reference for the type class to avoid repeated FindClass JNI calls
@@ -272,37 +370,30 @@ namespace Android.Runtime
 
 		bool TryCreateInstance (Type type, Type? proxyType, IntPtr handle, JniHandleOwnership transfer, [NotNullWhen (true)] out IJavaPeerable? result)
 		{
+			// First try to use the already-found proxy type from FindTypeInHierarchy.
+			// This is the proxy for the actual Java class (e.g., HelloWorld.MainActivity),
+			// not the targetType hint (e.g., Activity).
 			JavaPeerProxy? proxy = null;
-
-			// First try to get cached proxy for the specific proxy type (if provided)
-			if (proxyType != null && typeof (JavaPeerProxy).IsAssignableFrom (proxyType)) {
-				proxy = GetOrCreateProxyInstance (proxyType);
+			if (proxyType != null) {
+				proxy = GetProxyForType (proxyType);
 			}
 
-			// Fall back to cached proxy for the target type
-			proxy ??= GetProxyForType (type);
+			// Fall back to looking up by type if no proxy type was found
+			if (proxy is null) {
+				proxy = GetProxyForType (type);
+			}
 
-			if (proxy == null) {
+			if (proxy is null) {
+				// Reflection-based activation is strictly forbidden in V3 to ensure AOT safety.
+				// Any type that needs to be activated MUST have a [JavaPeerProxy] attribute.
+				Logger.Log (LogLevel.Error, "monodroid-typemap", $"Activation failed for {type.FullName} (proxyType={proxyType?.FullName}): No [JavaPeerProxy] attribute found and dynamic registration is disabled.");
 				result = null;
 				return false;
 			}
 
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"TryCreateInstance: Using proxy {proxy.GetType ().FullName} to create instance for {type.FullName}");
 			result = proxy.CreateInstance (handle, transfer);
-			return result != null;
-		}
-
-		/// <summary>
-		/// Gets or creates a cached JavaPeerProxy instance for the given proxy type.
-		/// Uses Activator.CreateInstance only on first access; subsequent calls return cached instance.
-		/// </summary>
-		JavaPeerProxy? GetOrCreateProxyInstance (Type proxyType)
-		{
-			return _proxyInstances.GetOrAdd (proxyType, static t => {
-				if (!typeof (JavaPeerProxy).IsAssignableFrom (t)) {
-					return null;
-				}
-				return (JavaPeerProxy?) Activator.CreateInstance (t);
-			});
+			return result is not null;
 		}
 
 		/// <inheritdoc/>
@@ -314,33 +405,71 @@ namespace Android.Runtime
 
 			// Called once per function pointer during native method registration.
 			// Result is cached in LLVM IR globals, so no managed-side caching needed.
-			IntPtr result;
-			if (!_externalTypeMap.TryGetValue (classNameStr, out Type? type)) {
-				Logger.Log (LogLevel.Warn, "monodroid-typemap", $"  -> Class NOT FOUND in _externalTypeMap!");
-				result = IntPtr.Zero;
-			} else {
+			if (_externalTypeMap.TryGetValue (classNameStr, out Type? type)) {
 				Logger.Log (LogLevel.Info, "monodroid-typemap", $"  -> Found type: {type?.FullName ?? "NULL"}");
 				JavaPeerProxy? proxy = GetProxyForType (type!);
-				if (proxy == null) {
-					Logger.Log (LogLevel.Warn, "monodroid-typemap", $"  -> GetProxyForType returned NULL!");
-					result = IntPtr.Zero;
-				} else if (proxy is IAndroidCallableWrapper acw) {
+				if (proxy is IAndroidCallableWrapper acw) {
 					// Only ACW types have GetFunctionPointer - they have generated Java classes that call back
 					Logger.Log (LogLevel.Info, "monodroid-typemap", $"  -> Got ACW proxy: {proxy.GetType ().FullName}");
-					result = acw.GetFunctionPointer (methodIndex);
+					var result = acw.GetFunctionPointer (methodIndex);
 					Logger.Log (LogLevel.Info, "monodroid-typemap", $"  -> Function pointer: 0x{result:X}");
+					return result;
+				} else if (proxy is null) {
+					Logger.Log (LogLevel.Warn, "monodroid-typemap", $"  -> GetProxyForType returned NULL!");
 				} else {
 					// MCW types don't have GetFunctionPointer - they only wrap existing Java classes
 					Logger.Log (LogLevel.Warn, "monodroid-typemap", $"  -> Proxy {proxy.GetType ().FullName} is MCW (no GetFunctionPointer)!");
-					result = IntPtr.Zero;
 				}
+			} else {
+				Logger.Log (LogLevel.Warn, "monodroid-typemap", $"  -> Class NOT FOUND in _externalTypeMap!");
 			}
 
-			if (result == IntPtr.Zero) {
-				Logger.Log (LogLevel.Error, "monodroid-typemap", $"  -> RETURNING NULL POINTER! This will crash!");
+			Logger.Log (LogLevel.Error, "monodroid-typemap", $"  -> RETURNING NULL POINTER! This will crash!");
+			return IntPtr.Zero;
+		}
+
+		/// <summary>
+		/// Creates a 1D .NET array (T[]) of the specified element type using the pre-generated proxy.
+		/// This is AOT-safe - no Type.MakeGenericType or Array.CreateInstance at runtime.
+		/// </summary>
+		/// <param name="elementType">The element type of the array. May be T or T[] for nested arrays.</param>
+		/// <param name="length">The length of the array.</param>
+		/// <param name="rank">The array rank: 1 for T[], 2 for T[][]. Default is 1.</param>
+		/// <returns>A new array of the specified type and length.</returns>
+		/// <exception cref="ArgumentOutOfRangeException">Thrown if rank is not 1 or 2.</exception>
+		/// <exception cref="InvalidOperationException">Thrown if no proxy is registered for the element type.</exception>
+		public Array CreateArray (Type elementType, int length, int rank)
+		{
+			if (rank < 1 || rank > 2) {
+				throw new ArgumentOutOfRangeException (nameof (rank), rank, "Rank must be 1 or 2");
 			}
 
-			return result;
+			// Handle nested arrays: if elementType is T[], unwrap and bump rank
+			if (elementType.IsArray) {
+				var innerType = elementType.GetElementType ();
+				if (innerType == null) {
+					throw new InvalidOperationException ($"Cannot get element type from array type {elementType.FullName}");
+				}
+				return CreateArray (innerType, length, rank + 1);
+			}
+
+			// 1. Get JNI name for element type
+			if (!TryGetJniNameForType (elementType, out string? jniName)) {
+				throw new InvalidOperationException ($"No JNI name found for element type {elementType.FullName}");
+			}
+
+			// 2. Look up proxy for element type
+			if (!_externalTypeMap.TryGetValue (jniName, out Type? proxyType)) {
+				throw new InvalidOperationException ($"No proxy registered for {jniName}");
+			}
+
+			// 3. Get cached proxy instance and call CreateArray (virtual call, no reflection)
+			var proxy = GetProxyForType (proxyType);
+			if (proxy == null) {
+				throw new InvalidOperationException ($"No proxy instance for {proxyType.FullName}");
+			}
+
+			return proxy.CreateArray (length, rank);
 		}
 	}
 }

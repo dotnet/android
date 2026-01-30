@@ -6,9 +6,10 @@
     - TODO: measure how long it takes to load ~8000 TypeMapAttributes into a type map (untrimmed Debug build scenario) on Samsung A16 (low end phone)
 - [ ] What is the potnetial size saving from excluding unnecessary .java and .o for trimmed classes?
     - TODO: compare the size of .dex and .so files with and without the trimmed java classes (~300 difference)
-- [ ] Do we need special handling for array and generic types (especially lists)?
-    - TODO: determine if we need to encode array types into the type map as the legacy type map had entries for `[I` and other
-    - TODO: determine if the _base_ JniValueManager and JniTypeManager methods which create array and generic types at runtime are reachable and used with the new typemap
+- [x] Do we need special handling for array and generic types (especially lists)?
+    - **RESOLVED**: Yes, array types require special handling. See [Section 20.1: Array Type Handling](#201-array-type-handling) for the design.
+    - Array types use `ArrayProxyAttribute<T>` for AOT-safe array creation
+    - Generic list types are handled through the standard MCW binding pattern
 
 ## 1. Overview
 
@@ -193,6 +194,10 @@ interface ITypeMap
 
     // Marshal method function pointer resolution
     IntPtr GetFunctionPointer(ReadOnlySpan<char> className, int methodIndex);
+
+    // Array creation (AOT-safe)
+    // rank=1 for T[], rank=2 for T[][]
+    Array CreateArray(Type elementType, int length, int rank);
 }
 ```
 
@@ -2038,42 +2043,236 @@ The .NET SDK's `Microsoft.NET.ILLink.targets` automatically adds the flag:
 
 ### 20.1 Array Type Handling
 
-**Status**: Needs Investigation
+**Status**: Designed and Implemented
 
-The legacy native typemap includes entries for Java array types:
+#### Problem
 
-| JNI Signature | Java Type | .NET Equivalent |
-|---------------|-----------|-----------------|
-| `[B` | byte[] | byte[] |
-| `[C` | char[] | char[] |
-| `[D` | double[] | double[] |
-| `[F` | float[] | float[] |
-| `[I` | int[] | int[] |
-| `[J` | long[] | long[] |
-| `[S` | short[] | short[] |
-| `[Z` | boolean[] | bool[] |
-| `[Ljava/lang/Object;` | Object[] | Java.Lang.Object[] |
+The legacy `Array.CreateInstance(elementType, length)` method is not AOT-safe. When marshalling Java arrays to .NET arrays (e.g., `TrustManagerFactory.GetTrustManagers()` returns `ITrustManager[]`), the runtime needs to create .NET arrays without using reflection.
 
-The new TypeMapAttribute system **does not currently include array types**.
+#### Existing Marshalling Flow
 
-**Questions to Investigate**:
+The existing binding code for array-returning methods looks like:
 
-1. When are array typemap entries used in the legacy system?
-2. Does `JNIEnv.GetObjectClass()` on array instances need typemap lookup?
-3. Are arrays handled through explicit JNI array APIs that bypass the typemap?
-4. Do JNI callbacks with array parameters require array type entries?
-5. What happens if exception handling encounters array types?
+```csharp
+// Generated MCW binding
+public unsafe ITrustManager[]? GetTrustManagers()
+{
+    return (ITrustManager[])JNIEnv.GetArray(
+        _members.InstanceMethods.InvokeNonvirtualObjectMethod(...).Handle,
+        JniHandleOwnership.TransferLocalRef,
+        typeof(ITrustManager));  // Element type passed here
+}
+```
 
-**Current Hypothesis**: Array handling may work without typemap entries because:
-- Primitive arrays are marshaled through explicit JNI array APIs (`GetByteArrayElements`, etc.)
-- Type compatibility uses `IsAssignableFrom` on the Java side
-- Object arrays use `GetObjectArrayElement` which returns individual objects
+The `JNIEnv.GetArray` flow:
+1. Get array length via `JniEnvironment.Arrays.GetArrayLength()`
+2. Pick converter based on element type (primitive vs reference)
+3. For reference types: call `ArrayCreateInstance(elementType, length)` to allocate
+4. Call `CopyArray()` to populate individual elements via `GetObjectArrayElement`
 
-**Action Items**:
-- [ ] Test app with array parameters in JNI callbacks
-- [ ] Review `AndroidValueManager` for array-specific handling
-- [ ] Verify exception handling with array types in stack traces
-- [ ] Determine if TypeMapAttribute needs array type support
+**Our change point:** `ArrayCreateInstance` - replace `Array.CreateInstance()` with AOT-safe lookup.
+
+#### ILLink Limitation: Array Types as Trim Targets
+
+We attempted to use `T[]` as the trim target for array TypeMap entries, but ILLink cannot resolve array types:
+
+```
+System.NotSupportedException: TypeDefinition cannot be resolved from 'Mono.Cecil.ArrayType'
+```
+
+This means we cannot have separate TypeMap entries for array types with `T[]` as the trim target.
+
+#### Solution: Unified Proxy with CreateArray Method
+
+Instead of separate `ArrayProxyAttribute<T>` entries, we add array creation capability directly to the existing `JavaPeerProxy` base class. Each generated proxy can create arrays of its target type by calling a static generic helper.
+
+**JavaPeerProxy base class (in Mono.Android):**
+
+```csharp
+public abstract class JavaPeerProxy : Attribute
+{
+    // Existing: Create peer instances
+    public abstract IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer);
+
+    // Create arrays of the target type
+    // rank=1 for T[], rank=2 for T[][]
+    public abstract Array CreateArray(int length, int rank);
+
+    // Static generic helper - contains the actual array creation logic
+    // Generated proxies call this to avoid duplicating the logic
+    protected static Array CreateArrayOf<T>(int length, int rank)
+    {
+        return rank switch {
+            1 => new T[length],
+            2 => new T[length][],
+            _ => throw new ArgumentOutOfRangeException(nameof(rank), rank, "Rank must be 1 or 2"),
+        };
+    }
+}
+```
+
+**Generated proxy classes:**
+
+```csharp
+// For concrete classes - just forwards to the static helper
+internal sealed class Javax_Net_Ssl_TrustManagerFactory_Proxy : JavaPeerProxy
+{
+    public override IJavaPeerable CreateInstance(...) { /* activation logic */ }
+    public override Array CreateArray(int length, int rank)
+        => CreateArrayOf<TrustManagerFactory>(length, rank);
+}
+
+// For interfaces (can't instantiate, but CAN create arrays)
+internal sealed class Javax_Net_Ssl_ITrustManager_Proxy : JavaPeerProxy
+{
+    public override IJavaPeerable CreateInstance(...) => throw new NotSupportedException();
+    public override Array CreateArray(int length, int rank)
+        => CreateArrayOf<ITrustManager>(length, rank);
+}
+
+// For string (special case, commonly used in T[][] APIs)
+internal sealed class Java_Lang_String_Proxy : JavaPeerProxy
+{
+    public override IJavaPeerable CreateInstance(...) { /* ... */ }
+    public override Array CreateArray(int length, int rank)
+        => CreateArrayOf<string>(length, rank);
+}
+```
+
+#### Array Rank Support
+
+| JNI Signature | Element Type | Call | Result |
+|---------------|--------------|------|--------|
+| `[Ljava/lang/String;` | `string` | `CreateArray(n, 1)` | `new string[n]` |
+| `[[Ljava/lang/String;` | `string[]` | `CreateArray(n, 2)` | `new string[n][]` |
+
+**Note:** Higher-rank arrays (T[][][], etc.) are not supported in AOT mode and will throw `ArgumentOutOfRangeException`. This is a practical limitation that covers all known Android API use cases.
+
+#### ITypeMap Interface
+
+```csharp
+interface ITypeMap
+{
+    // ... existing methods ...
+
+    // Array creation (AOT-safe)
+    // rank=1 for T[], rank=2 for T[][]
+    // If elementType is already an array (T[]), it's unwrapped and rank is incremented
+    Array CreateArray(Type elementType, int length, int rank);
+}
+```
+
+#### Runtime Array Creation
+
+```csharp
+// In TypeMapAttributeTypeMap (CoreCLR/NativeAOT path - NO reflection)
+public Array CreateArray(Type elementType, int length, int rank)
+{
+    if (rank < 1 || rank > 2) {
+        throw new ArgumentOutOfRangeException(nameof(rank), rank, "Rank must be 1 or 2");
+    }
+
+    // Handle nested arrays: if elementType is T[], unwrap and bump rank
+    if (elementType.IsArray) {
+        return CreateArray(elementType.GetElementType()!, length, rank + 1);
+    }
+
+    // 1. Get JNI name for element type
+    if (!TryGetJniNameForType(elementType, out var jniName)) {
+        throw new InvalidOperationException($"No JNI name for {elementType}");
+    }
+
+    // 2. Look up proxy for that type (reuse existing mechanism)
+    if (!_externalTypeMap.TryGetValue(jniName, out var proxyType)) {
+        throw new InvalidOperationException($"No proxy registered for {jniName}");
+    }
+
+    // 3. Get cached proxy instance and call CreateArray (virtual call, no reflection)
+    var proxy = GetProxyForType(proxyType);
+    if (proxy == null) {
+        throw new InvalidOperationException($"No proxy instance for {proxyType}");
+    }
+
+    return proxy.CreateArray(length, rank);
+}
+
+// In LlvmIrTypeMap (MonoVM legacy path - reflection OK)
+public Array CreateArray(Type elementType, int length, int rank)
+{
+    if (rank < 1 || rank > 2) {
+        throw new ArgumentOutOfRangeException(nameof(rank), rank, "Rank must be 1 or 2");
+    }
+
+    // Unwrap nested array types
+    while (elementType.IsArray) {
+        elementType = elementType.GetElementType()!;
+        rank++;
+    }
+
+    if (rank > 2) {
+        throw new ArgumentOutOfRangeException(nameof(rank), rank, "Rank must be 1 or 2");
+    }
+
+    // Use reflection (OK for MonoVM)
+    var arrayType = rank == 1 ? elementType : elementType.MakeArrayType();
+    return Array.CreateInstance(arrayType, length);
+}
+```
+
+#### JNIEnv Integration
+
+`JNIEnv.ArrayCreateInstance` delegates to `ITypeMap.CreateArray`:
+
+```csharp
+static Array ArrayCreateInstance(Type elementType, int length)
+{
+    // elementType may be T or T[] (for nested arrays)
+    // CreateArray unwraps array types and computes rank internally
+    // External callers always use rank=1 - nested arrays are handled by unwrapping
+    return JNIEnvInit.TypeMap!.CreateArray(elementType, length, rank: 1);
+}
+```
+
+#### Benefits of This Design
+
+1. **Single method** - `CreateArray(length, rank)` instead of separate `CreateArray` and `CreateArray2`
+2. **Logic in base class** - The switch expression is in handwritten C#, not generated IL
+3. **Simple generated IL** - Each proxy just calls `CreateArrayOf<T>(length, rank)`
+4. **AOT-safe** - `new T[length]` with known T at compile time
+5. **Interfaces supported** - Interface proxies can create arrays even though they can't create instances
+6. **Trimmer-friendly** - When element type is preserved, its proxy is preserved
+
+#### Trimmer Behavior
+
+- **Used types**: If `ITrustManager` is used, its proxy and `CreateArray` method are preserved
+- **Unused types**: If a type is trimmed, its proxy is trimmed, so no array creation overhead
+- **No separate array entries**: No risk of array entries surviving when element type is trimmed
+
+#### Primitive Arrays
+
+Primitive arrays (`byte[]`, `int[]`, etc.) are handled separately through explicit converters in `NativeArrayToManaged`:
+- Direct array allocation: `new byte[len]`, `new int[len]`, etc.
+- Copy via JNI: `GetByteArrayElements`, `GetIntArrayElements`, etc.
+- These don't require TypeMap entries as they use hardcoded allocations
+
+#### Generator Changes
+
+The `GenerateTypeMapAssembly` task generates `CreateArray` for each proxy:
+
+```csharp
+// For each proxy type:
+void GenerateProxyType(JavaPeer peer)
+{
+    // ... existing CreateInstance generation ...
+
+    // Generate CreateArray method that calls the static helper
+    // public override Array CreateArray(int length, int rank)
+    //     => CreateArrayOf<T>(length, rank);
+    GenerateCreateArrayMethod(peer.ManagedType);
+}
+```
+
+**Note:** No separate array TypeMap entries are generated. Array creation uses the element type's proxy.
 
 ### 20.2 ILLink UnsafeAccessor Constructor Marking
 

@@ -24,12 +24,12 @@ namespace Android.Runtime {
 
 		public static IntPtr Handle => JniEnvironment.EnvironmentPointer;
 
-		static Array ArrayCreateInstance (Type elementType, int length) =>
-			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
-			// IL3050 disabled in source: if someone uses NativeAOT, they will get the warning.
-			#pragma warning disable IL3050
-			Array.CreateInstance (elementType, length);
-			#pragma warning restore IL3050
+		static Array ArrayCreateInstance (Type elementType, int length)
+		{
+			// Delegate to ITypeMap.CreateArray - handles both AOT-safe and legacy paths
+			// Rank 1 = T[] (default for all external calls; nested arrays are handled internally)
+			return JNIEnvInit.TypeMap!.CreateArray (elementType, length, rank: 1);
+		}
 
 		static Type MakeArrayType (Type type)
 		{

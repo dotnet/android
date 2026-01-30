@@ -153,6 +153,29 @@ namespace Java.Interop
 		}
 
 		/// <inheritdoc/>
+		[RequiresUnreferencedCode ("Uses Array.CreateInstance which is not AOT-safe.")]
+		public Array CreateArray (Type elementType, int length, int rank)
+		{
+			if (rank < 1 || rank > 2) {
+				throw new ArgumentOutOfRangeException (nameof (rank), rank, "Rank must be 1 or 2");
+			}
+
+			// Unwrap nested array types
+			while (elementType.IsArray) {
+				elementType = elementType.GetElementType ()!;
+				rank++;
+			}
+
+			if (rank > 2) {
+				throw new ArgumentOutOfRangeException (nameof (rank), rank, "Rank must be 1 or 2");
+			}
+
+			// Legacy MonoVM path - reflection is OK here
+			var arrayType = rank == 1 ? elementType : elementType.MakeArrayType ();
+			return Array.CreateInstance (arrayType, length);
+		}
+
+		/// <inheritdoc/>
 		public IJavaPeerable? CreatePeer (
 			IntPtr handle,
 			JniHandleOwnership transfer,

@@ -2305,6 +2305,7 @@ internal class TypeMapAssemblyGenerator
 	TypeReferenceHandle _voidTypeRef;
 	TypeReferenceHandle _intPtrTypeRef;
 	TypeReferenceHandle _int32TypeRef;
+	TypeReferenceHandle _arrayTypeRef;
 	TypeReferenceHandle _typeTypeRef;
 	TypeReferenceHandle _runtimeTypeHandleTypeRef;
 	TypeReferenceHandle _attributeUsageTypeRef;
@@ -2335,6 +2336,7 @@ internal class TypeMapAssemblyGenerator
 
 	// Well-known member references
 	MemberReferenceHandle _javaPeerProxyCtorRef;
+	MemberReferenceHandle _javaPeerProxySetInvokerTypeRef;
 	MemberReferenceHandle _intPtrZeroFieldRef;
 	MemberReferenceHandle _aliasesTypeMapAssocAttrCtorRef;
 	MemberReferenceHandle _typeMapAttrCtorRef;
@@ -2358,6 +2360,7 @@ internal class TypeMapAssemblyGenerator
 	BlobHandle _voidMethodSig;
 	BlobHandle _getFunctionPointerSig;
 	BlobHandle _createInstanceSig;
+	BlobHandle _createArraySig;
 
 	// Tracking for type/method definition order
 	int _nextFieldDefRowId = 1;
@@ -2553,6 +2556,13 @@ internal class TypeMapAssemblyGenerator
 		}
 	}
 
+	// NOTE: Array-specific TypeMap entries are no longer generated.
+	// Instead, each proxy type has CreateArray(int length, int rank) method
+	// that calls the static CreateArrayOf<T>(length, rank) helper to create arrays.
+	// - No separate array JNI names ([L<jni-name>;)
+	// - No ArrayProxyAttribute<T> class needed
+	// - Array creation uses the element type's proxy directly
+
 	// 9. Apply self-attribute to each proxy type
 	ApplySelfAttributes ();
 	
@@ -2627,6 +2637,7 @@ internal class TypeMapAssemblyGenerator
 	/// - DoNotGenerateAcw=true means no JCW (MCW bindings to existing Java classes)
 	/// - Interfaces don't need JCW (Java interfaces already exist)
 	/// - mono/android/* framework types already have JCWs in mono.android.jar
+	/// - android/runtime/* and android/app/* framework types already have JCWs in mono.android.jar
 	/// - Everything else needs JCW (user types, Implementors, etc.)
 	/// </summary>
 	bool NeedsJcwGeneration (JavaPeerInfo peer)
@@ -2640,9 +2651,21 @@ internal class TypeMapAssemblyGenerator
 		if (peer.IsInterface)
 			return false;
 		
-		// Framework infrastructure types (mono/android/*) already have JCWs in mono.android.jar
-		// Exception: Implementors (mono/android/view/*Implementor) need new JCWs for TypeMap v2
+		// Framework infrastructure types already have JCWs in mono.android.jar
+		// Exception: Implementors (mono/android/view/*Implementor) need new JCWs for TypeMap V3
 		if (peer.JavaName.StartsWith ("mono/android/", StringComparison.Ordinal) && !IsImplementorType (peer))
+			return false;
+		
+		// android/runtime/* types (JavaProxyThrowable, XmlReaderPullParser) already have JCWs in mono.android.jar
+		if (peer.JavaName.StartsWith ("android/runtime/", StringComparison.Ordinal))
+			return false;
+		
+		// android/app/ActivityTracker already has JCW in mono.android.jar
+		if (peer.JavaName.StartsWith ("android/app/ActivityTracker", StringComparison.Ordinal))
+			return false;
+		
+		// android/security/* types already have JCWs in mono.android.jar
+		if (peer.JavaName.StartsWith ("android/security/", StringComparison.Ordinal))
 			return false;
 		
 		// Everything else needs JCW generation (user types, Implementors, etc.)
@@ -2686,7 +2709,7 @@ target datalayout = "e-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128"
 target triple = "aarch64-unknown-linux-android21"
 
 ; Global typemap_get_function_pointer callback - initialized to null, set at runtime
-@typemap_get_function_pointer = default local_unnamed_addr global ptr null, align 8
+@typemap_get_function_pointer = protected local_unnamed_addr global ptr null, align 8
 
 ; External puts and abort for error handling
 declare i32 @puts(ptr nocapture readonly) local_unnamed_addr
@@ -3477,6 +3500,11 @@ public class {{className}}
 	@namespace: _metadata.GetOrAddString ("System"),
 	name: _metadata.GetOrAddString ("Int32"));
 	
+	_arrayTypeRef = _metadata.AddTypeReference (
+	resolutionScope: _corlibRef,
+	@namespace: _metadata.GetOrAddString ("System"),
+	name: _metadata.GetOrAddString ("Array"));
+	
 	_typeTypeRef = _metadata.AddTypeReference (
 	resolutionScope: _corlibRef,
 	@namespace: _metadata.GetOrAddString ("System"),
@@ -3529,7 +3557,7 @@ public class {{className}}
 	resolutionScope: _javaInteropRef,
 	@namespace: _metadata.GetOrAddString ("Java.Interop"),
 	name: _metadata.GetOrAddString ("JniObjectReferenceOptions"));
-	
+
 	_javaLangObjectTypeRef = _metadata.AddTypeReference (
 	resolutionScope: _monoAndroidRef,
 	@namespace: _metadata.GetOrAddString ("Java.Lang"),
@@ -3682,6 +3710,18 @@ public class {{className}}
 	parent: _javaPeerProxyTypeRef,
 	name: _metadata.GetOrAddString (".ctor"),
 	signature: _metadata.GetOrAddBlob (ctorSigBlob));
+
+	// JavaPeerProxy.set_InvokerType(Type)
+	var setInvokerTypeSigBlob = new BlobBuilder ();
+	new BlobEncoder (setInvokerTypeSigBlob)
+		.MethodSignature (isInstanceMethod: true)
+		.Parameters (1,
+			returnType => returnType.Void (),
+			parameters => parameters.AddParameter ().Type ().Type (_typeTypeRef, isValueType: false));
+	_javaPeerProxySetInvokerTypeRef = _metadata.AddMemberReference (
+		parent: _javaPeerProxyTypeRef,
+		name: _metadata.GetOrAddString ("set_InvokerType"),
+		signature: _metadata.GetOrAddBlob (setInvokerTypeSigBlob));
 	
 	// IntPtr.Zero field
 	var intPtrFieldSig = new BlobBuilder ();
@@ -3909,6 +3949,18 @@ public class {{className}}
 	parameters.AddParameter ().Type ().Type (_jniHandleOwnershipTypeRef, isValueType: true);
 	});
 	_createInstanceSig = _metadata.GetOrAddBlob (createInstanceSigBlob);
+
+	// Array CreateArray(int length, int rank) signature
+	var createArraySigBlob = new BlobBuilder ();
+	new BlobEncoder (createArraySigBlob)
+	.MethodSignature (isInstanceMethod: true)
+	.Parameters (2,
+	returnType => returnType.Type ().Type (_arrayTypeRef, isValueType: false),
+	parameters => {
+	parameters.AddParameter ().Type ().Int32 ();
+	parameters.AddParameter ().Type ().Int32 ();
+	});
+	_createArraySig = _metadata.GetOrAddBlob (createArraySigBlob);
 	}
 	
 	TypeReferenceHandle AddExternalTypeReference (string assemblyName, string typeName)
@@ -3945,6 +3997,22 @@ public class {{className}}
 	@namespace: _metadata.GetOrAddString (ns),
 	name: _metadata.GetOrAddString (name));
 	}
+
+	/// <summary>
+	/// Parses a type name with assembly (e.g., "Android.Views.View, Mono.Android")
+	/// into its components.
+	/// </summary>
+	static (string? assemblyName, string? typeName) ParseTypeNameWithAssembly (string fullName)
+	{
+		int commaIndex = fullName.IndexOf (',');
+		if (commaIndex < 0)
+			return (null, null);
+
+		string typeName = fullName.Substring (0, commaIndex).Trim ();
+		string assemblyName = fullName.Substring (commaIndex + 1).Trim ();
+
+		return (assemblyName, typeName);
+	}
 	
 	TypeDefinitionHandle GenerateProxyType (JavaPeerInfo peer, TypeReferenceHandle targetTypeRef, string proxyTypeName)
 	{
@@ -3962,7 +4030,7 @@ public class {{className}}
 
 		// Generate methods first (before type definition)
 		// 1. Constructor
-		int ctorBodyOffset = GenerateProxyConstructor ();
+		int ctorBodyOffset = GenerateProxyConstructor (peer);
 		var ctorDef = _metadata.AddMethodDefinition (
 			attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
 			implAttributes: MethodImplAttributes.IL | MethodImplAttributes.Managed,
@@ -4063,10 +4131,28 @@ public class {{className}}
 		_nextParamDefRowId++;
 		_nextMethodDefRowId++;
 
-		// 6. InvokerType property getter override (for interfaces/abstract types with invokers)
-		if ((peer.IsInterface || peer.IsAbstract) && !string.IsNullOrEmpty (peer.InvokerTypeName)) {
-			GenerateInvokerTypeProperty (peer);
-		}
+		// 6. CreateArray override - calls static CreateArrayOf<T>(length, rank)
+		int createArrayBodyOffset = GenerateCreateArrayBody (peer, targetTypeRef);
+		var createArrayDef = _metadata.AddMethodDefinition (
+			attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+			implAttributes: MethodImplAttributes.IL | MethodImplAttributes.Managed,
+			name: _metadata.GetOrAddString ("CreateArray"),
+			signature: _createArraySig,
+			bodyOffset: createArrayBodyOffset,
+			parameterList: MetadataTokens.ParameterHandle (_nextParamDefRowId));
+
+		_metadata.AddParameter (
+			attributes: ParameterAttributes.None,
+			name: _metadata.GetOrAddString ("length"),
+			sequenceNumber: 1);
+		_nextParamDefRowId++;
+
+		_metadata.AddParameter (
+			attributes: ParameterAttributes.None,
+			name: _metadata.GetOrAddString ("rank"),
+			sequenceNumber: 2);
+		_nextParamDefRowId++;
+		_nextMethodDefRowId++;
 
 		// Create the type definition
 		var typeDef = _metadata.AddTypeDefinition (
@@ -4091,61 +4177,6 @@ public class {{className}}
 		return typeDef;
 	}
 
-	/// <summary>
-	/// Generates the InvokerType property getter that returns typeof(InvokerType).
-	/// This allows the runtime to get the invoker type without reflection.
-	/// </summary>
-	void GenerateInvokerTypeProperty (JavaPeerInfo peer)
-	{
-		var invokerTypeRef = AddExternalTypeReference (peer.InvokerAssemblyName!, peer.InvokerTypeName!);
-
-		// Create method signature: Type get_InvokerType()
-		var getterSigBlob = new BlobBuilder ();
-		new BlobEncoder (getterSigBlob)
-			.MethodSignature (isInstanceMethod: true)
-			.Parameters (0,
-				returnType => returnType.Type ().Type (_typeTypeRef, isValueType: false),
-				parameters => { });
-		var getterSig = _metadata.GetOrAddBlob (getterSigBlob);
-
-		// Generate method body: return typeof(InvokerType);
-		var encoder = new InstructionEncoder (new BlobBuilder ());
-
-		// ldtoken InvokerType
-		encoder.OpCode (ILOpCode.Ldtoken);
-		encoder.Token (invokerTypeRef);
-
-		// call Type.GetTypeFromHandle(RuntimeTypeHandle)
-		var getTypeFromHandleSigBlob = new BlobBuilder ();
-		new BlobEncoder (getTypeFromHandleSigBlob)
-			.MethodSignature (isInstanceMethod: false)
-			.Parameters (1,
-				returnType => returnType.Type ().Type (_typeTypeRef, isValueType: false),
-				parameters => parameters.AddParameter ().Type ().Type (_runtimeTypeHandleTypeRef, isValueType: true));
-		var getTypeFromHandleRef = _metadata.AddMemberReference (
-			parent: _typeTypeRef,
-			name: _metadata.GetOrAddString ("GetTypeFromHandle"),
-			signature: _metadata.GetOrAddBlob (getTypeFromHandleSigBlob));
-
-		encoder.Call (getTypeFromHandleRef);
-		encoder.OpCode (ILOpCode.Ret);
-
-		int bodyOffset = _methodBodyStream.AddMethodBody (
-			encoder,
-			maxStack: 1,
-			localVariablesSignature: default,
-			attributes: MethodBodyAttributes.None);
-
-		// Create method definition
-		_metadata.AddMethodDefinition (
-			attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual | MethodAttributes.SpecialName,
-			implAttributes: MethodImplAttributes.IL | MethodImplAttributes.Managed,
-			name: _metadata.GetOrAddString ("get_InvokerType"),
-			signature: getterSig,
-			bodyOffset: bodyOffset,
-			parameterList: MetadataTokens.ParameterHandle (_nextParamDefRowId));
-		_nextMethodDefRowId++;
-	}
 
 	/// <summary>
 	/// Generates UCO wrapper methods for activation constructors and marshal methods.
@@ -4700,17 +4731,49 @@ public class {{className}}
 		return wrapperDef;
 	}
 	
-	int GenerateProxyConstructor ()
+	int GenerateProxyConstructor (JavaPeerInfo peer)
 	{
-	// Generate: ldarg.0; call JavaPeerProxy::.ctor(); ret
-	var codeBuilder = new BlobBuilder ();
-	var encoder = new InstructionEncoder (codeBuilder);
+		// Generate: 
+		//   ldarg.0
+		//   call JavaPeerProxy::.ctor()
+		//   [if invoker]
+		//     ldarg.0
+		//     ldtoken InvokerType
+		//     call Type.GetTypeFromHandle
+		//     call JavaPeerProxy::set_InvokerType
+		//   ret
+
+		var codeBuilder = new BlobBuilder ();
+		var encoder = new InstructionEncoder (codeBuilder);
 	
-	encoder.OpCode (ILOpCode.Ldarg_0);
-	encoder.Call (_javaPeerProxyCtorRef);
-	encoder.OpCode (ILOpCode.Ret);
+		encoder.OpCode (ILOpCode.Ldarg_0);
+		encoder.Call (_javaPeerProxyCtorRef);
+
+		if ((peer.IsInterface || peer.IsAbstract) && !string.IsNullOrEmpty (peer.InvokerTypeName)) {
+			var invokerTypeRef = AddExternalTypeReference (peer.InvokerAssemblyName!, peer.InvokerTypeName!);
+
+			// call Type.GetTypeFromHandle(RuntimeTypeHandle)
+			var getTypeFromHandleSigBlob = new BlobBuilder ();
+			new BlobEncoder (getTypeFromHandleSigBlob)
+				.MethodSignature (isInstanceMethod: false)
+				.Parameters (1,
+					returnType => returnType.Type ().Type (_typeTypeRef, isValueType: false),
+					parameters => parameters.AddParameter ().Type ().Type (_runtimeTypeHandleTypeRef, isValueType: true));
+			var getTypeFromHandleRef = _metadata.AddMemberReference (
+				parent: _typeTypeRef,
+				name: _metadata.GetOrAddString ("GetTypeFromHandle"),
+				signature: _metadata.GetOrAddBlob (getTypeFromHandleSigBlob));
+
+			encoder.OpCode (ILOpCode.Ldarg_0);
+			encoder.OpCode (ILOpCode.Ldtoken);
+			encoder.Token (invokerTypeRef);
+			encoder.Call (getTypeFromHandleRef);
+			encoder.Call (_javaPeerProxySetInvokerTypeRef);
+		}
 	
-	return _methodBodyStream.AddMethodBody (encoder);
+		encoder.OpCode (ILOpCode.Ret);
+	
+		return _methodBodyStream.AddMethodBody (encoder);
 	}
 	
 	int GenerateGetFunctionPointerBody (JavaPeerInfo peer, List<MethodDefinitionHandle> ucoWrapperHandles)
@@ -5145,6 +5208,51 @@ public class {{className}}
 			// No activation constructor - throw NotSupportedException
 			EmitThrowNotSupported (encoder, $"No activation constructor found for {peer.ManagedTypeName}");
 		}
+
+		return _methodBodyStream.AddMethodBody (encoder);
+	}
+
+	int GenerateCreateArrayBody (JavaPeerInfo peer, TypeReferenceHandle targetTypeRef)
+	{
+		var codeBuilder = new BlobBuilder ();
+		var encoder = new InstructionEncoder (codeBuilder);
+
+		// Generate: return CreateArrayOf<T>(length, rank);
+		// This calls the static protected helper on JavaPeerProxy base class
+
+		// Create MethodSpec for CreateArrayOf<T>
+		// First, we need a MemberRef to the uninstantiated CreateArrayOf method on JavaPeerProxy
+		var createArrayOfSigBlob = new BlobBuilder ();
+		new BlobEncoder (createArrayOfSigBlob)
+			.MethodSignature (isInstanceMethod: false, genericParameterCount: 1)
+			.Parameters (2,
+				returnType => returnType.Type ().Type (_arrayTypeRef, isValueType: false),
+				parameters => {
+					parameters.AddParameter ().Type ().Int32 ();
+					parameters.AddParameter ().Type ().Int32 ();
+				});
+		var createArrayOfRef = _metadata.AddMemberReference (
+			parent: _javaPeerProxyTypeRef,
+			name: _metadata.GetOrAddString ("CreateArrayOf"),
+			signature: _metadata.GetOrAddBlob (createArrayOfSigBlob));
+
+		// Create MethodSpec to instantiate CreateArrayOf<T> with targetType
+		var methodSpecSigBlob = new BlobBuilder ();
+		new BlobEncoder (methodSpecSigBlob)
+			.MethodSpecificationSignature (1)
+			.AddArgument ().Type (targetTypeRef, isValueType: false);
+		var methodSpec = _metadata.AddMethodSpecification (
+			method: createArrayOfRef,
+			instantiation: _metadata.GetOrAddBlob (methodSpecSigBlob));
+
+		// ldarg.1 (length)
+		encoder.OpCode (ILOpCode.Ldarg_1);
+		// ldarg.2 (rank)
+		encoder.OpCode (ILOpCode.Ldarg_2);
+		// call JavaPeerProxy.CreateArrayOf<T>(length, rank)
+		encoder.Call (methodSpec);
+		// ret
+		encoder.OpCode (ILOpCode.Ret);
 
 		return _methodBodyStream.AddMethodBody (encoder);
 	}

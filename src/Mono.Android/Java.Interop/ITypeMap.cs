@@ -43,6 +43,21 @@ namespace Android.Runtime
 			Type? targetType);
 
 		/// <summary>
+		/// Creates a 1D .NET array (T[]) of the specified element type.
+		/// This is AOT-safe and does not use Array.CreateInstance reflection.
+		/// </summary>
+		/// <param name="elementType">The element type of the array to create. May be T or T[] for nested arrays.</param>
+		/// <param name="length">The length of the array.</param>
+		/// <param name="rank">The array rank: 1 for T[], 2 for T[][]. Default is 1.</param>
+		/// <returns>A new array instance.</returns>
+		/// <remarks>
+		/// If elementType is itself an array type (T[]), this method unwraps it and
+		/// increments the rank to create the correct jagged array type.
+		/// Higher-rank arrays (T[][][]) are not supported and will throw.
+		/// </remarks>
+		Array CreateArray (Type elementType, int length, int rank);
+
+		/// <summary>
 		/// Resolves a marshal method function pointer by JNI class name and method index.
 		/// Used by Type Mapping API stubs.
 		/// </summary>
