@@ -2327,6 +2327,7 @@ internal class TypeMapAssemblyGenerator
 	TypeReferenceHandle _unmanagedCallersOnlyAttrTypeRef;
 	TypeReferenceHandle _unsafeAccessorAttrTypeRef;
 	TypeReferenceHandle _unsafeAccessorKindTypeRef;
+	TypeReferenceHandle _unconditionalSuppressMessageAttrTypeRef;
 	TypeReferenceHandle _exceptionTypeRef;
 	TypeReferenceHandle _throwableTypeRef;
 	TypeReferenceHandle _androidEnvironmentTypeRef;
@@ -2345,6 +2346,7 @@ internal class TypeMapAssemblyGenerator
 
 	// UCO related member references
 	MemberReferenceHandle _unmanagedCallersOnlyCtorRef;
+	MemberReferenceHandle _unconditionalSuppressMessageAttrCtorRef;
 	MemberReferenceHandle _waitForBridgeProcessingRef;
 	MemberReferenceHandle _raiseThrowableRef;
 	MemberReferenceHandle _throwableFromExceptionRef;
@@ -3599,6 +3601,11 @@ public class {{className}}
 	@namespace: _metadata.GetOrAddString ("System.Runtime.InteropServices"),
 	name: _metadata.GetOrAddString ("UnmanagedCallersOnlyAttribute"));
 
+	_unconditionalSuppressMessageAttrTypeRef = _metadata.AddTypeReference (
+	resolutionScope: _corlibRef,
+	@namespace: _metadata.GetOrAddString ("System.Diagnostics.CodeAnalysis"),
+	name: _metadata.GetOrAddString ("UnconditionalSuppressMessageAttribute"));
+
 	_unsafeAccessorAttrTypeRef = _metadata.AddTypeReference (
 	resolutionScope: _corlibRef,
 	@namespace: _metadata.GetOrAddString ("System.Runtime.CompilerServices"),
@@ -3808,6 +3815,20 @@ public class {{className}}
 		parent: _unmanagedCallersOnlyAttrTypeRef,
 		name: _metadata.GetOrAddString (".ctor"),
 		signature: _metadata.GetOrAddBlob (ucoCtorSigBlob));
+
+	// UnconditionalSuppressMessageAttribute..ctor(string category, string checkId)
+	var usmCtorSigBlob = new BlobBuilder ();
+	new BlobEncoder (usmCtorSigBlob)
+		.MethodSignature (isInstanceMethod: true)
+		.Parameters (2, returnType => returnType.Void (), parameters => {
+			parameters.AddParameter ().Type ().String ();
+			parameters.AddParameter ().Type ().String ();
+		});
+
+	_unconditionalSuppressMessageAttrCtorRef = _metadata.AddMemberReference (
+		parent: _unconditionalSuppressMessageAttrTypeRef,
+		name: _metadata.GetOrAddString (".ctor"),
+		signature: _metadata.GetOrAddBlob (usmCtorSigBlob));
 
 	// AssemblyMetadataAttribute..ctor(string, string)
 	var asmMetaCtorSigBlob = new BlobBuilder ();
@@ -4116,6 +4137,9 @@ public class {{className}}
 			signature: _createInstanceSig,
 			bodyOffset: createInstanceBodyOffset,
 			parameterList: MetadataTokens.ParameterHandle (_nextParamDefRowId));
+
+		// Suppress IL2072: typeof(T) passed to GetUninitializedObject is statically known
+		AddUnconditionalSuppressMessageAttribute (createInstanceDef, "IL2072", "typeof(T) passed to GetUninitializedObject is statically known");
 
 		// Add parameter definitions
 		_metadata.AddParameter (
@@ -4721,6 +4745,9 @@ public class {{className}}
 			namedArguments => namedArguments.Count (0));
 		_metadata.AddCustomAttribute (wrapperDef, _unmanagedCallersOnlyCtorRef, _metadata.GetOrAddBlob (ucoAttrValue));
 
+		// Suppress IL2072: typeof(T) passed to GetUninitializedObject is statically known
+		AddUnconditionalSuppressMessageAttribute (wrapperDef, "IL2072", "typeof(T) passed to GetUninitializedObject is statically known");
+
 		// Add parameter definitions
 		_metadata.AddParameter (ParameterAttributes.None, _metadata.GetOrAddString ("jnienv"), 1);
 		_nextParamDefRowId++;
@@ -5266,6 +5293,53 @@ public class {{className}}
 		encoder.Token (_notSupportedExceptionCtorRef);
 		// throw
 		encoder.OpCode (ILOpCode.Throw);
+	}
+
+	/// <summary>
+	/// Adds [UnconditionalSuppressMessage("Trimming", diagnosticId, Justification = justification)]
+	/// to suppress a specific trim warning on a method.
+	/// </summary>
+	void AddUnconditionalSuppressMessageAttribute (MethodDefinitionHandle methodDef, string diagnosticId, string justification)
+	{
+		// Build custom attribute blob for UnconditionalSuppressMessageAttribute(string category, string checkId)
+		// with named argument Justification = justification
+		var attrBlob = new BlobBuilder ();
+		attrBlob.WriteUInt16 (1); // Prolog
+		WriteSerString (attrBlob, "Trimming"); // category
+		WriteSerString (attrBlob, diagnosticId); // checkId
+		attrBlob.WriteUInt16 (1); // 1 named argument
+		attrBlob.WriteByte (0x54); // PROPERTY
+		attrBlob.WriteByte (0x0E); // ELEMENT_TYPE_STRING
+		WriteSerString (attrBlob, "Justification");
+		WriteSerString (attrBlob, justification);
+
+		_metadata.AddCustomAttribute (methodDef, _unconditionalSuppressMessageAttrCtorRef, _metadata.GetOrAddBlob (attrBlob));
+	}
+
+	void WriteSerString (BlobBuilder blob, string? value)
+	{
+		if (value == null) {
+			blob.WriteByte (0xFF);
+			return;
+		}
+		var bytes = System.Text.Encoding.UTF8.GetBytes (value);
+		WriteCompressedInteger (blob, bytes.Length);
+		blob.WriteBytes (bytes);
+	}
+
+	void WriteCompressedInteger (BlobBuilder blob, int value)
+	{
+		if (value <= 0x7F) {
+			blob.WriteByte ((byte) value);
+		} else if (value <= 0x3FFF) {
+			blob.WriteByte ((byte) (0x80 | (value >> 8)));
+			blob.WriteByte ((byte) value);
+		} else {
+			blob.WriteByte ((byte) (0xC0 | (value >> 24)));
+			blob.WriteByte ((byte) (value >> 16));
+			blob.WriteByte ((byte) (value >> 8));
+			blob.WriteByte ((byte) value);
+		}
 	}
 
 	void AddAttributeUsageToType (TypeDefinitionHandle typeDef)
