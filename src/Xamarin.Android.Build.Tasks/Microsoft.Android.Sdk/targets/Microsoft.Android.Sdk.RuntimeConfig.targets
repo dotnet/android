@@ -63,6 +63,12 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
         Value="$(_AndroidIsAssignableFromCheck)"
         Trim="true"
     />
+    <!-- Disable dynamic type registration when TypeMap V3 is enabled - all types are registered at build time -->
+    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.IsDynamicTypeRegistration"
+        Condition="'$(AndroidEnableTypeMaps)' == 'true'"
+        Value="false"
+        Trim="true"
+    />
   </ItemGroup>
 
   <!-- Skip RuntimeConfigParserTask for CoreCLR - the task comes from MonoTargets SDK which isn't available for CoreCLR builds -->

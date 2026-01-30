@@ -9,7 +9,7 @@ static class RuntimeFeature
 	const bool IsCoreClrRuntimeEnabledByDefault = false;
 	const bool IsAssignableFromCheckEnabledByDefault = true;
 	const bool StartupHookSupportEnabledByDefault = true;
-	const bool IsDynamicMemberRegistrationEnabledByDefault = true;
+	const bool IsDynamicTypeRegistrationEnabledByDefault = true;
 
 	const string FeatureSwitchPrefix = "Microsoft.Android.Runtime.RuntimeFeature.";
 	const string StartupHookProviderSwitch = "System.StartupHookProvider.IsSupported";
@@ -30,4 +30,13 @@ static class RuntimeFeature
 	[FeatureGuard (typeof (RequiresUnreferencedCodeAttribute))]
 	internal static bool StartupHookSupport { get; } =
 		AppContext.TryGetSwitch (StartupHookProviderSwitch, out bool isEnabled) ? isEnabled : StartupHookSupportEnabledByDefault;
+
+	/// <summary>
+	/// When false, dynamic type registration via RegisterJniNatives is not supported.
+	/// TypeMap V3 sets this to false since all types are registered at build time.
+	/// </summary>
+	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (IsDynamicTypeRegistration)}")]
+	[FeatureGuard (typeof (RequiresUnreferencedCodeAttribute))]
+	internal static bool IsDynamicTypeRegistration { get; } =
+		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (IsDynamicTypeRegistration)}", out bool isEnabled) ? isEnabled : IsDynamicTypeRegistrationEnabledByDefault;
 }

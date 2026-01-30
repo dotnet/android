@@ -63,14 +63,18 @@ namespace Android.Runtime
 		[UnmanagedCallersOnly]
 		static unsafe void RegisterJniNatives (IntPtr typeName_ptr, int typeName_len, IntPtr jniClass, IntPtr methods_ptr, int methods_len)
 		{
-			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
-			[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type should be preserved by the MarkJavaObjects trimmer step.")]
-			[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes)]
-			static Type TypeGetType (string typeName) =>
-				Type.GetType (typeName, throwOnError: false);
+			if (!RuntimeFeature.IsDynamicTypeRegistration) {
+				throw new NotSupportedException ("Dynamic native member registration is not supported when TypeMap V3 is enabled. All types should be registered at build time.");
+			}
 
+			RegisterJniNativesCore (typeName_ptr, typeName_len, jniClass, methods_ptr, methods_len);
+		}
+
+		[RequiresUnreferencedCode ("Dynamic type registration uses Type.GetType() which cannot be statically analyzed.")]
+		static unsafe void RegisterJniNativesCore (IntPtr typeName_ptr, int typeName_len, IntPtr jniClass, IntPtr methods_ptr, int methods_len)
+		{
 			string typeName = new string ((char*) typeName_ptr, 0, typeName_len);
-			var type = TypeGetType (typeName);
+			var type = Type.GetType (typeName, throwOnError: false);
 			if (type == null) {
 				RuntimeNativeMethods.monodroid_log (LogLevel.Error,
 				               LogCategories.Default,
@@ -173,19 +177,10 @@ namespace Android.Runtime
 
 			args->propagateUncaughtExceptionFn = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&PropagateUncaughtException;
 
-			// For CoreCLR/NativeAOT, provide the GetFunctionPointer callback for Type Mapping API marshal methods
-			if (RuntimeFeature.IsCoreClrRuntime) {
-				args->getFunctionPointerFn = (IntPtr)(delegate* unmanaged<byte*, int, int, IntPtr*, void>)&GetFunctionPointer;
-				RuntimeNativeMethods.monodroid_log (LogLevel.Info, LogCategories.Default,
-					$"JNIEnvInit: Set getFunctionPointerFn to 0x{args->getFunctionPointerFn:x}");
-			} else {
-				// Even for Mono (where it's unused), we can set it to a stub or keep it null.
-				// For now, consistent with review feedback, let's just initialize it to something safe or null.
-				// But actually, we want to move the UCO here.
-				args->getFunctionPointerFn = IntPtr.Zero;
-				RuntimeNativeMethods.monodroid_log (LogLevel.Info, LogCategories.Default,
-					"JNIEnvInit: Not CoreCLR, getFunctionPointerFn set to null");
-			}
+			// Provide the GetFunctionPointer callback for Type Mapping API marshal methods
+			args->getFunctionPointerFn = (IntPtr)(delegate* unmanaged<byte*, int, int, IntPtr*, void>)&GetFunctionPointer;
+			RuntimeNativeMethods.monodroid_log (LogLevel.Info, LogCategories.Default,
+				$"JNIEnvInit: Set getFunctionPointerFn to 0x{args->getFunctionPointerFn:x}");
 
 			RunStartupHooksIfNeeded ();
 			SetSynchronizationContext ();
@@ -246,7 +241,8 @@ namespace Android.Runtime
 				Assembly.SetEntryAssembly (typeof (Java.Lang.Object).Assembly); // TODO is this really still necessary?
 				return new TypeMapAttributeTypeMap ();
 			} else if (RuntimeFeature.IsMonoRuntime) {
-				return new LlvmIrTypeMap ();
+				// PoC: Use TypeMap V3 for MonoVM too
+				return new TypeMapAttributeTypeMap ();
 			} else {
 				throw new NotSupportedException ("Internal error: unknown runtime not supported");
 			}
