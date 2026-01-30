@@ -43,8 +43,9 @@
     <!-- jar2xml is not supported -->
     <AndroidClassParser>class-parse</AndroidClassParser>
     <AndroidCodegenTarget Condition=" '$(AndroidCodegenTarget)' == '' ">XAJavaInterop1</AndroidCodegenTarget>
-    <!-- CoreCLR and NativeAOT use JavaInterop1 - they generate all JCWs at build time, no mono.android.jar -->
+    <!-- CoreCLR, NativeAOT, and TypeMap V3 use JavaInterop1 - they generate all JCWs at build time, no mono.android.jar -->
     <_AndroidJcwCodegenTarget Condition=" '$(_AndroidJcwCodegenTarget)' == '' and '$(_AndroidRuntime)' == 'CoreCLR' ">JavaInterop1</_AndroidJcwCodegenTarget>
+    <_AndroidJcwCodegenTarget Condition=" '$(_AndroidJcwCodegenTarget)' == '' and '$(AndroidEnableTypeMaps)' == 'true' ">JavaInterop1</_AndroidJcwCodegenTarget>
     <_AndroidJcwCodegenTarget Condition=" '$(_AndroidJcwCodegenTarget)' == '' and '$(_AndroidRuntime)' != 'NativeAOT' and '$(_AndroidRuntime)' != 'CoreCLR' ">XAJavaInterop1</_AndroidJcwCodegenTarget>
     <AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods Condition=" '$(AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods)' == '' ">true</AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods>
     <AndroidBoundInterfacesContainTypes Condition=" '$(AndroidBoundInterfacesContainTypes)' == '' ">true</AndroidBoundInterfacesContainTypes>
@@ -169,6 +170,12 @@
     <ApplicationVersion Condition=" '$(ApplicationVersion)' == '' ">1</ApplicationVersion>
     <Version Condition=" $([System.Version]::TryParse ('$(ApplicationDisplayVersion)', $([System.Version]::Parse('1.0')))) ">$(ApplicationDisplayVersion)</Version>
     <ApplicationDisplayVersion Condition=" '$(ApplicationDisplayVersion)' == '' ">$(Version)</ApplicationDisplayVersion>
+
+    <!-- 
+      Suppress IL2035 (unresolved assembly in DynamicDependencyAttribute) for Java.Interop.Export.
+      This assembly is not used in Android (UseMarshalMemberBuilder is false).
+    -->
+    <NoWarn>$(NoWarn);IL2035</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
     <AndroidManifest Condition=" '$(AndroidManifest)' == '' and Exists ('Properties\AndroidManifest.xml') and !Exists ('AndroidManifest.xml') ">Properties\AndroidManifest.xml</AndroidManifest>
