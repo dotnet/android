@@ -29,6 +29,8 @@
     <DisableTransitiveFrameworkReferenceDownloads>true</DisableTransitiveFrameworkReferenceDownloads>
     <!-- Workaround analyzer errors in .NET 11 -->
     <NoWarn>$(NoWarn);AD0001</NoWarn>
+    <!-- Pass ANDROID define to Java.Interop to disable MarshalMemberBuilder (not used in Android) -->
+    <JavaInteropDefineConstants>ANDROID</JavaInteropDefineConstants>
   </PropertyGroup>
 
   <PropertyGroup>

@@ -60,7 +60,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" />
+    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" AdditionalProperties="JavaInteropDefineConstants=ANDROID" />
     <EmbeddedResource Include="ILLink/ILLink.LinkAttributes.xml">
       <LogicalName>ILLink.LinkAttributes.xml</LogicalName>
     </EmbeddedResource>
