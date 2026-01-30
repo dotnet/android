@@ -259,40 +259,38 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	public override void ActivatePeer (IJavaPeerable? self, JniObjectReference reference, ConstructorInfo cinfo, object?[]? argumentValues)
 	{
-		// Check if the type is a JavaPeerProxy (TypeMap v2 proxy type)
-		// If so, use CreateInstance instead of reflection-based activation
 		var declType = cinfo.DeclaringType;
-		if (declType != null && typeof (JavaPeerProxy).IsAssignableFrom (declType)) {
-			try {
-				ActivateViaProxy (reference, declType);
-				return;
-			} catch (Exception e) {
-				var m = string.Format (
-						CultureInfo.InvariantCulture,
-						"Could not activate {{ PeerReference={0} IdentityHashCode=0x{1} Java.Type={2} }} via proxy for managed type '{3}'.",
-						reference,
-						GetJniIdentityHashCode (reference).ToString ("x", CultureInfo.InvariantCulture),
-						JniEnvironment.Types.GetJniTypeNameFromInstance (reference),
-						declType.FullName);
-				Debug.WriteLine (m);
-				throw new NotSupportedException (m, e);
+		if (declType == null) {
+			throw new NotSupportedException ("ConstructorInfo.DeclaringType is null - cannot determine type to activate.");
+		}
+
+		// If the type is already a JavaPeerProxy, use it directly
+		if (typeof (JavaPeerProxy).IsAssignableFrom (declType)) {
+			ActivateViaProxy (reference, declType);
+			return;
+		}
+
+		// The type is not a proxy - look up the proxy from TypeMap
+		// This happens when the TypeManager returns the original type instead of the proxy
+		var proxy = typeMap.GetProxyForManagedType (declType);
+		if (proxy != null) {
+			var handle = reference.Handle;
+			var peer = proxy.CreateInstance (handle, JniHandleOwnership.DoNotTransfer);
+			if (peer == null) {
+				throw new InvalidOperationException ($"Proxy for {declType.FullName}.CreateInstance returned null.");
 			}
+			return;
 		}
 
-		try {
-			ActivateViaReflection (reference, cinfo, argumentValues);
-		} catch (Exception e) {
-			var m = string.Format (
-					CultureInfo.InvariantCulture,
-					"Could not activate {{ PeerReference={0} IdentityHashCode=0x{1} Java.Type={2} }} for managed type '{3}'.",
-					reference,
-					GetJniIdentityHashCode (reference).ToString ("x", CultureInfo.InvariantCulture),
-					JniEnvironment.Types.GetJniTypeNameFromInstance (reference),
-					cinfo.DeclaringType?.FullName);
-			Debug.WriteLine (m);
-
-			throw new NotSupportedException (m, e);
+		// No proxy found - this should not happen with TypeMap V3
+		// Fall back to reflection-based activation only if dynamic type registration is enabled
+		if (!RuntimeFeature.IsDynamicTypeRegistration) {
+			throw new NotSupportedException (
+				$"Cannot activate type '{declType.FullName}' - no proxy found in TypeMap and dynamic type registration is disabled. " +
+				"Ensure the type is included in the TypeMap at build time.");
 		}
+
+		ActivateViaReflection (reference, cinfo, argumentValues);
 	}
 
 	void ActivateViaProxy (JniObjectReference reference, Type proxyType)
@@ -314,21 +312,15 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		// (via the activation constructor it calls internally)
 	}
 
+	[RequiresUnreferencedCode ("Reflection-based activation cannot statically determine the type from ConstructorInfo.DeclaringType.")]
 	void ActivateViaReflection (JniObjectReference reference, ConstructorInfo cinfo, object?[]? argumentValues)
 	{
-		var declType  = GetDeclaringType (cinfo);
+		var declType  = cinfo.DeclaringType ?? throw new NotSupportedException ("Do not know the type to create!");
 
-#pragma warning disable IL2072
 		var self      = (IJavaPeerable) System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject (declType);
-#pragma warning restore IL2072
 		self.SetPeerReference (reference);
 
 		cinfo.Invoke (self, argumentValues);
-
-		[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "🤷‍♂️")]
-		[return: DynamicallyAccessedMembers (Constructors)]
-		Type GetDeclaringType (ConstructorInfo cinfo) =>
-			cinfo.DeclaringType ?? throw new NotSupportedException ("Do not know the type to create!");
 	}
 
 	public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()

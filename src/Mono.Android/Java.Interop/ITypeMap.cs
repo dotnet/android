@@ -28,6 +28,15 @@ namespace Android.Runtime
 		IEnumerable<string> GetJniNamesForType (Type type);
 
 		/// <summary>
+		/// Gets the JavaPeerProxy for a managed type.
+		/// This is used to activate instances when the TypeManager returns the original type
+		/// instead of the proxy type.
+		/// </summary>
+		/// <param name="managedType">The managed type to look up.</param>
+		/// <returns>The proxy, or null if not found.</returns>
+		JavaPeerProxy? GetProxyForManagedType (Type managedType);
+
+		/// <summary>
 		/// Creates a peer instance from a JNI handle.
 		/// This is the main entry point for creating managed wrappers for Java objects.
 		/// It resolves the type from the JNI handle, finds the appropriate invoker if needed,

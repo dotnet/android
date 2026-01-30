@@ -145,6 +145,13 @@ namespace Java.Interop
 		}
 
 		/// <inheritdoc/>
+		public JavaPeerProxy? GetProxyForManagedType (Type managedType)
+		{
+			// LlvmIrTypeMap uses reflection-based activation, not proxy types
+			return null;
+		}
+
+		/// <inheritdoc/>
 		public IntPtr GetFunctionPointer (ReadOnlySpan<char> className, int methodIndex)
 		{
 			// LlvmIrTypeMap doesn't use the attribute-based GetFunctionPointer mechanism.

@@ -169,6 +169,25 @@ namespace Android.Runtime
 			return [];
 		}
 
+		/// <inheritdoc/>
+		public JavaPeerProxy? GetProxyForManagedType (Type managedType)
+		{
+			// First check if the type itself has the proxy attribute
+			var proxy = GetProxyForType (managedType);
+			if (proxy != null) {
+				return proxy;
+			}
+
+			// Try to find the proxy type from the TypeMap by JNI name
+			if (TryGetJniNameForType (managedType, out string? jniName)) {
+				if (_externalTypeMap.TryGetValue (jniName, out Type? proxyType)) {
+					return GetProxyForType (proxyType);
+				}
+			}
+
+			return null;
+		}
+
 		/// <summary>
 		/// Gets or creates a cached JavaPeerProxy instance for the given type.
 		/// </summary>
@@ -194,18 +213,11 @@ namespace Android.Runtime
 				Logger.Log (LogLevel.Info, "monodroid-typemap", $"CreatePeer: FindTypeInHierarchy returned type={type?.FullName}");
 
 				if (type != null && type.IsGenericTypeDefinition) {
-					// TODO: This MakeGenericType is AOT-unsafe. In the future, we should generate
-					// closed generic type entries at build time (e.g., GenericHolder<Object>).
-					// For now, fall back to closing with Java.Lang.Object.
-					var args = type.GetGenericArguments ();
-					var typeArgs = new Type [args.Length];
-					for (int i = 0; i < args.Length; i++) typeArgs[i] = typeof (Java.Lang.Object);
-					try {
-						Logger.Log (LogLevel.Warn, "monodroid-typemap", $"Closing generic type {type.FullName} with Object - consider generating pre-closed types");
-						type = type.MakeGenericType (typeArgs);
-					} catch (Exception e) {
-						Logger.Log (LogLevel.Warn, "monodroid-typemap", $"Failed to close generic type {type.FullName}: {e.Message}");
-					}
+					// Open generic types cannot be instantiated in AOT scenarios.
+					// The build should generate closed generic type entries (e.g., GenericHolder`1[Java.Lang.Object]).
+					throw new NotSupportedException (
+						$"Cannot create peer for open generic type '{type.FullName}'. " +
+						"Ensure closed generic types are used at build time.");
 				}
 
 				if (type != null && typeof (JavaPeerProxy).IsAssignableFrom (type)) {
