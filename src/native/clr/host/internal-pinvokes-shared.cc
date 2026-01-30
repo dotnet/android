@@ -41,6 +41,21 @@ BridgeProcessingFtn clr_initialize_gc_bridge (
 	return GCBridge::initialize_callback (bridge_processing_started_callback, bridge_processing_finished_callback);
 }
 
+BridgeProcessingFtn clr_gc_bridge_initialize_for_managed_processing () noexcept
+{
+	return GCBridge::initialize_for_managed_processing ();
+}
+
+MarkCrossReferencesArgs* clr_gc_bridge_wait_for_processing () noexcept
+{
+	return GCBridge::wait_for_processing ();
+}
+
+void clr_gc_bridge_trigger_java_gc () noexcept
+{
+	GCBridge::trigger_java_gc_cached ();
+}
+
 void monodroid_log (LogLevel level, LogCategories category, const char *message) noexcept
 {
 	switch (level) {

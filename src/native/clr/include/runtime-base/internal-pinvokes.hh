@@ -18,6 +18,12 @@ extern "C" {
 	BridgeProcessingFtn clr_initialize_gc_bridge (
 		BridgeProcessingStartedFtn bridge_processing_started_callback,
 		BridgeProcessingFinishedFtn mark_cross_references_callback) noexcept;
+
+	// Functions for managed GC bridge processing mode
+	BridgeProcessingFtn clr_gc_bridge_initialize_for_managed_processing () noexcept;
+	MarkCrossReferencesArgs* clr_gc_bridge_wait_for_processing () noexcept;
+	void clr_gc_bridge_trigger_java_gc () noexcept;
+
 	void monodroid_log (xamarin::android::LogLevel level, LogCategories category, const char *message) noexcept;
 	char* monodroid_TypeManager_get_java_class_name (jclass klass) noexcept;
 	void monodroid_free (void *ptr) noexcept;

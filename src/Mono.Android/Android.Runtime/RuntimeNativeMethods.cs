@@ -90,6 +90,25 @@ namespace Android.Runtime
 			delegate* unmanaged<MarkCrossReferencesArgs*, void> bridge_processing_started_callback,
 			delegate* unmanaged<MarkCrossReferencesArgs*, void> bridge_processing_finished_callback);
 
+		/// <summary>
+		/// Initialize GC bridge for managed processing mode (no native background thread).
+		/// Returns the mark_cross_references function pointer to pass to JavaMarshal.Initialize.
+		/// </summary>
+		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern delegate* unmanaged<MarkCrossReferencesArgs*, void> clr_gc_bridge_initialize_for_managed_processing ();
+
+		/// <summary>
+		/// Wait for the next set of cross references to process. Blocks until mark_cross_references is called by the GC.
+		/// </summary>
+		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern MarkCrossReferencesArgs* clr_gc_bridge_wait_for_processing ();
+
+		/// <summary>
+		/// Trigger Java garbage collection.
+		/// </summary>
+		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void clr_gc_bridge_trigger_java_gc ();
+
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
 		internal static extern void monodroid_unhandled_exception (Exception javaException);
 

@@ -28,15 +28,23 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	bool disposed;
 
 	static readonly SemaphoreSlim bridgeProcessingSemaphore = new (1, 1);
+	static Thread? bridgeProcessingThread;
 
 	static Lazy<ManagedValueManager> s_instance = new (() => new ManagedValueManager ());
 	public static ManagedValueManager GetOrCreateInstance () => s_instance.Value;
 
 	unsafe ManagedValueManager ()
 	{
-		// There can only be one instance of ManagedValueManager because we can call JavaMarshal.Initialize only once.
-		var mark_cross_references_ftn = RuntimeNativeMethods.clr_initialize_gc_bridge (&BridgeProcessingStarted, &BridgeProcessingFinished);
+		// Initialize GC bridge for managed processing mode (C# background thread instead of C++)
+		var mark_cross_references_ftn = RuntimeNativeMethods.clr_gc_bridge_initialize_for_managed_processing ();
 		JavaMarshal.Initialize (mark_cross_references_ftn);
+
+		// Start the managed bridge processing thread
+		bridgeProcessingThread = new Thread (ManagedBridgeProcessingLoop) {
+			Name = "GC Bridge Processing",
+			IsBackground = true
+		};
+		bridgeProcessingThread.Start ();
 	}
 
 	protected override void Dispose (bool disposing)
@@ -431,28 +439,36 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		}
 	}
 
-	[UnmanagedCallersOnly]
-	static unsafe void BridgeProcessingStarted (MarkCrossReferencesArgs* mcr)
+	/// <summary>
+	/// Main loop for managed GC bridge processing.
+	/// This replaces the native C++ bridge_processing() function.
+	/// </summary>
+	static unsafe void ManagedBridgeProcessingLoop ()
 	{
-		if (mcr == null) {
-			throw new ArgumentNullException (nameof (mcr), "MarkCrossReferencesArgs should never be null.");
+		while (true) {
+			// Wait for mark_cross_references to be called by the GC
+			MarkCrossReferencesArgs* args = RuntimeNativeMethods.clr_gc_bridge_wait_for_processing ();
+
+			if (args == null) {
+				throw new InvalidOperationException ("clr_gc_bridge_wait_for_processing returned null");
+			}
+
+			// Start processing - acquire semaphore and validate contexts
+			HandleContext.EnsureAllContextsAreOurs (args);
+			bridgeProcessingSemaphore.Wait ();
+
+			try {
+				// Do the actual bridge processing in managed code
+				var processing = new BridgeProcessing (args);
+				processing.Process ();
+
+				// Process collected contexts and finish
+				ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (args);
+				JavaMarshal.FinishCrossReferenceProcessing (args, handlesToFree);
+			} finally {
+				bridgeProcessingSemaphore.Release ();
+			}
 		}
-
-		HandleContext.EnsureAllContextsAreOurs (mcr);
-		bridgeProcessingSemaphore.Wait ();
-	}
-
-	[UnmanagedCallersOnly]
-	static unsafe void BridgeProcessingFinished (MarkCrossReferencesArgs* mcr)
-	{
-		if (mcr == null) {
-			throw new ArgumentNullException (nameof (mcr), "MarkCrossReferencesArgs should never be null.");
-		}
-
-		ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (mcr);
-		JavaMarshal.FinishCrossReferenceProcessing (mcr, handlesToFree);
-
-		bridgeProcessingSemaphore.Release ();
 	}
 
 	static unsafe ReadOnlySpan<GCHandle> ProcessCollectedContexts (MarkCrossReferencesArgs* mcr)

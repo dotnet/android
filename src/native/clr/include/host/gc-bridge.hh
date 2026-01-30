@@ -8,6 +8,7 @@
 #include <unordered_map>
 
 #include <shared/cpp-util.hh>
+#include <host/os-bridge.hh>
 
 struct JniObjectReferenceControlBlock
 {
@@ -78,7 +79,30 @@ namespace xamarin::android {
 			return mark_cross_references;
 		}
 
+		// Initialize for managed processing mode (no native background thread)
+		// Returns the mark_cross_references function pointer for JavaMarshal.Initialize
+		static BridgeProcessingFtn initialize_for_managed_processing () noexcept
+		{
+			managed_processing_mode = true;
+			return mark_cross_references;
+		}
+
+		// Wait for the next set of cross references to process (for managed processing mode)
+		// Blocks until mark_cross_references is called by the GC
+		static MarkCrossReferencesArgs* wait_for_processing () noexcept
+		{
+			shared_args_semaphore.acquire ();
+			return shared_args.load ();
+		}
+
 		static void trigger_java_gc (JNIEnv *env) noexcept;
+
+		// Trigger Java GC using the cached Runtime instance (for managed processing mode)
+		static void trigger_java_gc_cached () noexcept
+		{
+			JNIEnv *env = OSBridge::ensure_jnienv ();
+			trigger_java_gc (env);
+		}
 
 	private:
 		static inline std::thread bridge_processing_thread {};
@@ -91,6 +115,8 @@ namespace xamarin::android {
 
 		static inline BridgeProcessingStartedFtn bridge_processing_started_callback = nullptr;
 		static inline BridgeProcessingFinishedFtn bridge_processing_finished_callback = nullptr;
+
+		static inline bool managed_processing_mode = false;
 
 		static void bridge_processing () noexcept;
 		static void mark_cross_references (MarkCrossReferencesArgs *args) noexcept;
