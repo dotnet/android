@@ -6,6 +6,7 @@ const string Name = "Microsoft.Android.Run";
 const string VersionsFileName = "Microsoft.Android.versions.txt";
 
 string? adbPath = null;
+string? adbTarget = null;
 string? package = null;
 string? activity = null;
 bool verbose = false;
@@ -38,6 +39,9 @@ int Run (string[] args)
 			"Path to the {ADB} executable. If not specified, will attempt to locate " +
 			"the Android SDK automatically.",
 			v => adbPath = v },
+		{ "adb-target=",
+			"The {TARGET} device/emulator for adb commands (e.g., '-s emulator-5554').",
+			v => adbTarget = v },
 		{ "p|package=",
 			"The Android application {PACKAGE} name (e.g., com.example.myapp). Required.",
 			v => package = v },
@@ -123,6 +127,8 @@ int Run (string[] args)
 
 	if (verbose) {
 		Console.WriteLine ($"Using adb: {adbPath}");
+		if (!string.IsNullOrEmpty (adbTarget))
+			Console.WriteLine ($"Target: {adbTarget}");
 		Console.WriteLine ($"Package: {package}");
 		if (!string.IsNullOrEmpty (activity))
 			Console.WriteLine ($"Activity: {activity}");
@@ -224,13 +230,15 @@ void StartLogcat ()
 	if (!string.IsNullOrEmpty (logcatArgs))
 		logcatArguments += $" {logcatArgs}";
 
+	var fullArguments = string.IsNullOrEmpty (adbTarget) ? logcatArguments : $"{adbTarget} {logcatArguments}";
+
 	if (verbose)
-		Console.WriteLine ($"Running: adb {logcatArguments}");
+		Console.WriteLine ($"Running: adb {fullArguments}");
 
 	var locker = new Lock();
 	var psi = new ProcessStartInfo {
 		FileName = adbPath,
-		Arguments = logcatArguments,
+		Arguments = fullArguments,
 		UseShellExecute = false,
 		RedirectStandardOutput = true,
 		RedirectStandardError = true,
@@ -320,12 +328,14 @@ string? FindAdbPath ()
 
 (int ExitCode, string Output, string Error) RunAdb (string arguments)
 {
+	var fullArguments = string.IsNullOrEmpty (adbTarget) ? arguments : $"{adbTarget} {arguments}";
+
 	if (verbose)
-		Console.WriteLine ($"Running: adb {arguments}");
+		Console.WriteLine ($"Running: adb {fullArguments}");
 
 	var psi = new ProcessStartInfo {
 		FileName = adbPath,
-		Arguments = arguments,
+		Arguments = fullArguments,
 		UseShellExecute = false,
 		RedirectStandardOutput = true,
 		RedirectStandardError = true,
