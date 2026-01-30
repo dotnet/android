@@ -1,5 +1,4 @@
 #include <host/gc-bridge.hh>
-#include <host/bridge-processing.hh>
 #include <host/os-bridge.hh>
 #include <host/host.hh>
 #include <runtime-base/util.hh>
@@ -26,12 +25,10 @@ void GCBridge::initialize_on_onload (JNIEnv *env) noexcept
 	env->DeleteLocalRef (Runtime_class);
 }
 
-void GCBridge::initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass) noexcept
+void GCBridge::initialize_on_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] jclass runtimeClass) noexcept
 {
-	abort_if_invalid_pointer_argument (env, "env");
-	abort_if_invalid_pointer_argument (runtimeClass, "runtimeClass");
-
-	BridgeProcessing::initialize_on_runtime_init (env, runtimeClass);
+	// Bridge processing is now done in managed code (C#)
+	// No native initialization is needed
 }
 
 void GCBridge::trigger_java_gc (JNIEnv *env) noexcept
@@ -69,11 +66,9 @@ void GCBridge::bridge_processing () noexcept
 		shared_args_semaphore.acquire ();
 		MarkCrossReferencesArgs *args = shared_args.load ();
 
+		// All bridge processing is now done in managed code (C#)
+		// The callbacks are still invoked to notify managed code
 		bridge_processing_started_callback (args);
-
-		BridgeProcessing bridge_processing {args};
-		bridge_processing.process ();
-
 		bridge_processing_finished_callback (args);
 	}
 }
