@@ -56,23 +56,6 @@ void GCBridge::mark_cross_references (MarkCrossReferencesArgs *args) noexcept
 	shared_args_semaphore.release ();
 }
 
-void GCBridge::bridge_processing () noexcept
-{
-	abort_unless (bridge_processing_started_callback != nullptr, "GC bridge processing started callback is not set");
-	abort_unless (bridge_processing_finished_callback != nullptr, "GC bridge processing finished callback is not set");
-
-	while (true) {
-		// wait until mark cross references args are set by the GC callback
-		shared_args_semaphore.acquire ();
-		MarkCrossReferencesArgs *args = shared_args.load ();
-
-		// All bridge processing is now done in managed code (C#)
-		// The callbacks are still invoked to notify managed code
-		bridge_processing_started_callback (args);
-		bridge_processing_finished_callback (args);
-	}
-}
-
 [[gnu::always_inline]]
 void GCBridge::log_mark_cross_references_args_if_enabled (MarkCrossReferencesArgs *args) noexcept
 {

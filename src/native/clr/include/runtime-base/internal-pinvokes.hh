@@ -15,9 +15,6 @@ extern "C" {
 	void _monodroid_gref_log_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable) noexcept;
 	const char* clr_typemap_managed_to_java (const char *typeName, const uint8_t *mvid) noexcept;
 	bool clr_typemap_java_to_managed (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept;
-	BridgeProcessingFtn clr_initialize_gc_bridge (
-		BridgeProcessingStartedFtn bridge_processing_started_callback,
-		BridgeProcessingFinishedFtn mark_cross_references_callback) noexcept;
 
 	// Functions for managed GC bridge processing mode
 	BridgeProcessingFtn clr_gc_bridge_initialize_for_managed_processing () noexcept;
