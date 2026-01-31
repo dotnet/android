@@ -56,8 +56,9 @@ namespace xamarin::android {
 		static void initialize_on_onload (JNIEnv *env) noexcept;
 		static void initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass) noexcept;
 
-		// Initialize for managed processing mode
-		// Returns the mark_cross_references function pointer for JavaMarshal.Initialize
+		// Returns the mark_cross_references function pointer for JavaMarshal.Initialize.
+		// All GC bridge processing is done in managed code (C#).
+		// This function just provides the callback pointer for the GC to invoke.
 		static BridgeProcessingFtn initialize_for_managed_processing () noexcept
 		{
 			return mark_cross_references;
