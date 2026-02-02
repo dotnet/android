@@ -29,6 +29,10 @@ unsafe class BridgeProcessing
 	static JniMethodInfo? s_GCUserPeerable_jiAddManagedReference;
 	static JniMethodInfo? s_GCUserPeerable_jiClearManagedReferences;
 
+	// For triggering Java GC directly
+	static JniObjectReference s_RuntimeInstance;
+	static JniMethodInfo? s_Runtime_gc;
+
 	// Is NativeAOT mode (uses GCUserPeerable instead of IGCUserPeer)
 	static bool s_initialized;
 	static bool s_isNativeAOT;
@@ -70,6 +74,14 @@ unsafe class BridgeProcessing
 			s_GCUserPeerable_jiAddManagedReference = s_GCUserPeerableClass.GetInstanceMethod ("jiAddManagedReference", "(Ljava/lang/Object;)V");
 			s_GCUserPeerable_jiClearManagedReferences = s_GCUserPeerableClass.GetInstanceMethod ("jiClearManagedReferences", "()V");
 		}
+
+		// Initialize Java Runtime for triggering GC
+		using var runtimeClass = new JniType ("java/lang/Runtime");
+		var getRuntimeMethod = runtimeClass.GetStaticMethod ("getRuntime", "()Ljava/lang/Runtime;");
+		s_Runtime_gc = runtimeClass.GetInstanceMethod ("gc", "()V");
+		var runtimeLocal = JniEnvironment.StaticMethods.CallStaticObjectMethod (runtimeClass.PeerReference, getRuntimeMethod, null);
+		s_RuntimeInstance = runtimeLocal.NewGlobalRef ();
+		JniObjectReference.Dispose (ref runtimeLocal);
 
 		s_initialized = true;
 	}
@@ -262,11 +274,19 @@ unsafe class BridgeProcessing
 	}
 
 	/// <summary>
-	/// Trigger Java garbage collection using the cached Runtime instance from native code.
+	/// Trigger Java garbage collection using the cached Runtime instance directly through JNI.
 	/// </summary>
 	static void TriggerJavaGC ()
 	{
-		RuntimeNativeMethods.clr_gc_bridge_trigger_java_gc ();
+		if (s_Runtime_gc == null) {
+			throw new InvalidOperationException ("BridgeProcessing.Initialize must be called before TriggerJavaGC");
+		}
+
+		try {
+			JniEnvironment.InstanceMethods.CallVoidMethod (s_RuntimeInstance, s_Runtime_gc, null);
+		} catch (Exception ex) {
+			Logger.Log (LogLevel.Error, "monodroid-gc", $"Java GC failed: {ex.Message}");
+		}
 	}
 
 	void TakeWeakGlobalRef (HandleContext* context)

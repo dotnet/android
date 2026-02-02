@@ -63,7 +63,6 @@ void Host::OnInit (jstring language, jstring filesDir, jstring cacheDir, JnienvI
 
 	OSBridge::initialize_on_runtime_init (env, runtimeClass);
 	GCBridge::initialize_on_runtime_init (env, runtimeClass);
-	// Bridge processing is now done in managed code (C#)
 
 	// We expect the struct to be initialized by the managed land the way it sees fit, we set only the
 	// fields we support.

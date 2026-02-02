@@ -39,11 +39,6 @@ BridgeProcessingFtn clr_gc_bridge_initialize_for_managed_processing (OnMarkCross
 	return GCBridge::initialize_for_managed_processing (callback);
 }
 
-void clr_gc_bridge_trigger_java_gc () noexcept
-{
-	GCBridge::trigger_java_gc_cached ();
-}
-
 void monodroid_log (LogLevel level, LogCategories category, const char *message) noexcept
 {
 	switch (level) {

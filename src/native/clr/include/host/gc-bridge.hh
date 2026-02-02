@@ -65,20 +65,8 @@ namespace xamarin::android {
 			return mark_cross_references;
 		}
 
-		static void trigger_java_gc (JNIEnv *env) noexcept;
-
-		// Trigger Java GC using the cached Runtime instance (for managed processing mode)
-		static void trigger_java_gc_cached () noexcept
-		{
-			JNIEnv *env = OSBridge::ensure_jnienv ();
-			trigger_java_gc (env);
-		}
-
 	private:
 		static inline OnMarkCrossReferencesCallback on_mark_cross_references_callback = nullptr;
-
-		static inline jobject Runtime_instance = nullptr;
-		static inline jmethodID Runtime_gc = nullptr;
 
 		static void mark_cross_references (MarkCrossReferencesArgs *args) noexcept;
 		

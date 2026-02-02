@@ -6,43 +6,13 @@
 
 using namespace xamarin::android;
 
-void GCBridge::initialize_on_onload (JNIEnv *env) noexcept
+void GCBridge::initialize_on_onload ([[maybe_unused]] JNIEnv *env) noexcept
 {
-	abort_if_invalid_pointer_argument (env, "env");
-
-	jclass Runtime_class = env->FindClass ("java/lang/Runtime");
-	abort_unless (Runtime_class != nullptr, "Failed to look up java/lang/Runtime class.");
-
-	jmethodID Runtime_getRuntime = env->GetStaticMethodID (Runtime_class, "getRuntime", "()Ljava/lang/Runtime;");
-	abort_unless (Runtime_getRuntime != nullptr, "Failed to look up the Runtime.getRuntime() method.");
-
-	Runtime_gc = env->GetMethodID (Runtime_class, "gc", "()V");
-	abort_unless (Runtime_gc != nullptr, "Failed to look up the Runtime.gc() method.");
-
-	Runtime_instance = OSBridge::lref_to_gref (env, env->CallStaticObjectMethod (Runtime_class, Runtime_getRuntime));
-	abort_unless (Runtime_instance != nullptr, "Failed to obtain Runtime instance.");
-
-	env->DeleteLocalRef (Runtime_class);
+	// Java Runtime.gc() is now called directly from managed code
 }
 
 void GCBridge::initialize_on_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] jclass runtimeClass) noexcept
 {
-	// Bridge processing is now done in managed code (C#)
-	// No native initialization is needed
-}
-
-void GCBridge::trigger_java_gc (JNIEnv *env) noexcept
-{
-	abort_if_invalid_pointer_argument (env, "env");
-
-	env->CallVoidMethod (Runtime_instance, Runtime_gc);
-	if (!env->ExceptionCheck ()) [[likely]] {
-		return;
-	}
-
-	env->ExceptionDescribe ();
-	env->ExceptionClear ();
-	log_error (LOG_DEFAULT, "Java GC failed");
 }
 
 void GCBridge::mark_cross_references (MarkCrossReferencesArgs *args) noexcept

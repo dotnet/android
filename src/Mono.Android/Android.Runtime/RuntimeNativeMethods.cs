@@ -94,12 +94,6 @@ namespace Android.Runtime
 		internal static extern delegate* unmanaged<MarkCrossReferencesArgs*, void> clr_gc_bridge_initialize_for_managed_processing (
 			delegate* unmanaged[Cdecl]<MarkCrossReferencesArgs*, void> onMarkCrossReferencesCallback);
 
-		/// <summary>
-		/// Trigger Java garbage collection.
-		/// </summary>
-		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void clr_gc_bridge_trigger_java_gc ();
-
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
 		internal static extern void monodroid_unhandled_exception (Exception javaException);
 
