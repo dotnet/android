@@ -190,7 +190,7 @@ This file contains the .NET 5-specific targets to customize ILLink
       <!-- add our custom steps -->
       <!-- Custom MarkHandlers that run during MarkStep -->
       <!-- DISABLED: MarkJavaObjects and Preserve* steps replaced by TypeMapAttribute preservation strategy
-           See type-mapping-api-v3-spec.md for details on how preservation is now handled:
+           See docs/trimmable-typemap-spec.md for details on how preservation is now handled:
            - JCW types (DoNotGenerateAcw=false) use 2-arg unconditional TypeMapAttribute
            - MCW types (DoNotGenerateAcw=true) use 3-arg trimmable TypeMapAttribute
            - Proxy types directly reference activation ctors, string ctors, and interface methods
