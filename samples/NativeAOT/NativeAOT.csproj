@@ -11,6 +11,10 @@
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <!-- Only property required to opt into NativeAOT -->
     <PublishAot>true</PublishAot>
+    <!-- Enable trimmable type map -->
+    <AndroidEnableTypeMaps>true</AndroidEnableTypeMaps>
+    <!-- Only arm64 for now -->
+    <RuntimeIdentifiers>android-arm64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <ItemGroup>
