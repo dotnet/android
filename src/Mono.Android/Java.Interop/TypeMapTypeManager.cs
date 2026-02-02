@@ -22,7 +22,6 @@ namespace Android.Runtime
 		};
 
 		readonly ITypeMap _typeMap;
-		static bool _loggedTrimmableTypeMapActive;
 
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 		const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
@@ -31,13 +30,6 @@ namespace Android.Runtime
 		public TypeMapTypeManager (ITypeMap typeMap)
 		{
 			_typeMap = typeMap ?? throw new ArgumentNullException (nameof (typeMap));
-			
-			// Log once that the trimmable type map is active
-			if (!_loggedTrimmableTypeMapActive) {
-				_loggedTrimmableTypeMapActive = true;
-				Logger.Log (LogLevel.Info, "monodroid-typemap", 
-					"*** TRIMMABLE TYPE MAP ACTIVE *** TypeMapTypeManager initialized with " + typeMap.GetType ().Name);
-			}
 		}
 
 		/// <summary>
@@ -61,11 +53,6 @@ namespace Android.Runtime
 			if (_typeMap.TryGetTypesForJniName (jniSimpleReference, out IEnumerable<Type>? types)) {
 				foreach (var type in types) {
 					yield return type;
-				}
-			} else {
-				if (Logger.LogAssembly) {
-					// Miss message is logged in the native runtime
-					JNIEnv.LogTypemapTrace (new System.Diagnostics.StackTrace (true));
 				}
 			}
 
