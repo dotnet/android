@@ -108,6 +108,7 @@
     <Compile Include="Java.Interop\AndroidValueManager.cs" />
     <Compile Include="Java.Interop\DynamicNativeMembersRegistration.cs" />
     <Compile Include="Java.Interop\ITypeMap.cs" />
+    <Compile Include="Java.Interop\JavaHierarchyWalker.cs" />
     <Compile Include="Java.Interop\LlvmIrTypeMap.cs" />
     <Compile Include="Java.Interop\TypeMapAttributeTypeMap.cs" />
     <Compile Include="Java.Interop\TypeMapTypeManager.cs" />
@@ -117,6 +118,8 @@
     <Compile Include="Java.Interop\IAndroidCallableWrapper.cs" />
     <Compile Include="Java.Interop\AliasesUniverse.cs" />
     <Compile Include="Java.Interop\JavaInteropAliasesAttribute.cs" />
+    <Compile Include="Java.Interop\PeerCreationHelper.cs" />
+    <Compile Include="Java.Interop\TypeMapException.cs" />
     <Compile Include="Java.Lang.Invoke\MethodType.cs" />
     <Compile Include="Java.Time.Chrono\AbstractChronology.cs" />
     <Compile Include="Java.Time\ZonedDateTime.cs" />

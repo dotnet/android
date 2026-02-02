@@ -29,7 +29,26 @@ namespace Android.Runtime
 		readonly ConcurrentDictionary<Type, Type[]?> _aliasCache = new ();
 		readonly ConcurrentDictionary<Type, string> _jniNameCache = new ();
 		readonly ConcurrentDictionary<string, Type?> _classToTypeCache = new ();
-		readonly ConcurrentDictionary<string, IntPtr> _jniClassCache = new ();
+
+		/// <summary>
+		/// Logs a TypeMap trace message if typemap tracing is enabled.
+		/// </summary>
+		static void LogTrace (string message)
+		{
+			if (Logger.LogTypemapTrace) {
+				Logger.Log (LogLevel.Info, "monodroid-typemap", message);
+			}
+		}
+
+		/// <summary>
+		/// Logs a TypeMap warning message if typemap tracing is enabled.
+		/// </summary>
+		static void LogWarn (string message)
+		{
+			if (Logger.LogTypemapTrace) {
+				Logger.Log (LogLevel.Warn, "monodroid-typemap", message);
+			}
+		}
 
 		public TypeMapAttributeTypeMap ()
 		{
@@ -48,10 +67,10 @@ namespace Android.Runtime
 				// Load the TypeMaps assembly and set it as the entry assembly so that
 				// TypeMapLazyDictionary will scan it for TypeMapAttribute entries.
 				var typeMapsAssembly = Assembly.Load (TypeMapsAssemblyName);
-				Logger.Log (LogLevel.Info, "monodroid-typemap", $"Loaded TypeMaps assembly: {typeMapsAssembly.FullName}");
+				LogTrace ($"Loaded TypeMaps assembly: {typeMapsAssembly.FullName}");
 
 				Assembly.SetEntryAssembly (typeMapsAssembly);
-				Logger.Log (LogLevel.Info, "monodroid-typemap", "SetEntryAssembly called successfully");
+				LogTrace ("SetEntryAssembly called successfully");
 			}
 
 			// Workaround for Mono VM - scans the generated type maps assembly attributes
@@ -88,14 +107,20 @@ namespace Android.Runtime
 						}
 					} catch (Exception ex) {
 						// Skip entries that fail to resolve (e.g., alias holder types)
-						Logger.Log (LogLevel.Info, "monodroid-typemap", 
-							$"Skipping TypeMapAttribute that failed to resolve: {ex.Message}");
+						LogTrace ($"Skipping TypeMapAttribute that failed to resolve: {ex.Message}");
 					}
 				}
 
-				Logger.Log (LogLevel.Info, "monodroid-typemap", $"Collected {result.Count} TypeMap entries for MonoVM");
+				LogTrace ($"Collected {result.Count} TypeMap entries for MonoVM");
 				return result;
 			}
+		}
+
+		/// <inheritdoc/>
+		public Type? TryGetExactTypeMapping (string jniTypeName)
+		{
+			_externalTypeMap.TryGetValue (jniTypeName, out Type? type);
+			return type;
 		}
 
 		/// <inheritdoc/>
@@ -207,84 +232,50 @@ namespace Android.Runtime
 		/// </summary>
 		JavaPeerProxy? GetProxyForType (Type type)
 		{
-			Logger.Log (LogLevel.Info, "monodroid-typemap", $"GetProxyForType: Looking for proxy on type {type.FullName}");
+			LogTrace ($"GetProxyForType: Looking for proxy on type {type.FullName}");
 			return _proxyInstances.GetOrAdd (type, static t => t.GetCustomAttribute<JavaPeerProxy> (inherit: false));
 		}
 
 		/// <inheritdoc/>
 		public IJavaPeerable? CreatePeer (IntPtr handle, JniHandleOwnership transfer, Type? targetType)
 		{
-			Type? type = null;
-			Type? proxyType = null;
-			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
-			string? class_name = GetClassNameFromJavaClassHandle (class_ptr);
+			return PeerCreationHelper.CreatePeer (
+				handle,
+				transfer,
+				targetType,
+				typeMap: this,
+				typeResolver: ResolveTypeWithCaching,
+				instanceCreator: CreateInstance,
+				resolveInvokerTypes: true);
+		}
 
-			Logger.Log (LogLevel.Info, "monodroid-typemap", $"CreatePeer: class_name='{class_name}', targetType={targetType?.FullName}");
+		/// <summary>
+		/// Resolves type from class pointer with caching and array type handling.
+		/// </summary>
+		Type? ResolveTypeWithCaching (IntPtr class_ptr, string class_name)
+		{
+			return _classToTypeCache.GetOrAdd (class_name, _ => FindTypeInHierarchy (class_ptr, class_name));
+		}
 
-			if (class_name != null) {
-				type = _classToTypeCache.GetOrAdd (class_name, _ => FindTypeInHierarchy (class_ptr, class_name));
-
-				Logger.Log (LogLevel.Info, "monodroid-typemap", $"CreatePeer: FindTypeInHierarchy returned type={type?.FullName}");
-
-				if (type != null && type.IsGenericTypeDefinition) {
-					// Open generic types cannot be instantiated in AOT scenarios.
-					// The build should generate closed generic type entries (e.g., GenericHolder`1[Java.Lang.Object]).
-					throw new NotSupportedException (
-						$"Cannot create peer for open generic type '{type.FullName}'. " +
-						"Ensure closed generic types are used at build time.");
-				}
-
-				if (type != null && typeof (JavaPeerProxy).IsAssignableFrom (type)) {
-					proxyType = type;
-					Logger.Log (LogLevel.Info, "monodroid-typemap", $"CreatePeer: Found proxyType={proxyType.FullName}");
-				} else {
-					Logger.Log (LogLevel.Info, "monodroid-typemap", $"CreatePeer: type is NOT a JavaPeerProxy (type={type?.FullName}, isProxy={type != null && typeof (JavaPeerProxy).IsAssignableFrom (type)})");
-				}
+		/// <summary>
+		/// Creates an instance using the proxy-based activation.
+		/// </summary>
+		IJavaPeerable? CreateInstance (Type type, IntPtr handle, JniHandleOwnership transfer)
+		{
+			var proxy = GetProxyForType (type);
+			if (proxy is null) {
+				// Try looking up via managed type mapping
+				proxy = GetProxyForManagedType (type);
 			}
 
-			// Always clean up the original class_ptr
-			if (class_ptr != IntPtr.Zero) {
-				JNIEnv.DeleteLocalRef (class_ptr);
-			}
-
-			// If we found a proxy type, prefer targetType if provided
-			if (proxyType != null) {
-				type = targetType ?? proxyType;
-			} else if (targetType != null && (type == null || !targetType.IsAssignableFrom (type))) {
-				type = targetType;
-			}
-
-			if (type == null) {
-				class_name = JNIEnv.GetClassNameFromInstance (handle);
-				JNIEnv.DeleteRef (handle, transfer);
-				throw new NotSupportedException (
-						FormattableString.Invariant ($"Internal error finding wrapper class for '{class_name}'."),
-						Java.Interop.TypeManager.CreateJavaLocationException ());
-			}
-
-			if (!TryGetJniNameForType (type, out string? jniName) || string.IsNullOrEmpty (jniName)) {
-				throw new ArgumentException ($"Could not determine Java type corresponding to `{type.AssemblyQualifiedName}`.", nameof (targetType));
-			}
-
-			if (!IsJavaTypeAssignableFrom (handle, jniName)) {
+			if (proxy is null) {
+				// Log error and return null - caller will throw appropriate exception
+				LogWarn ($"Activation failed for {type.FullName}: No [JavaPeerProxy] attribute found.");
 				return null;
 			}
 
-			if (!TryCreateInstance (type, proxyType, handle, transfer, out var result)) {
-				var key_handle = JNIEnv.IdentityHash (handle);
-				JNIEnv.DeleteRef (handle, transfer);
-				throw new NotSupportedException (FormattableString.Invariant (
-					$"Unable to activate instance of type {type} from native handle 0x{handle:x} (key_handle 0x{key_handle:x})."));
-			}
-
-			if (Java.Interop.Runtime.IsGCUserPeer (result!.PeerReference.Handle)) {
-				result.SetJniManagedPeerState (JniManagedPeerStates.Replaceable | JniManagedPeerStates.Activatable);
-			}
-
-			return result;
-
-			static string? GetClassNameFromJavaClassHandle (IntPtr class_ptr) =>
-				Java.Interop.TypeManager.GetClassName (class_ptr);
+			LogTrace ($"CreateInstance: Using proxy {proxy.GetType ().FullName} to create instance for {type.FullName}");
+			return proxy.CreateInstance (handle, transfer);
 		}
 
 		/// <summary>
@@ -299,36 +290,7 @@ namespace Android.Runtime
 				return GetArrayType (class_name);
 			}
 
-			Type? foundType = null;
-			IntPtr currentPtr = class_ptr;
-			string? currentName = class_name;
-
-			while (currentPtr != IntPtr.Zero) {
-				if (currentName != null) {
-					_externalTypeMap.TryGetValue (currentName, out foundType);
-					if (foundType != null) {
-						break;
-					}
-				}
-
-				IntPtr super_class_ptr = JNIEnv.GetSuperclass (currentPtr);
-				if (currentPtr != class_ptr) {
-					// Only delete refs we created, not the original
-					JNIEnv.DeleteLocalRef (currentPtr);
-				}
-				currentName = null;
-				currentPtr = super_class_ptr;
-				if (currentPtr != IntPtr.Zero) {
-					currentName = Java.Interop.TypeManager.GetClassName (currentPtr);
-				}
-			}
-
-			// Clean up the last pointer if it's not the original
-			if (currentPtr != IntPtr.Zero && currentPtr != class_ptr) {
-				JNIEnv.DeleteLocalRef (currentPtr);
-			}
-
-			return foundType;
+			return JavaHierarchyWalker.WalkHierarchy (class_ptr, class_name, this);
 		}
 
 		Type? GetArrayType (string jniName)
@@ -353,7 +315,7 @@ namespace Android.Runtime
 			// Object arrays: lookup in typemap for pre-generated JavaObjectArray<T> proxy
 			// The generator creates entries like: [Landroid/view/View; -> JavaObjectArray<View>
 			if (_externalTypeMap.TryGetValue (jniName, out Type? arrayType)) {
-				Logger.Log (LogLevel.Info, "monodroid-typemap", $"GetArrayType: Found {jniName} -> {arrayType.FullName}");
+				LogTrace ($"GetArrayType: Found {jniName} -> {arrayType.FullName}");
 				return arrayType;
 			}
 
@@ -365,61 +327,8 @@ namespace Android.Runtime
 			}
 
 			// No entry found - this means the element type isn't in our typemap
-			Logger.Log (LogLevel.Warn, "monodroid-typemap", $"GetArrayType: No typemap entry for {jniName}");
+			LogWarn ($"GetArrayType: No typemap entry for {jniName}");
 			return null;
-		}
-
-		bool IsJavaTypeAssignableFrom (IntPtr handle, string jniName)
-		{
-			// Use cached global reference for the type class to avoid repeated FindClass JNI calls
-			IntPtr typeClassPtr = _jniClassCache.GetOrAdd (jniName, static name => {
-				var classRef = JniEnvironment.Types.FindClass (name);
-				// Convert to global reference so it persists beyond this call
-				IntPtr globalRef = JNIEnv.NewGlobalRef (classRef.Handle);
-				JniObjectReference.Dispose (ref classRef);
-				return globalRef;
-			});
-
-			if (typeClassPtr == IntPtr.Zero) {
-				throw new ArgumentException ($"Could not find Java class `{jniName}`.", "jniName");
-			}
-
-			JniObjectReference handleClass = default;
-			try {
-				handleClass = JniEnvironment.Types.GetObjectClass (new JniObjectReference (handle));
-				return JniEnvironment.Types.IsAssignableFrom (handleClass, new JniObjectReference (typeClassPtr));
-			} finally {
-				JniObjectReference.Dispose (ref handleClass);
-				// Don't dispose typeClassPtr - it's a cached global reference
-			}
-		}
-
-		bool TryCreateInstance (Type type, Type? proxyType, IntPtr handle, JniHandleOwnership transfer, [NotNullWhen (true)] out IJavaPeerable? result)
-		{
-			// First try to use the already-found proxy type from FindTypeInHierarchy.
-			// This is the proxy for the actual Java class (e.g., HelloWorld.MainActivity),
-			// not the targetType hint (e.g., Activity).
-			JavaPeerProxy? proxy = null;
-			if (proxyType != null) {
-				proxy = GetProxyForType (proxyType);
-			}
-
-			// Fall back to looking up by type if no proxy type was found
-			if (proxy is null) {
-				proxy = GetProxyForType (type);
-			}
-
-			if (proxy is null) {
-				// Reflection-based activation is strictly forbidden in V3 to ensure AOT safety.
-				// Any type that needs to be activated MUST have a [JavaPeerProxy] attribute.
-				Logger.Log (LogLevel.Error, "monodroid-typemap", $"Activation failed for {type.FullName} (proxyType={proxyType?.FullName}): No [JavaPeerProxy] attribute found and dynamic registration is disabled.");
-				result = null;
-				return false;
-			}
-
-			Logger.Log (LogLevel.Info, "monodroid-typemap", $"TryCreateInstance: Using proxy {proxy.GetType ().FullName} to create instance for {type.FullName}");
-			result = proxy.CreateInstance (handle, transfer);
-			return result is not null;
 		}
 
 		/// <inheritdoc/>
@@ -427,31 +336,34 @@ namespace Android.Runtime
 		{
 			string classNameStr = className.ToString ();
 
-			Logger.Log (LogLevel.Info, "monodroid-typemap", $"GetFunctionPointer called: className='{classNameStr}', methodIndex={methodIndex}");
+			LogTrace ($"GetFunctionPointer called: className='{classNameStr}', methodIndex={methodIndex}");
 
 			// Called once per function pointer during native method registration.
 			// Result is cached in LLVM IR globals, so no managed-side caching needed.
 			if (_externalTypeMap.TryGetValue (classNameStr, out Type? type)) {
-				Logger.Log (LogLevel.Info, "monodroid-typemap", $"  -> Found type: {type?.FullName ?? "NULL"}");
+				LogTrace ($"  -> Found type: {type?.FullName ?? "NULL"}");
 				JavaPeerProxy? proxy = GetProxyForType (type!);
 				if (proxy is IAndroidCallableWrapper acw) {
 					// Only ACW types have GetFunctionPointer - they have generated Java classes that call back
-					Logger.Log (LogLevel.Info, "monodroid-typemap", $"  -> Got ACW proxy: {proxy.GetType ().FullName}");
+					LogTrace ($"  -> Got ACW proxy: {proxy.GetType ().FullName}");
 					var result = acw.GetFunctionPointer (methodIndex);
-					Logger.Log (LogLevel.Info, "monodroid-typemap", $"  -> Function pointer: 0x{result:X}");
+					LogTrace ($"  -> Function pointer: 0x{result:X}");
 					return result;
 				} else if (proxy is null) {
-					Logger.Log (LogLevel.Warn, "monodroid-typemap", $"  -> GetProxyForType returned NULL!");
+					throw new TypeMapException (
+						$"XA4302: No proxy found for type '{type!.FullName}' when looking up function pointer for '{classNameStr}' at index {methodIndex}. " +
+						"Ensure the type has [JavaPeerProxy] attribute.");
 				} else {
 					// MCW types don't have GetFunctionPointer - they only wrap existing Java classes
-					Logger.Log (LogLevel.Warn, "monodroid-typemap", $"  -> Proxy {proxy.GetType ().FullName} is MCW (no GetFunctionPointer)!");
+					throw new TypeMapException (
+						$"XA4303: Type '{type!.FullName}' is an MCW (managed callable wrapper) and does not have function pointers. " +
+						$"Requested function pointer for '{classNameStr}' at index {methodIndex}.");
 				}
 			} else {
-				Logger.Log (LogLevel.Warn, "monodroid-typemap", $"  -> Class NOT FOUND in _externalTypeMap!");
+				throw new TypeMapException (
+					$"XA4301: Type lookup failed for '{classNameStr}'. " +
+					"Ensure the type has [Register] attribute and is not trimmed away.");
 			}
-
-			Logger.Log (LogLevel.Error, "monodroid-typemap", $"  -> RETURNING NULL POINTER! This will crash!");
-			return IntPtr.Zero;
 		}
 
 		/// <summary>

@@ -4,12 +4,31 @@
 
 This document is a comprehensive revision of the Type Mapping API V3 specification, incorporating lessons learned from the Proof-of-Concept (PoC) implementation, cross-referencing with the actual codebase, and providing recommendations for production readiness.
 
+**Status: ✅ PoC Validated on Device (2026-02-02)**
+
+The TypeMap V4 implementation has been successfully tested on a physical Samsung device running all core scenarios:
+
+| Test Category | Status | Notes |
+|---------------|--------|-------|
+| TypeMap initialization | ✅ Pass | V4 active, minimal logging |
+| JavaList\<string\> | ✅ Pass | Add, iterate, count |
+| JavaList\<Integer\> | ✅ Pass | Boxed primitives |
+| JavaList from JNI handle | ✅ Pass | Wrapping existing Java objects |
+| JavaSet\<string\> | ✅ Pass | Set operations |
+| JavaDictionary\<K,V\> | ✅ Pass | Key-value pairs |
+| Java String[] array | ✅ Pass | Object arrays |
+| Java int[] array | ✅ Pass | Primitive arrays (`[I`) |
+| Mixed Object[] array | ✅ Pass | Heterogeneous arrays |
+
 **Key Changes from V3:**
 - Consolidated findings from PoC implementation
 - Identified remaining gaps and edge cases
 - Added performance and build time analysis
 - Clarified compromises and trade-offs
 - Provided clearer path to production
+- **NEW:** Shared peer creation architecture (Section 2.3)
+- **NEW:** Error handling with TypeMapException (XA4301-4303)
+- **NEW:** Logging gated behind `Logger.LogTypemapTrace`
 
 ---
 
@@ -375,10 +394,13 @@ Based on codebase cross-referencing:
 | Component | File | Status | Lines |
 |-----------|------|--------|-------|
 | MSBuild Task | `GenerateTypeMapAssembly.cs` | ✅ Implemented | ~6000 |
-| Runtime TypeMap | `TypeMapAttributeTypeMap.cs` | ✅ Implemented | ~500 |
+| Runtime TypeMap | `TypeMapAttributeTypeMap.cs` | ✅ Implemented | ~400 |
 | JavaPeerProxy Base | `JavaPeerProxy.cs` | ✅ Implemented | ~105 |
 | ITypeMap Interface | `ITypeMap.cs` | ✅ Implemented | ~85 |
-| Legacy TypeMap | `LlvmIrTypeMap.cs` | ✅ Maintained | ~330 |
+| Legacy TypeMap | `LlvmIrTypeMap.cs` | ✅ Maintained | ~250 |
+| Peer Creation Helper | `PeerCreationHelper.cs` | ✅ Implemented | ~180 |
+| TypeMap Exception | `TypeMapException.cs` | ✅ Implemented | ~30 |
+| Hierarchy Walker | `JavaHierarchyWalker.cs` | ✅ Implemented | ~70 |
 | RuntimeFeature Switch | `RuntimeFeature.cs` | ✅ Implemented | ~42 |
 | MSBuild Targets | `Microsoft.Android.Sdk.ILLink.targets` | ✅ Integrated | - |
 | Sample Project | `samples/HelloWorld/NewTypeMapPoc` | ✅ Working | - |
@@ -396,6 +418,140 @@ RuntimeFeature.IsDynamicTypeRegistration // Default: true → Enables/disables d
 - `AndroidEnableTypeMaps=true` in project file
 - `RuntimeIdentifier` set (e.g., `android-arm64`)
 - CoreCLR or NativeAOT runtime selected
+
+### 2.3 Shared Peer Creation Architecture
+
+Both `LlvmIrTypeMap` (legacy) and `TypeMapAttributeTypeMap` (V4) share nearly identical logic for creating managed peers from Java object handles. This logic has been extracted into `PeerCreationHelper` to eliminate duplication and ensure consistent behavior.
+
+#### 2.3.1 The Problem
+
+The peer creation algorithm involves multiple steps:
+1. Get Java class from handle
+2. Walk class hierarchy to find mapped .NET type
+3. Apply targetType override (when caller provides a hint)
+4. Resolve invoker types for interfaces/abstract classes
+5. Validate JNI type signature
+6. Check IsAssignableFrom
+7. Create the peer instance
+8. Set peer state for GC management
+
+Both typemaps had independent implementations of this algorithm, leading to:
+- Code duplication (~80 lines duplicated)
+- Risk of behavioral divergence
+- Bug fixes needed in two places
+
+#### 2.3.2 The Solution: PeerCreationHelper
+
+```csharp
+// PeerCreationHelper.cs - Shared peer creation algorithm
+static class PeerCreationHelper
+{
+    // Delegate for type resolution (handles hierarchy walking, arrays, caching)
+    public delegate Type? TypeResolverDelegate(IntPtr class_ptr, string class_name);
+    
+    // Delegate for instance creation (reflection vs proxy-based)
+    public delegate IJavaPeerable? InstanceCreatorDelegate(Type type, IntPtr handle, JniHandleOwnership transfer);
+
+    public static IJavaPeerable? CreatePeer(
+        IntPtr handle,
+        JniHandleOwnership transfer,
+        Type? targetType,
+        ITypeMap typeMap,                    // For invoker lookup and JNI name resolution
+        TypeResolverDelegate typeResolver,   // Customizable per typemap
+        InstanceCreatorDelegate instanceCreator, // Customizable per typemap
+        bool resolveInvokerTypes)            // true for legacy, false for new (when ready)
+    {
+        // Shared algorithm implementation
+    }
+}
+```
+
+#### 2.3.3 TypeMap-Specific Implementations
+
+**Legacy LlvmIrTypeMap:**
+```csharp
+public IJavaPeerable? CreatePeer(IntPtr handle, JniHandleOwnership transfer, Type? targetType)
+{
+    return PeerCreationHelper.CreatePeer(
+        handle, transfer, targetType,
+        typeMap: this,
+        typeResolver: (ptr, name) => JavaHierarchyWalker.WalkHierarchy(ptr, name, this),
+        instanceCreator: CreateProxy,  // Uses reflection
+        resolveInvokerTypes: true);    // Legacy requires runtime invoker resolution
+}
+```
+
+**New TypeMapAttributeTypeMap:**
+```csharp
+public IJavaPeerable? CreatePeer(IntPtr handle, JniHandleOwnership transfer, Type? targetType)
+{
+    return PeerCreationHelper.CreatePeer(
+        handle, transfer, targetType,
+        typeMap: this,
+        typeResolver: ResolveTypeWithCaching,  // Includes array handling + caching
+        instanceCreator: CreateInstance,       // Uses JavaPeerProxy
+        resolveInvokerTypes: true);            // Can be false when proxy handles invokers
+}
+```
+
+#### 2.3.4 The resolveInvokerTypes Flag
+
+The `resolveInvokerTypes` parameter controls a key behavioral difference:
+
+| Value | Behavior | Use Case |
+|-------|----------|----------|
+| `true` | Helper calls `ITypeMap.TryGetInvokerType()` for interfaces/abstract classes and substitutes the invoker type before calling `instanceCreator` | Legacy typemap (reflection-based activation needs concrete type) |
+| `false` | Helper passes interface/abstract type directly to `instanceCreator`, which is responsible for creating the correct invoker | New typemap (proxy's `CreateInstance()` knows its `InvokerType` and creates it directly) |
+
+**Future Optimization:** When `JavaPeerProxy.CreateInstance()` for an interface proxy directly creates the invoker, the new typemap can switch to `resolveInvokerTypes: false`, simplifying the runtime path.
+
+#### 2.3.5 Type Resolution Flexibility
+
+The `TypeResolverDelegate` allows each typemap to customize how types are resolved:
+
+| TypeMap | Type Resolution Strategy |
+|---------|-------------------------|
+| LlvmIrTypeMap | `JavaHierarchyWalker.WalkHierarchy()` - walks Java class hierarchy |
+| TypeMapAttributeTypeMap | `ResolveTypeWithCaching()` - handles arrays specially, then walks hierarchy with caching |
+
+This flexibility is essential because:
+- Array types (JNI names starting with `[`) don't have a class hierarchy to walk
+- The new typemap caches resolved types per JNI class name
+- Future implementations might use different resolution strategies
+
+#### 2.3.6 Error Handling
+
+The helper provides consistent error handling with TypeMapException:
+
+| Error Code | When Thrown | Message |
+|------------|-------------|---------|
+| XA4301 | Type lookup failed | "Type lookup failed for '{jniName}'. Ensure the type has [Register] attribute..." |
+| XA4302 | No proxy found | "No proxy found for type '{typeName}'..." |
+| XA4303 | MCW type has no function pointers | "Type '{typeName}' is an MCW and does not have function pointers..." |
+
+#### 2.3.7 Future Optimization: Eliminating Runtime Invoker Resolution
+
+A key insight from the implementation is that interface proxies already know their invoker type at compile time. This creates an opportunity for optimization:
+
+**Current State (resolveInvokerTypes: true):**
+1. Java calls back with an interface type (e.g., `IOnClickListener`)
+2. `PeerCreationHelper` detects the type is an interface
+3. Helper calls `TryGetInvokerType()` to find `IOnClickListenerInvoker`
+4. Helper passes the invoker type to `instanceCreator`
+5. Instance is created via reflection or proxy
+
+**Optimized State (resolveInvokerTypes: false):**
+1. Java calls back with an interface type (e.g., `IOnClickListener`)
+2. Helper passes the interface type directly to `instanceCreator`
+3. `JavaPeerProxy.CreateInstance()` for the interface already knows its `InvokerType` and creates the invoker directly
+4. No runtime type substitution needed
+
+**Implementation Requirements:**
+- Each `JavaPeerProxy` for an interface must know its corresponding invoker type
+- `CreateInstance()` must check if it's an interface proxy and create the invoker instead
+- This eliminates one reflection lookup per interface callback
+
+**Status:** Not yet implemented. The current implementation uses `resolveInvokerTypes: true` for both typemaps. This optimization is P2 priority.
 
 ---
 
@@ -2107,19 +2263,21 @@ if (result == IntPtr.Zero) {
 
 ### 10.5 Error Handling Requirements
 
-**Current Problem:** `GetFunctionPointer` returns `IntPtr.Zero` causing SIGSEGV.
+**Status:** ✅ Implemented
 
-**Proposed Error Codes:**
+The `GetFunctionPointer` method now throws `TypeMapException` instead of returning `IntPtr.Zero`. This prevents silent SIGSEGV crashes and provides actionable error messages.
+
+**Error Codes (Implemented):**
 
 | Code | Description | Thrown When |
 |------|-------------|-------------|
-| XA4301 | Type not found in TypeMap | `CreatePeer` with unknown JNI name |
+| XA4301 | Type not found in TypeMap | `GetFunctionPointer` with unknown JNI name |
 | XA4302 | Proxy attribute missing | Type exists but no `[JavaPeerProxy]` |
-| XA4303 | Method index out of range | `GetFunctionPointer` with bad index |
+| XA4303 | MCW has no function pointers | Type is MCW (binds existing Java class) not ACW |
 | XA4304 | Invoker type not found | Interface without generated Invoker |
 | XA4305 | Activation constructor missing | Type cannot be instantiated |
 
-**Implementation:**
+**Implementation (in TypeMapAttributeTypeMap.cs):**
 ```csharp
 public IntPtr GetFunctionPointer(ReadOnlySpan<char> className, int methodIndex)
 {
@@ -2127,24 +2285,21 @@ public IntPtr GetFunctionPointer(ReadOnlySpan<char> className, int methodIndex)
     
     if (!_externalTypeMap.TryGetValue(classNameStr, out Type? type)) {
         throw new TypeMapException(
-            $"XA4301: Type '{classNameStr}' not found in TypeMap. " +
-            "Ensure the type has [Register] attribute and is included in build.");
+            $"XA4301: Type lookup failed for '{classNameStr}'. " +
+            "Ensure the type has [Register] attribute and is not trimmed away.");
     }
     
-    var proxy = GetProxyForType(type);
-    if (proxy is not IAndroidCallableWrapper acw) {
+    JavaPeerProxy? proxy = GetProxyForType(type!);
+    if (proxy is IAndroidCallableWrapper acw) {
+        return acw.GetFunctionPointer(methodIndex);
+    } else if (proxy is null) {
         throw new TypeMapException(
-            $"XA4302: Type '{classNameStr}' has no proxy with GetFunctionPointer. " +
-            "This type may be an MCW (binds existing Java class) not an ACW.");
-    }
-    
-    var result = acw.GetFunctionPointer(methodIndex);
-    if (result == IntPtr.Zero) {
+            $"XA4302: No proxy found for type '{type!.FullName}'...");
+    } else {
         throw new TypeMapException(
-            $"XA4303: Method index {methodIndex} not found for '{classNameStr}'. " +
-            "Method indices may be out of sync between IL and LLVM IR generation.");
+            $"XA4303: Type '{type!.FullName}' is an MCW and does not have function pointers...");
     }
-    
+}
     return result;
 }
 ```
@@ -2155,10 +2310,19 @@ public IntPtr GetFunctionPointer(ReadOnlySpan<char> className, int methodIndex)
 
 ### 11.1 Immediate Actions
 
-1. **Remove Debug Logging**
-   - Current implementation has extensive `Logger.Log` calls
-   - Add `TYPEMAP_DEBUG` conditional compilation symbol
-   - Default off for release
+1. **Remove Debug Logging** ✅ **Implemented**
+   - Added `LogTrace()` and `LogWarn()` helper methods in `TypeMapAttributeTypeMap`
+   - All logging gated behind `Logger.LogTypemapTrace` property (default: `false`)
+   - No string formatting overhead unless tracing is enabled
+   
+   ```csharp
+   static void LogTrace(string message)
+   {
+       if (Logger.LogTypemapTrace) {
+           Logger.Log(LogLevel.Info, "monodroid-typemap", message);
+       }
+   }
+   ```
 
 2. **Add Unit Tests**
    - Test `TypeMapAttributeTypeMap` in isolation
@@ -2177,10 +2341,11 @@ public IntPtr GetFunctionPointer(ReadOnlySpan<char> className, int methodIndex)
    - Ship as artifacts, skip regeneration at app build time
    - Expected: ~80% build time reduction
 
-2. **Error Code System**
-   - Define XA43xx error codes for TypeMap runtime (see Section 10.5)
-   - Provide actionable error messages with context
-   - Include type, assembly, and method index information
+2. **Error Code System** ✅ **Implemented**
+   - Defined XA43xx error codes for TypeMap runtime (see Section 10.5)
+   - `TypeMapException` class provides actionable error messages
+   - Includes type, JNI name, and method index information
+   - No more silent SIGSEGV crashes from `IntPtr.Zero` returns
 
 3. **Integration Tests**
    - Test full build → deploy → run cycle
@@ -2998,33 +3163,34 @@ This appendix consolidates all future work items mentioned throughout the docume
 
 ### C.1 Feature Gaps (Must Address)
 
-| Item | Description | Section | Priority |
-|------|-------------|---------|----------|
-| Generic Collections | `IList<T>`, `IDictionary<K,V>` support | 8.4 | P1 |
-| Error Handling | XA43xx error codes, actionable messages | 10.5 | P0 |
-| Test Suite | Unit and integration tests | 10.4 | P0 |
-| Debug Logging | Gate behind conditional compilation | 11.1 | P0 |
-| Performance Benchmarks | Low-end device testing | 5.2 | P0 |
+| Item | Description | Section | Priority | Status |
+|------|-------------|---------|----------|--------|
+| Generic Collections | `IList<T>`, `IDictionary<K,V>` support | 8.4 | P1 | ❌ Not started |
+| Error Handling | XA43xx error codes, actionable messages | 10.5 | P0 | ✅ **Implemented** |
+| Test Suite | Unit and integration tests | 10.4 | P0 | ❌ Not started |
+| Debug Logging | Gate behind conditional compilation | 11.1 | P0 | ✅ **Implemented** |
+| Performance Benchmarks | Low-end device testing | 5.2 | P0 | ❌ Not started |
+| Shared Peer Creation | Extract common CreatePeer logic | 2.3 | P0 | ✅ **Implemented** |
 
 ### C.2 Optimizations (Should Address)
 
-| Item | Description | Section | Priority |
-|------|-------------|---------|----------|
-| SDK Pre-generation | Pre-generate SDK types during SDK build | 6.3, 11.2 | P1 |
-| JNI Reference Management | LRU cache or cleanup for global refs | 5.3 | P1 |
-| FrozenDictionary | Use for read-only type map | 5.3 | P2 |
-| Incremental Build | Cache results based on assembly hashes | 6.3 | P1 |
+| Item | Description | Section | Priority | Status |
+|------|-------------|---------|----------|--------|
+| SDK Pre-generation | Pre-generate SDK types during SDK build | 6.3, 11.2 | P1 | ❌ Not started |
+| JNI Reference Management | LRU cache or cleanup for global refs | 5.3 | P1 | ❌ Not started |
+| FrozenDictionary | Use for read-only type map | 5.3 | P2 | ❌ Not started |
+| Incremental Build | Cache results based on assembly hashes | 6.3 | P1 | ❌ Not started |
 
 ### C.3 Edge Cases (Nice to Have)
 
-| Item | Description | Section | Priority |
-|------|-------------|---------|----------|
-| Open Generics | Closed generic pre-generation | 8.5 | P2 |
-| Non-static Inner Classes | Outer class reference handling | 8.6 | P2 |
-| Higher-rank Arrays | T[][][] and beyond | 8.1 | P3 |
-| Shared UCO Methods | Dedupe callback wrappers | 11.3 | P2 |
-| Tool Integration | VS inspection, build navigation | 11.3 | P2 |
-| Documentation | App developer guide | 11.3 | P1 |
+| Item | Description | Section | Priority | Status |
+|------|-------------|---------|----------|--------|
+| Open Generics | Closed generic pre-generation | 8.5 | P2 | ❌ Not started |
+| Non-static Inner Classes | Outer class reference handling | 8.6 | P2 | ❌ Not started |
+| Higher-rank Arrays | T[][][] and beyond | 8.1 | P3 | ❌ Not started |
+| Shared UCO Methods | Dedupe callback wrappers | 11.3 | P2 | ❌ Not started |
+| Tool Integration | VS inspection, build navigation | 11.3 | P2 | ❌ Not started |
+| Documentation | App developer guide | 11.3 | P1 | ❌ Not started |
 
 ### C.4 Infrastructure (Blocking)
 
@@ -3036,25 +3202,28 @@ This appendix consolidates all future work items mentioned throughout the docume
 
 ### C.5 Proposed Solutions Summary
 
-| Gap | Proposed Solution | Implementation Effort |
-|-----|-------------------|----------------------|
-| Generic Collections | `IDerivedTypeFactory<T>` pattern (Section 8.4) | Medium |
-| Open Generics | Build-time closed generic scanning | Medium |
-| Non-static Inner Classes | Outer-aware activation constructor | Low |
-| JNI Global Refs | LRU cache with bounded size | Low |
-| Error Handling | TypeMapException with XA43xx codes | Low |
-| Performance | R2R + FrozenDictionary | Medium |
-| MonoVM Reflection | Accept for now; optional binary serialization later | Low |
-| SetEntryAssembly Hack | Remove when ILLink PR merges | Low |
-| SDK Pre-generation | Pre-generate during SDK build, ship as NuGet | Medium |
-| Incremental Build | Hash-based cache, skip unchanged assemblies | Medium |
-| Shared Callbacks | Shared dispatcher with runtime type lookup | Medium |
-| Tool Integration | `.typemap.json` for VS, source links | Low |
-| Documentation | `Documentation/guides/typemap-v4.md` | Low |
+| Gap | Proposed Solution | Implementation Effort | Status |
+|-----|-------------------|----------------------|--------|
+| Generic Collections | `IDerivedTypeFactory<T>` pattern (Section 8.4) | Medium | ❌ |
+| Open Generics | Build-time closed generic scanning | Medium | ❌ |
+| Non-static Inner Classes | Outer-aware activation constructor | Low | ❌ |
+| JNI Global Refs | LRU cache with bounded size | Low | ❌ |
+| Error Handling | TypeMapException with XA43xx codes | Low | ✅ |
+| Performance | R2R + FrozenDictionary | Medium | ❌ |
+| MonoVM Reflection | Accept for now; optional binary serialization later | Low | ❌ |
+| SetEntryAssembly Hack | Remove when ILLink PR merges | Low | ❌ |
+| SDK Pre-generation | Pre-generate during SDK build, ship as NuGet | Medium | ❌ |
+| Incremental Build | Hash-based cache, skip unchanged assemblies | Medium | ❌ |
+| Shared Callbacks | Shared dispatcher with runtime type lookup | Medium | ❌ |
+| Tool Integration | `.typemap.json` for VS, source links | Low | ❌ |
+| Documentation | `Documentation/guides/typemap-v4.md` | Low | ❌ |
+| **Shared Peer Creation** | `PeerCreationHelper` with delegates | Low | ✅ |
+| **Debug Logging** | Gate with `Logger.LogTypemapTrace` | Low | ✅ |
 
 ---
 
-*Document version: 4.8*
+*Document version: 4.9*
 *Based on: type-mapping-api-v3-spec.md v1.4*
-*Last updated: 2026-02-01*
+*Last updated: 2026-02-02*
 *Author: Cross-reference analysis of V3 spec and codebase*
+*Updates: Added Section 2.3 (Shared Peer Creation), marked completed items*

@@ -50,7 +50,8 @@ namespace Java.Interop
 			return ret;
 		}
 
-		Type? GetJavaToManagedType (string class_name)
+		/// <inheritdoc/>
+		public Type? TryGetExactTypeMapping (string class_name)
 		{
 			lock (TypeManagerMapDictionaries.AccessLock) {
 				if (TypeManagerMapDictionaries.JniToManaged.TryGetValue (class_name, out Type? type)) {
@@ -80,7 +81,7 @@ namespace Java.Interop
 		/// <inheritdoc/>
 		public bool TryGetTypesForJniName (string jniSimpleReference, [NotNullWhen (true)] out IEnumerable<Type>? types)
 		{
-			var type = GetJavaToManagedType (jniSimpleReference);
+			var type = TryGetExactTypeMapping (jniSimpleReference);
 			if (type != null) {
 				types = [type];
 				return true;
@@ -152,6 +153,14 @@ namespace Java.Interop
 		}
 
 		/// <inheritdoc/>
+		public bool TryGetInvokerType (Type type, [NotNullWhen (true)] out Type? invokerType)
+		{
+			// For LlvmIrTypeMap, we look up the invoker type from the [Register] attribute's Invoker property
+			invokerType = JavaObjectExtensions.GetInvokerType (type);
+			return invokerType != null;
+		}
+
+		/// <inheritdoc/>
 		public IntPtr GetFunctionPointer (ReadOnlySpan<char> className, int methodIndex)
 		{
 			// LlvmIrTypeMap doesn't use the attribute-based GetFunctionPointer mechanism.
@@ -188,104 +197,17 @@ namespace Java.Interop
 			JniHandleOwnership transfer,
 			Type? targetType)
 		{
-			Type? type = null;
-			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
-			string? class_name = TypeManager.GetClassName (class_ptr);
-
-			lock (TypeManagerMapDictionaries.AccessLock) {
-				// TODO I suppose we want to use cache if we're locking?
-				while (class_ptr != IntPtr.Zero) {
-					type = GetJavaToManagedType (class_name!);
-					if (type != null) {
-						// TODO: I suppose we need to add it to the cache now that we found it?
-						break;
-					}
-
-					IntPtr super_class_ptr = JNIEnv.GetSuperclass (class_ptr);
-					JNIEnv.DeleteLocalRef (class_ptr);
-					class_name = null;
-					class_ptr = super_class_ptr;
-					if (class_ptr != IntPtr.Zero) {
-						class_name = TypeManager.GetClassName (class_ptr);
-					}
-				}
-			}
-
-			if (class_ptr != IntPtr.Zero) {
-				JNIEnv.DeleteLocalRef (class_ptr);
-				class_ptr = IntPtr.Zero;
-			}
-
-			if (targetType != null &&
-					(type == null ||
-					 !targetType.IsAssignableFrom (type))) {
-				type = targetType;
-			}
-
-			if (type == null) {
-				class_name = JNIEnv.GetClassNameFromInstance (handle);
-				JNIEnv.DeleteRef (handle, transfer);
-				throw new NotSupportedException (
-						FormattableString.Invariant ($"Internal error finding wrapper class for '{class_name}'. (Where is the Java.Lang.Object wrapper?!)"),
-						TypeManager.CreateJavaLocationException ());
-			}
-
-			if (type.IsInterface || type.IsAbstract) {
-				var invokerType = JavaObjectExtensions.GetInvokerType (type);
-				if (invokerType == null)
-					throw new NotSupportedException ("Unable to find Invoker for type '" + type.FullName + "'. Was it linked away?",
-							TypeManager.CreateJavaLocationException ());
-				type = invokerType;
-			}
-
-			var typeSig = JNIEnvInit.androidRuntime?.TypeManager.GetTypeSignature (type) ?? default;
-			if (!typeSig.IsValid || typeSig.SimpleReference == null) {
-				throw new ArgumentException ($"Could not determine Java type corresponding to `{type.AssemblyQualifiedName}`.", nameof (targetType));
-			}
-
-			JniObjectReference typeClass = default;
-			JniObjectReference handleClass = default;
-			try {
-				try {
-					typeClass = JniEnvironment.Types.FindClass (typeSig.SimpleReference);
-				} catch (Exception e) {
-					throw new ArgumentException ($"Could not find Java class `{typeSig.SimpleReference}`.",
-							nameof (targetType),
-							e);
-				}
-
-				handleClass = JniEnvironment.Types.GetObjectClass (new JniObjectReference (handle));
-				if (!JniEnvironment.Types.IsAssignableFrom (handleClass, typeClass)) {
-					if (Logger.LogAssembly) {
-						var message = $"Handle 0x{handle:x} is of type '{JNIEnv.GetClassNameFromInstance (handle)}' which is not assignable to '{typeSig.SimpleReference}'";
-						Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
-					}
-					if (RuntimeFeature.IsAssignableFromCheck) {
-						return null;
-					}
-				}
-			} finally {
-				JniObjectReference.Dispose (ref handleClass);
-				JniObjectReference.Dispose (ref typeClass);
-			}
-
-			IJavaPeerable? result = null;
-
-			try {
-				result = CreateProxy (type, handle, transfer);
-				if (Runtime.IsGCUserPeer (result.PeerReference.Handle)) {
-					result.SetJniManagedPeerState (JniManagedPeerStates.Replaceable | JniManagedPeerStates.Activatable);
-				}
-			} catch (MissingMethodException e) {
-				var key_handle = JNIEnv.IdentityHash (handle);
-				JNIEnv.DeleteRef (handle, transfer);
-				throw new NotSupportedException (FormattableString.Invariant (
-					$"Unable to activate instance of type {type} from native handle 0x{handle:x} (key_handle 0x{key_handle:x})."), e);
-			}
-			return result;
+			return Android.Runtime.PeerCreationHelper.CreatePeer (
+				handle,
+				transfer,
+				targetType,
+				typeMap: this,
+				typeResolver: (class_ptr, class_name) => JavaHierarchyWalker.WalkHierarchy (class_ptr, class_name, this),
+				instanceCreator: CreateProxy,
+				resolveInvokerTypes: true);
 		}
 
-		static IJavaPeerable CreateProxy (
+		static IJavaPeerable? CreateProxy (
 				Type type,
 				IntPtr handle,
 				JniHandleOwnership transfer)
@@ -308,9 +230,8 @@ namespace Java.Interop
 				return peer;
 			}
 			GC.SuppressFinalize (peer);
-			throw new MissingMethodException (
-					"No constructor found for " + type.FullName + "::.ctor(System.IntPtr, Android.Runtime.JniHandleOwnership)",
-					TypeManager.CreateJavaLocationException ());
+			// Return null - PeerCreationHelper will throw NotSupportedException with proper context
+			return null;
 
 			static IJavaPeerable GetUninitializedObject (Type type)
 			{

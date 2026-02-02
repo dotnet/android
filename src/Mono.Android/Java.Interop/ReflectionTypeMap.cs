@@ -91,6 +91,13 @@ namespace Java.Interop
 
 		#region ITypeMap Implementation
 
+		/// <inheritdoc/>
+		public Type? TryGetExactTypeMapping (string jniTypeName)
+		{
+			_jniToManagedMap.TryGetValue (jniTypeName, out var type);
+			return type;
+		}
+
 		public bool TryGetTypesForJniName (string jniSimpleReference, [NotNullWhen (true)] out IEnumerable<Type>? types)
 		{
 			if (_jniToManagedMap.TryGetValue (jniSimpleReference, out var type))
