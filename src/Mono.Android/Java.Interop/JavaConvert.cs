@@ -57,21 +57,6 @@ namespace Java.Interop {
 
 		static Func<IntPtr, JniHandleOwnership, object?>? GetJniHandleConverter (Type? target)
 		{
-			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
-			// Might cause an issue in the future for NativeAOT
-			[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = "We don't think the IDictionary, IList, or ICollection code paths occur if JavaDictionary<,>, JavaList<>, and JavaCollection<> do not exist.")]
-			[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
-			static Type MakeGenericType (
-					[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
-					Type type,
-					params Type [] typeArguments
-			) =>
-				// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
-				// IL3050 disabled in source: if someone uses NativeAOT, they will get the warning.
-				#pragma warning disable IL3050
-				type.MakeGenericType (typeArguments);
-				#pragma warning restore IL3050
-
 			if (target == null)
 				return null;
 
@@ -79,33 +64,28 @@ namespace Java.Interop {
 				return converter;
 			if (target.IsArray)
 				return (h, t) => JNIEnv.GetArray (h, t, target.GetElementType ());
+			// TypeMap v3: Generic collection conversions via MakeGenericType are not supported
+			// These code paths require runtime type construction which is incompatible with NativeAOT/trimming
 			if (target.IsGenericType && target.GetGenericTypeDefinition() == typeof (IDictionary<,>)) {
-				Type t = MakeGenericType (typeof (JavaDictionary<,>), target.GetGenericArguments ());
-				return GetJniHandleConverterForType (t);
+				throw new NotSupportedException (
+					$"Generic IDictionary<,> conversion is not supported with TypeMap v3. Use JavaDictionary<,> directly.");
 			}
 			if (typeof (IDictionary).IsAssignableFrom (target))
 				return (h, t) => JavaDictionary.FromJniHandle (h, t);
 			if (target.IsGenericType && target.GetGenericTypeDefinition() == typeof (IList<>)) {
-				Type t = MakeGenericType (typeof (JavaList<>), target.GetGenericArguments ());
-				return GetJniHandleConverterForType (t);
+				throw new NotSupportedException (
+					$"Generic IList<> conversion is not supported with TypeMap v3. Use JavaList<> directly.");
 			}
 			if (typeof (IList).IsAssignableFrom (target))
 				return (h, t) => JavaList.FromJniHandle (h, t);
 			if (target.IsGenericType && target.GetGenericTypeDefinition() == typeof (ICollection<>)) {
-				Type t = MakeGenericType (typeof (JavaCollection<>), target.GetGenericArguments ());
-				return GetJniHandleConverterForType (t);
+				throw new NotSupportedException (
+					$"Generic ICollection<> conversion is not supported with TypeMap v3. Use JavaCollection<> directly.");
 			}
 			if (typeof (ICollection).IsAssignableFrom (target))
 				return (h, t) => JavaCollection.FromJniHandle (h, t);
 
 			return null;
-		}
-
-		static Func<IntPtr, JniHandleOwnership, object> GetJniHandleConverterForType ([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)] Type t)
-		{
-			MethodInfo m = t.GetMethod ("FromJniHandle", BindingFlags.Static | BindingFlags.Public)!;
-			return (Func<IntPtr, JniHandleOwnership, object>) Delegate.CreateDelegate (
-					typeof (Func<IntPtr, JniHandleOwnership, object>), m);
 		}
 
 		public static T? FromJniHandle<
