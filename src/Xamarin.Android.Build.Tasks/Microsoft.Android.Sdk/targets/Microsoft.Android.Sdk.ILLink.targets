@@ -19,22 +19,36 @@ This file contains the .NET 5-specific targets to customize ILLink
   -->
   <Target Name="_GenerateTypeMapAssembly"
       AfterTargets="_ResolveAssemblies"
-      BeforeTargets="_GenerateJavaStubs">
+      BeforeTargets="_GenerateJavaStubs"
+      Condition=" '$(AndroidEnableTypeMaps)' == 'true' and '@(ReferencePath)' != '' ">
     <PropertyGroup>
       <!-- Use BaseIntermediateOutputPath to ensure LLVM IR files are in a consistent location
            accessible from both outer build and per-RID builds -->
       <_TypeMapBaseOutputDir>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework)\</_TypeMapBaseOutputDir>
       <_TypeMapAssemblyOutputDir>$(_TypeMapBaseOutputDir)typemap\</_TypeMapAssemblyOutputDir>
       <_TypeMapJavaSourceOutputDir>$(_AndroidIntermediateJavaSourceDirectory)</_TypeMapJavaSourceOutputDir>
-      <_TypeMapLlvmIrOutputDir>$(_TypeMapBaseOutputDir)android\</_TypeMapLlvmIrOutputDir>
+      <!-- Use IntermediateOutputPath (RID-specific) for LLVM IR files so they're in the same dir as other .ll files -->
+      <_TypeMapLlvmIrOutputDir>$(IntermediateOutputPath)android\</_TypeMapLlvmIrOutputDir>
     </PropertyGroup>
     
-    <!-- Build list of assemblies to scan: use ResolvedAssemblies from _ResolveAssemblies -->
+    <!-- Build list of assemblies to scan: use ResolvedAssemblies from _ResolveAssemblies,
+         plus ResolvedFrameworkAssemblies which includes Mono.Android -->
+    <Warning Text="[GTMA DEBUG] ResolvedAssemblies count: @(ResolvedAssemblies->Count())" />
+    <Warning Text="[GTMA DEBUG] ResolvedFrameworkAssemblies count: @(ResolvedFrameworkAssemblies->Count())" />
+    <Warning Text="[GTMA DEBUG] ReferencePath count: @(ReferencePath->Count())" />
+    <Warning Text="[GTMA DEBUG] ReferencePath: @(ReferencePath->'%(FileName)')" />
+    <Warning Text="[GTMA DEBUG] App assembly: $(IntermediateOutputPath)$(TargetFileName)" />
+    <Warning Text="[GTMA DEBUG] App assembly exists: $([System.IO.File]::Exists('$(IntermediateOutputPath)$(TargetFileName)'))" />
     <ItemGroup>
       <_TypeMapInputAssemblies Include="@(ResolvedAssemblies)" />
+      <_TypeMapInputAssemblies Include="@(ResolvedFrameworkAssemblies)" />
+      <!-- Also include ReferencePath which has framework assemblies in the outer build -->
+      <_TypeMapInputAssemblies Include="@(ReferencePath)" />
+      <_TypeMapInputAssemblies Include="$(IntermediateOutputPath)$(TargetFileName)" Condition="Exists('$(IntermediateOutputPath)$(TargetFileName)')" />
     </ItemGroup>
     
     <Message Importance="high" Text="[GTMA] ResolvedAssemblies count: @(ResolvedAssemblies->Count())" />
+    <Message Importance="high" Text="[GTMA] _XamarinAndroidBuildTasksAssembly: $(_XamarinAndroidBuildTasksAssembly)" />
     <Message Importance="high" Text="[GTMA] _TypeMapInputAssemblies count: @(_TypeMapInputAssemblies->Count())" />
     <Message Importance="high" Text="[GTMA] Input assemblies: @(_TypeMapInputAssemblies->'%(FileName)')" Condition=" '@(_TypeMapInputAssemblies->Count())' != '0' " />
     
@@ -59,28 +73,58 @@ This file contains the .NET 5-specific targets to customize ILLink
     <!-- Add the generated TypeMaps assembly to ManagedAssemblyToLink so ILLink processes it.
          ILLink uses the typemap-entry-assembly flag to know which assembly contains TypeMapAttribute entries
          and will trim unused proxy types based on the 3-arg TypeMapAttribute trimTarget parameter. -->
-    <Message Importance="high" Text="DEBUG: _TypeMapGeneratedAssembly='@(_TypeMapGeneratedAssembly)'" />
-    <Message Importance="high" Text="DEBUG: ManagedAssemblyToLink count BEFORE adding TypeMaps: @(ManagedAssemblyToLink->Count())" />
     <ItemGroup Condition=" '@(_TypeMapGeneratedAssembly)' != '' ">
       <ManagedAssemblyToLink Include="@(_TypeMapGeneratedAssembly)" />
     </ItemGroup>
-    <Message Importance="high" Text="DEBUG: ManagedAssemblyToLink count AFTER adding TypeMaps: @(ManagedAssemblyToLink->Count())" />
 
-    <!-- Replace only the assembly items in ResolvedFileToPublish, preserve non-assembly items (native libs, etc.) -->
-    <ItemGroup Condition=" '@(_TypeMapUpdatedAssemblies)' != '' ">
-      <!-- Save non-assembly items (native libs, config files, etc.) -->
-      <_ResolvedFileToPublishNonAssembly Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' != '.dll' " />
-      <!-- Remove all items -->
-      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" />
-      <!-- Re-add: updated assemblies + preserved non-assemblies -->
-      <ResolvedFileToPublish Include="@(_TypeMapUpdatedAssemblies)" />
-      <ResolvedFileToPublish Include="@(_ResolvedFileToPublishNonAssembly)" />
-      <!-- Also add the TypeMaps assembly to the publish list -->
+    <!-- Add the TypeMaps assembly to ResolvedFileToPublish for trimmed builds -->
+    <ItemGroup Condition=" '@(_TypeMapGeneratedAssembly)' != '' ">
       <ResolvedFileToPublish Include="@(_TypeMapGeneratedAssembly)" />
     </ItemGroup>
 
     <Message Condition=" '@(_TypeMapGeneratedAssembly)' != '' " Importance="high" 
              Text="Generated TypeMap assembly: @(_TypeMapGeneratedAssembly) (TypeMapEntryAssembly=$(TypeMapEntryAssembly))" />
+  </Target>
+
+  <!-- 
+    Add the TypeMaps assembly to ResolvedAssemblies with proper ABI metadata.
+    This runs after _GenerateTypeMapAssembly when RuntimeIdentifier is available.
+    We require RuntimeIdentifier to be set to properly map to ABI.
+  -->
+  <Target Name="_AddTypeMapAssemblyToResolvedAssemblies"
+      AfterTargets="_GenerateTypeMapAssembly"
+      BeforeTargets="_GenerateJavaStubs;_CopyAssemblies"
+      Condition=" '$(AndroidEnableTypeMaps)' == 'true' and '@(_TypeMapGeneratedAssembly)' != '' and '$(RuntimeIdentifier)' != '' ">
+    
+    <PropertyGroup>
+      <!-- Map RuntimeIdentifier to Abi -->
+      <_TypeMapAbi Condition=" '$(RuntimeIdentifier)' == 'android-arm64' ">arm64-v8a</_TypeMapAbi>
+      <_TypeMapAbi Condition=" '$(RuntimeIdentifier)' == 'android-arm' ">armeabi-v7a</_TypeMapAbi>
+      <_TypeMapAbi Condition=" '$(RuntimeIdentifier)' == 'android-x64' ">x86_64</_TypeMapAbi>
+      <_TypeMapAbi Condition=" '$(RuntimeIdentifier)' == 'android-x86' ">x86</_TypeMapAbi>
+      <!-- Check if already added -->
+      <_TypeMapAlreadyInResolvedAssemblies>@(_ResolvedAssemblies->AnyHaveMetadataValue('Filename', '_Microsoft.Android.TypeMaps'))</_TypeMapAlreadyInResolvedAssemblies>
+    </PropertyGroup>
+
+    <ItemGroup Condition=" '$(_TypeMapAlreadyInResolvedAssemblies)' != 'true' ">
+      <_ResolvedAssemblies Include="@(_TypeMapGeneratedAssembly)">
+        <Abi>$(_TypeMapAbi)</Abi>
+        <RuntimeIdentifier>$(RuntimeIdentifier)</RuntimeIdentifier>
+        <DestinationSubDirectory>$(_TypeMapAbi)\</DestinationSubDirectory>
+        <DestinationSubPath>_Microsoft.Android.TypeMaps.dll</DestinationSubPath>
+      </_ResolvedAssemblies>
+      <ResolvedAssemblies Include="@(_TypeMapGeneratedAssembly)">
+        <Abi>$(_TypeMapAbi)</Abi>
+        <RuntimeIdentifier>$(RuntimeIdentifier)</RuntimeIdentifier>
+        <DestinationSubDirectory>$(_TypeMapAbi)\</DestinationSubDirectory>
+        <DestinationSubPath>_Microsoft.Android.TypeMaps.dll</DestinationSubPath>
+      </ResolvedAssemblies>
+    </ItemGroup>
+    
+    <Message Importance="high" Text="[TypeMap] Added TypeMaps assembly with Abi=$(_TypeMapAbi) RuntimeIdentifier=$(RuntimeIdentifier)" 
+             Condition=" '$(_TypeMapAlreadyInResolvedAssemblies)' != 'true' " />
+    <Message Importance="high" Text="[TypeMap] TypeMaps assembly already in _ResolvedAssemblies, skipping" 
+             Condition=" '$(_TypeMapAlreadyInResolvedAssemblies)' == 'true' " />
   </Target>
 
   <Target Name="_PrepareLinking"
@@ -118,10 +162,10 @@ This file contains the .NET 5-specific targets to customize ILLink
       />
       <_TrimmerCustomData Include="SystemIOHashingAssemblyPath" Value="$(_SystemIOHashingAssemblyPath)" />
       <!-- TypeMap: Output path for LLVM IR generation (JCW is handled by GenerateJavaStubs) -->
-      <_TrimmerCustomData Include="LlvmIrOutputPath" Value="$(_TypeMapLlvmIrOutputDir)" />
-      <_TrimmerCustomData Include="TargetArch" Value="$(RuntimeIdentifier)" />
+      <_TrimmerCustomData Condition=" '$(AndroidEnableTypeMaps)' == 'true' and '$(TypeMapEntryAssembly)' != '' " Include="LlvmIrOutputPath" Value="$(_TypeMapLlvmIrOutputDir)" />
+      <_TrimmerCustomData Condition=" '$(RuntimeIdentifier)' != '' " Include="TargetArch" Value="$(RuntimeIdentifier)" />
       <!-- TypeMap assembly name - the ILLink step reads type mapping info from this assembly -->
-      <_TrimmerCustomData Include="TypeMapEntryAssembly" Value="$(TypeMapEntryAssembly)" />
+      <_TrimmerCustomData Condition=" '$(TypeMapEntryAssembly)' != '' " Include="TypeMapEntryAssembly" Value="$(TypeMapEntryAssembly)" />
 
       <!--
         Used for the <ILLink CustomSteps="@(_TrimmerCustomSteps)" /> value:
@@ -144,8 +188,11 @@ This file contains the .NET 5-specific targets to customize ILLink
       -->
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="MonoDroid.Tuner.FixAbstractMethodsStep" />
       <!-- Custom steps that run after MarkStep -->
+      <!-- GenerateProguardConfiguration: Generates keep rules during ILLink.
+           When using TypeMap v3, we use _GenerateProguardFromTypeMap MSBuild task instead,
+           which runs after ILLink completes and reads the linked TypeMaps assembly. -->
       <_TrimmerCustomSteps
-          Condition=" '$(_ProguardProjectConfiguration)' != '' "
+          Condition=" '$(_ProguardProjectConfiguration)' != '' and '$(AndroidEnableTypeMaps)' != 'true' "
           Include="$(_AndroidLinkerCustomStepAssembly)"
           AfterStep="CleanStep"
           Type="Mono.Linker.Steps.GenerateProguardConfiguration"
@@ -181,7 +228,6 @@ This file contains the .NET 5-specific targets to customize ILLink
       <TrimmerRootDescriptor Include="@(LinkDescription)" />
       <TrimmerRootAssembly Include="Microsoft.Android.Runtime.NativeAOT" Condition=" '$(_AndroidRuntime)' == 'NativeAOT' " RootMode="All" />
     </ItemGroup>
-    <Message Importance="high" Text="DEBUG: TypeMapEntryAssembly='$(TypeMapEntryAssembly)'" />
   </Target>
 
   <Target Name="_FixRootAssembly" AfterTargets="PrepareForILLink">
@@ -207,42 +253,85 @@ This file contains the .NET 5-specific targets to customize ILLink
        ILLink copies the assembly to IntermediateLinkDir, so we need to reference that location. -->
   <Target Name="_AddLinkedTypeMapAssemblyToPublish"
       AfterTargets="ILLink"
-      Condition=" '$(PublishTrimmed)' == 'true' and '@(_TypeMapGeneratedAssembly)' != '' ">
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidEnableTypeMaps)' == 'true' ">
     <PropertyGroup>
-      <_LinkedTypeMapAssemblyPath>$(IntermediateLinkDir)$([System.IO.Path]::GetFileName('%(_TypeMapGeneratedAssembly.Identity)'))</_LinkedTypeMapAssemblyPath>
+      <!-- TypeMaps assembly is generated to a well-known location, compute the linked path from properties -->
+      <_TypeMapAssemblyFileName>_Microsoft.Android.TypeMaps.dll</_TypeMapAssemblyFileName>
+      <_LinkedTypeMapAssemblyPath>$(IntermediateLinkDir)$(_TypeMapAssemblyFileName)</_LinkedTypeMapAssemblyPath>
+      <_LinkedTypeMapJloXmlPath>$(IntermediateLinkDir)_Microsoft.Android.TypeMaps.jlo.xml</_LinkedTypeMapJloXmlPath>
+      <_LinkedTypeMapTypemapXmlPath>$(IntermediateLinkDir)_Microsoft.Android.TypeMaps.typemap.xml</_LinkedTypeMapTypemapXmlPath>
     </PropertyGroup>
-    <Message Importance="high" Text="DEBUG: Adding linked TypeMaps assembly to ResolvedFileToPublish: $(_LinkedTypeMapAssemblyPath)" />
     <ItemGroup Condition=" Exists('$(_LinkedTypeMapAssemblyPath)') ">
       <ResolvedFileToPublish Include="$(_LinkedTypeMapAssemblyPath)" />
     </ItemGroup>
+    <!-- Create empty .jlo.xml and .typemap.xml files for the TypeMaps assembly so GenerateJavaStubs doesn't fail -->
+    <WriteLinesToFile Condition=" Exists('$(_LinkedTypeMapAssemblyPath)') and !Exists('$(_LinkedTypeMapJloXmlPath)') "
+                      File="$(_LinkedTypeMapJloXmlPath)"
+                      Lines="&lt;?xml version='1.0' encoding='utf-8'?&gt;&lt;api /&gt;"
+                      Overwrite="true" />
+    <WriteLinesToFile Condition=" Exists('$(_LinkedTypeMapAssemblyPath)') and !Exists('$(_LinkedTypeMapTypemapXmlPath)') "
+                      File="$(_LinkedTypeMapTypemapXmlPath)"
+                      Lines=""
+                      Overwrite="true" />
     <Warning Condition=" !Exists('$(_LinkedTypeMapAssemblyPath)') " 
              Text="TypeMaps assembly not found in linked output: $(_LinkedTypeMapAssemblyPath)" />
   </Target>
 
-  <!-- Collect LLVM IR files generated by GenerateTypeMapAssembly for Type Mapping API marshal methods -->
-  <Target Name="_CollectTypeMapMarshalMethodSources">
+  <!-- Generate proguard keep rules based on the types that survived IL trimming.
+       This ensures R8 only keeps Java classes that are actually used by the app.
+       Runs after ILLink, before _CompileToDalvik which invokes R8. -->
+  <Target Name="_GenerateProguardFromTypeMap"
+      AfterTargets="_AddLinkedTypeMapAssemblyToPublish"
+      BeforeTargets="_CalculateProguardConfigurationFiles"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidEnableTypeMaps)' == 'true' and '$(AndroidLinkTool)' != '' ">
     <PropertyGroup>
-      <!-- Use BaseIntermediateOutputPath to match where _GenerateTypeMapAssembly writes files -->
-      <_TypeMapBaseOutputDir>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework)\</_TypeMapBaseOutputDir>
-      <_AndroidMarshalMethodsDir>$([System.IO.Path]::Combine('$(_TypeMapBaseOutputDir)', 'android'))</_AndroidMarshalMethodsDir>
+      <!-- Compute the linked TypeMaps assembly path (same logic as _AddLinkedTypeMapAssemblyToPublish) -->
+      <_TypeMapAssemblyFileName>_Microsoft.Android.TypeMaps.dll</_TypeMapAssemblyFileName>
+      <_LinkedTypeMapAssemblyPath>$(IntermediateLinkDir)$(_TypeMapAssemblyFileName)</_LinkedTypeMapAssemblyPath>
+      <_TypeMapProguardConfig>$(IntermediateOutputPath)proguard\proguard_typemap.cfg</_TypeMapProguardConfig>
+    </PropertyGroup>
+    <GenerateProguardFromTypeMap
+        Condition=" Exists('$(_LinkedTypeMapAssemblyPath)') "
+        TypeMapsAssembly="$(_LinkedTypeMapAssemblyPath)"
+        OutputProguardConfiguration="$(_TypeMapProguardConfig)"
+        Enabled="true" />
+    <!-- Add to proguard configuration files -->
+    <ItemGroup Condition=" Exists('$(_TypeMapProguardConfig)') ">
+      <ProguardConfiguration Include="$(_TypeMapProguardConfig)" />
+    </ItemGroup>
+  </Target>
+
+  <!-- Collect LLVM IR files generated by GenerateTypeMapAssembly for Type Mapping API marshal methods -->
+  <Target Name="_CollectTypeMapMarshalMethodSources" 
+          BeforeTargets="_CompileNativeAssemblySources"
+          Condition=" '$(AndroidEnableTypeMaps)' == 'true' ">
+    <Warning Text="[COLLECT DEBUG] Running _CollectTypeMapMarshalMethodSources" />
+    <PropertyGroup>
+      <!-- Use IntermediateOutputPath (RID-specific) to match where _GenerateTypeMapAssembly writes files -->
+      <_AndroidMarshalMethodsDir>$(IntermediateOutputPath)android</_AndroidMarshalMethodsDir>
     </PropertyGroup>
     <Message Importance="high" Text="[COLLECT] _AndroidMarshalMethodsDir=$(_AndroidMarshalMethodsDir)" />
     <Message Importance="high" Text="[COLLECT] _AndroidRuntime=$(_AndroidRuntime), _BuildTargetAbis=@(_BuildTargetAbis)" />
     <!-- Collect the raw .ll files first (no ABI metadata yet) -->
-    <ItemGroup Condition=" '$(_AndroidRuntime)' != 'MonoVM' ">
-      <_TypeMapMarshalMethodsSourceRaw Include="$(_AndroidMarshalMethodsDir)$([System.IO.Path]::DirectorySeparatorChar)marshal_methods_*.ll"
-                                        Exclude="$(_AndroidMarshalMethodsDir)$([System.IO.Path]::DirectorySeparatorChar)marshal_methods_typemap.ll" />
+    <ItemGroup>
+      <_TypeMapMarshalMethodsSourceRaw Include="$(_AndroidMarshalMethodsDir)$([System.IO.Path]::DirectorySeparatorChar)marshal_methods_*.ll" />
       <!-- Ensure the legacy obj is not passed to native compilation -->
       <AndroidNativeLibrary Remove="$(_AndroidMarshalMethodsDir)$([System.IO.Path]::DirectorySeparatorChar)marshal_methods_typemap.o" />
       <AndroidNativeSource Remove="$(_AndroidMarshalMethodsDir)$([System.IO.Path]::DirectorySeparatorChar)marshal_methods_typemap.ll" />
     </ItemGroup>
     <Message Importance="high" Text="[COLLECT] Found @(_TypeMapMarshalMethodsSourceRaw->Count()) TypeMap marshal method source files" />
     <!-- Batch the files for each target ABI (LLVM IR is architecture-independent, compiled per-ABI) -->
-    <ItemGroup Condition=" '$(_AndroidRuntime)' != 'MonoVM' ">
+    <ItemGroup>
       <_TypeMapMarshalMethodsSource Include="@(_TypeMapMarshalMethodsSourceRaw)">
         <abi>%(_BuildTargetAbis.Identity)</abi>
       </_TypeMapMarshalMethodsSource>
     </ItemGroup>
+    <!--
+    <ItemGroup>
+      <_MarshalMethodsAssemblySource Include="@(_TypeMapMarshalMethodsSource)" />
+    </ItemGroup>
+    <Warning Text="[COLLECT DEBUG] Added @(_TypeMapMarshalMethodsSource->Count()) files to _MarshalMethodsAssemblySource" />
+    -->
     <Message Importance="high" Text="[COLLECT] Total @(_TypeMapMarshalMethodsSource->Count()) TypeMap marshal method sources (after ABI batching)" />
   </Target>
 

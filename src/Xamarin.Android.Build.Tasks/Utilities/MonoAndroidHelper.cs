@@ -762,7 +762,11 @@ namespace Xamarin.Android.Tasks
 					assembliesPerArch.Add (arch, assemblies);
 				}
 
-				assemblies.Add (GetAssemblyNameWithCulture (assembly), assembly);
+				// Handle potential duplicates gracefully (e.g., from outer/inner builds)
+				string key = GetAssemblyNameWithCulture (assembly);
+				if (!assemblies.ContainsKey (key)) {
+					assemblies.Add (key, assembly);
+				}
 			}
 
 			// It's possible some assembly collections will be empty (e.g. `ResolvedUserAssemblies` as passed to the `GenerateJavaStubs` task), which
