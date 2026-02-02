@@ -151,6 +151,84 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void DotNetRunWithDeviceParameter ()
+		{
+			const string logcatMessage = "DOTNET_RUN_DEVICE_TEST_67890";
+			var proj = new XamarinAndroidApplicationProject ();
+
+			// Enable verbose output from Microsoft.Android.Run for debugging
+			proj.SetProperty ("_AndroidRunExtraArgs", "--verbose");
+
+			// Add a Console.WriteLine that will appear in logcat
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"//${AFTER_ONCREATE}",
+				$"Console.WriteLine (\"{logcatMessage}\");");
+
+			using var builder = CreateApkBuilder ();
+			builder.Save (proj);
+
+			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
+			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+
+			// Get the attached device serial
+			var serial = GetAttachedDeviceSerial ();
+
+			// Start dotnet run with Device parameter, which should set $(AdbTarget)
+			using var process = dotnet.StartRun (waitForExit: true, parameters: [$"Device={serial}"]);
+
+			var locker = new Lock ();
+			var output = new StringBuilder ();
+			var outputReceived = new ManualResetEventSlim (false);
+			bool foundMessage = false;
+			bool foundAdbTarget = false;
+
+			process.OutputDataReceived += (sender, e) => {
+				if (e.Data != null) {
+					lock (locker) {
+						output.AppendLine (e.Data);
+						// Check for the --adb-target argument in verbose output
+						if (e.Data.Contains ($"Target: -s {serial}")) {
+							foundAdbTarget = true;
+						}
+						if (e.Data.Contains (logcatMessage)) {
+							foundMessage = true;
+							outputReceived.Set ();
+						}
+					}
+				}
+			};
+			process.ErrorDataReceived += (sender, e) => {
+				if (e.Data != null) {
+					lock (locker) {
+						output.AppendLine ($"STDERR: {e.Data}");
+					}
+				}
+			};
+
+			process.BeginOutputReadLine ();
+			process.BeginErrorReadLine ();
+
+			// Wait for the expected message or timeout
+			bool messageFound = outputReceived.Wait (TimeSpan.FromSeconds (60));
+
+			// Kill the process (simulating Ctrl+C)
+			if (!process.HasExited) {
+				process.Kill (entireProcessTree: true);
+				process.WaitForExit ();
+			}
+
+			// Write the output to a log file for debugging
+			string logPath = Path.Combine (Root, builder.ProjectDirectory, "dotnet-run-device-output.log");
+			File.WriteAllText (logPath, output.ToString ());
+			TestContext.AddTestAttachment (logPath);
+
+			Assert.IsTrue (foundAdbTarget, $"Expected --adb-target argument with serial '{serial}' was not found in verbose output. See {logPath} for details.");
+			Assert.IsTrue (foundMessage, $"Expected message '{logcatMessage}' was not found in output. See {logPath} for details.");
+		}
+
+		[Test]
+		[TestCase (true)]
+		[TestCase (false)]
 		public void DeployToDevice ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
