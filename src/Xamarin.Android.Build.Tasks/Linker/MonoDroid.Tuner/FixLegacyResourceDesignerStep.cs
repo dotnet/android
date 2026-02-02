@@ -85,6 +85,12 @@ namespace MonoDroid.Tuner
 
 		internal override bool ProcessAssemblyDesigner (AssemblyDefinition assembly)
 		{
+			// Skip the generated TypeMaps assembly - it doesn't have a Resource designer
+			if (assembly.Name.Name == "_Microsoft.Android.TypeMaps") {
+				LogMessage ($"   {assembly.Name.Name} is the TypeMaps assembly, skipping. ");
+				return false;
+			}
+
 			if (!FindResourceDesigner (assembly, mainApplication: false, out TypeDefinition designer, out CustomAttribute designerAttribute)) {
 				LogMessage ($"   {assembly.Name.Name} has no designer. ");
 				return false;
