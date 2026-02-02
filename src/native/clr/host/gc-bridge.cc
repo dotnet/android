@@ -52,8 +52,9 @@ void GCBridge::mark_cross_references (MarkCrossReferencesArgs *args) noexcept
 	abort_unless (args->CrossReferences != nullptr || args->CrossReferenceCount == 0, "CrossReferences must not be null if CrossReferenceCount is greater than 0");
 	log_mark_cross_references_args_if_enabled (args);
 
-	shared_args.store (args);
-	shared_args_semaphore.release ();
+	// Invoke the managed callback to queue the args for processing
+	abort_unless (on_mark_cross_references_callback != nullptr, "on_mark_cross_references_callback must be set before mark_cross_references is called");
+	on_mark_cross_references_callback (args);
 }
 
 [[gnu::always_inline]]

@@ -28,15 +28,29 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	bool disposed;
 
 	static readonly SemaphoreSlim bridgeProcessingSemaphore = new (1, 1);
+	static readonly SemaphoreSlim pendingArgsSemaphore = new (0, int.MaxValue);
+	static readonly ConcurrentQueue<IntPtr> pendingArgsQueue = new ();
 	static Thread? bridgeProcessingThread;
 
 	static Lazy<ManagedValueManager> s_instance = new (() => new ManagedValueManager ());
 	public static ManagedValueManager GetOrCreateInstance () => s_instance.Value;
 
+	/// <summary>
+	/// UCO callback invoked by native code when mark_cross_references is called.
+	/// This stores the args pointer in a queue and signals the processing thread.
+	/// </summary>
+	[UnmanagedCallersOnly (CallConvs = [typeof (CallConvCdecl)])]
+	static unsafe void OnMarkCrossReferences (MarkCrossReferencesArgs* args)
+	{
+		pendingArgsQueue.Enqueue ((IntPtr)args);
+		pendingArgsSemaphore.Release ();
+	}
+
 	unsafe ManagedValueManager ()
 	{
-		// Initialize GC bridge for managed processing mode (C# background thread instead of C++)
-		var mark_cross_references_ftn = RuntimeNativeMethods.clr_gc_bridge_initialize_for_managed_processing ();
+		// Initialize GC bridge with our UCO callback that will be invoked when mark_cross_references is called
+		delegate* unmanaged[Cdecl]<MarkCrossReferencesArgs*, void> callback = &OnMarkCrossReferences;
+		var mark_cross_references_ftn = RuntimeNativeMethods.clr_gc_bridge_initialize_for_managed_processing (callback);
 		JavaMarshal.Initialize (mark_cross_references_ftn);
 
 		// Start the managed bridge processing thread
@@ -446,11 +460,16 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	static unsafe void ManagedBridgeProcessingLoop ()
 	{
 		while (true) {
-			// Wait for mark_cross_references to be called by the GC
-			MarkCrossReferencesArgs* args = RuntimeNativeMethods.clr_gc_bridge_wait_for_processing ();
+			// Wait for OnMarkCrossReferences to be called by the GC via our UCO callback
+			pendingArgsSemaphore.Wait ();
 
+			if (!pendingArgsQueue.TryDequeue (out IntPtr argsPtr)) {
+				throw new InvalidOperationException ("pendingArgsQueue was signaled but no args were available");
+			}
+
+			MarkCrossReferencesArgs* args = (MarkCrossReferencesArgs*)argsPtr;
 			if (args == null) {
-				throw new InvalidOperationException ("clr_gc_bridge_wait_for_processing returned null");
+				throw new InvalidOperationException ("MarkCrossReferencesArgs pointer was null");
 			}
 
 			// Start processing - acquire semaphore and validate contexts

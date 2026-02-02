@@ -86,17 +86,13 @@ namespace Android.Runtime
 		internal static extern bool clr_typemap_java_to_managed (string java_type_name, out IntPtr managed_assembly_name, out uint managed_type_token_id);
 
 		/// <summary>
-		/// Initialize GC bridge for managed processing mode (no native background thread).
+		/// Initialize GC bridge for managed processing mode.
+		/// Takes a callback that will be invoked when mark_cross_references is called by the GC.
 		/// Returns the mark_cross_references function pointer to pass to JavaMarshal.Initialize.
 		/// </summary>
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern delegate* unmanaged<MarkCrossReferencesArgs*, void> clr_gc_bridge_initialize_for_managed_processing ();
-
-		/// <summary>
-		/// Wait for the next set of cross references to process. Blocks until mark_cross_references is called by the GC.
-		/// </summary>
-		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern MarkCrossReferencesArgs* clr_gc_bridge_wait_for_processing ();
+		internal static extern delegate* unmanaged<MarkCrossReferencesArgs*, void> clr_gc_bridge_initialize_for_managed_processing (
+			delegate* unmanaged[Cdecl]<MarkCrossReferencesArgs*, void> onMarkCrossReferencesCallback);
 
 		/// <summary>
 		/// Trigger Java garbage collection.

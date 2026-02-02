@@ -1,8 +1,6 @@
 #pragma once
 
-#include <atomic>
 #include <jni.h>
-#include <semaphore>
 
 #include <shared/cpp-util.hh>
 #include <host/os-bridge.hh>
@@ -48,6 +46,7 @@ struct MarkCrossReferencesArgs
 };
 
 using BridgeProcessingFtn = void (*)(MarkCrossReferencesArgs*);
+using OnMarkCrossReferencesCallback = void (*)(MarkCrossReferencesArgs*);
 
 namespace xamarin::android {
 	class GCBridge
@@ -56,20 +55,14 @@ namespace xamarin::android {
 		static void initialize_on_onload (JNIEnv *env) noexcept;
 		static void initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass) noexcept;
 
+		// Initialize GC bridge for managed processing mode.
+		// Takes a callback that will be invoked when mark_cross_references is called by the GC.
+		// The callback is expected to queue the args and signal a managed thread to process them.
 		// Returns the mark_cross_references function pointer for JavaMarshal.Initialize.
-		// All GC bridge processing is done in managed code (C#).
-		// This function just provides the callback pointer for the GC to invoke.
-		static BridgeProcessingFtn initialize_for_managed_processing () noexcept
+		static BridgeProcessingFtn initialize_for_managed_processing (OnMarkCrossReferencesCallback callback) noexcept
 		{
+			on_mark_cross_references_callback = callback;
 			return mark_cross_references;
-		}
-
-		// Wait for the next set of cross references to process (for managed processing mode)
-		// Blocks until mark_cross_references is called by the GC
-		static MarkCrossReferencesArgs* wait_for_processing () noexcept
-		{
-			shared_args_semaphore.acquire ();
-			return shared_args.load ();
 		}
 
 		static void trigger_java_gc (JNIEnv *env) noexcept;
@@ -82,8 +75,7 @@ namespace xamarin::android {
 		}
 
 	private:
-		static inline std::binary_semaphore shared_args_semaphore{0};
-		static inline std::atomic<MarkCrossReferencesArgs*> shared_args;
+		static inline OnMarkCrossReferencesCallback on_mark_cross_references_callback = nullptr;
 
 		static inline jobject Runtime_instance = nullptr;
 		static inline jmethodID Runtime_gc = nullptr;
