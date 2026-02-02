@@ -5,37 +5,37 @@
       "Size": 3036
     },
     "classes.dex": {
-      "Size": 22400
+      "Size": 22336
     },
     "lib/arm64-v8a/lib__Microsoft.Android.Resource.Designer.dll.so": {
-      "Size": 18288
+      "Size": 18296
     },
     "lib/arm64-v8a/lib_Java.Interop.dll.so": {
-      "Size": 88160
+      "Size": 88056
     },
     "lib/arm64-v8a/lib_Mono.Android.dll.so": {
-      "Size": 116376
+      "Size": 116592
     },
     "lib/arm64-v8a/lib_Mono.Android.Runtime.dll.so": {
-      "Size": 23536
+      "Size": 23880
     },
     "lib/arm64-v8a/lib_System.Console.dll.so": {
-      "Size": 24368
+      "Size": 24424
     },
     "lib/arm64-v8a/lib_System.Linq.dll.so": {
-      "Size": 25448
+      "Size": 25504
     },
     "lib/arm64-v8a/lib_System.Private.CoreLib.dll.so": {
-      "Size": 630328
+      "Size": 633864
     },
     "lib/arm64-v8a/lib_System.Runtime.dll.so": {
-      "Size": 20104
+      "Size": 20200
     },
     "lib/arm64-v8a/lib_System.Runtime.InteropServices.dll.so": {
-      "Size": 21496
+      "Size": 21536
     },
     "lib/arm64-v8a/lib_UnnamedProject.dll.so": {
-      "Size": 20032
+      "Size": 20024
     },
     "lib/arm64-v8a/libarc.bin.so": {
       "Size": 19112
@@ -44,25 +44,25 @@
       "Size": 36616
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 1386320
+      "Size": 1386232
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 3122432
+      "Size": 3123608
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
-      "Size": 71952
+      "Size": 71936
     },
     "lib/arm64-v8a/libSystem.IO.Compression.Native.so": {
-      "Size": 759304
+      "Size": 1281696
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 104112
+      "Size": 105664
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
-      "Size": 165568
+      "Size": 165536
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 19616
+      "Size": 19640
     },
     "META-INF/BNDLTOOL.RSA": {
       "Size": 1221
@@ -98,5 +98,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 3037717
+  "PackageSize": 3262997
 }

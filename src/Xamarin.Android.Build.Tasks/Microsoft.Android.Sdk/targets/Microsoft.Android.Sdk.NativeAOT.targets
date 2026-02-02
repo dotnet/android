@@ -150,6 +150,7 @@ This eliminates the NDK dependency for NativeAOT builds.
       <!-- Satellite assemblies -->
       <IlcSatelliteAssembly Include="$(_OuterIntermediateSatelliteAssembliesWithTargetPath)" />
 
+
       <!-- This library conflicts with static libc++ -->
       <NativeLibrary Remove="$(IlcSdkPath)libstdc++compat.a" />
 
@@ -204,7 +205,6 @@ This eliminates the NDK dependency for NativeAOT builds.
         OutputSources="@(_PrivateJniInitFuncsAssemblySource)" />
 
     <GenerateNativeAotEnvironmentAssemblerSources
-        Debug="$(AndroidIncludeDebugSymbols)"
         Environments="@(AndroidEnvironment);@(LibraryEnvironments)"
         HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
         OutputSources="@(_PrivateEnvironmentAssemblySource)"

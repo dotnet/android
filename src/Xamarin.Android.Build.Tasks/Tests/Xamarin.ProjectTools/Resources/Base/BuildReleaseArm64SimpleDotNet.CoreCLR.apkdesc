@@ -5,34 +5,34 @@
       "Size": 3036
     },
     "classes.dex": {
-      "Size": 397616
+      "Size": 397520
     },
     "lib/arm64-v8a/libassembly-store.so": {
-      "Size": 3124664
+      "Size": 3091928
     },
     "lib/arm64-v8a/libclrjit.so": {
-      "Size": 3180136
+      "Size": 3141224
     },
     "lib/arm64-v8a/libcoreclr.so": {
-      "Size": 5835752
+      "Size": 5736320
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 1375432
+      "Size": 1375784
     },
     "lib/arm64-v8a/libmscordaccore.so": {
-      "Size": 2534624
+      "Size": 2442416
     },
     "lib/arm64-v8a/libmscordbi.so": {
-      "Size": 1909056
+      "Size": 1894280
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
       "Size": 71936
     },
     "lib/arm64-v8a/libSystem.IO.Compression.Native.so": {
-      "Size": 758968
+      "Size": 1281696
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 105408
+      "Size": 105664
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
       "Size": 165536
@@ -44,10 +44,10 @@
       "Size": 1221
     },
     "META-INF/BNDLTOOL.SF": {
-      "Size": 2306
+      "Size": 2295
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 2179
+      "Size": 2168
     },
     "res/drawable-hdpi-v4/icon.png": {
       "Size": 2178
@@ -74,5 +74,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 9049893
+  "PackageSize": 9176858
 }
