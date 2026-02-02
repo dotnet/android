@@ -108,18 +108,27 @@ namespace Java.Interop {
 		// typeof(Foo) -> FooInvoker
 		// typeof(Foo<>) -> FooInvoker`1
 		[RequiresUnreferencedCode ("Invoker type lookup uses Assembly.GetType() which cannot be statically analyzed.")]
+		[RequiresDynamicCode ("Generic invoker types require MakeGenericType which is not compatible with NativeAOT.")]
 		[return: DynamicallyAccessedMembers (Constructors)]
 		internal static Type? GetInvokerType (Type type)
 		{
 			const string suffix = "Invoker";
-			
+
 			Type[] arguments = type.GetGenericArguments ();
 			if (arguments.Length == 0)
 				return type.Assembly.GetType (type + suffix);
-			// Trimmable type map: Generic invoker types must be pre-registered, MakeGenericType is not supported
-			throw new NotSupportedException (
-				$"Generic invoker type construction is not supported with the trimmable type map. " +
-				$"Type '{type.FullName}' invoker must be pre-registered.");
+
+			Type definition = type.GetGenericTypeDefinition ();
+			int bt = definition.FullName!.IndexOf ("`", StringComparison.Ordinal);
+			if (bt == -1)
+				throw new NotSupportedException ("Generic type doesn't follow generic type naming convention! " + type.FullName);
+
+			Type? suffixDefinition = definition.Assembly.GetType (
+					definition.FullName.Substring (0, bt) + suffix + definition.FullName.Substring (bt));
+			if (suffixDefinition == null)
+				return null;
+
+			return suffixDefinition.MakeGenericType (arguments);
 		}
 	}
 }
