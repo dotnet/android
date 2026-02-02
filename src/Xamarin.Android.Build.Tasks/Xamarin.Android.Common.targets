@@ -1526,9 +1526,7 @@ because xbuild doesn't support framework reference assemblies.
     <_ManagedSearchDir Include="$(_ManagedRuntimePackDir)" />
     <_ManagedSearchDir Include="$(_NetCoreRefDir)" Condition="Exists('$(_NetCoreRefDir)')" />
   </ItemGroup>
-  
-  <Warning Text="[DEBUG] _ManagedSearchDir: @(_ManagedSearchDir)" />
-  
+
   <AssemblyModifierPipeline
       AdditionalSearchDirectories="@(_ManagedSearchDir)"
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
