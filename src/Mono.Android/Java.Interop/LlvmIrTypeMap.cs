@@ -146,8 +146,8 @@ namespace Java.Interop
 		[RequiresUnreferencedCode ("Uses Array.CreateInstance which is not AOT-safe.")]
 		public Array CreateArray (Type elementType, int length, int rank)
 		{
-			if (rank < 1 || rank > 2) {
-				throw new ArgumentOutOfRangeException (nameof (rank), rank, "Rank must be 1 or 2");
+			if (rank < 1 || rank > 3) {
+				throw new ArgumentOutOfRangeException (nameof (rank), rank, "Rank must be 1, 2, or 3");
 			}
 
 			while (elementType.IsArray) {
@@ -155,8 +155,8 @@ namespace Java.Interop
 				rank++;
 			}
 
-			if (rank > 2) {
-				throw new ArgumentOutOfRangeException (nameof (rank), rank, "Rank must be 1 or 2");
+			if (rank > 3) {
+				throw new ArgumentOutOfRangeException (nameof (rank), rank, "Rank must be 1, 2, or 3");
 			}
 
 			var arrayType = rank == 1 ? elementType : elementType.MakeArrayType ();
