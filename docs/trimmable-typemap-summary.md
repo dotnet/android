@@ -67,15 +67,17 @@ Performance characteristics have not been benchmarked yet. Key areas to measure:
 ## Open Questions
 
 1. **Startup performance**: What is the impact of loading ~8000 `TypeMap` attributes? Is R2R precompilation sufficient?
-2. **Interface implementations**: The current JCW generator only emits overridden methods, not all interface methods - this needs fixing for full compatibility
-3. **Generic types**: `MakeGenericType()` is not AOT-safe; generic invoker types must be pre-registered
-4. **Array types**: Currently limited to rank 1-3; higher-rank arrays throw at runtime
+2. **NativeAOT integration**: MSBuild targets need work to support NativeAOT builds (RID metadata, ILLink integration)
+3. **Interface implementations**: The current JCW generator only emits overridden methods, not all interface methods - this needs fixing for full compatibility
+4. **Generic types**: `MakeGenericType()` is not AOT-safe; generic invoker types must be pre-registered
+5. **Array types**: Currently limited to rank 1-3; higher-rank arrays throw at runtime
 
 ## Current Status
 
 - ✅ Core runtime implementation complete
 - ✅ Build task generates type map assembly
-- ✅ Sample app runs successfully on device
+- ✅ Sample app runs successfully on device (CoreCLR)
+- ⚠️ NativeAOT builds not yet supported
 - ⚠️ JCW generation has bugs with interface implementations
 - ⚠️ Not all Mono.Android-Tests pass yet
 - ❌ No performance benchmarks yet
