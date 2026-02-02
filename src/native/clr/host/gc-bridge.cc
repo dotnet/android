@@ -6,15 +6,6 @@
 
 using namespace xamarin::android;
 
-void GCBridge::initialize_on_onload ([[maybe_unused]] JNIEnv *env) noexcept
-{
-	// Java Runtime.gc() is now called directly from managed code
-}
-
-void GCBridge::initialize_on_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] jclass runtimeClass) noexcept
-{
-}
-
 void GCBridge::mark_cross_references (MarkCrossReferencesArgs *args) noexcept
 {
 	abort_if_invalid_pointer_argument (args, "args");
@@ -22,9 +13,21 @@ void GCBridge::mark_cross_references (MarkCrossReferencesArgs *args) noexcept
 	abort_unless (args->CrossReferences != nullptr || args->CrossReferenceCount == 0, "CrossReferences must not be null if CrossReferenceCount is greater than 0");
 	log_mark_cross_references_args_if_enabled (args);
 
-	// Invoke the managed callback to queue the args for processing
-	abort_unless (on_mark_cross_references_callback != nullptr, "on_mark_cross_references_callback must be set before mark_cross_references is called");
-	on_mark_cross_references_callback (args);
+	// Signal the background thread to process
+	shared_args.store (args);
+	shared_args_semaphore.release ();
+}
+
+void GCBridge::bridge_processing () noexcept
+{
+	while (true) {
+		// Wait until mark_cross_references is called by the GC
+		shared_args_semaphore.acquire ();
+		MarkCrossReferencesArgs *args = shared_args.load ();
+
+		// Call into managed code to do the actual processing
+		bridge_processing_callback (args);
+	}
 }
 
 [[gnu::always_inline]]

@@ -27,7 +27,6 @@ auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, void *reserved) noexcept -> jint
 	JNIEnv *env = nullptr;
 	vm->GetEnv ((void**)&env, JNI_VERSION_1_6);
 	OSBridge::initialize_on_onload (vm, env);
-	GCBridge::initialize_on_onload (env);
 	AndroidSystem::init_max_gref_count ();
 
 	if (__jni_on_load_handler_count > 0) {
@@ -62,7 +61,6 @@ void Host::OnInit (jstring language, jstring filesDir, jstring cacheDir, JnienvI
 	Logger::init_reference_logging (AndroidSystem::get_primary_override_dir ());
 
 	OSBridge::initialize_on_runtime_init (env, runtimeClass);
-	GCBridge::initialize_on_runtime_init (env, runtimeClass);
 
 	// We expect the struct to be initialized by the managed land the way it sees fit, we set only the
 	// fields we support.

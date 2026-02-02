@@ -13,6 +13,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Java;
 using System.Threading;
+using System.Threading.Tasks;
 using Android.Runtime;
 using Java.Interop;
 
@@ -27,38 +28,34 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	bool disposed;
 
-	static readonly SemaphoreSlim bridgeProcessingSemaphore = new (1, 1);
-	static readonly SemaphoreSlim pendingArgsSemaphore = new (0, int.MaxValue);
-	static readonly ConcurrentQueue<IntPtr> pendingArgsQueue = new ();
-	static Thread? bridgeProcessingThread;
-
 	static Lazy<ManagedValueManager> s_instance = new (() => new ManagedValueManager ());
 	public static ManagedValueManager GetOrCreateInstance () => s_instance.Value;
 
 	/// <summary>
-	/// UCO callback invoked by native code when mark_cross_references is called.
-	/// This stores the args pointer in a queue and signals the processing thread.
+	/// Callback invoked by native background thread to process bridge args.
+	/// This runs on the native bridge processing thread, not a managed thread pool thread.
 	/// </summary>
 	[UnmanagedCallersOnly (CallConvs = [typeof (CallConvCdecl)])]
-	static unsafe void OnMarkCrossReferences (MarkCrossReferencesArgs* args)
+	static unsafe void OnBridgeProcessing (MarkCrossReferencesArgs* args)
 	{
-		pendingArgsQueue.Enqueue ((IntPtr)args);
-		pendingArgsSemaphore.Release ();
+		// Validate contexts
+		HandleContext.EnsureAllContextsAreOurs (args);
+
+		// Do the actual bridge processing in managed code
+		var processing = new BridgeProcessing (args);
+		processing.Process ();
+
+		// Process collected contexts and finish
+		ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (args);
+		JavaMarshal.FinishCrossReferenceProcessing (args, handlesToFree);
 	}
 
 	unsafe ManagedValueManager ()
 	{
-		// Initialize GC bridge with our UCO callback that will be invoked when mark_cross_references is called
-		delegate* unmanaged[Cdecl]<MarkCrossReferencesArgs*, void> callback = &OnMarkCrossReferences;
+		// Initialize GC bridge with our callback that will be invoked from the native background thread
+		delegate* unmanaged[Cdecl]<MarkCrossReferencesArgs*, void> callback = &OnBridgeProcessing;
 		var mark_cross_references_ftn = RuntimeNativeMethods.clr_gc_bridge_initialize_for_managed_processing (callback);
 		JavaMarshal.Initialize (mark_cross_references_ftn);
-
-		// Start the managed bridge processing thread
-		bridgeProcessingThread = new Thread (ManagedBridgeProcessingLoop) {
-			Name = "GC Bridge Processing",
-			IsBackground = true
-		};
-		bridgeProcessingThread.Start ();
 	}
 
 	protected override void Dispose (bool disposing)
@@ -75,8 +72,8 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	public override void WaitForGCBridgeProcessing ()
 	{
-		bridgeProcessingSemaphore.Wait ();
-		bridgeProcessingSemaphore.Release ();
+		// No-op: The native code guarantees mark_cross_references won't be called again
+		// until FinishCrossReferenceProcessing returns, so there's no need to wait.
 	}
 
 	public unsafe override void CollectPeers ()
@@ -450,43 +447,6 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 			NativeMemory.Free (context);
 			context = null;
-		}
-	}
-
-	/// <summary>
-	/// Main loop for managed GC bridge processing.
-	/// This replaces the native C++ bridge_processing() function.
-	/// </summary>
-	static unsafe void ManagedBridgeProcessingLoop ()
-	{
-		while (true) {
-			// Wait for OnMarkCrossReferences to be called by the GC via our UCO callback
-			pendingArgsSemaphore.Wait ();
-
-			if (!pendingArgsQueue.TryDequeue (out IntPtr argsPtr)) {
-				throw new InvalidOperationException ("pendingArgsQueue was signaled but no args were available");
-			}
-
-			MarkCrossReferencesArgs* args = (MarkCrossReferencesArgs*)argsPtr;
-			if (args == null) {
-				throw new InvalidOperationException ("MarkCrossReferencesArgs pointer was null");
-			}
-
-			// Start processing - acquire semaphore and validate contexts
-			HandleContext.EnsureAllContextsAreOurs (args);
-			bridgeProcessingSemaphore.Wait ();
-
-			try {
-				// Do the actual bridge processing in managed code
-				var processing = new BridgeProcessing (args);
-				processing.Process ();
-
-				// Process collected contexts and finish
-				ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (args);
-				JavaMarshal.FinishCrossReferenceProcessing (args, handlesToFree);
-			} finally {
-				bridgeProcessingSemaphore.Release ();
-			}
 		}
 	}
 

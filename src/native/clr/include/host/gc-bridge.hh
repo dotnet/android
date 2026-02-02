@@ -1,6 +1,9 @@
 #pragma once
 
+#include <atomic>
 #include <jni.h>
+#include <semaphore>
+#include <thread>
 
 #include <shared/cpp-util.hh>
 #include <host/os-bridge.hh>
@@ -46,28 +49,34 @@ struct MarkCrossReferencesArgs
 };
 
 using BridgeProcessingFtn = void (*)(MarkCrossReferencesArgs*);
-using OnMarkCrossReferencesCallback = void (*)(MarkCrossReferencesArgs*);
+using BridgeProcessingCallback = void (*)(MarkCrossReferencesArgs*);
 
 namespace xamarin::android {
 	class GCBridge
 	{
 	public:
-		static void initialize_on_onload (JNIEnv *env) noexcept;
-		static void initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass) noexcept;
-
 		// Initialize GC bridge for managed processing mode.
-		// Takes a callback that will be invoked when mark_cross_references is called by the GC.
-		// The callback is expected to queue the args and signal a managed thread to process them.
+		// Takes a callback that will be invoked from a background thread when mark_cross_references is called.
 		// Returns the mark_cross_references function pointer for JavaMarshal.Initialize.
-		static BridgeProcessingFtn initialize_for_managed_processing (OnMarkCrossReferencesCallback callback) noexcept
+		static BridgeProcessingFtn initialize_for_managed_processing (BridgeProcessingCallback callback) noexcept
 		{
-			on_mark_cross_references_callback = callback;
+			abort_if_invalid_pointer_argument (callback, "callback");
+			bridge_processing_callback = callback;
+
+			// Start the background thread that will call into managed code
+			bridge_processing_thread = std::thread { bridge_processing };
+			bridge_processing_thread.detach ();
+
 			return mark_cross_references;
 		}
 
 	private:
-		static inline OnMarkCrossReferencesCallback on_mark_cross_references_callback = nullptr;
+		static inline std::thread bridge_processing_thread {};
+		static inline std::binary_semaphore shared_args_semaphore{0};
+		static inline std::atomic<MarkCrossReferencesArgs*> shared_args;
+		static inline BridgeProcessingCallback bridge_processing_callback = nullptr;
 
+		static void bridge_processing () noexcept;
 		static void mark_cross_references (MarkCrossReferencesArgs *args) noexcept;
 		
 		static void log_mark_cross_references_args_if_enabled (MarkCrossReferencesArgs *args) noexcept;

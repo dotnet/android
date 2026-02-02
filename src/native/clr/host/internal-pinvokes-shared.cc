@@ -34,7 +34,7 @@ void _monodroid_weak_gref_delete (jobject handle, char type, const char *threadN
 	OSBridge::_monodroid_weak_gref_delete (handle, type, threadName, threadId, from);
 }
 
-BridgeProcessingFtn clr_gc_bridge_initialize_for_managed_processing (OnMarkCrossReferencesCallback callback) noexcept
+BridgeProcessingFtn clr_gc_bridge_initialize_for_managed_processing (BridgeProcessingCallback callback) noexcept
 {
 	return GCBridge::initialize_for_managed_processing (callback);
 }

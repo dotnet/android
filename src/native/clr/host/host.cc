@@ -522,7 +522,6 @@ void Host::Java_mono_android_Runtime_initInternal (
 	log_info (LOG_GC, "GREF GC Threshold: {}"sv, init.grefGcThreshold);
 
 	OSBridge::initialize_on_runtime_init (env, runtimeClass);
-	GCBridge::initialize_on_runtime_init (env, runtimeClass);
 
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.start_event (TimingEventKind::NativeToManagedTransition);
@@ -612,7 +611,6 @@ auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) n
 	JNIEnv *env = nullptr;
 	vm->GetEnv ((void**)&env, JNI_VERSION_1_6);
 	OSBridge::initialize_on_onload (vm, env);
-	GCBridge::initialize_on_onload (env);
 
 	AndroidSystem::init_max_gref_count ();
 	return JNI_VERSION_1_6;
