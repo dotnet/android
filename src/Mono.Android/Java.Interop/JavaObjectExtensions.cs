@@ -107,26 +107,18 @@ namespace Java.Interop {
 
 		// typeof(Foo) -> FooInvoker
 		// typeof(Foo<>) -> FooInvoker`1
+		[RequiresUnreferencedCode ("Invoker type lookup uses Assembly.GetType() which cannot be statically analyzed.")]
 		[return: DynamicallyAccessedMembers (Constructors)]
 		internal static Type? GetInvokerType (Type type)
 		{
-			const string InvokerTypes = "*Invoker types are preserved by the MarkJavaObjects linker step.";
-
-			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = InvokerTypes)]
-			[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = InvokerTypes)]
-			[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = InvokerTypes)]
-			[return: DynamicallyAccessedMembers (Constructors)]
-			static Type? AssemblyGetType (Assembly assembly, string typeName) =>
-				assembly.GetType (typeName);
-
 			const string suffix = "Invoker";
 			
 			Type[] arguments = type.GetGenericArguments ();
 			if (arguments.Length == 0)
-				return AssemblyGetType (type.Assembly, type + suffix);
-			// TypeMap v3: Generic invoker types must be pre-registered, MakeGenericType is not supported
+				return type.Assembly.GetType (type + suffix);
+			// Trimmable type map: Generic invoker types must be pre-registered, MakeGenericType is not supported
 			throw new NotSupportedException (
-				$"Generic invoker type construction is not supported with TypeMap v3. " +
+				$"Generic invoker type construction is not supported with the trimmable type map. " +
 				$"Type '{type.FullName}' invoker must be pre-registered.");
 		}
 	}

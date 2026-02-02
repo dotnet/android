@@ -34,9 +34,10 @@ namespace Android.Runtime
 			}
 
 			// First, try to get invoker type from the JavaPeerProxy attribute
-			// This is the AOT-safe and trim-safe approach for TypeMap v3
-			var invokerType = GetInvokerTypeFromProxy (type);
-			if (invokerType != null) {
+			// This is the AOT-safe and trim-safe approach for the trimmable type map
+			var proxy = (JavaPeerProxy?) Attribute.GetCustomAttribute (type, typeof (JavaPeerProxy), inherit: false);
+			if (proxy?.InvokerType is Type invokerType) {
+				// The linker preserves constructors via typeof(T) in the attribute
 				return invokerType;
 			}
 
@@ -46,25 +47,15 @@ namespace Android.Runtime
 			return JavaObjectExtensions.GetInvokerType (type);
 		}
 
-		[return: DynamicallyAccessedMembers (Constructors)]
-		static Type? GetInvokerTypeFromProxy (
-			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.All)]
-			Type type)
-		{
-			// Look for JavaPeerProxy on the type and check its InvokerType property
-			var proxy = (JavaPeerProxy?) Attribute.GetCustomAttribute (type, typeof (JavaPeerProxy), inherit: false);
-			return proxy?.InvokerType;
-		}
-
 		public override void RegisterNativeMembers (
 				JniType nativeClass,
 				[DynamicallyAccessedMembers (MethodsAndPrivateNested)] Type type,
 				ReadOnlySpan<char> methods)
 		{
-			// Note: Dynamic native member registration ([Export] attribute) is NOT supported with TypeMap v3.
+			// Note: Dynamic native member registration ([Export] attribute) is NOT supported with the trimmable type map.
 			// [Export] requires Mono.Android.Export which uses Reflection.Emit to generate delegates at runtime,
 			// which is incompatible with NativeAOT and trimming. Use [JavaCallable] with source generators instead.
-			throw new NotSupportedException ($"Dynamic native member registration is not supported with TypeMap v3. Type: {type.FullName}");
+			throw new NotSupportedException ($"Dynamic native member registration is not supported with the trimmable type map. Type: {type.FullName}");
 		}
 	}
 }

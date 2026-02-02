@@ -42,6 +42,11 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 	public override string TaskPrefix => "GNM";
 
 	/// <summary>
+	/// Gets or sets whether to use the trimmable type map.
+	/// </summary>
+	public bool UseTrimmableTypeMap { get; set; }
+
+	/// <summary>
 	/// Gets or sets whether marshal methods generation is enabled.
 	/// When false, generates empty placeholder files to maintain build consistency.
 	/// </summary>
@@ -186,6 +191,7 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 			Tasks.AndroidRuntime.CoreCLR => MakeCoreCLRGenerator (),
 			_ => throw new NotSupportedException ($"Internal error: unsupported runtime type '{androidRuntime}'")
 		};
+		marshalMethodsAsmGen.UseTrimmableTypeMap = UseTrimmableTypeMap;
 
 		// Generate P/Invoke preservation code if native linking is enabled
 		bool fileFullyWritten;

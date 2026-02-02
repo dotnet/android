@@ -16,7 +16,8 @@ namespace Xamarin.Android.Tasks
 {
 	abstract partial class MarshalMethodsNativeAssemblyGenerator : LlvmIrComposer
 	{
-		const string GetFunctionPointerVariableName = "get_function_pointer";
+		public bool UseTrimmableTypeMap { get; set; }
+		protected string GetFunctionPointerVariableName => UseTrimmableTypeMap ? "typemap_get_function_pointer" : "get_function_pointer";
 
 		// This is here only to generate strongly-typed IR
 		internal sealed class MonoClass
@@ -779,13 +780,28 @@ namespace Xamarin.Android.Tasks
 				parameters: getFunctionPtrParams
 			);
 
-			LlvmIrVariable getFunctionPtrVariable = module.AddGlobalVariable (
-				typeof(IntPtr),
-				GetFunctionPointerVariableName,
-				null,
-				LlvmIrVariableOptions.LocalWritableInsignificantAddr,
-				getFunctionPtrComment.ToString ()
-			);
+			LlvmIrVariable getFunctionPtrVariable;
+			if (UseTrimmableTypeMap) {
+				getFunctionPtrVariable = module.AddGlobalVariable (
+					typeof(IntPtr),
+					GetFunctionPointerVariableName,
+					null,
+					new LlvmIrVariableOptions {
+						Linkage = LlvmIrLinkage.External,
+						Visibility = LlvmIrVisibility.Protected,
+						Writability = LlvmIrWritability.Writable,
+					},
+					getFunctionPtrComment.ToString ()
+				);
+			} else {
+				getFunctionPtrVariable = module.AddGlobalVariable (
+					typeof(IntPtr),
+					GetFunctionPointerVariableName,
+					null,
+					LlvmIrVariableOptions.LocalWritableInsignificantAddr,
+					getFunctionPtrComment.ToString ()
+				);
+			}
 
 			var init_params = new List<LlvmIrFunctionParameter> {
 				new (typeof(_JNIEnv), "env") {
