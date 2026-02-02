@@ -172,6 +172,7 @@
         AndroidApiInfo="@(AndroidApiInfo)"
         TargetApiLevel="$(AndroidDefaultTargetDotnetApiLevel)"
         MinimumApiLevel="$(AndroidMinimumDotNetApiLevel)"
+        MinimumNonMonoApiLevel="$(AndroidMinimumNonMonoApiLevel)"
         OutputFile="Microsoft.Android.Sdk\targets\Microsoft.Android.Sdk.SupportedPlatforms.targets"
     />
   </Target>

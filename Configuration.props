@@ -24,6 +24,8 @@
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' And '$(UsingMicrosoftNETSdk)' != 'true' ">v4.7.1</TargetFrameworkVersion>
     <!-- The min API level supported by Microsoft.Android.Sdk -->
     <AndroidMinimumDotNetApiLevel Condition="'$(AndroidMinimumDotNetApiLevel)' == ''">21</AndroidMinimumDotNetApiLevel>
+    <!-- The min API level supported by non-Mono runtimes (CoreCLR/NativeAOT) -->
+    <AndroidMinimumNonMonoApiLevel Condition="'$(AndroidMinimumNonMonoApiLevel)' == ''">23</AndroidMinimumNonMonoApiLevel>
     <!-- *Latest* *stable* API level binding that we support; used when building src/Xamarin.Android.Build.Tasks -->
     <AndroidLatestStableApiLevel Condition="'$(AndroidLatestStableApiLevel)' == ''">36</AndroidLatestStableApiLevel>
     <AndroidLatestStablePlatformId Condition="'$(AndroidLatestStablePlatformId)' == ''">$(AndroidLatestStableApiLevel)</AndroidLatestStablePlatformId>
