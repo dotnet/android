@@ -60,7 +60,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" />
+    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" AdditionalProperties="JavaInteropDefineConstants=ANDROID" />
     <EmbeddedResource Include="ILLink/ILLink.LinkAttributes.xml">
       <LogicalName>ILLink.LinkAttributes.xml</LogicalName>
     </EmbeddedResource>
@@ -104,6 +104,21 @@
     <Compile Include="Android.Telephony.Mbms\StreamingService.cs" />
     <Compile Include="Android.Telephony\MbmsDownloadSession.cs" />
     <Compile Include="Android.Views\WindowManagerLayoutParams.cs" />
+    <Compile Include="Java.Interop\AndroidTypeManager.cs" />
+    <Compile Include="Java.Interop\AndroidValueManager.cs" />
+    <Compile Include="Java.Interop\DynamicNativeMembersRegistration.cs" />
+    <Compile Include="Java.Interop\ITypeMap.cs" />
+    <Compile Include="Java.Interop\LlvmIrTypeMap.cs" />
+    <Compile Include="Java.Interop\TypeMapAttributeTypeMap.cs" />
+    <Compile Include="Java.Interop\TypeMapTypeManager.cs" />
+    <Compile Include="Java.Interop\JavaPeerProxy.cs" />
+    <Compile Include="Java.Interop\DerivedTypeFactory.cs" />
+    <Compile Include="Java.Interop\ReflectionTypeMap.cs" />
+    <Compile Include="Java.Interop\IAndroidCallableWrapper.cs" />
+    <Compile Include="Java.Interop\AliasesUniverse.cs" />
+    <Compile Include="Java.Interop\JavaInteropAliasesAttribute.cs" />
+    <Compile Include="Java.Interop\PeerCreationHelper.cs" />
+    <Compile Include="Java.Interop\TypeMapException.cs" />
     <Compile Include="Java.Lang.Invoke\MethodType.cs" />
     <Compile Include="Java.Time.Chrono\AbstractChronology.cs" />
     <Compile Include="Java.Time\ZonedDateTime.cs" />
@@ -111,17 +126,6 @@
     <Compile Include="Java.Time\LocalDate.cs" />
     <Compile Include="Java.Util\ISortedMap.cs" />
     <Compile Include="Java.Util\IList.cs" />
-    <Compile Include="Java.Interop\AndroidTypeManager.cs" />
-    <Compile Include="Java.Interop\AndroidValueManager.cs" />
-    <Compile Include="Java.Interop\ITypeMap.cs" />
-    <Compile Include="Java.Interop\JavaHierarchyWalker.cs" />
-    <Compile Include="Java.Interop\JavaPeerProxy.cs" />
-    <Compile Include="Java.Interop\LlvmIrTypeMap.cs" />
-    <Compile Include="Java.Interop\PeerCreationHelper.cs" />
-    <Compile Include="Java.Interop\ReflectionTypeMap.cs" />
-    <Compile Include="Java.Interop\TrimmableTypeMap.cs" />
-    <Compile Include="Java.Interop\TypeMapException.cs" />
-    <Compile Include="Java.Interop\TypeMapTypeManager.cs" />
   </ItemGroup>
 
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
@@ -325,7 +329,6 @@
     <Compile Include="Java.Interop\JavaLocationException.cs" />
     <Compile Include="Java.Interop\JavaObjectExtensions.cs" />
     <Compile Include="Java.Interop\JavaTypeParametersAttribute.cs" />
-    <Compile Include="Java.Interop\ManagedMarshalMethodsLookupTable.cs" />
     <Compile Include="Java.Interop\Runtime.cs" />
     <Compile Include="Java.Interop\TypeManager.cs" />
     <Compile Include="Java.Lang\Boolean.cs" />
@@ -362,11 +365,8 @@
     <Compile Include="Java.Util.Concurrent.Atomic\AtomicInteger.cs" />
     <Compile Include="Java.Util.Concurrent.Atomic\AtomicLong.cs" />
     <Compile Include="Javax.Microedition.Khronos.Egl\EGLContext.cs" />
-    <Compile Include="Microsoft.Android.Runtime\ManagedTypeManager.cs" />
-    <Compile Include="Microsoft.Android.Runtime\ManagedTypeMapping.cs" />
     <Compile Include="Microsoft.Android.Runtime\ManagedValueManager.cs" />
     <Compile Include="Microsoft.Android.Runtime\RuntimeFeature.cs" />
-    <Compile Include="Microsoft.Android.Runtime\SimpleValueManager.cs" />
     <Compile Include="Org.Apache.Http.Impl.Conn\DefaultClientConnection.cs" />
     <Compile Include="Org.Apache.Http.Impl.Cookie\BasicClientCookie.cs" />
     <Compile Include="System.Drawing/PointConverter.cs" />

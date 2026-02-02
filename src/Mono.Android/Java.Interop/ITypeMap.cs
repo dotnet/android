@@ -13,7 +13,7 @@ namespace Android.Runtime
 		/// <summary>
 		/// Tries to get the exact .NET type mapping for a given JNI type name.
 		/// This performs a direct lookup without walking the Java class hierarchy.
-		/// Used by <see cref="JavaHierarchyWalker"/> to check each class in the hierarchy.
+		/// Used by <see cref="PeerCreationHelper.WalkHierarchy"/> to check each class in the hierarchy.
 		/// </summary>
 		/// <param name="jniTypeName">The JNI type name (e.g., "java/lang/Object").</param>
 		/// <returns>The mapped .NET type, or null if no exact mapping exists.</returns>
