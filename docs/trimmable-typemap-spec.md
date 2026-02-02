@@ -2176,7 +2176,7 @@ Both generators must enumerate methods in identical order.
 - MSBuild target that passes `$(TypeMapEntryAssembly)` to ILLink
 - Runtime support for the `TypeMappingEntryAssembly` runtimeconfig property
 
-**Impact:** Critical dependency - TypeMap API v3 cannot function without this ILLink feature.
+**Impact:** Critical dependency - Trimmable Type Map cannot function without this ILLink feature.
 
 ### A.10 Interface Split Optimization (DoNotGenerateAcw)
 
@@ -2242,7 +2242,7 @@ if (callbackTypeName == null) {
 
 ### 20.1 .NET SDK Version
 
-The Type Mapping API v3 requires a .NET SDK version that includes:
+The Trimmable Type Map requires a .NET SDK version that includes:
 
 | Requirement | Minimum Version | PR/Issue |
 |-------------|-----------------|----------|
@@ -2282,7 +2282,7 @@ The .NET SDK's `Microsoft.NET.ILLink.targets` automatically adds the flag:
 
 | .NET for Android | .NET SDK Required | Notes |
 |------------------|-------------------|-------|
-| 36.x (TypeMap v3) | .NET 11 (post-#121513) | Full TypeMap API support |
+| 36.x (Trimmable Type Map) | .NET 11 (post-#121513) | Full TypeMap API support |
 | 35.x and earlier | .NET 10+ | Legacy LLVM IR TypeMap |
 
 ---

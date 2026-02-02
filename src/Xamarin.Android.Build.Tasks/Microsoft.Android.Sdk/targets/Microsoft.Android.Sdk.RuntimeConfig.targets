@@ -63,7 +63,7 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
         Value="$(_AndroidIsAssignableFromCheck)"
         Trim="true"
     />
-    <!-- Disable dynamic type registration when TypeMap V3 is enabled - all types are registered at build time -->
+    <!-- Disable dynamic type registration when trimmable type map is enabled - all types are registered at build time -->
     <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.IsDynamicTypeRegistration"
         Condition="'$(AndroidUseTrimmableTypeMap)' == 'true'"
         Value="false"

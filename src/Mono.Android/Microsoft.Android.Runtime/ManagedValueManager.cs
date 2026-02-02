@@ -282,7 +282,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 			return;
 		}
 
-		// No proxy found - this should not happen with TypeMap V3
+		// No proxy found - this should not happen with the trimmable type map
 		// Fall back to reflection-based activation only if dynamic type registration is enabled
 		if (!RuntimeFeature.IsDynamicTypeRegistration) {
 			throw new NotSupportedException (

@@ -33,9 +33,9 @@ namespace Android.Runtime {
 
 		static Type MakeArrayType (Type type)
 		{
-			// TypeMap v3: MakeArrayType is not supported - all array types must be pre-registered
+			// Trimmable type map: MakeArrayType is not supported - all array types must be pre-registered
 			throw new NotSupportedException (
-				$"MakeArrayType is not supported with TypeMap v3. Type '{type.FullName}' array must be pre-registered.");
+				$"MakeArrayType is not supported with the trimmable type map. Type '{type.FullName}' array must be pre-registered.");
 		}
 
 		internal static IntPtr IdentityHash (IntPtr v)
