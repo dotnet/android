@@ -11,6 +11,15 @@ namespace Android.Runtime
 	interface ITypeMap
 	{
 		/// <summary>
+		/// Tries to get the exact .NET type mapping for a given JNI type name.
+		/// This performs a direct lookup without walking the Java class hierarchy.
+		/// Used by <see cref="PeerCreationHelper.WalkHierarchy"/> to check each class in the hierarchy.
+		/// </summary>
+		/// <param name="jniTypeName">The JNI type name (e.g., "java/lang/Object").</param>
+		/// <returns>The mapped .NET type, or null if no exact mapping exists.</returns>
+		Type? TryGetExactTypeMapping (string jniTypeName);
+
+		/// <summary>
 		/// Tries to get all .NET types for a given JNI type name.
 		/// Returns true if at least one type was found.
 		/// </summary>
@@ -26,6 +35,15 @@ namespace Android.Runtime
 		/// Returns empty collection if no mappings exist.
 		/// </summary>
 		IEnumerable<string> GetJniNamesForType (Type type);
+
+		/// <summary>
+		/// Tries to get the invoker type for an interface or abstract class.
+		/// Invoker types are concrete implementations that can wrap a JNI handle.
+		/// </summary>
+		/// <param name="type">The interface or abstract class type.</param>
+		/// <param name="invokerType">The invoker type if found.</param>
+		/// <returns>True if an invoker type was found, false otherwise.</returns>
+		bool TryGetInvokerType (Type type, [NotNullWhen (true)] out Type? invokerType);
 
 		/// <summary>
 		/// Gets the JavaPeerProxy for a managed type.

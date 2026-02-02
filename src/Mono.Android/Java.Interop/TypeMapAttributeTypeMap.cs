@@ -228,7 +228,7 @@ namespace Android.Runtime
 				return GetArrayType (class_name);
 			}
 
-			return JavaHierarchyWalker.WalkHierarchy (class_ptr, class_name, this);
+			return PeerCreationHelper.WalkHierarchy (class_ptr, class_name, this);
 		}
 
 		Type? GetArrayType (string jniName)

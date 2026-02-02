@@ -8,25 +8,35 @@ namespace Android.Runtime
 {
 	/// <summary>
 	/// Shared algorithm for creating managed peers from Java object handles.
+	/// Includes hierarchy walking to find registered .NET types.
 	/// </summary>
 	static class PeerCreationHelper
 	{
 		public delegate IJavaPeerable? InstanceCreatorDelegate (Type type, IntPtr handle, JniHandleOwnership transfer);
 		public delegate Type? TypeResolverDelegate (IntPtr class_ptr, string class_name);
 
+		/// <summary>
+		/// Creates a managed peer for the given Java object handle.
+		/// </summary>
+		/// <param name="typeResolver">Optional custom type resolver. If null, uses WalkHierarchy directly.</param>
 		public static IJavaPeerable? CreatePeer (
 			IntPtr handle,
 			JniHandleOwnership transfer,
 			Type? targetType,
 			ITypeMap typeMap,
-			TypeResolverDelegate typeResolver,
 			InstanceCreatorDelegate instanceCreator,
-			bool resolveInvokerTypes)
+			bool resolveInvokerTypes,
+			TypeResolverDelegate? typeResolver = null)
 		{
 			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
 			string? class_name = Java.Interop.TypeManager.GetClassName (class_ptr);
 
-			Type? type = class_name != null ? typeResolver (class_ptr, class_name) : null;
+			Type? type = null;
+			if (class_name != null) {
+				type = typeResolver != null
+					? typeResolver (class_ptr, class_name)
+					: WalkHierarchy (class_ptr, class_name, typeMap);
+			}
 
 			if (class_ptr != IntPtr.Zero) {
 				JNIEnv.DeleteLocalRef (class_ptr);
@@ -81,6 +91,53 @@ namespace Android.Runtime
 
 			if (Java.Interop.Runtime.IsGCUserPeer (result.PeerReference.Handle)) {
 				result.SetJniManagedPeerState (JniManagedPeerStates.Replaceable | JniManagedPeerStates.Activatable);
+			}
+
+			return result;
+		}
+
+		/// <summary>
+		/// Walks the Java class hierarchy starting from <paramref name="class_ptr"/> and queries
+		/// the type map for each class until a type mapping is found.
+		/// </summary>
+		/// <param name="class_ptr">The starting Java class pointer. This ref is NOT deleted by this method.</param>
+		/// <param name="class_name">The JNI name of the starting class.</param>
+		/// <param name="typeMap">The type map to query for exact type mappings.</param>
+		/// <returns>The first mapped .NET type found, or null if no mapping exists.</returns>
+		public static Type? WalkHierarchy (IntPtr class_ptr, string class_name, ITypeMap typeMap)
+		{
+			if (class_ptr == IntPtr.Zero) {
+				return null;
+			}
+
+			Type? result = null;
+			IntPtr currentPtr = class_ptr;
+			string? currentName = class_name;
+
+			while (currentPtr != IntPtr.Zero) {
+				if (currentName != null) {
+					result = typeMap.TryGetExactTypeMapping (currentName);
+					if (result != null) {
+						break;
+					}
+				}
+
+				IntPtr super_class_ptr = JNIEnv.GetSuperclass (currentPtr);
+
+				// Delete local refs we created, but not the original class_ptr
+				if (currentPtr != class_ptr) {
+					JNIEnv.DeleteLocalRef (currentPtr);
+				}
+
+				currentPtr = super_class_ptr;
+				currentName = currentPtr != IntPtr.Zero
+					? Java.Interop.TypeManager.GetClassName (currentPtr)
+					: null;
+			}
+
+			// Clean up the last pointer if it's not the original
+			if (currentPtr != IntPtr.Zero && currentPtr != class_ptr) {
+				JNIEnv.DeleteLocalRef (currentPtr);
 			}
 
 			return result;

@@ -160,7 +160,6 @@ namespace Java.Interop
 				transfer,
 				targetType,
 				typeMap: this,
-				typeResolver: (class_ptr, class_name) => JavaHierarchyWalker.WalkHierarchy (class_ptr, class_name, this),
 				instanceCreator: CreateProxy,
 				resolveInvokerTypes: true);
 		}
