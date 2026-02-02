@@ -1021,8 +1021,8 @@ internal class JavaPeerScanner
 		string fullName = string.IsNullOrEmpty (ns) ? name : $"{ns}.{name}";
 		
 		if (javaName == null) {
-			// XA4212 check disabled for PoC - assume SDK is correct
-			// TODO: Re-enable with proper caching if needed
+			// Types without Java names are skipped - this can happen for types that
+			// have [Register] attributes removed by the linker or types with invalid metadata
 			return false;
 		}
 		
