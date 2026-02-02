@@ -20,18 +20,9 @@ namespace Android.Runtime
 
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
-		static bool LogTypemapTrace => Logger.LogTypemapTrace;
-
-		static void Log (string message)
-		{
-			if (LogTypemapTrace)
-				Logger.Log (LogLevel.Info, "monodroid-typemap", message);
-		}
-
 		public AndroidValueManager (ITypeMap typeMap)
 		{
 			_typeMap = typeMap ?? throw new ArgumentNullException (nameof (typeMap));
-			Log ($"AndroidValueManager: Created with {typeMap.GetType ().Name}");
 		}
 
 		public override void WaitForGCBridgeProcessing ()
@@ -50,9 +41,7 @@ namespace Android.Runtime
 			if (!reference.IsValid)
 				return null;
 
-			Log ($"AndroidValueManager.CreatePeer: reference=0x{reference.Handle:x}, targetType={targetType?.FullName ?? "null"}");
 			var peer = _typeMap.CreatePeer (reference.Handle, JniHandleOwnership.DoNotTransfer, targetType);
-			Log ($"AndroidValueManager.CreatePeer: result={peer?.GetType ().FullName ?? "null"}");
 			JniObjectReference.Dispose (ref reference, options);
 			return peer;
 		}

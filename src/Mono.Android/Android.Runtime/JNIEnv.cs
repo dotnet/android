@@ -414,18 +414,6 @@ namespace Android.Runtime {
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
 		static extern unsafe IntPtr monodroid_typemap_managed_to_java (Type type, byte* mvid);
 
-		internal static void LogTypemapTrace (StackTrace st)
-		{
-			string? trace = st.ToString ()?.Trim ();
-			if (String.IsNullOrEmpty (trace))
-				return;
-
-			RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Assembly, "typemap: called from");
-			foreach (string line in trace!.Split ('\n')) {
-				RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Assembly, line);
-			}
-		}
-
 		// We need this proxy method because if `TypeManagedToJava` contained the call to `monodroid_typemap_managed_to_java`
 		// (which is an icall, or ecall in CoreCLR parlance), CoreCLR JIT would throw an exception, refusing to compile the
 		// method.  The exception would be thrown even if the icall weren't called (e.g. hidden behind a runtime type check)
@@ -462,7 +450,6 @@ namespace Android.Runtime {
 			if (ret == IntPtr.Zero) {
 				if (Logger.LogAssembly) {
 					RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"typemap: failed to map managed type to Java type: {type.AssemblyQualifiedName} (Module ID: {type.Module.ModuleVersionId}; Type token: {type.MetadataToken})");
-					LogTypemapTrace (new StackTrace (true));
 				}
 
 				return null;

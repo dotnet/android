@@ -62,11 +62,6 @@ namespace Android.Runtime
 				foreach (var type in types) {
 					yield return type;
 				}
-			} else {
-				if (Logger.LogAssembly) {
-					// Miss message is logged in the native runtime
-					JNIEnv.LogTypemapTrace (new System.Diagnostics.StackTrace (true));
-				}
 			}
 
 			foreach (var ti in base.GetTypesForSimpleReference (jniSimpleReference))

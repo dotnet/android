@@ -30,13 +30,6 @@ namespace Android.Runtime
 		readonly ConcurrentDictionary<Type, string> _jniNameCache = new ();
 		readonly ConcurrentDictionary<string, Type?> _classToTypeCache = new ();
 
-		static void LogTrace (string message)
-		{
-			if (Logger.LogTypemapTrace) {
-				Logger.Log (LogLevel.Info, "monodroid-typemap", message);
-			}
-		}
-
 		public TypeMapAttributeTypeMap ()
 		{
 			LoadTypeMapsAssembly ();
@@ -51,7 +44,6 @@ namespace Android.Runtime
 		void LoadTypeMapsAssembly ()
 		{
 			var typeMapsAssembly = Assembly.Load (TypeMapsAssemblyName);
-			LogTrace ($"Loaded TypeMaps assembly: {typeMapsAssembly.FullName}");
 			Assembly.SetEntryAssembly (typeMapsAssembly);
 		}
 
@@ -83,7 +75,6 @@ namespace Android.Runtime
 				}
 			}
 
-			LogTrace ($"Collected {result.Count} TypeMap entries for MonoVM");
 			return result;
 		}
 
