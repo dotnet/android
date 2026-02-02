@@ -89,14 +89,14 @@ namespace Java.Interop
 		/// Internal visitor method for dictionary creation. Called by value factory's CreateDictionary.
 		/// Override in DerivedTypeFactory&lt;T&gt; to provide T as the key type.
 		/// </summary>
-		protected virtual IDictionary CreateDictionaryWithValueFactory<TValue> (DerivedTypeFactory<TValue> valueFactory) where TValue : class, IJavaPeerable
+		internal virtual IDictionary CreateDictionaryWithValueFactory<TValue> (DerivedTypeFactory<TValue> valueFactory) where TValue : class, IJavaPeerable
 			=> throw new NotSupportedException ("Dictionary creation requires a typed DerivedTypeFactory<T>");
 
 		/// <summary>
 		/// Internal visitor method for dictionary creation from handle. Called by value factory's CreateDictionaryFromHandle.
 		/// Override in DerivedTypeFactory&lt;T&gt; to provide T as the key type.
 		/// </summary>
-		protected virtual IDictionary CreateDictionaryFromHandleWithValueFactory<TValue> (DerivedTypeFactory<TValue> valueFactory, IntPtr handle, JniHandleOwnership transfer) where TValue : class, IJavaPeerable
+		internal virtual IDictionary CreateDictionaryFromHandleWithValueFactory<TValue> (DerivedTypeFactory<TValue> valueFactory, IntPtr handle, JniHandleOwnership transfer) where TValue : class, IJavaPeerable
 			=> throw new NotSupportedException ("Dictionary creation requires a typed DerivedTypeFactory<T>");
 
 		/// <summary>
@@ -180,13 +180,13 @@ namespace Java.Interop
 		/// Creates a JavaDictionary with T as the key type and TValue as the value type.
 		/// Called by value factory's CreateDictionary method (visitor pattern).
 		/// </summary>
-		protected override IDictionary CreateDictionaryWithValueFactory<TValue> (DerivedTypeFactory<TValue> valueFactory)
+		internal override IDictionary CreateDictionaryWithValueFactory<TValue> (DerivedTypeFactory<TValue> valueFactory)
 			=> new JavaDictionary<T, TValue> ();
 
 		/// <summary>
 		/// Creates a JavaDictionary from handle with T as key type and TValue as value type.
 		/// </summary>
-		protected override IDictionary CreateDictionaryFromHandleWithValueFactory<TValue> (DerivedTypeFactory<TValue> valueFactory, IntPtr handle, JniHandleOwnership transfer)
+		internal override IDictionary CreateDictionaryFromHandleWithValueFactory<TValue> (DerivedTypeFactory<TValue> valueFactory, IntPtr handle, JniHandleOwnership transfer)
 			=> new JavaDictionary<T, TValue> (handle, transfer);
 	}
 }

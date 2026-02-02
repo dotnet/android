@@ -72,6 +72,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateMainAndroidManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GeneratePackageManagerJava" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateTypeMappings" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.GenerateProguardFromTypeMap" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidDefineConstants" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAppSettingsDirectory" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetFilesThatExist" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -246,6 +247,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<!-- NOTE: $(AndroidLinkTool) would be blank if code shrinking is not used at all -->
 	<AndroidLinkTool       Condition=" '$(AndroidLinkTool)' == '' And '$(AndroidEnableProguard)' == 'True' ">proguard</AndroidLinkTool>
 	<AndroidLinkTool       Condition=" '$(AndroidLinkTool)' == 'proguard' And '$(AndroidEnableDesugar)' == 'True' ">r8</AndroidLinkTool>
+	<!-- Enable R8 Java code shrinking for CoreCLR Release builds when Marshal Methods are not used.
+	     Without Marshal Methods, mono.android.jar (containing ~300 Implementor classes) is bundled,
+	     and R8 can remove unused classes to reduce DEX size significantly. -->
+	<AndroidLinkTool       Condition=" '$(AndroidLinkTool)' == '' And '$(AndroidEnableMarshalMethods)' != 'True' And '$(AndroidIncludeDebugSymbols)' != 'True' ">r8</AndroidLinkTool>
 	<AndroidEnableProguard Condition=" '$(AndroidLinkTool)' != '' ">True</AndroidEnableProguard>
 	<AndroidEnableDesugar  Condition=" '$(AndroidEnableDesugar)' == '' And ('$(AndroidDexTool)' == 'd8' Or '$(AndroidLinkTool)' == 'r8') ">True</AndroidEnableDesugar>
 	<AndroidEnableDesugar  Condition=" '$(AndroidEnableDesugar)' == '' ">False</AndroidEnableDesugar>
@@ -342,6 +347,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <!-- NOTE: temporarily disable for NativeAOT and CoreCLR for now -->
   <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and ('$(_AndroidRuntime)' != 'MonoVM' or '$(PublishReadyToRun)' == 'true') ">False</AndroidEnableMarshalMethods>
 
+  <!-- Marshal methods are disabled for Debug builds due to build complexity -->
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' ">False</_AndroidUseMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' ">$(AndroidEnableMarshalMethods)</_AndroidUseMarshalMethods>
 
@@ -1418,7 +1424,7 @@ because xbuild doesn't support framework reference assemblies.
       OutputPath="$(_AndroidIntermediateJavaSourceDirectory)net\dot\jni\nativeaot\NativeAotRuntimeProvider.java"
   />
   <CreateTypeManagerJava
-      Condition=" '$(_AndroidUseMarshalMethods)' == 'True' "
+      Condition=" '$(_AndroidUseMarshalMethods)' == 'True' And '$(TypemapImplementation)' != 'v3' "
       ResourceName="JavaInteropTypeManager.java"
       OutputFilePath="$(_AndroidIntermediateJavaSourceDirectory)mono\TypeManager.java"
   />
@@ -1495,19 +1501,48 @@ because xbuild doesn't support framework reference assemblies.
     Condition="'$(PublishTrimmed)' == 'true'"
     Inputs="$(_AndroidLinkFlag)"
     Outputs="$(_AdditionalPostLinkerStepsFlag)">
+  
+  <!-- Exclude TypeMaps assembly from processing - it doesn't need JCW scanning/modification -->
+  <ItemGroup>
+    <_ResolvedAssembliesForPipeline Include="@(ResolvedAssemblies)" Condition="'%(Filename)' != '_Microsoft.Android.TypeMaps'" />
+    <_AllResolvedAssembliesForPipeline Include="@(_AllResolvedAssemblies)" Condition="'%(Filename)' != '_Microsoft.Android.TypeMaps'" />
+  </ItemGroup>
+  
+  <!-- Compute the managed Android runtime pack path from the native pack path.
+       _RuntimePackLibraryDirectory is e.g., .../packs/Microsoft.Android.Runtime.CoreCLR.36.android-arm64/.../runtimes/android-arm64/native
+       We need:                        .../packs/Microsoft.Android.Runtime.36.android/.../runtimes/android/lib/net11.0 -->
+  <PropertyGroup>
+    <_NativeRuntimePackDir>@(_RuntimePackLibraryDirectory)</_NativeRuntimePackDir>
+    <!-- Go up to the packs directory and find the managed runtime pack -->
+    <_ManagedRuntimePackDir>$([System.Text.RegularExpressions.Regex]::Replace('$(_NativeRuntimePackDir)', 'Microsoft\.Android\.Runtime\.(CoreCLR|Mono)\.\d+\.android-\w+', 'Microsoft.Android.Runtime.36.android'))</_ManagedRuntimePackDir>
+    <_ManagedRuntimePackDir>$([System.Text.RegularExpressions.Regex]::Replace('$(_ManagedRuntimePackDir)', 'runtimes/android-\w+/native', 'runtimes/android/lib/net11.0'))</_ManagedRuntimePackDir>
+    <!-- Also find the .NET Core ref assemblies for System.Runtime, etc. -->
+    <_PacksDir>$([System.Text.RegularExpressions.Regex]::Replace('$(_NativeRuntimePackDir)', '/Microsoft\.Android\.Runtime\..*', ''))</_PacksDir>
+    <!-- Hard-code the known version for now (PoC) -->
+    <_NetCoreRefDir>$(_PacksDir)/Microsoft.NETCore.App.Ref/11.0.0-alpha.1.26064.107/ref/net11.0</_NetCoreRefDir>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <_ManagedSearchDir Include="$(_ManagedRuntimePackDir)" />
+    <_ManagedSearchDir Include="$(_NetCoreRefDir)" Condition="Exists('$(_NetCoreRefDir)')" />
+  </ItemGroup>
+  
+  <Warning Text="[DEBUG] _ManagedSearchDir: @(_ManagedSearchDir)" />
+  
   <AssemblyModifierPipeline
+      AdditionalSearchDirectories="@(_ManagedSearchDir)"
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
       CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
       Debug="$(AndroidIncludeDebugSymbols)"
-      DestinationFiles="@(ResolvedAssemblies)"
+      DestinationFiles="@(_ResolvedAssembliesForPipeline)"
       Deterministic="$(Deterministic)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
       ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
       PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
       ReadSymbols="$(_AndroidLinkAssembliesReadSymbols)"
-      ResolvedAssemblies="@(_AllResolvedAssemblies)"
+      ResolvedAssemblies="@(_AllResolvedAssembliesForPipeline)"
       ResolvedUserAssemblies="@(ResolvedUserAssemblies)"
-      SourceFiles="@(ResolvedAssemblies)"
+      SourceFiles="@(_ResolvedAssembliesForPipeline)"
       TargetName="$(TargetName)">
   </AssemblyModifierPipeline>
 
@@ -1562,6 +1597,8 @@ because xbuild doesn't support framework reference assemblies.
     <_LinkingEnabled Condition=" '$(AndroidLinkMode)' == 'None'">False</_LinkingEnabled>
     <_HaveMultipleRIDs Condition=" '$(RuntimeIdentifiers)' != '' ">True</_HaveMultipleRIDs>
     <_HaveMultipleRIDs Condition=" '$(RuntimeIdentifiers)' == '' ">False</_HaveMultipleRIDs>
+    <_AndroidEnableMarshalMethodsForProviders>$(AndroidEnableMarshalMethods)</_AndroidEnableMarshalMethodsForProviders>
+    <_AndroidEnableMarshalMethodsForProviders Condition="'$(AndroidEnableTypeMaps)' == 'true'">True</_AndroidEnableMarshalMethodsForProviders>
   </PropertyGroup>
   <ItemGroup>
     <_MergedManifestDocuments Condition=" '$(AndroidManifestMerger)' == 'legacy' " Include="@(ExtractedManifestDocuments)" />
@@ -1575,9 +1612,10 @@ because xbuild doesn't support framework reference assemblies.
   </GenerateACWMap>
 
   <!-- JCW generation for MonoVM - generates the .java files that are compiled into classes.dex.
-       For CoreCLR, JCW generation is handled by GenerateTypeMapAssembly task instead. -->
+       When AndroidEnableTypeMaps=true, JCW generation is handled by GenerateTypeMapAssembly task instead.
+       For CoreCLR, JCW generation is also handled by GenerateTypeMapAssembly task. -->
   <GenerateJavaCallableWrappers
-      Condition=" '$(_AndroidRuntime)' != 'CoreCLR' "
+      Condition=" '$(_AndroidRuntime)' != 'CoreCLR' And '$(AndroidEnableTypeMaps)' != 'true' "
       CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
       OutputDirectory="$(IntermediateOutputPath)android\src"
       ResolvedAssemblies="@(_ResolvedAssemblies)"
@@ -1616,6 +1654,10 @@ because xbuild doesn't support framework reference assemblies.
   -->
 
   <!-- TypeMap PoC: Keep GenerateTypeMappings enabled to generate native symbols needed by libmonodroid.so -->
+  <PropertyGroup>
+    <_AndroidTypemapImplementation Condition=" '$(AndroidEnableTypeMaps)' == 'true' ">v3</_AndroidTypemapImplementation>
+    <_AndroidTypemapImplementation Condition=" '$(AndroidEnableTypeMaps)' != 'true' ">llvm-ir</_AndroidTypemapImplementation>
+  </PropertyGroup>
   <GenerateTypeMappings
       AndroidRuntime="$(_AndroidRuntime)"
       Debug="$(AndroidIncludeDebugSymbols)"
@@ -1625,6 +1667,7 @@ because xbuild doesn't support framework reference assemblies.
       RunCheckedBuild="$(_AndroidJLOCheckedBuild)"
       SkipJniAddNativeMethodRegistrationAttributeScan="$(_SkipJniAddNativeMethodRegistrationAttributeScan)"
       SupportedAbis="@(_BuildTargetAbis)"
+      TypemapImplementation="$(_AndroidTypemapImplementation)"
       TypemapOutputDirectory="$(_NativeAssemblySourceDir)">
   </GenerateTypeMappings>
 
@@ -1670,6 +1713,7 @@ because xbuild doesn't support framework reference assemblies.
       Environments="@(_EnvironmentFiles)"
       HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
       EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)"
+      EnableMarshalMethods="$(_AndroidEnableMarshalMethodsForProviders)"
       CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
       IntermediateOutputDirectory="$(IntermediateOutputPath)"
       OutputDirectory="$(IntermediateOutputPath)android"
@@ -1921,6 +1965,7 @@ because xbuild doesn't support framework reference assemblies.
   <GenerateNativeMarshalMethodSources
       AndroidRuntime="$(_AndroidRuntime)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
+      UseTypemapV3="$(AndroidEnableTypeMaps)"
       EnableNativeRuntimeLinking="$(_AndroidEnableNativeRuntimeLinking)"
       MonoComponents="@(_MonoComponent)"
       EnvironmentOutputDirectory="$(IntermediateOutputPath)android"

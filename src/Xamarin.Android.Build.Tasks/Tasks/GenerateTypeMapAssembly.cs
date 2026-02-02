@@ -2906,9 +2906,9 @@ internal class TypeMapAssemblyGenerator
 	/// Rules:
 	/// - DoNotGenerateAcw=true means no JCW (MCW bindings to existing Java classes)
 	/// - Interfaces don't need JCW (Java interfaces already exist)
-	/// - mono/android/* framework types already have JCWs in mono.android.jar
+	/// - Types from Mono.Android assembly already have JCWs in mono.android.jar
 	/// - android/runtime/* and android/app/* framework types already have JCWs in mono.android.jar
-	/// - Everything else needs JCW (user types, Implementors, etc.)
+	/// - Everything else needs JCW (user types)
 	/// </summary>
 	bool NeedsJcwGeneration (JavaPeerInfo peer)
 	{
@@ -2921,24 +2921,12 @@ internal class TypeMapAssemblyGenerator
 		if (peer.IsInterface)
 			return false;
 		
-		// Framework infrastructure types already have JCWs in mono.android.jar
-		// Exception: Implementors (mono/android/view/*Implementor) need new JCWs for TypeMap V3
-		if (peer.JavaName.StartsWith ("mono/android/", StringComparison.Ordinal) && !IsImplementorType (peer))
+		// All types from Mono.Android assembly already have JCWs in mono.android.jar
+		// This includes Implementors (mono/android/*Implementor) and framework types
+		if (peer.AssemblyName == "Mono.Android")
 			return false;
 		
-		// android/runtime/* types (JavaProxyThrowable, XmlReaderPullParser) already have JCWs in mono.android.jar
-		if (peer.JavaName.StartsWith ("android/runtime/", StringComparison.Ordinal))
-			return false;
-		
-		// android/app/ActivityTracker already has JCW in mono.android.jar
-		if (peer.JavaName.StartsWith ("android/app/ActivityTracker", StringComparison.Ordinal))
-			return false;
-		
-		// android/security/* types already have JCWs in mono.android.jar
-		if (peer.JavaName.StartsWith ("android/security/", StringComparison.Ordinal))
-			return false;
-		
-		// Everything else needs JCW generation (user types, Implementors, etc.)
+		// Everything else needs JCW generation (user types)
 		return true;
 	}
 
