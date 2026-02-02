@@ -55,19 +55,18 @@ The Trimmable Type Map replaces the legacy system with a compile-time code gener
 | Create instance | `Activator.CreateInstance()` | `JavaPeerProxy.CreateInstance()` |
 | Get callback | Reflection-based lookup | `JavaPeerProxy.GetFunctionPointer()` |
 
-## Expected Performance Characteristics
+## Performance Considerations
 
-| Aspect | Legacy | Trimmable | Status |
-|--------|--------|-----------|--------|
-| **Startup time** | Baseline | Similar (needs measurement) | ⚠️ |
-| **First method call** | Fast (native cache) | Slightly slower (+1-2ms) | ✓ |
-| **Subsequent calls** | Native cache | Native cache (same) | ✓ |
-| **APK size (DEX)** | Baseline | ~87% smaller with R8 | ✓ |
-| **Memory** | Lower | Slightly higher (proxy cache) | ⚠️ |
+Performance characteristics have not been benchmarked yet. Key areas to measure:
+
+- **Startup time**: The trimmable type map generates more managed code that needs JIT compilation. R2R (ReadyToRun) / crossgen2 precompilation may be required to avoid startup regression.
+- **First method call**: Managed proxy lookup adds overhead compared to native typemap lookup.
+- **Memory**: Proxy objects are cached in memory.
+- **APK size**: R8 can trim unused JCW classes, potentially reducing DEX size.
 
 ## Open Questions
 
-1. **Startup performance**: What is the impact of loading ~8000 `TypeMap` attributes on low-end devices?
+1. **Startup performance**: What is the impact of loading ~8000 `TypeMap` attributes? Is R2R precompilation sufficient?
 2. **Interface implementations**: The current JCW generator only emits overridden methods, not all interface methods - this needs fixing for full compatibility
 3. **Generic types**: `MakeGenericType()` is not AOT-safe; generic invoker types must be pre-registered
 4. **Array types**: Currently limited to rank 1-3; higher-rank arrays throw at runtime
