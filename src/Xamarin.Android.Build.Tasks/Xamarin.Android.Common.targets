@@ -1606,7 +1606,6 @@ because xbuild doesn't support framework reference assemblies.
 
   <FixUpMonoAndroidRuntime
       Condition=" '$(_AndroidUseMarshalMethods)' == 'true' And '$(AndroidIncludeDebugSymbols)' == 'false' "
-      IntermediateOutputDirectory="$(IntermediateOutputPath)"
       ResolvedAssemblies="@(_ResolvedAssemblies)" />
 
   <RewriteMarshalMethods

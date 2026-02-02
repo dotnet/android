@@ -2214,7 +2214,7 @@ namespace App1
 			}
 
 			Assert.NotNull (type, $"Failed to find the '{TypeName}' type in '{monoAndroidRuntimePath}'");
-			Assert.IsTrue (type.IsPublic, "Type '{typeName}' should be public");
+			Assert.IsTrue (type.IsPublic, $"Type '{TypeName}' should be public");
 		}
 	}
 }

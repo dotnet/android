@@ -25,7 +25,7 @@ class MonoAndroidRuntimeMarshalMethodsFixUp
 
 	static bool ApplyFixUp (TaskLoggingHelper log, ITaskItem monoAndroidRuntime)
 	{
-		string newDirPath = Path.Combine (Path.GetDirectoryName (monoAndroidRuntime.ItemSpec), "new");
+		string newDirPath = Path.Combine (Path.GetDirectoryName (monoAndroidRuntime.ItemSpec), "new")!;
 		string newFilePath = Path.Combine (newDirPath, Path.GetFileName (monoAndroidRuntime.ItemSpec));
 		Directory.CreateDirectory (newDirPath);
 
@@ -37,7 +37,7 @@ class MonoAndroidRuntimeMarshalMethodsFixUp
 			InMemory = true,
 			ReadSymbols = havePdb,
 		};
-		AssemblyDefinition asmdef = AssemblyDefinition.ReadAssembly (monoAndroidRuntime.ItemSpec, readerParams);
+		using AssemblyDefinition asmdef = AssemblyDefinition.ReadAssembly (monoAndroidRuntime.ItemSpec, readerParams);
 		TypeDefinition? androidRuntimeInternal = null;
 		foreach (ModuleDefinition module in asmdef.Modules) {
 			androidRuntimeInternal = FindAndroidRuntimeInternal (module);
