@@ -5,18 +5,15 @@ namespace Microsoft.Android.Runtime;
 
 static class RuntimeFeature
 {
-	const bool ManagedTypeMapEnabledByDefault = false;
 	const bool IsMonoRuntimeEnabledByDefault = true;
 	const bool IsCoreClrRuntimeEnabledByDefault = false;
 	const bool IsAssignableFromCheckEnabledByDefault = true;
 	const bool StartupHookSupportEnabledByDefault = true;
+	const bool IsDynamicTypeRegistrationEnabledByDefault = true;
+	const bool UseTrimmableTypeMapEnabledByDefault = false;
 
 	const string FeatureSwitchPrefix = "Microsoft.Android.Runtime.RuntimeFeature.";
 	const string StartupHookProviderSwitch = "System.StartupHookProvider.IsSupported";
-
-	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (ManagedTypeMap)}")]
-	internal static bool ManagedTypeMap { get; } =
-		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (ManagedTypeMap)}", out bool isEnabled) ? isEnabled : ManagedTypeMapEnabledByDefault;
 
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (IsMonoRuntime)}")]
 	internal static bool IsMonoRuntime { get; } =
@@ -34,4 +31,21 @@ static class RuntimeFeature
 	[FeatureGuard (typeof (RequiresUnreferencedCodeAttribute))]
 	internal static bool StartupHookSupport { get; } =
 		AppContext.TryGetSwitch (StartupHookProviderSwitch, out bool isEnabled) ? isEnabled : StartupHookSupportEnabledByDefault;
+
+	/// <summary>
+	/// When false, dynamic type registration via RegisterJniNatives is not supported.
+	/// Trimmable TypeMap sets this to false since all types are registered at build time.
+	/// </summary>
+	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (IsDynamicTypeRegistration)}")]
+	[FeatureGuard (typeof (RequiresUnreferencedCodeAttribute))]
+	internal static bool IsDynamicTypeRegistration { get; } =
+		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (IsDynamicTypeRegistration)}", out bool isEnabled) ? isEnabled : IsDynamicTypeRegistrationEnabledByDefault;
+
+	/// <summary>
+	/// When true, use the TrimmableTypeMap instead of LlvmIrTypeMap.
+	/// TrimmableTypeMap is AOT and trimming safe.
+	/// </summary>
+	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (UseTrimmableTypeMap)}")]
+	internal static bool UseTrimmableTypeMap { get; } =
+		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (UseTrimmableTypeMap)}", out bool isEnabled) ? isEnabled : UseTrimmableTypeMapEnabledByDefault;
 }

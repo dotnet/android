@@ -235,14 +235,19 @@ namespace Android.Runtime
 
 		private static ITypeMap CreateTypeMap ()
 		{
-			// Use LlvmIrTypeMap for both MonoVM and CoreCLR (legacy behavior)
+			// Check if TrimmableTypeMap is enabled via runtime feature
+			if (RuntimeFeature.UseTrimmableTypeMap) {
+				return new TrimmableTypeMap ();
+			}
+
+			// Use LlvmIrTypeMap for legacy behavior
 			return new LlvmIrTypeMap ();
 		}
 
 		private static JniRuntime.JniTypeManager CreateTypeManager (ITypeMap typeMap)
 		{
 			if (RuntimeFeature.IsCoreClrRuntime) {
-				// CoreCLR uses AndroidTypeManager - note that [Export] is NOT supported with TypeMap v3
+				// CoreCLR uses AndroidTypeManager
 				return new AndroidTypeManager (typeMap);
 			}
 

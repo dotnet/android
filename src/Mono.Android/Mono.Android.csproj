@@ -119,7 +119,9 @@
     <Compile Include="Java.Interop\LlvmIrTypeMap.cs" />
     <Compile Include="Java.Interop\PeerCreationHelper.cs" />
     <Compile Include="Java.Interop\ReflectionTypeMap.cs" />
+    <Compile Include="Java.Interop\TrimmableTypeMap.cs" />
     <Compile Include="Java.Interop\TypeMapException.cs" />
+    <Compile Include="Java.Interop\TypeMapTypeManager.cs" />
   </ItemGroup>
 
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
