@@ -106,6 +106,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <IlcCompileInput Remove="@(IlcCompileInput)" />
       <IlcCompileInput Include="$(IntermediateLinkDir)$(TargetName)$(TargetExt)" />
       <_AndroidILLinkAssemblies Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')" Condition="Exists('$(IntermediateLinkDir)%(Filename)%(Extension)')" />
+      <!-- Explicitly add the TypeMaps assembly if it exists in linked output -->
+      <_AndroidILLinkAssemblies Include="$(IntermediateLinkDir)_Microsoft.Android.TypeMaps.dll" Condition=" '$(AndroidEnableTypeMaps)' == 'true' and Exists('$(IntermediateLinkDir)_Microsoft.Android.TypeMaps.dll') " />
       <IlcReference Remove="@(IlcReference)" />
       <IlcReference Include="@(PrivateSdkAssemblies)" />
       <IlcReference Include="@(_AndroidILLinkAssemblies)" />
