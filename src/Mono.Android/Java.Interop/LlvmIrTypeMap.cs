@@ -51,7 +51,21 @@ namespace Java.Interop
 				}
 
 				string? managedAssemblyName = Marshal.PtrToStringAnsi (managedAssemblyNamePointer);
-				Assembly assembly = Assembly.Load (managedAssemblyName!);
+				if (string.IsNullOrEmpty (managedAssemblyName)) {
+					return null;
+				}
+
+				Assembly? assembly;
+				try {
+					assembly = Assembly.Load (managedAssemblyName);
+				} catch (Exception) {
+					return null;
+				}
+
+				if (assembly == null) {
+					return null;
+				}
+
 				foreach (Module module in assembly.Modules) {
 					var ret = module.ResolveType ((int) managedTypeTokenId);
 					if (ret != null) {
