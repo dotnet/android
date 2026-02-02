@@ -31,13 +31,13 @@ namespace Java.Interop
 		/// <param name="length">The length of the array.</param>
 		/// <param name="rank">The array rank: 1 for T[], 2 for T[][], 3 for T[][][].</param>
 		/// <returns>A new array of the target type.</returns>
-		public abstract Array CreateArray (int length, int rank);
+		internal abstract Array CreateArray (int length, int rank);
 
 		/// <summary>
 		/// Creates an empty JavaList for the target type.
 		/// </summary>
 		/// <returns>A new empty JavaList wrapping the target type.</returns>
-		public abstract IList CreateList ();
+		internal abstract IList CreateList ();
 
 		/// <summary>
 		/// Creates a JavaList wrapping an existing Java ArrayList handle.
@@ -45,7 +45,7 @@ namespace Java.Interop
 		/// <param name="handle">The JNI handle to the Java ArrayList.</param>
 		/// <param name="transfer">How to handle JNI reference ownership.</param>
 		/// <returns>A JavaList wrapping the Java object.</returns>
-		public abstract IList CreateListFromHandle (IntPtr handle, JniHandleOwnership transfer);
+		internal abstract IList CreateListFromHandle (IntPtr handle, JniHandleOwnership transfer);
 
 		/// <summary>
 		/// Creates a JavaCollection wrapping an existing Java Collection handle.
@@ -53,13 +53,13 @@ namespace Java.Interop
 		/// <param name="handle">The JNI handle to the Java Collection.</param>
 		/// <param name="transfer">How to handle JNI reference ownership.</param>
 		/// <returns>A JavaCollection wrapping the Java object.</returns>
-		public abstract ICollection CreateCollectionFromHandle (IntPtr handle, JniHandleOwnership transfer);
+		internal abstract ICollection CreateCollectionFromHandle (IntPtr handle, JniHandleOwnership transfer);
 
 		/// <summary>
 		/// Creates an empty JavaSet for the target type.
 		/// </summary>
 		/// <returns>A new empty JavaSet wrapping the target type.</returns>
-		public abstract ICollection CreateSet ();
+		internal abstract ICollection CreateSet ();
 
 		/// <summary>
 		/// Creates a JavaSet wrapping an existing Java Set handle.
@@ -67,14 +67,14 @@ namespace Java.Interop
 		/// <param name="handle">The JNI handle to the Java Set.</param>
 		/// <param name="transfer">How to handle JNI reference ownership.</param>
 		/// <returns>A JavaSet wrapping the Java object.</returns>
-		public abstract ICollection CreateSetFromHandle (IntPtr handle, JniHandleOwnership transfer);
+		internal abstract ICollection CreateSetFromHandle (IntPtr handle, JniHandleOwnership transfer);
 
 		/// <summary>
 		/// Creates an empty JavaDictionary with the specified key factory.
 		/// </summary>
 		/// <param name="keyFactory">The factory for the key type (provides type information).</param>
 		/// <returns>A new empty JavaDictionary, or null if not supported.</returns>
-		public virtual IDictionary? CreateDictionary (DerivedTypeFactory keyFactory) => null;
+		internal virtual IDictionary? CreateDictionary (DerivedTypeFactory keyFactory) => null;
 
 		/// <summary>
 		/// Creates a JavaDictionary wrapping an existing Java Map handle.
@@ -83,12 +83,34 @@ namespace Java.Interop
 		/// <param name="handle">The JNI handle to the Java Map.</param>
 		/// <param name="transfer">How to handle JNI reference ownership.</param>
 		/// <returns>A JavaDictionary wrapping the Java object, or null if not supported.</returns>
-		public virtual IDictionary? CreateDictionaryFromHandle (DerivedTypeFactory keyFactory, IntPtr handle, JniHandleOwnership transfer) => null;
+		internal virtual IDictionary? CreateDictionaryFromHandle (DerivedTypeFactory keyFactory, IntPtr handle, JniHandleOwnership transfer) => null;
+
+		/// <summary>
+		/// Internal visitor method for dictionary creation. Called by value factory's CreateDictionary.
+		/// Override in DerivedTypeFactory&lt;T&gt; to provide T as the key type.
+		/// </summary>
+		protected virtual IDictionary CreateDictionaryWithValueFactory<TValue> (DerivedTypeFactory<TValue> valueFactory) where TValue : class, IJavaPeerable
+			=> throw new NotSupportedException ("Dictionary creation requires a typed DerivedTypeFactory<T>");
+
+		/// <summary>
+		/// Internal visitor method for dictionary creation from handle. Called by value factory's CreateDictionaryFromHandle.
+		/// Override in DerivedTypeFactory&lt;T&gt; to provide T as the key type.
+		/// </summary>
+		protected virtual IDictionary CreateDictionaryFromHandleWithValueFactory<TValue> (DerivedTypeFactory<TValue> valueFactory, IntPtr handle, JniHandleOwnership transfer) where TValue : class, IJavaPeerable
+			=> throw new NotSupportedException ("Dictionary creation requires a typed DerivedTypeFactory<T>");
+
+		/// <summary>
+		/// Creates a DerivedTypeFactory for the specified element type T.
+		/// </summary>
+		/// <typeparam name="T">The element type for arrays and collections.</typeparam>
+		/// <returns>A singleton factory instance for the specified type.</returns>
+		public static DerivedTypeFactory Create<T> () where T : class, IJavaPeerable
+			=> DerivedTypeFactory<T>.Instance;
 	}
 
 	/// <summary>
 	/// Generic implementation of DerivedTypeFactory for a specific element type T.
-	/// This class is instantiated by generated proxy types to provide type-safe factory methods.
+	/// This class is internal - use <see cref="DerivedTypeFactory.Create{T}"/> to obtain instances.
 	/// </summary>
 	/// <typeparam name="T">The element type for arrays and collections.</typeparam>
 	/// <remarks>
@@ -99,21 +121,21 @@ namespace Java.Interop
 	/// <code>
 	/// sealed class ViewProxy : JavaPeerProxy {
 	///     public override DerivedTypeFactory GetDerivedTypeFactory() 
-	///         => DerivedTypeFactory&lt;View&gt;.Instance;
+	///         => DerivedTypeFactory.Create&lt;View&gt;();
 	/// }
 	/// </code>
 	/// </remarks>
-	public sealed class DerivedTypeFactory<T> : DerivedTypeFactory where T : class
+	internal sealed class DerivedTypeFactory<T> : DerivedTypeFactory where T : class, IJavaPeerable
 	{
 		/// <summary>
 		/// Singleton instance - no state, so safe to share across all usages.
 		/// </summary>
-		public static readonly DerivedTypeFactory<T> Instance = new ();
+		internal static readonly DerivedTypeFactory<T> Instance = new ();
 
 		private DerivedTypeFactory () { }
 
 		/// <inheritdoc/>
-		public override Array CreateArray (int length, int rank)
+		internal override Array CreateArray (int length, int rank)
 		{
 			return rank switch {
 				1 => new T[length],
@@ -124,76 +146,47 @@ namespace Java.Interop
 		}
 
 		/// <inheritdoc/>
-		public override IList CreateList () => new JavaList<T> ();
+		internal override IList CreateList () => new JavaList<T> ();
 
 		/// <inheritdoc/>
-		public override IList CreateListFromHandle (IntPtr handle, JniHandleOwnership transfer)
+		internal override IList CreateListFromHandle (IntPtr handle, JniHandleOwnership transfer)
 			=> new JavaList<T> (handle, transfer);
 
 		/// <inheritdoc/>
-		public override ICollection CreateCollectionFromHandle (IntPtr handle, JniHandleOwnership transfer)
+		internal override ICollection CreateCollectionFromHandle (IntPtr handle, JniHandleOwnership transfer)
 			=> new JavaCollection<T> (handle, transfer);
 
 		/// <inheritdoc/>
-		public override ICollection CreateSet () => new JavaSet<T> ();
+		internal override ICollection CreateSet () => new JavaSet<T> ();
 
 		/// <inheritdoc/>
-		public override ICollection CreateSetFromHandle (IntPtr handle, JniHandleOwnership transfer)
+		internal override ICollection CreateSetFromHandle (IntPtr handle, JniHandleOwnership transfer)
 			=> new JavaSet<T> (handle, transfer);
 
 		/// <inheritdoc/>
-		public override IDictionary? CreateDictionary (DerivedTypeFactory keyFactory)
+		internal override IDictionary? CreateDictionary (DerivedTypeFactory keyFactory)
 		{
-			// We need the key factory to be generic to create the dictionary
-			// This uses a visitor pattern - we ask the key factory to create the dictionary with us as value
+			// T is the value type - ask key factory to create dictionary with us as value
 			return keyFactory.CreateDictionaryWithValueFactory (this);
 		}
 
 		/// <inheritdoc/>
-		public override IDictionary? CreateDictionaryFromHandle (DerivedTypeFactory keyFactory, IntPtr handle, JniHandleOwnership transfer)
+		internal override IDictionary? CreateDictionaryFromHandle (DerivedTypeFactory keyFactory, IntPtr handle, JniHandleOwnership transfer)
 		{
 			return keyFactory.CreateDictionaryFromHandleWithValueFactory (this, handle, transfer);
 		}
 
 		/// <summary>
-		/// Creates a JavaDictionary with this type as the key and the provided factory's type as the value.
+		/// Creates a JavaDictionary with T as the key type and TValue as the value type.
 		/// Called by value factory's CreateDictionary method (visitor pattern).
 		/// </summary>
-		internal IDictionary CreateDictionaryWithValueFactory<TValue> (DerivedTypeFactory<TValue> valueFactory) where TValue : class
+		protected override IDictionary CreateDictionaryWithValueFactory<TValue> (DerivedTypeFactory<TValue> valueFactory)
 			=> new JavaDictionary<T, TValue> ();
 
 		/// <summary>
-		/// Creates a JavaDictionary from handle with this type as key and provided factory's type as value.
+		/// Creates a JavaDictionary from handle with T as key type and TValue as value type.
 		/// </summary>
-		internal IDictionary CreateDictionaryFromHandleWithValueFactory<TValue> (DerivedTypeFactory<TValue> valueFactory, IntPtr handle, JniHandleOwnership transfer) where TValue : class
+		protected override IDictionary CreateDictionaryFromHandleWithValueFactory<TValue> (DerivedTypeFactory<TValue> valueFactory, IntPtr handle, JniHandleOwnership transfer)
 			=> new JavaDictionary<T, TValue> (handle, transfer);
-	}
-
-	// Extension methods on base class to support visitor pattern for dictionaries
-	public static class DerivedTypeFactoryExtensions
-	{
-		/// <summary>
-		/// Creates a dictionary using the visitor pattern - the key factory creates the dictionary
-		/// with both type parameters known.
-		/// </summary>
-		internal static IDictionary? CreateDictionaryWithValueFactory<TValue> (this DerivedTypeFactory keyFactory, DerivedTypeFactory<TValue> valueFactory) where TValue : class
-		{
-			// Dynamic dispatch to the correct generic key factory
-			return keyFactory switch {
-				DerivedTypeFactory<Java.Lang.Object> f => f.CreateDictionaryWithValueFactory (valueFactory),
-				DerivedTypeFactory<Java.Lang.String> f => f.CreateDictionaryWithValueFactory (valueFactory),
-				// Add more common key types as needed, or use a registration mechanism
-				_ => null // Unsupported key type
-			};
-		}
-
-		internal static IDictionary? CreateDictionaryFromHandleWithValueFactory<TValue> (this DerivedTypeFactory keyFactory, DerivedTypeFactory<TValue> valueFactory, IntPtr handle, JniHandleOwnership transfer) where TValue : class
-		{
-			return keyFactory switch {
-				DerivedTypeFactory<Java.Lang.Object> f => f.CreateDictionaryFromHandleWithValueFactory (valueFactory, handle, transfer),
-				DerivedTypeFactory<Java.Lang.String> f => f.CreateDictionaryFromHandleWithValueFactory (valueFactory, handle, transfer),
-				_ => null
-			};
-		}
 	}
 }

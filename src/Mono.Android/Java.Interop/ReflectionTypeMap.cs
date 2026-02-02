@@ -357,7 +357,7 @@ namespace Java.Interop
 		}
 
 		[RequiresUnreferencedCode ("Uses Array.CreateInstance which is not AOT-safe.")]
-		public override Array CreateArray (int length, int rank)
+		internal override Array CreateArray (int length, int rank)
 		{
 			return rank switch
 			{
@@ -368,37 +368,37 @@ namespace Java.Interop
 			};
 		}
 
-		public override IList CreateList ()
+		internal override IList CreateList ()
 		{
 			throw new NotSupportedException ("ReflectionDerivedTypeFactory does not support list creation.");
 		}
 
-		public override IList CreateListFromHandle (IntPtr handle, JniHandleOwnership transfer)
+		internal override IList CreateListFromHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			throw new NotSupportedException ("ReflectionDerivedTypeFactory does not support list creation.");
 		}
 
-		public override ICollection CreateCollectionFromHandle (IntPtr handle, JniHandleOwnership transfer)
+		internal override ICollection CreateCollectionFromHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			throw new NotSupportedException ("ReflectionDerivedTypeFactory does not support collection creation.");
 		}
 
-		public override ICollection CreateSet ()
+		internal override ICollection CreateSet ()
 		{
 			throw new NotSupportedException ("ReflectionDerivedTypeFactory does not support set creation.");
 		}
 
-		public override ICollection CreateSetFromHandle (IntPtr handle, JniHandleOwnership transfer)
+		internal override ICollection CreateSetFromHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			throw new NotSupportedException ("ReflectionDerivedTypeFactory does not support set creation.");
 		}
 
-		public override IDictionary? CreateDictionary (DerivedTypeFactory keyFactory)
+		internal override IDictionary? CreateDictionary (DerivedTypeFactory keyFactory)
 		{
 			throw new NotSupportedException ("ReflectionDerivedTypeFactory does not support dictionary creation.");
 		}
 
-		public override IDictionary? CreateDictionaryFromHandle (DerivedTypeFactory keyFactory, IntPtr handle, JniHandleOwnership transfer)
+		internal override IDictionary? CreateDictionaryFromHandle (DerivedTypeFactory keyFactory, IntPtr handle, JniHandleOwnership transfer)
 		{
 			throw new NotSupportedException ("ReflectionDerivedTypeFactory does not support dictionary creation.");
 		}
