@@ -272,11 +272,12 @@ This eliminates the NDK dependency for NativeAOT builds.
       We need to run ProcessRuntimePackLibraryDirectories here because this code runs in an inner build
       and `_RuntimePackLibraryDirectory` items aren't carried over from the outer build.
       This discovers sysroot library directories (containing libc.so, liblog.so, etc.) from the runtime pack.
+      Note: Removal of sysroot libraries from ResolvedFileToPublish happens in the outer build's
+      _ResolveAssemblies target, not here.
     -->
     <ProcessRuntimePackLibraryDirectories
         ResolvedFilesToPublish="@(ResolvedFileToPublish)">
       <Output TaskParameter="RuntimePackLibraryDirectories" ItemName="_RuntimePackLibraryDirectory" />
-      <Output TaskParameter="NativeLibrariesToRemove" ItemName="_NativeLibraryToRemove" />
     </ProcessRuntimePackLibraryDirectories>
 
     <MakeDir Directories="$(NativeOutputPath)" />

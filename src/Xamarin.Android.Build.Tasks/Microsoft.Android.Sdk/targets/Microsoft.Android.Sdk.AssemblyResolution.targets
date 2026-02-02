@@ -116,7 +116,6 @@ _ResolveAssemblies MSBuild target.
          are never taken into consideration in any context.
     -->
     <ProcessRuntimePackLibraryDirectories
-        Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
         ResolvedFilesToPublish="@(ResolvedFileToPublish)">
       <Output TaskParameter="RuntimePackLibraryDirectories" ItemName="_RuntimePackLibraryDirectory" />
       <Output TaskParameter="NativeLibrariesToRemove" ItemName="_NativeLibraryToRemove" />
