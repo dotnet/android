@@ -24,19 +24,19 @@ namespace Android.Runtime {
 
 		public static IntPtr Handle => JniEnvironment.EnvironmentPointer;
 
-		static Array ArrayCreateInstance (Type elementType, int length) =>
-			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
-			// IL3050 disabled in source: if someone uses NativeAOT, they will get the warning.
-			#pragma warning disable IL3050
-			Array.CreateInstance (elementType, length);
-			#pragma warning restore IL3050
+		static Array ArrayCreateInstance (Type elementType, int length)
+		{
+			// Delegate to ITypeMap.CreateArray - handles both AOT-safe and legacy paths
+			// Rank 1 = T[] (default for all external calls; nested arrays are handled internally)
+			return JNIEnvInit.TypeMap!.CreateArray (elementType, length, rank: 1);
+		}
 
-		static Type MakeArrayType (Type type) =>
-			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
-			// IL3050 disabled in source: if someone uses NativeAOT, they will get the warning.
-			#pragma warning disable IL3050
-			type.MakeArrayType ();
-			#pragma warning restore IL3050
+		static Type MakeArrayType (Type type)
+		{
+			// TypeMap v3: MakeArrayType is not supported - all array types must be pre-registered
+			throw new NotSupportedException (
+				$"MakeArrayType is not supported with TypeMap v3. Type '{type.FullName}' array must be pre-registered.");
+		}
 
 		internal static IntPtr IdentityHash (IntPtr v)
 		{
@@ -429,7 +429,7 @@ namespace Android.Runtime {
 		// We need this proxy method because if `TypeManagedToJava` contained the call to `monodroid_typemap_managed_to_java`
 		// (which is an icall, or ecall in CoreCLR parlance), CoreCLR JIT would throw an exception, refusing to compile the
 		// method.  The exception would be thrown even if the icall weren't called (e.g. hidden behind a runtime type check)
-		static unsafe IntPtr monovm_typemap_managed_to_java (Type type, byte* mvidptr)
+		internal static unsafe IntPtr monovm_typemap_managed_to_java (Type type, byte* mvidptr)
 		{
 			return monodroid_typemap_managed_to_java (type, mvidptr);
 		}
@@ -646,23 +646,24 @@ namespace Android.Runtime {
 						return new Java.Lang.String (elem, JniHandleOwnership.TransferLocalRef);
 					return GetString (elem, JniHandleOwnership.TransferLocalRef);
 				} },
-				{ typeof (IJavaObject), (type, source, index) => {
-					AssertIsJavaObject (type);
-
-					IntPtr elem = GetObjectArrayElement (source, index);
-					return GetObject (elem, type);
-
-					// FIXME: Since a Dictionary<Type, Func> is used here, the trimmer will not be able to properly analyze `Type t`
-					// error IL2111: Method 'lambda expression' with parameters or return value with `DynamicallyAccessedMembersAttribute` is accessed via reflection. Trimmer can't guarantee availability of the requirements of the method.
-					[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "FIXME: https://github.com/xamarin/xamarin-android/issues/8724")]
-					static object? GetObject (IntPtr e, Type t) =>
-						Java.Lang.Object.GetObject (e, JniHandleOwnership.TransferLocalRef, t);
-				} },
+				{ typeof (IJavaObject), GetJavaObjectArrayElement },
 				{ typeof (Array), (type, source, index) => {
 					IntPtr  elem      = GetObjectArrayElement (source, index);
 					return GetArray (elem, JniHandleOwnership.TransferLocalRef, type);
 				} },
 			};
+		}
+
+		[RequiresUnreferencedCode ("Type lookup for Java objects cannot be statically analyzed.")]
+		static object? GetJavaObjectArrayElement (
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			Type? type,
+			IntPtr source,
+			int index)
+		{
+			AssertIsJavaObject (type);
+			IntPtr elem = GetObjectArrayElement (source, index);
+			return Java.Lang.Object.GetObject (elem, JniHandleOwnership.TransferLocalRef, type);
 		}
 
 		static TValue GetConverter<TValue>(Dictionary<Type, TValue> dict, Type? elementType, IntPtr array)

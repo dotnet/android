@@ -111,6 +111,15 @@
     <Compile Include="Java.Time\LocalDate.cs" />
     <Compile Include="Java.Util\ISortedMap.cs" />
     <Compile Include="Java.Util\IList.cs" />
+    <Compile Include="Java.Interop\AndroidTypeManager.cs" />
+    <Compile Include="Java.Interop\AndroidValueManager.cs" />
+    <Compile Include="Java.Interop\ITypeMap.cs" />
+    <Compile Include="Java.Interop\JavaHierarchyWalker.cs" />
+    <Compile Include="Java.Interop\JavaPeerProxy.cs" />
+    <Compile Include="Java.Interop\LlvmIrTypeMap.cs" />
+    <Compile Include="Java.Interop\PeerCreationHelper.cs" />
+    <Compile Include="Java.Interop\ReflectionTypeMap.cs" />
+    <Compile Include="Java.Interop\TypeMapException.cs" />
   </ItemGroup>
 
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />

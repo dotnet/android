@@ -40,6 +40,10 @@ namespace Java.Interop {
 	}
 
 	public static partial class TypeManager {
+		// Internal call for Mono runtime - registered by native code as Java.Interop.TypeManager::monodroid_typemap_java_to_managed
+		[MethodImplAttribute (MethodImplOptions.InternalCall)]
+		internal static extern Type monodroid_typemap_java_to_managed (string java_type_name);
+
 		internal static string GetClassName (IntPtr class_ptr)
 		{
 			IntPtr ptr = RuntimeNativeMethods.monodroid_TypeManager_get_java_class_name (class_ptr);
@@ -116,7 +120,7 @@ namespace Java.Interop {
 		}
 #endif	// !JAVA_INTEROP
 
-		[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type.GetType() can never statically know the string value from parameter 'signature'.")]
+		[RequiresUnreferencedCode ("Dynamic activation uses Type.GetType() which cannot be statically analyzed.")]
 		static Type[] GetParameterTypes (string? signature)
 		{
 			if (String.IsNullOrEmpty (signature))
@@ -129,7 +133,7 @@ namespace Java.Interop {
 		}
 
 		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
-		[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type.GetType() can never statically know the string value from parameter 'typename_ptr'.")]
+		[RequiresUnreferencedCode ("Dynamic activation uses Type.GetType() which cannot be statically analyzed.")]
 		static void n_Activate (IntPtr jnienv, IntPtr jclass, IntPtr typename_ptr, IntPtr signature_ptr, IntPtr jobject, IntPtr parameters_ptr)
 		{
 			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
@@ -177,7 +181,7 @@ namespace Java.Interop {
 			}
 		}
 
-		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "RuntimeHelpers.GetUninitializedObject() does not statically know the return value from ConstructorInfo.DeclaringType.")]
+		[RequiresUnreferencedCode ("Dynamic activation cannot statically determine the type from ConstructorInfo.DeclaringType.")]
 		internal static void Activate (IntPtr jobject, ConstructorInfo cinfo, object? []? parms)
 		{
 			try {
@@ -216,74 +220,19 @@ namespace Java.Interop {
 			return new NotSupportedException (message.ToString (), CreateJavaLocationException ());
 		}
 
-		static Exception CreateJavaLocationException ()
+		internal static Exception CreateJavaLocationException ()
 		{
 			using (var loc = new Java.Lang.Error ("Java callstack:"))
 				return new JavaLocationException (loc.ToString ());
 		}
 
-		[MethodImplAttribute(MethodImplOptions.InternalCall)]
-		static extern Type monodroid_typemap_java_to_managed (string java_type_name);
-
-		static Type monovm_typemap_java_to_managed (string java_type_name)
-		{
-			return monodroid_typemap_java_to_managed (java_type_name);
-		}
-
-		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Value of java_type_name isn't statically known.")]
-		static Type? clr_typemap_java_to_managed (string java_type_name)
-		{
-			bool result = RuntimeNativeMethods.clr_typemap_java_to_managed (java_type_name, out IntPtr managedAssemblyNamePointer, out uint managedTypeTokenId);
-			if (!result || managedAssemblyNamePointer == IntPtr.Zero) {
-				return null;
-			}
-
-			string managedAssemblyName = Marshal.PtrToStringAnsi (managedAssemblyNamePointer);
-			Assembly assembly = Assembly.Load (managedAssemblyName);
-			Type? ret = null;
-			foreach (Module module in assembly.Modules) {
-				ret = module.ResolveType ((int)managedTypeTokenId);
-				if (ret != null) {
-					break;
-				}
-			}
-
-			if (Logger.LogAssembly) {
-				Logger.Log (LogLevel.Info, "monodroid", $"Loaded type: {ret}");
-			}
-
-			return ret;
-		}
-
 		internal static Type? GetJavaToManagedType (string class_name)
 		{
-			lock (TypeManagerMapDictionaries.AccessLock) {
-				return GetJavaToManagedTypeCore (class_name);
+			if (JNIEnvInit.TypeMap?.TryGetTypesForJniName (class_name, out var types) == true) {
+				foreach (var type in types) {
+					return type;
+				}
 			}
-		}
-
-		static Type? GetJavaToManagedTypeCore (string class_name)
-		{
-			if (TypeManagerMapDictionaries.JniToManaged.TryGetValue (class_name, out Type? type)) {
-				return type;
-			}
-
-			if (RuntimeFeature.IsMonoRuntime) {
-				type = monovm_typemap_java_to_managed (class_name);
-			} else if (RuntimeFeature.IsCoreClrRuntime) {
-				type = clr_typemap_java_to_managed (class_name);
-			} else {
-				throw new NotSupportedException ("Internal error: unknown runtime not supported");
-			}
-
-			if (type != null) {
-				TypeManagerMapDictionaries.JniToManaged.Add (class_name, type);
-				return type;
-			}
-
-			// Miss message is logged in the native runtime
-			if (Logger.LogAssembly)
-				JNIEnv.LogTypemapTrace (new System.Diagnostics.StackTrace (true));
 			return null;
 		}
 
@@ -292,143 +241,9 @@ namespace Java.Interop {
 			return CreateInstance (handle, transfer, null);
 		}
 
-		[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "TypeManager.CreateProxy() does not statically know the value of the 'type' local variable.")]
-		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "TypeManager.CreateProxy() does not statically know the value of the 'type' local variable.")]
 		internal static IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer, Type? targetType)
 		{
-			Type? type = null;
-			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
-			string? class_name = GetClassName (class_ptr);
-			lock (TypeManagerMapDictionaries.AccessLock) {
-				while (class_ptr != IntPtr.Zero) {
-					type = GetJavaToManagedTypeCore (class_name);
-					if (type != null) {
-						break;
-					}
-
-					IntPtr super_class_ptr = JNIEnv.GetSuperclass (class_ptr);
-					JNIEnv.DeleteLocalRef (class_ptr);
-					class_name = null;
-					class_ptr = super_class_ptr;
-					if (class_ptr != IntPtr.Zero) {
-						class_name = GetClassName (class_ptr);
-					}
-				}
-			}
-
-			if (class_ptr != IntPtr.Zero) {
-				JNIEnv.DeleteLocalRef (class_ptr);
-				class_ptr = IntPtr.Zero;
-			}
-
-			if (targetType != null &&
-					(type == null ||
-					 !targetType.IsAssignableFrom (type))) {
-				type = targetType;
-			}
-
-			if (type == null) {
-				class_name = JNIEnv.GetClassNameFromInstance (handle);
-				JNIEnv.DeleteRef (handle, transfer);
-				throw new NotSupportedException (
-						FormattableString.Invariant ($"Internal error finding wrapper class for '{class_name}'. (Where is the Java.Lang.Object wrapper?!)"),
-						CreateJavaLocationException ());
-			}
-
-			if (type.IsInterface || type.IsAbstract) {
-				var invokerType = JavaObjectExtensions.GetInvokerType (type);
-				if (invokerType == null)
-					throw new NotSupportedException ("Unable to find Invoker for type '" + type.FullName + "'. Was it linked away?",
-							CreateJavaLocationException ());
-				type = invokerType;
-			}
-
-			var typeSig  = JNIEnvInit.androidRuntime?.TypeManager.GetTypeSignature (type) ?? default;
-			if (!typeSig.IsValid || typeSig.SimpleReference == null) {
-				throw new ArgumentException ($"Could not determine Java type corresponding to `{type.AssemblyQualifiedName}`.", nameof (targetType));
-			}
-
-			JniObjectReference typeClass = default;
-			JniObjectReference handleClass = default;
-			try {
-				try {
-					typeClass = JniEnvironment.Types.FindClass (typeSig.SimpleReference);
-				} catch (Exception e) {
-					throw new ArgumentException ($"Could not find Java class `{typeSig.SimpleReference}`.",
-							nameof (targetType),
-							e);
-				}
-
-				handleClass = JniEnvironment.Types.GetObjectClass (new JniObjectReference (handle));
-				if (!JniEnvironment.Types.IsAssignableFrom (handleClass, typeClass)) {
-					if (Logger.LogAssembly) {
-						var message = $"Handle 0x{handle:x} is of type '{JNIEnv.GetClassNameFromInstance (handle)}' which is not assignable to '{typeSig.SimpleReference}'";
-						Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
-					}
-					if (RuntimeFeature.IsAssignableFromCheck) {
-						return null;
-					}
-				}
-			} finally {
-				JniObjectReference.Dispose (ref handleClass);
-				JniObjectReference.Dispose (ref typeClass);
-			}
-
-			IJavaPeerable? result = null;
-
-			try {
-				result = (IJavaPeerable) CreateProxy (type, handle, transfer);
-				if (Runtime.IsGCUserPeer (result.PeerReference.Handle)) {
-					result.SetJniManagedPeerState (JniManagedPeerStates.Replaceable | JniManagedPeerStates.Activatable);
-				}
-			} catch (MissingMethodException e) {
-				var key_handle  = JNIEnv.IdentityHash (handle);
-				JNIEnv.DeleteRef (handle, transfer);
-				throw new NotSupportedException (FormattableString.Invariant (
-					$"Unable to activate instance of type {type} from native handle 0x{handle:x} (key_handle 0x{key_handle:x})."), e);
-			}
-			return result;
- 		}
-
-		static  readonly    Type[]  XAConstructorSignature  = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
-		static  readonly    Type[]  JIConstructorSignature  = new Type [] { typeof (JniObjectReference).MakeByRefType (), typeof (JniObjectReferenceOptions) };
-
-		internal static object CreateProxy (
-				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-				Type type,
-				IntPtr handle,
-				JniHandleOwnership transfer)
-		{
-			// Skip Activator.CreateInstance() as that requires public constructors,
-			// and we want to hide some constructors for sanity reasons.
-			var peer = GetUninitializedObject (type);
-			BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-			var c = type.GetConstructor (flags, null, XAConstructorSignature, null);
-			if (c != null) {
-				c.Invoke (peer, new object[] { handle, transfer });
-				return peer;
-			}
-			c = type.GetConstructor (flags, null, JIConstructorSignature, null);
-			if (c != null) {
-				JniObjectReference          r = new JniObjectReference (handle);
-				JniObjectReferenceOptions   o = JniObjectReferenceOptions.Copy;
-				c.Invoke (peer, new object [] { r, o });
-				JNIEnv.DeleteRef (handle, transfer);
-				return peer;
-			}
-			GC.SuppressFinalize (peer);
-			throw new MissingMethodException (
-					"No constructor found for " + type.FullName + "::.ctor(System.IntPtr, Android.Runtime.JniHandleOwnership)",
-					CreateJavaLocationException ());
-
-			static IJavaPeerable GetUninitializedObject (
-					[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-					Type type)
-			{
-				var v   = (IJavaPeerable) System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject (type);
-				v.SetJniManagedPeerState (JniManagedPeerStates.Replaceable | JniManagedPeerStates.Activatable);
-				return v;
-			}
+			return JNIEnvInit.TypeMap?.CreatePeer (handle, transfer, targetType);
 		}
 
 		public static void RegisterType (string java_class, Type t)
@@ -491,6 +306,17 @@ namespace Java.Interop {
 			}
 		}
 
+		/// <summary>
+		/// Gets the function pointer for the [UnmanagedCallersOnly] n_Activate_mm method.
+		/// This is used by TrimmableTypeMap to provide the function pointer for
+		/// framework JCWs that call TypeManager.Activate().
+		/// </summary>
+		internal static unsafe IntPtr GetActivateFunctionPointer ()
+		{
+			delegate* unmanaged<IntPtr, IntPtr, IntPtr, IntPtr, IntPtr, IntPtr, void> fn = &JavaTypeManager.n_Activate_mm;
+			return (IntPtr)fn;
+		}
+
 		[Register ("mono/android/TypeManager", DoNotGenerateAcw = true)]
 		internal class JavaTypeManager : Java.Lang.Object
 		{
@@ -501,7 +327,7 @@ namespace Java.Interop {
 			}
 
 			[UnmanagedCallersOnly]
-			static void n_Activate_mm (IntPtr jnienv, IntPtr jclass, IntPtr typename_ptr, IntPtr signature_ptr, IntPtr jobject, IntPtr parameters_ptr)
+			internal static void n_Activate_mm (IntPtr jnienv, IntPtr jclass, IntPtr typename_ptr, IntPtr signature_ptr, IntPtr jobject, IntPtr parameters_ptr)
 			{
 				// TODO: need a full wrapper code here, a'la JNINativeWrapper.CreateDelegate
 				try {
