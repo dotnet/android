@@ -9,6 +9,19 @@ The legacy type mapping system in .NET Android relies on reflection (`Type.GetTy
 
 The Trimmable Type Map replaces the legacy system with a compile-time code generation approach that is **AOT-safe and trimming-safe by design**.
 
+## Comparison: Legacy vs Trimmable Type Map
+
+| Aspect | Legacy Type Map | Trimmable Type Map |
+|--------|-----------------|-------------------|
+| **Type lookup** | Native typemap tables + `Type.GetType()` | `TypeMapping.Get<T>()` intrinsic |
+| **Instance creation** | `Activator.CreateInstance()` | Pre-generated `CreateInstance()` factory |
+| **Method dispatch** | Reflection to find methods | Pre-generated `GetFunctionPointer()` |
+| **Trimmer compatibility** | Requires custom ILLink steps | Works with standard trimmer |
+| **NativeAOT compatibility** | ❌ Not supported | ✅ Fully supported |
+| **Type preservation** | `MarkJavaObjects` ILLink step | `[TypeMap<T>]` attributes |
+| **Build output** | Native `.o` files with typemap data | `_Microsoft.Android.TypeMaps.dll` + LLVM IR |
+| **Runtime** | MonoVM only | CoreCLR + NativeAOT |
+
 ## Key Aspects
 
 ### Trimming-Safe by Design
@@ -25,29 +38,32 @@ The Trimmable Type Map replaces the legacy system with a compile-time code gener
 
 ### Build Time (GenerateTypeMapAssembly Task)
 
-1. **Scan assemblies** for Java peer types (`[Register]` attributes, interface implementations)
-2. **Generate `_Microsoft.Android.TypeMaps.dll`** containing:
-   - `TypeMap<T>` attributes for each Java-to-.NET type mapping
-   - `JavaPeerProxy` subclasses with `CreateInstance()` and `GetFunctionPointer()` methods
-3. **Generate Java files** (JCWs) for user types and interface implementors
-4. **Generate LLVM IR** for native-to-managed callbacks with per-type caching
+| Step | Legacy | Trimmable |
+|------|--------|-----------|
+| 1. Scan assemblies | `GenerateJavaStubs` task | `GenerateTypeMapAssembly` task |
+| 2. Generate type maps | Native typemap tables (`.o` files) | `[TypeMap<T>]` attributes in IL |
+| 3. Generate activation | Relies on `Activator.CreateInstance` | `JavaPeerProxy.CreateInstance()` methods |
+| 4. Generate JCWs | `GenerateJavaStubs` task | Integrated in `GenerateTypeMapAssembly` |
+| 5. Generate callbacks | Marshal methods in native code | LLVM IR with managed `GetFunctionPointer` |
 
 ### Runtime
 
-1. Java calls a native method (e.g., `n_onCreate`)
-2. LLVM-generated stub checks cached function pointer, calls `GetFunctionPointer` if needed
-3. `TrimmableTypeMap` looks up type via `TypeMapping.Get<T>(jniName)`
-4. Returns cached `JavaPeerProxy` which provides the function pointer or creates instances
+| Step | Legacy | Trimmable |
+|------|--------|-----------|
+| Java calls native | Same | Same |
+| Lookup type | Native typemap → `Type.GetType()` | `TypeMapping.Get<T>(jniName)` |
+| Create instance | `Activator.CreateInstance()` | `JavaPeerProxy.CreateInstance()` |
+| Get callback | Reflection-based lookup | `JavaPeerProxy.GetFunctionPointer()` |
 
 ## Expected Performance Characteristics
 
-| Aspect | Expectation | Status |
-|--------|-------------|--------|
-| **Startup time** | Similar to legacy (type map loading is fast) | Needs measurement |
-| **First method call** | Slightly slower (proxy lookup + cache) | ~1-2ms overhead |
-| **Subsequent calls** | Native-level caching, same as legacy | ✓ Verified |
-| **APK size** | Smaller with R8 trimming (~87% DEX reduction observed) | ✓ Verified |
-| **Memory** | Slightly higher (proxy objects cached) | Needs measurement |
+| Aspect | Legacy | Trimmable | Status |
+|--------|--------|-----------|--------|
+| **Startup time** | Baseline | Similar (needs measurement) | ⚠️ |
+| **First method call** | Fast (native cache) | Slightly slower (+1-2ms) | ✓ |
+| **Subsequent calls** | Native cache | Native cache (same) | ✓ |
+| **APK size (DEX)** | Baseline | ~87% smaller with R8 | ✓ |
+| **Memory** | Lower | Slightly higher (proxy cache) | ⚠️ |
 
 ## Open Questions
 
@@ -68,6 +84,7 @@ The Trimmable Type Map replaces the legacy system with a compile-time code gener
 ## Files
 
 - `src/Mono.Android/Java.Interop/TrimmableTypeMap.cs` - Runtime type map implementation
-- `src/Mono.Android/Java.Interop/ITypeMap.cs` - Abstraction interface
+- `src/Mono.Android/Java.Interop/LlvmIrTypeMap.cs` - Legacy type map (for comparison)
+- `src/Mono.Android/Java.Interop/ITypeMap.cs` - Abstraction interface (shared by both)
 - `src/Xamarin.Android.Build.Tasks/Tasks/GenerateTypeMapAssembly.cs` - Build-time generator
 - `docs/trimmable-typemap-spec.md` - Full specification
