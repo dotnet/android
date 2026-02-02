@@ -11,44 +11,15 @@ namespace Java.Interop
 {
 	/// <summary>
 	/// Provides type mappings using LLVM IR generated type maps for Mono runtime.
-	/// Falls back to native type lookup for managed-to-Java mappings.
 	/// </summary>
 	[RequiresUnreferencedCode ("Uses runtime code generation for type mapping.")]
 	class LlvmIrTypeMap : ITypeMap
 	{
 		[ThreadStatic]
 		static byte[]? mvid_bytes;
+
 		static readonly Type[] XAConstructorSignature = [typeof (IntPtr), typeof (JniHandleOwnership)];
 		static readonly Type[] JIConstructorSignature = [typeof (JniObjectReference).MakeByRefType (), typeof (JniObjectReferenceOptions)];
-
-		static Type monovm_typemap_java_to_managed (string java_type_name)
-		{
-			return TypeManager.monodroid_typemap_java_to_managed (java_type_name);
-		}
-
-		static Type? clr_typemap_java_to_managed (string java_type_name)
-		{
-			bool result = RuntimeNativeMethods.clr_typemap_java_to_managed (java_type_name, out IntPtr managedAssemblyNamePointer, out uint managedTypeTokenId);
-			if (!result || managedAssemblyNamePointer == IntPtr.Zero) {
-				return null;
-			}
-
-			string? managedAssemblyName = Marshal.PtrToStringAnsi (managedAssemblyNamePointer);
-			Assembly assembly = Assembly.Load (managedAssemblyName!);
-			Type? ret = null;
-			foreach (Module module in assembly.Modules) {
-				ret = module.ResolveType ((int)managedTypeTokenId);
-				if (ret != null) {
-					break;
-				}
-			}
-
-			if (Logger.LogAssembly) {
-				Logger.Log (LogLevel.Info, "monodroid", $"Loaded type: {ret}");
-			}
-
-			return ret;
-		}
 
 		/// <inheritdoc/>
 		public Type? TryGetExactTypeMapping (string class_name)
@@ -58,24 +29,39 @@ namespace Java.Interop
 					return type;
 				}
 
-				if (RuntimeFeature.IsMonoRuntime) {
-					type = monovm_typemap_java_to_managed (class_name);
-				} else if (RuntimeFeature.IsCoreClrRuntime) {
-					type = clr_typemap_java_to_managed (class_name);
-				} else {
-					throw new NotSupportedException ("Internal error: unknown runtime not supported");
-				}
-
+				type = LookupTypeFromNative (class_name);
 				if (type != null) {
 					TypeManagerMapDictionaries.JniToManaged.Add (class_name, type);
-					return type;
 				}
 
-				// Miss message is logged in the native runtime
-				if (Logger.LogAssembly)
-					JNIEnv.LogTypemapTrace (new System.Diagnostics.StackTrace (true));
+				return type;
+			}
+		}
+
+		static Type? LookupTypeFromNative (string class_name)
+		{
+			if (RuntimeFeature.IsMonoRuntime) {
+				return TypeManager.monodroid_typemap_java_to_managed (class_name);
+			}
+
+			if (RuntimeFeature.IsCoreClrRuntime) {
+				bool result = RuntimeNativeMethods.clr_typemap_java_to_managed (class_name, out IntPtr managedAssemblyNamePointer, out uint managedTypeTokenId);
+				if (!result || managedAssemblyNamePointer == IntPtr.Zero) {
+					return null;
+				}
+
+				string? managedAssemblyName = Marshal.PtrToStringAnsi (managedAssemblyNamePointer);
+				Assembly assembly = Assembly.Load (managedAssemblyName!);
+				foreach (Module module in assembly.Modules) {
+					var ret = module.ResolveType ((int) managedTypeTokenId);
+					if (ret != null) {
+						return ret;
+					}
+				}
 				return null;
 			}
+
+			throw new NotSupportedException ("Unknown runtime");
 		}
 
 		/// <inheritdoc/>
@@ -92,24 +78,17 @@ namespace Java.Interop
 		}
 
 		static unsafe IntPtr monovm_typemap_managed_to_java (Type type, byte* mvidptr)
-		{
-			return JNIEnv.monovm_typemap_managed_to_java (type, mvidptr);
-		}
+			=> JNIEnv.monovm_typemap_managed_to_java (type, mvidptr);
 
 		/// <inheritdoc/>
 		public unsafe bool TryGetJniNameForType (Type type, [NotNullWhen (true)] out string? jniName)
 		{
-			if (mvid_bytes == null)
-				mvid_bytes = new byte[16];
+			mvid_bytes ??= new byte[16];
 
 			var mvid = new Span<byte> (mvid_bytes);
-			byte[]? mvid_data = null;
-			if (!type.Module.ModuleVersionId.TryWriteBytes (mvid)) {
-				RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"Failed to obtain module MVID using the fast method, falling back to the slow one");
-				mvid_data = type.Module.ModuleVersionId.ToByteArray ();
-			} else {
-				mvid_data = mvid_bytes;
-			}
+			byte[]? mvid_data = type.Module.ModuleVersionId.TryWriteBytes (mvid)
+				? mvid_bytes
+				: type.Module.ModuleVersionId.ToByteArray ();
 
 			IntPtr ret;
 			fixed (byte* mvidptr = mvid_data) {
@@ -118,21 +97,11 @@ namespace Java.Interop
 				} else if (RuntimeFeature.IsCoreClrRuntime) {
 					ret = RuntimeNativeMethods.clr_typemap_managed_to_java (type.FullName, (IntPtr) mvidptr);
 				} else {
-					throw new NotSupportedException ("Internal error: unknown runtime not supported");
+					throw new NotSupportedException ("Unknown runtime");
 				}
 			}
 
-			if (ret == IntPtr.Zero) {
-				if (Logger.LogAssembly) {
-					RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"typemap: failed to map managed type to Java type: {type.AssemblyQualifiedName} (Module ID: {type.Module.ModuleVersionId}; Type token: {type.MetadataToken})");
-					JNIEnv.LogTypemapTrace (new System.Diagnostics.StackTrace (true));
-				}
-
-				jniName = null;
-				return false;
-			}
-
-			jniName = Marshal.PtrToStringAnsi (ret);
+			jniName = ret != IntPtr.Zero ? Marshal.PtrToStringAnsi (ret) : null;
 			return jniName != null;
 		}
 
@@ -146,27 +115,18 @@ namespace Java.Interop
 		}
 
 		/// <inheritdoc/>
-		public JavaPeerProxy? GetProxyForManagedType (Type managedType)
-		{
-			// LlvmIrTypeMap uses reflection-based activation, not proxy types
-			return null;
-		}
+		public JavaPeerProxy? GetProxyForManagedType (Type managedType) => null;
 
 		/// <inheritdoc/>
 		public bool TryGetInvokerType (Type type, [NotNullWhen (true)] out Type? invokerType)
 		{
-			// For LlvmIrTypeMap, we look up the invoker type from the [Register] attribute's Invoker property
 			invokerType = JavaObjectExtensions.GetInvokerType (type);
 			return invokerType != null;
 		}
 
 		/// <inheritdoc/>
 		public IntPtr GetFunctionPointer (ReadOnlySpan<char> className, int methodIndex)
-		{
-			// LlvmIrTypeMap doesn't use the attribute-based GetFunctionPointer mechanism.
-			// This is only implemented in TypeMapAttributeTypeMap for CoreCLR.
-			throw new NotSupportedException ("LlvmIrTypeMap does not support this GetFunctionPointer shape.");
-		}
+			=> throw new NotSupportedException ("LlvmIrTypeMap does not support GetFunctionPointer.");
 
 		/// <inheritdoc/>
 		[RequiresUnreferencedCode ("Uses Array.CreateInstance which is not AOT-safe.")]
@@ -176,7 +136,6 @@ namespace Java.Interop
 				throw new ArgumentOutOfRangeException (nameof (rank), rank, "Rank must be 1 or 2");
 			}
 
-			// Unwrap nested array types
 			while (elementType.IsArray) {
 				elementType = elementType.GetElementType ()!;
 				rank++;
@@ -186,7 +145,6 @@ namespace Java.Interop
 				throw new ArgumentOutOfRangeException (nameof (rank), rank, "Rank must be 1 or 2");
 			}
 
-			// Legacy MonoVM path - reflection is OK here
 			var arrayType = rank == 1 ? elementType : elementType.MakeArrayType ();
 			return Array.CreateInstance (arrayType, length);
 		}
