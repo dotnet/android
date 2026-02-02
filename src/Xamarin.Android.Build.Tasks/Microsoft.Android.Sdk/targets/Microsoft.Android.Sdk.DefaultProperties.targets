@@ -43,8 +43,9 @@
     <!-- jar2xml is not supported -->
     <AndroidClassParser>class-parse</AndroidClassParser>
     <AndroidCodegenTarget Condition=" '$(AndroidCodegenTarget)' == '' ">XAJavaInterop1</AndroidCodegenTarget>
-    <_AndroidJcwCodegenTarget Condition=" '$(_AndroidJcwCodegenTarget)' == '' and '$(_AndroidRuntime)' != 'NativeAOT' ">XAJavaInterop1</_AndroidJcwCodegenTarget>
-    <_AndroidTypeMapImplementation Condition=" '$(_AndroidTypeMapImplementation)' == '' and '$(_AndroidRuntime)' != 'NativeAOT' ">llvm-ir</_AndroidTypeMapImplementation>
+    <!-- CoreCLR and NativeAOT use JavaInterop1 - they generate all JCWs at build time, no mono.android.jar -->
+    <_AndroidJcwCodegenTarget Condition=" '$(_AndroidJcwCodegenTarget)' == '' and '$(_AndroidRuntime)' == 'CoreCLR' ">JavaInterop1</_AndroidJcwCodegenTarget>
+    <_AndroidJcwCodegenTarget Condition=" '$(_AndroidJcwCodegenTarget)' == '' and '$(_AndroidRuntime)' != 'NativeAOT' and '$(_AndroidRuntime)' != 'CoreCLR' ">XAJavaInterop1</_AndroidJcwCodegenTarget>
     <AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods Condition=" '$(AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods)' == '' ">true</AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods>
     <AndroidBoundInterfacesContainTypes Condition=" '$(AndroidBoundInterfacesContainTypes)' == '' ">true</AndroidBoundInterfacesContainTypes>
     <AndroidBoundInterfacesContainConstants Condition=" '$(AndroidBoundInterfacesContainConstants)' == '' ">true</AndroidBoundInterfacesContainConstants>
