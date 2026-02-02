@@ -51,7 +51,21 @@ namespace Java.Interop
 				}
 
 				string? managedAssemblyName = Marshal.PtrToStringAnsi (managedAssemblyNamePointer);
-				Assembly assembly = Assembly.Load (managedAssemblyName!);
+				if (string.IsNullOrEmpty (managedAssemblyName)) {
+					return null;
+				}
+
+				Assembly? assembly;
+				try {
+					assembly = Assembly.Load (managedAssemblyName);
+				} catch (Exception) {
+					return null;
+				}
+
+				if (assembly == null) {
+					return null;
+				}
+
 				foreach (Module module in assembly.Modules) {
 					var ret = module.ResolveType ((int) managedTypeTokenId);
 					if (ret != null) {
@@ -132,8 +146,8 @@ namespace Java.Interop
 		[RequiresUnreferencedCode ("Uses Array.CreateInstance which is not AOT-safe.")]
 		public Array CreateArray (Type elementType, int length, int rank)
 		{
-			if (rank < 1 || rank > 2) {
-				throw new ArgumentOutOfRangeException (nameof (rank), rank, "Rank must be 1 or 2");
+			if (rank < 1 || rank > 3) {
+				throw new ArgumentOutOfRangeException (nameof (rank), rank, "Rank must be 1, 2, or 3");
 			}
 
 			while (elementType.IsArray) {
@@ -141,8 +155,8 @@ namespace Java.Interop
 				rank++;
 			}
 
-			if (rank > 2) {
-				throw new ArgumentOutOfRangeException (nameof (rank), rank, "Rank must be 1 or 2");
+			if (rank > 3) {
+				throw new ArgumentOutOfRangeException (nameof (rank), rank, "Rank must be 1, 2, or 3");
 			}
 
 			var arrayType = rank == 1 ? elementType : elementType.MakeArrayType ();
@@ -160,7 +174,6 @@ namespace Java.Interop
 				transfer,
 				targetType,
 				typeMap: this,
-				typeResolver: (class_ptr, class_name) => JavaHierarchyWalker.WalkHierarchy (class_ptr, class_name, this),
 				instanceCreator: CreateProxy,
 				resolveInvokerTypes: true);
 		}
