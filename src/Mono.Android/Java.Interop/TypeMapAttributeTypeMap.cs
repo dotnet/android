@@ -170,6 +170,20 @@ namespace Android.Runtime
 		}
 
 		/// <inheritdoc/>
+		public bool TryGetInvokerType (Type type, [NotNullWhen (true)] out Type? invokerType)
+		{
+			// Look up the proxy for the interface/abstract class
+			var proxy = GetProxyForManagedType (type);
+			if (proxy?.InvokerType != null) {
+				invokerType = proxy.InvokerType;
+				return true;
+			}
+
+			invokerType = null;
+			return false;
+		}
+
+		/// <inheritdoc/>
 		public JavaPeerProxy? GetProxyForManagedType (Type managedType)
 		{
 			// First check if the type itself has the proxy attribute
@@ -446,14 +460,14 @@ namespace Android.Runtime
 		/// </summary>
 		/// <param name="elementType">The element type of the array. May be T or T[] for nested arrays.</param>
 		/// <param name="length">The length of the array.</param>
-		/// <param name="rank">The array rank: 1 for T[], 2 for T[][]. Default is 1.</param>
+		/// <param name="rank">The array rank: 1 for T[], 2 for T[][], 3 for T[][][]. Default is 1.</param>
 		/// <returns>A new array of the specified type and length.</returns>
-		/// <exception cref="ArgumentOutOfRangeException">Thrown if rank is not 1 or 2.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Thrown if rank is not 1, 2, or 3.</exception>
 		/// <exception cref="InvalidOperationException">Thrown if no proxy is registered for the element type.</exception>
 		public Array CreateArray (Type elementType, int length, int rank)
 		{
-			if (rank < 1 || rank > 2) {
-				throw new ArgumentOutOfRangeException (nameof (rank), rank, "Rank must be 1 or 2");
+			if (rank < 1 || rank > 3) {
+				throw new ArgumentOutOfRangeException (nameof (rank), rank, "Rank must be 1, 2, or 3");
 			}
 
 			// Handle nested arrays: if elementType is T[], unwrap and bump rank
@@ -475,13 +489,14 @@ namespace Android.Runtime
 				throw new InvalidOperationException ($"No proxy registered for {jniName}");
 			}
 
-			// 3. Get cached proxy instance and call CreateArray (virtual call, no reflection)
+			// 3. Get cached proxy instance and use factory to create array
 			var proxy = GetProxyForType (proxyType);
 			if (proxy == null) {
 				throw new InvalidOperationException ($"No proxy instance for {proxyType.FullName}");
 			}
 
-			return proxy.CreateArray (length, rank);
+			var factory = proxy.GetDerivedTypeFactory ();
+			return factory.CreateArray (length, rank);
 		}
 	}
 }

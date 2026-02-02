@@ -277,6 +277,14 @@ internal class JavaPeerInfo
 	public List<string> ImplementedJavaInterfaces { get; set; } = new ();
 
 	/// <summary>
+	/// Activation constructors - constructors that don't have [Register] on them directly,
+	/// but should generate Java constructors because they're compatible with base class
+	/// registered constructors. These constructors call the activation pattern.
+	/// The JniSignature contains the Java-compatible signature.
+	/// </summary>
+	public List<ActivationConstructorInfo> ActivationConstructors { get; } = new ();
+
+	/// <summary>
 	/// Partitions MarshalMethods into ConstructorMarshalMethods and RegularMarshalMethods.
 	/// Call this after populating MarshalMethods.
 	/// </summary>
@@ -323,6 +331,25 @@ internal class MarshalMethodInfo
 	/// Assembly containing the callback type.
 	/// </summary>
 	public string? CallbackAssemblyName { get; set; }
+}
+
+/// <summary>
+/// Information about an activation constructor - a constructor that doesn't have [Register]
+/// on it directly, but should generate a Java constructor because its signature is compatible
+/// with a base class registered constructor.
+/// </summary>
+internal class ActivationConstructorInfo
+{
+	/// <summary>
+	/// JNI signature of the constructor (e.g., "()V" for no-arg ctor).
+	/// </summary>
+	public string JniSignature { get; set; } = "";
+
+	/// <summary>
+	/// The base type's JNI signature that this constructor matches.
+	/// Used to call super() with the correct arguments.
+	/// </summary>
+	public string BaseSuperSignature { get; set; } = "";
 }
 
 /// <summary>
@@ -684,6 +711,245 @@ internal class JavaPeerScanner
 				}
 			}
 		}
+
+		// Second pass: Collect activation constructors for types that don't have [Register("<init>")] directly
+		// but should generate Java constructors because their constructors are compatible with base class
+		// registered constructors.
+		CollectActivationConstructors (results, typesByName);
+	}
+
+	/// <summary>
+	/// Collects activation constructors for types that don't have [Register("<init>")] on their constructors
+	/// but should still generate Java constructors because they're compatible with base class registered constructors.
+	/// This mimics the legacy CecilImporter.AddConstructors() algorithm.
+	/// </summary>
+	void CollectActivationConstructors (List<JavaPeerInfo> peers, Dictionary<string, JavaPeerInfo> typesByName)
+	{
+		foreach (var peer in peers) {
+			// Skip types that already have constructor marshal methods (they have [Register("<init>")])
+			if (peer.ConstructorMarshalMethods.Count > 0)
+				continue;
+			// Skip interfaces
+			if (peer.IsInterface)
+				continue;
+			// Skip DoNotGenerateAcw types (MCW types don't need Java constructors)
+			if (peer.DoNotGenerateAcw)
+				continue;
+			// Skip abstract types - they can't be instantiated from Java anyway
+			if (peer.IsAbstract)
+				continue;
+			// Need a base type to check
+			if (string.IsNullOrEmpty (peer.BaseManagedTypeName))
+				continue;
+
+			// Get the current type's constructors
+			var currentTypeCtors = GetTypeConstructors (peer.AssemblyPath, peer.ManagedTypeName);
+			if (currentTypeCtors.Count == 0) {
+				continue;
+			}
+
+			// Walk up the hierarchy to find base class registered constructors
+			var baseCtors = FindBaseClassRegisteredConstructors (peer.BaseManagedTypeName, peer.BaseAssemblyName, typesByName);
+			if (baseCtors.Count == 0) {
+				continue;
+			}
+
+			// Match current type constructors with base class constructors
+			foreach (var ctor in currentTypeCtors) {
+				// Check if this ctor is compatible with any base ctor
+				// For now, we use simple signature matching - if the JNI signature matches, it's compatible
+				// Legacy code also checks parameter compatibility, but signature matching should be sufficient
+				var matchingBaseCtor = baseCtors.FirstOrDefault (bc => bc == ctor.JniSignature);
+				if (matchingBaseCtor != null) {
+					peer.ActivationConstructors.Add (new ActivationConstructorInfo {
+						JniSignature = ctor.JniSignature,
+						BaseSuperSignature = matchingBaseCtor,
+					});
+				} else if (baseCtors.Any (bc => bc == "()V")) {
+					// If the base has a no-arg constructor, any ctor can use it via super()
+					peer.ActivationConstructors.Add (new ActivationConstructorInfo {
+						JniSignature = ctor.JniSignature,
+						BaseSuperSignature = "()V",
+					});
+				}
+			}
+		}
+	}
+
+	/// <summary>
+	/// Gets constructors from a type in a cached assembly.
+	/// Returns list of (JniSignature) tuples.
+	/// </summary>
+	List<(string JniSignature, string[] ParameterTypes)> GetTypeConstructors (string assemblyPath, string typeName)
+	{
+		var result = new List<(string JniSignature, string[] ParameterTypes)> ();
+		
+		string fileName = Path.GetFileNameWithoutExtension (assemblyPath);
+		var reader = GetMetadataReader (fileName);
+		if (reader == null)
+			return result;
+
+		// Find the type
+		var typeDef = FindTypeDefinition (reader, typeName);
+		if (typeDef == null)
+			return result;
+
+		var sigProvider = new SignatureTypeProvider (reader);
+
+		foreach (var methodHandle in typeDef.Value.GetMethods ()) {
+			var method = reader.GetMethodDefinition (methodHandle);
+			string methodName = reader.GetString (method.Name);
+			if (methodName != ".ctor")
+				continue;
+			if (method.Attributes.HasFlag (System.Reflection.MethodAttributes.Static))
+				continue;
+
+			var signature = method.DecodeSignature (sigProvider, genericContext: null);
+			var paramTypes = signature.ParameterTypes.ToArray ();
+
+			// Build JNI signature
+			string jniSig = BuildJniMethodSignature (paramTypes, "System.Void");
+			result.Add ((jniSig, paramTypes));
+		}
+
+		return result;
+	}
+
+	/// <summary>
+	/// Finds a TypeDefinition in the reader by full managed type name.
+	/// </summary>
+	TypeDefinition? FindTypeDefinition (MetadataReader reader, string typeName)
+	{
+		// Handle nested types (MyApp.MyType+NestedType)
+		string[] parts = typeName.Split ('+');
+		string topLevelName = parts[0];
+
+		// Parse namespace and name
+		int lastDot = topLevelName.LastIndexOf ('.');
+		string ns = lastDot > 0 ? topLevelName.Substring (0, lastDot) : "";
+		string name = lastDot > 0 ? topLevelName.Substring (lastDot + 1) : topLevelName;
+
+		foreach (var handle in reader.TypeDefinitions) {
+			var typeDef = reader.GetTypeDefinition (handle);
+			if (typeDef.IsNested)
+				continue;
+
+			string typeNs = typeDef.Namespace.IsNil ? "" : reader.GetString (typeDef.Namespace);
+			string typDefName = reader.GetString (typeDef.Name);
+
+			if (typeNs == ns && typDefName == name) {
+				// Found the top-level type
+				if (parts.Length == 1)
+					return typeDef;
+
+				// Navigate to nested types
+				var current = typeDef;
+				for (int i = 1; i < parts.Length; i++) {
+					TypeDefinition? found = null;
+					foreach (var nestedHandle in current.GetNestedTypes ()) {
+						var nested = reader.GetTypeDefinition (nestedHandle);
+						if (reader.GetString (nested.Name) == parts[i]) {
+							found = nested;
+							break;
+						}
+					}
+					if (found == null)
+						return null;
+					current = found.Value;
+				}
+				return current;
+			}
+		}
+		return null;
+	}
+
+	/// <summary>
+	/// Walks up the type hierarchy to find base class constructors with [Register("<init>")].
+	/// Returns list of JNI signatures.
+	/// </summary>
+	List<string> FindBaseClassRegisteredConstructors (string? baseTypeName, string? baseAssemblyName, Dictionary<string, JavaPeerInfo> typesByName)
+	{
+		var signatures = new List<string> ();
+		string? currentType = baseTypeName;
+		string? currentAssembly = baseAssemblyName;
+
+		while (currentType != null) {
+			// First check if the type is in our scanned peers
+			if (typesByName.TryGetValue (currentType, out var basePeer)) {
+				// Get [Register("<init>")] constructors from this peer
+				foreach (var ctor in basePeer.ConstructorMarshalMethods) {
+					if (!signatures.Contains (ctor.JniSignature)) {
+						signatures.Add (ctor.JniSignature);
+					}
+				}
+				// Also check activation constructors from this peer (in case it also inherited them)
+				foreach (var actCtor in basePeer.ActivationConstructors) {
+					if (!signatures.Contains (actCtor.JniSignature)) {
+						signatures.Add (actCtor.JniSignature);
+					}
+				}
+
+				// Continue up the hierarchy if this base doesn't have DoNotGenerateAcw
+				if (!basePeer.DoNotGenerateAcw && !string.IsNullOrEmpty (basePeer.BaseManagedTypeName)) {
+					currentType = basePeer.BaseManagedTypeName;
+					currentAssembly = basePeer.BaseAssemblyName;
+					continue;
+				}
+			}
+
+			// Type not in our peers or has DoNotGenerateAcw - try to scan it from assembly
+			var ctorsFromAssembly = GetRegisteredConstructorsFromAssembly (currentType, currentAssembly);
+			foreach (var sig in ctorsFromAssembly) {
+				if (!signatures.Contains (sig)) {
+					signatures.Add (sig);
+				}
+			}
+
+			// If we found any constructors or couldn't resolve the type, stop
+			break;
+		}
+
+		return signatures;
+	}
+
+	/// <summary>
+	/// Gets [Register("<init>")] constructor signatures from a type in an assembly.
+	/// </summary>
+	List<string> GetRegisteredConstructorsFromAssembly (string typeName, string? assemblyName)
+	{
+		var result = new List<string> ();
+
+		if (string.IsNullOrEmpty (assemblyName))
+			return result;
+
+		var reader = GetMetadataReader (assemblyName!);
+		if (reader == null)
+			return result;
+
+		var typeDef = FindTypeDefinition (reader, typeName);
+		if (typeDef == null)
+			return result;
+
+		foreach (var methodHandle in typeDef.Value.GetMethods ()) {
+			var method = reader.GetMethodDefinition (methodHandle);
+			string methodName = reader.GetString (method.Name);
+			if (methodName != ".ctor")
+				continue;
+			if (method.Attributes.HasFlag (System.Reflection.MethodAttributes.Static))
+				continue;
+
+			// Check for [Register("<init>", ...)] or [Register(".ctor", ...)]
+			var registerInfo = GetMethodRegisterAttribute (reader, method);
+			if (registerInfo != null) {
+				var (jniName, jniSignature, _) = registerInfo.Value;
+				// Accept both "<init>" (JNI convention) and ".ctor" (C# convention)
+				if (jniName == "<init>" || jniName == ".ctor") {
+					result.Add (jniSignature);
+				}
+			}
+		}
+
+		return result;
 	}
 
 	List<JavaPeerInfo> ScanAssembly (string assemblyPath)
@@ -2334,6 +2600,8 @@ internal class TypeMapAssemblyGenerator
 	TypeReferenceHandle _androidRuntimeInternalTypeRef;
 	TypeReferenceHandle _notSupportedExceptionTypeRef;
 	TypeReferenceHandle _runtimeHelpersTypeRef;
+	TypeReferenceHandle _derivedTypeFactoryTypeRef;
+	TypeReferenceHandle _derivedTypeFactoryGenericTypeRef;
 
 	// Well-known member references
 	MemberReferenceHandle _javaPeerProxyCtorRef;
@@ -2362,7 +2630,7 @@ internal class TypeMapAssemblyGenerator
 	BlobHandle _voidMethodSig;
 	BlobHandle _getFunctionPointerSig;
 	BlobHandle _createInstanceSig;
-	BlobHandle _createArraySig;
+	BlobHandle _getDerivedTypeFactorySig;
 
 	// Tracking for type/method definition order
 	int _nextFieldDefRowId = 1;
@@ -2704,11 +2972,12 @@ internal class TypeMapAssemblyGenerator
 
 		using var writer = new StreamWriter (llFilePath);
 
+		// NOTE: No target triple or datalayout - these are specified at compile time via -mtriple
+		// This allows the same .ll files to be compiled for all target architectures (arm64, x86_64, arm, x86)
 		writer.Write ("""
 ; ModuleID = 'marshal_methods_init.ll'
 source_filename = "marshal_methods_init.ll"
-target datalayout = "e-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128"
-target triple = "aarch64-unknown-linux-android21"
+; Architecture-neutral IR - compile with: llc -mtriple=<target> ...
 
 ; Global typemap_get_function_pointer callback - initialized to null, set at runtime
 @typemap_get_function_pointer = protected local_unnamed_addr global ptr null, align 8
@@ -2735,21 +3004,21 @@ declare void @abort() noreturn
 
 		// Use pre-partitioned lists for performance
 		var constructors = peer.ConstructorMarshalMethods;
+		var activationConstructors = peer.ActivationConstructors;
 		var regularMethods = peer.RegularMarshalMethods;
 
-		// Only generate activation methods for constructors we know about.
-		// Don't generate a default nc_activate_0 - it may not be valid if the base class
-		// doesn't have a no-arg constructor.
-		int numActivateMethods = constructors.Count;
+		// Total activation methods: [Register("<init>")] constructors + inherited activation constructors
+		int numActivateMethods = constructors.Count + activationConstructors.Count;
 
 		// Total function pointers: regular methods + activation methods
 		int totalFnPointers = regularMethods.Count + numActivateMethods;
 
+		// NOTE: No target triple or datalayout - these are specified at compile time via -mtriple
+		// This allows the same .ll files to be compiled for all target architectures (arm64, x86_64, arm, x86)
 		writer.Write ($"""""
 ; ModuleID = 'marshal_methods_{sanitizedName}.ll'
 source_filename = "marshal_methods_{sanitizedName}.ll"
-target datalayout = "e-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128"
-target triple = "aarch64-unknown-linux-android21"
+; Architecture-neutral IR - compile with: llc -mtriple=<target> ...
 
 ; External typemap_get_function_pointer callback
 @typemap_get_function_pointer = external local_unnamed_addr global ptr, align 8
@@ -2833,12 +3102,11 @@ call:
 		writer.WriteLine ("; Native constructor activation stubs");
 
 		int activateBaseIndex = regularMethods.Count;
+		int ctorIdx = 0;
 
-		// Only generate activation methods for constructors we know about.
-		// Don't generate a default nc_activate_0 - types without exported constructors
-		// may only be usable for callbacks (via GetObject<T>).
-		for (int ctorIdx = 0; ctorIdx < constructors.Count; ctorIdx++) {
-			var ctor = constructors [ctorIdx];
+		// First, generate activation methods for [Register("<init>")] constructors
+		for (int i = 0; i < constructors.Count; i++, ctorIdx++) {
+			var ctor = constructors [i];
 			string nativeSymbol = MakeJniActivateSymbol (peer.JavaName, $"nc_activate_{ctorIdx}", ctor.JniSignature);
 			string llvmParams = JniSignatureToLlvmParams (ctor.JniSignature);
 			string llvmArgs = JniSignatureToLlvmArgs (ctor.JniSignature);
@@ -2847,6 +3115,37 @@ call:
 			writer.Write ($$"""
 
 ; nc_activate_{{ctorIdx}} - constructor activation for {{ctor.JniSignature}}
+define default void @{{nativeSymbol}}(ptr %env, ptr %obj{{llvmParams}}) #0 {
+entry:
+  %cached_ptr = load ptr, ptr @fn_ptr_{{fnPtrIndex}}, align 8
+  %is_null = icmp eq ptr %cached_ptr, null
+  br i1 %is_null, label %resolve, label %call
+
+resolve:
+  %get_fn = load ptr, ptr @typemap_get_function_pointer, align 8
+  call void %get_fn(ptr @class_name, i32 {{classNameLength}}, i32 {{fnPtrIndex}}, ptr @fn_ptr_{{fnPtrIndex}})
+  %resolved_ptr = load ptr, ptr @fn_ptr_{{fnPtrIndex}}, align 8
+  br label %call
+
+call:
+  %fn = phi ptr [ %cached_ptr, %entry ], [ %resolved_ptr, %resolve ]
+  tail call void %fn(ptr %env, ptr %obj{{llvmArgs}})
+  ret void
+}
+""");
+		}
+
+		// Second, generate activation methods for inherited activation constructors
+		for (int i = 0; i < activationConstructors.Count; i++, ctorIdx++) {
+			var actCtor = activationConstructors [i];
+			string nativeSymbol = MakeJniActivateSymbol (peer.JavaName, $"nc_activate_{ctorIdx}", actCtor.JniSignature);
+			string llvmParams = JniSignatureToLlvmParams (actCtor.JniSignature);
+			string llvmArgs = JniSignatureToLlvmArgs (actCtor.JniSignature);
+			int fnPtrIndex = activateBaseIndex + ctorIdx;
+
+			writer.Write ($$"""
+
+; nc_activate_{{ctorIdx}} - inherited activation ctor for {{actCtor.JniSignature}}
 define default void @{{nativeSymbol}}(ptr %env, ptr %obj{{llvmParams}}) #0 {
 entry:
   %cached_ptr = load ptr, ptr @fn_ptr_{{fnPtrIndex}}, align 8
@@ -3148,6 +3447,7 @@ attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memor
 
 		// Use pre-partitioned lists for performance
 		var constructors = peer.ConstructorMarshalMethods;
+		var activationCtors = peer.ActivationConstructors;
 		var regularMethods = peer.RegularMarshalMethods;
 
 		// Build constructor declarations
@@ -3155,30 +3455,39 @@ attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memor
 		var nativeCtorDeclarations = new StringBuilder ();
 		int ctorIndex = 0;
 
-		// If no constructors with marshal methods, check if we can generate a default constructor.
-		// We can only do this if the base class has a no-arg constructor.
-		// For now, skip default constructor generation - types without exported constructors
-		// may still work if they're only used for callbacks (overriding virtual methods).
-		if (constructors.Count == 0) {
-			// Don't generate a default no-arg constructor - it may not be valid
-			// if the base class doesn't have a no-arg constructor.
-			// These types are still usable for callbacks via GetObject<T>().
-		} else {
-			// Generate each constructor
-			foreach (var ctor in constructors) {
-				string parameters = JniSignatureToJavaParameters (ctor.JniSignature);
-				string parameterNames = JniSignatureToJavaParameterNames (ctor.JniSignature);
+		// First, generate constructors from [Register("<init>")] (marshal methods)
+		foreach (var ctor in constructors) {
+			string parameters = JniSignatureToJavaParameters (ctor.JniSignature);
+			string parameterNames = JniSignatureToJavaParameterNames (ctor.JniSignature);
 
-				constructorDeclarations.AppendLine ($$"""
+			constructorDeclarations.AppendLine ($$"""
     public {{className}} ({{parameters}})
     {
         super ({{parameterNames}});
         if (getClass () == {{className}}.class) { nc_activate_{{ctorIndex}} ({{parameterNames}}); }
     }
 """);
-				nativeCtorDeclarations.AppendLine ($"    private native void nc_activate_{ctorIndex} ({parameters});");
-				ctorIndex++;
-			}
+			nativeCtorDeclarations.AppendLine ($"    private native void nc_activate_{ctorIndex} ({parameters});");
+			ctorIndex++;
+		}
+
+		// Second, generate activation constructors (inherited from base class)
+		// These don't have [Register] directly but match base class registered ctors
+		// We also use native calls for these - they will call TypeManager.Activate on the managed side
+		foreach (var actCtor in activationCtors) {
+			string parameters = JniSignatureToJavaParameters (actCtor.JniSignature);
+			string parameterNames = JniSignatureToJavaParameterNames (actCtor.JniSignature);
+			string superParams = JniSignatureToJavaParameterNames (actCtor.BaseSuperSignature);
+
+			constructorDeclarations.AppendLine ($$"""
+    public {{className}} ({{parameters}})
+    {
+        super ({{superParams}});
+        if (getClass () == {{className}}.class) { nc_activate_{{ctorIndex}} ({{parameterNames}}); }
+    }
+""");
+			nativeCtorDeclarations.AppendLine ($"    private native void nc_activate_{ctorIndex} ({parameters});");
+			ctorIndex++;
 		}
 
 		// Build method declarations
@@ -3194,7 +3503,6 @@ attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memor
 			publicMethods.AppendLine ($$"""
     public {{returnType}} {{method.JniName}} ({{parameters}})
     {
-        android.util.Log.i("JCW-TRACE", "{{peer.JavaName}}.{{method.JniName}} called, invoking native n_{{method.JniName}}");
         {{returnStatement}}n_{{method.JniName}} ({{parameterNames}});
     }
 
@@ -3548,6 +3856,17 @@ public class {{className}}
 	resolutionScope: _monoAndroidRef,
 	@namespace: _metadata.GetOrAddString ("Java.Interop"),
 	name: _metadata.GetOrAddString ("IAndroidCallableWrapper"));
+
+	_derivedTypeFactoryTypeRef = _metadata.AddTypeReference (
+	resolutionScope: _monoAndroidRef,
+	@namespace: _metadata.GetOrAddString ("Java.Interop"),
+	name: _metadata.GetOrAddString ("DerivedTypeFactory"));
+
+	// DerivedTypeFactory<> (generic type definition with arity `1)
+	_derivedTypeFactoryGenericTypeRef = _metadata.AddTypeReference (
+	resolutionScope: _monoAndroidRef,
+	@namespace: _metadata.GetOrAddString ("Java.Interop"),
+	name: _metadata.GetOrAddString ("DerivedTypeFactory`1"));
 
 	// Java.Interop JI-style constructor types
 	_jniObjectReferenceTypeRef = _metadata.AddTypeReference (
@@ -3971,17 +4290,14 @@ public class {{className}}
 	});
 	_createInstanceSig = _metadata.GetOrAddBlob (createInstanceSigBlob);
 
-	// Array CreateArray(int length, int rank) signature
-	var createArraySigBlob = new BlobBuilder ();
-	new BlobEncoder (createArraySigBlob)
+	// DerivedTypeFactory GetDerivedTypeFactory() signature
+	var getDerivedTypeFactorySigBlob = new BlobBuilder ();
+	new BlobEncoder (getDerivedTypeFactorySigBlob)
 	.MethodSignature (isInstanceMethod: true)
-	.Parameters (2,
-	returnType => returnType.Type ().Type (_arrayTypeRef, isValueType: false),
-	parameters => {
-	parameters.AddParameter ().Type ().Int32 ();
-	parameters.AddParameter ().Type ().Int32 ();
-	});
-	_createArraySig = _metadata.GetOrAddBlob (createArraySigBlob);
+	.Parameters (0,
+	returnType => returnType.Type ().Type (_derivedTypeFactoryTypeRef, isValueType: false),
+	parameters => { });
+	_getDerivedTypeFactorySig = _metadata.GetOrAddBlob (getDerivedTypeFactorySigBlob);
 	}
 	
 	TypeReferenceHandle AddExternalTypeReference (string assemblyName, string typeName)
@@ -4155,27 +4471,15 @@ public class {{className}}
 		_nextParamDefRowId++;
 		_nextMethodDefRowId++;
 
-		// 6. CreateArray override - calls static CreateArrayOf<T>(length, rank)
-		int createArrayBodyOffset = GenerateCreateArrayBody (peer, targetTypeRef);
-		var createArrayDef = _metadata.AddMethodDefinition (
+		// 6. GetDerivedTypeFactory override - returns DerivedTypeFactory<T>.Instance
+		int getDerivedTypeFactoryBodyOffset = GenerateGetDerivedTypeFactoryBody (peer, targetTypeRef);
+		var getDerivedTypeFactoryDef = _metadata.AddMethodDefinition (
 			attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
 			implAttributes: MethodImplAttributes.IL | MethodImplAttributes.Managed,
-			name: _metadata.GetOrAddString ("CreateArray"),
-			signature: _createArraySig,
-			bodyOffset: createArrayBodyOffset,
+			name: _metadata.GetOrAddString ("GetDerivedTypeFactory"),
+			signature: _getDerivedTypeFactorySig,
+			bodyOffset: getDerivedTypeFactoryBodyOffset,
 			parameterList: MetadataTokens.ParameterHandle (_nextParamDefRowId));
-
-		_metadata.AddParameter (
-			attributes: ParameterAttributes.None,
-			name: _metadata.GetOrAddString ("length"),
-			sequenceNumber: 1);
-		_nextParamDefRowId++;
-
-		_metadata.AddParameter (
-			attributes: ParameterAttributes.None,
-			name: _metadata.GetOrAddString ("rank"),
-			sequenceNumber: 2);
-		_nextParamDefRowId++;
 		_nextMethodDefRowId++;
 
 		// Create the type definition
@@ -4422,17 +4726,40 @@ public class {{className}}
 		// These come AFTER regular methods in the LLVM IR stub index order (indices n..m-1)
 		// Only generate if the type has a valid activation path (own ctor, base ctor, or invoker)
 		if (HasActivationPath (peer)) {
-			// Use pre-partitioned list for performance
+			// Use pre-partitioned lists for performance
 			var constructorMarshalMethods = peer.ConstructorMarshalMethods;
-			int numActivationCtors = constructorMarshalMethods.Count > 0 ? constructorMarshalMethods.Count : 1; // At least one default ctor
-
-			for (int ctorIdx = 0; ctorIdx < numActivationCtors; ctorIdx++) {
-				// Get constructor info if available
-				MarshalMethodInfo? ctorInfo = ctorIdx < constructorMarshalMethods.Count ? constructorMarshalMethods[ctorIdx] : null;
-				
-				// Generate activation constructor UCO wrapper
-				var activationWrapper = GenerateActivationCtorUcoWrapper (peer, targetTypeRef, ctorIdx, ctorInfo);
+			var activationConstructors = peer.ActivationConstructors;
+			
+			// Total ctors = [Register] ctors + inherited activation ctors
+			int totalCtors = constructorMarshalMethods.Count + activationConstructors.Count;
+			
+			// If no constructors at all, check if we should generate a default one
+			if (totalCtors == 0) {
+				// Types without any activation constructors still need at least one default ctor
+				// for activation to work. Generate nc_activate_0 with empty signature.
+				var activationWrapper = GenerateActivationCtorUcoWrapper (peer, targetTypeRef, 0, null);
 				wrapperHandles.Add (activationWrapper);
+			} else {
+				int ctorIdx = 0;
+				
+				// First, generate wrappers for [Register] constructors
+				for (int i = 0; i < constructorMarshalMethods.Count; i++, ctorIdx++) {
+					var ctorInfo = constructorMarshalMethods [i];
+					var activationWrapper = GenerateActivationCtorUcoWrapper (peer, targetTypeRef, ctorIdx, ctorInfo);
+					wrapperHandles.Add (activationWrapper);
+				}
+				
+				// Second, generate wrappers for inherited activation constructors
+				for (int i = 0; i < activationConstructors.Count; i++, ctorIdx++) {
+					var actCtor = activationConstructors [i];
+					// Create a temporary MarshalMethodInfo for the activation constructor
+					var ctorInfo = new MarshalMethodInfo {
+						JniName = "<init>",
+						JniSignature = actCtor.JniSignature,
+					};
+					var activationWrapper = GenerateActivationCtorUcoWrapper (peer, targetTypeRef, ctorIdx, ctorInfo);
+					wrapperHandles.Add (activationWrapper);
+				}
 			}
 		}
 
@@ -5239,45 +5566,38 @@ public class {{className}}
 		return _methodBodyStream.AddMethodBody (encoder);
 	}
 
-	int GenerateCreateArrayBody (JavaPeerInfo peer, TypeReferenceHandle targetTypeRef)
+	int GenerateGetDerivedTypeFactoryBody (JavaPeerInfo peer, TypeReferenceHandle targetTypeRef)
 	{
 		var codeBuilder = new BlobBuilder ();
 		var encoder = new InstructionEncoder (codeBuilder);
 
-		// Generate: return CreateArrayOf<T>(length, rank);
-		// This calls the static protected helper on JavaPeerProxy base class
+		// Generate: return DerivedTypeFactory<T>.Instance;
+		// This accesses the static readonly Instance field on the generic DerivedTypeFactory<T>
 
-		// Create MethodSpec for CreateArrayOf<T>
-		// First, we need a MemberRef to the uninstantiated CreateArrayOf method on JavaPeerProxy
-		var createArrayOfSigBlob = new BlobBuilder ();
-		new BlobEncoder (createArrayOfSigBlob)
-			.MethodSignature (isInstanceMethod: false, genericParameterCount: 1)
-			.Parameters (2,
-				returnType => returnType.Type ().Type (_arrayTypeRef, isValueType: false),
-				parameters => {
-					parameters.AddParameter ().Type ().Int32 ();
-					parameters.AddParameter ().Type ().Int32 ();
-				});
-		var createArrayOfRef = _metadata.AddMemberReference (
-			parent: _javaPeerProxyTypeRef,
-			name: _metadata.GetOrAddString ("CreateArrayOf"),
-			signature: _metadata.GetOrAddBlob (createArrayOfSigBlob));
-
-		// Create MethodSpec to instantiate CreateArrayOf<T> with targetType
-		var methodSpecSigBlob = new BlobBuilder ();
-		new BlobEncoder (methodSpecSigBlob)
-			.MethodSpecificationSignature (1)
+		// Create TypeSpec for DerivedTypeFactory<T> where T is the target type
+		var typeSpecBlob = new BlobBuilder ();
+		new BlobEncoder (typeSpecBlob)
+			.TypeSpecificationSignature ()
+			.GenericInstantiation (_derivedTypeFactoryGenericTypeRef, 1, isValueType: false)
 			.AddArgument ().Type (targetTypeRef, isValueType: false);
-		var methodSpec = _metadata.AddMethodSpecification (
-			method: createArrayOfRef,
-			instantiation: _metadata.GetOrAddBlob (methodSpecSigBlob));
+		var typeSpec = _metadata.AddTypeSpecification (_metadata.GetOrAddBlob (typeSpecBlob));
 
-		// ldarg.1 (length)
-		encoder.OpCode (ILOpCode.Ldarg_1);
-		// ldarg.2 (rank)
-		encoder.OpCode (ILOpCode.Ldarg_2);
-		// call JavaPeerProxy.CreateArrayOf<T>(length, rank)
-		encoder.Call (methodSpec);
+		// Create field signature for Instance (static field of type DerivedTypeFactory<T>)
+		var fieldSigBlob = new BlobBuilder ();
+		new BlobEncoder (fieldSigBlob)
+			.Field ()
+			.Type ().GenericInstantiation (_derivedTypeFactoryGenericTypeRef, 1, isValueType: false)
+			.AddArgument ().Type (targetTypeRef, isValueType: false);
+
+		// Create MemberRef to the Instance field on DerivedTypeFactory<T>
+		var instanceFieldRef = _metadata.AddMemberReference (
+			parent: typeSpec,
+			name: _metadata.GetOrAddString ("Instance"),
+			signature: _metadata.GetOrAddBlob (fieldSigBlob));
+
+		// ldsfld DerivedTypeFactory<T>.Instance
+		encoder.OpCode (ILOpCode.Ldsfld);
+		encoder.Token (instanceFieldRef);
 		// ret
 		encoder.OpCode (ILOpCode.Ret);
 

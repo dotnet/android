@@ -24,6 +24,14 @@ namespace Xamarin.Android.Tasks
 			public string? InputSource;
 		}
 
+		// ABI to LLVM triple mapping for -mtriple flag
+		static readonly Dictionary<string, string> AbiToTriple = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
+			{ "arm64-v8a", "aarch64-unknown-linux-android21" },
+			{ "armeabi-v7a", "armv7-unknown-linux-android21" },
+			{ "x86_64", "x86_64-unknown-linux-android21" },
+			{ "x86", "i686-unknown-linux-android21" },
+		};
+
 		[Required]
 		public ITaskItem[] Sources { get; set; } = [];
 
@@ -102,7 +110,7 @@ namespace Xamarin.Android.Tasks
 
 		IEnumerable<Config> GetAssemblerConfigs ()
 		{
-			const string assemblerOptions =
+			const string baseAssemblerOptions =
 				"-O2 " +
 				"--debugger-tune=lldb " + // NDK uses lldb now
 				"--debugify-level=location+variables " +
@@ -115,13 +123,22 @@ namespace Xamarin.Android.Tasks
 				// We don't need the directory since our WorkingDirectory is where all the sources are
 				string sourceFile = Path.GetFileName (item.ItemSpec);
 				string outputFile = QuoteFileName (sourceFile.Replace (".ll", ".o"));
-				string executableDir = Path.GetDirectoryName (llcPath);
+				string? executableDir = Path.GetDirectoryName (llcPath);
 				string executableName = MonoAndroidHelper.GetExecutablePath (executableDir, Path.GetFileName (llcPath));
+
+				// Get ABI from item metadata and map to LLVM triple
+				// Architecture-neutral .ll files need -mtriple to specify target
+				string abi = item.GetMetadata ("abi");
+				string tripleOption = "";
+				if (!string.IsNullOrEmpty (abi) && AbiToTriple.TryGetValue (abi, out string? triple)) {
+					tripleOption = $"-mtriple={triple} ";
+					LogDebugMessage ($"[LLVM llc] Using -mtriple={triple} for ABI {abi}");
+				}
 
 				yield return new Config {
 					InputSource = item.ItemSpec,
-					AssemblerPath = Path.Combine (executableDir, executableName),
-					AssemblerOptions = $"{assemblerOptions} -o={outputFile} {QuoteFileName (sourceFile)}",
+					AssemblerPath = Path.Combine (executableDir!, executableName),
+					AssemblerOptions = $"{tripleOption}{baseAssemblerOptions} -o={outputFile} {QuoteFileName (sourceFile)}",
 				};
 			}
 		}

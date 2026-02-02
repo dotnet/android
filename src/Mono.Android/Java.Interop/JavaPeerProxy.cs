@@ -28,8 +28,7 @@ namespace Java.Interop
 	/// {
 	///     public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
 	///         => new Activity(handle, transfer);
-	///     public override Array CreateArray(int length) => new Activity[length];
-	///     public override Array CreateArray2(int length) => new Activity[length][];
+	///     public override DerivedTypeFactory GetDerivedTypeFactory() => DerivedTypeFactory&lt;Activity&gt;.Instance;
 	/// }
 	/// </code>
 	/// 
@@ -45,8 +44,7 @@ namespace Java.Interop
 	///     public override Type? InvokerType => typeof(IComparableInvoker);
 	///     public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
 	///         => new IComparableInvoker(handle, transfer);
-	///     public override Array CreateArray(int length) => new IComparable[length];
-	///     public override Array CreateArray2(int length) => new IComparable[length][];
+	///     public override DerivedTypeFactory GetDerivedTypeFactory() => DerivedTypeFactory&lt;IComparable&gt;.Instance;
 	/// }
 	/// </code>
 	/// </remarks>
@@ -65,31 +63,6 @@ namespace Java.Interop
 		public abstract IJavaPeerable CreateInstance (IntPtr handle, JniHandleOwnership transfer);
 
 		/// <summary>
-		/// Creates an array of the target type.
-		/// This is used for AOT-safe array creation without using Array.CreateInstance().
-		/// </summary>
-		/// <param name="length">The length of the array to create.</param>
-		/// <param name="rank">The array rank: 1 for T[], 2 for T[][].</param>
-		/// <returns>A new array of the target type.</returns>
-		public abstract Array CreateArray (int length, int rank);
-
-		/// <summary>
-		/// Static helper for AOT-safe array creation. Generated proxies call this method.
-		/// </summary>
-		/// <typeparam name="T">The element type of the array.</typeparam>
-		/// <param name="length">The length of the array to create.</param>
-		/// <param name="rank">The array rank: 1 for T[], 2 for T[][].</param>
-		/// <returns>A new array of the specified type and rank.</returns>
-		protected static Array CreateArrayOf<T> (int length, int rank)
-		{
-			return rank switch {
-				1 => new T[length],
-				2 => new T[length][],
-				_ => throw new ArgumentOutOfRangeException (nameof (rank), rank, "Rank must be 1 or 2"),
-			};
-		}
-
-		/// <summary>
 		/// Gets the invoker type for abstract classes and interfaces.
 		/// Returns null for concrete types that can be directly instantiated.
 		/// </summary>
@@ -100,5 +73,28 @@ namespace Java.Interop
 		/// </remarks>
 		[return: DynamicallyAccessedMembers (Constructors)]
 		public Type? InvokerType { get; protected set; }
+
+		/// <summary>
+		/// Gets a factory for creating derived types (arrays, collections) of the target type.
+		/// This enables AOT-safe creation of generic collections like <c>IList&lt;T&gt;</c> without reflection.
+		/// </summary>
+		/// <remarks>
+		/// The factory is typed to the target type and can create:
+		/// - Arrays: T[], T[][], T[][][]
+		/// - Lists: JavaList&lt;T&gt;
+		/// - Collections: JavaCollection&lt;T&gt;
+		/// - Sets: JavaSet&lt;T&gt;
+		/// - Dictionaries: JavaDictionary&lt;TKey, T&gt; (with a key factory)
+		/// 
+		/// Example usage in TypeMap:
+		/// <code>
+		/// var proxy = typeMap.GetProxyForType(typeof(View));
+		/// var factory = proxy.GetDerivedTypeFactory();
+		/// var array = factory.CreateArray(10, 1);           // T[]
+		/// var list = factory.CreateListFromHandle(handle, transfer);  // IList
+		/// </code>
+		/// </remarks>
+		/// <returns>A factory for creating derived types of the target type.</returns>
+		public abstract DerivedTypeFactory GetDerivedTypeFactory ();
 	}
 }

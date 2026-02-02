@@ -112,6 +112,8 @@
     <Compile Include="Java.Interop\TypeMapAttributeTypeMap.cs" />
     <Compile Include="Java.Interop\TypeMapTypeManager.cs" />
     <Compile Include="Java.Interop\JavaPeerProxy.cs" />
+    <Compile Include="Java.Interop\DerivedTypeFactory.cs" />
+    <Compile Include="Java.Interop\ReflectionTypeMap.cs" />
     <Compile Include="Java.Interop\IAndroidCallableWrapper.cs" />
     <Compile Include="Java.Interop\AliasesUniverse.cs" />
     <Compile Include="Java.Interop\JavaInteropAliasesAttribute.cs" />
@@ -363,7 +365,6 @@
     <Compile Include="Javax.Microedition.Khronos.Egl\EGLContext.cs" />
     <Compile Include="Microsoft.Android.Runtime\ManagedValueManager.cs" />
     <Compile Include="Microsoft.Android.Runtime\RuntimeFeature.cs" />
-    <Compile Include="Microsoft.Android.Runtime\SimpleValueManager.cs" />
     <Compile Include="Org.Apache.Http.Impl.Conn\DefaultClientConnection.cs" />
     <Compile Include="Org.Apache.Http.Impl.Cookie\BasicClientCookie.cs" />
     <Compile Include="System.Drawing/PointConverter.cs" />
