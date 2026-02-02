@@ -36,6 +36,7 @@ public class GenerateAdditionalProviderSources : AndroidTask
 	// by this task. See also GenerateNativeApplicationSources.cs
 	public string? HttpClientHandlerType { get; set; }
 	public bool EnableSGenConcurrent { get; set; }
+	public bool EnableMarshalMethods { get; set; }
 
 	AndroidRuntime androidRuntime;
 	JavaPeerStyle codeGenerationTarget;
@@ -115,16 +116,19 @@ public class GenerateAdditionalProviderSources : AndroidTask
 
 		// Create additional application java sources.
 		StringWriter regCallsWriter = new StringWriter ();
-		regCallsWriter.WriteLine ("// Application and Instrumentation ACWs must be registered first.");
 
-		foreach ((string jniName, string assemblyQualifiedName) in codeGenState.ApplicationsAndInstrumentationsToRegister) {
-			regCallsWriter.WriteLine (
-				codeGenerationTarget == JavaPeerStyle.XAJavaInterop1 ?
-					"\t\tmono.android.Runtime.register (\"{0}\", {1}.class, {1}.__md_methods);" :
-					"\t\tnet.dot.jni.ManagedPeer.registerNativeMembers ({1}.class, {1}.__md_methods);",
-				assemblyQualifiedName,
-				jniName
-			);
+		// With the trimmable type map, native methods are registered via RegisterNatives in native code,
+		// so we don't need the Java-side registerNativeMembers calls.
+		// For older XAJavaInterop1 style, we still need to register via Runtime.register.
+		if (codeGenerationTarget == JavaPeerStyle.XAJavaInterop1 && !EnableMarshalMethods) {
+			regCallsWriter.WriteLine ("// Application and Instrumentation ACWs must be registered first.");
+			foreach ((string jniName, string assemblyQualifiedName) in codeGenState.ApplicationsAndInstrumentationsToRegister) {
+				regCallsWriter.WriteLine (
+					"\t\tmono.android.Runtime.register (\"{0}\", {1}.class, {1}.__md_methods);",
+					assemblyQualifiedName,
+					jniName
+				);
+			}
 		}
 
 		regCallsWriter.Close ();

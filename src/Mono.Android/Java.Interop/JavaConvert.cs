@@ -64,23 +64,23 @@ namespace Java.Interop {
 				return converter;
 			if (target.IsArray)
 				return (h, t) => JNIEnv.GetArray (h, t, target.GetElementType ());
-			// TypeMap v3: Generic collection conversions via MakeGenericType are not supported
+			// Trimmable type map: Generic collection conversions via MakeGenericType are not supported
 			// These code paths require runtime type construction which is incompatible with NativeAOT/trimming
 			if (target.IsGenericType && target.GetGenericTypeDefinition() == typeof (IDictionary<,>)) {
 				throw new NotSupportedException (
-					$"Generic IDictionary<,> conversion is not supported with TypeMap v3. Use JavaDictionary<,> directly.");
+					$"Generic IDictionary<,> conversion is not supported with the trimmable type map. Use JavaDictionary<,> directly.");
 			}
 			if (typeof (IDictionary).IsAssignableFrom (target))
 				return (h, t) => JavaDictionary.FromJniHandle (h, t);
 			if (target.IsGenericType && target.GetGenericTypeDefinition() == typeof (IList<>)) {
 				throw new NotSupportedException (
-					$"Generic IList<> conversion is not supported with TypeMap v3. Use JavaList<> directly.");
+					$"Generic IList<> conversion is not supported with the trimmable type map. Use JavaList<> directly.");
 			}
 			if (typeof (IList).IsAssignableFrom (target))
 				return (h, t) => JavaList.FromJniHandle (h, t);
 			if (target.IsGenericType && target.GetGenericTypeDefinition() == typeof (ICollection<>)) {
 				throw new NotSupportedException (
-					$"Generic ICollection<> conversion is not supported with TypeMap v3. Use JavaCollection<> directly.");
+					$"Generic ICollection<> conversion is not supported with the trimmable type map. Use JavaCollection<> directly.");
 			}
 			if (typeof (ICollection).IsAssignableFrom (target))
 				return (h, t) => JavaCollection.FromJniHandle (h, t);

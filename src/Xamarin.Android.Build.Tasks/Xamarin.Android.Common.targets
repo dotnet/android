@@ -1598,7 +1598,7 @@ because xbuild doesn't support framework reference assemblies.
     <_HaveMultipleRIDs Condition=" '$(RuntimeIdentifiers)' != '' ">True</_HaveMultipleRIDs>
     <_HaveMultipleRIDs Condition=" '$(RuntimeIdentifiers)' == '' ">False</_HaveMultipleRIDs>
     <_AndroidEnableMarshalMethodsForProviders>$(AndroidEnableMarshalMethods)</_AndroidEnableMarshalMethodsForProviders>
-    <_AndroidEnableMarshalMethodsForProviders Condition="'$(AndroidUseTrimmableTypeMap)' == 'true'">True</_AndroidEnableMarshalMethodsForProviders>
+    <_AndroidEnableMarshalMethodsForProviders Condition="'$(AndroidEnableTypeMaps)' == 'true'">True</_AndroidEnableMarshalMethodsForProviders>
   </PropertyGroup>
   <ItemGroup>
     <_MergedManifestDocuments Condition=" '$(AndroidManifestMerger)' == 'legacy' " Include="@(ExtractedManifestDocuments)" />
@@ -1612,10 +1612,10 @@ because xbuild doesn't support framework reference assemblies.
   </GenerateACWMap>
 
   <!-- JCW generation for MonoVM - generates the .java files that are compiled into classes.dex.
-       When AndroidUseTrimmableTypeMap=true, JCW generation is handled by GenerateTypeMapAssembly task instead.
+       When AndroidEnableTypeMaps=true, JCW generation is handled by GenerateTypeMapAssembly task instead.
        For CoreCLR, JCW generation is also handled by GenerateTypeMapAssembly task. -->
   <GenerateJavaCallableWrappers
-      Condition=" '$(_AndroidRuntime)' != 'CoreCLR' And '$(AndroidUseTrimmableTypeMap)' != 'true' "
+      Condition=" '$(_AndroidRuntime)' != 'CoreCLR' And '$(AndroidEnableTypeMaps)' != 'true' "
       CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
       OutputDirectory="$(IntermediateOutputPath)android\src"
       ResolvedAssemblies="@(_ResolvedAssemblies)"
@@ -1655,8 +1655,8 @@ because xbuild doesn't support framework reference assemblies.
 
   <!-- TypeMap PoC: Keep GenerateTypeMappings enabled to generate native symbols needed by libmonodroid.so -->
   <PropertyGroup>
-    <_AndroidTypemapImplementation Condition=" '$(AndroidUseTrimmableTypeMap)' == 'true' ">trimmable</_AndroidTypemapImplementation>
-    <_AndroidTypemapImplementation Condition=" '$(AndroidUseTrimmableTypeMap)' != 'true' ">llvm-ir</_AndroidTypemapImplementation>
+    <_AndroidTypemapImplementation Condition=" '$(AndroidEnableTypeMaps)' == 'true' ">v3</_AndroidTypemapImplementation>
+    <_AndroidTypemapImplementation Condition=" '$(AndroidEnableTypeMaps)' != 'true' ">llvm-ir</_AndroidTypemapImplementation>
   </PropertyGroup>
   <GenerateTypeMappings
       AndroidRuntime="$(_AndroidRuntime)"
@@ -1965,7 +1965,7 @@ because xbuild doesn't support framework reference assemblies.
   <GenerateNativeMarshalMethodSources
       AndroidRuntime="$(_AndroidRuntime)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
-      UseTypemapV3="$(AndroidUseTrimmableTypeMap)"
+      UseTrimmableTypeMap="$(AndroidEnableTypeMaps)"
       EnableNativeRuntimeLinking="$(_AndroidEnableNativeRuntimeLinking)"
       MonoComponents="@(_MonoComponent)"
       EnvironmentOutputDirectory="$(IntermediateOutputPath)android"

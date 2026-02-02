@@ -116,9 +116,9 @@ namespace Java.Interop {
 			Type[] arguments = type.GetGenericArguments ();
 			if (arguments.Length == 0)
 				return type.Assembly.GetType (type + suffix);
-			// TypeMap v3: Generic invoker types must be pre-registered, MakeGenericType is not supported
+			// Trimmable type map: Generic invoker types must be pre-registered, MakeGenericType is not supported
 			throw new NotSupportedException (
-				$"Generic invoker type construction is not supported with TypeMap v3. " +
+				$"Generic invoker type construction is not supported with the trimmable type map. " +
 				$"Type '{type.FullName}' invoker must be pre-registered.");
 		}
 	}

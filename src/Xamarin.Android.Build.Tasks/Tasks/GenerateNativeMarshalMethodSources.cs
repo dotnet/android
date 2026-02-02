@@ -42,10 +42,9 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 	public override string TaskPrefix => "GNM";
 
 	/// <summary>
-	/// Gets or sets whether to generate managed marshal methods lookup tables.
-	/// When enabled, creates runtime data structures for efficient marshal method resolution.
+	/// Gets or sets whether to use the trimmable type map.
 	/// </summary>
-	public bool EnableManagedMarshalMethodsLookup { get; set; }
+	public bool UseTrimmableTypeMap { get; set; }
 
 	/// <summary>
 	/// Gets or sets whether marshal methods generation is enabled.
@@ -130,6 +129,7 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 	/// </remarks>
 	public override bool RunTask ()
 	{
+		Log.LogWarning ($"DEBUG: EnableMarshalMethods={EnableMarshalMethods}, AndroidRuntime={AndroidRuntime}");
 		NativeCodeGenStateCollection? nativeCodeGenStates = null;
 		androidRuntime = MonoAndroidHelper.ParseAndroidRuntime (AndroidRuntime);
 
@@ -191,6 +191,7 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 			Tasks.AndroidRuntime.CoreCLR => MakeCoreCLRGenerator (),
 			_ => throw new NotSupportedException ($"Internal error: unsupported runtime type '{androidRuntime}'")
 		};
+		marshalMethodsAsmGen.UseTrimmableTypeMap = UseTrimmableTypeMap;
 
 		// Generate P/Invoke preservation code if native linking is enabled
 		bool fileFullyWritten;
@@ -241,8 +242,7 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 					Log,
 					assemblyCount,
 					uniqueAssemblyNames,
-					EnsureCodeGenState (nativeCodeGenStates, targetArch),
-					EnableManagedMarshalMethodsLookup
+					EnsureCodeGenState (nativeCodeGenStates, targetArch)
 				);
 			}
 
@@ -266,8 +266,7 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 				return new MarshalMethodsNativeAssemblyGeneratorCoreCLR (
 					Log,
 					uniqueAssemblyNames,
-					EnsureCodeGenState (nativeCodeGenStates, targetArch),
-					EnableManagedMarshalMethodsLookup
+					EnsureCodeGenState (nativeCodeGenStates, targetArch)
 				);
 			}
 

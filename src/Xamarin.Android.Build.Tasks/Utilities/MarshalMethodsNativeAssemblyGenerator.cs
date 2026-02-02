@@ -16,7 +16,8 @@ namespace Xamarin.Android.Tasks
 {
 	abstract partial class MarshalMethodsNativeAssemblyGenerator : LlvmIrComposer
 	{
-		const string GetFunctionPointerVariableName = "get_function_pointer";
+		public bool UseTrimmableTypeMap { get; set; }
+		protected string GetFunctionPointerVariableName => UseTrimmableTypeMap ? "typemap_get_function_pointer" : "get_function_pointer";
 
 		// This is here only to generate strongly-typed IR
 		internal sealed class MonoClass
@@ -210,12 +211,17 @@ namespace Xamarin.Android.Tasks
 		readonly LlvmIrCallMarker defaultCallMarker;
 #pragma warning restore CS0414
 		readonly bool generateEmptyCode;
-		readonly bool managedMarshalMethodsLookupEnabled;
 		readonly AndroidTargetArch targetArch;
 		readonly NativeCodeGenStateObject? codeGenState;
 
 		protected bool GenerateEmptyCode => generateEmptyCode;
 		protected List<MarshalMethodInfo> Methods => methods;
+		
+		/// <summary>
+		/// When true, always generate xamarin_app_init even when marshal methods are disabled.
+		/// CoreCLR needs this for runtime initialization.
+		/// </summary>
+		protected virtual bool AlwaysGenerateXamarinAppInit => false;
 
 		/// <summary>
 		/// Constructor to be used ONLY when marshal methods are DISABLED
@@ -232,12 +238,11 @@ namespace Xamarin.Android.Tasks
 		/// <summary>
 		/// Constructor to be used ONLY when marshal methods are ENABLED
 		/// </summary>
-		protected MarshalMethodsNativeAssemblyGenerator (TaskLoggingHelper log, ICollection<string> uniqueAssemblyNames, NativeCodeGenStateObject codeGenState, bool managedMarshalMethodsLookupEnabled)
+		protected MarshalMethodsNativeAssemblyGenerator (TaskLoggingHelper log, ICollection<string> uniqueAssemblyNames, NativeCodeGenStateObject codeGenState)
 			: base (log)
 		{
 			this.uniqueAssemblyNames = uniqueAssemblyNames ?? throw new ArgumentNullException (nameof (uniqueAssemblyNames));
 			this.codeGenState = codeGenState ?? throw new ArgumentNullException (nameof (codeGenState));
-			this.managedMarshalMethodsLookupEnabled = managedMarshalMethodsLookupEnabled;
 
 			generateEmptyCode = false;
 			defaultCallMarker = LlvmIrCallMarker.Tail;
@@ -584,7 +589,13 @@ namespace Xamarin.Android.Tasks
 			AddClassNames (module);
 
 			AddMarshalMethodNames (module, acs);
-			(LlvmIrVariable getFunctionPtrVariable, LlvmIrFunction getFunctionPtrFunction) = AddXamarinAppInitFunction (module);
+			LlvmIrVariable getFunctionPtrVariable = null;
+			LlvmIrFunction getFunctionPtrFunction = null;
+
+			// Generate xamarin_app_init if marshal methods are enabled OR if runtime requires it (CoreCLR)
+			if (!GenerateEmptyCode || AlwaysGenerateXamarinAppInit) {
+				(getFunctionPtrVariable, getFunctionPtrFunction) = AddXamarinAppInitFunction (module);
+			}
 
 			AddMarshalMethods (module, acs, getFunctionPtrVariable, getFunctionPtrFunction);
 		}
@@ -681,14 +692,8 @@ namespace Xamarin.Android.Tasks
 				LlvmIrLocalVariable getFuncPtrResult = func.CreateLocalVariable (typeof(IntPtr), "get_func_ptr");
 				body.Load (writeState.GetFunctionPtrVariable, getFuncPtrResult, tbaa: module.TbaaAnyPointer);
 
-				List<object?> getFunctionPointerArguments;
-				if (managedMarshalMethodsLookupEnabled) {
-					(uint assemblyIndex, uint classIndex, uint methodIndex) = GetManagedMarshalMethodsLookupIndexes (nativeCallback);
-					getFunctionPointerArguments = new List<object?> { assemblyIndex, classIndex, methodIndex, backingField };
-				} else {
-					var placeholder = new MarshalMethodAssemblyIndexValuePlaceholder (method, writeState.AssemblyCacheState);
-					getFunctionPointerArguments = new List<object?> { placeholder, method.ClassCacheIndex, nativeCallback.MetadataToken, backingField };
-				}
+				var placeholder = new MarshalMethodAssemblyIndexValuePlaceholder (method, writeState.AssemblyCacheState);
+				List<object?> getFunctionPointerArguments = new List<object?> { placeholder, method.ClassCacheIndex, nativeCallback.MetadataToken, backingField };
 
 				LlvmIrInstructions.Call call = body.Call (writeState.GetFunctionPtrFunction, arguments: getFunctionPointerArguments, funcPointer: getFuncPtrResult);
 
@@ -715,15 +720,6 @@ namespace Xamarin.Android.Tasks
 				call.CallMarker = LlvmIrCallMarker.Tail;
 
 				body.Ret (nativeFunc.Signature.ReturnType, result);
-			}
-
-			(uint assemblyIndex, uint classIndex, uint methodIndex) GetManagedMarshalMethodsLookupIndexes (MarshalMethodEntryMethodObject nativeCallback)
-			{
-				var assemblyIndex = nativeCallback.AssemblyIndex ?? throw new InvalidOperationException ("ManagedMarshalMethodsLookupInfo missing");
-				var classIndex = nativeCallback.ClassIndex ?? throw new InvalidOperationException ("ManagedMarshalMethodsLookupInfo missing");
-				var methodIndex = nativeCallback.MethodIndex ?? throw new InvalidOperationException ("ManagedMarshalMethodsLookupInfo missing");
-
-				return (assemblyIndex, classIndex, methodIndex);
 			}
 		}
 
@@ -784,13 +780,28 @@ namespace Xamarin.Android.Tasks
 				parameters: getFunctionPtrParams
 			);
 
-			LlvmIrVariable getFunctionPtrVariable = module.AddGlobalVariable (
-				typeof(IntPtr),
-				GetFunctionPointerVariableName,
-				null,
-				LlvmIrVariableOptions.LocalWritableInsignificantAddr,
-				getFunctionPtrComment.ToString ()
-			);
+			LlvmIrVariable getFunctionPtrVariable;
+			if (UseTrimmableTypeMap) {
+				getFunctionPtrVariable = module.AddGlobalVariable (
+					typeof(IntPtr),
+					GetFunctionPointerVariableName,
+					null,
+					new LlvmIrVariableOptions {
+						Linkage = LlvmIrLinkage.External,
+						Visibility = LlvmIrVisibility.Protected,
+						Writability = LlvmIrWritability.Writable,
+					},
+					getFunctionPtrComment.ToString ()
+				);
+			} else {
+				getFunctionPtrVariable = module.AddGlobalVariable (
+					typeof(IntPtr),
+					GetFunctionPointerVariableName,
+					null,
+					LlvmIrVariableOptions.LocalWritableInsignificantAddr,
+					getFunctionPtrComment.ToString ()
+				);
+			}
 
 			var init_params = new List<LlvmIrFunctionParameter> {
 				new (typeof(_JNIEnv), "env") {
