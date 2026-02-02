@@ -502,9 +502,6 @@ void Host::Java_mono_android_Runtime_initInternal (
 	init.jniAddNativeMethodRegistrationAttributePresent = application_config.jni_add_native_method_registration_attribute_present ? 1 : 0;
 	init.jniRemappingInUse                              = application_config.jni_remapping_replacement_type_count > 0 || application_config.jni_remapping_replacement_method_index_entry_count > 0;
 	init.marshalMethodsEnabled                          = application_config.marshal_methods_enabled;
-	init.managedMarshalMethodsLookupEnabled             = application_config.managed_marshal_methods_lookup_enabled;
-	abort_unless (!init.marshalMethodsEnabled || init.managedMarshalMethodsLookupEnabled,
-		"Managed marshal methods lookup must be enabled if marshal methods are enabled");
 
 	// GC threshold is 90% of the max GREF count
 	init.grefGcThreshold                                = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());
@@ -557,12 +554,20 @@ void Host::Java_mono_android_Runtime_initInternal (
 		}
 	);
 
-	log_debug (LOG_DEFAULT, "Calling into managed runtime init"sv);
+	log_warn (LOG_DEFAULT, "About to call managed runtime init"sv);
 	FastTiming::time_call ("JNIEnv.Initialize UCO"sv, initialize, &init);
+	log_warn (LOG_DEFAULT, "Back from managed runtime init"sv);
 
 	// PropagateUncaughtException is returned from Initialize to avoid an extra create_delegate call
 	jnienv_propagate_uncaught_exception = init.propagateUncaughtExceptionFn;
 	abort_unless (jnienv_propagate_uncaught_exception != nullptr, "Failed to obtain unmanaged-callers-only function pointer to the PropagateUncaughtException method.");
+
+	// Store the Type Mapping API get_function_pointer callback (may be null for Mono runtime)
+	// Set directly from JNIEnvInit.Initialize out parameter - no need for separate typemap_init call
+	if (init.getFunctionPointerFn != nullptr) {
+		typemap_get_function_pointer = init.getFunctionPointerFn;
+		log_debug (LOG_DEFAULT, "Type Mapping API typemap_get_function_pointer callback set"sv);
+	}
 
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.end_event (); // native to managed
