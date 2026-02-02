@@ -36,8 +36,10 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	/// This runs on the native bridge processing thread, not a managed thread pool thread.
 	/// </summary>
 	[UnmanagedCallersOnly (CallConvs = [typeof (CallConvCdecl)])]
-	static unsafe void OnBridgeProcessing (MarkCrossReferencesArgs* args)
+	static unsafe void OnBridgeProcessing (void* argsPtr)
 	{
+		MarkCrossReferencesArgs* args = (MarkCrossReferencesArgs*)argsPtr;
+
 		// Validate contexts
 		HandleContext.EnsureAllContextsAreOurs (args);
 
@@ -53,7 +55,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	unsafe ManagedValueManager ()
 	{
 		// Initialize GC bridge with our callback that will be invoked from the native background thread
-		delegate* unmanaged[Cdecl]<MarkCrossReferencesArgs*, void> callback = &OnBridgeProcessing;
+		delegate* unmanaged[Cdecl]<void*, void> callback = &OnBridgeProcessing;
 		var mark_cross_references_ftn = RuntimeNativeMethods.clr_gc_bridge_initialize_for_managed_processing (callback);
 		JavaMarshal.Initialize (mark_cross_references_ftn);
 	}
