@@ -39,11 +39,18 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		/// </summary>
 		public string? TargetApiLevel { get; set; }
 
+		/// <summary>
+		/// Minimum API level supported by non-Mono runtimes (CoreCLR/NativeAOT).
+		/// API levels below this will be conditional on $(UseMonoRuntime) == 'true'.
+		/// </summary>
+		public string? MinimumNonMonoApiLevel { get; set; }
+
 		public override bool Execute ()
 		{
 
 			var minVersion        = ToVersion (MinimumApiLevel);
 			var targetVersion     = ToVersion (TargetApiLevel);
+			var minNonMonoVersion = ToVersion (MinimumNonMonoApiLevel);
 			var versions          = new AndroidVersions (AndroidApiInfo.Select (ToAndroidVersion));
 			var targetApiLevel    = targetVersion != null && targetVersion.Major > 0
 				? targetVersion
@@ -90,6 +97,9 @@ Specifies the supported Android platform versions for this SDK.
 					writer.WriteAttributeString ("Include", versionCode.ToString ());
 					if (versionCode < targetVersion) {
 						writer.WriteAttributeString ("DefineConstantsOnly", "true");
+					}
+					if (minNonMonoVersion != null && versionCode < minNonMonoVersion) {
+						writer.WriteAttributeString ("Condition", " '$(UseMonoRuntime)' == 'true' ");
 					}
 					writer.WriteEndElement (); // </AndroidSdkSupportedTargetPlatformVersion>
 				}
