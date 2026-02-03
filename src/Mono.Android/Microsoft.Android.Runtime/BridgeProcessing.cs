@@ -34,8 +34,31 @@ unsafe class BridgeProcessing
 	static JniMethodInfo? s_Runtime_gc;
 
 	// Is NativeAOT mode (uses GCUserPeerable instead of IGCUserPeer)
-	static bool s_initialized;
-	static bool s_isNativeAOT;
+	static readonly bool s_isNativeAOT;
+
+	static BridgeProcessing ()
+	{
+		s_isNativeAOT = !RuntimeFeature.IsMonoRuntime;
+
+		// Initialize GCUserPeer class for creating temporary peers
+		s_GCUserPeerClass = new JniType ("mono/android/GCUserPeer");
+		s_GCUserPeerCtor = s_GCUserPeerClass.GetConstructor ("()V");
+
+		if (s_isNativeAOT) {
+			// For NativeAOT, we also use GCUserPeerable interface for optimized method calls
+			s_GCUserPeerableClass = new JniType ("net/dot/jni/GCUserPeerable");
+			s_GCUserPeerable_jiAddManagedReference = s_GCUserPeerableClass.GetInstanceMethod ("jiAddManagedReference", "(Ljava/lang/Object;)V");
+			s_GCUserPeerable_jiClearManagedReferences = s_GCUserPeerableClass.GetInstanceMethod ("jiClearManagedReferences", "()V");
+		}
+
+		// Initialize Java Runtime for triggering GC
+		using var runtimeClass = new JniType ("java/lang/Runtime");
+		var getRuntimeMethod = runtimeClass.GetStaticMethod ("getRuntime", "()Ljava/lang/Runtime;");
+		s_Runtime_gc = runtimeClass.GetInstanceMethod ("gc", "()V");
+		var runtimeLocal = JniEnvironment.StaticMethods.CallStaticObjectMethod (runtimeClass.PeerReference, getRuntimeMethod, null);
+		s_RuntimeInstance = runtimeLocal.NewGlobalRef ();
+		JniObjectReference.Dispose (ref runtimeLocal);
+	}
 
 	public BridgeProcessing (MarkCrossReferencesArgs* args)
 	{
@@ -52,38 +75,6 @@ unsafe class BridgeProcessing
 		}
 
 		crossRefs = args;
-	}
-
-	/// <summary>
-	/// Initialize cached Java references. Must be called once during runtime initialization.
-	/// </summary>
-	public static void Initialize (bool isNativeAOT)
-	{
-		if (s_initialized)
-			return;
-
-		s_isNativeAOT = isNativeAOT;
-
-		// Initialize GCUserPeer class for creating temporary peers
-		s_GCUserPeerClass = new JniType ("mono/android/GCUserPeer");
-		s_GCUserPeerCtor = s_GCUserPeerClass.GetConstructor ("()V");
-
-		if (isNativeAOT) {
-			// For NativeAOT, we also use GCUserPeerable interface for optimized method calls
-			s_GCUserPeerableClass = new JniType ("net/dot/jni/GCUserPeerable");
-			s_GCUserPeerable_jiAddManagedReference = s_GCUserPeerableClass.GetInstanceMethod ("jiAddManagedReference", "(Ljava/lang/Object;)V");
-			s_GCUserPeerable_jiClearManagedReferences = s_GCUserPeerableClass.GetInstanceMethod ("jiClearManagedReferences", "()V");
-		}
-
-		// Initialize Java Runtime for triggering GC
-		using var runtimeClass = new JniType ("java/lang/Runtime");
-		var getRuntimeMethod = runtimeClass.GetStaticMethod ("getRuntime", "()Ljava/lang/Runtime;");
-		s_Runtime_gc = runtimeClass.GetInstanceMethod ("gc", "()V");
-		var runtimeLocal = JniEnvironment.StaticMethods.CallStaticObjectMethod (runtimeClass.PeerReference, getRuntimeMethod, null);
-		s_RuntimeInstance = runtimeLocal.NewGlobalRef ();
-		JniObjectReference.Dispose (ref runtimeLocal);
-
-		s_initialized = true;
 	}
 
 	/// <summary>
@@ -117,8 +108,8 @@ unsafe class BridgeProcessing
 
 		// With cross references processed, the temporary peer list can be released
 		foreach (var (_, temporaryPeer) in temporaryPeers) {
-			var peer = temporaryPeer;
-			JniObjectReference.Dispose (ref peer);
+			var peerToDispose = temporaryPeer;
+			JniObjectReference.Dispose (ref peerToDispose);
 		}
 
 		// Switch global to weak references
@@ -177,37 +168,20 @@ unsafe class BridgeProcessing
 
 	void AddCrossReference (nuint sourceIndex, nuint destIndex)
 	{
-		CrossReferenceTarget from = SelectCrossReferenceTarget (sourceIndex);
-		CrossReferenceTarget to = SelectCrossReferenceTarget (destIndex);
+		var (fromRef, fromContextPtr) = SelectCrossReferenceTarget (sourceIndex);
+		var (toRef, _) = SelectCrossReferenceTarget (destIndex);
 
-		if (AddReference (from.Reference, to.Reference)) {
-			from.MarkRefsAddedIfNeeded ();
+		if (AddReference (fromRef, toRef) && fromContextPtr != IntPtr.Zero) {
+			HandleContext* fromContext = (HandleContext*)fromContextPtr;
+			fromContext->ControlBlock->RefsAdded = 1;
 		}
 	}
 
-	readonly struct CrossReferenceTarget
-	{
-		public readonly JniObjectReference Reference;
-		public readonly HandleContext* Context;
-		public readonly bool IsTemporaryPeer;
-
-		public CrossReferenceTarget (JniObjectReference reference, HandleContext* context, bool isTemporaryPeer)
-		{
-			Reference = reference;
-			Context = context;
-			IsTemporaryPeer = isTemporaryPeer;
-		}
-
-		public void MarkRefsAddedIfNeeded ()
-		{
-			if (IsTemporaryPeer || Context == null) {
-				return;
-			}
-			Context->ControlBlock->RefsAdded = 1;
-		}
-	}
-
-	CrossReferenceTarget SelectCrossReferenceTarget (nuint sccIndex)
+	/// <summary>
+	/// Selects the target for a cross-reference from an SCC.
+	/// Returns the JNI reference and the handle context pointer (IntPtr.Zero for temporary peers).
+	/// </summary>
+	(JniObjectReference Reference, IntPtr ContextPtr) SelectCrossReferenceTarget (nuint sccIndex)
 	{
 		ref StronglyConnectedComponent scc = ref crossRefs->Components[sccIndex];
 
@@ -215,14 +189,14 @@ unsafe class BridgeProcessing
 			if (!temporaryPeers.TryGetValue (sccIndex, out var tempPeer)) {
 				throw new InvalidOperationException ("Temporary peer must be found in the map");
 			}
-			return new CrossReferenceTarget (tempPeer, null, isTemporaryPeer: true);
+			return (tempPeer, IntPtr.Zero);
 		}
 
 		HandleContext* context = (HandleContext*)scc.Contexts[0];
 		Debug.Assert (context != null && context->ControlBlock != null, "SCC must have at least one valid context");
 
 		var reference = new JniObjectReference (context->ControlBlock->Handle, JniObjectReferenceType.Global);
-		return new CrossReferenceTarget (reference, context, isTemporaryPeer: false);
+		return (reference, (IntPtr)context);
 	}
 
 	bool AddReference (JniObjectReference from, JniObjectReference to)
@@ -238,23 +212,20 @@ unsafe class BridgeProcessing
 
 		// Fall back to reflection-based approach
 		var fromClassRef = JniEnvironment.Types.GetObjectClass (from);
-		try {
-			using var fromClass = new JniType (ref fromClassRef, JniObjectReferenceOptions.CopyAndDispose);
-			JniMethodInfo addMethod;
-			try {
-				addMethod = fromClass.GetInstanceMethod ("monodroidAddReference", "(Ljava/lang/Object;)V");
-			} catch (Java.Lang.NoSuchMethodError) {
-				Logger.Log (LogLevel.Error, "monodroid-gc", "Failed to find monodroidAddReference method");
-				return false;
-			}
+		using var fromClass = new JniType (ref fromClassRef, JniObjectReferenceOptions.CopyAndDispose);
 
-			JniArgumentValue* args = stackalloc JniArgumentValue[1];
-			args[0] = new JniArgumentValue (to);
-			JniEnvironment.InstanceMethods.CallVoidMethod (from, addMethod, args);
-			return true;
-		} catch {
+		JniMethodInfo addMethod;
+		try {
+			addMethod = fromClass.GetInstanceMethod ("monodroidAddReference", "(Ljava/lang/Object;)V");
+		} catch (Java.Lang.NoSuchMethodError) {
+			Logger.Log (LogLevel.Error, "monodroid-gc", "Failed to find monodroidAddReference method");
 			return false;
 		}
+
+		JniArgumentValue* args = stackalloc JniArgumentValue[1];
+		args[0] = new JniArgumentValue (to);
+		JniEnvironment.InstanceMethods.CallVoidMethod (from, addMethod, args);
+		return true;
 	}
 
 	bool TryCallGCUserPeerableAddManagedReference (JniObjectReference from, JniObjectReference to)
@@ -279,7 +250,7 @@ unsafe class BridgeProcessing
 	static void TriggerJavaGC ()
 	{
 		if (s_Runtime_gc == null) {
-			throw new InvalidOperationException ("BridgeProcessing.Initialize must be called before TriggerJavaGC");
+			throw new InvalidOperationException ("BridgeProcessing static constructor must run before TriggerJavaGC");
 		}
 
 		try {
@@ -370,20 +341,17 @@ unsafe class BridgeProcessing
 
 		// Fall back to reflection-based approach
 		var javaClassRef = JniEnvironment.Types.GetObjectClass (handle);
-		try {
-			using var javaClass = new JniType (ref javaClassRef, JniObjectReferenceOptions.CopyAndDispose);
-			JniMethodInfo clearMethod;
-			try {
-				clearMethod = javaClass.GetInstanceMethod ("monodroidClearReferences", "()V");
-			} catch (Java.Lang.NoSuchMethodError) {
-				Logger.Log (LogLevel.Error, "monodroid-gc", "Failed to find monodroidClearReferences method");
-				return;
-			}
+		using var javaClass = new JniType (ref javaClassRef, JniObjectReferenceOptions.CopyAndDispose);
 
-			JniEnvironment.InstanceMethods.CallVoidMethod (handle, clearMethod, null);
-		} catch {
-			// Ignore exceptions during cleanup
+		JniMethodInfo clearMethod;
+		try {
+			clearMethod = javaClass.GetInstanceMethod ("monodroidClearReferences", "()V");
+		} catch (Java.Lang.NoSuchMethodError) {
+			Logger.Log (LogLevel.Error, "monodroid-gc", "Failed to find monodroidClearReferences method");
+			return;
 		}
+
+		JniEnvironment.InstanceMethods.CallVoidMethod (handle, clearMethod, null);
 	}
 
 	bool TryCallGCUserPeerableClearManagedReferences (JniObjectReference handle)

@@ -28,6 +28,8 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	bool disposed;
 
+	static readonly SemaphoreSlim bridgeProcessingSemaphore = new (1, 1);
+
 	static Lazy<ManagedValueManager> s_instance = new (() => new ManagedValueManager ());
 	public static ManagedValueManager GetOrCreateInstance () => s_instance.Value;
 
@@ -35,27 +37,32 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	/// Callback invoked by native background thread to process bridge args.
 	/// This runs on the native bridge processing thread, not a managed thread pool thread.
 	/// </summary>
-	[UnmanagedCallersOnly (CallConvs = [typeof (CallConvCdecl)])]
+	[UnmanagedCallersOnly]
 	static unsafe void OnBridgeProcessing (void* argsPtr)
 	{
 		MarkCrossReferencesArgs* args = (MarkCrossReferencesArgs*)argsPtr;
 
-		// Validate contexts
-		HandleContext.EnsureAllContextsAreOurs (args);
+		bridgeProcessingSemaphore.Wait ();
+		try {
+			// Validate contexts
+			HandleContext.EnsureAllContextsAreOurs (args);
 
-		// Do the actual bridge processing in managed code
-		var processing = new BridgeProcessing (args);
-		processing.Process ();
+			// Do the actual bridge processing in managed code
+			var processing = new BridgeProcessing (args);
+			processing.Process ();
 
-		// Process collected contexts and finish
-		ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (args);
-		JavaMarshal.FinishCrossReferenceProcessing (args, handlesToFree);
+			// Process collected contexts and finish
+			ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (args);
+			JavaMarshal.FinishCrossReferenceProcessing (args, handlesToFree);
+		} finally {
+			bridgeProcessingSemaphore.Release ();
+		}
 	}
 
 	unsafe ManagedValueManager ()
 	{
 		// Initialize GC bridge with our callback that will be invoked from the native background thread
-		delegate* unmanaged[Cdecl]<void*, void> callback = &OnBridgeProcessing;
+		delegate* unmanaged<void*, void> callback = &OnBridgeProcessing;
 		var mark_cross_references_ftn = RuntimeNativeMethods.clr_gc_bridge_initialize_for_managed_processing (callback);
 		JavaMarshal.Initialize (mark_cross_references_ftn);
 	}
@@ -74,8 +81,8 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	public override void WaitForGCBridgeProcessing ()
 	{
-		// No-op: The native code guarantees mark_cross_references won't be called again
-		// until FinishCrossReferenceProcessing returns, so there's no need to wait.
+		bridgeProcessingSemaphore.Wait ();
+		bridgeProcessingSemaphore.Release ();
 	}
 
 	public unsafe override void CollectPeers ()
