@@ -2303,14 +2303,13 @@ namespace UnnamedProject
 		[Test]
 		public void TrimmerRootAssemblyWithoutRootMode ()
 		{
-			// Test for https://github.com/dotnet/android/issues/XXXXX
 			// Verifies that user-defined TrimmerRootAssembly items without RootMode metadata
 			// don't cause MSB4096 error in _FixRootAssembly target
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 			};
 			proj.SetProperty ("PublishTrimmed", "true");
-			
+
 			// Add TrimmerRootAssembly items without RootMode metadata
 			proj.OtherBuildItems.Add (new BuildItem ("TrimmerRootAssembly", "Mono.Android"));
 			proj.OtherBuildItems.Add (new BuildItem ("TrimmerRootAssembly", "System.Runtime"));
@@ -2318,7 +2317,7 @@ namespace UnnamedProject
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 			// Verify no MSB4096 error occurred
-			Assert.IsFalse (StringAssertEx.ContainsText (builder.LastBuildOutput, "MSB4096"), 
+			Assert.IsFalse (StringAssertEx.ContainsText (builder.LastBuildOutput, "MSB4096"),
 				"Build should not produce MSB4096 error for TrimmerRootAssembly without RootMode metadata.");
 		}
 	}
