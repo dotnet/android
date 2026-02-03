@@ -214,7 +214,6 @@ The previous system used:
 | `GenerateTypeMaps` | MSBuild task | Scan assemblies, generate TypeMapAssembly.dll, .java, .ll |
 | `TypeMapAssembly.dll` | Generated | Contains proxies, UCOs, TypeMap attributes |
 | `TypeMapAttributeTypeMap` | Mono.Android.dll | Runtime type lookup, function pointer resolution |
-| `LlvmIrTypeMap` | Mono.Android.dll | Legacy Mono runtime path |
 | `JavaPeerProxy` | Mono.Android.dll | Base class for generated proxies |
 | LLVM IR stubs | Generated .ll | JNI entry points with caching |
 
@@ -257,18 +256,11 @@ private static ITypeMap CreateTypeMap()
     if (RuntimeFeature.IsCoreClrRuntime)
         return new TypeMapAttributeTypeMap();  // AOT-safe, uses generated attributes
     else if (RuntimeFeature.IsMonoRuntime)
-        return new LlvmIrTypeMap();            // Legacy path
+        return new MonoTypeMap();
     else
         throw new NotSupportedException();
 }
 ```
-
-### 3.5 Feature Switches
-
-| Switch | Default | Purpose |
-|--------|---------|---------|
-| `Microsoft.Android.Runtime.RuntimeFeature.IsMonoRuntime` | `true` | Use LlvmIrTypeMap (legacy) |
-| `Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime` | `false` | Use TypeMapAttributeTypeMap |
 
 ---
 
@@ -280,7 +272,7 @@ private static ITypeMap CreateTypeMap()
 |---------------|---------|------|---------------|-------------------|----------------|
 | User class with JCW | `MainActivity` | Yes | ✅ | Returns UCO ptrs | `new T(h, t)` |
 | SDK MCW (binding) | `Activity` | No | ✅ | Throws | `new T(h, t)` |
-| Interface | `IOnClickListener` | No | ✅ | Throws | Returns Invoker |
+| Interface | `IOnClickListener` | No | ✅ | Throws | `new TInvoker(h, t)` |
 | Implementor | `IOnClickListenerImplementor` | Yes | ✅ | Returns UCO ptrs | `new T(h, t)` |
 
 ### 4.2 Types That Do NOT Need Proxies
@@ -323,12 +315,21 @@ The proxy type applies itself as an attribute to itself:
 [assembly: TypeMap<Java.Lang.Object>("com/example/MainActivity", typeof(MainActivity_Proxy), typeof(MainActivity))]
 
 // Proxy applies ITSELF as an attribute to ITSELF
+// ACW types also implement IAndroidCallableWrapper for GetFunctionPointer
 [MainActivity_Proxy]  // Self-application
-public sealed class MainActivity_Proxy : JavaPeerProxy
+public sealed class MainActivity_Proxy : JavaPeerProxy, IAndroidCallableWrapper
 {
-    public override IntPtr GetFunctionPointer(int methodIndex) => ...;
     public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
         => new MainActivity(handle, transfer);
+    
+    public override JavaPeerContainerFactory GetContainerFactory()
+        => JavaPeerContainerFactory.Create<MainActivity>();
+    
+    // IAndroidCallableWrapper - only on ACW types
+    public IntPtr GetFunctionPointer(int methodIndex) => methodIndex switch {
+        0 => (IntPtr)(delegate* unmanaged<...>)&n_OnCreate,
+        _ => IntPtr.Zero
+    };
 }
 
 // At runtime:
@@ -344,23 +345,20 @@ IJavaPeerable instance = proxy.CreateInstance(handle, transfer);  // Returns Mai
 
 ### 5.3 Interface-to-Invoker Mapping
 
-Interfaces cannot be instantiated directly. The interface proxy's `CreateInstance` directly returns an Invoker instance:
+Interfaces cannot be instantiated directly. The interface proxy's `CreateInstance` directly returns an Invoker instance. Interfaces do NOT implement `IAndroidCallableWrapper` since Java never calls back into them:
 
 ```csharp
 [IOnClickListener_Proxy]
-public sealed class IOnClickListener_Proxy : JavaPeerProxy
+public sealed class IOnClickListener_Proxy : JavaPeerProxy  // No IAndroidCallableWrapper
 {
-    public override IntPtr GetFunctionPointer(int methodIndex)
-    {
-        // Interfaces don't have JCWs - no native methods call them directly
-        throw new NotSupportedException("GetFunctionPointer not supported for interface types.");
-    }
-
     public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
     {
         // Directly create Invoker instance - no separate lookup needed
         return new IOnClickListenerInvoker(handle, transfer);
     }
+    
+    public override JavaPeerContainerFactory GetContainerFactory()
+        => JavaPeerContainerFactory.Create<IOnClickListener>();
 }
 ```
 
@@ -370,7 +368,7 @@ public sealed class IOnClickListener_Proxy : JavaPeerProxy
 
 ### 6.1 Base Class
 
-The base class provides instance creation and array factory methods. Note that `GetFunctionPointer` is NOT in the base class - it's in a separate interface (see Section 6.3).
+The base class provides instance creation and container factory methods. Note that `GetFunctionPointer` is NOT in the base class - it's in a separate interface (see Section 6.2).
 
 ```csharp
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, Inherited = false)]
@@ -382,14 +380,10 @@ abstract class JavaPeerProxy : Attribute
     public abstract IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer);
 
     /// <summary>
-    /// Creates an array of the target type.
+    /// Gets a factory for creating containers (arrays, lists, sets, dictionaries) of the target type.
+    /// See Section 21.7 for details on JavaPeerContainerFactory.
     /// </summary>
-    public abstract Array CreateArray(int length, int rank);
-
-    /// <summary>
-    /// Static helper for AOT-safe array creation.
-    /// </summary>
-    protected static Array CreateArrayOf<T>(int length, int rank);
+    public abstract JavaPeerContainerFactory GetContainerFactory();
 
     /// <summary>
     /// Gets the invoker type for interfaces/abstract classes.
@@ -463,8 +457,8 @@ public sealed class com_example_MainActivity_Proxy : JavaPeerProxy, IAndroidCall
     public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
         => new MainActivity(handle, transfer);
 
-    public override Array CreateArray(int length, int rank)
-        => CreateArrayOf<MainActivity>(length, rank);
+    public override JavaPeerContainerFactory GetContainerFactory()
+        => JavaPeerContainerFactory.Create<MainActivity>();
 
     [UnmanagedCallersOnly]
     public static void n_onCreate_mm_0(IntPtr jnienv, IntPtr obj, IntPtr p0)
@@ -504,13 +498,13 @@ MCW types (framework bindings with `DoNotGenerateAcw=true`) only implement `Java
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, Inherited = false)]
 public sealed class android_widget_TextView_Proxy : JavaPeerProxy
 {
-    // NO GetFunctionPointer - this is an MCW type, Java never calls back into it
+    // NO IAndroidCallableWrapper - this is an MCW type, Java never calls back into it
 
     public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
         => new TextView(handle, transfer);
 
-    public override Array CreateArray(int length, int rank)
-        => CreateArrayOf<TextView>(length, rank);
+    public override JavaPeerContainerFactory GetContainerFactory()
+        => JavaPeerContainerFactory.Create<TextView>();
 }
 ```
 
@@ -534,8 +528,8 @@ public sealed class mono_android_view_View_OnClickListenerImplementor_Proxy : Ja
     public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
         => new View.IOnClickListenerImplementor(handle, transfer);
 
-    public override Array CreateArray(int length, int rank)
-        => CreateArrayOf<View.IOnClickListenerImplementor>(length, rank);
+    public override JavaPeerContainerFactory GetContainerFactory()
+        => JavaPeerContainerFactory.Create<View.IOnClickListenerImplementor>();
 
     [UnmanagedCallersOnly]
     public static void n_OnClick_mm_0(IntPtr jnienv, IntPtr obj, IntPtr v)
@@ -677,7 +671,7 @@ void ReadJniObjectReferenceOptionsValues(MetadataReader reader)
 }
 ```
 
-**Known issue (legacy behavior):** If the constructor throws an exception, the handle leaks. The legacy `LlvmIrTypeMap.CreateProxy` has the same issue. A future improvement could wrap the constructor call in try-finally to ensure cleanup:
+**Known issue (legacy behavior):** If the constructor throws an exception, the handle leaks. The existing `TypeManager` code has the same issue. A future improvement could wrap the constructor call in try-finally to ensure cleanup:
 
 ```csharp
 // Potential improvement for final implementation:
@@ -2047,7 +2041,6 @@ See section 15.3 "Post-Trimming Filtering" for details.
 |-----------|----------|
 | ITypeMap | `src/Mono.Android/Java.Interop/ITypeMap.cs` |
 | TypeMapAttributeTypeMap | `src/Mono.Android/Java.Interop/TypeMapAttributeTypeMap.cs` |
-| LlvmIrTypeMap | `src/Mono.Android/Java.Interop/LlvmIrTypeMap.cs` |
 | JavaPeerProxy | `src/Mono.Android/Java.Interop/JavaPeerProxy.cs` |
 | RuntimeFeature | `src/Mono.Android/Microsoft.Android.Runtime/RuntimeFeature.cs` |
 
@@ -2188,13 +2181,15 @@ Both generators must enumerate methods in identical order.
 - Only ~5% are **ACW types** that override Java methods and need callbacks
 - Generating UCO stubs and LLVM IR for all types is wasteful
 
-**Resolution:** Split `IJavaPeerProxy` interface:
+**Resolution:** Separate `GetFunctionPointer` into a distinct interface, keeping `JavaPeerProxy` as the base class:
 
 ```csharp
-// For ALL Java peer types - creates managed wrapper from Java reference
-public interface IJavaPeerProxy
+// Base class for ALL Java peer types - creates managed wrapper from Java reference
+public abstract class JavaPeerProxy : Attribute
 {
-    IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer);
+    public abstract IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer);
+    public abstract JavaPeerContainerFactory GetContainerFactory();
+    public Type? InvokerType { get; protected set; }
 }
 
 // ONLY for types that generate ACW (override Java methods)
@@ -2205,8 +2200,8 @@ public interface IAndroidCallableWrapper
 ```
 
 Decision logic:
-- `DoNotGenerateAcw = true` → Implement only `IJavaPeerProxy` (no UCO, no LLVM IR)
-- `DoNotGenerateAcw = false` → Implement both interfaces (full UCO + LLVM IR)
+- `DoNotGenerateAcw = true` → Extend only `JavaPeerProxy` (no UCO, no LLVM IR)
+- `DoNotGenerateAcw = false` → Extend `JavaPeerProxy` AND implement `IAndroidCallableWrapper` (full UCO + LLVM IR)
 
 **Impact:**
 - ~95% fewer UCO methods generated
@@ -2332,6 +2327,8 @@ This means we cannot have separate TypeMap entries for array types with `T[]` as
 
 #### Solution: Unified Proxy with CreateArray Method
 
+> **Note**: This section describes an earlier design iteration. The implementation has evolved to use `JavaPeerContainerFactory` which provides a more comprehensive solution supporting arrays, lists, sets, collections, and dictionaries. See [Section 21.7: JavaPeerContainerFactory](#217-javapeercontainerfactory---aot-safe-generic-container-creation) for the current implementation.
+
 Instead of separate `ArrayProxyAttribute<T>` entries, we add array creation capability directly to the existing `JavaPeerProxy` base class. Each generated proxy can create arrays of its target type by calling a static generic helper.
 
 **JavaPeerProxy base class (in Mono.Android):**
@@ -2444,7 +2441,7 @@ public Array CreateArray(Type elementType, int length, int rank)
     return proxy.CreateArray(length, rank);
 }
 
-// In LlvmIrTypeMap (MonoVM legacy path - reflection OK)
+// MonoVM path - reflection OK
 public Array CreateArray(Type elementType, int length, int rank)
 {
     if (rank < 1 || rank > 2) {
@@ -2698,7 +2695,181 @@ namespace System.Runtime.CompilerServices
 
 **Result**: 26 types preserved (vs 54 with UnsafeAccessor, vs 37 legacy)
 
+### 21.7 JavaPeerContainerFactory - AOT-Safe Generic Container Creation
+
+**Status**: Implemented
+
+#### Problem
+
+When marshaling Java collections to .NET, we need to create generic containers like `JavaList<T>`, `JavaSet<T>`, `JavaDictionary<TKey, TValue>`, and arrays `T[]`. The traditional reflection-based approaches are not compatible with Native AOT:
+
+```csharp
+// NOT AOT-safe:
+Array.CreateInstance(typeof(T), length);
+Activator.CreateInstance(typeof(JavaList<>).MakeGenericType(typeof(T)));
+```
+
+#### Solution: JavaPeerContainerFactory
+
+The `JavaPeerContainerFactory` is an abstract base class that provides factory methods for creating containers. Each `JavaPeerProxy` has a `GetContainerFactory()` method that returns a `JavaPeerContainerFactory<T>` singleton already typed to the target type.
+
+**Key insight**: Generic instantiation like `new T[length]` or `new JavaList<T>()` requires knowing `T` at compile time. By having each proxy return a factory that is already typed to its specific `T`, these operations use direct `new` expressions which are fully AOT-safe.
+
+#### Architecture
+
+```
+JavaPeerProxy (attribute on each bound type)
+    │
+    └── abstract JavaPeerContainerFactory GetContainerFactory()
+                      │
+                      ▼
+         JavaPeerContainerFactory<T> : JavaPeerContainerFactory
+                      │
+         ┌────────────┼────────────┐
+         ▼            ▼            ▼
+    CreateArray   CreateList   CreateDictionary
+    new T[len]    JavaList<T>  JavaDictionary<K,V>
+```
+
+#### API
+
+```csharp
+public abstract class JavaPeerContainerFactory
+{
+    // Array creation (T[], T[][], T[][][])
+    internal abstract Array CreateArray(int length, int rank);
+
+    // List creation
+    internal abstract IList CreateList();
+    internal abstract IList CreateListFromHandle(IntPtr handle, JniHandleOwnership transfer);
+
+    // Collection creation
+    internal abstract ICollection CreateCollectionFromHandle(IntPtr handle, JniHandleOwnership transfer);
+
+    // Set creation
+    internal abstract ICollection CreateSet();
+    internal abstract ICollection CreateSetFromHandle(IntPtr handle, JniHandleOwnership transfer);
+
+    // Dictionary creation (uses visitor pattern for two type parameters)
+    internal virtual IDictionary? CreateDictionary(JavaPeerContainerFactory keyFactory);
+    internal virtual IDictionary? CreateDictionaryFromHandle(
+        JavaPeerContainerFactory keyFactory, IntPtr handle, JniHandleOwnership transfer);
+
+    // Factory method
+    public static JavaPeerContainerFactory Create<T>() where T : class, IJavaPeerable
+        => JavaPeerContainerFactory<T>.Instance;
+}
+```
+
+#### Generic Implementation
+
+```csharp
+internal sealed class JavaPeerContainerFactory<T> : JavaPeerContainerFactory 
+    where T : class, IJavaPeerable
+{
+    internal static readonly JavaPeerContainerFactory<T> Instance = new();
+
+    internal override Array CreateArray(int length, int rank) => rank switch {
+        1 => new T[length],
+        2 => new T[length][],
+        3 => new T[length][][],
+        _ => throw new ArgumentOutOfRangeException(...)
+    };
+
+    internal override IList CreateList() => new JavaList<T>();
+    internal override IList CreateListFromHandle(IntPtr h, JniHandleOwnership t) 
+        => new JavaList<T>(h, t);
+    internal override ICollection CreateCollectionFromHandle(IntPtr h, JniHandleOwnership t) 
+        => new JavaCollection<T>(h, t);
+    internal override ICollection CreateSet() => new JavaSet<T>();
+    internal override ICollection CreateSetFromHandle(IntPtr h, JniHandleOwnership t) 
+        => new JavaSet<T>(h, t);
+}
+```
+
+#### Dictionary Creation - Visitor Pattern
+
+Dictionaries require **two** type parameters (`TKey`, `TValue`). Since each factory only knows one type, they use a **visitor pattern**:
+
+```csharp
+// To create JavaDictionary<View, Activity>:
+var valueFactory = typeMap.GetProxyForType(typeof(Activity)).GetContainerFactory();
+var keyFactory = typeMap.GetProxyForType(typeof(View)).GetContainerFactory();
+
+// valueFactory (JavaPeerContainerFactory<Activity>) calls:
+valueFactory.CreateDictionary(keyFactory);
+    // which calls: keyFactory.CreateDictionaryWithValueFactory(this)
+    // which creates: new JavaDictionary<View, Activity>()
+```
+
+The visitor pattern allows both type parameters to be known at compile time within the generic method, enabling AOT-safe instantiation.
+
+#### Generated Proxy Code
+
+Each generated proxy includes a `GetContainerFactory()` override:
+
+```csharp
+// Generated proxy (conceptual C#):
+sealed class Android_Views_View_Proxy : JavaPeerProxy
+{
+    public override JavaPeerContainerFactory GetContainerFactory()
+        => JavaPeerContainerFactory<View>.Instance;  // ldsfld + ret
+}
+```
+
+The IL generated is simply:
+```il
+ldsfld JavaPeerContainerFactory<T>.Instance
+ret
+```
+
+#### Runtime Usage
+
+In `TrimmableTypeMap.CreateArray()`:
+
+```csharp
+public Array CreateArray(Type elementType, int length, int rank)
+{
+    if (!TryGetJniNameForType(elementType, out string? jniName))
+        throw new InvalidOperationException($"No JNI name for {elementType}");
+    
+    if (!_externalTypeMap.TryGetValue(jniName, out Type? proxyType))
+        throw new InvalidOperationException($"No proxy registered for {jniName}");
+    
+    var proxy = GetProxyForType(proxyType);
+    return proxy.GetContainerFactory().CreateArray(length, rank);  // AOT-safe!
+}
+```
+
+#### Supported Container Types
+
+| Container | Method | Result |
+|-----------|--------|--------|
+| Array | `CreateArray(10, 1)` | `new T[10]` |
+| 2D Array | `CreateArray(10, 2)` | `new T[10][]` |
+| 3D Array | `CreateArray(10, 3)` | `new T[10][][]` |
+| List | `CreateList()` | `new JavaList<T>()` |
+| List (from handle) | `CreateListFromHandle(h, t)` | `new JavaList<T>(h, t)` |
+| Collection | `CreateCollectionFromHandle(h, t)` | `new JavaCollection<T>(h, t)` |
+| Set | `CreateSet()` | `new JavaSet<T>()` |
+| Set (from handle) | `CreateSetFromHandle(h, t)` | `new JavaSet<T>(h, t)` |
+| Dictionary | `CreateDictionary(keyFactory)` | `new JavaDictionary<K, V>()` |
+| Dictionary (from handle) | `CreateDictionaryFromHandle(keyFactory, h, t)` | `new JavaDictionary<K, V>(h, t)` |
+
+#### Fallback for Debug/MonoVM
+
+`ReflectionJavaPeerContainerFactory` provides a reflection-based fallback for debug builds and MonoVM, using `Array.CreateInstance()`. This is NOT trimmer-safe but acceptable for debug scenarios.
+
+#### Benefits
+
+1. **AOT-safe**: Direct `new` expressions with compile-time known types
+2. **Trimmer-safe**: When element type is preserved, its proxy and factory are preserved
+3. **No reflection**: All container creation uses direct instantiation
+4. **Unified pattern**: Same factory handles arrays, lists, sets, collections, dictionaries
+5. **Efficient**: Singleton factories, no allocations per call
+6. **Type-safe**: Generic constraints ensure only valid peer types are used
+
 ---
 
-*Document version: 1.4*
-*Last updated: 2026-01-28*
+*Document version: 1.5*
+*Last updated: 2026-02-03*

@@ -28,7 +28,7 @@ namespace Java.Interop
 	/// {
 	///     public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
 	///         => new Activity(handle, transfer);
-	///     public override DerivedTypeFactory GetDerivedTypeFactory() => DerivedTypeFactory.Create&lt;Activity&gt;();
+	///     public override JavaPeerContainerFactory GetContainerFactory() => JavaPeerContainerFactory.Create&lt;Activity&gt;();
 	/// }
 	/// </code>
 	/// 
@@ -44,7 +44,7 @@ namespace Java.Interop
 	///     public override Type? InvokerType => typeof(IComparableInvoker);
 	///     public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
 	///         => new IComparableInvoker(handle, transfer);
-	///     public override DerivedTypeFactory GetDerivedTypeFactory() => DerivedTypeFactory.Create&lt;IComparable&gt;();
+	///     public override JavaPeerContainerFactory GetContainerFactory() => JavaPeerContainerFactory.Create&lt;IComparable&gt;();
 	/// }
 	/// </code>
 	/// </remarks>
@@ -75,7 +75,7 @@ namespace Java.Interop
 		public Type? InvokerType { get; protected set; }
 
 		/// <summary>
-		/// Gets a factory for creating derived types (arrays, collections) of the target type.
+		/// Gets a factory for creating containers (arrays, collections) of the target type.
 		/// This enables AOT-safe creation of generic collections like <c>IList&lt;T&gt;</c> without reflection.
 		/// </summary>
 		/// <remarks>
@@ -89,12 +89,12 @@ namespace Java.Interop
 		/// Example usage in TypeMap:
 		/// <code>
 		/// var proxy = typeMap.GetProxyForType(typeof(View));
-		/// var factory = proxy.GetDerivedTypeFactory();
+		/// var factory = proxy.GetContainerFactory();
 		/// var array = factory.CreateArray(10, 1);           // T[]
 		/// var list = factory.CreateListFromHandle(handle, transfer);  // IList
 		/// </code>
 		/// </remarks>
-		/// <returns>A factory for creating derived types of the target type.</returns>
-		public abstract DerivedTypeFactory GetDerivedTypeFactory ();
+		/// <returns>A factory for creating containers of the target type.</returns>
+		public abstract JavaPeerContainerFactory GetContainerFactory ();
 	}
 }

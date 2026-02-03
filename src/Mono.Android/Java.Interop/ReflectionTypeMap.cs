@@ -284,7 +284,7 @@ namespace Java.Interop
 		[DynamicallyAccessedMembers (Constructors | Methods)]
 		public Type TargetType { get; }
 
-		DerivedTypeFactory? _cachedFactory;
+		JavaPeerContainerFactory? _cachedFactory;
 
 		/// <summary>
 		/// Creates a proxy for the specified target type.
@@ -340,25 +340,25 @@ namespace Java.Interop
 		}
 
 		/// <summary>
-		/// Gets a reflection-based factory for creating derived types.
+		/// Gets a reflection-based factory for creating containers.
 		/// NOTE: This uses Array.CreateInstance and is NOT fully trimmer-safe.
 		/// </summary>
-		public override DerivedTypeFactory GetDerivedTypeFactory ()
+		public override JavaPeerContainerFactory GetContainerFactory ()
 		{
-			return _cachedFactory ??= new ReflectionDerivedTypeFactory (TargetType);
+			return _cachedFactory ??= new ReflectionJavaPeerContainerFactory (TargetType);
 		}
 	}
 
 	/// <summary>
-	/// Reflection-based implementation of DerivedTypeFactory.
+	/// Reflection-based implementation of <see cref="JavaPeerContainerFactory"/>.
 	/// Uses Array.CreateInstance which is NOT trimmer-safe for arbitrary types.
 	/// This is only used for debugging/fallback scenarios.
 	/// </summary>
-	class ReflectionDerivedTypeFactory : DerivedTypeFactory
+	class ReflectionJavaPeerContainerFactory : JavaPeerContainerFactory
 	{
 		readonly Type _targetType;
 
-		public ReflectionDerivedTypeFactory (Type targetType)
+		public ReflectionJavaPeerContainerFactory (Type targetType)
 		{
 			_targetType = targetType;
 		}
@@ -377,37 +377,37 @@ namespace Java.Interop
 
 		internal override IList CreateList ()
 		{
-			throw new NotSupportedException ("ReflectionDerivedTypeFactory does not support list creation.");
+			throw new NotSupportedException ("ReflectionJavaPeerContainerFactory does not support list creation.");
 		}
 
 		internal override IList CreateListFromHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
-			throw new NotSupportedException ("ReflectionDerivedTypeFactory does not support list creation.");
+			throw new NotSupportedException ("ReflectionJavaPeerContainerFactory does not support list creation.");
 		}
 
 		internal override ICollection CreateCollectionFromHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
-			throw new NotSupportedException ("ReflectionDerivedTypeFactory does not support collection creation.");
+			throw new NotSupportedException ("ReflectionJavaPeerContainerFactory does not support collection creation.");
 		}
 
 		internal override ICollection CreateSet ()
 		{
-			throw new NotSupportedException ("ReflectionDerivedTypeFactory does not support set creation.");
+			throw new NotSupportedException ("ReflectionJavaPeerContainerFactory does not support set creation.");
 		}
 
 		internal override ICollection CreateSetFromHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
-			throw new NotSupportedException ("ReflectionDerivedTypeFactory does not support set creation.");
+			throw new NotSupportedException ("ReflectionJavaPeerContainerFactory does not support set creation.");
 		}
 
-		internal override IDictionary? CreateDictionary (DerivedTypeFactory keyFactory)
+		internal override IDictionary? CreateDictionary (JavaPeerContainerFactory keyFactory)
 		{
-			throw new NotSupportedException ("ReflectionDerivedTypeFactory does not support dictionary creation.");
+			throw new NotSupportedException ("ReflectionJavaPeerContainerFactory does not support dictionary creation.");
 		}
 
-		internal override IDictionary? CreateDictionaryFromHandle (DerivedTypeFactory keyFactory, IntPtr handle, JniHandleOwnership transfer)
+		internal override IDictionary? CreateDictionaryFromHandle (JavaPeerContainerFactory keyFactory, IntPtr handle, JniHandleOwnership transfer)
 		{
-			throw new NotSupportedException ("ReflectionDerivedTypeFactory does not support dictionary creation.");
+			throw new NotSupportedException ("ReflectionJavaPeerContainerFactory does not support dictionary creation.");
 		}
 	}
 

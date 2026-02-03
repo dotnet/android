@@ -2630,7 +2630,7 @@ internal class TypeMapAssemblyGenerator
 	BlobHandle _voidMethodSig;
 	BlobHandle _getFunctionPointerSig;
 	BlobHandle _createInstanceSig;
-	BlobHandle _getDerivedTypeFactorySig;
+	BlobHandle _getContainerFactorySig;
 
 	// Tracking for type/method definition order
 	int _nextFieldDefRowId = 1;
@@ -3848,13 +3848,13 @@ public class {{className}}
 	_derivedTypeFactoryTypeRef = _metadata.AddTypeReference (
 	resolutionScope: _monoAndroidRef,
 	@namespace: _metadata.GetOrAddString ("Java.Interop"),
-	name: _metadata.GetOrAddString ("DerivedTypeFactory"));
+	name: _metadata.GetOrAddString ("JavaPeerContainerFactory"));
 
-	// DerivedTypeFactory<> (generic type definition with arity `1)
+	// JavaPeerContainerFactory<> (generic type definition with arity `1)
 	_derivedTypeFactoryGenericTypeRef = _metadata.AddTypeReference (
 	resolutionScope: _monoAndroidRef,
 	@namespace: _metadata.GetOrAddString ("Java.Interop"),
-	name: _metadata.GetOrAddString ("DerivedTypeFactory`1"));
+	name: _metadata.GetOrAddString ("JavaPeerContainerFactory`1"));
 
 	// Java.Interop JI-style constructor types
 	_jniObjectReferenceTypeRef = _metadata.AddTypeReference (
@@ -4278,14 +4278,14 @@ public class {{className}}
 	});
 	_createInstanceSig = _metadata.GetOrAddBlob (createInstanceSigBlob);
 
-	// DerivedTypeFactory GetDerivedTypeFactory() signature
-	var getDerivedTypeFactorySigBlob = new BlobBuilder ();
-	new BlobEncoder (getDerivedTypeFactorySigBlob)
+	// JavaPeerContainerFactory GetContainerFactory() signature
+	var getContainerFactorySigBlob = new BlobBuilder ();
+	new BlobEncoder (getContainerFactorySigBlob)
 	.MethodSignature (isInstanceMethod: true)
 	.Parameters (0,
 	returnType => returnType.Type ().Type (_derivedTypeFactoryTypeRef, isValueType: false),
 	parameters => { });
-	_getDerivedTypeFactorySig = _metadata.GetOrAddBlob (getDerivedTypeFactorySigBlob);
+	_getContainerFactorySig = _metadata.GetOrAddBlob (getContainerFactorySigBlob);
 	}
 	
 	TypeReferenceHandle AddExternalTypeReference (string assemblyName, string typeName)
@@ -4459,14 +4459,14 @@ public class {{className}}
 		_nextParamDefRowId++;
 		_nextMethodDefRowId++;
 
-		// 6. GetDerivedTypeFactory override - returns DerivedTypeFactory<T>.Instance
-		int getDerivedTypeFactoryBodyOffset = GenerateGetDerivedTypeFactoryBody (peer, targetTypeRef);
-		var getDerivedTypeFactoryDef = _metadata.AddMethodDefinition (
+		// 6. GetContainerFactory override - returns JavaPeerContainerFactory<T>.Instance
+		int getContainerFactoryBodyOffset = GenerateGetContainerFactoryBody (peer, targetTypeRef);
+		var getContainerFactoryDef = _metadata.AddMethodDefinition (
 			attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
 			implAttributes: MethodImplAttributes.IL | MethodImplAttributes.Managed,
-			name: _metadata.GetOrAddString ("GetDerivedTypeFactory"),
-			signature: _getDerivedTypeFactorySig,
-			bodyOffset: getDerivedTypeFactoryBodyOffset,
+			name: _metadata.GetOrAddString ("GetContainerFactory"),
+			signature: _getContainerFactorySig,
+			bodyOffset: getContainerFactoryBodyOffset,
 			parameterList: MetadataTokens.ParameterHandle (_nextParamDefRowId));
 		_nextMethodDefRowId++;
 
@@ -5554,15 +5554,15 @@ public class {{className}}
 		return _methodBodyStream.AddMethodBody (encoder);
 	}
 
-	int GenerateGetDerivedTypeFactoryBody (JavaPeerInfo peer, TypeReferenceHandle targetTypeRef)
+	int GenerateGetContainerFactoryBody (JavaPeerInfo peer, TypeReferenceHandle targetTypeRef)
 	{
 		var codeBuilder = new BlobBuilder ();
 		var encoder = new InstructionEncoder (codeBuilder);
 
-		// Generate: return DerivedTypeFactory<T>.Instance;
-		// This accesses the static readonly Instance field on the generic DerivedTypeFactory<T>
+		// Generate: return JavaPeerContainerFactory<T>.Instance;
+		// This accesses the static readonly Instance field on the generic JavaPeerContainerFactory<T>
 
-		// Create TypeSpec for DerivedTypeFactory<T> where T is the target type
+		// Create TypeSpec for JavaPeerContainerFactory<T> where T is the target type
 		var typeSpecBlob = new BlobBuilder ();
 		new BlobEncoder (typeSpecBlob)
 			.TypeSpecificationSignature ()
@@ -5570,20 +5570,20 @@ public class {{className}}
 			.AddArgument ().Type (targetTypeRef, isValueType: false);
 		var typeSpec = _metadata.AddTypeSpecification (_metadata.GetOrAddBlob (typeSpecBlob));
 
-		// Create field signature for Instance (static field of type DerivedTypeFactory<T>)
+		// Create field signature for Instance (static field of type JavaPeerContainerFactory<T>)
 		var fieldSigBlob = new BlobBuilder ();
 		new BlobEncoder (fieldSigBlob)
 			.Field ()
 			.Type ().GenericInstantiation (_derivedTypeFactoryGenericTypeRef, 1, isValueType: false)
 			.AddArgument ().Type (targetTypeRef, isValueType: false);
 
-		// Create MemberRef to the Instance field on DerivedTypeFactory<T>
+		// Create MemberRef to the Instance field on JavaPeerContainerFactory<T>
 		var instanceFieldRef = _metadata.AddMemberReference (
 			parent: typeSpec,
 			name: _metadata.GetOrAddString ("Instance"),
 			signature: _metadata.GetOrAddBlob (fieldSigBlob));
 
-		// ldsfld DerivedTypeFactory<T>.Instance
+		// ldsfld JavaPeerContainerFactory<T>.Instance
 		encoder.OpCode (ILOpCode.Ldsfld);
 		encoder.Token (instanceFieldRef);
 		// ret

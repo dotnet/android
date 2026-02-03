@@ -328,7 +328,7 @@ namespace Android.Runtime
 			var proxy = GetProxyForType (proxyType)
 				?? throw new InvalidOperationException ($"No proxy instance for {proxyType.FullName}");
 
-			return proxy.GetDerivedTypeFactory ().CreateArray (length, rank);
+			return proxy.GetContainerFactory ().CreateArray (length, rank);
 		}
 	}
 }
