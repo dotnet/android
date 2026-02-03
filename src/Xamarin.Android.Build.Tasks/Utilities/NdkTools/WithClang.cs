@@ -37,7 +37,7 @@ namespace Xamarin.Android.Tasks
 
 		public override int GetMinimumApiLevelFor (AndroidTargetArch arch, AndroidRuntime runtime)
 		{
-			return GetApiLevel (arch, runtime);
+			return MonoAndroidHelper.GetMinimumApiLevel (arch, runtime);
 		}
 
 		public override string GetToolPath (NdkToolKind kind, AndroidTargetArch arch, int apiLevel)

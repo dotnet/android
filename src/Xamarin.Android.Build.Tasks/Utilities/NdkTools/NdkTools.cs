@@ -287,19 +287,6 @@ namespace Xamarin.Android.Tasks
 			throw new InvalidOperationException ($"Unsupported NDK architecture '{arch}'");
 		}
 
-		protected static int GetApiLevel (AndroidTargetArch arch, AndroidRuntime runtime)
-		{
-			int minValue = 0;
-			string archName = GetPlatformArch (arch);
-
-			Dictionary<string, int> apiLevels = runtime == AndroidRuntime.MonoVM ? XABuildConfig.ArchAPILevels : XABuildConfig.ArchAPILevelsNonMono;
-			if (!apiLevels.TryGetValue (archName, out minValue)) {
-				throw new InvalidOperationException ($"Unable to determine minimum API level for architecture {arch}");
-			}
-
-			return minValue;
-		}
-
 		protected string EnsureDirectoryExists (string path)
 		{
 			if (Directory.Exists (path)) {

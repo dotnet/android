@@ -42,7 +42,7 @@ namespace Xamarin.Android.Tasks
 
 		public override int GetMinimumApiLevelFor (AndroidTargetArch arch, AndroidRuntime runtime)
 		{
-			int minValue = GetApiLevel (arch, runtime);
+			int minValue = MonoAndroidHelper.GetMinimumApiLevel (arch, runtime);
 			var platforms = GetSupportedPlatforms ().OrderBy (x => x).Where (x => x >= minValue);
 			return platforms.First (x => Directory.Exists (Path.Combine (NdkRootDirectory, "platforms", $"android-{x}", $"arch-{GetPlatformArch (arch)}")));
 		}
