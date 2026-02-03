@@ -48,6 +48,9 @@
 
 #include "logger.hh"
 #include "util.hh"
+
+using get_function_pointer_typemap_fn = void(*)(const char* class_name, int32_t class_name_length, int32_t method_index, void** target_ptr);
+extern "C" [[gnu::weak]] get_function_pointer_typemap_fn typemap_get_function_pointer;
 #include "debug.hh"
 #include "embedded-assemblies.hh"
 #include "monodroid-glue.hh"
@@ -919,6 +922,17 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 		}
 	);
 	initialize (&init);
+
+	// Store the Type Mapping API get_function_pointer callback (may be null for Mono runtime)
+	// Set directly from JNIEnvInit.Initialize out parameter - no need for separate typemap_init call
+	if (init.getFunctionPointerFn != nullptr) {
+		if (&typemap_get_function_pointer != nullptr) {
+			typemap_get_function_pointer = init.getFunctionPointerFn;
+			log_debug (LOG_DEFAULT, "Type Mapping API typemap_get_function_pointer callback set"sv);
+		} else {
+			log_warn (LOG_DEFAULT, "Type Mapping API callback provided but typemap_get_function_pointer symbol not found"sv);
+		}
+	}
 
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.end_event ();

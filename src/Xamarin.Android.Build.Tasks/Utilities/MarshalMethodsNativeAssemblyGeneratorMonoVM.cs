@@ -57,6 +57,8 @@ class MarshalMethodsNativeAssemblyGeneratorMonoVM : MarshalMethodsNativeAssembly
 		this.numberOfAssembliesInApk = numberOfAssembliesInApk;
 	}
 
+	protected override bool AlwaysGenerateXamarinAppInit => true;
+
 	protected override void AddMarshalMethodNames (LlvmIrModule module, AssemblyCacheState acs)
 	{
 		var uniqueMethods = new Dictionary<ulong, (MarshalMethodInfo mmi, ulong id32, ulong id64)> ();

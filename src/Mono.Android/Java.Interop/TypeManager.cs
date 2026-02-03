@@ -120,7 +120,7 @@ namespace Java.Interop {
 		}
 #endif	// !JAVA_INTEROP
 
-		[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type.GetType() can never statically know the string value from parameter 'signature'.")]
+		[RequiresUnreferencedCode ("Dynamic activation uses Type.GetType() which cannot be statically analyzed.")]
 		static Type[] GetParameterTypes (string? signature)
 		{
 			if (String.IsNullOrEmpty (signature))
@@ -133,7 +133,7 @@ namespace Java.Interop {
 		}
 
 		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
-		[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type.GetType() can never statically know the string value from parameter 'typename_ptr'.")]
+		[RequiresUnreferencedCode ("Dynamic activation uses Type.GetType() which cannot be statically analyzed.")]
 		static void n_Activate (IntPtr jnienv, IntPtr jclass, IntPtr typename_ptr, IntPtr signature_ptr, IntPtr jobject, IntPtr parameters_ptr)
 		{
 			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
@@ -181,7 +181,7 @@ namespace Java.Interop {
 			}
 		}
 
-		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "RuntimeHelpers.GetUninitializedObject() does not statically know the return value from ConstructorInfo.DeclaringType.")]
+		[RequiresUnreferencedCode ("Dynamic activation cannot statically determine the type from ConstructorInfo.DeclaringType.")]
 		internal static void Activate (IntPtr jobject, ConstructorInfo cinfo, object? []? parms)
 		{
 			try {

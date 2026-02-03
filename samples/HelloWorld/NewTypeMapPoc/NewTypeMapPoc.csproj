@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net11.0-android</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <ApplicationId>com.typemap.newpoc</ApplicationId>
+    <AndroidEnableTypeMaps>true</AndroidEnableTypeMaps>
+    <PublishAot>true</PublishAot>
+    <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
+    
+    <!-- Enable ILC logging for debugging -->
+    <IlcGenerateMetadataLog>true</IlcGenerateMetadataLog>
+  </PropertyGroup>
+
+</Project>

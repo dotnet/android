@@ -305,7 +305,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			WriteGlobalVariableStart (context, variable);
-			WriteTypeAndValue (context, variable, out LlvmTypeInfo typeInfo);
+
+			LlvmTypeInfo typeInfo;
+			if (variable.Options?.Linkage == LlvmIrLinkage.External) {
+				WriteType (context, variable, out typeInfo);
+			} else {
+				WriteTypeAndValue (context, variable, out typeInfo);
+			}
+
 			context.Output.Write (", align ");
 
 			ulong alignment;

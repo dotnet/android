@@ -174,3 +174,51 @@ When debugging SIGSEGV or other native crashes at the JNI boundary:
 - **Avoid multiple independent loops that must stay synchronized** - If IL and LLVM IR both need matching method indices, generate them together in one loop
 - **Document index ordering contracts** - Add comments like "method indices: regular methods 0..n-1, activation ctors n..m-1"
 - **Add conditional debug logging** - Use flags like `TYPEMAP_DEBUG` instead of adding/removing logging each time
+
+## TypeMap PoC Development
+
+When working on the TypeMap PoC (new attribute-based type mapping):
+
+### Building and Testing Changes to GenerateTypeMapAssembly.cs
+
+1. **Rebuild just the tasks DLL:**
+   ```bash
+   ./dotnet-local.sh build src/Xamarin.Android.Build.Tasks/Xamarin.Android.Build.Tasks.csproj -c Release --no-restore
+   ```
+
+2. **Clean and rebuild the sample project:**
+   ```bash
+   rm -rf samples/HelloWorld/NewTypeMapPoc/obj samples/HelloWorld/NewTypeMapPoc/bin
+   ./dotnet-local.sh build samples/HelloWorld/NewTypeMapPoc/NewTypeMapPoc.csproj -c Release
+   ```
+
+3. **Install and launch on device/emulator:**
+   ```bash
+   adb install -r samples/HelloWorld/NewTypeMapPoc/bin/Release/net11.0-android/android-arm64/com.typemap.newpoc-Signed.apk
+   adb shell am start -n "com.typemap.newpoc/crc64a09b530e5fb31016.MainActivity"
+   ```
+
+4. **Check logs for TypeMap V3 output:**
+   ```bash
+   adb logcat -d | grep -E "monodroid-typemap|TYPEMAP"
+   ```
+
+### Workload Issues
+
+If you encounter workload installation failures (e.g., missing packages for different ABIs):
+
+1. **Install wasm-tools workload** (required for some build scenarios):
+   ```bash
+   ./dotnet-local.sh workload install wasm-tools --skip-sign-check
+   ```
+
+2. **Check installed workloads:**
+   ```bash
+   ./dotnet-local.sh workload list
+   ```
+
+### Key Files for TypeMap PoC
+
+- `src/Xamarin.Android.Build.Tasks/Tasks/GenerateTypeMapAssembly.cs` - Main JCW and TypeMap generation
+- `samples/HelloWorld/NewTypeMapPoc/` - Test project with `AndroidEnableTypeMaps=true`
+- `type-mapping-api-v3-spec.md` - Specification document

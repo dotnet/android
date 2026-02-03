@@ -54,6 +54,11 @@ public class AssemblyModifierPipeline : AndroidTask
 	[Required]
 	public ITaskItem [] ResolvedAssemblies { get; set; } = [];
 
+	/// <summary>
+	/// Additional directories to search for assembly references (e.g., runtime pack directories)
+	/// </summary>
+	public ITaskItem []? AdditionalSearchDirectories { get; set; }
+
 	[Required]
 	public ITaskItem [] ResolvedUserAssemblies { get; set; } = [];
 
@@ -108,6 +113,16 @@ public class AssemblyModifierPipeline : AndroidTask
 					var path = Path.GetFullPath (Path.GetDirectoryName (assembly.ItemSpec));
 					if (!resolver.SearchDirectories.Contains (path)) {
 						resolver.SearchDirectories.Add (path);
+					}
+				}
+
+				// Add additional search directories (e.g., runtime pack directories for framework assemblies)
+				if (AdditionalSearchDirectories != null) {
+					foreach (var dir in AdditionalSearchDirectories) {
+						var path = Path.GetFullPath (dir.ItemSpec);
+						if (Directory.Exists (path) && !resolver.SearchDirectories.Contains (path)) {
+							resolver.SearchDirectories.Add (path);
+						}
 					}
 				}
 

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Android.App;
+using Android.OS;
 using Android.Runtime;
 using Xamarin.Android.UnitTests;
 using Xamarin.Android.UnitTests.NUnit;
@@ -10,8 +11,14 @@ using Xamarin.Android.UnitTests.NUnit;
 namespace Xamarin.Android.RuntimeTests
 {
     [Instrumentation(Name = "xamarin.android.runtimetests.NUnitInstrumentation")]
+    // [Register("xamarin/android/runtimetests/NUnitInstrumentation", DoNotGenerateAcw = true)]
     public class NUnitInstrumentation : NUnitTestInstrumentation
     {
+        [Register ("onCreate", "(Landroid/os/Bundle;)V", "GetOnCreate_Landroid_os_Bundle_Handler")]
+        public override void OnCreate (Bundle? arguments)
+        {
+            base.OnCreate (arguments);
+        }
         const string DefaultLogTag = "NUnit";
 
         string logTag = DefaultLogTag;

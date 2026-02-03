@@ -38,8 +38,7 @@ namespace Java.Interop
 		static readonly List<GCHandle> _registeredDelegateHandles = new List<GCHandle> ();
 
 		// See ExportAttribute.cs
-		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Mono.Android.Export.dll is preserved when [Export] is used via [DynamicDependency].")]
-		[UnconditionalSuppressMessage ("Trimming", "IL2075", Justification = "Mono.Android.Export.dll is preserved when [Export] is used via [DynamicDependency].")]
+		[RequiresUnreferencedCode ("Dynamic callback generation uses Assembly.Load() and reflection which cannot be statically analyzed.")]
 		static Delegate CreateDynamicCallback (MethodInfo method)
 		{
 			if (dynamic_callback_gen == null) {

@@ -28,7 +28,7 @@ namespace Java.Interop
 	/// {
 	///     public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
 	///         => new Activity(handle, transfer);
-	///     public override DerivedTypeFactory GetDerivedTypeFactory() => DerivedTypeFactory&lt;Activity&gt;.Instance;
+	///     public override DerivedTypeFactory GetDerivedTypeFactory() => DerivedTypeFactory.Create&lt;Activity&gt;();
 	/// }
 	/// </code>
 	/// 
@@ -44,7 +44,7 @@ namespace Java.Interop
 	///     public override Type? InvokerType => typeof(IComparableInvoker);
 	///     public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
 	///         => new IComparableInvoker(handle, transfer);
-	///     public override DerivedTypeFactory GetDerivedTypeFactory() => DerivedTypeFactory&lt;IComparable&gt;.Instance;
+	///     public override DerivedTypeFactory GetDerivedTypeFactory() => DerivedTypeFactory.Create&lt;IComparable&gt;();
 	/// }
 	/// </code>
 	/// </remarks>

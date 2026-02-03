@@ -1541,14 +1541,29 @@ internal class JavaPeerScanner
 			var newCache = new HashSet<string> (StringComparer.Ordinal);
 			foreach (var typeDefHandle in reader.TypeDefinitions) {
 				var typeDef = reader.GetTypeDefinition (typeDefHandle);
-				string ns = reader.GetString (typeDef.Namespace);
-				string name = reader.GetString (typeDef.Name);
-				string fullName = string.IsNullOrEmpty (ns) ? name : $"{ns}.{name}";
+				string fullName = GetFullTypeNameForCache (reader, typeDef);
 				newCache.Add (fullName);
 			}
 			return newCache;
 		});
 		return cache.Contains (typeName);
+	}
+
+	static string GetFullTypeNameForCache (MetadataReader reader, TypeDefinition typeDef)
+	{
+		var declaringTypeHandle = typeDef.GetDeclaringType ();
+		if (declaringTypeHandle.IsNil) {
+			// Top-level type
+			string ns = reader.GetString (typeDef.Namespace);
+			string name = reader.GetString (typeDef.Name);
+			return string.IsNullOrEmpty (ns) ? name : $"{ns}.{name}";
+		} else {
+			// Nested type - recursively get parent name and use '+' separator
+			var declaringType = reader.GetTypeDefinition (declaringTypeHandle);
+			string parentName = GetFullTypeNameForCache (reader, declaringType);
+			string name = reader.GetString (typeDef.Name);
+			return $"{parentName}+{name}";
+		}
 	}
 
 	static string GetAssemblyName (MetadataReader reader)
@@ -2377,7 +2392,7 @@ internal class JavaPeerScanner
 	/// </summary>
 	string TypeNameToJniType (string typeName)
 	{
-		// Handle primitives
+		// Handle primitives and special .NET-only types
 		return typeName switch {
 			"System.Void" => "V",
 			"System.Boolean" => "Z",
@@ -2394,6 +2409,12 @@ internal class JavaPeerScanner
 			"System.Double" => "D",
 			"System.String" => "Ljava/lang/String;",
 			"System.Object" => "Ljava/lang/Object;",
+			// .NET-only types used in activation constructors - map to Java equivalents
+			"System.IntPtr" => "Ljava/lang/Object;",  // JNI handle passed as Object
+			"Android.Runtime.JniHandleOwnership" => "I",  // Enum maps to int
+			"Java.Interop.JniObjectReference&" => "Ljava/lang/Object;",  // JI style handle
+			"Java.Interop.JniObjectReference" => "Ljava/lang/Object;",  // JI style handle
+			"Java.Interop.JniObjectReferenceOptions" => "I",  // JI style options (enum)
 			_ => TypeNameToJniObject (typeName)
 		};
 	}
@@ -2769,7 +2790,12 @@ internal class TypeMapAssemblyGenerator
 				bool isImplementorType = peer.ManagedTypeName.EndsWith ("EventDispatcher", StringComparison.Ordinal) ||
 				                         peer.ManagedTypeName.EndsWith ("Implementor", StringComparison.Ordinal);
 				bool isCustomView = _customViewTypes.Contains (peer.ManagedTypeName);
-				bool isUnconditional = isCustomView || (!peer.DoNotGenerateAcw && !peer.IsInterface && !isImplementorType);
+				
+				// Essential runtime types that must ALWAYS be in the type map unconditionally.
+				// These are used by the runtime for exception handling, object wrapping, etc.
+				bool isEssentialRuntimeType = IsEssentialRuntimeType (jniName);
+				
+				bool isUnconditional = isCustomView || isEssentialRuntimeType || (!peer.DoNotGenerateAcw && !peer.IsInterface && !isImplementorType);
 
 				typeMapAttrs.Add ((entryJniName, qualifiedProxyTypeName, isUnconditional ? null : targetTypeName, isUnconditional));
 				
@@ -2835,6 +2861,9 @@ internal class TypeMapAssemblyGenerator
 
 	// 9. Apply self-attribute to each proxy type
 	ApplySelfAttributes ();
+	
+	// 10. Generate TypeMapProvider class for NativeAOT (marker type for assembly discovery)
+	GenerateTypeMapProvider ();
 	
 	attrStopwatch.Stop ();
 	_log.LogMessage (MessageImportance.Low, $"[GTMA-Gen] Attributes: {attrStopwatch.ElapsedMilliseconds}ms ({unconditionalCount} unconditional, {trimmableCount} trimmable, {aliasMappings.Count} aliases)");
@@ -2995,6 +3024,17 @@ declare void @abort() noreturn
 		var activationConstructors = peer.ActivationConstructors;
 		var regularMethods = peer.RegularMarshalMethods;
 
+		// Special handling for Application subclasses:
+		// Application subclasses should have a no-arg activation constructor,
+		// not the (IntPtr, JniHandleOwnership) style constructor.
+		bool isApplicationSubclass = peer.BaseJavaName == "android/app/Application" ||
+		                             (peer.BaseJavaName?.EndsWith ("/Application") == true);
+		if (isApplicationSubclass && activationConstructors.Count > 0 && constructors.Count == 0) {
+			// For Application subclasses, don't generate activation methods at all
+			// (the constructor doesn't call native code - activation happens via onCreate)
+			activationConstructors = new List<ActivationConstructorInfo> ();
+		}
+
 		// Total activation methods: [Register("<init>")] constructors + inherited activation constructors
 		int numActivateMethods = constructors.Count + activationConstructors.Count;
 
@@ -3091,6 +3131,10 @@ call:
 
 		int activateBaseIndex = regularMethods.Count;
 		int ctorIdx = 0;
+
+		// Application subclasses don't need activation stubs in their constructor
+		// (the constructor doesn't call native code - managed activation happens via onCreate)
+		// So we skip the activation stub generation for them
 
 		// First, generate activation methods for [Register("<init>")] constructors
 		for (int i = 0; i < constructors.Count; i++, ctorIdx++) {
@@ -3442,6 +3486,30 @@ attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memor
 		var constructorDeclarations = new StringBuilder ();
 		var nativeCtorDeclarations = new StringBuilder ();
 		int ctorIndex = 0;
+
+		// Special handling for Application subclasses:
+		// Application subclasses should have a no-arg constructor for Android to instantiate.
+		// The (IntPtr, JniHandleOwnership) activation constructor is for wrapping existing Java objects
+		// and should NOT be exposed in Java.
+		// IMPORTANT: The constructor must NOT call native methods because the native library
+		// hasn't been loaded yet (that happens in the ContentProvider's attachInfo()).
+		bool isApplicationSubclass = peer.BaseJavaName == "android/app/Application" ||
+		                             (peer.BaseJavaName?.EndsWith ("/Application") == true);
+		
+		if (isApplicationSubclass && activationCtors.Count > 0 && constructors.Count == 0) {
+			// For Application subclasses with only activation constructors, generate a simple no-arg constructor
+			// that doesn't call any native methods. The managed Application is activated later via onCreate().
+			constructorDeclarations.AppendLine ($$"""
+    public {{className}} ()
+    {
+        super ();
+    }
+""");
+			// No native ctor declarations for Application - activation happens via onCreate()
+			ctorIndex = 0;
+			// Skip the normal activation constructor generation for Application subclasses
+			activationCtors = new List<ActivationConstructorInfo> ();
+		}
 
 		// First, generate constructors from [Register("<init>")] (marshal methods)
 		foreach (var ctor in constructors) {
@@ -4290,37 +4358,52 @@ public class {{className}}
 	
 	TypeReferenceHandle AddExternalTypeReference (string assemblyName, string typeName)
 	{
-	// Find or add assembly reference
-	AssemblyReferenceHandle asmRef;
-	if (assemblyName == "Mono.Android") {
-	asmRef = _monoAndroidRef;
-	} else {
-	// Add new assembly reference
-	asmRef = _metadata.AddAssemblyReference (
-	name: _metadata.GetOrAddString (assemblyName),
-	version: new Version (0, 0, 0, 0),
-	culture: default,
-	publicKeyOrToken: default,
-	flags: default,
-	hashValue: default);
-	}
-	
-	// Parse namespace and name
-	int lastDot = typeName.LastIndexOf ('.');
-	string ns = lastDot > 0 ? typeName.Substring (0, lastDot) : "";
-	string name = lastDot > 0 ? typeName.Substring (lastDot + 1) : typeName;
-	
-	// Handle nested types (A+B format)
-	if (name.Contains ('+')) {
-	// For nested types, we'd need to create a chain of type references
-	// For now, just use the full nested name with '/' separator
-	name = name.Replace ('+', '/');
-	}
-	
-	return _metadata.AddTypeReference (
-	resolutionScope: asmRef,
-	@namespace: _metadata.GetOrAddString (ns),
-	name: _metadata.GetOrAddString (name));
+		// Find or add assembly reference
+		AssemblyReferenceHandle asmRef;
+		if (assemblyName == "Mono.Android") {
+			asmRef = _monoAndroidRef;
+		} else {
+			// Add new assembly reference
+			asmRef = _metadata.AddAssemblyReference (
+				name: _metadata.GetOrAddString (assemblyName),
+				version: new Version (0, 0, 0, 0),
+				culture: default,
+				publicKeyOrToken: default,
+				flags: default,
+				hashValue: default);
+		}
+		
+		// Parse namespace and name
+		int lastDot = typeName.LastIndexOf ('.');
+		string ns = lastDot > 0 ? typeName.Substring (0, lastDot) : "";
+		string name = lastDot > 0 ? typeName.Substring (lastDot + 1) : typeName;
+		
+		// Handle nested types (A+B+C format) - need to create a chain of type references
+		if (name.Contains ('+')) {
+			var nestedParts = name.Split ('+');
+			
+			// First part is the outer type with the namespace
+			var outerTypeRef = _metadata.AddTypeReference (
+				resolutionScope: asmRef,
+				@namespace: _metadata.GetOrAddString (ns),
+				name: _metadata.GetOrAddString (nestedParts[0]));
+			
+			// Chain each nested type, using the previous type as the resolution scope
+			TypeReferenceHandle currentTypeRef = outerTypeRef;
+			for (int i = 1; i < nestedParts.Length; i++) {
+				currentTypeRef = _metadata.AddTypeReference (
+					resolutionScope: currentTypeRef,
+					@namespace: default,  // Nested types don't have a namespace
+					name: _metadata.GetOrAddString (nestedParts[i]));
+			}
+			
+			return currentTypeRef;
+		}
+		
+		return _metadata.AddTypeReference (
+			resolutionScope: asmRef,
+			@namespace: _metadata.GetOrAddString (ns),
+			name: _metadata.GetOrAddString (name));
 	}
 
 	/// <summary>
@@ -4718,35 +4801,46 @@ public class {{className}}
 			var constructorMarshalMethods = peer.ConstructorMarshalMethods;
 			var activationConstructors = peer.ActivationConstructors;
 			
-			// Total ctors = [Register] ctors + inherited activation ctors
-			int totalCtors = constructorMarshalMethods.Count + activationConstructors.Count;
+			// Special handling for Application subclasses:
+			// Application subclasses don't need activation stubs - their constructor doesn't call native code.
+			// The managed Application is activated later when onCreate() is called.
+			bool isApplicationSubclass = peer.BaseJavaName == "android/app/Application" ||
+			                             (peer.BaseJavaName?.EndsWith ("/Application") == true);
 			
-			// If no constructors at all, check if we should generate a default one
-			if (totalCtors == 0) {
-				// Types without any activation constructors still need at least one default ctor
-				// for activation to work. Generate nc_activate_0 with empty signature.
-				var activationWrapper = GenerateActivationCtorUcoWrapper (peer, targetTypeRef, 0, null);
-				wrapperHandles.Add (activationWrapper);
+			if (isApplicationSubclass && activationConstructors.Count > 0 && constructorMarshalMethods.Count == 0) {
+				// Skip activation wrapper generation for Application subclasses
+				// (they don't call nc_activate_X from their constructor)
 			} else {
-				int ctorIdx = 0;
+				// Total ctors = [Register] ctors + inherited activation ctors
+				int totalCtors = constructorMarshalMethods.Count + activationConstructors.Count;
 				
-				// First, generate wrappers for [Register] constructors
-				for (int i = 0; i < constructorMarshalMethods.Count; i++, ctorIdx++) {
-					var ctorInfo = constructorMarshalMethods [i];
-					var activationWrapper = GenerateActivationCtorUcoWrapper (peer, targetTypeRef, ctorIdx, ctorInfo);
+				// If no constructors at all, check if we should generate a default one
+				if (totalCtors == 0) {
+					// Types without any activation constructors still need at least one default ctor
+					// for activation to work. Generate nc_activate_0 with empty signature.
+					var activationWrapper = GenerateActivationCtorUcoWrapper (peer, targetTypeRef, 0, null);
 					wrapperHandles.Add (activationWrapper);
-				}
-				
-				// Second, generate wrappers for inherited activation constructors
-				for (int i = 0; i < activationConstructors.Count; i++, ctorIdx++) {
-					var actCtor = activationConstructors [i];
-					// Create a temporary MarshalMethodInfo for the activation constructor
-					var ctorInfo = new MarshalMethodInfo {
-						JniName = "<init>",
-						JniSignature = actCtor.JniSignature,
-					};
-					var activationWrapper = GenerateActivationCtorUcoWrapper (peer, targetTypeRef, ctorIdx, ctorInfo);
-					wrapperHandles.Add (activationWrapper);
+				} else {
+					int ctorIdx = 0;
+					
+					// First, generate wrappers for [Register] constructors
+					for (int i = 0; i < constructorMarshalMethods.Count; i++, ctorIdx++) {
+						var ctorInfo = constructorMarshalMethods [i];
+						var activationWrapper = GenerateActivationCtorUcoWrapper (peer, targetTypeRef, ctorIdx, ctorInfo);
+						wrapperHandles.Add (activationWrapper);
+					}
+					
+					// Second, generate wrappers for inherited activation constructors
+					for (int i = 0; i < activationConstructors.Count; i++, ctorIdx++) {
+						var actCtor = activationConstructors [i];
+						// Create a temporary MarshalMethodInfo for the activation constructor
+						var ctorInfo = new MarshalMethodInfo {
+							JniName = "<init>",
+							JniSignature = actCtor.JniSignature,
+						};
+						var activationWrapper = GenerateActivationCtorUcoWrapper (peer, targetTypeRef, ctorIdx, ctorInfo);
+						wrapperHandles.Add (activationWrapper);
+					}
 				}
 			}
 		}
@@ -5862,6 +5956,31 @@ public class {{className}}
 			value: _metadata.GetOrAddBlob (attrBlob));
 	}
 	
+	/// <summary>
+	/// Returns true for essential runtime types that must ALWAYS be in the type map unconditionally.
+	/// These types are used by the runtime for exception handling, object wrapping, etc.
+	/// </summary>
+	static bool IsEssentialRuntimeType (string jniName)
+	{
+		return jniName switch {
+			// Exception hierarchy - needed for exception marshaling
+			"java/lang/Throwable" => true,
+			"java/lang/Exception" => true,
+			"java/lang/RuntimeException" => true,
+			"java/lang/Error" => true,
+			
+			// Core object types
+			"java/lang/Object" => true,
+			"java/lang/Class" => true,
+			"java/lang/String" => true,
+			
+			// Threading types
+			"java/lang/Thread" => true,
+			
+			_ => false,
+		};
+	}
+	
 	void AddTypeMapAttributeTrimmable (string jniName, string proxyTypeName, string targetTypeName)
 	{
 		// [assembly: TypeMapAttribute<Java.Lang.Object>(jniName, typeof(proxyType), typeof(targetType))]
@@ -5948,6 +6067,23 @@ public class {{className}}
 			attributes: TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Class,
 			@namespace: default,
 			name: _metadata.GetOrAddString (typeName),
+			baseType: _objectTypeRef,
+			fieldList: MetadataTokens.FieldDefinitionHandle (_nextFieldDefRowId),
+			methodList: MetadataTokens.MethodDefinitionHandle (_nextMethodDefRowId));
+	}
+
+	/// <summary>
+	/// Generate a simple TypeMapProvider marker class for NativeAOT assembly discovery.
+	/// NativeAOT uses Type.GetType() with this class name to find the TypeMaps assembly
+	/// when AppDomain.GetAssemblies() doesn't include it.
+	/// </summary>
+	void GenerateTypeMapProvider ()
+	{
+		// public static class TypeMapProvider { }
+		_metadata.AddTypeDefinition (
+			attributes: TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.Class,
+			@namespace: _metadata.GetOrAddString ("_Microsoft.Android.TypeMaps"),
+			name: _metadata.GetOrAddString ("TypeMapProvider"),
 			baseType: _objectTypeRef,
 			fieldList: MetadataTokens.FieldDefinitionHandle (_nextFieldDefRowId),
 			methodList: MetadataTokens.MethodDefinitionHandle (_nextMethodDefRowId));

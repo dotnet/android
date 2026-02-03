@@ -115,16 +115,9 @@ namespace Android.Runtime {
 			return (lineNumber, methodName, className);
 		}
 
+		[RequiresUnreferencedCode ("StackFrame.GetMethod() may return incomplete information under AOT scenarios.")]
 		void TranslateStackTrace ()
 		{
-			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
-			// StackFrame.GetMethod() will return null under NativeAOT;
-			// However, you can still get useful information from StackFrame.ToString():
-			// MainActivity.OnCreate() + 0x37 at offset 55 in file:line:column <filename unknown>:0:0
-			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "StackFrame.GetMethod() is \"best attempt\", we handle null & exceptions")]
-			static MethodBase? StackFrameGetMethod (StackFrame frame) =>
-				frame.GetMethod ();
-
 			var trace = new StackTrace (InnerException, fNeedFileInfo: true);
 			if (trace.FrameCount <= 0) {
 				return;
@@ -146,7 +139,7 @@ namespace Android.Runtime {
 			const string Unknown = "Unknown";
 			for (int i = 0; i < frames.Length; i++) {
 				StackFrame managedFrame = frames[i];
-				MethodBase? managedMethod = StackFrameGetMethod (managedFrame);
+				MethodBase? managedMethod = managedFrame.GetMethod ();
 
 				// https://developer.android.com/reference/java/lang/StackTraceElement?hl=en#StackTraceElement(java.lang.String,%20java.lang.String,%20java.lang.String,%20int)
 				(int lineNumber, string? methodName, string? declaringClass) = GetFrameInfo (managedFrame, managedMethod);

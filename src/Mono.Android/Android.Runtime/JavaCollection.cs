@@ -146,13 +146,9 @@ namespace Android.Runtime {
 		//  Rationale
 		//    `java.util.Collection.toArray()` is not documented to throw any exceptions.
 		//
+		[RequiresUnreferencedCode ("Array element type lookup cannot be statically analyzed.")]
 		public void CopyTo (Array array, int array_index)
 		{
-			[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "JavaCollection<T> constructors are preserved by the MarkJavaObjects trimmer step.")]
-			[return: DynamicallyAccessedMembers (Constructors)]
-			static Type GetElementType (Array array) =>
-				array.GetType ().GetElementType ();
-
 			if (array == null)
 				throw new ArgumentNullException ("array");
 			if (array_index < 0)
@@ -163,13 +159,14 @@ namespace Android.Runtime {
 			if (id_toArray == IntPtr.Zero)
 				id_toArray = JNIEnv.GetMethodID (collection_class, "toArray", "()[Ljava/lang/Object;");
 
+			var targetType = array.GetType ().GetElementType ()!;
 			IntPtr lrefArray = JNIEnv.CallObjectMethod (Handle, id_toArray);
 			for (int i = 0; i < Count; i++)
 				array.SetValue (
 						JavaConvert.FromJniHandle (
 							JNIEnv.GetObjectArrayElement (lrefArray, i),
 							JniHandleOwnership.TransferLocalRef,
-							GetElementType (array)),
+							targetType),
 						array_index + i);
 			JNIEnv.DeleteLocalRef (lrefArray);
 		}

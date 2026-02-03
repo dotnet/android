@@ -5,26 +5,10 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading;
 
+using Microsoft.Android.Runtime;
+
 namespace Android.Runtime {
 	public static partial class JNINativeWrapper {
-
-		static MethodInfo? exception_handler_method;
-		static MethodInfo? wait_for_bridge_processing_method;
-
-		static void get_runtime_types ()
-		{
-			if (exception_handler_method != null)
-				return;
-
-			exception_handler_method = typeof (AndroidEnvironment).GetMethod (
-				"UnhandledException", BindingFlags.NonPublic | BindingFlags.Static);
-			if (exception_handler_method == null)
-				AndroidEnvironment.FailFast ("Cannot find AndroidEnvironment.UnhandledException");
-
-			wait_for_bridge_processing_method = typeof (AndroidRuntimeInternal).GetMethod ("WaitForBridgeProcessing", BindingFlags.Public | BindingFlags.Static);
-			if (wait_for_bridge_processing_method == null)
-				AndroidEnvironment.FailFast ("Cannot find AndroidRuntimeInternal.WaitForBridgeProcessing");
-		}
 
 		public static Delegate CreateDelegate (Delegate dlg)
 		{
@@ -40,24 +24,30 @@ namespace Android.Runtime {
 			if (result != null)
 				return result;
 
+			if (!RuntimeFeature.IsDynamicTypeRegistration) {
+				throw new NotSupportedException ($"Cannot create dynamic delegate wrapper for '{delegateType}'. Ensure all JNI native methods use known signatures.");
+			}
+
+			return CreateDynamicDelegateWrapper (dlg, delegateType);
+		}
+
+		[RequiresDynamicCode ("Dynamic delegate wrapper generation requires System.Reflection.Emit")]
+		static Delegate CreateDynamicDelegateWrapper (Delegate dlg, Type delegateType)
+		{
 			if (Logger.LogAssembly) {
 				RuntimeNativeMethods.monodroid_log (LogLevel.Debug, LogCategories.Assembly, $"Falling back to System.Reflection.Emit for delegate type '{delegateType}': {dlg.Method}");
 			}
 
 			get_runtime_types ();
 
-			var ret_type = dlg.Method.ReturnType;
+			var ret_type = dlg.Method!.ReturnType;
 			var parameters = dlg.Method.GetParameters ();
 			var param_types = new Type [parameters.Length];
 			for (int i = 0; i < parameters.Length; i++) {
 				param_types [i] = parameters [i].ParameterType;
 			}
 
-			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
-			// IL3050 disabled in source: if someone uses NativeAOT, they will get the warning.
-			#pragma warning disable IL3050
 			var dynamic = new DynamicMethod (DynamicMethodNameCounter.GetUniqueName (), ret_type, param_types, typeof (DynamicMethodNameCounter), true);
-			#pragma warning restore IL3050
 			var ig = dynamic.GetILGenerator ();
 
 			LocalBuilder? retval = null;
@@ -104,5 +94,22 @@ namespace Android.Runtime {
 			return dynamic.CreateDelegate (dlg.GetType ());
 		}
 
+		static MethodInfo? exception_handler_method;
+		static MethodInfo? wait_for_bridge_processing_method;
+
+		static void get_runtime_types ()
+		{
+			if (exception_handler_method != null)
+				return;
+
+			exception_handler_method = typeof (AndroidEnvironment).GetMethod (
+				"UnhandledException", BindingFlags.NonPublic | BindingFlags.Static);
+			if (exception_handler_method == null)
+				AndroidEnvironment.FailFast ("Cannot find AndroidEnvironment.UnhandledException");
+
+			wait_for_bridge_processing_method = typeof (AndroidRuntimeInternal).GetMethod ("WaitForBridgeProcessing", BindingFlags.Public | BindingFlags.Static);
+			if (wait_for_bridge_processing_method == null)
+				AndroidEnvironment.FailFast ("Cannot find AndroidRuntimeInternal.WaitForBridgeProcessing");
+		}
 	}
 }

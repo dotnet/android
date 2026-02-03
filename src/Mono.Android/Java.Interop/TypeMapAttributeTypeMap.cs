@@ -4,11 +4,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Threading;
-using Android.OS;
 using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Android.Runtime;
@@ -32,24 +29,35 @@ namespace Android.Runtime
 
 		public TypeMapAttributeTypeMap ()
 		{
-			LoadTypeMapsAssembly ();
-
-			if (RuntimeFeature.IsCoreClrRuntime) {
+			if (RuntimeFeature.IsNativeAotRuntime) {
+				// For NativeAOT, use the .NET 10+ TypeMapping API which is an intrinsic
+				// that ILC recognizes and generates the type map at compile time.
 				_externalTypeMap = TypeMapping.GetOrCreateExternalTypeMapping<Java.Lang.Object> ();
+				Logger.Log (LogLevel.Info, "monodroid-typemap", $"TypeMap: NativeAOT mode, got {_externalTypeMap.Count} entries from TypeMapping API");
 			} else {
+				// For MonoVM/CoreCLR, we need to load the assembly and scan for TypeMapAttribute entries.
+				SetEntryAssemblyWorkaround ();
 				_externalTypeMap = CollectTypeMapEntriesForMonoVM ();
+				Logger.Log (LogLevel.Info, "monodroid-typemap", $"TypeMap: MonoVM/CoreCLR mode, got {_externalTypeMap.Count} entries from assembly scan");
 			}
 		}
 
-		void LoadTypeMapsAssembly ()
+		[RequiresUnreferencedCode ("MonoVM type map uses Assembly.Load which is not trim-safe")]
+		static void SetEntryAssemblyWorkaround ()
 		{
 			var typeMapsAssembly = Assembly.Load (TypeMapsAssemblyName);
 			Assembly.SetEntryAssembly (typeMapsAssembly);
 		}
 
+		[RequiresUnreferencedCode ("MonoVM type map uses Assembly.Load and reflection which are not trim-safe")]
 		static IReadOnlyDictionary<string, Type> CollectTypeMapEntriesForMonoVM ()
 		{
 			var typeMapsAssembly = Assembly.Load (TypeMapsAssemblyName);
+			return CollectTypeMapEntries (typeMapsAssembly);
+		}
+
+		static IReadOnlyDictionary<string, Type> CollectTypeMapEntries (Assembly typeMapsAssembly)
+		{
 			var result = new Dictionary<string, Type> (StringComparer.Ordinal);
 			var typeMapAttrType = typeof (TypeMapAttribute<>);
 
@@ -131,16 +139,25 @@ namespace Android.Runtime
 		{
 			var attrs = type.GetCustomAttributes (typeof (IJniNameProviderAttribute), inherit: false);
 			if (attrs.Length > 0 && attrs[0] is IJniNameProviderAttribute jniNameProvider && !string.IsNullOrEmpty (jniNameProvider.Name)) {
-				return jniNameProvider.Name.Replace ('.', '/');
+				var jniName = jniNameProvider.Name.Replace ('.', '/');
+				Logger.Log (LogLevel.Info, "monodroid-typemap", $"ComputeJniNameForType: {type.FullName} -> {jniName} (via IJniNameProviderAttribute)");
+				return jniName;
 			}
 
 			var sigAttr = type.GetCustomAttribute<JniTypeSignatureAttribute> (inherit: false);
 			if (sigAttr != null && !string.IsNullOrEmpty (sigAttr.SimpleReference)) {
+				Logger.Log (LogLevel.Info, "monodroid-typemap", $"ComputeJniNameForType: {type.FullName} -> {sigAttr.SimpleReference} (via JniTypeSignatureAttribute)");
 				return sigAttr.SimpleReference;
 			}
 
-			var jniName = JavaNativeTypeManager.ToJniName (type);
-			return string.IsNullOrEmpty (jniName) ? "" : jniName;
+			var jniNameFromManager = JavaNativeTypeManager.ToJniName (type);
+			if (!string.IsNullOrEmpty (jniNameFromManager)) {
+				Logger.Log (LogLevel.Info, "monodroid-typemap", $"ComputeJniNameForType: {type.FullName} -> {jniNameFromManager} (via JavaNativeTypeManager)");
+				return jniNameFromManager;
+			}
+
+			Logger.Log (LogLevel.Warn, "monodroid-typemap", $"ComputeJniNameForType: {type.FullName} -> NOT FOUND");
+			return "";
 		}
 
 		/// <inheritdoc/>

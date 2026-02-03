@@ -249,8 +249,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidLinkTool       Condition=" '$(AndroidLinkTool)' == 'proguard' And '$(AndroidEnableDesugar)' == 'True' ">r8</AndroidLinkTool>
 	<!-- Enable R8 Java code shrinking for CoreCLR Release builds when Marshal Methods are not used.
 	     Without Marshal Methods, mono.android.jar (containing ~300 Implementor classes) is bundled,
-	     and R8 can remove unused classes to reduce DEX size significantly. -->
-	<AndroidLinkTool       Condition=" '$(AndroidLinkTool)' == '' And '$(AndroidEnableMarshalMethods)' != 'True' And '$(AndroidIncludeDebugSymbols)' != 'True' ">r8</AndroidLinkTool>
+	     and R8 can remove unused classes to reduce DEX size significantly.
+	     For TypeMap V3 (AndroidEnableTypeMaps=true), R8 is disabled because we don't have a way
+	     to determine which types survived ILC trimming for generating accurate keep rules yet.
+	     D8 is used instead (dexing without shrinking). -->
+	<AndroidLinkTool       Condition=" '$(AndroidLinkTool)' == '' And '$(AndroidEnableMarshalMethods)' != 'True' And '$(AndroidIncludeDebugSymbols)' != 'True' And '$(AndroidEnableTypeMaps)' != 'true' ">r8</AndroidLinkTool>
 	<AndroidEnableProguard Condition=" '$(AndroidLinkTool)' != '' ">True</AndroidEnableProguard>
 	<AndroidEnableDesugar  Condition=" '$(AndroidEnableDesugar)' == '' And ('$(AndroidDexTool)' == 'd8' Or '$(AndroidLinkTool)' == 'r8') ">True</AndroidEnableDesugar>
 	<AndroidEnableDesugar  Condition=" '$(AndroidEnableDesugar)' == '' ">False</AndroidEnableDesugar>
@@ -1406,6 +1409,46 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="MonoPlatformJarPath" PropertyName="MonoPlatformJarPath" />
     <Output TaskParameter="MonoPlatformDexPath" PropertyName="MonoPlatformDexPath" />
   </GetMonoPlatformJar>
+</Target>
+
+<!-- For TypeMap V3: Remove legacy Java.Interop JAR files from ExtractedJarImports.
+     These JAR files contain classes like ManagedPeer, JavaProxyThrowable, etc.
+     that have static initializers calling registerNativeMembers() which is not
+     supported in TypeMap V3. -->
+<Target Name="_RemoveLegacyJarsForTypeMapV3"
+    AfterTargets="_GetLibraryImports"
+    BeforeTargets="_DetermineJavaLibrariesToCompile"
+    Condition=" '$(AndroidEnableTypeMaps)' == 'true' ">
+  <ItemGroup>
+    <!-- Remove java-interop.jar which contains ManagedPeer, JavaProxyThrowable, JavaProxyObject -->
+    <ExtractedJarImports Remove="@(ExtractedJarImports)" Condition=" $([System.String]::new('%(Filename)').EndsWith('java-interop')) " />
+    <AndroidJavaLibrary Remove="@(AndroidJavaLibrary)" Condition=" $([System.String]::new('%(Filename)').EndsWith('java-interop')) " />
+  </ItemGroup>
+</Target>
+
+<!-- For TypeMap V3: Create a stripped runtime JAR without problematic classes.
+     The runtime JAR (java_runtime_clr.jar or java_runtime_net6.jar) contains classes like
+     ManagedPeer, JavaProxyThrowable, JavaProxyObject which have static initializers calling
+     registerNativeMembers(). This is not supported in TypeMap V3.
+     We create a stripped copy that excludes these classes. -->
+<Target Name="_CreateStrippedRuntimeJarForTypeMapV3"
+    BeforeTargets="_DetermineJavaLibrariesToCompile"
+    DependsOnTargets="_CollectRuntimeJarFilenames"
+    Condition=" '$(AndroidEnableTypeMaps)' == 'true' And '$(_RuntimeJar)' != '' ">
+  <PropertyGroup>
+    <_StrippedRuntimeJarDir>$(IntermediateOutputPath)typemap$([System.IO.Path]::DirectorySeparatorChar)</_StrippedRuntimeJarDir>
+    <_StrippedRuntimeJar>$(_StrippedRuntimeJarDir)java_runtime_stripped.jar</_StrippedRuntimeJar>
+  </PropertyGroup>
+  <MakeDir Directories="$(_StrippedRuntimeJarDir)" />
+  <!-- Use zip command to create a stripped copy of the runtime JAR -->
+  <Exec 
+      Condition=" Exists('$(_RuntimeJar)') "
+      Command="unzip -q -o '$(_RuntimeJar)' -d '$(_StrippedRuntimeJarDir)runtime_jar_tmp' -x 'net/dot/jni/ManagedPeer.class' 'net/dot/jni/internal/JavaProxyObject.class' 'net/dot/jni/internal/JavaProxyThrowable.class' 'net_dot_jni_*.h' &amp;&amp; cd '$(_StrippedRuntimeJarDir)runtime_jar_tmp' &amp;&amp; jar cf '../java_runtime_stripped.jar' . &amp;&amp; cd .. &amp;&amp; rm -rf runtime_jar_tmp"
+      IgnoreExitCode="false" />
+  <!-- Override the runtime jar property to use the stripped version -->
+  <PropertyGroup Condition=" Exists('$(_StrippedRuntimeJar)') ">
+    <_RuntimeJar>$(_StrippedRuntimeJar)</_RuntimeJar>
+  </PropertyGroup>
 </Target>
 
 <Target Name="_AddStaticResources"

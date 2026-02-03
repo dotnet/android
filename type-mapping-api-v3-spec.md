@@ -4,12 +4,58 @@
 
 - [ ] What is the startup perf impact of loading large type maps?
     - TODO: measure how long it takes to load ~8000 TypeMapAttributes into a type map (untrimmed Debug build scenario) on Samsung A16 (low end phone)
-- [ ] What is the potnetial size saving from excluding unnecessary .java and .o for trimmed classes?
-    - TODO: compare the size of .dex and .so files with and without the trimmed java classes (~300 difference)
+- [x] What is the potential size saving from excluding unnecessary .java and .o for trimmed classes?
+    - **RESOLVED**: Significant savings achieved with R8 trimming.
+    - Tested on Samsung Galaxy S23 with simple app (2026-02-01):
+      - MonoVM: 36 classes, 21KB classes.dex
+      - CoreCLR (before R8): 330 classes, 249KB classes.dex
+      - CoreCLR (after R8): ~60 classes, 33KB classes.dex (**87% reduction**)
+    - Startup improved ~10ms with R8 trimming (179ms vs 189ms)
+    - Key fix: Modified `proguard_xamarin.cfg` to allow trimming of unused Implementor classes
 - [x] Do we need special handling for array and generic types (especially lists)?
-    - **RESOLVED**: Yes, array types require special handling. See [Section 20.1: Array Type Handling](#201-array-type-handling) for the design.
+    - **RESOLVED**: Yes, array types require special handling. See [Section 21.1: Array Type Handling](#211-array-type-handling) for the design.
     - Array types use `ArrayProxyAttribute<T>` for AOT-safe array creation
     - Generic list types are handled through the standard MCW binding pattern
+
+## 0.1 Resolved Issues (PoC Implementation)
+
+The following issues were identified and fixed during PoC development:
+
+### 0.1.1 Missing Java Constructors ✅ FIXED
+
+**Status:** ✅ Fixed (2026-02-01)
+
+**Problem:** User types like `MainActivity` need "activation constructors" - Java constructors that call native code to create the managed peer. The initial implementation only generated constructors for types with explicit `[Register("<init>")]` attributes on their constructors.
+
+**Root Cause:** C# uses `[Register(".ctor", ...)]` NOT `[Register("<init>", ...)]`. The code was checking for `"<init>"` which never matched.
+
+**Fix Applied:**
+1. Added `ActivationConstructorInfo` class and `ActivationConstructors` property to `JavaPeerInfo`
+2. Added `CollectActivationConstructors()` method that walks base type hierarchy looking for registered constructors
+3. Fixed jniName check to accept both `".ctor"` and `"<init>"`
+4. Updated Java, LLVM IR, and IL code generators to emit activation constructors with `nc_activate_X()` native calls
+
+### 0.1.2 Debug Logging in JCW Output ✅ FIXED
+
+**Status:** ✅ Fixed (2026-02-01)
+
+The `android.util.Log.i("JCW-TRACE", ...)` calls have been removed from `GenerateTypeMapAssembly.cs`.
+
+### 0.1.3 Excessive Implementor in Final DEX ✅ RESOLVED
+
+**Status:** ✅ Resolved - NOT A BUG
+
+**Observation:** 298 Implementor `.java` files are generated, but R8 correctly trims them.
+
+**Investigation Results:**
+- 298 Implementor Java files are generated at build time (before R8)
+- These are compiled to JAR, then R8 trims unused classes
+- **Final DEX: Only 1 Implementor** (`RunnableImplementor`) remains
+- **NewTypeMap DEX (19KB, 31 classes) is smaller than MonoVM (22KB, 36 classes)**
+
+**Key Fix:** Removed blanket `-keep class mono.android.app.** { *; }` from proguard config, allowing R8 to trim unused Implementors.
+
+The extra Java file generation at build time is intentional - we generate JCWs for all types that might be needed, then let R8 trim unused ones. This is a trade-off: slower builds but optimal runtime size.
 
 ## 1. Overview
 
@@ -38,7 +84,7 @@ This specification defines the architecture for enabling Java-to-.NET interopera
 
 ### 1.4 Prerequisites
 
-This specification requires .NET 11 SDK with [dotnet/runtime#121513](https://github.com/dotnet/runtime/pull/121513) merged. This PR adds the `--typemap-entry-assembly` ILLink flag that enables the `TypeMapping.GetOrCreateExternalTypeMapping<T>()` intrinsic to work correctly with trimming. See [Section 19: Toolchain Requirements](#19-toolchain-requirements) for details.
+This specification requires .NET 11 SDK with [dotnet/runtime#121513](https://github.com/dotnet/runtime/pull/121513) merged. This PR adds the `--typemap-entry-assembly` ILLink flag that enables the `TypeMapping.GetOrCreateExternalTypeMapping<T>()` intrinsic to work correctly with trimming. See [Section 20: Toolchain Requirements](#20-toolchain-requirements) for details.
 
 ---
 
@@ -324,51 +370,101 @@ public sealed class IOnClickListener_Proxy : JavaPeerProxy
 
 ### 6.1 Base Class
 
+The base class provides instance creation and array factory methods. Note that `GetFunctionPointer` is NOT in the base class - it's in a separate interface (see Section 6.3).
+
 ```csharp
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, Inherited = false)]
 abstract class JavaPeerProxy : Attribute
 {
     /// <summary>
-    /// Returns the function pointer for the UCO method at the given index.
-    /// </summary>
-    public abstract IntPtr GetFunctionPointer(int methodIndex);
-
-    /// <summary>
     /// Creates an instance of the target type wrapping the given Java object.
     /// </summary>
     public abstract IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer);
+
+    /// <summary>
+    /// Creates an array of the target type.
+    /// </summary>
+    public abstract Array CreateArray(int length, int rank);
+
+    /// <summary>
+    /// Static helper for AOT-safe array creation.
+    /// </summary>
+    protected static Array CreateArrayOf<T>(int length, int rank);
+
+    /// <summary>
+    /// Gets the invoker type for interfaces/abstract classes.
+    /// </summary>
+    public Type? InvokerType { get; protected set; }
 }
 ```
 
-### 6.2 Proxy Behavior by Type Category
+### 6.2 IAndroidCallableWrapper Interface
 
-| Type Category | `GetFunctionPointer` Behavior | `CreateInstance` Behavior |
-|---------------|-------------------------------|---------------------------|
-| Concrete class with JCW | Returns UCO function pointers | Creates instance of the type |
-| MCW (framework binding) | Throws `NotSupportedException` | Creates instance of the type |
-| Interface | Throws `NotSupportedException` | Creates instance of **Invoker** |
-| Implementor | Returns UCO function pointers | Creates instance of the implementor |
+**OPTIMIZATION**: The `GetFunctionPointer` method is separated into a distinct interface because ~95% of types are MCW (Managed Callable Wrapper) types that:
+- Wrap existing Java classes
+- Have `DoNotGenerateAcw = true`
+- Never receive callbacks from Java
+- Don't need `GetFunctionPointer` or LLVM IR stubs
+
+Only ACW (Android Callable Wrapper) types - user types, Implementors - implement this interface:
+
+```csharp
+/// <summary>
+/// Interface for proxy types that represent Android Callable Wrappers (ACW).
+/// ACW types are .NET types that have a corresponding generated Java class which calls back into .NET via JNI.
+/// Only types with DoNotGenerateAcw=false implement this interface.
+/// </summary>
+public interface IAndroidCallableWrapper
+{
+    /// <summary>
+    /// Gets a function pointer for a marshal method at the specified index.
+    /// </summary>
+    IntPtr GetFunctionPointer(int methodIndex);
+}
+```
+
+**Benefits:**
+- ~95% fewer UCO methods generated
+- ~95% less LLVM IR code
+- Faster codegen and smaller binaries
+- Runtime only checks for callbacks on types that actually have them
+
+### 6.3 Proxy Behavior by Type Category
+
+| Type Category | Implements `IAndroidCallableWrapper`? | `GetFunctionPointer` Behavior | `CreateInstance` Behavior |
+|---------------|--------------------------------------|-------------------------------|---------------------------|
+| Concrete class with JCW | ✅ Yes | Returns UCO function pointers | Creates instance of the type |
+| MCW (framework binding) | ❌ No | N/A (not implemented) | Creates instance of the type |
+| Interface | ❌ No | N/A (not implemented) | Creates instance of **Invoker** |
+| Implementor | ✅ Yes | Returns UCO function pointers | Creates instance of the implementor |
 
 ---
 
 ## 7. Generated Proxy Types
 
-### 7.1 User Class Proxy
+### 7.1 User Class Proxy (ACW Type)
+
+User classes that generate JCWs implement BOTH `JavaPeerProxy` AND `IAndroidCallableWrapper`:
 
 ```csharp
 [com_example_MainActivity_Proxy]
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, Inherited = false)]
-public sealed class com_example_MainActivity_Proxy : JavaPeerProxy
+public sealed class com_example_MainActivity_Proxy : JavaPeerProxy, IAndroidCallableWrapper
 {
-    public override IntPtr GetFunctionPointer(int methodIndex) => methodIndex switch
+    // IAndroidCallableWrapper implementation
+    public IntPtr GetFunctionPointer(int methodIndex) => methodIndex switch
     {
         0 => (IntPtr)(delegate*<IntPtr, IntPtr, IntPtr, void>)&n_onCreate_mm_0,
         1 => (IntPtr)(delegate*<IntPtr, IntPtr, void>)&nc_activate_0,
         _ => IntPtr.Zero
     };
 
+    // JavaPeerProxy implementation
     public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
         => new MainActivity(handle, transfer);
+
+    public override Array CreateArray(int length, int rank)
+        => CreateArrayOf<MainActivity>(length, rank);
 
     [UnmanagedCallersOnly]
     public static void n_onCreate_mm_0(IntPtr jnienv, IntPtr obj, IntPtr p0)
@@ -399,23 +495,47 @@ public sealed class com_example_MainActivity_Proxy : JavaPeerProxy
 }
 ```
 
-### 7.2 Implementor Proxy
+### 7.2 MCW Type Proxy (No JCW)
 
-Implementors implement Java interfaces and ARE callable from Java. Their UCO wrappers call the **Invoker's** static callback methods:
+MCW types (framework bindings with `DoNotGenerateAcw=true`) only implement `JavaPeerProxy`, NOT `IAndroidCallableWrapper`:
+
+```csharp
+[android_widget_TextView_Proxy]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, Inherited = false)]
+public sealed class android_widget_TextView_Proxy : JavaPeerProxy
+{
+    // NO GetFunctionPointer - this is an MCW type, Java never calls back into it
+
+    public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
+        => new TextView(handle, transfer);
+
+    public override Array CreateArray(int length, int rank)
+        => CreateArrayOf<TextView>(length, rank);
+}
+```
+
+### 7.3 Implementor Proxy (ACW Type)
+
+Implementors implement Java interfaces and ARE callable from Java. They implement BOTH interfaces. Their UCO wrappers call the **Invoker's** static callback methods:
 
 ```csharp
 [mono_android_view_View_OnClickListenerImplementor_Proxy]
-public sealed class mono_android_view_View_OnClickListenerImplementor_Proxy : JavaPeerProxy
+public sealed class mono_android_view_View_OnClickListenerImplementor_Proxy : JavaPeerProxy, IAndroidCallableWrapper
 {
-    public override IntPtr GetFunctionPointer(int methodIndex) => methodIndex switch
+    // IAndroidCallableWrapper implementation
+    public IntPtr GetFunctionPointer(int methodIndex) => methodIndex switch
     {
         0 => (IntPtr)(delegate*<IntPtr, IntPtr, IntPtr, void>)&n_OnClick_mm_0,
         1 => (IntPtr)(delegate*<IntPtr, IntPtr, void>)&nc_activate_0,
         _ => IntPtr.Zero
     };
 
+    // JavaPeerProxy implementation
     public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
         => new View.IOnClickListenerImplementor(handle, transfer);
+
+    public override Array CreateArray(int length, int rank)
+        => CreateArrayOf<View.IOnClickListenerImplementor>(length, rank);
 
     [UnmanagedCallersOnly]
     public static void n_OnClick_mm_0(IntPtr jnienv, IntPtr obj, IntPtr v)
@@ -525,7 +645,7 @@ newobj instance void [Mono.Android]Android.App.Activity::.ctor(native int, value
 ret
 ```
 
-**Note:** When using base class constructor, derived type field initializers do NOT run. This matches legacy behavior. See Section 20.6 for full details on IgnoresAccessChecksTo.
+**Note:** When using base class constructor, derived type field initializers do NOT run. This matches legacy behavior. See Section 21.6 for full details on IgnoresAccessChecksTo.
 
 ### 9.4 JI Constructor Handle Cleanup
 
@@ -570,7 +690,72 @@ try {
 
 ---
 
-## 10. Export Attribute Support
+## 10. Java Constructor Generation
+
+**IMPORTANT:** This section describes generating **Java constructors** in the JCW `.java` files. This is distinct from [Section 9: Activation Constructor Handling](#9-activation-constructor-handling) which describes **managed activation constructors** used by `CreateInstance`.
+
+### 10.1 Overview
+
+When Java code creates an instance of a JCW class, the Java constructor must:
+1. Call the superclass constructor
+2. Activate the .NET peer (call managed code to create the corresponding .NET object)
+
+```java
+// Generated Java constructor pattern:
+public MainActivity () {
+    super ();
+    if (getClass () == MainActivity.class) {
+        // Call native activation method (index depends on ctor signature)
+        nc_activate_0 ();
+    }
+}
+
+private native void nc_activate_0 ();
+```
+
+### 10.2 Constructor Generation Algorithm
+
+The Java constructor generation must match what the legacy `CecilImporter.AddConstructors()` does:
+
+```
+FOR EACH type T in hierarchy (from topmost base with DoNotGenerateAcw=false → current type):
+    FOR EACH constructor C in T:
+        IF C has [Export] attribute:
+            Generate Java ctor with export handling
+        ELSE IF C has [Register("<init>", signature, connector)] attribute:
+            Generate Java ctor with that signature
+        ELSE IF baseCtors is not null:
+            IF C's parameters match any baseCtor:
+                Generate Java ctor (inherit signature pattern)
+            ELSE IF any baseCtor has no parameters:
+                Generate Java ctor (use no-arg super())
+```
+
+**Key insight:** User types like `MainActivity` typically have NO `[Register]` on their constructors. The Java constructor is generated because:
+1. The base type `Activity` has `[Register("<init>", "()V", ...)]` on its no-arg ctor
+2. `MainActivity` has a compatible no-arg ctor (implicit or explicit)
+3. Therefore, a Java constructor is generated for `MainActivity`
+
+### 10.3 Activation Call Generation
+
+Inside the Java constructor, the activation call depends on the **Java peer style**:
+
+| Style | Activation Call |
+|-------|-----------------|
+| **XA (Legacy)** | `mono.android.TypeManager.Activate("AssemblyQualifiedName", "params", this, args)` |
+| **JI (Java.Interop)** | `net.dot.jni.ManagedPeer.construct(this, "signature", args)` |
+
+For new TypeMap, we should use a new activation pattern that integrates with the generated proxies.
+
+### 10.4 Current Implementation Status
+
+⚠️ **The current PoC implementation is missing this logic.** See [Section 0.1.1: Missing Java Constructors](#011-missing-java-constructors) for details.
+
+The fix requires updating `GenerateTypeMapAssembly.cs` to implement the inheritance-based algorithm described above.
+
+---
+
+## 11. Export Attribute Support
 
 ### 10.1 Approach
 
@@ -605,7 +790,7 @@ When `[Export]` doesn't specify a signature, derive from .NET types:
 
 ---
 
-## 11. LLVM IR Generation
+## 12. LLVM IR Generation
 
 ### 11.1 Per-Method Stub Template
 
@@ -665,7 +850,7 @@ define default void @Java_...  ; NOT hidden!
 
 ---
 
-## 12. UCO Wrapper Generation
+## 13. UCO Wrapper Generation
 
 ### 12.1 Regular Method UCO
 
@@ -725,7 +910,7 @@ public static void n_setEnabled_mm_0(IntPtr jnienv, IntPtr obj, byte enabled)
 
 ---
 
-## 13. Alias Handling
+## 14. Alias Handling
 
 ### 13.1 When Aliases Are Needed
 
@@ -769,7 +954,7 @@ The bracket characters `[` and `]` cannot appear in valid JNI names, guaranteein
 
 ---
 
-## 14. Runtime Caching
+## 15. Runtime Caching
 
 ### 14.1 Native Layer
 
@@ -800,9 +985,9 @@ public sealed class TypeMapAttributeTypeMap : ITypeMap
 
 ---
 
-## 15. Build Pipeline
+## 16. Build Pipeline
 
-### 15.1 Debug Build (No Trimming)
+### 16.1 Debug Build (No Trimming)
 
 ```
 1. Compile user assemblies
@@ -831,7 +1016,7 @@ public sealed class TypeMapAttributeTypeMap : ITypeMap
                                                       (larger, all code included)
 ```
 
-### 15.2 Release Build (With Trimming)
+### 16.2 Release Build (With Trimming)
 
 ```
 1. Compile user assemblies
@@ -869,7 +1054,7 @@ public sealed class TypeMapAttributeTypeMap : ITypeMap
                               (optimized, dead code removed)
 ```
 
-### 15.3 Debug vs Release Build Flows
+### 16.3 Debug vs Release Build Flows
 
 The build flow differs significantly based on whether trimming is enabled:
 
@@ -927,7 +1112,7 @@ Post-Trimming Filter
 | Build speed | Faster | Slower (trimming overhead) |
 | TypeMapAssembly.dll | ALL types | ALL types (roots for linker) |
 
-### 15.3 Post-Trimming Filtering (Release Only)
+### 16.5 Post-Trimming Filtering (Release Only)
 
 **Problem:** We generate JCW .java files and LLVM IR .ll files for ALL types before trimming. After trimming, some .NET types are removed, but their Java classes and native stubs still exist.
 
@@ -947,7 +1132,7 @@ Post-Trimming Filter
 
 **When to skip filtering:** If `$(PublishTrimmed)` is false (Debug), skip the post-trimming filter entirely and link all .o files.
 
-### 15.3 File Naming Convention
+### 16.6 File Naming Convention
 
 ```
 $(IntermediateOutputPath)/
@@ -969,7 +1154,70 @@ $(IntermediateOutputPath)/
     └── proguard_typemap.cfg                    # -keep rules for surviving types only
 ```
 
-### 15.4 Type Hash Computation
+### 16.4 R8/ProGuard Configuration
+
+R8 is used to shrink unused Java classes from the DEX file. Proper configuration is critical for achieving small DEX sizes comparable to MonoVM.
+
+#### 16.4.1 Key ProGuard Rules
+
+The `proguard_xamarin.cfg` embedded in the SDK should use **selective keeps**, not blanket wildcards:
+
+```proguard
+# ✅ GOOD: Selective keeps for runtime infrastructure
+-keep class mono.android.Runtime { *; <init>(...); }
+-keep class mono.android.TypeManager { *; <init>(...); }
+-keep class mono.android.GCUserPeer { *; <init>(...); }
+-keep class mono.MonoPackageManager { *; <init>(...); }
+-keep class mono.MonoRuntimeProvider* { *; <init>(...); }
+-keep class net.dot.jni.** { *; <init>(); }
+
+# ✅ GOOD: Keep JCW classes by crc64 prefix
+-keep class crc64**.** { *; <init>(...); }
+
+# ❌ BAD: Blanket keep prevents R8 from trimming Implementors
+# -keep class mono.android.** { *; <init>(...); }
+# -keep class mono.android.app.** { *; <init>(...); }
+```
+
+#### 16.4.2 Implementor Classes
+
+Implementor classes (e.g., `mono.android.app.DatePickerDialog_OnDateSetListenerImplementor`) are JCW classes for Java listener interfaces. They should **only be kept if actually used**.
+
+**Problem with blanket keeps:**
+```proguard
+# This keeps ALL ~300 Implementor classes, bloating DEX
+-keep class mono.android.app.** { *; <init>(...); }
+```
+
+**Solution:** Remove blanket keeps and let R8 trace actual usage. Implementors that are actually instantiated will be kept via the `crc64**.**` rule or direct references.
+
+#### 16.4.3 Benchmark Results
+
+Tested on Samsung Galaxy S23 with simple app (2026-02-01):
+
+| Configuration | DEX Classes | DEX Size | Startup |
+|---------------|-------------|----------|---------|
+| MonoVM (Marshal Methods) | 36 | 21KB | 169.8ms |
+| CoreCLR (blanket keeps) | 330 | 249KB | 189.8ms |
+| CoreCLR (selective keeps) | ~60 | 33KB | 179ms |
+
+**Improvement:** 87% DEX size reduction, ~10ms startup improvement.
+
+#### 16.4.4 R8.cs Keep Rule Generation
+
+The `R8.cs` task generates keep rules for all types in the ACW map (`acw-map.txt`). This is necessary to prevent R8 from removing JCW classes, but the current implementation keeps ALL types:
+
+```csharp
+// Current behavior in R8.cs (lines 88-98)
+foreach (var v in acwMap.Values) {
+    javaTypes.Add(v);
+}
+// Generates: -keep class X { *; } for EVERY type
+```
+
+**Potential optimization:** Only generate keep rules for types that are actually instantiated from Java (Activities, Services, Broadcast Receivers, Content Providers) or referenced in AndroidManifest.xml.
+
+### 16.7 Type Hash Computation
 
 Each type needs a stable identifier that:
 - Uniquely identifies the type
@@ -981,7 +1229,7 @@ Each type needs a stable identifier that:
 string typeHash = ComputeHash(javaClassName);  // e.g., "com/example/MainActivity" → "a1b2c3d4"
 ```
 
-### 15.5 Incremental Build Strategy
+### 16.8 Incremental Build Strategy
 
 | Type Source | Strategy |
 |-------------|----------|
@@ -989,7 +1237,7 @@ string typeHash = ComputeHash(javaClassName);  // e.g., "com/example/MainActivit
 | NuGet package types | Generate on first build, cache by package version |
 | User types | Always regenerate (typically few types) |
 
-### 15.6 TypeMap Attributes and Trimming
+### 16.9 TypeMap Attributes and Trimming
 
 The trimmable type map system uses `TypeMapAttribute` to point to **proxy types**, which have direct references to the real types.
 
@@ -1032,7 +1280,7 @@ class MainActivity_Proxy {
 
 ---
 
-### 15.7 Legacy Trimmer Steps: Complete Analysis
+### 16.10 Legacy Trimmer Steps: Complete Analysis
 
 This section provides a comprehensive analysis of ALL legacy ILLink custom steps, explaining what they do, why they exist, and how trimmable type map replaces them.
 
@@ -1363,7 +1611,7 @@ foreach (var peer in javaPeers) {
 
 ---
 
-### 15.8 Type Detection Rules: Unconditional vs Trimmable
+### 16.11 Type Detection Rules: Unconditional vs Trimmable
 
 This section defines the **exact rules** for determining which types are preserved **unconditionally** vs which are **trimmable**.
 
@@ -1541,7 +1789,7 @@ public class MyApp : Application { }
 
 ---
 
-### 15.8 Proxy Type Generation
+### 16.12 Proxy Type Generation
 
 The proxy types must contain direct references to all methods/constructors that need preservation.
 
@@ -1625,7 +1873,7 @@ Is this type referenced in [Application] BackupAgent/ManageSpaceActivity?
 4. **No custom ILLink steps** - Can be deleted entirely
 5. **NativeAOT compatible** - Enables skipping ILLink for NativeAOT builds
 
-### 15.9 Non-Preservation ILLink Steps
+### 16.13 Non-Preservation ILLink Steps
 
 These steps are NOT related to type/method preservation and are NOT replaced by trimmable type map:
 
@@ -1726,16 +1974,16 @@ See section 15.3 "Post-Trimming Filtering" for details.
 
 ---
 
-## 16. Error Handling
+## 17. Error Handling
 
-### 16.1 Build-Time Errors
+### 17.1 Build-Time Errors
 
 | Error Code | Description |
 |------------|-------------|
 | XA4212 | Type implements IJavaObject but doesn't extend Java.Lang.Object |
 | XA4xxx | No activation constructor found in type hierarchy |
 
-### 16.2 Runtime Errors
+### 17.2 Runtime Errors
 
 | Scenario | Behavior |
 |----------|----------|
@@ -1746,9 +1994,9 @@ See section 15.3 "Post-Trimming Filtering" for details.
 
 ---
 
-## 17. Implementation Checklist
+## 18. Implementation Checklist
 
-### 17.1 Core Infrastructure
+### 18.1 Core Infrastructure
 
 - [ ] MSBuild task: `GenerateTypeMaps`
 - [ ] Assembly scanning for Java peers
@@ -1757,26 +2005,26 @@ See section 15.3 "Post-Trimming Filtering" for details.
 - [ ] GetFunctionPointer switch statements
 - [ ] CreateInstance factory methods
 
-### 17.2 Constructor Handling
+### 18.2 Constructor Handling
 
 - [x] IgnoresAccessChecksTo for protected/base constructors (replaced UnsafeAccessor)
 - [ ] XI + JI constructor support
 - [ ] Constructor search up hierarchy
 
-### 17.3 Native Integration
+### 18.3 Native Integration
 
 - [ ] LLVM IR stub generation
 - [ ] JCW Java file generation
 - [ ] Implementor JCW + UCO generation
 - [ ] Function pointer callback wiring
 
-### 17.4 Performance
+### 18.4 Performance
 
 - [ ] SDK type pre-generation and caching
 - [ ] NuGet package type caching
 - [ ] Parallel assembly scanning
 
-### 17.5 Validation
+### 18.5 Validation
 
 - [ ] Full trimming validation (`TrimMode=full`)
 - [ ] Performance benchmarks
@@ -1784,16 +2032,16 @@ See section 15.3 "Post-Trimming Filtering" for details.
 
 ---
 
-## 18. File Locations
+## 19. File Locations
 
-### 18.1 Build-Time Components
+### 19.1 Build-Time Components
 
 | Component | Location |
 |-----------|----------|
 | TypeMaps generator task | `src/Xamarin.Android.Build.Tasks/Tasks/GenerateTypeMaps.cs` |
 | Build targets | `src/Xamarin.Android.Build.Tasks/Microsoft.Android.Sdk/targets/` |
 
-### 18.2 Runtime Components
+### 19.2 Runtime Components
 
 | Component | Location |
 |-----------|----------|
@@ -1990,9 +2238,9 @@ if (callbackTypeName == null) {
 
 ---
 
-## 19. Toolchain Requirements
+## 20. Toolchain Requirements
 
-### 19.1 .NET SDK Version
+### 20.1 .NET SDK Version
 
 The Type Mapping API v3 requires a .NET SDK version that includes:
 
@@ -2002,7 +2250,7 @@ The Type Mapping API v3 requires a .NET SDK version that includes:
 | `TypeMapping.GetOrCreateExternalTypeMapping<T>()` intrinsic | .NET 11 | Same PR |
 | `TypeMappingEntryAssembly` runtimeconfig property | .NET 11 | Same PR |
 
-### 19.2 Build Configuration
+### 20.2 Build Configuration
 
 The following MSBuild properties must be set:
 
@@ -2021,7 +2269,7 @@ The following MSBuild properties must be set:
 </ItemGroup>
 ```
 
-### 19.3 ILLink Targets
+### 20.3 ILLink Targets
 
 The .NET SDK's `Microsoft.NET.ILLink.targets` automatically adds the flag:
 ```xml
@@ -2030,7 +2278,7 @@ The .NET SDK's `Microsoft.NET.ILLink.targets` automatically adds the flag:
 </_ExtraTrimmerArgs>
 ```
 
-### 19.4 Version Compatibility Matrix
+### 20.4 Version Compatibility Matrix
 
 | .NET for Android | .NET SDK Required | Notes |
 |------------------|-------------------|-------|
@@ -2039,9 +2287,9 @@ The .NET SDK's `Microsoft.NET.ILLink.targets` automatically adds the flag:
 
 ---
 
-## 20. Open Issues and TODOs
+## 21. Open Issues and TODOs
 
-### 20.1 Array Type Handling
+### 21.1 Array Type Handling
 
 **Status**: Designed and Implemented
 
@@ -2274,7 +2522,7 @@ void GenerateProxyType(JavaPeer peer)
 
 **Note:** No separate array TypeMap entries are generated. Array creation uses the element type's proxy.
 
-### 20.2 ILLink UnsafeAccessor Constructor Marking
+### 21.2 ILLink UnsafeAccessor Constructor Marking
 
 **Status**: Known limitation, workaround available
 
@@ -2296,14 +2544,14 @@ ret
 
 **Limitation**: `ldftn + calli` cannot bypass access checks at runtime. Protected constructors fail with `MethodAccessException`.
 
-**Solution**: Use `IgnoresAccessChecksToAttribute` (see Section 20.6).
+**Solution**: Use `IgnoresAccessChecksToAttribute` (see Section 21.6).
 
 **Result with UnsafeAccessor**: 54 types preserved
 **Result with ldftn+calli + IgnoresAccessChecksTo**: 26 types preserved (better than legacy's 37)
 
 **Future**: Consider filing an issue with dotnet/runtime to add signature matching to `ProcessConstructorAccessor` in ILLink.
 
-### 20.3 Callback Type Resolution for Inherited Methods
+### 21.3 Callback Type Resolution for Inherited Methods
 
 **Status**: Fixed
 
@@ -2328,7 +2576,7 @@ if (callbackTypeName == null) {
 
 **Impact**: Critical fix - callbacks would fail to resolve without this.
 
-### 20.4 Shared Callback Wrappers (Future Optimization)
+### 21.4 Shared Callback Wrappers (Future Optimization)
 
 **Status**: Proposed, not implemented
 
@@ -2367,7 +2615,7 @@ MainActivity, MyOtherActivity both reference Activity_Proxy.n_onCreate_mm_0
 - Native LLVM IR needs to know which proxy has the wrapper and what method index
 - Consistent method indices across hierarchy or delegation pattern needed
 
-### 20.5 UnsafeAccessor for Static Method Callbacks
+### 21.5 UnsafeAccessor for Static Method Callbacks
 
 **Status**: Resolved - replaced with IgnoresAccessChecksTo
 
@@ -2375,9 +2623,9 @@ MainActivity, MyOtherActivity both reference Activity_Proxy.n_onCreate_mm_0
 
 **Original approach**: `[UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]` - but this had issues with ILLink marking and runtime resolution.
 
-**Solution**: Use `IgnoresAccessChecksToAttribute` instead (see Section 20.6).
+**Solution**: Use `IgnoresAccessChecksToAttribute` instead (see Section 21.6).
 
-### 20.6 IgnoresAccessChecksTo for Cross-Assembly Access
+### 21.6 IgnoresAccessChecksTo for Cross-Assembly Access
 
 **Status**: Implemented and working
 

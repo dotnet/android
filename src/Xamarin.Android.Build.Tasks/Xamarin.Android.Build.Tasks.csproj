@@ -40,6 +40,8 @@
     <Compile Remove="MSBuild\**" />
     <Compile Remove="Resources\**" />
     <Compile Remove="Tests\**" />
+    <Compile Remove="tools\**" />
+    <Compile Remove="Microsoft.Android.Sdk\tools\**" />
     <EmbeddedResource Remove="Tests\**" />
     <None Remove="Tests\**" />
     <Compile Include="..\..\bin\Build$(Configuration)\XABuildConfig.cs" />

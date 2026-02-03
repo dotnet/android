@@ -262,4 +262,9 @@
 
   <Import Project="$(XamarinAndroidSourcePath)build-tools\scripts\TestApks.targets" />
 
+  <PropertyGroup>
+    <_XamarinAndroidBuildTasksAssembly>$(XamarinAndroidSourcePath)bin\Debug\lib\packs\Microsoft.Android.Sdk.$(HostOS)\36.1.99\tools\Xamarin.Android.Build.Tasks.dll</_XamarinAndroidBuildTasksAssembly>
+  </PropertyGroup>
+
+  <Import Project="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\Microsoft.Android.Sdk.ILLink.targets" />
 </Project>

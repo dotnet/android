@@ -279,7 +279,7 @@ This file contains the .NET 5-specific targets to customize ILLink
        ILLink copies the assembly to IntermediateLinkDir, so we need to reference that location. -->
   <Target Name="_AddLinkedTypeMapAssemblyToPublish"
       AfterTargets="ILLink"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidEnableTypeMaps)' == 'true' ">
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidEnableTypeMaps)' == 'true' and '$(PublishAot)' != 'true' ">
     <PropertyGroup>
       <!-- TypeMaps assembly is generated to a well-known location, compute the linked path from properties -->
       <_TypeMapAssemblyFileName>_Microsoft.Android.TypeMaps.dll</_TypeMapAssemblyFileName>

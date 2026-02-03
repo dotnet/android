@@ -54,6 +54,11 @@ public class CreateAssemblyStore : AndroidTask
 
 		var store_builder = new AssemblyStoreBuilder (Log, targetRuntime);
 		var per_arch_assemblies = MonoAndroidHelper.GetPerArchAssemblies (assemblies, SupportedAbis, true);
+		if (per_arch_assemblies.Count == 0) {
+			Log.LogDebugMessage ("No assemblies available for assembly store generation, falling back to direct assembly packaging.");
+			AssembliesToAddToArchive = assemblies;
+			return !Log.HasLoggedErrors;
+		}
 
 		foreach (var kvp in per_arch_assemblies) {
 			Log.LogDebugMessage ($"Adding assemblies for architecture '{kvp.Key}'");

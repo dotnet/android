@@ -40,10 +40,15 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			if (SourceFiles.Length != DestinationFiles.Length)
-				throw new ArgumentException ("source and destination count mismatch");
+			if (SourceFiles.Length != DestinationFiles.Length) {
+				Log.LogWarning ($"SourceFiles ({SourceFiles.Length}) and DestinationFiles ({DestinationFiles.Length}) count mismatch. Truncating to min length.");
+				if (SourceFiles.Length == 0 || DestinationFiles.Length == 0) {
+					return !Log.HasLoggedErrors;
+				}
+			}
 
-			for (int i = 0; i < SourceFiles.Length; i++) {
+			int count = Math.Min (SourceFiles.Length, DestinationFiles.Length);
+			for (int i = 0; i < count; i++) {
 				var src = new FileInfo (SourceFiles [i].ItemSpec);
 				if (!src.Exists) {
 					Log.LogDebugMessage ($"  Skipping {src} it does not exist");

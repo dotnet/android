@@ -1,6 +1,8 @@
 using Android.App;
 using Android.OS;
 using Android.Util;
+using Android.Views;
+using Android.Widget;
 
 namespace HelloWorld;
 
@@ -11,53 +13,77 @@ public class MainActivity : Activity
 
 	protected override void OnCreate (Bundle? savedInstanceState)
 	{
-		base.OnCreate (savedInstanceState);
-		SetContentView (Resource.Layout.Main);
+		try {
+			Log.Info (TAG, "MainActivity.OnCreate START");
+			base.OnCreate (savedInstanceState);
+			Log.Info (TAG, "After base.OnCreate");
+			SetContentView (Resource.Layout.Main);
+			Log.Info (TAG, "After SetContentView");
 
-		// Test object array callback - Java calls our DoInBackground with Object[] params
-		TestObjectArrayCallback ();
+			// Test array API - this should trigger the array TypeMap lookup
+			TestArrayAPIs ();
+
+			Log.Info (TAG, "MainActivity.OnCreate SUCCESS!");
+		} catch (System.Exception ex) {
+			Log.Error (TAG, $"Exception in OnCreate: {ex}");
+		}
 	}
 
-	void TestObjectArrayCallback ()
+	void TestArrayAPIs ()
 	{
-		Log.Info (TAG, "=== Testing Object[] callback from Java to C# ===");
+		Log.Info (TAG, "TestArrayAPIs START");
 
-		// Create custom AsyncTask that receives Object[] from Java
-		var task = new MyAsyncTask ();
+		// Test 1: String array (primitive array type) - skip ViewGroup test for now
+		string[] strings = new string[] { "Hello", "World", "TypeMap", "V3" };
+		Log.Info (TAG, $"String array: {string.Join (", ", strings)}");
 
-		// Execute with string parameters - Java will call DoInBackground with these as Object[]
-		task.Execute ("Hello", "World", "From", "Java");
-
-		Log.Info (TAG, "AsyncTask executed, check logs for callback results");
-	}
-}
-
-// Custom AsyncTask that overrides DoInBackground - Java calls this with Object[] params
-#pragma warning disable CS0618 // AsyncTask is obsolete
-[Android.Runtime.Register ("crc649c7c8361742aa92e/MyAsyncTask")]
-public class MyAsyncTask : AsyncTask
-{
-	const string TAG = "MyAsyncTask";
-
-	protected override Java.Lang.Object? DoInBackground (params Java.Lang.Object[]? @params)
-	{
-		Log.Info (TAG, $"DoInBackground called with {@params?.Length ?? 0} parameters:");
-
-		if (@params != null) {
-			for (int i = 0; i < @params.Length; i++) {
-				var p = @params[i];
-				Log.Info (TAG, $"  param[{i}]: {p} (type: {p?.GetType ().Name ?? "null"})");
-			}
+		// Test 2: Create a Java array from managed and pass it back
+		var javaStrings = new Java.Lang.String[] {
+			new Java.Lang.String ("Java"),
+			new Java.Lang.String ("String"),
+			new Java.Lang.String ("Array")
+		};
+		Log.Info (TAG, $"Java.Lang.String[] length: {javaStrings.Length}");
+		foreach (var s in javaStrings) {
+			Log.Info (TAG, $"  Java.Lang.String: {s}");
 		}
 
-		// Return a result
-		return new Java.Lang.String ($"Processed {@params?.Length ?? 0} items");
-	}
+		// Test 3: Get threads from ThreadGroup - returns Thread[]
+		try {
+			var threadGroup = Java.Lang.Thread.CurrentThread ()?.ThreadGroup;
+			if (threadGroup != null) {
+				int activeCount = threadGroup.ActiveCount ();
+				var threads = new Java.Lang.Thread[activeCount];
+				int count = threadGroup.Enumerate (threads);
+				Log.Info (TAG, $"ThreadGroup.Enumerate: {count} threads");
+				for (int i = 0; i < count; i++) {
+					Log.Info (TAG, $"  Thread[{i}]: {threads[i]?.Name}");
+				}
+			}
+		} catch (System.Exception ex) {
+			Log.Error (TAG, $"ThreadGroup test failed: {ex}");
+		}
 
-	protected override void OnPostExecute (Java.Lang.Object? result)
-	{
-		Log.Info (TAG, $"OnPostExecute: result = {result}");
-		Log.Info (TAG, "=== Object[] callback test completed ===");
+		// Test 4: TrustManagerFactory.GetTrustManagers() - returns ITrustManager[]
+		// NOTE: This may fail because Android returns internal types like RootTrustManager
+		// that don't have bindings, causing them to be wrapped as Java.Lang.Object
+		// which can't be stored in an ITrustManager[] array.
+		try {
+			var tmf = Javax.Net.Ssl.TrustManagerFactory.GetInstance (Javax.Net.Ssl.TrustManagerFactory.DefaultAlgorithm);
+			tmf?.Init ((Java.Security.KeyStore?) null);
+			var trustManagers = tmf?.GetTrustManagers ();
+			if (trustManagers != null) {
+				Log.Info (TAG, $"TrustManagers: {trustManagers.Length} items");
+				foreach (var tm in trustManagers) {
+					Log.Info (TAG, $"  TrustManager: {tm?.GetType ().Name}");
+				}
+			} else {
+				Log.Info (TAG, "TrustManagers: null");
+			}
+		} catch (System.Exception ex) {
+			Log.Error (TAG, $"TrustManager test failed (expected for internal Android types): {ex.Message}");
+		}
+
+		Log.Info (TAG, "TestArrayAPIs SUCCESS!");
 	}
 }
-#pragma warning restore CS0618

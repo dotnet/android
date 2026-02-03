@@ -7,6 +7,7 @@ static class RuntimeFeature
 {
 	const bool IsMonoRuntimeEnabledByDefault = true;
 	const bool IsCoreClrRuntimeEnabledByDefault = false;
+	const bool IsNativeAotRuntimeEnabledByDefault = false;
 	const bool IsAssignableFromCheckEnabledByDefault = true;
 	const bool StartupHookSupportEnabledByDefault = true;
 	const bool IsDynamicTypeRegistrationEnabledByDefault = true;
@@ -21,6 +22,10 @@ static class RuntimeFeature
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (IsCoreClrRuntime)}")]
 	internal static bool IsCoreClrRuntime { get; } =
 		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (IsCoreClrRuntime)}", out bool isEnabled) ? isEnabled : IsCoreClrRuntimeEnabledByDefault;
+
+	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (IsNativeAotRuntime)}")]
+	internal static bool IsNativeAotRuntime { get; } =
+		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (IsNativeAotRuntime)}", out bool isEnabled) ? isEnabled : IsNativeAotRuntimeEnabledByDefault;
 
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (IsAssignableFromCheck)}")]
 	internal static bool IsAssignableFromCheck { get; } =
