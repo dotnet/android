@@ -165,12 +165,51 @@ namespace Android.Runtime
 			}
 
 			args->propagateUncaughtExceptionFn = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&PropagateUncaughtException;
-
+			RunStartupHooksIfNeeded ();
 			SetSynchronizationContext ();
 		}
 
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		static extern unsafe void xamarin_app_init (IntPtr env, delegate* unmanaged <int, int, int, IntPtr*, void> get_function_pointer);
+
+		static void RunStartupHooksIfNeeded ()
+		{
+			// Return if startup hooks are disabled or not CoreCLR
+			if (!RuntimeFeature.IsCoreClrRuntime)
+				return;
+			if (!RuntimeFeature.StartupHookSupport)
+				return;
+
+			RunStartupHooks ();
+		}
+
+		[RequiresUnreferencedCode ("Uses reflection to access System.StartupHookProvider.")]
+		static void RunStartupHooks ()
+		{
+			const string typeName = "System.StartupHookProvider";
+			const string methodName = "ProcessStartupHooks";
+
+			var type = typeof(object).Assembly.GetType (typeName, throwOnError: false);
+			if (type is null) {
+				RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default,
+					$"Could not load type '{typeName}'. Skipping startup hooks.");
+				return;
+			}
+
+			var method = type.GetMethod (methodName, 
+				BindingFlags.NonPublic | BindingFlags.Static, null, [ typeof(string) ], null);
+			if (method is null) {
+				RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default,
+					$"Could not load method '{typeName}.{methodName}'. Skipping startup hooks.");
+				return;
+			}
+
+			// ProcessStartupHooks accepts startup hooks directly via parameter.
+			// It will also read STARTUP_HOOKS from AppContext internally.
+			// Pass DOTNET_STARTUP_HOOKS env var value so it works without needing AppContext setup.
+			string? startupHooks = Environment.GetEnvironmentVariable ("DOTNET_STARTUP_HOOKS");
+			method.Invoke (null, [ startupHooks ?? "" ]);
+		}
 
 		static void SetSynchronizationContext () =>
 			SynchronizationContext.SetSynchronizationContext (Android.App.Application.SynchronizationContext);

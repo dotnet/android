@@ -268,7 +268,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntime (runtime);
 			proj.AndroidClassParser = classParser;
 			proj.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\aFileChooserBinaries.zip") {
-				WebContentFileNameFromAzure = "aFileChooserBinaries.zip"
+				TestResourceFileName = "aFileChooserBinaries.zip"
 			});
 			proj.MetadataXml = @"
 				<metadata>
@@ -294,7 +294,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetRuntime (runtime);
 			proj.Jars.Add (new AndroidItem.EmbeddedJar ("Jars\\svg-android.jar") {
-				WebContentFileNameFromAzure = "javaBindingIssue.jar"
+				TestResourceFileName = "javaBindingIssue.jar"
 			});
 			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
@@ -316,7 +316,7 @@ namespace Xamarin.Android.Build.Tests
 			binding.SetRuntime (runtime);
 			binding.AndroidClassParser = "class-parse";
 			binding.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\adal-1.0.7.aar") {
-				WebContentFileNameFromAzure = "adal-1.0.7.aar"
+				TestResourceFileName = "adal-1.0.7.aar"
 			});
 			binding.MetadataXml = @"
 <metadata>
@@ -350,7 +350,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			binding.AndroidClassParser = "class-parse";
 			binding.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\mylibrary.aar") {
-				WebContentFileNameFromAzure = "mylibrary-debug.aar"
+				TestResourceFileName = "mylibrary-debug.aar"
 			});
 			using (var bindingBuilder = CreateDllBuilder ()) {
 				Assert.IsTrue (bindingBuilder.Build (binding), "binding build failed");
@@ -404,7 +404,7 @@ namespace Xamarin.Android.Build.Tests
 			binding.SetRuntime (runtime);
 			binding.AndroidClassParser = "class-parse";
 			binding.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\mylibrary.aar") {
-				WebContentFileNameFromAzure = "card.io-5.3.0.aar"
+				TestResourceFileName = "card.io-5.3.0.aar"
 			});
 			var path = Path.Combine ("temp", TestName);
 			using (var bindingBuilder = CreateDllBuilder (Path.Combine (path, binding.ProjectName))) {
@@ -435,10 +435,10 @@ namespace Xamarin.Android.Build.Tests
 			binding.SetRuntime (runtime);
 			binding.AndroidClassParser = "class-parse";
 			binding.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\mylibrary.aar") {
-				WebContentFileNameFromAzure = "mylibrary.aar"
+				TestResourceFileName = "mylibrary.aar"
 			});
 			binding.Jars.Add (new AndroidItem.EmbeddedJar ("Jars\\svg-android.jar") {
-				WebContentFileNameFromAzure = "javaBindingIssue.jar"
+				TestResourceFileName = "javaBindingIssue.jar"
 			});
 			var path = Path.Combine ("temp", TestName);
 			using (var bindingBuilder = CreateDllBuilder (Path.Combine (path, binding.ProjectName))) {
@@ -484,7 +484,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 				Jars = {
 					new AndroidItem.EmbeddedJar ("Jars\\svg-android.jar") {
-						WebContentFileNameFromAzure = "javaBindingIssue.jar"
+						TestResourceFileName = "javaBindingIssue.jar"
 					}
 				},
 				AssemblyInfo = @"
@@ -1144,9 +1144,16 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 
 			using var a = CreateDllBuilder ();
 			using var b = CreateDllBuilder ();
+			a.ThrowOnBuildFailure = false;
+			b.ThrowOnBuildFailure = false;
 
-			Assert.IsTrue (a.Build (proj), "ProjectReference build should have succeeded.");
-			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			Assert.IsTrue (a.Build (collection), "ProjectReference project build should have succeeded.");
+			if (!b.Build (proj)) {
+				if (b.LastBuildOutput.ContainsText ("404 (Not Found)")) {
+					Assert.Inconclusive ("Test skipped due to transient Maven repository error (404 Not Found).");
+				}
+				Assert.Fail ("Build should have succeeded.");
+			}
 		}
 	}
 }

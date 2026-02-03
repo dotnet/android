@@ -11,6 +11,7 @@ using Xamarin.ProjectTools;
 using System.Collections.Generic;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tasks;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -513,8 +514,8 @@ namespace ${ROOT_NAMESPACE} {
 
 			app.SetRuntime (runtime);
 			if (!useLatestSdk) {
-				lib.TargetFramework = "net9.0-android";
-				app.TargetFramework = "net9.0-android";
+				lib.TargetFramework = $"{XABuildConfig.PreviousDotNetTargetFramework}-android";
+				app.TargetFramework = $"{XABuildConfig.PreviousDotNetTargetFramework}-android";
 			}
 
 			app.SetProperty ("AndroidPackageFormat", packageFormat);
@@ -548,7 +549,7 @@ namespace ${ROOT_NAMESPACE} {
 				appBuilder.Verbosity = LoggerVerbosity.Detailed;
 				Assert.True (libBuilder.Build (lib), "Library should have built.");
 
-				SetTargetFrameworkAndManifest (app, appBuilder, app.TargetFramework == "net9.0-android" ? 35 : null);
+				SetTargetFrameworkAndManifest (app, appBuilder, app.TargetFramework == $"{XABuildConfig.PreviousDotNetTargetFramework}-android" ? 36 : null);
 				Assert.True (appBuilder.Install (app, parameters: parameters.ToArray ()), "App should have installed.");
 
 				if (!embedAssemblies) {

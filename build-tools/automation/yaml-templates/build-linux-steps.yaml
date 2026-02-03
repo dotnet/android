@@ -82,5 +82,3 @@ steps:
 - template: /build-tools/automation/yaml-templates/fail-on-dirty-tree.yaml
   parameters:
     xaSourcePath: ${{ parameters.xaSourcePath }}
-
-- template: /build-tools/automation/yaml-templates/fail-on-issue.yaml

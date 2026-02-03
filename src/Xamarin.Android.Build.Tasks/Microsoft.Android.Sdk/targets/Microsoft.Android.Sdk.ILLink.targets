@@ -36,10 +36,6 @@ This file contains the .NET 5-specific targets to customize ILLink
       <_TrimmerCustomData Include="AndroidHttpClientHandlerType" Value="$(AndroidHttpClientHandlerType)" />
       <_TrimmerCustomData Include="AndroidCustomViewMapFile" Value="$(_OuterCustomViewMapFile)" />
       <_TrimmerCustomData Include="SystemIOHashingAssemblyPath" Value="$(_SystemIOHashingAssemblyPath)" />
-      <_TrimmerCustomSteps
-        Include="$(_AndroidLinkerCustomStepAssembly)"
-        BeforeStep="MarkStep"
-        Type="Microsoft.Android.Sdk.ILLink.WarnOnPreserveAttribute" />
 
       <!--
         Used for the <ILLink CustomSteps="@(_TrimmerCustomSteps)" /> value:

@@ -197,7 +197,7 @@ $@"<Project>
 		}
 
 		/// <summary>
-		/// Gets or sets the target framework for the project (e.g., "net9.0-android").
+		/// Gets or sets the target framework for the project (e.g., "net11.0-android").
 		/// </summary>
 		/// <seealso cref="TargetFrameworks"/>
 		public string TargetFramework {

@@ -169,7 +169,7 @@ namespace Xamarin.Android.Build.Tests
 				return;
 			}
 
-			var dotnetVersion = "net10.0";
+			var dotnetVersion = XABuildConfig.LatestDotNetTargetFramework;
 			var apiLevel = XABuildConfig.AndroidDefaultTargetDotnetApiLevel;
 			var gradleProject = AndroidGradleProject.CreateDefault (GradleTestProjectDir);
 			var moduleName = gradleProject.Modules.First ().Name;

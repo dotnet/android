@@ -2,11 +2,11 @@
 
   <PropertyGroup>
     <DirectoryBuildPropsImported>true</DirectoryBuildPropsImported>
-    <DotNetTargetFrameworkVersion>10.0</DotNetTargetFrameworkVersion>
+    <DotNetTargetFrameworkVersion>11.0</DotNetTargetFrameworkVersion>
     <DotNetTargetFramework>net$(DotNetTargetFrameworkVersion)</DotNetTargetFramework>
     <DotNetAndroidTargetFramework>$(DotNetTargetFramework)-android</DotNetAndroidTargetFramework>
     <!-- Used for bootstrap, command-line tooling, and desktop NUnit projects -->
-    <DotNetStableTargetFramework>net9.0</DotNetStableTargetFramework>
+    <DotNetStableTargetFramework>net10.0</DotNetStableTargetFramework>
     <TargetFrameworkNETStandard>netstandard2.0</TargetFrameworkNETStandard>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <BuildOutputDirectory>$(MSBuildThisFileDirectory)bin\$(Configuration)\</BuildOutputDirectory>
@@ -37,7 +37,7 @@
          * Bump first digit of the patch version for feature releases (and reset the first two digits to 0)
     -->
     <AndroidPackVersion>36.1.99</AndroidPackVersion>
-    <AndroidPackVersionSuffix>preview.1</AndroidPackVersionSuffix>
+    <AndroidPackVersionSuffix>preview.2</AndroidPackVersionSuffix>
     <!-- Final value set by GetXAVersionInfo target -->
     <IsStableBuild>false</IsStableBuild>
   </PropertyGroup>
