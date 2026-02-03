@@ -113,7 +113,7 @@ namespace Xamarin.Android.Tasks
 
 		public abstract string GetToolPath (NdkToolKind kind, AndroidTargetArch arch, int apiLevel);
 		public abstract string GetToolPath (string name, AndroidTargetArch arch, int apiLevel);
-		public abstract int GetMinimumApiLevelFor (AndroidTargetArch arch);
+		public abstract int GetMinimumApiLevelFor (AndroidTargetArch arch, AndroidRuntime runtime);
 		public abstract bool ValidateNdkPlatform (Action<string> logMessage, Action<string, string> logError, AndroidTargetArch arch, bool enableLLVM);
 
 		public bool ValidateNdkPlatform (AndroidTargetArch arch, bool enableLLVM)
@@ -285,6 +285,19 @@ namespace Xamarin.Android.Tasks
 			}
 
 			throw new InvalidOperationException ($"Unsupported NDK architecture '{arch}'");
+		}
+
+		protected static int GetApiLevel (AndroidTargetArch arch, AndroidRuntime runtime)
+		{
+			int minValue = 0;
+			string archName = GetPlatformArch (arch);
+
+			Dictionary<string, int> apiLevels = runtime == AndroidRuntime.MonoVM ? XABuildConfig.ArchAPILevels : XABuildConfig.ArchAPILevelsNonMono;
+			if (!apiLevels.TryGetValue (archName, out minValue)) {
+				throw new InvalidOperationException ($"Unable to determine minimum API level for architecture {arch}");
+			}
+
+			return minValue;
 		}
 
 		protected string EnsureDirectoryExists (string path)

@@ -25,6 +25,7 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 			engine = new MockBuildEngine (TestContext.Out, errors = new List<BuildErrorEventArgs> (), warnings = new List<BuildWarningEventArgs> ());
 		}
 
+		// TODO: parametrize for various runtimes
 		[Test]
 		public void TestNdkUtil ()
 		{
@@ -40,7 +41,8 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 				var arch = AndroidTargetArch.X86;
 				Assert.IsTrue (ndk.ValidateNdkPlatform (arch, enableLLVM: false));
 				Assert.AreEqual (0, errors.Count, "NdkTools.ValidateNdkPlatform should not have returned false.");
-				int level = ndk.GetMinimumApiLevelFor (arch);
+				int level = ndk.GetMinimumApiLevelFor (arch, AndroidRuntime.MonoVM);
+				// TODO: take it from XABuildConfig
 				int expected = 21;
 				Assert.AreEqual (expected, level, $"Min Api Level for {arch} should be {expected}.");
 				var compilerNoQuotes = ndk.GetToolPath (NdkToolKind.CompilerC, arch, level);

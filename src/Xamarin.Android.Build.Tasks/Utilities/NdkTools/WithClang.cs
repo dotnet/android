@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 using Microsoft.Build.Utilities;
@@ -34,14 +35,9 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 
-		public override int GetMinimumApiLevelFor (AndroidTargetArch arch)
+		public override int GetMinimumApiLevelFor (AndroidTargetArch arch, AndroidRuntime runtime)
 		{
-			int minValue = 0;
-			string archName = GetPlatformArch (arch);
-			if (!XABuildConfig.ArchAPILevels.TryGetValue (archName, out minValue))
-				throw new InvalidOperationException ($"Unable to determine minimum API level for architecture {arch}");
-
-			return minValue;
+			return GetApiLevel (arch, runtime);
 		}
 
 		public override string GetToolPath (NdkToolKind kind, AndroidTargetArch arch, int apiLevel)
