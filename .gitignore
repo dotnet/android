@@ -37,3 +37,15 @@ src/native/clr/pinvoke-override/pinvoke-tables.include.generated
 src/native/mono/pinvoke-override/generate-pinvoke-tables
 src/native/mono/pinvoke-override/pinvoke-tables.include.generated
 dotnet-install.ps1
+src/manifestmerger/gradle/
+src/manifestmerger/gradlew
+src/manifestmerger/gradlew.bat
+src/proguard-android/gradle/
+src/proguard-android/gradlew
+src/proguard-android/gradlew.bat
+src/r8/gradle/
+src/r8/gradlew
+src/r8/gradlew.bat
+tests/CodeGen-Binding/Xamarin.Android.LibraryProjectZip-LibBinding/java/JavaLib/gradle/
+tests/CodeGen-Binding/Xamarin.Android.LibraryProjectZip-LibBinding/java/JavaLib/gradlew
+tests/CodeGen-Binding/Xamarin.Android.LibraryProjectZip-LibBinding/java/JavaLib/gradlew.bat
