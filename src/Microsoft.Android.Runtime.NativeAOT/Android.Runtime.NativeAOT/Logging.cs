@@ -55,9 +55,9 @@ internal sealed class LogcatTextWriter : TextWriter {
 
 static partial class AndroidLog {
 
-	[LibraryImport ("log", EntryPoint = "__android_log_print")]
+	[LibraryImport ("log", EntryPoint = "__android_log_print", StringMarshalling = StringMarshalling.Utf8)]
 	[UnmanagedCallConv (CallConvs = [typeof (System.Runtime.CompilerServices.CallConvCdecl)])]
-	private static partial void __android_log_print (AndroidLogLevel level, [MarshalAs (UnmanagedType.LPUTF8Str)] string? tag, [MarshalAs (UnmanagedType.LPUTF8Str)] string format, [MarshalAs (UnmanagedType.LPUTF8Str)] string args, IntPtr ptr);
+	private static partial void __android_log_print (AndroidLogLevel level, string? tag, string format, string args, IntPtr ptr);
 
 	internal static void Print (AndroidLogLevel level, string? tag, string message) =>
 		__android_log_print (level, tag, "%s", message, IntPtr.Zero);
