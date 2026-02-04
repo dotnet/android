@@ -4,6 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Java.Interop;
@@ -27,14 +28,21 @@ namespace Android.Runtime
 		readonly ConcurrentDictionary<Type, string> _jniNameCache = new ();
 		readonly ConcurrentDictionary<string, Type?> _classToTypeCache = new ();
 
+		static int _instanceCounter = 0;
+
 		public TypeMapAttributeTypeMap ()
 		{
+			var instanceId = ++_instanceCounter;
+			var stackTrace = Environment.StackTrace;
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"TypeMapAttributeTypeMap constructor starting (instance #{instanceId})");
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"Stack trace for instance #{instanceId}: {stackTrace}");
+			
 			if (RuntimeFeature.IsNativeAotRuntime) {
 				// For NativeAOT, use the .NET 10+ TypeMapping API which is an intrinsic
 				// that ILC recognizes and generates the type map at compile time.
 				_externalTypeMap = TypeMapping.GetOrCreateExternalTypeMapping<Java.Lang.Object> ();
 				// Note: Cannot call .Count on the lazy dictionary - it throws NotSupportedException
-				Logger.Log (LogLevel.Info, "monodroid-typemap", "TypeMap: NativeAOT mode, initialized from TypeMapping API");
+				Logger.Log (LogLevel.Info, "monodroid-typemap", $"TypeMap: NativeAOT mode, initialized from TypeMapping API (instance #{instanceId})");
 			} else {
 				// For MonoVM/CoreCLR, we need to load the assembly and scan for TypeMapAttribute entries.
 				SetEntryAssemblyWorkaround ();
@@ -126,18 +134,25 @@ namespace Android.Runtime
 		/// <inheritdoc/>
 		public bool TryGetJniNameForType (Type type, [NotNullWhen (true)] out string? jniName)
 		{
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"TryGetJniNameForType called for: {type.FullName}");
 			// Use GetOrAdd for thread-safe caching (empty string = not found)
 			var cached = _jniNameCache.GetOrAdd (type, ComputeJniNameForType);
 			if (cached.Length == 0) {
+				Logger.Log (LogLevel.Warn, "monodroid-typemap", $"TryGetJniNameForType: {type.FullName} NOT FOUND");
 				jniName = null;
 				return false;
 			}
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"TryGetJniNameForType: {type.FullName} -> {cached}");
 			jniName = cached;
 			return true;
 		}
 
 		string ComputeJniNameForType (Type type)
 		{
+			var allAttrs = type.GetCustomAttributes (inherit: false);
+			var attrNames = string.Join (", ", allAttrs.Select (a => a.GetType ().Name).ToArray ());
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"ComputeJniNameForType: {type.FullName} has {allAttrs.Length} attrs: {attrNames}");
+
 			var attrs = type.GetCustomAttributes (typeof (IJniNameProviderAttribute), inherit: false);
 			if (attrs.Length > 0 && attrs[0] is IJniNameProviderAttribute jniNameProvider && !string.IsNullOrEmpty (jniNameProvider.Name)) {
 				var jniName = jniNameProvider.Name.Replace ('.', '/');
@@ -173,42 +188,67 @@ namespace Android.Runtime
 		/// <inheritdoc/>
 		public bool TryGetInvokerType (Type type, [NotNullWhen (true)] out Type? invokerType)
 		{
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"TryGetInvokerType: Looking for invoker for {type.FullName}");
 			// Look up the proxy for the interface/abstract class
 			var proxy = GetProxyForManagedType (type);
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"TryGetInvokerType: proxy={proxy?.GetType().FullName ?? "null"}, InvokerType={proxy?.InvokerType?.FullName ?? "null"}");
 			if (proxy?.InvokerType != null) {
 				invokerType = proxy.InvokerType;
+				Logger.Log (LogLevel.Info, "monodroid-typemap", $"TryGetInvokerType: Found invoker {invokerType.FullName}");
 				return true;
 			}
 
 			invokerType = null;
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"TryGetInvokerType: No invoker found for {type.FullName}");
 			return false;
 		}
 
 		/// <inheritdoc/>
 		public JavaPeerProxy? GetProxyForManagedType (Type managedType)
 		{
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"GetProxyForManagedType: Looking for proxy for {managedType.FullName}");
 			var proxy = GetProxyForType (managedType);
 			if (proxy != null) {
+				Logger.Log (LogLevel.Info, "monodroid-typemap", $"GetProxyForManagedType: Found direct proxy {proxy.GetType().FullName}");
 				return proxy;
 			}
 
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"GetProxyForManagedType: No direct proxy, trying JNI name lookup");
 			if (TryGetJniNameForType (managedType, out string? jniName)) {
+				Logger.Log (LogLevel.Info, "monodroid-typemap", $"GetProxyForManagedType: JNI name = {jniName}");
 				if (_externalTypeMap.TryGetValue (jniName, out Type? proxyType)) {
+					Logger.Log (LogLevel.Info, "monodroid-typemap", $"GetProxyForManagedType: Found proxy type {proxyType.FullName} in external map");
 					return GetProxyForType (proxyType);
 				}
+				Logger.Log (LogLevel.Info, "monodroid-typemap", $"GetProxyForManagedType: JNI name {jniName} not in external map");
+			} else {
+				Logger.Log (LogLevel.Info, "monodroid-typemap", $"GetProxyForManagedType: Could not get JNI name for {managedType.FullName}");
 			}
 
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"GetProxyForManagedType: No proxy found for {managedType.FullName}");
 			return null;
 		}
 
 		JavaPeerProxy? GetProxyForType (Type type)
 		{
-			return _proxyInstances.GetOrAdd (type, static t => t.GetCustomAttribute<JavaPeerProxy> (inherit: false));
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"GetProxyForType: Looking for JavaPeerProxy attribute on {type.FullName}");
+			var proxy = _proxyInstances.GetOrAdd (type, static t => {
+				Logger.Log (LogLevel.Info, "monodroid-typemap", $"GetProxyForType: Cache miss, calling GetCustomAttribute for {t.FullName}");
+				var attrs = t.GetCustomAttributes (typeof(JavaPeerProxy), inherit: false);
+				Logger.Log (LogLevel.Info, "monodroid-typemap", $"GetProxyForType: GetCustomAttributes returned {attrs?.Length ?? 0} attributes");
+				if (attrs != null && attrs.Length > 0) {
+					Logger.Log (LogLevel.Info, "monodroid-typemap", $"GetProxyForType: First attribute type: {attrs[0]?.GetType().FullName ?? "null"}");
+				}
+				return t.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+			});
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"GetProxyForType: Returning {(proxy != null ? proxy.GetType().FullName : "null")} for {type.FullName}");
+			return proxy;
 		}
 
 		/// <inheritdoc/>
 		public IJavaPeerable? CreatePeer (IntPtr handle, JniHandleOwnership transfer, Type? targetType)
 		{
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"CreatePeer ENTRY: handle=0x{handle:x}, targetType={targetType?.FullName ?? "null"}");
 			return PeerCreationHelper.CreatePeer (
 				handle,
 				transfer,
@@ -224,17 +264,46 @@ namespace Android.Runtime
 		/// </summary>
 		Type? ResolveTypeWithCaching (IntPtr class_ptr, string class_name)
 		{
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"ResolveTypeWithCaching: class_name={class_name}");
 			return _classToTypeCache.GetOrAdd (class_name, _ => FindTypeInHierarchy (class_ptr, class_name));
 		}
 
 		IJavaPeerable? CreateInstance (Type type, IntPtr handle, JniHandleOwnership transfer)
 		{
-			var proxy = GetProxyForType (type) ?? GetProxyForManagedType (type);
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"CreateInstance ENTRY: type={type.FullName}, handle=0x{handle:x}");
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"CreateInstance: Type assembly: {type.Assembly.FullName}");
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"CreateInstance: Type IsAbstract={type.IsAbstract}, IsInterface={type.IsInterface}, BaseType={type.BaseType?.FullName ?? "null"}");
+			
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"CreateInstance: Looking for proxy for type {type.FullName}");
+			
+			// First, try to get the proxy directly for this type
+			var proxy = GetProxyForType (type);
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"CreateInstance: GetProxyForType returned: {(proxy != null ? proxy.GetType().FullName : "null")}");
+			
+			// If not found directly, try via JNI name lookup (for types in external map)
 			if (proxy is null) {
+				proxy = GetProxyForManagedType (type);
+				Logger.Log (LogLevel.Info, "monodroid-typemap", $"CreateInstance: GetProxyForManagedType returned: {(proxy != null ? proxy.GetType().FullName : "null")}");
+			}
+			
+			if (proxy is null) {
+				Logger.Log (LogLevel.Warn, "monodroid-typemap", $"CreateInstance: No proxy found for {type.FullName}, returning null");
 				return null;
 			}
 
-			return proxy.CreateInstance (handle, transfer);
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"CreateInstance: proxy {proxy.GetType().FullName}, InvokerType={proxy.InvokerType?.FullName ?? "null"}, TargetType={proxy.TargetType?.FullName ?? "null"}");
+			
+			try {
+				// CreateInstance for abstract/interface proxies automatically creates the invoker type
+				Logger.Log (LogLevel.Info, "monodroid-typemap", $"CreateInstance: CALLING proxy.CreateInstance NOW for {type.FullName}...");
+				var result = proxy.CreateInstance (handle, transfer);
+				Logger.Log (LogLevel.Info, "monodroid-typemap", $"CreateInstance: proxy.CreateInstance RETURNED, result={result?.GetType().FullName ?? "null"}");
+				return result;
+			} catch (Exception ex) {
+				Logger.Log (LogLevel.Error, "monodroid-typemap", $"CreateInstance: proxy.CreateInstance THREW: {ex.GetType().Name}: {ex.Message}");
+				Logger.Log (LogLevel.Error, "monodroid-typemap", $"CreateInstance: Stack trace: {ex.StackTrace}");
+				throw;
+			}
 		}
 
 		/// <summary>

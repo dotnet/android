@@ -59,10 +59,14 @@ namespace Java.Interop {
 				throw new InvalidOperationException ($"Member `{nameof (NativeAotRuntimeOptions)}.{nameof (NativeAotRuntimeOptions.JvmLibraryPath)}` must be set.");
 
 #if NET
-			// Create type map and managers for NativeAOT
-			var typeMap = new TypeMapAttributeTypeMap ();
-			builder.TypeManager     ??= new Android.Runtime.AndroidTypeManager (typeMap);
-			builder.ValueManager    ??= new ManagedValueManager (typeMap);
+			// Only create type map and managers if not already provided
+			// Both TypeManager AND ValueManager must be null to create a new TypeMap
+			// (JavaInteropRuntime.init() sets both when calling CreateJreVM)
+			if (builder.TypeManager == null && builder.ValueManager == null) {
+				var typeMap = new TypeMapAttributeTypeMap ();
+				builder.TypeManager     = new Android.Runtime.AndroidTypeManager (typeMap);
+				builder.ValueManager    = new ManagedValueManager (typeMap);
+			}
 #endif  // NET
 
 			builder.ObjectReferenceManager  ??= new Android.Runtime.AndroidObjectReferenceManager ();

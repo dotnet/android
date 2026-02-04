@@ -59,6 +59,14 @@ public class GenerateMainAndroidManifest : AndroidTask
 		// We only need the first architecture, since this task is architecture-agnostic
 		var templateCodeGenState = nativeCodeGenStates.First ().Value;
 
+		// Debug: Log AllJavaTypes count
+		Log.LogDebugMessage ($"[GenerateMainAndroidManifest] AllJavaTypes count: {templateCodeGenState.AllJavaTypes.Count}");
+		foreach (var jt in templateCodeGenState.AllJavaTypes) {
+			if (jt.FullName.Contains ("Activity")) {
+				Log.LogDebugMessage ($"[GenerateMainAndroidManifest] Type containing 'Activity': {jt.FullName}");
+			}
+		}
+
 		var userAssembliesPerArch = MonoAndroidHelper.GetPerArchAssemblies (ResolvedUserAssemblies, SupportedAbis, validate: true);
 
 		androidRuntime = MonoAndroidHelper.ParseAndroidRuntime (AndroidRuntime);

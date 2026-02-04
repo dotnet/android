@@ -54,6 +54,16 @@ namespace Java.Interop
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
 		/// <summary>
+		/// Gets the target type that this proxy creates instances of.
+		/// </summary>
+		/// <remarks>
+		/// This property is set in generated proxies to return the .NET type that wraps the Java class.
+		/// For example, a proxy for android/content/Context would return typeof(Android.Content.Context).
+		/// </remarks>
+		[return: DynamicallyAccessedMembers (Constructors)]
+		public Type? TargetType { get; protected set; }
+
+		/// <summary>
 		/// Creates an instance of the target type using the JNI handle and ownership semantics.
 		/// This is used for AOT-safe instance creation without reflection.
 		/// </summary>
@@ -73,6 +83,17 @@ namespace Java.Interop
 		/// </remarks>
 		[return: DynamicallyAccessedMembers (Constructors)]
 		public Type? InvokerType { get; protected set; }
+
+		/// <summary>
+		/// Creates an instance of the invoker type using the JNI handle and ownership semantics.
+		/// This is used for abstract classes and interfaces where the target type cannot be
+		/// instantiated directly. Returns null if no invoker type is defined.
+		/// </summary>
+		/// <param name="handle">The JNI object reference handle.</param>
+		/// <param name="transfer">How to handle JNI reference ownership.</param>
+		/// <returns>A new instance of the invoker type wrapping the JNI handle, or null if no invoker.</returns>
+		[Obsolete ("Use CreateInstance instead - it automatically creates the invoker for abstract/interface types")]
+		public virtual IJavaPeerable? CreateInvokerInstance (IntPtr handle, JniHandleOwnership transfer) => null;
 
 		/// <summary>
 		/// Gets a factory for creating derived types (arrays, collections) of the target type.

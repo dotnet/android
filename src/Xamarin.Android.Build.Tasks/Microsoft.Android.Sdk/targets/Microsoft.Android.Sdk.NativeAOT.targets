@@ -51,7 +51,88 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     />
   </ItemGroup>
 
-  <!-- Make IlcCompile depend on assembly resolution - NO ILLink, ILC does its own trimming -->
+  <!-- For NativeAOT, populate ResolvedAssemblies (the input to _PrepareAssemblies) with the 
+       actual assemblies for manifest generation. Since ILLink is disabled for NativeAOT 
+       (ILC does its own trimming), _LinkAssemblies doesn't run, and we need to manually 
+       populate the assemblies for GenerateJavaStubs to use.
+       
+       This target runs before _PrepareAssemblies, populating the @(ResolvedAssemblies) item group
+       with assemblies from the runtime packs for proper type resolution.
+       We need the implementation assemblies (from runtimes/.../lib/) not reference assemblies (from /ref/) 
+       for GenerateJavaStubs to walk type hierarchies. -->
+  <Target Name="_PopulateNativeAotAssemblies"
+      BeforeTargets="_PrepareAssemblies"
+      AfterTargets="_ResolveAssemblies">
+    
+    <!-- Determine the ABI based on runtime identifier -->
+    <PropertyGroup>
+      <_NativeAotAbi Condition=" '$(RuntimeIdentifier)' == 'android-arm64' ">arm64-v8a</_NativeAotAbi>
+      <_NativeAotAbi Condition=" '$(RuntimeIdentifier)' == 'android-arm' ">armeabi-v7a</_NativeAotAbi>
+      <_NativeAotAbi Condition=" '$(RuntimeIdentifier)' == 'android-x64' ">x86_64</_NativeAotAbi>
+      <_NativeAotAbi Condition=" '$(RuntimeIdentifier)' == 'android-x86' ">x86</_NativeAotAbi>
+      <!-- App assembly location - prefer IntermediateOutputPath (RID-specific) over _OuterIntermediateOutputPath -->
+      <_NativeAotAppAssembly Condition=" Exists('$(IntermediateOutputPath)$(TargetName)$(TargetExt)') ">$(IntermediateOutputPath)$(TargetName)$(TargetExt)</_NativeAotAppAssembly>
+      <_NativeAotAppAssembly Condition=" '$(_NativeAotAppAssembly)' == '' and Exists('$(_OuterIntermediateOutputPath)$(TargetName)$(TargetExt)') ">$(_OuterIntermediateOutputPath)$(TargetName)$(TargetExt)</_NativeAotAppAssembly>
+    </PropertyGroup>
+    
+    <ItemGroup>
+      <!-- Get the Android runtime pack path from ResolvedRuntimePack (set by ResolveFrameworkReferences) -->
+      <_AndroidRuntimePackItem Include="@(ResolvedRuntimePack)" 
+          Condition=" '%(ResolvedRuntimePack.NuGetPackageId)' != '' and $([System.String]::new('%(NuGetPackageId)').StartsWith('Microsoft.Android.Runtime.')) and !$([System.String]::new('%(NuGetPackageId)').Contains('NativeAOT')) " />
+    </ItemGroup>
+
+    <PropertyGroup>
+      <_AndroidRuntimePackPath>@(_AndroidRuntimePackItem->'%(PackageDirectory)')</_AndroidRuntimePackPath>
+      <_AndroidRuntimePackLibPath Condition=" '$(_AndroidRuntimePackPath)' != '' ">$(_AndroidRuntimePackPath)/runtimes/android/lib/net11.0/</_AndroidRuntimePackLibPath>
+    </PropertyGroup>
+    
+    <ItemGroup>
+      <!-- Add ALL Android runtime pack assemblies so the resolver can find types for attribute resolution -->
+      <ResolvedAssemblies Include="$(_AndroidRuntimePackLibPath)*.dll"
+          Condition=" '$(_AndroidRuntimePackLibPath)' != '' and Exists('$(_AndroidRuntimePackLibPath)') ">
+        <Abi>$(_NativeAotAbi)</Abi>
+        <RuntimeIdentifier>$(RuntimeIdentifier)</RuntimeIdentifier>
+        <HasMonoAndroidReference>True</HasMonoAndroidReference>
+      </ResolvedAssemblies>
+      
+      <!-- Add .NET reference assemblies for attribute type resolution (e.g., System.Runtime) -->
+      <ResolvedAssemblies Include="@(ReferencePath)" 
+          Condition=" '%(ReferencePath.Extension)' == '.dll' ">
+        <Abi>$(_NativeAotAbi)</Abi>
+        <RuntimeIdentifier>$(RuntimeIdentifier)</RuntimeIdentifier>
+      </ResolvedAssemblies>
+
+      <!-- Also include ResolvedFileToPublish assemblies if any exist (TypeMaps, Resource.Designer) -->
+      <ResolvedAssemblies Include="@(ResolvedFileToPublish)" 
+          Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' ">
+        <Abi>$(_NativeAotAbi)</Abi>
+        <RuntimeIdentifier>$(RuntimeIdentifier)</RuntimeIdentifier>
+      </ResolvedAssemblies>
+      
+      <!-- Add app assembly from intermediate output -->
+      <ResolvedAssemblies Include="$(_NativeAotAppAssembly)"
+          Condition=" '$(_NativeAotAppAssembly)' != '' ">
+        <Abi>$(_NativeAotAbi)</Abi>
+        <RuntimeIdentifier>$(RuntimeIdentifier)</RuntimeIdentifier>
+        <HasMonoAndroidReference>True</HasMonoAndroidReference>
+        <TargetFrameworkIdentifier>MonoAndroid</TargetFrameworkIdentifier>
+      </ResolvedAssemblies>
+      
+      <!-- User assemblies need to include the app -->
+      <ResolvedUserAssemblies Include="$(_NativeAotAppAssembly)"
+          Condition=" '$(_NativeAotAppAssembly)' != '' ">
+        <Abi>$(_NativeAotAbi)</Abi>
+        <RuntimeIdentifier>$(RuntimeIdentifier)</RuntimeIdentifier>
+        <HasMonoAndroidReference>True</HasMonoAndroidReference>
+        <TargetFrameworkIdentifier>MonoAndroid</TargetFrameworkIdentifier>
+      </ResolvedUserAssemblies>
+    </ItemGroup>
+
+    <Message Importance="high" Text="[NativeAOT] App assembly: $(_NativeAotAppAssembly)" />
+    <Message Importance="high" Text="[NativeAOT] Android runtime pack: $(_AndroidRuntimePackPath)" />
+    <Message Importance="high" Text="[NativeAOT] Populated ResolvedAssemblies with @(ResolvedAssemblies->Count()) items for manifest generation" />
+  </Target>
+
   <PropertyGroup>
     <IlcCompileDependsOn>
       _AndroidBeforeIlcCompile;
@@ -329,27 +410,30 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
              Text="TypeMaps assembly not found for proguard generation: $(_TypeMapAssemblyPath)" />
   </Target>
 
-  <!-- Remove legacy Java.Interop JAR files for TypeMap V3 builds.
-       TypeMap V3 generates ALL Java code - no legacy JAR files are needed.
-       These JAR files contain classes like ManagedPeer, JavaProxyThrowable, etc.
-       that have static initializers calling registerNativeMembers() which is not
-       supported in TypeMap V3. -->
-  <Target Name="_RemoveLegacyJavaInteropJarsForNativeAot"
-      AfterTargets="_ResolveAssemblies;_GetLibraryImports"
-      BeforeTargets="_DetermineJavaLibrariesToCompile"
-      Condition=" '$(AndroidEnableTypeMaps)' == 'true' ">
-    <Message Importance="high" Text="TypeMap V3: Removing legacy Java.Interop JAR files from build." />
-    <Message Importance="high" Text="TypeMap V3: Before - AndroidJavaLibrary: @(AndroidJavaLibrary)" />
-    <Message Importance="high" Text="TypeMap V3: Before - ExtractedJarImports: @(ExtractedJarImports)" />
-    <ItemGroup>
-      <!-- Remove java-interop.jar which contains ManagedPeer, JavaProxyThrowable, JavaProxyObject
-           Note: We KEEP java_runtime_xxx.jar as they contain essential classes like IGCUserPeer, MonoPackageManager -->
-      <AndroidJavaLibrary Remove="@(AndroidJavaLibrary)" Condition=" $([System.String]::new('%(Filename)').EndsWith('java-interop')) " />
-      <!-- Remove from ExtractedJarImports as well -->
-      <ExtractedJarImports Remove="@(ExtractedJarImports)" Condition=" $([System.String]::new('%(Filename)').EndsWith('java-interop')) " />
+  <!-- NativeAOT with TypeMap V3 NEEDS java-interop.jar for peer creation.
+       Unlike MonoVM TypeMap V3, NativeAOT uses Java.Interop directly and requires:
+       - ManagedPeer: for registerNativeMembers and peer construction
+       - JavaProxyThrowable/JavaProxyObject: for exception and object proxies
+       The target that was previously removing these JARs has been removed. -->
+
+  <!-- Include System.Security.Cryptography.Native.Android JAR for SSL/TLS support.
+       This JAR contains Java classes needed for Android crypto interop (DotnetProxyTrustManager, etc.).
+       The native library is linked via ILC but the Java classes are needed at runtime.
+       The JAR is located in the Mono runtime pack (same version as NativeAOT runtime pack) -->
+  <Target Name="_IncludeCryptoJarForNativeAot"
+      AfterTargets="ComputeIlcCompileInputs"
+      BeforeTargets="_DetermineJavaLibrariesToCompile;IlcCompile">
+    <PropertyGroup>
+      <!-- Try IlcFrameworkNativePath first (set during ILC compile), then fall back to NETCoreAppRuntimePackPath -->
+      <_CryptoJarPath Condition=" '$(IlcFrameworkNativePath)' != '' ">$(IlcFrameworkNativePath)libSystem.Security.Cryptography.Native.Android.jar</_CryptoJarPath>
+      <!-- NativeAOT uses the NETCore.App.Runtime pack for framework assemblies, which contains the crypto JAR -->
+      <_CryptoJarPath Condition=" '$(IlcFrameworkNativePath)' == '' ">%(_NETCoreAppFrameworkReference.RuntimePackPath)/runtimes/$(RuntimeIdentifier)/native/libSystem.Security.Cryptography.Native.Android.jar</_CryptoJarPath>
+    </PropertyGroup>
+    <ItemGroup Condition=" Exists('$(_CryptoJarPath)') ">
+      <AndroidJavaLibrary Include="$(_CryptoJarPath)" />
     </ItemGroup>
-    <Message Importance="high" Text="TypeMap V3: After - AndroidJavaLibrary: @(AndroidJavaLibrary)" />
-    <Message Importance="high" Text="TypeMap V3: After - ExtractedJarImports: @(ExtractedJarImports)" />
+    <Message Condition=" Exists('$(_CryptoJarPath)') " Importance="high" Text="[NativeAOT] Added crypto JAR: $(_CryptoJarPath)" />
+    <Warning Condition=" !Exists('$(_CryptoJarPath)') " Text="[NativeAOT] Crypto JAR not found: $(_CryptoJarPath). SSL/TLS may not work." />
   </Target>
 
 </Project>

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net11.0-android</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <ApplicationId>com.nativeaot.complexapp</ApplicationId>
+    <ApplicationTitle>NativeAOT Complex App</ApplicationTitle>
+    <AndroidEnableTypeMaps>true</AndroidEnableTypeMaps>
+    <PublishAot>true</PublishAot>
+    <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
+    <Nullable>enable</Nullable>
+    <!-- Enable ILC metadata log for filtering marshal methods -->
+    <IlcGenerateMetadataLog>true</IlcGenerateMetadataLog>
+  </PropertyGroup>
+
+</Project>

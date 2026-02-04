@@ -2631,6 +2631,7 @@ internal class TypeMapAssemblyGenerator
 	// Well-known member references
 	MemberReferenceHandle _javaPeerProxyCtorRef;
 	MemberReferenceHandle _javaPeerProxySetInvokerTypeRef;
+	MemberReferenceHandle _javaPeerProxySetTargetTypeRef;
 	MemberReferenceHandle _intPtrZeroFieldRef;
 	MemberReferenceHandle _aliasesTypeMapAssocAttrCtorRef;
 	MemberReferenceHandle _typeMapAttrCtorRef;
@@ -2710,16 +2711,16 @@ internal class TypeMapAssemblyGenerator
 	var typeMapAttrs = new List<(string jniName, string proxyTypeName, string? targetTypeName, bool isUnconditional)> ();
 	var aliasMappings = new List<(string source, string aliasHolder)> ();
 	
-	// Filter out Invokers - they don't need TypeMap entries
-	// (they share JNI names with interfaces and are only instantiated by CreateInstance)
-	int invokerCount = javaPeers.Count (p => IsInvokerType (p));
-	var filteredPeers = javaPeers.Where (p => !IsInvokerType (p)).ToList ();
-	if (invokerCount > 0) {
-		_log.LogMessage (MessageImportance.Low, $"[GTMA-Gen] Skipped {invokerCount} Invoker types from TypeMap (no JCW/proxy needed)");
+	// Separate invokers from non-invokers
+	// Invokers need proxies (for CreateInstance) but NOT TypeMap entries (they share JNI names with interfaces)
+	var invokerPeers = javaPeers.Where (p => IsInvokerType (p)).ToList ();
+	var nonInvokerPeers = javaPeers.Where (p => !IsInvokerType (p)).ToList ();
+	if (invokerPeers.Count > 0) {
+		_log.LogMessage (MessageImportance.Low, $"[GTMA-Gen] Found {invokerPeers.Count} Invoker types (will generate proxies but no TypeMap entries)");
 	}
 	
-	// Group peers by JavaName to handle aliases
-	var peersByJavaName = filteredPeers.GroupBy (p => p.JavaName).ToList ();
+	// Group non-invoker peers by JavaName to handle aliases
+	var peersByJavaName = nonInvokerPeers.GroupBy (p => p.JavaName).ToList ();
 	int proxyCount = 0;
 	long slowestProxyMs = 0;
 	string? slowestProxyName = null;
@@ -2814,6 +2815,14 @@ internal class TypeMapAssemblyGenerator
 			}
 		}
 	}
+	
+	// NOTE: Invoker types don't need separate proxies anymore.
+	// The abstract/interface type's proxy now directly creates the invoker via CreateInstance.
+	// The invoker's constructor is compiled because it's referenced from the parent proxy.
+	if (invokerPeers.Count > 0) {
+		_log.LogMessage (MessageImportance.Low, $"[GTMA-Gen] Skipped {invokerPeers.Count} invoker types (created via parent proxy)");
+	}
+	
 	proxyStopwatch.Stop ();
 	_log.LogMessage (MessageImportance.Low, $"[GTMA-Gen] Proxy generation: {proxyStopwatch.ElapsedMilliseconds}ms ({proxyCount} proxies, {(double)proxyStopwatch.ElapsedMilliseconds / Math.Max (1, proxyCount):F2}ms/proxy)");
 	if (slowestProxyName != null) {
@@ -4128,6 +4137,18 @@ public class {{className}}
 		parent: _javaPeerProxyTypeRef,
 		name: _metadata.GetOrAddString ("set_InvokerType"),
 		signature: _metadata.GetOrAddBlob (setInvokerTypeSigBlob));
+
+	// JavaPeerProxy.set_TargetType(Type)
+	var setTargetTypeSigBlob = new BlobBuilder ();
+	new BlobEncoder (setTargetTypeSigBlob)
+		.MethodSignature (isInstanceMethod: true)
+		.Parameters (1,
+			returnType => returnType.Void (),
+			parameters => parameters.AddParameter ().Type ().Type (_typeTypeRef, isValueType: false));
+	_javaPeerProxySetTargetTypeRef = _metadata.AddMemberReference (
+		parent: _javaPeerProxyTypeRef,
+		name: _metadata.GetOrAddString ("set_TargetType"),
+		signature: _metadata.GetOrAddBlob (setTargetTypeSigBlob));
 	
 	// IntPtr.Zero field
 	var intPtrFieldSig = new BlobBuilder ();
@@ -4462,7 +4483,7 @@ public class {{className}}
 
 		// Generate methods first (before type definition)
 		// 1. Constructor
-		int ctorBodyOffset = GenerateProxyConstructor (peer);
+		int ctorBodyOffset = GenerateProxyConstructor (peer, targetTypeRef);
 		var ctorDef = _metadata.AddMethodDefinition (
 			attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
 			implAttributes: MethodImplAttributes.IL | MethodImplAttributes.Managed,
@@ -4503,7 +4524,16 @@ public class {{className}}
 
 		// 4. Create a direct reference to the activation constructor
 		// With [assembly: IgnoresAccessChecksTo("Mono.Android")], we can call protected constructors directly
+		// For abstract/interface types with invokers, use the INVOKER's constructor instead
 		MemberReferenceHandle? ctorRef = null;
+		TypeReferenceHandle activationTypeRef = targetTypeRef;
+		
+		// If this is an abstract/interface type with an invoker, CreateInstance should create the invoker
+		if ((peer.IsInterface || peer.IsAbstract) && !string.IsNullOrEmpty (peer.InvokerTypeName)) {
+			activationTypeRef = AddExternalTypeReference (peer.InvokerAssemblyName!, peer.InvokerTypeName!);
+			_log.LogDebugMessage ($"  Abstract/interface type {peer.ManagedTypeName}: CreateInstance will create invoker {peer.InvokerTypeName}");
+		}
+		
 		if (peer.ActivationConstructorStyle == ActivationConstructorStyle.XI) {
 			// XI style: ctor(IntPtr, JniHandleOwnership)
 			var ctorSigBlob = new BlobBuilder ();
@@ -4516,7 +4546,7 @@ public class {{className}}
 						parameters.AddParameter ().Type ().Type (_jniHandleOwnershipTypeRef, isValueType: true);
 					});
 			ctorRef = _metadata.AddMemberReference (
-				parent: targetTypeRef,
+				parent: activationTypeRef,
 				name: _metadata.GetOrAddString (".ctor"),
 				signature: _metadata.GetOrAddBlob (ctorSigBlob));
 		} else if (peer.ActivationConstructorStyle == ActivationConstructorStyle.JI) {
@@ -4534,13 +4564,13 @@ public class {{className}}
 						parameters.AddParameter ().Type ().Type (_jniObjectReferenceOptionsTypeRef, isValueType: true);
 					});
 			ctorRef = _metadata.AddMemberReference (
-				parent: targetTypeRef,
+				parent: activationTypeRef,
 				name: _metadata.GetOrAddString (".ctor"),
 				signature: _metadata.GetOrAddBlob (ctorSigBlob));
 		}
 
 		// 5. CreateInstance override
-		int createInstanceBodyOffset = GenerateCreateInstanceBody (peer, targetTypeRef, ctorRef);
+		int createInstanceBodyOffset = GenerateCreateInstanceBody (peer, activationTypeRef, ctorRef);
 		var createInstanceDef = _metadata.AddMethodDefinition (
 			attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
 			implAttributes: MethodImplAttributes.IL | MethodImplAttributes.Managed,
@@ -5191,11 +5221,15 @@ public class {{className}}
 		return wrapperDef;
 	}
 	
-	int GenerateProxyConstructor (JavaPeerInfo peer)
+	int GenerateProxyConstructor (JavaPeerInfo peer, TypeReferenceHandle targetTypeRef)
 	{
 		// Generate: 
 		//   ldarg.0
 		//   call JavaPeerProxy::.ctor()
+		//   ldarg.0
+		//   ldtoken TargetType
+		//   call Type.GetTypeFromHandle
+		//   call JavaPeerProxy::set_TargetType
 		//   [if invoker]
 		//     ldarg.0
 		//     ldtoken InvokerType
@@ -5209,20 +5243,28 @@ public class {{className}}
 		encoder.OpCode (ILOpCode.Ldarg_0);
 		encoder.Call (_javaPeerProxyCtorRef);
 
+		// call Type.GetTypeFromHandle(RuntimeTypeHandle) helper reference
+		var getTypeFromHandleSigBlob = new BlobBuilder ();
+		new BlobEncoder (getTypeFromHandleSigBlob)
+			.MethodSignature (isInstanceMethod: false)
+			.Parameters (1,
+				returnType => returnType.Type ().Type (_typeTypeRef, isValueType: false),
+				parameters => parameters.AddParameter ().Type ().Type (_runtimeTypeHandleTypeRef, isValueType: true));
+		var getTypeFromHandleRef = _metadata.AddMemberReference (
+			parent: _typeTypeRef,
+			name: _metadata.GetOrAddString ("GetTypeFromHandle"),
+			signature: _metadata.GetOrAddBlob (getTypeFromHandleSigBlob));
+
+		// Always set TargetType
+		encoder.OpCode (ILOpCode.Ldarg_0);
+		encoder.OpCode (ILOpCode.Ldtoken);
+		encoder.Token (targetTypeRef);
+		encoder.Call (getTypeFromHandleRef);
+		encoder.Call (_javaPeerProxySetTargetTypeRef);
+
+		// If interface/abstract, also set InvokerType
 		if ((peer.IsInterface || peer.IsAbstract) && !string.IsNullOrEmpty (peer.InvokerTypeName)) {
 			var invokerTypeRef = AddExternalTypeReference (peer.InvokerAssemblyName!, peer.InvokerTypeName!);
-
-			// call Type.GetTypeFromHandle(RuntimeTypeHandle)
-			var getTypeFromHandleSigBlob = new BlobBuilder ();
-			new BlobEncoder (getTypeFromHandleSigBlob)
-				.MethodSignature (isInstanceMethod: false)
-				.Parameters (1,
-					returnType => returnType.Type ().Type (_typeTypeRef, isValueType: false),
-					parameters => parameters.AddParameter ().Type ().Type (_runtimeTypeHandleTypeRef, isValueType: true));
-			var getTypeFromHandleRef = _metadata.AddMemberReference (
-				parent: _typeTypeRef,
-				name: _metadata.GetOrAddString ("GetTypeFromHandle"),
-				signature: _metadata.GetOrAddBlob (getTypeFromHandleSigBlob));
 
 			encoder.OpCode (ILOpCode.Ldarg_0);
 			encoder.OpCode (ILOpCode.Ldtoken);

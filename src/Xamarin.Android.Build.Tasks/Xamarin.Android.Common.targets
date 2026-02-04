@@ -1414,11 +1414,13 @@ because xbuild doesn't support framework reference assemblies.
 <!-- For TypeMap V3: Remove legacy Java.Interop JAR files from ExtractedJarImports.
      These JAR files contain classes like ManagedPeer, JavaProxyThrowable, etc.
      that have static initializers calling registerNativeMembers() which is not
-     supported in TypeMap V3. -->
+     supported in TypeMap V3 for MonoVM.
+     NOTE: NativeAOT needs these classes (ManagedPeer, JavaProxyThrowable, etc.) because
+     it uses Java.Interop directly for peer creation. -->
 <Target Name="_RemoveLegacyJarsForTypeMapV3"
     AfterTargets="_GetLibraryImports"
     BeforeTargets="_DetermineJavaLibrariesToCompile"
-    Condition=" '$(AndroidEnableTypeMaps)' == 'true' ">
+    Condition=" '$(AndroidEnableTypeMaps)' == 'true' And '$(_AndroidRuntime)' != 'NativeAOT' ">
   <ItemGroup>
     <!-- Remove java-interop.jar which contains ManagedPeer, JavaProxyThrowable, JavaProxyObject -->
     <ExtractedJarImports Remove="@(ExtractedJarImports)" Condition=" $([System.String]::new('%(Filename)').EndsWith('java-interop')) " />
@@ -1429,12 +1431,14 @@ because xbuild doesn't support framework reference assemblies.
 <!-- For TypeMap V3: Create a stripped runtime JAR without problematic classes.
      The runtime JAR (java_runtime_clr.jar or java_runtime_net6.jar) contains classes like
      ManagedPeer, JavaProxyThrowable, JavaProxyObject which have static initializers calling
-     registerNativeMembers(). This is not supported in TypeMap V3.
-     We create a stripped copy that excludes these classes. -->
+     registerNativeMembers(). This is not supported in TypeMap V3 for MonoVM.
+     We create a stripped copy that excludes these classes.
+     NOTE: NativeAOT needs these classes (ManagedPeer, JavaProxyThrowable, etc.) because
+     it uses Java.Interop directly for peer creation. -->
 <Target Name="_CreateStrippedRuntimeJarForTypeMapV3"
     BeforeTargets="_DetermineJavaLibrariesToCompile"
     DependsOnTargets="_CollectRuntimeJarFilenames"
-    Condition=" '$(AndroidEnableTypeMaps)' == 'true' And '$(_RuntimeJar)' != '' ">
+    Condition=" '$(AndroidEnableTypeMaps)' == 'true' And '$(_RuntimeJar)' != '' And '$(_AndroidRuntime)' != 'NativeAOT' ">
   <PropertyGroup>
     <_StrippedRuntimeJarDir>$(IntermediateOutputPath)typemap$([System.IO.Path]::DirectorySeparatorChar)</_StrippedRuntimeJarDir>
     <_StrippedRuntimeJar>$(_StrippedRuntimeJarDir)java_runtime_stripped.jar</_StrippedRuntimeJar>
@@ -1645,7 +1649,9 @@ because xbuild doesn't support framework reference assemblies.
     <_MergedManifestDocuments Condition=" '$(AndroidManifestMerger)' == 'legacy' " Include="@(ExtractedManifestDocuments)" />
   </ItemGroup>
 
+  <!-- Skip GenerateACWMap for TypeMap V3 - type mapping is handled by GenerateTypeMapAssembly -->
   <GenerateACWMap
+      Condition=" '$(AndroidEnableTypeMaps)' != 'true' "
       AcwMapFile="$(_AcwMapFile)"
       IntermediateOutputDirectory="$(IntermediateOutputPath)"
       ResolvedAssemblies="@(_ResolvedAssemblies)"

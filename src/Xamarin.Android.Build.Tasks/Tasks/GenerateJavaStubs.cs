@@ -257,7 +257,12 @@ namespace Xamarin.Android.Tasks
 			var scanner = new XAJavaTypeScanner (res.TargetArch, Log, cache) {
 				ErrorOnCustomJavaObject     = ErrorOnCustomJavaObject,
 			};
+			Log.LogDebugMessage ($"[ScanForJavaTypes] Assemblies to scan: {assemblies.Count}");
+			foreach (var asm in assemblies.Values) {
+				Log.LogDebugMessage ($"[ScanForJavaTypes] Assembly: {asm.ItemSpec}");
+			}
 			List<TypeDefinition> allJavaTypes = scanner.GetJavaTypes (assemblies.Values, res, scannedAssemblies);
+			Log.LogDebugMessage ($"[ScanForJavaTypes] Found {allJavaTypes.Count} Java types");
 
 			var javaTypesForJCW = new List<TypeDefinition> ();
 

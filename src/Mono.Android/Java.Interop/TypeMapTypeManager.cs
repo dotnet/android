@@ -62,10 +62,16 @@ namespace Android.Runtime
 
 		protected override string? GetSimpleReference (Type type)
 		{
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"GetSimpleReference called for: {type.FullName}");
 			if (_typeMap.TryGetJniNameForType (type, out string? jniName)) {
+				Logger.Log (LogLevel.Info, "monodroid-typemap", $"GetSimpleReference: {type.FullName} -> {jniName}");
 				return GetReplacementTypeCore (jniName) ?? jniName;
 			}
-			return null;
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"GetSimpleReference: {type.FullName} falling back to base");
+			// Fall back to base implementation which uses JniTypeSignatureAttribute
+			var baseResult = base.GetSimpleReference (type);
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"GetSimpleReference: {type.FullName} base result = {baseResult ?? "null"}");
+			return baseResult;
 		}
 
 		protected override IEnumerable<string> GetSimpleReferences (Type type)
