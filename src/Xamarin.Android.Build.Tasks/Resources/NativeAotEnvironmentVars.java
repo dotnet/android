@@ -32,7 +32,7 @@ public class NativeAotEnvironmentVars
 				Os.setenv (envNames[i], envValues[i], true /* overwrite */);
 			}
 		} catch (ErrnoException e) {
-			Log.e (TAG, "Failed to set environment variables");
+			Log.e (TAG, "Failed to set environment variables", e);
 		}
 	}
 }
