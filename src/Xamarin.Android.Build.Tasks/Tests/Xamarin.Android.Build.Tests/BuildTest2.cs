@@ -192,6 +192,37 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void DebugBuildR2RIncrementalBuild ([Values ("android-x64", "android-arm64")] string rid)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = false, // Debug build - R2R enabled only for SDK assemblies
+			};
+
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("RuntimeIdentifier", rid);
+			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
+
+			using var b = CreateApkBuilder ();
+			b.Verbosity = LoggerVerbosity.Diagnostic;
+
+			// First build - R2R compilation should run
+			Assert.IsTrue (b.Build (proj), "First build should have succeeded.");
+			var firstBuildTime = b.LastBuildTime;
+
+			// Second build - R2R compilation should be SKIPPED (incremental build)
+			Assert.IsTrue (b.Build (proj), "Second build should have succeeded.");
+			var secondBuildTime = b.LastBuildTime;
+
+			// Verify incremental build is faster
+			Assert.IsTrue (secondBuildTime < firstBuildTime,
+				$"Second build ({secondBuildTime}) should have been faster than first build ({firstBuildTime})");
+
+			// Verify CreateReadyToRunImages target is skipped on second build
+			// This confirms R2R images are NOT being rebuilt
+			b.Output.AssertTargetIsSkipped ("CreateReadyToRunImages");
+		}
+
+		[Test]
 		public void NativeAOT ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
