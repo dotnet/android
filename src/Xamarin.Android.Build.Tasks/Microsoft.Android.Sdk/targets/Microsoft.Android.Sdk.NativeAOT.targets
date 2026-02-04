@@ -12,6 +12,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotEnvironmentAssemblerSources" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateProguardFromTypeMap" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.AppendMarshalMethodExports" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.FilterMarshalMethodsByIlcMetadata" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <!-- Default property values for NativeAOT -->
   <PropertyGroup>
@@ -23,6 +24,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <DisableUnsupportedError Condition=" $([MSBuild]::IsOSPlatform('windows')) and '$(DisableUnsupportedError)' == '' ">true</DisableUnsupportedError>
     <!-- HACK: make dotnet restore include Microsoft.NETCore.App.Runtime.NativeAOT.linux-bionic-arm64 -->
     <_IsPublishing Condition=" '$(_IsPublishing)' == '' ">true</_IsPublishing>
+    <!-- Enable ILC metadata log for filtering marshal methods based on surviving types -->
+    <IlcGenerateMetadataLog Condition=" '$(IlcGenerateMetadataLog)' == '' ">true</IlcGenerateMetadataLog>
   </PropertyGroup>
 
   <!-- Default property values for NativeAOT Debug configuration -->
@@ -205,10 +208,12 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   <Target
       Name="_CompileTypeMapMarshalMethodsForNativeAot"
       BeforeTargets="LinkNative"
+      AfterTargets="IlcCompile"
       DependsOnTargets="_ResolveSdks;_GenerateTypeMapAssembly"
       Condition=" '$(AndroidEnableTypeMaps)' == 'true' ">
     <PropertyGroup>
       <_AndroidMarshalMethodsDir>$(IntermediateOutputPath)android</_AndroidMarshalMethodsDir>
+      <_IlcMetadataFile>$(IntermediateOutputPath)native$([System.IO.Path]::DirectorySeparatorChar)$(TargetName).metadata.csv</_IlcMetadataFile>
     </PropertyGroup>
 
     <!-- Collect the marshal method LLVM IR files -->
@@ -231,37 +236,53 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
         AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
         Condition=" '@(_TypeMapMarshalMethodsSource)' != '' " />
 
-    <Message Importance="High" Text="[TypeMap] Looking for marshal methods in: $(_AndroidMarshalMethodsDir)" />
-    <Message Importance="High" Text="[TypeMap] Raw source files: @(_TypeMapMarshalMethodsSourceRaw)" />
-    <Message Importance="High" Text="[TypeMap] Source files with abi: @(_TypeMapMarshalMethodsSource)" />
+    <Message Importance="High" Text="[TypeMap] Compiled @(_TypeMapMarshalMethodsSource->Count()) marshal method files" />
 
-    <!-- Define the object files -->
+    <!-- Collect ALL object files (before filtering) -->
     <ItemGroup>
-      <_TypeMapMarshalMethodsObjectFile Include="$(_AndroidMarshalMethodsDir)$([System.IO.Path]::DirectorySeparatorChar)marshal_methods_*.o">
+      <_TypeMapMarshalMethodsObjectFileAll Include="$(_AndroidMarshalMethodsDir)$([System.IO.Path]::DirectorySeparatorChar)marshal_methods_*.o">
         <abi>arm64-v8a</abi>
-      </_TypeMapMarshalMethodsObjectFile>
+      </_TypeMapMarshalMethodsObjectFileAll>
     </ItemGroup>
 
-    <Message Importance="High" Text="[TypeMap] Object files: @(_TypeMapMarshalMethodsObjectFile)" />
+    <!-- Define exports file path -->
+    <PropertyGroup>
+      <_TypeMapMarshalMethodsExportsFile>$(_AndroidMarshalMethodsDir)$([System.IO.Path]::DirectorySeparatorChar)marshal_methods_exports.txt</_TypeMapMarshalMethodsExportsFile>
+    </PropertyGroup>
 
-    <!-- Add to LinkerArg -->
+    <!-- Filter object files based on ILC trimming results -->
+    <FilterMarshalMethodsByIlcMetadata
+        Condition=" Exists('$(_IlcMetadataFile)') "
+        IlcMetadataFile="$(_IlcMetadataFile)"
+        MarshalMethodObjectFiles="@(_TypeMapMarshalMethodsObjectFileAll)"
+        MarshalMethodsExportsFile="$(_TypeMapMarshalMethodsExportsFile)">
+      <Output TaskParameter="FilteredObjectFiles" ItemName="_TypeMapMarshalMethodsObjectFile" />
+      <Output TaskParameter="FilteredExportsFile" PropertyName="_TypeMapMarshalMethodsExportsFileFiltered" />
+    </FilterMarshalMethodsByIlcMetadata>
+
+    <!-- If no metadata file, use all object files (non-NativeAOT case or fallback) -->
+    <ItemGroup Condition=" !Exists('$(_IlcMetadataFile)') ">
+      <_TypeMapMarshalMethodsObjectFile Include="@(_TypeMapMarshalMethodsObjectFileAll)" />
+    </ItemGroup>
+    <PropertyGroup Condition=" !Exists('$(_IlcMetadataFile)') ">
+      <_TypeMapMarshalMethodsExportsFileFiltered>$(_TypeMapMarshalMethodsExportsFile)</_TypeMapMarshalMethodsExportsFileFiltered>
+    </PropertyGroup>
+
+    <Message Importance="High" Text="[TypeMap] Linking @(_TypeMapMarshalMethodsObjectFile->Count()) filtered object files (from @(_TypeMapMarshalMethodsObjectFileAll->Count()) total)" />
+
+    <!-- Add filtered object files to LinkerArg -->
     <ItemGroup>
       <LinkerArg Include="@(_TypeMapMarshalMethodsObjectFile)" />
     </ItemGroup>
 
-    <Message Importance="High" Text="[TypeMap] Added object files to LinkerArg: @(_TypeMapMarshalMethodsObjectFile)" />
-
-    <!-- Append marshal method symbols to ILC exports file -->
-    <PropertyGroup>
-      <_TypeMapMarshalMethodsExportsFile>$(_AndroidMarshalMethodsDir)$([System.IO.Path]::DirectorySeparatorChar)marshal_methods_exports.txt</_TypeMapMarshalMethodsExportsFile>
-    </PropertyGroup>
+    <!-- Append filtered marshal method symbols to ILC exports file -->
     <AppendMarshalMethodExports
-        Condition=" Exists('$(_TypeMapMarshalMethodsExportsFile)') and Exists('$(ExportsFile)') "
-        MarshalMethodsExportsFile="$(_TypeMapMarshalMethodsExportsFile)"
+        Condition=" Exists('$(_TypeMapMarshalMethodsExportsFileFiltered)') and Exists('$(ExportsFile)') "
+        MarshalMethodsExportsFile="$(_TypeMapMarshalMethodsExportsFileFiltered)"
         ExportsFile="$(ExportsFile)" />
     <Message Importance="High"
-             Condition=" Exists('$(_TypeMapMarshalMethodsExportsFile)') "
-             Text="[TypeMap] Appended marshal method exports from $(_TypeMapMarshalMethodsExportsFile)" />
+             Condition=" Exists('$(_TypeMapMarshalMethodsExportsFileFiltered)') "
+             Text="[TypeMap] Appended filtered marshal method exports from $(_TypeMapMarshalMethodsExportsFileFiltered)" />
   </Target>
 
   <!-- Make sure we have a chance to generate our application-specific static library before linking

@@ -1053,7 +1053,9 @@ internal class JavaPeerScanner
 		var activationCtorStyle = GetActivationConstructorStyle (reader, typeDef);
 
 		// Collect marshal methods and implemented interfaces
-		var (marshalMethods, implementedInterfaces) = CollectMarshalMethodsAndInterfaces (reader, typeDef);
+		// For ACW types (DoNotGenerateAcw=false), we need to scan base types for overridden [Register] methods
+		// For MCW types (DoNotGenerateAcw=true), all methods are already annotated directly
+		var (marshalMethods, implementedInterfaces) = CollectMarshalMethodsAndInterfaces (reader, typeDef, doNotGenerateAcw);
 
 		var newPeer = new JavaPeerInfo {
 			JavaName = javaName,
@@ -1127,7 +1129,8 @@ internal class JavaPeerScanner
 		var activationCtorStyle = GetActivationConstructorStyle (reader, typeDef);
 
 		// Collect marshal methods and implemented interfaces
-		var (marshalMethods, implementedInterfaces) = CollectMarshalMethodsAndInterfaces (reader, typeDef);
+		// For ACW types (DoNotGenerateAcw=false), we need to scan base types for overridden [Register] methods
+		var (marshalMethods, implementedInterfaces) = CollectMarshalMethodsAndInterfaces (reader, typeDef, doNotGenerateAcw);
 
 		var nestedPeer = new JavaPeerInfo {
 			JavaName = javaName,
@@ -1828,11 +1831,9 @@ internal class JavaPeerScanner
 		if ((method.Attributes & System.Reflection.MethodAttributes.NewSlot) != 0)
 			return;
 
-		// PERF: Skip base type scanning for types in Mono.Android - they're already fully annotated
-		// This avoids O(n²) scanning for thousands of types
-		string assemblyName = GetAssemblyName (reader);
-		if (assemblyName == "Mono.Android")
-			return;
+		// Note: The caller already filters based on DoNotGenerateAcw
+		// MCW types (DoNotGenerateAcw=true) never reach here
+		// ACW types (DoNotGenerateAcw=false) may override methods from MCW base classes
 
 		// Get the method signature for matching
 		var signature = method.DecodeSignature (sigProvider, genericContext: null);
@@ -1966,7 +1967,10 @@ internal class JavaPeerScanner
 	/// Collects marshal methods from a type that have [Register] attributes with connector methods.
 	/// Also collects registered methods from base types that this type overrides.
 	/// </summary>
-	(List<MarshalMethodInfo> Methods, List<string> Interfaces) CollectMarshalMethodsAndInterfaces (MetadataReader reader, TypeDefinition typeDef)
+	/// <param name="reader">Metadata reader for the assembly containing the type</param>
+	/// <param name="typeDef">Type definition to collect methods from</param>
+	/// <param name="doNotGenerateAcw">True for MCW types (bindings), false for ACW types (user types)</param>
+	(List<MarshalMethodInfo> Methods, List<string> Interfaces) CollectMarshalMethodsAndInterfaces (MetadataReader reader, TypeDefinition typeDef, bool doNotGenerateAcw)
 	{
 		var methods = new List<MarshalMethodInfo> ();
 		var interfaces = new List<string> ();
@@ -1974,9 +1978,9 @@ internal class JavaPeerScanner
 
 		string typeName = reader.GetString (typeDef.Name);
 		
-		// For Mono.Android, all methods are already annotated with [Register] - skip base type scanning
-		string assemblyName = GetAssemblyName (reader);
-		bool skipBaseTypeScanning = assemblyName == "Mono.Android";
+		// MCW types (DoNotGenerateAcw=true) have all methods directly annotated with [Register] - skip base type scanning
+		// ACW types (DoNotGenerateAcw=false) may override methods from MCW base classes - need base type scanning
+		bool skipBaseTypeScanning = doNotGenerateAcw;
 
 		// Reuse SignatureTypeProvider for all signature decoding in this type
 		var sigProvider = new SignatureTypeProvider (reader);
@@ -2935,9 +2939,11 @@ internal class TypeMapAssemblyGenerator
 	/// Rules:
 	/// - DoNotGenerateAcw=true means no JCW (MCW bindings to existing Java classes)
 	/// - Interfaces don't need JCW (Java interfaces already exist)
-	/// - Types from Mono.Android assembly already have JCWs in mono.android.jar
-	/// - android/runtime/* and android/app/* framework types already have JCWs in mono.android.jar
-	/// - Everything else needs JCW (user types)
+	/// - Everything else needs JCW (ACW types from any assembly, including Mono.Android)
+	/// 
+	/// Note: For TypeMap V3, we generate JCW for ALL ACW types including those in Mono.Android
+	/// (e.g., InputStreamAdapter, OutputStreamAdapter, RunnableImplementor, TrustManager implementations).
+	/// The legacy mono.android.jar is not used with TypeMap V3.
 	/// </summary>
 	bool NeedsJcwGeneration (JavaPeerInfo peer)
 	{
@@ -2950,12 +2956,7 @@ internal class TypeMapAssemblyGenerator
 		if (peer.IsInterface)
 			return false;
 		
-		// All types from Mono.Android assembly already have JCWs in mono.android.jar
-		// This includes Implementors (mono/android/*Implementor) and framework types
-		if (peer.AssemblyName == "Mono.Android")
-			return false;
-		
-		// Everything else needs JCW generation (user types)
+		// All other types are ACW and need JCW generation
 		return true;
 	}
 

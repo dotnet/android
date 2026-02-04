@@ -7,9 +7,6 @@
     <AndroidEnableTypeMaps>true</AndroidEnableTypeMaps>
     <PublishAot>true</PublishAot>
     <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
-    
-    <!-- Enable ILC logging for debugging -->
-    <IlcGenerateMetadataLog>true</IlcGenerateMetadataLog>
   </PropertyGroup>
 
 </Project>
