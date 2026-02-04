@@ -67,27 +67,27 @@ namespace Android.Runtime
 
 		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
 		[UnmanagedCallConv (CallConvs = [typeof (CallConvCdecl)])]
-		internal static partial int _monodroid_gref_log_new (IntPtr curHandle, byte curType, IntPtr newHandle, byte newType, string? threadName, int threadId, [MarshalAs (UnmanagedType.LPStr)] string? from, int from_writable);
+		internal static partial int _monodroid_gref_log_new (IntPtr curHandle, byte curType, IntPtr newHandle, byte newType, string? threadName, int threadId, string? from, int from_writable);
 
 		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
 		[UnmanagedCallConv (CallConvs = [typeof (CallConvCdecl)])]
-		internal static partial void _monodroid_gref_log_delete (IntPtr handle, byte type, string? threadName, int threadId, [MarshalAs (UnmanagedType.LPStr)] string? from, int from_writable);
+		internal static partial void _monodroid_gref_log_delete (IntPtr handle, byte type, string? threadName, int threadId, string? from, int from_writable);
 
 		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
 		[UnmanagedCallConv (CallConvs = [typeof (CallConvCdecl)])]
-		internal static partial void _monodroid_weak_gref_new (IntPtr curHandle, byte curType, IntPtr newHandle, byte newType, string? threadName, int threadId, [MarshalAs (UnmanagedType.LPStr)] string? from, int from_writable);
+		internal static partial void _monodroid_weak_gref_new (IntPtr curHandle, byte curType, IntPtr newHandle, byte newType, string? threadName, int threadId, string? from, int from_writable);
 
 		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
 		[UnmanagedCallConv (CallConvs = [typeof (CallConvCdecl)])]
-		internal static partial void _monodroid_weak_gref_delete (IntPtr handle, byte type, string? threadName, int threadId, [MarshalAs (UnmanagedType.LPStr)] string? from, int from_writable);
+		internal static partial void _monodroid_weak_gref_delete (IntPtr handle, byte type, string? threadName, int threadId, string? from, int from_writable);
 
 		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
 		[UnmanagedCallConv (CallConvs = [typeof (CallConvCdecl)])]
-		internal static partial int _monodroid_lref_log_new (int lrefc, IntPtr handle, byte type, string? threadName, int threadId, [MarshalAs (UnmanagedType.LPStr)] string from, int from_writable);
+		internal static partial int _monodroid_lref_log_new (int lrefc, IntPtr handle, byte type, string? threadName, int threadId, string from, int from_writable);
 
 		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
 		[UnmanagedCallConv (CallConvs = [typeof (CallConvCdecl)])]
-		internal static partial void _monodroid_lref_log_delete (int lrefc, IntPtr handle, byte type, string? threadName, int threadId, [MarshalAs (UnmanagedType.LPStr)] string from, int from_writable);
+		internal static partial void _monodroid_lref_log_delete (int lrefc, IntPtr handle, byte type, string? threadName, int threadId, string from, int from_writable);
 
 		[LibraryImport (RuntimeConstants.InternalDllName)]
 		[UnmanagedCallConv (CallConvs = [typeof (CallConvCdecl)])]
