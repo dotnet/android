@@ -209,6 +209,9 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (b.Build (proj), "First build should have succeeded.");
 			var firstBuildTime = b.LastBuildTime;
 
+			// Verify R2R compilation DID run in first build
+			b.Output.AssertTargetIsNotSkipped ("CreateReadyToRunImages");
+
 			// Second build - R2R compilation should be SKIPPED (incremental build)
 			Assert.IsTrue (b.Build (proj), "Second build should have succeeded.");
 			var secondBuildTime = b.LastBuildTime;
@@ -217,8 +220,8 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (secondBuildTime < firstBuildTime,
 				$"Second build ({secondBuildTime}) should have been faster than first build ({firstBuildTime})");
 
-			// Verify CreateReadyToRunImages target is skipped on second build
-			// This confirms R2R images are NOT being rebuilt
+			// Verify R2R compilation DID NOT run in second build
+			// This confirms R2R images are cached and NOT being rebuilt
 			b.Output.AssertTargetIsSkipped ("CreateReadyToRunImages");
 		}
 
