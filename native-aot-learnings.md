@@ -1,12 +1,12 @@
 # NativeAOT TypeMap Learnings
 
-This document captures the key learnings from adapting TypeMap V3 for NativeAOT in .NET for Android. It focuses on architectural concepts, design decisions, and challenges encountered.
+This document captures the key learnings from adapting Trimmable Type Map for NativeAOT in .NET for Android. It focuses on architectural concepts, design decisions, and challenges encountered.
 
 ## Table of Contents
 
 1. [Overview](#overview)
 2. [Runtime Differences](#runtime-differences)
-3. [TypeMap V3 Architecture](#typemap-v3-architecture)
+3. [Trimmable Type Map Architecture](#typemap-v3-architecture)
 4. [JNI Native Method Generation](#jni-native-method-generation)
 5. [Trimming and Dead Code Elimination](#trimming-and-dead-code-elimination)
 6. [Build Pipeline Integration](#build-pipeline-integration)
@@ -18,7 +18,7 @@ This document captures the key learnings from adapting TypeMap V3 for NativeAOT 
 
 ## Overview
 
-TypeMap V3 is a new type mapping system for .NET for Android that uses compile-time code generation instead of runtime reflection. The goal is to make the type mapping system fully trimmable and compatible with NativeAOT.
+Trimmable Type Map is a new type mapping system for .NET for Android that uses compile-time code generation instead of runtime reflection. The goal is to make the type mapping system fully trimmable and compatible with NativeAOT.
 
 **Key goals:**
 - Eliminate runtime reflection for type lookups
@@ -52,11 +52,11 @@ TypeMap V3 is a new type mapping system for .NET for Android that uses compile-t
 - **Type activation must be explicit** - Cannot rely on `Activator.CreateInstance` with unknown types
 - **Type mapping data must survive trimming** - Unused mappings will be removed by ILC
 
-## TypeMap V3 Architecture
+## Trimmable Type Map Architecture
 
 ### Core Concept: Proxy Types
 
-TypeMap V3 generates a "proxy type" for each Java peer type. The proxy contains:
+Trimmable Type Map generates a "proxy type" for each Java peer type. The proxy contains:
 - Activation constructor delegates
 - Type registration with the type mapping system
 
@@ -276,7 +276,7 @@ if ((peer.IsInterface || peer.IsAbstract) && !string.IsNullOrEmpty(peer.InvokerT
 
 ### Working NativeAOT App (NativeAotComplexApp)
 
-The NativeAOT TypeMap V3 implementation is now functional with:
+The NativeAOT Trimmable Type Map implementation is now functional with:
 - ✅ App launches successfully
 - ✅ UI renders and is interactive
 - ✅ Type mapping works (Java → .NET lookups)
@@ -295,6 +295,13 @@ The NativeAOT TypeMap V3 implementation is now functional with:
 ---
 
 ## Future Considerations
+
+### Conditional Crypto Library Inclusion
+
+Currently, the crypto JAR/DEX and static library are always included. An optimization would be:
+- Only include `libSystem.Security.Cryptography.Native.Android.jar` and `.a` if `System.Net.Security.SslStream` survives ILC trimming
+- Check ILC `metadata.csv` for `SslStream` presence after `IlcCompile`
+- This would reduce APK size for apps that don't use HTTPS/SSL
 
 ### ProGuard/R8 Integration
 

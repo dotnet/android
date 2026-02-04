@@ -48,11 +48,11 @@ public class MainActivity : Activity
 
 		UpdateStatus ("Ready", StatusType.Info);
 
-		// Auto-run test on startup for easier debugging
-		Log.Info (TAG, "Auto-running network test on startup...");
+		// Auto-run HTTPS test on startup for easier debugging
+		Log.Info (TAG, "Auto-running HTTPS test on startup...");
 		_ = Task.Run (async () => {
 			await Task.Delay (1000); // Wait for UI to settle
-			RunOnUiThread (() => OnHttpButtonClick (null, EventArgs.Empty));
+			RunOnUiThread (() => OnCustomCertButtonClick (null, EventArgs.Empty));
 		});
 	}
 
@@ -146,21 +146,16 @@ public class MainActivity : Activity
 		_resultText!.Text = "";
 
 		try {
-			// Use SocketsHttpHandler with custom certificate validation for NativeAOT compatibility
-			var handler = new SocketsHttpHandler {
-				SslOptions = new SslClientAuthenticationOptions {
-					RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) =>
-						ValidateServerCertificate (null!, certificate as X509Certificate2, chain, sslPolicyErrors)
-				}
-			};
+			// Use SocketsHttpHandler with default certificate validation for simplicity
+			var handler = new SocketsHttpHandler ();
 
 			using var client = new HttpClient (handler);
 			client.Timeout = TimeSpan.FromSeconds (10);
 
-			AppendResult ("Using custom RemoteCertificateValidationCallback");
-			AppendResult ("Requesting https://httpbin.org/headers...");
+			AppendResult ("Using default certificate validation");
+			AppendResult ("Requesting https://httpbin.org/get...");
 
-			var response = await client.GetAsync ("https://httpbin.org/headers");
+			var response = await client.GetAsync ("https://httpbin.org/get");
 
 			AppendResult ($"Status: {response.StatusCode}");
 			var content = await response.Content.ReadAsStringAsync ();

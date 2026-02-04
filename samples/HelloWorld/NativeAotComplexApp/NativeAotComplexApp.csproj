@@ -11,6 +11,8 @@
     <Nullable>enable</Nullable>
     <!-- Enable ILC metadata log for filtering marshal methods -->
     <IlcGenerateMetadataLog>true</IlcGenerateMetadataLog>
+    <!-- Enable R8 to shrink Java code -->
+    <AndroidLinkTool>r8</AndroidLinkTool>
   </PropertyGroup>
 
 </Project>

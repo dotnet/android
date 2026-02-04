@@ -26,7 +26,18 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <_IsPublishing Condition=" '$(_IsPublishing)' == '' ">true</_IsPublishing>
     <!-- Enable ILC metadata log for filtering marshal methods based on surviving types -->
     <IlcGenerateMetadataLog Condition=" '$(IlcGenerateMetadataLog)' == '' ">true</IlcGenerateMetadataLog>
+    <!-- HACK: Bypass gc-sections by setting LinkerFlavor to a non-matching value.
+         This is needed to keep crypto symbols from being stripped.
+         The runtime's gc-sections condition checks for '', 'bfd', or 'lld'. -->
+    <LinkerFlavor>android</LinkerFlavor>
   </PropertyGroup>
+
+  <!-- Add the crypto library's JNI init function so it gets called during JNI_OnLoad.
+       This initializes the crypto library with the JavaVM pointer so it can call JNI.
+       Always include this - the crypto library is always linked for NativeAOT. -->
+  <ItemGroup>
+    <AndroidStaticJniInitFunction Include="AndroidCryptoNative_InitLibraryOnLoad" />
+  </ItemGroup>
 
   <!-- Default property values for NativeAOT Debug configuration -->
   <PropertyGroup Condition="'$(DebugSymbols)' == 'true'">
@@ -221,6 +232,34 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     </ItemGroup>
   </Target>
 
+  <!-- Crypto library handling: use whole-archive to force all symbols to be included.
+       The crypto symbols are not being pulled in by the normal link because the .NET code
+       referencing them may be in sections that gc-sections eliminates.
+       
+       We add the crypto library a second time with whole-archive. The linker will see
+       duplicate symbols, so we use allow-multiple-definition to let the first one win. -->
+  <Target Name="_AndroidCryptoWholeArchive"
+      AfterTargets="SetupOSSpecificProps"
+      BeforeTargets="LinkNative">
+    <PropertyGroup>
+      <_CryptoLibPath>$(IlcFrameworkNativePath)libSystem.Security.Cryptography.Native.Android.a</_CryptoLibPath>
+    </PropertyGroup>
+    <ItemGroup Condition="Exists('$(_CryptoLibPath)')">
+      <!-- Re-add -fuse-ld=lld since LinkerFlavor is set to 'android' to bypass gc-sections.
+           The last -fuse-ld flag wins, so this overrides the invalid 'android' one. -->
+      <LinkerArg Include="-fuse-ld=lld" />
+      <!-- Allow duplicate symbols since we're linking crypto twice -->
+      <LinkerArg Include="-Wl,--allow-multiple-definition" />
+      <!-- Add crypto with whole-archive to force all symbols to be included -->
+      <LinkerArg Include="-Wl,--whole-archive" />
+      <LinkerArg Include="&quot;$(_CryptoLibPath)&quot;" />
+      <LinkerArg Include="-Wl,--no-whole-archive" />
+      <!-- Use -z nostart-stop-gc to prevent stripping of encapsulation symbols -->
+      <LinkerArg Include="-Wl,-z,nostart-stop-gc" />
+    </ItemGroup>
+    <Message Condition="Exists('$(_CryptoLibPath)')" Importance="high" Text="[NativeAOT] Using whole-archive for crypto: $(_CryptoLibPath)" />
+  </Target>
+
   <Target Name="_PrepareNativeAotAndroidAppInputs">
     <ItemGroup>
       <_PrivateBuildTargetAbi Condition=" '$(RuntimeIdentifier)' == 'android-arm64' " Include="arm64-v8a" />
@@ -364,6 +403,28 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <Message Importance="High"
              Condition=" Exists('$(_TypeMapMarshalMethodsExportsFileFiltered)') "
              Text="[TypeMap] Appended filtered marshal method exports from $(_TypeMapMarshalMethodsExportsFileFiltered)" />
+
+    <!-- Append crypto JNI callback symbols to exports file.
+         The libSystem.Security.Cryptography.Native.Android library has Java classes that 
+         call back to native code. These JNI symbols must be exported. -->
+    <PropertyGroup>
+      <_CryptoExportsFile>$(_AndroidMarshalMethodsDir)$([System.IO.Path]::DirectorySeparatorChar)crypto_exports.txt</_CryptoExportsFile>
+    </PropertyGroup>
+    <ItemGroup>
+      <_CryptoExportSymbol Include="Java_net_dot_android_crypto_DotnetProxyTrustManager_verifyRemoteCertificate" />
+    </ItemGroup>
+    <WriteLinesToFile
+        Condition=" Exists('$(ExportsFile)') "
+        File="$(_CryptoExportsFile)"
+        Lines="@(_CryptoExportSymbol)"
+        Overwrite="true" />
+    <AppendMarshalMethodExports
+        Condition=" Exists('$(_CryptoExportsFile)') and Exists('$(ExportsFile)') "
+        MarshalMethodsExportsFile="$(_CryptoExportsFile)"
+        ExportsFile="$(ExportsFile)" />
+    <Message Importance="High"
+             Condition=" Exists('$(_CryptoExportsFile)') "
+             Text="[NativeAOT] Added crypto JNI callback symbols to exports" />
   </Target>
 
   <!-- Make sure we have a chance to generate our application-specific static library before linking
@@ -419,21 +480,47 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   <!-- Include System.Security.Cryptography.Native.Android JAR for SSL/TLS support.
        This JAR contains Java classes needed for Android crypto interop (DotnetProxyTrustManager, etc.).
        The native library is linked via ILC but the Java classes are needed at runtime.
-       The JAR is located in the Mono runtime pack (same version as NativeAOT runtime pack) -->
+       The JAR is located in the NativeAOT runtime pack.
+       
+       TODO: Future optimization - only include crypto JAR/dex if System.Net.Security.SslStream 
+       survives ILC trimming. This requires checking ILC metadata.csv after IlcCompile. -->
   <Target Name="_IncludeCryptoJarForNativeAot"
       AfterTargets="ComputeIlcCompileInputs"
       BeforeTargets="_DetermineJavaLibrariesToCompile;IlcCompile">
     <PropertyGroup>
-      <!-- Try IlcFrameworkNativePath first (set during ILC compile), then fall back to NETCoreAppRuntimePackPath -->
-      <_CryptoJarPath Condition=" '$(IlcFrameworkNativePath)' != '' ">$(IlcFrameworkNativePath)libSystem.Security.Cryptography.Native.Android.jar</_CryptoJarPath>
-      <!-- NativeAOT uses the NETCore.App.Runtime pack for framework assemblies, which contains the crypto JAR -->
-      <_CryptoJarPath Condition=" '$(IlcFrameworkNativePath)' == '' ">%(_NETCoreAppFrameworkReference.RuntimePackPath)/runtimes/$(RuntimeIdentifier)/native/libSystem.Security.Cryptography.Native.Android.jar</_CryptoJarPath>
+      <!-- Use IlcFrameworkNativePath which is set during ILC compile.
+           Store it in a persistent property so subsequent target runs can use it. -->
+      <_CryptoJarNativePath Condition=" '$(IlcFrameworkNativePath)' != '' ">$(IlcFrameworkNativePath)</_CryptoJarNativePath>
+      <_CryptoJarPath Condition=" '$(_CryptoJarNativePath)' != '' ">$(_CryptoJarNativePath)libSystem.Security.Cryptography.Native.Android.jar</_CryptoJarPath>
     </PropertyGroup>
-    <ItemGroup Condition=" Exists('$(_CryptoJarPath)') ">
+    <ItemGroup Condition=" '$(_CryptoJarPath)' != '' and Exists('$(_CryptoJarPath)') ">
       <AndroidJavaLibrary Include="$(_CryptoJarPath)" />
     </ItemGroup>
-    <Message Condition=" Exists('$(_CryptoJarPath)') " Importance="high" Text="[NativeAOT] Added crypto JAR: $(_CryptoJarPath)" />
-    <Warning Condition=" !Exists('$(_CryptoJarPath)') " Text="[NativeAOT] Crypto JAR not found: $(_CryptoJarPath). SSL/TLS may not work." />
+    <Message Condition=" '$(_CryptoJarPath)' != '' and Exists('$(_CryptoJarPath)') " Importance="high" Text="[NativeAOT] Added crypto JAR: $(_CryptoJarPath)" />
+    <!-- Only warn if we tried to find the JAR but it wasn't there -->
+    <Warning Condition=" '$(_CryptoJarPath)' != '' and !Exists('$(_CryptoJarPath)') " Text="[NativeAOT] Crypto JAR not found: $(_CryptoJarPath). SSL/TLS may not work." />
+  </Target>
+
+  <!-- Add ProGuard keep rules for crypto classes.
+       The crypto JAR contains classes that are called via JNI from native code,
+       so R8 cannot detect that they are used and would strip them. -->
+  <Target Name="_AddCryptoProguardRulesForNativeAot"
+      AfterTargets="_IncludeCryptoJarForNativeAot"
+      BeforeTargets="_CalculateProguardConfigurationFiles"
+      Condition=" '$(AndroidLinkTool)' != '' ">
+    <PropertyGroup>
+      <_CryptoProguardConfig>$(IntermediateOutputPath)proguard$([System.IO.Path]::DirectorySeparatorChar)proguard_crypto.cfg</_CryptoProguardConfig>
+    </PropertyGroup>
+    <MakeDir Directories="$(IntermediateOutputPath)proguard" />
+    <!-- Generate keep rules for crypto classes -->
+    <WriteLinesToFile
+        File="$(_CryptoProguardConfig)"
+        Lines="# Keep crypto classes used by System.Security.Cryptography.Native.Android;-keep class net.dot.android.crypto.** { *%3B }"
+        Overwrite="true" />
+    <ItemGroup>
+      <ProguardConfiguration Include="$(_CryptoProguardConfig)" />
+    </ItemGroup>
+    <Message Importance="high" Text="[NativeAOT] Added crypto ProGuard rules: $(_CryptoProguardConfig)" />
   </Target>
 
 </Project>
