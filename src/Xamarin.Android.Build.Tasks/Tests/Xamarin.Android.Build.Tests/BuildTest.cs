@@ -2308,7 +2308,6 @@ namespace UnnamedProject
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 			};
-			proj.SetProperty ("PublishTrimmed", "true");
 
 			// Add TrimmerRootAssembly items without RootMode metadata
 			proj.OtherBuildItems.Add (new BuildItem ("TrimmerRootAssembly", "Mono.Android"));
