@@ -59,7 +59,7 @@ unsafe class BridgeProcessing
 	public void Process ()
 	{
 		PrepareForJavaCollection ();
-		JavaGCTrigger.Trigger ();
+		BridgeProcessingJniHelper.Trigger ();
 		CleanupAfterJavaCollection ();
 		s_logger?.LogGcSummary (crossRefs);
 	}
@@ -184,7 +184,7 @@ unsafe class BridgeProcessing
 
 		// Try the optimized path for GCUserPeerable (NativeAOT)
 		if (!RuntimeFeature.IsCoreClrRuntime) {
-			if (JavaGCTrigger.TryAddManagedReference (from, to)) {
+			if (BridgeProcessingJniHelper.TryAddManagedReference (from, to)) {
 				return true;
 			}
 		}
@@ -293,7 +293,7 @@ unsafe class BridgeProcessing
 
 		// Try the optimized path for GCUserPeerable (NativeAOT)
 		if (!RuntimeFeature.IsCoreClrRuntime) {
-			if (JavaGCTrigger.TryClearManagedReferences (handle)) {
+			if (BridgeProcessingJniHelper.TryClearManagedReferences (handle)) {
 				return;
 			}
 		}

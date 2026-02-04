@@ -8,17 +8,16 @@ namespace Microsoft.Android.Runtime;
 /// Java-side GC bridge helpers for NativeAOT.
 /// Triggers Java garbage collection and handles GCUserPeerable interface calls.
 /// </summary>
-unsafe static class JavaGCTrigger
+unsafe static class BridgeProcessingJniHelper
 {
 	static JniObjectReference s_RuntimeInstance;
 	static JniMethodInfo? s_Runtime_gc;
 
-	// For NativeAOT: GCUserPeerable interface
 	static JniType? s_GCUserPeerableClass;
 	static JniMethodInfo? s_GCUserPeerable_jiAddManagedReference;
 	static JniMethodInfo? s_GCUserPeerable_jiClearManagedReferences;
 
-	static JavaGCTrigger ()
+	static BridgeProcessingJniHelper ()
 	{
 		using var runtimeClass = new JniType ("java/lang/Runtime");
 		var getRuntimeMethod = runtimeClass.GetStaticMethod ("getRuntime", "()Ljava/lang/Runtime;");
