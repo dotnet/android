@@ -227,8 +227,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[TestCase (true)]
-		[TestCase (false)]
+
 		public void DeployToDevice ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -380,7 +379,7 @@ namespace Xamarin.Android.Build.Tests
 
 			string expectedLogcatOutput = "Bug 29730: GlobalLayout event handler called!";
 
-			proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 				SupportedOSPlatformVersion = "23",
 			};
@@ -420,7 +419,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 				Assert.Ignore ("AppDomain.CurrentDomain.UnhandledException doesn't work in CoreCLR or NativeAOT");
 			}
 
-			proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
@@ -522,7 +521,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			//  java.lang.UnsatisfiedLinkError: dlopen failed: library "lib中国.so" not found
 			//  java.lang.UnsatisfiedLinkError: dlopen failed: library "lib随机生成器.so" not found
 			//
-			// It might be an issue with the Android shared libary loader or name encoding in the archive. It might
+			// It might be an issue with the Android shared library loader or name encoding in the archive. It might
 			// be a good idea to limit .so names to ASCII.
 			if (runtime == AndroidRuntime.NativeAOT) {
 				Assert.Ignore ("NativeAOT doesn't work well with diacritics in the application library name");
@@ -654,7 +653,7 @@ namespace Library1 {
 			};
 			lib2.SetRuntime (runtime);
 
-			proj = new XamarinFormsAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+			var proj = new XamarinFormsAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 				AndroidLinkModeRelease = linkMode,
 				References = {
@@ -841,7 +840,7 @@ using System.Runtime.Serialization.Json;
 				Assert.Ignore ("MonoVM-only test for the moment");
 			}
 
-			proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 				AotAssemblies = false, // Release defaults to Profiled AOT for .NET 6
 			};
@@ -926,7 +925,7 @@ using System.Runtime.Serialization.Json;
 
 			AssertCommercialBuild ();
 
-			proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
@@ -1030,7 +1029,7 @@ namespace Styleable.Library {
 }"
 			});
 
-			proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
@@ -1378,7 +1377,7 @@ namespace UnnamedProject
 
 			// Mono-only test for the moment (until net10 or later is the "previous" framework)
 			if (runtime != AndroidRuntime.MonoVM) {
-				Assert.Ignore ("Mono-only test util net9 is no longer the 'previous' SDK");
+				Assert.Ignore ("Mono-only test until net9 is no longer the 'previous' SDK");
 			}
 
 			var proj = new XamarinFormsAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
@@ -1682,7 +1681,7 @@ MONO_GC_PARAMS=bridge-implementation=new",
 			library2.AndroidResources.Clear ();
 			library2.SetProperty ("AndroidGenerateResourceDesigner", "false"); // Disable Android Resource Designer generation
 			library2.AddReference (library1);
-			proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 				ProjectName = "MyApp",
 			};
@@ -1714,7 +1713,7 @@ MONO_GC_PARAMS=bridge-implementation=new",
 				return;
 			}
 
-			proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 				PackageReferences = {
 					KnownPackages.AndroidXAppCompat,
