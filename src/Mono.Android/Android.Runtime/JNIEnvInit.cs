@@ -170,7 +170,7 @@ namespace Android.Runtime
 		}
 
 		[LibraryImport (RuntimeConstants.InternalDllName)]
-		[UnmanagedCallConv (CallConvs = [typeof (CallConvCdecl)])]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		private static unsafe partial void xamarin_app_init (IntPtr env, delegate* unmanaged <int, int, int, IntPtr*, void> get_function_pointer);
 
 		static void RunStartupHooksIfNeeded ()

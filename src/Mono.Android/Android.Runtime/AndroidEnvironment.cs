@@ -67,7 +67,7 @@ namespace Android.Runtime {
 		}
 
 		[LibraryImport ("libc")]
-		[UnmanagedCallConv (CallConvs = [typeof (CallConvCdecl)])]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		private static partial void exit (int status);
 
 		public static void FailFast (string? message)

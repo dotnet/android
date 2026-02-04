@@ -13,7 +13,7 @@
     <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
-    <LangVersion>10</LangVersion>
+    <LangVersion>12</LangVersion>
     <NoStdLib>true</NoStdLib>
     <Nullable>enable</Nullable>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>

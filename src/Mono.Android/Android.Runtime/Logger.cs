@@ -45,7 +45,7 @@ namespace Android.Runtime {
 		}
 
 		[LibraryImport ("liblog", StringMarshalling = StringMarshalling.Utf8)]
-		[UnmanagedCallConv (CallConvs = [typeof (CallConvCdecl)])]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		private static partial void __android_log_print (LogLevel level, string appname, string format, string args, IntPtr zero);
 
 		public static void Log (LogLevel level, string appname, string? log) {

@@ -1507,15 +1507,15 @@ namespace Android.Runtime {
 		}
 #if ANDROID_8
 		[LibraryImport ("libjnigraphics.so")]
-		[UnmanagedCallConv (CallConvs = [typeof (CallConvCdecl)])]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		private static partial int AndroidBitmap_getInfo (IntPtr env, IntPtr jbitmap, out Android.Graphics.AndroidBitmapInfo info);
 
 		[LibraryImport ("libjnigraphics.so")]
-		[UnmanagedCallConv (CallConvs = [typeof (CallConvCdecl)])]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		private static partial int AndroidBitmap_lockPixels (IntPtr env, IntPtr jbitmap, out IntPtr addrPtr);
 
 		[LibraryImport ("libjnigraphics.so")]
-		[UnmanagedCallConv (CallConvs = [typeof (CallConvCdecl)])]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		private static partial int AndroidBitmap_unlockPixels (IntPtr env, IntPtr jbitmap);
 
 		internal static int AndroidBitmap_getInfo (IntPtr jbitmap, out Android.Graphics.AndroidBitmapInfo info)
