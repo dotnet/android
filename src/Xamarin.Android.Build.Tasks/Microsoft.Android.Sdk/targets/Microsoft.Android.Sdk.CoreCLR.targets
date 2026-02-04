@@ -13,9 +13,15 @@ This file contains the CoreCLR-specific MSBuild logic for .NET for Android.
   </PropertyGroup>
   <!-- Properties for $(OutputType)=Exe (Android Applications) -->
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' ">
-    <!-- Default to R2R Composite for CoreCLR Release mode -->
-    <PublishReadyToRun Condition=" '$(PublishReadyToRun)' == '' and '$(Configuration)' == 'Release' ">true</PublishReadyToRun>
-    <PublishReadyToRunComposite Condition=" '$(PublishReadyToRunComposite)' == '' and '$(PublishReadyToRun)' == 'true' ">true</PublishReadyToRunComposite>
+    <!--
+      Enable R2R by default for CoreCLR applications:
+      - Release builds: Use composite R2R for best startup performance
+      - Debug builds: Use individual R2R to improve runtime performance while debugging
+      Set PublishReadyToRun=false to disable R2R compilation.
+    -->
+    <PublishReadyToRun Condition=" '$(PublishReadyToRun)' == '' ">true</PublishReadyToRun>
+    <!-- Composite R2R only for Release builds - it's slower to compile but faster at runtime -->
+    <PublishReadyToRunComposite Condition=" '$(PublishReadyToRunComposite)' == '' and '$(PublishReadyToRun)' == 'true' and '$(Configuration)' == 'Release' ">true</PublishReadyToRunComposite>
     <_IsPublishing Condition=" '$(_IsPublishing)' == '' and '$(PublishReadyToRun)' == 'true' ">true</_IsPublishing>
     <AllowReadyToRunWithoutRuntimeIdentifier Condition=" '$(PublishReadyToRun)' == 'true' and '$(RuntimeIdentifiers)' != '' ">true</AllowReadyToRunWithoutRuntimeIdentifier>
   </PropertyGroup>
