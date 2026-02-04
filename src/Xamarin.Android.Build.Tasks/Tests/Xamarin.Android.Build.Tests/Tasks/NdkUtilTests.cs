@@ -43,7 +43,7 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 				};
 				Assert.IsTrue (ndk.ValidateNdkPlatform (arch, enableLLVM: false));
 				Assert.AreEqual (0, errors.Count, "NdkTools.ValidateNdkPlatform should not have returned false.");
-				int level = ndk.GetMinimumApiLevelFor (arch, AndroidRuntime.MonoVM);
+				int level = ndk.GetMinimumApiLevelFor (arch, runtime);
 
 				int expected = MonoAndroidHelper.GetMinimumApiLevel (arch, runtime);
 				Assert.AreEqual (expected, level, $"Min Api Level for {arch} should be {expected}.");
