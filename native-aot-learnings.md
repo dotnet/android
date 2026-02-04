@@ -272,6 +272,27 @@ if ((peer.IsInterface || peer.IsAbstract) && !string.IsNullOrEmpty(peer.InvokerT
 2. Keep `java-interop.jar` in the APK for NativeAOT builds
 3. Remove the `_RemoveLegacyJavaInteropJarsForNativeAot` target that was erroneously deleting needed JARs
 
+### Challenge 9: Crypto Library Integration for HTTPS/SSL
+
+**Problem**: HTTPS requests failed with "No implementation found for boolean net.dot.android.crypto.DotnetProxyTrustManager.verifyRemoteCertificate(long)". The Android crypto library (`libSystem.Security.Cryptography.Native.Android`) has Java components that call back to native code, but these symbols weren't available.
+
+**Root Causes**:
+1. **Crypto JAR missing**: `libSystem.Security.Cryptography.Native.Android.jar` wasn't included in the APK for NativeAOT
+2. **ProGuard stripping Java classes**: R8/ProGuard removed `net.dot.android.crypto.*` classes
+3. **gc-sections removing crypto code**: The `--gc-sections` linker flag eliminated "unreachable" crypto native code
+4. **JNI init handler not registered**: `AndroidCryptoNative_InitLibraryOnLoad` wasn't called during JNI_OnLoad
+5. **JNI callback not exported**: `Java_net_dot_android_crypto_DotnetProxyTrustManager_verifyRemoteCertificate` wasn't in the exports file
+
+**Solution**:
+1. **Add crypto JAR**: Create `_IncludeCryptoJarForNativeAot` target that copies the JAR to `$(IntermediateOutputPath)android-nativeaot/` for DEX compilation
+2. **Keep Java classes**: Add ProGuard rules via `_AddCryptoProguardRulesForNativeAot` target: `-keep class net.dot.android.crypto.** { *; }`
+3. **Bypass gc-sections**: Set `LinkerFlavor=android` to skip the gc-sections condition (add `-fuse-ld=lld` later to fix the linker selection)
+4. **Force crypto symbols**: Use `--whole-archive` to include all symbols from the crypto `.a` file
+5. **Register JNI init handler**: Add `<AndroidStaticJniInitFunction Include="AndroidCryptoNative_InitLibraryOnLoad" />` to static ItemGroup
+6. **Export JNI callback**: Write crypto symbol to exports file and append via `AppendMarshalMethodExports`
+
+**Key Insight**: NativeAOT's aggressive gc-sections optimization removes symbols that appear "unreachable" from a static analysis perspective, even if they're called dynamically via JNI. The workaround is to bypass gc-sections entirely for NativeAOT Android builds.
+
 ## Current Status
 
 ### Working NativeAOT App (NativeAotComplexApp)
@@ -284,7 +305,7 @@ The NativeAOT Trimmable Type Map implementation is now functional with:
 - ✅ Abstract/interface peer creation works
 - ✅ DNS resolution works
 - ✅ TCP socket connections work
-- ⏳ HTTPS not yet tested (crypto JAR integration pending)
+- ✅ HTTPS/SSL works with certificate validation
 
 ### Build Artifacts
 
