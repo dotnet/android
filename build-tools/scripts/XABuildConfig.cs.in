@@ -15,7 +15,7 @@ namespace Xamarin.Android.Tools
 		public const string XamarinAndroidBranch = "@XAMARIN_ANDROID_BRANCH@";
 		public const string AndroidSdkBuildToolsVersion = "@SDK_BUILD_TOOLS_VERSION@";
 		public static readonly Version AndroidMinimumDotNetApiLevel = new Version (@ANDROID_DEFAULT_MINIMUM_DOTNET_API_LEVEL@, @ANDROID_DEFAULT_MINIMUM_DOTNET_API_LEVEL_MINOR@);
-        public static readonly Version AndroidMinimumNonMonoApiLevel = new Version (@ANDROID_DEFAULT_MINIMUM_NONMONO_API_LEVEL@, @ANDROID_DEFAULT_MINIMUM_NONMONO_API_LEVEL_MINOR@);
+		public static readonly Version AndroidMinimumNonMonoApiLevel = new Version (@ANDROID_DEFAULT_MINIMUM_NONMONO_API_LEVEL@, @ANDROID_DEFAULT_MINIMUM_NONMONO_API_LEVEL_MINOR@);
 		public static readonly Version AndroidLatestStableApiLevel = new Version (@ANDROID_LATEST_STABLE_API_LEVEL@, @ANDROID_LATEST_STABLE_API_LEVEL_MINOR@);
 		public static readonly Version AndroidLatestUnstableApiLevel = new Version (@ANDROID_LATEST_UNSTABLE_API_LEVEL@, @ANDROID_LATEST_UNSTABLE_API_LEVEL_MINOR@);
 		public static readonly Version AndroidDefaultTargetDotnetApiLevel = new Version (@ANDROID_DEFAULT_TARGET_DOTNET_API_LEVEL@, @ANDROID_DEFAULT_TARGET_DOTNET_API_LEVEL_MINOR@);
@@ -31,16 +31,16 @@ namespace Xamarin.Android.Tools
 		/// </summary>
 		public const string PreviousDotNetTargetFramework = "net10.0";
 
-        public static readonly Dictionary <AndroidTargetArch, int> ArchToApiLevel = new () {
-            { AndroidTargetArch.Arm,    @NDK_ARMEABI_V7_API@ },
+		public static readonly Dictionary <AndroidTargetArch, int> ArchToApiLevel = new () {
+			{ AndroidTargetArch.Arm,    @NDK_ARMEABI_V7_API@ },
 			{ AndroidTargetArch.Arm64,  @NDK_ARM64_V8A_API@ },
 			{ AndroidTargetArch.X86,    @NDK_X86_API@ },
 			{ AndroidTargetArch.X86_64, @NDK_X86_64_API@ },
-        };
+		};
 
-        public static readonly Dictionary <AndroidTargetArch, int> ArchToApiLevelNonMono = new () {
-            { AndroidTargetArch.Arm64, @NDK_ARM64_V8A_NONMONO_API@ },
-            { AndroidTargetArch.X86_64, @NDK_X86_64_NONMONO_API@ },
-        };
+		public static readonly Dictionary <AndroidTargetArch, int> ArchToApiLevelNonMono = new () {
+			{ AndroidTargetArch.Arm64, @NDK_ARM64_V8A_NONMONO_API@ },
+			{ AndroidTargetArch.X86_64, @NDK_X86_64_NONMONO_API@ },
+		};
 	}
 }
