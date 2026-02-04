@@ -269,7 +269,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			};
 			proj.SetRuntime (runtime);
 			if (runtime == AndroidRuntime.MonoVM) {
-				proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
+				proj.SetRuntimeIdentifiers (new [] {"armeabi-v7a", "arm64-v8a", "x86", "x86_64"});
 			} else {
 				proj.SetRuntimeIdentifiers (new [] {"arm64-v8a", "x86_64"});
 			}

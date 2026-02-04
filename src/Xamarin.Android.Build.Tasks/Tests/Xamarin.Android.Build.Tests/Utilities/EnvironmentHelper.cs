@@ -519,7 +519,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 			}
 
-			Assert.AreEqual (names.Count, values.Count, "Environment variable name and value arrays aren't of the same size in '{javaSourcePath}'");
+			Assert.AreEqual (names.Count, values.Count, $"Environment variable name and value arrays aren't of the same size in '{javaSourcePath}'");
 			for (int i = 0; i < names.Count; i++) {
 				ret.Add (names[i], values[i]);
 			}
