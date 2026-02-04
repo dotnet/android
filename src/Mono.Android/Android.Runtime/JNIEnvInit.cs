@@ -13,7 +13,7 @@ using RuntimeFeature = Microsoft.Android.Runtime.RuntimeFeature;
 
 namespace Android.Runtime
 {
-	static internal class JNIEnvInit
+	static internal partial class JNIEnvInit
 	{
 #pragma warning disable 0649
 		// NOTE: Keep this in sync with the native side in src/native/common/include/managed-interface.hh
@@ -169,8 +169,9 @@ namespace Android.Runtime
 			SetSynchronizationContext ();
 		}
 
-		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		static extern unsafe void xamarin_app_init (IntPtr env, delegate* unmanaged <int, int, int, IntPtr*, void> get_function_pointer);
+		[LibraryImport (RuntimeConstants.InternalDllName)]
+		[UnmanagedCallConv (CallConvs = [typeof (CallConvCdecl)])]
+		private static unsafe partial void xamarin_app_init (IntPtr env, delegate* unmanaged <int, int, int, IntPtr*, void> get_function_pointer);
 
 		static void RunStartupHooksIfNeeded ()
 		{

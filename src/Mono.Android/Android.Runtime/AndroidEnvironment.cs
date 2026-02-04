@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
 using System.Net.Security;
+using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
@@ -18,7 +19,7 @@ using Javax.Net.Ssl;
 
 namespace Android.Runtime {
 
-	public static class AndroidEnvironment {
+	public static partial class AndroidEnvironment {
 
 		public const string AndroidLogAppName = "Mono.Android";
 
@@ -65,8 +66,9 @@ namespace Android.Runtime {
 			}
 		}
 
-		[DllImport ("libc")]
-		static extern void exit (int status);
+		[LibraryImport ("libc")]
+		[UnmanagedCallConv (CallConvs = [typeof (CallConvCdecl)])]
+		private static partial void exit (int status);
 
 		public static void FailFast (string? message)
 		{

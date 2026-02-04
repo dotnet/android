@@ -1506,14 +1506,17 @@ namespace Android.Runtime {
 				JniEnvironment.Arrays.GetLongArrayRegion (new JniObjectReference (src), 0, dest.Length, (long*) __p);
 		}
 #if ANDROID_8
-		[DllImport ("libjnigraphics.so")]
-		static extern int AndroidBitmap_getInfo (IntPtr env, IntPtr jbitmap, out Android.Graphics.AndroidBitmapInfo info);
+		[LibraryImport ("libjnigraphics.so")]
+		[UnmanagedCallConv (CallConvs = [typeof (CallConvCdecl)])]
+		private static partial int AndroidBitmap_getInfo (IntPtr env, IntPtr jbitmap, out Android.Graphics.AndroidBitmapInfo info);
 
-		[DllImport ("libjnigraphics.so")]
-		static extern int AndroidBitmap_lockPixels (IntPtr env, IntPtr jbitmap, out IntPtr addrPtr);
+		[LibraryImport ("libjnigraphics.so")]
+		[UnmanagedCallConv (CallConvs = [typeof (CallConvCdecl)])]
+		private static partial int AndroidBitmap_lockPixels (IntPtr env, IntPtr jbitmap, out IntPtr addrPtr);
 
-		[DllImport ("libjnigraphics.so")]
-		static extern int AndroidBitmap_unlockPixels(IntPtr env, IntPtr jbitmap);
+		[LibraryImport ("libjnigraphics.so")]
+		[UnmanagedCallConv (CallConvs = [typeof (CallConvCdecl)])]
+		private static partial int AndroidBitmap_unlockPixels (IntPtr env, IntPtr jbitmap);
 
 		internal static int AndroidBitmap_getInfo (IntPtr jbitmap, out Android.Graphics.AndroidBitmapInfo info)
 		{

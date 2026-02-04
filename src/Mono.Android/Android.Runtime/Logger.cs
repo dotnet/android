@@ -1,8 +1,9 @@
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Android.Runtime {
-	internal static class Logger {
+	internal static partial class Logger {
 		static bool hasNoLibLog;
 
 		internal static LogCategories Categories;
@@ -43,8 +44,9 @@ namespace Android.Runtime {
 			get {return (Categories & LogCategories.Netlink) != 0;}
 		}
 
-		[DllImport ("liblog")]
-		static extern void __android_log_print (LogLevel level, string appname, string format, string args, IntPtr zero);
+		[LibraryImport ("liblog", StringMarshalling = StringMarshalling.Utf8)]
+		[UnmanagedCallConv (CallConvs = [typeof (CallConvCdecl)])]
+		private static partial void __android_log_print (LogLevel level, string appname, string format, string args, IntPtr zero);
 
 		public static void Log (LogLevel level, string appname, string? log) {
 			foreach (var line in (log ?? "").Split (new[]{Environment.NewLine}, StringSplitOptions.None)) {
