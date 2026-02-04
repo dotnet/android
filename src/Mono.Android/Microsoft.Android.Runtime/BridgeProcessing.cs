@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Java;
-using System.Threading;
 using Android.Runtime;
 using Java.Interop;
 
@@ -30,35 +29,19 @@ unsafe class BridgeProcessing
 	static JniMethodInfo? s_GCUserPeerable_jiAddManagedReference;
 	static JniMethodInfo? s_GCUserPeerable_jiClearManagedReferences;
 
-	// For triggering Java GC directly
-	static JniObjectReference s_RuntimeInstance;
-	static JniMethodInfo? s_Runtime_gc;
-
-	// Logger instance (null if logging is disabled)
 	static readonly BridgeProcessingLogger? s_logger;
 
 	static BridgeProcessing ()
 	{
-		// Initialize GCUserPeer class for creating temporary peers
 		s_GCUserPeerClass = new JniType ("mono/android/GCUserPeer");
 		s_GCUserPeerCtor = s_GCUserPeerClass.GetConstructor ("()V");
 
 		if (!RuntimeFeature.IsCoreClrRuntime) {
-			// For NativeAOT, we also use GCUserPeerable interface for optimized method calls
 			s_GCUserPeerableClass = new JniType ("net/dot/jni/GCUserPeerable");
 			s_GCUserPeerable_jiAddManagedReference = s_GCUserPeerableClass.GetInstanceMethod ("jiAddManagedReference", "(Ljava/lang/Object;)V");
 			s_GCUserPeerable_jiClearManagedReferences = s_GCUserPeerableClass.GetInstanceMethod ("jiClearManagedReferences", "()V");
 		}
 
-		// Initialize Java Runtime for triggering GC
-		using var runtimeClass = new JniType ("java/lang/Runtime");
-		var getRuntimeMethod = runtimeClass.GetStaticMethod ("getRuntime", "()Ljava/lang/Runtime;");
-		s_Runtime_gc = runtimeClass.GetInstanceMethod ("gc", "()V");
-		var runtimeLocal = JniEnvironment.StaticMethods.CallStaticObjectMethod (runtimeClass.PeerReference, getRuntimeMethod, null);
-		s_RuntimeInstance = runtimeLocal.NewGlobalRef ();
-		JniObjectReference.Dispose (ref runtimeLocal);
-
-		// Initialize logger if logging is enabled
 		if (Logger.LogGC || Logger.LogGlobalRef) {
 			s_logger = new BridgeProcessingLogger ();
 		}
@@ -87,7 +70,7 @@ unsafe class BridgeProcessing
 	public void Process ()
 	{
 		PrepareForJavaCollection ();
-		TriggerJavaGC ();
+		JavaGCTrigger.Trigger ();
 		CleanupAfterJavaCollection ();
 		s_logger?.LogGcSummary (crossRefs);
 	}
@@ -112,9 +95,9 @@ unsafe class BridgeProcessing
 		}
 
 		// With cross references processed, the temporary peer list can be released
-		foreach (var (_, temporaryPeer) in temporaryPeers) {
-			var peerToDispose = temporaryPeer;
-			JniObjectReference.Dispose (ref peerToDispose);
+		foreach (var (_, peer) in temporaryPeers) {
+			var reference = peer;
+			JniObjectReference.Dispose (ref reference);
 		}
 
 		// Switch global to weak references
@@ -249,22 +232,6 @@ unsafe class BridgeProcessing
 		args[0] = new JniArgumentValue (to);
 		JniEnvironment.InstanceMethods.CallVoidMethod (from, s_GCUserPeerable_jiAddManagedReference, args);
 		return true;
-	}
-
-	/// <summary>
-	/// Trigger Java garbage collection using the cached Runtime instance directly through JNI.
-	/// </summary>
-	static void TriggerJavaGC ()
-	{
-		if (s_Runtime_gc == null) {
-			throw new InvalidOperationException ("BridgeProcessing static constructor must run before TriggerJavaGC");
-		}
-
-		try {
-			JniEnvironment.InstanceMethods.CallVoidMethod (s_RuntimeInstance, s_Runtime_gc, null);
-		} catch (Exception ex) {
-			Logger.Log (LogLevel.Error, "monodroid-gc", $"Java GC failed: {ex.Message}");
-		}
 	}
 
 	void TakeWeakGlobalRef (HandleContext* context)
@@ -435,118 +402,5 @@ unsafe class BridgeProcessing
 	{
 		public int IdentityHashCode;
 		public JniObjectReferenceControlBlock* ControlBlock;
-	}
-}
-
-/// <summary>
-/// Logger for GC bridge processing operations.
-/// Mirrors the logging from the original C++ bridge-processing.cc.
-/// </summary>
-unsafe class BridgeProcessingLogger
-{
-	const string LogTag = "monodroid-gc";
-
-	public void LogMissingAddReferencesMethod (JniType javaClass)
-	{
-		Logger.Log (LogLevel.Error, LogTag, "Failed to find monodroidAddReference method");
-		if (Logger.LogGC) {
-			var className = GetClassName (javaClass);
-			Logger.Log (LogLevel.Error, LogTag, $"Missing monodroidAddReference method for object of class {className}");
-		}
-	}
-
-	public void LogMissingClearReferencesMethod (JniType javaClass)
-	{
-		Logger.Log (LogLevel.Error, LogTag, "Failed to find monodroidClearReferences method");
-		if (Logger.LogGC) {
-			var className = GetClassName (javaClass);
-			Logger.Log (LogLevel.Error, LogTag, $"Missing monodroidClearReferences method for object of class {className}");
-		}
-	}
-
-	public void LogWeakToGref (JniObjectReference weak, JniObjectReference handle)
-	{
-		if (!Logger.LogGlobalRef) {
-			return;
-		}
-		Logger.Log (LogLevel.Info, LogTag, $"take_global_ref wref=0x{weak.Handle:x} -> handle=0x{handle.Handle:x}");
-	}
-
-	public void LogWeakRefCollected (JniObjectReference weak)
-	{
-		if (!Logger.LogGC) {
-			return;
-		}
-		Logger.Log (LogLevel.Info, LogTag, $"handle 0x{weak.Handle:x}/W; was collected by a Java GC");
-	}
-
-	public void LogTakeWeakGlobalRef (JniObjectReference handle)
-	{
-		if (!Logger.LogGlobalRef) {
-			return;
-		}
-		Logger.Log (LogLevel.Info, LogTag, $"take_weak_global_ref handle=0x{handle.Handle:x}");
-	}
-
-	public void LogWeakGrefNew (JniObjectReference handle, JniObjectReference weak)
-	{
-		if (!Logger.LogGlobalRef) {
-			return;
-		}
-		Logger.Log (LogLevel.Info, LogTag, $"weak_gref_new handle=0x{handle.Handle:x} -> weak=0x{weak.Handle:x}");
-	}
-
-	public void LogGrefDelete (JniObjectReference handle)
-	{
-		if (!Logger.LogGlobalRef) {
-			return;
-		}
-		Logger.Log (LogLevel.Info, LogTag, $"gref_delete handle=0x{handle.Handle:x}   at [[clr-gc:take_weak_global_ref]]");
-	}
-
-	public void LogWeakRefDelete (JniObjectReference weak)
-	{
-		if (!Logger.LogGlobalRef) {
-			return;
-		}
-		Logger.Log (LogLevel.Info, LogTag, $"weak_ref_delete weak=0x{weak.Handle:x}   at [[clr-gc:take_global_ref]]");
-	}
-
-	public void LogGcSummary (MarkCrossReferencesArgs* crossRefs)
-	{
-		if (!Logger.LogGC) {
-			return;
-		}
-
-		nuint total = 0;
-		nuint alive = 0;
-
-		for (nuint i = 0; i < crossRefs->ComponentCount; i++) {
-			ref StronglyConnectedComponent scc = ref crossRefs->Components[i];
-
-			for (nuint j = 0; j < scc.Count; j++) {
-				BridgeProcessing.HandleContext* context = (BridgeProcessing.HandleContext*)scc.Contexts[j];
-				if (context == null) {
-					continue;
-				}
-
-				total++;
-				if (context->ControlBlock != null && context->ControlBlock->Handle != IntPtr.Zero) {
-					alive++;
-				}
-			}
-		}
-
-		Logger.Log (LogLevel.Info, LogTag, $"GC cleanup summary: {total} objects tested - resurrecting {alive}.");
-	}
-
-	static string GetClassName (JniType javaClass)
-	{
-		try {
-			// Get class name via Java reflection
-			return javaClass.PeerReference.IsValid ? javaClass.Name : "(unknown)";
-		} catch {
-			return "(unknown)";
-		}
 	}
 }

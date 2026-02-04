@@ -91,7 +91,7 @@ namespace Android.Runtime
 		/// Returns the mark_cross_references function pointer to pass to JavaMarshal.Initialize.
 		/// </summary>
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern delegate* unmanaged<void*, void> clr_gc_bridge_initialize_for_managed_processing (
+		internal static extern delegate* unmanaged<void*, void> clr_gc_bridge_init (
 			delegate* unmanaged<void*, void> onMarkCrossReferencesCallback);
 
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]

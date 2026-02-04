@@ -17,7 +17,7 @@ extern "C" {
 	bool clr_typemap_java_to_managed (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept;
 
 	// Functions for managed GC bridge processing mode
-	BridgeProcessingFtn clr_gc_bridge_initialize_for_managed_processing (BridgeProcessingCallback callback) noexcept;
+	BridgeProcessingFtn clr_gc_bridge_init (BridgeProcessingCallback callback) noexcept;
 
 	void monodroid_log (xamarin::android::LogLevel level, LogCategories category, const char *message) noexcept;
 	char* monodroid_TypeManager_get_java_class_name (jclass klass) noexcept;

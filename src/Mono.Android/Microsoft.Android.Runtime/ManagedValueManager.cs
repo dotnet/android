@@ -13,7 +13,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Java;
 using System.Threading;
-using System.Threading.Tasks;
 using Android.Runtime;
 using Java.Interop;
 
@@ -63,7 +62,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	{
 		// Initialize GC bridge with our callback that will be invoked from the native background thread
 		delegate* unmanaged<void*, void> callback = &OnBridgeProcessing;
-		var mark_cross_references_ftn = RuntimeNativeMethods.clr_gc_bridge_initialize_for_managed_processing (callback);
+		var mark_cross_references_ftn = RuntimeNativeMethods.clr_gc_bridge_init (callback);
 		JavaMarshal.Initialize (mark_cross_references_ftn);
 	}
 
