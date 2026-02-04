@@ -1442,7 +1442,23 @@ namespace UnnamedProject
 
 			var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
-			builder.AssertHasNoWarnings ();
+			if (runtime == AndroidRuntime.MonoVM) {
+				builder.AssertHasNoWarnings ();
+			} else {
+				// CoreCLR generates:
+				//   warning XA1040: The CoreCLR runtime on Android is an experimental feature and not yet suitable for production use.
+				//
+				// NativeAOT generates (twice, once per arch):
+				//   warning IL3053: Assembly 'Mono.Android' produced AOT analysis warnings.
+				//
+				int expected = runtime switch {
+					AndroidRuntime.CoreCLR   => 1,
+					AndroidRuntime.NativeAOT => 2,
+					_ => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
+				};
+				builder.AssertHasSomeWarnings (expected);
+
+			}
 			RunProjectAndAssert (proj, builder);
 
 			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
@@ -1561,6 +1577,11 @@ namespace UnnamedProject
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
+			}
+
+			// FastDeploy is used only in Debug builds, NativeAOT is used only in Release builds
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT doesn't support FastDeploy");
 			}
 
 			if (!isRelease && !embedAssembliesIntoApk) {
