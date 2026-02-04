@@ -292,7 +292,7 @@ namespace Xamarin.Android.Prepare
 		/// </summary>
 		public string? LocalDotNetSdkArchive { get; set; }
 
-		// <summary>
+		/// <summary>
 		///   Set by <see cref="Step_Get_Android_BuildTools"/> if the archive has been downloaded and validated.
 		/// </summary>
 		public bool BuildToolsArchiveDownloaded { get; set; }
