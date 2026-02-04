@@ -803,7 +803,7 @@ namespace Library1 {
 			StreamReader sr = new StreamReader (stream);
 
 			Console.WriteLine ($""JSON Person representation: {sr.ReadToEnd ()}"");
-/
+			//
 			stream.Position = 0;
 			Person p2 = (Person) serializer.ReadObject (stream);
 
