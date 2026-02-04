@@ -8,8 +8,8 @@ static partial class JavaInteropRuntime
 {
 	static JniRuntime? runtime;
 
-	[DllImport("xa-internal-api")]
-	static extern int XA_Host_NativeAOT_JNI_OnLoad (IntPtr vm, IntPtr reserved);
+	[LibraryImport ("xa-internal-api")]
+	private static partial int XA_Host_NativeAOT_JNI_OnLoad (IntPtr vm, IntPtr reserved);
 
 	[UnmanagedCallersOnly (EntryPoint="JNI_OnLoad")]
 	static int JNI_OnLoad (IntPtr vm, IntPtr reserved)
@@ -40,8 +40,8 @@ static partial class JavaInteropRuntime
 		runtime?.Dispose ();
 	}
 
-	[DllImport("xa-internal-api")]
-	static extern void XA_Host_NativeAOT_OnInit (IntPtr language, IntPtr filesDir, IntPtr cacheDir, ref JNIEnvInit.JnienvInitializeArgs initArgs);
+	[LibraryImport ("xa-internal-api")]
+	private static partial void XA_Host_NativeAOT_OnInit (IntPtr language, IntPtr filesDir, IntPtr cacheDir, ref JNIEnvInit.JnienvInitializeArgs initArgs);
 
 	// symbol name from `$(IntermediateOutputPath)obj/Release/osx-arm64/h-classes/net_dot_jni_hello_JavaInteropRuntime.h`
 	[UnmanagedCallersOnly (EntryPoint="Java_net_dot_jni_nativeaot_JavaInteropRuntime_init")]
