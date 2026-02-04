@@ -1451,7 +1451,7 @@ namespace UnnamedProject
 				// NativeAOT generates (twice, once per arch):
 				//   warning IL3053: Assembly 'Mono.Android' produced AOT analysis warnings.
 				//
-				int expected = runtime switch {
+				uint expected = runtime switch {
 					AndroidRuntime.CoreCLR   => 1,
 					AndroidRuntime.NativeAOT => 2,
 					_ => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
