@@ -151,34 +151,44 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void DebugBuildPublishReadyToRun ([Values ("android-x64", "android-arm64")] string rid)
+		public void DebugBuildR2ROnlyForSdkAssemblies ([Values ("android-x64", "android-arm64")] string rid)
 		{
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = false, // Debug build - R2R is now enabled by default for CoreCLR
+				IsRelease = false, // Debug build - R2R enabled only for SDK assemblies
 			};
 
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetProperty ("RuntimeIdentifier", rid);
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
-			// Composite R2R should NOT be enabled by default for Debug builds
-			proj.SetProperty ("PublishReadyToRunComposite", "false");
 
 			var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
-			var assemblyName = proj.ProjectName;
+			var userAssemblyName = proj.ProjectName;
 			var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, rid, $"{proj.PackageName}-Signed.apk");
 			FileAssert.Exists (apk);
 
 			var helper = new ArchiveAssemblyHelper (apk, true);
 			var abi = MonoAndroidHelper.RidToAbi (rid);
-			Assert.IsTrue (helper.Exists ($"assemblies/{abi}/{assemblyName}.dll"), $"{assemblyName}.dll should exist in apk!");
 
-			using var stream = helper.ReadEntry ($"assemblies/{assemblyName}.dll");
-			stream.Position = 0;
-			using var peReader = new System.Reflection.PortableExecutable.PEReader (stream);
-			Assert.IsTrue (peReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size > 0,
-				$"ReadyToRun image not found in Debug build {assemblyName}.dll! ManagedNativeHeaderDirectory should not be empty!");
+			// User assembly should exist but NOT have R2R image (excluded for debugging)
+			Assert.IsTrue (helper.Exists ($"assemblies/{abi}/{userAssemblyName}.dll"), $"{userAssemblyName}.dll should exist in apk!");
+			using (var userStream = helper.ReadEntry ($"assemblies/{userAssemblyName}.dll")) {
+				userStream.Position = 0;
+				using var userPeReader = new System.Reflection.PortableExecutable.PEReader (userStream);
+				Assert.AreEqual (0, userPeReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size,
+					$"User assembly {userAssemblyName}.dll should NOT have R2R image in Debug build!");
+			}
+
+			// SDK assembly (Mono.Android.dll) should have R2R image
+			var sdkAssemblyName = "Mono.Android";
+			Assert.IsTrue (helper.Exists ($"assemblies/{abi}/{sdkAssemblyName}.dll"), $"{sdkAssemblyName}.dll should exist in apk!");
+			using (var sdkStream = helper.ReadEntry ($"assemblies/{sdkAssemblyName}.dll")) {
+				sdkStream.Position = 0;
+				using var sdkPeReader = new System.Reflection.PortableExecutable.PEReader (sdkStream);
+				Assert.IsTrue (sdkPeReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size > 0,
+					$"SDK assembly {sdkAssemblyName}.dll should have R2R image in Debug build!");
+			}
 		}
 
 		[Test]

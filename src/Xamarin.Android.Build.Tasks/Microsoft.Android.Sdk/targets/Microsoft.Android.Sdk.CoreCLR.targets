@@ -15,8 +15,8 @@ This file contains the CoreCLR-specific MSBuild logic for .NET for Android.
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' ">
     <!--
       Enable R2R by default for CoreCLR applications:
-      - Release builds: Use composite R2R for best startup performance
-      - Debug builds: Use individual R2R to improve runtime performance while debugging
+      - Release builds: R2R for all assemblies using composite mode
+      - Debug builds: R2R only for SDK assemblies (user assemblies excluded for debugging)
       Set PublishReadyToRun=false to disable R2R compilation.
     -->
     <PublishReadyToRun Condition=" '$(PublishReadyToRun)' == '' ">true</PublishReadyToRun>
@@ -24,6 +24,8 @@ This file contains the CoreCLR-specific MSBuild logic for .NET for Android.
     <PublishReadyToRunComposite Condition=" '$(PublishReadyToRunComposite)' == '' and '$(PublishReadyToRun)' == 'true' and '$(Configuration)' == 'Release' ">true</PublishReadyToRunComposite>
     <_IsPublishing Condition=" '$(_IsPublishing)' == '' and '$(PublishReadyToRun)' == 'true' ">true</_IsPublishing>
     <AllowReadyToRunWithoutRuntimeIdentifier Condition=" '$(PublishReadyToRun)' == 'true' and '$(RuntimeIdentifiers)' != '' ">true</AllowReadyToRunWithoutRuntimeIdentifier>
+    <!-- In Debug mode, only SDK assemblies should be R2R compiled (user assemblies excluded for debugging) -->
+    <_AndroidFilterR2RAssemblies Condition=" '$(_AndroidFilterR2RAssemblies)' == '' and '$(Configuration)' != 'Release' ">true</_AndroidFilterR2RAssemblies>
   </PropertyGroup>
 
   <!-- Default feature switches -->
@@ -50,5 +52,43 @@ This file contains the CoreCLR-specific MSBuild logic for .NET for Android.
           PackageDirectory="$(_DotnetRuntimeRepo)/artifacts/bin/microsoft.netcore.app.runtime.$(RuntimeIdentifier)/$(_DotNetRuntimeConfiguration)"
           Condition=" '%(ResolvedRuntimePack.FrameworkName)' == 'Microsoft.NETCore.App' And Exists('$(_DotnetRuntimeRepo)/artifacts/bin/microsoft.netcore.app.runtime.$(RuntimeIdentifier)/$(_DotNetRuntimeConfiguration)') " />
     </ItemGroup>
+  </Target>
+
+  <!--
+    In Debug mode, exclude user assemblies from R2R compilation.
+    Only SDK assemblies (from Microsoft.Android and Microsoft.NETCore.App frameworks) are R2R compiled.
+    This allows user code to be JIT compiled for better debugging experience while still benefiting
+    from pre-compiled SDK assemblies for improved startup performance.
+  -->
+  <Target Name="_AndroidSelectR2RAssemblies"
+          Condition=" '$(_AndroidFilterR2RAssemblies)' == 'true' and '$(PublishReadyToRun)' == 'true' "
+          BeforeTargets="_PrepareForReadyToRunCompilation"
+          DependsOnTargets="ComputeFilesToPublish">
+    <ItemGroup>
+      <!-- Get all assemblies that will be published -->
+      <_AndroidR2RCandidates Include="@(ResolvedFileToPublish)"
+          Condition=" '%(Extension)' == '.dll' and '%(ResolvedFileToPublish.Culture)' == '' and '%(ResolvedFileToPublish.DestinationSubDirectory)' == '' " />
+
+      <!--
+        SDK assemblies are identified by:
+        - FrameworkReferenceName: Microsoft.Android or Microsoft.NETCore.App
+        - NuGetPackageId starting with: Microsoft.Android., Microsoft.Maui., or Microsoft.NETCore.App.Ref
+      -->
+      <_AndroidR2RSdkAssemblies Include="@(_AndroidR2RCandidates)"
+          Condition=" '%(_AndroidR2RCandidates.FrameworkReferenceName)' == 'Microsoft.Android' or
+                      '%(_AndroidR2RCandidates.FrameworkReferenceName)' == 'Microsoft.NETCore.App' or
+                      '%(_AndroidR2RCandidates.NuGetPackageId)' == 'Microsoft.NETCore.App.Ref' or
+                      $([System.String]::new('%(_AndroidR2RCandidates.NuGetPackageId)').StartsWith('Microsoft.Android.')) or
+                      $([System.String]::new('%(_AndroidR2RCandidates.NuGetPackageId)').StartsWith('Microsoft.Maui.')) " />
+
+      <!-- User assemblies are all candidates minus SDK assemblies -->
+      <_AndroidR2RUserAssemblies Include="@(_AndroidR2RCandidates)" Exclude="@(_AndroidR2RSdkAssemblies)" />
+
+      <!-- Exclude user assemblies from R2R compilation -->
+      <PublishReadyToRunExclude Include="@(_AndroidR2RUserAssemblies->'%(Filename)')" />
+    </ItemGroup>
+
+    <Message Text="R2R: Excluding user assembly from R2R compilation: %(_AndroidR2RUserAssemblies.Filename)" Importance="low"
+             Condition=" '@(_AndroidR2RUserAssemblies)' != '' " />
   </Target>
 </Project>
