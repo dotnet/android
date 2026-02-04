@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Java;
+using System.Threading;
 using Android.Runtime;
 using Java.Interop;
 
@@ -33,18 +34,16 @@ unsafe class BridgeProcessing
 	static JniObjectReference s_RuntimeInstance;
 	static JniMethodInfo? s_Runtime_gc;
 
-	// Is NativeAOT mode (uses GCUserPeerable instead of IGCUserPeer)
-	static readonly bool s_isNativeAOT;
+	// Logger instance (null if logging is disabled)
+	static readonly BridgeProcessingLogger? s_logger;
 
 	static BridgeProcessing ()
 	{
-		s_isNativeAOT = !RuntimeFeature.IsMonoRuntime;
-
 		// Initialize GCUserPeer class for creating temporary peers
 		s_GCUserPeerClass = new JniType ("mono/android/GCUserPeer");
 		s_GCUserPeerCtor = s_GCUserPeerClass.GetConstructor ("()V");
 
-		if (s_isNativeAOT) {
+		if (!RuntimeFeature.IsCoreClrRuntime) {
 			// For NativeAOT, we also use GCUserPeerable interface for optimized method calls
 			s_GCUserPeerableClass = new JniType ("net/dot/jni/GCUserPeerable");
 			s_GCUserPeerable_jiAddManagedReference = s_GCUserPeerableClass.GetInstanceMethod ("jiAddManagedReference", "(Ljava/lang/Object;)V");
@@ -58,6 +57,11 @@ unsafe class BridgeProcessing
 		var runtimeLocal = JniEnvironment.StaticMethods.CallStaticObjectMethod (runtimeClass.PeerReference, getRuntimeMethod, null);
 		s_RuntimeInstance = runtimeLocal.NewGlobalRef ();
 		JniObjectReference.Dispose (ref runtimeLocal);
+
+		// Initialize logger if logging is enabled
+		if (Logger.LogGC || Logger.LogGlobalRef) {
+			s_logger = new BridgeProcessingLogger ();
+		}
 	}
 
 	public BridgeProcessing (MarkCrossReferencesArgs* args)
@@ -85,6 +89,7 @@ unsafe class BridgeProcessing
 		PrepareForJavaCollection ();
 		TriggerJavaGC ();
 		CleanupAfterJavaCollection ();
+		s_logger?.LogGcSummary (crossRefs);
 	}
 
 	/// <summary>
@@ -206,8 +211,10 @@ unsafe class BridgeProcessing
 		}
 
 		// Try the optimized path for GCUserPeerable (NativeAOT)
-		if (s_isNativeAOT && TryCallGCUserPeerableAddManagedReference (from, to)) {
-			return true;
+		if (!RuntimeFeature.IsCoreClrRuntime) {
+			if (TryCallGCUserPeerableAddManagedReference (from, to)) {
+				return true;
+			}
 		}
 
 		// Fall back to reflection-based approach
@@ -218,7 +225,7 @@ unsafe class BridgeProcessing
 		try {
 			addMethod = fromClass.GetInstanceMethod ("monodroidAddReference", "(Ljava/lang/Object;)V");
 		} catch (Java.Lang.NoSuchMethodError) {
-			Logger.Log (LogLevel.Error, "monodroid-gc", "Failed to find monodroidAddReference method");
+			s_logger?.LogMissingAddReferencesMethod (fromClass);
 			return false;
 		}
 
@@ -266,12 +273,16 @@ unsafe class BridgeProcessing
 		Debug.Assert (context->ControlBlock->HandleType == (int)JniObjectReferenceType.Global, "Expected global reference type for handle");
 
 		var handle = new JniObjectReference (context->ControlBlock->Handle, JniObjectReferenceType.Global);
+		s_logger?.LogTakeWeakGlobalRef (handle);
+
 		var weak = handle.NewWeakGlobalRef ();
+		s_logger?.LogWeakGrefNew (handle, weak);
 
 		context->ControlBlock->Handle = weak.Handle;
 		context->ControlBlock->HandleType = (int)JniObjectReferenceType.WeakGlobal;
 
 		// Delete the old global ref
+		s_logger?.LogGrefDelete (handle);
 		JniObjectReference.Dispose (ref handle);
 	}
 
@@ -300,12 +311,18 @@ unsafe class BridgeProcessing
 
 		var weak = new JniObjectReference (context->ControlBlock->Handle, JniObjectReferenceType.WeakGlobal);
 		var handle = weak.NewGlobalRef ();
+		s_logger?.LogWeakToGref (weak, handle);
 
 		// The weak reference might have been collected
+		if (handle.Handle == IntPtr.Zero) {
+			s_logger?.LogWeakRefCollected (weak);
+		}
+
 		context->ControlBlock->Handle = handle.Handle; // This may be null if collected
 		context->ControlBlock->HandleType = (int)JniObjectReferenceType.Global;
 
 		// Delete the old weak ref
+		s_logger?.LogWeakRefDelete (weak);
 		JniObjectReference.Dispose (ref weak);
 	}
 
@@ -335,8 +352,10 @@ unsafe class BridgeProcessing
 		}
 
 		// Try the optimized path for GCUserPeerable (NativeAOT)
-		if (s_isNativeAOT && TryCallGCUserPeerableClearManagedReferences (handle)) {
-			return;
+		if (!RuntimeFeature.IsCoreClrRuntime) {
+			if (TryCallGCUserPeerableClearManagedReferences (handle)) {
+				return;
+			}
 		}
 
 		// Fall back to reflection-based approach
@@ -347,7 +366,7 @@ unsafe class BridgeProcessing
 		try {
 			clearMethod = javaClass.GetInstanceMethod ("monodroidClearReferences", "()V");
 		} catch (Java.Lang.NoSuchMethodError) {
-			Logger.Log (LogLevel.Error, "monodroid-gc", "Failed to find monodroidClearReferences method");
+			s_logger?.LogMissingClearReferencesMethod (javaClass);
 			return;
 		}
 
@@ -416,5 +435,118 @@ unsafe class BridgeProcessing
 	{
 		public int IdentityHashCode;
 		public JniObjectReferenceControlBlock* ControlBlock;
+	}
+}
+
+/// <summary>
+/// Logger for GC bridge processing operations.
+/// Mirrors the logging from the original C++ bridge-processing.cc.
+/// </summary>
+unsafe class BridgeProcessingLogger
+{
+	const string LogTag = "monodroid-gc";
+
+	public void LogMissingAddReferencesMethod (JniType javaClass)
+	{
+		Logger.Log (LogLevel.Error, LogTag, "Failed to find monodroidAddReference method");
+		if (Logger.LogGC) {
+			var className = GetClassName (javaClass);
+			Logger.Log (LogLevel.Error, LogTag, $"Missing monodroidAddReference method for object of class {className}");
+		}
+	}
+
+	public void LogMissingClearReferencesMethod (JniType javaClass)
+	{
+		Logger.Log (LogLevel.Error, LogTag, "Failed to find monodroidClearReferences method");
+		if (Logger.LogGC) {
+			var className = GetClassName (javaClass);
+			Logger.Log (LogLevel.Error, LogTag, $"Missing monodroidClearReferences method for object of class {className}");
+		}
+	}
+
+	public void LogWeakToGref (JniObjectReference weak, JniObjectReference handle)
+	{
+		if (!Logger.LogGlobalRef) {
+			return;
+		}
+		Logger.Log (LogLevel.Info, LogTag, $"take_global_ref wref=0x{weak.Handle:x} -> handle=0x{handle.Handle:x}");
+	}
+
+	public void LogWeakRefCollected (JniObjectReference weak)
+	{
+		if (!Logger.LogGC) {
+			return;
+		}
+		Logger.Log (LogLevel.Info, LogTag, $"handle 0x{weak.Handle:x}/W; was collected by a Java GC");
+	}
+
+	public void LogTakeWeakGlobalRef (JniObjectReference handle)
+	{
+		if (!Logger.LogGlobalRef) {
+			return;
+		}
+		Logger.Log (LogLevel.Info, LogTag, $"take_weak_global_ref handle=0x{handle.Handle:x}");
+	}
+
+	public void LogWeakGrefNew (JniObjectReference handle, JniObjectReference weak)
+	{
+		if (!Logger.LogGlobalRef) {
+			return;
+		}
+		Logger.Log (LogLevel.Info, LogTag, $"weak_gref_new handle=0x{handle.Handle:x} -> weak=0x{weak.Handle:x}");
+	}
+
+	public void LogGrefDelete (JniObjectReference handle)
+	{
+		if (!Logger.LogGlobalRef) {
+			return;
+		}
+		Logger.Log (LogLevel.Info, LogTag, $"gref_delete handle=0x{handle.Handle:x}   at [[clr-gc:take_weak_global_ref]]");
+	}
+
+	public void LogWeakRefDelete (JniObjectReference weak)
+	{
+		if (!Logger.LogGlobalRef) {
+			return;
+		}
+		Logger.Log (LogLevel.Info, LogTag, $"weak_ref_delete weak=0x{weak.Handle:x}   at [[clr-gc:take_global_ref]]");
+	}
+
+	public void LogGcSummary (MarkCrossReferencesArgs* crossRefs)
+	{
+		if (!Logger.LogGC) {
+			return;
+		}
+
+		nuint total = 0;
+		nuint alive = 0;
+
+		for (nuint i = 0; i < crossRefs->ComponentCount; i++) {
+			ref StronglyConnectedComponent scc = ref crossRefs->Components[i];
+
+			for (nuint j = 0; j < scc.Count; j++) {
+				BridgeProcessing.HandleContext* context = (BridgeProcessing.HandleContext*)scc.Contexts[j];
+				if (context == null) {
+					continue;
+				}
+
+				total++;
+				if (context->ControlBlock != null && context->ControlBlock->Handle != IntPtr.Zero) {
+					alive++;
+				}
+			}
+		}
+
+		Logger.Log (LogLevel.Info, LogTag, $"GC cleanup summary: {total} objects tested - resurrecting {alive}.");
+	}
+
+	static string GetClassName (JniType javaClass)
+	{
+		try {
+			// Get class name via Java reflection
+			return javaClass.PeerReference.IsValid ? javaClass.Name : "(unknown)";
+		} catch {
+			return "(unknown)";
+		}
 	}
 }
