@@ -1,5 +1,8 @@
 LIBNAOT_ANDROID {
   global:
+    XA_Host_NativeAOT_JNI_OnLoad;
+    XA_Host_NativeAOT_OnInit;
+    XA_Host_NativeAOT_SetTypemapGetFunctionPointer;
 
   local:
     *;

@@ -10,20 +10,11 @@ static partial class JavaInteropRuntime
 	static JniRuntime? runtime;
 	static TypeMapAttributeTypeMap? typeMap;
 
-	// Delegate type for typemap_get_function_pointer callback
-	unsafe delegate void GetFunctionPointerCallback (byte* classNamePtr, int classNameLength, int methodIndex, IntPtr* outputPtr);
-
-	// Keep delegate alive to prevent GC
-	static GetFunctionPointerCallback? _getFunctionPointerDelegate;
-	static IntPtr _getFunctionPointerPtr;
-
 	[DllImport("xa-internal-api")]
 	static extern int XA_Host_NativeAOT_JNI_OnLoad (IntPtr vm, IntPtr reserved);
 
-	// Import dlsym and dlopen for looking up the global symbol
-	const int RTLD_DEFAULT = 0;
-	[DllImport("dl")]
-	static extern IntPtr dlsym (IntPtr handle, string symbol);
+	[DllImport("xa-internal-api")]
+	static extern void XA_Host_NativeAOT_SetTypemapGetFunctionPointer (IntPtr getFunctionPointerFn);
 
 	[UnmanagedCallersOnly (EntryPoint="JNI_OnLoad")]
 	static int JNI_OnLoad (IntPtr vm, IntPtr reserved)
@@ -75,7 +66,12 @@ static partial class JavaInteropRuntime
 			typeMap = new TypeMapAttributeTypeMap ();
 
 			// Initialize the typemap_get_function_pointer callback for LLVM IR marshal methods
-			InitializeTypemapGetFunctionPointer ();
+			// Pass the unmanaged function pointer to the native side to set the global
+			unsafe {
+				IntPtr fnPtr = (IntPtr)(delegate* unmanaged<byte*, int, int, IntPtr*, void>)&TypemapGetFunctionPointer;
+				XA_Host_NativeAOT_SetTypemapGetFunctionPointer (fnPtr);
+				AndroidLog.Print (AndroidLogLevel.Info, "JavaInteropRuntime", $"Set typemap_get_function_pointer to 0x{fnPtr:X}");
+			}
 
 			var options = new NativeAotRuntimeOptions {
 				EnvironmentPointer          = jnienv,
@@ -107,33 +103,10 @@ static partial class JavaInteropRuntime
 	}
 
 	/// <summary>
-	/// Initialize the typemap_get_function_pointer global callback that LLVM IR marshal methods use
-	/// to get managed method pointers.
+	/// Callback that LLVM IR marshal methods call to get managed method pointers.
 	/// </summary>
-	static unsafe void InitializeTypemapGetFunctionPointer ()
-	{
-		// Create the callback delegate and get its function pointer
-		_getFunctionPointerDelegate = new GetFunctionPointerCallback (TypemapGetFunctionPointerImpl);
-		_getFunctionPointerPtr = Marshal.GetFunctionPointerForDelegate (_getFunctionPointerDelegate);
-
-		// Use dlsym to find the global variable address
-		// RTLD_DEFAULT (0) searches all loaded shared libraries
-		IntPtr globalAddr = dlsym (IntPtr.Zero, "typemap_get_function_pointer");
-		if (globalAddr == IntPtr.Zero) {
-			AndroidLog.Print (AndroidLogLevel.Error, "JavaInteropRuntime", "Failed to find typemap_get_function_pointer symbol");
-			return;
-		}
-
-		// The address points to the global variable (which holds a pointer)
-		// We need to write our function pointer to this location
-		*(IntPtr*)globalAddr = _getFunctionPointerPtr;
-		AndroidLog.Print (AndroidLogLevel.Info, "JavaInteropRuntime", $"Initialized typemap_get_function_pointer callback at 0x{globalAddr:X}");
-	}
-
-	/// <summary>
-	/// Callback implementation that the LLVM IR marshal methods call to get managed method pointers.
-	/// </summary>
-	static unsafe void TypemapGetFunctionPointerImpl (byte* classNamePtr, int classNameLength, int methodIndex, IntPtr* outputPtr)
+	[UnmanagedCallersOnly]
+	static unsafe void TypemapGetFunctionPointer (byte* classNamePtr, int classNameLength, int methodIndex, IntPtr* outputPtr)
 	{
 		try {
 			// Convert the class name from bytes
