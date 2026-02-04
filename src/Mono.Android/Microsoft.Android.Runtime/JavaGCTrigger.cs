@@ -5,12 +5,18 @@ using Java.Interop;
 namespace Microsoft.Android.Runtime;
 
 /// <summary>
-/// Triggers Java garbage collection directly through JNI.
+/// Java-side GC bridge helpers for NativeAOT.
+/// Triggers Java garbage collection and handles GCUserPeerable interface calls.
 /// </summary>
-static class JavaGCTrigger
+unsafe static class JavaGCTrigger
 {
 	static JniObjectReference s_RuntimeInstance;
 	static JniMethodInfo? s_Runtime_gc;
+
+	// For NativeAOT: GCUserPeerable interface
+	static JniType? s_GCUserPeerableClass;
+	static JniMethodInfo? s_GCUserPeerable_jiAddManagedReference;
+	static JniMethodInfo? s_GCUserPeerable_jiClearManagedReferences;
 
 	static JavaGCTrigger ()
 	{
@@ -20,18 +26,50 @@ static class JavaGCTrigger
 		var runtimeLocal = JniEnvironment.StaticMethods.CallStaticObjectMethod (runtimeClass.PeerReference, getRuntimeMethod, null);
 		s_RuntimeInstance = runtimeLocal.NewGlobalRef ();
 		JniObjectReference.Dispose (ref runtimeLocal);
+
+		if (!RuntimeFeature.IsCoreClrRuntime) {
+			s_GCUserPeerableClass = new JniType ("net/dot/jni/GCUserPeerable");
+			s_GCUserPeerable_jiAddManagedReference = s_GCUserPeerableClass.GetInstanceMethod ("jiAddManagedReference", "(Ljava/lang/Object;)V");
+			s_GCUserPeerable_jiClearManagedReferences = s_GCUserPeerableClass.GetInstanceMethod ("jiClearManagedReferences", "()V");
+		}
 	}
 
 	public static void Trigger ()
 	{
-		if (s_Runtime_gc == null) {
-			throw new InvalidOperationException ("JavaGCTrigger static constructor must run before Trigger");
-		}
-
 		try {
-			JniEnvironment.InstanceMethods.CallVoidMethod (s_RuntimeInstance, s_Runtime_gc, null);
+			JniEnvironment.InstanceMethods.CallVoidMethod (s_RuntimeInstance, s_Runtime_gc!, null);
 		} catch (Exception ex) {
 			Logger.Log (LogLevel.Error, "monodroid-gc", $"Java GC failed: {ex.Message}");
 		}
+	}
+
+	public static bool TryAddManagedReference (JniObjectReference from, JniObjectReference to)
+	{
+		if (s_GCUserPeerableClass == null || s_GCUserPeerable_jiAddManagedReference == null) {
+			return false;
+		}
+
+		if (!JniEnvironment.Types.IsInstanceOf (from, s_GCUserPeerableClass.PeerReference)) {
+			return false;
+		}
+
+		JniArgumentValue* args = stackalloc JniArgumentValue[1];
+		args[0] = new JniArgumentValue (to);
+		JniEnvironment.InstanceMethods.CallVoidMethod (from, s_GCUserPeerable_jiAddManagedReference, args);
+		return true;
+	}
+
+	public static bool TryClearManagedReferences (JniObjectReference handle)
+	{
+		if (s_GCUserPeerableClass == null || s_GCUserPeerable_jiClearManagedReferences == null) {
+			return false;
+		}
+
+		if (!JniEnvironment.Types.IsInstanceOf (handle, s_GCUserPeerableClass.PeerReference)) {
+			return false;
+		}
+
+		JniEnvironment.InstanceMethods.CallVoidMethod (handle, s_GCUserPeerable_jiClearManagedReferences, null);
+		return true;
 	}
 }

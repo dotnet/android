@@ -85,13 +85,8 @@ namespace Android.Runtime
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern bool clr_typemap_java_to_managed (string java_type_name, out IntPtr managed_assembly_name, out uint managed_type_token_id);
 
-		/// <summary>
-		/// Initialize GC bridge for managed processing mode.
-		/// Takes a callback that will be invoked when mark_cross_references is called by the GC.
-		/// Returns the mark_cross_references function pointer to pass to JavaMarshal.Initialize.
-		/// </summary>
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern delegate* unmanaged<void*, void> clr_gc_bridge_init (
+		internal static extern delegate* unmanaged<void*, void> clr_initialize_gc_bridge (
 			delegate* unmanaged<void*, void> onMarkCrossReferencesCallback);
 
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]

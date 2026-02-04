@@ -24,23 +24,12 @@ unsafe class BridgeProcessing
 	static JniType? s_GCUserPeerClass;
 	static JniMethodInfo? s_GCUserPeerCtor;
 
-	// For NativeAOT: GCUserPeerable interface
-	static JniType? s_GCUserPeerableClass;
-	static JniMethodInfo? s_GCUserPeerable_jiAddManagedReference;
-	static JniMethodInfo? s_GCUserPeerable_jiClearManagedReferences;
-
 	static readonly BridgeProcessingLogger? s_logger;
 
 	static BridgeProcessing ()
 	{
 		s_GCUserPeerClass = new JniType ("mono/android/GCUserPeer");
 		s_GCUserPeerCtor = s_GCUserPeerClass.GetConstructor ("()V");
-
-		if (!RuntimeFeature.IsCoreClrRuntime) {
-			s_GCUserPeerableClass = new JniType ("net/dot/jni/GCUserPeerable");
-			s_GCUserPeerable_jiAddManagedReference = s_GCUserPeerableClass.GetInstanceMethod ("jiAddManagedReference", "(Ljava/lang/Object;)V");
-			s_GCUserPeerable_jiClearManagedReferences = s_GCUserPeerableClass.GetInstanceMethod ("jiClearManagedReferences", "()V");
-		}
 
 		if (Logger.LogGC || Logger.LogGlobalRef) {
 			s_logger = new BridgeProcessingLogger ();
@@ -195,7 +184,7 @@ unsafe class BridgeProcessing
 
 		// Try the optimized path for GCUserPeerable (NativeAOT)
 		if (!RuntimeFeature.IsCoreClrRuntime) {
-			if (TryCallGCUserPeerableAddManagedReference (from, to)) {
+			if (JavaGCTrigger.TryAddManagedReference (from, to)) {
 				return true;
 			}
 		}
@@ -215,22 +204,6 @@ unsafe class BridgeProcessing
 		JniArgumentValue* args = stackalloc JniArgumentValue[1];
 		args[0] = new JniArgumentValue (to);
 		JniEnvironment.InstanceMethods.CallVoidMethod (from, addMethod, args);
-		return true;
-	}
-
-	bool TryCallGCUserPeerableAddManagedReference (JniObjectReference from, JniObjectReference to)
-	{
-		if (s_GCUserPeerableClass == null || s_GCUserPeerable_jiAddManagedReference == null) {
-			return false;
-		}
-
-		if (!JniEnvironment.Types.IsInstanceOf (from, s_GCUserPeerableClass.PeerReference)) {
-			return false;
-		}
-
-		JniArgumentValue* args = stackalloc JniArgumentValue[1];
-		args[0] = new JniArgumentValue (to);
-		JniEnvironment.InstanceMethods.CallVoidMethod (from, s_GCUserPeerable_jiAddManagedReference, args);
 		return true;
 	}
 
@@ -320,7 +293,7 @@ unsafe class BridgeProcessing
 
 		// Try the optimized path for GCUserPeerable (NativeAOT)
 		if (!RuntimeFeature.IsCoreClrRuntime) {
-			if (TryCallGCUserPeerableClearManagedReferences (handle)) {
+			if (JavaGCTrigger.TryClearManagedReferences (handle)) {
 				return;
 			}
 		}
@@ -338,20 +311,6 @@ unsafe class BridgeProcessing
 		}
 
 		JniEnvironment.InstanceMethods.CallVoidMethod (handle, clearMethod, null);
-	}
-
-	bool TryCallGCUserPeerableClearManagedReferences (JniObjectReference handle)
-	{
-		if (s_GCUserPeerableClass == null || s_GCUserPeerable_jiClearManagedReferences == null) {
-			return false;
-		}
-
-		if (!JniEnvironment.Types.IsInstanceOf (handle, s_GCUserPeerableClass.PeerReference)) {
-			return false;
-		}
-
-		JniEnvironment.InstanceMethods.CallVoidMethod (handle, s_GCUserPeerable_jiClearManagedReferences, null);
-		return true;
 	}
 
 	static bool IsCollected (HandleContext* context)

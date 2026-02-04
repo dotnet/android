@@ -62,7 +62,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	{
 		// Initialize GC bridge with our callback that will be invoked from the native background thread
 		delegate* unmanaged<void*, void> callback = &OnBridgeProcessing;
-		var mark_cross_references_ftn = RuntimeNativeMethods.clr_gc_bridge_init (callback);
+		var mark_cross_references_ftn = RuntimeNativeMethods.clr_initialize_gc_bridge (callback);
 		JavaMarshal.Initialize (mark_cross_references_ftn);
 	}
 
