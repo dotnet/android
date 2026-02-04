@@ -462,6 +462,71 @@ namespace Xamarin.Android.Build.Tests
 			return environmentFiles;
 		}
 
+		public static Dictionary<string, string> ReadNativeAotEnvironmentVariables (string outputDirectoryRoot, bool required = true)
+		{
+			var ret = new Dictionary<string, string> (StringComparer.Ordinal);
+
+			string javaSourcePath = Path.Combine (outputDirectoryRoot, "android", "src", "net", "dot", "jni", "nativeaot", "NativeAotEnvironmentVars.java");
+			bool exists = File.Exists (javaSourcePath);
+			if (required) {
+				Assert.IsTrue (exists, $"NativeAOT Java source with environment variables does not exist: {javaSourcePath}");
+			} else if (!exists) {
+				return ret;
+			}
+
+			var names = new List<string> ();
+			var values = new List<string> ();
+			bool collectingNames = false;
+			bool collectingValues = false;
+			int lineNum = 0;
+
+			foreach (string l in File.ReadAllLines (javaSourcePath)) {
+				lineNum++;
+				string line = l.Trim ();
+				switch (line) {
+					case "static String[] envNames = new String[] {":
+						collectingNames = true;
+						collectingValues = false;
+						continue;
+
+					case "static String[] envValues = new String[] {":
+						collectingValues = true;
+						collectingNames = false;
+						continue;
+
+					case "};":
+						collectingValues = false;
+						collectingNames = false;
+						continue;
+
+					case "":
+						continue;
+				}
+
+				if (!collectingValues && !collectingNames) {
+					continue;
+				}
+
+				Assert.IsTrue (line[0] == '"', $"Line {lineNum} in '{javaSourcePath}' doesn't start with a double quote: '{line}'");
+				Assert.IsTrue (line[line.Length - 1] == ',', $"Line {lineNum} in '{javaSourcePath}' doesn't end with a comma: '{line}'");
+				Assert.IsTrue (line[line.Length - 2] == '"', $"Line {lineNum} in '{javaSourcePath}' doesn't close the quoted string properly: '{line}'");
+
+				string data = line.Substring (1, line.Length - 3);
+				if (collectingNames) {
+					names.Add (data);
+				} else if (collectingValues) {
+					values.Add (data);
+				}
+			}
+
+			Assert.AreEqual (names.Count, values.Count, "Environment variable name and value arrays aren't of the same size in '{javaSourcePath}'");
+			for (int i = 0; i < names.Count; i++) {
+				ret.Add (names[i], values[i]);
+			}
+
+			return ret;
+		}
+
 		public static void AssertValidEnvironmentSharedLibrary (string outputDirectoryRoot, string sdkDirectory, string ndkDirectory, string supportedAbis)
 		{
 			NdkTools ndk = NdkTools.Create (ndkDirectory);
