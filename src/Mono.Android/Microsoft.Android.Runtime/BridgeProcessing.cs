@@ -59,7 +59,7 @@ unsafe class BridgeProcessing
 	public void Process ()
 	{
 		PrepareForJavaCollection ();
-		BridgeProcessingJniHelper.Trigger ();
+		BridgeProcessingJniHelper.TriggerJavaGC ();
 		CleanupAfterJavaCollection ();
 		s_logger?.LogGcSummary (crossRefs);
 	}
@@ -133,7 +133,7 @@ unsafe class BridgeProcessing
 			var prevRef = new JniObjectReference (prev->ControlBlock->Handle, JniObjectReferenceType.Global);
 			var nextRef = new JniObjectReference (next->ControlBlock->Handle, JniObjectReferenceType.Global);
 
-			bool referenceAdded = AddReference (prevRef, nextRef);
+			bool referenceAdded = BridgeProcessingJniHelper.AddReference (prevRef, nextRef, s_logger);
 			if (!referenceAdded) {
 				throw new InvalidOperationException ("Failed to add reference between objects in a strongly connected component");
 			}
@@ -148,7 +148,7 @@ unsafe class BridgeProcessing
 		var (fromRef, fromContextPtr) = SelectCrossReferenceTarget (sourceIndex);
 		var (toRef, _) = SelectCrossReferenceTarget (destIndex);
 
-		if (AddReference (fromRef, toRef) && fromContextPtr != IntPtr.Zero) {
+		if (BridgeProcessingJniHelper.AddReference (fromRef, toRef, s_logger) && fromContextPtr != IntPtr.Zero) {
 			HandleContext* fromContext = (HandleContext*)fromContextPtr;
 			fromContext->ControlBlock->RefsAdded = 1;
 		}
@@ -174,37 +174,6 @@ unsafe class BridgeProcessing
 
 		var reference = new JniObjectReference (context->ControlBlock->Handle, JniObjectReferenceType.Global);
 		return (reference, (IntPtr)context);
-	}
-
-	bool AddReference (JniObjectReference from, JniObjectReference to)
-	{
-		if (!from.IsValid || !to.IsValid) {
-			return false;
-		}
-
-		// Try the optimized path for GCUserPeerable (NativeAOT)
-		if (!RuntimeFeature.IsCoreClrRuntime) {
-			if (BridgeProcessingJniHelper.TryAddManagedReference (from, to)) {
-				return true;
-			}
-		}
-
-		// Fall back to reflection-based approach
-		var fromClassRef = JniEnvironment.Types.GetObjectClass (from);
-		using var fromClass = new JniType (ref fromClassRef, JniObjectReferenceOptions.CopyAndDispose);
-
-		JniMethodInfo addMethod;
-		try {
-			addMethod = fromClass.GetInstanceMethod ("monodroidAddReference", "(Ljava/lang/Object;)V");
-		} catch (Java.Lang.NoSuchMethodError) {
-			s_logger?.LogMissingAddReferencesMethod (fromClass);
-			return false;
-		}
-
-		JniArgumentValue* args = stackalloc JniArgumentValue[1];
-		args[0] = new JniArgumentValue (to);
-		JniEnvironment.InstanceMethods.CallVoidMethod (from, addMethod, args);
-		return true;
 	}
 
 	void TakeWeakGlobalRef (HandleContext* context)

@@ -33,13 +33,44 @@ unsafe static class BridgeProcessingJniHelper
 		}
 	}
 
-	public static void Trigger ()
+	public static void TriggerJavaGC ()
 	{
 		try {
 			JniEnvironment.InstanceMethods.CallVoidMethod (s_RuntimeInstance, s_Runtime_gc!, null);
 		} catch (Exception ex) {
 			Logger.Log (LogLevel.Error, "monodroid-gc", $"Java GC failed: {ex.Message}");
 		}
+	}
+
+	public static bool AddReference (JniObjectReference from, JniObjectReference to, BridgeProcessingLogger? logger)
+	{
+		if (!from.IsValid || !to.IsValid) {
+			return false;
+		}
+
+		// Try the optimized path for GCUserPeerable (NativeAOT)
+		if (!RuntimeFeature.IsCoreClrRuntime) {
+			if (TryAddManagedReference (from, to)) {
+				return true;
+			}
+		}
+
+		// Fall back to reflection-based approach
+		var fromClassRef = JniEnvironment.Types.GetObjectClass (from);
+		using var fromClass = new JniType (ref fromClassRef, JniObjectReferenceOptions.CopyAndDispose);
+
+		JniMethodInfo addMethod;
+		try {
+			addMethod = fromClass.GetInstanceMethod ("monodroidAddReference", "(Ljava/lang/Object;)V");
+		} catch (Java.Lang.NoSuchMethodError) {
+			logger?.LogMissingAddReferencesMethod (fromClass);
+			return false;
+		}
+
+		JniArgumentValue* args = stackalloc JniArgumentValue[1];
+		args[0] = new JniArgumentValue (to);
+		JniEnvironment.InstanceMethods.CallVoidMethod (from, addMethod, args);
+		return true;
 	}
 
 	public static bool TryAddManagedReference (JniObjectReference from, JniObjectReference to)
