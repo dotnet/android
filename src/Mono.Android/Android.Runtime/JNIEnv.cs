@@ -53,6 +53,10 @@ namespace Android.Runtime {
 			if (value == IntPtr.Zero)
 				return false;
 
+			// NativeAOT doesn't initialize these class refs - skip the check
+			if (JNIEnvInit.grefIGCUserPeer_class == IntPtr.Zero && JNIEnvInit.grefGCUserPeerable_class == IntPtr.Zero)
+				return false;
+
 			return IsInstanceOf (value, JNIEnvInit.grefIGCUserPeer_class) ||
 				IsInstanceOf (value, JNIEnvInit.grefGCUserPeerable_class);
 		}

@@ -48,7 +48,8 @@
   </Target>
 
   <Target Name="GenerateWorkloadDependencies"
-      DependsOnTargets="_CheckDeps">
+      DependsOnTargets="_CheckDeps"
+      Condition=" !Exists('$(WorkloadDependenciesPath)') ">
 
     <PropertyGroup>
       <_AndroidPlatformSupportFeed>$(MSBuildThisFileDirectory)/../../external/android-platform-support/Feeds/AndroidManifestFeed_d18.0.xml</_AndroidPlatformSupportFeed>

@@ -2968,18 +2968,36 @@ internal class TypeMapAssemblyGenerator
 			return;
 		}
 		
+		var allSymbols = new List<string> ();
 		int count = 0;
 		foreach (var peer in javaPeers) {
 			if (!NeedsJcwGeneration (peer))
 				continue;
 
-			GenerateLlvmIrFile (llvmIrDir, peer);
+			var symbols = GenerateLlvmIrFile (llvmIrDir, peer);
+			allSymbols.AddRange (symbols);
 			count++;
 		}
 		
 		GenerateLlvmIrInitFile (llvmIrDir);
 		
-		_log.LogMessage (MessageImportance.High, $"[GTMA-LLVM] Generated {count} LLVM IR files in {llvmIrDir}");
+		// Generate exports file for NativeAOT
+		GenerateMarshalMethodsExportsFile (llvmIrDir, allSymbols);
+		
+		_log.LogMessage (MessageImportance.High, $"[GTMA-LLVM] Generated {count} LLVM IR files with {allSymbols.Count} symbols in {llvmIrDir}");
+	}
+
+	void GenerateMarshalMethodsExportsFile (string outputPath, List<string> symbols)
+	{
+		string exportsPath = Path.Combine (outputPath, "marshal_methods_exports.txt");
+		using var writer = new StreamWriter (exportsPath);
+		
+		// Always export the typemap_get_function_pointer global so the runtime can set it
+		writer.WriteLine ("typemap_get_function_pointer");
+		
+		foreach (var symbol in symbols) {
+			writer.WriteLine (symbol);
+		}
 	}
 
 	void GenerateLlvmIrInitFile (string outputPath)
@@ -3009,9 +3027,10 @@ declare void @abort() noreturn
 """);
 	}
 
-	void GenerateLlvmIrFile (string outputPath, JavaPeerInfo peer)
+	List<string> GenerateLlvmIrFile (string outputPath, JavaPeerInfo peer)
 	{
 		Directory.CreateDirectory (outputPath);
+		var symbols = new List<string> ();
 
 		// Sanitize type name for filename
 		string sanitizedName = peer.ManagedTypeName.Replace ('.', '_').Replace ('/', '_').Replace ('+', '_');
@@ -3074,6 +3093,7 @@ source_filename = "marshal_methods_{sanitizedName}.ll"
 		for (int i = 0; i < regularMethods.Count; i++) {
 			var method = regularMethods [i];
 			string nativeSymbol = MakeJniNativeSymbol (peer.JavaName, method.JniName, method.JniSignature);
+			symbols.Add (nativeSymbol);
 			string llvmParams = JniSignatureToLlvmParams (method.JniSignature);
 			string llvmArgs = JniSignatureToLlvmArgs (method.JniSignature);
 			string llvmRetType = JniSignatureToLlvmReturnType (method.JniSignature);
@@ -3140,6 +3160,7 @@ call:
 		for (int i = 0; i < constructors.Count; i++, ctorIdx++) {
 			var ctor = constructors [i];
 			string nativeSymbol = MakeJniActivateSymbol (peer.JavaName, $"nc_activate_{ctorIdx}", ctor.JniSignature);
+			symbols.Add (nativeSymbol);
 			string llvmParams = JniSignatureToLlvmParams (ctor.JniSignature);
 			string llvmArgs = JniSignatureToLlvmArgs (ctor.JniSignature);
 			int fnPtrIndex = activateBaseIndex + ctorIdx;
@@ -3171,6 +3192,7 @@ call:
 		for (int i = 0; i < activationConstructors.Count; i++, ctorIdx++) {
 			var actCtor = activationConstructors [i];
 			string nativeSymbol = MakeJniActivateSymbol (peer.JavaName, $"nc_activate_{ctorIdx}", actCtor.JniSignature);
+			symbols.Add (nativeSymbol);
 			string llvmParams = JniSignatureToLlvmParams (actCtor.JniSignature);
 			string llvmArgs = JniSignatureToLlvmArgs (actCtor.JniSignature);
 			int fnPtrIndex = activateBaseIndex + ctorIdx;
@@ -3207,6 +3229,7 @@ attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memor
 !llvm.module.flags = !{!0}
 !0 = !{i32 1, !"wchar_size", i32 4}
 """);
+		return symbols;
 	}
 
 	string MakeJniNativeSymbol (string jniTypeName, string methodName, string jniSignature)
@@ -6062,10 +6085,10 @@ public class {{className}}
 
 	TypeDefinitionHandle GenerateAliasHolderType (string typeName)
 	{
-		// public sealed class typeName { }
+		// public sealed class _Microsoft.Android.TypeMaps.typeName { }
 		return _metadata.AddTypeDefinition (
 			attributes: TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Class,
-			@namespace: default,
+			@namespace: _metadata.GetOrAddString ("_Microsoft.Android.TypeMaps"),
 			name: _metadata.GetOrAddString (typeName),
 			baseType: _objectTypeRef,
 			fieldList: MetadataTokens.FieldDefinitionHandle (_nextFieldDefRowId),

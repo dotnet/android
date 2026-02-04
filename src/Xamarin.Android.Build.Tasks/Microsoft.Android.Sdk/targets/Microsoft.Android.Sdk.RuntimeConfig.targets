@@ -87,10 +87,10 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
     />
   </ItemGroup>
 
-  <!-- Skip RuntimeConfigParserTask for CoreCLR - the task comes from MonoTargets SDK which isn't available for CoreCLR builds -->
+  <!-- Skip RuntimeConfigParserTask for CoreCLR and NativeAOT - the task comes from MonoTargets SDK which isn't available for CoreCLR/NativeAOT builds -->
   <Target Name="_ParseRuntimeConfigFiles"
       AfterTargets="GenerateBuildRuntimeConfigurationFiles"
-      Condition=" '$(GenerateRuntimeConfigurationFiles)' == 'true' and '$(_AndroidRuntime)' != 'CoreCLR' "
+      Condition=" '$(GenerateRuntimeConfigurationFiles)' == 'true' and '$(_AndroidRuntime)' != 'CoreCLR' and '$(_AndroidRuntime)' != 'NativeAOT' "
       Inputs="$(ProjectRuntimeConfigFilePath)"
       Outputs="$(_BinaryRuntimeConfigPath)">
     <RuntimeConfigParserTask

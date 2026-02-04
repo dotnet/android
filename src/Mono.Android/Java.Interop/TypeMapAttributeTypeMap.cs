@@ -33,7 +33,8 @@ namespace Android.Runtime
 				// For NativeAOT, use the .NET 10+ TypeMapping API which is an intrinsic
 				// that ILC recognizes and generates the type map at compile time.
 				_externalTypeMap = TypeMapping.GetOrCreateExternalTypeMapping<Java.Lang.Object> ();
-				Logger.Log (LogLevel.Info, "monodroid-typemap", $"TypeMap: NativeAOT mode, got {_externalTypeMap.Count} entries from TypeMapping API");
+				// Note: Cannot call .Count on the lazy dictionary - it throws NotSupportedException
+				Logger.Log (LogLevel.Info, "monodroid-typemap", "TypeMap: NativeAOT mode, initialized from TypeMapping API");
 			} else {
 				// For MonoVM/CoreCLR, we need to load the assembly and scan for TypeMapAttribute entries.
 				SetEntryAssemblyWorkaround ();
@@ -308,6 +309,15 @@ namespace Android.Runtime
 			throw new TypeMapException (
 				$"XA4303: Type '{type!.FullName}' is an MCW and does not have function pointers. " +
 				$"Requested function pointer for '{classNameStr}' at index {methodIndex}.");
+		}
+
+		/// <summary>
+		/// Gets the function pointer for a given class name and method index.
+		/// This overload accepts a string for convenience when called from native code.
+		/// </summary>
+		public IntPtr GetFunctionPointer (string className, int methodIndex)
+		{
+			return GetFunctionPointer (className.AsSpan (), methodIndex);
 		}
 
 		/// <summary>
