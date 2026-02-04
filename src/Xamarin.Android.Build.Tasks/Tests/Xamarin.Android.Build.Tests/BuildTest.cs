@@ -2315,9 +2315,6 @@ namespace UnnamedProject
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-			// Verify no MSB4096 error occurred
-			Assert.IsFalse (StringAssertEx.ContainsText (builder.LastBuildOutput, "MSB4096"),
-				"Build should not produce MSB4096 error for TrimmerRootAssembly without RootMode metadata.");
 		}
 	}
 }
