@@ -431,8 +431,8 @@ namespace Android.Runtime
 			var proxy = GetProxyForType (proxyType)
 				?? throw new InvalidOperationException ($"No proxy instance for {proxyType.FullName}");
 
-			global::Android.Util.Log.Info ("TYPEMAP", $"CreateArray: calling proxy.GetDerivedTypeFactory()");
-			var factory = proxy.GetDerivedTypeFactory ();
+			global::Android.Util.Log.Info ("TYPEMAP", $"CreateArray: calling proxy.GetJavaPeerContainerFactory()");
+			var factory = proxy.GetJavaPeerContainerFactory ();
 			global::Android.Util.Log.Info ("TYPEMAP", $"CreateArray: factory = {factory?.GetType().FullName ?? "NULL"}");
 			return factory.CreateArray (length, rank);
 		}

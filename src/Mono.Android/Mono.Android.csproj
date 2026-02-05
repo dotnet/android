@@ -113,7 +113,7 @@
     <Compile Include="Java.Interop\TypeMapAttributeTypeMap.cs" />
     <Compile Include="Java.Interop\TypeMapTypeManager.cs" />
     <Compile Include="Java.Interop\JavaPeerProxy.cs" />
-    <Compile Include="Java.Interop\DerivedTypeFactory.cs" />
+    <Compile Include="Java.Interop\JavaPeerContainerFactory.cs" />
     <Compile Include="Java.Interop\ReflectionTypeMap.cs" />
     <Compile Include="Java.Interop\IAndroidCallableWrapper.cs" />
     <Compile Include="Java.Interop\AliasesUniverse.cs" />

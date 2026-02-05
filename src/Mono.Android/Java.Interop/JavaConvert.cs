@@ -65,17 +65,17 @@ namespace Java.Interop {
 			if (target.IsArray)
 				return (h, t) => JNIEnv.GetArray (h, t, target.GetElementType ());
 
-			// Handle generic IList<T> using DerivedTypeFactory for AOT-safe conversion
+			// Handle generic IList<T> using JavaPeerContainerFactory for AOT-safe conversion
 			if (target.IsGenericType && target.GetGenericTypeDefinition () == typeof (IList<>)) {
 				return TryCreateGenericListConverter (target);
 			}
 
-			// Handle generic IDictionary<K,V> using DerivedTypeFactory for AOT-safe conversion
+			// Handle generic IDictionary<K,V> using JavaPeerContainerFactory for AOT-safe conversion
 			if (target.IsGenericType && target.GetGenericTypeDefinition () == typeof (IDictionary<,>)) {
 				return TryCreateGenericDictionaryConverter (target);
 			}
 
-			// Handle generic ICollection<T> using DerivedTypeFactory for AOT-safe conversion
+			// Handle generic ICollection<T> using JavaPeerContainerFactory for AOT-safe conversion
 			if (target.IsGenericType && target.GetGenericTypeDefinition () == typeof (ICollection<>)) {
 				return TryCreateGenericCollectionConverter (target);
 			}
@@ -92,7 +92,7 @@ namespace Java.Interop {
 		}
 
 		/// <summary>
-		/// Creates a converter for IList&lt;T&gt; using DerivedTypeFactory.
+		/// Creates a converter for IList&lt;T&gt; using JavaPeerContainerFactory.
 		/// Uses the TypeMap to look up the proxy for T and get its factory.
 		/// </summary>
 		static Func<IntPtr, JniHandleOwnership, object?>? TryCreateGenericListConverter (Type listType)
@@ -123,7 +123,7 @@ namespace Java.Interop {
 				return (h, t) => JavaList<object>.FromJniHandle (h, t);
 			}
 
-			// For Java peer types, use the TypeMap to get the proxy and its DerivedTypeFactory
+			// For Java peer types, use the TypeMap to get the proxy and its JavaPeerContainerFactory
 			var typeMap = JNIEnvInit.TypeMap;
 			if (typeMap == null) {
 				return (h, t) => JavaList.FromJniHandle (h, t);
@@ -135,13 +135,13 @@ namespace Java.Interop {
 				return (h, t) => JavaList.FromJniHandle (h, t);
 			}
 
-			// Get the DerivedTypeFactory and use it to create lists
-			var factory = proxy.GetDerivedTypeFactory ();
+			// Get the JavaPeerContainerFactory and use it to create lists
+			var factory = proxy.GetJavaPeerContainerFactory ();
 			return (h, t) => factory.CreateListFromHandle (h, t);
 		}
 
 		/// <summary>
-		/// Creates a converter for IDictionary&lt;K,V&gt; using DerivedTypeFactory.
+		/// Creates a converter for IDictionary&lt;K,V&gt; using JavaPeerContainerFactory.
 		/// Note: Most dictionary access goes through JavaDictionary&lt;K,V&gt;.FromJniHandle directly.
 		/// This converter is used when explicitly requesting FromJniHandle&lt;IDictionary&lt;K,V&gt;&gt;().
 		/// </summary>
@@ -165,7 +165,7 @@ namespace Java.Interop {
 				// which is handled by TryCreateGenericListConverter
 			}
 
-			// For Java peer types, use DerivedTypeFactory
+			// For Java peer types, use JavaPeerContainerFactory
 			var typeMap = JNIEnvInit.TypeMap;
 			if (typeMap == null) {
 				return (h, t) => JavaDictionary.FromJniHandle (h, t);
@@ -178,13 +178,13 @@ namespace Java.Interop {
 				return (h, t) => JavaDictionary.FromJniHandle (h, t);
 			}
 
-			var keyFactory = keyProxy.GetDerivedTypeFactory ();
-			var valueFactory = valueProxy.GetDerivedTypeFactory ();
+			var keyFactory = keyProxy.GetJavaPeerContainerFactory ();
+			var valueFactory = valueProxy.GetJavaPeerContainerFactory ();
 			return (h, t) => valueFactory.CreateDictionaryFromHandle (keyFactory, h, t);
 		}
 
 		/// <summary>
-		/// Creates a converter for ICollection&lt;T&gt; using DerivedTypeFactory.
+		/// Creates a converter for ICollection&lt;T&gt; using JavaPeerContainerFactory.
 		/// </summary>
 		static Func<IntPtr, JniHandleOwnership, object?>? TryCreateGenericCollectionConverter (Type collectionType)
 		{
@@ -224,7 +224,7 @@ namespace Java.Interop {
 				return (h, t) => JavaCollection.FromJniHandle (h, t);
 			}
 
-			var factory = proxy.GetDerivedTypeFactory ();
+			var factory = proxy.GetJavaPeerContainerFactory ();
 			return (h, t) => factory.CreateCollectionFromHandle (h, t);
 		}
 

@@ -28,7 +28,7 @@ namespace Java.Interop
 	/// {
 	///     public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
 	///         => new Activity(handle, transfer);
-	///     public override DerivedTypeFactory GetDerivedTypeFactory() => DerivedTypeFactory.Create&lt;Activity&gt;();
+	///     public override JavaPeerContainerFactory GetJavaPeerContainerFactory() => JavaPeerContainerFactory.Create&lt;Activity&gt;();
 	/// }
 	/// </code>
 	/// 
@@ -44,7 +44,7 @@ namespace Java.Interop
 	///     public override Type? InvokerType => typeof(IComparableInvoker);
 	///     public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
 	///         => new IComparableInvoker(handle, transfer);
-	///     public override DerivedTypeFactory GetDerivedTypeFactory() => DerivedTypeFactory.Create&lt;IComparable&gt;();
+	///     public override JavaPeerContainerFactory GetJavaPeerContainerFactory() => JavaPeerContainerFactory.Create&lt;IComparable&gt;();
 	/// }
 	/// </code>
 	/// </remarks>
@@ -109,12 +109,12 @@ namespace Java.Interop
 		/// Example usage in TypeMap:
 		/// <code>
 		/// var proxy = typeMap.GetProxyForType(typeof(View));
-		/// var factory = proxy.GetDerivedTypeFactory();
+		/// var factory = proxy.GetJavaPeerContainerFactory();
 		/// var array = factory.CreateArray(10, 1);           // T[]
 		/// var list = factory.CreateListFromHandle(handle, transfer);  // IList
 		/// </code>
 		/// </remarks>
 		/// <returns>A factory for creating derived types of the target type.</returns>
-		public abstract DerivedTypeFactory GetDerivedTypeFactory ();
+		public abstract JavaPeerContainerFactory GetJavaPeerContainerFactory ();
 	}
 }

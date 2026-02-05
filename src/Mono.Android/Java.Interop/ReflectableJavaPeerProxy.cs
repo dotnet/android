@@ -51,12 +51,12 @@ namespace Java.Interop
 		/// Example usage in TypeMap:
 		/// <code>
 		/// var proxy = typeMap.GetProxyForType(typeof(View));
-		/// var factory = proxy.GetDerivedTypeFactory();
+		/// var factory = proxy.GetJavaPeerContainerFactory();
 		/// var array = factory.CreateArray(10, 1);           // T[]
 		/// var list = factory.CreateListFromHandle(handle, transfer);  // IList
 		/// </code>
 		/// </remarks>
 		/// <returns>A factory for creating derived types of the target type.</returns>
-		public DerivedTypeFactory GetDerivedTypeFactory () => new DerivedTypeFactory<TTarget> ();
+		public JavaPeerContainerFactory GetJavaPeerContainerFactory () => new JavaPeerContainerFactory<TTarget> ();
 	}
 }

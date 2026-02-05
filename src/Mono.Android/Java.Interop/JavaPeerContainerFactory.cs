@@ -7,7 +7,7 @@ namespace Java.Interop
 {
 	/// <summary>
 	/// Abstract base class for creating derived types (arrays, collections) in an AOT-safe manner.
-	/// Each JavaPeerProxy returns a DerivedTypeFactory for its target type, enabling creation
+	/// Each JavaPeerProxy returns a JavaPeerContainerFactory for its target type, enabling creation
 	/// of arrays, lists, dictionaries, and other generic containers without reflection.
 	/// </summary>
 	/// <remarks>
@@ -19,11 +19,11 @@ namespace Java.Interop
 	/// <code>
 	/// // To create IList&lt;View&gt; from a Java ArrayList:
 	/// var proxy = typeMap.GetProxyForType(typeof(Android.Views.View));
-	/// var factory = proxy.GetDerivedTypeFactory();
+	/// var factory = proxy.GetJavaPeerContainerFactory();
 	/// IList list = factory.CreateListFromHandle(javaArrayListHandle, ownership);
 	/// </code>
 	/// </remarks>
-	public abstract class DerivedTypeFactory
+	public abstract class JavaPeerContainerFactory
 	{
 		/// <summary>
 		/// Creates an array of the target type.
@@ -74,7 +74,7 @@ namespace Java.Interop
 		/// </summary>
 		/// <param name="keyFactory">The factory for the key type (provides type information).</param>
 		/// <returns>A new empty JavaDictionary, or null if not supported.</returns>
-		internal virtual IDictionary? CreateDictionary (DerivedTypeFactory keyFactory) => null;
+		internal virtual IDictionary? CreateDictionary (JavaPeerContainerFactory keyFactory) => null;
 
 		/// <summary>
 		/// Creates a JavaDictionary wrapping an existing Java Map handle.
@@ -83,34 +83,34 @@ namespace Java.Interop
 		/// <param name="handle">The JNI handle to the Java Map.</param>
 		/// <param name="transfer">How to handle JNI reference ownership.</param>
 		/// <returns>A JavaDictionary wrapping the Java object, or null if not supported.</returns>
-		internal virtual IDictionary? CreateDictionaryFromHandle (DerivedTypeFactory keyFactory, IntPtr handle, JniHandleOwnership transfer) => null;
+		internal virtual IDictionary? CreateDictionaryFromHandle (JavaPeerContainerFactory keyFactory, IntPtr handle, JniHandleOwnership transfer) => null;
 
 		/// <summary>
 		/// Internal visitor method for dictionary creation. Called by value factory's CreateDictionary.
-		/// Override in DerivedTypeFactory&lt;T&gt; to provide T as the key type.
+		/// Override in JavaPeerContainerFactory&lt;T&gt; to provide T as the key type.
 		/// </summary>
-		internal virtual IDictionary CreateDictionaryWithValueFactory<TValue> (DerivedTypeFactory<TValue> valueFactory) where TValue : class, IJavaPeerable
-			=> throw new NotSupportedException ("Dictionary creation requires a typed DerivedTypeFactory<T>");
+		internal virtual IDictionary CreateDictionaryWithValueFactory<TValue> (JavaPeerContainerFactory<TValue> valueFactory) where TValue : class, IJavaPeerable
+			=> throw new NotSupportedException ("Dictionary creation requires a typed JavaPeerContainerFactory<T>");
 
 		/// <summary>
 		/// Internal visitor method for dictionary creation from handle. Called by value factory's CreateDictionaryFromHandle.
-		/// Override in DerivedTypeFactory&lt;T&gt; to provide T as the key type.
+		/// Override in JavaPeerContainerFactory&lt;T&gt; to provide T as the key type.
 		/// </summary>
-		internal virtual IDictionary CreateDictionaryFromHandleWithValueFactory<TValue> (DerivedTypeFactory<TValue> valueFactory, IntPtr handle, JniHandleOwnership transfer) where TValue : class, IJavaPeerable
-			=> throw new NotSupportedException ("Dictionary creation requires a typed DerivedTypeFactory<T>");
+		internal virtual IDictionary CreateDictionaryFromHandleWithValueFactory<TValue> (JavaPeerContainerFactory<TValue> valueFactory, IntPtr handle, JniHandleOwnership transfer) where TValue : class, IJavaPeerable
+			=> throw new NotSupportedException ("Dictionary creation requires a typed JavaPeerContainerFactory<T>");
 
 		/// <summary>
-		/// Creates a DerivedTypeFactory for the specified element type T.
+		/// Creates a JavaPeerContainerFactory for the specified element type T.
 		/// </summary>
 		/// <typeparam name="T">The element type for arrays and collections.</typeparam>
 		/// <returns>A singleton factory instance for the specified type.</returns>
-		public static DerivedTypeFactory Create<T> () where T : class, IJavaPeerable
-			=> DerivedTypeFactory<T>.Instance;
+		public static JavaPeerContainerFactory Create<T> () where T : class, IJavaPeerable
+			=> JavaPeerContainerFactory<T>.Instance;
 	}
 
 	/// <summary>
-	/// Generic implementation of DerivedTypeFactory for a specific element type T.
-	/// This class is internal - use <see cref="DerivedTypeFactory.Create{T}"/> to obtain instances.
+	/// Generic implementation of JavaPeerContainerFactory for a specific element type T.
+	/// This class is internal - use <see cref="JavaPeerContainerFactory.Create{T}"/> to obtain instances.
 	/// </summary>
 	/// <typeparam name="T">The element type for arrays and collections.</typeparam>
 	/// <remarks>
@@ -120,19 +120,19 @@ namespace Java.Interop
 	/// Example generated proxy:
 	/// <code>
 	/// sealed class ViewProxy : JavaPeerProxy {
-	///     public override DerivedTypeFactory GetDerivedTypeFactory() 
-	///         => DerivedTypeFactory.Create&lt;View&gt;();
+	///     public override JavaPeerContainerFactory GetJavaPeerContainerFactory() 
+	///         => JavaPeerContainerFactory.Create&lt;View&gt;();
 	/// }
 	/// </code>
 	/// </remarks>
-	internal sealed class DerivedTypeFactory<T> : DerivedTypeFactory where T : class, IJavaPeerable
+	internal sealed class JavaPeerContainerFactory<T> : JavaPeerContainerFactory where T : class, IJavaPeerable
 	{
 		/// <summary>
 		/// Singleton instance - no state, so safe to share across all usages.
 		/// </summary>
-		internal static readonly DerivedTypeFactory<T> Instance = new ();
+		internal static readonly JavaPeerContainerFactory<T> Instance = new ();
 
-		private DerivedTypeFactory () { }
+		private JavaPeerContainerFactory () { }
 
 		/// <inheritdoc/>
 		internal override Array CreateArray (int length, int rank)
@@ -164,14 +164,14 @@ namespace Java.Interop
 			=> new JavaSet<T> (handle, transfer);
 
 		/// <inheritdoc/>
-		internal override IDictionary? CreateDictionary (DerivedTypeFactory keyFactory)
+		internal override IDictionary? CreateDictionary (JavaPeerContainerFactory keyFactory)
 		{
 			// T is the value type - ask key factory to create dictionary with us as value
 			return keyFactory.CreateDictionaryWithValueFactory (this);
 		}
 
 		/// <inheritdoc/>
-		internal override IDictionary? CreateDictionaryFromHandle (DerivedTypeFactory keyFactory, IntPtr handle, JniHandleOwnership transfer)
+		internal override IDictionary? CreateDictionaryFromHandle (JavaPeerContainerFactory keyFactory, IntPtr handle, JniHandleOwnership transfer)
 		{
 			return keyFactory.CreateDictionaryFromHandleWithValueFactory (this, handle, transfer);
 		}
@@ -180,13 +180,13 @@ namespace Java.Interop
 		/// Creates a JavaDictionary with T as the key type and TValue as the value type.
 		/// Called by value factory's CreateDictionary method (visitor pattern).
 		/// </summary>
-		internal override IDictionary CreateDictionaryWithValueFactory<TValue> (DerivedTypeFactory<TValue> valueFactory)
+		internal override IDictionary CreateDictionaryWithValueFactory<TValue> (JavaPeerContainerFactory<TValue> valueFactory)
 			=> new JavaDictionary<T, TValue> ();
 
 		/// <summary>
 		/// Creates a JavaDictionary from handle with T as key type and TValue as value type.
 		/// </summary>
-		internal override IDictionary CreateDictionaryFromHandleWithValueFactory<TValue> (DerivedTypeFactory<TValue> valueFactory, IntPtr handle, JniHandleOwnership transfer)
+		internal override IDictionary CreateDictionaryFromHandleWithValueFactory<TValue> (JavaPeerContainerFactory<TValue> valueFactory, IntPtr handle, JniHandleOwnership transfer)
 			=> new JavaDictionary<T, TValue> (handle, transfer);
 	}
 }
