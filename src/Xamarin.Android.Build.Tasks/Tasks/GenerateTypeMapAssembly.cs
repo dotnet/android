@@ -1034,28 +1034,51 @@ internal class JavaPeerScanner
 		string name = reader.GetString (typeDef.Name);
 		string fullName = string.IsNullOrEmpty (ns) ? name : $"{ns}.{name}";
 		
-		if (javaName == null) {
-			// Type itself is not a Java peer, but it may have nested types that are Java peers
-			// (e.g., a C# class with nested classes that extend Java.Lang.Object)
-			_log.LogMessage (MessageImportance.High, $"    ProcessType: {fullName} has no [Register], processing {typeDef.GetNestedTypes ().Count ()} nested types");
-			foreach (var nestedHandle in typeDef.GetNestedTypes ()) {
-				var nestedDef = reader.GetTypeDefinition (nestedHandle);
-				var nestedName = reader.GetString (nestedDef.Name);
-				_log.LogMessage (MessageImportance.High, $"    ProcessType: Processing nested type {nestedName}");
-				ProcessNestedType (reader, nestedDef, fullName, assemblyName, assemblyPath, results);
-			}
-			return false;
-		}
-		
-		_log.LogDebugMessage ($"    Found Java peer: {fullName} -> {javaName} (in {assemblyName}), DoNotGenerateAcw={doNotGenerateAcw}");
-
-		bool isAbstract = (typeDef.Attributes & System.Reflection.TypeAttributes.Abstract) != 0;
-
+		// Get base type info even if we don't have [Register] yet
 		string? baseTypeName = null;
 		string? baseAssemblyName = null;
 		if (!isInterface && !typeDef.BaseType.IsNil) {
 			(baseTypeName, baseAssemblyName) = GetFullTypeNameAndAssembly (reader, typeDef.BaseType);
 		}
+		
+		if (javaName == null) {
+			// Only auto-generate JCWs for user code (app assemblies), not for framework assemblies
+			// Framework assemblies should have [Register] attributes already
+			bool isFrameworkAssembly = assemblyName == "Mono.Android" || 
+			                            assemblyName == "Java.Interop" ||
+			                            assemblyName.StartsWith ("System.", StringComparison.Ordinal) ||
+			                            assemblyName.StartsWith ("Microsoft.", StringComparison.Ordinal);
+			
+			// Check if this type inherits from a Java peer (needs JCW)
+			// We need to check if any base type has a [Register] attribute
+			bool inheritsFromJavaPeer = false;
+			if (!isInterface && !isFrameworkAssembly && baseTypeName != null) {
+				inheritsFromJavaPeer = IsJavaPeerType (baseTypeName, baseAssemblyName);
+			}
+			
+			if (inheritsFromJavaPeer) {
+				// Generate Java name using CRC64 package naming (same as JavaNativeTypeManager)
+				string package = JavaNativeTypeManager.GetPackageName (ns, assemblyName);
+				javaName = $"{package}/{name}";
+				doNotGenerateAcw = false; // These types need ACW generation
+				_log.LogMessage (MessageImportance.High, $"    Auto-generated Java name for type without [Register]: {fullName} -> {javaName}");
+			} else {
+				// Type itself is not a Java peer, but it may have nested types that are Java peers
+				// (e.g., a C# class with nested classes that extend Java.Lang.Object)
+				_log.LogMessage (MessageImportance.High, $"    ProcessType: {fullName} has no [Register], processing {typeDef.GetNestedTypes ().Count ()} nested types");
+				foreach (var nestedHandle in typeDef.GetNestedTypes ()) {
+					var nestedDef = reader.GetTypeDefinition (nestedHandle);
+					var nestedName = reader.GetString (nestedDef.Name);
+					_log.LogMessage (MessageImportance.High, $"    ProcessType: Processing nested type {nestedName}");
+					ProcessNestedType (reader, nestedDef, fullName, assemblyName, assemblyPath, results);
+				}
+				return false;
+			}
+		}
+		
+		_log.LogDebugMessage ($"    Found Java peer: {fullName} -> {javaName} (in {assemblyName}), DoNotGenerateAcw={doNotGenerateAcw}");
+
+		bool isAbstract = (typeDef.Attributes & System.Reflection.TypeAttributes.Abstract) != 0;
 
 		// For interfaces and abstract types, try to find the Invoker type
 		string? invokerTypeName = null;
@@ -1589,6 +1612,45 @@ internal class JavaPeerScanner
 			return null;
 
 		return reader.ReadUTF8 (length);
+	}
+
+	/// <summary>
+	/// Checks if a type is a Java peer (has [Register] attribute) or inherits from one.
+	/// This is used to detect ACW-needing types that don't have [Register] themselves.
+	/// </summary>
+	bool IsJavaPeerType (string typeName, string? assemblyName)
+	{
+		// Common Java peer base types
+		if (typeName == "Java.Lang.Object" || 
+		    typeName == "Java.Lang.Throwable" ||
+		    typeName == "Java.Interop.JavaObject" ||
+		    typeName == "Java.Interop.JavaException") {
+			return true;
+		}
+		
+		// Check if the type has [Register] attribute (it's directly a Java peer)
+		if (!string.IsNullOrEmpty (assemblyName)) {
+			var reader = GetMetadataReader (assemblyName!);
+			if (reader != null) {
+				var typeDef = FindTypeDefinition (reader, typeName);
+				if (typeDef.HasValue) {
+					var (javaName, _, _) = GetRegisterAttributeValue (reader, typeDef.Value);
+					if (javaName != null) {
+						return true;
+					}
+					
+					// Recursively check base type
+					if (!typeDef.Value.BaseType.IsNil) {
+						var (baseTypeName, baseAssemblyName) = GetFullTypeNameAndAssembly (reader, typeDef.Value.BaseType);
+						if (baseTypeName != null) {
+							return IsJavaPeerType (baseTypeName, baseAssemblyName);
+						}
+					}
+				}
+			}
+		}
+		
+		return false;
 	}
 
 	bool TypeExistsInAssembly (MetadataReader reader, string typeName)

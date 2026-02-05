@@ -1,0 +1,6 @@
+<Directives xmlns="http://schemas.microsoft.com/netfx/2013/01/metadata">
+  <Application>
+    <!-- Keep things alive that NativeAOT trimmer might remove -->
+    <Assembly Name="NativeAotAdvancedTest" Dynamic="Required All" />
+  </Application>
+</Directives>
