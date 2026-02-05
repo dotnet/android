@@ -3574,6 +3574,168 @@ attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memor
 	}
 
 	/// <summary>
+	/// JNI type classification for method parameters and return types
+	/// </summary>
+	enum JniType
+	{
+		Void,       // V
+		Boolean,    // Z -> bool/byte
+		Byte,       // B -> sbyte
+		Char,       // C -> char (ushort)
+		Short,      // S -> short
+		Int,        // I -> int
+		Long,       // J -> long
+		Float,      // F -> float
+		Double,     // D -> double
+		Object,     // L...; or [ -> IntPtr
+	}
+
+	/// <summary>
+	/// Parse JNI signature and return the CLR parameter types.
+	/// Returns a list of JniType values for each parameter.
+	/// </summary>
+	List<JniType> ParseJniParameterTypes (string signature)
+	{
+		var types = new List<JniType> ();
+		
+		int parenStart = signature.IndexOf ('(');
+		int parenEnd = signature.IndexOf (')');
+		if (parenStart < 0 || parenEnd < 0 || parenEnd == parenStart + 1) {
+			return types;
+		}
+
+		string paramSig = signature.Substring (parenStart + 1, parenEnd - parenStart - 1);
+		int idx = 0;
+
+		while (idx < paramSig.Length) {
+			char c = paramSig [idx];
+
+			switch (c) {
+				case 'Z':
+					types.Add (JniType.Boolean);
+					idx++;
+					break;
+				case 'B':
+					types.Add (JniType.Byte);
+					idx++;
+					break;
+				case 'C':
+					types.Add (JniType.Char);
+					idx++;
+					break;
+				case 'S':
+					types.Add (JniType.Short);
+					idx++;
+					break;
+				case 'I':
+					types.Add (JniType.Int);
+					idx++;
+					break;
+				case 'J':
+					types.Add (JniType.Long);
+					idx++;
+					break;
+				case 'F':
+					types.Add (JniType.Float);
+					idx++;
+					break;
+				case 'D':
+					types.Add (JniType.Double);
+					idx++;
+					break;
+				case 'L':
+					// Object type: skip to ';'
+					types.Add (JniType.Object);
+					while (idx < paramSig.Length && paramSig [idx] != ';') idx++;
+					idx++;
+					break;
+				case '[':
+					// Array type: skip array markers then element type, treat as Object (IntPtr)
+					types.Add (JniType.Object);
+					while (idx < paramSig.Length && paramSig [idx] == '[') idx++;
+					if (idx < paramSig.Length) {
+						if (paramSig [idx] == 'L') {
+							while (idx < paramSig.Length && paramSig [idx] != ';') idx++;
+							idx++;
+						} else {
+							idx++;
+						}
+					}
+					break;
+				default:
+					// Unknown - treat as object
+					types.Add (JniType.Object);
+					idx++;
+					break;
+			}
+		}
+
+		return types;
+	}
+
+	/// <summary>
+	/// Parse JNI signature and return the return type.
+	/// </summary>
+	JniType ParseJniReturnType (string signature)
+	{
+		int parenEnd = signature.LastIndexOf (')');
+		if (parenEnd < 0 || parenEnd + 1 >= signature.Length) return JniType.Void;
+
+		char returnChar = signature [parenEnd + 1];
+		return returnChar switch {
+			'V' => JniType.Void,
+			'Z' => JniType.Boolean,
+			'B' => JniType.Byte,
+			'C' => JniType.Char,
+			'S' => JniType.Short,
+			'I' => JniType.Int,
+			'J' => JniType.Long,
+			'F' => JniType.Float,
+			'D' => JniType.Double,
+			'L' => JniType.Object,
+			'[' => JniType.Object,
+			_ => JniType.Object,
+		};
+	}
+
+	/// <summary>
+	/// Emit the appropriate type encoding for a JniType into a SignatureTypeEncoder
+	/// </summary>
+	void EmitJniTypeAsClrType (SignatureTypeEncoder typeEncoder, JniType jniType)
+	{
+		switch (jniType) {
+			case JniType.Boolean:
+				typeEncoder.Boolean ();
+				break;
+			case JniType.Byte:
+				typeEncoder.SByte ();
+				break;
+			case JniType.Char:
+				typeEncoder.Char ();
+				break;
+			case JniType.Short:
+				typeEncoder.Int16 ();
+				break;
+			case JniType.Int:
+				typeEncoder.Int32 ();
+				break;
+			case JniType.Long:
+				typeEncoder.Int64 ();
+				break;
+			case JniType.Float:
+				typeEncoder.Single ();
+				break;
+			case JniType.Double:
+				typeEncoder.Double ();
+				break;
+			case JniType.Object:
+			default:
+				typeEncoder.IntPtr ();
+				break;
+		}
+	}
+
+	/// <summary>
 	/// Count the number of parameters in a JNI method signature.
 	/// </summary>
 	int CountJniParameters (string signature)
@@ -4837,33 +4999,35 @@ public class {{className}}
 
 			// Build the parameter list for the wrapper
 			// Native callback has: (IntPtr jnienv, IntPtr obj, additional JNI params...)
-			// Parse JNI signature to count parameters
-			int jniParamCount = CountJniParameters (mm.JniSignature);
+			// Parse JNI signature to get parameter types
+			var jniParamTypes = ParseJniParameterTypes (mm.JniSignature);
+			int jniParamCount = jniParamTypes.Count;
 			int paramCount = 2 + jniParamCount; // jnienv + obj + JNI params
 
 			// Parse the JNI signature to determine callback return type
 			// Format: "(params)returntype" - e.g., "(Landroid/os/Bundle;)V"
-			bool callbackReturnsVoid = mm.JniSignature.EndsWith (")V");
+			var returnType = ParseJniReturnType (mm.JniSignature);
+			bool callbackReturnsVoid = returnType == JniType.Void;
 
 			// Create method signature - wrapper and callback have the same return type
-			// Void methods return void, non-void methods return IntPtr
+			// The signature must match what Mono.Android's n_* callbacks expect
 			var wrapperSigBlob = new BlobBuilder ();
 			var sigEncoder = new BlobEncoder (wrapperSigBlob).MethodSignature (isInstanceMethod: false);
 			sigEncoder.Parameters (paramCount,
-				returnType => {
+				rt => {
 					if (callbackReturnsVoid) {
-						returnType.Void ();
+						rt.Void ();
 					} else {
-						returnType.Type ().IntPtr ();
+						EmitJniTypeAsClrType (rt.Type (), returnType);
 					}
 				},
 				parameters => {
 					// First two are always jnienv and obj (IntPtr)
 					parameters.AddParameter ().Type ().IntPtr ();
 					parameters.AddParameter ().Type ().IntPtr ();
-					// Additional parameters
-					for (int p = 2; p < paramCount; p++) {
-						parameters.AddParameter ().Type ().IntPtr ();
+					// Additional parameters - use the actual types from JNI signature
+					for (int p = 0; p < jniParamCount; p++) {
+						EmitJniTypeAsClrType (parameters.AddParameter ().Type (), jniParamTypes[p]);
 					}
 				});
 
@@ -4871,20 +5035,20 @@ public class {{className}}
 			var callbackSigBlob = new BlobBuilder ();
 			var callbackSigEncoder = new BlobEncoder (callbackSigBlob).MethodSignature (isInstanceMethod: false);
 			callbackSigEncoder.Parameters (paramCount,
-				returnType => {
+				rt => {
 					if (callbackReturnsVoid) {
-						returnType.Void ();
+						rt.Void ();
 					} else {
-						returnType.Type ().IntPtr ();
+						EmitJniTypeAsClrType (rt.Type (), returnType);
 					}
 				},
 				parameters => {
 					// First two are always jnienv and obj (IntPtr)
 					parameters.AddParameter ().Type ().IntPtr ();
 					parameters.AddParameter ().Type ().IntPtr ();
-					// Additional parameters
-					for (int p = 2; p < paramCount; p++) {
-						parameters.AddParameter ().Type ().IntPtr ();
+					// Additional parameters - use the actual types from JNI signature
+					for (int p = 0; p < jniParamCount; p++) {
+						EmitJniTypeAsClrType (parameters.AddParameter ().Type (), jniParamTypes[p]);
 					}
 				});
 
@@ -4901,20 +5065,25 @@ public class {{className}}
 			
 			// Create a direct reference to the n_* callback method
 			// With [assembly: IgnoresAccessChecksTo("Mono.Android")], we can call private/internal methods directly
+			// The signature must match the actual n_* callback method signature in Mono.Android
 			var callbackMethodSigBlob = new BlobBuilder ();
 			new BlobEncoder (callbackMethodSigBlob)
 				.MethodSignature (isInstanceMethod: false)
 				.Parameters (paramCount,
-					returnType => {
+					rt => {
 						if (callbackReturnsVoid) {
-							returnType.Void ();
+							rt.Void ();
 						} else {
-							returnType.Type ().IntPtr ();
+							EmitJniTypeAsClrType (rt.Type (), returnType);
 						}
 					},
 					parameters => {
-						for (int p = 0; p < paramCount; p++) {
-							parameters.AddParameter ().Type ().IntPtr ();
+						// First two are always jnienv and obj (IntPtr)
+						parameters.AddParameter ().Type ().IntPtr ();
+						parameters.AddParameter ().Type ().IntPtr ();
+						// Additional parameters - use the actual types from JNI signature
+						for (int p = 0; p < jniParamCount; p++) {
+							EmitJniTypeAsClrType (parameters.AddParameter ().Type (), jniParamTypes[p]);
 						}
 					});
 			
