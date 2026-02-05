@@ -145,7 +145,7 @@ namespace Xamarin.Android.Build.Tests
 			var serial = GetAttachedDeviceSerial ();
 
 			// Start dotnet run with Device parameter, which should set $(AdbTarget)
-			using var process = dotnet.StartRun (waitForExit: true, parameters: [$"Device={serial}"]);
+			using var process = dotnet.StartRun (waitForExit: true, parameters: [$"/p:Device={serial}"]);
 
 			var locker = new Lock ();
 			var output = new StringBuilder ();
@@ -1401,6 +1401,44 @@ MONO_GC_PARAMS=bridge-implementation=new",
 						"The Environment variable \"DOTNET_MODIFIABLE_ASSEMBLIES\" was not set."
 				);
 			}
+		}
+
+		[Test]
+		public void DotNetRunEnvironmentVariables ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				ProjectName = nameof (DotNetRunEnvironmentVariables),
+				RootNamespace = nameof (DotNetRunEnvironmentVariables),
+				IsRelease = false,
+				EnableDefaultItems = true,
+			};
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
+		Console.WriteLine (""DOTNET_RUN_FOO="" + Environment.GetEnvironmentVariable(""DOTNET_RUN_FOO""));
+		Console.WriteLine (""DOTNET_RUN_BAR="" + Environment.GetEnvironmentVariable(""DOTNET_RUN_BAR""));
+		");
+			using var builder = CreateApkBuilder ();
+			builder.Save (proj);
+
+			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
+			Assert.IsTrue (dotnet.Run (noBuild: false, parameters: new [] { "-e", "DOTNET_RUN_FOO=TestValue123", "-e", "DOTNET_RUN_BAR=AnotherValue456" }), "`dotnet run` should succeed");
+
+			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
+			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+			Assert.IsTrue (didLaunch, "Activity should have started.");
+			var appStartupLogcatFile = Path.Combine (Root, builder.ProjectDirectory, "logcat.log");
+			var logcatOutput = File.ReadAllText (appStartupLogcatFile);
+
+			StringAssert.Contains (
+					"DOTNET_RUN_FOO=TestValue123",
+					logcatOutput,
+					"The Environment variable \"DOTNET_RUN_FOO\" was not set to expected value \"TestValue123\"."
+			);
+			StringAssert.Contains (
+					"DOTNET_RUN_BAR=AnotherValue456",
+					logcatOutput,
+					"The Environment variable \"DOTNET_RUN_BAR\" was not set to expected value \"AnotherValue456\"."
+			);
 		}
 
 		[Test]
