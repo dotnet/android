@@ -132,7 +132,11 @@ namespace Android.Runtime {
 				// ..but ignore
 			}
 
-			StackFrame[] frames = trace.GetFrames ();
+			StackFrame[]? frames = trace.GetFrames ();
+			if (frames == null || frames.Length == 0) {
+				return;
+			}
+
 			int nElements = frames.Length + (javaTrace?.Length ?? 0);
 			StackTraceElement[] elements = new StackTraceElement[nElements];
 

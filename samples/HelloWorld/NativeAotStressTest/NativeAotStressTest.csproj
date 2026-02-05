@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net11.0-android</TargetFramework>
+    <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
+    <OutputType>Exe</OutputType>
+    <ApplicationId>com.nativeaot.stresstest</ApplicationId>
+    <ApplicationTitle>NativeAOT Stress Test</ApplicationTitle>
+    <PublishAot>true</PublishAot>
+    <AndroidEnableTypeMaps>true</AndroidEnableTypeMaps>
+    <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
+  </PropertyGroup>
+</Project>

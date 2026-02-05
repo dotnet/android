@@ -94,5 +94,19 @@ namespace Java.Interop {
 			return new StackTrace (skipFrames, fNeedFileInfo)
 				.ToString ();
 		}
+
+		// Override to use Android.Runtime.JavaProxyThrowable instead of Java.Interop.JavaProxyThrowable.
+		// Java.Interop.JavaProxyThrowable uses net/dot/jni/internal/JavaProxyThrowable which requires
+		// dynamic native member registration that is not supported in NativeAOT.
+		// Android.Runtime.JavaProxyThrowable has a proper JCW (android/runtime/JavaProxyThrowable)
+		// that doesn't require dynamic registration.
+		public override void RaisePendingException (Exception pendingException)
+		{
+			var je = pendingException as JavaException;
+			if (je == null) {
+				je = Android.Runtime.JavaProxyThrowable.Create (pendingException);
+			}
+			JniEnvironment.Exceptions.Throw (je.PeerReference);
+		}
 	}
 }
