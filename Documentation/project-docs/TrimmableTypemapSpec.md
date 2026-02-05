@@ -1198,7 +1198,7 @@ BackupAgent and ManageSpaceActivity types referenced in `[Application]` attribut
 
 #### Problem
 
-When marshaling Java collections to .NET, we need to create generic containers like `JavaList<T>`, `JavaSet<T>`, `JavaDictionary<TKey, TValue>`, and arrays `T[]`. The traditional reflection-based approaches are not compatible with Native AOT:
+When marshaling Java collections to .NET, we need to create generic containers like `JavaList<T>`, `JavaDictionary<TKey, TValue>`, and arrays `T[]`. The traditional reflection-based approaches are not compatible with Native AOT:
 
 ```csharp
 // NOT AOT-safe:
@@ -1236,20 +1236,14 @@ public abstract class JavaPeerContainerFactory
     // Array creation (T[], T[][], T[][][])
     internal abstract Array CreateArray(int length, int rank);
 
-    // List creation
-    internal abstract IList CreateList();
-    internal abstract IList CreateListFromHandle(IntPtr handle, JniHandleOwnership transfer);
+    // List creation from JNI handle
+    internal abstract IList CreateList(IntPtr handle, JniHandleOwnership transfer);
 
-    // Collection creation
-    internal abstract ICollection CreateCollectionFromHandle(IntPtr handle, JniHandleOwnership transfer);
-
-    // Set creation
-    internal abstract ICollection CreateSet();
-    internal abstract ICollection CreateSetFromHandle(IntPtr handle, JniHandleOwnership transfer);
+    // Collection creation from JNI handle
+    internal abstract ICollection CreateCollection(IntPtr handle, JniHandleOwnership transfer);
 
     // Dictionary creation (uses visitor pattern for two type parameters)
-    internal virtual IDictionary? CreateDictionary(JavaPeerContainerFactory keyFactory);
-    internal virtual IDictionary? CreateDictionaryFromHandle(
+    internal virtual IDictionary? CreateDictionary(
         JavaPeerContainerFactory keyFactory, IntPtr handle, JniHandleOwnership transfer);
 
     // Factory method
@@ -1273,14 +1267,21 @@ internal sealed class JavaPeerContainerFactory<T> : JavaPeerContainerFactory
         _ => throw new ArgumentOutOfRangeException(...)
     };
 
-    internal override IList CreateList() => new JavaList<T>();
-    internal override IList CreateListFromHandle(IntPtr h, JniHandleOwnership t) 
+    internal override IList CreateList(IntPtr h, JniHandleOwnership t) 
         => new JavaList<T>(h, t);
-    internal override ICollection CreateCollectionFromHandle(IntPtr h, JniHandleOwnership t) 
+    internal override ICollection CreateCollection(IntPtr h, JniHandleOwnership t) 
         => new JavaCollection<T>(h, t);
-    internal override ICollection CreateSet() => new JavaSet<T>();
-    internal override ICollection CreateSetFromHandle(IntPtr h, JniHandleOwnership t) 
-        => new JavaSet<T>(h, t);
+    
+    internal override IDictionary? CreateDictionary(
+        JavaPeerContainerFactory keyFactory, IntPtr h, JniHandleOwnership t)
+    {
+        return keyFactory.CreateDictionaryWithValueFactory(this, h, t);
+    }
+
+    // Visitor pattern: called by value factory to provide both K and V types
+    internal override IDictionary CreateDictionaryWithValueFactory<TValue>(
+        JavaPeerContainerFactory<TValue> valueFactory, IntPtr h, JniHandleOwnership t)
+        => new JavaDictionary<T, TValue>(h, t);
 }
 ```
 
@@ -1289,23 +1290,24 @@ internal sealed class JavaPeerContainerFactory<T> : JavaPeerContainerFactory
 Dictionaries require **two** type parameters (`TKey`, `TValue`). Since each factory only knows one type, they use a **visitor pattern**:
 
 ```csharp
-// To create JavaDictionary<View, Activity>:
+// To create JavaDictionary<View, Activity> from a Java Map handle:
 var valueFactory = typeMap.GetProxyForType(typeof(Activity)).GetContainerFactory();
 var keyFactory = typeMap.GetProxyForType(typeof(View)).GetContainerFactory();
 
 // valueFactory (JavaPeerContainerFactory<Activity>) calls:
-valueFactory.CreateDictionary(keyFactory);
-    // which calls: keyFactory.CreateDictionaryWithValueFactory(this)
-    // which creates: new JavaDictionary<View, Activity>()
+valueFactory.CreateDictionary(keyFactory, handle, transfer);
+    // which calls: keyFactory.CreateDictionaryWithValueFactory(this, handle, transfer)
+    // which creates: new JavaDictionary<View, Activity>(handle, transfer)
 ```
 
 The visitor pattern allows both type parameters to be known at compile time within the generic method, enabling AOT-safe instantiation.
 
-#### Runtime Usage
+#### PoC Usage: TypeMapAttributeTypeMap.CreateArray
 
-In `TrimmableTypeMap.CreateArray()`:
+Arrays are created when marshaling Java arrays to .NET (e.g., `ITrustManager[]` during SSL handshake):
 
 ```csharp
+// In TypeMapAttributeTypeMap.cs
 public Array CreateArray(Type elementType, int length, int rank)
 {
     if (!TryGetJniNameForType(elementType, out string? jniName))
@@ -1319,6 +1321,44 @@ public Array CreateArray(Type elementType, int length, int rank)
 }
 ```
 
+This is called from `JNIEnv.ArrayCreateInstance()` which is used by the `CreateNativeArrayToManaged` converters.
+
+#### PoC Usage: JavaConvert Generic Collection Marshalling
+
+`JavaConvert.cs` uses the factory for marshaling `IList<T>`, `ICollection<T>`, and `IDictionary<K,V>`:
+
+```csharp
+// In JavaConvert.cs - TryCreateGenericListConverter
+static Func<IntPtr, JniHandleOwnership, object?>? TryCreateGenericListConverter(Type listType)
+{
+    var elementType = listType.GetGenericArguments()[0];
+    
+    // For primitives and strings, use explicit typed converters
+    if (elementType == typeof(string))
+        return (h, t) => JavaList<string>.FromJniHandle(h, t);
+    if (elementType == typeof(int))
+        return (h, t) => JavaList<int>.FromJniHandle(h, t);
+    // ... other primitives ...
+    
+    // For Java peer types, use the factory pattern
+    if (typeof(IJavaPeerable).IsAssignableFrom(elementType)) {
+        var proxy = JNIEnvInit.TypeMap?.GetProxyForType(elementType);
+        if (proxy == null) return null;
+        
+        var factory = proxy.GetContainerFactory();
+        return (h, t) => factory.CreateList(h, t);  // AOT-safe!
+    }
+    
+    return null;
+}
+```
+
+The same pattern is used for:
+- `TryCreateGenericCollectionConverter` → `factory.CreateCollection(h, t)`
+- `TryCreateGenericDictionaryConverter` → `valueFactory.CreateDictionary(keyFactory, h, t)`
+
+**Why primitives need explicit converters**: Primitive types (`int`, `string`, `bool`, etc.) don't have proxies in the TypeMap because they're not Java peer types. They use statically-typed `JavaList<string>.FromJniHandle()` calls which are already AOT-safe.
+
 #### Supported Container Types
 
 | Container | Method | Result |
@@ -1326,19 +1366,15 @@ public Array CreateArray(Type elementType, int length, int rank)
 | Array | `CreateArray(10, 1)` | `new T[10]` |
 | 2D Array | `CreateArray(10, 2)` | `new T[10][]` |
 | 3D Array | `CreateArray(10, 3)` | `new T[10][][]` |
-| List | `CreateList()` | `new JavaList<T>()` |
-| List (from handle) | `CreateListFromHandle(h, t)` | `new JavaList<T>(h, t)` |
-| Collection | `CreateCollectionFromHandle(h, t)` | `new JavaCollection<T>(h, t)` |
-| Set | `CreateSet()` | `new JavaSet<T>()` |
-| Set (from handle) | `CreateSetFromHandle(h, t)` | `new JavaSet<T>(h, t)` |
-| Dictionary | `CreateDictionary(keyFactory)` | `new JavaDictionary<K, V>()` |
-| Dictionary (from handle) | `CreateDictionaryFromHandle(keyFactory, h, t)` | `new JavaDictionary<K, V>(h, t)` |
+| List | `CreateList(h, t)` | `new JavaList<T>(h, t)` |
+| Collection | `CreateCollection(h, t)` | `new JavaCollection<T>(h, t)` |
+| Dictionary | `CreateDictionary(keyFactory, h, t)` | `new JavaDictionary<K, V>(h, t)` |
 
 #### Benefits
 
 1. **AOT-safe**: Direct `new` expressions with compile-time known types
 2. **Trimmer-safe**: When element type is preserved, its proxy and factory are preserved
 3. **No reflection**: All container creation uses direct instantiation
-4. **Unified pattern**: Same factory handles arrays, lists, sets, collections, dictionaries
+4. **Unified pattern**: Same factory handles arrays, lists, collections, dictionaries
 5. **Efficient**: Singleton factories, no allocations per call
 6. **Type-safe**: Generic constraints ensure only valid peer types are used
