@@ -1,0 +1,84 @@
+<!--
+***********************************************************************************************
+Microsoft.Android.Sdk.HotReload.targets
+
+This file contains targets for Hot Reload support in .NET for Android.
+These targets are invoked by dotnet-watch when Hot Reload starts.
+
+dotnet-watch passes environment variables via @(RuntimeEnvironmentVariable) items:
+- DOTNET_STARTUP_HOOKS: Path to Microsoft.Extensions.DotNetDeltaApplier.dll
+- DOTNET_WATCH_HOTRELOAD_WEBSOCKET_ENDPOINT: WebSocket endpoint URL for hot reload communication
+
+The environment variables are written to the app by the _GenerateEnvironmentFiles target
+in Xamarin.Android.Common.targets, which includes @(RuntimeEnvironmentVariable) items.
+
+See: https://github.com/dotnet/sdk/issues/52492
+See: https://github.com/dotnet/sdk/pull/52581
+
+***********************************************************************************************
+-->
+
+<Project>
+
+  <!--
+    _AndroidConfigureHotReloadEnvironment:
+    Configures Hot Reload when dotnet-watch passes environment variables via @(RuntimeEnvironmentVariable).
+    - Adds the Hot Reload agent DLL as a reference so it gets deployed
+    - Updates DOTNET_STARTUP_HOOKS to use just the assembly name (not the full path)
+    - Sets up STARTUP_HOOKS via RuntimeHostConfigurationOption for MonoVM
+  -->
+  <Target Name="_AndroidConfigureHotReloadEnvironment"
+          Condition=" '@(RuntimeEnvironmentVariable)' != '' ">
+
+    <!-- Extract the startup hooks value from @(RuntimeEnvironmentVariable) -->
+    <PropertyGroup>
+      <_AndroidHotReloadAgentAssemblyPath>@(RuntimeEnvironmentVariable->WithMetadataValue('Identity', 'DOTNET_STARTUP_HOOKS')->'%(Value)'->Exists())</_AndroidHotReloadAgentAssemblyPath>
+    </PropertyGroup>
+
+    <!-- Extract just the assembly name for STARTUP_HOOKS config -->
+    <PropertyGroup Condition=" '$(_AndroidHotReloadAgentAssemblyPath)' != '' ">
+      <_AndroidHotReloadAgentAssemblyName>$([System.IO.Path]::GetFileNameWithoutExtension('$(_AndroidHotReloadAgentAssemblyPath)'))</_AndroidHotReloadAgentAssemblyName>
+    </PropertyGroup>
+
+    <!--
+      Update DOTNET_STARTUP_HOOKS in @(RuntimeEnvironmentVariable) to use just the assembly name.
+      The full path doesn't work on Android since the DLL is deployed alongside the app.
+    -->
+    <ItemGroup Condition=" '$(_AndroidHotReloadAgentAssemblyName)' != '' ">
+      <RuntimeEnvironmentVariable Remove="DOTNET_STARTUP_HOOKS" />
+      <RuntimeEnvironmentVariable Include="DOTNET_STARTUP_HOOKS" Value="$(_AndroidHotReloadAgentAssemblyName)" />
+      <!-- Set STARTUP_HOOKS via RuntimeHostConfigurationOption for MonoVM (read by Mono runtime) -->
+      <RuntimeHostConfigurationOption Include="STARTUP_HOOKS" Value="$(_AndroidHotReloadAgentAssemblyName)" Condition=" '$(UseMonoRuntime)' == 'true' " />
+    </ItemGroup>
+
+  </Target>
+
+  <!--
+    _AndroidConfigureAdbReverse:
+    Sets up adb reverse port forwarding when using WebSocket endpoint from @(RuntimeEnvironmentVariable).
+    Extracts the port from DOTNET_WATCH_HOTRELOAD_WEBSOCKET_ENDPOINT and sets up reverse forwarding.
+    This allows the device/emulator to connect back to the host machine.
+  -->
+  <Target Name="_AndroidConfigureAdbReverse"
+          Condition=" '@(RuntimeEnvironmentVariable)' != '' "
+          DependsOnTargets="_AndroidAdbToolPath">
+
+    <!-- Extract the WebSocket endpoint URL and parse the port -->
+    <PropertyGroup>
+      <_AndroidWebSocketEndpoint>@(RuntimeEnvironmentVariable->WithMetadataValue('Identity', 'DOTNET_WATCH_HOTRELOAD_WEBSOCKET_ENDPOINT')->'%(Value)')</_AndroidWebSocketEndpoint>
+    </PropertyGroup>
+
+    <!-- Parse port from WebSocket URL (e.g., ws://localhost:9000 or http://localhost:9000) -->
+    <PropertyGroup Condition=" '$(_AndroidWebSocketEndpoint)' != '' ">
+      <_AndroidWebSocketPort>$([System.UriBuilder]::new('$(_AndroidWebSocketEndpoint)').Port)</_AndroidWebSocketPort>
+      <!-- UriBuilder.Port returns -1 when no port is specified -->
+      <_AndroidWebSocketPort Condition=" '$(_AndroidWebSocketPort)' == '-1' "></_AndroidWebSocketPort>
+    </PropertyGroup>
+
+    <Exec Condition=" '$(_AndroidWebSocketPort)' != '' "
+          Command="&quot;$(_AdbToolPath)&quot; reverse tcp:$(_AndroidWebSocketPort) tcp:$(_AndroidWebSocketPort)" />
+
+  </Target>
+
+</Project>
+
