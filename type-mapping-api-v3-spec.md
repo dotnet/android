@@ -57,6 +57,53 @@ The `android.util.Log.i("JCW-TRACE", ...)` calls have been removed from `Generat
 
 The extra Java file generation at build time is intentional - we generate JCWs for all types that might be needed, then let R8 trim unused ones. This is a trade-off: slower builds but optimal runtime size.
 
+### 0.1.4 Implementor Activation Constructor Signature Mismatch ✅ FIXED
+
+**Status:** ✅ Fixed (2026-02-05)
+
+**Problem:** Implementor types (e.g., `IAnimatorUpdateListenerImplementor`, `RunnableImplementor`) were generating Java constructors with incorrect signatures, causing `ValueAnimator.Update` events to never fire callbacks.
+
+**Symptom:** Animations using `ValueAnimator.Update` event completed instantly (only 2 updates: start and end) instead of firing on each frame.
+
+**Root Cause:** The `CollectActivationConstructors()` method was converting C# constructor parameter types to JNI signatures. For example, `IAnimatorUpdateListenerImplementor(object sender)` was converted to Java constructor `(Ljava/lang/Object;)V`. However, the C# code actually calls `StartCreateInstance("()V", ...)` - a no-arg constructor - because the `sender` parameter is kept in .NET only and not passed to Java.
+
+This caused a mismatch: Java expected to find `n_onAnimationUpdate` registered to a class with `()V` constructor, but the generated Java class only had `(Ljava/lang/Object;)V`.
+
+**Fix Applied:**
+1. In `CollectActivationConstructors()`, detect when a type extends `Java.Lang.Object` directly
+2. For such types, use `()V` as the JNI signature regardless of C# parameter types
+3. Added deduplication to avoid generating multiple constructors with the same signature
+
+**Code Change in `GenerateTypeMapAssembly.cs`:**
+```csharp
+// For types extending Java.Lang.Object directly, C# parameters are .NET-only
+bool isJavaObjectDescendant = peer.BaseManagedTypeName == "Java.Lang.Object" ||
+                               peer.BaseManagedTypeName == "System.Object";
+string activationSignature = isJavaObjectDescendant ? "()V" : ctor.JniSignature;
+```
+
+**Generated Java (Before Fix):**
+```java
+public ValueAnimator_AnimatorUpdateListenerImplementor (java.lang.Object p0) {
+    super();
+    if (getClass() == ValueAnimator_AnimatorUpdateListenerImplementor.class) { 
+        nc_activate_0(p0); 
+    }
+}
+```
+
+**Generated Java (After Fix):**
+```java
+public ValueAnimator_AnimatorUpdateListenerImplementor () {
+    super();
+    if (getClass() == ValueAnimator_AnimatorUpdateListenerImplementor.class) { 
+        nc_activate_0(); 
+    }
+}
+```
+
+**Verification:** With animations enabled, `ValueAnimator.Update` now fires 100+ times over a 2-second animation.
+
 ## 1. Overview
 
 ### 1.1 Purpose

@@ -369,6 +369,7 @@ namespace Android.Runtime
 		public IntPtr GetFunctionPointer (ReadOnlySpan<char> className, int methodIndex)
 		{
 			string classNameStr = className.ToString ();
+			Logger.LogTypemapTrace ($"GetFunctionPointer: className={classNameStr}, methodIndex={methodIndex}");
 
 			if (!_externalTypeMap.TryGetValue (classNameStr, out Type? type)) {
 				throw new TypeMapException (
@@ -377,8 +378,12 @@ namespace Android.Runtime
 			}
 
 			JavaPeerProxy? proxy = GetProxyForType (type!);
+			Logger.LogTypemapTrace ($"GetFunctionPointer: proxy type={proxy?.GetType().FullName}, isACW={proxy is IAndroidCallableWrapper}");
+			
 			if (proxy is IAndroidCallableWrapper acw) {
-				return acw.GetFunctionPointer (methodIndex);
+				IntPtr fnPtr = acw.GetFunctionPointer (methodIndex);
+				Logger.LogTypemapTrace ($"GetFunctionPointer: got fnPtr=0x{fnPtr:X}");
+				return fnPtr;
 			}
 
 			if (proxy is null) {

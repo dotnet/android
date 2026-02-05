@@ -769,22 +769,44 @@ internal class JavaPeerScanner
 			}
 
 			// Match current type constructors with base class constructors
+			// Track seen signatures to avoid duplicates
+			var seenSignatures = new HashSet<string> ();
+			
 			foreach (var ctor in currentTypeCtors) {
 				// Check if this ctor is compatible with any base ctor
 				// For now, we use simple signature matching - if the JNI signature matches, it's compatible
 				// Legacy code also checks parameter compatibility, but signature matching should be sufficient
 				var matchingBaseCtor = baseCtors.FirstOrDefault (bc => bc == ctor.JniSignature);
 				if (matchingBaseCtor != null) {
-					peer.ActivationConstructors.Add (new ActivationConstructorInfo {
-						JniSignature = ctor.JniSignature,
-						BaseSuperSignature = matchingBaseCtor,
-					});
+					if (!seenSignatures.Contains (ctor.JniSignature)) {
+						seenSignatures.Add (ctor.JniSignature);
+						peer.ActivationConstructors.Add (new ActivationConstructorInfo {
+							JniSignature = ctor.JniSignature,
+							BaseSuperSignature = matchingBaseCtor,
+						});
+					}
 				} else if (baseCtors.Any (bc => bc == "()V")) {
 					// If the base has a no-arg constructor, any ctor can use it via super()
-					peer.ActivationConstructors.Add (new ActivationConstructorInfo {
-						JniSignature = ctor.JniSignature,
-						BaseSuperSignature = "()V",
-					});
+					// 
+					// For Implementor types (and similar patterns) that extend Java.Lang.Object directly,
+					// the C# constructor takes an `object sender` parameter, but this parameter is NOT
+					// passed to Java. The C# code uses StartCreateInstance("()V", ...) to create the
+					// Java object. So we should use "()V" as the JNI signature for the Java constructor,
+					// not the signature derived from C# parameters.
+					//
+					// Detection: If the base type is Java.Lang.Object (the ultimate Java base) and
+					// the only available base ctor is ()V, then the C# parameters are .NET-only.
+					bool isJavaObjectDescendant = peer.BaseManagedTypeName == "Java.Lang.Object" ||
+					                               peer.BaseManagedTypeName == "System.Object";
+					string activationSignature = isJavaObjectDescendant ? "()V" : ctor.JniSignature;
+					
+					if (!seenSignatures.Contains (activationSignature)) {
+						seenSignatures.Add (activationSignature);
+						peer.ActivationConstructors.Add (new ActivationConstructorInfo {
+							JniSignature = activationSignature,
+							BaseSuperSignature = "()V",
+						});
+					}
 				}
 			}
 		}
