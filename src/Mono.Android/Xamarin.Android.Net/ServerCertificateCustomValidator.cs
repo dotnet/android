@@ -11,15 +11,23 @@ using Javax.Net.Ssl;
 
 using JavaCertificateException = Java.Security.Cert.CertificateException;
 using JavaX509Certificate = Java.Security.Cert.X509Certificate;
+using Log = Android.Util.Log;
 
 namespace Xamarin.Android.Net
 {
 	internal sealed class ServerCertificateCustomValidator
 	{
-		public IHostnameVerifier HostnameVerifier => AlwaysAcceptingHostnameVerifier.Instance;
+		// For NativeAOT: Returning null for HostnameVerifier means the default hostname
+		// verifier will be used. The custom TrustManager's CheckServerTrusted already
+		// handles hostname verification via VerifyHostname(), so duplicate verification
+		// is skipped. If VerifyHostname fails, SslPolicyErrors.RemoteCertificateNameMismatch
+		// is set and the custom callback decides whether to accept.
+		// TODO: Fix AlwaysAcceptingHostnameVerifier for NativeAOT (needs ILC to preserve invoker)
+		public IHostnameVerifier? HostnameVerifier => null;
 
 		public Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> Callback { get; set; }
 
+		[DynamicDependency("n_Verify_Ljava_lang_String_Ljavax_net_ssl_SSLSession_", "Javax.Net.Ssl.IHostnameVerifierInvoker", "Mono.Android")]
 		public ServerCertificateCustomValidator (Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> callback)
 		{
 			Callback = callback;
@@ -27,12 +35,16 @@ namespace Xamarin.Android.Net
 
 		public ITrustManager[] ReplaceX509TrustManager (ITrustManager[]? trustManagers, HttpRequestMessage requestMessage)
 		{
+			Log.Info ("ServerCertificateCustomValidator", $"ReplaceX509TrustManager called with {trustManagers?.Length ?? 0} trust managers");
 			trustManagers ??= [];
 			var originalX509TrustManager = FindX509TrustManager(trustManagers, out int originalTrustManagerIndex);
+			Log.Info ("ServerCertificateCustomValidator", $"Found original trust manager at index {originalTrustManagerIndex}: {originalX509TrustManager?.GetType().FullName}");
 			var trustManagerWithCallback = new TrustManager (originalX509TrustManager, requestMessage, Callback);
+			Log.Info ("ServerCertificateCustomValidator", $"Created custom TrustManager: {trustManagerWithCallback.GetType().FullName}, Handle={trustManagerWithCallback.Handle}");
 			return ModifyTrustManagersArray (trustManagers, originalTrustManagerIndex, trustManagerWithCallback);
 		}
 
+		[Register ("xamarin/android/net/ServerCertificateCustomValidator_TrustManager")]
 		private sealed class TrustManager : Java.Lang.Object, IX509TrustManager
 		{
 			private readonly IX509TrustManager _internalTrustManager;
@@ -51,16 +63,30 @@ namespace Xamarin.Android.Net
 
 			public void CheckServerTrusted (JavaX509Certificate[] javaChain, string authType)
 			{
+				Log.Info ("TrustManager", $"CheckServerTrusted called! javaChain.Length={javaChain?.Length ?? 0}, authType={authType}");
 				var sslPolicyErrors = SslPolicyErrors.None;
 
 				try {
 					var trustManagerExtensions = new X509TrustManagerExtensions (_internalTrustManager);
 					trustManagerExtensions.CheckServerTrusted (javaChain, authType, _request.RequestUri?.Host);
-				} catch (JavaCertificateException) {
+				} catch (JavaCertificateException ex) {
+					Log.Info ("TrustManager", $"Internal trust manager rejected cert (CertificateException): {ex.Message}");
+					sslPolicyErrors |= SslPolicyErrors.RemoteCertificateChainErrors;
+				} catch (Java.Lang.Throwable ex) {
+					// Catch any Java exception, including CertPathValidatorException
+					Log.Info ("TrustManager", $"Internal trust manager rejected cert ({ex.GetType ().Name}): {ex.Message}");
 					sslPolicyErrors |= SslPolicyErrors.RemoteCertificateChainErrors;
 				}
 
-				var certificates = Convert (javaChain);
+				X509Certificate2[] certificates;
+				Log.Info ("TrustManager", "Converting Java certificates...");
+				try {
+					certificates = Convert (javaChain);
+				} catch (Exception ex) {
+					Log.Error ("TrustManager", $"Convert failed: {ex.GetType ().Name}: {ex.Message}");
+					throw;
+				}
+				Log.Info ("TrustManager", $"Converted {certificates.Length} certificates");
 				X509Certificate2? certificate = null;
 
 				if (certificates.Length > 0) {
@@ -69,10 +95,13 @@ namespace Xamarin.Android.Net
 					sslPolicyErrors |= SslPolicyErrors.RemoteCertificateNotAvailable;
 				}
 
+				Log.Info ("TrustManager", "Verifying hostname...");
 				if (!VerifyHostname (javaChain)) {
+					Log.Info ("TrustManager", "Hostname verification failed");
 					sslPolicyErrors |= SslPolicyErrors.RemoteCertificateNameMismatch;
 				}
 
+				Log.Info ("TrustManager", $"Invoking custom callback with sslPolicyErrors={sslPolicyErrors}");
 				if (!_serverCertificateCustomValidationCallback (_request, certificate, CreateChain (certificates), sslPolicyErrors)) {
 					throw new JavaCertificateException ("The remote certificate was rejected by the provided RemoteCertificateValidationCallback.");
 				}
@@ -123,6 +152,7 @@ namespace Xamarin.Android.Net
 			// verifier on Android uses the SSLSession object only to get the peer certificates (as of 2022).
 			// This could change in future Android versions and we would have to implement more methods
 			// and properties of this interface.
+			[Register ("xamarin/android/net/FakeSSLSession")]
 			private sealed class FakeSSLSession : Java.Lang.Object, ISSLSession
 			{
 				private readonly JavaX509Certificate[] _certificates;
@@ -161,12 +191,14 @@ namespace Xamarin.Android.Net
 		// When the hostname verifier is reached, the trust manager has already invoked the
 		// custom validation callback and approved the remote certificate (including hostname
 		// mismatch) so at this point there's no verification left to.
+		[Register ("xamarin/android/net/ServerCertificateCustomValidator_AlwaysAcceptingHostnameVerifier")]
 		private sealed class AlwaysAcceptingHostnameVerifier : Java.Lang.Object, IHostnameVerifier
 		{
 			private readonly static Lazy<AlwaysAcceptingHostnameVerifier> s_instance = new Lazy<AlwaysAcceptingHostnameVerifier> (() => new AlwaysAcceptingHostnameVerifier ());
 
 			public static AlwaysAcceptingHostnameVerifier Instance => s_instance.Value;
 
+			[DynamicDependency("n_Verify_Ljava_lang_String_Ljavax_net_ssl_SSLSession_", typeof(IHostnameVerifierInvoker))]
 			public bool Verify (string? hostname, ISSLSession? session) => true;
 		}
 

@@ -66,6 +66,8 @@ namespace Java.Interop {
 				var typeMap = new TypeMapAttributeTypeMap ();
 				builder.TypeManager     = new Android.Runtime.AndroidTypeManager (typeMap);
 				builder.ValueManager    = new ManagedValueManager (typeMap);
+				// Also set JNIEnvInit.TypeMap for legacy API compatibility (e.g., JNIEnv.GetArray)
+				Android.Runtime.JNIEnvInit.TypeMap = typeMap;
 			}
 #endif  // NET
 

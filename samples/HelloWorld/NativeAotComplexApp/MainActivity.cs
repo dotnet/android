@@ -142,29 +142,57 @@ public class MainActivity : Activity
 	async void OnCustomCertButtonClick (object? sender, EventArgs e)
 	{
 		Log.Info (TAG, "Custom certificate button clicked");
-		UpdateStatus ("Making HTTPS request with custom cert validation...", StatusType.Loading);
+		UpdateStatus ("Making HTTPS request to self-signed endpoint...", StatusType.Loading);
 		_resultText!.Text = "";
 
 		try {
-			// Use SocketsHttpHandler with default certificate validation for simplicity
-			var handler = new SocketsHttpHandler ();
+			// Use AndroidMessageHandler with custom certificate validation
+			Log.Info (TAG, "Creating AndroidMessageHandler");
+			var handler = new Xamarin.Android.Net.AndroidMessageHandler ();
+			Log.Info (TAG, $"Setting ServerCertificateCustomValidationCallback");
+			handler.ServerCertificateCustomValidationCallback = (request, certificate, chain, sslPolicyErrors) => {
+				Log.Info (TAG, $"=== Custom Certificate Validation CALLBACK INVOKED ===");
+				Log.Info (TAG, $"URL: {request.RequestUri}");
+				Log.Info (TAG, $"SSL Policy Errors: {sslPolicyErrors}");
+
+				if (certificate != null) {
+					Log.Info (TAG, $"Certificate Subject: {certificate.Subject}");
+					Log.Info (TAG, $"Certificate Issuer: {certificate.Issuer}");
+					
+					RunOnUiThread (() => {
+						AppendResult ($"Cert Subject: {certificate.Subject}");
+						AppendResult ($"Cert Issuer: {certificate.Issuer}");
+						AppendResult ($"SSL Errors: {sslPolicyErrors}");
+					});
+				}
+
+				// Accept self-signed certificates for this test
+				Log.Info (TAG, "Accepting certificate (self-signed test)");
+				return true;
+			};
+			Log.Info (TAG, $"Callback is set: {handler.ServerCertificateCustomValidationCallback != null}");
 
 			using var client = new HttpClient (handler);
 			client.Timeout = TimeSpan.FromSeconds (10);
 
-			AppendResult ("Using default certificate validation");
-			AppendResult ("Requesting https://httpbin.org/get...");
+			// Use self-signed certificate endpoint
+			const string url = "https://self-signed.badssl.com/";
+			AppendResult ("Testing self-signed certificate validation");
+			AppendResult ("Using AndroidMessageHandler");
+			AppendResult ($"Requesting {url}...");
 
-			var response = await client.GetAsync ("https://httpbin.org/get");
+			var response = await client.GetAsync (url);
 
 			AppendResult ($"Status: {response.StatusCode}");
 			var content = await response.Content.ReadAsStringAsync ();
 			AppendResult ($"Response length: {content.Length} chars");
-			AppendResult ("Headers returned:");
-			AppendResult (content);
+			
+			// Show first 200 chars of content
+			var preview = content.Length > 200 ? content.Substring (0, 200) + "..." : content;
+			AppendResult ($"Content preview: {preview}");
 
-			UpdateStatus ("Custom cert validation successful!", StatusType.Success);
-			Log.Info (TAG, "Custom cert validation completed successfully");
+			UpdateStatus ("Self-signed cert accepted!", StatusType.Success);
+			Log.Info (TAG, "Self-signed cert validation completed successfully");
 		} catch (Exception ex) {
 			Log.Error (TAG, $"Custom cert request failed: {ex}");
 			AppendResult ($"Error: {ex.Message}");

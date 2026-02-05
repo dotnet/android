@@ -1,0 +1,8 @@
+<Directives>
+  <Application>
+    <!-- Keep IHostnameVerifierInvoker methods for SSL hostname verification -->
+    <Assembly Name="Mono.Android">
+      <Type Name="Javax.Net.Ssl.IHostnameVerifierInvoker" Dynamic="Required All" />
+    </Assembly>
+  </Application>
+</Directives>

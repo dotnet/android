@@ -64,6 +64,9 @@ static partial class JavaInteropRuntime
 			settings.AddDebugDotnetLog ();
 
 			typeMap = new TypeMapAttributeTypeMap ();
+			
+			// Set JNIEnvInit.TypeMap for legacy API compatibility (e.g., JNIEnv.GetArray)
+			JNIEnvInit.TypeMap = typeMap;
 
 			// Initialize the typemap_get_function_pointer callback for LLVM IR marshal methods
 			// Pass the unmanaged function pointer to the native side to set the global

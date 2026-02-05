@@ -857,24 +857,9 @@ namespace Xamarin.Android.Net
 					return false;
 			}
 
-			var headers = httpConnection.HeaderFields;
-			IList <string>? locationHeader = null;
-			string? location = null;
-
-			if (headers?.TryGetValue ("Location", out locationHeader) == true && locationHeader != null && locationHeader.Count > 0) {
-				if (locationHeader.Count == 1) {
-					location = locationHeader [0]?.Trim ();
-				} else {
-					if (Logger.LogNet)
-						Logger.Log (LogLevel.Info, LOG_APP, $"More than one location header for HTTP {redirectCode} redirect. Will use the first non-empty one.");
-
-					foreach (string l in locationHeader) {
-						location = l?.Trim ();
-						if (!String.IsNullOrEmpty (location))
-							break;
-					}
-				}
-			}
+			// Use GetHeaderField(name) instead of HeaderFields dictionary to avoid
+			// generic IList<string> conversion which is not supported in NativeAOT
+			string? location = httpConnection.GetHeaderField ("Location")?.Trim ();
 
 			if (String.IsNullOrEmpty (location)) {
 				// As per https://tools.ietf.org/html/rfc7231#section-6.4.1 the reponse isn't required to contain the Location header and the
@@ -1112,6 +1097,7 @@ namespace Xamarin.Android.Net
 			var httpConnection = conn.JavaCast <HttpURLConnection> ();
 			if (httpConnection == null)
 				throw new InvalidOperationException ($"Unsupported URL scheme {conn.URL?.Protocol}");
+			global::Android.Util.Log.Info ("AMH", $"SetupRequestInternal: httpConnection type={httpConnection.GetType().FullName}, Java class={httpConnection.Class?.Name ?? "null"}");
 
 			try {
 				httpConnection.RequestMethod = request.Method.ToString ();
@@ -1163,10 +1149,12 @@ namespace Xamarin.Android.Net
 
 		void SetupSSL (HttpsURLConnection? httpsConnection, HttpRequestMessage requestMessage)
 		{
+			global::Android.Util.Log.Info ("AMH", $"SetupSSL called, httpsConnection={(httpsConnection != null ? "not null" : "null")}");
 			if (httpsConnection == null)
 				return;
 
 			var socketFactory = ConfigureCustomSSLSocketFactory (httpsConnection);
+			global::Android.Util.Log.Info ("AMH", $"ConfigureCustomSSLSocketFactory returned {(socketFactory != null ? "custom factory" : "null")}");
 			if (socketFactory != null) {
 				httpsConnection.SSLSocketFactory = socketFactory;
 				return;
@@ -1176,15 +1164,21 @@ namespace Xamarin.Android.Net
 			KeyManagerFactory? kmf = GetConfiguredKeyManagerFactory (keyStore);
 			TrustManagerFactory? tmf = ConfigureTrustManagerFactory (keyStore);
 
+			global::Android.Util.Log.Info ("AMH", $"SetupSSL: HasServerCertificateCustomValidationCallback={HasServerCertificateCustomValidationCallback}, HasTrustedCerts={HasTrustedCerts}, HasClientCertificates={HasClientCertificates}");
+
 			// If there is no customization there is no point in changing the behavior of the default SSL socket factory.
 			if (tmf is null && kmf is null && !HasTrustedCerts && !HasServerCertificateCustomValidationCallback && !HasClientCertificates) {
+				global::Android.Util.Log.Info ("AMH", "SetupSSL: No customization, returning early");
 				return;
 			}
 
+			global::Android.Util.Log.Info ("AMH", "SetupSSL: Setting up custom SSL context");
 			var context = SSLContext.GetInstance ("TLS") ?? throw new InvalidOperationException ("Failed to get the SSLContext instance for TLS");
 			var trustManagers = GetTrustManagers (tmf, keyStore, requestMessage);
+			global::Android.Util.Log.Info ("AMH", $"SetupSSL: Got {trustManagers?.Length ?? 0} trust managers");
 			context.Init (kmf?.GetKeyManagers (), trustManagers, null);
 			httpsConnection.SSLSocketFactory = context.SocketFactory;
+			global::Android.Util.Log.Info ("AMH", "SetupSSL: Custom SSL context set up successfully");
 		}
 
 		[MemberNotNullWhen (true, nameof(TrustedCerts))]
@@ -1239,15 +1233,30 @@ namespace Xamarin.Android.Net
 
 		ITrustManager[]? GetTrustManagers (TrustManagerFactory? tmf, KeyStore keyStore, HttpRequestMessage requestMessage)
 		{
+			global::Android.Util.Log.Info ("AMH", $"GetTrustManagers: tmf={tmf != null}, keyStore={keyStore != null}");
 			if (tmf is null) {
-				tmf = TrustManagerFactory.GetInstance (TrustManagerFactory.DefaultAlgorithm) ?? throw new InvalidOperationException ("Failed to get the default TrustManagerFactory instance");
+				var algorithm = TrustManagerFactory.DefaultAlgorithm;
+				global::Android.Util.Log.Info ("AMH", $"GetTrustManagers: Getting default TMF with algorithm={algorithm}");
+				tmf = TrustManagerFactory.GetInstance (algorithm) ?? throw new InvalidOperationException ("Failed to get the default TrustManagerFactory instance");
+				global::Android.Util.Log.Info ("AMH", $"GetTrustManagers: Got TMF, HasTrustedCerts={HasTrustedCerts}");
 				tmf.Init (HasTrustedCerts ? keyStore : null); // only use the custom key store if the user defined any trusted certs
 			}
 
+			global::Android.Util.Log.Info ("AMH", "GetTrustManagers: Calling tmf.GetTrustManagers()");
+			global::Android.Util.Log.Info ("AMH", $"GetTrustManagers: tmf.Handle={((Java.Lang.Object)tmf).Handle}, tmf.JniPeerMembers={tmf.JniPeerMembers?.GetType().Name}");
+			try {
+				var members = tmf.JniPeerMembers;
+				global::Android.Util.Log.Info ("AMH", $"GetTrustManagers: JniPeerMembers.InstanceMethods={members?.InstanceMethods != null}");
+			} catch (Exception ex) {
+				global::Android.Util.Log.Error ("AMH", $"GetTrustManagers: Exception checking members: {ex.Message}");
+			}
 			ITrustManager[]? trustManagers = tmf.GetTrustManagers ();
+			global::Android.Util.Log.Info ("AMH", $"GetTrustManagers: Got {trustManagers?.Length ?? 0} trust managers");
 
 			if (HasServerCertificateCustomValidationCallback) {
+				global::Android.Util.Log.Info ("AMH", "GetTrustManagers: Has custom callback, calling ReplaceX509TrustManager");
 				trustManagers = _serverCertificateCustomValidator.ReplaceX509TrustManager (trustManagers, requestMessage);
+				global::Android.Util.Log.Info ("AMH", $"GetTrustManagers: After replace, got {trustManagers?.Length ?? 0} trust managers");
 			}
 
 			return trustManagers;

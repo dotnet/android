@@ -53,6 +53,16 @@ namespace Java.Interop {
 				using (var value = new Java.Lang.String (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return value.ToString ();
 			} },
+			// Generic collection converters for NativeAOT/trimming compatibility
+			// These are the most commonly used generic collection types
+			{ typeof (IList<string>), (handle, transfer) => JavaList<string>.FromJniHandle (handle, transfer)! },
+			{ typeof (IList<int>), (handle, transfer) => JavaList<int>.FromJniHandle (handle, transfer)! },
+			{ typeof (IList<long>), (handle, transfer) => JavaList<long>.FromJniHandle (handle, transfer)! },
+			{ typeof (IList<bool>), (handle, transfer) => JavaList<bool>.FromJniHandle (handle, transfer)! },
+			{ typeof (IList<float>), (handle, transfer) => JavaList<float>.FromJniHandle (handle, transfer)! },
+			{ typeof (IList<double>), (handle, transfer) => JavaList<double>.FromJniHandle (handle, transfer)! },
+			{ typeof (IList<object>), (handle, transfer) => JavaList<object>.FromJniHandle (handle, transfer)! },
+			{ typeof (IList<Java.Lang.Object>), (handle, transfer) => JavaList<Java.Lang.Object>.FromJniHandle (handle, transfer)! },
 		};
 
 		static Func<IntPtr, JniHandleOwnership, object?>? GetJniHandleConverter (Type? target)

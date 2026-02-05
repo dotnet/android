@@ -15,4 +15,8 @@
     <AndroidLinkTool>r8</AndroidLinkTool>
   </PropertyGroup>
 
+  <ItemGroup>
+    <RdXmlFile Include="rd.xml" />
+  </ItemGroup>
+
 </Project>

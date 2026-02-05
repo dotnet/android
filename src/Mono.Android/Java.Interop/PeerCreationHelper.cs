@@ -29,7 +29,10 @@ namespace Android.Runtime
 			TypeResolverDelegate? typeResolver = null)
 		{
 			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
-			string? class_name = Java.Interop.TypeManager.GetClassName (class_ptr);
+			// Use pure JNI to get class name - don't call legacy TypeManager which requires native runtime
+			string? class_name = JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (class_ptr));
+
+			global::Android.Util.Log.Info ("PeerCreationHelper", $"CreatePeer ENTRY: class_name={class_name}, targetType={targetType?.FullName ?? "null"}");
 
 			Type? type = null;
 			if (class_name != null) {
@@ -38,13 +41,18 @@ namespace Android.Runtime
 					: WalkHierarchy (class_ptr, class_name, typeMap);
 			}
 
+			global::Android.Util.Log.Info ("PeerCreationHelper", $"CreatePeer: resolved type={type?.FullName ?? "null"}");
+
 			if (class_ptr != IntPtr.Zero) {
 				JNIEnv.DeleteLocalRef (class_ptr);
 			}
 
 			if (targetType != null && (type == null || !targetType.IsAssignableFrom (type))) {
+				global::Android.Util.Log.Info ("PeerCreationHelper", $"CreatePeer: overriding type with targetType because type={type?.FullName ?? "null"}, targetType.IsAssignableFrom(type)={(type != null ? targetType.IsAssignableFrom(type).ToString() : "N/A")}");
 				type = targetType;
 			}
+
+			global::Android.Util.Log.Info ("PeerCreationHelper", $"CreatePeer: final type={type?.FullName ?? "null"}");
 
 			if (type == null) {
 				class_name = JNIEnv.GetClassNameFromInstance (handle);
@@ -148,8 +156,10 @@ namespace Android.Runtime
 
 			while (currentPtr != IntPtr.Zero) {
 				if (currentName != null) {
+					global::Android.Util.Log.Info ("PeerCreationHelper", $"WalkHierarchy checking: '{currentName}'");
 					result = typeMap.TryGetExactTypeMapping (currentName);
 					if (result != null) {
+						global::Android.Util.Log.Info ("PeerCreationHelper", $"WalkHierarchy FOUND: '{currentName}' -> {result.FullName}");
 						break;
 					}
 				}
@@ -162,8 +172,9 @@ namespace Android.Runtime
 				}
 
 				currentPtr = super_class_ptr;
+				// Use pure JNI to get class name - don't call legacy TypeManager which requires native runtime
 				currentName = currentPtr != IntPtr.Zero
-					? Java.Interop.TypeManager.GetClassName (currentPtr)
+					? JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (currentPtr))
 					: null;
 			}
 

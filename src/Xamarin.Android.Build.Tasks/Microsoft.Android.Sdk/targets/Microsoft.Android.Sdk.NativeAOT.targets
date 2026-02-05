@@ -501,6 +501,11 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <Warning Condition=" '$(_CryptoJarPath)' != '' and !Exists('$(_CryptoJarPath)') " Text="[NativeAOT] Crypto JAR not found: $(_CryptoJarPath). SSL/TLS may not work." />
   </Target>
 
+  <!-- TODO: Include only the specific JCWs from mono.android.jar that NativeAOT needs
+       (e.g., FakeSSLSession for SSL hostname verification). Currently commented out
+       because mono.android.jar duplicates classes already in java-interop.jar.
+       For now, skip hostname verification for self-signed certs. -->
+
   <!-- Add ProGuard keep rules for crypto classes.
        The crypto JAR contains classes that are called via JNI from native code,
        so R8 cannot detect that they are used and would strip them. -->

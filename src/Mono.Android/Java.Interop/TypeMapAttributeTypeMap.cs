@@ -98,8 +98,19 @@ namespace Android.Runtime
 		/// <inheritdoc/>
 		public Type? TryGetExactTypeMapping (string jniTypeName)
 		{
-			_externalTypeMap.TryGetValue (jniTypeName, out Type? type);
-			return type;
+			if (!_externalTypeMap.TryGetValue (jniTypeName, out Type? proxyType)) {
+				return null;
+			}
+
+			// The external type map contains proxy types (JavaPeerProxy subclasses).
+			// We need to return the TargetType from the proxy, not the proxy itself.
+			var proxy = GetProxyForType (proxyType);
+			if (proxy?.TargetType != null) {
+				return proxy.TargetType;
+			}
+
+			// Fallback: if proxy doesn't have TargetType, return the type as-is
+			return proxyType;
 		}
 
 		/// <inheritdoc/>
@@ -248,7 +259,7 @@ namespace Android.Runtime
 		/// <inheritdoc/>
 		public IJavaPeerable? CreatePeer (IntPtr handle, JniHandleOwnership transfer, Type? targetType)
 		{
-			Logger.Log (LogLevel.Info, "monodroid-typemap", $"CreatePeer ENTRY: handle=0x{handle:x}, targetType={targetType?.FullName ?? "null"}");
+			global::Android.Util.Log.Info ("TypeMapV3", $"CreatePeer ENTRY: targetType={targetType?.FullName ?? "null"}");
 			return PeerCreationHelper.CreatePeer (
 				handle,
 				transfer,
@@ -264,7 +275,7 @@ namespace Android.Runtime
 		/// </summary>
 		Type? ResolveTypeWithCaching (IntPtr class_ptr, string class_name)
 		{
-			Logger.Log (LogLevel.Info, "monodroid-typemap", $"ResolveTypeWithCaching: class_name={class_name}");
+			global::Android.Util.Log.Info ("TypeMapV3", $"ResolveTypeWithCaching: class_name={class_name}");
 			return _classToTypeCache.GetOrAdd (class_name, _ => FindTypeInHierarchy (class_ptr, class_name));
 		}
 
@@ -394,6 +405,7 @@ namespace Android.Runtime
 		/// </summary>
 		public Array CreateArray (Type elementType, int length, int rank)
 		{
+			global::Android.Util.Log.Info ("TYPEMAP", $"CreateArray: elementType={elementType.FullName}, length={length}, rank={rank}");
 			if (rank < 1 || rank > 3) {
 				throw new ArgumentOutOfRangeException (nameof (rank), rank, "Rank must be 1, 2, or 3");
 			}
@@ -405,17 +417,24 @@ namespace Android.Runtime
 			}
 
 			if (!TryGetJniNameForType (elementType, out string? jniName)) {
+				global::Android.Util.Log.Error ("TYPEMAP", $"CreateArray: No JNI name for {elementType.FullName}");
 				throw new InvalidOperationException ($"No JNI name found for element type {elementType.FullName}");
 			}
 
+			global::Android.Util.Log.Info ("TYPEMAP", $"CreateArray: JNI name = {jniName}");
 			if (!_externalTypeMap.TryGetValue (jniName, out Type? proxyType)) {
+				global::Android.Util.Log.Error ("TYPEMAP", $"CreateArray: No proxy registered for {jniName}");
 				throw new InvalidOperationException ($"No proxy registered for {jniName}");
 			}
 
+			global::Android.Util.Log.Info ("TYPEMAP", $"CreateArray: proxy type = {proxyType?.FullName}");
 			var proxy = GetProxyForType (proxyType)
 				?? throw new InvalidOperationException ($"No proxy instance for {proxyType.FullName}");
 
-			return proxy.GetDerivedTypeFactory ().CreateArray (length, rank);
+			global::Android.Util.Log.Info ("TYPEMAP", $"CreateArray: calling proxy.GetDerivedTypeFactory()");
+			var factory = proxy.GetDerivedTypeFactory ();
+			global::Android.Util.Log.Info ("TYPEMAP", $"CreateArray: factory = {factory?.GetType().FullName ?? "NULL"}");
+			return factory.CreateArray (length, rank);
 		}
 	}
 }

@@ -58,6 +58,14 @@ namespace Android.Runtime {
 			}
 		}
 
+		/// <summary>
+		/// Convenience method for logging TypeMap tracing messages.
+		/// </summary>
+		internal static void LogTypemapTrace (string message)
+		{
+			Log (LogLevel.Info, "monodroid-typemap", message);
+		}
+
 		internal static void SetLogCategories (LogCategories categories) =>
 			Categories = categories;
 	}

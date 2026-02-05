@@ -444,6 +444,20 @@ internal class JavaPeerScanner
 
 	// Cache of whether assembly references Mono.Android
 	readonly ConcurrentDictionary<string, bool> _referencesMonoAndroidCache = new ();
+	
+	/// <summary>
+	/// Lookup table: managed type name -> JNI type name (populated during scanning).
+	/// Used to correctly convert parameter types to JNI signatures.
+	/// </summary>
+	readonly ConcurrentDictionary<string, string> _managedToJniNameCache = new ();
+	
+	/// <summary>
+	/// Gets the JNI name for a managed type, if known from scanning.
+	/// </summary>
+	public bool TryGetJniName (string managedTypeName, [System.Diagnostics.CodeAnalysis.NotNullWhen (true)] out string? jniName)
+	{
+		return _managedToJniNameCache.TryGetValue (managedTypeName, out jniName);
+	}
 
 	/// <summary>
 	/// JniObjectReferenceOptions.Copy enum value read from Java.Interop assembly.
@@ -1021,8 +1035,15 @@ internal class JavaPeerScanner
 		string fullName = string.IsNullOrEmpty (ns) ? name : $"{ns}.{name}";
 		
 		if (javaName == null) {
-			// Types without Java names are skipped - this can happen for types that
-			// have [Register] attributes removed by the linker or types with invalid metadata
+			// Type itself is not a Java peer, but it may have nested types that are Java peers
+			// (e.g., a C# class with nested classes that extend Java.Lang.Object)
+			_log.LogMessage (MessageImportance.High, $"    ProcessType: {fullName} has no [Register], processing {typeDef.GetNestedTypes ().Count ()} nested types");
+			foreach (var nestedHandle in typeDef.GetNestedTypes ()) {
+				var nestedDef = reader.GetTypeDefinition (nestedHandle);
+				var nestedName = reader.GetString (nestedDef.Name);
+				_log.LogMessage (MessageImportance.High, $"    ProcessType: Processing nested type {nestedName}");
+				ProcessNestedType (reader, nestedDef, fullName, assemblyName, assemblyPath, results);
+			}
 			return false;
 		}
 		
@@ -1077,6 +1098,9 @@ internal class JavaPeerScanner
 		newPeer.PartitionMarshalMethods ();
 		results.Add (newPeer);
 		
+		// Cache the managed-to-JNI name mapping for use in signature generation
+		_managedToJniNameCache[fullName] = javaName;
+		
 		// Log every peer - changed to High for debugging
 		_log.LogMessage (MessageImportance.High, $"    Added Java peer: {fullName} -> '{javaName}' (in {assemblyName}, DoNotGenerateAcw={doNotGenerateAcw}, MarshalMethods={marshalMethods.Count})");
 
@@ -1092,11 +1116,11 @@ internal class JavaPeerScanner
 	void ProcessNestedType (MetadataReader reader, TypeDefinition typeDef, string parentTypeName, string assemblyName, string assemblyPath, List<JavaPeerInfo> results)
 	{
 		var (javaName, doNotGenerateAcw, associatedTypes) = GetRegisterAttributeValue (reader, typeDef);
-		if (javaName == null)
-			return;
 
 		string name = reader.GetString (typeDef.Name);
 		string fullName = $"{parentTypeName}+{name}";
+
+		_log.LogMessage (MessageImportance.High, $"    ProcessNestedType ENTRY: {fullName}, javaName={javaName ?? "null"}");
 
 		bool isInterface = (typeDef.Attributes & System.Reflection.TypeAttributes.Interface) != 0;
 		bool isAbstract = (typeDef.Attributes & System.Reflection.TypeAttributes.Abstract) != 0;
@@ -1105,6 +1129,37 @@ internal class JavaPeerScanner
 		string? baseAssemblyName = null;
 		if (!isInterface && !typeDef.BaseType.IsNil) {
 			(baseTypeName, baseAssemblyName) = GetFullTypeNameAndAssembly (reader, typeDef.BaseType);
+		}
+		
+		_log.LogMessage (MessageImportance.High, $"    ProcessNestedType: {fullName}, baseTypeName={baseTypeName}, isInterface={isInterface}");
+
+		// If no [Register] attribute but type directly inherits from Java.Lang.Object or Java.Lang.Throwable,
+		// generate a Java name using the CRC64 package naming (same as JavaNativeTypeManager)
+		if (javaName == null) {
+			_log.LogMessage (MessageImportance.High, $"    ProcessNestedType: {fullName} has no [Register], baseTypeName={baseTypeName}");
+			// Only check direct base type - types that inherit through another layer should have [Register]
+			bool inheritsFromJavaObject = baseTypeName == "Java.Lang.Object" || 
+			                               baseTypeName == "Java.Lang.Throwable" ||
+			                               baseTypeName == "Java.Interop.JavaObject" ||
+			                               baseTypeName == "Java.Interop.JavaException";
+			
+			if (!isInterface && inheritsFromJavaObject) {
+				// Generate Java name: package/ClassName where package is crc64XXXX
+				string ns = GetNamespaceForNestedType (parentTypeName);
+				string package = JavaNativeTypeManager.GetPackageName (ns, assemblyName);
+				// For nested types, use underscore separator (matching legacy behavior)
+				string javaClassName = fullName.Replace ('.', '_').Replace ('+', '_');
+				javaName = $"{package}/{javaClassName}";
+				doNotGenerateAcw = false; // These types need ACW generation
+				_log.LogMessage (MessageImportance.High, $"    Auto-generated Java name for nested type: {fullName} -> {javaName}");
+			} else {
+				// Process nested types even if parent isn't registered
+				foreach (var nestedHandle in typeDef.GetNestedTypes ()) {
+					var nestedDef = reader.GetTypeDefinition (nestedHandle);
+					ProcessNestedType (reader, nestedDef, fullName, assemblyName, assemblyPath, results);
+				}
+				return;
+			}
 		}
 
 		// Skip non-static inner classes - these are nested types whose Java base class
@@ -1151,6 +1206,11 @@ internal class JavaPeerScanner
 		};
 		nestedPeer.PartitionMarshalMethods ();
 		results.Add (nestedPeer);
+		
+		// Cache the managed-to-JNI name mapping for use in signature generation
+		_managedToJniNameCache[fullName] = javaName;
+		
+		_log.LogMessage (MessageImportance.High, $"    Added Java peer (nested): {fullName} -> '{javaName}' (in {assemblyName}, DoNotGenerateAcw={doNotGenerateAcw})");
 
 		// Recursively process nested types
 		foreach (var nestedHandle in typeDef.GetNestedTypes ()) {
@@ -1781,6 +1841,22 @@ internal class JavaPeerScanner
 		}
 
 		return false;
+	}
+
+	/// <summary>
+	/// Gets the namespace for a nested type from its parent type full name.
+	/// E.g., "Xamarin.Android.Net.ServerCertificateCustomValidator" -> "Xamarin.Android.Net"
+	/// </summary>
+	static string GetNamespaceForNestedType (string parentTypeName)
+	{
+		// Remove any nested type indicators
+		int plusIndex = parentTypeName.IndexOf ('+');
+		if (plusIndex > 0) {
+			parentTypeName = parentTypeName.Substring (0, plusIndex);
+		}
+		// Get namespace (everything before the last dot)
+		int lastDot = parentTypeName.LastIndexOf ('.');
+		return lastDot > 0 ? parentTypeName.Substring (0, lastDot) : "";
 	}
 
 	/// <summary>
@@ -2434,17 +2510,47 @@ internal class JavaPeerScanner
 			return "[" + TypeNameToJniType (elementType);
 		}
 
-		// Handle Android types - map to Java equivalents
-		if (typeName.StartsWith ("Android.") || typeName.StartsWith ("Java.")) {
+		// First, check if we have a cached JNI name from the [Register] attribute
+		// This is the most reliable source as it comes directly from the binding
+		if (_managedToJniNameCache.TryGetValue (typeName, out string? cachedJniName)) {
+			return $"L{cachedJniName};";
+		}
+
+		// Handle Android/Java/Javax types - map to Java equivalents with proper casing
+		if (typeName.StartsWith ("Android.") || typeName.StartsWith ("Java.") || typeName.StartsWith ("Javax.")) {
 			// Convert Android.Widget.Button -> android/widget/Button
 			// Convert Java.Lang.Object -> java/lang/Object
-			string javaName = typeName
-				.Replace ("Android.", "android/")
-				.Replace ("Java.Lang.", "java/lang/")
-				.Replace ("Java.Util.", "java/util/")
-				.Replace ("Java.", "java/")
-				.Replace (".", "/");
-			return $"L{javaName};";
+			// Convert Java.Security.Cert.X509Certificate -> java/security/cert/X509Certificate
+			// The key insight: in managed code, namespace parts are PascalCase
+			// but in JNI, they're lowercase. Class names stay as-is.
+			
+			// Split into namespace parts and class name
+			string[] parts = typeName.Split ('.');
+			if (parts.Length < 2) {
+				return "Ljava/lang/Object;";
+			}
+			
+			// Last part is the class name (may include nested types with +)
+			string className = parts[parts.Length - 1].Replace ('+', '$');
+			
+			// Handle C# interface naming convention: IFoo -> Foo in Java
+			// This is specifically for the Java.*/Javax.*/Android.* bindings where
+			// .NET uses IInterface convention but Java doesn't have the I prefix.
+			// Only strip I prefix if followed by uppercase (to avoid stripping from classes like "Intent")
+			if (className.Length > 1 && className[0] == 'I' && char.IsUpper (className[1])) {
+				className = className.Substring (1);
+			}
+			
+			// All other parts are namespace - convert to lowercase
+			var sb = new StringBuilder ();
+			for (int i = 0; i < parts.Length - 1; i++) {
+				if (i > 0) sb.Append ('/');
+				sb.Append (parts[i].ToLowerInvariant ());
+			}
+			sb.Append ('/');
+			sb.Append (className);
+			
+			return $"L{sb};";
 		}
 
 		// Default: treat as java.lang.Object (for unknown types)

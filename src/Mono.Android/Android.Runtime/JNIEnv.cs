@@ -28,14 +28,27 @@ namespace Android.Runtime {
 		{
 			// Delegate to ITypeMap.CreateArray - handles both AOT-safe and legacy paths
 			// Rank 1 = T[] (default for all external calls; nested arrays are handled internally)
-			return JNIEnvInit.TypeMap!.CreateArray (elementType, length, rank: 1);
+			global::Android.Util.Log.Info ("JNIENV", $"ArrayCreateInstance: elementType={elementType?.FullName ?? "null"}, length={length}");
+			if (JNIEnvInit.TypeMap == null) {
+				global::Android.Util.Log.Error ("JNIENV", "ArrayCreateInstance: JNIEnvInit.TypeMap is NULL!");
+				throw new InvalidOperationException ("TypeMap is not initialized");
+			}
+			global::Android.Util.Log.Info ("JNIENV", $"ArrayCreateInstance: TypeMap type = {JNIEnvInit.TypeMap.GetType().FullName}");
+			return JNIEnvInit.TypeMap.CreateArray (elementType, length, rank: 1);
 		}
 
 		static Type MakeArrayType (Type type)
 		{
-			// TypeMap v3: MakeArrayType is not supported - all array types must be pre-registered
+			// TypeMap v3: MakeArrayType is not supported for dynamic type construction.
+			// For primitive types (byte[], int[], etc.), we can still construct the array type
+			// since these are well-known .NET types that don't require Java type registration.
+			if (type.IsPrimitive || type == typeof(string)) {
+				return type.MakeArrayType ();
+			}
+			
+			// For Java object types, we can't dynamically create array types
 			throw new NotSupportedException (
-				$"MakeArrayType is not supported with TypeMap v3. Type '{type.FullName}' array must be pre-registered.");
+				$"MakeArrayType is not supported with TypeMap v3 for Java object types. Type '{type.FullName}' array must be pre-registered.");
 		}
 
 		internal static IntPtr IdentityHash (IntPtr v)
@@ -1005,11 +1018,28 @@ namespace Android.Runtime {
 					}
 				} },
 				{ typeof (IJavaObject), (type, source, len) => {
-					var r = ArrayCreateInstance (type!, len);
-					CopyArray (source, r, type);
-					return r;
+					global::Android.Util.Log.Info ("JNIENV", $"CreateNativeArrayToManaged[IJavaObject]: ENTRY type={type?.FullName ?? "NULL"}, source={source}, len={len}");
+					try {
+						if (type == null) {
+							global::Android.Util.Log.Error ("JNIENV", "CreateNativeArrayToManaged[IJavaObject]: type is NULL!");
+							throw new InvalidOperationException ("Cannot create array with null element type");
+						}
+						global::Android.Util.Log.Info ("JNIENV", $"CreateNativeArrayToManaged[IJavaObject]: calling ArrayCreateInstance");
+						var r = ArrayCreateInstance (type!, len);
+						global::Android.Util.Log.Info ("JNIENV", $"CreateNativeArrayToManaged[IJavaObject]: calling CopyArray");
+						CopyArray (source, r, type);
+						global::Android.Util.Log.Info ("JNIENV", $"CreateNativeArrayToManaged[IJavaObject]: returning");
+						return r;
+					} catch (Exception ex) {
+						global::Android.Util.Log.Error ("JNIENV", $"CreateNativeArrayToManaged[IJavaObject]: Exception: {ex.GetType().Name}: {ex.Message}");
+						throw;
+					}
 				} },
 				{ typeof (Array), (type, source, len) => {
+					if (type == null) {
+						Logger.LogTypemapTrace ("CreateNativeArrayToManaged[Array]: type is NULL!");
+						throw new InvalidOperationException ("Cannot create array with null element type");
+					}
 					var r = ArrayCreateInstance (type!, len);
 					CopyArray (source, r, type);
 					return r;
