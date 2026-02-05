@@ -2193,20 +2193,20 @@ namespace App1
 
 			using var assembly = AssemblyDefinition.ReadAssembly (monoAndroidRuntimePath);
 			const string expectedTypeName = "Android.Runtime.AndroidEnvironmentInternal";
+			const string expectedMethodName = "UnhandledException";
 
-			TypeDefinition foundType = null;
-			foreach (var module in assembly.Modules) {
-				foreach (var type in module.Types) {
-					if (string.Equals (type.FullName, expectedTypeName, StringComparison.Ordinal)) {
-						foundType = type;
-						break;
-					}
-				}
-				if (foundType != null) break;
-			}
+			var foundType = assembly.Modules
+				.SelectMany (m => m.Types)
+				.FirstOrDefault (t => string.Equals (t.FullName, expectedTypeName, StringComparison.Ordinal));
 
 			Assert.IsNotNull (foundType, $"Type '{expectedTypeName}' should exist in '{monoAndroidRuntimePath}'");
 			Assert.IsTrue (foundType.IsPublic, $"Type '{expectedTypeName}' should be public");
+
+			var unhandledExceptionMethod = foundType.Methods
+				.FirstOrDefault (m => string.Equals (m.Name, expectedMethodName, StringComparison.Ordinal));
+
+			Assert.IsNotNull (unhandledExceptionMethod, $"Method '{expectedMethodName}' should exist in type '{expectedTypeName}'");
+			Assert.IsTrue (unhandledExceptionMethod.IsPublic, $"Method '{expectedMethodName}' should be public");
 		}
 	}
 }
