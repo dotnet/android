@@ -874,5 +874,31 @@ namespace Xamarin.Android.Tasks
 			log.LogDebugMessage (message);
 			log.LogDebugMessage (reader.ReadToEnd ());
 		}
+
+		public static void CopyFileAvoidSharingViolations (TaskLoggingHelper log, string source, string dest)
+		{
+			string destBackup = $"{dest}.bak";
+			if (File.Exists (dest)) {
+				// Try to avoid sharing violations by first renaming the target
+				File.Move (dest, destBackup);
+			}
+
+			File.Copy (source, dest, true);
+			TryRemoveFile (log, destBackup);
+		}
+
+		public static void TryRemoveFile (TaskLoggingHelper log, string? filePath)
+		{
+			if (String.IsNullOrEmpty (filePath) || !File.Exists (filePath)) {
+				return;
+			}
+
+			try {
+				File.Delete (filePath);
+			} catch (Exception ex) {
+				log.LogWarning ($"Unable to delete source file '{filePath}'");
+				log.LogDebugMessage (ex.ToString ());
+			}
+		}
 	}
 }
