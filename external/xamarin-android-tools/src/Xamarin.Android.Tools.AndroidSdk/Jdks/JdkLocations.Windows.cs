@@ -54,6 +54,34 @@ namespace Xamarin.Android.Tools {
 			}
 		}
 
+		protected static IEnumerable<JdkInfo> GetWindowsUserFileSystemJdks (Action<TraceLevel, string> logger)
+		{
+			if (!OS.IsWindows) {
+				yield break;
+			}
+
+			var root = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.LocalApplicationData), "Android");
+			if (!Directory.Exists (root)) {
+				yield break;
+			}
+
+			IEnumerable<string> homes;
+			try {
+				// Match any folder containing "jdk" (jdk-21, microsoft-21.jdk, jdk-21.0.8.1-hotspot, etc.)
+				homes = Directory.EnumerateDirectories (root, "*jdk*");
+			}
+			catch (IOException) {
+				yield break;
+			}
+
+			foreach (var home in homes) {
+				var jdk = JdkInfo.TryGetJdkInfo (home, logger, @"%LocalAppData%\Android\*jdk*");
+				if (jdk == null)
+					continue;
+				yield return jdk;
+			}
+		}
+
 		protected static IEnumerable<JdkInfo> GetWindowsRegistryJdks (
 				Action<TraceLevel, string> logger,
 				string  parentKey,

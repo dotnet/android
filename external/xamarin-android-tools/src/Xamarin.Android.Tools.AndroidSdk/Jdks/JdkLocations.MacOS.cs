@@ -31,6 +31,42 @@ namespace Xamarin.Android.Tools {
 
 		const   string  MacOSJavaVirtualMachinesRoot    = "/Library/Java/JavaVirtualMachines";
 
+		protected static IEnumerable<JdkInfo> GetMacOSUserFileSystemJdks (Action<TraceLevel, string> logger)
+		{
+			if (!OS.IsMac) {
+				return Array.Empty<JdkInfo> ();
+			}
+
+			// Search ~/Library/Android/*jdk*/ (matches microsoft-21.jdk, jdk-21, etc.)
+			var libraryAndroidRoot = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), "Library", "Android");
+			if (!Directory.Exists (libraryAndroidRoot)) {
+				return Array.Empty<JdkInfo> ();
+			}
+
+			IEnumerable<string> dirs;
+			try {
+				dirs = Directory.EnumerateDirectories (libraryAndroidRoot, "*jdk*");
+			}
+			catch (IOException) {
+				return Array.Empty<JdkInfo> ();
+			}
+
+			var toHome = Path.Combine ("Contents", "Home");
+			var paths = new List<string> ();
+			foreach (var dir in dirs) {
+				// Check for macOS .jdk bundle structure (Contents/Home)
+				var bundleHome = Path.Combine (dir, toHome);
+				if (Directory.Exists (bundleHome)) {
+					paths.Add (bundleHome);
+				} else {
+					// Flat JDK structure - let TryGetJdkInfo validate
+					paths.Add (dir);
+				}
+			}
+
+			return FromPaths (paths, logger, "~/Library/Android/*jdk*/");
+		}
+
 		protected static IEnumerable<JdkInfo> GetMacOSSystemJdks (string pattern, Action<TraceLevel, string> logger, string? locator = null)
 		{
 			if (!OS.IsMac) {
