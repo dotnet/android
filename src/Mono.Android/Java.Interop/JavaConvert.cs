@@ -142,6 +142,8 @@ namespace Java.Interop {
 
 		/// <summary>
 		/// Creates a converter for IDictionary&lt;K,V&gt; using DerivedTypeFactory.
+		/// Note: Most dictionary access goes through JavaDictionary&lt;K,V&gt;.FromJniHandle directly.
+		/// This converter is used when explicitly requesting FromJniHandle&lt;IDictionary&lt;K,V&gt;&gt;().
 		/// </summary>
 		static Func<IntPtr, JniHandleOwnership, object?>? TryCreateGenericDictionaryConverter (Type dictType)
 		{
@@ -149,12 +151,21 @@ namespace Java.Interop {
 			var keyType = typeArgs[0];
 			var valueType = typeArgs[1];
 
-			// For primitive types and string, fall back to non-generic JavaDictionary
-			if (keyType.IsPrimitive || keyType == typeof (string) || keyType == typeof (object) ||
-			    valueType.IsPrimitive || valueType == typeof (string) || valueType == typeof (object)) {
-				return (h, t) => JavaDictionary.FromJniHandle (h, t);
+			// Handle common key/value type combinations directly
+			// These are the most frequently used dictionary types
+			if (keyType == typeof (string)) {
+				if (valueType == typeof (string)) {
+					return (h, t) => JavaDictionary<string, string>.FromJniHandle (h, t);
+				}
+				if (valueType == typeof (object)) {
+					return (h, t) => JavaDictionary<string, object>.FromJniHandle (h, t);
+				}
+				// For IList<string> values (e.g., HeaderFields), the dictionary itself is typed
+				// and value access goes through JavaConvert.FromJniHandle<IList<string>>
+				// which is handled by TryCreateGenericListConverter
 			}
 
+			// For Java peer types, use DerivedTypeFactory
 			var typeMap = JNIEnvInit.TypeMap;
 			if (typeMap == null) {
 				return (h, t) => JavaDictionary.FromJniHandle (h, t);
@@ -163,6 +174,7 @@ namespace Java.Interop {
 			var keyProxy = typeMap.GetProxyForManagedType (keyType);
 			var valueProxy = typeMap.GetProxyForManagedType (valueType);
 			if (keyProxy == null || valueProxy == null) {
+				// Fall back to non-generic - caller may need to cast values manually
 				return (h, t) => JavaDictionary.FromJniHandle (h, t);
 			}
 
@@ -178,10 +190,30 @@ namespace Java.Interop {
 		{
 			var elementType = collectionType.GetGenericArguments ()[0];
 
-			if (elementType.IsPrimitive || elementType == typeof (string) || elementType == typeof (object)) {
-				return (h, t) => JavaCollection.FromJniHandle (h, t);
+			// Handle primitive and string element types directly
+			if (elementType == typeof (string)) {
+				return (h, t) => JavaCollection<string>.FromJniHandle (h, t);
+			}
+			if (elementType == typeof (int)) {
+				return (h, t) => JavaCollection<int>.FromJniHandle (h, t);
+			}
+			if (elementType == typeof (long)) {
+				return (h, t) => JavaCollection<long>.FromJniHandle (h, t);
+			}
+			if (elementType == typeof (bool)) {
+				return (h, t) => JavaCollection<bool>.FromJniHandle (h, t);
+			}
+			if (elementType == typeof (float)) {
+				return (h, t) => JavaCollection<float>.FromJniHandle (h, t);
+			}
+			if (elementType == typeof (double)) {
+				return (h, t) => JavaCollection<double>.FromJniHandle (h, t);
+			}
+			if (elementType == typeof (object)) {
+				return (h, t) => JavaCollection<object>.FromJniHandle (h, t);
 			}
 
+			// For Java peer types, use the TypeMap to get the proxy's factory
 			var typeMap = JNIEnvInit.TypeMap;
 			if (typeMap == null) {
 				return (h, t) => JavaCollection.FromJniHandle (h, t);
