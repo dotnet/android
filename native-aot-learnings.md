@@ -319,20 +319,45 @@ if ((peer.IsInterface || peer.IsAbstract) && !string.IsNullOrEmpty(peer.InvokerT
 
 **Solution**: Remove `DoNotGenerateAcw=true` from the `[Register]` attribute on `FakeSSLSession`.
 
-### Challenge 12: IList<T> Generic Collection Marshalling
+### Challenge 12: IList<T> Generic Collection Marshalling with DerivedTypeFactory
 
-**Problem**: `AndroidMessageHandler.CopyHeaders` crashed with `NotSupportedException: Generic IList<> conversion is not supported with the trimmable type map`.
+**Problem**: `AndroidMessageHandler.CopyHeaders` crashed because generic `IList<T>` conversion used `MakeGenericType` which is incompatible with NativeAOT.
 
-**Root Cause**: `JavaConvert.GetJniHandleConverter` throws for `IList<T>` types because `MakeGenericType` requires runtime type construction which is incompatible with NativeAOT.
+**Root Cause**: `JavaConvert.GetJniHandleConverter` threw `NotSupportedException` for `IList<T>` types because it tried to use `MakeGenericType(typeof(JavaList<>), elementType)` which requires runtime type construction.
 
-**Solution**: Pre-register converters for common generic collection types in `JavaConvert.JniHandleConverters`:
+**Initial Fix (Quick Hack)**: Pre-register converters for common types (`IList<string>`, `IList<int>`, etc.) in a static dictionary. This worked but was limited - any `IList<CustomType>` would fail.
+
+**Proper Solution**: Use the `DerivedTypeFactory` pattern already designed for this purpose:
+
 ```csharp
-{ typeof(IList<string>), (h, t) => JavaList<string>.FromJniHandle(h, t)! },
-{ typeof(IList<int>), (h, t) => JavaList<int>.FromJniHandle(h, t)! },
-// etc.
+static Func<IntPtr, JniHandleOwnership, object?>? TryCreateGenericListConverter (Type listType)
+{
+    var elementType = listType.GetGenericArguments()[0];
+    
+    // Primitives/string have dedicated converters
+    if (elementType == typeof(string)) {
+        return (h, t) => JavaList<string>.FromJniHandle(h, t);
+    }
+    // ... similar for int, long, bool, float, double, object
+    
+    // For Java peer types, use the TypeMap to get the proxy's factory
+    var proxy = typeMap.GetProxyForManagedType(elementType);
+    if (proxy == null) {
+        return (h, t) => JavaList.FromJniHandle(h, t);  // fallback
+    }
+    
+    var factory = proxy.GetDerivedTypeFactory();
+    return (h, t) => factory.CreateListFromHandle(h, t);
+}
 ```
 
-**Key Insight**: By explicitly registering converters for common instantiations of `IList<T>`, we avoid the need for runtime generic type construction while supporting the most common use cases.
+**Key Insight**: The `DerivedTypeFactory` abstraction enables AOT-safe generic collection creation:
+1. Each `JavaPeerProxy` has `GetDerivedTypeFactory()` returning a `DerivedTypeFactory<T>`
+2. `DerivedTypeFactory<T>` has `CreateListFromHandle()` that returns `new JavaList<T>(handle, transfer)`
+3. Since the factory is typed at compile time, no `MakeGenericType` is needed
+4. For primitive/string types, we still need explicit converters since they don't have proxies
+
+**JavaPeerProxy.TargetType Change**: Also required changing `TargetType` from `abstract Type { get; }` to `virtual Type { get; set; }` because the generated proxy IL calls `set_TargetType` in the constructor.
 
 ## Current Status
 
