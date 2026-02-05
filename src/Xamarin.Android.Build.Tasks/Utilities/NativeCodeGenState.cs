@@ -39,7 +39,7 @@ class NativeCodeGenState
 	public List<PinvokeScanner.PinvokeEntryInfo>? PinvokeInfos { get; set; }
 
 	public List<TypeDefinition> JavaTypesForJCW                { get; }
-	public XAAssemblyResolver Resolver                         { get; }
+	public XAAssemblyResolver? Resolver                         { get; }
 	public TypeDefinitionCache TypeCache                       { get; }
 	public bool JniAddNativeMethodRegistrationAttributePresent { get; set; }
 
@@ -49,7 +49,7 @@ class NativeCodeGenState
 	{
 		TargetArch = arch;
 		TypeCache = tdCache;
-		Resolver = resolver;
+		//Resolver = resolver;
 		AllJavaTypes = allJavaTypes;
 		JavaTypesForJCW = javaTypesForJCW;
 		Classifier = classifier;

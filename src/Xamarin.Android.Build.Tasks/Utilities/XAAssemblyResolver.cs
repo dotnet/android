@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
 using Xamarin.Android.Tools;
@@ -18,6 +19,8 @@ class XAAssemblyResolver : IAssemblyResolver
 	bool loadDebugSymbols;
 	ReaderParameters readerParameters;
 	readonly AndroidTargetArch targetArch;
+
+	readonly HashSet<string> stackTraces = new (StringComparer.OrdinalIgnoreCase);
 
 	/// <summary>
 	/// **MUST** point to directories which contain assemblies for single ABI **only**.
@@ -43,6 +46,13 @@ class XAAssemblyResolver : IAssemblyResolver
 
 	public AssemblyDefinition? Resolve (AssemblyNameReference name, ReaderParameters? parameters)
 	{
+		var stack = new System.Diagnostics.StackTrace (true);
+		string trace = stack.ToString ();
+		if (!stackTraces.Contains (trace)) {
+			stackTraces.Add (trace);
+			log.LogMessage (MessageImportance.Normal, $"XAAssemblyResolver.Resolve called from: {trace}");
+		}
+
 		string shortName = name.Name;
 		if (cache.TryGetValue (shortName, out AssemblyDefinition? assembly)) {
 			return assembly;

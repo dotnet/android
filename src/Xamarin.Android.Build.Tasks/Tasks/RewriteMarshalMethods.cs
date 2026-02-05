@@ -14,13 +14,13 @@ namespace Xamarin.Android.Tasks;
 /// </summary>
 /// <remarks>
 /// This task operates on the marshal method classifications produced by earlier pipeline stages and:
-/// 
+///
 /// 1. Retrieves marshal method classifications from the build pipeline state
 /// 2. Parses environment files to determine exception transition behavior
 /// 3. Rewrites assemblies to replace dynamic registration with static marshal methods
 /// 4. Optionally builds managed lookup tables for runtime marshal method resolution
 /// 5. Reports statistics on marshal method generation and any fallback to dynamic registration
-/// 
+///
 /// The rewriting process creates native callback wrappers for methods that have non-blittable
 /// parameters or return types, ensuring compatibility with the [UnmanagedCallersOnly] attribute
 /// while maintaining proper marshaling semantics.
@@ -62,7 +62,7 @@ public class RewriteMarshalMethods : AndroidTask
 	/// </returns>
 	/// <remarks>
 	/// The execution flow is:
-	/// 
+	///
 	/// 1. Retrieve native code generation state from previous pipeline stages
 	/// 2. Parse environment files for configuration (e.g., broken exception transitions)
 	/// 3. For each target architecture:
@@ -71,7 +71,7 @@ public class RewriteMarshalMethods : AndroidTask
 	///    - Optionally build managed lookup tables
 	/// 4. Report statistics on marshal method generation
 	/// 5. Log warnings for methods that must fall back to dynamic registration
-	/// 
+	///
 	/// The task handles the ordering dependency between special case methods and managed
 	/// lookup tables - special cases must be added first so they appear in the lookup tables.
 	/// </remarks>
@@ -156,6 +156,7 @@ public class RewriteMarshalMethods : AndroidTask
 			return;
 		}
 
+		Log.LogDebugMessage ("NativeCodeGenState: using resolver #03");
 		var rewriter = new MarshalMethodsAssemblyRewriter (Log, state.TargetArch, state.Classifier, state.Resolver, state.ManagedMarshalMethodsLookupInfo);
 		rewriter.Rewrite (brokenExceptionTransitionsEnabled);
 	}

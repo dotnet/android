@@ -98,6 +98,7 @@ public class GenerateMainAndroidManifest : AndroidTask
 			targetSdkVersion = version.Major.ToString (CultureInfo.InvariantCulture);
 		}
 
+		Log.LogDebugMessage ("NativeCodeGenState: using resolver #02");
 		var manifest = new ManifestDocument (ManifestTemplate) {
 			PackageName = PackageName,
 			VersionName = VersionName,

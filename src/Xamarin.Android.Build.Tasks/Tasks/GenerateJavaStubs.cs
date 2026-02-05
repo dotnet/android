@@ -162,6 +162,7 @@ namespace Xamarin.Android.Tasks
 					nativeCodeGenStates.TryAdd (arch, state);
 
 					if (pinvokeScanner != null && state != null) {
+						Log.LogDebugMessage ("NativeCodeGenState: using resolver #01");
 						(success, List<PinvokeScanner.PinvokeEntryInfo>? pinfos) = ScanForUsedPinvokes (pinvokeScanner, arch, state.Resolver);
 						if (!success) {
 							return;
