@@ -1159,22 +1159,20 @@ internal class JavaPeerScanner
 		
 		_log.LogMessage (MessageImportance.High, $"    ProcessNestedType: {fullName}, baseTypeName={baseTypeName}, isInterface={isInterface}");
 
-		// If no [Register] attribute but type directly inherits from Java.Lang.Object or Java.Lang.Throwable,
+		// If no [Register] attribute but type inherits from a Java peer type,
 		// generate a Java name using the CRC64 package naming (same as JavaNativeTypeManager)
 		if (javaName == null) {
 			_log.LogMessage (MessageImportance.High, $"    ProcessNestedType: {fullName} has no [Register], baseTypeName={baseTypeName}");
-			// Only check direct base type - types that inherit through another layer should have [Register]
-			bool inheritsFromJavaObject = baseTypeName == "Java.Lang.Object" || 
-			                               baseTypeName == "Java.Lang.Throwable" ||
-			                               baseTypeName == "Java.Interop.JavaObject" ||
-			                               baseTypeName == "Java.Interop.JavaException";
+			// Use IsJavaPeerType to recursively check inheritance chain (same as top-level types)
+			bool inheritsFromJavaPeer = !isInterface && baseTypeName != null && IsJavaPeerType (baseTypeName, baseAssemblyName);
 			
-			if (!isInterface && inheritsFromJavaObject) {
+			if (inheritsFromJavaPeer) {
 				// Generate Java name: package/ClassName where package is crc64XXXX
 				string ns = GetNamespaceForNestedType (parentTypeName);
 				string package = JavaNativeTypeManager.GetPackageName (ns, assemblyName);
-				// For nested types, use underscore separator (matching legacy behavior)
-				string javaClassName = fullName.Replace ('.', '_').Replace ('+', '_');
+				// For nested types, extract just the type names without namespace
+				// e.g., "NativeAotVisualDemo.ParticleView+AnimationRunnable" -> "ParticleView_AnimationRunnable"
+				string javaClassName = GetJavaClassNameForNestedType (fullName);
 				javaName = $"{package}/{javaClassName}";
 				doNotGenerateAcw = false; // These types need ACW generation
 				_log.LogMessage (MessageImportance.High, $"    Auto-generated Java name for nested type: {fullName} -> {javaName}");
@@ -1922,6 +1920,24 @@ internal class JavaPeerScanner
 		// Get namespace (everything before the last dot)
 		int lastDot = parentTypeName.LastIndexOf ('.');
 		return lastDot > 0 ? parentTypeName.Substring (0, lastDot) : "";
+	}
+
+	/// <summary>
+	/// Gets the Java class name for a nested type by extracting just the type names without namespace.
+	/// E.g., "NativeAotVisualDemo.ParticleView+AnimationRunnable" -> "ParticleView_AnimationRunnable"
+	/// Matches JavaNativeTypeManager.ToJniName behavior.
+	/// </summary>
+	static string GetJavaClassNameForNestedType (string fullName)
+	{
+		// First, strip the namespace by finding the last '.' that's before any '+'
+		// E.g., "NativeAotVisualDemo.ParticleView+AnimationRunnable" -> "ParticleView+AnimationRunnable"
+		int plusIndex = fullName.IndexOf ('+');
+		int lastDotBeforePlus = plusIndex > 0 ? fullName.LastIndexOf ('.', plusIndex) : fullName.LastIndexOf ('.');
+		
+		string typeNamePart = lastDotBeforePlus >= 0 ? fullName.Substring (lastDotBeforePlus + 1) : fullName;
+		
+		// Replace '+' with '_' for nested type separator (matches legacy JCW behavior)
+		return typeNamePart.Replace ('+', '_');
 	}
 
 	/// <summary>
@@ -3716,7 +3732,9 @@ attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memor
 	{
 		switch (jniType) {
 			case JniType.Boolean:
-				typeEncoder.Boolean ();
+				// JNI jboolean is an 8-bit value (sbyte), not CLR bool
+				// Mono.Android callbacks use sbyte for boolean parameters/returns
+				typeEncoder.SByte ();
 				break;
 			case JniType.Byte:
 				typeEncoder.SByte ();
