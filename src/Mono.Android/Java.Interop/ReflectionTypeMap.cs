@@ -282,7 +282,7 @@ namespace Java.Interop
 		/// constructors and methods needed for reflection-based activation and marshaling.
 		/// </summary>
 		[DynamicallyAccessedMembers (Constructors | Methods)]
-		public Type TargetType { get; }
+		public override Type TargetType { get; set; }
 
 		DerivedTypeFactory? _cachedFactory;
 

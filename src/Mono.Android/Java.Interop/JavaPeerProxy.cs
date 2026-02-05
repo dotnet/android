@@ -60,7 +60,7 @@ namespace Java.Interop
 		/// This property is set in generated proxies to return the .NET type that wraps the Java class.
 		/// For example, a proxy for android/content/Context would return typeof(Android.Content.Context).
 		/// </remarks>
-		public required Type TargetType { get; init; }
+		public virtual Type TargetType { get; set; } = null!;
 
 		/// <summary>
 		/// Creates an instance of the target type using the JNI handle and ownership semantics.

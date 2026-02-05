@@ -53,16 +53,6 @@ namespace Java.Interop {
 				using (var value = new Java.Lang.String (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return value.ToString ();
 			} },
-			// Generic collection converters for NativeAOT/trimming compatibility
-			// These are the most commonly used generic collection types
-			{ typeof (IList<string>), (handle, transfer) => JavaList<string>.FromJniHandle (handle, transfer)! },
-			{ typeof (IList<int>), (handle, transfer) => JavaList<int>.FromJniHandle (handle, transfer)! },
-			{ typeof (IList<long>), (handle, transfer) => JavaList<long>.FromJniHandle (handle, transfer)! },
-			{ typeof (IList<bool>), (handle, transfer) => JavaList<bool>.FromJniHandle (handle, transfer)! },
-			{ typeof (IList<float>), (handle, transfer) => JavaList<float>.FromJniHandle (handle, transfer)! },
-			{ typeof (IList<double>), (handle, transfer) => JavaList<double>.FromJniHandle (handle, transfer)! },
-			{ typeof (IList<object>), (handle, transfer) => JavaList<object>.FromJniHandle (handle, transfer)! },
-			{ typeof (IList<Java.Lang.Object>), (handle, transfer) => JavaList<Java.Lang.Object>.FromJniHandle (handle, transfer)! },
 		};
 
 		static Func<IntPtr, JniHandleOwnership, object?>? GetJniHandleConverter (Type? target)
@@ -74,28 +64,136 @@ namespace Java.Interop {
 				return converter;
 			if (target.IsArray)
 				return (h, t) => JNIEnv.GetArray (h, t, target.GetElementType ());
-			// Trimmable type map: Generic collection conversions via MakeGenericType are not supported
-			// These code paths require runtime type construction which is incompatible with NativeAOT/trimming
-			if (target.IsGenericType && target.GetGenericTypeDefinition() == typeof (IDictionary<,>)) {
-				throw new NotSupportedException (
-					$"Generic IDictionary<,> conversion is not supported with the trimmable type map. Use JavaDictionary<,> directly.");
+
+			// Handle generic IList<T> using DerivedTypeFactory for AOT-safe conversion
+			if (target.IsGenericType && target.GetGenericTypeDefinition () == typeof (IList<>)) {
+				return TryCreateGenericListConverter (target);
 			}
+
+			// Handle generic IDictionary<K,V> using DerivedTypeFactory for AOT-safe conversion
+			if (target.IsGenericType && target.GetGenericTypeDefinition () == typeof (IDictionary<,>)) {
+				return TryCreateGenericDictionaryConverter (target);
+			}
+
+			// Handle generic ICollection<T> using DerivedTypeFactory for AOT-safe conversion
+			if (target.IsGenericType && target.GetGenericTypeDefinition () == typeof (ICollection<>)) {
+				return TryCreateGenericCollectionConverter (target);
+			}
+
+			// Non-generic collection fallbacks
 			if (typeof (IDictionary).IsAssignableFrom (target))
 				return (h, t) => JavaDictionary.FromJniHandle (h, t);
-			if (target.IsGenericType && target.GetGenericTypeDefinition() == typeof (IList<>)) {
-				throw new NotSupportedException (
-					$"Generic IList<> conversion is not supported with the trimmable type map. Use JavaList<> directly.");
-			}
 			if (typeof (IList).IsAssignableFrom (target))
 				return (h, t) => JavaList.FromJniHandle (h, t);
-			if (target.IsGenericType && target.GetGenericTypeDefinition() == typeof (ICollection<>)) {
-				throw new NotSupportedException (
-					$"Generic ICollection<> conversion is not supported with the trimmable type map. Use JavaCollection<> directly.");
-			}
 			if (typeof (ICollection).IsAssignableFrom (target))
 				return (h, t) => JavaCollection.FromJniHandle (h, t);
 
 			return null;
+		}
+
+		/// <summary>
+		/// Creates a converter for IList&lt;T&gt; using DerivedTypeFactory.
+		/// Uses the TypeMap to look up the proxy for T and get its factory.
+		/// </summary>
+		static Func<IntPtr, JniHandleOwnership, object?>? TryCreateGenericListConverter (Type listType)
+		{
+			var elementType = listType.GetGenericArguments ()[0];
+
+			// For primitive types and string, we need specific converters since they don't have proxies
+			// These return JavaList<T> which implements IList<T>
+			if (elementType == typeof (string)) {
+				return (h, t) => JavaList<string>.FromJniHandle (h, t);
+			}
+			if (elementType == typeof (int)) {
+				return (h, t) => JavaList<int>.FromJniHandle (h, t);
+			}
+			if (elementType == typeof (long)) {
+				return (h, t) => JavaList<long>.FromJniHandle (h, t);
+			}
+			if (elementType == typeof (bool)) {
+				return (h, t) => JavaList<bool>.FromJniHandle (h, t);
+			}
+			if (elementType == typeof (float)) {
+				return (h, t) => JavaList<float>.FromJniHandle (h, t);
+			}
+			if (elementType == typeof (double)) {
+				return (h, t) => JavaList<double>.FromJniHandle (h, t);
+			}
+			if (elementType == typeof (object)) {
+				return (h, t) => JavaList<object>.FromJniHandle (h, t);
+			}
+
+			// For Java peer types, use the TypeMap to get the proxy and its DerivedTypeFactory
+			var typeMap = JNIEnvInit.TypeMap;
+			if (typeMap == null) {
+				return (h, t) => JavaList.FromJniHandle (h, t);
+			}
+
+			var proxy = typeMap.GetProxyForManagedType (elementType);
+			if (proxy == null) {
+				// No proxy found - fall back to non-generic JavaList
+				return (h, t) => JavaList.FromJniHandle (h, t);
+			}
+
+			// Get the DerivedTypeFactory and use it to create lists
+			var factory = proxy.GetDerivedTypeFactory ();
+			return (h, t) => factory.CreateListFromHandle (h, t);
+		}
+
+		/// <summary>
+		/// Creates a converter for IDictionary&lt;K,V&gt; using DerivedTypeFactory.
+		/// </summary>
+		static Func<IntPtr, JniHandleOwnership, object?>? TryCreateGenericDictionaryConverter (Type dictType)
+		{
+			var typeArgs = dictType.GetGenericArguments ();
+			var keyType = typeArgs[0];
+			var valueType = typeArgs[1];
+
+			// For primitive types and string, fall back to non-generic JavaDictionary
+			if (keyType.IsPrimitive || keyType == typeof (string) || keyType == typeof (object) ||
+			    valueType.IsPrimitive || valueType == typeof (string) || valueType == typeof (object)) {
+				return (h, t) => JavaDictionary.FromJniHandle (h, t);
+			}
+
+			var typeMap = JNIEnvInit.TypeMap;
+			if (typeMap == null) {
+				return (h, t) => JavaDictionary.FromJniHandle (h, t);
+			}
+
+			var keyProxy = typeMap.GetProxyForManagedType (keyType);
+			var valueProxy = typeMap.GetProxyForManagedType (valueType);
+			if (keyProxy == null || valueProxy == null) {
+				return (h, t) => JavaDictionary.FromJniHandle (h, t);
+			}
+
+			var keyFactory = keyProxy.GetDerivedTypeFactory ();
+			var valueFactory = valueProxy.GetDerivedTypeFactory ();
+			return (h, t) => valueFactory.CreateDictionaryFromHandle (keyFactory, h, t);
+		}
+
+		/// <summary>
+		/// Creates a converter for ICollection&lt;T&gt; using DerivedTypeFactory.
+		/// </summary>
+		static Func<IntPtr, JniHandleOwnership, object?>? TryCreateGenericCollectionConverter (Type collectionType)
+		{
+			var elementType = collectionType.GetGenericArguments ()[0];
+
+			if (elementType.IsPrimitive || elementType == typeof (string) || elementType == typeof (object)) {
+				return (h, t) => JavaCollection.FromJniHandle (h, t);
+			}
+
+			var typeMap = JNIEnvInit.TypeMap;
+			if (typeMap == null) {
+				return (h, t) => JavaCollection.FromJniHandle (h, t);
+			}
+
+			var proxy = typeMap.GetProxyForManagedType (elementType);
+			if (proxy == null) {
+				return (h, t) => JavaCollection.FromJniHandle (h, t);
+			}
+
+			var factory = proxy.GetDerivedTypeFactory ();
+			return (h, t) => factory.CreateCollectionFromHandle (h, t);
 		}
 
 		public static T? FromJniHandle<
