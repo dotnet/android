@@ -375,37 +375,17 @@ namespace Java.Interop
 			};
 		}
 
-		internal override IList CreateList ()
+		internal override IList CreateList (IntPtr handle, JniHandleOwnership transfer)
 		{
 			throw new NotSupportedException ("ReflectionJavaPeerContainerFactory does not support list creation.");
 		}
 
-		internal override IList CreateListFromHandle (IntPtr handle, JniHandleOwnership transfer)
-		{
-			throw new NotSupportedException ("ReflectionJavaPeerContainerFactory does not support list creation.");
-		}
-
-		internal override ICollection CreateCollectionFromHandle (IntPtr handle, JniHandleOwnership transfer)
+		internal override ICollection CreateCollection (IntPtr handle, JniHandleOwnership transfer)
 		{
 			throw new NotSupportedException ("ReflectionJavaPeerContainerFactory does not support collection creation.");
 		}
 
-		internal override ICollection CreateSet ()
-		{
-			throw new NotSupportedException ("ReflectionJavaPeerContainerFactory does not support set creation.");
-		}
-
-		internal override ICollection CreateSetFromHandle (IntPtr handle, JniHandleOwnership transfer)
-		{
-			throw new NotSupportedException ("ReflectionJavaPeerContainerFactory does not support set creation.");
-		}
-
-		internal override IDictionary? CreateDictionary (JavaPeerContainerFactory keyFactory)
-		{
-			throw new NotSupportedException ("ReflectionJavaPeerContainerFactory does not support dictionary creation.");
-		}
-
-		internal override IDictionary? CreateDictionaryFromHandle (JavaPeerContainerFactory keyFactory, IntPtr handle, JniHandleOwnership transfer)
+		internal override IDictionary? CreateDictionary (JavaPeerContainerFactory keyFactory, IntPtr handle, JniHandleOwnership transfer)
 		{
 			throw new NotSupportedException ("ReflectionJavaPeerContainerFactory does not support dictionary creation.");
 		}

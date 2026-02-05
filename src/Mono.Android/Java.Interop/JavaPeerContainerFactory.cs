@@ -20,7 +20,7 @@ namespace Java.Interop
 	/// // To create IList&lt;View&gt; from a Java ArrayList:
 	/// var proxy = typeMap.GetProxyForType(typeof(Android.Views.View));
 	/// var factory = proxy.GetJavaPeerContainerFactory();
-	/// IList list = factory.CreateListFromHandle(javaArrayListHandle, ownership);
+	/// IList list = factory.CreateList(javaArrayListHandle, ownership);
 	/// </code>
 	/// </remarks>
 	public abstract class JavaPeerContainerFactory
@@ -34,18 +34,12 @@ namespace Java.Interop
 		internal abstract Array CreateArray (int length, int rank);
 
 		/// <summary>
-		/// Creates an empty JavaList for the target type.
-		/// </summary>
-		/// <returns>A new empty JavaList wrapping the target type.</returns>
-		internal abstract IList CreateList ();
-
-		/// <summary>
 		/// Creates a JavaList wrapping an existing Java ArrayList handle.
 		/// </summary>
 		/// <param name="handle">The JNI handle to the Java ArrayList.</param>
 		/// <param name="transfer">How to handle JNI reference ownership.</param>
 		/// <returns>A JavaList wrapping the Java object.</returns>
-		internal abstract IList CreateListFromHandle (IntPtr handle, JniHandleOwnership transfer);
+		internal abstract IList CreateList (IntPtr handle, JniHandleOwnership transfer);
 
 		/// <summary>
 		/// Creates a JavaCollection wrapping an existing Java Collection handle.
@@ -53,28 +47,7 @@ namespace Java.Interop
 		/// <param name="handle">The JNI handle to the Java Collection.</param>
 		/// <param name="transfer">How to handle JNI reference ownership.</param>
 		/// <returns>A JavaCollection wrapping the Java object.</returns>
-		internal abstract ICollection CreateCollectionFromHandle (IntPtr handle, JniHandleOwnership transfer);
-
-		/// <summary>
-		/// Creates an empty JavaSet for the target type.
-		/// </summary>
-		/// <returns>A new empty JavaSet wrapping the target type.</returns>
-		internal abstract ICollection CreateSet ();
-
-		/// <summary>
-		/// Creates a JavaSet wrapping an existing Java Set handle.
-		/// </summary>
-		/// <param name="handle">The JNI handle to the Java Set.</param>
-		/// <param name="transfer">How to handle JNI reference ownership.</param>
-		/// <returns>A JavaSet wrapping the Java object.</returns>
-		internal abstract ICollection CreateSetFromHandle (IntPtr handle, JniHandleOwnership transfer);
-
-		/// <summary>
-		/// Creates an empty JavaDictionary with the specified key factory.
-		/// </summary>
-		/// <param name="keyFactory">The factory for the key type (provides type information).</param>
-		/// <returns>A new empty JavaDictionary, or null if not supported.</returns>
-		internal virtual IDictionary? CreateDictionary (JavaPeerContainerFactory keyFactory) => null;
+		internal abstract ICollection CreateCollection (IntPtr handle, JniHandleOwnership transfer);
 
 		/// <summary>
 		/// Creates a JavaDictionary wrapping an existing Java Map handle.
@@ -82,21 +55,14 @@ namespace Java.Interop
 		/// <param name="keyFactory">The factory for the key type.</param>
 		/// <param name="handle">The JNI handle to the Java Map.</param>
 		/// <param name="transfer">How to handle JNI reference ownership.</param>
-		/// <returns>A JavaDictionary wrapping the Java object, or null if not supported.</returns>
-		internal virtual IDictionary? CreateDictionaryFromHandle (JavaPeerContainerFactory keyFactory, IntPtr handle, JniHandleOwnership transfer) => null;
+		/// <returns>A JavaDictionary wrapping the Java object.</returns>
+		internal virtual IDictionary? CreateDictionary (JavaPeerContainerFactory keyFactory, IntPtr handle, JniHandleOwnership transfer) => null;
 
 		/// <summary>
-		/// Internal visitor method for dictionary creation. Called by value factory's CreateDictionary.
+		/// Internal visitor method for dictionary creation from handle. Called by value factory's CreateDictionary.
 		/// Override in JavaPeerContainerFactory&lt;T&gt; to provide T as the key type.
 		/// </summary>
-		internal virtual IDictionary CreateDictionaryWithValueFactory<TValue> (JavaPeerContainerFactory<TValue> valueFactory) where TValue : class, IJavaPeerable
-			=> throw new NotSupportedException ("Dictionary creation requires a typed JavaPeerContainerFactory<T>");
-
-		/// <summary>
-		/// Internal visitor method for dictionary creation from handle. Called by value factory's CreateDictionaryFromHandle.
-		/// Override in JavaPeerContainerFactory&lt;T&gt; to provide T as the key type.
-		/// </summary>
-		internal virtual IDictionary CreateDictionaryFromHandleWithValueFactory<TValue> (JavaPeerContainerFactory<TValue> valueFactory, IntPtr handle, JniHandleOwnership transfer) where TValue : class, IJavaPeerable
+		internal virtual IDictionary CreateDictionaryWithValueFactory<TValue> (JavaPeerContainerFactory<TValue> valueFactory, IntPtr handle, JniHandleOwnership transfer) where TValue : class, IJavaPeerable
 			=> throw new NotSupportedException ("Dictionary creation requires a typed JavaPeerContainerFactory<T>");
 
 		/// <summary>
@@ -146,47 +112,23 @@ namespace Java.Interop
 		}
 
 		/// <inheritdoc/>
-		internal override IList CreateList () => new JavaList<T> ();
-
-		/// <inheritdoc/>
-		internal override IList CreateListFromHandle (IntPtr handle, JniHandleOwnership transfer)
+		internal override IList CreateList (IntPtr handle, JniHandleOwnership transfer)
 			=> new JavaList<T> (handle, transfer);
 
 		/// <inheritdoc/>
-		internal override ICollection CreateCollectionFromHandle (IntPtr handle, JniHandleOwnership transfer)
+		internal override ICollection CreateCollection (IntPtr handle, JniHandleOwnership transfer)
 			=> new JavaCollection<T> (handle, transfer);
 
 		/// <inheritdoc/>
-		internal override ICollection CreateSet () => new JavaSet<T> ();
-
-		/// <inheritdoc/>
-		internal override ICollection CreateSetFromHandle (IntPtr handle, JniHandleOwnership transfer)
-			=> new JavaSet<T> (handle, transfer);
-
-		/// <inheritdoc/>
-		internal override IDictionary? CreateDictionary (JavaPeerContainerFactory keyFactory)
+		internal override IDictionary? CreateDictionary (JavaPeerContainerFactory keyFactory, IntPtr handle, JniHandleOwnership transfer)
 		{
-			// T is the value type - ask key factory to create dictionary with us as value
-			return keyFactory.CreateDictionaryWithValueFactory (this);
+			return keyFactory.CreateDictionaryWithValueFactory (this, handle, transfer);
 		}
-
-		/// <inheritdoc/>
-		internal override IDictionary? CreateDictionaryFromHandle (JavaPeerContainerFactory keyFactory, IntPtr handle, JniHandleOwnership transfer)
-		{
-			return keyFactory.CreateDictionaryFromHandleWithValueFactory (this, handle, transfer);
-		}
-
-		/// <summary>
-		/// Creates a JavaDictionary with T as the key type and TValue as the value type.
-		/// Called by value factory's CreateDictionary method (visitor pattern).
-		/// </summary>
-		internal override IDictionary CreateDictionaryWithValueFactory<TValue> (JavaPeerContainerFactory<TValue> valueFactory)
-			=> new JavaDictionary<T, TValue> ();
 
 		/// <summary>
 		/// Creates a JavaDictionary from handle with T as key type and TValue as value type.
 		/// </summary>
-		internal override IDictionary CreateDictionaryFromHandleWithValueFactory<TValue> (JavaPeerContainerFactory<TValue> valueFactory, IntPtr handle, JniHandleOwnership transfer)
+		internal override IDictionary CreateDictionaryWithValueFactory<TValue> (JavaPeerContainerFactory<TValue> valueFactory, IntPtr handle, JniHandleOwnership transfer)
 			=> new JavaDictionary<T, TValue> (handle, transfer);
 	}
 }

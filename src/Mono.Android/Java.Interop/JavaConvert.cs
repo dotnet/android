@@ -137,7 +137,7 @@ namespace Java.Interop {
 
 			// Get the JavaPeerContainerFactory and use it to create lists
 			var factory = proxy.GetJavaPeerContainerFactory ();
-			return (h, t) => factory.CreateListFromHandle (h, t);
+			return (h, t) => factory.CreateList (h, t);
 		}
 
 		/// <summary>
@@ -180,7 +180,7 @@ namespace Java.Interop {
 
 			var keyFactory = keyProxy.GetJavaPeerContainerFactory ();
 			var valueFactory = valueProxy.GetJavaPeerContainerFactory ();
-			return (h, t) => valueFactory.CreateDictionaryFromHandle (keyFactory, h, t);
+			return (h, t) => valueFactory.CreateDictionary (keyFactory, h, t);
 		}
 
 		/// <summary>
@@ -225,7 +225,7 @@ namespace Java.Interop {
 			}
 
 			var factory = proxy.GetJavaPeerContainerFactory ();
-			return (h, t) => factory.CreateCollectionFromHandle (h, t);
+			return (h, t) => factory.CreateCollection (h, t);
 		}
 
 		public static T? FromJniHandle<

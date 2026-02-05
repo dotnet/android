@@ -111,7 +111,7 @@ namespace Java.Interop
 		/// var proxy = typeMap.GetProxyForType(typeof(View));
 		/// var factory = proxy.GetJavaPeerContainerFactory();
 		/// var array = factory.CreateArray(10, 1);           // T[]
-		/// var list = factory.CreateListFromHandle(handle, transfer);  // IList
+		/// var list = factory.CreateList(handle, transfer);  // IList
 		/// </code>
 		/// </remarks>
 		/// <returns>A factory for creating derived types of the target type.</returns>
