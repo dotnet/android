@@ -1089,6 +1089,39 @@ public class MyCustomButton : Button { }
 
 **Trimmable type map requirement:** The TypeMap generator must process the custom view map file and generate unconditional entries.
 
+##### Rule 2b: Manual AndroidManifest.xml Component References → Unconditional (Not Yet Implemented)
+
+Users can manually add component entries to `AndroidManifest.xml` without using the `[Activity]`, `[Service]`, etc. attributes:
+
+```xml
+<!-- AndroidManifest.xml - manually added by user -->
+<activity android:name="com.example.MyManualActivity" />
+<service android:name="com.example.MyBackgroundService" />
+<receiver android:name="com.example.MyBroadcastReceiver" />
+<provider android:name="com.example.MyContentProvider" />
+```
+
+**Current Behavior:** These types are NOT automatically discovered as roots. If the .NET type doesn't have the corresponding attribute (`[Activity]`, etc.) and isn't otherwise referenced, **it may be trimmed**, causing a runtime `ClassNotFoundException`.
+
+**Recommended Approach:** We should scan the merged `AndroidManifest.xml` for component references (similar to how we scan layout XML for custom views) and add them to the TypeMap as unconditional entries. The scanning should look for:
+
+- `<activity android:name="...">` → Root the .NET Activity subclass
+- `<service android:name="...">` → Root the .NET Service subclass  
+- `<receiver android:name="...">` → Root the .NET BroadcastReceiver subclass
+- `<provider android:name="...">` → Root the .NET ContentProvider subclass
+- `<application android:backupAgent="...">` → Root the BackupAgent subclass
+
+**Implementation Note:** The `android:name` attribute can be:
+1. A fully-qualified Java class name: `com.example.MainActivity`
+2. A short name with package prefix: `.MainActivity` (expands to `{package}.MainActivity`)
+
+Both forms need to be resolved to find the corresponding .NET type via the ACW map.
+
+**Workaround (Current):** Users must either:
+1. Use the proper C# attribute (`[Activity]`, `[Service]`, etc.) on their type
+2. Manually add a `[DynamicallyAccessedMembers]` attribute to preserve the type
+3. Add explicit trimmer roots via `TrimmerRootDescriptor`
+
 ##### Rule 3: Interfaces → TRIMMABLE
 
 Java interfaces are **trimmable** - only preserved if .NET code uses them:
