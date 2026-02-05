@@ -293,11 +293,52 @@ if ((peer.IsInterface || peer.IsAbstract) && !string.IsNullOrEmpty(peer.InvokerT
 
 **Key Insight**: NativeAOT's aggressive gc-sections optimization removes symbols that appear "unreachable" from a static analysis perspective, even if they're called dynamically via JNI. The workaround is to bypass gc-sections entirely for NativeAOT Android builds.
 
+### Challenge 10: JCW Type Name Casing and Interface Prefixes
+
+**Problem**: Generated JCW Java files had incorrect type names for constructor parameters and return types:
+- Namespace casing: `java.Security.Cert.X509Certificate` instead of `java.security.cert.X509Certificate`
+- Interface prefix: `javax.net.ssl.IX509TrustManager` instead of `javax.net.ssl.X509TrustManager`
+
+**Root Cause**: The `TypeNameToJniObject` function in `GenerateTypeMapAssembly.cs` was computing JNI type names from managed type names using simple string replacement, but:
+1. Managed namespaces use PascalCase (`Java.Security.Cert`) while Java uses lowercase (`java.security.cert`)
+2. .NET interface naming convention prefixes with `I` (`IX509TrustManager`) but Java interfaces don't have this prefix
+
+**Solution**: Multi-pronged fix:
+1. **Cache [Register] attribute values**: When scanning types, populate `_managedToJniNameCache` with the JNI name from each type's `[Register]` attribute
+2. **Use cache first**: In `TypeNameToJniObject`, check the cache before computing - this gives the authoritative JNI name
+3. **Fix namespace casing**: Split type name into parts, lowercase all namespace parts, keep class name as-is
+4. **Strip interface prefix**: For classes starting with `I` followed by uppercase, strip the `I` (e.g., `IX509TrustManager` → `X509TrustManager`)
+
+**Key Insight**: The `[Register]` attribute on types like `IX509TrustManager` contains the correct JNI name (`javax/net/ssl/X509TrustManager`). By caching these during the scanning phase, we can use them for accurate constructor signature generation.
+
+### Challenge 11: FakeSSLSession JCW Generation
+
+**Problem**: `ServerCertificateCustomValidator.TrustManager.FakeSSLSession` (a nested class implementing `ISSLSession`) wasn't being generated as a JCW, causing `ClassNotFoundException` at runtime.
+
+**Root Cause**: The class had `DoNotGenerateAcw=true` because it was historically provided by `mono.android.jar`. For NativeAOT, we don't use that JAR so the class needs to be generated.
+
+**Solution**: Remove `DoNotGenerateAcw=true` from the `[Register]` attribute on `FakeSSLSession`.
+
+### Challenge 12: IList<T> Generic Collection Marshalling
+
+**Problem**: `AndroidMessageHandler.CopyHeaders` crashed with `NotSupportedException: Generic IList<> conversion is not supported with the trimmable type map`.
+
+**Root Cause**: `JavaConvert.GetJniHandleConverter` throws for `IList<T>` types because `MakeGenericType` requires runtime type construction which is incompatible with NativeAOT.
+
+**Solution**: Pre-register converters for common generic collection types in `JavaConvert.JniHandleConverters`:
+```csharp
+{ typeof(IList<string>), (h, t) => JavaList<string>.FromJniHandle(h, t)! },
+{ typeof(IList<int>), (h, t) => JavaList<int>.FromJniHandle(h, t)! },
+// etc.
+```
+
+**Key Insight**: By explicitly registering converters for common instantiations of `IList<T>`, we avoid the need for runtime generic type construction while supporting the most common use cases.
+
 ## Current Status
 
 ### Working NativeAOT App (NativeAotComplexApp)
 
-The NativeAOT Trimmable Type Map implementation is now functional with:
+The NativeAOT Trimmable Type Map implementation is now fully functional with:
 - ✅ App launches successfully
 - ✅ UI renders and is interactive
 - ✅ Type mapping works (Java → .NET lookups)
@@ -306,6 +347,10 @@ The NativeAOT Trimmable Type Map implementation is now functional with:
 - ✅ DNS resolution works
 - ✅ TCP socket connections work
 - ✅ HTTPS/SSL works with certificate validation
+- ✅ **ServerCertificateCustomValidationCallback works!**
+- ✅ Response headers correctly parsed (IList<string> marshalling)
+- ✅ FakeSSLSession hostname verification works
+- ✅ Nested types implementing interfaces (JCW generation)
 
 ### Build Artifacts
 
