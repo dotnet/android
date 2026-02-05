@@ -1411,3 +1411,131 @@ The same pattern is used for:
 4. **Unified pattern**: Same factory handles arrays, lists, collections, dictionaries
 5. **Efficient**: Singleton factories, no allocations per call
 6. **Type-safe**: Generic constraints ensure only valid peer types are used
+
+
+## 17. Native AOT Specifics
+
+This section covers the unique considerations when targeting Native AOT compilation for Android. While the TypeMap architecture is designed to be AOT-compatible from the ground up, Native AOT introduces additional constraints and opportunities beyond standard ILLink-based trimming.
+
+### 17.1 Why Native AOT is Different
+
+Native AOT uses the ILC (IL Compiler) which performs whole-program analysis and compilation to native code. Key differences from MonoVM/CoreCLR with ILLink:
+
+| Aspect | ILLink + MonoVM | Native AOT (ILC) |
+|--------|-----------------|------------------|
+| Trimming | ILLink removes unused IL | ILC does whole-program trimming |
+| JIT | MonoVM JITs remaining IL | No JIT - everything AOT compiled |
+| Reflection | Partially supported | Severely restricted |
+| Dynamic code | `MakeGenericType` works at runtime | Must be statically known |
+| Binary output | Trimmed IL assemblies + runtime | Single native shared library |
+
+**Key Insight:** ILLink is disabled for Native AOT builds because ILC performs its own trimming. The TypeMap assembly is still generated, but ILC's trimmer processes it instead of ILLink.
+
+### 17.2 Forbidden Patterns
+
+The following patterns work with MonoVM but fail with Native AOT:
+
+```csharp
+// ❌ Dynamic generic instantiation
+var listType = typeof(JavaList<>).MakeGenericType(elementType);
+var list = Activator.CreateInstance(listType, handle, transfer);
+
+// ❌ Array.CreateInstance
+var array = Array.CreateInstance(elementType, length);
+
+// ❌ Reflection-based activation
+var instance = Activator.CreateInstance(type, handle, transfer);
+```
+
+**Why these fail:** ILC must know all types at compile time. Dynamic type construction cannot be resolved statically.
+
+**Solution:** The `JavaPeerProxy` and `JavaPeerContainerFactory` patterns replace all dynamic instantiation with statically-typed factory methods that ILC can analyze.
+
+### 17.3 JNI Callback Implementation
+
+With MonoVM, JNI callbacks can use managed-to-native trampolines. Native AOT requires explicit `UnmanagedCallersOnly` methods:
+
+```csharp
+// Native AOT JNI callback pattern
+[UnmanagedCallersOnly]
+static void n_OnCreate(IntPtr jnienv, IntPtr native__this, IntPtr native_savedInstanceState)
+{
+    var __this = Java.Lang.Object.GetObject<MainActivity>(jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+    var savedInstanceState = Java.Lang.Object.GetObject<Bundle>(jnienv, native_savedInstanceState, JniHandleOwnership.DoNotTransfer);
+    __this.OnCreate(savedInstanceState);
+}
+```
+
+**LLVM IR Generation:** For Native AOT, we generate LLVM IR files (`.ll`) that define the JNI entry points. These are compiled alongside the ILC output and linked into the final shared library. This approach:
+- Avoids Java source generation for JCW method stubs
+- Provides direct native-to-managed transitions
+- Enables ILC to see and optimize the call paths
+
+### 17.4 Symbol Export Requirements
+
+Native AOT shared libraries use hidden visibility by default. JNI callbacks must be explicitly exported:
+
+```llvm
+; LLVM IR with explicit visibility
+define void @"Java_crc64..._n_1onCreate__Landroid_os_Bundle_2"(...) #0 {
+  ; ...
+}
+
+attributes #0 = { "visibility"="default" }
+```
+
+**Reasoning:** Android's ART runtime looks up JNI methods by symbol name. Hidden symbols won't be found, causing `UnsatisfiedLinkError` at runtime.
+
+### 17.5 Crypto and TLS Integration
+
+HTTPS/TLS support requires native crypto libraries. For Native AOT:
+
+1. **Crypto shared library** (`libSystem.Security.Cryptography.Native.Android.so`) must be linked with `--whole-archive` to prevent symbol stripping
+2. **JNI initialization** must register crypto callbacks before any TLS operations
+3. **Java classes** (in `libSystem.Security.Cryptography.Native.Android.jar`) must be included in DEX compilation
+4. **ProGuard rules** must preserve crypto Java classes (`net.dot.android.crypto.**`)
+
+**Why whole-archive:** The crypto library exports JNI callbacks that are called from Java. Without `--whole-archive`, the linker sees no references from the main binary and strips them.
+
+### 17.6 TypeMap Runtime Initialization
+
+The TypeMap must be initialized before any Java-to-.NET transitions occur. For Native AOT:
+
+```csharp
+// During JNI_OnLoad or equivalent
+JNIEnvInit.TypeMap = new TypeMapAttributeTypeMap(typeMapAssembly);
+```
+
+**Timing is critical:** If a Java callback arrives before the TypeMap is initialized, the runtime cannot resolve the target .NET type, causing a crash.
+
+### 17.7 Build Pipeline Differences
+
+| Phase | ILLink Build | Native AOT Build |
+|-------|--------------|------------------|
+| TypeMap generation | Before ILLink | Before ILC |
+| Trimming | ILLink trims IL | ILC trims during compilation |
+| JCW stubs | Java source files | LLVM IR files |
+| Output | Trimmed DLLs + MonoVM | Single `.so` + minimal runtime |
+| JNI registration | `RegisterNatives` at startup | Static exports in `.so` |
+
+### 17.8 Debugging Native AOT Issues
+
+Common failure patterns and diagnosis:
+
+| Symptom | Likely Cause | Solution |
+|---------|--------------|----------|
+| `ClassNotFoundException` | JCW not generated for nested/inner type | Check type naming, ensure outer class is processed |
+| `UnsatisfiedLinkError` | Symbol not exported | Add explicit export, check visibility |
+| SIGSEGV in JNI callback | TypeMap not initialized or type not found | Verify initialization order, check type registration |
+| `NotSupportedException` | Invoker type trimmed | Ensure interface is preserved when abstract types are used |
+| TLS handshake failure | Crypto symbols stripped | Use `--whole-archive` for crypto library |
+
+### 17.9 Future Considerations
+
+**External Type Mapping API (.NET 10+):** The `System.Runtime.InteropServices.TypeMapping` API will provide first-class support for external type maps. This will simplify Native AOT integration by:
+- Eliminating the need for assembly-level attributes scanned via reflection
+- Providing ILC intrinsics for type lookup
+- Enabling better trimming through compile-time analysis
+
+Until this API is available, the `TypeMapAttribute<T>` pattern with self-applying proxy attributes remains the most AOT-compatible approach.
+
