@@ -2155,17 +2155,21 @@ namespace App1
 		}
 
 		[Test]
-		public void AndroidEnvironmentInternalIsPublic ([Values] AndroidRuntime runtime)
+		public void MarshalMethodsUnhandledExceptionRuntimeFixUpWorks ([Values] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
 
-			// NativeAOT does not use marshal methods in the same way
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT does not use marshal methods");
-				return;
+			switch (runtime) {
+				case AndroidRuntime.NativeAOT:
+					Assert.Ignore ("NativeAOT does not support marshal methods");
+					break;
+
+				case AndroidRuntime.CoreCLR:
+					Assert.Ignore ("CoreCLR currently doesn't work due to a bug in Mono.Cecil");
+					break;
 			}
 
 			var proj = new XamarinAndroidApplicationProject {
@@ -2173,7 +2177,6 @@ namespace App1
 				EnableMarshalMethods = true,
 			};
 			proj.SetRuntime (runtime);
-
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 
@@ -2185,28 +2188,36 @@ namespace App1
 				"linked",
 				"Mono.Android.Runtime.dll"
 			);
+			FileAssert.Exists (monoAndroidRuntimePath);
 
-			if (!File.Exists (monoAndroidRuntimePath)) {
-				Assert.Ignore ($"Mono.Android.Runtime.dll not found at expected path: {monoAndroidRuntimePath}");
-				return;
+			using var asm = AssemblyDefinition.ReadAssembly (monoAndroidRuntimePath);
+			const string TypeName = "Android.Runtime.AndroidEnvironmentInternal";
+			TypeDefinition? type = null;
+
+			foreach (ModuleDefinition module in asm.Modules) {
+				foreach (TypeDefinition t in module.Types) {
+					if (t.FullName.Equals (TypeName, StringComparison.Ordinal)) {
+						type = t;
+						break;
+					}
+				}
 			}
 
-			using var assembly = AssemblyDefinition.ReadAssembly (monoAndroidRuntimePath);
-			const string expectedTypeName = "Android.Runtime.AndroidEnvironmentInternal";
-			const string expectedMethodName = "UnhandledException";
+			Assert.NotNull (type, $"Failed to find the '{TypeName}' type in '{monoAndroidRuntimePath}'");
+			Assert.IsTrue (type.IsPublic, $"Type '{TypeName}' should be public");
 
-			var foundType = assembly.Modules
-				.SelectMany (m => m.Types)
-				.FirstOrDefault (t => string.Equals (t.FullName, expectedTypeName, StringComparison.Ordinal));
+			// Additionally verify that the UnhandledException method is also public
+			const string MethodName = "UnhandledException";
+			MethodDefinition? method = null;
+			foreach (MethodDefinition m in type.Methods) {
+				if (m.Name.Equals (MethodName, StringComparison.Ordinal)) {
+					method = m;
+					break;
+				}
+			}
 
-			Assert.IsNotNull (foundType, $"Type '{expectedTypeName}' should exist in '{monoAndroidRuntimePath}'");
-			Assert.IsTrue (foundType.IsPublic, $"Type '{expectedTypeName}' should be public");
-
-			var unhandledExceptionMethod = foundType.Methods
-				.FirstOrDefault (m => string.Equals (m.Name, expectedMethodName, StringComparison.Ordinal));
-
-			Assert.IsNotNull (unhandledExceptionMethod, $"Method '{expectedMethodName}' should exist in type '{expectedTypeName}'");
-			Assert.IsTrue (unhandledExceptionMethod.IsPublic, $"Method '{expectedMethodName}' should be public");
+			Assert.NotNull (method, $"Failed to find the '{MethodName}' method in type '{TypeName}'");
+			Assert.IsTrue (method.IsPublic, $"Method '{MethodName}' should be public");
 		}
 	}
 }
