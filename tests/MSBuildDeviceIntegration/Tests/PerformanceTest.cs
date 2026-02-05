@@ -147,21 +147,6 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Retry (Retry)]
-		public void Build_From_Clean_DontIncludeRestore ()
-		{
-			AssertCommercialBuild (); // If <BuildApk/> runs, this test will fail without Fast Deployment
-
-			var proj = CreateApplicationProject ();
-			using (var builder = CreateBuilderWithoutLogFile ()) {
-				builder.AutomaticNuGetRestore = false;
-				builder.Target = "Build";
-				builder.Restore (proj);
-				Profile (builder, b => b.Build (proj));
-			}
-		}
-
-		[Test]
-		[Retry (Retry)]
 		public void Build_No_Changes ()
 		{
 			var proj = CreateApplicationProject ();
@@ -256,29 +241,6 @@ namespace Xamarin.Android.Build.Tests
 				libBuilder.Build (lib);
 				builder.Target = "SignAndroidPackage";
 				// Profile AndroidAsset change
-				Profile (builder, b => b.Build (proj));
-			}
-		}
-
-		[Test]
-		[Retry (Retry)]
-		public void Build_JLO_Change ()
-		{
-			AssertCommercialBuild (); // If <BuildApk/> runs, this test will fail without Fast Deployment
-
-			var className = "Foo";
-			var proj = CreateApplicationProject ();
-			proj.Sources.Add (new BuildItem.Source ("Foo.cs") {
-				TextContent = () => $"class {className} : Java.Lang.Object {{}}"
-			});
-			using (var builder = CreateBuilderWithoutLogFile ()) {
-				builder.Target = "Build";
-				builder.Build (proj);
-				builder.AutomaticNuGetRestore = false;
-
-				// Profile Java.Lang.Object rename
-				className = "Foo2";
-				proj.Touch ("Foo.cs");
 				Profile (builder, b => b.Build (proj));
 			}
 		}

@@ -50,6 +50,9 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public bool TargetsCLR { get; set; }
 
+		[Required]
+		public string AndroidRuntime { get; set; } = "";
+
 		public bool EnableMarshalMethods { get; set; }
 		public bool EnableManagedMarshalMethodsLookup { get; set; }
 		public string? RuntimeConfigBinFilePath { get; set; }
@@ -76,8 +79,19 @@ namespace Xamarin.Android.Tasks
 
 		static internal AndroidTargetArch GetAndroidTargetArchForAbi (string abi) => MonoAndroidHelper.AbiToTargetArch (abi);
 
+		AndroidRuntime androidRuntime;
+
+		internal static void AddDefaultEnvironmentVariables (EnvironmentBuilder envBuilder, string? httpClientHandlerType, bool enableSGenConcurrent)
+		{
+			envBuilder.AddDefaultMonoDebug ();
+			envBuilder.AddHttpClientHandlerType (httpClientHandlerType);
+			envBuilder.AddMonoGcParams (enableSGenConcurrent);
+		}
+
 		public override bool RunTask ()
 		{
+			androidRuntime = MonoAndroidHelper.ParseAndroidRuntime (AndroidRuntime);
+
 			bool usesMonoAOT = false;
 
 			if (!Enum.TryParse (PackageNamingPolicy, out PackageNamingPolicy pnp)) {
@@ -101,9 +115,15 @@ namespace Xamarin.Android.Tasks
 			if (_Debug) {
 				envBuilder.AddDefaultDebugBuildLogLevel ();
 			}
-			envBuilder.AddDefaultMonoDebug ();
-			envBuilder.AddHttpClientHandlerType (HttpClientHandlerType);
-			envBuilder.AddMonoGcParams (EnableSGenConcurrent);
+
+			if (androidRuntime != Xamarin.Android.Tasks.AndroidRuntime.NativeAOT) {
+				AddDefaultEnvironmentVariables (envBuilder, HttpClientHandlerType, EnableSGenConcurrent);
+			} else {
+				// NativeAOT sets all the environment variables from Java, we don't want to repeat that
+				// process in the native code. This is just a precaution, because NativeAOT builds should
+				// not even use this task.
+				envBuilder.EnvironmentVariables.Clear ();
+			}
 
 			global::Android.Runtime.BoundExceptionType boundExceptionType;
 			if (String.IsNullOrEmpty (BoundExceptionType) || MonoAndroidHelper.StringEquals (BoundExceptionType, "System", StringComparison.OrdinalIgnoreCase)) {

@@ -123,7 +123,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <!-- Include libc++ -->
       <_NdkLibs Include="$(_NdkSysrootDir)libc++_static.a" />
       <_NdkLibs Include="$(_NdkSysrootDir)libc++abi.a" />
-      
+
       <LinkerArg Include="&quot;%(_NdkLibs.Identity)&quot;" />
 
       <!-- This library conflicts with static libc++ -->
@@ -181,7 +181,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
         OutputSources="@(_PrivateJniInitFuncsAssemblySource)" />
 
     <GenerateNativeAotEnvironmentAssemblerSources
-        Debug="$(AndroidIncludeDebugSymbols)"
         Environments="@(AndroidEnvironment);@(LibraryEnvironments)"
         HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
         OutputSources="@(_PrivateEnvironmentAssemblySource)"

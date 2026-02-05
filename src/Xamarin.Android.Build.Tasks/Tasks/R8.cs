@@ -51,9 +51,17 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		protected override CommandLineBuilder GetCommandLineBuilder ()
+		/// <summary>
+		/// Override CreateResponseFile to add R8-specific arguments to the response file.
+		/// This ensures all arguments are passed via response file to avoid command line length limits.
+		/// </summary>
+		protected override string CreateResponseFile ()
 		{
-			var cmd = base.GetCommandLineBuilder ();
+			// First, get the base response file path and write base D8 arguments
+			var responseFile = base.CreateResponseFile ();
+
+			// Now append R8-specific arguments to the response file
+			using var response = new StreamWriter (responseFile, append: true, encoding: Files.UTF8withoutBOM);
 
 			if (EnableMultiDex) {
 				if (MinSdkVersion >= 21) {
@@ -77,9 +85,12 @@ namespace Xamarin.Android.Tasks
 					}
 					File.WriteAllText (temp, string.Concat (content));
 
-					cmd.AppendSwitchIfNotNull ("--main-dex-list ", temp);
-					cmd.AppendSwitchIfNotNull ("--main-dex-rules ", Path.Combine (AndroidSdkBuildToolsPath, "mainDexClasses.rules"));
-					cmd.AppendSwitchIfNotNull ("--main-dex-list-output ", MultiDexMainDexListFile);
+					WriteArg (response, "--main-dex-list");
+					WriteArg (response, temp);
+					WriteArg (response, "--main-dex-rules");
+					WriteArg (response, Path.Combine (AndroidSdkBuildToolsPath, "mainDexClasses.rules"));
+					WriteArg (response, "--main-dex-list-output");
+					WriteArg (response, MultiDexMainDexListFile);
 				}
 			}
 
@@ -112,8 +123,8 @@ namespace Xamarin.Android.Tasks
 				}
 			} else {
 				//NOTE: we may be calling r8 *only* for multi-dex, and all shrinking is disabled
-				cmd.AppendSwitch ("--no-tree-shaking");
-				cmd.AppendSwitch ("--no-minification");
+				WriteArg (response, "--no-tree-shaking");
+				WriteArg (response, "--no-minification");
 				// Rules to turn off optimizations
 				var temp = Path.GetTempFileName ();
 				var lines = new List<string> {
@@ -131,18 +142,21 @@ namespace Xamarin.Android.Tasks
 				}
 				File.WriteAllLines (temp, lines);
 				tempFiles.Add (temp);
-				cmd.AppendSwitchIfNotNull ("--pg-conf ", temp);
+				WriteArg (response, "--pg-conf");
+				WriteArg (response, temp);
 			}
 			if (ProguardConfigurationFiles != null) {
 				foreach (var file in ProguardConfigurationFiles) {
-					if (File.Exists (file))
-						cmd.AppendSwitchIfNotNull ("--pg-conf ", file);
-					else
+					if (File.Exists (file)) {
+						WriteArg (response, "--pg-conf");
+						WriteArg (response, file);
+					} else {
 						Log.LogCodedWarning ("XA4304", file, 0, Properties.Resources.XA4304, file);
+					}
 				}
 			}
 
-			return cmd;
+			return responseFile;
 		}
 
 		// Note: We do not want to call the base.LogEventsFromTextOutput as it will incorrectly identify

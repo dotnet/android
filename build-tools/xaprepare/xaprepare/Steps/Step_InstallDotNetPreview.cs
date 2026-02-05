@@ -21,7 +21,13 @@ namespace Xamarin.Android.Prepare
 			var dotnetPath = Configurables.Paths.DotNetPreviewPath;
 			dotnetPath = dotnetPath.TrimEnd (new char [] { Path.DirectorySeparatorChar });
 
-			if (!await InstallDotNetAsync (context, dotnetPath, BuildToolVersion, useCachedInstallScript: true) &&
+			// Check if a local SDK archive was specified
+			if (!String.IsNullOrEmpty (context.LocalDotNetSdkArchive)) {
+				if (!await InstallDotNetFromLocalArchiveAsync (context, dotnetPath, context.LocalDotNetSdkArchive!)) {
+					Log.ErrorLine ($"Installation of dotnet SDK from local archive '{context.LocalDotNetSdkArchive}' failed.");
+					return false;
+				}
+			} else if (!await InstallDotNetAsync (context, dotnetPath, BuildToolVersion, useCachedInstallScript: true) &&
 					!await InstallDotNetAsync (context, dotnetPath, BuildToolVersion, useCachedInstallScript: false)) {
 				Log.ErrorLine ($"Installation of dotnet SDK '{BuildToolVersion}' failed.");
 				return false;
@@ -177,6 +183,21 @@ namespace Xamarin.Android.Prepare
 			}
 
 			return args.ToArray ();
+		}
+
+		async Task<bool> InstallDotNetFromLocalArchiveAsync (Context context, string dotnetPath, string archivePath)
+		{
+			if (!File.Exists (archivePath)) {
+				Log.ErrorLine ($"Local .NET SDK archive not found: '{archivePath}'");
+				return false;
+			}
+
+			Log.StatusLine ($"Installing .NET SDK from local archive: {archivePath}");
+
+			// Always delete the bin/$(Configuration)/dotnet/ directory
+			Utilities.DeleteDirectory (dotnetPath);
+
+			return await Utilities.Unpack (archivePath, dotnetPath);
 		}
 
 		async Task<bool> InstallDotNetAsync (Context context, string dotnetPath, string version, bool useCachedInstallScript, bool runtimeOnly = false)
