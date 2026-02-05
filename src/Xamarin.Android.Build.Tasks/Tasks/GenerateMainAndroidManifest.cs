@@ -79,7 +79,7 @@ public class GenerateMainAndroidManifest : AndroidTask
 		Log.LogDebugMessage ($"Disposing all {nameof (NativeCodeGenState)}.{nameof (NativeCodeGenState.Resolver)}");
 
 		foreach (var state in nativeCodeGenStates.Values) {
-			state.Resolver.Dispose ();
+			state.Resolver!.Dispose (); // ignoring null check on purpose
 		}
 
 		if (Log.HasLoggedErrors) {

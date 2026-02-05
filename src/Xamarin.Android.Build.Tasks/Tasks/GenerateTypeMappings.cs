@@ -141,7 +141,7 @@ public class GenerateTypeMappings : AndroidTask
 
 		if (TypemapImplementation != "llvm-ir") {
 			Log.LogDebugMessage ($"TypemapImplementation='{TypemapImplementation}' will write an empty native typemap.");
-			state = new NativeCodeGenState (state.TargetArch, new TypeDefinitionCache (), state.Resolver, [], [], state.Classifier);
+			state = new NativeCodeGenState (state.TargetArch, new TypeDefinitionCache (), state.Resolver!, [], [], state.Classifier); // ignoring null check on purpose
 		}
 
 		var tmg = new TypeMapGenerator (Log, new NativeCodeGenStateAdapter (state), androidRuntime) { RunCheckedBuild = RunCheckedBuild && !useMarshalMethods };

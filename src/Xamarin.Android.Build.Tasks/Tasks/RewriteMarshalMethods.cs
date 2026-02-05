@@ -157,7 +157,7 @@ public class RewriteMarshalMethods : AndroidTask
 		}
 
 		Log.LogDebugMessage ("NativeCodeGenState: using resolver #03");
-		var rewriter = new MarshalMethodsAssemblyRewriter (Log, state.TargetArch, state.Classifier, state.Resolver, state.ManagedMarshalMethodsLookupInfo);
+		var rewriter = new MarshalMethodsAssemblyRewriter (Log, state.TargetArch, state.Classifier, state.Resolver!, state.ManagedMarshalMethodsLookupInfo); // ignoring null check on purpose
 		rewriter.Rewrite (brokenExceptionTransitionsEnabled);
 	}
 }
