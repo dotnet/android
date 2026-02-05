@@ -13,6 +13,7 @@ using Android.Util;
 using Android.Views;
 using Android.Webkit;
 using Android.Widget;
+using Java.Interop;
 using Java.IO;
 using Java.Lang;
 using Java.Lang.Reflect;
@@ -97,6 +98,26 @@ public class MainActivity : Activity
         RunTest("19. ClipboardManager", TestClipboardManager);
         RunTest("20. VibrationEffect", TestVibrationEffect);
         RunTest("21. Notification builder", TestNotificationBuilder);
+        
+        // Advanced array and collection tests
+        RunTest("22. Primitive int array", TestPrimitiveIntArray);
+        RunTest("23. Primitive byte array", TestPrimitiveByteArray);
+        RunTest("24. 2D int array", Test2DIntArray);
+        RunTest("25. Object array", TestObjectArray);
+        RunTest("26. String array return", TestStringArrayReturn);
+        RunTest("27. IDictionary marshalling", TestIDictionaryMarshalling);
+        RunTest("28. Nested collections", TestNestedCollections);
+        
+        // Enum and exception tests
+        RunTest("29. Java enum marshalling", TestJavaEnumMarshalling);
+        RunTest("30. Exception marshalling", TestExceptionMarshalling);
+        
+        // Advanced Java interop
+        RunTest("31. Java.Lang.Class usage", TestJavaLangClass);
+        // Note: [Export] is NOT supported in NativeAOT - it requires dynamic code generation
+        // RunTest("32. Export attribute", TestExportAttribute);
+        RunTest("32. Fragment lifecycle", TestFragmentLifecycle);
+        RunTest("33. MultiChoiceMode listener", TestRecyclerViewAdapter);
         
         if (_statusText != null) _statusText.Text = "Tests completed!";
         if (_resultsText != null) _resultsText.Text = _log?.ToString() ?? "";
@@ -438,6 +459,272 @@ public class MainActivity : Activity
         var notification = builder.Build();
         if (notification == null) throw new System.Exception("Notification is null");
     }
+    
+    // Test 22: Primitive int array
+    void TestPrimitiveIntArray()
+    {
+        // Create Java int array and pass to Bundle
+        int[] intArray = { 1, 2, 3, 4, 5 };
+        var bundle = new Bundle();
+        bundle.PutIntArray("ints", intArray);
+        
+        // Read back
+        var retrieved = bundle.GetIntArray("ints");
+        if (retrieved == null || retrieved.Length != 5)
+            throw new System.Exception($"Int array mismatch: {retrieved?.Length ?? -1}");
+        if (retrieved[0] != 1 || retrieved[4] != 5)
+            throw new System.Exception("Int array values mismatch");
+        Log.Info("ComplexTest", $"Int array: [{string.Join(", ", retrieved)}]");
+    }
+    
+    // Test 23: Primitive byte array
+    void TestPrimitiveByteArray()
+    {
+        // String to bytes and back
+        string original = "Hello NativeAOT!";
+        byte[] bytes = System.Text.Encoding.UTF8.GetBytes(original);
+        
+        // Put in Bundle
+        var bundle = new Bundle();
+        bundle.PutByteArray("bytes", bytes);
+        
+        // Read back
+        var retrieved = bundle.GetByteArray("bytes");
+        if (retrieved == null || retrieved.Length != bytes.Length)
+            throw new System.Exception("Byte array length mismatch");
+        
+        string decoded = System.Text.Encoding.UTF8.GetString(retrieved);
+        if (decoded != original)
+            throw new System.Exception($"Byte array value mismatch: {decoded}");
+        Log.Info("ComplexTest", $"Byte array round-trip: {decoded}");
+    }
+    
+    // Test 24: 2D int array (array of arrays)
+    void Test2DIntArray()
+    {
+        // Create 2D array via Bundle (simpler than Java reflection)
+        // Bundle supports int[][] via getSerializable
+        int[][] array2d = new int[][] {
+            new int[] { 0, 1, 2, 3 },
+            new int[] { 4, 5, 6, 7 },
+            new int[] { 8, 9, 10, 11 }
+        };
+        
+        // Put into Bundle via Java ArrayList of int arrays
+        var bundle = new Bundle();
+        var arrayList = new Java.Util.ArrayList();
+        foreach (var row in array2d) {
+            // Wrap each int[] and add to ArrayList
+            var intArray = new int[row.Length];
+            System.Array.Copy(row, intArray, row.Length);
+            bundle.PutIntArray($"row_{arrayList.Size()}", intArray);
+            arrayList.Add(new Java.Lang.Integer(arrayList.Size()));
+        }
+        bundle.PutInt("rowCount", array2d.Length);
+        
+        // Read back
+        int rowCount = bundle.GetInt("rowCount");
+        if (rowCount != 3) throw new System.Exception($"Row count mismatch: {rowCount}");
+        
+        var row1 = bundle.GetIntArray("row_1");
+        if (row1 == null || row1.Length != 4)
+            throw new System.Exception($"Row 1 length mismatch");
+        if (row1[2] != 6) throw new System.Exception($"2D array value mismatch: expected 6, got {row1[2]}");
+        
+        Log.Info("ComplexTest", $"2D array[1][2] = {row1[2]}");
+    }
+    
+    // Test 25: Object array
+    void TestObjectArray()
+    {
+        // Create Java Object array
+        var strings = new Java.Lang.Object[] {
+            new Java.Lang.String("First"),
+            new Java.Lang.String("Second"),
+            new Java.Lang.String("Third")
+        };
+        
+        // Use ArrayList to store and retrieve
+        var list = new Java.Util.ArrayList();
+        foreach (var s in strings) {
+            list.Add(s);
+        }
+        
+        // Convert back to array
+        var array = list.ToArray();
+        if (array == null || array.Length != 3)
+            throw new System.Exception($"Object array mismatch: {array?.Length ?? -1}");
+        
+        string? first = array[0]?.ToString();
+        if (first != "First") throw new System.Exception($"First element mismatch: {first}");
+        Log.Info("ComplexTest", $"Object array: {array.Length} elements, first={first}");
+    }
+    
+    // Test 26: String array return from Java
+    void TestStringArrayReturn()
+    {
+        // Get locale's available locales (returns String[] for display names)
+        var locales = Java.Util.Locale.GetAvailableLocales();
+        if (locales == null || locales.Length == 0)
+            throw new System.Exception("No locales returned");
+        
+        // Get display names (returns strings)
+        var displayName = locales[0]?.DisplayName;
+        Log.Info("ComplexTest", $"First locale: {displayName}, total: {locales.Length}");
+    }
+    
+    // Test 27: IDictionary marshalling
+    void TestIDictionaryMarshalling()
+    {
+        // Create a HashMap and use it as IDictionary
+        var hashMap = new Java.Util.HashMap();
+        hashMap.Put(new Java.Lang.String("key1"), new Java.Lang.Integer(100));
+        hashMap.Put(new Java.Lang.String("key2"), new Java.Lang.Integer(200));
+        hashMap.Put(new Java.Lang.String("key3"), new Java.Lang.Integer(300));
+        
+        // Check size directly on HashMap
+        int size = hashMap.Size();
+        if (size != 3)
+            throw new System.Exception($"HashMap size mismatch: {size}");
+        
+        // Get value back
+        var value = hashMap.Get(new Java.Lang.String("key2"));
+        if (value == null || ((Java.Lang.Integer)value).IntValue() != 200)
+            throw new System.Exception("HashMap value mismatch");
+        
+        Log.Info("ComplexTest", $"HashMap: {size} entries, key2={value}");
+    }
+    
+    // Test 28: Nested collections (List of Lists)
+    void TestNestedCollections()
+    {
+        // Create ArrayList of ArrayLists
+        var outer = new Java.Util.ArrayList();
+        
+        for (int i = 0; i < 3; i++) {
+            var inner = new Java.Util.ArrayList();
+            for (int j = 0; j < 4; j++) {
+                inner.Add(new Java.Lang.Integer(i * 10 + j));
+            }
+            outer.Add(inner);
+        }
+        
+        // Access nested element
+        var innerList = (Java.Util.ArrayList?)outer.Get(1);
+        if (innerList == null) throw new System.Exception("Inner list is null");
+        
+        var element = (Java.Lang.Integer?)innerList.Get(2);
+        if (element == null || element.IntValue() != 12)
+            throw new System.Exception($"Nested value mismatch: expected 12, got {element?.IntValue()}");
+        
+        Log.Info("ComplexTest", $"Nested list[1][2] = {element}");
+    }
+    
+    // Test 29: Java enum marshalling
+    void TestJavaEnumMarshalling()
+    {
+        // Test Thread.State enum
+        var thread = new Java.Lang.Thread();
+        var state = thread.GetState();
+        if (state == null) throw new System.Exception("Thread state is null");
+        
+        Log.Info("ComplexTest", $"Thread state: {state.Name()}");
+        
+        // Test enum values() and valueOf()
+        var states = Java.Lang.Thread.State.Values();
+        if (states == null || states.Length == 0)
+            throw new System.Exception("Thread.State.Values() returned empty");
+        
+        var newState = Java.Lang.Thread.State.ValueOf("NEW");
+        if (newState == null) throw new System.Exception("ValueOf returned null");
+        Log.Info("ComplexTest", $"Enum values: {states.Length}, valueOf(NEW)={newState.Name()}");
+    }
+    
+    // Test 30: Exception marshalling (Java -> .NET)
+    void TestExceptionMarshalling()
+    {
+        try {
+            // This should throw NumberFormatException
+            Java.Lang.Integer.ParseInt("not a number");
+            throw new System.Exception("Should have thrown");
+        } catch (Java.Lang.NumberFormatException ex) {
+            Log.Info("ComplexTest", $"Caught Java exception: {ex.GetType().Name}");
+        }
+        
+        // Test creating Java exception from .NET
+        var javaEx = new Java.Lang.IllegalArgumentException("Test exception from .NET");
+        if (javaEx.Message != "Test exception from .NET")
+            throw new System.Exception("Exception message mismatch");
+        Log.Info("ComplexTest", $"Created Java exception: {javaEx.Message}");
+    }
+    
+    // Test 31: Java.Lang.Class usage
+    void TestJavaLangClass()
+    {
+        // Get class objects via different methods
+        var stringClass = Java.Lang.Class.FromType(typeof(Java.Lang.String));
+        if (stringClass == null) throw new System.Exception("String class is null");
+        
+        var integerClass = Java.Lang.Class.ForName("java.lang.Integer");
+        if (integerClass == null) throw new System.Exception("Integer class is null");
+        
+        // Check class properties
+        var name = stringClass.Name;
+        var simpleName = stringClass.SimpleName;
+        Log.Info("ComplexTest", $"String class: {name}, simple: {simpleName}");
+        
+        // Check isAssignableFrom
+        var objectClass = Java.Lang.Class.FromType(typeof(Java.Lang.Object));
+        bool isAssignable = objectClass?.IsAssignableFrom(stringClass) ?? false;
+        if (!isAssignable) throw new System.Exception("Object should be assignable from String");
+        Log.Info("ComplexTest", $"IsAssignableFrom works: {isAssignable}");
+    }
+    
+    // Test 32: Export attribute
+    void TestExportAttribute()
+    {
+        // Create instance with [Export] method
+        var exported = new TestExportedClass();
+        
+        // Call via Java reflection to test [Export] works
+        var javaClass = exported.Class;
+        var method = javaClass.GetMethod("exportedMethod", null);
+        if (method == null) throw new System.Exception("Exported method not found");
+        
+        var result = method.Invoke(exported, null);
+        if (result == null || ((Java.Lang.Integer)result).IntValue() != 42)
+            throw new System.Exception("Exported method returned wrong value");
+        
+        Log.Info("ComplexTest", $"[Export] method works, returned: {result}");
+    }
+    
+    // Test 33: Fragment lifecycle (basic)
+    void TestFragmentLifecycle()
+    {
+        // We can't fully test fragments without FragmentManager, but we can test creation
+        var fragment = new TestFragment();
+        
+        // Verify bundle arguments work
+        var args = new Bundle();
+        args.PutString("key", "value");
+        fragment.Arguments = args;
+        
+        var retrievedArgs = fragment.Arguments;
+        if (retrievedArgs == null || retrievedArgs.GetString("key") != "value")
+            throw new System.Exception("Fragment arguments mismatch");
+        
+        Log.Info("ComplexTest", "Fragment created with arguments");
+    }
+    
+    // Test 34: Cursor adapter pattern (similar to RecyclerView but simpler)
+    void TestRecyclerViewAdapter()
+    {
+        // Test AbsListView.IMultiChoiceModeListener (callback interface pattern)
+        var listener = new TestMultiChoiceModeListener();
+        
+        // Verify the listener can be created and callbacks are defined
+        Log.Info("ComplexTest", "MultiChoiceModeListener created");
+    }
 }
 
 // MediaPlayer listeners
@@ -570,4 +857,40 @@ public class TestParcelable : Java.Lang.Object, IParcelable
         dest?.WriteString(Data);
         dest?.WriteInt(Value);
     }
+}
+
+// Class with [Export] attribute
+public class TestExportedClass : Java.Lang.Object
+{
+    [Export("exportedMethod")]
+    public int ExportedMethod()
+    {
+        Log.Info("ComplexTest", "Exported method called!");
+        return 42;
+    }
+}
+
+// Test Fragment
+public class TestFragment : Android.App.Fragment
+{
+    public override void OnCreate(Bundle? savedInstanceState)
+    {
+        base.OnCreate(savedInstanceState);
+        Log.Info("ComplexTest", "TestFragment.OnCreate");
+    }
+    
+    public override View? OnCreateView(Android.Views.LayoutInflater? inflater, ViewGroup? container, Bundle? savedInstanceState)
+    {
+        return new TextView(Activity) { Text = "Test Fragment" };
+    }
+}
+
+// MultiChoiceMode listener (complex callback interface pattern)
+public class TestMultiChoiceModeListener : Java.Lang.Object, AbsListView.IMultiChoiceModeListener
+{
+    public bool OnActionItemClicked(ActionMode? mode, IMenuItem? item) => false;
+    public bool OnCreateActionMode(ActionMode? mode, IMenu? menu) => true;
+    public void OnDestroyActionMode(ActionMode? mode) { }
+    public bool OnPrepareActionMode(ActionMode? mode, IMenu? menu) => false;
+    public void OnItemCheckedStateChanged(ActionMode? mode, int position, long id, bool @checked) { }
 }

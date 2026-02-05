@@ -67,21 +67,6 @@ namespace Android.Runtime
 				throw new NotSupportedException ($"Cannot create peer for open generic type '{type.FullName}'.");
 			}
 
-			// Special case: Exception types that don't have a Java type signature.
-			// For exception types, we use a hardcoded JNI name to avoid triggering
-			// recursive exception handling during early initialization.
-			// The issue is that GetTypeSignature can trigger TryFindClass which throws
-			// JavaException, which needs JniPeerMembers for java/lang/Throwable, etc.
-			string? hardcodedJniName = null;
-			if (type == typeof (System.Exception) || 
-			    type == typeof (Java.Lang.Throwable) ||
-			    typeof (Java.Lang.Throwable).IsAssignableFrom (type) ||
-			    (type.IsSubclassOf (typeof (System.Exception)) && !typeof (Java.Lang.Throwable).IsAssignableFrom (type))) {
-				Logger.Log (LogLevel.Info, "monodroid-typemap", $"CreatePeer: Using hardcoded java/lang/Throwable for {type.FullName}");
-				hardcodedJniName = "java/lang/Throwable";
-				type = typeof (Java.Lang.Throwable);
-			}
-
 			Logger.Log (LogLevel.Info, "monodroid-typemap", $"CreatePeer: Getting type signature for {type.FullName}");
 
 			if (resolveInvokerTypes && (type.IsInterface || type.IsAbstract)) {
@@ -95,27 +80,25 @@ namespace Android.Runtime
 				Logger.Log (LogLevel.Info, "monodroid-typemap", $"CreatePeer: Using invoker type {type.FullName}");
 			}
 
-			string? simpleReference = hardcodedJniName;
-			if (simpleReference == null) {
-				JniTypeSignature typeSig = default;
-				try {
-					typeSig = JNIEnvInit.androidRuntime?.TypeManager.GetTypeSignature (type) ?? default;
-				} catch (Exception ex) {
-					// During early initialization, type resolution may fail due to recursive exception handling.
-					Logger.Log (LogLevel.Warn, "monodroid-typemap", $"CreatePeer: GetTypeSignature for {type.FullName} threw: {ex.GetType ().Name}: {ex.Message}");
-					JNIEnv.DeleteRef (handle, transfer);
-					return null;
-				}
-				Logger.Log (LogLevel.Info, "monodroid-typemap", $"CreatePeer: TypeSignature for {type.FullName} = {typeSig.Name ?? "null"}");
-				if (!typeSig.IsValid || typeSig.SimpleReference == null) {
-					// During early initialization, type resolution may fail. Don't throw an exception
-					// as that can cause recursive exception handling issues.
-					Logger.Log (LogLevel.Warn, "monodroid-typemap", $"CreatePeer: Cannot resolve type signature for {type.FullName}, returning null");
-					JNIEnv.DeleteRef (handle, transfer);
-					return null;
-				}
-				simpleReference = typeSig.SimpleReference;
+			string? simpleReference = null;
+			JniTypeSignature typeSig = default;
+			try {
+				typeSig = JNIEnvInit.androidRuntime?.TypeManager.GetTypeSignature (type) ?? default;
+			} catch (Exception ex) {
+				// During early initialization, type resolution may fail due to recursive exception handling.
+				Logger.Log (LogLevel.Warn, "monodroid-typemap", $"CreatePeer: GetTypeSignature for {type.FullName} threw: {ex.GetType ().Name}: {ex.Message}");
+				JNIEnv.DeleteRef (handle, transfer);
+				return null;
 			}
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"CreatePeer: TypeSignature for {type.FullName} = {typeSig.Name ?? "null"}");
+			if (!typeSig.IsValid || typeSig.SimpleReference == null) {
+				// During early initialization, type resolution may fail. Don't throw an exception
+				// as that can cause recursive exception handling issues.
+				Logger.Log (LogLevel.Warn, "monodroid-typemap", $"CreatePeer: Cannot resolve type signature for {type.FullName}, returning null");
+				JNIEnv.DeleteRef (handle, transfer);
+				return null;
+			}
+			simpleReference = typeSig.SimpleReference;
 
 			if (!IsJavaTypeAssignableFrom (handle, simpleReference)) {
 				return null;
