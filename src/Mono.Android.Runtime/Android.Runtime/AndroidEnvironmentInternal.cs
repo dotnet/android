@@ -1,12 +1,18 @@
 using System;
+using System.ComponentModel;
+using System.Diagnostics;
 
 namespace Android.Runtime
 {
-	internal static class AndroidEnvironmentInternal
+	[DebuggerBrowsable (DebuggerBrowsableState.Never)]
+	[EditorBrowsable (EditorBrowsableState.Never)]
+	public static class AndroidEnvironmentInternal
 	{
 		internal static Action<Exception>? UnhandledExceptionHandler;
 
-		internal static void UnhandledException (Exception e)
+		[DebuggerBrowsable (DebuggerBrowsableState.Never)]
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		public static void UnhandledException (Exception e)
 		{
 			if (UnhandledExceptionHandler == null) {
 				return;

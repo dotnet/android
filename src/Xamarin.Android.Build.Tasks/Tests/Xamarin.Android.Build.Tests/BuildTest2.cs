@@ -2153,5 +2153,60 @@ namespace App1
 			const string className = "Lcrc64467b05f37239e7a6/StreamMediaDataSource;";
 			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 		}
+
+		[Test]
+		public void AndroidEnvironmentInternalIsPublic ([Values] AndroidRuntime runtime)
+		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			// NativeAOT does not use marshal methods in the same way
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT does not use marshal methods");
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				EnableMarshalMethods = true,
+			};
+			proj.SetRuntime (runtime);
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+
+			string monoAndroidRuntimePath = Path.Combine (
+				Root,
+				builder.ProjectDirectory,
+				proj.IntermediateOutputPath,
+				"android-arm64",
+				"linked",
+				"Mono.Android.Runtime.dll"
+			);
+
+			if (!File.Exists (monoAndroidRuntimePath)) {
+				Assert.Ignore ($"Mono.Android.Runtime.dll not found at expected path: {monoAndroidRuntimePath}");
+				return;
+			}
+
+			using var assembly = AssemblyDefinition.ReadAssembly (monoAndroidRuntimePath);
+			const string expectedTypeName = "Android.Runtime.AndroidEnvironmentInternal";
+
+			TypeDefinition foundType = null;
+			foreach (var module in assembly.Modules) {
+				foreach (var type in module.Types) {
+					if (string.Equals (type.FullName, expectedTypeName, StringComparison.Ordinal)) {
+						foundType = type;
+						break;
+					}
+				}
+				if (foundType != null) break;
+			}
+
+			Assert.IsNotNull (foundType, $"Type '{expectedTypeName}' should exist in '{monoAndroidRuntimePath}'");
+			Assert.IsTrue (foundType.IsPublic, $"Type '{expectedTypeName}' should be public");
+		}
 	}
 }
