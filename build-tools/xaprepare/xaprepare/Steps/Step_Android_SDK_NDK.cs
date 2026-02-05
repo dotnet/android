@@ -207,7 +207,7 @@ namespace Xamarin.Android.Prepare
 			foreach (var kvp in Configurables.Defaults.AndroidToolchainPrefixes) {
 				string abi = kvp.Key;
 				string abiDir = Path.Combine (Configurables.Paths.AndroidToolchainSysrootLibDirectory, kvp.Value);
-				string crtFilesPath = Path.Combine (abiDir, BuildAndroidPlatforms.NdkMinimumAPI.ToString (CultureInfo.InvariantCulture));
+				string crtFilesPath = Path.Combine (abiDir, BuildAndroidPlatforms.NdkMinimumAPI);
 				string clangArch = Configurables.Defaults.AbiToClangArch[abi];
 
 				foreach (string file in CRTFiles) {

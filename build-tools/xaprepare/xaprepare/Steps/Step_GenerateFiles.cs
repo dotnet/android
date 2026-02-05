@@ -99,9 +99,7 @@ namespace Xamarin.Android.Prepare
 				{ "@NETCORE_APP_RUNTIME_ANDROID_X86@",    Utilities.EscapePathSeparators (Configurables.Paths.NetcoreAppRuntimeAndroidX86) },
 				{ "@NETCORE_APP_RUNTIME_ANDROID_X86_64@", Utilities.EscapePathSeparators (Configurables.Paths.NetcoreAppRuntimeAndroidX86_64) },
 
-				{ "@CORECLR_APP_RUNTIME_ANDROID_ARM@",    Utilities.EscapePathSeparators (Configurables.Paths.CoreClrAppRuntimeAndroidARM) },
 				{ "@CORECLR_APP_RUNTIME_ANDROID_ARM64@",  Utilities.EscapePathSeparators (Configurables.Paths.CoreClrAppRuntimeAndroidARM64) },
-				{ "@CORECLR_APP_RUNTIME_ANDROID_X86@",    Utilities.EscapePathSeparators (Configurables.Paths.CoreClrAppRuntimeAndroidX86) },
 				{ "@CORECLR_APP_RUNTIME_ANDROID_X86_64@", Utilities.EscapePathSeparators (Configurables.Paths.CoreClrAppRuntimeAndroidX86_64) },
 			};
 
@@ -122,10 +120,12 @@ namespace Xamarin.Android.Prepare
 				{ "@NinjaPath@",                 Utilities.EscapePathSeparators (props.GetRequiredValue (KnownProperties.NinjaPath)) },
 				{ "@MicrosoftAndroidSdkOutDir@", Utilities.EscapePathSeparators (props.GetRequiredValue (KnownProperties.MicrosoftAndroidSdkOutDir)) },
 				{ "@OutputPath@",                Utilities.EscapePathSeparators (Path.Combine (props.GetRequiredValue (KnownProperties.MicrosoftAndroidSdkOutDir), "lib")) },
-				{ "@NDK_ARMEABI_V7_API_NET@",    BuildAndroidPlatforms.NdkMinimumAPI.ToString () },
-				{ "@NDK_ARM64_V8A_API_NET@",     BuildAndroidPlatforms.NdkMinimumAPI.ToString () },
-				{ "@NDK_X86_API_NET@",           BuildAndroidPlatforms.NdkMinimumAPI.ToString () },
-				{ "@NDK_X86_64_API_NET@",        BuildAndroidPlatforms.NdkMinimumAPI.ToString () },
+				{ "@NDK_ARMEABI_V7_API_NET@",    BuildAndroidPlatforms.NdkMinimumAPILegacy32 },
+				{ "@NDK_ARM64_V8A_API_NET@",     BuildAndroidPlatforms.NdkMinimumAPI },
+				{ "@NDK_X86_API_NET@",           BuildAndroidPlatforms.NdkMinimumAPILegacy32 },
+				{ "@NDK_X86_64_API_NET@",        BuildAndroidPlatforms.NdkMinimumAPI },
+				{ "@NDK_ARM64_V8A_NONMONO_API_NET@", BuildAndroidPlatforms.NdkMinimumNonMonoAPI },
+				{ "@NDK_X86_64_NONMONO_API_NET@",    BuildAndroidPlatforms.NdkMinimumNonMonoAPI },
 				{ "@XA_BUILD_CONFIGURATION@",    context.Configuration },
 			};
 
@@ -196,10 +196,14 @@ namespace Xamarin.Android.Prepare
 				{ "@NDK_ARM64_V8A_API@",         BuildAndroidPlatforms.NdkMinimumAPI.ToString () },
 				{ "@NDK_X86_API@",               BuildAndroidPlatforms.NdkMinimumAPILegacy32.ToString ().ToString () },
 				{ "@NDK_X86_64_API@",            BuildAndroidPlatforms.NdkMinimumAPI.ToString ().ToString () },
+				{ "@NDK_ARM64_V8A_NONMONO_API@", BuildAndroidPlatforms.NdkMinimumNonMonoAPI },
+				{ "@NDK_X86_64_NONMONO_API@",    BuildAndroidPlatforms.NdkMinimumNonMonoAPI },
 				{ "@XA_SUPPORTED_ABIS@",         context.Properties.GetRequiredValue (KnownProperties.AndroidSupportedTargetJitAbis).Replace (':', ';') },
 				{ "@SDK_BUILD_TOOLS_VERSION@",   context.Properties.GetRequiredValue (KnownProperties.XABuildToolsFolder) },
 				{ "@ANDROID_DEFAULT_MINIMUM_DOTNET_API_LEVEL@", GetMajor (context.Properties.GetRequiredValue (KnownProperties.AndroidMinimumDotNetApiLevel)) },
 				{ "@ANDROID_DEFAULT_MINIMUM_DOTNET_API_LEVEL_MINOR@", GetMinor (context.Properties.GetRequiredValue (KnownProperties.AndroidMinimumDotNetApiLevel)) },
+				{ "@ANDROID_DEFAULT_MINIMUM_NONMONO_API_LEVEL@", GetMajor (context.Properties.GetRequiredValue (KnownProperties.AndroidMinimumNonMonoApiLevel)) },
+				{ "@ANDROID_DEFAULT_MINIMUM_NONMONO_API_LEVEL_MINOR@", GetMinor (context.Properties.GetRequiredValue (KnownProperties.AndroidMinimumNonMonoApiLevel)) },
 				{ "@ANDROID_DEFAULT_TARGET_DOTNET_API_LEVEL@", GetMajor (context.Properties.GetRequiredValue (KnownProperties.AndroidDefaultTargetDotnetApiLevel)) },
 				{ "@ANDROID_DEFAULT_TARGET_DOTNET_API_LEVEL_MINOR@", GetMinor (context.Properties.GetRequiredValue (KnownProperties.AndroidDefaultTargetDotnetApiLevel)) },
 				{ "@ANDROID_LATEST_STABLE_API_LEVEL@", GetMajor (context.Properties.GetRequiredValue (KnownProperties.AndroidLatestStableApiLevel)) },

@@ -26,7 +26,7 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 		}
 
 		[Test]
-		public void TestNdkUtil ()
+		public void TestNdkUtil ([Values] AndroidRuntime runtime)
 		{
 			var log = new TaskLoggingHelper (engine, TestName);
 			using (var builder = new Builder ()) {
@@ -37,11 +37,15 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 				MonoAndroidHelper.AndroidSdk = new AndroidSdkInfo ((arg1, arg2) => { }, sdkDir, ndkDir, AndroidSdkResolver.GetJavaSdkPath ());
 				var platforms = ndk.GetSupportedPlatforms ();
 				Assert.AreNotEqual (0, platforms.Count (), "No platforms found");
-				var arch = AndroidTargetArch.X86;
+				AndroidTargetArch arch = runtime switch {
+					AndroidRuntime.MonoVM => AndroidTargetArch.X86,
+					_ => AndroidTargetArch.X86_64
+				};
 				Assert.IsTrue (ndk.ValidateNdkPlatform (arch, enableLLVM: false));
 				Assert.AreEqual (0, errors.Count, "NdkTools.ValidateNdkPlatform should not have returned false.");
-				int level = ndk.GetMinimumApiLevelFor (arch);
-				int expected = 21;
+				int level = ndk.GetMinimumApiLevelFor (arch, runtime);
+
+				int expected = MonoAndroidHelper.GetMinimumApiLevel (arch, runtime);
 				Assert.AreEqual (expected, level, $"Min Api Level for {arch} should be {expected}.");
 				var compilerNoQuotes = ndk.GetToolPath (NdkToolKind.CompilerC, arch, level);
 				Assert.AreEqual (0, errors.Count, "NdkTools.GetToolPath should not have errored.");

@@ -7,8 +7,10 @@ namespace Xamarin.Android.Prepare
 	{
 		public const string AndroidNdkVersion = "28c";
 		public const string AndroidNdkPkgRevision = "28.2.13676358";
-		public const int NdkMinimumAPI = 21;
-		public const int NdkMinimumAPILegacy32 = 21;
+
+		public static string NdkMinimumAPI => Context.Instance.Properties.GetRequiredValue (KnownProperties.AndroidMinimumDotNetApiLevel);
+		public static string NdkMinimumAPILegacy32 => NdkMinimumAPI;
+		public static string NdkMinimumNonMonoAPI => Context.Instance.Properties.GetRequiredValue (KnownProperties.AndroidMinimumNonMonoApiLevel);
 
 		public static readonly List<AndroidPlatform> AllPlatforms = new List<AndroidPlatform> {
 			new AndroidPlatform (apiName: "",                       apiLevel: 1,  platformID: "1"),

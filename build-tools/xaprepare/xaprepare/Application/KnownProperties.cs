@@ -6,6 +6,7 @@ namespace Xamarin.Android.Prepare
 		public const string AndroidCmakeVersion                 = "AndroidCmakeVersion";
 		public const string AndroidCmakeVersionPath             = "AndroidCmakeVersionPath";
 		public const string AndroidMinimumDotNetApiLevel        = "AndroidMinimumDotNetApiLevel";
+		public const string AndroidMinimumNonMonoApiLevel       = "AndroidMinimumNonMonoApiLevel";
 		public const string AndroidDefaultTargetDotnetApiLevel  = "AndroidDefaultTargetDotnetApiLevel";
 		public const string AndroidLatestStableApiLevel         = "AndroidLatestStableApiLevel";
 		public const string AndroidLatestUnstableApiLevel       = "AndroidLatestUnstableApiLevel";
