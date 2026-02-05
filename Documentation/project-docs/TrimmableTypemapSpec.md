@@ -258,8 +258,8 @@ public sealed class MainActivity_Proxy : JavaPeerProxy, IAndroidCallableWrapper
     public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
         => new MainActivity(handle, transfer);
     
-    public override DerivedTypeFactory GetDerivedTypeFactory()
-        => DerivedTypeFactory.Create<MainActivity>();
+    public override JavaPeerContainerFactory GetContainerFactory()
+        => JavaPeerContainerFactory.Create<MainActivity>();
     
     // IAndroidCallableWrapper - only on ACW types
     public IntPtr GetFunctionPointer(int methodIndex) => methodIndex switch {
@@ -290,8 +290,8 @@ public sealed class IOnClickListener_Proxy : JavaPeerProxy  // No IAndroidCallab
     public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
         => new IOnClickListenerInvoker(handle, transfer); // Directly create Invoker instance - no separate lookup needed
 
-    public override DerivedTypeFactory GetDerivedTypeFactory()
-        => DerivedTypeFactory.Create<IOnClickListener>();
+    public override JavaPeerContainerFactory GetContainerFactory()
+        => JavaPeerContainerFactory.Create<IOnClickListener>();
 }
 ```
 
@@ -314,9 +314,9 @@ abstract class JavaPeerProxy : Attribute
 
     /// <summary>
     /// Gets a factory for creating containers (arrays, lists, sets, dictionaries) of the target type.
-    /// See Section 16 for details on DerivedTypeFactory.
+    /// See Section 21.7 for details on JavaPeerContainerFactory.
     /// </summary>
-    public abstract DerivedTypeFactory GetDerivedTypeFactory();
+    public abstract JavaPeerContainerFactory GetContainerFactory();
 }
 ```
 
@@ -374,8 +374,8 @@ public sealed class MainActivity_Proxy : JavaPeerProxy, IAndroidCallableWrapper
     public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
         => new MainActivity(handle, transfer);
 
-    public override DerivedTypeFactory GetDerivedTypeFactory()
-        => DerivedTypeFactory.Create<MainActivity>();
+    public override JavaPeerContainerFactory GetContainerFactory()
+        => JavaPeerContainerFactory.Create<MainActivity>();
 
     [UnmanagedCallersOnly]
     public static void n_onCreate_mm_0(IntPtr jnienv, IntPtr obj, IntPtr p0)
@@ -420,8 +420,8 @@ public sealed class android_widget_TextView_Proxy : JavaPeerProxy
     public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
         => new TextView(handle, transfer);
 
-    public override DerivedTypeFactory GetDerivedTypeFactory()
-        => DerivedTypeFactory.Create<TextView>();
+    public override JavaPeerContainerFactory GetContainerFactory()
+        => JavaPeerContainerFactory.Create<TextView>();
 }
 ```
 
@@ -1194,7 +1194,7 @@ BackupAgent and ManageSpaceActivity types referenced in `[Application]` attribut
 
 ---
 
-### 16. DerivedTypeFactory - AOT-Safe Generic Container Creation
+### 16. JavaPeerContainerFactory - AOT-Safe Generic Container Creation
 
 #### Problem
 
@@ -1206,9 +1206,9 @@ Array.CreateInstance(typeof(T), length);
 Activator.CreateInstance(typeof(JavaList<>).MakeGenericType(typeof(T)));
 ```
 
-#### Solution: DerivedTypeFactory
+#### Solution: JavaPeerContainerFactory
 
-The `DerivedTypeFactory` is an abstract base class that provides factory methods for creating derived types (arrays, collections). Each `JavaPeerProxy` has a `GetDerivedTypeFactory()` method that returns a `DerivedTypeFactory<T>` singleton already typed to the target type.
+The `JavaPeerContainerFactory` is an abstract base class that provides factory methods for creating containers. Each `JavaPeerProxy` has a `GetContainerFactory()` method that returns a `JavaPeerContainerFactory<T>` singleton already typed to the target type.
 
 **Key insight**: Generic instantiation like `new T[length]` or `new JavaList<T>()` requires knowing `T` at compile time. By having each proxy return a factory that is already typed to its specific `T`, these operations use direct `new` expressions which are fully AOT-safe.
 
@@ -1217,10 +1217,10 @@ The `DerivedTypeFactory` is an abstract base class that provides factory methods
 ```
 JavaPeerProxy (attribute on each bound type)
     │
-    └── abstract DerivedTypeFactory GetDerivedTypeFactory()
+    └── abstract JavaPeerContainerFactory GetContainerFactory()
                       │
                       ▼
-         DerivedTypeFactory<T> : DerivedTypeFactory
+         JavaPeerContainerFactory<T> : JavaPeerContainerFactory
                       │
          ┌────────────┼────────────┐
          ▼            ▼            ▼
@@ -1231,7 +1231,7 @@ JavaPeerProxy (attribute on each bound type)
 #### API
 
 ```csharp
-public abstract class DerivedTypeFactory
+public abstract class JavaPeerContainerFactory
 {
     // Array creation (T[], T[][], T[][][])
     internal abstract Array CreateArray(int length, int rank);
@@ -1248,23 +1248,23 @@ public abstract class DerivedTypeFactory
     internal abstract ICollection CreateSetFromHandle(IntPtr handle, JniHandleOwnership transfer);
 
     // Dictionary creation (uses visitor pattern for two type parameters)
-    internal virtual IDictionary? CreateDictionary(DerivedTypeFactory keyFactory);
+    internal virtual IDictionary? CreateDictionary(JavaPeerContainerFactory keyFactory);
     internal virtual IDictionary? CreateDictionaryFromHandle(
-        DerivedTypeFactory keyFactory, IntPtr handle, JniHandleOwnership transfer);
+        JavaPeerContainerFactory keyFactory, IntPtr handle, JniHandleOwnership transfer);
 
     // Factory method
-    public static DerivedTypeFactory Create<T>() where T : class, IJavaPeerable
-        => DerivedTypeFactory<T>.Instance;
+    public static JavaPeerContainerFactory Create<T>() where T : class, IJavaPeerable
+        => JavaPeerContainerFactory<T>.Instance;
 }
 ```
 
 #### Generic Implementation
 
 ```csharp
-internal sealed class DerivedTypeFactory<T> : DerivedTypeFactory 
+internal sealed class JavaPeerContainerFactory<T> : JavaPeerContainerFactory 
     where T : class, IJavaPeerable
 {
-    internal static readonly DerivedTypeFactory<T> Instance = new();
+    internal static readonly JavaPeerContainerFactory<T> Instance = new();
 
     internal override Array CreateArray(int length, int rank) => rank switch {
         1 => new T[length],
@@ -1290,48 +1290,34 @@ Dictionaries require **two** type parameters (`TKey`, `TValue`). Since each fact
 
 ```csharp
 // To create JavaDictionary<View, Activity>:
-var valueFactory = typeMap.GetProxyForManagedType(typeof(Activity)).GetDerivedTypeFactory();
-var keyFactory = typeMap.GetProxyForManagedType(typeof(View)).GetDerivedTypeFactory();
+var valueFactory = typeMap.GetProxyForType(typeof(Activity)).GetContainerFactory();
+var keyFactory = typeMap.GetProxyForType(typeof(View)).GetContainerFactory();
 
-// valueFactory (DerivedTypeFactory<Activity>) calls:
-valueFactory.CreateDictionaryFromHandle(keyFactory, handle, transfer);
-    // which calls: keyFactory.CreateDictionaryFromHandleWithValueFactory(this, handle, transfer)
-    // which creates: new JavaDictionary<View, Activity>(handle, transfer)
+// valueFactory (JavaPeerContainerFactory<Activity>) calls:
+valueFactory.CreateDictionary(keyFactory);
+    // which calls: keyFactory.CreateDictionaryWithValueFactory(this)
+    // which creates: new JavaDictionary<View, Activity>()
 ```
 
 The visitor pattern allows both type parameters to be known at compile time within the generic method, enabling AOT-safe instantiation.
 
-#### Integration with JavaConvert
+#### Runtime Usage
 
-The `JavaConvert` class uses `DerivedTypeFactory` to handle generic collection marshaling:
+In `TrimmableTypeMap.CreateArray()`:
 
 ```csharp
-// In JavaConvert.GetJniHandleConverter for IList<T>:
-static Func<IntPtr, JniHandleOwnership, object?>? TryCreateGenericListConverter(Type listType)
+public Array CreateArray(Type elementType, int length, int rank)
 {
-    var elementType = listType.GetGenericArguments()[0];
+    if (!TryGetJniNameForType(elementType, out string? jniName))
+        throw new InvalidOperationException($"No JNI name for {elementType}");
     
-    // Primitives and strings have explicit converters
-    if (elementType == typeof(string)) {
-        return (h, t) => JavaList<string>.FromJniHandle(h, t);
-    }
-    // ... similar for int, long, bool, float, double, object
+    if (!_externalTypeMap.TryGetValue(jniName, out Type? proxyType))
+        throw new InvalidOperationException($"No proxy registered for {jniName}");
     
-    // For Java peer types, use DerivedTypeFactory via TypeMap
-    var proxy = JNIEnvInit.TypeMap?.GetProxyForManagedType(elementType);
-    if (proxy == null) {
-        return (h, t) => JavaList.FromJniHandle(h, t);  // fallback
-    }
-    
-    var factory = proxy.GetDerivedTypeFactory();
-    return (h, t) => factory.CreateListFromHandle(h, t);  // AOT-safe!
+    var proxy = GetProxyForType(proxyType);
+    return proxy.GetContainerFactory().CreateArray(length, rank);  // AOT-safe!
 }
 ```
-
-This pattern is used for:
-- `IList<T>` → `TryCreateGenericListConverter`
-- `IDictionary<K,V>` → `TryCreateGenericDictionaryConverter`
-- `ICollection<T>` → `TryCreateGenericCollectionConverter`
 
 #### Supported Container Types
 
@@ -1348,17 +1334,6 @@ This pattern is used for:
 | Dictionary | `CreateDictionary(keyFactory)` | `new JavaDictionary<K, V>()` |
 | Dictionary (from handle) | `CreateDictionaryFromHandle(keyFactory, h, t)` | `new JavaDictionary<K, V>(h, t)` |
 
-#### Primitive/String Element Types
-
-For primitive types (`int`, `long`, `bool`, `float`, `double`) and `string`, direct converters are used since these types don't have proxies in the TypeMap:
-
-```csharp
-// These are handled directly in JavaConvert, not via DerivedTypeFactory:
-typeof(IList<string>) → JavaList<string>.FromJniHandle()
-typeof(IList<int>) → JavaList<int>.FromJniHandle()
-// etc.
-```
-
 #### Benefits
 
 1. **AOT-safe**: Direct `new` expressions with compile-time known types
@@ -1367,4 +1342,3 @@ typeof(IList<int>) → JavaList<int>.FromJniHandle()
 4. **Unified pattern**: Same factory handles arrays, lists, sets, collections, dictionaries
 5. **Efficient**: Singleton factories, no allocations per call
 6. **Type-safe**: Generic constraints ensure only valid peer types are used
-7. **Integrated**: Works seamlessly with `JavaConvert` for automatic marshaling
