@@ -108,5 +108,5 @@ class EnvironmentBuilder
 		AddEnvironmentVariable ("MONO_GC_PARAMS", enableSgenConcurrent ? "major=marksweep-conc" : "major=marksweep");
 	}
 
-	static string ValidAssemblerString (string s) => s.Replace ("\"", "\\\"");
+	static string ValidAssemblerString (string s) => s.Replace ("\\", "\\\\").Replace ("\"", "\\\"");
 }
