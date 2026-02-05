@@ -1054,6 +1054,9 @@ internal class JavaPeerScanner
 			bool inheritsFromJavaPeer = false;
 			if (!isInterface && !isFrameworkAssembly && baseTypeName != null) {
 				inheritsFromJavaPeer = IsJavaPeerType (baseTypeName, baseAssemblyName);
+				if (!inheritsFromJavaPeer) {
+					_log.LogMessage (MessageImportance.High, $"    IsJavaPeerType returned false for base type: {baseTypeName} (in {baseAssemblyName})");
+				}
 			}
 			
 			if (inheritsFromJavaPeer) {
@@ -2699,6 +2702,14 @@ internal class JavaPeerScanner
 				if (typeRef.ResolutionScope.Kind == HandleKind.AssemblyReference) {
 					var asmRef = reader.GetAssemblyReference ((AssemblyReferenceHandle)typeRef.ResolutionScope);
 					assemblyName = reader.GetString (asmRef.Name);
+				} else if (typeRef.ResolutionScope.Kind == HandleKind.TypeReference) {
+					// Nested type - the resolution scope points to the enclosing type
+					// Recursively get the enclosing type's full name and assembly
+					var (enclosingTypeName, enclosingAssembly) = GetFullTypeNameAndAssembly (reader, typeRef.ResolutionScope);
+					if (enclosingTypeName != null) {
+						fullName = $"{enclosingTypeName}+{name}";
+					}
+					assemblyName = enclosingAssembly;
 				}
 				return (fullName, assemblyName);
 			} else if (handle.Kind == HandleKind.TypeDefinition) {

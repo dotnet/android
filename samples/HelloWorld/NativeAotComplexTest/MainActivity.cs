@@ -45,6 +45,12 @@ public class MainActivity : Activity
         runButton!.Click += async (s, e) => await RunAllTestsAsync();
         
         Log.Info("ComplexTest", "MainActivity created");
+        
+        // Auto-run tests if launched with --es autorun true
+        if (Intent?.GetBooleanExtra("autorun", false) == true) {
+            Log.Info("ComplexTest", "Auto-run mode detected");
+            _ = RunAllTestsAsync();
+        }
     }
     
     async Task RunAllTestsAsync()
