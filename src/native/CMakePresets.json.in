@@ -54,6 +54,16 @@
         },
 
         {
+            "name": "nativeaot-default-common",
+            "hidden": true,
+            "inherits": "common",
+            "cacheVariables": {
+                "ANDROID_STL": "none",
+                "ANDROID_CPP_FEATURES": "no-rtti no-exceptions"
+            }
+        },
+
+        {
             "name": "analyzers-common",
             "hidden": true,
             "inherits": "common",
@@ -61,18 +71,6 @@
                 "ANDROID_STL": "c++_static",
                 "ANDROID_CPP_FEATURES": "rtti exceptions"
             }
-        },
-
-        {
-            "name": "default-debug",
-            "hidden": true,
-            "inherits": ["default-common", "common-debug"]
-        },
-
-        {
-            "name": "default-release",
-            "hidden": true,
-            "inherits": ["default-common", "common-release"]
         },
 
         {
@@ -197,8 +195,18 @@
         },
 
         {
+            "name": "nativeaot-default-debug-arm64-v8a",
+            "inherits": ["nativeaot-default-common", "common-debug", "common-arm64-v8a"]
+        },
+
+        {
             "name": "default-release-arm64-v8a",
             "inherits": ["default-common", "common-release", "common-arm64-v8a"]
+        },
+
+        {
+            "name": "nativeaot-default-release-arm64-v8a",
+            "inherits": ["nativeaot-default-common", "common-release", "common-arm64-v8a"]
         },
 
         {
@@ -285,8 +293,18 @@
         },
 
         {
+            "name": "nativeaot-default-debug-x86_64",
+            "inherits": ["nativeaot-default-common", "common-debug", "common-x86_64"]
+        },
+
+        {
             "name": "default-release-x86_64",
             "inherits": ["default-common", "common-release", "common-x86_64"]
+        },
+
+        {
+            "name": "nativeaot-default-release-x86_64",
+            "inherits": ["nativeaot-default-common", "common-release", "common-x86_64"]
         },
 
         {

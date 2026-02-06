@@ -1533,6 +1533,7 @@ namespace UnnamedProject
 				SolutionPath = Path.Combine (Root, path),
 				MaxCpuCount = 4,
 				BuildingInsideVisualStudio = false, // allow projects dependencies to build
+				Configuration = isRelease ? "Release" : "Debug", // MUST be set for NativeAOT builds
 			}) {
 				var apps = new List<XamarinAndroidApplicationProject> ();
 				var app1 = new XamarinAndroidApplicationProject {
