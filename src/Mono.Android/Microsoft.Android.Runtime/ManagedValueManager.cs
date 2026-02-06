@@ -32,10 +32,37 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	static Lazy<ManagedValueManager> s_instance = new (() => new ManagedValueManager ());
 	public static ManagedValueManager GetOrCreateInstance () => s_instance.Value;
 
+	/// <summary>
+	/// Callback invoked by native background thread to process bridge args.
+	/// This runs on the native bridge processing thread, not a managed thread pool thread.
+	/// </summary>
+	[UnmanagedCallersOnly]
+	static unsafe void OnBridgeProcessing (void* argsPtr)
+	{
+		MarkCrossReferencesArgs* args = (MarkCrossReferencesArgs*)argsPtr;
+
+		bridgeProcessingSemaphore.Wait ();
+		try {
+			// Validate contexts
+			HandleContext.EnsureAllContextsAreOurs (args);
+
+			// Do the actual bridge processing in managed code
+			var processing = new BridgeProcessing (args);
+			processing.Process ();
+
+			// Process collected contexts and finish
+			ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (args);
+			JavaMarshal.FinishCrossReferenceProcessing (args, handlesToFree);
+		} finally {
+			bridgeProcessingSemaphore.Release ();
+		}
+	}
+
 	unsafe ManagedValueManager ()
 	{
-		// There can only be one instance of ManagedValueManager because we can call JavaMarshal.Initialize only once.
-		var mark_cross_references_ftn = RuntimeNativeMethods.clr_initialize_gc_bridge (&BridgeProcessingStarted, &BridgeProcessingFinished);
+		// Initialize GC bridge with our callback that will be invoked from the native background thread
+		delegate* unmanaged<void*, void> callback = &OnBridgeProcessing;
+		var mark_cross_references_ftn = RuntimeNativeMethods.clr_initialize_gc_bridge (callback);
 		JavaMarshal.Initialize (mark_cross_references_ftn);
 	}
 
@@ -429,30 +456,6 @@ class ManagedValueManager : JniRuntime.JniValueManager
 			NativeMemory.Free (context);
 			context = null;
 		}
-	}
-
-	[UnmanagedCallersOnly]
-	static unsafe void BridgeProcessingStarted (MarkCrossReferencesArgs* mcr)
-	{
-		if (mcr == null) {
-			throw new ArgumentNullException (nameof (mcr), "MarkCrossReferencesArgs should never be null.");
-		}
-
-		HandleContext.EnsureAllContextsAreOurs (mcr);
-		bridgeProcessingSemaphore.Wait ();
-	}
-
-	[UnmanagedCallersOnly]
-	static unsafe void BridgeProcessingFinished (MarkCrossReferencesArgs* mcr)
-	{
-		if (mcr == null) {
-			throw new ArgumentNullException (nameof (mcr), "MarkCrossReferencesArgs should never be null.");
-		}
-
-		ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (mcr);
-		JavaMarshal.FinishCrossReferenceProcessing (mcr, handlesToFree);
-
-		bridgeProcessingSemaphore.Release ();
 	}
 
 	static unsafe ReadOnlySpan<GCHandle> ProcessCollectedContexts (MarkCrossReferencesArgs* mcr)
