@@ -62,7 +62,7 @@ public class MainActivity extends android.app.Activity
     public MainActivity() {
         super();
         if (getClass() == MainActivity.class) {
-            nc_activate_0();  // Activates .NET peer
+            nctor_0();  // Constructs .NET peer
         }
     }
 
@@ -72,7 +72,7 @@ public class MainActivity extends android.app.Activity
     }
 
     private native void n_onCreate(android.os.Bundle savedInstanceState);
-    private native void nc_activate_0();
+    private native void nctor_0();
 }
 ```
 
@@ -98,10 +98,10 @@ The previous system used:
 │  │           MSBuild Task: GenerateTypeMaps                              │ │
 │  │                                                                        │ │
 │  │  1. Scan assemblies for Java peers ([Register], [Export], implements) │ │
-│  │  2. Collect marshal methods + activation constructors                 │ │
+│  │  2. Collect marshal methods + Java-callable constructors                 │ │
 │  │  3. Generate TypeMapAssembly.dll:                                     │ │
 │  │     - TypeMap<T> attributes                                           │ │
-│  │     - JavaPeerProxy subclasses with UCO methods                       │ │
+│  │     - JavaPeerProxyAttribute subclasses with UCO methods                       │ │
 │  │     - GetFunctionPointer switch statements                            │ │
 │  │     - CreateInstance factory methods                                  │ │
 │  │  4. Generate JCW .java files (user types + Implementors only)         │ │
@@ -125,15 +125,15 @@ The previous system used:
 │  ┌─────────────────────────────────────────────────────────────────────────┐│
 │  │ LLVM-generated stub                                                    ││
 │  │   1. Check cached function pointer (@fn_ptr_N)                         ││
-│  │   2. If null: call typemap_get_function_pointer(className, len, idx)   ││
+│  │   2. If null: call typemap_get_function_pointer(jniName, len, idx)    ││
 │  │   3. Call resolved UCO method                                          ││
 │  └─────────────────────────────────────────────────────────────────────────┘│
 │           │                                                                 │
 │           ▼                                                                 │
 │  ┌─────────────────────────────────────────────────────────────────────────┐│
-│  │ TrimmableTypeMap.GetFunctionPointer(className, methodIndex)     ││
-│  │   1. Lookup type via TypeMapping.Get<Java.Lang.Object>(className)      ││
-│  │   2. Get cached JavaPeerProxy via GetCustomAttribute                   ││
+│  │ TrimmableTypeMap.GetFunctionPointer(jniName, methodIndex)       ││
+│  │   1. Lookup type via TypeMapping.Get<Java.Lang.Object>(jniName)        ││
+│  │   2. Get cached JavaPeerProxyAttribute via GetCustomAttribute                   ││
 │  │   3. Return proxy.GetFunctionPointer(methodIndex)                      ││
 │  └─────────────────────────────────────────────────────────────────────────┘│
 │           │                                                                 │
@@ -154,7 +154,7 @@ The previous system used:
 | `GenerateTypeMaps` | MSBuild task | Scan assemblies, generate TypeMapAssembly.dll, .java, .ll |
 | `TypeMapAssembly.dll` | Generated | Contains proxies, UCOs, TypeMap attributes |
 | `TrimmableTypeMap` | Mono.Android.dll | Runtime type lookup, function pointer resolution |
-| `JavaPeerProxy` | Mono.Android.dll | Base class for generated proxies |
+| `JavaPeerProxyAttribute` | Mono.Android.dll | Base class for generated proxies |
 | LLVM IR stubs | Generated .ll | JNI entry points with caching |
 
 ### 3.3 ITypeMap Interface
@@ -169,13 +169,12 @@ interface ITypeMap
 
     // .NET-to-Java type resolution
     bool TryGetJniNameForType(Type type, [NotNullWhen(true)] out string? jniName);
-    IEnumerable<string> GetJniNamesForType(Type type);
 
     // Peer instance creation
     IJavaPeerable? CreatePeer(IntPtr handle, JniHandleOwnership transfer, Type? targetType);
 
     // Marshal method function pointer resolution
-    IntPtr GetFunctionPointer(ReadOnlySpan<char> className, int methodIndex);
+    IntPtr GetFunctionPointer(ReadOnlySpan<char> jniName, int methodIndex);
 
     // Array creation (AOT-safe)
     // rank=1 for T[], rank=2 for T[][]
@@ -190,7 +189,7 @@ At initialization, the runtime selects the appropriate `ITypeMap` implementation
 ```csharp
 private static ITypeMap CreateTypeMap()
 {
-    if (RuntimeFeature.IsCoreClrRuntime)
+    if (RuntimeFeature.IsCoreClrRuntime || RuntimeFeature.IsNativeAotRuntime)
         return new TrimmableTypeMap();  // AOT-safe, uses generated attributes
     else if (RuntimeFeature.IsMonoRuntime)
         return new MonoTypeMap();
@@ -207,8 +206,8 @@ private static ITypeMap CreateTypeMap()
 
 | Type Category | Example | JCW? | TypeMap Entry | GetFunctionPointer | CreateInstance |
 |---------------|---------|------|---------------|-------------------|----------------|
-| User class with JCW | `MainActivity` | Yes | ✅ | Returns UCO ptrs | `new T(h, t)` |
-| SDK MCW (binding) | `Activity` | No | ✅ | Throws | `new T(h, t)` |
+| User class with JCW | `MainActivity` | Yes | ✅ | Returns UCO ptrs | `GetUninitializedObject` + base `.ctor(h, t)` |
+| SDK MCW (binding) | `Activity` | No | ✅ | Throws | `new T(h, t)` (bindings have this ctor) |
 | Interface | `IOnClickListener` | No | ✅ | Throws | `new TInvoker(h, t)` |
 
 ### 4.2 Types That Do NOT Need Proxies
@@ -216,7 +215,7 @@ private static ITypeMap CreateTypeMap()
 | Type Category | Example | Reason |
 |---------------|---------|--------|
 | Invoker | `IOnClickListenerInvoker` | Share JNI name with interface; instantiated by interface proxy |
-| `DoNotGenerateAcw` types without activation | Internal helpers | No JCW, no peer creation from Java |
+| `DoNotGenerateAcw` types without activation ctor | Internal helpers | No JCW, no peer creation from Java |
 | Generic types | `List<T>` | Not directly mapped to Java |
 
 **Key Design Decision:** Invokers are excluded from the TypeMap because:
@@ -228,6 +227,12 @@ private static ITypeMap CreateTypeMap()
 ---
 
 ## 5. Type Map Attributes
+
+> **Generation:** The `TypeMap` assembly-level attributes and all `*_Proxy` types described in this section
+> are **generated at build time** by an MSBuild task that emits IL directly into a dedicated assembly
+> (the "TypeMap assembly", e.g., `TypeMapAssembly.dll`). They are never hand-written or part of
+> `generator` output. The TypeMap assembly uses `[assembly: IgnoresAccessChecksTo("...")]` to
+> reference non-public types from other assemblies.
 
 ### 5.1 TypeMap Attribute Structure
 
@@ -253,11 +258,16 @@ The proxy type applies itself as an attribute to itself:
 // Proxy applies ITSELF as an attribute to ITSELF
 // ACW types also implement IAndroidCallableWrapper for GetFunctionPointer
 [MainActivity_Proxy]  // Self-application
-public sealed class MainActivity_Proxy : JavaPeerProxy, IAndroidCallableWrapper
+public sealed class MainActivity_Proxy : JavaPeerProxyAttribute, IAndroidCallableWrapper
 {
     public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
-        => new MainActivity(handle, transfer);
-    
+    {
+        // Uses GetUninitializedObject + base class .ctor call (see §9.3)
+        var instance = (MainActivity)RuntimeHelpers.GetUninitializedObject(typeof(MainActivity));
+        ((Activity)instance)..ctor(handle, transfer); // C#-pseudocode, this call must be generated directly in IL
+        return instance;
+    }
+
     public override JavaPeerContainerFactory GetContainerFactory()
         => JavaPeerContainerFactory.Create<MainActivity>();
     
@@ -270,7 +280,7 @@ public sealed class MainActivity_Proxy : JavaPeerProxy, IAndroidCallableWrapper
 
 // At runtime:
 Type proxyType = typeMap["com/example/MainActivity"];  // Returns typeof(MainActivity_Proxy)
-JavaPeerProxy proxy = proxyType.GetCustomAttribute<JavaPeerProxy>();  // Returns MainActivity_Proxy instance
+JavaPeerProxyAttribute proxy = proxyType.GetCustomAttribute<JavaPeerProxyAttribute>();  // Returns MainActivity_Proxy instance
 IJavaPeerable instance = proxy.CreateInstance(handle, transfer);  // Returns MainActivity instance
 ```
 
@@ -285,7 +295,7 @@ Interfaces cannot be instantiated directly. The interface proxy's `CreateInstanc
 
 ```csharp
 [IOnClickListener_Proxy]
-public sealed class IOnClickListener_Proxy : JavaPeerProxy  // No IAndroidCallableWrapper
+public sealed class IOnClickListener_Proxy : JavaPeerProxyAttribute  // No IAndroidCallableWrapper
 {
     public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
         => new IOnClickListenerInvoker(handle, transfer); // Directly create Invoker instance - no separate lookup needed
@@ -297,7 +307,7 @@ public sealed class IOnClickListener_Proxy : JavaPeerProxy  // No IAndroidCallab
 
 ---
 
-## 6. JavaPeerProxy Design
+## 6. JavaPeerProxyAttribute Design
 
 ### 6.1 Base Class
 
@@ -305,7 +315,7 @@ The base class provides instance creation and container factory methods. Note th
 
 ```csharp
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, Inherited = false)]
-abstract class JavaPeerProxy : Attribute
+abstract class JavaPeerProxyAttribute : Attribute
 {
     /// <summary>
     /// Creates an instance of the target type wrapping the given Java object.
@@ -355,24 +365,28 @@ This interface is used to obtain function pointers for Java `native` methods. We
 
 ### 7.1 User Class Proxy (ACW Type)
 
-User classes that generate JCWs implement BOTH `JavaPeerProxy` AND `IAndroidCallableWrapper`:
+User classes that generate JCWs implement BOTH `JavaPeerProxyAttribute` AND `IAndroidCallableWrapper`:
 
 ```csharp
 [MainActivity_Proxy]
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, Inherited = false)]
-public sealed class MainActivity_Proxy : JavaPeerProxy, IAndroidCallableWrapper
+public sealed class MainActivity_Proxy : JavaPeerProxyAttribute, IAndroidCallableWrapper
 {
     // IAndroidCallableWrapper implementation
     public IntPtr GetFunctionPointer(int methodIndex) => methodIndex switch
     {
         0 => (IntPtr)(delegate*<IntPtr, IntPtr, IntPtr, void>)&n_onCreate_mm_0,
-        1 => (IntPtr)(delegate*<IntPtr, IntPtr, void>)&nc_activate_0,
+        1 => (IntPtr)(delegate*<IntPtr, IntPtr, void>)&nctor_0,
         _ => IntPtr.Zero
     };
 
-    // JavaPeerProxy implementation
+    // JavaPeerProxyAttribute implementation
     public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
-        => new MainActivity(handle, transfer);
+    {
+        var instance = (MainActivity)RuntimeHelpers.GetUninitializedObject(typeof(MainActivity));
+        ((Activity)instance)..ctor(handle, transfer); // C#-pseudocode, generated in IL
+        return instance;
+    }
 
     public override JavaPeerContainerFactory GetContainerFactory()
         => JavaPeerContainerFactory.Create<MainActivity>();
@@ -389,7 +403,7 @@ public sealed class MainActivity_Proxy : JavaPeerProxy, IAndroidCallableWrapper
     }
 
     [UnmanagedCallersOnly]
-    public static void nc_activate_0(IntPtr jnienv, IntPtr jobject)
+    public static void nctor_0(IntPtr jnienv, IntPtr jobject)
     {
         if (JniEnvironment.WithinNewObjectScope)
             return;
@@ -398,8 +412,7 @@ public sealed class MainActivity_Proxy : JavaPeerProxy, IAndroidCallableWrapper
 
         var instance = (MainActivity)RuntimeHelpers.GetUninitializedObject(typeof(MainActivity));
         ((IJavaPeerable)instance).SetPeerReference(new JniObjectReference(jobject));
-        CallActivationCtor(instance, jobject, JniHandleOwnership.DoNotTransfer);
-    }
+        CallActivationCtor(instance, jobject, JniHandleOwnership.DoNotTransfer);    }
 
     [UnsafeAccessor(UnsafeAccessorKind.Method, Name = ".ctor")]
     static extern void CallActivationCtor(MainActivity instance, IntPtr handle, JniHandleOwnership transfer);
@@ -408,12 +421,12 @@ public sealed class MainActivity_Proxy : JavaPeerProxy, IAndroidCallableWrapper
 
 ### 7.2 MCW Type Proxy (No JCW)
 
-MCW types (framework bindings with `DoNotGenerateAcw=true`) only implement `JavaPeerProxy`, NOT `IAndroidCallableWrapper`:
+MCW types (framework bindings with `DoNotGenerateAcw=true`) only implement `JavaPeerProxyAttribute`, NOT `IAndroidCallableWrapper`:
 
 ```csharp
 [android_widget_TextView_Proxy]
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, Inherited = false)]
-public sealed class android_widget_TextView_Proxy : JavaPeerProxy
+public sealed class android_widget_TextView_Proxy : JavaPeerProxyAttribute
 {
     // NO IAndroidCallableWrapper - this is an MCW type, Java never calls back into it
 
@@ -431,7 +444,7 @@ public sealed class android_widget_TextView_Proxy : JavaPeerProxy
 
 ### 8.1 The Problem
 
-LLVM IR stubs call `GetFunctionPointer(className, methodIndex)`. Both LLVM IR and the C# `GetFunctionPointer` switch must use identical indexing.
+LLVM IR stubs call `GetFunctionPointer(jniName, methodIndex)`. Both LLVM IR and the C# `GetFunctionPointer` switch must use identical indexing.
 
 ### 8.2 The Contract
 
@@ -440,8 +453,8 @@ LLVM IR stubs call `GetFunctionPointer(className, methodIndex)`. Both LLVM IR an
 1. **Regular marshal methods** (indices 0 to n-1)
    - Enumerate in declaration order from `[Register]` and `[Export]` attributes
 
-2. **Activation constructors** (indices n to m-1)
-   - One per activation constructor style (XI or JI)
+2. **Java-callable constructors** (indices n to m-1)
+   - One per user-defined constructor that Java can invoke (`nctor_N`)
 
 **BOTH** the IL generator and LLVM IR generator MUST iterate methods in identical order.
 
@@ -458,8 +471,8 @@ foreach (var method in type.GetMethodsWithRegisterOrExport().OrderBy(m => m.Name
     methodIndex++;
 }
 
-// Second: activation constructors
-foreach (var ctor in type.GetActivationConstructors())
+// Second: Java-callable constructors
+foreach (var ctor in type.GetJavaCallableConstructors())
 {
     EmitLlvmStub(ctor, methodIndex);
     EmitUcoWrapper(ctor, methodIndex);
@@ -502,7 +515,7 @@ When the activation constructor is protected or in a base class, the TypeMaps as
 // Direct newobj call works despite protected constructor
 public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
 {
-    var obj = RuntimeHelpers.GetUninitialiedObject(typeof(MainActivity));
+    var obj = RuntimeHelpers.GetUninitializedObject(typeof(MainActivity));
     ((Activity)obj)..ctor(handle, transfer);  // Direct call to Activity..ctor (protected), won't cause an exception (only possible to generate directly in IL)
     return obj;
 }
@@ -522,10 +535,10 @@ For JI-style constructors, the `CreateInstance` method must:
 public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
 {
     var reference = new JniObjectReference(handle);
-    var obj = RuntimeHelpers.GetUninitialiedObject(typeof(MainActivity));
+    var obj = RuntimeHelpers.GetUninitializedObject(typeof(MainActivity));
     ((Activity)obj)..ctor(ref reference, JniObjectReferenceOptions.Copy);
     JNIEnv.DeleteRef(handle, transfer);  // Clean up original handle
-    return result;
+    return obj;
 }
 ```
 
@@ -542,7 +555,7 @@ try {
 
 ---
 
-## 10. Java Constructor Generation
+## 10. Java Callable Wrapper Constructor Generation
 
 **IMPORTANT:** This section describes generating **Java constructors** in the JCW `.java` files. This is distinct from [Section 9: Activation Constructor Handling](#9-activation-constructor-handling) which describes **managed activation constructors** used by `CreateInstance`.
 
@@ -557,12 +570,12 @@ When Java code creates an instance of a JCW class, the Java constructor must:
 public MainActivity () {
     super ();
     if (getClass () == MainActivity.class) {
-        // Call native activation method (index depends on ctor signature)
-        nc_activate_0 ();
+        // Call native Java-callable constructor (index depends on ctor signature)
+        nctor_0 ();
     }
 }
 
-private native void nc_activate_0 ();
+private native void nctor_0 ();
 ```
 
 ### 10.2 Constructor Generation Algorithm
@@ -659,8 +672,8 @@ attributes #0 = { noinline nounwind "frame-pointer"="non-leaf" }
 
 ```c
 void (*typemap_get_function_pointer)(
-    const char16_t* className,  // UTF-16 Java class name (NOT null-terminated)
-    int32_t classNameLength,    // Length in char16_t units
+    const char16_t* jniName,    // UTF-16 Java class name (NOT null-terminated)
+    int32_t jniNameLength,      // Length in char16_t units
     int32_t methodIndex,        // Index into proxy's GetFunctionPointer switch
     intptr_t* fnptr             // Out: resolved function pointer
 );
@@ -705,11 +718,11 @@ public static void n_{MethodName}_mm_{Index}(IntPtr jnienv, IntPtr obj, ...)
 }
 ```
 
-### 12.2 Activation UCO
+### 12.2 Java-Callable Constructor UCO
 
 ```csharp
 [UnmanagedCallersOnly]
-public static void nc_activate_{Index}(IntPtr jnienv, IntPtr jobject)
+public static void nctor_{Index}(IntPtr jnienv, IntPtr jobject)
 {
     // Skip if being constructed from managed side
     if (JniEnvironment.WithinNewObjectScope)
@@ -761,7 +774,7 @@ class HandlerB : Java.Lang.Object { }
 
 ### 14.2 Alias Holder Pattern
 
-The typemap does not map to `JavaPeerProxy` directly in this case, but it maps to an "alias holder" class. This class has an attribute which lists all the string keys of the target proxies. This way the types corresponding to these keys can be trimmed.
+The typemap does not map to `JavaPeerProxyAttribute` directly in this case, but it maps to an "alias holder" class. This class has an attribute which lists all the string keys of the target proxies. This way the types corresponding to these keys can be trimmed.
 
 ```csharp
 // Base name → alias holder
@@ -998,7 +1011,9 @@ The trimmable type map system uses `TypeMapAttribute` to point to **proxy types*
 // The proxy has DIRECT REFERENCES to the real type's methods:
 class MainActivity_Proxy {
     public static Java.Lang.Object CreateInstance(IntPtr handle, JniHandleOwnership ownership) {
-        return new MainActivity(handle, ownership);  // Direct reference!
+        var instance = (MainActivity)RuntimeHelpers.GetUninitializedObject(typeof(MainActivity));
+        ((Activity)instance)..ctor(handle, ownership);  // C#-pseudocode, generated in IL
+        return instance;
     }
 
     public static void n_OnCreate(IntPtr jnienv, IntPtr native__this, IntPtr bundle) {
@@ -1038,7 +1053,7 @@ This section defines the **exact rules** for determining which types are preserv
 | Interface with `[Register]` | **Trimmable** | Only if .NET implements/uses |
 | Implementor type (ends in "Implementor") | **Trimmable** | Only if C# event is used |
 | `[Register]` with `DoNotGenerateAcw = true` | **Trimmable** | MCW - only if .NET uses |
-| Invoker type | **Not in TypeMap** | Instantiated from the corresponding interface's `JavaPeerProxy.CreateInstance` |
+| Invoker type | **Not in TypeMap** | Instantiated from the corresponding interface's `JavaPeerProxyAttribute.CreateInstance` |
 
 **Key Insight:** In the legacy system, most types are only preserved if they're referenced by user code. The legacy `MarkJavaObjects` only unconditionally marks:
 1. Types with `[Activity]`, `[Service]`, `[BroadcastReceiver]`, `[ContentProvider]`, `[Application]`, `[Instrumentation]` attributes
@@ -1241,14 +1256,14 @@ Activator.CreateInstance(typeof(JavaList<>).MakeGenericType(typeof(T)));
 
 #### Solution: JavaPeerContainerFactory
 
-The `JavaPeerContainerFactory` is an abstract base class that provides factory methods for creating containers. Each `JavaPeerProxy` has a `GetContainerFactory()` method that returns a `JavaPeerContainerFactory<T>` singleton already typed to the target type.
+The `JavaPeerContainerFactory` is an abstract base class that provides factory methods for creating containers. Each `JavaPeerProxyAttribute` has a `GetContainerFactory()` method that returns a `JavaPeerContainerFactory<T>` singleton already typed to the target type.
 
 **Key insight**: Generic instantiation like `new T[length]` or `new JavaList<T>()` requires knowing `T` at compile time. By having each proxy return a factory that is already typed to its specific `T`, these operations use direct `new` expressions which are fully AOT-safe.
 
 #### Architecture
 
 ```
-JavaPeerProxy (attribute on each bound type)
+JavaPeerProxyAttribute (attribute on each bound type)
     │
     └── abstract JavaPeerContainerFactory GetContainerFactory()
                       │
@@ -1449,7 +1464,7 @@ var instance = Activator.CreateInstance(type, handle, transfer);
 
 **Why these fail:** ILC must know all types at compile time. Dynamic type construction cannot be resolved statically.
 
-**Solution:** The `JavaPeerProxy` and `JavaPeerContainerFactory` patterns replace all dynamic instantiation with statically-typed factory methods that ILC can analyze.
+**Solution:** The `JavaPeerProxyAttribute` and `JavaPeerContainerFactory` patterns replace all dynamic instantiation with statically-typed factory methods that ILC can analyze.
 
 ### 17.3 JNI Callback Implementation
 
@@ -1467,8 +1482,7 @@ static void n_OnCreate(IntPtr jnienv, IntPtr native__this, IntPtr native_savedIn
 ```
 
 **LLVM IR Generation:** For Native AOT, we generate LLVM IR files (`.ll`) that define the JNI entry points. These are compiled alongside the ILC output and linked into the final shared library. This approach:
-- Avoids Java source generation for JCW method stubs
-- Provides direct native-to-managed transitions
+- Provides direct native-to-managed transitions via `Java_`-prefixed symbols
 - Enables ILC to see and optimize the call paths
 
 ### 17.4 Symbol Export Requirements
