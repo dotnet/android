@@ -209,14 +209,28 @@ private static ITypeMap CreateTypeMap()
 | User class with JCW | `MainActivity` | Yes | ✅ | Returns UCO ptrs | `GetUninitializedObject` + base `.ctor(h, t)` |
 | SDK MCW (binding) | `Activity` | No | ✅ | Throws | `new T(h, t)` (bindings have this ctor) |
 | Interface | `IOnClickListener` | No | ✅ | Throws | `new TInvoker(h, t)` |
+| Generic user class | `GenericHolder<T>` | Yes | ✅ | Returns UCO ptrs | Throws (unreachable — see §4.2) |
 
-### 4.2 Types That Do NOT Need Proxies
+### 4.2 Generic Types
+
+User-defined generic types that extend Java peers (e.g., `class GenericHolder<T> : Java.Lang.Object`) **do** get JCWs and **do** need TypeMap entries. The JCW is generated for the open generic definition — Java sees one class (e.g., `crc64.../GenericHolder_1`) regardless of the type parameter.
+
+**What works:**
+- `TryGetType("crc64.../GenericHolder_1")` → returns `typeof(GenericHolder<>)` (the open generic definition)
+- `TryGetJniNameForType(typeof(GenericHolder<int>))` → returns `"crc64.../GenericHolder_1"`
+- Closed generic instances created on the .NET side (e.g., `new GenericHolder<int>()`) work normally — they are registered via `ConstructPeer` and Java can call their methods
+
+**What does NOT work:**
+- `CreateInstance(handle, transfer)` — this would only be called when there is a Java instance of `crc64.../GenericHolder_1` with no corresponding .NET peer in the object map. Since the open-generic JCW cannot have a constructor callable from Java (there is no way to determine `T`), this scenario is effectively **unreachable**. The proxy's `CreateInstance` throws `NotSupportedException` as a safety measure, matching the existing behavior where `TypeManager.Activate` rejects open generic types.
+
+**Proxy design:** The proxy for a generic type maps to the open generic definition. `CreateInstance` throws with a clear error message. `GetFunctionPointer` works normally for marshal methods (method overrides are on the open definition).
+
+### 4.3 Types That Do NOT Need Proxies
 
 | Type Category | Example | Reason |
 |---------------|---------|--------|
 | Invoker | `IOnClickListenerInvoker` | Share JNI name with interface; instantiated by interface proxy |
 | `DoNotGenerateAcw` types without activation ctor | Internal helpers | No JCW, no peer creation from Java |
-| Generic types | `List<T>` | Not directly mapped to Java |
 
 **Key Design Decision:** Invokers are excluded from the TypeMap because:
 1. They have `DoNotGenerateAcw=true` (no JCW)
