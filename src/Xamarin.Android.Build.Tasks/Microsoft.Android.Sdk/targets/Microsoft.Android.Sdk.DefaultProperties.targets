@@ -7,7 +7,7 @@
     <MonoAndroidAssetsPrefix Condition=" '$(MonoAndroidAssetsPrefix)' == '' ">Assets</MonoAndroidAssetsPrefix>
     <AndroidResgenClass Condition=" '$(AndroidResgenClass)' == '' ">Resource</AndroidResgenClass>
     <AndroidEnableSGenConcurrent Condition=" '$(AndroidEnableSGenConcurrent)' == '' ">true</AndroidEnableSGenConcurrent>
-    <AndroidHttpClientHandlerType Condition=" '$(AndroidHttpClientHandlerType)' == '' ">Xamarin.Android.Net.AndroidMessageHandler</AndroidHttpClientHandlerType>
+    <!-- AndroidHttpClientHandlerType is deprecated and should no longer be set. See XA1034 warning. -->
     <AndroidGenerateResourceDesigner Condition=" '$(AndroidGenerateResourceDesigner)' == '' ">true</AndroidGenerateResourceDesigner>
     <AndroidUseDesignerAssembly Condition=" '$(AndroidUseDesignerAssembly)' == '' ">true</AndroidUseDesignerAssembly>
     <AndroidUseIntermediateDesignerFile Condition=" '$(AndroidUseDesignerAssembly)' == 'True' ">false</AndroidUseIntermediateDesignerFile>
@@ -133,7 +133,7 @@
     <Http3Support Condition="'$(Http3Support)' == ''">false</Http3Support>
     <InvariantGlobalization Condition="'$(InvariantGlobalization)' == ''">false</InvariantGlobalization>
     <UseSizeOptimizedLinq Condition="'$(UseSizeOptimizedLinq)' == ''">true</UseSizeOptimizedLinq>
-    <UseNativeHttpHandler Condition=" $(AndroidHttpClientHandlerType.Contains ('System.Net.Http.SocketsHttpHandler')) And '$(UseNativeHttpHandler)' == '' ">false</UseNativeHttpHandler>
+    <UseNativeHttpHandler Condition=" '$(AndroidHttpClientHandlerType)' != '' And $(AndroidHttpClientHandlerType.Contains ('System.Net.Http.SocketsHttpHandler')) And '$(UseNativeHttpHandler)' == '' ">false</UseNativeHttpHandler>
     <UseNativeHttpHandler Condition="'$(UseNativeHttpHandler)' == ''">true</UseNativeHttpHandler>
     <BuiltInComInteropSupport Condition="'$(BuiltInComInteropSupport)' == ''">false</BuiltInComInteropSupport>
     <JsonSerializerIsReflectionEnabledByDefault Condition="'$(JsonSerializerIsReflectionEnabledByDefault)' == '' and '$(TrimMode)' == 'partial'">true</JsonSerializerIsReflectionEnabledByDefault>

@@ -7,6 +7,8 @@
     <type fullname="Microsoft.Android.Runtime.RuntimeFeature">
       <method signature="System.Boolean get_ManagedTypeMap()" body="stub" feature="Microsoft.Android.Runtime.RuntimeFeature.ManagedTypeMap" featurevalue="false" value="false" />
       <method signature="System.Boolean get_ManagedTypeMap()" body="stub" feature="Microsoft.Android.Runtime.RuntimeFeature.ManagedTypeMap" featurevalue="true" value="true" />
+      <method signature="System.Boolean get_XaHttpClientHandlerType()" body="stub" feature="Microsoft.Android.Runtime.RuntimeFeature.XaHttpClientHandlerType" featurevalue="false" value="false" />
+      <method signature="System.Boolean get_XaHttpClientHandlerType()" body="stub" feature="Microsoft.Android.Runtime.RuntimeFeature.XaHttpClientHandlerType" featurevalue="true" value="true" />
     </type>
   </assembly>
 </linker>

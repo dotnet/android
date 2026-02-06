@@ -10,6 +10,7 @@ static class RuntimeFeature
 	const bool IsCoreClrRuntimeEnabledByDefault = false;
 	const bool IsAssignableFromCheckEnabledByDefault = true;
 	const bool StartupHookSupportEnabledByDefault = true;
+	const bool XaHttpClientHandlerTypeEnabledByDefault = false;
 
 	const string FeatureSwitchPrefix = "Microsoft.Android.Runtime.RuntimeFeature.";
 	const string StartupHookProviderSwitch = "System.StartupHookProvider.IsSupported";
@@ -34,4 +35,9 @@ static class RuntimeFeature
 	[FeatureGuard (typeof (RequiresUnreferencedCodeAttribute))]
 	internal static bool StartupHookSupport { get; } =
 		AppContext.TryGetSwitch (StartupHookProviderSwitch, out bool isEnabled) ? isEnabled : StartupHookSupportEnabledByDefault;
+
+	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (XaHttpClientHandlerType)}")]
+	[FeatureGuard (typeof (RequiresUnreferencedCodeAttribute))]
+	internal static bool XaHttpClientHandlerType { get; } =
+		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (XaHttpClientHandlerType)}", out bool isEnabled) ? isEnabled : XaHttpClientHandlerTypeEnabledByDefault;
 }
