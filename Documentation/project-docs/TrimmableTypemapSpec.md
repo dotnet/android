@@ -727,6 +727,67 @@ define default void @Java_...  ; NOT hidden!
 | `marshal_methods_{TypeName}.ll` | Per-type JNI stubs |
 | `marshal_methods_init.ll` | Global `typemap_get_function_pointer` declaration |
 
+### 12.5 Alternative: JNI `RegisterNatives` Instead of LLVM IR
+
+The LLVM IR approach (§12.1–12.4) generates native stubs that export `Java_pkg_Class_method` symbols, which the JVM resolves via `dlsym`. An alternative is to use JNI's `RegisterNatives` API to bind Java `native` methods to managed `[UnmanagedCallersOnly]` function pointers at runtime — eliminating LLVM IR generation for marshal methods entirely.
+
+With `RegisterNatives`, the proxy class registers its own native methods:
+
+```csharp
+unsafe class MainActivity_Proxy : JavaPeerProxyAttribute, IAndroidCallableWrapper
+{
+    public void RegisterNatives(JniType javaClass)
+    {
+        ReadOnlySpan<JniNativeMethodRegistration> methods = [
+            new ("nctor_0"u8, "()V"u8, (IntPtr)(delegate*<IntPtr, IntPtr, void>)&nctor_0),
+            new ("n_onCreate"u8, "(Landroid/os/Bundle;)V"u8,
+                (IntPtr)(delegate*<IntPtr, IntPtr, IntPtr, void>)&n_onCreate_mm_0),
+        ];
+        javaClass.RegisterNativeMethods(methods);
+    }
+
+    [UnmanagedCallersOnly]
+    public static void n_onCreate_mm_0(IntPtr jnienv, IntPtr obj, IntPtr p0)
+        => Activity.n_OnCreate_Landroid_os_Bundle_(jnienv, obj, p0);
+
+    // ...
+}
+```
+
+The UCO methods (`n_onCreate_mm_0`, `nctor_0`, etc.) are identical in both approaches — only the JNI binding mechanism differs. With LLVM IR, the binding is a native stub that calls `GetFunctionPointer` and caches the result. With `RegisterNatives`, the binding is a managed method that passes function pointers to the JVM directly.
+
+#### Impact on the trimmable typemap build pipeline
+
+The LLVM IR approach requires these build steps (per ABI):
+
+1. Generate `.ll` files containing JNI entry stubs with `GetFunctionPointer` caching
+2. Compile `.ll` → `.o` using `llc`
+3. Link `.o` into `libmarshal_methods.so` (MonoVM) or merge into `libApp.so` (NativeAOT)
+4. For NativeAOT: post-trimming filter to exclude `.o` files for trimmed types
+5. For NativeAOT: append marshal method symbols to the linker exports file
+
+The `RegisterNatives` approach replaces all of these with IL generation in the proxy class (which is already being generated). The build pipeline comparison:
+
+| Build step | With LLVM IR | With `RegisterNatives` |
+|-----------|-------------|----------------------|
+| Generate LLVM IR (`.ll`) per ABI | ✅ Required | ❌ Not needed |
+| `llc` compilation (`.ll` → `.o`) per ABI | ✅ Required | ❌ Not needed |
+| Native linking (`.o` → `.so`/`.a`) | ✅ Required | ❌ Not needed |
+| Post-trim `.o` filtering (NativeAOT) | ✅ Required | ❌ Not needed |
+| Symbol export management (NativeAOT) | ✅ Required | ❌ Not needed |
+| IL generation in proxy class | ✅ `GetFunctionPointer` switch | ✅ `RegisterNatives` method |
+| JCW Java source generation | ✅ Required (declares `native` methods) | ✅ Required (declares `native` methods) |
+
+This is significant because the trimmable typemap already eliminates the native binary typemap tables (category 1 of 4 in the legacy LLVM pipeline). Adopting `RegisterNatives` would also eliminate the marshal method stubs (category 2). The remaining LLVM IR categories (environment config, compressed assemblies) are simpler and could potentially be replaced with alternative approaches in a future release, fully removing `llc` from the build.
+
+#### Prerequisites
+
+- **`dotnet/java-interop` API additions**: `JniNativeMethodRegistration` currently stores a `Delegate`. A new constructor or struct variant accepting `IntPtr` (raw function pointer) is needed for `[UnmanagedCallersOnly]` methods. `ReadOnlySpan<byte>` overloads for method name/signature would enable zero-allocation registration using UTF-8 string literals.
+- **Registration trigger**: Java `native` methods must be registered before first invocation. The existing Java static initializer pattern (`mono.android.Runtime.register()` called from each JCW's `<clinit>`) can be reused — the trimmable typemap just needs to route it to the proxy's `RegisterNatives` method instead of the legacy reflection-based path.
+- **GC safety**: Unlike the current delegate-based `RegisterNatives`, `[UnmanagedCallersOnly]` static method pointers are stable and do not require `GCHandle` protection.
+
+> **Open question:** Should `RegisterNatives` be used for all builds, or should Release builds use LLVM IR for the static symbol resolution benefit? The performance difference is likely negligible in practice since `RegisterNatives` runs once per class at load time, but this needs measurement.
+
 ---
 
 ## 13. UCO Wrapper Generation
