@@ -426,16 +426,10 @@ public sealed class MainActivity_Proxy : JavaPeerProxyAttribute, IAndroidCallabl
     public override JavaPeerContainerFactory GetContainerFactory()
         => JavaPeerContainerFactory.Create<MainActivity>();
 
+    // Delegation: Activity already has the generator-emitted marshal method
     [UnmanagedCallersOnly]
     public static void n_onCreate_mm_0(IntPtr jnienv, IntPtr obj, IntPtr p0)
-    {
-        AndroidRuntimeInternal.WaitForBridgeProcessing();
-        try {
-            MainActivity.n_OnCreate(jnienv, obj, p0);
-        } catch (Exception ex) {
-            AndroidEnvironmentInternal.UnhandledException(jnienv, ex);
-        }
-    }
+        => Activity.n_OnCreate_Landroid_os_Bundle_(jnienv, obj, p0);
 
     [UnmanagedCallersOnly]
     public static void nctor_0(IntPtr jnienv, IntPtr jobject)
@@ -739,18 +733,40 @@ define default void @Java_...  ; NOT hidden!
 
 ### 13.1 Regular Method UCO
 
+There are two cases depending on whether a generator-emitted marshal method already exists on the declaring type.
+
+#### Delegation (preferred)
+
+When the binding generator has already emitted a marshal method on the declaring type (e.g., `Activity.n_OnCreate_Landroid_os_Bundle_`), the UCO simply **delegates** to it:
+
 ```csharp
 [UnmanagedCallersOnly]
+public static void n_onCreate_mm_0(IntPtr jnienv, IntPtr obj, IntPtr p0)
+    => Activity.n_OnCreate_Landroid_os_Bundle_(jnienv, obj, p0);
+```
+
+The generator-emitted method already contains `BeginMarshalMethod`/`EndMarshalMethod`, parameter marshalling, and exception handling — there is no need to duplicate that logic. Subclasses that override the same virtual method share the base class's marshal method through delegation, avoiding code bloat across the type hierarchy.
+
+**Detection at build time:** The `GenerateTypeMaps` task scans assemblies and resolves the `[Register]` attribute's connector method. If the declaring type has a matching static `n_*` callback method, delegation is used.
+
+#### Inlining (fallback)
+
+When no generator-emitted marshal method exists (e.g., `[Export]` methods or user-defined `[Register]` overrides without a corresponding generator callback), the UCO contains the full marshal pattern:
+
+```csharp
+[UnmanagedCallersOnly]
+[DebuggerDisableUserUnhandledExceptions]
 public static void n_{MethodName}_mm_{Index}(IntPtr jnienv, IntPtr obj, ...)
 {
-    AndroidRuntimeInternal.WaitForBridgeProcessing();
-    try
-    {
-        TargetType.n_{MethodName}_{JniSignature}(jnienv, obj, ...);
-    }
-    catch (Exception ex)
-    {
-        AndroidEnvironmentInternal.UnhandledException(jnienv, ex);
+    if (!JniEnvironment.BeginMarshalMethod(jnienv, out var __envp, out var __r))
+        return;
+    try {
+        var __this = Java.Lang.Object.GetObject<TargetType>(jnienv, obj, JniHandleOwnership.DoNotTransfer)!;
+        __this.TargetMethod(...);
+    } catch (Exception __e) {
+        __r.OnUserUnhandledException(ref __envp, __e);
+    } finally {
+        JniEnvironment.EndMarshalMethod(ref __envp);
     }
 }
 ```
@@ -782,16 +798,21 @@ public static void nctor_{Index}(IntPtr jnienv, IntPtr jobject)
 
 ### 13.3 Blittable Parameter Handling
 
-`[UnmanagedCallersOnly]` requires blittable parameters. Replace `bool` with `byte`:
+`[UnmanagedCallersOnly]` requires blittable parameters. Non-blittable JNI types like `jboolean` must be converted. For example, `bool` → `byte`:
 
 ```csharp
-// Original: n_setEnabled(JNIEnv*, jobject, jboolean)
+// Original generator method: n_SetEnabled(JNIEnv*, jobject, jboolean)
+// jboolean maps to bool in C#, but bool is non-blittable
 [UnmanagedCallersOnly]
 public static void n_setEnabled_mm_0(IntPtr jnienv, IntPtr obj, byte enabled)
 {
-    TargetType.n_setEnabled(jnienv, obj, enabled);
+    // Delegation with blittable adapter — the generator method takes bool,
+    // so we convert byte → bool at the boundary
+    TargetType.n_SetEnabled(jnienv, obj, enabled != 0);
 }
 ```
+
+When inlining the full pattern (no generator method to delegate to), the conversion happens inline within the `try` block.
 
 ---
 
