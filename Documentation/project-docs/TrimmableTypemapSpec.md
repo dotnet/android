@@ -204,6 +204,8 @@ private static ITypeMap CreateTypeMap()
 
 ### 4.1 Types That Need Proxies
 
+The following table summarizes the proxy types generated for each type category. `GetFunctionPointer` and `CreateInstance` are methods on the proxy — see §5 for the base class design and §6 for full examples. "UCO" refers to `[UnmanagedCallersOnly]` wrapper methods described in §13.
+
 | Type Category | Example | JCW? | TypeMap Entry | GetFunctionPointer | CreateInstance |
 |---------------|---------|------|---------------|-------------------|----------------|
 | User class with JCW | `MainActivity` | Yes | ✅ | Returns UCO ptrs | `GetUninitializedObject` + base `.ctor(h, t)` |
@@ -240,15 +242,78 @@ User-defined generic types that extend Java peers (e.g., `class GenericHolder<T>
 
 ---
 
-## 5. Type Map Attributes
+## 5. JavaPeerProxyAttribute Design
+
+The TypeMap assembly references types and members from other assemblies (e.g., `Mono.Android`, user assemblies) that may be `protected` or `internal`. To make this possible, the TypeMap assembly uses [`IgnoresAccessChecksToAttribute`](https://www.strathweb.com/2018/10/no-internalvisibleto-no-problem-bypassing-c-visibility-rules-with-roslyn/):
+
+```csharp
+[assembly: IgnoresAccessChecksTo("Mono.Android")]
+[assembly: IgnoresAccessChecksTo("UserAssembly")]
+// ... one per referenced assembly with non-public types/members
+```
+
+This is an assembly-level attribute that instructs the runtime to bypass access checks when the TypeMap assembly accesses non-public members of the target assembly. It is used extensively throughout the generated code — for calling protected activation constructors (§9.3), referencing internal types, and more.
+
+### 5.1 Base Class
+
+The base class provides instance creation and container factory methods. Note that `GetFunctionPointer` is NOT in the base class — it's in a separate interface (see §5.2).
+
+```csharp
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, Inherited = false)]
+abstract class JavaPeerProxyAttribute : Attribute
+{
+    /// <summary>
+    /// Creates an instance of the target type wrapping the given Java object.
+    /// </summary>
+    public abstract IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer);
+
+    /// <summary>
+    /// Gets a factory for creating containers (arrays, lists, sets, dictionaries) of the target type.
+    /// See §16 for details on JavaPeerContainerFactory.
+    /// </summary>
+    public abstract JavaPeerContainerFactory GetContainerFactory();
+}
+```
+
+### 5.2 IAndroidCallableWrapper Interface
+
+ACW (Android Callable Wrapper) types implement this interface:
+
+```csharp
+/// <summary>
+/// Interface for proxy types that represent Android Callable Wrappers (ACW).
+/// ACW types are .NET types that have a corresponding generated Java class which calls back into .NET via JNI.
+/// Only types with DoNotGenerateAcw=false implement this interface.
+/// </summary>
+public interface IAndroidCallableWrapper
+{
+    /// <summary>
+    /// Gets a function pointer for a marshal method at the specified index.
+    /// </summary>
+    IntPtr GetFunctionPointer(int methodIndex);
+}
+```
+
+This interface is used to obtain function pointers for Java `native` methods. We basically reimplement the Marshal Methods design.
+
+### 5.3 Proxy Behavior by Type Category
+
+| Type Category | Implements `IAndroidCallableWrapper`? | `GetFunctionPointer` Behavior | `CreateInstance` Behavior |
+|---------------|--------------------------------------|-------------------------------|---------------------------|
+| Concrete class with JCW | ✅ Yes | Returns UCO function pointers | Creates instance of the type |
+| MCW (framework binding) | ❌ No | N/A (not implemented) | Creates instance of the type |
+| Interface | ❌ No | N/A (not implemented) | Creates instance of **Invoker** |
+
+---
+
+## 6. Type Map Attributes
 
 > **Generation:** The `TypeMap` assembly-level attributes and all `*_Proxy` types described in this section
 > are **generated at build time** by an MSBuild task that emits IL directly into a dedicated assembly
 > (the "TypeMap assembly", e.g., `TypeMapAssembly.dll`). They are never hand-written or part of
-> `generator` output. The TypeMap assembly uses `[assembly: IgnoresAccessChecksTo("...")]` to
-> reference non-public types from other assemblies.
+> `generator` output.
 
-### 5.1 TypeMap Attribute Structure
+### 6.1 TypeMap Attribute Structure
 
 Each Java peer type is registered using assembly-level attributes:
 
@@ -261,7 +326,7 @@ Each Java peer type is registered using assembly-level attributes:
 [assembly: TypeMap<Java.Lang.Object>("com/example/MainActivity", typeof(MainActivity_Proxy), typeof(MainActivity))]
 ```
 
-### 5.2 Proxy Self-Application Pattern
+### 6.2 Proxy Self-Application Pattern
 
 The proxy type applies itself as an attribute to itself:
 
@@ -270,7 +335,7 @@ The proxy type applies itself as an attribute to itself:
 [assembly: TypeMap<Java.Lang.Object>("com/example/MainActivity", typeof(MainActivity_Proxy), typeof(MainActivity))]
 
 // Proxy applies ITSELF as an attribute to ITSELF
-// ACW types also implement IAndroidCallableWrapper for GetFunctionPointer
+// ACW types also implement IAndroidCallableWrapper for GetFunctionPointer (§5.2)
 [MainActivity_Proxy]  // Self-application
 public sealed class MainActivity_Proxy : JavaPeerProxyAttribute, IAndroidCallableWrapper
 {
@@ -303,7 +368,7 @@ IJavaPeerable instance = proxy.CreateInstance(handle, transfer);  // Returns Mai
 2. The .NET runtime's `GetCustomAttribute<T>()` instantiates attributes in an AOT-safe manner
 3. The `trimTarget` parameter ensures the mapping is preserved when the target type survives trimming
 
-### 5.3 Interface-to-Invoker Mapping
+### 6.3 Interface-to-Invoker Mapping
 
 Interfaces cannot be instantiated directly. The interface proxy's `CreateInstance` directly returns an Invoker instance. Interfaces do NOT implement `IAndroidCallableWrapper` since Java never calls back into them:
 
@@ -321,61 +386,9 @@ public sealed class IOnClickListener_Proxy : JavaPeerProxyAttribute  // No IAndr
 
 ---
 
-## 6. JavaPeerProxyAttribute Design
-
-### 6.1 Base Class
-
-The base class provides instance creation and container factory methods. Note that `GetFunctionPointer` is NOT in the base class - it's in a separate interface (see Section 6.2).
-
-```csharp
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, Inherited = false)]
-abstract class JavaPeerProxyAttribute : Attribute
-{
-    /// <summary>
-    /// Creates an instance of the target type wrapping the given Java object.
-    /// </summary>
-    public abstract IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer);
-
-    /// <summary>
-    /// Gets a factory for creating containers (arrays, lists, sets, dictionaries) of the target type.
-    /// See Section 21.7 for details on JavaPeerContainerFactory.
-    /// </summary>
-    public abstract JavaPeerContainerFactory GetContainerFactory();
-}
-```
-
-### 6.2 IAndroidCallableWrapper Interface
-
-ACW (Android Callable Wrapper) types implement this interface:
-
-```csharp
-/// <summary>
-/// Interface for proxy types that represent Android Callable Wrappers (ACW).
-/// ACW types are .NET types that have a corresponding generated Java class which calls back into .NET via JNI.
-/// Only types with DoNotGenerateAcw=false implement this interface.
-/// </summary>
-public interface IAndroidCallableWrapper
-{
-    /// <summary>
-    /// Gets a function pointer for a marshal method at the specified index.
-    /// </summary>
-    IntPtr GetFunctionPointer(int methodIndex);
-}
-```
-
-This interface is used to obtain function pointers for Java `native` methods. We basically reimplement the Marshal Methods design.
-
-### 6.3 Proxy Behavior by Type Category
-
-| Type Category | Implements `IAndroidCallableWrapper`? | `GetFunctionPointer` Behavior | `CreateInstance` Behavior |
-|---------------|--------------------------------------|-------------------------------|---------------------------|
-| Concrete class with JCW | ✅ Yes | Returns UCO function pointers | Creates instance of the type |
-| MCW (framework binding) | ❌ No | N/A (not implemented) | Creates instance of the type |
-| Interface | ❌ No | N/A (not implemented) | Creates instance of **Invoker** |
-
----
-
 ## 7. Generated Proxy Types
+
+This section shows complete proxy examples combining the base class (§5) and attributes (§6). These examples reference `[UnmanagedCallersOnly]` wrappers (UCOs, detailed in §13), Java-callable constructors (`nctor_N`, detailed in §10), and LLVM IR stubs (§12).
 
 ### 7.1 User Class Proxy (ACW Type)
 
@@ -458,7 +471,7 @@ public sealed class android_widget_TextView_Proxy : JavaPeerProxyAttribute
 
 ### 8.1 The Problem
 
-LLVM IR stubs call `GetFunctionPointer(jniName, methodIndex)`. Both LLVM IR and the C# `GetFunctionPointer` switch must use identical indexing.
+LLVM IR stubs (detailed in §12) call `GetFunctionPointer(jniName, methodIndex)`. Both LLVM IR and the C# `GetFunctionPointer` switch must use identical indexing.
 
 ### 8.2 The Contract
 
@@ -535,7 +548,7 @@ public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership t
 }
 ```
 
-**Note:** When using base class constructor, derived type field initializers do NOT run. This matches existing behavior. See Section 21.6 for full details on IgnoresAccessChecksTo.
+**Note:** When using base class constructor, derived type field initializers do NOT run. This matches existing behavior. See §5 for details on `IgnoresAccessChecksToAttribute`.
 
 ### 9.4 JI Constructor Handle Cleanup
 
@@ -619,7 +632,7 @@ FOR EACH type T in hierarchy (from topmost base with DoNotGenerateAcw=false → 
 
 ## 11. Export Attribute Support
 
-### 10.1 Approach
+### 11.1 Approach
 
 Handle `[Export]` identically to `[Register]` at build time:
 
@@ -631,7 +644,7 @@ public void MyMethod(int value) { ... }
 // [Register("myCustomMethod", "(I)V", "n_myCustomMethod")]
 ```
 
-### 10.2 JNI Signature Derivation
+### 11.2 JNI Signature Derivation
 
 When `[Export]` doesn't specify a signature, derive from .NET types:
 
@@ -714,7 +727,7 @@ define default void @Java_...  ; NOT hidden!
 
 ## 13. UCO Wrapper Generation
 
-### 12.1 Regular Method UCO
+### 13.1 Regular Method UCO
 
 ```csharp
 [UnmanagedCallersOnly]
@@ -732,7 +745,7 @@ public static void n_{MethodName}_mm_{Index}(IntPtr jnienv, IntPtr obj, ...)
 }
 ```
 
-### 12.2 Java-Callable Constructor UCO
+### 13.2 Java-Callable Constructor UCO
 
 ```csharp
 [UnmanagedCallersOnly]
@@ -757,7 +770,7 @@ public static void nctor_{Index}(IntPtr jnienv, IntPtr jobject)
 }
 ```
 
-### 12.3 Blittable Parameter Handling
+### 13.3 Blittable Parameter Handling
 
 `[UnmanagedCallersOnly]` requires blittable parameters. Replace `bool` with `byte`:
 
@@ -964,7 +977,7 @@ Post-Trimming Filter
 | Build speed | Faster | Slower (trimming overhead) |
 | TypeMapAssembly.dll | ALL types | Trimmed |
 
-### 15.5 Post-Trimming Filtering (Release Only)
+### 15.4 Post-Trimming Filtering (Release Only)
 
 **Problem:** We generate JCW .java files and LLVM IR .ll files for ALL types before trimming. After trimming, some .NET types are removed, but their Java classes and native stubs still exist.
 
@@ -978,7 +991,7 @@ Post-Trimming Filter
 
 **When to skip filtering:** If `$(PublishTrimmed)` is false (Debug), skip the post-trimming filter entirely and link all .o files.
 
-### 15.6 File Naming Convention
+### 15.5 File Naming Convention
 
 ```
 $(IntermediateOutputPath)/
@@ -1000,11 +1013,11 @@ $(IntermediateOutputPath)/
     └── proguard_typemap.cfg                    # -keep rules for surviving types only
 ```
 
-### 15.4 R8/ProGuard Configuration
+### 15.6 R8/ProGuard Configuration
 
 R8 is used to shrink unused Java classes from the DEX file. Proper configuration is critical for achieving small DEX sizes comparable to MonoVM.
 
-### 15.5 Incremental Build Strategy
+### 15.7 Incremental Build Strategy
 
 | Type Source | Strategy |
 |-------------|----------|
@@ -1012,7 +1025,7 @@ R8 is used to shrink unused Java classes from the DEX file. Proper configuration
 | NuGet package types | Generate on first build, cache by package version |
 | User types | Always regenerate (typically few types) |
 
-### 15.6 TypeMap Attributes and Trimming
+### 15.8 TypeMap Attributes and Trimming
 
 The trimmable type map system uses `TypeMapAttribute` to point to **proxy types**, which have direct references to the real types.
 
@@ -1053,7 +1066,7 @@ class MainActivity_Proxy {
 [assembly: TypeMap<JavaObjects>("android/widget/TextView", typeof(TextView_Proxy), typeof(TextView))]
 ```
 
-### 15.7 Type Detection Rules: Unconditional vs Trimmable
+### 15.9 Type Detection Rules: Unconditional vs Trimmable
 
 This section defines the **exact rules** for determining which types are preserved **unconditionally** vs which are **trimmable**.
 
@@ -1256,7 +1269,7 @@ BackupAgent and ManageSpaceActivity types referenced in `[Application]` attribut
 
 ---
 
-### 16. JavaPeerContainerFactory - AOT-Safe Generic Container Creation
+## 16. JavaPeerContainerFactory - AOT-Safe Generic Container Creation
 
 #### Problem
 
