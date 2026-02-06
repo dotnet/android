@@ -1099,26 +1099,23 @@ class MainActivity_Proxy {
 
 ### 15.9 Type Detection Rules: Unconditional vs Trimmable
 
-This section defines the **exact rules** for determining which types are preserved **unconditionally** vs which are **trimmable**.
+The legacy `MarkJavaObjects` custom trimmer step decides which types are preserved unconditionally and which can be trimmed. The trimmable TypeMap replaces this logic: the TypeMap entry for each type can either **unconditionally preserve** the type or make it **trimmable**, letting the trimmer keep or remove it based on usage. This section documents the rules that `MarkJavaObjects` uses, which the TypeMap generation must replicate.
 
-#### Rule Summary
+**Unconditional** types are determined by the presence of specific attributes or by appearing in XML resource files:
 
-| Detection Criteria | Preservation | Reason |
-|-------------------|--------------|--------|
-| User type with `[Activity]`, `[Service]`, etc. attribute | **Unconditional** | Android creates these |
-| User type subclassing Android component (Activity, etc.) | **Unconditional** | Android creates these |
-| Custom view referenced in layout XML | **Unconditional** | Android inflates these |
-| Interface with `[Register]` | **Trimmable** | Only if .NET implements/uses |
-| Implementor type (ends in "Implementor") | **Trimmable** | Only if C# event is used |
-| `[Register]` with `DoNotGenerateAcw = true` | **Trimmable** | MCW - only if .NET uses |
-| Invoker type | **Not in TypeMap** | Instantiated from the corresponding interface's `JavaPeerProxyAttribute.CreateInstance` |
+1. Types annotated with `[Activity]`, `[Service]`, `[BroadcastReceiver]`, `[ContentProvider]`, `[Application]`, or `[Instrumentation]` — these attributes implement `IJniNameProviderAttribute` (excluding plain `[Register]`) and indicate Android may instantiate the type.
+2. Custom views referenced in layout XML files — Android inflates these via `LayoutInflater`.
+3. Components referenced in the merged `AndroidManifest.xml` — see Rule 2b below.
 
-**Key Insight:** In the legacy system, most types are only preserved if they're referenced by user code. The legacy `MarkJavaObjects` only unconditionally marks:
-1. Types with `[Activity]`, `[Service]`, `[BroadcastReceiver]`, `[ContentProvider]`, `[Application]`, `[Instrumentation]` attributes
-2. Custom views from layout XML files
-3. Custom HttpMessageHandler from settings
+> **Note:** Simply subclassing `Activity` (or another Android component) does NOT make a type unconditional. If the type lacks the corresponding attribute (e.g., `[Activity]`) and is not in `AndroidManifest.xml`, it is trimmable. Android can only instantiate components that are declared in the manifest.
 
-All other types (interfaces, MCWs, Implementors) are only preserved if user code references them.
+**Trimmable** types include everything else:
+
+- **Bound Java interfaces** with `[Register]` — preserved only when .NET code references or implements the interface. When an interface survives trimming, ALL of its members must also be preserved. Java calls through the interface's JCW, and any trimmed member would cause a runtime failure. The generated proxy class ensures this by referencing all interface members directly.
+- **Implementor types** (e.g., `View_OnClickListenerImplementor`) — preserved only if the corresponding C# event is used.
+- **MCW types** with `DoNotGenerateAcw = true` — preserved only if .NET code uses the type.
+
+**Invoker types** are not in the TypeMap at all — they are instantiated from the corresponding interface or abstract class's `JavaPeerProxyAttribute.CreateInstance`.
 
 #### Detailed Detection Rules
 
@@ -1210,7 +1207,9 @@ public interface IContentHandler : IJavaObject { }
 // - Calls a method that takes/returns IContentHandler
 ```
 
-**Reasoning:** Interfaces don't have `DoNotGenerateAcw=true` in their `[Register]` attribute, but they are still MCW bindings. Android never creates interface instances directly - they're always created from .NET code.
+**Reasoning:** Interfaces don't have `DoNotGenerateAcw=true` in their `[Register]` attribute, but they are still MCW bindings for existing Java interfaces. Android never creates interface instances directly — they're always created from .NET code. The interface is preserved when .NET code references or implements it.
+
+When an interface survives trimming, its **individual members must NOT be trimmed** even if the trimmer thinks they're unused. Java calls through the interface's JCW, and removing a member would cause a runtime `MissingMethodException`. The generated proxy class ensures this by referencing all interface members directly.
 
 ##### Rule 4: Implementor Types → TRIMMABLE
 
@@ -1253,24 +1252,33 @@ PreservationMode DeterminePreservation(TypeDefinition type)
     }
 
     // JCW type (user's .NET type with Java wrapper)
-    // Always preserve because Android/Java may create at any time
-    return PreservationMode.Unconditional;
+    // Check if it has an IJniNameProviderAttribute (other than [Register])
+    // that indicates Android may instantiate it directly
+    if (HasComponentAttribute(type) || IsInCustomViewMap(type) || IsInManifest(type))
+    {
+        return PreservationMode.Unconditional;
+    }
+
+    // JCW type without component attribute — trimmable unless referenced
+    // (e.g., a Java.Lang.Object subclass, a custom exception, etc.)
+    return PreservationMode.Trimmable;
 }
 ```
 
 #### Summary Table
 
-| Type | `DoNotGenerateAcw` | Inherits From | Preservation | Example |
-|------|-------------------|---------------|--------------|---------|
-| User Activity | `false`/unset | `Activity` | **Unconditional** | `MainActivity` |
-| User Service | `false`/unset | `Service` | **Unconditional** | `MyBackgroundService` |
-| User Receiver | `false`/unset | `BroadcastReceiver` | **Unconditional** | `MyReceiver` |
-| User Exception | `false`/unset | `Java.Lang.Throwable` | **Unconditional** | `MyCustomException` |
-| User Interface | `false`/unset | `IJavaObject` | **Unconditional** | `IMyCallback` |
-| User Java.Lang.Object | `false`/unset | `Java.Lang.Object` | **Unconditional** | `MyJavaObject` |
-| SDK Activity | `true` | `Activity` | **Trimmable** | `Activity` binding |
-| SDK View | `true` | `View` | **Trimmable** | `TextView`, `Button` |
-| SDK Exception | `true` | `Java.Lang.Throwable` | **Trimmable** | `Java.Lang.Exception` |
+| Type | `DoNotGenerateAcw` | Has Component Attribute | Preservation | Example |
+|------|-------------------|------------------------|--------------|---------|
+| User Activity with `[Activity]` | `false`/unset | ✅ | **Unconditional** | `MainActivity` |
+| User Service with `[Service]` | `false`/unset | ✅ | **Unconditional** | `MyBackgroundService` |
+| User Activity without `[Activity]` | `false`/unset | ❌ | **Trimmable** | `MyHelperActivity` |
+| User Java.Lang.Object subclass | `false`/unset | ❌ | **Trimmable** | `MyJavaObject` |
+| User Exception | `false`/unset | ❌ | **Trimmable** | `MyCustomException` |
+| User Interface | `false`/unset | ❌ | **Trimmable** | `IMyCallback` |
+| Custom view in layout XML | `false`/unset | ❌ (but in XML) | **Unconditional** | `MyCustomButton` |
+| SDK Activity | `true` | N/A | **Trimmable** | `Activity` binding |
+| SDK View | `true` | N/A | **Trimmable** | `TextView`, `Button` |
+| SDK Exception | `true` | N/A | **Trimmable** | `Java.Lang.Exception` |
 
 #### Types Referenced by Application Attributes
 
