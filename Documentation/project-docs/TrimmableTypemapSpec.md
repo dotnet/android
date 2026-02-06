@@ -786,7 +786,7 @@ This is significant because the trimmable typemap already eliminates the native 
 - **Registration trigger**: Java `native` methods must be registered before first invocation. The existing Java static initializer pattern (`mono.android.Runtime.register()` called from each JCW's `<clinit>`) can be reused — the trimmable typemap just needs to route it to the proxy's `RegisterNatives` method instead of the legacy reflection-based path.
 - **GC safety**: Unlike the current delegate-based `RegisterNatives`, `[UnmanagedCallersOnly]` static method pointers are stable and do not require `GCHandle` protection.
 
-> **Open question:** Should `RegisterNatives` be used for all builds, or should Release builds use LLVM IR for the static symbol resolution benefit? The performance difference is likely negligible in practice since `RegisterNatives` runs once per class at load time, but this needs measurement.
+> **Runtime performance is not a concern.** Benchmarking on a Samsung Galaxy A16 (MediaTek mt6789, Android 14) confirms that `RegisterNatives` is marginally _faster_ than `dlsym` on the hot path (~328ns vs ~340ns per call for void methods, ~357ns vs ~369ns for `int` return). The ~3% difference is negligible — both approaches are dominated by the JNI call overhead itself. Since `RegisterNatives` is equal-or-better at runtime and dramatically simpler at build time, there is no reason to retain the LLVM IR approach for marshal methods.
 
 ---
 
