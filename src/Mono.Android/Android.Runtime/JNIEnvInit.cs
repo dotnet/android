@@ -204,9 +204,11 @@ namespace Android.Runtime
 				return;
 			}
 
-			// Pass empty string for diagnosticStartupHooks parameter
-			// The method will read STARTUP_HOOKS from AppContext internally
-			method.Invoke (null, [ "" ]);
+			// ProcessStartupHooks accepts startup hooks directly via parameter.
+			// It will also read STARTUP_HOOKS from AppContext internally.
+			// Pass DOTNET_STARTUP_HOOKS env var value so it works without needing AppContext setup.
+			string? startupHooks = Environment.GetEnvironmentVariable ("DOTNET_STARTUP_HOOKS");
+			method.Invoke (null, [ startupHooks ?? "" ]);
 		}
 
 		static void SetSynchronizationContext () =>

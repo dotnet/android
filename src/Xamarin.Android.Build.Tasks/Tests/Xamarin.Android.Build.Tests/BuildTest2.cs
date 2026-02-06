@@ -2153,5 +2153,71 @@ namespace App1
 			const string className = "Lcrc64467b05f37239e7a6/StreamMediaDataSource;";
 			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 		}
+
+		[Test]
+		public void MarshalMethodsUnhandledExceptionRuntimeFixUpWorks ([Values] AndroidRuntime runtime)
+		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			switch (runtime) {
+				case AndroidRuntime.NativeAOT:
+					Assert.Ignore ("NativeAOT does not support marshal methods");
+					break;
+
+				case AndroidRuntime.CoreCLR:
+					Assert.Ignore ("CoreCLR currently doesn't work due to a bug in Mono.Cecil");
+					break;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				EnableMarshalMethods = true,
+			};
+			proj.SetRuntime (runtime);
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+
+			string monoAndroidRuntimePath = Path.Combine (
+				Root,
+				builder.ProjectDirectory,
+				proj.IntermediateOutputPath,
+				"android-arm64",
+				"linked",
+				"Mono.Android.Runtime.dll"
+			);
+			FileAssert.Exists (monoAndroidRuntimePath);
+
+			using var asm = AssemblyDefinition.ReadAssembly (monoAndroidRuntimePath);
+			const string TypeName = "Android.Runtime.AndroidEnvironmentInternal";
+			TypeDefinition? type = null;
+
+			foreach (ModuleDefinition module in asm.Modules) {
+				foreach (TypeDefinition t in module.Types) {
+					if (t.FullName.Equals (TypeName, StringComparison.Ordinal)) {
+						type = t;
+						break;
+					}
+				}
+			}
+
+			Assert.NotNull (type, $"Failed to find the '{TypeName}' type in '{monoAndroidRuntimePath}'");
+			Assert.IsTrue (type.IsPublic, $"Type '{TypeName}' should be public");
+
+			// Additionally verify that the UnhandledException method is also public
+			const string MethodName = "UnhandledException";
+			MethodDefinition? method = null;
+			foreach (MethodDefinition m in type.Methods) {
+				if (m.Name.Equals (MethodName, StringComparison.Ordinal)) {
+					method = m;
+					break;
+				}
+			}
+
+			Assert.NotNull (method, $"Failed to find the '{MethodName}' method in type '{TypeName}'");
+			Assert.IsTrue (method.IsPublic, $"Method '{MethodName}' should be public");
+		}
 	}
 }

@@ -298,6 +298,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <_AndroidStripNativeLibraries Condition=" '$(_AndroidStripNativeLibraries)' != 'true' ">false</_AndroidStripNativeLibraries>
 </PropertyGroup>
 
+<!-- Setup $(AdbTarget) from $(Device) property for device selection support -->
+<PropertyGroup Condition=" '$(Device)' != '' ">
+	<AdbTarget>-s $(Device)</AdbTarget>
+</PropertyGroup>
+
 <Choose>
 	<When Condition=" '$(DebugSymbols)' == 'True' And '$(DebugType)' != '' And ('$(EmbedAssembliesIntoApk)' == 'False' Or '$(Optimize)' != 'True') ">
 		<PropertyGroup>
@@ -819,11 +824,6 @@ because xbuild doesn't support framework reference assemblies.
 		<AndroidApplicationJavaClass Condition="'$(AndroidApplicationJavaClass)' == ''">android.app.Application</AndroidApplicationJavaClass>
 	</PropertyGroup>
 	<Message Text="Application Java class: $(AndroidApplicationJavaClass)" />
-
-	<!-- Setup $(AdbTarget) from $(Device) property for device selection support -->
-	<PropertyGroup Condition=" '$(Device)' != '' ">
-		<AdbTarget>-s $(Device)</AdbTarget>
-	</PropertyGroup>
 </Target>
 
 <Target Name="AndroidPrepareForBuild" DependsOnTargets="$(_OnResolveMonoAndroidSdks);$(AndroidPrepareForBuildDependsOn)" />
@@ -1662,6 +1662,9 @@ because xbuild doesn't support framework reference assemblies.
   <GenerateAdditionalProviderSources
       AdditionalProviderSources="@(_AdditionalProviderSources)"
       AndroidRuntime="$(_AndroidRuntime)"
+      Environments="@(_EnvironmentFiles)"
+      HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
+      EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)"
       CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
       IntermediateOutputDirectory="$(IntermediateOutputPath)"
       OutputDirectory="$(IntermediateOutputPath)android"
@@ -1877,8 +1880,7 @@ because xbuild doesn't support framework reference assemblies.
   <!-- Create java needed for Mono runtime -->
   <GeneratePackageManagerJava
       MainAssembly="$(TargetPath)"
-      OutputDirectory="$(_AndroidIntermediateJavaSourceDirectory)mono"
-      ResolvedUserAssemblies="@(_ResolvedUserAssemblies)">
+      OutputDirectory="$(_AndroidIntermediateJavaSourceDirectory)mono">
   </GeneratePackageManagerJava>
 
   <GenerateNativeApplicationConfigSources
@@ -1907,6 +1909,7 @@ because xbuild doesn't support framework reference assemblies.
       EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
       CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
       TargetsCLR="$(_AndroidUseCLR)"
+      AndroidRuntime="$(_AndroidRuntime)"
       ProjectRuntimeConfigFilePath="$(ProjectRuntimeConfigFilePath)"
       >
   </GenerateNativeApplicationConfigSources>

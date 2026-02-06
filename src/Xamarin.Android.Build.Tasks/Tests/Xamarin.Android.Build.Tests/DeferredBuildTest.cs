@@ -2,6 +2,7 @@ using NUnit.Framework;
 using System.IO;
 using Xamarin.ProjectTools;
 using Microsoft.Build.Framework;
+using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -9,13 +10,19 @@ namespace Xamarin.Android.Build.Tests
 	public class DeferredBuildTest : BaseTest
 	{
 		[Test]
-		public void SelectivelyRunUpdateAndroidResources ()
+		public void SelectivelyRunUpdateAndroidResources ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var path = Path.Combine ("temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				ProjectName = "MyApp",
 			};
 
+			app.SetRuntime (runtime);
 			app.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
 			app.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
 
@@ -54,13 +61,20 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void RunUpdateAndroidResourcesIfBackgroundBuildNotSupported ()
+		public void RunUpdateAndroidResourcesIfBackgroundBuildNotSupported ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var path = Path.Combine ("temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				ProjectName = "MyApp",
 			};
 
+			app.SetRuntime (runtime);
 			app.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
 			app.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
 

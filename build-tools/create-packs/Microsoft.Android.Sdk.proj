@@ -8,8 +8,14 @@ core workload SDK packs imported by WorkloadManifest.targets.
 -->
 <Project Sdk="Microsoft.Build.NoTargets">
 
-  <Sdk Name="Microsoft.DotNet.SharedFramework.Sdk" Version="$(MicrosoftDotNetBuildTasksFeedPackageVersion)" />
+  <!-- Use net10.0 version since CI only has the .NET 10 SDK installed for BAR manifest publishing -->
+  <Sdk Name="Microsoft.DotNet.SharedFramework.Sdk" Version="$(MicrosoftDotNetBuildTasksFeedPackageVersionNet10)" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateUnixFilePermissions" />
+
+  <PropertyGroup>
+    <!-- Use stable TFM since CI only has the stable .NET SDK installed -->
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+  </PropertyGroup>
 
   <PropertyGroup>
     <PackageId>Microsoft.Android.Sdk.$(HostOS)</PackageId>
