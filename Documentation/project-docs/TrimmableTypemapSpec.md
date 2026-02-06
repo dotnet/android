@@ -110,7 +110,7 @@ The previous system used:
 │           │                              │                    │             │
 │           ▼                              ▼                    ▼             │
 │  ┌────────────────┐             ┌────────────────┐    ┌────────────────────┐│
-│  │ ILLink/Trimmer │             │ Java Compiler  │    │ LLVM → .o → .so    ││
+│  │ ILLink/Trimmer │             │ Java Compiler  │    │ LLVM → .o → .so/.a ││
 │  └────────────────┘             └────────────────┘    └────────────────────┘│
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -120,6 +120,12 @@ The previous system used:
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  Java calls native method (e.g., n_onCreate)                                │
+│           │                                                                 │
+│  ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐│
+│    Step 0: Java loads the native library via System.loadLibrary("App")     ││
+│    which triggers JNI_OnLoad → runtime init → TypeMap init.                ││
+│    After loading, Java_-prefixed symbols resolve native method calls.      ││
+│  └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘│
 │           │                                                                 │
 │           ▼                                                                 │
 │  ┌─────────────────────────────────────────────────────────────────────────┐│
@@ -205,6 +211,8 @@ private static ITypeMap CreateTypeMap()
 ### 4.1 Types That Need Proxies
 
 The following table summarizes the proxy types generated for each type category. `GetFunctionPointer` and `CreateInstance` are methods on the proxy — see §5 for the base class design and §6 for full examples. "UCO" refers to `[UnmanagedCallersOnly]` wrapper methods described in §13.
+
+**Accessibility:** User types that extend Java peers may be `internal`, `private`, or nested. The TypeMap assembly can reference all of these because it uses `IgnoresAccessChecksToAttribute` (see §5).
 
 | Type Category | Example | JCW? | TypeMap Entry | GetFunctionPointer | CreateInstance |
 |---------------|---------|------|---------------|-------------------|----------------|
@@ -631,6 +639,8 @@ FOR EACH type T in hierarchy (from topmost base with DoNotGenerateAcw=false → 
 ---
 
 ## 11. Export Attribute Support
+
+> **Note:** `[Export]` is not trimmer-safe and already emits trimmer warnings. It is not required for Android — developers can use interfaces instead for strongly-typed Java interop. Support for `[Export]` in the trimmable typemap is **low priority** and may be deferred or dropped entirely. The approach below is included for completeness.
 
 ### 11.1 Approach
 
@@ -1508,7 +1518,7 @@ static void n_OnCreate(IntPtr jnienv, IntPtr native__this, IntPtr native_savedIn
 }
 ```
 
-**LLVM IR Generation:** For Native AOT, we generate LLVM IR files (`.ll`) that define the JNI entry points. These are compiled alongside the ILC output and linked into the final shared library. This approach:
+**LLVM IR Generation:** For Native AOT, we generate LLVM IR files (`.ll`) that define the JNI entry points. These are compiled to a static library (`.a`) which is linked into the final `libApp.so` by the Native AOT toolchain. There is no separate `libmarshal_methods.so` — all symbols are merged into the single application shared library. This approach:
 - Provides direct native-to-managed transitions via `Java_`-prefixed symbols
 - Enables ILC to see and optimize the call paths
 
@@ -1555,9 +1565,9 @@ JNIEnvInit.TypeMap = new TypeMapAttributeTypeMap(typeMapAssembly);
 |-------|--------------|------------------|
 | TypeMap generation | Before ILLink | Before ILC |
 | Trimming | ILLink trims IL | ILC trims during compilation |
-| JCW stubs | Java source files | LLVM IR files |
-| Output | Trimmed DLLs + MonoVM | Single `.so` + minimal runtime |
-| JNI registration | `RegisterNatives` at startup | Static exports in `.so` |
+| LLVM IR output | `.ll` → `.o` → `libmarshal_methods.so` | `.ll` → `.o` → `.a` (linked into `libApp.so`) |
+| Output | Trimmed DLLs + MonoVM | Single `libApp.so` + minimal runtime |
+| JNI registration | Static `Java_`-prefixed exports | Static `Java_`-prefixed exports (in `libApp.so`) |
 
 ### 17.8 Debugging Native AOT Issues
 
