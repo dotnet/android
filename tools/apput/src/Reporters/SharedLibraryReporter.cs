@@ -1,3 +1,4 @@
+using System;
 using System.Text;
 
 namespace ApplicationUtility;
@@ -17,7 +18,24 @@ class SharedLibraryReporter : BaseReporter
 		this.library = library;
 	}
 
-	protected override void DoReport ()
+	protected override void DoReport (ReportForm form)
+	{
+		switch (form) {
+			case ReportForm.Standalone:
+				DoStandaloneReport ();
+				break;
+
+			case ReportForm.SimpleList:
+				DoListReport ();
+				break;
+
+			default:
+				throw new NotSupportedException ($"Unsupported report form '{form}'");
+		}
+	}
+
+	// TODO: migrate to Markdown
+	void DoStandaloneReport ()
 	{
 		WriteAspectDesc (LibraryKind);
 
@@ -35,6 +53,61 @@ class SharedLibraryReporter : BaseReporter
 			WriteSubsectionBanner ("Android-specific ELF shared library info");
 			WriteItem ("Android ident", ValueOrNone (library.AndroidIdent));
 		}
+	}
+
+	void DoListReport ()
+	{
+		ReportDoc.BeginList ();
+		AddNativeArchListItem (library.TargetArchitecture);
+		if (library.HasSoname) {
+			ReportDoc.AddLabeledListItem ("Soname", ValueOrNone (library.Soname));
+		}
+		AddBuildId ();
+		AddSize ();
+		AddAlignment ();
+		AddDebugInfo ();
+		AddAndroidIdent (appendLine: false);
+
+		ReportDoc.EndList ().EndListItem ();
+	}
+
+	void AddSoname ()
+	{
+		if (!library.HasSoname) {
+			return;
+		}
+
+		ReportDoc.AddLabeledListItem ("Soname", ValueOrNone (library.Soname));
+	}
+
+	void AddBuildId (bool appendLine = true)
+	{
+		ReportDoc.AddLabeledListItem ("Build ID", ValueOrNone (library.BuildID), appendLine: appendLine);
+	}
+
+	void AddAlignment (bool appendLine = true)
+	{
+		ReportDoc.AddLabeledListItem ("Alignment", $"{library.Alignment}", appendLine: appendLine);
+	}
+
+	void AddDebugInfo (bool appendLine = true)
+	{
+		ReportDoc.AddLabeledListItem ("Debug info", $"{YesNo (library.HasDebugInfo)}", appendLine: appendLine);
+	}
+
+	void AddSize (bool appendLine = true)
+	{
+		ReportDoc.AddLabeledListItem ("Size", $"{library.Size}", appendLine: appendLine);
+	}
+
+	void AddAndroidIdent (bool appendLine = true)
+	{
+		if (!library.HasAndroidIdent) {
+			return;
+		}
+
+		// TODO: fix output, currently produces gibberish
+		ReportDoc.AddLabeledListItem ("Android ident", "FIXME" /* ValueOrNone (library.AndroidIdent) */);
 	}
 
 	protected void WriteDebugInfoDesc ()
