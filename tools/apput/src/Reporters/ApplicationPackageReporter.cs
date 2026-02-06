@@ -16,7 +16,7 @@ class ApplicationPackageReporter : BaseReporter
 		this.package = package;
 	}
 
-	protected override void DoReport ()
+	protected override void DoReport (ReportForm form)
 	{
 		AddAspectDesc (package.PackageFormat);
 
@@ -56,12 +56,8 @@ class ApplicationPackageReporter : BaseReporter
 				// Markdown renderer has a bug where it won't render the first item of the sub-list
 				// properly if the item line ends with a formatting character (or whitespace)
 				AddText (":  ", addIndent: false);
-				ReportDoc.BeginList ()
-				         .AddLabeledListItem ("Alignment", $"{lib.Alignment}")
-				         .AddLabeledListItem ("Debug info", $"{YesNo (lib.HasDebugInfo)}")
-				         .AddLabeledListItem ("Size", $"{lib.Size}", appendLine: false)
-				         .EndList ()
-				         .EndListItem ();
+				var libReporter = new SharedLibraryReporter (lib, ReportDoc);
+				libReporter.Report (ReportForm.SimpleList);
 			}
 			ReportDoc.AddNewline ();
 			ReportDoc.EndList ();

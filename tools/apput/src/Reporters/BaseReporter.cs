@@ -48,14 +48,22 @@ abstract class BaseReporter : IReporter
 		ReportDoc = doc;
 	}
 
-	public void Report ()
+	public void Report (ReportForm form)
 	{
-		WriteLine (BannerColor, $"# {AspectName} ({ShortDescription})");
-		DoReport ();
-		WriteLine ();
+		bool standalone = form == ReportForm.Standalone;
+
+		if (standalone) {
+			WriteLine (BannerColor, $"# {AspectName} ({ShortDescription})");
+		}
+
+		DoReport (form);
+
+		if (standalone) {
+			WriteLine ();
+		}
 	}
 
-	protected abstract void DoReport ();
+	protected abstract void DoReport (ReportForm form);
 
 	protected MarkdownDocument AddSection (string text, uint level = 1) => ReportDoc.AddHeading (level, text).AddNewline ();
 
@@ -94,6 +102,12 @@ abstract class BaseReporter : IReporter
 	protected void WriteNativeArch (NativeArchitecture arch)
 	{
 		WriteItem (NativeArchitectureLabel, arch.ToString ());
+	}
+
+	protected MarkdownDocument AddNativeArchListItem (NativeArchitecture arch)
+	{
+		ReportDoc.AddLabeledListItem (NativeArchitectureLabel, arch.ToString ());
+		return ReportDoc;
 	}
 
 	protected void WriteNativeArch (AndroidTargetArch arch)
