@@ -1159,9 +1159,9 @@ public class MyCustomButton : Button { }
 
 **Trimmable type map requirement:** The TypeMap generator must process the custom view map file and generate unconditional entries.
 
-##### Rule 2b: Manual AndroidManifest.xml Component References → Unconditional (Not Yet Implemented)
+##### Rule 2b: Manual AndroidManifest.xml Component References → Unconditional
 
-Users can manually add component entries to `AndroidManifest.xml` without using the `[Activity]`, `[Service]`, etc. attributes:
+Users can register components in `AndroidManifest.xml` without using C# attributes like `[Activity]` or `[Service]`. These types must also be treated as unconditional roots, otherwise they will be trimmed and cause a runtime `ClassNotFoundException` when Android attempts to instantiate them.
 
 ```xml
 <!-- AndroidManifest.xml - manually added by user -->
@@ -1171,9 +1171,7 @@ Users can manually add component entries to `AndroidManifest.xml` without using 
 <provider android:name="com.example.MyContentProvider" />
 ```
 
-**Current Behavior:** These types are NOT automatically discovered as roots. If the .NET type doesn't have the corresponding attribute (`[Activity]`, etc.) and isn't otherwise referenced, **it may be trimmed**, causing a runtime `ClassNotFoundException`.
-
-**Recommended Approach:** We should scan the merged `AndroidManifest.xml` for component references (similar to how we scan layout XML for custom views) and add them to the TypeMap as unconditional entries. The scanning should look for:
+The TypeMap generator should scan the merged `AndroidManifest.xml` for component references (similar to how we scan layout XML for custom views) and add them as unconditional entries. The scanning should look for:
 
 - `<activity android:name="...">` → Root the .NET Activity subclass
 - `<service android:name="...">` → Root the .NET Service subclass  
@@ -1187,10 +1185,7 @@ Users can manually add component entries to `AndroidManifest.xml` without using 
 
 Both forms need to be resolved to find the corresponding .NET type via the ACW map.
 
-**Workaround (Current):** Users must either:
-1. Use the proper C# attribute (`[Activity]`, `[Service]`, etc.) on their type
-2. Manually add a `[DynamicallyAccessedMembers]` attribute to preserve the type
-3. Add explicit trimmer roots via `TrimmerRootDescriptor`
+> **Note:** Without this manifest scanning, users who manually write `AndroidManifest.xml` entries must ensure the corresponding .NET types are preserved through other means (e.g., using the proper C# attribute, adding `[DynamicDependency]`, or adding explicit trimmer roots via `TrimmerRootDescriptor`).
 
 ##### Rule 3: Interfaces → TRIMMABLE
 
