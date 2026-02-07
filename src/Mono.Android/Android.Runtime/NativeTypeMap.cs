@@ -57,7 +57,9 @@ namespace Android.Runtime
 
 		public bool TryGetManagedType (string jniTypeName, [NotNullWhen (true)] out Type? managedType)
 		{
-			managedType = GetJavaToManagedTypeCore (jniTypeName);
+			lock (TypeManagerMapDictionaries.AccessLock) {
+				managedType = GetJavaToManagedTypeCore (jniTypeName);
+			}
 			return managedType != null;
 		}
 
