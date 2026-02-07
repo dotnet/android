@@ -10,13 +10,6 @@ namespace Android.Runtime
 	///
 	/// Implementations provide lookup between JNI type names and .NET types,
 	/// and creation of managed peer instances for Java objects.
-	///
-	/// Native member registration (<c>RegisterNativeMembers</c>) is NOT part of this interface —
-	/// it stays in <see cref="JniRuntime.JniTypeManager"/> subclasses, as it depends on the
-	/// specific runtime's callback registration mechanism.
-	///
-	/// To add a new type mapping strategy (e.g., the trimmable typemap), implement this interface
-	/// and wire it into <see cref="JNIEnvInit.Initialize"/> based on the appropriate feature flag.
 	/// </summary>
 	interface ITypeMap
 	{

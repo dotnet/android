@@ -96,7 +96,126 @@ namespace Android.Runtime
 
 		public IJavaPeerable? CreatePeer (IntPtr handle, JniHandleOwnership transfer, Type? targetType)
 		{
-			return PeerCreationHelper.CreatePeer (this, JavaObjectExtensions.GetInvokerType, handle, transfer, targetType);
+			// Walk Java hierarchy to find the managed type
+			Type? type = PeerCreationHelper.WalkHierarchyForType (this, handle, targetType);
+
+			if (type == null) {
+				string class_name = JNIEnv.GetClassNameFromInstance (handle);
+				JNIEnv.DeleteRef (handle, transfer);
+				throw new NotSupportedException (
+						FormattableString.Invariant ($"Internal error finding wrapper class for '{class_name}'. (Where is the Java.Lang.Object wrapper?!)"),
+						PeerCreationHelper.CreateJavaLocationException ());
+			}
+
+			// Native typemap: reflection-based instantiation with GetInvokerType
+			return InstantiatePeer (type, handle, transfer, targetType);
+		}
+
+		[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "Reflection-based instantiation is only used by legacy type maps.")]
+		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "Reflection-based instantiation is only used by legacy type maps.")]
+		static IJavaPeerable? InstantiatePeer (
+			Type type,
+			IntPtr handle,
+			JniHandleOwnership transfer,
+			Type? targetType)
+		{
+			// Resolve invoker if needed
+			if (type.IsInterface || type.IsAbstract) {
+				var invokerType = JavaObjectExtensions.GetInvokerType (type);
+				if (invokerType == null)
+					throw new NotSupportedException ("Unable to find Invoker for type '" + type.FullName + "'. Was it linked away?",
+							PeerCreationHelper.CreateJavaLocationException ());
+				type = invokerType;
+			}
+
+			// Validate assignability
+			var typeSig = JNIEnvInit.androidRuntime?.TypeManager.GetTypeSignature (type) ?? default;
+			if (!typeSig.IsValid || typeSig.SimpleReference == null) {
+				throw new ArgumentException ($"Could not determine Java type corresponding to `{type.AssemblyQualifiedName}`.", nameof (targetType));
+			}
+
+			JniObjectReference typeClass = default;
+			JniObjectReference handleClass = default;
+			try {
+				try {
+					typeClass = JniEnvironment.Types.FindClass (typeSig.SimpleReference);
+				} catch (Exception e) {
+					throw new ArgumentException ($"Could not find Java class `{typeSig.SimpleReference}`.",
+							nameof (targetType),
+							e);
+				}
+
+				handleClass = JniEnvironment.Types.GetObjectClass (new JniObjectReference (handle));
+				if (!JniEnvironment.Types.IsAssignableFrom (handleClass, typeClass)) {
+					if (Logger.LogAssembly) {
+						var message = $"Handle 0x{handle:x} is of type '{JNIEnv.GetClassNameFromInstance (handle)}' which is not assignable to '{typeSig.SimpleReference}'";
+						Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
+					}
+					if (RuntimeFeature.IsAssignableFromCheck) {
+						return null;
+					}
+				}
+			} finally {
+				JniObjectReference.Dispose (ref handleClass);
+				JniObjectReference.Dispose (ref typeClass);
+			}
+
+			// Instantiate via reflection
+			IJavaPeerable? result = null;
+
+			try {
+				result = (IJavaPeerable) CreateProxy (type, handle, transfer);
+				if (Java.Interop.Runtime.IsGCUserPeer (result.PeerReference.Handle)) {
+					result.SetJniManagedPeerState (JniManagedPeerStates.Replaceable | JniManagedPeerStates.Activatable);
+				}
+			} catch (MissingMethodException e) {
+				var key_handle = JNIEnv.IdentityHash (handle);
+				JNIEnv.DeleteRef (handle, transfer);
+				throw new NotSupportedException (FormattableString.Invariant (
+					$"Unable to activate instance of type {type} from native handle 0x{handle:x} (key_handle 0x{key_handle:x})."), e);
+			}
+			return result;
+		}
+
+		static readonly Type[] XAConstructorSignature = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
+		static readonly Type[] JIConstructorSignature = new Type [] { typeof (JniObjectReference).MakeByRefType (), typeof (JniObjectReferenceOptions) };
+
+		static object CreateProxy (
+				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+				Type type,
+				IntPtr handle,
+				JniHandleOwnership transfer)
+		{
+			// Skip Activator.CreateInstance() as that requires public constructors,
+			// and we want to hide some constructors for sanity reasons.
+			var peer = GetUninitializedObject (type);
+			BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+			var c = type.GetConstructor (flags, null, XAConstructorSignature, null);
+			if (c != null) {
+				c.Invoke (peer, new object[] { handle, transfer });
+				return peer;
+			}
+			c = type.GetConstructor (flags, null, JIConstructorSignature, null);
+			if (c != null) {
+				JniObjectReference          r = new JniObjectReference (handle);
+				JniObjectReferenceOptions   o = JniObjectReferenceOptions.Copy;
+				c.Invoke (peer, new object [] { r, o });
+				JNIEnv.DeleteRef (handle, transfer);
+				return peer;
+			}
+			GC.SuppressFinalize (peer);
+			throw new MissingMethodException (
+					"No constructor found for " + type.FullName + "::.ctor(System.IntPtr, Android.Runtime.JniHandleOwnership)",
+					PeerCreationHelper.CreateJavaLocationException ());
+
+			static IJavaPeerable GetUninitializedObject (
+					[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+					Type type)
+			{
+				var v = (IJavaPeerable) RuntimeHelpers.GetUninitializedObject (type);
+				v.SetJniManagedPeerState (JniManagedPeerStates.Replaceable | JniManagedPeerStates.Activatable);
+				return v;
+			}
 		}
 	}
 }
