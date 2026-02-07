@@ -19,6 +19,9 @@ namespace Android.Runtime
 		/// <summary>
 		/// Walk the Java class hierarchy to find the best matching managed type.
 		/// Starts with the instance's actual class and walks up to java.lang.Object.
+		/// 
+		/// Takes the <see cref="TypeManagerMapDictionaries.AccessLock"/> for the entire
+		/// hierarchy walk to match the original <c>TypeManager.CreateInstance</c> behavior.
 		/// </summary>
 		/// <param name="typeMap">The type map to use for JNI→managed type lookups.</param>
 		/// <param name="handle">JNI handle to the Java object.</param>
@@ -39,18 +42,21 @@ namespace Android.Runtime
 			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
 			string? class_name = Java.Interop.TypeManager.GetClassName (class_ptr);
 
-			while (class_ptr != IntPtr.Zero) {
-				if (typeMap.TryGetManagedType (class_name!, out var resolved)) {
-					type = resolved;
-					break;
-				}
+			// Hold lock for entire hierarchy walk (matches original TypeManager.CreateInstance behavior)
+			lock (Java.Interop.TypeManagerMapDictionaries.AccessLock) {
+				while (class_ptr != IntPtr.Zero) {
+					if (typeMap.TryGetManagedType (class_name!, out var resolved)) {
+						type = resolved;
+						break;
+					}
 
-				IntPtr super_class_ptr = JNIEnv.GetSuperclass (class_ptr);
-				JNIEnv.DeleteLocalRef (class_ptr);
-				class_name = null;
-				class_ptr = super_class_ptr;
-				if (class_ptr != IntPtr.Zero) {
-					class_name = Java.Interop.TypeManager.GetClassName (class_ptr);
+					IntPtr super_class_ptr = JNIEnv.GetSuperclass (class_ptr);
+					JNIEnv.DeleteLocalRef (class_ptr);
+					class_name = null;
+					class_ptr = super_class_ptr;
+					if (class_ptr != IntPtr.Zero) {
+						class_name = Java.Interop.TypeManager.GetClassName (class_ptr);
+					}
 				}
 			}
 
