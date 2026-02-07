@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using Android.Runtime;
 using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
 
@@ -13,8 +14,11 @@ class ManagedTypeManager : JniRuntime.JniTypeManager {
 	internal const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
 	internal const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
 
-	public ManagedTypeManager ()
+	internal ITypeMap TypeMap { get; }
+
+	public ManagedTypeManager (ITypeMap typeMap)
 	{
+		TypeMap = typeMap;
 	}
 
 	[return: DynamicallyAccessedMembers (Constructors)]
@@ -129,7 +133,7 @@ class ManagedTypeManager : JniRuntime.JniTypeManager {
 
 	protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
 	{
-		if (ManagedTypeMapping.TryGetType (jniSimpleReference, out var target)) {
+		if (TypeMap.TryGetManagedType (jniSimpleReference, out var target)) {
 			yield return target;
 		}
 		foreach (var t in base.GetTypesForSimpleReference (jniSimpleReference)) {
@@ -143,7 +147,7 @@ class ManagedTypeManager : JniRuntime.JniTypeManager {
 			yield return r;
 		}
 
-		if (ManagedTypeMapping.TryGetJniName (type, out var jniName)) {
+		if (TypeMap.TryGetJniTypeName (type, out var jniName)) {
 			yield return jniName;
 		}
 	}

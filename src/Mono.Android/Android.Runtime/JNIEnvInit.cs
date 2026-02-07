@@ -49,6 +49,7 @@ namespace Android.Runtime
 		internal static IntPtr java_class_loader;
 
 		internal static JniRuntime? androidRuntime;
+		internal static ITypeMap? TypeMap;
 
 		[UnmanagedCallersOnly]
 		static void PropagateUncaughtException (IntPtr env, IntPtr javaThread, IntPtr javaException)
@@ -129,20 +130,24 @@ namespace Android.Runtime
 			java_class_loader = args->grefLoader;
 
 			BoundExceptionType = (BoundExceptionType)args->ioExceptionType;
+			ITypeMap typeMap;
 			JniRuntime.JniTypeManager typeManager;
 			JniRuntime.JniValueManager valueManager;
 			if (RuntimeFeature.ManagedTypeMap) {
-				typeManager     = new ManagedTypeManager ();
+				typeMap         = new ManagedHybridTypeMap ();
+				typeManager     = new ManagedTypeManager (typeMap);
 			} else {
-				typeManager     = new AndroidTypeManager (args->jniAddNativeMethodRegistrationAttributePresent != 0);
+				typeMap         = new NativeTypeMap ();
+				typeManager     = new AndroidTypeManager (args->jniAddNativeMethodRegistrationAttributePresent != 0, typeMap);
 			}
 			if (RuntimeFeature.IsMonoRuntime) {
-				valueManager = new AndroidValueManager ();
+				valueManager = new AndroidValueManager (typeMap);
 			} else if (RuntimeFeature.IsCoreClrRuntime) {
 				valueManager = ManagedValueManager.GetOrCreateInstance ();
 			} else {
 				throw new NotSupportedException ("Internal error: unknown runtime not supported");
 			}
+			TypeMap = typeMap;
 			androidRuntime = new AndroidRuntime (
 					args->env,
 					args->javaVm,

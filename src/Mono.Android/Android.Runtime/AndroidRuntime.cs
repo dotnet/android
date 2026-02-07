@@ -253,14 +253,16 @@ namespace Android.Runtime {
 		};
 
 		bool jniAddNativeMethodRegistrationAttributePresent;
+		internal ITypeMap TypeMap { get; }
 
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 		const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
 		const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
 
-		public AndroidTypeManager (bool jniAddNativeMethodRegistrationAttributePresent)
+		public AndroidTypeManager (bool jniAddNativeMethodRegistrationAttributePresent, ITypeMap typeMap)
 		{
 			this.jniAddNativeMethodRegistrationAttributePresent = jniAddNativeMethodRegistrationAttributePresent;
+			TypeMap = typeMap;
 		}
 
 		protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
@@ -268,15 +270,13 @@ namespace Android.Runtime {
 			foreach (var ti in base.GetTypesForSimpleReference (jniSimpleReference))
 				yield return ti;
 
-			var t = Java.Interop.TypeManager.GetJavaToManagedType (jniSimpleReference);
-			if (t != null)
+			if (TypeMap.TryGetManagedType (jniSimpleReference, out var t))
 				yield return t;
 		}
 
 		protected override string? GetSimpleReference (Type type)
 		{
-			string? j = JNIEnv.TypemapManagedToJava (type);
-			if (j != null) {
+			if (TypeMap.TryGetJniTypeName (type, out string? j)) {
 				return GetReplacementTypeCore (j) ?? j;
 			}
 			return null;
@@ -284,10 +284,8 @@ namespace Android.Runtime {
 
 		protected override IEnumerable<string> GetSimpleReferences (Type type)
 		{
-			string? j = JNIEnv.TypemapManagedToJava (type);
-			j   = GetReplacementTypeCore (j) ?? j;
-
-			if (j != null) {
+			if (TypeMap.TryGetJniTypeName (type, out string? j)) {
+				j = GetReplacementTypeCore (j) ?? j;
 				return new[]{j};
 			}
 			return Array.Empty<string> ();
@@ -625,7 +623,13 @@ namespace Android.Runtime {
 
 	class AndroidValueManager : JniRuntime.JniValueManager {
 
+		readonly ITypeMap typeMap;
 		Dictionary<IntPtr, IdentityHashTargets>         instances       = new Dictionary<IntPtr, IdentityHashTargets> ();
+
+		public AndroidValueManager (ITypeMap typeMap)
+		{
+			this.typeMap = typeMap;
+		}
 
 		public override void WaitForGCBridgeProcessing ()
 		{
@@ -643,7 +647,7 @@ namespace Android.Runtime {
 			if (!reference.IsValid)
 				return null;
 
-			var peer        = Java.Interop.TypeManager.CreateInstance (reference.Handle, JniHandleOwnership.DoNotTransfer, targetType) as IJavaPeerable;
+			var peer = typeMap.CreatePeer (reference.Handle, JniHandleOwnership.DoNotTransfer, targetType);
 			JniObjectReference.Dispose (ref reference, options);
 			return peer;
 		}
