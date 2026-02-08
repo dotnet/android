@@ -143,8 +143,8 @@ namespace Android.Runtime
 				typeMap         = new LegacyManagedTypeMap ();
 				typeManager     = new ManagedTypeManager (typeMap);
 			} else {
-#pragma warning disable IL2026 // NativeTypeMap is only used when RuntimeFeature.ManagedTypeMap is false (native typemap is available)
-				typeMap         = new NativeTypeMap ();
+#pragma warning disable IL2026 // LegacyNativeTypeMap is only used when RuntimeFeature.ManagedTypeMap is false (native typemap is available)
+				typeMap         = new LegacyNativeTypeMap ();
 #pragma warning restore IL2026
 				typeManager     = new AndroidTypeManager (args->jniAddNativeMethodRegistrationAttributePresent != 0, typeMap);
 			}

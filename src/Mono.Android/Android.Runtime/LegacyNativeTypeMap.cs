@@ -24,7 +24,7 @@ namespace Android.Runtime
 	/// + <see cref="ConstructorInfo.Invoke"/>).
 	/// </summary>
 	[RequiresUnreferencedCode ("Native type map relies on native code to resolve Java->.NET type mappings, which may not be preserved when trimming.")]
-	internal class NativeTypeMap : LegacyTypeMap
+	internal class LegacyNativeTypeMap : LegacyTypeMap
 	{
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		static extern Type monodroid_typemap_java_to_managed (string java_type_name);

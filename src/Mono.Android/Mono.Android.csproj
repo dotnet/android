@@ -255,7 +255,7 @@
     <Compile Include="Android.Runtime\LogLevel.cs" />
     <Compile Include="Android.Runtime\LogCategories.cs" />
     <Compile Include="Android.Runtime\NamespaceMappingAttribute.cs" />
-    <Compile Include="Android.Runtime\NativeTypeMap.cs" />
+    <Compile Include="Android.Runtime\LegacyNativeTypeMap.cs" />
     <Compile Include="Android.Runtime\OutputStreamAdapter.cs" />
     <Compile Include="Android.Runtime\OutputStreamInvoker.cs" />
     <Compile Include="Android.Runtime\PreserveAttribute.cs" />
