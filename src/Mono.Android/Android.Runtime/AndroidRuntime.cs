@@ -253,13 +253,13 @@ namespace Android.Runtime {
 		};
 
 		bool jniAddNativeMethodRegistrationAttributePresent;
-		internal ITypeMap TypeMap { get; }
+		internal TypeMap TypeMap { get; }
 
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 		const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
 		const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
 
-		public AndroidTypeManager (bool jniAddNativeMethodRegistrationAttributePresent, ITypeMap typeMap)
+		public AndroidTypeManager (bool jniAddNativeMethodRegistrationAttributePresent, TypeMap typeMap)
 		{
 			this.jniAddNativeMethodRegistrationAttributePresent = jniAddNativeMethodRegistrationAttributePresent;
 			TypeMap = typeMap;
@@ -270,7 +270,7 @@ namespace Android.Runtime {
 			foreach (var ti in base.GetTypesForSimpleReference (jniSimpleReference))
 				yield return ti;
 
-			if (TypeMap.TryGetManagedType (jniSimpleReference, out var t))
+			foreach (var t in TypeMap.GetManagedTypes (jniSimpleReference))
 				yield return t;
 		}
 
@@ -623,10 +623,10 @@ namespace Android.Runtime {
 
 	class AndroidValueManager : JniRuntime.JniValueManager {
 
-		readonly ITypeMap typeMap;
+		readonly TypeMap typeMap;
 		Dictionary<IntPtr, IdentityHashTargets>         instances       = new Dictionary<IntPtr, IdentityHashTargets> ();
 
-		public AndroidValueManager (ITypeMap typeMap)
+		public AndroidValueManager (TypeMap typeMap)
 		{
 			this.typeMap = typeMap;
 		}

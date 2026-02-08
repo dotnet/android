@@ -78,6 +78,12 @@ namespace Android.Runtime {
 			return wrap;
 		}
 
+		internal static JavaLocationException CreateJavaLocationException ()
+		{
+			using (var loc = new Java.Lang.Error ("Java callstack:"))
+				return new JavaLocationException (loc.ToString ());
+		}
+
 		static void MonoDroidUnhandledException (Exception ex)
 		{
 			RuntimeNativeMethods.monodroid_unhandled_exception (ex);
@@ -404,6 +410,19 @@ namespace Android.Runtime {
 		{
 			fixed (JValue* p = parms)
 				return NewObject (jclass, jmethod, p);
+		}
+
+		/// <summary>
+		/// Get the Java class name for a JNI class pointer.
+		/// Returns a JNI-style name (e.g. <c>"android/widget/Button"</c>).
+		/// </summary>
+		internal static string GetClassName (IntPtr classPtr)
+		{
+			IntPtr ptr = RuntimeNativeMethods.monodroid_TypeManager_get_java_class_name (classPtr);
+			string ret = Marshal.PtrToStringAnsi (ptr)!;
+			RuntimeNativeMethods.monodroid_free (ptr);
+
+			return ret;
 		}
 
 		public static string GetClassNameFromInstance (IntPtr jobject)

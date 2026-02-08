@@ -14,9 +14,9 @@ class ManagedTypeManager : JniRuntime.JniTypeManager {
 	internal const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
 	internal const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
 
-	internal ITypeMap TypeMap { get; }
+	internal TypeMap TypeMap { get; }
 
-	public ManagedTypeManager (ITypeMap typeMap)
+	public ManagedTypeManager (TypeMap typeMap)
 	{
 		TypeMap = typeMap;
 	}
@@ -133,8 +133,8 @@ class ManagedTypeManager : JniRuntime.JniTypeManager {
 
 	protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
 	{
-		if (TypeMap.TryGetManagedType (jniSimpleReference, out var target)) {
-			yield return target;
+		foreach (var t in TypeMap.GetManagedTypes (jniSimpleReference)) {
+			yield return t;
 		}
 		foreach (var t in base.GetTypesForSimpleReference (jniSimpleReference)) {
 			yield return t;

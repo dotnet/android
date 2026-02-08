@@ -237,8 +237,7 @@
     <Compile Include="Android.Runtime\JavaObject.cs" />
     <Compile Include="Android.Runtime\JavaProxyThrowable.cs" />
     <Compile Include="Android.Runtime\JavaSet.cs" />
-    <Compile Include="Android.Runtime\ITypeMap.cs" />
-    <Compile Include="Android.Runtime\JniClassHelper.cs" />
+    <Compile Include="Android.Runtime\TypeMap.cs" />
     <Compile Include="Android.Runtime\JNIEnv.cs" />
     <Compile Include="Android.Runtime\JNIEnv.g.cs" />
     <Compile Include="Android.Runtime\JNIEnvInit.cs" />
@@ -258,7 +257,6 @@
     <Compile Include="Android.Runtime\NativeTypeMap.cs" />
     <Compile Include="Android.Runtime\OutputStreamAdapter.cs" />
     <Compile Include="Android.Runtime\OutputStreamInvoker.cs" />
-    <Compile Include="Android.Runtime\PeerCreationHelper.cs" />
     <Compile Include="Android.Runtime\PreserveAttribute.cs" />
     <Compile Include="Android.Runtime\RaiseThrowableEventArgs.cs" />
     <Compile Include="Android.Runtime\RequiresPermissionAttribute.cs" />

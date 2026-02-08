@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -10,7 +11,7 @@ using Microsoft.Android.Runtime;
 namespace Android.Runtime
 {
 	/// <summary>
-	/// <see cref="ITypeMap"/> implementation that wraps the existing native P/Invoke type mapping.
+	/// <see cref="TypeMap"/> implementation that wraps the existing native P/Invoke type mapping.
 	///
 	/// Java→.NET lookups use <c>monovm_typemap_java_to_managed()</c> (Mono) or
 	/// <c>clr_typemap_java_to_managed()</c> (CoreCLR), with a managed cache
@@ -19,10 +20,13 @@ namespace Android.Runtime
 	/// .NET→Java lookups use <see cref="JNIEnv.TypemapManagedToJava"/>.
 	///
 	/// Invoker type resolution uses <see cref="JavaObjectExtensions.GetInvokerType"/>.
+	/// Peer activation uses reflection (<see cref="RuntimeHelpers.GetUninitializedObject"/>
+	/// + <see cref="ConstructorInfo.Invoke"/>).
 	/// </summary>
-	class NativeTypeMap : ITypeMap
+	[RequiresUnreferencedCode ("Native type map relies on native code to resolve Java->.NET type mappings, which may not be preserved when trimming.")]
+	internal class NativeTypeMap : TypeMap
 	{
-		[MethodImplAttribute (MethodImplOptions.InternalCall)]
+		[MethodImpl(MethodImplOptions.InternalCall)]
 		static extern Type monodroid_typemap_java_to_managed (string java_type_name);
 
 		static Type monovm_typemap_java_to_managed (string java_type_name)
@@ -30,7 +34,6 @@ namespace Android.Runtime
 			return monodroid_typemap_java_to_managed (java_type_name);
 		}
 
-		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Value of java_type_name isn't statically known.")]
 		static Type? clr_typemap_java_to_managed (string java_type_name)
 		{
 			bool result = RuntimeNativeMethods.clr_typemap_java_to_managed (java_type_name, out IntPtr managedAssemblyNamePointer, out uint managedTypeTokenId);
@@ -38,7 +41,7 @@ namespace Android.Runtime
 				return null;
 			}
 
-			string managedAssemblyName = Marshal.PtrToStringAnsi (managedAssemblyNamePointer);
+			string managedAssemblyName = Marshal.PtrToStringAnsi (managedAssemblyNamePointer)!;
 			Assembly assembly = Assembly.Load (managedAssemblyName);
 			Type? ret = null;
 			foreach (Module module in assembly.Modules) {
@@ -55,12 +58,15 @@ namespace Android.Runtime
 			return ret;
 		}
 
-		public bool TryGetManagedType (string jniTypeName, [NotNullWhen (true)] out Type? managedType)
+		public override IEnumerable<Type> GetManagedTypes (string jniTypeName)
 		{
+			Type? type;
 			lock (TypeManagerMapDictionaries.AccessLock) {
-				managedType = GetJavaToManagedTypeCore (jniTypeName);
+				type = GetJavaToManagedTypeCore (jniTypeName);
 			}
-			return managedType != null;
+			if (type != null) {
+				yield return type;
+			}
 		}
 
 		static Type? GetJavaToManagedTypeCore (string class_name)
@@ -88,50 +94,42 @@ namespace Android.Runtime
 			return null;
 		}
 
-		public bool TryGetJniTypeName (Type managedType, [NotNullWhen (true)] out string? jniTypeName)
+		public override bool TryGetJniTypeName (Type managedType, [NotNullWhen (true)] out string? jniTypeName)
 		{
 			jniTypeName = JNIEnv.TypemapManagedToJava (managedType);
 			return jniTypeName != null;
 		}
 
-		public IJavaPeerable? CreatePeer (IntPtr handle, JniHandleOwnership transfer, Type? targetType)
+		public override IJavaPeerable? CreatePeer (IntPtr handle, JniHandleOwnership transfer, Type? targetType)
 		{
-			// Walk Java hierarchy to find the managed type
-			Type? type = PeerCreationHelper.WalkHierarchyForType (this, handle, targetType);
+			Type? type = FindClosestManagedType (handle, targetType);
 
 			if (type == null) {
 				string class_name = JNIEnv.GetClassNameFromInstance (handle);
 				JNIEnv.DeleteRef (handle, transfer);
 				throw new NotSupportedException (
 						FormattableString.Invariant ($"Internal error finding wrapper class for '{class_name}'. (Where is the Java.Lang.Object wrapper?!)"),
-						PeerCreationHelper.CreateJavaLocationException ());
+						JNIEnv.CreateJavaLocationException ());
 			}
 
-			// Native typemap: reflection-based instantiation with GetInvokerType
-			return InstantiatePeer (type, handle, transfer, targetType);
-		}
-
-		[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "Reflection-based instantiation is only used by legacy type maps.")]
-		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "Reflection-based instantiation is only used by legacy type maps.")]
-		static IJavaPeerable? InstantiatePeer (
-			Type type,
-			IntPtr handle,
-			JniHandleOwnership transfer,
-			Type? targetType)
-		{
 			// Resolve invoker if needed
 			if (type.IsInterface || type.IsAbstract) {
 				var invokerType = JavaObjectExtensions.GetInvokerType (type);
 				if (invokerType == null)
 					throw new NotSupportedException ("Unable to find Invoker for type '" + type.FullName + "'. Was it linked away?",
-							PeerCreationHelper.CreateJavaLocationException ());
+							JNIEnv.CreateJavaLocationException ());
 				type = invokerType;
 			}
 
+			return ActivatePeer (type, handle, transfer);
+		}
+
+		static IJavaPeerable? ActivatePeer ([DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type type, IntPtr handle, JniHandleOwnership transfer)
+		{
 			// Validate assignability
 			var typeSig = JNIEnvInit.androidRuntime?.TypeManager.GetTypeSignature (type) ?? default;
 			if (!typeSig.IsValid || typeSig.SimpleReference == null) {
-				throw new ArgumentException ($"Could not determine Java type corresponding to `{type.AssemblyQualifiedName}`.", nameof (targetType));
+				throw new ArgumentException ($"Could not determine Java type corresponding to `{type.AssemblyQualifiedName}`.", nameof (type));
 			}
 
 			JniObjectReference typeClass = default;
@@ -141,7 +139,7 @@ namespace Android.Runtime
 					typeClass = JniEnvironment.Types.FindClass (typeSig.SimpleReference);
 				} catch (Exception e) {
 					throw new ArgumentException ($"Could not find Java class `{typeSig.SimpleReference}`.",
-							nameof (targetType),
+							nameof (type),
 							e);
 				}
 
@@ -160,7 +158,6 @@ namespace Android.Runtime
 				JniObjectReference.Dispose (ref typeClass);
 			}
 
-			// Instantiate via reflection
 			IJavaPeerable? result = null;
 
 			try {
@@ -180,14 +177,8 @@ namespace Android.Runtime
 		static readonly Type[] XAConstructorSignature = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
 		static readonly Type[] JIConstructorSignature = new Type [] { typeof (JniObjectReference).MakeByRefType (), typeof (JniObjectReferenceOptions) };
 
-		static object CreateProxy (
-				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-				Type type,
-				IntPtr handle,
-				JniHandleOwnership transfer)
+		static object CreateProxy (Type type, IntPtr handle, JniHandleOwnership transfer)
 		{
-			// Skip Activator.CreateInstance() as that requires public constructors,
-			// and we want to hide some constructors for sanity reasons.
 			var peer = GetUninitializedObject (type);
 			BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 			var c = type.GetConstructor (flags, null, XAConstructorSignature, null);
@@ -206,11 +197,9 @@ namespace Android.Runtime
 			GC.SuppressFinalize (peer);
 			throw new MissingMethodException (
 					"No constructor found for " + type.FullName + "::.ctor(System.IntPtr, Android.Runtime.JniHandleOwnership)",
-					PeerCreationHelper.CreateJavaLocationException ());
+					JNIEnv.CreateJavaLocationException ());
 
-			static IJavaPeerable GetUninitializedObject (
-					[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-					Type type)
+			static IJavaPeerable GetUninitializedObject (Type type)
 			{
 				var v = (IJavaPeerable) RuntimeHelpers.GetUninitializedObject (type);
 				v.SetJniManagedPeerState (JniManagedPeerStates.Replaceable | JniManagedPeerStates.Activatable);

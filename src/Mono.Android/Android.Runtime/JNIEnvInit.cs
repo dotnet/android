@@ -49,7 +49,7 @@ namespace Android.Runtime
 		internal static IntPtr java_class_loader;
 
 		internal static JniRuntime? androidRuntime;
-		internal static ITypeMap? TypeMap;
+		internal static TypeMap? TypeMap;
 
 		[UnmanagedCallersOnly]
 		static void PropagateUncaughtException (IntPtr env, IntPtr javaThread, IntPtr javaException)
@@ -71,11 +71,11 @@ namespace Android.Runtime
 			if (type == null) {
 				RuntimeNativeMethods.monodroid_log (LogLevel.Error,
 				               LogCategories.Default,
-				               $"Could not load type '{typeName}'. Skipping JNI registration of type '{JniClassHelper.GetClassName (jniClass)}'.");
+				               $"Could not load type '{typeName}'. Skipping JNI registration of type '{JNIEnv.GetClassName (jniClass)}'.");
 				return;
 			}
 
-			var className = JniClassHelper.GetClassName (jniClass);
+			var className = JNIEnv.GetClassName (jniClass);
 			Java.Interop.TypeManager.RegisterType (className, type);
 
 			JniType? jniType = null;
@@ -131,19 +131,21 @@ namespace Android.Runtime
 
 			BoundExceptionType = (BoundExceptionType)args->ioExceptionType;
 
-			// Select the ITypeMap implementation based on runtime configuration.
-			// To add a new ITypeMap (e.g., a trimmable typemap), add a new branch here
-			// guarded by a RuntimeFeature flag, create the ITypeMap instance, and pair it
-			// with the appropriate JniTypeManager. The ITypeMap is passed to the type manager
+			// Select the TypeMap implementation based on runtime configuration.
+			// To add a new TypeMap (e.g., a trimmable typemap), add a new branch here
+			// guarded by a RuntimeFeature flag, create the TypeMap instance, and pair it
+			// with the appropriate JniTypeManager. The TypeMap is passed to the type manager
 			// and value manager constructors so all type mapping goes through this abstraction.
-			ITypeMap typeMap;
+			TypeMap typeMap;
 			JniRuntime.JniTypeManager typeManager;
 			JniRuntime.JniValueManager valueManager;
 			if (RuntimeFeature.ManagedTypeMap) {
 				typeMap         = new ManagedHybridTypeMap ();
 				typeManager     = new ManagedTypeManager (typeMap);
 			} else {
+#pragma warning disable IL2026 // NativeTypeMap is only used when RuntimeFeature.ManagedTypeMap is false (native typemap is available)
 				typeMap         = new NativeTypeMap ();
+#pragma warning restore IL2026
 				typeManager     = new AndroidTypeManager (args->jniAddNativeMethodRegistrationAttributePresent != 0, typeMap);
 			}
 			if (RuntimeFeature.IsMonoRuntime) {

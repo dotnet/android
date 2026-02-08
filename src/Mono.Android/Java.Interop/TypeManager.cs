@@ -42,9 +42,9 @@ namespace Java.Interop {
 	public static partial class TypeManager {
 		/// <summary>
 		/// Get the Java class name for a JNI class pointer.
-		/// Delegates to <see cref="JniClassHelper.GetClassName"/>.
+		/// Delegates to <see cref="JNIEnv.GetClassName"/>.
 		/// </summary>
-		internal static string GetClassName (IntPtr class_ptr) => Android.Runtime.JniClassHelper.GetClassName (class_ptr);
+		internal static string GetClassName (IntPtr class_ptr) => Android.Runtime.JNIEnv.GetClassName (class_ptr);
 
 		internal static string? GetJniTypeName (Type type)
 		{
@@ -219,24 +219,13 @@ namespace Java.Interop {
 				return new JavaLocationException (loc.ToString ());
 		}
 
-		/// <summary>
-		/// Backward-compatible shim — delegates to <see cref="ITypeMap.TryGetManagedType"/>.
-		/// </summary>
-		internal static Type? GetJavaToManagedType (string class_name)
-		{
-			if (JNIEnvInit.TypeMap == null)
-				throw new InvalidOperationException ("TypeMap not initialized. JNIEnvInit.Initialize() must be called first.");
-			JNIEnvInit.TypeMap.TryGetManagedType (class_name, out var type);
-			return type;
-		}
-
 		internal static IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer)
 		{
 			return CreateInstance (handle, transfer, null);
 		}
 
 		/// <summary>
-		/// Backward-compatible shim — delegates to <see cref="ITypeMap.CreatePeer"/>.
+		/// Backward-compatible shim — delegates to <see cref="TypeMap.CreatePeer"/>.
 		/// </summary>
 		internal static IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer, Type? targetType)
 		{
