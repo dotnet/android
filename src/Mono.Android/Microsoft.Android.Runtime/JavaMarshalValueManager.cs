@@ -24,19 +24,39 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 
 	readonly Dictionary<int, List<ReferenceTrackingHandle>> RegisteredInstances = new ();
 	readonly ConcurrentQueue<IntPtr> CollectedContexts = new ();
+	readonly ITypeMap typeMap;
 
 	bool disposed;
 
 	static readonly SemaphoreSlim bridgeProcessingSemaphore = new (1, 1);
 
-	static Lazy<JavaMarshalValueManager> s_instance = new (() => new JavaMarshalValueManager ());
-	public static JavaMarshalValueManager GetOrCreateInstance () => s_instance.Value;
-
-	unsafe JavaMarshalValueManager ()
+	static JavaMarshalValueManager? s_instance;
+	public static JavaMarshalValueManager GetOrCreateInstance (ITypeMap typeMap)
 	{
+		s_instance ??= new JavaMarshalValueManager (typeMap);
+		return s_instance;
+	}
+
+	unsafe JavaMarshalValueManager (ITypeMap typeMap)
+	{
+		this.typeMap = typeMap;
 		// There can only be one instance of JavaMarshalValueManager because we can call JavaMarshal.Initialize only once.
 		var mark_cross_references_ftn = RuntimeNativeMethods.clr_initialize_gc_bridge (&BridgeProcessingStarted, &BridgeProcessingFinished);
 		JavaMarshal.Initialize (mark_cross_references_ftn);
+	}
+
+	public override IJavaPeerable? CreatePeer (
+			ref JniObjectReference reference,
+			JniObjectReferenceOptions options,
+			[DynamicallyAccessedMembers (Constructors)]
+			Type? targetType)
+	{
+		if (!reference.IsValid)
+			return null;
+
+		var peer = typeMap.CreatePeer (reference.Handle, JniHandleOwnership.DoNotTransfer, targetType);
+		JniObjectReference.Dispose (ref reference, options);
+		return peer;
 	}
 
 	protected override void Dispose (bool disposing)
@@ -458,7 +478,7 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 	static unsafe ReadOnlySpan<GCHandle> ProcessCollectedContexts (MarkCrossReferencesArgs* mcr)
 	{
 		List<GCHandle> handlesToFree = [];
-		JavaMarshalValueManager instance = GetOrCreateInstance ();
+		JavaMarshalValueManager instance = s_instance ?? throw new InvalidOperationException ("JavaMarshalValueManager has not been initialized.");
 
 		for (int i = 0; (nuint)i < mcr->ComponentCount; i++) {
 			StronglyConnectedComponent component = mcr->Components [i];

@@ -57,11 +57,12 @@ namespace Java.Interop {
 					string.IsNullOrEmpty (builder.JvmLibraryPath))
 				throw new InvalidOperationException ($"Member `{nameof (NativeAotRuntimeOptions)}.{nameof (NativeAotRuntimeOptions.JvmLibraryPath)}` must be set.");
 
+			var typeMap = new LegacyManagedTypeMap ();
 #if NET
-			builder.TypeManager     ??= new ManagedTypeManager (new ManagedHybridTypeMap ());
+			builder.TypeManager     ??= new ManagedTypeManager (typeMap);
 #endif  // NET
 
-			builder.ValueManager            ??= JavaMarshalValueManager.GetOrCreateInstance();
+			builder.ValueManager            ??= JavaMarshalValueManager.GetOrCreateInstance (typeMap);
 			builder.ObjectReferenceManager  ??= new Android.Runtime.AndroidObjectReferenceManager ();
 
 			if (builder.InvocationPointer != IntPtr.Zero || builder.EnvironmentPointer != IntPtr.Zero)
