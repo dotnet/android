@@ -357,7 +357,7 @@
     <Compile Include="Microsoft.Android.Runtime\LegacyManagedTypeMap.cs" />
     <Compile Include="Microsoft.Android.Runtime\ManagedTypeManager.cs" />
     <Compile Include="Microsoft.Android.Runtime\ManagedTypeMapping.cs" />
-    <Compile Include="Microsoft.Android.Runtime\ManagedValueManager.cs" />
+    <Compile Include="Microsoft.Android.Runtime\JavaMarshalValueManager.cs" />
     <Compile Include="Microsoft.Android.Runtime\RuntimeFeature.cs" />
     <Compile Include="Microsoft.Android.Runtime\SimpleValueManager.cs" />
     <Compile Include="Org.Apache.Http.Impl.Conn\DefaultClientConnection.cs" />

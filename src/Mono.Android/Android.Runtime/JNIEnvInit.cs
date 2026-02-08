@@ -151,7 +151,7 @@ namespace Android.Runtime
 			if (RuntimeFeature.IsMonoRuntime) {
 				valueManager = new AndroidValueManager (typeMap);
 			} else if (RuntimeFeature.IsCoreClrRuntime) {
-				valueManager = ManagedValueManager.GetOrCreateInstance ();
+				valueManager = JavaMarshalValueManager.GetOrCreateInstance ();
 			} else {
 				throw new NotSupportedException ("Internal error: unknown runtime not supported");
 			}
