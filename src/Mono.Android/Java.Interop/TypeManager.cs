@@ -40,14 +40,11 @@ namespace Java.Interop {
 	}
 
 	public static partial class TypeManager {
-		internal static string GetClassName (IntPtr class_ptr)
-		{
-			IntPtr ptr = RuntimeNativeMethods.monodroid_TypeManager_get_java_class_name (class_ptr);
-			string ret = Marshal.PtrToStringAnsi (ptr)!;
-			RuntimeNativeMethods.monodroid_free (ptr);
-
-			return ret;
-		}
+		/// <summary>
+		/// Get the Java class name for a JNI class pointer.
+		/// Delegates to <see cref="JniClassHelper.GetClassName"/>.
+		/// </summary>
+		internal static string GetClassName (IntPtr class_ptr) => Android.Runtime.JniClassHelper.GetClassName (class_ptr);
 
 		internal static string? GetJniTypeName (Type type)
 		{

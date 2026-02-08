@@ -29,7 +29,7 @@ namespace Android.Runtime
 			Type? targetType)
 		{
 			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
-			string class_name = Java.Interop.TypeManager.GetClassName (class_ptr);
+			string class_name = JniClassHelper.GetClassName (class_ptr);
 			string original_class_name = class_name;
 
 			// Check cache first
@@ -50,7 +50,7 @@ namespace Android.Runtime
 				JNIEnv.DeleteLocalRef (class_ptr);
 				class_ptr = super_class_ptr;
 				if (class_ptr != IntPtr.Zero) {
-					class_name = Java.Interop.TypeManager.GetClassName (class_ptr);
+					class_name = JniClassHelper.GetClassName (class_ptr);
 				}
 			}
 

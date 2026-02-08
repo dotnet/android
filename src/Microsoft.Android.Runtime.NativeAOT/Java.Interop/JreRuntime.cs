@@ -58,7 +58,7 @@ namespace Java.Interop {
 				throw new InvalidOperationException ($"Member `{nameof (NativeAotRuntimeOptions)}.{nameof (NativeAotRuntimeOptions.JvmLibraryPath)}` must be set.");
 
 #if NET
-			builder.TypeManager     ??= new ManagedTypeManager ();
+			builder.TypeManager     ??= new ManagedTypeManager (new ManagedHybridTypeMap ());
 #endif  // NET
 
 			builder.ValueManager            ??= ManagedValueManager.GetOrCreateInstance();

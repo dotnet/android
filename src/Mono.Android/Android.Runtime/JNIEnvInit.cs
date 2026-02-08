@@ -71,11 +71,11 @@ namespace Android.Runtime
 			if (type == null) {
 				RuntimeNativeMethods.monodroid_log (LogLevel.Error,
 				               LogCategories.Default,
-				               $"Could not load type '{typeName}'. Skipping JNI registration of type '{Java.Interop.TypeManager.GetClassName (jniClass)}'.");
+				               $"Could not load type '{typeName}'. Skipping JNI registration of type '{JniClassHelper.GetClassName (jniClass)}'.");
 				return;
 			}
 
-			var className = Java.Interop.TypeManager.GetClassName (jniClass);
+			var className = JniClassHelper.GetClassName (jniClass);
 			Java.Interop.TypeManager.RegisterType (className, type);
 
 			JniType? jniType = null;
@@ -130,6 +130,12 @@ namespace Android.Runtime
 			java_class_loader = args->grefLoader;
 
 			BoundExceptionType = (BoundExceptionType)args->ioExceptionType;
+
+			// Select the ITypeMap implementation based on runtime configuration.
+			// To add a new ITypeMap (e.g., a trimmable typemap), add a new branch here
+			// guarded by a RuntimeFeature flag, create the ITypeMap instance, and pair it
+			// with the appropriate JniTypeManager. The ITypeMap is passed to the type manager
+			// and value manager constructors so all type mapping goes through this abstraction.
 			ITypeMap typeMap;
 			JniRuntime.JniTypeManager typeManager;
 			JniRuntime.JniValueManager valueManager;
