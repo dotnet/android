@@ -11,7 +11,7 @@ using Microsoft.Android.Runtime;
 namespace Android.Runtime
 {
 	/// <summary>
-	/// <see cref="TypeMap"/> implementation that wraps the existing native P/Invoke type mapping.
+	/// <see cref="LegacyTypeMap"/> implementation that wraps the existing native P/Invoke type mapping.
 	///
 	/// Java→.NET lookups use <c>monovm_typemap_java_to_managed()</c> (Mono) or
 	/// <c>clr_typemap_java_to_managed()</c> (CoreCLR), with a managed cache
@@ -24,7 +24,7 @@ namespace Android.Runtime
 	/// + <see cref="ConstructorInfo.Invoke"/>).
 	/// </summary>
 	[RequiresUnreferencedCode ("Native type map relies on native code to resolve Java->.NET type mappings, which may not be preserved when trimming.")]
-	internal class NativeTypeMap : TypeMap
+	internal class NativeTypeMap : LegacyTypeMap
 	{
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		static extern Type monodroid_typemap_java_to_managed (string java_type_name);

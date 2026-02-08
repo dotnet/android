@@ -10,7 +10,7 @@ using Java.Interop;
 namespace Microsoft.Android.Runtime
 {
 	/// <summary>
-	/// <see cref="TypeMap"/> implementation that wraps <see cref="ManagedTypeMapping"/>'s
+	/// <see cref="LegacyTypeMap"/> implementation that wraps <see cref="ManagedTypeMapping"/>'s
 	/// hash-based lookups. Used when <see cref="RuntimeFeature.ManagedTypeMap"/> is enabled
 	/// (NativeAOT / CoreCLR with managed type maps).
 	///
@@ -18,7 +18,7 @@ namespace Microsoft.Android.Runtime
 	/// Peer activation uses reflection (<see cref="RuntimeHelpers.GetUninitializedObject"/>
 	/// + <see cref="ConstructorInfo.Invoke"/>).
 	/// </summary>
-	class ManagedHybridTypeMap : TypeMap
+	class LegacyManagedTypeMap : LegacyTypeMap
 	{
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 

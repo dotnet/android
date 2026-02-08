@@ -225,7 +225,7 @@ namespace Java.Interop {
 		}
 
 		/// <summary>
-		/// Backward-compatible shim — delegates to <see cref="TypeMap.CreatePeer"/>.
+		/// Backward-compatible shim — delegates to <see cref="ITypeMap.CreatePeer"/>.
 		/// </summary>
 		internal static IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer, Type? targetType)
 		{

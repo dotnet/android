@@ -11,17 +11,13 @@ namespace Android.Runtime;
 /// Abstract base for Java↔.NET type mapping and peer creation.
 ///
 /// Subclasses provide the lookup strategy (<see cref="GetManagedTypes"/>,
-/// <see cref="TryGetJniTypeName"/>), and peer activation (<see cref="CreatePeer"/>).
+/// <see cref="TryGetJniTypeName"/>), and peer activation
+/// (via <see cref="ITypeMap.CreatePeer"/>).
 ///
 /// The shared hierarchy walking logic (<see cref="FindClosestManagedType"/>) lives in
 /// this base class so every type map gets it automatically.
-///
-/// To add a new type map implementation (e.g., a trimmable typemap):
-/// 1. Subclass <see cref="TypeMap"/>
-/// 2. Override the abstract members
-/// 3. Instantiate it in <see cref="JNIEnvInit.Initialize"/> guarded by a RuntimeFeature flag
 /// </summary>
-internal abstract class TypeMap
+internal abstract class LegacyTypeMap : ITypeMap
 {
 	record CacheKey (string JniTypeName, Type? TargetType);
 

@@ -237,7 +237,8 @@
     <Compile Include="Android.Runtime\JavaObject.cs" />
     <Compile Include="Android.Runtime\JavaProxyThrowable.cs" />
     <Compile Include="Android.Runtime\JavaSet.cs" />
-    <Compile Include="Android.Runtime\TypeMap.cs" />
+    <Compile Include="Android.Runtime\ITypeMap.cs" />
+    <Compile Include="Android.Runtime\LegacyTypeMap.cs" />
     <Compile Include="Android.Runtime\JNIEnv.cs" />
     <Compile Include="Android.Runtime\JNIEnv.g.cs" />
     <Compile Include="Android.Runtime\JNIEnvInit.cs" />
@@ -353,7 +354,7 @@
     <Compile Include="Java.Util.Concurrent.Atomic\AtomicInteger.cs" />
     <Compile Include="Java.Util.Concurrent.Atomic\AtomicLong.cs" />
     <Compile Include="Javax.Microedition.Khronos.Egl\EGLContext.cs" />
-    <Compile Include="Microsoft.Android.Runtime\ManagedHybridTypeMap.cs" />
+    <Compile Include="Microsoft.Android.Runtime\LegacyManagedTypeMap.cs" />
     <Compile Include="Microsoft.Android.Runtime\ManagedTypeManager.cs" />
     <Compile Include="Microsoft.Android.Runtime\ManagedTypeMapping.cs" />
     <Compile Include="Microsoft.Android.Runtime\ManagedValueManager.cs" />

@@ -14,9 +14,9 @@ class ManagedTypeManager : JniRuntime.JniTypeManager {
 	internal const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
 	internal const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
 
-	internal TypeMap TypeMap { get; }
+	internal LegacyTypeMap TypeMap { get; }
 
-	public ManagedTypeManager (TypeMap typeMap)
+	public ManagedTypeManager (LegacyTypeMap typeMap)
 	{
 		TypeMap = typeMap;
 	}

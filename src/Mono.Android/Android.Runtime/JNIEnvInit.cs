@@ -49,7 +49,7 @@ namespace Android.Runtime
 		internal static IntPtr java_class_loader;
 
 		internal static JniRuntime? androidRuntime;
-		internal static TypeMap? TypeMap;
+		internal static ITypeMap? TypeMap;
 
 		[UnmanagedCallersOnly]
 		static void PropagateUncaughtException (IntPtr env, IntPtr javaThread, IntPtr javaException)
@@ -133,14 +133,14 @@ namespace Android.Runtime
 
 			// Select the TypeMap implementation based on runtime configuration.
 			// To add a new TypeMap (e.g., a trimmable typemap), add a new branch here
-			// guarded by a RuntimeFeature flag, create the TypeMap instance, and pair it
-			// with the appropriate JniTypeManager. The TypeMap is passed to the type manager
+			// guarded by a RuntimeFeature flag, create the ITypeMap instance, and pair it
+			// with the appropriate JniTypeManager. The ITypeMap is passed to the type manager
 			// and value manager constructors so all type mapping goes through this abstraction.
-			TypeMap typeMap;
+			LegacyTypeMap typeMap;
 			JniRuntime.JniTypeManager typeManager;
 			JniRuntime.JniValueManager valueManager;
 			if (RuntimeFeature.ManagedTypeMap) {
-				typeMap         = new ManagedHybridTypeMap ();
+				typeMap         = new LegacyManagedTypeMap ();
 				typeManager     = new ManagedTypeManager (typeMap);
 			} else {
 #pragma warning disable IL2026 // NativeTypeMap is only used when RuntimeFeature.ManagedTypeMap is false (native typemap is available)
