@@ -686,6 +686,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		var nameMutations = new List<string> ();
 		var dsoNamesBlob = new LlvmIrStringBlob ();
 		int nameMutationsCount = -1;
+		ICollection<string> ignorePreload = MakeJniPreloadIgnoreCollection (Log, NativeLibrarysAlwaysJniPreload, NativeLibrariesNoJniPreload);
 
 		for (int i = 0; i < dsos.Count; i++) {
 			string name = dsos[i].name;
@@ -693,7 +694,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 			bool isJniLibrary = ELFHelper.IsJniLibrary (Log, dsos[i].item.ItemSpec);
 			bool ignore = dsos[i].ignore;
-			bool ignore_for_preload = !DsoCacheJniPreloadIgnore.Contains (name);
+			bool ignore_for_preload = ShouldIgnoreForJniPreload (Log, ignorePreload, dsos[i].item);
 
 			nameMutations.Clear();
 			AddNameMutations (name);
@@ -721,7 +722,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 				// We must add all aliases to the preloads indices array so that all of them have their handle
 				// set when the library is preloaded.
-				if (entry.is_jni_library && ignore_for_preload) {
+				if (entry.is_jni_library && !ignore_for_preload) {
 					jniPreloads.Add (entry);
 				}
 
@@ -793,20 +794,26 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		return !libsToIgnore.Contains (libFileName);
 	}
 
-	internal static ICollection<string> MakeJniPreloadIgnoreCollection (TaskLoggingHelper log, ICollection<ITaskItem> alwaysPreload, ICollection<ITaskItem> ignorePreload)
+	internal static ICollection<string> MakeJniPreloadIgnoreCollection (TaskLoggingHelper log, ICollection<ITaskItem>? alwaysPreload, ICollection<ITaskItem>? ignorePreload)
 	{
 		// There Can Be Only One, no matter what name casing is on the user's build OS.
 		var libsToIgnore = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+		if (ignorePreload == null || ignorePreload.Count == 0) {
+			return libsToIgnore;
+		}
+
 		var neverIgnore = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
 		string? fileName;
-		foreach (ITaskItem item in alwaysPreload) {
-			fileName = GetFileName (log, item);
-			if (fileName == null) {
-				continue;
-			}
+		if (alwaysPreload != null) {
+			foreach (ITaskItem item in alwaysPreload) {
+				fileName = GetFileName (log, item);
+				if (fileName == null) {
+					continue;
+				}
 
-			neverIgnore.Add (fileName);
+				neverIgnore.Add (fileName);
+			}
 		}
 
 		foreach (ITaskItem item in ignorePreload) {
@@ -828,7 +835,11 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 	static string? GetFileName (TaskLoggingHelper log, ITaskItem item)
 	{
-		var name = MonoAndroidHelper.GetNormalizedNativeLibraryName (item);
+		string? name = item.GetMetadata ("ArchiveFileName");
+		if (String.IsNullOrEmpty (name)) {
+			name = MonoAndroidHelper.GetNormalizedNativeLibraryName (item);
+		}
+
 		if (String.IsNullOrEmpty (name)) {
 			log.LogDebugMessage ($"Failed to convert item path '{item.ItemSpec}' to canonical native shared library name.");
 			return null;

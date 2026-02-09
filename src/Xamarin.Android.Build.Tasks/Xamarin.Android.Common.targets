@@ -1705,7 +1705,9 @@ because xbuild doesn't support framework reference assemblies.
          segfault -->
     <_AndroidNativeLibraryAlwaysJniPreload Include="libSystem.Security.Cryptography.Native.Android.so" />
 
-    <!-- Android for .NET native runtime. Always loaded by the Java startup code -->
+    <!-- Android for .NET native runtime. Always loaded by the Java startup code. Note that this is the
+         "generic" name of the runtime library - the actual name of the file might be different. If
+         this is the case, the `ArchiveFileName` will be set to `libmonodroid.so` -->
     <_AndroidNativeLibraryAlwaysJniPreload Include="libmonodroid.so" />
   </ItemGroup>
 
