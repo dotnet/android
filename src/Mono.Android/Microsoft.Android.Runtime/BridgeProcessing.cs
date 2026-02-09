@@ -24,9 +24,13 @@ unsafe class BridgeProcessing
 	static JniType? s_GCUserPeerClass;
 	static JniMethodInfo? s_GCUserPeerCtor;
 
-	static readonly BridgeProcessingLogger? s_logger;
+	static BridgeProcessingLogger? s_logger;
 
-	static BridgeProcessing ()
+	/// <summary>
+	/// Must be called after JNI runtime is created but before any GC can trigger the bridge callback.
+	/// Performs JNI FindClass/GetMethod lookups that would deadlock if called during GC.
+	/// </summary>
+	public static void Initialize ()
 	{
 		s_GCUserPeerClass = new JniType ("mono/android/GCUserPeer");
 		s_GCUserPeerCtor = s_GCUserPeerClass.GetConstructor ("()V");

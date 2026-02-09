@@ -152,6 +152,12 @@ namespace Android.Runtime
 					args->jniAddNativeMethodRegistrationAttributePresent != 0
 			);
 
+			// Initialize GC bridge after the runtime is created (JNI is now available).
+			// This must happen before any GC can trigger the bridge callback.
+			if (valueManager is ManagedValueManager managedValueManager) {
+				managedValueManager.InitializeGCBridge ();
+			}
+
 			grefIGCUserPeer_class = args->grefIGCUserPeer;
 			grefGCUserPeerable_class = args->grefGCUserPeerable;
 

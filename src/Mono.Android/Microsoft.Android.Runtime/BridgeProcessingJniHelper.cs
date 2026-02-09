@@ -17,7 +17,11 @@ unsafe static class BridgeProcessingJniHelper
 	static JniMethodInfo? s_GCUserPeerable_jiAddManagedReference;
 	static JniMethodInfo? s_GCUserPeerable_jiClearManagedReferences;
 
-	static BridgeProcessingJniHelper ()
+	/// <summary>
+	/// Must be called after JNI runtime is created but before any GC can trigger the bridge callback.
+	/// Performs JNI lookups that would deadlock if called during GC.
+	/// </summary>
+	public static void Initialize ()
 	{
 		using var runtimeClass = new JniType ("java/lang/Runtime");
 		var getRuntimeMethod = runtimeClass.GetStaticMethod ("getRuntime", "()Ljava/lang/Runtime;");
