@@ -875,16 +875,28 @@ namespace Xamarin.Android.Tasks
 			log.LogDebugMessage (reader.ReadToEnd ());
 		}
 
-		public static int GetMinimumApiLevel (AndroidTargetArch arch, AndroidRuntime runtime)
+		/// <summary>
+		/// Takes `libItem.ItemSpec` and transforms it to a file name of a native library. It will
+		/// remove any paths from `ItemSpec` and will make sure that the file ends with the `.so`
+		/// extension. Empty string is returned if there's nothing to process. String comparisons
+		/// are ordinal and case-insensitive.
+		/// </summary>
+		public static string GetNormalizedNativeLibraryName (ITaskItem libItem)
 		{
-			int minValue = 0;
-
-			Dictionary<AndroidTargetArch, int> apiLevels = runtime == AndroidRuntime.MonoVM ? XABuildConfig.ArchToApiLevel : XABuildConfig.ArchToApiLevelNonMono;
-			if (!apiLevels.TryGetValue (arch, out minValue)) {
-				throw new InvalidOperationException ($"Unable to determine minimum API level for architecture {arch}");
+			if (String.IsNullOrEmpty (libItem.ItemSpec)) {
+				return String.Empty;
 			}
 
-			return minValue;
+			string ret = Path.GetFileName (libItem.ItemSpec);
+			if (String.IsNullOrEmpty (ret)) {
+				return String.Empty;
+			}
+
+			if (!String.Equals (Path.GetExtension (ret), ".so", StringComparison.OrdinalIgnoreCase)) {
+				return "${ret}.so";
+			}
+
+			return ret;
 		}
 	}
 }

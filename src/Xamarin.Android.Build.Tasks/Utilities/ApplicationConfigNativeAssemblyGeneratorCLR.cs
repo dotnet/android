@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 
 using Java.Interop.Tools.TypeNameMappings;
+using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tasks.LLVMIR;
@@ -281,6 +282,8 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	public int JniRemappingReplacementMethodIndexEntryCount { get; set; }
 	public PackageNamingPolicy PackageNamingPolicy { get; set; }
 	public List<ITaskItem> NativeLibraries { get; set; } = [];
+	public ICollection<ITaskItem>? NativeLibrariesNoJniPreload { get; set; }
+	public ICollection<ITaskItem>? NativeLibrarysAlwaysJniPreload { get; set; }
 	public bool MarshalMethodsEnabled { get; set; }
 	public bool ManagedMarshalMethodsLookupEnabled { get; set; }
 	public bool IgnoreSplitConfigs { get; set; }
@@ -774,5 +777,63 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		runtimePropertyStructureInfo = module.MapStructure<RuntimeProperty> ();
 		runtimePropertyIndexEntryStructureInfo = module.MapStructure<RuntimePropertyIndexEntry> ();
 		appEnvironmentVariableStructureInfo = module.MapStructure<LlvmIrHelpers.AppEnvironmentVariable> ();
+	}
+
+	internal static bool ShouldIgnoreForJniPreload (TaskLoggingHelper log, ICollection<string> libsToIgnore, ITaskItem libItem)
+	{
+		if (libsToIgnore.Count == 0) {
+			return false;
+		}
+
+		string? libFileName = GetFileName (log, libItem);
+		if (libFileName == null) {
+			return false; // We have no idea what it is, so let the caller handle the situation
+		}
+
+		return !libsToIgnore.Contains (libFileName);
+	}
+
+	internal static ICollection<string> MakeJniPreloadIgnoreCollection (TaskLoggingHelper log, ICollection<ITaskItem> alwaysPreload, ICollection<ITaskItem> ignorePreload)
+	{
+		// There Can Be Only One, no matter what name casing is on the user's build OS.
+		var libsToIgnore = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+		var neverIgnore = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+
+		string? fileName;
+		foreach (ITaskItem item in alwaysPreload) {
+			fileName = GetFileName (log, item);
+			if (fileName == null) {
+				continue;
+			}
+
+			neverIgnore.Add (fileName);
+		}
+
+		foreach (ITaskItem item in ignorePreload) {
+			fileName = GetFileName (log, item);
+			if (fileName == null) {
+				continue;
+			}
+
+			if (neverIgnore.Contains (fileName)) {
+				log.LogDebugMessage ($"Native library '{item.ItemSpec}' cannot be ignored when preloading JNI native libraries.");
+				continue;
+			}
+
+			libsToIgnore.Add (fileName);
+		}
+
+		return libsToIgnore;
+	}
+
+	static string? GetFileName (TaskLoggingHelper log, ITaskItem item)
+	{
+		var name = MonoAndroidHelper.GetNormalizedNativeLibraryName (item);
+		if (String.IsNullOrEmpty (name)) {
+			log.LogDebugMessage ($"Failed to convert item path '{item.ItemSpec}' to canonical native shared library name.");
+			return null;
+		}
+
+		return name;
 	}
 }
