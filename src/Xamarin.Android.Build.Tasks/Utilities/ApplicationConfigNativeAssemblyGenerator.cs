@@ -202,6 +202,8 @@ namespace Xamarin.Android.Tasks
 		public MonoComponent MonoComponents { get; set; }
 		public PackageNamingPolicy PackageNamingPolicy { get; set; }
 		public List<ITaskItem> NativeLibraries { get; set; } = [];
+		public ICollection<ITaskItem>? NativeLibrariesNoJniPreload { get; set; }
+		public ICollection<ITaskItem>? NativeLibrarysAlwaysJniPreload { get; set; }
 		public bool MarshalMethodsEnabled { get; set; }
 		public bool ManagedMarshalMethodsLookupEnabled { get; set; }
 		public bool IgnoreSplitConfigs { get; set; }
