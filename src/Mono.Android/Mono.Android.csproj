@@ -70,6 +70,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\Microsoft.Android.Runtime.NativeAOT\Java.Interop\ManagedObjectReferenceManager.cs">
+      <Link>Java.Interop\ManagedObjectReferenceManager.cs</Link>
+    </Compile>
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings\JavaNativeTypeManager.cs">
       <Link>JavaNativeTypeManager.cs</Link>
     </Compile>
