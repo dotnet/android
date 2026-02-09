@@ -1,6 +1,5 @@
 // Originally from: https://github.com/dotnet/java-interop/blob/9b1d8781e8e322849d05efac32119c913b21c192/src/Java.Runtime.Environment/Java.Interop/ManagedValueManager.cs
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -23,11 +22,10 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
 	readonly Dictionary<int, List<ReferenceTrackingHandle>> RegisteredInstances = new ();
-	readonly ConcurrentQueue<IntPtr> CollectedContexts = new ();
 
 	bool disposed;
 
-	static readonly SemaphoreSlim bridgeProcessingSemaphore = new (1, 1);
+	static readonly ReaderWriterLockSlim rwLock = new ();
 
 	static Lazy<ManagedValueManager> s_instance = new (() => new ManagedValueManager ());
 	public static ManagedValueManager GetOrCreateInstance () => s_instance.Value;
@@ -41,7 +39,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	{
 		MarkCrossReferencesArgs* args = (MarkCrossReferencesArgs*)argsPtr;
 
-		bridgeProcessingSemaphore.Wait ();
+		rwLock.EnterWriteLock ();
 		try {
 			// Validate contexts
 			HandleContext.EnsureAllContextsAreOurs (args);
@@ -51,10 +49,16 @@ class ManagedValueManager : JniRuntime.JniValueManager
 			processing.Process ();
 
 			// Process collected contexts and finish
-			ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (args);
-			JavaMarshal.FinishCrossReferenceProcessing (args, handlesToFree);
+			var (handlesToFree, contextsToFree) = ProcessCollectedContexts (args);
+			JavaMarshal.FinishCrossReferenceProcessing (args, CollectionsMarshal.AsSpan (handlesToFree));
+			GC.KeepAlive (handlesToFree);
+
+			foreach (IntPtr contextPtr in contextsToFree) {
+				var ctx = (HandleContext*)contextPtr;
+				HandleContext.Free (ref ctx);
+			}
 		} finally {
-			bridgeProcessingSemaphore.Release ();
+			rwLock.ExitWriteLock ();
 		}
 	}
 
@@ -80,50 +84,16 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	public override void WaitForGCBridgeProcessing ()
 	{
-		bridgeProcessingSemaphore.Wait ();
-		bridgeProcessingSemaphore.Release ();
 	}
 
 	public unsafe override void CollectPeers ()
 	{
 		ThrowIfDisposed ();
-
-		while (CollectedContexts.TryDequeue (out IntPtr contextPtr)) {
-			Debug.Assert (contextPtr != IntPtr.Zero, "CollectedContexts should not contain null pointers.");
-			HandleContext* context = (HandleContext*)contextPtr;
-			
-			lock (RegisteredInstances) {
-				Remove (context);
-			}
-
-			HandleContext.Free (ref context);
-		}
-
-		void Remove (HandleContext* context)
-		{
-			int key = context->PeerIdentityHashCode;
-			if (!RegisteredInstances.TryGetValue (key, out List<ReferenceTrackingHandle>? peers))
-				return;
-
-			for (int i = peers.Count - 1; i >= 0; i--) {
-				var peer = peers [i];
-				if (peer.BelongsToContext (context)) {
-					peers.RemoveAt (i);
-				}
-			}
-
-			if (peers.Count == 0) {
-				RegisteredInstances.Remove (key);
-			}
-		}
 	}
 
 	public override void AddPeer (IJavaPeerable value)
 	{
 		ThrowIfDisposed ();
-
-		// Remove any collected contexts before adding a new peer.
-		CollectPeers ();
 
 		var r = value.PeerReference;
 		if (!r.IsValid)
@@ -134,11 +104,11 @@ class ManagedValueManager : JniRuntime.JniValueManager
 			JniObjectReference.Dispose (ref r, JniObjectReferenceOptions.CopyAndDispose);
 		}
 		int key = value.JniIdentityHashCode;
-		lock (RegisteredInstances) {
+		rwLock.EnterUpgradeableReadLock ();
+		try {
 			List<ReferenceTrackingHandle>? peers;
 			if (!RegisteredInstances.TryGetValue (key, out peers)) {
-				peers = [new ReferenceTrackingHandle (value)];
-				RegisteredInstances.Add (key, peers);
+				AddNewPeer (key, value);
 				return;
 			}
 
@@ -149,8 +119,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 				if (!JniEnvironment.Types.IsSameObject (target.PeerReference, value.PeerReference))
 					continue;
 				if (target.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable)) {
-					peer.Dispose ();
-					peers [i] = new ReferenceTrackingHandle (value);
+					ReplacePeer (peers, i, peer, value);
 				} else {
 					WarnNotReplacing (key, value, target);
 				}
@@ -158,7 +127,41 @@ class ManagedValueManager : JniRuntime.JniValueManager
 				return;
 			}
 
-			peers.Add (new ReferenceTrackingHandle (value));
+			AppendPeer (peers, value);
+		} finally {
+			rwLock.ExitUpgradeableReadLock ();
+		}
+
+		void AddNewPeer (int key, IJavaPeerable value)
+		{
+			rwLock.EnterWriteLock ();
+			try {
+				var peers = new List<ReferenceTrackingHandle> { new ReferenceTrackingHandle (value) };
+				RegisteredInstances.Add (key, peers);
+			} finally {
+				rwLock.ExitWriteLock ();
+			}
+		}
+
+		void ReplacePeer (List<ReferenceTrackingHandle> peers, int index, ReferenceTrackingHandle oldPeer, IJavaPeerable value)
+		{
+			rwLock.EnterWriteLock ();
+			try {
+				oldPeer.Dispose ();
+				peers [index] = new ReferenceTrackingHandle (value);
+			} finally {
+				rwLock.ExitWriteLock ();
+			}
+		}
+
+		void AppendPeer (List<ReferenceTrackingHandle> peers, IJavaPeerable value)
+		{
+			rwLock.EnterWriteLock ();
+			try {
+				peers.Add (new ReferenceTrackingHandle (value));
+			} finally {
+				rwLock.ExitWriteLock ();
+			}
 		}
 	}
 
@@ -187,7 +190,15 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 		int key = GetJniIdentityHashCode (reference);
 
-		lock (RegisteredInstances) {
+		rwLock.EnterReadLock ();
+		try {
+			return FindPeer (key, reference);
+		} finally {
+			rwLock.ExitReadLock ();
+		}
+
+		IJavaPeerable? FindPeer (int key, JniObjectReference reference)
+		{
 			if (!RegisteredInstances.TryGetValue (key, out List<ReferenceTrackingHandle>? peers))
 				return null;
 
@@ -199,39 +210,42 @@ class ManagedValueManager : JniRuntime.JniValueManager
 				}
 			}
 
-			if (peers.Count == 0)
-				RegisteredInstances.Remove (key);
+			return null;
 		}
-		return null;
 	}
 
 	public override void RemovePeer (IJavaPeerable value)
 	{
 		ThrowIfDisposed ();
 
-		// Remove any collected contexts before modifying RegisteredInstances
-		CollectPeers ();
-
 		if (value == null)
 			throw new ArgumentNullException (nameof (value));
 
-		lock (RegisteredInstances) {
-			int key = value.JniIdentityHashCode;
-			if (!RegisteredInstances.TryGetValue (key, out List<ReferenceTrackingHandle>? peers))
-				return;
-
-			for (int i = peers.Count - 1; i >= 0; i--) {
-				ReferenceTrackingHandle peer = peers [i];
-				IJavaPeerable target = peer.Target;
-				if (ReferenceEquals (value, target)) {
-					peers.RemoveAt (i);
-					peer.Dispose ();
-				}
-				GC.KeepAlive (target);
-			}
-			if (peers.Count == 0)
-				RegisteredInstances.Remove (key);
+		rwLock.EnterWriteLock ();
+		try {
+			RemovePeerCore (value);
+		} finally {
+			rwLock.ExitWriteLock ();
 		}
+	}
+
+	void RemovePeerCore (IJavaPeerable value)
+	{
+		int key = value.JniIdentityHashCode;
+		if (!RegisteredInstances.TryGetValue (key, out List<ReferenceTrackingHandle>? peers))
+			return;
+
+		for (int i = peers.Count - 1; i >= 0; i--) {
+			ReferenceTrackingHandle peer = peers [i];
+			IJavaPeerable target = peer.Target;
+			if (ReferenceEquals (value, target)) {
+				peers.RemoveAt (i);
+				peer.Dispose ();
+			}
+			GC.KeepAlive (target);
+		}
+		if (peers.Count == 0)
+			RegisteredInstances.Remove (key);
 	}
 
 	public override void FinalizePeer (IJavaPeerable value)
@@ -308,20 +322,25 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	{
 		ThrowIfDisposed ();
 
-		// Remove any collected contexts before iterating over all the registered instances
-		CollectPeers ();
+		rwLock.EnterReadLock ();
+		try {
+			return GetSurfacedPeersCore ();
+		} finally {
+			rwLock.ExitReadLock ();
+		}
+	}
 
-		lock (RegisteredInstances) {
-			var peers = new List<JniSurfacedPeerInfo> (RegisteredInstances.Count);
-			foreach (var (identityHashCode, referenceTrackingHandles) in RegisteredInstances) {
-				foreach (var peer in referenceTrackingHandles) {
-					if (peer.Target is IJavaPeerable target) {
-						peers.Add (new JniSurfacedPeerInfo (identityHashCode, new WeakReference<IJavaPeerable> (target)));
-					}
+	List<JniSurfacedPeerInfo> GetSurfacedPeersCore ()
+	{
+		var peers = new List<JniSurfacedPeerInfo> (RegisteredInstances.Count);
+		foreach (var (identityHashCode, referenceTrackingHandles) in RegisteredInstances) {
+			foreach (var peer in referenceTrackingHandles) {
+				if (peer.Target is IJavaPeerable target) {
+					peers.Add (new JniSurfacedPeerInfo (identityHashCode, new WeakReference<IJavaPeerable> (target)));
 				}
 			}
-			return peers;
 		}
+		return peers;
 	}
 
 	unsafe struct ReferenceTrackingHandle : IDisposable
@@ -392,22 +411,18 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 		public static GCHandle GetAssociatedGCHandle (HandleContext* context)
 		{
-			lock (referenceTrackingHandles) {
-				if (!referenceTrackingHandles.TryGetValue ((IntPtr) context, out GCHandle handle)) {
-					throw new InvalidOperationException ("Unknown reference tracking handle.");
-				}
-
-				return handle;
+			if (!referenceTrackingHandles.TryGetValue ((IntPtr) context, out GCHandle handle)) {
+				throw new InvalidOperationException ("Unknown reference tracking handle.");
 			}
+
+			return handle;
 		}
 
 		public static unsafe void EnsureAllContextsAreOurs (MarkCrossReferencesArgs* mcr)
 		{
-			lock (referenceTrackingHandles) {
-				for (nuint i = 0; i < mcr->ComponentCount; i++) {
-					StronglyConnectedComponent component = mcr->Components [i];
-					EnsureAllContextsInComponentAreOurs (component);
-				}
+			for (nuint i = 0; i < mcr->ComponentCount; i++) {
+				StronglyConnectedComponent component = mcr->Components [i];
+				EnsureAllContextsInComponentAreOurs (component);
 			}
 
 			static void EnsureAllContextsInComponentAreOurs (StronglyConnectedComponent component)
@@ -436,9 +451,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 			context->controlBlock = peer.JniObjectReferenceControlBlock;
 
 			GCHandle handle = JavaMarshal.CreateReferenceTrackingHandle (peer, context);
-			lock (referenceTrackingHandles) {
-				referenceTrackingHandles [(IntPtr) context] = handle;
-			}
+			referenceTrackingHandles [(IntPtr) context] = handle;
 
 			return context;
 		}
@@ -449,18 +462,17 @@ class ManagedValueManager : JniRuntime.JniValueManager
 				return;
 			}
 
-			lock (referenceTrackingHandles) {
-				referenceTrackingHandles.Remove ((IntPtr)context);
-			}
+			referenceTrackingHandles.Remove ((IntPtr)context);
 
 			NativeMemory.Free (context);
 			context = null;
 		}
 	}
 
-	static unsafe ReadOnlySpan<GCHandle> ProcessCollectedContexts (MarkCrossReferencesArgs* mcr)
+	static unsafe (List<GCHandle> handlesToFree, List<IntPtr> contextsToFree) ProcessCollectedContexts (MarkCrossReferencesArgs* mcr)
 	{
 		List<GCHandle> handlesToFree = [];
+		List<IntPtr> contextsToFree = [];
 		ManagedValueManager instance = GetOrCreateInstance ();
 
 		for (int i = 0; (nuint)i < mcr->ComponentCount; i++) {
@@ -482,17 +494,33 @@ class ManagedValueManager : JniRuntime.JniValueManager
 			}
 
 			GCHandle handle = HandleContext.GetAssociatedGCHandle (context);
-
-			// Note: modifying the RegisteredInstances dictionary while processing the collected contexts
-			// is tricky and can lead to deadlocks, so we remember which contexts were collected and we will free
-			// them later outside of the bridge processing loop.
-			instance.CollectedContexts.Enqueue ((IntPtr)context);
-
-			// important: we must not free the handle before passing it to JavaMarshal.FinishCrossReferenceProcessing
 			handlesToFree.Add (handle);
+
+			// Remove from RegisteredInstances immediately (we hold the write lock)
+			RemoveFromRegisteredInstances (instance, context);
+
+			// Defer HandleContext.Free until after JavaMarshal.FinishCrossReferenceProcessing
+			contextsToFree.Add ((IntPtr)context);
 		}
 
-		return CollectionsMarshal.AsSpan (handlesToFree);
+		return (handlesToFree, contextsToFree);
+	}
+
+	static unsafe void RemoveFromRegisteredInstances (ManagedValueManager instance, HandleContext* context)
+	{
+		int key = context->PeerIdentityHashCode;
+		if (!instance.RegisteredInstances.TryGetValue (key, out List<ReferenceTrackingHandle>? peers))
+			return;
+
+		for (int i = peers.Count - 1; i >= 0; i--) {
+			if (peers [i].BelongsToContext (context)) {
+				peers.RemoveAt (i);
+			}
+		}
+
+		if (peers.Count == 0) {
+			instance.RegisteredInstances.Remove (key);
+		}
 	}
 
 	const BindingFlags ActivationConstructorBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
