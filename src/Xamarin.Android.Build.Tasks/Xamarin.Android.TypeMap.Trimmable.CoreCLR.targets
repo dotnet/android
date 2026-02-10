@@ -1,0 +1,8 @@
+<!-- Trimmable typemap targets for CoreCLR runtime (stub).
+     The actual implementation will be added in a follow-up. -->
+<Project>
+
+  <!-- No native typemap sources needed for trimmable typemap -->
+  <Target Name="_PrepareNativeAssemblySources" />
+
+</Project>
