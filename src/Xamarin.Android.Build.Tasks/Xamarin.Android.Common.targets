@@ -1711,7 +1711,7 @@ because xbuild doesn't support framework reference assemblies.
     <_AndroidNativeLibraryAlwaysJniPreload Include="libmonodroid.so" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(AndroidIgnoreAllJniPreload)' != 'false' ">
+  <ItemGroup Condition=" '$(AndroidIgnoreAllJniPreload)' == 'true' ">
     <!-- We include everything, tasks below will take care of exclusion of certain libs from this
          item group -->
     <AndroidNativeLibraryNoJniPreload Include="@(AndroidNativeLibrary);@(EmbeddedNativeLibrary);@(FrameworkNativeLibrary)" />
