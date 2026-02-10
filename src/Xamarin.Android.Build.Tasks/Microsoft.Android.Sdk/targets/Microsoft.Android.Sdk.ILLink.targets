@@ -10,7 +10,7 @@ This file contains the .NET 5-specific targets to customize ILLink
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <Target Name="_PrepareLinking"
-      Condition=" '$(PublishTrimmed)' == 'true' "
+      Condition=" '$(PublishTrimmed)' == 'true' And '$(_AndroidTypeMapImplementation)' != 'trimmable' "
       AfterTargets="ComputeResolvedFilesToPublishList"
       DependsOnTargets="GetReferenceAssemblyPaths;_CreatePropertiesCache">
     <PropertyGroup>
@@ -98,7 +98,9 @@ This file contains the .NET 5-specific targets to customize ILLink
     </ItemGroup>
   </Target>
 
-  <Target Name="_FixRootAssembly" AfterTargets="PrepareForILLink">
+  <Target Name="_FixRootAssembly"
+      Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' "
+      AfterTargets="PrepareForILLink">
     <ItemGroup>
       <TrimmerRootAssembly Update="@(TrimmerRootAssembly)" Condition=" '%(TrimmerRootAssembly.RootMode)' == 'EntryPoint' " RootMode="All" />
     </ItemGroup>
@@ -110,7 +112,7 @@ This file contains the .NET 5-specific targets to customize ILLink
 
   <Target Name="_TouchAndroidLinkFlag"
       AfterTargets="ILLink"
-      Condition=" '$(PublishTrimmed)' == 'true' and Exists('$(_LinkSemaphore)') "
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_AndroidTypeMapImplementation)' != 'trimmable' and Exists('$(_LinkSemaphore)') "
       Inputs="$(_LinkSemaphore)"
       Outputs="$(_AndroidLinkFlag)">
     <!-- This file is an input for _RemoveRegisterAttribute -->
