@@ -385,14 +385,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Resource.Designer.targets" />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Tooling.targets" />
 
-<!-- Empty stubs for targets overridden by Legacy/Trimmable .targets files.
-     These MUST be defined BEFORE the imports so that the imported overrides win ("last definition wins"). -->
-<Target Name="_GetMonoPlatformJarPath" />
-<Target Name="_PrepareNativeAssemblySources" />
-
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.TypeMap.Trimmable.targets"
     Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
-<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.TypeMap.Legacy.targets"
+<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.TypeMap.LlvmIr.targets"
     Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' " />
 
 <Target Name="_WriteLockFile" Condition=" '$(_AndroidDetectParallelBuilds)' == 'True' ">
@@ -1397,7 +1392,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_AddStaticResources"
 		Inputs="$(MonoPlatformJarPath);$(_AndroidBuildPropertiesCache)"
 		Outputs="$(_AndroidStaticResourcesFlag)"
-		DependsOnTargets="_CollectRuntimeJarFilenames;$(_BeforeAddStaticResources);_GetMonoPlatformJarPath">
+		DependsOnTargets="_CollectRuntimeJarFilenames;$(_BeforeAddStaticResources)">
 	<CopyResource ResourceName="machine.config" OutputPath="$(MonoAndroidIntermediateAssemblyDir)machine.config" />
   <CopyResource
       Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
@@ -1489,16 +1484,6 @@ because xbuild doesn't support framework reference assemblies.
 
 <!-- _PrepareAssemblies lives in Microsoft.Android.Sdk.AssemblyResolution.targets -->
 
-<PropertyGroup>
-  <_GenerateJavaStubsDependsOnTargets>
-    _SetLatestTargetFrameworkVersion;
-    _PrepareAssemblies;
-    _PrepareNativeAssemblySources;
-    $(_AfterPrepareAssemblies);
-    _GetGenerateJavaStubsInputs;
-  </_GenerateJavaStubsDependsOnTargets>
-</PropertyGroup>
-
 <Target Name="_GetGenerateJavaStubsInputs" DependsOnTargets="_GenerateEnvironmentFiles">
   <ItemGroup>
     <_GenerateJavaStubsInputs Include="@(_AndroidMSBuildAllProjects)" />
@@ -1509,34 +1494,6 @@ because xbuild doesn't support framework reference assemblies.
     <_GenerateJavaStubsInputs Include="@(AndroidEnvironment);@(LibraryEnvironments)" Condition=" '$(_AndroidFastDeployEnvironmentFiles)' != 'true' " />
     <_EnvironmentFiles Include="@(AndroidEnvironment);@(LibraryEnvironments)" Condition=" '$(_AndroidFastDeployEnvironmentFiles)' != 'true' " />
   </ItemGroup>
-</Target>
-
-<Target Name="_GenerateJavaStubs"
-    DependsOnTargets="$(_GenerateJavaStubsDependsOnTargets);$(BeforeGenerateAndroidManifest);$(_BeforeGenerateAndroidManifestTasks)"
-    Inputs="@(_GenerateJavaStubsInputs)"
-    Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
-
-  <PropertyGroup>
-    <_ManifestOutput Condition=" '$(AndroidManifestMerger)' == 'legacy' ">$(IntermediateOutputPath)android\AndroidManifest.xml</_ManifestOutput>
-    <_ManifestOutput Condition=" '$(AndroidManifestMerger)' != 'legacy' ">$(IntermediateOutputPath)AndroidManifest.xml</_ManifestOutput>
-    <_LinkingEnabled Condition=" '$(AndroidLinkMode)' != 'None'">True</_LinkingEnabled>
-    <_LinkingEnabled Condition=" '$(AndroidLinkMode)' == 'None'">False</_LinkingEnabled>
-    <_HaveMultipleRIDs Condition=" '$(RuntimeIdentifiers)' != '' ">True</_HaveMultipleRIDs>
-    <_HaveMultipleRIDs Condition=" '$(RuntimeIdentifiers)' == '' ">False</_HaveMultipleRIDs>
-  </PropertyGroup>
-  <ItemGroup>
-    <_MergedManifestDocuments Condition=" '$(AndroidManifestMerger)' == 'legacy' " Include="@(ExtractedManifestDocuments)" />
-  </ItemGroup>
-
-  <!-- JCW generation, manifest generation, and typemap generation are handled by the
-       typemap-specific targets files (Legacy.targets / Trimmable.*.targets)
-       via _BeforeGenerateAndroidManifestTasks and AfterTargets="_GenerateJavaStubs". -->
-
-  <ItemGroup>
-    <FileWrites Include="$(_ManifestOutput)" />
-  </ItemGroup>
-
-  <Touch Files="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" AlwaysCreate="True" />
 </Target>
 
 <Target Name="_ManifestMerger"
@@ -1890,7 +1847,7 @@ because xbuild doesn't support framework reference assemblies.
 		_FindJavaStubFiles;
 		_AddStaticResources;
 		$(_AfterAddStaticResources);
-		_GetMonoPlatformJarPath;
+		$(_BeforeCompileJava);
 		$(_OnResolveMonoAndroidSdks);
 		_GetLibraryImports;
 		_CheckDuplicateJavaLibraries;
@@ -1905,7 +1862,7 @@ because xbuild doesn't support framework reference assemblies.
 		_CompileJava;
 		_CreateApplicationSharedLibraries;
 		$(_NativeRuntimeLinking);
-		_GetMonoPlatformJarPath;
+		$(_BeforeCompileToDalvik);
 		_GetLibraryImports;
 		_SetProguardMappingFileProperty;
 		_CalculateProguardConfigurationFiles;

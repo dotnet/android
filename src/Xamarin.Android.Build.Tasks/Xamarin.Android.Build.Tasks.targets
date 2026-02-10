@@ -115,7 +115,7 @@
     <None Include="Xamarin.Android.Tooling.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Xamarin.Android.TypeMap.Legacy.targets">
+    <None Include="Xamarin.Android.TypeMap.LlvmIr.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Xamarin.Android.TypeMap.Trimmable.targets">
