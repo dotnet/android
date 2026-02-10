@@ -70,7 +70,8 @@
   <!-- Legacy manifest generation and additional provider sources.
        Runs after _GenerateJavaStubs so that NativeCodeGenState is available. -->
   <Target Name="_GenerateLegacyAndroidManifest"
-      AfterTargets="_GenerateJavaStubs">
+      AfterTargets="_GenerateJavaStubs"
+      DependsOnTargets="_GenerateLegacyTypeMappings">
     <GenerateMainAndroidManifest
         AndroidRuntime="$(_AndroidRuntime)"
         AndroidSdkDir="$(_AndroidSdkDirectory)"
