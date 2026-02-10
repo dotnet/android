@@ -98,6 +98,36 @@ namespace Xamarin.Android.Build.Tests
 			public bool   managed_marshal_methods_lookup_enabled;
 		}
 
+		// This is shared between MonoVM and CoreCLR hosts, not used by NativeAOT
+		public sealed class DSOCacheEntry64
+		{
+			// Hardcoded, by design - we want to know if there are any changes in the
+			// native assembly layout.
+			public const uint NativeSize = 32;
+
+			public ulong hash;
+			public ulong real_name_hash;
+			public bool ignore;
+			public bool is_jni_library;
+			public string name; // real structure has an index here, we fetch the string to make it easier
+			public IntPtr handle;
+		}
+
+		// This is a synthetic class, not reflecting what's in the generated LLVM IR/assembler source
+		public sealed class JniPreloadsEntry
+		{
+			public uint Index;
+			public string LibraryName;
+		}
+
+		// This is a synthetic class, not reflecting what's in the generated LLVM IR/assembler source
+		public sealed class JniPreloads
+		{
+			public uint IndexStride;
+			public ulong IndexCount;
+			public List<JniPreloadsEntry> Entries;
+		}
+
 		const uint ApplicationConfigFieldCount_MonoVM = 27;
 
 		const string ApplicationConfigSymbolName = "application_config";
@@ -106,6 +136,12 @@ namespace Xamarin.Android.Build.Tests
 
 		const string AppEnvironmentVariablesNativeAOTSymbolName = "__naot_android_app_environment_variables";
 		const string AppEnvironmentVariableContentsNativeAOTSymbolName = "__naot_android_app_environment_variable_contents";
+
+		const string DsoJniPreloadsIdxStrideSymbolName = "dso_jni_preloads_idx_stride";
+		const string DsoJniPreloadsIdxCountSymbolName = "dso_jni_preloads_idx_count";
+		const string DsoJniPreloadsIdxSymbolName = "dso_jni_preloads_idx";
+		const string DsoCacheSymbolName = "dso_cache";
+		const string DsoNamesDataSymbolName = "dso_names_data";
 
 		static readonly object ndkInitLock = new object ();
 		static readonly char[] readElfFieldSeparator = new [] { ' ', '\t' };
@@ -919,6 +955,34 @@ namespace Xamarin.Android.Build.Tests
 			foreach (string symbol in requiredSharedLibrarySymbols) {
 				Assert.IsTrue (symbols.Contains (symbol), $"Symbol '{symbol}' is missing from '{dsoPath}'");
 			}
+		}
+
+		public static List<JniPreloads> ReadJniPreloads (List<EnvironmentFile> envFilePaths, uint expectedDsoCacheEntryCount, AndroidRuntime runtime)
+		{
+			var ret = new List<JniPreloads> ();
+
+			foreach (EnvironmentFile envFile in envFilePaths) {
+				JniPreloads preloads = runtime switch {
+					AndroidRuntime.CoreCLR => ReadJniPreloads_CLR (envFile),
+					_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
+				};
+
+				ret.Add (preloads);
+			}
+
+			return ret;
+		}
+
+		static JniPreloads ReadJniPreloads_CLR (EnvironmentFile envFile)
+		{
+			NativeAssemblyParser parser = CreateAssemblyParser (envFile);
+			NativeAssemblyParser.AssemblerSymbol dsoCache = GetRequiredSymbol (DsoCacheSymbolName, envFile, parser);
+			NativeAssemblyParser.AssemblerSymbol dsoNamesData = GetRequiredSymbol (DsoNamesDataSymbolName, envFile, parser);
+			NativeAssemblyParser.AssemblerSymbol dsoJniPreloadsIdxStride = GetRequiredSymbol (DsoJniPreloadsIdxStrideSymbolName, envFile, parser);
+			NativeAssemblyParser.AssemblerSymbol dsoJniPreloadsIdxCount = GetRequiredSymbol (DsoJniPreloadsIdxCountSymbolName, envFile, parser);
+			NativeAssemblyParser.AssemblerSymbol dsoJniPreloadsIdx = GetRequiredSymbol (DsoJniPreloadsIdxSymbolName, envFile, parser);
+
+			throw new NotImplementedException ();
 		}
 
 		static (List<string> stdout, List<string> stderr) RunCommand (string executablePath, string arguments = null)
