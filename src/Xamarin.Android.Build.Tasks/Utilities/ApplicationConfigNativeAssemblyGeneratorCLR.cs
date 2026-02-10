@@ -791,7 +791,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			return false; // We have no idea what it is, so let the caller handle the situation
 		}
 
-		return !libsToIgnore.Contains (libFileName);
+		return libsToIgnore.Contains (libFileName);
 	}
 
 	internal static ICollection<string> MakeJniPreloadIgnoreCollection (TaskLoggingHelper log, ICollection<ITaskItem>? alwaysPreload, ICollection<ITaskItem>? ignorePreload)
