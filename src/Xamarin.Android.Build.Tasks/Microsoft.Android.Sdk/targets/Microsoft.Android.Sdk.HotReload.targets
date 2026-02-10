@@ -70,7 +70,7 @@ See: https://github.com/dotnet/sdk/pull/52581
 
     <!-- Parse port from WebSocket URL (e.g., ws://localhost:9000 or http://localhost:9000) -->
     <PropertyGroup Condition=" '$(_AndroidWebSocketEndpoint)' != '' ">
-      <_AndroidWebSocketPort>$([System.Text.RegularExpressions.Regex]::Match('$(_AndroidWebSocketEndpoint)', ':(\d+)').Groups[1].Value)</_AndroidWebSocketPort>
+      <_AndroidWebSocketPort>$([System.Uri]::new('$(_AndroidWebSocketEndpoint)').Port)</_AndroidWebSocketPort>
     </PropertyGroup>
 
     <Exec Condition=" '$(_AndroidWebSocketPort)' != '' "
