@@ -27,8 +27,6 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	bool disposed;
 
-	static readonly SemaphoreSlim bridgeProcessingSemaphore = new (1, 1);
-
 	static Lazy<ManagedValueManager> s_instance = new (() => new ManagedValueManager ());
 	public static ManagedValueManager GetOrCreateInstance () => s_instance.Value;
 
@@ -53,8 +51,6 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	public override void WaitForGCBridgeProcessing ()
 	{
-		bridgeProcessingSemaphore.Wait ();
-		bridgeProcessingSemaphore.Release ();
 	}
 
 	public unsafe override void CollectPeers ()
@@ -195,7 +191,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 			for (int i = peers.Count - 1; i >= 0; i--) {
 				ReferenceTrackingHandle peer = peers [i];
-				IJavaPeerable target = peer.Target;
+				IJavaPeerable? target = peer.Target;
 				if (ReferenceEquals (value, target)) {
 					peers.RemoveAt (i);
 					peer.Dispose ();
@@ -299,7 +295,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	unsafe struct ReferenceTrackingHandle : IDisposable
 	{
-		WeakReference<IJavaPeerable> _weakReference;
+		WeakReference<IJavaPeerable?> _weakReference;
 		HandleContext* _context;
 
 		public bool BelongsToContext (HandleContext* context)
@@ -308,7 +304,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		public ReferenceTrackingHandle (IJavaPeerable peer)
 		{
 			_context = HandleContext.Alloc (peer);
-			_weakReference = new WeakReference<IJavaPeerable> (peer);
+			_weakReference = new (peer);
 		}
 
 		public IJavaPeerable? Target
@@ -321,7 +317,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 			IJavaPeerable? target = Target;
 
-			GCHandle handle = HandleContext.GetAssociatedGCHandle (_context);
+			GCHandle handle = _context->AssociatedGCHandle;
 			HandleContext.Free (ref _context);
 			_weakReference.SetTarget (null);
 			if (handle.IsAllocated) {
@@ -337,10 +333,10 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	unsafe struct HandleContext
 	{
 		static readonly nuint Size = (nuint)Marshal.SizeOf<HandleContext> ();
-		static readonly Dictionary<IntPtr, GCHandle> referenceTrackingHandles = new ();
 
 		int identityHashCode;
 		IntPtr controlBlock;
+		IntPtr gcHandle; // GCHandle stored as IntPtr to keep blittable layout
 
 		public int PeerIdentityHashCode => identityHashCode;
 		public bool IsCollected
@@ -363,40 +359,25 @@ class ManagedValueManager : JniRuntime.JniValueManager
 			public int refs_added;
 		}
 
-		public static GCHandle GetAssociatedGCHandle (HandleContext* context)
-		{
-			lock (referenceTrackingHandles) {
-				if (!referenceTrackingHandles.TryGetValue ((IntPtr) context, out GCHandle handle)) {
-					throw new InvalidOperationException ("Unknown reference tracking handle.");
-				}
+		public GCHandle AssociatedGCHandle => GCHandle.FromIntPtr (gcHandle);
 
-				return handle;
-			}
-		}
+#if DEBUG
+		static readonly HashSet<IntPtr> knownContexts = new ();
 
 		public static unsafe void EnsureAllContextsAreOurs (MarkCrossReferencesArgs* mcr)
 		{
-			lock (referenceTrackingHandles) {
+			lock (knownContexts) {
 				for (nuint i = 0; i < mcr->ComponentCount; i++) {
 					StronglyConnectedComponent component = mcr->Components [i];
-					EnsureAllContextsInComponentAreOurs (component);
+					for (nuint j = 0; j < component.Count; j++) {
+						if (!knownContexts.Contains ((IntPtr)component.Contexts [j])) {
+							throw new InvalidOperationException ("Unknown reference tracking handle.");
+						}
+					}
 				}
 			}
-
-			static void EnsureAllContextsInComponentAreOurs (StronglyConnectedComponent component)
-			{
-				for (nuint i = 0; i < component.Count; i++) {
-					EnsureContextIsOurs ((IntPtr)component.Contexts [i]);
-				}
-			}
-
-			static void EnsureContextIsOurs (IntPtr context)
-			{
-				if (!referenceTrackingHandles.ContainsKey (context)) {
-					throw new InvalidOperationException ("Unknown reference tracking handle.");
-				}
-			}	
 		}
+#endif
 
 		public static HandleContext* Alloc (IJavaPeerable peer)
 		{
@@ -409,9 +390,13 @@ class ManagedValueManager : JniRuntime.JniValueManager
 			context->controlBlock = peer.JniObjectReferenceControlBlock;
 
 			GCHandle handle = JavaMarshal.CreateReferenceTrackingHandle (peer, context);
-			lock (referenceTrackingHandles) {
-				referenceTrackingHandles [(IntPtr) context] = handle;
+			context->gcHandle = GCHandle.ToIntPtr (handle);
+
+#if DEBUG
+			lock (knownContexts) {
+				knownContexts.Add ((IntPtr)context);
 			}
+#endif
 
 			return context;
 		}
@@ -422,9 +407,11 @@ class ManagedValueManager : JniRuntime.JniValueManager
 				return;
 			}
 
-			lock (referenceTrackingHandles) {
-				referenceTrackingHandles.Remove ((IntPtr)context);
+#if DEBUG
+			lock (knownContexts) {
+				knownContexts.Remove ((IntPtr)context);
 			}
+#endif
 
 			NativeMemory.Free (context);
 			context = null;
@@ -438,8 +425,9 @@ class ManagedValueManager : JniRuntime.JniValueManager
 			throw new ArgumentNullException (nameof (mcr), "MarkCrossReferencesArgs should never be null.");
 		}
 
+#if DEBUG
 		HandleContext.EnsureAllContextsAreOurs (mcr);
-		bridgeProcessingSemaphore.Wait ();
+#endif
 	}
 
 	[UnmanagedCallersOnly]
@@ -451,8 +439,6 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 		ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (mcr);
 		JavaMarshal.FinishCrossReferenceProcessing (mcr, handlesToFree);
-
-		bridgeProcessingSemaphore.Release ();
 	}
 
 	static unsafe ReadOnlySpan<GCHandle> ProcessCollectedContexts (MarkCrossReferencesArgs* mcr)
@@ -478,7 +464,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 				return;
 			}
 
-			GCHandle handle = HandleContext.GetAssociatedGCHandle (context);
+			GCHandle handle = context->AssociatedGCHandle;
 
 			// Note: modifying the RegisteredInstances dictionary while processing the collected contexts
 			// is tricky and can lead to deadlocks, so we remember which contexts were collected and we will free
