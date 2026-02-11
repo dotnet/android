@@ -1,71 +1,47 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <RootNamespace>Microsoft.Android.Build.TypeMap.IntegrationTests</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <!-- Use this assembly name to match InternalsVisibleTo in the pre-built Xamarin.Android.Build.Tasks.dll -->
+    <!-- Use this assembly name to match InternalsVisibleTo in Xamarin.Android.Build.Tasks -->
     <AssemblyName>Xamarin.Android.Build.Tests</AssemblyName>
-    <!-- Path to a fully-built android repo (sibling or same repo after `make prepare && make`).
-         The test references pre-built DLLs from its test output directory. -->
-    <AndroidRepoBinDir Condition=" '$(AndroidRepoBinDir)' == '' ">$(MSBuildThisFileDirectory)..\..\bin\TestDebug\net10.0</AndroidRepoBinDir>
-    <AndroidRepoBinDirSibling>$(MSBuildThisFileDirectory)..\..\..\android\bin\TestDebug\net10.0</AndroidRepoBinDirSibling>
-    <AndroidRepoBinDir Condition=" !Exists('$(AndroidRepoBinDir)\Xamarin.Android.Build.Tasks.dll') ">$(AndroidRepoBinDirSibling)</AndroidRepoBinDir>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.0.2" />
-    <PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.Android.Build.TypeMap\Microsoft.Android.Build.TypeMap.csproj" />
+    <ProjectReference Include="..\..\src\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj" />
+    <!-- Mono.Android is built as a dependency so the ref assembly is available on disk.
+         ReferenceOutputAssembly=false because we read it with SRM/Cecil, not compile against it. -->
+    <ProjectReference Include="..\..\src\Mono.Android\Mono.Android.csproj"
+                      ReferenceOutputAssembly="false" />
   </ItemGroup>
 
-  <!-- Reference pre-built legacy scanner DLLs -->
-  <ItemGroup Condition=" Exists('$(AndroidRepoBinDir)\Xamarin.Android.Build.Tasks.dll') ">
-    <Reference Include="Xamarin.Android.Build.Tasks">
-      <HintPath>$(AndroidRepoBinDir)\Xamarin.Android.Build.Tasks.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
-    <Reference Include="Java.Interop.Tools.Cecil">
-      <HintPath>$(AndroidRepoBinDir)\Java.Interop.Tools.Cecil.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
-    <Reference Include="Java.Interop.Tools.JavaCallableWrappers">
-      <HintPath>$(AndroidRepoBinDir)\Java.Interop.Tools.JavaCallableWrappers.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
-    <Reference Include="Java.Interop.Tools.Diagnostics">
-      <HintPath>$(AndroidRepoBinDir)\Java.Interop.Tools.Diagnostics.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
-    <Reference Include="Microsoft.Android.Build.BaseTasks">
-      <HintPath>$(AndroidRepoBinDir)\Microsoft.Android.Build.BaseTasks.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
-    <Reference Include="Xamarin.Android.Tools.AndroidSdk">
-      <HintPath>$(AndroidRepoBinDir)\Xamarin.Android.Tools.AndroidSdk.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
-    <Reference Include="Mono.Cecil">
-      <HintPath>$(AndroidRepoBinDir)\Mono.Cecil.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
-    <Reference Include="Microsoft.Build.Framework">
-      <HintPath>$(AndroidRepoBinDir)\Microsoft.Build.Framework.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
-    <Reference Include="Microsoft.Build.Utilities.Core">
-      <HintPath>$(AndroidRepoBinDir)\Microsoft.Build.Utilities.Core.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
-  </ItemGroup>
+  <!-- Pass the Mono.Android ref assembly path via AssemblyMetadata so tests can locate it. -->
+  <Target Name="_SetMonoAndroidAssemblyMetadata" BeforeTargets="GetAssemblyAttributes">
+    <ItemGroup>
+      <_MonoAndroidRefCandidate Include="$(MSBuildThisFileDirectory)..\..\bin\$(Configuration)\lib\packs\Microsoft.Android.Ref.*\*\ref\net*\Mono.Android.dll" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_MonoAndroidRefAssembly>@(_MonoAndroidRefCandidate, ';')</_MonoAndroidRefAssembly>
+      <_MonoAndroidRefAssembly>$(_MonoAndroidRefAssembly.Split(';')[0])</_MonoAndroidRefAssembly>
+    </PropertyGroup>
+    <ItemGroup Condition=" '$(_MonoAndroidRefAssembly)' != '' ">
+      <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+        <_Parameter1>MonoAndroidRefAssembly</_Parameter1>
+        <_Parameter2>$([System.IO.Path]::GetFullPath('$(_MonoAndroidRefAssembly)'))</_Parameter2>
+      </AssemblyAttribute>
+    </ItemGroup>
+  </Target>
 
 </Project>

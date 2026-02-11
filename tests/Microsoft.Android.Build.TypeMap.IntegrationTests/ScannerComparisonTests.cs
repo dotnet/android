@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using Java.Interop.Tools.Cecil;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
@@ -15,7 +14,7 @@ namespace Microsoft.Android.Build.TypeMap.IntegrationTests;
 /// Side-by-side comparison tests: runs both the legacy Cecil-based scanner
 /// and the new SRM-based scanner on the same assembly and compares their outputs.
 /// </summary>
-public class ScannerComparisonTests : IDisposable
+public class ScannerComparisonTests
 {
 	readonly ITestOutputHelper output;
 
@@ -287,11 +286,10 @@ public class ScannerComparisonTests : IDisposable
 	/// as the legacy scanner on Mono.Android.dll. Every entry must match: same JNI name,
 	/// same managed name, same skip flag. No extras, no missing entries.
 	/// </summary>
-	[SkippableFact]
+	[Fact]
 	public void ExactTypeMap_MonoAndroid ()
 	{
-		var assemblyPath = FindMonoAndroidAssembly ();
-		Skip.If (assemblyPath == null, "Mono.Android.dll not found — requires a built android repo");
+		var assemblyPath = MonoAndroidAssemblyPath;
 
 		var (legacy, _) = RunLegacyScanner (assemblyPath);
 		var (newEntries, _) = RunNewScanner (assemblyPath);
@@ -375,11 +373,10 @@ public class ScannerComparisonTests : IDisposable
 	/// and the EXACT same marshal methods per managed type as the legacy scanner.
 	/// Multiple managed types can map to the same JNI name (aliases).
 	/// </summary>
-	[SkippableFact]
+	[Fact]
 	public void ExactMarshalMethods_MonoAndroid ()
 	{
-		var assemblyPath = FindMonoAndroidAssembly ();
-		Skip.If (assemblyPath == null, "Mono.Android.dll not found — requires a built android repo");
+		var assemblyPath = MonoAndroidAssemblyPath;
 
 		var (_, legacyMethods) = RunLegacyScanner (assemblyPath);
 		var (_, newMethods) = RunNewScanner (assemblyPath);
@@ -499,11 +496,10 @@ public class ScannerComparisonTests : IDisposable
 		Assert.Empty (connectorMismatches);
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void ScannerDiagnostics_MonoAndroid ()
 	{
-		var assemblyPath = FindMonoAndroidAssembly ();
-		Skip.If (assemblyPath == null, "Mono.Android.dll not found — requires a built android repo");
+		var assemblyPath = MonoAndroidAssemblyPath;
 
 		using var scanner = new JavaPeerScanner ();
 		var peers = scanner.Scan (new [] { assemblyPath });
@@ -532,40 +528,24 @@ public class ScannerComparisonTests : IDisposable
 		Assert.True (totalMethods > 10000, $"Expected >10000 marshal methods, got {totalMethods}");
 	}
 
-	static string? FindMonoAndroidAssembly ()
-	{
-		var thisDir = Path.GetDirectoryName (typeof (ScannerComparisonTests).Assembly.Location)!;
-		var repoRoot = Path.GetFullPath (Path.Combine (thisDir, "..", "..", "..", "..", ".."));
+	/// <summary>
+	/// Gets the file path of the Mono.Android.dll assembly from AssemblyMetadata
+	/// set by the project file at build time.
+	/// </summary>
+	static string MonoAndroidAssemblyPath {
+		get {
+			var attr = typeof (ScannerComparisonTests).Assembly
+				.GetCustomAttributes (typeof (System.Reflection.AssemblyMetadataAttribute), false)
+				.Cast<System.Reflection.AssemblyMetadataAttribute> ()
+				.FirstOrDefault (a => a.Key == "MonoAndroidRefAssembly");
 
-		var repoDirs = new [] { repoRoot, Path.Combine (repoRoot, "..", "android") };
-
-		foreach (var repo in repoDirs) {
-			var packsDir = Path.Combine (repo, "bin", "Debug", "lib", "packs");
-			if (!Directory.Exists (packsDir)) {
-				continue;
+			if (attr == null || string.IsNullOrEmpty (attr.Value)) {
+				throw new InvalidOperationException (
+					"MonoAndroidRefAssembly metadata not found. " +
+					"Ensure the android repo is built (bin/Debug/lib/packs/Microsoft.Android.Ref.*).");
 			}
 
-			foreach (var refDir in Directory.GetDirectories (packsDir, "Microsoft.Android.Ref.*")) {
-				foreach (var versionDir in Directory.GetDirectories (refDir)) {
-					var candidate = Path.Combine (versionDir, "ref");
-					if (!Directory.Exists (candidate)) {
-						continue;
-					}
-
-					foreach (var tfmDir in Directory.GetDirectories (candidate, "net*")) {
-						var dll = Path.Combine (tfmDir, "Mono.Android.dll");
-						if (File.Exists (dll)) {
-							return dll;
-						}
-					}
-				}
-			}
+			return attr.Value;
 		}
-
-		return null;
-	}
-
-	public void Dispose ()
-	{
 	}
 }
