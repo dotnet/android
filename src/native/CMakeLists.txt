@@ -91,8 +91,8 @@ if(ENABLE_CLANG_ASAN AND ENABLE_CLANG_UBSAN)
 endif()
 
 if(ENABLE_CLANG_ASAN OR ENABLE_CLANG_UBSAN)
-  if(BUILD_ARCHIVE_DSO_STUB)
-    message(FATAL_ERROR "ASAN/UBSAN builds aren't supported by the archive DSO target")
+  if(BUILD_ARCHIVE_DSO_STUB OR BUILD_TEST_JNI_LIBRARY)
+    message(FATAL_ERROR "ASAN/UBSAN builds aren't supported by the archive DSO / test JNI library targets")
   endif()
 
   set(STRIP_DEBUG_DEFAULT OFF)
@@ -330,7 +330,7 @@ macro(xa_add_compile_definitions TARGET)
   endif()
 endmacro()
 
-if(NOT BUILD_ARCHIVE_DSO_STUB)
+if(NOT BUILD_ARCHIVE_DSO_STUB AND NOT BUILD_TEST_JNI_LIBRARY)
   if(DEBUG_BUILD AND NOT DISABLE_DEBUG)
     add_compile_definitions(DEBUG)
   endif()
@@ -477,7 +477,7 @@ set(POTENTIAL_COMMON_CXX_COMPILER_ARGS
   -fno-cxx-exceptions
 )
 
-if(NOT BUILD_ARCHIVE_DSO_STUB)
+if(NOT BUILD_ARCHIVE_DSO_STUB AND NOT BUILD_TEST_JNI_LIBRARY)
  list(APPEND POTENTIAL_COMMON_COMPILER_ARGS
    -g
  )
@@ -609,7 +609,7 @@ xa_check_c_linker_args(XA_COMMON_C_LINKER_ARGS "${POTENTIAL_XA_COMMON_LINKER_ARG
 xa_check_c_linker_args(XA_C_DSO_LINKER_ARGS "${POTENTIAL_XA_DSO_LINKER_ARGS}")
 xa_check_cxx_linker_args(XA_CXX_DSO_LINKER_ARGS "${POTENTIAL_XA_DSO_LINKER_ARGS}")
 
-if(NOT BUILD_ARCHIVE_DSO_STUB)
+if(NOT BUILD_ARCHIVE_DSO_STUB AND NOT BUILD_TEST_JNI_LIBRARY)
   add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:${COMMON_CXX_ARGS}>")
   add_compile_options("$<$<COMPILE_LANGUAGE:C>:${COMMON_C_ARGS}>")
 
@@ -641,6 +641,8 @@ endmacro()
 
 if(BUILD_ARCHIVE_DSO_STUB)
   add_subdirectory(common/archive-dso-stub)
+elseif(BUILD_TEST_JNI_LIBRARY)
+  add_subdirectory(common/test-jni-library)
 else()
   add_subdirectory(common/java-interop)
 
