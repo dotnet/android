@@ -7,9 +7,6 @@ using Android.App;
 using Android.Content;
 using Android.Runtime;
 
-// ============================================================
-// Base type: simulates Java.Lang.Object
-// ============================================================
 namespace Java.Lang
 {
 	[Register ("java/lang/Object", DoNotGenerateAcw = true)]
@@ -25,10 +22,6 @@ namespace Java.Lang
 	}
 }
 
-// ============================================================
-// Exception/Throwable hierarchy (DoNotGenerateAcw = true)
-// These are MCW bindings for Java exception types.
-// ============================================================
 namespace Java.Lang
 {
 	[Register ("java/lang/Throwable", DoNotGenerateAcw = true)]
@@ -53,10 +46,6 @@ namespace Java.Lang
 	}
 }
 
-// ============================================================
-// MCW binding types (DoNotGenerateAcw = true)
-// These get TypeMap entries but NO JCW/RegisterNatives.
-// ============================================================
 namespace Android.App
 {
 	[Register ("android/app/Activity", DoNotGenerateAcw = true)]
@@ -137,10 +126,6 @@ namespace Android.Widget
 	}
 }
 
-// ============================================================
-// Interface types (trimmable, no JCW, no RegisterNatives)
-// Invoker types should be INCLUDED in scanner output (filtered by generators later)
-// ============================================================
 namespace Android.Views
 {
 	[Register ("android/view/View$OnClickListener", "", "Android.Views.IOnClickListenerInvoker")]
@@ -168,10 +153,6 @@ namespace Android.Views
 	}
 }
 
-// ============================================================
-// User types (unconditional: has [Activity])
-// Gets JCW + RegisterNatives
-// ============================================================
 namespace MyApp
 {
 	// User types get their JNI name from [Activity(Name = "...")]
@@ -223,10 +204,6 @@ namespace MyApp
 	}
 }
 
-// ============================================================
-// Generic types (trimmable, gets TypeMap entry for open definition)
-// CreateInstance should throw NotSupportedException
-// ============================================================
 namespace MyApp.Generic
 {
 	[Register ("my/app/GenericHolder")]
@@ -240,9 +217,6 @@ namespace MyApp.Generic
 	}
 }
 
-// ============================================================
-// Abstract type (trimmable, no JCW since abstract)
-// ============================================================
 namespace MyApp
 {
 	[Register ("my/app/AbstractBase")]
@@ -258,9 +232,6 @@ namespace MyApp
 	}
 }
 
-// ============================================================
-// Type without its own activation ctor — should inherit from base
-// ============================================================
 namespace MyApp
 {
 	[Register ("my/app/SimpleActivity")]
@@ -271,9 +242,6 @@ namespace MyApp
 	}
 }
 
-// ============================================================
-// Type implementing a Java interface (tests ImplementedInterfaceJavaNames)
-// ============================================================
 namespace MyApp
 {
 	[Register ("my/app/ClickableView")]
@@ -291,9 +259,6 @@ namespace MyApp
 	}
 }
 
-// ============================================================
-// Type with registered constructors (tests JavaConstructors)
-// ============================================================
 namespace MyApp
 {
 	[Register ("my/app/CustomView")]
@@ -318,10 +283,6 @@ namespace MyApp
 	}
 }
 
-// ============================================================
-// Nested type within another Java peer (inner class)
-// e.g. Java: android.view.View$OnClickListener
-// ============================================================
 namespace MyApp
 {
 	[Register ("my/app/Outer")]
@@ -338,9 +299,6 @@ namespace MyApp
 	}
 }
 
-// ============================================================
-// Nested type within a Java interface
-// ============================================================
 namespace MyApp
 {
 	[Register ("my/app/ICallback", "", "MyApp.ICallbackInvoker")]
@@ -357,10 +315,6 @@ namespace MyApp
 	}
 }
 
-// ============================================================
-// Marshal methods with non-blittable types (bool)
-// and various JNI signatures
-// ============================================================
 namespace MyApp
 {
 	[Register ("my/app/TouchHandler")]
@@ -400,9 +354,6 @@ namespace MyApp
 	}
 }
 
-// ============================================================
-// Method with [Export] attribute (no connector string)
-// ============================================================
 namespace MyApp
 {
 	[Register ("my/app/ExportExample")]
@@ -415,9 +366,6 @@ namespace MyApp
 	}
 }
 
-// ============================================================
-// [Application] and [Instrumentation] attributes
-// ============================================================
 namespace MyApp
 {
 	[Application (Name = "my.app.MyApplication")]
@@ -431,9 +379,6 @@ namespace MyApp
 	}
 }
 
-// ============================================================
-// Deep hierarchy: View → Button → MyButton (3+ levels)
-// ============================================================
 namespace MyApp
 {
 	[Register ("my/app/MyButton")]
@@ -446,9 +391,6 @@ namespace MyApp
 	}
 }
 
-// ============================================================
-// Type implementing multiple Java interfaces
-// ============================================================
 namespace Android.Views
 {
 	[Register ("android/view/View$OnLongClickListener", "", "Android.Views.IOnLongClickListenerInvoker")]

@@ -39,10 +39,6 @@ public class JavaPeerScannerTests
 		return peer;
 	}
 
-	// ================================================================
-	// Basic scanning: types with [Register] are discovered
-	// ================================================================
-
 	[Fact]
 	public void Scan_FindsAllJavaPeerTypes ()
 	{
@@ -58,10 +54,6 @@ public class JavaPeerScannerTests
 		Assert.Contains (peers, p => p.JavaName == "java/lang/Exception");
 	}
 
-	// ================================================================
-	// MCW binding types: DoNotGenerateAcw = true
-	// ================================================================
-
 	[Fact]
 	public void Scan_McwTypes_HaveDoNotGenerateAcw ()
 	{
@@ -74,10 +66,6 @@ public class JavaPeerScannerTests
 		Assert.True (button.DoNotGenerateAcw, "Button should be MCW");
 	}
 
-	// ================================================================
-	// User types: DoNotGenerateAcw = false (default)
-	// ================================================================
-
 	[Fact]
 	public void Scan_UserTypes_DoNotGenerateAcwIsFalse ()
 	{
@@ -86,10 +74,6 @@ public class JavaPeerScannerTests
 		var mainActivity = FindByJavaName (peers, "my/app/MainActivity");
 		Assert.False (mainActivity.DoNotGenerateAcw, "MainActivity should not have DoNotGenerateAcw");
 	}
-
-	// ================================================================
-	// Unconditional classification (component attributes)
-	// ================================================================
 
 	[Fact]
 	public void Scan_ActivityType_IsUnconditional ()
@@ -139,10 +123,6 @@ public class JavaPeerScannerTests
 		Assert.False (activity.IsUnconditional, "MCW Activity should be trimmable (no component attr on MCW type)");
 	}
 
-	// ================================================================
-	// Interface types
-	// ================================================================
-
 	[Fact]
 	public void Scan_InterfaceType_IsMarkedAsInterface ()
 	{
@@ -150,10 +130,6 @@ public class JavaPeerScannerTests
 		var listener = FindByManagedName (peers, "Android.Views.IOnClickListener");
 		Assert.True (listener.IsInterface, "IOnClickListener should be marked as interface");
 	}
-
-	// ================================================================
-	// Invoker types: INCLUDED in scanner output (filtered later by generators)
-	// ================================================================
 
 	[Fact]
 	public void Scan_InvokerTypes_AreIncluded ()
@@ -165,10 +141,6 @@ public class JavaPeerScannerTests
 		Assert.Equal ("android/view/View$OnClickListener", invoker.JavaName);
 	}
 
-	// ================================================================
-	// Generic types
-	// ================================================================
-
 	[Fact]
 	public void Scan_GenericType_IsGenericDefinition ()
 	{
@@ -177,10 +149,6 @@ public class JavaPeerScannerTests
 		Assert.True (generic.IsGenericDefinition, "GenericHolder<T> should be marked as generic definition");
 	}
 
-	// ================================================================
-	// Abstract types
-	// ================================================================
-
 	[Fact]
 	public void Scan_AbstractType_IsMarkedAbstract ()
 	{
@@ -188,10 +156,6 @@ public class JavaPeerScannerTests
 		var abstractBase = FindByJavaName (peers, "my/app/AbstractBase");
 		Assert.True (abstractBase.IsAbstract, "AbstractBase should be marked as abstract");
 	}
-
-	// ================================================================
-	// Marshal methods
-	// ================================================================
 
 	[Fact]
 	public void Scan_MarshalMethods_Collected ()
@@ -212,10 +176,6 @@ public class JavaPeerScannerTests
 		Assert.NotNull (onCreate);
 		Assert.Equal ("(Landroid/os/Bundle;)V", onCreate.JniSignature);
 	}
-
-	// ================================================================
-	// Activation constructor resolution
-	// ================================================================
 
 	[Fact]
 	public void Scan_TypeWithOwnActivationCtor_ResolvesToSelf ()
@@ -246,10 +206,6 @@ public class JavaPeerScannerTests
 		Assert.Equal ("Android.App.Activity", mainActivity.ActivationCtor.DeclaringTypeName);
 	}
 
-	// ================================================================
-	// Assembly name tracking
-	// ================================================================
-
 	[Fact]
 	public void Scan_AllTypes_HaveAssemblyName ()
 	{
@@ -258,10 +214,6 @@ public class JavaPeerScannerTests
 			Assert.False (string.IsNullOrEmpty (peer.AssemblyName),
 				$"Type {peer.ManagedTypeName} should have assembly name"));
 	}
-
-	// ================================================================
-	// No duplicates
-	// ================================================================
 
 	[Fact]
 	public void Scan_InvokerSharesJavaNameWithInterface ()
@@ -274,10 +226,6 @@ public class JavaPeerScannerTests
 		Assert.Contains (clickListenerPeers, p => p.DoNotGenerateAcw);
 	}
 
-	// ================================================================
-	// Namespace and short name
-	// ================================================================
-
 	[Fact]
 	public void Scan_ManagedTypeNamespace_IsCorrect ()
 	{
@@ -286,10 +234,6 @@ public class JavaPeerScannerTests
 		Assert.Equal ("Android.App", activity.ManagedTypeNamespace);
 		Assert.Equal ("Activity", activity.ManagedTypeShortName);
 	}
-
-	// ================================================================
-	// Base Java name resolution
-	// ================================================================
 
 	[Fact]
 	public void Scan_ActivityBaseJavaName_IsJavaLangObject ()
@@ -315,10 +259,6 @@ public class JavaPeerScannerTests
 		Assert.Null (jlo.BaseJavaName);
 	}
 
-	// ================================================================
-	// Implemented interface Java names
-	// ================================================================
-
 	[Fact]
 	public void Scan_TypeImplementingInterface_HasInterfaceJavaNames ()
 	{
@@ -334,10 +274,6 @@ public class JavaPeerScannerTests
 		var helper = FindByJavaName (peers, "my/app/MyHelper");
 		Assert.Empty (helper.ImplementedInterfaceJavaNames);
 	}
-
-	// ================================================================
-	// Java constructors
-	// ================================================================
 
 	[Fact]
 	public void Scan_TypeWithRegisteredCtors_HasJavaConstructors ()
@@ -358,10 +294,6 @@ public class JavaPeerScannerTests
 		var helper = FindByJavaName (peers, "my/app/MyHelper");
 		Assert.Empty (helper.JavaConstructors);
 	}
-
-	// ================================================================
-	// Marshal method extended fields
-	// ================================================================
 
 	[Fact]
 	public void Scan_MarshalMethod_HasDeclaringAssemblyName ()
@@ -391,10 +323,6 @@ public class JavaPeerScannerTests
 		Assert.NotNull (onCreate);
 		Assert.Equal ("onCreate", onCreate.JniName);
 	}
-
-	// ================================================================
-	// User types without [Register] — JNI name from component attribute
-	// ================================================================
 
 	[Fact]
 	public void Scan_UserTypeWithActivityName_DiscoveredWithoutRegister ()
@@ -432,10 +360,6 @@ public class JavaPeerScannerTests
 		Assert.True (provider.IsUnconditional);
 	}
 
-	// ================================================================
-	// Exception / Throwable hierarchy
-	// ================================================================
-
 	[Fact]
 	public void Scan_Throwable_IsMcwType ()
 	{
@@ -454,10 +378,6 @@ public class JavaPeerScannerTests
 		Assert.Equal ("java/lang/Throwable", exception.BaseJavaName);
 	}
 
-	// ================================================================
-	// Nested types (inner classes) — OneDotNetBindingProjects.md:171-222
-	// ================================================================
-
 	[Fact]
 	public void Scan_NestedType_IsDiscovered ()
 	{
@@ -473,10 +393,6 @@ public class JavaPeerScannerTests
 		var result = FindByJavaName (peers, "my/app/ICallback$Result");
 		Assert.Equal ("MyApp.ICallback+Result", result.ManagedTypeName);
 	}
-
-	// ================================================================
-	// Non-blittable marshal methods — JavaJNI_Interop.md:642-731
-	// ================================================================
 
 	[Fact]
 	public void Scan_MarshalMethod_BoolReturn_HasCorrectJniSignature ()
@@ -501,10 +417,6 @@ public class JavaPeerScannerTests
 		Assert.Equal ("Z", onFocus.Parameters [1].JniType);
 	}
 
-	// ================================================================
-	// Marshal method return types — JavaJNI_Interop.md:413-448
-	// ================================================================
-
 	[Fact]
 	public void Scan_MarshalMethod_VoidReturn ()
 	{
@@ -525,10 +437,6 @@ public class JavaPeerScannerTests
 		Assert.Equal ("Ljava/lang/String;", getText.JniReturnType);
 	}
 
-	// ================================================================
-	// Marshal method with multiple params — JavaJNI_Interop.md
-	// ================================================================
-
 	[Fact]
 	public void Scan_MarshalMethod_MultiplePrimitiveParams ()
 	{
@@ -547,10 +455,6 @@ public class JavaPeerScannerTests
 		Assert.Equal ("System.Double", onScroll.Parameters [3].ManagedType);
 	}
 
-	// ================================================================
-	// Array parameter — JavaJNI_Interop.md
-	// ================================================================
-
 	[Fact]
 	public void Scan_MarshalMethod_ArrayParam ()
 	{
@@ -563,10 +467,6 @@ public class JavaPeerScannerTests
 		Assert.Equal ("[Ljava/lang/String;", setItems.Parameters [0].JniType);
 	}
 
-	// ================================================================
-	// [Export] method — xa4210
-	// ================================================================
-
 	[Fact]
 	public void Scan_ExportMethod_CollectedAsMarshalMethod ()
 	{
@@ -578,13 +478,6 @@ public class JavaPeerScannerTests
 		Assert.Null (method.Connector);
 	}
 
-	// ================================================================
-	// Custom view type (unconditional via layout XML) — xa1002.md
-	// Custom views are marked unconditional externally, not by the scanner
-	// itself. The scanner just needs to discover them as regular types.
-	// The MSBuild task sets IsUnconditional later based on layout XML.
-	// ================================================================
-
 	[Fact]
 	public void Scan_CustomView_DiscoveredAsRegularType ()
 	{
@@ -593,10 +486,6 @@ public class JavaPeerScannerTests
 		Assert.False (customView.IsUnconditional, "Custom views are not unconditional by attribute alone");
 		Assert.Equal ("android/view/View", customView.BaseJavaName);
 	}
-
-	// ================================================================
-	// [Application] and [Instrumentation] attributes
-	// ================================================================
 
 	[Fact]
 	public void Scan_ApplicationType_IsUnconditional ()
@@ -614,22 +503,12 @@ public class JavaPeerScannerTests
 		Assert.True (instr.IsUnconditional, "[Instrumentation] should be unconditional");
 	}
 
-	// ================================================================
-	// [Application(BackupAgent=typeof(X))] — cross-reference
-	// The BackupAgent type needs to be forced unconditional.
-	// Scanner currently collects the type name; MSBuild task will use it.
-	// ================================================================
-
 	[Fact (Skip = "BackupAgent cross-reference forcing unconditional is not yet implemented in the scanner")]
 	public void Scan_BackupAgent_ForcedUnconditional ()
 	{
 		// TODO: Add BackupAgent fixture type and verify it's forced unconditional
 		// This requires the MSBuild task to propagate the cross-reference.
 	}
-
-	// ================================================================
-	// Deep hierarchy: View → Button → MyButton (3+ levels)
-	// ================================================================
 
 	[Fact]
 	public void Scan_DeepHierarchy_ResolvesBaseJavaName ()
@@ -649,10 +528,6 @@ public class JavaPeerScannerTests
 		Assert.Equal (ActivationCtorStyle.XamarinAndroid, myButton.ActivationCtor.Style);
 	}
 
-	// ================================================================
-	// Multiple interfaces
-	// ================================================================
-
 	[Fact]
 	public void Scan_MultipleInterfaces_AllResolved ()
 	{
@@ -662,10 +537,6 @@ public class JavaPeerScannerTests
 		Assert.Contains ("android/view/View$OnLongClickListener", multi.ImplementedInterfaceJavaNames);
 		Assert.Equal (2, multi.ImplementedInterfaceJavaNames.Count);
 	}
-
-	// ================================================================
-	// Abstract method with [Register] — JavaJNI_Interop.md
-	// ================================================================
 
 	[Fact]
 	public void Scan_AbstractMethod_CollectedAsMarshalMethod ()
@@ -677,10 +548,6 @@ public class JavaPeerScannerTests
 		Assert.Equal ("()V", doWork.JniSignature);
 	}
 
-	// ================================================================
-	// Property with [Register] on getter (like Throwable.getMessage)
-	// ================================================================
-
 	[Fact]
 	public void Scan_PropertyRegister_CollectedAsMarshalMethod ()
 	{
@@ -691,10 +558,6 @@ public class JavaPeerScannerTests
 		Assert.Equal ("()Ljava/lang/String;", getMessage.JniSignature);
 	}
 
-	// ================================================================
-	// Method with [Register(name, sig, "")] — empty connector
-	// ================================================================
-
 	[Fact]
 	public void Scan_MethodWithEmptyConnector_Collected ()
 	{
@@ -704,11 +567,6 @@ public class JavaPeerScannerTests
 		Assert.NotNull (onStart);
 		Assert.Equal ("", onStart.Connector);
 	}
-
-	// ================================================================
-	// Invoker types WITH [Register] and DoNotGenerateAcw=true
-	// (matching real Mono.Android.dll patterns from IL analysis)
-	// ================================================================
 
 	[Fact]
 	public void Scan_InvokerWithRegisterAndDoNotGenerateAcw_IsIncluded ()
@@ -721,11 +579,6 @@ public class JavaPeerScannerTests
 		Assert.True (invoker.DoNotGenerateAcw);
 		Assert.Equal ("android/view/View$OnClickListener", invoker.JavaName);
 	}
-
-	// ================================================================
-	// Interface [Register] connector contains invoker type name
-	// (real Mono.Android pattern: [Register("jni/name", "", "InvokerTypeName")])
-	// ================================================================
 
 	[Fact]
 	public void Scan_Interface_HasInvokerTypeNameFromRegisterConnector ()
@@ -745,10 +598,6 @@ public class JavaPeerScannerTests
 		Assert.False (listener.DoNotGenerateAcw, "Interfaces should not have DoNotGenerateAcw");
 	}
 
-	// ================================================================
-	// Interface with method marshal methods (method-level [Register])
-	// ================================================================
-
 	[Fact]
 	public void Scan_InterfaceMethod_CollectedAsMarshalMethod ()
 	{
@@ -759,10 +608,6 @@ public class JavaPeerScannerTests
 		Assert.Equal ("(Landroid/view/View;)V", onClick.JniSignature);
 	}
 
-	// ================================================================
-	// Generic type with base (non-generic) class
-	// ================================================================
-
 	[Fact]
 	public void Scan_GenericType_HasCorrectManagedTypeName ()
 	{
@@ -770,10 +615,6 @@ public class JavaPeerScannerTests
 		var generic = FindByJavaName (peers, "my/app/GenericHolder");
 		Assert.Equal ("MyApp.Generic.GenericHolder`1", generic.ManagedTypeName);
 	}
-
-	// ================================================================
-	// Context type (deep in the hierarchy)
-	// ================================================================
 
 	[Fact]
 	public void Scan_Context_IsDiscovered ()
