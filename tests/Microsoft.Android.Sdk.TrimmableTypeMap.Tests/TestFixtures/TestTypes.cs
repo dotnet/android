@@ -364,6 +364,15 @@ namespace MyApp
 		{
 		}
 	}
+
+	[Register ("my/app/ExportWithThrows")]
+	public class ExportWithThrows : Java.Lang.Object
+	{
+		[Java.Interop.Export ("riskyMethod", ThrownNames = new [] { "java.io.IOException", "java.lang.IllegalStateException" })]
+		public void RiskyMethod ()
+		{
+		}
+	}
 }
 
 namespace Android.App.Backup

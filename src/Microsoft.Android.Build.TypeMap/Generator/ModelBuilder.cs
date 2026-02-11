@@ -48,7 +48,8 @@ sealed class ModelBuilder
 		};
 
 		// Group peers by JNI name to detect aliases (multiple .NET types → same Java class).
-		var groups = new Dictionary<string, List<JavaPeerInfo>> (StringComparer.Ordinal);
+		// Use an ordered dictionary to ensure deterministic output across runs.
+		var groups = new SortedDictionary<string, List<JavaPeerInfo>> (StringComparer.Ordinal);
 		foreach (var peer in peers) {
 			if (!groups.TryGetValue (peer.JavaName, out var list)) {
 				list = new List<JavaPeerInfo> ();
@@ -60,6 +61,11 @@ sealed class ModelBuilder
 		foreach (var kvp in groups) {
 			string jniName = kvp.Key;
 			var peersForName = kvp.Value;
+
+			// Sort aliases by managed type name for deterministic proxy naming
+			if (peersForName.Count > 1) {
+				peersForName.Sort ((a, b) => StringComparer.Ordinal.Compare (a.ManagedTypeName, b.ManagedTypeName));
+			}
 
 			if (peersForName.Count == 1) {
 				var peer = peersForName [0];
@@ -196,6 +202,7 @@ sealed class ModelBuilder
 		foreach (var ctor in peer.JavaConstructors) {
 			proxy.UcoConstructors.Add (new UcoConstructorData {
 				WrapperName = $"nctor_{ctor.ConstructorIndex}_uco",
+				JniSignature = ctor.JniSignature,
 				TargetType = new TypeRefData {
 					ManagedTypeName = peer.ManagedTypeName,
 					AssemblyName = peer.AssemblyName,
@@ -223,7 +230,7 @@ sealed class ModelBuilder
 
 			proxy.NativeRegistrations.Add (new NativeRegistrationData {
 				JniMethodName = jniName,
-				JniSignature = "()V",
+				JniSignature = uco.JniSignature,
 				WrapperMethodName = uco.WrapperName,
 			});
 		}

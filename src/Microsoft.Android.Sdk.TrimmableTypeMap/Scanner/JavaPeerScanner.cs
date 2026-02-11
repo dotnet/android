@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
@@ -373,8 +374,8 @@ sealed class JavaPeerScanner : IDisposable
 		foreach (var named in value.NamedArguments) {
 			if (named.Name == "Name" && named.Value is string name) {
 				exportName = name;
-			} else if (named.Name == "ThrownNames" && named.Value is string[] names) {
-				thrownNames = new List<string> (names);
+			} else if (named.Name == "ThrownNames") {
+				thrownNames = ExtractStringArray (named.Value);
 			} else if (named.Name == "SuperArgumentsString" && named.Value is string superArgs) {
 				superArguments = superArgs;
 			}
@@ -390,6 +391,31 @@ sealed class JavaPeerScanner : IDisposable
 
 		return new RegisterInfo (exportName, jniSig, null, false,
 			thrownNames: thrownNames, superArgumentsString: superArguments);
+	}
+
+	/// <summary>
+	/// Extracts a string array from a decoded custom attribute value.
+	/// SRM decodes string[] as ImmutableArray&lt;CustomAttributeTypedArgument&lt;string&gt;&gt;.
+	/// </summary>
+	static List<string>? ExtractStringArray (object? value)
+	{
+		if (value is string[] directArray) {
+			return new List<string> (directArray);
+		}
+
+		if (value is ImmutableArray<CustomAttributeTypedArgument<string>> typedArray) {
+			var result = new List<string> (typedArray.Length);
+			foreach (var item in typedArray) {
+				if (item.Value is string s) {
+					result.Add (s);
+				}
+			}
+			if (result.Count > 0) {
+				return result;
+			}
+		}
+
+		return null;
 	}
 
 	static string BuildJniSignatureFromManaged (MethodSignature<string> sig)
