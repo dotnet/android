@@ -600,8 +600,24 @@ sealed class JavaPeerScanner : IDisposable
 			// Generic base type — resolve the generic type definition
 			var typeSpec = index.Reader.GetTypeSpecification ((TypeSpecificationHandle)baseTypeHandle);
 			var decoded = typeSpec.DecodeSignature (new SignatureTypeProvider (), genericContext: default);
-			// For generic types, the signature provider returns "Ns.Name" — we need to find the assembly
-			// Best effort: check current assembly first
+
+			// Strip generic arguments: "Ns.Type`1<A,B>" → "Ns.Type`1"
+			var angleBracket = decoded.IndexOf ('<');
+			if (angleBracket > 0) {
+				var genericDef = decoded.Substring (0, angleBracket);
+				// The genericDef already includes the backtick+arity (e.g. "Ns.Type`1")
+				if (index.TypesByFullName.TryGetValue (genericDef, out _)) {
+					return (genericDef, index.AssemblyName);
+				}
+				// Check other assemblies
+				foreach (var asmKvp in assemblyCache) {
+					if (asmKvp.Value.TypesByFullName.TryGetValue (genericDef, out _)) {
+						return (genericDef, asmKvp.Key);
+					}
+				}
+			}
+
+			// Non-generic fallback: check current assembly first
 			if (index.TypesByFullName.ContainsKey (decoded)) {
 				return (decoded, index.AssemblyName);
 			}

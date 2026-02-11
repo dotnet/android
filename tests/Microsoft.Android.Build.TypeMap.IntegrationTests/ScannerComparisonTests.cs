@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Java.Interop.Tools.Cecil;
+using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
+using Xamarin.Android.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -243,11 +245,14 @@ public class ScannerComparisonTests
 	/// <summary>
 	/// Runs the new SRM-based scanner on the given assembly.
 	/// Returns all types including aliases (multiple managed types per JNI name).
+	/// Scans all given assemblies but only returns types from the primary assembly (first path).
 	/// </summary>
-	static (List<TypeMapEntry> entries, Dictionary<string, List<TypeMethodGroup>> methodsByJavaName) RunNewScanner (string assemblyPath)
+	static (List<TypeMapEntry> entries, Dictionary<string, List<TypeMethodGroup>> methodsByJavaName) RunNewScanner (string[] assemblyPaths)
 	{
+		var primaryAssemblyName = Path.GetFileNameWithoutExtension (assemblyPaths [0]);
 		using var scanner = new JavaPeerScanner ();
-		var peers = scanner.Scan (new [] { assemblyPath });
+		var allPeers = scanner.Scan (assemblyPaths);
+		var peers = allPeers.Where (p => p.AssemblyName == primaryAssemblyName).ToList ();
 
 		var entries = peers
 			.Select (p => new TypeMapEntry (
@@ -292,7 +297,7 @@ public class ScannerComparisonTests
 		var assemblyPath = MonoAndroidAssemblyPath;
 
 		var (legacy, _) = RunLegacyScanner (assemblyPath);
-		var (newEntries, _) = RunNewScanner (assemblyPath);
+		var (newEntries, _) = RunNewScanner (AllAssemblyPaths);
 
 		output.WriteLine ($"Legacy: {legacy.Count} entries, New: {newEntries.Count} entries");
 
@@ -379,7 +384,7 @@ public class ScannerComparisonTests
 		var assemblyPath = MonoAndroidAssemblyPath;
 
 		var (_, legacyMethods) = RunLegacyScanner (assemblyPath);
-		var (_, newMethods) = RunNewScanner (assemblyPath);
+		var (_, newMethods) = RunNewScanner (AllAssemblyPaths);
 
 		var legacyTypeCount = legacyMethods.Values.Sum (g => g.Count);
 		var newTypeCount = newMethods.Values.Sum (g => g.Count);
@@ -529,23 +534,621 @@ public class ScannerComparisonTests
 	}
 
 	/// <summary>
-	/// Gets the file path of the Mono.Android.dll assembly from AssemblyMetadata
-	/// set by the project file at build time.
+	/// Verifies the new scanner produces the same base Java type name for every type
+	/// as the legacy Cecil-based scanner. BaseJavaName drives the JCW "extends" clause
+	/// and is critical for correct Java inheritance.
+	/// </summary>
+	[Fact]
+	public void ExactBaseJavaNames_MonoAndroid ()
+	{
+		var assemblyPath = MonoAndroidAssemblyPath;
+
+		var (legacyData, _) = BuildLegacyTypeData (assemblyPath);
+		var newData = BuildNewTypeData (AllAssemblyPaths);
+
+		var allManagedNames = new HashSet<string> (legacyData.Keys);
+		allManagedNames.IntersectWith (newData.Keys);
+
+		var mismatches = new List<string> ();
+		int compared = 0;
+
+		foreach (var managedName in allManagedNames.OrderBy (n => n)) {
+			var legacy = legacyData [managedName];
+			var newInfo = newData [managedName];
+
+			compared++;
+
+			if (legacy.BaseJavaName != newInfo.BaseJavaName) {
+				// Legacy ToJniName can't resolve bases for open generic types (returns null).
+				// Our scanner resolves them correctly. Accept this known difference.
+				if (legacy.BaseJavaName == null && newInfo.BaseJavaName != null && managedName.Contains ('`')) {
+					continue;
+				}
+
+				mismatches.Add ($"{managedName}: legacy='{legacy.BaseJavaName ?? "(null)"}' new='{newInfo.BaseJavaName ?? "(null)"}'");
+			}
+		}
+
+		output.WriteLine ($"Compared BaseJavaName for {compared} types");
+
+		if (mismatches.Count > 0) {
+			output.WriteLine ($"\n--- BASE JAVA NAME MISMATCHES ({mismatches.Count}) ---");
+			foreach (var m in mismatches) output.WriteLine ($"  {m}");
+		}
+
+		Assert.Empty (mismatches);
+	}
+
+	/// <summary>
+	/// Verifies the new scanner produces the same implemented interface Java names
+	/// for every type as the legacy Cecil-based scanner. ImplementedInterfaceJavaNames
+	/// drives the JCW "implements" clause.
+	/// </summary>
+	[Fact]
+	public void ExactImplementedInterfaces_MonoAndroid ()
+	{
+		var assemblyPath = MonoAndroidAssemblyPath;
+
+		var (legacyData, _) = BuildLegacyTypeData (assemblyPath);
+		var newData = BuildNewTypeData (AllAssemblyPaths);
+
+		var allManagedNames = new HashSet<string> (legacyData.Keys);
+		allManagedNames.IntersectWith (newData.Keys);
+
+		var missingInterfaces = new List<string> ();
+		var extraInterfaces = new List<string> ();
+		int compared = 0;
+
+		foreach (var managedName in allManagedNames.OrderBy (n => n)) {
+			var legacy = legacyData [managedName];
+			var newInfo = newData [managedName];
+
+			compared++;
+
+			var legacySet = new HashSet<string> (legacy.ImplementedInterfaces, StringComparer.Ordinal);
+			var newSet = new HashSet<string> (newInfo.ImplementedInterfaces, StringComparer.Ordinal);
+
+			foreach (var iface in legacySet.Except (newSet)) {
+				missingInterfaces.Add ($"{managedName}: missing '{iface}'");
+			}
+
+			foreach (var iface in newSet.Except (legacySet)) {
+				extraInterfaces.Add ($"{managedName}: extra '{iface}'");
+			}
+		}
+
+		output.WriteLine ($"Compared ImplementedInterfaces for {compared} types");
+
+		if (missingInterfaces.Count > 0) {
+			output.WriteLine ($"\n--- INTERFACES MISSING from new scanner ({missingInterfaces.Count}) ---");
+			foreach (var m in missingInterfaces) output.WriteLine ($"  {m}");
+		}
+		if (extraInterfaces.Count > 0) {
+			output.WriteLine ($"\n--- INTERFACES EXTRA in new scanner ({extraInterfaces.Count}) ---");
+			foreach (var e in extraInterfaces) output.WriteLine ($"  {e}");
+		}
+
+		Assert.Empty (missingInterfaces);
+		Assert.Empty (extraInterfaces);
+	}
+
+	/// <summary>
+	/// Verifies the new scanner resolves the same activation constructor info
+	/// for every type as the legacy Cecil-based scanner. This determines how
+	/// peer instances are created from Java handles.
+	/// </summary>
+	[Fact]
+	public void ExactActivationCtors_MonoAndroid ()
+	{
+		var assemblyPath = MonoAndroidAssemblyPath;
+
+		var (legacyData, _) = BuildLegacyTypeData (assemblyPath);
+		var newData = BuildNewTypeData (AllAssemblyPaths);
+
+		var allManagedNames = new HashSet<string> (legacyData.Keys);
+		allManagedNames.IntersectWith (newData.Keys);
+
+		var presenceMismatches = new List<string> ();
+		var declaringTypeMismatches = new List<string> ();
+		var styleMismatches = new List<string> ();
+		int compared = 0;
+		int withActivationCtor = 0;
+
+		foreach (var managedName in allManagedNames.OrderBy (n => n)) {
+			var legacy = legacyData [managedName];
+			var newInfo = newData [managedName];
+
+			compared++;
+
+			if (legacy.HasActivationCtor != newInfo.HasActivationCtor) {
+				presenceMismatches.Add ($"{managedName}: legacy.has={legacy.HasActivationCtor} new.has={newInfo.HasActivationCtor}");
+				continue;
+			}
+
+			if (!legacy.HasActivationCtor) {
+				continue;
+			}
+
+			withActivationCtor++;
+
+			if (legacy.ActivationCtorDeclaringType != newInfo.ActivationCtorDeclaringType) {
+				declaringTypeMismatches.Add ($"{managedName}: legacy='{legacy.ActivationCtorDeclaringType}' new='{newInfo.ActivationCtorDeclaringType}'");
+			}
+
+			if (legacy.ActivationCtorStyle != newInfo.ActivationCtorStyle) {
+				styleMismatches.Add ($"{managedName}: legacy='{legacy.ActivationCtorStyle}' new='{newInfo.ActivationCtorStyle}'");
+			}
+		}
+
+		output.WriteLine ($"Compared ActivationCtor for {compared} types ({withActivationCtor} have activation ctors)");
+
+		if (presenceMismatches.Count > 0) {
+			output.WriteLine ($"\n--- ACTIVATION CTOR PRESENCE MISMATCHES ({presenceMismatches.Count}) ---");
+			foreach (var m in presenceMismatches) output.WriteLine ($"  {m}");
+		}
+		if (declaringTypeMismatches.Count > 0) {
+			output.WriteLine ($"\n--- ACTIVATION CTOR DECLARING TYPE MISMATCHES ({declaringTypeMismatches.Count}) ---");
+			foreach (var m in declaringTypeMismatches) output.WriteLine ($"  {m}");
+		}
+		if (styleMismatches.Count > 0) {
+			output.WriteLine ($"\n--- ACTIVATION CTOR STYLE MISMATCHES ({styleMismatches.Count}) ---");
+			foreach (var m in styleMismatches) output.WriteLine ($"  {m}");
+		}
+
+		Assert.Empty (presenceMismatches);
+		Assert.Empty (declaringTypeMismatches);
+		Assert.Empty (styleMismatches);
+	}
+
+	/// <summary>
+	/// Verifies the new scanner discovers the same Java constructors ([Register("&lt;init&gt;",...)])
+	/// for every type as the legacy Cecil-based scanner. These determine which nctor_N
+	/// native methods appear in JCW Java source files.
+	/// </summary>
+	[Fact]
+	public void ExactJavaConstructors_MonoAndroid ()
+	{
+		var assemblyPath = MonoAndroidAssemblyPath;
+
+		var (legacyData, _) = BuildLegacyTypeData (assemblyPath);
+		var newData = BuildNewTypeData (AllAssemblyPaths);
+
+		var allManagedNames = new HashSet<string> (legacyData.Keys);
+		allManagedNames.IntersectWith (newData.Keys);
+
+		var missingCtors = new List<string> ();
+		var extraCtors = new List<string> ();
+		int compared = 0;
+		int totalCtors = 0;
+
+		foreach (var managedName in allManagedNames.OrderBy (n => n)) {
+			var legacy = legacyData [managedName];
+			var newInfo = newData [managedName];
+
+			compared++;
+
+			var legacySet = new HashSet<string> (legacy.JavaConstructorSignatures, StringComparer.Ordinal);
+			var newSet = new HashSet<string> (newInfo.JavaConstructorSignatures, StringComparer.Ordinal);
+			totalCtors += newSet.Count;
+
+			foreach (var sig in legacySet.Except (newSet)) {
+				missingCtors.Add ($"{managedName}: missing '<init>{sig}'");
+			}
+
+			foreach (var sig in newSet.Except (legacySet)) {
+				extraCtors.Add ($"{managedName}: extra '<init>{sig}'");
+			}
+		}
+
+		output.WriteLine ($"Compared JavaConstructors for {compared} types ({totalCtors} total constructors)");
+
+		if (missingCtors.Count > 0) {
+			output.WriteLine ($"\n--- JAVA CONSTRUCTORS MISSING from new scanner ({missingCtors.Count}) ---");
+			foreach (var m in missingCtors) output.WriteLine ($"  {m}");
+		}
+		if (extraCtors.Count > 0) {
+			output.WriteLine ($"\n--- JAVA CONSTRUCTORS EXTRA in new scanner ({extraCtors.Count}) ---");
+			foreach (var e in extraCtors) output.WriteLine ($"  {e}");
+		}
+
+		Assert.Empty (missingCtors);
+		Assert.Empty (extraCtors);
+	}
+
+	/// <summary>
+	/// Verifies the new scanner produces the same type-level flags as the legacy
+	/// Cecil-based scanner: IsInterface, IsAbstract, IsGenericDefinition, DoNotGenerateAcw.
+	/// </summary>
+	[Fact]
+	public void ExactTypeFlags_MonoAndroid ()
+	{
+		var assemblyPath = MonoAndroidAssemblyPath;
+
+		var (legacyData, _) = BuildLegacyTypeData (assemblyPath);
+		var newData = BuildNewTypeData (AllAssemblyPaths);
+
+		var allManagedNames = new HashSet<string> (legacyData.Keys);
+		allManagedNames.IntersectWith (newData.Keys);
+
+		var interfaceMismatches = new List<string> ();
+		var abstractMismatches = new List<string> ();
+		var genericMismatches = new List<string> ();
+		var acwMismatches = new List<string> ();
+		int compared = 0;
+
+		foreach (var managedName in allManagedNames.OrderBy (n => n)) {
+			var legacy = legacyData [managedName];
+			var newInfo = newData [managedName];
+
+			compared++;
+
+			if (legacy.IsInterface != newInfo.IsInterface) {
+				interfaceMismatches.Add ($"{managedName}: legacy={legacy.IsInterface} new={newInfo.IsInterface}");
+			}
+
+			if (legacy.IsAbstract != newInfo.IsAbstract) {
+				abstractMismatches.Add ($"{managedName}: legacy={legacy.IsAbstract} new={newInfo.IsAbstract}");
+			}
+
+			if (legacy.IsGenericDefinition != newInfo.IsGenericDefinition) {
+				genericMismatches.Add ($"{managedName}: legacy={legacy.IsGenericDefinition} new={newInfo.IsGenericDefinition}");
+			}
+
+			if (legacy.DoNotGenerateAcw != newInfo.DoNotGenerateAcw) {
+				acwMismatches.Add ($"{managedName}: legacy={legacy.DoNotGenerateAcw} new={newInfo.DoNotGenerateAcw}");
+			}
+		}
+
+		output.WriteLine ($"Compared type flags for {compared} types");
+
+		if (interfaceMismatches.Count > 0) {
+			output.WriteLine ($"\n--- IsInterface MISMATCHES ({interfaceMismatches.Count}) ---");
+			foreach (var m in interfaceMismatches) output.WriteLine ($"  {m}");
+		}
+		if (abstractMismatches.Count > 0) {
+			output.WriteLine ($"\n--- IsAbstract MISMATCHES ({abstractMismatches.Count}) ---");
+			foreach (var m in abstractMismatches) output.WriteLine ($"  {m}");
+		}
+		if (genericMismatches.Count > 0) {
+			output.WriteLine ($"\n--- IsGenericDefinition MISMATCHES ({genericMismatches.Count}) ---");
+			foreach (var m in genericMismatches) output.WriteLine ($"  {m}");
+		}
+		if (acwMismatches.Count > 0) {
+			output.WriteLine ($"\n--- DoNotGenerateAcw MISMATCHES ({acwMismatches.Count}) ---");
+			foreach (var m in acwMismatches) output.WriteLine ($"  {m}");
+		}
+
+		Assert.Empty (interfaceMismatches);
+		Assert.Empty (abstractMismatches);
+		Assert.Empty (genericMismatches);
+		Assert.Empty (acwMismatches);
+	}
+
+	// ================================================================
+	// Shared data extraction helpers for comprehensive comparison tests
+	// ================================================================
+
+	/// <summary>
+	/// Unified per-type data record used for comparison between legacy and new scanners.
+	/// </summary>
+	record TypeComparisonData (
+		string ManagedName,
+		string JavaName,
+		string? BaseJavaName,
+		IReadOnlyList<string> ImplementedInterfaces,
+		bool HasActivationCtor,
+		string? ActivationCtorDeclaringType,
+		string? ActivationCtorStyle,
+		IReadOnlyList<string> JavaConstructorSignatures,
+		bool IsInterface,
+		bool IsAbstract,
+		bool IsGenericDefinition,
+		bool DoNotGenerateAcw
+	);
+
+	/// <summary>
+	/// Opens the assembly with Cecil and extracts per-type comparison data.
+	/// Keyed by managed type name "Namespace.Type, Assembly" for join with new scanner.
+	/// Returns both the per-type data and the type map entries for backward compatibility.
+	/// </summary>
+	static (Dictionary<string, TypeComparisonData> perType, List<TypeMapEntry> entries) BuildLegacyTypeData (string assemblyPath)
+	{
+		var cache = new TypeDefinitionCache ();
+		var resolver = new DefaultAssemblyResolver ();
+		resolver.AddSearchDirectory (Path.GetDirectoryName (assemblyPath)!);
+
+		var runtimeDir = Path.GetDirectoryName (typeof (object).Assembly.Location);
+		if (runtimeDir != null) {
+			resolver.AddSearchDirectory (runtimeDir);
+		}
+
+		var readerParams = new ReaderParameters { AssemblyResolver = resolver };
+		using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath, readerParams);
+
+		var scanner = new Xamarin.Android.Tasks.XAJavaTypeScanner (
+			Xamarin.Android.Tools.AndroidTargetArch.Arm64,
+			new TaskLoggingHelper (new MockBuildEngine (), "test"),
+			cache
+		);
+
+		var javaTypes = scanner.GetJavaTypes (assembly);
+		var (dataSets, _) = Xamarin.Android.Tasks.TypeMapCecilAdapter.GetDebugNativeEntries (
+			javaTypes, cache, needUniqueAssemblies: false
+		);
+
+		var entries = dataSets.JavaToManaged
+			.Select (e => new TypeMapEntry (e.JavaName, e.ManagedName, e.SkipInJavaToManaged))
+			.OrderBy (e => e.JavaName, StringComparer.Ordinal)
+			.ThenBy (e => e.ManagedName, StringComparer.Ordinal)
+			.ToList ();
+
+		var perType = new Dictionary<string, TypeComparisonData> (StringComparer.Ordinal);
+
+		foreach (var typeDef in javaTypes) {
+			if (IsCecilInvokerType (typeDef)) {
+				continue;
+			}
+
+			var javaName = GetCecilJavaName (typeDef);
+			if (javaName == null) {
+				continue;
+			}
+
+			// Cecil uses '/' for nested types, SRM uses '+' — normalize
+			var managedName = $"{typeDef.FullName.Replace ('/', '+')}, {typeDef.Module.Assembly.Name.Name}";
+
+			// Base Java name
+			string? baseJavaName = null;
+			var baseType = typeDef.GetBaseType (cache);
+			if (baseType != null) {
+				var baseJni = JavaNativeTypeManager.ToJniName (baseType, cache);
+				// ToJniName returns "java/lang/Object" as fallback for types without [Register]
+				// (e.g. System.Object). Filter out cases where legacy returns the type's OWN
+				// JNI name as its base — that's a self-reference artifact, not a real base.
+				if (baseJni != null && baseJni != javaName) {
+					baseJavaName = baseJni;
+				}
+			}
+
+			// Implemented interfaces (only Java peer interfaces with [Register])
+			var implementedInterfaces = new List<string> ();
+			if (typeDef.HasInterfaces) {
+				foreach (var ifaceImpl in typeDef.Interfaces) {
+					var ifaceDef = cache.Resolve (ifaceImpl.InterfaceType);
+					if (ifaceDef == null) {
+						continue;
+					}
+					var ifaceRegs = CecilExtensions.GetTypeRegistrationAttributes (ifaceDef);
+					var ifaceReg = ifaceRegs.FirstOrDefault ();
+					if (ifaceReg != null) {
+						implementedInterfaces.Add (ifaceReg.Name.Replace ('.', '/'));
+					}
+				}
+			}
+			implementedInterfaces.Sort (StringComparer.Ordinal);
+
+			// Activation constructor
+			bool hasActivationCtor = false;
+			string? activationCtorDeclaringType = null;
+			string? activationCtorStyle = null;
+			FindLegacyActivationCtor (typeDef, cache, out hasActivationCtor, out activationCtorDeclaringType, out activationCtorStyle);
+
+			// Java constructors: [Register("<init>", sig, ...)] on .ctor methods
+			var javaCtorSignatures = new List<string> ();
+			foreach (var method in typeDef.Methods) {
+				if (!method.IsConstructor || method.IsStatic || !method.HasCustomAttributes) {
+					continue;
+				}
+				foreach (var attr in method.CustomAttributes) {
+					if (attr.AttributeType.FullName != "Android.Runtime.RegisterAttribute") {
+						continue;
+					}
+					if (attr.ConstructorArguments.Count >= 2) {
+						var regName = (string) attr.ConstructorArguments [0].Value;
+						if (regName == "<init>" || regName == ".ctor") {
+							javaCtorSignatures.Add ((string) attr.ConstructorArguments [1].Value);
+						}
+					}
+				}
+			}
+			javaCtorSignatures.Sort (StringComparer.Ordinal);
+
+			// Type flags
+			var isInterface = typeDef.IsInterface;
+			var isAbstract = typeDef.IsAbstract && !typeDef.IsInterface;
+			var isGenericDefinition = typeDef.HasGenericParameters;
+			var doNotGenerateAcw = GetCecilDoNotGenerateAcw (typeDef);
+
+			perType [managedName] = new TypeComparisonData (
+				managedName,
+				javaName,
+				baseJavaName,
+				implementedInterfaces,
+				hasActivationCtor,
+				activationCtorDeclaringType,
+				activationCtorStyle,
+				javaCtorSignatures,
+				isInterface,
+				isAbstract,
+				isGenericDefinition,
+				doNotGenerateAcw
+			);
+		}
+
+		return (perType, entries);
+	}
+
+	/// <summary>
+	/// Walks the type hierarchy with Cecil to find the activation constructor.
+	/// XI-style: (IntPtr, JniHandleOwnership). JI-style: (ref JniObjectReference, JniObjectReferenceOptions).
+	/// </summary>
+	static void FindLegacyActivationCtor (TypeDefinition typeDef, TypeDefinitionCache cache,
+		out bool found, out string? declaringType, out string? style)
+	{
+		found = false;
+		declaringType = null;
+		style = null;
+
+		// Walk from current type up through base types
+		TypeDefinition? current = typeDef;
+		while (current != null) {
+			foreach (var method in current.Methods) {
+				if (!method.IsConstructor || method.IsStatic || method.Parameters.Count != 2) {
+					continue;
+				}
+
+				var p0 = method.Parameters [0].ParameterType.FullName;
+				var p1 = method.Parameters [1].ParameterType.FullName;
+
+				if (p0 == "System.IntPtr" && p1 == "Android.Runtime.JniHandleOwnership") {
+					found = true;
+					declaringType = $"{current.FullName.Replace ('/', '+')}, {current.Module.Assembly.Name.Name}";
+					style = "XamarinAndroid";
+					return;
+				}
+
+				if ((p0 == "Java.Interop.JniObjectReference&" || p0 == "Java.Interop.JniObjectReference") &&
+				    p1 == "Java.Interop.JniObjectReferenceOptions") {
+					found = true;
+					declaringType = $"{current.FullName.Replace ('/', '+')}, {current.Module.Assembly.Name.Name}";
+					style = "JavaInterop";
+					return;
+				}
+			}
+
+			current = current.GetBaseType (cache);
+		}
+	}
+
+	/// <summary>
+	/// Gets DoNotGenerateAcw from a Cecil TypeDefinition's [Register] attribute.
+	/// </summary>
+	static bool GetCecilDoNotGenerateAcw (TypeDefinition typeDef)
+	{
+		if (!typeDef.HasCustomAttributes) {
+			return false;
+		}
+
+		foreach (var attr in typeDef.CustomAttributes) {
+			if (attr.AttributeType.FullName != "Android.Runtime.RegisterAttribute") {
+				continue;
+			}
+			if (attr.HasProperties) {
+				foreach (var prop in attr.Properties) {
+					if (prop.Name == "DoNotGenerateAcw" && prop.Argument.Value is bool val) {
+						return val;
+					}
+				}
+			}
+			// [Register] found but DoNotGenerateAcw not set — defaults to false
+			return false;
+		}
+
+		return false;
+	}
+
+	/// <summary>
+	/// Runs the new SRM-based scanner and builds per-type comparison data.
+	/// Keyed by managed type name "Namespace.Type, Assembly" for join with legacy data.
+	/// Scans all given assemblies but only returns types from the primary assembly (first path).
+	/// </summary>
+	static Dictionary<string, TypeComparisonData> BuildNewTypeData (string[] assemblyPaths)
+	{
+		var primaryAssemblyName = Path.GetFileNameWithoutExtension (assemblyPaths [0]);
+		using var scanner = new JavaPeerScanner ();
+		var peers = scanner.Scan (assemblyPaths);
+
+		var perType = new Dictionary<string, TypeComparisonData> (StringComparer.Ordinal);
+
+		foreach (var peer in peers) {
+			// Only include types from the primary assembly
+			if (peer.AssemblyName != primaryAssemblyName) {
+				continue;
+			}
+
+			var managedName = $"{peer.ManagedTypeName}, {peer.AssemblyName}";
+
+			// Map ActivationCtor
+			bool hasActivationCtor = peer.ActivationCtor != null;
+			string? activationCtorDeclaringType = null;
+			string? activationCtorStyle = null;
+			if (peer.ActivationCtor != null) {
+				activationCtorDeclaringType = $"{peer.ActivationCtor.DeclaringTypeName}, {peer.ActivationCtor.DeclaringAssemblyName}";
+				activationCtorStyle = peer.ActivationCtor.Style.ToString ();
+			}
+
+			// Java constructor signatures (sorted)
+			var javaCtorSignatures = peer.JavaConstructors
+				.Select (c => c.JniSignature)
+				.OrderBy (s => s, StringComparer.Ordinal)
+				.ToList ();
+
+			// Implemented interfaces (sorted)
+			var implementedInterfaces = peer.ImplementedInterfaceJavaNames
+				.OrderBy (i => i, StringComparer.Ordinal)
+				.ToList ();
+
+			perType [managedName] = new TypeComparisonData (
+				managedName,
+				peer.JavaName,
+				peer.BaseJavaName,
+				implementedInterfaces,
+				hasActivationCtor,
+				activationCtorDeclaringType,
+				activationCtorStyle,
+				javaCtorSignatures,
+				peer.IsInterface,
+				peer.IsAbstract && !peer.IsInterface,  // Match legacy: isAbstract excludes interfaces
+				peer.IsGenericDefinition,
+				peer.DoNotGenerateAcw
+			);
+		}
+
+		return perType;
+	}
+
+	/// <summary>
+	/// Gets the file path of the Mono.Android.dll ref assembly.
+	/// At compile time, nameof(Java.Lang.Object) verifies that the reference is correctly set up.
+	/// At runtime, we locate the assembly via the copy in the test output directory (placed there
+	/// by the _AddMonoAndroidReference MSBuild target with Private=true).
 	/// </summary>
 	static string MonoAndroidAssemblyPath {
 		get {
-			var attr = typeof (ScannerComparisonTests).Assembly
-				.GetCustomAttributes (typeof (System.Reflection.AssemblyMetadataAttribute), false)
-				.Cast<System.Reflection.AssemblyMetadataAttribute> ()
-				.FirstOrDefault (a => a.Key == "MonoAndroidRefAssembly");
+			// Compile-time check: this ensures the Mono.Android reference is properly configured.
+			// It's never actually evaluated at runtime — it just validates the build setup.
+			_ = nameof (Java.Lang.Object);
 
-			if (attr == null || string.IsNullOrEmpty (attr.Value)) {
+			// At runtime, find the Mono.Android.dll copy in the test output directory.
+			var testDir = Path.GetDirectoryName (typeof (ScannerComparisonTests).Assembly.Location)!;
+			var path = Path.Combine (testDir, "Mono.Android.dll");
+
+			if (!File.Exists (path)) {
 				throw new InvalidOperationException (
-					"MonoAndroidRefAssembly metadata not found. " +
-					"Ensure the android repo is built (bin/Debug/lib/packs/Microsoft.Android.Ref.*).");
+					$"Mono.Android.dll not found at '{path}'. " +
+					"Ensure Mono.Android is built (bin/Debug/lib/packs/Microsoft.Android.Ref.*).");
 			}
 
-			return attr.Value;
+			return path;
+		}
+	}
+
+	/// <summary>
+	/// Gets all assembly paths needed for scanning: Mono.Android.dll + Java.Interop.dll.
+	/// Java.Interop.dll contains base types like JavaObject and JavaException that
+	/// Mono.Android types inherit from — without it, cross-assembly base resolution fails.
+	/// </summary>
+	static string[] AllAssemblyPaths {
+		get {
+			var monoAndroidPath = MonoAndroidAssemblyPath;
+			var dir = Path.GetDirectoryName (monoAndroidPath)!;
+			var javaInteropPath = Path.Combine (dir, "Java.Interop.dll");
+
+			if (!File.Exists (javaInteropPath)) {
+				return new [] { monoAndroidPath };
+			}
+
+			return new [] { monoAndroidPath, javaInteropPath };
 		}
 	}
 }

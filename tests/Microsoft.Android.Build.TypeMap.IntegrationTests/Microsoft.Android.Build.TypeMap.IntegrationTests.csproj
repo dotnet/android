@@ -22,13 +22,15 @@
     <ProjectReference Include="..\..\src\Microsoft.Android.Build.TypeMap\Microsoft.Android.Build.TypeMap.csproj" />
     <ProjectReference Include="..\..\src\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj" />
     <!-- Mono.Android is built as a dependency so the ref assembly is available on disk.
-         ReferenceOutputAssembly=false because we read it with SRM/Cecil, not compile against it. -->
+         ReferenceOutputAssembly=false because we read it with SRM/Cecil, not compile against it directly.
+         Instead, we reference the ref assembly below so we can use typeof(Java.Lang.Object). -->
     <ProjectReference Include="..\..\src\Mono.Android\Mono.Android.csproj"
                       ReferenceOutputAssembly="false" />
   </ItemGroup>
 
-  <!-- Pass the Mono.Android ref assembly path via AssemblyMetadata so tests can locate it. -->
-  <Target Name="_SetMonoAndroidAssemblyMetadata" BeforeTargets="GetAssemblyAttributes">
+  <!-- Discover the Mono.Android ref assembly path and add a direct Reference to it.
+       This lets tests use typeof(Java.Lang.Object).Assembly.Location to find the assembly. -->
+  <Target Name="_AddMonoAndroidReference" BeforeTargets="ResolveAssemblyReferences">
     <ItemGroup>
       <_MonoAndroidRefCandidate Include="$(MSBuildThisFileDirectory)..\..\bin\$(Configuration)\lib\packs\Microsoft.Android.Ref.*\*\ref\net*\Mono.Android.dll" />
     </ItemGroup>
@@ -37,10 +39,9 @@
       <_MonoAndroidRefAssembly>$(_MonoAndroidRefAssembly.Split(';')[0])</_MonoAndroidRefAssembly>
     </PropertyGroup>
     <ItemGroup Condition=" '$(_MonoAndroidRefAssembly)' != '' ">
-      <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
-        <_Parameter1>MonoAndroidRefAssembly</_Parameter1>
-        <_Parameter2>$([System.IO.Path]::GetFullPath('$(_MonoAndroidRefAssembly)'))</_Parameter2>
-      </AssemblyAttribute>
+      <Reference Include="Mono.Android">
+        <HintPath>$(_MonoAndroidRefAssembly)</HintPath>
+      </Reference>
     </ItemGroup>
   </Target>
 
