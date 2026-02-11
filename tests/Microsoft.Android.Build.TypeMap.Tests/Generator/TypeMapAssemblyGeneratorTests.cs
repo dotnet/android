@@ -155,8 +155,8 @@ public class TypeMapAssemblyGeneratorTests
 				// At least some proxy types should be generated
 				Assert.NotEmpty (proxyTypes);
 
-				// Check that a proxy exists for java/lang/Object → java_lang_Object_Proxy
-				Assert.Contains (proxyTypes, t => reader.GetString (t.Name) == "java_lang_Object_Proxy");
+				// Check that a proxy exists for java/lang/Object → Java_Lang_Object_Proxy
+				Assert.Contains (proxyTypes, t => reader.GetString (t.Name) == "Java_Lang_Object_Proxy");
 			}
 		} finally {
 			CleanUp (path);
@@ -198,7 +198,7 @@ public class TypeMapAssemblyGeneratorTests
 			using (pe) {
 				var objectProxy = reader.TypeDefinitions
 					.Select (h => reader.GetTypeDefinition (h))
-					.First (t => reader.GetString (t.Name) == "java_lang_Object_Proxy");
+					.First (t => reader.GetString (t.Name) == "Java_Lang_Object_Proxy");
 
 				var methods = objectProxy.GetMethods ()
 					.Select (h => reader.GetMethodDefinition (h))
@@ -228,7 +228,7 @@ public class TypeMapAssemblyGeneratorTests
 			using (pe) {
 				var proxy = reader.TypeDefinitions
 					.Select (h => reader.GetTypeDefinition (h))
-					.First (t => reader.GetString (t.Name) == "my_app_TouchHandler_Proxy");
+					.First (t => reader.GetString (t.Name) == "MyApp_TouchHandler_Proxy");
 
 				var methods = proxy.GetMethods ()
 					.Select (h => reader.GetMethodDefinition (h))
@@ -255,7 +255,7 @@ public class TypeMapAssemblyGeneratorTests
 			using (pe) {
 				var proxy = reader.TypeDefinitions
 					.Select (h => reader.GetTypeDefinition (h))
-					.First (t => reader.GetString (t.Name) == "my_app_TouchHandler_Proxy");
+					.First (t => reader.GetString (t.Name) == "MyApp_TouchHandler_Proxy");
 
 				// Find a UCO method
 				var ucoMethod = proxy.GetMethods ()

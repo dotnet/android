@@ -30,8 +30,7 @@ public class ModelBuilderTests
 	TypeMapAssemblyData BuildModel (IReadOnlyList<JavaPeerInfo> peers, string? assemblyName = null)
 	{
 		var outputPath = Path.Combine ("/tmp", (assemblyName ?? "TestTypeMap") + ".dll");
-		var builder = new ModelBuilder ();
-		return builder.Build (peers, outputPath, assemblyName);
+		return ModelBuilder.Build (peers, outputPath, assemblyName);
 	}
 
 	// ---- Basic model structure ----
@@ -49,8 +48,7 @@ public class ModelBuilderTests
 	[Fact]
 	public void Build_AssemblyNameDerivedFromOutputPath ()
 	{
-		var builder = new ModelBuilder ();
-		var model = builder.Build (Array.Empty<JavaPeerInfo> (), "/some/path/Foo.Bar.dll");
+		var model = ModelBuilder.Build (Array.Empty<JavaPeerInfo> (), "/some/path/Foo.Bar.dll");
 		Assert.Equal ("Foo.Bar", model.AssemblyName);
 		Assert.Equal ("Foo.Bar.dll", model.ModuleName);
 	}
@@ -58,8 +56,7 @@ public class ModelBuilderTests
 	[Fact]
 	public void Build_ExplicitAssemblyName_OverridesOutputPath ()
 	{
-		var builder = new ModelBuilder ();
-		var model = builder.Build (Array.Empty<JavaPeerInfo> (), "/some/path/Foo.dll", "MyAssembly");
+		var model = ModelBuilder.Build (Array.Empty<JavaPeerInfo> (), "/some/path/Foo.dll", "MyAssembly");
 		Assert.Equal ("MyAssembly", model.AssemblyName);
 	}
 
@@ -240,9 +237,9 @@ public class ModelBuilderTests
 
 		var model = BuildModel (peers, "TypeMap");
 		Assert.Equal (2, model.ProxyTypes.Count);
-		// Distinct proxy names: first gets _Proxy, second gets _1_Proxy
-		Assert.Equal ("test_Dup_Proxy", model.ProxyTypes [0].TypeName);
-		Assert.Equal ("test_Dup_1_Proxy", model.ProxyTypes [1].TypeName);
+		// Distinct proxy names based on managed type names
+		Assert.Equal ("Test_First_Proxy", model.ProxyTypes [0].TypeName);
+		Assert.Equal ("Test_Second_Proxy", model.ProxyTypes [1].TypeName);
 	}
 
 	[Fact]
@@ -267,7 +264,7 @@ public class ModelBuilderTests
 
 		Assert.Single (model.ProxyTypes);
 		var proxy = model.ProxyTypes [0];
-		Assert.Equal ("java_lang_Object_Proxy", proxy.TypeName);
+		Assert.Equal ("Java_Lang_Object_Proxy", proxy.TypeName);
 		Assert.Equal ("_TypeMap.Proxies", proxy.Namespace);
 		Assert.True (proxy.HasActivation);
 		Assert.Equal ("Java.Lang.Object", proxy.TargetType.ManagedTypeName);
@@ -315,13 +312,13 @@ public class ModelBuilderTests
 	}
 
 	[Fact]
-	public void Build_ProxyNaming_ReplacesSlashAndDollar ()
+	public void Build_ProxyNaming_ReplacesDotAndPlus ()
 	{
 		var peer = MakePeerWithActivation ("com/example/Outer$Inner", "Com.Example.Outer.Inner", "App");
 		var model = BuildModel (new [] { peer });
 
 		Assert.Single (model.ProxyTypes);
-		Assert.Equal ("com_example_Outer_Inner_Proxy", model.ProxyTypes [0].TypeName);
+		Assert.Equal ("Com_Example_Outer_Inner_Proxy", model.ProxyTypes [0].TypeName);
 	}
 
 	[Fact]
@@ -331,7 +328,7 @@ public class ModelBuilderTests
 		var model = BuildModel (new [] { peer }, "MyTypeMap");
 
 		var entry = model.Entries [0];
-		Assert.Contains ("java_lang_Object_Proxy", entry.ProxyTypeReference);
+		Assert.Contains ("Java_Lang_Object_Proxy", entry.ProxyTypeReference);
 		Assert.Contains ("MyTypeMap", entry.ProxyTypeReference);
 	}
 
@@ -776,7 +773,7 @@ public class ModelBuilderTests
 		var peer = FindFixtureByJavaName ("java/lang/Object");
 		var model = BuildModel (new [] { peer }, "TypeMap");
 
-		var proxy = FindProxy (model, "java_lang_Object_Proxy");
+		var proxy = FindProxy (model, "Java_Lang_Object_Proxy");
 		Assert.NotNull (proxy);
 		Assert.True (proxy!.HasActivation);
 		Assert.Equal ("Java.Lang.Object", proxy.TargetType.ManagedTypeName);
@@ -794,7 +791,7 @@ public class ModelBuilderTests
 		var peer = FindFixtureByJavaName ("android/app/Activity");
 		var model = BuildModel (new [] { peer }, "TypeMap");
 
-		var proxy = FindProxy (model, "android_app_Activity_Proxy");
+		var proxy = FindProxy (model, "Android_App_Activity_Proxy");
 		Assert.NotNull (proxy);
 		Assert.True (proxy!.HasActivation);
 		Assert.Equal ("Android.App.Activity", proxy.TargetType.ManagedTypeName);
@@ -810,7 +807,7 @@ public class ModelBuilderTests
 
 		var entry = FindEntry (model, "android/app/Activity");
 		Assert.NotNull (entry);
-		Assert.Contains ("android_app_Activity_Proxy", entry!.ProxyTypeReference);
+		Assert.Contains ("Android_App_Activity_Proxy", entry!.ProxyTypeReference);
 		Assert.Contains ("MyTypeMap", entry.ProxyTypeReference);
 	}
 
@@ -820,7 +817,7 @@ public class ModelBuilderTests
 		var peer = FindFixtureByJavaName ("java/lang/Throwable");
 		var model = BuildModel (new [] { peer }, "TypeMap");
 
-		var proxy = FindProxy (model, "java_lang_Throwable_Proxy");
+		var proxy = FindProxy (model, "Java_Lang_Throwable_Proxy");
 		Assert.NotNull (proxy);
 		Assert.True (proxy!.HasActivation);
 		Assert.False (proxy.IsAcw);
@@ -832,7 +829,7 @@ public class ModelBuilderTests
 		var peer = FindFixtureByJavaName ("java/lang/Exception");
 		var model = BuildModel (new [] { peer }, "TypeMap");
 
-		var proxy = FindProxy (model, "java_lang_Exception_Proxy");
+		var proxy = FindProxy (model, "Java_Lang_Exception_Proxy");
 		Assert.NotNull (proxy);
 		Assert.True (proxy!.HasActivation);
 	}
@@ -860,7 +857,7 @@ public class ModelBuilderTests
 
 		// Context has (IntPtr, JniHandleOwnership) ctor
 		if (peer.ActivationCtor != null) {
-			var proxy = FindProxy (model, "android_content_Context_Proxy");
+			var proxy = FindProxy (model, "Android_Content_Context_Proxy");
 			Assert.NotNull (proxy);
 			Assert.False (proxy!.IsAcw);
 		}
@@ -873,7 +870,7 @@ public class ModelBuilderTests
 		var model = BuildModel (new [] { peer }, "TypeMap");
 
 		if (peer.ActivationCtor != null) {
-			var proxy = FindProxy (model, "android_view_View_Proxy");
+			var proxy = FindProxy (model, "Android_Views_View_Proxy");
 			Assert.NotNull (proxy);
 		}
 	}
@@ -885,7 +882,7 @@ public class ModelBuilderTests
 		var model = BuildModel (new [] { peer }, "TypeMap");
 
 		if (peer.ActivationCtor != null) {
-			var proxy = FindProxy (model, "android_widget_Button_Proxy");
+			var proxy = FindProxy (model, "Android_Widget_Button_Proxy");
 			Assert.NotNull (proxy);
 		}
 	}
@@ -901,7 +898,7 @@ public class ModelBuilderTests
 		Assert.NotNull (peer.ActivationCtor);
 
 		var model = BuildModel (new [] { peer }, "TypeMap");
-		var proxy = FindProxy (model, "my_app_MainActivity_Proxy");
+		var proxy = FindProxy (model, "MyApp_MainActivity_Proxy");
 		Assert.NotNull (proxy);
 		Assert.True (proxy!.IsAcw);
 		Assert.True (proxy.ImplementsIAndroidCallableWrapper);
@@ -913,7 +910,7 @@ public class ModelBuilderTests
 	{
 		var peer = FindFixtureByJavaName ("my/app/MainActivity");
 		var model = BuildModel (new [] { peer }, "TypeMap");
-		var proxy = FindProxy (model, "my_app_MainActivity_Proxy")!;
+		var proxy = FindProxy (model, "MyApp_MainActivity_Proxy")!;
 
 		// Should have UCO wrappers for non-constructor marshal methods
 		var nonCtorMethods = peer.MarshalMethods.Where (m => !m.IsConstructor).ToList ();
@@ -931,7 +928,7 @@ public class ModelBuilderTests
 	{
 		var peer = FindFixtureByJavaName ("my/app/MainActivity");
 		var model = BuildModel (new [] { peer }, "TypeMap");
-		var proxy = FindProxy (model, "my_app_MainActivity_Proxy")!;
+		var proxy = FindProxy (model, "MyApp_MainActivity_Proxy")!;
 
 		Assert.NotEmpty (proxy.NativeRegistrations);
 
@@ -952,7 +949,7 @@ public class ModelBuilderTests
 		// MyHelper has marshal methods and is not DoNotGenerateAcw
 		// Whether it's ACW depends on: not interface, has marshal methods, not DoNotGenerateAcw
 		if (peer.MarshalMethods.Count > 0 && peer.ActivationCtor != null) {
-			var proxy = FindProxy (model, "my_app_MyHelper_Proxy");
+			var proxy = FindProxy (model, "MyApp_MyHelper_Proxy");
 			Assert.NotNull (proxy);
 		}
 	}
@@ -964,7 +961,7 @@ public class ModelBuilderTests
 	{
 		var peer = FindFixtureByJavaName ("my/app/TouchHandler");
 		var model = BuildModel (new [] { peer }, "TypeMap");
-		var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "my_app_TouchHandler_Proxy");
+		var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_TouchHandler_Proxy");
 		Assert.NotNull (proxy);
 
 		var nonCtorMethods = peer.MarshalMethods.Where (m => !m.IsConstructor).ToList ();
@@ -1001,7 +998,7 @@ public class ModelBuilderTests
 	{
 		var peer = FindFixtureByJavaName ("my/app/TouchHandler");
 		var model = BuildModel (new [] { peer }, "TypeMap");
-		var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "my_app_TouchHandler_Proxy")!;
+		var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_TouchHandler_Proxy")!;
 
 		// Every UCO method should have a matching registration
 		foreach (var uco in proxy.UcoMethods) {
@@ -1020,7 +1017,7 @@ public class ModelBuilderTests
 		Assert.Equal (2, peer.JavaConstructors.Count);
 
 		var model = BuildModel (new [] { peer }, "TypeMap");
-		var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "my_app_CustomView_Proxy");
+		var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_CustomView_Proxy");
 		Assert.NotNull (proxy);
 
 		if (proxy!.IsAcw) {
@@ -1083,12 +1080,12 @@ public class ModelBuilderTests
 		var peer = FindFixtureByJavaName ("my/app/Outer$Inner");
 		var model = BuildModel (new [] { peer }, "TypeMap");
 
-		// $ gets replaced with _
+		// . and + get replaced with _
 		var entry = FindEntry (model, "my/app/Outer$Inner");
 		Assert.NotNull (entry);
 
 		if (peer.ActivationCtor != null) {
-			var proxy = FindProxy (model, "my_app_Outer_Inner_Proxy");
+			var proxy = FindProxy (model, "MyApp_Outer_Inner_Proxy");
 			Assert.NotNull (proxy);
 			Assert.Equal ("MyApp.Outer+Inner", proxy!.TargetType.ManagedTypeName);
 		}
@@ -1104,7 +1101,7 @@ public class ModelBuilderTests
 		Assert.NotNull (entry);
 
 		if (peer.ActivationCtor != null) {
-			var proxy = FindProxy (model, "my_app_ICallback_Result_Proxy");
+			var proxy = FindProxy (model, "MyApp_ICallback_Result_Proxy");
 			Assert.NotNull (proxy);
 			Assert.Equal ("MyApp.ICallback+Result", proxy!.TargetType.ManagedTypeName);
 		}
@@ -1113,7 +1110,7 @@ public class ModelBuilderTests
 	// ---- Duplicate JNI names across interface + invoker ----
 
 	[Fact]
-	public void Fixture_InterfaceAndInvoker_ShareJniName_CreateAliases ()
+	public void Fixture_InterfaceAndInvoker_ShareJniName_InvokerSeparated ()
 	{
 		var peers = ScanFixtures ();
 		// IOnClickListener and IOnClickListenerInvoker share "android/view/View$OnClickListener"
@@ -1122,10 +1119,13 @@ public class ModelBuilderTests
 
 		var model = BuildModel (clickPeers, "TypeMap");
 
-		// Aliases: primary entry + indexed alias
-		Assert.Equal (2, model.Entries.Count);
+		// Invoker is separated from non-invokers before alias grouping,
+		// so only the interface gets a TypeMap entry
+		Assert.Single (model.Entries);
 		Assert.Equal ("android/view/View$OnClickListener", model.Entries [0].JniName);
-		Assert.Equal ("android/view/View$OnClickListener[1]", model.Entries [1].JniName);
+
+		// Both the interface and the invoker should get proxy types
+		Assert.Equal (2, model.ProxyTypes.Count);
 	}
 
 	// ---- GenericHolder ----
@@ -1154,7 +1154,7 @@ public class ModelBuilderTests
 
 		// AbstractBase has marshal methods (doWork) and activation ctor
 		if (peer.ActivationCtor != null && peer.MarshalMethods.Count > 0) {
-			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "my_app_AbstractBase_Proxy");
+			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_AbstractBase_Proxy");
 			Assert.NotNull (proxy);
 			Assert.True (proxy!.IsAcw);
 		}
@@ -1171,7 +1171,7 @@ public class ModelBuilderTests
 		var model = BuildModel (new [] { peer }, "TypeMap");
 
 		if (peer.ActivationCtor != null && peer.MarshalMethods.Count > 0) {
-			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "my_app_ClickableView_Proxy");
+			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_ClickableView_Proxy");
 			Assert.NotNull (proxy);
 			Assert.True (proxy!.IsAcw);
 			// Should have onClick UCO wrapper
@@ -1192,7 +1192,7 @@ public class ModelBuilderTests
 		var model = BuildModel (new [] { peer }, "TypeMap");
 
 		if (peer.ActivationCtor != null && peer.MarshalMethods.Count > 0) {
-			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "my_app_MultiInterfaceView_Proxy");
+			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_MultiInterfaceView_Proxy");
 			Assert.NotNull (proxy);
 
 			// Should have onClick and onLongClick UCO wrappers
@@ -1213,9 +1213,45 @@ public class ModelBuilderTests
 		var model = BuildModel (new [] { peer }, "TypeMap");
 
 		if (peer.ActivationCtor != null) {
-			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "my_app_ExportExample_Proxy");
+			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_ExportExample_Proxy");
 			Assert.NotNull (proxy);
 		}
+	}
+
+	// ---- Implementor types ----
+
+	[Fact]
+	public void Fixture_Implementor_IsTrimmable_NotUnconditional ()
+	{
+		var peer = FindFixtureByJavaName ("android/view/View_IOnClickListenerImplementor");
+		Assert.False (peer.DoNotGenerateAcw);
+		Assert.False (peer.IsInterface);
+
+		var model = BuildModel (new [] { peer }, "TypeMap");
+
+		// Implementor types should be trimmable (3-arg), NOT unconditional
+		var entry = model.Entries.FirstOrDefault ();
+		Assert.NotNull (entry);
+		Assert.False (entry!.IsUnconditional, "Implementor should NOT be unconditional");
+		Assert.NotNull (entry.TargetTypeReference);
+	}
+
+	// ---- EventDispatcher types ----
+
+	[Fact]
+	public void Fixture_EventDispatcher_IsTrimmable_NotUnconditional ()
+	{
+		var peer = FindFixtureByJavaName ("android/view/View_ClickEventDispatcher");
+		Assert.False (peer.DoNotGenerateAcw);
+		Assert.False (peer.IsInterface);
+
+		var model = BuildModel (new [] { peer }, "TypeMap");
+
+		// EventDispatcher types should be trimmable (3-arg), NOT unconditional
+		var entry = model.Entries.FirstOrDefault ();
+		Assert.NotNull (entry);
+		Assert.False (entry!.IsUnconditional, "EventDispatcher should NOT be unconditional");
+		Assert.NotNull (entry.TargetTypeReference);
 	}
 
 	// ---- Full pipeline: scan → model → emit → read back ----
@@ -1300,7 +1336,7 @@ public class ModelBuilderTests
 
 			var proxy = reader.TypeDefinitions
 				.Select (h => reader.GetTypeDefinition (h))
-				.First (t => reader.GetString (t.Name) == "my_app_TouchHandler_Proxy");
+				.First (t => reader.GetString (t.Name) == "MyApp_TouchHandler_Proxy");
 
 			var methods = proxy.GetMethods ()
 				.Select (h => reader.GetMethodDefinition (h))
@@ -1337,7 +1373,7 @@ public class ModelBuilderTests
 
 			var proxy = reader.TypeDefinitions
 				.Select (h => reader.GetTypeDefinition (h))
-				.First (t => reader.GetString (t.Name) == "my_app_CustomView_Proxy");
+				.First (t => reader.GetString (t.Name) == "MyApp_CustomView_Proxy");
 
 			var methodNames = proxy.GetMethods ()
 				.Select (h => reader.GetString (reader.GetMethodDefinition (h).Name))
@@ -1380,7 +1416,7 @@ public class ModelBuilderTests
 
 			Assert.Equal ("java/lang/Object", jniName);
 			Assert.NotNull (proxyRef);
-			Assert.Contains ("java_lang_Object_Proxy", proxyRef!);
+			Assert.Contains ("Java_Lang_Object_Proxy", proxyRef!);
 			// 2-arg: no target type
 			Assert.Null (targetRef);
 		} finally {
@@ -1408,7 +1444,7 @@ public class ModelBuilderTests
 
 			Assert.Equal ("android/app/Activity", jniName);
 			Assert.NotNull (proxyRef);
-			Assert.Contains ("android_app_Activity_Proxy", proxyRef!);
+			Assert.Contains ("Android_App_Activity_Proxy", proxyRef!);
 			// 3-arg: has target type
 			Assert.NotNull (targetRef);
 			Assert.Contains ("Android.App.Activity", targetRef!);

@@ -11,7 +11,7 @@ namespace Microsoft.Android.Build.TypeMap;
 /// selection, callback resolution, proxy naming) lives here.
 /// The output model is a plain data structure that the emitter writes directly into a PE assembly.
 /// </summary>
-sealed class ModelBuilder
+static class ModelBuilder
 {
 	static readonly HashSet<string> EssentialRuntimeTypes = new (StringComparer.Ordinal) {
 		"java/lang/Object",
@@ -30,7 +30,7 @@ sealed class ModelBuilder
 	/// <param name="peers">Scanned Java peer types (typically from a single input assembly).</param>
 	/// <param name="outputPath">Output .dll path — used to derive assembly/module names if not specified.</param>
 	/// <param name="assemblyName">Explicit assembly name. If null, derived from <paramref name="outputPath"/>.</param>
-	public TypeMapAssemblyData Build (IReadOnlyList<JavaPeerInfo> peers, string outputPath, string? assemblyName = null)
+	public static TypeMapAssemblyData Build (IReadOnlyList<JavaPeerInfo> peers, string outputPath, string? assemblyName = null)
 	{
 		if (peers is null) {
 			throw new ArgumentNullException (nameof (peers));
@@ -47,10 +47,30 @@ sealed class ModelBuilder
 			ModuleName = moduleName,
 		};
 
-		// Group peers by JNI name to detect aliases (multiple .NET types → same Java class).
+		// Separate invoker types — they get proxies (for CreateInstance) but NOT TypeMap entries.
+		// Invokers share JNI names with their interfaces and are created via the parent proxy.
+		var invokerPeers = new List<JavaPeerInfo> ();
+		var nonInvokerPeers = new List<JavaPeerInfo> ();
+		foreach (var peer in peers) {
+			if (IsInvokerType (peer)) {
+				invokerPeers.Add (peer);
+			} else {
+				nonInvokerPeers.Add (peer);
+			}
+		}
+
+		// Generate proxies for invoker types (no TypeMap entries)
+		foreach (var invoker in invokerPeers) {
+			if (invoker.ActivationCtor != null) {
+				var proxy = BuildProxyType (invoker, isAcw: false);
+				model.ProxyTypes.Add (proxy);
+			}
+		}
+
+		// Group non-invoker peers by JNI name to detect aliases (multiple .NET types → same Java class).
 		// Use an ordered dictionary to ensure deterministic output across runs.
 		var groups = new SortedDictionary<string, List<JavaPeerInfo>> (StringComparer.Ordinal);
-		foreach (var peer in peers) {
+		foreach (var peer in nonInvokerPeers) {
 			if (!groups.TryGetValue (peer.JavaName, out var list)) {
 				list = new List<JavaPeerInfo> ();
 				groups [peer.JavaName] = list;
@@ -92,7 +112,16 @@ sealed class ModelBuilder
 		return model;
 	}
 
-	void EmitSinglePeer (TypeMapAssemblyData model, JavaPeerInfo peer, string assemblyName)
+	/// <summary>
+	/// Invoker types (e.g., IOnClickListenerInvoker) wrap existing Java interfaces.
+	/// They get proxies for CreateInstance but no TypeMap entries — the interface entry covers them.
+	/// </summary>
+	static bool IsInvokerType (JavaPeerInfo peer)
+	{
+		return peer.DoNotGenerateAcw && peer.ManagedTypeName.EndsWith ("Invoker", StringComparison.Ordinal);
+	}
+
+	static void EmitSinglePeer (TypeMapAssemblyData model, JavaPeerInfo peer, string assemblyName)
 	{
 		bool hasProxy = peer.ActivationCtor != null || peer.InvokerTypeName != null;
 		bool isAcw = !peer.DoNotGenerateAcw && !peer.IsInterface && peer.MarshalMethods.Count > 0;
@@ -106,11 +135,11 @@ sealed class ModelBuilder
 		model.Entries.Add (BuildEntry (peer, proxy, assemblyName));
 	}
 
-	void EmitAliasedPeers (TypeMapAssemblyData model, string jniName,
+	static void EmitAliasedPeers (TypeMapAssemblyData model, string jniName,
 		List<JavaPeerInfo> peersForName, string assemblyName)
 	{
 		// First peer is the "primary" — it gets the base JNI name entry.
-		// Remaining peers get indexed alias entries: "jni/name[0]", "jni/name[1]", ...
+		// Remaining peers get indexed alias entries: "jni/name[1]", "jni/name[2]", ...
 		for (int i = 0; i < peersForName.Count; i++) {
 			var peer = peersForName [i];
 			string entryJniName = i == 0 ? jniName : $"{jniName}[{i}]";
@@ -120,8 +149,7 @@ sealed class ModelBuilder
 
 			JavaPeerProxyData? proxy = null;
 			if (hasProxy) {
-				string suffix = i == 0 ? "_Proxy" : $"_{i}_Proxy";
-				proxy = BuildProxyType (peer, isAcw, suffix);
+				proxy = BuildProxyType (peer, isAcw);
 				model.ProxyTypes.Add (proxy);
 			}
 
@@ -140,6 +168,12 @@ sealed class ModelBuilder
 			return true;
 		}
 
+		// Implementor/EventDispatcher types are only created from .NET (e.g., when a C# event
+		// is subscribed). They should NOT be unconditional — they're trimmable.
+		if (IsImplementorOrEventDispatcher (peer)) {
+			return false;
+		}
+
 		// User-defined ACW types (not MCW bindings, not interfaces) are unconditional
 		// because Android can instantiate them from Java at any time.
 		if (!peer.DoNotGenerateAcw && !peer.IsInterface) {
@@ -154,10 +188,21 @@ sealed class ModelBuilder
 		return false;
 	}
 
-	static JavaPeerProxyData BuildProxyType (JavaPeerInfo peer, bool isAcw, string? suffix = null)
+	/// <summary>
+	/// Implementor and EventDispatcher types are generated by the binding generator
+	/// and are only instantiated from .NET. They should be trimmable.
+	/// </summary>
+	static bool IsImplementorOrEventDispatcher (JavaPeerInfo peer)
 	{
-		suffix ??= "_Proxy";
-		var proxyTypeName = peer.JavaName.Replace ('/', '_').Replace ('$', '_') + suffix;
+		return peer.ManagedTypeName.EndsWith ("Implementor", StringComparison.Ordinal) ||
+			peer.ManagedTypeName.EndsWith ("EventDispatcher", StringComparison.Ordinal);
+	}
+
+	static JavaPeerProxyData BuildProxyType (JavaPeerInfo peer, bool isAcw)
+	{
+		// Use managed type name for proxy naming to guarantee uniqueness across aliases
+		// (two types with the same JNI name will have different managed names).
+		var proxyTypeName = peer.ManagedTypeName.Replace ('.', '_').Replace ('+', '_') + "_Proxy";
 
 		var proxy = new JavaPeerProxyData {
 			TypeName = proxyTypeName,
