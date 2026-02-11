@@ -35,9 +35,16 @@ public class ScannerComparisonTests : IDisposable
 	record MethodEntry (string JniName, string JniSignature, string? Connector);
 
 	/// <summary>
-	/// Opens the assembly with Cecil and returns the scanner results plus methods per type.
+	/// Represents one managed type's methods for a given JNI name.
+	/// Multiple managed types can share the same JNI name (aliases).
 	/// </summary>
-	static (List<TypeMapEntry> entries, Dictionary<string, List<MethodEntry>> methodsByJavaName) RunLegacyScanner (string assemblyPath)
+	record TypeMethodGroup (string ManagedName, List<MethodEntry> Methods);
+
+	/// <summary>
+	/// Opens the assembly with Cecil and returns the scanner results plus methods per type.
+	/// Multiple managed types can map to the same JNI name (aliases).
+	/// </summary>
+	static (List<TypeMapEntry> entries, Dictionary<string, List<TypeMethodGroup>> methodsByJavaName) RunLegacyScanner (string assemblyPath)
 	{
 		var cache = new TypeDefinitionCache ();
 		var resolver = new DefaultAssemblyResolver ();
@@ -68,23 +75,50 @@ public class ScannerComparisonTests : IDisposable
 			.ThenBy (e => e.ManagedName, StringComparer.Ordinal)
 			.ToList ();
 
-		// Extract method-level [Register] attributes from each TypeDefinition
-		// Use the raw javaTypes list to get ALL types (dataSets.JavaToManaged may skip duplicates)
-		var methodsByJavaName = new Dictionary<string, List<MethodEntry>> ();
+		// Extract method-level [Register] attributes from each TypeDefinition.
+		// Use the raw javaTypes list to get ALL types — multiple managed types
+		// can map to the same JNI name (aliases).
+		// Skip Invoker types (DoNotGenerateAcw + name ends with "Invoker") — the new
+		// scanner intentionally excludes these as they're implementation details.
+		var methodsByJavaName = new Dictionary<string, List<TypeMethodGroup>> ();
 		foreach (var typeDef in javaTypes) {
 			var javaName = GetCecilJavaName (typeDef);
 			if (javaName == null) {
 				continue;
 			}
 
+			if (IsCecilInvokerType (typeDef)) {
+				continue;
+			}
+
+			// Cecil uses '/' for nested types, SRM uses '+' (CLR format) — normalize
+			var managedName = $"{typeDef.FullName.Replace ('/', '+')}, {typeDef.Module.Assembly.Name.Name}";
 			var methods = ExtractMethodRegistrations (typeDef);
 
-			if (methods.Count > 0 && !methodsByJavaName.ContainsKey (javaName)) {
-				methodsByJavaName [javaName] = methods
-					.OrderBy (m => m.JniName, StringComparer.Ordinal)
-					.ThenBy (m => m.JniSignature, StringComparer.Ordinal)
-					.ToList ();
+			if (!methodsByJavaName.TryGetValue (javaName, out var groups)) {
+				groups = new List<TypeMethodGroup> ();
+				methodsByJavaName [javaName] = groups;
 			}
+
+			groups.Add (new TypeMethodGroup (
+				managedName,
+				methods.OrderBy (m => m.JniName, StringComparer.Ordinal)
+					.ThenBy (m => m.JniSignature, StringComparer.Ordinal)
+					.ToList ()
+			));
+		}
+
+		// Some types appear in dataSets.JavaToManaged (the typemap) but not in
+		// javaTypes (the raw list). Include them with empty method lists so the
+		// comparison covers all types known to the legacy scanner.
+		foreach (var entry in dataSets.JavaToManaged) {
+			if (methodsByJavaName.ContainsKey (entry.JavaName)) {
+				continue;
+			}
+
+			methodsByJavaName [entry.JavaName] = new List<TypeMethodGroup> {
+				new TypeMethodGroup (entry.ManagedName, new List<MethodEntry> ())
+			};
 		}
 
 		return (entries, methodsByJavaName);
@@ -110,6 +144,38 @@ public class ScannerComparisonTests : IDisposable
 		}
 
 		return null;
+	}
+
+	/// <summary>
+	/// Checks if a Cecil TypeDefinition is an Invoker type (DoNotGenerateAcw=true
+	/// and name ends with "Invoker"). These are runtime implementation details
+	/// that the new scanner intentionally excludes from the typemap.
+	/// </summary>
+	static bool IsCecilInvokerType (TypeDefinition typeDef)
+	{
+		if (!typeDef.Name.EndsWith ("Invoker", StringComparison.Ordinal)) {
+			return false;
+		}
+
+		if (!typeDef.HasCustomAttributes) {
+			return false;
+		}
+
+		foreach (var attr in typeDef.CustomAttributes) {
+			if (attr.AttributeType.FullName != "Android.Runtime.RegisterAttribute") {
+				continue;
+			}
+
+			if (attr.HasProperties) {
+				foreach (var prop in attr.Properties) {
+					if (prop.Name == "DoNotGenerateAcw" && prop.Argument.Value is bool val && val) {
+						return true;
+					}
+				}
+			}
+		}
+
+		return false;
 	}
 
 	/// <summary>
@@ -177,8 +243,9 @@ public class ScannerComparisonTests : IDisposable
 
 	/// <summary>
 	/// Runs the new SRM-based scanner on the given assembly.
+	/// Returns all types including aliases (multiple managed types per JNI name).
 	/// </summary>
-	static (List<TypeMapEntry> entries, Dictionary<string, List<MethodEntry>> methodsByJavaName) RunNewScanner (string assemblyPath)
+	static (List<TypeMapEntry> entries, Dictionary<string, List<TypeMethodGroup>> methodsByJavaName) RunNewScanner (string assemblyPath)
 	{
 		using var scanner = new JavaPeerScanner ();
 		var peers = scanner.Scan (new [] { assemblyPath });
@@ -193,17 +260,23 @@ public class ScannerComparisonTests : IDisposable
 			.ThenBy (e => e.ManagedName, StringComparer.Ordinal)
 			.ToList ();
 
-		var methodsByJavaName = new Dictionary<string, List<MethodEntry>> ();
+		var methodsByJavaName = new Dictionary<string, List<TypeMethodGroup>> ();
 		foreach (var peer in peers) {
-			if (peer.MarshalMethods.Count == 0) {
-				continue;
+			var managedName = $"{peer.ManagedTypeName}, {peer.AssemblyName}";
+
+			if (!methodsByJavaName.TryGetValue (peer.JavaName, out var groups)) {
+				groups = new List<TypeMethodGroup> ();
+				methodsByJavaName [peer.JavaName] = groups;
 			}
 
-			methodsByJavaName [peer.JavaName] = peer.MarshalMethods
-				.Select (m => new MethodEntry (m.JniName, m.JniSignature, m.Connector))
-				.OrderBy (m => m.JniName, StringComparer.Ordinal)
-				.ThenBy (m => m.JniSignature, StringComparer.Ordinal)
-				.ToList ();
+			groups.Add (new TypeMethodGroup (
+				managedName,
+				peer.MarshalMethods
+					.Select (m => new MethodEntry (m.JniName, m.JniSignature, m.Connector))
+					.OrderBy (m => m.JniName, StringComparer.Ordinal)
+					.ThenBy (m => m.JniSignature, StringComparer.Ordinal)
+					.ToList ()
+			));
 		}
 
 		return (entries, methodsByJavaName);
@@ -298,8 +371,9 @@ public class ScannerComparisonTests : IDisposable
 	}
 
 	/// <summary>
-	/// Verifies the new scanner discovers the EXACT same set of marshal methods
-	/// (JNI name + signature) per type as reading [Register] attributes via Cecil.
+	/// Verifies the new scanner discovers the EXACT same set of managed types per JNI name
+	/// and the EXACT same marshal methods per managed type as the legacy scanner.
+	/// Multiple managed types can map to the same JNI name (aliases).
 	/// </summary>
 	[SkippableFact]
 	public void ExactMarshalMethods_MonoAndroid ()
@@ -310,8 +384,12 @@ public class ScannerComparisonTests : IDisposable
 		var (_, legacyMethods) = RunLegacyScanner (assemblyPath);
 		var (_, newMethods) = RunNewScanner (assemblyPath);
 
-		output.WriteLine ($"Legacy: {legacyMethods.Count} types with methods, New: {newMethods.Count} types with methods");
-		output.WriteLine ($"Legacy total methods: {legacyMethods.Values.Sum (m => m.Count)}, New total methods: {newMethods.Values.Sum (m => m.Count)}");
+		var legacyTypeCount = legacyMethods.Values.Sum (g => g.Count);
+		var newTypeCount = newMethods.Values.Sum (g => g.Count);
+		var legacyMethodCount = legacyMethods.Values.Sum (g => g.Sum (t => t.Methods.Count));
+		var newMethodCount = newMethods.Values.Sum (g => g.Sum (t => t.Methods.Count));
+		output.WriteLine ($"Legacy: {legacyTypeCount} type groups across {legacyMethods.Count} JNI names, {legacyMethodCount} total methods");
+		output.WriteLine ($"New:    {newTypeCount} type groups across {newMethods.Count} JNI names, {newMethodCount} total methods");
 
 		var allJavaNames = new HashSet<string> (legacyMethods.Keys);
 		allJavaNames.UnionWith (newMethods.Keys);
@@ -323,93 +401,102 @@ public class ScannerComparisonTests : IDisposable
 		var connectorMismatches = new List<string> ();
 
 		foreach (var javaName in allJavaNames.OrderBy (n => n)) {
-			var inLegacy = legacyMethods.TryGetValue (javaName, out var legacyMethodList);
-			var inNew = newMethods.TryGetValue (javaName, out var newMethodList);
+			var inLegacy = legacyMethods.TryGetValue (javaName, out var legacyGroups);
+			var inNew = newMethods.TryGetValue (javaName, out var newGroups);
 
 			if (inLegacy && !inNew) {
-				missingTypes.Add ($"{javaName} ({legacyMethodList!.Count} methods)");
+				foreach (var g in legacyGroups!) {
+					missingTypes.Add ($"{javaName} → {g.ManagedName} ({g.Methods.Count} methods)");
+				}
 				continue;
 			}
 
 			if (!inLegacy && inNew) {
-				extraTypes.Add ($"{javaName} ({newMethodList!.Count} methods)");
+				foreach (var g in newGroups!) {
+					extraTypes.Add ($"{javaName} → {g.ManagedName} ({g.Methods.Count} methods)");
+				}
 				continue;
 			}
 
-			// Both have this type — compare method sets
-			var legacySet = new HashSet<(string name, string sig)> (
-				legacyMethodList!.Select (m => (m.JniName, m.JniSignature))
-			);
-			var newSet = new HashSet<(string name, string sig)> (
-				newMethodList!.Select (m => (m.JniName, m.JniSignature))
-			);
+			// Both scanners found this JNI name — compare managed types within it
+			var legacyByManaged = legacyGroups!.ToDictionary (g => g.ManagedName, g => g.Methods);
+			var newByManaged = newGroups!.ToDictionary (g => g.ManagedName, g => g.Methods);
 
-			foreach (var m in legacySet.Except (newSet)) {
-				missingMethods.Add ($"{javaName}: {m.name}{m.sig}");
+			foreach (var managedName in legacyByManaged.Keys.Except (newByManaged.Keys)) {
+				missingTypes.Add ($"{javaName} → {managedName} ({legacyByManaged [managedName].Count} methods)");
 			}
 
-			foreach (var m in newSet.Except (legacySet)) {
-				extraMethods.Add ($"{javaName}: {m.name}{m.sig}");
+			foreach (var managedName in newByManaged.Keys.Except (legacyByManaged.Keys)) {
+				extraTypes.Add ($"{javaName} → {managedName} ({newByManaged [managedName].Count} methods)");
 			}
 
-			// For methods in both, compare connector strings
-			var legacyByKey = legacyMethodList!
-				.GroupBy (m => (m.JniName, m.JniSignature))
-				.ToDictionary (g => g.Key, g => g.First ());
-			var newByKey = newMethodList!
-				.GroupBy (m => (m.JniName, m.JniSignature))
-				.ToDictionary (g => g.Key, g => g.First ());
+			// For managed types present in both, compare their method sets
+			foreach (var managedName in legacyByManaged.Keys.Intersect (newByManaged.Keys)) {
+				var legacyMethodList = legacyByManaged [managedName];
+				var newMethodList = newByManaged [managedName];
 
-			foreach (var key in legacyByKey.Keys.Intersect (newByKey.Keys)) {
-				var lc = legacyByKey [key].Connector ?? "";
-				var nc = newByKey [key].Connector ?? "";
-				if (lc != nc) {
-					connectorMismatches.Add ($"{javaName}: {key.JniName}{key.JniSignature} legacy='{lc}' new='{nc}'");
+				var legacySet = new HashSet<(string name, string sig)> (
+					legacyMethodList.Select (m => (m.JniName, m.JniSignature))
+				);
+				var newSet = new HashSet<(string name, string sig)> (
+					newMethodList.Select (m => (m.JniName, m.JniSignature))
+				);
+
+				foreach (var m in legacySet.Except (newSet)) {
+					missingMethods.Add ($"{javaName} [{managedName}]: {m.name}{m.sig}");
+				}
+
+				foreach (var m in newSet.Except (legacySet)) {
+					extraMethods.Add ($"{javaName} [{managedName}]: {m.name}{m.sig}");
+				}
+
+				// For methods in both, compare connector strings
+				var legacyByKey = legacyMethodList
+					.GroupBy (m => (m.JniName, m.JniSignature))
+					.ToDictionary (g => g.Key, g => g.First ());
+				var newByKey = newMethodList
+					.GroupBy (m => (m.JniName, m.JniSignature))
+					.ToDictionary (g => g.Key, g => g.First ());
+
+				foreach (var key in legacyByKey.Keys.Intersect (newByKey.Keys)) {
+					var lc = legacyByKey [key].Connector ?? "";
+					var nc = newByKey [key].Connector ?? "";
+					if (lc != nc) {
+						connectorMismatches.Add ($"{javaName} [{managedName}]: {key.JniName}{key.JniSignature} legacy='{lc}' new='{nc}'");
+					}
 				}
 			}
 		}
 
 		// Log all differences
 		if (missingTypes.Count > 0) {
-			output.WriteLine ($"\n--- TYPES WITH METHODS MISSING from new scanner ({missingTypes.Count}) ---");
-			foreach (var m in missingTypes.Take (20)) output.WriteLine ($"  {m}");
-			if (missingTypes.Count > 20) output.WriteLine ($"  ... and {missingTypes.Count - 20} more");
+			output.WriteLine ($"\n--- MANAGED TYPES MISSING from new scanner ({missingTypes.Count}) ---");
+			foreach (var m in missingTypes) output.WriteLine ($"  {m}");
 		}
 		if (extraTypes.Count > 0) {
-			output.WriteLine ($"\n--- TYPES WITH METHODS EXTRA in new scanner ({extraTypes.Count}) ---");
-			foreach (var e in extraTypes.Take (20)) output.WriteLine ($"  {e}");
-			if (extraTypes.Count > 20) output.WriteLine ($"  ... and {extraTypes.Count - 20} more");
+			output.WriteLine ($"\n--- MANAGED TYPES EXTRA in new scanner ({extraTypes.Count}) ---");
+			foreach (var e in extraTypes) output.WriteLine ($"  {e}");
 		}
 		if (missingMethods.Count > 0) {
 			output.WriteLine ($"\n--- METHODS MISSING from new scanner ({missingMethods.Count}) ---");
-			foreach (var m in missingMethods.Take (30)) output.WriteLine ($"  {m}");
-			if (missingMethods.Count > 30) output.WriteLine ($"  ... and {missingMethods.Count - 30} more");
+			foreach (var m in missingMethods) output.WriteLine ($"  {m}");
 		}
 		if (extraMethods.Count > 0) {
 			output.WriteLine ($"\n--- METHODS EXTRA in new scanner ({extraMethods.Count}) ---");
-			foreach (var e in extraMethods.Take (30)) output.WriteLine ($"  {e}");
-			if (extraMethods.Count > 30) output.WriteLine ($"  ... and {extraMethods.Count - 30} more");
+			foreach (var e in extraMethods) output.WriteLine ($"  {e}");
 		}
 		if (connectorMismatches.Count > 0) {
 			output.WriteLine ($"\n--- CONNECTOR MISMATCHES ({connectorMismatches.Count}) ---");
-			foreach (var m in connectorMismatches.Take (30)) output.WriteLine ($"  {m}");
-			if (connectorMismatches.Count > 30) output.WriteLine ($"  ... and {connectorMismatches.Count - 30} more");
+			foreach (var m in connectorMismatches) output.WriteLine ($"  {m}");
 		}
 
-		// Known differences exist between the two scanners for generic types and interface
-		// property connectors. Assert tight bounds so regressions are caught, while allowing
-		// for the known gaps that will be addressed in follow-up work.
-		// Total methods: legacy ~55472, new ~55442 → difference ~30 out of ~55000 (0.05%)
-		Assert.True (missingTypes.Count <= 1,
-			$"Expected ≤1 missing type, got {missingTypes.Count}:\n  {string.Join ("\n  ", missingTypes)}");
-		Assert.True (extraTypes.Count == 0,
-			$"Expected 0 extra types, got {extraTypes.Count}:\n  {string.Join ("\n  ", extraTypes)}");
-		Assert.True (missingMethods.Count <= 80,
-			$"Expected ≤80 missing methods (generic type gaps), got {missingMethods.Count}");
-		Assert.True (extraMethods.Count <= 55,
-			$"Expected ≤55 extra methods (generic type gaps), got {extraMethods.Count}");
-		Assert.True (connectorMismatches.Count <= 20,
-			$"Expected ≤20 connector mismatches (interface property connectors), got {connectorMismatches.Count}");
+		// All five categories must be empty — the new scanner should find the exact
+		// same managed types and methods per JNI name as the legacy scanner.
+		Assert.Empty (missingTypes);
+		Assert.Empty (extraTypes);
+		Assert.Empty (missingMethods);
+		Assert.Empty (extraMethods);
+		Assert.Empty (connectorMismatches);
 	}
 
 	[SkippableFact]
