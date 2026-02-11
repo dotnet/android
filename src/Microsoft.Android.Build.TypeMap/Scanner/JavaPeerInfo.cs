@@ -173,20 +173,6 @@ sealed class MarshalMethodInfo
 	public string DeclaringAssemblyName { get; }
 
 	/// <summary>
-	/// Full name of the type that contains the native callback (n_*) method.
-	/// Parsed from the connector string. This is the type the UCO wrapper calls into.
-	/// For [Register("name", "sig", "GetNameHandler")], this is the type declaring GetNameHandler.
-	/// Null if the callback is on the same type as the declaring type.
-	/// </summary>
-	public string? CallbackTypeName { get; }
-
-	/// <summary>
-	/// Assembly name of the callback type.
-	/// Null if same as DeclaringAssemblyName.
-	/// </summary>
-	public string? CallbackAssemblyName { get; }
-
-	/// <summary>
 	/// The native callback method name, e.g., "n_onCreate".
 	/// This is the actual method the UCO wrapper delegates to.
 	/// </summary>
@@ -227,8 +213,6 @@ sealed class MarshalMethodInfo
 		string managedMethodName,
 		string declaringTypeName,
 		string declaringAssemblyName,
-		string? callbackTypeName,
-		string? callbackAssemblyName,
 		string nativeCallbackName,
 		IReadOnlyList<JniParameterInfo> parameters,
 		string jniReturnType,
@@ -242,8 +226,6 @@ sealed class MarshalMethodInfo
 		ManagedMethodName = managedMethodName;
 		DeclaringTypeName = declaringTypeName;
 		DeclaringAssemblyName = declaringAssemblyName;
-		CallbackTypeName = callbackTypeName;
-		CallbackAssemblyName = callbackAssemblyName;
 		NativeCallbackName = nativeCallbackName;
 		Parameters = parameters;
 		JniReturnType = jniReturnType;
