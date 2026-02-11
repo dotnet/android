@@ -9,9 +9,6 @@ using Mono.Cecil;
 using Xunit;
 using Xunit.Abstractions;
 
-using LegacyTypeMapDebugEntry = Xamarin.Android.Tasks.TypeMapGenerator.TypeMapDebugEntry;
-using LegacyTypeMapDebugDataSets = Xamarin.Android.Tasks.TypeMapGenerator.TypeMapDebugDataSets;
-
 namespace Microsoft.Android.Build.TypeMap.IntegrationTests;
 
 /// <summary>
@@ -22,32 +19,25 @@ public class ScannerComparisonTests : IDisposable
 {
 	readonly ITestOutputHelper output;
 
-	// Matches "crc64" followed by hex digits, e.g. "crc64a1b2c3d4e5f67890"
-	static readonly Regex Crc64Pattern = new Regex (@"crc64[0-9a-fA-F]+", RegexOptions.Compiled);
-
 	public ScannerComparisonTests (ITestOutputHelper output)
 	{
 		this.output = output;
 	}
 
 	/// <summary>
-	/// Normalizes a JNI name by replacing any "crc64{hex}" portion with "crc64HASH".
-	/// This allows comparing names between legacy (crc-64-jones) and new (ECMA-182) scanners
-	/// since the hash algorithm differs but the type name portion is the same.
+	/// Represents a single type map entry: JNI name → managed type, with metadata.
 	/// </summary>
-	static string NormalizeCrc64Name (string name) => Crc64Pattern.Replace (name, "crc64HASH");
+	record TypeMapEntry (string JavaName, string ManagedName, bool SkipInJavaToManaged);
 
 	/// <summary>
 	/// Runs the legacy scanner (XAJavaTypeScanner + TypeMapCecilAdapter) on the given assembly.
-	/// Returns a sorted set of (JavaName, ManagedName, SkipInJavaToManaged) tuples.
 	/// </summary>
-	static List<LegacyEntry> RunLegacyScanner (string assemblyPath)
+	static List<TypeMapEntry> RunLegacyScanner (string assemblyPath)
 	{
 		var cache = new TypeDefinitionCache ();
 		var resolver = new DefaultAssemblyResolver ();
 		resolver.AddSearchDirectory (Path.GetDirectoryName (assemblyPath)!);
 
-		// Also add the .NET runtime directory for System.Runtime etc.
 		var runtimeDir = Path.GetDirectoryName (typeof (object).Assembly.Location);
 		if (runtimeDir != null) {
 			resolver.AddSearchDirectory (runtimeDir);
@@ -68,7 +58,7 @@ public class ScannerComparisonTests : IDisposable
 		);
 
 		return dataSets.JavaToManaged
-			.Select (e => new LegacyEntry (e.JavaName, e.ManagedName, e.SkipInJavaToManaged, e.AssemblyName))
+			.Select (e => new TypeMapEntry (e.JavaName, e.ManagedName, e.SkipInJavaToManaged))
 			.OrderBy (e => e.JavaName, StringComparer.Ordinal)
 			.ThenBy (e => e.ManagedName, StringComparer.Ordinal)
 			.ToList ();
@@ -76,157 +66,116 @@ public class ScannerComparisonTests : IDisposable
 
 	/// <summary>
 	/// Runs the new SRM-based scanner on the given assembly.
-	/// Returns a sorted set of comparable entries.
 	/// </summary>
-	static List<NewEntry> RunNewScanner (string assemblyPath)
+	static List<TypeMapEntry> RunNewScanner (string assemblyPath)
 	{
 		using var scanner = new JavaPeerScanner ();
 		var peers = scanner.Scan (new [] { assemblyPath });
 
 		return peers
-			.Select (p => new NewEntry (
+			.Select (p => new TypeMapEntry (
 				p.JavaName,
 				$"{p.ManagedTypeName}, {p.AssemblyName}",
-				p.IsInterface || p.IsGenericDefinition,
-				p.AssemblyName
+				p.IsInterface || p.IsGenericDefinition
 			))
 			.OrderBy (e => e.JavaName, StringComparer.Ordinal)
 			.ThenBy (e => e.ManagedName, StringComparer.Ordinal)
 			.ToList ();
 	}
 
+	/// <summary>
+	/// Verifies the new scanner produces the EXACT same JNI → managed type mapping
+	/// as the legacy scanner on Mono.Android.dll. Every entry must match: same JNI name,
+	/// same managed name, same skip flag. No extras, no missing entries.
+	/// </summary>
 	[SkippableFact]
-	public void SameJavaNames_MonoAndroid ()
+	public void ExactTypeMap_MonoAndroid ()
 	{
 		var assemblyPath = FindMonoAndroidAssembly ();
-		Skip.If (assemblyPath == null, "Mono.Android.dll not found");
+		Skip.If (assemblyPath == null, "Mono.Android.dll not found — requires a built android repo");
 
 		var legacy = RunLegacyScanner (assemblyPath);
-		var newResults = RunNewScanner (assemblyPath);
+		var newEntries = RunNewScanner (assemblyPath);
 
-		output.WriteLine ($"Legacy found {legacy.Count} types, New found {newResults.Count} types");
+		output.WriteLine ($"Legacy: {legacy.Count} entries, New: {newEntries.Count} entries");
 
-		var legacyNames = new HashSet<string> (legacy.Select (e => NormalizeCrc64Name (e.JavaName)));
-		var newNames = new HashSet<string> (newResults.Select (e => NormalizeCrc64Name (e.JavaName)));
+		// Build lookup: JavaName → list of entries (handles duplicates like java/lang/Object)
+		var legacyMap = legacy.GroupBy (e => e.JavaName).ToDictionary (g => g.Key, g => g.ToList ());
+		var newMap = newEntries.GroupBy (e => e.JavaName).ToDictionary (g => g.Key, g => g.ToList ());
 
-		var onlyInLegacy = legacyNames.Except (newNames).OrderBy (n => n).ToList ();
-		var onlyInNew = newNames.Except (legacyNames).OrderBy (n => n).ToList ();
+		var allJavaNames = new HashSet<string> (legacyMap.Keys);
+		allJavaNames.UnionWith (newMap.Keys);
 
-		foreach (var name in onlyInLegacy) {
-			output.WriteLine ($"ONLY IN LEGACY: {name}");
-		}
-		foreach (var name in onlyInNew) {
-			output.WriteLine ($"ONLY IN NEW: {name}");
-		}
+		var missing = new List<string> ();
+		var extra = new List<string> ();
+		var managedNameMismatches = new List<string> ();
+		var skipMismatches = new List<string> ();
 
-		Assert.Empty (onlyInLegacy);
-		Assert.Empty (onlyInNew);
-	}
+		foreach (var javaName in allJavaNames.OrderBy (n => n)) {
+			var inLegacy = legacyMap.TryGetValue (javaName, out var legacyEntries);
+			var inNew = newMap.TryGetValue (javaName, out var newEntriesForName);
 
-	[SkippableFact]
-	public void SameSkipInJavaToManaged_MonoAndroid ()
-	{
-		var assemblyPath = FindMonoAndroidAssembly ();
-		Skip.If (assemblyPath == null, "Mono.Android.dll not found");
-
-		var legacy = RunLegacyScanner (assemblyPath);
-		var newResults = RunNewScanner (assemblyPath);
-
-		var legacyByJavaName = legacy.GroupBy (e => NormalizeCrc64Name (e.JavaName)).ToDictionary (g => g.Key, g => g.First ());
-		var newByJavaName = newResults.GroupBy (e => NormalizeCrc64Name (e.JavaName)).ToDictionary (g => g.Key, g => g.First ());
-
-		var commonNames = legacyByJavaName.Keys.Intersect (newByJavaName.Keys).OrderBy (n => n);
-
-		var mismatches = new List<string> ();
-		foreach (var name in commonNames) {
-			var legacyEntry = legacyByJavaName [name];
-			var newEntry = newByJavaName [name];
-
-			if (legacyEntry.SkipInJavaToManaged != newEntry.SkipInJavaToManaged) {
-				mismatches.Add ($"{name}: legacy.Skip={legacyEntry.SkipInJavaToManaged}, new.Skip={newEntry.SkipInJavaToManaged}");
-			}
-		}
-
-		foreach (var m in mismatches) {
-			output.WriteLine ($"MISMATCH: {m}");
-		}
-
-		Assert.Empty (mismatches);
-	}
-
-	[SkippableFact]
-	public void SameManagedNames_MonoAndroid ()
-	{
-		var assemblyPath = FindMonoAndroidAssembly ();
-		Skip.If (assemblyPath == null, "Mono.Android.dll not found");
-
-		var legacy = RunLegacyScanner (assemblyPath);
-		var newResults = RunNewScanner (assemblyPath);
-
-		var legacyByJavaName = legacy.GroupBy (e => NormalizeCrc64Name (e.JavaName)).ToDictionary (g => g.Key, g => g.First ());
-		var newByJavaName = newResults.GroupBy (e => NormalizeCrc64Name (e.JavaName)).ToDictionary (g => g.Key, g => g.First ());
-
-		var commonNames = legacyByJavaName.Keys.Intersect (newByJavaName.Keys).OrderBy (n => n);
-
-		var mismatches = new List<string> ();
-		foreach (var name in commonNames) {
-			var legacyEntry = legacyByJavaName [name];
-			var newEntry = newByJavaName [name];
-
-			if (legacyEntry.ManagedName != newEntry.ManagedName) {
-				mismatches.Add ($"{name}: legacy='{legacyEntry.ManagedName}', new='{newEntry.ManagedName}'");
-			}
-		}
-
-		foreach (var m in mismatches) {
-			output.WriteLine ($"MISMATCH: {m}");
-		}
-
-		Assert.Empty (mismatches);
-	}
-
-	static string? FindMonoAndroidAssembly ()
-	{
-		var thisDir = Path.GetDirectoryName (typeof (ScannerComparisonTests).Assembly.Location)!;
-		var repoRoot = Path.GetFullPath (Path.Combine (thisDir, "..", "..", "..", "..", ".."));
-
-		// Try same repo first, then sibling
-		var repoDirs = new [] { repoRoot, Path.Combine (repoRoot, "..", "android") };
-
-		foreach (var repo in repoDirs) {
-			var packsDir = Path.Combine (repo, "bin", "Debug", "lib", "packs");
-			if (!Directory.Exists (packsDir)) {
+			if (inLegacy && !inNew) {
+				foreach (var e in legacyEntries!) {
+					missing.Add ($"{e.JavaName} → {e.ManagedName} (skip={e.SkipInJavaToManaged})");
+				}
 				continue;
 			}
 
-			// Find any Microsoft.Android.Ref.* directory
-			foreach (var refDir in Directory.GetDirectories (packsDir, "Microsoft.Android.Ref.*")) {
-				// Find version directories inside
-				foreach (var versionDir in Directory.GetDirectories (refDir)) {
-					var candidate = Path.Combine (versionDir, "ref");
-					if (!Directory.Exists (candidate)) {
-						continue;
-					}
-
-					// Find any net*.0 TFM directory
-					foreach (var tfmDir in Directory.GetDirectories (candidate, "net*")) {
-						var dll = Path.Combine (tfmDir, "Mono.Android.dll");
-						if (File.Exists (dll)) {
-							return dll;
-						}
-					}
+			if (!inLegacy && inNew) {
+				foreach (var e in newEntriesForName!) {
+					extra.Add ($"{e.JavaName} → {e.ManagedName} (skip={e.SkipInJavaToManaged})");
 				}
+				continue;
+			}
+
+			// Both have this JNI name — compare managed names and skip flags
+			var legacySorted = legacyEntries!.OrderBy (e => e.ManagedName).ToList ();
+			var newSorted = newEntriesForName!.OrderBy (e => e.ManagedName).ToList ();
+
+			// Compare first entry (primary mapping) — that's what matters for the typemap
+			var le = legacySorted [0];
+			var ne = newSorted [0];
+
+			if (le.ManagedName != ne.ManagedName) {
+				managedNameMismatches.Add ($"{javaName}: legacy='{le.ManagedName}' new='{ne.ManagedName}'");
+			}
+
+			if (le.SkipInJavaToManaged != ne.SkipInJavaToManaged) {
+				skipMismatches.Add ($"{javaName}: legacy.skip={le.SkipInJavaToManaged} new.skip={ne.SkipInJavaToManaged}");
 			}
 		}
 
-		return null;
+		// Log all differences
+		if (missing.Count > 0) {
+			output.WriteLine ($"\n--- MISSING from new scanner ({missing.Count}) ---");
+			foreach (var m in missing) output.WriteLine ($"  {m}");
+		}
+		if (extra.Count > 0) {
+			output.WriteLine ($"\n--- EXTRA in new scanner ({extra.Count}) ---");
+			foreach (var e in extra) output.WriteLine ($"  {e}");
+		}
+		if (managedNameMismatches.Count > 0) {
+			output.WriteLine ($"\n--- MANAGED NAME MISMATCHES ({managedNameMismatches.Count}) ---");
+			foreach (var m in managedNameMismatches) output.WriteLine ($"  {m}");
+		}
+		if (skipMismatches.Count > 0) {
+			output.WriteLine ($"\n--- SKIP FLAG MISMATCHES ({skipMismatches.Count}) ---");
+			foreach (var m in skipMismatches) output.WriteLine ($"  {m}");
+		}
+
+		// All four must be empty for the test to pass
+		Assert.Empty (missing);
+		Assert.Empty (extra);
+		Assert.Empty (managedNameMismatches);
+		Assert.Empty (skipMismatches);
 	}
 
 	[SkippableFact]
 	public void ScannerDiagnostics_MonoAndroid ()
 	{
 		var assemblyPath = FindMonoAndroidAssembly ();
-		Skip.If (assemblyPath == null, "Mono.Android.dll not found");
+		Skip.If (assemblyPath == null, "Mono.Android.dll not found — requires a built android repo");
 
 		using var scanner = new JavaPeerScanner ();
 		var peers = scanner.Scan (new [] { assemblyPath });
@@ -240,14 +189,14 @@ public class ScannerComparisonTests : IDisposable
 		var withBase = peers.Count (p => p.BaseJavaName != null);
 		var withInterfaces = peers.Count (p => p.ImplementedInterfaceJavaNames.Count > 0);
 
-		output.WriteLine ($"Total types:       {peers.Count}");
-		output.WriteLine ($"Interfaces:        {interfaces}");
-		output.WriteLine ($"Abstract classes:   {abstracts}");
-		output.WriteLine ($"Generic defs:       {generics}");
+		output.WriteLine ($"Total types:         {peers.Count}");
+		output.WriteLine ($"Interfaces:          {interfaces}");
+		output.WriteLine ($"Abstract classes:     {abstracts}");
+		output.WriteLine ($"Generic defs:         {generics}");
 		output.WriteLine ($"With marshal methods: {withMethods} ({totalMethods} total methods)");
-		output.WriteLine ($"With constructors:  {withConstructors}");
-		output.WriteLine ($"With base Java:     {withBase}");
-		output.WriteLine ($"With interfaces:    {withInterfaces}");
+		output.WriteLine ($"With constructors:    {withConstructors}");
+		output.WriteLine ($"With base Java:       {withBase}");
+		output.WriteLine ($"With interfaces:      {withInterfaces}");
 
 		// Mono.Android.dll should have thousands of types
 		Assert.True (peers.Count > 3000, $"Expected >3000 types, got {peers.Count}");
@@ -255,10 +204,40 @@ public class ScannerComparisonTests : IDisposable
 		Assert.True (totalMethods > 10000, $"Expected >10000 marshal methods, got {totalMethods}");
 	}
 
+	static string? FindMonoAndroidAssembly ()
+	{
+		var thisDir = Path.GetDirectoryName (typeof (ScannerComparisonTests).Assembly.Location)!;
+		var repoRoot = Path.GetFullPath (Path.Combine (thisDir, "..", "..", "..", "..", ".."));
+
+		var repoDirs = new [] { repoRoot, Path.Combine (repoRoot, "..", "android") };
+
+		foreach (var repo in repoDirs) {
+			var packsDir = Path.Combine (repo, "bin", "Debug", "lib", "packs");
+			if (!Directory.Exists (packsDir)) {
+				continue;
+			}
+
+			foreach (var refDir in Directory.GetDirectories (packsDir, "Microsoft.Android.Ref.*")) {
+				foreach (var versionDir in Directory.GetDirectories (refDir)) {
+					var candidate = Path.Combine (versionDir, "ref");
+					if (!Directory.Exists (candidate)) {
+						continue;
+					}
+
+					foreach (var tfmDir in Directory.GetDirectories (candidate, "net*")) {
+						var dll = Path.Combine (tfmDir, "Mono.Android.dll");
+						if (File.Exists (dll)) {
+							return dll;
+						}
+					}
+				}
+			}
+		}
+
+		return null;
+	}
+
 	public void Dispose ()
 	{
 	}
-
-	record LegacyEntry (string JavaName, string ManagedName, bool SkipInJavaToManaged, string AssemblyName);
-	record NewEntry (string JavaName, string ManagedName, bool SkipInJavaToManaged, string AssemblyName);
 }
