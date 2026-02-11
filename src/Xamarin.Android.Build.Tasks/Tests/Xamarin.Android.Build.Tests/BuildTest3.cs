@@ -26,22 +26,31 @@ public partial class BuildTest3 : BaseTest
 	const uint ExpectedJniPreloadIndexStride = 4;
 
 	[Test]
-	public void NativeLibraryJniPreload_IgnoreAllJniPreload_PreserveRequired ([Values] AndroidRuntime runtime)
+	public void NativeLibraryJniPreload_IgnoreAll_PreservesRequired ([Values] AndroidRuntime runtime)
 	{
 		const int ExpectedEntryCount = 4; // stride * number_of_libs
 
-		List<EnvironmentHelper.JniPreloads>? allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (runtime);
-		if (allPreloads == null) {
-			return;
-		}
+		List<EnvironmentHelper.JniPreloads>? allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
+			runtime,
+			(XamarinAndroidApplicationProject proj) => {
+				proj.SetProperty ("AndroidIgnoreAllJniPreload", "true");
+			}
+		);
+
+		NativeLibraryJniPreload_VerifyDefaults (allPreloads);
 	}
 
 	[Test]
 	public void NativeLibraryJniPreload_DefaultsWork ([Values] AndroidRuntime runtime)
 	{
+		List<EnvironmentHelper.JniPreloads>? allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (runtime);
+		NativeLibraryJniPreload_VerifyDefaults (allPreloads);
+	}
+
+	void NativeLibraryJniPreload_VerifyDefaults (List<EnvironmentHelper.JniPreloads>? allPreloads)
+	{
 		const int ExpectedEntryCount = 4; // stride * number_of_libs
 
-		List<EnvironmentHelper.JniPreloads>? allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (runtime);
 		if (allPreloads == null) {
 			return;
 		}
@@ -74,7 +83,7 @@ public partial class BuildTest3 : BaseTest
 		}
 	}
 
-	List<EnvironmentHelper.JniPreloads>? NativeLibraryJniPreload_CommonInitAndGetPreloads (AndroidRuntime runtime)
+	List<EnvironmentHelper.JniPreloads>? NativeLibraryJniPreload_CommonInitAndGetPreloads (AndroidRuntime runtime, Action<XamarinAndroidApplicationProject>? configureProject = null)
 	{
 		const bool isRelease = true;
 		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -95,6 +104,7 @@ public partial class BuildTest3 : BaseTest
 		};
 		proj.SetRuntime (runtime);
 		proj.SetRuntimeIdentifiers (supportedArches);
+		configureProject?.Invoke (proj);
 
 		using var builder = CreateApkBuilder ();
 		Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
