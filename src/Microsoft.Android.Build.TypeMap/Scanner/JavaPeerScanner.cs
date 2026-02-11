@@ -113,24 +113,24 @@ sealed class JavaPeerScanner : IDisposable
 				invokerTypeName = TryFindInvokerTypeName (fullName, typeHandle, index);
 			}
 
-			var peer = new JavaPeerInfo (
-				javaName: jniName,
-				managedTypeName: fullName,
-				managedTypeNamespace: ns,
-				managedTypeShortName: shortName,
-				assemblyName: index.AssemblyName,
-				baseJavaName: baseJavaName,
-				implementedInterfaceJavaNames: implementedInterfaces,
-				isInterface: isInterface,
-				isAbstract: isAbstract,
-				doNotGenerateAcw: doNotGenerateAcw,
-				isUnconditional: isUnconditional,
-				marshalMethods: marshalMethods,
-				javaConstructors: javaConstructors,
-				activationCtor: activationCtor,
-				invokerTypeName: invokerTypeName,
-				isGenericDefinition: isGenericDefinition
-			);
+			var peer = new JavaPeerInfo {
+				JavaName = jniName,
+				ManagedTypeName = fullName,
+				ManagedTypeNamespace = ns,
+				ManagedTypeShortName = shortName,
+				AssemblyName = index.AssemblyName,
+				BaseJavaName = baseJavaName,
+				ImplementedInterfaceJavaNames = implementedInterfaces,
+				IsInterface = isInterface,
+				IsAbstract = isAbstract,
+				DoNotGenerateAcw = doNotGenerateAcw,
+				IsUnconditional = isUnconditional,
+				MarshalMethods = marshalMethods,
+				JavaConstructors = javaConstructors,
+				ActivationCtor = activationCtor,
+				InvokerTypeName = invokerTypeName,
+				IsGenericDefinition = isGenericDefinition,
+			};
 
 			results.Add (peer);
 		}
@@ -200,20 +200,20 @@ sealed class JavaPeerScanner : IDisposable
 		// The JNI name is the Java method name (without the n_ prefix)
 		string jniName = registerInfo.JniName;
 
-		methods.Add (new MarshalMethodInfo (
-			jniName: jniName,
-			jniSignature: registerInfo.Signature ?? "()V",
-			connector: registerInfo.Connector,
-			managedMethodName: methodName,
-			declaringTypeName: declaringTypeName,
-			declaringAssemblyName: index.AssemblyName,
-			nativeCallbackName: nativeCallbackName,
-			parameters: parameters,
-			jniReturnType: returnType,
-			isConstructor: isConstructor,
-			thrownNames: registerInfo.ThrownNames,
-			superArgumentsString: registerInfo.SuperArgumentsString
-		));
+		methods.Add (new MarshalMethodInfo {
+			JniName = jniName,
+			JniSignature = registerInfo.Signature ?? "()V",
+			Connector = registerInfo.Connector,
+			ManagedMethodName = methodName,
+			DeclaringTypeName = declaringTypeName,
+			DeclaringAssemblyName = index.AssemblyName,
+			NativeCallbackName = nativeCallbackName,
+			Parameters = parameters,
+			JniReturnType = returnType,
+			IsConstructor = isConstructor,
+			ThrownNames = registerInfo.ThrownNames,
+			SuperArgumentsString = registerInfo.SuperArgumentsString,
+		});
 	}
 
 	List<JavaConstructorInfo> CollectJavaConstructors (TypeDefinition typeDef, AssemblyIndex index)
@@ -235,11 +235,11 @@ sealed class JavaPeerScanner : IDisposable
 			var sig = methodRegister.Signature ?? "()V";
 			var (parameters, _) = ParseJniSignature (sig);
 
-			constructors.Add (new JavaConstructorInfo (
-				jniSignature: sig,
-				constructorIndex: constructors.Count,
-				parameters: parameters
-			));
+			constructors.Add (new JavaConstructorInfo {
+				JniSignature = sig,
+				ConstructorIndex = constructors.Count,
+				Parameters = parameters,
+			});
 		}
 
 		return constructors;
@@ -494,7 +494,7 @@ sealed class JavaPeerScanner : IDisposable
 		// Check this type's constructors
 		var ownCtor = FindActivationCtorOnType (typeDef, index);
 		if (ownCtor != null) {
-			var info = new ActivationCtorInfo (typeName, index.AssemblyName, ownCtor.Value);
+			var info = new ActivationCtorInfo { DeclaringTypeName = typeName, DeclaringAssemblyName = index.AssemblyName, Style = ownCtor.Value };
 			activationCtorCache [typeName] = info;
 			return info;
 		}
@@ -671,7 +671,7 @@ sealed class JavaPeerScanner : IDisposable
 		int i = 1;
 		while (i < signature.Length && signature [i] != ')') {
 			var (jniType, managedType, newIndex) = ParseJniType (signature, i);
-			parameters.Add (new JniParameterInfo (jniType, managedType));
+			parameters.Add (new JniParameterInfo { JniType = jniType, ManagedType = managedType });
 			i = newIndex;
 		}
 

@@ -14,49 +14,49 @@ sealed class JavaPeerInfo
 	/// JNI type name, e.g., "android/app/Activity".
 	/// Extracted from the [Register] attribute.
 	/// </summary>
-	public string JavaName { get; }
+	public string JavaName { get; set; } = "";
 
 	/// <summary>
 	/// Full managed type name, e.g., "Android.App.Activity".
 	/// </summary>
-	public string ManagedTypeName { get; }
+	public string ManagedTypeName { get; set; } = "";
 
 	/// <summary>
 	/// Managed type namespace, e.g., "Android.App".
 	/// </summary>
-	public string ManagedTypeNamespace { get; }
+	public string ManagedTypeNamespace { get; set; } = "";
 
 	/// <summary>
 	/// Managed type short name (without namespace), e.g., "Activity".
 	/// </summary>
-	public string ManagedTypeShortName { get; }
+	public string ManagedTypeShortName { get; set; } = "";
 
 	/// <summary>
 	/// Assembly name the type belongs to, e.g., "Mono.Android".
 	/// </summary>
-	public string AssemblyName { get; }
+	public string AssemblyName { get; set; } = "";
 
 	/// <summary>
 	/// JNI name of the base Java type, e.g., "android/app/Activity" for a type
 	/// that extends Activity. Null for java/lang/Object or types without a Java base.
 	/// Needed by JCW Java source generation ("extends" clause).
 	/// </summary>
-	public string? BaseJavaName { get; }
+	public string? BaseJavaName { get; set; }
 
 	/// <summary>
 	/// JNI names of Java interfaces this type implements, e.g., ["android/view/View$OnClickListener"].
 	/// Needed by JCW Java source generation ("implements" clause).
 	/// </summary>
-	public IReadOnlyList<string> ImplementedInterfaceJavaNames { get; }
+	public IReadOnlyList<string> ImplementedInterfaceJavaNames { get; set; } = Array.Empty<string> ();
 
-	public bool IsInterface { get; }
-	public bool IsAbstract { get; }
+	public bool IsInterface { get; set; }
+	public bool IsAbstract { get; set; }
 
 	/// <summary>
 	/// If true, this is a Managed Callable Wrapper (MCW) binding type.
 	/// No JCW or RegisterNatives will be generated for it.
 	/// </summary>
-	public bool DoNotGenerateAcw { get; }
+	public bool DoNotGenerateAcw { get; set; }
 
 	/// <summary>
 	/// Types with component attributes ([Activity], [Service], etc.),
@@ -69,67 +69,31 @@ sealed class JavaPeerInfo
 	/// Marshal methods: methods with [Register(name, sig, connector)] or [Export].
 	/// Ordered — the index in this list is the method's ordinal for RegisterNatives.
 	/// </summary>
-	public IReadOnlyList<MarshalMethodInfo> MarshalMethods { get; }
+	public IReadOnlyList<MarshalMethodInfo> MarshalMethods { get; set; } = Array.Empty<MarshalMethodInfo> ();
 
 	/// <summary>
 	/// Java constructors to emit in the JCW .java file.
 	/// Each has a JNI signature and an ordinal index for the nctor_N native method.
 	/// </summary>
-	public IReadOnlyList<JavaConstructorInfo> JavaConstructors { get; }
+	public IReadOnlyList<JavaConstructorInfo> JavaConstructors { get; set; } = Array.Empty<JavaConstructorInfo> ();
 
 	/// <summary>
 	/// Information about the activation constructor for this type.
 	/// May reference a base type's constructor if the type doesn't define its own.
 	/// </summary>
-	public ActivationCtorInfo? ActivationCtor { get; }
+	public ActivationCtorInfo? ActivationCtor { get; set; }
 
 	/// <summary>
 	/// For interfaces and abstract types, the name of the invoker type
 	/// used to instantiate instances from Java.
 	/// </summary>
-	public string? InvokerTypeName { get; }
+	public string? InvokerTypeName { get; set; }
 
 	/// <summary>
 	/// True if this is an open generic type definition.
 	/// Generic types get TypeMap entries but CreateInstance throws NotSupportedException.
 	/// </summary>
-	public bool IsGenericDefinition { get; }
-
-	public JavaPeerInfo (
-		string javaName,
-		string managedTypeName,
-		string managedTypeNamespace,
-		string managedTypeShortName,
-		string assemblyName,
-		string? baseJavaName,
-		IReadOnlyList<string> implementedInterfaceJavaNames,
-		bool isInterface,
-		bool isAbstract,
-		bool doNotGenerateAcw,
-		bool isUnconditional,
-		IReadOnlyList<MarshalMethodInfo> marshalMethods,
-		IReadOnlyList<JavaConstructorInfo> javaConstructors,
-		ActivationCtorInfo? activationCtor,
-		string? invokerTypeName,
-		bool isGenericDefinition)
-	{
-		JavaName = javaName;
-		ManagedTypeName = managedTypeName;
-		ManagedTypeNamespace = managedTypeNamespace;
-		ManagedTypeShortName = managedTypeShortName;
-		AssemblyName = assemblyName;
-		BaseJavaName = baseJavaName;
-		ImplementedInterfaceJavaNames = implementedInterfaceJavaNames;
-		IsInterface = isInterface;
-		IsAbstract = isAbstract;
-		DoNotGenerateAcw = doNotGenerateAcw;
-		IsUnconditional = isUnconditional;
-		MarshalMethods = marshalMethods;
-		JavaConstructors = javaConstructors;
-		ActivationCtor = activationCtor;
-		InvokerTypeName = invokerTypeName;
-		IsGenericDefinition = isGenericDefinition;
-	}
+	public bool IsGenericDefinition { get; set; }
 }
 
 /// <summary>
@@ -143,96 +107,68 @@ sealed class MarshalMethodInfo
 	/// JNI method name, e.g., "onCreate".
 	/// This is the Java method name (without n_ prefix).
 	/// </summary>
-	public string JniName { get; }
+	public string JniName { get; set; } = "";
 
 	/// <summary>
 	/// JNI method signature, e.g., "(Landroid/os/Bundle;)V".
 	/// </summary>
-	public string JniSignature { get; }
+	public string JniSignature { get; set; } = "";
 
 	/// <summary>
 	/// The connector string from [Register], e.g., "GetOnCreate_Landroid_os_Bundle_Handler".
 	/// Null for [Export] methods.
 	/// </summary>
-	public string? Connector { get; }
+	public string? Connector { get; set; }
 
 	/// <summary>
 	/// Full name of the managed method this marshal method maps to.
 	/// </summary>
-	public string ManagedMethodName { get; }
+	public string ManagedMethodName { get; set; } = "";
 
 	/// <summary>
 	/// Full name of the type that declares the managed method (may be a base type).
 	/// </summary>
-	public string DeclaringTypeName { get; }
+	public string DeclaringTypeName { get; set; } = "";
 
 	/// <summary>
 	/// Assembly name of the type that declares the managed method.
 	/// Needed for cross-assembly UCO wrapper generation.
 	/// </summary>
-	public string DeclaringAssemblyName { get; }
+	public string DeclaringAssemblyName { get; set; } = "";
 
 	/// <summary>
 	/// The native callback method name, e.g., "n_onCreate".
 	/// This is the actual method the UCO wrapper delegates to.
 	/// </summary>
-	public string NativeCallbackName { get; }
+	public string NativeCallbackName { get; set; } = "";
 
 	/// <summary>
 	/// JNI parameter types for UCO generation.
 	/// </summary>
-	public IReadOnlyList<JniParameterInfo> Parameters { get; }
+	public IReadOnlyList<JniParameterInfo> Parameters { get; set; } = Array.Empty<JniParameterInfo> ();
 
 	/// <summary>
 	/// JNI return type descriptor, e.g., "V", "Landroid/os/Bundle;".
 	/// </summary>
-	public string JniReturnType { get; }
+	public string JniReturnType { get; set; } = "";
 
 	/// <summary>
 	/// True if this is a constructor registration.
 	/// Constructor registrations use nctor_N naming and ActivateInstance.
 	/// </summary>
-	public bool IsConstructor { get; }
+	public bool IsConstructor { get; set; }
 
 	/// <summary>
 	/// For [Export] methods: Java exception types that the method declares it can throw.
 	/// Null for [Register] methods.
 	/// </summary>
-	public IReadOnlyList<string>? ThrownNames { get; }
+	public IReadOnlyList<string>? ThrownNames { get; set; }
 
 	/// <summary>
 	/// For [Export] methods: super constructor arguments string.
 	/// Null for [Register] methods.
 	/// </summary>
-	public string? SuperArgumentsString { get; }
-
-	public MarshalMethodInfo (
-		string jniName,
-		string jniSignature,
-		string? connector,
-		string managedMethodName,
-		string declaringTypeName,
-		string declaringAssemblyName,
-		string nativeCallbackName,
-		IReadOnlyList<JniParameterInfo> parameters,
-		string jniReturnType,
-		bool isConstructor,
-		IReadOnlyList<string>? thrownNames = null,
-		string? superArgumentsString = null)
-	{
-		JniName = jniName;
-		JniSignature = jniSignature;
-		Connector = connector;
-		ManagedMethodName = managedMethodName;
-		DeclaringTypeName = declaringTypeName;
-		DeclaringAssemblyName = declaringAssemblyName;
-		NativeCallbackName = nativeCallbackName;
-		Parameters = parameters;
-		JniReturnType = jniReturnType;
-		IsConstructor = isConstructor;
-		ThrownNames = thrownNames;
-		SuperArgumentsString = superArgumentsString;
-	}
+	public string? SuperArgumentsString { get; set; }
 }
 
 /// <summary>
@@ -243,18 +179,12 @@ sealed class JniParameterInfo
 	/// <summary>
 	/// JNI type descriptor, e.g., "Landroid/os/Bundle;", "I", "Z".
 	/// </summary>
-	public string JniType { get; }
+	public string JniType { get; set; } = "";
 
 	/// <summary>
 	/// Managed parameter type name, e.g., "Android.OS.Bundle", "System.Int32".
 	/// </summary>
-	public string ManagedType { get; }
-
-	public JniParameterInfo (string jniType, string managedType)
-	{
-		JniType = jniType;
-		ManagedType = managedType;
-	}
+	public string ManagedType { get; set; } = "";
 }
 
 /// <summary>
@@ -265,25 +195,18 @@ sealed class JavaConstructorInfo
 	/// <summary>
 	/// JNI constructor signature, e.g., "(Landroid/content/Context;)V".
 	/// </summary>
-	public string JniSignature { get; }
+	public string JniSignature { get; set; } = "";
 
 	/// <summary>
 	/// Ordinal index for the native constructor method (nctor_0, nctor_1, ...).
 	/// </summary>
-	public int ConstructorIndex { get; }
+	public int ConstructorIndex { get; set; }
 
 	/// <summary>
 	/// JNI parameter types parsed from the signature.
 	/// Used to generate the Java constructor parameter list.
 	/// </summary>
-	public IReadOnlyList<JniParameterInfo> Parameters { get; }
-
-	public JavaConstructorInfo (string jniSignature, int constructorIndex, IReadOnlyList<JniParameterInfo> parameters)
-	{
-		JniSignature = jniSignature;
-		ConstructorIndex = constructorIndex;
-		Parameters = parameters;
-	}
+	public IReadOnlyList<JniParameterInfo> Parameters { get; set; } = Array.Empty<JniParameterInfo> ();
 }
 
 /// <summary>
@@ -295,24 +218,17 @@ sealed class ActivationCtorInfo
 	/// The type that declares the activation constructor.
 	/// May be the type itself or a base type.
 	/// </summary>
-	public string DeclaringTypeName { get; }
+	public string DeclaringTypeName { get; set; } = "";
 
 	/// <summary>
 	/// The assembly containing the declaring type.
 	/// </summary>
-	public string DeclaringAssemblyName { get; }
+	public string DeclaringAssemblyName { get; set; } = "";
 
 	/// <summary>
 	/// The style of activation constructor found.
 	/// </summary>
-	public ActivationCtorStyle Style { get; }
-
-	public ActivationCtorInfo (string declaringTypeName, string declaringAssemblyName, ActivationCtorStyle style)
-	{
-		DeclaringTypeName = declaringTypeName;
-		DeclaringAssemblyName = declaringAssemblyName;
-		Style = style;
-	}
+	public ActivationCtorStyle Style { get; set; }
 }
 
 enum ActivationCtorStyle
