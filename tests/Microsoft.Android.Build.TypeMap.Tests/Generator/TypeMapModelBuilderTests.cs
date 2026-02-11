@@ -20,11 +20,12 @@ public class ModelBuilderTests
 		}
 	}
 
-	List<JavaPeerInfo> ScanFixtures ()
-	{
+	static readonly Lazy<List<JavaPeerInfo>> _cachedFixtures = new (() => {
 		using var scanner = new JavaPeerScanner ();
 		return scanner.Scan (new [] { TestFixtureAssemblyPath });
-	}
+	});
+
+	static List<JavaPeerInfo> ScanFixtures () => _cachedFixtures.Value;
 
 	TypeMapAssemblyData BuildModel (IReadOnlyList<JavaPeerInfo> peers, string? assemblyName = null)
 	{
@@ -82,8 +83,9 @@ public class ModelBuilderTests
 
 		var model = BuildModel (peers);
 		Assert.Equal (2, model.Entries.Count);
-		Assert.Equal ("java/lang/Object", model.Entries [0].JniName);
-		Assert.Equal ("android/app/Activity", model.Entries [1].JniName);
+		// Entries are ordered by JNI name (alphabetical)
+		Assert.Equal ("android/app/Activity", model.Entries [0].JniName);
+		Assert.Equal ("java/lang/Object", model.Entries [1].JniName);
 	}
 
 	[Fact]
@@ -495,7 +497,35 @@ public class ModelBuilderTests
 
 		var ctorReg = proxy.NativeRegistrations [1];
 		Assert.Equal ("nctor_0", ctorReg.JniMethodName);
+		Assert.Equal ("()V", ctorReg.JniSignature);
 		Assert.Equal ("nctor_0_uco", ctorReg.WrapperMethodName);
+	}
+
+	[Fact]
+	public void Build_NativeRegistrations_ParameterizedConstructor_HasCorrectJniSignature ()
+	{
+		var peer = MakeAcwPeer ("my/app/MyView", "MyApp.MyView", "App");
+		peer.JavaConstructors = new List<JavaConstructorInfo> {
+			new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V" },
+			new JavaConstructorInfo { ConstructorIndex = 1, JniSignature = "(Landroid/content/Context;)V",
+				Parameters = new List<JniParameterInfo> {
+					new JniParameterInfo { JniType = "Landroid/content/Context;" },
+				}
+			},
+		};
+		peer.MarshalMethods = new List<MarshalMethodInfo> {
+			MakeMarshalMethod ("<init>", "n_ctor", "()V", isConstructor: true),
+			MakeMarshalMethod ("<init>", "n_ctor", "(Landroid/content/Context;)V", isConstructor: true),
+		};
+
+		var model = BuildModel (new [] { peer });
+		var proxy = model.ProxyTypes [0];
+
+		var ctorRegs = proxy.NativeRegistrations.Where (r => r.JniMethodName.StartsWith ("nctor_")).ToList ();
+		Assert.Equal (2, ctorRegs.Count);
+
+		Assert.Equal ("()V", ctorRegs [0].JniSignature);
+		Assert.Equal ("(Landroid/content/Context;)V", ctorRegs [1].JniSignature);
 	}
 
 	[Fact]
@@ -682,7 +712,7 @@ public class ModelBuilderTests
 	// Fixture-based tests: scan the real TestFixtures.dll and verify model output
 	// ========================================================================
 
-	JavaPeerInfo FindFixtureByJavaName (string javaName)
+	static JavaPeerInfo FindFixtureByJavaName (string javaName)
 	{
 		var peers = ScanFixtures ();
 		var peer = peers.FirstOrDefault (p => p.JavaName == javaName);
@@ -690,12 +720,12 @@ public class ModelBuilderTests
 		return peer;
 	}
 
-	JavaPeerProxyData? FindProxy (TypeMapAssemblyData model, string proxyTypeName)
+	static JavaPeerProxyData? FindProxy (TypeMapAssemblyData model, string proxyTypeName)
 	{
 		return model.ProxyTypes.FirstOrDefault (p => p.TypeName == proxyTypeName);
 	}
 
-	TypeMapAttributeData? FindEntry (TypeMapAssemblyData model, string jniName)
+	static TypeMapAttributeData? FindEntry (TypeMapAssemblyData model, string jniName)
 	{
 		return model.Entries.FirstOrDefault (e => e.JniName == jniName);
 	}
@@ -962,9 +992,15 @@ public class ModelBuilderTests
 			Assert.Equal ("MyApp.CustomView", proxy.UcoConstructors [0].TargetType.ManagedTypeName);
 			Assert.Equal ("MyApp.CustomView", proxy.UcoConstructors [1].TargetType.ManagedTypeName);
 
-			// Constructor registrations
+			// Constructor JNI signatures should be propagated
+			Assert.Equal ("()V", proxy.UcoConstructors [0].JniSignature);
+			Assert.Equal ("(Landroid/content/Context;)V", proxy.UcoConstructors [1].JniSignature);
+
+			// Constructor registrations must use the actual JNI signatures
 			var ctorRegs = proxy.NativeRegistrations.Where (r => r.JniMethodName.StartsWith ("nctor_")).ToList ();
 			Assert.Equal (2, ctorRegs.Count);
+			Assert.Equal ("()V", ctorRegs [0].JniSignature);
+			Assert.Equal ("(Landroid/content/Context;)V", ctorRegs [1].JniSignature);
 		}
 	}
 
@@ -1282,5 +1318,149 @@ public class ModelBuilderTests
 			if (dir != null && Directory.Exists (dir))
 				try { Directory.Delete (dir, true); } catch { }
 		}
+	}
+
+	// ---- PE blob validation: 2-arg vs 3-arg TypeMap attributes ----
+
+	[Fact]
+	public void FullPipeline_EssentialType_Emits2ArgAttribute ()
+	{
+		// java/lang/Object is essential → unconditional 2-arg attribute
+		var peer = FindFixtureByJavaName ("java/lang/Object");
+		var model = BuildModel (new [] { peer }, "Blob2Arg");
+		Assert.Single (model.Entries);
+		Assert.True (model.Entries [0].IsUnconditional);
+
+		var outputPath = Path.Combine (Path.GetTempPath (), $"blob2arg-{Guid.NewGuid ():N}", "Blob2Arg.dll");
+		try {
+			var emitter = new TypeMapAssemblyEmitter ();
+			emitter.Emit (model, outputPath);
+
+			using var pe = new PEReader (File.OpenRead (outputPath));
+			var reader = pe.GetMetadataReader ();
+			var (jniName, proxyRef, targetRef) = ReadFirstTypeMapAttributeBlob (reader);
+
+			Assert.Equal ("java/lang/Object", jniName);
+			Assert.NotNull (proxyRef);
+			Assert.Contains ("java_lang_Object_Proxy", proxyRef!);
+			// 2-arg: no target type
+			Assert.Null (targetRef);
+		} finally {
+			CleanUpDir (outputPath);
+		}
+	}
+
+	[Fact]
+	public void FullPipeline_McwBinding_Emits3ArgAttribute ()
+	{
+		// android/app/Activity is MCW → trimmable 3-arg attribute
+		var peer = FindFixtureByJavaName ("android/app/Activity");
+		var model = BuildModel (new [] { peer }, "Blob3Arg");
+		Assert.Single (model.Entries);
+		Assert.False (model.Entries [0].IsUnconditional);
+
+		var outputPath = Path.Combine (Path.GetTempPath (), $"blob3arg-{Guid.NewGuid ():N}", "Blob3Arg.dll");
+		try {
+			var emitter = new TypeMapAssemblyEmitter ();
+			emitter.Emit (model, outputPath);
+
+			using var pe = new PEReader (File.OpenRead (outputPath));
+			var reader = pe.GetMetadataReader ();
+			var (jniName, proxyRef, targetRef) = ReadFirstTypeMapAttributeBlob (reader);
+
+			Assert.Equal ("android/app/Activity", jniName);
+			Assert.NotNull (proxyRef);
+			Assert.Contains ("android_app_Activity_Proxy", proxyRef!);
+			// 3-arg: has target type
+			Assert.NotNull (targetRef);
+			Assert.Contains ("Android.App.Activity", targetRef!);
+		} finally {
+			CleanUpDir (outputPath);
+		}
+	}
+
+	[Fact]
+	public void FullPipeline_UserAcw_Emits2ArgAttribute ()
+	{
+		// my/app/MainActivity is user ACW → unconditional 2-arg
+		var peer = FindFixtureByJavaName ("my/app/MainActivity");
+		var model = BuildModel (new [] { peer }, "BlobAcw");
+		Assert.Single (model.Entries);
+		Assert.True (model.Entries [0].IsUnconditional);
+
+		var outputPath = Path.Combine (Path.GetTempPath (), $"blobacw-{Guid.NewGuid ():N}", "BlobAcw.dll");
+		try {
+			var emitter = new TypeMapAssemblyEmitter ();
+			emitter.Emit (model, outputPath);
+
+			using var pe = new PEReader (File.OpenRead (outputPath));
+			var reader = pe.GetMetadataReader ();
+			var (jniName, proxyRef, targetRef) = ReadFirstTypeMapAttributeBlob (reader);
+
+			Assert.Equal ("my/app/MainActivity", jniName);
+			Assert.Null (targetRef); // unconditional → no target
+		} finally {
+			CleanUpDir (outputPath);
+		}
+	}
+
+	// ---- Determinism ----
+
+	[Fact]
+	public void Build_SameInput_ProducesDeterministicOutput ()
+	{
+		var peers = ScanFixtures ();
+
+		var model1 = BuildModel (peers, "DetTest");
+		var model2 = BuildModel (peers, "DetTest");
+
+		Assert.Equal (model1.Entries.Count, model2.Entries.Count);
+		for (int i = 0; i < model1.Entries.Count; i++) {
+			Assert.Equal (model1.Entries [i].JniName, model2.Entries [i].JniName);
+			Assert.Equal (model1.Entries [i].ProxyTypeReference, model2.Entries [i].ProxyTypeReference);
+			Assert.Equal (model1.Entries [i].TargetTypeReference, model2.Entries [i].TargetTypeReference);
+		}
+	}
+
+	// ---- Blob reading helpers ----
+
+	/// <summary>
+	/// Reads the first TypeMap assembly-level attribute blob and returns (jniName, proxyRef, targetRef).
+	/// targetRef is null for 2-arg attributes.
+	/// </summary>
+	static (string? jniName, string? proxyRef, string? targetRef) ReadFirstTypeMapAttributeBlob (MetadataReader reader)
+	{
+		var asmAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
+		foreach (var attrHandle in asmAttrs) {
+			var attr = reader.GetCustomAttribute (attrHandle);
+			// Skip IgnoresAccessChecksTo attributes
+			if (attr.Constructor.Kind == HandleKind.MethodDefinition)
+				continue;
+
+			var blobReader = reader.GetBlobReader (attr.Value);
+			ushort prolog = blobReader.ReadUInt16 (); // 0x0001
+			if (prolog != 1)
+				continue;
+
+			string? jniName = blobReader.ReadSerializedString ();
+			string? proxyRef = blobReader.ReadSerializedString ();
+
+			// Try to read third arg (target type) — if remaining bytes are just NumNamed (2 bytes), it's 2-arg
+			string? targetRef = null;
+			if (blobReader.RemainingBytes > 2) {
+				targetRef = blobReader.ReadSerializedString ();
+			}
+
+			return (jniName, proxyRef, targetRef);
+		}
+
+		throw new InvalidOperationException ("No TypeMap attribute found on assembly");
+	}
+
+	static void CleanUpDir (string path)
+	{
+		var dir = Path.GetDirectoryName (path);
+		if (dir != null && Directory.Exists (dir))
+			try { Directory.Delete (dir, true); } catch { }
 	}
 }

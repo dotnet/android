@@ -18,11 +18,12 @@ public class JcwJavaSourceGeneratorTests
 		}
 	}
 
-	List<JavaPeerInfo> ScanFixtures ()
-	{
+	static readonly Lazy<List<JavaPeerInfo>> _cachedFixtures = new (() => {
 		using var scanner = new JavaPeerScanner ();
 		return scanner.Scan (new [] { TestFixtureAssemblyPath });
-	}
+	});
+
+	static List<JavaPeerInfo> ScanFixtures () => _cachedFixtures.Value;
 
 	JavaPeerInfo FindByJavaName (List<JavaPeerInfo> peers, string javaName)
 	{
@@ -289,5 +290,25 @@ public class JcwJavaSourceGeneratorTests
 				Directory.Delete (outputDir, true);
 			}
 		}
+	}
+
+	// ---- [Export] with throws clause ----
+
+	[Fact]
+	public void Generate_ExportWithThrows_HasThrowsClause ()
+	{
+		var peers = ScanFixtures ();
+		var peer = FindByJavaName (peers, "my/app/ExportWithThrows");
+		var java = GenerateToString (peer);
+		Assert.Contains ("throws java.io.IOException, java.lang.IllegalStateException\n", java);
+	}
+
+	[Fact]
+	public void Generate_ExportWithoutThrows_HasNoThrowsClause ()
+	{
+		var peers = ScanFixtures ();
+		var peer = FindByJavaName (peers, "my/app/ExportExample");
+		var java = GenerateToString (peer);
+		Assert.DoesNotContain ("throws", java);
 	}
 }

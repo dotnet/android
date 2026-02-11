@@ -386,6 +386,12 @@ sealed class TypeMapAssemblyEmitter
 	{
 		var userTypeRef = ResolveTypeRef (metadata, uco.TargetType);
 
+		// UCO constructor wrappers always take exactly (IntPtr jnienv, IntPtr self) regardless
+		// of the actual JNI constructor signature. The JNI parameters are not forwarded —
+		// ActivateInstance only needs the jobject handle to create the managed peer.
+		// The correct JNI signature is still used in RegisterNatives so the JNI runtime
+		// dispatches to this wrapper for the right constructor overload.
+
 		var handle = EmitBody (metadata, ilBuilder, uco.WrapperName,
 			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 			sig => sig.MethodSignature ().Parameters (2,
@@ -438,6 +444,8 @@ sealed class TypeMapAssemblyEmitter
 
 	void EmitTypeMapAttribute (MetadataBuilder metadata, TypeMapAttributeData entry)
 	{
+		// Per ECMA-335 §II.23.3, System.Type-typed constructor arguments are encoded
+		// as SerString (assembly-qualified type name), not as TypeDefOrRef tokens.
 		var attrBlob = new BlobBuilder ();
 		attrBlob.WriteUInt16 (0x0001); // Prolog
 

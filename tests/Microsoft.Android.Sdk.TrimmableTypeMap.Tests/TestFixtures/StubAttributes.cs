@@ -103,6 +103,10 @@ namespace Java.Interop
 	{
 		public string? Name { get; set; }
 
+		public string[]? ThrownNames { get; set; }
+
+		public string? SuperArgumentsString { get; set; }
+
 		public ExportAttribute () { }
 		public ExportAttribute (string name) => Name = name;
 	}

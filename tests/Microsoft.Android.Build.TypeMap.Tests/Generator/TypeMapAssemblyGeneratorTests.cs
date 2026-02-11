@@ -21,11 +21,12 @@ public class TypeMapAssemblyGeneratorTests
 		}
 	}
 
-	List<JavaPeerInfo> ScanFixtures ()
-	{
+	static readonly Lazy<List<JavaPeerInfo>> _cachedFixtures = new (() => {
 		using var scanner = new JavaPeerScanner ();
 		return scanner.Scan (new [] { TestFixtureAssemblyPath });
-	}
+	});
+
+	static List<JavaPeerInfo> ScanFixtures () => _cachedFixtures.Value;
 
 	string GenerateAssembly (IReadOnlyList<JavaPeerInfo> peers, string? assemblyName = null)
 	{

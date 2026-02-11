@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Microsoft.Android.Build.TypeMap;
 
 /// <summary>
-/// Intermediate representation of a single TypeMap output assembly.
+/// Data model for a single TypeMap output assembly.
 /// Describes what to emit — the emitter writes this directly into a PE assembly.
 /// Built by <see cref="ModelBuilder"/>, consumed by <see cref="TypeMapAssemblyGenerator"/>.
 /// </summary>
@@ -133,6 +133,9 @@ sealed class UcoConstructorData
 
 	/// <summary>Target type to pass to ActivateInstance.</summary>
 	public TypeRefData TargetType { get; set; } = new ();
+
+	/// <summary>JNI constructor signature, e.g., "(Landroid/content/Context;)V". Used for RegisterNatives registration.</summary>
+	public string JniSignature { get; set; } = "()V";
 }
 
 /// <summary>

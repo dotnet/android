@@ -1,3 +1,7 @@
+// Test fixture types that exercise all scanner code paths.
+// Each type is annotated with comments explaining which classification
+// and behavior the scanner should produce.
+
 using System;
 using Android.App;
 using Android.Content;
@@ -8,14 +12,25 @@ namespace Java.Lang
 	[Register ("java/lang/Object", DoNotGenerateAcw = true)]
 	public class Object
 	{
-		public Object () { }
-		protected Object (IntPtr handle, JniHandleOwnership transfer) { }
-	}
+		public Object ()
+		{
+		}
 
+		protected Object (IntPtr handle, JniHandleOwnership transfer)
+		{
+		}
+	}
+}
+
+namespace Java.Lang
+{
 	[Register ("java/lang/Throwable", DoNotGenerateAcw = true)]
-	public class Throwable : Object
+	public class Throwable : Java.Lang.Object
 	{
-		protected Throwable (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+		protected Throwable (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
 
 		[Register ("getMessage", "()Ljava/lang/String;", "GetGetMessageHandler")]
 		public virtual string? Message { get; }
@@ -24,7 +39,10 @@ namespace Java.Lang
 	[Register ("java/lang/Exception", DoNotGenerateAcw = true)]
 	public class Exception : Throwable
 	{
-		protected Exception (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+		protected Exception (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
 	}
 }
 
@@ -33,29 +51,33 @@ namespace Android.App
 	[Register ("android/app/Activity", DoNotGenerateAcw = true)]
 	public class Activity : Java.Lang.Object
 	{
-		public Activity () { }
-		protected Activity (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+		public Activity ()
+		{
+		}
+
+		protected Activity (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
 
 		[Register ("onCreate", "(Landroid/os/Bundle;)V", "GetOnCreate_Landroid_os_Bundle_Handler")]
-		protected virtual void OnCreate (object? savedInstanceState) { }
+		protected virtual void OnCreate (/* Bundle? */ object? savedInstanceState)
+		{
+		}
 
 		[Register ("onStart", "()V", "")]
-		protected virtual void OnStart () { }
+		protected virtual void OnStart ()
+		{
+		}
 	}
 
 	[Register ("android/app/Service", DoNotGenerateAcw = true)]
 	public class Service : Java.Lang.Object
 	{
-		protected Service (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
-	}
-}
-
-namespace Android.App.Backup
-{
-	[Register ("android/app/backup/BackupAgent", DoNotGenerateAcw = true)]
-	public class BackupAgent : Java.Lang.Object
-	{
-		protected BackupAgent (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+		protected Service (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
 	}
 }
 
@@ -64,7 +86,10 @@ namespace Android.Content
 	[Register ("android/content/Context", DoNotGenerateAcw = true)]
 	public class Context : Java.Lang.Object
 	{
-		protected Context (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+		protected Context (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
 	}
 }
 
@@ -73,28 +98,10 @@ namespace Android.Views
 	[Register ("android/view/View", DoNotGenerateAcw = true)]
 	public class View : Java.Lang.Object
 	{
-		protected View (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
-	}
-
-	[Register ("android/view/View$OnClickListener", "", "Android.Views.IOnClickListenerInvoker")]
-	public interface IOnClickListener
-	{
-		[Register ("onClick", "(Landroid/view/View;)V", "GetOnClick_Landroid_view_View_Handler:Android.Views.IOnClickListenerInvoker")]
-		void OnClick (View v);
-	}
-
-	[Register ("android/view/View$OnClickListener", DoNotGenerateAcw = true)]
-	internal sealed class IOnClickListenerInvoker : Java.Lang.Object, IOnClickListener
-	{
-		public IOnClickListenerInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
-		public void OnClick (View v) { }
-	}
-
-	[Register ("android/view/View$OnLongClickListener", "", "Android.Views.IOnLongClickListenerInvoker")]
-	public interface IOnLongClickListener
-	{
-		[Register ("onLongClick", "(Landroid/view/View;)Z", "GetOnLongClick_Landroid_view_View_Handler:Android.Views.IOnLongClickListenerInvoker")]
-		bool OnLongClick (View v);
+		protected View (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
 	}
 }
 
@@ -103,201 +110,97 @@ namespace Android.Widget
 	[Register ("android/widget/Button", DoNotGenerateAcw = true)]
 	public class Button : Android.Views.View
 	{
-		protected Button (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+		protected Button (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
 	}
 
 	[Register ("android/widget/TextView", DoNotGenerateAcw = true)]
 	public class TextView : Android.Views.View
 	{
-		protected TextView (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+		protected TextView (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+	}
+}
+
+namespace Android.Views
+{
+	[Register ("android/view/View$OnClickListener", "", "Android.Views.IOnClickListenerInvoker")]
+	public interface IOnClickListener
+	{
+		[Register ("onClick", "(Landroid/view/View;)V", "GetOnClick_Landroid_view_View_Handler:Android.Views.IOnClickListenerInvoker")]
+		void OnClick (View v);
+	}
+
+	// Invoker types ARE internal implementation details.
+	// In real Mono.Android.dll, invokers DO have [Register] with DoNotGenerateAcw=true
+	// and the SAME JNI name as their interface.
+	// The scanner includes them — generators filter them later.
+	[Register ("android/view/View$OnClickListener", DoNotGenerateAcw = true)]
+	internal sealed class IOnClickListenerInvoker : Java.Lang.Object, IOnClickListener
+	{
+		public IOnClickListenerInvoker (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+
+		public void OnClick (View v)
+		{
+		}
 	}
 }
 
 namespace MyApp
 {
+	// User types get their JNI name from [Activity(Name = "...")]
+	// NOT from [Register] — that's only on MCW binding types.
 	[Activity (MainLauncher = true, Label = "My App", Name = "my.app.MainActivity")]
 	public class MainActivity : Android.App.Activity
 	{
-		public MainActivity () { }
+		public MainActivity ()
+		{
+		}
 
 		[Register ("onCreate", "(Landroid/os/Bundle;)V", "GetOnCreate_Landroid_os_Bundle_Handler")]
-		protected override void OnCreate (object? savedInstanceState) => base.OnCreate (savedInstanceState);
+		protected override void OnCreate (object? savedInstanceState)
+		{
+			base.OnCreate (savedInstanceState);
+		}
 	}
 
+	// User type without component attribute: TRIMMABLE
 	[Register ("my/app/MyHelper")]
 	public class MyHelper : Java.Lang.Object
 	{
 		[Register ("doSomething", "()V", "GetDoSomethingHandler")]
-		public virtual void DoSomething () { }
+		public virtual void DoSomething ()
+		{
+		}
 	}
 
+	// User service: UNCONDITIONAL — gets JNI name from [Service(Name = "...")]
 	[Service (Name = "my.app.MyService")]
 	public class MyService : Android.App.Service
 	{
-		protected MyService (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+		protected MyService (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
 	}
 
+	// User broadcast receiver: UNCONDITIONAL — gets JNI name from [BroadcastReceiver(Name = "...")]
 	[BroadcastReceiver (Name = "my.app.MyReceiver")]
-	public class MyReceiver : Java.Lang.Object { }
+	public class MyReceiver : Java.Lang.Object
+	{
+	}
 
+	// User content provider: UNCONDITIONAL — gets JNI name from [ContentProvider(Name = "...")]
 	[ContentProvider (new [] { "my.app.provider" }, Name = "my.app.MyProvider")]
-	public class MyProvider : Java.Lang.Object { }
-
-	[Register ("my/app/AbstractBase")]
-	public abstract class AbstractBase : Java.Lang.Object
+	public class MyProvider : Java.Lang.Object
 	{
-		protected AbstractBase (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
-
-		[Register ("doWork", "()V", "")]
-		public abstract void DoWork ();
-	}
-
-	[Register ("my/app/SimpleActivity")]
-	public class SimpleActivity : Android.App.Activity { }
-
-	[Register ("my/app/ClickableView")]
-	public class ClickableView : Android.Views.View, Android.Views.IOnClickListener
-	{
-		protected ClickableView (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
-
-		[Register ("onClick", "(Landroid/view/View;)V", "")]
-		public void OnClick (Android.Views.View v) { }
-	}
-
-	[Register ("my/app/CustomView")]
-	public class CustomView : Android.Views.View
-	{
-		protected CustomView (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
-
-		[Register ("<init>", "()V", "")]
-		public CustomView () : base (default!, default) { }
-
-		[Register ("<init>", "(Landroid/content/Context;)V", "")]
-		public CustomView (Context context) : base (default!, default) { }
-	}
-
-	[Register ("my/app/Outer")]
-	public class Outer : Java.Lang.Object
-	{
-		[Register ("my/app/Outer$Inner")]
-		public class Inner : Java.Lang.Object
-		{
-			protected Inner (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
-		}
-	}
-
-	[Register ("my/app/ICallback", "", "MyApp.ICallbackInvoker")]
-	public interface ICallback
-	{
-		[Register ("my/app/ICallback$Result")]
-		public class Result : Java.Lang.Object
-		{
-			protected Result (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
-		}
-	}
-
-	[Register ("my/app/TouchHandler")]
-	public class TouchHandler : Java.Lang.Object
-	{
-		[Register ("onTouch", "(Landroid/view/View;I)Z", "GetOnTouchHandler")]
-		public virtual bool OnTouch (Android.Views.View v, int action) => false;
-
-		[Register ("onFocusChange", "(Landroid/view/View;Z)V", "GetOnFocusChangeHandler")]
-		public virtual void OnFocusChange (Android.Views.View v, bool hasFocus) { }
-
-		[Register ("onScroll", "(IFJD)V", "GetOnScrollHandler")]
-		public virtual void OnScroll (int x, float y, long timestamp, double velocity) { }
-
-		[Register ("getText", "()Ljava/lang/String;", "GetGetTextHandler")]
-		public virtual string? GetText () => null;
-
-		[Register ("setItems", "([Ljava/lang/String;)V", "GetSetItemsHandler")]
-		public virtual void SetItems (string[]? items) { }
-	}
-
-	[Register ("my/app/ExportExample")]
-	public class ExportExample : Java.Lang.Object
-	{
-		[Java.Interop.Export ("myExportedMethod")]
-		public void MyExportedMethod () { }
-	}
-
-	[Application (Name = "my.app.MyApplication", BackupAgent = typeof (MyBackupAgent), ManageSpaceActivity = typeof (MyManageSpaceActivity))]
-	public class MyApplication : Java.Lang.Object { }
-
-	[Instrumentation (Name = "my.app.MyInstrumentation")]
-	public class MyInstrumentation : Java.Lang.Object { }
-
-	[Register ("my/app/MyBackupAgent")]
-	public class MyBackupAgent : Android.App.Backup.BackupAgent
-	{
-		protected MyBackupAgent (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
-	}
-
-	[Register ("my/app/MyManageSpaceActivity")]
-	public class MyManageSpaceActivity : Android.App.Activity
-	{
-		protected MyManageSpaceActivity (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
-	}
-
-	public class UnregisteredHelper : Java.Lang.Object { }
-
-	[Register ("my/app/MyButton")]
-	public class MyButton : Android.Widget.Button
-	{
-		protected MyButton (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
-	}
-
-	[Register ("my/app/MultiInterfaceView")]
-	public class MultiInterfaceView : Android.Views.View, Android.Views.IOnClickListener, Android.Views.IOnLongClickListener
-	{
-		protected MultiInterfaceView (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
-
-		[Register ("onClick", "(Landroid/view/View;)V", "")]
-		public void OnClick (Android.Views.View v) { }
-
-		[Register ("onLongClick", "(Landroid/view/View;)Z", "")]
-		public bool OnLongClick (Android.Views.View v) => false;
-	}
-
-	[CustomJniName ("com.example.CustomWidget")]
-	public class CustomWidget : Java.Lang.Object { }
-
-	[Activity (Name = "my.app.BaseActivityNoRegister")]
-	public class BaseActivityNoRegister : Android.App.Activity { }
-
-	public class DerivedFromComponentBase : BaseActivityNoRegister { }
-
-	[Register ("my/app/RegisteredParent")]
-	public class RegisteredParent : Java.Lang.Object
-	{
-		public class UnregisteredChild : Java.Lang.Object { }
-	}
-
-	[Register ("my/app/DeepOuter")]
-	public class DeepOuter : Java.Lang.Object
-	{
-		public class Middle : Java.Lang.Object
-		{
-			public class DeepInner : Java.Lang.Object { }
-		}
-	}
-
-	public class PlainActivitySubclass : Android.App.Activity { }
-
-	[Activity (Label = "Unnamed")]
-	public class UnnamedActivity : Android.App.Activity { }
-
-	public class UnregisteredClickListener : Java.Lang.Object, Android.Views.IOnClickListener
-	{
-		[Register ("onClick", "(Landroid/view/View;)V", "")]
-		public void OnClick (Android.Views.View v) { }
-	}
-
-	public class UnregisteredExporter : Java.Lang.Object
-	{
-		[Java.Interop.Export ("doExportedWork")]
-		public void DoExportedWork () { }
 	}
 }
 
@@ -307,35 +210,428 @@ namespace MyApp.Generic
 	public class GenericHolder<T> : Java.Lang.Object where T : Java.Lang.Object
 	{
 		[Register ("getItem", "()Ljava/lang/Object;", "GetGetItemHandler")]
-		public virtual T? GetItem () => default;
+		public virtual T? GetItem ()
+		{
+			return default;
+		}
+	}
+}
+
+namespace MyApp
+{
+	[Register ("my/app/AbstractBase")]
+	public abstract class AbstractBase : Java.Lang.Object
+	{
+		protected AbstractBase (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+
+		[Register ("doWork", "()V", "")]
+		public abstract void DoWork ();
+	}
+}
+
+namespace MyApp
+{
+	[Register ("my/app/SimpleActivity")]
+	public class SimpleActivity : Android.App.Activity
+	{
+		// No (IntPtr, JniHandleOwnership) ctor — scanner should
+		// resolve to Activity's activation ctor
+	}
+}
+
+namespace MyApp
+{
+	[Register ("my/app/ClickableView")]
+	public class ClickableView : Android.Views.View, Android.Views.IOnClickListener
+	{
+		protected ClickableView (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+
+		[Register ("onClick", "(Landroid/view/View;)V", "")]
+		public void OnClick (Android.Views.View v)
+		{
+		}
+	}
+}
+
+namespace MyApp
+{
+	[Register ("my/app/CustomView")]
+	public class CustomView : Android.Views.View
+	{
+		protected CustomView (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+
+		[Register ("<init>", "()V", "")]
+		public CustomView ()
+			: base (default!, default)
+		{
+		}
+
+		[Register ("<init>", "(Landroid/content/Context;)V", "")]
+		public CustomView (Context context)
+			: base (default!, default)
+		{
+		}
+	}
+}
+
+namespace MyApp
+{
+	[Register ("my/app/Outer")]
+	public class Outer : Java.Lang.Object
+	{
+		[Register ("my/app/Outer$Inner")]
+		public class Inner : Java.Lang.Object
+		{
+			protected Inner (IntPtr handle, JniHandleOwnership transfer)
+				: base (handle, transfer)
+			{
+			}
+		}
+	}
+}
+
+namespace MyApp
+{
+	[Register ("my/app/ICallback", "", "MyApp.ICallbackInvoker")]
+	public interface ICallback
+	{
+		[Register ("my/app/ICallback$Result")]
+		public class Result : Java.Lang.Object
+		{
+			protected Result (IntPtr handle, JniHandleOwnership transfer)
+				: base (handle, transfer)
+			{
+			}
+		}
+	}
+}
+
+namespace MyApp
+{
+	[Register ("my/app/TouchHandler")]
+	public class TouchHandler : Java.Lang.Object
+	{
+		// bool return type (non-blittable, needs byte wrapper in UCO)
+		[Register ("onTouch", "(Landroid/view/View;I)Z", "GetOnTouchHandler")]
+		public virtual bool OnTouch (Android.Views.View v, int action)
+		{
+			return false;
+		}
+
+		// bool parameter (non-blittable)
+		[Register ("onFocusChange", "(Landroid/view/View;Z)V", "GetOnFocusChangeHandler")]
+		public virtual void OnFocusChange (Android.Views.View v, bool hasFocus)
+		{
+		}
+
+		// Multiple params of different JNI types
+		[Register ("onScroll", "(IFJD)V", "GetOnScrollHandler")]
+		public virtual void OnScroll (int x, float y, long timestamp, double velocity)
+		{
+		}
+
+		// Object return type
+		[Register ("getText", "()Ljava/lang/String;", "GetGetTextHandler")]
+		public virtual string? GetText ()
+		{
+			return null;
+		}
+
+		// Array parameter
+		[Register ("setItems", "([Ljava/lang/String;)V", "GetSetItemsHandler")]
+		public virtual void SetItems (string[]? items)
+		{
+		}
+	}
+}
+
+namespace MyApp
+{
+	[Register ("my/app/ExportExample")]
+	public class ExportExample : Java.Lang.Object
+	{
+		[Java.Interop.Export ("myExportedMethod")]
+		public void MyExportedMethod ()
+		{
+		}
 	}
 
+	[Register ("my/app/ExportWithThrows")]
+	public class ExportWithThrows : Java.Lang.Object
+	{
+		[Java.Interop.Export ("riskyMethod", ThrownNames = new [] { "java.io.IOException", "java.lang.IllegalStateException" })]
+		public void RiskyMethod ()
+		{
+		}
+	}
+}
+
+namespace Android.App.Backup
+{
+	[Register ("android/app/backup/BackupAgent", DoNotGenerateAcw = true)]
+	public class BackupAgent : Java.Lang.Object
+	{
+		protected BackupAgent (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+	}
+}
+
+namespace MyApp
+{
+	[Application (Name = "my.app.MyApplication", BackupAgent = typeof (MyBackupAgent), ManageSpaceActivity = typeof (MyManageSpaceActivity))]
+	public class MyApplication : Java.Lang.Object
+	{
+	}
+
+	[Instrumentation (Name = "my.app.MyInstrumentation")]
+	public class MyInstrumentation : Java.Lang.Object
+	{
+	}
+
+	// BackupAgent without a component attribute — would normally be trimmable,
+	// but [Application(BackupAgent = typeof(...))] should force it unconditional.
+	[Register ("my/app/MyBackupAgent")]
+	public class MyBackupAgent : Android.App.Backup.BackupAgent
+	{
+		protected MyBackupAgent (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+	}
+
+	// Activity without [Activity] attribute — would normally be trimmable,
+	// but [Application(ManageSpaceActivity = typeof(...))] should force it unconditional.
+	[Register ("my/app/MyManageSpaceActivity")]
+	public class MyManageSpaceActivity : Android.App.Activity
+	{
+		protected MyManageSpaceActivity (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+	}
+
+	// User type WITHOUT [Register] — gets CRC64-computed JNI name.
+	// CompatJniName should use raw namespace instead of CRC64.
+	public class UnregisteredHelper : Java.Lang.Object
+	{
+	}
+}
+
+namespace MyApp
+{
+	[Register ("my/app/MyButton")]
+	public class MyButton : Android.Widget.Button
+	{
+		protected MyButton (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+	}
+}
+
+namespace Android.Views
+{
+	[Register ("android/view/View$OnLongClickListener", "", "Android.Views.IOnLongClickListenerInvoker")]
+	public interface IOnLongClickListener
+	{
+		[Register ("onLongClick", "(Landroid/view/View;)Z", "GetOnLongClick_Landroid_view_View_Handler:Android.Views.IOnLongClickListenerInvoker")]
+		bool OnLongClick (View v);
+	}
+}
+
+namespace MyApp
+{
+	[Register ("my/app/MultiInterfaceView")]
+	public class MultiInterfaceView : Android.Views.View, Android.Views.IOnClickListener, Android.Views.IOnLongClickListener
+	{
+		protected MultiInterfaceView (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+
+		[Register ("onClick", "(Landroid/view/View;)V", "")]
+		public void OnClick (Android.Views.View v) { }
+
+		[Register ("onLongClick", "(Landroid/view/View;)Z", "")]
+		public bool OnLongClick (Android.Views.View v) { return false; }
+	}
+
+	// User type with a custom IJniNameProviderAttribute — the scanner
+	// should detect this via interface resolution, not hardcoded attribute names.
+	[CustomJniName ("com.example.CustomWidget")]
+	public class CustomWidget : Java.Lang.Object
+	{
+	}
+}
+
+// ================================================================
+// Edge case: generic base type (TypeSpecification resolution)
+// ================================================================
+namespace MyApp.Generic
+{
 	[Register ("my/app/GenericBase", DoNotGenerateAcw = true)]
 	public class GenericBase<T> : Java.Lang.Object where T : class
 	{
-		protected GenericBase (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+		protected GenericBase (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
 	}
 
 	[Register ("my/app/ConcreteFromGeneric")]
 	public class ConcreteFromGeneric : GenericBase<string>
 	{
-		protected ConcreteFromGeneric (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+		protected ConcreteFromGeneric (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
 	}
+}
 
+// ================================================================
+// Edge case: generic interface (TypeSpecification resolution)
+// ================================================================
+namespace MyApp.Generic
+{
 	[Register ("my/app/IGenericCallback", "", "")]
-	public interface IGenericCallback<T> { }
+	public interface IGenericCallback<T>
+	{
+	}
 
 	[Register ("my/app/GenericCallbackImpl")]
 	public class GenericCallbackImpl : Java.Lang.Object, IGenericCallback<string>
 	{
-		protected GenericCallbackImpl (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+		protected GenericCallbackImpl (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
 	}
 }
 
+// ================================================================
+// Edge case: component-only base detection
+// ================================================================
+namespace MyApp
+{
+	[Activity (Name = "my.app.BaseActivityNoRegister")]
+	public class BaseActivityNoRegister : Android.App.Activity
+	{
+	}
+
+	public class DerivedFromComponentBase : BaseActivityNoRegister
+	{
+	}
+}
+
+// ================================================================
+// Edge case: unregistered nested type inside [Register] parent
+// ================================================================
+namespace MyApp
+{
+	[Register ("my/app/RegisteredParent")]
+	public class RegisteredParent : Java.Lang.Object
+	{
+		public class UnregisteredChild : Java.Lang.Object
+		{
+		}
+	}
+}
+
+// ================================================================
+// Edge case: 3-level deep nesting
+// ComputeTypeNameParts must walk multiple levels, collecting names.
+// ================================================================
+namespace MyApp
+{
+	[Register ("my/app/DeepOuter")]
+	public class DeepOuter : Java.Lang.Object
+	{
+		public class Middle : Java.Lang.Object
+		{
+			public class DeepInner : Java.Lang.Object
+			{
+			}
+		}
+	}
+}
+
+// ================================================================
+// Edge case: plain Java peer subclass — no [Register], no component attribute
+// ExtendsJavaPeer must detect it via base type chain, gets CRC64 name.
+// ================================================================
+namespace MyApp
+{
+	public class PlainActivitySubclass : Android.App.Activity
+	{
+	}
+}
+
+// ================================================================
+// Edge case: component attribute WITHOUT Name property
+// HasComponentAttribute = true but ComponentAttributeJniName = null.
+// Type should still get a CRC64 JNI name (not null).
+// ================================================================
+namespace MyApp
+{
+	[Activity (Label = "Unnamed")]
+	public class UnnamedActivity : Android.App.Activity
+	{
+	}
+}
+
+// ================================================================
+// Edge case: interface implementation on unregistered type
+// Type gets CRC64 JNI name but still resolves interface names.
+// ================================================================
+namespace MyApp
+{
+	public class UnregisteredClickListener : Java.Lang.Object, Android.Views.IOnClickListener
+	{
+		[Register ("onClick", "(Landroid/view/View;)V", "")]
+		public void OnClick (Android.Views.View v)
+		{
+		}
+	}
+}
+
+// ================================================================
+// Edge case: [Export] method on unregistered type
+// ParseExportAttribute runs on a type that gets CRC64 JNI name.
+// ================================================================
+namespace MyApp
+{
+	public class UnregisteredExporter : Java.Lang.Object
+	{
+		[Java.Interop.Export ("doExportedWork")]
+		public void DoExportedWork ()
+		{
+		}
+	}
+}
+
+// ================================================================
+// Edge case: type in empty namespace
+// ================================================================
 [Register ("my/app/GlobalType")]
 public class GlobalType : Java.Lang.Object
 {
-	protected GlobalType (IntPtr handle, Android.Runtime.JniHandleOwnership transfer) : base (handle, transfer) { }
+	protected GlobalType (IntPtr handle, Android.Runtime.JniHandleOwnership transfer)
+		: base (handle, transfer)
+	{
+	}
 }
 
-public class GlobalUnregisteredType : Java.Lang.Object { }
+public class GlobalUnregisteredType : Java.Lang.Object
+{
+}
