@@ -13,6 +13,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Java;
 using System.Threading;
+using System.Threading.Tasks;
 using Android.Runtime;
 using Java.Interop;
 
@@ -90,9 +91,6 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	public override void AddPeer (IJavaPeerable value)
 	{
 		ThrowIfDisposed ();
-
-		// Remove any collected contexts before adding a new peer.
-		CollectPeers ();
 
 		var r = value.PeerReference;
 		if (!r.IsValid)
@@ -439,6 +437,10 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 		ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (mcr);
 		JavaMarshal.FinishCrossReferenceProcessing (mcr, handlesToFree);
+
+		// Schedule cleanup of RegisteredInstances on a thread pool thread.
+		// The bridge thread must not take lock(RegisteredInstances) — see deadlock notes.
+		Task.Run (GetOrCreateInstance ().CollectPeers);
 	}
 
 	static unsafe ReadOnlySpan<GCHandle> ProcessCollectedContexts (MarkCrossReferencesArgs* mcr)
