@@ -60,7 +60,7 @@ sealed class TypeMapAttributeData
 /// </summary>
 sealed class JavaPeerProxyData
 {
-	/// <summary>Simple type name, e.g., "java_lang_Object_Proxy".</summary>
+	/// <summary>Simple type name, e.g., "Java_Lang_Object_Proxy".</summary>
 	public string TypeName { get; set; } = "";
 
 	/// <summary>Namespace for all proxy types.</summary>

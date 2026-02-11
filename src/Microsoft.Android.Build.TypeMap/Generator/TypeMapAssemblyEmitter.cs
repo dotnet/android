@@ -53,6 +53,7 @@ sealed class TypeMapAssemblyEmitter
 		}
 
 		_asmRefCache.Clear ();
+		_typeRefCache.Clear ();
 
 		var dir = Path.GetDirectoryName (outputPath);
 		if (!string.IsNullOrEmpty (dir)) {
@@ -103,13 +104,19 @@ sealed class TypeMapAssemblyEmitter
 			encBaseId: default);
 	}
 
+	// Mono.Android strong name public key token (84e04ff9cfb79065)
+	static readonly byte [] MonoAndroidPublicKeyToken = { 0x84, 0xe0, 0x4f, 0xf9, 0xcf, 0xb7, 0x90, 0x65 };
+
+	// TODO: Make these configurable per target framework instead of hardcoding .NET 11
+	static readonly Version SystemRuntimeVersion = new Version (11, 0, 0, 0);
+
 	void EmitAssemblyReferences (MetadataBuilder metadata)
 	{
-		_systemRuntimeRef = AddAssemblyRef (metadata, "System.Runtime", new Version (11, 0, 0, 0));
+		_systemRuntimeRef = AddAssemblyRef (metadata, "System.Runtime", SystemRuntimeVersion);
 		_monoAndroidRef = AddAssemblyRef (metadata, "Mono.Android", new Version (0, 0, 0, 0),
-			publicKeyOrToken: new byte [] { 0x84, 0xe0, 0x4f, 0xf9, 0xcf, 0xb7, 0x90, 0x65 });
+			publicKeyOrToken: MonoAndroidPublicKeyToken);
 		_javaInteropRef = AddAssemblyRef (metadata, "Java.Interop", new Version (0, 0, 0, 0));
-		_systemRuntimeInteropServicesRef = AddAssemblyRef (metadata, "System.Runtime.InteropServices", new Version (11, 0, 0, 0));
+		_systemRuntimeInteropServicesRef = AddAssemblyRef (metadata, "System.Runtime.InteropServices", SystemRuntimeVersion);
 	}
 
 	void EmitTypeReferences (MetadataBuilder metadata)

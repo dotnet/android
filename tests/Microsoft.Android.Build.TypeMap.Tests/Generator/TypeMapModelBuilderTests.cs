@@ -1254,6 +1254,38 @@ public class ModelBuilderTests
 		Assert.NotNull (entry.TargetTypeReference);
 	}
 
+	// ---- Name-based detection edge cases ----
+
+	[Fact]
+	public void Build_UserTypeNamedImplementor_IsTreatedAsTrimmable ()
+	{
+		// Limitation: name-based heuristic means a user type ending in "Implementor"
+		// will be treated as trimmable even if it's genuinely a user ACW type.
+		// This test documents the known behavior.
+		var peer = MakeAcwPeer ("my/app/MyImplementor", "MyApp.MyImplementor", "App");
+		var model = BuildModel (new [] { peer });
+
+		var entry = model.Entries.FirstOrDefault ();
+		Assert.NotNull (entry);
+		// The heuristic treats this as an Implementor → trimmable (not unconditional)
+		Assert.False (entry!.IsUnconditional,
+			"Name-based heuristic: types ending in 'Implementor' are treated as trimmable");
+	}
+
+	[Fact]
+	public void Build_UserTypeNamedInvoker_WithDoNotGenerateAcw_IsTreatedAsInvoker ()
+	{
+		// Limitation: name-based heuristic means a MCW type ending in "Invoker"
+		// will be treated as an invoker (no TypeMap entry, only proxy).
+		var peer = MakePeerWithActivation ("my/app/MyInvoker", "MyApp.MyInvoker", "App");
+		peer.DoNotGenerateAcw = true;
+		var model = BuildModel (new [] { peer });
+
+		// The heuristic treats this as an invoker → proxy but no entry
+		Assert.Empty (model.Entries);
+		Assert.Single (model.ProxyTypes);
+	}
+
 	// ---- Full pipeline: scan → model → emit → read back ----
 
 	[Fact]
@@ -1394,7 +1426,108 @@ public class ModelBuilderTests
 		}
 	}
 
+	[Fact]
+	public void FullPipeline_CustomView_UcoConstructorHasExactlyTwoParams ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/CustomView");
+		var model = BuildModel (new [] { peer }, "CtorSigTest");
+
+		var outputPath = Path.Combine (Path.GetTempPath (), $"ctorsig-{Guid.NewGuid ():N}", "CtorSigTest.dll");
+		try {
+			var emitter = new TypeMapAssemblyEmitter ();
+			emitter.Emit (model, outputPath);
+
+			using var pe = new PEReader (File.OpenRead (outputPath));
+			var reader = pe.GetMetadataReader ();
+
+			var proxy = reader.TypeDefinitions
+				.Select (h => reader.GetTypeDefinition (h))
+				.First (t => reader.GetString (t.Name) == "MyApp_CustomView_Proxy");
+
+			// Find UCO constructor wrappers (nctor_*_uco)
+			var ucoCtors = proxy.GetMethods ()
+				.Select (h => reader.GetMethodDefinition (h))
+				.Where (m => reader.GetString (m.Name).StartsWith ("nctor_") && reader.GetString (m.Name).EndsWith ("_uco"))
+				.ToList ();
+
+			Assert.NotEmpty (ucoCtors);
+			foreach (var uco in ucoCtors) {
+				// UCO constructor wrappers always take exactly 2 params (IntPtr jnienv, IntPtr self)
+				var sig = reader.GetBlobReader (uco.Signature);
+				var header = sig.ReadSignatureHeader ();
+				int paramCount = sig.ReadCompressedInteger ();
+				Assert.Equal (2, paramCount);
+			}
+		} finally {
+			CleanUpDir (outputPath);
+		}
+	}
+
+	[Fact]
+	public void FullPipeline_GenericHolder_ProducesValidAssembly ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/GenericHolder");
+		var model = BuildModel (new [] { peer }, "GenericTest");
+
+		var outputPath = Path.Combine (Path.GetTempPath (), $"generic-{Guid.NewGuid ():N}", "GenericTest.dll");
+		try {
+			var emitter = new TypeMapAssemblyEmitter ();
+			emitter.Emit (model, outputPath);
+
+			using var pe = new PEReader (File.OpenRead (outputPath));
+			var reader = pe.GetMetadataReader ();
+
+			// Verify the assembly is loadable and has entries
+			Assert.True (pe.HasMetadata);
+			var entry = FindEntry (model, "my/app/GenericHolder");
+			Assert.NotNull (entry);
+
+			// Verify assembly attributes were emitted
+			var asmAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
+			Assert.NotEmpty (asmAttrs);
+		} finally {
+			CleanUpDir (outputPath);
+		}
+	}
+
 	// ---- PE blob validation: 2-arg vs 3-arg TypeMap attributes ----
+
+	[Fact]
+	public void FullPipeline_Mixed2ArgAnd3Arg_BothSurviveRoundTrip ()
+	{
+		// java/lang/Object → essential → 2-arg unconditional
+		var objectPeer = FindFixtureByJavaName ("java/lang/Object");
+		// android/app/Activity → MCW → 3-arg trimmable
+		var activityPeer = FindFixtureByJavaName ("android/app/Activity");
+
+		var model = BuildModel (new [] { objectPeer, activityPeer }, "MixedBlob");
+		Assert.Equal (2, model.Entries.Count);
+
+		var outputPath = Path.Combine (Path.GetTempPath (), $"mixedblob-{Guid.NewGuid ():N}", "MixedBlob.dll");
+		try {
+			var emitter = new TypeMapAssemblyEmitter ();
+			emitter.Emit (model, outputPath);
+
+			using var pe = new PEReader (File.OpenRead (outputPath));
+			var reader = pe.GetMetadataReader ();
+
+			var attrs = ReadAllTypeMapAttributeBlobs (reader);
+			Assert.Equal (2, attrs.Count);
+
+			// Find the 2-arg (unconditional) entry
+			var unconditional = attrs.FirstOrDefault (a => a.jniName == "java/lang/Object");
+			Assert.NotNull (unconditional.jniName);
+			Assert.Null (unconditional.targetRef); // 2-arg: no target
+
+			// Find the 3-arg (trimmable) entry
+			var trimmable = attrs.FirstOrDefault (a => a.jniName == "android/app/Activity");
+			Assert.NotNull (trimmable.jniName);
+			Assert.NotNull (trimmable.targetRef); // 3-arg: has target
+			Assert.Contains ("Android.App.Activity", trimmable.targetRef!);
+		} finally {
+			CleanUpDir (outputPath);
+		}
+	}
 
 	[Fact]
 	public void FullPipeline_EssentialType_Emits2ArgAttribute ()
@@ -1504,15 +1637,25 @@ public class ModelBuilderTests
 	/// </summary>
 	static (string? jniName, string? proxyRef, string? targetRef) ReadFirstTypeMapAttributeBlob (MetadataReader reader)
 	{
+		var all = ReadAllTypeMapAttributeBlobs (reader);
+		if (all.Count == 0) {
+			throw new InvalidOperationException ("No TypeMap attribute found on assembly");
+		}
+		return all [0];
+	}
+
+	static List<(string? jniName, string? proxyRef, string? targetRef)> ReadAllTypeMapAttributeBlobs (MetadataReader reader)
+	{
+		var result = new List<(string?, string?, string?)> ();
 		var asmAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
 		foreach (var attrHandle in asmAttrs) {
 			var attr = reader.GetCustomAttribute (attrHandle);
-			// Skip IgnoresAccessChecksTo attributes
+			// Skip IgnoresAccessChecksTo attributes (their ctor is a MethodDefinition, not MemberRef)
 			if (attr.Constructor.Kind == HandleKind.MethodDefinition)
 				continue;
 
 			var blobReader = reader.GetBlobReader (attr.Value);
-			ushort prolog = blobReader.ReadUInt16 (); // 0x0001
+			ushort prolog = blobReader.ReadUInt16 ();
 			if (prolog != 1)
 				continue;
 
@@ -1525,10 +1668,9 @@ public class ModelBuilderTests
 				targetRef = blobReader.ReadSerializedString ();
 			}
 
-			return (jniName, proxyRef, targetRef);
+			result.Add ((jniName, proxyRef, targetRef));
 		}
-
-		throw new InvalidOperationException ("No TypeMap attribute found on assembly");
+		return result;
 	}
 
 	static void CleanUpDir (string path)
