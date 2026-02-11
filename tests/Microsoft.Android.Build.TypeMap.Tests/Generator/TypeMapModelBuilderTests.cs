@@ -6,11 +6,11 @@ using Xunit;
 
 namespace Microsoft.Android.Build.TypeMap.Tests;
 
-public class TypeMapModelBuilderTests
+public class ModelBuilderTests
 {
 	static string TestFixtureAssemblyPath {
 		get {
-			var testAssemblyDir = Path.GetDirectoryName (typeof (TypeMapModelBuilderTests).Assembly.Location)!;
+			var testAssemblyDir = Path.GetDirectoryName (typeof (ModelBuilderTests).Assembly.Location)!;
 			var fixtureAssembly = Path.Combine (testAssemblyDir, "TestFixtures.dll");
 			Assert.True (File.Exists (fixtureAssembly),
 				$"TestFixtures.dll not found at {fixtureAssembly}. Ensure the TestFixtures project builds.");
@@ -24,10 +24,10 @@ public class TypeMapModelBuilderTests
 		return scanner.Scan (new [] { TestFixtureAssemblyPath });
 	}
 
-	TypeMapAssemblyModel BuildModel (IReadOnlyList<JavaPeerInfo> peers, string? assemblyName = null)
+	TypeMapAssemblyData BuildModel (IReadOnlyList<JavaPeerInfo> peers, string? assemblyName = null)
 	{
 		var outputPath = Path.Combine ("/tmp", (assemblyName ?? "TestTypeMap") + ".dll");
-		var builder = new TypeMapModelBuilder ();
+		var builder = new ModelBuilder ();
 		return builder.Build (peers, outputPath, assemblyName);
 	}
 
@@ -46,7 +46,7 @@ public class TypeMapModelBuilderTests
 	[Fact]
 	public void Build_AssemblyNameDerivedFromOutputPath ()
 	{
-		var builder = new TypeMapModelBuilder ();
+		var builder = new ModelBuilder ();
 		var model = builder.Build (Array.Empty<JavaPeerInfo> (), "/some/path/Foo.Bar.dll");
 		Assert.Equal ("Foo.Bar", model.AssemblyName);
 		Assert.Equal ("Foo.Bar.dll", model.ModuleName);
@@ -55,7 +55,7 @@ public class TypeMapModelBuilderTests
 	[Fact]
 	public void Build_ExplicitAssemblyName_OverridesOutputPath ()
 	{
-		var builder = new TypeMapModelBuilder ();
+		var builder = new ModelBuilder ();
 		var model = builder.Build (Array.Empty<JavaPeerInfo> (), "/some/path/Foo.dll", "MyAssembly");
 		Assert.Equal ("MyAssembly", model.AssemblyName);
 	}

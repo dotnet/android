@@ -5,10 +5,10 @@ namespace Microsoft.Android.Build.TypeMap;
 
 /// <summary>
 /// Intermediate representation of a single TypeMap output assembly.
-/// This is the "AST" that describes what to emit — the PE emitter translates it 1:1 into IL.
-/// Built by <see cref="TypeMapModelBuilder"/>, consumed by <see cref="TypeMapAssemblyGenerator"/>.
+/// Describes what to emit — the emitter writes this directly into a PE assembly.
+/// Built by <see cref="ModelBuilder"/>, consumed by <see cref="TypeMapAssemblyGenerator"/>.
 /// </summary>
-sealed class TypeMapAssemblyModel
+sealed class TypeMapAssemblyData
 {
 	/// <summary>Assembly name (e.g., "_MyApp.TypeMap").</summary>
 	public string AssemblyName { get; set; } = "";
@@ -17,10 +17,10 @@ sealed class TypeMapAssemblyModel
 	public string ModuleName { get; set; } = "";
 
 	/// <summary>TypeMap entries — one per unique JNI name.</summary>
-	public List<TypeMapEntryModel> Entries { get; } = new ();
+	public List<TypeMapAttributeData> Entries { get; } = new ();
 
 	/// <summary>Proxy types to emit in the assembly.</summary>
-	public List<ProxyTypeModel> ProxyTypes { get; } = new ();
+	public List<JavaPeerProxyData> ProxyTypes { get; } = new ();
 
 	/// <summary>Assembly names that need [IgnoresAccessChecksTo] for cross-assembly n_* calls.</summary>
 	public List<string> IgnoresAccessChecksTo { get; } = new () { "Mono.Android", "Java.Interop" };
@@ -29,7 +29,7 @@ sealed class TypeMapAssemblyModel
 /// <summary>
 /// One [assembly: TypeMap("jni/name", typeof(TargetOrProxy))] entry.
 /// </summary>
-sealed class TypeMapEntryModel
+sealed class TypeMapAttributeData
 {
 	/// <summary>JNI type name, e.g., "android/app/Activity".</summary>
 	public string JniName { get; set; } = "";
@@ -44,7 +44,7 @@ sealed class TypeMapEntryModel
 /// <summary>
 /// A proxy type to generate in the TypeMap assembly (subclass of JavaPeerProxy).
 /// </summary>
-sealed class ProxyTypeModel
+sealed class JavaPeerProxyData
 {
 	/// <summary>Simple type name, e.g., "java_lang_Object_Proxy".</summary>
 	public string TypeName { get; set; } = "";
@@ -53,10 +53,10 @@ sealed class ProxyTypeModel
 	public string Namespace { get; set; } = "_TypeMap.Proxies";
 
 	/// <summary>Reference to the managed type this proxy wraps (for ldtoken in TargetType property).</summary>
-	public TypeRefModel TargetType { get; set; } = new ();
+	public TypeRefData TargetType { get; set; } = new ();
 
 	/// <summary>Reference to the invoker type (for interfaces/abstract types). Null if not applicable.</summary>
-	public TypeRefModel? InvokerType { get; set; }
+	public TypeRefData? InvokerType { get; set; }
 
 	/// <summary>Whether this proxy has a CreateInstance that can actually create instances (has activation ctor).</summary>
 	public bool HasActivation { get; set; }
@@ -68,19 +68,19 @@ sealed class ProxyTypeModel
 	public bool ImplementsIAndroidCallableWrapper => IsAcw;
 
 	/// <summary>UCO method wrappers for marshal methods (non-constructor).</summary>
-	public List<UcoMethodModel> UcoMethods { get; } = new ();
+	public List<UcoMethodData> UcoMethods { get; } = new ();
 
 	/// <summary>UCO constructor wrappers.</summary>
-	public List<UcoConstructorModel> UcoConstructors { get; } = new ();
+	public List<UcoConstructorData> UcoConstructors { get; } = new ();
 
 	/// <summary>RegisterNatives registrations (method name, JNI signature, wrapper name).</summary>
-	public List<NativeRegistrationModel> NativeRegistrations { get; } = new ();
+	public List<NativeRegistrationData> NativeRegistrations { get; } = new ();
 }
 
 /// <summary>
 /// A cross-assembly type reference (assembly name + full managed type name).
 /// </summary>
-sealed class TypeRefModel
+sealed class TypeRefData
 {
 	/// <summary>Full managed type name, e.g., "Android.App.Activity" or "MyApp.Outer+Inner".</summary>
 	public string ManagedTypeName { get; set; } = "";
@@ -93,7 +93,7 @@ sealed class TypeRefModel
 /// An [UnmanagedCallersOnly] static wrapper for a marshal method.
 /// Body: load all args → call n_* callback → ret.
 /// </summary>
-sealed class UcoMethodModel
+sealed class UcoMethodData
 {
 	/// <summary>Name of the generated wrapper method, e.g., "n_onCreate_uco_0".</summary>
 	public string WrapperName { get; set; } = "";
@@ -102,7 +102,7 @@ sealed class UcoMethodModel
 	public string CallbackMethodName { get; set; } = "";
 
 	/// <summary>Type containing the callback method.</summary>
-	public TypeRefModel CallbackType { get; set; } = new ();
+	public TypeRefData CallbackType { get; set; } = new ();
 
 	/// <summary>JNI method signature, e.g., "(Landroid/os/Bundle;)V". Used to determine CLR parameter types.</summary>
 	public string JniSignature { get; set; } = "";
@@ -112,19 +112,19 @@ sealed class UcoMethodModel
 /// An [UnmanagedCallersOnly] static wrapper for a constructor callback.
 /// Body: TrimmableNativeRegistration.ActivateInstance(self, typeof(TargetType)).
 /// </summary>
-sealed class UcoConstructorModel
+sealed class UcoConstructorData
 {
 	/// <summary>Name of the generated wrapper, e.g., "nctor_0_uco".</summary>
 	public string WrapperName { get; set; } = "";
 
 	/// <summary>Target type to pass to ActivateInstance.</summary>
-	public TypeRefModel TargetType { get; set; } = new ();
+	public TypeRefData TargetType { get; set; } = new ();
 }
 
 /// <summary>
 /// One JNI native method registration in RegisterNatives.
 /// </summary>
-sealed class NativeRegistrationModel
+sealed class NativeRegistrationData
 {
 	/// <summary>JNI method name to register, e.g., "n_onCreate" or "nctor_0".</summary>
 	public string JniMethodName { get; set; } = "";
