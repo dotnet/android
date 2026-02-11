@@ -119,6 +119,7 @@
           Outputs="@(_ConfigureRuntimesOutputs)">
     <PropertyGroup>
       <_PresetPrefix Condition=" '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">nativeaot-</_PresetPrefix>
+      <_PresetPrefix Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">coreclr-</_PresetPrefix>
       <_NoInline Condition=" '$(DoNotInlineMonodroid)' == 'true' ">-DDONT_INLINE=ON</_NoInline>
       <_NoStrip Condition=" '$(DoNotStripMonodroid)' == 'true' ">-DSTRIP_DEBUG=OFF</_NoStrip>
       <_LocalDotNetRuntimePath Condition=" '$(CLRLocalRuntimePath)' != '' And '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">-DLOCAL_CORECLR_PATH="$(CLRLocalRuntimePath)"</_LocalDotNetRuntimePath>
