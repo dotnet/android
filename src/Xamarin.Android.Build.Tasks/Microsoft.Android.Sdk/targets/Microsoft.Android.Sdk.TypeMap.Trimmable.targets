@@ -2,15 +2,19 @@
      This is a stub — the actual implementation will be added in a follow-up. -->
 <Project>
 
-  <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.TypeMap.Trimmable.CoreCLR.targets"
+  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.TypeMap.Trimmable.CoreCLR.targets"
       Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
-  <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.TypeMap.Trimmable.NativeAOT.targets"
+  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.TypeMap.Trimmable.NativeAOT.targets"
       Condition=" '$(_AndroidRuntime)' == 'NativeAOT' " />
 
   <Target Name="_ValidateTrimmableTypeMapRuntime"
       BeforeTargets="Build"
       Condition=" '$(_AndroidRuntime)' != 'CoreCLR' And '$(_AndroidRuntime)' != 'NativeAOT' ">
     <Error Text="Trimmable typemap is not supported for runtime '$(_AndroidRuntime)'. Supported runtimes: CoreCLR, NativeAOT." />
+  </Target>
+
+  <Target Name="_GenerateJavaStubs">
+    <Message Text="Trimmable typemap: skipping legacy _GenerateJavaStubs" Importance="High" />
   </Target>
 
 </Project>
