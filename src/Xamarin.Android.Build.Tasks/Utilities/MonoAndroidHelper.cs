@@ -875,6 +875,18 @@ namespace Xamarin.Android.Tasks
 			log.LogDebugMessage (reader.ReadToEnd ());
 		}
 
+		public static int GetMinimumApiLevel (AndroidTargetArch arch, AndroidRuntime runtime)
+		{
+			int minValue = 0;
+
+			Dictionary<AndroidTargetArch, int> apiLevels = runtime == AndroidRuntime.MonoVM ? XABuildConfig.ArchToApiLevel : XABuildConfig.ArchToApiLevelNonMono;
+			if (!apiLevels.TryGetValue (arch, out minValue)) {
+				throw new InvalidOperationException ($"Unable to determine minimum API level for architecture {arch}");
+			}
+
+			return minValue;
+		}
+
 		/// <summary>
 		/// Takes `libItem.ItemSpec` and transforms it to a file name of a native library. It will
 		/// remove any paths from `ItemSpec` and will make sure that the file ends with the `.so`
