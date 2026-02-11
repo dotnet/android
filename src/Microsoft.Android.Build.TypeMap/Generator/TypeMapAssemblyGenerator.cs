@@ -17,8 +17,7 @@ sealed class TypeMapAssemblyGenerator
 	/// <param name="assemblyName">Optional explicit assembly name. Derived from outputPath if null.</param>
 	public void Generate (IReadOnlyList<JavaPeerInfo> peers, string outputPath, string? assemblyName = null)
 	{
-		var builder = new ModelBuilder ();
-		var model = builder.Build (peers, outputPath, assemblyName);
+		var model = ModelBuilder.Build (peers, outputPath, assemblyName);
 		var emitter = new TypeMapAssemblyEmitter ();
 		emitter.Emit (model, outputPath);
 	}

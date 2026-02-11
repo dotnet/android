@@ -64,10 +64,6 @@ sealed class RootTypeMapAssemblyGenerator
 			metadata.GetOrAddString ("System.Runtime"),
 			new Version (11, 0, 0, 0), default, default, 0, default);
 
-		var systemRuntimeInteropServicesRef = metadata.AddAssemblyReference (
-			metadata.GetOrAddString ("System.Runtime.InteropServices"),
-			new Version (11, 0, 0, 0), default, default, 0, default);
-
 		// <Module> type
 		metadata.AddTypeDefinition (
 			default, default,
@@ -82,9 +78,6 @@ sealed class RootTypeMapAssemblyGenerator
 
 		var baseAttrCtorRef = AddMemberRef (metadata, attributeTypeRef, ".ctor",
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }));
-
-		var stringRef = metadata.AddTypeReference (systemRuntimeRef,
-			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("String"));
 
 		// Define TypeMapAssemblyTargetAttribute with (string assemblyName) ctor
 		int typeFieldStart = metadata.GetRowCount (TableIndex.Field) + 1;

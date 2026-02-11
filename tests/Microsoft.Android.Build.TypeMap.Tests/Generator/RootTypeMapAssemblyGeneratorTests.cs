@@ -130,4 +130,34 @@ public class RootTypeMapAssemblyGeneratorTests
 			CleanUp (path);
 		}
 	}
+
+	[Fact]
+	public void Generate_AttributeBlobValues_MatchTargetNames ()
+	{
+		var targets = new [] { "_App.TypeMap", "_Mono.Android.TypeMap" };
+		var path = GenerateRootAssembly (targets);
+		try {
+			using var pe = new PEReader (File.OpenRead (path));
+			var reader = pe.GetMetadataReader ();
+
+			var attrValues = new List<string> ();
+			foreach (var attrHandle in reader.GetCustomAttributes (EntityHandle.AssemblyDefinition)) {
+				var attr = reader.GetCustomAttribute (attrHandle);
+				var blob = reader.GetBlobReader (attr.Value);
+
+				// Custom attribute blob: prolog (2 bytes) + SerString value
+				var prolog = blob.ReadUInt16 ();
+				Assert.Equal (1, prolog); // ECMA-335 prolog
+				var value = blob.ReadSerializedString ();
+				Assert.NotNull (value);
+				attrValues.Add (value!);
+			}
+
+			Assert.Equal (2, attrValues.Count);
+			Assert.Contains ("_App.TypeMap", attrValues);
+			Assert.Contains ("_Mono.Android.TypeMap", attrValues);
+		} finally {
+			CleanUp (path);
+		}
+	}
 }
