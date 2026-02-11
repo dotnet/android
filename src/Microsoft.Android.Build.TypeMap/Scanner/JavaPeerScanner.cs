@@ -221,9 +221,6 @@ sealed class JavaPeerScanner : IDisposable
 		// The JNI name is the Java method name (without the n_ prefix)
 		string jniName = registerInfo.JniName;
 
-		// Parse callback type info from connector string
-		var (callbackTypeName, callbackAssemblyName) = ParseConnectorString (registerInfo.Connector);
-
 		methods.Add (new MarshalMethodInfo (
 			jniName: jniName,
 			jniSignature: registerInfo.Signature ?? "()V",
@@ -231,8 +228,6 @@ sealed class JavaPeerScanner : IDisposable
 			managedMethodName: methodName,
 			declaringTypeName: declaringTypeName,
 			declaringAssemblyName: index.AssemblyName,
-			callbackTypeName: callbackTypeName,
-			callbackAssemblyName: callbackAssemblyName,
 			nativeCallbackName: nativeCallbackName,
 			parameters: parameters,
 			jniReturnType: returnType,
@@ -814,40 +809,4 @@ sealed class JavaPeerScanner : IDisposable
 	}
 
 	// ================================================================
-	// Gap #2: Parse connector string for callback type info
-	// ================================================================
-
-	/// <summary>
-	/// Parse a connector string to extract the callback type and assembly name.
-	/// Connector format: "GetHandlerName:TypeName, Assembly, Version=..., Culture=..., PublicKeyToken=..."
-	/// The colon separates the handler method name from the type that contains it.
-	/// </summary>
-	static (string? callbackTypeName, string? callbackAssemblyName) ParseConnectorString (string? connector)
-	{
-		if (connector == null || connector.Length == 0) {
-			return (null, null);
-		}
-
-		var colonIndex = connector.IndexOf (':');
-		if (colonIndex < 0 || colonIndex >= connector.Length - 1) {
-			return (null, null);
-		}
-
-		var typeInfo = connector.Substring (colonIndex + 1);
-		var commaIndex = typeInfo.IndexOf (',');
-		string callbackTypeName;
-		string? callbackAssemblyName = null;
-
-		if (commaIndex > 0) {
-			callbackTypeName = typeInfo.Substring (0, commaIndex).Trim ();
-			// Assembly name is the next comma-separated value
-			var rest = typeInfo.Substring (commaIndex + 1);
-			var nextComma = rest.IndexOf (',');
-			callbackAssemblyName = (nextComma > 0 ? rest.Substring (0, nextComma) : rest).Trim ();
-		} else {
-			callbackTypeName = typeInfo.Trim ();
-		}
-
-		return (callbackTypeName, callbackAssemblyName);
-	}
 }
