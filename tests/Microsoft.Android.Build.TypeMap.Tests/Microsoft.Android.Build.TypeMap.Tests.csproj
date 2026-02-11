@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Microsoft.Android.Build.TypeMap.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <!-- Exclude TestFixtures subdirectory — it's a separate project compiled independently -->
+  <ItemGroup>
+    <Compile Remove="TestFixtures\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.0.2" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Microsoft.Android.Build.TypeMap\Microsoft.Android.Build.TypeMap.csproj" />
+    <ProjectReference Include="TestFixtures\TestFixtures.csproj">
+      <!-- Don't add as a compile-time reference — we only need the built DLL as scanner test input -->
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+
+  <!-- Copy TestFixtures output to our output directory so tests can find it -->
+  <Target Name="_CopyTestFixturesOutput" AfterTargets="Build">
+    <ItemGroup>
+      <_TestFixtureFiles Include="TestFixtures\bin\$(Configuration)\$(DotNetStableTargetFramework)\TestFixtures.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_TestFixtureFiles)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>
