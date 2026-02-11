@@ -115,18 +115,6 @@
     <None Include="Xamarin.Android.Tooling.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Xamarin.Android.TypeMap.LlvmIr.targets">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Xamarin.Android.TypeMap.Trimmable.targets">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Xamarin.Android.TypeMap.Trimmable.CoreCLR.targets">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Xamarin.Android.TypeMap.Trimmable.NativeAOT.targets">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="ManifestOverlays\Timing.xml">
