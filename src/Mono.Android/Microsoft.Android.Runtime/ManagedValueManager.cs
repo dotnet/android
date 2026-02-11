@@ -23,6 +23,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 {
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
+	readonly Lock _registeredInstancesLock = new ();
 	readonly Dictionary<int, List<ReferenceTrackingHandle>> RegisteredInstances = new ();
 	readonly ConcurrentQueue<IntPtr> CollectedContexts = new ();
 
@@ -62,7 +63,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 			Debug.Assert (contextPtr != IntPtr.Zero, "CollectedContexts should not contain null pointers.");
 			HandleContext* context = (HandleContext*)contextPtr;
 			
-			lock (RegisteredInstances) {
+			lock (_registeredInstancesLock) {
 				Remove (context);
 			}
 
@@ -101,7 +102,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 			JniObjectReference.Dispose (ref r, JniObjectReferenceOptions.CopyAndDispose);
 		}
 		int key = value.JniIdentityHashCode;
-		lock (RegisteredInstances) {
+		lock (_registeredInstancesLock) {
 			List<ReferenceTrackingHandle>? peers;
 			if (!RegisteredInstances.TryGetValue (key, out peers)) {
 				peers = [new ReferenceTrackingHandle (value)];
@@ -154,7 +155,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 		int key = GetJniIdentityHashCode (reference);
 
-		lock (RegisteredInstances) {
+		lock (_registeredInstancesLock) {
 			if (!RegisteredInstances.TryGetValue (key, out List<ReferenceTrackingHandle>? peers))
 				return null;
 
@@ -182,7 +183,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		if (value == null)
 			throw new ArgumentNullException (nameof (value));
 
-		lock (RegisteredInstances) {
+		lock (_registeredInstancesLock) {
 			int key = value.JniIdentityHashCode;
 			if (!RegisteredInstances.TryGetValue (key, out List<ReferenceTrackingHandle>? peers))
 				return;
@@ -278,7 +279,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		// Remove any collected contexts before iterating over all the registered instances
 		CollectPeers ();
 
-		lock (RegisteredInstances) {
+		lock (_registeredInstancesLock) {
 			var peers = new List<JniSurfacedPeerInfo> (RegisteredInstances.Count);
 			foreach (var (identityHashCode, referenceTrackingHandles) in RegisteredInstances) {
 				foreach (var peer in referenceTrackingHandles) {
