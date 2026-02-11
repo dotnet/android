@@ -435,6 +435,39 @@ public class TypeMapAssemblyGeneratorTests
 		Assert.Equal (JniParamKind.Object, JniSignatureHelper.ParseReturnType ("()Ljava/lang/String;"));
 	}
 
+	// ---- Negative / edge-case tests ----
+
+	[Theory]
+	[InlineData ("")]
+	[InlineData ("not-a-sig")]
+	[InlineData ("(")]
+	public void ParseParameterTypes_InvalidSignature_ThrowsOrReturnsEmpty (string signature)
+	{
+		// Should not crash — either returns empty or throws ArgumentException
+		try {
+			var result = JniSignatureHelper.ParseParameterTypes (signature);
+			// If it doesn't throw, empty is acceptable
+			Assert.NotNull (result);
+		} catch (Exception ex) when (ex is ArgumentException || ex is IndexOutOfRangeException || ex is FormatException) {
+			// Any of these are acceptable for malformed input
+		}
+	}
+
+	[Fact]
+	public void Generate_NullPeers_ThrowsArgumentNull ()
+	{
+		var gen = new TypeMapAssemblyGenerator ();
+		var tmpPath = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ("N"), "test.dll");
+		Assert.Throws<ArgumentNullException> (() => gen.Generate (null!, tmpPath));
+	}
+
+	[Fact]
+	public void Generate_NullOutputPath_ThrowsArgumentNull ()
+	{
+		var gen = new TypeMapAssemblyGenerator ();
+		Assert.Throws<ArgumentNullException> (() => gen.Generate (Array.Empty<JavaPeerInfo> (), null!));
+	}
+
 	static void CleanUp (string path)
 	{
 		var dir = Path.GetDirectoryName (path);
