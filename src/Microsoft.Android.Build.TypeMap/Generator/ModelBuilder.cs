@@ -1,16 +1,29 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Microsoft.Android.Build.TypeMap;
 
 /// <summary>
 /// Builds a <see cref="TypeMapAssemblyData"/> from scanned <see cref="JavaPeerInfo"/> records.
-/// All decision logic (deduplication, ACW detection, callback resolution, proxy naming) lives here.
+/// All decision logic (deduplication, alias detection, ACW filtering, 2-arg vs 3-arg attribute
+/// selection, callback resolution, proxy naming) lives here.
 /// The output model is a plain data structure that the emitter writes directly into a PE assembly.
 /// </summary>
 sealed class ModelBuilder
 {
+	static readonly HashSet<string> EssentialRuntimeTypes = new (StringComparer.Ordinal) {
+		"java/lang/Object",
+		"java/lang/Class",
+		"java/lang/String",
+		"java/lang/Throwable",
+		"java/lang/Exception",
+		"java/lang/RuntimeException",
+		"java/lang/Error",
+		"java/lang/Thread",
+	};
+
 	/// <summary>
 	/// Builds a TypeMap assembly model for the given peers.
 	/// </summary>
@@ -34,31 +47,97 @@ sealed class ModelBuilder
 			ModuleName = moduleName,
 		};
 
-		var seenJniNames = new HashSet<string> (StringComparer.Ordinal);
-
+		// Group peers by JNI name to detect aliases (multiple .NET types → same Java class).
+		var groups = new Dictionary<string, List<JavaPeerInfo>> (StringComparer.Ordinal);
 		foreach (var peer in peers) {
-			if (!seenJniNames.Add (peer.JavaName)) {
-				continue;
+			if (!groups.TryGetValue (peer.JavaName, out var list)) {
+				list = new List<JavaPeerInfo> ();
+				groups [peer.JavaName] = list;
 			}
+			list.Add (peer);
+		}
+
+		foreach (var kvp in groups) {
+			string jniName = kvp.Key;
+			var peersForName = kvp.Value;
+
+			if (peersForName.Count == 1) {
+				var peer = peersForName [0];
+				EmitSinglePeer (model, peer, assemblyName);
+			} else {
+				EmitAliasedPeers (model, jniName, peersForName, assemblyName);
+			}
+		}
+
+		return model;
+	}
+
+	void EmitSinglePeer (TypeMapAssemblyData model, JavaPeerInfo peer, string assemblyName)
+	{
+		bool hasProxy = peer.ActivationCtor != null || peer.InvokerTypeName != null;
+		bool isAcw = !peer.DoNotGenerateAcw && !peer.IsInterface && peer.MarshalMethods.Count > 0;
+
+		JavaPeerProxyData? proxy = null;
+		if (hasProxy) {
+			proxy = BuildProxyType (peer, isAcw);
+			model.ProxyTypes.Add (proxy);
+		}
+
+		model.Entries.Add (BuildEntry (peer, proxy, assemblyName));
+	}
+
+	void EmitAliasedPeers (TypeMapAssemblyData model, string jniName,
+		List<JavaPeerInfo> peersForName, string assemblyName)
+	{
+		// First peer is the "primary" — it gets the base JNI name entry.
+		// Remaining peers get indexed alias entries: "jni/name[0]", "jni/name[1]", ...
+		for (int i = 0; i < peersForName.Count; i++) {
+			var peer = peersForName [i];
+			string entryJniName = i == 0 ? jniName : $"{jniName}[{i}]";
 
 			bool hasProxy = peer.ActivationCtor != null || peer.InvokerTypeName != null;
 			bool isAcw = !peer.DoNotGenerateAcw && !peer.IsInterface && peer.MarshalMethods.Count > 0;
 
 			JavaPeerProxyData? proxy = null;
 			if (hasProxy) {
-				proxy = BuildProxyType (peer, isAcw);
+				string suffix = i == 0 ? "_Proxy" : $"_{i}_Proxy";
+				proxy = BuildProxyType (peer, isAcw, suffix);
 				model.ProxyTypes.Add (proxy);
 			}
 
-			model.Entries.Add (BuildEntry (peer, proxy, assemblyName));
+			model.Entries.Add (BuildEntry (peer, proxy, assemblyName, entryJniName));
 		}
-
-		return model;
 	}
 
-	static JavaPeerProxyData BuildProxyType (JavaPeerInfo peer, bool isAcw)
+	/// <summary>
+	/// Determines whether a type should use the unconditional (2-arg) TypeMap attribute.
+	/// Unconditional types are always preserved by the trimmer.
+	/// </summary>
+	static bool IsUnconditionalEntry (JavaPeerInfo peer)
 	{
-		var proxyTypeName = peer.JavaName.Replace ('/', '_').Replace ('$', '_') + "_Proxy";
+		// Essential runtime types needed by the Java interop runtime
+		if (EssentialRuntimeTypes.Contains (peer.JavaName)) {
+			return true;
+		}
+
+		// User-defined ACW types (not MCW bindings, not interfaces) are unconditional
+		// because Android can instantiate them from Java at any time.
+		if (!peer.DoNotGenerateAcw && !peer.IsInterface) {
+			return true;
+		}
+
+		// Types marked unconditional by the scanner (component attributes: Activity, Service, etc.)
+		if (peer.IsUnconditional) {
+			return true;
+		}
+
+		return false;
+	}
+
+	static JavaPeerProxyData BuildProxyType (JavaPeerInfo peer, bool isAcw, string? suffix = null)
+	{
+		suffix ??= "_Proxy";
+		var proxyTypeName = peer.JavaName.Replace ('/', '_').Replace ('$', '_') + suffix;
 
 		var proxy = new JavaPeerProxyData {
 			TypeName = proxyTypeName,
@@ -128,8 +207,6 @@ sealed class ModelBuilder
 	static void BuildNativeRegistrations (JavaPeerProxyData proxy)
 	{
 		foreach (var uco in proxy.UcoMethods) {
-			// The JNI method name registered is the n_* callback name (e.g., "n_onCreate")
-			// but we need the Java-side native method name which matches the callback name
 			proxy.NativeRegistrations.Add (new NativeRegistrationData {
 				JniMethodName = uco.CallbackMethodName,
 				JniSignature = uco.JniSignature,
@@ -138,7 +215,6 @@ sealed class ModelBuilder
 		}
 
 		foreach (var uco in proxy.UcoConstructors) {
-			// Constructor wrapper name is "nctor_N_uco", JNI name is "nctor_N"
 			string jniName = uco.WrapperName;
 			int ucoSuffix = jniName.LastIndexOf ("_uco", StringComparison.Ordinal);
 			if (ucoSuffix >= 0) {
@@ -147,27 +223,33 @@ sealed class ModelBuilder
 
 			proxy.NativeRegistrations.Add (new NativeRegistrationData {
 				JniMethodName = jniName,
-				// Constructor UCO wrappers have a fixed (IntPtr, IntPtr) signature — the JNI
-				// signature for registration is the Java constructor's JNI signature.
-				// For now, use "()V" as placeholder — the actual ctor signature is resolved at emit time.
 				JniSignature = "()V",
 				WrapperMethodName = uco.WrapperName,
 			});
 		}
 	}
 
-	static TypeMapAttributeData BuildEntry (JavaPeerInfo peer, JavaPeerProxyData? proxy, string outputAssemblyName)
+	static TypeMapAttributeData BuildEntry (JavaPeerInfo peer, JavaPeerProxyData? proxy,
+		string outputAssemblyName, string? overrideJniName = null)
 	{
-		string typeRef;
+		string proxyRef;
 		if (proxy != null) {
-			typeRef = $"{proxy.Namespace}.{proxy.TypeName}, {outputAssemblyName}";
+			proxyRef = $"{proxy.Namespace}.{proxy.TypeName}, {outputAssemblyName}";
 		} else {
-			typeRef = $"{peer.ManagedTypeName}, {peer.AssemblyName}";
+			proxyRef = $"{peer.ManagedTypeName}, {peer.AssemblyName}";
+		}
+
+		bool isUnconditional = IsUnconditionalEntry (peer);
+		string? targetRef = null;
+		if (!isUnconditional) {
+			// Trimmable: the trimmer will preserve the proxy only if the target type is referenced.
+			targetRef = $"{peer.ManagedTypeName}, {peer.AssemblyName}";
 		}
 
 		return new TypeMapAttributeData {
-			JniName = peer.JavaName,
-			TypeReference = typeRef,
+			JniName = overrideJniName ?? peer.JavaName,
+			ProxyTypeReference = proxyRef,
+			TargetTypeReference = targetRef,
 		};
 	}
 }

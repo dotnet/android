@@ -295,12 +295,12 @@ public class TypeMapAssemblyGeneratorTests
 		}
 	}
 
-	// ---- Deduplication tests ----
+	// ---- Alias tests ----
 
 	[Fact]
-	public void Generate_DuplicateJniNames_KeepsFirstOnly ()
+	public void Generate_DuplicateJniNames_CreatesAliasEntries ()
 	{
-		// Create two peers with the same JNI name
+		// Create two peers with the same JNI name — these become aliases
 		var peers = new List<JavaPeerInfo> {
 			new JavaPeerInfo {
 				JavaName = "test/Duplicate",
@@ -318,17 +318,14 @@ public class TypeMapAssemblyGeneratorTests
 			},
 		};
 
-		var path = GenerateAssembly (peers, "DedupTest");
+		var path = GenerateAssembly (peers, "AliasTest");
 		try {
 			var (pe, reader) = OpenAssembly (path);
 			using (pe) {
-				// Should only have one proxy for "test/Duplicate"
-				var proxyTypes = reader.TypeDefinitions
-					.Select (h => reader.GetTypeDefinition (h))
-					.Where (t => reader.GetString (t.Name) == "test_Duplicate_Proxy")
-					.ToList ();
-				// No proxies because neither peer has an activation ctor or invoker
-				Assert.Empty (proxyTypes);
+				// Neither peer has activation ctor → no proxies, but both get entries
+				var assemblyAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
+				// Should have 2 TypeMap entries + IgnoresAccessChecksTo entries
+				Assert.True (assemblyAttrs.Count () >= 2);
 			}
 		} finally {
 			CleanUp (path);

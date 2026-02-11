@@ -37,7 +37,8 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _activateInstanceRef;
 	MemberReferenceHandle _registerMethodRef;
 	MemberReferenceHandle _ucoAttrCtorRef;
-	MemberReferenceHandle _typeMapAttrCtorRef;
+	MemberReferenceHandle _typeMapAttrCtorRef2Arg;
+	MemberReferenceHandle _typeMapAttrCtorRef3Arg;
 
 	/// <summary>
 	/// Emits a PE assembly from the given model and writes it to <paramref name="outputPath"/>.
@@ -196,11 +197,22 @@ sealed class TypeMapAssemblyEmitter
 		genericInstBlob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (javaLangObjectRef));
 		var closedAttrTypeSpec = metadata.AddTypeSpecification (metadata.GetOrAddBlob (genericInstBlob));
 
-		_typeMapAttrCtorRef = AddMemberRef (metadata, closedAttrTypeSpec, ".ctor",
+		// 2-arg: TypeMap(string jniName, Type proxyType) — unconditional
+		_typeMapAttrCtorRef2Arg = AddMemberRef (metadata, closedAttrTypeSpec, ".ctor",
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
 				rt => rt.Void (),
 				p => {
 					p.AddParameter ().Type ().Type (_stringRef, false);
+					p.AddParameter ().Type ().Type (_systemTypeRef, false);
+				}));
+
+		// 3-arg: TypeMap(string jniName, Type proxyType, Type targetType) — trimmable
+		_typeMapAttrCtorRef3Arg = AddMemberRef (metadata, closedAttrTypeSpec, ".ctor",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (3,
+				rt => rt.Void (),
+				p => {
+					p.AddParameter ().Type ().Type (_stringRef, false);
+					p.AddParameter ().Type ().Type (_systemTypeRef, false);
 					p.AddParameter ().Type ().Type (_systemTypeRef, false);
 				}));
 	}
@@ -428,10 +440,23 @@ sealed class TypeMapAssemblyEmitter
 	{
 		var attrBlob = new BlobBuilder ();
 		attrBlob.WriteUInt16 (0x0001); // Prolog
-		attrBlob.WriteSerializedString (entry.JniName);
-		attrBlob.WriteSerializedString (entry.TypeReference);
-		attrBlob.WriteUInt16 (0x0000); // NumNamed
-		metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, _typeMapAttrCtorRef, metadata.GetOrAddBlob (attrBlob));
+
+		if (entry.IsUnconditional) {
+			// 2-arg: TypeMap(jniName, proxyType) — always preserved
+			attrBlob.WriteSerializedString (entry.JniName);
+			attrBlob.WriteSerializedString (entry.ProxyTypeReference);
+			attrBlob.WriteUInt16 (0x0000); // NumNamed
+			metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, _typeMapAttrCtorRef2Arg,
+				metadata.GetOrAddBlob (attrBlob));
+		} else {
+			// 3-arg: TypeMap(jniName, proxyType, targetType) — trimmable
+			attrBlob.WriteSerializedString (entry.JniName);
+			attrBlob.WriteSerializedString (entry.ProxyTypeReference);
+			attrBlob.WriteSerializedString (entry.TargetTypeReference!);
+			attrBlob.WriteUInt16 (0x0000); // NumNamed
+			metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, _typeMapAttrCtorRef3Arg,
+				metadata.GetOrAddBlob (attrBlob));
+		}
 	}
 
 	// ---- IgnoresAccessChecksTo ----
