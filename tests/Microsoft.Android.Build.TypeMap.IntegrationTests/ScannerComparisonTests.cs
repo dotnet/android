@@ -188,25 +188,71 @@ public class ScannerComparisonTests : IDisposable
 	static string? FindMonoAndroidAssembly ()
 	{
 		var thisDir = Path.GetDirectoryName (typeof (ScannerComparisonTests).Assembly.Location)!;
+		var repoRoot = Path.GetFullPath (Path.Combine (thisDir, "..", "..", "..", "..", ".."));
 
-		// Look in standard locations for a built Mono.Android.dll
-		var candidates = new [] {
-			// Same repo after full build
-			Path.Combine (thisDir, "..", "..", "..", "..", "..", "bin", "Debug", "lib", "packs", "Microsoft.Android.Ref.36", "36.1.99", "ref", "net11.0", "Mono.Android.dll"),
-			Path.Combine (thisDir, "..", "..", "..", "..", "..", "bin", "Debug", "lib", "packs", "Microsoft.Android.Ref.36.1", "36.1.99", "ref", "net11.0", "Mono.Android.dll"),
-			// Sibling android repo
-			Path.Combine (thisDir, "..", "..", "..", "..", "..", "..", "android", "bin", "Debug", "lib", "packs", "Microsoft.Android.Ref.36", "36.1.99", "ref", "net11.0", "Mono.Android.dll"),
-			Path.Combine (thisDir, "..", "..", "..", "..", "..", "..", "android", "bin", "Debug", "lib", "packs", "Microsoft.Android.Ref.36.1", "36.1.99", "ref", "net11.0", "Mono.Android.dll"),
-		};
+		// Try same repo first, then sibling
+		var repoDirs = new [] { repoRoot, Path.Combine (repoRoot, "..", "android") };
 
-		foreach (var candidate in candidates) {
-			var resolved = Path.GetFullPath (candidate);
-			if (File.Exists (resolved)) {
-				return resolved;
+		foreach (var repo in repoDirs) {
+			var packsDir = Path.Combine (repo, "bin", "Debug", "lib", "packs");
+			if (!Directory.Exists (packsDir)) {
+				continue;
+			}
+
+			// Find any Microsoft.Android.Ref.* directory
+			foreach (var refDir in Directory.GetDirectories (packsDir, "Microsoft.Android.Ref.*")) {
+				// Find version directories inside
+				foreach (var versionDir in Directory.GetDirectories (refDir)) {
+					var candidate = Path.Combine (versionDir, "ref");
+					if (!Directory.Exists (candidate)) {
+						continue;
+					}
+
+					// Find any net*.0 TFM directory
+					foreach (var tfmDir in Directory.GetDirectories (candidate, "net*")) {
+						var dll = Path.Combine (tfmDir, "Mono.Android.dll");
+						if (File.Exists (dll)) {
+							return dll;
+						}
+					}
+				}
 			}
 		}
 
 		return null;
+	}
+
+	[SkippableFact]
+	public void ScannerDiagnostics_MonoAndroid ()
+	{
+		var assemblyPath = FindMonoAndroidAssembly ();
+		Skip.If (assemblyPath == null, "Mono.Android.dll not found");
+
+		using var scanner = new JavaPeerScanner ();
+		var peers = scanner.Scan (new [] { assemblyPath });
+
+		var interfaces = peers.Count (p => p.IsInterface);
+		var abstracts = peers.Count (p => p.IsAbstract);
+		var generics = peers.Count (p => p.IsGenericDefinition);
+		var withMethods = peers.Count (p => p.MarshalMethods.Count > 0);
+		var totalMethods = peers.Sum (p => p.MarshalMethods.Count);
+		var withConstructors = peers.Count (p => p.JavaConstructors.Count > 0);
+		var withBase = peers.Count (p => p.BaseJavaName != null);
+		var withInterfaces = peers.Count (p => p.ImplementedInterfaceJavaNames.Count > 0);
+
+		output.WriteLine ($"Total types:       {peers.Count}");
+		output.WriteLine ($"Interfaces:        {interfaces}");
+		output.WriteLine ($"Abstract classes:   {abstracts}");
+		output.WriteLine ($"Generic defs:       {generics}");
+		output.WriteLine ($"With marshal methods: {withMethods} ({totalMethods} total methods)");
+		output.WriteLine ($"With constructors:  {withConstructors}");
+		output.WriteLine ($"With base Java:     {withBase}");
+		output.WriteLine ($"With interfaces:    {withInterfaces}");
+
+		// Mono.Android.dll should have thousands of types
+		Assert.True (peers.Count > 3000, $"Expected >3000 types, got {peers.Count}");
+		Assert.True (interfaces > 500, $"Expected >500 interfaces, got {interfaces}");
+		Assert.True (totalMethods > 10000, $"Expected >10000 marshal methods, got {totalMethods}");
 	}
 
 	public void Dispose ()
