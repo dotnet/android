@@ -63,6 +63,35 @@ public partial class BuildTest3 : BaseTest
 			_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
 		};
 
-		List<EnvironmentHelper.JniPreloads> preloads = EnvironmentHelper.ReadJniPreloads (envFiles, numberOfDsoCacheEntries, runtime);
+		const uint ExpectedIndexStride = 4;
+		const int ExpectedEntryCount = 4; // stride * number_of_libs
+
+		List<EnvironmentHelper.JniPreloads> allPreloads = EnvironmentHelper.ReadJniPreloads (envFiles, numberOfDsoCacheEntries, runtime);
+		foreach (EnvironmentHelper.JniPreloads preloads in allPreloads) {
+			Assert.IsTrue (preloads.IndexStride == ExpectedIndexStride, $"JNI preloads index stride should be {ExpectedIndexStride}, was {preloads.IndexStride} instead. Source file: {preloads.SourceFile}");
+			Assert.IsTrue (preloads.Entries.Count == ExpectedEntryCount, $"JNI preloads index entry count should be {ExpectedEntryCount}, was {preloads.Entries.Count} instead. Source file: {preloads.SourceFile}");
+
+			// DSO cache entries are sorted based on their **mutated name's** 64-bit xxHash, which
+			// won't change but builds may add/remove libraries and, thus, change the indexes after
+			// sorting. For that reason we don't verify the index values and use them just for reporting.
+			//
+			// Also, all the entries will point to the same library name. Name variations aren't
+			// stored directly in the DSO cache, just their hashes which are used for lookup at run time.
+			//
+			// We use a Dictionary<> here because there might be more libraries to preload in the future.
+			var expectedLibNames = new Dictionary<string, uint> (StringComparer.Ordinal) {
+				{ "libSystem.Security.Cryptography.Native.Android.so", 0 },
+			};
+
+			for (int i = 0; i < preloads.Entries.Count; i++) {
+				EnvironmentHelper.JniPreloadsEntry entry = preloads.Entries[i];
+				Assert.IsTrue (expectedLibNames.ContainsKey (entry.LibraryName), $"JNI preloads entry at index {i}, referring to library at DSO cache index {entry.Index} has unexpected name '{entry.LibraryName}';  Source file: {preloads.SourceFile}");
+				expectedLibNames[entry.LibraryName]++;
+			}
+
+			foreach (var kvp in expectedLibNames) {
+				Assert.IsTrue (kvp.Value == ExpectedIndexStride, $"JNI preloads entry '{kvp.Key}' should have {ExpectedIndexStride} instances, it had {kvp.Value} instead. Source file: {preloads.SourceFile}");
+			}
+		}
 	}
 }
