@@ -78,12 +78,7 @@ sealed class JavaPeerScanner : IDisposable
 				}
 			}
 
-			// Skip invoker types (they share JNI names with their interface)
-			if (IsInvokerType (typeDef, doNotGenerateAcw, index)) {
-				continue;
-			}
-
-			var fullName = GetFullName (typeDef, index.Reader);
+				var fullName = GetFullName (typeDef, index.Reader);
 			var ns = index.Reader.GetString (typeDef.Namespace);
 			var shortName = index.Reader.GetString (typeDef.Name);
 			if (typeDef.IsNested) {
@@ -144,22 +139,6 @@ sealed class JavaPeerScanner : IDisposable
 	static bool IsModuleType (TypeDefinition typeDef, MetadataReader reader)
 	{
 		return reader.GetString (typeDef.Name) == "<Module>";
-	}
-
-	/// <summary>
-	/// Invoker types are implementation details — they implement interfaces
-	/// for Java-to-.NET calls. They have DoNotGenerateAcw=true and their name
-	/// typically ends with "Invoker".
-	/// They are excluded from the TypeMap entirely.
-	/// </summary>
-	static bool IsInvokerType (TypeDefinition typeDef, bool doNotGenerateAcw, AssemblyIndex index)
-	{
-		if (!doNotGenerateAcw) {
-			return false;
-		}
-
-		var name = index.Reader.GetString (typeDef.Name);
-		return name.EndsWith ("Invoker", StringComparison.Ordinal);
 	}
 
 	List<MarshalMethodInfo> CollectMarshalMethods (TypeDefinition typeDef, AssemblyIndex index)

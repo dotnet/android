@@ -139,7 +139,7 @@ namespace Android.Widget
 
 // ============================================================
 // Interface types (trimmable, no JCW, no RegisterNatives)
-// Invoker types should be EXCLUDED from TypeMap
+// Invoker types should be INCLUDED in scanner output (filtered by generators later)
 // ============================================================
 namespace Android.Views
 {
@@ -153,7 +153,7 @@ namespace Android.Views
 	// Invoker types ARE internal implementation details.
 	// In real Mono.Android.dll, invokers DO have [Register] with DoNotGenerateAcw=true
 	// and the SAME JNI name as their interface.
-	// The scanner must exclude them from the TypeMap output.
+	// The scanner includes them — generators filter them later.
 	[Register ("android/view/View$OnClickListener", DoNotGenerateAcw = true)]
 	internal sealed class IOnClickListenerInvoker : Java.Lang.Object, IOnClickListener
 	{

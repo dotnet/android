@@ -32,6 +32,13 @@ public class JavaPeerScannerTests
 		return peer;
 	}
 
+	JavaPeerInfo FindByManagedName (List<JavaPeerInfo> peers, string managedName)
+	{
+		var peer = peers.FirstOrDefault (p => p.ManagedTypeName == managedName);
+		Assert.NotNull (peer);
+		return peer;
+	}
+
 	// ================================================================
 	// Basic scanning: types with [Register] are discovered
 	// ================================================================
@@ -140,20 +147,22 @@ public class JavaPeerScannerTests
 	public void Scan_InterfaceType_IsMarkedAsInterface ()
 	{
 		var peers = ScanFixtures ();
-		var listener = FindByJavaName (peers, "android/view/View$OnClickListener");
+		var listener = FindByManagedName (peers, "Android.Views.IOnClickListener");
 		Assert.True (listener.IsInterface, "IOnClickListener should be marked as interface");
 	}
 
 	// ================================================================
-	// Invoker types: EXCLUDED from TypeMap
+	// Invoker types: INCLUDED in scanner output (filtered later by generators)
 	// ================================================================
 
 	[Fact]
-	public void Scan_InvokerTypes_AreExcluded ()
+	public void Scan_InvokerTypes_AreIncluded ()
 	{
 		var peers = ScanFixtures ();
-		var invokers = peers.Where (p => p.ManagedTypeName.EndsWith ("Invoker")).ToList ();
-		Assert.Empty (invokers);
+		var invoker = peers.FirstOrDefault (p => p.ManagedTypeName == "Android.Views.IOnClickListenerInvoker");
+		Assert.NotNull (invoker);
+		Assert.True (invoker.DoNotGenerateAcw, "Invoker should have DoNotGenerateAcw=true");
+		Assert.Equal ("android/view/View$OnClickListener", invoker.JavaName);
 	}
 
 	// ================================================================
@@ -255,15 +264,14 @@ public class JavaPeerScannerTests
 	// ================================================================
 
 	[Fact]
-	public void Scan_NoDuplicateJavaNames ()
+	public void Scan_InvokerSharesJavaNameWithInterface ()
 	{
 		var peers = ScanFixtures ();
-		var duplicates = peers.GroupBy (p => p.JavaName)
-			.Where (g => g.Count () > 1)
-			.Select (g => g.Key)
-			.ToList ();
-
-		Assert.Empty (duplicates);
+		var clickListenerPeers = peers.Where (p => p.JavaName == "android/view/View$OnClickListener").ToList ();
+		// Interface + Invoker share the same JNI name (this is expected — they're aliases)
+		Assert.Equal (2, clickListenerPeers.Count);
+		Assert.Contains (clickListenerPeers, p => p.IsInterface);
+		Assert.Contains (clickListenerPeers, p => p.DoNotGenerateAcw);
 	}
 
 	// ================================================================
@@ -422,19 +430,6 @@ public class JavaPeerScannerTests
 		var provider = FindByJavaName (peers, "my/app/MyProvider");
 		Assert.False (provider.DoNotGenerateAcw);
 		Assert.True (provider.IsUnconditional);
-	}
-
-	// ================================================================
-	// Invoker types without [Register] are NOT discovered
-	// ================================================================
-
-	[Fact]
-	public void Scan_InvokerWithoutRegister_IsExcluded ()
-	{
-		var peers = ScanFixtures ();
-		// IOnClickListenerInvoker has no [Register] and no component attribute —
-		// it should not be discovered at all
-		Assert.DoesNotContain (peers, p => p.ManagedTypeName.Contains ("Invoker"));
 	}
 
 	// ================================================================
@@ -716,12 +711,15 @@ public class JavaPeerScannerTests
 	// ================================================================
 
 	[Fact]
-	public void Scan_InvokerWithRegisterAndDoNotGenerateAcw_IsExcluded ()
+	public void Scan_InvokerWithRegisterAndDoNotGenerateAcw_IsIncluded ()
 	{
 		var peers = ScanFixtures ();
 		// IOnClickListenerInvoker has [Register("android/view/View$OnClickListener", DoNotGenerateAcw=true)]
-		// It should be excluded because it's an invoker type (name ends with "Invoker" + DoNotGenerateAcw=true)
-		Assert.DoesNotContain (peers, p => p.ManagedTypeName.Contains ("Invoker"));
+		// It should be included in the scanner output — generators will filter it later
+		var invoker = peers.FirstOrDefault (p => p.ManagedTypeName == "Android.Views.IOnClickListenerInvoker");
+		Assert.NotNull (invoker);
+		Assert.True (invoker.DoNotGenerateAcw);
+		Assert.Equal ("android/view/View$OnClickListener", invoker.JavaName);
 	}
 
 	// ================================================================
@@ -733,7 +731,7 @@ public class JavaPeerScannerTests
 	public void Scan_Interface_HasInvokerTypeNameFromRegisterConnector ()
 	{
 		var peers = ScanFixtures ();
-		var listener = FindByJavaName (peers, "android/view/View$OnClickListener");
+		var listener = FindByManagedName (peers, "Android.Views.IOnClickListener");
 		Assert.NotNull (listener.InvokerTypeName);
 		Assert.Equal ("Android.Views.IOnClickListenerInvoker", listener.InvokerTypeName);
 	}
@@ -742,7 +740,7 @@ public class JavaPeerScannerTests
 	public void Scan_Interface_IsNotMarkedDoNotGenerateAcw ()
 	{
 		var peers = ScanFixtures ();
-		var listener = FindByJavaName (peers, "android/view/View$OnClickListener");
+		var listener = FindByManagedName (peers, "Android.Views.IOnClickListener");
 		// Interfaces have [Register("name", "", "connector")] — the 3-arg form doesn't set DoNotGenerateAcw
 		Assert.False (listener.DoNotGenerateAcw, "Interfaces should not have DoNotGenerateAcw");
 	}
@@ -755,7 +753,7 @@ public class JavaPeerScannerTests
 	public void Scan_InterfaceMethod_CollectedAsMarshalMethod ()
 	{
 		var peers = ScanFixtures ();
-		var listener = FindByJavaName (peers, "android/view/View$OnClickListener");
+		var listener = FindByManagedName (peers, "Android.Views.IOnClickListener");
 		var onClick = listener.MarshalMethods.FirstOrDefault (m => m.JniName == "onClick");
 		Assert.NotNull (onClick);
 		Assert.Equal ("(Landroid/view/View;)V", onClick.JniSignature);

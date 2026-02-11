@@ -79,8 +79,6 @@ public class ScannerComparisonTests
 		// Extract method-level [Register] attributes from each TypeDefinition.
 		// Use the raw javaTypes list to get ALL types — multiple managed types
 		// can map to the same JNI name (aliases).
-		// Skip Invoker types (DoNotGenerateAcw + name ends with "Invoker") — the new
-		// scanner intentionally excludes these as they're implementation details.
 		var methodsByJavaName = new Dictionary<string, List<TypeMethodGroup>> ();
 		foreach (var typeDef in javaTypes) {
 			var javaName = GetCecilJavaName (typeDef);
@@ -88,11 +86,7 @@ public class ScannerComparisonTests
 				continue;
 			}
 
-			if (IsCecilInvokerType (typeDef)) {
-				continue;
-			}
-
-			// Cecil uses '/' for nested types, SRM uses '+' (CLR format) — normalize
+				// Cecil uses '/' for nested types, SRM uses '+' (CLR format) — normalize
 			var managedName = $"{typeDef.FullName.Replace ('/', '+')}, {typeDef.Module.Assembly.Name.Name}";
 			var methods = ExtractMethodRegistrations (typeDef);
 
@@ -145,38 +139,6 @@ public class ScannerComparisonTests
 		}
 
 		return null;
-	}
-
-	/// <summary>
-	/// Checks if a Cecil TypeDefinition is an Invoker type (DoNotGenerateAcw=true
-	/// and name ends with "Invoker"). These are runtime implementation details
-	/// that the new scanner intentionally excludes from the typemap.
-	/// </summary>
-	static bool IsCecilInvokerType (TypeDefinition typeDef)
-	{
-		if (!typeDef.Name.EndsWith ("Invoker", StringComparison.Ordinal)) {
-			return false;
-		}
-
-		if (!typeDef.HasCustomAttributes) {
-			return false;
-		}
-
-		foreach (var attr in typeDef.CustomAttributes) {
-			if (attr.AttributeType.FullName != "Android.Runtime.RegisterAttribute") {
-				continue;
-			}
-
-			if (attr.HasProperties) {
-				foreach (var prop in attr.Properties) {
-					if (prop.Name == "DoNotGenerateAcw" && prop.Argument.Value is bool val && val) {
-						return true;
-					}
-				}
-			}
-		}
-
-		return false;
 	}
 
 	/// <summary>
@@ -565,6 +527,22 @@ public class ScannerComparisonTests
 					continue;
 				}
 
+				// Invokers share JNI names with their base class. Legacy ToJniName
+				// self-reference filter discards the base (baseJni == javaName), but
+				// our scanner correctly resolves it. Accept legacy=null, new=valid
+				// for DoNotGenerateAcw types.
+				if (legacy.BaseJavaName == null && newInfo.BaseJavaName != null && newInfo.DoNotGenerateAcw) {
+					continue;
+				}
+
+				// Legacy ToJniName(System.Object) returns "java/lang/Object" as a fallback,
+				// making Java.Lang.Object/Throwable appear to have themselves as base.
+				// Our scanner correctly returns null. Accept legacy=self, new=null.
+				if (legacy.BaseJavaName != null && newInfo.BaseJavaName == null &&
+					legacy.BaseJavaName == legacy.JavaName) {
+					continue;
+				}
+
 				mismatches.Add ($"{managedName}: legacy='{legacy.BaseJavaName ?? "(null)"}' new='{newInfo.BaseJavaName ?? "(null)"}'");
 			}
 		}
@@ -885,10 +863,6 @@ public class ScannerComparisonTests
 		var perType = new Dictionary<string, TypeComparisonData> (StringComparer.Ordinal);
 
 		foreach (var typeDef in javaTypes) {
-			if (IsCecilInvokerType (typeDef)) {
-				continue;
-			}
-
 			var javaName = GetCecilJavaName (typeDef);
 			if (javaName == null) {
 				continue;
@@ -902,9 +876,8 @@ public class ScannerComparisonTests
 			var baseType = typeDef.GetBaseType (cache);
 			if (baseType != null) {
 				var baseJni = JavaNativeTypeManager.ToJniName (baseType, cache);
-				// ToJniName returns "java/lang/Object" as fallback for types without [Register]
-				// (e.g. System.Object). Filter out cases where legacy returns the type's OWN
-				// JNI name as its base — that's a self-reference artifact, not a real base.
+				// Filter self-references: ToJniName can return the type's own JNI name
+				// (e.g., Java.Lang.Object → System.Object → "java/lang/Object").
 				if (baseJni != null && baseJni != javaName) {
 					baseJavaName = baseJni;
 				}
