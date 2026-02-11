@@ -15,6 +15,7 @@ namespace Microsoft.Android.Build.TypeMap;
 sealed class TypeMapAssemblyEmitter
 {
 	readonly Dictionary<string, AssemblyReferenceHandle> _asmRefCache = new (StringComparer.OrdinalIgnoreCase);
+	readonly Dictionary<string, EntityHandle> _typeRefCache = new (StringComparer.Ordinal);
 
 	AssemblyReferenceHandle _systemRuntimeRef;
 	AssemblyReferenceHandle _monoAndroidRef;
@@ -27,7 +28,6 @@ sealed class TypeMapAssemblyEmitter
 	TypeReferenceHandle _iAndroidCallableWrapperRef;
 	TypeReferenceHandle _systemTypeRef;
 	TypeReferenceHandle _runtimeTypeHandleRef;
-	TypeReferenceHandle _stringRef;
 	TypeReferenceHandle _jniTypeRef;
 	TypeReferenceHandle _trimmableNativeRegistrationRef;
 
@@ -126,8 +126,6 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Type"));
 		_runtimeTypeHandleRef = metadata.AddTypeReference (_systemRuntimeRef,
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("RuntimeTypeHandle"));
-		_stringRef = metadata.AddTypeReference (_systemRuntimeRef,
-			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("String"));
 		_jniTypeRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniType"));
 		_trimmableNativeRegistrationRef = metadata.AddTypeReference (_monoAndroidRef,
@@ -202,7 +200,7 @@ sealed class TypeMapAssemblyEmitter
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
 				rt => rt.Void (),
 				p => {
-					p.AddParameter ().Type ().Type (_stringRef, false);
+					p.AddParameter ().Type ().String ();
 					p.AddParameter ().Type ().Type (_systemTypeRef, false);
 				}));
 
@@ -211,7 +209,7 @@ sealed class TypeMapAssemblyEmitter
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (3,
 				rt => rt.Void (),
 				p => {
-					p.AddParameter ().Type ().Type (_stringRef, false);
+					p.AddParameter ().Type ().String ();
 					p.AddParameter ().Type ().Type (_systemTypeRef, false);
 					p.AddParameter ().Type ().Type (_systemTypeRef, false);
 				}));
@@ -538,8 +536,15 @@ sealed class TypeMapAssemblyEmitter
 
 	EntityHandle ResolveTypeRef (MetadataBuilder metadata, TypeRefData typeRef)
 	{
+		// Cache key: "AssemblyName:ManagedTypeName" to avoid duplicate TypeRef rows
+		var cacheKey = $"{typeRef.AssemblyName}:{typeRef.ManagedTypeName}";
+		if (_typeRefCache.TryGetValue (cacheKey, out var cached)) {
+			return cached;
+		}
 		var asmRef = FindOrAddAssemblyReference (metadata, typeRef.AssemblyName);
-		return MakeTypeRefForManagedName (metadata, asmRef, typeRef.ManagedTypeName);
+		var result = MakeTypeRefForManagedName (metadata, asmRef, typeRef.ManagedTypeName);
+		_typeRefCache [cacheKey] = result;
+		return result;
 	}
 
 	TypeReferenceHandle MakeTypeRefForManagedName (MetadataBuilder metadata, EntityHandle scope, string managedTypeName)

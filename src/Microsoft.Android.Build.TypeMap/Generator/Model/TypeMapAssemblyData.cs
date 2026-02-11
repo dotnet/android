@@ -23,7 +23,7 @@ sealed class TypeMapAssemblyData
 	public List<JavaPeerProxyData> ProxyTypes { get; } = new ();
 
 	/// <summary>Assembly names that need [IgnoresAccessChecksTo] for cross-assembly n_* calls.</summary>
-	public List<string> IgnoresAccessChecksTo { get; } = new () { "Mono.Android", "Java.Interop" };
+	public List<string> IgnoresAccessChecksTo { get; } = new ();
 }
 
 /// <summary>

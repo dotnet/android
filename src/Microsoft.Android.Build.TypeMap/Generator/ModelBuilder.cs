@@ -75,6 +75,20 @@ sealed class ModelBuilder
 			}
 		}
 
+		// Compute IgnoresAccessChecksTo from actual cross-assembly references in UCO callback types
+		var referencedAssemblies = new SortedSet<string> (StringComparer.Ordinal);
+		foreach (var proxy in model.ProxyTypes) {
+			foreach (var uco in proxy.UcoMethods) {
+				if (!string.Equals (uco.CallbackType.AssemblyName, assemblyName, StringComparison.Ordinal)) {
+					referencedAssemblies.Add (uco.CallbackType.AssemblyName);
+				}
+			}
+			if (proxy.TargetType != null && !string.Equals (proxy.TargetType.AssemblyName, assemblyName, StringComparison.Ordinal)) {
+				referencedAssemblies.Add (proxy.TargetType.AssemblyName);
+			}
+		}
+		model.IgnoresAccessChecksTo.AddRange (referencedAssemblies);
+
 		return model;
 	}
 

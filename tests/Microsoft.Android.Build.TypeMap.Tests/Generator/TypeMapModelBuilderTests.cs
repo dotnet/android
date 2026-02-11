@@ -64,11 +64,29 @@ public class ModelBuilderTests
 	}
 
 	[Fact]
-	public void Build_DefaultIgnoresAccessChecksTo ()
+	public void Build_EmptyInput_HasEmptyIgnoresAccessChecksTo ()
 	{
 		var model = BuildModel (Array.Empty<JavaPeerInfo> ());
+		Assert.Empty (model.IgnoresAccessChecksTo);
+	}
+
+	[Fact]
+	public void Build_ComputesIgnoresAccessChecksToFromCrossAssemblyCallbacks ()
+	{
+		var peer = MakeAcwPeer ("my/app/MainActivity", "MyApp.MainActivity", "MyApp");
+		((List<MarshalMethodInfo>) peer.MarshalMethods).Add (new MarshalMethodInfo {
+			JniName = "onCreate",
+			NativeCallbackName = "n_OnCreate",
+			JniSignature = "(Landroid/os/Bundle;)V",
+			IsConstructor = false,
+			DeclaringTypeName = "Android.App.Activity",
+			DeclaringAssemblyName = "Mono.Android",
+		});
+		var model = BuildModel (new [] { peer });
+		// The UCO callback type references Mono.Android, which is cross-assembly
 		Assert.Contains ("Mono.Android", model.IgnoresAccessChecksTo);
-		Assert.Contains ("Java.Interop", model.IgnoresAccessChecksTo);
+		// The output assembly itself should not appear
+		Assert.DoesNotContain (model.AssemblyName, model.IgnoresAccessChecksTo);
 	}
 
 	// ---- TypeMap entries ----
@@ -274,6 +292,26 @@ public class ModelBuilderTests
 		var proxy = model.ProxyTypes [0];
 		Assert.NotNull (proxy.InvokerType);
 		Assert.Equal ("Android.Views.View+IOnClickListenerInvoker", proxy.InvokerType!.ManagedTypeName);
+	}
+
+	[Fact]
+	public void Build_PeerWithInvokerButNoActivation_ProxyHasActivationFalse ()
+	{
+		var peer = new JavaPeerInfo {
+			JavaName = "android/view/View$OnClickListener",
+			ManagedTypeName = "Android.Views.View+IOnClickListener",
+			ManagedTypeNamespace = "Android.Views",
+			ManagedTypeShortName = "IOnClickListener",
+			AssemblyName = "Mono.Android",
+			IsInterface = true,
+			InvokerTypeName = "Android.Views.View+IOnClickListenerInvoker",
+		};
+
+		var model = BuildModel (new [] { peer });
+		Assert.Single (model.ProxyTypes);
+		var proxy = model.ProxyTypes [0];
+		Assert.False (proxy.HasActivation);
+		Assert.NotNull (proxy.InvokerType);
 	}
 
 	[Fact]
