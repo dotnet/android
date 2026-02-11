@@ -9,8 +9,8 @@ using System.Reflection.PortableExecutable;
 namespace Microsoft.Android.Build.TypeMap;
 
 /// <summary>
-/// Emits a TypeMap PE assembly from a <see cref="TypeMapAssemblyModel"/>.
-/// This is a mechanical translation — all decision logic lives in <see cref="TypeMapModelBuilder"/>.
+/// Emits a TypeMap PE assembly from a <see cref="TypeMapAssemblyData"/>.
+/// This is a mechanical translation — all decision logic lives in <see cref="ModelBuilder"/>.
 /// </summary>
 sealed class TypeMapAssemblyEmitter
 {
@@ -42,7 +42,7 @@ sealed class TypeMapAssemblyEmitter
 	/// <summary>
 	/// Emits a PE assembly from the given model and writes it to <paramref name="outputPath"/>.
 	/// </summary>
-	public void Emit (TypeMapAssemblyModel model, string outputPath)
+	public void Emit (TypeMapAssemblyData model, string outputPath)
 	{
 		if (model is null) {
 			throw new ArgumentNullException (nameof (model));
@@ -84,7 +84,7 @@ sealed class TypeMapAssemblyEmitter
 
 	// ---- Assembly / Module ----
 
-	void EmitAssemblyAndModule (MetadataBuilder metadata, TypeMapAssemblyModel model)
+	void EmitAssemblyAndModule (MetadataBuilder metadata, TypeMapAssemblyData model)
 	{
 		metadata.AddAssembly (
 			metadata.GetOrAddString (model.AssemblyName),
@@ -217,7 +217,7 @@ sealed class TypeMapAssemblyEmitter
 
 	// ---- Proxy types ----
 
-	void EmitProxyType (MetadataBuilder metadata, BlobBuilder ilBuilder, ProxyTypeModel proxy,
+	void EmitProxyType (MetadataBuilder metadata, BlobBuilder ilBuilder, JavaPeerProxyData proxy,
 		Dictionary<string, MethodDefinitionHandle> wrapperHandles)
 	{
 		var typeDefHandle = metadata.AddTypeDefinition (
@@ -272,7 +272,7 @@ sealed class TypeMapAssemblyEmitter
 		}
 	}
 
-	void EmitCreateInstance (MetadataBuilder metadata, BlobBuilder ilBuilder, ProxyTypeModel proxy)
+	void EmitCreateInstance (MetadataBuilder metadata, BlobBuilder ilBuilder, JavaPeerProxyData proxy)
 	{
 		if (!proxy.HasActivation) {
 			EmitBody (metadata, ilBuilder, "CreateInstance",
@@ -312,7 +312,7 @@ sealed class TypeMapAssemblyEmitter
 	}
 
 	void EmitTypeGetter (MetadataBuilder metadata, BlobBuilder ilBuilder, string methodName,
-		TypeRefModel typeRef, MethodAttributes attrs)
+		TypeRefData typeRef, MethodAttributes attrs)
 	{
 		var handle = ResolveTypeRef (metadata, typeRef);
 
@@ -330,7 +330,7 @@ sealed class TypeMapAssemblyEmitter
 
 	// ---- UCO wrappers ----
 
-	MethodDefinitionHandle EmitUcoMethod (MetadataBuilder metadata, BlobBuilder ilBuilder, UcoMethodModel uco)
+	MethodDefinitionHandle EmitUcoMethod (MetadataBuilder metadata, BlobBuilder ilBuilder, UcoMethodData uco)
 	{
 		var jniParams = JniSignatureHelper.ParseParameterTypes (uco.JniSignature);
 		var returnKind = JniSignatureHelper.ParseReturnType (uco.JniSignature);
@@ -370,7 +370,7 @@ sealed class TypeMapAssemblyEmitter
 		return handle;
 	}
 
-	MethodDefinitionHandle EmitUcoConstructor (MetadataBuilder metadata, BlobBuilder ilBuilder, UcoConstructorModel uco)
+	MethodDefinitionHandle EmitUcoConstructor (MetadataBuilder metadata, BlobBuilder ilBuilder, UcoConstructorData uco)
 	{
 		var userTypeRef = ResolveTypeRef (metadata, uco.TargetType);
 
@@ -398,7 +398,7 @@ sealed class TypeMapAssemblyEmitter
 	// ---- RegisterNatives ----
 
 	void EmitRegisterNatives (MetadataBuilder metadata, BlobBuilder ilBuilder,
-		List<NativeRegistrationModel> registrations, Dictionary<string, MethodDefinitionHandle> wrapperHandles)
+		List<NativeRegistrationData> registrations, Dictionary<string, MethodDefinitionHandle> wrapperHandles)
 	{
 		EmitBody (metadata, ilBuilder, "RegisterNatives",
 			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig |
@@ -424,7 +424,7 @@ sealed class TypeMapAssemblyEmitter
 
 	// ---- TypeMap attributes ----
 
-	void EmitTypeMapAttribute (MetadataBuilder metadata, TypeMapEntryModel entry)
+	void EmitTypeMapAttribute (MetadataBuilder metadata, TypeMapAttributeData entry)
 	{
 		var attrBlob = new BlobBuilder ();
 		attrBlob.WriteUInt16 (0x0001); // Prolog
@@ -503,7 +503,7 @@ sealed class TypeMapAssemblyEmitter
 		return metadata.AddMemberReference (parent, metadata.GetOrAddString (name), metadata.GetOrAddBlob (blob));
 	}
 
-	EntityHandle ResolveTypeRef (MetadataBuilder metadata, TypeRefModel typeRef)
+	EntityHandle ResolveTypeRef (MetadataBuilder metadata, TypeRefData typeRef)
 	{
 		var asmRef = FindOrAddAssemblyReference (metadata, typeRef.AssemblyName);
 		return MakeTypeRefForManagedName (metadata, asmRef, typeRef.ManagedTypeName);
