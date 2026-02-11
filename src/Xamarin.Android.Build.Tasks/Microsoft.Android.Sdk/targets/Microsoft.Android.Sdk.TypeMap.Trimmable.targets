@@ -13,16 +13,8 @@
     <Error Text="Trimmable typemap is not supported for runtime '$(_AndroidRuntime)'. Supported runtimes: CoreCLR, NativeAOT." />
   </Target>
 
-  <!-- TODO: GenerateMainAndroidManifest and GenerateAdditionalProviderSources are shared
-       tasks needed by all typemap paths, but they currently depend on NativeCodeGenState
-       from the Cecil-based GenerateJavaStubs task. Extracting them into a shared target
-       requires decoupling from NativeCodeGenState first. See #10807. -->
-  <Target Name="_GenerateJavaStubs"
-      DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;_GetGenerateJavaStubsInputs"
-      Inputs="@(_GenerateJavaStubsInputs)"
-      Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
+  <Target Name="_GenerateJavaStubs">
     <Message Text="Trimmable typemap: skipping legacy _GenerateJavaStubs" Importance="High" />
-    <Touch Files="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" AlwaysCreate="True" />
   </Target>
 
 </Project>
