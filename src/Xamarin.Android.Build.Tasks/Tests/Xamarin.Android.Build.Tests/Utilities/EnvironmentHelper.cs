@@ -124,8 +124,8 @@ namespace Xamarin.Android.Build.Tests
 		public sealed class JniPreloads
 		{
 			public uint IndexStride;
-			public ulong IndexCount;
 			public List<JniPreloadsEntry> Entries;
+			public string SourceFile;
 		}
 
 		const uint ApplicationConfigFieldCount_MonoVM = 27;
@@ -160,6 +160,7 @@ namespace Xamarin.Android.Build.Tests
 
 		static readonly HashSet <string> expectedUInt64Types = new HashSet <string> (StringComparer.Ordinal) {
 			".xword",
+			".quad",
 		};
 
 		static readonly string[] requiredSharedLibrarySymbolsMonoVM = {
@@ -984,7 +985,26 @@ namespace Xamarin.Android.Build.Tests
 			ulong calculatedPreloadsIdxSize = preloadsCount * 4; // single index field is a 32-bit integer
 			Assert.IsTrue (dsoJniPreloadsIdx.Size == calculatedPreloadsIdxSize, $"JNI preloads index should have size of {calculatedPreloadsIdxSize} instead of {dsoJniPreloadsIdx.Size}");
 
-			throw new NotImplementedException ();
+			var preloadsIndex = new List<JniPreloadsEntry> ();
+			for (int i = 0; i < (int)preloadsCount; i++) {
+				(ulong lineNumber, string value) = ReadNextArrayIndex (envFile, parser, dsoJniPreloadsIdx, i, expectedUInt32Types);
+				uint index = ConvertFieldToUInt32 ("index", envFile.Path, parser.SourceFilePath, lineNumber, value);
+
+				Assert.True (index < (uint)dsoCacheEntries.Count, $"JNI preload index {index} is larger than the number of items in the DSO cache array ({dsoCacheEntries.Count})");
+				preloadsIndex.Add (
+					new JniPreloadsEntry {
+						Index = index,
+						LibraryName = dsoCacheEntries[(int)index].name,
+					}
+				);
+			}
+			Assert.IsTrue (preloadsCount == (uint)preloadsIndex.Count, $"JNI preload index count should be equal to {preloadsCount}, but was {preloadsIndex.Count} instead.");
+
+			return new JniPreloads {
+				IndexStride = preloadsStride,
+				Entries = preloadsIndex,
+				SourceFile = envFile.Path,
+			};
 
 			NativeAssemblyParser.AssemblerSymbol GetNonEmptyRequiredSymbol (string symbolName)
 			{
@@ -1024,33 +1044,33 @@ namespace Xamarin.Android.Build.Tests
 				int index = i;
 
 				// uint64_t hash
-				(lineNumber, value) = ReadNextFieldValue (index++, ".xword");
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, expectedUInt64Types);
 				ulong hash = ConvertFieldToUInt64 ("hash", envFile.Path, parser.SourceFilePath, lineNumber, value);
 
 				// uint64_t real_name_hash
-				(lineNumber, value) = ReadNextFieldValue (index++, ".xword");
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, expectedUInt64Types);
 				ulong real_name_hash = ConvertFieldToUInt64 ("real_name_hash", envFile.Path, parser.SourceFilePath, lineNumber, value);
 
 				// bool ignore
-				(lineNumber, value) = ReadNextFieldValue (index++, ".byte");
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, ".byte");
 				bool ignore = ConvertFieldToBool ("ignore", envFile.Path, parser.SourceFilePath, lineNumber, value);
 
 				// bool is_jni_library
-				(lineNumber, value) = ReadNextFieldValue (index++, ".byte");
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, ".byte");
 				bool is_jni_library = ConvertFieldToBool ("is_jni_library", envFile.Path, parser.SourceFilePath, lineNumber, value);
 
 				// padding, 2 bytes
-				(lineNumber, value) = ReadNextFieldValue (index, ".zero");
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index, ".zero");
 				uint padding1 = ConvertFieldToUInt32 ("padding1", envFile.Path, parser.SourceFilePath, lineNumber, value);
 				Assert.IsTrue (padding1 == 2, $"Padding field #1 at index {index} of symbol '{dsoCache.Name}' should have had a value of 2, instead it was set to {padding1}");
 				index++;
 
 				// uint32_t name_index
-				(lineNumber, value) = ReadNextFieldValue (index++, ".word");
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, expectedUInt32Types);
 				uint name_index = ConvertFieldToUInt32 ("name_index", envFile.Path, parser.SourceFilePath, lineNumber, value);
 
 				// void* handle
-				(lineNumber, value) = ReadNextFieldValue (index, ".xword");
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index, expectedUInt64Types);
 				ulong handle = ConvertFieldToUInt64 ("handle", envFile.Path, parser.SourceFilePath, lineNumber, value);
 				Assert.IsTrue (handle == 0, $"Handle field at index {index} of symbol '{dsoCache.Name}' should have had a value of 0, instead it was set to {handle}");
 
@@ -1068,18 +1088,26 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			return ret;
+		}
 
-			(ulong line, string value) ReadNextFieldValue (int index, string expectedType)
-			{
-				Assert.IsFalse (index >= dsoCache.Contents.Count, $"Index {index} exceeds the number of items in the {dsoCache.Name} array.");
-				NativeAssemblyParser.AssemblerSymbolItem item = dsoCache.Contents[index];
+		static (ulong line, string value) ReadNextArrayIndex (EnvironmentFile envFile, NativeAssemblyParser parser, NativeAssemblyParser.AssemblerSymbol array, int index, string expectedType)
+		{
+			return ReadNextArrayIndex (envFile, parser, array, index, new HashSet<string> (StringComparer.Ordinal) { expectedType });
+		}
 
-				string[] field = GetField (envFile.Path, parser.SourceFilePath, item.Contents, item.LineNumber);
-				Assert.IsTrue (field.Length == 2, $"Item {index} of symbol {dsoCache.Name} at {envFile.Path}:{item.LineNumber} has an invalid value.");
-				Assert.IsTrue (field[0] == expectedType, $"Item {index} of symbol {dsoCache.Name} at {envFile.Path}:{item.LineNumber} should be of type '{expectedType}', but was '{field[0]}' instead.");
+		static (ulong line, string value) ReadNextArrayIndex (EnvironmentFile envFile, NativeAssemblyParser parser, NativeAssemblyParser.AssemblerSymbol array,
+		  int index, HashSet<string> expectedTypes)
+		{
+			Assert.IsFalse (index >= array.Contents.Count, $"Index {index} exceeds the number of items in the {array.Name} array.");
+			NativeAssemblyParser.AssemblerSymbolItem item = array.Contents[index];
 
-				return (item.LineNumber, field[1]);
-			}
+			string[] field = GetField (envFile.Path, parser.SourceFilePath, item.Contents, item.LineNumber);
+			Assert.IsTrue (field.Length == 2, $"Item {index} of symbol {array.Name} at {envFile.Path}:{item.LineNumber} has an invalid value.");
+
+			string expectedTypesList = String.Join (" | ", expectedTypes);
+			Assert.IsTrue (expectedTypes.Contains (field[0]), $"Item {index} of symbol {array.Name} at {parser.SourceFilePath}:{item.LineNumber} should be of type '{expectedTypesList}', but was '{field[0]}' instead.");
+
+			return (item.LineNumber, field[1]);
 		}
 
 		static (List<string> stdout, List<string> stderr) RunCommand (string executablePath, string arguments = null)
