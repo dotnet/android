@@ -37,6 +37,7 @@ public partial class BuildTest3 : BaseTest
 			}
 		);
 
+		// With `$(AndroidIgnoreAllJniPreload)=true` we still must have the defaults in the generated code.
 		NativeLibraryJniPreload_VerifyDefaults (allPreloads);
 	}
 
@@ -73,6 +74,7 @@ public partial class BuildTest3 : BaseTest
 
 			for (int i = 0; i < preloads.Entries.Count; i++) {
 				EnvironmentHelper.JniPreloadsEntry entry = preloads.Entries[i];
+				Assert.IsFalse (entry.LibraryName == "libmonodroid.so", $"JNI preloads entry at index {i} refers to the .NET for Android native runtime. It must never be preloaded. Source file: {preloads.SourceFile}");
 				Assert.IsTrue (expectedLibNames.ContainsKey (entry.LibraryName), $"JNI preloads entry at index {i}, referring to library at DSO cache index {entry.Index} has unexpected name '{entry.LibraryName}';  Source file: {preloads.SourceFile}");
 				expectedLibNames[entry.LibraryName]++;
 			}
