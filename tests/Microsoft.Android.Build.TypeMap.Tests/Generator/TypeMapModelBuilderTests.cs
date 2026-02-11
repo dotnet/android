@@ -87,7 +87,7 @@ public class ModelBuilderTests
 	}
 
 	[Fact]
-	public void Build_DuplicateJniNames_KeepsFirstOnly ()
+	public void Build_DuplicateJniNames_CreatesAliasEntries ()
 	{
 		var peers = new List<JavaPeerInfo> {
 			MakeMcwPeer ("test/Dup", "Test.First", "A"),
@@ -95,10 +95,134 @@ public class ModelBuilderTests
 		};
 
 		var model = BuildModel (peers);
-		Assert.Single (model.Entries);
+		// Two entries: primary "test/Dup" and alias "test/Dup[1]"
+		Assert.Equal (2, model.Entries.Count);
 		Assert.Equal ("test/Dup", model.Entries [0].JniName);
-		// First one wins - type reference should point to Test.First
-		Assert.Contains ("Test.First", model.Entries [0].TypeReference);
+		Assert.Contains ("Test.First", model.Entries [0].ProxyTypeReference);
+		Assert.Equal ("test/Dup[1]", model.Entries [1].JniName);
+		Assert.Contains ("Test.Second", model.Entries [1].ProxyTypeReference);
+	}
+
+	// ---- 2-arg (unconditional) vs 3-arg (trimmable) attributes ----
+
+	[Fact]
+	public void Build_EssentialRuntimeType_IsUnconditional ()
+	{
+		var peer = MakeMcwPeer ("java/lang/Object", "Java.Lang.Object", "Mono.Android");
+		peer.DoNotGenerateAcw = true;
+		var model = BuildModel (new [] { peer });
+
+		Assert.Single (model.Entries);
+		Assert.True (model.Entries [0].IsUnconditional);
+		Assert.Null (model.Entries [0].TargetTypeReference);
+	}
+
+	[Theory]
+	[InlineData ("java/lang/Object")]
+	[InlineData ("java/lang/Throwable")]
+	[InlineData ("java/lang/Exception")]
+	[InlineData ("java/lang/RuntimeException")]
+	[InlineData ("java/lang/Error")]
+	[InlineData ("java/lang/Class")]
+	[InlineData ("java/lang/String")]
+	[InlineData ("java/lang/Thread")]
+	public void Build_AllEssentialRuntimeTypes_AreUnconditional (string jniName)
+	{
+		var peer = MakeMcwPeer (jniName, "Java.Lang.SomeType", "Mono.Android");
+		peer.DoNotGenerateAcw = true;
+		var model = BuildModel (new [] { peer });
+		Assert.True (model.Entries [0].IsUnconditional, $"{jniName} should be unconditional");
+	}
+
+	[Fact]
+	public void Build_UserAcwType_IsUnconditional ()
+	{
+		// User-defined ACW types (not MCW, not interface) are unconditional
+		// because Android can instantiate them from Java
+		var peer = MakeAcwPeer ("my/app/Main", "MyApp.MainActivity", "App");
+		var model = BuildModel (new [] { peer });
+
+		var mainEntry = model.Entries.First (e => e.JniName == "my/app/Main");
+		Assert.True (mainEntry.IsUnconditional);
+		Assert.Null (mainEntry.TargetTypeReference);
+	}
+
+	[Fact]
+	public void Build_McwBinding_IsTrimmable ()
+	{
+		// MCW binding types (DoNotGenerateAcw=true) are trimmable unless essential
+		var peer = MakeMcwPeer ("android/app/Activity", "Android.App.Activity", "Mono.Android");
+		peer.DoNotGenerateAcw = true;
+		var model = BuildModel (new [] { peer });
+
+		Assert.Single (model.Entries);
+		Assert.False (model.Entries [0].IsUnconditional);
+		Assert.NotNull (model.Entries [0].TargetTypeReference);
+		Assert.Contains ("Android.App.Activity, Mono.Android", model.Entries [0].TargetTypeReference!);
+	}
+
+	[Fact]
+	public void Build_Interface_IsTrimmable ()
+	{
+		var peer = new JavaPeerInfo {
+			JavaName = "android/view/View$OnClickListener",
+			ManagedTypeName = "Android.Views.View+IOnClickListener",
+			ManagedTypeNamespace = "Android.Views",
+			ManagedTypeShortName = "IOnClickListener",
+			AssemblyName = "Mono.Android",
+			IsInterface = true,
+			InvokerTypeName = "Android.Views.View+IOnClickListenerInvoker",
+		};
+
+		var model = BuildModel (new [] { peer });
+		Assert.Single (model.Entries);
+		Assert.False (model.Entries [0].IsUnconditional);
+		Assert.NotNull (model.Entries [0].TargetTypeReference);
+	}
+
+	[Fact]
+	public void Build_UnconditionalScannedType_IsUnconditional ()
+	{
+		// Types with IsUnconditional from scanner (e.g., from [Activity], [Service] attrs)
+		var peer = MakeMcwPeer ("my/app/MySvc", "MyApp.MyService", "App");
+		peer.DoNotGenerateAcw = true; // simulate MCW-like
+		peer.IsUnconditional = true; // scanner marked it
+		var model = BuildModel (new [] { peer });
+
+		Assert.True (model.Entries [0].IsUnconditional);
+	}
+
+	// ---- Alias tests ----
+
+	[Fact]
+	public void Build_AliasedPeers_GetIndexedJniNames ()
+	{
+		var peers = new List<JavaPeerInfo> {
+			MakeMcwPeer ("test/Dup", "Test.First", "A"),
+			MakeMcwPeer ("test/Dup", "Test.Second", "A"),
+			MakeMcwPeer ("test/Dup", "Test.Third", "A"),
+		};
+
+		var model = BuildModel (peers);
+		Assert.Equal (3, model.Entries.Count);
+		Assert.Equal ("test/Dup", model.Entries [0].JniName);
+		Assert.Equal ("test/Dup[1]", model.Entries [1].JniName);
+		Assert.Equal ("test/Dup[2]", model.Entries [2].JniName);
+	}
+
+	[Fact]
+	public void Build_AliasedPeersWithActivation_GetDistinctProxies ()
+	{
+		var peers = new List<JavaPeerInfo> {
+			MakePeerWithActivation ("test/Dup", "Test.First", "A"),
+			MakePeerWithActivation ("test/Dup", "Test.Second", "A"),
+		};
+
+		var model = BuildModel (peers, "TypeMap");
+		Assert.Equal (2, model.ProxyTypes.Count);
+		// Distinct proxy names: first gets _Proxy, second gets _1_Proxy
+		Assert.Equal ("test_Dup_Proxy", model.ProxyTypes [0].TypeName);
+		Assert.Equal ("test_Dup_1_Proxy", model.ProxyTypes [1].TypeName);
 	}
 
 	[Fact]
@@ -110,7 +234,7 @@ public class ModelBuilderTests
 
 		Assert.Empty (model.ProxyTypes);
 		Assert.Single (model.Entries);
-		Assert.Contains ("Java.Lang.Object, Mono.Android", model.Entries [0].TypeReference);
+		Assert.Contains ("Java.Lang.Object, Mono.Android", model.Entries [0].ProxyTypeReference);
 	}
 
 	// ---- Proxy types ----
@@ -167,8 +291,8 @@ public class ModelBuilderTests
 		var model = BuildModel (new [] { peer }, "MyTypeMap");
 
 		var entry = model.Entries [0];
-		Assert.Contains ("java_lang_Object_Proxy", entry.TypeReference);
-		Assert.Contains ("MyTypeMap", entry.TypeReference);
+		Assert.Contains ("java_lang_Object_Proxy", entry.ProxyTypeReference);
+		Assert.Contains ("MyTypeMap", entry.ProxyTypeReference);
 	}
 
 	// ---- ACW detection ----
@@ -398,7 +522,7 @@ public class ModelBuilderTests
 
 		// All entries have non-empty JNI names
 		Assert.All (model.Entries, e => Assert.False (string.IsNullOrEmpty (e.JniName)));
-		Assert.All (model.Entries, e => Assert.False (string.IsNullOrEmpty (e.TypeReference)));
+		Assert.All (model.Entries, e => Assert.False (string.IsNullOrEmpty (e.ProxyTypeReference)));
 	}
 
 	[Fact]
@@ -424,6 +548,80 @@ public class ModelBuilderTests
 		foreach (var proxy in acwProxies) {
 			Assert.NotEmpty (proxy.NativeRegistrations);
 		}
+	}
+
+	// ---- Fixture-based 2-arg vs 3-arg tests ----
+
+	[Fact]
+	public void Fixture_JavaLangObject_IsUnconditional ()
+	{
+		var peer = FindFixtureByJavaName ("java/lang/Object");
+		var model = BuildModel (new [] { peer });
+		Assert.True (model.Entries [0].IsUnconditional);
+	}
+
+	[Fact]
+	public void Fixture_Throwable_IsUnconditional ()
+	{
+		var peer = FindFixtureByJavaName ("java/lang/Throwable");
+		var model = BuildModel (new [] { peer });
+		Assert.True (model.Entries [0].IsUnconditional);
+	}
+
+	[Fact]
+	public void Fixture_Exception_IsUnconditional ()
+	{
+		var peer = FindFixtureByJavaName ("java/lang/Exception");
+		var model = BuildModel (new [] { peer });
+		Assert.True (model.Entries [0].IsUnconditional);
+	}
+
+	[Fact]
+	public void Fixture_Activity_McwBinding_IsTrimmable ()
+	{
+		var peer = FindFixtureByJavaName ("android/app/Activity");
+		Assert.True (peer.DoNotGenerateAcw);
+		var model = BuildModel (new [] { peer });
+		// Activity is MCW and not an essential runtime type → trimmable
+		Assert.False (model.Entries [0].IsUnconditional);
+		Assert.Contains ("Android.App.Activity", model.Entries [0].TargetTypeReference!);
+	}
+
+	[Fact]
+	public void Fixture_MainActivity_UserAcw_IsUnconditional ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/MainActivity");
+		Assert.False (peer.DoNotGenerateAcw);
+		Assert.False (peer.IsInterface);
+		var model = BuildModel (new [] { peer });
+		Assert.True (model.Entries [0].IsUnconditional);
+	}
+
+	[Fact]
+	public void Fixture_IOnClickListener_Interface_IsTrimmable ()
+	{
+		var peers = ScanFixtures ();
+		var listener = peers.First (p => p.ManagedTypeName == "Android.Views.IOnClickListener");
+		var model = BuildModel (new [] { listener });
+		Assert.False (model.Entries [0].IsUnconditional);
+	}
+
+	[Fact]
+	public void Fixture_TouchHandler_UserType_IsUnconditional ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/TouchHandler");
+		Assert.False (peer.DoNotGenerateAcw);
+		var model = BuildModel (new [] { peer });
+		Assert.True (model.Entries [0].IsUnconditional);
+	}
+
+	[Fact]
+	public void Fixture_Button_McwBinding_IsTrimmable ()
+	{
+		var peer = FindFixtureByJavaName ("android/widget/Button");
+		Assert.True (peer.DoNotGenerateAcw);
+		var model = BuildModel (new [] { peer });
+		Assert.False (model.Entries [0].IsUnconditional);
 	}
 
 	// ---- Helpers ----
@@ -544,8 +742,8 @@ public class ModelBuilderTests
 
 		var entry = FindEntry (model, "android/app/Activity");
 		Assert.NotNull (entry);
-		Assert.Contains ("android_app_Activity_Proxy", entry!.TypeReference);
-		Assert.Contains ("MyTypeMap", entry.TypeReference);
+		Assert.Contains ("android_app_Activity_Proxy", entry!.ProxyTypeReference);
+		Assert.Contains ("MyTypeMap", entry.ProxyTypeReference);
 	}
 
 	[Fact]
@@ -841,7 +1039,7 @@ public class ModelBuilderTests
 	// ---- Duplicate JNI names across interface + invoker ----
 
 	[Fact]
-	public void Fixture_InterfaceAndInvoker_ShareJniName_OnlyFirst ()
+	public void Fixture_InterfaceAndInvoker_ShareJniName_CreateAliases ()
 	{
 		var peers = ScanFixtures ();
 		// IOnClickListener and IOnClickListenerInvoker share "android/view/View$OnClickListener"
@@ -850,9 +1048,10 @@ public class ModelBuilderTests
 
 		var model = BuildModel (clickPeers, "TypeMap");
 
-		// Dedup: only one entry for this JNI name
-		var entries = model.Entries.Where (e => e.JniName == "android/view/View$OnClickListener").ToList ();
-		Assert.Single (entries);
+		// Aliases: primary entry + indexed alias
+		Assert.Equal (2, model.Entries.Count);
+		Assert.Equal ("android/view/View$OnClickListener", model.Entries [0].JniName);
+		Assert.Equal ("android/view/View$OnClickListener[1]", model.Entries [1].JniName);
 	}
 
 	// ---- GenericHolder ----

@@ -27,7 +27,11 @@ sealed class TypeMapAssemblyData
 }
 
 /// <summary>
-/// One [assembly: TypeMap("jni/name", typeof(TargetOrProxy))] entry.
+/// One [assembly: TypeMap("jni/name", typeof(Proxy))] or
+/// [assembly: TypeMap("jni/name", typeof(Proxy), typeof(Target))] entry.
+///
+/// 2-arg (unconditional): proxy is always preserved — used for ACW types and essential runtime types.
+/// 3-arg (trimmable): proxy is preserved only if Target type is referenced by the app.
 /// </summary>
 sealed class TypeMapAttributeData
 {
@@ -35,10 +39,20 @@ sealed class TypeMapAttributeData
 	public string JniName { get; set; } = "";
 
 	/// <summary>
-	/// Assembly-qualified type reference for the attribute's Type argument.
+	/// Assembly-qualified proxy type reference string.
 	/// Either points to a generated proxy or to the original managed type.
 	/// </summary>
-	public string TypeReference { get; set; } = "";
+	public string ProxyTypeReference { get; set; } = "";
+
+	/// <summary>
+	/// Assembly-qualified target type reference for the trimmable (3-arg) variant.
+	/// Null for unconditional (2-arg) entries.
+	/// The trimmer preserves the proxy only if this target type is used by the app.
+	/// </summary>
+	public string? TargetTypeReference { get; set; }
+
+	/// <summary>True for 2-arg unconditional entries (ACW types, essential runtime types).</summary>
+	public bool IsUnconditional => TargetTypeReference == null;
 }
 
 /// <summary>
