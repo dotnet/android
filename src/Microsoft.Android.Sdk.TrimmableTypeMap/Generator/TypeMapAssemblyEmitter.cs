@@ -6,7 +6,7 @@ using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 
-namespace Microsoft.Android.Sdk.TrimmableTypeMap;
+namespace Microsoft.Android.Build.TypeMap;
 
 /// <summary>
 /// Emits a TypeMap PE assembly from a <see cref="TypeMapAssemblyData"/>.
@@ -15,15 +15,6 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 sealed class TypeMapAssemblyEmitter
 {
 	readonly Dictionary<string, AssemblyReferenceHandle> _asmRefCache = new (StringComparer.OrdinalIgnoreCase);
-	readonly Dictionary<(string Assembly, string Type), EntityHandle> _typeRefCache = new ();
-
-	// Reusable scratch BlobBuilders — avoids allocating a new one per method body / attribute / member ref.
-	// Each is Clear()'d before use. Safe because all emission is single-threaded and non-reentrant.
-	readonly BlobBuilder _sigBlob = new BlobBuilder (64);
-	readonly BlobBuilder _codeBlob = new BlobBuilder (256);
-	readonly BlobBuilder _attrBlob = new BlobBuilder (64);
-
-	readonly Version _systemRuntimeVersion;
 
 	AssemblyReferenceHandle _systemRuntimeRef;
 	AssemblyReferenceHandle _monoAndroidRef;
@@ -36,34 +27,18 @@ sealed class TypeMapAssemblyEmitter
 	TypeReferenceHandle _iAndroidCallableWrapperRef;
 	TypeReferenceHandle _systemTypeRef;
 	TypeReferenceHandle _runtimeTypeHandleRef;
+	TypeReferenceHandle _stringRef;
 	TypeReferenceHandle _jniTypeRef;
 	TypeReferenceHandle _trimmableNativeRegistrationRef;
-	TypeReferenceHandle _notSupportedExceptionRef;
-	TypeReferenceHandle _runtimeHelpersRef;
 
 	MemberReferenceHandle _baseCtorRef;
 	MemberReferenceHandle _getTypeFromHandleRef;
-	MemberReferenceHandle _getUninitializedObjectRef;
-	MemberReferenceHandle _notSupportedExceptionCtorRef;
+	MemberReferenceHandle _createManagedPeerRef;
 	MemberReferenceHandle _activateInstanceRef;
 	MemberReferenceHandle _registerMethodRef;
 	MemberReferenceHandle _ucoAttrCtorRef;
-	BlobHandle _ucoAttrBlobHandle;
 	MemberReferenceHandle _typeMapAttrCtorRef2Arg;
 	MemberReferenceHandle _typeMapAttrCtorRef3Arg;
-	MemberReferenceHandle _typeMapAssociationAttrCtorRef;
-
-	/// <summary>
-	/// Creates a new emitter.
-	/// </summary>
-	/// <param name="systemRuntimeVersion">
-	/// Version for System.Runtime assembly references.
-	/// Will be derived from $(DotNetTargetVersion) MSBuild property in the build task.
-	/// </param>
-	public TypeMapAssemblyEmitter (Version systemRuntimeVersion)
-	{
-		_systemRuntimeVersion = systemRuntimeVersion ?? throw new ArgumentNullException (nameof (systemRuntimeVersion));
-	}
 
 	/// <summary>
 	/// Emits a PE assembly from the given model and writes it to <paramref name="outputPath"/>.
@@ -78,7 +53,6 @@ sealed class TypeMapAssemblyEmitter
 		}
 
 		_asmRefCache.Clear ();
-		_typeRefCache.Clear ();
 
 		var dir = Path.GetDirectoryName (outputPath);
 		if (!string.IsNullOrEmpty (dir)) {
@@ -105,10 +79,6 @@ sealed class TypeMapAssemblyEmitter
 			EmitTypeMapAttribute (metadata, entry);
 		}
 
-		foreach (var assoc in model.Associations) {
-			EmitTypeMapAssociationAttribute (metadata, assoc);
-		}
-
 		EmitIgnoresAccessChecksToAttribute (metadata, ilBuilder, model.IgnoresAccessChecksTo);
 		WritePE (metadata, ilBuilder, outputPath);
 	}
@@ -133,16 +103,13 @@ sealed class TypeMapAssemblyEmitter
 			encBaseId: default);
 	}
 
-	// Mono.Android strong name public key token (84e04ff9cfb79065)
-	static readonly byte [] MonoAndroidPublicKeyToken = { 0x84, 0xe0, 0x4f, 0xf9, 0xcf, 0xb7, 0x90, 0x65 };
-
 	void EmitAssemblyReferences (MetadataBuilder metadata)
 	{
-		_systemRuntimeRef = AddAssemblyRef (metadata, "System.Runtime", _systemRuntimeVersion);
+		_systemRuntimeRef = AddAssemblyRef (metadata, "System.Runtime", new Version (11, 0, 0, 0));
 		_monoAndroidRef = AddAssemblyRef (metadata, "Mono.Android", new Version (0, 0, 0, 0),
-			publicKeyOrToken: MonoAndroidPublicKeyToken);
+			publicKeyOrToken: new byte [] { 0x84, 0xe0, 0x4f, 0xf9, 0xcf, 0xb7, 0x90, 0x65 });
 		_javaInteropRef = AddAssemblyRef (metadata, "Java.Interop", new Version (0, 0, 0, 0));
-		_systemRuntimeInteropServicesRef = AddAssemblyRef (metadata, "System.Runtime.InteropServices", _systemRuntimeVersion);
+		_systemRuntimeInteropServicesRef = AddAssemblyRef (metadata, "System.Runtime.InteropServices", new Version (11, 0, 0, 0));
 	}
 
 	void EmitTypeReferences (MetadataBuilder metadata)
@@ -159,14 +126,12 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Type"));
 		_runtimeTypeHandleRef = metadata.AddTypeReference (_systemRuntimeRef,
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("RuntimeTypeHandle"));
+		_stringRef = metadata.AddTypeReference (_systemRuntimeRef,
+			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("String"));
 		_jniTypeRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniType"));
 		_trimmableNativeRegistrationRef = metadata.AddTypeReference (_monoAndroidRef,
 			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("TrimmableNativeRegistration"));
-		_notSupportedExceptionRef = metadata.AddTypeReference (_systemRuntimeRef,
-			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("NotSupportedException"));
-		_runtimeHelpersRef = metadata.AddTypeReference (_systemRuntimeRef,
-			metadata.GetOrAddString ("System.Runtime.CompilerServices"), metadata.GetOrAddString ("RuntimeHelpers"));
 	}
 
 	void EmitMemberReferences (MetadataBuilder metadata)
@@ -179,15 +144,14 @@ sealed class TypeMapAssemblyEmitter
 				rt => rt.Type ().Type (_systemTypeRef, false),
 				p => p.AddParameter ().Type ().Type (_runtimeTypeHandleRef, true)));
 
-		_getUninitializedObjectRef = AddMemberRef (metadata, _runtimeHelpersRef, "GetUninitializedObject",
-			sig => sig.MethodSignature ().Parameters (1,
-				rt => rt.Type ().Object (),
-				p => p.AddParameter ().Type ().Type (_systemTypeRef, false)));
-
-		_notSupportedExceptionCtorRef = AddMemberRef (metadata, _notSupportedExceptionRef, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
-				rt => rt.Void (),
-				p => p.AddParameter ().Type ().String ()));
+		_createManagedPeerRef = AddMemberRef (metadata, _trimmableNativeRegistrationRef, "CreateManagedPeer",
+			sig => sig.MethodSignature ().Parameters (3,
+				rt => rt.Type ().Type (_iJavaPeerableRef, false),
+				p => {
+					p.AddParameter ().Type ().IntPtr ();
+					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+					p.AddParameter ().Type ().Type (_systemTypeRef, false);
+				}));
 
 		_activateInstanceRef = AddMemberRef (metadata, _trimmableNativeRegistrationRef, "ActivateInstance",
 			sig => sig.MethodSignature ().Parameters (2,
@@ -213,14 +177,7 @@ sealed class TypeMapAssemblyEmitter
 		_ucoAttrCtorRef = AddMemberRef (metadata, ucoAttrTypeRef, ".ctor",
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }));
 
-		// Pre-compute the UCO attribute blob — it's always the same 4 bytes (prolog + no named args)
-		_attrBlob.Clear ();
-		_attrBlob.WriteUInt16 (1);
-		_attrBlob.WriteUInt16 (0);
-		_ucoAttrBlobHandle = metadata.GetOrAddBlob (_attrBlob);
-
 		EmitTypeMapAttributeCtorRef (metadata);
-		EmitTypeMapAssociationAttributeCtorRef (metadata);
 	}
 
 	void EmitTypeMapAttributeCtorRef (MetadataBuilder metadata)
@@ -245,7 +202,7 @@ sealed class TypeMapAssemblyEmitter
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
 				rt => rt.Void (),
 				p => {
-					p.AddParameter ().Type ().String ();
+					p.AddParameter ().Type ().Type (_stringRef, false);
 					p.AddParameter ().Type ().Type (_systemTypeRef, false);
 				}));
 
@@ -254,24 +211,7 @@ sealed class TypeMapAssemblyEmitter
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (3,
 				rt => rt.Void (),
 				p => {
-					p.AddParameter ().Type ().String ();
-					p.AddParameter ().Type ().Type (_systemTypeRef, false);
-					p.AddParameter ().Type ().Type (_systemTypeRef, false);
-				}));
-	}
-
-	void EmitTypeMapAssociationAttributeCtorRef (MetadataBuilder metadata)
-	{
-		// TypeMapAssociationAttribute is in System.Runtime.InteropServices, takes 2 Type args:
-		// TypeMapAssociation(Type sourceType, Type aliasProxyType)
-		var typeMapAssociationAttrRef = metadata.AddTypeReference (_systemRuntimeInteropServicesRef,
-			metadata.GetOrAddString ("System.Runtime.InteropServices"),
-			metadata.GetOrAddString ("TypeMapAssociationAttribute"));
-
-		_typeMapAssociationAttrCtorRef = AddMemberRef (metadata, typeMapAssociationAttrRef, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
-				rt => rt.Void (),
-				p => {
+					p.AddParameter ().Type ().Type (_stringRef, false);
 					p.AddParameter ().Type ().Type (_systemTypeRef, false);
 					p.AddParameter ().Type ().Type (_systemTypeRef, false);
 				}));
@@ -300,7 +240,7 @@ sealed class TypeMapAssemblyEmitter
 			MetadataTokens.FieldDefinitionHandle (metadata.GetRowCount (TableIndex.Field) + 1),
 			MetadataTokens.MethodDefinitionHandle (metadata.GetRowCount (TableIndex.MethodDef) + 1));
 
-		if (proxy.IsAcw) {
+		if (proxy.ImplementsIAndroidCallableWrapper) {
 			metadata.AddInterfaceImplementation (typeDefHandle, _iAndroidCallableWrapperRef);
 		}
 
@@ -347,74 +287,23 @@ sealed class TypeMapAssemblyEmitter
 	void EmitCreateInstance (MetadataBuilder metadata, BlobBuilder ilBuilder, JavaPeerProxyData proxy)
 	{
 		if (!proxy.HasActivation) {
-			EmitCreateInstanceBody (metadata, ilBuilder, encoder => {
-				encoder.OpCode (ILOpCode.Ldnull);
-				encoder.OpCode (ILOpCode.Ret);
-			});
+			EmitBody (metadata, ilBuilder, "CreateInstance",
+				MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+					rt => rt.Type ().Type (_iJavaPeerableRef, false),
+					p => {
+						p.AddParameter ().Type ().IntPtr ();
+						p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+					}),
+				encoder => {
+					encoder.OpCode (ILOpCode.Ldnull);
+					encoder.OpCode (ILOpCode.Ret);
+				});
 			return;
 		}
 
-		// Generic type definitions cannot be instantiated
-		if (proxy.IsGenericDefinition) {
-			EmitCreateInstanceBody (metadata, ilBuilder, encoder => {
-				encoder.LoadString (metadata.GetOrAddUserString ("Cannot create instance of open generic type."));
-				encoder.OpCode (ILOpCode.Newobj);
-				encoder.Token (_notSupportedExceptionCtorRef);
-				encoder.OpCode (ILOpCode.Throw);
-			});
-			return;
-		}
+		var userTypeRef = ResolveTypeRef (metadata, proxy.TargetType);
 
-		// Interface with invoker: new TInvoker(IntPtr, JniHandleOwnership)
-		if (proxy.InvokerType != null) {
-			var invokerCtorRef = AddActivationCtorRef (metadata, ResolveTypeRef (metadata, proxy.InvokerType));
-			EmitCreateInstanceBody (metadata, ilBuilder, encoder => {
-				encoder.OpCode (ILOpCode.Ldarg_1);
-				encoder.OpCode (ILOpCode.Ldarg_2);
-				encoder.OpCode (ILOpCode.Newobj);
-				encoder.Token (invokerCtorRef);
-				encoder.OpCode (ILOpCode.Ret);
-			});
-			return;
-		}
-
-		// At this point, ActivationCtor is guaranteed non-null (HasActivation && InvokerType == null)
-		var activationCtor = proxy.ActivationCtor ?? throw new InvalidOperationException ("ActivationCtor should not be null when HasActivation is true and InvokerType is null");
-		var targetTypeRef = ResolveTypeRef (metadata, proxy.TargetType);
-
-		if (activationCtor.IsOnLeafType) {
-			// Leaf type has its own ctor: new T(IntPtr, JniHandleOwnership)
-			var ctorRef = AddActivationCtorRef (metadata, targetTypeRef);
-			EmitCreateInstanceBody (metadata, ilBuilder, encoder => {
-				encoder.OpCode (ILOpCode.Ldarg_1);
-				encoder.OpCode (ILOpCode.Ldarg_2);
-				encoder.OpCode (ILOpCode.Newobj);
-				encoder.Token (ctorRef);
-				encoder.OpCode (ILOpCode.Ret);
-			});
-		} else {
-			// Inherited ctor: GetUninitializedObject(typeof(T)) + call Base::.ctor(IntPtr, JniHandleOwnership)
-			var baseActivationCtorRef = AddActivationCtorRef (metadata, ResolveTypeRef (metadata, activationCtor.DeclaringType));
-			EmitCreateInstanceBody (metadata, ilBuilder, encoder => {
-				encoder.OpCode (ILOpCode.Ldtoken);
-				encoder.Token (targetTypeRef);
-				encoder.Call (_getTypeFromHandleRef);
-				encoder.Call (_getUninitializedObjectRef);
-				encoder.OpCode (ILOpCode.Castclass);
-				encoder.Token (targetTypeRef);
-
-				encoder.OpCode (ILOpCode.Dup);
-				encoder.OpCode (ILOpCode.Ldarg_1);
-				encoder.OpCode (ILOpCode.Ldarg_2);
-				encoder.Call (baseActivationCtorRef);
-
-				encoder.OpCode (ILOpCode.Ret);
-			});
-		}
-	}
-
-	void EmitCreateInstanceBody (MetadataBuilder metadata, BlobBuilder ilBuilder, Action<InstructionEncoder> emitIL)
-	{
 		EmitBody (metadata, ilBuilder, "CreateInstance",
 			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
@@ -423,18 +312,15 @@ sealed class TypeMapAssemblyEmitter
 					p.AddParameter ().Type ().IntPtr ();
 					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
 				}),
-			emitIL);
-	}
-
-	MemberReferenceHandle AddActivationCtorRef (MetadataBuilder metadata, EntityHandle declaringTypeRef)
-	{
-		return AddMemberRef (metadata, declaringTypeRef, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
-				rt => rt.Void (),
-				p => {
-					p.AddParameter ().Type ().IntPtr ();
-					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
-				}));
+			encoder => {
+				encoder.OpCode (ILOpCode.Ldarg_1);
+				encoder.OpCode (ILOpCode.Ldarg_2);
+				encoder.OpCode (ILOpCode.Ldtoken);
+				encoder.Token (userTypeRef);
+				encoder.Call (_getTypeFromHandleRef);
+				encoder.Call (_createManagedPeerRef);
+				encoder.OpCode (ILOpCode.Ret);
+			});
 	}
 
 	void EmitTypeGetter (MetadataBuilder metadata, BlobBuilder ilBuilder, string methodName,
@@ -463,21 +349,28 @@ sealed class TypeMapAssemblyEmitter
 		int paramCount = 2 + jniParams.Count;
 		bool isVoid = returnKind == JniParamKind.Void;
 
-		Action<BlobEncoder> encodeSig = sig => sig.MethodSignature ().Parameters (paramCount,
-			rt => { if (isVoid) rt.Void (); else JniSignatureHelper.EncodeClrType (rt.Type (), returnKind); },
-			p => {
-				p.AddParameter ().Type ().IntPtr ();
-				p.AddParameter ().Type ().IntPtr ();
-				for (int j = 0; j < jniParams.Count; j++)
-					JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniParams [j]);
-			});
-
+		// Callback method reference
 		var callbackTypeHandle = ResolveTypeRef (metadata, uco.CallbackType);
-		var callbackRef = AddMemberRef (metadata, callbackTypeHandle, uco.CallbackMethodName, encodeSig);
+		var callbackRef = AddMemberRef (metadata, callbackTypeHandle, uco.CallbackMethodName,
+			sig => sig.MethodSignature ().Parameters (paramCount,
+				rt => { if (isVoid) rt.Void (); else JniSignatureHelper.EncodeClrType (rt.Type (), returnKind); },
+				p => {
+					p.AddParameter ().Type ().IntPtr ();
+					p.AddParameter ().Type ().IntPtr ();
+					for (int j = 0; j < jniParams.Count; j++)
+						JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniParams [j]);
+				}));
 
 		var handle = EmitBody (metadata, ilBuilder, uco.WrapperName,
 			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-			encodeSig,
+			sig => sig.MethodSignature ().Parameters (paramCount,
+				rt => { if (isVoid) rt.Void (); else JniSignatureHelper.EncodeClrType (rt.Type (), returnKind); },
+				p => {
+					p.AddParameter ().Type ().IntPtr ();
+					p.AddParameter ().Type ().IntPtr ();
+					for (int j = 0; j < jniParams.Count; j++)
+						JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniParams [j]);
+				}),
 			encoder => {
 				for (int p = 0; p < paramCount; p++)
 					encoder.LoadArgument (p);
@@ -493,25 +386,19 @@ sealed class TypeMapAssemblyEmitter
 	{
 		var userTypeRef = ResolveTypeRef (metadata, uco.TargetType);
 
-		// UCO constructor wrappers must match the JNI native method signature exactly.
-		// The Java JCW declares e.g. "private native void nctor_0(Context p0)" and calls
-		// it with arguments. JNI dispatches with (JNIEnv*, jobject, <ctor params...>),
-		// so the wrapper signature must include all parameters to match the ABI.
-		// Only jnienv (arg 0) and self (arg 1) are used — the constructor parameters
-		// are not forwarded because ActivateInstance creates the managed peer using the
-		// activation ctor (IntPtr, JniHandleOwnership), not the user-visible constructor.
-		var jniParams = JniSignatureHelper.ParseParameterTypes (uco.JniSignature);
-		int paramCount = 2 + jniParams.Count;
+		// UCO constructor wrappers always take exactly (IntPtr jnienv, IntPtr self) regardless
+		// of the actual JNI constructor signature. The JNI parameters are not forwarded —
+		// ActivateInstance only needs the jobject handle to create the managed peer.
+		// The correct JNI signature is still used in RegisterNatives so the JNI runtime
+		// dispatches to this wrapper for the right constructor overload.
 
 		var handle = EmitBody (metadata, ilBuilder, uco.WrapperName,
 			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-			sig => sig.MethodSignature ().Parameters (paramCount,
+			sig => sig.MethodSignature ().Parameters (2,
 				rt => rt.Void (),
 				p => {
-					p.AddParameter ().Type ().IntPtr (); // jnienv
-					p.AddParameter ().Type ().IntPtr (); // self
-					for (int j = 0; j < jniParams.Count; j++)
-						JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniParams [j]);
+					p.AddParameter ().Type ().IntPtr ();
+					p.AddParameter ().Type ().IntPtr ();
 				}),
 			encoder => {
 				encoder.LoadArgument (1); // self
@@ -557,28 +444,27 @@ sealed class TypeMapAssemblyEmitter
 
 	void EmitTypeMapAttribute (MetadataBuilder metadata, TypeMapAttributeData entry)
 	{
-		_attrBlob.Clear ();
-		_attrBlob.WriteUInt16 (0x0001); // Prolog
-		_attrBlob.WriteSerializedString (entry.JniName);
-		_attrBlob.WriteSerializedString (entry.ProxyTypeReference);
-		if (!entry.IsUnconditional) {
-			_attrBlob.WriteSerializedString (entry.TargetTypeReference!);
+		// Per ECMA-335 §II.23.3, System.Type-typed constructor arguments are encoded
+		// as SerString (assembly-qualified type name), not as TypeDefOrRef tokens.
+		var attrBlob = new BlobBuilder ();
+		attrBlob.WriteUInt16 (0x0001); // Prolog
+
+		if (entry.IsUnconditional) {
+			// 2-arg: TypeMap(jniName, proxyType) — always preserved
+			attrBlob.WriteSerializedString (entry.JniName);
+			attrBlob.WriteSerializedString (entry.ProxyTypeReference);
+			attrBlob.WriteUInt16 (0x0000); // NumNamed
+			metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, _typeMapAttrCtorRef2Arg,
+				metadata.GetOrAddBlob (attrBlob));
+		} else {
+			// 3-arg: TypeMap(jniName, proxyType, targetType) — trimmable
+			attrBlob.WriteSerializedString (entry.JniName);
+			attrBlob.WriteSerializedString (entry.ProxyTypeReference);
+			attrBlob.WriteSerializedString (entry.TargetTypeReference!);
+			attrBlob.WriteUInt16 (0x0000); // NumNamed
+			metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, _typeMapAttrCtorRef3Arg,
+				metadata.GetOrAddBlob (attrBlob));
 		}
-		_attrBlob.WriteUInt16 (0x0000); // NumNamed
-
-		var ctorRef = entry.IsUnconditional ? _typeMapAttrCtorRef2Arg : _typeMapAttrCtorRef3Arg;
-		metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorRef, metadata.GetOrAddBlob (_attrBlob));
-	}
-
-	void EmitTypeMapAssociationAttribute (MetadataBuilder metadata, TypeMapAssociationData assoc)
-	{
-		_attrBlob.Clear ();
-		_attrBlob.WriteUInt16 (0x0001); // Prolog
-		_attrBlob.WriteSerializedString (assoc.SourceTypeReference);
-		_attrBlob.WriteSerializedString (assoc.AliasProxyTypeReference);
-		_attrBlob.WriteUInt16 (0x0000); // NumNamed
-		metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, _typeMapAssociationAttrCtorRef,
-			metadata.GetOrAddBlob (_attrBlob));
 	}
 
 	// ---- IgnoresAccessChecksTo ----
@@ -614,11 +500,11 @@ sealed class TypeMapAssemblyEmitter
 			MetadataTokens.MethodDefinitionHandle (typeMethodStart));
 
 		foreach (var asmName in assemblyNames) {
-			_attrBlob.Clear ();
-			_attrBlob.WriteUInt16 (1);
-			_attrBlob.WriteSerializedString (asmName);
-			_attrBlob.WriteUInt16 (0);
-			metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorDef, metadata.GetOrAddBlob (_attrBlob));
+			var attrBlob = new BlobBuilder ();
+			attrBlob.WriteUInt16 (1);
+			attrBlob.WriteSerializedString (asmName);
+			attrBlob.WriteUInt16 (0);
+			metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorDef, metadata.GetOrAddBlob (attrBlob));
 		}
 	}
 
@@ -642,24 +528,18 @@ sealed class TypeMapAssemblyEmitter
 		return AddAssemblyRef (metadata, assemblyName, new Version (0, 0, 0, 0));
 	}
 
-	MemberReferenceHandle AddMemberRef (MetadataBuilder metadata, EntityHandle parent, string name,
+	static MemberReferenceHandle AddMemberRef (MetadataBuilder metadata, EntityHandle parent, string name,
 		Action<BlobEncoder> encodeSig)
 	{
-		_sigBlob.Clear ();
-		encodeSig (new BlobEncoder (_sigBlob));
-		return metadata.AddMemberReference (parent, metadata.GetOrAddString (name), metadata.GetOrAddBlob (_sigBlob));
+		var blob = new BlobBuilder ();
+		encodeSig (new BlobEncoder (blob));
+		return metadata.AddMemberReference (parent, metadata.GetOrAddString (name), metadata.GetOrAddBlob (blob));
 	}
 
 	EntityHandle ResolveTypeRef (MetadataBuilder metadata, TypeRefData typeRef)
 	{
-		var cacheKey = (typeRef.AssemblyName, typeRef.ManagedTypeName);
-		if (_typeRefCache.TryGetValue (cacheKey, out var cached)) {
-			return cached;
-		}
 		var asmRef = FindOrAddAssemblyReference (metadata, typeRef.AssemblyName);
-		var result = MakeTypeRefForManagedName (metadata, asmRef, typeRef.ManagedTypeName);
-		_typeRefCache [cacheKey] = result;
-		return result;
+		return MakeTypeRefForManagedName (metadata, asmRef, typeRef.ManagedTypeName);
 	}
 
 	TypeReferenceHandle MakeTypeRefForManagedName (MetadataBuilder metadata, EntityHandle scope, string managedTypeName)
@@ -677,7 +557,10 @@ sealed class TypeMapAssemblyEmitter
 
 	void AddUnmanagedCallersOnlyAttribute (MetadataBuilder metadata, MethodDefinitionHandle handle)
 	{
-		metadata.AddCustomAttribute (handle, _ucoAttrCtorRef, _ucoAttrBlobHandle);
+		var attrBlob = new BlobBuilder ();
+		attrBlob.WriteUInt16 (1);
+		attrBlob.WriteUInt16 (0);
+		metadata.AddCustomAttribute (handle, _ucoAttrCtorRef, metadata.GetOrAddBlob (attrBlob));
 	}
 
 	/// <summary>Emits a method body and definition in one call.</summary>
@@ -685,11 +568,11 @@ sealed class TypeMapAssemblyEmitter
 		string name, MethodAttributes attrs,
 		Action<BlobEncoder> encodeSig, Action<InstructionEncoder> emitIL)
 	{
-		_sigBlob.Clear ();
-		encodeSig (new BlobEncoder (_sigBlob));
+		var sigBlob = new BlobBuilder ();
+		encodeSig (new BlobEncoder (sigBlob));
 
-		_codeBlob.Clear ();
-		var encoder = new InstructionEncoder (_codeBlob);
+		var codeBuilder = new BlobBuilder ();
+		var encoder = new InstructionEncoder (codeBuilder);
 		emitIL (encoder);
 
 		while (ilBuilder.Count % 4 != 0) {
@@ -701,7 +584,7 @@ sealed class TypeMapAssemblyEmitter
 		return metadata.AddMethodDefinition (
 			attrs, MethodImplAttributes.IL,
 			metadata.GetOrAddString (name),
-			metadata.GetOrAddBlob (_sigBlob),
+			metadata.GetOrAddBlob (sigBlob),
 			bodyOffset, default);
 	}
 
