@@ -669,4 +669,105 @@ public class JcwJavaSourceGeneratorTests
 		}
 
 	}
+
+	public class StaticExportAndExportField : JcwJavaSourceGeneratorTests
+	{
+		[Fact]
+		public void Generate_StaticExportMethod_HasStaticKeyword ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportStaticAndFields");
+			var java = GenerateToString (peer);
+
+			Assert.Contains ("public static void staticMethodNotMangled ()", java);
+			Assert.Contains ("private static native void n_staticMethodNotMangled ()", java);
+		}
+
+		[Fact]
+		public void Generate_InstanceExportMethod_NoStaticKeyword ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportStaticAndFields");
+			var java = GenerateToString (peer);
+
+			// Instance method should NOT have static
+			Assert.Contains ("public void instanceMethod ()", java);
+			Assert.Contains ("private native void n_instanceMethod ()", java);
+		}
+
+		[Fact]
+		public void Generate_ExportField_StaticFieldDeclaration ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportStaticAndFields");
+			var java = GenerateToString (peer);
+
+			// Static [ExportField] → "public static <type> FIELD_NAME = MethodName ();"
+			Assert.Contains ("public static", java);
+			Assert.Contains ("STATIC_INSTANCE = GetInstance ();", java);
+		}
+
+		[Fact]
+		public void Generate_ExportField_InstanceFieldDeclaration ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportStaticAndFields");
+			var java = GenerateToString (peer);
+
+			// Instance [ExportField] → "public <type> FIELD_NAME = MethodName ();"
+			// Should NOT contain "static" for the VALUE field
+			var lines = java.Split ('\n');
+			bool foundValue = false;
+			foreach (var line in lines) {
+				if (line.Contains ("VALUE = GetValue ()")) {
+					foundValue = true;
+					Assert.DoesNotContain ("static", line);
+					break;
+				}
+			}
+			Assert.True (foundValue, "VALUE field declaration not found");
+		}
+
+		[Fact]
+		public void Generate_ExportField_MethodHasNativeCallback ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportStaticAndFields");
+			var java = GenerateToString (peer);
+
+			// [ExportField] methods should have corresponding wrapper + native method
+			Assert.Contains ("n_GetInstance ()", java);
+			Assert.Contains ("n_GetValue ()", java);
+		}
+
+		[Fact]
+		public void Generate_ExportField_StaticMethodIsStatic ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportStaticAndFields");
+			var java = GenerateToString (peer);
+
+			// Static [ExportField] method: both wrapper and native should be static
+			Assert.Contains ("public static", java);
+			Assert.Contains ("private static native", java);
+		}
+
+		[Fact]
+		public void Generate_ExportField_FieldsAppearBeforeConstructors ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportStaticAndFields");
+			var java = GenerateToString (peer);
+
+			// Fields should appear before constructors (after static initializer)
+			int fieldsPos = java.IndexOf ("STATIC_INSTANCE");
+			int ctorPos = java.IndexOf ("ExportStaticAndFields (");
+			Assert.True (fieldsPos > 0, "STATIC_INSTANCE field not found");
+
+			// Constructors may or may not be present, but if so fields come first
+			if (ctorPos > 0) {
+				Assert.True (fieldsPos < ctorPos, "Fields should appear before constructors");
+			}
+		}
+	}
 }

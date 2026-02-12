@@ -661,7 +661,11 @@ sealed class TypeMapAssemblyEmitter
 		var declaringTypeRef = ResolveTypeRef (metadata, export.DeclaringType);
 
 		// Build GetObject<T> method spec — generic instantiation of Object.GetObject<T>
-		var getObjectRef = BuildGetObjectMethodSpec (metadata, declaringTypeRef);
+		// Not needed for static methods (no 'this' object to unmarshal)
+		EntityHandle getObjectRef = default;
+		if (!export.IsStatic) {
+			getObjectRef = BuildGetObjectMethodSpec (metadata, declaringTypeRef);
+		}
 
 		// Resolve managed method to call
 		MemberReferenceHandle managedMethodRef;
@@ -710,23 +714,29 @@ sealed class TypeMapAssemblyEmitter
 			encoder.Call (_activateInstanceRef);
 		}
 
-		// var __this = Object.GetObject<T>(jnienv, native__this, DoNotTransfer);
-		encoder.LoadArgument (0); // jnienv
-		encoder.LoadArgument (1); // native__this
-		encoder.OpCode (ILOpCode.Ldc_i4_0); // JniHandleOwnership.DoNotTransfer = 0
-		encoder.Call (getObjectRef);
-
-		// Unmarshal each parameter
-		for (int i = 0; i < export.ManagedParameters.Count; i++) {
-			EmitParameterUnmarshal (encoder, metadata, export.ManagedParameters [i], jniParams [i], i + 2);
-		}
-
-		// Call managed method
-		if (export.IsConstructor) {
+		if (export.IsStatic) {
+			// Static methods: unmarshal params, then call static managed method directly
+			for (int i = 0; i < export.ManagedParameters.Count; i++) {
+				EmitParameterUnmarshal (encoder, metadata, export.ManagedParameters [i], jniParams [i], i + 2);
+			}
 			encoder.Call (managedMethodRef);
 		} else {
-			encoder.OpCode (ILOpCode.Callvirt);
-			encoder.Token (managedMethodRef);
+			// Instance methods: GetObject<T>, unmarshal params, then callvirt
+			encoder.LoadArgument (0); // jnienv
+			encoder.LoadArgument (1); // native__this
+			encoder.OpCode (ILOpCode.Ldc_i4_0); // JniHandleOwnership.DoNotTransfer = 0
+			encoder.Call (getObjectRef);
+
+			for (int i = 0; i < export.ManagedParameters.Count; i++) {
+				EmitParameterUnmarshal (encoder, metadata, export.ManagedParameters [i], jniParams [i], i + 2);
+			}
+
+			if (export.IsConstructor) {
+				encoder.Call (managedMethodRef);
+			} else {
+				encoder.OpCode (ILOpCode.Callvirt);
+				encoder.Token (managedMethodRef);
+			}
 		}
 
 		// Marshal return value and store in local 3
@@ -840,7 +850,7 @@ sealed class TypeMapAssemblyEmitter
 		bool isVoid = returnKind == JniParamKind.Void;
 
 		return AddMemberRef (metadata, declaringTypeRef, export.ManagedMethodName,
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (paramCount,
+			sig => sig.MethodSignature (isInstanceMethod: !export.IsStatic).Parameters (paramCount,
 				rt => {
 					if (isVoid) {
 						rt.Void ();

@@ -424,6 +424,69 @@ public class TypeMapAssemblyGeneratorTests
 			}
 		}
 
+		[Fact]
+		public void Generate_StaticExportMethod_ProducesValidAssembly ()
+		{
+			var peers = ScanFixtures ();
+			var peer = peers.First (p => p.JavaName == "my/app/ExportStaticAndFields");
+			var path = GenerateAssembly (new [] { peer }, "StaticExportTest");
+			try {
+				var (pe, reader) = OpenAssembly (path);
+				using (pe) {
+					var proxy = reader.TypeDefinitions
+						.Select (h => reader.GetTypeDefinition (h))
+						.First (t => reader.GetString (t.Name) == "MyApp_ExportStaticAndFields_Proxy");
+
+					var methods = proxy.GetMethods ()
+						.Select (h => reader.GetMethodDefinition (h))
+						.Select (m => reader.GetString (m.Name))
+						.ToList ();
+
+					// Should have export wrappers for static methods, instance methods, and ExportField methods
+					var exportWrappers = methods.Where (m => m.StartsWith ("n_") && m.Contains ("_uco")).ToList ();
+					Assert.True (exportWrappers.Count >= 3,
+						$"Expected at least 3 export wrappers (static, instance, ExportField), got {exportWrappers.Count}: [{string.Join (", ", exportWrappers)}]");
+
+					Assert.Contains ("RegisterNatives", methods);
+				}
+			} finally {
+				CleanUp (path);
+			}
+		}
+
+		[Fact]
+		public void Generate_StaticExportMethod_HasMethodBodyWithCorrectPattern ()
+		{
+			var peers = ScanFixtures ();
+			var peer = peers.First (p => p.JavaName == "my/app/ExportStaticAndFields");
+			var path = GenerateAssembly (new [] { peer }, "StaticExportBody");
+			try {
+				var (pe, reader) = OpenAssembly (path);
+				using (pe) {
+					var proxy = reader.TypeDefinitions
+						.Select (h => reader.GetTypeDefinition (h))
+						.First (t => reader.GetString (t.Name) == "MyApp_ExportStaticAndFields_Proxy");
+
+					// All export wrappers should have non-zero RVA
+					var exportWrappers = proxy.GetMethods ()
+						.Select (h => reader.GetMethodDefinition (h))
+						.Where (m => {
+							var name = reader.GetString (m.Name);
+							return name.StartsWith ("n_") && name.Contains ("_uco");
+						})
+						.ToList ();
+
+					Assert.NotEmpty (exportWrappers);
+					foreach (var wrapper in exportWrappers) {
+						Assert.True (wrapper.RelativeVirtualAddress > 0,
+							$"Export marshal method '{reader.GetString (wrapper.Name)}' should have a method body");
+					}
+				}
+			} finally {
+				CleanUp (path);
+			}
+		}
+
 	}
 
 	public class Ignoresaccesschecksto

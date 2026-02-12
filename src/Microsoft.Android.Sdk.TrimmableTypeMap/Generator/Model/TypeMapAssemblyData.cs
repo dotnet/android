@@ -180,6 +180,9 @@ sealed class ExportMarshalMethodData
 	/// <summary>True if this is a constructor.</summary>
 	public bool IsConstructor { get; set; }
 
+	/// <summary>True if this is a static method.</summary>
+	public bool IsStatic { get; set; }
+
 	/// <summary>
 	/// Managed parameter types for the managed method call.
 	/// Each entry is the assembly-qualified managed type name.

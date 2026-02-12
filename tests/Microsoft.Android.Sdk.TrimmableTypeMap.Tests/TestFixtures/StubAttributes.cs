@@ -110,6 +110,17 @@ namespace Java.Interop
 		public ExportAttribute () { }
 		public ExportAttribute (string name) => Name = name;
 	}
+
+	[AttributeUsage (AttributeTargets.Method, AllowMultiple = false)]
+	public sealed class ExportFieldAttribute : Attribute
+	{
+		public string Name { get; set; }
+
+		public ExportFieldAttribute (string name)
+		{
+			Name = name;
+		}
+	}
 }
 
 namespace MyApp
