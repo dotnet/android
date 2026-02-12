@@ -53,6 +53,9 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	public override void WaitForGCBridgeProcessing ()
 	{
+		// Drain any pending contexts that were enqueued during bridge processing.
+		// This ensures synchronous cleanup when explicitly requested (e.g., in tests).
+		CollectPeers ();
 	}
 
 	public unsafe override void CollectPeers ()
