@@ -361,7 +361,6 @@ public class ModelBuilderTests
 
 			Assert.Single (model.ProxyTypes);
 			Assert.True (model.ProxyTypes [0].IsAcw);
-			Assert.True (model.ProxyTypes [0].ImplementsIAndroidCallableWrapper);
 		}
 
 		[Fact]
@@ -372,7 +371,6 @@ public class ModelBuilderTests
 
 			Assert.Single (model.ProxyTypes);
 			Assert.False (model.ProxyTypes [0].IsAcw);
-			Assert.False (model.ProxyTypes [0].ImplementsIAndroidCallableWrapper);
 		}
 
 		[Fact]
@@ -938,7 +936,6 @@ public class ModelBuilderTests
 			var proxy = FindProxy (model, "MyApp_MainActivity_Proxy");
 			Assert.NotNull (proxy);
 			Assert.True (proxy!.IsAcw);
-			Assert.True (proxy.ImplementsIAndroidCallableWrapper);
 			Assert.True (proxy.HasActivation);
 		}
 

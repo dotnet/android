@@ -287,7 +287,7 @@ sealed class TypeMapAssemblyEmitter
 			MetadataTokens.FieldDefinitionHandle (metadata.GetRowCount (TableIndex.Field) + 1),
 			MetadataTokens.MethodDefinitionHandle (metadata.GetRowCount (TableIndex.MethodDef) + 1));
 
-		if (proxy.ImplementsIAndroidCallableWrapper) {
+		if (proxy.IsAcw) {
 			metadata.AddInterfaceImplementation (typeDefHandle, _iAndroidCallableWrapperRef);
 		}
 
@@ -449,28 +449,21 @@ sealed class TypeMapAssemblyEmitter
 		int paramCount = 2 + jniParams.Count;
 		bool isVoid = returnKind == JniParamKind.Void;
 
-		// Callback method reference
+		Action<BlobEncoder> encodeSig = sig => sig.MethodSignature ().Parameters (paramCount,
+			rt => { if (isVoid) rt.Void (); else JniSignatureHelper.EncodeClrType (rt.Type (), returnKind); },
+			p => {
+				p.AddParameter ().Type ().IntPtr ();
+				p.AddParameter ().Type ().IntPtr ();
+				for (int j = 0; j < jniParams.Count; j++)
+					JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniParams [j]);
+			});
+
 		var callbackTypeHandle = ResolveTypeRef (metadata, uco.CallbackType);
-		var callbackRef = AddMemberRef (metadata, callbackTypeHandle, uco.CallbackMethodName,
-			sig => sig.MethodSignature ().Parameters (paramCount,
-				rt => { if (isVoid) rt.Void (); else JniSignatureHelper.EncodeClrType (rt.Type (), returnKind); },
-				p => {
-					p.AddParameter ().Type ().IntPtr ();
-					p.AddParameter ().Type ().IntPtr ();
-					for (int j = 0; j < jniParams.Count; j++)
-						JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniParams [j]);
-				}));
+		var callbackRef = AddMemberRef (metadata, callbackTypeHandle, uco.CallbackMethodName, encodeSig);
 
 		var handle = EmitBody (metadata, ilBuilder, uco.WrapperName,
 			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-			sig => sig.MethodSignature ().Parameters (paramCount,
-				rt => { if (isVoid) rt.Void (); else JniSignatureHelper.EncodeClrType (rt.Type (), returnKind); },
-				p => {
-					p.AddParameter ().Type ().IntPtr ();
-					p.AddParameter ().Type ().IntPtr ();
-					for (int j = 0; j < jniParams.Count; j++)
-						JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniParams [j]);
-				}),
+			encodeSig,
 			encoder => {
 				for (int p = 0; p < paramCount; p++)
 					encoder.LoadArgument (p);
@@ -544,27 +537,17 @@ sealed class TypeMapAssemblyEmitter
 
 	void EmitTypeMapAttribute (MetadataBuilder metadata, TypeMapAttributeData entry)
 	{
-		// Per ECMA-335 §II.23.3, System.Type-typed constructor arguments are encoded
-		// as SerString (assembly-qualified type name), not as TypeDefOrRef tokens.
 		var attrBlob = new BlobBuilder ();
 		attrBlob.WriteUInt16 (0x0001); // Prolog
-
-		if (entry.IsUnconditional) {
-			// 2-arg: TypeMap(jniName, proxyType) — always preserved
-			attrBlob.WriteSerializedString (entry.JniName);
-			attrBlob.WriteSerializedString (entry.ProxyTypeReference);
-			attrBlob.WriteUInt16 (0x0000); // NumNamed
-			metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, _typeMapAttrCtorRef2Arg,
-				metadata.GetOrAddBlob (attrBlob));
-		} else {
-			// 3-arg: TypeMap(jniName, proxyType, targetType) — trimmable
-			attrBlob.WriteSerializedString (entry.JniName);
-			attrBlob.WriteSerializedString (entry.ProxyTypeReference);
+		attrBlob.WriteSerializedString (entry.JniName);
+		attrBlob.WriteSerializedString (entry.ProxyTypeReference);
+		if (!entry.IsUnconditional) {
 			attrBlob.WriteSerializedString (entry.TargetTypeReference!);
-			attrBlob.WriteUInt16 (0x0000); // NumNamed
-			metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, _typeMapAttrCtorRef3Arg,
-				metadata.GetOrAddBlob (attrBlob));
 		}
+		attrBlob.WriteUInt16 (0x0000); // NumNamed
+
+		var ctorRef = entry.IsUnconditional ? _typeMapAttrCtorRef2Arg : _typeMapAttrCtorRef3Arg;
+		metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorRef, metadata.GetOrAddBlob (attrBlob));
 	}
 
 	void EmitTypeMapAssociationAttribute (MetadataBuilder metadata, TypeMapAssociationData assoc)
