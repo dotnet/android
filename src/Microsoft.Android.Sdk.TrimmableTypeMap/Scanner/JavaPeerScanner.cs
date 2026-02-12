@@ -30,17 +30,43 @@ sealed class JavaPeerScanner : IDisposable
 		}
 
 		// Phase 2: Analyze types using cached indices
-		var results = new List<JavaPeerInfo> ();
+		var resultsByManagedName = new Dictionary<string, JavaPeerInfo> (StringComparer.Ordinal);
 
 		foreach (var kvp in assemblyCache) {
 			var index = kvp.Value;
-			ScanAssembly (index, results);
+			ScanAssembly (index, resultsByManagedName);
 		}
 
-		return results;
+		// Phase 3: Force unconditional on types referenced by [Application] attributes
+		ForceUnconditionalCrossReferences (resultsByManagedName, assemblyCache);
+
+		return new List<JavaPeerInfo> (resultsByManagedName.Values);
 	}
 
-	void ScanAssembly (AssemblyIndex index, List<JavaPeerInfo> results)
+	/// <summary>
+	/// Types referenced by [Application(BackupAgent = typeof(X))] or
+	/// [Application(ManageSpaceActivity = typeof(X))] must be unconditional,
+	/// because the manifest will reference them even if nothing else does.
+	/// </summary>
+	static void ForceUnconditionalCrossReferences (Dictionary<string, JavaPeerInfo> resultsByManagedName, Dictionary<string, AssemblyIndex> assemblyCache)
+	{
+		foreach (var kvp in assemblyCache) {
+			foreach (var attrKvp in kvp.Value.AttributesByType) {
+				var attrInfo = attrKvp.Value;
+				ForceUnconditionalIfPresent (resultsByManagedName, attrInfo.ApplicationBackupAgent);
+				ForceUnconditionalIfPresent (resultsByManagedName, attrInfo.ApplicationManageSpaceActivity);
+			}
+		}
+	}
+
+	static void ForceUnconditionalIfPresent (Dictionary<string, JavaPeerInfo> resultsByManagedName, string? managedTypeName)
+	{
+		if (managedTypeName != null && resultsByManagedName.TryGetValue (managedTypeName, out var peer)) {
+			peer.IsUnconditional = true;
+		}
+	}
+
+	void ScanAssembly (AssemblyIndex index, Dictionary<string, JavaPeerInfo> results)
 	{
 		foreach (var typeHandle in index.Reader.TypeDefinitions) {
 			var typeDef = index.Reader.GetTypeDefinition (typeHandle);
@@ -137,7 +163,7 @@ sealed class JavaPeerScanner : IDisposable
 				isGenericDefinition: isGenericDefinition
 			);
 
-			results.Add (peer);
+			results [fullName] = peer;
 		}
 	}
 

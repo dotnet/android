@@ -74,6 +74,7 @@ namespace Android.App
 	public sealed class ApplicationAttribute : Attribute
 	{
 		public Type? BackupAgent { get; set; }
+		public Type? ManageSpaceActivity { get; set; }
 		public string? Name { get; set; }
 	}
 }
