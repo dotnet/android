@@ -192,9 +192,12 @@ sealed class JcwJavaSourceGenerator
 
 			string javaReturnType = JniTypeToJava (method.JniReturnType);
 			bool isVoid = method.JniReturnType == "V";
+			bool isExport = method.Connector == null;
 
-			// Public override wrapper
-			writer.Write ("\t@Override\n");
+			// Public wrapper method
+			if (!isExport) {
+				writer.Write ("\t@Override\n");
+			}
 			writer.Write ("\tpublic ");
 			writer.Write (javaReturnType);
 			writer.Write (' ');
@@ -230,7 +233,7 @@ sealed class JcwJavaSourceGenerator
 			writer.Write ("\t}\n");
 
 			// Native method declaration
-			writer.Write ("\tpublic native ");
+			writer.Write ("\tprivate native ");
 			writer.Write (javaReturnType);
 			writer.Write (' ');
 			writer.Write (method.NativeCallbackName);
