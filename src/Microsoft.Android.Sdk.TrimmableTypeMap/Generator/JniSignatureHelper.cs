@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 
-namespace Microsoft.Android.Build.TypeMap;
+namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
 /// <summary>JNI primitive type kinds used for mapping JNI signatures → CLR types.</summary>
 enum JniParamKind

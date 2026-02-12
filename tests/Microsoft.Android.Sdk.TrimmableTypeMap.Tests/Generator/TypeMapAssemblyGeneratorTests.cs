@@ -7,7 +7,7 @@ using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using Xunit;
 
-namespace Microsoft.Android.Build.TypeMap.Tests;
+namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 
 public class TypeMapAssemblyGeneratorTests
 {

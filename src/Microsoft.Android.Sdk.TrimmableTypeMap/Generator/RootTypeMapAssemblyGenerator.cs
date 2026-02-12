@@ -6,7 +6,7 @@ using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 
-namespace Microsoft.Android.Build.TypeMap;
+namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
 /// <summary>
 /// Generates the root <c>_Microsoft.Android.TypeMaps.dll</c> assembly that references

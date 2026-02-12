@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Microsoft.Android.Build.TypeMap;
+namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
 /// <summary>
 /// Builds a <see cref="TypeMapAssemblyData"/> from scanned <see cref="JavaPeerInfo"/> records.
