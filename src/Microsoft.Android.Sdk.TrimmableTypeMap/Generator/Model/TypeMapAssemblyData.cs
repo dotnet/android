@@ -75,12 +75,11 @@ sealed class JavaPeerProxyData
 	/// <summary>Reference to the invoker type (for interfaces/abstract types). Null if not applicable.</summary>
 	public TypeRefData? InvokerType { get; set; }
 
-	/// <summary>Whether this proxy has a CreateInstance that can actually create instances (has activation ctor).</summary>
-	public bool HasActivation { get; set; }
+	/// <summary>Whether this proxy has a CreateInstance that can actually create instances.</summary>
+	public bool HasActivation => ActivationCtor != null || InvokerType != null;
 
 	/// <summary>
 	/// Activation constructor details. Determines how CreateInstance instantiates the managed peer.
-	/// Null when HasActivation is false.
 	/// </summary>
 	public ActivationCtorData? ActivationCtor { get; set; }
 

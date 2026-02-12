@@ -334,59 +334,34 @@ sealed class TypeMapAssemblyEmitter
 	void EmitCreateInstance (MetadataBuilder metadata, BlobBuilder ilBuilder, JavaPeerProxyData proxy)
 	{
 		if (!proxy.HasActivation) {
-			EmitBody (metadata, ilBuilder, "CreateInstance",
-				MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
-				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
-					rt => rt.Type ().Type (_iJavaPeerableRef, false),
-					p => {
-						p.AddParameter ().Type ().IntPtr ();
-						p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
-					}),
-				encoder => {
-					encoder.OpCode (ILOpCode.Ldnull);
-					encoder.OpCode (ILOpCode.Ret);
-				});
+			EmitCreateInstanceBody (metadata, ilBuilder, encoder => {
+				encoder.OpCode (ILOpCode.Ldnull);
+				encoder.OpCode (ILOpCode.Ret);
+			});
 			return;
 		}
 
 		// Generic type definitions cannot be instantiated
 		if (proxy.IsGenericDefinition) {
-			EmitBody (metadata, ilBuilder, "CreateInstance",
-				MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
-				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
-					rt => rt.Type ().Type (_iJavaPeerableRef, false),
-					p => {
-						p.AddParameter ().Type ().IntPtr ();
-						p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
-					}),
-				encoder => {
-					encoder.LoadString (metadata.GetOrAddUserString ("Cannot create instance of open generic type."));
-					encoder.OpCode (ILOpCode.Newobj);
-					encoder.Token (_notSupportedExceptionCtorRef);
-					encoder.OpCode (ILOpCode.Throw);
-				});
+			EmitCreateInstanceBody (metadata, ilBuilder, encoder => {
+				encoder.LoadString (metadata.GetOrAddUserString ("Cannot create instance of open generic type."));
+				encoder.OpCode (ILOpCode.Newobj);
+				encoder.Token (_notSupportedExceptionCtorRef);
+				encoder.OpCode (ILOpCode.Throw);
+			});
 			return;
 		}
 
 		// Interface with invoker: new TInvoker(IntPtr, JniHandleOwnership)
 		if (proxy.InvokerType != null) {
-			var invokerTypeRef = ResolveTypeRef (metadata, proxy.InvokerType);
-			var invokerCtorRef = AddActivationCtorRef (metadata, invokerTypeRef);
-			EmitBody (metadata, ilBuilder, "CreateInstance",
-				MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
-				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
-					rt => rt.Type ().Type (_iJavaPeerableRef, false),
-					p => {
-						p.AddParameter ().Type ().IntPtr ();
-						p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
-					}),
-				encoder => {
-					encoder.OpCode (ILOpCode.Ldarg_1);
-					encoder.OpCode (ILOpCode.Ldarg_2);
-					encoder.OpCode (ILOpCode.Newobj);
-					encoder.Token (invokerCtorRef);
-					encoder.OpCode (ILOpCode.Ret);
-				});
+			var invokerCtorRef = AddActivationCtorRef (metadata, ResolveTypeRef (metadata, proxy.InvokerType));
+			EmitCreateInstanceBody (metadata, ilBuilder, encoder => {
+				encoder.OpCode (ILOpCode.Ldarg_1);
+				encoder.OpCode (ILOpCode.Ldarg_2);
+				encoder.OpCode (ILOpCode.Newobj);
+				encoder.Token (invokerCtorRef);
+				encoder.OpCode (ILOpCode.Ret);
+			});
 			return;
 		}
 
@@ -396,52 +371,45 @@ sealed class TypeMapAssemblyEmitter
 		if (proxy.ActivationCtor != null && proxy.ActivationCtor.IsOnLeafType) {
 			// Leaf type has its own ctor: new T(IntPtr, JniHandleOwnership)
 			var ctorRef = AddActivationCtorRef (metadata, targetTypeRef);
-			EmitBody (metadata, ilBuilder, "CreateInstance",
-				MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
-				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
-					rt => rt.Type ().Type (_iJavaPeerableRef, false),
-					p => {
-						p.AddParameter ().Type ().IntPtr ();
-						p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
-					}),
-				encoder => {
-					encoder.OpCode (ILOpCode.Ldarg_1);
-					encoder.OpCode (ILOpCode.Ldarg_2);
-					encoder.OpCode (ILOpCode.Newobj);
-					encoder.Token (ctorRef);
-					encoder.OpCode (ILOpCode.Ret);
-				});
+			EmitCreateInstanceBody (metadata, ilBuilder, encoder => {
+				encoder.OpCode (ILOpCode.Ldarg_1);
+				encoder.OpCode (ILOpCode.Ldarg_2);
+				encoder.OpCode (ILOpCode.Newobj);
+				encoder.Token (ctorRef);
+				encoder.OpCode (ILOpCode.Ret);
+			});
 		} else if (proxy.ActivationCtor != null) {
 			// Inherited ctor: GetUninitializedObject(typeof(T)) + call Base::.ctor(IntPtr, JniHandleOwnership)
-			var baseCtorTypeRef = ResolveTypeRef (metadata, proxy.ActivationCtor.DeclaringType);
-			var baseActivationCtorRef = AddActivationCtorRef (metadata, baseCtorTypeRef);
-			EmitBody (metadata, ilBuilder, "CreateInstance",
-				MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
-				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
-					rt => rt.Type ().Type (_iJavaPeerableRef, false),
-					p => {
-						p.AddParameter ().Type ().IntPtr ();
-						p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
-					}),
-				encoder => {
-					// var obj = (TargetType)RuntimeHelpers.GetUninitializedObject(typeof(TargetType));
-					encoder.OpCode (ILOpCode.Ldtoken);
-					encoder.Token (targetTypeRef);
-					encoder.Call (_getTypeFromHandleRef);
-					encoder.Call (_getUninitializedObjectRef);
-					encoder.OpCode (ILOpCode.Castclass);
-					encoder.Token (targetTypeRef);
+			var baseActivationCtorRef = AddActivationCtorRef (metadata, ResolveTypeRef (metadata, proxy.ActivationCtor.DeclaringType));
+			EmitCreateInstanceBody (metadata, ilBuilder, encoder => {
+				encoder.OpCode (ILOpCode.Ldtoken);
+				encoder.Token (targetTypeRef);
+				encoder.Call (_getTypeFromHandleRef);
+				encoder.Call (_getUninitializedObjectRef);
+				encoder.OpCode (ILOpCode.Castclass);
+				encoder.Token (targetTypeRef);
 
-					// obj.Base::.ctor(handle, transfer) — direct call to inherited ctor
-					encoder.OpCode (ILOpCode.Dup);
-					encoder.OpCode (ILOpCode.Ldarg_1);
-					encoder.OpCode (ILOpCode.Ldarg_2);
-					encoder.Call (baseActivationCtorRef);
+				encoder.OpCode (ILOpCode.Dup);
+				encoder.OpCode (ILOpCode.Ldarg_1);
+				encoder.OpCode (ILOpCode.Ldarg_2);
+				encoder.Call (baseActivationCtorRef);
 
-					// return obj;
-					encoder.OpCode (ILOpCode.Ret);
-				});
+				encoder.OpCode (ILOpCode.Ret);
+			});
 		}
+	}
+
+	void EmitCreateInstanceBody (MetadataBuilder metadata, BlobBuilder ilBuilder, Action<InstructionEncoder> emitIL)
+	{
+		EmitBody (metadata, ilBuilder, "CreateInstance",
+			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+				rt => rt.Type ().Type (_iJavaPeerableRef, false),
+				p => {
+					p.AddParameter ().Type ().IntPtr ();
+					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+				}),
+			emitIL);
 	}
 
 	MemberReferenceHandle AddActivationCtorRef (MetadataBuilder metadata, EntityHandle declaringTypeRef)
