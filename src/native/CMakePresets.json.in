@@ -23,7 +23,8 @@
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "CMAKE_MAKE_PROGRAM": "@NinjaPath@",
                 "XA_LIB_TOP_DIR": "@MicrosoftAndroidSdkOutDir@",
-                "XA_BUILD_CONFIGURATION": "@XA_BUILD_CONFIGURATION@"
+                "XA_BUILD_CONFIGURATION": "@XA_BUILD_CONFIGURATION@",
+                "XA_TEST_OUTPUT_DIR": "@XA_TEST_OUTPUT_DIR@"
             }
         },
 
