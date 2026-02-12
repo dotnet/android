@@ -107,12 +107,22 @@ This file contains the .NET 5-specific targets to customize ILLink
     <Touch Files="$(_AndroidLinkFlag)" AlwaysCreate="true" />
   </Target>
 
+  <!-- In the non-NativeAOT path, ResolvedFileToPublish is populated by the ILLink target
+       (via the SDK's ComputeResolvedFilesToPublishList), so we run proguard generation after ILLink.
+       In NativeAOT, ResolvedFileToPublish remains empty after ILLink because the ILC package's
+       _ComputeManagedAssemblyForILLink replaces ManagedAssemblyToLink after _LinkedResolvedFileToPublishCandidate
+       is computed, so the ILLink target's ResolvedFileToPublish rewrite adds nothing.
+       Instead, _AndroidComputeIlcCompileInputs populates ResolvedFileToPublish, so NativeAOT.targets
+       sets _GenerateProguardAfterTargets to run these targets after that. -->
+  <PropertyGroup>
+    <_GenerateProguardAfterTargets Condition=" '$(_GenerateProguardAfterTargets)' == '' ">ILLink</_GenerateProguardAfterTargets>
+  </PropertyGroup>
+
   <Target Name="_PrepareLinkedAssembliesForProguard"
-      AfterTargets="ILLink"
+      AfterTargets="$(_GenerateProguardAfterTargets)"
       Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' ">
     <ItemGroup>
-      <_LinkedAssemblyForProguard Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')"
-                                   Condition="Exists('$(IntermediateLinkDir)%(Filename)%(Extension)')" />
+      <_LinkedAssemblyForProguard Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
     </ItemGroup>
   </Target>
 
