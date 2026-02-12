@@ -3,6 +3,7 @@
 
   <PropertyGroup>
     <TargetFramework>$(TargetFrameworkNETStandard)</TargetFramework>
+    <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <WarningsAsErrors>Nullable</WarningsAsErrors>
     <RootNamespace>Microsoft.Android.Sdk.TrimmableTypeMap</RootNamespace>
@@ -10,11 +11,9 @@
 
   <ItemGroup>
     <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
-    <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataPackageVersion)" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\..\src-ThirdParty\System.Runtime.CompilerServices\CompilerFeaturePolyfills.cs" Link="CompilerFeaturePolyfills.cs" />
+    <PackageReference Include="System.Reflection.Metadata" Version="9.0.3" />
+    <InternalsVisibleTo Include="Microsoft.Android.Sdk.TrimmableTypeMap.Tests" />
+    <InternalsVisibleTo Include="Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests" />
   </ItemGroup>
 
 </Project>

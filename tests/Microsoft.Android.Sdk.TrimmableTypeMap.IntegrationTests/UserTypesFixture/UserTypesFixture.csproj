@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Must target the same Android TFM as Mono.Android -->
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <OutputType>Library</OutputType>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\..\product.snk</AssemblyOriginatorKeyFile>
+    <!-- Output next to the integration test DLL so it's easy to find -->
+    <OutputPath>..\bin\$(Configuration)\$(TargetFramework)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <!-- Reference the ref assembly of Mono.Android -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Mono.Android\Mono.Android.csproj"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <Target Name="_AddMonoAndroidReference" BeforeTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <_MonoAndroidRefCandidate Include="$(MSBuildThisFileDirectory)..\..\..\bin\$(Configuration)\lib\packs\Microsoft.Android.Ref.*\*\ref\net*\Mono.Android.dll" />
+      <_JavaInteropRefCandidate Include="$(MSBuildThisFileDirectory)..\..\..\bin\$(Configuration)\lib\packs\Microsoft.Android.Ref.*\*\ref\net*\Java.Interop.dll" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_MonoAndroidRefAssembly>@(_MonoAndroidRefCandidate, ';')</_MonoAndroidRefAssembly>
+      <_MonoAndroidRefAssembly>$(_MonoAndroidRefAssembly.Split(';')[0])</_MonoAndroidRefAssembly>
+      <_JavaInteropRefAssembly>@(_JavaInteropRefCandidate, ';')</_JavaInteropRefAssembly>
+      <_JavaInteropRefAssembly>$(_JavaInteropRefAssembly.Split(';')[0])</_JavaInteropRefAssembly>
+    </PropertyGroup>
+    <ItemGroup Condition=" '$(_MonoAndroidRefAssembly)' != '' ">
+      <Reference Include="Mono.Android">
+        <HintPath>$(_MonoAndroidRefAssembly)</HintPath>
+      </Reference>
+    </ItemGroup>
+    <ItemGroup Condition=" '$(_JavaInteropRefAssembly)' != '' ">
+      <Reference Include="Java.Interop">
+        <HintPath>$(_JavaInteropRefAssembly)</HintPath>
+      </Reference>
+    </ItemGroup>
+  </Target>
+
+</Project>

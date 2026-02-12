@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using Microsoft.Build.Framework;
 
-namespace Microsoft.Android.Build.TypeMap.IntegrationTests;
+namespace Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests;
 
 /// <summary>
 /// Minimal IBuildEngine implementation for use with TaskLoggingHelper in tests.

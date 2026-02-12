@@ -36,10 +36,31 @@ sealed class SignatureTypeProvider : ISignatureTypeProvider<string, object?>
 	};
 
 	public string GetTypeFromDefinition (MetadataReader reader, TypeDefinitionHandle handle, byte rawTypeKind)
-		=> MetadataTypeNameResolver.GetTypeFromDefinition (reader, handle, rawTypeKind);
+	{
+		var typeDef = reader.GetTypeDefinition (handle);
+		var ns = reader.GetString (typeDef.Namespace);
+		var name = reader.GetString (typeDef.Name);
+		if (typeDef.IsNested) {
+			var parent = GetTypeFromDefinition (reader, typeDef.GetDeclaringType (), rawTypeKind);
+			return parent + "+" + name;
+		}
+		return ns.Length > 0 ? ns + "." + name : name;
+	}
 
 	public string GetTypeFromReference (MetadataReader reader, TypeReferenceHandle handle, byte rawTypeKind)
-		=> MetadataTypeNameResolver.GetTypeFromReference (reader, handle, rawTypeKind);
+	{
+		var typeRef = reader.GetTypeReference (handle);
+		var name = reader.GetString (typeRef.Name);
+
+		// Handle nested types: if the ResolutionScope is another TypeReference, resolve recursively
+		if (typeRef.ResolutionScope.Kind == HandleKind.TypeReference) {
+			var parent = GetTypeFromReference (reader, (TypeReferenceHandle)typeRef.ResolutionScope, rawTypeKind);
+			return parent + "+" + name;
+		}
+
+		var ns = reader.GetString (typeRef.Namespace);
+		return ns.Length > 0 ? ns + "." + name : name;
+	}
 
 	public string GetTypeFromSpecification (MetadataReader reader, object? genericContext, TypeSpecificationHandle handle, byte rawTypeKind)
 	{
@@ -47,20 +68,20 @@ sealed class SignatureTypeProvider : ISignatureTypeProvider<string, object?>
 		return typeSpec.DecodeSignature (this, genericContext);
 	}
 
-	public string GetSZArrayType (string elementType) => $"{elementType}[]";
-	public string GetArrayType (string elementType, ArrayShape shape) => $"{elementType}[{new string (',', shape.Rank - 1)}]";
-	public string GetByReferenceType (string elementType) => $"{elementType}&";
-	public string GetPointerType (string elementType) => $"{elementType}*";
+	public string GetSZArrayType (string elementType) => elementType + "[]";
+	public string GetArrayType (string elementType, ArrayShape shape) => elementType + "[" + new string (',', shape.Rank - 1) + "]";
+	public string GetByReferenceType (string elementType) => elementType + "&";
+	public string GetPointerType (string elementType) => elementType + "*";
 	public string GetPinnedType (string elementType) => elementType;
 	public string GetModifiedType (string modifier, string unmodifiedType, bool isRequired) => unmodifiedType;
 
 	public string GetGenericInstantiation (string genericType, ImmutableArray<string> typeArguments)
 	{
-		return $"{genericType}<{string.Join (",", typeArguments)}>";
+		return genericType + "<" + string.Join (",", typeArguments) + ">";
 	}
 
-	public string GetGenericTypeParameter (object? genericContext, int index) => $"!{index}";
-	public string GetGenericMethodParameter (object? genericContext, int index) => $"!!{index}";
+	public string GetGenericTypeParameter (object? genericContext, int index) => "!" + index;
+	public string GetGenericMethodParameter (object? genericContext, int index) => "!!" + index;
 
 	public string GetFunctionPointerType (MethodSignature<string> signature) => "delegate*";
 }

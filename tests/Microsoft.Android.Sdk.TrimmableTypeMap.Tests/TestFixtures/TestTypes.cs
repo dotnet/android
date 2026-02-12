@@ -366,15 +366,55 @@ namespace MyApp
 	}
 }
 
+namespace Android.App.Backup
+{
+	[Register ("android/app/backup/BackupAgent", DoNotGenerateAcw = true)]
+	public class BackupAgent : Java.Lang.Object
+	{
+		protected BackupAgent (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+	}
+}
+
 namespace MyApp
 {
-	[Application (Name = "my.app.MyApplication")]
+	[Application (Name = "my.app.MyApplication", BackupAgent = typeof (MyBackupAgent), ManageSpaceActivity = typeof (MyManageSpaceActivity))]
 	public class MyApplication : Java.Lang.Object
 	{
 	}
 
 	[Instrumentation (Name = "my.app.MyInstrumentation")]
 	public class MyInstrumentation : Java.Lang.Object
+	{
+	}
+
+	// BackupAgent without a component attribute — would normally be trimmable,
+	// but [Application(BackupAgent = typeof(...))] should force it unconditional.
+	[Register ("my/app/MyBackupAgent")]
+	public class MyBackupAgent : Android.App.Backup.BackupAgent
+	{
+		protected MyBackupAgent (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+	}
+
+	// Activity without [Activity] attribute — would normally be trimmable,
+	// but [Application(ManageSpaceActivity = typeof(...))] should force it unconditional.
+	[Register ("my/app/MyManageSpaceActivity")]
+	public class MyManageSpaceActivity : Android.App.Activity
+	{
+		protected MyManageSpaceActivity (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+	}
+
+	// User type WITHOUT [Register] — gets CRC64-computed JNI name.
+	// CompatJniName should use raw namespace instead of CRC64.
+	public class UnregisteredHelper : Java.Lang.Object
 	{
 	}
 }
@@ -417,4 +457,172 @@ namespace MyApp
 		[Register ("onLongClick", "(Landroid/view/View;)Z", "")]
 		public bool OnLongClick (Android.Views.View v) { return false; }
 	}
+
+	// User type with a custom IJniNameProviderAttribute — the scanner
+	// should detect this via interface resolution, not hardcoded attribute names.
+	[CustomJniName ("com.example.CustomWidget")]
+	public class CustomWidget : Java.Lang.Object
+	{
+	}
+}
+
+// ================================================================
+// Edge case: generic base type (TypeSpecification resolution)
+// ================================================================
+namespace MyApp.Generic
+{
+	[Register ("my/app/GenericBase", DoNotGenerateAcw = true)]
+	public class GenericBase<T> : Java.Lang.Object where T : class
+	{
+		protected GenericBase (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+	}
+
+	[Register ("my/app/ConcreteFromGeneric")]
+	public class ConcreteFromGeneric : GenericBase<string>
+	{
+		protected ConcreteFromGeneric (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+	}
+}
+
+// ================================================================
+// Edge case: generic interface (TypeSpecification resolution)
+// ================================================================
+namespace MyApp.Generic
+{
+	[Register ("my/app/IGenericCallback", "", "")]
+	public interface IGenericCallback<T>
+	{
+	}
+
+	[Register ("my/app/GenericCallbackImpl")]
+	public class GenericCallbackImpl : Java.Lang.Object, IGenericCallback<string>
+	{
+		protected GenericCallbackImpl (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+	}
+}
+
+// ================================================================
+// Edge case: component-only base detection
+// ================================================================
+namespace MyApp
+{
+	[Activity (Name = "my.app.BaseActivityNoRegister")]
+	public class BaseActivityNoRegister : Android.App.Activity
+	{
+	}
+
+	public class DerivedFromComponentBase : BaseActivityNoRegister
+	{
+	}
+}
+
+// ================================================================
+// Edge case: unregistered nested type inside [Register] parent
+// ================================================================
+namespace MyApp
+{
+	[Register ("my/app/RegisteredParent")]
+	public class RegisteredParent : Java.Lang.Object
+	{
+		public class UnregisteredChild : Java.Lang.Object
+		{
+		}
+	}
+}
+
+// ================================================================
+// Edge case: 3-level deep nesting
+// ComputeTypeNameParts must walk multiple levels, collecting names.
+// ================================================================
+namespace MyApp
+{
+	[Register ("my/app/DeepOuter")]
+	public class DeepOuter : Java.Lang.Object
+	{
+		public class Middle : Java.Lang.Object
+		{
+			public class DeepInner : Java.Lang.Object
+			{
+			}
+		}
+	}
+}
+
+// ================================================================
+// Edge case: plain Java peer subclass — no [Register], no component attribute
+// ExtendsJavaPeer must detect it via base type chain, gets CRC64 name.
+// ================================================================
+namespace MyApp
+{
+	public class PlainActivitySubclass : Android.App.Activity
+	{
+	}
+}
+
+// ================================================================
+// Edge case: component attribute WITHOUT Name property
+// HasComponentAttribute = true but ComponentAttributeJniName = null.
+// Type should still get a CRC64 JNI name (not null).
+// ================================================================
+namespace MyApp
+{
+	[Activity (Label = "Unnamed")]
+	public class UnnamedActivity : Android.App.Activity
+	{
+	}
+}
+
+// ================================================================
+// Edge case: interface implementation on unregistered type
+// Type gets CRC64 JNI name but still resolves interface names.
+// ================================================================
+namespace MyApp
+{
+	public class UnregisteredClickListener : Java.Lang.Object, Android.Views.IOnClickListener
+	{
+		[Register ("onClick", "(Landroid/view/View;)V", "")]
+		public void OnClick (Android.Views.View v)
+		{
+		}
+	}
+}
+
+// ================================================================
+// Edge case: [Export] method on unregistered type
+// ParseExportAttribute runs on a type that gets CRC64 JNI name.
+// ================================================================
+namespace MyApp
+{
+	public class UnregisteredExporter : Java.Lang.Object
+	{
+		[Java.Interop.Export ("doExportedWork")]
+		public void DoExportedWork ()
+		{
+		}
+	}
+}
+
+// ================================================================
+// Edge case: type in empty namespace
+// ================================================================
+[Register ("my/app/GlobalType")]
+public class GlobalType : Java.Lang.Object
+{
+	protected GlobalType (IntPtr handle, Android.Runtime.JniHandleOwnership transfer)
+		: base (handle, transfer)
+	{
+	}
+}
+
+public class GlobalUnregisteredType : Java.Lang.Object
+{
 }

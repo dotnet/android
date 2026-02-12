@@ -5,11 +5,10 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <RootNamespace>Microsoft.Android.Build.TypeMap.IntegrationTests</RootNamespace>
+    <RootNamespace>Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <!-- Use this assembly name to match InternalsVisibleTo in Xamarin.Android.Build.Tasks -->
-    <AssemblyName>Xamarin.Android.Build.Tests</AssemblyName>
+    <OutputPath>..\..\bin\Test$(Configuration)</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,13 +17,22 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
   </ItemGroup>
 
+  <!-- Exclude the fixture assembly source files from this project -->
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Microsoft.Android.Build.TypeMap\Microsoft.Android.Build.TypeMap.csproj" />
+    <Compile Remove="UserTypesFixture\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
     <ProjectReference Include="..\..\src\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj" />
     <!-- Mono.Android is built as a dependency so the ref assembly is available on disk.
          ReferenceOutputAssembly=false because we read it with SRM/Cecil, not compile against it directly.
          Instead, we reference the ref assembly below so we can use typeof(Java.Lang.Object). -->
     <ProjectReference Include="..\..\src\Mono.Android\Mono.Android.csproj"
+                      ReferenceOutputAssembly="false" />
+    <!-- User-type fixture assembly: built as a dependency, scanned via SRM/Cecil in tests.
+         ReferenceOutputAssembly=false because we don't compile against it — we just need the DLL on disk. -->
+    <ProjectReference Include="UserTypesFixture\UserTypesFixture.csproj"
                       ReferenceOutputAssembly="false" />
   </ItemGroup>
 
