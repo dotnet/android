@@ -5,7 +5,7 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <RootNamespace>Microsoft.Android.Build.TypeMap.Tests</RootNamespace>
+    <RootNamespace>Microsoft.Android.Sdk.TrimmableTypeMap.Tests</RootNamespace>
   </PropertyGroup>
 
   <!-- Exclude TestFixtures subdirectory — it's a separate project compiled independently -->
@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Microsoft.Android.Build.TypeMap\Microsoft.Android.Build.TypeMap.csproj" />
+    <ProjectReference Include="..\..\src\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
     <ProjectReference Include="TestFixtures\TestFixtures.csproj">
       <!-- Don't add as a compile-time reference — we only need the built DLL as scanner test input -->
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>

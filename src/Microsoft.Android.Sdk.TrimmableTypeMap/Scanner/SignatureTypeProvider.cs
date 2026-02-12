@@ -2,7 +2,7 @@ using System;
 using System.Collections.Immutable;
 using System.Reflection.Metadata;
 
-namespace Microsoft.Android.Build.TypeMap;
+namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
 /// <summary>
 /// Minimal ISignatureTypeProvider implementation for decoding method
@@ -11,6 +11,8 @@ namespace Microsoft.Android.Build.TypeMap;
 /// </summary>
 sealed class SignatureTypeProvider : ISignatureTypeProvider<string, object?>
 {
+	public static readonly SignatureTypeProvider Instance = new ();
+
 	public string GetPrimitiveType (PrimitiveTypeCode typeCode) => typeCode switch {
 		PrimitiveTypeCode.Void => "System.Void",
 		PrimitiveTypeCode.Boolean => "System.Boolean",
@@ -48,8 +50,15 @@ sealed class SignatureTypeProvider : ISignatureTypeProvider<string, object?>
 	public string GetTypeFromReference (MetadataReader reader, TypeReferenceHandle handle, byte rawTypeKind)
 	{
 		var typeRef = reader.GetTypeReference (handle);
-		var ns = reader.GetString (typeRef.Namespace);
 		var name = reader.GetString (typeRef.Name);
+
+		// Handle nested types: if the ResolutionScope is another TypeReference, resolve recursively
+		if (typeRef.ResolutionScope.Kind == HandleKind.TypeReference) {
+			var parent = GetTypeFromReference (reader, (TypeReferenceHandle)typeRef.ResolutionScope, rawTypeKind);
+			return parent + "+" + name;
+		}
+
+		var ns = reader.GetString (typeRef.Namespace);
 		return ns.Length > 0 ? ns + "." + name : name;
 	}
 

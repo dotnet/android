@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using Xunit;
 
-namespace Microsoft.Android.Build.TypeMap.Tests;
+namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 
 public class JavaPeerScannerTests
 {
@@ -227,15 +227,6 @@ public class JavaPeerScannerTests
 	}
 
 	[Fact]
-	public void Scan_ManagedTypeNamespace_IsCorrect ()
-	{
-		var peers = ScanFixtures ();
-		var activity = FindByJavaName (peers, "android/app/Activity");
-		Assert.Equal ("Android.App", activity.ManagedTypeNamespace);
-		Assert.Equal ("Activity", activity.ManagedTypeShortName);
-	}
-
-	[Fact]
 	public void Scan_ActivityBaseJavaName_IsJavaLangObject ()
 	{
 		var peers = ScanFixtures ();
@@ -276,42 +267,22 @@ public class JavaPeerScannerTests
 	}
 
 	[Fact]
-	public void Scan_TypeWithRegisteredCtors_HasJavaConstructors ()
+	public void Scan_TypeWithRegisteredCtors_HasConstructorMarshalMethods ()
 	{
 		var peers = ScanFixtures ();
 		var customView = FindByJavaName (peers, "my/app/CustomView");
-		Assert.Equal (2, customView.JavaConstructors.Count);
-		Assert.Equal ("()V", customView.JavaConstructors [0].JniSignature);
-		Assert.Equal (0, customView.JavaConstructors [0].ConstructorIndex);
-		Assert.Equal ("(Landroid/content/Context;)V", customView.JavaConstructors [1].JniSignature);
-		Assert.Equal (1, customView.JavaConstructors [1].ConstructorIndex);
+		var ctors = customView.MarshalMethods.Where (m => m.IsConstructor).ToList ();
+		Assert.Equal (2, ctors.Count);
+		Assert.Equal ("()V", ctors [0].JniSignature);
+		Assert.Equal ("(Landroid/content/Context;)V", ctors [1].JniSignature);
 	}
 
 	[Fact]
-	public void Scan_TypeWithoutRegisteredCtors_HasEmptyJavaConstructors ()
+	public void Scan_TypeWithoutRegisteredCtors_HasNoConstructorMarshalMethods ()
 	{
 		var peers = ScanFixtures ();
 		var helper = FindByJavaName (peers, "my/app/MyHelper");
-		Assert.Empty (helper.JavaConstructors);
-	}
-
-	[Fact]
-	public void Scan_MarshalMethod_HasDeclaringAssemblyName ()
-	{
-		var peers = ScanFixtures ();
-		var activity = FindByJavaName (peers, "android/app/Activity");
-		Assert.All (activity.MarshalMethods, m =>
-			Assert.Equal ("TestFixtures", m.DeclaringAssemblyName));
-	}
-
-	[Fact]
-	public void Scan_MarshalMethod_HasNativeCallbackName ()
-	{
-		var peers = ScanFixtures ();
-		var activity = FindByJavaName (peers, "android/app/Activity");
-		var onCreate = activity.MarshalMethods.FirstOrDefault (m => m.JniName == "onCreate");
-		Assert.NotNull (onCreate);
-		Assert.Equal ("n_OnCreate", onCreate.NativeCallbackName);
+		Assert.DoesNotContain (helper.MarshalMethods, m => m.IsConstructor);
 	}
 
 	[Fact]
@@ -402,7 +373,6 @@ public class JavaPeerScannerTests
 		var onTouch = handler.MarshalMethods.FirstOrDefault (m => m.JniName == "onTouch");
 		Assert.NotNull (onTouch);
 		Assert.Equal ("(Landroid/view/View;I)Z", onTouch.JniSignature);
-		Assert.Equal ("Z", onTouch.JniReturnType);
 	}
 
 	[Fact]
@@ -413,28 +383,6 @@ public class JavaPeerScannerTests
 		var onFocus = handler.MarshalMethods.FirstOrDefault (m => m.JniName == "onFocusChange");
 		Assert.NotNull (onFocus);
 		Assert.Equal ("(Landroid/view/View;Z)V", onFocus.JniSignature);
-		Assert.Equal (2, onFocus.Parameters.Count);
-		Assert.Equal ("Z", onFocus.Parameters [1].JniType);
-	}
-
-	[Fact]
-	public void Scan_MarshalMethod_VoidReturn ()
-	{
-		var peers = ScanFixtures ();
-		var handler = FindByJavaName (peers, "my/app/TouchHandler");
-		var onFocus = handler.MarshalMethods.FirstOrDefault (m => m.JniName == "onFocusChange");
-		Assert.NotNull (onFocus);
-		Assert.Equal ("V", onFocus.JniReturnType);
-	}
-
-	[Fact]
-	public void Scan_MarshalMethod_ObjectReturn ()
-	{
-		var peers = ScanFixtures ();
-		var handler = FindByJavaName (peers, "my/app/TouchHandler");
-		var getText = handler.MarshalMethods.FirstOrDefault (m => m.JniName == "getText");
-		Assert.NotNull (getText);
-		Assert.Equal ("Ljava/lang/String;", getText.JniReturnType);
 	}
 
 	[Fact]
@@ -444,15 +392,7 @@ public class JavaPeerScannerTests
 		var handler = FindByJavaName (peers, "my/app/TouchHandler");
 		var onScroll = handler.MarshalMethods.FirstOrDefault (m => m.JniName == "onScroll");
 		Assert.NotNull (onScroll);
-		Assert.Equal (4, onScroll.Parameters.Count);
-		Assert.Equal ("I", onScroll.Parameters [0].JniType);
-		Assert.Equal ("System.Int32", onScroll.Parameters [0].ManagedType);
-		Assert.Equal ("F", onScroll.Parameters [1].JniType);
-		Assert.Equal ("System.Single", onScroll.Parameters [1].ManagedType);
-		Assert.Equal ("J", onScroll.Parameters [2].JniType);
-		Assert.Equal ("System.Int64", onScroll.Parameters [2].ManagedType);
-		Assert.Equal ("D", onScroll.Parameters [3].JniType);
-		Assert.Equal ("System.Double", onScroll.Parameters [3].ManagedType);
+		Assert.Equal ("(IFJD)V", onScroll.JniSignature);
 	}
 
 	[Fact]
@@ -463,8 +403,6 @@ public class JavaPeerScannerTests
 		var setItems = handler.MarshalMethods.FirstOrDefault (m => m.JniName == "setItems");
 		Assert.NotNull (setItems);
 		Assert.Equal ("([Ljava/lang/String;)V", setItems.JniSignature);
-		Assert.Single (setItems.Parameters);
-		Assert.Equal ("[Ljava/lang/String;", setItems.Parameters [0].JniType);
 	}
 
 	[Fact]
@@ -503,11 +441,72 @@ public class JavaPeerScannerTests
 		Assert.True (instr.IsUnconditional, "[Instrumentation] should be unconditional");
 	}
 
-	[Fact (Skip = "BackupAgent cross-reference forcing unconditional is not yet implemented in the scanner")]
+	[Fact]
 	public void Scan_BackupAgent_ForcedUnconditional ()
 	{
-		// TODO: Add BackupAgent fixture type and verify it's forced unconditional
-		// This requires the MSBuild task to propagate the cross-reference.
+		var peers = ScanFixtures ();
+		var backupAgent = FindByJavaName (peers, "my/app/MyBackupAgent");
+		Assert.True (backupAgent.IsUnconditional, "BackupAgent referenced from [Application] should be forced unconditional");
+	}
+
+	[Fact]
+	public void Scan_ManageSpaceActivity_ForcedUnconditional ()
+	{
+		var peers = ScanFixtures ();
+		var activity = FindByJavaName (peers, "my/app/MyManageSpaceActivity");
+		Assert.True (activity.IsUnconditional, "ManageSpaceActivity referenced from [Application] should be forced unconditional");
+	}
+
+	[Fact]
+	public void Scan_BackupAgent_NotUnconditional_WhenNotReferenced ()
+	{
+		// A type extending BackupAgent that is NOT referenced from [Application]
+		// should remain trimmable (not unconditional).
+		var peers = ScanFixtures ();
+		var helper = FindByJavaName (peers, "my/app/MyHelper");
+		Assert.False (helper.IsUnconditional, "Unreferenced type should remain trimmable");
+	}
+
+	[Fact]
+	public void Scan_McwBinding_CompatJniNameEqualsJavaName ()
+	{
+		var peers = ScanFixtures ();
+		var activity = FindByJavaName (peers, "android/app/Activity");
+		Assert.Equal (activity.JavaName, activity.CompatJniName);
+	}
+
+	[Fact]
+	public void Scan_UserTypeWithRegister_CompatJniNameEqualsJavaName ()
+	{
+		var peers = ScanFixtures ();
+		var mainActivity = FindByJavaName (peers, "my/app/MainActivity");
+		Assert.Equal (mainActivity.JavaName, mainActivity.CompatJniName);
+	}
+
+	[Fact]
+	public void Scan_UserTypeWithoutRegister_CompatJniNameUsesRawNamespace ()
+	{
+		var peers = ScanFixtures ();
+		var unregistered = peers.FirstOrDefault (p => p.ManagedTypeName == "MyApp.UnregisteredHelper");
+		Assert.NotNull (unregistered);
+
+		// JavaName should use CRC64 package
+		Assert.StartsWith ("crc64", unregistered.JavaName);
+
+		// CompatJniName should use the raw namespace
+		Assert.Equal ("myapp/UnregisteredHelper", unregistered.CompatJniName);
+	}
+
+	[Fact]
+	public void Scan_CustomJniNameProviderAttribute_UsesNameFromAttribute ()
+	{
+		var peers = ScanFixtures ();
+		var widget = peers.FirstOrDefault (p => p.ManagedTypeName == "MyApp.CustomWidget");
+		Assert.NotNull (widget);
+
+		// The custom attribute provides the JNI name via IJniNameProviderAttribute
+		Assert.Equal ("com/example/CustomWidget", widget.JavaName);
+		Assert.Equal ("com/example/CustomWidget", widget.CompatJniName);
 	}
 
 	[Fact]
@@ -623,5 +622,148 @@ public class JavaPeerScannerTests
 		var context = FindByJavaName (peers, "android/content/Context");
 		Assert.True (context.DoNotGenerateAcw, "Context is MCW");
 		Assert.Equal ("java/lang/Object", context.BaseJavaName);
+	}
+
+	// ================================================================
+	// Edge case tests — discovered during side-by-side testing
+	// ================================================================
+
+	[Fact]
+	public void Scan_GenericBaseType_ResolvesViaTypeSpecification ()
+	{
+		// ConcreteFromGeneric extends GenericBase<string>. The base type
+		// is a TypeSpecification (generic instantiation). The scanner must
+		// decode the blob to resolve the underlying TypeDef/TypeRef.
+		var peers = ScanFixtures ();
+		var concrete = FindByJavaName (peers, "my/app/ConcreteFromGeneric");
+		Assert.Equal ("my/app/GenericBase", concrete.BaseJavaName);
+	}
+
+	[Fact]
+	public void Scan_GenericInterface_ResolvesViaTypeSpecification ()
+	{
+		// GenericCallbackImpl implements IGenericCallback<string>. The interface
+		// is a TypeSpecification. The scanner must decode the blob to resolve it.
+		var peers = ScanFixtures ();
+		var impl = FindByJavaName (peers, "my/app/GenericCallbackImpl");
+		Assert.Contains ("my/app/IGenericCallback", impl.ImplementedInterfaceJavaNames);
+	}
+
+	[Fact]
+	public void Scan_ComponentOnlyBase_DerivedTypeIsDiscovered ()
+	{
+		// BaseActivityNoRegister has [Activity] but no [Register].
+		// DerivedFromComponentBase extends it. ExtendsJavaPeerCore must
+		// detect the component attribute on the base to include the derived type.
+		var peers = ScanFixtures ();
+		var derived = peers.FirstOrDefault (p => p.ManagedTypeName == "MyApp.DerivedFromComponentBase");
+		Assert.NotNull (derived);
+		// Should get a CRC64-computed JNI name
+		Assert.StartsWith ("crc64", derived.JavaName);
+	}
+
+	[Fact]
+	public void Scan_ComponentOnlyBase_BaseTypeIsDiscovered ()
+	{
+		// BaseActivityNoRegister has [Activity(Name = "...")] — should be discovered
+		// even without [Register].
+		var peers = ScanFixtures ();
+		var baseType = FindByJavaName (peers, "my/app/BaseActivityNoRegister");
+		Assert.True (baseType.IsUnconditional, "[Activity] makes it unconditional");
+		Assert.Equal ("android/app/Activity", baseType.BaseJavaName);
+	}
+
+	[Fact]
+	public void Scan_UnregisteredNestedType_UsesParentJniPrefix ()
+	{
+		// UnregisteredChild has no [Register] but its parent RegisteredParent does.
+		// ComputeTypeNameParts should use parent's JNI name as prefix.
+		var peers = ScanFixtures ();
+		var child = peers.FirstOrDefault (p => p.ManagedTypeName == "MyApp.RegisteredParent+UnregisteredChild");
+		Assert.NotNull (child);
+		Assert.Equal ("my/app/RegisteredParent_UnregisteredChild", child.JavaName);
+	}
+
+	[Fact]
+	public void Scan_EmptyNamespace_RegisteredType_Discovered ()
+	{
+		// GlobalType has [Register] and no namespace — should work normally.
+		var peers = ScanFixtures ();
+		var global = FindByJavaName (peers, "my/app/GlobalType");
+		Assert.Equal ("GlobalType", global.ManagedTypeName);
+	}
+
+	[Fact]
+	public void Scan_EmptyNamespace_UnregisteredType_CompatJniHasNoSlash ()
+	{
+		// GlobalUnregisteredType has no namespace and no [Register].
+		// CompatJniName should just be the type name (no leading slash).
+		var peers = ScanFixtures ();
+		var global = peers.FirstOrDefault (p => p.ManagedTypeName == "GlobalUnregisteredType");
+		Assert.NotNull (global);
+		Assert.Equal ("GlobalUnregisteredType", global.CompatJniName);
+		Assert.DoesNotContain ("/", global.CompatJniName);
+	}
+
+	[Fact]
+	public void Scan_DeepNestedType_ThreeLevelNesting ()
+	{
+		// DeepOuter.Middle.DeepInner — 3-level nesting.
+		// ComputeTypeNameParts walks multiple declaring-type levels.
+		var peers = ScanFixtures ();
+		var deep = peers.FirstOrDefault (p => p.ManagedTypeName == "MyApp.DeepOuter+Middle+DeepInner");
+		Assert.NotNull (deep);
+		Assert.Equal ("my/app/DeepOuter_Middle_DeepInner", deep.JavaName);
+	}
+
+	[Fact]
+	public void Scan_PlainActivitySubclass_DiscoveredWithCrc64Name ()
+	{
+		// PlainActivitySubclass extends Activity with no [Register], no [Activity].
+		// ExtendsJavaPeer detects it via the base type chain, gets CRC64 name.
+		var peers = ScanFixtures ();
+		var plain = peers.FirstOrDefault (p => p.ManagedTypeName == "MyApp.PlainActivitySubclass");
+		Assert.NotNull (plain);
+		Assert.StartsWith ("crc64", plain.JavaName);
+		Assert.Equal ("android/app/Activity", plain.BaseJavaName);
+	}
+
+	[Fact]
+	public void Scan_ComponentAttributeWithoutName_DiscoveredWithCrc64Name ()
+	{
+		// UnnamedActivity has [Activity(Label="Unnamed")] but no Name property.
+		// HasComponentAttribute = true, ComponentAttributeJniName should be null,
+		// and the type should still get a CRC64-based JNI name.
+		var peers = ScanFixtures ();
+		var unnamed = peers.FirstOrDefault (p => p.ManagedTypeName == "MyApp.UnnamedActivity");
+		Assert.NotNull (unnamed);
+		Assert.StartsWith ("crc64", unnamed.JavaName);
+		Assert.True (unnamed.IsUnconditional, "[Activity] makes it unconditional");
+	}
+
+	[Fact]
+	public void Scan_InterfaceOnUnregisteredType_InterfacesResolved ()
+	{
+		// UnregisteredClickListener has no [Register] but implements IOnClickListener.
+		// Type gets CRC64 name, interfaces still resolved.
+		var peers = ScanFixtures ();
+		var listener = peers.FirstOrDefault (p => p.ManagedTypeName == "MyApp.UnregisteredClickListener");
+		Assert.NotNull (listener);
+		Assert.StartsWith ("crc64", listener.JavaName);
+		Assert.Contains ("android/view/View$OnClickListener", listener.ImplementedInterfaceJavaNames);
+	}
+
+	[Fact]
+	public void Scan_ExportOnUnregisteredType_MethodDiscovered ()
+	{
+		// UnregisteredExporter has [Export("doExportedWork")] on a type without [Register].
+		// Type gets CRC64 name, [Export] method is in MarshalMethods.
+		var peers = ScanFixtures ();
+		var exporter = peers.FirstOrDefault (p => p.ManagedTypeName == "MyApp.UnregisteredExporter");
+		Assert.NotNull (exporter);
+		Assert.StartsWith ("crc64", exporter.JavaName);
+		var exportMethod = exporter.MarshalMethods.FirstOrDefault (m => m.JniName == "doExportedWork");
+		Assert.NotNull (exportMethod);
+		Assert.Null (exportMethod.Connector);
 	}
 }

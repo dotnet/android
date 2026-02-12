@@ -10,7 +10,7 @@ using Xamarin.Android.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Microsoft.Android.Build.TypeMap.IntegrationTests;
+namespace Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests;
 
 /// <summary>
 /// Side-by-side comparison tests: runs both the legacy Cecil-based scanner
@@ -86,7 +86,7 @@ public class ScannerComparisonTests
 				continue;
 			}
 
-				// Cecil uses '/' for nested types, SRM uses '+' (CLR format) — normalize
+			// Cecil uses '/' for nested types, SRM uses '+' (CLR format) — normalize
 			var managedName = $"{typeDef.FullName.Replace ('/', '+')}, {typeDef.Module.Assembly.Name.Name}";
 			var methods = ExtractMethodRegistrations (typeDef);
 
@@ -476,7 +476,7 @@ public class ScannerComparisonTests
 		var generics = peers.Count (p => p.IsGenericDefinition);
 		var withMethods = peers.Count (p => p.MarshalMethods.Count > 0);
 		var totalMethods = peers.Sum (p => p.MarshalMethods.Count);
-		var withConstructors = peers.Count (p => p.JavaConstructors.Count > 0);
+		var withConstructors = peers.Count (p => p.MarshalMethods.Any (m => m.IsConstructor));
 		var withBase = peers.Count (p => p.BaseJavaName != null);
 		var withInterfaces = peers.Count (p => p.ImplementedInterfaceJavaNames.Count > 0);
 
@@ -1050,9 +1050,10 @@ public class ScannerComparisonTests
 				activationCtorStyle = peer.ActivationCtor.Style.ToString ();
 			}
 
-			// Java constructor signatures (sorted)
-			var javaCtorSignatures = peer.JavaConstructors
-				.Select (c => c.JniSignature)
+			// Java constructor signatures (sorted) — derived from constructor marshal methods
+			var javaCtorSignatures = peer.MarshalMethods
+				.Where (m => m.IsConstructor)
+				.Select (m => m.JniSignature)
 				.OrderBy (s => s, StringComparer.Ordinal)
 				.ToList ();
 
@@ -1123,5 +1124,225 @@ public class ScannerComparisonTests
 
 			return new [] { monoAndroidPath, javaInteropPath };
 		}
+	}
+
+	/// <summary>
+	/// Normalizes a CRC64 JNI package name so that different CRC64 implementations
+	/// compare as equal. Replaces "crc64XXXX/TypeName" with "crc64.../TypeName".
+	/// Non-CRC64 names (e.g., "android/app/Activity") are returned unchanged.
+	/// </summary>
+	static string NormalizeCrc64 (string javaName)
+	{
+		if (javaName.StartsWith ("crc64", StringComparison.Ordinal)) {
+			int slash = javaName.IndexOf ('/');
+			if (slash > 0) {
+				return "crc64.../" + javaName.Substring (slash + 1);
+			}
+		}
+		return javaName;
+	}
+
+	/// <summary>
+	/// Path to the UserTypesFixture.dll — a test assembly that references real Mono.Android
+	/// and contains user types with [Activity], [Service], [Register], nested types, etc.
+	/// </summary>
+	static string? UserTypesFixturePath {
+		get {
+			var testDir = Path.GetDirectoryName (typeof (ScannerComparisonTests).Assembly.Location)!;
+			var path = Path.Combine (testDir, "UserTypesFixture.dll");
+			return File.Exists (path) ? path : null;
+		}
+	}
+
+	/// <summary>
+	/// All assembly paths needed for scanning UserTypesFixture.dll:
+	/// the fixture itself + Mono.Android.dll + Java.Interop.dll for base type resolution.
+	/// </summary>
+	static string[]? AllUserTypesAssemblyPaths {
+		get {
+			var fixturePath = UserTypesFixturePath;
+			if (fixturePath == null) {
+				return null;
+			}
+
+			var dir = Path.GetDirectoryName (fixturePath)!;
+			var monoAndroidPath = Path.Combine (dir, "Mono.Android.dll");
+			var javaInteropPath = Path.Combine (dir, "Java.Interop.dll");
+
+			var paths = new List<string> { fixturePath };
+			if (File.Exists (monoAndroidPath)) {
+				paths.Add (monoAndroidPath);
+			}
+			if (File.Exists (javaInteropPath)) {
+				paths.Add (javaInteropPath);
+			}
+			return paths.ToArray ();
+		}
+	}
+
+	/// <summary>
+	/// Verifies the new scanner produces the EXACT same JNI → managed type mapping
+	/// as the legacy scanner on UserTypesFixture.dll — a user-type assembly with
+	/// [Activity], [Service], [BroadcastReceiver], [Application], [Register], [Export],
+	/// nested types, and plain Java.Lang.Object subclasses (CRC64 names).
+	/// </summary>
+	[Fact]
+	public void ExactTypeMap_UserTypesFixture ()
+	{
+		var paths = AllUserTypesAssemblyPaths;
+		Assert.NotNull (paths);
+
+		var fixturePath = paths! [0];
+		var (legacy, _) = RunLegacyScanner (fixturePath);
+		var (newEntries, _) = RunNewScanner (paths);
+
+		output.WriteLine ($"UserTypesFixture: Legacy={legacy.Count} entries, New={newEntries.Count} entries");
+
+		// Normalize CRC64 hashes — the two scanners use different CRC64 implementations
+		// but the type name part after the hash must match.
+		var legacyNormalized = legacy.Select (e => e with { JavaName = NormalizeCrc64 (e.JavaName) }).ToList ();
+		var newNormalized = newEntries.Select (e => e with { JavaName = NormalizeCrc64 (e.JavaName) }).ToList ();
+
+		var legacyMap = legacyNormalized.GroupBy (e => e.JavaName).ToDictionary (g => g.Key, g => g.ToList ());
+		var newMap = newNormalized.GroupBy (e => e.JavaName).ToDictionary (g => g.Key, g => g.ToList ());
+
+		var allJavaNames = new HashSet<string> (legacyMap.Keys);
+		allJavaNames.UnionWith (newMap.Keys);
+
+		var missing = new List<string> ();
+		var extra = new List<string> ();
+		var managedNameMismatches = new List<string> ();
+		var skipMismatches = new List<string> ();
+
+		foreach (var javaName in allJavaNames.OrderBy (n => n)) {
+			var inLegacy = legacyMap.TryGetValue (javaName, out var legacyEntries);
+			var inNew = newMap.TryGetValue (javaName, out var newEntriesForName);
+
+			if (inLegacy && !inNew) {
+				foreach (var e in legacyEntries!) {
+					missing.Add ($"{e.JavaName} → {e.ManagedName} (skip={e.SkipInJavaToManaged})");
+				}
+				continue;
+			}
+
+			if (!inLegacy && inNew) {
+				foreach (var e in newEntriesForName!) {
+					extra.Add ($"{e.JavaName} → {e.ManagedName} (skip={e.SkipInJavaToManaged})");
+				}
+				continue;
+			}
+
+			var legacySorted = legacyEntries!.OrderBy (e => e.ManagedName).ToList ();
+			var newSorted = newEntriesForName!.OrderBy (e => e.ManagedName).ToList ();
+
+			var le = legacySorted [0];
+			var ne = newSorted [0];
+
+			if (le.ManagedName != ne.ManagedName) {
+				managedNameMismatches.Add ($"{javaName}: legacy='{le.ManagedName}' new='{ne.ManagedName}'");
+			}
+
+			if (le.SkipInJavaToManaged != ne.SkipInJavaToManaged) {
+				skipMismatches.Add ($"{javaName}: legacy.skip={le.SkipInJavaToManaged} new.skip={ne.SkipInJavaToManaged}");
+			}
+		}
+
+		if (missing.Count > 0) {
+			output.WriteLine ($"\n--- MISSING from new scanner ({missing.Count}) ---");
+			foreach (var m in missing) output.WriteLine ($"  {m}");
+		}
+		if (extra.Count > 0) {
+			output.WriteLine ($"\n--- EXTRA in new scanner ({extra.Count}) ---");
+			foreach (var e in extra) output.WriteLine ($"  {e}");
+		}
+		if (managedNameMismatches.Count > 0) {
+			output.WriteLine ($"\n--- MANAGED NAME MISMATCHES ({managedNameMismatches.Count}) ---");
+			foreach (var m in managedNameMismatches) output.WriteLine ($"  {m}");
+		}
+		if (skipMismatches.Count > 0) {
+			output.WriteLine ($"\n--- SKIP FLAG MISMATCHES ({skipMismatches.Count}) ---");
+			foreach (var m in skipMismatches) output.WriteLine ($"  {m}");
+		}
+
+		Assert.Empty (missing);
+		Assert.Empty (managedNameMismatches);
+		Assert.Empty (skipMismatches);
+		Assert.Empty (extra);
+	}
+
+	/// <summary>
+	/// Verifies the new scanner produces the same marshal methods (type-level and method-level
+	/// [Register] attributes) as the legacy scanner on UserTypesFixture.dll.
+	/// </summary>
+	[Fact]
+	public void ExactMarshalMethods_UserTypesFixture ()
+	{
+		var paths = AllUserTypesAssemblyPaths;
+		Assert.NotNull (paths);
+
+		var fixturePath = paths! [0];
+		var (_, legacyMethods) = RunLegacyScanner (fixturePath);
+		var (_, newMethods) = RunNewScanner (paths);
+
+		// Normalize CRC64 hashes in method group keys
+		var legacyNormalized = legacyMethods
+			.ToDictionary (kvp => NormalizeCrc64 (kvp.Key), kvp => kvp.Value);
+		var newNormalized = newMethods
+			.ToDictionary (kvp => NormalizeCrc64 (kvp.Key), kvp => kvp.Value);
+
+		output.WriteLine ($"UserTypesFixture: Legacy={legacyNormalized.Count} types with methods, New={newNormalized.Count}");
+
+		// Only compare types that the legacy scanner found (it skips user types without [Register])
+		var missing = new List<string> ();
+		var methodMismatches = new List<string> ();
+
+		foreach (var javaName in legacyNormalized.Keys.OrderBy (n => n)) {
+			if (!newNormalized.TryGetValue (javaName, out var newGroups)) {
+				missing.Add (javaName);
+				continue;
+			}
+
+			var legacyGroups = legacyNormalized [javaName];
+
+			foreach (var legacyGroup in legacyGroups) {
+				var newGroup = newGroups.FirstOrDefault (g => g.ManagedName == legacyGroup.ManagedName);
+				if (newGroup == null) {
+					missing.Add ($"{javaName} → {legacyGroup.ManagedName}");
+					continue;
+				}
+
+				// Legacy test helper only extracts [Register] methods, not [Export] methods.
+				// When legacy has 0 methods (from the typemap fallback path) but new has some,
+				// the new scanner is correct — it handles [Export] too. Skip comparison.
+				if (legacyGroup.Methods.Count == 0) {
+					continue;
+				}
+
+				if (legacyGroup.Methods.Count != newGroup.Methods.Count) {
+					methodMismatches.Add ($"{javaName}/{legacyGroup.ManagedName}: legacy={legacyGroup.Methods.Count} methods, new={newGroup.Methods.Count}");
+					continue;
+				}
+
+				for (int i = 0; i < legacyGroup.Methods.Count; i++) {
+					var lm = legacyGroup.Methods [i];
+					var nm = newGroup.Methods [i];
+					if (lm.JniName != nm.JniName || lm.JniSignature != nm.JniSignature) {
+						methodMismatches.Add ($"{javaName}: [{i}] legacy=({lm.JniName}, {lm.JniSignature}) new=({nm.JniName}, {nm.JniSignature})");
+					}
+				}
+			}
+		}
+
+		if (missing.Count > 0) {
+			output.WriteLine ($"\n--- MISSING from new scanner ({missing.Count}) ---");
+			foreach (var m in missing) output.WriteLine ($"  {m}");
+		}
+		if (methodMismatches.Count > 0) {
+			output.WriteLine ($"\n--- METHOD MISMATCHES ({methodMismatches.Count}) ---");
+			foreach (var m in methodMismatches) output.WriteLine ($"  {m}");
+		}
+
+		Assert.Empty (missing);
+		Assert.Empty (methodMismatches);
 	}
 }

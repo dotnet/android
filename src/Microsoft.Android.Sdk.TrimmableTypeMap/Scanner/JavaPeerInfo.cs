@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Microsoft.Android.Build.TypeMap;
+namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
 /// <summary>
 /// Represents a Java peer type discovered during assembly scanning.
@@ -17,19 +17,16 @@ sealed class JavaPeerInfo
 	public string JavaName { get; set; } = "";
 
 	/// <summary>
+	/// Compat JNI type name, e.g., "myapp.namespace/MyType" for user types (uses raw namespace, not CRC64).
+	/// For MCW binding types (with [Register]), this equals <see cref="JavaName"/>.
+	/// Used by acw-map.txt to support legacy custom view name resolution in layout XMLs.
+	/// </summary>
+	public string CompatJniName { get; set; } = "";
+
+	/// <summary>
 	/// Full managed type name, e.g., "Android.App.Activity".
 	/// </summary>
 	public string ManagedTypeName { get; set; } = "";
-
-	/// <summary>
-	/// Managed type namespace, e.g., "Android.App".
-	/// </summary>
-	public string ManagedTypeNamespace { get; set; } = "";
-
-	/// <summary>
-	/// Managed type short name (without namespace), e.g., "Activity".
-	/// </summary>
-	public string ManagedTypeShortName { get; set; } = "";
 
 	/// <summary>
 	/// Assembly name the type belongs to, e.g., "Mono.Android".
@@ -66,16 +63,12 @@ sealed class JavaPeerInfo
 	public bool IsUnconditional { get; set; }
 
 	/// <summary>
-	/// Marshal methods: methods with [Register(name, sig, connector)] or [Export].
+	/// Marshal methods: methods with [Register(name, sig, connector)], [Export], or
+	/// constructor registrations ([Register(".ctor", sig, "")] / [JniConstructorSignature]).
+	/// Constructors are identified by <see cref="MarshalMethodInfo.IsConstructor"/>.
 	/// Ordered — the index in this list is the method's ordinal for RegisterNatives.
 	/// </summary>
 	public IReadOnlyList<MarshalMethodInfo> MarshalMethods { get; set; } = Array.Empty<MarshalMethodInfo> ();
-
-	/// <summary>
-	/// Java constructors to emit in the JCW .java file.
-	/// Each has a JNI signature and an ordinal index for the nctor_N native method.
-	/// </summary>
-	public IReadOnlyList<JavaConstructorInfo> JavaConstructors { get; set; } = Array.Empty<JavaConstructorInfo> ();
 
 	/// <summary>
 	/// Information about the activation constructor for this type.
@@ -111,6 +104,7 @@ sealed class MarshalMethodInfo
 
 	/// <summary>
 	/// JNI method signature, e.g., "(Landroid/os/Bundle;)V".
+	/// Contains both parameter types and return type.
 	/// </summary>
 	public string JniSignature { get; set; } = "";
 
@@ -121,40 +115,12 @@ sealed class MarshalMethodInfo
 	public string? Connector { get; set; }
 
 	/// <summary>
-	/// Full name of the managed method this marshal method maps to.
+	/// Name of the managed method this maps to, e.g., "OnCreate".
 	/// </summary>
 	public string ManagedMethodName { get; set; } = "";
 
 	/// <summary>
-	/// Full name of the type that declares the managed method (may be a base type).
-	/// </summary>
-	public string DeclaringTypeName { get; set; } = "";
-
-	/// <summary>
-	/// Assembly name of the type that declares the managed method.
-	/// Needed for cross-assembly UCO wrapper generation.
-	/// </summary>
-	public string DeclaringAssemblyName { get; set; } = "";
-
-	/// <summary>
-	/// The native callback method name, e.g., "n_onCreate".
-	/// This is the actual method the UCO wrapper delegates to.
-	/// </summary>
-	public string NativeCallbackName { get; set; } = "";
-
-	/// <summary>
-	/// JNI parameter types for UCO generation.
-	/// </summary>
-	public IReadOnlyList<JniParameterInfo> Parameters { get; set; } = Array.Empty<JniParameterInfo> ();
-
-	/// <summary>
-	/// JNI return type descriptor, e.g., "V", "Landroid/os/Bundle;".
-	/// </summary>
-	public string JniReturnType { get; set; } = "";
-
-	/// <summary>
 	/// True if this is a constructor registration.
-	/// Constructor registrations use nctor_N naming and ActivateInstance.
 	/// </summary>
 	public bool IsConstructor { get; set; }
 
@@ -169,44 +135,6 @@ sealed class MarshalMethodInfo
 	/// Null for [Register] methods.
 	/// </summary>
 	public string? SuperArgumentsString { get; set; }
-}
-
-/// <summary>
-/// Describes a JNI parameter for UCO method generation.
-/// </summary>
-sealed class JniParameterInfo
-{
-	/// <summary>
-	/// JNI type descriptor, e.g., "Landroid/os/Bundle;", "I", "Z".
-	/// </summary>
-	public string JniType { get; set; } = "";
-
-	/// <summary>
-	/// Managed parameter type name, e.g., "Android.OS.Bundle", "System.Int32".
-	/// </summary>
-	public string ManagedType { get; set; } = "";
-}
-
-/// <summary>
-/// Describes a Java constructor to emit in the JCW .java source file.
-/// </summary>
-sealed class JavaConstructorInfo
-{
-	/// <summary>
-	/// JNI constructor signature, e.g., "(Landroid/content/Context;)V".
-	/// </summary>
-	public string JniSignature { get; set; } = "";
-
-	/// <summary>
-	/// Ordinal index for the native constructor method (nctor_0, nctor_1, ...).
-	/// </summary>
-	public int ConstructorIndex { get; set; }
-
-	/// <summary>
-	/// JNI parameter types parsed from the signature.
-	/// Used to generate the Java constructor parameter list.
-	/// </summary>
-	public IReadOnlyList<JniParameterInfo> Parameters { get; set; } = Array.Empty<JniParameterInfo> ();
 }
 
 /// <summary>
