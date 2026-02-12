@@ -52,6 +52,7 @@ sealed class JcwJavaSourceGenerator
 		WritePackageDeclaration (type, writer);
 		WriteClassDeclaration (type, writer);
 		WriteStaticInitializer (type, writer);
+		WriteExportFields (type, writer);
 		WriteConstructors (type, writer);
 		WriteMethods (type, writer);
 		WriteClassClose (writer);
@@ -114,6 +115,28 @@ sealed class JcwJavaSourceGenerator
 		writer.Write (".class);\n");
 		writer.Write ("\t}\n");
 		writer.WriteLine ();
+	}
+
+	static void WriteExportFields (JavaPeerInfo type, TextWriter writer)
+	{
+		foreach (var field in type.ExportFields) {
+			string javaType = JniTypeToJava (field.JniReturnType);
+
+			writer.Write ("\tpublic ");
+			if (field.IsStatic) {
+				writer.Write ("static ");
+			}
+			writer.Write (javaType);
+			writer.Write (' ');
+			writer.Write (field.FieldName);
+			writer.Write (" = ");
+			writer.Write (field.MethodName);
+			writer.WriteLine (" ();");
+		}
+
+		if (type.ExportFields.Count > 0) {
+			writer.WriteLine ();
+		}
 	}
 
 	static void WriteConstructors (JavaPeerInfo type, TextWriter writer)
@@ -199,6 +222,9 @@ sealed class JcwJavaSourceGenerator
 				writer.Write ("\t@Override\n");
 			}
 			writer.Write ("\tpublic ");
+			if (method.IsStatic) {
+				writer.Write ("static ");
+			}
 			writer.Write (javaReturnType);
 			writer.Write (' ');
 			writer.Write (method.JniName);
@@ -233,7 +259,11 @@ sealed class JcwJavaSourceGenerator
 			writer.Write ("\t}\n");
 
 			// Native method declaration
-			writer.Write ("\tprivate native ");
+			writer.Write ("\tprivate ");
+			if (method.IsStatic) {
+				writer.Write ("static ");
+			}
+			writer.Write ("native ");
 			writer.Write (javaReturnType);
 			writer.Write (' ');
 			writer.Write (method.NativeCallbackName);

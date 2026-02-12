@@ -202,6 +202,8 @@ sealed class JavaPeerScanner : IDisposable
 			// Collect marshal methods (including constructors) in a single pass over methods
 			var marshalMethods = CollectMarshalMethods (typeDef, index);
 
+			// Collect [ExportField] declarations
+			var exportFields = CollectExportFields (typeDef, index);
 			// Resolve activation constructor
 			var activationCtor = ResolveActivationCtor (fullName, typeDef, index);
 
@@ -226,6 +228,7 @@ sealed class JavaPeerScanner : IDisposable
 				MarshalMethods = marshalMethods,
 				JavaConstructors = BuildJavaConstructors (marshalMethods),
 				ActivationCtor = activationCtor,
+				ExportFields = exportFields,
 				InvokerTypeName = invokerTypeName,
 				IsGenericDefinition = isGenericDefinition,
 			};
@@ -277,6 +280,7 @@ sealed class JavaPeerScanner : IDisposable
 		var methodName = index.Reader.GetString (methodDef.Name);
 		var jniSignature = registerInfo.Signature ?? "()V";
 		var parameters = ParseJniParameters (jniSignature);
+		bool isStatic = (methodDef.Attributes & MethodAttributes.Static) != 0;
 
 		// For [Export] methods, populate ManagedType from the actual method signature
 		// (needed for the generated marshal method body)
@@ -299,6 +303,7 @@ sealed class JavaPeerScanner : IDisposable
 			JniReturnType = JniSignatureHelper.ParseReturnTypeString (jniSignature),
 			Parameters = parameters,
 			IsConstructor = registerInfo.JniName == "<init>" || registerInfo.JniName == ".ctor",
+			IsStatic = isStatic,
 			ThrownNames = registerInfo.ThrownNames,
 			SuperArgumentsString = registerInfo.SuperArgumentsString,
 			ManagedReturnType = managedReturnType,
@@ -363,6 +368,12 @@ sealed class JavaPeerScanner : IDisposable
 			if (attrName == "ExportAttribute") {
 				return ParseExportAttribute (ca, methodDef, index);
 			}
+
+			if (attrName == "ExportFieldAttribute") {
+				// [ExportField] methods are registered like [Export] — they need a native callback.
+				// The method name is used as the export name (not the field name).
+				return ParseExportFieldAsRegisterInfo (methodDef, index);
+			}
 		}
 		return null;
 	}
@@ -414,6 +425,64 @@ sealed class JavaPeerScanner : IDisposable
 
 		return new RegisterInfo (exportName, jniSig, null, false,
 			thrownNames: thrownNames, superArgumentsString: superArguments);
+	}
+
+	/// <summary>
+	/// Creates a RegisterInfo for an [ExportField] method.
+	/// The method is registered like [Export] (Connector = null) so it gets a full marshal body.
+	/// </summary>
+	static RegisterInfo ParseExportFieldAsRegisterInfo (MethodDefinition methodDef, AssemblyIndex index)
+	{
+		var methodName = index.Reader.GetString (methodDef.Name);
+		var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+		var jniSig = BuildJniSignatureFromManaged (sig);
+		return new RegisterInfo (methodName, jniSig, null, false);
+	}
+
+	/// <summary>
+	/// Collects [ExportField] declarations from methods on a type.
+	/// Returns field info (field name, method name, return type, static).
+	/// </summary>
+	static List<ExportFieldInfo> CollectExportFields (TypeDefinition typeDef, AssemblyIndex index)
+	{
+		var fields = new List<ExportFieldInfo> ();
+
+		foreach (var methodHandle in typeDef.GetMethods ()) {
+			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
+
+			foreach (var caHandle in methodDef.GetCustomAttributes ()) {
+				var ca = index.Reader.GetCustomAttribute (caHandle);
+				var attrName = AssemblyIndex.GetCustomAttributeName (ca, index.Reader);
+
+				if (attrName != "ExportFieldAttribute") {
+					continue;
+				}
+
+				var value = ca.DecodeValue (index.customAttributeTypeProvider);
+				if (value.FixedArguments.Length == 0) {
+					continue;
+				}
+
+				string? fieldName = (string?)value.FixedArguments [0].Value;
+				if (fieldName == null || fieldName.Length == 0) {
+					continue;
+				}
+
+				var methodName = index.Reader.GetString (methodDef.Name);
+				var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+				var jniSig = BuildJniSignatureFromManaged (sig);
+				bool isStatic = (methodDef.Attributes & MethodAttributes.Static) != 0;
+
+				fields.Add (new ExportFieldInfo {
+					FieldName = fieldName,
+					MethodName = methodName,
+					JniReturnType = JniSignatureHelper.ParseReturnTypeString (jniSig),
+					IsStatic = isStatic,
+				});
+			}
+		}
+
+		return fields;
 	}
 
 	/// <summary>

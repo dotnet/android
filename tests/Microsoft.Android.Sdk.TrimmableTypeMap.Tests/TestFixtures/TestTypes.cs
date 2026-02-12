@@ -781,4 +781,36 @@ namespace MyApp
 		[Java.Interop.Export (SuperArgumentsString = "")]
 		public ExportCtorWithSuperArgs (int value) { }
 	}
+
+	/// <summary>
+	/// Static [Export] method and [ExportField] declarations.
+	/// </summary>
+	[Register ("my/app/ExportStaticAndFields")]
+	public class ExportStaticAndFields : Java.Lang.Object
+	{
+		protected ExportStaticAndFields (IntPtr handle, Android.Runtime.JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+
+		[Java.Interop.ExportField ("STATIC_INSTANCE")]
+		public static ExportStaticAndFields GetInstance ()
+		{
+			return null!;
+		}
+
+		[Java.Interop.ExportField ("VALUE")]
+		public string GetValue ()
+		{
+			return "value";
+		}
+
+		[Java.Interop.Export]
+		public static void staticMethodNotMangled ()
+		{
+		}
+
+		[Java.Interop.Export]
+		public void instanceMethod () { }
+	}
 }

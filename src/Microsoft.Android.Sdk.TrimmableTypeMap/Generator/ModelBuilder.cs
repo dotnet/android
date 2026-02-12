@@ -346,6 +346,7 @@ static class ModelBuilder
 			},
 			JniSignature = mm.JniSignature,
 			IsConstructor = isConstructor,
+			IsStatic = mm.IsStatic,
 			ManagedReturnType = mm.ManagedReturnType,
 		};
 

@@ -829,4 +829,63 @@ public class JavaPeerScannerTests
 		Assert.NotNull (exportMethod);
 		Assert.Null (exportMethod.Connector);
 	}
+
+	[Fact]
+	public void Scan_StaticExportMethod_IsStaticSetTrue ()
+	{
+		var peers = ScanFixtures ();
+		var peer = FindByJavaName (peers, "my/app/ExportStaticAndFields");
+		var staticMethod = peer.MarshalMethods.FirstOrDefault (m => m.JniName == "staticMethodNotMangled");
+		Assert.NotNull (staticMethod);
+		Assert.True (staticMethod.IsStatic);
+		Assert.Null (staticMethod.Connector);
+	}
+
+	[Fact]
+	public void Scan_InstanceExportMethod_IsStaticSetFalse ()
+	{
+		var peers = ScanFixtures ();
+		var peer = FindByJavaName (peers, "my/app/ExportStaticAndFields");
+		var instanceMethod = peer.MarshalMethods.FirstOrDefault (m => m.JniName == "instanceMethod");
+		Assert.NotNull (instanceMethod);
+		Assert.False (instanceMethod.IsStatic);
+	}
+
+	[Fact]
+	public void Scan_ExportField_CollectedAsExportFieldInfo ()
+	{
+		var peers = ScanFixtures ();
+		var peer = FindByJavaName (peers, "my/app/ExportStaticAndFields");
+
+		Assert.NotNull (peer.ExportFields);
+		Assert.Equal (2, peer.ExportFields.Count);
+
+		var staticField = peer.ExportFields.FirstOrDefault (f => f.FieldName == "STATIC_INSTANCE");
+		Assert.NotNull (staticField);
+		Assert.Equal ("GetInstance", staticField.MethodName);
+		Assert.True (staticField.IsStatic);
+
+		var instanceField = peer.ExportFields.FirstOrDefault (f => f.FieldName == "VALUE");
+		Assert.NotNull (instanceField);
+		Assert.Equal ("GetValue", instanceField.MethodName);
+		Assert.False (instanceField.IsStatic);
+	}
+
+	[Fact]
+	public void Scan_ExportField_MethodAlsoInMarshalMethods ()
+	{
+		var peers = ScanFixtures ();
+		var peer = FindByJavaName (peers, "my/app/ExportStaticAndFields");
+
+		// [ExportField] methods should also be in MarshalMethods as export methods
+		var getInstance = peer.MarshalMethods.FirstOrDefault (m => m.ManagedMethodName == "GetInstance");
+		Assert.NotNull (getInstance);
+		Assert.Null (getInstance.Connector); // Export, not Register
+		Assert.True (getInstance.IsStatic);
+
+		var getValue = peer.MarshalMethods.FirstOrDefault (m => m.ManagedMethodName == "GetValue");
+		Assert.NotNull (getValue);
+		Assert.Null (getValue.Connector);
+		Assert.False (getValue.IsStatic);
+	}
 }

@@ -1433,6 +1433,71 @@ public class ModelBuilderTests
 
 	}
 
+	public class FixtureStaticExportAndExportField
+	{
+
+		[Fact]
+		public void Fixture_StaticExport_IsStaticInModel ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/ExportStaticAndFields");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_ExportStaticAndFields_Proxy");
+			Assert.NotNull (proxy);
+
+			var staticExport = proxy!.ExportMarshalMethods.FirstOrDefault (e => e.ManagedMethodName == "staticMethodNotMangled");
+			Assert.NotNull (staticExport);
+			Assert.True (staticExport!.IsStatic);
+		}
+
+		[Fact]
+		public void Fixture_InstanceExport_IsNotStaticInModel ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/ExportStaticAndFields");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_ExportStaticAndFields_Proxy");
+			Assert.NotNull (proxy);
+
+			var instanceExport = proxy!.ExportMarshalMethods.FirstOrDefault (e => e.ManagedMethodName == "instanceMethod");
+			Assert.NotNull (instanceExport);
+			Assert.False (instanceExport!.IsStatic);
+		}
+
+		[Fact]
+		public void Fixture_ExportField_MethodInExportMarshalMethods ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/ExportStaticAndFields");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_ExportStaticAndFields_Proxy");
+			Assert.NotNull (proxy);
+
+			// [ExportField] methods are [Export]-style and should be in ExportMarshalMethods
+			var getInstance = proxy!.ExportMarshalMethods.FirstOrDefault (e => e.ManagedMethodName == "GetInstance");
+			Assert.NotNull (getInstance);
+			Assert.True (getInstance!.IsStatic);
+			Assert.False (getInstance.IsConstructor);
+
+			var getValue = proxy.ExportMarshalMethods.FirstOrDefault (e => e.ManagedMethodName == "GetValue");
+			Assert.NotNull (getValue);
+			Assert.False (getValue!.IsStatic);
+		}
+
+		[Fact]
+		public void Fixture_ExportField_NativeRegistrations ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/ExportStaticAndFields");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_ExportStaticAndFields_Proxy");
+			Assert.NotNull (proxy);
+
+			// All export methods should have native registrations
+			var getInstanceReg = proxy!.NativeRegistrations.FirstOrDefault (r => r.JniMethodName == "n_GetInstance");
+			Assert.NotNull (getInstanceReg);
+
+			var staticReg = proxy.NativeRegistrations.FirstOrDefault (r => r.JniMethodName == "n_staticMethodNotMangled");
+			Assert.NotNull (staticReg);
+		}
+	}
+
 	public class FixtureImplementors
 	{
 
