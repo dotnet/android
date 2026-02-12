@@ -14,7 +14,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 
-namespace Xamarin.Android.Tools;
+namespace Microsoft.Android.Tools;
 
 class App
 {
@@ -93,7 +93,7 @@ class App
 		}
 
 		if (fi.Length == 0) {
-			throw new InvalidOperationException ($"Remove file '{remotePath}' is empty.");
+			throw new InvalidOperationException ($"Remote file '{remotePath}' is empty.");
 		}
 
 		// Remote files are base64-encoded

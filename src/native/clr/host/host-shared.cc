@@ -15,7 +15,7 @@ auto HostCommon::get_java_class_name_for_TypeManager (jclass klass) noexcept -> 
 		log_error (
 			LOG_DEFAULT,
 #if defined(XA_HOST_NATIVEAOT)
-			"Failed to obtain Java class name for object at %p  "  ,
+			"Failed to obtain Java class name for object at %p",
 #else
 			"Failed to obtain Java class name for object at {:p}"sv,
 #endif
