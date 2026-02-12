@@ -641,12 +641,20 @@ sealed class TypeMapAssemblyEmitter
 					JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniParams [j]);
 			});
 
-		// Build the locals signature: JniTransition __envp (0), JniRuntime __r (1), Exception __e (2)
+		// Build the locals signature:
+		//   local 0: JniTransition __envp
+		//   local 1: JniRuntime __r
+		//   local 2: Exception __e
+		//   local 3: <return type> __ret  (only for non-void methods)
+		int localCount = isVoid ? 3 : 4;
 		var localsBlob = new BlobBuilder (32);
-		var localsEncoder = new BlobEncoder (localsBlob).LocalVariableSignature (3);
-		localsEncoder.AddVariable ().Type ().Type (_jniTransitionRef, true);   // local 0: JniTransition __envp
-		localsEncoder.AddVariable ().Type ().Type (_jniRuntimeRef, false);     // local 1: JniRuntime __r
-		localsEncoder.AddVariable ().Type ().Type (_systemExceptionRef, false); // local 2: Exception __e
+		var localsEncoder = new BlobEncoder (localsBlob).LocalVariableSignature (localCount);
+		localsEncoder.AddVariable ().Type ().Type (_jniTransitionRef, true);   // local 0
+		localsEncoder.AddVariable ().Type ().Type (_jniRuntimeRef, false);     // local 1
+		localsEncoder.AddVariable ().Type ().Type (_systemExceptionRef, false); // local 2
+		if (!isVoid) {
+			JniSignatureHelper.EncodeClrType (localsEncoder.AddVariable ().Type (), returnKind); // local 3
+		}
 		var localsSigHandle = metadata.AddStandaloneSignature (metadata.GetOrAddBlob (localsBlob));
 
 		// Resolve managed type references
@@ -721,9 +729,10 @@ sealed class TypeMapAssemblyEmitter
 			encoder.Token (managedMethodRef);
 		}
 
-		// Marshal return value
+		// Marshal return value and store in local 3
 		if (!isVoid) {
 			EmitReturnMarshal (encoder, returnKind, export.ManagedReturnType);
+			encoder.OpCode (ILOpCode.Stloc_3);
 		}
 
 		// leave to after the handler
@@ -740,6 +749,7 @@ sealed class TypeMapAssemblyEmitter
 		encoder.Token (_onUserUnhandledExceptionRef);
 		if (!isVoid) {
 			EmitDefaultReturnValue (encoder, returnKind);
+			encoder.OpCode (ILOpCode.Stloc_3);
 		}
 		encoder.Branch (ILOpCode.Leave_s, returnLabel);
 		encoder.MarkLabel (catchEndLabel);
@@ -753,6 +763,9 @@ sealed class TypeMapAssemblyEmitter
 
 		// --- return ---
 		encoder.MarkLabel (returnLabel);
+		if (!isVoid) {
+			encoder.OpCode (ILOpCode.Ldloc_3);
+		}
 		encoder.OpCode (ILOpCode.Ret);
 
 		// Add exception regions
