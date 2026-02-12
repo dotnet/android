@@ -94,6 +94,7 @@ static class ModelBuilder
 		}
 
 		// Compute IgnoresAccessChecksTo from actual cross-assembly references in UCO callback types
+		// and from base class activation ctors that need direct invocation
 		var referencedAssemblies = new SortedSet<string> (StringComparer.Ordinal);
 		foreach (var proxy in model.ProxyTypes) {
 			foreach (var uco in proxy.UcoMethods) {
@@ -103,6 +104,12 @@ static class ModelBuilder
 			}
 			if (proxy.TargetType != null && !string.Equals (proxy.TargetType.AssemblyName, assemblyName, StringComparison.Ordinal)) {
 				referencedAssemblies.Add (proxy.TargetType.AssemblyName);
+			}
+			// When calling a protected base class ctor directly (inherited activation ctor),
+			// we need IgnoresAccessChecksTo for the assembly containing that ctor
+			if (proxy.ActivationCtor != null && !proxy.ActivationCtor.IsOnLeafType &&
+				!string.Equals (proxy.ActivationCtor.DeclaringType.AssemblyName, assemblyName, StringComparison.Ordinal)) {
+				referencedAssemblies.Add (proxy.ActivationCtor.DeclaringType.AssemblyName);
 			}
 		}
 		model.IgnoresAccessChecksTo.AddRange (referencedAssemblies);
@@ -129,6 +136,7 @@ static class ModelBuilder
 	{
 		// First peer is the "primary" — it gets the base JNI name entry.
 		// Remaining peers get indexed alias entries: "jni/name[1]", "jni/name[2]", ...
+		JavaPeerProxyData? primaryProxy = null;
 		for (int i = 0; i < peersForName.Count; i++) {
 			var peer = peersForName [i];
 			string entryJniName = i == 0 ? jniName : $"{jniName}[{i}]";
@@ -142,7 +150,19 @@ static class ModelBuilder
 				model.ProxyTypes.Add (proxy);
 			}
 
+			if (i == 0) {
+				primaryProxy = proxy;
+			}
+
 			model.Entries.Add (BuildEntry (peer, proxy, assemblyName, entryJniName));
+
+			// Emit TypeMapAssociation linking this alias type to the primary proxy
+			if (i > 0 && primaryProxy != null) {
+				model.Associations.Add (new TypeMapAssociationData {
+					SourceTypeReference = $"{peer.ManagedTypeName}, {peer.AssemblyName}",
+					AliasProxyTypeReference = $"{primaryProxy.Namespace}.{primaryProxy.TypeName}, {assemblyName}",
+				});
+			}
 		}
 	}
 
@@ -205,12 +225,25 @@ static class ModelBuilder
 			},
 			HasActivation = peer.ActivationCtor != null || peer.InvokerTypeName != null,
 			IsAcw = isAcw,
+			IsGenericDefinition = peer.IsGenericDefinition,
 		};
 
 		if (peer.InvokerTypeName != null) {
 			proxy.InvokerType = new TypeRefData {
 				ManagedTypeName = peer.InvokerTypeName,
 				AssemblyName = peer.AssemblyName,
+			};
+		}
+
+		if (peer.ActivationCtor != null) {
+			bool isOnLeaf = string.Equals (peer.ActivationCtor.DeclaringTypeName, peer.ManagedTypeName, StringComparison.Ordinal);
+			proxy.ActivationCtor = new ActivationCtorData {
+				DeclaringType = new TypeRefData {
+					ManagedTypeName = peer.ActivationCtor.DeclaringTypeName,
+					AssemblyName = peer.ActivationCtor.DeclaringAssemblyName,
+				},
+				IsOnLeafType = isOnLeaf,
+				Style = peer.ActivationCtor.Style,
 			};
 		}
 

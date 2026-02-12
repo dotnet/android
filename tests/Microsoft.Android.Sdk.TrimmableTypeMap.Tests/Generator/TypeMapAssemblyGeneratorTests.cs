@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
+using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using Xunit;
 
@@ -329,6 +330,11 @@ public class TypeMapAssemblyGeneratorTests
 					ManagedTypeNamespace = "Test",
 					ManagedTypeShortName = "Duplicate1",
 					AssemblyName = "TestAssembly",
+					ActivationCtor = new ActivationCtorInfo {
+						DeclaringTypeName = "Test.Duplicate1",
+						DeclaringAssemblyName = "TestAssembly",
+						Style = ActivationCtorStyle.XamarinAndroid,
+					},
 				},
 				new JavaPeerInfo {
 					JavaName = "test/Duplicate",
@@ -343,10 +349,56 @@ public class TypeMapAssemblyGeneratorTests
 			try {
 				var (pe, reader) = OpenAssembly (path);
 				using (pe) {
-					// Neither peer has activation ctor → no proxies, but both get entries
 					var assemblyAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
-					// Should have 2 TypeMap entries + IgnoresAccessChecksTo entries
-					Assert.True (assemblyAttrs.Count () >= 2);
+					// Should have 2 TypeMap entries + TypeMapAssociation + IgnoresAccessChecksTo entries
+					Assert.True (assemblyAttrs.Count () >= 3);
+				}
+			} finally {
+				CleanUp (path);
+			}
+		}
+
+		[Fact]
+		public void Generate_DuplicateJniNames_EmitsTypeMapAssociationAttribute ()
+		{
+			var peers = new List<JavaPeerInfo> {
+				new JavaPeerInfo {
+					JavaName = "test/Duplicate",
+					ManagedTypeName = "Test.Duplicate1",
+					ManagedTypeNamespace = "Test",
+					ManagedTypeShortName = "Duplicate1",
+					AssemblyName = "TestAssembly",
+					ActivationCtor = new ActivationCtorInfo {
+						DeclaringTypeName = "Test.Duplicate1",
+						DeclaringAssemblyName = "TestAssembly",
+						Style = ActivationCtorStyle.XamarinAndroid,
+					},
+				},
+				new JavaPeerInfo {
+					JavaName = "test/Duplicate",
+					ManagedTypeName = "Test.Duplicate2",
+					ManagedTypeNamespace = "Test",
+					ManagedTypeShortName = "Duplicate2",
+					AssemblyName = "TestAssembly",
+				},
+			};
+
+			var path = GenerateAssembly (peers, "AliasAssocTest");
+			try {
+				var (pe, reader) = OpenAssembly (path);
+				using (pe) {
+					// Look for TypeMapAssociationAttribute references
+					var memberRefs = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
+						.Select (i => reader.GetMemberReference (MetadataTokens.MemberReferenceHandle (i)))
+						.Where (m => reader.GetString (m.Name) == ".ctor")
+						.ToList ();
+
+					// There should be a TypeMapAssociationAttribute ctor reference
+					var typeNames = reader.TypeReferences
+						.Select (h => reader.GetTypeReference (h))
+						.Select (t => reader.GetString (t.Name))
+						.ToList ();
+					Assert.Contains ("TypeMapAssociationAttribute", typeNames);
 				}
 			} finally {
 				CleanUp (path);
@@ -498,6 +550,140 @@ public class TypeMapAssemblyGeneratorTests
 		{
 			var gen = new TypeMapAssemblyGenerator (new Version (11, 0, 0, 0));
 			Assert.Throws<ArgumentNullException> (() => gen.Generate (Array.Empty<JavaPeerInfo> (), null!));
+		}
+
+	}
+
+	public class CreateInstancePaths
+	{
+
+		[Fact]
+		public void Generate_SimpleActivity_UsesGetUninitializedObject ()
+		{
+			// SimpleActivity has no own activation ctor — inherits from Activity
+			var peers = ScanFixtures ();
+			var simpleActivity = peers.First (p => p.JavaName == "my/app/SimpleActivity");
+			Assert.NotNull (simpleActivity.ActivationCtor);
+			Assert.NotEqual (simpleActivity.ManagedTypeName, simpleActivity.ActivationCtor.DeclaringTypeName);
+
+			var path = GenerateAssembly (new [] { simpleActivity }, "InheritedCtorTest");
+			try {
+				var (pe, reader) = OpenAssembly (path);
+				using (pe) {
+					// Verify RuntimeHelpers type is referenced (for GetUninitializedObject)
+					var typeNames = reader.TypeReferences
+						.Select (h => reader.GetTypeReference (h))
+						.Select (t => reader.GetString (t.Name))
+						.ToList ();
+					Assert.Contains ("RuntimeHelpers", typeNames);
+
+					// Verify no CreateManagedPeer reference exists
+					var memberNames = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
+						.Select (i => reader.GetMemberReference (MetadataTokens.MemberReferenceHandle (i)))
+						.Select (m => reader.GetString (m.Name))
+						.ToList ();
+					Assert.DoesNotContain ("CreateManagedPeer", memberNames);
+					Assert.Contains ("GetUninitializedObject", memberNames);
+				}
+			} finally {
+				CleanUp (path);
+			}
+		}
+
+		[Fact]
+		public void Generate_LeafCtor_DoesNotUseCreateManagedPeer ()
+		{
+			var peers = ScanFixtures ();
+			// ClickableView has its own (IntPtr, JniHandleOwnership) ctor
+			var clickableView = peers.First (p => p.JavaName == "my/app/ClickableView");
+			Assert.NotNull (clickableView.ActivationCtor);
+			Assert.Equal (clickableView.ManagedTypeName, clickableView.ActivationCtor.DeclaringTypeName);
+
+			var path = GenerateAssembly (new [] { clickableView }, "LeafCtorTest");
+			try {
+				var (pe, reader) = OpenAssembly (path);
+				using (pe) {
+					// Should NOT have CreateManagedPeer — leaf ctor uses direct newobj
+					var memberNames = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
+						.Select (i => reader.GetMemberReference (MetadataTokens.MemberReferenceHandle (i)))
+						.Select (m => reader.GetString (m.Name))
+						.ToList ();
+					Assert.DoesNotContain ("CreateManagedPeer", memberNames);
+
+					// Should have a .ctor MemberRef for the target type (direct newobj)
+					var ctorRefs = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
+						.Select (i => reader.GetMemberReference (MetadataTokens.MemberReferenceHandle (i)))
+						.Where (m => reader.GetString (m.Name) == ".ctor")
+						.ToList ();
+					Assert.True (ctorRefs.Count >= 2, "Should have ctor refs for proxy base + target type");
+				}
+			} finally {
+				CleanUp (path);
+			}
+		}
+
+		[Fact]
+		public void Generate_GenericType_ThrowsNotSupportedException ()
+		{
+			var peers = ScanFixtures ();
+			var generic = peers.First (p => p.JavaName == "my/app/GenericHolder");
+			Assert.True (generic.IsGenericDefinition);
+
+			var path = GenerateAssembly (new [] { generic }, "GenericTest");
+			try {
+				var (pe, reader) = OpenAssembly (path);
+				using (pe) {
+					// NotSupportedException should be referenced
+					var typeNames = reader.TypeReferences
+						.Select (h => reader.GetTypeReference (h))
+						.Select (t => reader.GetString (t.Name))
+						.ToList ();
+					Assert.Contains ("NotSupportedException", typeNames);
+				}
+			} finally {
+				CleanUp (path);
+			}
+		}
+
+	}
+
+	public class IgnoresAccessChecksToForBaseCtor
+	{
+
+		[Fact]
+		public void Generate_InheritedCtor_IncludesBaseCtorAssembly ()
+		{
+			// SimpleActivity inherits activation ctor from Activity — both in TestFixtures
+			// but the generated assembly is "IgnoresAccessTest", so TestFixtures must be
+			// in IgnoresAccessChecksTo
+			var peers = ScanFixtures ();
+			var simpleActivity = peers.First (p => p.JavaName == "my/app/SimpleActivity");
+
+			var path = GenerateAssembly (new [] { simpleActivity }, "IgnoresAccessTest");
+			try {
+				var (pe, reader) = OpenAssembly (path);
+				using (pe) {
+					// Find the IgnoresAccessChecksToAttribute type
+					var ignoresAttrType = reader.TypeDefinitions
+						.Select (h => reader.GetTypeDefinition (h))
+						.FirstOrDefault (t => reader.GetString (t.Name) == "IgnoresAccessChecksToAttribute");
+					Assert.True (ignoresAttrType.Attributes != 0, "IgnoresAccessChecksToAttribute should be defined");
+
+					// Check assembly-level custom attributes include the base ctor's assembly
+					var assemblyAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
+					var attrBlobs = new List<string> ();
+					foreach (var attrHandle in assemblyAttrs) {
+						var attr = reader.GetCustomAttribute (attrHandle);
+						var blob = reader.GetBlobBytes (attr.Value);
+						var blobStr = System.Text.Encoding.UTF8.GetString (blob);
+						attrBlobs.Add (blobStr);
+					}
+					// Activity is in TestFixtures, so IgnoresAccessChecksTo must include TestFixtures
+					Assert.Contains (attrBlobs, b => b.Contains ("TestFixtures"));
+				}
+			} finally {
+				CleanUp (path);
+			}
 		}
 
 	}
