@@ -149,19 +149,10 @@ sealed class JcwJavaSourceGenerator
 			writer.Write (simpleClassName);
 			writer.Write (" (");
 			WriteParameterList (ctor.Parameters, writer);
-			writer.Write (')');
+			writer.Write (")\n");
 
-			if (ctor.IsExport && ctor.ThrownNames != null && ctor.ThrownNames.Count > 0) {
-				writer.Write ("\n\t\tthrows ");
-				for (int i = 0; i < ctor.ThrownNames.Count; i++) {
-					if (i > 0) {
-						writer.Write (", ");
-					}
-					writer.Write (ctor.ThrownNames [i]);
-				}
-			}
+			WriteThrowsClause (ctor.IsExport ? ctor.ThrownNames : null, writer);
 
-			writer.WriteLine ();
 			writer.WriteLine ("\t{");
 
 			// super() call — use SuperArgumentsString if provided ([Export] constructors),
@@ -232,17 +223,7 @@ sealed class JcwJavaSourceGenerator
 			WriteParameterList (method.Parameters, writer);
 			writer.Write (")\n");
 
-			// throws clause for [Export] methods
-			if (method.ThrownNames != null && method.ThrownNames.Count > 0) {
-				writer.Write ("\t\tthrows ");
-				for (int i = 0; i < method.ThrownNames.Count; i++) {
-					if (i > 0) {
-						writer.Write (", ");
-					}
-					writer.Write (method.ThrownNames [i]);
-				}
-				writer.Write ('\n');
-			}
+			WriteThrowsClause (method.ThrownNames, writer);
 
 			writer.Write ("\t{\n");
 
@@ -301,6 +282,22 @@ sealed class JcwJavaSourceGenerator
 			writer.Write ('p');
 			writer.Write (i);
 		}
+	}
+
+	static void WriteThrowsClause (IReadOnlyList<string>? thrownNames, TextWriter writer)
+	{
+		if (thrownNames == null || thrownNames.Count == 0) {
+			return;
+		}
+
+		writer.Write ("\t\tthrows ");
+		for (int i = 0; i < thrownNames.Count; i++) {
+			if (i > 0) {
+				writer.Write (", ");
+			}
+			writer.Write (thrownNames [i]);
+		}
+		writer.Write ('\n');
 	}
 
 	/// <summary>

@@ -271,7 +271,6 @@ sealed class JavaConstructorInfo
 
 	/// <summary>
 	/// Whether this constructor is from [Export] attribute.
-	/// [Export] constructors use TypeManager.Activate instead of nctor_N.
 	/// </summary>
 	public bool IsExport { get; set; }
 

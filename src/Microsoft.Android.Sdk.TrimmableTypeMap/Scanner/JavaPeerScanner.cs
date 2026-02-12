@@ -199,11 +199,9 @@ sealed class JavaPeerScanner : IDisposable
 			// Resolve implemented Java interface names
 			var implementedInterfaces = ResolveImplementedInterfaceJavaNames (typeDef, index);
 
-			// Collect marshal methods (including constructors) in a single pass over methods
-			var marshalMethods = CollectMarshalMethods (typeDef, index);
+			// Collect marshal methods (including constructors) and [ExportField] declarations
+			var (marshalMethods, exportFields) = CollectMarshalMethodsAndExportFields (typeDef, index);
 
-			// Collect [ExportField] declarations
-			var exportFields = CollectExportFields (typeDef, index);
 			// Resolve activation constructor
 			var activationCtor = ResolveActivationCtor (fullName, typeDef, index);
 
@@ -237,19 +235,55 @@ sealed class JavaPeerScanner : IDisposable
 		}
 	}
 
-	List<MarshalMethodInfo> CollectMarshalMethods (TypeDefinition typeDef, AssemblyIndex index)
+	(List<MarshalMethodInfo>, List<ExportFieldInfo>) CollectMarshalMethodsAndExportFields (TypeDefinition typeDef, AssemblyIndex index)
 	{
 		var methods = new List<MarshalMethodInfo> ();
+		var exportFields = new List<ExportFieldInfo> ();
 
-		// Single pass over methods: collect marshal methods (including constructors)
+		// Single pass over methods: collect marshal methods, constructors, and export fields
 		foreach (var methodHandle in typeDef.GetMethods ()) {
 			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
-			var registerInfo = TryGetMethodRegisterInfo (methodDef, index);
-			if (registerInfo == null) {
-				continue;
+
+			string? exportFieldName = null;
+			RegisterInfo? registerInfo = null;
+
+			foreach (var caHandle in methodDef.GetCustomAttributes ()) {
+				var ca = index.Reader.GetCustomAttribute (caHandle);
+				var attrName = AssemblyIndex.GetCustomAttributeName (ca, index.Reader);
+
+				if (attrName == "RegisterAttribute") {
+					registerInfo = AssemblyIndex.ParseRegisterAttribute (ca, index.customAttributeTypeProvider);
+					break;
+				}
+
+				if (attrName == "ExportAttribute") {
+					registerInfo = ParseExportAttribute (ca, methodDef, index);
+					break;
+				}
+
+				if (attrName == "ExportFieldAttribute") {
+					registerInfo = ParseExportFieldAsRegisterInfo (methodDef, index);
+					exportFieldName = ParseExportFieldName (ca, index);
+					break;
+				}
 			}
 
-			AddMarshalMethod (methods, registerInfo, methodDef, index);
+			if (registerInfo != null) {
+				AddMarshalMethod (methods, registerInfo, methodDef, index);
+			}
+
+			if (exportFieldName != null) {
+				var methodName = index.Reader.GetString (methodDef.Name);
+				var jniSig = registerInfo!.Signature ?? "()V";
+				bool isStatic = (methodDef.Attributes & MethodAttributes.Static) != 0;
+
+				exportFields.Add (new ExportFieldInfo {
+					FieldName = exportFieldName,
+					MethodName = methodName,
+					JniReturnType = JniSignatureHelper.ParseReturnTypeString (jniSig),
+					IsStatic = isStatic,
+				});
+			}
 		}
 
 		// Collect [Register] from properties (attribute is on the property, not the getter)
@@ -267,7 +301,7 @@ sealed class JavaPeerScanner : IDisposable
 			}
 		}
 
-		return methods;
+		return (methods, exportFields);
 	}
 
 	static void AddMarshalMethod (List<MarshalMethodInfo> methods, RegisterInfo registerInfo, MethodDefinition methodDef, AssemblyIndex index)
@@ -355,29 +389,6 @@ sealed class JavaPeerScanner : IDisposable
 		return resolved != null ? ResolveRegisterJniName (resolved.Value.typeName, resolved.Value.assemblyName) : null;
 	}
 
-	static RegisterInfo? TryGetMethodRegisterInfo (MethodDefinition methodDef, AssemblyIndex index)
-	{
-		foreach (var caHandle in methodDef.GetCustomAttributes ()) {
-			var ca = index.Reader.GetCustomAttribute (caHandle);
-			var attrName = AssemblyIndex.GetCustomAttributeName (ca, index.Reader);
-
-			if (attrName == "RegisterAttribute") {
-				return AssemblyIndex.ParseRegisterAttribute (ca, index.customAttributeTypeProvider);
-			}
-
-			if (attrName == "ExportAttribute") {
-				return ParseExportAttribute (ca, methodDef, index);
-			}
-
-			if (attrName == "ExportFieldAttribute") {
-				// [ExportField] methods are registered like [Export] — they need a native callback.
-				// The method name is used as the export name (not the field name).
-				return ParseExportFieldAsRegisterInfo (methodDef, index);
-			}
-		}
-		return null;
-	}
-
 	static RegisterInfo? TryGetPropertyRegisterInfo (PropertyDefinition propDef, AssemblyIndex index)
 	{
 		foreach (var caHandle in propDef.GetCustomAttributes ()) {
@@ -440,49 +451,18 @@ sealed class JavaPeerScanner : IDisposable
 	}
 
 	/// <summary>
-	/// Collects [ExportField] declarations from methods on a type.
-	/// Returns field info (field name, method name, return type, static).
+	/// Extracts the field name from an [ExportField("FIELD_NAME")] attribute.
+	/// Returns null if the field name is empty or missing.
 	/// </summary>
-	static List<ExportFieldInfo> CollectExportFields (TypeDefinition typeDef, AssemblyIndex index)
+	static string? ParseExportFieldName (CustomAttribute ca, AssemblyIndex index)
 	{
-		var fields = new List<ExportFieldInfo> ();
-
-		foreach (var methodHandle in typeDef.GetMethods ()) {
-			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
-
-			foreach (var caHandle in methodDef.GetCustomAttributes ()) {
-				var ca = index.Reader.GetCustomAttribute (caHandle);
-				var attrName = AssemblyIndex.GetCustomAttributeName (ca, index.Reader);
-
-				if (attrName != "ExportFieldAttribute") {
-					continue;
-				}
-
-				var value = ca.DecodeValue (index.customAttributeTypeProvider);
-				if (value.FixedArguments.Length == 0) {
-					continue;
-				}
-
-				string? fieldName = (string?)value.FixedArguments [0].Value;
-				if (fieldName == null || fieldName.Length == 0) {
-					continue;
-				}
-
-				var methodName = index.Reader.GetString (methodDef.Name);
-				var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
-				var jniSig = BuildJniSignatureFromManaged (sig);
-				bool isStatic = (methodDef.Attributes & MethodAttributes.Static) != 0;
-
-				fields.Add (new ExportFieldInfo {
-					FieldName = fieldName,
-					MethodName = methodName,
-					JniReturnType = JniSignatureHelper.ParseReturnTypeString (jniSig),
-					IsStatic = isStatic,
-				});
-			}
+		var value = ca.DecodeValue (index.customAttributeTypeProvider);
+		if (value.FixedArguments.Length == 0) {
+			return null;
 		}
 
-		return fields;
+		var fieldName = (string?)value.FixedArguments [0].Value;
+		return fieldName != null && fieldName.Length > 0 ? fieldName : null;
 	}
 
 	/// <summary>
