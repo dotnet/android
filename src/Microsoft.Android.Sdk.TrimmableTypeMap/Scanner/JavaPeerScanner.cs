@@ -157,6 +157,7 @@ sealed class JavaPeerScanner : IDisposable
 				ActivationCtor = activationCtor,
 				InvokerTypeName = invokerTypeName,
 				IsGenericDefinition = isGenericDefinition,
+				ComponentData = ComponentAttributeExtractor.Extract (index.Reader, typeHandle),
 			};
 
 			results [fullName] = peer;
