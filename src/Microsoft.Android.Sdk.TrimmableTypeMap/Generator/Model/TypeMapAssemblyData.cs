@@ -89,11 +89,14 @@ sealed class JavaPeerProxyData
 	/// <summary>Whether this proxy needs ACW support (RegisterNatives + UCO wrappers + IAndroidCallableWrapper).</summary>
 	public bool IsAcw { get; set; }
 
-	/// <summary>UCO method wrappers for marshal methods (non-constructor).</summary>
+	/// <summary>UCO method wrappers for marshal methods (non-constructor) with [Register].</summary>
 	public List<UcoMethodData> UcoMethods { get; } = new ();
 
-	/// <summary>UCO constructor wrappers.</summary>
+	/// <summary>UCO constructor wrappers for [Register] constructors.</summary>
 	public List<UcoConstructorData> UcoConstructors { get; } = new ();
+
+	/// <summary>Export marshal method wrappers — full marshal body for [Export] methods and constructors.</summary>
+	public List<ExportMarshalMethodData> ExportMarshalMethods { get; } = new ();
 
 	/// <summary>RegisterNatives registrations (method name, JNI signature, wrapper name).</summary>
 	public List<NativeRegistrationData> NativeRegistrations { get; } = new ();
@@ -146,6 +149,54 @@ sealed class UcoConstructorData
 
 	/// <summary>JNI constructor signature, e.g., "(Landroid/content/Context;)V". Used for RegisterNatives registration.</summary>
 	public string JniSignature { get; set; } = "()V";
+}
+
+/// <summary>
+/// An [UnmanagedCallersOnly] static wrapper for an [Export] method or constructor.
+/// Unlike <see cref="UcoMethodData"/> which just forwards to an existing n_* callback,
+/// this generates the full marshal method body: BeginMarshalMethod, GetObject, param
+/// unmarshaling, managed method call, return marshaling, exception handling, EndMarshalMethod.
+/// </summary>
+sealed class ExportMarshalMethodData
+{
+	/// <summary>Name of the generated wrapper method, e.g., "n_myMethod_uco_0" or "nctor_0_uco".</summary>
+	public string WrapperName { get; set; } = "";
+
+	/// <summary>Name of the managed method to call, e.g., "MyMethod" or ".ctor".</summary>
+	public string ManagedMethodName { get; set; } = "";
+
+	/// <summary>Type containing the managed method (the user's type).</summary>
+	public TypeRefData DeclaringType { get; set; } = new ();
+
+	/// <summary>JNI method signature, e.g., "(Ljava/lang/String;I)V".</summary>
+	public string JniSignature { get; set; } = "";
+
+	/// <summary>True if this is a constructor.</summary>
+	public bool IsConstructor { get; set; }
+
+	/// <summary>
+	/// Managed parameter types for the managed method call.
+	/// Each entry is the assembly-qualified managed type name.
+	/// </summary>
+	public List<ExportParamData> ManagedParameters { get; } = new ();
+
+	/// <summary>Managed return type (assembly-qualified). Null/empty for void or constructors.</summary>
+	public string? ManagedReturnType { get; set; }
+}
+
+/// <summary>
+/// Describes a parameter for an [Export] marshal method, with both JNI and managed type info.
+/// </summary>
+sealed class ExportParamData
+{
+	/// <summary>JNI type descriptor, e.g., "Ljava/lang/String;", "I".</summary>
+	public string JniType { get; set; } = "";
+
+	/// <summary>Managed type name (assembly-qualified), e.g., "System.String, System.Private.CoreLib".</summary>
+	public string ManagedTypeName { get; set; } = "";
+
+	/// <summary>Assembly containing the managed type.</summary>
+	public string AssemblyName { get; set; } = "";
 }
 
 /// <summary>

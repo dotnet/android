@@ -85,6 +85,13 @@ static class JniSignatureHelper
 		}
 	}
 
+	/// <summary>Parses a standalone JNI type descriptor like "I", "Ljava/lang/String;", "[B".</summary>
+	public static JniParamKind ParseSingleTypeFromDescriptor (string descriptor)
+	{
+		int i = 0;
+		return ParseSingleType (descriptor, ref i);
+	}
+
 	static void SkipSingleType (string sig, ref int i)
 	{
 		switch (sig [i]) {

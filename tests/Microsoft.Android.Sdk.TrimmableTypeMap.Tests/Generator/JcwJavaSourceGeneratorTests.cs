@@ -431,46 +431,22 @@ public class JcwJavaSourceGeneratorTests
 	{
 
 		[Fact]
-		public void Generate_ExportConstructors_UsesTypeManagerActivate ()
+		public void Generate_ExportConstructors_UsesNativeCtorMethods ()
 		{
 			var peers = ScanFixtures ();
 			var peer = FindByJavaName (peers, "my/app/ExportsConstructors");
 			var java = GenerateToString (peer);
 
-			// [Export] constructors should use TypeManager.Activate
-			Assert.Contains ("mono.android.TypeManager.Activate (\"", java);
+			// [Export] constructors should use nctor_N native methods (same as [Register])
+			Assert.Contains ("nctor_0 ()", java);
+			Assert.Contains ("nctor_1 (int p0)", java);
+			Assert.Contains ("private native void nctor_0 ()", java);
+			Assert.Contains ("private native void nctor_1 (int p0)", java);
 
-			// Should NOT have nctor_N native declarations
-			Assert.DoesNotContain ("nctor_", java);
+			// Should NOT use TypeManager.Activate
+			Assert.DoesNotContain ("TypeManager.Activate", java);
 		}
 
-		[Fact]
-		public void Generate_ExportConstructors_ParameterlessCtorHasEmptySignature ()
-		{
-			var peers = ScanFixtures ();
-			var peer = FindByJavaName (peers, "my/app/ExportsConstructors");
-			var java = GenerateToString (peer);
-
-			// Parameterless [Export] ctor should have empty managed param signature
-			Assert.Contains ("mono.android.TypeManager.Activate (\"MyApp.ExportsConstructors, TestFixtures\", \"\", this, new java.lang.Object[] {  })", java);
-		}
-
-		[Fact]
-		public void Generate_ExportConstructors_IntCtorHasIntSignature ()
-		{
-			var peers = ScanFixtures ();
-			var peer = FindByJavaName (peers, "my/app/ExportsConstructors");
-			var java = GenerateToString (peer);
-
-			// int parameter [Export] ctor should have managed type signature
-			Assert.Contains ("mono.android.TypeManager.Activate (\"MyApp.ExportsConstructors, TestFixtures\", \"System.Int32, System.Private.CoreLib\", this, new java.lang.Object[] { p0 })", java);
-		}
-
-		/// <summary>
-		/// Full output comparison — ported from legacy GenerateConstructors.
-		/// Verifies the complete JCW for [Export] constructors matches the
-		/// TypeManager.Activate pattern with correct activation guard.
-		/// </summary>
 		[Fact]
 		public void Generate_ExportConstructors_FullOutput ()
 		{
@@ -478,14 +454,11 @@ public class JcwJavaSourceGeneratorTests
 			var peer = FindByJavaName (peers, "my/app/ExportsConstructors");
 			var java = GenerateToString (peer);
 
-			// Parameterless ctor: super(), then TypeManager.Activate with empty sig
-			Assert.Contains ("\tpublic ExportsConstructors ()\n\t{\n\t\tsuper ();\n\t\tif (getClass () == ExportsConstructors.class) mono.android.TypeManager.Activate (\"MyApp.ExportsConstructors, TestFixtures\", \"\", this, new java.lang.Object[] {  });\n\t}\n", java);
+			// Parameterless ctor: super(), then nctor_0
+			Assert.Contains ("\tpublic ExportsConstructors ()\n\t{\n\t\tsuper ();\n\t\tif (getClass () == ExportsConstructors.class) nctor_0 ();\n\t}\n", java);
 
-			// int ctor: super(p0), then TypeManager.Activate with int sig
-			Assert.Contains ("\tpublic ExportsConstructors (int p0)\n\t{\n\t\tsuper (p0);\n\t\tif (getClass () == ExportsConstructors.class) mono.android.TypeManager.Activate (\"MyApp.ExportsConstructors, TestFixtures\", \"System.Int32, System.Private.CoreLib\", this, new java.lang.Object[] { p0 });\n\t}\n", java);
-
-			// No nctor native declarations
-			Assert.DoesNotContain ("private native void nctor_", java);
+			// int ctor: super(p0), then nctor_1
+			Assert.Contains ("\tpublic ExportsConstructors (int p0)\n\t{\n\t\tsuper (p0);\n\t\tif (getClass () == ExportsConstructors.class) nctor_1 (p0);\n\t}\n", java);
 		}
 
 		/// <summary>
@@ -508,11 +481,11 @@ public class JcwJavaSourceGeneratorTests
 			// string ctor WITHOUT throws (empty ThrownNames in legacy means [Export] with no Throws)
 			Assert.Contains ("\tpublic ExportsThrowsConstructors (java.lang.String p0)\n\t{\n\t\tsuper (p0);\n", java);
 
-			// String ctor should use TypeManager.Activate with String sig
-			Assert.Contains ("\"System.String, System.Private.CoreLib\"", java);
-
-			// No nctor native declarations
-			Assert.DoesNotContain ("private native void nctor_", java);
+			// All ctors should use nctor_N, not TypeManager.Activate
+			Assert.Contains ("nctor_0 ()", java);
+			Assert.Contains ("nctor_1 (int p0)", java);
+			Assert.Contains ("nctor_2 (java.lang.String p0)", java);
+			Assert.DoesNotContain ("TypeManager.Activate", java);
 		}
 
 		[Fact]
@@ -557,15 +530,14 @@ public class JcwJavaSourceGeneratorTests
 
 			var java = GenerateToString (type);
 
-			// [Register] ctor should use nctor_0
+			// Both [Register] and [Export] ctors should use nctor_N
 			Assert.Contains ("nctor_0 ()", java);
+			Assert.Contains ("nctor_1 (int p0)", java);
 			Assert.Contains ("private native void nctor_0 ()", java);
+			Assert.Contains ("private native void nctor_1 (int p0)", java);
 
-			// [Export] ctor should use TypeManager.Activate
-			Assert.Contains ("mono.android.TypeManager.Activate (\"MyApp.MixedCtors, App\"", java);
-
-			// Only nctor_0 declaration (not nctor_1 for [Export])
-			Assert.DoesNotContain ("nctor_1", java);
+			// No TypeManager.Activate
+			Assert.DoesNotContain ("TypeManager.Activate", java);
 		}
 
 		[Fact]
@@ -579,8 +551,9 @@ public class JcwJavaSourceGeneratorTests
 			Assert.Contains ("super ();", java);
 			Assert.DoesNotContain ("super (p0);", java);
 
-			// Should still use TypeManager.Activate
-			Assert.Contains ("mono.android.TypeManager.Activate (\"", java);
+			// Should use nctor_N, not TypeManager.Activate
+			Assert.Contains ("nctor_0 (int p0)", java);
+			Assert.DoesNotContain ("TypeManager.Activate", java);
 		}
 
 	}

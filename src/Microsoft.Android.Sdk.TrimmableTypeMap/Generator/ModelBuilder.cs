@@ -86,6 +86,9 @@ static class ModelBuilder
 			foreach (var uco in proxy.UcoMethods) {
 				AddIfCrossAssembly (referencedAssemblies, uco.CallbackType.AssemblyName, assemblyName);
 			}
+			foreach (var export in proxy.ExportMarshalMethods) {
+				AddIfCrossAssembly (referencedAssemblies, export.DeclaringType.AssemblyName, assemblyName);
+			}
 			if (proxy.ActivationCtor != null && !proxy.ActivationCtor.IsOnLeafType) {
 				AddIfCrossAssembly (referencedAssemblies, proxy.ActivationCtor.DeclaringType.AssemblyName, assemblyName);
 			}
@@ -235,21 +238,24 @@ static class ModelBuilder
 				continue;
 			}
 
-			// [Export] methods have no n_* callback on the declaring type — skip them.
-			// TODO: generate full marshal method body for [Export] methods (parameter marshaling + managed call)
-			if (mm.Connector == null) {
-				continue;
-			}
+			string wrapperName = $"n_{mm.JniName}_uco_{ucoIndex}";
 
-			proxy.UcoMethods.Add (new UcoMethodData {
-				WrapperName = $"n_{mm.JniName}_uco_{ucoIndex}",
-				CallbackMethodName = mm.NativeCallbackName,
-				CallbackType = new TypeRefData {
-					ManagedTypeName = !string.IsNullOrEmpty (mm.DeclaringTypeName) ? mm.DeclaringTypeName : peer.ManagedTypeName,
-					AssemblyName = !string.IsNullOrEmpty (mm.DeclaringAssemblyName) ? mm.DeclaringAssemblyName : peer.AssemblyName,
-				},
-				JniSignature = mm.JniSignature,
-			});
+			if (mm.Connector == null) {
+				// [Export] method — generate full marshal body
+				var exportData = BuildExportMarshalMethod (mm, peer, wrapperName, isConstructor: false);
+				proxy.ExportMarshalMethods.Add (exportData);
+			} else {
+				// [Register] method — forward to existing n_* callback
+				proxy.UcoMethods.Add (new UcoMethodData {
+					WrapperName = wrapperName,
+					CallbackMethodName = mm.NativeCallbackName,
+					CallbackType = new TypeRefData {
+						ManagedTypeName = !string.IsNullOrEmpty (mm.DeclaringTypeName) ? mm.DeclaringTypeName : peer.ManagedTypeName,
+						AssemblyName = !string.IsNullOrEmpty (mm.DeclaringAssemblyName) ? mm.DeclaringAssemblyName : peer.AssemblyName,
+					},
+					JniSignature = mm.JniSignature,
+				});
+			}
 			ucoIndex++;
 		}
 	}
@@ -260,30 +266,36 @@ static class ModelBuilder
 			return;
 		}
 
-		// Build a set of [Register] constructor signatures (Connector != null).
-		// [Export] constructors (Connector == null) don't get UCO wrappers —
-		// they use TypeManager.Activate in the JCW instead.
-		// TODO: generate full marshal body for [Export] constructors
-		var registerCtorSignatures = new HashSet<string> (StringComparer.Ordinal);
+		// Index marshal methods by JNI signature for lookup
+		var marshalMethodsBySignature = new Dictionary<string, MarshalMethodInfo> (StringComparer.Ordinal);
 		foreach (var mm in peer.MarshalMethods) {
-			if (mm.IsConstructor && mm.Connector != null) {
-				registerCtorSignatures.Add (mm.JniSignature);
+			if (mm.IsConstructor) {
+				marshalMethodsBySignature [mm.JniSignature] = mm;
 			}
 		}
 
 		foreach (var ctor in peer.JavaConstructors) {
-			if (!registerCtorSignatures.Contains (ctor.JniSignature)) {
+			if (!marshalMethodsBySignature.TryGetValue (ctor.JniSignature, out var mm)) {
 				continue;
 			}
 
-			proxy.UcoConstructors.Add (new UcoConstructorData {
-				WrapperName = $"nctor_{ctor.ConstructorIndex}_uco",
-				JniSignature = ctor.JniSignature,
-				TargetType = new TypeRefData {
-					ManagedTypeName = peer.ManagedTypeName,
-					AssemblyName = peer.AssemblyName,
-				},
-			});
+			string wrapperName = $"nctor_{ctor.ConstructorIndex}_uco";
+
+			if (mm.Connector == null) {
+				// [Export] constructor — generate full marshal body
+				var exportData = BuildExportMarshalMethod (mm, peer, wrapperName, isConstructor: true);
+				proxy.ExportMarshalMethods.Add (exportData);
+			} else {
+				// [Register] constructor — ActivateInstance pattern
+				proxy.UcoConstructors.Add (new UcoConstructorData {
+					WrapperName = wrapperName,
+					JniSignature = ctor.JniSignature,
+					TargetType = new TypeRefData {
+						ManagedTypeName = peer.ManagedTypeName,
+						AssemblyName = peer.AssemblyName,
+					},
+				});
+			}
 		}
 	}
 
@@ -310,6 +322,55 @@ static class ModelBuilder
 				WrapperMethodName = uco.WrapperName,
 			});
 		}
+
+		foreach (var export in proxy.ExportMarshalMethods) {
+			string jniName = export.WrapperName;
+			int ucoSuffix = jniName.LastIndexOf ("_uco", StringComparison.Ordinal);
+			if (ucoSuffix >= 0) {
+				jniName = jniName.Substring (0, ucoSuffix);
+			}
+
+			proxy.NativeRegistrations.Add (new NativeRegistrationData {
+				JniMethodName = jniName,
+				JniSignature = export.JniSignature,
+				WrapperMethodName = export.WrapperName,
+			});
+		}
+	}
+
+	static ExportMarshalMethodData BuildExportMarshalMethod (MarshalMethodInfo mm, JavaPeerInfo peer,
+		string wrapperName, bool isConstructor)
+	{
+		var data = new ExportMarshalMethodData {
+			WrapperName = wrapperName,
+			ManagedMethodName = mm.ManagedMethodName,
+			DeclaringType = new TypeRefData {
+				ManagedTypeName = peer.ManagedTypeName,
+				AssemblyName = peer.AssemblyName,
+			},
+			JniSignature = mm.JniSignature,
+			IsConstructor = isConstructor,
+			ManagedReturnType = mm.ManagedReturnType,
+		};
+
+		foreach (var param in mm.Parameters) {
+			// Parse assembly name from assembly-qualified name "TypeName, AssemblyName"
+			string managedTypeName = param.ManagedType;
+			string assemblyName = peer.AssemblyName;
+			int commaIndex = managedTypeName.IndexOf (", ", StringComparison.Ordinal);
+			if (commaIndex >= 0) {
+				assemblyName = managedTypeName.Substring (commaIndex + 2);
+				managedTypeName = managedTypeName.Substring (0, commaIndex);
+			}
+
+			data.ManagedParameters.Add (new ExportParamData {
+				JniType = param.JniType,
+				ManagedTypeName = managedTypeName,
+				AssemblyName = assemblyName,
+			});
+		}
+
+		return data;
 	}
 
 	static TypeMapAttributeData BuildEntry (JavaPeerInfo peer, JavaPeerProxyData? proxy,

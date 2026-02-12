@@ -282,11 +282,15 @@ sealed class JavaPeerScanner : IDisposable
 		var parameters = ParseJniParameters (jniSignature);
 
 		// For [Export] methods, populate ManagedType from the actual method signature
-		// (needed for TypeManager.Activate call in JCW)
+		// (needed for the generated marshal method body)
+		string? managedReturnType = null;
 		if (registerInfo.Connector == null) {
 			var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
 			for (int i = 0; i < parameters.Count && i < sig.ParameterTypes.Length; i++) {
 				parameters [i].ManagedType = ManagedTypeToAssemblyQualifiedName (sig.ParameterTypes [i]);
+			}
+			if (sig.ReturnType != "System.Void") {
+				managedReturnType = sig.ReturnType;
 			}
 		}
 		methods.Add (new MarshalMethodInfo {
@@ -300,6 +304,7 @@ sealed class JavaPeerScanner : IDisposable
 			IsConstructor = registerInfo.JniName == "<init>" || registerInfo.JniName == ".ctor",
 			ThrownNames = exportInfo?.ThrownNames,
 			SuperArgumentsString = exportInfo?.SuperArgumentsString,
+			ManagedReturnType = managedReturnType,
 		});
 	}
 
