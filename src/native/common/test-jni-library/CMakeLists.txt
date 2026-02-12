@@ -10,6 +10,12 @@ add_library(
   ${LIB_SOURCES}
 )
 
+set_target_properties(
+  ${LIB_NAME}
+  PROPERTIES
+  LIBRARY_OUTPUT_DIRECTORY "${XA_TEST_OUTPUT_DIR}/${ANDROID_RID}"
+)
+
 target_compile_options(
   ${LIB_NAME}
   PRIVATE
