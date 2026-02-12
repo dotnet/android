@@ -17,6 +17,8 @@ sealed class TypeMapAssemblyEmitter
 	readonly Dictionary<string, AssemblyReferenceHandle> _asmRefCache = new (StringComparer.OrdinalIgnoreCase);
 	readonly Dictionary<string, EntityHandle> _typeRefCache = new (StringComparer.Ordinal);
 
+	readonly Version _systemRuntimeVersion;
+
 	AssemblyReferenceHandle _systemRuntimeRef;
 	AssemblyReferenceHandle _monoAndroidRef;
 	AssemblyReferenceHandle _javaInteropRef;
@@ -39,6 +41,18 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _ucoAttrCtorRef;
 	MemberReferenceHandle _typeMapAttrCtorRef2Arg;
 	MemberReferenceHandle _typeMapAttrCtorRef3Arg;
+
+	/// <summary>
+	/// Creates a new emitter.
+	/// </summary>
+	/// <param name="dotnetVersion">
+	/// Target .NET version (e.g., 11 for .NET 11). Used for System.Runtime assembly reference version.
+	/// Will be passed from $(DotNetTargetVersion) MSBuild property in the build task.
+	/// </param>
+	public TypeMapAssemblyEmitter (int dotnetVersion)
+	{
+		_systemRuntimeVersion = new Version (dotnetVersion, 0, 0, 0);
+	}
 
 	/// <summary>
 	/// Emits a PE assembly from the given model and writes it to <paramref name="outputPath"/>.
@@ -107,16 +121,13 @@ sealed class TypeMapAssemblyEmitter
 	// Mono.Android strong name public key token (84e04ff9cfb79065)
 	static readonly byte [] MonoAndroidPublicKeyToken = { 0x84, 0xe0, 0x4f, 0xf9, 0xcf, 0xb7, 0x90, 0x65 };
 
-	// TODO: Make these configurable per target framework instead of hardcoding .NET 11
-	static readonly Version SystemRuntimeVersion = new Version (11, 0, 0, 0);
-
 	void EmitAssemblyReferences (MetadataBuilder metadata)
 	{
-		_systemRuntimeRef = AddAssemblyRef (metadata, "System.Runtime", SystemRuntimeVersion);
+		_systemRuntimeRef = AddAssemblyRef (metadata, "System.Runtime", _systemRuntimeVersion);
 		_monoAndroidRef = AddAssemblyRef (metadata, "Mono.Android", new Version (0, 0, 0, 0),
 			publicKeyOrToken: MonoAndroidPublicKeyToken);
 		_javaInteropRef = AddAssemblyRef (metadata, "Java.Interop", new Version (0, 0, 0, 0));
-		_systemRuntimeInteropServicesRef = AddAssemblyRef (metadata, "System.Runtime.InteropServices", SystemRuntimeVersion);
+		_systemRuntimeInteropServicesRef = AddAssemblyRef (metadata, "System.Runtime.InteropServices", _systemRuntimeVersion);
 	}
 
 	void EmitTypeReferences (MetadataBuilder metadata)
@@ -307,7 +318,11 @@ sealed class TypeMapAssemblyEmitter
 			return;
 		}
 
-		var userTypeRef = ResolveTypeRef (metadata, proxy.TargetType);
+		// For interface proxies with an invoker type, CreateInstance instantiates the invoker
+		// (e.g., IOnClickListenerInvoker), not the interface itself. For regular types, it
+		// instantiates the target type directly.
+		var activatedType = proxy.InvokerType ?? proxy.TargetType;
+		var activatedTypeRef = ResolveTypeRef (metadata, activatedType);
 
 		EmitBody (metadata, ilBuilder, "CreateInstance",
 			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
@@ -321,7 +336,7 @@ sealed class TypeMapAssemblyEmitter
 				encoder.OpCode (ILOpCode.Ldarg_1);
 				encoder.OpCode (ILOpCode.Ldarg_2);
 				encoder.OpCode (ILOpCode.Ldtoken);
-				encoder.Token (userTypeRef);
+				encoder.Token (activatedTypeRef);
 				encoder.Call (_getTypeFromHandleRef);
 				encoder.Call (_createManagedPeerRef);
 				encoder.OpCode (ILOpCode.Ret);

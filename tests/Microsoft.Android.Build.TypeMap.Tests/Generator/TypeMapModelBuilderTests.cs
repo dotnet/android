@@ -292,8 +292,10 @@ public class ModelBuilderTests
 	}
 
 	[Fact]
-	public void Build_PeerWithInvokerButNoActivation_ProxyHasActivationFalse ()
+	public void Build_PeerWithInvokerButNoActivationCtor_ProxyHasActivationTrue ()
 	{
+		// An interface with an invoker type has HasActivation = true because
+		// CreateInstance will instantiate the invoker type.
 		var peer = new JavaPeerInfo {
 			JavaName = "android/view/View$OnClickListener",
 			ManagedTypeName = "Android.Views.View+IOnClickListener",
@@ -307,7 +309,7 @@ public class ModelBuilderTests
 		var model = BuildModel (new [] { peer });
 		Assert.Single (model.ProxyTypes);
 		var proxy = model.ProxyTypes [0];
-		Assert.False (proxy.HasActivation);
+		Assert.True (proxy.HasActivation);
 		Assert.NotNull (proxy.InvokerType);
 	}
 
@@ -1119,13 +1121,48 @@ public class ModelBuilderTests
 
 		var model = BuildModel (clickPeers, "TypeMap");
 
-		// Invoker is separated from non-invokers before alias grouping,
-		// so only the interface gets a TypeMap entry
+		// Invoker is excluded entirely — no TypeMap entry, no proxy.
+		// Only the interface gets a TypeMap entry and a proxy.
 		Assert.Single (model.Entries);
 		Assert.Equal ("android/view/View$OnClickListener", model.Entries [0].JniName);
 
-		// Both the interface and the invoker should get proxy types
-		Assert.Equal (2, model.ProxyTypes.Count);
+		// Only the interface proxy exists; the invoker type is referenced
+		// only as a TypeRef in the interface proxy's InvokerType property.
+		Assert.Single (model.ProxyTypes);
+		Assert.NotNull (model.ProxyTypes [0].InvokerType);
+		Assert.Equal ("Android.Views.IOnClickListenerInvoker", model.ProxyTypes [0].InvokerType!.ManagedTypeName);
+	}
+
+	[Fact]
+	public void Build_InvokerType_NoProxyNoEntry ()
+	{
+		// Invoker types should never get their own proxy or TypeMap entry.
+		// They only appear as a TypeRef in the interface proxy's InvokerType/CreateInstance.
+		var ifacePeer = new JavaPeerInfo {
+			JavaName = "my/app/IFoo",
+			ManagedTypeName = "MyApp.IFoo",
+			AssemblyName = "App",
+			IsInterface = true,
+			InvokerTypeName = "MyApp.FooInvoker",
+		};
+		var invokerPeer = MakePeerWithActivation ("my/app/IFoo", "MyApp.FooInvoker", "App");
+		invokerPeer.DoNotGenerateAcw = true;
+
+		var model = BuildModel (new [] { ifacePeer, invokerPeer });
+
+		// Only the interface gets a TypeMap entry — its ProxyTypeReference points to the generated proxy
+		Assert.Single (model.Entries);
+		Assert.Contains ("MyApp_IFoo_Proxy", model.Entries [0].ProxyTypeReference);
+
+		// Only the interface gets a proxy — the invoker is referenced, not proxied
+		Assert.Single (model.ProxyTypes);
+		var proxy = model.ProxyTypes [0];
+		Assert.Equal ("MyApp.IFoo", proxy.TargetType.ManagedTypeName);
+		Assert.NotNull (proxy.InvokerType);
+		Assert.Equal ("MyApp.FooInvoker", proxy.InvokerType!.ManagedTypeName);
+
+		// Interface proxy has activation because it will create the invoker
+		Assert.True (proxy.HasActivation);
 	}
 
 	// ---- GenericHolder ----
@@ -1273,17 +1310,29 @@ public class ModelBuilderTests
 	}
 
 	[Fact]
-	public void Build_UserTypeNamedInvoker_WithDoNotGenerateAcw_IsTreatedAsInvoker ()
+	public void Build_TypeIsInvoker_OnlyWhenReferencedByAnotherPeer ()
 	{
-		// Limitation: name-based heuristic means a MCW type ending in "Invoker"
-		// will be treated as an invoker (no TypeMap entry, only proxy).
-		var peer = MakePeerWithActivation ("my/app/MyInvoker", "MyApp.MyInvoker", "App");
-		peer.DoNotGenerateAcw = true;
-		var model = BuildModel (new [] { peer });
+		// A type is only treated as an invoker when another peer's InvokerTypeName references it.
+		// A type named "MyInvoker" with DoNotGenerateAcw is NOT automatically an invoker.
+		var invokerPeer = MakePeerWithActivation ("my/app/MyInvoker", "MyApp.MyInvoker", "App");
+		invokerPeer.DoNotGenerateAcw = true;
 
-		// The heuristic treats this as an invoker → proxy but no entry
-		Assert.Empty (model.Entries);
-		Assert.Single (model.ProxyTypes);
+		// Without a referencing peer, it gets a normal entry
+		var model1 = BuildModel (new [] { invokerPeer });
+		Assert.Single (model1.Entries);
+
+		// When an interface references it as invoker, it is excluded
+		var ifacePeer = new JavaPeerInfo {
+			JavaName = "my/app/MyInvoker",
+			ManagedTypeName = "MyApp.IMyInterface",
+			AssemblyName = "App",
+			IsInterface = true,
+			InvokerTypeName = "MyApp.MyInvoker",
+		};
+		var model2 = BuildModel (new [] { ifacePeer, invokerPeer });
+		// Only the interface gets entries/proxies, the invoker is excluded
+		Assert.Single (model2.Entries);
+		Assert.Equal ("MyApp.IMyInterface", model2.ProxyTypes [0].TargetType.ManagedTypeName);
 	}
 
 	// ---- Full pipeline: scan → model → emit → read back ----
@@ -1296,7 +1345,7 @@ public class ModelBuilderTests
 
 		var outputPath = Path.Combine (Path.GetTempPath (), $"fullpipeline-{Guid.NewGuid ():N}", "FullPipeline.dll");
 		try {
-			var emitter = new TypeMapAssemblyEmitter ();
+			var emitter = new TypeMapAssemblyEmitter (11);
 			emitter.Emit (model, outputPath);
 
 			Assert.True (File.Exists (outputPath));
@@ -1333,7 +1382,7 @@ public class ModelBuilderTests
 
 		var outputPath = Path.Combine (Path.GetTempPath (), $"attrcount-{Guid.NewGuid ():N}", "AttrCount.dll");
 		try {
-			var emitter = new TypeMapAssemblyEmitter ();
+			var emitter = new TypeMapAssemblyEmitter (11);
 			emitter.Emit (model, outputPath);
 
 			using var pe = new PEReader (File.OpenRead (outputPath));
@@ -1360,7 +1409,7 @@ public class ModelBuilderTests
 
 		var outputPath = Path.Combine (Path.GetTempPath (), $"ucoattr-{Guid.NewGuid ():N}", "UcoAttrTest.dll");
 		try {
-			var emitter = new TypeMapAssemblyEmitter ();
+			var emitter = new TypeMapAssemblyEmitter (11);
 			emitter.Emit (model, outputPath);
 
 			using var pe = new PEReader (File.OpenRead (outputPath));
@@ -1397,7 +1446,7 @@ public class ModelBuilderTests
 
 		var outputPath = Path.Combine (Path.GetTempPath (), $"ctor-{Guid.NewGuid ():N}", "CtorTest.dll");
 		try {
-			var emitter = new TypeMapAssemblyEmitter ();
+			var emitter = new TypeMapAssemblyEmitter (11);
 			emitter.Emit (model, outputPath);
 
 			using var pe = new PEReader (File.OpenRead (outputPath));
@@ -1434,7 +1483,7 @@ public class ModelBuilderTests
 
 		var outputPath = Path.Combine (Path.GetTempPath (), $"ctorsig-{Guid.NewGuid ():N}", "CtorSigTest.dll");
 		try {
-			var emitter = new TypeMapAssemblyEmitter ();
+			var emitter = new TypeMapAssemblyEmitter (11);
 			emitter.Emit (model, outputPath);
 
 			using var pe = new PEReader (File.OpenRead (outputPath));
@@ -1471,7 +1520,7 @@ public class ModelBuilderTests
 
 		var outputPath = Path.Combine (Path.GetTempPath (), $"generic-{Guid.NewGuid ():N}", "GenericTest.dll");
 		try {
-			var emitter = new TypeMapAssemblyEmitter ();
+			var emitter = new TypeMapAssemblyEmitter (11);
 			emitter.Emit (model, outputPath);
 
 			using var pe = new PEReader (File.OpenRead (outputPath));
@@ -1505,7 +1554,7 @@ public class ModelBuilderTests
 
 		var outputPath = Path.Combine (Path.GetTempPath (), $"mixedblob-{Guid.NewGuid ():N}", "MixedBlob.dll");
 		try {
-			var emitter = new TypeMapAssemblyEmitter ();
+			var emitter = new TypeMapAssemblyEmitter (11);
 			emitter.Emit (model, outputPath);
 
 			using var pe = new PEReader (File.OpenRead (outputPath));
@@ -1540,7 +1589,7 @@ public class ModelBuilderTests
 
 		var outputPath = Path.Combine (Path.GetTempPath (), $"blob2arg-{Guid.NewGuid ():N}", "Blob2Arg.dll");
 		try {
-			var emitter = new TypeMapAssemblyEmitter ();
+			var emitter = new TypeMapAssemblyEmitter (11);
 			emitter.Emit (model, outputPath);
 
 			using var pe = new PEReader (File.OpenRead (outputPath));
@@ -1568,7 +1617,7 @@ public class ModelBuilderTests
 
 		var outputPath = Path.Combine (Path.GetTempPath (), $"blob3arg-{Guid.NewGuid ():N}", "Blob3Arg.dll");
 		try {
-			var emitter = new TypeMapAssemblyEmitter ();
+			var emitter = new TypeMapAssemblyEmitter (11);
 			emitter.Emit (model, outputPath);
 
 			using var pe = new PEReader (File.OpenRead (outputPath));
@@ -1597,7 +1646,7 @@ public class ModelBuilderTests
 
 		var outputPath = Path.Combine (Path.GetTempPath (), $"blobacw-{Guid.NewGuid ():N}", "BlobAcw.dll");
 		try {
-			var emitter = new TypeMapAssemblyEmitter ();
+			var emitter = new TypeMapAssemblyEmitter (11);
 			emitter.Emit (model, outputPath);
 
 			using var pe = new PEReader (File.OpenRead (outputPath));
@@ -1644,6 +1693,21 @@ public class ModelBuilderTests
 		return all [0];
 	}
 
+	/// <summary>
+	/// Reads TypeMap attribute blobs from a PE assembly's metadata.
+	///
+	/// NOTE: This is a PE-level integration test helper, not a primary unit test mechanism.
+	/// The model-level tests (which verify TypeMapAssemblyData directly) are the main unit tests.
+	/// These PE round-trip tests exist to catch encoding bugs in the emitter and to verify that
+	/// the full scan→model→emit pipeline produces a valid, loadable assembly.
+	///
+	/// The distinction between TypeMap and IgnoresAccessChecksTo attributes relies on
+	/// attr.Constructor.Kind: TypeMap attributes reference their ctor via MemberReference
+	/// (because the attribute type is a TypeSpec — generic), while IgnoresAccessChecksTo
+	/// uses MethodDefinition (the attribute type is defined in the same assembly as a TypeDef).
+	/// If this logic breaks, the test will either fail to find TypeMap attributes or
+	/// misidentify IgnoresAccessChecksTo as TypeMap — both cause obvious assertion failures.
+	/// </summary>
 	static List<(string? jniName, string? proxyRef, string? targetRef)> ReadAllTypeMapAttributeBlobs (MetadataReader reader)
 	{
 		var result = new List<(string?, string?, string?)> ();

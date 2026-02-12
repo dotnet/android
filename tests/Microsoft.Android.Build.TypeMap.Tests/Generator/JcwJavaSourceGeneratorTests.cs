@@ -203,6 +203,91 @@ public class JcwJavaSourceGeneratorTests
 		Assert.Contains ("if (getClass () == CustomView.class) nctor_0 ();\n", java);
 	}
 
+	[Fact]
+	public void Generate_Constructor_WithSuperArgumentsString_UsesCustomSuperArgs ()
+	{
+		// [Export] constructors with SuperArgumentsString should use it in super() call
+		var type = new JavaPeerInfo {
+			JavaName = "my/app/CustomService",
+			ManagedTypeName = "MyApp.CustomService",
+			ManagedTypeNamespace = "MyApp",
+			ManagedTypeShortName = "CustomService",
+			AssemblyName = "App",
+			BaseJavaName = "android/app/Service",
+			JavaConstructors = new List<JavaConstructorInfo> {
+				new JavaConstructorInfo {
+					JniSignature = "(Landroid/content/Context;I)V",
+					ConstructorIndex = 0,
+					Parameters = new List<JniParameterInfo> {
+						new JniParameterInfo { JniType = "Landroid/content/Context;" },
+						new JniParameterInfo { JniType = "I" },
+					},
+					SuperArgumentsString = "p0",
+				},
+			},
+		};
+
+		var java = GenerateToString (type);
+		// super() should use the custom args, not all parameters
+		Assert.Contains ("super (p0);", java);
+		Assert.DoesNotContain ("super (p0, p1);", java);
+	}
+
+	[Fact]
+	public void Generate_Constructor_WithEmptySuperArgumentsString_EmptySuper ()
+	{
+		// Empty string means super() with no arguments
+		var type = new JavaPeerInfo {
+			JavaName = "my/app/MyWidget",
+			ManagedTypeName = "MyApp.MyWidget",
+			ManagedTypeNamespace = "MyApp",
+			ManagedTypeShortName = "MyWidget",
+			AssemblyName = "App",
+			BaseJavaName = "android/appwidget/AppWidgetProvider",
+			JavaConstructors = new List<JavaConstructorInfo> {
+				new JavaConstructorInfo {
+					JniSignature = "(Landroid/content/Context;)V",
+					ConstructorIndex = 0,
+					Parameters = new List<JniParameterInfo> {
+						new JniParameterInfo { JniType = "Landroid/content/Context;" },
+					},
+					SuperArgumentsString = "",
+				},
+			},
+		};
+
+		var java = GenerateToString (type);
+		Assert.Contains ("super ();", java);
+		Assert.DoesNotContain ("super (p0);", java);
+	}
+
+	[Fact]
+	public void Generate_Constructor_WithoutSuperArgumentsString_ForwardsAllParams ()
+	{
+		// null SuperArgumentsString means forward all params (default behavior)
+		var type = new JavaPeerInfo {
+			JavaName = "my/app/MyView",
+			ManagedTypeName = "MyApp.MyView",
+			ManagedTypeNamespace = "MyApp",
+			ManagedTypeShortName = "MyView",
+			AssemblyName = "App",
+			BaseJavaName = "android/view/View",
+			JavaConstructors = new List<JavaConstructorInfo> {
+				new JavaConstructorInfo {
+					JniSignature = "(Landroid/content/Context;Landroid/util/AttributeSet;)V",
+					ConstructorIndex = 0,
+					Parameters = new List<JniParameterInfo> {
+						new JniParameterInfo { JniType = "Landroid/content/Context;" },
+						new JniParameterInfo { JniType = "Landroid/util/AttributeSet;" },
+					},
+				},
+			},
+		};
+
+		var java = GenerateToString (type);
+		Assert.Contains ("super (p0, p1);", java);
+	}
+
 	// ---- Method tests ----
 
 	[Fact]

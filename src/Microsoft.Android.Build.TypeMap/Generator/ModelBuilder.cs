@@ -47,23 +47,21 @@ static class ModelBuilder
 			ModuleName = moduleName,
 		};
 
-		// Separate invoker types — they get proxies (for CreateInstance) but NOT TypeMap entries.
-		// Invokers share JNI names with their interfaces and are created via the parent proxy.
-		var invokerPeers = new List<JavaPeerInfo> ();
-		var nonInvokerPeers = new List<JavaPeerInfo> ();
+		// Build a set of invoker type names referenced by interfaces/abstract types via [Register]'s
+		// third argument. Invoker types are NOT emitted as separate proxies or TypeMap entries —
+		// they only appear as a TypeRef in the interface proxy's get_InvokerType property.
+		var invokerTypeNames = new HashSet<string> (StringComparer.Ordinal);
 		foreach (var peer in peers) {
-			if (IsInvokerType (peer)) {
-				invokerPeers.Add (peer);
-			} else {
-				nonInvokerPeers.Add (peer);
+			if (peer.InvokerTypeName != null) {
+				invokerTypeNames.Add (peer.InvokerTypeName);
 			}
 		}
 
-		// Generate proxies for invoker types (no TypeMap entries)
-		foreach (var invoker in invokerPeers) {
-			if (invoker.ActivationCtor != null) {
-				var proxy = BuildProxyType (invoker, isAcw: false);
-				model.ProxyTypes.Add (proxy);
+		// Exclude invoker types from further processing — they don't get TypeMap entries or proxies.
+		var nonInvokerPeers = new List<JavaPeerInfo> ();
+		foreach (var peer in peers) {
+			if (!invokerTypeNames.Contains (peer.ManagedTypeName)) {
+				nonInvokerPeers.Add (peer);
 			}
 		}
 
@@ -110,16 +108,6 @@ static class ModelBuilder
 		model.IgnoresAccessChecksTo.AddRange (referencedAssemblies);
 
 		return model;
-	}
-
-	/// <summary>
-	/// Invoker types (e.g., IOnClickListenerInvoker) wrap existing Java interfaces.
-	/// They get proxies for CreateInstance but no TypeMap entries — the interface entry covers them.
-	/// NOTE: This is a name-based heuristic. Ideally the scanner would provide a dedicated flag.
-	/// </summary>
-	static bool IsInvokerType (JavaPeerInfo peer)
-	{
-		return peer.DoNotGenerateAcw && peer.ManagedTypeName.EndsWith ("Invoker", StringComparison.Ordinal);
 	}
 
 	static void EmitSinglePeer (TypeMapAssemblyData model, JavaPeerInfo peer, string assemblyName)
@@ -215,7 +203,7 @@ static class ModelBuilder
 				ManagedTypeName = peer.ManagedTypeName,
 				AssemblyName = peer.AssemblyName,
 			},
-			HasActivation = peer.ActivationCtor != null,
+			HasActivation = peer.ActivationCtor != null || peer.InvokerTypeName != null,
 			IsAcw = isAcw,
 		};
 

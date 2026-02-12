@@ -129,9 +129,14 @@ sealed class JcwJavaSourceGenerator
 			writer.WriteLine (')');
 			writer.WriteLine ("\t{");
 
-			// super() call with parameters
+			// super() call — use SuperArgumentsString if provided ([Export] constructors),
+			// otherwise forward all constructor parameters.
 			writer.Write ("\t\tsuper (");
-			WriteArgumentList (ctor.Parameters, writer);
+			if (ctor.SuperArgumentsString != null) {
+				writer.Write (ctor.SuperArgumentsString);
+			} else {
+				WriteArgumentList (ctor.Parameters, writer);
+			}
 			writer.WriteLine (");");
 
 			// Activation guard: only activate if this is the exact class
