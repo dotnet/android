@@ -1550,7 +1550,7 @@ public class ModelBuilderTests
 		}
 
 		[Fact]
-		public void FullPipeline_CustomView_UcoConstructorHasExactlyTwoParams ()
+		public void FullPipeline_CustomView_UcoConstructorMatchesJniSignature ()
 		{
 			var peer = FindFixtureByJavaName ("my/app/CustomView");
 			var model = BuildModel (new [] { peer }, "CtorSigTest");
@@ -1574,12 +1574,22 @@ public class ModelBuilderTests
 					.ToList ();
 
 				Assert.NotEmpty (ucoCtors);
+
+				// Match each UCO constructor to its model data to verify param count
 				foreach (var uco in ucoCtors) {
-					// UCO constructor wrappers always take exactly 2 params (IntPtr jnienv, IntPtr self)
+					var name = reader.GetString (uco.Name);
+					var modelUco = model.ProxyTypes
+						.SelectMany (p => p.UcoConstructors)
+						.First (u => u.WrapperName == name);
+
+					// UCO constructor signature must include jnienv + self + JNI params
+					int expectedJniParams = JniSignatureHelper.ParseParameterTypes (modelUco.JniSignature).Count;
+					int expectedTotal = 2 + expectedJniParams;
+
 					var sig = reader.GetBlobReader (uco.Signature);
 					var header = sig.ReadSignatureHeader ();
 					int paramCount = sig.ReadCompressedInteger ();
-					Assert.Equal (2, paramCount);
+					Assert.Equal (expectedTotal, paramCount);
 				}
 			} finally {
 				CleanUpDir (outputPath);

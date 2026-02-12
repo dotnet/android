@@ -493,19 +493,25 @@ sealed class TypeMapAssemblyEmitter
 	{
 		var userTypeRef = ResolveTypeRef (metadata, uco.TargetType);
 
-		// UCO constructor wrappers always take exactly (IntPtr jnienv, IntPtr self) regardless
-		// of the actual JNI constructor signature. The JNI parameters are not forwarded —
-		// ActivateInstance only needs the jobject handle to create the managed peer.
-		// The correct JNI signature is still used in RegisterNatives so the JNI runtime
-		// dispatches to this wrapper for the right constructor overload.
+		// UCO constructor wrappers must match the JNI native method signature exactly.
+		// The Java JCW declares e.g. "private native void nctor_0(Context p0)" and calls
+		// it with arguments. JNI dispatches with (JNIEnv*, jobject, <ctor params...>),
+		// so the wrapper signature must include all parameters to match the ABI.
+		// Only jnienv (arg 0) and self (arg 1) are used — the constructor parameters
+		// are not forwarded because ActivateInstance creates the managed peer using the
+		// activation ctor (IntPtr, JniHandleOwnership), not the user-visible constructor.
+		var jniParams = JniSignatureHelper.ParseParameterTypes (uco.JniSignature);
+		int paramCount = 2 + jniParams.Count;
 
 		var handle = EmitBody (metadata, ilBuilder, uco.WrapperName,
 			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-			sig => sig.MethodSignature ().Parameters (2,
+			sig => sig.MethodSignature ().Parameters (paramCount,
 				rt => rt.Void (),
 				p => {
-					p.AddParameter ().Type ().IntPtr ();
-					p.AddParameter ().Type ().IntPtr ();
+					p.AddParameter ().Type ().IntPtr (); // jnienv
+					p.AddParameter ().Type ().IntPtr (); // self
+					for (int j = 0; j < jniParams.Count; j++)
+						JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniParams [j]);
 				}),
 			encoder => {
 				encoder.LoadArgument (1); // self
