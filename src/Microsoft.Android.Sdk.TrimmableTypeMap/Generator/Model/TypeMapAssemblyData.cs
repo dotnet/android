@@ -86,11 +86,8 @@ sealed class JavaPeerProxyData
 	/// <summary>True if this is an open generic type definition. CreateInstance throws NotSupportedException.</summary>
 	public bool IsGenericDefinition { get; set; }
 
-	/// <summary>Whether this proxy needs ACW support (RegisterNatives + UCO wrappers).</summary>
+	/// <summary>Whether this proxy needs ACW support (RegisterNatives + UCO wrappers + IAndroidCallableWrapper).</summary>
 	public bool IsAcw { get; set; }
-
-	/// <summary>Implements IAndroidCallableWrapper when IsAcw is true.</summary>
-	public bool ImplementsIAndroidCallableWrapper => IsAcw;
 
 	/// <summary>UCO method wrappers for marshal methods (non-constructor).</summary>
 	public List<UcoMethodData> UcoMethods { get; } = new ();

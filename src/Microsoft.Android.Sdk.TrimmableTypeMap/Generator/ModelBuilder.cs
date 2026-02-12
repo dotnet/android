@@ -47,28 +47,19 @@ static class ModelBuilder
 			ModuleName = moduleName,
 		};
 
-		// Build a set of invoker type names referenced by interfaces/abstract types via [Register]'s
-		// third argument. Invoker types are NOT emitted as separate proxies or TypeMap entries —
+		// Invoker types are NOT emitted as separate proxies or TypeMap entries —
 		// they only appear as a TypeRef in the interface proxy's get_InvokerType property.
-		var invokerTypeNames = new HashSet<string> (StringComparer.Ordinal);
-		foreach (var peer in peers) {
-			if (peer.InvokerTypeName != null) {
-				invokerTypeNames.Add (peer.InvokerTypeName);
-			}
-		}
-
-		// Exclude invoker types from further processing — they don't get TypeMap entries or proxies.
-		var nonInvokerPeers = new List<JavaPeerInfo> ();
-		foreach (var peer in peers) {
-			if (!invokerTypeNames.Contains (peer.ManagedTypeName)) {
-				nonInvokerPeers.Add (peer);
-			}
-		}
+		var invokerTypeNames = new HashSet<string> (
+			peers.Where (p => p.InvokerTypeName != null).Select (p => p.InvokerTypeName!),
+			StringComparer.Ordinal);
 
 		// Group non-invoker peers by JNI name to detect aliases (multiple .NET types → same Java class).
 		// Use an ordered dictionary to ensure deterministic output across runs.
 		var groups = new SortedDictionary<string, List<JavaPeerInfo>> (StringComparer.Ordinal);
-		foreach (var peer in nonInvokerPeers) {
+		foreach (var peer in peers) {
+			if (invokerTypeNames.Contains (peer.ManagedTypeName)) {
+				continue;
+			}
 			if (!groups.TryGetValue (peer.JavaName, out var list)) {
 				list = new List<JavaPeerInfo> ();
 				groups [peer.JavaName] = list;
@@ -88,23 +79,15 @@ static class ModelBuilder
 			EmitPeers (model, jniName, peersForName, assemblyName);
 		}
 
-		// Compute IgnoresAccessChecksTo from actual cross-assembly references in UCO callback types
-		// and from base class activation ctors that need direct invocation
+		// Compute IgnoresAccessChecksTo from cross-assembly references
 		var referencedAssemblies = new SortedSet<string> (StringComparer.Ordinal);
 		foreach (var proxy in model.ProxyTypes) {
+			AddIfCrossAssembly (referencedAssemblies, proxy.TargetType?.AssemblyName, assemblyName);
 			foreach (var uco in proxy.UcoMethods) {
-				if (!string.Equals (uco.CallbackType.AssemblyName, assemblyName, StringComparison.Ordinal)) {
-					referencedAssemblies.Add (uco.CallbackType.AssemblyName);
-				}
+				AddIfCrossAssembly (referencedAssemblies, uco.CallbackType.AssemblyName, assemblyName);
 			}
-			if (proxy.TargetType != null && !string.Equals (proxy.TargetType.AssemblyName, assemblyName, StringComparison.Ordinal)) {
-				referencedAssemblies.Add (proxy.TargetType.AssemblyName);
-			}
-			// When calling a protected base class ctor directly (inherited activation ctor),
-			// we need IgnoresAccessChecksTo for the assembly containing that ctor
-			if (proxy.ActivationCtor != null && !proxy.ActivationCtor.IsOnLeafType &&
-				!string.Equals (proxy.ActivationCtor.DeclaringType.AssemblyName, assemblyName, StringComparison.Ordinal)) {
-				referencedAssemblies.Add (proxy.ActivationCtor.DeclaringType.AssemblyName);
+			if (proxy.ActivationCtor != null && !proxy.ActivationCtor.IsOnLeafType) {
+				AddIfCrossAssembly (referencedAssemblies, proxy.ActivationCtor.DeclaringType.AssemblyName, assemblyName);
 			}
 		}
 		model.IgnoresAccessChecksTo.AddRange (referencedAssemblies);
@@ -190,6 +173,13 @@ static class ModelBuilder
 	{
 		return peer.ManagedTypeName.EndsWith ("Implementor", StringComparison.Ordinal) ||
 			peer.ManagedTypeName.EndsWith ("EventDispatcher", StringComparison.Ordinal);
+	}
+
+	static void AddIfCrossAssembly (SortedSet<string> set, string? asmName, string outputAssemblyName)
+	{
+		if (asmName != null && !string.Equals (asmName, outputAssemblyName, StringComparison.Ordinal)) {
+			set.Add (asmName);
+		}
 	}
 
 	static JavaPeerProxyData BuildProxyType (JavaPeerInfo peer, bool isAcw)
