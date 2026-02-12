@@ -88,7 +88,7 @@ void GCBridge::log_mark_cross_references_args_if_enabled (MarkCrossReferencesArg
 	log_info (
 		LOG_GC,
 #if defined(XA_HOST_NATIVEAOT)
-		"cross references callback invoked with %z sccs and %z xrefs.",
+		"cross references callback invoked with %zu sccs and %zu xrefs.",
 #else
 		"cross references callback invoked with {} sccs and {} xrefs."sv,
 #endif
@@ -114,7 +114,7 @@ void GCBridge::log_mark_cross_references_args_if_enabled (MarkCrossReferencesArg
 		size_t source_index = args->CrossReferences [i].SourceGroupIndex;
 		size_t dest_index = args->CrossReferences [i].DestinationGroupIndex;
 #if defined(XA_HOST_NATIVEAOT)
-		log_info_nocheck_printf (LOG_GC, "xref [%z] %z -> %z", i, source_index, dest_index);
+		log_info_nocheck_printf (LOG_GC, "xref [%zu] %zu -> %zu", i, source_index, dest_index);
 #else
 		log_info_nocheck_fmt (LOG_GC, "xref [{}] {} -> {}", i, source_index, dest_index);
 #endif
@@ -134,7 +134,7 @@ void GCBridge::log_handle_context (JNIEnv *env, HandleContext *ctx) noexcept
 		log_info (
 			LOG_GC,
 #if defined(XA_HOST_NATIVEAOT)
-			"gref %p [%s]",
+			"gref 0x%x [%s]",
 #else
 			"gref {:#x} [{}]"sv,
 #endif
@@ -146,7 +146,7 @@ void GCBridge::log_handle_context (JNIEnv *env, HandleContext *ctx) noexcept
 		log_info (
 			LOG_GC,
 #if defined(XA_HOST_NATIVEAOT)
-			"gref %p [unknown class]",
+			"gref 0x%x [unknown class]",
 #else
 			"gref {:#x} [unknown class]"sv,
 #endif

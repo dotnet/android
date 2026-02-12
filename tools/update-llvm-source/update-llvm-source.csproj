@@ -9,7 +9,7 @@
     <OutputPath>../../bin/$(Configuration)/bin/update-llvm-source</OutputPath>
     <OutputType>Exe</OutputType>
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
-    <RootNamespace>Xamarin.Android.Tools</RootNamespace>
+    <RootNamespace>Microsoft.Android.Tools</RootNamespace>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RollForward>Major</RollForward>

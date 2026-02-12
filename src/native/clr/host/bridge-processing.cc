@@ -367,7 +367,7 @@ void BridgeProcessingShared::log_weak_to_gref (jobject weak, jobject handle) noe
 		dynamic_local_string<BufferSize> message;
 		bool formatted = format_printf (
 			message,
-			"take_global_ref wref={:#x} -> handle={:#x}\n",
+			"take_global_ref wref=%p -> handle=%p\n",
 			weak_p, handle_p
 		);
 
@@ -390,7 +390,7 @@ void BridgeProcessingShared::log_weak_to_gref (jobject weak, jobject handle) noe
 [[gnu::always_inline]]
 void BridgeProcessingShared::log_weak_ref_collected (jobject weak) noexcept
 {
-	if (Logger::gc_spew_enabled ()) [[likely]] {
+	if (!Logger::gc_spew_enabled ()) [[likely]] {
 		return;
 	}
 
@@ -400,7 +400,7 @@ void BridgeProcessingShared::log_weak_ref_collected (jobject weak) noexcept
 		dynamic_local_string<BufferSize> message;
 		bool formatted = format_printf (
 			message,
-			"handle 0x%x/W; was collected by a Java GC",
+			"handle 0x%p/W; was collected by a Java GC",
 			weak_p
 		);
 
@@ -429,7 +429,7 @@ void BridgeProcessingShared::log_take_weak_global_ref (jobject handle) noexcept
 		dynamic_local_string<BufferSize> message;
 		bool formatted = format_printf (
 			message,
-			"take_weak_global_ref handle={:#x}\n",
+			"take_weak_global_ref handle=%p\n",
 			handle_p
 		);
 

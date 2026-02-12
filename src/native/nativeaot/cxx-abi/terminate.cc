@@ -1,5 +1,5 @@
 //
-// Simple implementation of std::terminate() for Xamarin.Android
+// Simple implementation of std::terminate() for .NET for Android
 //
 //  Does NOT support terminate handlers, since we don't use them.
 //

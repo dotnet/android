@@ -92,7 +92,7 @@ void log_fatal_printf (LogCategories category, const char *format, ...) noexcept
 {
 	va_list args;
 
-	DO_LOG (ANDROID_LOG_ERROR, category, format, args);
+	DO_LOG (ANDROID_LOG_FATAL, category, format, args);
 }
 
 void

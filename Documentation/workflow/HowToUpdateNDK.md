@@ -17,9 +17,9 @@ properties with the information obtained from the NDK distribution URL.
 
 ## Update LLVM sources
 
-The best way to do it is by using the `tools/update-llvm-sources` utility, after running `xaprepare`.
+The best way to do it is by using the `tools/update-llvm-source` utility, after runing `xaprepare`.
 
-You can run the utility directly with `dotnet tools/update-llvm-sources` or, if you are on a Unix
+You can run the utility directly with `dotnet tools/update-llvm-source` or, if you are on a Unix
 system, run `make update-llvm` from the top directory.
 
 ### Details (should you need to update sources manually)

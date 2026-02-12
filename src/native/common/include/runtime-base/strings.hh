@@ -210,7 +210,7 @@ namespace xamarin::android {
 				log_error (
 					LOG_DEFAULT,
 #if defined(XA_HOST_NATIVEAOT)
-					"Cannot convert string to integer, index %z is out of range",
+					"Cannot convert string to integer, index %zu is out of range",
 #else
 					"Cannot convert string to integer, index {} is out of range"sv,
 #endif
