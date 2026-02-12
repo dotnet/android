@@ -365,10 +365,11 @@ sealed class TypeMapAssemblyEmitter
 			return;
 		}
 
-		// Non-interface type with activation ctor
+		// At this point, ActivationCtor is guaranteed non-null (HasActivation && InvokerType == null)
+		var activationCtor = proxy.ActivationCtor ?? throw new InvalidOperationException ("ActivationCtor should not be null when HasActivation is true and InvokerType is null");
 		var targetTypeRef = ResolveTypeRef (metadata, proxy.TargetType);
 
-		if (proxy.ActivationCtor != null && proxy.ActivationCtor.IsOnLeafType) {
+		if (activationCtor.IsOnLeafType) {
 			// Leaf type has its own ctor: new T(IntPtr, JniHandleOwnership)
 			var ctorRef = AddActivationCtorRef (metadata, targetTypeRef);
 			EmitCreateInstanceBody (metadata, ilBuilder, encoder => {
@@ -378,9 +379,9 @@ sealed class TypeMapAssemblyEmitter
 				encoder.Token (ctorRef);
 				encoder.OpCode (ILOpCode.Ret);
 			});
-		} else if (proxy.ActivationCtor != null) {
+		} else {
 			// Inherited ctor: GetUninitializedObject(typeof(T)) + call Base::.ctor(IntPtr, JniHandleOwnership)
-			var baseActivationCtorRef = AddActivationCtorRef (metadata, ResolveTypeRef (metadata, proxy.ActivationCtor.DeclaringType));
+			var baseActivationCtorRef = AddActivationCtorRef (metadata, ResolveTypeRef (metadata, activationCtor.DeclaringType));
 			EmitCreateInstanceBody (metadata, ilBuilder, encoder => {
 				encoder.OpCode (ILOpCode.Ldtoken);
 				encoder.Token (targetTypeRef);
