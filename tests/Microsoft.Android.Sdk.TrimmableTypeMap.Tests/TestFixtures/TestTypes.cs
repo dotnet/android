@@ -740,4 +740,45 @@ namespace MyApp
 		[Java.Interop.Export ("computeName")]
 		public string ComputeName (string prefix, int index) { return ""; }
 	}
+
+	/// <summary>
+	/// Comprehensive [Export] member scenarios ported from legacy ExportsMembers.
+	/// Tests: name override, throws, empty throws, static methods.
+	/// </summary>
+	[Register ("my/app/ExportMembersComprehensive")]
+	public class ExportMembersComprehensive : Java.Lang.Object
+	{
+		protected ExportMembersComprehensive (IntPtr handle, Android.Runtime.JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+
+		[Java.Interop.Export]
+		public void methodNamesNotMangled () { }
+
+		[Java.Interop.Export ("attributeOverridesNames")]
+		public string CompletelyDifferentName (string value, int count) { return value; }
+
+		[Java.Interop.Export (ThrownNames = new [] { "java.lang.Throwable" })]
+		public void methodThatThrows () { }
+
+		[Java.Interop.Export (ThrownNames = new string [0])]
+		public void methodThatThrowsEmptyArray () { }
+	}
+
+	/// <summary>
+	/// [Export] constructor with SuperArgumentsString.
+	/// The super() call should use the custom args, not forward all params.
+	/// </summary>
+	[Register ("my/app/ExportCtorWithSuperArgs")]
+	public class ExportCtorWithSuperArgs : Java.Lang.Object
+	{
+		protected ExportCtorWithSuperArgs (IntPtr handle, Android.Runtime.JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+
+		[Java.Interop.Export (SuperArgumentsString = "")]
+		public ExportCtorWithSuperArgs (int value) { }
+	}
 }
