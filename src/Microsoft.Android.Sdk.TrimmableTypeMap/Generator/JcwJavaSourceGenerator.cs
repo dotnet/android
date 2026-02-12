@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Microsoft.Android.Build.TypeMap;
+namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
 /// <summary>
 /// Generates JCW (Java Callable Wrapper) .java source files from scanned <see cref="JavaPeerInfo"/> records.

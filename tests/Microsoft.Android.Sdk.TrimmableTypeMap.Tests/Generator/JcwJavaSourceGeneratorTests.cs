@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using Xunit;
 
-namespace Microsoft.Android.Build.TypeMap.Tests;
+namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 
 public class JcwJavaSourceGeneratorTests
 {

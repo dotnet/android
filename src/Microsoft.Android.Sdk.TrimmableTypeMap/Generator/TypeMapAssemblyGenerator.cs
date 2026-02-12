@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Microsoft.Android.Build.TypeMap;
+namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
 /// <summary>
 /// High-level API: builds the model from peers, then emits the PE assembly.
