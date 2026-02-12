@@ -18,10 +18,10 @@ sealed class RootTypeMapAssemblyGenerator
 
 	readonly Version _systemRuntimeVersion;
 
-	/// <param name="dotnetVersion">Target .NET version (e.g., 11 for .NET 11).</param>
-	public RootTypeMapAssemblyGenerator (int dotnetVersion)
+	/// <param name="systemRuntimeVersion">Version for System.Runtime assembly references.</param>
+	public RootTypeMapAssemblyGenerator (Version systemRuntimeVersion)
 	{
-		_systemRuntimeVersion = new Version (dotnetVersion, 0, 0, 0);
+		_systemRuntimeVersion = systemRuntimeVersion ?? throw new ArgumentNullException (nameof (systemRuntimeVersion));
 	}
 
 	/// <summary>

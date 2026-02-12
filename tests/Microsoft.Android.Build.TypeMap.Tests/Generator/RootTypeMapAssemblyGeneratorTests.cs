@@ -14,7 +14,7 @@ public class RootTypeMapAssemblyGeneratorTests
 	{
 		var outputPath = Path.Combine (Path.GetTempPath (), $"root-typemap-{Guid.NewGuid ():N}",
 			(assemblyName ?? "_Microsoft.Android.TypeMaps") + ".dll");
-		var generator = new RootTypeMapAssemblyGenerator (11);
+		var generator = new RootTypeMapAssemblyGenerator (new Version (11, 0, 0, 0));
 		generator.Generate (perAssemblyNames, outputPath, assemblyName);
 		return outputPath;
 	}

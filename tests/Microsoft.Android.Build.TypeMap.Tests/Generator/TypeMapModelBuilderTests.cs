@@ -1345,7 +1345,7 @@ public class ModelBuilderTests
 
 		var outputPath = Path.Combine (Path.GetTempPath (), $"fullpipeline-{Guid.NewGuid ():N}", "FullPipeline.dll");
 		try {
-			var emitter = new TypeMapAssemblyEmitter (11);
+			var emitter = new TypeMapAssemblyEmitter (new Version (11, 0, 0, 0));
 			emitter.Emit (model, outputPath);
 
 			Assert.True (File.Exists (outputPath));
@@ -1382,7 +1382,7 @@ public class ModelBuilderTests
 
 		var outputPath = Path.Combine (Path.GetTempPath (), $"attrcount-{Guid.NewGuid ():N}", "AttrCount.dll");
 		try {
-			var emitter = new TypeMapAssemblyEmitter (11);
+			var emitter = new TypeMapAssemblyEmitter (new Version (11, 0, 0, 0));
 			emitter.Emit (model, outputPath);
 
 			using var pe = new PEReader (File.OpenRead (outputPath));
@@ -1409,7 +1409,7 @@ public class ModelBuilderTests
 
 		var outputPath = Path.Combine (Path.GetTempPath (), $"ucoattr-{Guid.NewGuid ():N}", "UcoAttrTest.dll");
 		try {
-			var emitter = new TypeMapAssemblyEmitter (11);
+			var emitter = new TypeMapAssemblyEmitter (new Version (11, 0, 0, 0));
 			emitter.Emit (model, outputPath);
 
 			using var pe = new PEReader (File.OpenRead (outputPath));
@@ -1446,7 +1446,7 @@ public class ModelBuilderTests
 
 		var outputPath = Path.Combine (Path.GetTempPath (), $"ctor-{Guid.NewGuid ():N}", "CtorTest.dll");
 		try {
-			var emitter = new TypeMapAssemblyEmitter (11);
+			var emitter = new TypeMapAssemblyEmitter (new Version (11, 0, 0, 0));
 			emitter.Emit (model, outputPath);
 
 			using var pe = new PEReader (File.OpenRead (outputPath));
@@ -1483,7 +1483,7 @@ public class ModelBuilderTests
 
 		var outputPath = Path.Combine (Path.GetTempPath (), $"ctorsig-{Guid.NewGuid ():N}", "CtorSigTest.dll");
 		try {
-			var emitter = new TypeMapAssemblyEmitter (11);
+			var emitter = new TypeMapAssemblyEmitter (new Version (11, 0, 0, 0));
 			emitter.Emit (model, outputPath);
 
 			using var pe = new PEReader (File.OpenRead (outputPath));
@@ -1520,7 +1520,7 @@ public class ModelBuilderTests
 
 		var outputPath = Path.Combine (Path.GetTempPath (), $"generic-{Guid.NewGuid ():N}", "GenericTest.dll");
 		try {
-			var emitter = new TypeMapAssemblyEmitter (11);
+			var emitter = new TypeMapAssemblyEmitter (new Version (11, 0, 0, 0));
 			emitter.Emit (model, outputPath);
 
 			using var pe = new PEReader (File.OpenRead (outputPath));
@@ -1554,7 +1554,7 @@ public class ModelBuilderTests
 
 		var outputPath = Path.Combine (Path.GetTempPath (), $"mixedblob-{Guid.NewGuid ():N}", "MixedBlob.dll");
 		try {
-			var emitter = new TypeMapAssemblyEmitter (11);
+			var emitter = new TypeMapAssemblyEmitter (new Version (11, 0, 0, 0));
 			emitter.Emit (model, outputPath);
 
 			using var pe = new PEReader (File.OpenRead (outputPath));
@@ -1589,7 +1589,7 @@ public class ModelBuilderTests
 
 		var outputPath = Path.Combine (Path.GetTempPath (), $"blob2arg-{Guid.NewGuid ():N}", "Blob2Arg.dll");
 		try {
-			var emitter = new TypeMapAssemblyEmitter (11);
+			var emitter = new TypeMapAssemblyEmitter (new Version (11, 0, 0, 0));
 			emitter.Emit (model, outputPath);
 
 			using var pe = new PEReader (File.OpenRead (outputPath));
@@ -1617,7 +1617,7 @@ public class ModelBuilderTests
 
 		var outputPath = Path.Combine (Path.GetTempPath (), $"blob3arg-{Guid.NewGuid ():N}", "Blob3Arg.dll");
 		try {
-			var emitter = new TypeMapAssemblyEmitter (11);
+			var emitter = new TypeMapAssemblyEmitter (new Version (11, 0, 0, 0));
 			emitter.Emit (model, outputPath);
 
 			using var pe = new PEReader (File.OpenRead (outputPath));
@@ -1646,7 +1646,7 @@ public class ModelBuilderTests
 
 		var outputPath = Path.Combine (Path.GetTempPath (), $"blobacw-{Guid.NewGuid ():N}", "BlobAcw.dll");
 		try {
-			var emitter = new TypeMapAssemblyEmitter (11);
+			var emitter = new TypeMapAssemblyEmitter (new Version (11, 0, 0, 0));
 			emitter.Emit (model, outputPath);
 
 			using var pe = new PEReader (File.OpenRead (outputPath));
