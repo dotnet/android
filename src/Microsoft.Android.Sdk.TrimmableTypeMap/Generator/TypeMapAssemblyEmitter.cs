@@ -15,7 +15,13 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 sealed class TypeMapAssemblyEmitter
 {
 	readonly Dictionary<string, AssemblyReferenceHandle> _asmRefCache = new (StringComparer.OrdinalIgnoreCase);
-	readonly Dictionary<string, EntityHandle> _typeRefCache = new (StringComparer.Ordinal);
+	readonly Dictionary<(string Assembly, string Type), EntityHandle> _typeRefCache = new ();
+
+	// Reusable scratch BlobBuilders — avoids allocating a new one per method body / attribute / member ref.
+	// Each is Clear()'d before use. Safe because all emission is single-threaded and non-reentrant.
+	readonly BlobBuilder _sigBlob = new BlobBuilder (64);
+	readonly BlobBuilder _codeBlob = new BlobBuilder (256);
+	readonly BlobBuilder _attrBlob = new BlobBuilder (64);
 
 	readonly Version _systemRuntimeVersion;
 
@@ -42,6 +48,7 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _activateInstanceRef;
 	MemberReferenceHandle _registerMethodRef;
 	MemberReferenceHandle _ucoAttrCtorRef;
+	BlobHandle _ucoAttrBlobHandle;
 	MemberReferenceHandle _typeMapAttrCtorRef2Arg;
 	MemberReferenceHandle _typeMapAttrCtorRef3Arg;
 	MemberReferenceHandle _typeMapAssociationAttrCtorRef;
@@ -205,6 +212,12 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("UnmanagedCallersOnlyAttribute"));
 		_ucoAttrCtorRef = AddMemberRef (metadata, ucoAttrTypeRef, ".ctor",
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }));
+
+		// Pre-compute the UCO attribute blob — it's always the same 4 bytes (prolog + no named args)
+		_attrBlob.Clear ();
+		_attrBlob.WriteUInt16 (1);
+		_attrBlob.WriteUInt16 (0);
+		_ucoAttrBlobHandle = metadata.GetOrAddBlob (_attrBlob);
 
 		EmitTypeMapAttributeCtorRef (metadata);
 		EmitTypeMapAssociationAttributeCtorRef (metadata);
@@ -538,28 +551,28 @@ sealed class TypeMapAssemblyEmitter
 
 	void EmitTypeMapAttribute (MetadataBuilder metadata, TypeMapAttributeData entry)
 	{
-		var attrBlob = new BlobBuilder ();
-		attrBlob.WriteUInt16 (0x0001); // Prolog
-		attrBlob.WriteSerializedString (entry.JniName);
-		attrBlob.WriteSerializedString (entry.ProxyTypeReference);
+		_attrBlob.Clear ();
+		_attrBlob.WriteUInt16 (0x0001); // Prolog
+		_attrBlob.WriteSerializedString (entry.JniName);
+		_attrBlob.WriteSerializedString (entry.ProxyTypeReference);
 		if (!entry.IsUnconditional) {
-			attrBlob.WriteSerializedString (entry.TargetTypeReference!);
+			_attrBlob.WriteSerializedString (entry.TargetTypeReference!);
 		}
-		attrBlob.WriteUInt16 (0x0000); // NumNamed
+		_attrBlob.WriteUInt16 (0x0000); // NumNamed
 
 		var ctorRef = entry.IsUnconditional ? _typeMapAttrCtorRef2Arg : _typeMapAttrCtorRef3Arg;
-		metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorRef, metadata.GetOrAddBlob (attrBlob));
+		metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorRef, metadata.GetOrAddBlob (_attrBlob));
 	}
 
 	void EmitTypeMapAssociationAttribute (MetadataBuilder metadata, TypeMapAssociationData assoc)
 	{
-		var attrBlob = new BlobBuilder ();
-		attrBlob.WriteUInt16 (0x0001); // Prolog
-		attrBlob.WriteSerializedString (assoc.SourceTypeReference);
-		attrBlob.WriteSerializedString (assoc.AliasProxyTypeReference);
-		attrBlob.WriteUInt16 (0x0000); // NumNamed
+		_attrBlob.Clear ();
+		_attrBlob.WriteUInt16 (0x0001); // Prolog
+		_attrBlob.WriteSerializedString (assoc.SourceTypeReference);
+		_attrBlob.WriteSerializedString (assoc.AliasProxyTypeReference);
+		_attrBlob.WriteUInt16 (0x0000); // NumNamed
 		metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, _typeMapAssociationAttrCtorRef,
-			metadata.GetOrAddBlob (attrBlob));
+			metadata.GetOrAddBlob (_attrBlob));
 	}
 
 	// ---- IgnoresAccessChecksTo ----
@@ -595,11 +608,11 @@ sealed class TypeMapAssemblyEmitter
 			MetadataTokens.MethodDefinitionHandle (typeMethodStart));
 
 		foreach (var asmName in assemblyNames) {
-			var attrBlob = new BlobBuilder ();
-			attrBlob.WriteUInt16 (1);
-			attrBlob.WriteSerializedString (asmName);
-			attrBlob.WriteUInt16 (0);
-			metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorDef, metadata.GetOrAddBlob (attrBlob));
+			_attrBlob.Clear ();
+			_attrBlob.WriteUInt16 (1);
+			_attrBlob.WriteSerializedString (asmName);
+			_attrBlob.WriteUInt16 (0);
+			metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorDef, metadata.GetOrAddBlob (_attrBlob));
 		}
 	}
 
@@ -623,18 +636,17 @@ sealed class TypeMapAssemblyEmitter
 		return AddAssemblyRef (metadata, assemblyName, new Version (0, 0, 0, 0));
 	}
 
-	static MemberReferenceHandle AddMemberRef (MetadataBuilder metadata, EntityHandle parent, string name,
+	MemberReferenceHandle AddMemberRef (MetadataBuilder metadata, EntityHandle parent, string name,
 		Action<BlobEncoder> encodeSig)
 	{
-		var blob = new BlobBuilder ();
-		encodeSig (new BlobEncoder (blob));
-		return metadata.AddMemberReference (parent, metadata.GetOrAddString (name), metadata.GetOrAddBlob (blob));
+		_sigBlob.Clear ();
+		encodeSig (new BlobEncoder (_sigBlob));
+		return metadata.AddMemberReference (parent, metadata.GetOrAddString (name), metadata.GetOrAddBlob (_sigBlob));
 	}
 
 	EntityHandle ResolveTypeRef (MetadataBuilder metadata, TypeRefData typeRef)
 	{
-		// Cache key: "AssemblyName:ManagedTypeName" to avoid duplicate TypeRef rows
-		var cacheKey = $"{typeRef.AssemblyName}:{typeRef.ManagedTypeName}";
+		var cacheKey = (typeRef.AssemblyName, typeRef.ManagedTypeName);
 		if (_typeRefCache.TryGetValue (cacheKey, out var cached)) {
 			return cached;
 		}
@@ -659,10 +671,7 @@ sealed class TypeMapAssemblyEmitter
 
 	void AddUnmanagedCallersOnlyAttribute (MetadataBuilder metadata, MethodDefinitionHandle handle)
 	{
-		var attrBlob = new BlobBuilder ();
-		attrBlob.WriteUInt16 (1);
-		attrBlob.WriteUInt16 (0);
-		metadata.AddCustomAttribute (handle, _ucoAttrCtorRef, metadata.GetOrAddBlob (attrBlob));
+		metadata.AddCustomAttribute (handle, _ucoAttrCtorRef, _ucoAttrBlobHandle);
 	}
 
 	/// <summary>Emits a method body and definition in one call.</summary>
@@ -670,11 +679,11 @@ sealed class TypeMapAssemblyEmitter
 		string name, MethodAttributes attrs,
 		Action<BlobEncoder> encodeSig, Action<InstructionEncoder> emitIL)
 	{
-		var sigBlob = new BlobBuilder ();
-		encodeSig (new BlobEncoder (sigBlob));
+		_sigBlob.Clear ();
+		encodeSig (new BlobEncoder (_sigBlob));
 
-		var codeBuilder = new BlobBuilder ();
-		var encoder = new InstructionEncoder (codeBuilder);
+		_codeBlob.Clear ();
+		var encoder = new InstructionEncoder (_codeBlob);
 		emitIL (encoder);
 
 		while (ilBuilder.Count % 4 != 0) {
@@ -686,7 +695,7 @@ sealed class TypeMapAssemblyEmitter
 		return metadata.AddMethodDefinition (
 			attrs, MethodImplAttributes.IL,
 			metadata.GetOrAddString (name),
-			metadata.GetOrAddBlob (sigBlob),
+			metadata.GetOrAddBlob (_sigBlob),
 			bodyOffset, default);
 	}
 
