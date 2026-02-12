@@ -32,7 +32,7 @@ public class TypeMapAssemblyGeneratorTests
 	{
 		var outputPath = Path.Combine (Path.GetTempPath (), $"typemap-test-{Guid.NewGuid ():N}",
 			(assemblyName ?? "TestTypeMap") + ".dll");
-		var generator = new TypeMapAssemblyGenerator ();
+		var generator = new TypeMapAssemblyGenerator (11);
 		generator.Generate (peers, outputPath, assemblyName);
 		return outputPath;
 	}
@@ -456,7 +456,7 @@ public class TypeMapAssemblyGeneratorTests
 	[Fact]
 	public void Generate_NullPeers_ThrowsArgumentNull ()
 	{
-		var gen = new TypeMapAssemblyGenerator ();
+		var gen = new TypeMapAssemblyGenerator (11);
 		var tmpPath = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ("N"), "test.dll");
 		Assert.Throws<ArgumentNullException> (() => gen.Generate (null!, tmpPath));
 	}
@@ -464,7 +464,7 @@ public class TypeMapAssemblyGeneratorTests
 	[Fact]
 	public void Generate_NullOutputPath_ThrowsArgumentNull ()
 	{
-		var gen = new TypeMapAssemblyGenerator ();
+		var gen = new TypeMapAssemblyGenerator (11);
 		Assert.Throws<ArgumentNullException> (() => gen.Generate (Array.Empty<JavaPeerInfo> (), null!));
 	}
 

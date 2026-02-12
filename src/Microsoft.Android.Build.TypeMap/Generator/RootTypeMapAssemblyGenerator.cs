@@ -16,6 +16,14 @@ sealed class RootTypeMapAssemblyGenerator
 {
 	const string DefaultAssemblyName = "_Microsoft.Android.TypeMaps";
 
+	readonly Version _systemRuntimeVersion;
+
+	/// <param name="dotnetVersion">Target .NET version (e.g., 11 for .NET 11).</param>
+	public RootTypeMapAssemblyGenerator (int dotnetVersion)
+	{
+		_systemRuntimeVersion = new Version (dotnetVersion, 0, 0, 0);
+	}
+
 	/// <summary>
 	/// Generates the root typemap assembly.
 	/// </summary>
@@ -62,7 +70,7 @@ sealed class RootTypeMapAssemblyGenerator
 		// Assembly reference for System.Runtime (needed for Attribute base class)
 		var systemRuntimeRef = metadata.AddAssemblyReference (
 			metadata.GetOrAddString ("System.Runtime"),
-			new Version (11, 0, 0, 0), default, default, 0, default);
+			_systemRuntimeVersion, default, default, 0, default);
 
 		// <Module> type
 		metadata.AddTypeDefinition (

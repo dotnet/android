@@ -9,6 +9,14 @@ namespace Microsoft.Android.Build.TypeMap;
 /// </summary>
 sealed class TypeMapAssemblyGenerator
 {
+	readonly int _dotnetVersion;
+
+	/// <param name="dotnetVersion">Target .NET version (e.g., 11 for .NET 11).</param>
+	public TypeMapAssemblyGenerator (int dotnetVersion)
+	{
+		_dotnetVersion = dotnetVersion;
+	}
+
 	/// <summary>
 	/// Generates a TypeMap PE assembly from the given Java peer info records.
 	/// </summary>
@@ -18,7 +26,7 @@ sealed class TypeMapAssemblyGenerator
 	public void Generate (IReadOnlyList<JavaPeerInfo> peers, string outputPath, string? assemblyName = null)
 	{
 		var model = ModelBuilder.Build (peers, outputPath, assemblyName);
-		var emitter = new TypeMapAssemblyEmitter ();
+		var emitter = new TypeMapAssemblyEmitter (_dotnetVersion);
 		emitter.Emit (model, outputPath);
 	}
 }
