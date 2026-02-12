@@ -44,6 +44,53 @@ public class TypeMapAssemblyGeneratorTests
 		return (pe, pe.GetMetadataReader ());
 	}
 
+	/// <summary>
+	/// Reads the RegisterNatives method's IL body and extracts all (jniMethodName, jniSignature) pairs
+	/// from the ldstr instructions. RegisterNatives emits repeating sequences of:
+	///   ldarg.1; ldstr jniMethodName; ldstr jniSignature; ldftn wrapper; call RegisterMethod
+	/// </summary>
+	static List<(string jniMethodName, string jniSignature)> ReadRegisterNativesEntries (
+		PEReader pe, MetadataReader reader, TypeDefinition proxy)
+	{
+		var registerNatives = proxy.GetMethods ()
+			.Select (h => reader.GetMethodDefinition (h))
+			.First (m => reader.GetString (m.Name) == "RegisterNatives");
+
+		var body = pe.GetMethodBody (registerNatives.RelativeVirtualAddress);
+		var il = body.GetILBytes ()!;
+		var result = new List<(string, string)> ();
+		var strings = new List<string> ();
+
+		for (int i = 0; i < il.Length;) {
+			byte op = il [i++];
+			if (op == 0x72) { // ldstr
+				int token = il [i] | (il [i + 1] << 8) | (il [i + 2] << 16) | (il [i + 3] << 24);
+				i += 4;
+				var handle = MetadataTokens.UserStringHandle (token & 0x00FFFFFF);
+				strings.Add (reader.GetUserString (handle));
+			} else if (op == 0x28) { // call — marks end of a registration sequence
+				i += 4;
+				if (strings.Count >= 2) {
+					result.Add ((strings [strings.Count - 2], strings [strings.Count - 1]));
+				}
+				strings.Clear ();
+			} else if (op == 0xFE) { // two-byte opcode prefix (ldftn = 0xFE 0x06)
+				i++; // skip second opcode byte
+				if (i < il.Length && il [i - 1] == 0x06) { // ldftn has 4-byte token
+					i += 4;
+				}
+			} else if (op >= 0x02 && op <= 0x05) { // ldarg.0-3 — no operand
+				// skip
+			} else if (op == 0x0E) { // ldarg.s — 1-byte operand
+				i++;
+			} else if (op == 0x00 || op == 0x01 || op == 0x2A) { // nop, break, ret — no operand
+				// skip
+			}
+		}
+
+		return result;
+	}
+
 
 	public class BasicAssemblyStructure
 	{
@@ -481,6 +528,119 @@ public class TypeMapAssemblyGeneratorTests
 						Assert.True (wrapper.RelativeVirtualAddress > 0,
 							$"Export marshal method '{reader.GetString (wrapper.Name)}' should have a method body");
 					}
+				}
+			} finally {
+				CleanUp (path);
+			}
+		}
+
+	}
+
+	public class ExportNativeRegistration
+	{
+
+		[Fact]
+		public void Generate_ExportMethods_RegisteredInRegisterNatives ()
+		{
+			var peers = ScanFixtures ();
+			var peer = peers.First (p => p.JavaName == "my/app/ExportMembersComprehensive");
+			var path = GenerateAssembly (new [] { peer }, "ExportRegistration");
+			try {
+				var (pe, reader) = OpenAssembly (path);
+				using (pe) {
+					var proxy = reader.TypeDefinitions
+						.Select (h => reader.GetTypeDefinition (h))
+						.First (t => reader.GetString (t.Name) == "MyApp_ExportMembersComprehensive_Proxy");
+
+					var entries = ReadRegisterNativesEntries (pe, reader, proxy);
+					var jniNames = entries.Select (e => e.jniMethodName).ToList ();
+
+					Assert.Contains ("n_methodNamesNotMangled", jniNames);
+					Assert.Contains ("n_CompletelyDifferentName", jniNames);
+					Assert.Contains ("n_methodThatThrows", jniNames);
+					Assert.Contains ("n_methodThatThrowsEmptyArray", jniNames);
+				}
+			} finally {
+				CleanUp (path);
+			}
+		}
+
+		[Fact]
+		public void Generate_ExportConstructors_RegisteredInRegisterNatives ()
+		{
+			var peers = ScanFixtures ();
+			var peer = peers.First (p => p.JavaName == "my/app/ExportsConstructors");
+			var path = GenerateAssembly (new [] { peer }, "ExportCtorRegistration");
+			try {
+				var (pe, reader) = OpenAssembly (path);
+				using (pe) {
+					var proxy = reader.TypeDefinitions
+						.Select (h => reader.GetTypeDefinition (h))
+						.First (t => reader.GetString (t.Name) == "MyApp_ExportsConstructors_Proxy");
+
+					var entries = ReadRegisterNativesEntries (pe, reader, proxy);
+					var jniNames = entries.Select (e => e.jniMethodName).ToList ();
+
+					// Two [Export] constructors → nctor_0, nctor_1
+					Assert.Contains ("nctor_0", jniNames);
+					Assert.Contains ("nctor_1", jniNames);
+				}
+			} finally {
+				CleanUp (path);
+			}
+		}
+
+		[Fact]
+		public void Generate_StaticExportAndExportField_RegisteredInRegisterNatives ()
+		{
+			var peers = ScanFixtures ();
+			var peer = peers.First (p => p.JavaName == "my/app/ExportStaticAndFields");
+			var path = GenerateAssembly (new [] { peer }, "StaticExportRegistration");
+			try {
+				var (pe, reader) = OpenAssembly (path);
+				using (pe) {
+					var proxy = reader.TypeDefinitions
+						.Select (h => reader.GetTypeDefinition (h))
+						.First (t => reader.GetString (t.Name) == "MyApp_ExportStaticAndFields_Proxy");
+
+					var entries = ReadRegisterNativesEntries (pe, reader, proxy);
+					var jniNames = entries.Select (e => e.jniMethodName).ToList ();
+
+					// Static [Export] method
+					Assert.Contains ("n_staticMethodNotMangled", jniNames);
+					// Instance [Export] method
+					Assert.Contains ("n_instanceMethod", jniNames);
+					// [ExportField] backing methods
+					Assert.Contains ("n_GetInstance", jniNames);
+					Assert.Contains ("n_GetValue", jniNames);
+				}
+			} finally {
+				CleanUp (path);
+			}
+		}
+
+		[Fact]
+		public void Generate_ExportRegistration_HasCorrectJniSignatures ()
+		{
+			var peers = ScanFixtures ();
+			var peer = peers.First (p => p.JavaName == "my/app/ExportMembersComprehensive");
+			var path = GenerateAssembly (new [] { peer }, "ExportSignatures");
+			try {
+				var (pe, reader) = OpenAssembly (path);
+				using (pe) {
+					var proxy = reader.TypeDefinitions
+						.Select (h => reader.GetTypeDefinition (h))
+						.First (t => reader.GetString (t.Name) == "MyApp_ExportMembersComprehensive_Proxy");
+
+					var entries = ReadRegisterNativesEntries (pe, reader, proxy);
+
+					// CompletelyDifferentName(String, int) → String  =  (Ljava/lang/String;I)Ljava/lang/String;
+					var nameOverride = entries.First (e => e.jniMethodName == "n_CompletelyDifferentName");
+					Assert.Equal ("(Ljava/lang/String;I)Ljava/lang/String;", nameOverride.jniSignature);
+
+					// void methodNamesNotMangled()  =  ()V
+					var simple = entries.First (e => e.jniMethodName == "n_methodNamesNotMangled");
+					Assert.Equal ("()V", simple.jniSignature);
 				}
 			} finally {
 				CleanUp (path);
