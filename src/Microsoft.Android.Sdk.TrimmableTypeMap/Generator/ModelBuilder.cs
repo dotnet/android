@@ -235,6 +235,12 @@ static class ModelBuilder
 				continue;
 			}
 
+			// [Export] methods have no n_* callback on the declaring type — skip them.
+			// TODO: generate full marshal method body for [Export] methods (parameter marshaling + managed call)
+			if (mm.Connector == null) {
+				continue;
+			}
+
 			proxy.UcoMethods.Add (new UcoMethodData {
 				WrapperName = $"n_{mm.JniName}_uco_{ucoIndex}",
 				CallbackMethodName = mm.NativeCallbackName,
@@ -254,7 +260,22 @@ static class ModelBuilder
 			return;
 		}
 
+		// Build a set of [Register] constructor signatures (Connector != null).
+		// [Export] constructors (Connector == null) don't get UCO wrappers —
+		// they use TypeManager.Activate in the JCW instead.
+		// TODO: generate full marshal body for [Export] constructors
+		var registerCtorSignatures = new HashSet<string> (StringComparer.Ordinal);
+		foreach (var mm in peer.MarshalMethods) {
+			if (mm.IsConstructor && mm.Connector != null) {
+				registerCtorSignatures.Add (mm.JniSignature);
+			}
+		}
+
 		foreach (var ctor in peer.JavaConstructors) {
+			if (!registerCtorSignatures.Contains (ctor.JniSignature)) {
+				continue;
+			}
+
 			proxy.UcoConstructors.Add (new UcoConstructorData {
 				WrapperName = $"nctor_{ctor.ConstructorIndex}_uco",
 				JniSignature = ctor.JniSignature,

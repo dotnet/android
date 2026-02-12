@@ -222,6 +222,18 @@ sealed class JavaConstructorInfo
 	/// Null for [Register] constructors.
 	/// </summary>
 	public string? SuperArgumentsString { get; set; }
+
+	/// <summary>
+	/// Whether this constructor is from [Export] attribute.
+	/// [Export] constructors use TypeManager.Activate instead of nctor_N.
+	/// </summary>
+	public bool IsExport { get; set; }
+
+	/// <summary>
+	/// For [Export] constructors: Java exception types that the constructor declares it can throw.
+	/// Null for [Register] constructors.
+	/// </summary>
+	public IReadOnlyList<string>? ThrownNames { get; set; }
 }
 
 /// <summary>

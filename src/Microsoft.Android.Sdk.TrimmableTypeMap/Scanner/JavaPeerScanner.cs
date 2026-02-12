@@ -277,14 +277,26 @@ sealed class JavaPeerScanner : IDisposable
 			return;
 		}
 
+		var methodName = index.Reader.GetString (methodDef.Name);
+		var jniSignature = registerInfo.Signature ?? "()V";
+		var parameters = ParseJniParameters (jniSignature);
+
+		// For [Export] methods, populate ManagedType from the actual method signature
+		// (needed for TypeManager.Activate call in JCW)
+		if (registerInfo.Connector == null) {
+			var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+			for (int i = 0; i < parameters.Count && i < sig.ParameterTypes.Length; i++) {
+				parameters [i].ManagedType = ManagedTypeToAssemblyQualifiedName (sig.ParameterTypes [i]);
+			}
+		}
 		methods.Add (new MarshalMethodInfo {
 			JniName = registerInfo.JniName,
 			JniSignature = registerInfo.Signature ?? "()V",
 			Connector = registerInfo.Connector,
-			ManagedMethodName = index.Reader.GetString (methodDef.Name),
-			NativeCallbackName = "n_" + index.Reader.GetString (methodDef.Name),
-			JniReturnType = JniSignatureHelper.ParseReturnTypeString (registerInfo.Signature ?? "()V"),
-			Parameters = ParseJniParameters (registerInfo.Signature ?? "()V"),
+			ManagedMethodName = methodName,
+			NativeCallbackName = string.Concat ("n_", methodName),
+			JniReturnType = JniSignatureHelper.ParseReturnTypeString (jniSignature),
+			Parameters = parameters,
 			IsConstructor = registerInfo.JniName == "<init>" || registerInfo.JniName == ".ctor",
 			ThrownNames = exportInfo?.ThrownNames,
 			SuperArgumentsString = exportInfo?.SuperArgumentsString,
@@ -448,6 +460,40 @@ sealed class JavaPeerScanner : IDisposable
 				return $"[{ManagedTypeToJniDescriptor (managedType.Substring (0, managedType.Length - 2))}";
 			}
 			return "Ljava/lang/Object;";
+		}
+	}
+
+	/// <summary>
+	/// Maps a managed type name (from SignatureTypeProvider) to an assembly-qualified name
+	/// like "System.Int32, System.Private.CoreLib" used in TypeManager.Activate calls.
+	/// </summary>
+	static string ManagedTypeToAssemblyQualifiedName (string managedType)
+	{
+		// BCL types all live in System.Private.CoreLib
+		switch (managedType) {
+		case "System.Void":
+		case "System.Boolean":
+		case "System.Byte":
+		case "System.SByte":
+		case "System.Char":
+		case "System.Int16":
+		case "System.UInt16":
+		case "System.Int32":
+		case "System.UInt32":
+		case "System.Int64":
+		case "System.UInt64":
+		case "System.Single":
+		case "System.Double":
+		case "System.String":
+		case "System.Object":
+		case "System.IntPtr":
+		case "System.UIntPtr":
+			return managedType + ", System.Private.CoreLib";
+		default:
+			// For non-BCL types, we don't know the assembly at this point.
+			// This is a best-effort mapping; full assembly resolution for
+			// arbitrary types is a follow-up.
+			return managedType;
 		}
 	}
 
@@ -815,6 +861,8 @@ sealed class JavaPeerScanner : IDisposable
 				ConstructorIndex = ctorIndex,
 				Parameters = mm.Parameters,
 				SuperArgumentsString = mm.SuperArgumentsString,
+				IsExport = mm.Connector == null,
+				ThrownNames = mm.ThrownNames,
 			});
 			ctorIndex++;
 		}
