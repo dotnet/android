@@ -31,7 +31,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	static Lazy<ManagedValueManager> s_instance = new (() => new ManagedValueManager ());
 	
-	public static ManagedValueManager GetOrCreateInstance () => s_instance.Value;
+	public static ManagedValueManager Instance => s_instance.Value;
 	
 	static ManagedValueManager? GetInstanceIfCreated () => s_instance.IsValueCreated ? s_instance.Value : null;
 
@@ -56,9 +56,6 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	public override void WaitForGCBridgeProcessing ()
 	{
-		// Drain any pending contexts that were enqueued during bridge processing.
-		// This ensures synchronous cleanup when explicitly requested (e.g., in tests).
-		CollectPeers ();
 	}
 
 	public unsafe override void CollectPeers ()
