@@ -32,15 +32,19 @@ sealed class TypeMapAssemblyEmitter
 	TypeReferenceHandle _runtimeTypeHandleRef;
 	TypeReferenceHandle _jniTypeRef;
 	TypeReferenceHandle _trimmableNativeRegistrationRef;
+	TypeReferenceHandle _notSupportedExceptionRef;
+	TypeReferenceHandle _runtimeHelpersRef;
 
 	MemberReferenceHandle _baseCtorRef;
 	MemberReferenceHandle _getTypeFromHandleRef;
-	MemberReferenceHandle _createManagedPeerRef;
+	MemberReferenceHandle _getUninitializedObjectRef;
+	MemberReferenceHandle _notSupportedExceptionCtorRef;
 	MemberReferenceHandle _activateInstanceRef;
 	MemberReferenceHandle _registerMethodRef;
 	MemberReferenceHandle _ucoAttrCtorRef;
 	MemberReferenceHandle _typeMapAttrCtorRef2Arg;
 	MemberReferenceHandle _typeMapAttrCtorRef3Arg;
+	MemberReferenceHandle _typeMapAssociationAttrCtorRef;
 
 	/// <summary>
 	/// Creates a new emitter.
@@ -92,6 +96,10 @@ sealed class TypeMapAssemblyEmitter
 
 		foreach (var entry in model.Entries) {
 			EmitTypeMapAttribute (metadata, entry);
+		}
+
+		foreach (var assoc in model.Associations) {
+			EmitTypeMapAssociationAttribute (metadata, assoc);
 		}
 
 		EmitIgnoresAccessChecksToAttribute (metadata, ilBuilder, model.IgnoresAccessChecksTo);
@@ -148,6 +156,10 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniType"));
 		_trimmableNativeRegistrationRef = metadata.AddTypeReference (_monoAndroidRef,
 			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("TrimmableNativeRegistration"));
+		_notSupportedExceptionRef = metadata.AddTypeReference (_systemRuntimeRef,
+			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("NotSupportedException"));
+		_runtimeHelpersRef = metadata.AddTypeReference (_systemRuntimeRef,
+			metadata.GetOrAddString ("System.Runtime.CompilerServices"), metadata.GetOrAddString ("RuntimeHelpers"));
 	}
 
 	void EmitMemberReferences (MetadataBuilder metadata)
@@ -160,14 +172,15 @@ sealed class TypeMapAssemblyEmitter
 				rt => rt.Type ().Type (_systemTypeRef, false),
 				p => p.AddParameter ().Type ().Type (_runtimeTypeHandleRef, true)));
 
-		_createManagedPeerRef = AddMemberRef (metadata, _trimmableNativeRegistrationRef, "CreateManagedPeer",
-			sig => sig.MethodSignature ().Parameters (3,
-				rt => rt.Type ().Type (_iJavaPeerableRef, false),
-				p => {
-					p.AddParameter ().Type ().IntPtr ();
-					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
-					p.AddParameter ().Type ().Type (_systemTypeRef, false);
-				}));
+		_getUninitializedObjectRef = AddMemberRef (metadata, _runtimeHelpersRef, "GetUninitializedObject",
+			sig => sig.MethodSignature ().Parameters (1,
+				rt => rt.Type ().Object (),
+				p => p.AddParameter ().Type ().Type (_systemTypeRef, false)));
+
+		_notSupportedExceptionCtorRef = AddMemberRef (metadata, _notSupportedExceptionRef, ".ctor",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
+				rt => rt.Void (),
+				p => p.AddParameter ().Type ().String ()));
 
 		_activateInstanceRef = AddMemberRef (metadata, _trimmableNativeRegistrationRef, "ActivateInstance",
 			sig => sig.MethodSignature ().Parameters (2,
@@ -194,6 +207,7 @@ sealed class TypeMapAssemblyEmitter
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }));
 
 		EmitTypeMapAttributeCtorRef (metadata);
+		EmitTypeMapAssociationAttributeCtorRef (metadata);
 	}
 
 	void EmitTypeMapAttributeCtorRef (MetadataBuilder metadata)
@@ -228,6 +242,23 @@ sealed class TypeMapAssemblyEmitter
 				rt => rt.Void (),
 				p => {
 					p.AddParameter ().Type ().String ();
+					p.AddParameter ().Type ().Type (_systemTypeRef, false);
+					p.AddParameter ().Type ().Type (_systemTypeRef, false);
+				}));
+	}
+
+	void EmitTypeMapAssociationAttributeCtorRef (MetadataBuilder metadata)
+	{
+		// TypeMapAssociationAttribute is in System.Runtime.InteropServices, takes 2 Type args:
+		// TypeMapAssociation(Type sourceType, Type aliasProxyType)
+		var typeMapAssociationAttrRef = metadata.AddTypeReference (_systemRuntimeInteropServicesRef,
+			metadata.GetOrAddString ("System.Runtime.InteropServices"),
+			metadata.GetOrAddString ("TypeMapAssociationAttribute"));
+
+		_typeMapAssociationAttrCtorRef = AddMemberRef (metadata, typeMapAssociationAttrRef, ".ctor",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+				rt => rt.Void (),
+				p => {
 					p.AddParameter ().Type ().Type (_systemTypeRef, false);
 					p.AddParameter ().Type ().Type (_systemTypeRef, false);
 				}));
@@ -318,29 +349,110 @@ sealed class TypeMapAssemblyEmitter
 			return;
 		}
 
-		// For interface proxies with an invoker type, CreateInstance instantiates the invoker
-		// (e.g., IOnClickListenerInvoker), not the interface itself. For regular types, it
-		// instantiates the target type directly.
-		var activatedType = proxy.InvokerType ?? proxy.TargetType;
-		var activatedTypeRef = ResolveTypeRef (metadata, activatedType);
+		// Generic type definitions cannot be instantiated
+		if (proxy.IsGenericDefinition) {
+			EmitBody (metadata, ilBuilder, "CreateInstance",
+				MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+					rt => rt.Type ().Type (_iJavaPeerableRef, false),
+					p => {
+						p.AddParameter ().Type ().IntPtr ();
+						p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+					}),
+				encoder => {
+					encoder.LoadString (metadata.GetOrAddUserString ("Cannot create instance of open generic type."));
+					encoder.OpCode (ILOpCode.Newobj);
+					encoder.Token (_notSupportedExceptionCtorRef);
+					encoder.OpCode (ILOpCode.Throw);
+				});
+			return;
+		}
 
-		EmitBody (metadata, ilBuilder, "CreateInstance",
-			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
+		// Interface with invoker: new TInvoker(IntPtr, JniHandleOwnership)
+		if (proxy.InvokerType != null) {
+			var invokerTypeRef = ResolveTypeRef (metadata, proxy.InvokerType);
+			var invokerCtorRef = AddActivationCtorRef (metadata, invokerTypeRef);
+			EmitBody (metadata, ilBuilder, "CreateInstance",
+				MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+					rt => rt.Type ().Type (_iJavaPeerableRef, false),
+					p => {
+						p.AddParameter ().Type ().IntPtr ();
+						p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+					}),
+				encoder => {
+					encoder.OpCode (ILOpCode.Ldarg_1);
+					encoder.OpCode (ILOpCode.Ldarg_2);
+					encoder.OpCode (ILOpCode.Newobj);
+					encoder.Token (invokerCtorRef);
+					encoder.OpCode (ILOpCode.Ret);
+				});
+			return;
+		}
+
+		// Non-interface type with activation ctor
+		var targetTypeRef = ResolveTypeRef (metadata, proxy.TargetType);
+
+		if (proxy.ActivationCtor != null && proxy.ActivationCtor.IsOnLeafType) {
+			// Leaf type has its own ctor: new T(IntPtr, JniHandleOwnership)
+			var ctorRef = AddActivationCtorRef (metadata, targetTypeRef);
+			EmitBody (metadata, ilBuilder, "CreateInstance",
+				MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+					rt => rt.Type ().Type (_iJavaPeerableRef, false),
+					p => {
+						p.AddParameter ().Type ().IntPtr ();
+						p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+					}),
+				encoder => {
+					encoder.OpCode (ILOpCode.Ldarg_1);
+					encoder.OpCode (ILOpCode.Ldarg_2);
+					encoder.OpCode (ILOpCode.Newobj);
+					encoder.Token (ctorRef);
+					encoder.OpCode (ILOpCode.Ret);
+				});
+		} else if (proxy.ActivationCtor != null) {
+			// Inherited ctor: GetUninitializedObject(typeof(T)) + call Base::.ctor(IntPtr, JniHandleOwnership)
+			var baseCtorTypeRef = ResolveTypeRef (metadata, proxy.ActivationCtor.DeclaringType);
+			var baseActivationCtorRef = AddActivationCtorRef (metadata, baseCtorTypeRef);
+			EmitBody (metadata, ilBuilder, "CreateInstance",
+				MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+					rt => rt.Type ().Type (_iJavaPeerableRef, false),
+					p => {
+						p.AddParameter ().Type ().IntPtr ();
+						p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+					}),
+				encoder => {
+					// var obj = (TargetType)RuntimeHelpers.GetUninitializedObject(typeof(TargetType));
+					encoder.OpCode (ILOpCode.Ldtoken);
+					encoder.Token (targetTypeRef);
+					encoder.Call (_getTypeFromHandleRef);
+					encoder.Call (_getUninitializedObjectRef);
+					encoder.OpCode (ILOpCode.Castclass);
+					encoder.Token (targetTypeRef);
+
+					// obj.Base::.ctor(handle, transfer) — direct call to inherited ctor
+					encoder.OpCode (ILOpCode.Dup);
+					encoder.OpCode (ILOpCode.Ldarg_1);
+					encoder.OpCode (ILOpCode.Ldarg_2);
+					encoder.Call (baseActivationCtorRef);
+
+					// return obj;
+					encoder.OpCode (ILOpCode.Ret);
+				});
+		}
+	}
+
+	MemberReferenceHandle AddActivationCtorRef (MetadataBuilder metadata, EntityHandle declaringTypeRef)
+	{
+		return AddMemberRef (metadata, declaringTypeRef, ".ctor",
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
-				rt => rt.Type ().Type (_iJavaPeerableRef, false),
+				rt => rt.Void (),
 				p => {
 					p.AddParameter ().Type ().IntPtr ();
 					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
-				}),
-			encoder => {
-				encoder.OpCode (ILOpCode.Ldarg_1);
-				encoder.OpCode (ILOpCode.Ldarg_2);
-				encoder.OpCode (ILOpCode.Ldtoken);
-				encoder.Token (activatedTypeRef);
-				encoder.Call (_getTypeFromHandleRef);
-				encoder.Call (_createManagedPeerRef);
-				encoder.OpCode (ILOpCode.Ret);
-			});
+				}));
 	}
 
 	void EmitTypeGetter (MetadataBuilder metadata, BlobBuilder ilBuilder, string methodName,
@@ -485,6 +597,17 @@ sealed class TypeMapAssemblyEmitter
 			metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, _typeMapAttrCtorRef3Arg,
 				metadata.GetOrAddBlob (attrBlob));
 		}
+	}
+
+	void EmitTypeMapAssociationAttribute (MetadataBuilder metadata, TypeMapAssociationData assoc)
+	{
+		var attrBlob = new BlobBuilder ();
+		attrBlob.WriteUInt16 (0x0001); // Prolog
+		attrBlob.WriteSerializedString (assoc.SourceTypeReference);
+		attrBlob.WriteSerializedString (assoc.AliasProxyTypeReference);
+		attrBlob.WriteUInt16 (0x0000); // NumNamed
+		metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, _typeMapAssociationAttrCtorRef,
+			metadata.GetOrAddBlob (attrBlob));
 	}
 
 	// ---- IgnoresAccessChecksTo ----

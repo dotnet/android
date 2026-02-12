@@ -22,6 +22,9 @@ sealed class TypeMapAssemblyData
 	/// <summary>Proxy types to emit in the assembly.</summary>
 	public List<JavaPeerProxyData> ProxyTypes { get; } = new ();
 
+	/// <summary>TypeMapAssociation entries for alias groups (multiple managed types → same JNI name).</summary>
+	public List<TypeMapAssociationData> Associations { get; } = new ();
+
 	/// <summary>Assembly names that need [IgnoresAccessChecksTo] for cross-assembly n_* calls.</summary>
 	public List<string> IgnoresAccessChecksTo { get; } = new ();
 }
@@ -74,6 +77,15 @@ sealed class JavaPeerProxyData
 
 	/// <summary>Whether this proxy has a CreateInstance that can actually create instances (has activation ctor).</summary>
 	public bool HasActivation { get; set; }
+
+	/// <summary>
+	/// Activation constructor details. Determines how CreateInstance instantiates the managed peer.
+	/// Null when HasActivation is false.
+	/// </summary>
+	public ActivationCtorData? ActivationCtor { get; set; }
+
+	/// <summary>True if this is an open generic type definition. CreateInstance throws NotSupportedException.</summary>
+	public bool IsGenericDefinition { get; set; }
 
 	/// <summary>Whether this proxy needs ACW support (RegisterNatives + UCO wrappers).</summary>
 	public bool IsAcw { get; set; }
@@ -151,4 +163,32 @@ sealed class NativeRegistrationData
 
 	/// <summary>Name of the UCO wrapper method whose function pointer to register.</summary>
 	public string WrapperMethodName { get; set; } = "";
+}
+
+/// <summary>
+/// Describes how the proxy's CreateInstance should construct the managed peer.
+/// </summary>
+sealed class ActivationCtorData
+{
+	/// <summary>Type that declares the activation constructor (may be a base type).</summary>
+	public TypeRefData DeclaringType { get; set; } = new ();
+
+	/// <summary>True when the leaf type itself declares the activation ctor.</summary>
+	public bool IsOnLeafType { get; set; }
+
+	/// <summary>The style of activation ctor (XamarinAndroid or JavaInterop).</summary>
+	public ActivationCtorStyle Style { get; set; }
+}
+
+/// <summary>
+/// One [assembly: TypeMapAssociation(typeof(Source), typeof(AliasProxy))] entry.
+/// Links a managed type to the proxy that holds its alias TypeMap entry.
+/// </summary>
+sealed class TypeMapAssociationData
+{
+	/// <summary>Assembly-qualified source type reference (the managed alias type).</summary>
+	public string SourceTypeReference { get; set; } = "";
+
+	/// <summary>Assembly-qualified proxy type reference (the alias holder proxy).</summary>
+	public string AliasProxyTypeReference { get; set; } = "";
 }
