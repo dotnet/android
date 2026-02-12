@@ -1000,7 +1000,7 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
   <data name="XA1040" xml:space="preserve">
     <value>Środowisko uruchomieniowe {0} w systemie Android jest funkcją eksperymentalną i nie nadaje się jeszcze do użycia w środowisku produkcyjnym. Problemy z plikami na stronie: https://github.com/dotnet/android/issues</value>
     <comment>The following are literal names and should not be translated: .NET.
-{0} - The name of the .NET runtime, such as CoreCLR or NativeAOT.</comment>
+{0} - The name of the .NET runtime, such as NativeAOT.</comment>
   </data>
   <data name="XA1041" xml:space="preserve">
     <value>Właściwość MSBuild „{0}” ma nieprawidłową wartość, która wynosi „{1}”. Oczekuje się, że wartością będzie ścieżka katalogu reprezentująca względną lokalizację aktywów lub zasobów.</value>
