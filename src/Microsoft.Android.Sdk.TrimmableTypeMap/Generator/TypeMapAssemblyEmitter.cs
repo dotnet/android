@@ -40,6 +40,13 @@ sealed class TypeMapAssemblyEmitter
 	TypeReferenceHandle _trimmableNativeRegistrationRef;
 	TypeReferenceHandle _notSupportedExceptionRef;
 	TypeReferenceHandle _runtimeHelpersRef;
+	TypeReferenceHandle _jniEnvironmentRef;
+	TypeReferenceHandle _jniTransitionRef;
+	TypeReferenceHandle _jniRuntimeRef;
+	TypeReferenceHandle _javaLangObjectRef;
+	TypeReferenceHandle _jniEnvRef;
+	TypeReferenceHandle _systemExceptionRef;
+	TypeReferenceHandle _iJavaObjectRef;
 
 	MemberReferenceHandle _baseCtorRef;
 	MemberReferenceHandle _getTypeFromHandleRef;
@@ -52,6 +59,12 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _typeMapAttrCtorRef2Arg;
 	MemberReferenceHandle _typeMapAttrCtorRef3Arg;
 	MemberReferenceHandle _typeMapAssociationAttrCtorRef;
+	MemberReferenceHandle _beginMarshalMethodRef;
+	MemberReferenceHandle _endMarshalMethodRef;
+	MemberReferenceHandle _onUserUnhandledExceptionRef;
+	MemberReferenceHandle _jniEnvGetStringRef;
+	MemberReferenceHandle _jniEnvNewStringRef;
+	MemberReferenceHandle _jniEnvToLocalJniHandleRef;
 
 	/// <summary>
 	/// Creates a new emitter.
@@ -167,6 +180,20 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("NotSupportedException"));
 		_runtimeHelpersRef = metadata.AddTypeReference (_systemRuntimeRef,
 			metadata.GetOrAddString ("System.Runtime.CompilerServices"), metadata.GetOrAddString ("RuntimeHelpers"));
+		_jniEnvironmentRef = metadata.AddTypeReference (_javaInteropRef,
+			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniEnvironment"));
+		_jniTransitionRef = metadata.AddTypeReference (_javaInteropRef,
+			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniTransition"));
+		_jniRuntimeRef = metadata.AddTypeReference (_javaInteropRef,
+			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniRuntime"));
+		_javaLangObjectRef = metadata.AddTypeReference (_monoAndroidRef,
+			metadata.GetOrAddString ("Java.Lang"), metadata.GetOrAddString ("Object"));
+		_jniEnvRef = metadata.AddTypeReference (_monoAndroidRef,
+			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("JNIEnv"));
+		_systemExceptionRef = metadata.AddTypeReference (_systemRuntimeRef,
+			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Exception"));
+		_iJavaObjectRef = metadata.AddTypeReference (_javaInteropRef,
+			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("IJavaObject"));
 	}
 
 	void EmitMemberReferences (MetadataBuilder metadata)
@@ -218,6 +245,53 @@ sealed class TypeMapAssemblyEmitter
 		_attrBlob.WriteUInt16 (1);
 		_attrBlob.WriteUInt16 (0);
 		_ucoAttrBlobHandle = metadata.GetOrAddBlob (_attrBlob);
+
+		// Marshal method support: BeginMarshalMethod, EndMarshalMethod, GetObject, GetString, etc.
+		// BeginMarshalMethod(IntPtr jnienv, out JniTransition, out JniRuntime) : bool
+		_beginMarshalMethodRef = AddMemberRef (metadata, _jniEnvironmentRef, "BeginMarshalMethod",
+			sig => sig.MethodSignature ().Parameters (3,
+				rt => rt.Type ().Boolean (),
+				p => {
+					p.AddParameter ().Type ().IntPtr ();
+					p.AddParameter ().Type (isByRef: true).Type (_jniTransitionRef, true);
+					p.AddParameter ().Type (isByRef: true).Type (_jniRuntimeRef, false);
+				}));
+
+		// EndMarshalMethod(ref JniTransition)
+		_endMarshalMethodRef = AddMemberRef (metadata, _jniEnvironmentRef, "EndMarshalMethod",
+			sig => sig.MethodSignature ().Parameters (1,
+				rt => rt.Void (),
+				p => p.AddParameter ().Type (isByRef: true).Type (_jniTransitionRef, true)));
+
+		// JniRuntime.OnUserUnhandledException(ref JniTransition, Exception) — virtual instance method
+		_onUserUnhandledExceptionRef = AddMemberRef (metadata, _jniRuntimeRef, "OnUserUnhandledException",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+				rt => rt.Void (),
+				p => {
+					p.AddParameter ().Type (isByRef: true).Type (_jniTransitionRef, true);
+					p.AddParameter ().Type ().Type (_systemExceptionRef, false);
+				}));
+
+		// JNIEnv.GetString(IntPtr, JniHandleOwnership) : string
+		_jniEnvGetStringRef = AddMemberRef (metadata, _jniEnvRef, "GetString",
+			sig => sig.MethodSignature ().Parameters (2,
+				rt => rt.Type ().String (),
+				p => {
+					p.AddParameter ().Type ().IntPtr ();
+					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+				}));
+
+		// JNIEnv.NewString(string) : IntPtr
+		_jniEnvNewStringRef = AddMemberRef (metadata, _jniEnvRef, "NewString",
+			sig => sig.MethodSignature ().Parameters (1,
+				rt => rt.Type ().IntPtr (),
+				p => p.AddParameter ().Type ().String ()));
+
+		// JNIEnv.ToLocalJniHandle(IJavaObject) : IntPtr
+		_jniEnvToLocalJniHandleRef = AddMemberRef (metadata, _jniEnvRef, "ToLocalJniHandle",
+			sig => sig.MethodSignature ().Parameters (1,
+				rt => rt.Type ().IntPtr (),
+				p => p.AddParameter ().Type ().Type (_iJavaObjectRef, false)));
 
 		EmitTypeMapAttributeCtorRef (metadata);
 		EmitTypeMapAssociationAttributeCtorRef (metadata);
@@ -336,6 +410,12 @@ sealed class TypeMapAssemblyEmitter
 		foreach (var uco in proxy.UcoConstructors) {
 			var handle = EmitUcoConstructor (metadata, ilBuilder, uco);
 			wrapperHandles [uco.WrapperName] = handle;
+		}
+
+		// Export marshal method wrappers (full marshal body)
+		foreach (var export in proxy.ExportMarshalMethods) {
+			var handle = EmitExportMarshalMethod (metadata, ilBuilder, export);
+			wrapperHandles [export.WrapperName] = handle;
 		}
 
 		// RegisterNatives
@@ -526,7 +606,358 @@ sealed class TypeMapAssemblyEmitter
 		return handle;
 	}
 
-	// ---- RegisterNatives ----
+	// ---- Export marshal method wrappers ----
+
+	/// <summary>
+	/// Emits a full marshal method body for an [Export] method or constructor.
+	/// Pattern:
+	///   static RetType n_Method(IntPtr jnienv, IntPtr native__this, <JNI params...>) {
+	///     if (!JniEnvironment.BeginMarshalMethod(jnienv, out var __envp, out var __r)) return default;
+	///     try {
+	///       var __this = Object.GetObject&lt;T&gt;(jnienv, native__this, DoNotTransfer);
+	///       // unmarshal params, call managed method, marshal return
+	///     } catch (Exception __e) {
+	///       __r.OnUserUnhandledException(ref __envp, __e);
+	///       return default;
+	///     } finally {
+	///       JniEnvironment.EndMarshalMethod(ref __envp);
+	///     }
+	///   }
+	/// </summary>
+	MethodDefinitionHandle EmitExportMarshalMethod (MetadataBuilder metadata, BlobBuilder ilBuilder, ExportMarshalMethodData export)
+	{
+		var jniParams = JniSignatureHelper.ParseParameterTypes (export.JniSignature);
+		var returnKind = export.IsConstructor ? JniParamKind.Void : JniSignatureHelper.ParseReturnType (export.JniSignature);
+		bool isVoid = returnKind == JniParamKind.Void;
+		int jniParamCount = 2 + jniParams.Count; // jnienv + self + method params
+
+		// Build the method signature
+		Action<BlobEncoder> encodeSig = sig => sig.MethodSignature ().Parameters (jniParamCount,
+			rt => { if (isVoid) rt.Void (); else JniSignatureHelper.EncodeClrType (rt.Type (), returnKind); },
+			p => {
+				p.AddParameter ().Type ().IntPtr (); // jnienv
+				p.AddParameter ().Type ().IntPtr (); // native__this
+				for (int j = 0; j < jniParams.Count; j++)
+					JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniParams [j]);
+			});
+
+		// Build the locals signature: JniTransition __envp (0), JniRuntime __r (1), Exception __e (2)
+		var localsBlob = new BlobBuilder (32);
+		var localsEncoder = new BlobEncoder (localsBlob).LocalVariableSignature (3);
+		localsEncoder.AddVariable ().Type ().Type (_jniTransitionRef, true);   // local 0: JniTransition __envp
+		localsEncoder.AddVariable ().Type ().Type (_jniRuntimeRef, false);     // local 1: JniRuntime __r
+		localsEncoder.AddVariable ().Type ().Type (_systemExceptionRef, false); // local 2: Exception __e
+		var localsSigHandle = metadata.AddStandaloneSignature (metadata.GetOrAddBlob (localsBlob));
+
+		// Resolve managed type references
+		var declaringTypeRef = ResolveTypeRef (metadata, export.DeclaringType);
+
+		// Build GetObject<T> method spec — generic instantiation of Object.GetObject<T>
+		var getObjectRef = BuildGetObjectMethodSpec (metadata, declaringTypeRef);
+
+		// Resolve managed method to call
+		MemberReferenceHandle managedMethodRef;
+		if (export.IsConstructor) {
+			managedMethodRef = BuildExportCtorRef (metadata, export, declaringTypeRef);
+		} else {
+			managedMethodRef = BuildExportMethodRef (metadata, export, declaringTypeRef);
+		}
+
+		// Build the IL with ControlFlowBuilder for try/catch/finally
+		var cfBuilder = new ControlFlowBuilder ();
+		_codeBlob.Clear ();
+		var encoder = new InstructionEncoder (_codeBlob, cfBuilder);
+
+		// Define labels
+		var tryStartLabel = encoder.DefineLabel ();
+		var tryEndLabel = encoder.DefineLabel ();
+		var catchStartLabel = encoder.DefineLabel ();
+		var catchEndLabel = encoder.DefineLabel ();
+		var finallyStartLabel = encoder.DefineLabel ();
+		var finallyEndLabel = encoder.DefineLabel ();
+		var returnLabel = encoder.DefineLabel ();
+
+		// --- if (!BeginMarshalMethod(jnienv, out __envp, out __r)) return default; ---
+		encoder.LoadArgument (0); // jnienv
+		encoder.OpCode (ILOpCode.Ldloca_s); encoder.CodeBuilder.WriteByte (0); // out __envp
+		encoder.OpCode (ILOpCode.Ldloca_s); encoder.CodeBuilder.WriteByte (1); // out __r
+		encoder.Call (_beginMarshalMethodRef);
+		encoder.Branch (ILOpCode.Brtrue_s, tryStartLabel);
+		// return default
+		if (!isVoid) {
+			EmitDefaultReturnValue (encoder, returnKind);
+		}
+		encoder.OpCode (ILOpCode.Ret);
+
+		// --- try { ---
+		encoder.MarkLabel (tryStartLabel);
+
+		if (export.IsConstructor) {
+			// For constructors: ActivateInstance first, then get the managed object and call ctor
+			// ActivateInstance(native__this, typeof(T))
+			encoder.LoadArgument (1); // native__this
+			encoder.OpCode (ILOpCode.Ldtoken);
+			encoder.Token (declaringTypeRef);
+			encoder.Call (_getTypeFromHandleRef);
+			encoder.Call (_activateInstanceRef);
+		}
+
+		// var __this = Object.GetObject<T>(jnienv, native__this, DoNotTransfer);
+		encoder.LoadArgument (0); // jnienv
+		encoder.LoadArgument (1); // native__this
+		encoder.OpCode (ILOpCode.Ldc_i4_0); // JniHandleOwnership.DoNotTransfer = 0
+		encoder.Call (getObjectRef);
+
+		// Unmarshal each parameter
+		for (int i = 0; i < export.ManagedParameters.Count; i++) {
+			EmitParameterUnmarshal (encoder, metadata, export.ManagedParameters [i], jniParams [i], i + 2);
+		}
+
+		// Call managed method
+		if (export.IsConstructor) {
+			encoder.Call (managedMethodRef);
+		} else {
+			encoder.OpCode (ILOpCode.Callvirt);
+			encoder.Token (managedMethodRef);
+		}
+
+		// Marshal return value
+		if (!isVoid) {
+			EmitReturnMarshal (encoder, returnKind, export.ManagedReturnType);
+		}
+
+		// leave to after the handler
+		encoder.Branch (ILOpCode.Leave_s, returnLabel);
+		encoder.MarkLabel (tryEndLabel);
+
+		// --- } catch (Exception __e) { ---
+		encoder.MarkLabel (catchStartLabel);
+		encoder.OpCode (ILOpCode.Stloc_2); // store exception in local 2
+		encoder.OpCode (ILOpCode.Ldloc_1); // __r
+		encoder.OpCode (ILOpCode.Ldloca_s); encoder.CodeBuilder.WriteByte (0); // ref __envp
+		encoder.OpCode (ILOpCode.Ldloc_2); // __e
+		encoder.OpCode (ILOpCode.Callvirt);
+		encoder.Token (_onUserUnhandledExceptionRef);
+		if (!isVoid) {
+			EmitDefaultReturnValue (encoder, returnKind);
+		}
+		encoder.Branch (ILOpCode.Leave_s, returnLabel);
+		encoder.MarkLabel (catchEndLabel);
+
+		// --- } finally { ---
+		encoder.MarkLabel (finallyStartLabel);
+		encoder.OpCode (ILOpCode.Ldloca_s); encoder.CodeBuilder.WriteByte (0); // ref __envp
+		encoder.Call (_endMarshalMethodRef);
+		encoder.OpCode (ILOpCode.Endfinally);
+		encoder.MarkLabel (finallyEndLabel);
+
+		// --- return ---
+		encoder.MarkLabel (returnLabel);
+		encoder.OpCode (ILOpCode.Ret);
+
+		// Add exception regions
+		cfBuilder.AddCatchRegion (tryStartLabel, tryEndLabel, catchStartLabel, catchEndLabel, _systemExceptionRef);
+		cfBuilder.AddFinallyRegion (tryStartLabel, catchEndLabel, finallyStartLabel, finallyEndLabel);
+
+		// Emit the method with fat body (locals + exception handlers)
+		_sigBlob.Clear ();
+		encodeSig (new BlobEncoder (_sigBlob));
+
+		while (ilBuilder.Count % 4 != 0) {
+			ilBuilder.WriteByte (0);
+		}
+		var bodyEncoder = new MethodBodyStreamEncoder (ilBuilder);
+		int bodyOffset = bodyEncoder.AddMethodBody (encoder, maxStack: 8, localsSigHandle, MethodBodyAttributes.InitLocals);
+
+		var handle = metadata.AddMethodDefinition (
+			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+			MethodImplAttributes.IL,
+			metadata.GetOrAddString (export.WrapperName),
+			metadata.GetOrAddBlob (_sigBlob),
+			bodyOffset, default);
+
+		AddUnmanagedCallersOnlyAttribute (metadata, handle);
+		return handle;
+	}
+
+	/// <summary>
+	/// Builds a MethodSpec for Object.GetObject&lt;T&gt;(IntPtr, IntPtr, JniHandleOwnership).
+	/// </summary>
+	EntityHandle BuildGetObjectMethodSpec (MetadataBuilder metadata, EntityHandle managedTypeRef)
+	{
+		// Object.GetObject<T>(IntPtr jnienv, IntPtr handle, JniHandleOwnership transfer) : T
+		var openGetObjectRef = AddMemberRef (metadata, _javaLangObjectRef, "GetObject",
+			sig => {
+				var methodSig = sig.MethodSignature (genericParameterCount: 1);
+				methodSig.Parameters (3,
+					rt => rt.Type ().GenericMethodTypeParameter (0),
+					p => {
+						p.AddParameter ().Type ().IntPtr ();
+						p.AddParameter ().Type ().IntPtr ();
+						p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+					});
+			});
+
+		// Build generic instantiation blob: GetObject<DeclaringType>
+		var instBlob = new BlobBuilder (16);
+		instBlob.WriteByte (0x0A); // ELEMENT_TYPE_GENERICINST (for method)
+		instBlob.WriteCompressedInteger (1); // 1 type argument
+		instBlob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+		instBlob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (managedTypeRef));
+
+		return metadata.AddMethodSpecification (openGetObjectRef, metadata.GetOrAddBlob (instBlob));
+	}
+
+	MemberReferenceHandle BuildExportCtorRef (MetadataBuilder metadata, ExportMarshalMethodData export, EntityHandle declaringTypeRef)
+	{
+		int paramCount = export.ManagedParameters.Count;
+		return AddMemberRef (metadata, declaringTypeRef, ".ctor",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (paramCount,
+				rt => rt.Void (),
+				p => {
+					foreach (var param in export.ManagedParameters)
+						EncodeExportParamType (p, metadata, param);
+				}));
+	}
+
+	MemberReferenceHandle BuildExportMethodRef (MetadataBuilder metadata, ExportMarshalMethodData export, EntityHandle declaringTypeRef)
+	{
+		int paramCount = export.ManagedParameters.Count;
+		var returnKind = JniSignatureHelper.ParseReturnType (export.JniSignature);
+		bool isVoid = returnKind == JniParamKind.Void;
+
+		return AddMemberRef (metadata, declaringTypeRef, export.ManagedMethodName,
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (paramCount,
+				rt => {
+					if (isVoid) {
+						rt.Void ();
+					} else {
+						EncodeExportReturnType (rt, metadata, export.ManagedReturnType, returnKind);
+					}
+				},
+				p => {
+					foreach (var param in export.ManagedParameters)
+						EncodeExportParamType (p, metadata, param);
+				}));
+	}
+
+	void EncodeExportParamType (ParametersEncoder p, MetadataBuilder metadata, ExportParamData param)
+	{
+		var jniKind = JniSignatureHelper.ParseSingleTypeFromDescriptor (param.JniType);
+		if (jniKind != JniParamKind.Object) {
+			JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniKind);
+		} else if (param.ManagedTypeName == "System.String") {
+			p.AddParameter ().Type ().String ();
+		} else {
+			var typeRef = ResolveTypeRef (metadata, new TypeRefData {
+				ManagedTypeName = param.ManagedTypeName,
+				AssemblyName = param.AssemblyName,
+			});
+			p.AddParameter ().Type ().Type (typeRef, false);
+		}
+	}
+
+	void EncodeExportReturnType (ReturnTypeEncoder rt, MetadataBuilder metadata, string? managedReturnType, JniParamKind returnKind)
+	{
+		if (returnKind != JniParamKind.Object) {
+			JniSignatureHelper.EncodeClrType (rt.Type (), returnKind);
+		} else if (managedReturnType == "System.String") {
+			rt.Type ().String ();
+		} else {
+			// For object returns, the JNI return type is IntPtr
+			rt.Type ().IntPtr ();
+		}
+	}
+
+	void EmitParameterUnmarshal (InstructionEncoder encoder, MetadataBuilder metadata, ExportParamData param, JniParamKind jniKind, int argIndex)
+	{
+		if (jniKind != JniParamKind.Object) {
+			// Primitives: just load the argument directly
+			encoder.LoadArgument (argIndex);
+			return;
+		}
+
+		if (param.ManagedTypeName == "System.String") {
+			// String: JNIEnv.GetString(handle, DoNotTransfer)
+			encoder.LoadArgument (argIndex);
+			encoder.OpCode (ILOpCode.Ldc_i4_0); // DoNotTransfer
+			encoder.Call (_jniEnvGetStringRef);
+			return;
+		}
+
+		// Java object: Object.GetObject<T>(handle, DoNotTransfer)
+		// Use the 2-arg overload (without jnienv)
+		var typeRef = ResolveTypeRef (metadata, new TypeRefData {
+			ManagedTypeName = param.ManagedTypeName,
+			AssemblyName = param.AssemblyName,
+		});
+		var getObjectRef2 = AddMemberRef (metadata, _javaLangObjectRef, "GetObject",
+			sig => {
+				var methodSig = sig.MethodSignature (genericParameterCount: 1);
+				methodSig.Parameters (2,
+					rt => rt.Type ().GenericMethodTypeParameter (0),
+					p => {
+						p.AddParameter ().Type ().IntPtr ();
+						p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+					});
+			});
+		var instBlob = new BlobBuilder (16);
+		instBlob.WriteByte (0x0A);
+		instBlob.WriteCompressedInteger (1);
+		instBlob.WriteByte (0x12);
+		instBlob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (typeRef));
+		var methodSpec = metadata.AddMethodSpecification (getObjectRef2, metadata.GetOrAddBlob (instBlob));
+
+		encoder.LoadArgument (argIndex);
+		encoder.OpCode (ILOpCode.Ldc_i4_0); // DoNotTransfer
+		encoder.Call (methodSpec);
+	}
+
+	void EmitReturnMarshal (InstructionEncoder encoder, JniParamKind returnKind, string? managedReturnType)
+	{
+		if (returnKind != JniParamKind.Object) {
+			// Primitives: return directly (value is already on the stack)
+			return;
+		}
+
+		if (managedReturnType == "System.String") {
+			// String: JNIEnv.NewString(result)
+			encoder.Call (_jniEnvNewStringRef);
+			return;
+		}
+
+		// Java object: JNIEnv.ToLocalJniHandle(result)
+		encoder.Call (_jniEnvToLocalJniHandleRef);
+	}
+
+	static void EmitDefaultReturnValue (InstructionEncoder encoder, JniParamKind kind)
+	{
+		switch (kind) {
+		case JniParamKind.Boolean:
+		case JniParamKind.Byte:
+		case JniParamKind.Char:
+		case JniParamKind.Short:
+		case JniParamKind.Int:
+			encoder.OpCode (ILOpCode.Ldc_i4_0);
+			break;
+		case JniParamKind.Long:
+			encoder.OpCode (ILOpCode.Ldc_i8);
+			encoder.CodeBuilder.WriteInt64 (0);
+			break;
+		case JniParamKind.Float:
+			encoder.OpCode (ILOpCode.Ldc_r4);
+			encoder.CodeBuilder.WriteSingle (0);
+			break;
+		case JniParamKind.Double:
+			encoder.OpCode (ILOpCode.Ldc_r8);
+			encoder.CodeBuilder.WriteDouble (0);
+			break;
+		case JniParamKind.Object:
+			encoder.OpCode (ILOpCode.Ldc_i4_0);
+			encoder.OpCode (ILOpCode.Conv_i); // IntPtr.Zero
+			break;
+		}
+	}
 
 	void EmitRegisterNatives (MetadataBuilder metadata, BlobBuilder ilBuilder,
 		List<NativeRegistrationData> registrations, Dictionary<string, MethodDefinitionHandle> wrapperHandles)

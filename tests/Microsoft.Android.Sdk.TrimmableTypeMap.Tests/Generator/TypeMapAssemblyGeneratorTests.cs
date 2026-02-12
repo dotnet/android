@@ -290,6 +290,142 @@ public class TypeMapAssemblyGeneratorTests
 
 	}
 
+	public class ExportMarshalMethods
+	{
+
+		[Fact]
+		public void Generate_ExportMethod_ProducesValidAssembly ()
+		{
+			var peers = ScanFixtures ();
+			var peer = peers.First (p => p.JavaName == "my/app/ExportMethodWithParams");
+			var path = GenerateAssembly (new [] { peer }, "ExportMethodTest");
+			try {
+				var (pe, reader) = OpenAssembly (path);
+				using (pe) {
+					Assert.True (reader.TypeDefinitions.Count > 0);
+				}
+			} finally {
+				CleanUp (path);
+			}
+		}
+
+		[Fact]
+		public void Generate_ExportMethod_HasWrapperMethods ()
+		{
+			var peers = ScanFixtures ();
+			var peer = peers.First (p => p.JavaName == "my/app/ExportMethodWithParams");
+			var path = GenerateAssembly (new [] { peer }, "ExportMethodWrappers");
+			try {
+				var (pe, reader) = OpenAssembly (path);
+				using (pe) {
+					var proxy = reader.TypeDefinitions
+						.Select (h => reader.GetTypeDefinition (h))
+						.First (t => reader.GetString (t.Name) == "MyApp_ExportMethodWithParams_Proxy");
+
+					var methods = proxy.GetMethods ()
+						.Select (h => reader.GetMethodDefinition (h))
+						.Select (m => reader.GetString (m.Name))
+						.ToList ();
+
+					// Export methods should produce UCO wrappers
+					Assert.Contains (methods, m => m.StartsWith ("n_") && m.Contains ("_uco"));
+					Assert.Contains ("RegisterNatives", methods);
+				}
+			} finally {
+				CleanUp (path);
+			}
+		}
+
+		[Fact]
+		public void Generate_ExportConstructor_HasWrapperMethods ()
+		{
+			var peers = ScanFixtures ();
+			var peer = peers.First (p => p.JavaName == "my/app/ExportsConstructors");
+			var path = GenerateAssembly (new [] { peer }, "ExportCtorWrappers");
+			try {
+				var (pe, reader) = OpenAssembly (path);
+				using (pe) {
+					var proxy = reader.TypeDefinitions
+						.Select (h => reader.GetTypeDefinition (h))
+						.First (t => reader.GetString (t.Name) == "MyApp_ExportsConstructors_Proxy");
+
+					var methods = proxy.GetMethods ()
+						.Select (h => reader.GetMethodDefinition (h))
+						.Select (m => reader.GetString (m.Name))
+						.ToList ();
+
+					// Export constructors should produce nctor_N_uco wrappers
+					Assert.Contains (methods, m => m.StartsWith ("nctor_") && m.EndsWith ("_uco"));
+					Assert.Contains ("RegisterNatives", methods);
+				}
+			} finally {
+				CleanUp (path);
+			}
+		}
+
+		[Fact]
+		public void Generate_ExportMethod_HasMethodBody ()
+		{
+			var peers = ScanFixtures ();
+			var peer = peers.First (p => p.JavaName == "my/app/ExportMethodWithParams");
+			var path = GenerateAssembly (new [] { peer }, "ExportMethodBody");
+			try {
+				var (pe, reader) = OpenAssembly (path);
+				using (pe) {
+					var proxy = reader.TypeDefinitions
+						.Select (h => reader.GetTypeDefinition (h))
+						.First (t => reader.GetString (t.Name) == "MyApp_ExportMethodWithParams_Proxy");
+
+					// Export marshal methods should have non-zero RVA (they have a real body)
+					var exportWrappers = proxy.GetMethods ()
+						.Select (h => reader.GetMethodDefinition (h))
+						.Where (m => {
+							var name = reader.GetString (m.Name);
+							return name.StartsWith ("n_") && name.Contains ("_uco");
+						})
+						.ToList ();
+
+					Assert.NotEmpty (exportWrappers);
+					foreach (var wrapper in exportWrappers) {
+						Assert.True (wrapper.RelativeVirtualAddress > 0,
+							$"Export marshal method '{reader.GetString (wrapper.Name)}' should have a method body (non-zero RVA)");
+					}
+				}
+			} finally {
+				CleanUp (path);
+			}
+		}
+
+		[Fact]
+		public void Generate_ExportMembersComprehensive_ProducesValidAssembly ()
+		{
+			var peers = ScanFixtures ();
+			var peer = peers.First (p => p.JavaName == "my/app/ExportMembersComprehensive");
+			var path = GenerateAssembly (new [] { peer }, "ExportComprehensive");
+			try {
+				var (pe, reader) = OpenAssembly (path);
+				using (pe) {
+					var proxy = reader.TypeDefinitions
+						.Select (h => reader.GetTypeDefinition (h))
+						.First (t => reader.GetString (t.Name) == "MyApp_ExportMembersComprehensive_Proxy");
+
+					var methods = proxy.GetMethods ()
+						.Select (h => reader.GetMethodDefinition (h))
+						.Select (m => reader.GetString (m.Name))
+						.ToList ();
+
+					// Should have multiple export wrappers
+					var exportWrappers = methods.Where (m => m.StartsWith ("n_") && m.Contains ("_uco")).ToList ();
+					Assert.True (exportWrappers.Count >= 2,
+						$"Expected at least 2 export wrappers, got {exportWrappers.Count}: [{string.Join (", ", exportWrappers)}]");
+				}
+			} finally {
+				CleanUp (path);
+			}
+		}
+
+	}
+
 	public class Ignoresaccesschecksto
 	{
 

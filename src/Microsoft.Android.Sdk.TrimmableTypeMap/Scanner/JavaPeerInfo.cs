@@ -178,6 +178,12 @@ sealed class MarshalMethodInfo
 	/// Null for [Register] methods.
 	/// </summary>
 	public string? SuperArgumentsString { get; set; }
+
+	/// <summary>
+	/// For [Export] methods: managed return type name, e.g., "System.String".
+	/// Null for [Register] methods and constructors.
+	/// </summary>
+	public string? ManagedReturnType { get; set; }
 }
 
 /// <summary>

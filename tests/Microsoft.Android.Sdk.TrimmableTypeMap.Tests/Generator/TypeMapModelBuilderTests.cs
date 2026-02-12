@@ -1323,19 +1323,20 @@ public class ModelBuilderTests
 		}
 
 		[Fact]
-		public void Fixture_ExportExample_ExportMethodNotInUcoMethods ()
+		public void Fixture_ExportExample_ExportMethodInExportMarshalMethods ()
 		{
 			var peer = FindFixtureByJavaName ("my/app/ExportExample");
 			var model = BuildModel (new [] { peer }, "TypeMap");
 			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_ExportExample_Proxy");
 			Assert.NotNull (proxy);
 
-			// [Export] methods have no n_* callback → must NOT generate UCO wrappers
+			// [Export] methods go into ExportMarshalMethods, not UcoMethods
 			Assert.Empty (proxy!.UcoMethods);
+			Assert.NotEmpty (proxy.ExportMarshalMethods);
 		}
 
 		[Fact]
-		public void Fixture_ExportMethodWithParams_ExportMethodsNotInUcoMethods ()
+		public void Fixture_ExportMethodWithParams_ExportMethodsInExportMarshalMethods ()
 		{
 			var peer = FindFixtureByJavaName ("my/app/ExportMethodWithParams");
 			Assert.Equal (2, peer.MarshalMethods.Count);
@@ -1346,10 +1347,11 @@ public class ModelBuilderTests
 			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_ExportMethodWithParams_Proxy");
 			Assert.NotNull (proxy);
 			Assert.Empty (proxy!.UcoMethods);
+			Assert.Equal (2, proxy.ExportMarshalMethods.Count);
 		}
 
 		[Fact]
-		public void Fixture_ExportsConstructors_NoUcoConstructors ()
+		public void Fixture_ExportsConstructors_ExportConstructorsInExportMarshalMethods ()
 		{
 			var peer = FindFixtureByJavaName ("my/app/ExportsConstructors");
 			// Should have [Export] constructors (Connector == null)
@@ -1360,20 +1362,49 @@ public class ModelBuilderTests
 			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_ExportsConstructors_Proxy");
 			Assert.NotNull (proxy);
 
-			// [Export] constructors should NOT generate UCO constructor wrappers
+			// [Export] constructors go into ExportMarshalMethods, not UcoConstructors
 			Assert.Empty (proxy!.UcoConstructors);
+			Assert.Equal (exportCtors.Count, proxy.ExportMarshalMethods.Count (e => e.IsConstructor));
 		}
 
 		[Fact]
-		public void Fixture_ExportsThrowsConstructors_NoUcoConstructors ()
+		public void Fixture_ExportsThrowsConstructors_ExportConstructorsInExportMarshalMethods ()
 		{
 			var peer = FindFixtureByJavaName ("my/app/ExportsThrowsConstructors");
 			var model = BuildModel (new [] { peer }, "TypeMap");
 			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_ExportsThrowsConstructors_Proxy");
 			Assert.NotNull (proxy);
 
-			// All constructors are [Export] → no UCO constructors
+			// All constructors are [Export] → in ExportMarshalMethods, not UcoConstructors
 			Assert.Empty (proxy!.UcoConstructors);
+			Assert.NotEmpty (proxy.ExportMarshalMethods);
+			Assert.All (proxy.ExportMarshalMethods, e => Assert.True (e.IsConstructor));
+		}
+
+		[Fact]
+		public void Fixture_ExportMethodWithParams_HasNativeRegistrations ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/ExportMethodWithParams");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_ExportMethodWithParams_Proxy");
+			Assert.NotNull (proxy);
+
+			// [Export] methods should generate NativeRegistrations entries
+			Assert.Equal (2, proxy!.NativeRegistrations.Count);
+		}
+
+		[Fact]
+		public void Fixture_ExportMarshalMethod_HasCorrectManagedParameters ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/ExportMethodWithParams");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_ExportMethodWithParams_Proxy");
+			Assert.NotNull (proxy);
+
+			// The method with (String, int) params should have correct managed types
+			var exportMethod = proxy!.ExportMarshalMethods.FirstOrDefault (e => e.ManagedParameters.Count == 2);
+			Assert.NotNull (exportMethod);
+			Assert.False (exportMethod!.IsConstructor);
 		}
 
 	}
