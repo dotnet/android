@@ -126,7 +126,19 @@ sealed class JcwJavaSourceGenerator
 			writer.Write (simpleClassName);
 			writer.Write (" (");
 			WriteParameterList (ctor.Parameters, writer);
-			writer.WriteLine (')');
+			writer.Write (')');
+
+			if (ctor.IsExport && ctor.ThrownNames != null && ctor.ThrownNames.Count > 0) {
+				writer.Write ("\n\t\tthrows ");
+				for (int i = 0; i < ctor.ThrownNames.Count; i++) {
+					if (i > 0) {
+						writer.Write (", ");
+					}
+					writer.Write (ctor.ThrownNames [i]);
+				}
+			}
+
+			writer.WriteLine ();
 			writer.WriteLine ("\t{");
 
 			// super() call — use SuperArgumentsString if provided ([Export] constructors),
@@ -143,18 +155,29 @@ sealed class JcwJavaSourceGenerator
 			writer.Write ("\t\tif (getClass () == ");
 			writer.Write (simpleClassName);
 			writer.Write (".class) ");
-			writer.Write ("nctor_");
-			writer.Write (ctor.ConstructorIndex);
-			writer.Write (" (");
-			WriteArgumentList (ctor.Parameters, writer);
-			writer.WriteLine (");");
+
+			if (ctor.IsExport) {
+				// [Export] constructors use TypeManager.Activate
+				WriteTypeManagerActivate (type, ctor.Parameters, writer);
+			} else {
+				// [Register] constructors use native nctor_N methods
+				writer.Write ("nctor_");
+				writer.Write (ctor.ConstructorIndex);
+				writer.Write (" (");
+				WriteArgumentList (ctor.Parameters, writer);
+				writer.Write (')');
+			}
+			writer.WriteLine (";");
 
 			writer.WriteLine ("\t}");
 			writer.WriteLine ();
 		}
 
-		// Write native constructor declarations
+		// Write native constructor declarations (only for [Register] constructors)
 		foreach (var ctor in type.JavaConstructors) {
+			if (ctor.IsExport) {
+				continue;
+			}
 			writer.Write ("\tprivate native void nctor_");
 			writer.Write (ctor.ConstructorIndex);
 			writer.Write (" (");
@@ -165,6 +188,30 @@ sealed class JcwJavaSourceGenerator
 		if (type.JavaConstructors.Count > 0) {
 			writer.WriteLine ();
 		}
+	}
+
+	/// <summary>
+	/// Writes: mono.android.TypeManager.Activate ("ManagedType, Assembly", "param types", this, new java.lang.Object[] { p0, p1 })
+	/// </summary>
+	static void WriteTypeManagerActivate (JavaPeerInfo type, IReadOnlyList<JniParameterInfo> parameters, TextWriter writer)
+	{
+		writer.Write ("mono.android.TypeManager.Activate (\"");
+		writer.Write (type.ManagedTypeName);
+		writer.Write (", ");
+		writer.Write (type.AssemblyName);
+		writer.Write ("\", \"");
+
+		// Managed parameter type signature
+		for (int i = 0; i < parameters.Count; i++) {
+			if (i > 0) {
+				writer.Write (", ");
+			}
+			writer.Write (parameters [i].ManagedType);
+		}
+
+		writer.Write ("\", this, new java.lang.Object[] { ");
+		WriteArgumentList (parameters, writer);
+		writer.Write (" })");
 	}
 
 	static void WriteMethods (JavaPeerInfo type, TextWriter writer)

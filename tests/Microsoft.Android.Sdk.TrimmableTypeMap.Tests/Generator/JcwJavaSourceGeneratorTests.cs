@@ -426,4 +426,98 @@ public class JcwJavaSourceGeneratorTests
 			Assert.DoesNotContain ("throws", java);
 		}
 	}
+
+	public class ExportConstructor
+	{
+
+		[Fact]
+		public void Generate_ExportConstructors_UsesTypeManagerActivate ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportsConstructors");
+			var java = GenerateToString (peer);
+
+			// [Export] constructors should use TypeManager.Activate
+			Assert.Contains ("mono.android.TypeManager.Activate (\"", java);
+
+			// Should NOT have nctor_N native declarations
+			Assert.DoesNotContain ("nctor_", java);
+		}
+
+		[Fact]
+		public void Generate_ExportConstructors_ParameterlessCtorHasEmptySignature ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportsConstructors");
+			var java = GenerateToString (peer);
+
+			// Parameterless [Export] ctor should have empty managed param signature
+			Assert.Contains ("mono.android.TypeManager.Activate (\"MyApp.ExportsConstructors, TestFixtures\", \"\", this, new java.lang.Object[] {  })", java);
+		}
+
+		[Fact]
+		public void Generate_ExportConstructors_IntCtorHasIntSignature ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportsConstructors");
+			var java = GenerateToString (peer);
+
+			// int parameter [Export] ctor should have managed type signature
+			Assert.Contains ("mono.android.TypeManager.Activate (\"MyApp.ExportsConstructors, TestFixtures\", \"System.Int32, System.Private.CoreLib\", this, new java.lang.Object[] { p0 })", java);
+		}
+
+		[Fact]
+		public void Generate_ExportThrowsConstructors_HasThrowsClause ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportsThrowsConstructors");
+			var java = GenerateToString (peer);
+
+			// [Export] constructors with ThrownNames should have throws clause
+			Assert.Contains ("throws java.lang.Throwable", java);
+		}
+
+		[Fact]
+		public void Generate_MixedRegisterAndExportConstructors_HandledCorrectly ()
+		{
+			// A type with both [Register] and [Export] constructors
+			var type = new JavaPeerInfo {
+				JavaName = "my/app/MixedCtors",
+				ManagedTypeName = "MyApp.MixedCtors",
+				ManagedTypeNamespace = "MyApp",
+				ManagedTypeShortName = "MixedCtors",
+				AssemblyName = "App",
+				BaseJavaName = "java/lang/Object",
+				JavaConstructors = new List<JavaConstructorInfo> {
+					new JavaConstructorInfo {
+						JniSignature = "()V",
+						ConstructorIndex = 0,
+						Parameters = new List<JniParameterInfo> (),
+						IsExport = false, // [Register]
+					},
+					new JavaConstructorInfo {
+						JniSignature = "(I)V",
+						ConstructorIndex = 1,
+						Parameters = new List<JniParameterInfo> {
+							new JniParameterInfo { JniType = "I", ManagedType = "System.Int32, System.Private.CoreLib" },
+						},
+						IsExport = true, // [Export]
+					},
+				},
+			};
+
+			var java = GenerateToString (type);
+
+			// [Register] ctor should use nctor_0
+			Assert.Contains ("nctor_0 ()", java);
+			Assert.Contains ("private native void nctor_0 ()", java);
+
+			// [Export] ctor should use TypeManager.Activate
+			Assert.Contains ("mono.android.TypeManager.Activate (\"MyApp.MixedCtors, App\"", java);
+
+			// Only nctor_0 declaration (not nctor_1 for [Export])
+			Assert.DoesNotContain ("nctor_1", java);
+		}
+
+	}
 }

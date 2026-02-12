@@ -417,6 +417,35 @@ public class JavaPeerScannerTests
 	}
 
 	[Fact]
+	public void Scan_ExportConstructor_CollectedWithNullConnector ()
+	{
+		var peers = ScanFixtures ();
+		var peer = FindByJavaName (peers, "my/app/ExportsConstructors");
+		// [Export] on constructors: 2 exported ctors + 0 Register methods
+		var exportCtors = peer.MarshalMethods.Where (m => m.IsConstructor && m.Connector == null).ToList ();
+		Assert.Equal (2, exportCtors.Count);
+		// Verify one is parameterless, one takes int
+		Assert.Contains (exportCtors, c => c.JniSignature == "()V");
+		Assert.Contains (exportCtors, c => c.JniSignature == "(I)V");
+	}
+
+	[Fact]
+	public void Scan_ExportMethodWithParams_HasCorrectJniSignature ()
+	{
+		var peers = ScanFixtures ();
+		var peer = FindByJavaName (peers, "my/app/ExportMethodWithParams");
+		Assert.Equal (2, peer.MarshalMethods.Count);
+		// All should be [Export] (null connector)
+		Assert.All (peer.MarshalMethods, m => Assert.Null (m.Connector));
+		// doWork(int) → (I)V
+		var doWork = peer.MarshalMethods.First (m => m.JniName == "doWork");
+		Assert.Equal ("(I)V", doWork.JniSignature);
+		// computeName(String, int) → (Ljava/lang/String;I)Ljava/lang/String;
+		var computeName = peer.MarshalMethods.First (m => m.JniName == "computeName");
+		Assert.Equal ("(Ljava/lang/String;I)Ljava/lang/String;", computeName.JniSignature);
+	}
+
+	[Fact]
 	public void Scan_CustomView_DiscoveredAsRegularType ()
 	{
 		var peers = ScanFixtures ();

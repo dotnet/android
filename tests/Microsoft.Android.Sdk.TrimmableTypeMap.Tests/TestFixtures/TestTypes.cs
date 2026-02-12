@@ -676,3 +676,68 @@ public class GlobalType : Java.Lang.Object
 public class GlobalUnregisteredType : Java.Lang.Object
 {
 }
+
+// ================================================================
+// [Export] constructor scenarios — ported from legacy SupportDeclarations.cs
+// ================================================================
+namespace MyApp
+{
+	/// <summary>
+	/// Type with [Export] constructors (no [Register] on ctors).
+	/// Legacy JCW: TypeManager.Activate pattern, not nctor_N.
+	/// </summary>
+	[Register ("my/app/ExportsConstructors")]
+	public class ExportsConstructors : Java.Lang.Object
+	{
+		protected ExportsConstructors (IntPtr handle, Android.Runtime.JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+
+		[Java.Interop.Export]
+		public ExportsConstructors () { }
+
+		[Java.Interop.Export]
+		public ExportsConstructors (int value) { }
+	}
+
+	/// <summary>
+	/// Type with [Export] constructors that throw.
+	/// </summary>
+	[Register ("my/app/ExportsThrowsConstructors")]
+	public class ExportsThrowsConstructors : Java.Lang.Object
+	{
+		protected ExportsThrowsConstructors (IntPtr handle, Android.Runtime.JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+
+		[Java.Interop.Export (ThrownNames = new [] { "java.lang.Throwable" })]
+		public ExportsThrowsConstructors () { }
+
+		[Java.Interop.Export (ThrownNames = new [] { "java.lang.Throwable" })]
+		public ExportsThrowsConstructors (int value) { }
+
+		[Java.Interop.Export]
+		public ExportsThrowsConstructors (string value) { }
+	}
+
+	/// <summary>
+	/// Type with [Export] methods with parameters (not just parameterless).
+	/// Ported from legacy ExportsMembers.
+	/// </summary>
+	[Register ("my/app/ExportMethodWithParams")]
+	public class ExportMethodWithParams : Java.Lang.Object
+	{
+		protected ExportMethodWithParams (IntPtr handle, Android.Runtime.JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+
+		[Java.Interop.Export ("doWork")]
+		public void DoWork (int count) { }
+
+		[Java.Interop.Export ("computeName")]
+		public string ComputeName (string prefix, int index) { return ""; }
+	}
+}
