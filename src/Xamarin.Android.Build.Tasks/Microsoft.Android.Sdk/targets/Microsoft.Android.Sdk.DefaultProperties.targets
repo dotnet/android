@@ -103,10 +103,11 @@
     <UseCurrentRuntimeIdentifier>false</UseCurrentRuntimeIdentifier>
     <PublishTrimmed Condition=" '$(PublishTrimmed)' == '' and ('$(AndroidLinkMode)' == 'SdkOnly' or '$(AndroidLinkMode)' == 'Full') ">true</PublishTrimmed>
     <PublishTrimmed Condition=" '$(PublishTrimmed)' == '' and '$(Configuration)' == 'Release' and '$(AndroidLinkMode)' != 'None' ">true</PublishTrimmed>
+    <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' and '$(_AndroidRuntime)' == 'NativeAOT' ">Full</AndroidLinkMode>
     <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' and '$(PublishTrimmed)' == 'true' ">SdkOnly</AndroidLinkMode>
     <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' ">None</AndroidLinkMode>
     <!-- For compat with user code not marked trimmable, only trim opt-in by default. -->
-    <TrimMode Condition=" '$(TrimMode)' == '' and ('$(AndroidLinkMode)' == 'Full' or '$(_AndroidRuntime)' == 'NativeAOT') ">full</TrimMode>
+    <TrimMode Condition=" '$(TrimMode)' == '' and '$(AndroidLinkMode)' == 'Full' ">full</TrimMode>
 		<TrimMode Condition="'$(TrimMode)' == ''">partial</TrimMode>
     <SuppressTrimAnalysisWarnings Condition=" '$(SuppressTrimAnalysisWarnings)' == '' and ('$(TrimMode)' == 'full' or '$(IsAotCompatible)' == 'true') ">false</SuppressTrimAnalysisWarnings>
     <SuppressTrimAnalysisWarnings Condition=" '$(SuppressTrimAnalysisWarnings)' == '' ">true</SuppressTrimAnalysisWarnings>
