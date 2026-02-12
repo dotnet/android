@@ -222,6 +222,12 @@
           BeforeStep="MarkStep"
           Type="MonoDroid.Tuner.FixLegacyResourceDesignerStep"
       />
+      <_TrimmerCustomSteps
+          Condition=" '$(_AndroidTypeMapImplementation)' == 'managed' "
+          Include="$(_AndroidLinkerCustomStepAssembly)"
+          AfterStep="CleanStep"
+          Type="Microsoft.Android.Sdk.ILLink.TypeMappingStep"
+      />
       <TrimmerRootDescriptor Include="$(MSBuildThisFileDirectory)..\PreserveLists\*.xml" />
       <TrimmerRootDescriptor Include="@(LinkDescription)" />
       <TrimmerRootAssembly Include="Microsoft.Android.Runtime.NativeAOT" Condition=" '$(_AndroidRuntime)' == 'NativeAOT' " RootMode="All" />
