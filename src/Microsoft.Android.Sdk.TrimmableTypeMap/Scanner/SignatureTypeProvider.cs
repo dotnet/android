@@ -11,8 +11,6 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// </summary>
 sealed class SignatureTypeProvider : ISignatureTypeProvider<string, object?>
 {
-	public static readonly SignatureTypeProvider Instance = new ();
-
 	public string GetPrimitiveType (PrimitiveTypeCode typeCode) => typeCode switch {
 		PrimitiveTypeCode.Void => "System.Void",
 		PrimitiveTypeCode.Boolean => "System.Boolean",

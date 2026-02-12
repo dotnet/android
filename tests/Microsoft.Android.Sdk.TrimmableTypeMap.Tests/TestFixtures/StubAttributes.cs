@@ -50,54 +50,47 @@ namespace Android.Runtime
 namespace Android.App
 {
 	[AttributeUsage (AttributeTargets.Class)]
-	public sealed class ActivityAttribute : Attribute, Java.Interop.IJniNameProviderAttribute
+	public sealed class ActivityAttribute : Attribute
 	{
 		public bool MainLauncher { get; set; }
 		public string? Label { get; set; }
 		public string? Icon { get; set; }
 		public string? Name { get; set; }
-		string Java.Interop.IJniNameProviderAttribute.Name => Name ?? "";
 	}
 
 	[AttributeUsage (AttributeTargets.Class)]
-	public sealed class ServiceAttribute : Attribute, Java.Interop.IJniNameProviderAttribute
+	public sealed class ServiceAttribute : Attribute
 	{
 		public string? Name { get; set; }
-		string Java.Interop.IJniNameProviderAttribute.Name => Name ?? "";
 	}
 
 	[AttributeUsage (AttributeTargets.Class)]
-	public sealed class InstrumentationAttribute : Attribute, Java.Interop.IJniNameProviderAttribute
+	public sealed class InstrumentationAttribute : Attribute
 	{
 		public string? Name { get; set; }
-		string Java.Interop.IJniNameProviderAttribute.Name => Name ?? "";
 	}
 
 	[AttributeUsage (AttributeTargets.Class)]
-	public sealed class ApplicationAttribute : Attribute, Java.Interop.IJniNameProviderAttribute
+	public sealed class ApplicationAttribute : Attribute
 	{
 		public Type? BackupAgent { get; set; }
-		public Type? ManageSpaceActivity { get; set; }
 		public string? Name { get; set; }
-		string Java.Interop.IJniNameProviderAttribute.Name => Name ?? "";
 	}
 }
 
 namespace Android.Content
 {
 	[AttributeUsage (AttributeTargets.Class)]
-	public sealed class BroadcastReceiverAttribute : Attribute, Java.Interop.IJniNameProviderAttribute
+	public sealed class BroadcastReceiverAttribute : Attribute
 	{
 		public string? Name { get; set; }
-		string Java.Interop.IJniNameProviderAttribute.Name => Name ?? "";
 	}
 
 	[AttributeUsage (AttributeTargets.Class)]
-	public sealed class ContentProviderAttribute : Attribute, Java.Interop.IJniNameProviderAttribute
+	public sealed class ContentProviderAttribute : Attribute
 	{
 		public string []? Authorities { get; set; }
 		public string? Name { get; set; }
-		string Java.Interop.IJniNameProviderAttribute.Name => Name ?? "";
 
 		public ContentProviderAttribute (string [] authorities)
 		{
@@ -113,33 +106,11 @@ namespace Java.Interop
 	{
 		public string? Name { get; set; }
 
-		public string[]? ThrownNames { get; set; }
-
-		public string? SuperArgumentsString { get; set; }
-
 		public ExportAttribute ()
 		{
 		}
 
 		public ExportAttribute (string name)
-		{
-			Name = name;
-		}
-	}
-}
-
-namespace MyApp
-{
-	/// <summary>
-	/// Custom attribute implementing IJniNameProviderAttribute — the scanner
-	/// should detect this dynamically via interface resolution, not hardcoded names.
-	/// </summary>
-	[AttributeUsage (AttributeTargets.Class)]
-	public sealed class CustomJniNameAttribute : Attribute, Java.Interop.IJniNameProviderAttribute
-	{
-		public string Name { get; }
-
-		public CustomJniNameAttribute (string name)
 		{
 			Name = name;
 		}

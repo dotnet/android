@@ -13,7 +13,6 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 sealed class AssemblyIndex : IDisposable
 {
 	readonly PEReader peReader;
-	internal readonly CustomAttributeTypeProvider customAttributeTypeProvider;
 
 	public MetadataReader Reader { get; }
 	public string AssemblyName { get; }
@@ -25,6 +24,12 @@ sealed class AssemblyIndex : IDisposable
 	public Dictionary<string, TypeDefinitionHandle> TypesByFullName { get; } = new (StringComparer.Ordinal);
 
 	/// <summary>
+	/// Maps JNI type name (from [Register]) to TypeDefinitionHandle.
+	/// Only types with [Register] are included.
+	/// </summary>
+	public Dictionary<string, TypeDefinitionHandle> TypesByJniName { get; } = new (StringComparer.Ordinal);
+
+	/// <summary>
 	/// Cached [Register] attribute data per type.
 	/// </summary>
 	public Dictionary<TypeDefinitionHandle, RegisterInfo> RegisterInfoByType { get; } = new ();
@@ -34,22 +39,9 @@ sealed class AssemblyIndex : IDisposable
 	/// </summary>
 	public Dictionary<TypeDefinitionHandle, TypeAttributeInfo> AttributesByType { get; } = new ();
 
-	/// <summary>
-	/// Type names of attributes that implement <c>Java.Interop.IJniNameProviderAttribute</c>
-	/// in this assembly. Used to detect JNI name providers without hardcoding attribute names.
-	/// </summary>
-	public HashSet<string> JniNameProviderAttributes { get; } = new (StringComparer.Ordinal);
-
-	/// <summary>
-	/// Merged set of all JNI name provider attribute type names across all loaded assemblies.
-	/// Set by <see cref="JavaPeerScanner"/> after all assemblies are indexed.
-	/// </summary>
-	HashSet<string>? allJniNameProviderAttributes;
-
 	AssemblyIndex (PEReader peReader, MetadataReader reader, string assemblyName, string filePath)
 	{
 		this.peReader = peReader;
-		this.customAttributeTypeProvider = new CustomAttributeTypeProvider (reader);
 		Reader = reader;
 		AssemblyName = assemblyName;
 		FilePath = filePath;
@@ -67,12 +59,10 @@ sealed class AssemblyIndex : IDisposable
 
 	void Build ()
 	{
-		FindJniNameProviderAttributes ();
-
 		foreach (var typeHandle in Reader.TypeDefinitions) {
 			var typeDef = Reader.GetTypeDefinition (typeHandle);
 
-			var fullName = GetFullName (typeDef, Reader);
+			var fullName = GetFullName (typeDef);
 			if (fullName.Length == 0) {
 				continue;
 			}
@@ -87,93 +77,21 @@ sealed class AssemblyIndex : IDisposable
 
 			if (registerInfo != null) {
 				RegisterInfoByType [typeHandle] = registerInfo;
-			}
-		}
-	}
-
-	/// <summary>
-	/// Finds all types in this assembly that implement <c>Java.Interop.IJniNameProviderAttribute</c>.
-	/// </summary>
-	void FindJniNameProviderAttributes ()
-	{
-		foreach (var typeHandle in Reader.TypeDefinitions) {
-			var typeDef = Reader.GetTypeDefinition (typeHandle);
-			if (ImplementsIJniNameProviderAttribute (typeDef)) {
-				var name = Reader.GetString (typeDef.Name);
-				JniNameProviderAttributes.Add (name);
-			}
-		}
-	}
-
-	bool ImplementsIJniNameProviderAttribute (TypeDefinition typeDef)
-	{
-		foreach (var implHandle in typeDef.GetInterfaceImplementations ()) {
-			var impl = Reader.GetInterfaceImplementation (implHandle);
-			if (impl.Interface.Kind == HandleKind.TypeReference) {
-				var typeRef = Reader.GetTypeReference ((TypeReferenceHandle)impl.Interface);
-				var name = Reader.GetString (typeRef.Name);
-				var ns = Reader.GetString (typeRef.Namespace);
-				if (name == "IJniNameProviderAttribute" && ns == "Java.Interop") {
-					return true;
-				}
-			} else if (impl.Interface.Kind == HandleKind.TypeDefinition) {
-				var ifaceTypeDef = Reader.GetTypeDefinition ((TypeDefinitionHandle)impl.Interface);
-				var name = Reader.GetString (ifaceTypeDef.Name);
-				var ns = Reader.GetString (ifaceTypeDef.Namespace);
-				if (name == "IJniNameProviderAttribute" && ns == "Java.Interop") {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
-	/// <summary>
-	/// Sets the merged set of JNI name provider attributes from all loaded assemblies
-	/// and re-classifies any attributes that weren't recognized in the initial pass.
-	/// </summary>
-	public void ReclassifyAttributes (HashSet<string> mergedJniNameProviders)
-	{
-		allJniNameProviderAttributes = mergedJniNameProviders;
-
-		foreach (var typeHandle in Reader.TypeDefinitions) {
-			var typeDef = Reader.GetTypeDefinition (typeHandle);
-
-			// Skip types that already have component attribute info
-			if (AttributesByType.TryGetValue (typeHandle, out var existing) && existing.HasComponentAttribute) {
-				continue;
-			}
-
-			// Re-check custom attributes with the full set of known providers
-			foreach (var caHandle in typeDef.GetCustomAttributes ()) {
-				var ca = Reader.GetCustomAttribute (caHandle);
-				var attrName = GetCustomAttributeName (ca, Reader);
-
-				if (attrName == null || attrName == "RegisterAttribute" || attrName == "ExportAttribute") {
-					continue;
-				}
-
-				if (mergedJniNameProviders.Contains (attrName) && !IsKnownComponentAttribute (attrName)) {
-					var componentName = TryGetNameProperty (ca);
-					if (componentName != null) {
-						var attrInfo = existing ?? new TypeAttributeInfo ();
-						attrInfo.HasComponentAttribute = true;
-						attrInfo.ComponentAttributeJniName = componentName.Replace ('.', '/');
-						AttributesByType [typeHandle] = attrInfo;
-					}
+				if (!string.IsNullOrEmpty (registerInfo.JniName)) {
+					TypesByJniName [registerInfo.JniName] = typeHandle;
 				}
 			}
 		}
 	}
 
-	internal static string GetFullName (TypeDefinition typeDef, MetadataReader reader)
+	string GetFullName (TypeDefinition typeDef)
 	{
-		var name = reader.GetString (typeDef.Name);
-		var ns = reader.GetString (typeDef.Namespace);
+		var name = Reader.GetString (typeDef.Name);
+		var ns = Reader.GetString (typeDef.Namespace);
 
 		if (typeDef.IsNested) {
-			var declaringType = reader.GetTypeDefinition (typeDef.GetDeclaringType ());
-			var parentName = GetFullName (declaringType, reader);
+			var declaringType = Reader.GetTypeDefinition (typeDef.GetDeclaringType ());
+			var parentName = GetFullName (declaringType);
 			return parentName + "+" + name;
 		}
 
@@ -191,17 +109,23 @@ sealed class AssemblyIndex : IDisposable
 
 		foreach (var caHandle in typeDef.GetCustomAttributes ()) {
 			var ca = Reader.GetCustomAttribute (caHandle);
-			var attrName = GetCustomAttributeName (ca, Reader);
+			var attrName = GetCustomAttributeName (ca);
 
 			if (attrName == null) {
 				continue;
 			}
 
-			if (attrName == "RegisterAttribute") {
-				registerInfo = ParseRegisterAttribute (ca, customAttributeTypeProvider);
-			} else if (attrName == "ExportAttribute") {
-				// [Export] methods are detected per-method in CollectMarshalMethods
-			} else if (IsJniNameProviderAttribute (attrName)) {
+			switch (attrName) {
+			case "RegisterAttribute":
+				registerInfo = ParseRegisterAttribute (ca);
+				break;
+
+			case "ActivityAttribute":
+			case "ServiceAttribute":
+			case "BroadcastReceiverAttribute":
+			case "ContentProviderAttribute":
+			case "ApplicationAttribute":
+			case "InstrumentationAttribute":
 				attrInfo ??= new TypeAttributeInfo ();
 				attrInfo.HasComponentAttribute = true;
 				var componentName = TryGetNameProperty (ca);
@@ -212,62 +136,37 @@ sealed class AssemblyIndex : IDisposable
 					attrInfo.ApplicationBackupAgent = TryGetTypeProperty (ca, "BackupAgent");
 					attrInfo.ApplicationManageSpaceActivity = TryGetTypeProperty (ca, "ManageSpaceActivity");
 				}
+				break;
+
+			case "ExportAttribute":
+				attrInfo ??= new TypeAttributeInfo ();
+				attrInfo.HasExportAttribute = true;
+				break;
 			}
 		}
 
 		return (registerInfo, attrInfo);
 	}
 
-	/// <summary>
-	/// Checks if an attribute type name is a known <c>IJniNameProviderAttribute</c> implementor.
-	/// Uses the local set first (from this assembly), then falls back to the merged set
-	/// (populated after all assemblies are loaded), then falls back to hardcoded names
-	/// for the well-known Android component attributes.
-	/// </summary>
-	bool IsJniNameProviderAttribute (string attrName)
-	{
-		if (JniNameProviderAttributes.Contains (attrName)) {
-			return true;
-		}
-
-		if (allJniNameProviderAttributes != null && allJniNameProviderAttributes.Contains (attrName)) {
-			return true;
-		}
-
-		// Fallback for the case where we haven't loaded the assembly defining the attribute yet.
-		// This covers the common case where user assemblies reference Mono.Android attributes.
-		return IsKnownComponentAttribute (attrName);
-	}
-
-	static bool IsKnownComponentAttribute (string attrName)
-	{
-		return attrName == "ActivityAttribute"
-			|| attrName == "ServiceAttribute"
-			|| attrName == "BroadcastReceiverAttribute"
-			|| attrName == "ContentProviderAttribute"
-			|| attrName == "ApplicationAttribute"
-			|| attrName == "InstrumentationAttribute";
-	}
-
-	internal static string? GetCustomAttributeName (CustomAttribute ca, MetadataReader reader)
+	string? GetCustomAttributeName (CustomAttribute ca)
 	{
 		if (ca.Constructor.Kind == HandleKind.MemberReference) {
-			var memberRef = reader.GetMemberReference ((MemberReferenceHandle)ca.Constructor);
+			var memberRef = Reader.GetMemberReference ((MemberReferenceHandle)ca.Constructor);
 			if (memberRef.Parent.Kind == HandleKind.TypeReference) {
-				var typeRef = reader.GetTypeReference ((TypeReferenceHandle)memberRef.Parent);
-				return reader.GetString (typeRef.Name);
+				var typeRef = Reader.GetTypeReference ((TypeReferenceHandle)memberRef.Parent);
+				return Reader.GetString (typeRef.Name);
 			}
 		} else if (ca.Constructor.Kind == HandleKind.MethodDefinition) {
-			var methodDef = reader.GetMethodDefinition ((MethodDefinitionHandle)ca.Constructor);
-			var declaringType = reader.GetTypeDefinition (methodDef.GetDeclaringType ());
-			return reader.GetString (declaringType.Name);
+			var methodDef = Reader.GetMethodDefinition ((MethodDefinitionHandle)ca.Constructor);
+			var declaringType = Reader.GetTypeDefinition (methodDef.GetDeclaringType ());
+			return Reader.GetString (declaringType.Name);
 		}
 		return null;
 	}
 
-	internal static RegisterInfo ParseRegisterAttribute (CustomAttribute ca, ICustomAttributeTypeProvider<string> provider)
+	RegisterInfo ParseRegisterAttribute (CustomAttribute ca)
 	{
-		var value = ca.DecodeValue (provider);
+		var value = ca.DecodeValue (new CustomAttributeTypeProvider (Reader));
 
 		string jniName = "";
 		string? signature = null;
@@ -284,8 +183,10 @@ sealed class AssemblyIndex : IDisposable
 			connector = (string?)value.FixedArguments [2].Value;
 		}
 
-		if (TryGetNamedBooleanArgument (value, "DoNotGenerateAcw", out var doNotGenerateAcwValue)) {
-			doNotGenerateAcw = doNotGenerateAcwValue;
+		foreach (var named in value.NamedArguments) {
+			if (named.Name == "DoNotGenerateAcw" && named.Value is bool val) {
+				doNotGenerateAcw = val;
+			}
 		}
 
 		return new RegisterInfo (jniName, signature, connector, doNotGenerateAcw);
@@ -293,53 +194,23 @@ sealed class AssemblyIndex : IDisposable
 
 	string? TryGetTypeProperty (CustomAttribute ca, string propertyName)
 	{
-		var value = ca.DecodeValue (customAttributeTypeProvider);
-		var typeName = TryGetNamedStringArgument (value, propertyName);
-		if (!string.IsNullOrEmpty (typeName)) {
-			return typeName;
+		var value = ca.DecodeValue (new CustomAttributeTypeProvider (Reader));
+		foreach (var named in value.NamedArguments) {
+			if (named.Name == propertyName && named.Value is string typeName && !string.IsNullOrEmpty (typeName)) {
+				return typeName;
+			}
 		}
 		return null;
 	}
 
 	string? TryGetNameProperty (CustomAttribute ca)
 	{
-		var value = ca.DecodeValue (customAttributeTypeProvider);
-
-		// Check named arguments first (e.g., [Activity(Name = "...")])
-		var name = TryGetNamedStringArgument (value, "Name");
-		if (!string.IsNullOrEmpty (name)) {
-			return name;
-		}
-
-		// Fall back to first constructor argument (e.g., [CustomJniName("...")])
-		if (value.FixedArguments.Length > 0 && value.FixedArguments [0].Value is string ctorName && !string.IsNullOrEmpty (ctorName)) {
-			return ctorName;
-		}
-
-		return null;
-	}
-
-	static bool TryGetNamedBooleanArgument (CustomAttributeValue<string> value, string argumentName, out bool argumentValue)
-	{
+		var value = ca.DecodeValue (new CustomAttributeTypeProvider (Reader));
 		foreach (var named in value.NamedArguments) {
-			if (named.Name == argumentName && named.Value is bool boolValue) {
-				argumentValue = boolValue;
-				return true;
+			if (named.Name == "Name" && named.Value is string name && !string.IsNullOrEmpty (name)) {
+				return name;
 			}
 		}
-
-		argumentValue = false;
-		return false;
-	}
-
-	static string? TryGetNamedStringArgument (CustomAttributeValue<string> value, string argumentName)
-	{
-		foreach (var named in value.NamedArguments) {
-			if (named.Name == argumentName && named.Value is string stringValue) {
-				return stringValue;
-			}
-		}
-
 		return null;
 	}
 
@@ -398,6 +269,11 @@ sealed class TypeAttributeInfo
 	/// Null if no Name was specified on the component attribute.
 	/// </summary>
 	public string? ComponentAttributeJniName { get; set; }
+
+	/// <summary>
+	/// Type has [Export] attribute on itself.
+	/// </summary>
+	public bool HasExportAttribute { get; set; }
 
 	/// <summary>
 	/// If the type has [Application(BackupAgent = typeof(X))],

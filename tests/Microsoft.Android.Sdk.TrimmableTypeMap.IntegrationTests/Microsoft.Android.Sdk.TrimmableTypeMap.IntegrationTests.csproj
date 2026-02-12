@@ -1,28 +1,47 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <RootNamespace>Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <OutputPath>..\..\bin\Test$(Configuration)</OutputPath>
+<<<<<<<< HEAD:tests/Microsoft.Android.Build.TypeMap.IntegrationTests/Microsoft.Android.Build.TypeMap.IntegrationTests.csproj
+    <!-- Use this assembly name to match InternalsVisibleTo in the pre-built Xamarin.Android.Build.Tasks.dll -->
+    <AssemblyName>Xamarin.Android.Build.Tests</AssemblyName>
+    <!-- Path to a fully-built android repo (sibling or same repo after `make prepare && make`).
+         The test references pre-built DLLs from its test output directory. -->
+    <AndroidRepoBinDir Condition=" '$(AndroidRepoBinDir)' == '' ">$(MSBuildThisFileDirectory)..\..\bin\TestDebug\net10.0</AndroidRepoBinDir>
+    <AndroidRepoBinDirSibling>$(MSBuildThisFileDirectory)..\..\..\android\bin\TestDebug\net10.0</AndroidRepoBinDirSibling>
+    <AndroidRepoBinDir Condition=" !Exists('$(AndroidRepoBinDir)\Xamarin.Android.Build.Tasks.dll') ">$(AndroidRepoBinDirSibling)</AndroidRepoBinDir>
+|||||||| parent of 1f1d6570d (Rename to Microsoft.Android.Sdk.TrimmableTypeMap and fix review issues):tests/Microsoft.Android.Build.TypeMap.IntegrationTests/Microsoft.Android.Build.TypeMap.IntegrationTests.csproj
+    <!-- Use this assembly name to match InternalsVisibleTo in Xamarin.Android.Build.Tasks -->
+    <AssemblyName>Xamarin.Android.Build.Tests</AssemblyName>
+========
+>>>>>>>> 1f1d6570d (Rename to Microsoft.Android.Sdk.TrimmableTypeMap and fix review issues):tests/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests.csproj
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.0.2" />
+    <PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
   </ItemGroup>
 
-  <!-- Exclude the fixture assembly source files from this project -->
   <ItemGroup>
-    <Compile Remove="UserTypesFixture\**" />
-  </ItemGroup>
-
-  <ItemGroup>
+<<<<<<<< HEAD:tests/Microsoft.Android.Build.TypeMap.IntegrationTests/Microsoft.Android.Build.TypeMap.IntegrationTests.csproj
+    <ProjectReference Include="..\..\src\Microsoft.Android.Build.TypeMap\Microsoft.Android.Build.TypeMap.csproj" />
+|||||||| parent of 1f1d6570d (Rename to Microsoft.Android.Sdk.TrimmableTypeMap and fix review issues):tests/Microsoft.Android.Build.TypeMap.IntegrationTests/Microsoft.Android.Build.TypeMap.IntegrationTests.csproj
+    <ProjectReference Include="..\..\src\Microsoft.Android.Build.TypeMap\Microsoft.Android.Build.TypeMap.csproj" />
+    <ProjectReference Include="..\..\src\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj" />
+    <!-- Mono.Android is built as a dependency so the ref assembly is available on disk.
+         ReferenceOutputAssembly=false because we read it with SRM/Cecil, not compile against it directly.
+         Instead, we reference the ref assembly below so we can use typeof(Java.Lang.Object). -->
+    <ProjectReference Include="..\..\src\Mono.Android\Mono.Android.csproj"
+                      ReferenceOutputAssembly="false" />
+========
     <ProjectReference Include="..\..\src\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
     <ProjectReference Include="..\..\src\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj" />
     <!-- Mono.Android is built as a dependency so the ref assembly is available on disk.
@@ -30,27 +49,47 @@
          Instead, we reference the ref assembly below so we can use typeof(Java.Lang.Object). -->
     <ProjectReference Include="..\..\src\Mono.Android\Mono.Android.csproj"
                       ReferenceOutputAssembly="false" />
-    <!-- User-type fixture assembly: built as a dependency, scanned via SRM/Cecil in tests.
-         ReferenceOutputAssembly=false because we don't compile against it — we just need the DLL on disk. -->
-    <ProjectReference Include="UserTypesFixture\UserTypesFixture.csproj"
-                      ReferenceOutputAssembly="false" />
+>>>>>>>> 1f1d6570d (Rename to Microsoft.Android.Sdk.TrimmableTypeMap and fix review issues):tests/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests.csproj
   </ItemGroup>
 
-  <!-- Discover the Mono.Android ref assembly path and add a direct Reference to it.
-       This lets tests use typeof(Java.Lang.Object).Assembly.Location to find the assembly. -->
-  <Target Name="_AddMonoAndroidReference" BeforeTargets="ResolveAssemblyReferences">
-    <ItemGroup>
-      <_MonoAndroidRefCandidate Include="$(MSBuildThisFileDirectory)..\..\bin\$(Configuration)\lib\packs\Microsoft.Android.Ref.*\*\ref\net*\Mono.Android.dll" />
-    </ItemGroup>
-    <PropertyGroup>
-      <_MonoAndroidRefAssembly>@(_MonoAndroidRefCandidate, ';')</_MonoAndroidRefAssembly>
-      <_MonoAndroidRefAssembly>$(_MonoAndroidRefAssembly.Split(';')[0])</_MonoAndroidRefAssembly>
-    </PropertyGroup>
-    <ItemGroup Condition=" '$(_MonoAndroidRefAssembly)' != '' ">
-      <Reference Include="Mono.Android">
-        <HintPath>$(_MonoAndroidRefAssembly)</HintPath>
-      </Reference>
-    </ItemGroup>
-  </Target>
+  <!-- Reference pre-built legacy scanner DLLs -->
+  <ItemGroup Condition=" Exists('$(AndroidRepoBinDir)\Xamarin.Android.Build.Tasks.dll') ">
+    <Reference Include="Xamarin.Android.Build.Tasks">
+      <HintPath>$(AndroidRepoBinDir)\Xamarin.Android.Build.Tasks.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="Java.Interop.Tools.Cecil">
+      <HintPath>$(AndroidRepoBinDir)\Java.Interop.Tools.Cecil.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="Java.Interop.Tools.JavaCallableWrappers">
+      <HintPath>$(AndroidRepoBinDir)\Java.Interop.Tools.JavaCallableWrappers.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="Java.Interop.Tools.Diagnostics">
+      <HintPath>$(AndroidRepoBinDir)\Java.Interop.Tools.Diagnostics.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="Microsoft.Android.Build.BaseTasks">
+      <HintPath>$(AndroidRepoBinDir)\Microsoft.Android.Build.BaseTasks.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="Xamarin.Android.Tools.AndroidSdk">
+      <HintPath>$(AndroidRepoBinDir)\Xamarin.Android.Tools.AndroidSdk.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="Mono.Cecil">
+      <HintPath>$(AndroidRepoBinDir)\Mono.Cecil.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="Microsoft.Build.Framework">
+      <HintPath>$(AndroidRepoBinDir)\Microsoft.Build.Framework.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="Microsoft.Build.Utilities.Core">
+      <HintPath>$(AndroidRepoBinDir)\Microsoft.Build.Utilities.Core.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
 
 </Project>
