@@ -446,6 +446,40 @@ public class JavaPeerScannerTests
 	}
 
 	[Fact]
+	public void Scan_ExportMembersComprehensive_NameOverrideAndThrows ()
+	{
+		var peers = ScanFixtures ();
+		var peer = FindByJavaName (peers, "my/app/ExportMembersComprehensive");
+		Assert.Equal (4, peer.MarshalMethods.Count);
+
+		// [Export("attributeOverridesNames")] on CompletelyDifferentName
+		var renamed = peer.MarshalMethods.First (m => m.JniName == "attributeOverridesNames");
+		Assert.Null (renamed.Connector);
+		Assert.Equal ("n_CompletelyDifferentName", renamed.NativeCallbackName);
+
+		// [Export(ThrownNames = new [] { "java.lang.Throwable" })]
+		var throwing = peer.MarshalMethods.First (m => m.JniName == "methodThatThrows");
+		Assert.NotNull (throwing.ThrownNames);
+		Assert.Single (throwing.ThrownNames!);
+		Assert.Equal ("java.lang.Throwable", throwing.ThrownNames! [0]);
+
+		// [Export(ThrownNames = new string [0])]
+		var emptyThrows = peer.MarshalMethods.First (m => m.JniName == "methodThatThrowsEmptyArray");
+		// Empty array should result in null or empty ThrownNames
+		Assert.True (emptyThrows.ThrownNames == null || emptyThrows.ThrownNames.Count == 0);
+	}
+
+	[Fact]
+	public void Scan_ExportCtorWithSuperArgs_HasSuperArgumentsString ()
+	{
+		var peers = ScanFixtures ();
+		var peer = FindByJavaName (peers, "my/app/ExportCtorWithSuperArgs");
+		var ctor = peer.MarshalMethods.FirstOrDefault (m => m.IsConstructor);
+		Assert.NotNull (ctor);
+		Assert.Equal ("", ctor!.SuperArgumentsString);
+	}
+
+	[Fact]
 	public void Scan_CustomView_DiscoveredAsRegularType ()
 	{
 		var peers = ScanFixtures ();

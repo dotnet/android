@@ -466,6 +466,55 @@ public class JcwJavaSourceGeneratorTests
 			Assert.Contains ("mono.android.TypeManager.Activate (\"MyApp.ExportsConstructors, TestFixtures\", \"System.Int32, System.Private.CoreLib\", this, new java.lang.Object[] { p0 })", java);
 		}
 
+		/// <summary>
+		/// Full output comparison — ported from legacy GenerateConstructors.
+		/// Verifies the complete JCW for [Export] constructors matches the
+		/// TypeManager.Activate pattern with correct activation guard.
+		/// </summary>
+		[Fact]
+		public void Generate_ExportConstructors_FullOutput ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportsConstructors");
+			var java = GenerateToString (peer);
+
+			// Parameterless ctor: super(), then TypeManager.Activate with empty sig
+			Assert.Contains ("\tpublic ExportsConstructors ()\n\t{\n\t\tsuper ();\n\t\tif (getClass () == ExportsConstructors.class) mono.android.TypeManager.Activate (\"MyApp.ExportsConstructors, TestFixtures\", \"\", this, new java.lang.Object[] {  });\n\t}\n", java);
+
+			// int ctor: super(p0), then TypeManager.Activate with int sig
+			Assert.Contains ("\tpublic ExportsConstructors (int p0)\n\t{\n\t\tsuper (p0);\n\t\tif (getClass () == ExportsConstructors.class) mono.android.TypeManager.Activate (\"MyApp.ExportsConstructors, TestFixtures\", \"System.Int32, System.Private.CoreLib\", this, new java.lang.Object[] { p0 });\n\t}\n", java);
+
+			// No nctor native declarations
+			Assert.DoesNotContain ("private native void nctor_", java);
+		}
+
+		/// <summary>
+		/// Full output comparison — ported from legacy GenerateConstructors_WithThrows.
+		/// Verifies throws clauses appear on ctors that have ThrownNames.
+		/// </summary>
+		[Fact]
+		public void Generate_ExportThrowsConstructors_FullOutput ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportsThrowsConstructors");
+			var java = GenerateToString (peer);
+
+			// Parameterless ctor with throws
+			Assert.Contains ("\tpublic ExportsThrowsConstructors ()\n\t\tthrows java.lang.Throwable\n\t{\n\t\tsuper ();\n", java);
+
+			// int ctor with throws
+			Assert.Contains ("\tpublic ExportsThrowsConstructors (int p0)\n\t\tthrows java.lang.Throwable\n\t{\n\t\tsuper (p0);\n", java);
+
+			// string ctor WITHOUT throws (empty ThrownNames in legacy means [Export] with no Throws)
+			Assert.Contains ("\tpublic ExportsThrowsConstructors (java.lang.String p0)\n\t{\n\t\tsuper (p0);\n", java);
+
+			// String ctor should use TypeManager.Activate with String sig
+			Assert.Contains ("\"System.String, System.Private.CoreLib\"", java);
+
+			// No nctor native declarations
+			Assert.DoesNotContain ("private native void nctor_", java);
+		}
+
 		[Fact]
 		public void Generate_ExportThrowsConstructors_HasThrowsClause ()
 		{
@@ -517,6 +566,103 @@ public class JcwJavaSourceGeneratorTests
 
 			// Only nctor_0 declaration (not nctor_1 for [Export])
 			Assert.DoesNotContain ("nctor_1", java);
+		}
+
+		[Fact]
+		public void Generate_ExportCtorWithSuperArgs_UsesCustomSuperArgs ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportCtorWithSuperArgs");
+			var java = GenerateToString (peer);
+
+			// SuperArgumentsString = "" means super() with no args, not super(p0)
+			Assert.Contains ("super ();", java);
+			Assert.DoesNotContain ("super (p0);", java);
+
+			// Should still use TypeManager.Activate
+			Assert.Contains ("mono.android.TypeManager.Activate (\"", java);
+		}
+
+	}
+
+	public class ExportMethodJcw
+	{
+
+		/// <summary>
+		/// Ported from legacy GenerateExportedMembers — [Export] with name override.
+		/// The Java method name should be the export name, not the C# method name.
+		/// </summary>
+		[Fact]
+		public void Generate_ExportWithNameOverride_UsesExportName ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportMembersComprehensive");
+			var java = GenerateToString (peer);
+
+			// [Export("attributeOverridesNames")] on CompletelyDifferentName
+			// Java method uses export name, native callback uses n_ + C# method name
+			Assert.Contains ("public java.lang.String attributeOverridesNames (java.lang.String p0, int p1)", java);
+			Assert.Contains ("n_CompletelyDifferentName (p0, p1)", java);
+		}
+
+		/// <summary>
+		/// Ported from legacy GenerateExportedMembers — [Export] method keeps C# name.
+		/// </summary>
+		[Fact]
+		public void Generate_ExportWithoutNameOverride_UsesMethodName ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportMembersComprehensive");
+			var java = GenerateToString (peer);
+
+			// [Export] without name arg uses the C# method name as-is
+			Assert.Contains ("public void methodNamesNotMangled ()", java);
+			Assert.Contains ("n_methodNamesNotMangled ()", java);
+		}
+
+		/// <summary>
+		/// Ported from legacy GenerateExportedMembers — [Export] with throws.
+		/// </summary>
+		[Fact]
+		public void Generate_ExportMethodWithThrows_HasThrowsClause ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportMembersComprehensive");
+			var java = GenerateToString (peer);
+
+			// throws clause appears on the line after the method signature
+			Assert.Contains ("methodThatThrows ()\n\t\tthrows java.lang.Throwable\n", java);
+		}
+
+		/// <summary>
+		/// Ported from legacy GenerateExportedMembers — [Export] with empty throws array.
+		/// Should NOT generate a throws clause.
+		/// </summary>
+		[Fact]
+		public void Generate_ExportMethodWithEmptyThrows_NoThrowsClause ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportMembersComprehensive");
+			var java = GenerateToString (peer);
+
+			// methodThatThrowsEmptyArray should NOT have throws clause
+			// It should appear as a plain method declaration
+			Assert.Contains ("public void methodThatThrowsEmptyArray ()", java);
+
+			// Make sure the throws clause is NOT on this specific method
+			// (it might be on methodThatThrows, but not on methodThatThrowsEmptyArray)
+			var lines = java.Split ('\n');
+			for (int i = 0; i < lines.Length; i++) {
+				if (lines [i].Contains ("methodThatThrowsEmptyArray")) {
+					// The line with the method should not have throws,
+					// and neither should the next line
+					Assert.DoesNotContain ("throws", lines [i]);
+					if (i + 1 < lines.Length) {
+						Assert.DoesNotContain ("throws", lines [i + 1]);
+					}
+					break;
+				}
+			}
 		}
 
 	}
