@@ -876,8 +876,26 @@ sealed class TypeMapAssemblyEmitter
 			JniSignatureHelper.EncodeClrType (rt.Type (), returnKind);
 		} else if (managedReturnType == "System.String") {
 			rt.Type ().String ();
+		} else if (managedReturnType != null) {
+			// Resolve the managed return type for the method ref signature
+			string typeName = managedReturnType;
+			string assemblyName = "";
+			int commaIndex = managedReturnType.IndexOf (", ", StringComparison.Ordinal);
+			if (commaIndex >= 0) {
+				assemblyName = managedReturnType.Substring (commaIndex + 2);
+				typeName = managedReturnType.Substring (0, commaIndex);
+			}
+			if (assemblyName.Length > 0) {
+				var typeRef = ResolveTypeRef (metadata, new TypeRefData {
+					ManagedTypeName = typeName,
+					AssemblyName = assemblyName,
+				});
+				rt.Type ().Type (typeRef, false);
+			} else {
+				// Fallback: no assembly info available, use IntPtr
+				rt.Type ().IntPtr ();
+			}
 		} else {
-			// For object returns, the JNI return type is IntPtr
 			rt.Type ().IntPtr ();
 		}
 	}

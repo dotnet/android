@@ -287,7 +287,7 @@ sealed class JavaPeerScanner : IDisposable
 				parameters [i].ManagedType = ManagedTypeToAssemblyQualifiedName (sig.ParameterTypes [i]);
 			}
 			if (sig.ReturnType != "System.Void") {
-				managedReturnType = sig.ReturnType;
+				managedReturnType = ManagedTypeToAssemblyQualifiedName (sig.ReturnType);
 			}
 		}
 		methods.Add (new MarshalMethodInfo {

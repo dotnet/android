@@ -1405,6 +1405,9 @@ public class ModelBuilderTests
 			var exportMethod = proxy!.ExportMarshalMethods.FirstOrDefault (e => e.ManagedParameters.Count == 2);
 			Assert.NotNull (exportMethod);
 			Assert.False (exportMethod!.IsConstructor);
+
+			// Verify the string return type is assembly-qualified
+			Assert.Equal ("System.String, System.Private.CoreLib", exportMethod.ManagedReturnType);
 		}
 
 	}
