@@ -162,6 +162,12 @@ sealed class ExportMarshalMethodData
 	/// <summary>Name of the generated wrapper method, e.g., "n_myMethod_uco_0" or "nctor_0_uco".</summary>
 	public string WrapperName { get; set; } = "";
 
+	/// <summary>
+	/// JNI method name for RegisterNatives, e.g., "n_DoWork" or "nctor_0".
+	/// Must match the native method declaration in the Java JCW.
+	/// </summary>
+	public string NativeCallbackName { get; set; } = "";
+
 	/// <summary>Name of the managed method to call, e.g., "MyMethod" or ".ctor".</summary>
 	public string ManagedMethodName { get; set; } = "";
 

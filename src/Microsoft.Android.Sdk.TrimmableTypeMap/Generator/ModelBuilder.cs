@@ -242,7 +242,7 @@ static class ModelBuilder
 
 			if (mm.Connector == null) {
 				// [Export] method — generate full marshal body
-				var exportData = BuildExportMarshalMethod (mm, peer, wrapperName, isConstructor: false);
+				var exportData = BuildExportMarshalMethod (mm, peer, wrapperName, mm.NativeCallbackName, isConstructor: false);
 				proxy.ExportMarshalMethods.Add (exportData);
 			} else {
 				// [Register] method — forward to existing n_* callback
@@ -280,10 +280,11 @@ static class ModelBuilder
 			}
 
 			string wrapperName = $"nctor_{ctor.ConstructorIndex}_uco";
+			string nativeCallbackName = $"nctor_{ctor.ConstructorIndex}";
 
 			if (mm.Connector == null) {
 				// [Export] constructor — generate full marshal body
-				var exportData = BuildExportMarshalMethod (mm, peer, wrapperName, isConstructor: true);
+				var exportData = BuildExportMarshalMethod (mm, peer, wrapperName, nativeCallbackName, isConstructor: true);
 				proxy.ExportMarshalMethods.Add (exportData);
 			} else {
 				// [Register] constructor — ActivateInstance pattern
@@ -324,14 +325,8 @@ static class ModelBuilder
 		}
 
 		foreach (var export in proxy.ExportMarshalMethods) {
-			string jniName = export.WrapperName;
-			int ucoSuffix = jniName.LastIndexOf ("_uco", StringComparison.Ordinal);
-			if (ucoSuffix >= 0) {
-				jniName = jniName.Substring (0, ucoSuffix);
-			}
-
 			proxy.NativeRegistrations.Add (new NativeRegistrationData {
-				JniMethodName = jniName,
+				JniMethodName = export.NativeCallbackName,
 				JniSignature = export.JniSignature,
 				WrapperMethodName = export.WrapperName,
 			});
@@ -339,10 +334,11 @@ static class ModelBuilder
 	}
 
 	static ExportMarshalMethodData BuildExportMarshalMethod (MarshalMethodInfo mm, JavaPeerInfo peer,
-		string wrapperName, bool isConstructor)
+		string wrapperName, string nativeCallbackName, bool isConstructor)
 	{
 		var data = new ExportMarshalMethodData {
 			WrapperName = wrapperName,
+			NativeCallbackName = nativeCallbackName,
 			ManagedMethodName = mm.ManagedMethodName,
 			DeclaringType = new TypeRefData {
 				ManagedTypeName = peer.ManagedTypeName,

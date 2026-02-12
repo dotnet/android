@@ -1391,6 +1391,27 @@ public class ModelBuilderTests
 
 			// [Export] methods should generate NativeRegistrations entries
 			Assert.Equal (2, proxy!.NativeRegistrations.Count);
+
+			// Registration names must match the JCW native method declarations (n_<ManagedMethodName>)
+			Assert.Contains (proxy.NativeRegistrations, r => r.JniMethodName == "n_DoWork");
+			Assert.Contains (proxy.NativeRegistrations, r => r.JniMethodName == "n_ComputeName");
+		}
+
+		[Fact]
+		public void Fixture_ExportWithNameOverride_NativeRegistrationUsesCallbackName ()
+		{
+			// [Export("attributeOverridesNames")] public string CompletelyDifferentName(...)
+			// JCW declares: native String n_CompletelyDifferentName(...)
+			// RegisterNatives must use "n_CompletelyDifferentName", NOT "n_attributeOverridesNames"
+			var peer = FindFixtureByJavaName ("my/app/ExportMembersComprehensive");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_ExportMembersComprehensive_Proxy");
+			Assert.NotNull (proxy);
+
+			Assert.Contains (proxy!.NativeRegistrations,
+				r => r.JniMethodName == "n_CompletelyDifferentName");
+			Assert.DoesNotContain (proxy.NativeRegistrations,
+				r => r.JniMethodName == "n_attributeOverridesNames");
 		}
 
 		[Fact]
