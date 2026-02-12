@@ -26,13 +26,49 @@ public partial class BuildTest3 : BaseTest
 	const uint ExpectedJniPreloadIndexStride = 4;
 
 	[Test]
-	public void NativeLibraryJniPreload_IgnoreAll_PreservesRequired ([Values] AndroidRuntime runtime)
+	public void NativeLibraryJniPreload_IncludeCustomLibraries ([Values] AndroidRuntime runtime)
 	{
-		const int ExpectedEntryCount = 4; // stride * number_of_libs
-
 		List<EnvironmentHelper.JniPreloads>? allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
 			runtime,
-			(XamarinAndroidApplicationProject proj) => {
+			(XamarinAndroidApplicationProject proj, AndroidTargetArch[] supportedArches) => {
+				NativeLibraryJniPreload_AddNativeLibraries (proj, supportedArches, "libMyStuff.so");
+			}
+		);
+		Assert.Fail ("Just gotta see the sources");
+	}
+
+	void NativeLibraryJniPreload_AddNativeLibraries (XamarinAndroidApplicationProject proj, AndroidTargetArch[] supportedArches, string libName, params string[]? moreLibNames)
+	{
+		const string SourceLibraryName = "libtest-jni-library.so";
+		var libNames = new List<string> {
+			libName,
+		};
+		if (moreLibNames != null && moreLibNames.Length > 0) {
+			libNames.AddRange (moreLibNames);
+		}
+
+		foreach (AndroidTargetArch arch in supportedArches) {
+			string libPath = Path.Combine (XABuildPaths.TestOutputDirectory, MonoAndroidHelper.ArchToRid (arch), SourceLibraryName);
+			Assert.IsTrue (File.Exists (libPath), $"Native library '{libPath}' does not exist.");
+
+			foreach (string lib in libNames) {
+				string abi = MonoAndroidHelper.ArchToAbi (arch);
+				proj.OtherBuildItems.Add (
+					new AndroidItem.AndroidNativeLibrary ($"native/{abi}/{lib}") {
+						BinaryContent = () => File.ReadAllBytes (libPath),
+						MetadataValues = $"Link={abi}/{lib}",
+					}
+				);
+			}
+		}
+	}
+
+	[Test]
+	public void NativeLibraryJniPreload_IgnoreAll_PreservesRequired ([Values] AndroidRuntime runtime)
+	{
+		List<EnvironmentHelper.JniPreloads>? allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
+			runtime,
+			(XamarinAndroidApplicationProject proj, AndroidTargetArch[] supportedArches) => {
 				proj.SetProperty ("AndroidIgnoreAllJniPreload", "true");
 			}
 		);
@@ -85,7 +121,7 @@ public partial class BuildTest3 : BaseTest
 		}
 	}
 
-	List<EnvironmentHelper.JniPreloads>? NativeLibraryJniPreload_CommonInitAndGetPreloads (AndroidRuntime runtime, Action<XamarinAndroidApplicationProject>? configureProject = null)
+	List<EnvironmentHelper.JniPreloads>? NativeLibraryJniPreload_CommonInitAndGetPreloads (AndroidRuntime runtime, Action<XamarinAndroidApplicationProject, AndroidTargetArch[]>? configureProject = null)
 	{
 		const bool isRelease = true;
 		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -106,7 +142,7 @@ public partial class BuildTest3 : BaseTest
 		};
 		proj.SetRuntime (runtime);
 		proj.SetRuntimeIdentifiers (supportedArches);
-		configureProject?.Invoke (proj);
+		configureProject?.Invoke (proj, supportedArches);
 
 		using var builder = CreateApkBuilder ();
 		Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
