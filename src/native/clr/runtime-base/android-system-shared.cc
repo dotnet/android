@@ -39,7 +39,7 @@ AndroidSystem::monodroid__system_property_get (std::string_view const& name, cha
 		log_warn (
 			LOG_DEFAULT,
 #if defined(XA_HOST_NATIVEAOT)
-			"Buffer to store system property may be too small, will copy only %z bytes",
+			"Buffer to store system property may be too small, will copy only %zu bytes",
 #else
 			"Buffer to store system property may be too small, will copy only {} bytes"sv,
 #endif

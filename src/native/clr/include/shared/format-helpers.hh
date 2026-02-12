@@ -41,7 +41,7 @@ namespace xamarin::android {
 
 		auto res = static_cast<size_t>(n);
 		if (res < dest.size ()) [[likely]] {
-			return std::string (dest.get (), dest.size ());
+			return std::string (dest.get (), dest.length ());
 		}
 
 		// resize_for_extra adds one more byte for the NUL character
@@ -60,7 +60,7 @@ namespace xamarin::android {
 			return "<error:3>";
 		}
 
-		return std::string (dest.get (), dest.size ());
+		return std::string (dest.get (), dest.length ());
 	}
 #else
 	template<typename ...Args> [[gnu::always_inline]]
