@@ -218,6 +218,8 @@ sealed class JavaPeerScanner : IDisposable
 				JavaName = jniName,
 				CompatJniName = compatJniName,
 				ManagedTypeName = fullName,
+				ManagedTypeNamespace = ExtractNamespace (fullName),
+				ManagedTypeShortName = ExtractShortName (fullName),
 				AssemblyName = index.AssemblyName,
 				BaseJavaName = baseJavaName,
 				ImplementedInterfaceJavaNames = implementedInterfaces,
@@ -226,6 +228,7 @@ sealed class JavaPeerScanner : IDisposable
 				DoNotGenerateAcw = doNotGenerateAcw,
 				IsUnconditional = isUnconditional,
 				MarshalMethods = marshalMethods,
+				JavaConstructors = BuildJavaConstructors (marshalMethods),
 				ActivationCtor = activationCtor,
 				InvokerTypeName = invokerTypeName,
 				IsGenericDefinition = isGenericDefinition,
@@ -279,6 +282,9 @@ sealed class JavaPeerScanner : IDisposable
 			JniSignature = registerInfo.Signature ?? "()V",
 			Connector = registerInfo.Connector,
 			ManagedMethodName = index.Reader.GetString (methodDef.Name),
+			NativeCallbackName = "n_" + index.Reader.GetString (methodDef.Name),
+			JniReturnType = JniSignatureHelper.ParseReturnTypeString (registerInfo.Signature ?? "()V"),
+			Parameters = ParseJniParameters (registerInfo.Signature ?? "()V"),
 			IsConstructor = registerInfo.JniName == "<init>" || registerInfo.JniName == ".ctor",
 			ThrownNames = exportInfo?.ThrownNames,
 			SuperArgumentsString = exportInfo?.SuperArgumentsString,
@@ -731,5 +737,46 @@ sealed class JavaPeerScanner : IDisposable
 		var data = System.Text.Encoding.UTF8.GetBytes ($"{ns}:{assemblyName}");
 		var hash = System.IO.Hashing.Crc64.Hash (data);
 		return $"crc64{BitConverter.ToString (hash).Replace ("-", "").ToLowerInvariant ()}";
+	}
+
+	static string ExtractNamespace (string fullName)
+	{
+		int lastDot = fullName.LastIndexOf ('.');
+		return lastDot >= 0 ? fullName.Substring (0, lastDot) : "";
+	}
+
+	static string ExtractShortName (string fullName)
+	{
+		int lastDot = fullName.LastIndexOf ('.');
+		return lastDot >= 0 ? fullName.Substring (lastDot + 1) : fullName;
+	}
+
+	static List<JniParameterInfo> ParseJniParameters (string jniSignature)
+	{
+		var typeStrings = JniSignatureHelper.ParseParameterTypeStrings (jniSignature);
+		var result = new List<JniParameterInfo> (typeStrings.Count);
+		foreach (var t in typeStrings) {
+			result.Add (new JniParameterInfo { JniType = t });
+		}
+		return result;
+	}
+
+	static List<JavaConstructorInfo> BuildJavaConstructors (List<MarshalMethodInfo> marshalMethods)
+	{
+		var ctors = new List<JavaConstructorInfo> ();
+		int ctorIndex = 0;
+		foreach (var mm in marshalMethods) {
+			if (!mm.IsConstructor) {
+				continue;
+			}
+			ctors.Add (new JavaConstructorInfo {
+				JniSignature = mm.JniSignature,
+				ConstructorIndex = ctorIndex,
+				Parameters = mm.Parameters,
+				SuperArgumentsString = mm.SuperArgumentsString,
+			});
+			ctorIndex++;
+		}
+		return ctors;
 	}
 }
