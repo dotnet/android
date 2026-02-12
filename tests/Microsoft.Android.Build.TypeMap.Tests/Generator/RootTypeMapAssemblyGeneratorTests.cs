@@ -68,19 +68,54 @@ public class RootTypeMapAssemblyGeneratorTests
 	}
 
 	[Fact]
-	public void Generate_HasTypeMapAssemblyTargetAttributeType ()
+	public void Generate_ReferencesGenericTypeMapAssemblyTargetAttribute ()
 	{
 		var path = GenerateRootAssembly (new [] { "_App.TypeMap" });
 		try {
 			using var pe = new PEReader (File.OpenRead (path));
 			var reader = pe.GetMetadataReader ();
 
-			var types = reader.TypeDefinitions
+			// The attribute type is referenced (not defined) — look for TypeRef
+			var typeRefs = reader.TypeReferences
+				.Select (h => reader.GetTypeReference (h))
+				.ToList ();
+			Assert.Contains (typeRefs, t =>
+				reader.GetString (t.Name) == "TypeMapAssemblyTargetAttribute`1" &&
+				reader.GetString (t.Namespace) == "System.Runtime.InteropServices");
+
+			// Java.Lang.Object must also be referenced (generic type argument)
+			Assert.Contains (typeRefs, t =>
+				reader.GetString (t.Name) == "Object" &&
+				reader.GetString (t.Namespace) == "Java.Lang");
+
+			// No TypeDefinition for the attribute (it's external)
+			var typeDefs = reader.TypeDefinitions
 				.Select (h => reader.GetTypeDefinition (h))
 				.ToList ();
-			Assert.Contains (types, t =>
-				reader.GetString (t.Name) == "TypeMapAssemblyTargetAttribute" &&
-				reader.GetString (t.Namespace) == "System.Runtime.InteropServices");
+			Assert.DoesNotContain (typeDefs, t =>
+				reader.GetString (t.Name).Contains ("TypeMapAssemblyTarget"));
+		} finally {
+			CleanUp (path);
+		}
+	}
+
+	[Fact]
+	public void Generate_AttributeCtorIsOnGenericTypeSpec ()
+	{
+		var path = GenerateRootAssembly (new [] { "_App.TypeMap" });
+		try {
+			using var pe = new PEReader (File.OpenRead (path));
+			var reader = pe.GetMetadataReader ();
+
+			var attr = reader.GetCustomAttribute (
+				reader.GetCustomAttributes (EntityHandle.AssemblyDefinition).First ());
+
+			// The ctor should be a MemberReference (on a TypeSpec), not a MethodDefinition
+			Assert.Equal (HandleKind.MemberReference, attr.Constructor.Kind);
+
+			var memberRef = reader.GetMemberReference ((MemberReferenceHandle) attr.Constructor);
+			// Parent should be a TypeSpec (closed generic)
+			Assert.Equal (HandleKind.TypeSpecification, memberRef.Parent.Kind);
 		} finally {
 			CleanUp (path);
 		}
