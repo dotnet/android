@@ -319,7 +319,7 @@ public class JcwJavaSourceGeneratorTests
 			Assert.Contains ("@Override\n", java);
 			Assert.Contains ("public void onCreate (android.os.Bundle p0)\n", java);
 			Assert.Contains ("n_OnCreate (p0);\n", java);
-			Assert.Contains ("public native void n_OnCreate (android.os.Bundle p0);\n", java);
+			Assert.Contains ("private native void n_OnCreate (android.os.Bundle p0);\n", java);
 		}
 
 		[Fact]
@@ -636,6 +636,36 @@ public class JcwJavaSourceGeneratorTests
 					break;
 				}
 			}
+		}
+
+		[Fact]
+		public void Generate_ExportMethod_NoOverrideAnnotation ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportMembersComprehensive");
+			var java = GenerateToString (peer);
+
+			// [Export] methods should NOT have @Override — they are new declarations, not overrides
+			var lines = java.Split ('\n');
+			for (int i = 0; i < lines.Length; i++) {
+				if (lines [i].Contains ("methodNamesNotMangled ()")) {
+					// The line before should NOT be @Override
+					Assert.True (i > 0);
+					Assert.DoesNotContain ("@Override", lines [i - 1]);
+					break;
+				}
+			}
+		}
+
+		[Fact]
+		public void Generate_ExportMethod_NativeDeclarationIsPrivate ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportMembersComprehensive");
+			var java = GenerateToString (peer);
+
+			Assert.Contains ("private native void n_methodNamesNotMangled ()", java);
+			Assert.Contains ("private native java.lang.String n_CompletelyDifferentName (java.lang.String p0, int p1)", java);
 		}
 
 	}
