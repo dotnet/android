@@ -30,7 +30,10 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	bool _disposed;
 
 	static Lazy<ManagedValueManager> s_instance = new (() => new ManagedValueManager ());
+	
 	public static ManagedValueManager GetOrCreateInstance () => s_instance.Value;
+	
+	static ManagedValueManager? TryGetInstance () => s_instance.IsValueCreated ? s_instance.Value : null;
 
 	unsafe ManagedValueManager ()
 	{
@@ -444,13 +447,24 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 		// Schedule cleanup of _registeredInstances on a thread pool thread.
 		// The bridge thread must not take lock(_registeredInstances) — see deadlock notes.
-		Task.Run (GetOrCreateInstance ().CollectPeers);
+		// Only schedule if instance exists (bridge processing implies registered objects exist).
+		var instance = TryGetInstance ();
+		if (instance != null) {
+			Task.Run (instance.CollectPeers);
+		}
 	}
 
 	static unsafe ReadOnlySpan<GCHandle> ProcessCollectedContexts (MarkCrossReferencesArgs* mcr)
 	{
 		List<GCHandle> handlesToFree = [];
-		ManagedValueManager instance = GetOrCreateInstance ();
+		
+		// Bridge processing should only happen if instance exists (there are registered objects).
+		// Use TryGetInstance to avoid creating instance unnecessarily.
+		ManagedValueManager? instance = TryGetInstance ();
+		if (instance == null) {
+			// No registered objects, nothing to process
+			return ReadOnlySpan<GCHandle>.Empty;
+		}
 
 		for (int i = 0; (nuint)i < mcr->ComponentCount; i++) {
 			StronglyConnectedComponent component = mcr->Components [i];
