@@ -10,11 +10,15 @@ namespace Microsoft.Android.Build.TypeMap;
 
 /// <summary>
 /// Generates the root <c>_Microsoft.Android.TypeMaps.dll</c> assembly that references
-/// all per-assembly typemap assemblies via <c>[assembly: TypeMapAssemblyTarget("name")]</c>.
+/// all per-assembly typemap assemblies via
+/// <c>[assembly: TypeMapAssemblyTargetAttribute&lt;Java.Lang.Object&gt;("name")]</c>.
 /// </summary>
 sealed class RootTypeMapAssemblyGenerator
 {
 	const string DefaultAssemblyName = "_Microsoft.Android.TypeMaps";
+
+	// Mono.Android strong name public key token (84e04ff9cfb79065)
+	static readonly byte [] MonoAndroidPublicKeyToken = { 0x84, 0xe0, 0x4f, 0xf9, 0xcf, 0xb7, 0x90, 0x65 };
 
 	readonly Version _systemRuntimeVersion;
 
@@ -67,10 +71,19 @@ sealed class RootTypeMapAssemblyGenerator
 			encId: default,
 			encBaseId: default);
 
-		// Assembly reference for System.Runtime (needed for Attribute base class)
+		// Assembly references
 		var systemRuntimeRef = metadata.AddAssemblyReference (
 			metadata.GetOrAddString ("System.Runtime"),
 			_systemRuntimeVersion, default, default, 0, default);
+
+		var systemRuntimeInteropServicesRef = metadata.AddAssemblyReference (
+			metadata.GetOrAddString ("System.Runtime.InteropServices"),
+			_systemRuntimeVersion, default, default, 0, default);
+
+		var monoAndroidRef = metadata.AddAssemblyReference (
+			metadata.GetOrAddString ("Mono.Android"),
+			new Version (0, 0, 0, 0), default,
+			metadata.GetOrAddBlob (MonoAndroidPublicKeyToken), 0, default);
 
 		// <Module> type
 		metadata.AddTypeDefinition (
@@ -80,57 +93,38 @@ sealed class RootTypeMapAssemblyGenerator
 			MetadataTokens.FieldDefinitionHandle (1),
 			MetadataTokens.MethodDefinitionHandle (1));
 
-		// TypeMapAssemblyTargetAttribute type definition + [assembly: ...] applications
-		var attributeTypeRef = metadata.AddTypeReference (systemRuntimeRef,
-			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Attribute"));
-
-		var baseAttrCtorRef = AddMemberRef (metadata, attributeTypeRef, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }));
-
-		// Define TypeMapAssemblyTargetAttribute with (string assemblyName) ctor
-		int typeFieldStart = metadata.GetRowCount (TableIndex.Field) + 1;
-		int typeMethodStart = metadata.GetRowCount (TableIndex.MethodDef) + 1;
-
-		var ctorSigBlob = new BlobBuilder ();
-		new BlobEncoder (ctorSigBlob).MethodSignature (isInstanceMethod: true)
-			.Parameters (1,
-				rt => rt.Void (),
-				p => p.AddParameter ().Type ().String ());
-
-		var ctorCodeBuilder = new BlobBuilder ();
-		var ctorEncoder = new InstructionEncoder (ctorCodeBuilder);
-		ctorEncoder.OpCode (ILOpCode.Ldarg_0);
-		ctorEncoder.Call (baseAttrCtorRef);
-		ctorEncoder.OpCode (ILOpCode.Ret);
-
-		while (ilBuilder.Count % 4 != 0) {
-			ilBuilder.WriteByte (0);
-		}
-		var bodyEncoder = new MethodBodyStreamEncoder (ilBuilder);
-		int ctorBodyOffset = bodyEncoder.AddMethodBody (ctorEncoder);
-
-		var ctorDef = metadata.AddMethodDefinition (
-			MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
-			MethodImplAttributes.IL,
-			metadata.GetOrAddString (".ctor"),
-			metadata.GetOrAddBlob (ctorSigBlob),
-			ctorBodyOffset, default);
-
-		metadata.AddTypeDefinition (
-			TypeAttributes.NotPublic | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+		// Reference the open generic TypeMapAssemblyTargetAttribute`1 from System.Runtime.InteropServices
+		var openAttrRef = metadata.AddTypeReference (systemRuntimeInteropServicesRef,
 			metadata.GetOrAddString ("System.Runtime.InteropServices"),
-			metadata.GetOrAddString ("TypeMapAssemblyTargetAttribute"),
-			attributeTypeRef,
-			MetadataTokens.FieldDefinitionHandle (typeFieldStart),
-			MetadataTokens.MethodDefinitionHandle (typeMethodStart));
+			metadata.GetOrAddString ("TypeMapAssemblyTargetAttribute`1"));
 
-		// Add [assembly: TypeMapAssemblyTarget("name")] for each per-assembly typemap
+		// Reference Java.Lang.Object from Mono.Android (the type universe)
+		var javaLangObjectRef = metadata.AddTypeReference (monoAndroidRef,
+			metadata.GetOrAddString ("Java.Lang"), metadata.GetOrAddString ("Object"));
+
+		// Build TypeSpec for TypeMapAssemblyTargetAttribute<Java.Lang.Object>
+		var genericInstBlob = new BlobBuilder ();
+		genericInstBlob.WriteByte (0x15); // ELEMENT_TYPE_GENERICINST
+		genericInstBlob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+		genericInstBlob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (openAttrRef));
+		genericInstBlob.WriteCompressedInteger (1); // generic arity = 1
+		genericInstBlob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+		genericInstBlob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (javaLangObjectRef));
+		var closedAttrTypeSpec = metadata.AddTypeSpecification (metadata.GetOrAddBlob (genericInstBlob));
+
+		// MemberRef for .ctor(string) on the closed generic type
+		var ctorRef = AddMemberRef (metadata, closedAttrTypeSpec, ".ctor",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
+				rt => rt.Void (),
+				p => p.AddParameter ().Type ().String ()));
+
+		// Add [assembly: TypeMapAssemblyTargetAttribute<Java.Lang.Object>("name")] for each per-assembly typemap
 		foreach (var name in perAssemblyTypeMapNames) {
 			var attrBlob = new BlobBuilder ();
 			attrBlob.WriteUInt16 (1); // Prolog
 			attrBlob.WriteSerializedString (name);
 			attrBlob.WriteUInt16 (0); // NumNamed
-			metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorDef,
+			metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorRef,
 				metadata.GetOrAddBlob (attrBlob));
 		}
 
