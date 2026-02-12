@@ -779,4 +779,45 @@ sealed class JavaPeerScanner : IDisposable
 		}
 		return ctors;
 	}
+
+	static string ExtractNamespace (string fullName)
+	{
+		int lastDot = fullName.LastIndexOf ('.');
+		return lastDot >= 0 ? fullName.Substring (0, lastDot) : "";
+	}
+
+	static string ExtractShortName (string fullName)
+	{
+		int lastDot = fullName.LastIndexOf ('.');
+		return lastDot >= 0 ? fullName.Substring (lastDot + 1) : fullName;
+	}
+
+	static List<JniParameterInfo> ParseJniParameters (string jniSignature)
+	{
+		var typeStrings = JniSignatureHelper.ParseParameterTypeStrings (jniSignature);
+		var result = new List<JniParameterInfo> (typeStrings.Count);
+		foreach (var t in typeStrings) {
+			result.Add (new JniParameterInfo { JniType = t });
+		}
+		return result;
+	}
+
+	static List<JavaConstructorInfo> BuildJavaConstructors (List<MarshalMethodInfo> marshalMethods)
+	{
+		var ctors = new List<JavaConstructorInfo> ();
+		int ctorIndex = 0;
+		foreach (var mm in marshalMethods) {
+			if (!mm.IsConstructor) {
+				continue;
+			}
+			ctors.Add (new JavaConstructorInfo {
+				JniSignature = mm.JniSignature,
+				ConstructorIndex = ctorIndex,
+				Parameters = mm.Parameters,
+				SuperArgumentsString = mm.SuperArgumentsString,
+			});
+			ctorIndex++;
+		}
+		return ctors;
+	}
 }
