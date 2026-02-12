@@ -2299,5 +2299,22 @@ namespace UnnamedProject
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 		}
+
+		[Test]
+		public void TrimmerRootAssemblyWithoutRootMode ()
+		{
+			// Verifies that user-defined TrimmerRootAssembly items without RootMode metadata
+			// don't cause MSB4096 error in _FixRootAssembly target
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+
+			// Add TrimmerRootAssembly items without RootMode metadata
+			proj.OtherBuildItems.Add (new BuildItem ("TrimmerRootAssembly", "Mono.Android"));
+			proj.OtherBuildItems.Add (new BuildItem ("TrimmerRootAssembly", "System.Runtime"));
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+		}
 	}
 }
