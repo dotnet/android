@@ -85,12 +85,7 @@ static class ModelBuilder
 				peersForName.Sort ((a, b) => StringComparer.Ordinal.Compare (a.ManagedTypeName, b.ManagedTypeName));
 			}
 
-			if (peersForName.Count == 1) {
-				var peer = peersForName [0];
-				EmitSinglePeer (model, peer, assemblyName);
-			} else {
-				EmitAliasedPeers (model, jniName, peersForName, assemblyName);
-			}
+			EmitPeers (model, jniName, peersForName, assemblyName);
 		}
 
 		// Compute IgnoresAccessChecksTo from actual cross-assembly references in UCO callback types
@@ -117,21 +112,7 @@ static class ModelBuilder
 		return model;
 	}
 
-	static void EmitSinglePeer (TypeMapAssemblyData model, JavaPeerInfo peer, string assemblyName)
-	{
-		bool hasProxy = peer.ActivationCtor != null || peer.InvokerTypeName != null;
-		bool isAcw = !peer.DoNotGenerateAcw && !peer.IsInterface && peer.MarshalMethods.Count > 0;
-
-		JavaPeerProxyData? proxy = null;
-		if (hasProxy) {
-			proxy = BuildProxyType (peer, isAcw);
-			model.ProxyTypes.Add (proxy);
-		}
-
-		model.Entries.Add (BuildEntry (peer, proxy, assemblyName));
-	}
-
-	static void EmitAliasedPeers (TypeMapAssemblyData model, string jniName,
+	static void EmitPeers (TypeMapAssemblyData model, string jniName,
 		List<JavaPeerInfo> peersForName, string assemblyName)
 	{
 		// First peer is the "primary" — it gets the base JNI name entry.
@@ -156,7 +137,7 @@ static class ModelBuilder
 
 			model.Entries.Add (BuildEntry (peer, proxy, assemblyName, entryJniName));
 
-			// Emit TypeMapAssociation linking this alias type to the primary proxy
+			// Emit TypeMapAssociation linking alias types to the primary proxy
 			if (i > 0 && primaryProxy != null) {
 				model.Associations.Add (new TypeMapAssociationData {
 					SourceTypeReference = $"{peer.ManagedTypeName}, {peer.AssemblyName}",
@@ -223,7 +204,6 @@ static class ModelBuilder
 				ManagedTypeName = peer.ManagedTypeName,
 				AssemblyName = peer.AssemblyName,
 			},
-			HasActivation = peer.ActivationCtor != null || peer.InvokerTypeName != null,
 			IsAcw = isAcw,
 			IsGenericDefinition = peer.IsGenericDefinition,
 		};
@@ -322,7 +302,7 @@ static class ModelBuilder
 	}
 
 	static TypeMapAttributeData BuildEntry (JavaPeerInfo peer, JavaPeerProxyData? proxy,
-		string outputAssemblyName, string? overrideJniName = null)
+		string outputAssemblyName, string jniName)
 	{
 		string proxyRef;
 		if (proxy != null) {
@@ -334,12 +314,11 @@ static class ModelBuilder
 		bool isUnconditional = IsUnconditionalEntry (peer);
 		string? targetRef = null;
 		if (!isUnconditional) {
-			// Trimmable: the trimmer will preserve the proxy only if the target type is referenced.
 			targetRef = $"{peer.ManagedTypeName}, {peer.AssemblyName}";
 		}
 
 		return new TypeMapAttributeData {
-			JniName = overrideJniName ?? peer.JavaName,
+			JniName = jniName,
 			ProxyTypeReference = proxyRef,
 			TargetTypeReference = targetRef,
 		};
