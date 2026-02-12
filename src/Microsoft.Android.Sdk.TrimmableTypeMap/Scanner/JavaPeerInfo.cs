@@ -109,6 +109,13 @@ sealed class JavaPeerInfo
 	/// Generic types get TypeMap entries but CreateInstance throws NotSupportedException.
 	/// </summary>
 	public bool IsGenericDefinition { get; set; }
+
+	/// <summary>
+	/// Component attribute data extracted from the type (Activity, Service, etc.).
+	/// Null if the type has no component attributes.
+	/// Used by manifest generation and the ScannerManifestTypeInfoAdapter.
+	/// </summary>
+	public ComponentData? ComponentData { get; set; }
 }
 
 /// <summary>

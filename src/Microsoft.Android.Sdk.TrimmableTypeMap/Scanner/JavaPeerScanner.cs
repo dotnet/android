@@ -229,6 +229,7 @@ sealed class JavaPeerScanner : IDisposable
 				ExportFields = exportFields,
 				InvokerTypeName = invokerTypeName,
 				IsGenericDefinition = isGenericDefinition,
+				ComponentData = ComponentAttributeExtractor.Extract (index.Reader, typeHandle),
 			};
 
 			results [fullName] = peer;

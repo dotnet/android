@@ -176,6 +176,50 @@ namespace MyApp
 		}
 	}
 
+	// Activity with intent filters, metadata, layout, and property attributes
+	[Activity (Name = "my.app.DeepLinkActivity", Theme = "@style/AppTheme", Exported = true)]
+	[IntentFilter (
+		new [] { "android.intent.action.VIEW" },
+		Categories = new [] { "android.intent.category.DEFAULT", "android.intent.category.BROWSABLE" },
+		DataScheme = "https",
+		DataHost = "example.com",
+		DataPathPrefix = "/deep",
+		AutoVerify = true)]
+	[IntentFilter (
+		new [] { "my.app.CUSTOM_ACTION" },
+		Categories = new [] { "android.intent.category.DEFAULT" })]
+	[MetaData ("com.google.android.geo.API_KEY", Value = "test-api-key")]
+	[MetaData ("com.google.android.gms.version", Resource = "@integer/google_play_services_version")]
+	[Layout (DefaultWidth = "500dp", DefaultHeight = "600dp", Gravity = "center", MinWidth = "300dp", MinHeight = "400dp")]
+	[Property ("custom.prop", Value = "custom-value")]
+	public class DeepLinkActivity : Android.App.Activity
+	{
+		public DeepLinkActivity ()
+		{
+		}
+	}
+
+	// Abstract activity — should be skipped by manifest generation
+	[Activity (Name = "my.app.BaseActivity")]
+	public abstract class BaseActivity : Android.App.Activity
+	{
+		protected BaseActivity ()
+		{
+		}
+	}
+
+	// Activity without public parameterless constructor — should trigger XA4213
+	[Activity (Name = "my.app.NoDefaultCtorActivity")]
+	public class NoDefaultCtorActivity : Android.App.Activity
+	{
+		readonly string _arg;
+
+		public NoDefaultCtorActivity (string arg)
+		{
+			_arg = arg;
+		}
+	}
+
 	// User type without component attribute: TRIMMABLE
 	[Register ("my/app/MyHelper")]
 	public class MyHelper : Java.Lang.Object
@@ -186,8 +230,10 @@ namespace MyApp
 		}
 	}
 
-	// User service: UNCONDITIONAL — gets JNI name from [Service(Name = "...")]
-	[Service (Name = "my.app.MyService")]
+	// User service with rich attributes
+	[Service (Name = "my.app.MyService", Exported = true, Permission = "my.app.BIND_SERVICE", IsolatedProcess = true)]
+	[IntentFilter (new [] { "my.app.START_SERVICE" })]
+	[MetaData ("service.version", Value = "1")]
 	public class MyService : Android.App.Service
 	{
 		protected MyService (IntPtr handle, JniHandleOwnership transfer)
@@ -196,14 +242,18 @@ namespace MyApp
 		}
 	}
 
-	// User broadcast receiver: UNCONDITIONAL — gets JNI name from [BroadcastReceiver(Name = "...")]
-	[BroadcastReceiver (Name = "my.app.MyReceiver")]
+	// User broadcast receiver with attributes
+	[BroadcastReceiver (Name = "my.app.MyReceiver", Exported = true, Permission = "my.app.RECEIVE_BROADCAST")]
+	[IntentFilter (new [] { "android.intent.action.BOOT_COMPLETED" })]
 	public class MyReceiver : Java.Lang.Object
 	{
 	}
 
-	// User content provider: UNCONDITIONAL — gets JNI name from [ContentProvider(Name = "...")]
-	[ContentProvider (new [] { "my.app.provider" }, Name = "my.app.MyProvider")]
+	// User content provider with grant URI permissions
+	[ContentProvider (new [] { "my.app.provider" }, Name = "my.app.MyProvider", Exported = true, GrantUriPermissions = true)]
+	[GrantUriPermission (Path = "/data")]
+	[GrantUriPermission (PathPrefix = "/files")]
+	[MetaData ("provider.meta", Value = "meta-value")]
 	public class MyProvider : Java.Lang.Object
 	{
 	}
@@ -394,12 +444,13 @@ namespace Android.App.Backup
 
 namespace MyApp
 {
-	[Application (Name = "my.app.MyApplication", BackupAgent = typeof (MyBackupAgent), ManageSpaceActivity = typeof (MyManageSpaceActivity))]
+	[Application (Name = "my.app.MyApplication", BackupAgent = typeof (MyBackupAgent), ManageSpaceActivity = typeof (MyManageSpaceActivity), Theme = "@style/AppTheme", Debuggable = true, AllowBackup = true, SupportsRtl = true, Label = "My Application", Icon = "@mipmap/ic_launcher")]
+	[MetaData ("app.version", Value = "2.0")]
 	public class MyApplication : Java.Lang.Object
 	{
 	}
 
-	[Instrumentation (Name = "my.app.MyInstrumentation")]
+	[Instrumentation (Name = "my.app.MyInstrumentation", TargetPackage = "my.app", FunctionalTest = true, HandleProfiling = true, Label = "Test Runner")]
 	public class MyInstrumentation : Java.Lang.Object
 	{
 	}
