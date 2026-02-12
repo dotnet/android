@@ -1000,7 +1000,7 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
   <data name="XA1040" xml:space="preserve">
     <value>Le runtime {0} sur Android est une fonctionnalité expérimentale qui ne convient pas encore pour une utilisation en production. Signalez les problèmes à : https://github.com/dotnet/android/issues</value>
     <comment>The following are literal names and should not be translated: .NET.
-{0} - The name of the .NET runtime, such as CoreCLR or NativeAOT.</comment>
+{0} - The name of the .NET runtime, such as NativeAOT.</comment>
   </data>
   <data name="XA1041" xml:space="preserve">
     <value>La propriété MSBuild « {0} » a une valeur non valide de « {1} ». La valeur est censée être un chemin d’accès au répertoire représentant l’emplacement relatif de vos actifs ou ressources.</value>

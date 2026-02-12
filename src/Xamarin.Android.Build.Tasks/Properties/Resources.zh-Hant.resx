@@ -1000,7 +1000,7 @@ In this message, the term "handheld app" means "app for handheld devices."
   <data name="XA1040" xml:space="preserve">
     <value>Android 上的 {0} 執行階段是一項實驗性功能，尚不適合用於生產環境。請在以下位置舉報問題： https://github.com/dotnet/android/issues</value>
     <comment>The following are literal names and should not be translated: .NET.
-{0} - The name of the .NET runtime, such as CoreCLR or NativeAOT.</comment>
+{0} - The name of the .NET runtime, such as NativeAOT.</comment>
   </data>
   <data name="XA1041" xml:space="preserve">
     <value>MSBuild 屬性 '{0}' 有無效的 '{1}' 值。此值應該是代表資產或資源相對位置的目錄路徑。</value>

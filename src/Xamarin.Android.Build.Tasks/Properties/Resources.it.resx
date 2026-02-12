@@ -1000,7 +1000,7 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
   <data name="XA1040" xml:space="preserve">
     <value>Il runtime di {0} su Android è una funzionalità sperimentale e non è ancora adatta per l'uso in produzione. Segnala i problemi su: https://github.com/dotnet/android/issues</value>
     <comment>The following are literal names and should not be translated: .NET.
-{0} - The name of the .NET runtime, such as CoreCLR or NativeAOT.</comment>
+{0} - The name of the .NET runtime, such as NativeAOT.</comment>
   </data>
   <data name="XA1041" xml:space="preserve">
     <value>Il valore ‘{1}’ della proprietà MSBuild ‘{0}’ non è valido. Il valore deve essere un percorso di directory che rappresenta il percorso relativo delle risorse.</value>

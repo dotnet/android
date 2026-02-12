@@ -1000,7 +1000,7 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
   <data name="XA1040" xml:space="preserve">
     <value>Die Runtime „{0}“ unter Android ist ein experimentelles Feature und noch nicht für die Verwendung in der Produktion geeignet. Bitte melden Sie Probleme unter: https://github.com/dotnet/android/issues</value>
     <comment>The following are literal names and should not be translated: .NET.
-{0} - The name of the .NET runtime, such as CoreCLR or NativeAOT.</comment>
+{0} - The name of the .NET runtime, such as NativeAOT.</comment>
   </data>
   <data name="XA1041" xml:space="preserve">
     <value>Die MSBuild-Eigenschaft „{0}“ weist den ungültigen Wert „{1}“ auf. Der Wert muss ein Verzeichnispfad sein, der den relativen Speicherort Ihrer Ressourcen angibt.</value>
