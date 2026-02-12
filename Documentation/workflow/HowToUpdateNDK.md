@@ -17,7 +17,7 @@ properties with the information obtained from the NDK distribution URL.
 
 ## Update LLVM sources
 
-The best way to do it is by using the `tools/update-llvm-sources` utility, after runing `xaprepare`.
+The best way to do it is by using the `tools/update-llvm-sources` utility, after running `xaprepare`.
 
 You can run the utility directly with `dotnet tools/update-llvm-sources` or, if you are on a Unix
 system, run `make update-llvm` from the top directory.
@@ -49,7 +49,7 @@ form the file's URL as follows:
 https://android.googlesource.com/toolchain/llvm-project/+/${LLVM_REVISION}/${RELATIVE_FILE_PATH}
 ```
 
-Visiting this url will show you the file with syntax higlighting and line numbers, however it's
+Visiting this url will show you the file with syntax highlighting and line numbers, however it's
 not the raw source, but rather its HTML rendering, useless for our purpose. In order to fetch the
 raw source, we need to append `?format=TEXT` to the URL. Once visited in the browser (or fetched
 using `curl` or `wget`), the resulting file will be downloaded but not yet ready for updating of
