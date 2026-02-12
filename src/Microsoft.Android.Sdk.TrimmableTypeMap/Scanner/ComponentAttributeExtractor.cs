@@ -5,12 +5,9 @@ using System.Reflection.Metadata;
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
 /// <summary>
-/// Extracts component attribute data (Activity, Service, BroadcastReceiver, ContentProvider,
-/// Application, Instrumentation) and sub-attribute data (IntentFilter, MetaData, Property,
-/// Layout, GrantUriPermission) from SRM CustomAttribute blobs.
-///
-/// All attribute properties are decoded into <see cref="ComponentAttributeInfo"/> objects
-/// containing raw name-value dictionaries — no Cecil dependency.
+/// Extracts component attribute data ([Activity], [Service], etc.) and sub-attributes
+/// ([IntentFilter], [MetaData], [Layout], [Property], [GrantUriPermission])
+/// from SRM CustomAttribute blobs into <see cref="ComponentData"/>.
 /// </summary>
 static class ComponentAttributeExtractor
 {
@@ -33,7 +30,7 @@ static class ComponentAttributeExtractor
 	};
 
 	/// <summary>
-	/// Extracts all component and sub-attribute data from the custom attributes of a type.
+	/// Extracts all component and sub-attribute data from a type's custom attributes.
 	/// </summary>
 	public static ComponentData Extract (MetadataReader reader, TypeDefinitionHandle typeHandle)
 	{
@@ -75,10 +72,6 @@ static class ComponentAttributeExtractor
 		return result;
 	}
 
-	/// <summary>
-	/// Decodes a CustomAttribute blob into a ComponentAttributeInfo.
-	/// Extracts both constructor arguments and named properties.
-	/// </summary>
 	static ComponentAttributeInfo DecodeAttribute (MetadataReader reader, CustomAttribute ca, CustomAttributeTypeProvider provider, string attrName)
 	{
 		var decoded = ca.DecodeValue (provider);
@@ -104,8 +97,7 @@ static class ComponentAttributeExtractor
 	}
 
 	/// <summary>
-	/// Normalizes decoded attribute values to consistent types.
-	/// SRM may return boxed primitives, ImmutableArray, or strings.
+	/// Normalizes SRM decoded values (boxed primitives, ImmutableArray) to consistent types.
 	/// </summary>
 	static object NormalizeValue (object? value)
 	{
