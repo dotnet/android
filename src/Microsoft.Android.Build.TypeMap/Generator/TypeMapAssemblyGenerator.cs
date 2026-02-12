@@ -9,12 +9,12 @@ namespace Microsoft.Android.Build.TypeMap;
 /// </summary>
 sealed class TypeMapAssemblyGenerator
 {
-	readonly int _dotnetVersion;
+	readonly Version _systemRuntimeVersion;
 
-	/// <param name="dotnetVersion">Target .NET version (e.g., 11 for .NET 11).</param>
-	public TypeMapAssemblyGenerator (int dotnetVersion)
+	/// <param name="systemRuntimeVersion">Version for System.Runtime assembly references.</param>
+	public TypeMapAssemblyGenerator (Version systemRuntimeVersion)
 	{
-		_dotnetVersion = dotnetVersion;
+		_systemRuntimeVersion = systemRuntimeVersion ?? throw new ArgumentNullException (nameof (systemRuntimeVersion));
 	}
 
 	/// <summary>
@@ -26,7 +26,7 @@ sealed class TypeMapAssemblyGenerator
 	public void Generate (IReadOnlyList<JavaPeerInfo> peers, string outputPath, string? assemblyName = null)
 	{
 		var model = ModelBuilder.Build (peers, outputPath, assemblyName);
-		var emitter = new TypeMapAssemblyEmitter (_dotnetVersion);
+		var emitter = new TypeMapAssemblyEmitter (_systemRuntimeVersion);
 		emitter.Emit (model, outputPath);
 	}
 }

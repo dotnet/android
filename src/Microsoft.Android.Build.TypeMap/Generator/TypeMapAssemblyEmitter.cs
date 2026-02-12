@@ -45,13 +45,13 @@ sealed class TypeMapAssemblyEmitter
 	/// <summary>
 	/// Creates a new emitter.
 	/// </summary>
-	/// <param name="dotnetVersion">
-	/// Target .NET version (e.g., 11 for .NET 11). Used for System.Runtime assembly reference version.
-	/// Will be passed from $(DotNetTargetVersion) MSBuild property in the build task.
+	/// <param name="systemRuntimeVersion">
+	/// Version for System.Runtime assembly references.
+	/// Will be derived from $(DotNetTargetVersion) MSBuild property in the build task.
 	/// </param>
-	public TypeMapAssemblyEmitter (int dotnetVersion)
+	public TypeMapAssemblyEmitter (Version systemRuntimeVersion)
 	{
-		_systemRuntimeVersion = new Version (dotnetVersion, 0, 0, 0);
+		_systemRuntimeVersion = systemRuntimeVersion ?? throw new ArgumentNullException (nameof (systemRuntimeVersion));
 	}
 
 	/// <summary>
