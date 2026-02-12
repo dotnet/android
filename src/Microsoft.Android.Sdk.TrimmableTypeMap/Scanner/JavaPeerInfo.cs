@@ -111,9 +111,7 @@ sealed class JavaPeerInfo
 	public bool IsGenericDefinition { get; set; }
 
 	/// <summary>
-	/// Component attribute data extracted from the type (Activity, Service, etc.).
-	/// Null if the type has no component attributes.
-	/// Used by manifest generation and the ScannerManifestTypeInfoAdapter.
+	/// Component attribute data ([Activity], [Service], etc.). Null if no component attributes.
 	/// </summary>
 	public ComponentData? ComponentData { get; set; }
 }

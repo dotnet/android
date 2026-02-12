@@ -2,27 +2,20 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
 /// <summary>
 /// Generates acw-map.txt from JavaPeerInfo scanner results.
-/// The acw-map format is consumed by _ConvertCustomView to fix up
-/// custom view names in layout XML files.
+/// The acw-map is consumed by _ConvertCustomView to fix up custom view names in layout XML.
 ///
-/// Each type produces up to 3 lines:
-///   PartialAssemblyQualifiedName;JavaKey
-///   ManagedKey;JavaKey
-///   CompatJniName;JavaKey
-///
+/// Each type produces 3 lines: PartialAssemblyQualifiedName;JavaKey, ManagedKey;JavaKey, CompatJniName;JavaKey.
 /// Types with DoNotGenerateAcw = true are excluded (MCW binding types).
 /// </summary>
 static class AcwMapWriter
 {
 	/// <summary>
-	/// Writes per-assembly acw-map lines for a single assembly's scan results.
-	/// Returns the lines (not yet written to disk) so they can be merged later.
+	/// Creates per-assembly acw-map entries for a single assembly's scan results.
 	/// </summary>
 	public static List<AcwMapEntry> CreateEntries (IReadOnlyList<JavaPeerInfo> peers, string assemblyName)
 	{
@@ -54,9 +47,7 @@ static class AcwMapWriter
 	}
 
 	/// <summary>
-	/// Writes acw-map.txt from merged entries.
-	/// Detects XA4214 (duplicate managed key) and XA4215 (duplicate Java key) conflicts.
-	/// Returns true if no errors were found, false if XA4215 errors prevent output.
+	/// Writes acw-map.txt, detecting XA4214 (duplicate managed key) and XA4215 (duplicate Java key).
 	/// </summary>
 	public static AcwMapResult WriteMap (IReadOnlyList<AcwMapEntry> entries, TextWriter writer)
 	{
@@ -111,8 +102,7 @@ static class AcwMapWriter
 	}
 
 	/// <summary>
-	/// Convenience: writes acw-map.txt to a file, only if content changed.
-	/// Returns the result with conflict information.
+	/// Writes acw-map.txt to a file, only if content changed.
 	/// </summary>
 	public static AcwMapResult WriteMapToFile (IReadOnlyList<AcwMapEntry> entries, string outputPath)
 	{
