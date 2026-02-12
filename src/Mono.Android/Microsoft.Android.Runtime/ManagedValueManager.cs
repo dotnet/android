@@ -33,7 +33,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	
 	public static ManagedValueManager GetOrCreateInstance () => s_instance.Value;
 	
-	static ManagedValueManager? TryGetInstance () => s_instance.IsValueCreated ? s_instance.Value : null;
+	static ManagedValueManager? GetInstanceIfCreated () => s_instance.IsValueCreated ? s_instance.Value : null;
 
 	unsafe ManagedValueManager ()
 	{
@@ -447,8 +447,8 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 		// Schedule cleanup of _registeredInstances on a thread pool thread.
 		// The bridge thread must not take lock(_registeredInstances) — see deadlock notes.
-		// Only schedule if instance exists (bridge processing implies registered objects exist).
-		var instance = TryGetInstance ();
+		// Only schedule if instance exists (bridge processing typically implies registered objects exist).
+		var instance = GetInstanceIfCreated ();
 		if (instance != null) {
 			Task.Run (instance.CollectPeers);
 		}
@@ -458,9 +458,9 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	{
 		List<GCHandle> handlesToFree = [];
 		
-		// Bridge processing should only happen if instance exists (there are registered objects).
-		// Use TryGetInstance to avoid creating instance unnecessarily.
-		ManagedValueManager? instance = TryGetInstance ();
+		// Bridge processing typically implies registered objects exist, but check defensively
+		// to avoid creating the ManagedValueManager instance unnecessarily.
+		ManagedValueManager? instance = GetInstanceIfCreated ();
 		if (instance == null) {
 			// No registered objects, nothing to process
 			return ReadOnlySpan<GCHandle>.Empty;
