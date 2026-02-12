@@ -105,12 +105,7 @@ sealed class JavaPeerScanner : IDisposable
 				}
 			}
 
-			// Skip invoker types (they share JNI names with their interface)
-			if (IsInvokerType (typeDef, doNotGenerateAcw, index)) {
-				continue;
-			}
-
-			var fullName = GetFullName (typeDef, index.Reader);
+				var fullName = GetFullName (typeDef, index.Reader);
 			var ns = index.Reader.GetString (typeDef.Namespace);
 			var shortName = index.Reader.GetString (typeDef.Name);
 			if (typeDef.IsNested) {
@@ -145,24 +140,24 @@ sealed class JavaPeerScanner : IDisposable
 				invokerTypeName = TryFindInvokerTypeName (fullName, typeHandle, index);
 			}
 
-			var peer = new JavaPeerInfo (
-				javaName: jniName,
-				managedTypeName: fullName,
-				managedTypeNamespace: ns,
-				managedTypeShortName: shortName,
-				assemblyName: index.AssemblyName,
-				baseJavaName: baseJavaName,
-				implementedInterfaceJavaNames: implementedInterfaces,
-				isInterface: isInterface,
-				isAbstract: isAbstract,
-				doNotGenerateAcw: doNotGenerateAcw,
-				isUnconditional: isUnconditional,
-				marshalMethods: marshalMethods,
-				javaConstructors: javaConstructors,
-				activationCtor: activationCtor,
-				invokerTypeName: invokerTypeName,
-				isGenericDefinition: isGenericDefinition
-			);
+			var peer = new JavaPeerInfo {
+				JavaName = jniName,
+				ManagedTypeName = fullName,
+				ManagedTypeNamespace = ns,
+				ManagedTypeShortName = shortName,
+				AssemblyName = index.AssemblyName,
+				BaseJavaName = baseJavaName,
+				ImplementedInterfaceJavaNames = implementedInterfaces,
+				IsInterface = isInterface,
+				IsAbstract = isAbstract,
+				DoNotGenerateAcw = doNotGenerateAcw,
+				IsUnconditional = isUnconditional,
+				MarshalMethods = marshalMethods,
+				JavaConstructors = javaConstructors,
+				ActivationCtor = activationCtor,
+				InvokerTypeName = invokerTypeName,
+				IsGenericDefinition = isGenericDefinition,
+			};
 
 			results [fullName] = peer;
 		}
@@ -171,22 +166,6 @@ sealed class JavaPeerScanner : IDisposable
 	static bool IsModuleType (TypeDefinition typeDef, MetadataReader reader)
 	{
 		return reader.GetString (typeDef.Name) == "<Module>";
-	}
-
-	/// <summary>
-	/// Invoker types are implementation details — they implement interfaces
-	/// for Java-to-.NET calls. They have DoNotGenerateAcw=true and their name
-	/// typically ends with "Invoker".
-	/// They are excluded from the TypeMap entirely.
-	/// </summary>
-	static bool IsInvokerType (TypeDefinition typeDef, bool doNotGenerateAcw, AssemblyIndex index)
-	{
-		if (!doNotGenerateAcw) {
-			return false;
-		}
-
-		var name = index.Reader.GetString (typeDef.Name);
-		return name.EndsWith ("Invoker", StringComparison.Ordinal);
 	}
 
 	List<MarshalMethodInfo> CollectMarshalMethods (TypeDefinition typeDef, AssemblyIndex index)
@@ -248,25 +227,20 @@ sealed class JavaPeerScanner : IDisposable
 		// The JNI name is the Java method name (without the n_ prefix)
 		string jniName = registerInfo.JniName;
 
-		// Parse callback type info from connector string
-		var (callbackTypeName, callbackAssemblyName) = ParseConnectorString (registerInfo.Connector);
-
-		methods.Add (new MarshalMethodInfo (
-			jniName: jniName,
-			jniSignature: registerInfo.Signature ?? "()V",
-			connector: registerInfo.Connector,
-			managedMethodName: methodName,
-			declaringTypeName: declaringTypeName,
-			declaringAssemblyName: index.AssemblyName,
-			callbackTypeName: callbackTypeName,
-			callbackAssemblyName: callbackAssemblyName,
-			nativeCallbackName: nativeCallbackName,
-			parameters: parameters,
-			jniReturnType: returnType,
-			isConstructor: isConstructor,
-			thrownNames: registerInfo.ThrownNames,
-			superArgumentsString: registerInfo.SuperArgumentsString
-		));
+		methods.Add (new MarshalMethodInfo {
+			JniName = jniName,
+			JniSignature = registerInfo.Signature ?? "()V",
+			Connector = registerInfo.Connector,
+			ManagedMethodName = methodName,
+			DeclaringTypeName = declaringTypeName,
+			DeclaringAssemblyName = index.AssemblyName,
+			NativeCallbackName = nativeCallbackName,
+			Parameters = parameters,
+			JniReturnType = returnType,
+			IsConstructor = isConstructor,
+			ThrownNames = registerInfo.ThrownNames,
+			SuperArgumentsString = registerInfo.SuperArgumentsString,
+		});
 	}
 
 	List<JavaConstructorInfo> CollectJavaConstructors (TypeDefinition typeDef, AssemblyIndex index)
@@ -288,11 +262,12 @@ sealed class JavaPeerScanner : IDisposable
 			var sig = methodRegister.Signature ?? "()V";
 			var (parameters, _) = ParseJniSignature (sig);
 
-			constructors.Add (new JavaConstructorInfo (
-				jniSignature: sig,
-				constructorIndex: constructors.Count,
-				parameters: parameters
-			));
+			constructors.Add (new JavaConstructorInfo {
+				JniSignature = sig,
+				ConstructorIndex = constructors.Count,
+				Parameters = parameters,
+				SuperArgumentsString = methodRegister.SuperArgumentsString,
+			});
 		}
 
 		return constructors;
@@ -572,7 +547,7 @@ sealed class JavaPeerScanner : IDisposable
 		// Check this type's constructors
 		var ownCtor = FindActivationCtorOnType (typeDef, index);
 		if (ownCtor != null) {
-			var info = new ActivationCtorInfo (typeName, index.AssemblyName, ownCtor.Value);
+			var info = new ActivationCtorInfo { DeclaringTypeName = typeName, DeclaringAssemblyName = index.AssemblyName, Style = ownCtor.Value };
 			activationCtorCache [typeName] = info;
 			return info;
 		}
@@ -657,8 +632,24 @@ sealed class JavaPeerScanner : IDisposable
 			// Generic base type — resolve the generic type definition
 			var typeSpec = index.Reader.GetTypeSpecification ((TypeSpecificationHandle)baseTypeHandle);
 			var decoded = typeSpec.DecodeSignature (new SignatureTypeProvider (), genericContext: default);
-			// For generic types, the signature provider returns "Ns.Name" — we need to find the assembly
-			// Best effort: check current assembly first
+
+			// Strip generic arguments: "Ns.Type`1<A,B>" → "Ns.Type`1"
+			var angleBracket = decoded.IndexOf ('<');
+			if (angleBracket > 0) {
+				var genericDef = decoded.Substring (0, angleBracket);
+				// The genericDef already includes the backtick+arity (e.g. "Ns.Type`1")
+				if (index.TypesByFullName.TryGetValue (genericDef, out _)) {
+					return (genericDef, index.AssemblyName);
+				}
+				// Check other assemblies
+				foreach (var asmKvp in assemblyCache) {
+					if (asmKvp.Value.TypesByFullName.TryGetValue (genericDef, out _)) {
+						return (genericDef, asmKvp.Key);
+					}
+				}
+			}
+
+			// Non-generic fallback: check current assembly first
 			if (index.TypesByFullName.ContainsKey (decoded)) {
 				return (decoded, index.AssemblyName);
 			}
@@ -733,7 +724,7 @@ sealed class JavaPeerScanner : IDisposable
 		int i = 1;
 		while (i < signature.Length && signature [i] != ')') {
 			var (jniType, managedType, newIndex) = ParseJniType (signature, i);
-			parameters.Add (new JniParameterInfo (jniType, managedType));
+			parameters.Add (new JniParameterInfo { JniType = jniType, ManagedType = managedType });
 			i = newIndex;
 		}
 
@@ -883,40 +874,4 @@ sealed class JavaPeerScanner : IDisposable
 	}
 
 	// ================================================================
-	// Gap #2: Parse connector string for callback type info
-	// ================================================================
-
-	/// <summary>
-	/// Parse a connector string to extract the callback type and assembly name.
-	/// Connector format: "GetHandlerName:TypeName, Assembly, Version=..., Culture=..., PublicKeyToken=..."
-	/// The colon separates the handler method name from the type that contains it.
-	/// </summary>
-	static (string? callbackTypeName, string? callbackAssemblyName) ParseConnectorString (string? connector)
-	{
-		if (connector == null || connector.Length == 0) {
-			return (null, null);
-		}
-
-		var colonIndex = connector.IndexOf (':');
-		if (colonIndex < 0 || colonIndex >= connector.Length - 1) {
-			return (null, null);
-		}
-
-		var typeInfo = connector.Substring (colonIndex + 1);
-		var commaIndex = typeInfo.IndexOf (',');
-		string callbackTypeName;
-		string? callbackAssemblyName = null;
-
-		if (commaIndex > 0) {
-			callbackTypeName = typeInfo.Substring (0, commaIndex).Trim ();
-			// Assembly name is the next comma-separated value
-			var rest = typeInfo.Substring (commaIndex + 1);
-			var nextComma = rest.IndexOf (',');
-			callbackAssemblyName = (nextComma > 0 ? rest.Substring (0, nextComma) : rest).Trim ();
-		} else {
-			callbackTypeName = typeInfo.Trim ();
-		}
-
-		return (callbackTypeName, callbackAssemblyName);
-	}
 }

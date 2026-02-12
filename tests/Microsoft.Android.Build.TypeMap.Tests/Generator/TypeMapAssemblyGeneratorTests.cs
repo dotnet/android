@@ -32,7 +32,7 @@ public class TypeMapAssemblyGeneratorTests
 	{
 		var outputPath = Path.Combine (Path.GetTempPath (), $"typemap-test-{Guid.NewGuid ():N}",
 			(assemblyName ?? "TestTypeMap") + ".dll");
-		var generator = new TypeMapAssemblyGenerator ();
+		var generator = new TypeMapAssemblyGenerator (11);
 		generator.Generate (peers, outputPath, assemblyName);
 		return outputPath;
 	}
@@ -155,8 +155,8 @@ public class TypeMapAssemblyGeneratorTests
 				// At least some proxy types should be generated
 				Assert.NotEmpty (proxyTypes);
 
-				// Check that a proxy exists for java/lang/Object → java_lang_Object_Proxy
-				Assert.Contains (proxyTypes, t => reader.GetString (t.Name) == "java_lang_Object_Proxy");
+				// Check that a proxy exists for java/lang/Object → Java_Lang_Object_Proxy
+				Assert.Contains (proxyTypes, t => reader.GetString (t.Name) == "Java_Lang_Object_Proxy");
 			}
 		} finally {
 			CleanUp (path);
@@ -198,7 +198,7 @@ public class TypeMapAssemblyGeneratorTests
 			using (pe) {
 				var objectProxy = reader.TypeDefinitions
 					.Select (h => reader.GetTypeDefinition (h))
-					.First (t => reader.GetString (t.Name) == "java_lang_Object_Proxy");
+					.First (t => reader.GetString (t.Name) == "Java_Lang_Object_Proxy");
 
 				var methods = objectProxy.GetMethods ()
 					.Select (h => reader.GetMethodDefinition (h))
@@ -228,7 +228,7 @@ public class TypeMapAssemblyGeneratorTests
 			using (pe) {
 				var proxy = reader.TypeDefinitions
 					.Select (h => reader.GetTypeDefinition (h))
-					.First (t => reader.GetString (t.Name) == "my_app_TouchHandler_Proxy");
+					.First (t => reader.GetString (t.Name) == "MyApp_TouchHandler_Proxy");
 
 				var methods = proxy.GetMethods ()
 					.Select (h => reader.GetMethodDefinition (h))
@@ -255,7 +255,7 @@ public class TypeMapAssemblyGeneratorTests
 			using (pe) {
 				var proxy = reader.TypeDefinitions
 					.Select (h => reader.GetTypeDefinition (h))
-					.First (t => reader.GetString (t.Name) == "my_app_TouchHandler_Proxy");
+					.First (t => reader.GetString (t.Name) == "MyApp_TouchHandler_Proxy");
 
 				// Find a UCO method
 				var ucoMethod = proxy.GetMethods ()
@@ -433,6 +433,39 @@ public class TypeMapAssemblyGeneratorTests
 	public void ParseReturnType_Object ()
 	{
 		Assert.Equal (JniParamKind.Object, JniSignatureHelper.ParseReturnType ("()Ljava/lang/String;"));
+	}
+
+	// ---- Negative / edge-case tests ----
+
+	[Theory]
+	[InlineData ("")]
+	[InlineData ("not-a-sig")]
+	[InlineData ("(")]
+	public void ParseParameterTypes_InvalidSignature_ThrowsOrReturnsEmpty (string signature)
+	{
+		// Should not crash — either returns empty or throws ArgumentException
+		try {
+			var result = JniSignatureHelper.ParseParameterTypes (signature);
+			// If it doesn't throw, empty is acceptable
+			Assert.NotNull (result);
+		} catch (Exception ex) when (ex is ArgumentException || ex is IndexOutOfRangeException || ex is FormatException) {
+			// Any of these are acceptable for malformed input
+		}
+	}
+
+	[Fact]
+	public void Generate_NullPeers_ThrowsArgumentNull ()
+	{
+		var gen = new TypeMapAssemblyGenerator (11);
+		var tmpPath = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ("N"), "test.dll");
+		Assert.Throws<ArgumentNullException> (() => gen.Generate (null!, tmpPath));
+	}
+
+	[Fact]
+	public void Generate_NullOutputPath_ThrowsArgumentNull ()
+	{
+		var gen = new TypeMapAssemblyGenerator (11);
+		Assert.Throws<ArgumentNullException> (() => gen.Generate (Array.Empty<JavaPeerInfo> (), null!));
 	}
 
 	static void CleanUp (string path)

@@ -15,6 +15,9 @@ namespace Microsoft.Android.Build.TypeMap;
 sealed class TypeMapAssemblyEmitter
 {
 	readonly Dictionary<string, AssemblyReferenceHandle> _asmRefCache = new (StringComparer.OrdinalIgnoreCase);
+	readonly Dictionary<string, EntityHandle> _typeRefCache = new (StringComparer.Ordinal);
+
+	readonly Version _systemRuntimeVersion;
 
 	AssemblyReferenceHandle _systemRuntimeRef;
 	AssemblyReferenceHandle _monoAndroidRef;
@@ -27,7 +30,6 @@ sealed class TypeMapAssemblyEmitter
 	TypeReferenceHandle _iAndroidCallableWrapperRef;
 	TypeReferenceHandle _systemTypeRef;
 	TypeReferenceHandle _runtimeTypeHandleRef;
-	TypeReferenceHandle _stringRef;
 	TypeReferenceHandle _jniTypeRef;
 	TypeReferenceHandle _trimmableNativeRegistrationRef;
 
@@ -39,6 +41,18 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _ucoAttrCtorRef;
 	MemberReferenceHandle _typeMapAttrCtorRef2Arg;
 	MemberReferenceHandle _typeMapAttrCtorRef3Arg;
+
+	/// <summary>
+	/// Creates a new emitter.
+	/// </summary>
+	/// <param name="dotnetVersion">
+	/// Target .NET version (e.g., 11 for .NET 11). Used for System.Runtime assembly reference version.
+	/// Will be passed from $(DotNetTargetVersion) MSBuild property in the build task.
+	/// </param>
+	public TypeMapAssemblyEmitter (int dotnetVersion)
+	{
+		_systemRuntimeVersion = new Version (dotnetVersion, 0, 0, 0);
+	}
 
 	/// <summary>
 	/// Emits a PE assembly from the given model and writes it to <paramref name="outputPath"/>.
@@ -53,6 +67,7 @@ sealed class TypeMapAssemblyEmitter
 		}
 
 		_asmRefCache.Clear ();
+		_typeRefCache.Clear ();
 
 		var dir = Path.GetDirectoryName (outputPath);
 		if (!string.IsNullOrEmpty (dir)) {
@@ -103,13 +118,16 @@ sealed class TypeMapAssemblyEmitter
 			encBaseId: default);
 	}
 
+	// Mono.Android strong name public key token (84e04ff9cfb79065)
+	static readonly byte [] MonoAndroidPublicKeyToken = { 0x84, 0xe0, 0x4f, 0xf9, 0xcf, 0xb7, 0x90, 0x65 };
+
 	void EmitAssemblyReferences (MetadataBuilder metadata)
 	{
-		_systemRuntimeRef = AddAssemblyRef (metadata, "System.Runtime", new Version (11, 0, 0, 0));
+		_systemRuntimeRef = AddAssemblyRef (metadata, "System.Runtime", _systemRuntimeVersion);
 		_monoAndroidRef = AddAssemblyRef (metadata, "Mono.Android", new Version (0, 0, 0, 0),
-			publicKeyOrToken: new byte [] { 0x84, 0xe0, 0x4f, 0xf9, 0xcf, 0xb7, 0x90, 0x65 });
+			publicKeyOrToken: MonoAndroidPublicKeyToken);
 		_javaInteropRef = AddAssemblyRef (metadata, "Java.Interop", new Version (0, 0, 0, 0));
-		_systemRuntimeInteropServicesRef = AddAssemblyRef (metadata, "System.Runtime.InteropServices", new Version (11, 0, 0, 0));
+		_systemRuntimeInteropServicesRef = AddAssemblyRef (metadata, "System.Runtime.InteropServices", _systemRuntimeVersion);
 	}
 
 	void EmitTypeReferences (MetadataBuilder metadata)
@@ -126,8 +144,6 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Type"));
 		_runtimeTypeHandleRef = metadata.AddTypeReference (_systemRuntimeRef,
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("RuntimeTypeHandle"));
-		_stringRef = metadata.AddTypeReference (_systemRuntimeRef,
-			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("String"));
 		_jniTypeRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniType"));
 		_trimmableNativeRegistrationRef = metadata.AddTypeReference (_monoAndroidRef,
@@ -202,7 +218,7 @@ sealed class TypeMapAssemblyEmitter
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
 				rt => rt.Void (),
 				p => {
-					p.AddParameter ().Type ().Type (_stringRef, false);
+					p.AddParameter ().Type ().String ();
 					p.AddParameter ().Type ().Type (_systemTypeRef, false);
 				}));
 
@@ -211,7 +227,7 @@ sealed class TypeMapAssemblyEmitter
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (3,
 				rt => rt.Void (),
 				p => {
-					p.AddParameter ().Type ().Type (_stringRef, false);
+					p.AddParameter ().Type ().String ();
 					p.AddParameter ().Type ().Type (_systemTypeRef, false);
 					p.AddParameter ().Type ().Type (_systemTypeRef, false);
 				}));
@@ -302,7 +318,11 @@ sealed class TypeMapAssemblyEmitter
 			return;
 		}
 
-		var userTypeRef = ResolveTypeRef (metadata, proxy.TargetType);
+		// For interface proxies with an invoker type, CreateInstance instantiates the invoker
+		// (e.g., IOnClickListenerInvoker), not the interface itself. For regular types, it
+		// instantiates the target type directly.
+		var activatedType = proxy.InvokerType ?? proxy.TargetType;
+		var activatedTypeRef = ResolveTypeRef (metadata, activatedType);
 
 		EmitBody (metadata, ilBuilder, "CreateInstance",
 			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
@@ -316,7 +336,7 @@ sealed class TypeMapAssemblyEmitter
 				encoder.OpCode (ILOpCode.Ldarg_1);
 				encoder.OpCode (ILOpCode.Ldarg_2);
 				encoder.OpCode (ILOpCode.Ldtoken);
-				encoder.Token (userTypeRef);
+				encoder.Token (activatedTypeRef);
 				encoder.Call (_getTypeFromHandleRef);
 				encoder.Call (_createManagedPeerRef);
 				encoder.OpCode (ILOpCode.Ret);
@@ -538,8 +558,15 @@ sealed class TypeMapAssemblyEmitter
 
 	EntityHandle ResolveTypeRef (MetadataBuilder metadata, TypeRefData typeRef)
 	{
+		// Cache key: "AssemblyName:ManagedTypeName" to avoid duplicate TypeRef rows
+		var cacheKey = $"{typeRef.AssemblyName}:{typeRef.ManagedTypeName}";
+		if (_typeRefCache.TryGetValue (cacheKey, out var cached)) {
+			return cached;
+		}
 		var asmRef = FindOrAddAssemblyReference (metadata, typeRef.AssemblyName);
-		return MakeTypeRefForManagedName (metadata, asmRef, typeRef.ManagedTypeName);
+		var result = MakeTypeRefForManagedName (metadata, asmRef, typeRef.ManagedTypeName);
+		_typeRefCache [cacheKey] = result;
+		return result;
 	}
 
 	TypeReferenceHandle MakeTypeRefForManagedName (MetadataBuilder metadata, EntityHandle scope, string managedTypeName)
