@@ -121,7 +121,7 @@ namespace Xamarin.Android.Tasks
 					var args = attr.GetCustomAttributeArguments ();
 					if (args.FixedArguments.Length >= 2 &&
 					    args.FixedArguments[0].Value is string jname &&
-					    args.FixedArguments[1].Value is string jargs) {
+					    args.FixedArguments[1].Value is string) {
 						if (jname == ".ctor") {
 							writer.WriteLine ("   <init>(...);");
 						} else {
