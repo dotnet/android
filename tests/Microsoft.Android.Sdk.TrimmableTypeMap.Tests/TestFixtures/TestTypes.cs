@@ -20,6 +20,11 @@ namespace Java.Lang
 		{
 		}
 	}
+
+	[Register ("java/lang/CharSequence", DoNotGenerateAcw = true)]
+	public interface ICharSequence
+	{
+	}
 }
 
 namespace Java.Lang
@@ -682,6 +687,12 @@ public class GlobalUnregisteredType : Java.Lang.Object
 // ================================================================
 namespace MyApp
 {
+	public enum ExportSampleEnum
+	{
+		None,
+		One,
+	}
+
 	/// <summary>
 	/// Type with [Export] constructors (no [Register] on ctors).
 	/// Legacy JCW: TypeManager.Activate pattern, not nctor_N.
@@ -739,6 +750,33 @@ namespace MyApp
 
 		[Java.Interop.Export ("computeName")]
 		public string ComputeName (string prefix, int index) { return ""; }
+	}
+
+	/// <summary>
+	/// Complex [Export] marshal scenarios: arrays, enums, and CharSequence.
+	/// </summary>
+	[Register ("my/app/ExportMarshalComplex")]
+	public class ExportMarshalComplex : Java.Lang.Object
+	{
+		protected ExportMarshalComplex (IntPtr handle, Android.Runtime.JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+
+		[Java.Interop.Export ("mutateInts")]
+		public void MutateInts (int[] values) { }
+
+		[Java.Interop.Export ("roundTripEnum")]
+		public ExportSampleEnum RoundTripEnum (ExportSampleEnum value) { return value; }
+
+		[Java.Interop.Export ("echoCharSequence")]
+		public Java.Lang.ICharSequence EchoCharSequence (Java.Lang.ICharSequence value) { return value; }
+
+		[Java.Interop.Export ("echoViews")]
+		public Android.Views.View[] EchoViews (Android.Views.View[] values) { return values; }
+
+		[Java.Interop.Export ("echoStrings")]
+		public string[] EchoStrings (string[] values) { return values; }
 	}
 
 	/// <summary>

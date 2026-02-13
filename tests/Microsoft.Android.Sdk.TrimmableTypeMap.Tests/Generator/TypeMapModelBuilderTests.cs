@@ -695,10 +695,14 @@ public class ModelBuilderTests
 			var acwProxies = model.ProxyTypes.Where (p => p.IsAcw).ToList ();
 			Assert.NotEmpty (acwProxies);
 
-			// ACW proxies with [Register] marshal methods should have registrations.
-			// [Export]-only types don't generate UCO wrappers yet (TODO).
+			// ACW proxies should have native registrations for [Register] and [Export] members.
 			var proxiesWithRegistrations = acwProxies.Where (p => p.NativeRegistrations.Count > 0).ToList ();
 			Assert.NotEmpty (proxiesWithRegistrations);
+
+			// [Export]-only unregistered type should still get a proxy + registration.
+			var exportOnlyProxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_UnregisteredExporter_Proxy");
+			Assert.NotNull (exportOnlyProxy);
+			Assert.Contains (exportOnlyProxy!.NativeRegistrations, r => r.JniMethodName == "n_DoExportedWork");
 		}
 
 	}
@@ -1484,6 +1488,49 @@ public class ModelBuilderTests
 
 			// Verify the string return type is assembly-qualified
 			Assert.Equal ("System.String, System.Private.CoreLib", exportMethod.ManagedReturnType);
+		}
+
+		[Fact]
+		public void Fixture_ExportMarshalComplex_HasArrayEnumAndCharSequenceMetadata ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/ExportMarshalComplex");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_ExportMarshalComplex_Proxy");
+			Assert.NotNull (proxy);
+
+			var roundTripEnum = proxy!.ExportMarshalMethods.First (e => e.ManagedMethodName == "RoundTripEnum");
+			Assert.Equal ("(I)I", roundTripEnum.JniSignature);
+			Assert.Equal ("MyApp.ExportSampleEnum", roundTripEnum.ManagedParameters [0].ManagedTypeName);
+			Assert.Equal ("TestFixtures", roundTripEnum.ManagedParameters [0].AssemblyName);
+			Assert.Equal ("MyApp.ExportSampleEnum, TestFixtures", roundTripEnum.ManagedReturnType);
+
+			var echoCharSequence = proxy.ExportMarshalMethods.First (e => e.ManagedMethodName == "EchoCharSequence");
+			Assert.Equal ("(Ljava/lang/CharSequence;)Ljava/lang/CharSequence;", echoCharSequence.JniSignature);
+			Assert.Equal ("Java.Lang.ICharSequence", echoCharSequence.ManagedParameters [0].ManagedTypeName);
+
+			var mutateInts = proxy.ExportMarshalMethods.First (e => e.ManagedMethodName == "MutateInts");
+			Assert.Equal ("([I)V", mutateInts.JniSignature);
+			Assert.Equal ("System.Int32[]", mutateInts.ManagedParameters [0].ManagedTypeName);
+
+			var echoViews = proxy.ExportMarshalMethods.First (e => e.ManagedMethodName == "EchoViews");
+			Assert.Equal ("([Landroid/view/View;)[Landroid/view/View;", echoViews.JniSignature);
+			Assert.Equal ("Android.Views.View[]", echoViews.ManagedParameters [0].ManagedTypeName);
+
+			var echoStrings = proxy.ExportMarshalMethods.First (e => e.ManagedMethodName == "EchoStrings");
+			Assert.Equal ("([Ljava/lang/String;)[Ljava/lang/String;", echoStrings.JniSignature);
+			Assert.Equal ("System.String[]", echoStrings.ManagedParameters [0].ManagedTypeName);
+		}
+
+		[Fact]
+		public void Fixture_UnregisteredExporter_ExportOnlyTypeGetsProxy ()
+		{
+			var peers = ScanFixtures ();
+			var peer = peers.First (p => p.ManagedTypeName == "MyApp.UnregisteredExporter");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_UnregisteredExporter_Proxy");
+			Assert.NotNull (proxy);
+			Assert.True (proxy!.IsAcw);
+			Assert.Contains (proxy.NativeRegistrations, r => r.JniMethodName == "n_DoExportedWork");
 		}
 
 	}
