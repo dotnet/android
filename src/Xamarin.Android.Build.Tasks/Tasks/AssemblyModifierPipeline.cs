@@ -140,6 +140,10 @@ public class AssemblyModifierPipeline : AndroidTask
 		findJavaObjectsStep.Initialize (context);
 		pipeline.Steps.Add (findJavaObjectsStep);
 
+		// StripEmbeddedLibrariesStep
+		var stripEmbeddedLibrariesStep = new StripEmbeddedLibrariesStep (Log);
+		pipeline.Steps.Add (stripEmbeddedLibrariesStep);
+
 		// SaveChangedAssemblyStep
 		var writerParameters = new WriterParameters {
 			DeterministicMvid = Deterministic,
