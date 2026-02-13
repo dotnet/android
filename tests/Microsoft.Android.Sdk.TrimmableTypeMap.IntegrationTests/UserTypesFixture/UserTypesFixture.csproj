@@ -10,8 +10,7 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\..\product.snk</AssemblyOriginatorKeyFile>
     <!-- Output next to the integration test DLL so it's easy to find -->
-    <OutputPath>..\bin\$(Configuration)\$(TargetFramework)\</OutputPath>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>..\..\..\bin\Test$(Configuration)\</OutputPath>
   </PropertyGroup>
 
   <!-- Reference the ref assembly of Mono.Android -->

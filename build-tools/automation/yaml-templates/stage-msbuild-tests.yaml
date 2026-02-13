@@ -105,17 +105,23 @@ stages:
         testResultsFiles: '**/TestResults.trx'
         testRunTitle: TrimmableTypeMap Scanner Tests - Windows
 
-  - job: integration_tests
+  - job: integration_tests_mac
     displayName: macOS > Integration Tests
     pool:
       name: Azure Pipelines
-      image: macOS-14
+      vmImage: macOS-14
       os: macOS
     timeoutInMinutes: 10
     steps:
     - checkout: ${{ parameters.repositoryAlias }}
       path: s/android
       persistCredentials: false
+
+    - task: UseDotNet@2
+      displayName: Install .NET SDK
+      inputs:
+        useGlobalJson: true
+        workingDirectory: ${{ parameters.xaSourcePath }}
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -124,7 +130,7 @@ stages:
 
     - script: >-
         dotnet test
-        ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests.dll
+        ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests.dll
         --logger "trx;LogFileName=TestResults.trx"
       displayName: Run TrimmableTypeMap Integration Tests
 
@@ -134,4 +140,41 @@ stages:
       inputs:
         testResultsFormat: VSTest
         testResultsFiles: '**/TestResults.trx'
-        testRunTitle: TrimmableTypeMap Integration Tests
+        testRunTitle: TrimmableTypeMap Integration Tests - macOS
+
+  - job: integration_tests_win
+    displayName: Windows > Integration Tests
+    pool:
+      name: Azure Pipelines
+      vmImage: windows-latest
+      os: windows
+    timeoutInMinutes: 10
+    steps:
+    - checkout: ${{ parameters.repositoryAlias }}
+      path: s/android
+      persistCredentials: false
+
+    - task: UseDotNet@2
+      displayName: Install .NET SDK
+      inputs:
+        useGlobalJson: true
+        workingDirectory: ${{ parameters.xaSourcePath }}
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(TestAssembliesArtifactName)
+        downloadPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
+
+    - script: >-
+        dotnet test
+        ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests.dll
+        --logger "trx;LogFileName=TestResults.trx"
+      displayName: Run TrimmableTypeMap Integration Tests
+
+    - task: PublishTestResults@2
+      displayName: Publish Test Results
+      condition: always()
+      inputs:
+        testResultsFormat: VSTest
+        testResultsFiles: '**/TestResults.trx'
+        testRunTitle: TrimmableTypeMap Integration Tests - Windows

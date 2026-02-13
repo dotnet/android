@@ -422,7 +422,7 @@ stages:
         testResultsFiles: '**/TestResults.trx'
         testRunTitle: TrimmableTypeMap Scanner Tests - Windows
 
-  - job: integration_tests
+  - job: integration_tests_mac
     displayName: macOS > Integration Tests
     pool:
       name: Azure Pipelines
@@ -442,7 +442,7 @@ stages:
 
     - script: >-
         dotnet test
-        $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests.dll
+        $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests.dll
         --logger "trx;LogFileName=TestResults.trx"
       displayName: Run TrimmableTypeMap Integration Tests
 
@@ -452,4 +452,36 @@ stages:
       inputs:
         testResultsFormat: VSTest
         testResultsFiles: '**/TestResults.trx'
-        testRunTitle: TrimmableTypeMap Integration Tests
+        testRunTitle: TrimmableTypeMap Integration Tests - macOS
+
+  - job: integration_tests_win
+    displayName: Windows > Integration Tests
+    pool:
+      name: $(NetCorePublicPoolName)
+      demands:
+      - ImageOverride -equals $(WindowsPoolImageNetCorePublic)
+    timeoutInMinutes: 10
+    steps:
+    - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
+      parameters:
+        installTestSlicer: false
+        use1ESTemplate: false
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(TestAssembliesArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+
+    - script: >-
+        dotnet test
+        $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests.dll
+        --logger "trx;LogFileName=TestResults.trx"
+      displayName: Run TrimmableTypeMap Integration Tests
+
+    - task: PublishTestResults@2
+      displayName: Publish Test Results
+      condition: always()
+      inputs:
+        testResultsFormat: VSTest
+        testResultsFiles: '**/TestResults.trx'
+        testRunTitle: TrimmableTypeMap Integration Tests - Windows
