@@ -1007,8 +1007,8 @@ public class ScannerComparisonTests
 				continue;
 			}
 			if (attr.HasProperties) {
-				foreach (var prop in attr.Properties) {
-					if (prop.Name == "DoNotGenerateAcw" && prop.Argument.Value is bool val) {
+				foreach (var prop in attr.Properties.Where (p => p.Name == "DoNotGenerateAcw")) {
+					if (prop.Argument.Value is bool val) {
 						return val;
 					}
 				}

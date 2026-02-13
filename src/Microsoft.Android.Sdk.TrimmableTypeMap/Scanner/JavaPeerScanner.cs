@@ -89,18 +89,17 @@ sealed class JavaPeerScanner : IDisposable
 		// and re-classify any attributes that weren't recognized in the initial pass
 		// (e.g., user assembly references ActivityAttribute from Mono.Android.dll).
 		var mergedJniNameProviders = new HashSet<string> (StringComparer.Ordinal);
-		foreach (var kvp in assemblyCache) {
-			mergedJniNameProviders.UnionWith (kvp.Value.JniNameProviderAttributes);
+		foreach (var index in assemblyCache.Values) {
+			mergedJniNameProviders.UnionWith (index.JniNameProviderAttributes);
 		}
-		foreach (var kvp in assemblyCache) {
-			kvp.Value.ReclassifyAttributes (mergedJniNameProviders);
+		foreach (var index in assemblyCache.Values) {
+			index.ReclassifyAttributes (mergedJniNameProviders);
 		}
 
 		// Phase 2: Analyze types using cached indices
 		var resultsByManagedName = new Dictionary<string, JavaPeerInfo> (StringComparer.Ordinal);
 
-		foreach (var kvp in assemblyCache) {
-			var index = kvp.Value;
+		foreach (var index in assemblyCache.Values) {
 			ScanAssembly (index, resultsByManagedName);
 		}
 
@@ -117,9 +116,8 @@ sealed class JavaPeerScanner : IDisposable
 	/// </summary>
 	static void ForceUnconditionalCrossReferences (Dictionary<string, JavaPeerInfo> resultsByManagedName, Dictionary<string, AssemblyIndex> assemblyCache)
 	{
-		foreach (var kvp in assemblyCache) {
-			foreach (var attrKvp in kvp.Value.AttributesByType) {
-				var attrInfo = attrKvp.Value;
+		foreach (var index in assemblyCache.Values) {
+			foreach (var attrInfo in index.AttributesByType.Values) {
 				ForceUnconditionalIfPresent (resultsByManagedName, attrInfo.ApplicationBackupAgent);
 				ForceUnconditionalIfPresent (resultsByManagedName, attrInfo.ApplicationManageSpaceActivity);
 			}
