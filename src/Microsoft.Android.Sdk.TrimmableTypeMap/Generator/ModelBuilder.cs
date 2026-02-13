@@ -117,8 +117,8 @@ static class ModelBuilder
 			var peer = peersForName [i];
 			string entryJniName = i == 0 ? jniName : $"{jniName}[{i}]";
 
-			bool hasProxy = peer.ActivationCtor != null || peer.InvokerTypeName != null;
 			bool isAcw = !peer.DoNotGenerateAcw && !peer.IsInterface && peer.MarshalMethods.Count > 0;
+			bool hasProxy = peer.ActivationCtor != null || peer.InvokerTypeName != null || isAcw;
 
 			JavaPeerProxyData? proxy = null;
 			if (hasProxy) {

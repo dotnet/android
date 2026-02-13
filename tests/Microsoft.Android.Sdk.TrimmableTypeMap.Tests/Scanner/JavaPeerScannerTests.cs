@@ -470,6 +470,34 @@ public class JavaPeerScannerTests
 	}
 
 	[Fact]
+	public void Scan_ExportMarshalComplex_HasArrayEnumAndCharSequenceSignatures ()
+	{
+		var peers = ScanFixtures ();
+		var peer = FindByJavaName (peers, "my/app/ExportMarshalComplex");
+
+		var mutateInts = peer.MarshalMethods.First (m => m.JniName == "mutateInts");
+		Assert.Equal ("([I)V", mutateInts.JniSignature);
+		Assert.Equal ("System.Int32[], System.Private.CoreLib", mutateInts.Parameters [0].ManagedType);
+
+		var roundTripEnum = peer.MarshalMethods.First (m => m.JniName == "roundTripEnum");
+		Assert.Equal ("(I)I", roundTripEnum.JniSignature);
+		Assert.Equal ("MyApp.ExportSampleEnum, TestFixtures", roundTripEnum.Parameters [0].ManagedType);
+		Assert.Equal ("MyApp.ExportSampleEnum, TestFixtures", roundTripEnum.ManagedReturnType);
+
+		var echoCharSequence = peer.MarshalMethods.First (m => m.JniName == "echoCharSequence");
+		Assert.Equal ("(Ljava/lang/CharSequence;)Ljava/lang/CharSequence;", echoCharSequence.JniSignature);
+		Assert.Equal ("Java.Lang.ICharSequence, TestFixtures", echoCharSequence.Parameters [0].ManagedType);
+
+		var echoViews = peer.MarshalMethods.First (m => m.JniName == "echoViews");
+		Assert.Equal ("([Landroid/view/View;)[Landroid/view/View;", echoViews.JniSignature);
+		Assert.Equal ("Android.Views.View[], TestFixtures", echoViews.Parameters [0].ManagedType);
+
+		var echoStrings = peer.MarshalMethods.First (m => m.JniName == "echoStrings");
+		Assert.Equal ("([Ljava/lang/String;)[Ljava/lang/String;", echoStrings.JniSignature);
+		Assert.Equal ("System.String[], System.Private.CoreLib", echoStrings.Parameters [0].ManagedType);
+	}
+
+	[Fact]
 	public void Scan_ExportCtorWithSuperArgs_HasSuperArgumentsString ()
 	{
 		var peers = ScanFixtures ();

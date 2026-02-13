@@ -304,7 +304,7 @@ sealed class JavaPeerScanner : IDisposable
 		return (methods, exportFields);
 	}
 
-	static void AddMarshalMethod (List<MarshalMethodInfo> methods, RegisterInfo registerInfo, MethodDefinition methodDef, AssemblyIndex index)
+	void AddMarshalMethod (List<MarshalMethodInfo> methods, RegisterInfo registerInfo, MethodDefinition methodDef, AssemblyIndex index)
 	{
 		// Skip methods that are just the JNI name (type-level [Register])
 		if (registerInfo.Signature == null && registerInfo.Connector == null) {
@@ -324,10 +324,10 @@ sealed class JavaPeerScanner : IDisposable
 		if (registerInfo.Connector == null || isConstructor) {
 			var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
 			for (int i = 0; i < parameters.Count && i < sig.ParameterTypes.Length; i++) {
-				parameters [i].ManagedType = ManagedTypeToAssemblyQualifiedName (sig.ParameterTypes [i]);
+				parameters [i].ManagedType = ManagedTypeToAssemblyQualifiedName (sig.ParameterTypes [i], index);
 			}
 			if (sig.ReturnType != "System.Void") {
-				managedReturnType = ManagedTypeToAssemblyQualifiedName (sig.ReturnType);
+				managedReturnType = ManagedTypeToAssemblyQualifiedName (sig.ReturnType, index);
 			}
 		}
 		methods.Add (new MarshalMethodInfo {
@@ -404,7 +404,7 @@ sealed class JavaPeerScanner : IDisposable
 		return null;
 	}
 
-	static RegisterInfo ParseExportAttribute (CustomAttribute ca, MethodDefinition methodDef, AssemblyIndex index)
+	RegisterInfo ParseExportAttribute (CustomAttribute ca, MethodDefinition methodDef, AssemblyIndex index)
 	{
 		var value = ca.DecodeValue (index.customAttributeTypeProvider);
 
@@ -434,7 +434,7 @@ sealed class JavaPeerScanner : IDisposable
 
 		// Build JNI signature from method signature
 		var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
-		var jniSig = BuildJniSignatureFromManaged (sig);
+		var jniSig = BuildJniSignatureFromManaged (sig, index);
 
 		return new RegisterInfo (exportName, jniSig, null, false,
 			thrownNames: thrownNames, superArgumentsString: superArguments);
@@ -444,11 +444,11 @@ sealed class JavaPeerScanner : IDisposable
 	/// Creates a RegisterInfo for an [ExportField] method.
 	/// The method is registered like [Export] (Connector = null) so it gets a full marshal body.
 	/// </summary>
-	static RegisterInfo ParseExportFieldAsRegisterInfo (MethodDefinition methodDef, AssemblyIndex index)
+	RegisterInfo ParseExportFieldAsRegisterInfo (MethodDefinition methodDef, AssemblyIndex index)
 	{
 		var methodName = index.Reader.GetString (methodDef.Name);
 		var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
-		var jniSig = BuildJniSignatureFromManaged (sig);
+		var jniSig = BuildJniSignatureFromManaged (sig, index);
 		return new RegisterInfo (methodName, jniSig, null, false);
 	}
 
@@ -492,19 +492,19 @@ sealed class JavaPeerScanner : IDisposable
 		return null;
 	}
 
-	static string BuildJniSignatureFromManaged (MethodSignature<string> sig)
+	string BuildJniSignatureFromManaged (MethodSignature<string> sig, AssemblyIndex index)
 	{
 		var sb = new System.Text.StringBuilder ();
 		sb.Append ('(');
 		foreach (var param in sig.ParameterTypes) {
-			sb.Append (ManagedTypeToJniDescriptor (param));
+			sb.Append (ManagedTypeToJniDescriptor (param, index));
 		}
 		sb.Append (')');
-		sb.Append (ManagedTypeToJniDescriptor (sig.ReturnType));
+		sb.Append (ManagedTypeToJniDescriptor (sig.ReturnType, index));
 		return sb.ToString ();
 	}
 
-	static string ManagedTypeToJniDescriptor (string managedType)
+	string ManagedTypeToJniDescriptor (string managedType, AssemblyIndex index)
 	{
 		switch (managedType) {
 		case "System.Void": return "V";
@@ -521,9 +521,17 @@ sealed class JavaPeerScanner : IDisposable
 		case "System.Single": return "F";
 		case "System.Double": return "D";
 		case "System.String": return "Ljava/lang/String;";
+		case "Java.Lang.ICharSequence": return "Ljava/lang/CharSequence;";
 		default:
 			if (managedType.EndsWith ("[]")) {
-				return "[" + ManagedTypeToJniDescriptor (managedType.Substring (0, managedType.Length - 2));
+				return "[" + ManagedTypeToJniDescriptor (managedType.Substring (0, managedType.Length - 2), index);
+			}
+			if (IsEnumManagedType (managedType, index)) {
+				return "I";
+			}
+			var jniName = ResolveManagedTypeJniName (managedType, index);
+			if (!string.IsNullOrEmpty (jniName)) {
+				return "L" + jniName + ";";
 			}
 			return "Ljava/lang/Object;";
 		}
@@ -533,8 +541,12 @@ sealed class JavaPeerScanner : IDisposable
 	/// Maps a managed type name (from SignatureTypeProvider) to an assembly-qualified name
 	/// like "System.Int32, System.Private.CoreLib" used in TypeManager.Activate calls.
 	/// </summary>
-	static string ManagedTypeToAssemblyQualifiedName (string managedType)
+	string ManagedTypeToAssemblyQualifiedName (string managedType, AssemblyIndex index)
 	{
+		if (managedType.IndexOf (", ", StringComparison.Ordinal) >= 0) {
+			return managedType;
+		}
+
 		// BCL types all live in System.Private.CoreLib
 		switch (managedType) {
 		case "System.Void":
@@ -556,11 +568,131 @@ sealed class JavaPeerScanner : IDisposable
 		case "System.UIntPtr":
 			return managedType + ", System.Private.CoreLib";
 		default:
-			// For non-BCL types, we don't know the assembly at this point.
-			// This is a best-effort mapping; full assembly resolution for
-			// arbitrary types is a follow-up.
-			return managedType;
+			// Best-effort assembly resolution across loaded assemblies.
+			var assemblyName = ResolveManagedTypeAssemblyName (managedType, index);
+			return assemblyName != null ? managedType + ", " + assemblyName : managedType;
 		}
+	}
+
+	string? ResolveManagedTypeAssemblyName (string managedType, AssemblyIndex index)
+	{
+		string typeName = StripManagedTypeDecorations (managedType);
+		if (typeName.Length == 0 || typeName [0] == '!') {
+			return null; // generic method/type parameter
+		}
+
+		if (IsBclTypeName (typeName)) {
+			return "System.Private.CoreLib";
+		}
+
+		if (TryResolveManagedTypeDefinition (typeName, index, out _, out var resolvedIndex)) {
+			return resolvedIndex.AssemblyName;
+		}
+
+		return index.AssemblyName;
+	}
+
+	bool IsEnumManagedType (string managedType, AssemblyIndex index)
+	{
+		string typeName = StripManagedTypeDecorations (managedType);
+		if (typeName.Length == 0 || typeName [0] == '!') {
+			return false;
+		}
+
+		if (!TryResolveManagedTypeDefinition (typeName, index, out var handle, out var resolvedIndex)) {
+			return false;
+		}
+
+		var typeDef = resolvedIndex.Reader.GetTypeDefinition (handle);
+		if (typeDef.BaseType.Kind == HandleKind.TypeReference) {
+			var (baseTypeName, _) = ResolveTypeReference ((TypeReferenceHandle) typeDef.BaseType, resolvedIndex);
+			return baseTypeName == "System.Enum";
+		}
+		if (typeDef.BaseType.Kind == HandleKind.TypeDefinition) {
+			var baseTypeDef = resolvedIndex.Reader.GetTypeDefinition ((TypeDefinitionHandle) typeDef.BaseType);
+			return AssemblyIndex.GetFullName (baseTypeDef, resolvedIndex.Reader) == "System.Enum";
+		}
+		return false;
+	}
+
+	string? ResolveManagedTypeJniName (string managedType, AssemblyIndex index)
+	{
+		string typeName = StripManagedTypeDecorations (managedType);
+		if (typeName.Length == 0 || typeName [0] == '!') {
+			return null;
+		}
+
+		if (!TryResolveManagedTypeDefinition (typeName, index, out var handle, out var resolvedIndex)) {
+			return null;
+		}
+
+		if (resolvedIndex.RegisterInfoByType.TryGetValue (handle, out var regInfo) &&
+			!string.IsNullOrEmpty (regInfo.JniName)) {
+			return regInfo.JniName;
+		}
+
+		return null;
+	}
+
+	bool TryResolveManagedTypeDefinition (string managedTypeName, AssemblyIndex index, out TypeDefinitionHandle handle, out AssemblyIndex resolvedIndex)
+	{
+		if (TryResolveType (managedTypeName, index.AssemblyName, out handle, out resolvedIndex)) {
+			return true;
+		}
+
+		foreach (var candidate in assemblyCache.Values) {
+			if (candidate.TypesByFullName.TryGetValue (managedTypeName, out handle)) {
+				resolvedIndex = candidate;
+				return true;
+			}
+		}
+
+		handle = default;
+		resolvedIndex = null!;
+		return false;
+	}
+
+	static bool IsBclTypeName (string managedTypeName)
+	{
+		switch (managedTypeName) {
+		case "System.Void":
+		case "System.Boolean":
+		case "System.Byte":
+		case "System.SByte":
+		case "System.Char":
+		case "System.Int16":
+		case "System.UInt16":
+		case "System.Int32":
+		case "System.UInt32":
+		case "System.Int64":
+		case "System.UInt64":
+		case "System.Single":
+		case "System.Double":
+		case "System.String":
+		case "System.Object":
+		case "System.IntPtr":
+		case "System.UIntPtr":
+			return true;
+		default:
+			return false;
+		}
+	}
+
+	static string StripManagedTypeDecorations (string managedType)
+	{
+		string result = managedType;
+		while (result.EndsWith ("[]", StringComparison.Ordinal) ||
+			   result.EndsWith ("&", StringComparison.Ordinal) ||
+			   result.EndsWith ("*", StringComparison.Ordinal)) {
+			result = result.Substring (0, result.Length - (result.EndsWith ("[]", StringComparison.Ordinal) ? 2 : 1));
+		}
+
+		int genericStart = result.IndexOf ('<');
+		if (genericStart >= 0) {
+			result = result.Substring (0, genericStart);
+		}
+
+		return result;
 	}
 
 	ActivationCtorInfo? ResolveActivationCtor (string typeName, TypeDefinition typeDef, AssemblyIndex index)
@@ -848,47 +980,6 @@ sealed class JavaPeerScanner : IDisposable
 		var data = System.Text.Encoding.UTF8.GetBytes (ns + ":" + assemblyName);
 		var hash = System.IO.Hashing.Crc64.Hash (data);
 		return "crc64" + BitConverter.ToString (hash).Replace ("-", "").ToLowerInvariant ();
-	}
-
-	static string ExtractNamespace (string fullName)
-	{
-		int lastDot = fullName.LastIndexOf ('.');
-		return lastDot >= 0 ? fullName.Substring (0, lastDot) : "";
-	}
-
-	static string ExtractShortName (string fullName)
-	{
-		int lastDot = fullName.LastIndexOf ('.');
-		return lastDot >= 0 ? fullName.Substring (lastDot + 1) : fullName;
-	}
-
-	static List<JniParameterInfo> ParseJniParameters (string jniSignature)
-	{
-		var typeStrings = JniSignatureHelper.ParseParameterTypeStrings (jniSignature);
-		var result = new List<JniParameterInfo> (typeStrings.Count);
-		foreach (var t in typeStrings) {
-			result.Add (new JniParameterInfo { JniType = t });
-		}
-		return result;
-	}
-
-	static List<JavaConstructorInfo> BuildJavaConstructors (List<MarshalMethodInfo> marshalMethods)
-	{
-		var ctors = new List<JavaConstructorInfo> ();
-		int ctorIndex = 0;
-		foreach (var mm in marshalMethods) {
-			if (!mm.IsConstructor) {
-				continue;
-			}
-			ctors.Add (new JavaConstructorInfo {
-				JniSignature = mm.JniSignature,
-				ConstructorIndex = ctorIndex,
-				Parameters = mm.Parameters,
-				SuperArgumentsString = mm.SuperArgumentsString,
-			});
-			ctorIndex++;
-		}
-		return ctors;
 	}
 
 	static string ExtractNamespace (string fullName)

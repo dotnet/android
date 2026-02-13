@@ -384,6 +384,29 @@ public class TypeMapAssemblyGeneratorTests
 		}
 
 		[Fact]
+		public void Generate_ExportMarshalComplex_UsesArrayMarshalHelpers ()
+		{
+			var peers = ScanFixtures ();
+			var peer = peers.First (p => p.JavaName == "my/app/ExportMarshalComplex");
+			var path = GenerateAssembly (new [] { peer }, "ExportMarshalComplexHelpers");
+			try {
+				var (pe, reader) = OpenAssembly (path);
+				using (pe) {
+					var memberNames = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
+						.Select (i => reader.GetMemberReference (MetadataTokens.MemberReferenceHandle (i)))
+						.Select (m => reader.GetString (m.Name))
+						.ToList ();
+					Assert.Contains ("GetArray", memberNames);
+					Assert.Contains ("NewArray", memberNames);
+					Assert.Contains ("CopyArray", memberNames);
+					Assert.Contains ("GetCharSequence", memberNames);
+				}
+			} finally {
+				CleanUp (path);
+			}
+		}
+
+		[Fact]
 		public void Generate_ExportConstructor_HasWrapperMethods ()
 		{
 			var peers = ScanFixtures ();
@@ -404,6 +427,34 @@ public class TypeMapAssemblyGeneratorTests
 					// Export constructors should produce nctor_N_uco wrappers
 					Assert.Contains (methods, m => m.StartsWith ("nctor_") && m.EndsWith ("_uco"));
 					Assert.Contains ("RegisterNatives", methods);
+				}
+			} finally {
+				CleanUp (path);
+			}
+		}
+
+		[Fact]
+		public void Generate_ExportOnlyType_HasProxyAndRegistration ()
+		{
+			var peers = ScanFixtures ();
+			var peer = peers.First (p => p.ManagedTypeName == "MyApp.UnregisteredExporter");
+			var path = GenerateAssembly (new [] { peer }, "ExportOnlyType");
+			try {
+				var (pe, reader) = OpenAssembly (path);
+				using (pe) {
+					var proxy = reader.TypeDefinitions
+						.Select (h => reader.GetTypeDefinition (h))
+						.First (t => reader.GetString (t.Name) == "MyApp_UnregisteredExporter_Proxy");
+
+					var methods = proxy.GetMethods ()
+						.Select (h => reader.GetMethodDefinition (h))
+						.Select (m => reader.GetString (m.Name))
+						.ToList ();
+					Assert.Contains ("n_doExportedWork_uco_0", methods);
+					Assert.Contains ("RegisterNatives", methods);
+
+					var entries = ReadRegisterNativesEntries (pe, reader, proxy);
+					Assert.Contains (entries, e => e.jniMethodName == "n_DoExportedWork" && e.jniSignature == "()V");
 				}
 			} finally {
 				CleanUp (path);
@@ -613,6 +664,31 @@ public class TypeMapAssemblyGeneratorTests
 					// [ExportField] backing methods
 					Assert.Contains ("n_GetInstance", jniNames);
 					Assert.Contains ("n_GetValue", jniNames);
+				}
+			} finally {
+				CleanUp (path);
+			}
+		}
+
+		[Fact]
+		public void Generate_ExportMarshalComplex_RegisteredInRegisterNatives ()
+		{
+			var peers = ScanFixtures ();
+			var peer = peers.First (p => p.JavaName == "my/app/ExportMarshalComplex");
+			var path = GenerateAssembly (new [] { peer }, "ExportMarshalComplexRegistration");
+			try {
+				var (pe, reader) = OpenAssembly (path);
+				using (pe) {
+					var proxy = reader.TypeDefinitions
+						.Select (h => reader.GetTypeDefinition (h))
+						.First (t => reader.GetString (t.Name) == "MyApp_ExportMarshalComplex_Proxy");
+
+					var entries = ReadRegisterNativesEntries (pe, reader, proxy);
+					Assert.Contains (entries, e => e.jniMethodName == "n_MutateInts" && e.jniSignature == "([I)V");
+					Assert.Contains (entries, e => e.jniMethodName == "n_RoundTripEnum" && e.jniSignature == "(I)I");
+					Assert.Contains (entries, e => e.jniMethodName == "n_EchoCharSequence" && e.jniSignature == "(Ljava/lang/CharSequence;)Ljava/lang/CharSequence;");
+					Assert.Contains (entries, e => e.jniMethodName == "n_EchoViews" && e.jniSignature == "([Landroid/view/View;)[Landroid/view/View;");
+					Assert.Contains (entries, e => e.jniMethodName == "n_EchoStrings" && e.jniSignature == "([Ljava/lang/String;)[Ljava/lang/String;");
 				}
 			} finally {
 				CleanUp (path);
