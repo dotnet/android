@@ -22,8 +22,9 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			var dir = Path.GetDirectoryName (OutputFile);
-			if (!Directory.Exists (dir))
+			if (!dir.IsNullOrEmpty () && !Directory.Exists (dir)) {
 				Directory.CreateDirectory (dir);
+			}
 			using var writer = File.CreateText (OutputFile);
 
 			foreach (var assembly in LinkedAssemblies) {
