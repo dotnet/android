@@ -284,10 +284,8 @@ sealed class AssemblyIndex : IDisposable
 			connector = (string?)value.FixedArguments [2].Value;
 		}
 
-		foreach (var named in value.NamedArguments) {
-			if (named.Name == "DoNotGenerateAcw" && named.Value is bool val) {
-				doNotGenerateAcw = val;
-			}
+		if (TryGetNamedBooleanArgument (value, "DoNotGenerateAcw", out var doNotGenerateAcwValue)) {
+			doNotGenerateAcw = doNotGenerateAcwValue;
 		}
 
 		return new RegisterInfo (jniName, signature, connector, doNotGenerateAcw);
@@ -296,10 +294,9 @@ sealed class AssemblyIndex : IDisposable
 	string? TryGetTypeProperty (CustomAttribute ca, string propertyName)
 	{
 		var value = ca.DecodeValue (customAttributeTypeProvider);
-		foreach (var named in value.NamedArguments) {
-			if (named.Name == propertyName && named.Value is string typeName && !string.IsNullOrEmpty (typeName)) {
-				return typeName;
-			}
+		var typeName = TryGetNamedStringArgument (value, propertyName);
+		if (!string.IsNullOrEmpty (typeName)) {
+			return typeName;
 		}
 		return null;
 	}
@@ -309,15 +306,38 @@ sealed class AssemblyIndex : IDisposable
 		var value = ca.DecodeValue (customAttributeTypeProvider);
 
 		// Check named arguments first (e.g., [Activity(Name = "...")])
-		foreach (var named in value.NamedArguments) {
-			if (named.Name == "Name" && named.Value is string name && !string.IsNullOrEmpty (name)) {
-				return name;
-			}
+		var name = TryGetNamedStringArgument (value, "Name");
+		if (!string.IsNullOrEmpty (name)) {
+			return name;
 		}
 
 		// Fall back to first constructor argument (e.g., [CustomJniName("...")])
 		if (value.FixedArguments.Length > 0 && value.FixedArguments [0].Value is string ctorName && !string.IsNullOrEmpty (ctorName)) {
 			return ctorName;
+		}
+
+		return null;
+	}
+
+	static bool TryGetNamedBooleanArgument (CustomAttributeValue<string> value, string argumentName, out bool argumentValue)
+	{
+		foreach (var named in value.NamedArguments) {
+			if (named.Name == argumentName && named.Value is bool boolValue) {
+				argumentValue = boolValue;
+				return true;
+			}
+		}
+
+		argumentValue = false;
+		return false;
+	}
+
+	static string? TryGetNamedStringArgument (CustomAttributeValue<string> value, string argumentName)
+	{
+		foreach (var named in value.NamedArguments) {
+			if (named.Name == argumentName && named.Value is string stringValue) {
+				return stringValue;
+			}
 		}
 
 		return null;
