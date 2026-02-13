@@ -162,9 +162,11 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckForInvalidHttpClientHandlerType ([Values] AndroidRuntime runtime)
+		public void CheckForInvalidHttpClientHandlerType ()
 		{
+			// Test with MonoVM only since NativeAOT will fail with XA1042 before reaching XA1031
 			const bool isRelease = true;
+			var runtime = AndroidRuntime.MonoVM;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
@@ -177,13 +179,38 @@ namespace Xamarin.Android.Build.Tests
 				proj.SetProperty ("AndroidHttpClientHandlerType", "Android.App.Application");
 				Assert.IsFalse (b.Build (proj), "Build should not have succeeded.");
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "XA1031"), "Output should contain XA1031");
+				// Also expect deprecation warning
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "XA1043"), "Output should contain XA1043 deprecation warning");
 			}
 		}
 
 		[Test]
-		public void CheckHttpClientHandlerType ([Values] AndroidRuntime runtime)
+		public void CheckHttpClientHandlerType_NativeAOT_Error ()
 		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			// NativeAOT should fail with an error when AndroidHttpClientHandlerType is set
+			const bool isRelease = true;
+			var runtime = AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			using (var b = CreateApkBuilder ()) {
+				b.ThrowOnBuildFailure = false;
+				proj.SetProperty ("AndroidHttpClientHandlerType", "Xamarin.Android.Net.AndroidMessageHandler");
+				Assert.IsFalse (b.Build (proj), "Build should not have succeeded for NativeAOT with AndroidHttpClientHandlerType set.");
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "XA1042"), "Output should contain XA1042");
+			}
+		}
+
+		[Test]
+		[TestCase (AndroidRuntime.MonoVM)]
+		[TestCase (AndroidRuntime.CoreCLR)]
+		public void CheckHttpClientHandlerType_DeprecationWarning (AndroidRuntime runtime)
+		{
+			bool isRelease = false;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
@@ -197,7 +224,6 @@ namespace Xamarin.Android.Build.Tests
 			string supportedAbis = runtime switch {
 				AndroidRuntime.MonoVM  => "armeabi-v7a;arm64-v8a",
 				AndroidRuntime.CoreCLR => "arm64-v8a;x86_64",
-				AndroidRuntime.NativeAOT => "arm64-v8a;x86_64",
 				_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
 			};
 			proj.SetRuntime (runtime);
@@ -208,17 +234,16 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = CreateApkBuilder ()) {
 				proj.SetProperty ("AndroidHttpClientHandlerType", expectedDefaultValue);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				// Expect deprecation warning XA1043
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "XA1043"), "Output should contain XA1043 deprecation warning");
+
 				var intermediateOutputDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 
 				List<EnvironmentHelper.EnvironmentFile>? envFiles = null;
 				Dictionary<string, string> envvars;
 
-				if (runtime == AndroidRuntime.NativeAOT) {
-					envvars = EnvironmentHelper.ReadNativeAotEnvironmentVariables (intermediateOutputDir);
-				} else {
-					envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true, runtime);
-					envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles, runtime);
-				}
+				envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true, runtime);
+				envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles, runtime);
 
 				Assert.IsTrue (envvars.ContainsKey (httpClientHandlerVarName), $"Environment should contain '{httpClientHandlerVarName}'.");
 				Assert.AreEqual (expectedDefaultValue, envvars[httpClientHandlerVarName]);
@@ -226,12 +251,8 @@ namespace Xamarin.Android.Build.Tests
 				proj.SetProperty ("AndroidHttpClientHandlerType", expectedUpdatedValue);
 				Assert.IsTrue (b.Build (proj), "Second build should have succeeded.");
 
-				if (runtime == AndroidRuntime.NativeAOT) {
-					envvars = EnvironmentHelper.ReadNativeAotEnvironmentVariables (intermediateOutputDir);
-				} else {
-					envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true, runtime);
-					envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles, runtime);
-				}
+				envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true, runtime);
+				envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles, runtime);
 
 				Assert.IsTrue (envvars.ContainsKey (httpClientHandlerVarName), $"Environment should contain '{httpClientHandlerVarName}'.");
 				Assert.AreEqual (expectedUpdatedValue, envvars[httpClientHandlerVarName]);

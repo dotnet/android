@@ -51,8 +51,10 @@ namespace Xamarin.Android.Tasks
 						if (sequencePointsMode != SequencePointsMode.None && !lineToWrite.Contains ("gen-compact-seq-points"))
 							lineToWrite = line  + ",gen-compact-seq-points";
 					}
-					if (lineToWrite.StartsWith ("XA_HTTP_CLIENT_HANDLER_TYPE=", StringComparison.Ordinal))
+					if (lineToWrite.StartsWith ("XA_HTTP_CLIENT_HANDLER_TYPE=", StringComparison.Ordinal)) {
 						HaveHttpMessageHandler = true;
+						log.LogCodedWarning ("XA1044", Properties.Resources.XA1044);
+					}
 
 					if (lineToWrite.StartsWith ("mono.enable_assembly_preload=", StringComparison.Ordinal)) {
 						int idx = lineToWrite.IndexOf ('=');
