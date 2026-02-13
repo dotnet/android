@@ -78,6 +78,7 @@ public class ModelBuilderTests
 				NativeCallbackName = "n_OnCreate",
 				JniSignature = "(Landroid/os/Bundle;)V",
 				IsConstructor = false,
+				Connector = "n_OnCreate_handler",
 				DeclaringTypeName = "Android.App.Activity",
 				DeclaringAssemblyName = "Mono.Android",
 			});
@@ -286,6 +287,51 @@ public class ModelBuilderTests
 		}
 
 		[Fact]
+		public void Build_LeafActivationCtor_IsOnLeafTypeTrue ()
+		{
+			var peer = MakePeerWithActivation ("my/app/Foo", "MyApp.Foo", "App");
+			// Leaf: the type itself declares the activation ctor
+			peer.ActivationCtor!.DeclaringTypeName = "MyApp.Foo";
+			peer.ActivationCtor!.DeclaringAssemblyName = "App";
+
+			var model = BuildModel (new [] { peer });
+			var proxy = model.ProxyTypes [0];
+
+			Assert.NotNull (proxy.ActivationCtor);
+			Assert.True (proxy.ActivationCtor!.IsOnLeafType);
+			Assert.Equal ("MyApp.Foo", proxy.ActivationCtor.DeclaringType.ManagedTypeName);
+		}
+
+		[Fact]
+		public void Build_InheritedActivationCtor_IsOnLeafTypeFalse ()
+		{
+			var peer = MakePeerWithActivation ("my/app/Bar", "MyApp.Bar", "App");
+			// Inherited: a base type declares the activation ctor
+			peer.ActivationCtor!.DeclaringTypeName = "MyApp.BaseBar";
+			peer.ActivationCtor!.DeclaringAssemblyName = "App";
+
+			var model = BuildModel (new [] { peer });
+			var proxy = model.ProxyTypes [0];
+
+			Assert.NotNull (proxy.ActivationCtor);
+			Assert.False (proxy.ActivationCtor!.IsOnLeafType);
+			Assert.Equal ("MyApp.BaseBar", proxy.ActivationCtor.DeclaringType.ManagedTypeName);
+			Assert.Equal ("App", proxy.ActivationCtor.DeclaringType.AssemblyName);
+		}
+
+		[Fact]
+		public void Build_InheritedActivationCtor_CrossAssembly_AddsIgnoresAccessChecksTo ()
+		{
+			var peer = MakePeerWithActivation ("my/app/Baz", "MyApp.Baz", "App");
+			peer.ActivationCtor!.DeclaringTypeName = "Base.Activity";
+			peer.ActivationCtor!.DeclaringAssemblyName = "Mono.Android";
+
+			var model = BuildModel (new [] { peer }, "TypeMapAsm");
+
+			Assert.Contains ("Mono.Android", model.IgnoresAccessChecksTo);
+		}
+
+		[Fact]
 		public void Build_PeerWithInvoker_CreatesProxy ()
 		{
 			var peer = new JavaPeerInfo {
@@ -428,12 +474,19 @@ public class ModelBuilderTests
 			var proxy = model.ProxyTypes [0];
 
 			Assert.Equal (2, proxy.UcoMethods.Count);
+
+			// Method UCOs (only non-constructor methods)
 			Assert.Equal ("n_onCreate_uco_0", proxy.UcoMethods [0].WrapperName);
 			Assert.Equal ("n_OnCreate", proxy.UcoMethods [0].CallbackMethodName);
 			Assert.Equal ("(Landroid/os/Bundle;)V", proxy.UcoMethods [0].JniSignature);
 
 			Assert.Equal ("n_onResume_uco_1", proxy.UcoMethods [1].WrapperName);
 			Assert.Equal ("n_OnResume", proxy.UcoMethods [1].CallbackMethodName);
+
+			// Constructor goes into ExportMarshalMethods (full marshal body)
+			var ctorExport = proxy.ExportMarshalMethods.FirstOrDefault (e => e.IsConstructor);
+			Assert.NotNull (ctorExport);
+			Assert.Equal ("nctor_0_uco", ctorExport.WrapperName);
 		}
 
 		[Fact]
@@ -483,31 +536,34 @@ public class ModelBuilderTests
 			var model = BuildModel (new [] { peer });
 			var proxy = model.ProxyTypes [0];
 
-			// Only 1 UCO method (constructors are skipped from UcoMethods)
+			// Constructors go to ExportMarshalMethods, not UcoMethods
 			Assert.Single (proxy.UcoMethods);
 			Assert.Equal ("n_onStart_uco_0", proxy.UcoMethods [0].WrapperName);
+			Assert.NotEmpty (proxy.ExportMarshalMethods.Where (e => e.IsConstructor));
 		}
 
 	}
 
-	public class UcoConstructors
+	public class ConstructorMarshalMethods
 	{
 
 		[Fact]
-		public void Build_AcwWithConstructors_CreatesUcoConstructors ()
+		public void Build_AcwWithConstructors_CreatesExportMarshalMethod ()
 		{
 			var peer = MakeAcwPeer ("my/app/Main", "MyApp.MainActivity", "App");
 
 			var model = BuildModel (new [] { peer });
 			var proxy = model.ProxyTypes [0];
 
-			Assert.Single (proxy.UcoConstructors);
-			Assert.Equal ("nctor_0_uco", proxy.UcoConstructors [0].WrapperName);
-			Assert.Equal ("MyApp.MainActivity", proxy.UcoConstructors [0].TargetType.ManagedTypeName);
+			// All constructors generate full marshal bodies in ExportMarshalMethods
+			var ctorExport = proxy.ExportMarshalMethods.FirstOrDefault (e => e.IsConstructor);
+			Assert.NotNull (ctorExport);
+			Assert.Equal ("nctor_0_uco", ctorExport.WrapperName);
+			Assert.Equal ("nctor_0", ctorExport.NativeCallbackName);
 		}
 
 		[Fact]
-		public void Build_PeerWithoutActivationCtor_NoUcoConstructors ()
+		public void Build_PeerWithoutActivationCtor_NoConstructorMarshalMethods ()
 		{
 			// Peer with marshal methods but no activation ctor
 			var peer = new JavaPeerInfo {
@@ -528,7 +584,8 @@ public class ModelBuilderTests
 			var model = BuildModel (new [] { peer });
 			var proxy = model.ProxyTypes [0];
 
-			Assert.Empty (proxy.UcoConstructors);
+			// No activation ctor → no constructor marshal methods
+			Assert.DoesNotContain (proxy.ExportMarshalMethods, e => e.IsConstructor);
 		}
 
 	}
@@ -638,10 +695,14 @@ public class ModelBuilderTests
 			var acwProxies = model.ProxyTypes.Where (p => p.IsAcw).ToList ();
 			Assert.NotEmpty (acwProxies);
 
-			// ACW proxies should have registrations
-			foreach (var proxy in acwProxies) {
-				Assert.NotEmpty (proxy.NativeRegistrations);
-			}
+			// ACW proxies should have native registrations for [Register] and [Export] members.
+			var proxiesWithRegistrations = acwProxies.Where (p => p.NativeRegistrations.Count > 0).ToList ();
+			Assert.NotEmpty (proxiesWithRegistrations);
+
+			// [Export]-only unregistered type should still get a proxy + registration.
+			var exportOnlyProxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_UnregisteredExporter_Proxy");
+			Assert.NotNull (exportOnlyProxy);
+			Assert.Contains (exportOnlyProxy!.NativeRegistrations, r => r.JniMethodName == "n_DoExportedWork");
 		}
 
 	}
@@ -760,6 +821,7 @@ public class ModelBuilderTests
 				NativeCallbackName = "n_ctor",
 				JniSignature = "()V",
 				IsConstructor = true,
+				Connector = "",
 			},
 		};
 		return peer;
@@ -772,6 +834,9 @@ public class ModelBuilderTests
 			NativeCallbackName = callbackName,
 			JniSignature = jniSig,
 			IsConstructor = isConstructor,
+			// [Register] methods always have a non-null Connector (handler name or "" for ctors).
+			// [Export] methods have null Connector.
+			Connector = isConstructor ? "" : callbackName + "_handler",
 		};
 	}
 
@@ -813,7 +878,6 @@ public class ModelBuilderTests
 			// MCW with DoNotGenerateAcw → not ACW
 			Assert.False (proxy.IsAcw);
 			Assert.Empty (proxy.UcoMethods);
-			Assert.Empty (proxy.UcoConstructors);
 			Assert.Empty (proxy.NativeRegistrations);
 		}
 
@@ -1061,15 +1125,15 @@ public class ModelBuilderTests
 			Assert.NotNull (proxy);
 
 			if (proxy!.IsAcw) {
-				Assert.Equal (2, proxy.UcoConstructors.Count);
-				Assert.Equal ("nctor_0_uco", proxy.UcoConstructors [0].WrapperName);
-				Assert.Equal ("nctor_1_uco", proxy.UcoConstructors [1].WrapperName);
-				Assert.Equal ("MyApp.CustomView", proxy.UcoConstructors [0].TargetType.ManagedTypeName);
-				Assert.Equal ("MyApp.CustomView", proxy.UcoConstructors [1].TargetType.ManagedTypeName);
+				// Constructors go into ExportMarshalMethods (full marshal body)
+				var ctorExports = proxy.ExportMarshalMethods.Where (e => e.IsConstructor).ToList ();
+				Assert.Equal (2, ctorExports.Count);
+				Assert.Equal ("nctor_0_uco", ctorExports [0].WrapperName);
+				Assert.Equal ("nctor_1_uco", ctorExports [1].WrapperName);
 
 				// Constructor JNI signatures should be propagated
-				Assert.Equal ("()V", proxy.UcoConstructors [0].JniSignature);
-				Assert.Equal ("(Landroid/content/Context;)V", proxy.UcoConstructors [1].JniSignature);
+				Assert.Equal ("()V", ctorExports [0].JniSignature);
+				Assert.Equal ("(Landroid/content/Context;)V", ctorExports [1].JniSignature);
 
 				// Constructor registrations must use the actual JNI signatures
 				var ctorRegs = proxy.NativeRegistrations.Where (r => r.JniMethodName.StartsWith ("nctor_")).ToList ();
@@ -1317,6 +1381,223 @@ public class ModelBuilderTests
 			}
 		}
 
+		[Fact]
+		public void Fixture_ExportExample_ExportMethodInExportMarshalMethods ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/ExportExample");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_ExportExample_Proxy");
+			Assert.NotNull (proxy);
+
+			// [Export] methods go into ExportMarshalMethods, not UcoMethods
+			Assert.Empty (proxy!.UcoMethods);
+			Assert.NotEmpty (proxy.ExportMarshalMethods);
+		}
+
+		[Fact]
+		public void Fixture_ExportMethodWithParams_ExportMethodsInExportMarshalMethods ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/ExportMethodWithParams");
+			Assert.Equal (2, peer.MarshalMethods.Count);
+			// Both methods should be [Export] (Connector == null)
+			Assert.All (peer.MarshalMethods, mm => Assert.Null (mm.Connector));
+
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_ExportMethodWithParams_Proxy");
+			Assert.NotNull (proxy);
+			Assert.Empty (proxy!.UcoMethods);
+			Assert.Equal (2, proxy.ExportMarshalMethods.Count);
+		}
+
+		[Fact]
+		public void Fixture_ExportsConstructors_ExportConstructorsInExportMarshalMethods ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/ExportsConstructors");
+			// Should have [Export] constructors (Connector == null)
+			var exportCtors = peer.MarshalMethods.Where (m => m.IsConstructor && m.Connector == null).ToList ();
+			Assert.NotEmpty (exportCtors);
+
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_ExportsConstructors_Proxy");
+			Assert.NotNull (proxy);
+
+			// [Export] constructors go into ExportMarshalMethods, not UcoMethods
+			Assert.DoesNotContain (proxy!.UcoMethods, u => u.WrapperName.StartsWith ("nctor_"));
+			Assert.Equal (exportCtors.Count, proxy.ExportMarshalMethods.Count (e => e.IsConstructor));
+		}
+
+		[Fact]
+		public void Fixture_ExportsThrowsConstructors_ExportConstructorsInExportMarshalMethods ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/ExportsThrowsConstructors");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_ExportsThrowsConstructors_Proxy");
+			Assert.NotNull (proxy);
+
+			// All constructors are [Export] → in ExportMarshalMethods, not UcoMethods
+			Assert.DoesNotContain (proxy!.UcoMethods, u => u.WrapperName.StartsWith ("nctor_"));
+			Assert.NotEmpty (proxy.ExportMarshalMethods);
+			Assert.All (proxy.ExportMarshalMethods, e => Assert.True (e.IsConstructor));
+		}
+
+		[Fact]
+		public void Fixture_ExportMethodWithParams_HasNativeRegistrations ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/ExportMethodWithParams");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_ExportMethodWithParams_Proxy");
+			Assert.NotNull (proxy);
+
+			// [Export] methods should generate NativeRegistrations entries
+			Assert.Equal (2, proxy!.NativeRegistrations.Count);
+
+			// Registration names must match the JCW native method declarations (n_<ManagedMethodName>)
+			Assert.Contains (proxy.NativeRegistrations, r => r.JniMethodName == "n_DoWork");
+			Assert.Contains (proxy.NativeRegistrations, r => r.JniMethodName == "n_ComputeName");
+		}
+
+		[Fact]
+		public void Fixture_ExportWithNameOverride_NativeRegistrationUsesCallbackName ()
+		{
+			// [Export("attributeOverridesNames")] public string CompletelyDifferentName(...)
+			// JCW declares: native String n_CompletelyDifferentName(...)
+			// RegisterNatives must use "n_CompletelyDifferentName", NOT "n_attributeOverridesNames"
+			var peer = FindFixtureByJavaName ("my/app/ExportMembersComprehensive");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_ExportMembersComprehensive_Proxy");
+			Assert.NotNull (proxy);
+
+			Assert.Contains (proxy!.NativeRegistrations,
+				r => r.JniMethodName == "n_CompletelyDifferentName");
+			Assert.DoesNotContain (proxy.NativeRegistrations,
+				r => r.JniMethodName == "n_attributeOverridesNames");
+		}
+
+		[Fact]
+		public void Fixture_ExportMarshalMethod_HasCorrectManagedParameters ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/ExportMethodWithParams");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_ExportMethodWithParams_Proxy");
+			Assert.NotNull (proxy);
+
+			// The method with (String, int) params should have correct managed types
+			var exportMethod = proxy!.ExportMarshalMethods.FirstOrDefault (e => e.ManagedParameters.Count == 2);
+			Assert.NotNull (exportMethod);
+			Assert.False (exportMethod!.IsConstructor);
+
+			// Verify the string return type is assembly-qualified
+			Assert.Equal ("System.String, System.Private.CoreLib", exportMethod.ManagedReturnType);
+		}
+
+		[Fact]
+		public void Fixture_ExportMarshalComplex_HasArrayEnumAndCharSequenceMetadata ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/ExportMarshalComplex");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_ExportMarshalComplex_Proxy");
+			Assert.NotNull (proxy);
+
+			var roundTripEnum = proxy!.ExportMarshalMethods.First (e => e.ManagedMethodName == "RoundTripEnum");
+			Assert.Equal ("(I)I", roundTripEnum.JniSignature);
+			Assert.Equal ("MyApp.ExportSampleEnum", roundTripEnum.ManagedParameters [0].ManagedTypeName);
+			Assert.Equal ("TestFixtures", roundTripEnum.ManagedParameters [0].AssemblyName);
+			Assert.Equal ("MyApp.ExportSampleEnum, TestFixtures", roundTripEnum.ManagedReturnType);
+
+			var echoCharSequence = proxy.ExportMarshalMethods.First (e => e.ManagedMethodName == "EchoCharSequence");
+			Assert.Equal ("(Ljava/lang/CharSequence;)Ljava/lang/CharSequence;", echoCharSequence.JniSignature);
+			Assert.Equal ("Java.Lang.ICharSequence", echoCharSequence.ManagedParameters [0].ManagedTypeName);
+
+			var mutateInts = proxy.ExportMarshalMethods.First (e => e.ManagedMethodName == "MutateInts");
+			Assert.Equal ("([I)V", mutateInts.JniSignature);
+			Assert.Equal ("System.Int32[]", mutateInts.ManagedParameters [0].ManagedTypeName);
+
+			var echoViews = proxy.ExportMarshalMethods.First (e => e.ManagedMethodName == "EchoViews");
+			Assert.Equal ("([Landroid/view/View;)[Landroid/view/View;", echoViews.JniSignature);
+			Assert.Equal ("Android.Views.View[]", echoViews.ManagedParameters [0].ManagedTypeName);
+
+			var echoStrings = proxy.ExportMarshalMethods.First (e => e.ManagedMethodName == "EchoStrings");
+			Assert.Equal ("([Ljava/lang/String;)[Ljava/lang/String;", echoStrings.JniSignature);
+			Assert.Equal ("System.String[]", echoStrings.ManagedParameters [0].ManagedTypeName);
+		}
+
+		[Fact]
+		public void Fixture_UnregisteredExporter_ExportOnlyTypeGetsProxy ()
+		{
+			var peers = ScanFixtures ();
+			var peer = peers.First (p => p.ManagedTypeName == "MyApp.UnregisteredExporter");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_UnregisteredExporter_Proxy");
+			Assert.NotNull (proxy);
+			Assert.True (proxy!.IsAcw);
+			Assert.Contains (proxy.NativeRegistrations, r => r.JniMethodName == "n_DoExportedWork");
+		}
+
+	}
+
+	public class FixtureStaticExportAndExportField
+	{
+
+		[Fact]
+		public void Fixture_StaticExport_IsStaticInModel ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/ExportStaticAndFields");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_ExportStaticAndFields_Proxy");
+			Assert.NotNull (proxy);
+
+			var staticExport = proxy!.ExportMarshalMethods.FirstOrDefault (e => e.ManagedMethodName == "staticMethodNotMangled");
+			Assert.NotNull (staticExport);
+			Assert.True (staticExport!.IsStatic);
+		}
+
+		[Fact]
+		public void Fixture_InstanceExport_IsNotStaticInModel ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/ExportStaticAndFields");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_ExportStaticAndFields_Proxy");
+			Assert.NotNull (proxy);
+
+			var instanceExport = proxy!.ExportMarshalMethods.FirstOrDefault (e => e.ManagedMethodName == "instanceMethod");
+			Assert.NotNull (instanceExport);
+			Assert.False (instanceExport!.IsStatic);
+		}
+
+		[Fact]
+		public void Fixture_ExportField_MethodInExportMarshalMethods ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/ExportStaticAndFields");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_ExportStaticAndFields_Proxy");
+			Assert.NotNull (proxy);
+
+			// [ExportField] methods are [Export]-style and should be in ExportMarshalMethods
+			var getInstance = proxy!.ExportMarshalMethods.FirstOrDefault (e => e.ManagedMethodName == "GetInstance");
+			Assert.NotNull (getInstance);
+			Assert.True (getInstance!.IsStatic);
+			Assert.False (getInstance.IsConstructor);
+
+			var getValue = proxy.ExportMarshalMethods.FirstOrDefault (e => e.ManagedMethodName == "GetValue");
+			Assert.NotNull (getValue);
+			Assert.False (getValue!.IsStatic);
+		}
+
+		[Fact]
+		public void Fixture_ExportField_NativeRegistrations ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/ExportStaticAndFields");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_ExportStaticAndFields_Proxy");
+			Assert.NotNull (proxy);
+
+			// All export methods should have native registrations
+			var getInstanceReg = proxy!.NativeRegistrations.FirstOrDefault (r => r.JniMethodName == "n_GetInstance");
+			Assert.NotNull (getInstanceReg);
+
+			var staticReg = proxy.NativeRegistrations.FirstOrDefault (r => r.JniMethodName == "n_staticMethodNotMangled");
+			Assert.NotNull (staticReg);
+		}
 	}
 
 	public class FixtureImplementors
@@ -1575,15 +1856,15 @@ public class ModelBuilderTests
 
 				Assert.NotEmpty (ucoCtors);
 
-				// Match each UCO constructor to its model data to verify param count
+				// Match each constructor to its model data to verify param count
 				foreach (var uco in ucoCtors) {
 					var name = reader.GetString (uco.Name);
-					var modelUco = model.ProxyTypes
-						.SelectMany (p => p.UcoConstructors)
-						.First (u => u.WrapperName == name);
+					var modelExport = model.ProxyTypes
+						.SelectMany (p => p.ExportMarshalMethods)
+						.First (e => e.WrapperName == name);
 
-					// UCO constructor signature must include jnienv + self + JNI params
-					int expectedJniParams = JniSignatureHelper.ParseParameterTypes (modelUco.JniSignature).Count;
+					// Constructor signature must include jnienv + self + JNI params
+					int expectedJniParams = JniSignatureHelper.ParseParameterTypes (modelExport.JniSignature).Count;
 					int expectedTotal = 2 + expectedJniParams;
 
 					var sig = reader.GetBlobReader (uco.Signature);

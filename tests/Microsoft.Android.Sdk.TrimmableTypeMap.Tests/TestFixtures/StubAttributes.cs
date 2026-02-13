@@ -108,7 +108,7 @@ namespace Android.Content
 
 namespace Java.Interop
 {
-	[AttributeUsage (AttributeTargets.Method, AllowMultiple = false)]
+	[AttributeUsage (AttributeTargets.Method | AttributeTargets.Constructor, AllowMultiple = false)]
 	public sealed class ExportAttribute : Attribute
 	{
 		public string? Name { get; set; }
@@ -122,6 +122,17 @@ namespace Java.Interop
 		}
 
 		public ExportAttribute (string name)
+		{
+			Name = name;
+		}
+	}
+
+	[AttributeUsage (AttributeTargets.Method, AllowMultiple = false)]
+	public sealed class ExportFieldAttribute : Attribute
+	{
+		public string Name { get; set; }
+
+		public ExportFieldAttribute (string name)
 		{
 			Name = name;
 		}

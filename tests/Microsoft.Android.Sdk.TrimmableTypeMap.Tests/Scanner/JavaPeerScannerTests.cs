@@ -417,6 +417,97 @@ public class JavaPeerScannerTests
 	}
 
 	[Fact]
+	public void Scan_ExportConstructor_CollectedWithNullConnector ()
+	{
+		var peers = ScanFixtures ();
+		var peer = FindByJavaName (peers, "my/app/ExportsConstructors");
+		// [Export] on constructors: 2 exported ctors + 0 Register methods
+		var exportCtors = peer.MarshalMethods.Where (m => m.IsConstructor && m.Connector == null).ToList ();
+		Assert.Equal (2, exportCtors.Count);
+		// Verify one is parameterless, one takes int
+		Assert.Contains (exportCtors, c => c.JniSignature == "()V");
+		Assert.Contains (exportCtors, c => c.JniSignature == "(I)V");
+	}
+
+	[Fact]
+	public void Scan_ExportMethodWithParams_HasCorrectJniSignature ()
+	{
+		var peers = ScanFixtures ();
+		var peer = FindByJavaName (peers, "my/app/ExportMethodWithParams");
+		Assert.Equal (2, peer.MarshalMethods.Count);
+		// All should be [Export] (null connector)
+		Assert.All (peer.MarshalMethods, m => Assert.Null (m.Connector));
+		// doWork(int) → (I)V
+		var doWork = peer.MarshalMethods.First (m => m.JniName == "doWork");
+		Assert.Equal ("(I)V", doWork.JniSignature);
+		// computeName(String, int) → (Ljava/lang/String;I)Ljava/lang/String;
+		var computeName = peer.MarshalMethods.First (m => m.JniName == "computeName");
+		Assert.Equal ("(Ljava/lang/String;I)Ljava/lang/String;", computeName.JniSignature);
+	}
+
+	[Fact]
+	public void Scan_ExportMembersComprehensive_NameOverrideAndThrows ()
+	{
+		var peers = ScanFixtures ();
+		var peer = FindByJavaName (peers, "my/app/ExportMembersComprehensive");
+		Assert.Equal (4, peer.MarshalMethods.Count);
+
+		// [Export("attributeOverridesNames")] on CompletelyDifferentName
+		var renamed = peer.MarshalMethods.First (m => m.JniName == "attributeOverridesNames");
+		Assert.Null (renamed.Connector);
+		Assert.Equal ("n_CompletelyDifferentName", renamed.NativeCallbackName);
+
+		// [Export(ThrownNames = new [] { "java.lang.Throwable" })]
+		var throwing = peer.MarshalMethods.First (m => m.JniName == "methodThatThrows");
+		Assert.NotNull (throwing.ThrownNames);
+		Assert.Single (throwing.ThrownNames!);
+		Assert.Equal ("java.lang.Throwable", throwing.ThrownNames! [0]);
+
+		// [Export(ThrownNames = new string [0])]
+		var emptyThrows = peer.MarshalMethods.First (m => m.JniName == "methodThatThrowsEmptyArray");
+		// Empty array should result in null or empty ThrownNames
+		Assert.True (emptyThrows.ThrownNames == null || emptyThrows.ThrownNames.Count == 0);
+	}
+
+	[Fact]
+	public void Scan_ExportMarshalComplex_HasArrayEnumAndCharSequenceSignatures ()
+	{
+		var peers = ScanFixtures ();
+		var peer = FindByJavaName (peers, "my/app/ExportMarshalComplex");
+
+		var mutateInts = peer.MarshalMethods.First (m => m.JniName == "mutateInts");
+		Assert.Equal ("([I)V", mutateInts.JniSignature);
+		Assert.Equal ("System.Int32[], System.Private.CoreLib", mutateInts.Parameters [0].ManagedType);
+
+		var roundTripEnum = peer.MarshalMethods.First (m => m.JniName == "roundTripEnum");
+		Assert.Equal ("(I)I", roundTripEnum.JniSignature);
+		Assert.Equal ("MyApp.ExportSampleEnum, TestFixtures", roundTripEnum.Parameters [0].ManagedType);
+		Assert.Equal ("MyApp.ExportSampleEnum, TestFixtures", roundTripEnum.ManagedReturnType);
+
+		var echoCharSequence = peer.MarshalMethods.First (m => m.JniName == "echoCharSequence");
+		Assert.Equal ("(Ljava/lang/CharSequence;)Ljava/lang/CharSequence;", echoCharSequence.JniSignature);
+		Assert.Equal ("Java.Lang.ICharSequence, TestFixtures", echoCharSequence.Parameters [0].ManagedType);
+
+		var echoViews = peer.MarshalMethods.First (m => m.JniName == "echoViews");
+		Assert.Equal ("([Landroid/view/View;)[Landroid/view/View;", echoViews.JniSignature);
+		Assert.Equal ("Android.Views.View[], TestFixtures", echoViews.Parameters [0].ManagedType);
+
+		var echoStrings = peer.MarshalMethods.First (m => m.JniName == "echoStrings");
+		Assert.Equal ("([Ljava/lang/String;)[Ljava/lang/String;", echoStrings.JniSignature);
+		Assert.Equal ("System.String[], System.Private.CoreLib", echoStrings.Parameters [0].ManagedType);
+	}
+
+	[Fact]
+	public void Scan_ExportCtorWithSuperArgs_HasSuperArgumentsString ()
+	{
+		var peers = ScanFixtures ();
+		var peer = FindByJavaName (peers, "my/app/ExportCtorWithSuperArgs");
+		var ctor = peer.MarshalMethods.FirstOrDefault (m => m.IsConstructor);
+		Assert.NotNull (ctor);
+		Assert.Equal ("", ctor!.SuperArgumentsString);
+	}
+
+	[Fact]
 	public void Scan_CustomView_DiscoveredAsRegularType ()
 	{
 		var peers = ScanFixtures ();
@@ -765,5 +856,64 @@ public class JavaPeerScannerTests
 		var exportMethod = exporter.MarshalMethods.FirstOrDefault (m => m.JniName == "doExportedWork");
 		Assert.NotNull (exportMethod);
 		Assert.Null (exportMethod.Connector);
+	}
+
+	[Fact]
+	public void Scan_StaticExportMethod_IsStaticSetTrue ()
+	{
+		var peers = ScanFixtures ();
+		var peer = FindByJavaName (peers, "my/app/ExportStaticAndFields");
+		var staticMethod = peer.MarshalMethods.FirstOrDefault (m => m.JniName == "staticMethodNotMangled");
+		Assert.NotNull (staticMethod);
+		Assert.True (staticMethod.IsStatic);
+		Assert.Null (staticMethod.Connector);
+	}
+
+	[Fact]
+	public void Scan_InstanceExportMethod_IsStaticSetFalse ()
+	{
+		var peers = ScanFixtures ();
+		var peer = FindByJavaName (peers, "my/app/ExportStaticAndFields");
+		var instanceMethod = peer.MarshalMethods.FirstOrDefault (m => m.JniName == "instanceMethod");
+		Assert.NotNull (instanceMethod);
+		Assert.False (instanceMethod.IsStatic);
+	}
+
+	[Fact]
+	public void Scan_ExportField_CollectedAsExportFieldInfo ()
+	{
+		var peers = ScanFixtures ();
+		var peer = FindByJavaName (peers, "my/app/ExportStaticAndFields");
+
+		Assert.NotNull (peer.ExportFields);
+		Assert.Equal (2, peer.ExportFields.Count);
+
+		var staticField = peer.ExportFields.FirstOrDefault (f => f.FieldName == "STATIC_INSTANCE");
+		Assert.NotNull (staticField);
+		Assert.Equal ("GetInstance", staticField.MethodName);
+		Assert.True (staticField.IsStatic);
+
+		var instanceField = peer.ExportFields.FirstOrDefault (f => f.FieldName == "VALUE");
+		Assert.NotNull (instanceField);
+		Assert.Equal ("GetValue", instanceField.MethodName);
+		Assert.False (instanceField.IsStatic);
+	}
+
+	[Fact]
+	public void Scan_ExportField_MethodAlsoInMarshalMethods ()
+	{
+		var peers = ScanFixtures ();
+		var peer = FindByJavaName (peers, "my/app/ExportStaticAndFields");
+
+		// [ExportField] methods should also be in MarshalMethods as export methods
+		var getInstance = peer.MarshalMethods.FirstOrDefault (m => m.ManagedMethodName == "GetInstance");
+		Assert.NotNull (getInstance);
+		Assert.Null (getInstance.Connector); // Export, not Register
+		Assert.True (getInstance.IsStatic);
+
+		var getValue = peer.MarshalMethods.FirstOrDefault (m => m.ManagedMethodName == "GetValue");
+		Assert.NotNull (getValue);
+		Assert.Null (getValue.Connector);
+		Assert.False (getValue.IsStatic);
 	}
 }

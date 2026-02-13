@@ -93,6 +93,12 @@ sealed class JavaPeerInfo
 	public ActivationCtorInfo? ActivationCtor { get; set; }
 
 	/// <summary>
+	/// Java fields generated from [ExportField] attributes.
+	/// Each field is initialized by calling the associated managed method.
+	/// </summary>
+	public IReadOnlyList<ExportFieldInfo> ExportFields { get; set; } = Array.Empty<ExportFieldInfo> ();
+
+	/// <summary>
 	/// For interfaces and abstract types, the name of the invoker type
 	/// used to instantiate instances from Java.
 	/// </summary>
@@ -178,6 +184,46 @@ sealed class MarshalMethodInfo
 	/// Null for [Register] methods.
 	/// </summary>
 	public string? SuperArgumentsString { get; set; }
+
+	/// <summary>
+	/// For [Export] methods: managed return type name, e.g., "System.String".
+	/// Null for [Register] methods and constructors.
+	/// </summary>
+	public string? ManagedReturnType { get; set; }
+
+	/// <summary>
+	/// True if the method is static. Relevant for [Export] static methods.
+	/// </summary>
+	public bool IsStatic { get; set; }
+}
+
+/// <summary>
+/// Describes a Java field generated from a method annotated with [ExportField].
+/// The Java side declares a field initialized by calling the method.
+/// </summary>
+sealed class ExportFieldInfo
+{
+	/// <summary>
+	/// The Java field name, e.g., "STATIC_INSTANCE".
+	/// </summary>
+	public string FieldName { get; set; } = "";
+
+	/// <summary>
+	/// Name of the managed method that initializes the field.
+	/// Used both as the Java initializer method name and the native callback method name.
+	/// </summary>
+	public string MethodName { get; set; } = "";
+
+	/// <summary>
+	/// JNI return type descriptor, e.g., "Ljava/lang/String;".
+	/// Determines the Java field type.
+	/// </summary>
+	public string JniReturnType { get; set; } = "";
+
+	/// <summary>
+	/// Whether the method (and thus the field) is static.
+	/// </summary>
+	public bool IsStatic { get; set; }
 }
 
 /// <summary>
@@ -222,6 +268,17 @@ sealed class JavaConstructorInfo
 	/// Null for [Register] constructors.
 	/// </summary>
 	public string? SuperArgumentsString { get; set; }
+
+	/// <summary>
+	/// Whether this constructor is from [Export] attribute.
+	/// </summary>
+	public bool IsExport { get; set; }
+
+	/// <summary>
+	/// For [Export] constructors: Java exception types that the constructor declares it can throw.
+	/// Null for [Register] constructors.
+	/// </summary>
+	public IReadOnlyList<string>? ThrownNames { get; set; }
 }
 
 /// <summary>
