@@ -80,32 +80,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <_NdkWrapperScriptExt Condition=" $([MSBuild]::IsOSPlatform('windows')) ">.cmd</_NdkWrapperScriptExt>
       <_NdkSysrootDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/sysroot/usr/lib/$(_NdkSysrootAbi)/</_NdkSysrootDir>
       <_NdkBinDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/bin/</_NdkBinDir>
-
-      <!--
-          Don't call `clang` directly, use the wrapper scripts instead since they properly pass
-          arguments required to link the application using the right API level libraries.
-          Using the script also makes it certain that we're not invoking a random `clang` in
-          from the system but rather the NDK one.
-
-          Also, we cannot use $(_NdkBinDir) here because, on Windows, the `Exec` task will get
-          confused by the forward slash in the path (even though it's a valid path separator
-          character on Windows) and signal the following error:
-
-            SetupOSSpecificProps:
-              where /Q "C:\Android\android-sdk\ndk\29.0.14206865\toolchains/llvm/prebuilt/windows-x86_64/bin/clang++"
-            1>EXEC : error : Invalid pattern is specified in "path:pattern".
-            The command "where /Q "C:\Android\android-sdk\ndk\29.0.14206865\toolchains/llvm/prebuilt/windows-x86_64/bin/clang++"" exited with code 2.
-
-          This could be fixed by making sure $(_NdkBinDir) path is fixed-up to use the canonical
-          form of path separation for the host OS, but it's simpler to just use the NDK-specific
-          compiler/linker wrapper script name.
-
-          Also, do NOT use `clang++` here because it will link the dynamic libc++ library into the
-          application. If, for some reason, `clang++` has to be used, `<LinkerArgs>` need to be
-          added to pass `-nostdlib` to it.
-      -->
-      <CppCompilerAndLinker>$(_NdkAbi)-linux-android$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppCompilerAndLinker>
-      <CppLinker>$(_NdkAbi)-linux-android$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppLinker>
+      <CppCompilerAndLinker>$(_NdkBinDir)clang++</CppCompilerAndLinker>
+      <CppLinker>$(_NdkBinDir)clang++</CppLinker>
       <ObjCopyName>llvm-objcopy</ObjCopyName>
 
       <!-- We must ensure this is `false`, as it would interfere with statically linking libc++ -->
@@ -131,8 +107,17 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <!-- Turn trimmer warnings back to original value -->
       <SuppressTrimAnalysisWarnings>$(_OriginalSuppressTrimAnalysisWarnings)</SuppressTrimAnalysisWarnings>
       <_XANativeAotHostName>libnaot-android.release-static-release.a</_XANativeAotHostName>
+      <_NDKApiLevel Condition=" '$(RuntimeIdentifier)' == 'android-arm64' ">$(AndroidNdkApiLevel_Arm64)</_NDKApiLevel>
+      <_NDKArch Condition=" '$(RuntimeIdentifier)' == 'android-arm64' ">aarch64</_NDKArch>
+      <_NDKApiLevel Condition=" '$(RuntimeIdentifier)' == 'android-x64' ">$(AndroidNdkAPiLevel_X64)</_NDKApiLevel>
+      <_NDKArch Condition=" '$(RuntimeIdentifier)' == 'android-x64' ">x86_64</_NDKArch>
     </PropertyGroup>
     <ItemGroup>
+      <!--
+          The `target` argument is **CRUCIAL** since it selects the appropriate directory from which the linker
+          resolves various system libraries. It **MUST** match the API level that .NET for Android was compiled for.
+      -->
+      <LinkerArg Include="--target=$(_NDKArch)-linux-android$(_NDKApiLevel)" />
       <!-- Android needs a proper soname property or it will refuse to load the library -->
       <LinkerArg Include="&quot;-Wl,-soname,lib$(TargetName)$(NativeBinaryExt)&quot;" />
       <LinkerArg Include="-Wl,--error-unresolved-symbols" />
