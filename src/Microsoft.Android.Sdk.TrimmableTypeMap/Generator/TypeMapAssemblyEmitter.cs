@@ -52,7 +52,6 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _getTypeFromHandleRef;
 	MemberReferenceHandle _getUninitializedObjectRef;
 	MemberReferenceHandle _notSupportedExceptionCtorRef;
-	MemberReferenceHandle _activateInstanceRef;
 	MemberReferenceHandle _registerMethodRef;
 	MemberReferenceHandle _ucoAttrCtorRef;
 	BlobHandle _ucoAttrBlobHandle;
@@ -65,6 +64,7 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _jniEnvGetStringRef;
 	MemberReferenceHandle _jniEnvNewStringRef;
 	MemberReferenceHandle _jniEnvToLocalJniHandleRef;
+	MemberReferenceHandle _setHandleRef;
 
 	/// <summary>
 	/// Creates a new emitter.
@@ -216,14 +216,6 @@ sealed class TypeMapAssemblyEmitter
 				rt => rt.Void (),
 				p => p.AddParameter ().Type ().String ()));
 
-		_activateInstanceRef = AddMemberRef (metadata, _trimmableNativeRegistrationRef, "ActivateInstance",
-			sig => sig.MethodSignature ().Parameters (2,
-				rt => rt.Void (),
-				p => {
-					p.AddParameter ().Type ().IntPtr ();
-					p.AddParameter ().Type ().Type (_systemTypeRef, false);
-				}));
-
 		_registerMethodRef = AddMemberRef (metadata, _trimmableNativeRegistrationRef, "RegisterMethod",
 			sig => sig.MethodSignature ().Parameters (4,
 				rt => rt.Void (),
@@ -292,6 +284,15 @@ sealed class TypeMapAssemblyEmitter
 			sig => sig.MethodSignature ().Parameters (1,
 				rt => rt.Type ().IntPtr (),
 				p => p.AddParameter ().Type ().Type (_iJavaObjectRef, false)));
+
+		// Java.Lang.Object.SetHandle(IntPtr, JniHandleOwnership) : void — protected instance method
+		_setHandleRef = AddMemberRef (metadata, _javaLangObjectRef, "SetHandle",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+				rt => rt.Void (),
+				p => {
+					p.AddParameter ().Type ().IntPtr ();
+					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+				}));
 
 		EmitTypeMapAttributeCtorRef (metadata);
 		EmitTypeMapAssociationAttributeCtorRef (metadata);
@@ -401,14 +402,9 @@ sealed class TypeMapAssemblyEmitter
 				MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig);
 		}
 
-		// UCO wrappers
+		// UCO wrappers (methods and constructors with [Register] connectors)
 		foreach (var uco in proxy.UcoMethods) {
 			var handle = EmitUcoMethod (metadata, ilBuilder, uco);
-			wrapperHandles [uco.WrapperName] = handle;
-		}
-
-		foreach (var uco in proxy.UcoConstructors) {
-			var handle = EmitUcoConstructor (metadata, ilBuilder, uco);
 			wrapperHandles [uco.WrapperName] = handle;
 		}
 
@@ -473,8 +469,10 @@ sealed class TypeMapAssemblyEmitter
 				encoder.OpCode (ILOpCode.Ret);
 			});
 		} else {
-			// Inherited ctor: GetUninitializedObject(typeof(T)) + call Base::.ctor(IntPtr, JniHandleOwnership)
-			var baseActivationCtorRef = AddActivationCtorRef (metadata, ResolveTypeRef (metadata, activationCtor.DeclaringType));
+			// Inherited ctor: GetUninitializedObject(typeof(T)) then call BaseType::.ctor(IntPtr, JniHandleOwnership)
+			// The base ctor does SetHandle + any other initialization the base class needs.
+			var baseTypeRef = ResolveTypeRef (metadata, activationCtor.DeclaringType);
+			var baseCtorRef = AddActivationCtorRef (metadata, baseTypeRef);
 			EmitCreateInstanceBody (metadata, ilBuilder, encoder => {
 				encoder.OpCode (ILOpCode.Ldtoken);
 				encoder.Token (targetTypeRef);
@@ -486,7 +484,7 @@ sealed class TypeMapAssemblyEmitter
 				encoder.OpCode (ILOpCode.Dup);
 				encoder.OpCode (ILOpCode.Ldarg_1);
 				encoder.OpCode (ILOpCode.Ldarg_2);
-				encoder.Call (baseActivationCtorRef);
+				encoder.Call (baseCtorRef);
 
 				encoder.OpCode (ILOpCode.Ret);
 			});
@@ -569,59 +567,26 @@ sealed class TypeMapAssemblyEmitter
 		return handle;
 	}
 
-	MethodDefinitionHandle EmitUcoConstructor (MetadataBuilder metadata, BlobBuilder ilBuilder, UcoConstructorData uco)
-	{
-		var userTypeRef = ResolveTypeRef (metadata, uco.TargetType);
-
-		// UCO constructor wrappers must match the JNI native method signature exactly.
-		// The Java JCW declares e.g. "private native void nctor_0(Context p0)" and calls
-		// it with arguments. JNI dispatches with (JNIEnv*, jobject, <ctor params...>),
-		// so the wrapper signature must include all parameters to match the ABI.
-		// Only jnienv (arg 0) and self (arg 1) are used — the constructor parameters
-		// are not forwarded because ActivateInstance creates the managed peer using the
-		// activation ctor (IntPtr, JniHandleOwnership), not the user-visible constructor.
-		var jniParams = JniSignatureHelper.ParseParameterTypes (uco.JniSignature);
-		int paramCount = 2 + jniParams.Count;
-
-		var handle = EmitBody (metadata, ilBuilder, uco.WrapperName,
-			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-			sig => sig.MethodSignature ().Parameters (paramCount,
-				rt => rt.Void (),
-				p => {
-					p.AddParameter ().Type ().IntPtr (); // jnienv
-					p.AddParameter ().Type ().IntPtr (); // self
-					for (int j = 0; j < jniParams.Count; j++)
-						JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniParams [j]);
-				}),
-			encoder => {
-				encoder.LoadArgument (1); // self
-				encoder.OpCode (ILOpCode.Ldtoken);
-				encoder.Token (userTypeRef);
-				encoder.Call (_getTypeFromHandleRef);
-				encoder.Call (_activateInstanceRef);
-				encoder.OpCode (ILOpCode.Ret);
-			});
-
-		AddUnmanagedCallersOnlyAttribute (metadata, handle);
-		return handle;
-	}
-
 	// ---- Export marshal method wrappers ----
 
 	/// <summary>
 	/// Emits a full marshal method body for an [Export] method or constructor.
-	/// Pattern:
-	///   static RetType n_Method(IntPtr jnienv, IntPtr native__this, <JNI params...>) {
+	/// Pattern for methods:
+	///   static RetType n_Method(IntPtr jnienv, IntPtr native__this, &lt;JNI params...&gt;) {
 	///     if (!JniEnvironment.BeginMarshalMethod(jnienv, out var __envp, out var __r)) return default;
 	///     try {
 	///       var __this = Object.GetObject&lt;T&gt;(jnienv, native__this, DoNotTransfer);
 	///       // unmarshal params, call managed method, marshal return
-	///     } catch (Exception __e) {
-	///       __r.OnUserUnhandledException(ref __envp, __e);
-	///       return default;
-	///     } finally {
-	///       JniEnvironment.EndMarshalMethod(ref __envp);
-	///     }
+	///     } catch / finally ...
+	///   }
+	/// Pattern for constructors:
+	///   static void nctor_N_uco(IntPtr jnienv, IntPtr native__this, &lt;ctor params...&gt;) {
+	///     if (!JniEnvironment.BeginMarshalMethod(jnienv, out var __envp, out var __r)) return;
+	///     try {
+	///       var __this = (T)RuntimeHelpers.GetUninitializedObject(typeof(T));
+	///       __this.SetHandle(native__this, DoNotTransfer);  // registers peer with runtime
+	///       __this..ctor(params...);                        // user constructor
+	///     } catch / finally ...
 	///   }
 	/// </summary>
 	MethodDefinitionHandle EmitExportMarshalMethod (MetadataBuilder metadata, BlobBuilder ilBuilder, ExportMarshalMethodData export)
@@ -641,29 +606,33 @@ sealed class TypeMapAssemblyEmitter
 					JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniParams [j]);
 			});
 
+		// Resolve managed type references (needed early for locals signature in constructor case)
+		var declaringTypeRef = ResolveTypeRef (metadata, export.DeclaringType);
+
 		// Build the locals signature:
 		//   local 0: JniTransition __envp
 		//   local 1: JniRuntime __r
 		//   local 2: Exception __e
 		//   local 3: <return type> __ret  (only for non-void methods)
+		//   local 3 (ctor): T __this  (for constructors — holds the uninitialized object)
 		int localCount = isVoid ? 3 : 4;
+		if (export.IsConstructor) localCount = 4; // __envp, __r, __e, __this
 		var localsBlob = new BlobBuilder (32);
 		var localsEncoder = new BlobEncoder (localsBlob).LocalVariableSignature (localCount);
 		localsEncoder.AddVariable ().Type ().Type (_jniTransitionRef, true);   // local 0
 		localsEncoder.AddVariable ().Type ().Type (_jniRuntimeRef, false);     // local 1
 		localsEncoder.AddVariable ().Type ().Type (_systemExceptionRef, false); // local 2
-		if (!isVoid) {
-			JniSignatureHelper.EncodeClrType (localsEncoder.AddVariable ().Type (), returnKind); // local 3
+		if (export.IsConstructor) {
+			localsEncoder.AddVariable ().Type ().Type (declaringTypeRef, false); // local 3: T __this
+		} else if (!isVoid) {
+			JniSignatureHelper.EncodeClrType (localsEncoder.AddVariable ().Type (), returnKind); // local 3: __ret
 		}
 		var localsSigHandle = metadata.AddStandaloneSignature (metadata.GetOrAddBlob (localsBlob));
 
-		// Resolve managed type references
-		var declaringTypeRef = ResolveTypeRef (metadata, export.DeclaringType);
-
 		// Build GetObject<T> method spec — generic instantiation of Object.GetObject<T>
-		// Not needed for static methods (no 'this' object to unmarshal)
+		// Not needed for static methods or constructors
 		EntityHandle getObjectRef = default;
-		if (!export.IsStatic) {
+		if (!export.IsStatic && !export.IsConstructor) {
 			getObjectRef = BuildGetObjectMethodSpec (metadata, declaringTypeRef);
 		}
 
@@ -705,17 +674,27 @@ sealed class TypeMapAssemblyEmitter
 		encoder.MarkLabel (tryStartLabel);
 
 		if (export.IsConstructor) {
-			// For constructors: ActivateInstance first, then get the managed object and call ctor
-			// ActivateInstance(native__this, typeof(T))
-			encoder.LoadArgument (1); // native__this
+			// Constructor: create uninitialized object, call activation ctor, then user ctor
+			// var __this = (T)RuntimeHelpers.GetUninitializedObject(typeof(T));
 			encoder.OpCode (ILOpCode.Ldtoken);
 			encoder.Token (declaringTypeRef);
 			encoder.Call (_getTypeFromHandleRef);
-			encoder.Call (_activateInstanceRef);
-		}
+			encoder.Call (_getUninitializedObjectRef);
+			encoder.OpCode (ILOpCode.Castclass);
+			encoder.Token (declaringTypeRef);
+			encoder.OpCode (ILOpCode.Stloc_3); // store in local 3: __this
 
-		if (!export.IsStatic) {
-			// Instance methods/constructors: get managed object from JNI handle
+			// __this.SetHandle(native__this, JniHandleOwnership.DoNotTransfer)
+			// — registers the peer with the runtime and sets up the JNI handle association
+			encoder.OpCode (ILOpCode.Ldloc_3); // __this
+			encoder.LoadArgument (1); // native__this
+			encoder.OpCode (ILOpCode.Ldc_i4_0); // JniHandleOwnership.DoNotTransfer = 0
+			encoder.Call (_setHandleRef);
+
+			// Load __this for the user .ctor call below
+			encoder.OpCode (ILOpCode.Ldloc_3);
+		} else if (!export.IsStatic) {
+			// Instance method: get managed object from JNI handle
 			encoder.LoadArgument (0); // jnienv
 			encoder.LoadArgument (1); // native__this
 			encoder.OpCode (ILOpCode.Ldc_i4_0); // JniHandleOwnership.DoNotTransfer = 0

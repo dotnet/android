@@ -943,6 +943,23 @@ public class TypeMapAssemblyGeneratorTests
 						.ToList ();
 					Assert.DoesNotContain ("CreateManagedPeer", memberNames);
 					Assert.Contains ("GetUninitializedObject", memberNames);
+
+					// The .ctor MemberRef must target the base type that declares the activation ctor
+					var baseTypeName = simpleActivity.ActivationCtor.DeclaringTypeName;
+					var baseSimpleName = baseTypeName.Contains ('.') ? baseTypeName.Substring (baseTypeName.LastIndexOf ('.') + 1) : baseTypeName;
+					var ctorMemberRefs = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
+						.Select (i => reader.GetMemberReference (MetadataTokens.MemberReferenceHandle (i)))
+						.Where (m => reader.GetString (m.Name) == ".ctor")
+						.ToList ();
+					// One of the .ctor refs must be on the base type
+					bool hasBaseCtorRef = ctorMemberRefs.Any (m => {
+						if (m.Parent.Kind == HandleKind.TypeReference) {
+							var tr = reader.GetTypeReference ((TypeReferenceHandle)m.Parent);
+							return reader.GetString (tr.Name) == baseSimpleName;
+						}
+						return false;
+					});
+					Assert.True (hasBaseCtorRef, $"Should have .ctor MemberRef on base type {baseSimpleName}");
 				}
 			} finally {
 				CleanUp (path);

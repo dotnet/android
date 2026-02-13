@@ -316,10 +316,12 @@ sealed class JavaPeerScanner : IDisposable
 		var parameters = ParseJniParameters (jniSignature);
 		bool isStatic = (methodDef.Attributes & MethodAttributes.Static) != 0;
 
-		// For [Export] methods, populate ManagedType from the actual method signature
-		// (needed for the generated marshal method body)
+		// For [Export] methods and constructors, populate ManagedType from the actual
+		// method signature (needed for the generated marshal method body).
+		// Constructors always need this because there are no pre-existing n_* callbacks.
+		bool isConstructor = registerInfo.JniName == "<init>" || registerInfo.JniName == ".ctor";
 		string? managedReturnType = null;
-		if (registerInfo.Connector == null) {
+		if (registerInfo.Connector == null || isConstructor) {
 			var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
 			for (int i = 0; i < parameters.Count && i < sig.ParameterTypes.Length; i++) {
 				parameters [i].ManagedType = ManagedTypeToAssemblyQualifiedName (sig.ParameterTypes [i]);
@@ -336,7 +338,7 @@ sealed class JavaPeerScanner : IDisposable
 			NativeCallbackName = string.Concat ("n_", methodName),
 			JniReturnType = JniSignatureHelper.ParseReturnTypeString (jniSignature),
 			Parameters = parameters,
-			IsConstructor = registerInfo.JniName == "<init>" || registerInfo.JniName == ".ctor",
+			IsConstructor = isConstructor,
 			IsStatic = isStatic,
 			ThrownNames = registerInfo.ThrownNames,
 			SuperArgumentsString = registerInfo.SuperArgumentsString,

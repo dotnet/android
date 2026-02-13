@@ -89,11 +89,8 @@ sealed class JavaPeerProxyData
 	/// <summary>Whether this proxy needs ACW support (RegisterNatives + UCO wrappers + IAndroidCallableWrapper).</summary>
 	public bool IsAcw { get; set; }
 
-	/// <summary>UCO method wrappers for marshal methods (non-constructor) with [Register].</summary>
+	/// <summary>UCO method wrappers for [Register] methods and constructors.</summary>
 	public List<UcoMethodData> UcoMethods { get; } = new ();
-
-	/// <summary>UCO constructor wrappers for [Register] constructors.</summary>
-	public List<UcoConstructorData> UcoConstructors { get; } = new ();
 
 	/// <summary>Export marshal method wrappers — full marshal body for [Export] methods and constructors.</summary>
 	public List<ExportMarshalMethodData> ExportMarshalMethods { get; } = new ();
@@ -131,24 +128,6 @@ sealed class UcoMethodData
 
 	/// <summary>JNI method signature, e.g., "(Landroid/os/Bundle;)V". Used to determine CLR parameter types.</summary>
 	public string JniSignature { get; set; } = "";
-}
-
-/// <summary>
-/// An [UnmanagedCallersOnly] static wrapper for a constructor callback.
-/// Signature must match the full JNI native method signature (jnienv + self + ctor params)
-/// so the ABI is correct when JNI dispatches the call.
-/// Body: TrimmableNativeRegistration.ActivateInstance(self, typeof(TargetType)).
-/// </summary>
-sealed class UcoConstructorData
-{
-	/// <summary>Name of the generated wrapper, e.g., "nctor_0_uco".</summary>
-	public string WrapperName { get; set; } = "";
-
-	/// <summary>Target type to pass to ActivateInstance.</summary>
-	public TypeRefData TargetType { get; set; } = new ();
-
-	/// <summary>JNI constructor signature, e.g., "(Landroid/content/Context;)V". Used for RegisterNatives registration.</summary>
-	public string JniSignature { get; set; } = "()V";
 }
 
 /// <summary>
