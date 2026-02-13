@@ -74,7 +74,7 @@ _ResolveAssemblies MSBuild target.
     </ItemGroup>
   </Target>
 
-  <Target Name="_ResolveAssemblies">
+  <Target Name="_ResolveAssemblies" DependsOnTargets="_AndroidConfigureHotReloadEnvironment">
     <ItemGroup>
       <_RIDs Include="$(RuntimeIdentifier)"  Condition=" '$(RuntimeIdentifiers)' == '' " />
       <_RIDs Include="$(RuntimeIdentifiers)" Condition=" '$(RuntimeIdentifiers)' != '' " />
@@ -120,6 +120,7 @@ _ResolveAssemblies MSBuild target.
     </ProcessRuntimePackLibraryDirectories>
 
     <ItemGroup>
+      <ResolvedFileToPublish Include="$(_AndroidHotReloadAgentAssemblyPath)" Condition="Exists('$(_AndroidHotReloadAgentAssemblyPath)')" RuntimeIdentifier="%(_RIDs.Identity)" />
       <ResolvedFileToPublish Remove="@(_NativeLibraryToRemove)" />
     </ItemGroup>
 
