@@ -132,20 +132,20 @@ namespace Xamarin.ProjectTools
 			return Execute (arguments.ToArray ());
 		}
 
-		public bool Run (bool waitForExit = false, string [] parameters = null)
+		public bool Run (bool waitForExit = false, bool noBuild = true, string [] parameters = null)
 		{
 			string binlog = Path.Combine (Path.GetDirectoryName (projectOrSolution), "run.binlog");
 			var arguments = new List<string> {
 				"run",
 				"--project", $"\"{projectOrSolution}\"",
-				"--no-build",
-				$"/bl:\"{binlog}\"",
-				$"/p:WaitForExit={waitForExit.ToString (CultureInfo.InvariantCulture)}"
 			};
+			if (noBuild) {
+				arguments.Add ("--no-build");
+			}
+			arguments.Add ($"/bl:\"{binlog}\"");
+			arguments.Add ($"/p:WaitForExit={waitForExit.ToString (CultureInfo.InvariantCulture)}");
 			if (parameters != null) {
-				foreach (var parameter in parameters) {
-					arguments.Add ($"/p:{parameter}");
-				}
+				arguments.AddRange (parameters);
 			}
 			return Execute (arguments.ToArray ());
 		}
@@ -154,7 +154,7 @@ namespace Xamarin.ProjectTools
 		/// Starts `dotnet run` and returns a running Process that can be monitored and killed.
 		/// </summary>
 		/// <param name="waitForExit">Whether to use Microsoft.Android.Run tool which waits for app exit and streams logcat.</param>
-		/// <param name="parameters">Optional MSBuild properties to pass (e.g., "Device=emulator-5554").</param>
+		/// <param name="parameters">Additional arguments to pass to `dotnet run`.</param>
 		/// <returns>A running Process instance. Caller is responsible for disposing.</returns>
 		public Process StartRun (bool waitForExit = true, string [] parameters = null)
 		{
@@ -167,9 +167,7 @@ namespace Xamarin.ProjectTools
 				$"/p:WaitForExit={waitForExit.ToString (CultureInfo.InvariantCulture)}"
 			};
 			if (parameters != null) {
-				foreach (var parameter in parameters) {
-					arguments.Add ($"/p:{parameter}");
-				}
+				arguments.AddRange (parameters);
 			}
 
 			return ExecuteProcess (arguments.ToArray ());
