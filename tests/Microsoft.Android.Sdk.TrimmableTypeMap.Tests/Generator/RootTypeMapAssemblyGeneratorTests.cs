@@ -6,7 +6,7 @@ using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using Xunit;
 
-namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
+namespace Microsoft.Android.Build.TypeMap.Tests;
 
 public class RootTypeMapAssemblyGeneratorTests
 {
@@ -14,7 +14,7 @@ public class RootTypeMapAssemblyGeneratorTests
 	{
 		var outputPath = Path.Combine (Path.GetTempPath (), $"root-typemap-{Guid.NewGuid ():N}",
 			(assemblyName ?? "_Microsoft.Android.TypeMaps") + ".dll");
-		var generator = new RootTypeMapAssemblyGenerator (new Version (11, 0, 0, 0));
+		var generator = new RootTypeMapAssemblyGenerator (11);
 		generator.Generate (perAssemblyNames, outputPath, assemblyName);
 		return outputPath;
 	}
@@ -68,54 +68,19 @@ public class RootTypeMapAssemblyGeneratorTests
 	}
 
 	[Fact]
-	public void Generate_ReferencesGenericTypeMapAssemblyTargetAttribute ()
+	public void Generate_HasTypeMapAssemblyTargetAttributeType ()
 	{
 		var path = GenerateRootAssembly (new [] { "_App.TypeMap" });
 		try {
 			using var pe = new PEReader (File.OpenRead (path));
 			var reader = pe.GetMetadataReader ();
 
-			// The attribute type is referenced (not defined) — look for TypeRef
-			var typeRefs = reader.TypeReferences
-				.Select (h => reader.GetTypeReference (h))
-				.ToList ();
-			Assert.Contains (typeRefs, t =>
-				reader.GetString (t.Name) == "TypeMapAssemblyTargetAttribute`1" &&
-				reader.GetString (t.Namespace) == "System.Runtime.InteropServices");
-
-			// Java.Lang.Object must also be referenced (generic type argument)
-			Assert.Contains (typeRefs, t =>
-				reader.GetString (t.Name) == "Object" &&
-				reader.GetString (t.Namespace) == "Java.Lang");
-
-			// No TypeDefinition for the attribute (it's external)
-			var typeDefs = reader.TypeDefinitions
+			var types = reader.TypeDefinitions
 				.Select (h => reader.GetTypeDefinition (h))
 				.ToList ();
-			Assert.DoesNotContain (typeDefs, t =>
-				reader.GetString (t.Name).Contains ("TypeMapAssemblyTarget"));
-		} finally {
-			CleanUp (path);
-		}
-	}
-
-	[Fact]
-	public void Generate_AttributeCtorIsOnGenericTypeSpec ()
-	{
-		var path = GenerateRootAssembly (new [] { "_App.TypeMap" });
-		try {
-			using var pe = new PEReader (File.OpenRead (path));
-			var reader = pe.GetMetadataReader ();
-
-			var attr = reader.GetCustomAttribute (
-				reader.GetCustomAttributes (EntityHandle.AssemblyDefinition).First ());
-
-			// The ctor should be a MemberReference (on a TypeSpec), not a MethodDefinition
-			Assert.Equal (HandleKind.MemberReference, attr.Constructor.Kind);
-
-			var memberRef = reader.GetMemberReference ((MemberReferenceHandle) attr.Constructor);
-			// Parent should be a TypeSpec (closed generic)
-			Assert.Equal (HandleKind.TypeSpecification, memberRef.Parent.Kind);
+			Assert.Contains (types, t =>
+				reader.GetString (t.Name) == "TypeMapAssemblyTargetAttribute" &&
+				reader.GetString (t.Namespace) == "System.Runtime.InteropServices");
 		} finally {
 			CleanUp (path);
 		}

@@ -17,13 +17,6 @@ sealed class JavaPeerInfo
 	public string JavaName { get; set; } = "";
 
 	/// <summary>
-	/// Compat JNI type name, e.g., "myapp.namespace/MyType" for user types (uses raw namespace, not CRC64).
-	/// For MCW binding types (with [Register]), this equals <see cref="JavaName"/>.
-	/// Used by acw-map.txt to support legacy custom view name resolution in layout XMLs.
-	/// </summary>
-	public string CompatJniName { get; set; } = "";
-
-	/// <summary>
 	/// Full managed type name, e.g., "Android.App.Activity".
 	/// </summary>
 	public string ManagedTypeName { get; set; } = "";
@@ -73,9 +66,7 @@ sealed class JavaPeerInfo
 	public bool IsUnconditional { get; set; }
 
 	/// <summary>
-	/// Marshal methods: methods with [Register(name, sig, connector)], [Export], or
-	/// constructor registrations ([Register(".ctor", sig, "")] / [JniConstructorSignature]).
-	/// Constructors are identified by <see cref="MarshalMethodInfo.IsConstructor"/>.
+	/// Marshal methods: methods with [Register(name, sig, connector)] or [Export].
 	/// Ordered — the index in this list is the method's ordinal for RegisterNatives.
 	/// </summary>
 	public IReadOnlyList<MarshalMethodInfo> MarshalMethods { get; set; } = Array.Empty<MarshalMethodInfo> ();
@@ -103,6 +94,11 @@ sealed class JavaPeerInfo
 	/// Generic types get TypeMap entries but CreateInstance throws NotSupportedException.
 	/// </summary>
 	public bool IsGenericDefinition { get; set; }
+
+	/// <summary>
+	/// Component attribute data ([Activity], [Service], etc.). Null if no component attributes.
+	/// </summary>
+	public ComponentData? ComponentData { get; set; }
 }
 
 /// <summary>
@@ -120,7 +116,6 @@ sealed class MarshalMethodInfo
 
 	/// <summary>
 	/// JNI method signature, e.g., "(Landroid/os/Bundle;)V".
-	/// Contains both parameter types and return type.
 	/// </summary>
 	public string JniSignature { get; set; } = "";
 
@@ -131,7 +126,7 @@ sealed class MarshalMethodInfo
 	public string? Connector { get; set; }
 
 	/// <summary>
-	/// Name of the managed method this maps to, e.g., "OnCreate".
+	/// Full name of the managed method this marshal method maps to.
 	/// </summary>
 	public string ManagedMethodName { get; set; } = "";
 
@@ -164,6 +159,7 @@ sealed class MarshalMethodInfo
 
 	/// <summary>
 	/// True if this is a constructor registration.
+	/// Constructor registrations use nctor_N naming and ActivateInstance.
 	/// </summary>
 	public bool IsConstructor { get; set; }
 
@@ -218,8 +214,9 @@ sealed class JavaConstructorInfo
 	public IReadOnlyList<JniParameterInfo> Parameters { get; set; } = Array.Empty<JniParameterInfo> ();
 
 	/// <summary>
-	/// For [Export] constructors: super constructor arguments string.
-	/// Null for [Register] constructors.
+	/// For [Export] constructors: explicit arguments to pass to super().
+	/// When non-null, used verbatim in the super() call instead of forwarding all parameters.
+	/// Null means forward all constructor parameters to super().
 	/// </summary>
 	public string? SuperArgumentsString { get; set; }
 }

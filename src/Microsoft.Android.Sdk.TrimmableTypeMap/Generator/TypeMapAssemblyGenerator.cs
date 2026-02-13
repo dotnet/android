@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Microsoft.Android.Sdk.TrimmableTypeMap;
+namespace Microsoft.Android.Build.TypeMap;
 
 /// <summary>
 /// High-level API: builds the model from peers, then emits the PE assembly.
@@ -9,12 +9,12 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// </summary>
 sealed class TypeMapAssemblyGenerator
 {
-	readonly Version _systemRuntimeVersion;
+	readonly int _dotnetVersion;
 
-	/// <param name="systemRuntimeVersion">Version for System.Runtime assembly references.</param>
-	public TypeMapAssemblyGenerator (Version systemRuntimeVersion)
+	/// <param name="dotnetVersion">Target .NET version (e.g., 11 for .NET 11).</param>
+	public TypeMapAssemblyGenerator (int dotnetVersion)
 	{
-		_systemRuntimeVersion = systemRuntimeVersion ?? throw new ArgumentNullException (nameof (systemRuntimeVersion));
+		_dotnetVersion = dotnetVersion;
 	}
 
 	/// <summary>
@@ -26,7 +26,7 @@ sealed class TypeMapAssemblyGenerator
 	public void Generate (IReadOnlyList<JavaPeerInfo> peers, string outputPath, string? assemblyName = null)
 	{
 		var model = ModelBuilder.Build (peers, outputPath, assemblyName);
-		var emitter = new TypeMapAssemblyEmitter (_systemRuntimeVersion);
+		var emitter = new TypeMapAssemblyEmitter (_dotnetVersion);
 		emitter.Emit (model, outputPath);
 	}
 }

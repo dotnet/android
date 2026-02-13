@@ -19,27 +19,19 @@ sealed class CustomAttributeTypeProvider : ICustomAttributeTypeProvider<string>
 
 	public string GetPrimitiveType (PrimitiveTypeCode typeCode) => typeCode.ToString ();
 
-	public string GetTypeFromDefinition (MetadataReader metadataReader, TypeDefinitionHandle handle, byte rawTypeKind)
+	public string GetTypeFromDefinition (MetadataReader reader, TypeDefinitionHandle handle, byte rawTypeKind)
 	{
-		var typeDef = metadataReader.GetTypeDefinition (handle);
-		var name = metadataReader.GetString (typeDef.Name);
-		if (typeDef.IsNested) {
-			var parent = GetTypeFromDefinition (metadataReader, typeDef.GetDeclaringType (), rawTypeKind);
-			return parent + "+" + name;
-		}
-		var ns = metadataReader.GetString (typeDef.Namespace);
+		var typeDef = reader.GetTypeDefinition (handle);
+		var ns = reader.GetString (typeDef.Namespace);
+		var name = reader.GetString (typeDef.Name);
 		return ns.Length > 0 ? ns + "." + name : name;
 	}
 
-	public string GetTypeFromReference (MetadataReader metadataReader, TypeReferenceHandle handle, byte rawTypeKind)
+	public string GetTypeFromReference (MetadataReader reader, TypeReferenceHandle handle, byte rawTypeKind)
 	{
-		var typeRef = metadataReader.GetTypeReference (handle);
-		var name = metadataReader.GetString (typeRef.Name);
-		if (typeRef.ResolutionScope.Kind == HandleKind.TypeReference) {
-			var parent = GetTypeFromReference (metadataReader, (TypeReferenceHandle)typeRef.ResolutionScope, rawTypeKind);
-			return parent + "+" + name;
-		}
-		var ns = metadataReader.GetString (typeRef.Namespace);
+		var typeRef = reader.GetTypeReference (handle);
+		var ns = reader.GetString (typeRef.Namespace);
+		var name = reader.GetString (typeRef.Name);
 		return ns.Length > 0 ? ns + "." + name : name;
 	}
 
@@ -63,7 +55,7 @@ sealed class CustomAttributeTypeProvider : ICustomAttributeTypeProvider<string>
 				if ((field.Attributes & System.Reflection.FieldAttributes.Static) != 0)
 					continue;
 
-				var sig = field.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null);
+				var sig = field.DecodeSignature (new SignatureTypeProvider (), genericContext: null);
 				return sig switch {
 					"System.Byte" => PrimitiveTypeCode.Byte,
 					"System.SByte" => PrimitiveTypeCode.SByte,

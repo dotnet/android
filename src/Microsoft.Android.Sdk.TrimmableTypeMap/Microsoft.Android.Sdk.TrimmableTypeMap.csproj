@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\Configuration.props" />
 
   <PropertyGroup>
     <TargetFramework>$(TargetFrameworkNETStandard)</TargetFramework>
@@ -10,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
+    <PackageReference Include="System.IO.Hashing" Version="9.0.3" />
     <PackageReference Include="System.Reflection.Metadata" Version="9.0.3" />
     <InternalsVisibleTo Include="Microsoft.Android.Sdk.TrimmableTypeMap.Tests" />
     <InternalsVisibleTo Include="Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests" />
