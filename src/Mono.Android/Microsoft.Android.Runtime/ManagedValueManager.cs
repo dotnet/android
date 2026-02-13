@@ -30,7 +30,8 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	bool _disposed;
 
 	static Lazy<ManagedValueManager> s_instance = new (() => new ManagedValueManager ());
-	public static ManagedValueManager GetOrCreateInstance () => s_instance.Value;
+	
+	public static ManagedValueManager Instance => s_instance.Value;
 
 	unsafe ManagedValueManager ()
 	{
@@ -441,13 +442,13 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 		// Schedule cleanup of _registeredInstances on a thread pool thread.
 		// The bridge thread must not take lock(_registeredInstances) — see deadlock notes.
-		Task.Run (GetOrCreateInstance ().CollectPeers);
+		Task.Run (Instance.CollectPeers);
 	}
 
 	static unsafe ReadOnlySpan<GCHandle> ProcessCollectedContexts (MarkCrossReferencesArgs* mcr)
 	{
 		List<GCHandle> handlesToFree = [];
-		ManagedValueManager instance = GetOrCreateInstance ();
+		ManagedValueManager instance = Instance;
 
 		for (int i = 0; (nuint)i < mcr->ComponentCount; i++) {
 			StronglyConnectedComponent component = mcr->Components [i];
