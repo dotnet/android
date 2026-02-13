@@ -6,6 +6,7 @@
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateTypeMappings" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GetMonoPlatformJar" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.RemoveRegisterAttribute" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateProguardConfiguration" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <PropertyGroup>
     <_RemoveRegisterFlag>$(MonoAndroidIntermediateAssemblyDir)shrunk\shrunk.flag</_RemoveRegisterFlag>
@@ -179,11 +180,6 @@
         -->
       <_TrimmerCustomData Include="AndroidHttpClientHandlerType" Value="$(AndroidHttpClientHandlerType)" />
       <_TrimmerCustomData Include="AndroidCustomViewMapFile" Value="$(_OuterCustomViewMapFile)" />
-      <_TrimmerCustomData
-          Condition=" '$(_ProguardProjectConfiguration)' != '' "
-          Include="ProguardConfiguration"
-          Value="$(_ProguardProjectConfiguration)"
-      />
       <_TrimmerCustomData Include="SystemIOHashingAssemblyPath" Value="$(_SystemIOHashingAssemblyPath)" />
 
       <!--
@@ -200,12 +196,6 @@
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="Microsoft.Android.Sdk.ILLink.PreserveJavaInterfaces" />
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="MonoDroid.Tuner.FixAbstractMethodsStep" />
       <!-- Custom steps that run after MarkStep -->
-      <_TrimmerCustomSteps
-          Condition=" '$(_ProguardProjectConfiguration)' != '' "
-          Include="$(_AndroidLinkerCustomStepAssembly)"
-          AfterStep="CleanStep"
-          Type="Mono.Linker.Steps.GenerateProguardConfiguration"
-      />
       <_TrimmerCustomSteps
           Condition=" '$(AndroidAddKeepAlives)' == 'true' "
           Include="$(_AndroidLinkerCustomStepAssembly)"
@@ -348,6 +338,35 @@
         TypeMappings="@(_AndroidTypeMaps)">
       <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
     </CollectTypeMapFilesForArchive>
+  </Target>
+
+  <!-- In the non-NativeAOT path, ResolvedFileToPublish is populated by the ILLink target
+       (via the SDK's ComputeResolvedFilesToPublishList), so we run proguard generation after ILLink.
+       In NativeAOT, ResolvedFileToPublish remains empty after ILLink because the ILC package's
+       _ComputeManagedAssemblyForILLink replaces ManagedAssemblyToLink after _LinkedResolvedFileToPublishCandidate
+       is computed, so the ILLink target's ResolvedFileToPublish rewrite adds nothing.
+       Instead, _AndroidComputeIlcCompileInputs populates ResolvedFileToPublish, so NativeAOT.targets
+       sets _GenerateProguardAfterTargets to run these targets after that. -->
+  <PropertyGroup>
+    <_GenerateProguardAfterTargets Condition=" '$(_GenerateProguardAfterTargets)' == '' ">ILLink</_GenerateProguardAfterTargets>
+  </PropertyGroup>
+
+  <Target Name="_PrepareLinkedAssembliesForProguard"
+      AfterTargets="$(_GenerateProguardAfterTargets)"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' ">
+    <ItemGroup>
+      <_LinkedAssemblyForProguard Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_GenerateProguardConfiguration"
+      AfterTargets="_PrepareLinkedAssembliesForProguard"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
+      Inputs="@(_LinkedAssemblyForProguard)"
+      Outputs="$(_ProguardProjectConfiguration)">
+    <GenerateProguardConfiguration
+        LinkedAssemblies="@(_LinkedAssemblyForProguard)"
+        OutputFile="$(_ProguardProjectConfiguration)" />
   </Target>
 
 </Project>
