@@ -287,6 +287,51 @@ public class ModelBuilderTests
 		}
 
 		[Fact]
+		public void Build_LeafActivationCtor_IsOnLeafTypeTrue ()
+		{
+			var peer = MakePeerWithActivation ("my/app/Foo", "MyApp.Foo", "App");
+			// Leaf: the type itself declares the activation ctor
+			peer.ActivationCtor!.DeclaringTypeName = "MyApp.Foo";
+			peer.ActivationCtor!.DeclaringAssemblyName = "App";
+
+			var model = BuildModel (new [] { peer });
+			var proxy = model.ProxyTypes [0];
+
+			Assert.NotNull (proxy.ActivationCtor);
+			Assert.True (proxy.ActivationCtor!.IsOnLeafType);
+			Assert.Equal ("MyApp.Foo", proxy.ActivationCtor.DeclaringType.ManagedTypeName);
+		}
+
+		[Fact]
+		public void Build_InheritedActivationCtor_IsOnLeafTypeFalse ()
+		{
+			var peer = MakePeerWithActivation ("my/app/Bar", "MyApp.Bar", "App");
+			// Inherited: a base type declares the activation ctor
+			peer.ActivationCtor!.DeclaringTypeName = "MyApp.BaseBar";
+			peer.ActivationCtor!.DeclaringAssemblyName = "App";
+
+			var model = BuildModel (new [] { peer });
+			var proxy = model.ProxyTypes [0];
+
+			Assert.NotNull (proxy.ActivationCtor);
+			Assert.False (proxy.ActivationCtor!.IsOnLeafType);
+			Assert.Equal ("MyApp.BaseBar", proxy.ActivationCtor.DeclaringType.ManagedTypeName);
+			Assert.Equal ("App", proxy.ActivationCtor.DeclaringType.AssemblyName);
+		}
+
+		[Fact]
+		public void Build_InheritedActivationCtor_CrossAssembly_AddsIgnoresAccessChecksTo ()
+		{
+			var peer = MakePeerWithActivation ("my/app/Baz", "MyApp.Baz", "App");
+			peer.ActivationCtor!.DeclaringTypeName = "Base.Activity";
+			peer.ActivationCtor!.DeclaringAssemblyName = "Mono.Android";
+
+			var model = BuildModel (new [] { peer }, "TypeMapAsm");
+
+			Assert.Contains ("Mono.Android", model.IgnoresAccessChecksTo);
+		}
+
+		[Fact]
 		public void Build_PeerWithInvoker_CreatesProxy ()
 		{
 			var peer = new JavaPeerInfo {
@@ -429,12 +474,19 @@ public class ModelBuilderTests
 			var proxy = model.ProxyTypes [0];
 
 			Assert.Equal (2, proxy.UcoMethods.Count);
+
+			// Method UCOs (only non-constructor methods)
 			Assert.Equal ("n_onCreate_uco_0", proxy.UcoMethods [0].WrapperName);
 			Assert.Equal ("n_OnCreate", proxy.UcoMethods [0].CallbackMethodName);
 			Assert.Equal ("(Landroid/os/Bundle;)V", proxy.UcoMethods [0].JniSignature);
 
 			Assert.Equal ("n_onResume_uco_1", proxy.UcoMethods [1].WrapperName);
 			Assert.Equal ("n_OnResume", proxy.UcoMethods [1].CallbackMethodName);
+
+			// Constructor goes into ExportMarshalMethods (full marshal body)
+			var ctorExport = proxy.ExportMarshalMethods.FirstOrDefault (e => e.IsConstructor);
+			Assert.NotNull (ctorExport);
+			Assert.Equal ("nctor_0_uco", ctorExport.WrapperName);
 		}
 
 		[Fact]
@@ -484,31 +536,34 @@ public class ModelBuilderTests
 			var model = BuildModel (new [] { peer });
 			var proxy = model.ProxyTypes [0];
 
-			// Only 1 UCO method (constructors are skipped from UcoMethods)
+			// Constructors go to ExportMarshalMethods, not UcoMethods
 			Assert.Single (proxy.UcoMethods);
 			Assert.Equal ("n_onStart_uco_0", proxy.UcoMethods [0].WrapperName);
+			Assert.NotEmpty (proxy.ExportMarshalMethods.Where (e => e.IsConstructor));
 		}
 
 	}
 
-	public class UcoConstructors
+	public class ConstructorMarshalMethods
 	{
 
 		[Fact]
-		public void Build_AcwWithConstructors_CreatesUcoConstructors ()
+		public void Build_AcwWithConstructors_CreatesExportMarshalMethod ()
 		{
 			var peer = MakeAcwPeer ("my/app/Main", "MyApp.MainActivity", "App");
 
 			var model = BuildModel (new [] { peer });
 			var proxy = model.ProxyTypes [0];
 
-			Assert.Single (proxy.UcoConstructors);
-			Assert.Equal ("nctor_0_uco", proxy.UcoConstructors [0].WrapperName);
-			Assert.Equal ("MyApp.MainActivity", proxy.UcoConstructors [0].TargetType.ManagedTypeName);
+			// All constructors generate full marshal bodies in ExportMarshalMethods
+			var ctorExport = proxy.ExportMarshalMethods.FirstOrDefault (e => e.IsConstructor);
+			Assert.NotNull (ctorExport);
+			Assert.Equal ("nctor_0_uco", ctorExport.WrapperName);
+			Assert.Equal ("nctor_0", ctorExport.NativeCallbackName);
 		}
 
 		[Fact]
-		public void Build_PeerWithoutActivationCtor_NoUcoConstructors ()
+		public void Build_PeerWithoutActivationCtor_NoConstructorMarshalMethods ()
 		{
 			// Peer with marshal methods but no activation ctor
 			var peer = new JavaPeerInfo {
@@ -529,7 +584,8 @@ public class ModelBuilderTests
 			var model = BuildModel (new [] { peer });
 			var proxy = model.ProxyTypes [0];
 
-			Assert.Empty (proxy.UcoConstructors);
+			// No activation ctor → no constructor marshal methods
+			Assert.DoesNotContain (proxy.ExportMarshalMethods, e => e.IsConstructor);
 		}
 
 	}
@@ -818,7 +874,6 @@ public class ModelBuilderTests
 			// MCW with DoNotGenerateAcw → not ACW
 			Assert.False (proxy.IsAcw);
 			Assert.Empty (proxy.UcoMethods);
-			Assert.Empty (proxy.UcoConstructors);
 			Assert.Empty (proxy.NativeRegistrations);
 		}
 
@@ -1066,15 +1121,15 @@ public class ModelBuilderTests
 			Assert.NotNull (proxy);
 
 			if (proxy!.IsAcw) {
-				Assert.Equal (2, proxy.UcoConstructors.Count);
-				Assert.Equal ("nctor_0_uco", proxy.UcoConstructors [0].WrapperName);
-				Assert.Equal ("nctor_1_uco", proxy.UcoConstructors [1].WrapperName);
-				Assert.Equal ("MyApp.CustomView", proxy.UcoConstructors [0].TargetType.ManagedTypeName);
-				Assert.Equal ("MyApp.CustomView", proxy.UcoConstructors [1].TargetType.ManagedTypeName);
+				// Constructors go into ExportMarshalMethods (full marshal body)
+				var ctorExports = proxy.ExportMarshalMethods.Where (e => e.IsConstructor).ToList ();
+				Assert.Equal (2, ctorExports.Count);
+				Assert.Equal ("nctor_0_uco", ctorExports [0].WrapperName);
+				Assert.Equal ("nctor_1_uco", ctorExports [1].WrapperName);
 
 				// Constructor JNI signatures should be propagated
-				Assert.Equal ("()V", proxy.UcoConstructors [0].JniSignature);
-				Assert.Equal ("(Landroid/content/Context;)V", proxy.UcoConstructors [1].JniSignature);
+				Assert.Equal ("()V", ctorExports [0].JniSignature);
+				Assert.Equal ("(Landroid/content/Context;)V", ctorExports [1].JniSignature);
 
 				// Constructor registrations must use the actual JNI signatures
 				var ctorRegs = proxy.NativeRegistrations.Where (r => r.JniMethodName.StartsWith ("nctor_")).ToList ();
@@ -1362,8 +1417,8 @@ public class ModelBuilderTests
 			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_ExportsConstructors_Proxy");
 			Assert.NotNull (proxy);
 
-			// [Export] constructors go into ExportMarshalMethods, not UcoConstructors
-			Assert.Empty (proxy!.UcoConstructors);
+			// [Export] constructors go into ExportMarshalMethods, not UcoMethods
+			Assert.DoesNotContain (proxy!.UcoMethods, u => u.WrapperName.StartsWith ("nctor_"));
 			Assert.Equal (exportCtors.Count, proxy.ExportMarshalMethods.Count (e => e.IsConstructor));
 		}
 
@@ -1375,8 +1430,8 @@ public class ModelBuilderTests
 			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_ExportsThrowsConstructors_Proxy");
 			Assert.NotNull (proxy);
 
-			// All constructors are [Export] → in ExportMarshalMethods, not UcoConstructors
-			Assert.Empty (proxy!.UcoConstructors);
+			// All constructors are [Export] → in ExportMarshalMethods, not UcoMethods
+			Assert.DoesNotContain (proxy!.UcoMethods, u => u.WrapperName.StartsWith ("nctor_"));
 			Assert.NotEmpty (proxy.ExportMarshalMethods);
 			Assert.All (proxy.ExportMarshalMethods, e => Assert.True (e.IsConstructor));
 		}
@@ -1754,15 +1809,15 @@ public class ModelBuilderTests
 
 				Assert.NotEmpty (ucoCtors);
 
-				// Match each UCO constructor to its model data to verify param count
+				// Match each constructor to its model data to verify param count
 				foreach (var uco in ucoCtors) {
 					var name = reader.GetString (uco.Name);
-					var modelUco = model.ProxyTypes
-						.SelectMany (p => p.UcoConstructors)
-						.First (u => u.WrapperName == name);
+					var modelExport = model.ProxyTypes
+						.SelectMany (p => p.ExportMarshalMethods)
+						.First (e => e.WrapperName == name);
 
-					// UCO constructor signature must include jnienv + self + JNI params
-					int expectedJniParams = JniSignatureHelper.ParseParameterTypes (modelUco.JniSignature).Count;
+					// Constructor signature must include jnienv + self + JNI params
+					int expectedJniParams = JniSignatureHelper.ParseParameterTypes (modelExport.JniSignature).Count;
 					int expectedTotal = 2 + expectedJniParams;
 
 					var sig = reader.GetBlobReader (uco.Signature);

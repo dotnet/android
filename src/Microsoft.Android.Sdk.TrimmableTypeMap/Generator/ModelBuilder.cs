@@ -89,8 +89,17 @@ static class ModelBuilder
 			foreach (var export in proxy.ExportMarshalMethods) {
 				AddIfCrossAssembly (referencedAssemblies, export.DeclaringType.AssemblyName, assemblyName);
 			}
-			if (proxy.ActivationCtor != null && !proxy.ActivationCtor.IsOnLeafType) {
-				AddIfCrossAssembly (referencedAssemblies, proxy.ActivationCtor.DeclaringType.AssemblyName, assemblyName);
+			// SetHandle is protected on Java.Lang.Object (Mono.Android) — needed for
+			// [Export] constructor marshal methods (nctor_N_uco) that call SetHandle directly.
+			// Inherited activation ctors call .ctor(IntPtr, JniHandleOwnership) which is public,
+			// but the base ctor's declaring assembly still needs IgnoresAccessChecksTo.
+			bool usesSetHandle = proxy.ExportMarshalMethods.Any (e => e.IsConstructor);
+			bool usesInheritedCtor = proxy.ActivationCtor != null && !proxy.ActivationCtor.IsOnLeafType;
+			if (usesSetHandle) {
+				AddIfCrossAssembly (referencedAssemblies, "Mono.Android", assemblyName);
+			}
+			if (usesInheritedCtor) {
+				AddIfCrossAssembly (referencedAssemblies, proxy.ActivationCtor!.DeclaringType.AssemblyName, assemblyName);
 			}
 		}
 		model.IgnoresAccessChecksTo.AddRange (referencedAssemblies);
@@ -282,21 +291,11 @@ static class ModelBuilder
 			string wrapperName = $"nctor_{ctor.ConstructorIndex}_uco";
 			string nativeCallbackName = $"nctor_{ctor.ConstructorIndex}";
 
-			if (mm.Connector == null) {
-				// [Export] constructor — generate full marshal body
-				var exportData = BuildExportMarshalMethod (mm, peer, wrapperName, nativeCallbackName, isConstructor: true);
-				proxy.ExportMarshalMethods.Add (exportData);
-			} else {
-				// [Register] constructor — ActivateInstance pattern
-				proxy.UcoConstructors.Add (new UcoConstructorData {
-					WrapperName = wrapperName,
-					JniSignature = ctor.JniSignature,
-					TargetType = new TypeRefData {
-						ManagedTypeName = peer.ManagedTypeName,
-						AssemblyName = peer.AssemblyName,
-					},
-				});
-			}
+			// ALL constructors need full marshal body generation — there are no
+			// pre-existing n_* callbacks for constructors (unlike [Register] methods).
+			// The [Register] connector for constructors is always "" (empty string).
+			var exportData = BuildExportMarshalMethod (mm, peer, wrapperName, nativeCallbackName, isConstructor: true);
+			proxy.ExportMarshalMethods.Add (exportData);
 		}
 	}
 
@@ -305,20 +304,6 @@ static class ModelBuilder
 		foreach (var uco in proxy.UcoMethods) {
 			proxy.NativeRegistrations.Add (new NativeRegistrationData {
 				JniMethodName = uco.CallbackMethodName,
-				JniSignature = uco.JniSignature,
-				WrapperMethodName = uco.WrapperName,
-			});
-		}
-
-		foreach (var uco in proxy.UcoConstructors) {
-			string jniName = uco.WrapperName;
-			int ucoSuffix = jniName.LastIndexOf ("_uco", StringComparison.Ordinal);
-			if (ucoSuffix >= 0) {
-				jniName = jniName.Substring (0, ucoSuffix);
-			}
-
-			proxy.NativeRegistrations.Add (new NativeRegistrationData {
-				JniMethodName = jniName,
 				JniSignature = uco.JniSignature,
 				WrapperMethodName = uco.WrapperName,
 			});
