@@ -35,25 +35,25 @@
 		<ResolveAssemblyConflicts>true</ResolveAssemblyConflicts>
 
         <AndroidNdkApiLevel_Arm64>@NDK_ARM64_V8A_API_NON_MONO@</AndroidNdkApiLevel_Arm64>
-        <AndroidNdkAPiLevel_X64>@NDK_X86_64_API_NON_MONO@</AndroidNdkAPiLevel_X64>
+        <AndroidNdkApiLevel_X64>@NDK_X86_64_API_NON_MONO@</AndroidNdkApiLevel_X64>
 	</PropertyGroup>
         <ItemGroup>
           <AndroidMinimumSupportedApiLevel Include="armeabi-v7a">
             <ApiLevel>@NDK_ARMEABI_V7_API@</ApiLevel>
           </AndroidMinimumSupportedApiLevel>
-          <AndroidMinimumSupportedApiLevel Include="arm64-v8a" Condition=" '$(AndroidRuntime)' == 'Mono' ">
+          <AndroidMinimumSupportedApiLevel Include="arm64-v8a" Condition=" '$(_AndroidRuntime)' == 'Mono' ">
             <ApiLevel>@NDK_ARM64_V8A_API@</ApiLevel>
           </AndroidMinimumSupportedApiLevel>
-          <AndroidMinimumSupportedApiLevel Include="arm64-v8a" Condition=" '$(AndroidRuntime)' != 'Mono' ">
+          <AndroidMinimumSupportedApiLevel Include="arm64-v8a" Condition=" '$(_AndroidRuntime)' != 'Mono' ">
             <ApiLevel>@NDK_ARM64_V8A_API_NON_MONO@</ApiLevel>
           </AndroidMinimumSupportedApiLevel>
           <AndroidMinimumSupportedApiLevel Include="x86">
             <ApiLevel>@NDK_X86_API@</ApiLevel>
           </AndroidMinimumSupportedApiLevel>
-          <AndroidMinimumSupportedApiLevel Include="x86_64" Condition=" '$(AndroidRuntime)' == 'Mono' ">
+          <AndroidMinimumSupportedApiLevel Include="x86_64" Condition=" '$(_AndroidRuntime)' == 'Mono' ">
             <ApiLevel>@NDK_X86_64_API@</ApiLevel>
           </AndroidMinimumSupportedApiLevel>
-          <AndroidMinimumSupportedApiLevel Include="x86_64" Condition=" '$(AndroidRuntime)' != 'Mono' ">
+          <AndroidMinimumSupportedApiLevel Include="x86_64" Condition=" '$(_AndroidRuntime)' != 'Mono' ">
             <ApiLevel>@NDK_X86_64_API_NON_MONO@</ApiLevel>
           </AndroidMinimumSupportedApiLevel>
         </ItemGroup>
