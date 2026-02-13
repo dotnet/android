@@ -7,10 +7,13 @@
 // - Generic user types
 
 using System;
+using System.Runtime.Versioning;
 using Android.App;
 using Android.Content;
 using Android.Runtime;
 using Java.Interop;
+
+[assembly: SupportedOSPlatform ("android21.0")]
 
 // --- User Activity with explicit Name ---
 
