@@ -35,7 +35,7 @@ auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, void *reserved) noexcept -> jint
 		for (uint32_t i = 0; i < __jni_on_load_handler_count; i++) {
 			log_debug (
 				LOG_ASSEMBLY,
-				"Calling JNI on-load init func '{}' ({:p})",
+				"Calling JNI on-load init func '%s' (%p)",
 				optional_string (__jni_on_load_handler_names[i]),
 				reinterpret_cast<void*>(__jni_on_load_handlers[i])
 			);

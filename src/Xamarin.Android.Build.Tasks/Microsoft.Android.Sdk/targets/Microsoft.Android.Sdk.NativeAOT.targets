@@ -72,7 +72,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('linux')) ">linux-x86_64</_NdkPrebuiltAbi>
       <_NdkSysrootDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/sysroot/usr/lib/$(_NdkSysrootAbi)/</_NdkSysrootDir>
       <_NdkBinDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/bin/</_NdkBinDir>
-      <CppCompilerAndLinker>clang++</CppCompilerAndLinker>
+      <CppCompilerAndLinker>$(_NdkBinDir)clang++</CppCompilerAndLinker>
+      <CppLinker>$(_NdkBinDir)clang++</CppLinker>
       <ObjCopyName>llvm-objcopy</ObjCopyName>
 
       <!-- We must ensure this is `false`, as it would interfere with statically linking libc++ -->
@@ -97,8 +98,18 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <PropertyGroup>
       <!-- Turn trimmer warnings back to original value -->
       <SuppressTrimAnalysisWarnings>$(_OriginalSuppressTrimAnalysisWarnings)</SuppressTrimAnalysisWarnings>
+      <_XANativeAotHostName>libnaot-android.release-static-release.a</_XANativeAotHostName>
+      <_NDKApiLevel Condition=" '$(RuntimeIdentifier)' == 'android-arm64' ">$(AndroidNdkApiLevel_Arm64)</_NDKApiLevel>
+      <_NDKArch Condition=" '$(RuntimeIdentifier)' == 'android-arm64' ">aarch64</_NDKArch>
+      <_NDKApiLevel Condition=" '$(RuntimeIdentifier)' == 'android-x64' ">$(AndroidNdkAPiLevel_X64)</_NDKApiLevel>
+      <_NDKArch Condition=" '$(RuntimeIdentifier)' == 'android-x64' ">x86_64</_NDKArch>
     </PropertyGroup>
     <ItemGroup>
+      <!--
+          The `target` argument is **CRUCIAL** since it selects the appropriate directory from which the linker
+          resolves various system libraries. It **MUST** match the API level that .NET for Android was compiled for.
+      -->
+      <LinkerArg Include="--target=$(_NDKArch)-linux-android$(_NDKApiLevel)" />
       <!-- Android needs a proper soname property or it will refuse to load the library -->
       <LinkerArg Include="&quot;-Wl,-soname,lib$(TargetName)$(NativeBinaryExt)&quot;" />
       <LinkerArg Include="-Wl,--error-unresolved-symbols" />
@@ -121,11 +132,12 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <!-- Satellite assemblies -->
       <IlcSatelliteAssembly Include="$(_OuterIntermediateSatelliteAssembliesWithTargetPath)" />
 
-      <_NdkLibs Include="@(RuntimePackAsset->WithMetadataValue('Filename', 'libnaot-android.$(Configuration.ToLower())-static-$(Configuration.ToLower())'))" />
-
-      <!-- Include libc++ -->
-      <_NdkLibs Include="$(_NdkSysrootDir)libc++_static.a" />
-      <_NdkLibs Include="$(_NdkSysrootDir)libc++abi.a" />
+      <!-- Attempt to find our NativeAOT runtime static library using different approaches. It seems
+           that the `Filename` metadata isn't always present on `RuntimePackAsset` items
+      -->
+      <_XANativeAotHost Include="@(RuntimePackAsset->WithMetadataValue('Filename', '$(_XANativeAotHostName)'))" />
+      <_XANativeAotHost Include="@(RuntimePackAsset->WithMetadataValue('DestinationSubPath', '$(_XANativeAotHostName)'))" />
+      <_NdkLibs Include="@(_XANativeAotHost)" />
 
       <LinkerArg Include="&quot;%(_NdkLibs.Identity)&quot;" />
 
@@ -136,6 +148,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <!-- Every p/invoke using the `xa-internal-api` "library" will be called directly -->
       <DirectPInvoke Include="xa-internal-api" />
     </ItemGroup>
+
+    <Error Condition=" '@(_XANativeAotHost)' == '' " Text="NativeAOT host library '$(_XANativeAotHostName)' not found." />
   </Target>
 
   <Target Name="_PrepareNativeAotAndroidAppInputs">
