@@ -25,10 +25,10 @@ sealed class CustomAttributeTypeProvider : ICustomAttributeTypeProvider<string>
 		var name = metadataReader.GetString (typeDef.Name);
 		if (typeDef.IsNested) {
 			var parent = GetTypeFromDefinition (metadataReader, typeDef.GetDeclaringType (), rawTypeKind);
-			return parent + "+" + name;
+			return $"{parent}+{name}";
 		}
 		var ns = metadataReader.GetString (typeDef.Namespace);
-		return ns.Length > 0 ? ns + "." + name : name;
+		return ns.Length > 0 ? $"{ns}.{name}" : name;
 	}
 
 	public string GetTypeFromReference (MetadataReader metadataReader, TypeReferenceHandle handle, byte rawTypeKind)
@@ -37,10 +37,10 @@ sealed class CustomAttributeTypeProvider : ICustomAttributeTypeProvider<string>
 		var name = metadataReader.GetString (typeRef.Name);
 		if (typeRef.ResolutionScope.Kind == HandleKind.TypeReference) {
 			var parent = GetTypeFromReference (metadataReader, (TypeReferenceHandle)typeRef.ResolutionScope, rawTypeKind);
-			return parent + "+" + name;
+			return $"{parent}+{name}";
 		}
 		var ns = metadataReader.GetString (typeRef.Namespace);
-		return ns.Length > 0 ? ns + "." + name : name;
+		return ns.Length > 0 ? $"{ns}.{name}" : name;
 	}
 
 	public string GetTypeFromSerializedName (string name) => name;
@@ -52,7 +52,7 @@ sealed class CustomAttributeTypeProvider : ICustomAttributeTypeProvider<string>
 			var typeDef = reader.GetTypeDefinition (typeHandle);
 			var name = reader.GetString (typeDef.Name);
 			var ns = reader.GetString (typeDef.Namespace);
-			var fullName = ns.Length > 0 ? ns + "." + name : name;
+			var fullName = ns.Length > 0 ? $"{ns}.{name}" : name;
 
 			if (fullName != type)
 				continue;
@@ -84,7 +84,7 @@ sealed class CustomAttributeTypeProvider : ICustomAttributeTypeProvider<string>
 
 	public string GetSystemType () => "System.Type";
 
-	public string GetSZArrayType (string elementType) => elementType + "[]";
+	public string GetSZArrayType (string elementType) => $"{elementType}[]";
 
 	public bool IsSystemType (string type) => type == "System.Type" || type == "Type";
 }
