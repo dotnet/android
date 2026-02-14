@@ -313,7 +313,7 @@ sealed class JavaPeerScanner : IDisposable
 		foreach (var implHandle in interfaceImpls) {
 			var impl = index.Reader.GetInterfaceImplementation (implHandle);
 			var ifaceJniName = ResolveInterfaceJniName (impl.Interface, index);
-			if (ifaceJniName != null) {
+			if (ifaceJniName is not null) {
 				result.Add (ifaceJniName);
 			}
 		}
