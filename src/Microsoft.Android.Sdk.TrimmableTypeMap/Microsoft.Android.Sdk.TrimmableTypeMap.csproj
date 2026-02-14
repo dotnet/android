@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\Configuration.props" />
+
+  <PropertyGroup>
+    <TargetFramework>$(TargetFrameworkNETStandard)</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <WarningsAsErrors>Nullable</WarningsAsErrors>
+    <RootNamespace>Microsoft.Android.Sdk.TrimmableTypeMap</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
+    <PackageReference Include="System.Reflection.Metadata" Version="9.0.3" />
+    <InternalsVisibleTo Include="Microsoft.Android.Sdk.TrimmableTypeMap.Tests" />
+    <InternalsVisibleTo Include="Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests" />
+  </ItemGroup>
+
+</Project>
