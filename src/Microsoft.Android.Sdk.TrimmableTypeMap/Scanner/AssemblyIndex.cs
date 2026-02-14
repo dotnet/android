@@ -67,8 +67,6 @@ sealed class AssemblyIndex : IDisposable
 
 	void Build ()
 	{
-		FindJniNameProviderAttributes ();
-
 		foreach (var typeHandle in Reader.TypeDefinitions) {
 			var typeDef = Reader.GetTypeDefinition (typeHandle);
 
@@ -81,51 +79,14 @@ sealed class AssemblyIndex : IDisposable
 
 			var (registerInfo, attrInfo) = ParseAttributes (typeDef);
 
-			if (attrInfo != null) {
+			if (attrInfo is not null) {
 				AttributesByType [typeHandle] = attrInfo;
 			}
 
-			if (registerInfo != null) {
+			if (registerInfo is not null) {
 				RegisterInfoByType [typeHandle] = registerInfo;
 			}
 		}
-	}
-
-	/// <summary>
-	/// Finds all types in this assembly that implement <c>Java.Interop.IJniNameProviderAttribute</c>.
-	/// </summary>
-	void FindJniNameProviderAttributes ()
-	{
-		foreach (var typeHandle in Reader.TypeDefinitions) {
-			var typeDef = Reader.GetTypeDefinition (typeHandle);
-			if (ImplementsIJniNameProviderAttribute (typeDef)) {
-				var name = Reader.GetString (typeDef.Name);
-				JniNameProviderAttributes.Add (name);
-			}
-		}
-	}
-
-	bool ImplementsIJniNameProviderAttribute (TypeDefinition typeDef)
-	{
-		foreach (var implHandle in typeDef.GetInterfaceImplementations ()) {
-			var impl = Reader.GetInterfaceImplementation (implHandle);
-			if (impl.Interface.Kind == HandleKind.TypeReference) {
-				var typeRef = Reader.GetTypeReference ((TypeReferenceHandle)impl.Interface);
-				var name = Reader.GetString (typeRef.Name);
-				var ns = Reader.GetString (typeRef.Namespace);
-				if (name == "IJniNameProviderAttribute" && ns == "Java.Interop") {
-					return true;
-				}
-			} else if (impl.Interface.Kind == HandleKind.TypeDefinition) {
-				var ifaceTypeDef = Reader.GetTypeDefinition ((TypeDefinitionHandle)impl.Interface);
-				var name = Reader.GetString (ifaceTypeDef.Name);
-				var ns = Reader.GetString (ifaceTypeDef.Namespace);
-				if (name == "IJniNameProviderAttribute" && ns == "Java.Interop") {
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 
 	/// <summary>
@@ -138,9 +99,10 @@ sealed class AssemblyIndex : IDisposable
 
 		foreach (var typeHandle in Reader.TypeDefinitions) {
 			var typeDef = Reader.GetTypeDefinition (typeHandle);
+			AttributesByType.TryGetValue (typeHandle, out var existing);
 
 			// Skip types that already have component attribute info
-			if (AttributesByType.TryGetValue (typeHandle, out var existing) && existing.HasComponentAttribute) {
+			if (existing is not null) {
 				continue;
 			}
 
@@ -149,16 +111,16 @@ sealed class AssemblyIndex : IDisposable
 				var ca = Reader.GetCustomAttribute (caHandle);
 				var attrName = GetCustomAttributeName (ca, Reader);
 
-				if (attrName == null || attrName == "RegisterAttribute" || attrName == "ExportAttribute") {
+				if (attrName is null || attrName == "RegisterAttribute" || attrName == "ExportAttribute") {
 					continue;
 				}
 
 				if (mergedJniNameProviders.Contains (attrName) && !IsKnownComponentAttribute (attrName)) {
 					var componentName = TryGetNameProperty (ca);
-					if (componentName != null) {
-						var attrInfo = existing ?? new TypeAttributeInfo ();
-						attrInfo.HasComponentAttribute = true;
-						attrInfo.ComponentAttributeJniName = componentName.Replace ('.', '/');
+					if (componentName is not null) {
+						var attrInfo = new JniNameProviderAttributeInfo (attrName) {
+							JniName = componentName.Replace ('.', '/'),
+						};
 						AttributesByType [typeHandle] = attrInfo;
 					}
 				}
@@ -174,14 +136,14 @@ sealed class AssemblyIndex : IDisposable
 		if (typeDef.IsNested) {
 			var declaringType = reader.GetTypeDefinition (typeDef.GetDeclaringType ());
 			var parentName = GetFullName (declaringType, reader);
-			return parentName + "+" + name;
+			return $"{parentName}+{name}";
 		}
 
 		if (ns.Length == 0) {
 			return name;
 		}
 
-		return ns + "." + name;
+		return $"{ns}.{name}";
 	}
 
 	(RegisterInfo? register, TypeAttributeInfo? attrs) ParseAttributes (TypeDefinition typeDef)
@@ -193,24 +155,23 @@ sealed class AssemblyIndex : IDisposable
 			var ca = Reader.GetCustomAttribute (caHandle);
 			var attrName = GetCustomAttributeName (ca, Reader);
 
-			if (attrName == null) {
+			if (attrName is null) {
 				continue;
 			}
 
 			if (attrName == "RegisterAttribute") {
 				registerInfo = ParseRegisterAttribute (ca, customAttributeTypeProvider);
 			} else if (attrName == "ExportAttribute") {
-				// [Export] methods are detected per-method in CollectMarshalMethods
+				// [Export] methods are not handled yet and supporting them will be implemented later
 			} else if (IsJniNameProviderAttribute (attrName)) {
-				attrInfo ??= new TypeAttributeInfo ();
-				attrInfo.HasComponentAttribute = true;
+				attrInfo ??= CreateTypeAttributeInfo (attrName);
 				var componentName = TryGetNameProperty (ca);
-				if (componentName != null) {
-					attrInfo.ComponentAttributeJniName = componentName.Replace ('.', '/');
+				if (componentName is not null) {
+					attrInfo.JniName = componentName.Replace ('.', '/');
 				}
-				if (attrName == "ApplicationAttribute") {
-					attrInfo.ApplicationBackupAgent = TryGetTypeProperty (ca, "BackupAgent");
-					attrInfo.ApplicationManageSpaceActivity = TryGetTypeProperty (ca, "ManageSpaceActivity");
+				if (attrInfo is ApplicationAttributeInfo applicationAttributeInfo) {
+					applicationAttributeInfo.BackupAgent = TryGetTypeProperty (ca, "BackupAgent");
+					applicationAttributeInfo.ManageSpaceActivity = TryGetTypeProperty (ca, "ManageSpaceActivity");
 				}
 			}
 		}
@@ -230,13 +191,26 @@ sealed class AssemblyIndex : IDisposable
 			return true;
 		}
 
-		if (allJniNameProviderAttributes != null && allJniNameProviderAttributes.Contains (attrName)) {
+		if (allJniNameProviderAttributes is not null && allJniNameProviderAttributes.Contains (attrName)) {
 			return true;
 		}
 
 		// Fallback for the case where we haven't loaded the assembly defining the attribute yet.
 		// This covers the common case where user assemblies reference Mono.Android attributes.
 		return IsKnownComponentAttribute (attrName);
+	}
+
+	static TypeAttributeInfo CreateTypeAttributeInfo (string attrName)
+	{
+		return attrName switch {
+			"ActivityAttribute" => new ActivityAttributeInfo (),
+			"ServiceAttribute" => new ServiceAttributeInfo (),
+			"BroadcastReceiverAttribute" => new BroadcastReceiverAttributeInfo (),
+			"ContentProviderAttribute" => new ContentProviderAttributeInfo (),
+			"ApplicationAttribute" => new ApplicationAttributeInfo (),
+			"InstrumentationAttribute" => new InstrumentationAttributeInfo (),
+			_ => new JniNameProviderAttributeInfo (attrName),
+		};
 	}
 
 	static bool IsKnownComponentAttribute (string attrName)
@@ -350,7 +324,7 @@ sealed class AssemblyIndex : IDisposable
 }
 
 /// <summary>
-/// Parsed [Register] or [Export] attribute data for a type or method.
+/// Parsed [Register] attribute data for a type or method.
 /// </summary>
 sealed class RegisterInfo
 {
@@ -359,55 +333,89 @@ sealed class RegisterInfo
 	public string? Connector { get; }
 	public bool DoNotGenerateAcw { get; }
 
-	/// <summary>
-	/// For [Export] methods: Java exception type names the method declares it can throw.
-	/// </summary>
-	public IReadOnlyList<string>? ThrownNames { get; }
-
-	/// <summary>
-	/// For [Export] methods: super constructor arguments string.
-	/// </summary>
-	public string? SuperArgumentsString { get; }
-
-	public RegisterInfo (string jniName, string? signature, string? connector, bool doNotGenerateAcw,
-		IReadOnlyList<string>? thrownNames = null, string? superArgumentsString = null)
+	public RegisterInfo (string jniName, string? signature, string? connector, bool doNotGenerateAcw)
 	{
 		JniName = jniName;
 		Signature = signature;
 		Connector = connector;
 		DoNotGenerateAcw = doNotGenerateAcw;
+	}
+}
+
+/// <summary>
+/// Parsed [Export] attribute data for a method.
+/// </summary>
+sealed class ExportInfo
+{
+	public IReadOnlyList<string>? ThrownNames { get; }
+	public string? SuperArgumentsString { get; }
+
+	public ExportInfo (IReadOnlyList<string>? thrownNames, string? superArgumentsString)
+	{
 		ThrownNames = thrownNames;
 		SuperArgumentsString = superArgumentsString;
 	}
 }
 
-/// <summary>
-/// Aggregated attribute information for a type, beyond [Register].
-/// </summary>
-sealed class TypeAttributeInfo
+abstract class TypeAttributeInfo
 {
-	/// <summary>
-	/// Type has [Activity], [Service], [BroadcastReceiver], [ContentProvider],
-	/// [Application], or [Instrumentation].
-	/// </summary>
-	public bool HasComponentAttribute { get; set; }
+	protected TypeAttributeInfo (string attributeName)
+	{
+		AttributeName = attributeName;
+	}
 
-	/// <summary>
-	/// The JNI name from the Name property of a component attribute
-	/// (e.g., [Activity(Name = "my.app.MainActivity")] → "my/app/MainActivity").
-	/// Null if no Name was specified on the component attribute.
-	/// </summary>
-	public string? ComponentAttributeJniName { get; set; }
+	public string AttributeName { get; }
+	public string? JniName { get; set; }
+}
 
-	/// <summary>
-	/// If the type has [Application(BackupAgent = typeof(X))],
-	/// this is the full name of X.
-	/// </summary>
-	public string? ApplicationBackupAgent { get; set; }
+sealed class ActivityAttributeInfo : TypeAttributeInfo
+{
+	public ActivityAttributeInfo () : base ("ActivityAttribute")
+	{
+	}
+}
 
-	/// <summary>
-	/// If the type has [Application(ManageSpaceActivity = typeof(X))],
-	/// this is the full name of X.
-	/// </summary>
-	public string? ApplicationManageSpaceActivity { get; set; }
+sealed class ServiceAttributeInfo : TypeAttributeInfo
+{
+	public ServiceAttributeInfo () : base ("ServiceAttribute")
+	{
+	}
+}
+
+sealed class BroadcastReceiverAttributeInfo : TypeAttributeInfo
+{
+	public BroadcastReceiverAttributeInfo () : base ("BroadcastReceiverAttribute")
+	{
+	}
+}
+
+sealed class ContentProviderAttributeInfo : TypeAttributeInfo
+{
+	public ContentProviderAttributeInfo () : base ("ContentProviderAttribute")
+	{
+	}
+}
+
+sealed class InstrumentationAttributeInfo : TypeAttributeInfo
+{
+	public InstrumentationAttributeInfo () : base ("InstrumentationAttribute")
+	{
+	}
+}
+
+sealed class JniNameProviderAttributeInfo : TypeAttributeInfo
+{
+	public JniNameProviderAttributeInfo (string attributeName) : base (attributeName)
+	{
+	}
+}
+
+sealed class ApplicationAttributeInfo : TypeAttributeInfo
+{
+	public ApplicationAttributeInfo () : base ("ApplicationAttribute")
+	{
+	}
+
+	public string? BackupAgent { get; set; }
+	public string? ManageSpaceActivity { get; set; }
 }
