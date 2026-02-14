@@ -127,6 +127,7 @@ namespace Xamarin.Android.Prepare
 				{ "@NDK_ARM64_V8A_NONMONO_API_NET@", BuildAndroidPlatforms.NdkMinimumNonMonoAPI },
 				{ "@NDK_X86_64_NONMONO_API_NET@",    BuildAndroidPlatforms.NdkMinimumNonMonoAPI },
 				{ "@XA_BUILD_CONFIGURATION@",    context.Configuration },
+				{ "@XA_TEST_OUTPUT_DIR@", Utilities.EscapePathSeparators (props.GetRequiredValue (KnownProperties.TestOutputDirectory)) },
 			};
 
 			return new GeneratedPlaceholdersFile (
