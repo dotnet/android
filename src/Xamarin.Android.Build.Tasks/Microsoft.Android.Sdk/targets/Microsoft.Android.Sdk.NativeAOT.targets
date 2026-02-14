@@ -72,7 +72,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('linux')) ">linux-x86_64</_NdkPrebuiltAbi>
       <_NdkSysrootDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/sysroot/usr/lib/$(_NdkSysrootAbi)/</_NdkSysrootDir>
       <_NdkBinDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/bin/</_NdkBinDir>
-      <CppCompilerAndLinker>clang++</CppCompilerAndLinker>
+      <CppCompilerAndLinker>$(_NdkBinDir)clang++</CppCompilerAndLinker>
+      <CppLinker>$(_NdkBinDir)clang++</CppLinker>
       <ObjCopyName>llvm-objcopy</ObjCopyName>
 
       <!-- We must ensure this is `false`, as it would interfere with statically linking libc++ -->
@@ -97,8 +98,17 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <PropertyGroup>
       <!-- Turn trimmer warnings back to original value -->
       <SuppressTrimAnalysisWarnings>$(_OriginalSuppressTrimAnalysisWarnings)</SuppressTrimAnalysisWarnings>
+      <_NDKApiLevel Condition=" '$(RuntimeIdentifier)' == 'android-arm64' ">$(AndroidNdkApiLevel_Arm64)</_NDKApiLevel>
+      <_NDKArch Condition=" '$(RuntimeIdentifier)' == 'android-arm64' ">aarch64</_NDKArch>
+      <_NDKApiLevel Condition=" '$(RuntimeIdentifier)' == 'android-x64' ">$(AndroidNdkAPiLevel_X64)</_NDKApiLevel>
+      <_NDKArch Condition=" '$(RuntimeIdentifier)' == 'android-x64' ">x86_64</_NDKArch>
     </PropertyGroup>
     <ItemGroup>
+      <!--
+          The `target` argument is **CRUCIAL** since it selects the appropriate directory from which the linker
+          resolves various system libraries. It **MUST** match the API level that .NET for Android was compiled for.
+      -->
+      <LinkerArg Include="--target=$(_NDKArch)-linux-android$(_NDKApiLevel)" />
       <!-- Android needs a proper soname property or it will refuse to load the library -->
       <LinkerArg Include="&quot;-Wl,-soname,lib$(TargetName)$(NativeBinaryExt)&quot;" />
       <LinkerArg Include="-Wl,--error-unresolved-symbols" />
