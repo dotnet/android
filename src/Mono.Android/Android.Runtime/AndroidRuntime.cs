@@ -13,6 +13,8 @@ using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
 using System.Diagnostics.CodeAnalysis;
 
+using RuntimeFeature = Microsoft.Android.Runtime.RuntimeFeature;
+
 #if JAVA_INTEROP
 namespace Android.Runtime {
 
@@ -94,7 +96,9 @@ namespace Android.Runtime {
 			EnvironmentPointer      = jnienv;
 			ClassLoader             = new JniObjectReference (classLoader, JniObjectReferenceType.Global);
 			InvocationPointer       = vm;
-			ObjectReferenceManager  = new AndroidObjectReferenceManager ();
+			ObjectReferenceManager  = RuntimeFeature.IsCoreClrRuntime
+				? new Java.Interop.ManagedObjectReferenceManager (null, null)
+				: new AndroidObjectReferenceManager ();
 			TypeManager             = typeManager;
 			ValueManager            = valueManager;
 			UseMarshalMemberBuilder = false;

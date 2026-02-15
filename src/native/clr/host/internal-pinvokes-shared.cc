@@ -34,11 +34,9 @@ void _monodroid_weak_gref_delete (jobject handle, char type, const char *threadN
 	OSBridge::_monodroid_weak_gref_delete (handle, type, threadName, threadId, from);
 }
 
-BridgeProcessingFtn clr_initialize_gc_bridge (
-	BridgeProcessingStartedFtn bridge_processing_started_callback,
-	BridgeProcessingFinishedFtn bridge_processing_finished_callback) noexcept
+BridgeProcessingFtn clr_initialize_gc_bridge (BridgeProcessingCallback callback) noexcept
 {
-	return GCBridge::initialize_callback (bridge_processing_started_callback, bridge_processing_finished_callback);
+	return GCBridge::initialize_for_managed_processing (callback);
 }
 
 void monodroid_log (LogLevel level, LogCategories category, const char *message) noexcept
