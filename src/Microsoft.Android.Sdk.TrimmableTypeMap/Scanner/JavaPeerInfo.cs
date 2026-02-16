@@ -14,53 +14,53 @@ sealed record JavaPeerInfo
 	/// JNI type name, e.g., "android/app/Activity".
 	/// Extracted from the [Register] attribute.
 	/// </summary>
-	public string JavaName { get; set; } = "";
+	public required string JavaName { get; init; }
 
 	/// <summary>
 	/// Compat JNI type name, e.g., "myapp.namespace/MyType" for user types (uses raw namespace, not CRC64).
 	/// For MCW binding types (with [Register]), this equals <see cref="JavaName"/>.
 	/// Used by acw-map.txt to support legacy custom view name resolution in layout XMLs.
 	/// </summary>
-	public string CompatJniName { get; set; } = "";
+	public required string CompatJniName { get; init; }
 
 	/// <summary>
 	/// Full managed type name, e.g., "Android.App.Activity".
 	/// </summary>
-	public string ManagedTypeName { get; set; } = "";
+	public required string ManagedTypeName { get; init; }
 
 	/// <summary>
 	/// Assembly name the type belongs to, e.g., "Mono.Android".
 	/// </summary>
-	public string AssemblyName { get; set; } = "";
+	public required string AssemblyName { get; init; }
 
 	/// <summary>
 	/// JNI name of the base Java type, e.g., "android/app/Activity" for a type
 	/// that extends Activity. Null for java/lang/Object or types without a Java base.
 	/// Needed by JCW Java source generation ("extends" clause).
 	/// </summary>
-	public string? BaseJavaName { get; set; }
+	public string? BaseJavaName { get; init; }
 
 	/// <summary>
 	/// JNI names of Java interfaces this type implements, e.g., ["android/view/View$OnClickListener"].
 	/// Needed by JCW Java source generation ("implements" clause).
 	/// </summary>
-	public IReadOnlyList<string> ImplementedInterfaceJavaNames { get; set; } = Array.Empty<string> ();
+	public IReadOnlyList<string> ImplementedInterfaceJavaNames { get; init; } = Array.Empty<string> ();
 
-	public bool IsInterface { get; set; }
-	public bool IsAbstract { get; set; }
+	public bool IsInterface { get; init; }
+	public bool IsAbstract { get; init; }
 
 	/// <summary>
 	/// If true, this is a Managed Callable Wrapper (MCW) binding type.
 	/// No JCW or RegisterNatives will be generated for it.
 	/// </summary>
-	public bool DoNotGenerateAcw { get; set; }
+	public bool DoNotGenerateAcw { get; init; }
 
 	/// <summary>
 	/// Types with component attributes ([Activity], [Service], etc.),
 	/// custom views from layout XML, or manifest-declared components
 	/// are unconditionally preserved (not trimmable).
 	/// </summary>
-	public bool IsUnconditional { get; set; }
+	public bool IsUnconditional { get; init; }
 
 	/// <summary>
 	/// Marshal methods: methods with [Register(name, sig, connector)], [Export], or
@@ -68,25 +68,25 @@ sealed record JavaPeerInfo
 	/// Constructors are identified by <see cref="MarshalMethodInfo.IsConstructor"/>.
 	/// Ordered — the index in this list is the method's ordinal for RegisterNatives.
 	/// </summary>
-	public IReadOnlyList<MarshalMethodInfo> MarshalMethods { get; set; } = Array.Empty<MarshalMethodInfo> ();
+	public IReadOnlyList<MarshalMethodInfo> MarshalMethods { get; init; } = Array.Empty<MarshalMethodInfo> ();
 
 	/// <summary>
 	/// Information about the activation constructor for this type.
 	/// May reference a base type's constructor if the type doesn't define its own.
 	/// </summary>
-	public ActivationCtorInfo? ActivationCtor { get; set; }
+	public ActivationCtorInfo? ActivationCtor { get; init; }
 
 	/// <summary>
 	/// For interfaces and abstract types, the name of the invoker type
 	/// used to instantiate instances from Java.
 	/// </summary>
-	public string? InvokerTypeName { get; set; }
+	public string? InvokerTypeName { get; init; }
 
 	/// <summary>
 	/// True if this is an open generic type definition.
 	/// Generic types get TypeMap entries but CreateInstance throws NotSupportedException.
 	/// </summary>
-	public bool IsGenericDefinition { get; set; }
+	public bool IsGenericDefinition { get; init; }
 }
 
 /// <summary>
@@ -100,41 +100,41 @@ sealed record MarshalMethodInfo
 	/// JNI method name, e.g., "onCreate".
 	/// This is the Java method name (without n_ prefix).
 	/// </summary>
-	public string JniName { get; set; } = "";
+	public required string JniName { get; init; }
 
 	/// <summary>
 	/// JNI method signature, e.g., "(Landroid/os/Bundle;)V".
 	/// Contains both parameter types and return type.
 	/// </summary>
-	public string JniSignature { get; set; } = "";
+	public required string JniSignature { get; init; }
 
 	/// <summary>
 	/// The connector string from [Register], e.g., "GetOnCreate_Landroid_os_Bundle_Handler".
 	/// Null for [Export] methods.
 	/// </summary>
-	public string? Connector { get; set; }
+	public string? Connector { get; init; }
 
 	/// <summary>
 	/// Name of the managed method this maps to, e.g., "OnCreate".
 	/// </summary>
-	public string ManagedMethodName { get; set; } = "";
+	public required string ManagedMethodName { get; init; }
 
 	/// <summary>
 	/// True if this is a constructor registration.
 	/// </summary>
-	public bool IsConstructor { get; set; }
+	public bool IsConstructor { get; init; }
 
 	/// <summary>
 	/// For [Export] methods: Java exception types that the method declares it can throw.
 	/// Null for [Register] methods.
 	/// </summary>
-	public IReadOnlyList<string>? ThrownNames { get; set; }
+	public IReadOnlyList<string>? ThrownNames { get; init; }
 
 	/// <summary>
 	/// For [Export] methods: super constructor arguments string.
 	/// Null for [Register] methods.
 	/// </summary>
-	public string? SuperArgumentsString { get; set; }
+	public string? SuperArgumentsString { get; init; }
 }
 
 /// <summary>
@@ -146,17 +146,17 @@ sealed record ActivationCtorInfo
 	/// The type that declares the activation constructor.
 	/// May be the type itself or a base type.
 	/// </summary>
-	public string DeclaringTypeName { get; set; } = "";
+	public required string DeclaringTypeName { get; init; }
 
 	/// <summary>
 	/// The assembly containing the declaring type.
 	/// </summary>
-	public string DeclaringAssemblyName { get; set; } = "";
+	public required string DeclaringAssemblyName { get; init; }
 
 	/// <summary>
 	/// The style of activation constructor found.
 	/// </summary>
-	public ActivationCtorStyle Style { get; set; }
+	public required ActivationCtorStyle Style { get; init; }
 }
 
 enum ActivationCtorStyle
