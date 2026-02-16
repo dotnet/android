@@ -59,6 +59,21 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     </IlcCompileDependsOn>
   </PropertyGroup>
 
+  <Target Name="_FixUpLinkerArgs"
+          AfterTargets="SetupOSSpecificProps">
+    <!-- NativeAOT (in Microsoft.NETCore.Native.Unix.targets) hardcodes the Android API level to
+         `android21` in a manner that cannot be overridden by us. This causes it to pass the
+         `-target=$(ABI)-linux-android21` argument to the linker regardless of the actual API level
+         we have to use. This breaks compilation with our API level != 21, so we need to remove the
+         extra argument here.
+         This workaround can be removed when NativeAOT target is fixed.
+    -->
+    <ItemGroup>
+      <LinkerArg Remove="--target=aarch64-linux-android21" />
+      <LinkerArg Remove="--target=x86_64-linux-android21" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="_AndroidBeforeIlcCompile"
       DependsOnTargets="_PrepareLinking"
       BeforeTargets="SetupProperties">
@@ -130,6 +145,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <PropertyGroup>
       <!-- Turn trimmer warnings back to original value -->
       <SuppressTrimAnalysisWarnings>$(_OriginalSuppressTrimAnalysisWarnings)</SuppressTrimAnalysisWarnings>
+      <_XANativeAotHostName>libnaot-android.release-static-release.a</_XANativeAotHostName>
     </PropertyGroup>
     <ItemGroup>
       <!-- Android needs a proper soname property or it will refuse to load the library -->
