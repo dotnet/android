@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Immutable;
+using System.Collections.Generic;
 using System.Reflection.Metadata;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
@@ -11,6 +11,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 sealed class CustomAttributeTypeProvider : ICustomAttributeTypeProvider<string>
 {
 	readonly MetadataReader reader;
+	Dictionary<string, PrimitiveTypeCode>? enumTypeCache;
 
 	public CustomAttributeTypeProvider (MetadataReader reader)
 	{
@@ -47,38 +48,74 @@ sealed class CustomAttributeTypeProvider : ICustomAttributeTypeProvider<string>
 
 	public PrimitiveTypeCode GetUnderlyingEnumType (string type)
 	{
-		// Find the enum type in this assembly's metadata and read its value__ field type.
-		foreach (var typeHandle in reader.TypeDefinitions) {
-			var typeDef = reader.GetTypeDefinition (typeHandle);
-			var name = reader.GetString (typeDef.Name);
-			var ns = reader.GetString (typeDef.Namespace);
-			var fullName = ns.Length > 0 ? $"{ns}.{name}" : name;
+		if (enumTypeCache == null) {
+			enumTypeCache = BuildEnumTypeCache ();
+		}
 
-			if (fullName != type)
-				continue;
-
-			// For enums, the first instance field is the underlying value__ field
-			foreach (var fieldHandle in typeDef.GetFields ()) {
-				var field = reader.GetFieldDefinition (fieldHandle);
-				if ((field.Attributes & System.Reflection.FieldAttributes.Static) != 0)
-					continue;
-
-				var sig = field.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null);
-				return sig switch {
-					"System.Byte" => PrimitiveTypeCode.Byte,
-					"System.SByte" => PrimitiveTypeCode.SByte,
-					"System.Int16" => PrimitiveTypeCode.Int16,
-					"System.UInt16" => PrimitiveTypeCode.UInt16,
-					"System.Int32" => PrimitiveTypeCode.Int32,
-					"System.UInt32" => PrimitiveTypeCode.UInt32,
-					"System.Int64" => PrimitiveTypeCode.Int64,
-					"System.UInt64" => PrimitiveTypeCode.UInt64,
-					_ => PrimitiveTypeCode.Int32,
-				};
-			}
+		if (enumTypeCache.TryGetValue (type, out var code)) {
+			return code;
 		}
 
 		// Default to Int32 for enums defined in other assemblies
+		return PrimitiveTypeCode.Int32;
+	}
+
+	Dictionary<string, PrimitiveTypeCode> BuildEnumTypeCache ()
+	{
+		var cache = new Dictionary<string, PrimitiveTypeCode> ();
+
+		foreach (var typeHandle in reader.TypeDefinitions) {
+			var typeDef = reader.GetTypeDefinition (typeHandle);
+
+			// Only process enum types
+			if (!IsEnum (typeDef))
+				continue;
+
+			var fullName = GetTypeFromDefinition (reader, typeHandle, rawTypeKind: 0);
+			var code = GetEnumUnderlyingTypeCode (typeDef);
+			cache [fullName] = code;
+		}
+
+		return cache;
+	}
+
+	bool IsEnum (TypeDefinition typeDef)
+	{
+		var baseType = typeDef.BaseType;
+		if (baseType.IsNil)
+			return false;
+
+		string? baseFullName = baseType.Kind switch {
+			HandleKind.TypeReference => GetTypeFromReference (reader, (TypeReferenceHandle)baseType, rawTypeKind: 0),
+			HandleKind.TypeDefinition => GetTypeFromDefinition (reader, (TypeDefinitionHandle)baseType, rawTypeKind: 0),
+			_ => null,
+		};
+
+		return baseFullName == "System.Enum";
+	}
+
+	PrimitiveTypeCode GetEnumUnderlyingTypeCode (TypeDefinition typeDef)
+	{
+		// For enums, the first instance field is the underlying value__ field
+		foreach (var fieldHandle in typeDef.GetFields ()) {
+			var field = reader.GetFieldDefinition (fieldHandle);
+			if ((field.Attributes & System.Reflection.FieldAttributes.Static) != 0)
+				continue;
+
+			var sig = field.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null);
+			return sig switch {
+				"System.Byte" => PrimitiveTypeCode.Byte,
+				"System.SByte" => PrimitiveTypeCode.SByte,
+				"System.Int16" => PrimitiveTypeCode.Int16,
+				"System.UInt16" => PrimitiveTypeCode.UInt16,
+				"System.Int32" => PrimitiveTypeCode.Int32,
+				"System.UInt32" => PrimitiveTypeCode.UInt32,
+				"System.Int64" => PrimitiveTypeCode.Int64,
+				"System.UInt64" => PrimitiveTypeCode.UInt64,
+				_ => PrimitiveTypeCode.Int32,
+			};
+		}
+
 		return PrimitiveTypeCode.Int32;
 	}
 

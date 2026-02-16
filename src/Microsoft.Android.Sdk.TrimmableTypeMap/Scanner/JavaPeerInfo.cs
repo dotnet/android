@@ -8,7 +8,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// Contains all data needed by downstream generators (TypeMap IL, UCO wrappers, JCW Java sources).
 /// Generators consume this data model — they never touch PEReader/MetadataReader.
 /// </summary>
-sealed class JavaPeerInfo
+sealed record JavaPeerInfo
 {
 	/// <summary>
 	/// JNI type name, e.g., "android/app/Activity".
@@ -94,7 +94,7 @@ sealed class JavaPeerInfo
 /// Contains all data needed to generate a UCO wrapper, a JCW native declaration,
 /// and a RegisterNatives call.
 /// </summary>
-sealed class MarshalMethodInfo
+sealed record MarshalMethodInfo
 {
 	/// <summary>
 	/// JNI method name, e.g., "onCreate".
@@ -140,7 +140,7 @@ sealed class MarshalMethodInfo
 /// <summary>
 /// Describes how to call the activation constructor for a Java peer type.
 /// </summary>
-sealed class ActivationCtorInfo
+sealed record ActivationCtorInfo
 {
 	/// <summary>
 	/// The type that declares the activation constructor.
