@@ -9,14 +9,9 @@ namespace System.Runtime.CompilerServices
 	sealed class RequiredMemberAttribute : Attribute { }
 
 	[AttributeUsage (AttributeTargets.All, AllowMultiple = true, Inherited = false)]
-	sealed class CompilerFeatureRequiredAttribute : Attribute
+	sealed class CompilerFeatureRequiredAttribute (string featureName) : Attribute
 	{
-		public CompilerFeatureRequiredAttribute (string featureName)
-		{
-			FeatureName = featureName;
-		}
-
-		public string FeatureName { get; }
+		public string FeatureName { get; } = featureName;
 		public bool IsOptional { get; init; }
 	}
 }
