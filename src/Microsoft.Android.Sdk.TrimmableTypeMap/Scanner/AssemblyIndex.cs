@@ -1,0 +1,333 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
+
+namespace Microsoft.Android.Sdk.TrimmableTypeMap;
+
+/// <summary>
+/// Phase 1 index for a single assembly. Built in one pass over TypeDefinitions,
+/// all subsequent lookups are O(1) dictionary lookups.
+/// </summary>
+sealed class AssemblyIndex : IDisposable
+{
+	readonly PEReader peReader;
+	internal readonly CustomAttributeTypeProvider customAttributeTypeProvider;
+
+	public MetadataReader Reader { get; }
+	public string AssemblyName { get; }
+	public string FilePath { get; }
+
+	/// <summary>
+	/// Maps full managed type name (e.g., "Android.App.Activity") to its TypeDefinitionHandle.
+	/// </summary>
+	public Dictionary<string, TypeDefinitionHandle> TypesByFullName { get; } = new (StringComparer.Ordinal);
+
+	/// <summary>
+	/// Cached [Register] attribute data per type.
+	/// </summary>
+	public Dictionary<TypeDefinitionHandle, RegisterInfo> RegisterInfoByType { get; } = new ();
+
+	/// <summary>
+	/// All custom attribute data per type, pre-parsed for the attributes we care about.
+	/// </summary>
+	public Dictionary<TypeDefinitionHandle, TypeAttributeInfo> AttributesByType { get; } = new ();
+
+	AssemblyIndex (PEReader peReader, MetadataReader reader, string assemblyName, string filePath)
+	{
+		this.peReader = peReader;
+		this.customAttributeTypeProvider = new CustomAttributeTypeProvider (reader);
+		Reader = reader;
+		AssemblyName = assemblyName;
+		FilePath = filePath;
+	}
+
+	public static AssemblyIndex Create (string filePath)
+	{
+		var peReader = new PEReader (File.OpenRead (filePath));
+		var reader = peReader.GetMetadataReader ();
+		var assemblyName = reader.GetString (reader.GetAssemblyDefinition ().Name);
+		var index = new AssemblyIndex (peReader, reader, assemblyName, filePath);
+		index.Build ();
+		return index;
+	}
+
+	void Build ()
+	{
+		foreach (var typeHandle in Reader.TypeDefinitions) {
+			var typeDef = Reader.GetTypeDefinition (typeHandle);
+
+			var fullName = GetFullName (typeDef, Reader);
+			if (fullName.Length == 0) {
+				continue;
+			}
+
+			TypesByFullName [fullName] = typeHandle;
+
+			var (registerInfo, attrInfo) = ParseAttributes (typeDef);
+
+			if (attrInfo is not null) {
+				AttributesByType [typeHandle] = attrInfo;
+			}
+
+			if (registerInfo is not null) {
+				RegisterInfoByType [typeHandle] = registerInfo;
+			}
+		}
+	}
+
+	internal static string GetFullName (TypeDefinition typeDef, MetadataReader reader)
+	{
+		var name = reader.GetString (typeDef.Name);
+		var ns = reader.GetString (typeDef.Namespace);
+
+		if (typeDef.IsNested) {
+			var declaringType = reader.GetTypeDefinition (typeDef.GetDeclaringType ());
+			var parentName = GetFullName (declaringType, reader);
+			return $"{parentName}+{name}";
+		}
+
+		if (ns.Length == 0) {
+			return name;
+		}
+
+		return $"{ns}.{name}";
+	}
+
+	(RegisterInfo? register, TypeAttributeInfo? attrs) ParseAttributes (TypeDefinition typeDef)
+	{
+		RegisterInfo? registerInfo = null;
+		TypeAttributeInfo? attrInfo = null;
+
+		foreach (var caHandle in typeDef.GetCustomAttributes ()) {
+			var ca = Reader.GetCustomAttribute (caHandle);
+			var attrName = GetCustomAttributeName (ca, Reader);
+
+			if (attrName is null) {
+				continue;
+			}
+
+			if (attrName == "RegisterAttribute") {
+				registerInfo = ParseRegisterAttribute (ca, customAttributeTypeProvider);
+			} else if (attrName == "ExportAttribute") {
+				// [Export] is a method-level attribute; it is parsed at scan time by JavaPeerScanner
+			} else if (IsKnownComponentAttribute (attrName)) {
+				attrInfo ??= CreateTypeAttributeInfo (attrName);
+				var componentName = TryGetNameProperty (ca);
+				if (componentName is not null) {
+					attrInfo.JniName = componentName.Replace ('.', '/');
+				}
+				if (attrInfo is ApplicationAttributeInfo applicationAttributeInfo) {
+					applicationAttributeInfo.BackupAgent = TryGetTypeProperty (ca, "BackupAgent");
+					applicationAttributeInfo.ManageSpaceActivity = TryGetTypeProperty (ca, "ManageSpaceActivity");
+				}
+			}
+		}
+
+		return (registerInfo, attrInfo);
+	}
+
+	static TypeAttributeInfo CreateTypeAttributeInfo (string attrName)
+	{
+		return attrName switch {
+			"ActivityAttribute" => new ActivityAttributeInfo (),
+			"ServiceAttribute" => new ServiceAttributeInfo (),
+			"BroadcastReceiverAttribute" => new BroadcastReceiverAttributeInfo (),
+			"ContentProviderAttribute" => new ContentProviderAttributeInfo (),
+			"ApplicationAttribute" => new ApplicationAttributeInfo (),
+			"InstrumentationAttribute" => new InstrumentationAttributeInfo (),
+			_ => throw new ArgumentException ($"Unknown component attribute: {attrName}"),
+		};
+	}
+
+	static bool IsKnownComponentAttribute (string attrName)
+	{
+		return attrName == "ActivityAttribute"
+			|| attrName == "ServiceAttribute"
+			|| attrName == "BroadcastReceiverAttribute"
+			|| attrName == "ContentProviderAttribute"
+			|| attrName == "ApplicationAttribute"
+			|| attrName == "InstrumentationAttribute";
+	}
+
+	internal static string? GetCustomAttributeName (CustomAttribute ca, MetadataReader reader)
+	{
+		if (ca.Constructor.Kind == HandleKind.MemberReference) {
+			var memberRef = reader.GetMemberReference ((MemberReferenceHandle)ca.Constructor);
+			if (memberRef.Parent.Kind == HandleKind.TypeReference) {
+				var typeRef = reader.GetTypeReference ((TypeReferenceHandle)memberRef.Parent);
+				return reader.GetString (typeRef.Name);
+			}
+		} else if (ca.Constructor.Kind == HandleKind.MethodDefinition) {
+			var methodDef = reader.GetMethodDefinition ((MethodDefinitionHandle)ca.Constructor);
+			var declaringType = reader.GetTypeDefinition (methodDef.GetDeclaringType ());
+			return reader.GetString (declaringType.Name);
+		}
+		return null;
+	}
+
+	internal static RegisterInfo ParseRegisterAttribute (CustomAttribute ca, ICustomAttributeTypeProvider<string> provider)
+	{
+		var value = ca.DecodeValue (provider);
+
+		string jniName = "";
+		string? signature = null;
+		string? connector = null;
+		bool doNotGenerateAcw = false;
+
+		if (value.FixedArguments.Length > 0) {
+			jniName = (string?)value.FixedArguments [0].Value ?? "";
+		}
+		if (value.FixedArguments.Length > 1) {
+			signature = (string?)value.FixedArguments [1].Value;
+		}
+		if (value.FixedArguments.Length > 2) {
+			connector = (string?)value.FixedArguments [2].Value;
+		}
+
+		if (TryGetNamedBooleanArgument (value, "DoNotGenerateAcw", out var doNotGenerateAcwValue)) {
+			doNotGenerateAcw = doNotGenerateAcwValue;
+		}
+
+		return new RegisterInfo {
+			JniName = jniName,
+			Signature = signature,
+			Connector = connector,
+			DoNotGenerateAcw = doNotGenerateAcw,
+		};
+	}
+
+	string? TryGetTypeProperty (CustomAttribute ca, string propertyName)
+	{
+		var value = ca.DecodeValue (customAttributeTypeProvider);
+		var typeName = TryGetNamedStringArgument (value, propertyName);
+		if (!typeName.IsNullOrEmpty ()) {
+			return typeName;
+		}
+		return null;
+	}
+
+	string? TryGetNameProperty (CustomAttribute ca)
+	{
+		var value = ca.DecodeValue (customAttributeTypeProvider);
+
+		// Check named arguments first (e.g., [Activity(Name = "...")])
+		var name = TryGetNamedStringArgument (value, "Name");
+		if (!name.IsNullOrEmpty ()) {
+			return name;
+		}
+
+		// Fall back to first constructor argument (e.g., [CustomJniName("...")])
+		if (value.FixedArguments.Length > 0 && value.FixedArguments [0].Value is string ctorName && !ctorName.IsNullOrEmpty ()) {
+			return ctorName;
+		}
+
+		return null;
+	}
+
+	static bool TryGetNamedBooleanArgument (CustomAttributeValue<string> value, string argumentName, out bool argumentValue)
+	{
+		foreach (var named in value.NamedArguments) {
+			if (named.Name == argumentName && named.Value is bool boolValue) {
+				argumentValue = boolValue;
+				return true;
+			}
+		}
+
+		argumentValue = false;
+		return false;
+	}
+
+	static string? TryGetNamedStringArgument (CustomAttributeValue<string> value, string argumentName)
+	{
+		foreach (var named in value.NamedArguments) {
+			if (named.Name == argumentName && named.Value is string stringValue) {
+				return stringValue;
+			}
+		}
+
+		return null;
+	}
+
+	public void Dispose ()
+	{
+		peReader.Dispose ();
+	}
+}
+
+/// <summary>
+/// Parsed [Register] attribute data for a type or method.
+/// </summary>
+sealed record RegisterInfo
+{
+	public required string JniName { get; init; }
+	public string? Signature { get; init; }
+	public string? Connector { get; init; }
+	public bool DoNotGenerateAcw { get; init; }
+}
+
+/// <summary>
+/// Parsed [Export] attribute data for a method.
+/// </summary>
+sealed record ExportInfo
+{
+	public IReadOnlyList<string>? ThrownNames { get; init; }
+	public string? SuperArgumentsString { get; init; }
+}
+
+abstract class TypeAttributeInfo
+{
+	protected TypeAttributeInfo (string attributeName)
+	{
+		AttributeName = attributeName;
+	}
+
+	public string AttributeName { get; }
+	public string? JniName { get; set; }
+}
+
+sealed class ActivityAttributeInfo : TypeAttributeInfo
+{
+	public ActivityAttributeInfo () : base ("ActivityAttribute")
+	{
+	}
+}
+
+sealed class ServiceAttributeInfo : TypeAttributeInfo
+{
+	public ServiceAttributeInfo () : base ("ServiceAttribute")
+	{
+	}
+}
+
+sealed class BroadcastReceiverAttributeInfo : TypeAttributeInfo
+{
+	public BroadcastReceiverAttributeInfo () : base ("BroadcastReceiverAttribute")
+	{
+	}
+}
+
+sealed class ContentProviderAttributeInfo : TypeAttributeInfo
+{
+	public ContentProviderAttributeInfo () : base ("ContentProviderAttribute")
+	{
+	}
+}
+
+sealed class InstrumentationAttributeInfo : TypeAttributeInfo
+{
+	public InstrumentationAttributeInfo () : base ("InstrumentationAttribute")
+	{
+	}
+}
+
+sealed class ApplicationAttributeInfo : TypeAttributeInfo
+{
+	public ApplicationAttributeInfo () : base ("ApplicationAttribute")
+	{
+	}
+
+	public string? BackupAgent { get; set; }
+	public string? ManageSpaceActivity { get; set; }
+}
