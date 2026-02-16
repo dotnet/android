@@ -319,7 +319,7 @@ public class JcwJavaSourceGeneratorTests
 			Assert.Contains ("@Override\n", java);
 			Assert.Contains ("public void onCreate (android.os.Bundle p0)\n", java);
 			Assert.Contains ("n_OnCreate (p0);\n", java);
-			Assert.Contains ("public native void n_OnCreate (android.os.Bundle p0);\n", java);
+			Assert.Contains ("private native void n_OnCreate (android.os.Bundle p0);\n", java);
 		}
 
 		[Fact]
@@ -424,6 +424,350 @@ public class JcwJavaSourceGeneratorTests
 			var peer = FindByJavaName (peers, "my/app/ExportExample");
 			var java = GenerateToString (peer);
 			Assert.DoesNotContain ("throws", java);
+		}
+	}
+
+	public class ExportConstructor
+	{
+
+		[Fact]
+		public void Generate_ExportConstructors_UsesNativeCtorMethods ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportsConstructors");
+			var java = GenerateToString (peer);
+
+			// [Export] constructors should use nctor_N native methods (same as [Register])
+			Assert.Contains ("nctor_0 ()", java);
+			Assert.Contains ("nctor_1 (int p0)", java);
+			Assert.Contains ("private native void nctor_0 ()", java);
+			Assert.Contains ("private native void nctor_1 (int p0)", java);
+
+			// Should NOT use TypeManager.Activate
+			Assert.DoesNotContain ("TypeManager.Activate", java);
+		}
+
+		[Fact]
+		public void Generate_ExportConstructors_FullOutput ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportsConstructors");
+			var java = GenerateToString (peer);
+
+			// Parameterless ctor: super(), then nctor_0
+			Assert.Contains ("\tpublic ExportsConstructors ()\n\t{\n\t\tsuper ();\n\t\tif (getClass () == ExportsConstructors.class) nctor_0 ();\n\t}\n", java);
+
+			// int ctor: super(p0), then nctor_1
+			Assert.Contains ("\tpublic ExportsConstructors (int p0)\n\t{\n\t\tsuper (p0);\n\t\tif (getClass () == ExportsConstructors.class) nctor_1 (p0);\n\t}\n", java);
+		}
+
+		/// <summary>
+		/// Full output comparison — ported from legacy GenerateConstructors_WithThrows.
+		/// Verifies throws clauses appear on ctors that have ThrownNames.
+		/// </summary>
+		[Fact]
+		public void Generate_ExportThrowsConstructors_FullOutput ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportsThrowsConstructors");
+			var java = GenerateToString (peer);
+
+			// Parameterless ctor with throws
+			Assert.Contains ("\tpublic ExportsThrowsConstructors ()\n\t\tthrows java.lang.Throwable\n\t{\n\t\tsuper ();\n", java);
+
+			// int ctor with throws
+			Assert.Contains ("\tpublic ExportsThrowsConstructors (int p0)\n\t\tthrows java.lang.Throwable\n\t{\n\t\tsuper (p0);\n", java);
+
+			// string ctor WITHOUT throws (empty ThrownNames in legacy means [Export] with no Throws)
+			Assert.Contains ("\tpublic ExportsThrowsConstructors (java.lang.String p0)\n\t{\n\t\tsuper (p0);\n", java);
+
+			// All ctors should use nctor_N, not TypeManager.Activate
+			Assert.Contains ("nctor_0 ()", java);
+			Assert.Contains ("nctor_1 (int p0)", java);
+			Assert.Contains ("nctor_2 (java.lang.String p0)", java);
+			Assert.DoesNotContain ("TypeManager.Activate", java);
+		}
+
+		[Fact]
+		public void Generate_ExportThrowsConstructors_HasThrowsClause ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportsThrowsConstructors");
+			var java = GenerateToString (peer);
+
+			// [Export] constructors with ThrownNames should have throws clause
+			Assert.Contains ("throws java.lang.Throwable", java);
+		}
+
+		[Fact]
+		public void Generate_MixedRegisterAndExportConstructors_HandledCorrectly ()
+		{
+			// A type with both [Register] and [Export] constructors
+			var type = new JavaPeerInfo {
+				JavaName = "my/app/MixedCtors",
+				ManagedTypeName = "MyApp.MixedCtors",
+				ManagedTypeNamespace = "MyApp",
+				ManagedTypeShortName = "MixedCtors",
+				AssemblyName = "App",
+				BaseJavaName = "java/lang/Object",
+				JavaConstructors = new List<JavaConstructorInfo> {
+					new JavaConstructorInfo {
+						JniSignature = "()V",
+						ConstructorIndex = 0,
+						Parameters = new List<JniParameterInfo> (),
+						IsExport = false, // [Register]
+					},
+					new JavaConstructorInfo {
+						JniSignature = "(I)V",
+						ConstructorIndex = 1,
+						Parameters = new List<JniParameterInfo> {
+							new JniParameterInfo { JniType = "I", ManagedType = "System.Int32, System.Private.CoreLib" },
+						},
+						IsExport = true, // [Export]
+					},
+				},
+			};
+
+			var java = GenerateToString (type);
+
+			// Both [Register] and [Export] ctors should use nctor_N
+			Assert.Contains ("nctor_0 ()", java);
+			Assert.Contains ("nctor_1 (int p0)", java);
+			Assert.Contains ("private native void nctor_0 ()", java);
+			Assert.Contains ("private native void nctor_1 (int p0)", java);
+
+			// No TypeManager.Activate
+			Assert.DoesNotContain ("TypeManager.Activate", java);
+		}
+
+		[Fact]
+		public void Generate_ExportCtorWithSuperArgs_UsesCustomSuperArgs ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportCtorWithSuperArgs");
+			var java = GenerateToString (peer);
+
+			// SuperArgumentsString = "" means super() with no args, not super(p0)
+			Assert.Contains ("super ();", java);
+			Assert.DoesNotContain ("super (p0);", java);
+
+			// Should use nctor_N, not TypeManager.Activate
+			Assert.Contains ("nctor_0 (int p0)", java);
+			Assert.DoesNotContain ("TypeManager.Activate", java);
+		}
+
+	}
+
+	public class ExportMethodJcw
+	{
+
+		/// <summary>
+		/// Ported from legacy GenerateExportedMembers — [Export] with name override.
+		/// The Java method name should be the export name, not the C# method name.
+		/// </summary>
+		[Fact]
+		public void Generate_ExportWithNameOverride_UsesExportName ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportMembersComprehensive");
+			var java = GenerateToString (peer);
+
+			// [Export("attributeOverridesNames")] on CompletelyDifferentName
+			// Java method uses export name, native callback uses n_ + C# method name
+			Assert.Contains ("public java.lang.String attributeOverridesNames (java.lang.String p0, int p1)", java);
+			Assert.Contains ("n_CompletelyDifferentName (p0, p1)", java);
+		}
+
+		/// <summary>
+		/// Ported from legacy GenerateExportedMembers — [Export] method keeps C# name.
+		/// </summary>
+		[Fact]
+		public void Generate_ExportWithoutNameOverride_UsesMethodName ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportMembersComprehensive");
+			var java = GenerateToString (peer);
+
+			// [Export] without name arg uses the C# method name as-is
+			Assert.Contains ("public void methodNamesNotMangled ()", java);
+			Assert.Contains ("n_methodNamesNotMangled ()", java);
+		}
+
+		/// <summary>
+		/// Ported from legacy GenerateExportedMembers — [Export] with throws.
+		/// </summary>
+		[Fact]
+		public void Generate_ExportMethodWithThrows_HasThrowsClause ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportMembersComprehensive");
+			var java = GenerateToString (peer);
+
+			// throws clause appears on the line after the method signature
+			Assert.Contains ("methodThatThrows ()\n\t\tthrows java.lang.Throwable\n", java);
+		}
+
+		/// <summary>
+		/// Ported from legacy GenerateExportedMembers — [Export] with empty throws array.
+		/// Should NOT generate a throws clause.
+		/// </summary>
+		[Fact]
+		public void Generate_ExportMethodWithEmptyThrows_NoThrowsClause ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportMembersComprehensive");
+			var java = GenerateToString (peer);
+
+			// methodThatThrowsEmptyArray should NOT have throws clause
+			// It should appear as a plain method declaration
+			Assert.Contains ("public void methodThatThrowsEmptyArray ()", java);
+
+			// Make sure the throws clause is NOT on this specific method
+			// (it might be on methodThatThrows, but not on methodThatThrowsEmptyArray)
+			var lines = java.Split ('\n');
+			for (int i = 0; i < lines.Length; i++) {
+				if (lines [i].Contains ("methodThatThrowsEmptyArray")) {
+					// The line with the method should not have throws,
+					// and neither should the next line
+					Assert.DoesNotContain ("throws", lines [i]);
+					if (i + 1 < lines.Length) {
+						Assert.DoesNotContain ("throws", lines [i + 1]);
+					}
+					break;
+				}
+			}
+		}
+
+		[Fact]
+		public void Generate_ExportMethod_NoOverrideAnnotation ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportMembersComprehensive");
+			var java = GenerateToString (peer);
+
+			// [Export] methods should NOT have @Override — they are new declarations, not overrides
+			var lines = java.Split ('\n');
+			for (int i = 0; i < lines.Length; i++) {
+				if (lines [i].Contains ("methodNamesNotMangled ()")) {
+					// The line before should NOT be @Override
+					Assert.True (i > 0);
+					Assert.DoesNotContain ("@Override", lines [i - 1]);
+					break;
+				}
+			}
+		}
+
+		[Fact]
+		public void Generate_ExportMethod_NativeDeclarationIsPrivate ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportMembersComprehensive");
+			var java = GenerateToString (peer);
+
+			Assert.Contains ("private native void n_methodNamesNotMangled ()", java);
+			Assert.Contains ("private native java.lang.String n_CompletelyDifferentName (java.lang.String p0, int p1)", java);
+		}
+
+	}
+
+	public class StaticExportAndExportField : JcwJavaSourceGeneratorTests
+	{
+		[Fact]
+		public void Generate_StaticExportMethod_HasStaticKeyword ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportStaticAndFields");
+			var java = GenerateToString (peer);
+
+			Assert.Contains ("public static void staticMethodNotMangled ()", java);
+			Assert.Contains ("private static native void n_staticMethodNotMangled ()", java);
+		}
+
+		[Fact]
+		public void Generate_InstanceExportMethod_NoStaticKeyword ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportStaticAndFields");
+			var java = GenerateToString (peer);
+
+			// Instance method should NOT have static
+			Assert.Contains ("public void instanceMethod ()", java);
+			Assert.Contains ("private native void n_instanceMethod ()", java);
+		}
+
+		[Fact]
+		public void Generate_ExportField_StaticFieldDeclaration ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportStaticAndFields");
+			var java = GenerateToString (peer);
+
+			// Static [ExportField] → "public static <type> FIELD_NAME = MethodName ();"
+			Assert.Contains ("public static", java);
+			Assert.Contains ("STATIC_INSTANCE = GetInstance ();", java);
+		}
+
+		[Fact]
+		public void Generate_ExportField_InstanceFieldDeclaration ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportStaticAndFields");
+			var java = GenerateToString (peer);
+
+			// Instance [ExportField] → "public <type> FIELD_NAME = MethodName ();"
+			// Should NOT contain "static" for the VALUE field
+			var lines = java.Split ('\n');
+			bool foundValue = false;
+			foreach (var line in lines) {
+				if (line.Contains ("VALUE = GetValue ()")) {
+					foundValue = true;
+					Assert.DoesNotContain ("static", line);
+					break;
+				}
+			}
+			Assert.True (foundValue, "VALUE field declaration not found");
+		}
+
+		[Fact]
+		public void Generate_ExportField_MethodHasNativeCallback ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportStaticAndFields");
+			var java = GenerateToString (peer);
+
+			// [ExportField] methods should have corresponding wrapper + native method
+			Assert.Contains ("n_GetInstance ()", java);
+			Assert.Contains ("n_GetValue ()", java);
+		}
+
+		[Fact]
+		public void Generate_ExportField_StaticMethodIsStatic ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportStaticAndFields");
+			var java = GenerateToString (peer);
+
+			// Static [ExportField] method: both wrapper and native should be static
+			Assert.Contains ("public static", java);
+			Assert.Contains ("private static native", java);
+		}
+
+		[Fact]
+		public void Generate_ExportField_FieldsAppearBeforeConstructors ()
+		{
+			var peers = ScanFixtures ();
+			var peer = FindByJavaName (peers, "my/app/ExportStaticAndFields");
+			var java = GenerateToString (peer);
+
+			// Fields should appear before constructors (after static initializer)
+			int fieldsPos = java.IndexOf ("STATIC_INSTANCE");
+			int ctorPos = java.IndexOf ("ExportStaticAndFields (");
+			Assert.True (fieldsPos > 0, "STATIC_INSTANCE field not found");
+
+			// Constructors may or may not be present, but if so fields come first
+			if (ctorPos > 0) {
+				Assert.True (fieldsPos < ctorPos, "Fields should appear before constructors");
+			}
 		}
 	}
 }

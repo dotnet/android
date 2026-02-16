@@ -86,8 +86,20 @@ static class ModelBuilder
 			foreach (var uco in proxy.UcoMethods) {
 				AddIfCrossAssembly (referencedAssemblies, uco.CallbackType.AssemblyName, assemblyName);
 			}
-			if (proxy.ActivationCtor != null && !proxy.ActivationCtor.IsOnLeafType) {
-				AddIfCrossAssembly (referencedAssemblies, proxy.ActivationCtor.DeclaringType.AssemblyName, assemblyName);
+			foreach (var export in proxy.ExportMarshalMethods) {
+				AddIfCrossAssembly (referencedAssemblies, export.DeclaringType.AssemblyName, assemblyName);
+			}
+			// SetHandle is protected on Java.Lang.Object (Mono.Android) — needed for
+			// [Export] constructor marshal methods (nctor_N_uco) that call SetHandle directly.
+			// Inherited activation ctors call .ctor(IntPtr, JniHandleOwnership) which is public,
+			// but the base ctor's declaring assembly still needs IgnoresAccessChecksTo.
+			bool usesSetHandle = proxy.ExportMarshalMethods.Any (e => e.IsConstructor);
+			bool usesInheritedCtor = proxy.ActivationCtor != null && !proxy.ActivationCtor.IsOnLeafType;
+			if (usesSetHandle) {
+				AddIfCrossAssembly (referencedAssemblies, "Mono.Android", assemblyName);
+			}
+			if (usesInheritedCtor) {
+				AddIfCrossAssembly (referencedAssemblies, proxy.ActivationCtor!.DeclaringType.AssemblyName, assemblyName);
 			}
 		}
 		model.IgnoresAccessChecksTo.AddRange (referencedAssemblies);
@@ -105,8 +117,8 @@ static class ModelBuilder
 			var peer = peersForName [i];
 			string entryJniName = i == 0 ? jniName : $"{jniName}[{i}]";
 
-			bool hasProxy = peer.ActivationCtor != null || peer.InvokerTypeName != null;
 			bool isAcw = !peer.DoNotGenerateAcw && !peer.IsInterface && peer.MarshalMethods.Count > 0;
+			bool hasProxy = peer.ActivationCtor != null || peer.InvokerTypeName != null || isAcw;
 
 			JavaPeerProxyData? proxy = null;
 			if (hasProxy) {
@@ -235,15 +247,24 @@ static class ModelBuilder
 				continue;
 			}
 
-			proxy.UcoMethods.Add (new UcoMethodData {
-				WrapperName = $"n_{mm.JniName}_uco_{ucoIndex}",
-				CallbackMethodName = mm.NativeCallbackName,
-				CallbackType = new TypeRefData {
-					ManagedTypeName = !string.IsNullOrEmpty (mm.DeclaringTypeName) ? mm.DeclaringTypeName : peer.ManagedTypeName,
-					AssemblyName = !string.IsNullOrEmpty (mm.DeclaringAssemblyName) ? mm.DeclaringAssemblyName : peer.AssemblyName,
-				},
-				JniSignature = mm.JniSignature,
-			});
+			string wrapperName = $"n_{mm.JniName}_uco_{ucoIndex}";
+
+			if (mm.Connector == null) {
+				// [Export] method — generate full marshal body
+				var exportData = BuildExportMarshalMethod (mm, peer, wrapperName, mm.NativeCallbackName, isConstructor: false);
+				proxy.ExportMarshalMethods.Add (exportData);
+			} else {
+				// [Register] method — forward to existing n_* callback
+				proxy.UcoMethods.Add (new UcoMethodData {
+					WrapperName = wrapperName,
+					CallbackMethodName = mm.NativeCallbackName,
+					CallbackType = new TypeRefData {
+						ManagedTypeName = !string.IsNullOrEmpty (mm.DeclaringTypeName) ? mm.DeclaringTypeName : peer.ManagedTypeName,
+						AssemblyName = !string.IsNullOrEmpty (mm.DeclaringAssemblyName) ? mm.DeclaringAssemblyName : peer.AssemblyName,
+					},
+					JniSignature = mm.JniSignature,
+				});
+			}
 			ucoIndex++;
 		}
 	}
@@ -254,15 +275,27 @@ static class ModelBuilder
 			return;
 		}
 
+		// Index marshal methods by JNI signature for lookup
+		var marshalMethodsBySignature = new Dictionary<string, MarshalMethodInfo> (StringComparer.Ordinal);
+		foreach (var mm in peer.MarshalMethods) {
+			if (mm.IsConstructor) {
+				marshalMethodsBySignature [mm.JniSignature] = mm;
+			}
+		}
+
 		foreach (var ctor in peer.JavaConstructors) {
-			proxy.UcoConstructors.Add (new UcoConstructorData {
-				WrapperName = $"nctor_{ctor.ConstructorIndex}_uco",
-				JniSignature = ctor.JniSignature,
-				TargetType = new TypeRefData {
-					ManagedTypeName = peer.ManagedTypeName,
-					AssemblyName = peer.AssemblyName,
-				},
-			});
+			if (!marshalMethodsBySignature.TryGetValue (ctor.JniSignature, out var mm)) {
+				continue;
+			}
+
+			string wrapperName = $"nctor_{ctor.ConstructorIndex}_uco";
+			string nativeCallbackName = $"nctor_{ctor.ConstructorIndex}";
+
+			// ALL constructors need full marshal body generation — there are no
+			// pre-existing n_* callbacks for constructors (unlike [Register] methods).
+			// The [Register] connector for constructors is always "" (empty string).
+			var exportData = BuildExportMarshalMethod (mm, peer, wrapperName, nativeCallbackName, isConstructor: true);
+			proxy.ExportMarshalMethods.Add (exportData);
 		}
 	}
 
@@ -276,19 +309,50 @@ static class ModelBuilder
 			});
 		}
 
-		foreach (var uco in proxy.UcoConstructors) {
-			string jniName = uco.WrapperName;
-			int ucoSuffix = jniName.LastIndexOf ("_uco", StringComparison.Ordinal);
-			if (ucoSuffix >= 0) {
-				jniName = jniName.Substring (0, ucoSuffix);
-			}
-
+		foreach (var export in proxy.ExportMarshalMethods) {
 			proxy.NativeRegistrations.Add (new NativeRegistrationData {
-				JniMethodName = jniName,
-				JniSignature = uco.JniSignature,
-				WrapperMethodName = uco.WrapperName,
+				JniMethodName = export.NativeCallbackName,
+				JniSignature = export.JniSignature,
+				WrapperMethodName = export.WrapperName,
 			});
 		}
+	}
+
+	static ExportMarshalMethodData BuildExportMarshalMethod (MarshalMethodInfo mm, JavaPeerInfo peer,
+		string wrapperName, string nativeCallbackName, bool isConstructor)
+	{
+		var data = new ExportMarshalMethodData {
+			WrapperName = wrapperName,
+			NativeCallbackName = nativeCallbackName,
+			ManagedMethodName = mm.ManagedMethodName,
+			DeclaringType = new TypeRefData {
+				ManagedTypeName = peer.ManagedTypeName,
+				AssemblyName = peer.AssemblyName,
+			},
+			JniSignature = mm.JniSignature,
+			IsConstructor = isConstructor,
+			IsStatic = mm.IsStatic,
+			ManagedReturnType = mm.ManagedReturnType,
+		};
+
+		foreach (var param in mm.Parameters) {
+			// Parse assembly name from assembly-qualified name "TypeName, AssemblyName"
+			string managedTypeName = param.ManagedType;
+			string assemblyName = peer.AssemblyName;
+			int commaIndex = managedTypeName.IndexOf (", ", StringComparison.Ordinal);
+			if (commaIndex >= 0) {
+				assemblyName = managedTypeName.Substring (commaIndex + 2);
+				managedTypeName = managedTypeName.Substring (0, commaIndex);
+			}
+
+			data.ManagedParameters.Add (new ExportParamData {
+				JniType = param.JniType,
+				ManagedTypeName = managedTypeName,
+				AssemblyName = assemblyName,
+			});
+		}
+
+		return data;
 	}
 
 	static TypeMapAttributeData BuildEntry (JavaPeerInfo peer, JavaPeerProxyData? proxy,

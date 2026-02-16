@@ -385,6 +385,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Resource.Designer.targets" />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Tooling.targets" />
 
+<Import Project="$(MSBuildThisFileDirectory)..\targets\Microsoft.Android.Sdk.TypeMap.Trimmable.targets"
+    Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
+<Import Project="$(MSBuildThisFileDirectory)..\targets\Microsoft.Android.Sdk.TypeMap.LlvmIr.targets"
+    Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' " />
+
 <Target Name="_WriteLockFile" Condition=" '$(_AndroidDetectParallelBuilds)' == 'True' ">
   <WriteLockFile LockFile="$(IntermediateOutputPath).__lock" />
 </Target>
@@ -2851,11 +2856,5 @@ because xbuild doesn't support framework reference assemblies.
   <Target Name="_LinkAssemblies"
       DependsOnTargets="_ResolveAssemblies;_CreatePackageWorkspace;$(_BeforeLinkAssemblies);_GenerateJniMarshalMethods;_LinkAssembliesNoShrink"
   />
-
-<!-- TypeMap imports must be last so their target overrides (e.g. _RemoveRegisterAttribute) take precedence -->
-<Import Project="$(MSBuildThisFileDirectory)..\targets\Microsoft.Android.Sdk.TypeMap.Trimmable.targets"
-    Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
-<Import Project="$(MSBuildThisFileDirectory)..\targets\Microsoft.Android.Sdk.TypeMap.LlvmIr.targets"
-    Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' " />
 
 </Project>

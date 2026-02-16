@@ -52,6 +52,7 @@ sealed class JcwJavaSourceGenerator
 		WritePackageDeclaration (type, writer);
 		WriteClassDeclaration (type, writer);
 		WriteStaticInitializer (type, writer);
+		WriteExportFields (type, writer);
 		WriteConstructors (type, writer);
 		WriteMethods (type, writer);
 		WriteClassClose (writer);
@@ -116,6 +117,28 @@ sealed class JcwJavaSourceGenerator
 		writer.WriteLine ();
 	}
 
+	static void WriteExportFields (JavaPeerInfo type, TextWriter writer)
+	{
+		foreach (var field in type.ExportFields) {
+			string javaType = JniTypeToJava (field.JniReturnType);
+
+			writer.Write ("\tpublic ");
+			if (field.IsStatic) {
+				writer.Write ("static ");
+			}
+			writer.Write (javaType);
+			writer.Write (' ');
+			writer.Write (field.FieldName);
+			writer.Write (" = ");
+			writer.Write (field.MethodName);
+			writer.WriteLine (" ();");
+		}
+
+		if (type.ExportFields.Count > 0) {
+			writer.WriteLine ();
+		}
+	}
+
 	static void WriteConstructors (JavaPeerInfo type, TextWriter writer)
 	{
 		string simpleClassName = GetJavaSimpleName (type.JavaName);
@@ -126,7 +149,10 @@ sealed class JcwJavaSourceGenerator
 			writer.Write (simpleClassName);
 			writer.Write (" (");
 			WriteParameterList (ctor.Parameters, writer);
-			writer.WriteLine (')');
+			writer.Write (")\n");
+
+			WriteThrowsClause (ctor.IsExport ? ctor.ThrownNames : null, writer);
+
 			writer.WriteLine ("\t{");
 
 			// super() call — use SuperArgumentsString if provided ([Export] constructors),
@@ -143,11 +169,15 @@ sealed class JcwJavaSourceGenerator
 			writer.Write ("\t\tif (getClass () == ");
 			writer.Write (simpleClassName);
 			writer.Write (".class) ");
+
+			// Both [Register] and [Export] constructors use native nctor_N methods.
+			// The .NET side generates a UCO wrapper with the full marshal body.
 			writer.Write ("nctor_");
 			writer.Write (ctor.ConstructorIndex);
 			writer.Write (" (");
 			WriteArgumentList (ctor.Parameters, writer);
-			writer.WriteLine (");");
+			writer.Write (')');
+			writer.WriteLine (";");
 
 			writer.WriteLine ("\t}");
 			writer.WriteLine ();
@@ -176,10 +206,16 @@ sealed class JcwJavaSourceGenerator
 
 			string javaReturnType = JniTypeToJava (method.JniReturnType);
 			bool isVoid = method.JniReturnType == "V";
+			bool isExport = method.Connector == null;
 
-			// Public override wrapper
-			writer.Write ("\t@Override\n");
+			// Public wrapper method
+			if (!isExport) {
+				writer.Write ("\t@Override\n");
+			}
 			writer.Write ("\tpublic ");
+			if (method.IsStatic) {
+				writer.Write ("static ");
+			}
 			writer.Write (javaReturnType);
 			writer.Write (' ');
 			writer.Write (method.JniName);
@@ -187,17 +223,7 @@ sealed class JcwJavaSourceGenerator
 			WriteParameterList (method.Parameters, writer);
 			writer.Write (")\n");
 
-			// throws clause for [Export] methods
-			if (method.ThrownNames != null && method.ThrownNames.Count > 0) {
-				writer.Write ("\t\tthrows ");
-				for (int i = 0; i < method.ThrownNames.Count; i++) {
-					if (i > 0) {
-						writer.Write (", ");
-					}
-					writer.Write (method.ThrownNames [i]);
-				}
-				writer.Write ('\n');
-			}
+			WriteThrowsClause (method.ThrownNames, writer);
 
 			writer.Write ("\t{\n");
 
@@ -214,7 +240,11 @@ sealed class JcwJavaSourceGenerator
 			writer.Write ("\t}\n");
 
 			// Native method declaration
-			writer.Write ("\tpublic native ");
+			writer.Write ("\tprivate ");
+			if (method.IsStatic) {
+				writer.Write ("static ");
+			}
+			writer.Write ("native ");
 			writer.Write (javaReturnType);
 			writer.Write (' ');
 			writer.Write (method.NativeCallbackName);
@@ -252,6 +282,22 @@ sealed class JcwJavaSourceGenerator
 			writer.Write ('p');
 			writer.Write (i);
 		}
+	}
+
+	static void WriteThrowsClause (IReadOnlyList<string>? thrownNames, TextWriter writer)
+	{
+		if (thrownNames == null || thrownNames.Count == 0) {
+			return;
+		}
+
+		writer.Write ("\t\tthrows ");
+		for (int i = 0; i < thrownNames.Count; i++) {
+			if (i > 0) {
+				writer.Write (", ");
+			}
+			writer.Write (thrownNames [i]);
+		}
+		writer.Write ('\n');
 	}
 
 	/// <summary>
