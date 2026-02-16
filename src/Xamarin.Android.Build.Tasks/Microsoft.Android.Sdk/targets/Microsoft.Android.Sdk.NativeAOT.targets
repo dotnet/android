@@ -91,11 +91,18 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
           confused by the forward slash in the path (even though it's a valid path separator
           character on Windows) and signal the following error:
 
-            EXEC : error : Invalid pattern is specified in "path:pattern".
+            SetupOSSpecificProps:
+              where /Q "C:\Android\android-sdk\ndk\29.0.14206865\toolchains/llvm/prebuilt/windows-x86_64/bin/clang++"
+            1>EXEC : error : Invalid pattern is specified in "path:pattern".
+            The command "where /Q "C:\Android\android-sdk\ndk\29.0.14206865\toolchains/llvm/prebuilt/windows-x86_64/bin/clang++"" exited with code 2.
 
           This could be fixed by making sure $(_NdkBinDir) path is fixed-up to use the canonical
           form of path separation for the host OS, but it's simpler to just use the NDK-specific
           compiler/linker wrapper script name.
+
+          Also, do NOT use `clang++` here because it will link the dynamic libc++ library into the
+          application. If, for some reason, `clang++` has to be used, `<LinkerArgs>` need to be
+          added to pass `-nostdlib` to it.
       -->
       <CppCompilerAndLinker>$(_NdkAbi)-linux-android$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppCompilerAndLinker>
       <CppLinker>$(_NdkAbi)-linux-android$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppLinker>
