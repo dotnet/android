@@ -77,6 +77,21 @@ steps:
     testRunTitle: Microsoft.Android.Sdk.Analysis.Tests
   continueOnError: true
 
+- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
+  parameters:
+    command: test
+    project: tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests.csproj
+    arguments: -c $(XA.Build.Configuration) --logger trx --results-directory $(Agent.TempDirectory)/trimmable-typemap-tests
+    displayName: Test Microsoft.Android.Sdk.TrimmableTypeMap.Tests $(XA.Build.Configuration)
+
+- task: PublishTestResults@2
+  displayName: publish Microsoft.Android.Sdk.TrimmableTypeMap.Tests results
+  condition: always()
+  inputs:
+    testResultsFormat: VSTest
+    testResultsFiles: "$(Agent.TempDirectory)/trimmable-typemap-tests/*.trx"
+    testRunTitle: Microsoft.Android.Sdk.TrimmableTypeMap.Tests
+
 - task: BatchScript@1
   displayName: Test dotnet-local.cmd - create template
   inputs:
