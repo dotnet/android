@@ -251,7 +251,7 @@ public class ScannerComparisonTests
 		var extraMethods = new List<string> ();
 		var connectorMismatches = new List<string> ();
 
-		foreach (var javaName in allJavaNames.OrderBy (n => n)) {
+		foreach (var javaName in allJavaNames.OrderBy (n => n, StringComparer.Ordinal)) {
 			var inLegacy = legacyMethods.TryGetValue (javaName, out var legacyGroups);
 			var inNew = newMethods.TryGetValue (javaName, out var newGroups);
 
@@ -378,7 +378,7 @@ public class ScannerComparisonTests
 		var mismatches = new List<string> ();
 		int compared = 0;
 
-		foreach (var managedName in allManagedNames.OrderBy (n => n)) {
+		foreach (var managedName in allManagedNames.OrderBy (n => n, StringComparer.Ordinal)) {
 			var legacy = legacyData [managedName];
 			var newInfo = newData [managedName];
 
@@ -433,7 +433,7 @@ public class ScannerComparisonTests
 		var extraInterfaces = new List<string> ();
 		int compared = 0;
 
-		foreach (var managedName in allManagedNames.OrderBy (n => n)) {
+		foreach (var managedName in allManagedNames.OrderBy (n => n, StringComparer.Ordinal)) {
 			var legacy = legacyData [managedName];
 			var newInfo = newData [managedName];
 
@@ -477,7 +477,7 @@ public class ScannerComparisonTests
 		int compared = 0;
 		int withActivationCtor = 0;
 
-		foreach (var managedName in allManagedNames.OrderBy (n => n)) {
+		foreach (var managedName in allManagedNames.OrderBy (n => n, StringComparer.Ordinal)) {
 			var legacy = legacyData [managedName];
 			var newInfo = newData [managedName];
 
@@ -530,7 +530,7 @@ public class ScannerComparisonTests
 		int compared = 0;
 		int totalCtors = 0;
 
-		foreach (var managedName in allManagedNames.OrderBy (n => n)) {
+		foreach (var managedName in allManagedNames.OrderBy (n => n, StringComparer.Ordinal)) {
 			var legacy = legacyData [managedName];
 			var newInfo = newData [managedName];
 
@@ -575,7 +575,7 @@ public class ScannerComparisonTests
 		var acwMismatches = new List<string> ();
 		int compared = 0;
 
-		foreach (var managedName in allManagedNames.OrderBy (n => n)) {
+		foreach (var managedName in allManagedNames.OrderBy (n => n, StringComparer.Ordinal)) {
 			var legacy = legacyData [managedName];
 			var newInfo = newData [managedName];
 
@@ -874,7 +874,8 @@ public class ScannerComparisonTests
 			_ = nameof (Java.Lang.Object);
 
 			// At runtime, find the Mono.Android.dll copy in the test output directory.
-			var testDir = Path.GetDirectoryName (typeof (ScannerComparisonTests).Assembly.Location)!;
+			var testDir = Path.GetDirectoryName (typeof (ScannerComparisonTests).Assembly.Location)
+				?? throw new InvalidOperationException ("Could not determine test assembly directory.");
 			var path = Path.Combine (testDir, "Mono.Android.dll");
 
 			if (!File.Exists (path)) {
@@ -890,7 +891,8 @@ public class ScannerComparisonTests
 	static string[] AllAssemblyPaths {
 		get {
 			var monoAndroidPath = MonoAndroidAssemblyPath;
-			var dir = Path.GetDirectoryName (monoAndroidPath)!;
+			var dir = Path.GetDirectoryName (monoAndroidPath)
+				?? throw new InvalidOperationException ("Could not determine Mono.Android directory.");
 			var javaInteropPath = Path.Combine (dir, "Java.Interop.dll");
 
 			if (!File.Exists (javaInteropPath)) {
@@ -914,7 +916,8 @@ public class ScannerComparisonTests
 
 	static string? UserTypesFixturePath {
 		get {
-			var testDir = Path.GetDirectoryName (typeof (ScannerComparisonTests).Assembly.Location)!;
+			var testDir = Path.GetDirectoryName (typeof (ScannerComparisonTests).Assembly.Location)
+				?? throw new InvalidOperationException ("Could not determine test assembly directory.");
 			var path = Path.Combine (testDir, "UserTypesFixture.dll");
 			return File.Exists (path) ? path : null;
 		}
@@ -983,7 +986,7 @@ public class ScannerComparisonTests
 		var missing = new List<string> ();
 		var methodMismatches = new List<string> ();
 
-		foreach (var javaName in legacyNormalized.Keys.OrderBy (n => n)) {
+		foreach (var javaName in legacyNormalized.Keys.OrderBy (n => n, StringComparer.Ordinal)) {
 			if (!newNormalized.TryGetValue (javaName, out var newGroups)) {
 				missing.Add (javaName);
 				continue;
@@ -1040,7 +1043,7 @@ public class ScannerComparisonTests
 		var managedNameMismatches = new List<string> ();
 		var skipMismatches = new List<string> ();
 
-		foreach (var javaName in allJavaNames.OrderBy (n => n)) {
+		foreach (var javaName in allJavaNames.OrderBy (n => n, StringComparer.Ordinal)) {
 			var inLegacy = legacyMap.TryGetValue (javaName, out var legacyEntries);
 			var inNew = newMap.TryGetValue (javaName, out var newEntriesForName);
 
