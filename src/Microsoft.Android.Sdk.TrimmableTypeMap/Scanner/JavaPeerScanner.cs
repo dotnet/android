@@ -85,17 +85,6 @@ sealed class JavaPeerScanner : IDisposable
 			assemblyCache [index.AssemblyName] = index;
 		}
 
-		// Phase 1b: Merge IJniNameProviderAttribute implementor sets from all assemblies
-		// and re-classify any attributes that weren't recognized in the initial pass
-		// (e.g., user assembly references ActivityAttribute from Mono.Android.dll).
-		var mergedJniNameProviders = new HashSet<string> (StringComparer.Ordinal);
-		foreach (var index in assemblyCache.Values) {
-			mergedJniNameProviders.UnionWith (index.JniNameProviderAttributes);
-		}
-		foreach (var index in assemblyCache.Values) {
-			index.ReclassifyAttributes (mergedJniNameProviders);
-		}
-
 		// Phase 2: Analyze types using cached indices
 		var resultsByManagedName = new Dictionary<string, JavaPeerInfo> (StringComparer.Ordinal);
 
@@ -140,7 +129,7 @@ sealed class JavaPeerScanner : IDisposable
 		}
 
 		if (resultsByManagedName.TryGetValue (managedTypeName, out var peer)) {
-			peer.IsUnconditional = true;
+			resultsByManagedName [managedTypeName] = peer with { IsUnconditional = true };
 		}
 	}
 
@@ -167,7 +156,7 @@ sealed class JavaPeerScanner : IDisposable
 			index.RegisterInfoByType.TryGetValue (typeHandle, out var registerInfo);
 			index.AttributesByType.TryGetValue (typeHandle, out var attrInfo);
 
-			if (registerInfo is not null && !string.IsNullOrEmpty (registerInfo.JniName)) {
+			if (registerInfo is not null && !registerInfo.JniName.IsNullOrEmpty ()) {
 				jniName = registerInfo.JniName;
 				compatJniName = jniName;
 				doNotGenerateAcw = registerInfo.DoNotGenerateAcw;
@@ -385,7 +374,7 @@ sealed class JavaPeerScanner : IDisposable
 			}
 		}
 
-		if (string.IsNullOrEmpty (exportName)) {
+		if (exportName.IsNullOrEmpty ()) {
 			exportName = index.Reader.GetString (methodDef.Name);
 		}
 
@@ -394,8 +383,8 @@ sealed class JavaPeerScanner : IDisposable
 		var jniSig = BuildJniSignatureFromManaged (sig);
 
 		return (
-			new RegisterInfo (exportName, jniSig, null, false),
-			new ExportInfo (thrownNames, superArguments)
+			new RegisterInfo { JniName = exportName, Signature = jniSig, Connector = null, DoNotGenerateAcw = false },
+			new ExportInfo { ThrownNames = thrownNames, SuperArgumentsString = superArguments }
 		);
 	}
 
@@ -692,7 +681,7 @@ sealed class JavaPeerScanner : IDisposable
 			current = index.Reader.GetTypeDefinition (parentHandle);
 
 			// Check if the parent has a registered JNI name
-			if (index.RegisterInfoByType.TryGetValue (parentHandle, out var parentRegister) && !string.IsNullOrEmpty (parentRegister.JniName)) {
+			if (index.RegisterInfoByType.TryGetValue (parentHandle, out var parentRegister) && !parentRegister.JniName.IsNullOrEmpty ()) {
 				parentJniName = parentRegister.JniName;
 				break;
 			}
