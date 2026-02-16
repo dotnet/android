@@ -11,6 +11,7 @@
   <ItemGroup>
     <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
     <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataPackageVersion)" />
+    <InternalsVisibleTo Include="Microsoft.Android.Sdk.TrimmableTypeMap.Tests" />
   </ItemGroup>
 
 </Project>
