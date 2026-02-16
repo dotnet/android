@@ -34,18 +34,6 @@ sealed class AssemblyIndex : IDisposable
 	/// </summary>
 	public Dictionary<TypeDefinitionHandle, TypeAttributeInfo> AttributesByType { get; } = new ();
 
-	/// <summary>
-	/// Type names of attributes that implement <c>Java.Interop.IJniNameProviderAttribute</c>
-	/// in this assembly. Used to detect JNI name providers without hardcoding attribute names.
-	/// </summary>
-	public HashSet<string> JniNameProviderAttributes { get; } = new (StringComparer.Ordinal);
-
-	/// <summary>
-	/// Merged set of all JNI name provider attribute type names across all loaded assemblies.
-	/// Set by <see cref="JavaPeerScanner"/> after all assemblies are indexed.
-	/// </summary>
-	HashSet<string>? allJniNameProviderAttributes;
-
 	AssemblyIndex (PEReader peReader, MetadataReader reader, string assemblyName, string filePath)
 	{
 		this.peReader = peReader;
@@ -89,45 +77,6 @@ sealed class AssemblyIndex : IDisposable
 		}
 	}
 
-	/// <summary>
-	/// Sets the merged set of JNI name provider attributes from all loaded assemblies
-	/// and re-classifies any attributes that weren't recognized in the initial pass.
-	/// </summary>
-	public void ReclassifyAttributes (HashSet<string> mergedJniNameProviders)
-	{
-		allJniNameProviderAttributes = mergedJniNameProviders;
-
-		foreach (var typeHandle in Reader.TypeDefinitions) {
-			var typeDef = Reader.GetTypeDefinition (typeHandle);
-			AttributesByType.TryGetValue (typeHandle, out var existing);
-
-			// Skip types that already have component attribute info
-			if (existing is not null) {
-				continue;
-			}
-
-			// Re-check custom attributes with the full set of known providers
-			foreach (var caHandle in typeDef.GetCustomAttributes ()) {
-				var ca = Reader.GetCustomAttribute (caHandle);
-				var attrName = GetCustomAttributeName (ca, Reader);
-
-				if (attrName is null || attrName == "RegisterAttribute" || attrName == "ExportAttribute") {
-					continue;
-				}
-
-				if (mergedJniNameProviders.Contains (attrName) && !IsKnownComponentAttribute (attrName)) {
-					var componentName = TryGetNameProperty (ca);
-					if (componentName is not null) {
-						var attrInfo = new JniNameProviderAttributeInfo (attrName) {
-							JniName = componentName.Replace ('.', '/'),
-						};
-						AttributesByType [typeHandle] = attrInfo;
-					}
-				}
-			}
-		}
-	}
-
 	internal static string GetFullName (TypeDefinition typeDef, MetadataReader reader)
 	{
 		var name = reader.GetString (typeDef.Name);
@@ -163,7 +112,7 @@ sealed class AssemblyIndex : IDisposable
 				registerInfo = ParseRegisterAttribute (ca, customAttributeTypeProvider);
 			} else if (attrName == "ExportAttribute") {
 				// [Export] methods are not handled yet and supporting them will be implemented later
-			} else if (IsJniNameProviderAttribute (attrName)) {
+			} else if (IsKnownComponentAttribute (attrName)) {
 				attrInfo ??= CreateTypeAttributeInfo (attrName);
 				var componentName = TryGetNameProperty (ca);
 				if (componentName is not null) {
@@ -179,27 +128,6 @@ sealed class AssemblyIndex : IDisposable
 		return (registerInfo, attrInfo);
 	}
 
-	/// <summary>
-	/// Checks if an attribute type name is a known <c>IJniNameProviderAttribute</c> implementor.
-	/// Uses the local set first (from this assembly), then falls back to the merged set
-	/// (populated after all assemblies are loaded), then falls back to hardcoded names
-	/// for the well-known Android component attributes.
-	/// </summary>
-	bool IsJniNameProviderAttribute (string attrName)
-	{
-		if (JniNameProviderAttributes.Contains (attrName)) {
-			return true;
-		}
-
-		if (allJniNameProviderAttributes is not null && allJniNameProviderAttributes.Contains (attrName)) {
-			return true;
-		}
-
-		// Fallback for the case where we haven't loaded the assembly defining the attribute yet.
-		// This covers the common case where user assemblies reference Mono.Android attributes.
-		return IsKnownComponentAttribute (attrName);
-	}
-
 	static TypeAttributeInfo CreateTypeAttributeInfo (string attrName)
 	{
 		return attrName switch {
@@ -209,7 +137,7 @@ sealed class AssemblyIndex : IDisposable
 			"ContentProviderAttribute" => new ContentProviderAttributeInfo (),
 			"ApplicationAttribute" => new ApplicationAttributeInfo (),
 			"InstrumentationAttribute" => new InstrumentationAttributeInfo (),
-			_ => new JniNameProviderAttributeInfo (attrName),
+			_ => throw new ArgumentException ($"Unknown component attribute: {attrName}"),
 		};
 	}
 
@@ -262,14 +190,19 @@ sealed class AssemblyIndex : IDisposable
 			doNotGenerateAcw = doNotGenerateAcwValue;
 		}
 
-		return new RegisterInfo (jniName, signature, connector, doNotGenerateAcw);
+		return new RegisterInfo {
+			JniName = jniName,
+			Signature = signature,
+			Connector = connector,
+			DoNotGenerateAcw = doNotGenerateAcw,
+		};
 	}
 
 	string? TryGetTypeProperty (CustomAttribute ca, string propertyName)
 	{
 		var value = ca.DecodeValue (customAttributeTypeProvider);
 		var typeName = TryGetNamedStringArgument (value, propertyName);
-		if (!string.IsNullOrEmpty (typeName)) {
+		if (!typeName.IsNullOrEmpty ()) {
 			return typeName;
 		}
 		return null;
@@ -281,12 +214,12 @@ sealed class AssemblyIndex : IDisposable
 
 		// Check named arguments first (e.g., [Activity(Name = "...")])
 		var name = TryGetNamedStringArgument (value, "Name");
-		if (!string.IsNullOrEmpty (name)) {
+		if (!name.IsNullOrEmpty ()) {
 			return name;
 		}
 
 		// Fall back to first constructor argument (e.g., [CustomJniName("...")])
-		if (value.FixedArguments.Length > 0 && value.FixedArguments [0].Value is string ctorName && !string.IsNullOrEmpty (ctorName)) {
+		if (value.FixedArguments.Length > 0 && value.FixedArguments [0].Value is string ctorName && !ctorName.IsNullOrEmpty ()) {
 			return ctorName;
 		}
 
@@ -326,35 +259,21 @@ sealed class AssemblyIndex : IDisposable
 /// <summary>
 /// Parsed [Register] attribute data for a type or method.
 /// </summary>
-sealed class RegisterInfo
+sealed record RegisterInfo
 {
-	public string JniName { get; }
-	public string? Signature { get; }
-	public string? Connector { get; }
-	public bool DoNotGenerateAcw { get; }
-
-	public RegisterInfo (string jniName, string? signature, string? connector, bool doNotGenerateAcw)
-	{
-		JniName = jniName;
-		Signature = signature;
-		Connector = connector;
-		DoNotGenerateAcw = doNotGenerateAcw;
-	}
+	public required string JniName { get; init; }
+	public string? Signature { get; init; }
+	public string? Connector { get; init; }
+	public bool DoNotGenerateAcw { get; init; }
 }
 
 /// <summary>
 /// Parsed [Export] attribute data for a method.
 /// </summary>
-sealed class ExportInfo
+sealed record ExportInfo
 {
-	public IReadOnlyList<string>? ThrownNames { get; }
-	public string? SuperArgumentsString { get; }
-
-	public ExportInfo (IReadOnlyList<string>? thrownNames, string? superArgumentsString)
-	{
-		ThrownNames = thrownNames;
-		SuperArgumentsString = superArgumentsString;
-	}
+	public IReadOnlyList<string>? ThrownNames { get; init; }
+	public string? SuperArgumentsString { get; init; }
 }
 
 abstract class TypeAttributeInfo
@@ -399,13 +318,6 @@ sealed class ContentProviderAttributeInfo : TypeAttributeInfo
 sealed class InstrumentationAttributeInfo : TypeAttributeInfo
 {
 	public InstrumentationAttributeInfo () : base ("InstrumentationAttribute")
-	{
-	}
-}
-
-sealed class JniNameProviderAttributeInfo : TypeAttributeInfo
-{
-	public JniNameProviderAttributeInfo (string attributeName) : base (attributeName)
 	{
 	}
 }
