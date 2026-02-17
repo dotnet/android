@@ -1000,7 +1000,7 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
   <data name="XA1040" xml:space="preserve">
     <value>Modul runtime {0} na Androidu je experimentální funkce, která ještě není vhodná pro použití v produkčním prostředí. Případné problémy můžete nahlásit tady: https://github.com/dotnet/android/issues</value>
     <comment>The following are literal names and should not be translated: .NET.
-{0} - The name of the .NET runtime, such as CoreCLR or NativeAOT.</comment>
+{0} - The name of the .NET runtime, such as NativeAOT.</comment>
   </data>
   <data name="XA1041" xml:space="preserve">
     <value>Vlastnost MSBuild {0} má neplatnou hodnotu {1}. Očekává se, že hodnota bude cesta k adresáři představující relativní umístění vašich prostředků.</value>

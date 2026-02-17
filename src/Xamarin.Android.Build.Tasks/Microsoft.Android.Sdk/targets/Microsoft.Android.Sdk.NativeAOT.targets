@@ -31,6 +31,9 @@ This eliminates the NDK dependency for NativeAOT builds.
     <DisableUnsupportedError Condition=" $([MSBuild]::IsOSPlatform('windows')) and '$(DisableUnsupportedError)' == '' ">true</DisableUnsupportedError>
     <!-- HACK: make dotnet restore include Microsoft.NETCore.App.Runtime.NativeAOT.linux-bionic-arm64 -->
     <_IsPublishing Condition=" '$(_IsPublishing)' == '' ">true</_IsPublishing>
+    <!-- ResolvedFileToPublish is not populated until _AndroidComputeIlcCompileInputs, so
+         proguard generation must run after that target instead of after ILLink. -->
+    <_GenerateProguardAfterTargets>_AndroidComputeIlcCompileInputs</_GenerateProguardAfterTargets>
 
     <!--
       Disable ILC SDK's native compilation pipeline - we use our own linker (android-native-tools)

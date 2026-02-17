@@ -1000,7 +1000,7 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
   <data name="XA1040" xml:space="preserve">
     <value>Android'deki {0} çalışma zamanı, deneysel bir özellik olup henüz üretim kullanımı için uygun değildir. Sorunları şuradan bildirin: https://github.com/dotnet/android/issues</value>
     <comment>The following are literal names and should not be translated: .NET.
-{0} - The name of the .NET runtime, such as CoreCLR or NativeAOT.</comment>
+{0} - The name of the .NET runtime, such as NativeAOT.</comment>
   </data>
   <data name="XA1041" xml:space="preserve">
     <value>'{0}' MSBuild özelliği geçersiz '{1}' değerine sahip. Bu değer, Varlıklarınız veya Kaynaklarınızın göreli konumunu temsil eden bir dizin yolu olmalıdır.</value>
