@@ -25,6 +25,9 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <!-- ResolvedFileToPublish is not populated until _AndroidComputeIlcCompileInputs, so
          proguard generation must run after that target instead of after ILLink. -->
     <_GenerateProguardAfterTargets>_AndroidComputeIlcCompileInputs</_GenerateProguardAfterTargets>
+    <!-- Android requires native libraries to have the "lib" prefix (e.g. libMyApp.so).
+         Tell the NativeAOT SDK to produce the binary with this prefix from the start. -->
+    <_UseNativeLibPrefix Condition=" '$(_UseNativeLibPrefix)' == '' ">true</_UseNativeLibPrefix>
   </PropertyGroup>
 
   <!-- Default property values for NativeAOT Debug configuration -->
@@ -100,7 +103,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     </PropertyGroup>
     <ItemGroup>
       <!-- Android needs a proper soname property or it will refuse to load the library -->
-      <LinkerArg Include="&quot;-Wl,-soname,lib$(TargetName)$(NativeBinaryExt)&quot;" />
+      <LinkerArg Include="&quot;-Wl,-soname,$(NativeBinaryPrefix)$(TargetName)$(NativeBinaryExt)&quot;" />
       <LinkerArg Include="-Wl,--error-unresolved-symbols" />
       <LinkerArg Include="-Wl,--no-undefined" />
 
@@ -211,8 +214,10 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 
   <Target Name="_AndroidFixNativeLibraryFileName" AfterTargets="ComputeFilesToPublish">
     <ItemGroup>
-      <!-- Fix paths to contain lib-prefix -->
+      <!-- When the runtime produces the binary without the "lib" prefix, add it -->
       <ResolvedFileToPublish Update="@(ResolvedFileToPublish)" ArchiveFileName="lib%(FileName)%(Extension)" Condition=" '%(Filename)%(Extension)' == '$(TargetName)$(NativeBinaryExt)' " />
+      <!-- When the runtime already adds the "lib" prefix via $(NativeBinaryPrefix), set ArchiveFileName explicitly -->
+      <ResolvedFileToPublish Update="@(ResolvedFileToPublish)" ArchiveFileName="%(FileName)%(Extension)" Condition=" '$(NativeBinaryPrefix)' != '' and '%(Filename)%(Extension)' == '$(NativeBinaryPrefix)$(TargetName)$(NativeBinaryExt)' " />
     </ItemGroup>
   </Target>
 
