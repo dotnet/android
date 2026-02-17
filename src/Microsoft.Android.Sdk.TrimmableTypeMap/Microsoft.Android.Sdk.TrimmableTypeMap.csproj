@@ -13,4 +13,8 @@
     <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataPackageVersion)" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\..\src-ThirdParty\System.Runtime.CompilerServices\CompilerFeaturePolyfills.cs" Link="CompilerFeaturePolyfills.cs" />
+  </ItemGroup>
+
 </Project>
