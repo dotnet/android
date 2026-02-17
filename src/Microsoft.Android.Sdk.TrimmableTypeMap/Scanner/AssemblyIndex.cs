@@ -92,7 +92,7 @@ sealed class AssemblyIndex : IDisposable
 			}
 
 			if (attrName == "RegisterAttribute") {
-				registerInfo = ParseRegisterAttribute (ca, customAttributeTypeProvider);
+				registerInfo = ParseRegisterAttribute (ca);
 			} else if (attrName == "ExportAttribute") {
 				// [Export] is a method-level attribute; it is parsed at scan time by JavaPeerScanner
 			} else if (IsKnownComponentAttribute (attrName)) {
@@ -147,7 +147,7 @@ sealed class AssemblyIndex : IDisposable
 
 	internal RegisterInfo ParseRegisterAttribute (CustomAttribute ca)
 	{
-		return ParseRegisterAttribute (ca, customAttributeTypeProvider);
+		return ParseRegisterInfo (DecodeAttribute (ca));
 	}
 
 	internal CustomAttributeValue<string> DecodeAttribute (CustomAttribute ca)
@@ -155,9 +155,8 @@ sealed class AssemblyIndex : IDisposable
 		return ca.DecodeValue (customAttributeTypeProvider);
 	}
 
-	internal static RegisterInfo ParseRegisterAttribute (CustomAttribute ca, ICustomAttributeTypeProvider<string> provider)
+	RegisterInfo ParseRegisterInfo (CustomAttributeValue<string> value)
 	{
-		var value = ca.DecodeValue (provider);
 
 		string jniName = "";
 		string? signature = null;
@@ -188,7 +187,7 @@ sealed class AssemblyIndex : IDisposable
 
 	string? TryGetTypeProperty (CustomAttribute ca, string propertyName)
 	{
-		var value = ca.DecodeValue (customAttributeTypeProvider);
+		var value = DecodeAttribute (ca);
 		if (TryGetNamedArgument<string> (value, propertyName, out var typeName) && !string.IsNullOrEmpty (typeName)) {
 			return typeName;
 		}
@@ -202,7 +201,7 @@ sealed class AssemblyIndex : IDisposable
 			return name;
 		}
 
-		var value = ca.DecodeValue (customAttributeTypeProvider);
+		var value = DecodeAttribute (ca);
 
 		// Fall back to first constructor argument (e.g., [CustomJniName("...")])
 		if (value.FixedArguments.Length > 0 && value.FixedArguments [0].Value is string ctorName && !string.IsNullOrEmpty (ctorName)) {

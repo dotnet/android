@@ -48,16 +48,16 @@ sealed class JavaPeerScanner : IDisposable
 		switch (scope.Kind) {
 		case HandleKind.AssemblyReference: {
 			var asmRef = index.Reader.GetAssemblyReference ((AssemblyReferenceHandle)scope);
-			var fullName = ns.Length > 0 ? $"{ns}.{name}" : name;
+			var fullName = MetadataTypeNameResolver.JoinNamespaceAndName (ns, name);
 			return (fullName, index.Reader.GetString (asmRef.Name));
 		}
 		case HandleKind.TypeReference: {
 			// Nested type: recurse to get the declaring type's full name and assembly
 			var (parentFullName, assemblyName) = ResolveTypeReference ((TypeReferenceHandle)scope, index);
-			return ($"{parentFullName}+{name}", assemblyName);
+			return (MetadataTypeNameResolver.JoinNestedTypeName (parentFullName, name), assemblyName);
 		}
 		default: {
-			var fullName = ns.Length > 0 ? $"{ns}.{name}" : name;
+			var fullName = MetadataTypeNameResolver.JoinNamespaceAndName (ns, name);
 			return (fullName, index.AssemblyName);
 		}
 		}

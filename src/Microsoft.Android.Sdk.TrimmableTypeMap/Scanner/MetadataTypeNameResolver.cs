@@ -8,6 +8,16 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// </summary>
 static class MetadataTypeNameResolver
 {
+	internal static string JoinNamespaceAndName (string ns, string name)
+	{
+		return ns.Length > 0 ? $"{ns}.{name}" : name;
+	}
+
+	internal static string JoinNestedTypeName (string parentName, string name)
+	{
+		return $"{parentName}+{name}";
+	}
+
 	public static string GetFullName (TypeDefinition typeDef, MetadataReader reader)
 	{
 		var name = reader.GetString (typeDef.Name);
@@ -15,9 +25,9 @@ static class MetadataTypeNameResolver
 		if (typeDef.IsNested) {
 			var declaringType = reader.GetTypeDefinition (typeDef.GetDeclaringType ());
 			var parentName = GetFullName (declaringType, reader);
-			return $"{parentName}+{name}";
+			return JoinNestedTypeName (parentName, name);
 		}
-		return ns.Length > 0 ? $"{ns}.{name}" : name;
+		return JoinNamespaceAndName (ns, name);
 	}
 
 	public static string GetTypeFromDefinition (MetadataReader reader, TypeDefinitionHandle handle, byte rawTypeKind)
@@ -31,9 +41,9 @@ static class MetadataTypeNameResolver
 		var name = reader.GetString (typeRef.Name);
 		if (typeRef.ResolutionScope.Kind == HandleKind.TypeReference) {
 			var parent = GetTypeFromReference (reader, (TypeReferenceHandle)typeRef.ResolutionScope, rawTypeKind);
-			return $"{parent}+{name}";
+			return JoinNestedTypeName (parent, name);
 		}
 		var ns = reader.GetString (typeRef.Namespace);
-		return ns.Length > 0 ? $"{ns}.{name}" : name;
+		return JoinNamespaceAndName (ns, name);
 	}
 }
