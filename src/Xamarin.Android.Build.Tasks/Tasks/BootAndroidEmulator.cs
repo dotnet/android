@@ -29,7 +29,7 @@ public class BootAndroidEmulator : AndroidTask
 	const int DefaultBootTimeoutSeconds = 300;
 	const int PollIntervalMilliseconds = 3000;
 
-	public override string TaskPrefix => "BAE0";
+	public override string TaskPrefix => "BAE";
 
 	/// <summary>
 	/// The device identifier from 'dotnet run' device selection. May be an ADB serial
