@@ -161,7 +161,7 @@ public class BootAndroidEmulator : AndroidTask
 	/// <summary>
 	/// Checks whether the given deviceId is currently listed as an online device in 'adb devices'.
 	/// </summary>
-	bool IsOnlineAdbDevice (string adbPath, string deviceId)
+	protected virtual bool IsOnlineAdbDevice (string adbPath, string deviceId)
 	{
 		bool found = false;
 
@@ -187,7 +187,7 @@ public class BootAndroidEmulator : AndroidTask
 	/// Checks if an emulator with the specified AVD name is already running by querying
 	/// 'adb devices' and then 'adb -s serial emu avd name' for each running emulator.
 	/// </summary>
-	string? FindRunningEmulatorForAvd (string adbPath, string avdName)
+	protected virtual string? FindRunningEmulatorForAvd (string adbPath, string avdName)
 	{
 		var emulatorSerials = new List<string> ();
 
@@ -218,7 +218,7 @@ public class BootAndroidEmulator : AndroidTask
 	/// <summary>
 	/// Gets the AVD name from a running emulator via 'adb -s serial emu avd name'.
 	/// </summary>
-	string? GetRunningAvdName (string adbPath, string serial)
+	protected virtual string? GetRunningAvdName (string adbPath, string serial)
 	{
 		string? avdName = null;
 		try {
@@ -250,7 +250,7 @@ public class BootAndroidEmulator : AndroidTask
 	/// <summary>
 	/// Launches the emulator process in the background with -no-window (unless overridden by extra args).
 	/// </summary>
-	Process? LaunchEmulatorProcess (string emulatorPath, string avdName)
+	protected virtual Process? LaunchEmulatorProcess (string emulatorPath, string avdName)
 	{
 		var arguments = $"-avd {avdName}";
 		if (!EmulatorExtraArguments.IsNullOrEmpty ()) {
@@ -341,13 +341,16 @@ public class BootAndroidEmulator : AndroidTask
 				break;
 			}
 
-			if (stopwatch.Elapsed >= timeout) {
-				Log.LogCodedError ("XA0145", Properties.Resources.XA0145, avdName, BootTimeoutSeconds);
-				return false;
-			}
-
 			Thread.Sleep (PollIntervalMilliseconds);
 		}
+
+		if (stopwatch.Elapsed >= timeout) {
+			Log.LogCodedError ("XA0145", Properties.Resources.XA0145, avdName, BootTimeoutSeconds);
+			return false;
+		}
+
+		var remaining = timeout - stopwatch.Elapsed;
+		Log.LogMessage (MessageImportance.Normal, $"Phase 1 complete. {remaining.TotalSeconds:F0}s remaining for package manager.");
 
 		// Phase 2: Wait for package manager to be responsive
 		while (stopwatch.Elapsed < timeout) {
@@ -367,7 +370,7 @@ public class BootAndroidEmulator : AndroidTask
 	/// <summary>
 	/// Gets a system property from the device via 'adb -s serial shell getprop property'.
 	/// </summary>
-	string? GetShellProperty (string adbPath, string serial, string propertyName)
+	protected virtual string? GetShellProperty (string adbPath, string serial, string propertyName)
 	{
 		string? value = null;
 		try {
@@ -391,7 +394,7 @@ public class BootAndroidEmulator : AndroidTask
 	/// <summary>
 	/// Runs a shell command on the device and returns the first line of output.
 	/// </summary>
-	string? RunShellCommand (string adbPath, string serial, string command)
+	protected virtual string? RunShellCommand (string adbPath, string serial, string command)
 	{
 		string? result = null;
 		try {
