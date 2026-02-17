@@ -16,6 +16,25 @@ public partial class BuildTest3 : BaseTest
 	const string JniPreloadSourceLibraryName = "libtest-jni-library.so";
 
 	[Test]
+	public void NativeLibraryJniPreload_NoDuplicates ([Values] AndroidRuntime runtime)
+	{
+		const string MyLibKeep1 = "libMyStuffKeep.so";
+		const string MyLibKeep2 = "libMyStuffKeep.so";
+
+		List<EnvironmentHelper.JniPreloads>? allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
+			runtime,
+			(XamarinAndroidApplicationProject proj, AndroidTargetArch[] supportedArches) => {
+				NativeLibraryJniPreload_AddNativeLibraries (proj, supportedArches, MyLibKeep1, MyLibKeep2);
+			}
+		);
+		if (allPreloads == null) {
+			return;
+		}
+
+		NativeLibraryJniPreload_VerifyLibs (allPreloads, new List<string> { MyLibKeep1 });
+	}
+
+	[Test]
 	public void NativeLibraryJniPreload_IncludeCustomLibraries ([Values] AndroidRuntime runtime)
 	{
 		const string MyLib = "libMyStuff.so";
@@ -53,6 +72,31 @@ public partial class BuildTest3 : BaseTest
 		}
 
 		NativeLibraryJniPreload_VerifyLibs (allPreloads, new List<string> { MyLibKeep });
+	}
+
+	[Test]
+	public void NativeLibraryJniPreload_ExcludeAllCustomLibraries ([Values] AndroidRuntime runtime)
+	{
+		const string MyLibExempt1 = "libMyStuffExempt1.so";
+		const string MyLibExempt2 = "libMyStuffExempt2.so";
+
+		List<EnvironmentHelper.JniPreloads>? allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
+			runtime,
+			(XamarinAndroidApplicationProject proj, AndroidTargetArch[] supportedArches) => {
+				NativeLibraryJniPreload_AddNativeLibraries (proj, supportedArches, MyLibExempt1, MyLibExempt2);
+				proj.OtherBuildItems.Add (
+					new AndroidItem.AndroidNativeLibraryNoJniPreload (MyLibExempt1)
+				);
+				proj.OtherBuildItems.Add (
+					new AndroidItem.AndroidNativeLibraryNoJniPreload (MyLibExempt2)
+				);
+			}
+		);
+		if (allPreloads == null) {
+			return;
+		}
+
+		NativeLibraryJniPreload_VerifyDefaults (allPreloads);
 	}
 
 	[Test]
@@ -109,7 +153,7 @@ public partial class BuildTest3 : BaseTest
 		}
 
 		foreach (AndroidTargetArch arch in supportedArches) {
-			string libPath = Path.Combine (XABuildPaths.TestOutputDirectory, MonoAndroidHelper.ArchToRid (arch), JniPreloadSourceLibraryName);
+			string libPath = Path.Combine (XABuildPaths.TestAssemblyOutputDirectory, MonoAndroidHelper.ArchToRid (arch), JniPreloadSourceLibraryName);
 			Assert.IsTrue (File.Exists (libPath), $"Native library '{libPath}' does not exist.");
 
 			foreach (string lib in libNames) {
