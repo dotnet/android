@@ -2036,6 +2036,7 @@
   <attr api-since="36" path="/api/package[contains(@merge.SourceFile,'api-Baklava.xml.in')]/interface" name="no-alternatives">true</attr>
   <attr api-since="36.1" path="/api/package[contains(@merge.SourceFile,'api-CANARY.xml.in')]/interface" name="no-alternatives">true</attr>
   <attr api-since="36.1" path="/api/package[contains(@merge.SourceFile,'api-36.1.xml.in')]/interface" name="no-alternatives">true</attr>
+  <attr api-since="37" path="/api/package[contains(@merge.SourceFile,'api-CinnamonBun.xml.in')]/interface" name="no-alternatives">true</attr>
 
   <!-- Set ApiSince based on merge sourcefile. -->
   <attr api-since="22" path="/api//*[contains(@merge.SourceFile,'api-22.xml.in')]" name="api-since">22</attr>
@@ -2062,6 +2063,7 @@
   <attr api-since="36" path="/api//*[contains(@merge.SourceFile,'api-Baklava.xml.in')]" name="api-since">36</attr>
   <attr api-since="36.1" path="/api//*[contains(@merge.SourceFile,'api-CANARY.xml.in')]" name="api-since">36.1</attr>
   <attr api-since="36.1" path="/api//*[contains(@merge.SourceFile,'api-36.1.xml.in')]" name="api-since">36.1</attr>
+  <attr api-since="37" path="/api//*[contains(@merge.SourceFile,'api-CinnamonBun.xml.in')]" name="api-since">37</attr>
 
   <!-- Erase some 'api-since' attributes (This has to be done after they are set above) -->
 

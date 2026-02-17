@@ -1198,6 +1198,39 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		public void DotNetInstallAndRunPreviewAPILevels (
+				[Values (false, true)] bool isRelease,
+				[Values ("net11.0-android37.0")] string targetFramework)
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				TargetFramework = targetFramework,
+				IsRelease = isRelease,
+				ExtraNuGetConfigSources = {
+					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
+				}
+			};
+			proj.SetProperty ("EnablePreviewFeatures", "true");
+
+			// TODO: update on new minor API levels to use an introduced minor API
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("//${AFTER_ONCREATE}", """
+					if (OperatingSystem.IsAndroidVersionAtLeast (37, 0)) {
+						var ignore = global::Android.Manifest.Permission.RequestCompanionProfileMedical;
+					}
+				""");
+
+			var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
+			builder.AssertHasNoWarnings ();
+			RunProjectAndAssert (proj, builder);
+
+			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
+			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+			Assert.IsTrue(didLaunch, "Activity should have started.");
+		}
+
+		[Test]
 		public void DotNetInstallAndRunMinorAPILevels (
 				[Values (false, true)] bool isRelease,
 				[Values ("net10.0-android36.1")] string targetFramework)

@@ -63,7 +63,7 @@ variables:
 - name: IsRelOrTargetingRel
   value: $[or(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), startsWith(variables['System.PullRequest.TargetBranch'], 'release/'))]
 - name: DefaultTestSdkPlatforms  # Comma-separated SDK Platform(s) to install on test agents (no spaces)
-  value: 35,36,36.1
+  value: 35,36,36.1,CinnamonBun
 - name: DefaultJavaSdkMajorVersion
   value: 17
 - name: LatestJavaSdkMajorVersion
