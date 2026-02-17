@@ -75,6 +75,7 @@ namespace Xamarin.Android.Prepare
 				new AndroidPlatformComponent ("platform-35_r02",   apiLevel: "35", pkgRevision: "2"),
 				new AndroidPlatformComponent ("platform-36_r02",   apiLevel: "36", pkgRevision: "2"),
 				new AndroidPlatformComponent ("platform-36.1_r01", apiLevel: "36.1",    pkgRevision: "1", isLatestStable: true),
+				new AndroidPlatformComponent ("platform-CinnamonBun_r01", apiLevel: "CinnamonBun",    pkgRevision: "1", isLatestStable: false, isPreview: true),
 
 				new AndroidToolchainComponent ("source-36_r01",
 					destDir: Path.Combine ("sources", "android-36"),

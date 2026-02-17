@@ -54,6 +54,14 @@
         "linux-arm64": "Microsoft.Android.Sdk.Linux"
       }
     },
+    "Microsoft.Android.Ref.37": {
+      "kind": "framework",
+      "version": "@WORKLOAD_VERSION@"
+    },
+    "Microsoft.Android.Runtime.37.android": {
+      "kind": "framework",
+      "version": "@WORKLOAD_VERSION@"
+    },
     "Microsoft.Android.Ref.36.1": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
