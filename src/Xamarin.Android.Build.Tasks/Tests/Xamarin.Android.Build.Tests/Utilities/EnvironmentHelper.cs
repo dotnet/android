@@ -103,7 +103,8 @@ namespace Xamarin.Android.Build.Tests
 		{
 			// Hardcoded, by design - we want to know if there are any changes in the
 			// native assembly layout.
-			public const uint NativeSize = 32;
+			public const uint NativeSize_CoreCLR = 32;
+			public const uint NativeSize_MonoVM = 40;
 
 			public ulong hash;
 			public ulong real_name_hash;
@@ -944,6 +945,7 @@ namespace Xamarin.Android.Build.Tests
 			foreach (EnvironmentFile envFile in envFilePaths) {
 				JniPreloads preloads = runtime switch {
 					AndroidRuntime.CoreCLR => ReadJniPreloads_CoreCLR (envFile, expectedDsoCacheEntryCount),
+					AndroidRuntime.MonoVM  => ReadJniPreloads_MonoVM (envFile, expectedDsoCacheEntryCount),
 					_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
 				};
 
@@ -953,35 +955,32 @@ namespace Xamarin.Android.Build.Tests
 			return ret;
 		}
 
-		static JniPreloads ReadJniPreloads_CoreCLR (EnvironmentFile envFile, uint expectedDsoCacheEntryCount)
+		delegate List<DSOCacheEntry64> ReadDsoCacheFn (NativeAssemblyParser parser, EnvironmentFile envFile, NativeAssemblyParser.AssemblerSymbol dsoCacheSym);
+
+		static JniPreloads ReadJniPreloads_Common (EnvironmentFile envFile, uint expectedDsoCacheEntryCount, uint dsoCacheEntrySize, ReadDsoCacheFn dsoReader)
 		{
 			NativeAssemblyParser parser = CreateAssemblyParser (envFile);
 
-			NativeAssemblyParser.AssemblerSymbol dsoNamesData = GetNonEmptyRequiredSymbol (DsoNamesDataSymbolName);
-			Assert.IsTrue (dsoNamesData.Size > 0, "DSO names data must have size larger than zero");
-
-			NativeAssemblyParser.AssemblerSymbol dsoCache = GetNonEmptyRequiredSymbol (DsoCacheSymbolName);
-			uint calculatedDsoCacheEntryCount = (uint)(dsoCache.Size / DSOCacheEntry64.NativeSize);
+			NativeAssemblyParser.AssemblerSymbol dsoCache = GetNonEmptyRequiredSymbol (parser, envFile, DsoCacheSymbolName);
+			Console.WriteLine ($"DSO cache size: {dsoCache.Size}; entry size: {dsoCacheEntrySize}; count: {dsoCache.Size / dsoCacheEntrySize}");
+			uint calculatedDsoCacheEntryCount = (uint)(dsoCache.Size / dsoCacheEntrySize);
 			Assert.IsTrue (calculatedDsoCacheEntryCount == expectedDsoCacheEntryCount, $"Calculated DSO cache entry count should be {expectedDsoCacheEntryCount} but was {calculatedDsoCacheEntryCount} instead.");
 
-			uint calculatedDsoCacheEntrySize = (uint)(DSOCacheEntry64.NativeSize * expectedDsoCacheEntryCount);
+			uint calculatedDsoCacheEntrySize = (uint)(dsoCacheEntrySize * expectedDsoCacheEntryCount);
 			Assert.IsTrue (calculatedDsoCacheEntrySize == dsoCache.Size, $"Calculated DSO cache size should be {dsoCache.Size} but was {calculatedDsoCacheEntrySize} instead.");
 
-			string dsoNames = ReadStringBlob (envFile, dsoNamesData, parser);
-			Assert.IsTrue (dsoNames.Length > 0, "DSO names read from source mustn't be empty");
-
-			List<DSOCacheEntry64> dsoCacheEntries = ReadDsoCache64 (envFile, parser, dsoCache, dsoNames);
+			List<DSOCacheEntry64> dsoCacheEntries = dsoReader (parser, envFile, dsoCache);
 			Assert.IsTrue ((uint)dsoCacheEntries.Count == expectedDsoCacheEntryCount, $"DSO cache read from the source should have {expectedDsoCacheEntryCount} entries, it had {dsoCacheEntries.Count} instead.");
 
-			NativeAssemblyParser.AssemblerSymbol dsoJniPreloadsIdxStride = GetNonEmptyRequiredSymbol (DsoJniPreloadsIdxStrideSymbolName);
+			NativeAssemblyParser.AssemblerSymbol dsoJniPreloadsIdxStride = GetNonEmptyRequiredSymbol (parser, envFile, DsoJniPreloadsIdxStrideSymbolName);
 			uint preloadsStride = GetSymbolValueAsUInt32 (dsoJniPreloadsIdxStride);
 			Assert.IsTrue (preloadsStride > 0, $"Symbol {dsoJniPreloadsIdxStride.Name} must have value larger than 0.");
 
-			NativeAssemblyParser.AssemblerSymbol dsoJniPreloadsIdxCount = GetNonEmptyRequiredSymbol (DsoJniPreloadsIdxCountSymbolName);
+			NativeAssemblyParser.AssemblerSymbol dsoJniPreloadsIdxCount = GetNonEmptyRequiredSymbol (parser, envFile, DsoJniPreloadsIdxCountSymbolName);
 			ulong preloadsCount = GetSymbolValueAsUInt64 (dsoJniPreloadsIdxCount);
 			Assert.IsTrue (preloadsCount > 0, $"Symbol {dsoJniPreloadsIdxStride.Name} must have value larger than 0.");
 
-			NativeAssemblyParser.AssemblerSymbol dsoJniPreloadsIdx = GetNonEmptyRequiredSymbol (DsoJniPreloadsIdxSymbolName);
+			NativeAssemblyParser.AssemblerSymbol dsoJniPreloadsIdx = GetNonEmptyRequiredSymbol (parser, envFile, DsoJniPreloadsIdxSymbolName);
 			ulong calculatedPreloadsIdxSize = preloadsCount * 4; // single index field is a 32-bit integer
 			Assert.IsTrue (dsoJniPreloadsIdx.Size == calculatedPreloadsIdxSize, $"JNI preloads index should have size of {calculatedPreloadsIdxSize} instead of {dsoJniPreloadsIdx.Size}");
 
@@ -1006,14 +1005,6 @@ namespace Xamarin.Android.Build.Tests
 				SourceFile = envFile.Path,
 			};
 
-			NativeAssemblyParser.AssemblerSymbol GetNonEmptyRequiredSymbol (string symbolName)
-			{
-				var symbol = GetRequiredSymbol (symbolName, envFile, parser);
-
-				Assert.IsTrue (symbol.Size != 0, $"{symbolName} size as specified in the '.size' directive must not be 0");
-				return symbol;
-			}
-
 			uint GetSymbolValueAsUInt32 (NativeAssemblyParser.AssemblerSymbol symbol)
 			{
 				NativeAssemblyParser.AssemblerSymbolItem item = symbol.Contents[0];
@@ -1031,7 +1022,50 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		static List<DSOCacheEntry64> ReadDsoCache64 (EnvironmentFile envFile, NativeAssemblyParser parser, NativeAssemblyParser.AssemblerSymbol dsoCache, string dsoNamesBlob)
+		static NativeAssemblyParser.AssemblerSymbol GetNonEmptyRequiredSymbol (NativeAssemblyParser parser, EnvironmentFile envFile, string symbolName)
+		{
+			var symbol = GetRequiredSymbol (symbolName, envFile, parser);
+
+			Assert.IsTrue (symbol.Size != 0, $"{symbolName} size as specified in the '.size' directive must not be 0");
+			return symbol;
+		}
+
+		static JniPreloads ReadJniPreloads_MonoVM (EnvironmentFile envFile, uint expectedDsoCacheEntryCount)
+		{
+			return ReadJniPreloads_Common (
+				envFile,
+				expectedDsoCacheEntryCount,
+				DSOCacheEntry64.NativeSize_MonoVM,
+				(NativeAssemblyParser parser, EnvironmentFile envFile, NativeAssemblyParser.AssemblerSymbol dsoCacheSym) => {
+					return ReadDsoCache64_MonoVM (envFile, parser, dsoCacheSym);
+				}
+			);
+		}
+
+		static List<DSOCacheEntry64> ReadDsoCache64_MonoVM (EnvironmentFile envFile, NativeAssemblyParser parser, NativeAssemblyParser.AssemblerSymbol dsoCache)
+		{
+			throw new NotImplementedException ();
+		}
+
+		static JniPreloads ReadJniPreloads_CoreCLR (EnvironmentFile envFile, uint expectedDsoCacheEntryCount)
+		{
+			return ReadJniPreloads_Common (
+				envFile,
+				expectedDsoCacheEntryCount,
+				DSOCacheEntry64.NativeSize_CoreCLR,
+				(NativeAssemblyParser parser, EnvironmentFile envFile, NativeAssemblyParser.AssemblerSymbol dsoCacheSym) => {
+					NativeAssemblyParser.AssemblerSymbol dsoNamesData = GetNonEmptyRequiredSymbol (parser, envFile, DsoNamesDataSymbolName);
+					Assert.IsTrue (dsoNamesData.Size > 0, "DSO names data must have size larger than zero");
+
+					string dsoNames = ReadStringBlob (envFile, dsoNamesData, parser);
+					Assert.IsTrue (dsoNames.Length > 0, "DSO names read from source mustn't be empty");
+
+					return ReadDsoCache64_CoreCLR (envFile, parser, dsoCacheSym, dsoNames);
+				}
+			);
+		}
+
+		static List<DSOCacheEntry64> ReadDsoCache64_CoreCLR (EnvironmentFile envFile, NativeAssemblyParser parser, NativeAssemblyParser.AssemblerSymbol dsoCache, string dsoNamesBlob)
 		{
 			var ret = new List<DSOCacheEntry64> ();
 
