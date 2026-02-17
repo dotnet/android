@@ -338,7 +338,7 @@ sealed class JavaPeerScanner : IDisposable
 			var attrName = AssemblyIndex.GetCustomAttributeName (ca, index.Reader);
 
 			if (attrName == "RegisterAttribute") {
-				registerInfo = AssemblyIndex.ParseRegisterAttribute (ca, index.customAttributeTypeProvider);
+				registerInfo = index.ParseRegisterAttribute (ca);
 				return true;
 			}
 
@@ -358,7 +358,7 @@ sealed class JavaPeerScanner : IDisposable
 			var attrName = AssemblyIndex.GetCustomAttributeName (ca, index.Reader);
 
 			if (attrName == "RegisterAttribute") {
-				return AssemblyIndex.ParseRegisterAttribute (ca, index.customAttributeTypeProvider);
+				return index.ParseRegisterAttribute (ca);
 			}
 		}
 		return null;
@@ -366,7 +366,7 @@ sealed class JavaPeerScanner : IDisposable
 
 	static (RegisterInfo registerInfo, ExportInfo exportInfo) ParseExportAttribute (CustomAttribute ca, MethodDefinition methodDef, AssemblyIndex index)
 	{
-		var value = ca.DecodeValue (index.customAttributeTypeProvider);
+		var value = index.DecodeAttribute (ca);
 
 		// [Export("name")] or [Export] (uses method name)
 		string? exportName = null;

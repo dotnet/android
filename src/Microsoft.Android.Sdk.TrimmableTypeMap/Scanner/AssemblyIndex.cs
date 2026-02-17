@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
@@ -13,7 +14,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 sealed class AssemblyIndex : IDisposable
 {
 	readonly PEReader peReader;
-	internal readonly CustomAttributeTypeProvider customAttributeTypeProvider;
+	readonly CustomAttributeTypeProvider customAttributeTypeProvider;
 
 	public MetadataReader Reader { get; }
 	public string AssemblyName { get; }
@@ -96,9 +97,9 @@ sealed class AssemblyIndex : IDisposable
 				// [Export] is a method-level attribute; it is parsed at scan time by JavaPeerScanner
 			} else if (IsKnownComponentAttribute (attrName)) {
 				attrInfo ??= CreateTypeAttributeInfo (attrName);
-				var componentName = TryGetNameProperty (ca);
-				if (componentName is not null) {
-					attrInfo.JniName = componentName.Replace ('.', '/');
+				var name = TryGetNameProperty (ca);
+				if (name is not null) {
+					attrInfo.JniName = name.Replace ('.', '/');
 				}
 				if (attrInfo is ApplicationAttributeInfo applicationAttributeInfo) {
 					applicationAttributeInfo.BackupAgent = TryGetTypeProperty (ca, "BackupAgent");
@@ -144,6 +145,16 @@ sealed class AssemblyIndex : IDisposable
 		return null;
 	}
 
+	internal RegisterInfo ParseRegisterAttribute (CustomAttribute ca)
+	{
+		return ParseRegisterAttribute (ca, customAttributeTypeProvider);
+	}
+
+	internal CustomAttributeValue<string> DecodeAttribute (CustomAttribute ca)
+	{
+		return ca.DecodeValue (customAttributeTypeProvider);
+	}
+
 	internal static RegisterInfo ParseRegisterAttribute (CustomAttribute ca, ICustomAttributeTypeProvider<string> provider)
 	{
 		var value = ca.DecodeValue (provider);
@@ -163,7 +174,7 @@ sealed class AssemblyIndex : IDisposable
 			connector = (string?)value.FixedArguments [2].Value;
 		}
 
-		if (TryGetNamedBooleanArgument (value, "DoNotGenerateAcw", out var doNotGenerateAcwValue)) {
+		if (TryGetNamedArgument<bool> (value, "DoNotGenerateAcw", out var doNotGenerateAcwValue)) {
 			doNotGenerateAcw = doNotGenerateAcwValue;
 		}
 
@@ -178,8 +189,7 @@ sealed class AssemblyIndex : IDisposable
 	string? TryGetTypeProperty (CustomAttribute ca, string propertyName)
 	{
 		var value = ca.DecodeValue (customAttributeTypeProvider);
-		var typeName = TryGetNamedArgument<string> (value, propertyName);
-		if (!string.IsNullOrEmpty (typeName)) {
+		if (TryGetNamedArgument<string> (value, propertyName, out var typeName) && !string.IsNullOrEmpty (typeName)) {
 			return typeName;
 		}
 		return null;
@@ -187,13 +197,12 @@ sealed class AssemblyIndex : IDisposable
 
 	string? TryGetNameProperty (CustomAttribute ca)
 	{
-		var value = ca.DecodeValue (customAttributeTypeProvider);
-
-		// Check named arguments first (e.g., [Activity(Name = "...")])
-		var name = TryGetNamedArgument<string> (value, "Name");
+		var name = TryGetTypeProperty (ca, "Name");
 		if (!string.IsNullOrEmpty (name)) {
 			return name;
 		}
+
+		var value = ca.DecodeValue (customAttributeTypeProvider);
 
 		// Fall back to first constructor argument (e.g., [CustomJniName("...")])
 		if (value.FixedArguments.Length > 0 && value.FixedArguments [0].Value is string ctorName && !string.IsNullOrEmpty (ctorName)) {
@@ -203,26 +212,15 @@ sealed class AssemblyIndex : IDisposable
 		return null;
 	}
 
-	static T? TryGetNamedArgument<T> (CustomAttributeValue<string> value, string argumentName) where T : class
+	static bool TryGetNamedArgument<T> (CustomAttributeValue<string> value, string argumentName, [MaybeNullWhen (false)] out T argumentValue) where T : notnull
 	{
 		foreach (var named in value.NamedArguments) {
 			if (named.Name == argumentName && named.Value is T typedValue) {
-				return typedValue;
-			}
-		}
-		return null;
-	}
-
-	static bool TryGetNamedBooleanArgument (CustomAttributeValue<string> value, string argumentName, out bool argumentValue)
-	{
-		foreach (var named in value.NamedArguments) {
-			if (named.Name == argumentName && named.Value is bool boolValue) {
-				argumentValue = boolValue;
+				argumentValue = typedValue;
 				return true;
 			}
 		}
-
-		argumentValue = false;
+		argumentValue = default;
 		return false;
 	}
 

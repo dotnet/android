@@ -48,8 +48,7 @@ sealed class CustomAttributeTypeProvider (MetadataReader reader) : ICustomAttrib
 				continue;
 
 			var fullName = GetTypeFromDefinition (reader, typeHandle, rawTypeKind: 0);
-			var code = GetEnumUnderlyingTypeCode (typeDef);
-			cache [fullName] = code;
+			cache [fullName] = GetEnumUnderlyingTypeCode (typeDef);
 		}
 
 		return cache;
