@@ -127,7 +127,59 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 	}
 
-	public class IgnoresAccessChecksTo : IDisposable
+public class AcwProxy : IDisposable
+{
+readonly string _outputDir = CreateTempDir ();
+public void Dispose () => DeleteTempDir (_outputDir);
+
+[Fact]
+public void Generate_AcwProxy_HasRegisterNativesAndUcoMethods ()
+{
+var peers = ScanFixtures ();
+var acwPeer = peers.First (p => p.JavaName == "my/app/TouchHandler");
+var path = GenerateAssembly (new [] { acwPeer }, _outputDir, "AcwTest");
+var (pe, reader) = OpenAssembly (path);
+using (pe) {
+var proxy = reader.TypeDefinitions
+.Select (h => reader.GetTypeDefinition (h))
+.First (t => reader.GetString (t.Name) == "MyApp_TouchHandler_Proxy");
+
+var methods = proxy.GetMethods ()
+.Select (h => reader.GetMethodDefinition (h))
+.Select (m => reader.GetString (m.Name))
+.ToList ();
+
+Assert.Contains ("RegisterNatives", methods);
+Assert.Contains (methods, m => m.StartsWith ("n_") && m.EndsWith ("_uco_0"));
+}
+}
+
+[Fact]
+public void Generate_AcwProxy_HasUnmanagedCallersOnlyAttribute ()
+{
+var peers = ScanFixtures ();
+var acwPeer = peers.First (p => p.JavaName == "my/app/TouchHandler");
+var path = GenerateAssembly (new [] { acwPeer }, _outputDir, "UcoTest");
+var (pe, reader) = OpenAssembly (path);
+using (pe) {
+var proxy = reader.TypeDefinitions
+.Select (h => reader.GetTypeDefinition (h))
+.First (t => reader.GetString (t.Name) == "MyApp_TouchHandler_Proxy");
+
+var ucoMethod = proxy.GetMethods ()
+.Select (h => reader.GetMethodDefinition (h))
+.First (m => reader.GetString (m.Name).Contains ("_uco_"));
+
+var attrs = ucoMethod.GetCustomAttributes ()
+.Select (h => reader.GetCustomAttribute (h))
+.ToList ();
+Assert.NotEmpty (attrs);
+}
+}
+
+}
+
+public class IgnoresAccessChecksTo : IDisposable
 	{
 		readonly string _outputDir = CreateTempDir ();
 		public void Dispose () => DeleteTempDir (_outputDir);
