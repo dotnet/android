@@ -64,7 +64,6 @@ This file contains targets specific for Android application projects.
   ***********************************************************************************************
   -->
   <Target Name="_EnsureDeviceBooted"
-      DependsOnTargets="_ResolveMonoAndroidSdks"
       BeforeTargets="_GetPrimaryCpuAbi;_DeployApk;_DeployAppBundle"
       Condition=" '$(Device)' != '' ">
     <BootAndroidEmulator
