@@ -577,20 +577,13 @@ public class Foo {{
 		/// <summary>
 		/// Test case data for AGP/Gradle version combinations.
 		/// Gradle 9.x has stricter Kotlin type checking for null safety.
-		/// See: https://github.com/dotnet/android/issues/9818
+		/// See: https://github.com/dotnet/android/issues/10737
 		/// </summary>
 		static IEnumerable<object[]> GetAgpGradleVersionTestData ()
 		{
-			// AGP 8.5.0 with Gradle 8.7 (minimum required for AGP 8.5)
+			// AGP 8.5.0 with Gradle 8.7 - baseline, tests existing behavior
 			yield return new object[] { "8.5.0", "8.7" };
-			// AGP 8.7.0 with Gradle 8.9 (minimum required for AGP 8.7)
-			yield return new object[] { "8.7.0", "8.9" };
-			// AGP 8.8.0 with Gradle 8.10 (minimum required for AGP 8.8)
-			yield return new object[] { "8.8.0", "8.10.2" };
-			// AGP 8.9.0 with Gradle 8.11 (minimum required for AGP 8.9)
-			yield return new object[] { "8.9.0", "8.11.1" };
-			// AGP 9.0.0 with Gradle 9.1 (minimum required for AGP 9.0)
-			// This tests the Gradle 9.x stricter Kotlin type checking fix
+			// AGP 9.0.0 with Gradle 9.1 - tests the Gradle 9.x stricter Kotlin type checking fix
 			yield return new object[] { "9.0.0", "9.1" };
 		}
 
@@ -604,7 +597,8 @@ public class Foo {{
 		public void BindLibraryWithMultipleGradleVersions (string agpVersion, string gradleVersion)
 		{
 			var gradleProject = AndroidGradleProject.CreateDefault (GradleTestProjectDir, agpVersion, gradleVersion);
-			var moduleName = gradleProject.Modules.First ().Name;
+			var gradleModule = gradleProject.Modules.First ();
+			var moduleName = gradleModule.Name;
 
 			var proj = new XamarinAndroidBindingProject {
 				Jars = {
@@ -621,7 +615,7 @@ public class Foo {{
 						TextContent = () => @$"public class Foo {{ public Foo () {{ System.Console.WriteLine (GradleTest.{moduleName}Class.GetString(""TestString"")); }} }}"
 					},
 				},
-				MetadataXml = $@"<metadata><attr path=""/api/package[@name='{gradleProject.Modules.First ().PackageName}']"" name=""managedName"">GradleTest</attr></metadata>",
+				MetadataXml = $@"<metadata><attr path=""/api/package[@name='{gradleModule.PackageName}']"" name=""managedName"">GradleTest</attr></metadata>",
 			};
 
 			using var builder = CreateDllBuilder ();

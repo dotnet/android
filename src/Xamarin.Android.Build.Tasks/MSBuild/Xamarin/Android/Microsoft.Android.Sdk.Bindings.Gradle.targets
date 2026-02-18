@@ -77,7 +77,7 @@ This file contains MSBuild targets that support building and operating on Androi
     <!-- Create the net.android.init.gradle.kts script used to override the Gradle project output directory -->
     <!-- Skip CopyResource if user has overridden _AGPInitScriptPath to point to their own file -->
     <CopyResource
-        Condition=" $([System.String]::Copy('$(_AGPInitScriptPath)').StartsWith('$(_AGPOutDirAbs)')) "
+        Condition=" $(_AGPInitScriptPath.StartsWith('$(_AGPOutDirAbs)')) "
         ResourceName="net.android.init.gradle.kts"
         OutputPath="$(_AGPInitScriptPath)"
     />
@@ -120,7 +120,7 @@ This file contains MSBuild targets that support building and operating on Androi
       Condition=" '@(AndroidGradleProject->Count())' != '0' "
       DependsOnTargets="_CalculateAndroidGradleProjectOutputPath" >
     <Gradle ToolPath="%(AndroidGradleProject.RootDir)%(AndroidGradleProject.Directory)"
-        BuildDirInitScriptPath="%(AndroidGradleProject.OutputPath)$(_AGPInitScriptPath)"
+        BuildDirInitScriptPath="$(_AGPInitScriptPath)"
         Command="clean"
         ModuleName="%(AndroidGradleProject.ModuleName)"
         OutputPath="%(AndroidGradleProject.OutputPath)"
