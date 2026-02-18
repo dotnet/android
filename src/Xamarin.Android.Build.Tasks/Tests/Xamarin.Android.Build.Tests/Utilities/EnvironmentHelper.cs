@@ -85,9 +85,9 @@ namespace Xamarin.Android.Build.Tests
 			public uint   system_property_count;
 			public uint   number_of_assemblies_in_apk;
 			public uint   bundled_assembly_name_width;
-			public uint   number_of_assembly_store_files;
 			public uint   number_of_dso_cache_entries;
 			public uint   number_of_aot_cache_entries;
+			public uint   number_of_shared_libraries;
 			public uint   android_runtime_jnienv_class_token;
 			public uint   jnienv_initialize_method_token;
 			public uint   jnienv_registerjninatives_method_token;
@@ -458,7 +458,7 @@ namespace Xamarin.Android.Build.Tests
 					case 2:
 						// aot_lazy_load: bool / .byte
 						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
-						ret.uses_mono_aot = ConvertFieldToBool ("aot_lazy_load", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
+						ret.aot_lazy_load = ConvertFieldToBool ("aot_lazy_load", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
 					case 3: // uses_assembly_preload: bool / .byte
@@ -526,19 +526,19 @@ namespace Xamarin.Android.Build.Tests
 						ret.bundled_assembly_name_width = ConvertFieldToUInt32 ("bundled_assembly_name_width", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 16: // number_of_assembly_store_files: uint32_t / .word | .long
-						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
-						ret.number_of_assembly_store_files = ConvertFieldToUInt32 ("number_of_assembly_store_files", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
-
-					case 17: // number_of_dso_cache_entries: uint32_t / .word | .long
+					case 16: // number_of_dso_cache_entries: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.number_of_dso_cache_entries = ConvertFieldToUInt32 ("number_of_dso_cache_entries", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 18: // number_of_aot_cache_entries: uint32_t / .word | .long
+					case 17: // number_of_aot_cache_entries: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.number_of_aot_cache_entries = ConvertFieldToUInt32 ("number_of_aot_cache_entries", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
+						break;
+
+					case 18: // number_of_shared_libraries: uint32_t / .word | long
+						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
+						ret.number_of_shared_libraries = ConvertFieldToUInt32 ("number_of_shared_libraries", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
 					case 19: // android_runtime_jnienv_class_token: uint32_t / .word | .long
@@ -962,7 +962,6 @@ namespace Xamarin.Android.Build.Tests
 			NativeAssemblyParser parser = CreateAssemblyParser (envFile);
 
 			NativeAssemblyParser.AssemblerSymbol dsoCache = GetNonEmptyRequiredSymbol (parser, envFile, DsoCacheSymbolName);
-			Console.WriteLine ($"DSO cache size: {dsoCache.Size}; entry size: {dsoCacheEntrySize}; count: {dsoCache.Size / dsoCacheEntrySize}");
 			uint calculatedDsoCacheEntryCount = (uint)(dsoCache.Size / dsoCacheEntrySize);
 			Assert.IsTrue (calculatedDsoCacheEntryCount == expectedDsoCacheEntryCount, $"Calculated DSO cache entry count should be {expectedDsoCacheEntryCount} but was {calculatedDsoCacheEntryCount} instead.");
 
