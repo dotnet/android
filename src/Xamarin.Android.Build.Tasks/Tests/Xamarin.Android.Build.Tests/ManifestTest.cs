@@ -1174,8 +1174,8 @@ class TestActivity : Activity { }"
 			Assert.IsFalse (b.Build (proj), "Build should have failed");
 			var extension = IsWindows ? ".exe" : "";
 			uint errorLine = runtime == AndroidRuntime.NativeAOT ? 11u : 12u;
-			Assert.IsTrue (b.LastBuildOutput.ContainsText ($"AndroidManifest.xml({errorLine},5): java{extension} error AMM0000:"), "Should recieve AMM0000 error");
-			Assert.IsTrue (b.LastBuildOutput.ContainsText ("Apps targeting Android 12 and higher are required to specify an explicit value for `android:exported`"), "Should recieve AMM0000 error");
+			Assert.IsTrue (b.LastBuildOutput.ContainsText ($"AndroidManifest.xml({errorLine},5): java{extension} error AMM0000:"), "Should receive AMM0000 error");
+			Assert.IsTrue (b.LastBuildOutput.ContainsText ("Apps targeting Android 12 and higher are required to specify an explicit value for `android:exported`"), "Should receive AMM0000 error");
 		}
 
 		static object [] SupportedOSTestSources = new object [] {

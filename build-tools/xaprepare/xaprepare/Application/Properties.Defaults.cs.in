@@ -10,6 +10,7 @@ namespace Xamarin.Android.Prepare
 			properties.Add (KnownProperties.AndroidCmakeVersion,                 StripQuotes ("@AndroidCmakeVersion@"));
 			properties.Add (KnownProperties.AndroidCmakeVersionPath,             StripQuotes (@"@AndroidCmakeVersionPath@"));
 			properties.Add (KnownProperties.AndroidMinimumDotNetApiLevel,        StripQuotes ("@AndroidMinimumDotNetApiLevel@"));
+			properties.Add (KnownProperties.AndroidMinimumNonMonoApiLevel,       StripQuotes ("@AndroidMinimumNonMonoApiLevel@"));
 			properties.Add (KnownProperties.AndroidDefaultTargetDotnetApiLevel,  StripQuotes ("@AndroidDefaultTargetDotnetApiLevel@"));
 			properties.Add (KnownProperties.AndroidLatestStableApiLevel,         StripQuotes ("@AndroidLatestStableApiLevel@"));
 			properties.Add (KnownProperties.AndroidLatestUnstableApiLevel,       StripQuotes ("@AndroidLatestUnstableApiLevel@"));

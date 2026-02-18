@@ -1000,7 +1000,7 @@ Para usar um caminho JDK personalizado para um build de linha de comando, defina
   <data name="XA1040" xml:space="preserve">
     <value>O {0} tempo de execução no Android é um recurso experimental e ainda não é adequado para uso em produção. Relatar problemas em: [https://github.com/dotnet/android/issues](https://github.com/dotnet/android/issues)</value>
     <comment>The following are literal names and should not be translated: .NET.
-{0} - The name of the .NET runtime, such as CoreCLR or NativeAOT.</comment>
+{0} - The name of the .NET runtime, such as NativeAOT.</comment>
   </data>
   <data name="XA1041" xml:space="preserve">
     <value>A propriedade MSBuild '{0}' tem um valor inválido de '{1}'. O valor deve ser um caminho de diretório que represente a localização relativa dos seus Ativos ou Recursos.</value>

@@ -22,8 +22,11 @@
     <_StandardLibraryPath Condition=" '$(TargetFrameworkVersion)' == '' ">$([Microsoft.Build.Utilities.ToolLocationHelper]::GetPathToStandardLibraries('.NETFramework', 'v4.7.2', ''))</_StandardLibraryPath>
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' And '$(UsingMicrosoftNETSdk)' != 'true' And '$(_StandardLibraryPath)' != '' ">v4.7.2</TargetFrameworkVersion>
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' And '$(UsingMicrosoftNETSdk)' != 'true' ">v4.7.1</TargetFrameworkVersion>
-    <!-- The min API level supported by Microsoft.Android.Sdk -->
+    <!-- The min API level supported by Microsoft.Android.Sdk. This applies to Mono-based runtimes,
+         both 32-bit and 64-bit. -->
     <AndroidMinimumDotNetApiLevel Condition="'$(AndroidMinimumDotNetApiLevel)' == ''">21</AndroidMinimumDotNetApiLevel>
+    <!-- The min API level supported by non-Mono runtimes (CoreCLR/NativeAOT) -->
+    <AndroidMinimumNonMonoApiLevel Condition="'$(AndroidMinimumNonMonoApiLevel)' == ''">24</AndroidMinimumNonMonoApiLevel>
     <!-- *Latest* *stable* API level binding that we support; used when building src/Xamarin.Android.Build.Tasks -->
     <AndroidLatestStableApiLevel Condition="'$(AndroidLatestStableApiLevel)' == ''">36</AndroidLatestStableApiLevel>
     <AndroidLatestStablePlatformId Condition="'$(AndroidLatestStablePlatformId)' == ''">$(AndroidLatestStableApiLevel)</AndroidLatestStablePlatformId>

@@ -49,7 +49,7 @@ variables:
     value: dnceng-dotnet9
 
 extends:
-  ${{ if and(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.DefinitionName'], 'Xamarin.Android')) }}:
+  ${{ if eq(variables['Build.DefinitionName'], 'Xamarin.Android') }}:
     template: azure-pipelines/MicroBuild.1ES.Official.yml@1esPipelines
   ${{ else }}:
     template: azure-pipelines/MicroBuild.1ES.Unofficial.yml@1esPipelines

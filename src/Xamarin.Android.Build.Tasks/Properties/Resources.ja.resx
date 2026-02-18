@@ -1001,7 +1001,7 @@ In this message, the term "handheld app" means "app for handheld devices."
   <data name="XA1040" xml:space="preserve">
     <value>Android 上の {0} ランタイムは試験的な機能であり、まだ運用環境での使用には適していません。問題の報告先: https://github.com/dotnet/android/issues</value>
     <comment>The following are literal names and should not be translated: .NET.
-{0} - The name of the .NET runtime, such as CoreCLR or NativeAOT.</comment>
+{0} - The name of the .NET runtime, such as NativeAOT.</comment>
   </data>
   <data name="XA1041" xml:space="preserve">
     <value>MSBuild プロパティ '{0}' の値 '{1}' が無効です。この値は、資産またはリソースの相対的な場所を表すディレクトリ パスである必要があります。</value>

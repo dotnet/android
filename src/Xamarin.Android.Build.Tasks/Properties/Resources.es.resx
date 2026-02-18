@@ -1000,7 +1000,7 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
   <data name="XA1040" xml:space="preserve">
     <value>El entorno de ejecución {0} en Android es una característica experimental y aún no es adecuado para su uso en producción. Problemas de archivos en: https://github.com/dotnet/android/issues</value>
     <comment>The following are literal names and should not be translated: .NET.
-{0} - The name of the .NET runtime, such as CoreCLR or NativeAOT.</comment>
+{0} - The name of the .NET runtime, such as NativeAOT.</comment>
   </data>
   <data name="XA1041" xml:space="preserve">
     <value>La propiedad '{0}' de MSBuild tiene un valor no válido de '{1}'. Se espera que el valor sea una ruta de acceso de directorio que represente la ubicación relativa de los activos o recursos.</value>
