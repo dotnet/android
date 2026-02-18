@@ -452,13 +452,14 @@ namespace Xamarin.Android.Tasks
 			var aotDsoCache = new List<StructureInstance<DSOCacheEntry>> ();
 			var nameMutations = new List<string> ();
 			int nameMutationsCount = -1;
+			ICollection<string> ignorePreload = ApplicationConfigNativeAssemblyGeneratorCLR.MakeJniPreloadIgnoreCollection (Log, NativeLibrarysAlwaysJniPreload, NativeLibrariesNoJniPreload);
 
 			for (int i = 0; i < dsos.Count; i++) {
 				string name = dsos[i].name;
 
 				bool isJniLibrary = ELFHelper.IsJniLibrary (Log, dsos[i].item.ItemSpec);
 				bool ignore = dsos[i].ignore;
-				bool ignore_for_preload = !ApplicationConfigNativeAssemblyGeneratorCLR.DsoCacheJniPreloadIgnore.Contains (name);
+				bool ignore_for_preload = ApplicationConfigNativeAssemblyGeneratorCLR.ShouldIgnoreForJniPreload (Log, ignorePreload, dsos[i].item);
 
 				nameMutations.Clear();
 				AddNameMutations (name);
@@ -484,7 +485,7 @@ namespace Xamarin.Android.Tasks
 
 					// We must add all aliases to the preloads indices array so that all of them have their handle
 					// set when the library is preloaded.
-					if (entry.is_jni_library && ignore_for_preload) {
+					if (entry.is_jni_library && !ignore_for_preload) {
 						jniPreloads.Add (entry);
 					}
 
