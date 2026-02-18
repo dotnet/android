@@ -86,9 +86,8 @@ namespace Android.Runtime
 		internal static extern bool clr_typemap_java_to_managed (string java_type_name, out IntPtr managed_assembly_name, out uint managed_type_token_id);
 
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern delegate* unmanaged<MarkCrossReferencesArgs*, void> clr_initialize_gc_bridge (
-			delegate* unmanaged<MarkCrossReferencesArgs*, void> bridge_processing_started_callback,
-			delegate* unmanaged<MarkCrossReferencesArgs*, void> bridge_processing_finished_callback);
+		internal static extern delegate* unmanaged<void*, void> clr_initialize_gc_bridge (
+			delegate* unmanaged<void*, void> onMarkCrossReferencesCallback);
 
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
 		internal static extern void monodroid_unhandled_exception (Exception javaException);

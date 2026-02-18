@@ -70,6 +70,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\Microsoft.Android.Runtime.NativeAOT\Java.Interop\ManagedObjectReferenceManager.cs">
+      <Link>Java.Interop\ManagedObjectReferenceManager.cs</Link>
+    </Compile>
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings\JavaNativeTypeManager.cs">
       <Link>JavaNativeTypeManager.cs</Link>
     </Compile>
@@ -351,6 +354,9 @@
     <Compile Include="Java.Util.Concurrent.Atomic\AtomicInteger.cs" />
     <Compile Include="Java.Util.Concurrent.Atomic\AtomicLong.cs" />
     <Compile Include="Javax.Microedition.Khronos.Egl\EGLContext.cs" />
+    <Compile Include="Microsoft.Android.Runtime\BridgeProcessing.cs" />
+    <Compile Include="Microsoft.Android.Runtime\BridgeProcessingJniHelper.cs" />
+    <Compile Include="Microsoft.Android.Runtime\BridgeProcessingLogger.cs" />
     <Compile Include="Microsoft.Android.Runtime\ManagedTypeManager.cs" />
     <Compile Include="Microsoft.Android.Runtime\ManagedTypeMapping.cs" />
     <Compile Include="Microsoft.Android.Runtime\ManagedValueManager.cs" />
