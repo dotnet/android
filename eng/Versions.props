@@ -9,10 +9,10 @@
     <!-- Last version built for net10.0, needed for CI steps that only have the .NET 10 SDK installed (e.g., BAR manifest publishing) -->
     <MicrosoftDotNetBuildTasksFeedPackageVersionNet10>11.0.0-beta.26060.102</MicrosoftDotNetBuildTasksFeedPackageVersionNet10>
     <MicrosoftDotNetBuildTasksFeedPackageVersion>11.0.0-beta.26115.104</MicrosoftDotNetBuildTasksFeedPackageVersion>
-    <MicrosoftNETWorkloadMonoToolChainCurrentManifest110100preview1PackageVersion>11.0.0-preview.2.26115.104</MicrosoftNETWorkloadMonoToolChainCurrentManifest110100preview1PackageVersion>
-    <MicrosoftNETWorkloadEmscriptenCurrentManifest110100preview1PackageVersion>11.0.100-preview.1.26076.102</MicrosoftNETWorkloadEmscriptenCurrentManifest110100preview1PackageVersion>
-    <MicrosoftNETWorkloadMonoToolChainPackageVersion>$(MicrosoftNETWorkloadMonoToolChainCurrentManifest110100preview1PackageVersion)</MicrosoftNETWorkloadMonoToolChainPackageVersion>
-    <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETWorkloadEmscriptenCurrentManifest110100preview1PackageVersion)</MicrosoftNETWorkloadEmscriptenPackageVersion>
+    <MicrosoftNETWorkloadMonoToolchainCurrentManifest110100preview2PackageVersion>11.0.100-preview.2.26115.104</MicrosoftNETWorkloadMonoToolchainCurrentManifest110100preview2PackageVersion>
+    <MicrosoftNETWorkloadEmscriptenCurrentManifest110100preview2PackageVersion>11.0.100-preview.2.26115.104</MicrosoftNETWorkloadEmscriptenCurrentManifest110100preview2PackageVersion>
+    <MicrosoftNETWorkloadMonoToolChainPackageVersion>$(MicrosoftNETWorkloadMonoToolChainCurrentManifest110100preview2PackageVersion)</MicrosoftNETWorkloadMonoToolChainPackageVersion>
+    <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETWorkloadEmscriptenCurrentManifest110100preview2PackageVersion)</MicrosoftNETWorkloadEmscriptenPackageVersion>
     <MicrosoftTemplateEngineAuthoringTasksPackageVersion>11.0.100-preview.2.26115.104</MicrosoftTemplateEngineAuthoringTasksPackageVersion>
     <MicrosoftDotNetCecilPackageVersion>0.11.5-preview.26115.104</MicrosoftDotNetCecilPackageVersion>
     <SystemIOHashingPackageVersion>9.0.4</SystemIOHashingPackageVersion>
