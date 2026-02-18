@@ -1,0 +1,350 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Xunit;
+
+namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
+
+public class JcwJavaSourceGeneratorTests : FixtureTestBase
+{
+	static string GenerateToString (JavaPeerInfo type)
+	{
+		var generator = new JcwJavaSourceGenerator ();
+		using var writer = new StringWriter ();
+		generator.Generate (type, writer);
+		return writer.ToString ();
+	}
+
+	static string GenerateFixture (string javaName)
+	{
+		var peer = FindFixtureByJavaName (javaName);
+		return GenerateToString (peer);
+	}
+
+
+	public class JniNameConversion
+	{
+
+		[Theory]
+		[InlineData ("android/app/Activity", "android.app.Activity")]
+		[InlineData ("java/lang/Object", "java.lang.Object")]
+		[InlineData ("android/view/View$OnClickListener", "android.view.View$OnClickListener")]
+		public void JniNameToJavaName_ConvertsCorrectly (string jniName, string expected)
+		{
+			Assert.Equal (expected, JcwJavaSourceGenerator.JniNameToJavaName (jniName));
+		}
+
+		[Theory]
+		[InlineData ("com/example/MainActivity", "com.example")]
+		[InlineData ("java/lang/Object", "java.lang")]
+		[InlineData ("TopLevelClass", null)]
+		public void GetJavaPackageName_ExtractsCorrectly (string jniName, string? expected)
+		{
+			Assert.Equal (expected, JcwJavaSourceGenerator.GetJavaPackageName (jniName));
+		}
+
+		[Theory]
+		[InlineData ("com/example/MainActivity", "MainActivity")]
+		[InlineData ("com/example/Outer$Inner", "Outer$Inner")]
+		[InlineData ("TopLevelClass", "TopLevelClass")]
+		public void GetJavaSimpleName_ExtractsCorrectly (string jniName, string expected)
+		{
+			Assert.Equal (expected, JcwJavaSourceGenerator.GetJavaSimpleName (jniName));
+		}
+
+		[Theory]
+		[InlineData ("V", "void")]
+		[InlineData ("Z", "boolean")]
+		[InlineData ("B", "byte")]
+		[InlineData ("I", "int")]
+		[InlineData ("J", "long")]
+		[InlineData ("F", "float")]
+		[InlineData ("D", "double")]
+		[InlineData ("Landroid/os/Bundle;", "android.os.Bundle")]
+		[InlineData ("[I", "int[]")]
+		[InlineData ("[Ljava/lang/String;", "java.lang.String[]")]
+		public void JniTypeToJava_ConvertsCorrectly (string jniType, string expected)
+		{
+			Assert.Equal (expected, JcwJavaSourceGenerator.JniTypeToJava (jniType));
+		}
+
+	}
+
+	public class Filtering
+	{
+
+		[Fact]
+		public void Generate_SkipsMcwTypes ()
+		{
+			var peers = ScanFixtures ();
+			var generator = new JcwJavaSourceGenerator ();
+			var outputDir = Path.Combine (Path.GetTempPath (), $"jcw-test-{Guid.NewGuid ():N}");
+			try {
+				var files = generator.Generate (peers, outputDir);
+				Assert.DoesNotContain (files, f => f.EndsWith ("java/lang/Object.java"));
+				Assert.DoesNotContain (files, f => f.EndsWith ("android/app/Activity.java"));
+				Assert.Contains (files, f => f.Replace ('\\', '/').Contains ("my/app/MainActivity.java"));
+			} finally {
+				if (Directory.Exists (outputDir)) {
+					Directory.Delete (outputDir, true);
+				}
+			}
+		}
+
+	}
+
+	public class PackageDeclaration
+	{
+
+		[Fact]
+		public void Generate_MainActivity_HasPackageDeclaration ()
+		{
+			var java = GenerateFixture ("my/app/MainActivity");
+			Assert.StartsWith ("package my.app;\n", java);
+		}
+
+	}
+
+	public class ClassDeclaration
+	{
+
+		[Fact]
+		public void Generate_MainActivity_HasClassDeclaration ()
+		{
+			var java = GenerateFixture ("my/app/MainActivity");
+			Assert.Contains ("public class MainActivity\n", java);
+			Assert.Contains ("\textends android.app.Activity\n", java);
+			Assert.Contains ("\t\tmono.android.IGCUserPeer\n", java);
+		}
+
+		[Fact]
+		public void Generate_AbstractType_HasAbstractModifier ()
+		{
+			var java = GenerateFixture ("my/app/AbstractBase");
+			Assert.Contains ("public abstract class AbstractBase\n", java);
+		}
+
+		[Fact]
+		public void Generate_TypeWithInterfaces_HasImplementsClause ()
+		{
+			var java = GenerateFixture ("my/app/MultiInterfaceView");
+			Assert.Contains ("\timplements\n", java);
+			Assert.Contains ("\t\tmono.android.IGCUserPeer", java);
+			Assert.Contains ("android.view.View$OnClickListener", java);
+			Assert.Contains ("android.view.View$OnLongClickListener", java);
+		}
+
+	}
+
+	public class StaticInitializer
+	{
+
+		[Fact]
+		public void Generate_AcwType_HasRegisterNativesStaticBlock ()
+		{
+			var java = GenerateFixture ("my/app/MainActivity");
+			Assert.Contains ("static {\n", java);
+			Assert.Contains ("mono.android.Runtime.registerNatives (MainActivity.class);\n", java);
+		}
+
+	}
+
+	public class Constructor
+	{
+
+		[Theory]
+		[InlineData ("public CustomView ()\n")]
+		[InlineData ("public CustomView (android.content.Context p0)\n")]
+		[InlineData ("private native void nctor_0 ();\n")]
+		[InlineData ("private native void nctor_1 (android.content.Context p0);\n")]
+		[InlineData ("if (getClass () == CustomView.class) nctor_0 ();\n")]
+		public void Generate_CustomView_HasExpectedConstructorElement (string expectedContent)
+		{
+			var java = GenerateFixture ("my/app/CustomView");
+			Assert.Contains (expectedContent, java);
+		}
+
+		[Fact]
+		public void Generate_Constructor_WithSuperArgumentsString_UsesCustomSuperArgs ()
+		{
+			// [Export] constructors with SuperArgumentsString should use it in super() call
+			var type = new JavaPeerInfo {
+				JavaName = "my/app/CustomService",
+				ManagedTypeName = "MyApp.CustomService",
+				ManagedTypeNamespace = "MyApp",
+				ManagedTypeShortName = "CustomService",
+				AssemblyName = "App",
+				BaseJavaName = "android/app/Service",
+				JavaConstructors = new List<JavaConstructorInfo> {
+					new JavaConstructorInfo {
+						JniSignature = "(Landroid/content/Context;I)V",
+						ConstructorIndex = 0,
+						Parameters = new List<JniParameterInfo> {
+							new JniParameterInfo { JniType = "Landroid/content/Context;" },
+							new JniParameterInfo { JniType = "I" },
+						},
+						SuperArgumentsString = "p0",
+					},
+				},
+			};
+
+			var java = GenerateToString (type);
+			Assert.Contains ("super (p0);", java);
+			Assert.DoesNotContain ("super (p0, p1);", java);
+		}
+
+		[Fact]
+		public void Generate_Constructor_WithEmptySuperArgumentsString_EmptySuper ()
+		{
+			// Empty string means super() with no arguments
+			var type = new JavaPeerInfo {
+				JavaName = "my/app/MyWidget",
+				ManagedTypeName = "MyApp.MyWidget",
+				ManagedTypeNamespace = "MyApp",
+				ManagedTypeShortName = "MyWidget",
+				AssemblyName = "App",
+				BaseJavaName = "android/appwidget/AppWidgetProvider",
+				JavaConstructors = new List<JavaConstructorInfo> {
+					new JavaConstructorInfo {
+						JniSignature = "(Landroid/content/Context;)V",
+						ConstructorIndex = 0,
+						Parameters = new List<JniParameterInfo> {
+							new JniParameterInfo { JniType = "Landroid/content/Context;" },
+						},
+						SuperArgumentsString = "",
+					},
+				},
+			};
+
+			var java = GenerateToString (type);
+			Assert.Contains ("super ();", java);
+			Assert.DoesNotContain ("super (p0);", java);
+		}
+
+		[Fact]
+		public void Generate_Constructor_WithoutSuperArgumentsString_ForwardsAllParams ()
+		{
+			// null SuperArgumentsString means forward all params (default behavior)
+			var type = new JavaPeerInfo {
+				JavaName = "my/app/MyView",
+				ManagedTypeName = "MyApp.MyView",
+				ManagedTypeNamespace = "MyApp",
+				ManagedTypeShortName = "MyView",
+				AssemblyName = "App",
+				BaseJavaName = "android/view/View",
+				JavaConstructors = new List<JavaConstructorInfo> {
+					new JavaConstructorInfo {
+						JniSignature = "(Landroid/content/Context;Landroid/util/AttributeSet;)V",
+						ConstructorIndex = 0,
+						Parameters = new List<JniParameterInfo> {
+							new JniParameterInfo { JniType = "Landroid/content/Context;" },
+							new JniParameterInfo { JniType = "Landroid/util/AttributeSet;" },
+						},
+					},
+				},
+			};
+
+			var java = GenerateToString (type);
+			Assert.Contains ("super (p0, p1);", java);
+		}
+
+	}
+
+	public class Method
+	{
+
+		[Fact]
+		public void Generate_MarshalMethod_HasOverrideAndNativeDeclaration ()
+		{
+			var java = GenerateFixture ("my/app/MainActivity");
+			Assert.Contains ("@Override\n", java);
+			Assert.Contains ("public void onCreate (android.os.Bundle p0)\n", java);
+			Assert.Contains ("n_OnCreate (p0);\n", java);
+			Assert.Contains ("public native void n_OnCreate (android.os.Bundle p0);\n", java);
+		}
+
+		[Fact]
+		public void Generate_MethodWithReturnValue_HasReturnStatement ()
+		{
+			var java = GenerateFixture ("my/app/TouchHandler");
+			Assert.Contains ("return n_OnTouch (p0, p1);\n", java);
+		}
+
+	}
+
+	public class NestedType
+	{
+
+		[Fact]
+		public void Generate_NestedType_HasCorrectPackageAndClassName ()
+		{
+			var java = GenerateFixture ("my/app/Outer$Inner");
+			Assert.Contains ("package my.app;\n", java);
+			Assert.Contains ("public class Outer$Inner\n", java);
+		}
+
+	}
+
+	public class OutputFilePath
+	{
+
+		[Fact]
+		public void Generate_CreatesCorrectFileStructure ()
+		{
+			var peers = ScanFixtures ();
+			var generator = new JcwJavaSourceGenerator ();
+			var outputDir = Path.Combine (Path.GetTempPath (), $"jcw-test-{Guid.NewGuid ():N}");
+			try {
+				var files = generator.Generate (peers, outputDir);
+				Assert.NotEmpty (files);
+
+				foreach (var file in files) {
+					Assert.StartsWith (outputDir, file);
+					Assert.True (File.Exists (file), $"Generated file should exist: {file}");
+					Assert.EndsWith (".java", file);
+				}
+			} finally {
+				if (Directory.Exists (outputDir)) {
+					Directory.Delete (outputDir, true);
+				}
+			}
+		}
+
+	}
+
+	public class ExportWithThrowsClause
+	{
+
+		[Fact]
+		public void Generate_ExportWithThrows_HasThrowsClause ()
+		{
+			var java = GenerateFixture ("my/app/ExportWithThrows");
+			Assert.Contains ("throws java.io.IOException, java.lang.IllegalStateException\n", java);
+		}
+
+		[Fact]
+		public void Generate_ExportWithoutThrows_HasNoThrowsClause ()
+		{
+			var java = GenerateFixture ("my/app/ExportExample");
+			Assert.DoesNotContain ("throws", java);
+		}
+
+	}
+
+	public class MethodReturnTypesAndParams
+	{
+
+		[Theory]
+		[InlineData ("public boolean onTouch (android.view.View p0, int p1)")]
+		[InlineData ("public void onScroll (int p0, float p1, long p2, double p3)")]
+		[InlineData ("public java.lang.String getText ()")]
+		[InlineData ("public void setItems (java.lang.String[] p0)")]
+		public void Generate_TouchHandler_HasExpectedMethodSignature (string expectedSignature)
+		{
+			var java = GenerateFixture ("my/app/TouchHandler");
+			Assert.Contains (expectedSignature + "\n", java);
+		}
+
+	}
+}
