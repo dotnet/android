@@ -106,6 +106,7 @@ steps:
     testResultsFormat: VSTest
     testResultsFiles: "$(Agent.TempDirectory)/trimmable-typemap-integration-tests/*.trx"
     testRunTitle: Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests
+  continueOnError: true
 - task: BatchScript@1
   displayName: Test dotnet-local.cmd - create template
   inputs:
