@@ -106,6 +106,14 @@ This eliminates the NDK dependency for NativeAOT builds.
       <!-- We must ensure this is `false`, as it would interfere with statically linking libc++ -->
       <LinkStandardCPlusPlusLibrary>false</LinkStandardCPlusPlusLibrary>
 
+      <!--
+        Point ILC's ObjCopyName to the llvm-objcopy shipped with our workload pack.
+        This prevents SetupOSSpecificProps from searching PATH for a system-installed
+        llvm-objcopy/objcopy, which may not be present (e.g. on macOS CI agents).
+        Our LinkNativeAotLibrary task uses this same binary from AndroidBinUtilsDirectory.
+      -->
+      <ObjCopyName>$([System.IO.Path]::Combine('$(AndroidBinUtilsDirectory)', 'llvm-objcopy'))</ObjCopyName>
+
       <!-- We want to run ILLink ourselves before ILC -->
       <RunILLink>true</RunILLink>
 
