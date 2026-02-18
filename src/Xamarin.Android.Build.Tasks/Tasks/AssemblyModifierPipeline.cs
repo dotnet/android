@@ -197,6 +197,20 @@ class SaveChangedAssemblyStep : IAssemblyModifierPipelineStep
 		if (context.IsAssemblyModified) {
 			Log.LogDebugMessage ($"Saving modified assembly: {context.Destination.ItemSpec}");
 			Directory.CreateDirectory (Path.GetDirectoryName (context.Destination.ItemSpec));
+
+			// Write back pure IL even for crossgen-ed (R2R) assemblies, matching ILLink's OutputStep behavior.
+			// Mono.Cecil cannot write mixed-mode assemblies, so we strip the R2R metadata before writing.
+			// The native R2R code is discarded since the assembly has been modified and would need to be
+			// re-crossgen'd anyway.
+			foreach (var module in assembly.Modules) {
+				if (IsCrossgened (module)) {
+					module.Attributes |= ModuleAttributes.ILOnly;
+					module.Attributes ^= ModuleAttributes.ILLibrary;
+					module.Architecture = TargetArchitecture.I386; // I386+ILOnly translates to AnyCPU
+					module.Characteristics |= ModuleCharacteristics.NoSEH;
+				}
+			}
+
 			WriterParameters.WriteSymbols = assembly.MainModule.HasSymbols;
 			assembly.Write (context.Destination.ItemSpec, WriterParameters);
 		} else {
@@ -218,5 +232,15 @@ class SaveChangedAssemblyStep : IAssemblyModifierPipelineStep
 			// NOTE: We still need to update the timestamp on this file, or this target would run again
 			File.SetLastWriteTimeUtc (destination.ItemSpec, DateTime.UtcNow);
 		}
+	}
+
+	/// <summary>
+	/// Check if a module has been crossgen-ed (ReadyToRun compiled), matching
+	/// ILLink's ModuleDefinitionExtensions.IsCrossgened() implementation.
+	/// </summary>
+	static bool IsCrossgened (ModuleDefinition module)
+	{
+		return (module.Attributes & ModuleAttributes.ILOnly) == 0 &&
+			(module.Attributes & ModuleAttributes.ILLibrary) != 0;
 	}
 }
