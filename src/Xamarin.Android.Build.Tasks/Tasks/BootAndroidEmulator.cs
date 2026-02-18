@@ -7,6 +7,7 @@ using System.IO;
 using System.Threading;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks;
 
@@ -40,28 +41,32 @@ public class BootAndroidEmulator : AndroidTask
 	public string Device { get; set; } = "";
 
 	/// <summary>
-	/// Path to the emulator tool directory.
+	/// Path to the Android SDK directory (e.g., "/usr/local/lib/android/sdk/").
+	/// Used to compute default tool paths when EmulatorToolPath/AdbToolPath are not set.
 	/// </summary>
-	[Required]
-	public string EmulatorToolPath { get; set; } = "";
+	public string? AndroidSdkDirectory { get; set; }
+
+	/// <summary>
+	/// Path to the emulator tool directory.
+	/// Defaults to $(AndroidSdkDirectory)/emulator/ if not set.
+	/// </summary>
+	public string? EmulatorToolPath { get; set; }
 
 	/// <summary>
 	/// Filename of the emulator executable (e.g., "emulator" or "emulator.exe").
 	/// </summary>
-	[Required]
-	public string EmulatorToolExe { get; set; } = "";
+	public string? EmulatorToolExe { get; set; }
 
 	/// <summary>
 	/// Path to the adb tool directory.
+	/// Defaults to $(AndroidSdkDirectory)/platform-tools/ if not set.
 	/// </summary>
-	[Required]
-	public string AdbToolPath { get; set; } = "";
+	public string? AdbToolPath { get; set; }
 
 	/// <summary>
 	/// Filename of the adb executable (e.g., "adb" or "adb.exe").
 	/// </summary>
-	[Required]
-	public string AdbToolExe { get; set; } = "";
+	public string? AdbToolExe { get; set; }
 
 	/// <summary>
 	/// Maximum time in seconds to wait for the emulator to fully boot.
@@ -89,7 +94,8 @@ public class BootAndroidEmulator : AndroidTask
 
 	public override bool RunTask ()
 	{
-		var adbPath = Path.Combine (AdbToolPath, AdbToolExe);
+		ResolveToolPaths ();
+		var adbPath = Path.Combine (AdbToolPath!, AdbToolExe!);
 
 		// Check if DeviceId is already a known online ADB serial
 		if (IsOnlineAdbDevice (adbPath, Device)) {
@@ -102,7 +108,7 @@ public class BootAndroidEmulator : AndroidTask
 		// DeviceId is not an online serial — treat it as an AVD name and boot it
 		Log.LogMessage (MessageImportance.Normal, $"Device '{Device}' is not an online ADB device. Treating as AVD name.");
 
-		var emulatorPath = Path.Combine (EmulatorToolPath, EmulatorToolExe);
+		var emulatorPath = Path.Combine (EmulatorToolPath!, EmulatorToolExe!);
 
 		var avdName = Device;
 
@@ -155,6 +161,36 @@ public class BootAndroidEmulator : AndroidTask
 			}
 			emulatorProcess.OutputDataReceived -= EmulatorOutputDataReceived;
 			emulatorProcess.ErrorDataReceived -= EmulatorErrorDataReceived;
+		}
+	}
+
+	/// <summary>
+	/// Resolves tool paths from AndroidSdkDirectory when not explicitly set.
+	/// </summary>
+	void ResolveToolPaths ()
+	{
+		if (AdbToolExe.IsNullOrEmpty ()) {
+			AdbToolExe = OS.IsWindows ? "adb.exe" : "adb";
+		}
+
+		if (AdbToolPath.IsNullOrEmpty ()) {
+			if (!AndroidSdkDirectory.IsNullOrEmpty ()) {
+				AdbToolPath = Path.Combine (AndroidSdkDirectory, "platform-tools") + Path.DirectorySeparatorChar;
+			} else {
+				AdbToolPath = "";
+			}
+		}
+
+		if (EmulatorToolExe.IsNullOrEmpty ()) {
+			EmulatorToolExe = OS.IsWindows ? "emulator.exe" : "emulator";
+		}
+
+		if (EmulatorToolPath.IsNullOrEmpty ()) {
+			if (!AndroidSdkDirectory.IsNullOrEmpty ()) {
+				EmulatorToolPath = Path.Combine (AndroidSdkDirectory, "emulator") + Path.DirectorySeparatorChar;
+			} else {
+				EmulatorToolPath = "";
+			}
 		}
 	}
 

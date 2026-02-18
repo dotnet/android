@@ -224,4 +224,23 @@ public class BootAndroidEmulatorTests : BaseTest
 		Assert.AreEqual ("emulator-5556", task.ResolvedDevice);
 		Assert.AreEqual ("-s emulator-5556", task.AdbTarget);
 	}
+
+	[Test]
+	public void ToolPaths_ResolvedFromAndroidSdkDirectory ()
+	{
+		var task = new MockBootAndroidEmulator {
+			BuildEngine = engine,
+			Device = "emulator-5554",
+			AndroidSdkDirectory = "/android/sdk",
+			BootTimeoutSeconds = 10,
+		};
+		task.OnlineDevices = ["emulator-5554"];
+
+		Assert.IsTrue (task.RunTask (), "RunTask should succeed");
+		Assert.AreEqual ("emulator-5554", task.ResolvedDevice);
+		// Verify tool paths were computed from AndroidSdkDirectory
+		var separator = System.IO.Path.DirectorySeparatorChar;
+		Assert.AreEqual ($"/android/sdk{separator}platform-tools{separator}", task.AdbToolPath);
+		Assert.AreEqual ($"/android/sdk{separator}emulator{separator}", task.EmulatorToolPath);
+	}
 }

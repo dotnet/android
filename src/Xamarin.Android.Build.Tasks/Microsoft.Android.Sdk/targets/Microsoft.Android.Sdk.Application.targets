@@ -59,16 +59,23 @@ This file contains targets specific for Android application projects.
   Target that ensures the selected device is online and ready. If $(Device) refers to an
   unbooted AVD, this target boots the emulator and updates $(AdbTarget) to the resolved
   ADB serial (e.g. "-s emulator-5554").
-  Runs before _DeployApk/_DeployAppBundle (which use AdbTarget for adb commands)
+  Runs before _GetPrimaryCpuAbi (in commercial builds) so $(AdbTarget) is correct,
+  and before _DeployApk/_DeployAppBundle (which use AdbTarget for adb commands)
   when $(Device) is set.
+
+  Note: this target CANNOT use DependsOnTargets="_ResolveMonoAndroidSdks" because in commercial
+  builds _GetPrimaryCpuAbi is in $(_ResolveMonoAndroidSdksDependsOn), which would create a cycle:
+    _ResolveMonoAndroidSdks -> _GetPrimaryCpuAbi -> _EnsureDeviceBooted -> _ResolveMonoAndroidSdks
+  Instead, the task computes tool paths from $(AndroidSdkDirectory), which is available because
+  _ResolveSdks runs earlier in the dependency chain.
   ***********************************************************************************************
   -->
   <Target Name="_EnsureDeviceBooted"
-      DependsOnTargets="_ResolveMonoAndroidSdks"
-      BeforeTargets="_DeployApk;_DeployAppBundle"
+      BeforeTargets="_GetPrimaryCpuAbi;_DeployApk;_DeployAppBundle"
       Condition=" '$(Device)' != '' ">
     <BootAndroidEmulator
         Device="$(Device)"
+        AndroidSdkDirectory="$(AndroidSdkDirectory)"
         EmulatorToolExe="$(EmulatorToolExe)"
         EmulatorToolPath="$(EmulatorToolPath)"
         AdbToolExe="$(AdbToolExe)"
