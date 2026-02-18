@@ -944,15 +944,15 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		[Test]
 		public void MinorApiLevelFallbackThrowsXA5207 ()
 		{
-			int apiLevel = XABuildConfig.AndroidLatestStableApiLevel.Major;
+			var stableApiLevel = XABuildConfig.AndroidLatestStableApiLevel;
 			// Verifies that when targeting a minor API level (like 36.1), we don't fall back to the major version (36)
 			// if the minor version platform is not installed. See: https://github.com/dotnet/android/issues/10720
 			var path = Path.Combine ("temp", TestName);
 			// Create a fake SDK with only android-36 (not android-36.1)
-			var AndroidSdkDirectory = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), $"{apiLevel}.0.0", [new ApiInfo { Id = $"{apiLevel}" }]);
+			var AndroidSdkDirectory = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), $"{stableApiLevel.Major}.0.0", [new ApiInfo { Id = $"{stableApiLevel.Major}" }]);
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
-				TargetFramework = $"{XABuildConfig.LatestDotNetTargetFramework}-android{apiLevel}.1",
+				TargetFramework = $"{XABuildConfig.LatestDotNetTargetFramework}-android{stableApiLevel}",
 				ExtraNuGetConfigSources = {
 					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
 				},
@@ -961,11 +961,11 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsFalse (builder.Build (proj, parameters: [
-					$"AndroidSdkBuildToolsVersion={apiLevel}.0.0",
+					$"AndroidSdkBuildToolsVersion={stableApiLevel.Major}.0.0",
 					$"AndroidSdkDirectory={AndroidSdkDirectory}",
-				]), "Build should have failed because android-36.1 is not installed");
+				]), $"Build should have failed because android-{stableApiLevel} is not installed");
 				Assert.IsTrue (builder.LastBuildOutput.ContainsText ("error XA5207:"), "XA5207 should have been raised.");
-				Assert.IsTrue (builder.LastBuildOutput.ContainsText ($"{apiLevel}.1"), "Error message should mention the minor API level.");
+				Assert.IsTrue (builder.LastBuildOutput.ContainsText ($"{stableApiLevel}"), "Error message should mention the API level.");
 			}
 			Directory.Delete (AndroidSdkDirectory, recursive: true);
 		}
@@ -973,13 +973,13 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		[Test]
 		public void BuildWithDeviceLockedStateListener ()
 		{
-			int apiLevel = XABuildConfig.AndroidLatestStableApiLevel.Major;
+			var stableApiLevel = XABuildConfig.AndroidLatestStableApiLevel;
 
 			// Verifies that implementing DeviceLockedStateListener (introduced in API 36.1) builds successfully.
 			// This is a regression test for https://github.com/dotnet/android/issues/10720
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
-				TargetFramework = $"{XABuildConfig.LatestDotNetTargetFramework}-android{apiLevel}.1",
+				TargetFramework = $"{XABuildConfig.LatestDotNetTargetFramework}-android{stableApiLevel}",
 				ExtraNuGetConfigSources = {
 					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
 				},
