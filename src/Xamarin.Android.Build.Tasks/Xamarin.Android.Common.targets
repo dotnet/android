@@ -1459,6 +1459,7 @@ because xbuild doesn't support framework reference assemblies.
     Inputs="$(_AndroidLinkFlag)"
     Outputs="$(_AdditionalPostLinkerStepsFlag)">
   <AssemblyModifierPipeline
+      AddKeepAlives="$(AndroidAddKeepAlives)"
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
       CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
       Debug="$(AndroidIncludeDebugSymbols)"

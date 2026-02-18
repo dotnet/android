@@ -14,8 +14,6 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "LNS";
 
-		public bool AddKeepAlives { get; set; }
-
 		public bool UseDesignerAssembly { get; set; }
 
 		protected override void BuildPipeline (AssemblyPipeline pipeline, MSBuildLinkContext context)
@@ -30,13 +28,6 @@ namespace Xamarin.Android.Tasks
 				var fixLegacyResourceDesignerStep = new FixLegacyResourceDesignerStep ();
 				fixLegacyResourceDesignerStep.Initialize (context);
 				pipeline.Steps.Add (fixLegacyResourceDesignerStep);
-			}
-
-			// AddKeepAlivesStep
-			if (AddKeepAlives) {
-				var addKeepAliveStep = new AddKeepAlivesStep ();
-				addKeepAliveStep.Initialize (context);
-				pipeline.Steps.Add (addKeepAliveStep);
 			}
 
 			// Ensure the <AssemblyModifierPipeline> task's steps are added
