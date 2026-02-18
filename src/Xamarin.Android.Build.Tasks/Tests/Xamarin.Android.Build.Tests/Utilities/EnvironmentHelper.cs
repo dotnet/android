@@ -1043,7 +1043,66 @@ namespace Xamarin.Android.Build.Tests
 
 		static List<DSOCacheEntry64> ReadDsoCache64_MonoVM (EnvironmentFile envFile, NativeAssemblyParser parser, NativeAssemblyParser.AssemblerSymbol dsoCache)
 		{
-			throw new NotImplementedException ();
+			var ret = new List<DSOCacheEntry64> ();
+
+			// This follows a VERY strict format, by design. If anything changes in the generated source this is supposed
+			// to break.
+			//
+			// The code is almost identical to that of CoreCLR, but it is kept completely separate on purpose - it makes the code simpler, since
+			// it doesn't have to account for the small differences between runtimes and it also provides for independence of the two runtime
+			// hosts.
+			const int itemsPerEntry = 7; // Includes padding entries
+			for (int i = 0; i < dsoCache.Contents.Count; i += itemsPerEntry) {
+				ulong lineNumber;
+				string value;
+				int index = i;
+
+				// uint64_t hash
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, expectedUInt64Types);
+				ulong hash = ConvertFieldToUInt64 ("hash", envFile.Path, parser.SourceFilePath, lineNumber, value);
+
+				// uint64_t real_name_hash
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, expectedUInt64Types);
+				ulong real_name_hash = ConvertFieldToUInt64 ("real_name_hash", envFile.Path, parser.SourceFilePath, lineNumber, value);
+
+				// bool ignore
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, ".byte");
+				bool ignore = ConvertFieldToBool ("ignore", envFile.Path, parser.SourceFilePath, lineNumber, value);
+
+				// bool is_jni_library
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, ".byte");
+				bool is_jni_library = ConvertFieldToBool ("is_jni_library", envFile.Path, parser.SourceFilePath, lineNumber, value);
+
+				// padding, 6 bytes
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index, ".zero");
+				uint padding1 = ConvertFieldToUInt32 ("padding1", envFile.Path, parser.SourceFilePath, lineNumber, value);
+				Assert.IsTrue (padding1 == 6, $"Padding field #1 at index {index} of symbol '{dsoCache.Name}' should have had a value of 6, instead it was set to {padding1}");
+				index++;
+
+				// .pointer_type SYMBOL_NAME
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, expectedUInt64Types);
+				NativeAssemblyParser.AssemblerSymbol dsoLibNameSymbol = GetRequiredSymbol (value, envFile, parser);
+
+				// void* handle
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index, expectedUInt64Types);
+				ulong handle = ConvertFieldToUInt64 ("handle", envFile.Path, parser.SourceFilePath, lineNumber, value);
+				Assert.IsTrue (handle == 0, $"Handle field at index {index} of symbol '{dsoCache.Name}' should have had a value of 0, instead it was set to {handle}");
+
+				string name = GetStringContents (dsoLibNameSymbol, envFile, parser);
+
+				ret.Add (
+					new DSOCacheEntry64 {
+						hash = hash,
+						real_name_hash = real_name_hash,
+						ignore = ignore,
+						is_jni_library = is_jni_library,
+						name = name,
+						handle = IntPtr.Zero,
+					}
+				);
+			}
+
+			return ret;
 		}
 
 		static JniPreloads ReadJniPreloads_CoreCLR (EnvironmentFile envFile, uint expectedDsoCacheEntryCount)
