@@ -1,5 +1,6 @@
 using Android.Runtime;
 using Java.Interop;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Microsoft.Android.Runtime;
@@ -9,6 +10,7 @@ static partial class JavaInteropRuntime
 	static JniRuntime? runtime;
 
 	[LibraryImport ("xa-internal-api")]
+	[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 	private static partial int XA_Host_NativeAOT_JNI_OnLoad (IntPtr vm, IntPtr reserved);
 
 	[UnmanagedCallersOnly (EntryPoint="JNI_OnLoad")]
@@ -41,6 +43,7 @@ static partial class JavaInteropRuntime
 	}
 
 	[LibraryImport ("xa-internal-api")]
+	[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 	private static partial void XA_Host_NativeAOT_OnInit (IntPtr language, IntPtr filesDir, IntPtr cacheDir, ref JNIEnvInit.JnienvInitializeArgs initArgs);
 
 	// symbol name from `$(IntermediateOutputPath)obj/Release/osx-arm64/h-classes/net_dot_jni_hello_JavaInteropRuntime.h`
