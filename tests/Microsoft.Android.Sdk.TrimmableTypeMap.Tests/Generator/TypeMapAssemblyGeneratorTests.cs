@@ -12,10 +12,9 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 
 public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 {
-	static string GenerateAssembly (IReadOnlyList<JavaPeerInfo> peers, string? assemblyName = null)
+	static string GenerateAssembly (IReadOnlyList<JavaPeerInfo> peers, string outputDir, string? assemblyName = null)
 	{
-		var outputPath = Path.Combine (Path.GetTempPath (), $"typemap-test-{Guid.NewGuid ():N}",
-			(assemblyName ?? "TestTypeMap") + ".dll");
+		var outputPath = Path.Combine (outputDir, (assemblyName ?? "TestTypeMap") + ".dll");
 		var generator = new TypeMapAssemblyGenerator (new Version (11, 0, 0, 0));
 		generator.Generate (peers, outputPath, assemblyName);
 		return outputPath;
@@ -39,74 +38,68 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			.Select (t => reader.GetString (t.Name))
 			.ToList ();
 
-	public class BasicAssemblyStructure
+	public class BasicAssemblyStructure : IDisposable
 	{
+		readonly string _outputDir = CreateTempDir ();
+		public void Dispose () => DeleteTempDir (_outputDir);
 
 		[Fact]
 		public void Generate_ProducesValidPEAssembly ()
 		{
 			var peers = ScanFixtures ();
-			var path = GenerateAssembly (peers);
-			try {
-				Assert.True (File.Exists (path));
-				using var pe = new PEReader (File.OpenRead (path));
-				Assert.True (pe.HasMetadata);
-				var reader = pe.GetMetadataReader ();
-				Assert.NotNull (reader);
-			} finally {
-				CleanUpDir (path);
-			}
+			var path = GenerateAssembly (peers, _outputDir);
+			Assert.True (File.Exists (path));
+			using var pe = new PEReader (File.OpenRead (path));
+			Assert.True (pe.HasMetadata);
+			var reader = pe.GetMetadataReader ();
+			Assert.NotNull (reader);
 		}
 
 	}
 
-	public class AssemblyReference
+	public class AssemblyReference : IDisposable
 	{
+		readonly string _outputDir = CreateTempDir ();
+		public void Dispose () => DeleteTempDir (_outputDir);
 
 		[Fact]
 		public void Generate_HasRequiredAssemblyReferences ()
 		{
 			var peers = ScanFixtures ();
-			var path = GenerateAssembly (peers);
-			try {
-				var (pe, reader) = OpenAssembly (path);
-				using (pe) {
-					var asmRefs = reader.AssemblyReferences
-						.Select (h => reader.GetString (reader.GetAssemblyReference (h).Name))
-						.ToList ();
-					Assert.Contains ("System.Runtime", asmRefs);
-					Assert.Contains ("Mono.Android", asmRefs);
-					Assert.Contains ("Java.Interop", asmRefs);
-					Assert.Contains ("System.Runtime.InteropServices", asmRefs);
-				}
-			} finally {
-				CleanUpDir (path);
+			var path = GenerateAssembly (peers, _outputDir);
+			var (pe, reader) = OpenAssembly (path);
+			using (pe) {
+				var asmRefs = reader.AssemblyReferences
+					.Select (h => reader.GetString (reader.GetAssemblyReference (h).Name))
+					.ToList ();
+				Assert.Contains ("System.Runtime", asmRefs);
+				Assert.Contains ("Mono.Android", asmRefs);
+				Assert.Contains ("Java.Interop", asmRefs);
+				Assert.Contains ("System.Runtime.InteropServices", asmRefs);
 			}
 		}
 
 	}
 
-	public class ProxyType
+	public class ProxyType : IDisposable
 	{
+		readonly string _outputDir = CreateTempDir ();
+		public void Dispose () => DeleteTempDir (_outputDir);
 
 		[Fact]
 		public void Generate_CreatesProxyTypes ()
 		{
 			var peers = ScanFixtures ();
-			var path = GenerateAssembly (peers);
-			try {
-				var (pe, reader) = OpenAssembly (path);
-				using (pe) {
-					var proxyTypes = reader.TypeDefinitions
-						.Select (h => reader.GetTypeDefinition (h))
-						.Where (t => reader.GetString (t.Namespace) == "_TypeMap.Proxies")
-						.ToList ();
+			var path = GenerateAssembly (peers, _outputDir);
+			var (pe, reader) = OpenAssembly (path);
+			using (pe) {
+				var proxyTypes = reader.TypeDefinitions
+					.Select (h => reader.GetTypeDefinition (h))
+					.Where (t => reader.GetString (t.Namespace) == "_TypeMap.Proxies")
+					.ToList ();
 
-					Assert.NotEmpty (proxyTypes);
-					Assert.Contains (proxyTypes, t => reader.GetString (t.Name) == "Java_Lang_Object_Proxy");
-				}
-			} finally {
-				CleanUpDir (path);
+				Assert.NotEmpty (proxyTypes);
+				Assert.Contains (proxyTypes, t => reader.GetString (t.Name) == "Java_Lang_Object_Proxy");
 			}
 		}
 
@@ -114,57 +107,53 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		public void Generate_ProxyType_HasCtorAndCreateInstance ()
 		{
 			var peers = ScanFixtures ();
-			var path = GenerateAssembly (peers);
-			try {
-				var (pe, reader) = OpenAssembly (path);
-				using (pe) {
-					var objectProxy = reader.TypeDefinitions
-						.Select (h => reader.GetTypeDefinition (h))
-						.First (t => reader.GetString (t.Name) == "Java_Lang_Object_Proxy");
+			var path = GenerateAssembly (peers, _outputDir);
+			var (pe, reader) = OpenAssembly (path);
+			using (pe) {
+				var objectProxy = reader.TypeDefinitions
+					.Select (h => reader.GetTypeDefinition (h))
+					.First (t => reader.GetString (t.Name) == "Java_Lang_Object_Proxy");
 
-					var methods = objectProxy.GetMethods ()
-						.Select (h => reader.GetMethodDefinition (h))
-						.Select (m => reader.GetString (m.Name))
-						.ToList ();
+				var methods = objectProxy.GetMethods ()
+					.Select (h => reader.GetMethodDefinition (h))
+					.Select (m => reader.GetString (m.Name))
+					.ToList ();
 
-					Assert.Contains (".ctor", methods);
-					Assert.Contains ("CreateInstance", methods);
-					Assert.Contains ("get_TargetType", methods);
-				}
-			} finally {
-				CleanUpDir (path);
+				Assert.Contains (".ctor", methods);
+				Assert.Contains ("CreateInstance", methods);
+				Assert.Contains ("get_TargetType", methods);
 			}
 		}
 
 	}
 
-	public class IgnoresAccessChecksTo
+	public class IgnoresAccessChecksTo : IDisposable
 	{
+		readonly string _outputDir = CreateTempDir ();
+		public void Dispose () => DeleteTempDir (_outputDir);
 
 		[Fact]
 		public void Generate_HasIgnoresAccessChecksToAttribute ()
 		{
 			var peers = ScanFixtures ();
-			var path = GenerateAssembly (peers);
-			try {
-				var (pe, reader) = OpenAssembly (path);
-				using (pe) {
-					var types = reader.TypeDefinitions
-						.Select (h => reader.GetTypeDefinition (h))
-						.ToList ();
-					Assert.Contains (types, t =>
-						reader.GetString (t.Name) == "IgnoresAccessChecksToAttribute" &&
-						reader.GetString (t.Namespace) == "System.Runtime.CompilerServices");
-				}
-			} finally {
-				CleanUpDir (path);
+			var path = GenerateAssembly (peers, _outputDir);
+			var (pe, reader) = OpenAssembly (path);
+			using (pe) {
+				var types = reader.TypeDefinitions
+					.Select (h => reader.GetTypeDefinition (h))
+					.ToList ();
+				Assert.Contains (types, t =>
+					reader.GetString (t.Name) == "IgnoresAccessChecksToAttribute" &&
+					reader.GetString (t.Namespace) == "System.Runtime.CompilerServices");
 			}
 		}
 
 	}
 
-	public class Alias
+	public class Alias : IDisposable
 	{
+		readonly string _outputDir = CreateTempDir ();
+		public void Dispose () => DeleteTempDir (_outputDir);
 
 		static List<JavaPeerInfo> MakeDuplicateAliasPeers () => new List<JavaPeerInfo> {
 			new JavaPeerInfo {
@@ -192,16 +181,11 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		public void Generate_DuplicateJniNames_CreatesAliasEntries ()
 		{
 			var peers = MakeDuplicateAliasPeers ();
-
-			var path = GenerateAssembly (peers, "AliasTest");
-			try {
-				var (pe, reader) = OpenAssembly (path);
-				using (pe) {
-					var assemblyAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
-					Assert.True (assemblyAttrs.Count () >= 3);
-				}
-			} finally {
-				CleanUpDir (path);
+			var path = GenerateAssembly (peers, _outputDir, "AliasTest");
+			var (pe, reader) = OpenAssembly (path);
+			using (pe) {
+				var assemblyAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
+				Assert.True (assemblyAttrs.Count () >= 3);
 			}
 		}
 
@@ -209,50 +193,45 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		public void Generate_DuplicateJniNames_EmitsTypeMapAssociationAttribute ()
 		{
 			var peers = MakeDuplicateAliasPeers ();
+			var path = GenerateAssembly (peers, _outputDir, "AliasAssocTest");
+			var (pe, reader) = OpenAssembly (path);
+			using (pe) {
+				var memberRefs = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
+					.Select (i => reader.GetMemberReference (MetadataTokens.MemberReferenceHandle (i)))
+					.Where (m => reader.GetString (m.Name) == ".ctor")
+					.ToList ();
 
-			var path = GenerateAssembly (peers, "AliasAssocTest");
-			try {
-				var (pe, reader) = OpenAssembly (path);
-				using (pe) {
-					var memberRefs = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
-						.Select (i => reader.GetMemberReference (MetadataTokens.MemberReferenceHandle (i)))
-						.Where (m => reader.GetString (m.Name) == ".ctor")
-						.ToList ();
-
-					var typeNames = GetTypeRefNames (reader);
-					Assert.Contains ("TypeMapAssociationAttribute", typeNames);
-				}
-			} finally {
-				CleanUpDir (path);
+				var typeNames = GetTypeRefNames (reader);
+				Assert.Contains ("TypeMapAssociationAttribute", typeNames);
 			}
 		}
 
 	}
 
-	public class EmptyInput
+	public class EmptyInput : IDisposable
 	{
+		readonly string _outputDir = CreateTempDir ();
+		public void Dispose () => DeleteTempDir (_outputDir);
 
 		[Fact]
 		public void Generate_EmptyPeerList_ProducesValidAssembly ()
 		{
-			var path = GenerateAssembly (Array.Empty<JavaPeerInfo> (), "EmptyTest");
-			try {
-				Assert.True (File.Exists (path));
-				var (pe, reader) = OpenAssembly (path);
-				using (pe) {
-					Assert.NotNull (reader);
-					var asmDef = reader.GetAssemblyDefinition ();
-					Assert.Equal ("EmptyTest", reader.GetString (asmDef.Name));
-				}
-			} finally {
-				CleanUpDir (path);
+			var path = GenerateAssembly (Array.Empty<JavaPeerInfo> (), _outputDir, "EmptyTest");
+			Assert.True (File.Exists (path));
+			var (pe, reader) = OpenAssembly (path);
+			using (pe) {
+				Assert.NotNull (reader);
+				var asmDef = reader.GetAssemblyDefinition ();
+				Assert.Equal ("EmptyTest", reader.GetString (asmDef.Name));
 			}
 		}
 
 	}
 
-	public class CreateInstancePaths
+	public class CreateInstancePaths : IDisposable
 	{
+		readonly string _outputDir = CreateTempDir ();
+		public void Dispose () => DeleteTempDir (_outputDir);
 
 		[Fact]
 		public void Generate_SimpleActivity_UsesGetUninitializedObject ()
@@ -262,19 +241,15 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			Assert.NotNull (simpleActivity.ActivationCtor);
 			Assert.NotEqual (simpleActivity.ManagedTypeName, simpleActivity.ActivationCtor.DeclaringTypeName);
 
-			var path = GenerateAssembly (new [] { simpleActivity }, "InheritedCtorTest");
-			try {
-				var (pe, reader) = OpenAssembly (path);
-				using (pe) {
-					var typeNames = GetTypeRefNames (reader);
-					Assert.Contains ("RuntimeHelpers", typeNames);
+			var path = GenerateAssembly (new [] { simpleActivity }, _outputDir, "InheritedCtorTest");
+			var (pe, reader) = OpenAssembly (path);
+			using (pe) {
+				var typeNames = GetTypeRefNames (reader);
+				Assert.Contains ("RuntimeHelpers", typeNames);
 
-					var memberNames = GetMemberRefNames (reader);
-					Assert.DoesNotContain ("CreateManagedPeer", memberNames);
-					Assert.Contains ("GetUninitializedObject", memberNames);
-				}
-			} finally {
-				CleanUpDir (path);
+				var memberNames = GetMemberRefNames (reader);
+				Assert.DoesNotContain ("CreateManagedPeer", memberNames);
+				Assert.Contains ("GetUninitializedObject", memberNames);
 			}
 		}
 
@@ -287,21 +262,17 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			Assert.NotNull (clickableView.ActivationCtor);
 			Assert.Equal (clickableView.ManagedTypeName, clickableView.ActivationCtor.DeclaringTypeName);
 
-			var path = GenerateAssembly (new [] { clickableView }, "LeafCtorTest");
-			try {
-				var (pe, reader) = OpenAssembly (path);
-				using (pe) {
-					var memberNames = GetMemberRefNames (reader);
-					Assert.DoesNotContain ("CreateManagedPeer", memberNames);
+			var path = GenerateAssembly (new [] { clickableView }, _outputDir, "LeafCtorTest");
+			var (pe, reader) = OpenAssembly (path);
+			using (pe) {
+				var memberNames = GetMemberRefNames (reader);
+				Assert.DoesNotContain ("CreateManagedPeer", memberNames);
 
-					var ctorRefs = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
-						.Select (i => reader.GetMemberReference (MetadataTokens.MemberReferenceHandle (i)))
-						.Where (m => reader.GetString (m.Name) == ".ctor")
-						.ToList ();
-					Assert.True (ctorRefs.Count >= 2, "Should have ctor refs for proxy base + target type");
-				}
-			} finally {
-				CleanUpDir (path);
+				var ctorRefs = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
+					.Select (i => reader.GetMemberReference (MetadataTokens.MemberReferenceHandle (i)))
+					.Where (m => reader.GetString (m.Name) == ".ctor")
+					.ToList ();
+				Assert.True (ctorRefs.Count >= 2, "Should have ctor refs for proxy base + target type");
 			}
 		}
 
@@ -312,22 +283,20 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			var generic = peers.First (p => p.JavaName == "my/app/GenericHolder");
 			Assert.True (generic.IsGenericDefinition);
 
-			var path = GenerateAssembly (new [] { generic }, "GenericTest");
-			try {
-				var (pe, reader) = OpenAssembly (path);
-				using (pe) {
-					var typeNames = GetTypeRefNames (reader);
-					Assert.Contains ("NotSupportedException", typeNames);
-				}
-			} finally {
-				CleanUpDir (path);
+			var path = GenerateAssembly (new [] { generic }, _outputDir, "GenericTest");
+			var (pe, reader) = OpenAssembly (path);
+			using (pe) {
+				var typeNames = GetTypeRefNames (reader);
+				Assert.Contains ("NotSupportedException", typeNames);
 			}
 		}
 
 	}
 
-	public class IgnoresAccessChecksToForBaseCtor
+	public class IgnoresAccessChecksToForBaseCtor : IDisposable
 	{
+		readonly string _outputDir = CreateTempDir ();
+		public void Dispose () => DeleteTempDir (_outputDir);
 
 		[Fact]
 		public void Generate_InheritedCtor_IncludesBaseCtorAssembly ()
@@ -338,28 +307,24 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			var peers = ScanFixtures ();
 			var simpleActivity = peers.First (p => p.JavaName == "my/app/SimpleActivity");
 
-			var path = GenerateAssembly (new [] { simpleActivity }, "IgnoresAccessTest");
-			try {
-				var (pe, reader) = OpenAssembly (path);
-				using (pe) {
-					var ignoresAttrType = reader.TypeDefinitions
-						.Select (h => reader.GetTypeDefinition (h))
-						.FirstOrDefault (t => reader.GetString (t.Name) == "IgnoresAccessChecksToAttribute");
-					Assert.True (ignoresAttrType.Attributes != 0, "IgnoresAccessChecksToAttribute should be defined");
+			var path = GenerateAssembly (new [] { simpleActivity }, _outputDir, "IgnoresAccessTest");
+			var (pe, reader) = OpenAssembly (path);
+			using (pe) {
+				var ignoresAttrType = reader.TypeDefinitions
+					.Select (h => reader.GetTypeDefinition (h))
+					.FirstOrDefault (t => reader.GetString (t.Name) == "IgnoresAccessChecksToAttribute");
+				Assert.True (ignoresAttrType.Attributes != 0, "IgnoresAccessChecksToAttribute should be defined");
 
-					var assemblyAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
-					var attrBlobs = new List<string> ();
-					foreach (var attrHandle in assemblyAttrs) {
-						var attr = reader.GetCustomAttribute (attrHandle);
-						var blob = reader.GetBlobBytes (attr.Value);
-						var blobStr = System.Text.Encoding.UTF8.GetString (blob);
-						attrBlobs.Add (blobStr);
-					}
-					// Activity is in TestFixtures, so IgnoresAccessChecksTo must include TestFixtures
-					Assert.Contains (attrBlobs, b => b.Contains ("TestFixtures"));
+				var assemblyAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
+				var attrBlobs = new List<string> ();
+				foreach (var attrHandle in assemblyAttrs) {
+					var attr = reader.GetCustomAttribute (attrHandle);
+					var blob = reader.GetBlobBytes (attr.Value);
+					var blobStr = System.Text.Encoding.UTF8.GetString (blob);
+					attrBlobs.Add (blobStr);
 				}
-			} finally {
-				CleanUpDir (path);
+				// Activity is in TestFixtures, so IgnoresAccessChecksTo must include TestFixtures
+				Assert.Contains (attrBlobs, b => b.Contains ("TestFixtures"));
 			}
 		}
 

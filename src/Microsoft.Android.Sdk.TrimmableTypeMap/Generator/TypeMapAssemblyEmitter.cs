@@ -108,7 +108,7 @@ sealed class TypeMapAssemblyEmitter
 			EmitTypeMapAssociationAttribute (assoc);
 		}
 
-		EmitIgnoresAccessChecksToAttribute (model.IgnoresAccessChecksTo);
+		_pe.EmitIgnoresAccessChecksToAttribute (model.IgnoresAccessChecksTo);
 		_pe.WritePE (outputPath);
 	}
 
@@ -166,14 +166,7 @@ sealed class TypeMapAssemblyEmitter
 		var javaLangObjectRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
 			metadata.GetOrAddString ("Java.Lang"), metadata.GetOrAddString ("Object"));
 
-		var genericInstBlob = new BlobBuilder ();
-		genericInstBlob.WriteByte (0x15); // ELEMENT_TYPE_GENERICINST
-		genericInstBlob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
-		genericInstBlob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (typeMapAttrOpenRef));
-		genericInstBlob.WriteCompressedInteger (1);
-		genericInstBlob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
-		genericInstBlob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (javaLangObjectRef));
-		var closedAttrTypeSpec = metadata.AddTypeSpecification (metadata.GetOrAddBlob (genericInstBlob));
+		var closedAttrTypeSpec = _pe.MakeGenericTypeSpec (typeMapAttrOpenRef, javaLangObjectRef);
 
 		// 2-arg: TypeMap(string jniName, Type proxyType) — unconditional
 		_typeMapAttrCtorRef2Arg = _pe.AddMemberRef (closedAttrTypeSpec, ".ctor",
@@ -383,42 +376,4 @@ sealed class TypeMapAssemblyEmitter
 		_pe.Metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, _typeMapAssociationAttrCtorRef, blob);
 	}
 
-	// ---- IgnoresAccessChecksTo ----
-
-	void EmitIgnoresAccessChecksToAttribute (List<string> assemblyNames)
-	{
-		var metadata = _pe.Metadata;
-		var attributeTypeRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
-			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Attribute"));
-
-		int typeFieldStart = metadata.GetRowCount (TableIndex.Field) + 1;
-		int typeMethodStart = metadata.GetRowCount (TableIndex.MethodDef) + 1;
-
-		var baseAttrCtorRef = _pe.AddMemberRef (attributeTypeRef, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }));
-
-		var ctorDef = _pe.EmitBody (".ctor",
-			MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
-				rt => rt.Void (),
-				p => p.AddParameter ().Type ().String ()),
-			encoder => {
-				encoder.LoadArgument (0);
-				encoder.Call (baseAttrCtorRef);
-				encoder.OpCode (ILOpCode.Ret);
-			});
-
-		metadata.AddTypeDefinition (
-			TypeAttributes.NotPublic | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-			metadata.GetOrAddString ("System.Runtime.CompilerServices"),
-			metadata.GetOrAddString ("IgnoresAccessChecksToAttribute"),
-			attributeTypeRef,
-			MetadataTokens.FieldDefinitionHandle (typeFieldStart),
-			MetadataTokens.MethodDefinitionHandle (typeMethodStart));
-
-		foreach (var asmName in assemblyNames) {
-			var blob = _pe.BuildAttributeBlob (b => b.WriteSerializedString (asmName));
-			metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorDef, blob);
-		}
-	}
 }

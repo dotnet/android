@@ -187,6 +187,25 @@ sealed class PEAssemblyBuilder
 			bodyOffset, default);
 	}
 
+	// ---- TypeSpec helpers ----
+
+	/// <summary>
+	/// Builds a <c>TypeSpec</c> for a closed generic type with a single type argument.
+	/// For example, <c>MakeGenericTypeSpec(openAttrRef, javaLangObjectRef)</c> produces
+	/// <c>TypeMapAttribute&lt;Java.Lang.Object&gt;</c>.
+	/// </summary>
+	public TypeSpecificationHandle MakeGenericTypeSpec (EntityHandle openType, EntityHandle typeArg)
+	{
+		_sigBlob.Clear ();
+		_sigBlob.WriteByte (0x15); // ELEMENT_TYPE_GENERICINST
+		_sigBlob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+		_sigBlob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (openType));
+		_sigBlob.WriteCompressedInteger (1); // generic arity = 1
+		_sigBlob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+		_sigBlob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (typeArg));
+		return Metadata.AddTypeSpecification (Metadata.GetOrAddBlob (_sigBlob));
+	}
+
 	// ---- Attribute blob helpers ----
 
 	/// <summary>
@@ -200,5 +219,45 @@ sealed class PEAssemblyBuilder
 		writePayload (_attrBlob);
 		_attrBlob.WriteUInt16 (0x0000); // NumNamed
 		return Metadata.GetOrAddBlob (_attrBlob);
+	}
+
+	/// <summary>
+	/// Emits the <c>IgnoresAccessChecksToAttribute</c> type and applies
+	/// <c>[assembly: IgnoresAccessChecksTo("...")]</c> for each assembly name.
+	/// </summary>
+	public void EmitIgnoresAccessChecksToAttribute (List<string> assemblyNames)
+	{
+		var attributeTypeRef = Metadata.AddTypeReference (SystemRuntimeRef,
+			Metadata.GetOrAddString ("System"), Metadata.GetOrAddString ("Attribute"));
+
+		int typeFieldStart = Metadata.GetRowCount (TableIndex.Field) + 1;
+		int typeMethodStart = Metadata.GetRowCount (TableIndex.MethodDef) + 1;
+
+		var baseAttrCtorRef = AddMemberRef (attributeTypeRef, ".ctor",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }));
+
+		var ctorDef = EmitBody (".ctor",
+			MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
+				rt => rt.Void (),
+				p => p.AddParameter ().Type ().String ()),
+			encoder => {
+				encoder.LoadArgument (0);
+				encoder.Call (baseAttrCtorRef);
+				encoder.OpCode (ILOpCode.Ret);
+			});
+
+		Metadata.AddTypeDefinition (
+			TypeAttributes.NotPublic | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+			Metadata.GetOrAddString ("System.Runtime.CompilerServices"),
+			Metadata.GetOrAddString ("IgnoresAccessChecksToAttribute"),
+			attributeTypeRef,
+			MetadataTokens.FieldDefinitionHandle (typeFieldStart),
+			MetadataTokens.MethodDefinitionHandle (typeMethodStart));
+
+		foreach (var asmName in assemblyNames) {
+			var blob = BuildAttributeBlob (b => b.WriteSerializedString (asmName));
+			Metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorDef, blob);
+		}
 	}
 }

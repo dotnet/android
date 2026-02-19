@@ -722,14 +722,15 @@ public class ModelBuilderTests : FixtureTestBase
 
 	static void EmitAndVerify (TypeMapAssemblyData model, string assemblyName, Action<PEReader, MetadataReader> verify)
 	{
-		var outputPath = Path.Combine (Path.GetTempPath (), $"{assemblyName.ToLowerInvariant ()}-{Guid.NewGuid ():N}", $"{assemblyName}.dll");
+		var outputDir = CreateTempDir ();
 		try {
+			var outputPath = Path.Combine (outputDir, $"{assemblyName}.dll");
 			var emitter = new TypeMapAssemblyEmitter (new Version (11, 0, 0, 0));
 			emitter.Emit (model, outputPath);
 			using var pe = new PEReader (File.OpenRead (outputPath));
 			verify (pe, pe.GetMetadataReader ());
 		} finally {
-			CleanUpDir (outputPath);
+			DeleteTempDir (outputDir);
 		}
 	}
 

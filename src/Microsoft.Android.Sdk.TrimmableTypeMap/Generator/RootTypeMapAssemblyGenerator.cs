@@ -62,14 +62,7 @@ sealed class RootTypeMapAssemblyGenerator
 			pe.Metadata.GetOrAddString ("Java.Lang"), pe.Metadata.GetOrAddString ("Object"));
 
 		// Build TypeSpec for TypeMapAssemblyTargetAttribute<Java.Lang.Object>
-		var genericInstBlob = new BlobBuilder ();
-		genericInstBlob.WriteByte (0x15); // ELEMENT_TYPE_GENERICINST
-		genericInstBlob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
-		genericInstBlob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (openAttrRef));
-		genericInstBlob.WriteCompressedInteger (1); // generic arity = 1
-		genericInstBlob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
-		genericInstBlob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (javaLangObjectRef));
-		var closedAttrTypeSpec = pe.Metadata.AddTypeSpecification (pe.Metadata.GetOrAddBlob (genericInstBlob));
+		var closedAttrTypeSpec = pe.MakeGenericTypeSpec (openAttrRef, javaLangObjectRef);
 
 		// MemberRef for .ctor(string) on the closed generic type
 		var ctorRef = pe.AddMemberRef (closedAttrTypeSpec, ".ctor",
