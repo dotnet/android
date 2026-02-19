@@ -1078,7 +1078,7 @@ public class ModelBuilderTests : FixtureTestBase
 						.First (u => u.WrapperName == name);
 
 					// UCO constructor signature: jnienv + self + JNI params
-					int expectedJniParams = JniSignatureHelper.ParseParameterTypes (modelUco.JniSignature).Count;
+					int expectedJniParams = JniSignatureHelper.ParseParameterKinds (modelUco.JniSignature).Count;
 					int expectedTotal = 2 + expectedJniParams;
 
 					var sig = reader.GetBlobReader (uco.Signature);

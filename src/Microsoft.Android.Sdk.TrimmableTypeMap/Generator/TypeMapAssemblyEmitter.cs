@@ -451,8 +451,8 @@ sealed class TypeMapAssemblyEmitter
 
 	MethodDefinitionHandle EmitUcoMethod (UcoMethodData uco)
 	{
-		var jniParams = JniSignatureHelper.ParseParameterTypes (uco.JniSignature);
-		var returnKind = JniSignatureHelper.ParseReturnType (uco.JniSignature);
+		var jniParams = JniSignatureHelper.ParseParameterKinds (uco.JniSignature);
+		var returnKind = JniSignatureHelper.ParseReturnKind (uco.JniSignature);
 		int paramCount = 2 + jniParams.Count;
 		bool isVoid = returnKind == JniParamKind.Void;
 
@@ -493,7 +493,7 @@ sealed class TypeMapAssemblyEmitter
 		// Only jnienv (arg 0) and self (arg 1) are used — the constructor parameters
 		// are not forwarded because ActivateInstance creates the managed peer using the
 		// activation ctor (IntPtr, JniHandleOwnership), not the user-visible constructor.
-		var jniParams = JniSignatureHelper.ParseParameterTypes (uco.JniSignature);
+		var jniParams = JniSignatureHelper.ParseParameterKinds (uco.JniSignature);
 		int paramCount = 2 + jniParams.Count;
 
 		var handle = _pe.EmitBody (uco.WrapperName,
