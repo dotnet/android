@@ -67,6 +67,9 @@ public abstract class FixtureTestBase
 	{
 		var peer = MakePeerWithActivation (jniName, managedName, asmName);
 		peer.DoNotGenerateAcw = false;
+		peer.JavaConstructors = new List<JavaConstructorInfo> {
+			new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V" },
+		};
 		peer.MarshalMethods = new List<MarshalMethodInfo> {
 			new MarshalMethodInfo {
 				JniName = "<init>",
