@@ -37,9 +37,9 @@ class ApplicationPackageReporter : BaseReporter
 
 			ReportDoc.BeginList ();
 			foreach (string permission in package.Permissions) {
-				ReportDoc.AddListItem ($"{permission}", MarkdownTextStyle.Monospace);
+				ReportDoc.AddListItem ($"{permission}", MarkdownTextStyle.Monospace, styledWorkaroundTail: ";");
 			}
-			ReportDoc.EndList ().AddNewline ();
+			ReportDoc.AddNewline ().EndList ();
 		}
 
 		AddSection ("Shared libraries", 2);
@@ -54,7 +54,8 @@ class ApplicationPackageReporter : BaseReporter
 				ReportDoc.StartListItem ($"{lib.Name}", MarkdownTextStyle.Monospace);
 
 				// Markdown renderer has a bug where it won't render the first item of the sub-list
-				// properly if the item line ends with a formatting character (or whitespace)
+				// properly if the item line ends with a formatting character (or whitespace without
+				// preceding unformatted character)
 				AddText (":  ", addIndent: false);
 				var libReporter = new SharedLibraryReporter (lib, ReportDoc);
 				libReporter.Report (ReportForm.SimpleList);
