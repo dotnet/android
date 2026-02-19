@@ -43,6 +43,19 @@ sealed record JavaPeerInfo
 	/// </summary>
 	public required string AssemblyName { get; init; }
 
+	/// <summary>
+	/// JNI name of the base Java type, e.g., "android/app/Activity" for a type
+	/// that extends Activity. Null for java/lang/Object or types without a Java base.
+	/// Needed by JCW Java source generation ("extends" clause).
+	/// </summary>
+	public string? BaseJavaName { get; init; }
+
+	/// <summary>
+	/// JNI names of Java interfaces this type implements, e.g., ["android/view/View$OnClickListener"].
+	/// Needed by JCW Java source generation ("implements" clause).
+	/// </summary>
+	public IReadOnlyList<string> ImplementedInterfaceJavaNames { get; init; } = Array.Empty<string> ();
+
 	public bool IsInterface { get; init; }
 	public bool IsAbstract { get; init; }
 

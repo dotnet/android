@@ -197,6 +197,12 @@ sealed class JavaPeerScanner : IDisposable
 			var isUnconditional = attrInfo is not null;
 			string? invokerTypeName = null;
 
+			// Resolve base Java type name
+			var baseJavaName = ResolveBaseJavaName (typeDef, index, results);
+
+			// Resolve implemented Java interface names
+			var implementedInterfaces = ResolveImplementedInterfaceJavaNames (typeDef, index);
+
 			// Collect marshal methods (including constructors) in a single pass over methods
 			var marshalMethods = CollectMarshalMethods (typeDef, index);
 
@@ -215,6 +221,8 @@ sealed class JavaPeerScanner : IDisposable
 				ManagedTypeNamespace = ExtractNamespace (fullName),
 				ManagedTypeShortName = ExtractShortName (fullName),
 				AssemblyName = index.AssemblyName,
+				BaseJavaName = baseJavaName,
+				ImplementedInterfaceJavaNames = implementedInterfaces,
 				IsInterface = isInterface,
 				IsAbstract = isAbstract,
 				DoNotGenerateAcw = doNotGenerateAcw,
@@ -281,6 +289,51 @@ sealed class JavaPeerScanner : IDisposable
 			ThrownNames = exportInfo?.ThrownNames,
 			SuperArgumentsString = exportInfo?.SuperArgumentsString,
 		});
+	}
+
+	string? ResolveBaseJavaName (TypeDefinition typeDef, AssemblyIndex index, Dictionary<string, JavaPeerInfo> results)
+	{
+		var baseInfo = GetBaseTypeInfo (typeDef, index);
+		if (baseInfo is null) {
+			return null;
+		}
+
+		var (baseTypeName, baseAssemblyName) = baseInfo.Value;
+
+		// First try [Register] attribute
+		var registerJniName = ResolveRegisterJniName (baseTypeName, baseAssemblyName);
+		if (registerJniName is not null) {
+			return registerJniName;
+		}
+
+		// Fall back to already-scanned results (component-attributed or CRC64-computed peers)
+		if (results.TryGetValue (baseTypeName, out var basePeer)) {
+			return basePeer.JavaName;
+		}
+
+		return null;
+	}
+
+	List<string> ResolveImplementedInterfaceJavaNames (TypeDefinition typeDef, AssemblyIndex index)
+	{
+		var result = new List<string> ();
+		var interfaceImpls = typeDef.GetInterfaceImplementations ();
+
+		foreach (var implHandle in interfaceImpls) {
+			var impl = index.Reader.GetInterfaceImplementation (implHandle);
+			var ifaceJniName = ResolveInterfaceJniName (impl.Interface, index);
+			if (ifaceJniName is not null) {
+				result.Add (ifaceJniName);
+			}
+		}
+
+		return result;
+	}
+
+	string? ResolveInterfaceJniName (EntityHandle interfaceHandle, AssemblyIndex index)
+	{
+		var resolved = ResolveEntityHandle (interfaceHandle, index);
+		return resolved is not null ? ResolveRegisterJniName (resolved.Value.typeName, resolved.Value.assemblyName) : null;
 	}
 
 	static bool TryGetMethodRegisterInfo (MethodDefinition methodDef, AssemblyIndex index, out RegisterInfo? registerInfo, out ExportInfo? exportInfo)
