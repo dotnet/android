@@ -133,9 +133,18 @@ class MarkdownDocument
 		return this;
 	}
 
-	public MarkdownDocument AddListItem (string? text = null, MarkdownTextStyle style = MarkdownTextStyle.Plain, bool appendLine = true)
+	/// <summary>
+	/// Add a list item in one call. If `style` is different to `MarkdownTextStyle.Plain`, the `styleWorkaroundTail` string
+	/// is appended to the item. It is necessary because the markdown renderer has a bug where, if the list item is fully styled,
+	/// it will render the next list item on the same line as the previous one. This bug is worked around by appending non-styled
+	/// and non-whitespace text to the entry.
+	/// </summary>
+	public MarkdownDocument AddListItem (string? text = null, MarkdownTextStyle style = MarkdownTextStyle.Plain, bool appendLine = true, string styledWorkaroundTail = ".")
 	{
 		StartListItem (text, style);
+		if (style != MarkdownTextStyle.Plain) {
+			AddText(styledWorkaroundTail, addIndent: false);
+		}
 		EndListItem (appendLine);
 		return this;
 	}
