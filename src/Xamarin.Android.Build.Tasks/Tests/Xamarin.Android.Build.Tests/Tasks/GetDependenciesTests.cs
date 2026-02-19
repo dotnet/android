@@ -27,11 +27,11 @@ namespace Xamarin.Android.Build.Tests {
 				BuildEngine = engine
 			};
 
+			task.AndroidApiLevel = "26";
 			task.PlatformToolsVersion = "26.0.3";
 			task.NdkVersion = "12.1";
 			task.NdkRequired = ndkRequred;
 			task.BuildToolsVersion = "26.0.1";
-			task.TargetFrameworkVersion = "v8.0";
 			task.ManifestFile = new TaskItem (Path.Combine (path, "AndroidManifest.xml"));
 			Assert.IsTrue (task.Execute ());
 			Assert.IsNotNull (task.Dependencies);
@@ -65,11 +65,11 @@ namespace Xamarin.Android.Build.Tests {
 				BuildEngine = engine
 			};
 
+			task.AndroidApiLevel = "26";
 			task.PlatformToolsVersion = "26.0.3";
 			task.NdkVersion = "12.1";
 			task.NdkRequired = true;
 			task.BuildToolsVersion = "26.0.1";
-			task.TargetFrameworkVersion = "v8.0";
 			task.ManifestFile = new TaskItem (Path.Combine (path, "AndroidManifest.xml"));
 			Assert.IsTrue (task.Execute ());
 			Assert.IsNotNull (task.Dependencies);
@@ -106,11 +106,11 @@ namespace Xamarin.Android.Build.Tests {
 	<uses-sdk android:minSdkVersion='21' />
 </manifest>");
 
+			task.AndroidApiLevel = "26";
 			task.PlatformToolsVersion = "26.0.3";
 			task.NdkVersion = "12.1";
 			task.NdkRequired = true;
 			task.BuildToolsVersion = "26.0.1";
-			task.TargetFrameworkVersion = "v8.0";
 			task.ManifestFile = new TaskItem (manifestFile);
 			Assert.IsTrue(task.Execute ());
 			Assert.IsNotNull (task.Dependencies);
