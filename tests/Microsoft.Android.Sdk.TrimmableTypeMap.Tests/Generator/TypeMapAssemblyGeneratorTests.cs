@@ -170,10 +170,16 @@ var ucoMethod = proxy.GetMethods ()
 .Select (h => reader.GetMethodDefinition (h))
 .First (m => reader.GetString (m.Name).Contains ("_uco_"));
 
-var attrs = ucoMethod.GetCustomAttributes ()
+var attrNames = ucoMethod.GetCustomAttributes ()
 .Select (h => reader.GetCustomAttribute (h))
+.Select (a => {
+var ctorHandle = (MemberReferenceHandle) a.Constructor;
+var ctor = reader.GetMemberReference (ctorHandle);
+var typeRef = reader.GetTypeReference ((TypeReferenceHandle) ctor.Parent);
+return $"{reader.GetString (typeRef.Namespace)}.{reader.GetString (typeRef.Name)}";
+})
 .ToList ();
-Assert.NotEmpty (attrs);
+Assert.Contains ("System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute", attrNames);
 }
 }
 
@@ -321,17 +327,22 @@ Assert.Equal (expectedKind, JniSignatureHelper.ParseReturnType (signature));
 public class NegativeEdgeCase
 {
 
-[Theory]
-[InlineData ("")]
-[InlineData ("not-a-sig")]
-[InlineData ("(")]
-public void ParseParameterTypes_InvalidSignature_ThrowsOrReturnsEmpty (string signature)
+[Fact]
+public void ParseParameterTypes_EmptyString_ReturnsEmptyList ()
 {
-try {
-var result = JniSignatureHelper.ParseParameterTypes (signature);
-Assert.NotNull (result);
-} catch (Exception ex) when (ex is ArgumentException || ex is IndexOutOfRangeException || ex is FormatException) {
+Assert.Empty (JniSignatureHelper.ParseParameterTypes (""));
 }
+
+[Fact]
+public void ParseParameterTypes_InvalidSignature_Throws ()
+{
+Assert.ThrowsAny<ArgumentException> (() => JniSignatureHelper.ParseParameterTypes ("not-a-sig"));
+}
+
+[Fact]
+public void ParseParameterTypes_UnterminatedSignature_ReturnsEmptyList ()
+{
+Assert.Empty (JniSignatureHelper.ParseParameterTypes ("("));
 }
 
 }
