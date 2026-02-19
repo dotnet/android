@@ -348,7 +348,7 @@ on individual basis.
 Some framework libraries which must be loaded at application startup will not
 be affected if included in this item group.
 
-See also [`$(AndroidIgnoreAllJniPreload)`](build-items.md#androidignorealljnipreload)
+See also [`$(AndroidIgnoreAllJniPreload)`](build-properties.md#androidignorealljnipreload)
 
 ## AndroidPackagingOptionsExclude
 

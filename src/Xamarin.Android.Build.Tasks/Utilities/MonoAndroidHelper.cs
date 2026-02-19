@@ -905,7 +905,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (!String.Equals (Path.GetExtension (ret), ".so", StringComparison.OrdinalIgnoreCase)) {
-				return "${ret}.so";
+				return $"{ret}.so";
 			}
 
 			return ret;

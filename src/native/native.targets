@@ -123,16 +123,16 @@
     <ItemGroup>
       <_TestJniLibraryInput Include="common\test-jni-library\CMakeLists.txt" />
 
-      <_TestJniLibraryOutput Include="@(_TestJniLibraryAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-test-jni-library\CMakeCache.txt')" />
+      <_TestJniLibraryOutput Include="@(_TestJniLibraryAbi->'$(FlavorIntermediateOutputPath)%(AndroidRID)-test-jni-library\CMakeCache.txt')" />
 
-      <_TestJniLibraryOutputDirToCreate Include="$(FlavorIntermediateOutputPath)\%(_TestJniLibraryAbi.AndroidRID)-test-jni-library" />
+      <_TestJniLibraryOutputDirToCreate Include="$(FlavorIntermediateOutputPath)%(_TestJniLibraryAbi.AndroidRID)-test-jni-library" />
     </ItemGroup>
   </Target>
 
   <Target Name="_ConfigureAndBuildTestJniLibrary"
           Condition="'$(CMakeRuntimeFlavor)' != 'NativeAOT' "
           DependsOnTargets="_PrepareCommonProperties;_ConfigureTestJniLibraryInputsAndOutputs"
-          Inputs="@_TestJniLibraryInput)"
+          Inputs="@(_TestJniLibraryInput)"
           Outputs="@(_TestJniLibraryOutput)">
     <ItemGroup>
       <_ConfigureTestJniLibraryCommands Include="@(_TestJniLibraryAbi)">

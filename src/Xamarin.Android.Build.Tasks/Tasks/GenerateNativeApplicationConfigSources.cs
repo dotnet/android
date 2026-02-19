@@ -29,7 +29,7 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem[]? NativeLibraries { get; set; }
 		public ITaskItem[]? NativeLibrariesNoJniPreload { get; set; }
-		public ITaskItem[]? NativeLibrarysAlwaysJniPreload { get; set; }
+		public ITaskItem[]? NativeLibrariesAlwaysJniPreload { get; set; }
 
 		public ITaskItem[]? MonoComponents { get; set; }
 
@@ -256,7 +256,7 @@ namespace Xamarin.Android.Tasks
 					BundledAssemblyNameWidth = assemblyNameWidth,
 					NativeLibraries = uniqueNativeLibraries,
 					NativeLibrariesNoJniPreload = NativeLibrariesNoJniPreload,
-					NativeLibrarysAlwaysJniPreload = NativeLibrarysAlwaysJniPreload,
+					NativeLibrarysAlwaysJniPreload = NativeLibrariesAlwaysJniPreload,
 					AndroidRuntimeJNIEnvToken = android_runtime_jnienv_class_token,
 					JNIEnvInitializeToken = jnienv_initialize_method_token,
 					JNIEnvRegisterJniNativesToken = jnienv_registerjninatives_method_token,
@@ -284,7 +284,7 @@ namespace Xamarin.Android.Tasks
 					MonoComponents = (MonoComponent)monoComponents,
 					NativeLibraries = uniqueNativeLibraries,
 					NativeLibrariesNoJniPreload = NativeLibrariesNoJniPreload,
-					NativeLibrarysAlwaysJniPreload = NativeLibrarysAlwaysJniPreload,
+					NativeLibrarysAlwaysJniPreload = NativeLibrariesAlwaysJniPreload,
 					HaveAssemblyStore = UseAssemblyStore,
 					AndroidRuntimeJNIEnvToken = android_runtime_jnienv_class_token,
 					JNIEnvInitializeToken = jnienv_initialize_method_token,

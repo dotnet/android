@@ -977,7 +977,7 @@ namespace Xamarin.Android.Build.Tests
 
 			NativeAssemblyParser.AssemblerSymbol dsoJniPreloadsIdxCount = GetNonEmptyRequiredSymbol (parser, envFile, DsoJniPreloadsIdxCountSymbolName);
 			ulong preloadsCount = GetSymbolValueAsUInt64 (dsoJniPreloadsIdxCount);
-			Assert.IsTrue (preloadsCount > 0, $"Symbol {dsoJniPreloadsIdxStride.Name} must have value larger than 0.");
+			Assert.IsTrue (preloadsCount > 0, $"Symbol {dsoJniPreloadsIdxCount.Name} must have value larger than 0.");
 
 			NativeAssemblyParser.AssemblerSymbol dsoJniPreloadsIdx = GetNonEmptyRequiredSymbol (parser, envFile, DsoJniPreloadsIdxSymbolName);
 			ulong calculatedPreloadsIdxSize = preloadsCount * 4; // single index field is a 32-bit integer
@@ -1356,7 +1356,7 @@ namespace Xamarin.Android.Build.Tests
 		static string ReadStringBlob (EnvironmentFile envFile, NativeAssemblyParser.AssemblerSymbol contentsSymbol, NativeAssemblyParser parser)
 		{
 			NativeAssemblyParser.AssemblerSymbolItem contentsItem = contentsSymbol.Contents[0];
-			string[] field = GetField (envFile.Path, parser.SourceFilePath, contentsItem.Contents, contentsItem.LineNumber);;
+			string[] field = GetField (envFile.Path, parser.SourceFilePath, contentsItem.Contents, contentsItem.LineNumber);
 			Assert.IsTrue (field[0] == ".asciz", $"{contentsSymbol.Name} must be of '.asciz' type");
 
 			var sb = new StringBuilder ();

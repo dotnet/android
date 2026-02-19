@@ -1726,7 +1726,7 @@ because xbuild doesn't support framework reference assemblies.
       SatelliteAssemblies="@(_AndroidResolvedSatellitePaths)"
       NativeLibraries="@(_AllNativeLibraries)"
       NativeLibrariesNoJniPreload="@(_AndroidNativeLibraryNeverJniPreload);@(AndroidNativeLibraryNoJniPreload)"
-      NativeLibrarysAlwaysJniPreload="@(_AndroidNativeLibraryAlwaysJniPreload)"
+      NativeLibrariesAlwaysJniPreload="@(_AndroidNativeLibraryAlwaysJniPreload)"
       MonoComponents="@(_MonoComponent)"
       EnvironmentOutputDirectory="$(IntermediateOutputPath)android"
       Environments="@(_EnvironmentFiles)"
