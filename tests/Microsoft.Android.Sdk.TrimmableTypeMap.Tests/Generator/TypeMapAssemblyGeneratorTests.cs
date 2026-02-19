@@ -127,65 +127,65 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 	}
 
-public class AcwProxy : IDisposable
-{
-readonly string _outputDir = CreateTempDir ();
-public void Dispose () => DeleteTempDir (_outputDir);
+	public class AcwProxy : IDisposable
+	{
+		readonly string _outputDir = CreateTempDir ();
+		public void Dispose () => DeleteTempDir (_outputDir);
 
-[Fact]
-public void Generate_AcwProxy_HasRegisterNativesAndUcoMethods ()
-{
-var peers = ScanFixtures ();
-var acwPeer = peers.First (p => p.JavaName == "my/app/TouchHandler");
-var path = GenerateAssembly (new [] { acwPeer }, _outputDir, "AcwTest");
-var (pe, reader) = OpenAssembly (path);
-using (pe) {
-var proxy = reader.TypeDefinitions
-.Select (h => reader.GetTypeDefinition (h))
-.First (t => reader.GetString (t.Name) == "MyApp_TouchHandler_Proxy");
+		[Fact]
+		public void Generate_AcwProxy_HasRegisterNativesAndUcoMethods ()
+		{
+			var peers = ScanFixtures ();
+			var acwPeer = peers.First (p => p.JavaName == "my/app/TouchHandler");
+			var path = GenerateAssembly (new [] { acwPeer }, _outputDir, "AcwTest");
+			var (pe, reader) = OpenAssembly (path);
+			using (pe) {
+				var proxy = reader.TypeDefinitions
+					.Select (h => reader.GetTypeDefinition (h))
+					.First (t => reader.GetString (t.Name) == "MyApp_TouchHandler_Proxy");
 
-var methods = proxy.GetMethods ()
-.Select (h => reader.GetMethodDefinition (h))
-.Select (m => reader.GetString (m.Name))
-.ToList ();
+				var methods = proxy.GetMethods ()
+					.Select (h => reader.GetMethodDefinition (h))
+					.Select (m => reader.GetString (m.Name))
+					.ToList ();
 
-Assert.Contains ("RegisterNatives", methods);
-Assert.Contains (methods, m => m.StartsWith ("n_") && m.EndsWith ("_uco_0"));
-}
-}
+				Assert.Contains ("RegisterNatives", methods);
+				Assert.Contains (methods, m => m.StartsWith ("n_") && m.EndsWith ("_uco_0"));
+			}
+		}
 
-[Fact]
-public void Generate_AcwProxy_HasUnmanagedCallersOnlyAttribute ()
-{
-var peers = ScanFixtures ();
-var acwPeer = peers.First (p => p.JavaName == "my/app/TouchHandler");
-var path = GenerateAssembly (new [] { acwPeer }, _outputDir, "UcoTest");
-var (pe, reader) = OpenAssembly (path);
-using (pe) {
-var proxy = reader.TypeDefinitions
-.Select (h => reader.GetTypeDefinition (h))
-.First (t => reader.GetString (t.Name) == "MyApp_TouchHandler_Proxy");
+		[Fact]
+		public void Generate_AcwProxy_HasUnmanagedCallersOnlyAttribute ()
+		{
+			var peers = ScanFixtures ();
+			var acwPeer = peers.First (p => p.JavaName == "my/app/TouchHandler");
+			var path = GenerateAssembly (new [] { acwPeer }, _outputDir, "UcoTest");
+			var (pe, reader) = OpenAssembly (path);
+			using (pe) {
+				var proxy = reader.TypeDefinitions
+					.Select (h => reader.GetTypeDefinition (h))
+					.First (t => reader.GetString (t.Name) == "MyApp_TouchHandler_Proxy");
 
-var ucoMethod = proxy.GetMethods ()
-.Select (h => reader.GetMethodDefinition (h))
-.First (m => reader.GetString (m.Name).Contains ("_uco_"));
+				var ucoMethod = proxy.GetMethods ()
+					.Select (h => reader.GetMethodDefinition (h))
+					.First (m => reader.GetString (m.Name).Contains ("_uco_"));
 
-var attrNames = ucoMethod.GetCustomAttributes ()
-.Select (h => reader.GetCustomAttribute (h))
-.Select (a => {
-var ctorHandle = (MemberReferenceHandle) a.Constructor;
-var ctor = reader.GetMemberReference (ctorHandle);
-var typeRef = reader.GetTypeReference ((TypeReferenceHandle) ctor.Parent);
-return $"{reader.GetString (typeRef.Namespace)}.{reader.GetString (typeRef.Name)}";
-})
-.ToList ();
-Assert.Contains ("System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute", attrNames);
-}
-}
+				var attrNames = ucoMethod.GetCustomAttributes ()
+					.Select (h => reader.GetCustomAttribute (h))
+					.Select (a => {
+						var ctorHandle = (MemberReferenceHandle) a.Constructor;
+						var ctor = reader.GetMemberReference (ctorHandle);
+						var typeRef = reader.GetTypeReference ((TypeReferenceHandle) ctor.Parent);
+						return $"{reader.GetString (typeRef.Namespace)}.{reader.GetString (typeRef.Name)}";
+					})
+					.ToList ();
+				Assert.Contains ("System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute", attrNames);
+			}
+		}
 
-}
+	}
 
-public class IgnoresAccessChecksTo : IDisposable
+	public class IgnoresAccessChecksTo : IDisposable
 	{
 		readonly string _outputDir = CreateTempDir ();
 		public void Dispose () => DeleteTempDir (_outputDir);
@@ -286,68 +286,68 @@ public class IgnoresAccessChecksTo : IDisposable
 
 	}
 
-public class JniSignatureHelperTests
-{
+	public class JniSignatureHelperTests
+	{
 
-[Theory]
-[InlineData ("()V", 0)]
-[InlineData ("(I)V", 1)]
-[InlineData ("(Landroid/os/Bundle;)V", 1)]
-[InlineData ("(IFJ)V", 3)]
-[InlineData ("(ZLandroid/view/View;I)Z", 3)]
-[InlineData ("([Ljava/lang/String;)V", 1)]
-public void ParseParameterTypes_ParsesCorrectCount (string signature, int expectedCount)
-{
-var actual = JniSignatureHelper.ParseParameterTypes (signature);
-Assert.Equal (expectedCount, actual.Count);
-}
+		[Theory]
+		[InlineData ("()V", 0)]
+		[InlineData ("(I)V", 1)]
+		[InlineData ("(Landroid/os/Bundle;)V", 1)]
+		[InlineData ("(IFJ)V", 3)]
+		[InlineData ("(ZLandroid/view/View;I)Z", 3)]
+		[InlineData ("([Ljava/lang/String;)V", 1)]
+		public void ParseParameterTypes_ParsesCorrectCount (string signature, int expectedCount)
+		{
+			var actual = JniSignatureHelper.ParseParameterTypes (signature);
+			Assert.Equal (expectedCount, actual.Count);
+		}
 
-[Theory]
-[InlineData ("(Z)V", JniParamKind.Boolean)]
-[InlineData ("(Ljava/lang/String;)V", JniParamKind.Object)]
-public void ParseParameterTypes_SingleParam_MapsToCorrectKind (string signature, JniParamKind expectedKind)
-{
-var types = JniSignatureHelper.ParseParameterTypes (signature);
-Assert.Single (types);
-Assert.Equal (expectedKind, types [0]);
-}
+		[Theory]
+		[InlineData ("(Z)V", JniParamKind.Boolean)]
+		[InlineData ("(Ljava/lang/String;)V", JniParamKind.Object)]
+		public void ParseParameterTypes_SingleParam_MapsToCorrectKind (string signature, JniParamKind expectedKind)
+		{
+			var types = JniSignatureHelper.ParseParameterTypes (signature);
+			Assert.Single (types);
+			Assert.Equal (expectedKind, types [0]);
+		}
 
-[Theory]
-[InlineData ("()V", JniParamKind.Void)]
-[InlineData ("()I", JniParamKind.Int)]
-[InlineData ("()Z", JniParamKind.Boolean)]
-[InlineData ("()Ljava/lang/String;", JniParamKind.Object)]
-public void ParseReturnType_MapsToCorrectKind (string signature, JniParamKind expectedKind)
-{
-Assert.Equal (expectedKind, JniSignatureHelper.ParseReturnType (signature));
-}
+		[Theory]
+		[InlineData ("()V", JniParamKind.Void)]
+		[InlineData ("()I", JniParamKind.Int)]
+		[InlineData ("()Z", JniParamKind.Boolean)]
+		[InlineData ("()Ljava/lang/String;", JniParamKind.Object)]
+		public void ParseReturnType_MapsToCorrectKind (string signature, JniParamKind expectedKind)
+		{
+			Assert.Equal (expectedKind, JniSignatureHelper.ParseReturnType (signature));
+		}
 
-}
+	}
 
-public class NegativeEdgeCase
-{
+	public class NegativeEdgeCase
+	{
 
-[Fact]
-public void ParseParameterTypes_EmptyString_ReturnsEmptyList ()
-{
-Assert.Empty (JniSignatureHelper.ParseParameterTypes (""));
-}
+		[Fact]
+		public void ParseParameterTypes_EmptyString_ReturnsEmptyList ()
+		{
+			Assert.Empty (JniSignatureHelper.ParseParameterTypes (""));
+		}
 
-[Fact]
-public void ParseParameterTypes_InvalidSignature_Throws ()
-{
-Assert.ThrowsAny<ArgumentException> (() => JniSignatureHelper.ParseParameterTypes ("not-a-sig"));
-}
+		[Fact]
+		public void ParseParameterTypes_InvalidSignature_Throws ()
+		{
+			Assert.ThrowsAny<ArgumentException> (() => JniSignatureHelper.ParseParameterTypes ("not-a-sig"));
+		}
 
-[Fact]
-public void ParseParameterTypes_UnterminatedSignature_ReturnsEmptyList ()
-{
-Assert.Empty (JniSignatureHelper.ParseParameterTypes ("("));
-}
+		[Fact]
+		public void ParseParameterTypes_UnterminatedSignature_ReturnsEmptyList ()
+		{
+			Assert.Empty (JniSignatureHelper.ParseParameterTypes ("("));
+		}
 
-}
+	}
 
-public class CreateInstancePaths : IDisposable
+	public class CreateInstancePaths : IDisposable
 	{
 		readonly string _outputDir = CreateTempDir ();
 		public void Dispose () => DeleteTempDir (_outputDir);

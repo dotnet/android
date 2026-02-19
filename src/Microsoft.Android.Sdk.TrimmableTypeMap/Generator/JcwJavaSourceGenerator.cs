@@ -86,6 +86,7 @@ sealed class JcwJavaSourceGenerator
 		WriteStaticInitializer (type, writer);
 		WriteConstructors (type, writer);
 		WriteMethods (type, writer);
+		WriteGCUserPeerMethods (writer);
 		WriteClassClose (writer);
 	}
 
@@ -220,6 +221,27 @@ sealed class JcwJavaSourceGenerator
 """);
 			}
 		}
+	}
+
+	static void WriteGCUserPeerMethods (TextWriter writer)
+	{
+		writer.Write ("""
+
+	private java.util.ArrayList refList;
+	public void monodroidAddReference (java.lang.Object obj)
+	{
+		if (refList == null)
+			refList = new java.util.ArrayList ();
+		refList.add (obj);
+	}
+
+	public void monodroidClearReferences ()
+	{
+		if (refList != null)
+			refList.clear ();
+	}
+
+""");
 	}
 
 	static void WriteClassClose (TextWriter writer)

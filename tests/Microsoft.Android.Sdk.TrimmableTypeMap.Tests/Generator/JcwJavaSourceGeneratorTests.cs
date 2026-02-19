@@ -62,25 +62,20 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 
 	}
 
-	public class Filtering
+	public class Filtering : IDisposable
 	{
+		readonly string _outputDir = CreateTempDir ();
+		public void Dispose () => DeleteTempDir (_outputDir);
 
 		[Fact]
 		public void Generate_SkipsMcwTypes ()
 		{
 			var peers = ScanFixtures ();
 			var generator = new JcwJavaSourceGenerator ();
-			var outputDir = Path.Combine (Path.GetTempPath (), $"jcw-test-{Guid.NewGuid ():N}");
-			try {
-				var files = generator.Generate (peers, outputDir);
-				Assert.DoesNotContain (files, f => f.EndsWith ("java/lang/Object.java"));
-				Assert.DoesNotContain (files, f => f.EndsWith ("android/app/Activity.java"));
-				Assert.Contains (files, f => f.Replace ('\\', '/').Contains ("my/app/MainActivity.java"));
-			} finally {
-				if (Directory.Exists (outputDir)) {
-					Directory.Delete (outputDir, true);
-				}
-			}
+			var files = generator.Generate (peers, _outputDir);
+			Assert.DoesNotContain (files, f => f.EndsWith ("java/lang/Object.java"));
+			Assert.DoesNotContain (files, f => f.EndsWith ("android/app/Activity.java"));
+			Assert.Contains (files, f => f.Replace ('\\', '/').Contains ("my/app/MainActivity.java"));
 		}
 
 	}
@@ -95,6 +90,15 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 			Assert.Contains ("public class MainActivity\n", java);
 			Assert.Contains ("\textends android.app.Activity\n", java);
 			Assert.Contains ("\t\tmono.android.IGCUserPeer\n", java);
+		}
+
+		[Fact]
+		public void Generate_MainActivity_HasIGCUserPeerMethods ()
+		{
+			var java = GenerateFixture ("my/app/MainActivity");
+			Assert.Contains ("private java.util.ArrayList refList;", java);
+			Assert.Contains ("public void monodroidAddReference (java.lang.Object obj)", java);
+			Assert.Contains ("public void monodroidClearReferences ()", java);
 		}
 
 		[Fact]
@@ -247,28 +251,23 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 
 	}
 
-	public class OutputFilePath
+	public class OutputFilePath : IDisposable
 	{
+		readonly string _outputDir = CreateTempDir ();
+		public void Dispose () => DeleteTempDir (_outputDir);
 
 		[Fact]
 		public void Generate_CreatesCorrectFileStructure ()
 		{
 			var peers = ScanFixtures ();
 			var generator = new JcwJavaSourceGenerator ();
-			var outputDir = Path.Combine (Path.GetTempPath (), $"jcw-test-{Guid.NewGuid ():N}");
-			try {
-				var files = generator.Generate (peers, outputDir);
-				Assert.NotEmpty (files);
+			var files = generator.Generate (peers, _outputDir);
+			Assert.NotEmpty (files);
 
-				foreach (var file in files) {
-					Assert.StartsWith (outputDir, file);
-					Assert.True (File.Exists (file), $"Generated file should exist: {file}");
-					Assert.EndsWith (".java", file);
-				}
-			} finally {
-				if (Directory.Exists (outputDir)) {
-					Directory.Delete (outputDir, true);
-				}
+			foreach (var file in files) {
+				Assert.StartsWith (_outputDir, file);
+				Assert.True (File.Exists (file), $"Generated file should exist: {file}");
+				Assert.EndsWith (".java", file);
 			}
 		}
 
@@ -287,8 +286,7 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 		{
 			var peer = MakeAcwPeer (badJniName, "Test.Bad", "TestApp");
 			var generator = new JcwJavaSourceGenerator ();
-			var outputDir = Path.Combine (Path.GetTempPath (), $"jcw-test-{Guid.NewGuid ():N}");
-			Assert.Throws<ArgumentException> (() => generator.Generate (new [] { peer }, outputDir));
+			Assert.Throws<ArgumentException> (() => generator.Generate (new [] { peer }, _outputDir));
 		}
 
 		[Theory]
@@ -301,14 +299,7 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 		{
 			var peer = MakeAcwPeer (validJniName, "Test.Valid", "TestApp");
 			var generator = new JcwJavaSourceGenerator ();
-			var outputDir = Path.Combine (Path.GetTempPath (), $"jcw-test-{Guid.NewGuid ():N}");
-			try {
-				generator.Generate (new [] { peer }, outputDir);
-			} finally {
-				if (Directory.Exists (outputDir)) {
-					Directory.Delete (outputDir, true);
-				}
-			}
+			generator.Generate (new [] { peer }, _outputDir);
 		}
 
 	}

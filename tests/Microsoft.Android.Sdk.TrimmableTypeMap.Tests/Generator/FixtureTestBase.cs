@@ -33,10 +33,16 @@ public abstract class FixtureTestBase
 		return peer;
 	}
 
-	protected static void CleanUpDir (string path)
+	protected static string CreateTempDir ()
 	{
-		var dir = Path.GetDirectoryName (path);
-		if (dir != null && Directory.Exists (dir))
+		var dir = Path.Combine (Path.GetTempPath (), $"typemap-test-{Guid.NewGuid ():N}");
+		Directory.CreateDirectory (dir);
+		return dir;
+	}
+
+	protected static void DeleteTempDir (string dir)
+	{
+		if (Directory.Exists (dir))
 			try { Directory.Delete (dir, true); } catch { }
 	}
 
