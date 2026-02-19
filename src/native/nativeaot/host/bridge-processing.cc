@@ -24,7 +24,7 @@ void BridgeProcessing::naot_initialize_on_runtime_init (JNIEnv *env) noexcept
 		constexpr auto ABSENT = "absent"sv;
 		constexpr auto PRESENT = "present"sv;
 
-		// This is fugly, but more type safe than printf format parsing
+		// This is ugly, but more type safe than printf format parsing
 		std::string err_msg { "Failed to find GCUserPeerable method(s): jiAddManagedReference ("sv };
 		err_msg.append (GCUserPeerable_jiAddManagedReference == nullptr ? ABSENT : PRESENT);
 		err_msg.append ("); jiClearManagedReferences ("sv);
