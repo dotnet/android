@@ -43,19 +43,6 @@ sealed record JavaPeerInfo
 	/// </summary>
 	public required string AssemblyName { get; init; }
 
-	/// <summary>
-	/// JNI name of the base Java type, e.g., "android/app/Activity" for a type
-	/// that extends Activity. Null for java/lang/Object or types without a Java base.
-	/// Needed by JCW Java source generation ("extends" clause).
-	/// </summary>
-	public string? BaseJavaName { get; init; }
-
-	/// <summary>
-	/// JNI names of Java interfaces this type implements, e.g., ["android/view/View$OnClickListener"].
-	/// Needed by JCW Java source generation ("implements" clause).
-	/// </summary>
-	public IReadOnlyList<string> ImplementedInterfaceJavaNames { get; init; } = Array.Empty<string> ();
-
 	public bool IsInterface { get; init; }
 	public bool IsAbstract { get; init; }
 
@@ -79,12 +66,6 @@ sealed record JavaPeerInfo
 	/// Ordered — the index in this list is the method's ordinal for RegisterNatives.
 	/// </summary>
 	public IReadOnlyList<MarshalMethodInfo> MarshalMethods { get; init; } = Array.Empty<MarshalMethodInfo> ();
-
-	/// <summary>
-	/// Java constructors to emit in the JCW .java file.
-	/// Each has a JNI signature and an ordinal index for the nctor_N native method.
-	/// </summary>
-	public IReadOnlyList<JavaConstructorInfo> JavaConstructors { get; init; } = Array.Empty<JavaConstructorInfo> ();
 
 	/// <summary>
 	/// Information about the activation constructor for this type.
@@ -196,34 +177,6 @@ sealed record JniParameterInfo
 	/// Managed parameter type name, e.g., "Android.OS.Bundle", "System.Int32".
 	/// </summary>
 	public string ManagedType { get; init; } = "";
-}
-
-/// <summary>
-/// Describes a Java constructor to emit in the JCW .java source file.
-/// </summary>
-sealed record JavaConstructorInfo
-{
-	/// <summary>
-	/// JNI constructor signature, e.g., "(Landroid/content/Context;)V".
-	/// </summary>
-	public required string JniSignature { get; init; }
-
-	/// <summary>
-	/// Ordinal index for the native constructor method (nctor_0, nctor_1, ...).
-	/// </summary>
-	public required int ConstructorIndex { get; init; }
-
-	/// <summary>
-	/// JNI parameter types parsed from the signature.
-	/// Used to generate the Java constructor parameter list.
-	/// </summary>
-	public IReadOnlyList<JniParameterInfo> Parameters { get; init; } = Array.Empty<JniParameterInfo> ();
-
-	/// <summary>
-	/// For [Export] constructors: super constructor arguments string.
-	/// Null for [Register] constructors.
-	/// </summary>
-	public string? SuperArgumentsString { get; init; }
 }
 
 /// <summary>

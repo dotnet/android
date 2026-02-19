@@ -340,7 +340,6 @@ public class ModelBuilderTests : FixtureTestBase
 		public void Fixture_CustomView_HasTwoConstructors ()
 		{
 			var peer = FindFixtureByJavaName ("my/app/CustomView");
-			Assert.Equal (2, peer.JavaConstructors.Count);
 
 			var model = BuildModel (new [] { peer }, "TypeMap");
 			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_CustomView_Proxy");

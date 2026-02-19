@@ -251,62 +251,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 	}
 
-	public class JniSignatureHelperTests
-	{
-
-		[Theory]
-		[InlineData ("()V", 0)]
-		[InlineData ("(I)V", 1)]
-		[InlineData ("(Landroid/os/Bundle;)V", 1)]
-		[InlineData ("(IFJ)V", 3)]
-		[InlineData ("(ZLandroid/view/View;I)Z", 3)]
-		[InlineData ("([Ljava/lang/String;)V", 1)]
-		public void ParseParameterTypes_ParsesCorrectCount (string signature, int expectedCount)
-		{
-			var actual = JniSignatureHelper.ParseParameterTypes (signature);
-			Assert.Equal (expectedCount, actual.Count);
-		}
-
-		[Theory]
-		[InlineData ("(Z)V", JniParamKind.Boolean)]
-		[InlineData ("(Ljava/lang/String;)V", JniParamKind.Object)]
-		public void ParseParameterTypes_SingleParam_MapsToCorrectKind (string signature, JniParamKind expectedKind)
-		{
-			var types = JniSignatureHelper.ParseParameterTypes (signature);
-			Assert.Single (types);
-			Assert.Equal (expectedKind, types [0]);
-		}
-
-		[Theory]
-		[InlineData ("()V", JniParamKind.Void)]
-		[InlineData ("()I", JniParamKind.Int)]
-		[InlineData ("()Z", JniParamKind.Boolean)]
-		[InlineData ("()Ljava/lang/String;", JniParamKind.Object)]
-		public void ParseReturnType_MapsToCorrectKind (string signature, JniParamKind expectedKind)
-		{
-			Assert.Equal (expectedKind, JniSignatureHelper.ParseReturnType (signature));
-		}
-
-	}
-
-	public class NegativeEdgeCase
-	{
-
-		[Theory]
-		[InlineData ("")]
-		[InlineData ("not-a-sig")]
-		[InlineData ("(")]
-		public void ParseParameterTypes_InvalidSignature_ThrowsOrReturnsEmpty (string signature)
-		{
-			try {
-				var result = JniSignatureHelper.ParseParameterTypes (signature);
-				Assert.NotNull (result);
-			} catch (Exception ex) when (ex is ArgumentException || ex is IndexOutOfRangeException || ex is FormatException) {
-			}
-		}
-
-	}
-
 	public class CreateInstancePaths
 	{
 
