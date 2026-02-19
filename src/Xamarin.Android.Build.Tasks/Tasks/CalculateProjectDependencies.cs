@@ -18,10 +18,8 @@ namespace Xamarin.Android.Tasks
 
 		public string? CommandLineToolsVersion { get; set; }
 
-		public string? AndroidApiLevel { get; set; }
-
 		[Required]
-		public string TargetFrameworkVersion { get; set; } = "";
+		public string AndroidApiLevel { get; set; } = "";
 
 		[Required]
 		public ITaskItem ManifestFile { get; set; } = null!;
@@ -59,16 +57,23 @@ namespace Xamarin.Android.Tasks
 		{
 			var dependencies = new List<ITaskItem> ();
 			var javaDependencies = new List<ITaskItem> ();
-			var targetApiLevel = AndroidApiLevel.IsNullOrEmpty () ?
-				MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (TargetFrameworkVersion) :
-				MonoAndroidHelper.SupportedVersions.GetApiLevelFromId (AndroidApiLevel);
+			if (!MonoAndroidHelper.TryParseApiLevel (AndroidApiLevel, out var targetVersion)) {
+				Log.LogDebugMessage ($"Failed to parse AndroidApiLevel '{AndroidApiLevel}', defaulting to {DefaultMinSDKVersion}");
+				targetVersion = new Version (DefaultMinSDKVersion, 0);
+			}
+			var targetApiLevel = targetVersion.Major;
 			var manifestApiLevel = DefaultMinSDKVersion;
 			if (File.Exists (ManifestFile.ItemSpec)) {
 				var manifest = AndroidAppManifest.Load (ManifestFile.ItemSpec, MonoAndroidHelper.SupportedVersions);
 				manifestApiLevel = manifest.TargetSdkVersion ?? manifest.MinSdkVersion ?? DefaultMinSDKVersion;
 			}
-			var sdkVersion = Math.Max (targetApiLevel ?? DefaultMinSDKVersion, manifestApiLevel);
-			dependencies.Add (CreateAndroidDependency ($"platforms/android-{sdkVersion}", $""));
+			var sdkVersion = Math.Max (targetApiLevel, manifestApiLevel);
+			// Use the platform Id (e.g. "36.1") for the directory name when the target has a minor version,
+			// since Google ships platforms/android-36.1 as a separate SDK platform from platforms/android-36.
+			var platformId = sdkVersion == targetVersion.Major
+				? (MonoAndroidHelper.SupportedVersions.GetIdFromVersionCodeFull (targetVersion) ?? sdkVersion.ToString ())
+				: sdkVersion.ToString ();
+			dependencies.Add (CreateAndroidDependency ($"platforms/android-{platformId}", ""));
 			dependencies.Add (CreateAndroidDependency ($"build-tools/{BuildToolsVersion}", BuildToolsVersion));
 			if (!PlatformToolsVersion.IsNullOrEmpty ()) {
 				dependencies.Add (CreateAndroidDependency ("platform-tools", PlatformToolsVersion));
