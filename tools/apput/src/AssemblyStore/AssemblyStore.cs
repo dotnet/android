@@ -68,42 +68,19 @@ public class AssemblyStore : IAspect
 		throw new InvalidOperationException ($"Failed to load assembly store '{description}'");
 	}
 
-	public static IAspectState ProbeAspect (Stream stream, string? description)
-	{
-		Stream? storeStream = null;
-
-		try {
-			IAspectState state = DotNetAndroidWrapperSharedLibrary.ProbeAspect (stream, description);
-			if (!state.Success) {
-				return DoProbeAspect (stream, description);
-			}
-
-			var library = (DotNetAndroidWrapperSharedLibrary)DotNetAndroidWrapperSharedLibrary.LoadAspect (stream, state, description);
-			if (!library.HasAndroidPayload) {
-				Log.Debug ($"AssemblyStore: stream ('{description}') is an ELF shared library, without payload");
-				return new BasicAspectState (false);
-			}
-			Log.Debug ($"AssemblyStore: stream ('{description}') is an ELF shared library with .NET for Android payload section");
-			storeStream = library.OpenAndroidPayload ();
-			return DoProbeAspect (storeStream, description);
-		} finally {
-			storeStream?.Dispose ();
-		}
-	}
-
 	// We return `BasicAspectState` instance for all failures, since there's no extra information we can
 	// pass on.
-	static IAspectState DoProbeAspect (Stream storeStream, string? description)
+	public static IAspectState ProbeAspect (Stream stream, string? description)
 	{
 		// All assembly store files are at least 8 bytes long - space taken up by
 		// the magic number + store version.
-		if (storeStream.Length < MinimumStoreSize) {
+		if (stream.Length < MinimumStoreSize) {
 			Log.Debug ($"AssemblyStore: stream ('{description}') isn't long enough. Need at least {MinimumStoreSize} bytes");
 			return new BasicAspectState (false);
 		}
 
-		storeStream.Seek (0, SeekOrigin.Begin);
-		using var reader = new BinaryReader (storeStream, Encoding.UTF8, leaveOpen: true);
+		stream.Seek (0, SeekOrigin.Begin);
+		using var reader = new BinaryReader (stream, Encoding.UTF8, leaveOpen: true);
 		uint magic = reader.ReadUInt32 ();
 		if (magic != MagicNumber) {
 			Log.Debug ($"AssemblyStore: stream ('{description}') doesn't have the correct signature.");
@@ -117,11 +94,11 @@ public class AssemblyStore : IAspect
 
 		switch (storeVersion.MainVersion) {
 			case 2:
-				validator = new Format_V2 (storeStream, description);
+				validator = new Format_V2 (stream, description);
 				break;
 
 			case 3:
-				validator = new Format_V3 (storeStream, description);
+				validator = new Format_V3 (stream, description);
 				break;
 
 			default:

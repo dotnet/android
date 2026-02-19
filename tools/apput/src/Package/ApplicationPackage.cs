@@ -253,6 +253,16 @@ public abstract class ApplicationPackage : IAspect
 	void TryLoadAssemblyStores ()
 	{
 		var stores = new List<AssemblyStore> ();
+		foreach (SharedLibrary dso in SharedLibraries) {
+			var storeLib = dso as AssemblyStoreSharedLibrary;
+			if (storeLib == null) {
+				continue;
+			}
+
+			Log.Debug ($"Assembly store shared library '{storeLib.Name}' found.");
+			stores.Add (storeLib.AssemblyStore);
+		}
+
 		foreach (AndroidTargetArch arch in Architectures) {
 			string storePath = GetNativeLibFile (arch, $"libassemblies.{MonoAndroidHelper.ArchToAbi (arch)}.blob.so");
 			Log.Debug ($"Trying assembly store: {storePath}");

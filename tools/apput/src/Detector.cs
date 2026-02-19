@@ -18,6 +18,7 @@ public class Detector
 		typeof (PackageAPK),
 		typeof (PackageAAB),
 		typeof (PackageBase),
+		typeof (AssemblyStoreSharedLibrary),
 		typeof (AssemblyStore),
 		typeof (ApplicationAssembly),
 		typeof (NativeAotSharedLibrary),
@@ -28,6 +29,7 @@ public class Detector
 	};
 
 	readonly static List<Type> KnownSharedLibraryAspects = new () {
+		typeof (AssemblyStoreSharedLibrary),
 		typeof (NativeAotSharedLibrary),
 		typeof (XamarinAppSharedLibrary),
 		typeof (MonoAotSharedLibrary),
