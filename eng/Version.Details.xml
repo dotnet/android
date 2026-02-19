@@ -16,13 +16,13 @@
       <Uri>https://github.com/dotnet/dotnet</Uri>
       <Sha>99f9e99f92d73ade5453ba8edba5d72247f3cd11</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.Workload.Mono.Toolchain.Current.Manifest-10.0.100" Version="10.0.103">
+    <Dependency Name="Microsoft.NET.Workload.Mono.Toolchain.Current.Manifest-10.0.100" Version="10.0.104">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>99f9e99f92d73ade5453ba8edba5d72247f3cd11</Sha>
+      <Sha>69600372e5b6e4a27587423ec6997a46079ea3fc</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.Workload.Emscripten.Current.Manifest-10.0.100" Version="10.0.103">
+    <Dependency Name="Microsoft.NET.Workload.Emscripten.Current.Manifest-10.0.100" Version="10.0.104">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>99f9e99f92d73ade5453ba8edba5d72247f3cd11</Sha>
+      <Sha>69600372e5b6e4a27587423ec6997a46079ea3fc</Sha>
     </Dependency>
     <!-- Previous .NET version -->
     <Dependency Name="Microsoft.NET.Workload.Mono.ToolChain.Current.Manifest-9.0.100" Version="9.0.13">
