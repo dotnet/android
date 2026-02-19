@@ -124,8 +124,6 @@ static class JniSignatureHelper
 		}
 	}
 
-	// ---- JNI name / Java source name helpers ----
-
 	/// <summary>
 	/// Validates that a JNI type name has the expected structure (e.g., "com/example/MyClass").
 	/// </summary>
