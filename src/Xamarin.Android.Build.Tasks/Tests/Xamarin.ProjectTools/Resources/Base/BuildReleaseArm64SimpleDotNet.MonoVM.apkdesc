@@ -14,28 +14,28 @@
       "Size": 88056
     },
     "lib/arm64-v8a/lib_Mono.Android.dll.so": {
-      "Size": 116592
+      "Size": 117184
     },
     "lib/arm64-v8a/lib_Mono.Android.Runtime.dll.so": {
-      "Size": 23880
+      "Size": 26328
     },
     "lib/arm64-v8a/lib_System.Console.dll.so": {
-      "Size": 24424
+      "Size": 24416
     },
     "lib/arm64-v8a/lib_System.Linq.dll.so": {
-      "Size": 25504
+      "Size": 25496
     },
     "lib/arm64-v8a/lib_System.Private.CoreLib.dll.so": {
-      "Size": 633864
+      "Size": 633928
     },
     "lib/arm64-v8a/lib_System.Runtime.dll.so": {
-      "Size": 20200
+      "Size": 20232
     },
     "lib/arm64-v8a/lib_System.Runtime.InteropServices.dll.so": {
-      "Size": 21536
+      "Size": 21624
     },
     "lib/arm64-v8a/lib_UnnamedProject.dll.so": {
-      "Size": 20024
+      "Size": 20032
     },
     "lib/arm64-v8a/libarc.bin.so": {
       "Size": 19112
@@ -65,7 +65,7 @@
       "Size": 19640
     },
     "META-INF/BNDLTOOL.RSA": {
-      "Size": 1221
+      "Size": 1223
     },
     "META-INF/BNDLTOOL.SF": {
       "Size": 3266
@@ -98,5 +98,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 3262997
+  "PackageSize": 3267093
 }
