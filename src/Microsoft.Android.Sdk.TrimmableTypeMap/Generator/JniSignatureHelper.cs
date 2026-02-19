@@ -3,10 +3,14 @@ using System.Collections.Generic;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
-/// <summary>Helpers for parsing JNI method signatures.</summary>
+/// <summary>
+/// Helpers for parsing JNI method signatures.
+/// </summary>
 static class JniSignatureHelper
 {
-	/// <summary>Parses the raw JNI type descriptor strings from a JNI method signature.</summary>
+	/// <summary>
+	/// Parses the raw JNI type descriptor strings from a JNI method signature.
+	/// </summary>
 	public static List<string> ParseParameterTypeStrings (string jniSignature)
 	{
 		var result = new List<string> ();
@@ -19,7 +23,9 @@ static class JniSignatureHelper
 		return result;
 	}
 
-	/// <summary>Extracts the return type descriptor from a JNI method signature.</summary>
+	/// <summary>
+	/// Extracts the return type descriptor from a JNI method signature.
+	/// </summary>
 	public static string ParseReturnTypeString (string jniSignature)
 	{
 		int i = jniSignature.IndexOf (')') + 1;

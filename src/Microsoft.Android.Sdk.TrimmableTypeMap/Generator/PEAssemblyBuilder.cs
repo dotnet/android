@@ -33,13 +33,10 @@ sealed class PEAssemblyBuilder
 	public MetadataBuilder Metadata { get; } = new MetadataBuilder ();
 	public BlobBuilder ILBuilder { get; } = new BlobBuilder ();
 
-	/// <summary>Reference to the System.Runtime assembly.</summary>
 	public AssemblyReferenceHandle SystemRuntimeRef { get; private set; }
 
-	/// <summary>Reference to the System.Runtime.InteropServices assembly.</summary>
 	public AssemblyReferenceHandle SystemRuntimeInteropServicesRef { get; private set; }
 
-	/// <summary>Reference to the Mono.Android assembly.</summary>
 	public AssemblyReferenceHandle MonoAndroidRef { get; private set; }
 
 	public PEAssemblyBuilder (Version systemRuntimeVersion)
@@ -85,7 +82,9 @@ sealed class PEAssemblyBuilder
 			MetadataTokens.MethodDefinitionHandle (1));
 	}
 
-	/// <summary>Serialises the metadata + IL into a PE DLL at <paramref name="outputPath"/>.</summary>
+	/// <summary>
+	/// Serialises the metadata + IL into a PE DLL at <paramref name="outputPath"/>.
+	/// </summary>
 	public void WritePE (string outputPath)
 	{
 		var dir = Path.GetDirectoryName (outputPath);
@@ -103,9 +102,9 @@ sealed class PEAssemblyBuilder
 		peBlob.WriteContentTo (fs);
 	}
 
-	// ---- Assembly / type / member reference helpers ----
-
-	/// <summary>Adds (or retrieves from cache) an assembly reference.</summary>
+	/// <summary>
+	/// Adds (or retrieves from cache) an assembly reference.
+	/// </summary>
 	public AssemblyReferenceHandle AddAssemblyRef (string name, Version version, byte []? publicKeyOrToken = null)
 	{
 		if (_asmRefCache.TryGetValue (name, out var existing)) {
@@ -118,7 +117,9 @@ sealed class PEAssemblyBuilder
 		return handle;
 	}
 
-	/// <summary>Finds an existing assembly reference or adds one with version 0.0.0.0.</summary>
+	/// <summary>
+	/// Finds an existing assembly reference or adds one with version 0.0.0.0.
+	/// </summary>
 	public AssemblyReferenceHandle FindOrAddAssemblyRef (string assemblyName)
 	{
 		if (_asmRefCache.TryGetValue (assemblyName, out var handle)) {
@@ -127,7 +128,9 @@ sealed class PEAssemblyBuilder
 		return AddAssemblyRef (assemblyName, new Version (0, 0, 0, 0));
 	}
 
-	/// <summary>Adds a member reference using the reusable signature blob builder.</summary>
+	/// <summary>
+	/// Adds a member reference using the reusable signature blob builder.
+	/// </summary>
 	public MemberReferenceHandle AddMemberRef (EntityHandle parent, string name, Action<BlobEncoder> encodeSig)
 	{
 		_sigBlob.Clear ();
@@ -135,7 +138,9 @@ sealed class PEAssemblyBuilder
 		return Metadata.AddMemberReference (parent, Metadata.GetOrAddString (name), Metadata.GetOrAddBlob (_sigBlob));
 	}
 
-	/// <summary>Resolves a <see cref="TypeRefData"/> to a TypeReference/TypeSpecification handle, with caching.</summary>
+	/// <summary>
+	/// Resolves a <see cref="TypeRefData"/> to a TypeReference/TypeSpecification handle, with caching.
+	/// </summary>
 	public EntityHandle ResolveTypeRef (TypeRefData typeRef)
 	{
 		var cacheKey = (typeRef.AssemblyName, typeRef.ManagedTypeName);
@@ -161,9 +166,9 @@ sealed class PEAssemblyBuilder
 		return Metadata.AddTypeReference (scope, Metadata.GetOrAddString (ns), Metadata.GetOrAddString (name));
 	}
 
-	// ---- Method body emission ----
-
-	/// <summary>Emits a method body and definition in one call.</summary>
+	/// <summary>
+	/// Emits a method body and definition in one call.
+	/// </summary>
 	public MethodDefinitionHandle EmitBody (string name, MethodAttributes attrs,
 		Action<BlobEncoder> encodeSig, Action<InstructionEncoder> emitIL)
 	{
@@ -187,8 +192,6 @@ sealed class PEAssemblyBuilder
 			bodyOffset, default);
 	}
 
-	// ---- TypeSpec helpers ----
-
 	/// <summary>
 	/// Builds a <c>TypeSpec</c> for a closed generic type with a single type argument.
 	/// For example, <c>MakeGenericTypeSpec(openAttrRef, javaLangObjectRef)</c> produces
@@ -205,8 +208,6 @@ sealed class PEAssemblyBuilder
 		_sigBlob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (typeArg));
 		return Metadata.AddTypeSpecification (Metadata.GetOrAddBlob (_sigBlob));
 	}
-
-	// ---- Attribute blob helpers ----
 
 	/// <summary>
 	/// Writes a custom attribute blob. Calls <paramref name="writePayload"/> to fill in the

@@ -112,8 +112,6 @@ sealed class TypeMapAssemblyEmitter
 		_pe.WritePE (outputPath);
 	}
 
-	// ---- Type / Member references ----
-
 	void EmitTypeReferences ()
 	{
 		var metadata = _pe.Metadata;
@@ -205,8 +203,6 @@ sealed class TypeMapAssemblyEmitter
 					p.AddParameter ().Type ().Type (_systemTypeRef, false);
 				}));
 	}
-
-	// ---- Proxy types ----
 
 	void EmitProxyType (JavaPeerProxyData proxy)
 	{
@@ -351,8 +347,6 @@ sealed class TypeMapAssemblyEmitter
 				encoder.OpCode (ILOpCode.Ret);
 			});
 	}
-
-	// ---- TypeMap attributes ----
 
 	void EmitTypeMapAttribute (TypeMapAttributeData entry)
 	{
