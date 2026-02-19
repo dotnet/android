@@ -583,8 +583,9 @@ public class Foo {{
 		{
 			// AGP 8.5.0 with Gradle 8.7 - baseline, tests existing behavior
 			yield return new object[] { "8.5.0", "8.7" };
-			// AGP 9.0.0 with Gradle 9.1 - tests the Gradle 9.x stricter Kotlin type checking fix
-			yield return new object[] { "9.0.0", "9.1" };
+			// AGP 9.0.0 with Gradle 9.1.0 - tests the Gradle 9.x stricter Kotlin type checking fix
+			// Note: Full version "9.1.0" is required for the download URL to work correctly
+			yield return new object[] { "9.0.0", "9.1.0" };
 		}
 
 		/// <summary>
