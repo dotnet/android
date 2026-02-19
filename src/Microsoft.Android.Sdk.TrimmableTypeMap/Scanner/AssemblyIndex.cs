@@ -105,6 +105,13 @@ sealed class AssemblyIndex : IDisposable
 					applicationAttributeInfo.BackupAgent = TryGetTypeProperty (ca, "BackupAgent");
 					applicationAttributeInfo.ManageSpaceActivity = TryGetTypeProperty (ca, "ManageSpaceActivity");
 				}
+			} else if (attrInfo is null && ImplementsJniNameProviderAttribute (ca)) {
+				// Custom attribute implementing IJniNameProviderAttribute (e.g., user-defined [CustomJniName])
+				var name = TryGetNameProperty (ca);
+				if (name is not null) {
+					attrInfo = new TypeAttributeInfo (attrName);
+					attrInfo.JniName = name.Replace ('.', '/');
+				}
 			}
 		}
 
@@ -128,6 +135,36 @@ sealed class AssemblyIndex : IDisposable
 	}
 
 	static bool IsKnownComponentAttribute (string attrName) => KnownComponentAttributes.Contains (attrName);
+
+	/// <summary>
+	/// Checks whether a custom attribute's type implements <c>Java.Interop.IJniNameProviderAttribute</c>.
+	/// Only works for attributes defined in the assembly being scanned (MethodDefinition constructors).
+	/// </summary>
+	bool ImplementsJniNameProviderAttribute (CustomAttribute ca)
+	{
+		if (ca.Constructor.Kind != HandleKind.MethodDefinition) {
+			return false;
+		}
+		var methodDef = Reader.GetMethodDefinition ((MethodDefinitionHandle)ca.Constructor);
+		var typeDef = Reader.GetTypeDefinition (methodDef.GetDeclaringType ());
+		foreach (var implHandle in typeDef.GetInterfaceImplementations ()) {
+			var impl = Reader.GetInterfaceImplementation (implHandle);
+			if (impl.Interface.Kind == HandleKind.TypeReference) {
+				var typeRef = Reader.GetTypeReference ((TypeReferenceHandle)impl.Interface);
+				if (Reader.GetString (typeRef.Name) == "IJniNameProviderAttribute" &&
+				    Reader.GetString (typeRef.Namespace) == "Java.Interop") {
+					return true;
+				}
+			} else if (impl.Interface.Kind == HandleKind.TypeDefinition) {
+				var ifaceDef = Reader.GetTypeDefinition ((TypeDefinitionHandle)impl.Interface);
+				if (Reader.GetString (ifaceDef.Name) == "IJniNameProviderAttribute" &&
+				    Reader.GetString (ifaceDef.Namespace) == "Java.Interop") {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 
 	internal static string? GetCustomAttributeName (CustomAttribute ca, MetadataReader reader)
 	{
