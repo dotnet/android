@@ -122,16 +122,15 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 	public class Constructor
 	{
 
-		[Theory]
-		[InlineData ("public CustomView ()\n")]
-		[InlineData ("public CustomView (android.content.Context p0)\n")]
-		[InlineData ("private native void nctor_0 ();\n")]
-		[InlineData ("private native void nctor_1 (android.content.Context p0);\n")]
-		[InlineData ("if (getClass () == CustomView.class) nctor_0 ();\n")]
-		public void Generate_CustomView_HasExpectedConstructorElement (string expectedContent)
+		[Fact]
+		public void Generate_CustomView_HasExpectedConstructorElements ()
 		{
 			var java = GenerateFixture ("my/app/CustomView");
-			Assert.Contains (expectedContent, java);
+			Assert.Contains ("public CustomView ()\n", java);
+			Assert.Contains ("public CustomView (android.content.Context p0)\n", java);
+			Assert.Contains ("private native void nctor_0 ();\n", java);
+			Assert.Contains ("private native void nctor_1 (android.content.Context p0);\n", java);
+			Assert.Contains ("if (getClass () == CustomView.class) nctor_0 ();\n", java);
 		}
 
 		[Fact]
@@ -329,15 +328,14 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 	public class MethodReturnTypesAndParams
 	{
 
-		[Theory]
-		[InlineData ("public boolean onTouch (android.view.View p0, int p1)")]
-		[InlineData ("public void onScroll (int p0, float p1, long p2, double p3)")]
-		[InlineData ("public java.lang.String getText ()")]
-		[InlineData ("public void setItems (java.lang.String[] p0)")]
-		public void Generate_TouchHandler_HasExpectedMethodSignature (string expectedSignature)
+		[Fact]
+		public void Generate_TouchHandler_HasExpectedMethodSignatures ()
 		{
 			var java = GenerateFixture ("my/app/TouchHandler");
-			Assert.Contains (expectedSignature + "\n", java);
+			Assert.Contains ("public boolean onTouch (android.view.View p0, int p1)\n", java);
+			Assert.Contains ("public void onScroll (int p0, float p1, long p2, double p3)\n", java);
+			Assert.Contains ("public java.lang.String getText ()\n", java);
+			Assert.Contains ("public void setItems (java.lang.String[] p0)\n", java);
 		}
 
 	}
