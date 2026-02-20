@@ -1545,6 +1545,7 @@ class TestActivity : Activity { }"
 
 			var manifest = new ManifestDocument (null) {
 				PackageName = "dummy.packageid",
+				TargetSdkVersion = "21",
 				VersionResolver = new MockVersionResolver (),
 			};
 
