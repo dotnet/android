@@ -162,6 +162,7 @@ class Format_V3 : FormatBase
 				continue;
 			}
 
+			// assemblyStream is owned by `ApplicationAssembly`
 			var assembly = (ApplicationAssembly)ApplicationAssembly.LoadAspect (assemblyStream, assemblyState, name);
 			assembly.NameHash = hash;
 			ret.Add (assembly);

@@ -18,4 +18,9 @@ enum ReportForm
 	/// report.
 	/// </summary>
 	SimpleList,
+
+	/// <summary>
+	/// Report is in a subsection of another report.
+	/// </summary>
+	Subsection,
 }

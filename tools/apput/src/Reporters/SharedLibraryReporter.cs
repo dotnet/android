@@ -3,22 +3,22 @@ using System.Text;
 
 namespace ApplicationUtility;
 
-[AspectReporter (typeof (NativeAotSharedLibrary))]
+[AspectReporter (typeof (SharedLibrary))]
 class SharedLibraryReporter : BaseReporter
 {
-	readonly SharedLibrary library;
+	protected SharedLibrary Library { get; }
 
 	protected override string AspectName => SharedLibrary.AspectName;
 	protected virtual string LibraryKind => "Shared library";
-	protected override string ShortDescription => library.Name;
+	protected override string ShortDescription => Library.Name;
 
 	public SharedLibraryReporter (SharedLibrary library, MarkdownDocument doc)
 		: base (doc)
 	{
-		this.library = library;
+		Library = library;
 	}
 
-	protected override void DoReport (ReportForm form)
+	protected override void DoReport (ReportForm form, uint sectionLevel)
 	{
 		switch (form) {
 			case ReportForm.Standalone:
@@ -35,32 +35,32 @@ class SharedLibraryReporter : BaseReporter
 	}
 
 	// TODO: migrate to Markdown
-	void DoStandaloneReport ()
+	protected virtual void DoStandaloneReport ()
 	{
 		WriteAspectDesc (LibraryKind);
 
 		WriteSubsectionBanner ("Generic ELF shared library info");
-		WriteNativeArch (library.TargetArchitecture);
+		WriteNativeArch (Library.TargetArchitecture);
 
-		if (library.HasSoname) {
-			WriteItem ("Soname", ValueOrNone (library.Soname));
+		if (Library.HasSoname) {
+			WriteItem ("Soname", ValueOrNone (Library.Soname));
 		}
-		WriteItem ("Build ID", ValueOrNone (library.BuildID));
+		WriteItem ("Build ID", ValueOrNone (Library.BuildID));
 		WriteDebugInfoDesc ();
 		WriteAlignmentInfo ();
 
-		if (library.HasAndroidIdent) {
+		if (Library.HasAndroidIdent) {
 			WriteSubsectionBanner ("Android-specific ELF shared library info");
-			WriteItem ("Android ident", ValueOrNone (library.AndroidIdent));
+			WriteItem ("Android ident", ValueOrNone (Library.AndroidIdent));
 		}
 	}
 
-	void DoListReport ()
+	protected virtual void DoListReport ()
 	{
 		ReportDoc.BeginList ();
-		AddNativeArchListItem (library.TargetArchitecture);
-		if (library.HasSoname) {
-			ReportDoc.AddLabeledListItem ("Soname", ValueOrNone (library.Soname));
+		AddNativeArchListItem (Library.TargetArchitecture);
+		if (Library.HasSoname) {
+			ReportDoc.AddLabeledListItem ("Soname", ValueOrNone (Library.Soname));
 		}
 		AddBuildId ();
 		AddSize ();
@@ -73,36 +73,36 @@ class SharedLibraryReporter : BaseReporter
 
 	void AddSoname ()
 	{
-		if (!library.HasSoname) {
+		if (!Library.HasSoname) {
 			return;
 		}
 
-		ReportDoc.AddLabeledListItem ("Soname", ValueOrNone (library.Soname));
+		ReportDoc.AddLabeledListItem ("Soname", ValueOrNone (Library.Soname));
 	}
 
 	void AddBuildId (bool appendLine = true)
 	{
-		ReportDoc.AddLabeledListItem ("Build ID", ValueOrNone (library.BuildID), appendLine: appendLine);
+		ReportDoc.AddLabeledListItem ("Build ID", ValueOrNone (Library.BuildID), appendLine: appendLine);
 	}
 
 	void AddAlignment (bool appendLine = true)
 	{
-		ReportDoc.AddLabeledListItem ("Alignment", $"{library.Alignment}", appendLine: appendLine);
+		ReportDoc.AddLabeledListItem ("Alignment", $"{Library.Alignment}", appendLine: appendLine);
 	}
 
 	void AddDebugInfo (bool appendLine = true)
 	{
-		ReportDoc.AddLabeledListItem ("Debug info", $"{YesNo (library.HasDebugInfo)}", appendLine: appendLine);
+		ReportDoc.AddLabeledListItem ("Debug info", $"{YesNo (Library.HasDebugInfo)}", appendLine: appendLine);
 	}
 
 	void AddSize (bool appendLine = true)
 	{
-		ReportDoc.AddLabeledListItem ("Size", $"{library.Size}", appendLine: appendLine);
+		ReportDoc.AddLabeledListItem ("Size", $"{Library.Size}", appendLine: appendLine);
 	}
 
 	void AddAndroidIdent (bool appendLine = true)
 	{
-		if (!library.HasAndroidIdent) {
+		if (!Library.HasAndroidIdent) {
 			return;
 		}
 
@@ -112,12 +112,12 @@ class SharedLibraryReporter : BaseReporter
 
 	protected void WriteDebugInfoDesc ()
 	{
-		WriteItem ("Has debug info", YesNo (library.HasDebugInfo));
+		WriteItem ("Has debug info", YesNo (Library.HasDebugInfo));
 
-		var sb = new StringBuilder (YesNo (library.HasDebugLink));
-		if (library.HasDebugLink) {
+		var sb = new StringBuilder (YesNo (Library.HasDebugLink));
+		if (Library.HasDebugLink) {
 			sb.Append (" ('");
-			sb.Append (library.DebugLink);
+			sb.Append (Library.DebugLink);
 			sb.Append ("')");
 		}
 		WriteItem ("Has debug link", sb.ToString ());
@@ -126,12 +126,12 @@ class SharedLibraryReporter : BaseReporter
 	protected void WriteAlignmentInfo ()
 	{
 		var sb = new StringBuilder ();
-		sb.Append ($"0x{library.Alignment:x} (");
-		if (!library.AlignmentCompatibleWith16k) {
+		sb.Append ($"0x{Library.Alignment:x} (");
+		if (!Library.AlignmentCompatibleWith16k) {
 			sb.Append ("NOT ");
 		}
 		sb.Append ("compatible with Android 16k library alignment requirement)");
 		WriteLabel ("Alignment");
-		WriteLine (library.AlignmentCompatibleWith16k ? ValidValueColor : InvalidValueColor, sb.ToString ());
+		WriteLine (Library.AlignmentCompatibleWith16k ? ValidValueColor : InvalidValueColor, sb.ToString ());
 	}
 }

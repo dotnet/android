@@ -23,6 +23,7 @@ abstract class BaseReporter : IReporter
 
 	const string NativeArchitectureLabel = "Native target architecture";
 	const string NativeArchitecturesLabel = NativeArchitectureLabel + "s";
+	const string TargetArchitectureLabel = "Target architecture";
 
 	static readonly Dictionary<Countable, (string singular, string plural)> Countables = new () {
 		{ Countable.Assembly, ("assembly", "assemblies") },
@@ -48,7 +49,7 @@ abstract class BaseReporter : IReporter
 		ReportDoc = doc;
 	}
 
-	public void Report (ReportForm form)
+	public void Report (ReportForm form, uint sectionLevel = 1)
 	{
 		bool standalone = form == ReportForm.Standalone;
 
@@ -56,14 +57,14 @@ abstract class BaseReporter : IReporter
 			WriteLine (BannerColor, $"# {AspectName} ({ShortDescription})");
 		}
 
-		DoReport (form);
+		DoReport (form, sectionLevel);
 
 		if (standalone) {
 			WriteLine ();
 		}
 	}
 
-	protected abstract void DoReport (ReportForm form);
+	protected abstract void DoReport (ReportForm form, uint sectionLevel);
 
 	protected MarkdownDocument AddSection (string text, uint level = 1) => ReportDoc.AddHeading (level, text).AddNewline ();
 
@@ -88,6 +89,13 @@ abstract class BaseReporter : IReporter
 		return AddLabeledItem ("Aspect type", text);
 	}
 
+	protected MarkdownDocument AddSubsectionBanner (string text, uint level = 1)
+	{
+		ReportDoc.AddHeading (level, text);
+		ReportDoc.AddNewline ().AddNewline ();
+		return ReportDoc;
+	}
+
 	protected void WriteSubsectionBanner (string text)
 	{
 		WriteLine ();
@@ -107,6 +115,18 @@ abstract class BaseReporter : IReporter
 	protected MarkdownDocument AddNativeArchListItem (NativeArchitecture arch)
 	{
 		ReportDoc.AddLabeledListItem (NativeArchitectureLabel, arch.ToString ());
+		return ReportDoc;
+	}
+
+	protected MarkdownDocument AddTargetArchListItem (AndroidTargetArch arch)
+	{
+		ReportDoc.AddLabeledListItem (TargetArchitectureLabel, arch.ToString ());
+		return ReportDoc;
+	}
+
+	protected MarkdownDocument AddTargetArchItem (AndroidTargetArch arch, bool appendNewline = true)
+	{
+		AddLabeledItem (TargetArchitectureLabel, arch.ToString (), appendNewline);
 		return ReportDoc;
 	}
 

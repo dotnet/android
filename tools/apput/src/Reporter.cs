@@ -7,7 +7,7 @@ namespace ApplicationUtility;
 
 class Reporter
 {
-	public static void Report (IAspect aspect, bool plainTextRendering)
+	public static void Report (IAspect aspect, bool plainTextRendering, ReportForm form = ReportForm.Standalone, MarkdownDocument? doc = null)
 	{
 		Type aspectType = aspect.GetType ();
 
@@ -26,16 +26,19 @@ class Reporter
 			throw new InvalidOperationException ($"Internal error: cannot generate report for unsupported type '{aspectType}'");
 		}
 
-		var reportDoc = new MarkdownDocument ();
+		var reportDoc = doc ?? new MarkdownDocument ();
 		try {
 			IReporter? reporter = CreateSpecificReporter (aspectType, aspect, reportDoc);
 			if (reporter == null) {
 				throw new InvalidOperationException ($"Internal error: failed to instantiate reporter for type '{aspectType}'");
 			}
 
-			reporter.Report ();
+			reporter.Report (form);
 		} finally {
-			WriteReport (reportDoc, plainTextRendering);
+			// Write report only when we're not nested
+			if (doc != null) {
+				WriteReport (reportDoc, plainTextRendering);
+			}
 		}
 	}
 
