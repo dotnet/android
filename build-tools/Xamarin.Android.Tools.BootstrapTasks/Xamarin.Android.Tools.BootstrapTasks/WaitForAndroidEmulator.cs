@@ -13,6 +13,9 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 		public override bool Execute ()
 		{
+			// The timeout is shared between both phases (boot_completed and
+			// Package Manager readiness), so the total wall-clock time for
+			// the entire method is bounded by a single Timeout period.
 			var endTime = DateTime.UtcNow.AddMilliseconds (Timeout);
 
 			// Phase 1: wait for sys.boot_completed
