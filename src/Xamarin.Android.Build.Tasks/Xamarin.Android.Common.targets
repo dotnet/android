@@ -477,11 +477,30 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   </ItemGroup>
 </Target>
 
+<!--
+  Check that AndroidHttpClientHandlerType is valid.
+  For NativeAOT, emit an error if AndroidHttpClientHandlerType is set (not supported).
+  For MonoVM/CoreCLR, emit a deprecation warning if AndroidHttpClientHandlerType is set.
+-->
 <Target Name="_CheckAndroidHttpClientHandlerType"
-    Condition=" '$(AndroidHttpClientHandlerType)' != '' And '$(AndroidHttpClientHandlerType)' != 'Xamarin.Android.Net.AndroidMessageHandler' And '$(AndroidApplication)' == 'True' ">
+    Condition=" '$(AndroidHttpClientHandlerType)' != '' And '$(AndroidApplication)' == 'True' ">
+  <!-- Error for NativeAOT: AndroidHttpClientHandlerType is not supported -->
+  <AndroidError Code="XA1042"
+      ResourceName="XA1042"
+      FormatArguments="$(AndroidHttpClientHandlerType)"
+      Condition=" '$(_AndroidRuntime)' == 'NativeAOT' "
+  />
+  <!-- Deprecation warning for MonoVM/CoreCLR -->
+  <AndroidWarning Code="XA1043"
+      ResourceName="XA1043"
+      FormatArguments="$(AndroidHttpClientHandlerType)"
+      Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
+  />
+  <!-- Still validate the type for MonoVM/CoreCLR if not the default -->
   <CheckClientHandlerType
     ClientHandlerType="$(AndroidHttpClientHandlerType)"
     ResolvedAssemblies="$(OutDir)$(TargetFileName);@(ReferencePath);@(ReferenceDependencyPaths)"
+    Condition=" '$(_AndroidRuntime)' != 'NativeAOT' And '$(AndroidHttpClientHandlerType)' != 'Xamarin.Android.Net.AndroidMessageHandler' "
   />
 </Target>
 

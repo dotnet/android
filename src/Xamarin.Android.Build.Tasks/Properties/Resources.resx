@@ -1009,6 +1009,20 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
 {1} - The current value of the property
 </comment>
   </data>
+  <data name="XA1042" xml:space="preserve">
+    <value>The 'AndroidHttpClientHandlerType' property is deprecated and not supported with NativeAOT. The property value '{0}' will be ignored, and the default handler 'Xamarin.Android.Net.AndroidMessageHandler' will be used. Remove the 'AndroidHttpClientHandlerType' property from your project file. To use a custom HTTP handler, pass it to the HttpClient constructor.</value>
+    <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType', 'NativeAOT', 'Xamarin.Android.Net.AndroidMessageHandler', 'HttpClient'.
+{0} - The value of the AndroidHttpClientHandlerType property.</comment>
+  </data>
+  <data name="XA1043" xml:space="preserve">
+    <value>The 'AndroidHttpClientHandlerType' property is deprecated and will be removed in a future version of .NET for Android. The property value '{0}' will be used, but the recommended approach is to remove the property and pass a custom HTTP handler to the HttpClient constructor if needed.</value>
+    <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType', 'HttpClient'.
+{0} - The value of the AndroidHttpClientHandlerType property.</comment>
+  </data>
+  <data name="XA1044" xml:space="preserve">
+    <value>The 'XA_HTTP_CLIENT_HANDLER_TYPE' environment variable is deprecated and will be removed in a future version of .NET for Android. Remove the environment variable from your @(AndroidEnvironment) files. To use a custom HTTP handler, pass it to the HttpClient constructor.</value>
+    <comment>The following are literal names and should not be translated: 'XA_HTTP_CLIENT_HANDLER_TYPE', '@(AndroidEnvironment)', 'HttpClient'.</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>Java dependency '{0}' is not satisfied.</value>
     <comment>The following are literal names and should not be translated: Java.
