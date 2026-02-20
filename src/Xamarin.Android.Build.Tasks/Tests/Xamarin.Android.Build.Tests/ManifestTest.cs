@@ -1231,7 +1231,7 @@ class TestActivity : Activity { }"
 				);
 
 				AddTestData (
-					minSdkVersion: $"{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}.0",
+					minSdkVersion: $"{XABuildConfig.AndroidLatestStableApiLevel}",
 					removeUsesSdkElement: false,
 					runtime: runtime
 				);
