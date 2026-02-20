@@ -57,6 +57,8 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void DotNetRunWaitForExit ()
 		{
+			AssertCommercialBuild (); //FIXME: https://github.com/dotnet/android/issues/10832
+
 			const string logcatMessage = "DOTNET_RUN_TEST_MESSAGE_12345";
 			var proj = new XamarinAndroidApplicationProject ();
 
@@ -124,6 +126,8 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void DotNetRunWithDeviceParameter ()
 		{
+			AssertCommercialBuild (); //FIXME: https://github.com/dotnet/android/issues/10832
+
 			const string logcatMessage = "DOTNET_RUN_DEVICE_TEST_67890";
 			var proj = new XamarinAndroidApplicationProject ();
 

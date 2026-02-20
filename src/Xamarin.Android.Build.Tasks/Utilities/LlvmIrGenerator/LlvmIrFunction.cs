@@ -442,7 +442,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					continue;
 				}
 
-				if (!String.IsNullOrEmpty (parameter.Name)) {
+				if (!String.IsNullOrWhiteSpace (parameter.Name)) {
 					continue;
 				}
 

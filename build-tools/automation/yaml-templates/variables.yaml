@@ -22,7 +22,7 @@ variables:
 - name: NUnitConsoleVersion
   value: 3.16.3
 - name: NUnit.NumberOfTestWorkers
-  value: 4
+  value: -1
 - name: DotNetSdkVersion
   value: 10.0
 - name: DotNetSdkQuality

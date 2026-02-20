@@ -53,13 +53,14 @@ internal sealed class LogcatTextWriter : TextWriter {
 	}
 }
 
-static class AndroidLog {
+static partial class AndroidLog {
 
-	[DllImport ("log", EntryPoint = "__android_log_print", CallingConvention = CallingConvention.Cdecl)]
-	private static extern void __android_log_print(AndroidLogLevel level, string? tag, string format, string args, IntPtr ptr);
+	[LibraryImport ("log", EntryPoint = "__android_log_print", StringMarshalling = StringMarshalling.Utf8)]
+	[UnmanagedCallConv (CallConvs = new[] { typeof (System.Runtime.CompilerServices.CallConvCdecl) })]
+	private static partial void __android_log_print (AndroidLogLevel level, string? tag, string format, string args, IntPtr ptr);
 
-	internal static void Print(AndroidLogLevel level, string? tag, string message) =>
-	    __android_log_print(level, tag, "%s", message, IntPtr.Zero);
+	internal static void Print (AndroidLogLevel level, string? tag, string message) =>
+		__android_log_print (level, tag, "%s", message, IntPtr.Zero);
 
 }
 
