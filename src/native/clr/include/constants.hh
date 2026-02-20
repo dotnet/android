@@ -31,6 +31,15 @@ namespace xamarin::android {
 		static constexpr bool is_release_build = false;
 		static constexpr bool is_debug_build = true;
 #endif
+
+#if defined(XA_HOST_NATIVEAOT)
+		static constexpr bool is_clr = false;
+		static constexpr bool is_nativeaot = true;
+#else
+		static constexpr bool is_clr = true;
+		static constexpr bool is_nativeaot = false;
+#endif
+
 		static constexpr std::string_view MANGLED_ASSEMBLY_NAME_EXT { ".so" };
 		static constexpr std::string_view dso_suffix { ".so" };
 		static constexpr std::string_view DSO_PREFIX { "lib" };

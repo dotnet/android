@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\Configuration.props" />
+
+  <PropertyGroup>
+    <Company>Microsoft Corporation</Company>
+    <Copyright>2026 Microsoft Corporation</Copyright>
+    <Version>0.0.1</Version>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>../../bin/$(Configuration)/bin/update-llvm-source</OutputPath>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <RootNamespace>Microsoft.Android.Tools</RootNamespace>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RollForward>Major</RollForward>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="../../bin/Build$(Configuration)/LlvmUpdateInfo.cs" />
+    <Compile Include="../../bin/Build$(Configuration)/XABuildConfig.cs" />
+  </ItemGroup>
+</Project>

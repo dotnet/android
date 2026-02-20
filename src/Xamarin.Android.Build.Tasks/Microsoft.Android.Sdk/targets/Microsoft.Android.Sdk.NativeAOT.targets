@@ -59,6 +59,21 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     </IlcCompileDependsOn>
   </PropertyGroup>
 
+  <Target Name="_FixUpLinkerArgs"
+          AfterTargets="SetupOSSpecificProps">
+    <!-- NativeAOT (in Microsoft.NETCore.Native.Unix.targets) hardcodes the Android API level to
+         `android21` in a manner that cannot be overridden by us. This causes it to pass the
+         `-target=$(ABI)-linux-android21` argument to the linker regardless of the actual API level
+         we have to use. This breaks compilation with our API level != 21, so we need to remove the
+         extra argument here.
+         This workaround can be removed when NativeAOT target is fixed.
+    -->
+    <ItemGroup>
+      <LinkerArg Remove="--target=aarch64-linux-android21" />
+      <LinkerArg Remove="--target=x86_64-linux-android21" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="_AndroidBeforeIlcCompile"
       DependsOnTargets="_PrepareLinking"
       BeforeTargets="SetupProperties">
@@ -130,6 +145,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <PropertyGroup>
       <!-- Turn trimmer warnings back to original value -->
       <SuppressTrimAnalysisWarnings>$(_OriginalSuppressTrimAnalysisWarnings)</SuppressTrimAnalysisWarnings>
+      <_XANativeAotHostName>libnaot-android.release-static-release.a</_XANativeAotHostName>
     </PropertyGroup>
     <ItemGroup>
       <!-- Android needs a proper soname property or it will refuse to load the library -->
@@ -154,11 +170,12 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <!-- Satellite assemblies -->
       <IlcSatelliteAssembly Include="$(_OuterIntermediateSatelliteAssembliesWithTargetPath)" />
 
-      <_NdkLibs Include="@(RuntimePackAsset->WithMetadataValue('Filename', 'libnaot-android.$(Configuration.ToLower())-static-$(Configuration.ToLower())'))" />
-
-      <!-- Include libc++ -->
-      <_NdkLibs Include="$(_NdkSysrootDir)libc++_static.a" />
-      <_NdkLibs Include="$(_NdkSysrootDir)libc++abi.a" />
+      <!-- Attempt to find our NativeAOT runtime static library using different approaches. It seems
+           that the `Filename` metadata isn't always present on `RuntimePackAsset` items
+      -->
+      <_XANativeAotHost Include="@(RuntimePackAsset->WithMetadataValue('Filename', '$(_XANativeAotHostName)'))" />
+      <_XANativeAotHost Include="@(RuntimePackAsset->WithMetadataValue('DestinationSubPath', '$(_XANativeAotHostName)'))" />
+      <_NdkLibs Include="@(_XANativeAotHost)" />
 
       <LinkerArg Include="&quot;%(_NdkLibs.Identity)&quot;" />
 
@@ -169,6 +186,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <!-- Every p/invoke using the `xa-internal-api` "library" will be called directly -->
       <DirectPInvoke Include="xa-internal-api" />
     </ItemGroup>
+
+    <Error Condition=" '@(_XANativeAotHost)' == '' " Text="NativeAOT host library '$(_XANativeAotHostName)' not found." />
   </Target>
 
   <Target Name="_PrepareNativeAotAndroidAppInputs">
