@@ -68,6 +68,12 @@ sealed record JavaPeerInfo
 	public IReadOnlyList<MarshalMethodInfo> MarshalMethods { get; init; } = Array.Empty<MarshalMethodInfo> ();
 
 	/// <summary>
+	/// Java constructors to emit in the JCW .java file.
+	/// Each has a JNI signature and an ordinal index for the nctor_N native method.
+	/// </summary>
+	public IReadOnlyList<JavaConstructorInfo> JavaConstructors { get; init; } = Array.Empty<JavaConstructorInfo> ();
+
+	/// <summary>
 	/// Information about the activation constructor for this type.
 	/// May reference a base type's constructor if the type doesn't define its own.
 	/// </summary>
@@ -177,6 +183,34 @@ sealed record JniParameterInfo
 	/// Managed parameter type name, e.g., "Android.OS.Bundle", "System.Int32".
 	/// </summary>
 	public string ManagedType { get; init; } = "";
+}
+
+/// <summary>
+/// Describes a Java constructor to emit in the JCW .java source file.
+/// </summary>
+sealed record JavaConstructorInfo
+{
+	/// <summary>
+	/// JNI constructor signature, e.g., "(Landroid/content/Context;)V".
+	/// </summary>
+	public required string JniSignature { get; init; }
+
+	/// <summary>
+	/// Ordinal index for the native constructor method (nctor_0, nctor_1, ...).
+	/// </summary>
+	public required int ConstructorIndex { get; init; }
+
+	/// <summary>
+	/// JNI parameter types parsed from the signature.
+	/// Used to generate the Java constructor parameter list.
+	/// </summary>
+	public IReadOnlyList<JniParameterInfo> Parameters { get; init; } = Array.Empty<JniParameterInfo> ();
+
+	/// <summary>
+	/// For [Export] constructors: super constructor arguments string.
+	/// Null for [Register] constructors.
+	/// </summary>
+	public string? SuperArgumentsString { get; init; }
 }
 
 /// <summary>

@@ -83,6 +83,9 @@ static class ModelBuilder
 		var referencedAssemblies = new SortedSet<string> (StringComparer.Ordinal);
 		foreach (var proxy in model.ProxyTypes) {
 			AddIfCrossAssembly (referencedAssemblies, proxy.TargetType?.AssemblyName, assemblyName);
+			foreach (var uco in proxy.UcoMethods) {
+				AddIfCrossAssembly (referencedAssemblies, uco.CallbackType.AssemblyName, assemblyName);
+			}
 			if (proxy.ActivationCtor != null && !proxy.ActivationCtor.IsOnLeafType) {
 				AddIfCrossAssembly (referencedAssemblies, proxy.ActivationCtor.DeclaringType.AssemblyName, assemblyName);
 			}
@@ -103,10 +106,11 @@ static class ModelBuilder
 			string entryJniName = i == 0 ? jniName : $"{jniName}[{i}]";
 
 			bool hasProxy = peer.ActivationCtor != null || peer.InvokerTypeName != null;
+			bool isAcw = !peer.DoNotGenerateAcw && !peer.IsInterface && peer.MarshalMethods.Count > 0;
 
 			JavaPeerProxyData? proxy = null;
 			if (hasProxy) {
-				proxy = BuildProxyType (peer);
+				proxy = BuildProxyType (peer, isAcw);
 				model.ProxyTypes.Add (proxy);
 			}
 
@@ -178,7 +182,7 @@ static class ModelBuilder
 		}
 	}
 
-	static JavaPeerProxyData BuildProxyType (JavaPeerInfo peer)
+	static JavaPeerProxyData BuildProxyType (JavaPeerInfo peer, bool isAcw)
 	{
 		// Use managed type name for proxy naming to guarantee uniqueness across aliases
 		// (two types with the same JNI name will have different managed names).
@@ -190,6 +194,7 @@ static class ModelBuilder
 				ManagedTypeName = peer.ManagedTypeName,
 				AssemblyName = peer.AssemblyName,
 			},
+			IsAcw = isAcw,
 			IsGenericDefinition = peer.IsGenericDefinition,
 		};
 
@@ -212,7 +217,78 @@ static class ModelBuilder
 			};
 		}
 
+		if (isAcw) {
+			BuildUcoMethods (peer, proxy);
+			BuildUcoConstructors (peer, proxy);
+			BuildNativeRegistrations (proxy);
+		}
+
 		return proxy;
+	}
+
+	static void BuildUcoMethods (JavaPeerInfo peer, JavaPeerProxyData proxy)
+	{
+		int ucoIndex = 0;
+		for (int i = 0; i < peer.MarshalMethods.Count; i++) {
+			var mm = peer.MarshalMethods [i];
+			if (mm.IsConstructor) {
+				continue;
+			}
+
+			proxy.UcoMethods.Add (new UcoMethodData {
+				WrapperName = $"n_{mm.JniName}_uco_{ucoIndex}",
+				CallbackMethodName = mm.NativeCallbackName,
+				CallbackType = new TypeRefData {
+					ManagedTypeName = !string.IsNullOrEmpty (mm.DeclaringTypeName) ? mm.DeclaringTypeName : peer.ManagedTypeName,
+					AssemblyName = !string.IsNullOrEmpty (mm.DeclaringAssemblyName) ? mm.DeclaringAssemblyName : peer.AssemblyName,
+				},
+				JniSignature = mm.JniSignature,
+			});
+			ucoIndex++;
+		}
+	}
+
+	static void BuildUcoConstructors (JavaPeerInfo peer, JavaPeerProxyData proxy)
+	{
+		if (peer.ActivationCtor == null || peer.JavaConstructors.Count == 0) {
+			return;
+		}
+
+		foreach (var ctor in peer.JavaConstructors) {
+			proxy.UcoConstructors.Add (new UcoConstructorData {
+				WrapperName = $"nctor_{ctor.ConstructorIndex}_uco",
+				JniSignature = ctor.JniSignature,
+				TargetType = new TypeRefData {
+					ManagedTypeName = peer.ManagedTypeName,
+					AssemblyName = peer.AssemblyName,
+				},
+			});
+		}
+	}
+
+	static void BuildNativeRegistrations (JavaPeerProxyData proxy)
+	{
+		foreach (var uco in proxy.UcoMethods) {
+			proxy.NativeRegistrations.Add (new NativeRegistrationData {
+				JniMethodName = uco.CallbackMethodName,
+				JniSignature = uco.JniSignature,
+				WrapperMethodName = uco.WrapperName,
+			});
+		}
+
+		foreach (var uco in proxy.UcoConstructors) {
+			string jniName = uco.WrapperName;
+			int ucoSuffix = jniName.LastIndexOf ("_uco", StringComparison.Ordinal);
+			if (ucoSuffix >= 0) {
+				jniName = jniName.Substring (0, ucoSuffix);
+			}
+
+			proxy.NativeRegistrations.Add (new NativeRegistrationData {
+				JniMethodName = jniName,
+				JniSignature = uco.JniSignature,
+				WrapperMethodName = uco.WrapperName,
+			});
+		}
 	}
 
 	static TypeMapAttributeData BuildEntry (JavaPeerInfo peer, JavaPeerProxyData? proxy,

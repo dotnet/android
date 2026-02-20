@@ -220,6 +220,7 @@ sealed class JavaPeerScanner : IDisposable
 				DoNotGenerateAcw = doNotGenerateAcw,
 				IsUnconditional = isUnconditional,
 				MarshalMethods = marshalMethods,
+				JavaConstructors = BuildJavaConstructors (marshalMethods),
 				ActivationCtor = activationCtor,
 				InvokerTypeName = invokerTypeName,
 				IsGenericDefinition = isGenericDefinition,
@@ -719,5 +720,24 @@ sealed class JavaPeerScanner : IDisposable
 			result.Add (new JniParameterInfo { JniType = t });
 		}
 		return result;
+	}
+
+	static List<JavaConstructorInfo> BuildJavaConstructors (List<MarshalMethodInfo> marshalMethods)
+	{
+		var ctors = new List<JavaConstructorInfo> ();
+		int ctorIndex = 0;
+		foreach (var mm in marshalMethods) {
+			if (!mm.IsConstructor) {
+				continue;
+			}
+			ctors.Add (new JavaConstructorInfo {
+				JniSignature = mm.JniSignature,
+				ConstructorIndex = ctorIndex,
+				Parameters = mm.Parameters,
+				SuperArgumentsString = mm.SuperArgumentsString,
+			});
+			ctorIndex++;
+		}
+		return ctors;
 	}
 }

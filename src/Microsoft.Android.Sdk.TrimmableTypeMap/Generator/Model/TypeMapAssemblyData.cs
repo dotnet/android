@@ -136,8 +136,34 @@ sealed class JavaPeerProxyData
 	/// </summary>
 	public bool IsGenericDefinition { get; init; }
 
-}
+	/// <summary>
 
+	/// Whether this proxy needs ACW support (RegisterNatives + UCO wrappers + IAndroidCallableWrapper).
+
+	/// </summary>
+	public bool IsAcw { get; init; }
+
+	/// <summary>
+
+	/// UCO method wrappers for marshal methods (non-constructor).
+
+	/// </summary>
+	public List<UcoMethodData> UcoMethods { get; } = new ();
+
+	/// <summary>
+
+	/// UCO constructor wrappers.
+
+	/// </summary>
+	public List<UcoConstructorData> UcoConstructors { get; } = new ();
+
+	/// <summary>
+
+	/// RegisterNatives registrations (method name, JNI signature, wrapper name).
+
+	/// </summary>
+	public List<NativeRegistrationData> NativeRegistrations { get; } = new ();
+}
 
 /// <summary>
 /// A cross-assembly type reference (assembly name + full managed type name).
@@ -155,6 +181,92 @@ sealed record TypeRefData
 
 	/// </summary>
 	public required string AssemblyName { get; init; }
+}
+
+/// <summary>
+/// An [UnmanagedCallersOnly] static wrapper for a marshal method.
+/// Body: load all args → call n_* callback → ret.
+/// </summary>
+sealed record UcoMethodData
+{
+	/// <summary>
+	/// Name of the generated wrapper method, e.g., "n_onCreate_uco_0".
+	/// </summary>
+	public required string WrapperName { get; init; }
+
+	/// <summary>
+
+	/// Name of the n_* callback to call, e.g., "n_OnCreate".
+
+	/// </summary>
+	public required string CallbackMethodName { get; init; }
+
+	/// <summary>
+
+	/// Type containing the callback method.
+
+	/// </summary>
+	public required TypeRefData CallbackType { get; init; }
+
+	/// <summary>
+
+	/// JNI method signature, e.g., "(Landroid/os/Bundle;)V". Used to determine CLR parameter types.
+
+	/// </summary>
+	public required string JniSignature { get; init; }
+}
+
+/// <summary>
+/// An [UnmanagedCallersOnly] static wrapper for a constructor callback.
+/// Signature must match the full JNI native method signature (jnienv + self + ctor params)
+/// so the ABI is correct when JNI dispatches the call.
+/// Body: TrimmableNativeRegistration.ActivateInstance(self, typeof(TargetType)).
+/// </summary>
+sealed record UcoConstructorData
+{
+	/// <summary>
+	/// Name of the generated wrapper, e.g., "nctor_0_uco".
+	/// </summary>
+	public required string WrapperName { get; init; }
+
+	/// <summary>
+
+	/// Target type to pass to ActivateInstance.
+
+	/// </summary>
+	public required TypeRefData TargetType { get; init; }
+
+	/// <summary>
+
+	/// JNI constructor signature, e.g., "(Landroid/content/Context;)V". Used for RegisterNatives registration.
+
+	/// </summary>
+	public required string JniSignature { get; init; }
+}
+
+/// <summary>
+/// One JNI native method registration in RegisterNatives.
+/// </summary>
+sealed record NativeRegistrationData
+{
+	/// <summary>
+	/// JNI method name to register, e.g., "n_onCreate" or "nctor_0".
+	/// </summary>
+	public required string JniMethodName { get; init; }
+
+	/// <summary>
+
+	/// JNI method signature, e.g., "(Landroid/os/Bundle;)V".
+
+	/// </summary>
+	public required string JniSignature { get; init; }
+
+	/// <summary>
+
+	/// Name of the UCO wrapper method whose function pointer to register.
+
+	/// </summary>
+	public required string WrapperMethodName { get; init; }
 }
 
 /// <summary>
