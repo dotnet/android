@@ -39,7 +39,7 @@ namespace {
 	}};
 
 	//64-bit DotNet p/invoke table
-	std::array<PinvokeEntry, 491> dotnet_pinvokes {{
+	std::array<PinvokeEntry, 494> dotnet_pinvokes {{
 		{0x99f2ee02463000, "CompressionNative_Crc32", nullptr},
 		{0xb38afc8bfe830b, "SystemNative_Bind", nullptr},
 		{0x190fe65d8736dcb, "SystemNative_TryGetIPPacketInformation", nullptr},
@@ -97,6 +97,7 @@ namespace {
 		{0x146cd1dc4fb2ba58, "SystemNative_LChflagsCanSetHiddenFlag", nullptr},
 		{0x14b7e3527b60e83f, "CryptoNative_ErrErrorStringN", nullptr},
 		{0x15bd710d3a9b3b0c, "CryptoNative_EvpDigestFinalEx", nullptr},
+		{0x1757413d3fb3c492, "SystemNative_LowLevelFutex_WaitOnAddress", nullptr},
 		{0x18580a4592ed1ea6, "GlobalizationNative_GetSortKey", nullptr},
 		{0x185f5d25252c3c72, "SystemNative_FAllocate", nullptr},
 		{0x18d6b5e9fec9b0dc, "SystemNative_Connectx", nullptr},
@@ -154,6 +155,7 @@ namespace {
 		{0x35c0aa811b7a83c8, "BrotliDecoderSetMetadataCallbacks", nullptr},
 		{0x35c1fa8dffcbbd8c, "CryptoNative_EvpDigestReset", nullptr},
 		{0x36128eed665b1923, "SystemNative_ShmUnlink", nullptr},
+		{0x362dd6799f8caed6, "SystemNative_LowLevelFutex_WaitOnAddressTimeout", nullptr},
 		{0x364dcf65ae63adff, "SystemNative_GetSocketErrorOption", nullptr},
 		{0x3757b327944abb54, "SystemNative_EnablePosixSignalHandling", nullptr},
 		{0x376f5dc6f9cfc714, "BrotliSharedDictionaryAttach", nullptr},
@@ -437,6 +439,7 @@ namespace {
 		{0xceba527295694651, "BrotliDecoderCreateInstance", nullptr},
 		{0xd0899515dfe85287, "GlobalizationNative_LoadICU", nullptr},
 		{0xd185dfe303ab91dd, "GlobalizationNative_CompareString", nullptr},
+		{0xd1ee731900924bec, "SystemNative_LowLevelFutex_WakeByAddressSingle", nullptr},
 		{0xd392d6ed5dcc111c, "SystemNative_GetDomainName", nullptr},
 		{0xd513a641103f8971, "SystemNative_IsMemfdSupported", nullptr},
 		{0xd5264d57a926edfb, "GlobalizationNative_InitICUFunctions", nullptr},
@@ -571,7 +574,7 @@ constexpr hash_t system_globalization_native_library_hash = 0x28b5c8fca080abd5;
 	}};
 
 	//32-bit DotNet p/invoke table
-	std::array<PinvokeEntry, 491> dotnet_pinvokes {{
+	std::array<PinvokeEntry, 494> dotnet_pinvokes {{
 		{0xaf6b1c, "AndroidCryptoNative_RsaPrivateDecrypt", nullptr},
 		{0x1733089, "SystemNative_SetTerminalInvalidationHandler", nullptr},
 		{0x1dd1f00, "AndroidCryptoNative_Aes192Cfb8", nullptr},
@@ -617,6 +620,7 @@ constexpr hash_t system_globalization_native_library_hash = 0x28b5c8fca080abd5;
 		{0x19b6a696, "AndroidCryptoNative_X509DecodeCollection", nullptr},
 		{0x1a302b28, "SystemNative_SchedSetAffinity", nullptr},
 		{0x1aa4105d, "GlobalizationNative_GetSortKey", nullptr},
+		{0x1ab05213, "SystemNative_LowLevelFutex_WakeByAddressSingle", nullptr},
 		{0x1ab1248e, "SystemNative_GetHostName", nullptr},
 		{0x1ad0dc45, "SystemNative_ReadDir", nullptr},
 		{0x1ae2353d, "SystemNative_MemfdCreate", nullptr},
@@ -795,6 +799,7 @@ constexpr hash_t system_globalization_native_library_hash = 0x28b5c8fca080abd5;
 		{0x70d4f7e6, "SystemNative_GetActiveTcpConnectionInfos", nullptr},
 		{0x70e91ddd, "SystemNative_FChMod", nullptr},
 		{0x71698a7f, "SystemNative_GetDomainSocketSizes", nullptr},
+		{0x72189e8a, "SystemNative_LowLevelFutex_WaitOnAddress", nullptr},
 		{0x7243c4b4, "AndroidCryptoNative_Des3Cfb8", nullptr},
 		{0x758dd6aa, "SystemNative_GetTimeZoneData", nullptr},
 		{0x759f5b1e, "AndroidCryptoNative_Aes256Cfb8", nullptr},
@@ -849,6 +854,7 @@ constexpr hash_t system_globalization_native_library_hash = 0x28b5c8fca080abd5;
 		{0x990163b4, "SystemNative_Receive", nullptr},
 		{0x996952b3, "AndroidCryptoNative_CipherFinalEx", nullptr},
 		{0x9a005080, "SystemNative_Bind", nullptr},
+		{0x9a1188d3, "SystemNative_LowLevelFutex_WaitOnAddressTimeout", nullptr},
 		{0x9a84ffd3, "AndroidCryptoNative_ChaCha20Poly1305", nullptr},
 		{0x9abfce84, "SystemNative_GetEnviron", nullptr},
 		{0x9bda7eb1, "SystemNative_ReadProcessStatusInfo", nullptr},
@@ -1076,5 +1082,5 @@ constexpr hash_t system_globalization_native_library_hash = 0xa66f1e5a;
 #endif
 
 constexpr size_t internal_pinvokes_count = 24;
-constexpr size_t dotnet_pinvokes_count = 491;
+constexpr size_t dotnet_pinvokes_count = 494;
 } // end of anonymous namespace
