@@ -15,8 +15,6 @@ using Java.Interop;
 
 [assembly: SupportedOSPlatform ("android21.0")]
 
-// --- User Activity with explicit Name ---
-
 namespace UserApp
 {
 	[Activity (Name = "com.example.userapp.MainActivity", MainLauncher = true, Label = "User App")]
@@ -40,8 +38,6 @@ namespace UserApp
 	}
 }
 
-// --- Services ---
-
 namespace UserApp.Services
 {
 	[Service (Name = "com.example.userapp.MyBackgroundService")]
@@ -58,8 +54,6 @@ namespace UserApp.Services
 	}
 }
 
-// --- BroadcastReceiver ---
-
 namespace UserApp.Receivers
 {
 	[BroadcastReceiver (Name = "com.example.userapp.BootReceiver", Exported = false)]
@@ -70,8 +64,6 @@ namespace UserApp.Receivers
 		}
 	}
 }
-
-// --- Application with BackupAgent ---
 
 namespace UserApp
 {
@@ -100,8 +92,6 @@ namespace UserApp
 	}
 }
 
-// --- Nested types ---
-
 namespace UserApp.Nested
 {
 	[Register ("com/example/userapp/OuterClass")]
@@ -122,8 +112,6 @@ namespace UserApp.Nested
 	}
 }
 
-// --- Plain Java.Lang.Object subclasses (no attributes) ---
-
 namespace UserApp.Models
 {
 	// These should all get CRC64-based JNI names
@@ -135,8 +123,6 @@ namespace UserApp.Models
 	{
 	}
 }
-
-// --- Explicit [Register] on user type ---
 
 namespace UserApp
 {
@@ -150,8 +136,6 @@ namespace UserApp
 	}
 }
 
-// --- Interface implementation ---
-
 namespace UserApp.Listeners
 {
 	public class MyClickListener : Java.Lang.Object, Android.Views.View.IOnClickListener
@@ -161,8 +145,6 @@ namespace UserApp.Listeners
 		}
 	}
 }
-
-// --- [Export] method ---
 
 namespace UserApp
 {
