@@ -14,9 +14,9 @@ class XamarinAppSharedLibraryReporter : SharedLibraryReporter
 		this.library = library;
 	}
 
-	protected override void DoReport (ReportForm form)
+	protected override void DoReport (ReportForm form, uint sectionLevel)
 	{
-		base.DoReport (form);
+		base.DoReport (form, sectionLevel);
 		WriteSubsectionBanner ("Xamarin.Android app library info");
 		WriteItem ("Format tag", $"0x{library.FormatTag:x}");
 	}

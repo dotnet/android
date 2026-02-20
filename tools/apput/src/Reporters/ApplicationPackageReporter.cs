@@ -16,7 +16,7 @@ class ApplicationPackageReporter : BaseReporter
 		this.package = package;
 	}
 
-	protected override void DoReport (ReportForm form)
+	protected override void DoReport (ReportForm form, uint sectionLevel)
 	{
 		AddAspectDesc (package.PackageFormat);
 
