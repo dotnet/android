@@ -77,7 +77,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				if (int.TryParse (line, out int value))
 					bootCompleted = value;
 			} else {
-				if (line.StartsWith ("package:", StringComparison.OrdinalIgnoreCase))
+				if (line.StartsWith ("package:", StringComparison.Ordinal))
 					pmReady = true;
 			}
 		}
