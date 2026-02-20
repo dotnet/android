@@ -160,6 +160,7 @@ stages:
         buildResultArtifactName: Build Results - Linux
         xaSourcePath: $(System.DefaultWorkingDirectory)/android
         nugetArtifactName: $(LinuxNuGetArtifactName)
+        makeMSBuildArgs: -m:2
         use1ESTemplate: false
 
 # Package Tests Stage
