@@ -26,6 +26,8 @@ public class AssemblyModifierPipeline : AndroidTask
 {
 	public override string TaskPrefix => "AMP";
 
+	public bool AddKeepAlives { get; set; }
+
 	public string ApplicationJavaClass { get; set; } = "";
 
 	public string CodeGenerationTarget { get; set; } = "";
@@ -139,6 +141,13 @@ public class AssemblyModifierPipeline : AndroidTask
 
 		findJavaObjectsStep.Initialize (context);
 		pipeline.Steps.Add (findJavaObjectsStep);
+
+		// AddKeepAlivesStep
+		if (AddKeepAlives) {
+			var addKeepAlivesStep = new AddKeepAlivesStep ();
+			addKeepAlivesStep.Initialize (context);
+			pipeline.Steps.Add (addKeepAlivesStep);
+		}
 
 		// SaveChangedAssemblyStep
 		var writerParameters = new WriterParameters {
