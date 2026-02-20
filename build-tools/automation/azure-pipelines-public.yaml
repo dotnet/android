@@ -358,3 +358,61 @@ stages:
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
       parameters:
         condition: true
+
+# MSBuild Emulator Tests Stage
+- stage: msbuilddevice_tests
+  displayName: MSBuild Emulator Tests
+  dependsOn: mac_build
+  condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'))
+  jobs:
+  - job: mac_dotnetdevice_tests
+    strategy:
+      parallel: 8
+    displayName: "macOS > Tests > MSBuild+Emulator"
+    pool:
+      name: Azure Pipelines
+      vmImage: $(HostedMacImageWithEmulator)
+      os: macOS
+    timeoutInMinutes: 180
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    steps:
+    - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
+      parameters:
+        installTestSlicer: true
+        installApkDiff: false
+        updateMono: true
+        xaprepareScenario: EmulatorTestDependencies
+        use1ESTemplate: false
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(TestAssembliesArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+
+    # Currently needed for samples/NativeAOT
+    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+      parameters:
+        project: Xamarin.Android.sln
+        arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) --no-restore
+        displayName: prepare java.interop $(XA.Build.Configuration)
+        continueOnError: false
+
+    - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
+
+    - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
+      parameters:
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+        testFilter: $(ExcludedNightlyNUnitCategories)
+        testRunTitle: MSBuildDeviceIntegration On Device - macOS
+
+    - template: /build-tools/automation/yaml-templates/upload-results.yaml
+      parameters:
+        artifactName: Test Results - MSBuild With Emulator - macOS-$(System.JobPositionInPhase)
+        xaSourcePath: $(System.DefaultWorkingDirectory)
+        use1ESTemplate: false
+
+    - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
+      parameters:
+        condition: true
