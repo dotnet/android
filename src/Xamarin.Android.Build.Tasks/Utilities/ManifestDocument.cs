@@ -162,7 +162,11 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 
-		string TargetSdkVersionName => VersionResolver.GetIdFromApiLevel (TargetSdkVersion);
+		// TargetSdkVersion is already resolved to the integer API level string (e.g. "36")
+		// by GenerateMainAndroidManifest. Don't round-trip through GetIdFromApiLevel() because
+		// when multiple API versions share the same ApiLevel (e.g. 36.0 and 36.1 both have
+		// ApiLevel=36), it can return the wrong Id (e.g. "36.1" instead of "36").
+		string TargetSdkVersionName => TargetSdkVersion;
 
 		string MinSdkVersionName =>
 			string.IsNullOrEmpty (MinSdkVersion) ?

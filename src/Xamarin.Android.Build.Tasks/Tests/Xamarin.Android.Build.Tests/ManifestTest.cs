@@ -1231,7 +1231,7 @@ class TestActivity : Activity { }"
 				);
 
 				AddTestData (
-					minSdkVersion: $"{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}.0",
+					minSdkVersion: $"{XABuildConfig.AndroidLatestStableApiLevel}",
 					removeUsesSdkElement: false,
 					runtime: runtime
 				);
@@ -1545,6 +1545,7 @@ class TestActivity : Activity { }"
 
 			var manifest = new ManifestDocument (null) {
 				PackageName = "dummy.packageid",
+				TargetSdkVersion = "21",
 				VersionResolver = new MockVersionResolver (),
 			};
 
@@ -1619,11 +1620,61 @@ class TestActivity : Activity { }"
 			}
 		}
 
+		/// <summary>
+		/// Regression test: when AndroidApiLevel is "36.1", the manifest must have targetSdkVersion="36".
+		/// GetIdFromApiLevel(36) can return "36.1" when multiple versions share the same ApiLevel,
+		/// so TargetSdkVersionName must not round-trip through it.
+		/// </summary>
+		[Test]
+		public void TargetSdkVersion_361In_36Out ()
+		{
+			// GetIdFromApiLevel("36") returns "36.1" — simulates the real bug
+			var resolver = new MockVersionResolver {
+				GetIdFromApiLevelFunc = apiLevel => apiLevel == "36" ? "36.1" : apiLevel,
+				GetApiLevelFromIdFunc = id => id == "36" || id == "36.1" ? 36 : 99,
+			};
+
+			// GenerateMainAndroidManifest strips "36.1" → "36" before setting TargetSdkVersion
+			string targetSdkVersion = "36.1";
+			if (MonoAndroidHelper.TryParseApiLevel (targetSdkVersion, out var version)) {
+				targetSdkVersion = version.Major.ToString ();
+			}
+
+			var templateFile = Path.GetTempFileName ();
+			try {
+				File.WriteAllText (templateFile, string.Format (TargetSdkManifest, "36"));
+
+				var manifest = new ManifestDocument (templateFile) {
+					PackageName = "com.test.targetsdkversion",
+					TargetSdkVersion = targetSdkVersion,
+					MinSdkVersion = "21",
+					VersionResolver = resolver,
+				};
+
+				var sb = new StringWriter ();
+				manifest.Save (null, sb);
+
+				var doc = XDocument.Parse (sb.ToString ());
+				var ns = XNamespace.Get ("http://schemas.android.com/apk/res/android");
+				var usesSdk = doc.Root.Element ("uses-sdk");
+				Assert.IsNotNull (usesSdk, "uses-sdk element should exist");
+
+				var targetSdkAttr = usesSdk.Attribute (ns + "targetSdkVersion");
+				Assert.IsNotNull (targetSdkAttr, "targetSdkVersion attribute should exist");
+				Assert.AreEqual ("36", targetSdkAttr.Value, "targetSdkVersion should be '36', not '36.1'");
+			} finally {
+				File.Delete (templateFile);
+			}
+		}
+
 		class MockVersionResolver : IVersionResolver
 		{
-			public int? GetApiLevelFromId (string id) => 99;
+			public Func<string, int?> GetApiLevelFromIdFunc { get; set; } = _ => 99;
+			public Func<string, string> GetIdFromApiLevelFunc { get; set; } = _ => "API-99";
 
-			public string GetIdFromApiLevel (string apiLevel) => "API-99";
+			public int? GetApiLevelFromId (string id) => GetApiLevelFromIdFunc (id);
+
+			public string GetIdFromApiLevel (string apiLevel) => GetIdFromApiLevelFunc (apiLevel);
 		}
 	}
 }

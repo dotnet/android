@@ -28,10 +28,12 @@
     <!-- The min API level supported by non-Mono runtimes (CoreCLR/NativeAOT) -->
     <AndroidMinimumNonMonoApiLevel Condition="'$(AndroidMinimumNonMonoApiLevel)' == ''">24</AndroidMinimumNonMonoApiLevel>
     <!-- *Latest* *stable* API level binding that we support; used when building src/Xamarin.Android.Build.Tasks -->
-    <AndroidLatestStableApiLevel Condition="'$(AndroidLatestStableApiLevel)' == ''">36</AndroidLatestStableApiLevel>
+    <AndroidLatestStableApiLevel Condition="'$(AndroidLatestStableApiLevel)' == ''">36.1</AndroidLatestStableApiLevel>
     <AndroidLatestStablePlatformId Condition="'$(AndroidLatestStablePlatformId)' == ''">$(AndroidLatestStableApiLevel)</AndroidLatestStablePlatformId>
-    <AndroidLatestStableFrameworkVersion Condition="'$(AndroidLatestStableFrameworkVersion)'==''">v16.0</AndroidLatestStableFrameworkVersion>
-    <AndroidLatestStableApiLevel2 Condition="'$(AndroidLatestStableApiLevel2)' == ''">36.1</AndroidLatestStableApiLevel2>
+    <AndroidLatestStableFrameworkVersion Condition="'$(AndroidLatestStableFrameworkVersion)'==''">v16.1</AndroidLatestStableFrameworkVersion>
+    <!-- If there is a second *stable* API level (e.g. 37.1 alongside 37), set it here:
+    <AndroidLatestStableApiLevel2 Condition="'$(AndroidLatestStableApiLevel2)' == ''">37.1</AndroidLatestStableApiLevel2>
+    -->
     <!-- *Latest* *unstable* API level binding that we support; this can be the same as *stable* -->
     <AndroidLatestUnstableApiLevel Condition="'$(AndroidLatestUnstableApiLevel)' == ''">36.1</AndroidLatestUnstableApiLevel>
     <AndroidLatestUnstablePlatformId Condition="'$(AndroidLatestUnstablePlatformId)' == ''">$(AndroidLatestUnstableApiLevel)</AndroidLatestUnstablePlatformId>

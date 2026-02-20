@@ -214,13 +214,6 @@ public class JavaSourceTest {
 
 				AddTestData (
 					dotnetVersion: XABuildConfig.LatestDotNetTargetFramework,
-					platform: $"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major}",
-					apiLevel: XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
-					runtime: runtime
-				);
-
-				AddTestData (
-					dotnetVersion: XABuildConfig.LatestDotNetTargetFramework,
 					platform: $"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
 					apiLevel: XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
 					runtime: runtime

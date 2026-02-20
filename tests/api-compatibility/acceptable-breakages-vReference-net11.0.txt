@@ -19,3 +19,19 @@ CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatform
 CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatformAttribute' exists on 'Android.Views.Display.GetSupportedRefreshRates()' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatformAttribute' exists on 'Android.App.AppOpsManager.CheckOp(System.String, System.Int32, System.String)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatformAttribute' exists on 'Android.App.AppOpsManager.CheckOpNoThrow(System.String, System.Int32, System.String)' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatformAttribute' exists on 'Android.Net.Wifi.WifiConfiguration' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatformAttribute' exists on 'Android.Net.Wifi.WifiConfiguration..ctor()' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatformAttribute' exists on 'Android.Net.Wifi.WifiConfiguration..ctor(Android.Net.Wifi.WifiConfiguration)' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatformAttribute' exists on 'Android.Net.Wifi.WifiConfiguration.DescribeContents()' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatformAttribute' exists on 'Android.Net.Wifi.WifiConfiguration.SetIpConfiguration(Android.Net.IpConfiguration)' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatformAttribute' exists on 'Android.Net.Wifi.WifiConfiguration.SetSecurityParams(System.Int32)' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatformAttribute' exists on 'Android.Net.Wifi.WifiConfiguration.WriteToParcel(Android.OS.Parcel, Android.OS.ParcelableWriteFlags)' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatformAttribute' exists on 'Android.Net.Wifi.WifiConfiguration.AuthAlgorithm' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatformAttribute' exists on 'Android.Net.Wifi.WifiConfiguration.GroupCipher' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatformAttribute' exists on 'Android.Net.Wifi.WifiConfiguration.GroupMgmtCipher' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatformAttribute' exists on 'Android.Net.Wifi.WifiConfiguration.KeyMgmt' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatformAttribute' exists on 'Android.Net.Wifi.WifiConfiguration.PairwiseCipher' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatformAttribute' exists on 'Android.Net.Wifi.WifiConfiguration.Protocol' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatformAttribute' exists on 'Android.Net.Wifi.WifiConfiguration.Status' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'Android.Runtime.RequiresPermissionAttribute' exists on 'Android.Telephony.TelephonyManager.IsMultiSimSupported()' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'Android.Runtime.RequiresPermissionAttribute' exists on 'Android.Telephony.TelephonyManager.UiccCardsInfo.get()' in the contract but not the implementation.
