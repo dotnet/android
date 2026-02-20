@@ -1,36 +1,38 @@
-﻿using Mono.Cecil;
-using Mono.Linker;
-using Mono.Linker.Steps;
 using System;
 using System.Linq;
+using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Utilities;
+using Mono.Cecil;
 using Xamarin.Android.Tasks;
 
 namespace MonoDroid.Tuner
 {
-	public class StripEmbeddedLibraries : BaseStep
+	public class StripEmbeddedLibrariesStep : IAssemblyModifierPipelineStep
 	{
-		protected override void ProcessAssembly (AssemblyDefinition assembly)
+		public TaskLoggingHelper Log { get; }
+
+		public StripEmbeddedLibrariesStep (TaskLoggingHelper log)
 		{
-			if (!Annotations.HasAction (assembly))
-				return;
-			var action = Annotations.GetAction (assembly);
-			if (action == AssemblyAction.Skip || action == AssemblyAction.Delete)
+			Log = log;
+		}
+
+		public void ProcessAssembly (AssemblyDefinition assembly, StepContext context)
+		{
+			if (context.IsFrameworkAssembly)
 				return;
 
-			if (MonoAndroidHelper.IsFrameworkAssembly (assembly))
-				return;
 			bool assembly_modified = false;
 			foreach (var mod in assembly.Modules) {
 				foreach (var r in mod.Resources.ToArray ()) {
 					if (ShouldStripResource (r)) {
-						Context.LogMessage ($"    Stripped {r.Name} from {assembly.Name.Name}.dll");
+						Log.LogDebugMessage ($"    Stripped {r.Name} from {assembly.Name.Name}.dll");
 						mod.Resources.Remove (r);
 						assembly_modified = true;
 					}
 				}
 			}
-			if (assembly_modified && action == AssemblyAction.Copy) {
-				Annotations.SetAction (assembly, AssemblyAction.Save);
+			if (assembly_modified) {
+				context.IsAssemblyModified = true;
 			}
 		}
 

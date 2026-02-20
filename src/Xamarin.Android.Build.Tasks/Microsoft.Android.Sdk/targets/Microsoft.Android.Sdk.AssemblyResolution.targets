@@ -206,10 +206,10 @@ _ResolveAssemblies MSBuild target.
       <_ShrunkFrameworkAssemblies   Include="@(_ResolvedFrameworkAssemblies)" />
     </ItemGroup>
     <ItemGroup Condition=" '$(PublishTrimmed)' == 'true' ">
-      <_ResolvedAssemblies          Include="@(ResolvedAssemblies)" />
-      <_ResolvedUserAssemblies      Include="@(ResolvedUserAssemblies)" />
-      <_ResolvedFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies)" />
-      <_ResolvedSymbols             Include="@(ResolvedSymbols)" />
+      <_ResolvedAssemblies          Include="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')"          Condition=" '%(DestinationSubPath)' != '' " />
+      <_ResolvedUserAssemblies      Include="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')"      Condition=" '%(DestinationSubPath)' != '' " />
+      <_ResolvedFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')" Condition=" '%(DestinationSubPath)' != '' " />
+      <_ResolvedSymbols             Include="@(ResolvedSymbols->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')"             Condition=" '%(DestinationSubPath)' != '' " />
       <_ShrunkFrameworkAssemblies
           Include="@(_ShrunkAssemblies)"
           Condition=" '%(_ShrunkAssemblies.FrameworkAssembly)' == 'true' "
