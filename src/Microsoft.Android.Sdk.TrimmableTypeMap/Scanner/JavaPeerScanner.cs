@@ -268,15 +268,27 @@ sealed class JavaPeerScanner : IDisposable
 			return;
 		}
 
+		bool isConstructor = registerInfo.JniName == "<init>" || registerInfo.JniName == ".ctor";
+		string nativeCallbackName = $"n_{index.Reader.GetString (methodDef.Name)}";
+		if (isConstructor) {
+			int ctorIndex = 0;
+			foreach (var method in methods) {
+				if (method.IsConstructor) {
+					ctorIndex++;
+				}
+			}
+			nativeCallbackName = ctorIndex == 0 ? "n_ctor" : $"n_ctor_{ctorIndex}";
+		}
+
 		methods.Add (new MarshalMethodInfo {
 			JniName = registerInfo.JniName,
 			JniSignature = registerInfo.Signature ?? "()V",
 			Connector = registerInfo.Connector,
 			ManagedMethodName = index.Reader.GetString (methodDef.Name),
-			NativeCallbackName = $"n_{index.Reader.GetString (methodDef.Name)}",
+			NativeCallbackName = nativeCallbackName,
 			JniReturnType = JniSignatureHelper.ParseReturnTypeString (registerInfo.Signature ?? "()V"),
 			Parameters = ParseJniParameters (registerInfo.Signature ?? "()V"),
-			IsConstructor = registerInfo.JniName == "<init>" || registerInfo.JniName == ".ctor",
+			IsConstructor = isConstructor,
 			ThrownNames = exportInfo?.ThrownNames,
 			SuperArgumentsString = exportInfo?.SuperArgumentsString,
 		});
