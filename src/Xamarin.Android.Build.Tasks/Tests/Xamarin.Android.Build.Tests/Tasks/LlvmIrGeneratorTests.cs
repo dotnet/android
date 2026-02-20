@@ -12,7 +12,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 	public class LlvmIrGeneratorTests
 	{
 		/// <summary>
-		/// Regression test for https://github.com/dotnet/android/issues/10086
+		/// Regression test for https://github.com/dotnet/android/issues/10679
 		///
 		/// When a managed method parameter has a whitespace-only name, the LLVM IR
 		/// generator would produce invalid IR like:
@@ -47,16 +47,18 @@ namespace Xamarin.Android.Build.Tests.Tasks
 
 		/// <summary>
 		/// Verifies that the LLVM IR generator produces valid function signatures
-		/// when parameters have valid names, including numeric names assigned to
-		/// previously unnamed parameters.
+		/// when parameters have whitespace-only names that would have caused
+		/// invalid IR like "ptr noundef % )" before the fix.
 		/// </summary>
 		[Test]
-		public void GeneratedIR_FunctionWithUnnamedParameter_ProducesValidOutput ()
+		[TestCase (" ", Description = "Space-only parameter name")]
+		[TestCase ("\t", Description = "Tab-only parameter name")]
+		public void GeneratedIR_FunctionWithWhitespaceParameterName_ProducesValidOutput (string paramName)
 		{
 			var parameters = new List<LlvmIrFunctionParameter> {
 				new LlvmIrFunctionParameter (typeof (IntPtr), "env"),
 				new LlvmIrFunctionParameter (typeof (IntPtr), "klass"),
-				new LlvmIrFunctionParameter (typeof (IntPtr), null), // unnamed parameter
+				new LlvmIrFunctionParameter (typeof (IntPtr), paramName),
 			};
 
 			var func = new LlvmIrFunction ("test_function", typeof (void), parameters);
@@ -72,8 +74,9 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			generator.Generate (writer, module);
 
 			string output = writer.ToString ();
-			// The output should contain valid parameter declarations - no "% " pattern
-			Assert.That (output, Does.Not.Contain ("% "), "Generated LLVM IR should not contain whitespace-only parameter names");
+			// The output should contain valid parameter declarations - no whitespace-only names after %
+			Assert.That (output, Does.Not.Contain ("% )"), "Generated LLVM IR should not contain 'ptr noundef % )' pattern");
+			Assert.That (output, Does.Not.Contain ("%\t)"), "Generated LLVM IR should not contain 'ptr noundef %\\t)' pattern");
 			Assert.That (output, Does.Contain ("@test_function"), "Generated LLVM IR should contain the function name");
 		}
 	}
