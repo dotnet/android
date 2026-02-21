@@ -93,6 +93,7 @@
       <Replacement Include="@PkgXamarin_LibZipSharp@=$(PkgXamarin_LibZipSharp)" />
       <Replacement Include="@ProductVersion@=$(ProductVersion)" />
       <Replacement Include="@_RuntimeRedistDirName@=$(_RuntimeRedistDirName)" />
+      <Replacement Include="@TestOutputDirectory@=$(TestOutputDirectory)" />
       <Replacement Include="@XABuildToolsFolder@=$(XABuildToolsFolder)" />
       <Replacement Include="@XABuildToolsVersion@=$(XABuildToolsVersion)" />
       <Replacement Include="@XABuildToolsPackagePrefixMacOS@=$(XABuildToolsPackagePrefixMacOS)" />

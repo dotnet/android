@@ -291,6 +291,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
   <_AndroidStripNativeLibraries Condition=" '$(AndroidStripNativeLibraries)' != '' And '$(AndroidStripNativeLibraries)' == 'true' ">true</_AndroidStripNativeLibraries>
   <_AndroidStripNativeLibraries Condition=" '$(_AndroidStripNativeLibraries)' != 'true' ">false</_AndroidStripNativeLibraries>
+
+  <AndroidIgnoreAllJniPreload Condition=" '$(AndroidIgnoreAllJniPreload)' == '' ">false</AndroidIgnoreAllJniPreload>
 </PropertyGroup>
 
 <!-- Setup $(AdbTarget) from $(Device) property for device selection support -->
@@ -1693,10 +1695,38 @@ because xbuild doesn't support framework reference assemblies.
       OutputDirectory="$(_AndroidIntermediateJavaSourceDirectory)mono">
   </GeneratePackageManagerJava>
 
+  <!-- This is a list of native libraries that must always/never be preloaded for their
+       JNI_OnLoad function to be called. The group is stored here to make it both
+       easier to modify by Android for .NET developers and harder for everybody else
+       to modify.
+  -->
+  <ItemGroup>
+    <!-- JNI_OnLoad initializes internal pointers for this library, without that the library will
+         segfault -->
+    <_AndroidNativeLibraryAlwaysJniPreload Include="libSystem.Security.Cryptography.Native.Android.so" />
+
+    <!-- Android for .NET native runtime. Always loaded by the Java startup code. Note that this is the
+         "generic" name of the runtime library - the actual name of the file might be different. If
+         this is the case, the `ArchiveFileName` will be set to `libmonodroid.so` -->
+    <_AndroidNativeLibraryNeverJniPreload Include="libmonodroid.so" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_AllNativeLibraries Include="@(AndroidNativeLibrary);@(EmbeddedNativeLibrary);@(FrameworkNativeLibrary)" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(AndroidIgnoreAllJniPreload)' == 'true' ">
+    <!-- We include everything, tasks below will take care of exclusion of certain libs from this
+         item group -->
+    <AndroidNativeLibraryNoJniPreload Include="@(_AllNativeLibraries)" />
+  </ItemGroup>
+
   <GenerateNativeApplicationConfigSources
       ResolvedAssemblies="@(_ResolvedAssemblies)"
       SatelliteAssemblies="@(_AndroidResolvedSatellitePaths)"
-      NativeLibraries="@(AndroidNativeLibrary);@(EmbeddedNativeLibrary);@(FrameworkNativeLibrary)"
+      NativeLibraries="@(_AllNativeLibraries)"
+      NativeLibrariesNoJniPreload="@(_AndroidNativeLibraryNeverJniPreload);@(AndroidNativeLibraryNoJniPreload)"
+      NativeLibrariesAlwaysJniPreload="@(_AndroidNativeLibraryAlwaysJniPreload)"
       MonoComponents="@(_MonoComponent)"
       EnvironmentOutputDirectory="$(IntermediateOutputPath)android"
       Environments="@(_EnvironmentFiles)"

@@ -689,6 +689,20 @@ The most common values for this property are:
 > [`@(AndroidEnvironment)`](build-items.md#androidenvironment)
 > will take precedence.
 
+## AndroidIgnoreAllJniPreload
+
+A boolean value which, if set to `true`, exempts all the native JNI libraries
+from being preloaded at application startup.  By default, all such libraries
+will be loaded by the runtime early during application startup in order to
+assure their proper initialization. However, in some cases it might not be the
+desired behavior and this property allows to effectively disable this behavior.
+
+Some framework libraries which must be loaded at application startup will not
+be affected by this property.
+
+See also [`@(AndroidNativeLibraryNoJniPreload)`](build-items.md#androidnativelibrarynojnipreload)
+for a more fine-grained way to exempt libraries from the preload mechanism.
+
 ## AndroidIncludeWrapSh
 
 A boolean value that indicates whether the Android wrapper script

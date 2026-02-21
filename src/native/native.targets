@@ -9,7 +9,7 @@
   </Target>
 
   <Target Name="_BuildRuntimes" BeforeTargets="Build"
-          DependsOnTargets="_PrepareCommonProperties;_ConfigureAndBuildArchiveDSOStub;_ConfigureRuntimes;_BuildAndroidRuntimes;_BuildAndroidAnalyzerRuntimes;_CopyToPackDirs">
+          DependsOnTargets="_PrepareCommonProperties;_ConfigureAndBuildArchiveDSOStub;_ConfigureAndBuildTestJniLibrary;_ConfigureRuntimes;_BuildAndroidRuntimes;_BuildAndroidAnalyzerRuntimes;_CopyToPackDirs">
   </Target>
 
   <!-- The runtime check makes the target run only once, when building the CoreCLR runtime. Otherwise, when building in parallel, we will get
@@ -111,6 +111,45 @@
         WorkingDirectory="$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-archive-dso-stub" />
 
     <Touch Files="@(_ArchiveDSOOutput)" />
+  </Target>
+
+  <Target Name="_ConfigureTestJniLibraryInputsAndOutputs">
+    <ItemGroup>
+      <_TestJniLibraryAbi Include="@(AndroidSupportedTargetJitAbi)" />
+      <_TestJniLibraryAbi Remove="armeabi-v7a" />
+      <_TestJniLibraryAbi Remove="x86" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <_TestJniLibraryInput Include="common\test-jni-library\CMakeLists.txt" />
+
+      <_TestJniLibraryOutput Include="@(_TestJniLibraryAbi->'$(FlavorIntermediateOutputPath)%(AndroidRID)-test-jni-library\CMakeCache.txt')" />
+
+      <_TestJniLibraryOutputDirToCreate Include="$(FlavorIntermediateOutputPath)%(_TestJniLibraryAbi.AndroidRID)-test-jni-library" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_ConfigureAndBuildTestJniLibrary"
+          Condition="'$(CMakeRuntimeFlavor)' != 'NativeAOT' "
+          DependsOnTargets="_PrepareCommonProperties;_ConfigureTestJniLibraryInputsAndOutputs"
+          Inputs="@(_TestJniLibraryInput)"
+          Outputs="@(_TestJniLibraryOutput)">
+    <ItemGroup>
+      <_ConfigureTestJniLibraryCommands Include="@(_TestJniLibraryAbi)">
+        <Command>$(CmakePath)</Command>
+        <Arguments>-DOUTPUT_PATH="$(OutputPath.TrimEnd('\'))" -DRUNTIME_FLAVOR="$(CMakeRuntimeFlavor)" --preset default-release-%(_TestJniLibraryAbi.Identity) -DBUILD_TEST_JNI_LIBRARY=ON "$(MSBuildThisFileDirectory)"</Arguments>
+        <WorkingDirectory>$(FlavorIntermediateOutputPath)%(_TestJniLibraryAbi.AndroidRID)-test-jni-library</WorkingDirectory>
+      </_ConfigureTestJniLibraryCommands>
+    </ItemGroup>
+
+    <MakeDir Directories="@(_TestJniLibraryOutputDirToCreate)" />
+    <RunParallelCmds Commands="@(_ConfigureTestJniLibraryCommands)" />
+
+    <Exec
+        Command="$(NinjaPath) -v"
+        WorkingDirectory="$(FlavorIntermediateOutputPath)%(_TestJniLibraryAbi.AndroidRID)-test-jni-library" />
+
+    <Touch Files="@(_TestJniLibraryOutput)" />
   </Target>
 
   <Target Name="_ConfigureRuntimes"
