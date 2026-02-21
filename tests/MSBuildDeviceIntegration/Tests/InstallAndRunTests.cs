@@ -30,17 +30,46 @@ namespace Xamarin.Android.Build.Tests
 			proj = null;
 		}
 
-		[Test]
-		[TestCase (true, "llvm-ir")]
-		[TestCase (false, "llvm-ir")]
-		[TestCase (true, "managed")]
-		// NOTE: TypeMappingStep is not yet setup for Debug mode
-		//[TestCase (false, "managed")]
-		public void DotNetRun (bool isRelease, string typemapImplementation)
+		static IEnumerable<object[]> Get_DotNetRun_Data ()
 		{
-			var proj = new XamarinAndroidApplicationProject {
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				AddTestData (true, "llvm-ir", runtime);
+				AddTestData (false, "llvm-ir", runtime);
+				AddTestData (true, "managed", runtime);
+				// NOTE: TypeMappingStep is not yet setup for Debug mode
+				//AddTestData (false, "managed", runtime);
+			}
+
+			return ret;
+
+			void AddTestData (bool isRelease, string typemapImplementation, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					isRelease,
+					typemapImplementation,
+					runtime,
+				});
+			}
+		}
+
+		[Test]
+		[TestCaseSource (nameof (Get_DotNetRun_Data))]
+		public void DotNetRun (bool isRelease, string typemapImplementation, AndroidRuntime runtime)
+		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			if (runtime == AndroidRuntime.NativeAOT && typemapImplementation == "llvm-ir") {
+				Assert.Ignore ("NativeAOT doesn't work with LLVM-IR typemaps");
+			}
+
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("_AndroidTypeMapImplementation", typemapImplementation);
 			using var builder = CreateApkBuilder ();
 			builder.Save (proj);
@@ -202,13 +231,17 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[TestCase (true)]
-		[TestCase (false)]
-		public void DeployToDevice (bool isRelease)
+
+		public void DeployToDevice ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject {
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease
 			};
+			proj.SetRuntime (runtime);
 			using var builder = CreateApkBuilder ();
 			builder.Save (proj);
 
@@ -238,11 +271,16 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ActivityAliasRuns ([Values (true, false)] bool isRelease)
+		public void ActivityAliasRuns ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject {
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease
 			};
+			proj.SetRuntime (runtime);
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("</application>", @"
 <activity-alias
 			android:name="".MainActivityAlias""
@@ -265,8 +303,17 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void NativeAssemblyCacheWithSatelliteAssemblies ([Values (true, false)] bool enableMarshalMethods, [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		public void NativeAssemblyCacheWithSatelliteAssemblies ([Values] bool enableMarshalMethods, [Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT doesn't support individual assemblies");
+			}
+
 			if (enableMarshalMethods && runtime == AndroidRuntime.CoreCLR) {
 				// This currently fails with the following exception:
 				//
@@ -283,6 +330,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject {
+				IsRelease = isRelease,
 				ProjectName = "Localization",
 				OtherBuildItems = {
 					new BuildItem ("EmbeddedResource", "Foo.resx") {
@@ -301,8 +349,8 @@ namespace Xamarin.Android.Build.Tests
 				);
 			}
 
-			proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+				IsRelease = isRelease,
 				EnableMarshalMethods = enableMarshalMethods,
 			};
 			proj.SetRuntime (runtime);
@@ -327,13 +375,15 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void GlobalLayoutEvent_ShouldRegisterAndFire_OnActivityLaunch (
-		  [Values (false, true)] bool isRelease,
-		  [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		public void GlobalLayoutEvent_ShouldRegisterAndFire_OnActivityLaunch ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			string expectedLogcatOutput = "Bug 29730: GlobalLayout event handler called!";
 
-			proj = new XamarinAndroidApplicationProject () {
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 				SupportedOSPlatformVersion = "23",
 			};
@@ -362,10 +412,19 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		}
 
 		[Test]
-		public void SubscribeToAppDomainUnhandledException ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		public void SubscribeToAppDomainUnhandledException ([Values] AndroidRuntime runtime)
 		{
-			proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			if (runtime == AndroidRuntime.CoreCLR || runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("AppDomain.CurrentDomain.UnhandledException doesn't work in CoreCLR or NativeAOT");
+			}
+
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
 			if (runtime == AndroidRuntime.MonoVM) {
@@ -428,18 +487,56 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			}
 		}
 
+		static IEnumerable<object[]> Get_SmokeTestBuildAndRunWithSpecialCharacters_Data ()
+		{
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				AddTestData ("テスト", runtime);
+				AddTestData ("随机生成器", runtime);
+				AddTestData ("中国", runtime);
+			}
+
+			return ret;
+
+			void AddTestData (string testName, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					testName,
+					runtime,
+				});
+			}
+		}
+
 		[Test]
 		[Category ("UsesDevice")]
-		[TestCase ("テスト")]
-		[TestCase ("随机生成器")]
-		[TestCase ("中国")]
-		public void SmokeTestBuildAndRunWithSpecialCharacters (string testName)
+		[TestCaseSource (nameof (Get_SmokeTestBuildAndRunWithSpecialCharacters_Data))]
+		public void SmokeTestBuildAndRunWithSpecialCharacters (string testName, AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			// TODO: fix NativeAOT builds. Despite the .so library being preset in the apk (and named correctly)
+			//       all the tests fail with one of:
+			//
+			//  java.lang.UnsatisfiedLinkError: dlopen failed: library "libテスト.so" not found
+			//  java.lang.UnsatisfiedLinkError: dlopen failed: library "lib中国.so" not found
+			//  java.lang.UnsatisfiedLinkError: dlopen failed: library "lib随机生成器.so" not found
+			//
+			// It might be an issue with the Android shared library loader or name encoding in the archive. It might
+			// be a good idea to limit .so names to ASCII.
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT doesn't work well with diacritics in the application library name");
+			}
+
 			var rootPath = Path.Combine (Root, "temp", TestName);
-			var proj = new XamarinFormsAndroidApplicationProject () {
+			var proj = new XamarinFormsAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				ProjectName = testName,
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			proj.SetAndroidSupportedAbis (DeviceAbi);
 			proj.SetDefaultTargetDevice ();
 			using (var builder = CreateApkBuilder (Path.Combine (rootPath, proj.ProjectName))){
@@ -474,10 +571,28 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		[Test]
 		public void CustomLinkDescriptionPreserve (
 		  [Values (AndroidLinkMode.SdkOnly, AndroidLinkMode.Full)] AndroidLinkMode linkMode,
-		  [Values (AndroidRuntime.MonoVM)] AndroidRuntime runtime
+		  [Values] AndroidRuntime runtime
 		)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			if (runtime == AndroidRuntime.CoreCLR) {
+				Assert.Ignore ("Currently broken on CoreCLR");
+			}
+
+			// TODO: NativeAOT perhaps should work here (ignoring all the MonoAOT settings?), but for now it fails with
+			//
+			//  Microsoft.NET.Sdk.FrameworkReferenceResolution.targets(120,5): error NETSDK1207: Ahead-of-time compilation is not supported for the target framework.
+			//
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT is currently broken here");
+			}
+
 			var lib1 = new XamarinAndroidLibraryProject () {
+				IsRelease = isRelease,
 				ProjectName = "Library1",
 				Sources = {
 					new BuildItem.Source ("SomeClass.cs") {
@@ -515,6 +630,7 @@ namespace Library1 {
 			lib1.SetRuntime (runtime);
 
 			var lib2 = new DotNetStandard {
+				IsRelease = isRelease,
 				ProjectName = "LinkTestLib",
 				Sdk = "Microsoft.NET.Sdk",
 				TargetFramework = "netstandard2.0",
@@ -541,8 +657,8 @@ namespace Library1 {
 			};
 			lib2.SetRuntime (runtime);
 
-			proj = new XamarinFormsAndroidApplicationProject () {
-				IsRelease = true,
+			var proj = new XamarinFormsAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+				IsRelease = isRelease,
 				AndroidLinkModeRelease = linkMode,
 				References = {
 					new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"),
@@ -621,11 +737,15 @@ namespace Library1 {
 		}
 
 		[Test]
-		public void JsonDeserializationCreatesJavaHandle ([Values (false, true)] bool isRelease)
+		public void JsonDeserializationCreatesJavaHandle ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
-			proj = new XamarinAndroidApplicationProject () {
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			// error SYSLIB0011: 'BinaryFormatter.Serialize(Stream, object)' is obsolete: 'BinaryFormatter serialization is obsolete and should not be used. See https://aka.ms/binaryformatter for more information.'
 			proj.SetProperty ("NoWarn", "SYSLIB0011");
 
@@ -651,7 +771,7 @@ namespace Library1 {
 			StreamReader sr = new StreamReader (stream);
 
 			Console.WriteLine ($""JSON Person representation: {sr.ReadToEnd ()}"");
-
+			//
 			stream.Position = 0;
 			Person p2 = (Person) serializer.ReadObject (stream);
 
@@ -713,14 +833,22 @@ using System.Runtime.Serialization.Json;
 		}
 
 		[Test]
-		public void RunWithInterpreterEnabled ([Values (false, true)] bool isRelease)
+		public void RunWithInterpreterEnabled ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
-			proj = new XamarinAndroidApplicationProject () {
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			// MonoVM-only test, for now (until CoreCLR has interpreter we can use)
+			if (runtime != AndroidRuntime.MonoVM) {
+				Assert.Ignore ("MonoVM-only test for the moment");
+			}
+
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 				AotAssemblies = false, // Release defaults to Profiled AOT for .NET 6
 			};
-			// MonoVM-only test
-			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
+			proj.SetRuntime (runtime);
 			var abis = new string[] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
 			proj.SetAndroidSupportedAbis (abis);
 			proj.SetProperty (proj.CommonProperties, "UseInterpreter", "True");
@@ -792,11 +920,19 @@ using System.Runtime.Serialization.Json;
 		}
 
 		[Test]
-		public void SingleProject_ApplicationId ([Values (false, true)] bool testOnly)
+		public void SingleProject_ApplicationId ([Values] bool testOnly, [Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			AssertCommercialBuild ();
 
-			proj = new XamarinAndroidApplicationProject ();
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("ApplicationId", "com.i.should.get.overridden.by.the.manifest");
 			if (testOnly)
 				proj.AndroidManifest = proj.AndroidManifest.Replace ("<application", "<application android:testOnly=\"true\"");
@@ -812,22 +948,50 @@ using System.Runtime.Serialization.Json;
 		}
 
 		[Test]
-		public void AppWithStyleableUsageRuns ([Values (true, false)] bool useCLR, [Values (true, false)] bool isRelease,
-			[Values (true, false)] bool linkResources, [Values (true, false)] bool useStringTypeMaps)
+		public void AppWithStyleableUsageRuns ([Values] bool isRelease,	[Values] bool linkResources, [Values] bool useStringTypeMaps, [Values] AndroidRuntime runtime)
 		{
-			// Not all combinations are valid, ignore those that aren't
-			if (!useCLR && useStringTypeMaps) {
-				Assert.Ignore ("String-based typemaps mode is used only in CoreCLR apps");
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
 			}
 
-			if (useCLR && isRelease && useStringTypeMaps) {
+			// Not all combinations are valid, ignore those that aren't
+			if (runtime == AndroidRuntime.MonoVM && useStringTypeMaps) {
+				Assert.Ignore ("String-based typemaps mode is used only in CoreCLR and NativeAOT apps");
+			}
+
+			if (runtime != AndroidRuntime.MonoVM && isRelease && useStringTypeMaps) {
 				Assert.Ignore ("String-based typemaps mode is available only in Debug CoreCLR builds");
+			}
+
+			// TODO: fix this for NativeAOT
+			if (runtime == AndroidRuntime.NativeAOT && isRelease && !useStringTypeMaps) {
+				// This configuration currently fails with a long stack trace, the gist of it is:
+				//
+				//  AndroidRuntime: java.lang.RuntimeException: Unable to start activity ComponentInfo{com.xamarin.appwithstyleableusageruns_nativeaot/com.xamarin.appwithstyleableusageruns_nativeaot.MainActivity}
+				//  AndroidRuntime: Caused by: android.view.InflateException: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Error inflating class crc64f75eeacfa0ca1368.MyLayout
+				//  AndroidRuntime: Caused by: android.view.InflateException: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Error inflating class crc64f75eeacfa0ca1368.MyLayout
+				//  AndroidRuntime: Caused by: java.lang.reflect.InvocationTargetException
+				//  AndroidRuntime: Caused by: net.dot.jni.internal.JavaProxyThrowable: System.NotSupportedException: Could not activate { PeerReference=0x7fe9706698/I IdentityHashCode=0xd12aeee Java.Type=crc64f75eeacfa0ca1368/MyLayout } for managed type 'UnnamedProject.MyLayout'.
+				//  AndroidRuntime:  ---> System.Reflection.TargetInvocationException: Arg_TargetInvocationException
+				//  AndroidRuntime:  ---> System.IO.FileNotFoundException: IO_FileNotFound_FileName, _Microsoft.Android.Resource.Designer
+				//  AndroidRuntime: IO_FileName_Name, _Microsoft.Android.Resource.Designer
+				//  DOTNET  : FATAL UNHANDLED EXCEPTION: Java.Lang.Exception: Unable to start activity ComponentInfo{com.xamarin.appwithstyleableusageruns_nativeaot/com.xamarin.appwithstyleableusageruns_nativeaot.MainActivity}
+				//  DOTNET  :  ---> Java.Lang.Exception: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Error inflating class crc64f75eeacfa0ca1368.MyLayout
+				//  DOTNET  :  ---> Java.Lang.Exception: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Error inflating class crc64f75eeacfa0ca1368.MyLayout
+				//  DOTNET  :  ---> Java.Lang.ReflectiveOperationException: Exception_WasThrown, Java.Lang.ReflectiveOperationException
+				//  DOTNET  :  ---> System.NotSupportedException: Could not activate { PeerReference=0x7fe9706698/I IdentityHashCode=0xd12aeee Java.Type=crc64f75eeacfa0ca1368/MyLayout } for managed type 'UnnamedProject.MyLayout'.
+				//  DOTNET  :  ---> System.Reflection.TargetInvocationException: Arg_TargetInvocationException
+				//  DOTNET  :  ---> System.IO
+				//  eruns_nativeaot: No implementation found for void mono.android.Runtime.propagateUncaughtException(java.lang.Thread, java.lang.Throwable) (tried Java_mono_android_Runtime_propagateUncaughtException and Java_mono_android_Runtime_propagateUncaughtException__Ljava_lang_Thread_2Ljava_lang_Throwable_2) - is the library loaded, e.g. System.loadLibrary?
+				Assert.Ignore ("NativeAOT is broken without string-based typemaps");
 			}
 
 			var rootPath = Path.Combine (Root, "temp", TestName);
 			var lib = new XamarinAndroidLibraryProject () {
+				IsRelease = isRelease,
 				ProjectName = "Styleable.Library"
 			};
+			lib.SetRuntime (runtime);
 
 			lib.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\styleables.xml") {
 				TextContent = () => @"<?xml version='1.0' encoding='utf-8'?>
@@ -869,10 +1033,10 @@ namespace Styleable.Library {
 }"
 			});
 
-			proj = new XamarinAndroidApplicationProject () {
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 			};
-			proj.SetProperty ("UseMonoRuntime", useCLR ? "false" : "true");
+			proj.SetRuntime (runtime);
 			proj.AddReference (lib);
 
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\styleables.xml") {
@@ -910,9 +1074,11 @@ namespace Styleable.Library {
 }
 ");
 
-			string[] abis = useCLR switch {
-				true => new string [] { "arm64-v8a", "x86_64" },
-				false => new string [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" },
+			string[] abis = runtime switch {
+				AndroidRuntime.CoreCLR => new string [] { "arm64-v8a", "x86_64" },
+				AndroidRuntime.NativeAOT => new string [] { "arm64-v8a", "x86_64" },
+				AndroidRuntime.MonoVM => new string [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" },
+				_ => throw new NotSupportedException ($"Unsupported runtime {runtime}")
 			};
 
 			proj.SetAndroidSupportedAbis (abis);
@@ -923,7 +1089,7 @@ namespace Styleable.Library {
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 
 			Dictionary<string, string>? environmentVariables = null;
-			if (useCLR && !isRelease && useStringTypeMaps) {
+			if (runtime == AndroidRuntime.CoreCLR && !isRelease && useStringTypeMaps) {
 				// The variable must have content to enable string-based typemaps
 				environmentVariables = new (StringComparer.Ordinal) {
 					{"CI_TYPEMAP_DEBUG_USE_STRINGS", "yes"}
@@ -938,16 +1104,33 @@ namespace Styleable.Library {
 		}
 
 		[Test]
-		public void CheckXamarinFormsAppDeploysAndAButtonWorks ()
+		public void CheckXamarinFormsAppDeploysAndAButtonWorks ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinFormsAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			// TODO: fix for NativeAOT. Currently fails with:
+			//
+			//  DOTNET  : FATAL UNHANDLED EXCEPTION: System.InvalidCastException: Unable to convert instance of type 'AndroidX.AppCompat.Widget.AppCompatImageButton' to type 'AndroidX.AppCompat.Widget.Toolbar'.
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT type mapping fails");
+			}
+
+			string packageName = PackageUtils.MakePackageName (runtime);
+			var proj = new XamarinFormsAndroidApplicationProject (packageName: packageName) {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.SetAndroidSupportedAbis (DeviceAbi);
-			var builder = CreateApkBuilder ();
+			var builder = CreateApkBuilder (packageName: packageName);
 
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 			builder.BuildLogFile = "install.log";
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 
+			ClearAdbLogcat ();
 			AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
 			WaitForActivityToStart (proj.PackageName, "MainActivity",
 				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 15);
@@ -960,11 +1143,14 @@ namespace Styleable.Library {
 		}
 
 		[Test]
-		public void SkiaSharpCanvasBasedAppRuns ([Values (true, false)] bool isRelease, [Values (true, false)] bool addResource)
+		public void SkiaSharpCanvasBasedAppRuns ([Values] bool isRelease, [Values] bool addResource, [Values] AndroidRuntime runtime)
 		{
-			var app = new XamarinAndroidApplicationProject () {
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var app = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime, "SkiaSharpCanvasTest")) {
 				IsRelease = isRelease,
-				PackageName = "Xamarin.SkiaSharpCanvasTest",
 				PackageReferences = {
 					KnownPackages.SkiaSharp,
 					KnownPackages.SkiaSharp_Views,
@@ -972,6 +1158,7 @@ namespace Styleable.Library {
 					KnownPackages.AndroidXAppCompatResources,
 				},
 			};
+			app.SetRuntime (runtime);
 			app.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\styles.xml") {
 				TextContent = () => @"<resources><style name='AppTheme' parent='Theme.AppCompat.Light.DarkActionBar'/></resources>",
 			});
@@ -1057,7 +1244,8 @@ namespace UnnamedProject
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName, app.ProjectName))) {
 				b.BuildLogFile = "build1.log";
 				b.ThrowOnBuildFailure = false;
-				if (!addResource) {
+				// TODO: fix for NativeAOT
+				if (!addResource && runtime != AndroidRuntime.NativeAOT) {
 					Assert.IsFalse (b.Build (app, doNotCleanupOnUpdate: true), $"Build of {app.ProjectName} should have failed.");
 					Assert.IsTrue (b.LastBuildOutput.ContainsText (isRelease ? "IL8000" : "XA8000"));
 					Assert.IsTrue (b.LastBuildOutput.ContainsText ("@styleable/SKCanvasView"), "Expected '@styleable/SKCanvasView' in build output.");
@@ -1077,9 +1265,15 @@ namespace UnnamedProject
 
 
 		[Test]
-		public void CheckResouceIsOverridden ()
+		public void CheckResouceIsOverridden ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var library = new XamarinAndroidLibraryProject () {
+				IsRelease = isRelease,
 				ProjectName = "Library1",
 				AndroidResources = {
 					new AndroidItem.AndroidResource (() => "Resources\\values\\strings2.xml") {
@@ -1090,7 +1284,9 @@ namespace UnnamedProject
 					},
 				},
 			};
+			library.SetRuntime (runtime);
 			var library2 = new XamarinAndroidLibraryProject () {
+				IsRelease = isRelease,
 				ProjectName = "Library2",
 				AndroidResources = {
 					new AndroidItem.AndroidResource (() => "Resources\\values\\strings2.xml") {
@@ -1101,13 +1297,15 @@ namespace UnnamedProject
 					},
 				},
 			};
-			var app = new XamarinAndroidApplicationProject () {
-				PackageName = "Xamarin.ResourceTest",
+			library2.SetRuntime (runtime);
+			var app = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime, "ResourceTest")) {
+				IsRelease = isRelease,
 				References = {
 					new BuildItem.ProjectReference ("..\\Library1\\Library1.csproj"),
 					new BuildItem.ProjectReference ("..\\Library2\\Library2.csproj"),
 				},
 			};
+			app.SetRuntime (runtime);
 			app.LayoutMain = app.LayoutMain.Replace ("@string/hello", "@string/hello_me");
 			using (var l1 = CreateDllBuilder (Path.Combine ("temp", TestName, library.ProjectName)))
 			using (var l2 = CreateDllBuilder (Path.Combine ("temp", TestName, library2.ProjectName)))
@@ -1174,15 +1372,24 @@ namespace UnnamedProject
 		[Test]
 		[Category ("WearOS")]
 		public void DotNetInstallAndRunPreviousSdk (
-				[Values (false, true)] bool isRelease)
+				[Values] bool isRelease,
+				[Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinFormsAndroidApplicationProject () {
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			// Mono-only test for the moment (until net10 or later is the "previous" framework)
+			if (runtime != AndroidRuntime.MonoVM) {
+				Assert.Ignore ("Mono-only test until net9 is no longer the 'previous' SDK");
+			}
+
+			var proj = new XamarinFormsAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				TargetFramework = $"{XABuildConfig.PreviousDotNetTargetFramework}-android",
 				IsRelease = isRelease,
 				EnableDefaultItems = true,
 			};
-			// Mono-only test
-			proj.SetRuntime (AndroidRuntime.MonoVM);
+			proj.SetRuntime (runtime);
 
 			// Requires 32-bit ABIs
 			proj.SetAndroidSupportedAbis (["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]);
@@ -1199,16 +1406,22 @@ namespace UnnamedProject
 
 		[Test]
 		public void DotNetInstallAndRunMinorAPILevels (
-				[Values (false, true)] bool isRelease,
-				[Values ("net10.0-android36.1")] string targetFramework)
+				[Values] bool isRelease,
+				[Values ("net10.0-android36.1")] string targetFramework,
+				[Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject () {
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				TargetFramework = targetFramework,
 				IsRelease = isRelease,
 				ExtraNuGetConfigSources = {
 					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
 				}
 			};
+			proj.SetRuntime (runtime);
 
 			// TODO: update on new minor API levels to use an introduced minor API
 			proj.MainActivity = proj.DefaultMainActivity
@@ -1233,7 +1446,23 @@ namespace UnnamedProject
 
 			var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
-			builder.AssertHasNoWarnings ();
+			if (runtime == AndroidRuntime.MonoVM) {
+				builder.AssertHasNoWarnings ();
+			} else {
+				// CoreCLR generates:
+				//   warning XA1040: The CoreCLR runtime on Android is an experimental feature and not yet suitable for production use.
+				//
+				// NativeAOT generates (twice, once per arch):
+				//   warning IL3053: Assembly 'Mono.Android' produced AOT analysis warnings.
+				//
+				uint expected = runtime switch {
+					AndroidRuntime.CoreCLR   => 1,
+					AndroidRuntime.NativeAOT => 2,
+					_ => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
+				};
+				builder.AssertHasSomeWarnings (expected);
+
+			}
 			RunProjectAndAssert (proj, builder);
 
 			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
@@ -1243,9 +1472,18 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void TypeAndMemberRemapping ([Values (false, true)] bool isRelease)
+		public void TypeAndMemberRemapping ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject () {
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			// TODO: fix for NativeAOT, if possible
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("Type and member mapping is currently unsupported under NativeAOT");
+			}
+
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 				EnableDefaultItems = true,
 				OtherBuildItems = {
@@ -1262,6 +1500,7 @@ namespace UnnamedProject
 					},
 				},
 			};
+			proj.SetRuntime (runtime);
 			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": global::Example.RemapActivity");
 			var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
@@ -1284,9 +1523,22 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void SupportDesugaringStaticInterfaceMethods ()
+		public void SupportDesugaringStaticInterfaceMethods ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject () {
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			// TODO: fix for NativeAOT, if possible. Currently fails with:
+			//
+			//  Process: com.xamarin.supportdesugaringstaticinterfacemethods_nativeaot, PID: 13888
+			//  java.lang.NoSuchMethodError: no static method "Lexample/StaticMethodsInterface;.getValue()I"
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("Currently broken on NativeAOT");
+			}
+
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = true,
 				EnableDefaultItems = true,
 				OtherBuildItems = {
@@ -1299,6 +1551,7 @@ namespace UnnamedProject
 					},
 				},
 			};
+			proj.SetRuntime (runtime);
 
 			// Note: To properly test, Desugaring must be *enabled*, which requires that
 			// `$(SupportedOSPlatformVersion)` be *less than* 23.  21 is currently the default,
@@ -1324,16 +1577,26 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		[TestCase (false, true)]
-		[TestCase (false, false)]
-		[TestCase (true, false)]
-		public void FastDeployEnvironmentFiles (bool isRelease, bool embedAssembliesIntoApk)
+		public void FastDeployEnvironmentFiles ([Values] bool isRelease, [Values] bool embedAssembliesIntoApk, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			// FastDeploy is used only in Debug builds, NativeAOT is used only in Release builds
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT doesn't support FastDeploy");
+			}
+
+			if (!isRelease && !embedAssembliesIntoApk) {
+				Assert.Ignore ("Not a FastDev configuration");
+			}
+
 			if (embedAssembliesIntoApk) {
 				AssertCommercialBuild ();
 			}
 
-			var proj = new XamarinAndroidApplicationProject {
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				ProjectName = nameof (FastDeployEnvironmentFiles),
 				RootNamespace = nameof (FastDeployEnvironmentFiles),
 				IsRelease = isRelease,
@@ -1348,6 +1611,7 @@ MONO_GC_PARAMS=bridge-implementation=new",
 					}
 				}
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("DiagnosticAddress", "127.0.0.1");
 			proj.SetProperty ("DiagnosticPort", "9000");
 			proj.SetProperty ("DiagnosticSuspend", "false");
@@ -1408,10 +1672,14 @@ MONO_GC_PARAMS=bridge-implementation=new",
 		}
 
 		[Test]
-		public void FixLegacyResourceDesignerStep ([Values (true, false)] bool isRelease)
+		public void FixLegacyResourceDesignerStep ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			string previousTargetFramework = $"{XABuildConfig.PreviousDotNetTargetFramework}-android";
 
+			// Don't call SetRuntime on library projects (at least until "previous" framework bumps to at least 10.0)
 			var library1 = new XamarinAndroidLibraryProject {
 				IsRelease = isRelease,
 				TargetFramework = previousTargetFramework,
@@ -1438,10 +1706,11 @@ MONO_GC_PARAMS=bridge-implementation=new",
 			library2.AndroidResources.Clear ();
 			library2.SetProperty ("AndroidGenerateResourceDesigner", "false"); // Disable Android Resource Designer generation
 			library2.AddReference (library1);
-			proj = new XamarinAndroidApplicationProject {
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 				ProjectName = "MyApp",
 			};
+			proj.SetRuntime (runtime);
 			proj.AddReference (library2);
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "Console.WriteLine(Foo.Hello);");
 
@@ -1462,17 +1731,21 @@ MONO_GC_PARAMS=bridge-implementation=new",
 		}
 
 		[Test]
-		public void MicrosoftIntune ([Values (false, true)] bool isRelease)
+		public void MicrosoftIntune ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
 			Assert.Ignore ("https://github.com/xamarin/xamarin-android/issues/8548");
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 
-			proj = new XamarinAndroidApplicationProject {
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 				PackageReferences = {
 					KnownPackages.AndroidXAppCompat,
 					KnownPackages.Microsoft_Intune_Maui_Essentials_android,
 				},
 			};
+			proj.SetRuntime (runtime);
 			proj.MainActivity = proj.DefaultMainActivity
 				.Replace ("Icon = \"@drawable/icon\")]", "Icon = \"@drawable/icon\", Theme = \"@style/Theme.AppCompat.Light.DarkActionBar\")]")
 				.Replace ("public class MainActivity : Activity", "public class MainActivity : AndroidX.AppCompat.App.AppCompatActivity");
@@ -1498,8 +1771,12 @@ MONO_GC_PARAMS=bridge-implementation=new",
 		}
 
 		[Test]
-		public void GradleFBProj ([Values (false, true)] bool isRelease)
+		public void GradleFBProj ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var moduleName = "Library";
 			var gradleTestProjectDir = Path.Combine (Root, "temp", "gradle", TestName);
 			var gradleModule = new AndroidGradleModule (Path.Combine (gradleTestProjectDir, moduleName));
@@ -1547,7 +1824,7 @@ public class FacebookSdk {{
 			};
 			gradleProject.Create ();
 
-			var proj = new XamarinAndroidApplicationProject {
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 				ExtraNuGetConfigSources = {
 					"https://api.nuget.org/v3/index.json",
@@ -1601,6 +1878,7 @@ public class FacebookSdk {{
 					},
 				},
 			};
+			proj.SetRuntime (runtime);
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
 Facebook.FacebookSdk.InitializeSDK(this, Java.Lang.Boolean.True);
 Facebook.FacebookSdk.LogEvent(""TestFacebook"");
@@ -1645,9 +1923,17 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 		}
 
 		[Test]
-		public void AppStartsWithManagedMarshalMethodsLookupEnabled ()
+		public void AppStartsWithManagedMarshalMethodsLookupEnabled ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject { IsRelease = true };
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidUseMarshalMethods", "true");
 			proj.SetProperty ("_AndroidUseManagedMarshalMethodsLookup", "true");
 
