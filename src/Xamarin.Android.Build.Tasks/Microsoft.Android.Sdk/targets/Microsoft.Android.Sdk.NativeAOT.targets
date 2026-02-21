@@ -158,6 +158,16 @@ This eliminates the NDK dependency for NativeAOT builds.
       <ResolvedFileToPublish Remove="@(_AndroidILLinkAssemblies)" />
       <ResolvedFileToPublish Include="@(IlcCompileInput);@(_AndroidILLinkAssemblies)" RuntimeIdentifier="$(RuntimeIdentifier)" />
 
+      <!--
+        Remove NativeAOT runtime pack shared libraries (.so) from the publish output.
+        These PAL libraries (System.Native, System.IO.Compression.Native, etc.) are already
+        statically linked into the application binary via their .a counterparts in @(NativeLibrary).
+        Without this removal, both the static and shared versions end up in the APK.
+      -->
+      <_NativeAotSharedLibsToRemove Include="@(ResolvedFileToPublish)"
+          Condition=" '%(ResolvedFileToPublish.Extension)' == '.so' and $([System.String]::new('%(ResolvedFileToPublish.NuGetPackageId)').StartsWith('Microsoft.NETCore.App.Runtime.NativeAOT.')) " />
+      <ResolvedFileToPublish Remove="@(_NativeAotSharedLibsToRemove)" />
+
       <!-- Satellite assemblies -->
       <IlcSatelliteAssembly Include="$(_OuterIntermediateSatelliteAssembliesWithTargetPath)" />
 
