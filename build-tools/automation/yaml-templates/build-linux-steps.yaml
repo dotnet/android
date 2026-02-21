@@ -5,6 +5,7 @@ parameters:
   buildResultArtifactName: Build Results - Linux
   xaSourcePath: $(System.DefaultWorkingDirectory)/android
   nugetArtifactName: $(LinuxNuGetArtifactName)
+  makeMSBuildArgs: ''
   use1ESTemplate: true
 
 steps:
@@ -26,7 +27,7 @@ steps:
 
 - template: /build-tools/automation/yaml-templates/log-disk-space.yaml
 
-- script: make jenkins PREPARE_CI=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
+- script: make jenkins PREPARE_CI=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make jenkins
 

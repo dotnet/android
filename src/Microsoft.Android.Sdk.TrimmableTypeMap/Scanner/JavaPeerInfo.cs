@@ -29,22 +29,19 @@ sealed record JavaPeerInfo
 	public required string ManagedTypeName { get; init; }
 
 	/// <summary>
+	/// Managed type namespace, e.g., "Android.App".
+	/// </summary>
+	public required string ManagedTypeNamespace { get; init; }
+
+	/// <summary>
+	/// Managed type short name (without namespace), e.g., "Activity".
+	/// </summary>
+	public required string ManagedTypeShortName { get; init; }
+
+	/// <summary>
 	/// Assembly name the type belongs to, e.g., "Mono.Android".
 	/// </summary>
 	public required string AssemblyName { get; init; }
-
-	/// <summary>
-	/// JNI name of the base Java type, e.g., "android/app/Activity" for a type
-	/// that extends Activity. Null for java/lang/Object or types without a Java base.
-	/// Needed by JCW Java source generation ("extends" clause).
-	/// </summary>
-	public string? BaseJavaName { get; init; }
-
-	/// <summary>
-	/// JNI names of Java interfaces this type implements, e.g., ["android/view/View$OnClickListener"].
-	/// Needed by JCW Java source generation ("implements" clause).
-	/// </summary>
-	public IReadOnlyList<string> ImplementedInterfaceJavaNames { get; init; } = Array.Empty<string> ();
 
 	public bool IsInterface { get; init; }
 	public bool IsAbstract { get; init; }
@@ -120,6 +117,35 @@ sealed record MarshalMethodInfo
 	public required string ManagedMethodName { get; init; }
 
 	/// <summary>
+	/// Full name of the type that declares the managed method (may be a base type).
+	/// Empty when the declaring type is the same as the peer type.
+	/// </summary>
+	public string DeclaringTypeName { get; init; } = "";
+
+	/// <summary>
+	/// Assembly name of the type that declares the managed method.
+	/// Needed for cross-assembly UCO wrapper generation.
+	/// Empty when the declaring type is the same as the peer type.
+	/// </summary>
+	public string DeclaringAssemblyName { get; init; } = "";
+
+	/// <summary>
+	/// The native callback method name, e.g., "n_onCreate".
+	/// This is the actual method the UCO wrapper delegates to.
+	/// </summary>
+	public required string NativeCallbackName { get; init; }
+
+	/// <summary>
+	/// JNI parameter types for UCO generation.
+	/// </summary>
+	public IReadOnlyList<JniParameterInfo> Parameters { get; init; } = Array.Empty<JniParameterInfo> ();
+
+	/// <summary>
+	/// JNI return type descriptor, e.g., "V", "Landroid/os/Bundle;".
+	/// </summary>
+	public required string JniReturnType { get; init; }
+
+	/// <summary>
 	/// True if this is a constructor registration.
 	/// </summary>
 	public bool IsConstructor { get; init; }
@@ -135,6 +161,22 @@ sealed record MarshalMethodInfo
 	/// Null for [Register] methods.
 	/// </summary>
 	public string? SuperArgumentsString { get; init; }
+}
+
+/// <summary>
+/// Describes a JNI parameter for UCO method generation.
+/// </summary>
+sealed record JniParameterInfo
+{
+	/// <summary>
+	/// JNI type descriptor, e.g., "Landroid/os/Bundle;", "I", "Z".
+	/// </summary>
+	public required string JniType { get; init; }
+
+	/// <summary>
+	/// Managed parameter type name, e.g., "Android.OS.Bundle", "System.Int32".
+	/// </summary>
+	public string ManagedType { get; init; } = "";
 }
 
 /// <summary>
