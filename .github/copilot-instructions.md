@@ -133,6 +133,7 @@ C# code uses tabs (not spaces) and Mono style (`.editorconfig`):
 - Space before `(` and `[`: `Foo ()`, `array [0]`
 - Use `""` not `string.Empty`, `[]` not `Array.Empty<T>()`
 - Minimal diffs - don't leave random empty lines
+- Do NOT use `#region` or `#endregion`
 
 ```csharp
 Foo ();

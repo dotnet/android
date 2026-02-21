@@ -1,4 +1,5 @@
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using NUnit.Framework;
 using System.Collections.Generic;
 using System.Reflection;
@@ -25,16 +26,24 @@ namespace Xamarin.Android.Build.Tests
 		/// </summary>
 		class MockGetAvailableAndroidDevices : GetAvailableAndroidDevices
 		{
+			// Real AVD names from 'emulator -list-avds' can have mixed case, underscores, and dashes
 			readonly Dictionary<string, string> AvdNames = new () {
-				{ "emulator-5554", "Pixel 7 - API 35" },
-				{ "emulator-5556", "Pixel 9 Pro XL - API 36" }
+				{ "emulator-5554", "pixel_7_-_api_35" },
+				{ "emulator-5556", "Pixel_9_Pro_XL" }
 			};
 
-			protected override string? GetEmulatorAvdDisplayName (string serial)
+			public List<string> MockAvailableEmulators { get; set; } = [];
+
+			protected override string? GetEmulatorAvdName (string serial)
 			{
 				if (AvdNames.TryGetValue (serial, out var name))
 					return name;
 				return null;
+			}
+
+			protected override List<string> GetAvailableEmulators ()
+			{
+				return MockAvailableEmulators;
 			}
 		}
 
@@ -84,6 +93,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("Emulator", device2.GetMetadata ("Type"), "Type should be Emulator");
 			Assert.AreEqual ("Online", device2.GetMetadata ("Status"), "Status should be Online");
 			Assert.AreEqual ("Pixel 7 - API 35", device2.GetMetadata ("Description"), "Description should be replaced with AVD name");
+			Assert.AreEqual ("pixel_7_-_api_35", device2.GetMetadata ("AvdName"), "AvdName metadata should be raw AVD name");
 			Assert.AreEqual ("sdk_gphone64_x86_64", device2.GetMetadata ("Model"), "Model metadata should be 'sdk_gphone64_x86_64'");
 			Assert.AreEqual ("sdk_gphone64_x86_64", device2.GetMetadata ("Product"), "Product metadata should be 'sdk_gphone64_x86_64'");
 			Assert.AreEqual ("emu64xa", device2.GetMetadata ("Device"), "Device metadata should be 'emu64xa'");
@@ -127,6 +137,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("Emulator", device.GetMetadata ("Type"), "Type should be Emulator");
 			Assert.AreEqual ("Online", device.GetMetadata ("Status"), "Status should be Online");
 			Assert.AreEqual ("Pixel 7 - API 35", device.GetMetadata ("Description"), "Description should be replaced with AVD name");
+			Assert.AreEqual ("pixel_7_-_api_35", device.GetMetadata ("AvdName"), "AvdName should be raw AVD name");
 			Assert.AreEqual ("sdk_gphone64_arm64", device.GetMetadata ("Model"), "Model metadata should be present");
 			Assert.AreEqual ("1", device.GetMetadata ("TransportId"), "TransportId should be present");
 		}
@@ -182,7 +193,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("emulator-5556", devices [1].ItemSpec);
 			Assert.AreEqual ("Emulator", devices [1].GetMetadata ("Type"));
 			Assert.AreEqual ("Online", devices [1].GetMetadata ("Status"));
-			Assert.AreEqual ("Pixel 9 Pro XL - API 36", devices [1].GetMetadata ("Description"), "Emulator should have AVD name");
+			Assert.AreEqual ("Pixel 9 Pro XL", devices [1].GetMetadata ("Description"), "Emulator should have AVD name");
 
 			Assert.AreEqual ("0A041FDD400327", devices [2].ItemSpec);
 			Assert.AreEqual ("Device", devices [2].GetMetadata ("Type"));
@@ -341,7 +352,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("Pixel 7 - API 35", devices [0].GetMetadata ("Description"), "Emulator should have AVD name");
 
 			Assert.AreEqual ("Offline", devices [1].GetMetadata ("Status"));
-			Assert.AreEqual ("Pixel 9 Pro XL - API 36", devices [1].GetMetadata ("Description"), "Offline emulator should still get AVD name");
+			Assert.AreEqual ("Pixel 9 Pro XL", devices [1].GetMetadata ("Description"), "Offline emulator should still get AVD name");
 
 			Assert.AreEqual ("Online", devices [2].GetMetadata ("Status"));
 			Assert.AreEqual ("Pixel 6 Pro", devices [2].GetMetadata ("Description"));
@@ -555,6 +566,205 @@ namespace Xamarin.Android.Build.Tests
 			var result = task.FormatDisplayName ("emulator-5554", "erapidevice");
 
 			Assert.AreEqual ("Erapidevice", result, "Should not replace 'api' when it's part of a larger word");
+		}
+
+		[Test]
+		public void MergeDevicesAndEmulators_NoEmulators_ReturnsAdbDevicesOnly ()
+		{
+			var task = new MockGetAvailableAndroidDevices {
+				BuildEngine = engine,
+			};
+
+			var adbDevices = new List<ITaskItem> {
+				CreateDeviceItem ("0A041FDD400327", "Pixel 5", "Device", "Online"),
+			};
+			var availableEmulators = new List<string> ();
+
+			var result = task.MergeDevicesAndEmulators (adbDevices, availableEmulators);
+
+			Assert.AreEqual (1, result.Count, "Should return only adb devices");
+			Assert.AreEqual ("0A041FDD400327", result [0].ItemSpec);
+		}
+
+		[Test]
+		public void MergeDevicesAndEmulators_NoRunningEmulators_AddsAllAvailableEmulators ()
+		{
+			var task = new MockGetAvailableAndroidDevices {
+				BuildEngine = engine,
+			};
+
+			var adbDevices = new List<ITaskItem> {
+				CreateDeviceItem ("0A041FDD400327", "Pixel 5", "Device", "Online"),
+			};
+			var availableEmulators = new List<string> { "pixel_7_api_35", "pixel_9_api_36" };
+
+			var result = task.MergeDevicesAndEmulators (adbDevices, availableEmulators);
+
+			Assert.AreEqual (3, result.Count, "Should return adb device + 2 available emulators");
+
+			// First item: physical device (online, sorted first)
+			Assert.AreEqual ("0A041FDD400327", result [0].ItemSpec);
+
+			// Second item: non-running emulator (sorted alphabetically by description)
+			Assert.AreEqual ("pixel_7_api_35", result [1].ItemSpec, "Non-running emulator ItemSpec should be AVD name");
+			Assert.AreEqual ("Emulator", result [1].GetMetadata ("Type"));
+			Assert.AreEqual ("NotRunning", result [1].GetMetadata ("Status"));
+			Assert.AreEqual ("pixel_7_api_35", result [1].GetMetadata ("AvdName"));
+			Assert.AreEqual ("Pixel 7 API 35 (Not Running)", result [1].GetMetadata ("Description"));
+
+			// Third item: non-running emulator
+			Assert.AreEqual ("pixel_9_api_36", result [2].ItemSpec);
+			Assert.AreEqual ("NotRunning", result [2].GetMetadata ("Status"));
+			Assert.AreEqual ("Pixel 9 API 36 (Not Running)", result [2].GetMetadata ("Description"));
+		}
+
+		[Test]
+		public void MergeDevicesAndEmulators_RunningEmulator_NoDuplicate ()
+		{
+			var task = new MockGetAvailableAndroidDevices {
+				BuildEngine = engine,
+			};
+
+			// Emulator is running (has adb entry with AvdName metadata)
+			var runningEmulator = CreateDeviceItem ("emulator-5554", "Pixel 7 API 35", "Emulator", "Online");
+			runningEmulator.SetMetadata ("AvdName", "pixel_7_api_35");
+
+			var adbDevices = new List<ITaskItem> { runningEmulator };
+			var availableEmulators = new List<string> { "pixel_7_api_35" };
+
+			var result = task.MergeDevicesAndEmulators (adbDevices, availableEmulators);
+
+			Assert.AreEqual (1, result.Count, "Should not duplicate running emulator");
+			Assert.AreEqual ("emulator-5554", result [0].ItemSpec, "Should keep the running emulator entry");
+			Assert.AreEqual ("Online", result [0].GetMetadata ("Status"));
+		}
+
+		[Test]
+		public void MergeDevicesAndEmulators_MixedRunningAndNotRunning ()
+		{
+			var task = new MockGetAvailableAndroidDevices {
+				BuildEngine = engine,
+			};
+
+			// One emulator is running
+			var runningEmulator = CreateDeviceItem ("emulator-5554", "Pixel 7 API 35", "Emulator", "Online");
+			runningEmulator.SetMetadata ("AvdName", "pixel_7_api_35");
+
+			var physicalDevice = CreateDeviceItem ("0A041FDD400327", "Pixel 5", "Device", "Online");
+
+			var adbDevices = new List<ITaskItem> { runningEmulator, physicalDevice };
+			var availableEmulators = new List<string> { "pixel_7_api_35", "pixel_9_api_36", "nexus_5_api_30" };
+
+			var result = task.MergeDevicesAndEmulators (adbDevices, availableEmulators);
+
+			Assert.AreEqual (4, result.Count, "Should have: 1 running emulator + 1 device + 2 non-running emulators");
+
+			// Online devices come first, sorted alphabetically by description
+			Assert.AreEqual ("0A041FDD400327", result [0].ItemSpec);
+			Assert.AreEqual ("Online", result [0].GetMetadata ("Status"));
+
+			Assert.AreEqual ("emulator-5554", result [1].ItemSpec);
+			Assert.AreEqual ("Online", result [1].GetMetadata ("Status"));
+
+			// Non-running emulators come second, sorted alphabetically by description
+			Assert.AreEqual ("nexus_5_api_30", result [2].ItemSpec);
+			Assert.AreEqual ("NotRunning", result [2].GetMetadata ("Status"));
+			Assert.AreEqual ("Nexus 5 API 30 (Not Running)", result [2].GetMetadata ("Description"));
+
+			Assert.AreEqual ("pixel_9_api_36", result [3].ItemSpec);
+			Assert.AreEqual ("NotRunning", result [3].GetMetadata ("Status"));
+			Assert.AreEqual ("Pixel 9 API 36 (Not Running)", result [3].GetMetadata ("Description"));
+		}
+
+		[Test]
+		public void MergeDevicesAndEmulators_CaseInsensitiveAvdNameMatching ()
+		{
+			var task = new MockGetAvailableAndroidDevices {
+				BuildEngine = engine,
+			};
+
+			// Running emulator with different case
+			var runningEmulator = CreateDeviceItem ("emulator-5554", "Pixel 7 API 35", "Emulator", "Online");
+			runningEmulator.SetMetadata ("AvdName", "Pixel_7_API_35");
+
+			var adbDevices = new List<ITaskItem> { runningEmulator };
+			var availableEmulators = new List<string> { "pixel_7_api_35" }; // lowercase
+
+			var result = task.MergeDevicesAndEmulators (adbDevices, availableEmulators);
+
+			Assert.AreEqual (1, result.Count, "Should match AVD names case-insensitively");
+			Assert.AreEqual ("emulator-5554", result [0].ItemSpec);
+		}
+
+		[Test]
+		public void MergeDevicesAndEmulators_EmptyAdbDevices_ReturnsAllAvailableEmulators ()
+		{
+			var task = new MockGetAvailableAndroidDevices {
+				BuildEngine = engine,
+			};
+
+			var adbDevices = new List<ITaskItem> ();
+			var availableEmulators = new List<string> { "pixel_7_api_35", "pixel_9_api_36" };
+
+			var result = task.MergeDevicesAndEmulators (adbDevices, availableEmulators);
+
+			Assert.AreEqual (2, result.Count, "Should return all available emulators");
+			Assert.AreEqual ("pixel_7_api_35", result [0].ItemSpec);
+			Assert.AreEqual ("Pixel 7 API 35 (Not Running)", result [0].GetMetadata ("Description"));
+			Assert.AreEqual ("pixel_9_api_36", result [1].ItemSpec);
+			Assert.AreEqual ("Pixel 9 API 36 (Not Running)", result [1].GetMetadata ("Description"));
+		}
+
+		[Test]
+		public void MergeDevicesAndEmulators_AllEmulatorsRunning_NoDuplicates ()
+		{
+			var task = new MockGetAvailableAndroidDevices {
+				BuildEngine = engine,
+			};
+
+			var emulator1 = CreateDeviceItem ("emulator-5554", "Pixel 7 API 35", "Emulator", "Online");
+			emulator1.SetMetadata ("AvdName", "pixel_7_api_35");
+
+			var emulator2 = CreateDeviceItem ("emulator-5556", "Pixel 9 API 36", "Emulator", "Online");
+			emulator2.SetMetadata ("AvdName", "pixel_9_api_36");
+
+			var adbDevices = new List<ITaskItem> { emulator1, emulator2 };
+			var availableEmulators = new List<string> { "pixel_7_api_35", "pixel_9_api_36" };
+
+			var result = task.MergeDevicesAndEmulators (adbDevices, availableEmulators);
+
+			Assert.AreEqual (2, result.Count, "Should not add duplicates when all emulators are running");
+			Assert.AreEqual ("Pixel 7 API 35", result [0].GetMetadata ("Description"), "First should be alphabetically first");
+			Assert.AreEqual ("Pixel 9 API 36", result [1].GetMetadata ("Description"), "Second should be alphabetically second");
+			Assert.IsTrue (result.TrueForAll (d => d.GetMetadata ("Status") == "Online"), "All should be Online (running)");
+		}
+
+		[Test]
+		public void MergeDevicesAndEmulators_NonRunningEmulatorHasFormattedDescription ()
+		{
+			var task = new MockGetAvailableAndroidDevices {
+				BuildEngine = engine,
+			};
+
+			var adbDevices = new List<ITaskItem> ();
+			var availableEmulators = new List<string> { "pixel_7_pro_api_35" };
+
+			var result = task.MergeDevicesAndEmulators (adbDevices, availableEmulators);
+
+			Assert.AreEqual (1, result.Count);
+			Assert.AreEqual ("Pixel 7 Pro API 35 (Not Running)", result [0].GetMetadata ("Description"), "Description should be formatted with (Not Running) suffix");
+		}
+
+		/// <summary>
+		/// Helper method to create a device ITaskItem for testing
+		/// </summary>
+		static ITaskItem CreateDeviceItem (string serial, string description, string type, string status)
+		{
+			var item = new TaskItem (serial);
+			item.SetMetadata ("Description", description);
+			item.SetMetadata ("Type", type);
+			item.SetMetadata ("Status", status);
+			return item;
 		}
 	}
 }
