@@ -65,7 +65,7 @@ static partial class JavaInteropRuntime
 				EnvironmentPointer          = jnienv,
 				ClassLoader                 = new JniObjectReference (classLoader, JniObjectReferenceType.Global),
 				TypeManager                 = new ManagedTypeManager (),
-				ValueManager                = ManagedValueManager.GetOrCreateInstance (),
+				ValueManager                = ManagedValueManager.Instance,
 				UseMarshalMemberBuilder     = false,
 				JniGlobalReferenceLogWriter = settings.GrefLog,
 				JniLocalReferenceLogWriter  = settings.LrefLog,
