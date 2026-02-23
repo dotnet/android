@@ -54,6 +54,7 @@ properties that determine build ordering.
     </BuildDependsOn>
     <IncrementalCleanDependsOn>
       _PrepareAssemblies;
+      _RemoveRegisterAttribute;
       _CompileDex;
       $(_AfterCompileDex);
       _AddFilesToFileWrites;

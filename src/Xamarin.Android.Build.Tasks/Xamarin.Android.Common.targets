@@ -1917,7 +1917,6 @@ because xbuild doesn't support framework reference assemblies.
   <CopyIfChanged
     SourceFiles="@(_ResolvedAssemblies->'%(Identity).config')"
     DestinationFiles="@(_ShrunkAssemblies->'%(Identity).config')" />
-  <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)shrunk" />
 </Target>
 
 <Target Name="_ResolveSatellitePaths"

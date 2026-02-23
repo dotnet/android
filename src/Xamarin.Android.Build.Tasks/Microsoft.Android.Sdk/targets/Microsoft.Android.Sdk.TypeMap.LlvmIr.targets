@@ -9,7 +9,7 @@
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateProguardConfiguration" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <PropertyGroup>
-    <_RemoveRegisterFlag>$(MonoAndroidIntermediateAssemblyDir)shrunk\shrunk.flag</_RemoveRegisterFlag>
+    <_RemoveRegisterFlag>$(_AndroidStampDirectory)_RemoveRegisterAttribute.stamp</_RemoveRegisterFlag>
     <!-- Inject typemap-specific targets into build dependency chains -->
     <_BeforeAddStaticResources>$(_BeforeAddStaticResources);_GetMonoPlatformJarPath</_BeforeAddStaticResources>
     <_BeforeCompileJava>$(_BeforeCompileJava);_GetMonoPlatformJarPath</_BeforeCompileJava>
@@ -325,7 +325,6 @@
     <RemoveRegisterAttribute
         Condition=" '$(_AndroidRuntime)' != 'NativeAOT' and '$(PublishReadyToRun)' != 'true' "
         ShrunkFrameworkAssemblies="@(_ShrunkAssemblies)" />
-    <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)shrunk" />
     <Touch Files="$(_RemoveRegisterFlag)" AlwaysCreate="true" />
   </Target>
 
