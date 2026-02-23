@@ -284,7 +284,8 @@ public class BootAndroidEmulator : AndroidTask
 	}
 
 	/// <summary>
-	/// Launches the emulator process in the background with -no-window (unless overridden by extra args).
+	/// Launches the emulator process in the background. The emulator window is shown by default,
+	/// but this can be customized (for example, by passing -no-window) via EmulatorExtraArguments.
 	/// </summary>
 	protected virtual Process? LaunchEmulatorProcess (string emulatorPath, string avdName)
 	{
