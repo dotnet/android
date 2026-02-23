@@ -8,8 +8,8 @@ class Format_V2 : FormatBase
 {
 	protected override string LogTag => "AssemblyStore/Format_V2";
 
-	public Format_V2 (Stream storeStream, string? description)
-		: base (storeStream, description)
+	public Format_V2 (string? description)
+		: base (description)
 	{}
 
 	protected override bool ReadAssemblies (BinaryReader reader, out IList<ApplicationAssembly>? assemblies)
@@ -17,7 +17,7 @@ class Format_V2 : FormatBase
 		throw new NotImplementedException ();
 	}
 
-	protected override IAspectState ValidateInner ()
+	protected override IAspectState ValidateInner (Stream storeStream)
 	{
 		throw new NotImplementedException ();
 	}

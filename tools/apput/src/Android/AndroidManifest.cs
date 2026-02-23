@@ -8,7 +8,7 @@ using ProtoManifest = Aapt.Pb;
 namespace ApplicationUtility;
 
 // TODO: implement support for AndroidManifest.xml in AAB packages. It's protobuf data, not binary/text XML
-public class AndroidManifest : IAspect
+public class AndroidManifest : BaseAspect
 {
 	public string Description           { get; }
 	public AndroidManifestFormat Format { get; } = AndroidManifestFormat.Unknown;
@@ -22,7 +22,8 @@ public class AndroidManifest : IAspect
 	readonly XmlDocument? xmlDoc;
 	XmlNamespaceManager? nsmgr;
 
-	AndroidManifest (XmlDocument? doc, string? description, AndroidManifestFormat format)
+	AndroidManifest (Stream stream, XmlDocument? doc, string? description, AndroidManifestFormat format)
+		: base (stream)
 	{
 		xmlDoc = doc ?? throw new ArgumentNullException (nameof (doc));
 		Format = format;
@@ -35,12 +36,12 @@ public class AndroidManifest : IAspect
 		Permissions = TryGetPermissions (xmlDoc, nsmgr);
 	}
 
-	AndroidManifest (AXMLParser binaryParser, string? description)
-		: this (Read (binaryParser, description), description, AndroidManifestFormat.Binary)
+	AndroidManifest (Stream stream, AXMLParser binaryParser, string? description)
+		: this (stream, Read (binaryParser, description), description, AndroidManifestFormat.Binary)
 	{}
 
-	AndroidManifest (ProtoManifest.XmlNode rootNode, string? description)
-		: this (Read (rootNode, description), description, AndroidManifestFormat.Protobuf)
+	AndroidManifest (Stream stream, ProtoManifest.XmlNode rootNode, string? description)
+		: this (stream, Read (rootNode, description), description, AndroidManifestFormat.Protobuf)
 	{}
 
 	public static IAspect LoadAspect (Stream stream, IAspectState state, string? description)
@@ -52,9 +53,9 @@ public class AndroidManifest : IAspect
 
 		AndroidManifest ret;
 		if (manifestState.BinaryParser != null) {
-			ret = new AndroidManifest (manifestState.BinaryParser, description);
+			ret = new AndroidManifest (stream, manifestState.BinaryParser, description);
 		} else if (manifestState.ProtoManifestRoot != null) {
-			ret = new AndroidManifest (manifestState.ProtoManifestRoot, description);
+			ret = new AndroidManifest (stream, manifestState.ProtoManifestRoot, description);
 		} else {
 			throw new NotImplementedException ();
 		}

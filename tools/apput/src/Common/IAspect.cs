@@ -10,7 +10,7 @@ namespace ApplicationUtility;
 /// be identified/detected by looking at its format/location it is most
 /// likely an aspect.
 /// </summary>
-public interface IAspect
+public interface IAspect : IDisposable
 {
 	/// <summary>
 	/// Aspect name, for presentation purposes.

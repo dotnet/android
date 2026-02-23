@@ -4,8 +4,8 @@ class AssemblyStoreSharedLibraryAspectState : DotNetAndroidWrapperSharedLibraryA
 {
 	public IAspectState? AssemblyStoreState { get; }
 
-	public AssemblyStoreSharedLibraryAspectState (bool success, IAspectState? assemblyStoreAspectState, AnELF? elf)
-		: base (success, elf)
+	public AssemblyStoreSharedLibraryAspectState (bool success, IAspectState? assemblyStoreAspectState, AnELF? elf, ulong storeDataOffset)
+		: base (success, elf, storeDataOffset)
 	{
 		AssemblyStoreState = assemblyStoreAspectState;
 	}

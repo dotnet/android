@@ -64,7 +64,7 @@ class DotNetAndroidWrapperSharedLibrary : SharedLibrary
 			throw new InvalidOperationException ($"Payload offset of {payloadSize} is too large to support.");
 		}
 
-		return new SubStream (LibraryStream, (long)payloadOffset, (long)payloadSize);
+		return new SubStream (AspectStream, (long)payloadOffset, (long)payloadSize);
 	}
 
 	static DotNetAndroidWrapperSharedLibraryAspectState IsDotNetAndroidWrapperSharedLibrary (Stream stream, string? description)
@@ -84,12 +84,13 @@ class DotNetAndroidWrapperSharedLibrary : SharedLibrary
 			return GetErrorState ();
 		}
 
-		return new DotNetAndroidWrapperSharedLibraryAspectState (true, anElf);
+		(ulong offset, ulong _) = FindAndroidPayload (elf, elf.Class == Class.Bit64, description);
+		return new DotNetAndroidWrapperSharedLibraryAspectState (true, anElf, offset);
 
-		DotNetAndroidWrapperSharedLibraryAspectState GetErrorState () => new DotNetAndroidWrapperSharedLibraryAspectState (false, null);
+		DotNetAndroidWrapperSharedLibraryAspectState GetErrorState () => new DotNetAndroidWrapperSharedLibraryAspectState (false, null, 0);
 	}
 
-	(ulong offset, ulong size) FindAndroidPayload (IELF elf, bool is64Bit, string libraryName)
+	static (ulong offset, ulong size) FindAndroidPayload (IELF elf, bool is64Bit, string libraryName)
 	{
 		if (!elf.TryGetSection (PayloadSectionName, out ISection? payloadSection)) {
 			Log.Debug ($"Shared library '{libraryName}' doesn't have the '{PayloadSectionName}' section.");

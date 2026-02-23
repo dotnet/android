@@ -9,7 +9,7 @@ using Xamarin.Android.Tools;
 
 namespace ApplicationUtility;
 
-public abstract class ApplicationPackage : IAspect
+public abstract class ApplicationPackage : BaseAspect
 {
 	readonly static HashSet<string> KnownApkEntries = new (StringComparer.Ordinal) {
 		"AndroidManifest.xml",
@@ -57,10 +57,46 @@ public abstract class ApplicationPackage : IAspect
 	public bool ValidAndroidPackage { get; protected set; }
 	protected ZipArchive Zip { get; }
 
-	protected ApplicationPackage (ZipArchive zip, string? description)
+	protected ApplicationPackage (Stream stream, ZipArchive zip, string? description)
+		: base (stream)
 	{
 		Zip = zip;
 		Description = description;
+	}
+
+	protected override void Dispose (bool disposing)
+	{
+		if (Disposed || !disposing) {
+			base.Dispose (disposing);
+			return;
+		}
+
+		// Dispose all the owned aspects, they might be using substreams of our stream
+		AndroidManifest?.Dispose ();
+
+		// Then the assembly stores, they might be in shared libraries so they need to go before them
+		if (AssemblyStores != null) {
+			foreach (AssemblyStore store in AssemblyStores) {
+				try {
+					store.Dispose ();
+				} catch (Exception ex) {
+					Log.Debug ("Failed to dispose of an assembly store", ex);
+				}
+			}
+			AssemblyStores.Clear ();
+		}
+
+		// Shared libraries are last
+		foreach (SharedLibrary lib in SharedLibraries) {
+			try {
+				lib.Dispose ();
+			} catch (Exception ex) {
+				Log.Debug ("Failed to dispose of a shared library", ex);
+			}
+		}
+		SharedLibraries.Clear ();
+
+		base.Dispose (disposing);
 	}
 
 	public static IAspect LoadAspect (Stream stream, IAspectState state, string? description)
@@ -73,11 +109,11 @@ public abstract class ApplicationPackage : IAspect
 
 		ApplicationPackage ret;
 		if (IsAPK (zip)) {
-			ret = new PackageAPK (zip, description);
+			ret = new PackageAPK (stream, zip, description);
 		} else if (IsAAB (zip)) {
-			ret = new PackageAAB (zip, description);
+			ret = new PackageAAB (stream, zip, description);
 		} else if (IsBase (zip)) {
-			ret = new PackageBase (zip, description);
+			ret = new PackageBase (stream, zip, description);
 		} else {
 			throw new InvalidOperationException ("Stream is not a supported Android ZIP package. Call ProbeAspect first.");
 		}

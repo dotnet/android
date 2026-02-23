@@ -8,7 +8,7 @@ using ELFSharp.ELF.Segments;
 
 namespace ApplicationUtility;
 
-public class SharedLibrary : IAspect, IDisposable
+public class SharedLibrary : BaseAspect
 {
 	const uint ELF_MAGIC = 0x464c457f;
 	const string DebugLinkSectionName = ".gnu_debuglink";
@@ -21,11 +21,8 @@ public class SharedLibrary : IAspect, IDisposable
 	readonly bool is64Bit;
 	readonly ulong libraryAlignment;
 	readonly string libraryName;
-	readonly Stream libraryStream;
 	readonly NativeArchitecture nativeArch = NativeArchitecture.Unknown;
 	readonly string? soname;
-
-	bool disposed;
 
 	public static string AspectName { get; } = "Native shared library";
 
@@ -40,20 +37,19 @@ public class SharedLibrary : IAspect, IDisposable
 	public bool HasDebugLink => !String.IsNullOrEmpty (debugLink);
 	public bool HasSoname => !String.IsNullOrEmpty (soname);
 	public bool Is64Bit => is64Bit;
-	public Stream LibraryStream => libraryStream;
 	public string Name => libraryName;
 	public string? Soname => soname;
-	public long Size => libraryStream.Length;
+	public long Size => AspectStream.Length;
 
 	public NativeArchitecture TargetArchitecture => nativeArch;
 
 	protected IELF ELF => elf;
 
 	protected SharedLibrary (Stream stream, string libraryName, IAspectState state)
+		: base (stream)
 	{
 		var libState = EnsureValidAspectState<SharedLibraryAspectState> (state);
 
-		this.libraryStream = stream;
 		this.libraryName = libraryName;
 		elf = libState.ElfImage!;
 		(is64Bit, nativeArch) = ValidateELF (libState.ElfImage!, libraryName);
@@ -362,23 +358,12 @@ public class SharedLibrary : IAspect, IDisposable
 		return section.Type == type;
 	}
 
-	protected virtual void Dispose (bool disposing)
+	protected override void Dispose (bool disposing)
 	{
-		if (disposed) {
+		if (Disposed || !disposing) {
 			return;
 		}
 
-		if (disposing) {
-			elf?.Dispose ();
-		}
-
-		disposed = true;
-	}
-
-	public void Dispose ()
-	{
-		// Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-		Dispose (disposing: true);
-		GC.SuppressFinalize (this);
+		elf?.Dispose ();
 	}
 }
