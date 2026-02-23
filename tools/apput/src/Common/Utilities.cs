@@ -33,7 +33,7 @@ class Utilities
 		DeleteFile (path);
 	}
 
-	public static BinaryReader GetReaderAndRewindStream (Stream stream, bool rewindStream = false)
+	public static BinaryReader GetReaderAndRewindStream (Stream stream, bool rewindStream = true)
 	{
 		if (rewindStream) {
 			stream.Seek (0, SeekOrigin.Begin);

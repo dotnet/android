@@ -50,15 +50,15 @@ class AssemblyStoreReporter : BaseReporter
 			ApplicationAssembly asm = kvp.Value;
 
 			ReportDoc.AddListItem (asm.Name);
-			// ReportDoc.BeginList ();
-			// AddYesNo ("Compressed", asm.IsCompressed);
-			// ReportDoc.AddLabeledListItem ("Size", $"{asm.Size}");
-			// if (asm.IsCompressed) {
-			// 	ReportDoc.AddLabeledListItem ("Compressed size", $"{asm.CompressedSize}");
-			// }
-			// ReportDoc.AddLabeledListItem ("Name hash", $"0x{asm.NameHash:x}");
-			// AddYesNo ("Ignore on load", asm.IgnoreOnLoad);
-			// ReportDoc.EndList ();
+			ReportDoc.BeginList ();
+			AddYesNoListItem ("Compressed", asm.IsCompressed);
+			ReportDoc.AddLabeledListItem ("Size", $"{asm.Size}");
+			if (asm.IsCompressed) {
+				ReportDoc.AddLabeledListItem ("Compressed size", $"{asm.CompressedSize}");
+			}
+			ReportDoc.AddLabeledListItem ("Name hash", $"0x{asm.NameHash:x}");
+			AddYesNoListItem ("Ignore on load", asm.IgnoreOnLoad);
+			ReportDoc.EndList ();
 		}
 		ReportDoc.EndList ().EndListItem ();
 	}

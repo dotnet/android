@@ -1,3 +1,4 @@
+using System.IO;
 using System.IO.Compression;
 
 namespace ApplicationUtility;
@@ -8,7 +9,7 @@ class PackageAAB : ApplicationPackage
 	protected override string NativeLibDirBase => "base/lib";
 	protected override string AndroidManifestPath => "base/manifest/AndroidManifest.xml";
 
-	public PackageAAB (ZipArchive zip, string? description)
-		: base (zip, description)
+	public PackageAAB (Stream stream, ZipArchive zip, string? description)
+		: base (stream, zip, description)
 	{}
 }

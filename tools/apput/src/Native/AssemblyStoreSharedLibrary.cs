@@ -28,7 +28,12 @@ class AssemblyStoreSharedLibrary : DotNetAndroidWrapperSharedLibrary
 			throw new InvalidOperationException ("Internal error: unexpected aspect state. Was ProbeAspect unsuccessful?");
 		}
 
-		return new AssemblyStoreSharedLibrary (stream, description, libraryState);
+		using Stream? storeStream = GetStoreStream (libraryState, stream, description);
+		if (storeStream == null) {
+			throw new InvalidOperationException ("Internal error: failed to create store stream.");
+		}
+
+		return new AssemblyStoreSharedLibrary (storeStream, description, libraryState);
 	}
 
 	public new static IAspectState ProbeAspect (Stream stream, string? description)
@@ -55,7 +60,8 @@ class AssemblyStoreSharedLibrary : DotNetAndroidWrapperSharedLibrary
 		return new AssemblyStoreSharedLibraryAspectState (
 			success: true,
 			assemblyStoreAspectState: storeState,
-			elf: baseState.LoadedELF
+			elf: baseState.LoadedELF,
+			storeDataOffset: baseState.PayloadOffset
 		);
 
 		AssemblyStoreSharedLibraryAspectState GetErrorState ()
@@ -63,7 +69,8 @@ class AssemblyStoreSharedLibrary : DotNetAndroidWrapperSharedLibrary
 			return new AssemblyStoreSharedLibraryAspectState (
 				success: false,
 				assemblyStoreAspectState: null,
-				elf: null
+				elf: null,
+				storeDataOffset: 0
 			);
 		}
 	}
@@ -91,11 +98,11 @@ class AssemblyStoreSharedLibrary : DotNetAndroidWrapperSharedLibrary
 			return store;
 		}
 
-		using Stream? storeStream = GetStoreStream (state, stream, libraryName);
-		if (storeStream == null) {
-			throw new InvalidOperationException ($"Failed to load assembly store from '{libraryName}'");
-		}
+		// using Stream? storeStream = GetStoreStream (state, stream, libraryName);
+		// if (storeStream == null) {
+		// 	throw new InvalidOperationException ($"Failed to load assembly store from '{libraryName}'");
+		// }
 
-		return (AssemblyStore)AssemblyStore.LoadAspect (storeStream, state.AssemblyStoreState!, libraryName);
+		return (AssemblyStore)AssemblyStore.LoadAspect (stream, state.AssemblyStoreState!, libraryName);
 	}
 }

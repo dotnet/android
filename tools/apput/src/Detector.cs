@@ -44,8 +44,18 @@ public class Detector
 			return null;
 		}
 
-		using Stream fs = File.OpenRead (path);
-		return TryFindTopLevelAspect (fs, path);
+		Stream fs = File.OpenRead (path);
+		IAspect? ret = null;
+		try {
+			ret = TryFindTopLevelAspect (fs, path);
+			return ret;
+		} finally {
+			// If no aspect was found, nobody owns the stream. Get rid of it.
+			if (ret == null) {
+				fs.Close ();
+				fs.Dispose ();
+			}
+		}
 	}
 
 	public static IAspect? FindAspect (Stream stream, string? description = null)

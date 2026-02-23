@@ -16,23 +16,21 @@ abstract class FormatBase
 {
 	protected abstract string LogTag { get; }
 
-	protected Stream StoreStream { get; }
 	protected string? Description { get; }
 
 	public AssemblyStoreHeader? Header { get; protected set; }
 	public IList<AssemblyStoreAssemblyDescriptor>? Descriptors { get; protected set; }
 	public IList<ApplicationAssembly> Assemblies { get; protected set; } = null!;
 
-	protected FormatBase (Stream storeStream, string? description)
+	protected FormatBase (string? description)
 	{
-		this.StoreStream = storeStream;
 		this.Description = description;
 	}
 
-	public bool Read ()
+	public bool Read (Stream storeStream)
 	{
 		bool success = true;
-		using var reader = Utilities.GetReaderAndRewindStream (StoreStream);
+		using var reader = Utilities.GetReaderAndRewindStream (storeStream);
 
 		// They can be `null` if `Validate` wasn't called for some reason.
 		if (Header == null) {
@@ -65,9 +63,9 @@ abstract class FormatBase
 
 	protected abstract bool ReadAssemblies (BinaryReader reader, out IList<ApplicationAssembly>? assemblies);
 
-	public IAspectState Validate ()
+	public IAspectState Validate (Stream storeStream)
 	{
-		using var reader = Utilities.GetReaderAndRewindStream (StoreStream);
+		using var reader = Utilities.GetReaderAndRewindStream (storeStream);
 
 		if (ReadHeader (reader, out AssemblyStoreHeader? header)) {
 			Header = header;
@@ -77,10 +75,10 @@ abstract class FormatBase
 			Descriptors = descriptors;
 		}
 
-		return ValidateInner ();
+		return ValidateInner (storeStream);
 	}
 
-	protected abstract IAspectState ValidateInner ();
+	protected abstract IAspectState ValidateInner (Stream storeStream);
 
 	protected virtual bool ReadHeader (BinaryReader reader, out AssemblyStoreHeader? header)
 	{
@@ -105,7 +103,7 @@ abstract class FormatBase
 
 	AssemblyStoreHeader? DoReadHeader (BinaryReader reader)
 	{
-		StoreStream.Seek (0, SeekOrigin.Begin);
+		reader.BaseStream.Seek (0, SeekOrigin.Begin);
 
 		// From src/native/clr/include/xamarin-app.hh
 		//

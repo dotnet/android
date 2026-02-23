@@ -19,8 +19,8 @@ class Format_V3 : FormatBase
 
 	ulong assemblyNamesOffset;
 
-	public Format_V3 (Stream storeStream, string? description)
-		: base (storeStream, description)
+	public Format_V3 (string? description)
+		: base (description)
 	{}
 
 	protected bool EnsureValidState (string where, out IAspectState? retval)
@@ -39,7 +39,7 @@ class Format_V3 : FormatBase
 		return true;
 	}
 
-	protected override IAspectState ValidateInner ()
+	protected override IAspectState ValidateInner (Stream storeStream)
 	{
 		Log.Debug ($"{LogTag}: validating store format.");
 		if (!EnsureValidState (nameof (ValidateInner), out IAspectState? retval)) {
@@ -78,8 +78,8 @@ class Format_V3 : FormatBase
 			return Utilities.GetFailureAspectState ($"{LogTag}: required stream size is too long for the stream API to handle.");
 		}
 
-		if ((long)requiredStreamSize != StoreStream.Length) {
-			return Utilities.GetFailureAspectState ($"{LogTag}: stream has invalid size, expected {requiredStreamSize} bytes, found {StoreStream.Length} instead.");
+		if ((long)requiredStreamSize != storeStream.Length) {
+			return Utilities.GetFailureAspectState ($"{LogTag}: stream has invalid size, expected {requiredStreamSize} bytes, found {storeStream.Length} instead.");
 		} else {
 			Log.Debug ($"{LogTag}: stream size is valid.");
 		}
@@ -147,17 +147,20 @@ class Format_V3 : FormatBase
 			string name = assemblyNamesUnreliable ? "" : assemblyNames[i];
 			var assemblyStream = new SubStream (reader.BaseStream, (long)desc.DataOffset, (long)desc.DataSize);
 
+			Log.Debug ($"{LogTag}: loading assembly at index {i}; Data offset: {desc.DataOffset}; Data size: {desc.DataSize}");
 			ulong hash = NameHash (name);
 			Log.Debug ($"{LogTag}: hash for assembly '{name}' is 0x{hash:x}");
 
 			bool isIgnored = CheckIgnored (hash);
 			if (isIgnored) {
+				Log.Debug ($"{LogTag}: assembly '{name}' added, marked as ignore on load");
 				ret.Add ((ApplicationAssembly)ApplicationAssembly.CreateIgnoredAssembly (name, hash));
 				continue;
 			}
 
 			IAspectState assemblyState = ApplicationAssembly.ProbeAspect (assemblyStream, name);
 			if (!assemblyState.Success) {
+				Log.Debug ($"{LogTag}: assembly '{name}' NOT loaded");
 				assemblyStream.Dispose ();
 				continue;
 			}
@@ -166,6 +169,7 @@ class Format_V3 : FormatBase
 			var assembly = (ApplicationAssembly)ApplicationAssembly.LoadAspect (assemblyStream, assemblyState, name);
 			assembly.NameHash = hash;
 			ret.Add (assembly);
+			Log.Debug ($"{LogTag}: assembly '{name}' loaded");
 		}
 
 		assemblies = ret.AsReadOnly ();

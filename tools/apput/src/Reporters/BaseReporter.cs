@@ -183,6 +183,8 @@ abstract class BaseReporter : IReporter
 
 	protected MarkdownDocument AddYesNo (string label, bool value, bool appendNewLine = true) => AddLabeledItem (label, YesNo (value), appendNewLine);
 
+	protected MarkdownDocument AddYesNoListItem (string label, bool value, bool appendNewLine = true) => ReportDoc.AddLabeledListItem (label, YesNo (value), appendLine: appendNewLine);
+
 	protected void WriteYesNo (string label, bool value) => WriteItem (label, YesNo (value));
 
 	protected void WriteLabel (string label)

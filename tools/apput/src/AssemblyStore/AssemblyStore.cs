@@ -7,7 +7,7 @@ using Xamarin.Android.Tools;
 
 namespace ApplicationUtility;
 
-public class AssemblyStore : IAspect
+public class AssemblyStore : BaseAspect
 {
 	const int MinimumStoreSize = 8;
 	const uint MagicNumber = 0x41424158; // 'XABA', little-endian
@@ -21,7 +21,8 @@ public class AssemblyStore : IAspect
 	AssemblyStoreAspectState storeState;
 	string? description;
 
-	AssemblyStore (AssemblyStoreAspectState state, string? description)
+	AssemblyStore (Stream stream, AssemblyStoreAspectState state, string? description)
+		: base (stream)
 	{
 		storeState = state;
 		this.description = description;
@@ -40,9 +41,29 @@ public class AssemblyStore : IAspect
 		};
 	}
 
-	bool Read ()
+	protected override void Dispose (bool disposing)
 	{
-		if (!storeState.Format.Read ()) {
+		if (Disposed || !disposing) {
+			base.Dispose (disposing);
+			return;
+		}
+
+		// We need to dispose assemblies first, because they might be using substreams
+		foreach (var kvp in Assemblies) {
+			try {
+				kvp.Value.Dispose ();
+			} catch (Exception ex) {
+				Log.Debug ("Failed to dispose an application assembly", ex);
+			}
+		}
+		Assemblies.Clear ();
+
+		base.Dispose (disposing);
+	}
+
+	bool Read (Stream storeStream)
+	{
+		if (!storeState.Format.Read (storeStream)) {
 			return false;
 		}
 
@@ -60,16 +81,19 @@ public class AssemblyStore : IAspect
 			throw new InvalidOperationException ("Internal error: unexpected aspect state. Was ProbeAspect unsuccessful?");
 		}
 
-		var store = new AssemblyStore (storeState, description);
-		if (store.Read ()) {
+		var store = new AssemblyStore (stream, storeState, description);
+		if (store.Read (stream)) {
 			return store;
 		}
 
 		throw new InvalidOperationException ($"Failed to load assembly store '{description}'");
 	}
 
-	// We return `BasicAspectState` instance for all failures, since there's no extra information we can
-	// pass on.
+	/// <summary>
+	/// We return `BasicAspectState` instance for all failures, since there's no extra information we can
+	/// pass on. `context`, if not `null`, is an offset into `stream` to where the actual store data begins.
+	/// It is used when the store is stored inside a shared library. It has to be of type `ulong`.
+	/// </summary>
 	public static IAspectState ProbeAspect (Stream stream, string? description)
 	{
 		// All assembly store files are at least 8 bytes long - space taken up by
@@ -94,11 +118,11 @@ public class AssemblyStore : IAspect
 
 		switch (storeVersion.MainVersion) {
 			case 2:
-				validator = new Format_V2 (stream, description);
+				validator = new Format_V2 (description);
 				break;
 
 			case 3:
-				validator = new Format_V3 (stream, description);
+				validator = new Format_V3 (description);
 				break;
 
 			default:
@@ -110,6 +134,6 @@ public class AssemblyStore : IAspect
 			throw new InvalidOperationException ("Internal error: validator should never be null here");
 		}
 
-		return validator.Validate ();
+		return validator.Validate (stream);
 	}
 }

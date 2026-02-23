@@ -3,7 +3,7 @@ using System.IO;
 
 namespace ApplicationUtility;
 
-public class ApplicationAssembly : IAspect
+public class ApplicationAssembly : BaseAspect
 {
 	const string LogTag = "ApplicationAssembly";
 	const uint COMPRESSED_MAGIC = 0x5A4C4158; // 'XALZ', little-endian
@@ -19,11 +19,9 @@ public class ApplicationAssembly : IAspect
 	public bool IgnoreOnLoad    { get; }
 	public ulong NameHash       { get; internal set; }
 
-	readonly Stream? assemblyStream;
-
 	ApplicationAssembly (Stream stream, uint uncompressedSize, string? description, bool isCompressed)
+		: base (stream)
 	{
-		assemblyStream = stream;
 		Size = uncompressedSize;
 		CompressedSize = isCompressed ? (ulong)stream.Length : 0;
 		IsCompressed = isCompressed;
@@ -31,6 +29,7 @@ public class ApplicationAssembly : IAspect
 	}
 
 	ApplicationAssembly (string? description, bool isIgnored)
+		: base (null)
 	{
 		IgnoreOnLoad = isIgnored;
 		Name = NameMe (description);
@@ -51,6 +50,7 @@ public class ApplicationAssembly : IAspect
 
 	public static IAspect LoadAspect (Stream stream, IAspectState state, string? description)
 	{
+		Log.Debug ($"Loading assembly from stream {stream}");
 		using var reader = Utilities.GetReaderAndRewindStream (stream);
 		if (ReadCompressedHeader (reader, out uint uncompressedLength)) {
 			return new ApplicationAssembly (stream, uncompressedLength, description, isCompressed: true);

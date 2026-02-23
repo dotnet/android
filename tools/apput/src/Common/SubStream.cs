@@ -40,6 +40,10 @@ class SubStream : Stream
 		this.baseStream = baseStream;
 		this.length = length;
 		this.offsetInParentStream = offsetInParentStream;
+
+		// Position at the beginning of the data we access, so that the caller doesn't have to use `Seek` before
+		// calling `Read` etc.
+		Seek (0, SeekOrigin.Begin);
 	}
 
 	public override int Read (byte [] buffer, int offset, int count)
