@@ -289,7 +289,7 @@ public class BootAndroidEmulator : AndroidTask
 	/// </summary>
 	protected virtual Process? LaunchEmulatorProcess (string emulatorPath, string avdName)
 	{
-		var arguments = $"-avd {avdName}";
+		var arguments = $"-avd \"{avdName}\"";
 		if (!EmulatorExtraArguments.IsNullOrEmpty ()) {
 			arguments += $" {EmulatorExtraArguments}";
 		}
