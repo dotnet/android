@@ -126,5 +126,29 @@ namespace Xamarin.Android.Build.Tests {
 
 			Directory.Delete (path, recursive: true);
 		}
+
+		[Test]
+		public void MinorApiLevelEmitsPlatformDirectory ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new ApiInfo [] {
+				new ApiInfo () { Id = "36.1", Level = 36, Name = "Baklava", FrameworkVersion = "v16.1", Stable = true },
+			});
+			MonoAndroidHelper.RefreshSupportedVersions (new string [] { referencePath });
+			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
+			var task = new CalculateProjectDependencies {
+				BuildEngine = engine
+			};
+
+			task.AndroidApiLevel = "36.1";
+			task.PlatformToolsVersion = "36.0.0";
+			task.BuildToolsVersion = "36.0.0";
+			task.ManifestFile = new TaskItem (Path.Combine (path, "AndroidManifest.xml"));
+			Assert.IsTrue (task.Execute ());
+			Assert.IsNotNull (task.Dependencies);
+			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platforms/android-36.1"),
+				"Dependencies should contain platform android-36.1 when AndroidApiLevel has a minor version");
+			Directory.Delete (Path.Combine (Root, path), recursive: true);
+		}
 	}
 }
