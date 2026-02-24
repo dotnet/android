@@ -33,6 +33,7 @@ class Utilities
 		DeleteFile (path);
 	}
 
+	// TODO: review all the call sites, now that `rewindStream` default is different
 	public static BinaryReader GetReaderAndRewindStream (Stream stream, bool rewindStream = true)
 	{
 		if (rewindStream) {

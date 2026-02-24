@@ -112,7 +112,7 @@ class AXMLParser
 		XmlDeclaration declaration = ret.CreateXmlDeclaration ("1.0", stringPool.IsUTF8 ? "UTF-8" : "UTF-16", null);
 		ret.InsertBefore (declaration, ret.DocumentElement);
 
-		using var reader = Utilities.GetReaderAndRewindStream (data);
+		using var reader = Utilities.GetReaderAndRewindStream (data, rewindStream: false);
 		ARSCHeader? header;
 		string? nsPrefix = null;
 		string? nsUri = null;
@@ -144,7 +144,7 @@ class AXMLParser
 
 			// Check that we read a correct header
 			if (header.HeaderSize != 16) {
-				Log.Warning ($"XML chunk header size is not 16. Chunk type {header.Type} (0x{header.TypeRaw:x}), chunk size {header.Size}");
+				Log.Warning ($"XML chunk header size is {header.HeaderSize} instead of 16. Chunk type {header.Type} (0x{header.TypeRaw:x}), chunk size {header.Size}");
 				data.Seek (header.Size, SeekOrigin.Current);
 				continue;
 			}
