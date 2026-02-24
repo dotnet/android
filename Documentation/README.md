@@ -12,6 +12,7 @@
   * [Submitting Bugs, Feature Requests, and Pull Requests][bugs]
   * [Directory Structure](project-docs/ExploringSources.md)
   * [Assembly store format](project-docs/AssemblyStores.md)
+  * [NDK and toolchain history](project-docs/NdkAndToolchainHistory.md)
 
 [bugs]: https://github.com/xamarin/xamarin-android/wiki/Submitting-Bugs,-Feature-Requests,-and-Pull-Requests
 
