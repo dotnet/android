@@ -54,7 +54,7 @@ abstract class BaseReporter : IReporter
 		bool standalone = form == ReportForm.Standalone;
 
 		if (standalone) {
-			WriteLine (BannerColor, $"# {AspectName} ({ShortDescription})");
+			AddSection ($"# {AspectName} ({ShortDescription})");
 		}
 
 		DoReport (form, sectionLevel);
