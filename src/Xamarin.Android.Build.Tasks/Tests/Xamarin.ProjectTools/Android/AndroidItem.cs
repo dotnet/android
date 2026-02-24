@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Xamarin.ProjectTools
 {
@@ -153,6 +153,16 @@ namespace Xamarin.ProjectTools
 			}
 			public AndroidNativeLibrary (Func<string> include)
 				: base (AndroidBuildActions.AndroidNativeLibrary, include)
+			{
+			}
+		}
+		public class AndroidNativeLibraryNoJniPreload : BuildItem {
+			public AndroidNativeLibraryNoJniPreload (string include)
+				: this (() => include)
+			{
+			}
+			public AndroidNativeLibraryNoJniPreload (Func<string> include)
+				: base (AndroidBuildActions.AndroidNativeLibraryNoJniPreload, include)
 			{
 			}
 		}
