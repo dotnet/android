@@ -75,20 +75,58 @@ The transition happened in three phases:
 `strip`, and `objcopy`. These matched the Mono AOT compiler's expectations.
 
 **Phase 2 -- Own GNU Binutils build (2021).** NDK r22 deprecated and r23 removed GNU Binutils.
-The project built its own (initially 2.36, then 2.37, then downgraded to 2.35.2 due to the
-Windows encoding bugs above).
+The project built its own from source rather than switching to LLVM because GNU Binutils was a
+drop-in replacement --- the Mono AOT compiler already expected a GNU `gas`-compatible assembler
+interface, so no wrapper or pipeline changes were needed. The initial build used version 2.36,
+bumped to 2.37, then downgraded to 2.35.2 when 2.36's Windows filename encoding bugs were
+discovered.
 
-**Phase 3 -- LLVM (2022).** The persistent encoding bugs motivated a switch to LLVM tools.
-Because the Mono AOT compiler expects a GNU `gas`-compatible assembler, a C++ wrapper (`gas.cc`
-in `dotnet/android-native-tools`) translates `gas` CLI arguments to `llvm-mc` arguments:
+**Phase 3 -- LLVM (2022).** The encoding bugs could not be easily fixed in the GNU Binutils
+codebase, forcing a switch to LLVM. Even then, the switch was cautious --- initially only the
+assembler and strip were replaced, keeping GNU `gold` for linking because `lld` was too large:
 
-> "As mono/mono & dotnet/runtime AOT expects a GNU Binutils-compatible toolchain, it was
-> necessary to implement a GNU Assembler (`gas`) wrapper around the LLVM `llvm-mc` assembler,
-> so that command lines used by the Mono AOT compiler keep working fine."
-> --- commit `b21cbf943` (2022-03-17, PR #6683)
+> "GNU Binutils have problems dealing with diacritic characters on Windows platform. Fixing the
+> issue in the Binutils codebase is not straightforward, so we decided to use portions of the
+> LLVM toolchain (`llvm-mc`, the assembler, and `llvm-objcopy` which doubles as `strip`) instead,
+> since they don't have said problem with diacritics."
+>
+> "The initial plan was to switch the linker to LLVM's `lld` as well, but since its binary comes
+> up at 70mb (twice that on mac, with two architectures) we decided to keep using GNU ld (`gold`)
+> for the moment."
+> --- `xamarin-android-binutils` commit `6d4e3bbc` (2022-01-28)
 
-This switch was briefly reverted (`3d088a29c`) due to APK size concerns, then re-introduced
-alongside the move to LLVM IR.
+Because the Mono AOT compiler expects a GNU `gas`-compatible interface, a C++ wrapper (`gas.cc`
+in `dotnet/android-native-tools`) was written to translate `gas` CLI arguments to `llvm-mc`
+arguments. The full switch (including `lld` for linking) landed in commit `b21cbf943`
+(2022-03-17, PR #6683), was briefly reverted (`3d088a29c`) due to APK size concerns, then
+re-introduced alongside the move to LLVM IR.
+
+### Why not use the NDK's LLVM?
+
+The NDK has shipped its own LLVM/Clang since r18 (2018), so a natural question is why the
+project built its own LLVM tools instead of using the NDK's. No single commit states this
+explicitly, but the reasoning is clear from the overall trajectory:
+
+1. **The whole point was to eliminate the NDK dependency.** The project had been working since
+   2019 to remove the NDK requirement for end-user builds (`f0b1e8a53`: "will not require that
+   the full Android NDK be installed"). Using the NDK's `llvm-mc` or `lld` would have preserved
+   exactly the dependency they were trying to remove.
+
+2. **The NDK doesn't ship standalone `llvm-mc`.** The NDK provides `clang` (which uses an
+   integrated assembler internally) but not a standalone `llvm-mc` binary. The Mono AOT compiler
+   shells out to a standalone assembler, so the NDK's clang-integrated assembler wasn't usable
+   without modifying Mono itself.
+
+3. **NDK LLVM version churn.** The NDK's LLVM version changes with every NDK release (e.g.,
+   LLVM 11 in r22, LLVM 12 in r23, LLVM 14 in r25). This is exactly the version instability
+   that caused repeated breakage with the NDK (see `accc846e3`, `f361d9978`, `b21267f4e`).
+   Building their own LLVM gave version control and stability.
+
+4. **The NDK's own tools had bugs too.** NDK r22's Windows `.cmd` wrapper scripts for `clang`
+   had quoting bugs with spaces in paths (`NdkToolsWithClangNoBinutils` in
+   `src/Xamarin.Android.Build.Tasks/Utilities/NdkTools/WithClangNoBinutils.cs` documents this
+   workaround at length). The NDK's LLVM wasn't necessarily more reliable than the NDK's
+   binutils had been.
 
 
 ## The LLVM IR Decision
