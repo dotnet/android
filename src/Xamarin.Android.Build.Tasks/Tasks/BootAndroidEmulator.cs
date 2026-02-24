@@ -94,8 +94,7 @@ public class BootAndroidEmulator : AndroidTask
 
 	public override bool RunTask ()
 	{
-		ResolveToolPaths ();
-		var adbPath = Path.Combine (AdbToolPath!, AdbToolExe!);
+		var adbPath = ResolveAdbPath ();
 
 		// Check if DeviceId is already a known online ADB serial
 		if (IsOnlineAdbDevice (adbPath, Device)) {
@@ -108,8 +107,7 @@ public class BootAndroidEmulator : AndroidTask
 		// DeviceId is not an online serial — treat it as an AVD name and boot it
 		Log.LogMessage (MessageImportance.Normal, $"Device '{Device}' is not an online ADB device. Treating as AVD name.");
 
-		var emulatorPath = Path.Combine (EmulatorToolPath!, EmulatorToolExe!);
-
+		var emulatorPath = ResolveEmulatorPath ();
 		var avdName = Device;
 
 		// Check if this AVD is already running (but perhaps still booting)
@@ -165,33 +163,35 @@ public class BootAndroidEmulator : AndroidTask
 	}
 
 	/// <summary>
-	/// Resolves tool paths from AndroidSdkDirectory when not explicitly set.
+	/// Resolves the full path to the adb executable, using AdbToolPath/AdbToolExe
+	/// if set, otherwise computing defaults from AndroidSdkDirectory.
 	/// </summary>
-	void ResolveToolPaths ()
+	string ResolveAdbPath ()
 	{
-		if (AdbToolExe.IsNullOrEmpty ()) {
-			AdbToolExe = OS.IsWindows ? "adb.exe" : "adb";
+		var exe = AdbToolExe.IsNullOrEmpty () ? (OS.IsWindows ? "adb.exe" : "adb") : AdbToolExe;
+		var dir = AdbToolPath;
+
+		if (dir.IsNullOrEmpty () && !AndroidSdkDirectory.IsNullOrEmpty ()) {
+			dir = Path.Combine (AndroidSdkDirectory, "platform-tools");
 		}
 
-		if (AdbToolPath.IsNullOrEmpty ()) {
-			if (!AndroidSdkDirectory.IsNullOrEmpty ()) {
-				AdbToolPath = Path.Combine (AndroidSdkDirectory, "platform-tools") + Path.DirectorySeparatorChar;
-			} else {
-				AdbToolPath = "";
-			}
+		return dir.IsNullOrEmpty () ? exe : Path.Combine (dir, exe);
+	}
+
+	/// <summary>
+	/// Resolves the full path to the emulator executable, using EmulatorToolPath/EmulatorToolExe
+	/// if set, otherwise computing defaults from AndroidSdkDirectory.
+	/// </summary>
+	string ResolveEmulatorPath ()
+	{
+		var exe = EmulatorToolExe.IsNullOrEmpty () ? (OS.IsWindows ? "emulator.exe" : "emulator") : EmulatorToolExe;
+		var dir = EmulatorToolPath;
+
+		if (dir.IsNullOrEmpty () && !AndroidSdkDirectory.IsNullOrEmpty ()) {
+			dir = Path.Combine (AndroidSdkDirectory, "emulator");
 		}
 
-		if (EmulatorToolExe.IsNullOrEmpty ()) {
-			EmulatorToolExe = OS.IsWindows ? "emulator.exe" : "emulator";
-		}
-
-		if (EmulatorToolPath.IsNullOrEmpty ()) {
-			if (!AndroidSdkDirectory.IsNullOrEmpty ()) {
-				EmulatorToolPath = Path.Combine (AndroidSdkDirectory, "emulator") + Path.DirectorySeparatorChar;
-			} else {
-				EmulatorToolPath = "";
-			}
-		}
+		return dir.IsNullOrEmpty () ? exe : Path.Combine (dir, exe);
 	}
 
 	/// <summary>

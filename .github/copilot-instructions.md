@@ -129,6 +129,7 @@ if (!UncompressedFileExtensions.IsNullOrWhiteSpace ()) {
 ## Formatting
 
 C# code uses tabs (not spaces) and Mono style (`.editorconfig`):
+- **NEVER** use `!` (null-forgiving operator) in C# code. Always refactor to avoid it, e.g. by having helper methods return non-null types or by checking for null explicitly.
 - Preserve existing formatting and comments
 - Space before `(` and `[`: `Foo ()`, `array [0]`
 - Use `""` not `string.Empty`, `[]` not `Array.Empty<T>()`
