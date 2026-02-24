@@ -28,7 +28,7 @@ namespace Xamarin.Android.Tasks;
 public class BootAndroidEmulator : AndroidTask
 {
 	const int DefaultBootTimeoutSeconds = 300;
-	const int PollIntervalMilliseconds = 3000;
+	const int PollIntervalMilliseconds = 500;
 
 	public override string TaskPrefix => "BAE";
 
