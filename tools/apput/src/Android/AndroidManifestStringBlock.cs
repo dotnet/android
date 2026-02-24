@@ -25,7 +25,7 @@ class AndroidManifestStringBlock
 	{
 		header = stringPoolHeader;
 
-		using var reader = Utilities.GetReaderAndRewindStream (data);
+		using var reader = Utilities.GetReaderAndRewindStream (data, rewindStream: false);
 
 		stringCount = reader.ReadUInt32 ();
 		uint styleCount = reader.ReadUInt32 ();
