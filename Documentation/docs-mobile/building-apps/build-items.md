@@ -33,7 +33,7 @@ The following MSBuild metadata are required:
 - `%(JavaArtifact)`: The group and artifact id of the Java library matching the specifed POM
   file in the form `{GroupId}:{ArtifactId}`.
 - `%(JavaVersion)`: The version of the Java library matching the specified POM file.
-  
+
 See the [Java Dependency Resolution documentation](../features/maven/java-dependency-verification.md)
 for more details.
 
@@ -279,9 +279,9 @@ installing app bundles.
 
 ## AndroidMavenLibrary
 
-`<AndroidMavenLibrary>` allows a Maven artifact to be specified which will 
-automatically be downloaded and added to a .NET for Android binding project. 
-This can be useful to simplify maintenance of .NET for Android bindings for artifacts 
+`<AndroidMavenLibrary>` allows a Maven artifact to be specified which will
+automatically be downloaded and added to a .NET for Android binding project.
+This can be useful to simplify maintenance of .NET for Android bindings for artifacts
 hosted in Maven.
 
 ```xml
@@ -335,6 +335,20 @@ used to specify the ABI that the library targets. Thus, if you add
   </AndroidNativeLibrary>
 </ItemGroup>
 ```
+
+## AndroidNativeLibraryNoJniPreload
+
+Every native library included in this item group will be exempt from the
+JNI library preload mechanism. By default, all such libraries will be loaded
+by the runtime early during application startup in order to assure their
+proper initialization. However, in some cases it might not be the desired
+behavior and this item group allows exclusion of libraries from this process
+on individual basis.
+
+Some framework libraries which must be loaded at application startup will not
+be affected if included in this item group.
+
+See also [`$(AndroidIgnoreAllJniPreload)`](build-properties.md#androidignorealljnipreload)
 
 ## AndroidPackagingOptionsExclude
 
