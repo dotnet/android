@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace ApplicationUtility;
 
 [AspectReporter (typeof (PackageAPK))]
@@ -47,18 +50,35 @@ class ApplicationPackageReporter : BaseReporter
 			// Very unlikely...
 			AddText ("No shared libraries found in the package");
 		} else {
-			AddText ($"Application contains the following {GetCountable (Countable.SharedLibrary, package.SharedLibraries.Count)}:");
+			AddText ($"Application contains the following {package.SharedLibraries.Count} native shared {GetCountable (Countable.SharedLibrary, package.SharedLibraries.Count)}:");
+
+			// Group and sort libraries by name, then architecture
+			var libs = new SortedDictionary<string, List<SharedLibrary>> (StringComparer.Ordinal);
+			foreach (SharedLibrary lib in package.SharedLibraries) {
+				string name = Utilities.GetZipEntryFileName (lib.Name);
+				if (!libs.TryGetValue (name, out List<SharedLibrary>? libsByName) || libsByName == null) {
+					libsByName = new List<SharedLibrary> ();
+					libs[name] = libsByName;
+				}
+				libsByName.Add (lib);
+			}
+
+			foreach (var kvp in libs) {
+				kvp.Value.Sort ((SharedLibrary a, SharedLibrary b) => a.Name.CompareTo (b.Name));
+			}
 
 			ReportDoc.BeginList ();
-			foreach (SharedLibrary lib in package.SharedLibraries) {
-				ReportDoc.StartListItem ($"{lib.Name}", MarkdownTextStyle.Monospace);
+			foreach (var kvp in libs) {
+				foreach (SharedLibrary lib in kvp.Value) {
+					ReportDoc.StartListItem ($"{lib.Name}", MarkdownTextStyle.Monospace);
 
-				// Markdown renderer has a bug where it won't render the first item of the sub-list
-				// properly if the item line ends with a formatting character (or whitespace without
-				// preceding unformatted character)
-				AddText (":  ", addIndent: false);
-				var libReporter = new SharedLibraryReporter (lib, ReportDoc);
-				libReporter.Report (ReportForm.SimpleList);
+					// Markdown renderer has a bug where it won't render the first item of the sub-list
+					// properly if the item line ends with a formatting character (or whitespace without
+					// preceding unformatted character)
+					AddText (":  ", addIndent: false);
+					var libReporter = new SharedLibraryReporter (lib, ReportDoc);
+					libReporter.Report (ReportForm.SimpleList);
+				}
 			}
 			ReportDoc.AddNewline ();
 			ReportDoc.EndList ();
@@ -71,15 +91,14 @@ class ApplicationPackageReporter : BaseReporter
 		if (package.AssemblyStores == null || package.AssemblyStores.Count == 0) {
 			AddText ("No assembly stores found");
 		} else {
-			AddText ($"Application contains the following {GetCountable (Countable.AssemblyStore, package.AssemblyStores.Count)}:");
+			AddText ($"Application contains the following {package.AssemblyStores.Count} {GetCountable (Countable.AssemblyStore, package.AssemblyStores.Count)}.");
 
-			ReportDoc.BeginList ();
 			foreach (AssemblyStore store in package.AssemblyStores) {
-				ReportDoc.StartListItem ($"{store.Architecture}", MarkdownTextStyle.Monospace);
-				AddListItemText ($" ({store.NumberOfAssemblies} {GetCountable (Countable.Assembly, store.NumberOfAssemblies)})");
-				ReportDoc.EndListItem ();
+				AddSection ($"Architecture: {store.Architecture}");
+
+				var storeReporter = new AssemblyStoreReporter (store, ReportDoc);
+				storeReporter.Report (ReportForm.Subsection, sectionLevel: 2);
 			}
-			ReportDoc.EndList ();
 		}
 	}
 }

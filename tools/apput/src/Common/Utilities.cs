@@ -49,4 +49,18 @@ class Utilities
 	}
 
 	public static string ToStringOrNull<T> (T? reference) => reference == null ? "<NULL>" : reference.ToString () ?? "[unknown]";
+
+	public static string GetZipEntryFileName (string entryName)
+	{
+		int idx = entryName.LastIndexOf ('/');
+		if (idx <= 0) {
+			return entryName;
+		}
+
+		if (idx == entryName.Length - 1) {
+			return String.Empty;
+		}
+
+		return entryName.Substring (idx + 1);
+	}
 }

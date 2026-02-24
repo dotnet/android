@@ -36,7 +36,7 @@ class Reporter
 			reporter.Report (form);
 		} finally {
 			// Write report only when we're not nested
-			if (doc != null) {
+			if (doc == null) {
 				WriteReport (reportDoc, plainTextRendering);
 			}
 		}
