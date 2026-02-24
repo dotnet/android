@@ -9,7 +9,7 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <AssemblyName>$(VendorPrefix)Microsoft.Android.Build.BaseTasks$(VendorSuffix)</AssemblyName>
-    <LangVersion>12.0</LangVersion>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

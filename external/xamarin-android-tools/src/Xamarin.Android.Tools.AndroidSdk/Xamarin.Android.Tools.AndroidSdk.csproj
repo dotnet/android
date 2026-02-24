@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <TargetFrameworks Condition=" '$(AndroidToolsDisableMultiTargeting)' != 'true' ">$(TargetFrameworks);$(DotNetTargetFramework)</TargetFrameworks>
-    <LangVersion>9.0</LangVersion>
+    <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <DefineConstants>INTERNAL_NULLABLE_ATTRIBUTES</DefineConstants>
     <SignAssembly>true</SignAssembly>

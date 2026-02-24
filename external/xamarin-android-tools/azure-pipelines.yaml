@@ -11,7 +11,7 @@ pr:
 # Global variables
 variables:
   - name: DotNetCoreVersion
-    value: 9.0.x
+    value: 10.0.x
 
 jobs:
 - job: build
