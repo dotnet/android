@@ -19,6 +19,7 @@ public class AndroidManifest : BaseAspect
 	public List<string>? Permissions    { get; }
 	public XmlDocument? RawXML          => xmlDoc;
 	public string? TargetSdkVersion     { get; }
+	public string RenderedXML           => RenderXmlAsString (RawXML);
 
 	readonly XmlDocument? xmlDoc;
 	XmlNamespaceManager? nsmgr;
@@ -217,6 +218,19 @@ public class AndroidManifest : BaseAspect
 		}
 		Log.Debug ($"'{description}' loaded and parsed correctly.");
 
+		Log.Debug ("--- Application manifest: start ---");
+		Log.Debug (RenderXmlAsString (doc));
+		Log.Debug ("--- Application manifest: end   ---");
+
+		return doc;
+	}
+
+	static string RenderXmlAsString (XmlDocument? doc)
+	{
+		if (doc == null) {
+			return String.Empty;
+		}
+
 		var writerSettings = new XmlWriterSettings {
 			Encoding = Encoding.UTF8,
 			Indent = true,
@@ -227,11 +241,7 @@ public class AndroidManifest : BaseAspect
 		doc.WriteTo (xmlWriter);
 		xmlWriter.Flush ();
 
-		Log.Debug ("--- Application manifest: start ---");
-		Log.Debug (stringWriter.ToString ());
-		Log.Debug ("--- Application manifest: end   ---");
-
-		return doc;
+		return stringWriter.ToString ();
 	}
 
 	static XmlNamespaceManager? PrepareForReading (XmlDocument? doc)
