@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Xml;
 
 using ProtoManifest = Aapt.Pb;
@@ -215,6 +216,21 @@ public class AndroidManifest : BaseAspect
 			return null;
 		}
 		Log.Debug ($"'{description}' loaded and parsed correctly.");
+
+		var writerSettings = new XmlWriterSettings {
+			Encoding = Encoding.UTF8,
+			Indent = true,
+		};
+
+		using var stringWriter = new StringWriter ();
+		using var xmlWriter = XmlWriter.Create (stringWriter, writerSettings);
+		doc.WriteTo (xmlWriter);
+		xmlWriter.Flush ();
+
+		Log.Debug ("--- Application manifest: start ---");
+		Log.Debug (stringWriter.ToString ());
+		Log.Debug ("--- Application manifest: end   ---");
+
 		return doc;
 	}
 

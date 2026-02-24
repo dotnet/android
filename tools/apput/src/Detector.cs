@@ -26,6 +26,7 @@ public class Detector
 		typeof (MonoAotSharedLibrary),
 		typeof (DotNetAndroidWrapperSharedLibrary),
 		typeof (SharedLibrary),
+		typeof (AndroidManifest),
 	};
 
 	readonly static List<Type> KnownSharedLibraryAspects = new () {
