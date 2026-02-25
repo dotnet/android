@@ -9,7 +9,7 @@
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateProguardConfiguration" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <PropertyGroup>
-    <_RemoveRegisterFlag>$(_AndroidStampDirectory)_RemoveRegisterAttribute.stamp</_RemoveRegisterFlag>
+    <_RemoveRegisterFlag>$(MonoAndroidIntermediateAssemblyDir)shrunk\shrunk.flag</_RemoveRegisterFlag>
     <!-- Inject typemap-specific targets into build dependency chains -->
     <_BeforeAddStaticResources>$(_BeforeAddStaticResources);_GetMonoPlatformJarPath</_BeforeAddStaticResources>
     <_BeforeCompileJava>$(_BeforeCompileJava);_GetMonoPlatformJarPath</_BeforeCompileJava>
@@ -327,9 +327,6 @@
         ShrunkFrameworkAssemblies="@(_ShrunkAssemblies)" />
     <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)shrunk" />
     <Touch Files="$(_RemoveRegisterFlag)" AlwaysCreate="true" />
-    <ItemGroup>
-      <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)shrunk\**" />
-    </ItemGroup>
   </Target>
 
   <!-- Collect native typemap files for archive (FastDev) -->
