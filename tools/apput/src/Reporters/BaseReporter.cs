@@ -15,6 +15,7 @@ abstract class BaseReporter : IReporter
 {
 	protected enum Countable
 	{
+		Architecture,
 		Assembly,
 		AssemblyStore,
 		Permission,
@@ -26,6 +27,7 @@ abstract class BaseReporter : IReporter
 	const string TargetArchitectureLabel = "Target architecture";
 
 	static readonly Dictionary<Countable, (string singular, string plural)> Countables = new () {
+		{ Countable.Architecture, ("architecture", "architectures") },
 		{ Countable.Assembly, ("assembly", "assemblies") },
 		{ Countable.AssemblyStore, ("assembly store", "assembly stores") },
 		{ Countable.Permission, ("permission", "permissions") },
@@ -195,6 +197,12 @@ abstract class BaseReporter : IReporter
 	protected MarkdownDocument AddText (string text, MarkdownTextStyle style = MarkdownTextStyle.Plain, bool addIndent = true)
 	{
 		return ReportDoc.AddText (text, style, addIndent);
+	}
+
+	protected MarkdownDocument AddParagraph ()
+	{
+		ReportDoc.AddNewline ();
+		return ReportDoc.AddNewline ();
 	}
 
 	public MarkdownDocument AddListItemText (string text, MarkdownTextStyle style = MarkdownTextStyle.Plain)
