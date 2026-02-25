@@ -1,20 +1,20 @@
 <Project>
   <!--Package versions-->
   <PropertyGroup>
-    <MicrosoftNETSdkPackageVersion>11.0.100-preview.3.26121.104</MicrosoftNETSdkPackageVersion>
+    <MicrosoftNETSdkPackageVersion>11.0.100-preview.3.26124.102</MicrosoftNETSdkPackageVersion>
     <MicrosoftDotnetSdkInternalPackageVersion>$(MicrosoftNETSdkPackageVersion)</MicrosoftDotnetSdkInternalPackageVersion>
-    <MicrosoftNETILLinkPackageVersion>11.0.0-preview.3.26121.104</MicrosoftNETILLinkPackageVersion>
-    <MicrosoftNETCoreAppRefPackageVersion>11.0.0-preview.3.26121.104</MicrosoftNETCoreAppRefPackageVersion>
+    <MicrosoftNETILLinkPackageVersion>11.0.0-preview.3.26124.102</MicrosoftNETILLinkPackageVersion>
+    <MicrosoftNETCoreAppRefPackageVersion>11.0.0-preview.3.26124.102</MicrosoftNETCoreAppRefPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetApiCompatPackageVersion>
     <!-- Last version built for net10.0, needed for CI steps that only have the .NET 10 SDK installed (e.g., BAR manifest publishing) -->
     <MicrosoftDotNetBuildTasksFeedPackageVersionNet10>11.0.0-beta.26060.102</MicrosoftDotNetBuildTasksFeedPackageVersionNet10>
-    <MicrosoftDotNetBuildTasksFeedPackageVersion>11.0.0-beta.26121.104</MicrosoftDotNetBuildTasksFeedPackageVersion>
-    <MicrosoftNETWorkloadMonoToolchainCurrentManifest110100preview3PackageVersion>11.0.100-preview.3.26121.104</MicrosoftNETWorkloadMonoToolchainCurrentManifest110100preview3PackageVersion>
-    <MicrosoftNETWorkloadEmscriptenCurrentManifest110100preview3PackageVersion>11.0.100-preview.3.26121.104</MicrosoftNETWorkloadEmscriptenCurrentManifest110100preview3PackageVersion>
+    <MicrosoftDotNetBuildTasksFeedPackageVersion>11.0.0-beta.26124.102</MicrosoftDotNetBuildTasksFeedPackageVersion>
+    <MicrosoftNETWorkloadMonoToolchainCurrentManifest110100preview3PackageVersion>11.0.100-preview.3.26124.102</MicrosoftNETWorkloadMonoToolchainCurrentManifest110100preview3PackageVersion>
+    <MicrosoftNETWorkloadEmscriptenCurrentManifest110100preview3PackageVersion>11.0.100-preview.3.26124.102</MicrosoftNETWorkloadEmscriptenCurrentManifest110100preview3PackageVersion>
     <MicrosoftNETWorkloadMonoToolChainPackageVersion>$(MicrosoftNETWorkloadMonoToolChainCurrentManifest110100preview3PackageVersion)</MicrosoftNETWorkloadMonoToolChainPackageVersion>
     <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETWorkloadEmscriptenCurrentManifest110100preview3PackageVersion)</MicrosoftNETWorkloadEmscriptenPackageVersion>
-    <MicrosoftTemplateEngineAuthoringTasksPackageVersion>11.0.100-preview.3.26121.104</MicrosoftTemplateEngineAuthoringTasksPackageVersion>
-    <MicrosoftDotNetCecilPackageVersion>0.11.5-preview.26121.104</MicrosoftDotNetCecilPackageVersion>
+    <MicrosoftTemplateEngineAuthoringTasksPackageVersion>11.0.100-preview.3.26124.102</MicrosoftTemplateEngineAuthoringTasksPackageVersion>
+    <MicrosoftDotNetCecilPackageVersion>0.11.5-preview.26124.102</MicrosoftDotNetCecilPackageVersion>
     <SystemIOHashingPackageVersion>9.0.4</SystemIOHashingPackageVersion>
     <SystemReflectionMetadataPackageVersion>11.0.0-preview.1.26104.118</SystemReflectionMetadataPackageVersion>
     <!-- Previous .NET Android version -->

@@ -1,28 +1,28 @@
 <Dependencies>
   <ProductDependencies>
-    <Dependency Name="Microsoft.NET.Sdk" Version="11.0.100-preview.3.26121.104">
+    <Dependency Name="Microsoft.NET.Sdk" Version="11.0.100-preview.3.26124.102">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>51587e2f3d5f86ca27184a6b5e8a778841d05b31</Sha>
+      <Sha>36ea4de4a4409ace6bdf48c2dae2b6713f47c1b9</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.ILLink" Version="11.0.0-preview.3.26121.104">
+    <Dependency Name="Microsoft.NET.ILLink" Version="11.0.0-preview.3.26124.102">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>51587e2f3d5f86ca27184a6b5e8a778841d05b31</Sha>
+      <Sha>36ea4de4a4409ace6bdf48c2dae2b6713f47c1b9</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NETCore.App.Ref" Version="11.0.0-preview.3.26121.104">
+    <Dependency Name="Microsoft.NETCore.App.Ref" Version="11.0.0-preview.3.26124.102">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>51587e2f3d5f86ca27184a6b5e8a778841d05b31</Sha>
+      <Sha>36ea4de4a4409ace6bdf48c2dae2b6713f47c1b9</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.5-preview.26121.104">
+    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.5-preview.26124.102">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>51587e2f3d5f86ca27184a6b5e8a778841d05b31</Sha>
+      <Sha>36ea4de4a4409ace6bdf48c2dae2b6713f47c1b9</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.Workload.Mono.Toolchain.Current.Manifest-11.0.100-preview.3" Version="11.0.100-preview.3.26121.104">
+    <Dependency Name="Microsoft.NET.Workload.Mono.Toolchain.Current.Manifest-11.0.100-preview.3" Version="11.0.100-preview.3.26124.102">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>51587e2f3d5f86ca27184a6b5e8a778841d05b31</Sha>
+      <Sha>36ea4de4a4409ace6bdf48c2dae2b6713f47c1b9</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.Workload.Emscripten.Current.Manifest-11.0.100-preview.3" Version="11.0.100-preview.3.26121.104">
+    <Dependency Name="Microsoft.NET.Workload.Emscripten.Current.Manifest-11.0.100-preview.3" Version="11.0.100-preview.3.26124.102">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>51587e2f3d5f86ca27184a6b5e8a778841d05b31</Sha>
+      <Sha>36ea4de4a4409ace6bdf48c2dae2b6713f47c1b9</Sha>
     </Dependency>
     <!-- Previous .NET version -->
     <Dependency Name="Microsoft.NET.Workload.Mono.ToolChain.Current.Manifest-9.0.100" Version="9.0.12">
@@ -36,13 +36,13 @@
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="11.0.0-beta.26121.104">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="11.0.0-beta.26124.102">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>51587e2f3d5f86ca27184a6b5e8a778841d05b31</Sha>
+      <Sha>36ea4de4a4409ace6bdf48c2dae2b6713f47c1b9</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="11.0.100-preview.3.26121.104">
+    <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="11.0.100-preview.3.26124.102">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>51587e2f3d5f86ca27184a6b5e8a778841d05b31</Sha>
+      <Sha>36ea4de4a4409ace6bdf48c2dae2b6713f47c1b9</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
