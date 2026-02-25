@@ -9,11 +9,14 @@ string? adbPath = null;
 string? adbTarget = null;
 string? package = null;
 string? activity = null;
+string? instrumentation = null;
 bool verbose = false;
 int? logcatPid = null;
 Process? logcatProcess = null;
 CancellationTokenSource cts = new ();
 string? logcatArgs = null;
+bool isDotnetTestMode = false;
+string? dotnetTestPipe = null;
 
 try {
 	return Run (args);
@@ -46,8 +49,18 @@ int Run (string[] args)
 			"The Android application {PACKAGE} name (e.g., com.example.myapp). Required.",
 			v => package = v },
 		{ "c|activity=",
-			"The {ACTIVITY} class name to launch. Required.",
+			"The {ACTIVITY} class name to launch. Required unless --instrument is used.",
 			v => activity = v },
+		{ "i|instrument=",
+			"The instrumentation {RUNNER} class name (e.g., com.example.myapp.TestInstrumentation). " +
+			"When specified, runs 'am instrument' instead of 'am start'.",
+			v => instrumentation = v },
+		{ "server=",
+			"The test {SERVER} protocol to use (e.g., 'dotnettestcli'). Used by 'dotnet test'.",
+			v => { if (v == "dotnettestcli") isDotnetTestMode = true; } },
+		{ "dotnet-test-pipe=",
+			"The {PIPE} name for dotnet test communication. Used by 'dotnet test'.",
+			v => dotnetTestPipe = v },
 		{ "v|verbose",
 			"Enable verbose output for debugging.",
 			v => verbose = v != null },
@@ -62,15 +75,17 @@ int Run (string[] args)
 			v => showHelp = v != null },
 	};
 
+	List<string> remaining;
 	try {
-		var remaining = options.Parse (args);
-		if (remaining.Count > 0) {
-			Console.Error.WriteLine ($"Error: Unexpected argument(s): {string.Join (" ", remaining)}");
-			Console.Error.WriteLine ($"Try '{Name} --help' for more information.");
-			return 1;
-		}
+		remaining = options.Parse (args);
 	} catch (OptionException e) {
 		Console.Error.WriteLine ($"Error: {e.Message}");
+		Console.Error.WriteLine ($"Try '{Name} --help' for more information.");
+		return 1;
+	}
+
+	if (remaining.Count > 0 && !isDotnetTestMode) {
+		Console.Error.WriteLine ($"Error: Unexpected argument(s): {string.Join (" ", remaining)}");
 		Console.Error.WriteLine ($"Try '{Name} --help' for more information.");
 		return 1;
 	}
@@ -91,9 +106,9 @@ int Run (string[] args)
 		options.WriteOptionDescriptions (Console.Out);
 		Console.WriteLine ();
 		Console.WriteLine ("Examples:");
-		Console.WriteLine ($"  {Name} -p com.example.myapp");
 		Console.WriteLine ($"  {Name} -p com.example.myapp -c com.example.myapp.MainActivity");
-		Console.WriteLine ($"  {Name} --adb /path/to/adb -p com.example.myapp");
+		Console.WriteLine ($"  {Name} -p com.example.myapp -i com.example.myapp.TestInstrumentation");
+		Console.WriteLine ($"  {Name} --adb /path/to/adb -p com.example.myapp -c com.example.myapp.MainActivity");
 		Console.WriteLine ();
 		Console.WriteLine ("Press Ctrl+C while running to stop the Android application and exit.");
 		return 0;
@@ -105,8 +120,22 @@ int Run (string[] args)
 		return 1;
 	}
 
-	if (string.IsNullOrEmpty (activity)) {
-		Console.Error.WriteLine ("Error: --activity is required.");
+	bool isInstrumentMode = !string.IsNullOrEmpty (instrumentation);
+
+	if (!isInstrumentMode && string.IsNullOrEmpty (activity) && !isDotnetTestMode) {
+		Console.Error.WriteLine ("Error: --activity or --instrument is required.");
+		Console.Error.WriteLine ($"Try '{Name} --help' for more information.");
+		return 1;
+	}
+
+	if (isDotnetTestMode && !isInstrumentMode) {
+		Console.Error.WriteLine ("Error: --instrument is required when using dotnet test mode.");
+		Console.Error.WriteLine ($"Try '{Name} --help' for more information.");
+		return 1;
+	}
+
+	if (isInstrumentMode && !string.IsNullOrEmpty (activity)) {
+		Console.Error.WriteLine ("Error: --activity and --instrument cannot be used together.");
 		Console.Error.WriteLine ($"Try '{Name} --help' for more information.");
 		return 1;
 	}
@@ -125,6 +154,8 @@ int Run (string[] args)
 		return 1;
 	}
 
+	Debug.Assert (adbPath != null, "adbPath should be non-null after validation");
+
 	if (verbose) {
 		Console.WriteLine ($"Using adb: {adbPath}");
 		if (!string.IsNullOrEmpty (adbTarget))
@@ -132,12 +163,22 @@ int Run (string[] args)
 		Console.WriteLine ($"Package: {package}");
 		if (!string.IsNullOrEmpty (activity))
 			Console.WriteLine ($"Activity: {activity}");
+		if (isInstrumentMode)
+			Console.WriteLine ($"Instrumentation runner: {instrumentation}");
+		if (isDotnetTestMode)
+			Console.WriteLine ($"dotnet test mode (pipe: {dotnetTestPipe})");
 	}
 
 	// Set up Ctrl+C handler
 	Console.CancelKeyPress += OnCancelKeyPress;
 
 	try {
+		if (isDotnetTestMode)
+			return RunDotnetTest (remaining);
+
+		if (isInstrumentMode)
+			return RunInstrumentation ();
+
 		return RunApp ();
 	} finally {
 		Console.CancelKeyPress -= OnCancelKeyPress;
@@ -165,6 +206,104 @@ void OnCancelKeyPress (object? sender, ConsoleCancelEventArgs e)
 		if (verbose)
 			Console.Error.WriteLine ($"Error killing logcat process: {ex.Message}");
 	}
+}
+
+int RunInstrumentation ()
+{
+	// Build the am instrument command
+	var cmdArgs = $"shell am instrument -w {package}/{instrumentation}";
+
+	if (verbose)
+		Console.WriteLine ($"Running instrumentation: adb {cmdArgs}");
+
+	// Run instrumentation with streaming output
+	var psi = AdbHelper.CreateStartInfo (adbPath, adbTarget, cmdArgs);
+	using var instrumentProcess = new Process { StartInfo = psi };
+
+	var locker = new Lock ();
+
+	instrumentProcess.OutputDataReceived += (s, e) => {
+		if (e.Data != null)
+			lock (locker)
+				Console.WriteLine (e.Data);
+	};
+
+	instrumentProcess.ErrorDataReceived += (s, e) => {
+		if (e.Data != null)
+			lock (locker)
+				Console.Error.WriteLine (e.Data);
+	};
+
+	instrumentProcess.Start ();
+	instrumentProcess.BeginOutputReadLine ();
+	instrumentProcess.BeginErrorReadLine ();
+
+	// Also start logcat in the background for additional debug output
+	logcatPid = GetAppPid ();
+	if (logcatPid != null)
+		StartLogcat ();
+
+	// Wait for instrumentation to complete or Ctrl+C
+	try {
+		while (!instrumentProcess.HasExited && !cts.Token.IsCancellationRequested)
+			Thread.Sleep (250);
+
+		if (cts.Token.IsCancellationRequested) {
+			try { instrumentProcess.Kill (); } catch { }
+			return 1;
+		}
+
+		instrumentProcess.WaitForExit ();
+	} finally {
+		// Clean up logcat
+		try {
+			if (logcatProcess != null && !logcatProcess.HasExited) {
+				logcatProcess.Kill ();
+				logcatProcess.WaitForExit (1000);
+			}
+		} catch { }
+	}
+
+	// Check exit status
+	if (instrumentProcess.ExitCode != 0) {
+		Console.Error.WriteLine ($"Error: adb instrument exited with code {instrumentProcess.ExitCode}");
+		return 1;
+	}
+
+	return 0;
+}
+
+int RunDotnetTest (List<string> mtpArgs)
+{
+	if (verbose)
+		Console.WriteLine ("Running in dotnet test mode...");
+
+	// Re-add the MTP protocol args that Mono.Options consumed,
+	// since MTP needs them to set up the test communication channel.
+	mtpArgs.AddRange (["--server", "dotnettestcli", "--dotnet-test-pipe", dotnetTestPipe!]);
+
+	return RunDotnetTestAsync (mtpArgs.ToArray ()).GetAwaiter ().GetResult ();
+}
+
+async Task<int> RunDotnetTestAsync (string[] originalArgs)
+{
+	Debug.Assert (instrumentation != null, "Instrumentation must be specified in dotnet test mode.");
+
+	var testApplicationBuilder = await Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync (originalArgs);
+
+	var adapter = new AndroidTestAdapter (
+		adbPath,
+		adbTarget,
+		package,
+		instrumentation,
+		verbose);
+
+	testApplicationBuilder.RegisterTestFramework (
+		_ => new AndroidTestCapabilities (),
+		(_, _) => adapter);
+
+	using var testApplication = await testApplicationBuilder.BuildAsync ();
+	return await testApplication.RunAsync ();
 }
 
 int RunApp ()
@@ -195,7 +334,7 @@ int RunApp ()
 bool StartApp ()
 {
 	var cmdArgs = $"shell am start -S -W -n \"{package}/{activity}\"";
-	var (exitCode, output, error) = RunAdb (cmdArgs);
+	var (exitCode, output, error) = AdbHelper.Run (adbPath, adbTarget, cmdArgs, verbose);
 	if (exitCode != 0) {
 		Console.Error.WriteLine ($"Error: Failed to start app: {error}");
 		return false;
@@ -210,7 +349,7 @@ bool StartApp ()
 int? GetAppPid ()
 {
 	var cmdArgs = $"shell pidof {package}";
-	var (exitCode, output, error) = RunAdb (cmdArgs);
+	var (exitCode, output, error) = AdbHelper.Run (adbPath, adbTarget, cmdArgs, verbose);
 	if (exitCode != 0 || string.IsNullOrWhiteSpace (output))
 		return null;
 
@@ -230,20 +369,12 @@ void StartLogcat ()
 	if (!string.IsNullOrEmpty (logcatArgs))
 		logcatArguments += $" {logcatArgs}";
 
-	var fullArguments = string.IsNullOrEmpty (adbTarget) ? logcatArguments : $"{adbTarget} {logcatArguments}";
+	var psi = AdbHelper.CreateStartInfo (adbPath, adbTarget, logcatArguments);
 
 	if (verbose)
-		Console.WriteLine ($"Running: adb {fullArguments}");
+		Console.WriteLine ($"Running: adb {psi.Arguments}");
 
 	var locker = new Lock();
-	var psi = new ProcessStartInfo {
-		FileName = adbPath,
-		Arguments = fullArguments,
-		UseShellExecute = false,
-		RedirectStandardOutput = true,
-		RedirectStandardError = true,
-		CreateNoWindow = true,
-	};
 
 	logcatProcess = new Process { StartInfo = psi };
 
@@ -302,7 +433,7 @@ void StopApp ()
 	if (string.IsNullOrEmpty (package) || string.IsNullOrEmpty (adbPath))
 		return;
 
-	RunAdb ($"shell am force-stop {package}");
+	AdbHelper.Run (adbPath, adbTarget, $"shell am force-stop {package}", verbose);
 }
 
 string? FindAdbPath ()
@@ -324,35 +455,6 @@ string? FindAdbPath ()
 	}
 
 	return null;
-}
-
-(int ExitCode, string Output, string Error) RunAdb (string arguments)
-{
-	var fullArguments = string.IsNullOrEmpty (adbTarget) ? arguments : $"{adbTarget} {arguments}";
-
-	if (verbose)
-		Console.WriteLine ($"Running: adb {fullArguments}");
-
-	var psi = new ProcessStartInfo {
-		FileName = adbPath,
-		Arguments = fullArguments,
-		UseShellExecute = false,
-		RedirectStandardOutput = true,
-		RedirectStandardError = true,
-		CreateNoWindow = true,
-	};
-
-	using var process = Process.Start (psi);
-	if (process == null)
-		return (-1, "", "Failed to start process");
-
-	// Read both streams asynchronously to avoid potential deadlock
-	var outputTask = process.StandardOutput.ReadToEndAsync ();
-	var errorTask = process.StandardError.ReadToEndAsync ();
-
-	process.WaitForExit ();
-
-	return (process.ExitCode, outputTask.Result, errorTask.Result);
 }
 
 (string? Version, string? Commit) GetVersionInfo ()
