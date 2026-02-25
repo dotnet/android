@@ -1447,7 +1447,7 @@ because xbuild doesn't support framework reference assemblies.
   </LinkAssembliesNoShrink>
 
   <ItemGroup>
-    <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)**" />
+    <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)**" Exclude="$(MonoAndroidIntermediateAssemblyDir)shrunk\**" />
   </ItemGroup>
 </Target>
 
@@ -1474,7 +1474,7 @@ because xbuild doesn't support framework reference assemblies.
   </AssemblyModifierPipeline>
 
   <ItemGroup>
-    <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)**" />
+    <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)**" Exclude="$(MonoAndroidIntermediateAssemblyDir)shrunk\**" />
   </ItemGroup>
 </Target>
 
@@ -1917,6 +1917,10 @@ because xbuild doesn't support framework reference assemblies.
   <CopyIfChanged
     SourceFiles="@(_ResolvedAssemblies->'%(Identity).config')"
     DestinationFiles="@(_ShrunkAssemblies->'%(Identity).config')" />
+  <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)shrunk" />
+  <ItemGroup>
+    <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)shrunk\**" />
+  </ItemGroup>
 </Target>
 
 <Target Name="_ResolveSatellitePaths"

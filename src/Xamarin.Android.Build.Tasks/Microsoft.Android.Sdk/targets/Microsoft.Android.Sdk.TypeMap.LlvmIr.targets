@@ -325,7 +325,11 @@
     <RemoveRegisterAttribute
         Condition=" '$(_AndroidRuntime)' != 'NativeAOT' and '$(PublishReadyToRun)' != 'true' "
         ShrunkFrameworkAssemblies="@(_ShrunkAssemblies)" />
+    <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)shrunk" />
     <Touch Files="$(_RemoveRegisterFlag)" AlwaysCreate="true" />
+    <ItemGroup>
+      <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)shrunk\**" />
+    </ItemGroup>
   </Target>
 
   <!-- Collect native typemap files for archive (FastDev) -->
