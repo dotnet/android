@@ -64,4 +64,11 @@ class Utilities
 
 		return entryName.Substring (idx + 1);
 	}
+
+	public static string SizeToString (ulong val)
+	{
+		// TODO: return both bytes and a "human readable" value (kb, mb etc)
+		// TODO: format the byte size according to the current culture
+		return val.ToString ();
+	}
 }
