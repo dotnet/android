@@ -17,6 +17,7 @@ Docs about @(ProjectCapability):
     <ProjectCapability Include="Mobile" />
     <ProjectCapability Include="Android" />
     <ProjectCapability Include="AndroidApplication" Condition="$(AndroidApplication)" />
+    <ProjectCapability Include="RuntimeEnvironmentVariableSupport" Condition="$(AndroidApplication)" />
     <ProjectCapability Condition="'$(_KeepLaunchProfiles)' != 'true'" Remove="LaunchProfiles" />
   </ItemGroup>
 
