@@ -307,7 +307,8 @@ void StopApp ()
 	if (string.IsNullOrEmpty (package) || string.IsNullOrEmpty (adbPath))
 		return;
 
-	RunAdb ($"shell am force-stop {package}");
+	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
+	RunAdb ($"shell am force-stop{userArg} {package}");
 }
 
 string? FindAdbPath ()
