@@ -169,7 +169,7 @@ class SharedLibraryReporter : BaseReporter
 		}
 
 		// TODO: fix output, currently produces gibberish
-		ReportDoc.AddLabeledListItem (AndroidIdentLabel, "FIXME" /* ValueOrNone (library.AndroidIdent) */);
+		ReportDoc.AddLabeledListItem (AndroidIdentLabel, ValueOrNone (Library.AndroidIdent));
 	}
 
 	protected void WriteDebugInfoDesc ()
