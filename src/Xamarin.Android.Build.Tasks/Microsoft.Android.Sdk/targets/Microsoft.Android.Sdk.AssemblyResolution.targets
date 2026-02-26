@@ -40,7 +40,24 @@ _ResolveAssemblies MSBuild target.
       DependsOnTargets="BuildOnlySettings;_FixupIntermediateAssembly;ResolveReferences;ComputeFilesToPublish;$(_RunAotMaybe)"
       Returns="@(ResolvedFileToPublish)">
       <ItemGroup>
-        <ResolvedFileToPublish Remove="@(_SourceItemsToCopyToPublishDirectory)" />
+        <!-- NuGet packages like MSTest add assemblies as both properly-resolved publish assets
+             (with DestinationSubPath metadata) and as None items (without DestinationSubPath)
+             that flow into _SourceItemsToCopyToPublishDirectory. Remove the "bad" copies without
+             DestinationSubPath, preserving properly-resolved copies. Then re-add any assemblies
+             that were completely stripped (no surviving copy in ResolvedFileToPublish). -->
+        <ResolvedFileToPublish
+            Remove="@(_SourceItemsToCopyToPublishDirectory)"
+            Condition=" '%(ResolvedFileToPublish.DestinationSubPath)' == '' "
+        />
+        <_MissingAssemblies Include="@(_SourceItemsToCopyToPublishDirectory)"
+            Condition=" '%(Extension)' == '.dll' or '%(Extension)' == '.pdb' " />
+        <_MissingAssemblies Remove="@(ResolvedFileToPublish)" />
+        <ResolvedFileToPublish
+            Include="@(_MissingAssemblies)"
+            DestinationSubPath="%(Filename)%(Extension)"
+            TargetPath=""
+        />
+        <_MissingAssemblies Remove="@(_MissingAssemblies)" />
         <ResolvedFileToPublish
             Condition=" '%(ResolvedFileToPublish.RuntimeIdentifier)' == '' "
             Update="@(ResolvedFileToPublish)"
