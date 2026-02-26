@@ -2,8 +2,13 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+
+#if !NET5_0_OR_GREATER
+using System.Runtime.InteropServices;
+#endif
 
 namespace Xamarin.Android.Tools
 {
@@ -159,6 +164,40 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
+		/// <summary>
+		/// Creates a <see cref="ProcessStartInfo"/> with the given filename and arguments.
+		/// On .NET 5+ uses <see cref="ProcessStartInfo.ArgumentList"/> to avoid shell-escaping issues;
+		/// on older frameworks falls back to a single <see cref="ProcessStartInfo.Arguments"/> string.
+		/// </summary>
+		public static ProcessStartInfo CreateProcessStartInfo (string fileName, params string[] args)
+		{
+			var psi = new ProcessStartInfo {
+				FileName = fileName,
+				UseShellExecute = false,
+				CreateNoWindow = true,
+			};
+#if NET5_0_OR_GREATER
+			foreach (var arg in args)
+				psi.ArgumentList.Add (arg);
+#else
+			psi.Arguments = JoinArguments (args);
+#endif
+			return psi;
+		}
+
+#if !NET5_0_OR_GREATER
+		static string JoinArguments (string[] args)
+		{
+			var sb = new StringBuilder ();
+			for (int i = 0; i < args.Length; i++) {
+				if (i > 0)
+					sb.Append (' ');
+				sb.Append ('"').Append (args [i]).Append ('"');
+			}
+			return sb.ToString ();
+		}
+#endif
+
 		internal static IEnumerable<string> FindExecutablesInPath (string executable)
 		{
 			var path        = Environment.GetEnvironmentVariable ("PATH") ?? "";
@@ -198,6 +237,27 @@ namespace Xamarin.Android.Tools
 				yield return Path.ChangeExtension (executable, ext);
 			yield return executable;
 		}
+
+		/// <summary>Checks if running as Administrator (Windows) or root (macOS/Linux).</summary>
+		public static bool IsElevated ()
+		{
+#if NET5_0_OR_GREATER
+			return Environment.IsPrivilegedProcess;
+#else
+			if (OS.IsWindows)
+				return IsUserAnAdmin ();
+			return geteuid () == 0;
+#endif
+		}
+
+#if !NET5_0_OR_GREATER
+		[DllImport ("shell32.dll")]
+		[return: MarshalAs (UnmanagedType.Bool)]
+		static extern bool IsUserAnAdmin ();
+
+		[DllImport ("libc", SetLastError = true)]
+		static extern uint geteuid ();
+#endif
 	}
 }
 

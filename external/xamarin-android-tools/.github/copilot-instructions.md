@@ -24,8 +24,21 @@ dotnet test tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Buil
 
 Output: `bin\$(Configuration)\` (redistributables), `bin\Test$(Configuration)\` (tests). `$(DotNetTargetFrameworkVersion)` = `10.0` in `Directory.Build.props`. Versioning: `nuget.version` has `major.minor`; patch = git commit count since file changed.
 
+## Android Environment Variables
+
+Per the [official Android docs](https://developer.android.com/tools/variables#envar):
+
+- **`ANDROID_HOME`** — the canonical variable for the Android SDK root path. Use this everywhere.
+- **`ANDROID_SDK_ROOT`** — **deprecated**. Do not introduce new usages. Existing code may still read it for backward compatibility but always prefer `ANDROID_HOME`.
+- **`ANDROID_USER_HOME`** — user-level config/AVD storage (defaults to `~/.android`).
+- **`ANDROID_EMULATOR_HOME`** — emulator config (defaults to `$ANDROID_USER_HOME`).
+- **`ANDROID_AVD_HOME`** — AVD data (defaults to `$ANDROID_USER_HOME/avd`).
+
+When setting environment variables for SDK tools (e.g. `sdkmanager`, `avdmanager`), set `ANDROID_HOME`. The `EnvironmentVariableNames` class in this repo defines the constants.
+
 ## Conventions
 
+- **One type per file**: each public class, struct, enum, or interface must be in its own `.cs` file named after the type (e.g. `JdkVersionInfo` → `JdkVersionInfo.cs`). Do not combine multiple top-level types in a single file.
 - [Mono Coding Guidelines](http://www.mono-project.com/community/contributing/coding-guidelines/): tabs, K&R braces, `PascalCase` public members.
 - Nullable enabled in `AndroidSdk`. `NullableAttributes.cs` excluded on `net10.0+`.
 - Strong-named via `product.snk`. In the AndroidSdk project, tests use `InternalsVisibleTo` with full public key (`Properties/AssemblyInfo.cs`).
