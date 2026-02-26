@@ -239,7 +239,7 @@ class ApplicationPackageReporter : BaseReporter
 			return GetAggregatedValue (
 				libs,
 				(SharedLibrary lib) => lib.AndroidIdent ?? String.Empty,
-				(SharedLibrary lib, string v) => /* ValueOrNone (v) */ "FIXME",
+				(SharedLibrary lib, string v) => v,
 				(SharedLibrary lib) => lib.TargetArchitecture.ToString ()
 			);
 		}

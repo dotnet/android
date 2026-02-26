@@ -300,7 +300,53 @@ public class SharedLibrary : BaseAspect
 
 	static string? GetAndroidIdent (IELF elf, bool is64Bit)
 	{
-		return GetNoteSectionContentsAsString (elf, is64Bit, ".note.android.ident");;
+		INoteSection? note = GetNoteSection (elf, is64Bit, ".note.android.ident");
+		if (note == null || note.NoteName != "Android") {
+			return null;
+		}
+
+		byte[]? bytes = note.Description;
+
+		// Descriptor has fixed size:
+		//
+		//   platform SDK version: int32
+		//   NDK version: 64 chars
+		//   NDK build: 64 chars
+		const int NdkVersionLength = 64;
+		const int NdkBuildNumberLength = 64;
+		const int MinDescLength = 4 + NdkVersionLength + NdkBuildNumberLength;
+		if (bytes == null || bytes.Length < MinDescLength) {
+			return null;
+		}
+
+		using var contents = new MemoryStream (bytes);
+		using var reader = new BinaryReader (contents);
+
+		// .net.android.indent format: https://android.googlesource.com/platform/ndk/+/ndk-release-r16/sources/crt/crtbrand.S#39
+		int platformSdkVersion = reader.ReadInt32 ();
+		string abiNdkVersion = GetASCIIZ (NdkVersionLength);
+		string abiNdkBuildNumber = GetASCIIZ (NdkBuildNumberLength);
+
+		return $"Platform SDK: {platformSdkVersion}; NDK version: {abiNdkVersion}, build {abiNdkBuildNumber}";
+
+		string GetASCIIZ (int len)
+		{
+			byte[] data = reader.ReadBytes (len);
+			int zeroIdx = -1;
+
+			for (int i = 0; i < data.Length; i++) {
+				if (data[i] == 0) {
+					zeroIdx = i;
+					break;
+				}
+			}
+
+			if (zeroIdx <= 0) {
+				return "<none>";
+			}
+
+			return Encoding.ASCII.GetString (data, 0, zeroIdx);
+		}
 	}
 
 	static string? GetNoteSectionContentsAsString (IELF elf, bool is64Bit, string sectionName, ulong noteType = 0)
@@ -313,7 +359,7 @@ public class SharedLibrary : BaseAspect
 		return Encoding.UTF8.GetString (contents);
 	}
 
-	static byte[]? GetNoteSectionContents (IELF elf, bool is64Bit, string sectionName, ulong noteType = 0)
+	static INoteSection? GetNoteSection (IELF elf, bool is64Bit, string sectionName, ulong noteType = 0)
 	{
 		if (!elf.TryGetSection (sectionName, out ISection? section) || section == null || section.Type != SectionType.Note) {
 			return null;
@@ -321,7 +367,7 @@ public class SharedLibrary : BaseAspect
 
 		var note = (INoteSection)section;
 		if (noteType == 0) {
-			return note.Description;
+			return note;
 		}
 
 		ulong type = is64Bit switch {
@@ -333,7 +379,12 @@ public class SharedLibrary : BaseAspect
 			return null;
 		}
 
-		return note.Description;
+		return note;
+	}
+
+	static byte[]? GetNoteSectionContents (IELF elf, bool is64Bit, string sectionName, ulong noteType = 0)
+	{
+		return GetNoteSection (elf, is64Bit, sectionName, noteType)?.Description;
 	}
 
 	public bool HasSection (string name, SectionType type = SectionType.Null)
