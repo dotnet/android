@@ -39,7 +39,7 @@ public class SharedLibrary : BaseAspect
 	public bool Is64Bit => is64Bit;
 	public string Name => libraryName;
 	public string? Soname => soname;
-	public long Size => AspectStream.Length;
+	public ulong Size => AspectStream.Length >= 0 ? (ulong)AspectStream.Length : 0;
 
 	public NativeArchitecture TargetArchitecture => nativeArch;
 

@@ -14,6 +14,7 @@ class DotNetAndroidWrapperSharedLibrary : SharedLibrary
 	readonly ulong payloadSize;
 
 	public bool HasAndroidPayload => payloadSize > 0;
+	public ulong PayloadSize => payloadSize;
 
 	protected DotNetAndroidWrapperSharedLibrary (Stream stream, string libraryName, IAspectState state)
 		: base (stream, libraryName, state)

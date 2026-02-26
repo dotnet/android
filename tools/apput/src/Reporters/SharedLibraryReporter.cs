@@ -6,6 +6,18 @@ namespace ApplicationUtility;
 [AspectReporter (typeof (SharedLibrary))]
 class SharedLibraryReporter : BaseReporter
 {
+	public const string AlignmentLabel = "Alignment";
+	public const string AndroidIdentLabel = "Android ident";
+	public const string BuildIdLabel = "Build ID";
+	public const string DebugInfoLabel = "Debug info";
+	public const string DebugLinkLabel = "External debug info file name";
+	public const string DotNetWrapperLabel = ".NET for Android data wrapper";
+	public const string MonoAotLabel = "Mono AOT image";
+	public const string NativeAotLabel = "NativeAOT";
+	public const string SizeLabel = "Size";
+	public const string SonameLabel = "Soname";
+	public const string XamarinAppLabel = "Application specific data and code";
+
 	protected SharedLibrary Library { get; }
 
 	protected override string AspectName => SharedLibrary.AspectName;
@@ -59,13 +71,16 @@ class SharedLibraryReporter : BaseReporter
 	{
 		ReportDoc.BeginList ();
 		AddNativeArchListItem (Library.TargetArchitecture);
-		if (Library.HasSoname) {
-			ReportDoc.AddLabeledListItem ("Soname", ValueOrNone (Library.Soname));
-		}
+		AddSoname ();
 		AddBuildId ();
 		AddSize ();
 		AddAlignment ();
 		AddDebugInfo ();
+		AddDebugInfoLink ();
+		AddMonoAot ();
+		AddNativeAot ();
+		AddXamarinApp ();
+		AddDotNetWrapper ();
 		AddAndroidIdent (appendLine: false);
 
 		ReportDoc.EndList ().EndListItem ();
@@ -77,27 +92,74 @@ class SharedLibraryReporter : BaseReporter
 			return;
 		}
 
-		ReportDoc.AddLabeledListItem ("Soname", ValueOrNone (Library.Soname));
+		ReportDoc.AddLabeledListItem (SonameLabel, ValueOrNone (Library.Soname));
 	}
 
 	void AddBuildId (bool appendLine = true)
 	{
-		ReportDoc.AddLabeledListItem ("Build ID", ValueOrNone (Library.BuildID), appendLine: appendLine);
+		ReportDoc.AddLabeledListItem (BuildIdLabel, ValueOrNone (Library.BuildID), appendLine: appendLine);
 	}
 
 	void AddAlignment (bool appendLine = true)
 	{
-		ReportDoc.AddLabeledListItem ("Alignment", $"{Library.Alignment}", appendLine: appendLine);
+		ReportDoc.AddLabeledListItem (AlignmentLabel, $"{Library.Alignment}", appendLine: appendLine);
 	}
 
 	void AddDebugInfo (bool appendLine = true)
 	{
-		ReportDoc.AddLabeledListItem ("Debug info", $"{YesNo (Library.HasDebugInfo)}", appendLine: appendLine);
+		ReportDoc.AddLabeledListItem (DebugInfoLabel, $"{YesNo (Library.HasDebugInfo)}", appendLine: appendLine);
+	}
+
+	void AddDebugInfoLink (bool appendLine = true)
+	{
+		if (!Library.HasDebugLink) {
+			return;
+		}
+
+		ReportDoc.AddLabeledListItem (DebugLinkLabel, ValueOrNone (Library.DebugLink), appendLine: appendLine);
 	}
 
 	void AddSize (bool appendLine = true)
 	{
-		ReportDoc.AddLabeledListItem ("Size", $"{Library.Size}", appendLine: appendLine);
+		ReportDoc.AddLabeledListItem (SizeLabel, $"{Library.Size}", appendLine: appendLine);
+	}
+
+	void AddDotNetWrapper (bool appendLine = true)
+	{
+		var lib = Library as DotNetAndroidWrapperSharedLibrary;
+		if (lib == null) {
+			return;
+		}
+
+		ReportDoc.AddLabeledListItem (DotNetWrapperLabel, $"{YesNo (true)}; Payload size: {Utilities.SizeToString (lib.PayloadSize)}", appendLine: appendLine);
+	}
+
+	void AddXamarinApp (bool appendLine = true)
+	{
+		var lib = Library as XamarinAppSharedLibrary;
+		if (lib == null) {
+			return;
+		}
+
+		ReportDoc.AddLabeledListItem (XamarinAppLabel, $"{YesNo (true)}; Format tag: 0x${lib.FormatTag:x}", appendLine: appendLine);
+	}
+
+	void AddNativeAot (bool appendLine = true)
+	{
+		if (Library is not NativeAotSharedLibrary) {
+			return;
+		}
+
+		ReportDoc.AddLabeledListItem (NativeAotLabel, YesNo (true), appendLine: appendLine);
+	}
+
+	void AddMonoAot (bool appendLine = true)
+	{
+		if (Library is not MonoAotSharedLibrary) {
+			return;
+		}
+
+		ReportDoc.AddLabeledListItem (MonoAotLabel, YesNo (true), appendLine: appendLine);
 	}
 
 	void AddAndroidIdent (bool appendLine = true)
@@ -107,7 +169,7 @@ class SharedLibraryReporter : BaseReporter
 		}
 
 		// TODO: fix output, currently produces gibberish
-		ReportDoc.AddLabeledListItem ("Android ident", "FIXME" /* ValueOrNone (library.AndroidIdent) */);
+		ReportDoc.AddLabeledListItem (AndroidIdentLabel, "FIXME" /* ValueOrNone (library.AndroidIdent) */);
 	}
 
 	protected void WriteDebugInfoDesc ()
