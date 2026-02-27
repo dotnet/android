@@ -16,7 +16,9 @@ namespace Xamarin.Android.Tools
 		static readonly char[] SourcePropertiesKeyValueSplit = new char[] { '=' };
 
 		// Per https://developer.android.com/studio/command-line/variables#envar
-		protected static readonly string[] AndroidSdkEnvVars = {"ANDROID_HOME", "ANDROID_SDK_ROOT"};
+		#pragma warning disable CS0618 // ANDROID_SDK_ROOT is obsolete but still needed for compat
+		protected static readonly string[] AndroidSdkEnvVars = {EnvironmentVariableNames.AndroidHome, EnvironmentVariableNames.AndroidSdkRoot};
+		#pragma warning restore CS0618
 
 		string[]? allAndroidSdks;
 

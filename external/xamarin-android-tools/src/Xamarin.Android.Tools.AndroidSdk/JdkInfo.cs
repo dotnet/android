@@ -328,7 +328,7 @@ namespace Xamarin.Android.Tools
 		{
 			logger  = logger ?? AndroidSdkInfo.DefaultConsoleLogger;
 
-			return GetEnvironmentVariableJdks ("JI_JAVA_HOME", logger)
+			return GetEnvironmentVariableJdks (EnvironmentVariableNames.JiJavaHome, logger)
 				.Concat (JdkLocations.GetPreferredJdks (logger))
 				.Concat (XAPrepareJdkLocations.GetXAPrepareJdks (logger))
 				.Concat (MicrosoftOpenJdkLocations.GetMicrosoftOpenJdks (logger))
@@ -337,7 +337,7 @@ namespace Xamarin.Android.Tools
 				.Concat (OracleJdkLocations.GetOracleJdks (logger))
 				.Concat (VSAndroidJdkLocations.GetVSAndroidJdks (logger))
 				.Concat (MicrosoftDistJdkLocations.GetMicrosoftDistJdks (logger))
-				.Concat (GetEnvironmentVariableJdks ("JAVA_HOME", logger))
+				.Concat (GetEnvironmentVariableJdks (EnvironmentVariableNames.JavaHome, logger))
 				.Concat (GetPathEnvironmentJdks (logger))
 				.Concat (GetLibexecJdks (logger))
 				.Concat (GetJavaAlternativesJdks (logger))

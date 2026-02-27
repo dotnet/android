@@ -18,7 +18,7 @@ namespace Xamarin.Android.Tools
 
 		static ProcessUtils ()
 		{
-			var pathExt     = Environment.GetEnvironmentVariable ("PATHEXT");
+			var pathExt     = Environment.GetEnvironmentVariable (EnvironmentVariableNames.PathExt);
 			var pathExts    = pathExt?.Split (new char [] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries) ?? new string [0];
 
 			ExecutableFileExtensions    = pathExts;
@@ -200,7 +200,7 @@ namespace Xamarin.Android.Tools
 
 		internal static IEnumerable<string> FindExecutablesInPath (string executable)
 		{
-			var path        = Environment.GetEnvironmentVariable ("PATH") ?? "";
+			var path        = Environment.GetEnvironmentVariable (EnvironmentVariableNames.Path) ?? "";
 			var pathDirs    = path.Split (new char[] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
 
 			foreach (var dir in pathDirs) {

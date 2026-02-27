@@ -185,16 +185,16 @@ namespace Xamarin.Android.Tools
 
 			var jdkPath = JavaSdkPath;
 			if (!string.IsNullOrEmpty (jdkPath)) {
-				var cur = Environment.GetEnvironmentVariable ("JAVA_HOME");
+				var cur = Environment.GetEnvironmentVariable (EnvironmentVariableNames.JavaHome);
 				if (!string.IsNullOrEmpty (cur))
-					Environment.SetEnvironmentVariable ("JAVA_HOME", jdkPath);
+					Environment.SetEnvironmentVariable (EnvironmentVariableNames.JavaHome, jdkPath);
 
 				var javaBinPath = this.JavaBinPath;
 				if (!string.IsNullOrEmpty (javaBinPath)) {
-					var environmentPath = Environment.GetEnvironmentVariable ("PATH") ?? "";
+					var environmentPath = Environment.GetEnvironmentVariable (EnvironmentVariableNames.Path) ?? "";
 					if (!environmentPath.Contains (javaBinPath)) {
 						var processPath = string.Concat (javaBinPath, Path.PathSeparator, environmentPath);
-						Environment.SetEnvironmentVariable ("PATH", processPath);
+						Environment.SetEnvironmentVariable (EnvironmentVariableNames.Path, processPath);
 					}
 				}
 			}
