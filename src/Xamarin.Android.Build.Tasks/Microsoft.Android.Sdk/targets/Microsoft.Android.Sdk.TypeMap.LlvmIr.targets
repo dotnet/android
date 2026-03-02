@@ -203,7 +203,6 @@
           Type="MonoDroid.Tuner.AddKeepAlivesStep"
       />
       <!-- Custom steps that run after CleanStep -->
-      <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" AfterStep="CleanStep" Type="MonoDroid.Tuner.StripEmbeddedLibraries" />
       <_TrimmerCustomSteps
           Condition=" '$(AndroidLinkResources)' == 'true' "
           Include="$(_AndroidLinkerCustomStepAssembly)"

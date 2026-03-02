@@ -140,6 +140,10 @@ public class AssemblyModifierPipeline : AndroidTask
 		findJavaObjectsStep.Initialize (context);
 		pipeline.Steps.Add (findJavaObjectsStep);
 
+		// StripEmbeddedLibrariesStep
+		var stripEmbeddedLibrariesStep = new StripEmbeddedLibrariesStep (Log);
+		pipeline.Steps.Add (stripEmbeddedLibrariesStep);
+
 		// SaveChangedAssemblyStep
 		var writerParameters = new WriterParameters {
 			DeterministicMvid = Deterministic,
@@ -192,9 +196,42 @@ class SaveChangedAssemblyStep : IAssemblyModifierPipelineStep
 	{
 		if (context.IsAssemblyModified) {
 			Log.LogDebugMessage ($"Saving modified assembly: {context.Destination.ItemSpec}");
-			Directory.CreateDirectory (Path.GetDirectoryName (context.Destination.ItemSpec));
+
+			// Write back pure IL even for crossgen-ed (R2R) assemblies, matching ILLink's OutputStep behavior.
+			// Mono.Cecil cannot write mixed-mode assemblies, so we strip the R2R metadata before writing.
+			// The native R2R code is discarded since the assembly has been modified and would need to be
+			// re-crossgen'd anyway.
+			foreach (var module in assembly.Modules) {
+				if (IsCrossgened (module)) {
+					module.Attributes |= ModuleAttributes.ILOnly;
+					module.Attributes ^= ModuleAttributes.ILLibrary;
+					module.Architecture = TargetArchitecture.I386; // I386+ILOnly translates to AnyCPU
+					module.Characteristics |= ModuleCharacteristics.NoSEH;
+				}
+			}
+
+			// Write to a temp "new/" subdirectory then immediately copy back, to avoid
+			// reading and writing from the same path. Follows the same pattern as
+			// MarshalMethodsAssemblyRewriter.
+			string destPath = context.Destination.ItemSpec;
+			string directory = Path.Combine (Path.GetDirectoryName (destPath), "new");
+			Directory.CreateDirectory (directory);
+			string tempPath = Path.Combine (directory, Path.GetFileName (destPath));
+
 			WriterParameters.WriteSymbols = assembly.MainModule.HasSymbols;
-			assembly.Write (context.Destination.ItemSpec, WriterParameters);
+			assembly.Write (tempPath, WriterParameters);
+
+			CopyFile (tempPath, destPath);
+			RemoveFile (tempPath);
+
+			if (assembly.MainModule.HasSymbols) {
+				string tempPdb = Path.ChangeExtension (tempPath, ".pdb");
+				string destPdb = Path.ChangeExtension (destPath, ".pdb");
+				if (File.Exists (tempPdb)) {
+					CopyFile (tempPdb, destPdb);
+				}
+				RemoveFile (tempPdb);
+			}
 		} else {
 			// If we didn't write a modified file, copy the original to the destination
 			CopyIfChanged (context.Source, context.Destination);
@@ -202,6 +239,44 @@ class SaveChangedAssemblyStep : IAssemblyModifierPipelineStep
 
 		// We just saved the assembly, so it is no longer modified
 		context.IsAssemblyModified = false;
+	}
+
+	void CopyFile (string source, string target)
+	{
+		Log.LogDebugMessage ($"Copying rewritten assembly: {source} -> {target}");
+
+		string targetBackup = $"{target}.bak";
+		if (File.Exists (target)) {
+			// Try to avoid sharing violations by first renaming the target
+			File.Move (target, targetBackup);
+		}
+
+		File.Copy (source, target, true);
+
+		if (File.Exists (targetBackup)) {
+			try {
+				File.Delete (targetBackup);
+			} catch (Exception ex) {
+				// On Windows the deletion may fail, depending on lock state of the original `target` file before the move.
+				Log.LogDebugMessage ($"While trying to delete '{targetBackup}', exception was thrown: {ex}");
+				Log.LogDebugMessage ($"Failed to delete backup file '{targetBackup}', ignoring.");
+			}
+		}
+	}
+
+	void RemoveFile (string? path)
+	{
+		if (String.IsNullOrEmpty (path) || !File.Exists (path)) {
+			return;
+		}
+
+		try {
+			Log.LogDebugMessage ($"Deleting: {path}");
+			File.Delete (path);
+		} catch (Exception ex) {
+			Log.LogWarning ($"Unable to delete source file '{path}'");
+			Log.LogDebugMessage ($"{ex}");
+		}
 	}
 
 	void CopyIfChanged (ITaskItem source, ITaskItem destination)
@@ -214,5 +289,15 @@ class SaveChangedAssemblyStep : IAssemblyModifierPipelineStep
 			// NOTE: We still need to update the timestamp on this file, or this target would run again
 			File.SetLastWriteTimeUtc (destination.ItemSpec, DateTime.UtcNow);
 		}
+	}
+
+	/// <summary>
+	/// Check if a module has been crossgen-ed (ReadyToRun compiled), matching
+	/// ILLink's ModuleDefinitionExtensions.IsCrossgened() implementation.
+	/// </summary>
+	static bool IsCrossgened (ModuleDefinition module)
+	{
+		return (module.Attributes & ModuleAttributes.ILOnly) == 0 &&
+			(module.Attributes & ModuleAttributes.ILLibrary) != 0;
 	}
 }
