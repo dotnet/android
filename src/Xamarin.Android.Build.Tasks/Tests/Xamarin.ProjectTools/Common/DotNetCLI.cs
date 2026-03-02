@@ -172,6 +172,27 @@ namespace Xamarin.ProjectTools
 			return ExecuteProcess (arguments.ToArray ());
 		}
 
+		/// <summary>
+		/// Starts `dotnet watch` and returns a running Process that can be monitored and killed.
+		/// This is used for hot reload testing where dotnet-watch builds, deploys, and watches for file changes.
+		/// </summary>
+		/// <param name="parameters">Additional arguments to pass to `dotnet watch`.</param>
+		/// <returns>A running Process instance. Caller is responsible for disposing.</returns>
+		public Process StartWatch (string [] parameters = null)
+		{
+			var arguments = new List<string> {
+				"watch",
+				"--project", $"\"{projectOrSolution}\"",
+				"--non-interactive",
+				"--verbose",
+			};
+			if (parameters != null) {
+				arguments.AddRange (parameters);
+			}
+
+			return ExecuteProcess (arguments.ToArray ());
+		}
+
 		public IEnumerable<string> LastBuildOutput {
 			get {
 				if (!string.IsNullOrEmpty (BuildLogFile) && File.Exists (BuildLogFile)) {

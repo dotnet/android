@@ -199,6 +199,118 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void DotNetWatchHotReload ()
+		{
+			const string initialMessage = "DOTNET_WATCH_INITIAL_12345";
+			const string hotReloadMessage = "DOTNET_WATCH_HOT_RELOAD_APPLIED";
+
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty ("AndroidUseInterpreter", "true");
+
+			// Add a Console.WriteLine that will appear in logcat
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"//${AFTER_ONCREATE}",
+				$"Console.WriteLine (\"{initialMessage}\");");
+
+			// Add a MetadataUpdateHandler that logs when hot reload is applied
+			proj.Sources.Add (new BuildItem.Source ("HotReloadService.cs") {
+				TextContent = () =>
+@"using System;
+
+[assembly: System.Reflection.Metadata.MetadataUpdateHandlerAttribute (typeof (UnderTest.HotReloadService))]
+
+namespace UnderTest
+{
+	public static class HotReloadService
+	{
+		internal static void ClearCache (Type[]? types) { }
+		internal static void UpdateApplication (Type[]? types)
+		{
+			Console.WriteLine (""" + hotReloadMessage + @""");
+		}
+	}
+}
+"
+			});
+
+			using var builder = CreateApkBuilder ();
+			builder.Save (proj);
+
+			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
+
+			// Start dotnet watch which will build, deploy, and watch for changes
+			using var process = dotnet.StartWatch ();
+
+			var locker = new Lock ();
+			var output = new StringBuilder ();
+			var initialMessageEvent = new ManualResetEventSlim ();
+			var hotReloadAppliedEvent = new ManualResetEventSlim ();
+			bool foundInitialMessage = false;
+			bool foundHotReloadMessage = false;
+
+			process.OutputDataReceived += (sender, e) => {
+				if (e.Data != null) {
+					lock (locker) {
+						output.AppendLine (e.Data);
+						if (e.Data.Contains (initialMessage)) {
+							foundInitialMessage = true;
+							initialMessageEvent.Set ();
+						}
+						if (e.Data.Contains (hotReloadMessage)) {
+							foundHotReloadMessage = true;
+							hotReloadAppliedEvent.Set ();
+						}
+					}
+				}
+			};
+			process.ErrorDataReceived += (sender, e) => {
+				if (e.Data != null) {
+					lock (locker) {
+						output.AppendLine ($"STDERR: {e.Data}");
+						// dotnet watch status messages (e.g., "changes applied") go to stderr
+						if (e.Data.Contains (hotReloadMessage)) {
+							foundHotReloadMessage = true;
+							hotReloadAppliedEvent.Set ();
+						}
+					}
+				}
+			};
+
+			process.BeginOutputReadLine ();
+			process.BeginErrorReadLine ();
+
+			string logPath = Path.Combine (Root, builder.ProjectDirectory, "dotnet-watch-output.log");
+
+			try {
+				// Wait for the initial message to appear (app launched and running)
+				Assert.IsTrue (initialMessageEvent.Wait (TimeSpan.FromMinutes (5)),
+					$"Initial message '{initialMessage}' was not found in output. See {logPath} for details.");
+
+				// Modify the source file to trigger hot reload
+				string mainActivityPath = Path.Combine (Root, builder.ProjectDirectory, "MainActivity.cs");
+				string content = File.ReadAllText (mainActivityPath);
+				content = content.Replace (
+					$"Console.WriteLine (\"{initialMessage}\");",
+					$"Console.WriteLine (\"{initialMessage}\");\n\t\t\tConsole.WriteLine (\"MODIFIED_LINE\");");
+				File.WriteAllText (mainActivityPath, content);
+
+				// Wait for hot reload to apply (MetadataUpdateHandler fires Console.WriteLine)
+				Assert.IsTrue (hotReloadAppliedEvent.Wait (TimeSpan.FromMinutes (2)),
+					$"Hot reload message '{hotReloadMessage}' was not found in output. See {logPath} for details.");
+			} finally {
+				// Kill the process
+				if (!process.HasExited) {
+					process.Kill (entireProcessTree: true);
+					process.WaitForExit ();
+				}
+
+				// Write the output to a log file for debugging
+				File.WriteAllText (logPath, output.ToString ());
+				TestContext.AddTestAttachment (logPath);
+			}
+		}
+
+		[Test]
 		[TestCase (true)]
 		[TestCase (false)]
 		public void DeployToDevice (bool isRelease)
