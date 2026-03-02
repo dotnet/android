@@ -39,6 +39,15 @@ When setting environment variables for SDK tools (e.g. `sdkmanager`, `avdmanager
 ## Conventions
 
 - **One type per file**: each public class, struct, enum, or interface must be in its own `.cs` file named after the type (e.g. `JdkVersionInfo` → `JdkVersionInfo.cs`). Do not combine multiple top-level types in a single file.
+- **Minimal public API**: prefer `internal` for new methods/classes unless they are consumed by external projects (dotnet/android, IDE extensions). Use `InternalsVisibleTo` for test access.
+- **Use `ProcessUtils`**: never use `System.Diagnostics.Process` directly. Use the existing helpers such as `ProcessUtils.CreateProcessStartInfo()`, `ProcessUtils.StartProcess()`, and `ProcessUtils.ExecuteToolAsync()` for launching external tools. This ensures consistent logging, timeout handling, and cancellation.
+- **Process arguments**: use `ProcessUtils.CreateProcessStartInfo()` and pass arguments as separate strings instead of building a single arguments string yourself. `ProcessUtils` will use `ProcessStartInfo.ArgumentList` when available and fall back to `Arguments` on `netstandard2.0`.
+- **Use `FileUtil`**: file operations like extraction, downloads, checksum verification, and path checks belong in `FileUtil.cs`. Don't duplicate file helpers in domain classes.
+- **Concise XML docs**: omit `<summary>` tags for self-explanatory methods. Only add doc comments when the behavior is non-obvious. Avoid restating the method name.
+- **`netstandard2.0` awareness**: many modern .NET APIs are unavailable or have fewer overloads on `netstandard2.0`. When unsure about API availability, search mslearn to check documentation for the target framework.
+- **Format your code**: always match the existing file indentation (tabs, not spaces — see `.editorconfig`). Only format code you add or modify; never reformat existing lines.
+- **File-scoped namespaces**: all new files should use file-scoped namespaces (`namespace Foo;` instead of `namespace Foo { ... }`).
+- **Static `HttpClient`**: `HttpClient` instances must be `static` to avoid socket exhaustion. See [HttpClient guidelines](https://learn.microsoft.com/dotnet/fundamentals/networking/http/httpclient-guidelines#recommended-use). Do not create per-instance `HttpClient` fields or dispose them in `IDisposable`.
 - [Mono Coding Guidelines](http://www.mono-project.com/community/contributing/coding-guidelines/): tabs, K&R braces, `PascalCase` public members.
 - Nullable enabled in `AndroidSdk`. `NullableAttributes.cs` excluded on `net10.0+`.
 - Strong-named via `product.snk`. In the AndroidSdk project, tests use `InternalsVisibleTo` with full public key (`Properties/AssemblyInfo.cs`).

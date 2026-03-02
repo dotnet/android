@@ -31,7 +31,7 @@ namespace Xamarin.Android.Tools
 #endif
 		}
 
-		static Task<string> ReadAsStringAsync (HttpContent content, CancellationToken cancellationToken)
+		internal static Task<string> ReadAsStringAsync (HttpContent content, CancellationToken cancellationToken)
 		{
 #if NET5_0_OR_GREATER
 			return content.ReadAsStringAsync (cancellationToken);
@@ -76,17 +76,36 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
-		/// <summary>Verifies a file's SHA-256 hash against an expected value.</summary>
-		public static void VerifyChecksum (string filePath, string expectedChecksum)
+		/// <summary>Verifies a file's hash against an expected value using the specified algorithm.</summary>
+		public static void VerifyChecksum (string filePath, string expectedChecksum, ChecksumType checksumType = ChecksumType.Sha256)
 		{
-			using var sha256 = SHA256.Create ();
+			using var hasher = CreateHashAlgorithm (checksumType);
 			using var stream = File.OpenRead (filePath);
 
-			var hash = sha256.ComputeHash (stream);
-			var actual = BitConverter.ToString (hash).Replace ("-", "").ToLowerInvariant ();
+			var actual = ComputeHashString (hasher, stream);
 
 			if (!string.Equals (actual, expectedChecksum, StringComparison.OrdinalIgnoreCase))
 				throw new InvalidOperationException ($"Checksum verification failed. Expected: {expectedChecksum}, Actual: {actual}");
+		}
+
+		/// <summary>Computes the hash of the given bytes and returns it as a lowercase hex string.</summary>
+		internal static string ComputeHashString (ChecksumType checksumType, byte[] data)
+		{
+			using var hasher = CreateHashAlgorithm (checksumType);
+			var hash = hasher.ComputeHash (data);
+			return BitConverter.ToString (hash).Replace ("-", "").ToLowerInvariant ();
+		}
+
+		static HashAlgorithm CreateHashAlgorithm (ChecksumType checksumType) => checksumType switch {
+			ChecksumType.Sha256 => (HashAlgorithm) SHA256.Create (),
+			ChecksumType.Sha1 => SHA1.Create (),
+			_ => throw new NotSupportedException ($"Unsupported checksum type: '{checksumType}'."),
+		};
+
+		static string ComputeHashString (HashAlgorithm hasher, Stream stream)
+		{
+			var hash = hasher.ComputeHash (stream);
+			return BitConverter.ToString (hash).Replace ("-", "").ToLowerInvariant ();
 		}
 
 		/// <summary>Extracts a ZIP archive with Zip Slip protection.</summary>
