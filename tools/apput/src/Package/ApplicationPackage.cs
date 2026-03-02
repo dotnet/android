@@ -34,7 +34,7 @@ public abstract class ApplicationPackage : BaseAspect
 
 	AndroidManifest? manifest;
 
-	public static string AspectName { get; } = "Application package";
+	public override string AspectName { get; } = "Application package";
 
 	protected abstract string AndroidManifestPath { get; }
 	protected abstract string NativeLibDirBase { get; }

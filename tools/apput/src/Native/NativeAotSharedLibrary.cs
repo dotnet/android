@@ -8,6 +8,8 @@ namespace ApplicationUtility;
 
 public class NativeAotSharedLibrary : SharedLibrary
 {
+	public override string AspectName => $"{base.AspectName} (NativeAOT)";
+
 	readonly static List<(string sectionName, SectionType type)> NativeAotSections = new () {
 		("__managedcode", SectionType.ProgBits),
 		(".dotnet_eh_table", SectionType.ProgBits),

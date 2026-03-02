@@ -12,7 +12,7 @@ public class AssemblyStore : BaseAspect
 	const int MinimumStoreSize = 8;
 	const uint MagicNumber = 0x41424158; // 'XABA', little-endian
 
-	public static string AspectName { get; } = "Assembly Store";
+	public override string AspectName { get; } = "Assembly Store";
 
 	public IDictionary<string, ApplicationAssembly> Assemblies { get; private set; } = new Dictionary<string, ApplicationAssembly> (StringComparer.Ordinal);
 	public AndroidTargetArch Architecture { get; }

@@ -8,6 +8,8 @@ class MonoAotSharedLibrary : SharedLibrary
 {
 	const string MonoAotDataSymbol = "mono_aot_file_info";
 
+	public override string AspectName => $"{base.AspectName} (Mono AOT)";
+
 	protected MonoAotSharedLibrary (Stream stream, string libraryName, MonoAotSharedLibraryAspectState state)
 		: base (stream, libraryName, state)
 	{}

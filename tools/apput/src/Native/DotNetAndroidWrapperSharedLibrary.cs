@@ -16,6 +16,8 @@ class DotNetAndroidWrapperSharedLibrary : SharedLibrary
 	public bool HasAndroidPayload => payloadSize > 0;
 	public ulong PayloadSize => payloadSize;
 
+	public override string AspectName => $"{base.AspectName} (.NET payload wrapper)";
+
 	protected DotNetAndroidWrapperSharedLibrary (Stream stream, string libraryName, IAspectState state)
 		: base (stream, libraryName, state)
 	{

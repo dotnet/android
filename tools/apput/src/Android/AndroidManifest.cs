@@ -21,6 +21,8 @@ public class AndroidManifest : BaseAspect
 	public string? TargetSdkVersion     { get; }
 	public string RenderedXML           => RenderXmlAsString (RawXML);
 
+	public override string AspectName => "Android manifest";
+
 	readonly XmlDocument? xmlDoc;
 	XmlNamespaceManager? nsmgr;
 

@@ -20,7 +20,7 @@ class SharedLibraryReporter : BaseReporter
 
 	protected SharedLibrary Library { get; }
 
-	protected override string AspectName => SharedLibrary.AspectName;
+	protected override string AspectName => Library.AspectName;
 	protected virtual string LibraryKind => "Shared library";
 	protected override string ShortDescription => Library.Name;
 

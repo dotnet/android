@@ -8,6 +8,8 @@ public abstract class BaseAspect : IAspect
 	bool disposed;
 	readonly Stream? stream;
 
+	public abstract string AspectName { get; }
+
 	protected Stream AspectStream => stream ?? throw new InvalidOperationException ("Internal error: aspect stream is null");
 	protected bool Disposed => disposed;
 

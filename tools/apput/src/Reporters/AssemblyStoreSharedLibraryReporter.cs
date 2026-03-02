@@ -1,12 +1,11 @@
 using System;
-using System.Text;
 
 namespace ApplicationUtility;
 
 [AspectReporter (typeof (AssemblyStoreSharedLibrary))]
 class AssemblyStoreSharedLibraryReporter : SharedLibraryReporter
 {
-	protected override string AspectName => AssemblyStoreSharedLibrary.AspectName;
+	protected override string AspectName => Library.AspectName;
 	protected override string LibraryKind => "Assembly store shared library";
 
 	public AssemblyStoreSharedLibraryReporter (SharedLibrary library, MarkdownDocument doc)

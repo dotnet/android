@@ -24,7 +24,7 @@ public class SharedLibrary : BaseAspect
 	readonly NativeArchitecture nativeArch = NativeArchitecture.Unknown;
 	readonly string? soname;
 
-	public static string AspectName { get; } = "Native shared library";
+	public override string AspectName { get; } = "Native shared library";
 
 	public ulong Alignment => libraryAlignment;
 	public bool AlignmentCompatibleWith16k => libraryAlignment >= 0x4000 && (libraryAlignment % 0x4000 == 0);

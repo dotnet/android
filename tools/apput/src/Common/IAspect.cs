@@ -15,7 +15,7 @@ public interface IAspect : IDisposable
 	/// <summary>
 	/// Aspect name, for presentation purposes.
 	/// </summary>
-	static string AspectName => throw new NotImplementedException ();
+	string AspectName { get; }
 
 	/// <summary>
 	/// Probes whether <paramref name="stream"/> contains something this aspect

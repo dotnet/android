@@ -21,7 +21,7 @@ class ApplicationPackageReporter : BaseReporter
 
 	readonly ApplicationPackage package;
 
-	protected override string AspectName => ApplicationPackage.AspectName;
+	protected override string AspectName => package.AspectName;
 	protected override string ShortDescription => package.PackageFormat;
 
 	public ApplicationPackageReporter (ApplicationPackage package, MarkdownDocument doc)
