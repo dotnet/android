@@ -10,6 +10,8 @@ class AssemblyStoreSharedLibrary : DotNetAndroidWrapperSharedLibrary
 
 	public AssemblyStore AssemblyStore { get; }
 
+	public override string AspectName => $"{base.AspectName} (Assembly Store)";
+
 	protected AssemblyStoreSharedLibrary (Stream stream, string libraryName, IAspectState state)
 		: base (stream, libraryName, state)
 	{

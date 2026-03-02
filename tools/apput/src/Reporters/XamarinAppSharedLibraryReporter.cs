@@ -5,7 +5,7 @@ class XamarinAppSharedLibraryReporter : SharedLibraryReporter
 {
 	readonly XamarinAppSharedLibrary library;
 
-	protected override string AspectName => XamarinAppSharedLibrary.AspectName;
+	protected override string AspectName => library.AspectName;
 	protected override string LibraryKind => "Xamarin.Android App shared library";
 
 	public XamarinAppSharedLibraryReporter (XamarinAppSharedLibrary library, MarkdownDocument doc)

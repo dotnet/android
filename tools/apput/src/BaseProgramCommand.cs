@@ -9,11 +9,11 @@ abstract class BaseProgramCommand : Command
 	protected bool ShowHelp { get; private set; }
 	protected bool NoColor { get; private set; }
 
-	protected BaseProgramCommand (string name, string commandDescription, string? help = null)
+	protected BaseProgramCommand (string name, string commandDescription, string? help = null, string? synopsis = null)
 		: base (name, help ?? commandDescription)
 	{
 		Options = new OptionSet {
-			$"{name} [OPTIONS]",
+			synopsis ?? $"{name} [OPTIONS]",
 			"",
 			commandDescription,
 			"",

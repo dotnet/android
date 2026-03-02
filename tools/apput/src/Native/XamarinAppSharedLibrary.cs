@@ -12,6 +12,8 @@ class XamarinAppSharedLibrary : SharedLibrary
 
 	public ulong FormatTag { get; }
 
+	public override string AspectName => $"{base.AspectName} (Xamarin App)";
+
 	XamarinAppSharedLibrary (Stream stream, string description, XamarinAppLibraryAspectState state)
 		: base (stream, description, state)
 	{

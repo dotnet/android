@@ -5,7 +5,7 @@ namespace ApplicationUtility;
 [AspectReporter (typeof (AssemblyStore))]
 class AssemblyStoreReporter : BaseReporter
 {
-	protected override string AspectName => AssemblyStore.AspectName;
+	protected override string AspectName => store.AspectName;
 	protected override string ShortDescription => "Assembly store";
 
 	readonly AssemblyStore store;

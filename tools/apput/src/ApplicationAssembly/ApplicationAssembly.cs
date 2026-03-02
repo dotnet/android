@@ -10,7 +10,7 @@ public class ApplicationAssembly : BaseAspect
 	const ushort MSDOS_EXE_MAGIC = 0x5A4D; // 'MZ'
 	const uint PE_EXE_MAGIC = 0x00004550; // 'PE\0\0'
 
-	public static string AspectName { get; } = "Application assembly";
+	public override string AspectName { get; } = "Application assembly";
 
 	public bool IsCompressed    { get; }
 	public string Name          { get; }
