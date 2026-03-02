@@ -162,7 +162,7 @@ class ApplicationPackageReporter : BaseReporter
 				ReportDoc.AddLabeledListItem (SharedLibraryReporter.DotNetWrapperLabel, GetDotNetWrapperValue (libs));
 			}
 
-			ReportDoc.EndList ().EndListItem ();
+			ReportDoc.EndList ().EndListItem (appendLine: false);
 		}
 		ReportDoc.AddNewline ().EndList ();
 
@@ -297,7 +297,9 @@ class ApplicationPackageReporter : BaseReporter
 
 	void ReportAssemblyStores ()
 	{
-		AddSection ("Assembly stores", 2);
+		const int TopSectionLevel = 2;
+
+		AddSection ("Assembly stores", TopSectionLevel);
 		if (package.AssemblyStores == null || package.AssemblyStores.Count == 0) {
 			AddText ("No assembly stores found");
 			return;
@@ -311,7 +313,7 @@ class ApplicationPackageReporter : BaseReporter
 
 			// Take a shortcut here, there's just one store so we can use store reporter directly
 			var storeReporter = new AssemblyStoreReporter (package.AssemblyStores[0], ReportDoc);
-			storeReporter.Report (ReportForm.Subsection, sectionLevel: 2);
+			storeReporter.Report (ReportForm.Subsection, sectionLevel: TopSectionLevel);
 			return;
 		}
 
@@ -349,7 +351,8 @@ class ApplicationPackageReporter : BaseReporter
 		AddLabeledItem ("Architectures", String.Join (", ", architectures));
 		AddLabeledItem ("Assembly count", String.Join (", ", assemblyCounts.Select (kvp => $"{kvp.Value} ({kvp.Key})")));
 
-		ReportDoc.BeginList ();
+		AddSection ("Assemblies", TopSectionLevel + 1);
+		ReportDoc.BeginList (appendLine: false);
 		foreach (var kvp in assembliesByName) {
 			List<AssemblyInfo> infos = kvp.Value;
 			if (infos.Count == 0) {
@@ -372,10 +375,9 @@ class ApplicationPackageReporter : BaseReporter
 			ReportDoc.AddLabeledListItem ("Name hash", GetNameHashValue (infos));
 			ReportDoc.AddLabeledListItem ("Ignore on load", GetIgnoreOnLoadValue (infos));
 
-			ReportDoc.EndList ().EndListItem ();
+			ReportDoc.EndList ().EndListItem (appendLine: false);
 		}
-		ReportDoc.AddNewline ();
-		ReportDoc.EndList ();
+		ReportDoc.AddNewline ().EndList ();
 
 		string GetCultureInfo (List<AssemblyInfo> infos)
 		{

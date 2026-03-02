@@ -42,14 +42,14 @@ class AssemblyStoreReporter : BaseReporter
 		AddTargetArchItem (store.Architecture);
 		AddLabeledItem ("Number of assemblies", store.NumberOfAssemblies.ToString ());
 
-		AddSubsectionBanner ("Assemblies", level: sectionLevel + 1);
+		AddSection ("Assemblies", level: sectionLevel + 1);
 
 		// TODO: probably want to sort them alphabetically
 		ReportDoc.BeginList ();
 		foreach (var kvp in store.Assemblies) {
 			ApplicationAssembly asm = kvp.Value;
 
-			ReportDoc.AddListItem (asm.Name);
+			ReportDoc.StartListItem (asm.Name);
 			ReportDoc.BeginList ();
 			AddYesNoListItem ("Compressed", asm.IsCompressed);
 			ReportDoc.AddLabeledListItem ("Size", $"{asm.Size}");
@@ -58,7 +58,7 @@ class AssemblyStoreReporter : BaseReporter
 			}
 			ReportDoc.AddLabeledListItem ("Name hash", $"0x{asm.NameHash:x}");
 			AddYesNoListItem ("Ignore on load", asm.IgnoreOnLoad);
-			ReportDoc.EndList ();
+			ReportDoc.EndList ().EndListItem (appendLine: false);
 		}
 		ReportDoc.EndList ().EndListItem ();
 	}

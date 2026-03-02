@@ -13,9 +13,9 @@ class AssemblyStoreSharedLibraryReporter : SharedLibraryReporter
 		: base (library, doc)
 	{}
 
-	protected override void DoListReport ()
+	protected override void DoListReport (bool startWithNewLine = true)
 	{
-		base.DoListReport ();
+		base.DoListReport (startWithNewLine);
 		ReportAssemblyStore ();
 	}
 
@@ -32,7 +32,7 @@ class AssemblyStoreSharedLibraryReporter : SharedLibraryReporter
 			throw new InvalidOperationException ($"Internal error: expected instance of {nameof (AssemblyStoreSharedLibrary)}, got {Library.GetType ()} instead.");
 		}
 
-		AddSubsectionBanner ("Assembly Store");
+		AddSection ("Assembly Store");
 		Reporter.Report (storeLib.AssemblyStore, plainTextRendering: false, ReportForm.Subsection, ReportDoc);
 	}
 }

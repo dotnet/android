@@ -12,6 +12,7 @@ namespace ApplicationUtility;
 public class AndroidManifest : BaseAspect
 {
 	public string Description           { get; }
+	public bool Debuggable              { get; }
 	public AndroidManifestFormat Format { get; } = AndroidManifestFormat.Unknown;
 	public string? MainActivity         { get; }
 	public string? MinSdkVersion        { get; }
@@ -36,6 +37,7 @@ public class AndroidManifest : BaseAspect
 		MainActivity = TryGetMainActivity (xmlDoc, nsmgr);
 		(MinSdkVersion, TargetSdkVersion) = TryGetSdkVersions (xmlDoc, nsmgr);
 		Permissions = TryGetPermissions (xmlDoc, nsmgr);
+		Debuggable = TryGetDebuggable (xmlDoc, nsmgr);
 	}
 
 	AndroidManifest (Stream stream, AXMLParser binaryParser, string? description)
@@ -259,11 +261,17 @@ public class AndroidManifest : BaseAspect
 	{
 		root = null;
 		if (doc == null || nsmgr == null) {
+			Log.Debug ($"XML context is invalid (doc == {doc}; nsmgr == {nsmgr}");
 			return false;
 		}
 
 		root = doc.DocumentElement;
-		return root != null;
+		if (root != null) {
+			return true;
+		}
+
+		Log.Debug ("XML context is invalid: missing root element");
+		return false;
 	}
 
 	static List<string>? TryGetPermissions (XmlDocument? doc, XmlNamespaceManager? nsmgr)
@@ -409,6 +417,35 @@ public class AndroidManifest : BaseAspect
 		}
 
 		return package == null ? null : package.Value;
+	}
+
+	static bool TryGetDebuggable (XmlDocument? doc, XmlNamespaceManager? nsmgr)
+	{
+		Log.Debug ("Trying to read `application/android:debuggable` value");
+		if (!ValidXmlContext (doc, nsmgr, out XmlElement? root) || root == null) {
+			return false;
+		}
+
+		XmlNode? application = root.SelectSingleNode ("//manifest/application", nsmgr!);
+		if (application == null) {
+			Log.Debug ("<application> element not found");
+			return false;
+		}
+
+		XmlNode? debuggableAttr = application.Attributes?.GetNamedItem ("android:debuggable");
+		if (debuggableAttr == null) {
+			Log.Debug ("`android:debuggable` attribute not found in the `application` element");
+			return false;
+		}
+
+		Log.Debug ($"`android:debuggable` value: {debuggableAttr.Value}");
+		if (!Boolean.TryParse (debuggableAttr.Value, out bool debuggable)) {
+			Log.Debug ($"Failed to parse `{debuggableAttr.Value}` as boolean");
+			return false;
+		}
+
+		Log.Debug ($"Parsed `android:debuggable` value: {debuggable}");
+		return debuggable;
 	}
 
 	static XmlDocument ParsePlainXML (Stream stream)

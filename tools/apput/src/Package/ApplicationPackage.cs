@@ -43,7 +43,7 @@ public abstract class ApplicationPackage : BaseAspect
 	public AndroidManifest? AndroidManifest => manifest;
 	public List<AndroidTargetArch> Architectures { get; protected set; } = new ();
 	public List<AssemblyStore>? AssemblyStores { get; protected set; }
-	public bool Debuggable { get; protected set; }
+	public bool Debuggable => manifest?.Debuggable ?? false;
 	public string? Description { get; }
 	public string? MainActivity => manifest?.MainActivity;
 	public string? MinSdkVersion => manifest?.MinSdkVersion;
