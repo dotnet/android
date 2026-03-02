@@ -78,13 +78,15 @@ This file contains targets specific for Android application projects.
       <_AndroidRunPath Condition=" '$(_AndroidRunPath)' == '' ">$(MSBuildThisFileDirectory)..\tools\Microsoft.Android.Run.dll</_AndroidRunPath>
       <_AndroidRunLogcatArgs Condition=" '$(_AndroidRunLogcatArgs)' == '' ">monodroid-assembly:S</_AndroidRunLogcatArgs>
       <_AndroidRunAdbTargetArg Condition=" '$(AdbTarget)' != '' ">--adb-target &quot;$(AdbTarget)&quot;</_AndroidRunAdbTargetArg>
+      <_AndroidRunUserArg Condition=" '$(AndroidDeviceUserId)' != '' ">--user &quot;$(AndroidDeviceUserId)&quot;</_AndroidRunUserArg>
       <RunCommand>dotnet</RunCommand>
-      <RunArguments>exec &quot;$(_AndroidRunPath)&quot; --adb &quot;$(_AdbToolPath)&quot; $(_AndroidRunAdbTargetArg) --package &quot;$(_AndroidPackage)&quot; --activity &quot;$(AndroidLaunchActivity)&quot; --logcat-args &quot;$(_AndroidRunLogcatArgs)&quot; $(_AndroidRunExtraArgs)</RunArguments>
+      <RunArguments>exec &quot;$(_AndroidRunPath)&quot; --adb &quot;$(_AdbToolPath)&quot; $(_AndroidRunAdbTargetArg) --package &quot;$(_AndroidPackage)&quot; --activity &quot;$(AndroidLaunchActivity)&quot; --logcat-args &quot;$(_AndroidRunLogcatArgs)&quot; $(_AndroidRunUserArg) $(_AndroidRunExtraArgs)</RunArguments>
     </PropertyGroup>
     <!-- When WaitForExit is false, use direct adb command (no logcat streaming) -->
     <PropertyGroup Condition=" '$(WaitForExit)' == 'false' ">
+      <_AmStartUserArg Condition=" '$(AndroidDeviceUserId)' != '' "> --user $(AndroidDeviceUserId)</_AmStartUserArg>
       <RunCommand>$(_AdbToolPath)</RunCommand>
-      <RunArguments>$(AdbTarget) shell am start -S -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;</RunArguments>
+      <RunArguments>$(AdbTarget) shell am start -S$(_AmStartUserArg) -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;</RunArguments>
     </PropertyGroup>
   </Target>
 
@@ -137,13 +139,16 @@ This file contains targets specific for Android application projects.
       Arguments="-c"
     />
 
+    <PropertyGroup>
+      <_AmStartUserArg Condition=" '$(AndroidDeviceUserId)' != '' "> --user $(AndroidDeviceUserId)</_AmStartUserArg>
+    </PropertyGroup>
     <Message Text="Running the application and waiting for it to fully start" Importance="High" />
     <AndroidAdb
       ToolExe="$(AdbToolExe)"
       ToolPath="$(AdbToolPath)"
       AdbTarget="$(AdbTarget)"
       Command="shell"
-      Arguments="am start -S -W -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;"
+      Arguments="am start -S -W$(_AmStartUserArg) -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;"
     />
 
     <Message Text="Sleeping for $(RunLogDelayInMS)ms to give logcat a chance to log all the messages" Importance="High" />

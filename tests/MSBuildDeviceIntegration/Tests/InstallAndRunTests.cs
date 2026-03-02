@@ -1764,6 +1764,22 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 		}
 
 		[Test]
+		public void StartAndroidActivityRespectsAndroidDeviceUserId ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+
+			// Run with AndroidDeviceUserId=0 (primary user, always available)
+			builder.BuildLogFile = "start-with-user.log";
+			Assert.IsTrue (builder.RunTarget (proj, "StartAndroidActivity", parameters: new [] { "AndroidDeviceUserId=0" }),
+				"StartAndroidActivity should have succeeded.");
+
+			StringAssertEx.ContainsRegex (@"am start.*--user 0", builder.LastBuildOutput,
+				"The 'am start' command should contain '--user 0' when AndroidDeviceUserId is set.");
+		}
+
+		[Test]
 		public void AppStartsWithManagedMarshalMethodsLookupEnabled ()
 		{
 			var proj = new XamarinAndroidApplicationProject { IsRelease = true };

@@ -9,6 +9,7 @@ string? adbPath = null;
 string? adbTarget = null;
 string? package = null;
 string? activity = null;
+string? deviceUserId = null;
 bool verbose = false;
 int? logcatPid = null;
 Process? logcatProcess = null;
@@ -48,6 +49,9 @@ int Run (string[] args)
 		{ "c|activity=",
 			"The {ACTIVITY} class name to launch. Required.",
 			v => activity = v },
+		{ "user=",
+			"The Android device {USER_ID} to launch the activity under (e.g., 10 for a work profile).",
+			v => deviceUserId = v },
 		{ "v|verbose",
 			"Enable verbose output for debugging.",
 			v => verbose = v != null },
@@ -194,7 +198,8 @@ int RunApp ()
 
 bool StartApp ()
 {
-	var cmdArgs = $"shell am start -S -W -n \"{package}/{activity}\"";
+	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
+	var cmdArgs = $"shell am start -S -W{userArg} -n \"{package}/{activity}\"";
 	var (exitCode, output, error) = RunAdb (cmdArgs);
 	if (exitCode != 0) {
 		Console.Error.WriteLine ($"Error: Failed to start app: {error}");
@@ -302,7 +307,8 @@ void StopApp ()
 	if (string.IsNullOrEmpty (package) || string.IsNullOrEmpty (adbPath))
 		return;
 
-	RunAdb ($"shell am force-stop {package}");
+	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
+	RunAdb ($"shell am force-stop{userArg} {package}");
 }
 
 string? FindAdbPath ()
