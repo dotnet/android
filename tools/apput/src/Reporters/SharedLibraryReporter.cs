@@ -49,27 +49,21 @@ class SharedLibraryReporter : BaseReporter
 	// TODO: migrate to Markdown
 	protected virtual void DoStandaloneReport ()
 	{
-		WriteAspectDesc (LibraryKind);
+		AddAspectDesc (LibraryKind);
 
-		WriteSubsectionBanner ("Generic ELF shared library info");
-		WriteNativeArch (Library.TargetArchitecture);
-
-		if (Library.HasSoname) {
-			WriteItem ("Soname", ValueOrNone (Library.Soname));
-		}
-		WriteItem ("Build ID", ValueOrNone (Library.BuildID));
-		WriteDebugInfoDesc ();
-		WriteAlignmentInfo ();
-
-		if (Library.HasAndroidIdent) {
-			WriteSubsectionBanner ("Android-specific ELF shared library info");
-			WriteItem ("Android ident", ValueOrNone (Library.AndroidIdent));
-		}
+		AddSection ("Generic ELF shared library info");
+		DoListReport (startWithNewLine: false);
 	}
 
-	protected virtual void DoListReport ()
+	protected virtual void DoListReport (bool startWithNewLine = true)
 	{
-		ReportDoc.BeginList ();
+		ReportDoc.BeginList (appendLine: startWithNewLine);
+		AddCommonItems ();
+		ReportDoc.EndList ().EndListItem (appendLine: false);
+	}
+
+	void AddCommonItems ()
+	{
 		AddNativeArchListItem (Library.TargetArchitecture);
 		AddSoname ();
 		AddBuildId ();
@@ -81,9 +75,7 @@ class SharedLibraryReporter : BaseReporter
 		AddNativeAot ();
 		AddXamarinApp ();
 		AddDotNetWrapper ();
-		AddAndroidIdent (appendLine: false);
-
-		ReportDoc.EndList ().EndListItem ();
+		AddAndroidIdent ();
 	}
 
 	void AddSoname ()
@@ -141,7 +133,7 @@ class SharedLibraryReporter : BaseReporter
 			return;
 		}
 
-		ReportDoc.AddLabeledListItem (XamarinAppLabel, $"{YesNo (true)}; Format tag: 0x${lib.FormatTag:x}", appendLine: appendLine);
+		ReportDoc.AddLabeledListItem (XamarinAppLabel, $"{YesNo (true)}; Format tag: 0x{lib.FormatTag:x}", appendLine: appendLine);
 	}
 
 	void AddNativeAot (bool appendLine = true)

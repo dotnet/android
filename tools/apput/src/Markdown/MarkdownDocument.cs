@@ -106,9 +106,11 @@ class MarkdownDocument
 		doc.Append (textToAppend);
 	}
 
-	public MarkdownDocument BeginList ()
+	public MarkdownDocument BeginList (bool appendLine = true)
 	{
-		doc.AppendLine ();
+		if (appendLine) {
+			doc.AppendLine ();
+		}
 		SetNewIndent (2);
 		return this;
 	}
