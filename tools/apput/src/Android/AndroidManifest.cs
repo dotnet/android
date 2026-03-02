@@ -8,7 +8,6 @@ using ProtoManifest = Aapt.Pb;
 
 namespace ApplicationUtility;
 
-// TODO: implement support for AndroidManifest.xml in AAB packages. It's protobuf data, not binary/text XML
 public class AndroidManifest : BaseAspect
 {
 	public string Description           { get; }
