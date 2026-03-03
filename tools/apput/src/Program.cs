@@ -122,29 +122,6 @@ class ExtractManifestCommand : BaseProgramCommand
 			return 1;
 		}
 
-		(bool supportsManifest, AndroidManifest? manifest) = aspect switch {
-			AndroidManifest => (true, (AndroidManifest)aspect),
-			ApplicationPackage => (true, ((ApplicationPackage)aspect).AndroidManifest),
-			_ => (false, null)
-		};
-
-		if (manifest == null) {
-			if (!supportsManifest) {
-				Log.Error ($"{aspect.AspectName} does not support Android manifest");
-			} else {
-				Log.Error ($"Android manifest not found in {aspect.AspectName}");
-			}
-			return 1;
-		}
-
-		string filePath = String.IsNullOrWhiteSpace (outputFile) ? ManifestOutputDefault : outputFile;
-		using var fs = File.Open (filePath, FileMode.Create, FileAccess.Write, FileShare.Read);
-		using var writer = new StreamWriter (fs);
-
-		writer.Write (manifest.RenderedXML);
-		writer.Flush ();
-		writer.Close ();
-
-		return 0;
+		return Extractor.Extract<AndroidManifest> (aspect, outputFile ?? ManifestOutputDefault) ? 0 : 1;
 	}
 }
