@@ -244,10 +244,6 @@ public partial class BuildTest3 : BaseTest
 	List<EnvironmentHelper.JniPreloads>? NativeLibraryJniPreload_CommonInitAndGetPreloads (AndroidRuntime runtime, Action<XamarinAndroidApplicationProject, AndroidTargetArch[]>? configureProject = null)
 	{
 		const bool isRelease = true;
-		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-			return null;
-		}
-
 		if (runtime == AndroidRuntime.NativeAOT) {
 			Assert.Ignore ("NativeAOT doesn't use JNI preload");
 		}
