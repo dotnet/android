@@ -203,7 +203,7 @@ namespace Xamarin.Android.Tasks
 		public PackageNamingPolicy PackageNamingPolicy { get; set; }
 		public List<ITaskItem> NativeLibraries { get; set; } = [];
 		public ICollection<ITaskItem>? NativeLibrariesNoJniPreload { get; set; }
-		public ICollection<ITaskItem>? NativeLibrarysAlwaysJniPreload { get; set; }
+		public ICollection<ITaskItem>? NativeLibrariesAlwaysJniPreload { get; set; }
 		public bool MarshalMethodsEnabled { get; set; }
 		public bool ManagedMarshalMethodsLookupEnabled { get; set; }
 		public bool IgnoreSplitConfigs { get; set; }
@@ -452,7 +452,7 @@ namespace Xamarin.Android.Tasks
 			var aotDsoCache = new List<StructureInstance<DSOCacheEntry>> ();
 			var nameMutations = new List<string> ();
 			int nameMutationsCount = -1;
-			ICollection<string> ignorePreload = ApplicationConfigNativeAssemblyGeneratorCLR.MakeJniPreloadIgnoreCollection (Log, NativeLibrarysAlwaysJniPreload, NativeLibrariesNoJniPreload);
+			ICollection<string> ignorePreload = ApplicationConfigNativeAssemblyGeneratorCLR.MakeJniPreloadIgnoreCollection (Log, NativeLibrariesAlwaysJniPreload, NativeLibrariesNoJniPreload);
 
 			for (int i = 0; i < dsos.Count; i++) {
 				string name = dsos[i].name;
