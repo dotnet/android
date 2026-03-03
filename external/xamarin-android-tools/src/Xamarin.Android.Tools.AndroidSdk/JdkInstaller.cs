@@ -30,7 +30,7 @@ namespace Xamarin.Android.Tools
 
 		static readonly IProgress<JdkInstallProgress> NullProgress = new Progress<JdkInstallProgress> ();
 
-		readonly HttpClient httpClient = new();
+		static readonly HttpClient httpClient = new();
 		readonly Action<TraceLevel, string> logger;
 
 		public JdkInstaller (Action<TraceLevel, string>? logger = null)
@@ -38,7 +38,7 @@ namespace Xamarin.Android.Tools
 			this.logger = logger ?? AndroidSdkInfo.DefaultConsoleLogger;
 		}
 
-		public void Dispose () => httpClient.Dispose ();
+		public void Dispose () { }
 
 		/// <summary>Discovers available Microsoft OpenJDK versions for the current platform.</summary>
 		public async Task<IReadOnlyList<JdkVersionInfo>> DiscoverAsync (CancellationToken cancellationToken = default)
