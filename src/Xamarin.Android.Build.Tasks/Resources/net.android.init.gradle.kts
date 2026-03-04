@@ -5,10 +5,10 @@
  *    https://docs.gradle.org/current/kotlin-dsl/gradle/org.gradle.api.invocation/-gradle/projects-loaded.html
  */
 gradle.projectsLoaded {
-	if (gradle.startParameter.projectProperties.containsKey("netAndroidBuildDirOverride")) {
+	gradle.startParameter.projectProperties["netAndroidBuildDirOverride"]?.let { buildDir ->
 		rootProject.allprojects {
 			afterEvaluate {
-				layout.buildDirectory.set(file(gradle.startParameter.projectProperties["netAndroidBuildDirOverride"]))
+				layout.buildDirectory.set(file(buildDir))
 			}
 		}
 	}

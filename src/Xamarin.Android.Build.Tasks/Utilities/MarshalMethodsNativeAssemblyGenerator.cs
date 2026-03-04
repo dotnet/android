@@ -567,7 +567,12 @@ namespace Xamarin.Android.Tasks
 				}
 
 				// Every parameter which isn't a primitive type becomes a pointer
-				parameters.Add (new LlvmIrFunctionParameter (type, implementedMethod.Parameters[parameters.Count].Name));
+				// If the parameter name is null, empty, or whitespace, pass null to let LlvmIrFunction assign a numeric name
+				string? paramName = implementedMethod.Parameters[parameters.Count].Name;
+				if (String.IsNullOrWhiteSpace (paramName)) {
+					paramName = null;
+				}
+				parameters.Add (new LlvmIrFunctionParameter (type, paramName));
 			}
 		}
 
