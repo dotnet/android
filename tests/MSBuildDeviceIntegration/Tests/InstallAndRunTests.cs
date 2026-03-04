@@ -287,12 +287,11 @@ namespace UnderTest
 					$"Initial message '{initialMessage}' was not found in output. See {logPath} for details.");
 
 				// Modify the source file to trigger hot reload
-				string mainActivityPath = Path.Combine (Root, builder.ProjectDirectory, "MainActivity.cs");
-				string content = File.ReadAllText (mainActivityPath);
-				content = content.Replace (
+				proj.MainActivity = proj.MainActivity.Replace (
 					$"Console.WriteLine (\"{initialMessage}\");",
 					$"Console.WriteLine (\"{initialMessage}\");\n\t\t\tConsole.WriteLine (\"MODIFIED_LINE\");");
-				File.WriteAllText (mainActivityPath, content);
+				proj.Touch ("MainActivity.cs");
+				builder.Save (proj, doNotCleanupOnUpdate: true, saveProject: false);
 
 				// Wait for hot reload to apply (MetadataUpdateHandler fires Console.WriteLine)
 				Assert.IsTrue (hotReloadAppliedEvent.Wait (TimeSpan.FromMinutes (2)),

@@ -150,6 +150,21 @@ try {
 }
 ```
 
+## Testing
+
+**Modifying project files in tests:** Never use `File.WriteAllText()` directly to update project source files. Instead, use the `Xamarin.ProjectTools` infrastructure:
+
+```csharp
+// 1. Update the in-memory content
+proj.MainActivity = proj.MainActivity.Replace ("old text", "new text");
+// 2. Bump the timestamp so UpdateProjectFiles knows it changed
+proj.Touch ("MainActivity.cs");
+// 3. Write to disk (doNotCleanupOnUpdate preserves other files, saveProject: false skips .csproj regeneration)
+builder.Save (proj, doNotCleanupOnUpdate: true, saveProject: false);
+```
+
+This pattern ensures proper encoding, timestamps, and file attributes are handled correctly. The `Touch` + `Save` pattern is used throughout the test suite for incremental builds and file modifications.
+
 ## Error Patterns
 - **MSBuild Errors:** `XA####` (errors), `XA####` (warnings), `APT####` (Android tools)
 - **Logging:** Use `Log.LogError`, `Log.LogWarning` with error codes and context
