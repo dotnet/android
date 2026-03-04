@@ -23,6 +23,7 @@
     <PackageReference Include="K4os.Compression.LZ4" Version="$(LZ4PackageVersion)" />
     <PackageReference Include="Google.Protobuf" Version="3.33.4" />
     <PackageReference Include="Microsoft.PowerShell.MarkdownRender" Version="7.2.1" />
+    <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="10.0.3" />
   </ItemGroup>
 
   <Import Project="$(XAPackagesDir)\Xamarin.LibZipSharp.$(LibZipSharpVersion)\build\Xamarin.LibZipSharp.targets" Condition="Exists('$(XAPackagesDir)\Xamarin.LibZipSharp.$(LibZipSharpVersion)\build\Xamarin.LibZipSharp.targets')" />
