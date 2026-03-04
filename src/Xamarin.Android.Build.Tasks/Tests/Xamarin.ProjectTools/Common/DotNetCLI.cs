@@ -189,6 +189,7 @@ namespace Xamarin.ProjectTools
 				"--non-interactive",
 				"--verbose",
 				"--verbosity", "diag",
+				"-bl",
 			};
 			if (parameters != null) {
 				arguments.AddRange (parameters);
