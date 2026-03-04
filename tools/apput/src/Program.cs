@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-
 using Mono.Options;
 
 namespace ApplicationUtility;
 
+// TODO: add support for individual assemblies as payload in shared libraries
 class Program
 {
 	const string AppName = "apput";
@@ -87,19 +87,49 @@ class ExtractAssemblyCommand : BaseProgramCommand
 
 	string? outputDir;
 	bool useRegex;
+	bool extractPdb;
+	string? architectures;
 
 	public ExtractAssemblyCommand ()
 		: base ("assembly", "Extract assemblies from the application package", synopsis: "assembly [OPTIONS] <assembly_name> [<assembly_name>]")
 	{
 		Options.Add ("output|o=", $"Write output to directory `VALUE`; Defaults to '{AssembliesOutputDirDefault}'", v => outputDir = v);
+		Options.Add ("a|arch=", "Extract only entries for the architectures specified by `VALUE`, a comma-separated list of architecture names. Defaults to 'all'", v => architectures = v);
 		Options.Add ("r", "Treat each <assembly_name> as a regular expression.", v => useRegex = v != null);
+		Options.Add ("d", "Extract also the accompanying PDB file, if found.", v => extractPdb = v != null);
 		Options.Add ("");
 		Options.Add ("<assembly_name> does not have to specify the extension. By default assembly names are treated as standard glob patterns.");
+		AddArchNamesForHelp ();
 	}
 
 	protected override int DoInvoke (List<string> rest)
 	{
-		throw new NotImplementedException ();
+		IAspect? aspect = GetAspect (rest[0]);
+		if (aspect == null) {
+			return 1;
+		}
+
+		string targetDir;
+		if (String.IsNullOrEmpty (outputDir)) {
+			targetDir = Path.Combine (Environment.CurrentDirectory, AssembliesOutputDirDefault);
+		} else {
+			targetDir = Path.GetFullPath (outputDir);
+		}
+
+		string archList;
+		if (String.IsNullOrEmpty (architectures)) {
+			archList = "all";
+		} else {
+			archList = architectures;
+		}
+
+		var options = new AssemblyExtractorOptions (targetDir) {
+			UseRegex = useRegex,
+			ExtractPDB = extractPdb,
+			Architectures = ArchitectureName.ParseList (archList),
+		};
+
+		return Extractor.ExtractMultiple<ApplicationAssembly, AssemblyExtractorOptions> (aspect, targetDir, options) ? 0 : 1;
 	}
 }
 

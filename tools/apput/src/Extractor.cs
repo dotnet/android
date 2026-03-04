@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 
@@ -52,6 +53,67 @@ public class Extractor
 		return true;
 	}
 
+	public static bool Extract<TStored, TOptions> (IAspect? fromAspect, string destinationPath, TOptions extractorOptions) where TStored: class, IAspect
+	{
+		if (!GetExtractor<TOptions> (typeof(TStored), fromAspect, extractorOptions, out IExtractorWithOptions<TOptions>? extractor) || extractor == null) {
+			return false;
+		}
+
+		using var fs = File.Open (destinationPath, FileMode.Create, FileAccess.Write, FileShare.Read);
+		if (!Extract (fromAspect!, extractor, fs)) {
+			// TODO: would be nice to use aspect name instead of `typeof(TStored)`
+			throw new InvalidOperationException ($"Extraction of aspect {typeof(TStored)} from '{fromAspect!.AspectName}' into file '{destinationPath}' failed.");
+		}
+
+		return true;
+	}
+
+	public static bool ExtractMultiple<TStored, TOptions> (IAspect? fromAspect, string destinationPath, TOptions extractorOptions) where TStored: class, IAspect
+	{
+		if (!GetExtractor<TOptions> (typeof(TStored), fromAspect, extractorOptions, out IExtractorWithOptions<TOptions>? extractor) || extractor == null) {
+			return false;
+		}
+
+		var streams = new List<(Stream stream, string path)> ();
+		bool success = false;
+		try {
+			success = Extract (
+				fromAspect!,
+				extractor,
+				(string relativePath) => {
+					string outputPath = Path.Combine (destinationPath, relativePath);
+					Directory.CreateDirectory (Path.GetDirectoryName (outputPath)!);
+					var fs = File.Open (outputPath, FileMode.Create, FileAccess.Write, FileShare.Read);
+					streams.Add ((fs, outputPath));
+					return fs;
+				}
+			);
+		} catch (Exception ex) {
+			Log.Error ($"Failed to extract one or more entries.");
+			Log.Error (ex.ToString ());
+			success = false;
+		}
+
+		foreach ((Stream stream, string path) in streams) {
+			try {
+				stream.Flush ();
+				stream.Close ();
+			} catch (Exception ex) {
+				Log.Error ($"Failed to flush and close stream for output file '{path}'");
+				Log.Error (ex.ToString ());
+			} finally {
+				stream.Dispose ();
+			}
+		}
+
+		return success;
+	}
+
+	static bool Extract (IAspect fromAspect, IExtractor extractor, GetOutputStreamForPathFn getOutputStreamForPath)
+	{
+		return extractor.Extract (getOutputStreamForPath);
+	}
+
 	static bool Extract (IAspect fromAspect, IExtractor extractor, Stream destinationStream)
 	{
 		bool success = extractor.Extract (destinationStream);
@@ -65,23 +127,34 @@ public class Extractor
 	{
 		extractor = null;
 		if (fromAspect == null) {
+			Log.Debug ($"Unable to determine extractor for '{storedAspectType}' because container aspect is not specified.");
 			return false;
 		}
 
 		extractor = CreateSpecificExtractor (storedAspectType, fromAspect);
+		if (extractor == null) {
+			Log.Error ($"Container '{fromAspect}' doesn't support '{storedAspectType}'.");
+		}
+
 		return extractor != null;
 	}
 
-	public static bool Extract<TStored, TOptions> (IAspect? fromAspect, string destinationPath, TOptions extractorOptions) where TStored: class, IAspect
+	static bool GetExtractor<TOptions> (Type storedAspectType, IAspect? fromAspect, TOptions options, out IExtractorWithOptions<TOptions>? extractor)
 	{
+		extractor = null;
 		if (fromAspect == null) {
+			Log.Debug ($"Unable to determine extractor for '{storedAspectType}' because container aspect is not specified.");
 			return false;
 		}
 
-		throw new NotImplementedException ();
+		extractor = CreateSpecificExtractor<TOptions> (storedAspectType, fromAspect, options);
+		if (extractor == null) {
+			Log.Error ($"Container '{fromAspect}' doesn't support '{storedAspectType}'.");
+		}
+		return extractor != null;
 	}
 
-	static (Type? extractorType, ConstructorInfo? ctor) FindMatchingExtractor (Type storedAspectType, Type containerAspectType)
+	static (Type? extractorType, ConstructorInfo? ctor) FindMatchingExtractor (Type storedAspectType, Type containerAspectType, Type[] ctorArgs)
 	{
 		Log.Debug ($"Looking for extractor type which supports {storedAspectType} inside container {containerAspectType} aspect.");
 
@@ -89,7 +162,6 @@ public class Extractor
 		Assembly asm = typeof(Extractor).Assembly;
 		ConstructorInfo? ctor = null;
 		Type? extractorType = null;
-		var ctorArgs = new Type[] { containerAspectType };
 
 		foreach (Type type in asm.GetTypes ()) {
 			(extractorType, ctor) = GetAspectExtractorRecursively (type, storedAspectType, containerAspectType, ctorArgs);
@@ -101,16 +173,43 @@ public class Extractor
 		return (null, null);
 	}
 
+	static (Type? extractorType, ConstructorInfo? ctor) FindMatchingExtractor (Type storedAspectType, Type containerAspectType)
+	{
+		var ctorArgs = new Type[] { containerAspectType };
+		return FindMatchingExtractor (storedAspectType, containerAspectType, ctorArgs);
+	}
+
+	static (Type? extractorType, ConstructorInfo? ctor) FindMatchingExtractor<TOptions> (Type storedAspectType, Type containerAspectType)
+	{
+		var ctorArgs = new Type[] { containerAspectType, typeof(TOptions) };
+		return FindMatchingExtractor (storedAspectType, containerAspectType, ctorArgs);
+	}
+
 	static IExtractor? CreateSpecificExtractor (Type storedAspectType, IAspect containerAspect)
 	{
 		(Type? extractorType, ConstructorInfo? ctor) = FindMatchingExtractor (storedAspectType, containerAspect.GetType ());
 		if (extractorType == null || ctor == null) {
-			Log.Debug ($"Extractor for type '{storedAspectType}' not found.");
+			Log.Debug ($"Extractor for type '{storedAspectType}' contained in '{containerAspect.GetType ()}' not found.");
 			return null;
 		}
 
 		try {
 			return (IExtractor)ctor.Invoke (new object[] { containerAspect });
+		} catch (Exception ex) {
+			throw new InvalidOperationException ($"Internal error: failed to instantiate extractor type '{extractorType}'", ex);
+		}
+	}
+
+	static IExtractorWithOptions<TOptions>? CreateSpecificExtractor<TOptions> (Type storedAspectType, IAspect containerAspect, TOptions options)
+	{
+		(Type? extractorType, ConstructorInfo? ctor) = FindMatchingExtractor<TOptions> (storedAspectType, containerAspect.GetType ());
+		if (extractorType == null || ctor == null) {
+			Log.Debug ($"Extractor for type '{storedAspectType}' contained in '{containerAspect.GetType ()}' not found.");
+			return null;
+		}
+
+		try {
+			return (IExtractorWithOptions<TOptions>)ctor.Invoke (new object[] { containerAspect, options! });
 		} catch (Exception ex) {
 			throw new InvalidOperationException ($"Internal error: failed to instantiate extractor type '{extractorType}'", ex);
 		}
@@ -132,7 +231,7 @@ public class Extractor
 		return (null, null);
 	}
 
-	static bool IsExtractorForAspect (Type candidateType, Type storedAspectType, Type containerAspectType, Type[] ctorArgs, out ConstructorInfo? ctor)
+	static bool IsExtractorForAspect (Type expectedInterfaceType, Type candidateType, Type storedAspectType, Type containerAspectType, Type[] ctorArgs, out ConstructorInfo? ctor)
 	{
 		ctor = null;
 
@@ -161,11 +260,21 @@ public class Extractor
 		}
 
 		foreach (Type it in candidateType.GetInterfaces ()) {
-			if (it == typeof(IExtractor)) {
+			if (it == expectedInterfaceType) {
 				return true;
 			}
 		}
 
-		throw new InvalidOperationException ($"Internal error: type '{candidateType}' claims to be an exporter but it does not implement the IExtractor interface");
+		throw new InvalidOperationException ($"Internal error: type '{candidateType}' claims to be an exporter but it does not implement the {expectedInterfaceType} interface");
+	}
+
+	static bool IsExtractorForAspect (Type candidateType, Type storedAspectType, Type containerAspectType, Type[] ctorArgs, out ConstructorInfo? ctor)
+	{
+		return IsExtractorForAspect (typeof(IExtractor), candidateType, storedAspectType, containerAspectType, ctorArgs, out ctor);
+	}
+
+	static bool IsExtractorForAspect<TOptions> (Type candidateType, Type storedAspectType, Type containerAspectType, Type[] ctorArgs, out ConstructorInfo? ctor)
+	{
+		return IsExtractorForAspect (typeof(IExtractorWithOptions<TOptions>), candidateType, storedAspectType, containerAspectType, ctorArgs, out ctor);
 	}
 }

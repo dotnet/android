@@ -50,5 +50,18 @@ abstract class BaseProgramCommand : Command
 		return Detector.FindAspect (filePath);
 	}
 
+	protected void AddArchNamesForHelp ()
+	{
+		IDictionary<NativeArchitecture, string> names = ArchitectureName.GetSupportedNames ();
+
+		Options.Add ("");
+		Options.Add ("Supported native architecture names (case-insensitive):");
+		Options.Add ("  * all");
+		foreach (var kvp in names) {
+			Options.Add ($"  * {kvp.Key}: {kvp.Value}");
+		}
+		Options.Add ("");
+	}
+
 	protected abstract int DoInvoke (List<string> rest);
 }
