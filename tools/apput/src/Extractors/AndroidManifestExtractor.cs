@@ -39,4 +39,9 @@ class AndroidManifestExtractor : BaseExtractor
 
 		return true;
 	}
+
+	public override bool Extract (GetOutputStreamForPathFn getOutputStreamForPath)
+	{
+		return Extract (getOutputStreamForPath ("AndroidManifest.xml"));
+	}
 }

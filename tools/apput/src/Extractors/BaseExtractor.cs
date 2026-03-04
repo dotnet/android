@@ -12,4 +12,5 @@ abstract class BaseExtractor : IExtractor
 	}
 
 	public abstract bool Extract (Stream destinationStream);
+	public abstract bool Extract (GetOutputStreamForPathFn getOutputStreamForPath);
 }
