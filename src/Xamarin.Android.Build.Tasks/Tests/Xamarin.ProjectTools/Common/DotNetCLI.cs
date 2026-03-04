@@ -184,6 +184,7 @@ namespace Xamarin.ProjectTools
 				"watch",
 				"--project", $"\"{projectOrSolution}\"",
 				"--non-interactive",
+				"--verbose",
 				"--verbosity", "diag",
 			};
 			if (parameters != null) {

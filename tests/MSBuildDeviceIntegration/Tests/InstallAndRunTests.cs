@@ -268,7 +268,6 @@ namespace UnderTest
 				if (e.Data != null) {
 					lock (locker) {
 						output.AppendLine ($"STDERR: {e.Data}");
-						// dotnet watch status messages (e.g., "changes applied") go to stderr
 						if (e.Data.Contains (hotReloadMessage)) {
 							hotReloadAppliedEvent.Set ();
 						}
@@ -285,6 +284,10 @@ namespace UnderTest
 				// Wait for the initial message to appear (app launched and running)
 				Assert.IsTrue (initialMessageEvent.Wait (TimeSpan.FromMinutes (5)),
 					$"Initial message '{initialMessage}' was not found in output. See {logPath} for details.");
+
+				// Give dotnet watch time to finish post-deploy setup and start its file watcher.
+				// There is no explicit "ready" signal from dotnet watch after deploy completes.
+				Thread.Sleep (5000);
 
 				// Modify the source file to trigger hot reload
 				proj.MainActivity = proj.MainActivity.Replace (
