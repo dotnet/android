@@ -91,7 +91,7 @@ class ExtractAssemblyCommand : BaseProgramCommand
 	string? architectures;
 
 	public ExtractAssemblyCommand ()
-		: base ("assembly", "Extract assemblies from the application package", synopsis: "assembly [OPTIONS] <assembly_name> [<assembly_name>]")
+		: base ("assembly", "Extract assemblies from the application package", synopsis: "assembly [OPTIONS] <input_file> <assembly_name> [<assembly_name>]")
 	{
 		Options.Add ("output|o=", $"Write output to directory `VALUE`; Defaults to '{AssembliesOutputDirDefault}'", v => outputDir = v);
 		Options.Add ("a|arch=", "Extract only entries for the architectures specified by `VALUE`, a comma-separated list of architecture names. Defaults to 'all'", v => architectures = v);
@@ -104,6 +104,11 @@ class ExtractAssemblyCommand : BaseProgramCommand
 
 	protected override int DoInvoke (List<string> rest)
 	{
+		if (rest.Count < 2) {
+			Log.Error ("At least two positional arguments are required. See `extract assembly --help` for more information.");
+			return 1;
+		}
+
 		IAspect? aspect = GetAspect (rest[0]);
 		if (aspect == null) {
 			return 1;
@@ -123,7 +128,8 @@ class ExtractAssemblyCommand : BaseProgramCommand
 			archList = architectures;
 		}
 
-		var options = new AssemblyExtractorOptions (targetDir) {
+		var assemblyPatterns = new List<string> (rest.Slice (1, rest.Count - 1));
+		var options = new AssemblyExtractorOptions (targetDir, assemblyPatterns) {
 			UseRegex = useRegex,
 			ExtractPDB = extractPdb,
 			Architectures = ArchitectureName.ParseList (archList),
