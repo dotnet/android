@@ -135,6 +135,6 @@ public partial class ScannerComparisonTests
 		}
 
 		var details = string.Join (Environment.NewLine, items.Take (20).Select (item => $"  {item}"));
-		Assert.True (false, $"{label} ({items.Count}){Environment.NewLine}{details}");
+		Assert.Fail ($"{label} ({items.Count}){Environment.NewLine}{details}");
 	}
 }
