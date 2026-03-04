@@ -35,18 +35,18 @@ Filter `bucket == "fail"`. Each has a `link` with the AZDO build URL. Multiple f
 - `https://dev.azure.com/{org}/{project}/_build/results?buildId={id}`
 - `https://{org}.visualstudio.com/{project}/_build/results?buildId={id}`
 
-Extract `{org}`, `{project}` (may be a GUID — that's fine), and `{buildId}`.
+Extract `{org}`, `{project}` (may be a GUID — that's fine), `{buildId}`, and the full `{orgUrl}` (either `https://dev.azure.com/{org}` or `https://{org}.visualstudio.com`). Use `{orgUrl}` consistently in all subsequent `az` commands.
 
 ### 2. Get Build Overview
 
 ```powershell
-az pipelines runs show --id {buildId} --org https://dev.azure.com/{org} --project {project}
+az pipelines runs show --id {buildId} --org {orgUrl} --project {project}
 ```
 
 ### 3. Get Failed Jobs & Tasks (Timeline)
 
 ```powershell
-az devops invoke --area build --resource timeline --route-parameters buildId={buildId} --org https://dev.azure.com/{org} --project {project} --query "records[?result=='failed'] | [].{name:name, type:type, result:result, log:log, issues:issues, errorCount:errorCount}" --output json
+az devops invoke --area build --resource timeline --route-parameters project={project} buildId={buildId} --org {orgUrl} --project {project} --query "records[?result=='failed'] | [].{name:name, type:type, result:result, log:log, issues:issues, errorCount:errorCount}" --output json
 ```
 
 Check the `issues` array first — it often contains the root cause directly.
@@ -56,13 +56,13 @@ Check the `issues` array first — it often contains the root cause directly.
 Get log URLs from failed timeline records, then fetch by log ID:
 
 ```powershell
-az devops invoke --area build --resource logs --route-parameters buildId={buildId} logId={logId} --org https://dev.azure.com/{org} --project {project} --output json
+az devops invoke --area build --resource logs --route-parameters project={project} buildId={buildId} logId={logId} --org {orgUrl} --project {project} --output json
 ```
 
 ### 5. Check for .binlog Artifacts
 
 ```powershell
-az pipelines runs artifact list --run-id {buildId} --org https://dev.azure.com/{org} --project {project}
+az pipelines runs artifact list --run-id {buildId} --org {orgUrl} --project {project}
 ```
 
 Look for artifact names containing `binlog`, `msbuild`, or `build-log`.
@@ -72,7 +72,7 @@ Look for artifact names containing `binlog`, `msbuild`, or `build-log`.
 ```powershell
 $tempDir = Join-Path $env:TEMP "azdo-binlog-$buildId"
 New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
-az pipelines runs artifact download --artifact-name "{artifactName}" --path $tempDir --run-id {buildId} --org https://dev.azure.com/{org} --project {project}
+az pipelines runs artifact download --artifact-name "{artifactName}" --path $tempDir --run-id {buildId} --org {orgUrl} --project {project}
 ```
 
 Key `binlogtool` commands:
