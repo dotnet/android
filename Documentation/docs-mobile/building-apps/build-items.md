@@ -343,7 +343,7 @@ JNI library preload mechanism. By default, all such libraries will be loaded
 by the runtime early during application startup in order to assure their
 proper initialization. However, in some cases it might not be the desired
 behavior and this item group allows exclusion of libraries from this process
-on individual basis.
+on an individual basis.
 
 Some framework libraries which must be loaded at application startup will not
 be affected if included in this item group.

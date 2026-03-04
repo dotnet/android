@@ -283,7 +283,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	public PackageNamingPolicy PackageNamingPolicy { get; set; }
 	public List<ITaskItem> NativeLibraries { get; set; } = [];
 	public ICollection<ITaskItem>? NativeLibrariesNoJniPreload { get; set; }
-	public ICollection<ITaskItem>? NativeLibrarysAlwaysJniPreload { get; set; }
+	public ICollection<ITaskItem>? NativeLibrariesAlwaysJniPreload { get; set; }
 	public bool MarshalMethodsEnabled { get; set; }
 	public bool ManagedMarshalMethodsLookupEnabled { get; set; }
 	public bool IgnoreSplitConfigs { get; set; }
@@ -686,7 +686,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		var nameMutations = new List<string> ();
 		var dsoNamesBlob = new LlvmIrStringBlob ();
 		int nameMutationsCount = -1;
-		ICollection<string> ignorePreload = MakeJniPreloadIgnoreCollection (Log, NativeLibrarysAlwaysJniPreload, NativeLibrariesNoJniPreload);
+		ICollection<string> ignorePreload = MakeJniPreloadIgnoreCollection (Log, NativeLibrariesAlwaysJniPreload, NativeLibrariesNoJniPreload);
 
 		for (int i = 0; i < dsos.Count; i++) {
 			string name = dsos[i].name;
