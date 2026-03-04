@@ -541,16 +541,70 @@ Fixed by adding `ThrowIfFailed` consistently.
 
 ---
 
+## 52. Never use the null-forgiving operator (`!`)
+
+**PR #283** (review 3892527868, `AdbRunner.cs:195` and `AndroidEnvironmentHelper.cs:20`) — Code had parameters typed as nullable but then used `!` to suppress warnings at call sites. Jonathan flagged both spots.
+
+> "We should avoid using `!`, do you even need it if you use our `IsNullOrEmpty()` extension method?"
+
+> "Why are the paths allowed to be null? Then we have `!` below? Can we make sure `copilot-instructions.md` says to never use `!` and to actually fix nullable warnings correctly?"
+
+**Why it matters:** The null-forgiving operator `!` silences the compiler without fixing the bug. If a value can actually be null at runtime, `!` turns a compile-time warning into a `NullReferenceException`. The correct fix is to either make the parameter non-nullable (if null is never valid) or add a proper null check. AI frequently sprinkles `!` to make warnings disappear.
+
+---
+
+## 53. Add overloads to reduce caller ceremony
+
+**PR #283** (review 3892527868, `AdbRunner.cs:207`) — Multiple callers were calling `writer.ToString()` before passing to `ThrowIfFailed()`. Jonathan suggested adding a `StringWriter` overload instead.
+
+> "Should `ThrowIfFailed()` just have an overload for `StringWriter` and you wouldn't have to call `ToString()` from callers?"
+
+**Why it matters:** When every caller has to perform the same conversion before calling a method, the conversion belongs inside the method (or an overload). This reduces boilerplate, eliminates a class of copy-paste errors, and makes the API easier to use correctly.
+
+---
+
+## 54. Delete unused overloads
+
+**PR #283** (review 3892527868, `AdbRunner.cs:233`) — An overload existed but wasn't needed.
+
+> "Can we delete this overload?"
+
+**Why it matters:** Dead code is a maintenance burden and a trap for readers who assume it exists for a reason. AI tends to generate speculative overloads "for completeness" — review each public method and ask whether any caller actually needs it.
+
+---
+
+## 55. Prefer C# pattern matching
+
+**PR #283** (review 3892527868, `AdbRunner.cs:312`) — Code used traditional `if`/`else` chains to check types or values. Jonathan asked for pattern matching and to update `copilot-instructions.md`.
+
+> "Can this use C# pattern matching, and update `copilot-instructions.md` to do this for all new code?"
+
+**Why it matters:** Pattern matching (`is`, `switch` expressions, property patterns) is more concise, avoids unnecessary casts, and makes exhaustiveness checks possible. Encoding this in `copilot-instructions.md` prevents AI from generating old-style conditional chains.
+
+---
+
+## 56. Section-separator comments are `#region` in disguise
+
+**PR #283** (review 3892527868, `RunnerIntegrationTests.cs:151`) — Test files had block comments acting as visual section dividers between groups of tests.
+
+> "It doesn't seem like we should be writing comments like this, they are basically `#region` and `#endregion`"
+
+**Why it matters:** This extends the `#region` ban (Finding #12). Any mechanism to partition code into visual "sections" — whether `#region`, banner comments, or ASCII art dividers — signals the file should be split or the test organization rethought. AI loves generating these as pseudo-structure.
+
+---
+
 ## Summary of Themes
 
 | Theme | Occurrences | Key Lesson |
 |-------|------------|------------|
 | **AI reinvents the wheel** | AndroidToolRunner vs ProcessUtils, rewriting downstream logic | Check existing code FIRST — AI doesn't look at what's already there |
-| **AI over-engineers** | HttpClient injection, IsElevated, speculative code | Remove code until you need it (YAGNI) |
+| **AI over-engineers** | HttpClient injection, IsElevated, speculative code, unused overloads | Remove code until you need it (YAGNI) |
 | **AI ignores target framework** | netstandard2.0, new lang features | Always check API availability against the lowest TFM |
 | **AI swallows errors** | Empty catch blocks, chmod failure, checksumType, OperationCanceledException, unchecked exit codes | Fail fast with clear errors; apply error handling consistently |
-| **AI generates sloppy structure** | One type per file, #region, empty lines, naming, `public` when `internal` suffices | Encode conventions in copilot-instructions.md |
-| **API design** | `List<T>` vs `IReadOnlyList<T>`, unused CancellationToken, string args vs structured args | Public APIs are contracts — get them right the first time |
+| **AI generates sloppy structure** | One type per file, #region, section-separator comments, empty lines, naming, `public` when `internal` suffices | Encode conventions in copilot-instructions.md |
+| **AI fights the type system** | Null-forgiving `!`, nullable params that shouldn't be, `!` to silence warnings | Fix nullability at the source; never use `!` |
+| **API design** | `List<T>` vs `IReadOnlyList<T>`, unused CancellationToken, string args vs structured args, missing overloads | Public APIs are contracts — get them right the first time |
+| **Modern C# idioms** | Pattern matching, records, file-scoped namespaces | Use modern syntax when available on the target framework |
 | **Performance awareness** | ArrayPool, XmlReader, p/invoke, list merging, cached arrays | Small allocations add up in library code |
 | **Security & correctness** | Zip Slip, command injection, path traversal, mandatory checksums, license consent | Libraries must be correct by default |
 | **AI reviewer can be wrong** | ANDROID_HOME vs ANDROID_SDK_ROOT, over-mocking | Always verify AI claims against authoritative docs |

@@ -1,6 +1,6 @@
 # Android Tools Review Rules
 
-Distilled from [CODE_REVIEW_POSTMORTEM.md](../../../docs/CODE_REVIEW_POSTMORTEM.md) — 51 findings
+Distilled from [CODE_REVIEW_POSTMORTEM.md](../../../docs/CODE_REVIEW_POSTMORTEM.md) — 56 findings
 from reviews by @jonathanpeppers on PRs #274, #275, #281–#284.
 
 ---
@@ -77,11 +77,11 @@ Framework. Every API call must work on both targets.
 |-------|-----------------|
 | **One type per file** | Each public class, struct, enum, or interface must be in its own `.cs` file named after the type. No multiple top-level types in a single file. |
 | **File-scoped namespaces** | New files should use `namespace Foo;` (not `namespace Foo { ... }`). Don't reformat existing files. |
-| **No #region directives** | `#region` hides code and makes reviews harder. Remove them. |
+| **No #region directives** | `#region` hides code and makes reviews harder. Remove them. This also applies to banner/section-separator comments (e.g., `// --- Device Tests ---`) — they serve the same purpose as `#region` and signal the file should be split instead. |
 | **Use `record` for data types** | Immutable data-carrier types (progress, version info, license info) should be `record` types. They get value equality, `ToString()`, and deconstruction for free. |
 | **Remove unused code** | Dead methods, speculative helpers, and code "for later" should be removed. Ship only what's needed. |
 
-**Postmortem refs:** #9, #12, #25, #28
+**Postmortem refs:** #9, #12, #25, #28, #56
 
 ---
 
@@ -133,7 +133,7 @@ These are patterns that AI-generated code consistently gets wrong:
 | Pattern | What to watch for |
 |---------|------------------|
 | **Reinventing the wheel** | AI creates new infrastructure (e.g., `AndroidToolRunner`) instead of using existing utilities (`ProcessUtils`). ALWAYS check if a similar utility exists before accepting new wrapper code. This is the most expensive AI pattern — hundreds of lines of plausible code that duplicates what's already there. |
-| **Over-engineering** | HttpClient injection "for testability", elevation auto-detection, speculative helper classes. If no caller needs it today, remove it. |
+| **Over-engineering** | HttpClient injection "for testability", elevation auto-detection, speculative helper classes, unused overloads. If no caller needs it today, remove it. |
 | **Swallowed errors** | AI catch blocks love to eat exceptions silently. Check EVERY catch block. Also check that exit codes are checked consistently — if `ListDevicesAsync` checks exit codes, `StopEmulatorAsync` should too. |
 | **Ignoring target framework** | AI generates code for the newest .NET. Check every API call against netstandard2.0. |
 | **Sloppy structure** | Multiple types in one file, block-scoped namespaces, #region directives, classes where records would do. New helpers marked `public` when `internal` suffices. |
@@ -141,8 +141,9 @@ These are patterns that AI-generated code consistently gets wrong:
 | **Over-mocking** | Not everything needs to be mocked. Network integration tests with `Assert.Ignore` on failure are fine and catch real API changes that mocks never will. |
 | **Docs describe intent not reality** | AI doc comments often describe what the code *should* do, not what it *actually* does. Review doc comments against the implementation. |
 | **Unused parameters** | AI adds `CancellationToken` parameters but never observes them, or accepts `additionalArgs` as a string and interpolates it into a command. Unused CancellationToken is a broken contract; string args are injection risks. |
+| **Null-forgiving operator (`!`)** | Never use `!` to suppress nullable warnings. If the value can be null, add a proper null check. If it can't be null, make the parameter/variable non-nullable. AI frequently sprinkles `!` to make the compiler happy — this turns compile-time warnings into runtime `NullReferenceException`s. Use `IsNullOrEmpty()` extension methods or null-coalescing instead. |
 
-**Postmortem refs:** #7, #28, #29, #40, #41, #42, #49, #50, #51
+**Postmortem refs:** #7, #28, #29, #40, #41, #42, #49, #50, #51, #52, #54
 
 ---
 
@@ -154,8 +155,10 @@ These are patterns that AI-generated code consistently gets wrong:
 | **New helpers default to `internal`** | New utility methods should be `internal` unless a confirmed external consumer (e.g., `dotnet/android`) needs them. Use `InternalsVisibleTo` for test access. |
 | **Structured args, not string interpolation** | Additional arguments to processes should be `IEnumerable<string>`, not a single `string` that gets interpolated. Use `ProcessUtils.CreateProcessStartInfo()` which handles `ArgumentList` safely. |
 | **Honor `CancellationToken`** | If a method accepts a `CancellationToken`, it MUST observe it — register a callback to kill processes, check `IsCancellationRequested` in loops, pass it to downstream async calls. Don't just accept it for API completeness. |
+| **Add overloads to reduce caller ceremony** | If every caller performs the same conversion before calling a method (e.g., `writer.ToString()` before `ThrowIfFailed()`), the method should have an overload that accepts the unconverted type directly. |
+| **Prefer C# pattern matching** | Use `is`, `switch` expressions, and property patterns instead of `if`/`else` type-check chains. Pattern matching is more concise, avoids casts, and enables exhaustiveness checks. |
 
-**Postmortem refs:** #46, #47, #49, #50
+**Postmortem refs:** #46, #47, #49, #50, #53, #55
 
 ---
 
