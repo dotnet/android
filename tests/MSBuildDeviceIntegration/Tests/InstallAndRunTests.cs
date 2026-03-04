@@ -207,6 +207,11 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("AndroidUseInterpreter", "true");
 
+			// Enable hot reload log messages from the delta client
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidEnvironment", "env.txt") {
+				TextContent = () => "HOTRELOAD_DELTA_CLIENT_LOG_MESSAGES=[HotReload]",
+			});
+
 			// Add a Console.WriteLine that will appear in logcat
 			proj.MainActivity = proj.DefaultMainActivity.Replace (
 				"//${AFTER_ONCREATE}",
@@ -245,19 +250,15 @@ namespace UnderTest
 			var output = new StringBuilder ();
 			var initialMessageEvent = new ManualResetEventSlim ();
 			var hotReloadAppliedEvent = new ManualResetEventSlim ();
-			bool foundInitialMessage = false;
-			bool foundHotReloadMessage = false;
 
 			process.OutputDataReceived += (sender, e) => {
 				if (e.Data != null) {
 					lock (locker) {
 						output.AppendLine (e.Data);
 						if (e.Data.Contains (initialMessage)) {
-							foundInitialMessage = true;
 							initialMessageEvent.Set ();
 						}
 						if (e.Data.Contains (hotReloadMessage)) {
-							foundHotReloadMessage = true;
 							hotReloadAppliedEvent.Set ();
 						}
 					}
@@ -269,7 +270,6 @@ namespace UnderTest
 						output.AppendLine ($"STDERR: {e.Data}");
 						// dotnet watch status messages (e.g., "changes applied") go to stderr
 						if (e.Data.Contains (hotReloadMessage)) {
-							foundHotReloadMessage = true;
 							hotReloadAppliedEvent.Set ();
 						}
 					}
