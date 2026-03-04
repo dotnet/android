@@ -15,6 +15,13 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 
 	public class DownloadUri : MTask, ICancelableTask
 	{
+		const int DefaultMaxRetries = 3;
+		static readonly TimeSpan[] RetryDelays = {
+			TimeSpan.FromSeconds (5),
+			TimeSpan.FromSeconds (15),
+			TimeSpan.FromSeconds (30),
+		};
+
 		public DownloadUri ()
 		{
 		}
@@ -26,6 +33,8 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 		public ITaskItem[]  DestinationFiles    { get; set; }
 
 		public string       HashHeader          { get; set; }
+
+		public int          MaxRetries          { get; set; } = DefaultMaxRetries;
 
 		CancellationTokenSource cancellationTokenSource;
 
@@ -89,21 +98,35 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 			var tempPath = Path.Combine (dp, "." + dn + ".download");
 			Directory.CreateDirectory(dp);
 
-			Log.LogMessage (MessageImportance.Normal, $"Downloading `{uri}` to `{tempPath}`.");
-			try {
-				using (var r = await client.GetAsync (uri, HttpCompletionOption.ResponseHeadersRead, source.Token)) {
-					r.EnsureSuccessStatusCode ();
-					using (var s = await r.Content.ReadAsStreamAsync ())
-					using (var o = File.OpenWrite (tempPath)) {
-						await s.CopyToAsync (o, 4096, source.Token);
+			int retries = Math.Max (0, MaxRetries);
+			for (int attempt = 0; attempt <= retries; attempt++) {
+				Log.LogMessage (MessageImportance.Normal, $"Downloading `{uri}` to `{tempPath}` (attempt {attempt + 1} of {retries + 1}).");
+				try {
+					using (var r = await client.GetAsync (uri, HttpCompletionOption.ResponseHeadersRead, source.Token)) {
+						r.EnsureSuccessStatusCode ();
+						using (var s = await r.Content.ReadAsStreamAsync ())
+						using (var o = File.OpenWrite (tempPath)) {
+							await s.CopyToAsync (o, 4096, source.Token);
+						}
 					}
+					Log.LogMessage (MessageImportance.Low, $"mv '{tempPath}' '{destinationFile}'.");
+					File.Move (tempPath, destinationFile.ItemSpec);
+					return destinationFile;
 				}
-				Log.LogMessage (MessageImportance.Low, $"mv '{tempPath}' '{destinationFile}'.");
-				File.Move (tempPath, destinationFile.ItemSpec);
-			}
-			catch (Exception e) {
-				Log.LogError ("Unable to download URL `{0}` to `{1}`: {2}", uri, destinationFile, e.Message);
-				Log.LogErrorFromException (e);
+				catch (Exception e) when (attempt < retries && !source.IsCancellationRequested) {
+					var delay = attempt < RetryDelays.Length ? RetryDelays [attempt] : RetryDelays [RetryDelays.Length - 1];
+					Log.LogWarning ("Failed to download URL `{0}` (attempt {1} of {2}): {3}. Retrying in {4} seconds.",
+						uri, attempt + 1, retries + 1, e.Message, (int) delay.TotalSeconds);
+					try {
+						File.Delete (tempPath);
+					} catch {
+					}
+					await TTask.Delay (delay, source.Token);
+				}
+				catch (Exception e) {
+					Log.LogError ("Unable to download URL `{0}` to `{1}`: {2}", uri, destinationFile, e.Message);
+					Log.LogErrorFromException (e);
+				}
 			}
 			return destinationFile;
 		}
