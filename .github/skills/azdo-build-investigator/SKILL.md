@@ -9,7 +9,7 @@ Given a build URL or GitHub PR URL, fetch run details, find failed jobs/tasks, d
 
 ## Prerequisites
 
-All three tools below are **required only when needed** (gh for PR URLs, az always, binlogtool for .binlog analysis). If any is missing, **stop immediately**, show the relevant setup link, and do NOT install on the user's behalf.
+The tools below are required as follows: `az` is always required; `gh` is required only for GitHub PR URLs; `binlogtool` is required only for .binlog analysis. If any required tool is missing for the current task, **stop immediately**, show the relevant setup link, and do NOT install on the user's behalf.
 
 | Tool | Check | Install / Docs |
 |------|-------|----------------|
@@ -56,7 +56,8 @@ Check the `issues` array first — it often contains the root cause directly.
 Get log URLs from failed timeline records, then fetch by log ID:
 
 ```powershell
-az devops invoke --area build --resource logs --route-parameters project={project} buildId={buildId} logId={logId} --org {orgUrl} --project {project} --output json
+# The logs endpoint returns raw text; save to a file instead of requesting JSON
+az devops invoke --area build --resource logs --route-parameters project={project} buildId={buildId} logId={logId} --org {orgUrl} --project {project} --out-file "build-{buildId}-log-{logId}.log"
 ```
 
 ### 5. Check for .binlog Artifacts
