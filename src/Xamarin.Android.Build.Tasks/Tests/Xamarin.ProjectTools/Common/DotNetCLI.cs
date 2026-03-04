@@ -31,7 +31,7 @@ namespace Xamarin.ProjectTools
 		/// </summary>
 		/// <param name="args">command arguments</param>
 		/// <returns>A started Process instance. Caller is responsible for disposing.</returns>
-		protected Process ExecuteProcess (params string [] args)
+		protected Process ExecuteProcess (string [] args, string workingDirectory = null)
 		{
 			var p = new Process ();
 			p.StartInfo.FileName = Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet");
@@ -40,6 +40,9 @@ namespace Xamarin.ProjectTools
 			p.StartInfo.UseShellExecute = false;
 			p.StartInfo.RedirectStandardOutput = true;
 			p.StartInfo.RedirectStandardError = true;
+			if (!string.IsNullOrEmpty (workingDirectory)) {
+				p.StartInfo.WorkingDirectory = workingDirectory;
+			}
 			p.StartInfo.SetEnvironmentVariable ("DOTNET_MULTILEVEL_LOOKUP", "0");
 			p.StartInfo.SetEnvironmentVariable ("PATH", TestEnvironment.DotNetPreviewDirectory + Path.PathSeparator + Environment.GetEnvironmentVariable ("PATH"));
 			if (TestEnvironment.UseLocalBuildOutput) {
@@ -191,7 +194,7 @@ namespace Xamarin.ProjectTools
 				arguments.AddRange (parameters);
 			}
 
-			return ExecuteProcess (arguments.ToArray ());
+			return ExecuteProcess (arguments.ToArray (), workingDirectory: ProjectDirectory);
 		}
 
 		public IEnumerable<string> LastBuildOutput {
