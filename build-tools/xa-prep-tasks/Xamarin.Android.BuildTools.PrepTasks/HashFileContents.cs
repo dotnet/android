@@ -56,7 +56,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 		{
 			var     hashes  = new List<TaskItem> (Files.Length);
 			byte[]  block   = new byte [4096];
-			using (var complete = System.Security.Cryptography.HashAlgorithm.Create (HashAlgorithm)) {
+			using (var complete = CreateHashAlgorithm (HashAlgorithm)) {
 				foreach (var file in Files) {
 					var hash    = ProcessFile (complete, block, file.ItemSpec);
 					var e       = new TaskItem (hash);
@@ -87,7 +87,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				}
 				memoryStream.Seek (0, SeekOrigin.Begin);
 
-				using (var fileHash = System.Security.Cryptography.HashAlgorithm.Create (HashAlgorithm)) {
+				using (var fileHash = CreateHashAlgorithm (HashAlgorithm)) {
 					int read;
 					while ((read = memoryStream.Read (block, 0, block.Length)) > 0) {
 						complete.TransformBlock (block, 0, read, block, 0);
@@ -103,6 +103,17 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 		{
 			return string.Join ("", hash.Select (b => b.ToString ("x2")));
 		}
+
+		#pragma warning disable CA5350 // used for content hashing, not security
+		static System.Security.Cryptography.HashAlgorithm CreateHashAlgorithm (string name) =>
+			name.ToUpperInvariant () switch {
+				"SHA1"      => SHA1.Create (),
+				"SHA256"    => SHA256.Create (),
+				"SHA384"    => SHA384.Create (),
+				"SHA512"    => SHA512.Create (),
+				_           => throw new NotSupportedException ($"Hash algorithm '{name}' is not supported."),
+			};
+		#pragma warning restore CA5350
 	}
 }
 

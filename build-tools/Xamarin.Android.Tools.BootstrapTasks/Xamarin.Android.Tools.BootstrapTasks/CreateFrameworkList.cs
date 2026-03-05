@@ -65,7 +65,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					new XAttribute ("AssemblyName", assemblyName.Name),
 					new XAttribute ("Version", version),
 					new XAttribute ("PublicKeyToken", publicKeyToken),
-					new XAttribute ("ProcessorArchitecture", assemblyName.ProcessorArchitecture.ToString ()));
+					new XAttribute ("ProcessorArchitecture", "MSIL"));
 		}
 
 		static string Nullable (string value) => string.IsNullOrEmpty (value) ? null : value;
