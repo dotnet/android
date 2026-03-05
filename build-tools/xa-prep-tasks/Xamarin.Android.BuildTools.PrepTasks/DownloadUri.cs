@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -53,13 +54,18 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 			var source  = cancellationTokenSource = new CancellationTokenSource ();
 			var tasks   = new Task<ITaskItem> [SourceUris.Length];
 
-			// LGTM recommendation
-			//
-			// Using HttpClient without providing a platform specific handler (WinHttpHandler or CurlHandler) where the CheckCertificateRevocationList property is set
-			// to true, will allow revoked certificates to be accepted by the HttpClient as valid.
-			//
-			var handler = new HttpClientHandler {
-				CheckCertificateRevocationList = true,
+			// Configure cert revocation checking in a fail-open state to avoid intermittent
+			// failures on macOS when the CRL/OCSP endpoint is unreachable.
+			// Matches the approach in dotnet/arcade's DownloadFile task:
+			// https://github.com/dotnet/arcade/blob/a07b621/src/Microsoft.DotNet.Arcade.Sdk/src/DownloadFile.cs#L122-L145
+			var handler = new SocketsHttpHandler ();
+			handler.SslOptions.CertificateChainPolicy = new X509ChainPolicy {
+				RevocationMode = X509RevocationMode.Online,
+				RevocationFlag = X509RevocationFlag.ExcludeRoot,
+				VerificationFlags =
+					X509VerificationFlags.IgnoreCertificateAuthorityRevocationUnknown |
+					X509VerificationFlags.IgnoreEndRevocationUnknown,
+				VerificationTimeIgnored = true,
 			};
 
 			using (var client = new HttpClient (handler)) {
