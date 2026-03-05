@@ -239,11 +239,13 @@ _ResolveAssemblies MSBuild target.
     <ItemGroup>
       <_ResolvedNativeLibraries Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.so' " />
     </ItemGroup>
-    <ItemGroup>
+    <ItemGroup Condition="'$(_AndroidRuntime)' == 'Mono'">
       <_MonoComponent Condition=" '$(AndroidEnableProfiler)' == 'true' " Include="diagnostics_tracing" />
       <_MonoComponent Condition=" '$(AndroidUseInterpreter)' == 'true' " Include="hot_reload" />
       <_MonoComponent Condition=" '$(AndroidIncludeDebugSymbols)' == 'true' " Include="debugger" />
       <_MonoComponent Condition=" '$(_AndroidExcludeMarshalIlgenComponent)' != 'true' " Include="marshal-ilgen" />
+    </ItemGroup>
+    <ItemGroup>
       <!-- Filename without extension -->
       <_ExcludedNativeLibraries Condition=" '$(_AndroidIncludeSystemGlobalizationNative)' != 'true' " Include="libSystem.Globalization.Native" />
       <_ExcludedNativeLibraries Condition=" '$(_AndroidEnableNativeStackTracing)' != 'true' " Include="libxamarin-native-tracing" />
@@ -274,6 +276,17 @@ _ResolveAssemblies MSBuild target.
         KnownRuntimeNativeLibraries="@(_KnownRuntimeNativeLibrary)">
       <Output TaskParameter="OutputLibraries" ItemName="FrameworkNativeLibrary" />
     </ProcessNativeLibraries>
+
+    <ItemGroup Condition=" '$(AndroidEnableCoreClrDebugger)' == 'true' and '$(_AndroidRuntime)' == 'CoreCLR' ">
+      <AndroidNativeLibrary Include="$(CoreClrDebuggerNativeLibraryPath)\arm64-v8a\libremotemscordbitarget.so"
+                            Condition="Exists('$(CoreClrDebuggerNativeLibraryPath)\arm64-v8a\libremotemscordbitarget.so')">
+        <Abi>arm64-v8a</Abi>
+      </AndroidNativeLibrary>
+      <AndroidNativeLibrary Include="$(CoreClrDebuggerNativeLibraryPath)\x86_64\libremotemscordbitarget.so"
+                            Condition="Exists('$(CoreClrDebuggerNativeLibraryPath)\x86_64\libremotemscordbitarget.so')">
+        <Abi>x86_64</Abi>
+      </AndroidNativeLibrary>
+    </ItemGroup>
   </Target>
 
 </Project>

@@ -237,5 +237,64 @@ namespace Xamarin.Android.Build.Tests
 				Assert.AreEqual (expectedUpdatedValue, envvars[httpClientHandlerVarName]);
 			}
 		}
+
+		[Test]
+		public void CheckCoreClrDebuggerEnvironmentVariables ()
+		{
+			const string supportedAbis = "arm64-v8a;x86_64";
+
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = false,
+			};
+
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("AndroidEnableCoreClrDebugger", "true");
+			proj.SetAndroidSupportedAbis (supportedAbis);
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				string intermediateOutputDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true, AndroidRuntime.CoreCLR);
+				Dictionary<string, string> envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles, AndroidRuntime.CoreCLR);
+				Assert.IsTrue (envvars.Count > 0, $"No environment variables defined");
+
+				Assert.IsTrue (envvars.ContainsKey ("CORECLR_ENABLE_PROFILING"), "Environment should contain CORECLR_ENABLE_PROFILING");
+				Assert.AreEqual ("1", envvars ["CORECLR_ENABLE_PROFILING"], "CORECLR_ENABLE_PROFILING should be '1'");
+
+				Assert.IsTrue (envvars.ContainsKey ("CORECLR_PROFILER"), "Environment should contain CORECLR_PROFILER");
+				Assert.AreEqual ("{9DC623E8-C88F-4FD5-AD99-77E67E1D9631}", envvars ["CORECLR_PROFILER"], "CORECLR_PROFILER GUID mismatch");
+
+				Assert.IsTrue (envvars.ContainsKey ("CORECLR_PROFILER_PATH"), "Environment should contain CORECLR_PROFILER_PATH");
+				Assert.AreEqual ("libremotemscordbitarget.so", envvars ["CORECLR_PROFILER_PATH"], "CORECLR_PROFILER_PATH should point to libremotemscordbitarget.so");
+
+				Assert.IsFalse (envvars.ContainsKey ("MONO_GC_PARAMS"), "CoreCLR builds should not set MONO_GC_PARAMS");
+				Assert.IsFalse (envvars.ContainsKey ("MONO_DEBUG"), "CoreCLR builds should not set MONO_DEBUG");
+			}
+		}
+
+		[Test]
+		public void CheckCoreClrDebuggerNotEnabledInRelease ()
+		{
+			const string supportedAbis = "arm64-v8a";
+
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+			};
+
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetAndroidSupportedAbis (supportedAbis);
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				string intermediateOutputDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true, AndroidRuntime.CoreCLR);
+				Dictionary<string, string> envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles, AndroidRuntime.CoreCLR);
+
+				Assert.IsFalse (envvars.ContainsKey ("CORECLR_ENABLE_PROFILING"), "Release builds should not enable CoreCLR profiling");
+				Assert.IsFalse (envvars.ContainsKey ("CORECLR_PROFILER"), "Release builds should not set CORECLR_PROFILER");
+			}
+		}
 	}
 }
