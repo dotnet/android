@@ -1494,9 +1494,35 @@ because xbuild doesn't support framework reference assemblies.
         KeepDuplicates="false" />
   </ItemGroup>
 
-  <!-- Set Abi on all items. -->
+  <!-- The project's own assembly ($(TargetName)$(TargetExt)) may NOT be in
+       @(ManagedAssemblyToLink) — ILLink passes it as a TrimmerRootAssembly via the -a flag
+       rather than including it in the managed assembly list (this happens in NativeAOT builds).
+       We include it explicitly using the same pattern as NativeAOT.targets:144
+       (_AndroidComputeIlcCompileInputs).
+
+       We use Exclude="@(_AfterILLinkAssemblies)" instead of KeepDuplicates="false" to avoid
+       duplicates. KeepDuplicates compares items INCLUDING metadata, so if the same assembly
+       came from @(ManagedAssemblyToLink) with rich metadata (NuGetPackageId, etc.), it would
+       be considered distinct from a bare Include with no metadata — leading to duplicate items
+       that cause GetPerArchAssemblies() to throw "duplicate key" errors. Exclude compares
+       by ItemSpec only, which is what we need. -->
+  <ItemGroup>
+    <_AfterILLinkAssemblies
+        Include="$(IntermediateLinkDir)$(TargetName)$(TargetExt)"
+        Exclude="@(_AfterILLinkAssemblies)"
+        Condition=" Exists('$(IntermediateLinkDir)$(TargetName)$(TargetExt)') " />
+  </ItemGroup>
+
+  <!-- Set Abi on all items, and ensure the root assembly has HasMonoAndroidReference=true
+       so that IsAndroidAssembly() returns true for it (it may lack TargetFrameworkIdentifier/
+       TargetPlatformIdentifier metadata if it came from the explicit Include above rather
+       than from @(ManagedAssemblyToLink)). This Update is harmless if the root assembly was
+       already in @(ManagedAssemblyToLink) — it will already have this metadata or equivalent. -->
   <ItemGroup>
     <_AfterILLinkAssemblies Update="@(_AfterILLinkAssemblies)" Abi="$(_AfterILLinkAbi)" />
+    <_AfterILLinkAssemblies
+        Update="$(IntermediateLinkDir)$(TargetName)$(TargetExt)"
+        HasMonoAndroidReference="true" />
   </ItemGroup>
 
   <!-- Classify user vs framework assemblies for FindJavaObjectsStep.
