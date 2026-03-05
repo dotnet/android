@@ -2,6 +2,8 @@ using System;
 using System.IO;
 using System.Text;
 
+using Xamarin.Android.Tools;
+
 namespace ApplicationUtility;
 
 class Utilities
@@ -70,5 +72,17 @@ class Utilities
 		// TODO: return both bytes and a "human readable" value (kb, mb etc)
 		// TODO: format the byte size according to the current culture
 		return val.ToString ();
+	}
+
+	// TODO: consider replacing all uses of `AndroidTargetArch` with `NativeArchitecture`
+	public static NativeArchitecture TargetArchToNative (AndroidTargetArch arch)
+	{
+		return arch switch {
+			AndroidTargetArch.Arm    => NativeArchitecture.Arm,
+			AndroidTargetArch.Arm64  => NativeArchitecture.Arm64,
+			AndroidTargetArch.X86    => NativeArchitecture.X86,
+			AndroidTargetArch.X86_64 => NativeArchitecture.X64,
+			_                        => throw new NotSupportedException ($"Unsupported Android target architecture '{arch}'")
+		};
 	}
 }

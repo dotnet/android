@@ -88,27 +88,27 @@ class ExtractAssemblyCommand : BaseProgramCommand
 	string? outputDir;
 	bool useRegex;
 	bool extractPdb;
+	bool noDecompress;
 	string? architectures;
 
 	public ExtractAssemblyCommand ()
-		: base ("assembly", "Extract assemblies from the application package", synopsis: "assembly [OPTIONS] <input_file> <assembly_name> [<assembly_name>]")
+		: base ("assembly", "Extract assemblies from the application package", synopsis: "assembly [OPTIONS] <input_file> [<assembly_name> [<assembly_name> ...]]")
 	{
 		Options.Add ("output|o=", $"Write output to directory `VALUE`; Defaults to '{AssembliesOutputDirDefault}'", v => outputDir = v);
 		Options.Add ("a|arch=", "Extract only entries for the architectures specified by `VALUE`, a comma-separated list of architecture names. Defaults to 'all'", v => architectures = v);
 		Options.Add ("r", "Treat each <assembly_name> as a regular expression.", v => useRegex = v != null);
 		Options.Add ("d", "Extract also the accompanying PDB file, if found.", v => extractPdb = v != null);
+		Options.Add ("c", "Do not decompress the assembly data if it is compressed in the container.", v => noDecompress = v != null);
 		Options.Add ("");
-		Options.Add ("<assembly_name> does not have to specify the extension. By default assembly names are treated as standard glob patterns.");
+		Options.Add ("<assembly_name> does not have to specify the extension. By default assembly names are treated as simplified glob patterns.");
+		Options.Add ("If <assembly_name> is omitted, all assemblies will be extracted.");
+		Options.Add ("If the glob pattern contains any path segments, they will be ignored. The `**` pattern will be ignored as well.");
+		Options.Add ("Glob patterns, therefore, should contain only the `*` and `?` components.");
 		AddArchNamesForHelp ();
 	}
 
 	protected override int DoInvoke (List<string> rest)
 	{
-		if (rest.Count < 2) {
-			Log.Error ("At least two positional arguments are required. See `extract assembly --help` for more information.");
-			return 1;
-		}
-
 		IAspect? aspect = GetAspect (rest[0]);
 		if (aspect == null) {
 			return 1;
@@ -128,11 +128,16 @@ class ExtractAssemblyCommand : BaseProgramCommand
 			archList = architectures;
 		}
 
-		var assemblyPatterns = new List<string> (rest.Slice (1, rest.Count - 1));
+		var assemblyPatterns = rest.Count switch {
+			1 => null,
+			_ => new List<string> (rest.Slice (1, rest.Count - 1))
+		};
+
 		var options = new AssemblyExtractorOptions (targetDir, assemblyPatterns) {
-			UseRegex = useRegex,
-			ExtractPDB = extractPdb,
 			Architectures = ArchitectureName.ParseList (archList),
+			ExtractPDB = extractPdb,
+			NoDecompress = noDecompress,
+			UseRegex = useRegex,
 		};
 
 		return Extractor.ExtractMultiple<ApplicationAssembly, AssemblyExtractorOptions> (aspect, targetDir, options) ? 0 : 1;
