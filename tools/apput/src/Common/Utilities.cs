@@ -85,4 +85,27 @@ class Utilities
 			_                        => throw new NotSupportedException ($"Unsupported Android target architecture '{arch}'")
 		};
 	}
+
+	public static NativeArchitecture AssemblyStoreAbiToNative (AssemblyStoreABI abi)
+	{
+		return abi switch {
+			AssemblyStoreABI.Arm   => NativeArchitecture.Arm,
+			AssemblyStoreABI.Arm64 => NativeArchitecture.Arm64,
+			AssemblyStoreABI.X86   => NativeArchitecture.X86,
+			AssemblyStoreABI.X64   => NativeArchitecture.X64,
+			_                      => throw new NotSupportedException ($"Unsupported assembly store ABI '{abi}'")
+		};
+	}
+
+	public static string ArchNameForPath (NativeArchitecture arch)
+	{
+		return arch switch {
+			NativeArchitecture.Arm     => "arm",
+			NativeArchitecture.Arm64   => "arm64",
+			NativeArchitecture.X86     => "x86",
+			NativeArchitecture.X64     => "x86-64",
+			NativeArchitecture.Unknown => "unknown-abi",
+			_                          => throw new NotSupportedException ($"Unsupported native architecture '{arch}'")
+		};
+	}
 }

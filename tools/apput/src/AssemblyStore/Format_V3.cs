@@ -119,6 +119,7 @@ class Format_V3 : FormatBase
 			return false;
 		}
 
+		NativeArchitecture arch = Utilities.AssemblyStoreAbiToNative (Header.Version.ABI);
 		IList<string> assemblyNames = ReadAssemblyNames (reader);
 		bool assemblyNamesUnreliable = assemblyNames.Count != Descriptors.Count;
 		if (assemblyNamesUnreliable) {
@@ -168,6 +169,7 @@ class Format_V3 : FormatBase
 			// assemblyStream is owned by `ApplicationAssembly`
 			var assembly = (ApplicationAssembly)ApplicationAssembly.LoadAspect (assemblyStream, assemblyState, name);
 			assembly.NameHash = hash;
+			assembly.Architecture = arch;
 			ret.Add (assembly);
 			Log.Debug ($"{LogTag}: assembly '{name}' loaded");
 		}
