@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,6 +16,13 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 
 	public class DownloadUri : MTask, ICancelableTask
 	{
+		const int DefaultMaxRetries = 3;
+		static readonly TimeSpan[] RetryDelays = {
+			TimeSpan.FromSeconds (5),
+			TimeSpan.FromSeconds (15),
+			TimeSpan.FromSeconds (30),
+		};
+
 		public DownloadUri ()
 		{
 		}
@@ -26,6 +34,8 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 		public ITaskItem[]  DestinationFiles    { get; set; }
 
 		public string       HashHeader          { get; set; }
+
+		public int          MaxRetries          { get; set; } = DefaultMaxRetries;
 
 		CancellationTokenSource cancellationTokenSource;
 
@@ -44,13 +54,18 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 			var source  = cancellationTokenSource = new CancellationTokenSource ();
 			var tasks   = new Task<ITaskItem> [SourceUris.Length];
 
-			// LGTM recommendation
-			//
-			// Using HttpClient without providing a platform specific handler (WinHttpHandler or CurlHandler) where the CheckCertificateRevocationList property is set
-			// to true, will allow revoked certificates to be accepted by the HttpClient as valid.
-			//
-			var handler = new HttpClientHandler {
-				CheckCertificateRevocationList = true,
+			// Configure cert revocation checking in a fail-open state to avoid intermittent
+			// failures on macOS when the CRL/OCSP endpoint is unreachable.
+			// Matches the approach in dotnet/arcade's DownloadFile task:
+			// https://github.com/dotnet/arcade/blob/a07b621/src/Microsoft.DotNet.Arcade.Sdk/src/DownloadFile.cs#L122-L145
+			var handler = new SocketsHttpHandler ();
+			handler.SslOptions.CertificateChainPolicy = new X509ChainPolicy {
+				RevocationMode = X509RevocationMode.Online,
+				RevocationFlag = X509RevocationFlag.ExcludeRoot,
+				VerificationFlags =
+					X509VerificationFlags.IgnoreCertificateAuthorityRevocationUnknown |
+					X509VerificationFlags.IgnoreEndRevocationUnknown,
+				VerificationTimeIgnored = true,
 			};
 
 			using (var client = new HttpClient (handler)) {
@@ -89,21 +104,39 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 			var tempPath = Path.Combine (dp, "." + dn + ".download");
 			Directory.CreateDirectory(dp);
 
-			Log.LogMessage (MessageImportance.Normal, $"Downloading `{uri}` to `{tempPath}`.");
-			try {
-				using (var r = await client.GetAsync (uri, HttpCompletionOption.ResponseHeadersRead, source.Token)) {
-					r.EnsureSuccessStatusCode ();
-					using (var s = await r.Content.ReadAsStreamAsync ())
-					using (var o = File.OpenWrite (tempPath)) {
-						await s.CopyToAsync (o, 4096, source.Token);
+			int retries = Math.Max (0, MaxRetries);
+			for (int attempt = 0; attempt <= retries; attempt++) {
+				Log.LogMessage (MessageImportance.Normal, $"Downloading `{uri}` to `{tempPath}` (attempt {attempt + 1} of {retries + 1}).");
+				try {
+					using (var r = await client.GetAsync (uri, HttpCompletionOption.ResponseHeadersRead, source.Token)) {
+						r.EnsureSuccessStatusCode ();
+						using (var s = await r.Content.ReadAsStreamAsync ())
+						using (var o = File.Create (tempPath)) {
+							await s.CopyToAsync (o, 4096, source.Token);
+						}
+					}
+					Log.LogMessage (MessageImportance.Low, $"mv '{tempPath}' '{destinationFile}'.");
+					File.Move (tempPath, destinationFile.ItemSpec);
+					return destinationFile;
+				}
+				catch (Exception e) when (attempt < retries && !source.IsCancellationRequested) {
+					var delay = attempt < RetryDelays.Length ? RetryDelays [attempt] : RetryDelays [RetryDelays.Length - 1];
+					Log.LogWarning ("Failed to download URL `{0}` (attempt {1} of {2}): {3}. Retrying in {4} seconds.",
+						uri, attempt + 1, retries + 1, e.Message, (int) delay.TotalSeconds);
+					try {
+						File.Delete (tempPath);
+					} catch {
+					}
+					try {
+						await TTask.Delay (delay, source.Token);
+					} catch (OperationCanceledException) {
+						break;
 					}
 				}
-				Log.LogMessage (MessageImportance.Low, $"mv '{tempPath}' '{destinationFile}'.");
-				File.Move (tempPath, destinationFile.ItemSpec);
-			}
-			catch (Exception e) {
-				Log.LogError ("Unable to download URL `{0}` to `{1}`: {2}", uri, destinationFile, e.Message);
-				Log.LogErrorFromException (e);
+				catch (Exception e) {
+					Log.LogError ("Unable to download URL `{0}` to `{1}`: {2}", uri, destinationFile, e.Message);
+					Log.LogErrorFromException (e);
+				}
 			}
 			return destinationFile;
 		}
