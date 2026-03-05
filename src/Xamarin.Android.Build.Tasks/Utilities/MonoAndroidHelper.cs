@@ -874,5 +874,29 @@ namespace Xamarin.Android.Tasks
 			log.LogDebugMessage (message);
 			log.LogDebugMessage (reader.ReadToEnd ());
 		}
+
+		/// <summary>
+		/// Takes `libItem.ItemSpec` and transforms it to a file name of a native library. It will
+		/// remove any paths from `ItemSpec` and will make sure that the file ends with the `.so`
+		/// extension. Empty string is returned if there's nothing to process. String comparisons
+		/// are ordinal and case-insensitive.
+		/// </summary>
+		public static string GetNormalizedNativeLibraryName (ITaskItem libItem)
+		{
+			if (String.IsNullOrEmpty (libItem.ItemSpec)) {
+				return String.Empty;
+			}
+
+			string ret = Path.GetFileName (libItem.ItemSpec);
+			if (String.IsNullOrEmpty (ret)) {
+				return String.Empty;
+			}
+
+			if (!String.Equals (Path.GetExtension (ret), ".so", StringComparison.OrdinalIgnoreCase)) {
+				return $"{ret}.so";
+			}
+
+			return ret;
+		}
 	}
 }
