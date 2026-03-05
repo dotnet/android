@@ -1,6 +1,6 @@
 # Android Tools Review Rules
 
-Distilled from [CODE_REVIEW_POSTMORTEM.md](../../../docs/CODE_REVIEW_POSTMORTEM.md) — 56 findings
+Distilled from [CODE_REVIEW_POSTMORTEM.md](../../docs/CODE_REVIEW_POSTMORTEM.md) — 56 findings
 from reviews by @jonathanpeppers on PRs #274, #275, #281–#284.
 
 ---
