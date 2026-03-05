@@ -105,7 +105,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 					using (var r = await client.GetAsync (uri, HttpCompletionOption.ResponseHeadersRead, source.Token)) {
 						r.EnsureSuccessStatusCode ();
 						using (var s = await r.Content.ReadAsStreamAsync ())
-						using (var o = File.OpenWrite (tempPath)) {
+						using (var o = File.Create (tempPath)) {
 							await s.CopyToAsync (o, 4096, source.Token);
 						}
 					}
@@ -121,7 +121,11 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 						File.Delete (tempPath);
 					} catch {
 					}
-					await TTask.Delay (delay, source.Token);
+					try {
+						await TTask.Delay (delay, source.Token);
+					} catch (OperationCanceledException) {
+						break;
+					}
 				}
 				catch (Exception e) {
 					Log.LogError ("Unable to download URL `{0}` to `{1}`: {2}", uri, destinationFile, e.Message);
