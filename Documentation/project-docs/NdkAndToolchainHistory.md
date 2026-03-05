@@ -3,8 +3,7 @@
 dotnet/android bundles a custom LLVM toolchain (`llc`, `llvm-mc`, `lld`) and does not require
 the Android NDK for end-user builds. These two facts are the result of incremental decisions
 made over 2019--2026, each driven by a specific NDK problem. This document captures the
-rationale. For technical details on how the LLVM tools are used in the build pipeline, see
-[`llvm-tools-usage.md`](../../llvm-tools-usage.md).
+rationale.
 
 
 ## Why the NDK Became Untenable
@@ -187,6 +186,3 @@ The LLVM version and toolchain package version are defined in
 The NDK is still used internally (via CMake) to compile the C++ native runtime, but is **not**
 required for end-user builds. The internal NDK version is configured in
 `build-tools/xaprepare/xaprepare/ConfigAndData/BuildAndroidPlatforms.cs`.
-
-For technical details on how `llc` and `llvm-mc` are invoked, see
-[`llvm-tools-usage.md`](../../llvm-tools-usage.md).
