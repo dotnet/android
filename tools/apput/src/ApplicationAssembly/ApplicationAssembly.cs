@@ -12,12 +12,13 @@ public class ApplicationAssembly : BaseAspect
 
 	public override string AspectName { get; } = "Application assembly";
 
-	public bool IsCompressed    { get; }
-	public string Name          { get; }
-	public ulong CompressedSize { get; }
-	public ulong Size           { get; }
-	public bool IgnoreOnLoad    { get; }
-	public ulong NameHash       { get; internal set; }
+	public bool IsCompressed               { get; }
+	public string Name                     { get; }
+	public ulong CompressedSize            { get; }
+	public ulong Size                      { get; }
+	public bool IgnoreOnLoad               { get; }
+	public ulong NameHash                  { get; internal set; }
+	public NativeArchitecture Architecture { get; internal set; }
 
 	ApplicationAssembly (Stream stream, uint uncompressedSize, string? description, bool isCompressed)
 		: base (stream)
@@ -26,6 +27,9 @@ public class ApplicationAssembly : BaseAspect
 		CompressedSize = isCompressed ? (ulong)stream.Length : 0;
 		IsCompressed = isCompressed;
 		Name = NameMe (description);
+		if (!Name.EndsWith (".dll", StringComparison.OrdinalIgnoreCase)) {
+			Name = $"{Name}.dll";
+		}
 	}
 
 	ApplicationAssembly (string? description, bool isIgnored)
@@ -112,13 +116,12 @@ public class ApplicationAssembly : BaseAspect
 		return new BasicAspectState (true);
 	}
 
-	/// <summary>
-	/// Writes assembly data to the indicated file, uncompressing it if necessary. If the destination
-	/// file exists, it will be overwritten.
-	/// </summary>
-	public void SaveToFile (string filePath)
+	public void WriteToStream (Stream stream)
 	{
-		throw new NotImplementedException ();
+		AspectStream.Seek (0, SeekOrigin.Begin);
+		// TODO: implement decompression
+		AspectStream.CopyTo (stream);
+		stream.Flush ();
 	}
 
 	// We don't care about the descriptor index here, it's only needed during the run time

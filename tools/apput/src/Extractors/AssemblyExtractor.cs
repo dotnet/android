@@ -60,6 +60,8 @@ class AssemblyExtractor : BaseExtractorWithOptions<AssemblyExtractorOptions>
 			return LogNoAssemblies ();
 		}
 
+		// TODO: handle individual assemblies here, once we have support for them
+
 		bool haveArchitectures = Options.Architectures != null && Options.Architectures.Count > 0;
 		var assemblies = new List<ApplicationAssembly> ();
 		foreach (AssemblyStore store in package.AssemblyStores) {
@@ -124,6 +126,30 @@ class AssemblyExtractor : BaseExtractorWithOptions<AssemblyExtractorOptions>
 	bool Extract (Regex? nameRegex, GetOutputStreamForPathFn getOutputStreamForPath, List<ApplicationAssembly> assemblies)
 	{
 		// `null` nameRegex means match all the assemblies
+		bool processAll = nameRegex == null;
+		var asmName = new StringBuilder ();
+		foreach (ApplicationAssembly asm in assemblies) {
+			if (!processAll && !nameRegex!.IsMatch (asm.Name)) {
+				continue;
+			}
+
+			if (asm.IgnoreOnLoad || asm.Size == 0) {
+				Log.Info ($"Not extracting assembly '{asm.Name}' as it has no data (ignored? {asm.IgnoreOnLoad}; size {asm.Size})");
+				continue;
+			}
+
+			asmName.Clear ().Append (asm.Name);
+			if (Options.NoDecompress && asm.IsCompressed) {
+				asmName.Append (".lz4");
+			}
+
+			string destPath = Path.Combine (Options.TargetDir, Utilities.ArchNameForPath (asm.Architecture), asmName.ToString ());
+			Log.Debug ($"Requesting output stream for path '{destPath}'");
+
+			// We don't own the stream, caller does
+			Stream stream = getOutputStreamForPath (destPath);
+			asm.WriteToStream (stream);
+		}
 
 		throw new NotImplementedException ();
 	}
@@ -192,14 +218,9 @@ class AssemblyExtractor : BaseExtractorWithOptions<AssemblyExtractorOptions>
 		// ...and finally convert what remains to regular expression patterns
 		sb.Replace (".", "\\.").Replace ("*", ".*").Replace ('?', '.');
 
-		// Make sure we always have the optional .dll extension here
-		// This looks weird, but is more concise than trying to do it just with StringBuilder APIs
-		const string ExtensionGroup = "(?:\\.dll)?";
-		if (ap.EndsWith (".dll", StringComparison.OrdinalIgnoreCase)) {
-			// The original `.dll` would now have been converted to `\.dll`
-			sb.Replace ("\\.dll", ExtensionGroup);
-		} else {
-			sb.Append (ExtensionGroup);
+		if (!ap.EndsWith (".dll", StringComparison.OrdinalIgnoreCase)) {
+			// All ApplicationAssembly instances will have names that contain the .dll extension
+			sb.Append (".dll");
 		}
 
 		return sb.ToString ();

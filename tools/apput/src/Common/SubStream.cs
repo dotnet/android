@@ -15,7 +15,7 @@ class SubStream : Stream
 	public override long Length => length;
 
 	public override long Position {
-		get => throw new NotSupportedException ();
+		get => baseStream.Position + offsetInParentStream;
 		set => throw new NotSupportedException ();
 	}
 
