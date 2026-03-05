@@ -27,7 +27,7 @@
 
   <PropertyGroup>
     <IsUnstableVersion Condition=" $([MSBuild]::VersionGreaterThan($(AndroidApiLevel), $(AndroidLatestStableApiLevel)))
-        And $([MSBuild]::VersionGreaterThan($(AndroidApiLevel), $(AndroidLatestStableApiLevel2)))
+        And ( '$(AndroidLatestStableApiLevel2)' == '' Or $([MSBuild]::VersionGreaterThan($(AndroidApiLevel), $(AndroidLatestStableApiLevel2))) )
         "
     >true</IsUnstableVersion>
     <DefineConstants Condition=" '$(IsUnstableVersion)' == 'True' ">$(DefineConstants);ANDROID_UNSTABLE</DefineConstants>

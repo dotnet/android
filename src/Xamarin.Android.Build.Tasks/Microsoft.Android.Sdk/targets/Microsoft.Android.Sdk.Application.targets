@@ -10,6 +10,7 @@ This file contains targets specific for Android application projects.
   <UsingTask TaskName="Xamarin.Android.Tasks.AndroidAdb" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidActivityName" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GetAvailableAndroidDevices" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.BootAndroidEmulator" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.BuildTools.PrepTasks.XASleepInternal" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <PropertyGroup>
@@ -44,9 +45,45 @@ This file contains targets specific for Android application projects.
       Returns="@(Devices)">
     <GetAvailableAndroidDevices
         ToolExe="$(AdbToolExe)"
-        ToolPath="$(AdbToolPath)">
+        ToolPath="$(AdbToolPath)"
+        EmulatorToolExe="$(EmulatorToolExe)"
+        EmulatorToolPath="$(EmulatorToolPath)">
       <Output TaskParameter="Devices" ItemName="Devices" />
     </GetAvailableAndroidDevices>
+  </Target>
+
+  <!--
+  ***********************************************************************************************
+  _EnsureDeviceBooted
+
+  Target that ensures the selected device is online and ready. If $(Device) refers to an
+  unbooted AVD, this target boots the emulator and updates $(AdbTarget) to the resolved
+  ADB serial (e.g. "-s emulator-5554").
+  Runs before _GetPrimaryCpuAbi (in commercial builds) so $(AdbTarget) is correct,
+  and before _DeployApk/_DeployAppBundle (which use AdbTarget for adb commands)
+  when $(Device) is set.
+
+  Note: this target CANNOT use DependsOnTargets="_ResolveMonoAndroidSdks" because in commercial
+  builds _GetPrimaryCpuAbi is in $(_ResolveMonoAndroidSdksDependsOn), which would create a cycle:
+    _ResolveMonoAndroidSdks -> _GetPrimaryCpuAbi -> _EnsureDeviceBooted -> _ResolveMonoAndroidSdks
+  Instead, the task computes tool paths from $(AndroidSdkDirectory), which is available because
+  _ResolveSdks runs earlier in the dependency chain.
+  ***********************************************************************************************
+  -->
+  <Target Name="_EnsureDeviceBooted"
+      BeforeTargets="_GetPrimaryCpuAbi;_DeployApk;_DeployAppBundle"
+      Condition=" '$(Device)' != '' ">
+    <BootAndroidEmulator
+        Device="$(Device)"
+        AndroidSdkDirectory="$(AndroidSdkDirectory)"
+        EmulatorToolExe="$(EmulatorToolExe)"
+        EmulatorToolPath="$(EmulatorToolPath)"
+        AdbToolExe="$(AdbToolExe)"
+        AdbToolPath="$(AdbToolPath)"
+        BootTimeoutSeconds="$(BootTimeoutSeconds)"
+        EmulatorExtraArguments="$(EmulatorExtraArguments)">
+      <Output TaskParameter="AdbTarget" PropertyName="AdbTarget" />
+    </BootAndroidEmulator>
   </Target>
 
   <Target Name="_AndroidComputeRunArguments"
@@ -69,13 +106,15 @@ This file contains targets specific for Android application projects.
       <_AndroidRunPath Condition=" '$(_AndroidRunPath)' == '' ">$(MSBuildThisFileDirectory)..\tools\Microsoft.Android.Run.dll</_AndroidRunPath>
       <_AndroidRunLogcatArgs Condition=" '$(_AndroidRunLogcatArgs)' == '' ">monodroid-assembly:S</_AndroidRunLogcatArgs>
       <_AndroidRunAdbTargetArg Condition=" '$(AdbTarget)' != '' ">--adb-target &quot;$(AdbTarget)&quot;</_AndroidRunAdbTargetArg>
+      <_AndroidRunUserArg Condition=" '$(AndroidDeviceUserId)' != '' ">--user &quot;$(AndroidDeviceUserId)&quot;</_AndroidRunUserArg>
       <RunCommand>dotnet</RunCommand>
-      <RunArguments>exec &quot;$(_AndroidRunPath)&quot; --adb &quot;$(_AdbToolPath)&quot; $(_AndroidRunAdbTargetArg) --package &quot;$(_AndroidPackage)&quot; --activity &quot;$(AndroidLaunchActivity)&quot; --logcat-args &quot;$(_AndroidRunLogcatArgs)&quot; $(_AndroidRunExtraArgs)</RunArguments>
+      <RunArguments>exec &quot;$(_AndroidRunPath)&quot; --adb &quot;$(_AdbToolPath)&quot; $(_AndroidRunAdbTargetArg) --package &quot;$(_AndroidPackage)&quot; --activity &quot;$(AndroidLaunchActivity)&quot; --logcat-args &quot;$(_AndroidRunLogcatArgs)&quot; $(_AndroidRunUserArg) $(_AndroidRunExtraArgs)</RunArguments>
     </PropertyGroup>
     <!-- When WaitForExit is false, use direct adb command (no logcat streaming) -->
     <PropertyGroup Condition=" '$(WaitForExit)' == 'false' ">
+      <_AmStartUserArg Condition=" '$(AndroidDeviceUserId)' != '' "> --user $(AndroidDeviceUserId)</_AmStartUserArg>
       <RunCommand>$(_AdbToolPath)</RunCommand>
-      <RunArguments>$(AdbTarget) shell am start -S -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;</RunArguments>
+      <RunArguments>$(AdbTarget) shell am start -S$(_AmStartUserArg) -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;</RunArguments>
     </PropertyGroup>
   </Target>
 
@@ -128,13 +167,16 @@ This file contains targets specific for Android application projects.
       Arguments="-c"
     />
 
+    <PropertyGroup>
+      <_AmStartUserArg Condition=" '$(AndroidDeviceUserId)' != '' "> --user $(AndroidDeviceUserId)</_AmStartUserArg>
+    </PropertyGroup>
     <Message Text="Running the application and waiting for it to fully start" Importance="High" />
     <AndroidAdb
       ToolExe="$(AdbToolExe)"
       ToolPath="$(AdbToolPath)"
       AdbTarget="$(AdbTarget)"
       Command="shell"
-      Arguments="am start -S -W -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;"
+      Arguments="am start -S -W$(_AmStartUserArg) -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;"
     />
 
     <Message Text="Sleeping for $(RunLogDelayInMS)ms to give logcat a chance to log all the messages" Importance="High" />

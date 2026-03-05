@@ -196,18 +196,41 @@ Run the following command to create a merged `api.xml`:
   
 This will create a `api-XX.xml` file in `/src/Mono.Android/Profiles/` that needs to be committed.
 
+*Note*: the generated `api-XX.xml` file will contain *local filesystem paths* in the `//*/@merge.SourceFile` attribute.
+You should search-and-replace instances of your local directory name with `..\..\bin\BuildDebug\api\` to minimize private information disclosure and reduce comparison sizes.
+
 ### Other Infrastructure Changes
 
 - Add level to `/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks/CheckApiCompatibility.cs`
   to enable running ApiCompat against the new level. (ex: `{ "v11.0.99", "v11.0" }`)
 - Add level to `/build-tools/api-xml-adjuster/Makefile`
   [TODO: remove? `$(API_LEVELS)` was last touched for API-34!]
+- Add level to `DefaultTestSdkPlatforms` in `/build-tools/automation/yaml-templates/variables.yaml`
+- Update `WorkloadManifest.in.json` to generate .NET SDK Workload Packs for the new API level.
+- Update `DotNetInstallAndRunPreviewAPILevels` in `InstallAndRunTests.cs` to try to access a member added in the new API level.
+- If (when) the new API level is unstable, update `Configuration.props` and modify the `*Unstable*` MSBuild properties to match the new unstable API level:
+    ```xml
+    <AndroidLatestUnstableApiLevel Condition="'$(AndroidLatestUnstableApiLevel)' == ''">36.1</AndroidLatestUnstableApiLevel>
+    <AndroidLatestUnstablePlatformId Condition="'$(AndroidLatestUnstablePlatformId)' == ''">CANARY</AndroidLatestUnstablePlatformId>
+    <AndroidLatestUnstableFrameworkVersion Condition="'$(AndroidLatestUnstableFrameworkVersion)'==''">v16.1</AndroidLatestUnstableFrameworkVersion>
+    ```
 - LOCAL ONLY: Update `Configuration.props` or `Configuration.Override.props` to specify building the new level:
   - `<AndroidApiLevel>31</AndroidApiLevel>`
   - `<AndroidPlatformId>S</AndroidPlatformId>`
   - `<AndroidFrameworkVersion>v11.0.99</AndroidFrameworkVersion>`
 
 Or specify them on the command-line for one-off local builds.
+
+### Create `PublicAPI*.txt` for the new API level
+
+This is required in order to build the new `Mono.Android.dll`, as API compatibility checks are part of the build.
+
+Simply copy the files from the previous API level.  Note that the directory is the "version"-based API level, *not* the Id.
+
+```sh
+mkdir -p src/Mono.Android/PublicAPI/API-36.1
+cp src/Mono.Android/PublicAPI/API-36/* src/Mono.Android/PublicAPI/API-36.1
+```
 
 ### Building the New Mono.Android
 

@@ -50,6 +50,7 @@ namespace Xamarin.Android.Prepare
 			new AndroidPlatform (apiName: "VanillaIceCream",        apiLevel: 35, platformID: "35",  include: "v15.0",   framework: "v15.0"),
 			new AndroidPlatform (apiName: "Baklava",                apiLevel: 36, platformID: "36",  include: "v16.0",   framework: "v16.0"),
 			new AndroidPlatform (apiName: "CANARY",                 apiLevel: new Version (36, 1),   platformID: "36.1", include: "v16.1",   framework: "v16.1", stable: true),
+			new AndroidPlatform (apiName: "CinnamonBun",            apiLevel: new Version (37, 0),   platformID: "CinnamonBun", include: "v17.0",   framework: "v17.0", stable: false),
 		};
 
 	}
