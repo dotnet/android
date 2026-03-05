@@ -294,6 +294,7 @@ namespace UnderTest
 					$"Console.WriteLine (\"{initialMessage}\");",
 					$"Console.WriteLine (\"{initialMessage}\");\n\t\t\tConsole.WriteLine (\"MODIFIED_LINE\");");
 				proj.Touch ("MainActivity.cs");
+				builder.BuiltBefore = true; // dotnet watch will build, not builder.Build()
 				builder.Save (proj, doNotCleanupOnUpdate: true, saveProject: false);
 
 				// Wait for hot reload to apply (MetadataUpdateHandler fires Console.WriteLine)
