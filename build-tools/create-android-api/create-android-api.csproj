@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.Build.NoTargets">
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunParallelCmds" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunParallelCmds" TaskFactory="TaskHostFactory" Runtime="NET" />
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
