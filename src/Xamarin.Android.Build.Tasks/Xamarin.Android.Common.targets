@@ -793,17 +793,17 @@ because xbuild doesn't support framework reference assemblies.
 		/>
 	</CreateProperty>
 
-	<CreateProperty Value="$(_AndroidPlatformToolsDirectory)">
-		<Output TaskParameter="Value" PropertyName="AdbToolPath"
-				Condition="'$(AdbToolPath)' == ''"
-		/>
-	</CreateProperty>
-
 	<!-- We should slowly port all the <CreateProperty/> calls to <PropertyGroup/> here -->
 	<PropertyGroup>
 		<AProfUtilToolPath Condition=" '$(AProfUtilToolPath)' == '' ">$(MonoAndroidBinDirectory)</AProfUtilToolPath>
 		<_DefaultLintToolPath>$(_AndroidSdkDirectory)\cmdline-tools\$(AndroidCommandLineToolsVersion)\bin</_DefaultLintToolPath>
 		<LintToolPath Condition=" '$(LintToolPath)' == '' And Exists ($(_DefaultLintToolPath)) ">$(_DefaultLintToolPath)</LintToolPath>
+		<AdbToolPath Condition=" '$(AdbToolPath)' == '' ">$(_AndroidPlatformToolsDirectory)</AdbToolPath>
+		<AdbToolExe Condition=" '$(AdbToolExe)' == '' And $([MSBuild]::IsOSPlatform('windows')) ">adb.exe</AdbToolExe>
+		<AdbToolExe Condition=" '$(AdbToolExe)' == '' And !$([MSBuild]::IsOSPlatform('windows')) ">adb</AdbToolExe>
+		<EmulatorToolPath Condition=" '$(EmulatorToolPath)' == '' ">$(_AndroidSdkDirectory)emulator\</EmulatorToolPath>
+		<EmulatorToolExe Condition=" '$(EmulatorToolExe)' == '' And $([MSBuild]::IsOSPlatform('windows')) ">emulator.exe</EmulatorToolExe>
+		<EmulatorToolExe Condition=" '$(EmulatorToolExe)' == '' And !$([MSBuild]::IsOSPlatform('windows')) ">emulator</EmulatorToolExe>
 	</PropertyGroup>
 
 	<!-- Get the defined constants for this API Level -->

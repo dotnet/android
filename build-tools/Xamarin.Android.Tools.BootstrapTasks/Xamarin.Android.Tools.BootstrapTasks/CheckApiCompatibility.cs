@@ -35,6 +35,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			{ "v15.0", "v14.0" },
 			{ "v16.0", "v15.0" },
 			{ "v16.1", "v16.0" },
+			{ "v17.0", "v16.1" },
 		};
 
 		static readonly string assemblyToValidate = "Mono.Android.dll";

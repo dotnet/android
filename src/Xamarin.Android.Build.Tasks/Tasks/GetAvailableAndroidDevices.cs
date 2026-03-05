@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Text.RegularExpressions;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -11,7 +12,9 @@ using Microsoft.Build.Utilities;
 namespace Xamarin.Android.Tasks;
 
 /// <summary>
-/// MSBuild task that queries available Android devices and emulators using 'adb devices -l'.
+/// MSBuild task that queries available Android devices and emulators using 'adb devices -l'
+/// and 'emulator -list-avds'. Merges the results to provide a complete list of available
+/// devices including emulators that are not currently running.
 /// Returns a list of devices with metadata for device selection in dotnet run.
 /// </summary>
 public class GetAvailableAndroidDevices : AndroidAdb
@@ -28,6 +31,16 @@ public class GetAvailableAndroidDevices : AndroidAdb
     static readonly Regex ApiRegex = new(@"\bApi\b", RegexOptions.Compiled);
 
     readonly List<string> output = [];
+
+    /// <summary>
+    /// Path to the emulator tool directory.
+    /// </summary>
+    public string EmulatorToolPath { get; set; } = "";
+
+    /// <summary>
+    /// Filename of the emulator executable (e.g., "emulator" or "emulator.exe").
+    /// </summary>
+    public string EmulatorToolExe { get; set; } = "";
 
     [Output]
     public ITaskItem [] Devices { get; set; } = [];
@@ -51,12 +64,120 @@ public class GetAvailableAndroidDevices : AndroidAdb
         if (!base.RunTask ())
             return false;
 
-        var devices = ParseAdbDevicesOutput (output);
-        Devices = devices.ToArray ();
+        // Parse devices from adb
+        var adbDevices = ParseAdbDevicesOutput (output);
+        Log.LogDebugMessage ($"Found {adbDevices.Count} device(s) from adb");
 
-        Log.LogDebugMessage ($"Found {Devices.Length} Android device(s)/emulator(s)");
+        // Get available emulators from 'emulator -list-avds'
+        var availableEmulators = GetAvailableEmulators ();
+        Log.LogDebugMessage ($"Found {availableEmulators.Count} available emulator(s) from 'emulator -list-avds'");
+
+        // Merge the lists
+        var mergedDevices = MergeDevicesAndEmulators (adbDevices, availableEmulators);
+        Devices = mergedDevices.ToArray ();
+
+        Log.LogDebugMessage ($"Total {Devices.Length} Android device(s)/emulator(s) after merging");
 
         return !Log.HasLoggedErrors;
+    }
+
+    /// <summary>
+    /// Gets the list of available AVDs using 'emulator -list-avds'.
+    /// </summary>
+    protected virtual List<string> GetAvailableEmulators ()
+    {
+        var emulators = new List<string> ();
+
+        if (EmulatorToolPath.IsNullOrEmpty () || EmulatorToolExe.IsNullOrEmpty ()) {
+            Log.LogDebugMessage ("EmulatorToolPath or EmulatorToolExe not set, skipping emulator listing");
+            return emulators;
+        }
+
+        var emulatorPath = Path.Combine (EmulatorToolPath, EmulatorToolExe);
+        if (!File.Exists (emulatorPath)) {
+            Log.LogDebugMessage ($"Emulator tool not found at: {emulatorPath}");
+            return emulators;
+        }
+
+        try {
+            var exitCode = MonoAndroidHelper.RunProcess (
+                emulatorPath,
+                "-list-avds",
+                Log,
+                onOutput: (sender, e) => {
+                    if (!e.Data.IsNullOrWhiteSpace ()) {
+                        var avdName = e.Data.Trim ();
+                        emulators.Add (avdName);
+                        Log.LogDebugMessage ($"Found available emulator: {avdName}");
+                    }
+                },
+                logWarningOnFailure: false
+            );
+
+            if (exitCode != 0) {
+                Log.LogDebugMessage ($"'emulator -list-avds' returned exit code: {exitCode}");
+            }
+        } catch (Exception ex) {
+            Log.LogDebugMessage ($"Failed to run 'emulator -list-avds': {ex.Message}");
+        }
+
+        return emulators;
+    }
+
+    /// <summary>
+    /// Merges devices from adb with available emulators.
+    /// Running emulators (already in adb list) are not duplicated.
+    /// Non-running emulators are added with Status="NotRunning".
+    /// Results are sorted: online devices first, then not-running emulators, alphabetically by description within each group.
+    /// </summary>
+    internal List<ITaskItem> MergeDevicesAndEmulators (List<ITaskItem> adbDevices, List<string> availableEmulators)
+    {
+        var result = new List<ITaskItem> (adbDevices);
+
+        // Build a set of AVD names that are already running (from adb devices)
+        var runningAvdNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+        foreach (var device in adbDevices) {
+            var avdName = device.GetMetadata ("AvdName");
+            if (!avdName.IsNullOrEmpty ()) {
+                runningAvdNames.Add (avdName);
+            }
+        }
+
+        Log.LogDebugMessage ($"Running emulators AVD names: {string.Join (", ", runningAvdNames)}");
+
+        // Add non-running emulators
+        foreach (var avdName in availableEmulators) {
+            if (runningAvdNames.Contains (avdName)) {
+                Log.LogDebugMessage ($"Emulator '{avdName}' is already running, skipping");
+                continue;
+            }
+
+            // Create item for non-running emulator
+            // Use the AVD name as the ItemSpec since there's no serial yet
+            var item = new TaskItem (avdName);
+            var displayName = FormatDisplayName (avdName, avdName);
+            item.SetMetadata ("Description", $"{displayName} (Not Running)");
+            item.SetMetadata ("Type", DeviceType.Emulator.ToString ());
+            item.SetMetadata ("Status", "NotRunning");
+            item.SetMetadata ("AvdName", avdName);
+
+            result.Add (item);
+            Log.LogDebugMessage ($"Added non-running emulator: {avdName}");
+        }
+
+        // Sort: online devices first, then not-running emulators, alphabetically by description within each group
+        result.Sort ((a, b) => {
+            var aNotRunning = string.Equals (a.GetMetadata ("Status"), "NotRunning", StringComparison.OrdinalIgnoreCase);
+            var bNotRunning = string.Equals (b.GetMetadata ("Status"), "NotRunning", StringComparison.OrdinalIgnoreCase);
+
+            if (aNotRunning != bNotRunning) {
+                return aNotRunning ? 1 : -1;
+            }
+
+            return string.Compare (a.GetMetadata ("Description"), b.GetMetadata ("Description"), StringComparison.OrdinalIgnoreCase);
+        });
+
+        return result;
     }
 
     /// <summary>
@@ -72,7 +193,7 @@ public class GetAvailableAndroidDevices : AndroidAdb
 
         foreach (var line in lines) {
             // Skip the header line "List of devices attached"
-            if (line.Contains ("List of devices") || string.IsNullOrWhiteSpace (line))
+            if (line.Contains ("List of devices") || line.IsNullOrWhiteSpace ())
                 continue;
 
             var match = AdbDevicesRegex.Match (line);
@@ -85,7 +206,7 @@ public class GetAvailableAndroidDevices : AndroidAdb
 
             // Parse key:value pairs from the properties string
             var propDict = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase);
-            if (!string.IsNullOrWhiteSpace (properties)) {
+            if (!properties.IsNullOrWhiteSpace ()) {
                 // Split by whitespace and parse key:value pairs
                 var pairs = properties.Split ([' '], StringSplitOptions.RemoveEmptyEntries);
                 foreach (var pair in pairs) {
@@ -101,8 +222,14 @@ public class GetAvailableAndroidDevices : AndroidAdb
             // Determine device type: Emulator or Device
             var deviceType = serial.StartsWith ("emulator-", StringComparison.OrdinalIgnoreCase) ? DeviceType.Emulator : DeviceType.Device;
 
+            // For emulators, get the AVD name for duplicate detection
+            string? avdName = null;
+            if (deviceType == DeviceType.Emulator) {
+                avdName = GetEmulatorAvdName (serial);
+            }
+
             // Build a friendly description
-            var description = BuildDeviceDescription (serial, propDict, deviceType);
+            var description = BuildDeviceDescription (serial, propDict, deviceType, avdName);
 
             // Map adb state to device status
             var status = MapAdbStateToStatus (state);
@@ -112,6 +239,11 @@ public class GetAvailableAndroidDevices : AndroidAdb
             item.SetMetadata ("Description", description);
             item.SetMetadata ("Type", deviceType.ToString ());
             item.SetMetadata ("Status", status);
+
+            // Add AVD name for emulators (used for duplicate detection)
+            if (!avdName.IsNullOrEmpty ()) {
+                item.SetMetadata ("AvdName", avdName);
+            }
 
             // Add optional metadata for additional information
             if (propDict.TryGetValue ("model", out var model))
@@ -129,30 +261,28 @@ public class GetAvailableAndroidDevices : AndroidAdb
         return devices;
     }
 
-    string BuildDeviceDescription (string serial, Dictionary<string, string> properties, DeviceType deviceType)
+    string BuildDeviceDescription (string serial, Dictionary<string, string> properties, DeviceType deviceType, string? avdName)
     {
         // Try to build a human-friendly description
         // Priority: AVD name (for emulators) > model > product > device > serial
 
         // For emulators, try to get the AVD display name
-        if (deviceType == DeviceType.Emulator) {
-            var avdName = GetEmulatorAvdDisplayName (serial);
-            if (!string.IsNullOrEmpty (avdName))
-                return avdName!;
+        if (deviceType == DeviceType.Emulator && !avdName.IsNullOrEmpty ()) {
+            return FormatDisplayName (serial, avdName!);
         }
 
-        if (properties.TryGetValue ("model", out var model) && !string.IsNullOrEmpty (model)) {
+        if (properties.TryGetValue ("model", out var model) && !model.IsNullOrEmpty ()) {
             // Clean up model name - replace underscores with spaces
             model = model.Replace ('_', ' ');
             return model;
         }
 
-        if (properties.TryGetValue ("product", out var product) && !string.IsNullOrEmpty (product)) {
+        if (properties.TryGetValue ("product", out var product) && !product.IsNullOrEmpty ()) {
             product = product.Replace ('_', ' ');
             return product;
         }
 
-        if (properties.TryGetValue ("device", out var device) && !string.IsNullOrEmpty (device)) {
+        if (properties.TryGetValue ("device", out var device) && !device.IsNullOrEmpty ()) {
             device = device.Replace ('_', ' ');
             return device;
         }
@@ -174,13 +304,13 @@ public class GetAvailableAndroidDevices : AndroidAdb
     }
 
     /// <summary>
-    /// Queries the emulator for its AVD name using 'adb -s <serial> emu avd name'
-    /// and formats it as a friendly display name.
+    /// Queries the emulator for its AVD name using 'adb -s <serial> emu avd name'.
+    /// Returns the raw AVD name (not formatted).
     /// </summary>
-    protected virtual string? GetEmulatorAvdDisplayName (string serial)
+    protected virtual string? GetEmulatorAvdName (string serial)
     {
         try {
-            var adbPath = System.IO.Path.Combine (ToolPath, ToolExe);
+            var adbPath = Path.Combine (ToolPath, ToolExe);
             var outputLines = new List<string> ();
 
             var exitCode = MonoAndroidHelper.RunProcess (
@@ -188,9 +318,8 @@ public class GetAvailableAndroidDevices : AndroidAdb
                 $"-s {serial} emu avd name",
                 Log,
                 onOutput: (sender, e) => {
-                    if (!string.IsNullOrEmpty (e.Data)) {
+                    if (!e.Data.IsNullOrEmpty ()) {
                         outputLines.Add (e.Data);
-                        base.LogEventsFromTextOutput (e.Data, MessageImportance.Normal);
                     }
                 },
                 logWarningOnFailure: false
@@ -199,12 +328,13 @@ public class GetAvailableAndroidDevices : AndroidAdb
             if (exitCode == 0 && outputLines.Count > 0) {
                 var avdName = outputLines [0].Trim ();
                 // Verify it's not the "OK" response
-                if (!string.IsNullOrEmpty (avdName) && !avdName.Equals ("OK", StringComparison.OrdinalIgnoreCase)) {
-                    return FormatDisplayName (serial, avdName);
+                if (!avdName.IsNullOrEmpty () && !avdName.Equals ("OK", StringComparison.OrdinalIgnoreCase)) {
+                    Log.LogDebugMessage ($"Emulator {serial} has AVD name: {avdName}");
+                    return avdName;
                 }
             }
         } catch (Exception ex) {
-            Log.LogDebugMessage ($"Failed to get AVD display name for {serial}: {ex}");
+            Log.LogDebugMessage ($"Failed to get AVD name for {serial}: {ex.Message}");
         }
 
         return null;

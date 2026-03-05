@@ -1198,6 +1198,55 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		public void DotNetInstallAndRunPreviewAPILevels (
+				[Values (false, true)] bool isRelease,
+				[Values ("net11.0-android37.0")] string targetFramework,
+				[Values (true)] bool enablePreviewFeatures)
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				TargetFramework = targetFramework,
+				IsRelease = isRelease,
+				ExtraNuGetConfigSources = {
+					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
+				}
+			};
+
+			if (enablePreviewFeatures) {
+				proj.SetProperty ("EnablePreviewFeatures", "true");
+			}
+
+			// TODO: update on new minor API levels to use an introduced minor API
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("//${AFTER_ONCREATE}", """
+				// The value `ignore` is not used.
+				#pragma warning disable 0219
+					if (OperatingSystem.IsAndroidVersionAtLeast (37, 0)) {
+						var ignore = global::Android.Manifest.Permission.RequestCompanionProfileMedical;
+					}
+				#pragma warning restore 0219
+				""");
+
+			var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
+
+			if (!enablePreviewFeatures) {
+				builder.AssertHasNoWarnings ();
+			} else {
+				// This warning is unfixable; see also the `<GetJavaPlatformJar/>` task, which always emits
+				// XA4211 when the API level is not a parsable veersion, which is the case for e.g. "CinnamonBun".
+				//
+				//  warning XA4211: AndroidManifest.xml //uses-sdk/@android:targetSdkVersion 'CinnamonBun' is less than $(TargetPlatformVersion) '37.0'. Using API-CinnamonBun for ACW compilation.
+			}
+
+			RunProjectAndAssert (proj, builder);
+
+			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
+			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+			Assert.IsTrue(didLaunch, "Activity should have started.");
+		}
+
+		[Test]
 		public void DotNetInstallAndRunMinorAPILevels (
 				[Values (false, true)] bool isRelease,
 				[Values ("net10.0-android36.1")] string targetFramework)
@@ -1661,6 +1710,22 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
 				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
 			Assert.IsTrue (didLaunch, "Activity should have started.");
+		}
+
+		[Test]
+		public void StartAndroidActivityRespectsAndroidDeviceUserId ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+
+			// Run with AndroidDeviceUserId=0 (primary user, always available)
+			builder.BuildLogFile = "start-with-user.log";
+			Assert.IsTrue (builder.RunTarget (proj, "StartAndroidActivity", parameters: new [] { "AndroidDeviceUserId=0" }),
+				"StartAndroidActivity should have succeeded.");
+
+			StringAssertEx.ContainsRegex (@"am start.*--user 0", builder.LastBuildOutput,
+				"The 'am start' command should contain '--user 0' when AndroidDeviceUserId is set.");
 		}
 	}
 }

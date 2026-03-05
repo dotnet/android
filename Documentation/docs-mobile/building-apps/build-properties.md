@@ -695,7 +695,7 @@ A boolean value which, if set to `true`, exempts all the native JNI libraries
 from being preloaded at application startup.  By default, all such libraries
 will be loaded by the runtime early during application startup in order to
 assure their proper initialization. However, in some cases it might not be the
-desired behavior and this property allows to effectively disable this behavior.
+desired behavior and this property allows you to effectively disable it.
 
 Some framework libraries which must be loaded at application startup will not
 be affected by this property.
