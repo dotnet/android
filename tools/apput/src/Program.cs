@@ -38,6 +38,7 @@ class Program
 			"",
 			"Available commands (all commands support the `--help` parameter):",
 			new ReportCommand (),
+			new SummaryCommand (),
 			new CommandSet ("extract") {
 				new ExtractAssemblyCommand (),
 				new ExtractManifestCommand (),
@@ -66,6 +67,18 @@ class ReportCommand : BaseProgramCommand
 
 		Reporter.Report (aspect, plainTextRendering: NoColor == true);
 		return 0;
+	}
+}
+
+class SummaryCommand : BaseProgramCommand
+{
+	public SummaryCommand ()
+		: base ("summary", "Show a short summary of the application aspect passed on the command line.")
+	{}
+
+	protected override int DoInvoke (List<string> rest)
+	{
+		throw new NotImplementedException ();
 	}
 }
 
