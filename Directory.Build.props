@@ -12,8 +12,8 @@
     <BuildOutputDirectory>$(MSBuildThisFileDirectory)bin\$(Configuration)\</BuildOutputDirectory>
     <BootstrapOutputDirectory>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\</BootstrapOutputDirectory>
     <TestOutputDirectory>$(MSBuildThisFileDirectory)bin\Test$(Configuration)\</TestOutputDirectory>
-    <BootstrapTasksAssembly>$(BootstrapOutputDirectory)$(TargetFrameworkNETStandard)\Xamarin.Android.Tools.BootstrapTasks.dll</BootstrapTasksAssembly>
-    <PrepTasksAssembly>$(BootstrapOutputDirectory)$(TargetFrameworkNETStandard)\xa-prep-tasks.dll</PrepTasksAssembly>
+    <BootstrapTasksAssembly>$(BootstrapOutputDirectory)$(DotNetStableTargetFramework)\Xamarin.Android.Tools.BootstrapTasks.dll</BootstrapTasksAssembly>
+    <PrepTasksAssembly>$(BootstrapOutputDirectory)$(DotNetStableTargetFramework)\xa-prep-tasks.dll</PrepTasksAssembly>
     <DotNetPreviewPath Condition=" '$(DotNetPreviewPath)' == '' ">$(BuildOutputDirectory)dotnet\</DotNetPreviewPath>
     <DotNetPreviewTool Condition=" '$(DotNetPreviewTool)' == '' and Exists('$(DotNetPreviewPath)') ">$(DotNetPreviewPath)dotnet</DotNetPreviewTool>
     <DotNetPreviewTool Condition=" '$(DotNetPreviewTool)' == '' ">dotnet</DotNetPreviewTool>

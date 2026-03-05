@@ -128,7 +128,9 @@ Specifies the supported Android platform versions for this SDK.
 			</AndroidApiInfo>
 			*/
 
-			Version.TryParse (item.GetMetadata ("VersionCodeFull"), out var versionCodeFull);
+			if (!Version.TryParse (item.GetMetadata ("VersionCodeFull"), out var versionCodeFull)) {
+				throw new ArgumentException ($"Invalid VersionCodeFull '{item.GetMetadata ("VersionCodeFull")}' for item '{item.ItemSpec}'");
+			}
 			bool.TryParse (item.GetMetadata ("Stable"), out bool stable);
 
 			return new AndroidVersion (versionCodeFull, item.ItemSpec.TrimStart ('v'), item.GetMetadata ("Name"), item.GetMetadata ("Id"), stable);
