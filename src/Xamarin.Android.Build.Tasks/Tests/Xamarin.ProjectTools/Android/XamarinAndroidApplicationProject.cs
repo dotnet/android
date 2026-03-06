@@ -81,6 +81,16 @@ namespace Xamarin.ProjectTools
 						<PropertyGroup>
 							<VectorDrawableCheckBuildToolsVersionTaskBeforeTargets />
 						</PropertyGroup>
+						<!-- Prevent CI Guardian SDL analysis from breaking CoreCompile incrementality.
+						     Guardian's MergeGuardianDotnetAnalyzersRuleSets target regenerates a merged
+						     ruleset file on every build (new timestamp), which is in CoreCompile's Inputs
+						     via $(ResolvedCodeAnalysisRuleSet). Clearing this property ensures CoreCompile
+						     is properly incremental when source files haven't changed. -->
+						<Target Name=""_ClearResolvedCodeAnalysisRuleSet"" BeforeTargets=""CoreCompile"" AfterTargets=""ResolveCodeAnalysisRuleSet;MergeGuardianDotnetAnalyzersRuleSets"">
+							<PropertyGroup>
+								<ResolvedCodeAnalysisRuleSet />
+							</PropertyGroup>
+						</Target>
 					</Project>"
 			});
 
