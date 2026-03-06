@@ -128,6 +128,7 @@ class AssemblyExtractor : BaseExtractorWithOptions<AssemblyExtractorOptions>
 		// `null` nameRegex means match all the assemblies
 		bool processAll = nameRegex == null;
 		var asmName = new StringBuilder ();
+		bool allIsFine = true;
 		foreach (ApplicationAssembly asm in assemblies) {
 			if (!processAll && !nameRegex!.IsMatch (asm.Name)) {
 				continue;
@@ -143,15 +144,19 @@ class AssemblyExtractor : BaseExtractorWithOptions<AssemblyExtractorOptions>
 				asmName.Append (".lz4");
 			}
 
-			string destPath = Path.Combine (Options.TargetDir, Utilities.ArchNameForPath (asm.Architecture), asmName.ToString ());
+			string relName = Path.Combine (Utilities.ArchNameForPath (asm.Architecture), asmName.ToString ());
+			string destPath = Path.Combine (Options.TargetDir, relName);
 			Log.Debug ($"Requesting output stream for path '{destPath}'");
 
-			// We don't own the stream, caller does
+			// We don't own the stream, the caller does
 			Stream stream = getOutputStreamForPath (destPath);
-			asm.WriteToStream (stream);
+			if (!asm.WriteToStream (stream, decompress: !Options.NoDecompress)) {
+				Log.Error ($"Failed to write assembly {relName} data to file.");
+				allIsFine = false;
+			}
 		}
 
-		throw new NotImplementedException ();
+		return allIsFine;
 	}
 
 	Regex MakeRegex (string pattern)

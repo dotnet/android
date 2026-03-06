@@ -1,14 +1,18 @@
 using System;
+using System.Buffers;
 using System.IO;
+
+using K4os.Compression.LZ4;
 
 namespace ApplicationUtility;
 
 public class ApplicationAssembly : BaseAspect
 {
 	const string LogTag = "ApplicationAssembly";
-	const uint COMPRESSED_MAGIC = 0x5A4C4158; // 'XALZ', little-endian
-	const ushort MSDOS_EXE_MAGIC = 0x5A4D; // 'MZ'
-	const uint PE_EXE_MAGIC = 0x00004550; // 'PE\0\0'
+	const uint COMPRESSED_MAGIC  = 0x5A4C4158; // 'XALZ', little-endian
+	const ushort MSDOS_EXE_MAGIC = 0x5A4D;     // 'MZ'
+	const uint PE_EXE_MAGIC      = 0x00004550; // 'PE\0\0'
+	const uint CompressedHeaderSize = 3 * 4; // 3 32-bit words
 
 	public override string AspectName { get; } = "Application assembly";
 
@@ -19,6 +23,8 @@ public class ApplicationAssembly : BaseAspect
 	public bool IgnoreOnLoad               { get; }
 	public ulong NameHash                  { get; internal set; }
 	public NativeArchitecture Architecture { get; internal set; }
+
+	static readonly ArrayPool<byte> bytePool = ArrayPool<byte>.Shared;
 
 	ApplicationAssembly (Stream stream, uint uncompressedSize, string? description, bool isCompressed)
 		: base (stream)
@@ -116,12 +122,45 @@ public class ApplicationAssembly : BaseAspect
 		return new BasicAspectState (true);
 	}
 
-	public void WriteToStream (Stream stream)
+	public bool WriteToStream (Stream stream, bool decompress)
 	{
+		if (decompress) {
+			return DecompressTo (stream);
+		}
+
 		AspectStream.Seek (0, SeekOrigin.Begin);
-		// TODO: implement decompression
 		AspectStream.CopyTo (stream);
 		stream.Flush ();
+		return true;
+	}
+
+	bool DecompressTo (Stream stream)
+	{
+		using var reader = Utilities.GetReaderAndRewindStream (AspectStream);
+		if (!ReadCompressedHeader (reader, out uint uncompressedLength)) {
+			Log.Error ($"Stream doesn't have the required compressed assembly header, or the header is invalid.");
+			return false;
+		}
+
+		int inputLength = (int)AspectStream.Length - (int)CompressedHeaderSize;
+		byte[] inputData = bytePool.Rent (inputLength);
+		byte[] assemblyData = bytePool.Rent ((int)Size); // Let it throw if there's an integer overflow...
+
+		try {
+			reader.Read (inputData, 0, inputLength);
+			int decoded = LZ4Codec.Decode (inputData, 0, inputLength, assemblyData, 0, (int)Size);
+			if (decoded != (int)Size) {
+				Log.Error ($"Failed to decompress input stream data. Decoded {decoded} bytes, expected {Size}");
+				return false;
+			}
+			stream.Write (assemblyData, 0, decoded);
+			stream.Flush ();
+		} finally {
+			bytePool.Return (inputData);
+			bytePool.Return (assemblyData);
+		}
+
+		return true;
 	}
 
 	// We don't care about the descriptor index here, it's only needed during the run time
@@ -129,8 +168,14 @@ public class ApplicationAssembly : BaseAspect
 	{
 		uncompressedLength = 0;
 
+		if (reader.BaseStream.Length < (int)CompressedHeaderSize) {
+			Log.Debug ($"Not enough data in input stream to read the compressed header. Need at least {CompressedHeaderSize} bytes, found {reader.BaseStream.Length}");
+			return false;
+		}
+
 		uint uintVal = reader.ReadUInt32 ();
 		if (uintVal != COMPRESSED_MAGIC) {
+			Log.Debug ("Input stream doesn't have the compression header.");
 			return false;
 		}
 
