@@ -21,6 +21,7 @@ public class Detector
 		typeof (AssemblyStoreSharedLibrary),
 		typeof (AssemblyStore),
 		typeof (ApplicationAssembly),
+		typeof (AssemblySharedLibrary),
 		typeof (NativeAotSharedLibrary),
 		typeof (XamarinAppSharedLibrary),
 		typeof (MonoAotSharedLibrary),
@@ -31,6 +32,7 @@ public class Detector
 
 	readonly static List<Type> KnownSharedLibraryAspects = new () {
 		typeof (AssemblyStoreSharedLibrary),
+		typeof (AssemblySharedLibrary),
 		typeof (NativeAotSharedLibrary),
 		typeof (XamarinAppSharedLibrary),
 		typeof (MonoAotSharedLibrary),
@@ -65,8 +67,12 @@ public class Detector
 		return TryFindTopLevelAspect (stream, description);
 	}
 
-	public static SharedLibrary? FindSharedLibraryAspect (Stream stream, string? description = null)
+	public static SharedLibrary? FindSharedLibraryAspect (Stream? stream, string? description = null)
 	{
+		if (stream == null) {
+			return null;
+		}
+
 		Log.Debug ($"Looking for shared library aspect ('{description}')");
 		return (SharedLibrary?)TryFindAspect (KnownSharedLibraryAspects, stream, description);
 	}

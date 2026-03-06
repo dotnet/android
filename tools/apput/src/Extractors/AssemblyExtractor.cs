@@ -56,37 +56,48 @@ class AssemblyExtractor : BaseExtractorWithOptions<AssemblyExtractorOptions>
 
 	bool Extract (GetOutputStreamForPathFn getOutputStreamForPath, ApplicationPackage package)
 	{
-		if (package.AssemblyStores == null || package.AssemblyStores.Count == 0) {
-			return LogNoAssemblies ();
-		}
-
-		// TODO: handle individual assemblies here, once we have support for them
-
 		bool haveArchitectures = Options.Architectures != null && Options.Architectures.Count > 0;
 		var assemblies = new List<ApplicationAssembly> ();
-		foreach (AssemblyStore store in package.AssemblyStores) {
-			if (!MatchesRequestedArchitecture (store)) {
-				continue;
-			}
 
-			assemblies.AddRange (store.Assemblies.Values);
+		if (package.AssemblyStores != null) {
+			foreach (AssemblyStore store in package.AssemblyStores) {
+				if (!StoreForRequestedArchitecture (store)) {
+					continue;
+				}
+
+				assemblies.AddRange (store.Assemblies.Values);
+			}
 		}
 
-		return Extract (getOutputStreamForPath, assemblies);
+		if (package.StandaloneAssemblies != null) {
+			Log.Debug ($"Package has {package.StandaloneAssemblies.Count} standalone assemblies.");
+			foreach (ApplicationAssembly asm in package.StandaloneAssemblies) {
+				if (!AssemblyForRequestedArchitecture (asm)) {
+					Log.Debug ($"Assembly {asm.Name} ignored, architecture {asm.Architecture} is not requested.");
+					continue;
+				}
 
-		bool LogNoAssemblies ()
-		{
+				assemblies.Add (asm);
+			}
+		}
+
+		if (assemblies.Count == 0) {
 			Log.Info ("Package doesn't contain any assemblies.");
 			return true;
 		}
 
-		bool MatchesRequestedArchitecture (AssemblyStore store)
+		return Extract (getOutputStreamForPath, assemblies);
+
+		bool StoreForRequestedArchitecture (AssemblyStore store) => MatchesRequestedArchitecture (Utilities.TargetArchToNative (store.Architecture));
+		bool AssemblyForRequestedArchitecture (ApplicationAssembly asm) => MatchesRequestedArchitecture (asm.Architecture);
+
+		bool MatchesRequestedArchitecture (NativeArchitecture arch)
 		{
 			if (!haveArchitectures) {
 				return true;
 			}
 
-			return Options.Architectures!.Contains (Utilities.TargetArchToNative (store.Architecture));
+			return Options.Architectures!.Contains (arch);
 		}
 	}
 
