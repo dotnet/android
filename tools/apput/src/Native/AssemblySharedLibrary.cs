@@ -101,24 +101,7 @@ class AssemblySharedLibrary : DotNetAndroidWrapperSharedLibrary
 
 		// Name must be at least <PREFIX> length + .dll.so + at least one character for assembly name
 		if (assemblyName.Length > 11) {
-			if (assemblyName.StartsWith ("lib_", StringComparison.Ordinal)) {
-				assemblyName = assemblyName.Substring (4);
-			} else if (assemblyName.StartsWith ("lib-", StringComparison.Ordinal)) {
-				int cultureEnd = assemblyName.IndexOf ('_');
-				if (cultureEnd == -1 || cultureEnd == 4) {
-					// No culture, odd
-					assemblyName = assemblyName.Substring (4);
-				} else {
-					string cultureName = assemblyName.Substring (4, cultureEnd - 4);
-					assemblyName = $"{cultureName}/{assemblyName.Substring (cultureEnd + 1)}";
-				}
-			}
-
-			if (assemblyName.EndsWith (".dll.so", StringComparison.Ordinal)) {
-				assemblyName = Path.GetFileNameWithoutExtension (assemblyName);
-			}
-
-			Log.Debug ($"Demangled assembly name: '{assemblyName}'");
+			assemblyName = DemangleName (assemblyName);
 		} else {
 			assemblyName = libraryName;
 		}
@@ -127,5 +110,33 @@ class AssemblySharedLibrary : DotNetAndroidWrapperSharedLibrary
 		asm.Architecture = TargetArchitecture;
 
 		return asm;
+	}
+
+	string DemangleName (string assemblyName)
+	{
+		string? cultureName = null;
+		if (assemblyName.StartsWith ("lib_", StringComparison.Ordinal)) {
+			assemblyName = assemblyName.Substring (4);
+		} else if (assemblyName.StartsWith ("lib-", StringComparison.Ordinal)) {
+			int cultureEnd = assemblyName.IndexOf ('_');
+			if (cultureEnd == -1 || cultureEnd == 4) {
+				// No culture, odd
+				assemblyName = assemblyName.Substring (4);
+			} else {
+				cultureName = assemblyName.Substring (4, cultureEnd - 4);
+				assemblyName = assemblyName.Substring (cultureEnd + 1);
+			}
+		}
+
+		if (assemblyName.EndsWith (".dll.so", StringComparison.Ordinal)) {
+			assemblyName = Path.GetFileNameWithoutExtension (assemblyName);
+		}
+
+		if (!String.IsNullOrEmpty (cultureName)) {
+			assemblyName = $"{cultureName}/{assemblyName}";
+		}
+
+		Log.Debug ($"Demangled assembly name: '{assemblyName}'");
+		return assemblyName;
 	}
 }

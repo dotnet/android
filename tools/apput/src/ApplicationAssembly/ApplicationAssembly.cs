@@ -124,7 +124,7 @@ public class ApplicationAssembly : BaseAspect
 
 	public bool WriteToStream (Stream stream, bool decompress)
 	{
-		if (decompress) {
+		if (decompress && IsCompressed) {
 			return DecompressTo (stream);
 		}
 
