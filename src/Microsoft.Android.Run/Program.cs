@@ -18,7 +18,7 @@ CancellationTokenSource cts = new ();
 string? logcatArgs = null;
 
 try {
-	return Run (args);
+	return await RunAsync (args);
 } catch (Exception ex) {
 	Console.Error.WriteLine ($"Error: {ex.Message}");
 	if (verbose)
@@ -26,7 +26,7 @@ try {
 	return 1;
 }
 
-int Run (string[] args)
+async Task<int> RunAsync (string[] args)
 {
 	bool showHelp = false;
 	bool showVersion = false;
@@ -160,9 +160,9 @@ int Run (string[] args)
 
 	try {
 		if (isInstrumentMode)
-			return RunInstrumentation ();
+			return await RunInstrumentationAsync ();
 
-		return RunApp ();
+		return await RunAppAsync ();
 	} finally {
 		Console.CancelKeyPress -= OnCancelKeyPress;
 		cts.Dispose ();
@@ -177,8 +177,8 @@ void OnCancelKeyPress (object? sender, ConsoleCancelEventArgs e)
 
 	cts.Cancel ();
 
-	// Force-stop the app
-	StopApp ();
+	// Force-stop the app (fire-and-forget in cancel handler)
+	_ = StopAppAsync ();
 
 	// Kill logcat process if running
 	try {
@@ -191,7 +191,7 @@ void OnCancelKeyPress (object? sender, ConsoleCancelEventArgs e)
 	}
 }
 
-int RunInstrumentation ()
+async Task<int> RunInstrumentationAsync ()
 {
 	// Build the am instrument command
 	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
@@ -223,14 +223,14 @@ int RunInstrumentation ()
 	instrumentProcess.BeginErrorReadLine ();
 
 	// Also start logcat in the background for additional debug output
-	logcatPid = GetAppPid ();
+	logcatPid = await GetAppPidAsync ();
 	if (logcatPid != null)
 		StartLogcat ();
 
 	// Wait for instrumentation to complete or Ctrl+C
 	try {
 		while (!instrumentProcess.HasExited && !cts.Token.IsCancellationRequested)
-			Thread.Sleep (250);
+			await Task.Delay (250);
 
 		if (cts.Token.IsCancellationRequested) {
 			try { instrumentProcess.Kill (); } catch { }
@@ -257,14 +257,14 @@ int RunInstrumentation ()
 	return 0;
 }
 
-int RunApp ()
+async Task<int> RunAppAsync ()
 {
 	// 1. Start the app
-	if (!StartApp ())
+	if (!await StartAppAsync ())
 		return 1;
 
 	// 2. Get the PID
-	logcatPid = GetAppPid ();
+	logcatPid = await GetAppPidAsync ();
 	if (logcatPid == null) {
 		Console.Error.WriteLine ("Error: App started but could not retrieve PID. The app may have crashed.");
 		return 1;
@@ -277,16 +277,16 @@ int RunApp ()
 	StartLogcat ();
 
 	// 4. Wait for app to exit or Ctrl+C
-	WaitForAppExit ();
+	await WaitForAppExitAsync ();
 
 	return 0;
 }
 
-bool StartApp ()
+async Task<bool> StartAppAsync ()
 {
 	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
 	var cmdArgs = $"shell am start -S -W{userArg} -n \"{package}/{activity}\"";
-	var (exitCode, output, error) = AdbHelper.Run (adbPath, adbTarget, cmdArgs, verbose);
+	var (exitCode, output, error) = await AdbHelper.RunAsync (adbPath, adbTarget, cmdArgs, verbose);
 	if (exitCode != 0) {
 		Console.Error.WriteLine ($"Error: Failed to start app: {error}");
 		return false;
@@ -298,10 +298,10 @@ bool StartApp ()
 	return true;
 }
 
-int? GetAppPid ()
+async Task<int?> GetAppPidAsync ()
 {
 	var cmdArgs = $"shell pidof {package}";
-	var (exitCode, output, error) = AdbHelper.Run (adbPath, adbTarget, cmdArgs, verbose);
+	var (exitCode, output, error) = await AdbHelper.RunAsync (adbPath, adbTarget, cmdArgs, verbose);
 	if (exitCode != 0 || string.IsNullOrWhiteSpace (output))
 		return null;
 
@@ -347,11 +347,11 @@ void StartLogcat ()
 	logcatProcess.BeginErrorReadLine ();
 }
 
-void WaitForAppExit ()
+async Task WaitForAppExitAsync ()
 {
 	while (!cts!.Token.IsCancellationRequested) {
 		// Check if app is still running
-		var pid = GetAppPid ();
+		var pid = await GetAppPidAsync ();
 		if (pid == null || pid != logcatPid) {
 			if (verbose)
 				Console.WriteLine ("App has exited.");
@@ -365,7 +365,7 @@ void WaitForAppExit ()
 			break;
 		}
 
-		Thread.Sleep (1000);
+		await Task.Delay (1000);
 	}
 
 	// Clean up logcat process
@@ -380,13 +380,13 @@ void WaitForAppExit ()
 	}
 }
 
-void StopApp ()
+async Task StopAppAsync ()
 {
 	if (string.IsNullOrEmpty (package) || string.IsNullOrEmpty (adbPath))
 		return;
 
 	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
-	AdbHelper.Run (adbPath, adbTarget, $"shell am force-stop{userArg} {package}", verbose);
+	await AdbHelper.RunAsync (adbPath, adbTarget, $"shell am force-stop{userArg} {package}", verbose);
 }
 
 string? FindAdbPath ()

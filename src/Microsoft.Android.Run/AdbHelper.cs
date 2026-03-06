@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Xamarin.Android.Tools;
 
 static class AdbHelper
 {
@@ -15,23 +16,17 @@ static class AdbHelper
 		};
 	}
 
-	public static (int ExitCode, string Output, string Error) Run (string adbPath, string? adbTarget, string arguments, bool verbose = false)
+	public static async Task<(int ExitCode, string Output, string Error)> RunAsync (string adbPath, string? adbTarget, string arguments, bool verbose = false)
 	{
 		var psi = CreateStartInfo (adbPath, adbTarget, arguments);
 
 		if (verbose)
 			Console.WriteLine ($"Running: adb {psi.Arguments}");
 
-		using var process = Process.Start (psi);
-		if (process == null)
-			return (-1, "", "Failed to start process");
+		using var stdout = new StringWriter ();
+		using var stderr = new StringWriter ();
+		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, CancellationToken.None);
 
-		// Read both streams asynchronously to avoid potential deadlock
-		var outputTask = process.StandardOutput.ReadToEndAsync ();
-		var errorTask = process.StandardError.ReadToEndAsync ();
-
-		process.WaitForExit ();
-
-		return (process.ExitCode, outputTask.Result, errorTask.Result);
+		return (exitCode, stdout.ToString (), stderr.ToString ());
 	}
 }
