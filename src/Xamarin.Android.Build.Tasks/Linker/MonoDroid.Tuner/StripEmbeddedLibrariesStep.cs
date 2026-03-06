@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
 
