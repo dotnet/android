@@ -1484,15 +1484,17 @@ because xbuild doesn't support framework reference assemblies.
   </RuntimeIdentifierToAbi>
 
   <!-- Collect trimmed assemblies from $(IntermediateLinkDir) using the same transform that
-       _AndroidComputeIlcCompileInputs uses. ManagedAssemblyToLink metadata is preserved
-       through the transform. KeepDuplicates="false" is needed because NativeAOT builds
-       can have duplicate entries in @(ManagedAssemblyToLink) for the same assembly. -->
+       _AndroidComputeIlcCompileInputs uses. RemoveDuplicates deduplicates by ItemSpec only,
+       which is needed because NativeAOT builds can have duplicate @(ManagedAssemblyToLink)
+       entries for the same assembly with different metadata. -->
   <ItemGroup>
-    <_AfterILLinkAssemblies
+    <_AfterILLinkAssembliesRaw
         Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')"
-        Condition=" Exists('$(IntermediateLinkDir)%(Filename)%(Extension)') "
-        KeepDuplicates="false" />
+        Condition=" Exists('$(IntermediateLinkDir)%(Filename)%(Extension)') " />
   </ItemGroup>
+  <RemoveDuplicates Inputs="@(_AfterILLinkAssembliesRaw)">
+    <Output TaskParameter="Filtered" ItemName="_AfterILLinkAssemblies" />
+  </RemoveDuplicates>
 
   <!-- The project's own assembly ($(TargetName)$(TargetExt)) may NOT be in
        @(ManagedAssemblyToLink) — ILLink passes it as a TrimmerRootAssembly via the -a flag
@@ -1563,6 +1565,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <!-- Clean up temporary item groups -->
   <ItemGroup>
+    <_AfterILLinkAssembliesRaw Remove="@(_AfterILLinkAssembliesRaw)" />
     <_AfterILLinkAssemblies Remove="@(_AfterILLinkAssemblies)" />
     <_AfterILLinkUserAssemblies Remove="@(_AfterILLinkUserAssemblies)" />
   </ItemGroup>
