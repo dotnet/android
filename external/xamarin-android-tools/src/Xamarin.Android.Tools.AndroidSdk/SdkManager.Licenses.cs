@@ -60,7 +60,7 @@ public partial class SdkManager
 
 		logger (TraceLevel.Verbose, "Checking for pending licenses...");
 
-		var envVars = GetEnvironmentVariables ();
+		var envVars = AndroidEnvironmentHelper.GetEnvironmentVariables (AndroidSdkPath, JavaSdkPath);
 
 		// Run --licenses without auto-accept to get the license text
 		var psi = ProcessUtils.CreateProcessStartInfo (sdkManagerPath, "--licenses");

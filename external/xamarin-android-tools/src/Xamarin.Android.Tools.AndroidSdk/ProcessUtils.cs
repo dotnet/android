@@ -203,6 +203,33 @@ namespace Xamarin.Android.Tools
 		}
 #endif
 
+		/// <summary>
+		/// Throws <see cref="InvalidOperationException"/> when <paramref name="exitCode"/> is non-zero.
+		/// Includes stderr/stdout context in the message when available.
+		/// </summary>
+		internal static void ThrowIfFailed (int exitCode, string command, string? stderr = null, string? stdout = null)
+		{
+			if (exitCode == 0)
+				return;
+
+			var message = $"'{command}' failed with exit code {exitCode}.";
+
+			if (stderr is { Length: > 0 })
+				message += $" stderr:{Environment.NewLine}{stderr.Trim ()}";
+			if (stdout is { Length: > 0 })
+				message += $" stdout:{Environment.NewLine}{stdout.Trim ()}";
+
+			throw new InvalidOperationException (message);
+		}
+
+		/// <summary>
+		/// Overload that accepts <see cref="StringWriter"/> directly so callers don't need to call ToString().
+		/// </summary>
+		internal static void ThrowIfFailed (int exitCode, string command, StringWriter? stderr = null, StringWriter? stdout = null)
+		{
+			ThrowIfFailed (exitCode, command, stderr?.ToString (), stdout?.ToString ());
+		}
+
 		internal static IEnumerable<string> FindExecutablesInPath (string executable)
 		{
 			var path        = Environment.GetEnvironmentVariable (EnvironmentVariableNames.Path) ?? "";

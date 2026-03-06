@@ -29,7 +29,7 @@ public partial class SdkManager
 			};
 		psi.RedirectStandardInput = acceptLicenses;
 
-		var envVars = GetEnvironmentVariables ();
+		var envVars = AndroidEnvironmentHelper.GetEnvironmentVariables (AndroidSdkPath, JavaSdkPath);
 
 		using var stdout = new StringWriter ();
 		using var stderr = new StringWriter ();
@@ -90,21 +90,4 @@ public partial class SdkManager
 		await DownloadUtils.DownloadFileAsync (httpClient, url, destinationPath, expectedSize, downloadProgress, cancellationToken).ConfigureAwait (false);
 		logger (TraceLevel.Info, $"Download complete: {destinationPath}");
 	}
-
-	Dictionary<string, string> GetEnvironmentVariables ()
-	{
-		var env = new Dictionary<string, string> {
-			["ANDROID_USER_HOME"] = Path.Combine (
-				Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), ".android")
-		};
-
-		if (!string.IsNullOrEmpty (AndroidSdkPath))
-			env[EnvironmentVariableNames.AndroidHome] = AndroidSdkPath!;
-
-		if (!string.IsNullOrEmpty (JavaSdkPath))
-			env[EnvironmentVariableNames.JavaHome] = JavaSdkPath!;
-
-		return env;
-	}
-
 }

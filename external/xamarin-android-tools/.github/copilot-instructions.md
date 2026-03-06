@@ -49,6 +49,8 @@ When setting environment variables for SDK tools (e.g. `sdkmanager`, `avdmanager
 - **File-scoped namespaces**: all new files should use file-scoped namespaces (`namespace Foo;` instead of `namespace Foo { ... }`).
 - **Static `HttpClient`**: `HttpClient` instances must be `static` to avoid socket exhaustion. See [HttpClient guidelines](https://learn.microsoft.com/dotnet/fundamentals/networking/http/httpclient-guidelines#recommended-use). Do not create per-instance `HttpClient` fields or dispose them in `IDisposable`.
 - [Mono Coding Guidelines](http://www.mono-project.com/community/contributing/coding-guidelines/): tabs, K&R braces, `PascalCase` public members.
+- **No null-forgiving operator (`!`)**: do not use the null-forgiving operator after null checks. Instead, use C# property patterns (e.g. `if (value is { Length: > 0 } v)`) which give the compiler proper non-null flow analysis on all target frameworks including `netstandard2.0`.
+- **Prefer switch expressions**: use C# switch expressions over switch statements for simple value mappings (e.g. `return state switch { "x" => A, _ => B };`). Use switch statements only when the body has side effects or complex logic.
 - Nullable enabled in `AndroidSdk`. `NullableAttributes.cs` excluded on `net10.0+`.
 - Strong-named via `product.snk`. In the AndroidSdk project, tests use `InternalsVisibleTo` with full public key (`Properties/AssemblyInfo.cs`).
 - Assembly names support `$(VendorPrefix)`/`$(VendorSuffix)` for branding forks.
