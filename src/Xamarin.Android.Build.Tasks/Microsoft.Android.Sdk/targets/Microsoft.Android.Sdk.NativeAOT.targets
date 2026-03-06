@@ -86,6 +86,7 @@ This eliminates the NDK dependency for NativeAOT builds.
       _AndroidBeforeIlcCompile;
       Compile;
       SetupOSSpecificProps;
+      _AndroidAfterSetupOSSpecificProps;
       PrepareForILLink;
       ILLink;
       ComputeIlcCompileInputs;
@@ -107,12 +108,15 @@ This eliminates the NDK dependency for NativeAOT builds.
       <LinkStandardCPlusPlusLibrary>false</LinkStandardCPlusPlusLibrary>
 
       <!--
-        Point ILC's ObjCopyName to the llvm-objcopy shipped with our workload pack.
-        This prevents SetupOSSpecificProps from searching PATH for a system-installed
-        llvm-objcopy/objcopy, which may not be present (e.g. on macOS CI agents).
-        Our LinkNativeAotLibrary task uses this same binary from AndroidBinUtilsDirectory.
+        Temporarily disable ILC's symbol stripping probe in SetupOSSpecificProps.
+        The ILC SDK's ObjCopyName probe uses "where /Q" on Windows, which fails on absolute
+        paths (it interprets C:\ as a path:pattern separator). Since we handle our own native
+        linking/stripping in LinkNativeAotLibrary (which uses ld.lld -s), we don't need ILC's
+        ObjCopyName probe at all. Save the effective StripSymbols value, suppress the probe,
+        and restore it in _AndroidAfterSetupOSSpecificProps.
       -->
-      <ObjCopyName>$([System.IO.Path]::Combine('$(AndroidBinUtilsDirectory)', 'llvm-objcopy'))</ObjCopyName>
+      <_AndroidNativeAotStripSymbols Condition=" '$(_AndroidNativeAotStripSymbols)' == '' ">$(StripSymbols)</_AndroidNativeAotStripSymbols>
+      <StripSymbols>false</StripSymbols>
 
       <!-- We want to run ILLink ourselves before ILC -->
       <RunILLink>true</RunILLink>
@@ -125,6 +129,16 @@ This eliminates the NDK dependency for NativeAOT builds.
       <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
       <!-- Ensure ILLink respects the value of SuppressTrimAnalysisWarnings -->
       <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --notrimwarn</_ExtraTrimmerArgs>
+    </PropertyGroup>
+  </Target>
+
+  <!--
+    Restore StripSymbols after SetupOSSpecificProps has finished probing.
+    See _AndroidBeforeIlcCompile for why this is necessary.
+  -->
+  <Target Name="_AndroidAfterSetupOSSpecificProps">
+    <PropertyGroup>
+      <StripSymbols>$(_AndroidNativeAotStripSymbols)</StripSymbols>
     </PropertyGroup>
   </Target>
 
