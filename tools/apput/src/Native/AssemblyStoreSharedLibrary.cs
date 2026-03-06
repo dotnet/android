@@ -100,11 +100,6 @@ class AssemblyStoreSharedLibrary : DotNetAndroidWrapperSharedLibrary
 			return store;
 		}
 
-		// using Stream? storeStream = GetStoreStream (state, stream, libraryName);
-		// if (storeStream == null) {
-		// 	throw new InvalidOperationException ($"Failed to load assembly store from '{libraryName}'");
-		// }
-
 		return (AssemblyStore)AssemblyStore.LoadAspect (stream, state.AssemblyStoreState!, libraryName);
 	}
 }

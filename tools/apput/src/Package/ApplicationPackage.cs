@@ -43,6 +43,7 @@ public abstract class ApplicationPackage : BaseAspect
 	public AndroidManifest? AndroidManifest => manifest;
 	public List<AndroidTargetArch> Architectures { get; protected set; } = new ();
 	public List<AssemblyStore>? AssemblyStores { get; protected set; }
+	public List<ApplicationAssembly>? StandaloneAssemblies { get; protected set; }
 	public bool Debuggable => manifest?.Debuggable ?? false;
 	public string? Description { get; }
 	public string? MainActivity => manifest?.MainActivity;
@@ -126,6 +127,7 @@ public abstract class ApplicationPackage : BaseAspect
 		ret.TryDetectRuntime ();
 		ret.TryDetectWhetherIsSigned ();
 		ret.TryLoadAssemblyStores ();
+		ret.TryLoadStandaloneAssemblies ();
 		ret.TryLoadAndroidManifest ();
 		ret.TryLoadXamarinAppLibraries ();
 
@@ -342,6 +344,24 @@ public abstract class ApplicationPackage : BaseAspect
 		} catch (Exception ex) {
 			Log.Debug ($"Failed to load assembly store '{storePath}'. Exception thrown:", ex);
 			return null;
+		}
+	}
+
+	void TryLoadStandaloneAssemblies ()
+	{
+		var assemblies = new List<ApplicationAssembly> ();
+		foreach (SharedLibrary dso in SharedLibraries) {
+			var assemblyLib = dso as AssemblySharedLibrary;
+			if (assemblyLib == null) {
+				continue;
+			}
+
+			Log.Debug ($"Assembly shared library '{assemblyLib.Name}' found (assembly name '{assemblyLib.Assembly.Name}')");
+			assemblies.Add (assemblyLib.Assembly);
+		}
+
+		if (assemblies.Count > 0) {
+			StandaloneAssemblies = assemblies;
 		}
 	}
 
