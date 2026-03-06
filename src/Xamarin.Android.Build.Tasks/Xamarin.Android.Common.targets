@@ -1610,16 +1610,25 @@ because xbuild doesn't support framework reference assemblies.
       Files="@(_R2RCompositeAssemblies->'%(RootDir)%(Directory)%(Filename).jlo.xml');@(_R2RCompositeAssemblies->'%(RootDir)%(Directory)%(Filename).typemap.xml')"
       AlwaysCreate="true" />
 
-  <!-- Use the same pattern as AssemblyResolution.targets:128-129 to handle both
-       single-RID builds (IntermediateOutputPath already contains RID) and
-       multi-RID builds (need to add %(RuntimeIdentifier)/ to the path). -->
+  <!-- Compute the path to the inner build's linked/ directory where sidecar XML files reside.
+       The inner build is dispatched by _ResolveAssemblies with AppendRuntimeIdentifierToOutputPath=true,
+       so its IntermediateOutputPath is always $(OuterIntermediateOutputPath)$(RuntimeIdentifier)/.
+       In the outer build:
+         - Multi-RID (RuntimeIdentifier == ''): use $(IntermediateOutputPath)%(RuntimeIdentifier)/linked/
+         - Single-RID (RuntimeIdentifier != ''): $(IntermediateOutputPath) may or may not already
+           contain the RID. If it does (normal SDK behavior), use $(IntermediateOutputPath)linked/.
+           If it doesn't (e.g. RuntimeIdentifier set after path evaluation), append the RID first. -->
+  <PropertyGroup Condition=" '$(RuntimeIdentifier)' != '' ">
+    <_SidecarLinkedDir Condition=" $(IntermediateOutputPath.Replace('\','/').TrimEnd('/').EndsWith('$(RuntimeIdentifier)')) ">$(IntermediateOutputPath)linked\</_SidecarLinkedDir>
+    <_SidecarLinkedDir Condition=" '$(_SidecarLinkedDir)' == '' ">$(IntermediateOutputPath)$(RuntimeIdentifier)\linked\</_SidecarLinkedDir>
+  </PropertyGroup>
   <ItemGroup Condition=" '$(RuntimeIdentifier)' == '' ">
     <_SidecarXmlCopySource Include="@(_NonCompositeAssemblies->'$(IntermediateOutputPath)%(RuntimeIdentifier)\linked\%(Filename).jlo.xml')" />
     <_SidecarXmlCopySource Include="@(_NonCompositeAssemblies->'$(IntermediateOutputPath)%(RuntimeIdentifier)\linked\%(Filename).typemap.xml')" />
   </ItemGroup>
   <ItemGroup Condition=" '$(RuntimeIdentifier)' != '' ">
-    <_SidecarXmlCopySource Include="@(_NonCompositeAssemblies->'$(IntermediateOutputPath)linked\%(Filename).jlo.xml')" />
-    <_SidecarXmlCopySource Include="@(_NonCompositeAssemblies->'$(IntermediateOutputPath)linked\%(Filename).typemap.xml')" />
+    <_SidecarXmlCopySource Include="@(_NonCompositeAssemblies->'$(_SidecarLinkedDir)%(Filename).jlo.xml')" />
+    <_SidecarXmlCopySource Include="@(_NonCompositeAssemblies->'$(_SidecarLinkedDir)%(Filename).typemap.xml')" />
   </ItemGroup>
 
   <!-- Some assemblies (e.g. _Microsoft.Android.Resource.Designer.dll) end up in linked/ but were
