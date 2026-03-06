@@ -8,7 +8,7 @@
   <Import Project="License.targets" />
   <Import Project="..\..\build-tools\installers\create-installers.targets" />
 
-  <UsingTask TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" AssemblyFile="$(PrepTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" AssemblyFile="$(PrepTasksAssembly)" TaskFactory="TaskHostFactory" Runtime="NET" />
 
   <Target Name="_GetDefaultPackageVersion"
       DependsOnTargets="GetXAVersionInfo" >
