@@ -194,7 +194,8 @@ void OnCancelKeyPress (object? sender, ConsoleCancelEventArgs e)
 int RunInstrumentation ()
 {
 	// Build the am instrument command
-	var cmdArgs = $"shell am instrument -w {package}/{instrumentation}";
+	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
+	var cmdArgs = $"shell am instrument -w{userArg} {package}/{instrumentation}";
 
 	if (verbose)
 		Console.WriteLine ($"Running instrumentation: adb {cmdArgs}");
