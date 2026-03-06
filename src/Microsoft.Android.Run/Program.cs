@@ -230,7 +230,7 @@ async Task<int> RunInstrumentationAsync ()
 	// Wait for instrumentation to complete or Ctrl+C
 	try {
 		while (!instrumentProcess.HasExited && !cts.Token.IsCancellationRequested)
-			await Task.Delay (250);
+			await Task.Delay (250, cts.Token).ConfigureAwait (ConfigureAwaitOptions.SuppressThrowing);
 
 		if (cts.Token.IsCancellationRequested) {
 			try { instrumentProcess.Kill (); } catch { }
@@ -286,7 +286,7 @@ async Task<bool> StartAppAsync ()
 {
 	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
 	var cmdArgs = $"shell am start -S -W{userArg} -n \"{package}/{activity}\"";
-	var (exitCode, output, error) = await AdbHelper.RunAsync (adbPath, adbTarget, cmdArgs, verbose);
+	var (exitCode, output, error) = await AdbHelper.RunAsync (adbPath, adbTarget, cmdArgs, cts.Token, verbose);
 	if (exitCode != 0) {
 		Console.Error.WriteLine ($"Error: Failed to start app: {error}");
 		return false;
@@ -301,7 +301,7 @@ async Task<bool> StartAppAsync ()
 async Task<int?> GetAppPidAsync ()
 {
 	var cmdArgs = $"shell pidof {package}";
-	var (exitCode, output, error) = await AdbHelper.RunAsync (adbPath, adbTarget, cmdArgs, verbose);
+	var (exitCode, output, error) = await AdbHelper.RunAsync (adbPath, adbTarget, cmdArgs, cts.Token, verbose);
 	if (exitCode != 0 || string.IsNullOrWhiteSpace (output))
 		return null;
 
@@ -365,7 +365,7 @@ async Task WaitForAppExitAsync ()
 			break;
 		}
 
-		await Task.Delay (1000);
+		await Task.Delay (1000, cts.Token).ConfigureAwait (ConfigureAwaitOptions.SuppressThrowing);
 	}
 
 	// Clean up logcat process
@@ -386,7 +386,7 @@ async Task StopAppAsync ()
 		return;
 
 	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
-	await AdbHelper.RunAsync (adbPath, adbTarget, $"shell am force-stop{userArg} {package}", verbose);
+	await AdbHelper.RunAsync (adbPath, adbTarget, $"shell am force-stop{userArg} {package}", CancellationToken.None, verbose);
 }
 
 string? FindAdbPath ()

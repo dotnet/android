@@ -16,7 +16,7 @@ static class AdbHelper
 		};
 	}
 
-	public static async Task<(int ExitCode, string Output, string Error)> RunAsync (string adbPath, string? adbTarget, string arguments, bool verbose = false)
+	public static async Task<(int ExitCode, string Output, string Error)> RunAsync (string adbPath, string? adbTarget, string arguments, CancellationToken cancellationToken, bool verbose = false)
 	{
 		var psi = CreateStartInfo (adbPath, adbTarget, arguments);
 
@@ -25,7 +25,7 @@ static class AdbHelper
 
 		using var stdout = new StringWriter ();
 		using var stderr = new StringWriter ();
-		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, CancellationToken.None);
+		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken);
 
 		return (exitCode, stdout.ToString (), stderr.ToString ());
 	}
