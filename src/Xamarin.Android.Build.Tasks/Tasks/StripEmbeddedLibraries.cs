@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Android.Build.Tasks;
@@ -28,19 +29,32 @@ public class StripEmbeddedLibraries : AndroidTask
 
 	public override bool RunTask ()
 	{
-		foreach (var assembly in Assemblies) {
-			// Skip framework assemblies -- they do not have embedded Android resources
-			if (MonoAndroidHelper.IsFrameworkAssembly (assembly)) {
-				continue;
-			}
+		var resolver = new DefaultAssemblyResolver ();
+		var searchDirectories = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
-			StripAssembly (assembly.ItemSpec);
+		foreach (var assembly in Assemblies) {
+			var dir = Path.GetFullPath (Path.GetDirectoryName (assembly.ItemSpec));
+			if (searchDirectories.Add (dir)) {
+				resolver.AddSearchDirectory (dir);
+			}
+		}
+
+		try {
+			foreach (var assembly in Assemblies) {
+				if (MonoAndroidHelper.IsFrameworkAssembly (assembly)) {
+					continue;
+				}
+
+				StripAssembly (assembly.ItemSpec, resolver);
+			}
+		} finally {
+			resolver.Dispose ();
 		}
 
 		return !Log.HasLoggedErrors;
 	}
 
-	void StripAssembly (string assemblyPath)
+	void StripAssembly (string assemblyPath, IAssemblyResolver resolver)
 	{
 		string pdbPath = Path.ChangeExtension (assemblyPath, ".pdb");
 		bool havePdb = File.Exists (pdbPath);
@@ -48,6 +62,7 @@ public class StripEmbeddedLibraries : AndroidTask
 		var readerParams = new ReaderParameters {
 			ReadSymbols = havePdb,
 			ReadWrite = false,
+			AssemblyResolver = resolver,
 		};
 
 		bool assembly_modified = false;
