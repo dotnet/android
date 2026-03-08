@@ -1643,7 +1643,15 @@ because xbuild doesn't support framework reference assemblies.
   <!-- Some assemblies (e.g. _Microsoft.Android.Resource.Designer.dll) end up in linked/ but were
        NOT processed by AssemblyModifierPipeline (they weren't in @(ManagedAssemblyToLink) at ILLink
        time). They have no sidecar files in linked/. Create empty (zero-length) sidecar files for
-       them so the Copy below doesn't fail. Zero-length = "not scanned" which is correct. -->
+       them so the Copy below doesn't fail. Zero-length = "not scanned" which is correct.
+
+       The linked/ directory may not exist if the RID changed between builds without a clean
+       (e.g. switching from android-arm64 to android-x64 via RuntimeIdentifier parameter while
+       RuntimeIdentifiers still points to the old RID). In that case the inner build ran for the
+       old RID and never created the new RID's linked/ directory. MakeDir ensures it exists. -->
+  <MakeDir
+      Directories="@(_SidecarXmlCopySource->'%(RootDir)%(Directory)')"
+      Condition=" '@(_SidecarXmlCopySource)' != '' " />
   <Touch
       Files="@(_SidecarXmlCopySource)"
       AlwaysCreate="true"
