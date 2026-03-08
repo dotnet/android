@@ -356,9 +356,12 @@ This eliminates the NDK dependency for NativeAOT builds.
       <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('windows')) ">windows-x86_64</_NdkPrebuiltAbi>
       <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('osx')) ">darwin-x86_64</_NdkPrebuiltAbi>
       <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('linux')) ">linux-x86_64</_NdkPrebuiltAbi>
+      <_NdkApiLevel Condition=" '$(RuntimeIdentifier)' == 'android-arm64' ">$(AndroidNdkApiLevel_Arm64)</_NdkApiLevel>
+      <_NdkApiLevel Condition=" '$(RuntimeIdentifier)' == 'android-x64' ">$(AndroidNdkApiLevel_X64)</_NdkApiLevel>
       <_NdkSysrootDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/sysroot/usr/lib/$(_NdkSysrootAbi)/</_NdkSysrootDir>
       <_NdkBinDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/bin/</_NdkBinDir>
-      <CppCompilerAndLinker>clang++</CppCompilerAndLinker>
+      <!-- Use ABI-prefixed clang++ wrapper which sets the correct target triple, sysroot, and API level -->
+      <CppCompilerAndLinker>$(_NdkSysrootAbi)$(_NdkApiLevel)-clang++</CppCompilerAndLinker>
       <ObjCopyName>llvm-objcopy</ObjCopyName>
     </PropertyGroup>
 

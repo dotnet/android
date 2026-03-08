@@ -58,11 +58,8 @@ public class LinkNativeAotLibrary : AndroidTask
 		string abi = GetAbiFromRuntimeIdentifier (RuntimeIdentifier);
 		string clangArch = GetClangArchFromRuntimeIdentifier (RuntimeIdentifier);
 
-		// Compute soname - Android requires a proper soname or it will refuse to load the library
-		string soname = Path.GetFileNameWithoutExtension (OutputLibrary);
-		if (soname.StartsWith ("lib", StringComparison.OrdinalIgnoreCase)) {
-			soname = soname.Substring (3);
-		}
+		// Use the full filename as soname (e.g., "libMyApp.so") following ELF/Android conventions
+		string soname = Path.GetFileName (OutputLibrary);
 
 		// Find the sysroot directory from runtime pack library directories
 		string? sysrootDir = FindSysrootDirectory ();
@@ -84,6 +81,12 @@ public class LinkNativeAotLibrary : AndroidTask
 		List<ITaskItem> linkItems = OrganizeCommandLineItems (abi, sysrootDir, clangArch);
 		List<ITaskItem> linkStartFiles = GetCrtStartFiles (abi, sysrootDir);
 		List<ITaskItem> linkEndFiles = GetCrtEndFiles (abi, sysrootDir);
+
+		// If required files were missing (errors logged above), don't invoke the linker
+		// with incomplete inputs — it would produce confusing secondary errors.
+		if (Log.HasLoggedErrors) {
+			return false;
+		}
 
 		bool success = linker.Link (
 			CreateItemWithAbi (OutputLibrary, abi),
