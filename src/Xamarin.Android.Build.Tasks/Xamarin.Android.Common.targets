@@ -1473,10 +1473,24 @@ because xbuild doesn't support framework reference assemblies.
   are harmlessly satisfied.
 
   For non-trimmed builds, _LinkAssembliesNoShrink handles assembly modifications instead.
+
+  Incrementality: Input is $(_LinkSemaphore) (touched by ILLink when it runs). When ILLink is
+  skipped on a no-change rebuild, the semaphore is unchanged, so this target is also skipped.
+  This is important because SaveChangedAssemblyStep always updates assembly timestamps (even
+  when unchanged), which would cascade through _GenerateJavaStubs -> _CompileJava ->
+  _CompileToDalvik -> _BuildApkEmbed -> _Sign, breaking incremental builds.
+
+  For all runtimes (MonoVM, CoreCLR, NativeAOT), the user assembly is in @(ManagedAssemblyToLink)
+  which is part of _RunILLink's Inputs, so $(_LinkSemaphore) correctly updates whenever the user
+  assembly changes. For NativeAOT specifically, the standard SDK targets strip the user assembly
+  from @(ManagedAssemblyToLink), but _AndroidFixManagedAssemblyToLinkForILLink in
+  Microsoft.Android.Sdk.NativeAOT.targets adds it back.
 -->
 <Target Name="_AfterILLinkAdditionalSteps"
     AfterTargets="ILLink"
-    Condition=" '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' ">
+    Condition=" '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' "
+    Inputs="$(_LinkSemaphore)"
+    Outputs="$(_AdditionalPostLinkerStepsFlag)">
 
   <!-- Convert $(RuntimeIdentifier) (e.g. 'android-arm64') to ABI (e.g. 'arm64-v8a') -->
   <RuntimeIdentifierToAbi RuntimeIdentifier="$(RuntimeIdentifier)">
@@ -1496,18 +1510,11 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="Filtered" ItemName="_AfterILLinkAssemblies" />
   </RemoveDuplicates>
 
-  <!-- The project's own assembly ($(TargetName)$(TargetExt)) may NOT be in
-       @(ManagedAssemblyToLink) — ILLink passes it as a TrimmerRootAssembly via the -a flag
-       rather than including it in the managed assembly list (this happens in NativeAOT builds).
-       We include it explicitly using the same pattern as NativeAOT.targets:144
-       (_AndroidComputeIlcCompileInputs).
-
-       We use Exclude="@(_AfterILLinkAssemblies)" instead of KeepDuplicates="false" to avoid
-       duplicates. KeepDuplicates compares items INCLUDING metadata, so if the same assembly
-       came from @(ManagedAssemblyToLink) with rich metadata (NuGetPackageId, etc.), it would
-       be considered distinct from a bare Include with no metadata — leading to duplicate items
-       that cause GetPerArchAssemblies() to throw "duplicate key" errors. Exclude compares
-       by ItemSpec only, which is what we need. -->
+  <!-- The project's own assembly ($(TargetName)$(TargetExt)) should be in
+       @(ManagedAssemblyToLink) for all runtimes (for NativeAOT, _AndroidFixManagedAssemblyToLinkForILLink
+       ensures this). This explicit Include is a safety net in case some code path doesn't include it.
+       Exclude="@(_AfterILLinkAssemblies)" prevents duplicates by ItemSpec (KeepDuplicates compares
+       including metadata, which would miss matches when metadata differs). -->
   <ItemGroup>
     <_AfterILLinkAssemblies
         Include="$(IntermediateLinkDir)$(TargetName)$(TargetExt)"
@@ -1562,6 +1569,8 @@ because xbuild doesn't support framework reference assemblies.
       SourceFiles="@(_AfterILLinkAssemblies)"
       TargetName="$(TargetName)">
   </AssemblyModifierPipeline>
+
+  <Touch Files="$(_AdditionalPostLinkerStepsFlag)" AlwaysCreate="true" />
 
   <!-- Clean up temporary item groups -->
   <ItemGroup>
