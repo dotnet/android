@@ -33,7 +33,7 @@ public class StripEmbeddedLibraries : AndroidTask
 		var searchDirectories = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
 		foreach (var assembly in Assemblies) {
-			var dir = Path.GetFullPath (Path.GetDirectoryName (assembly.ItemSpec));
+			var dir = Path.GetFullPath (Path.GetDirectoryName (assembly.ItemSpec) ?? "");
 			if (searchDirectories.Add (dir)) {
 				resolver.AddSearchDirectory (dir);
 			}
@@ -66,6 +66,8 @@ public class StripEmbeddedLibraries : AndroidTask
 		};
 
 		bool assembly_modified = false;
+		string directory = Path.Combine (Path.GetDirectoryName (assemblyPath) ?? "", "stripped");
+		string tempOutput = Path.Combine (directory, Path.GetFileName (assemblyPath));
 
 		using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath, readerParams)) {
 			foreach (var module in assembly.Modules) {
@@ -82,11 +84,7 @@ public class StripEmbeddedLibraries : AndroidTask
 				return;
 			}
 
-			// Write modified assembly using the write-to-temp-then-copy pattern
-			// from MarshalMethodsAssemblyRewriter to avoid file locking issues.
-			string directory = Path.Combine (Path.GetDirectoryName (assemblyPath), "stripped");
 			Directory.CreateDirectory (directory);
-			string tempOutput = Path.Combine (directory, Path.GetFileName (assemblyPath));
 
 			var writerParams = new WriterParameters {
 				WriteSymbols = havePdb,
@@ -95,26 +93,25 @@ public class StripEmbeddedLibraries : AndroidTask
 
 			Log.LogDebugMessage ($"  Writing stripped assembly: {assemblyPath}");
 			assembly.Write (tempOutput, writerParams);
+		}
 
-			CopyFile (tempOutput, assemblyPath);
-			RemoveFile (tempOutput);
+		CopyFile (tempOutput, assemblyPath);
+		RemoveFile (tempOutput);
 
-			if (havePdb) {
-				string tempPdb = Path.ChangeExtension (tempOutput, ".pdb");
-				if (File.Exists (tempPdb)) {
-					CopyFile (tempPdb, pdbPath);
-				}
-				RemoveFile (tempPdb);
+		if (havePdb) {
+			string tempPdb = Path.ChangeExtension (tempOutput, ".pdb");
+			if (File.Exists (tempPdb)) {
+				CopyFile (tempPdb, pdbPath);
 			}
+			RemoveFile (tempPdb);
+		}
 
-			// Clean up temp directory if empty
-			try {
-				if (Directory.Exists (directory) && !Directory.EnumerateFileSystemEntries (directory).Any ()) {
-					Directory.Delete (directory);
-				}
-			} catch (Exception) {
-				// Ignore cleanup failures
+		try {
+			if (Directory.Exists (directory) && !Directory.EnumerateFileSystemEntries (directory).Any ()) {
+				Directory.Delete (directory);
 			}
+		} catch (Exception) {
+			// Ignore cleanup failures
 		}
 	}
 
