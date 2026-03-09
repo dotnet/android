@@ -70,6 +70,23 @@ class DotNetAndroidWrapperSharedLibrary : SharedLibrary
 		return new SubStream (AspectStream, (long)payloadOffset, (long)payloadSize);
 	}
 
+	protected static Stream? GetPayloadStream (string logTag, IAspectState state, Stream stream, string? description)
+	{
+		// If successful, then we know .NET for Android payload is there, we must load the library and check
+		// for presence of the assembly store data.
+		var library = DotNetAndroidWrapperSharedLibrary.LoadAspect (stream, state, description) as DotNetAndroidWrapperSharedLibrary;
+		if (library == null) {
+			throw new InvalidOperationException ($"Failed to load library '{description}'");
+		}
+
+		if (!library.HasAndroidPayload) {
+			Log.Debug ($"{logTag}: stream ('{description}') is an ELF shared library, without payload");
+			return null;
+		}
+
+		return library.OpenAndroidPayload ();
+	}
+
 	static DotNetAndroidWrapperSharedLibraryAspectState IsDotNetAndroidWrapperSharedLibrary (Stream stream, string? description)
 	{
 		Log.Debug ($"Checking if '{description}' is a Mono AOT shared library");

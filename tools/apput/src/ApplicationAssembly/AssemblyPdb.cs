@@ -12,14 +12,16 @@ public class AssemblyPdb : BaseAspect
 
 	public override string AspectName => "Assembly Portable PDB data";
 
+	public NativeArchitecture Architecture { get; internal set; }
+
 	public AssemblyPdb (Stream? aspectStream)
 		: base (aspectStream)
-	{
-	}
+	{}
 
 	public static IAspect LoadAspect (Stream stream, IAspectState state, string? description)
 	{
-		throw new NotImplementedException ();
+		Log.Debug ($"Loading PDB data from stream '{description}'");
+		return new AssemblyPdb (stream);
 	}
 
 	public static IAspectState ProbeAspect (Stream stream, string? description)
@@ -129,7 +131,6 @@ public class AssemblyPdb : BaseAspect
 			if (nread % 4 != 0) {
 				reader.BaseStream.Seek (4 - (nread % 4), SeekOrigin.Current);
 			}
-
 			string ret = sb.ToString ();
 			Log.Debug ($"{LogTag}: stream {idx} name == '{ret}'; size {size} bytes");
 

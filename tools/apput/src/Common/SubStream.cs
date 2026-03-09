@@ -53,6 +53,10 @@ class SubStream : Stream
 
 	public override long Seek (long offset, SeekOrigin origin)
 	{
+		if (origin == SeekOrigin.Current) {
+			return baseStream.Seek (offset, origin);
+		}
+
 		return baseStream.Seek (offset + offsetInParentStream, origin);
 	}
 
