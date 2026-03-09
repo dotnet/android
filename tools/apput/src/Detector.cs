@@ -21,6 +21,7 @@ public class Detector
 		typeof (AssemblyStoreSharedLibrary),
 		typeof (AssemblyStore),
 		typeof (ApplicationAssembly),
+		typeof (AssemblyPdb),
 		typeof (AssemblySharedLibrary),
 		typeof (NativeAotSharedLibrary),
 		typeof (XamarinAppSharedLibrary),
