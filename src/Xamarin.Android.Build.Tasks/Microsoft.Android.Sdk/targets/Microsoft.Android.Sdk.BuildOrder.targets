@@ -99,6 +99,7 @@ properties that determine build ordering.
       SignAndroidPackage;
       _DeployApk;
       _DeployAppBundle;
+      _AndroidConfigureAdbReverse;
     </InstallDependsOnTargets>
     <UninstallDependsOnTargets>
       AndroidPrepareForBuild;
@@ -127,12 +128,16 @@ properties that determine build ordering.
     <!-- This should function similar to SignAndroidPackage inside VS plus also deploy -->
     <DeployToDeviceDependsOnTargets Condition=" '$(_AndroidFastDeploymentSupported)' == 'true' ">
       $(_MinimalSignAndroidPackageDependsOn);
+      _GenerateEnvironmentFiles;
       _Upload;
+      _AndroidConfigureAdbReverse;
     </DeployToDeviceDependsOnTargets>
     <DeployToDeviceDependsOnTargets Condition=" '$(_AndroidFastDeploymentSupported)' != 'true' ">
       $(_MinimalSignAndroidPackageDependsOn);
+      _GenerateEnvironmentFiles;
       _DeployApk;
       _DeployAppBundle;
+      _AndroidConfigureAdbReverse;
     </DeployToDeviceDependsOnTargets>
   </PropertyGroup>
 

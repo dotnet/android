@@ -199,6 +199,108 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void DotNetWatchHotReload ()
+		{
+			const string initialMessage = "DOTNET_WATCH_INITIAL_12345";
+			const string hotReloadMessage = "DOTNET_WATCH_HOT_RELOAD_APPLIED";
+
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR); // CoreCLR only for now, as MonoVM requires: https://github.com/dotnet/runtime/commit/c8e2a6110c69601540c25f2099053505fa088b9e
+
+			// Enable hot reload log messages from the delta client
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidEnvironment", "env.txt") {
+				TextContent = () => "HOTRELOAD_DELTA_CLIENT_LOG_MESSAGES=[HotReload]",
+			});
+
+			// Call a helper method from OnCreate that will appear in logcat
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"//${AFTER_ONCREATE}",
+				"UnderTest.AppHelper.PrintMessage ();");
+
+			// Add a vanilla C# helper class (no Java interop) that we'll hot-reload,
+			// and a MetadataUpdateHandler that logs when hot reload is applied.
+			string appHelperBody = $"""Console.WriteLine ("{initialMessage}");""";
+			proj.Sources.Add (new BuildItem.Source ("AppHelper.cs") {
+				TextContent = () => GetAppHelperSource (appHelperBody, hotReloadMessage),
+			});
+
+			using var builder = CreateApkBuilder ();
+			builder.Save (proj);
+
+			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
+
+			// Start dotnet watch which will build, deploy, and watch for changes
+			using var process = dotnet.StartWatch ();
+
+			var locker = new Lock ();
+			var output = new StringBuilder ();
+			var initialMessageEvent = new ManualResetEventSlim ();
+			var hotReloadAppliedEvent = new ManualResetEventSlim ();
+
+			process.OutputDataReceived += (sender, e) => {
+				if (e.Data != null) {
+					lock (locker) {
+						output.AppendLine (e.Data);
+						if (e.Data.Contains (initialMessage)) {
+							initialMessageEvent.Set ();
+						}
+						if (e.Data.Contains (hotReloadMessage)) {
+							hotReloadAppliedEvent.Set ();
+						}
+					}
+				}
+			};
+			process.ErrorDataReceived += (sender, e) => {
+				if (e.Data != null) {
+					lock (locker) {
+						output.AppendLine ($"STDERR: {e.Data}");
+						if (e.Data.Contains (hotReloadMessage)) {
+							hotReloadAppliedEvent.Set ();
+						}
+					}
+				}
+			};
+
+			process.BeginOutputReadLine ();
+			process.BeginErrorReadLine ();
+
+			string logPath = Path.Combine (Root, builder.ProjectDirectory, "dotnet-watch-output.log");
+
+			try {
+				// Wait for the initial message to appear (app launched and running)
+				Assert.IsTrue (initialMessageEvent.Wait (TimeSpan.FromMinutes (5)),
+					$"Initial message '{initialMessage}' was not found in output. See {logPath} for details.");
+
+				// Give dotnet watch time to finish post-deploy setup and start its file watcher.
+				// There is no explicit "ready" signal from dotnet watch after deploy completes.
+				Thread.Sleep (5000);
+
+				// Modify the vanilla C# helper class (not the Java-interop MainActivity)
+				appHelperBody = $"""
+					Console.WriteLine ("{initialMessage}");
+					Console.WriteLine ("MODIFIED_LINE");
+					""";
+				proj.Touch ("AppHelper.cs");
+				builder.BuiltBefore = true; // dotnet watch will build, not builder.Build()
+				builder.Save (proj, doNotCleanupOnUpdate: true, saveProject: false);
+
+				// Wait for hot reload to apply (MetadataUpdateHandler fires Console.WriteLine)
+				Assert.IsTrue (hotReloadAppliedEvent.Wait (TimeSpan.FromMinutes (2)),
+					$"Hot reload message '{hotReloadMessage}' was not found in output. See {logPath} for details.");
+			} finally {
+				// Kill the process
+				if (!process.HasExited) {
+					process.Kill (entireProcessTree: true);
+					process.WaitForExit ();
+				}
+
+				// Write the output to a log file for debugging
+				File.WriteAllText (logPath, output.ToString ());
+				TestContext.AddTestAttachment (logPath);
+			}
+		}
+
+		[Test]
 		[TestCase (true)]
 		[TestCase (false)]
 		public void DeployToDevice (bool isRelease)
@@ -1645,5 +1747,31 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
 			Assert.IsTrue (didLaunch, "Activity should have started.");
 		}
+
+		static string GetAppHelperSource (string appHelperBody, string hotReloadMessage) => $$"""
+			using System;
+
+			[assembly: System.Reflection.Metadata.MetadataUpdateHandlerAttribute (typeof (UnderTest.HotReloadService))]
+
+			namespace UnderTest
+			{
+				public static class AppHelper
+				{
+					public static void PrintMessage ()
+					{
+						{{appHelperBody}}
+					}
+				}
+
+				public static class HotReloadService
+				{
+					internal static void ClearCache (Type[]? types) { }
+					internal static void UpdateApplication (Type[]? types)
+					{
+						Console.WriteLine ("{{hotReloadMessage}}");
+					}
+				}
+			}
+			""";
 	}
 }
