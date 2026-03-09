@@ -51,6 +51,11 @@ We recommend you use the Microsoft Open JDK, this has been tested against our .N
 
  1. Download [Microsoft OpenJDK 21](/java/openjdk/download#openjdk-21).
 
+ 2. Depending on your platform run the appropriate installer.
+
+ 3. It is also good practice to set the `JAVA_HOME` environment variable.
+    This will allow you to use the JDK from the Command Prompt or Terminal.
+
 ## Install the Android SDK manually
 
 > [!NOTE]
@@ -73,9 +78,10 @@ You might find it necessary to install the Android SDK manually:
  6. Run the `sdkmanager` command to install the desired components.
  
  7. Set the `$ANDROID_HOME` environment variable to your Android SDK path:
-```powershell
-$env:ANDROID_HOME = "C:\android-sdk"
-```
+
+    ```powershell
+    $env:ANDROID_HOME = "C:\android-sdk"
+    ```
 
 For example, to install the latest platform and platform tools, use:
 
@@ -107,9 +113,3 @@ The following component types are useful to know:
 
 It is also good practice to set the `ANDROID_HOME` environment variable, as this
 allows you to use certain tooling from the command line.
-
- 2. Depending on your platform run the appropriate installer.
-
- 3. It is also good practice to set the `JAVA_HOME` environment variable.
-    This will allow you to use the JDK from the Command Prompt or Terminal.
-
