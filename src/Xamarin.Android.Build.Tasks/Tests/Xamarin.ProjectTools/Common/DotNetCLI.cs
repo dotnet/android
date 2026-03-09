@@ -32,7 +32,7 @@ namespace Xamarin.ProjectTools
 		/// </summary>
 		/// <param name="args">command arguments</param>
 		/// <returns>A started Process instance. Caller is responsible for disposing.</returns>
-		protected Process ExecuteProcess (params string [] args)
+		protected Process ExecuteProcess (string [] args, string workingDirectory = null)
 		{
 			var p = new Process ();
 			p.StartInfo.FileName = Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet");
@@ -41,6 +41,9 @@ namespace Xamarin.ProjectTools
 			p.StartInfo.UseShellExecute = false;
 			p.StartInfo.RedirectStandardOutput = true;
 			p.StartInfo.RedirectStandardError = true;
+			if (!string.IsNullOrEmpty (workingDirectory)) {
+				p.StartInfo.WorkingDirectory = workingDirectory;
+			}
 			p.StartInfo.SetEnvironmentVariable ("DOTNET_MULTILEVEL_LOOKUP", "0");
 			// Workaround for dotnet/msbuild#13175: the MSBuild app host needs DOTNET_HOST_PATH
 			// to bootstrap the .NET runtime when spawning TaskHostFactory task hosts (e.g. ILLink).
@@ -175,6 +178,29 @@ namespace Xamarin.ProjectTools
 			}
 
 			return ExecuteProcess (arguments.ToArray ());
+		}
+
+		/// <summary>
+		/// Starts `dotnet watch` and returns a running Process that can be monitored and killed.
+		/// This is used for hot reload testing where dotnet-watch builds, deploys, and watches for file changes.
+		/// </summary>
+		/// <param name="parameters">Additional arguments to pass to `dotnet watch`.</param>
+		/// <returns>A running Process instance. Caller is responsible for disposing.</returns>
+		public Process StartWatch (string [] parameters = null)
+		{
+			var arguments = new List<string> {
+				"watch",
+				"--project", $"\"{projectOrSolution}\"",
+				"--non-interactive",
+				"--verbose",
+				"--verbosity", "diag",
+				"-bl",
+			};
+			if (parameters != null) {
+				arguments.AddRange (parameters);
+			}
+
+			return ExecuteProcess (arguments.ToArray (), workingDirectory: ProjectDirectory);
 		}
 
 		public IEnumerable<string> LastBuildOutput {
