@@ -59,10 +59,11 @@ public class GetAvailableAndroidDevices : AndroidAdb
         Log.LogDebugMessage ($"Found {adbDevices.Count} device(s) from adb");
 
         // For emulators, query AVD names
+        var logger = this.CreateTaskLogger ();
         foreach (var device in adbDevices) {
             if (device.Type == AdbDeviceType.Emulator) {
                 device.AvdName = GetEmulatorAvdName (device.Serial);
-                device.Description = AdbRunner.BuildDeviceDescription (device, this.CreateTaskLogger ());
+                device.Description = AdbRunner.BuildDeviceDescription (device, logger);
             }
         }
 
@@ -71,7 +72,7 @@ public class GetAvailableAndroidDevices : AndroidAdb
         Log.LogDebugMessage ($"Found {availableEmulators.Count} available emulator(s) from 'emulator -list-avds'");
 
         // Merge using shared logic
-        var mergedDevices = AdbRunner.MergeDevicesAndEmulators (adbDevices, availableEmulators, this.CreateTaskLogger ());
+        var mergedDevices = AdbRunner.MergeDevicesAndEmulators (adbDevices, availableEmulators, logger);
 
         // Convert to ITaskItem array
         Devices = ConvertToTaskItems (mergedDevices);
