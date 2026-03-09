@@ -85,9 +85,9 @@ namespace Xamarin.Android.Build.Tests
 			public uint   system_property_count;
 			public uint   number_of_assemblies_in_apk;
 			public uint   bundled_assembly_name_width;
-			public uint   number_of_assembly_store_files;
 			public uint   number_of_dso_cache_entries;
 			public uint   number_of_aot_cache_entries;
+			public uint   number_of_shared_libraries;
 			public uint   android_runtime_jnienv_class_token;
 			public uint   jnienv_initialize_method_token;
 			public uint   jnienv_registerjninatives_method_token;
@@ -98,6 +98,37 @@ namespace Xamarin.Android.Build.Tests
 			public bool   managed_marshal_methods_lookup_enabled;
 		}
 
+		// This is shared between MonoVM and CoreCLR hosts, not used by NativeAOT
+		public sealed class DSOCacheEntry64
+		{
+			// Hardcoded, by design - we want to know if there are any changes in the
+			// native assembly layout.
+			public const uint NativeSize_CoreCLR = 32;
+			public const uint NativeSize_MonoVM = 40;
+
+			public ulong hash;
+			public ulong real_name_hash;
+			public bool ignore;
+			public bool is_jni_library;
+			public string name; // real structure has an index here, we fetch the string to make it easier
+			public IntPtr handle;
+		}
+
+		// This is a synthetic class, not reflecting what's in the generated LLVM IR/assembler source
+		public sealed class JniPreloadsEntry
+		{
+			public uint Index;
+			public string LibraryName;
+		}
+
+		// This is a synthetic class, not reflecting what's in the generated LLVM IR/assembler source
+		public sealed class JniPreloads
+		{
+			public uint IndexStride;
+			public List<JniPreloadsEntry> Entries;
+			public string SourceFile;
+		}
+
 		const uint ApplicationConfigFieldCount_MonoVM = 27;
 
 		const string ApplicationConfigSymbolName = "application_config";
@@ -106,6 +137,12 @@ namespace Xamarin.Android.Build.Tests
 
 		const string AppEnvironmentVariablesNativeAOTSymbolName = "__naot_android_app_environment_variables";
 		const string AppEnvironmentVariableContentsNativeAOTSymbolName = "__naot_android_app_environment_variable_contents";
+
+		const string DsoJniPreloadsIdxStrideSymbolName = "dso_jni_preloads_idx_stride";
+		const string DsoJniPreloadsIdxCountSymbolName = "dso_jni_preloads_idx_count";
+		const string DsoJniPreloadsIdxSymbolName = "dso_jni_preloads_idx";
+		const string DsoCacheSymbolName = "dso_cache";
+		const string DsoNamesDataSymbolName = "dso_names_data";
 
 		static readonly object ndkInitLock = new object ();
 		static readonly char[] readElfFieldSeparator = new [] { ' ', '\t' };
@@ -120,6 +157,11 @@ namespace Xamarin.Android.Build.Tests
 		static readonly HashSet <string> expectedUInt32Types = new HashSet <string> (StringComparer.Ordinal) {
 			".word",
 			".long",
+		};
+
+		static readonly HashSet <string> expectedUInt64Types = new HashSet <string> (StringComparer.Ordinal) {
+			".xword",
+			".quad",
 		};
 
 		static readonly string[] requiredSharedLibrarySymbolsMonoVM = {
@@ -416,7 +458,7 @@ namespace Xamarin.Android.Build.Tests
 					case 2:
 						// aot_lazy_load: bool / .byte
 						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
-						ret.uses_mono_aot = ConvertFieldToBool ("aot_lazy_load", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
+						ret.aot_lazy_load = ConvertFieldToBool ("aot_lazy_load", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
 					case 3: // uses_assembly_preload: bool / .byte
@@ -484,19 +526,19 @@ namespace Xamarin.Android.Build.Tests
 						ret.bundled_assembly_name_width = ConvertFieldToUInt32 ("bundled_assembly_name_width", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 16: // number_of_assembly_store_files: uint32_t / .word | .long
-						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
-						ret.number_of_assembly_store_files = ConvertFieldToUInt32 ("number_of_assembly_store_files", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
-
-					case 17: // number_of_dso_cache_entries: uint32_t / .word | .long
+					case 16: // number_of_dso_cache_entries: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.number_of_dso_cache_entries = ConvertFieldToUInt32 ("number_of_dso_cache_entries", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 18: // number_of_aot_cache_entries: uint32_t / .word | .long
+					case 17: // number_of_aot_cache_entries: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.number_of_aot_cache_entries = ConvertFieldToUInt32 ("number_of_aot_cache_entries", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
+						break;
+
+					case 18: // number_of_shared_libraries: uint32_t / .word | long
+						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
+						ret.number_of_shared_libraries = ConvertFieldToUInt32 ("number_of_shared_libraries", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
 					case 19: // android_runtime_jnienv_class_token: uint32_t / .word | .long
@@ -596,21 +638,8 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (appEnvvarsContentsSymbol.Size != 0, $"{envvarsContentsSymbolName} size as specified in the '.size' directive must not be 0");
 			Assert.IsTrue (appEnvvarsContentsSymbol.Contents.Count == 1, $"{envvarsContentsSymbolName} symbol must have a single value.");
 
-			NativeAssemblyParser.AssemblerSymbolItem contentsItem = appEnvvarsContentsSymbol.Contents[0];
-			string[] field = GetField (envFile.Path, parser.SourceFilePath, contentsItem.Contents, contentsItem.LineNumber);;
-			Assert.IsTrue (field[0] == ".asciz", $"{envvarsContentsSymbolName} must be of '.asciz' type");
-
-
-			var sb = new StringBuilder ();
-			// We need to get rid of the '"' delimiter llc outputs..
-			sb.Append (field[1].Trim ('"'));
-
-			// ...and llc outputs NUL as the octal '\000' sequence, we need an actual NUL...
-			sb.Replace ("\\000", "\0");
-
-			// ...and since it's an .asciz variable, the string doesn't contain explicit terminating NUL, but we need one
-			sb.Append ('\0');
-			string contents = sb.ToString ();
+			string[] field;
+			string contents = ReadStringBlob (envFile, appEnvvarsContentsSymbol, parser);
 			var indexes = new List<(uint nameIdx, uint valueIdx)> ();
 
 			// Environment variables are pairs of indexes into the contents array
@@ -623,11 +652,16 @@ namespace Xamarin.Android.Build.Tests
 
 			// Contents array is a collection of strings terminated with the NUL character
 			var ret = new Dictionary <string, string> (StringComparer.Ordinal);
+
+			const string ContentsAssertionTag = "Environment Variables";
 			foreach (var envvar in indexes) {
 				Assert.IsTrue (envvar.nameIdx < appEnvvarsContentsSymbol.Size, $"Environment variable name index {envvar.nameIdx} is out of range of the contents array");
 				Assert.IsTrue (envvar.valueIdx < appEnvvarsContentsSymbol.Size, $"Environment variable value index {envvar.valueIdx} is out of range of the contents array");
 
-				ret.Add (GetFromContents (envvar.nameIdx), GetFromContents (envvar.valueIdx));
+				ret.Add (
+					GetStringFromBlobContents (ContentsAssertionTag, contents, envvar.nameIdx),
+					GetStringFromBlobContents (ContentsAssertionTag, contents, envvar.valueIdx)
+				);
 			}
 
 			return ret;
@@ -639,23 +673,6 @@ namespace Xamarin.Android.Build.Tests
 				field = GetField (envFile.Path, parser.SourceFilePath, item.Contents, item.LineNumber);
 				Assert.IsTrue (expectedUInt32Types.Contains (field[0]), $"Environment variable {name} index field has invalid type '${field[0]}'");
 				return UInt32.Parse (field[1], CultureInfo.InvariantCulture);
-			}
-
-			string GetFromContents (uint idx)
-			{
-				var sb = new StringBuilder ();
-				bool foundNull = false;
-
-				for (int i = (int)idx; i < contents.Length; i++) {
-					if (contents[i] == '\0') {
-						foundNull = true;
-						break;
-					}
-					sb.Append (contents[i]);
-				}
-
-				Assert.IsTrue (foundNull, $"Environment variable contents string starting at index {idx} is not NUL-terminated");
-				return sb.ToString ();
 			}
 		}
 
@@ -921,6 +938,270 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		public static List<JniPreloads> ReadJniPreloads (List<EnvironmentFile> envFilePaths, uint expectedDsoCacheEntryCount, AndroidRuntime runtime)
+		{
+			var ret = new List<JniPreloads> ();
+
+			foreach (EnvironmentFile envFile in envFilePaths) {
+				JniPreloads preloads = runtime switch {
+					AndroidRuntime.CoreCLR => ReadJniPreloads_CoreCLR (envFile, expectedDsoCacheEntryCount),
+					AndroidRuntime.MonoVM  => ReadJniPreloads_MonoVM (envFile, expectedDsoCacheEntryCount),
+					_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
+				};
+
+				ret.Add (preloads);
+			}
+
+			return ret;
+		}
+
+		delegate List<DSOCacheEntry64> ReadDsoCacheFn (NativeAssemblyParser parser, EnvironmentFile envFile, NativeAssemblyParser.AssemblerSymbol dsoCacheSym);
+
+		static JniPreloads ReadJniPreloads_Common (EnvironmentFile envFile, uint expectedDsoCacheEntryCount, uint dsoCacheEntrySize, ReadDsoCacheFn dsoReader)
+		{
+			NativeAssemblyParser parser = CreateAssemblyParser (envFile);
+
+			NativeAssemblyParser.AssemblerSymbol dsoCache = GetNonEmptyRequiredSymbol (parser, envFile, DsoCacheSymbolName);
+			uint calculatedDsoCacheEntryCount = (uint)(dsoCache.Size / dsoCacheEntrySize);
+			Assert.IsTrue (calculatedDsoCacheEntryCount == expectedDsoCacheEntryCount, $"Calculated DSO cache entry count should be {expectedDsoCacheEntryCount} but was {calculatedDsoCacheEntryCount} instead.");
+
+			uint calculatedDsoCacheEntrySize = (uint)(dsoCacheEntrySize * expectedDsoCacheEntryCount);
+			Assert.IsTrue (calculatedDsoCacheEntrySize == dsoCache.Size, $"Calculated DSO cache size should be {dsoCache.Size} but was {calculatedDsoCacheEntrySize} instead.");
+
+			List<DSOCacheEntry64> dsoCacheEntries = dsoReader (parser, envFile, dsoCache);
+			Assert.IsTrue ((uint)dsoCacheEntries.Count == expectedDsoCacheEntryCount, $"DSO cache read from the source should have {expectedDsoCacheEntryCount} entries, it had {dsoCacheEntries.Count} instead.");
+
+			NativeAssemblyParser.AssemblerSymbol dsoJniPreloadsIdxStride = GetNonEmptyRequiredSymbol (parser, envFile, DsoJniPreloadsIdxStrideSymbolName);
+			uint preloadsStride = GetSymbolValueAsUInt32 (dsoJniPreloadsIdxStride);
+			Assert.IsTrue (preloadsStride > 0, $"Symbol {dsoJniPreloadsIdxStride.Name} must have value larger than 0.");
+
+			NativeAssemblyParser.AssemblerSymbol dsoJniPreloadsIdxCount = GetNonEmptyRequiredSymbol (parser, envFile, DsoJniPreloadsIdxCountSymbolName);
+			ulong preloadsCount = GetSymbolValueAsUInt64 (dsoJniPreloadsIdxCount);
+			Assert.IsTrue (preloadsCount > 0, $"Symbol {dsoJniPreloadsIdxCount.Name} must have value larger than 0.");
+
+			NativeAssemblyParser.AssemblerSymbol dsoJniPreloadsIdx = GetNonEmptyRequiredSymbol (parser, envFile, DsoJniPreloadsIdxSymbolName);
+			ulong calculatedPreloadsIdxSize = preloadsCount * 4; // single index field is a 32-bit integer
+			Assert.IsTrue (dsoJniPreloadsIdx.Size == calculatedPreloadsIdxSize, $"JNI preloads index should have size of {calculatedPreloadsIdxSize} instead of {dsoJniPreloadsIdx.Size}");
+
+			var preloadsIndex = new List<JniPreloadsEntry> ();
+			for (int i = 0; i < (int)preloadsCount; i++) {
+				(ulong lineNumber, string value) = ReadNextArrayIndex (envFile, parser, dsoJniPreloadsIdx, i, expectedUInt32Types);
+				uint index = ConvertFieldToUInt32 ("index", envFile.Path, parser.SourceFilePath, lineNumber, value);
+
+				Assert.True (index < (uint)dsoCacheEntries.Count, $"JNI preload index {index} is larger than the number of items in the DSO cache array ({dsoCacheEntries.Count})");
+				preloadsIndex.Add (
+					new JniPreloadsEntry {
+						Index = index,
+						LibraryName = dsoCacheEntries[(int)index].name,
+					}
+				);
+			}
+			Assert.IsTrue (preloadsCount == (uint)preloadsIndex.Count, $"JNI preload index count should be equal to {preloadsCount}, but was {preloadsIndex.Count} instead.");
+
+			return new JniPreloads {
+				IndexStride = preloadsStride,
+				Entries = preloadsIndex,
+				SourceFile = envFile.Path,
+			};
+
+			uint GetSymbolValueAsUInt32 (NativeAssemblyParser.AssemblerSymbol symbol)
+			{
+				NativeAssemblyParser.AssemblerSymbolItem item = symbol.Contents[0];
+				string[] field = GetField (envFile.Path, parser.SourceFilePath, item.Contents, item.LineNumber);
+				Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected 32-bit integer field type for symbol {symbol.Name} in '{envFile.Path}:{item.LineNumber}': {field [0]}");
+				return ConvertFieldToUInt32 (DsoJniPreloadsIdxStrideSymbolName, envFile.Path, parser.SourceFilePath, item.LineNumber, field[1]);
+			}
+
+			ulong GetSymbolValueAsUInt64 (NativeAssemblyParser.AssemblerSymbol symbol)
+			{
+				NativeAssemblyParser.AssemblerSymbolItem item = symbol.Contents[0];
+				string[] field = GetField (envFile.Path, parser.SourceFilePath, item.Contents, item.LineNumber);
+				Assert.IsTrue (expectedUInt64Types.Contains (field [0]), $"Unexpected 64-bit integer field type for symbol {symbol.Name} in '{envFile.Path}:{item.LineNumber}': {field [0]}");
+				return ConvertFieldToUInt64 (DsoJniPreloadsIdxStrideSymbolName, envFile.Path, parser.SourceFilePath, item.LineNumber, field[1]);
+			}
+		}
+
+		static NativeAssemblyParser.AssemblerSymbol GetNonEmptyRequiredSymbol (NativeAssemblyParser parser, EnvironmentFile envFile, string symbolName)
+		{
+			var symbol = GetRequiredSymbol (symbolName, envFile, parser);
+
+			Assert.IsTrue (symbol.Size != 0, $"{symbolName} size as specified in the '.size' directive must not be 0");
+			return symbol;
+		}
+
+		static JniPreloads ReadJniPreloads_MonoVM (EnvironmentFile envFile, uint expectedDsoCacheEntryCount)
+		{
+			return ReadJniPreloads_Common (
+				envFile,
+				expectedDsoCacheEntryCount,
+				DSOCacheEntry64.NativeSize_MonoVM,
+				(NativeAssemblyParser parser, EnvironmentFile envFile, NativeAssemblyParser.AssemblerSymbol dsoCacheSym) => {
+					return ReadDsoCache64_MonoVM (envFile, parser, dsoCacheSym);
+				}
+			);
+		}
+
+		static List<DSOCacheEntry64> ReadDsoCache64_MonoVM (EnvironmentFile envFile, NativeAssemblyParser parser, NativeAssemblyParser.AssemblerSymbol dsoCache)
+		{
+			var ret = new List<DSOCacheEntry64> ();
+
+			// This follows a VERY strict format, by design. If anything changes in the generated source this is supposed
+			// to break.
+			//
+			// The code is almost identical to that of CoreCLR, but it is kept completely separate on purpose - it makes the code simpler, since
+			// it doesn't have to account for the small differences between runtimes and it also provides for independence of the two runtime
+			// hosts.
+			const int itemsPerEntry = 7; // Includes padding entries
+			for (int i = 0; i < dsoCache.Contents.Count; i += itemsPerEntry) {
+				ulong lineNumber;
+				string value;
+				int index = i;
+
+				// uint64_t hash
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, expectedUInt64Types);
+				ulong hash = ConvertFieldToUInt64 ("hash", envFile.Path, parser.SourceFilePath, lineNumber, value);
+
+				// uint64_t real_name_hash
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, expectedUInt64Types);
+				ulong real_name_hash = ConvertFieldToUInt64 ("real_name_hash", envFile.Path, parser.SourceFilePath, lineNumber, value);
+
+				// bool ignore
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, ".byte");
+				bool ignore = ConvertFieldToBool ("ignore", envFile.Path, parser.SourceFilePath, lineNumber, value);
+
+				// bool is_jni_library
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, ".byte");
+				bool is_jni_library = ConvertFieldToBool ("is_jni_library", envFile.Path, parser.SourceFilePath, lineNumber, value);
+
+				// padding, 6 bytes
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index, ".zero");
+				uint padding1 = ConvertFieldToUInt32 ("padding1", envFile.Path, parser.SourceFilePath, lineNumber, value);
+				Assert.IsTrue (padding1 == 6, $"Padding field #1 at index {index} of symbol '{dsoCache.Name}' should have had a value of 6, instead it was set to {padding1}");
+				index++;
+
+				// .pointer_type SYMBOL_NAME
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, expectedUInt64Types);
+				NativeAssemblyParser.AssemblerSymbol dsoLibNameSymbol = GetRequiredSymbol (value, envFile, parser);
+
+				// void* handle
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index, expectedUInt64Types);
+				ulong handle = ConvertFieldToUInt64 ("handle", envFile.Path, parser.SourceFilePath, lineNumber, value);
+				Assert.IsTrue (handle == 0, $"Handle field at index {index} of symbol '{dsoCache.Name}' should have had a value of 0, instead it was set to {handle}");
+
+				string name = GetStringContents (dsoLibNameSymbol, envFile, parser);
+
+				ret.Add (
+					new DSOCacheEntry64 {
+						hash = hash,
+						real_name_hash = real_name_hash,
+						ignore = ignore,
+						is_jni_library = is_jni_library,
+						name = name,
+						handle = IntPtr.Zero,
+					}
+				);
+			}
+
+			return ret;
+		}
+
+		static JniPreloads ReadJniPreloads_CoreCLR (EnvironmentFile envFile, uint expectedDsoCacheEntryCount)
+		{
+			return ReadJniPreloads_Common (
+				envFile,
+				expectedDsoCacheEntryCount,
+				DSOCacheEntry64.NativeSize_CoreCLR,
+				(NativeAssemblyParser parser, EnvironmentFile envFile, NativeAssemblyParser.AssemblerSymbol dsoCacheSym) => {
+					NativeAssemblyParser.AssemblerSymbol dsoNamesData = GetNonEmptyRequiredSymbol (parser, envFile, DsoNamesDataSymbolName);
+					Assert.IsTrue (dsoNamesData.Size > 0, "DSO names data must have size larger than zero");
+
+					string dsoNames = ReadStringBlob (envFile, dsoNamesData, parser);
+					Assert.IsTrue (dsoNames.Length > 0, "DSO names read from source mustn't be empty");
+
+					return ReadDsoCache64_CoreCLR (envFile, parser, dsoCacheSym, dsoNames);
+				}
+			);
+		}
+
+		static List<DSOCacheEntry64> ReadDsoCache64_CoreCLR (EnvironmentFile envFile, NativeAssemblyParser parser, NativeAssemblyParser.AssemblerSymbol dsoCache, string dsoNamesBlob)
+		{
+			var ret = new List<DSOCacheEntry64> ();
+
+			// This follows a VERY strict format, by design. If anything changes in the generated source this is supposed
+			// to break.
+			const int itemsPerEntry = 7; // Includes padding entries
+			for (int i = 0; i < dsoCache.Contents.Count; i += itemsPerEntry) {
+				ulong lineNumber;
+				string value;
+				int index = i;
+
+				// uint64_t hash
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, expectedUInt64Types);
+				ulong hash = ConvertFieldToUInt64 ("hash", envFile.Path, parser.SourceFilePath, lineNumber, value);
+
+				// uint64_t real_name_hash
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, expectedUInt64Types);
+				ulong real_name_hash = ConvertFieldToUInt64 ("real_name_hash", envFile.Path, parser.SourceFilePath, lineNumber, value);
+
+				// bool ignore
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, ".byte");
+				bool ignore = ConvertFieldToBool ("ignore", envFile.Path, parser.SourceFilePath, lineNumber, value);
+
+				// bool is_jni_library
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, ".byte");
+				bool is_jni_library = ConvertFieldToBool ("is_jni_library", envFile.Path, parser.SourceFilePath, lineNumber, value);
+
+				// padding, 2 bytes
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index, ".zero");
+				uint padding1 = ConvertFieldToUInt32 ("padding1", envFile.Path, parser.SourceFilePath, lineNumber, value);
+				Assert.IsTrue (padding1 == 2, $"Padding field #1 at index {index} of symbol '{dsoCache.Name}' should have had a value of 2, instead it was set to {padding1}");
+				index++;
+
+				// uint32_t name_index
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, expectedUInt32Types);
+				uint name_index = ConvertFieldToUInt32 ("name_index", envFile.Path, parser.SourceFilePath, lineNumber, value);
+
+				// void* handle
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index, expectedUInt64Types);
+				ulong handle = ConvertFieldToUInt64 ("handle", envFile.Path, parser.SourceFilePath, lineNumber, value);
+				Assert.IsTrue (handle == 0, $"Handle field at index {index} of symbol '{dsoCache.Name}' should have had a value of 0, instead it was set to {handle}");
+
+				string name = GetStringFromBlobContents ("DSO JNI preloads", dsoNamesBlob, name_index);
+				ret.Add (
+					new DSOCacheEntry64 {
+						hash = hash,
+						real_name_hash = real_name_hash,
+						ignore = ignore,
+						is_jni_library = is_jni_library,
+						name = name,
+						handle = IntPtr.Zero,
+					}
+				);
+			}
+
+			return ret;
+		}
+
+		static (ulong line, string value) ReadNextArrayIndex (EnvironmentFile envFile, NativeAssemblyParser parser, NativeAssemblyParser.AssemblerSymbol array, int index, string expectedType)
+		{
+			return ReadNextArrayIndex (envFile, parser, array, index, new HashSet<string> (StringComparer.Ordinal) { expectedType });
+		}
+
+		static (ulong line, string value) ReadNextArrayIndex (EnvironmentFile envFile, NativeAssemblyParser parser, NativeAssemblyParser.AssemblerSymbol array,
+		  int index, HashSet<string> expectedTypes)
+		{
+			Assert.IsFalse (index >= array.Contents.Count, $"Index {index} exceeds the number of items in the {array.Name} array.");
+			NativeAssemblyParser.AssemblerSymbolItem item = array.Contents[index];
+
+			string[] field = GetField (envFile.Path, parser.SourceFilePath, item.Contents, item.LineNumber);
+			Assert.IsTrue (field.Length == 2, $"Item {index} of symbol {array.Name} at {envFile.Path}:{item.LineNumber} has an invalid value.");
+
+			string expectedTypesList = String.Join (" | ", expectedTypes);
+			Assert.IsTrue (expectedTypes.Contains (field[0]), $"Item {index} of symbol {array.Name} at {parser.SourceFilePath}:{item.LineNumber} should be of type '{expectedTypesList}', but was '{field[0]}' instead.");
+
+			return (item.LineNumber, field[1]);
+		}
+
 		static (List<string> stdout, List<string> stderr) RunCommand (string executablePath, string arguments = null)
 		{
 			var psi = new ProcessStartInfo {
@@ -1007,7 +1288,17 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (value.Length > 0, $"Field '{fieldName}' in {nativeAssemblerEnvFile}:{fileLine} is not a valid uint32_t value (not long enough). File generated from '{llvmAssemblerEnvFile}'");
 
 			uint fv;
-			Assert.IsTrue (TryParseInteger (value, out fv), $"Field '{fieldName}' in {nativeAssemblerEnvFile}:{fileLine} is not a valid uint32_t value (not a valid integer). File generated from '{llvmAssemblerEnvFile}'");
+			Assert.IsTrue (TryParseInteger (value, out fv), $"Field '{fieldName}' in {nativeAssemblerEnvFile}:{fileLine} is not a valid uint32_t value ('{value}' is not a valid integer). File generated from '{llvmAssemblerEnvFile}'");
+
+			return fv;
+		}
+
+		static ulong ConvertFieldToUInt64 (string fieldName, string llvmAssemblerEnvFile, string nativeAssemblerEnvFile, ulong fileLine, string value)
+		{
+			Assert.IsTrue (value.Length > 0, $"Field '{fieldName}' in {nativeAssemblerEnvFile}:{fileLine} is not a valid uint64_t value (not long enough). File generated from '{llvmAssemblerEnvFile}'");
+
+			ulong fv;
+			Assert.IsTrue (TryParseInteger (value, out fv), $"Field '{fieldName}' in {nativeAssemblerEnvFile}:{fileLine} is not a valid uint64_t value ('{value}' is not a valid integer). File generated from '{llvmAssemblerEnvFile}'");
 
 			return fv;
 		}
@@ -1017,18 +1308,40 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (value.Length > 0, $"Field '{fieldName}' in {nativeAssemblerEnvFile}:{fileLine} is not a valid uint8_t value (not long enough). File generated from '{llvmAssemblerEnvFile}'");
 
 			byte fv;
-			Assert.IsTrue (TryParseInteger (value, out fv), $"Field '{fieldName}' in {nativeAssemblerEnvFile}:{fileLine} is not a valid uint8_t value (not a valid integer). File generated from '{llvmAssemblerEnvFile}'");
+			Assert.IsTrue (TryParseInteger (value, out fv), $"Field '{fieldName}' in {nativeAssemblerEnvFile}:{fileLine} is not a valid uint8_t value ('{value}' is not a valid integer). File generated from '{llvmAssemblerEnvFile}'");
 
 			return fv;
 		}
 
+		// Integers are parsed as signed, since llc will always output signed integers.
 		static bool TryParseInteger (string value, out uint fv)
 		{
 			if (value.StartsWith ("0x", StringComparison.Ordinal)) {
 				return UInt32.TryParse (value.Substring (2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out fv);
 			}
 
-			return UInt32.TryParse (value, out fv);
+			fv = 0;
+			if (!Int32.TryParse (value, out int signedFV)) {
+				return false;
+			}
+
+			fv = (uint)signedFV;
+			return true;
+		}
+
+		static bool TryParseInteger (string value, out ulong fv)
+		{
+			if (value.StartsWith ("0x", StringComparison.Ordinal)) {
+				return UInt64.TryParse (value.Substring (2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out fv);
+			}
+
+			fv = 0;
+			if (!Int64.TryParse (value, out long signedFV)) {
+				return false;
+			}
+
+			fv = (ulong)signedFV;
+			return true;
 		}
 
 		static bool TryParseInteger (string value, out byte fv)
@@ -1038,6 +1351,42 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			return Byte.TryParse (value, out fv);
+		}
+
+		static string ReadStringBlob (EnvironmentFile envFile, NativeAssemblyParser.AssemblerSymbol contentsSymbol, NativeAssemblyParser parser)
+		{
+			NativeAssemblyParser.AssemblerSymbolItem contentsItem = contentsSymbol.Contents[0];
+			string[] field = GetField (envFile.Path, parser.SourceFilePath, contentsItem.Contents, contentsItem.LineNumber);
+			Assert.IsTrue (field[0] == ".asciz", $"{contentsSymbol.Name} must be of '.asciz' type");
+
+			var sb = new StringBuilder ();
+			// We need to get rid of the '"' delimiter llc outputs..
+			sb.Append (field[1].Trim ('"'));
+
+			// ...and llc outputs NUL as the octal '\000' sequence, we need an actual NUL...
+			sb.Replace ("\\000", "\0");
+
+			// ...and since it's an .asciz variable, the string doesn't contain explicit terminating NUL, but we need one
+			sb.Append ('\0');
+
+			return sb.ToString ();
+		}
+
+		static string GetStringFromBlobContents (string assertionTag, string contents, uint idx)
+		{
+			var sb = new StringBuilder ();
+			bool foundNull = false;
+
+			for (int i = (int)idx; i < contents.Length; i++) {
+				if (contents[i] == '\0') {
+					foundNull = true;
+					break;
+				}
+				sb.Append (contents[i]);
+			}
+
+			Assert.IsTrue (foundNull, $"[{assertionTag} string starting at index {idx} of a string blob is not NUL-terminated");
+			return sb.ToString ();
 		}
 	}
 }

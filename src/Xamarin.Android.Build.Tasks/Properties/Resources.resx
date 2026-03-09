@@ -1073,6 +1073,22 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
     <value>Command '{0}' failed.\n{1}</value>
     <comment>'{0}' is a failed command name (potentially with path) followed by all the arguments passed to it. {1} is the combined output on the standard error and standard output streams.</comment>
   </data>
+  <data name="XA0143" xml:space="preserve">
+    <value>Failed to launch the Android emulator for AVD '{0}': {1}</value>
+    <comment>{0} - The AVD name.
+{1} - The exception message.</comment>
+  </data>
+  <data name="XA0144" xml:space="preserve">
+    <value>The Android emulator for AVD '{0}' exited unexpectedly with exit code {1} before becoming available.</value>
+    <comment>{0} - The AVD name.
+{1} - The process exit code.</comment>
+  </data>
+  <data name="XA0145" xml:space="preserve">
+    <value>The Android emulator for AVD '{0}' did not finish booting within {1} seconds. Increase 'BootTimeoutSeconds' or check the emulator configuration.</value>
+    <comment>The following is a literal name and should not be translated: BootTimeoutSeconds
+{0} - The AVD name.
+{1} - The timeout in seconds.</comment>
+  </data>
   <data name="XAGRDL1000" xml:space="preserve">
     <value>Executable 'gradlew' not found in project directory '{0}'. Please ensure the path to your Gradle project folder is correct, and that it contains Gradle Wrapper scripts.</value>
     <comment>The following are literal names and should not be translated: gradlew, Gradle, Gradle Wrapper

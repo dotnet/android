@@ -20,12 +20,15 @@ Copyright (C) 2019 Microsoft Corporation. All rights reserved.
         ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml">
       <Output TaskParameter="ActivityName" PropertyName="AndroidLaunchActivity" />
     </GetAndroidActivityName>
+    <PropertyGroup>
+      <_AmStartUserArg Condition=" '$(AndroidDeviceUserId)' != '' "> --user $(AndroidDeviceUserId)</_AmStartUserArg>
+    </PropertyGroup>
     <AndroidAdb
       ToolExe="$(AdbToolExe)"
       ToolPath="$(AdbToolPath)"
       AdbTarget="$(AdbTarget)"
       Command="shell"
-      Arguments="am start -S -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;"
+      Arguments="am start -S$(_AmStartUserArg) -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;"
     />
   </Target>
   <Target Name="StopAndroidPackage"

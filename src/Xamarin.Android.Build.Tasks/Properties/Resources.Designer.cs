@@ -19,7 +19,7 @@ namespace Xamarin.Android.Tasks.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
@@ -108,7 +108,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Invalid file name: filenames cannot use java reserved words..
+        ///   Looks up a localized string similar to Invalid file name: Filenames cannot use Java reserved words..
         /// </summary>
         public static string APT0005 {
             get {
@@ -531,7 +531,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to NuGet package &apos;{0}&apos; version &apos;{1}&apos; contains a shared library &apos;{2}&apos; which is not correctly aligned. See https://developer.android.com/guide/practices/page-sizes for more details.
+        ///   Looks up a localized string similar to Android 16 will require 16 KB page sizes, shared library &apos;{3}&apos; does not have a 16 KB page size. Please inform the authors of the NuGet package &apos;{0}&apos; version &apos;{1}&apos; which contains &apos;{2}&apos;. See https://developer.android.com/guide/practices/page-sizes for more details..
         /// </summary>
         public static string XA0141 {
             get {
@@ -540,7 +540,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Command '{0}' failed.\n{1}
+        ///   Looks up a localized string similar to Command &apos;{0}&apos; failed.\n{1}.
         /// </summary>
         public static string XA0142 {
             get {
@@ -548,7 +548,34 @@ namespace Xamarin.Android.Tasks.Properties {
             }
         }
 
-            /// <summary>
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to launch the Android emulator for AVD &apos;{0}&apos;: {1}.
+        /// </summary>
+        public static string XA0143 {
+            get {
+                return ResourceManager.GetString("XA0143", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The Android emulator for AVD &apos;{0}&apos; exited unexpectedly with exit code {1} before becoming available..
+        /// </summary>
+        public static string XA0144 {
+            get {
+                return ResourceManager.GetString("XA0144", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The Android emulator for AVD &apos;{0}&apos; did not finish booting within {1} seconds. Increase &apos;BootTimeoutSeconds&apos; or check the emulator configuration..
+        /// </summary>
+        public static string XA0145 {
+            get {
+                return ResourceManager.GetString("XA0145", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}.
         /// </summary>
         public static string XA1000 {
@@ -876,6 +903,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to The &apos;{0}&apos; MSBuild property has an invalid value of &apos;{1}&apos;. A valid value is one of: {2}..
+        /// </summary>
+        public static string XA1038 {
+            get {
+                return ResourceManager.GetString("XA1038", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to The Android Support libraries are not supported in .NET 9 and later, please migrate to AndroidX. See https://aka.ms/net-android/androidx for more details..
         /// </summary>
         public static string XA1039 {
@@ -885,7 +921,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to The {0} runtime on Android is an experimental feature and not yet suitable for production use. File issues at: https://github.com/dotnet/android/issues
+        ///   Looks up a localized string similar to The {0} runtime on Android is an experimental feature and not yet suitable for production use. File issues at: https://github.com/dotnet/android/issues.
         /// </summary>
         public static string XA1040 {
             get {
@@ -894,7 +930,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to The {0} .
+        ///   Looks up a localized string similar to The MSBuild property &apos;{0}&apos; has an invalid value of &apos;{1}&apos;. The value is expected to be a directory path representing the relative location of your Assets or Resources..
         /// </summary>
         public static string XA1041 {
             get {
@@ -1047,7 +1083,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to AndroidManifest.xml //uses-sdk/@android:targetSdkVersion &apos;{0}&apos; is less than $(TargetFrameworkVersion) &apos;{1}&apos;. Using API-{2} for ACW compilation..
+        ///   Looks up a localized string similar to AndroidManifest.xml //uses-sdk/@android:targetSdkVersion &apos;{0}&apos; is less than $(TargetPlatformVersion) &apos;{1}&apos;. Using API-{2} for ACW compilation..
         /// </summary>
         public static string XA4211 {
             get {
@@ -1565,7 +1601,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Ignoring {0}. Manifest does not have the required 'package' attribute on the manifest element.
+        ///   Looks up a localized string similar to Ignoring `{0}`. Manifest does not have the required &apos;package&apos; attribute on the manifest element..
         /// </summary>
         public static string XA4315 {
             get {
@@ -1740,7 +1776,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Executable 'gradlew' not found in project directory '{0}'. Please ensure the path to your Gradle project folder is correct, and that it contains Gradle Wrapper scripts..
+        ///   Looks up a localized string similar to Executable &apos;gradlew&apos; not found in project directory &apos;{0}&apos;. Please ensure the path to your Gradle project folder is correct, and that it contains Gradle Wrapper scripts..
         /// </summary>
         public static string XAGRDL1000 {
             get {
@@ -1749,7 +1785,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to dding reference to Gradle output: '{0}'. The '%(CreateAndroidLibrary)' metadata can be set to 'false' to opt out of this behavior..
+        ///   Looks up a localized string similar to Adding reference to Gradle output: &apos;{0}&apos;. The &apos;%(CreateAndroidLibrary)&apos; metadata can be set to &apos;false&apos; to opt out of this behavior..
         /// </summary>
         public static string XAGRDLRefLibraryOutputs {
             get {

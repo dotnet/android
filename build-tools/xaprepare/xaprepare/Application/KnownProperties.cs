@@ -56,6 +56,7 @@ namespace Xamarin.Android.Prepare
 		public const string PkgXamarin_LibZipSharp              = "PkgXamarin_LibZipSharp";
 		public const string ProductVersion                      = "ProductVersion";
 		public const string RuntimeRedistDirName                = "_RuntimeRedistDirName";
+		public const string TestOutputDirectory                 = "TestOutputDirectory";
 		public const string XABuildToolsFolder                  = "XABuildToolsFolder";
 		public const string XABuildToolsVersion                 = "XABuildToolsVersion";
 		public const string XABuildToolsPackagePrefixMacOS      = "XABuildToolsPackagePrefixMacOS";
