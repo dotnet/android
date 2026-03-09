@@ -1085,7 +1085,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 {1} - The process exit code.</comment>
   </data>
   <data name="XA0145" xml:space="preserve">
-    <value>The Android emulator for AVD '{0}' did not finish booting within {1} seconds. Increase 'BootTimeoutSeconds' or check the emulator configuration.</value>
+    <value>AVD '{0}' 用 Android Emulator は、{1} 秒以内に起動を完了しませんでした。'BootTimeoutSeconds' を増やすか、エミュレーターの構成を確認してください。</value>
     <comment>The following is a literal name and should not be translated: BootTimeoutSeconds
 {0} - The AVD name.
 {1} - The timeout in seconds.</comment>

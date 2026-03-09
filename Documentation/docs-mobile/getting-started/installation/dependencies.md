@@ -1,7 +1,7 @@
 ---
 title: "Install .NET for Android dependencies"
 description: "Learn how to install .NET for Android dependencies so you can create native Android applications."
-ms.date: 11/01/2023
+ms.date: 03/06/2026
 ---
 # Install .NET for Android dependencies
 
@@ -98,7 +98,7 @@ allows you to use certain tooling from the command line.
 In order to build .NET for Android applications or libraries you need to have a version of the Java Development Kit installed.
 We recommend you use the Microsoft Open JDK, this has been tested against our .NET for Android builds:
 
- 1. Download [Microsoft OpenJDK 11](/java/openjdk/download#openjdk-11).
+ 1. Download [Microsoft OpenJDK 21](/java/openjdk/download#openjdk-21).
 
  2. Depending on your platform run the appropriate installer.
 
