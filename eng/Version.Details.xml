@@ -16,7 +16,7 @@
       <Uri>https://github.com/dotnet/dotnet</Uri>
       <Sha>ca9f55a6971cf06cba3ad633253dda3c0560217c</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.Workload.Mono.ToolChain.Current.Manifest-11.0.100-preview.2" Version="11.0.0-preview.2.final">
+    <Dependency Name="Microsoft.NET.Workload.Mono.Toolchain.Current.Manifest-11.0.100-preview.2" Version="11.0.100-preview.2.final">
       <Uri>https://github.com/dotnet/dotnet</Uri>
       <Sha>ca9f55a6971cf06cba3ad633253dda3c0560217c</Sha>
     </Dependency>
