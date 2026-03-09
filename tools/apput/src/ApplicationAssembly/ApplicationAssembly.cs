@@ -60,7 +60,7 @@ public class ApplicationAssembly : BaseAspect
 
 	public static IAspect LoadAspect (Stream stream, IAspectState state, string? description)
 	{
-		Log.Debug ($"Loading assembly from stream {stream}");
+		Log.Debug ($"Loading assembly from stream '{description}'");
 		using var reader = Utilities.GetReaderAndRewindStream (stream);
 		if (ReadCompressedHeader (reader, out uint uncompressedLength)) {
 			return new ApplicationAssembly (stream, uncompressedLength, description, isCompressed: true);

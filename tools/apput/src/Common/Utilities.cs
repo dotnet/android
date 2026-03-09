@@ -108,4 +108,35 @@ class Utilities
 			_                          => throw new NotSupportedException ($"Unsupported native architecture '{arch}'")
 		};
 	}
+
+	public static string DemangleSharedAssemblyLibraryName (string sharedLibraryName) => DemangleSharedLibraryName (sharedLibraryName, ".dll.so");
+	public static string DemangleSharedPdbLibraryName (string sharedLibraryName) => DemangleSharedLibraryName (sharedLibraryName, ".pdb.so");
+
+	public static string DemangleSharedLibraryName (string sharedLibraryName, string removeExtensionIfEndsWith)
+	{
+		string? cultureName = null;
+		if (sharedLibraryName.StartsWith ("lib_", StringComparison.Ordinal)) {
+			sharedLibraryName = sharedLibraryName.Substring (4);
+		} else if (sharedLibraryName.StartsWith ("lib-", StringComparison.Ordinal)) {
+			int cultureEnd = sharedLibraryName.IndexOf ('_');
+			if (cultureEnd == -1 || cultureEnd == 4) {
+				// No culture, odd
+				sharedLibraryName = sharedLibraryName.Substring (4);
+			} else {
+				cultureName = sharedLibraryName.Substring (4, cultureEnd - 4);
+				sharedLibraryName = sharedLibraryName.Substring (cultureEnd + 1);
+			}
+		}
+
+		if (sharedLibraryName.EndsWith (removeExtensionIfEndsWith, StringComparison.Ordinal)) {
+			sharedLibraryName = Path.GetFileNameWithoutExtension (sharedLibraryName);
+		}
+
+		if (!String.IsNullOrEmpty (cultureName)) {
+			sharedLibraryName = $"{cultureName}/{sharedLibraryName}";
+		}
+
+		Log.Debug ($"Demangled library name: '{sharedLibraryName}'");
+		return sharedLibraryName;
+	}
 }

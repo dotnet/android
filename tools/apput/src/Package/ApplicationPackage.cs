@@ -40,23 +40,24 @@ public abstract class ApplicationPackage : BaseAspect
 	protected abstract string NativeLibDirBase { get; }
 	public abstract string PackageFormat { get; }
 
-	public AndroidManifest? AndroidManifest => manifest;
-	public List<AndroidTargetArch> Architectures { get; protected set; } = new ();
-	public List<AssemblyStore>? AssemblyStores { get; protected set; }
+	public AndroidManifest? AndroidManifest                => manifest;
+	public List<AndroidTargetArch> Architectures           { get; protected set; } = new ();
+	public List<AssemblyStore>? AssemblyStores             { get; protected set; }
 	public List<ApplicationAssembly>? StandaloneAssemblies { get; protected set; }
-	public bool Debuggable => manifest?.Debuggable ?? false;
-	public string? Description { get; }
-	public string? MainActivity => manifest?.MainActivity;
-	public string? MinSdkVersion => manifest?.MinSdkVersion;
-	public List<NativeAppInfo> NativeAppInfos { get; protected set; } = new ();
-	public string? PackageName => manifest?.PackageName;
-	public List<string>? Permissions => manifest?.Permissions;
-	public ApplicationRuntime Runtime { get; protected set; } = ApplicationRuntime.Unknown;
-	public List<SharedLibrary> SharedLibraries { get; protected set; } = new ();
-	public bool Signed { get; protected set; }
-	public string? TargetSdkVersion => manifest?.TargetSdkVersion;
-	public bool ValidAndroidPackage { get; protected set; }
-	protected ZipArchive Zip { get; }
+	public List<AssemblyPdb>? StandalonePdbs               { get; protected set; }
+	public bool Debuggable                                 => manifest?.Debuggable ?? false;
+	public string? Description                             { get; }
+	public string? MainActivity                            => manifest?.MainActivity;
+	public string? MinSdkVersion                           => manifest?.MinSdkVersion;
+	public List<NativeAppInfo> NativeAppInfos              { get; protected set; } = new ();
+	public string? PackageName                             => manifest?.PackageName;
+	public List<string>? Permissions                       => manifest?.Permissions;
+	public ApplicationRuntime Runtime                      { get; protected set; } = ApplicationRuntime.Unknown;
+	public List<SharedLibrary> SharedLibraries             { get; protected set; } = new ();
+	public bool Signed                                     { get; protected set; }
+	public string? TargetSdkVersion                        => manifest?.TargetSdkVersion;
+	public bool ValidAndroidPackage                        { get; protected set; }
+	protected ZipArchive Zip                               { get; }
 
 	protected ApplicationPackage (Stream stream, ZipArchive zip, string? description)
 		: base (stream)
@@ -128,6 +129,7 @@ public abstract class ApplicationPackage : BaseAspect
 		ret.TryDetectWhetherIsSigned ();
 		ret.TryLoadAssemblyStores ();
 		ret.TryLoadStandaloneAssemblies ();
+		ret.TryLoadStandalonePdbs ();
 		ret.TryLoadAndroidManifest ();
 		ret.TryLoadXamarinAppLibraries ();
 
@@ -362,6 +364,24 @@ public abstract class ApplicationPackage : BaseAspect
 
 		if (assemblies.Count > 0) {
 			StandaloneAssemblies = assemblies;
+		}
+	}
+
+	void TryLoadStandalonePdbs ()
+	{
+		var pdbs = new List<AssemblyPdb> ();
+		foreach (SharedLibrary dso in SharedLibraries) {
+			var pdbLib = dso as AssemblyPdbSharedLibrary;
+			if (pdbLib == null) {
+				continue;
+			}
+
+			Log.Debug ($"PDB shared library '{pdbLib.Name}' found");
+			pdbs.Add (pdbLib.PDB);
+		}
+
+		if (pdbs.Count > 0) {
+			StandalonePdbs = pdbs;
 		}
 	}
 

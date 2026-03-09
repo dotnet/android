@@ -60,6 +60,7 @@ class ApplicationPackageReporter : BaseReporter
 		AddSection (".NET for Android application information", 1);
 		AddLabeledItem ("Runtime", package.Runtime.ToString ());
 
+		ReportStandaloneAssemblies ();
 		ReportAssemblyStores ();
 	}
 
@@ -293,6 +294,11 @@ class ApplicationPackageReporter : BaseReporter
 				(SharedLibrary lib) => lib.TargetArchitecture.ToString ()
 			);
 		}
+	}
+
+	void ReportStandaloneAssemblies ()
+	{
+		throw new NotImplementedException ();
 	}
 
 	void ReportAssemblyStores ()
