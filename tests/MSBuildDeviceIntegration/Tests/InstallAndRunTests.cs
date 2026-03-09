@@ -212,30 +212,16 @@ namespace Xamarin.Android.Build.Tests
 				TextContent = () => "HOTRELOAD_DELTA_CLIENT_LOG_MESSAGES=[HotReload]",
 			});
 
-			// Add a Console.WriteLine that will appear in logcat
+			// Call a helper method from OnCreate that will appear in logcat
 			proj.MainActivity = proj.DefaultMainActivity.Replace (
 				"//${AFTER_ONCREATE}",
-				$"Console.WriteLine (\"{initialMessage}\");");
+				"UnderTest.AppHelper.PrintMessage ();");
 
-			// Add a MetadataUpdateHandler that logs when hot reload is applied
-			proj.Sources.Add (new BuildItem.Source ("HotReloadService.cs") {
-				TextContent = () =>
-@"using System;
-
-[assembly: System.Reflection.Metadata.MetadataUpdateHandlerAttribute (typeof (UnderTest.HotReloadService))]
-
-namespace UnderTest
-{
-	public static class HotReloadService
-	{
-		internal static void ClearCache (Type[]? types) { }
-		internal static void UpdateApplication (Type[]? types)
-		{
-			Console.WriteLine (""" + hotReloadMessage + @""");
-		}
-	}
-}
-"
+			// Add a vanilla C# helper class (no Java interop) that we'll hot-reload,
+			// and a MetadataUpdateHandler that logs when hot reload is applied.
+			string appHelperBody = $"""Console.WriteLine ("{initialMessage}");""";
+			proj.Sources.Add (new BuildItem.Source ("AppHelper.cs") {
+				TextContent = () => GetAppHelperSource (appHelperBody, hotReloadMessage),
 			});
 
 			using var builder = CreateApkBuilder ();
@@ -289,11 +275,12 @@ namespace UnderTest
 				// There is no explicit "ready" signal from dotnet watch after deploy completes.
 				Thread.Sleep (5000);
 
-				// Modify the source file to trigger hot reload
-				proj.MainActivity = proj.MainActivity.Replace (
-					$"Console.WriteLine (\"{initialMessage}\");",
-					$"Console.WriteLine (\"{initialMessage}\");\n\t\t\tConsole.WriteLine (\"MODIFIED_LINE\");");
-				proj.Touch ("MainActivity.cs");
+				// Modify the vanilla C# helper class (not the Java-interop MainActivity)
+				appHelperBody = $"""
+					Console.WriteLine ("{initialMessage}");
+					Console.WriteLine ("MODIFIED_LINE");
+					""";
+				proj.Touch ("AppHelper.cs");
 				builder.BuiltBefore = true; // dotnet watch will build, not builder.Build()
 				builder.Save (proj, doNotCleanupOnUpdate: true, saveProject: false);
 
@@ -1760,5 +1747,31 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
 			Assert.IsTrue (didLaunch, "Activity should have started.");
 		}
+
+		static string GetAppHelperSource (string appHelperBody, string hotReloadMessage) => $$"""
+			using System;
+
+			[assembly: System.Reflection.Metadata.MetadataUpdateHandlerAttribute (typeof (UnderTest.HotReloadService))]
+
+			namespace UnderTest
+			{
+				public static class AppHelper
+				{
+					public static void PrintMessage ()
+					{
+						{{appHelperBody}}
+					}
+				}
+
+				public static class HotReloadService
+				{
+					internal static void ClearCache (Type[]? types) { }
+					internal static void UpdateApplication (Type[]? types)
+					{
+						Console.WriteLine ("{{hotReloadMessage}}");
+					}
+				}
+			}
+			""";
 	}
 }
