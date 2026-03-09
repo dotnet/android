@@ -19,6 +19,8 @@
 
 ## Critical Rules
 
+**Never use `git commit --amend`:** Always create new commits. The user will squash or fixup as needed.
+
 Reference official Android documentation where helpful:
 * [Android Developer Guide](https://developer.android.com/develop)
 * [Android API Reference](https://developer.android.com/reference)
