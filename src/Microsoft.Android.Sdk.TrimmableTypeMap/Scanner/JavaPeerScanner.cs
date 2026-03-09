@@ -97,6 +97,9 @@ sealed class JavaPeerScanner : IDisposable
 		// Phase 3: Force unconditional on types referenced by [Application] attributes
 		ForceUnconditionalCrossReferences (resultsByManagedName, assemblyCache);
 
+		// Phase 4: Resolve BaseJavaName and ImplementedInterfaceJavaNames from the type hierarchy
+		ResolveJavaHierarchyNames (resultsByManagedName);
+
 		return new List<JavaPeerInfo> (resultsByManagedName.Values);
 	}
 
@@ -113,6 +116,56 @@ sealed class JavaPeerScanner : IDisposable
 					ForceUnconditionalIfPresent (resultsByManagedName, applicationAttributeInfo.BackupAgent);
 					ForceUnconditionalIfPresent (resultsByManagedName, applicationAttributeInfo.ManageSpaceActivity);
 				}
+			}
+		}
+	}
+
+	/// <summary>
+	/// Resolves <see cref="JavaPeerInfo.BaseJavaName"/> and
+	/// <see cref="JavaPeerInfo.ImplementedInterfaceJavaNames"/> for all scanned peers
+	/// by looking up their base class and directly-implemented interfaces in the scan results.
+	/// </summary>
+	void ResolveJavaHierarchyNames (Dictionary<string, JavaPeerInfo> results)
+	{
+		// Build a fast lookup: managed full type name → JNI name
+		var jniByManagedName = new Dictionary<string, string> (StringComparer.Ordinal);
+		foreach (var peer in results.Values) {
+			jniByManagedName [peer.ManagedTypeName] = peer.JavaName;
+		}
+
+		var keys = new List<string> (results.Keys);
+		foreach (var managedName in keys) {
+			var peer = results [managedName];
+			if (!TryResolveType (managedName, peer.AssemblyName, out var handle, out var index)) {
+				continue;
+			}
+
+			var typeDef = index.Reader.GetTypeDefinition (handle);
+
+			// BaseJavaName: look up the direct base class's JNI name
+			string? baseJniName = null;
+			var baseInfo = GetBaseTypeInfo (typeDef, index);
+			if (baseInfo is not null && jniByManagedName.TryGetValue (baseInfo.Value.typeName, out var bn)) {
+				baseJniName = bn;
+			}
+
+			// ImplementedInterfaceJavaNames: JNI names of directly implemented interfaces
+			var ifaceJniNames = new List<string> ();
+			foreach (var ifaceHandle in typeDef.GetInterfaceImplementations ()) {
+				var iface = index.Reader.GetInterfaceImplementation (ifaceHandle);
+				var ifaceInfo = ResolveEntityHandle (iface.Interface, index);
+				if (ifaceInfo is not null && jniByManagedName.TryGetValue (ifaceInfo.Value.typeName, out var ifaceJni)) {
+					ifaceJniNames.Add (ifaceJni);
+				}
+			}
+
+			if (baseJniName != null || ifaceJniNames.Count > 0) {
+				results [managedName] = peer with {
+					BaseJavaName = baseJniName,
+					ImplementedInterfaceJavaNames = ifaceJniNames.Count > 0
+						? (IReadOnlyList<string>) ifaceJniNames
+						: Array.Empty<string> (),
+				};
 			}
 		}
 	}
@@ -273,9 +326,8 @@ sealed class JavaPeerScanner : IDisposable
 		if (isConstructor) {
 			int ctorIndex = 0;
 			foreach (var method in methods) {
-				if (method.IsConstructor) {
+				if (method.IsConstructor)
 					ctorIndex++;
-				}
 			}
 			nativeCallbackName = ctorIndex == 0 ? "n_ctor" : $"n_ctor_{ctorIndex}";
 		}
@@ -713,11 +765,6 @@ sealed class JavaPeerScanner : IDisposable
 
 	static List<JniParameterInfo> ParseJniParameters (string jniSignature)
 	{
-		var typeStrings = JniSignatureHelper.ParseParameterTypeStrings (jniSignature);
-		var result = new List<JniParameterInfo> (typeStrings.Count);
-		foreach (var t in typeStrings) {
-			result.Add (new JniParameterInfo { JniType = t });
-		}
-		return result;
+		return JniSignatureHelper.ParseParameterTypes (jniSignature);
 	}
 }

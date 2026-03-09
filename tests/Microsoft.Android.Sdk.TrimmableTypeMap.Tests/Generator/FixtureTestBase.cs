@@ -23,9 +23,9 @@ public abstract class FixtureTestBase
 		return scanner.Scan (new [] { TestFixtureAssemblyPath });
 	});
 
-	protected static List<JavaPeerInfo> ScanFixtures () => _cachedFixtures.Value;
+	internal static List<JavaPeerInfo> ScanFixtures () => _cachedFixtures.Value;
 
-	protected static JavaPeerInfo FindFixtureByJavaName (string javaName)
+	internal static JavaPeerInfo FindFixtureByJavaName (string javaName)
 	{
 		var peers = ScanFixtures ();
 		var peer = peers.FirstOrDefault (p => p.JavaName == javaName);
@@ -33,20 +33,27 @@ public abstract class FixtureTestBase
 		return peer;
 	}
 
-	protected static void CleanUpDir (string path)
+	internal static string CreateTempDir ()
 	{
-		var dir = Path.GetDirectoryName (path);
-		if (dir != null && Directory.Exists (dir))
+		var dir = Path.Combine (Path.GetTempPath (), "TrimmableTypeMap_" + Path.GetRandomFileName ());
+		Directory.CreateDirectory (dir);
+		return dir;
+	}
+
+	internal static void DeleteTempDir (string dir)
+	{
+		if (Directory.Exists (dir))
 			try { Directory.Delete (dir, true); } catch { }
 	}
 
-	protected static JavaPeerInfo MakeMcwPeer (string jniName, string managedName, string asmName)
+	internal static JavaPeerInfo MakeMcwPeer (string jniName, string managedName, string asmName)
 	{
 		var ns = managedName.Contains ('.') ? managedName.Substring (0, managedName.LastIndexOf ('.')) : "";
 		var typePart = managedName.Contains ('.') ? managedName.Substring (managedName.LastIndexOf ('.') + 1) : managedName;
 		var shortName = typePart.Contains ('+') ? typePart.Substring (typePart.LastIndexOf ('+') + 1) : typePart;
 		return new JavaPeerInfo {
 			JavaName = jniName,
+			CompatJniName = jniName,
 			ManagedTypeName = managedName,
 			ManagedTypeNamespace = ns,
 			ManagedTypeShortName = shortName,
@@ -54,56 +61,53 @@ public abstract class FixtureTestBase
 		};
 	}
 
-	protected static JavaPeerInfo MakePeerWithActivation (string jniName, string managedName, string asmName)
+	internal static JavaPeerInfo MakePeerWithActivation (string jniName, string managedName, string asmName)
 	{
-		var peer = MakeMcwPeer (jniName, managedName, asmName);
-		peer.ActivationCtor = new ActivationCtorInfo {
-			Style = ActivationCtorStyle.XamarinAndroid,
-		};
-		return peer;
-	}
-
-	protected static JavaPeerInfo MakeAcwPeer (string jniName, string managedName, string asmName)
-	{
-		var peer = MakePeerWithActivation (jniName, managedName, asmName);
-		peer.DoNotGenerateAcw = false;
-		peer.MarshalMethods = new List<MarshalMethodInfo> {
-			new MarshalMethodInfo {
-				JniName = "<init>",
-				NativeCallbackName = "n_ctor",
-				JniSignature = "()V",
-				IsConstructor = true,
+		return MakeMcwPeer (jniName, managedName, asmName) with {
+			ActivationCtor = new ActivationCtorInfo {
+				DeclaringTypeName = managedName,
+				DeclaringAssemblyName = asmName,
+				Style = ActivationCtorStyle.XamarinAndroid,
 			},
 		};
-		return peer;
 	}
 
-	protected static JavaPeerInfo MakeInterfacePeer (
-		string jniName = "android/view/View$OnClickListener",
-		string managedName = "Android.Views.View+IOnClickListener",
-		string asmName = "Mono.Android",
-		string invokerName = "Android.Views.View+IOnClickListenerInvoker")
+	internal static JavaPeerInfo MakeAcwPeer (string jniName, string managedName, string asmName)
+	{
+		return MakePeerWithActivation (jniName, managedName, asmName) with {
+			MarshalMethods = new List<MarshalMethodInfo> {
+				new MarshalMethodInfo {
+					JniName = "<init>",
+					NativeCallbackName = "n_ctor",
+					JniSignature = "()V",
+					ManagedMethodName = ".ctor",
+					JniReturnType = "V",
+					IsConstructor = true,
+				},
+			},
+		};
+	}
+
+	/// <summary>
+	/// Creates a <see cref="JavaPeerInfo"/> representing a Java interface peer with an associated invoker.
+	/// </summary>
+	/// <example>
+	/// MakeInterfacePeer("android/view/View$OnClickListener", "Android.Views.View+IOnClickListener",
+	///     "Mono.Android", "Android.Views.View+IOnClickListenerInvoker")
+	/// </example>
+	internal static JavaPeerInfo MakeInterfacePeer (string jniName, string managedName, string asmName, string invokerName)
 	{
 		var ns = managedName.Contains ('.') ? managedName.Substring (0, managedName.LastIndexOf ('.')) : "";
 		var shortName = managedName.Contains ('.') ? managedName.Substring (managedName.LastIndexOf ('.') + 1) : managedName;
 		return new JavaPeerInfo {
 			JavaName = jniName,
+			CompatJniName = jniName,
 			ManagedTypeName = managedName,
 			ManagedTypeNamespace = ns,
 			ManagedTypeShortName = shortName,
 			AssemblyName = asmName,
 			IsInterface = true,
 			InvokerTypeName = invokerName,
-		};
-	}
-
-	protected static MarshalMethodInfo MakeMarshalMethod (string jniName, string callbackName, string jniSig, bool isConstructor = false)
-	{
-		return new MarshalMethodInfo {
-			JniName = jniName,
-			NativeCallbackName = callbackName,
-			JniSignature = jniSig,
-			IsConstructor = isConstructor,
 		};
 	}
 }

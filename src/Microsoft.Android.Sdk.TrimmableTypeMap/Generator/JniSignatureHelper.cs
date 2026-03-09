@@ -9,16 +9,16 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 static class JniSignatureHelper
 {
 	/// <summary>
-	/// Parses the raw JNI type descriptor strings from a JNI method signature.
+	/// Parses the JNI parameter types from a JNI method signature into a list of <see cref="JniParameterInfo"/>.
 	/// </summary>
-	public static List<string> ParseParameterTypeStrings (string jniSignature)
+	public static List<JniParameterInfo> ParseParameterTypes (string jniSignature)
 	{
-		var result = new List<string> ();
+		var result = new List<JniParameterInfo> ();
 		int i = 1; // skip opening '('
 		while (i < jniSignature.Length && jniSignature [i] != ')') {
 			int start = i;
 			SkipSingleType (jniSignature, ref i);
-			result.Add (jniSignature.Substring (start, i - start));
+			result.Add (new JniParameterInfo { JniType = jniSignature.Substring (start, i - start) });
 		}
 		return result;
 	}

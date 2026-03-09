@@ -158,6 +158,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		static List<JavaPeerInfo> MakeDuplicateAliasPeers () => new List<JavaPeerInfo> {
 			new JavaPeerInfo {
 				JavaName = "test/Duplicate",
+				CompatJniName = "test/Duplicate",
 				ManagedTypeName = "Test.Duplicate1",
 				ManagedTypeNamespace = "Test",
 				ManagedTypeShortName = "Duplicate1",
@@ -170,6 +171,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			},
 			new JavaPeerInfo {
 				JavaName = "test/Duplicate",
+				CompatJniName = "test/Duplicate",
 				ManagedTypeName = "Test.Duplicate2",
 				ManagedTypeNamespace = "Test",
 				ManagedTypeShortName = "Duplicate2",

@@ -48,7 +48,33 @@ sealed class RootTypeMapAssemblyGenerator
 
 		assemblyName ??= DefaultAssemblyName;
 		var moduleName = Path.GetFileName (outputPath);
+		var pe = BuildPE (perAssemblyTypeMapNames, assemblyName, moduleName);
+		pe.WritePE (outputPath);
+	}
 
+	/// <summary>
+	/// Generates the root typemap assembly and writes it to <paramref name="stream"/>.
+	/// </summary>
+	/// <param name="perAssemblyTypeMapNames">Names of per-assembly typemap assemblies to reference.</param>
+	/// <param name="stream">Stream to write the output PE to.</param>
+	/// <param name="assemblyName">Optional assembly name (defaults to _Microsoft.Android.TypeMaps).</param>
+	public void Generate (IReadOnlyList<string> perAssemblyTypeMapNames, Stream stream, string? assemblyName = null)
+	{
+		if (perAssemblyTypeMapNames is null) {
+			throw new ArgumentNullException (nameof (perAssemblyTypeMapNames));
+		}
+		if (stream is null) {
+			throw new ArgumentNullException (nameof (stream));
+		}
+
+		assemblyName ??= DefaultAssemblyName;
+		var moduleName = assemblyName + ".dll";
+		var pe = BuildPE (perAssemblyTypeMapNames, assemblyName, moduleName);
+		pe.WritePE (stream);
+	}
+
+	PEAssemblyBuilder BuildPE (IReadOnlyList<string> perAssemblyTypeMapNames, string assemblyName, string moduleName)
+	{
 		var pe = new PEAssemblyBuilder (_systemRuntimeVersion);
 		pe.EmitPreamble (assemblyName, moduleName);
 
@@ -76,6 +102,6 @@ sealed class RootTypeMapAssemblyGenerator
 			pe.Metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorRef, blobHandle);
 		}
 
-		pe.WritePE (outputPath);
+		return pe;
 	}
 }

@@ -80,6 +80,17 @@ sealed record JavaPeerInfo
 	public string? InvokerTypeName { get; init; }
 
 	/// <summary>
+	/// JNI name of the direct base class (if it is a Java peer type), or null if the base is not a peer.
+	/// For example, <c>java/lang/Object</c> for <c>Activity</c>.
+	/// </summary>
+	public string? BaseJavaName { get; init; }
+
+	/// <summary>
+	/// JNI names of directly implemented interface types that are Java peer types.
+	/// </summary>
+	public IReadOnlyList<string> ImplementedInterfaceJavaNames { get; init; } = Array.Empty<string> ();
+
+	/// <summary>
 	/// True if this is an open generic type definition.
 	/// Generic types get TypeMap entries but CreateInstance throws NotSupportedException.
 	/// </summary>
