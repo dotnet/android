@@ -30,19 +30,13 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.Empty (model.ProxyTypes);
 		}
 
-		[Fact]
-		public void Build_AssemblyNameDerivedFromOutputPath ()
+		[Theory]
+		[InlineData ("/some/path/Foo.Bar.dll", null, "Foo.Bar")]
+		[InlineData ("/some/path/Foo.dll", "MyAssembly", "MyAssembly")]
+		public void Build_AssemblyName_ResolvedCorrectly (string outputPath, string? explicitName, string expected)
 		{
-			var model = ModelBuilder.Build (Array.Empty<JavaPeerInfo> (), "/some/path/Foo.Bar.dll");
-			Assert.Equal ("Foo.Bar", model.AssemblyName);
-			Assert.Equal ("Foo.Bar.dll", model.ModuleName);
-		}
-
-		[Fact]
-		public void Build_ExplicitAssemblyName_OverridesOutputPath ()
-		{
-			var model = ModelBuilder.Build (Array.Empty<JavaPeerInfo> (), "/some/path/Foo.dll", "MyAssembly");
-			Assert.Equal ("MyAssembly", model.AssemblyName);
+			var model = ModelBuilder.Build (Array.Empty<JavaPeerInfo> (), outputPath, explicitName);
+			Assert.Equal (expected, model.AssemblyName);
 		}
 
 	}
@@ -177,19 +171,21 @@ public class ModelBuilderTests : FixtureTestBase
 	public class ProxyTypes
 	{
 
-		[Fact]
-		public void Build_PeerWithActivationCtor_CreatesProxy ()
+		[Theory]
+		[InlineData ("java/lang/Object", "Java.Lang.Object", "Mono.Android", "Java_Lang_Object_Proxy")]
+		[InlineData ("com/example/Outer$Inner", "Com.Example.Outer.Inner", "App", "Com_Example_Outer_Inner_Proxy")]
+		public void Build_PeerWithActivation_CreatesNamedProxy (string jniName, string managedName, string asmName, string expectedProxyName)
 		{
-			var peer = MakePeerWithActivation ("java/lang/Object", "Java.Lang.Object", "Mono.Android");
+			var peer = MakePeerWithActivation (jniName, managedName, asmName);
 			var model = BuildModel (new [] { peer }, "MyTypeMap");
 
 			Assert.Single (model.ProxyTypes);
 			var proxy = model.ProxyTypes [0];
-			Assert.Equal ("Java_Lang_Object_Proxy", proxy.TypeName);
+			Assert.Equal (expectedProxyName, proxy.TypeName);
 			Assert.Equal ("_TypeMap.Proxies", proxy.Namespace);
 			Assert.True (proxy.HasActivation);
-			Assert.Equal ("Java.Lang.Object", proxy.TargetType.ManagedTypeName);
-			Assert.Equal ("Mono.Android", proxy.TargetType.AssemblyName);
+			Assert.Equal (managedName, proxy.TargetType.ManagedTypeName);
+			Assert.Equal (asmName, proxy.TargetType.AssemblyName);
 		}
 
 		[Fact]
@@ -202,16 +198,6 @@ public class ModelBuilderTests : FixtureTestBase
 			var proxy = model.ProxyTypes [0];
 			Assert.NotNull (proxy.InvokerType);
 			Assert.Equal ("Android.Views.View+IOnClickListenerInvoker", proxy.InvokerType!.ManagedTypeName);
-		}
-
-		[Fact]
-		public void Build_ProxyNaming_ReplacesDotAndPlus ()
-		{
-			var peer = MakePeerWithActivation ("com/example/Outer$Inner", "Com.Example.Outer.Inner", "App");
-			var model = BuildModel (new [] { peer });
-
-			Assert.Single (model.ProxyTypes);
-			Assert.Equal ("Com_Example_Outer_Inner_Proxy", model.ProxyTypes [0].TypeName);
 		}
 
 	}

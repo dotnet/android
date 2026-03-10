@@ -8,6 +8,20 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 
 public abstract class FixtureTestBase
 {
+	protected static string CreateTempDir ()
+	{
+		var dir = Path.Combine (Path.GetTempPath (), "TypeMapTests_" + Guid.NewGuid ().ToString ("N"));
+		Directory.CreateDirectory (dir);
+		return dir;
+	}
+
+	protected static void DeleteTempDir (string dir)
+	{
+		if (Directory.Exists (dir)) {
+			Directory.Delete (dir, recursive: true);
+		}
+	}
+
 	static string TestFixtureAssemblyPath {
 		get {
 			var testAssemblyDir = Path.GetDirectoryName (typeof (FixtureTestBase).Assembly.Location)!;
@@ -23,9 +37,9 @@ public abstract class FixtureTestBase
 		return scanner.Scan (new [] { TestFixtureAssemblyPath });
 	});
 
-	protected static List<JavaPeerInfo> ScanFixtures () => _cachedFixtures.Value;
+	private protected static List<JavaPeerInfo> ScanFixtures () => _cachedFixtures.Value;
 
-	protected static JavaPeerInfo FindFixtureByJavaName (string javaName)
+	private protected static JavaPeerInfo FindFixtureByJavaName (string javaName)
 	{
 		var peers = ScanFixtures ();
 		var peer = peers.FirstOrDefault (p => p.JavaName == javaName);
@@ -33,7 +47,7 @@ public abstract class FixtureTestBase
 		return peer;
 	}
 
-	protected static JavaPeerInfo MakeMcwPeer (string jniName, string managedName, string asmName)
+	private protected static JavaPeerInfo MakeMcwPeer (string jniName, string managedName, string asmName)
 	{
 		var ns = managedName.Contains ('.') ? managedName.Substring (0, managedName.LastIndexOf ('.')) : "";
 		var typePart = managedName.Contains ('.') ? managedName.Substring (managedName.LastIndexOf ('.') + 1) : managedName;
@@ -47,7 +61,7 @@ public abstract class FixtureTestBase
 		};
 	}
 
-	protected static JavaPeerInfo MakePeerWithActivation (string jniName, string managedName, string asmName)
+	private protected static JavaPeerInfo MakePeerWithActivation (string jniName, string managedName, string asmName)
 	{
 		var peer = MakeMcwPeer (jniName, managedName, asmName);
 		peer.ActivationCtor = new ActivationCtorInfo {
@@ -56,10 +70,10 @@ public abstract class FixtureTestBase
 		return peer;
 	}
 
-	protected static JavaPeerInfo MakeAcwPeer (string jniName, string managedName, string asmName)
+	private protected static JavaPeerInfo MakeAcwPeer (string jniName, string managedName, string asmName)
 		=> MakePeerWithActivation (jniName, managedName, asmName);
 
-	protected static JavaPeerInfo MakeInterfacePeer (
+	private protected static JavaPeerInfo MakeInterfacePeer (
 		string jniName,
 		string managedName,
 		string asmName,

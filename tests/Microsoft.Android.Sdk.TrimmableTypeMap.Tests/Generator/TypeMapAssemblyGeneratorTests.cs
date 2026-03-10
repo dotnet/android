@@ -38,11 +38,14 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			.Select (t => reader.GetString (t.Name))
 			.ToList ();
 
-	public class BasicAssemblyStructure : IDisposable
+	public abstract class TempDirTestBase : IDisposable
 	{
-		readonly string _outputDir = CreateTempDir ();
+		protected readonly string _outputDir = CreateTempDir ();
 		public void Dispose () => DeleteTempDir (_outputDir);
+	}
 
+	public class BasicAssemblyStructure : TempDirTestBase
+	{
 		[Fact]
 		public void Generate_ProducesValidPEAssembly ()
 		{
@@ -54,14 +57,10 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			var reader = pe.GetMetadataReader ();
 			Assert.NotNull (reader);
 		}
-
 	}
 
-	public class AssemblyReference : IDisposable
+	public class AssemblyReference : TempDirTestBase
 	{
-		readonly string _outputDir = CreateTempDir ();
-		public void Dispose () => DeleteTempDir (_outputDir);
-
 		[Fact]
 		public void Generate_HasRequiredAssemblyReferences ()
 		{
@@ -78,14 +77,10 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 				Assert.Contains ("System.Runtime.InteropServices", asmRefs);
 			}
 		}
-
 	}
 
-	public class ProxyType : IDisposable
+	public class ProxyType : TempDirTestBase
 	{
-		readonly string _outputDir = CreateTempDir ();
-		public void Dispose () => DeleteTempDir (_outputDir);
-
 		[Fact]
 		public void Generate_CreatesProxyTypes ()
 		{
@@ -124,14 +119,10 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 				Assert.Contains ("get_TargetType", methods);
 			}
 		}
-
 	}
 
-	public class IgnoresAccessChecksTo : IDisposable
+	public class IgnoresAccessChecksTo : TempDirTestBase
 	{
-		readonly string _outputDir = CreateTempDir ();
-		public void Dispose () => DeleteTempDir (_outputDir);
-
 		[Fact]
 		public void Generate_HasIgnoresAccessChecksToAttribute ()
 		{
@@ -147,14 +138,10 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 					reader.GetString (t.Namespace) == "System.Runtime.CompilerServices");
 			}
 		}
-
 	}
 
-	public class Alias : IDisposable
+	public class Alias : TempDirTestBase
 	{
-		readonly string _outputDir = CreateTempDir ();
-		public void Dispose () => DeleteTempDir (_outputDir);
-
 		static List<JavaPeerInfo> MakeDuplicateAliasPeers () => new List<JavaPeerInfo> {
 			new JavaPeerInfo {
 				JavaName = "test/Duplicate",
@@ -178,7 +165,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		};
 
 		[Fact]
-		public void Generate_DuplicateJniNames_CreatesAliasEntries ()
+		public void Generate_DuplicateJniNames_CreatesAliasEntriesAndAssociationAttribute ()
 		{
 			var peers = MakeDuplicateAliasPeers ();
 			var path = GenerateAssembly (peers, _outputDir, "AliasTest");
@@ -186,33 +173,15 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			using (pe) {
 				var assemblyAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
 				Assert.True (assemblyAttrs.Count () >= 3);
-			}
-		}
-
-		[Fact]
-		public void Generate_DuplicateJniNames_EmitsTypeMapAssociationAttribute ()
-		{
-			var peers = MakeDuplicateAliasPeers ();
-			var path = GenerateAssembly (peers, _outputDir, "AliasAssocTest");
-			var (pe, reader) = OpenAssembly (path);
-			using (pe) {
-				var memberRefs = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
-					.Select (i => reader.GetMemberReference (MetadataTokens.MemberReferenceHandle (i)))
-					.Where (m => reader.GetString (m.Name) == ".ctor")
-					.ToList ();
 
 				var typeNames = GetTypeRefNames (reader);
 				Assert.Contains ("TypeMapAssociationAttribute", typeNames);
 			}
 		}
-
 	}
 
-	public class EmptyInput : IDisposable
+	public class EmptyInput : TempDirTestBase
 	{
-		readonly string _outputDir = CreateTempDir ();
-		public void Dispose () => DeleteTempDir (_outputDir);
-
 		[Fact]
 		public void Generate_EmptyPeerList_ProducesValidAssembly ()
 		{
@@ -225,14 +194,10 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 				Assert.Equal ("EmptyTest", reader.GetString (asmDef.Name));
 			}
 		}
-
 	}
 
-	public class CreateInstancePaths : IDisposable
+	public class CreateInstancePaths : TempDirTestBase
 	{
-		readonly string _outputDir = CreateTempDir ();
-		public void Dispose () => DeleteTempDir (_outputDir);
-
 		[Fact]
 		public void Generate_SimpleActivity_UsesGetUninitializedObject ()
 		{
@@ -290,14 +255,10 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 				Assert.Contains ("NotSupportedException", typeNames);
 			}
 		}
-
 	}
 
-	public class IgnoresAccessChecksToForBaseCtor : IDisposable
+	public class IgnoresAccessChecksToForBaseCtor : TempDirTestBase
 	{
-		readonly string _outputDir = CreateTempDir ();
-		public void Dispose () => DeleteTempDir (_outputDir);
-
 		[Fact]
 		public void Generate_InheritedCtor_IncludesBaseCtorAssembly ()
 		{
@@ -327,7 +288,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 				Assert.Contains (attrBlobs, b => b.Contains ("TestFixtures"));
 			}
 		}
-
 	}
 
 }
