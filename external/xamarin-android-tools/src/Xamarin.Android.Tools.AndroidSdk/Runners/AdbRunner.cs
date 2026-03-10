@@ -241,6 +241,7 @@ public class AdbRunner
 	/// <summary>
 	/// Formats an AVD name into a user-friendly display name.
 	/// Replaces underscores with spaces, applies title case, and capitalizes "API".
+	/// ToTitleCase naturally preserves fully-uppercase segments (e.g. "XL", "SE").
 	/// Ported from dotnet/android GetAvailableAndroidDevices.FormatDisplayName.
 	/// </summary>
 	public static string FormatDisplayName (string avdName)
@@ -249,7 +250,7 @@ public class AdbRunner
 			return avdName ?? string.Empty;
 
 		var textInfo = CultureInfo.InvariantCulture.TextInfo;
-		avdName = textInfo.ToTitleCase (avdName.Replace ('_', ' ').ToLowerInvariant ());
+		avdName = textInfo.ToTitleCase (avdName.Replace ('_', ' '));
 
 		// Replace "Api" with "API"
 		avdName = ApiRegex.Replace (avdName, "API");
