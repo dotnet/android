@@ -201,6 +201,16 @@ sealed class JavaPeerScanner : IDisposable
 				invokerTypeName = TryFindInvokerTypeName (fullName, typeHandle, index);
 			}
 
+			// Resolve base type JNI name
+			string? baseJavaName = null;
+			var baseTypeInfo = GetBaseTypeInfo (typeDef, index);
+			if (baseTypeInfo is not null) {
+				baseJavaName = ResolveRegisterJniName (baseTypeInfo.Value.typeName, baseTypeInfo.Value.assemblyName);
+			}
+
+			// Resolve implemented interface JNI names
+			var implementedInterfaces = ResolveImplementedInterfaces (typeDef, index);
+
 			var peer = new JavaPeerInfo {
 				JavaName = jniName,
 				ManagedTypeName = fullName,
@@ -214,6 +224,8 @@ sealed class JavaPeerScanner : IDisposable
 				ActivationCtor = activationCtor,
 				InvokerTypeName = invokerTypeName,
 				IsGenericDefinition = isGenericDefinition,
+				BaseJavaName = baseJavaName,
+				ImplementedInterfaceJavaNames = implementedInterfaces,
 			};
 
 			results [fullName] = peer;
@@ -369,6 +381,22 @@ sealed class JavaPeerScanner : IDisposable
 			return invokerName;
 		}
 		return null;
+	}
+
+	List<string> ResolveImplementedInterfaces (TypeDefinition typeDef, AssemblyIndex index)
+	{
+		var result = new List<string> ();
+		foreach (var ifaceImplHandle in typeDef.GetInterfaceImplementations ()) {
+			var ifaceImpl = index.Reader.GetInterfaceImplementation (ifaceImplHandle);
+			var resolved = ResolveEntityHandle (ifaceImpl.Interface, index);
+			if (resolved is not null) {
+				var ifaceJniName = ResolveRegisterJniName (resolved.Value.typeName, resolved.Value.assemblyName);
+				if (ifaceJniName is not null) {
+					result.Add (ifaceJniName);
+				}
+			}
+		}
+		return result;
 	}
 
 	public void Dispose ()

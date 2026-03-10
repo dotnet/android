@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
 /// <summary>
@@ -60,6 +62,16 @@ sealed record JavaPeerInfo
 	/// used to instantiate instances from Java.
 	/// </summary>
 	public string? InvokerTypeName { get; init; }
+
+	/// <summary>
+	/// JNI name of the base Java peer type, if any.
+	/// </summary>
+	public string? BaseJavaName { get; init; }
+
+	/// <summary>
+	/// JNI names of Java interfaces implemented by this type.
+	/// </summary>
+	public IReadOnlyList<string> ImplementedInterfaceJavaNames { get; init; } = [];
 
 	/// <summary>
 	/// True if this is an open generic type definition.
