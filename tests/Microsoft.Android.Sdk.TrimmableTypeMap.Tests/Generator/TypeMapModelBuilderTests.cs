@@ -12,7 +12,7 @@ public class ModelBuilderTests : FixtureTestBase
 {
 	static TypeMapAssemblyData BuildModel (IReadOnlyList<JavaPeerInfo> peers, string? assemblyName = null)
 	{
-		var outputPath = Path.Combine ("/tmp", (assemblyName ?? "TestTypeMap") + ".dll");
+		var outputPath = Path.Combine (Path.GetTempPath (), (assemblyName ?? "TestTypeMap") + ".dll");
 		return ModelBuilder.Build (peers, outputPath, assemblyName);
 	}
 
