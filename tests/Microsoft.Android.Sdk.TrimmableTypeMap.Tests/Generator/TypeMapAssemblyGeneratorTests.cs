@@ -229,4 +229,31 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		// Activity is in TestFixtures, so IgnoresAccessChecksTo must include TestFixtures
 		Assert.Contains (attrBlobs, b => b.Contains ("TestFixtures"));
 	}
+
+	[Fact]
+	public void Generate_JiStyleCtor_DoesNotEmitActivation ()
+	{
+		var peers = ScanFixtures ();
+		var jiPeer = peers.First (p => p.JavaName == "my/app/JiStylePeer");
+		Assert.NotNull (jiPeer.ActivationCtor);
+		Assert.Equal (ActivationCtorStyle.JavaInterop, jiPeer.ActivationCtor.Style);
+
+		using var stream = GenerateAssembly (new [] { jiPeer }, "JiStyleTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		// JI-style activation is not yet supported in the emitter, so
+		// CreateInstance should be the no-activation variant (ldnull + ret).
+		// Verify the proxy exists but no JI-specific type refs are emitted.
+		var typeNames = GetTypeRefNames (reader);
+		Assert.DoesNotContain ("JniObjectReference", typeNames);
+		Assert.DoesNotContain ("JniObjectReferenceOptions", typeNames);
+
+		// The proxy still exists (with a TargetType property) — only activation is skipped
+		var proxyTypes = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Where (t => reader.GetString (t.Namespace) == "_TypeMap.Proxies")
+			.ToList ();
+		Assert.Single (proxyTypes);
+	}
 }

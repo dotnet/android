@@ -40,6 +40,21 @@ namespace Android.Runtime
 	}
 }
 
+namespace Java.Interop
+{
+	public struct JniObjectReference
+	{
+		public IntPtr Handle;
+	}
+
+	public enum JniObjectReferenceOptions
+	{
+		None = 0,
+		Copy = 1,
+		CopyAndDispose = 2,
+	}
+}
+
 namespace Android.App
 {
 	[AttributeUsage (AttributeTargets.Class)]

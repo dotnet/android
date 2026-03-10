@@ -339,6 +339,13 @@ namespace MyApp.Generic
 	{
 		protected GenericCallbackImpl (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 	}
+
+	[Register ("my/app/JiStylePeer", DoNotGenerateAcw = true)]
+	public class JiStylePeer : Java.Lang.Object
+	{
+		protected JiStylePeer (ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options)
+			: base ((IntPtr)0, JniHandleOwnership.DoNotTransfer) { }
+	}
 }
 
 [Register ("my/app/GlobalType")]

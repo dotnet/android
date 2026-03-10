@@ -273,6 +273,14 @@ sealed class TypeMapAssemblyEmitter
 			return;
 		}
 
+		// JavaInterop-style activation ctors (ref JniObjectReference, JniObjectReferenceOptions)
+		// require parameter conversion that is not yet implemented in the emitter.
+		// Fall back to no-activation (runtime will use reflection-based activation).
+		if (proxy.ActivationCtor?.Style == ActivationCtorStyle.JavaInterop) {
+			EmitCreateInstanceNoActivation ();
+			return;
+		}
+
 		if (proxy.InvokerType != null) {
 			EmitCreateInstanceViaNewobj (_pe.ResolveTypeRef (proxy.InvokerType));
 			return;
