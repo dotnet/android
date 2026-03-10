@@ -284,6 +284,22 @@ public class AdbRunnerTests
 		Assert.AreEqual ("device name", devices3 [0].Description, "Device should have third priority");
 	}
 
+	[Test]
+	public void BuildDeviceDescription_EmulatorWithUppercaseAvdName ()
+	{
+		// Mirrors dotnet/android ParseMixedDeviceStates: offline emulator gets AVD name "Pixel_9_Pro_XL"
+		// BuildDeviceDescription should format it preserving "XL" uppercase
+		var device = new AdbDeviceInfo {
+			Serial = "emulator-5556",
+			Type = AdbDeviceType.Emulator,
+			Status = AdbDeviceStatus.Offline,
+			AvdName = "Pixel_9_Pro_XL",
+		};
+
+		var description = AdbRunner.BuildDeviceDescription (device);
+		Assert.AreEqual ("Pixel 9 Pro XL", description, "Offline emulator should still get AVD name with uppercase preserved");
+	}
+
 	// --- FormatDisplayName tests ---
 	// Consumer: dotnet/android GetAvailableAndroidDevicesTests, BuildDeviceDescription (via AVD name formatting)
 
@@ -320,7 +336,16 @@ public class AdbRunnerTests
 	[Test]
 	public void FormatDisplayName_HandlesComplexNames ()
 	{
+		// Lowercase input: "xl" gets title-cased to "Xl"
 		Assert.AreEqual ("Pixel 9 Pro Xl API 36", AdbRunner.FormatDisplayName ("pixel_9_pro_xl_api_36"));
+	}
+
+	[Test]
+	public void FormatDisplayName_PreservesUppercaseSegments ()
+	{
+		// Fully-uppercase segments like "XL", "SE", "FE" are preserved
+		Assert.AreEqual ("Pixel 9 Pro XL", AdbRunner.FormatDisplayName ("Pixel_9_Pro_XL"));
+		Assert.AreEqual ("Galaxy S24 FE", AdbRunner.FormatDisplayName ("Galaxy_S24_FE"));
 	}
 
 	[Test]
