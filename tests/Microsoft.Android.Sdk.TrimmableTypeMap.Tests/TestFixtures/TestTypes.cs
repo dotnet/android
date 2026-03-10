@@ -74,6 +74,20 @@ namespace Android.Views
 	public class View : Java.Lang.Object
 	{
 		protected View (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		// Auto-generated Implementor/EventDispatcher types — trimmable, not unconditional.
+		// Note: IOnClickListenerImplementor intentionally starts with 'I' — this mirrors the
+		// real Xamarin.Android binding convention where implementors are named after the interface
+		// they implement (IOnClickListener → IOnClickListenerImplementor).
+		public class IOnClickListenerImplementor : View
+		{
+			protected IOnClickListenerImplementor (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+		}
+
+		public class ClickEventDispatcher : View
+		{
+			protected ClickEventDispatcher (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+		}
 	}
 
 	[Register ("android/view/View$OnClickListener", "", "Android.Views.IOnClickListenerInvoker")]
