@@ -18,11 +18,12 @@ public partial class JavaPeerScannerTests
 		}
 	}
 
-	List<JavaPeerInfo> ScanFixtures ()
-	{
+	static readonly Lazy<List<JavaPeerInfo>> _cachedFixtures = new (() => {
 		using var scanner = new JavaPeerScanner ();
 		return scanner.Scan (new [] { TestFixtureAssemblyPath });
-	}
+	});
+
+	List<JavaPeerInfo> ScanFixtures () => _cachedFixtures.Value;
 
 	JavaPeerInfo FindByJavaName (List<JavaPeerInfo> peers, string javaName)
 	{
