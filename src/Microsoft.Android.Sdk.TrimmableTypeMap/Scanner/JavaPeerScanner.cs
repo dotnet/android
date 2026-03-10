@@ -17,6 +17,7 @@ sealed class JavaPeerScanner : IDisposable
 {
 	readonly Dictionary<string, AssemblyIndex> _assemblyCache = new (StringComparer.Ordinal);
 	readonly Dictionary<(string typeName, string assemblyName), ActivationCtorInfo> _activationCtorCache = new ();
+	bool _hasScanned;
 
 	/// <summary>
 	/// Resolves a type name + assembly name to a TypeDefinitionHandle + AssemblyIndex.
@@ -80,6 +81,11 @@ sealed class JavaPeerScanner : IDisposable
 	/// </summary>
 	public List<JavaPeerInfo> Scan (IReadOnlyList<string> assemblyPaths)
 	{
+		if (_hasScanned) {
+			throw new InvalidOperationException ("Scan() can only be called once per JavaPeerScanner instance. Create a new instance for each scan.");
+		}
+		_hasScanned = true;
+
 		// Phase 1: Build indices for all assemblies
 		foreach (var path in assemblyPaths) {
 			var index = AssemblyIndex.Create (path);
@@ -400,7 +406,7 @@ sealed class JavaPeerScanner : IDisposable
 		_assemblyCache.Clear ();
 	}
 
-	readonly Dictionary<string, bool> _extendsJavaPeerCache = new (StringComparer.Ordinal);
+	readonly Dictionary<(string assemblyName, string fullName), bool> _extendsJavaPeerCache = new ();
 
 	/// <summary>
 	/// Check if a type extends a known Java peer (has [Register] or component attribute)
@@ -409,7 +415,7 @@ sealed class JavaPeerScanner : IDisposable
 	bool ExtendsJavaPeer (TypeDefinition typeDef, AssemblyIndex index)
 	{
 		var fullName = MetadataTypeNameResolver.GetFullName (typeDef, index.Reader);
-		var key = $"{index.AssemblyName}:{fullName}";
+		var key = (index.AssemblyName, fullName);
 
 		if (_extendsJavaPeerCache.TryGetValue (key, out var cached)) {
 			return cached;
