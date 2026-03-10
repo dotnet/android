@@ -233,12 +233,11 @@ sealed class AssemblyIndex : IDisposable
 
 	string? TryGetNameProperty (CustomAttribute ca)
 	{
-		var name = TryGetTypeProperty (ca, "Name");
-		if (!string.IsNullOrEmpty (name)) {
+		var value = DecodeAttribute (ca);
+
+		if (TryGetNamedArgument<string> (value, "Name", out var name) && !string.IsNullOrEmpty (name)) {
 			return name;
 		}
-
-		var value = DecodeAttribute (ca);
 
 		// Fall back to first constructor argument (e.g., [CustomJniName("...")])
 		if (value.FixedArguments.Length > 0 && value.FixedArguments [0].Value is string ctorName && !string.IsNullOrEmpty (ctorName)) {
