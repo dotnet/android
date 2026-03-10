@@ -291,3 +291,12 @@ sealed class ApplicationAttributeInfo () : TypeAttributeInfo ("ApplicationAttrib
 	public string? BackupAgent { get; set; }
 	public string? ManageSpaceActivity { get; set; }
 }
+
+/// <summary>
+/// Parsed [Export] attribute data for a method.
+/// </summary>
+sealed record ExportInfo
+{
+	public IReadOnlyList<string>? ThrownNames { get; init; }
+	public string? SuperArgumentsString { get; init; }
+}

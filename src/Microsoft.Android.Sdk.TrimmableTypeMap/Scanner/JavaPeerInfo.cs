@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
@@ -14,6 +15,13 @@ sealed record JavaPeerInfo
 	/// Extracted from the [Register] attribute.
 	/// </summary>
 	public required string JavaName { get; init; }
+
+	/// <summary>
+	/// Compat JNI type name, e.g., "myapp.namespace/MyType" for user types (uses raw namespace, not CRC64).
+	/// For MCW binding types (with [Register]), this equals <see cref="JavaName"/>.
+	/// Used by acw-map.txt to support legacy custom view name resolution in layout XMLs.
+	/// </summary>
+	public required string CompatJniName { get; init; }
 
 	/// <summary>
 	/// Full managed type name, e.g., "Android.App.Activity".
@@ -51,6 +59,14 @@ sealed record JavaPeerInfo
 	public bool IsUnconditional { get; init; }
 
 	/// <summary>
+	/// Marshal methods: methods with [Register(name, sig, connector)], [Export], or
+	/// constructor registrations ([Register(".ctor", sig, "")] / [JniConstructorSignature]).
+	/// Constructors are identified by <see cref="MarshalMethodInfo.IsConstructor"/>.
+	/// Ordered — the index in this list is the method's ordinal for RegisterNatives.
+	/// </summary>
+	public IReadOnlyList<MarshalMethodInfo> MarshalMethods { get; init; } = [];
+
+	/// <summary>
 	/// Information about the activation constructor for this type.
 	/// May reference a base type's constructor if the type doesn't define its own.
 	/// </summary>
@@ -77,6 +93,54 @@ sealed record JavaPeerInfo
 	/// Generic types get TypeMap entries but CreateInstance throws NotSupportedException.
 	/// </summary>
 	public bool IsGenericDefinition { get; init; }
+}
+
+/// <summary>
+/// Describes a marshal method (a method with [Register] or [Export]) on a Java peer type.
+/// Contains all data needed to generate a UCO wrapper, a JCW native declaration,
+/// and a RegisterNatives call.
+/// </summary>
+sealed record MarshalMethodInfo
+{
+	/// <summary>
+	/// JNI method name, e.g., "onCreate".
+	/// This is the Java method name (without n_ prefix).
+	/// </summary>
+	public required string JniName { get; init; }
+
+	/// <summary>
+	/// JNI method signature, e.g., "(Landroid/os/Bundle;)V".
+	/// Contains both parameter types and return type.
+	/// </summary>
+	public required string JniSignature { get; init; }
+
+	/// <summary>
+	/// The connector string from [Register], e.g., "GetOnCreate_Landroid_os_Bundle_Handler".
+	/// Null for [Export] methods.
+	/// </summary>
+	public string? Connector { get; init; }
+
+	/// <summary>
+	/// Name of the managed method this maps to, e.g., "OnCreate".
+	/// </summary>
+	public required string ManagedMethodName { get; init; }
+
+	/// <summary>
+	/// True if this is a constructor registration.
+	/// </summary>
+	public bool IsConstructor { get; init; }
+
+	/// <summary>
+	/// For [Export] methods: Java exception types that the method declares it can throw.
+	/// Null for [Register] methods.
+	/// </summary>
+	public IReadOnlyList<string>? ThrownNames { get; init; }
+
+	/// <summary>
+	/// For [Export] constructors: super constructor arguments string.
+	/// Null for [Register] methods.
+	/// </summary>
+	public string? SuperArgumentsString { get; init; }
 }
 
 /// <summary>

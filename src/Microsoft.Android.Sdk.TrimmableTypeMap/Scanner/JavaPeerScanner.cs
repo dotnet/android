@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Reflection.Metadata;
@@ -164,6 +165,7 @@ sealed class JavaPeerScanner : IDisposable
 			//   3. Extends a known Java peer → auto-compute JNI name via CRC64
 			//   4. None of the above → not a Java peer, skip
 			string? jniName = null;
+			string? compatJniName = null;
 			bool doNotGenerateAcw = false;
 
 			index.RegisterInfoByType.TryGetValue (typeHandle, out var registerInfo);
@@ -171,15 +173,17 @@ sealed class JavaPeerScanner : IDisposable
 
 			if (registerInfo is not null && !string.IsNullOrEmpty (registerInfo.JniName)) {
 				jniName = registerInfo.JniName;
+				compatJniName = jniName;
 				doNotGenerateAcw = registerInfo.DoNotGenerateAcw;
 			} else if (attrInfo?.JniName is not null) {
 				// User type with [Activity(Name = "...")] but no [Register]
 				jniName = attrInfo.JniName;
+				compatJniName = jniName;
 			} else {
 				// No explicit JNI name — check if this type extends a known Java peer.
 				// If so, auto-compute JNI name from the managed type name via CRC64.
 				if (ExtendsJavaPeer (typeDef, index)) {
-					jniName = ComputeAutoJniName (typeDef, index);
+					(jniName, compatJniName) = ComputeAutoJniNames (typeDef, index);
 				} else {
 					continue;
 				}
@@ -193,6 +197,9 @@ sealed class JavaPeerScanner : IDisposable
 
 			var isUnconditional = attrInfo is not null;
 			string? invokerTypeName = null;
+
+			// Collect marshal methods (including constructors) in a single pass over methods
+			var marshalMethods = CollectMarshalMethods (typeDef, index);
 
 			// Resolve activation constructor
 			var activationCtor = ResolveActivationCtor (fullName, typeDef, index);
@@ -214,6 +221,7 @@ sealed class JavaPeerScanner : IDisposable
 
 			var peer = new JavaPeerInfo {
 				JavaName = jniName,
+				CompatJniName = compatJniName,
 				ManagedTypeName = fullName,
 				ManagedTypeNamespace = ExtractNamespace (fullName),
 				ManagedTypeShortName = ExtractShortName (fullName),
@@ -222,6 +230,7 @@ sealed class JavaPeerScanner : IDisposable
 				IsAbstract = isAbstract,
 				DoNotGenerateAcw = doNotGenerateAcw,
 				IsUnconditional = isUnconditional,
+				MarshalMethods = marshalMethods,
 				ActivationCtor = activationCtor,
 				InvokerTypeName = invokerTypeName,
 				IsGenericDefinition = isGenericDefinition,
@@ -230,6 +239,171 @@ sealed class JavaPeerScanner : IDisposable
 			};
 
 			results [fullName] = peer;
+		}
+	}
+
+	List<MarshalMethodInfo> CollectMarshalMethods (TypeDefinition typeDef, AssemblyIndex index)
+	{
+		var methods = new List<MarshalMethodInfo> ();
+
+		// Single pass over methods: collect marshal methods (including constructors)
+		foreach (var methodHandle in typeDef.GetMethods ()) {
+			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
+			if (!TryGetMethodRegisterInfo (methodDef, index, out var registerInfo, out var exportInfo) || registerInfo is null) {
+				continue;
+			}
+
+			AddMarshalMethod (methods, registerInfo, methodDef, index, exportInfo);
+		}
+
+		// Collect [Register] from properties (attribute is on the property, not the getter)
+		foreach (var propHandle in typeDef.GetProperties ()) {
+			var propDef = index.Reader.GetPropertyDefinition (propHandle);
+			var propRegister = TryGetPropertyRegisterInfo (propDef, index);
+			if (propRegister is null) {
+				continue;
+			}
+
+			var accessors = propDef.GetAccessors ();
+			if (!accessors.Getter.IsNil) {
+				var getterDef = index.Reader.GetMethodDefinition (accessors.Getter);
+				AddMarshalMethod (methods, propRegister, getterDef, index);
+			}
+		}
+
+		return methods;
+	}
+
+	static void AddMarshalMethod (List<MarshalMethodInfo> methods, RegisterInfo registerInfo, MethodDefinition methodDef, AssemblyIndex index, ExportInfo? exportInfo = null)
+	{
+		// Skip methods that are just the JNI name (type-level [Register])
+		if (registerInfo.Signature is null && registerInfo.Connector is null) {
+			return;
+		}
+
+		methods.Add (new MarshalMethodInfo {
+			JniName = registerInfo.JniName,
+			JniSignature = registerInfo.Signature ?? "()V",
+			Connector = registerInfo.Connector,
+			ManagedMethodName = index.Reader.GetString (methodDef.Name),
+			IsConstructor = registerInfo.JniName == "<init>" || registerInfo.JniName == ".ctor",
+			ThrownNames = exportInfo?.ThrownNames,
+			SuperArgumentsString = exportInfo?.SuperArgumentsString,
+		});
+	}
+
+	static bool TryGetMethodRegisterInfo (MethodDefinition methodDef, AssemblyIndex index, out RegisterInfo? registerInfo, out ExportInfo? exportInfo)
+	{
+		exportInfo = null;
+		foreach (var caHandle in methodDef.GetCustomAttributes ()) {
+			var ca = index.Reader.GetCustomAttribute (caHandle);
+			var attrName = AssemblyIndex.GetCustomAttributeName (ca, index.Reader);
+
+			if (attrName == "RegisterAttribute") {
+				registerInfo = index.ParseRegisterAttribute (ca);
+				return true;
+			}
+
+			if (attrName == "ExportAttribute") {
+				(registerInfo, exportInfo) = ParseExportAttribute (ca, methodDef, index);
+				return true;
+			}
+		}
+		registerInfo = null;
+		return false;
+	}
+
+	static RegisterInfo? TryGetPropertyRegisterInfo (PropertyDefinition propDef, AssemblyIndex index)
+	{
+		foreach (var caHandle in propDef.GetCustomAttributes ()) {
+			var ca = index.Reader.GetCustomAttribute (caHandle);
+			var attrName = AssemblyIndex.GetCustomAttributeName (ca, index.Reader);
+
+			if (attrName == "RegisterAttribute") {
+				return index.ParseRegisterAttribute (ca);
+			}
+		}
+		return null;
+	}
+
+	static (RegisterInfo registerInfo, ExportInfo exportInfo) ParseExportAttribute (CustomAttribute ca, MethodDefinition methodDef, AssemblyIndex index)
+	{
+		var value = index.DecodeAttribute (ca);
+
+		// [Export("name")] or [Export] (uses method name)
+		string? exportName = null;
+		if (value.FixedArguments.Length > 0) {
+			exportName = (string?)value.FixedArguments [0].Value;
+		}
+
+		List<string>? thrownNames = null;
+		string? superArguments = null;
+
+		// Check Named arguments
+		foreach (var named in value.NamedArguments) {
+			if (named.Name == "Name" && named.Value is string name) {
+				exportName = name;
+			} else if (named.Name == "ThrownNames" && named.Value is ImmutableArray<CustomAttributeTypedArgument<string>> names) {
+				thrownNames = new List<string> (names.Length);
+				foreach (var item in names) {
+					if (item.Value is string s) {
+						thrownNames.Add (s);
+					}
+				}
+			} else if (named.Name == "SuperArgumentsString" && named.Value is string superArgs) {
+				superArguments = superArgs;
+			}
+		}
+
+		if (string.IsNullOrEmpty (exportName)) {
+			exportName = index.Reader.GetString (methodDef.Name);
+		}
+		string resolvedExportName = exportName ?? throw new InvalidOperationException ("Export name should not be null at this point.");
+
+		// Build JNI signature from method signature
+		var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+		var jniSig = BuildJniSignatureFromManaged (sig);
+
+		return (
+			new RegisterInfo { JniName = resolvedExportName, Signature = jniSig, Connector = null, DoNotGenerateAcw = false },
+			new ExportInfo { ThrownNames = thrownNames, SuperArgumentsString = superArguments }
+		);
+	}
+
+	static string BuildJniSignatureFromManaged (MethodSignature<string> sig)
+	{
+		var sb = new System.Text.StringBuilder ();
+		sb.Append ('(');
+		foreach (var param in sig.ParameterTypes) {
+			sb.Append (ManagedTypeToJniDescriptor (param));
+		}
+		sb.Append (')');
+		sb.Append (ManagedTypeToJniDescriptor (sig.ReturnType));
+		return sb.ToString ();
+	}
+
+	static string ManagedTypeToJniDescriptor (string managedType)
+	{
+		switch (managedType) {
+		case "System.Void": return "V";
+		case "System.Boolean": return "Z";
+		case "System.Byte":
+		case "System.SByte": return "B";
+		case "System.Char": return "C";
+		case "System.Int16":
+		case "System.UInt16": return "S";
+		case "System.Int32":
+		case "System.UInt32": return "I";
+		case "System.Int64":
+		case "System.UInt64": return "J";
+		case "System.Single": return "F";
+		case "System.Double": return "D";
+		case "System.String": return "Ljava/lang/String;";
+		default:
+			if (managedType.EndsWith ("[]")) {
+				return $"[{ManagedTypeToJniDescriptor (managedType.Substring (0, managedType.Length - 2))}";
+			}
+			return "Ljava/lang/Object;";
 		}
 	}
 
@@ -453,21 +627,29 @@ sealed class JavaPeerScanner : IDisposable
 	}
 
 	/// <summary>
-	/// Compute JNI name for a type without [Register] or component Name.
+	/// Compute both JNI name and compat JNI name for a type without [Register] or component Name.
 	/// JNI name uses CRC64 hash of "namespace:assemblyName" for the package.
-	/// If a declaring type has [Register], its JNI name is used as prefix.
+	/// Compat JNI name uses the raw managed namespace (lowercased).
+	/// If a declaring type has [Register], its JNI name is used as prefix for both.
 	/// Generic backticks are replaced with _.
 	/// </summary>
-	static string ComputeAutoJniName (TypeDefinition typeDef, AssemblyIndex index)
+	static (string jniName, string compatJniName) ComputeAutoJniNames (TypeDefinition typeDef, AssemblyIndex index)
 	{
 		var (typeName, parentJniName, ns) = ComputeTypeNameParts (typeDef, index);
 
 		if (parentJniName is not null) {
-			return $"{parentJniName}_{typeName}";
+			var name = $"{parentJniName}_{typeName}";
+			return (name, name);
 		}
 
 		var packageName = GetCrc64PackageName (ns, index.AssemblyName);
-		return $"{packageName}/{typeName}";
+		var jniName = $"{packageName}/{typeName}";
+
+		string compatName = ns.Length == 0
+			? typeName
+			: $"{ns.ToLowerInvariant ().Replace ('.', '/')}/{typeName}";
+
+		return (jniName, compatName);
 	}
 
 	/// <summary>

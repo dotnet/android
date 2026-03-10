@@ -57,6 +57,7 @@ public abstract class FixtureTestBase
 		var (ns, shortName) = ParseManagedTypeName (managedName);
 		return new JavaPeerInfo {
 			JavaName = jniName,
+			CompatJniName = jniName,
 			ManagedTypeName = managedName,
 			ManagedTypeNamespace = ns,
 			ManagedTypeShortName = shortName,
@@ -87,6 +88,7 @@ public abstract class FixtureTestBase
 		var (ns, shortName) = ParseManagedTypeName (managedName);
 		return new JavaPeerInfo {
 			JavaName = jniName,
+			CompatJniName = jniName,
 			ManagedTypeName = managedName,
 			ManagedTypeNamespace = ns,
 			ManagedTypeShortName = shortName,
