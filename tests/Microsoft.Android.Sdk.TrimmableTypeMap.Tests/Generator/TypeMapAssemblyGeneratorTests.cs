@@ -231,7 +231,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_JiStyleCtor_DoesNotEmitActivation ()
+	public void Generate_JiStyleCtor_EmitsJavaInteropActivation ()
 	{
 		var peers = ScanFixtures ();
 		var jiPeer = peers.First (p => p.JavaName == "my/app/JiStylePeer");
@@ -242,14 +242,12 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 
-		// JI-style activation is not yet supported in the emitter, so
-		// CreateInstance should be the no-activation variant (ldnull + ret).
-		// Verify the proxy exists but no JI-specific type refs are emitted.
+		// JI-style activation should emit JniObjectReference and JniObjectReferenceOptions type refs
 		var typeNames = GetTypeRefNames (reader);
-		Assert.DoesNotContain ("JniObjectReference", typeNames);
-		Assert.DoesNotContain ("JniObjectReferenceOptions", typeNames);
+		Assert.Contains ("JniObjectReference", typeNames);
+		Assert.Contains ("JniObjectReferenceOptions", typeNames);
 
-		// The proxy still exists (with a TargetType property) — only activation is skipped
+		// The proxy still exists (with a TargetType property)
 		var proxyTypes = reader.TypeDefinitions
 			.Select (h => reader.GetTypeDefinition (h))
 			.Where (t => reader.GetString (t.Namespace) == "_TypeMap.Proxies")

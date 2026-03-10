@@ -97,13 +97,13 @@ namespace Android.Views
 		bool OnLongClick (View v);
 	}
 
-	[Register ("android/view/View_IOnClickListenerImplementor")]
+	[Register ("mono/android/view/View_IOnClickListenerImplementor")]
 	public class View_IOnClickListenerImplementor : Java.Lang.Object
 	{
 		public View_IOnClickListenerImplementor (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 	}
 
-	[Register ("android/view/View_ClickEventDispatcher")]
+	[Register ("mono/android/view/View_ClickEventDispatcher")]
 	public class View_ClickEventDispatcher : Java.Lang.Object
 	{
 		public View_ClickEventDispatcher (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }

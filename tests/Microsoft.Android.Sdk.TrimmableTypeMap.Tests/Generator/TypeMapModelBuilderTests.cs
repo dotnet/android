@@ -444,13 +444,14 @@ public class ModelBuilderTests : FixtureTestBase
 	public class FixtureImplementorsAndDispatchers
 	{
 		[Theory]
-		[InlineData ("android/view/View_IOnClickListenerImplementor", "Implementor")]
-		[InlineData ("android/view/View_ClickEventDispatcher", "EventDispatcher")]
+		[InlineData ("mono/android/view/View_IOnClickListenerImplementor", "Implementor")]
+		[InlineData ("mono/android/view/View_ClickEventDispatcher", "EventDispatcher")]
 		public void Fixture_HelperType_IsTrimmable_NotUnconditional (string javaName, string kind)
 		{
 			var peer = FindFixtureByJavaName (javaName);
 			Assert.False (peer.DoNotGenerateAcw);
 			Assert.False (peer.IsInterface);
+			Assert.True (peer.IsImplementorOrEventDispatcher, $"{kind} should be detected by scanner");
 
 			var model = BuildModel (new [] { peer }, "TypeMap");
 
@@ -461,22 +462,20 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 	}
 
-	public class NameBasedDetection
+	public class ImplementorDetection
 	{
 		[Fact]
-		public void Build_UserTypeNamedImplementor_IsTreatedAsTrimmable ()
+		public void Build_UserTypeNamedImplementor_IsNotMisclassified ()
 		{
-			// Limitation: name-based heuristic means a user type ending in "Implementor"
-			// will be treated as trimmable even if it's genuinely a user ACW type.
-			// This test documents the known behavior.
+			// User ACW types ending in "Implementor" should NOT be treated as trimmable
+			// because their JNI name doesn't start with "mono/" (binding generator convention).
 			var peer = MakeAcwPeer ("my/app/MyImplementor", "MyApp.MyImplementor", "App");
 			var model = BuildModel (new [] { peer });
 
 			var entry = model.Entries.FirstOrDefault ();
 			Assert.NotNull (entry);
-			// The heuristic treats this as an Implementor → trimmable (not unconditional)
-			Assert.False (entry!.IsUnconditional,
-				"Name-based heuristic: types ending in 'Implementor' are treated as trimmable");
+			Assert.True (entry!.IsUnconditional,
+				"User types ending in 'Implementor' should be unconditional (not misclassified as trimmable)");
 		}
 
 		[Fact]

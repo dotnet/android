@@ -77,6 +77,14 @@ sealed record JavaPeerInfo
 	/// Generic types get TypeMap entries but CreateInstance throws NotSupportedException.
 	/// </summary>
 	public bool IsGenericDefinition { get; init; }
+
+	/// <summary>
+	/// True if this type is a binding-generated Implementor or EventDispatcher.
+	/// These types are only instantiated from .NET and should be trimmable.
+	/// Detected by checking for the "mono/" JNI name prefix (used by the binding generator)
+	/// combined with the "Implementor" or "EventDispatcher" managed name suffix.
+	/// </summary>
+	public bool IsImplementorOrEventDispatcher { get; init; }
 }
 
 /// <summary>
