@@ -31,8 +31,8 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Theory]
-		[InlineData ("/some/path/Foo.Bar.dll", null, "Foo.Bar")]
-		[InlineData ("/some/path/Foo.dll", "MyAssembly", "MyAssembly")]
+		[InlineData ("Foo.Bar.dll", null, "Foo.Bar")]
+		[InlineData ("Foo.dll", "MyAssembly", "MyAssembly")]
 		public void Build_AssemblyName_ResolvedCorrectly (string outputPath, string? explicitName, string expected)
 		{
 			var model = ModelBuilder.Build (Array.Empty<JavaPeerInfo> (), outputPath, explicitName);
