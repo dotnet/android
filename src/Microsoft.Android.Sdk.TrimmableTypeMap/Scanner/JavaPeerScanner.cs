@@ -518,8 +518,19 @@ sealed class JavaPeerScanner : IDisposable
 
 		var data = System.Text.Encoding.UTF8.GetBytes ($"{ns}:{assemblyName}");
 		var hash = System.IO.Hashing.Crc64.Hash (data);
-		return $"crc64{BitConverter.ToString (hash).Replace ("-", "").ToLowerInvariant ()}";
+
+		// "crc64" prefix (5 chars) + 16 hex chars = 21 chars total, single allocation
+		var chars = new char [5 + hash.Length * 2];
+		chars [0] = 'c'; chars [1] = 'r'; chars [2] = 'c'; chars [3] = '6'; chars [4] = '4';
+		for (int i = 0; i < hash.Length; i++) {
+			chars [5 + i * 2] = ToHexChar (hash [i] >> 4);
+			chars [5 + i * 2 + 1] = ToHexChar (hash [i] & 0xF);
+		}
+		return new string (chars);
 	}
+
+	static char ToHexChar (int nibble)
+		=> (char) (nibble < 10 ? '0' + nibble : 'a' + nibble - 10);
 
 	static string ExtractNamespace (string fullName)
 	{
