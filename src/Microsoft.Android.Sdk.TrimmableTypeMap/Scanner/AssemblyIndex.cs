@@ -194,7 +194,6 @@ sealed class AssemblyIndex : IDisposable
 
 	RegisterInfo ParseRegisterInfo (CustomAttributeValue<string> value)
 	{
-
 		string jniName = "";
 		string? signature = null;
 		string? connector = null;

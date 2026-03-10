@@ -16,10 +16,8 @@ public class ModelBuilderTests : FixtureTestBase
 		return ModelBuilder.Build (peers, outputPath, assemblyName);
 	}
 
-
 	public class BasicStructure
 	{
-
 		[Fact]
 		public void Build_EmptyPeers_ProducesEmptyModel ()
 		{
@@ -42,7 +40,6 @@ public class ModelBuilderTests : FixtureTestBase
 
 	public class TypeMapEntries
 	{
-
 		[Fact]
 		public void Build_CreatesOneEntryPerPeer ()
 		{
@@ -77,7 +74,6 @@ public class ModelBuilderTests : FixtureTestBase
 
 	public class ConditionalAttributes
 	{
-
 		[Theory]
 		[InlineData ("java/lang/Object")]
 		[InlineData ("java/lang/Throwable")]
@@ -136,7 +132,6 @@ public class ModelBuilderTests : FixtureTestBase
 
 	public class Aliases
 	{
-
 		[Fact]
 		public void Build_AliasedPeersWithActivation_GetDistinctProxies ()
 		{
@@ -165,7 +160,6 @@ public class ModelBuilderTests : FixtureTestBase
 
 	public class ProxyTypes
 	{
-
 		[Theory]
 		[InlineData ("java/lang/Object", "Java.Lang.Object", "Mono.Android", "Java_Lang_Object_Proxy")]
 		[InlineData ("com/example/Outer$Inner", "Com.Example.Outer.Inner", "App", "Com_Example_Outer_Inner_Proxy")]
@@ -198,7 +192,6 @@ public class ModelBuilderTests : FixtureTestBase
 
 	public class FixtureScan
 	{
-
 		[Fact]
 		public void Build_FromScannedFixtures_ProducesValidModel ()
 		{
@@ -228,7 +221,6 @@ public class ModelBuilderTests : FixtureTestBase
 
 	public class FixtureConditionalAttributes
 	{
-
 		[Theory]
 		[InlineData ("my/app/MainActivity")]
 		[InlineData ("my/app/TouchHandler")]
@@ -262,10 +254,8 @@ public class ModelBuilderTests : FixtureTestBase
 		return model.Entries.FirstOrDefault (e => e.JniName == jniName);
 	}
 
-
 	public class FixtureMcwTypes
 	{
-
 		[Theory]
 		[InlineData ("java/lang/Object", "Java_Lang_Object_Proxy", "Java.Lang.Object")]
 		[InlineData ("android/app/Activity", "Android_App_Activity_Proxy", "Android.App.Activity")]
@@ -312,7 +302,6 @@ public class ModelBuilderTests : FixtureTestBase
 
 	public class FixtureCustomView
 	{
-
 		[Fact]
 		public void Fixture_CustomView_HasTwoConstructors ()
 		{
@@ -326,7 +315,6 @@ public class ModelBuilderTests : FixtureTestBase
 
 	public class FixtureInterfaces
 	{
-
 		[Fact]
 		public void Fixture_IOnClickListener_HasInvokerProxy ()
 		{
@@ -346,7 +334,6 @@ public class ModelBuilderTests : FixtureTestBase
 
 	public class FixtureNestedTypes
 	{
-
 		[Theory]
 		[InlineData ("my/app/Outer$Inner", "MyApp_Outer_Inner_Proxy", "MyApp.Outer+Inner")]
 		[InlineData ("my/app/ICallback$Result", "MyApp_ICallback_Result_Proxy", "MyApp.ICallback+Result")]
@@ -368,7 +355,6 @@ public class ModelBuilderTests : FixtureTestBase
 
 	public class FixtureInvokers
 	{
-
 		[Fact]
 		public void Fixture_InterfaceAndInvoker_ShareJniName_InvokerSeparated ()
 		{
@@ -419,7 +405,6 @@ public class ModelBuilderTests : FixtureTestBase
 
 	public class FixtureGenericHolder
 	{
-
 		[Fact]
 		public void Fixture_GenericHolder_Entry ()
 		{
@@ -434,7 +419,6 @@ public class ModelBuilderTests : FixtureTestBase
 
 	public class FixtureAcwTypeHasProxy
 	{
-
 		[Theory]
 		[InlineData ("my/app/AbstractBase", "MyApp_AbstractBase_Proxy")]
 		[InlineData ("my/app/ClickableView", "MyApp_ClickableView_Proxy")]
@@ -456,7 +440,6 @@ public class ModelBuilderTests : FixtureTestBase
 
 	public class FixtureImplementorsAndDispatchers
 	{
-
 		[Theory]
 		[InlineData ("android/view/View_IOnClickListenerImplementor", "Implementor")]
 		[InlineData ("android/view/View_ClickEventDispatcher", "EventDispatcher")]
@@ -477,7 +460,6 @@ public class ModelBuilderTests : FixtureTestBase
 
 	public class NameBasedDetection
 	{
-
 		[Fact]
 		public void Build_UserTypeNamedImplementor_IsTreatedAsTrimmable ()
 		{
@@ -516,7 +498,6 @@ public class ModelBuilderTests : FixtureTestBase
 
 	public class PipelineTests
 	{
-
 		[Fact]
 		public void FullPipeline_AllFixtures_ProducesLoadableAssembly ()
 		{
@@ -596,7 +577,6 @@ public class ModelBuilderTests : FixtureTestBase
 
 	public class PeBlobValidation
 	{
-
 		[Fact]
 		public void FullPipeline_Mixed2ArgAnd3Arg_BothSurviveRoundTrip ()
 		{
@@ -666,7 +646,6 @@ public class ModelBuilderTests : FixtureTestBase
 
 	public class DeterminismTests
 	{
-
 		[Fact]
 		public void Build_SameInput_ProducesDeterministicOutput ()
 		{

@@ -115,7 +115,6 @@ sealed class JavaPeerProxyData
 	public bool IsGenericDefinition { get; init; }
 }
 
-
 /// <summary>
 /// A cross-assembly type reference (assembly name + full managed type name).
 /// </summary>
