@@ -535,7 +535,26 @@ public class ModelBuilderTests : FixtureTestBase
 				var asmAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
 				int totalAttrs = asmAttrs.Count ();
 
-				int expected = model.Entries.Count + model.IgnoresAccessChecksTo.Count;
+				int expected = model.Entries.Count + model.Associations.Count + model.IgnoresAccessChecksTo.Count;
+				Assert.Equal (expected, totalAttrs);
+			});
+		}
+
+		[Fact]
+		public void FullPipeline_AliasGroup_TypeMapAttributeCountIncludesAssociations ()
+		{
+			// Two peers with the same JNI name, both with activation → generates an association
+			var peers = new List<JavaPeerInfo> {
+				MakePeerWithActivation ("test/Alias", "Test.Primary", "Asm"),
+				MakePeerWithActivation ("test/Alias", "Test.Secondary", "Asm"),
+			};
+			var model = BuildModel (peers, "AliasAttrCount");
+			Assert.NotEmpty (model.Associations);
+
+			EmitAndVerify (model, "AliasAttrCount", (pe, reader) => {
+				var asmAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
+				int totalAttrs = asmAttrs.Count ();
+				int expected = model.Entries.Count + model.Associations.Count + model.IgnoresAccessChecksTo.Count;
 				Assert.Equal (expected, totalAttrs);
 			});
 		}

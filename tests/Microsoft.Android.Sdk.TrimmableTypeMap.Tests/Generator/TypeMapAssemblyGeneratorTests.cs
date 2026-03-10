@@ -256,4 +256,67 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			.ToList ();
 		Assert.Single (proxyTypes);
 	}
+
+	[Fact]
+	public void Emit_CalledTwice_Throws ()
+	{
+		var model = ModelBuilder.Build (Array.Empty<JavaPeerInfo> (), "Double.dll", "Double");
+		var emitter = new TypeMapAssemblyEmitter (new Version (11, 0, 0, 0));
+		emitter.Emit (model, new MemoryStream ());
+		// MetadataBuilder.AddAssembly throws on second call (only one assembly definition per PE)
+		Assert.ThrowsAny<Exception> (() => emitter.Emit (model, new MemoryStream ()));
+	}
+
+	[Fact]
+	public void EmitBody_ILCallbackCallsAddMemberRef_SignatureNotCorrupted ()
+	{
+		// Regression test: EmitBody uses shared _sigBlob for the method signature.
+		// If the emitIL callback calls AddMemberRef (which also uses _sigBlob),
+		// the method signature must not be corrupted.
+		var pe = new PEAssemblyBuilder (new Version (11, 0, 0, 0));
+		pe.EmitPreamble ("SigTest", "SigTest.dll");
+
+		var objectRef = pe.Metadata.AddTypeReference (pe.SystemRuntimeRef,
+			pe.Metadata.GetOrAddString ("System"), pe.Metadata.GetOrAddString ("Object"));
+
+		// <Module> already defined; add a type to host the method
+		pe.Metadata.AddTypeDefinition (
+			System.Reflection.TypeAttributes.Public | System.Reflection.TypeAttributes.Class,
+			pe.Metadata.GetOrAddString ("Test"),
+			pe.Metadata.GetOrAddString ("MyType"),
+			objectRef,
+			MetadataTokens.FieldDefinitionHandle (pe.Metadata.GetRowCount (TableIndex.Field) + 1),
+			MetadataTokens.MethodDefinitionHandle (pe.Metadata.GetRowCount (TableIndex.MethodDef) + 1));
+
+		// EmitBody with an IL callback that calls AddMemberRef (clearing _sigBlob)
+		pe.EmitBody ("TestMethod",
+			MethodAttributes.Public | MethodAttributes.Static,
+			sig => sig.MethodSignature ().Parameters (1,
+				rt => rt.Void (),
+				p => p.AddParameter ().Type ().Int32 ()),
+			encoder => {
+				// This AddMemberRef call clears and repopulates _sigBlob
+				pe.AddMemberRef (objectRef, ".ctor",
+					s => s.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }));
+				encoder.OpCode (ILOpCode.Ret);
+			});
+
+		// If the sig blob was corrupted, the PE metadata will have a wrong signature.
+		// Write and read back to verify.
+		var stream = new MemoryStream ();
+		pe.WritePE (stream);
+		stream.Position = 0;
+
+		using var peReader = new PEReader (stream);
+		var reader = peReader.GetMetadataReader ();
+		var methods = reader.TypeDefinitions
+			.SelectMany (h => reader.GetTypeDefinition (h).GetMethods ())
+			.Select (h => reader.GetMethodDefinition (h))
+			.ToList ();
+
+		var testMethod = methods.First (m => reader.GetString (m.Name) == "TestMethod");
+		var sig = testMethod.DecodeSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal (1, sig.ParameterTypes.Length);
+		Assert.Equal ("System.Int32", sig.ParameterTypes [0]);
+	}
 }

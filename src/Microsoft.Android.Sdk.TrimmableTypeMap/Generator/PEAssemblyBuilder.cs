@@ -175,6 +175,9 @@ sealed class PEAssemblyBuilder
 	{
 		_sigBlob.Clear ();
 		encodeSig (new BlobEncoder (_sigBlob));
+		// Capture the sig blob handle before emitIL, because emitIL callbacks
+		// may call AddMemberRef which clears and repopulates _sigBlob.
+		var sigBlobHandle = Metadata.GetOrAddBlob (_sigBlob);
 
 		_codeBlob.Clear ();
 		var encoder = new InstructionEncoder (_codeBlob);
@@ -189,7 +192,7 @@ sealed class PEAssemblyBuilder
 		return Metadata.AddMethodDefinition (
 			attrs, MethodImplAttributes.IL,
 			Metadata.GetOrAddString (name),
-			Metadata.GetOrAddBlob (_sigBlob),
+			sigBlobHandle,
 			bodyOffset, default);
 	}
 
