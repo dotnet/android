@@ -274,7 +274,7 @@ sealed class TypeMapAssemblyEmitter
 		}
 
 		if (proxy.InvokerType != null) {
-			EmitCreateInstanceInvoker (proxy);
+			EmitCreateInstanceViaNewobj (_pe.ResolveTypeRef (proxy.InvokerType));
 			return;
 		}
 
@@ -283,7 +283,7 @@ sealed class TypeMapAssemblyEmitter
 		var targetTypeRef = _pe.ResolveTypeRef (proxy.TargetType);
 
 		if (activationCtor.IsOnLeafType) {
-			EmitCreateInstanceLeafCtor (targetTypeRef);
+			EmitCreateInstanceViaNewobj (targetTypeRef);
 		} else {
 			EmitCreateInstanceInheritedCtor (targetTypeRef, activationCtor);
 		}
@@ -307,21 +307,9 @@ sealed class TypeMapAssemblyEmitter
 		});
 	}
 
-	void EmitCreateInstanceInvoker (JavaPeerProxyData proxy)
+	void EmitCreateInstanceViaNewobj (EntityHandle typeRef)
 	{
-		var invokerCtorRef = AddActivationCtorRef (_pe.ResolveTypeRef (proxy.InvokerType!));
-		EmitCreateInstanceBody (encoder => {
-			encoder.OpCode (ILOpCode.Ldarg_1);
-			encoder.OpCode (ILOpCode.Ldarg_2);
-			encoder.OpCode (ILOpCode.Newobj);
-			encoder.Token (invokerCtorRef);
-			encoder.OpCode (ILOpCode.Ret);
-		});
-	}
-
-	void EmitCreateInstanceLeafCtor (EntityHandle targetTypeRef)
-	{
-		var ctorRef = AddActivationCtorRef (targetTypeRef);
+		var ctorRef = AddActivationCtorRef (typeRef);
 		EmitCreateInstanceBody (encoder => {
 			encoder.OpCode (ILOpCode.Ldarg_1);
 			encoder.OpCode (ILOpCode.Ldarg_2);

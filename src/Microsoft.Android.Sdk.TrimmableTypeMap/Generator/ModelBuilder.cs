@@ -119,8 +119,8 @@ static class ModelBuilder
 			// Emit TypeMapAssociation linking alias types to the primary proxy
 			if (i > 0 && primaryProxy != null) {
 				model.Associations.Add (new TypeMapAssociationData {
-					SourceTypeReference = $"{peer.ManagedTypeName}, {peer.AssemblyName}",
-					AliasProxyTypeReference = $"{primaryProxy.Namespace}.{primaryProxy.TypeName}, {assemblyName}",
+					SourceTypeReference = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName),
+					AliasProxyTypeReference = AssemblyQualify ($"{primaryProxy.Namespace}.{primaryProxy.TypeName}", assemblyName),
 				});
 			}
 		}
@@ -220,15 +220,15 @@ static class ModelBuilder
 	{
 		string proxyRef;
 		if (proxy != null) {
-			proxyRef = $"{proxy.Namespace}.{proxy.TypeName}, {outputAssemblyName}";
+			proxyRef = AssemblyQualify ($"{proxy.Namespace}.{proxy.TypeName}", outputAssemblyName);
 		} else {
-			proxyRef = $"{peer.ManagedTypeName}, {peer.AssemblyName}";
+			proxyRef = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName);
 		}
 
 		bool isUnconditional = IsUnconditionalEntry (peer);
 		string? targetRef = null;
 		if (!isUnconditional) {
-			targetRef = $"{peer.ManagedTypeName}, {peer.AssemblyName}";
+			targetRef = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName);
 		}
 
 		return new TypeMapAttributeData {
@@ -237,4 +237,7 @@ static class ModelBuilder
 			TargetTypeReference = targetRef,
 		};
 	}
+
+	static string AssemblyQualify (string typeName, string assemblyName)
+		=> $"{typeName}, {assemblyName}";
 }

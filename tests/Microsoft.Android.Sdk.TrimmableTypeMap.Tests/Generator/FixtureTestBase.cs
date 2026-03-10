@@ -33,11 +33,25 @@ public abstract class FixtureTestBase
 		return peer;
 	}
 
-	private protected static JavaPeerInfo MakeMcwPeer (string jniName, string managedName, string asmName)
+	private protected static JavaPeerInfo FindFixtureByManagedName (string managedName)
+	{
+		var peers = ScanFixtures ();
+		var peer = peers.FirstOrDefault (p => p.ManagedTypeName == managedName);
+		Assert.NotNull (peer);
+		return peer;
+	}
+
+	static (string ns, string shortName) ParseManagedTypeName (string managedName)
 	{
 		var ns = managedName.Contains ('.') ? managedName.Substring (0, managedName.LastIndexOf ('.')) : "";
 		var typePart = managedName.Contains ('.') ? managedName.Substring (managedName.LastIndexOf ('.') + 1) : managedName;
 		var shortName = typePart.Contains ('+') ? typePart.Substring (typePart.LastIndexOf ('+') + 1) : typePart;
+		return (ns, shortName);
+	}
+
+	private protected static JavaPeerInfo MakeMcwPeer (string jniName, string managedName, string asmName)
+	{
+		var (ns, shortName) = ParseManagedTypeName (managedName);
 		return new JavaPeerInfo {
 			JavaName = jniName,
 			ManagedTypeName = managedName,
@@ -67,8 +81,7 @@ public abstract class FixtureTestBase
 		string asmName,
 		string invokerName)
 	{
-		var ns = managedName.Contains ('.') ? managedName.Substring (0, managedName.LastIndexOf ('.')) : "";
-		var shortName = managedName.Contains ('.') ? managedName.Substring (managedName.LastIndexOf ('.') + 1) : managedName;
+		var (ns, shortName) = ParseManagedTypeName (managedName);
 		return new JavaPeerInfo {
 			JavaName = jniName,
 			ManagedTypeName = managedName,

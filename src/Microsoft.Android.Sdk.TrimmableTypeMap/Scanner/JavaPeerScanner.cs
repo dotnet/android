@@ -135,13 +135,8 @@ sealed class JavaPeerScanner : IDisposable
 
 		// TryGetTypeProperty may return assembly-qualified names like "Ns.Type, Assembly, ..."
 		// Strip to just the type name for lookup
-		var commaIndex = managedTypeName.IndexOf (',');
-		if (commaIndex <= 0) {
-			return;
-		}
-
-		var typeName = managedTypeName.Substring (0, commaIndex).Trim ();
-		if (typeName.Length > 0 && resultsByManagedName.TryGetValue (typeName, out peer)) {
+		var typeName = StripAssemblyQualification (managedTypeName);
+		if (typeName is not null && resultsByManagedName.TryGetValue (typeName, out peer)) {
 			resultsByManagedName [typeName] = peer with { IsUnconditional = true };
 		}
 	}
@@ -364,11 +359,9 @@ sealed class JavaPeerScanner : IDisposable
 		// where the connector contains the assembly-qualified invoker type name.
 		if (index.RegisterInfoByType.TryGetValue (typeHandle, out var registerInfo) && registerInfo.Connector is not null) {
 			var connector = registerInfo.Connector;
-			// The connector may be "TypeName" or "TypeName, Assembly, Version=..., Culture=..., PublicKeyToken=..."
-			// We want just the type name (before the first comma, if any)
-			var commaIndex = connector.IndexOf (',');
-			if (commaIndex > 0) {
-				return connector.Substring (0, commaIndex).Trim ();
+			var stripped = StripAssemblyQualification (connector);
+			if (stripped is not null) {
+				return stripped;
 			}
 			if (connector.Length > 0) {
 				return connector;
@@ -541,5 +534,19 @@ sealed class JavaPeerScanner : IDisposable
 		var typePart = lastDot >= 0 ? span.Slice (lastDot + 1) : span;
 		int lastPlus = typePart.LastIndexOf ('+');
 		return (lastPlus >= 0 ? typePart.Slice (lastPlus + 1) : typePart).ToString ();
+	}
+
+	/// <summary>
+	/// Strips assembly qualification from a type name like "Ns.Type, Assembly, Version=..."
+	/// returning just the type name, or null if the input has no comma.
+	/// </summary>
+	static string? StripAssemblyQualification (string assemblyQualifiedName)
+	{
+		var commaIndex = assemblyQualifiedName.IndexOf (',');
+		if (commaIndex <= 0) {
+			return null;
+		}
+		var typeName = assemblyQualifiedName.Substring (0, commaIndex).Trim ();
+		return typeName.Length > 0 ? typeName : null;
 	}
 }
