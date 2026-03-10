@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
@@ -89,6 +90,28 @@ sealed class TypeMapAssemblyEmitter
 			throw new ArgumentNullException (nameof (outputPath));
 		}
 
+		EmitCore (model);
+		_pe.WritePE (outputPath);
+	}
+
+	/// <summary>
+	/// Emits a PE assembly from the given model and writes it to <paramref name="stream"/>.
+	/// </summary>
+	public void Emit (TypeMapAssemblyData model, Stream stream)
+	{
+		if (model is null) {
+			throw new ArgumentNullException (nameof (model));
+		}
+		if (stream is null) {
+			throw new ArgumentNullException (nameof (stream));
+		}
+
+		EmitCore (model);
+		_pe.WritePE (stream);
+	}
+
+	void EmitCore (TypeMapAssemblyData model)
+	{
 		_pe.EmitPreamble (model.AssemblyName, model.ModuleName);
 
 		_javaInteropRef = _pe.AddAssemblyRef ("Java.Interop", new Version (0, 0, 0, 0));
@@ -109,7 +132,6 @@ sealed class TypeMapAssemblyEmitter
 		}
 
 		_pe.EmitIgnoresAccessChecksToAttribute (model.IgnoresAccessChecksTo);
-		_pe.WritePE (outputPath);
 	}
 
 	void EmitTypeReferences ()

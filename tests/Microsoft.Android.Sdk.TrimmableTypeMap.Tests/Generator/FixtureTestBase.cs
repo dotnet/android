@@ -8,20 +8,6 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 
 public abstract class FixtureTestBase
 {
-	protected static string CreateTempDir ()
-	{
-		var dir = Path.Combine (Path.GetTempPath (), "TypeMapTests_" + Guid.NewGuid ().ToString ("N"));
-		Directory.CreateDirectory (dir);
-		return dir;
-	}
-
-	protected static void DeleteTempDir (string dir)
-	{
-		if (Directory.Exists (dir)) {
-			Directory.Delete (dir, recursive: true);
-		}
-	}
-
 	static string TestFixtureAssemblyPath {
 		get {
 			var testAssemblyDir = Path.GetDirectoryName (typeof (FixtureTestBase).Assembly.Location)!;
