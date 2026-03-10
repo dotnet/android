@@ -58,6 +58,7 @@ class AssemblyExtractor : BaseExtractorWithOptions<AssemblyExtractorOptions>
 	{
 		bool haveArchitectures = Options.Architectures != null && Options.Architectures.Count > 0;
 		var assemblies = new List<ApplicationAssembly> ();
+		var pdbs = new List<AssemblyPdb> ();
 
 		if (package.AssemblyStores != null) {
 			foreach (AssemblyStore store in package.AssemblyStores) {
@@ -66,6 +67,9 @@ class AssemblyExtractor : BaseExtractorWithOptions<AssemblyExtractorOptions>
 				}
 
 				assemblies.AddRange (store.Assemblies.Values);
+				if (Options.ExtractPDB) {
+					pdbs.AddRange (store.PDBs.Values);
+				}
 			}
 		}
 
@@ -81,15 +85,23 @@ class AssemblyExtractor : BaseExtractorWithOptions<AssemblyExtractorOptions>
 			}
 		}
 
-		if (assemblies.Count == 0) {
-			Log.Info ("Package doesn't contain any assemblies.");
-			return true;
+		if (Options.ExtractPDB && package.StandalonePdbs != null) {
+			Log.Debug ($"Package has {package.StandalonePdbs.Count} standalone PDBs.");
+			foreach (AssemblyPdb pdb in package.StandalonePdbs) {
+				if (!PdbForRequestedArchitecture (pdb)) {
+					Log.Debug ($"PDB {pdb.Name} ignored, architecture {pdb.Architecture} is not requested.");
+					continue;
+				}
+
+				pdbs.Add (pdb);
+			}
 		}
 
-		return Extract (getOutputStreamForPath, assemblies);
+		return Extract (getOutputStreamForPath, assemblies, pdbs);
 
 		bool StoreForRequestedArchitecture (AssemblyStore store) => MatchesRequestedArchitecture (Utilities.TargetArchToNative (store.Architecture));
 		bool AssemblyForRequestedArchitecture (ApplicationAssembly asm) => MatchesRequestedArchitecture (asm.Architecture);
+		bool PdbForRequestedArchitecture (AssemblyPdb pdb) => MatchesRequestedArchitecture (pdb.Architecture);
 
 		bool MatchesRequestedArchitecture (NativeArchitecture arch)
 		{
@@ -101,8 +113,8 @@ class AssemblyExtractor : BaseExtractorWithOptions<AssemblyExtractorOptions>
 		}
 	}
 
-	// `assemblies` is expected to contain only assemblies for the architectures selected by the user.
-	bool Extract (GetOutputStreamForPathFn getOutputStreamForPath, List<ApplicationAssembly> assemblies)
+	// `assemblies` and `pdbs` are expected to contain only entries for the architectures selected by the user.
+	bool Extract (GetOutputStreamForPathFn getOutputStreamForPath, List<ApplicationAssembly> assemblies, List<AssemblyPdb> pdbs)
 	{
 		if (assemblies.Count == 0) {
 			return true;
@@ -112,14 +124,19 @@ class AssemblyExtractor : BaseExtractorWithOptions<AssemblyExtractorOptions>
 			return Extract (null, getOutputStreamForPath, assemblies);
 		}
 
+		bool allIsFine = true;
 		if (!Options.UseRegex) {
 			// Glob patterns are combined into a single regex
-			return Extract (MakeRegexFromGlobPatterns (), getOutputStreamForPath, assemblies);
+			allIsFine &= Extract (MakeRegexFromGlobPatterns (".dll"), getOutputStreamForPath, assemblies);
+			if (Options.ExtractPDB) {
+				allIsFine &= Extract (MakeRegexFromGlobPatterns (".pdb"), getOutputStreamForPath, pdbs);
+			}
+
+			return allIsFine;
 		}
 
 		// If the caller chose regexes, we match the patterns one by one. Slower, but regexes may be hard or
 		// impossible to combine.
-		bool allIsFine = true;
 		foreach (string ap in Options.AssemblyPatterns) {
 			try {
 				// We keep going despite failures, no point in stopping because something failed for a single pattern
@@ -132,6 +149,11 @@ class AssemblyExtractor : BaseExtractorWithOptions<AssemblyExtractorOptions>
 		}
 
 		return allIsFine;
+	}
+
+	bool Extract (Regex? nameRegex, GetOutputStreamForPathFn getOutputStreamForPath, List<AssemblyPdb> pdbs)
+	{
+		throw new NotImplementedException ();
 	}
 
 	bool Extract (Regex? nameRegex, GetOutputStreamForPathFn getOutputStreamForPath, List<ApplicationAssembly> assemblies)
@@ -175,7 +197,7 @@ class AssemblyExtractor : BaseExtractorWithOptions<AssemblyExtractorOptions>
 		return new Regex (pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled, TimeSpan.FromSeconds (10));
 	}
 
-	Regex? MakeRegexFromGlobPatterns ()
+	Regex? MakeRegexFromGlobPatterns (string fileExtension)
 	{
 		var rxSource = new StringBuilder ();
 		foreach (string ap in Options.AssemblyPatterns!) {
@@ -183,7 +205,7 @@ class AssemblyExtractor : BaseExtractorWithOptions<AssemblyExtractorOptions>
 				continue;
 			}
 
-			string? expression = GlobPatternToRegex (ap);
+			string? expression = GlobPatternToRegex (ap, fileExtension);
 			if (String.IsNullOrWhiteSpace (expression)) {
 				continue;
 			}
@@ -200,7 +222,7 @@ class AssemblyExtractor : BaseExtractorWithOptions<AssemblyExtractorOptions>
 		return MakeRegex (rx);
 	}
 
-	string? GlobPatternToRegex (string ap)
+	string? GlobPatternToRegex (string ap, string fileExtension)
 	{
 		// Input may contain escaped characters, Regex.Unescape processes the set of characters we're
 		// interested in, so let's use it instead of writing our own code.
@@ -234,9 +256,13 @@ class AssemblyExtractor : BaseExtractorWithOptions<AssemblyExtractorOptions>
 		// ...and finally convert what remains to regular expression patterns
 		sb.Replace (".", "\\.").Replace ("*", ".*").Replace ('?', '.');
 
-		if (!ap.EndsWith (".dll", StringComparison.OrdinalIgnoreCase)) {
+		// TODO: we will always deal with either .pdb or .dll extensions here. Make sure the glob
+		//       regex works if the glob pattern is e.g. Mono*.dll and we're requesting '.pdb' to
+		//       be extracted. Also make sure we don't end up with .dll.pdb or .pdb.dll patterns.
+		if (!ap.EndsWith (fileExtension, StringComparison.OrdinalIgnoreCase)) {
 			// All ApplicationAssembly instances will have names that contain the .dll extension
-			sb.Append (".dll");
+			// All AssemblyPdb instances will have names that contain the .pdb extension
+			sb.Append (fileExtension);
 		}
 
 		return sb.ToString ();

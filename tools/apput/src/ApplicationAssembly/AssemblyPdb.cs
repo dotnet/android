@@ -13,15 +13,18 @@ public class AssemblyPdb : BaseAspect
 	public override string AspectName => "Assembly Portable PDB data";
 
 	public NativeArchitecture Architecture { get; internal set; }
+	public string Name { get; }
 
-	public AssemblyPdb (Stream? aspectStream)
+	protected AssemblyPdb (Stream? aspectStream, string pdbName)
 		: base (aspectStream)
-	{}
+	{
+		Name = pdbName;
+	}
 
 	public static IAspect LoadAspect (Stream stream, IAspectState state, string? description)
 	{
 		Log.Debug ($"Loading PDB data from stream '{description}'");
-		return new AssemblyPdb (stream);
+		return new AssemblyPdb (stream, description);
 	}
 
 	public static IAspectState ProbeAspect (Stream stream, string? description)
