@@ -16,37 +16,27 @@ sealed class TypeMapAssemblyData
 	public required string AssemblyName { get; init; }
 
 	/// <summary>
-
 	/// Module file name (e.g., "_MyApp.TypeMap.dll").
-
 	/// </summary>
 	public required string ModuleName { get; init; }
 
 	/// <summary>
-
 	/// TypeMap entries — one per unique JNI name.
-
 	/// </summary>
 	public List<TypeMapAttributeData> Entries { get; } = new ();
 
 	/// <summary>
-
 	/// Proxy types to emit in the assembly.
-
 	/// </summary>
 	public List<JavaPeerProxyData> ProxyTypes { get; } = new ();
 
 	/// <summary>
-
 	/// TypeMapAssociation entries for alias groups (multiple managed types → same JNI name).
-
 	/// </summary>
 	public List<TypeMapAssociationData> Associations { get; } = new ();
 
 	/// <summary>
-
 	/// Assembly names that need [IgnoresAccessChecksTo] for cross-assembly n_* calls.
-
 	/// </summary>
 	public List<string> IgnoresAccessChecksTo { get; } = new ();
 }
@@ -79,9 +69,7 @@ sealed record TypeMapAttributeData
 	public string? TargetTypeReference { get; init; }
 
 	/// <summary>
-
 	/// True for 2-arg unconditional entries (ACW types, essential runtime types).
-
 	/// </summary>
 	public bool IsUnconditional => TargetTypeReference == null;
 }
@@ -97,30 +85,22 @@ sealed class JavaPeerProxyData
 	public required string TypeName { get; init; }
 
 	/// <summary>
-
 	/// Namespace for all proxy types.
-
 	/// </summary>
 	public string Namespace { get; init; } = "_TypeMap.Proxies";
 
 	/// <summary>
-
 	/// Reference to the managed type this proxy wraps (for ldtoken in TargetType property).
-
 	/// </summary>
 	public required TypeRefData TargetType { get; init; }
 
 	/// <summary>
-
 	/// Reference to the invoker type (for interfaces/abstract types). Null if not applicable.
-
 	/// </summary>
 	public TypeRefData? InvokerType { get; set; }
 
 	/// <summary>
-
 	/// Whether this proxy has a CreateInstance that can actually create instances.
-
 	/// </summary>
 	public bool HasActivation => ActivationCtor != null || InvokerType != null;
 
@@ -130,9 +110,7 @@ sealed class JavaPeerProxyData
 	public ActivationCtorData? ActivationCtor { get; set; }
 
 	/// <summary>
-
 	/// True if this is an open generic type definition. CreateInstance throws NotSupportedException.
-
 	/// </summary>
 	public bool IsGenericDefinition { get; init; }
 
@@ -150,9 +128,7 @@ sealed record TypeRefData
 	public required string ManagedTypeName { get; init; }
 
 	/// <summary>
-
 	/// Assembly containing the type, e.g., "Mono.Android".
-
 	/// </summary>
 	public required string AssemblyName { get; init; }
 }
@@ -168,16 +144,12 @@ sealed record ActivationCtorData
 	public required TypeRefData DeclaringType { get; init; }
 
 	/// <summary>
-
 	/// True when the leaf type itself declares the activation ctor.
-
 	/// </summary>
 	public required bool IsOnLeafType { get; init; }
 
 	/// <summary>
-
 	/// The style of activation ctor (XamarinAndroid or JavaInterop).
-
 	/// </summary>
 	public required ActivationCtorStyle Style { get; init; }
 }
@@ -194,9 +166,7 @@ sealed record TypeMapAssociationData
 	public required string SourceTypeReference { get; init; }
 
 	/// <summary>
-
 	/// Assembly-qualified proxy type reference (the alias holder proxy).
-
 	/// </summary>
 	public required string AliasProxyTypeReference { get; init; }
 }

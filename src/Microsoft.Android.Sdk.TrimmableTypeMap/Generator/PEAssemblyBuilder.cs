@@ -129,12 +129,7 @@ sealed class PEAssemblyBuilder
 	/// Finds an existing assembly reference or adds one with version 0.0.0.0.
 	/// </summary>
 	public AssemblyReferenceHandle FindOrAddAssemblyRef (string assemblyName)
-	{
-		if (_asmRefCache.TryGetValue (assemblyName, out var handle)) {
-			return handle;
-		}
-		return AddAssemblyRef (assemblyName, new Version (0, 0, 0, 0));
-	}
+		=> AddAssemblyRef (assemblyName, new Version (0, 0, 0, 0));
 
 	/// <summary>
 	/// Adds a member reference using the reusable signature blob builder.
