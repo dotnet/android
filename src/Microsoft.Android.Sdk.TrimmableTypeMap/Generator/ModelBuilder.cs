@@ -67,6 +67,8 @@ static class ModelBuilder
 			list.Add (peer);
 		}
 
+		var usedProxyNames = new HashSet<string> (StringComparer.Ordinal);
+
 		foreach (var kvp in groups) {
 			string jniName = kvp.Key;
 			var peersForName = kvp.Value;
@@ -76,7 +78,7 @@ static class ModelBuilder
 				peersForName.Sort ((a, b) => StringComparer.Ordinal.Compare (a.ManagedTypeName, b.ManagedTypeName));
 			}
 
-			EmitPeers (model, jniName, peersForName, assemblyName);
+			EmitPeers (model, jniName, peersForName, assemblyName, usedProxyNames);
 		}
 
 		// Compute IgnoresAccessChecksTo from cross-assembly references
@@ -93,7 +95,7 @@ static class ModelBuilder
 	}
 
 	static void EmitPeers (TypeMapAssemblyData model, string jniName,
-		List<JavaPeerInfo> peersForName, string assemblyName)
+		List<JavaPeerInfo> peersForName, string assemblyName, HashSet<string> usedProxyNames)
 	{
 		// First peer is the "primary" — it gets the base JNI name entry.
 		// Remaining peers get indexed alias entries: "jni/name[1]", "jni/name[2]", ...
@@ -106,7 +108,7 @@ static class ModelBuilder
 
 			JavaPeerProxyData? proxy = null;
 			if (hasProxy) {
-				proxy = BuildProxyType (peer);
+				proxy = BuildProxyType (peer, usedProxyNames);
 				model.ProxyTypes.Add (proxy);
 			}
 
@@ -178,11 +180,22 @@ static class ModelBuilder
 		}
 	}
 
-	static JavaPeerProxyData BuildProxyType (JavaPeerInfo peer)
+	static JavaPeerProxyData BuildProxyType (JavaPeerInfo peer, HashSet<string> usedProxyNames)
 	{
 		// Use managed type name for proxy naming to guarantee uniqueness across aliases
 		// (two types with the same JNI name will have different managed names).
 		var proxyTypeName = peer.ManagedTypeName.Replace ('.', '_').Replace ('+', '_') + "_Proxy";
+
+		// Guard against name collisions (e.g., "My.Type" and "My_Type" both map to "My_Type_Proxy")
+		if (!usedProxyNames.Add (proxyTypeName)) {
+			int suffix = 2;
+			string candidate;
+			do {
+				candidate = $"{proxyTypeName}_{suffix}";
+				suffix++;
+			} while (!usedProxyNames.Add (candidate));
+			proxyTypeName = candidate;
+		}
 
 		var proxy = new JavaPeerProxyData {
 			TypeName = proxyTypeName,
