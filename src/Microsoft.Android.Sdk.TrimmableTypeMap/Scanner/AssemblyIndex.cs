@@ -47,11 +47,16 @@ sealed class AssemblyIndex : IDisposable
 	public static AssemblyIndex Create (string filePath)
 	{
 		var peReader = new PEReader (File.OpenRead (filePath));
-		var reader = peReader.GetMetadataReader ();
-		var assemblyName = reader.GetString (reader.GetAssemblyDefinition ().Name);
-		var index = new AssemblyIndex (peReader, reader, assemblyName, filePath);
-		index.Build ();
-		return index;
+		try {
+			var reader = peReader.GetMetadataReader ();
+			var assemblyName = reader.GetString (reader.GetAssemblyDefinition ().Name);
+			var index = new AssemblyIndex (peReader, reader, assemblyName, filePath);
+			index.Build ();
+			return index;
+		} catch {
+			peReader.Dispose ();
+			throw;
+		}
 	}
 
 	void Build ()
