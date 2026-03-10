@@ -446,38 +446,24 @@ public class ModelBuilderTests : FixtureTestBase
 		[Theory]
 		[InlineData ("mono/android/view/View_IOnClickListenerImplementor", "Implementor")]
 		[InlineData ("mono/android/view/View_ClickEventDispatcher", "EventDispatcher")]
-		public void Fixture_HelperType_IsTrimmable_NotUnconditional (string javaName, string kind)
+		public void Fixture_HelperType_IsUnconditional (string javaName, string kind)
 		{
 			var peer = FindFixtureByJavaName (javaName);
 			Assert.False (peer.DoNotGenerateAcw);
 			Assert.False (peer.IsInterface);
-			Assert.True (peer.IsImplementorOrEventDispatcher, $"{kind} should be detected by scanner");
 
 			var model = BuildModel (new [] { peer }, "TypeMap");
 
 			var entry = model.Entries.FirstOrDefault ();
 			Assert.NotNull (entry);
-			Assert.False (entry!.IsUnconditional, $"{kind} should NOT be unconditional");
-			Assert.NotNull (entry.TargetTypeReference);
+			// Implementor/EventDispatcher types are treated as unconditional ACW types.
+			// Future optimization (see issue tracking Implementor trimming) may make them trimmable.
+			Assert.True (entry!.IsUnconditional, $"{kind} should be unconditional");
 		}
 	}
 
-	public class ImplementorDetection
+	public class InvokerDetection
 	{
-		[Fact]
-		public void Build_UserTypeNamedImplementor_IsNotMisclassified ()
-		{
-			// User ACW types ending in "Implementor" should NOT be treated as trimmable
-			// because their JNI name doesn't start with "mono/" (binding generator convention).
-			var peer = MakeAcwPeer ("my/app/MyImplementor", "MyApp.MyImplementor", "App");
-			var model = BuildModel (new [] { peer });
-
-			var entry = model.Entries.FirstOrDefault ();
-			Assert.NotNull (entry);
-			Assert.True (entry!.IsUnconditional,
-				"User types ending in 'Implementor' should be unconditional (not misclassified as trimmable)");
-		}
-
 		[Fact]
 		public void Build_TypeIsInvoker_OnlyWhenReferencedByAnotherPeer ()
 		{

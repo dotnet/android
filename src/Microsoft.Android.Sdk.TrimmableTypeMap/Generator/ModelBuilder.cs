@@ -139,12 +139,6 @@ static class ModelBuilder
 			return true;
 		}
 
-		// Implementor/EventDispatcher types are only created from .NET (e.g., when a C# event
-		// is subscribed). They should NOT be unconditional — they're trimmable.
-		if (peer.IsImplementorOrEventDispatcher) {
-			return false;
-		}
-
 		// User-defined ACW types (not MCW bindings, not interfaces) are unconditional
 		// because Android can instantiate them from Java at any time.
 		if (!peer.DoNotGenerateAcw && !peer.IsInterface) {
