@@ -140,4 +140,12 @@ public class AssemblyPdb : BaseAspect
 			return new (ret, size);
 		}
 	}
+
+	public bool WriteToStream (Stream stream)
+	{
+		AspectStream.Seek (0, SeekOrigin.Begin);
+		AspectStream.CopyTo (stream);
+		stream.Flush ();
+		return true;
+	}
 }

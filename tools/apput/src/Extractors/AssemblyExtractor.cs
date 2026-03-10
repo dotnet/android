@@ -14,6 +14,9 @@ namespace ApplicationUtility;
 [AspectExtractor (containerAspectType: typeof (PackageBase),                storedAspectType: typeof (ApplicationAssembly))]
 class AssemblyExtractor : BaseExtractorWithOptions<AssemblyExtractorOptions>
 {
+	const string DllExt = ".dll";
+	const string PdbExt = ".pdb";
+
 	public AssemblyExtractor (IAspect containerAspect, AssemblyExtractorOptions options)
 		: base (containerAspect, options)
 	{}
@@ -127,9 +130,12 @@ class AssemblyExtractor : BaseExtractorWithOptions<AssemblyExtractorOptions>
 		bool allIsFine = true;
 		if (!Options.UseRegex) {
 			// Glob patterns are combined into a single regex
-			allIsFine &= Extract (MakeRegexFromGlobPatterns (".dll"), getOutputStreamForPath, assemblies);
+			(Regex? rx, string ap) = MakeRegexFromGlobPatterns (DllExt);
+			allIsFine &= ExtractIt ("assemblies", ap, () => Extract (rx, getOutputStreamForPath, assemblies));
+
 			if (Options.ExtractPDB) {
-				allIsFine &= Extract (MakeRegexFromGlobPatterns (".pdb"), getOutputStreamForPath, pdbs);
+				(rx, ap) = MakeRegexFromGlobPatterns (PdbExt);
+				allIsFine &= ExtractIt ("PDBs", ap, () => Extract (rx, getOutputStreamForPath, pdbs));
 			}
 
 			return allIsFine;
@@ -138,22 +144,53 @@ class AssemblyExtractor : BaseExtractorWithOptions<AssemblyExtractorOptions>
 		// If the caller chose regexes, we match the patterns one by one. Slower, but regexes may be hard or
 		// impossible to combine.
 		foreach (string ap in Options.AssemblyPatterns) {
+			// We keep going despite failures, no point in stopping because something failed for a single pattern
+			allIsFine &= ExtractIt ("assemblies", ap, () => Extract (MakeRegex (ap), getOutputStreamForPath, assemblies));
+			if (Options.ExtractPDB) {
+				allIsFine &= ExtractIt ("PDBs", ap, () => Extract (MakeRegex (ap), getOutputStreamForPath, pdbs));
+			}
+		}
+
+		return allIsFine;
+
+		bool ExtractIt (string what, string ap, Func<bool> extractor)
+		{
 			try {
-				// We keep going despite failures, no point in stopping because something failed for a single pattern
-				allIsFine &= Extract (MakeRegex (ap), getOutputStreamForPath, assemblies);
+				return extractor ();
 			} catch (Exception ex) {
-				Log.Warning ($"Attempt to extract assemblies using pattern '{ap}' resulted in exception {ex.GetType ()}: {ex.Message}");
+				Log.Warning ($"Attempt to extract {what} using pattern '{ap}' resulted in exception {ex.GetType ()}: {ex.Message}");
 				Log.Debug (ex.ToString ());
+				return false;
+			}
+		}
+	}
+
+	bool Extract (Regex? nameRegex, GetOutputStreamForPathFn getOutputStreamForPath, List<AssemblyPdb> pdbs)
+	{
+		// `null` nameRegex means match all the assemblies
+		bool processAll = nameRegex == null;
+		var pdbName = new StringBuilder ();
+		bool allIsFine = true;
+		foreach (AssemblyPdb pdb in pdbs) {
+			if (!processAll && !nameRegex!.IsMatch (pdb.Name)) {
+				continue;
+			}
+
+			pdbName.Clear ().Append (pdb.Name);
+
+			string relName = Path.Combine (Utilities.ArchNameForPath (pdb.Architecture), pdbName.ToString ());
+			string destPath = Path.Combine (Options.TargetDir, relName);
+			Log.Debug ($"Requesting output stream for path '{destPath}'");
+
+			// We don't own the stream, the caller does
+			Stream stream = getOutputStreamForPath (destPath);
+			if (!pdb.WriteToStream (stream)) {
+				Log.Error ($"Failed to write PDB {relName} data to file.");
 				allIsFine = false;
 			}
 		}
 
 		return allIsFine;
-	}
-
-	bool Extract (Regex? nameRegex, GetOutputStreamForPathFn getOutputStreamForPath, List<AssemblyPdb> pdbs)
-	{
-		throw new NotImplementedException ();
 	}
 
 	bool Extract (Regex? nameRegex, GetOutputStreamForPathFn getOutputStreamForPath, List<ApplicationAssembly> assemblies)
@@ -197,7 +234,7 @@ class AssemblyExtractor : BaseExtractorWithOptions<AssemblyExtractorOptions>
 		return new Regex (pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled, TimeSpan.FromSeconds (10));
 	}
 
-	Regex? MakeRegexFromGlobPatterns (string fileExtension)
+	(Regex? rx, string ap) MakeRegexFromGlobPatterns (string fileExtension)
 	{
 		var rxSource = new StringBuilder ();
 		foreach (string ap in Options.AssemblyPatterns!) {
@@ -219,14 +256,22 @@ class AssemblyExtractor : BaseExtractorWithOptions<AssemblyExtractorOptions>
 
 		string rx = rxSource.ToString ();
 		Log.Debug ($"Glob patterns converted to regex: '{rx}'");
-		return MakeRegex (rx);
+		return (MakeRegex (rx), rx);
 	}
 
-	string? GlobPatternToRegex (string ap, string fileExtension)
+	string? GlobPatternToRegex (string apInput, string fileExtension)
 	{
 		// Input may contain escaped characters, Regex.Unescape processes the set of characters we're
 		// interested in, so let's use it instead of writing our own code.
-		var sb = new StringBuilder (Regex.Unescape (ap));
+		string ap = Regex.Unescape (apInput);
+		StringBuilder sb;
+		int extLen;
+		if (HasExtension (DllExt, out extLen) || HasExtension (PdbExt, out extLen)) {
+			// Remove the extension, to add the right one later
+			sb = new StringBuilder (ap, 0, ap.Length - extLen, ap.Length);
+		} else {
+			sb = new StringBuilder (ap);
+		}
 
 		// Convert any potential Windows dir separator chars to Unix ones...
 		sb.Replace ('\\', '/');
@@ -253,18 +298,25 @@ class AssemblyExtractor : BaseExtractorWithOptions<AssemblyExtractorOptions>
 		// ...then replace the patterns we don't support with something we can use, if any...
 		sb.Replace ("**", "*");
 
+		// ...then make sure we have the extension we asked for:
+		//    all ApplicationAssembly instances will have names that contain the .dll extension
+		//    all AssemblyPdb instances will have names that contain the .pdb extension
+		sb.Append (fileExtension);
+
 		// ...and finally convert what remains to regular expression patterns
 		sb.Replace (".", "\\.").Replace ("*", ".*").Replace ('?', '.');
 
-		// TODO: we will always deal with either .pdb or .dll extensions here. Make sure the glob
-		//       regex works if the glob pattern is e.g. Mono*.dll and we're requesting '.pdb' to
-		//       be extracted. Also make sure we don't end up with .dll.pdb or .pdb.dll patterns.
-		if (!ap.EndsWith (fileExtension, StringComparison.OrdinalIgnoreCase)) {
-			// All ApplicationAssembly instances will have names that contain the .dll extension
-			// All AssemblyPdb instances will have names that contain the .pdb extension
-			sb.Append (fileExtension);
-		}
-
 		return sb.ToString ();
+
+		bool HasExtension (string extension, out int extLen)
+		{
+			if (ap.EndsWith (extension, StringComparison.OrdinalIgnoreCase)) {
+				extLen = extension.Length;
+				return true;
+			}
+
+			extLen = 0;
+			return false;
+		}
 	}
 }
