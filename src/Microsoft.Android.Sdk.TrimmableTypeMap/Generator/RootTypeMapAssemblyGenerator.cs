@@ -32,22 +32,45 @@ sealed class RootTypeMapAssemblyGenerator
 	}
 
 	/// <summary>
-	/// Generates the root typemap assembly.
+	/// Generates the root typemap assembly and writes it to a file.
 	/// </summary>
 	/// <param name="perAssemblyTypeMapNames">Names of per-assembly typemap assemblies to reference.</param>
 	/// <param name="outputPath">Path to write the output .dll.</param>
 	/// <param name="assemblyName">Optional assembly name (defaults to _Microsoft.Android.TypeMaps).</param>
 	public void Generate (IReadOnlyList<string> perAssemblyTypeMapNames, string outputPath, string? assemblyName = null)
 	{
-		if (perAssemblyTypeMapNames is null) {
-			throw new ArgumentNullException (nameof (perAssemblyTypeMapNames));
-		}
 		if (outputPath is null) {
 			throw new ArgumentNullException (nameof (outputPath));
 		}
 
-		assemblyName ??= DefaultAssemblyName;
+		var dir = Path.GetDirectoryName (outputPath);
+		if (!string.IsNullOrEmpty (dir)) {
+			Directory.CreateDirectory (dir);
+		}
+
 		var moduleName = Path.GetFileName (outputPath);
+		using var fs = File.Create (outputPath);
+		Generate (perAssemblyTypeMapNames, fs, assemblyName, moduleName);
+	}
+
+	/// <summary>
+	/// Generates the root typemap assembly and writes it to the given stream.
+	/// </summary>
+	/// <param name="perAssemblyTypeMapNames">Names of per-assembly typemap assemblies to reference.</param>
+	/// <param name="stream">Stream to write the output PE to.</param>
+	/// <param name="assemblyName">Optional assembly name (defaults to _Microsoft.Android.TypeMaps).</param>
+	/// <param name="moduleName">Optional module name for the PE metadata.</param>
+	public void Generate (IReadOnlyList<string> perAssemblyTypeMapNames, Stream stream, string? assemblyName = null, string? moduleName = null)
+	{
+		if (perAssemblyTypeMapNames is null) {
+			throw new ArgumentNullException (nameof (perAssemblyTypeMapNames));
+		}
+		if (stream is null) {
+			throw new ArgumentNullException (nameof (stream));
+		}
+
+		assemblyName ??= DefaultAssemblyName;
+		moduleName ??= assemblyName + ".dll";
 
 		var pe = new PEAssemblyBuilder (_systemRuntimeVersion);
 		pe.EmitPreamble (assemblyName, moduleName);
@@ -76,6 +99,6 @@ sealed class RootTypeMapAssemblyGenerator
 			pe.Metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorRef, blobHandle);
 		}
 
-		pe.WritePE (outputPath);
+		pe.WritePE (stream);
 	}
 }

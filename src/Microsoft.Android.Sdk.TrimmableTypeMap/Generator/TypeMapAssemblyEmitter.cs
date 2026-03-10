@@ -44,7 +44,7 @@ sealed class TypeMapAssemblyEmitter
 {
 	readonly Version _systemRuntimeVersion;
 
-	PEAssemblyBuilder _pe = null!;
+	readonly PEAssemblyBuilder _pe;
 
 	AssemblyReferenceHandle _javaInteropRef;
 
@@ -74,6 +74,7 @@ sealed class TypeMapAssemblyEmitter
 	public TypeMapAssemblyEmitter (Version systemRuntimeVersion)
 	{
 		_systemRuntimeVersion = systemRuntimeVersion ?? throw new ArgumentNullException (nameof (systemRuntimeVersion));
+		_pe = new PEAssemblyBuilder (_systemRuntimeVersion);
 	}
 
 	/// <summary>
@@ -88,7 +89,6 @@ sealed class TypeMapAssemblyEmitter
 			throw new ArgumentNullException (nameof (outputPath));
 		}
 
-		_pe = new PEAssemblyBuilder (_systemRuntimeVersion);
 		_pe.EmitPreamble (model.AssemblyName, model.ModuleName);
 
 		_javaInteropRef = _pe.AddAssemblyRef ("Java.Interop", new Version (0, 0, 0, 0));
@@ -242,34 +242,17 @@ sealed class TypeMapAssemblyEmitter
 	void EmitCreateInstance (JavaPeerProxyData proxy)
 	{
 		if (!proxy.HasActivation) {
-			EmitCreateInstanceBody (encoder => {
-				encoder.OpCode (ILOpCode.Ldnull);
-				encoder.OpCode (ILOpCode.Ret);
-			});
+			EmitCreateInstanceNoActivation ();
 			return;
 		}
 
-		// Generic type definitions cannot be instantiated
 		if (proxy.IsGenericDefinition) {
-			EmitCreateInstanceBody (encoder => {
-				encoder.LoadString (_pe.Metadata.GetOrAddUserString ("Cannot create instance of open generic type."));
-				encoder.OpCode (ILOpCode.Newobj);
-				encoder.Token (_notSupportedExceptionCtorRef);
-				encoder.OpCode (ILOpCode.Throw);
-			});
+			EmitCreateInstanceGenericDefinition ();
 			return;
 		}
 
-		// Interface with invoker: new TInvoker(IntPtr, JniHandleOwnership)
 		if (proxy.InvokerType != null) {
-			var invokerCtorRef = AddActivationCtorRef (_pe.ResolveTypeRef (proxy.InvokerType));
-			EmitCreateInstanceBody (encoder => {
-				encoder.OpCode (ILOpCode.Ldarg_1);
-				encoder.OpCode (ILOpCode.Ldarg_2);
-				encoder.OpCode (ILOpCode.Newobj);
-				encoder.Token (invokerCtorRef);
-				encoder.OpCode (ILOpCode.Ret);
-			});
+			EmitCreateInstanceInvoker (proxy);
 			return;
 		}
 
@@ -278,34 +261,72 @@ sealed class TypeMapAssemblyEmitter
 		var targetTypeRef = _pe.ResolveTypeRef (proxy.TargetType);
 
 		if (activationCtor.IsOnLeafType) {
-			// Leaf type has its own ctor: new T(IntPtr, JniHandleOwnership)
-			var ctorRef = AddActivationCtorRef (targetTypeRef);
-			EmitCreateInstanceBody (encoder => {
-				encoder.OpCode (ILOpCode.Ldarg_1);
-				encoder.OpCode (ILOpCode.Ldarg_2);
-				encoder.OpCode (ILOpCode.Newobj);
-				encoder.Token (ctorRef);
-				encoder.OpCode (ILOpCode.Ret);
-			});
+			EmitCreateInstanceLeafCtor (targetTypeRef);
 		} else {
-			// Inherited ctor: GetUninitializedObject(typeof(T)) + call Base::.ctor(IntPtr, JniHandleOwnership)
-			var baseActivationCtorRef = AddActivationCtorRef (_pe.ResolveTypeRef (activationCtor.DeclaringType));
-			EmitCreateInstanceBody (encoder => {
-				encoder.OpCode (ILOpCode.Ldtoken);
-				encoder.Token (targetTypeRef);
-				encoder.Call (_getTypeFromHandleRef);
-				encoder.Call (_getUninitializedObjectRef);
-				encoder.OpCode (ILOpCode.Castclass);
-				encoder.Token (targetTypeRef);
-
-				encoder.OpCode (ILOpCode.Dup);
-				encoder.OpCode (ILOpCode.Ldarg_1);
-				encoder.OpCode (ILOpCode.Ldarg_2);
-				encoder.Call (baseActivationCtorRef);
-
-				encoder.OpCode (ILOpCode.Ret);
-			});
+			EmitCreateInstanceInheritedCtor (targetTypeRef, activationCtor);
 		}
+	}
+
+	void EmitCreateInstanceNoActivation ()
+	{
+		EmitCreateInstanceBody (encoder => {
+			encoder.OpCode (ILOpCode.Ldnull);
+			encoder.OpCode (ILOpCode.Ret);
+		});
+	}
+
+	void EmitCreateInstanceGenericDefinition ()
+	{
+		EmitCreateInstanceBody (encoder => {
+			encoder.LoadString (_pe.Metadata.GetOrAddUserString ("Cannot create instance of open generic type."));
+			encoder.OpCode (ILOpCode.Newobj);
+			encoder.Token (_notSupportedExceptionCtorRef);
+			encoder.OpCode (ILOpCode.Throw);
+		});
+	}
+
+	void EmitCreateInstanceInvoker (JavaPeerProxyData proxy)
+	{
+		var invokerCtorRef = AddActivationCtorRef (_pe.ResolveTypeRef (proxy.InvokerType!));
+		EmitCreateInstanceBody (encoder => {
+			encoder.OpCode (ILOpCode.Ldarg_1);
+			encoder.OpCode (ILOpCode.Ldarg_2);
+			encoder.OpCode (ILOpCode.Newobj);
+			encoder.Token (invokerCtorRef);
+			encoder.OpCode (ILOpCode.Ret);
+		});
+	}
+
+	void EmitCreateInstanceLeafCtor (EntityHandle targetTypeRef)
+	{
+		var ctorRef = AddActivationCtorRef (targetTypeRef);
+		EmitCreateInstanceBody (encoder => {
+			encoder.OpCode (ILOpCode.Ldarg_1);
+			encoder.OpCode (ILOpCode.Ldarg_2);
+			encoder.OpCode (ILOpCode.Newobj);
+			encoder.Token (ctorRef);
+			encoder.OpCode (ILOpCode.Ret);
+		});
+	}
+
+	void EmitCreateInstanceInheritedCtor (EntityHandle targetTypeRef, ActivationCtorData activationCtor)
+	{
+		var baseActivationCtorRef = AddActivationCtorRef (_pe.ResolveTypeRef (activationCtor.DeclaringType));
+		EmitCreateInstanceBody (encoder => {
+			encoder.OpCode (ILOpCode.Ldtoken);
+			encoder.Token (targetTypeRef);
+			encoder.Call (_getTypeFromHandleRef);
+			encoder.Call (_getUninitializedObjectRef);
+			encoder.OpCode (ILOpCode.Castclass);
+			encoder.Token (targetTypeRef);
+
+			encoder.OpCode (ILOpCode.Dup);
+			encoder.OpCode (ILOpCode.Ldarg_1);
+			encoder.OpCode (ILOpCode.Ldarg_2);
+			encoder.Call (baseActivationCtorRef);
+
+			encoder.OpCode (ILOpCode.Ret);
+		});
 	}
 
 	void EmitCreateInstanceBody (Action<InstructionEncoder> emitIL)

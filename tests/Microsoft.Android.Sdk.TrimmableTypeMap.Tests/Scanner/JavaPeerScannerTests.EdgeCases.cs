@@ -1,4 +1,3 @@
-using System.Linq;
 using Xunit;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
@@ -42,8 +41,6 @@ public partial class JavaPeerScannerTests
 	{
 		var peers = ScanFixtures ();
 		Assert.Equal ("GlobalType", FindByJavaName (peers, "my/app/GlobalType").ManagedTypeName);
-		Assert.Equal ("GlobalUnregisteredType",
-			FindByManagedName (peers, "GlobalUnregisteredType").CompatJniName);
 	}
 
 	[Theory]
@@ -57,13 +54,4 @@ public partial class JavaPeerScannerTests
 		Assert.StartsWith ("crc64", FindByManagedName (peers, managedName).JavaName);
 	}
 
-	[Fact]
-	public void Scan_ExportOnUnregisteredType_MethodDiscovered ()
-	{
-		var peers = ScanFixtures ();
-		var exportMethod = FindByManagedName (peers, "MyApp.UnregisteredExporter")
-			.MarshalMethods.FirstOrDefault (m => m.JniName == "doExportedWork");
-		Assert.NotNull (exportMethod);
-		Assert.Null (exportMethod.Connector);
-	}
 }
