@@ -69,6 +69,9 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.Contains ("Test.First", model.Entries [0].ProxyTypeReference);
 			Assert.Equal ("test/Dup[1]", model.Entries [1].JniName);
 			Assert.Contains ("Test.Second", model.Entries [1].ProxyTypeReference);
+
+			// No associations when neither peer has a proxy (no activation ctor or invoker)
+			Assert.Empty (model.Associations);
 		}
 	}
 
