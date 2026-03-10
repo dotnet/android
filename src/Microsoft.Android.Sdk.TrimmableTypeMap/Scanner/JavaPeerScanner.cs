@@ -15,8 +15,8 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// </summary>
 sealed class JavaPeerScanner : IDisposable
 {
-	readonly Dictionary<string, AssemblyIndex> assemblyCache = new (StringComparer.Ordinal);
-	readonly Dictionary<(string typeName, string assemblyName), ActivationCtorInfo> activationCtorCache = new ();
+	readonly Dictionary<string, AssemblyIndex> _assemblyCache = new (StringComparer.Ordinal);
+	readonly Dictionary<(string typeName, string assemblyName), ActivationCtorInfo> _activationCtorCache = new ();
 
 	/// <summary>
 	/// Resolves a type name + assembly name to a TypeDefinitionHandle + AssemblyIndex.
@@ -24,7 +24,7 @@ sealed class JavaPeerScanner : IDisposable
 	/// </summary>
 	bool TryResolveType (string typeName, string assemblyName, out TypeDefinitionHandle handle, [NotNullWhen (true)] out AssemblyIndex? resolvedIndex)
 	{
-		if (assemblyCache.TryGetValue (assemblyName, out resolvedIndex) &&
+		if (_assemblyCache.TryGetValue (assemblyName, out resolvedIndex) &&
 		    resolvedIndex.TypesByFullName.TryGetValue (typeName, out handle)) {
 			return true;
 		}
@@ -83,18 +83,18 @@ sealed class JavaPeerScanner : IDisposable
 		// Phase 1: Build indices for all assemblies
 		foreach (var path in assemblyPaths) {
 			var index = AssemblyIndex.Create (path);
-			assemblyCache [index.AssemblyName] = index;
+			_assemblyCache [index.AssemblyName] = index;
 		}
 
 		// Phase 2: Analyze types using cached indices
 		var resultsByManagedName = new Dictionary<string, JavaPeerInfo> (StringComparer.Ordinal);
 
-		foreach (var index in assemblyCache.Values) {
+		foreach (var index in _assemblyCache.Values) {
 			ScanAssembly (index, resultsByManagedName);
 		}
 
 		// Phase 3: Force unconditional on types referenced by [Application] attributes
-		ForceUnconditionalCrossReferences (resultsByManagedName, assemblyCache);
+		ForceUnconditionalCrossReferences (resultsByManagedName, _assemblyCache);
 
 		return new List<JavaPeerInfo> (resultsByManagedName.Values);
 	}
@@ -104,9 +104,9 @@ sealed class JavaPeerScanner : IDisposable
 	/// [Application(ManageSpaceActivity = typeof(X))] must be unconditional,
 	/// because the manifest will reference them even if nothing else does.
 	/// </summary>
-	static void ForceUnconditionalCrossReferences (Dictionary<string, JavaPeerInfo> resultsByManagedName, Dictionary<string, AssemblyIndex> assemblyCache)
+	static void ForceUnconditionalCrossReferences (Dictionary<string, JavaPeerInfo> resultsByManagedName, Dictionary<string, AssemblyIndex> _assemblyCache)
 	{
-		foreach (var index in assemblyCache.Values) {
+		foreach (var index in _assemblyCache.Values) {
 			foreach (var attrInfo in index.AttributesByType.Values) {
 				if (attrInfo is ApplicationAttributeInfo applicationAttributeInfo) {
 					ForceUnconditionalIfPresent (resultsByManagedName, applicationAttributeInfo.BackupAgent);
@@ -230,7 +230,7 @@ sealed class JavaPeerScanner : IDisposable
 	ActivationCtorInfo? ResolveActivationCtor (string typeName, TypeDefinition typeDef, AssemblyIndex index)
 	{
 		var cacheKey = (typeName, index.AssemblyName);
-		if (activationCtorCache.TryGetValue (cacheKey, out var cached)) {
+		if (_activationCtorCache.TryGetValue (cacheKey, out var cached)) {
 			return cached;
 		}
 
@@ -238,7 +238,7 @@ sealed class JavaPeerScanner : IDisposable
 		var ownCtor = FindActivationCtorOnType (typeDef, index);
 		if (ownCtor is not null) {
 			var info = new ActivationCtorInfo { DeclaringTypeName = typeName, DeclaringAssemblyName = index.AssemblyName, Style = ownCtor.Value };
-			activationCtorCache [cacheKey] = info;
+			_activationCtorCache [cacheKey] = info;
 			return info;
 		}
 
@@ -250,7 +250,7 @@ sealed class JavaPeerScanner : IDisposable
 				var baseTypeDef = baseIndex.Reader.GetTypeDefinition (baseHandle);
 				var result = ResolveActivationCtor (baseTypeName, baseTypeDef, baseIndex);
 				if (result is not null) {
-					activationCtorCache [cacheKey] = result;
+					_activationCtorCache [cacheKey] = result;
 				}
 				return result;
 			}
@@ -394,13 +394,13 @@ sealed class JavaPeerScanner : IDisposable
 
 	public void Dispose ()
 	{
-		foreach (var index in assemblyCache.Values) {
+		foreach (var index in _assemblyCache.Values) {
 			index.Dispose ();
 		}
-		assemblyCache.Clear ();
+		_assemblyCache.Clear ();
 	}
 
-	readonly Dictionary<string, bool> extendsJavaPeerCache = new (StringComparer.Ordinal);
+	readonly Dictionary<string, bool> _extendsJavaPeerCache = new (StringComparer.Ordinal);
 
 	/// <summary>
 	/// Check if a type extends a known Java peer (has [Register] or component attribute)
@@ -411,12 +411,12 @@ sealed class JavaPeerScanner : IDisposable
 		var fullName = MetadataTypeNameResolver.GetFullName (typeDef, index.Reader);
 		var key = $"{index.AssemblyName}:{fullName}";
 
-		if (extendsJavaPeerCache.TryGetValue (key, out var cached)) {
+		if (_extendsJavaPeerCache.TryGetValue (key, out var cached)) {
 			return cached;
 		}
 
 		// Mark as false to prevent cycles, then compute
-		extendsJavaPeerCache [key] = false;
+		_extendsJavaPeerCache [key] = false;
 
 		var baseInfo = GetBaseTypeInfo (typeDef, index);
 		if (baseInfo is null) {
@@ -431,18 +431,18 @@ sealed class JavaPeerScanner : IDisposable
 
 		// Direct hit: base has [Register] or component attribute
 		if (baseIndex.RegisterInfoByType.ContainsKey (baseHandle)) {
-			extendsJavaPeerCache [key] = true;
+			_extendsJavaPeerCache [key] = true;
 			return true;
 		}
 		if (baseIndex.AttributesByType.ContainsKey (baseHandle)) {
-			extendsJavaPeerCache [key] = true;
+			_extendsJavaPeerCache [key] = true;
 			return true;
 		}
 
 		// Recurse up the hierarchy
 		var baseDef = baseIndex.Reader.GetTypeDefinition (baseHandle);
 		var result = ExtendsJavaPeer (baseDef, baseIndex);
-		extendsJavaPeerCache [key] = result;
+		_extendsJavaPeerCache [key] = result;
 		return result;
 	}
 
