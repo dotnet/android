@@ -277,15 +277,6 @@ sealed record RegisterInfo
 	public bool DoNotGenerateAcw { get; init; }
 }
 
-/// <summary>
-/// Parsed [Export] attribute data for a method.
-/// </summary>
-sealed record ExportInfo
-{
-	public IReadOnlyList<string>? ThrownNames { get; init; }
-	public string? SuperArgumentsString { get; init; }
-}
-
 class TypeAttributeInfo (string attributeName)
 {
 	public string AttributeName { get; } = attributeName;
