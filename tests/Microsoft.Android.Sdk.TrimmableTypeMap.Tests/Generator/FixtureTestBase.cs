@@ -67,13 +67,13 @@ public abstract class FixtureTestBase
 
 	private protected static JavaPeerInfo MakePeerWithActivation (string jniName, string managedName, string asmName)
 	{
-		var peer = MakeMcwPeer (jniName, managedName, asmName);
-		peer.ActivationCtor = new ActivationCtorInfo {
-			DeclaringTypeName = managedName,
-			DeclaringAssemblyName = asmName,
-			Style = ActivationCtorStyle.XamarinAndroid,
+		return MakeMcwPeer (jniName, managedName, asmName) with {
+			ActivationCtor = new ActivationCtorInfo {
+				DeclaringTypeName = managedName,
+				DeclaringAssemblyName = asmName,
+				Style = ActivationCtorStyle.XamarinAndroid,
+			},
 		};
-		return peer;
 	}
 
 	private protected static JavaPeerInfo MakeAcwPeer (string jniName, string managedName, string asmName)

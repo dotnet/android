@@ -88,8 +88,7 @@ public class ModelBuilderTests : FixtureTestBase
 		[InlineData ("java/lang/Thread")]
 		public void Build_AllEssentialRuntimeTypes_AreUnconditional (string jniName)
 		{
-			var peer = MakeMcwPeer (jniName, "Java.Lang.SomeType", "Mono.Android");
-			peer.DoNotGenerateAcw = true;
+			var peer = MakeMcwPeer (jniName, "Java.Lang.SomeType", "Mono.Android") with { DoNotGenerateAcw = true };
 			var model = BuildModel (new [] { peer });
 			Assert.True (model.Entries [0].IsUnconditional, $"{jniName} should be unconditional");
 		}
@@ -111,8 +110,7 @@ public class ModelBuilderTests : FixtureTestBase
 		public void Build_McwBinding_IsTrimmable ()
 		{
 			// MCW binding types (DoNotGenerateAcw=true) are trimmable unless essential
-			var peer = MakeMcwPeer ("android/app/Activity", "Android.App.Activity", "Mono.Android");
-			peer.DoNotGenerateAcw = true;
+			var peer = MakeMcwPeer ("android/app/Activity", "Android.App.Activity", "Mono.Android") with { DoNotGenerateAcw = true };
 			var model = BuildModel (new [] { peer });
 
 			Assert.Single (model.Entries);
@@ -125,9 +123,10 @@ public class ModelBuilderTests : FixtureTestBase
 		public void Build_UnconditionalScannedType_IsUnconditional ()
 		{
 			// Types with IsUnconditional from scanner (e.g., from [Activity], [Service] attrs)
-			var peer = MakeMcwPeer ("my/app/MySvc", "MyApp.MyService", "App");
-			peer.DoNotGenerateAcw = true; // simulate MCW-like
-			peer.IsUnconditional = true; // scanner marked it
+			var peer = MakeMcwPeer ("my/app/MySvc", "MyApp.MyService", "App") with {
+				DoNotGenerateAcw = true, // simulate MCW-like
+				IsUnconditional = true, // scanner marked it
+			};
 			var model = BuildModel (new [] { peer });
 
 			Assert.True (model.Entries [0].IsUnconditional);
@@ -387,8 +386,7 @@ public class ModelBuilderTests : FixtureTestBase
 			// Invoker types should never get their own proxy or TypeMap entry.
 			// They only appear as a TypeRef in the interface proxy's InvokerType/CreateInstance.
 			var ifacePeer = MakeInterfacePeer ("my/app/IFoo", "MyApp.IFoo", "App", "MyApp.FooInvoker");
-			var invokerPeer = MakePeerWithActivation ("my/app/IFoo", "MyApp.FooInvoker", "App");
-			invokerPeer.DoNotGenerateAcw = true;
+			var invokerPeer = MakePeerWithActivation ("my/app/IFoo", "MyApp.FooInvoker", "App") with { DoNotGenerateAcw = true };
 
 			var model = BuildModel (new [] { ifacePeer, invokerPeer });
 
@@ -471,8 +469,7 @@ public class ModelBuilderTests : FixtureTestBase
 		{
 			// A type is only treated as an invoker when another peer's InvokerTypeName references it.
 			// A type named "MyInvoker" with DoNotGenerateAcw is NOT automatically an invoker.
-			var invokerPeer = MakePeerWithActivation ("my/app/MyInvoker", "MyApp.MyInvoker", "App");
-			invokerPeer.DoNotGenerateAcw = true;
+			var invokerPeer = MakePeerWithActivation ("my/app/MyInvoker", "MyApp.MyInvoker", "App") with { DoNotGenerateAcw = true };
 
 			// Without a referencing peer, it gets a normal entry
 			var model1 = BuildModel (new [] { invokerPeer });
