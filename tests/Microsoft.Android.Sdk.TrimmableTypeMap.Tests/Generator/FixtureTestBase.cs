@@ -40,6 +40,7 @@ public abstract class FixtureTestBase
 		var shortName = typePart.Contains ('+') ? typePart.Substring (typePart.LastIndexOf ('+') + 1) : typePart;
 		return new JavaPeerInfo {
 			JavaName = jniName,
+			CompatJniName = jniName,
 			ManagedTypeName = managedName,
 			ManagedTypeNamespace = ns,
 			ManagedTypeShortName = shortName,
@@ -57,24 +58,51 @@ public abstract class FixtureTestBase
 	}
 
 	protected static JavaPeerInfo MakeAcwPeer (string jniName, string managedName, string asmName)
-		=> MakePeerWithActivation (jniName, managedName, asmName);
+	{
+		var peer = MakePeerWithActivation (jniName, managedName, asmName);
+		peer.DoNotGenerateAcw = false;
+		peer.MarshalMethods = new List<MarshalMethodInfo> {
+			new MarshalMethodInfo {
+				JniName = "<init>",
+				NativeCallbackName = "n_ctor",
+				JniSignature = "()V",
+				JniReturnType = "V",
+				ManagedMethodName = ".ctor",
+				IsConstructor = true,
+			},
+		};
+		return peer;
+	}
 
 	protected static JavaPeerInfo MakeInterfacePeer (
-		string jniName,
-		string managedName,
-		string asmName,
-		string invokerName)
+		string jniName = "android/view/View$OnClickListener",
+		string managedName = "Android.Views.View+IOnClickListener",
+		string asmName = "Mono.Android",
+		string invokerName = "Android.Views.View+IOnClickListenerInvoker")
 	{
 		var ns = managedName.Contains ('.') ? managedName.Substring (0, managedName.LastIndexOf ('.')) : "";
 		var shortName = managedName.Contains ('.') ? managedName.Substring (managedName.LastIndexOf ('.') + 1) : managedName;
 		return new JavaPeerInfo {
 			JavaName = jniName,
+			CompatJniName = jniName,
 			ManagedTypeName = managedName,
 			ManagedTypeNamespace = ns,
 			ManagedTypeShortName = shortName,
 			AssemblyName = asmName,
 			IsInterface = true,
 			InvokerTypeName = invokerName,
+		};
+	}
+
+	protected static MarshalMethodInfo MakeMarshalMethod (string jniName, string callbackName, string jniSig, bool isConstructor = false)
+	{
+		return new MarshalMethodInfo {
+			JniName = jniName,
+			NativeCallbackName = callbackName,
+			JniSignature = jniSig,
+			JniReturnType = JniSignatureHelper.ParseReturnTypeString (jniSig),
+			ManagedMethodName = jniName,
+			IsConstructor = isConstructor,
 		};
 	}
 }
