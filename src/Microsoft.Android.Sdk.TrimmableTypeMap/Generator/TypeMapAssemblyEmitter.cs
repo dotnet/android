@@ -54,6 +54,7 @@ sealed class TypeMapAssemblyEmitter
 	TypeReferenceHandle _jniHandleOwnershipRef;
 	TypeReferenceHandle _jniObjectReferenceRef;
 	TypeReferenceHandle _jniObjectReferenceOptionsRef;
+	TypeReferenceHandle _jniEnvRef;
 	TypeReferenceHandle _systemTypeRef;
 	TypeReferenceHandle _runtimeTypeHandleRef;
 	TypeReferenceHandle _notSupportedExceptionRef;
@@ -64,6 +65,7 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _getUninitializedObjectRef;
 	MemberReferenceHandle _notSupportedExceptionCtorRef;
 	MemberReferenceHandle _jniObjectReferenceCtorRef;
+	MemberReferenceHandle _jniEnvDeleteRefRef;
 	MemberReferenceHandle _typeMapAttrCtorRef2Arg;
 	MemberReferenceHandle _typeMapAttrCtorRef3Arg;
 	MemberReferenceHandle _typeMapAssociationAttrCtorRef;
@@ -115,7 +117,7 @@ sealed class TypeMapAssemblyEmitter
 
 	void EmitCore (TypeMapAssemblyData model)
 	{
-		_pe.EmitPreamble (model.AssemblyName, model.ModuleName);
+		_pe.EmitPreamble (model.AssemblyName, model.ModuleName, MetadataHelper.ComputeContentFingerprint (model));
 
 		_javaInteropRef = _pe.AddAssemblyRef ("Java.Interop", new Version (0, 0, 0, 0));
 
@@ -146,6 +148,8 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("IJavaPeerable"));
 		_jniHandleOwnershipRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
 			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("JniHandleOwnership"));
+		_jniEnvRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("JNIEnv"));
 		_jniObjectReferenceRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniObjectReference"));
 		_jniObjectReferenceOptionsRef = metadata.AddTypeReference (_javaInteropRef,
@@ -184,6 +188,17 @@ sealed class TypeMapAssemblyEmitter
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
 				rt => rt.Void (),
 				p => p.AddParameter ().Type ().IntPtr ()));
+
+		// JNIEnv.DeleteRef(IntPtr, JniHandleOwnership) — static, internal
+		// Used by JI-style activation to clean up the original handle after constructing the peer.
+		// Matches the legacy TypeManager.CreateProxy behavior.
+		_jniEnvDeleteRefRef = _pe.AddMemberRef (_jniEnvRef, "DeleteRef",
+			sig => sig.MethodSignature ().Parameters (2,
+				rt => rt.Void (),
+				p => {
+					p.AddParameter ().Type ().IntPtr ();
+					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+				}));
 
 		EmitTypeMapAttributeCtorRef ();
 		EmitTypeMapAssociationAttributeCtorRef ();
@@ -371,24 +386,34 @@ sealed class TypeMapAssemblyEmitter
 	/// <summary>
 	/// Emits CreateInstance for JavaInterop-style activation (leaf type):
 	///   var jniRef = new JniObjectReference(handle);
-	///   return new TargetType(ref jniRef, JniObjectReferenceOptions.Copy);
+	///   var result = new TargetType(ref jniRef, JniObjectReferenceOptions.Copy);
+	///   JNIEnv.DeleteRef(handle, ownership);
+	///   return result;
 	/// </summary>
 	void EmitCreateInstanceViaJavaInteropNewobj (EntityHandle typeRef)
 	{
 		var ctorRef = AddJavaInteropActivationCtorRef (typeRef);
 		EmitCreateInstanceBodyWithLocals (
-			EncodeJniObjectReferenceLocal,
+			EncodeJniObjectReferenceAndObjectLocals,
 			encoder => {
 				// var jniRef = new JniObjectReference(handle);
 				encoder.LoadLocalAddress (0);
 				encoder.OpCode (ILOpCode.Ldarg_1); // handle
 				encoder.Call (_jniObjectReferenceCtorRef);
 
-				// return new TargetType(ref jniRef, JniObjectReferenceOptions.Copy);
+				// var result = new TargetType(ref jniRef, JniObjectReferenceOptions.Copy);
 				encoder.LoadLocalAddress (0);
 				encoder.LoadConstantI4 (1); // JniObjectReferenceOptions.Copy
 				encoder.OpCode (ILOpCode.Newobj);
 				encoder.Token (ctorRef);
+				encoder.StoreLocal (1); // save result
+
+				// JNIEnv.DeleteRef(handle, ownership);
+				encoder.OpCode (ILOpCode.Ldarg_1); // handle
+				encoder.OpCode (ILOpCode.Ldarg_2); // ownership
+				encoder.Call (_jniEnvDeleteRefRef);
+
+				encoder.LoadLocal (1); // load result
 				encoder.OpCode (ILOpCode.Ret);
 			});
 	}
@@ -398,6 +423,7 @@ sealed class TypeMapAssemblyEmitter
 	///   var obj = (TargetType)RuntimeHelpers.GetUninitializedObject(typeof(TargetType));
 	///   var jniRef = new JniObjectReference(handle);
 	///   obj.BaseCtor(ref jniRef, JniObjectReferenceOptions.Copy);
+	///   JNIEnv.DeleteRef(handle, ownership);
 	///   return obj;
 	/// </summary>
 	void EmitCreateInstanceInheritedJavaInteropCtor (EntityHandle targetTypeRef, ActivationCtorData activationCtor)
@@ -427,6 +453,11 @@ sealed class TypeMapAssemblyEmitter
 				encoder.LoadConstantI4 (1); // JniObjectReferenceOptions.Copy
 				encoder.Call (baseCtorRef);
 
+				// JNIEnv.DeleteRef(handle, ownership);
+				encoder.OpCode (ILOpCode.Ldarg_1); // handle
+				encoder.OpCode (ILOpCode.Ldarg_2); // ownership
+				encoder.Call (_jniEnvDeleteRefRef);
+
 				encoder.OpCode (ILOpCode.Ret);
 			});
 	}
@@ -440,6 +471,18 @@ sealed class TypeMapAssemblyEmitter
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniObjectReferenceRef));
 	}
 
+	void EncodeJniObjectReferenceAndObjectLocals (BlobBuilder blob)
+	{
+		// LOCAL_SIG header (0x07), count = 2:
+		//   local 0: JniObjectReference (valuetype)
+		//   local 1: object (for storing the newobj result across the DeleteRef call)
+		blob.WriteByte (0x07); // LOCAL_SIG
+		blob.WriteCompressedInteger (2); // 2 local variables
+		blob.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
+		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniObjectReferenceRef));
+		blob.WriteByte (0x1c); // ELEMENT_TYPE_OBJECT
+	}
+
 	MemberReferenceHandle AddJavaInteropActivationCtorRef (EntityHandle declaringTypeRef)
 	{
 		return _pe.AddMemberRef (declaringTypeRef, ".ctor",
@@ -447,7 +490,7 @@ sealed class TypeMapAssemblyEmitter
 				rt => rt.Void (),
 				p => {
 					// ref JniObjectReference — encoded as byref valuetype
-					p.AddParameter ().Type ().Type (_jniObjectReferenceRef, true);
+					p.AddParameter ().Type (isByRef: true).Type (_jniObjectReferenceRef, true);
 					// JniObjectReferenceOptions — encoded as valuetype (enum)
 					p.AddParameter ().Type ().Type (_jniObjectReferenceOptionsRef, true);
 				}));

@@ -89,6 +89,11 @@ static class ModelBuilder
 				AddIfCrossAssembly (referencedAssemblies, proxy.ActivationCtor.DeclaringType.AssemblyName, assemblyName);
 			}
 		}
+
+		// Always include Mono.Android — the emitter calls internal JNIEnv.DeleteRef
+		// for JI-style activation cleanup (matching legacy TypeManager.CreateProxy behavior).
+		referencedAssemblies.Add ("Mono.Android");
+
 		model.IgnoresAccessChecksTo.AddRange (referencedAssemblies);
 
 		return model;

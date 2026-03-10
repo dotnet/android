@@ -33,6 +33,14 @@ public partial class JavaPeerScannerTests
 		Assert.Equal (expectedJavaName, FindFixtureByManagedName (managedName).JavaName);
 	}
 
+	[Theory]
+	[InlineData ("MyApp.RegisteredParent+UnregisteredChild", "MyApp")]
+	[InlineData ("MyApp.DeepOuter+Middle+DeepInner", "MyApp")]
+	public void Scan_NestedType_HasCorrectNamespace (string managedName, string expectedNamespace)
+	{
+		Assert.Equal (expectedNamespace, FindFixtureByManagedName (managedName).ManagedTypeNamespace);
+	}
+
 	[Fact]
 	public void Scan_EmptyNamespace_Handled ()
 	{

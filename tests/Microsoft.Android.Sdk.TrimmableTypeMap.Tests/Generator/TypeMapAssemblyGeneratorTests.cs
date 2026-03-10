@@ -319,4 +319,95 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.Equal (1, sig.ParameterTypes.Length);
 		Assert.Equal ("System.Int32", sig.ParameterTypes [0]);
 	}
+
+	[Fact]
+	public void Generate_JiStyleCtor_FirstParamIsByRef ()
+	{
+		var peers = ScanFixtures ();
+		var jiPeer = peers.First (p => p.JavaName == "my/app/JiStylePeer");
+		Assert.Equal (ActivationCtorStyle.JavaInterop, jiPeer.ActivationCtor!.Style);
+
+		using var stream = GenerateAssembly (new [] { jiPeer }, "JiByRefTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		// Find the .ctor member reference whose parent type is the JI peer's declaring type
+		var ctorRefs = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
+			.Select (i => reader.GetMemberReference (MetadataTokens.MemberReferenceHandle (i)))
+			.Where (m => reader.GetString (m.Name) == ".ctor")
+			.ToList ();
+
+		// Decode each .ctor signature and find the JI-style one (2 params, first is byref JniObjectReference)
+		bool foundByRefCtor = false;
+		foreach (var ctor in ctorRefs) {
+			var sig = ctor.DecodeMethodSignature (SignatureTypeProvider.Instance, null);
+			if (sig.ParameterTypes.Length == 2 &&
+				sig.ParameterTypes [0].Contains ("JniObjectReference")) {
+				// The byref encoding should produce "Java.Interop.JniObjectReference&"
+				Assert.True (sig.ParameterTypes [0].EndsWith ("&"),
+					$"JI-style .ctor first param must be byref, got: {sig.ParameterTypes [0]}");
+				foundByRefCtor = true;
+			}
+		}
+		Assert.True (foundByRefCtor, "Expected to find a .ctor with byref JniObjectReference parameter");
+	}
+
+	[Fact]
+	public void Generate_JiStyleCtor_EmitsDeleteRefCall ()
+	{
+		var peers = ScanFixtures ();
+		var jiPeer = peers.First (p => p.JavaName == "my/app/JiStylePeer");
+
+		using var stream = GenerateAssembly (new [] { jiPeer }, "JiDeleteRefTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		// The JI-style activation path must emit a call to JNIEnv.DeleteRef(IntPtr, JniHandleOwnership)
+		// to match the legacy TypeManager.CreateProxy behavior.
+		var memberRefs = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
+			.Select (i => reader.GetMemberReference (MetadataTokens.MemberReferenceHandle (i)))
+			.ToList ();
+
+		var deleteRefRef = memberRefs.FirstOrDefault (m => reader.GetString (m.Name) == "DeleteRef");
+		Assert.True (!deleteRefRef.Equals (default (MemberReference)),
+			"JI-style activation must emit a DeleteRef member reference for JNI handle cleanup");
+
+		// Verify it's on the JNIEnv type
+		var parentTypeRef = reader.GetTypeReference ((TypeReferenceHandle)deleteRefRef.Parent);
+		Assert.Equal ("JNIEnv", reader.GetString (parentTypeRef.Name));
+		Assert.Equal ("Android.Runtime", reader.GetString (parentTypeRef.Namespace));
+	}
+
+	[Fact]
+	public void Generate_DifferentContent_ProducesDifferentMVIDs ()
+	{
+		var peer1 = MakePeerWithActivation ("test/TypeA", "Test.TypeA", "TestAsm");
+		var peer2 = MakePeerWithActivation ("test/TypeB", "Test.TypeB", "TestAsm");
+
+		using var stream1 = GenerateAssembly (new [] { peer1 }, "SameName");
+		using var stream2 = GenerateAssembly (new [] { peer2 }, "SameName");
+
+		using var pe1 = new PEReader (stream1);
+		using var pe2 = new PEReader (stream2);
+		var mvid1 = pe1.GetMetadataReader ().GetGuid (pe1.GetMetadataReader ().GetModuleDefinition ().Mvid);
+		var mvid2 = pe2.GetMetadataReader ().GetGuid (pe2.GetMetadataReader ().GetModuleDefinition ().Mvid);
+
+		Assert.NotEqual (mvid1, mvid2);
+	}
+
+	[Fact]
+	public void Generate_IdenticalContent_ProducesIdenticalMVIDs ()
+	{
+		var peer = MakePeerWithActivation ("test/TypeA", "Test.TypeA", "TestAsm");
+
+		using var stream1 = GenerateAssembly (new [] { peer }, "SameName");
+		using var stream2 = GenerateAssembly (new [] { peer }, "SameName");
+
+		using var pe1 = new PEReader (stream1);
+		using var pe2 = new PEReader (stream2);
+		var mvid1 = pe1.GetMetadataReader ().GetGuid (pe1.GetMetadataReader ().GetModuleDefinition ().Mvid);
+		var mvid2 = pe2.GetMetadataReader ().GetGuid (pe2.GetMetadataReader ().GetModuleDefinition ().Mvid);
+
+		Assert.Equal (mvid1, mvid2);
+	}
 }
