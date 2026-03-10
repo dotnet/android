@@ -21,18 +21,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		return stream;
 	}
 
-	static List<string> GetMemberRefNames (MetadataReader reader) =>
-		Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
-			.Select (i => reader.GetMemberReference (MetadataTokens.MemberReferenceHandle (i)))
-			.Select (m => reader.GetString (m.Name))
-			.ToList ();
-
-	static List<string> GetTypeRefNames (MetadataReader reader) =>
-		reader.TypeReferences
-			.Select (h => reader.GetTypeReference (h))
-			.Select (t => reader.GetString (t.Name))
-			.ToList ();
-
 	[Fact]
 	public void Generate_ProducesValidPEAssembly ()
 	{

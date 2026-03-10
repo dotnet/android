@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
+using System.Reflection.Metadata.Ecma335;
 using Xunit;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
@@ -92,4 +94,16 @@ public abstract class FixtureTestBase
 			InvokerTypeName = invokerName,
 		};
 	}
+
+	private protected static List<string> GetTypeRefNames (MetadataReader reader) =>
+		reader.TypeReferences
+			.Select (h => reader.GetTypeReference (h))
+			.Select (t => reader.GetString (t.Name))
+			.ToList ();
+
+	private protected static List<string> GetMemberRefNames (MetadataReader reader) =>
+		Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
+			.Select (i => reader.GetMemberReference (MetadataTokens.MemberReferenceHandle (i)))
+			.Select (m => reader.GetString (m.Name))
+			.ToList ();
 }
