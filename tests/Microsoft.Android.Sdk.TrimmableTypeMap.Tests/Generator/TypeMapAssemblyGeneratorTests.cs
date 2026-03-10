@@ -138,7 +138,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	[Fact]
 	public void Generate_EmptyPeerList_ProducesValidAssembly ()
 	{
-		using var stream = GenerateAssembly (Array.Empty<JavaPeerInfo> (), "EmptyTest");
+		using var stream = GenerateAssembly ([], "EmptyTest");
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 		Assert.NotNull (reader);
@@ -260,7 +260,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	[Fact]
 	public void Emit_CalledTwice_Throws ()
 	{
-		var model = ModelBuilder.Build (Array.Empty<JavaPeerInfo> (), "Double.dll", "Double");
+		var model = ModelBuilder.Build ([], "Double.dll", "Double");
 		var emitter = new TypeMapAssemblyEmitter (new Version (11, 0, 0, 0));
 		emitter.Emit (model, new MemoryStream ());
 		// MetadataBuilder.AddAssembly throws on second call (only one assembly definition per PE)

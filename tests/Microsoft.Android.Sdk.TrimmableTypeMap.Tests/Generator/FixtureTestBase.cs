@@ -12,7 +12,8 @@ public abstract class FixtureTestBase
 {
 	static string TestFixtureAssemblyPath {
 		get {
-			var testAssemblyDir = Path.GetDirectoryName (typeof (FixtureTestBase).Assembly.Location)!;
+			var testAssemblyDir = Path.GetDirectoryName (typeof (FixtureTestBase).Assembly.Location)
+				?? throw new InvalidOperationException ("Cannot determine test assembly directory");
 			var fixtureAssembly = Path.Combine (testAssemblyDir, "TestFixtures.dll");
 			Assert.True (File.Exists (fixtureAssembly),
 				$"TestFixtures.dll not found at {fixtureAssembly}. Ensure the TestFixtures project builds.");

@@ -394,7 +394,10 @@ sealed class TypeMapAssemblyEmitter
 			b.WriteSerializedString (entry.JniName);
 			b.WriteSerializedString (entry.ProxyTypeReference);
 			if (!entry.IsUnconditional) {
-				b.WriteSerializedString (entry.TargetTypeReference!);
+				if (entry.TargetTypeReference is null) {
+					throw new InvalidOperationException ($"TargetTypeReference must not be null for conditional entry '{entry.JniName}'");
+				}
+				b.WriteSerializedString (entry.TargetTypeReference);
 			}
 		});
 		_pe.Metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorRef, blob);

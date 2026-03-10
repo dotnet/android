@@ -21,7 +21,7 @@ public class ModelBuilderTests : FixtureTestBase
 		[Fact]
 		public void Build_EmptyPeers_ProducesEmptyModel ()
 		{
-			var model = BuildModel (Array.Empty<JavaPeerInfo> (), "Empty");
+			var model = BuildModel ([], "Empty");
 			Assert.Equal ("Empty", model.AssemblyName);
 			Assert.Equal ("Empty.dll", model.ModuleName);
 			Assert.Empty (model.Entries);
@@ -33,7 +33,7 @@ public class ModelBuilderTests : FixtureTestBase
 		[InlineData ("Foo.dll", "MyAssembly", "MyAssembly")]
 		public void Build_AssemblyName_ResolvedCorrectly (string outputPath, string? explicitName, string expected)
 		{
-			var model = ModelBuilder.Build (Array.Empty<JavaPeerInfo> (), outputPath, explicitName);
+			var model = ModelBuilder.Build ([], outputPath, explicitName);
 			Assert.Equal (expected, model.AssemblyName);
 		}
 	}

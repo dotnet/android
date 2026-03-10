@@ -32,7 +32,7 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 	[InlineData ("MyRoot", "MyRoot")]
 	public void Generate_AssemblyName_MatchesExpected (string? assemblyName, string expectedName)
 	{
-		using var stream = GenerateRootAssembly (Array.Empty<string> (), assemblyName);
+		using var stream = GenerateRootAssembly ([], assemblyName);
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 		var asmDef = reader.GetAssemblyDefinition ();
