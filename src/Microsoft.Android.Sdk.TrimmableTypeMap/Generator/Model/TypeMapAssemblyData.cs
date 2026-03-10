@@ -113,7 +113,6 @@ sealed class JavaPeerProxyData
 	/// True if this is an open generic type definition. CreateInstance throws NotSupportedException.
 	/// </summary>
 	public bool IsGenericDefinition { get; init; }
-
 }
 
 

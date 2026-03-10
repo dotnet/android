@@ -229,5 +229,4 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		// Activity is in TestFixtures, so IgnoresAccessChecksTo must include TestFixtures
 		Assert.Contains (attrBlobs, b => b.Contains ("TestFixtures"));
 	}
-
 }

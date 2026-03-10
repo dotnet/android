@@ -34,9 +34,7 @@ sealed class PEAssemblyBuilder
 	public BlobBuilder ILBuilder { get; } = new BlobBuilder ();
 
 	public AssemblyReferenceHandle SystemRuntimeRef { get; private set; }
-
 	public AssemblyReferenceHandle SystemRuntimeInteropServicesRef { get; private set; }
-
 	public AssemblyReferenceHandle MonoAndroidRef { get; private set; }
 
 	public PEAssemblyBuilder (Version systemRuntimeVersion)

@@ -400,5 +400,4 @@ sealed class TypeMapAssemblyEmitter
 		});
 		_pe.Metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, _typeMapAssociationAttrCtorRef, blob);
 	}
-
 }

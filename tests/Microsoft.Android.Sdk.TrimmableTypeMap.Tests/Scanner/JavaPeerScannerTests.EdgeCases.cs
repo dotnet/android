@@ -47,5 +47,4 @@ public partial class JavaPeerScannerTests
 	{
 		Assert.StartsWith ("crc64", FindFixtureByManagedName (managedName).JavaName);
 	}
-
 }

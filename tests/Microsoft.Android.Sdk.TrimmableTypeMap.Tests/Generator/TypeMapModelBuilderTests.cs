@@ -38,7 +38,6 @@ public class ModelBuilderTests : FixtureTestBase
 			var model = ModelBuilder.Build (Array.Empty<JavaPeerInfo> (), outputPath, explicitName);
 			Assert.Equal (expected, model.AssemblyName);
 		}
-
 	}
 
 	public class TypeMapEntries
@@ -74,7 +73,6 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.Equal ("test/Dup[1]", model.Entries [1].JniName);
 			Assert.Contains ("Test.Second", model.Entries [1].ProxyTypeReference);
 		}
-
 	}
 
 	public class ConditionalAttributes
@@ -134,7 +132,6 @@ public class ModelBuilderTests : FixtureTestBase
 
 			Assert.True (model.Entries [0].IsUnconditional);
 		}
-
 	}
 
 	public class Aliases
@@ -164,7 +161,6 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.Single (model.Entries);
 			Assert.Contains ("Java.Lang.Object, Mono.Android", model.Entries [0].ProxyTypeReference);
 		}
-
 	}
 
 	public class ProxyTypes
@@ -198,7 +194,6 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.NotNull (proxy.InvokerType);
 			Assert.Equal ("Android.Views.View+IOnClickListenerInvoker", proxy.InvokerType!.ManagedTypeName);
 		}
-
 	}
 
 	public class FixtureScan
@@ -229,7 +224,6 @@ public class ModelBuilderTests : FixtureTestBase
 			var peer = FindFixtureByJavaName (javaName);
 			Assert.Equal (expectedShortName, peer.ManagedTypeShortName);
 		}
-
 	}
 
 	public class FixtureConditionalAttributes
@@ -256,7 +250,6 @@ public class ModelBuilderTests : FixtureTestBase
 			var model = BuildModel (new [] { peer });
 			Assert.False (model.Entries [0].IsUnconditional);
 		}
-
 	}
 
 	static JavaPeerProxyData? FindProxy (TypeMapAssemblyData model, string proxyTypeName)
@@ -315,7 +308,6 @@ public class ModelBuilderTests : FixtureTestBase
 				Assert.Empty (model.ProxyTypes);
 			}
 		}
-
 	}
 
 	public class FixtureCustomView
@@ -330,7 +322,6 @@ public class ModelBuilderTests : FixtureTestBase
 			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_CustomView_Proxy");
 			Assert.NotNull (proxy);
 		}
-
 	}
 
 	public class FixtureInterfaces
@@ -351,7 +342,6 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.NotNull (proxy!.InvokerType);
 			Assert.Equal ("Android.Views.IOnClickListenerInvoker", proxy.InvokerType!.ManagedTypeName);
 		}
-
 	}
 
 	public class FixtureNestedTypes
@@ -374,7 +364,6 @@ public class ModelBuilderTests : FixtureTestBase
 				Assert.Equal (expectedManagedName, proxy!.TargetType.ManagedTypeName);
 			}
 		}
-
 	}
 
 	public class FixtureInvokers
@@ -426,7 +415,6 @@ public class ModelBuilderTests : FixtureTestBase
 			// Interface proxy has activation because it will create the invoker
 			Assert.True (proxy.HasActivation);
 		}
-
 	}
 
 	public class FixtureGenericHolder
@@ -442,7 +430,6 @@ public class ModelBuilderTests : FixtureTestBase
 			var entry = FindEntry (model, "my/app/GenericHolder");
 			Assert.NotNull (entry);
 		}
-
 	}
 
 	public class FixtureAcwTypeHasProxy
@@ -465,7 +452,6 @@ public class ModelBuilderTests : FixtureTestBase
 				Assert.NotNull (proxy);
 			}
 		}
-
 	}
 
 	public class FixtureImplementorsAndDispatchers
@@ -487,7 +473,6 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.False (entry!.IsUnconditional, $"{kind} should NOT be unconditional");
 			Assert.NotNull (entry.TargetTypeReference);
 		}
-
 	}
 
 	public class NameBasedDetection
@@ -527,7 +512,6 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.Single (model2.Entries);
 			Assert.Equal ("MyApp.IMyInterface", model2.ProxyTypes [0].TargetType.ManagedTypeName);
 		}
-
 	}
 
 	public class PipelineTests
@@ -608,7 +592,6 @@ public class ModelBuilderTests : FixtureTestBase
 				Assert.NotEmpty (asmAttrs);
 			});
 		}
-
 	}
 
 	public class PeBlobValidation
@@ -679,7 +662,6 @@ public class ModelBuilderTests : FixtureTestBase
 				Assert.Contains ("Android.App.Activity", targetRef!);
 			});
 		}
-
 	}
 
 	public class DeterminismTests
@@ -700,7 +682,6 @@ public class ModelBuilderTests : FixtureTestBase
 				Assert.Equal (model1.Entries [i].TargetTypeReference, model2.Entries [i].TargetTypeReference);
 			}
 		}
-
 	}
 
 	static void EmitAndVerify (TypeMapAssemblyData model, string assemblyName, Action<PEReader, MetadataReader> verify)

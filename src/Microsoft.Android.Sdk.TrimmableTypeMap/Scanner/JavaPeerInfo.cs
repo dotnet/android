@@ -34,7 +34,6 @@ sealed record JavaPeerInfo
 	/// Assembly name the type belongs to, e.g., "Mono.Android".
 	/// </summary>
 	public required string AssemblyName { get; init; }
-
 	public bool IsInterface { get; init; }
 	public bool IsAbstract { get; init; }
 
