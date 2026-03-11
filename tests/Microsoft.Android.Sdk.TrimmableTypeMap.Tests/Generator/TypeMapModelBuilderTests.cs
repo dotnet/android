@@ -23,7 +23,7 @@ public class ModelBuilderTests : FixtureTestBase
 		[Fact]
 		public void Build_EmptyPeers_ProducesEmptyModel ()
 		{
-			var model = BuildModel (Array.Empty<JavaPeerInfo> (), "Empty");
+			var model = BuildModel ([], "Empty");
 			Assert.Equal ("Empty", model.AssemblyName);
 			Assert.Equal ("Empty.dll", model.ModuleName);
 			Assert.Empty (model.Entries);
@@ -33,7 +33,7 @@ public class ModelBuilderTests : FixtureTestBase
 		[Fact]
 		public void Build_AssemblyNameDerivedFromOutputPath ()
 		{
-			var model = ModelBuilder.Build (Array.Empty<JavaPeerInfo> (), "/some/path/Foo.Bar.dll");
+			var model = ModelBuilder.Build ([], "/some/path/Foo.Bar.dll");
 			Assert.Equal ("Foo.Bar", model.AssemblyName);
 			Assert.Equal ("Foo.Bar.dll", model.ModuleName);
 		}
@@ -41,7 +41,7 @@ public class ModelBuilderTests : FixtureTestBase
 		[Fact]
 		public void Build_ExplicitAssemblyName_OverridesOutputPath ()
 		{
-			var model = ModelBuilder.Build (Array.Empty<JavaPeerInfo> (), "/some/path/Foo.dll", "MyAssembly");
+			var model = ModelBuilder.Build ([], "/some/path/Foo.dll", "MyAssembly");
 			Assert.Equal ("MyAssembly", model.AssemblyName);
 		}
 

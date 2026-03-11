@@ -84,7 +84,7 @@ sealed record JavaPeerInfo
 	/// Java constructors to emit in the JCW .java file.
 	/// Each has a JNI signature and an ordinal index for the nctor_N native method.
 	/// </summary>
-	public IReadOnlyList<JavaConstructorInfo> JavaConstructors { get; init; } = Array.Empty<JavaConstructorInfo> ();
+	public IReadOnlyList<JavaConstructorInfo> JavaConstructors { get; init; } = [];
 
 	/// <summary>
 	/// Information about the activation constructor for this type.
@@ -157,7 +157,7 @@ sealed record MarshalMethodInfo
 	/// <summary>
 	/// JNI parameter types for UCO generation.
 	/// </summary>
-	public IReadOnlyList<JniParameterInfo> Parameters { get; init; } = Array.Empty<JniParameterInfo> ();
+	public IReadOnlyList<JniParameterInfo> Parameters { get; init; } = [];
 
 	/// <summary>
 	/// JNI return type descriptor, e.g., "V", "Landroid/os/Bundle;".
@@ -217,7 +217,7 @@ sealed record JavaConstructorInfo
 	/// JNI parameter types parsed from the signature.
 	/// Used to generate the Java constructor parameter list.
 	/// </summary>
-	public IReadOnlyList<JniParameterInfo> Parameters { get; init; } = Array.Empty<JniParameterInfo> ();
+	public IReadOnlyList<JniParameterInfo> Parameters { get; init; } = [];
 
 	/// <summary>
 	/// For [Export] constructors: super constructor arguments string.
