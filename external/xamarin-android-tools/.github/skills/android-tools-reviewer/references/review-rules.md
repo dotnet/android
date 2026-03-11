@@ -27,6 +27,7 @@ Framework. Every API call must work on both targets.
 | **CancellationToken propagation** | Every `async` method that accepts a `CancellationToken` must pass it to ALL downstream async calls (`GetAsync`, `ReadAsStreamAsync`, `SendAsync`, etc.). A token that's accepted but never used is a broken contract. |
 | **OperationCanceledException** | Catch-all blocks (`catch (Exception)`) must NOT swallow `OperationCanceledException`. Either catch it explicitly first and rethrow, or use a type filter. |
 | **GetStringAsync** | On netstandard2.0, `GetStringAsync(url)` doesn't accept a `CancellationToken`. Use `GetAsync(url, ct)` + `ReadAsStringAsync()` instead. |
+| **Thread safety of shared state** | If a new field or property can be accessed from multiple threads (e.g., static caches, event handlers), verify thread-safe access: `ConcurrentDictionary`, `Interlocked`, or explicit locks. A `Dictionary<K,V>` read concurrently with a write is undefined behavior. |
 
 **Postmortem refs:** #5, #37
 
@@ -53,6 +54,9 @@ Framework. Every API call must work on both targets.
 | **Validate parameters** | Enum parameters and string-typed "mode" values must be validated — throw `ArgumentException` or `NotSupportedException` for unexpected values. Don't silently accept garbage. |
 | **Fail fast on critical ops** | If an operation like `chmod` or checksum verification fails, throw immediately. Silently continuing leads to confusing downstream failures ("permission denied" when the real problem was chmod). |
 | **Mandatory verification** | Checksum/hash verification must NOT be optional. If the checksum can't be fetched, the operation must fail — not proceed unverified. |
+| **Include actionable details in exceptions** | Use `nameof` for parameter names. Include the unsupported value or unexpected type. Never throw empty exceptions. |
+| **Use `ThrowIf` helpers where available** | In .NET 10+ projects, prefer `ArgumentOutOfRangeException.ThrowIfNegative`, `ArgumentNullException.ThrowIfNull`, etc. over manual if-then-throw patterns. In `netstandard2.0` projects where these helpers are unavailable, use explicit checks such as `if (x is null) throw new ArgumentNullException (nameof (x));`. |
+| **Challenge exception swallowing** | When a PR adds `catch { continue; }` or `catch { return null; }`, question whether the exception is truly expected or masking a deeper problem. The default should be to let unexpected exceptions propagate. |
 
 **Postmortem refs:** #11, #20, #22, #35
 
@@ -80,6 +84,9 @@ Framework. Every API call must work on both targets.
 | **No #region directives** | `#region` hides code and makes reviews harder. Remove them. This also applies to banner/section-separator comments (e.g., `// --- Device Tests ---`) — they serve the same purpose as `#region` and signal the file should be split instead. |
 | **Use `record` for data types** | Immutable data-carrier types (progress, version info, license info) should be `record` types. They get value equality, `ToString()`, and deconstruction for free. |
 | **Remove unused code** | Dead methods, speculative helpers, and code "for later" should be removed. Ship only what's needed. |
+| **No commented-out code** | Commented-out code should be deleted — Git has history. |
+| **Reduce indentation with early returns** | Invert conditions with `continue` or early `return` to reduce nesting. `foreach (var x in items ?? Array.Empty<T>())` eliminates null-check nesting. |
+| **Don't initialize fields to default values** | `bool flag = false;` and `int count = 0;` are noise. The CLR zero-initializes all fields. Only assign when the initial value is non-default. |
 
 **Postmortem refs:** #9, #12, #25, #28, #56
 
@@ -106,6 +113,10 @@ Framework. Every API call must work on both targets.
 | **p/invoke over process spawn** | For single syscalls like `chmod`, use `[DllImport("libc")]` instead of spawning a child process. Process creation is orders of magnitude more expensive. |
 | **Avoid intermediate collections** | Don't create two lists and `AddRange()` one to the other. Build a single list, or use LINQ to chain. |
 | **Cache reusable arrays** | Char arrays for `string.Split()` (like whitespace chars) should be `static readonly` fields, not allocated on each call. |
+| **Pre-allocate collections when size is known** | Use `new List<T>(capacity)` or `new Dictionary<TK, TV>(count)` when the size is known or estimable. Repeated resizing is O(n) allocation waste. |
+| **Avoid closures in hot paths** | Lambdas that capture local variables allocate a closure object on every call. In loops or frequently-called methods, extract the lambda to a static method or cache the delegate. |
+| **Place cheap checks before expensive ones** | In validation chains, test simple conditions (null checks, boolean flags) before allocating strings or doing I/O. Short-circuit with `&&`/`||`. |
+| **Watch for O(n²)** | Nested loops over the same or related collections, repeated `.Contains()` on a `List<T>`, or LINQ `.Where()` inside a loop are O(n²). Switch to `HashSet<T>` or `Dictionary<TK, TV>` for lookups. |
 
 **Postmortem refs:** #8, #14, #21, #31
 
@@ -121,6 +132,10 @@ Framework. Every API call must work on both targets.
 | **Version-based directories** | Install SDK/JDK to versioned paths (`cmdline-tools/19.0/`, not `cmdline-tools/latest/`). Versioned paths are self-documenting and allow side-by-side installs. |
 | **Safe directory replacement** | Use move-with-rollback: rename existing → temp, move new in place, validate, delete temp only after validation succeeds. Never delete the backup before confirming the new install works. |
 | **Cross-volume moves** | `Directory.Move` is really a rename — it fails across filesystems. Extract archives near the target path (same parent directory), or catch `IOException` and fall back to recursive copy + delete. |
+| **Method names must reflect behavior** | If `CreateFoo()` sometimes returns an existing instance, rename it `GetOrCreateFoo()` or `GetFoo()`. |
+| **Comments explain "why", not "what"** | `// increment i` adds nothing. `// skip the BOM — aapt2 chokes on it` explains intent. If a comment restates the code, delete it. |
+| **Track TODOs as issues** | A `// TODO` hidden in code will be forgotten. File an issue and reference it in the comment. |
+| **Remove stale comments** | If the code changed, update the comment. Comments that describe old behavior are misleading. |
 
 **Postmortem refs:** #15, #16, #23, #36, #38
 
@@ -141,7 +156,11 @@ These are patterns that AI-generated code consistently gets wrong:
 | **Over-mocking** | Not everything needs to be mocked. Network integration tests with `Assert.Ignore` on failure are fine and catch real API changes that mocks never will. |
 | **Docs describe intent not reality** | AI doc comments often describe what the code *should* do, not what it *actually* does. Review doc comments against the implementation. |
 | **Unused parameters** | AI adds `CancellationToken` parameters but never observes them, or accepts `additionalArgs` as a string and interpolates it into a command. Unused CancellationToken is a broken contract; string args are injection risks. |
-| **Null-forgiving operator (`!`)** | Never use `!` to suppress nullable warnings. If the value can be null, add a proper null check. If it can't be null, make the parameter/variable non-nullable. AI frequently sprinkles `!` to make the compiler happy — this turns compile-time warnings into runtime `NullReferenceException`s. Use `IsNullOrEmpty()` extension methods or null-coalescing instead. |
+| **Null-forgiving operator (`!`)** | The postfix `!` null-forgiving operator (e.g., `foo!.Bar`) is banned. If the value can be null, add a proper null check. If it can't be null, make the parameter/variable non-nullable. AI frequently sprinkles `!` to make the compiler happy — this turns compile-time warnings into runtime `NullReferenceException`s. Use `IsNullOrEmpty()` extension methods or null-coalescing instead. Note: this rule is about the postfix `!` operator, not the logical negation `!` (e.g., `if (!someBool)` or `if (!string.IsNullOrEmpty (s))`). |
+| **`git commit --amend`** | AI uses `--amend` on commits that are already pushed or belong to another author. Always create new commits — the maintainer will squash as needed. |
+| **Commit messages omit non-obvious choices** | Behavioral decisions and known limitations belong in the commit message, not just the code. |
+| **Typos in user-visible strings** | Users copy-paste error messages into bug reports. Get them right. |
+| **Filler words in docs** | "So" at the start of a sentence adds nothing. Be direct. |
 
 **Postmortem refs:** #7, #28, #29, #40, #41, #42, #49, #50, #51, #52, #54
 
@@ -172,3 +191,16 @@ These are patterns that AI-generated code consistently gets wrong:
 | **Check exit codes consistently** | If one operation (`ListDevicesAsync`) checks the process exit code, ALL similar operations (`StopEmulatorAsync`, `WaitForDeviceAsync`) must too. Inconsistent error checking creates a false sense of safety. |
 
 **Postmortem refs:** #42, #43, #44, #45, #48
+
+---
+
+## 13. Testing
+
+| Check | What to look for |
+|-------|-----------------|
+| **Bug fixes need regression tests** | Every PR that fixes a bug should include a test that fails without the fix and passes with it. If the PR description says "fixes #N" but adds no test, ask for one. |
+| **Test assertions must be specific** | `Assert.IsNotNull(result)` or `Assert.IsTrue(success)` don't tell you what went wrong. Prefer `Assert.AreEqual(expected, actual)` or NUnit constraints (`Assert.That` with `Does.Contain`, `Is.EqualTo`, etc.) for richer failure messages. |
+| **Deterministic test data** | Tests should not depend on system locale, timezone, or current date. Use explicit `CultureInfo.InvariantCulture` and hardcoded dates when testing formatting. |
+| **Test edge cases** | Empty collections, null inputs, boundary values, and very large inputs should all be considered. If the PR only tests the happy path, suggest edge cases. |
+
+**Source:** dotnet/android`#10918`
