@@ -11,7 +11,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 enum JniParamKind
 {
 	Void,     // V
-	Boolean,  // Z → bool
+	Boolean,  // Z → byte (JNI jboolean is unsigned byte; must be blittable for UCO)
 	Byte,     // B → sbyte
 	Char,     // C → char
 	Short,    // S → short
@@ -111,7 +111,7 @@ static class JniSignatureHelper
 	public static void EncodeClrType (SignatureTypeEncoder encoder, JniParamKind kind)
 	{
 		switch (kind) {
-		case JniParamKind.Boolean: encoder.Boolean (); break;
+		case JniParamKind.Boolean: encoder.Byte (); break;   // JNI jboolean is unsigned byte; must be blittable for UCO
 		case JniParamKind.Byte:    encoder.SByte (); break;
 		case JniParamKind.Char:    encoder.Char (); break;
 		case JniParamKind.Short:   encoder.Int16 (); break;
