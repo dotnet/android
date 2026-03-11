@@ -45,11 +45,23 @@ gh pr view {number} --repo {owner}/{repo} --json title,body
 
 Now read the PR description and linked issues. Treat them as claims to verify, not facts to accept. Where your independent reading disagrees with the PR description, investigate further. If the PR claims a performance improvement, require evidence (benchmarks, profiling data). If it claims a bug fix, verify the bug exists and the fix addresses root cause — not symptoms.
 
-### 4. Load review rules
+### 4. Check CI status
+
+```
+gh pr checks {number} --repo {owner}/{repo}
+```
+
+Review the CI results. **Never post ✅ LGTM if any required CI check is failing or if the code doesn't build.** If CI is failing:
+- Investigate the failure (check logs, identify root cause).
+- If the failure is caused by the PR's code changes, flag it as ❌ error.
+- If the failure is a known infrastructure issue or pre-existing flake unrelated to the PR, note it in the summary but still use ⚠️ Needs Changes — the PR isn't mergeable until CI is green.
+- If the PR description acknowledges the failure and documents a dependency (e.g., "blocked on X"), note it in the summary.
+
+### 5. Load review rules
 
 Read `references/review-rules.md` from this skill's directory.
 
-### 5. Analyze the diff
+### 6. Analyze the diff
 
 For each changed file, check against the review rules. Record issues as:
 
@@ -65,7 +77,7 @@ Constraints:
 - **Don't flag what CI catches.** Skip compiler errors, formatting the linter will catch, etc.
 - **Avoid false positives.** Verify the concern actually applies given the full context. If unsure, phrase it as a question rather than a firm claim.
 
-### 6. Build the review JSON
+### 7. Build the review JSON
 
 Write a temp JSON file:
 
@@ -84,9 +96,9 @@ Write a temp JSON file:
 }
 ```
 
-If no issues found, submit with empty `comments` and a positive summary.
+If no issues found **and CI is green**, submit with empty `comments` and a positive summary.
 
-### 7. Submit as a single batch
+### 8. Submit as a single batch
 
 ```powershell
 dotnet run {skill-dir}/scripts/submit_review.cs {owner} {repo} {number} {path-to-json}
