@@ -1,5 +1,6 @@
 using System;
 using System.Buffers;
+using System.Diagnostics;
 using System.IO;
 
 using K4os.Compression.LZ4;
@@ -124,10 +125,12 @@ public class ApplicationAssembly : BaseAspect
 
 	public bool WriteToStream (Stream stream, bool decompress)
 	{
+		Log.Debug ($"Writing assembly '{Name}' to stream");
 		if (decompress && IsCompressed) {
 			return DecompressTo (stream);
 		}
 
+		Log.Debug ($"Assembly is not compressed, copying {Utilities.SizeToString (Size)} bytes of data to stream verbatim.");
 		AspectStream.Seek (0, SeekOrigin.Begin);
 		AspectStream.CopyTo (stream);
 		stream.Flush ();
@@ -136,6 +139,7 @@ public class ApplicationAssembly : BaseAspect
 
 	bool DecompressTo (Stream stream)
 	{
+		Log.Debug ($"Assembly is compressed. Decompressing {CompressedSize - CompressedHeaderSize} bytes to {Size} bytes (as per compression header info).");
 		using var reader = Utilities.GetReaderAndRewindStream (AspectStream);
 		if (!ReadCompressedHeader (reader, out uint uncompressedLength)) {
 			Log.Error ($"Stream doesn't have the required compressed assembly header, or the header is invalid.");
@@ -143,10 +147,16 @@ public class ApplicationAssembly : BaseAspect
 		}
 
 		int inputLength = (int)AspectStream.Length - (int)CompressedHeaderSize;
+		Log.Debug ($"Input data length: {inputLength}");
 		byte[] inputData = bytePool.Rent (inputLength);
 		byte[] assemblyData = bytePool.Rent ((int)Size); // Let it throw if there's an integer overflow...
 
+		Log.Debug ("Starting decompression...");
+		var watch = new Stopwatch ();
 		try {
+
+			watch.Start ();
+
 			reader.Read (inputData, 0, inputLength);
 			int decoded = LZ4Codec.Decode (inputData, 0, inputLength, assemblyData, 0, (int)Size);
 			if (decoded != (int)Size) {
@@ -158,6 +168,9 @@ public class ApplicationAssembly : BaseAspect
 		} finally {
 			bytePool.Return (inputData);
 			bytePool.Return (assemblyData);
+
+			watch.Stop ();
+			Log.Debug ($"Decompression done in {watch.Elapsed}");
 		}
 
 		return true;
