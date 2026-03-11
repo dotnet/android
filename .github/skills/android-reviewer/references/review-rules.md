@@ -258,7 +258,7 @@ security vulnerabilities that are extremely hard to diagnose remotely.
 
 ---
 
-## 14. Testing
+## 13. Testing
 
 | Check | What to look for |
 |-------|-----------------|
@@ -272,7 +272,7 @@ security vulnerabilities that are extremely hard to diagnose remotely.
 
 ---
 
-## 15. YAGNI & AI-Specific Pitfalls
+## 14. YAGNI & AI-Specific Pitfalls
 
 These are patterns that AI-generated code consistently gets wrong in this repo:
 

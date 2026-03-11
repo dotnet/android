@@ -43,7 +43,7 @@ var errors = new System.Collections.Generic.List<string> ();
 if (!root.TryGetProperty ("event", out var eventProp) || eventProp.ValueKind != JsonValueKind.String) {
 	errors.Add ("Missing or invalid 'event' field — must be COMMENT, APPROVE, or REQUEST_CHANGES");
 } else {
-	var ev = eventProp.GetString ()!;
+	var ev = eventProp.GetString () ?? "";
 	if (ev != "COMMENT" && ev != "APPROVE" && ev != "REQUEST_CHANGES")
 		errors.Add ($"Invalid event '{ev}' — must be COMMENT, APPROVE, or REQUEST_CHANGES");
 }
@@ -65,11 +65,11 @@ if (root.TryGetProperty ("comments", out var commentsProp) && commentsProp.Value
 
 		if (!c.TryGetProperty ("body", out var cbody) || string.IsNullOrWhiteSpace (cbody.GetString ()))
 			errors.Add ($"{prefix}: missing or empty 'body'");
-		else if (!cbody.GetString ()!.StartsWith ("🤖"))
+		else if (!(cbody.GetString () ?? "").StartsWith ("🤖"))
 			errors.Add ($"{prefix}: body must start with 🤖 prefix");
 
 		if (c.TryGetProperty ("side", out var sideProp) && sideProp.ValueKind == JsonValueKind.String) {
-			var side = sideProp.GetString ()!;
+			var side = sideProp.GetString () ?? "";
 			if (side != "LEFT" && side != "RIGHT")
 				errors.Add ($"{prefix}: 'side' must be LEFT or RIGHT, got '{side}'");
 		}
@@ -103,7 +103,11 @@ psi.ArgumentList.Add ("POST");
 psi.ArgumentList.Add ("--input");
 psi.ArgumentList.Add (jsonPath);
 
-var process = Process.Start (psi)!;
+var process = Process.Start (psi);
+if (process is null) {
+	Console.Error.WriteLine ("❌ Failed to start 'gh' — is it installed and on PATH?");
+	return 1;
+}
 var stdoutTask = process.StandardOutput.ReadToEndAsync ();
 var stderrTask = process.StandardError.ReadToEndAsync ();
 process.WaitForExit ();
@@ -119,7 +123,7 @@ if (process.ExitCode != 0) {
 			using var errDoc = JsonDocument.Parse (stdout);
 			if (errDoc.RootElement.TryGetProperty ("message", out var msg))
 				Console.Error.WriteLine ($"  GitHub says: {msg.GetString ()}");
-		} catch {
+		} catch (JsonException) {
 			Console.Error.WriteLine (stdout);
 		}
 	}
@@ -132,7 +136,7 @@ try {
 		Console.WriteLine ($"✅ Review posted: {url.GetString ()}");
 	else
 		Console.WriteLine ("✅ Review posted.");
-} catch {
+} catch (JsonException) {
 	Console.WriteLine ("✅ Review posted.");
 }
 
