@@ -83,6 +83,8 @@ and merge conflicts.
 | **CancellationToken propagation** | Every `async` method that accepts a `CancellationToken` must pass it to ALL downstream async calls. A token that's accepted but never used is a broken contract. |
 | **OperationCanceledException** | Catch-all blocks (`catch (Exception)`) must NOT swallow `OperationCanceledException`. Catch it explicitly first and rethrow, or use a type filter. |
 | **Honor the token** | If a method accepts `CancellationToken`, it must observe it — register a callback to kill processes, check `IsCancellationRequested` in loops, pass it downstream. Don't accept it just for API completeness. |
+| **Thread safety of shared state** | If a new field or property can be accessed from multiple threads (e.g., static caches, event handlers, `AsyncTask` callbacks), verify thread-safe access: `ConcurrentDictionary`, `Interlocked`, or explicit locks. A `Dictionary<K,V>` read concurrently with a write is undefined behavior. |
+| **Lock ordering** | If code acquires multiple locks, the order must be consistent everywhere. Document the ordering. Inconsistent ordering → deadlock. |
 
 ---
 
@@ -97,6 +99,10 @@ and merge conflicts.
 | **Log messages must have context** | A bare `"GetModuleHandle failed"` could be anything. Include *what* you were doing: `"Unable to get HANDLE to libmono-android.debug.dll; GetModuleHandle returned %d"`. (Postmortem `#6`) |
 | **Differentiate similar error messages** | Two messages saying `"X failed"` for different operations are impossible to debug. Make each unique. (Postmortem `#7`) |
 | **Assert boundary invariants** | If a name=value pair array must have even length, assert `(length % 2) == 0` before indexing `[i+1]`. (Postmortem `#44`) |
+| **Include actionable details in exceptions** | Use `nameof` for parameter names. Include the unsupported value or unexpected type. Never throw empty exceptions. |
+| **Initialize output parameters in all paths** | Methods with `out` parameters must initialize them in all error paths, not just the success path. |
+| **Use `ThrowIf` helpers** | Prefer `ArgumentOutOfRangeException.ThrowIfNegative`, `ArgumentNullException.ThrowIfNull`, etc. over manual if-then-throw patterns (.NET 10+). |
+| **Challenge exception swallowing** | When a PR adds `catch { continue; }` or `catch { return null; }`, question whether the exception is truly expected or masking a deeper problem. The default should be to let unexpected exceptions propagate. |
 
 ---
 
@@ -134,6 +140,12 @@ and merge conflicts.
 | **`Split()` with count parameter** | `line.Split(new char[]{'='}, 2)` prevents values containing `=` from being split incorrectly. Follow existing patterns. (Postmortem `#50`) |
 | **Use `Files.CopyIfStringChanged()`** | Don't write to a file if the content hasn't changed — it breaks incremental builds by updating timestamps. (Postmortem `#53`) |
 | **Don't remove caches without measurement** | If a cache (like `TypeDefinitionCache`) had a measured perf win, removing it requires proving the replacement provides equivalent caching. (Postmortem `#57`) |
+| **Pre-allocate collections when size is known** | Use `new List<T>(capacity)` or `new Dictionary<TK, TV>(count)` when the size is known or estimable. Repeated resizing is O(n) allocation waste. |
+| **Avoid closures in hot paths** | Lambdas that capture local variables allocate a closure object on every call. In loops or frequently-called methods, extract the lambda to a static method or cache the delegate. |
+| **Place cheap checks before expensive ones** | In validation chains, test simple conditions (null checks, boolean flags) before allocating strings or doing I/O. Short-circuit with `&&`/`||`. |
+| **Cache repeated accessor calls** | If `foo.Bar.Baz` is used multiple times in a block, assign it to a local. This avoids repeated property evaluation and makes intent clearer. |
+| **Watch for O(n²)** | Nested loops over the same or related collections, repeated `.Contains()` on a `List<T>`, or LINQ `.Where()` inside a loop are O(n²). Switch to `HashSet<T>` or `Dictionary<TK, TV>` for lookups. |
+| **Extract throw helpers** | Code like `if (x) throw new SomeException(...)` in a frequently-called method prevents inlining. Extract into a `[DoesNotReturn]` helper so the JIT can inline the happy path. |
 
 ---
 
@@ -149,6 +161,9 @@ and merge conflicts.
 | **Use interfaces over concrete types** | Fields and parameters should prefer interfaces (`IMetadataResolver`) over concrete classes. When the implementation changes, you swap the implementation — not every call site. (Postmortem `#56`) |
 | **Introduce base types to reduce `#if` noise** | Instead of scattering `#if` in every class, create a base type (e.g., `BaseMarkHandler`) and let subclasses just override what differs. (Postmortem `#55`) |
 | **Reduce indentation with early returns** | `foreach (var x in items ?? Array.Empty<T>())` eliminates a null-check nesting level. Invert logic for the common case with `continue` so complex cases have less nesting. (Postmortem `#62`, `#63`) |
+| **Don't initialize fields to default values** | `bool flag = false;` and `int count = 0;` are noise. The CLR zero-initializes all fields. Only assign when the initial value is non-default. |
+| **`sealed` classes skip full Dispose** | A `sealed` class doesn't need `Dispose(bool)` + `GC.SuppressFinalize`. Just implement `IDisposable.Dispose()` directly. The full pattern is only for unsealed base classes. |
+| **Well-named constants over magic numbers** | `if (retryCount > 3)` should be `if (retryCount > MaxRetries)`. Constants document intent and make the value easy to find and change. |
 
 ---
 
@@ -169,6 +184,7 @@ and merge conflicts.
 | **Remove stale comments** | If the code changed, update the comment. "This loads libmonodroid.so" is wrong if we now load `libxa-internal-api.so`. (Postmortem `#59`) |
 | **Link vendored source to its origin** | When importing third-party code (e.g., `CryptoConvert.cs` from Mono), add a comment with the URL and commit hash of the original source. (Postmortem `#68`) |
 | **Question unnecessary path normalization** | If you normalize `\` → `/` only to normalize back later, the intermediate step is pointless. (Postmortem `#52`) |
+| **Comments explain "why", not "what"** | `// increment i` adds nothing. `// skip the BOM marker — Android aapt2 chokes on it` explains intent. If a comment restates the code, delete it. |
 
 ---
 
@@ -230,6 +246,16 @@ security vulnerabilities that are extremely hard to diagnose remotely.
 | **CMake** | Native code uses CMake. Changes must build for all ABIs: `arm64-v8a`, `armeabi-v7a`, `x86_64`, `x86`. |
 | **API bindings** | Use `[Register]` attributes. Follow `Android.*` namespace patterns. |
 
+### 12f. Managed ↔ Native Interop
+
+| Check | What to look for |
+|-------|-----------------|
+| **`static_cast` over C-style casts** | `static_cast<int>(val)` is checked at compile time. `(int)val` can silently reinterpret bits. Always use C++ casts in interop boundaries. |
+| **`nullptr` over `NULL`** | `NULL` is `0` in C++, which can silently convert to integral types. `nullptr` has proper pointer semantics. |
+| **Struct field ordering for padding** | When defining structs shared between managed and native code, order fields largest-to-smallest to minimize padding. Explicit `[StructLayout(LayoutKind.Sequential)]` and matching C struct must be kept in sync. |
+| **Bool marshalling** | Boolean marshalling is a common source of bugs. C++ `bool` is 1 byte, Windows `BOOL` is 4 bytes. When P/Invoking, explicitly specify `[MarshalAs(UnmanagedType.U1)]` or `[MarshalAs(UnmanagedType.Bool)]` (4-byte). |
+| **String marshalling charset** | P/Invoke string parameters should specify `CharSet.Unicode` (UTF-16) or use `[MarshalAs(UnmanagedType.LPUTF8Str)]` for UTF-8. Don't rely on the default (ANSI on Windows). |
+
 ---
 
 ## 14. Testing
@@ -239,6 +265,10 @@ security vulnerabilities that are extremely hard to diagnose remotely.
 | **Inherit from `BaseTest`** | Test fixtures should inherit from `BaseTest` (provides `Root`, `TestName`, SDK paths, platform helpers). |
 | **NUnit conventions** | Use `[TestFixture]`, `[Test]`, `[NonParallelizable]` (for tests that hang without it). |
 | **Test with `dotnet-local`** | Tests must run via `dotnet-local.cmd`/`dotnet-local.sh` to use the locally built SDK. |
+| **Bug fixes need regression tests** | Every PR that fixes a bug should include a test that fails without the fix and passes with it. If the PR description says "fixes #1234" but adds no test, ask for one. |
+| **Test assertions must be specific** | `Assert.IsNotNull(result)` or `Assert.IsTrue(success)` don't tell you what went wrong. Prefer `Assert.AreEqual(expected, actual)` or `StringAssert.Contains`. Use `Assert.That` with constraints for richer failure messages. |
+| **Deterministic test data** | Tests should not depend on system locale, timezone, or current date. Use explicit `CultureInfo.InvariantCulture` and hardcoded dates when testing formatting. |
+| **Test edge cases** | Empty collections, null inputs, boundary values, concurrent calls, and very large inputs should all be considered. If the PR only tests the happy path, suggest edge cases. |
 
 ---
 
