@@ -136,7 +136,7 @@ try {
 	if (resp.RootElement.TryGetProperty ("html_url", out var url))
 		Console.WriteLine ($"   {url.GetString ()}");
 } catch (JsonException) {
-	// Response wasn't JSON — the review was still posted, we just can't show the URL.
+	Console.WriteLine ("Note: API response was not JSON; review was posted but URL is unavailable.");
 }
 
 } // using (doc)
