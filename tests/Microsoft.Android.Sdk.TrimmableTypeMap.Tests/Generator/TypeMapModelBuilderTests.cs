@@ -788,7 +788,8 @@ public class ModelBuilderTests : FixtureTestBase
 		{
 			var peer = FindFixtureByJavaName ("my/app/MainActivity");
 			var model = BuildModel (new [] { peer }, "TypeMap");
-			var proxy = FindProxy (model, "MyApp_MainActivity_Proxy")!;
+			var proxy = FindProxy (model, "MyApp_MainActivity_Proxy");
+			Assert.NotNull (proxy);
 
 			var nonCtorMethods = peer.MarshalMethods.Where (m => !m.IsConstructor).ToList ();
 			Assert.Equal (nonCtorMethods.Count, proxy.UcoMethods.Count);
