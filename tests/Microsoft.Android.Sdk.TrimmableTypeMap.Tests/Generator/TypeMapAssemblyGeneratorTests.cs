@@ -278,33 +278,25 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			Assert.Equal (expectedCount, actual.Count);
 		}
 
-		[Fact]
-		public void ParseParameterTypes_Boolean_MapsToCorrectKind ()
+		[Theory]
+		[InlineData ("(Z)V", 1)]    // JniParamKind.Boolean
+		[InlineData ("(Ljava/lang/String;)V", 9)]  // JniParamKind.Object
+		public void ParseParameterTypes_SingleParam_MapsToCorrectKind (string signature, int expectedKind)
 		{
-			var types = JniSignatureHelper.ParseParameterTypes ("(Z)V");
+			var types = JniSignatureHelper.ParseParameterTypes (signature);
 			Assert.Single (types);
-			Assert.Equal (JniParamKind.Boolean, types [0]);
+			Assert.Equal ((JniParamKind) expectedKind, types [0]);
 		}
 
-		[Fact]
-		public void ParseParameterTypes_Object_MapsToCorrectKind ()
+		[Theory]
+		[InlineData ("()V", 0)]    // JniParamKind.Void
+		[InlineData ("()I", 5)]    // JniParamKind.Int
+		[InlineData ("()Z", 1)]    // JniParamKind.Boolean
+		[InlineData ("()Ljava/lang/String;", 9)]  // JniParamKind.Object
+		public void ParseReturnType_MapsToCorrectKind (string signature, int expectedKind)
 		{
-			var types = JniSignatureHelper.ParseParameterTypes ("(Ljava/lang/String;)V");
-			Assert.Single (types);
-			Assert.Equal (JniParamKind.Object, types [0]);
+			Assert.Equal ((JniParamKind) expectedKind, JniSignatureHelper.ParseReturnType (signature));
 		}
-
-		[Fact]
-		public void ParseReturnType_Void () => Assert.Equal (JniParamKind.Void, JniSignatureHelper.ParseReturnType ("()V"));
-
-		[Fact]
-		public void ParseReturnType_Int () => Assert.Equal (JniParamKind.Int, JniSignatureHelper.ParseReturnType ("()I"));
-
-		[Fact]
-		public void ParseReturnType_Boolean () => Assert.Equal (JniParamKind.Boolean, JniSignatureHelper.ParseReturnType ("()Z"));
-
-		[Fact]
-		public void ParseReturnType_Object () => Assert.Equal (JniParamKind.Object, JniSignatureHelper.ParseReturnType ("()Ljava/lang/String;"));
 
 	}
 
