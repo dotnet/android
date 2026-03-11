@@ -136,7 +136,11 @@ public abstract class FixtureTestBase
 
 	private protected static void DeleteTempDir (string dir)
 	{
-		if (Directory.Exists (dir))
-			try { Directory.Delete (dir, true); } catch (IOException) { }
+		if (Directory.Exists (dir)) {
+			try {
+				Directory.Delete (dir, true);
+			} catch (IOException) {
+			}
+		}
 	}
 }
