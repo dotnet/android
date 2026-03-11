@@ -21,6 +21,8 @@ abstract class FormatBase
 	public AssemblyStoreHeader? Header { get; protected set; }
 	public IList<AssemblyStoreAssemblyDescriptor>? Descriptors { get; protected set; }
 	public IList<ApplicationAssembly> Assemblies { get; protected set; } = null!;
+	public IList<AssemblyPdb> PDBs { get; protected set; } = null!;
+	public IDictionary<string, string> Configs { get; protected set; } = null!;
 
 	protected FormatBase (string? description)
 	{
@@ -51,17 +53,15 @@ abstract class FormatBase
 			}
 		}
 
-		if (ReadAssemblies (reader, out IList<ApplicationAssembly>? assemblies) && assemblies != null) {
-			Assemblies = assemblies;
-		} else {
-			success = false;
-			Assemblies = new List<ApplicationAssembly> ().AsReadOnly ();
-		}
+		success &= ReadAssemblies (reader, out IList<ApplicationAssembly>? assemblies, out IList<AssemblyPdb>? pdbs, out IDictionary<string, string>? configs);
+		Assemblies = assemblies ?? new List<ApplicationAssembly> ().AsReadOnly ();
+		PDBs = pdbs ?? new List<AssemblyPdb> ().AsReadOnly ();
+		Configs = configs ?? new Dictionary<string, string> ().AsReadOnly ();
 
 		return success;
 	}
 
-	protected abstract bool ReadAssemblies (BinaryReader reader, out IList<ApplicationAssembly>? assemblies);
+	protected abstract bool ReadAssemblies (BinaryReader reader, out IList<ApplicationAssembly>? assemblies, out IList<AssemblyPdb>? pdbs, out IDictionary<string, string>? configs);
 
 	public IAspectState Validate (Stream storeStream)
 	{

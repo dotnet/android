@@ -7,7 +7,6 @@ using Xamarin.Android.Tools;
 
 namespace ApplicationUtility;
 
-// TODO: implement support for loading debug data and configs
 public class AssemblyStore : BaseAspect
 {
 	const int MinimumStoreSize = 8;
@@ -61,6 +60,15 @@ public class AssemblyStore : BaseAspect
 		}
 		Assemblies.Clear ();
 
+		foreach (var kvp in PDBs) {
+			try {
+				kvp.Value.Dispose ();
+			} catch (Exception ex) {
+				Log.Debug ("Failed to dispose application assembly PDB", ex);
+			}
+		}
+		PDBs.Clear ();
+
 		base.Dispose (disposing);
 	}
 
@@ -72,6 +80,14 @@ public class AssemblyStore : BaseAspect
 
 		foreach (ApplicationAssembly asm in storeState.Format.Assemblies) {
 			Assemblies.Add (asm.Name, asm);
+		}
+
+		foreach (AssemblyPdb pdb in storeState.Format.PDBs) {
+			PDBs.Add (pdb.Name, pdb);
+		}
+
+		foreach (var kvp in storeState.Format.Configs) {
+			Configs.Add (kvp.Key, kvp.Value);
 		}
 
 		return true;

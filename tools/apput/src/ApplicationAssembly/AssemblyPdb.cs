@@ -23,13 +23,15 @@ public class AssemblyPdb : BaseAspect
 
 	public static IAspect LoadAspect (Stream stream, IAspectState state, string? description)
 	{
-		Log.Debug ($"Loading PDB data from stream '{description}'");
-		return new AssemblyPdb (stream, description);
+		string desc = EnsureValidName (description);
+		Log.Debug ($"Loading PDB data from stream '{desc}'");
+		return new AssemblyPdb (stream, desc);
 	}
 
 	public static IAspectState ProbeAspect (Stream stream, string? description)
 	{
-		Log.Debug ($"{LogTag}: probing stream ('{description}')");
+		string desc = EnsureValidName (description);
+		Log.Debug ($"{LogTag}: probing stream ('{desc}')");
 
 		// This is file header size + stream header size, taking into account only statically
 		// sized fields. This is the absolute minimum with empty names in those headers.
@@ -139,6 +141,19 @@ public class AssemblyPdb : BaseAspect
 
 			return new (ret, size);
 		}
+	}
+
+	static string EnsureValidName (string? description)
+	{
+		if (description == null) {
+			throw new ArgumentNullException (nameof (description));
+		}
+
+		if (description.EndsWith (".dll", StringComparison.OrdinalIgnoreCase)) {
+			description = Path.ChangeExtension (description, ".pdb");
+		}
+
+		return description;
 	}
 
 	public bool WriteToStream (Stream stream)

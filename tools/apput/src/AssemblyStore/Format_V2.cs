@@ -12,7 +12,7 @@ class Format_V2 : FormatBase
 		: base (description)
 	{}
 
-	protected override bool ReadAssemblies (BinaryReader reader, out IList<ApplicationAssembly>? assemblies)
+	protected override bool ReadAssemblies (BinaryReader reader, out IList<ApplicationAssembly>? assemblies, out IList<AssemblyPdb>? pdbs, out IDictionary<string, string>? configs)
 	{
 		throw new NotImplementedException ();
 	}
