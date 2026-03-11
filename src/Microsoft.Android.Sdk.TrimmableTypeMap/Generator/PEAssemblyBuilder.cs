@@ -34,9 +34,7 @@ sealed class PEAssemblyBuilder
 	public BlobBuilder ILBuilder { get; } = new BlobBuilder ();
 
 	public AssemblyReferenceHandle SystemRuntimeRef { get; private set; }
-
 	public AssemblyReferenceHandle SystemRuntimeInteropServicesRef { get; private set; }
-
 	public AssemblyReferenceHandle MonoAndroidRef { get; private set; }
 
 	public PEAssemblyBuilder (Version systemRuntimeVersion)
@@ -48,7 +46,7 @@ sealed class PEAssemblyBuilder
 	/// Emits the assembly definition, module definition, common assembly references, and &lt;Module&gt; type.
 	/// Call this first.
 	/// </summary>
-	public void EmitPreamble (string assemblyName, string moduleName)
+	public void EmitPreamble (string assemblyName, string moduleName, ReadOnlySpan<byte> contentFingerprint = default)
 	{
 		_asmRefCache.Clear ();
 		_typeRefCache.Clear ();
@@ -64,7 +62,7 @@ sealed class PEAssemblyBuilder
 		Metadata.AddModule (
 			generation: 0,
 			Metadata.GetOrAddString (moduleName),
-			Metadata.GetOrAddGuid (MetadataHelper.DeterministicMvid (moduleName)),
+			Metadata.GetOrAddGuid (MetadataHelper.DeterministicMvid (moduleName, contentFingerprint)),
 			encId: default,
 			encBaseId: default);
 

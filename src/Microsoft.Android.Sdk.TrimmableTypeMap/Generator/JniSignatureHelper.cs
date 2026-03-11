@@ -1,4 +1,3 @@
-#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Reflection.Metadata;
@@ -11,16 +10,16 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// </summary>
 enum JniParamKind
 {
-Void,     // V
-Boolean,  // Z → bool
-Byte,     // B → sbyte
-Char,     // C → char
-Short,    // S → short
-Int,      // I → int
-Long,     // J → long
-Float,    // F → float
-Double,   // D → double
-Object,   // L...; or [ → IntPtr
+	Void,     // V
+	Boolean,  // Z → bool
+	Byte,     // B → sbyte
+	Char,     // C → char
+	Short,    // S → short
+	Int,      // I → int
+	Long,     // J → long
+	Float,    // F → float
+	Double,   // D → double
+	Object,   // L...; or [ → IntPtr
 }
 
 /// <summary>
@@ -57,9 +56,7 @@ static class JniSignatureHelper
 	}
 
 	/// <summary>
-
 	/// Extracts the return type descriptor from a JNI method signature.
-
 	/// </summary>
 	public static string ParseReturnTypeString (string jniSignature)
 	{
@@ -70,9 +67,7 @@ static class JniSignatureHelper
 	}
 
 	/// <summary>
-
 	/// Parses the return type from a JNI method signature.
-
 	/// </summary>
 	public static JniParamKind ParseReturnType (string jniSignature)
 	{
@@ -111,9 +106,7 @@ static class JniSignatureHelper
 	}
 
 	/// <summary>
-
 	/// Encodes the CLR type for a JNI parameter kind into a signature type encoder.
-
 	/// </summary>
 	public static void EncodeClrType (SignatureTypeEncoder encoder, JniParamKind kind)
 	{

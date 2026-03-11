@@ -137,7 +137,7 @@ sealed class TypeMapAssemblyEmitter
 
 	void EmitCore (TypeMapAssemblyData model)
 	{
-		_pe.EmitPreamble (model.AssemblyName, model.ModuleName);
+		_pe.EmitPreamble (model.AssemblyName, model.ModuleName, MetadataHelper.ComputeContentFingerprint (model));
 
 		_javaInteropRef = _pe.AddAssemblyRef ("Java.Interop", new Version (0, 0, 0, 0));
 
