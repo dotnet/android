@@ -177,9 +177,32 @@ sealed class PEAssemblyBuilder
 	/// </summary>
 	public MethodDefinitionHandle EmitBody (string name, MethodAttributes attrs,
 		Action<BlobEncoder> encodeSig, Action<InstructionEncoder> emitIL)
+		=> EmitBody (name, attrs, encodeSig, emitIL, encodeLocals: null);
+
+	/// <summary>
+	/// Emits a method body and definition with optional local variable declarations.
+	/// </summary>
+	/// <param name="encodeLocals">
+	/// If non-null, writes the local variable signature blob. The callback receives a fresh
+	/// <see cref="BlobBuilder"/> and must write the full <c>LOCAL_SIG</c> blob (header 0x07,
+	/// compressed count, then each variable type).
+	/// </param>
+	public MethodDefinitionHandle EmitBody (string name, MethodAttributes attrs,
+		Action<BlobEncoder> encodeSig, Action<InstructionEncoder> emitIL,
+		Action<BlobBuilder>? encodeLocals)
 	{
 		_sigBlob.Clear ();
 		encodeSig (new BlobEncoder (_sigBlob));
+		// Capture the sig blob handle before emitIL, because emitIL callbacks
+		// may call AddMemberRef which clears and repopulates _sigBlob.
+		var sigBlobHandle = Metadata.GetOrAddBlob (_sigBlob);
+
+		StandaloneSignatureHandle localSigHandle = default;
+		if (encodeLocals != null) {
+			var localSigBlob = new BlobBuilder (32);
+			encodeLocals (localSigBlob);
+			localSigHandle = Metadata.AddStandaloneSignature (Metadata.GetOrAddBlob (localSigBlob));
+		}
 
 		_codeBlob.Clear ();
 		var encoder = new InstructionEncoder (_codeBlob);
@@ -189,12 +212,14 @@ sealed class PEAssemblyBuilder
 			ILBuilder.WriteByte (0);
 		}
 		var bodyEncoder = new MethodBodyStreamEncoder (ILBuilder);
-		int bodyOffset = bodyEncoder.AddMethodBody (encoder);
+		int bodyOffset = localSigHandle.IsNil
+			? bodyEncoder.AddMethodBody (encoder)
+			: bodyEncoder.AddMethodBody (encoder, maxStack: 8, localSigHandle, MethodBodyAttributes.InitLocals);
 
 		return Metadata.AddMethodDefinition (
 			attrs, MethodImplAttributes.IL,
 			Metadata.GetOrAddString (name),
-			Metadata.GetOrAddBlob (_sigBlob),
+			sigBlobHandle,
 			bodyOffset, default);
 	}
 
