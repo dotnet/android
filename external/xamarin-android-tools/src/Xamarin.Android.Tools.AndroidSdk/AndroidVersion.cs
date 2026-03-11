@@ -35,7 +35,10 @@ namespace Xamarin.Android.Tools
 
 		// Alternate Ids for a given API level. Allows for historical mapping, e.g. API-11 has alternate ID 'H'.
 		internal    string[]?   AlternateIds {
-			set => Ids.UnionWith (value);
+			set {
+				if (value is { Length: > 0 })
+					Ids.UnionWith (value);
+			}
 		}
 
 		public AndroidVersion (int apiLevel, string osVersion, string? codeName = null, string? id = null, bool stable = true)
