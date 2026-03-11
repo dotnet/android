@@ -49,15 +49,21 @@ _ResolveAssemblies MSBuild target.
             Remove="@(_SourceItemsToCopyToPublishDirectory)"
             Condition=" '%(ResolvedFileToPublish.DestinationSubPath)' == '' "
         />
-        <_MissingAssemblies Include="@(_SourceItemsToCopyToPublishDirectory)"
-            Condition=" '%(Extension)' == '.dll' or '%(Extension)' == '.pdb' " />
-        <_MissingAssemblies Remove="@(ResolvedFileToPublish)" />
+        <!-- Build a set of filenames already in ResolvedFileToPublish so we can compare
+             by filename rather than full path (native DLLs like KernelTraceControl.dll may
+             exist under a different path in _SourceItemsToCopyToPublishDirectory). -->
+        <_ResolvedPublishFileNames Include="@(ResolvedFileToPublish->'%(Filename)%(Extension)')" />
+        <_MissingAssemblyNames Include="@(_SourceItemsToCopyToPublishDirectory->'%(Filename)%(Extension)')"
+            Condition=" '%(Extension)' == '.dll' or '%(Extension)' == '.pdb' "
+            OriginalItemSpec="%(Identity)" />
+        <_MissingAssemblyNames Remove="@(_ResolvedPublishFileNames)" />
         <ResolvedFileToPublish
-            Include="@(_MissingAssemblies)"
+            Include="@(_MissingAssemblyNames->'%(OriginalItemSpec)')"
             DestinationSubPath="%(Filename)%(Extension)"
             TargetPath=""
         />
-        <_MissingAssemblies Remove="@(_MissingAssemblies)" />
+        <_MissingAssemblyNames Remove="@(_MissingAssemblyNames)" />
+        <_ResolvedPublishFileNames Remove="@(_ResolvedPublishFileNames)" />
         <ResolvedFileToPublish
             Condition=" '%(ResolvedFileToPublish.RuntimeIdentifier)' == '' "
             Update="@(ResolvedFileToPublish)"
