@@ -11,7 +11,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 enum JniParamKind
 {
 Void,     // V
-Boolean,  // Z → sbyte
+Boolean,  // Z → bool
 Byte,     // B → sbyte
 Char,     // C → char
 Short,    // S → short

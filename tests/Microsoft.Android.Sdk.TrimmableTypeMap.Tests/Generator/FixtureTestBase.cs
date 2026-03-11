@@ -97,10 +97,10 @@ public abstract class FixtureTestBase
 	}
 
 	private protected static JavaPeerInfo MakeInterfacePeer (
-		string jniName = "android/view/View$OnClickListener",
-		string managedName = "Android.Views.View+IOnClickListener",
-		string asmName = "Mono.Android",
-		string invokerName = "Android.Views.View+IOnClickListenerInvoker")
+		string jniName,
+		string managedName,
+		string asmName,
+		string invokerName)
 	{
 		var (ns, shortName) = ParseManagedTypeName (managedName);
 		return new JavaPeerInfo {

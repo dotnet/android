@@ -223,7 +223,7 @@ public class ModelBuilderTests : FixtureTestBase
 		[Fact]
 		public void Build_PeerWithInvoker_CreatesProxy ()
 		{
-			var peer = MakeInterfacePeer ();
+			var peer = MakeInterfacePeer ("android/view/View$OnClickListener", "Android.Views.View+IOnClickListener", "Mono.Android", "Android.Views.View+IOnClickListenerInvoker");
 
 			var model = BuildModel (new [] { peer });
 			Assert.Single (model.ProxyTypes);

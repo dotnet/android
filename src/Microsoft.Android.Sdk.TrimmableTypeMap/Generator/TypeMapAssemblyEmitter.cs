@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
@@ -60,13 +61,15 @@ sealed class TypeMapAssemblyEmitter
 {
 	readonly Version _systemRuntimeVersion;
 
-	PEAssemblyBuilder _pe = null!;
+	readonly PEAssemblyBuilder _pe;
 
 	AssemblyReferenceHandle _javaInteropRef;
 
 	TypeReferenceHandle _javaPeerProxyRef;
 	TypeReferenceHandle _iJavaPeerableRef;
 	TypeReferenceHandle _jniHandleOwnershipRef;
+	TypeReferenceHandle _jniObjectReferenceRef;
+	TypeReferenceHandle _jniObjectReferenceOptionsRef;
 	TypeReferenceHandle _iAndroidCallableWrapperRef;
 	TypeReferenceHandle _systemTypeRef;
 	TypeReferenceHandle _runtimeTypeHandleRef;
@@ -97,6 +100,7 @@ sealed class TypeMapAssemblyEmitter
 	public TypeMapAssemblyEmitter (Version systemRuntimeVersion)
 	{
 		_systemRuntimeVersion = systemRuntimeVersion ?? throw new ArgumentNullException (nameof (systemRuntimeVersion));
+		_pe = new PEAssemblyBuilder (_systemRuntimeVersion);
 	}
 
 	/// <summary>
@@ -111,7 +115,28 @@ sealed class TypeMapAssemblyEmitter
 			throw new ArgumentNullException (nameof (outputPath));
 		}
 
-		_pe = new PEAssemblyBuilder (_systemRuntimeVersion);
+		EmitCore (model);
+		_pe.WritePE (outputPath);
+	}
+
+	/// <summary>
+	/// Emits a PE assembly from the given model and writes it to <paramref name="output"/>.
+	/// </summary>
+	public void Emit (TypeMapAssemblyData model, Stream output)
+	{
+		if (model is null) {
+			throw new ArgumentNullException (nameof (model));
+		}
+		if (output is null) {
+			throw new ArgumentNullException (nameof (output));
+		}
+
+		EmitCore (model);
+		_pe.WritePE (output);
+	}
+
+	void EmitCore (TypeMapAssemblyData model)
+	{
 		_pe.EmitPreamble (model.AssemblyName, model.ModuleName);
 
 		_javaInteropRef = _pe.AddAssemblyRef ("Java.Interop", new Version (0, 0, 0, 0));
@@ -135,7 +160,6 @@ sealed class TypeMapAssemblyEmitter
 		}
 
 		_pe.EmitIgnoresAccessChecksToAttribute (model.IgnoresAccessChecksTo);
-		_pe.WritePE (outputPath);
 	}
 
 	void EmitTypeReferences ()
@@ -147,6 +171,10 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("IJavaPeerable"));
 		_jniHandleOwnershipRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
 			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("JniHandleOwnership"));
+		_jniObjectReferenceRef = metadata.AddTypeReference (_javaInteropRef,
+			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniObjectReference"));
+		_jniObjectReferenceOptionsRef = metadata.AddTypeReference (_javaInteropRef,
+			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniObjectReferenceOptions"));
 		_iAndroidCallableWrapperRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("IAndroidCallableWrapper"));
 		_systemTypeRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
@@ -342,7 +370,7 @@ sealed class TypeMapAssemblyEmitter
 
 		// Interface with invoker: new TInvoker(IntPtr, JniHandleOwnership)
 		if (proxy.InvokerType != null) {
-			var invokerCtorRef = AddActivationCtorRef (_pe.ResolveTypeRef (proxy.InvokerType));
+			var invokerCtorRef = AddActivationCtorRef (_pe.ResolveTypeRef (proxy.InvokerType), ActivationCtorStyle.XamarinAndroid);
 			EmitCreateInstanceBody (encoder => {
 				encoder.OpCode (ILOpCode.Ldarg_1);
 				encoder.OpCode (ILOpCode.Ldarg_2);
@@ -358,8 +386,8 @@ sealed class TypeMapAssemblyEmitter
 		var targetTypeRef = _pe.ResolveTypeRef (proxy.TargetType);
 
 		if (activationCtor.IsOnLeafType) {
-			// Leaf type has its own ctor: new T(IntPtr, JniHandleOwnership)
-			var ctorRef = AddActivationCtorRef (targetTypeRef);
+			// Leaf type has its own ctor: new T(IntPtr, JniHandleOwnership) or new T(ref JniObjectReference, JniObjectReferenceOptions)
+			var ctorRef = AddActivationCtorRef (targetTypeRef, activationCtor.Style);
 			EmitCreateInstanceBody (encoder => {
 				encoder.OpCode (ILOpCode.Ldarg_1);
 				encoder.OpCode (ILOpCode.Ldarg_2);
@@ -368,8 +396,8 @@ sealed class TypeMapAssemblyEmitter
 				encoder.OpCode (ILOpCode.Ret);
 			});
 		} else {
-			// Inherited ctor: GetUninitializedObject(typeof(T)) + call Base::.ctor(IntPtr, JniHandleOwnership)
-			var baseActivationCtorRef = AddActivationCtorRef (_pe.ResolveTypeRef (activationCtor.DeclaringType));
+			// Inherited ctor: GetUninitializedObject(typeof(T)) + call Base::.ctor(IntPtr, JniHandleOwnership) or (ref JniObjectReference, JniObjectReferenceOptions)
+			var baseActivationCtorRef = AddActivationCtorRef (_pe.ResolveTypeRef (activationCtor.DeclaringType), activationCtor.Style);
 			EmitCreateInstanceBody (encoder => {
 				encoder.OpCode (ILOpCode.Ldtoken);
 				encoder.Token (targetTypeRef);
@@ -401,14 +429,19 @@ sealed class TypeMapAssemblyEmitter
 			emitIL);
 	}
 
-	MemberReferenceHandle AddActivationCtorRef (EntityHandle declaringTypeRef)
+	MemberReferenceHandle AddActivationCtorRef (EntityHandle declaringTypeRef, ActivationCtorStyle style)
 	{
 		return _pe.AddMemberRef (declaringTypeRef, ".ctor",
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
 				rt => rt.Void (),
 				p => {
-					p.AddParameter ().Type ().IntPtr ();
-					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+					if (style == ActivationCtorStyle.JavaInterop) {
+						p.AddParameter ().Type (isByRef: true).Type (_jniObjectReferenceRef, true);
+						p.AddParameter ().Type ().Type (_jniObjectReferenceOptionsRef, true);
+					} else {
+						p.AddParameter ().Type ().IntPtr ();
+						p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+					}
 				}));
 	}
 
