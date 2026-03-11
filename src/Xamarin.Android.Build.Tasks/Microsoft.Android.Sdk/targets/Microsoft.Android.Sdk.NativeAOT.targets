@@ -352,10 +352,15 @@ This eliminates the NDK dependency for NativeAOT builds.
   <!--
     Legacy NDK-based linking (for compatibility).
     Only used when AndroidNativeAotUseNdk=true.
+    Unlike the default path (which uses android-native-tools ld.lld), this invokes
+    the NDK's clang++ compiler driver to link the NativeAOT output into a shared library.
+    Since NativeCompilationDuringPublish=false and NativeLib=Static are set unconditionally,
+    ILC always produces only .o files. This target collects those .o files and all static
+    archives, then performs the linking via clang++ directly.
   -->
   <Target
       Name="_GenerateNativeAotAndroidAppLibrary"
-      DependsOnTargets="_GenerateNativeAotAndroidAppAssemblerSources"
+      DependsOnTargets="_CollectNativeAotLinkInputs"
       Condition=" '$(AndroidNativeAotUseNdk)' == 'true' ">
 
     <PropertyGroup>
@@ -369,28 +374,72 @@ This eliminates the NDK dependency for NativeAOT builds.
       <_NdkApiLevel Condition=" '$(RuntimeIdentifier)' == 'android-x64' ">$(AndroidNdkApiLevel_X64)</_NdkApiLevel>
       <_NdkSysrootDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/sysroot/usr/lib/$(_NdkSysrootAbi)/</_NdkSysrootDir>
       <_NdkBinDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/bin/</_NdkBinDir>
-      <!-- Use ABI-prefixed clang++ wrapper which sets the correct target triple, sysroot, and API level -->
-      <CppCompilerAndLinker>$(_NdkSysrootAbi)$(_NdkApiLevel)-clang++</CppCompilerAndLinker>
-      <ObjCopyName>llvm-objcopy</ObjCopyName>
+      <!-- On Windows, NDK wrapper scripts require the .cmd extension -->
+      <_NdkWrapperScriptExt Condition=" $([MSBuild]::IsOSPlatform('windows')) ">.cmd</_NdkWrapperScriptExt>
+      <!-- Use ABI-prefixed clang++ wrapper which sets target triple, sysroot, and API level automatically -->
+      <_NdkClang>$(_NdkBinDir)$(_NdkSysrootAbi)$(_NdkApiLevel)-clang++$(_NdkWrapperScriptExt)</_NdkClang>
+      <_NativeAotOutputLibrary>$(NativeOutputPath)lib$(TargetName).so</_NativeAotOutputLibrary>
+      <_NdkLinkRspFile>$(NativeIntermediateOutputPath)ndk-link.rsp</_NdkLinkRspFile>
     </PropertyGroup>
 
-    <SetNdkPathForIlc NdkBinDirectory="$(_NdkBinDir)" />
-
     <ItemGroup>
-      <!-- Android needs a proper soname property or it will refuse to load the library -->
-      <LinkerArg Include="&quot;-Wl,-soname,lib$(TargetName)$(NativeBinaryExt)&quot;" />
-      <LinkerArg Include="-Wl,--error-unresolved-symbols" />
-      <LinkerArg Include="-Wl,--no-undefined" />
-
-      <_NdkLibs Include="@(RuntimePackAsset->WithMetadataValue('Filename', 'libnaot-android.$(Configuration.ToLower())-static-$(Configuration.ToLower())'))" />
-
-      <!-- Include libc++ from NDK -->
+      <!-- NDK-specific static C++ libraries -->
       <_NdkLibs Include="$(_NdkSysrootDir)libc++_static.a" />
       <_NdkLibs Include="$(_NdkSysrootDir)libc++abi.a" />
-      
-      <LinkerArg Include="&quot;%(_NdkLibs.Identity)&quot;" />
-      <LinkerArg Include="@(_PrivateJniInitFuncsNativeObjectFile)" />
-      <LinkerArg Include="@(_PrivateEnvironmentNativeObjectFile)" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <!--
+        Build the linker argument list for clang++.
+        The ABI-prefixed NDK wrapper handles target triple, sysroot, CRT files
+        (crtbegin_so.o/crtend_so.o), libunwind, and compiler-rt builtins automatically.
+      -->
+      <_NdkLinkerArgs Include="-shared" />
+      <!-- Prevent clang++ from auto-linking dynamic libc++; we link static libc++ explicitly -->
+      <_NdkLinkerArgs Include="-nostdlib++" />
+      <_NdkLinkerArgs Include="-o &quot;$(_NativeAotOutputLibrary)&quot;" />
+      <_NdkLinkerArgs Include="-Wl,-soname,$([System.IO.Path]::GetFileName('$(_NativeAotOutputLibrary)'))" />
+      <_NdkLinkerArgs Include="-Wl,--build-id=sha1" />
+      <_NdkLinkerArgs Include="-Wl,--eh-frame-hdr" />
+      <_NdkLinkerArgs Include="-Wl,-z,relro" />
+      <_NdkLinkerArgs Include="-Wl,-z,now" />
+      <_NdkLinkerArgs Include="-Wl,-z,max-page-size=16384" />
+      <_NdkLinkerArgs Include="-Wl,-z,nostart-stop-gc" />
+      <_NdkLinkerArgs Include="-Wl,--gc-sections" />
+      <_NdkLinkerArgs Include="-Wl,--as-needed" />
+      <_NdkLinkerArgs Include="-Wl,--no-undefined" />
+      <_NdkLinkerArgs Include="-Wl,-Bsymbolic" />
+      <_NdkLinkerArgs Condition=" '$(StripSymbols)' == 'true' " Include="-Wl,-s" />
+      <_NdkLinkerArgs Condition=" '$(NativeDebugSymbols)' == 'true' and '$(StripSymbols)' != 'true' " Include="-g" />
+
+      <!-- ILC-compiled native object -->
+      <_NdkLinkerArgs Include="&quot;$(NativeObject)&quot;" />
+      <!-- Generated assembler objects (JNI init, environment) -->
+      <_NdkLinkerArgs Include="@(_NativeAotObjectFiles->'&quot;%(Identity)&quot;')" />
+      <!-- ILC SDK static archives (PAL libraries, runtime, etc.) -->
+      <_NdkLinkerArgs Include="@(_NativeAotArchives->'&quot;%(Identity)&quot;')" />
+      <!-- NDK C++ libraries -->
+      <_NdkLinkerArgs Include="@(_NdkLibs->'&quot;%(Identity)&quot;')" />
+      <!-- System libraries required by PAL libraries on Android -->
+      <_NdkLinkerArgs Include="-llog" />
+      <_NdkLinkerArgs Include="-lz" />
+      <_NdkLinkerArgs Include="-lm" />
+      <_NdkLinkerArgs Include="-ldl" />
+    </ItemGroup>
+
+    <MakeDir Directories="$(NativeOutputPath)" />
+
+    <WriteLinesToFile File="$(_NdkLinkRspFile)" Lines="@(_NdkLinkerArgs)" Overwrite="true" Encoding="utf-8" />
+    <Message Text="Linking NativeAOT library with NDK: $(_NdkClang)" Importance="high" />
+    <Exec Command="&quot;$(_NdkClang)&quot; @&quot;$(_NdkLinkRspFile)&quot;" />
+
+    <ItemGroup>
+      <!-- Register the output library for publishing -->
+      <ResolvedFileToPublish Include="$(_NativeAotOutputLibrary)">
+        <RelativePath>lib$(TargetName).so</RelativePath>
+        <ArchiveFileName>lib$(TargetName).so</ArchiveFileName>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
     </ItemGroup>
   </Target>
 
