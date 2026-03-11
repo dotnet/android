@@ -498,6 +498,9 @@
       <Item ItemId=";XA0145" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The Android emulator for AVD '{0}' did not finish booting within {1} seconds. Increase 'BootTimeoutSeconds' or check the emulator configuration.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[AVD '{0}' 用 Android Emulator は、{1} 秒以内に起動を完了しませんでした。'BootTimeoutSeconds' を増やすか、エミュレーターの構成を確認してください。]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>

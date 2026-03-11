@@ -226,6 +226,15 @@ This eliminates the NDK dependency for NativeAOT builds.
       </_PrivateEnvironmentNativeObjectFile>
 
       <_PrivateAndroidNaotResolvedAssemblyFiles Include="@(ResolvedFileToPublish->Distinct())" Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' " />
+      <!-- In .NET 11+, the SDK's ILLink target populates ResolvedFileToPublish with linked assemblies
+           (via _LinkedResolvedFileToPublish) WITHOUT RuntimeIdentifier metadata. _AndroidComputeIlcCompileInputs
+           adds the same items WITH RuntimeIdentifier, but ->Distinct() keeps the first occurrence (without metadata).
+           Stamp RuntimeIdentifier on any items that lack it, since we're in the inner build with a single RID. -->
+      <_PrivateAndroidNaotResolvedAssemblyFiles
+          Update="@(_PrivateAndroidNaotResolvedAssemblyFiles)"
+          Condition=" '%(_PrivateAndroidNaotResolvedAssemblyFiles.RuntimeIdentifier)' == '' "
+          RuntimeIdentifier="$(RuntimeIdentifier)"
+      />
     </ItemGroup>
   </Target>
 

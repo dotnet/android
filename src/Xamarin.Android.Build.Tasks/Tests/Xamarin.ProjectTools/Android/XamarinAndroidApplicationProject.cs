@@ -29,6 +29,13 @@ namespace Xamarin.ProjectTools
 	/// <seealso cref="XamarinAndroidBindingProject"/>
 	public class XamarinAndroidApplicationProject : XamarinAndroidCommonProject
 	{
+		// Workaround for AndroidX, see: https://github.com/xamarin/AndroidSupportComponents/pull/239
+		protected override string ExtraDirectoryBuildTargetsContent => """
+			<PropertyGroup>
+				<VectorDrawableCheckBuildToolsVersionTaskBeforeTargets />
+			</PropertyGroup>
+		""";
+
 		const string default_strings_xml = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
 	<string name=""hello"">Hello World, Click Me!</string>
@@ -73,16 +80,6 @@ namespace Xamarin.ProjectTools
 			SetProperty ("XamarinAndroidSupportSkipVerifyVersions", "True");
 			SetProperty ("_FastDeploymentDiagnosticLogging", "True");
 			SupportedOSPlatformVersion = "21.0";
-
-			// Workaround for AndroidX, see: https://github.com/xamarin/AndroidSupportComponents/pull/239
-			Imports.Add (new Import (() => "Directory.Build.targets") {
-				TextContent = () =>
-					@"<Project>
-						<PropertyGroup>
-							<VectorDrawableCheckBuildToolsVersionTaskBeforeTargets />
-						</PropertyGroup>
-					</Project>"
-			});
 
 			AndroidManifest = default_android_manifest;
 			LayoutMain = default_layout_main;

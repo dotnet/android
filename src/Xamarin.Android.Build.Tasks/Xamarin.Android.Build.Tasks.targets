@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateProfile" />
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateSupportedPlatforms" />
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" />
-  <UsingTask AssemblyFile="$(PrepTasksAssembly)"      TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
-  <UsingTask AssemblyFile="$(PrepTasksAssembly)"      TaskName="Xamarin.Android.BuildTools.PrepTasks.Which" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateProfile" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateSupportedPlatforms" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)"      TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)"      TaskName="Xamarin.Android.BuildTools.PrepTasks.Which" TaskFactory="TaskHostFactory" Runtime="NET" />
 
   <PropertyGroup>
     <_SharedRuntimeBuildPath Condition=" '$(_SharedRuntimeBuildPath)' == '' ">$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\</_SharedRuntimeBuildPath>

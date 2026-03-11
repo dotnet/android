@@ -19,6 +19,8 @@
 
 ## Critical Rules
 
+**Never use `git commit --amend`:** Always create new commits. The user will squash or fixup as needed.
+
 Reference official Android documentation where helpful:
 * [Android Developer Guide](https://developer.android.com/develop)
 * [Android API Reference](https://developer.android.com/reference)
@@ -31,6 +33,15 @@ Reference official Android documentation where helpful:
 **Use Microsoft docs:** Search MS Learn before making .NET, Windows, or Microsoft features, APIs, or integrations. Use the `microsoft_docs_search` tool.
 
 **MSBuild Tasks:** Extend `AndroidTask` base class, use `XA####` error codes, test in isolation.
+
+**Internal build `<UsingTask/>` elements:** For `xa-prep-tasks` and `BootstrapTasks` (internal build-time tasks, not shipped to customers), always use `TaskFactory="TaskHostFactory"` and `Runtime="NET"` attributes on `<UsingTask/>` elements. This runs the task in a separate process to avoid Windows file locking issues and ensures the task runs on .NET (even when MSBuild.exe in Visual Studio uses .NET Framework). Example:
+
+```xml
+<UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.MyTask" TaskFactory="TaskHostFactory" Runtime="NET" />
+<UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.MyTask" TaskFactory="TaskHostFactory" Runtime="NET" />
+```
+
+**Do NOT** use `TaskFactory="TaskHostFactory"` or `Runtime="NET"` on `<UsingTask/>` elements shipped in the product (e.g., in `Xamarin.Android.Common.targets` or `Microsoft.Android.Sdk/*.targets`), as it could negatively impact customer builds.
 
 **API Bindings:** Use `[Register]` attributes, follow `Android.*` namespace patterns.
 
@@ -133,6 +144,7 @@ C# code uses tabs (not spaces) and Mono style (`.editorconfig`):
 - Preserve existing formatting and comments
 - Space before `(` and `[`: `Foo ()`, `array [0]`
 - Use `""` not `string.Empty`, `[]` not `Array.Empty<T>()`
+- Prefer C# raw string literals (`"""`) for multi-line strings instead of `@""` with escaped quotes
 - Minimal diffs - don't leave random empty lines
 - Do NOT use `#region` or `#endregion`
 

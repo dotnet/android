@@ -26,7 +26,7 @@ public sealed partial class UsesFeatureAttribute : Attribute {
 
 	public bool Required { get; set; }
 
-	public int Version { get; private set; }
+	public int Version { get; set; }
 
 #if XABT_MANIFEST_EXTENSIONS
 	static Xamarin.Android.Manifest.ManifestDocumentElement<UsesFeatureAttribute> mapping = new ("uses-feature");
@@ -49,7 +49,7 @@ public sealed partial class UsesFeatureAttribute : Attribute {
 			member: "Version",
 			attributeName: "version",
 			getter: self => self.Version,
-			setter: null
+			setter: (self, value) => self.Version = (int) value
 		);
 
 		AddManualMapping ();
