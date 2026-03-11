@@ -83,6 +83,7 @@ namespace Android.Runtime
 		internal static extern IntPtr clr_typemap_managed_to_java (string fullName, IntPtr mvid);
 
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.U1)]
 		internal static extern bool clr_typemap_java_to_managed (string java_type_name, out IntPtr managed_assembly_name, out uint managed_type_token_id);
 
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
