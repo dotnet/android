@@ -228,6 +228,7 @@ sealed class JavaPeerScanner : IDisposable
 				DoNotGenerateAcw = doNotGenerateAcw,
 				IsUnconditional = isUnconditional,
 				MarshalMethods = marshalMethods,
+				JavaConstructors = BuildJavaConstructors (marshalMethods),
 				ActivationCtor = activationCtor,
 				InvokerTypeName = invokerTypeName,
 				IsGenericDefinition = isGenericDefinition,
@@ -281,6 +282,9 @@ sealed class JavaPeerScanner : IDisposable
 			JniSignature = registerInfo.Signature ?? "()V",
 			Connector = registerInfo.Connector,
 			ManagedMethodName = index.Reader.GetString (methodDef.Name),
+			NativeCallbackName = $"n_{index.Reader.GetString (methodDef.Name)}",
+			JniReturnType = JniSignatureHelper.ParseReturnTypeString (registerInfo.Signature ?? "()V"),
+			Parameters = ParseJniParameters (registerInfo.Signature ?? "()V"),
 			IsConstructor = registerInfo.JniName == "<init>" || registerInfo.JniName == ".ctor",
 			ThrownNames = exportInfo?.ThrownNames,
 			SuperArgumentsString = exportInfo?.SuperArgumentsString,
@@ -737,19 +741,44 @@ sealed class JavaPeerScanner : IDisposable
 
 	static string ExtractNamespace (string fullName)
 	{
-		// Strip nested type suffix (e.g., "My.Namespace.Outer+Inner" → "My.Namespace.Outer")
-		int plusIndex = fullName.IndexOf ('+');
-		var nameForNamespace = plusIndex >= 0 ? fullName.Substring (0, plusIndex) : fullName;
-		int lastDot = nameForNamespace.LastIndexOf ('.');
-		return lastDot >= 0 ? nameForNamespace.Substring (0, lastDot) : "";
+		int lastDot = fullName.LastIndexOf ('.');
+		return lastDot >= 0 ? fullName.Substring (0, lastDot) : "";
 	}
 
 	static string ExtractShortName (string fullName)
 	{
-		var span = fullName.AsSpan ();
-		int lastDot = span.LastIndexOf ('.');
-		var typePart = lastDot >= 0 ? span.Slice (lastDot + 1) : span;
+		int lastDot = fullName.LastIndexOf ('.');
+		string typePart = lastDot >= 0 ? fullName.Substring (lastDot + 1) : fullName;
 		int lastPlus = typePart.LastIndexOf ('+');
-		return (lastPlus >= 0 ? typePart.Slice (lastPlus + 1) : typePart).ToString ();
+		return lastPlus >= 0 ? typePart.Substring (lastPlus + 1) : typePart;
+	}
+
+	static List<JniParameterInfo> ParseJniParameters (string jniSignature)
+	{
+		var typeStrings = JniSignatureHelper.ParseParameterTypeStrings (jniSignature);
+		var result = new List<JniParameterInfo> (typeStrings.Count);
+		foreach (var t in typeStrings) {
+			result.Add (new JniParameterInfo { JniType = t });
+		}
+		return result;
+	}
+
+	static List<JavaConstructorInfo> BuildJavaConstructors (List<MarshalMethodInfo> marshalMethods)
+	{
+		var ctors = new List<JavaConstructorInfo> ();
+		int ctorIndex = 0;
+		foreach (var mm in marshalMethods) {
+			if (!mm.IsConstructor) {
+				continue;
+			}
+			ctors.Add (new JavaConstructorInfo {
+				JniSignature = mm.JniSignature,
+				ConstructorIndex = ctorIndex,
+				Parameters = mm.Parameters,
+				SuperArgumentsString = mm.SuperArgumentsString,
+			});
+			ctorIndex++;
+		}
+		return ctors;
 	}
 }

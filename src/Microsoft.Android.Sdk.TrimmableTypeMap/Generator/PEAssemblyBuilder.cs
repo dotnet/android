@@ -34,7 +34,9 @@ sealed class PEAssemblyBuilder
 	public BlobBuilder ILBuilder { get; } = new BlobBuilder ();
 
 	public AssemblyReferenceHandle SystemRuntimeRef { get; private set; }
+
 	public AssemblyReferenceHandle SystemRuntimeInteropServicesRef { get; private set; }
+
 	public AssemblyReferenceHandle MonoAndroidRef { get; private set; }
 
 	public PEAssemblyBuilder (Version systemRuntimeVersion)
@@ -46,7 +48,7 @@ sealed class PEAssemblyBuilder
 	/// Emits the assembly definition, module definition, common assembly references, and &lt;Module&gt; type.
 	/// Call this first.
 	/// </summary>
-	public void EmitPreamble (string assemblyName, string moduleName, ReadOnlySpan<byte> contentFingerprint = default)
+	public void EmitPreamble (string assemblyName, string moduleName)
 	{
 		_asmRefCache.Clear ();
 		_typeRefCache.Clear ();
@@ -62,7 +64,7 @@ sealed class PEAssemblyBuilder
 		Metadata.AddModule (
 			generation: 0,
 			Metadata.GetOrAddString (moduleName),
-			Metadata.GetOrAddGuid (MetadataHelper.DeterministicMvid (moduleName, contentFingerprint)),
+			Metadata.GetOrAddGuid (MetadataHelper.DeterministicMvid (moduleName)),
 			encId: default,
 			encBaseId: default);
 
@@ -90,22 +92,14 @@ sealed class PEAssemblyBuilder
 			Directory.CreateDirectory (dir);
 		}
 
-		using var fs = File.Create (outputPath);
-		WritePE (fs);
-	}
-
-	/// <summary>
-	/// Serialises the metadata + IL into a PE DLL and writes it to the given <paramref name="stream"/>.
-	/// </summary>
-	public void WritePE (Stream stream)
-	{
 		var peBuilder = new ManagedPEBuilder (
 			new PEHeaderBuilder (imageCharacteristics: Characteristics.Dll),
 			new MetadataRootBuilder (Metadata),
 			ILBuilder);
 		var peBlob = new BlobBuilder ();
 		peBuilder.Serialize (peBlob);
-		peBlob.WriteContentTo (stream);
+		using var fs = File.Create (outputPath);
+		peBlob.WriteContentTo (fs);
 	}
 
 	/// <summary>
@@ -127,7 +121,12 @@ sealed class PEAssemblyBuilder
 	/// Finds an existing assembly reference or adds one with version 0.0.0.0.
 	/// </summary>
 	public AssemblyReferenceHandle FindOrAddAssemblyRef (string assemblyName)
-		=> AddAssemblyRef (assemblyName, new Version (0, 0, 0, 0));
+	{
+		if (_asmRefCache.TryGetValue (assemblyName, out var handle)) {
+			return handle;
+		}
+		return AddAssemblyRef (assemblyName, new Version (0, 0, 0, 0));
+	}
 
 	/// <summary>
 	/// Adds a member reference using the reusable signature blob builder.
@@ -172,32 +171,9 @@ sealed class PEAssemblyBuilder
 	/// </summary>
 	public MethodDefinitionHandle EmitBody (string name, MethodAttributes attrs,
 		Action<BlobEncoder> encodeSig, Action<InstructionEncoder> emitIL)
-		=> EmitBody (name, attrs, encodeSig, emitIL, encodeLocals: null);
-
-	/// <summary>
-	/// Emits a method body and definition with optional local variable declarations.
-	/// </summary>
-	/// <param name="encodeLocals">
-	/// If non-null, writes the local variable signature blob. The callback receives a fresh
-	/// <see cref="BlobBuilder"/> and must write the full <c>LOCAL_SIG</c> blob (header 0x07,
-	/// compressed count, then each variable type).
-	/// </param>
-	public MethodDefinitionHandle EmitBody (string name, MethodAttributes attrs,
-		Action<BlobEncoder> encodeSig, Action<InstructionEncoder> emitIL,
-		Action<BlobBuilder>? encodeLocals)
 	{
 		_sigBlob.Clear ();
 		encodeSig (new BlobEncoder (_sigBlob));
-		// Capture the sig blob handle before emitIL, because emitIL callbacks
-		// may call AddMemberRef which clears and repopulates _sigBlob.
-		var sigBlobHandle = Metadata.GetOrAddBlob (_sigBlob);
-
-		StandaloneSignatureHandle localSigHandle = default;
-		if (encodeLocals != null) {
-			var localSigBlob = new BlobBuilder (32);
-			encodeLocals (localSigBlob);
-			localSigHandle = Metadata.AddStandaloneSignature (Metadata.GetOrAddBlob (localSigBlob));
-		}
 
 		_codeBlob.Clear ();
 		var encoder = new InstructionEncoder (_codeBlob);
@@ -207,14 +183,12 @@ sealed class PEAssemblyBuilder
 			ILBuilder.WriteByte (0);
 		}
 		var bodyEncoder = new MethodBodyStreamEncoder (ILBuilder);
-		int bodyOffset = localSigHandle.IsNil
-			? bodyEncoder.AddMethodBody (encoder)
-			: bodyEncoder.AddMethodBody (encoder, maxStack: 8, localSigHandle, MethodBodyAttributes.InitLocals);
+		int bodyOffset = bodyEncoder.AddMethodBody (encoder);
 
 		return Metadata.AddMethodDefinition (
 			attrs, MethodImplAttributes.IL,
 			Metadata.GetOrAddString (name),
-			sigBlobHandle,
+			Metadata.GetOrAddBlob (_sigBlob),
 			bodyOffset, default);
 	}
 
