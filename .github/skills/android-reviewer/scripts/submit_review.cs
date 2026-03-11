@@ -130,14 +130,13 @@ if (process.ExitCode != 0) {
 	return 1;
 }
 
+Console.WriteLine ("✅ Review posted.");
 try {
 	using var resp = JsonDocument.Parse (stdout);
 	if (resp.RootElement.TryGetProperty ("html_url", out var url))
-		Console.WriteLine ($"✅ Review posted: {url.GetString ()}");
-	else
-		Console.WriteLine ("✅ Review posted.");
+		Console.WriteLine ($"   {url.GetString ()}");
 } catch (JsonException) {
-	Console.WriteLine ("✅ Review posted.");
+	// Response wasn't JSON — the review was still posted, we just can't show the URL.
 }
 
 } // using (doc)
