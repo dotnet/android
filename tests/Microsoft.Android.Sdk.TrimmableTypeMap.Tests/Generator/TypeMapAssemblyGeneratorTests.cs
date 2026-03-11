@@ -316,8 +316,8 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 		var testMethod = methods.First (m => reader.GetString (m.Name) == "TestMethod");
 		var sig = testMethod.DecodeSignature (SignatureTypeProvider.Instance, null);
-		Assert.Equal (1, sig.ParameterTypes.Length);
-		Assert.Equal ("System.Int32", sig.ParameterTypes [0]);
+		var paramType = Assert.Single (sig.ParameterTypes);
+		Assert.Equal ("System.Int32", paramType);
 	}
 
 	[Fact]
