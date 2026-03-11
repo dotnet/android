@@ -14,7 +14,7 @@ causes broken builds for every .NET Android developer.
 
 | Check | What to look for |
 |-------|-----------------|
-| **Inherit from `AndroidTask`** | Every MSBuild task must extend `AndroidTask` (from `Microsoft.Android.Build.BaseTasks`). It must implement `TaskPrefix` (a short string for error codes) and `RunTask()`. Do not inherit directly from `Microsoft.Build.Utilities.Task`. Unhandled exceptions are automatically converted to proper error codes. |
+| **Prefer `AndroidTask` / `AsyncTask`** | MSBuild tasks that execute build logic should extend `AndroidTask` (from `Microsoft.Android.Build.BaseTasks`). They must implement `TaskPrefix` (a short string for error codes) and `RunTask()`. Simple wrapper tasks that only log errors/warnings/messages (e.g., `AndroidError`, `AndroidWarning`, `AndroidMessage`) may inherit directly from `Microsoft.Build.Utilities.Task`. Unhandled exceptions in `AndroidTask` are automatically converted to proper error codes. |
 | **Use `AsyncTask` for background work** | Tasks that need `async`/`await` should extend `AsyncTask` and override `RunTaskAsync()`. It handles `Yield()`, `try`/`finally`, and `Reacquire()` automatically. Use `AsyncTask.Log*` helpers for logging from the background thread — calling `Log.LogMessage` directly can cause IDE hangs. Use full paths on background threads (`Environment.CurrentDirectory` may differ if the task is on another MSBuild node). Leverage the `WhenAll` extension for parallel work over `ITaskItem[]`. |
 | **Return `!Log.HasLoggedErrors`** | `RunTask()` must return `!Log.HasLoggedErrors`. Do not return `true`/`false` directly — it skips the centralized error-tracking mechanism. |
 | **Use `Log.LogCoded*` methods** | Errors and warnings must use `Log.LogCodedError("XA####", …)` or `Log.LogCodedWarning("XA####", …)` — never bare `Log.LogError` without a code. Error messages should come from `Properties.Resources`. |
@@ -101,7 +101,7 @@ and merge conflicts.
 | **Assert boundary invariants** | If a name=value pair array must have even length, assert `(length % 2) == 0` before indexing `[i+1]`. (Postmortem `#44`) |
 | **Include actionable details in exceptions** | Use `nameof` for parameter names. Include the unsupported value or unexpected type. Never throw empty exceptions. |
 | **Initialize output parameters in all paths** | Methods with `out` parameters must initialize them in all error paths, not just the success path. |
-| **Use `ThrowIf` helpers** | Prefer `ArgumentOutOfRangeException.ThrowIfNegative`, `ArgumentNullException.ThrowIfNull`, etc. over manual if-then-throw patterns (.NET 10+). |
+| **Use `ThrowIf` helpers where available** | In .NET 10+ projects, prefer `ArgumentOutOfRangeException.ThrowIfNegative`, `ArgumentNullException.ThrowIfNull`, etc. over manual if-then-throw patterns. In `netstandard2.0` projects where these helpers are unavailable, use explicit checks such as `if (x is null) throw new ArgumentNullException (nameof (x));`. |
 | **Challenge exception swallowing** | When a PR adds `catch { continue; }` or `catch { return null; }`, question whether the exception is truly expected or masking a deeper problem. The default should be to let unexpected exceptions propagate. |
 
 ---

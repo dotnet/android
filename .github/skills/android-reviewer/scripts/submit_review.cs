@@ -52,29 +52,38 @@ if (!root.TryGetProperty ("body", out var bodyProp) || bodyProp.ValueKind != Jso
 	errors.Add ("Missing or empty 'body' field (the review summary)");
 }
 
-if (root.TryGetProperty ("comments", out var commentsProp) && commentsProp.ValueKind == JsonValueKind.Array) {
-	int i = 0;
-	foreach (var c in commentsProp.EnumerateArray ()) {
-		var prefix = $"comments[{i}]";
+if (root.TryGetProperty ("comments", out var commentsProp)) {
+	if (commentsProp.ValueKind != JsonValueKind.Array) {
+		errors.Add ("Invalid 'comments' field — must be an array");
+	} else {
+		int i = 0;
+		foreach (var c in commentsProp.EnumerateArray ()) {
+			var prefix = $"comments[{i}]";
 
-		if (!c.TryGetProperty ("path", out var pathProp) || string.IsNullOrEmpty (pathProp.GetString ()))
-			errors.Add ($"{prefix}: missing 'path'");
+			if (!c.TryGetProperty ("path", out var pathProp) || pathProp.ValueKind != JsonValueKind.String || string.IsNullOrEmpty (pathProp.GetString ()))
+				errors.Add ($"{prefix}: missing 'path'");
 
-		if (!c.TryGetProperty ("line", out var lineProp) || lineProp.ValueKind != JsonValueKind.Number || lineProp.GetInt32 () < 1)
-			errors.Add ($"{prefix}: 'line' must be a positive integer");
+			if (!c.TryGetProperty ("line", out var lineProp) || lineProp.ValueKind != JsonValueKind.Number || lineProp.GetInt32 () < 1)
+				errors.Add ($"{prefix}: 'line' must be a positive integer");
 
-		if (!c.TryGetProperty ("body", out var cbody) || string.IsNullOrWhiteSpace (cbody.GetString ()))
-			errors.Add ($"{prefix}: missing or empty 'body'");
-		else if (!(cbody.GetString () ?? "").StartsWith ("🤖"))
-			errors.Add ($"{prefix}: body must start with 🤖 prefix");
+			if (!c.TryGetProperty ("body", out var cbody) || cbody.ValueKind != JsonValueKind.String) {
+				errors.Add ($"{prefix}: missing or empty 'body'");
+			} else {
+				var commentBody = cbody.GetString () ?? "";
+				if (string.IsNullOrWhiteSpace (commentBody))
+					errors.Add ($"{prefix}: missing or empty 'body'");
+				else if (!commentBody.StartsWith ("🤖"))
+					errors.Add ($"{prefix}: body must start with 🤖 prefix");
+			}
 
-		if (c.TryGetProperty ("side", out var sideProp) && sideProp.ValueKind == JsonValueKind.String) {
-			var side = sideProp.GetString () ?? "";
-			if (side != "LEFT" && side != "RIGHT")
-				errors.Add ($"{prefix}: 'side' must be LEFT or RIGHT, got '{side}'");
+			if (c.TryGetProperty ("side", out var sideProp) && sideProp.ValueKind == JsonValueKind.String) {
+				var side = sideProp.GetString () ?? "";
+				if (side != "LEFT" && side != "RIGHT")
+					errors.Add ($"{prefix}: 'side' must be LEFT or RIGHT, got '{side}'");
+			}
+
+			i++;
 		}
-
-		i++;
 	}
 }
 
