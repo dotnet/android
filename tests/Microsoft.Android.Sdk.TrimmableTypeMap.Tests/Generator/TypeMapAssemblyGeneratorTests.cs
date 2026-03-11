@@ -251,7 +251,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		[Fact]
 		public void Generate_EmptyPeerList_ProducesValidAssembly ()
 		{
-			using var stream = GenerateAssembly (Array.Empty<JavaPeerInfo> (), "EmptyTest");
+			using var stream = GenerateAssembly ([], "EmptyTest");
 			var (pe, reader) = OpenAssembly (stream);
 			using (pe) {
 				Assert.NotNull (reader);

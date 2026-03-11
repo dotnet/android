@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Reflection.Metadata;
@@ -62,8 +63,10 @@ static class JniSignatureHelper
 	/// </summary>
 	public static string ParseReturnTypeString (string jniSignature)
 	{
-		int i = jniSignature.IndexOf (')') + 1;
-		return jniSignature.Substring (i);
+		int paren = jniSignature.IndexOf (')');
+		if (paren < 0)
+			throw new ArgumentException ($"Malformed JNI signature '{jniSignature}': missing ')'");
+		return jniSignature.Substring (paren + 1);
 	}
 
 	/// <summary>
@@ -73,7 +76,10 @@ static class JniSignatureHelper
 	/// </summary>
 	public static JniParamKind ParseReturnType (string jniSignature)
 	{
-		int i = jniSignature.IndexOf (')') + 1;
+		int paren = jniSignature.IndexOf (')');
+		if (paren < 0)
+			throw new ArgumentException ($"Malformed JNI signature '{jniSignature}': missing ')'");
+		int i = paren + 1;
 		return ParseSingleType (jniSignature, ref i);
 	}
 
@@ -90,7 +96,10 @@ static class JniSignatureHelper
 		case 'F': i++; return JniParamKind.Float;
 		case 'D': i++; return JniParamKind.Double;
 		case 'L':
-			i = sig.IndexOf (';', i) + 1;
+			int semi = sig.IndexOf (';', i);
+			if (semi < 0)
+				throw new ArgumentException ($"Malformed object type in '{sig}' at index {i}: missing ';'");
+			i = semi + 1;
 			return JniParamKind.Object;
 		case '[':
 			i++;
