@@ -277,15 +277,19 @@ sealed class JavaPeerScanner : IDisposable
 			return;
 		}
 
+		bool isConstructor = registerInfo.JniName == "<init>" || registerInfo.JniName == ".ctor";
+		string managedName = index.Reader.GetString (methodDef.Name);
+		string jniSignature = registerInfo.Signature ?? "()V";
+
 		methods.Add (new MarshalMethodInfo {
 			JniName = registerInfo.JniName,
-			JniSignature = registerInfo.Signature ?? "()V",
+			JniSignature = jniSignature,
 			Connector = registerInfo.Connector,
-			ManagedMethodName = index.Reader.GetString (methodDef.Name),
-			NativeCallbackName = $"n_{index.Reader.GetString (methodDef.Name)}",
-			JniReturnType = JniSignatureHelper.ParseReturnTypeString (registerInfo.Signature ?? "()V"),
-			Parameters = ParseJniParameters (registerInfo.Signature ?? "()V"),
-			IsConstructor = registerInfo.JniName == "<init>" || registerInfo.JniName == ".ctor",
+			ManagedMethodName = managedName,
+			NativeCallbackName = isConstructor ? "n_ctor" : $"n_{managedName}",
+			JniReturnType = JniSignatureHelper.ParseReturnTypeString (jniSignature),
+			Parameters = JniSignatureHelper.ParseParameters (jniSignature),
+			IsConstructor = isConstructor,
 			ThrownNames = exportInfo?.ThrownNames,
 			SuperArgumentsString = exportInfo?.SuperArgumentsString,
 		});
@@ -751,16 +755,6 @@ sealed class JavaPeerScanner : IDisposable
 		string typePart = lastDot >= 0 ? fullName.Substring (lastDot + 1) : fullName;
 		int lastPlus = typePart.LastIndexOf ('+');
 		return lastPlus >= 0 ? typePart.Substring (lastPlus + 1) : typePart;
-	}
-
-	static List<JniParameterInfo> ParseJniParameters (string jniSignature)
-	{
-		var typeStrings = JniSignatureHelper.ParseParameterTypeStrings (jniSignature);
-		var result = new List<JniParameterInfo> (typeStrings.Count);
-		foreach (var t in typeStrings) {
-			result.Add (new JniParameterInfo { JniType = t });
-		}
-		return result;
 	}
 
 	static List<JavaConstructorInfo> BuildJavaConstructors (List<MarshalMethodInfo> marshalMethods)

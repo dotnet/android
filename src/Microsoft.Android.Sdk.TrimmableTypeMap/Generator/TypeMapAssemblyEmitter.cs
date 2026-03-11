@@ -350,34 +350,17 @@ sealed class TypeMapAssemblyEmitter
 	void EmitCreateInstance (JavaPeerProxyData proxy)
 	{
 		if (!proxy.HasActivation) {
-			EmitCreateInstanceBody (encoder => {
-				encoder.OpCode (ILOpCode.Ldnull);
-				encoder.OpCode (ILOpCode.Ret);
-			});
+			EmitNullCreateInstance ();
 			return;
 		}
 
-		// Generic type definitions cannot be instantiated
 		if (proxy.IsGenericDefinition) {
-			EmitCreateInstanceBody (encoder => {
-				encoder.LoadString (_pe.Metadata.GetOrAddUserString ("Cannot create instance of open generic type."));
-				encoder.OpCode (ILOpCode.Newobj);
-				encoder.Token (_notSupportedExceptionCtorRef);
-				encoder.OpCode (ILOpCode.Throw);
-			});
+			EmitGenericCreateInstance ();
 			return;
 		}
 
-		// Interface with invoker: new TInvoker(IntPtr, JniHandleOwnership)
 		if (proxy.InvokerType != null) {
-			var invokerCtorRef = AddActivationCtorRef (_pe.ResolveTypeRef (proxy.InvokerType), ActivationCtorStyle.XamarinAndroid);
-			EmitCreateInstanceBody (encoder => {
-				encoder.OpCode (ILOpCode.Ldarg_1);
-				encoder.OpCode (ILOpCode.Ldarg_2);
-				encoder.OpCode (ILOpCode.Newobj);
-				encoder.Token (invokerCtorRef);
-				encoder.OpCode (ILOpCode.Ret);
-			});
+			EmitInvokerCreateInstance (proxy.InvokerType);
 			return;
 		}
 
@@ -386,34 +369,88 @@ sealed class TypeMapAssemblyEmitter
 		var targetTypeRef = _pe.ResolveTypeRef (proxy.TargetType);
 
 		if (activationCtor.IsOnLeafType) {
-			// Leaf type has its own ctor: new T(IntPtr, JniHandleOwnership) or new T(ref JniObjectReference, JniObjectReferenceOptions)
-			var ctorRef = AddActivationCtorRef (targetTypeRef, activationCtor.Style);
-			EmitCreateInstanceBody (encoder => {
-				encoder.OpCode (ILOpCode.Ldarg_1);
-				encoder.OpCode (ILOpCode.Ldarg_2);
-				encoder.OpCode (ILOpCode.Newobj);
-				encoder.Token (ctorRef);
-				encoder.OpCode (ILOpCode.Ret);
-			});
+			EmitLeafCreateInstance (targetTypeRef, activationCtor.Style);
 		} else {
-			// Inherited ctor: GetUninitializedObject(typeof(T)) + call Base::.ctor(IntPtr, JniHandleOwnership) or (ref JniObjectReference, JniObjectReferenceOptions)
-			var baseActivationCtorRef = AddActivationCtorRef (_pe.ResolveTypeRef (activationCtor.DeclaringType), activationCtor.Style);
-			EmitCreateInstanceBody (encoder => {
-				encoder.OpCode (ILOpCode.Ldtoken);
-				encoder.Token (targetTypeRef);
-				encoder.Call (_getTypeFromHandleRef);
-				encoder.Call (_getUninitializedObjectRef);
-				encoder.OpCode (ILOpCode.Castclass);
-				encoder.Token (targetTypeRef);
-
-				encoder.OpCode (ILOpCode.Dup);
-				encoder.OpCode (ILOpCode.Ldarg_1);
-				encoder.OpCode (ILOpCode.Ldarg_2);
-				encoder.Call (baseActivationCtorRef);
-
-				encoder.OpCode (ILOpCode.Ret);
-			});
+			EmitInheritedCreateInstance (targetTypeRef, activationCtor);
 		}
+	}
+
+	/// <summary>
+	/// Emits a CreateInstance body that returns null (no activation possible).
+	/// </summary>
+	void EmitNullCreateInstance ()
+	{
+		EmitCreateInstanceBody (encoder => {
+			encoder.OpCode (ILOpCode.Ldnull);
+			encoder.OpCode (ILOpCode.Ret);
+		});
+	}
+
+	/// <summary>
+	/// Emits a CreateInstance body that throws NotSupportedException for open generic types.
+	/// </summary>
+	void EmitGenericCreateInstance ()
+	{
+		EmitCreateInstanceBody (encoder => {
+			encoder.LoadString (_pe.Metadata.GetOrAddUserString ("Cannot create instance of open generic type."));
+			encoder.OpCode (ILOpCode.Newobj);
+			encoder.Token (_notSupportedExceptionCtorRef);
+			encoder.OpCode (ILOpCode.Throw);
+		});
+	}
+
+	/// <summary>
+	/// Emits a CreateInstance body that instantiates the interface invoker type: new TInvoker(IntPtr, JniHandleOwnership).
+	/// </summary>
+	void EmitInvokerCreateInstance (TypeRefData invokerType)
+	{
+		var invokerCtorRef = AddActivationCtorRef (_pe.ResolveTypeRef (invokerType), ActivationCtorStyle.XamarinAndroid);
+		EmitCreateInstanceBody (encoder => {
+			encoder.OpCode (ILOpCode.Ldarg_1);
+			encoder.OpCode (ILOpCode.Ldarg_2);
+			encoder.OpCode (ILOpCode.Newobj);
+			encoder.Token (invokerCtorRef);
+			encoder.OpCode (ILOpCode.Ret);
+		});
+	}
+
+	/// <summary>
+	/// Emits a CreateInstance body for a leaf type that has its own activation ctor: new T(IntPtr, JniHandleOwnership).
+	/// </summary>
+	void EmitLeafCreateInstance (EntityHandle targetTypeRef, ActivationCtorStyle style)
+	{
+		var ctorRef = AddActivationCtorRef (targetTypeRef, style);
+		EmitCreateInstanceBody (encoder => {
+			encoder.OpCode (ILOpCode.Ldarg_1);
+			encoder.OpCode (ILOpCode.Ldarg_2);
+			encoder.OpCode (ILOpCode.Newobj);
+			encoder.Token (ctorRef);
+			encoder.OpCode (ILOpCode.Ret);
+		});
+	}
+
+	/// <summary>
+	/// Emits a CreateInstance body for types that inherit activation from a base type:
+	/// GetUninitializedObject(typeof(T)) + call Base::.ctor(IntPtr, JniHandleOwnership).
+	/// </summary>
+	void EmitInheritedCreateInstance (EntityHandle targetTypeRef, ActivationCtorData activationCtor)
+	{
+		var baseActivationCtorRef = AddActivationCtorRef (_pe.ResolveTypeRef (activationCtor.DeclaringType), activationCtor.Style);
+		EmitCreateInstanceBody (encoder => {
+			encoder.OpCode (ILOpCode.Ldtoken);
+			encoder.Token (targetTypeRef);
+			encoder.Call (_getTypeFromHandleRef);
+			encoder.Call (_getUninitializedObjectRef);
+			encoder.OpCode (ILOpCode.Castclass);
+			encoder.Token (targetTypeRef);
+
+			encoder.OpCode (ILOpCode.Dup);
+			encoder.OpCode (ILOpCode.Ldarg_1);
+			encoder.OpCode (ILOpCode.Ldarg_2);
+			encoder.Call (baseActivationCtorRef);
+
+			encoder.OpCode (ILOpCode.Ret);
+		});
 	}
 
 	void EmitCreateInstanceBody (Action<InstructionEncoder> emitIL)

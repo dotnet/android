@@ -115,18 +115,6 @@ public abstract class FixtureTestBase
 		};
 	}
 
-	private protected static MarshalMethodInfo MakeMarshalMethod (string jniName, string callbackName, string jniSig, bool isConstructor = false)
-	{
-		return new MarshalMethodInfo {
-			JniName = jniName,
-			NativeCallbackName = callbackName,
-			JniSignature = jniSig,
-			ManagedMethodName = isConstructor ? ".ctor" : callbackName.StartsWith ("n_") ? callbackName.Substring (2) : callbackName,
-			JniReturnType = jniSig.Contains (')') ? jniSig.Substring (jniSig.IndexOf (')') + 1) : "V",
-			IsConstructor = isConstructor,
-		};
-	}
-
 	private protected static List<string> GetTypeRefNames (MetadataReader reader) =>
 		reader.TypeReferences
 			.Select (h => reader.GetTypeReference (h))
