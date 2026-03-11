@@ -117,6 +117,7 @@ namespace Java.Interop
 	public sealed class ExportAttribute : Attribute
 	{
 		public string? Name { get; set; }
+		public string[]? ThrownNames { get; set; }
 
 		public ExportAttribute () { }
 		public ExportAttribute (string name) => Name = name;

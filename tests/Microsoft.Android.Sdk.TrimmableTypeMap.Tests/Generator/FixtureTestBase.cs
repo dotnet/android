@@ -77,13 +77,30 @@ public abstract class FixtureTestBase
 	}
 
 	private protected static JavaPeerInfo MakeAcwPeer (string jniName, string managedName, string asmName)
-		=> MakePeerWithActivation (jniName, managedName, asmName);
+	{
+		return MakePeerWithActivation (jniName, managedName, asmName) with {
+			DoNotGenerateAcw = false,
+			JavaConstructors = new List<JavaConstructorInfo> {
+				new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V" },
+			},
+			MarshalMethods = new List<MarshalMethodInfo> {
+				new MarshalMethodInfo {
+					JniName = "<init>",
+					NativeCallbackName = "n_ctor",
+					JniSignature = "()V",
+					ManagedMethodName = ".ctor",
+					JniReturnType = "V",
+					IsConstructor = true,
+				},
+			},
+		};
+	}
 
 	private protected static JavaPeerInfo MakeInterfacePeer (
-		string jniName,
-		string managedName,
-		string asmName,
-		string invokerName)
+		string jniName = "android/view/View$OnClickListener",
+		string managedName = "Android.Views.View+IOnClickListener",
+		string asmName = "Mono.Android",
+		string invokerName = "Android.Views.View+IOnClickListenerInvoker")
 	{
 		var (ns, shortName) = ParseManagedTypeName (managedName);
 		return new JavaPeerInfo {
@@ -98,6 +115,18 @@ public abstract class FixtureTestBase
 		};
 	}
 
+	private protected static MarshalMethodInfo MakeMarshalMethod (string jniName, string callbackName, string jniSig, bool isConstructor = false)
+	{
+		return new MarshalMethodInfo {
+			JniName = jniName,
+			NativeCallbackName = callbackName,
+			JniSignature = jniSig,
+			ManagedMethodName = isConstructor ? ".ctor" : callbackName.StartsWith ("n_") ? callbackName.Substring (2) : callbackName,
+			JniReturnType = jniSig.Contains (')') ? jniSig.Substring (jniSig.IndexOf (')') + 1) : "V",
+			IsConstructor = isConstructor,
+		};
+	}
+
 	private protected static List<string> GetTypeRefNames (MetadataReader reader) =>
 		reader.TypeReferences
 			.Select (h => reader.GetTypeReference (h))
@@ -109,4 +138,17 @@ public abstract class FixtureTestBase
 			.Select (i => reader.GetMemberReference (MetadataTokens.MemberReferenceHandle (i)))
 			.Select (m => reader.GetString (m.Name))
 			.ToList ();
+
+	private protected static string CreateTempDir ()
+	{
+		var dir = Path.Combine (Path.GetTempPath (), $"typemap-test-{Guid.NewGuid ():N}");
+		Directory.CreateDirectory (dir);
+		return dir;
+	}
+
+	private protected static void DeleteTempDir (string dir)
+	{
+		if (Directory.Exists (dir))
+			try { Directory.Delete (dir, true); } catch { }
+	}
 }

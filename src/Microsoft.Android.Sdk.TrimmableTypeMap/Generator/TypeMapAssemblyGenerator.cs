@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -29,18 +28,5 @@ sealed class TypeMapAssemblyGenerator
 		var model = ModelBuilder.Build (peers, outputPath, assemblyName);
 		var emitter = new TypeMapAssemblyEmitter (_systemRuntimeVersion);
 		emitter.Emit (model, outputPath);
-	}
-
-	/// <summary>
-	/// Generates a TypeMap PE assembly from the given Java peer info records and writes it to <paramref name="stream"/>.
-	/// </summary>
-	/// <param name="peers">Scanned Java peer types.</param>
-	/// <param name="stream">Stream to write the output PE assembly to.</param>
-	/// <param name="assemblyName">Assembly name for the generated assembly.</param>
-	public void Generate (IReadOnlyList<JavaPeerInfo> peers, Stream stream, string assemblyName)
-	{
-		var model = ModelBuilder.Build (peers, assemblyName + ".dll", assemblyName);
-		var emitter = new TypeMapAssemblyEmitter (_systemRuntimeVersion);
-		emitter.Emit (model, stream);
 	}
 }
