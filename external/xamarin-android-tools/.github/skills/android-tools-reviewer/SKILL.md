@@ -91,8 +91,12 @@ If no issues found, submit with empty `comments` and a positive summary.
 ### 7. Submit as a single batch
 
 ```powershell
-dotnet run {skill-dir}/scripts/submit_review.cs {owner} {repo} {number} {path-to-json}
+dotnet run {skill-dir}/scripts/submit_review.cs -- {owner} {repo} {number} {path-to-json}
 ```
+
+> **Note:** `dotnet run file.cs` is a .NET 10+ feature that runs standalone C# files
+> with top-level statements directly — no `.csproj` needed. Use `--` to separate
+> `dotnet run` flags from script arguments.
 
 The script validates structure (required fields, 🤖 prefix, positive line numbers) then calls `gh api`. Delete the temp file after success.
 
