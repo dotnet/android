@@ -1,27 +1,48 @@
 # .NET for Android Review Rules
 
-Distilled from past code reviews by senior maintainers of dotnet/android and the
-conventions in [copilot-instructions.md](../../../.github/copilot-instructions.md).
+Distilled from past code reviews by senior maintainers of dotnet/android, the
+conventions in [copilot-instructions.md](../../../.github/copilot-instructions.md),
+and [MSBuildBestPractices.md](../../../Documentation/guides/MSBuildBestPractices.md).
 
 ---
 
-## 1. MSBuild Task Conventions
+## 1. MSBuild Task Conventions (C#)
 
 All build tasks ship to customers and run inside MSBuild. Getting them wrong
 causes broken builds for every .NET Android developer.
 
 | Check | What to look for |
 |-------|-----------------|
-| **Inherit from `AndroidTask`** | Every MSBuild task must extend `AndroidTask` (from `Microsoft.Android.Build.BaseTasks`). It must implement `TaskPrefix` (a short string for error codes) and `RunTask()`. Do not inherit directly from `Microsoft.Build.Utilities.Task`. |
+| **Inherit from `AndroidTask`** | Every MSBuild task must extend `AndroidTask` (from `Microsoft.Android.Build.BaseTasks`). It must implement `TaskPrefix` (a short string for error codes) and `RunTask()`. Do not inherit directly from `Microsoft.Build.Utilities.Task`. Unhandled exceptions are automatically converted to proper error codes. |
+| **Use `AsyncTask` for background work** | Tasks that need `async`/`await` should extend `AsyncTask` and override `RunTaskAsync()`. It handles `Yield()`, `try`/`finally`, and `Reacquire()` automatically. Use `AsyncTask.Log*` helpers for logging from the background thread — calling `Log.LogMessage` directly can cause IDE hangs. Use full paths on background threads (`Environment.CurrentDirectory` may differ if the task is on another MSBuild node). Leverage the `WhenAll` extension for parallel work over `ITaskItem[]`. |
 | **Return `!Log.HasLoggedErrors`** | `RunTask()` must return `!Log.HasLoggedErrors`. Do not return `true`/`false` directly — it skips the centralized error-tracking mechanism. |
 | **Use `Log.LogCoded*` methods** | Errors and warnings must use `Log.LogCodedError("XA####", …)` or `Log.LogCodedWarning("XA####", …)` — never bare `Log.LogError` without a code. Error messages should come from `Properties.Resources`. |
 | **XA error codes** | Error codes follow `XA####` (4+ digits). New codes must not collide with existing ones. Check `Properties/Resources.cs.resx` for used codes. |
 | **`[Required]` properties** | `[Required]` properties must be non-nullable with a default: `public string Foo { get; set; } = "";` or `public ITaskItem[] Bar { get; set; } = [];`. Non-`[Required]` and `[Output]` properties must be nullable (`string?`, `ITaskItem[]?`). |
 | **`UsingTask` for internal tasks** | `<UsingTask/>` elements for `xa-prep-tasks` and `BootstrapTasks` (internal, not shipped) must use `TaskFactory="TaskHostFactory"` and `Runtime="NET"`. Do NOT add these attributes to shipped task definitions in `Xamarin.Android.Common.targets` or `Microsoft.Android.Sdk/*.targets`. |
+| **Caching with `RegisterTaskObject`** | Use `BuildEngine4.RegisterTaskObject()` (via the `RegisterTaskObjectAssemblyLocal()` extension method) instead of `static` variables for sharing data between tasks or across builds. Use `as` for casts to avoid `InvalidCastException`. Cache keys should include context that invalidates properly (device target, file path, version). Cache primitive/small values only. |
 
 ---
 
-## 2. Nullable Reference Types
+## 2. MSBuild Targets & XML
+
+Targets define the build pipeline. Mistakes here break incremental builds,
+cause performance regressions, or silently delete files.
+
+| Check | What to look for |
+|-------|-----------------|
+| **Underscore prefix for private names** | Internal targets, properties, and item groups must be prefixed with `_` (e.g., `_CompileJava`, `$(_JarFile)`, `@(_JavaFiles)`). MSBuild has no visibility — the underscore signals "we might rename this." Public-facing properties should be prefixed with `Android` (e.g., `$(AndroidEnableProguard)`). |
+| **Incremental builds (`Inputs`/`Outputs`)** | Every target that *writes files* must have `Inputs` and `Outputs` so MSBuild can skip it when nothing changed. Targets that only read files, set properties, or populate item groups do NOT need them. |
+| **Stamp files** | When outputs aren't known ahead of time, use a stamp file in `$(_AndroidStampDirectory)` named after the target (e.g., `$(_AndroidStampDirectory)_ResolveLibraryProjectImports.stamp`). Create it with `<Touch Files="..." AlwaysCreate="True" />`. |
+| **`FileWrites` for intermediate files** | Intermediate files must be added to `@(FileWrites)` so `IncrementalClean` doesn't delete them. Use an `<ItemGroup>` block inside the target (it evaluates even when the target is skipped). Do NOT use `<Output TaskParameter="TouchedFiles" ItemName="FileWrites" />` — it won't run when the target is skipped, so `IncrementalClean` will delete the stamp and break incrementality. Stamp files in `$(_AndroidStampDirectory)` are already handled by `_AddFilesToFileWrites`. |
+| **Don't duplicate item group transforms** | If a target uses the same transform (e.g., `@(Files->'$(Dir)%(Filename)%(Extension)')`) more than once, compute it into a local item group first and reuse it. Duplicated transforms allocate the same array twice. |
+| **Use `->Count()` for empty checks** | Prefer `'@(Items->Count())' != '0'` over `'@(Items)' != ''`. The latter does a string join of all items, producing enormous log messages. `->Count()` returns `0` even for non-existent item groups. |
+| **Avoid `BeforeTargets`/`AfterTargets`** | Prefer `$(XDependsOn)` properties (e.g., `$(BuildDependsOn)`) to order targets. `AfterTargets` runs even if the predecessor *failed*, causing confusing cascading errors. Use `BeforeTargets`/`AfterTargets` only when no `DependsOn` property exists, and consider checking `$(MSBuildLastTaskResult)`. |
+| **XML indentation** | MSBuild/XML files use 2 spaces for indentation (per `.editorconfig`), not tabs. |
+
+---
+
+## 3. Nullable Reference Types
 
 | Check | What to look for |
 |-------|-----------------|
@@ -32,7 +53,7 @@ causes broken builds for every .NET Android developer.
 
 ---
 
-## 3. Formatting & Style
+## 4. Formatting & Style
 
 This project uses Mono style with tabs. Formatting violations create noisy diffs
 and merge conflicts.
@@ -49,7 +70,7 @@ and merge conflicts.
 
 ---
 
-## 4. Async & Cancellation Patterns
+## 5. Async & Cancellation Patterns
 
 | Check | What to look for |
 |-------|-----------------|
@@ -59,7 +80,7 @@ and merge conflicts.
 
 ---
 
-## 5. Error Handling
+## 6. Error Handling
 
 | Check | What to look for |
 |-------|-----------------|
@@ -70,7 +91,7 @@ and merge conflicts.
 
 ---
 
-## 6. Resource & Localization Files
+## 7. Resource & Localization Files
 
 | Check | What to look for |
 |-------|-----------------|
@@ -79,7 +100,7 @@ and merge conflicts.
 
 ---
 
-## 7. Security
+## 8. Security
 
 | Check | What to look for |
 |-------|-----------------|
@@ -89,7 +110,7 @@ and merge conflicts.
 
 ---
 
-## 8. Performance
+## 9. Performance
 
 | Check | What to look for |
 |-------|-----------------|
@@ -100,7 +121,7 @@ and merge conflicts.
 
 ---
 
-## 9. Code Organization
+## 10. Code Organization
 
 | Check | What to look for |
 |-------|-----------------|
@@ -111,7 +132,7 @@ and merge conflicts.
 
 ---
 
-## 10. Patterns & Conventions
+## 11. Patterns & Conventions
 
 | Check | What to look for |
 |-------|-----------------|
@@ -123,7 +144,7 @@ and merge conflicts.
 
 ---
 
-## 11. Native Code
+## 12. Native Code
 
 | Check | What to look for |
 |-------|-----------------|
@@ -132,7 +153,7 @@ and merge conflicts.
 
 ---
 
-## 12. Testing
+## 13. Testing
 
 | Check | What to look for |
 |-------|-----------------|
@@ -142,7 +163,7 @@ and merge conflicts.
 
 ---
 
-## 13. YAGNI & AI-Specific Pitfalls
+## 14. YAGNI & AI-Specific Pitfalls
 
 These are patterns that AI-generated code consistently gets wrong in this repo:
 
