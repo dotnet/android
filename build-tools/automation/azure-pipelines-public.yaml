@@ -11,12 +11,14 @@ trigger:
     include:
     - main
     - release/*
+    - feature/*
 
 pr:
   branches:
     include:
     - main
     - release/*
+    - feature/*
 
 parameters:
 - name: macTestAgentsUseCleanImages   # Test agents we do not need to clean up when finished because they are not reused
