@@ -50,7 +50,14 @@ public class ModelBuilderTests : FixtureTestBase
 		{
 			var peer = MakeAcwPeer ("my/app/MainActivity", "MyApp.MainActivity", "MyApp") with {
 				MarshalMethods = new List<MarshalMethodInfo> {
-					MakeMarshalMethod ("<init>", "n_ctor", "()V", isConstructor: true),
+					new MarshalMethodInfo {
+						JniName = "<init>",
+						NativeCallbackName = "n_ctor",
+						JniSignature = "()V",
+						ManagedMethodName = ".ctor",
+						JniReturnType = "V",
+						IsConstructor = true,
+					},
 					new MarshalMethodInfo {
 						JniName = "onCreate",
 						NativeCallbackName = "n_OnCreate",
@@ -280,7 +287,14 @@ public class ModelBuilderTests : FixtureTestBase
 				IsInterface = true,
 				InvokerTypeName = "Android.Views.View+IOnClickListenerInvoker",
 				MarshalMethods = new List<MarshalMethodInfo> {
-					MakeMarshalMethod ("onClick", "n_OnClick", "(Landroid/view/View;)V"),
+					new MarshalMethodInfo {
+						JniName = "onClick",
+						NativeCallbackName = "n_OnClick",
+						JniSignature = "(Landroid/view/View;)V",
+						ManagedMethodName = "OnClick",
+						JniReturnType = "V",
+						IsConstructor = false,
+					},
 				},
 			};
 
@@ -296,7 +310,14 @@ public class ModelBuilderTests : FixtureTestBase
 			var peer = MakePeerWithActivation ("java/lang/Object", "Java.Lang.Object", "Mono.Android") with {
 				DoNotGenerateAcw = true,
 				MarshalMethods = new List<MarshalMethodInfo> {
-					MakeMarshalMethod ("toString", "n_ToString", "()Ljava/lang/String;"),
+					new MarshalMethodInfo {
+						JniName = "toString",
+						NativeCallbackName = "n_ToString",
+						JniSignature = "()Ljava/lang/String;",
+						ManagedMethodName = "ToString",
+						JniReturnType = "Ljava/lang/String;",
+						IsConstructor = false,
+					},
 				},
 			};
 
@@ -315,9 +336,30 @@ public class ModelBuilderTests : FixtureTestBase
 		{
 			var peer = MakeAcwPeer ("my/app/Main", "MyApp.MainActivity", "App") with {
 				MarshalMethods = new List<MarshalMethodInfo> {
-					MakeMarshalMethod ("<init>", "n_ctor", "()V", isConstructor: true),
-					MakeMarshalMethod ("onCreate", "n_OnCreate", "(Landroid/os/Bundle;)V"),
-					MakeMarshalMethod ("onResume", "n_OnResume", "()V"),
+					new MarshalMethodInfo {
+						JniName = "<init>",
+						NativeCallbackName = "n_ctor",
+						JniSignature = "()V",
+						ManagedMethodName = ".ctor",
+						JniReturnType = "V",
+						IsConstructor = true,
+					},
+					new MarshalMethodInfo {
+						JniName = "onCreate",
+						NativeCallbackName = "n_OnCreate",
+						JniSignature = "(Landroid/os/Bundle;)V",
+						ManagedMethodName = "OnCreate",
+						JniReturnType = "V",
+						IsConstructor = false,
+					},
+					new MarshalMethodInfo {
+						JniName = "onResume",
+						NativeCallbackName = "n_OnResume",
+						JniSignature = "()V",
+						ManagedMethodName = "OnResume",
+						JniReturnType = "V",
+						IsConstructor = false,
+					},
 				},
 			};
 
@@ -336,14 +378,27 @@ public class ModelBuilderTests : FixtureTestBase
 		[Fact]
 		public void Build_UcoMethod_CallbackTypeIsDeclaringType ()
 		{
-			var mm = MakeMarshalMethod ("toString", "n_ToString", "()Ljava/lang/String;") with {
+			var mm = new MarshalMethodInfo {
+				JniName = "toString",
+				NativeCallbackName = "n_ToString",
+				JniSignature = "()Ljava/lang/String;",
+				ManagedMethodName = "ToString",
+				JniReturnType = "Ljava/lang/String;",
+				IsConstructor = false,
 				DeclaringTypeName = "Java.Lang.Object",
 				DeclaringAssemblyName = "Mono.Android",
 			};
 
 			var peer = MakeAcwPeer ("my/app/Main", "MyApp.MainActivity", "App") with {
 				MarshalMethods = new List<MarshalMethodInfo> {
-					MakeMarshalMethod ("<init>", "n_ctor", "()V", isConstructor: true),
+					new MarshalMethodInfo {
+						JniName = "<init>",
+						NativeCallbackName = "n_ctor",
+						JniSignature = "()V",
+						ManagedMethodName = ".ctor",
+						JniReturnType = "V",
+						IsConstructor = true,
+					},
 					mm,
 				},
 			};
@@ -359,8 +414,22 @@ public class ModelBuilderTests : FixtureTestBase
 		{
 			var peer = MakeAcwPeer ("my/app/Main", "MyApp.MainActivity", "App") with {
 				MarshalMethods = new List<MarshalMethodInfo> {
-					MakeMarshalMethod ("<init>", "n_ctor", "()V", isConstructor: true),
-					MakeMarshalMethod ("onPause", "n_OnPause", "()V"),
+					new MarshalMethodInfo {
+						JniName = "<init>",
+						NativeCallbackName = "n_ctor",
+						JniSignature = "()V",
+						ManagedMethodName = ".ctor",
+						JniReturnType = "V",
+						IsConstructor = true,
+					},
+					new MarshalMethodInfo {
+						JniName = "onPause",
+						NativeCallbackName = "n_OnPause",
+						JniSignature = "()V",
+						ManagedMethodName = "OnPause",
+						JniReturnType = "V",
+						IsConstructor = false,
+					},
 				},
 			};
 
@@ -375,9 +444,30 @@ public class ModelBuilderTests : FixtureTestBase
 		{
 			var peer = MakeAcwPeer ("my/app/Main", "MyApp.MainActivity", "App") with {
 				MarshalMethods = new List<MarshalMethodInfo> {
-					MakeMarshalMethod ("<init>", "n_ctor", "()V", isConstructor: true),
-					MakeMarshalMethod ("<init>", "n_ctor2", "()V", isConstructor: true),
-					MakeMarshalMethod ("onStart", "n_OnStart", "()V"),
+					new MarshalMethodInfo {
+						JniName = "<init>",
+						NativeCallbackName = "n_ctor",
+						JniSignature = "()V",
+						ManagedMethodName = ".ctor",
+						JniReturnType = "V",
+						IsConstructor = true,
+					},
+					new MarshalMethodInfo {
+						JniName = "<init>",
+						NativeCallbackName = "n_ctor2",
+						JniSignature = "()V",
+						ManagedMethodName = ".ctor",
+						JniReturnType = "V",
+						IsConstructor = true,
+					},
+					new MarshalMethodInfo {
+						JniName = "onStart",
+						NativeCallbackName = "n_OnStart",
+						JniSignature = "()V",
+						ManagedMethodName = "OnStart",
+						JniReturnType = "V",
+						IsConstructor = false,
+					},
 				},
 			};
 
@@ -420,7 +510,14 @@ public class ModelBuilderTests : FixtureTestBase
 				AssemblyName = "App",
 				InvokerTypeName = "MyApp.FooInvoker", // has invoker → will create proxy
 				MarshalMethods = new List<MarshalMethodInfo> {
-					MakeMarshalMethod ("bar", "n_Bar", "()V"),
+					new MarshalMethodInfo {
+						JniName = "bar",
+						NativeCallbackName = "n_Bar",
+						JniSignature = "()V",
+						ManagedMethodName = "Bar",
+						JniReturnType = "V",
+						IsConstructor = false,
+					},
 				},
 				JavaConstructors = new List<JavaConstructorInfo> {
 					new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V" },
@@ -443,8 +540,22 @@ public class ModelBuilderTests : FixtureTestBase
 		{
 			var peer = MakeAcwPeer ("my/app/Main", "MyApp.MainActivity", "App") with {
 				MarshalMethods = new List<MarshalMethodInfo> {
-					MakeMarshalMethod ("<init>", "n_ctor", "()V", isConstructor: true),
-					MakeMarshalMethod ("onCreate", "n_OnCreate", "(Landroid/os/Bundle;)V"),
+					new MarshalMethodInfo {
+						JniName = "<init>",
+						NativeCallbackName = "n_ctor",
+						JniSignature = "()V",
+						ManagedMethodName = ".ctor",
+						JniReturnType = "V",
+						IsConstructor = true,
+					},
+					new MarshalMethodInfo {
+						JniName = "onCreate",
+						NativeCallbackName = "n_OnCreate",
+						JniSignature = "(Landroid/os/Bundle;)V",
+						ManagedMethodName = "OnCreate",
+						JniReturnType = "V",
+						IsConstructor = false,
+					},
 				},
 			};
 
@@ -478,8 +589,22 @@ public class ModelBuilderTests : FixtureTestBase
 					},
 				},
 				MarshalMethods = new List<MarshalMethodInfo> {
-					MakeMarshalMethod ("<init>", "n_ctor", "()V", isConstructor: true),
-					MakeMarshalMethod ("<init>", "n_ctor", "(Landroid/content/Context;)V", isConstructor: true),
+					new MarshalMethodInfo {
+						JniName = "<init>",
+						NativeCallbackName = "n_ctor",
+						JniSignature = "()V",
+						ManagedMethodName = ".ctor",
+						JniReturnType = "V",
+						IsConstructor = true,
+					},
+					new MarshalMethodInfo {
+						JniName = "<init>",
+						NativeCallbackName = "n_ctor",
+						JniSignature = "(Landroid/content/Context;)V",
+						ManagedMethodName = ".ctor",
+						JniReturnType = "V",
+						IsConstructor = true,
+					},
 				},
 			};
 

@@ -41,18 +41,16 @@ static class JniSignatureHelper
 	}
 
 	/// <summary>
-
-	/// Parses the raw JNI type descriptor strings from a JNI method signature.
-
+	/// Parses JNI parameter type descriptors into JniParameterInfo records.
 	/// </summary>
-	public static List<string> ParseParameterTypeStrings (string jniSignature)
+	public static List<JniParameterInfo> ParseParameters (string jniSignature)
 	{
-		var result = new List<string> ();
+		var result = new List<JniParameterInfo> ();
 		int i = 1; // skip opening '('
 		while (i < jniSignature.Length && jniSignature [i] != ')') {
 			int start = i;
 			ParseSingleType (jniSignature, ref i);
-			result.Add (jniSignature.Substring (start, i - start));
+			result.Add (new JniParameterInfo { JniType = jniSignature.Substring (start, i - start) });
 		}
 		return result;
 	}
