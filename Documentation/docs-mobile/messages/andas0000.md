@@ -2,7 +2,10 @@
 title: .NET for Android error/warning ANDAS0000
 description: ANDAS0000 error/warning code
 ms.date: 04/11/2024
+f1_keywords:
+  - "ANDAS0000"
 ---
+
 # .NET for Android error/warning ANDAS0000
 
 ## Issue

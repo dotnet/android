@@ -19,6 +19,8 @@
 
 ## Critical Rules
 
+**Never use `git commit --amend`:** Always create new commits. The user will squash or fixup as needed.
+
 Reference official Android documentation where helpful:
 * [Android Developer Guide](https://developer.android.com/develop)
 * [Android API Reference](https://developer.android.com/reference)
@@ -142,6 +144,7 @@ C# code uses tabs (not spaces) and Mono style (`.editorconfig`):
 - Preserve existing formatting and comments
 - Space before `(` and `[`: `Foo ()`, `array [0]`
 - Use `""` not `string.Empty`, `[]` not `Array.Empty<T>()`
+- Prefer C# raw string literals (`"""`) for multi-line strings instead of `@""` with escaped quotes
 - Minimal diffs - don't leave random empty lines
 - Do NOT use `#region` or `#endregion`
 

@@ -6,38 +6,8 @@ using Xunit;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 
-public partial class JavaPeerScannerTests
+public partial class JavaPeerScannerTests : FixtureTestBase
 {
-	static string TestFixtureAssemblyPath {
-		get {
-			var testAssemblyDir = Path.GetDirectoryName (typeof (JavaPeerScannerTests).Assembly.Location)!;
-			var fixtureAssembly = Path.Combine (testAssemblyDir, "TestFixtures.dll");
-			Assert.True (File.Exists (fixtureAssembly),
-				$"TestFixtures.dll not found at {fixtureAssembly}. Ensure the TestFixtures project builds.");
-			return fixtureAssembly;
-		}
-	}
-
-	List<JavaPeerInfo> ScanFixtures ()
-	{
-		using var scanner = new JavaPeerScanner ();
-		return scanner.Scan (new [] { TestFixtureAssemblyPath });
-	}
-
-	JavaPeerInfo FindByJavaName (List<JavaPeerInfo> peers, string javaName)
-	{
-		var peer = peers.FirstOrDefault (p => p.JavaName == javaName);
-		Assert.NotNull (peer);
-		return peer;
-	}
-
-	JavaPeerInfo FindByManagedName (List<JavaPeerInfo> peers, string managedName)
-	{
-		var peer = peers.FirstOrDefault (p => p.ManagedTypeName == managedName);
-		Assert.NotNull (peer);
-		return peer;
-	}
-
 	[Fact]
 	public void Scan_FindsAllJavaPeerTypes ()
 	{
@@ -54,8 +24,7 @@ public partial class JavaPeerScannerTests
 	[InlineData ("my/app/MainActivity", false)]
 	public void Scan_DoNotGenerateAcw (string javaName, bool expected)
 	{
-		var peers = ScanFixtures ();
-		Assert.Equal (expected, FindByJavaName (peers, javaName).DoNotGenerateAcw);
+		Assert.Equal (expected, FindFixtureByJavaName (javaName).DoNotGenerateAcw);
 	}
 
 	[Theory]
@@ -71,19 +40,17 @@ public partial class JavaPeerScannerTests
 	[InlineData ("android/app/Activity", false)]
 	public void Scan_IsUnconditional (string javaName, bool expected)
 	{
-		var peers = ScanFixtures ();
-		Assert.Equal (expected, FindByJavaName (peers, javaName).IsUnconditional);
+		Assert.Equal (expected, FindFixtureByJavaName (javaName).IsUnconditional);
 	}
 
 	[Fact]
 	public void Scan_TypeMetadata_IsCorrect ()
 	{
-		var peers = ScanFixtures ();
-		Assert.True (FindByJavaName (peers, "my/app/AbstractBase").IsAbstract);
-		Assert.True (FindByManagedName (peers, "Android.Views.IOnClickListener").IsInterface);
-		Assert.False (FindByManagedName (peers, "Android.Views.IOnClickListener").DoNotGenerateAcw);
+		Assert.True (FindFixtureByJavaName ("my/app/AbstractBase").IsAbstract);
+		Assert.True (FindFixtureByManagedName ("Android.Views.IOnClickListener").IsInterface);
+		Assert.False (FindFixtureByManagedName ("Android.Views.IOnClickListener").DoNotGenerateAcw);
 
-		var generic = FindByJavaName (peers, "my/app/GenericHolder");
+		var generic = FindFixtureByJavaName ("my/app/GenericHolder");
 		Assert.True (generic.IsGenericDefinition);
 		Assert.Equal ("MyApp.Generic.GenericHolder`1", generic.ManagedTypeName);
 	}

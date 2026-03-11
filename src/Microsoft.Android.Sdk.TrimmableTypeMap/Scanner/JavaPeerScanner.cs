@@ -218,6 +218,8 @@ sealed class JavaPeerScanner : IDisposable
 				JavaName = jniName,
 				CompatJniName = compatJniName,
 				ManagedTypeName = fullName,
+				ManagedTypeNamespace = ExtractNamespace (fullName),
+				ManagedTypeShortName = ExtractShortName (fullName),
 				AssemblyName = index.AssemblyName,
 				BaseJavaName = baseJavaName,
 				ImplementedInterfaceJavaNames = implementedInterfaces,
@@ -731,5 +733,23 @@ sealed class JavaPeerScanner : IDisposable
 		var data = System.Text.Encoding.UTF8.GetBytes ($"{ns}:{assemblyName}");
 		var hash = System.IO.Hashing.Crc64.Hash (data);
 		return $"crc64{BitConverter.ToString (hash).Replace ("-", "").ToLowerInvariant ()}";
+	}
+
+	static string ExtractNamespace (string fullName)
+	{
+		// Strip nested type suffix (e.g., "My.Namespace.Outer+Inner" → "My.Namespace.Outer")
+		int plusIndex = fullName.IndexOf ('+');
+		var nameForNamespace = plusIndex >= 0 ? fullName.Substring (0, plusIndex) : fullName;
+		int lastDot = nameForNamespace.LastIndexOf ('.');
+		return lastDot >= 0 ? nameForNamespace.Substring (0, lastDot) : "";
+	}
+
+	static string ExtractShortName (string fullName)
+	{
+		var span = fullName.AsSpan ();
+		int lastDot = span.LastIndexOf ('.');
+		var typePart = lastDot >= 0 ? span.Slice (lastDot + 1) : span;
+		int lastPlus = typePart.LastIndexOf ('+');
+		return (lastPlus >= 0 ? typePart.Slice (lastPlus + 1) : typePart).ToString ();
 	}
 }

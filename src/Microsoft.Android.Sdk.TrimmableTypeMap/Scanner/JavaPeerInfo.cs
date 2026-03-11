@@ -29,6 +29,16 @@ sealed record JavaPeerInfo
 	public required string ManagedTypeName { get; init; }
 
 	/// <summary>
+	/// Managed type namespace, e.g., "Android.App".
+	/// </summary>
+	public string ManagedTypeNamespace { get; init; } = "";
+
+	/// <summary>
+	/// Managed type short name (without namespace), e.g., "Activity".
+	/// </summary>
+	public string ManagedTypeShortName { get; init; } = "";
+
+	/// <summary>
 	/// Assembly name the type belongs to, e.g., "Mono.Android".
 	/// </summary>
 	public required string AssemblyName { get; init; }
