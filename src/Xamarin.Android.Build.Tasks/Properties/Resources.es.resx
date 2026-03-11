@@ -1000,7 +1000,7 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
   <data name="XA1040" xml:space="preserve">
     <value>El entorno de ejecución {0} en Android es una característica experimental y aún no es adecuado para su uso en producción. Problemas de archivos en: https://github.com/dotnet/android/issues</value>
     <comment>The following are literal names and should not be translated: .NET.
-{0} - The name of the .NET runtime, such as CoreCLR or NativeAOT.</comment>
+{0} - The name of the .NET runtime, such as NativeAOT.</comment>
   </data>
   <data name="XA1041" xml:space="preserve">
     <value>La propiedad '{0}' de MSBuild tiene un valor no válido de '{1}'. Se espera que el valor sea una ruta de acceso de directorio que represente la ubicación relativa de los activos o recursos.</value>
@@ -1072,6 +1072,22 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
   <data name="XA0142" xml:space="preserve">
     <value>Error del comando '{0}'.\n{1}</value>
     <comment>'{0}' is a failed command name (potentially with path) followed by all the arguments passed to it. {1} is the combined output on the standard error and standard output streams.</comment>
+  </data>
+  <data name="XA0143" xml:space="preserve">
+    <value>No se pudo iniciar Android Emulator para AVD "{0}": {1}</value>
+    <comment>{0} - The AVD name.
+{1} - The exception message.</comment>
+  </data>
+  <data name="XA0144" xml:space="preserve">
+    <value>El emulador de Android para AVD "{0}" se cerró inesperadamente con código {1} de salida antes de estar disponible.</value>
+    <comment>{0} - The AVD name.
+{1} - The process exit code.</comment>
+  </data>
+  <data name="XA0145" xml:space="preserve">
+    <value>El emulador de Android para AVD "{0}" no finalizó el arranque en cuestión {1} de segundos. Aumente "BootTimeoutSeconds" o compruebe la configuración del emulador.</value>
+    <comment>The following is a literal name and should not be translated: BootTimeoutSeconds
+{0} - The AVD name.
+{1} - The timeout in seconds.</comment>
   </data>
   <data name="XAGRDL1000" xml:space="preserve">
     <value>No se encontró el ejecutable 'gradlew' en el directorio del proyecto '{0}'. Asegúrese de que la ruta de acceso a la carpeta del proyecto de Gradle es correcta y que contiene scripts de contenedores de Gradle.</value>

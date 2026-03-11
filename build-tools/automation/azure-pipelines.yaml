@@ -7,6 +7,7 @@ trigger:
   - d16-*
   - d17-*
   - release/*
+  - feature/*
 
 # External sources, scripts, tests, and yaml template files.
 resources:
@@ -120,6 +121,8 @@ extends:
           clean: all
         variables:
           BuildVersion: $(Build.BuildId)
+          # Ignore MAUI's public API analyzer errors (RS0016) - dotnet/android does not care about those
+          PublicApiType: Generate
         steps:
         - checkout: maui
           clean: true

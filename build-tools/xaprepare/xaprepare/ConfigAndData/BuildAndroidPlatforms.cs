@@ -7,8 +7,10 @@ namespace Xamarin.Android.Prepare
 	{
 		public const string AndroidNdkVersion = "28c";
 		public const string AndroidNdkPkgRevision = "28.2.13676358";
-		public const int NdkMinimumAPI = 21;
-		public const int NdkMinimumAPILegacy32 = 21;
+
+		public static string NdkMinimumAPI => Context.Instance.Properties.GetRequiredValue (KnownProperties.AndroidMinimumDotNetApiLevel);
+		public static string NdkMinimumAPILegacy32 => NdkMinimumAPI;
+		public static string NdkMinimumNonMonoAPI => Context.Instance.Properties.GetRequiredValue (KnownProperties.AndroidMinimumNonMonoApiLevel);
 
 		public static readonly List<AndroidPlatform> AllPlatforms = new List<AndroidPlatform> {
 			new AndroidPlatform (apiName: "",                       apiLevel: 1,  platformID: "1"),
@@ -48,6 +50,7 @@ namespace Xamarin.Android.Prepare
 			new AndroidPlatform (apiName: "VanillaIceCream",        apiLevel: 35, platformID: "35",  include: "v15.0",   framework: "v15.0"),
 			new AndroidPlatform (apiName: "Baklava",                apiLevel: 36, platformID: "36",  include: "v16.0",   framework: "v16.0"),
 			new AndroidPlatform (apiName: "CANARY",                 apiLevel: new Version (36, 1),   platformID: "36.1", include: "v16.1",   framework: "v16.1", stable: true),
+			new AndroidPlatform (apiName: "CinnamonBun",            apiLevel: new Version (37, 0),   platformID: "CinnamonBun", include: "v17.0",   framework: "v17.0", stable: false),
 		};
 
 	}

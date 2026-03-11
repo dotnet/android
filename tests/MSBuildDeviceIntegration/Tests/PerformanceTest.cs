@@ -173,6 +173,8 @@ namespace Xamarin.Android.Build.Tests
 		[Retry (Retry)]
 		public void Build_CSharp_Change ()
 		{
+			AssertCommercialBuild (); // This test will fail without Fast Deployment
+
 			var proj = CreateApplicationProject ();
 			proj.MainActivity = proj.DefaultMainActivity;
 			using (var builder = CreateBuilderWithoutLogFile ()) {
@@ -269,9 +271,7 @@ namespace Xamarin.Android.Build.Tests
 		[Retry (Retry)]
 		public void Build_XAML_Change ([Values (true, false)] bool install)
 		{
-			if (install) {
-				AssertCommercialBuild (); // This test will fail without Fast Deployment
-			}
+			AssertCommercialBuild (); // This test will fail without Fast Deployment
 
 			var path = Path.Combine ("temp", TestName);
 			var xaml =

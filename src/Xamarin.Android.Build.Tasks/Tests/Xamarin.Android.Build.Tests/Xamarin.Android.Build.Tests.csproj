@@ -33,6 +33,7 @@
     <Compile Remove="DebuggingTasksTests.cs" Condition="!Exists('$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Debugging.Tasks.dll')" />
     <Compile Remove="Resources\ApacheHttpClient.cs" />
     <Compile Remove="Expected\**" />
+    <Compile Include="$(BootstrapOutputDirectory)\XABuildConfig.cs" />
     <Compile Include="..\..\..\..\tools\assembly-store-reader-mk2\AssemblyStore\*.cs" />
     <Content Include="Expected\GenerateDesignerFileExpected.cs">
       <Link>..\Expected\GenerateDesignerFileExpected.cs</Link>

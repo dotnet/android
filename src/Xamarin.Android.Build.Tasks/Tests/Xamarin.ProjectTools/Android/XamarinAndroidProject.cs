@@ -23,6 +23,13 @@ namespace Xamarin.ProjectTools
 	public abstract class XamarinAndroidProject : DotNetXamarinProject
 	{
 		/// <summary>
+		/// Override to provide additional MSBuild XML content inside the auto-generated Directory.Build.targets file.
+		/// The returned string is inserted as-is inside the root &lt;Project&gt; element, before the
+		/// <c>_ClearResolvedCodeAnalysisRuleSet</c> target.
+		/// </summary>
+		protected virtual string ExtraDirectoryBuildTargetsContent => "";
+
+		/// <summary>
 		/// Initializes a new instance of the XamarinAndroidProject class with the specified configuration names.
 		/// Sets the default language to C# and output type to Library.
 		/// </summary>
@@ -35,6 +42,24 @@ namespace Xamarin.ProjectTools
 		{
 			Language = XamarinAndroidProjectLanguage.CSharp;
 			SetProperty (KnownProperties.OutputType, "Library");
+
+			// Prevent CI Guardian SDL analysis from breaking CoreCompile incrementality.
+			// Guardian's MergeGuardianDotnetAnalyzersRuleSets target regenerates a merged
+			// ruleset file on every build (new timestamp), which is in CoreCompile's Inputs
+			// via $(ResolvedCodeAnalysisRuleSet). Clearing this property ensures CoreCompile
+			// is properly incremental when source files haven't changed.
+			Imports.Add (new Import (() => "Directory.Build.targets") {
+				TextContent = () => $"""
+					<Project>
+						{ExtraDirectoryBuildTargetsContent}
+						<Target Name="_ClearResolvedCodeAnalysisRuleSet" BeforeTargets="CoreCompile" AfterTargets="ResolveCodeAnalysisRuleSet;MergeGuardianDotnetAnalyzersRuleSets">
+							<PropertyGroup>
+								<ResolvedCodeAnalysisRuleSet />
+							</PropertyGroup>
+						</Target>
+					</Project>
+				""",
+			});
 		}
 
 		/// <summary>

@@ -12,8 +12,8 @@
     <BuildOutputDirectory>$(MSBuildThisFileDirectory)bin\$(Configuration)\</BuildOutputDirectory>
     <BootstrapOutputDirectory>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\</BootstrapOutputDirectory>
     <TestOutputDirectory>$(MSBuildThisFileDirectory)bin\Test$(Configuration)\</TestOutputDirectory>
-    <BootstrapTasksAssembly>$(BootstrapOutputDirectory)$(TargetFrameworkNETStandard)\Xamarin.Android.Tools.BootstrapTasks.dll</BootstrapTasksAssembly>
-    <PrepTasksAssembly>$(BootstrapOutputDirectory)$(TargetFrameworkNETStandard)\xa-prep-tasks.dll</PrepTasksAssembly>
+    <BootstrapTasksAssembly>$(BootstrapOutputDirectory)$(DotNetStableTargetFramework)\Xamarin.Android.Tools.BootstrapTasks.dll</BootstrapTasksAssembly>
+    <PrepTasksAssembly>$(BootstrapOutputDirectory)$(DotNetStableTargetFramework)\xa-prep-tasks.dll</PrepTasksAssembly>
     <DotNetPreviewPath Condition=" '$(DotNetPreviewPath)' == '' ">$(BuildOutputDirectory)dotnet\</DotNetPreviewPath>
     <DotNetPreviewTool Condition=" '$(DotNetPreviewTool)' == '' and Exists('$(DotNetPreviewPath)') ">$(DotNetPreviewPath)dotnet</DotNetPreviewTool>
     <DotNetPreviewTool Condition=" '$(DotNetPreviewTool)' == '' ">dotnet</DotNetPreviewTool>
@@ -37,7 +37,7 @@
          * Bump first digit of the patch version for feature releases (and reset the first two digits to 0)
     -->
     <AndroidPackVersion>36.1.99</AndroidPackVersion>
-    <AndroidPackVersionSuffix>preview.2</AndroidPackVersionSuffix>
+    <AndroidPackVersionSuffix>preview.3</AndroidPackVersionSuffix>
     <!-- Final value set by GetXAVersionInfo target -->
     <IsStableBuild>false</IsStableBuild>
   </PropertyGroup>

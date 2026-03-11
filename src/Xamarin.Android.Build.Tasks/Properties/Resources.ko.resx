@@ -1000,7 +1000,7 @@ In this message, the term "handheld app" means "app for handheld devices."
   <data name="XA1040" xml:space="preserve">
     <value>Android의 {0} 런타임은 실험적 기능이며 프로덕션 용도에 아직 적합하지 않습니다. 파일 문제: https://github.com/dotnet/android/issues</value>
     <comment>The following are literal names and should not be translated: .NET.
-{0} - The name of the .NET runtime, such as CoreCLR or NativeAOT.</comment>
+{0} - The name of the .NET runtime, such as NativeAOT.</comment>
   </data>
   <data name="XA1041" xml:space="preserve">
     <value>'{0}' MSBuild 속성의 '{1}' 값이 잘못되었습니다. 값은 자산 또는 리소스의 상대 위치를 나타내는 디렉터리 경로여야 합니다.</value>
@@ -1072,6 +1072,22 @@ In this message, the term "handheld app" means "app for handheld devices."
   <data name="XA0142" xml:space="preserve">
     <value>'{0}' 명령이 실패했습니다.\n{1}</value>
     <comment>'{0}' is a failed command name (potentially with path) followed by all the arguments passed to it. {1} is the combined output on the standard error and standard output streams.</comment>
+  </data>
+  <data name="XA0143" xml:space="preserve">
+    <value>AVD '{0}'용 Android Emulator를 시작하지 못 함: {1}</value>
+    <comment>{0} - The AVD name.
+{1} - The exception message.</comment>
+  </data>
+  <data name="XA0144" xml:space="preserve">
+    <value>AVD '{0}'용 Android Emulator가 사용 가능해지기 전에 종료 코드 {1}(으)로 예기치 않게 종료되었습니다.</value>
+    <comment>{0} - The AVD name.
+{1} - The process exit code.</comment>
+  </data>
+  <data name="XA0145" xml:space="preserve">
+    <value>AVD '{0}'용 Android Emulator가 {1}초 내에 부팅을 완료하지 못했습니다. 'BootTimeoutSeconds'를 늘리거나 에뮬레이터 구성을 확인하세요.</value>
+    <comment>The following is a literal name and should not be translated: BootTimeoutSeconds
+{0} - The AVD name.
+{1} - The timeout in seconds.</comment>
   </data>
   <data name="XAGRDL1000" xml:space="preserve">
     <value>프로젝트 디렉터리 '{0}'에서 실행 파일 'gradlew'를 찾을 수 없습니다. Gradle 프로젝트 폴더의 경로가 올바르고 Gradle Wrapper 스크립트가 포함되어 있는지 확인하세요.</value>

@@ -47,6 +47,16 @@ _ResolveAssemblies MSBuild target.
             RuntimeIdentifier="$(RuntimeIdentifier)"
         />
       </ItemGroup>
+      <!-- In .NET 11+, multiple targets (ILLink, NativeAOT runtime, Android) may independently
+           add the same assembly to ResolvedFileToPublish. Deduplicate before returning to the
+           outer build, which does not use Distinct() since items from different RIDs must be kept. -->
+      <RemoveDuplicates Condition=" '$(_AndroidRuntime)' == 'NativeAOT' " Inputs="@(ResolvedFileToPublish)">
+        <Output TaskParameter="Filtered" ItemName="_DeduplicatedResolvedFileToPublish" />
+      </RemoveDuplicates>
+      <ItemGroup Condition=" '$(_AndroidRuntime)' == 'NativeAOT' ">
+        <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" />
+        <ResolvedFileToPublish Include="@(_DeduplicatedResolvedFileToPublish)" />
+      </ItemGroup>
       <AndroidWarning
           Code="XA1024"
           ResourceName="XA1024"

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunParallelCmds" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunParallelCmds" TaskFactory="TaskHostFactory" Runtime="NET" />
 
   <Target Name="_PrepareCommonProperties">
     <PropertyGroup>
@@ -9,7 +9,7 @@
   </Target>
 
   <Target Name="_BuildRuntimes" BeforeTargets="Build"
-          DependsOnTargets="_PrepareCommonProperties;_ConfigureAndBuildArchiveDSOStub;_ConfigureRuntimes;_BuildAndroidRuntimes;_BuildAndroidAnalyzerRuntimes;_CopyToPackDirs">
+          DependsOnTargets="_PrepareCommonProperties;_ConfigureAndBuildArchiveDSOStub;_ConfigureAndBuildTestJniLibrary;_ConfigureRuntimes;_BuildAndroidRuntimes;_BuildAndroidAnalyzerRuntimes;_CopyToPackDirs">
   </Target>
 
   <!-- The runtime check makes the target run only once, when building the CoreCLR runtime. Otherwise, when building in parallel, we will get
@@ -113,11 +113,52 @@
     <Touch Files="@(_ArchiveDSOOutput)" />
   </Target>
 
+  <Target Name="_ConfigureTestJniLibraryInputsAndOutputs">
+    <ItemGroup>
+      <_TestJniLibraryAbi Include="@(AndroidSupportedTargetJitAbi)" />
+      <_TestJniLibraryAbi Remove="armeabi-v7a" />
+      <_TestJniLibraryAbi Remove="x86" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <_TestJniLibraryInput Include="common\test-jni-library\CMakeLists.txt" />
+
+      <_TestJniLibraryOutput Include="@(_TestJniLibraryAbi->'$(FlavorIntermediateOutputPath)%(AndroidRID)-test-jni-library\CMakeCache.txt')" />
+
+      <_TestJniLibraryOutputDirToCreate Include="$(FlavorIntermediateOutputPath)%(_TestJniLibraryAbi.AndroidRID)-test-jni-library" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_ConfigureAndBuildTestJniLibrary"
+          Condition="'$(CMakeRuntimeFlavor)' != 'NativeAOT' "
+          DependsOnTargets="_PrepareCommonProperties;_ConfigureTestJniLibraryInputsAndOutputs"
+          Inputs="@(_TestJniLibraryInput)"
+          Outputs="@(_TestJniLibraryOutput)">
+    <ItemGroup>
+      <_ConfigureTestJniLibraryCommands Include="@(_TestJniLibraryAbi)">
+        <Command>$(CmakePath)</Command>
+        <Arguments>-DOUTPUT_PATH="$(OutputPath.TrimEnd('\'))" -DRUNTIME_FLAVOR="$(CMakeRuntimeFlavor)" --preset default-release-%(_TestJniLibraryAbi.Identity) -DBUILD_TEST_JNI_LIBRARY=ON "$(MSBuildThisFileDirectory)"</Arguments>
+        <WorkingDirectory>$(FlavorIntermediateOutputPath)%(_TestJniLibraryAbi.AndroidRID)-test-jni-library</WorkingDirectory>
+      </_ConfigureTestJniLibraryCommands>
+    </ItemGroup>
+
+    <MakeDir Directories="@(_TestJniLibraryOutputDirToCreate)" />
+    <RunParallelCmds Commands="@(_ConfigureTestJniLibraryCommands)" />
+
+    <Exec
+        Command="$(NinjaPath) -v"
+        WorkingDirectory="$(FlavorIntermediateOutputPath)%(_TestJniLibraryAbi.AndroidRID)-test-jni-library" />
+
+    <Touch Files="@(_TestJniLibraryOutput)" />
+  </Target>
+
   <Target Name="_ConfigureRuntimes"
           DependsOnTargets="_ConfigureRuntimesInputs"
           Inputs="@(_ConfigureRuntimesInputs)"
           Outputs="@(_ConfigureRuntimesOutputs)">
     <PropertyGroup>
+      <_PresetPrefix Condition=" '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">nativeaot-</_PresetPrefix>
+      <_PresetPrefix Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">coreclr-</_PresetPrefix>
       <_NoInline Condition=" '$(DoNotInlineMonodroid)' == 'true' ">-DDONT_INLINE=ON</_NoInline>
       <_NoStrip Condition=" '$(DoNotStripMonodroid)' == 'true' ">-DSTRIP_DEBUG=OFF</_NoStrip>
       <_LocalDotNetRuntimePath Condition=" '$(CLRLocalRuntimePath)' != '' And '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">-DLOCAL_CORECLR_PATH="$(CLRLocalRuntimePath)"</_LocalDotNetRuntimePath>
@@ -128,13 +169,13 @@
     <ItemGroup>
       <_ConfigureRuntimeCommands Include="@(AndroidSupportedTargetJitAbi)">
         <Command>$(CmakePath)</Command>
-        <Arguments>--preset default-debug-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
+        <Arguments>--preset $(_PresetPrefix)default-debug-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
         <WorkingDirectory>$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-Debug</WorkingDirectory>
       </_ConfigureRuntimeCommands>
 
       <_ConfigureRuntimeCommands Include="@(AndroidSupportedTargetJitAbi)">
         <Command>$(CmakePath)</Command>
-        <Arguments>--preset default-release-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
+        <Arguments>--preset $(_PresetPrefix)default-release-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
         <WorkingDirectory>$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-Release</WorkingDirectory>
       </_ConfigureRuntimeCommands>
     </ItemGroup>
@@ -142,25 +183,25 @@
     <ItemGroup Condition=" '$(EnableNativeAnalyzers)' == 'true' And '$(CMakeRuntimeFlavor)' == 'MonoVM' " >
       <_ConfigureRuntimeCommands Include="@(AndroidSupportedTargetJitAbi)">
         <Command>$(CmakePath)</Command>
-        <Arguments>--preset asan-debug-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
+        <Arguments>--preset $(_PresetPrefix)asan-debug-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
         <WorkingDirectory>$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-asan-Debug</WorkingDirectory>
       </_ConfigureRuntimeCommands>
 
       <_ConfigureRuntimeCommands Include="@(AndroidSupportedTargetJitAbi)">
         <Command>$(CmakePath)</Command>
-        <Arguments>--preset asan-release-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
+        <Arguments>--preset $(_PresetPrefix)asan-release-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
         <WorkingDirectory>$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-asan-Release</WorkingDirectory>
       </_ConfigureRuntimeCommands>
 
       <_ConfigureRuntimeCommands Include="@(AndroidSupportedTargetJitAbi)">
         <Command>$(CmakePath)</Command>
-        <Arguments>--preset ubsan-debug-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
+        <Arguments>--preset $(_PresetPrefix)ubsan-debug-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
         <WorkingDirectory>$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-ubsan-Debug</WorkingDirectory>
       </_ConfigureRuntimeCommands>
 
       <_ConfigureRuntimeCommands Include="@(AndroidSupportedTargetJitAbi)">
         <Command>$(CmakePath)</Command>
-        <Arguments>--preset ubsan-release-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
+        <Arguments>--preset $(_PresetPrefix)ubsan-release-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
         <WorkingDirectory>$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-ubsan-Release</WorkingDirectory>
       </_ConfigureRuntimeCommands>
     </ItemGroup>
@@ -230,7 +271,6 @@
     </ItemGroup>
 
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">
-      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libnaot-android.debug.so')" />
       <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libnaot-android.release.so')" />
     </ItemGroup>
 
