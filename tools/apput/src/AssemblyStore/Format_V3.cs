@@ -108,13 +108,16 @@ class Format_V3 : FormatBase
 		return ret.AsReadOnly ();
 	}
 
-	protected override bool ReadAssemblies (BinaryReader reader, out IList<ApplicationAssembly>? assemblies)
+	protected override bool ReadAssemblies (BinaryReader reader, out IList<ApplicationAssembly>? assemblies, out IList<AssemblyPdb>? pdbs, out IDictionary<string, string>? configs)
 	{
 		Debug.Assert (Header != null);
 		Debug.Assert (Header.IndexEntryCount != null);
 		Debug.Assert (Descriptors != null);
 
 		assemblies = null;
+		pdbs = null;
+		configs = null;
+
 		if (!EnsureValidState (nameof (ReadAssemblies), out _)) {
 			return false;
 		}
@@ -142,20 +145,23 @@ class Format_V3 : FormatBase
 			index.Add (hash, new AssemblyStoreIndexEntryV3 (hash, descIdx, ignore));
 		}
 
-		var ret = new List<ApplicationAssembly> ();
+		var loadedAssemblies = new List<ApplicationAssembly> ();
+		var loadedPDBs = new List<AssemblyPdb> ();
+		var loadedConfigs = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase);
 		for (int i = 0; i < Descriptors.Count; i++) {
 			var desc = (AssemblyStoreAssemblyDescriptorV3)Descriptors[i];
 			string name = assemblyNamesUnreliable ? "" : assemblyNames[i];
 			var assemblyStream = new SubStream (reader.BaseStream, (long)desc.DataOffset, (long)desc.DataSize);
 
-			Log.Debug ($"{LogTag}: loading assembly at index {i}; Data offset: {desc.DataOffset}; Data size: {desc.DataSize}");
+			LogInformation (name, i, desc.DataOffset, desc.DataSize);
+
 			ulong hash = NameHash (name);
 			Log.Debug ($"{LogTag}: hash for assembly '{name}' is 0x{hash:x}");
 
 			bool isIgnored = CheckIgnored (hash);
 			if (isIgnored) {
 				Log.Debug ($"{LogTag}: assembly '{name}' added, marked as ignore on load");
-				ret.Add ((ApplicationAssembly)ApplicationAssembly.CreateIgnoredAssembly (name, hash));
+				loadedAssemblies.Add ((ApplicationAssembly)ApplicationAssembly.CreateIgnoredAssembly (name, hash));
 				continue;
 			}
 
@@ -163,19 +169,60 @@ class Format_V3 : FormatBase
 			if (!assemblyState.Success) {
 				Log.Debug ($"{LogTag}: assembly '{name}' NOT loaded");
 				assemblyStream.Dispose ();
-				continue;
+			} else {
+				// assemblyStream is owned by `ApplicationAssembly`
+				var assembly = (ApplicationAssembly)ApplicationAssembly.LoadAspect (assemblyStream, assemblyState, name);
+				assembly.NameHash = hash;
+				assembly.Architecture = arch;
+				loadedAssemblies.Add (assembly);
+				Log.Debug ($"{LogTag}: assembly '{name}' loaded");
 			}
 
-			// assemblyStream is owned by `ApplicationAssembly`
-			var assembly = (ApplicationAssembly)ApplicationAssembly.LoadAspect (assemblyStream, assemblyState, name);
-			assembly.NameHash = hash;
-			assembly.Architecture = arch;
-			ret.Add (assembly);
-			Log.Debug ($"{LogTag}: assembly '{name}' loaded");
+			if (desc.DebugDataSize > 0) {
+				Log.Debug ($"{LogTag}: assembly '{name}' has associated debug data.");
+
+				var pdbStream = new SubStream (reader.BaseStream, (long)desc.DebugDataOffset, (long)desc.DebugDataSize);
+				LogInformation (name, i, desc.DebugDataOffset, desc.DebugDataSize, "debug data");
+
+				IAspectState pdbState = AssemblyPdb.ProbeAspect (pdbStream, name);
+				if (!pdbState.Success) {
+					Log.Debug ($"{LogTag}: assembly '{name}' debug data NOT loaded");
+					pdbStream.Dispose ();
+				} else {
+					var pdb = (AssemblyPdb)AssemblyPdb.LoadAspect (pdbStream, pdbState, name);
+					pdb.Architecture = arch;
+					loadedPDBs.Add (pdb);
+					Log.Debug ($"{LogTag}: assembly '{name}' debug data loaded");
+				}
+			}
+
+			if (desc.ConfigDataSize > 0) {
+				Log.Debug ($"{LogTag}: assembly '{name}' has associated config file.");
+
+				using var configStream = new SubStream (reader.BaseStream, (long)desc.ConfigDataOffset, (long)desc.ConfigDataSize);
+				LogInformation (name, i, desc.ConfigDataOffset, desc.ConfigDataSize, "config file");
+
+				using var configReader = new StreamReader (configStream, Encoding.UTF8, detectEncodingFromByteOrderMarks: false);
+				loadedConfigs.Add (name, configReader.ReadToEnd ());
+				Log.Debug ($"{LogTag}: assembly '{name}' config file loaded");
+			}
 		}
 
-		assemblies = ret.AsReadOnly ();
+		assemblies = loadedAssemblies.AsReadOnly ();
+		pdbs = loadedPDBs.AsReadOnly ();
+		configs = loadedConfigs.AsReadOnly ();
+
 		return true;
+
+		void LogInformation (string assemblyName, int index, ulong offset, ulong size, string? what = null)
+		{
+			if (String.IsNullOrEmpty (what)) {
+				what = String.Empty;
+			} else {
+				what = $" {what}";
+			}
+			Log.Debug ($"{LogTag}: loading assembly '{assemblyName}'{what} at index {index}; Data offset: {offset}; Data size: {size}");
+		}
 
 		ulong NameHash (string name)
 		{

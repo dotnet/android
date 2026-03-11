@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace ApplicationUtility;
 
+// TODO: implement config file extraction
 [AspectExtractor (containerAspectType: typeof (AssemblyStore),              storedAspectType: typeof (ApplicationAssembly))]
 [AspectExtractor (containerAspectType: typeof (AssemblyStoreSharedLibrary), storedAspectType: typeof (ApplicationAssembly))]
 [AspectExtractor (containerAspectType: typeof (PackageAAB),                 storedAspectType: typeof (ApplicationAssembly))]
@@ -47,14 +48,18 @@ class AssemblyExtractor : BaseExtractorWithOptions<AssemblyExtractorOptions>
 
 	}
 
-	bool Extract (GetOutputStreamForPathFn getOutputStreamForPath, AssemblyStore store)
-	{
-		throw new NotImplementedException ();
-	}
-
 	bool Extract (GetOutputStreamForPathFn getOutputStreamForPath, AssemblyStoreSharedLibrary dso)
 	{
-		throw new NotImplementedException ();
+		return Extract (getOutputStreamForPath, dso.AssemblyStore);
+	}
+
+	bool Extract (GetOutputStreamForPathFn getOutputStreamForPath, AssemblyStore store)
+	{
+		var assemblies = new List<ApplicationAssembly> ();
+		var pdbs = new List<AssemblyPdb> ();
+
+		GatherItems (store, assemblies, pdbs);
+		return Extract (getOutputStreamForPath, assemblies, pdbs);
 	}
 
 	bool Extract (GetOutputStreamForPathFn getOutputStreamForPath, ApplicationPackage package)
@@ -69,10 +74,7 @@ class AssemblyExtractor : BaseExtractorWithOptions<AssemblyExtractorOptions>
 					continue;
 				}
 
-				assemblies.AddRange (store.Assemblies.Values);
-				if (Options.ExtractPDB) {
-					pdbs.AddRange (store.PDBs.Values);
-				}
+				GatherItems (store, assemblies, pdbs);
 			}
 		}
 
@@ -116,18 +118,29 @@ class AssemblyExtractor : BaseExtractorWithOptions<AssemblyExtractorOptions>
 		}
 	}
 
+	void GatherItems (AssemblyStore store, List<ApplicationAssembly> assemblies, List<AssemblyPdb> pdbs)
+	{
+		assemblies.AddRange (store.Assemblies.Values);
+		if (Options.ExtractPDB) {
+			pdbs.AddRange (store.PDBs.Values);
+		}
+	}
+
 	// `assemblies` and `pdbs` are expected to contain only entries for the architectures selected by the user.
 	bool Extract (GetOutputStreamForPathFn getOutputStreamForPath, List<ApplicationAssembly> assemblies, List<AssemblyPdb> pdbs)
 	{
-		if (assemblies.Count == 0) {
+		if (assemblies.Count == 0 && pdbs.Count == 0) {
 			return true;
 		}
 
+		bool allIsFine = true;
+
 		if (Options.AssemblyPatterns == null || Options.AssemblyPatterns.Count == 0) {
-			return Extract (null, getOutputStreamForPath, assemblies);
+			allIsFine &= Extract (null, getOutputStreamForPath, assemblies);
+			allIsFine &= Extract (null, getOutputStreamForPath, pdbs);
+			return allIsFine;
 		}
 
-		bool allIsFine = true;
 		if (!Options.UseRegex) {
 			// Glob patterns are combined into a single regex
 			(Regex? rx, string ap) = MakeRegexFromGlobPatterns (DllExt);
