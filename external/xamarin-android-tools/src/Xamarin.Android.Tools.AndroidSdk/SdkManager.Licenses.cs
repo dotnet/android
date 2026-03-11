@@ -17,8 +17,13 @@ public partial class SdkManager
 	/// <summary>
 	/// Accepts all SDK licenses using <c>sdkmanager --licenses</c>.
 	/// </summary>
+	public Task AcceptLicensesAsync () => AcceptLicensesAsync (CancellationToken.None);
+
+	/// <summary>
+	/// Accepts all SDK licenses using <c>sdkmanager --licenses</c>.
+	/// </summary>
 	/// <param name="cancellationToken">Cancellation token.</param>
-	public async Task AcceptLicensesAsync (CancellationToken cancellationToken = default)
+	public async Task AcceptLicensesAsync (CancellationToken cancellationToken)
 	{
 		var sdkManagerPath = RequireSdkManagerPath ();
 		logger (TraceLevel.Info, "Accepting SDK licenses...");
@@ -103,8 +108,14 @@ public partial class SdkManager
 	/// Accepts specific licenses by ID.
 	/// </summary>
 	/// <param name="licenseIds">The license IDs to accept (e.g., "android-sdk-license").</param>
+	public Task AcceptLicensesAsync (IEnumerable<string> licenseIds) => AcceptLicensesAsync (licenseIds, CancellationToken.None);
+
+	/// <summary>
+	/// Accepts specific licenses by ID.
+	/// </summary>
+	/// <param name="licenseIds">The license IDs to accept (e.g., "android-sdk-license").</param>
 	/// <param name="cancellationToken">Cancellation token.</param>
-	public async Task AcceptLicensesAsync (IEnumerable<string> licenseIds, CancellationToken cancellationToken = default)
+	public async Task AcceptLicensesAsync (IEnumerable<string> licenseIds, CancellationToken cancellationToken)
 	{
 		ThrowIfDisposed ();
 		if (licenseIds is null || !licenseIds.Any ())

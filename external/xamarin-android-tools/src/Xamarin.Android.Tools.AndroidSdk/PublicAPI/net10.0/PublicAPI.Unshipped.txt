@@ -90,8 +90,10 @@ Xamarin.Android.Tools.SdkLicense.SdkLicense(string! Id, string! Text) -> void
 Xamarin.Android.Tools.SdkLicense.Text.get -> string!
 Xamarin.Android.Tools.SdkLicense.Text.init -> void
 Xamarin.Android.Tools.SdkManager
-Xamarin.Android.Tools.SdkManager.AcceptLicensesAsync(System.Collections.Generic.IEnumerable<string!>! licenseIds, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Xamarin.Android.Tools.SdkManager.AcceptLicensesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Xamarin.Android.Tools.SdkManager.AcceptLicensesAsync() -> System.Threading.Tasks.Task!
+Xamarin.Android.Tools.SdkManager.AcceptLicensesAsync(System.Collections.Generic.IEnumerable<string!>! licenseIds) -> System.Threading.Tasks.Task!
+Xamarin.Android.Tools.SdkManager.AcceptLicensesAsync(System.Collections.Generic.IEnumerable<string!>! licenseIds, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Xamarin.Android.Tools.SdkManager.AcceptLicensesAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Xamarin.Android.Tools.SdkManager.AndroidSdkPath.get -> string?
 Xamarin.Android.Tools.SdkManager.AndroidSdkPath.set -> void
 Xamarin.Android.Tools.SdkManager.AreLicensesAccepted() -> bool
