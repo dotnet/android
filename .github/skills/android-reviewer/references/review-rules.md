@@ -2,7 +2,8 @@
 
 Distilled from past code reviews by senior maintainers of dotnet/android, the
 conventions in [copilot-instructions.md](../../../.github/copilot-instructions.md),
-and [MSBuildBestPractices.md](../../../Documentation/guides/MSBuildBestPractices.md).
+[MSBuildBestPractices.md](../../../Documentation/guides/MSBuildBestPractices.md),
+and [CODE_REVIEW_POST_MORTEM.md](../../../docs/CODE_REVIEW_POST_MORTEM.md).
 
 ---
 
@@ -17,8 +18,8 @@ causes broken builds for every .NET Android developer.
 | **Use `AsyncTask` for background work** | Tasks that need `async`/`await` should extend `AsyncTask` and override `RunTaskAsync()`. It handles `Yield()`, `try`/`finally`, and `Reacquire()` automatically. Use `AsyncTask.Log*` helpers for logging from the background thread — calling `Log.LogMessage` directly can cause IDE hangs. Use full paths on background threads (`Environment.CurrentDirectory` may differ if the task is on another MSBuild node). Leverage the `WhenAll` extension for parallel work over `ITaskItem[]`. |
 | **Return `!Log.HasLoggedErrors`** | `RunTask()` must return `!Log.HasLoggedErrors`. Do not return `true`/`false` directly — it skips the centralized error-tracking mechanism. |
 | **Use `Log.LogCoded*` methods** | Errors and warnings must use `Log.LogCodedError("XA####", …)` or `Log.LogCodedWarning("XA####", …)` — never bare `Log.LogError` without a code. Error messages should come from `Properties.Resources`. |
-| **XA error codes** | Error codes follow `XA####` (4+ digits). New codes must not collide with existing ones. Check `Properties/Resources.cs.resx` for used codes. |
-| **`[Required]` properties** | `[Required]` properties must be non-nullable with a default: `public string Foo { get; set; } = "";` or `public ITaskItem[] Bar { get; set; } = [];`. Non-`[Required]` and `[Output]` properties must be nullable (`string?`, `ITaskItem[]?`). |
+| **XA error codes** | Error codes follow `XA####` (4+ digits). New codes must not collide with existing ones. Check `Properties/Resources.cs.resx` for used codes. Every new code must have a documentation entry and be localized. (Postmortem `#10`) |
+| **`[Required]` properties** | `[Required]` properties must be non-nullable with a default: `public string Foo { get; set; } = "";` or `public ITaskItem[] Bar { get; set; } = [];`. Non-`[Required]` and `[Output]` properties must be nullable (`string?`, `ITaskItem[]?`). Mark properties `[Required]` when the task crashes without them. (Postmortem `#51`) |
 | **`UsingTask` for internal tasks** | `<UsingTask/>` elements for `xa-prep-tasks` and `BootstrapTasks` (internal, not shipped) must use `TaskFactory="TaskHostFactory"` and `Runtime="NET"`. Do NOT add these attributes to shipped task definitions in `Xamarin.Android.Common.targets` or `Microsoft.Android.Sdk/*.targets`. |
 | **Caching with `RegisterTaskObject`** | Use `BuildEngine4.RegisterTaskObject()` (via the `RegisterTaskObjectAssemblyLocal()` extension method) instead of `static` variables for sharing data between tasks or across builds. Use `as` for casts to avoid `InvalidCastException`. Cache keys should include context that invalidates properly (device target, file path, version). Cache primitive/small values only. |
 
@@ -39,6 +40,7 @@ cause performance regressions, or silently delete files.
 | **Use `->Count()` for empty checks** | Prefer `'@(Items->Count())' != '0'` over `'@(Items)' != ''`. The latter does a string join of all items, producing enormous log messages. `->Count()` returns `0` even for non-existent item groups. |
 | **Avoid `BeforeTargets`/`AfterTargets`** | Prefer `$(XDependsOn)` properties (e.g., `$(BuildDependsOn)`) to order targets. `AfterTargets` runs even if the predecessor *failed*, causing confusing cascading errors. Use `BeforeTargets`/`AfterTargets` only when no `DependsOn` property exists, and consider checking `$(MSBuildLastTaskResult)`. |
 | **XML indentation** | MSBuild/XML files use 2 spaces for indentation (per `.editorconfig`), not tabs. |
+| **`Condition` attribute first** | On `<Target>` and task elements, put the `Condition` attribute first — it's the most important for debugging. Be consistent with attribute ordering within a file. (Postmortem `#33`) |
 
 ---
 
@@ -67,6 +69,10 @@ and merge conflicts.
 | **No `#region`/`#endregion`** | Region directives hide code and make reviews harder. Remove them. |
 | **File-scoped namespaces** | New files should use `namespace Foo;` not `namespace Foo { }`. Don't reformat existing files. |
 | **Minimal diffs** | Don't leave random empty lines. Preserve existing formatting and comments in files you didn't write. |
+| **`#else`/`#endif` comments** | Always annotate `#else` and `#endif` with the original expression: `#else // !NET5_LINKER` and `#endif // !NET5_LINKER`. (Postmortem `#37`) |
+| **Braces outside `#if` blocks** | Don't split `{` and `}` across `#if`/`#else` branches — it confuses editors. Put the opening `{` after all the conditionally-selected base types/interfaces. (Postmortem `#38`) |
+| **Reasonable line width** | Don't merge two lines into a single 160-character monster. Keep lines readable (max 180 per `.editorconfig`). (Postmortem `#36`) |
+| **Consistent indentation per file** | Don't mix 2-space, 3-space, and 4-space indentation within the same file. (Postmortem `#35`) |
 
 ---
 
@@ -88,6 +94,9 @@ and merge conflicts.
 | **Validate parameters** | Enum parameters and string-typed "mode" values must be validated — throw `ArgumentException` or `NotSupportedException` for unexpected values. |
 | **Fail fast on critical ops** | If a critical operation fails, throw immediately. Silently continuing leads to confusing downstream failures. |
 | **Check process exit codes** | If one operation checks the process exit code, ALL similar operations must too. Inconsistent error checking creates a false sense of safety. |
+| **Log messages must have context** | A bare `"GetModuleHandle failed"` could be anything. Include *what* you were doing: `"Unable to get HANDLE to libmono-android.debug.dll; GetModuleHandle returned %d"`. (Postmortem `#6`) |
+| **Differentiate similar error messages** | Two messages saying `"X failed"` for different operations are impossible to debug. Make each unique. (Postmortem `#7`) |
+| **Assert boundary invariants** | If a name=value pair array must have even length, assert `(length % 2) == 0` before indexing `[i+1]`. (Postmortem `#44`) |
 
 ---
 
@@ -118,6 +127,13 @@ and merge conflicts.
 | **XmlReader over LINQ XML** | For forward-only XML parsing (manifests, config files), prefer `XmlReader` — it's streaming and allocation-free. `XElement`/`XDocument` builds a full DOM tree. |
 | **ArrayPool for large buffers** | Buffers ≥ 1 KB should use `ArrayPool<byte>.Shared.Rent()` with `try`/`finally` return. Large allocations go to the LOH and are expensive to GC. |
 | **p/invoke over process spawn** | For single syscalls like `chmod`, use `[DllImport("libc")]` instead of spawning a child process. Process creation is orders of magnitude more expensive. |
+| **`HashSet.Add()` already handles duplicates** | Calling `.Contains()` before `.Add()` does the hash lookup twice. Just call `.Add()`. (Postmortem `#41`) |
+| **Don't wrap a value in an interpolated string** | `$"{someString}"` creates an unnecessary `string.Format` call when `someString` is already a string. (Postmortem `#42`) |
+| **Consider allocations when choosing types** | `Stopwatch` is heap-allocated; `DateTime`/`ValueStopwatch` is a struct. On hot paths or startup, prefer value types. (Postmortem `#39`) |
+| **Use `.Ordinal` when comparing IL/C# identifiers** | `.Ordinal` is always faster than `.OrdinalIgnoreCase`. Use `.OrdinalIgnoreCase` only for filesystem paths. (Postmortem `#49`) |
+| **`Split()` with count parameter** | `line.Split(new char[]{'='}, 2)` prevents values containing `=` from being split incorrectly. Follow existing patterns. (Postmortem `#50`) |
+| **Use `Files.CopyIfStringChanged()`** | Don't write to a file if the content hasn't changed — it breaks incremental builds by updating timestamps. (Postmortem `#53`) |
+| **Don't remove caches without measurement** | If a cache (like `TypeDefinitionCache`) had a measured perf win, removing it requires proving the replacement provides equivalent caching. (Postmortem `#57`) |
 
 ---
 
@@ -127,8 +143,12 @@ and merge conflicts.
 |-------|-----------------|
 | **One type per file** | Each public class, struct, enum, or interface must be in its own `.cs` file named after the type. |
 | **Use `record` for data types** | Immutable data-carrier types should be `record` types — they get value equality, `ToString()`, and deconstruction for free. |
-| **Remove unused code** | Dead methods, speculative helpers, and code "for later" should be removed. Ship only what's needed. |
+| **Remove unused code** | Dead methods, speculative helpers, and code "for later" should be removed. Ship only what's needed. No commented-out code — Git has history. (Postmortem `#58`) |
 | **New helpers default to `internal`** | New utility methods should be `internal` unless a confirmed external consumer needs them. Use `InternalsVisibleTo` for test access. |
+| **Centralize duplicate algorithms** | If multiple repos have their own implementation of the same logic (e.g., "do these Cecil methods have the same parameter list?"), push it into a shared package. Duplication is a bug farm. (Postmortem `#54`) |
+| **Use interfaces over concrete types** | Fields and parameters should prefer interfaces (`IMetadataResolver`) over concrete classes. When the implementation changes, you swap the implementation — not every call site. (Postmortem `#56`) |
+| **Introduce base types to reduce `#if` noise** | Instead of scattering `#if` in every class, create a base type (e.g., `BaseMarkHandler`) and let subclasses just override what differs. (Postmortem `#55`) |
+| **Reduce indentation with early returns** | `foreach (var x in items ?? Array.Empty<T>())` eliminates a null-check nesting level. Invert logic for the common case with `continue` so complex cases have less nesting. (Postmortem `#62`, `#63`) |
 
 ---
 
@@ -137,14 +157,73 @@ and merge conflicts.
 | Check | What to look for |
 |-------|-----------------|
 | **Use existing utilities** | Check `MonoAndroidHelper`, `FileUtil`, `PathUtil`, `ITaskItemExtensions`, and other utilities before writing new helpers. Duplicating existing logic is the most expensive AI pattern. |
-| **`Log.LogDebugMessage` for diagnostics** | Use `Log.LogDebugMessage(…)` for verbose/debug output, not `Console.WriteLine` or `Debug.WriteLine`. |
+| **`Log.LogDebugMessage` for diagnostics** | Use `Log.LogDebugMessage(…)` for verbose/debug output, not `Console.WriteLine` or `Debug.WriteLine`. Don't spam logcat with messages that fire on every type lookup miss. (Postmortem `#9`) |
 | **Return `IReadOnlyList<T>`** | Public methods should return `IReadOnlyList<T>` or `IReadOnlyCollection<T>` instead of mutable `List<T>`. |
 | **Prefer C# pattern matching** | Use `is`, `switch` expressions, and property patterns instead of `if`/`else` type-check chains. |
 | **Structured args, not string interpolation** | Process arguments should be `IEnumerable<string>` or use `ArgumentList`, not a single interpolated string. |
+| **Method names must reflect behavior** | If `CreateFoo()` sometimes returns an existing instance, rename it `GetOrCreateFoo()` or `GetFoo()`. (Postmortem `#4`) |
+| **Choose collision-proof names** | Types and constants that could collide with user code or Android concepts need disambiguating prefixes (e.g., `__Xamarin.Android.Resource.Designer` with a `__` prefix). (Postmortem `#2`) |
+| **Don't assume transitive assembly references** | An assembly containing an `Activity` subclass does not necessarily reference `Mono.Android.dll` directly — the reference may be transitive. Skipping assemblies based on direct reference checks can break user code. (Postmortem `#64`) |
+| **Document array mutability semantics** | If a property returns a cached `int[]` (not a copy), callers who mutate it corrupt global state. Document "don't do that" explicitly. (Postmortem `#66`) |
+| **Track TODOs as issues** | A `// TODO` hidden in code will be forgotten. File an issue and reference it in the comment. (Postmortem `#60`) |
+| **Remove stale comments** | If the code changed, update the comment. "This loads libmonodroid.so" is wrong if we now load `libxa-internal-api.so`. (Postmortem `#59`) |
+| **Link vendored source to its origin** | When importing third-party code (e.g., `CryptoConvert.cs` from Mono), add a comment with the URL and commit hash of the original source. (Postmortem `#68`) |
+| **Question unnecessary path normalization** | If you normalize `\` → `/` only to normalize back later, the intermediate step is pointless. (Postmortem `#52`) |
 
 ---
 
-## 12. Native Code
+## 12. Native Code (C/C++)
+
+The native runtime (`src/native/`, historically `src/monodroid/`) is critical path
+code running on every Android device. Bugs here cause crashes, memory leaks, and
+security vulnerabilities that are extremely hard to diagnose remotely.
+
+### 12a. Memory Management
+
+| Check | What to look for |
+|-------|-----------------|
+| **Every `new` needs a `delete` or justification** | If a `new` has no matching cleanup, document *why* the leak is acceptable and its worst-case size. "Small leak" is not a justification without quantifying "how small" and "how often." (Postmortem `#11`) |
+| **Quantify leaks** | Is the leaked path hit once per assembly resolution (dozens of times) or once per P/Invoke invocation (millions)? The answer determines whether a leak matters. (Postmortem `#12`) |
+| **Document known leaks in commit messages** | If a small leak is deliberately accepted, say so in the commit message so reviewers don't rediscover it later. (Postmortem `#13`) |
+| **Watch for leaks in external APIs** | Functions like `mono_guid_to_string()` allocate memory that the caller must free. Check the docs for every external API call. (Postmortem `#14`) |
+| **Use RAII (`std::unique_ptr`, etc.)** | If a library can be unloaded or an object has a clear owner, use smart pointers or RAII to ensure cleanup. Don't rely on manual `delete`. (Postmortem `#15`) |
+| **Stack memory adds up on Android** | Android threads can have only 2–4 KB of stack. A struct with 88 bytes of wrappers is non-trivial on the stack. Make sentinel/invalid instances `static` to avoid per-instance overhead. (Postmortem `#43`) |
+
+### 12b. C++ Best Practices
+
+| Check | What to look for |
+|-------|-----------------|
+| **Virtual destructor on base classes** | Any base class with virtual methods must have a public virtual destructor. Without one, `delete`-through-base-pointer is undefined behavior. (Postmortem `#16`) |
+| **Delete copy/move constructors when inappropriate** | Types holding non-copyable resources (JNI references, file handles) must use `= delete` on copy constructor and assignment operator. (Postmortem `#17`) |
+| **Prefer `private` over `protected`** | Unless the type is explicitly designed for subclassing, use `private`. Don't speculatively make things `protected`. (Postmortem `#18`) |
+| **Use `const` where possible** | If a JNI parameter or function argument isn't modified, declare it `const`. (Postmortem `#19`) |
+| **Follow STL naming conventions** | Collection wrappers should use `size()` not `length()` or `count()`, for consistency with `std::vector`. (Postmortem `#20`) |
+| **Handle `EINTR` for system calls** | `read()`, `write()`, and other syscalls can return `EINTR` when interrupted by a signal. Retry in a loop. (Postmortem `#22`) |
+| **Use `sizeof()` not magic numbers** | `16` should be `sizeof(module_uuid_t)` or equivalent. Magic numbers make code fragile and unreadable. (Postmortem `#48`) |
+| **No commented-out code** | If it's not needed, delete it. Git has history. (Postmortem `#58`) |
+| **Don't use compiler-reserved identifiers** | Double-underscore `__` prefixed names are reserved by the C/C++ standard. Use `_monodroid_` or similar instead. (Postmortem `#3`) |
+| **Prefer `nothrow new` + null check where appropriate** | Have `operator new(size_t)` abort on OOM, but `operator new(size_t, nothrow_t)` return `nullptr` for callers that want to handle failure gracefully. |
+| **Avoid merging lines for no reason** | Don't combine two 80-char lines into one 160-char line. Keep code readable. (Postmortem `#36`) |
+
+### 12c. Symbol Visibility & Naming
+
+| Check | What to look for |
+|-------|-----------------|
+| **Use `-fvisibility=hidden` by default** | Only export symbols that are explicitly needed. If a native function isn't called from managed code or another library, it shouldn't be exported. (Postmortem `#30`) |
+| **Question every exported symbol** | Search GitHub for actual usage before keeping an exported function. If nothing outside `src/native/` calls it, make it internal. (Postmortem `#27`) |
+| **Document cross-references for exports** | Add comments with direct links to callers (e.g., the Mono BCL line that P/Invokes the function). When the caller changes, it's clear the export can be removed. (Postmortem `#28`) |
+| **Remove dead symbols proactively** | When an upstream consumer (e.g., a Mono branch) no longer uses a function, remove it now. Don't wait for "someday." (Postmortem `#29`) |
+| **Avoid "monodroid" in new filenames** | The runtime libraries use `libmono-android*` names. Keep new files consistent. (Postmortem `#1`) |
+
+### 12d. Platform-Specific Code
+
+| Check | What to look for |
+|-------|-----------------|
+| **Prefer `W` (wide) Win32 functions** | Use `GetModuleHandleExW` not `GetModuleHandleEx` (the macro). Avoid the `A` (ANSI) variants entirely. (Postmortem `#23`) |
+| **Don't change platform-guarded code unnecessarily** | If a change is in a `#if defined(WINDOWS)` block, verify it's actually needed on that platform. (Postmortem `#26`) |
+| **Check return codes on all platform APIs** | Even APIs that "shouldn't fail" (like `PathRemoveFileSpec`) have return values. Check them. (Postmortem `#8`) |
+
+### 12e. Build & ABI
 
 | Check | What to look for |
 |-------|-----------------|
@@ -153,7 +232,7 @@ and merge conflicts.
 
 ---
 
-## 13. Testing
+## 14. Testing
 
 | Check | What to look for |
 |-------|-----------------|
@@ -163,7 +242,7 @@ and merge conflicts.
 
 ---
 
-## 14. YAGNI & AI-Specific Pitfalls
+## 15. YAGNI & AI-Specific Pitfalls
 
 These are patterns that AI-generated code consistently gets wrong in this repo:
 
@@ -176,7 +255,10 @@ These are patterns that AI-generated code consistently gets wrong in this repo:
 | **Wrong formatting** | AI generates standard C# formatting (no space before parens). This repo requires Mono style: `Foo ()`, `array [0]`. |
 | **`string.Empty` and `Array.Empty<T>()`** | AI defaults to these. Use `""` and `[]` instead. |
 | **Sloppy structure** | Multiple types in one file, block-scoped namespaces, `#region` directives, classes where records would do. New helpers marked `public` when `internal` suffices. |
-| **Docs describe intent not reality** | AI doc comments often describe what the code *should* do, not what it *actually* does. Review doc comments against the implementation. |
+| **Docs describe intent not reality** | AI doc comments often describe what the code *should* do, not what it *actually* does. Review doc comments against the implementation. (Postmortem `#59`) |
 | **Unused parameters** | AI adds `CancellationToken` parameters but never observes them. Unused CancellationToken is a broken contract. |
 | **Modifying localization files** | AI modifies non-English `.resx` or `.lcl` files. Only the main English resource files should be edited. |
 | **`git commit --amend`** | AI uses `--amend` on commits. Always create new commits — the maintainer will squash as needed. |
+| **Commit messages omit non-obvious choices** | Behavioral decisions ("styleable arrays are cached, not copied per-access") and known limitations ("this leaks N bytes on Android 9") belong in the commit message. (Postmortem `#13`, `#69`) |
+| **Typos in user-visible strings** | Users copy-paste error messages into bug reports. Get them right. (Postmortem `#61`) |
+| **Filler words in docs** | "So" at the start of a sentence adds nothing. Be direct. (Postmortem `#71`) |

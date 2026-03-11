@@ -83,4 +83,4 @@ _{Rule: Brief name (`#N`)}_
 
 Always wrap `#N` in backticks so GitHub doesn't auto-link to issues.
 
-**Categories:** MSBuild tasks · Nullable · Async pattern · Resource management · Error handling · Security · Formatting · Naming · Performance · Pattern · YAGNI · API design · Code organization · Localization · Native code
+**Categories:** MSBuild tasks · MSBuild targets · Nullable · Async pattern · Error handling · Resource management · Security · Formatting · Performance · Code organization · Patterns · Native memory · Native C++ · Symbol visibility · Platform-specific · Testing · YAGNI · API design · Documentation
