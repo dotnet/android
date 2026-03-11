@@ -1,11 +1,9 @@
 ---
 name: android-reviewer
 description: >-
-  Review pull requests for dotnet/android using lessons from past code reviews.
-  Trigger when the user says "review this" with a GitHub PR URL, asks to review a PR,
-  or wants code review feedback. Fetches the diff, checks it against established rules
-  (MSBuild tasks, nullable, async, security, error handling, formatting, performance),
-  and posts a batched 🤖-prefixed review via gh CLI.
+  Review dotnet/android PRs against established rules. Trigger on "review this PR",
+  a GitHub PR URL, or code review requests. Checks MSBuild, nullable, async, security,
+  error handling, formatting, performance, native code, and posts a review via gh CLI.
 ---
 
 # Android PR Reviewer
