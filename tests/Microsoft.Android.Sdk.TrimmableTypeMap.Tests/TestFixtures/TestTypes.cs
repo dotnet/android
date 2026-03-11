@@ -96,6 +96,18 @@ namespace Android.Views
 		[Register ("onLongClick", "(Landroid/view/View;)Z", "GetOnLongClick_Landroid_view_View_Handler:Android.Views.IOnLongClickListenerInvoker")]
 		bool OnLongClick (View v);
 	}
+
+	[Register ("mono/android/view/View_IOnClickListenerImplementor")]
+	public class View_IOnClickListenerImplementor : Java.Lang.Object
+	{
+		public View_IOnClickListenerImplementor (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+	}
+
+	[Register ("mono/android/view/View_ClickEventDispatcher")]
+	public class View_ClickEventDispatcher : Java.Lang.Object
+	{
+		public View_ClickEventDispatcher (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+	}
 }
 
 namespace Android.Widget
@@ -239,7 +251,6 @@ namespace MyApp
 	{
 		protected MyManageSpaceActivity (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 	}
-
 	public class UnregisteredHelper : Java.Lang.Object { }
 
 	[Register ("my/app/MyButton")]
@@ -265,7 +276,6 @@ namespace MyApp
 
 	[Activity (Name = "my.app.BaseActivityNoRegister")]
 	public class BaseActivityNoRegister : Android.App.Activity { }
-
 	public class DerivedFromComponentBase : BaseActivityNoRegister { }
 
 	[Register ("my/app/RegisteredParent")]
@@ -282,7 +292,6 @@ namespace MyApp
 			public class DeepInner : Java.Lang.Object { }
 		}
 	}
-
 	public class PlainActivitySubclass : Android.App.Activity { }
 
 	[Activity (Label = "Unnamed")]
@@ -330,6 +339,13 @@ namespace MyApp.Generic
 	{
 		protected GenericCallbackImpl (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 	}
+
+	[Register ("my/app/JiStylePeer", DoNotGenerateAcw = true)]
+	public class JiStylePeer : Java.Lang.Object
+	{
+		protected JiStylePeer (ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options)
+			: base ((IntPtr)0, JniHandleOwnership.DoNotTransfer) { }
+	}
 }
 
 [Register ("my/app/GlobalType")]
@@ -337,5 +353,4 @@ public class GlobalType : Java.Lang.Object
 {
 	protected GlobalType (IntPtr handle, Android.Runtime.JniHandleOwnership transfer) : base (handle, transfer) { }
 }
-
 public class GlobalUnregisteredType : Java.Lang.Object { }
