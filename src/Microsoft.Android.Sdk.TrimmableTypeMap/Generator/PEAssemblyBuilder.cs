@@ -92,14 +92,22 @@ sealed class PEAssemblyBuilder
 			Directory.CreateDirectory (dir);
 		}
 
+		using var fs = File.Create (outputPath);
+		WritePE (fs);
+	}
+
+	/// <summary>
+	/// Serialises the metadata + IL into a PE DLL written to <paramref name="output"/>.
+	/// </summary>
+	public void WritePE (Stream output)
+	{
 		var peBuilder = new ManagedPEBuilder (
 			new PEHeaderBuilder (imageCharacteristics: Characteristics.Dll),
 			new MetadataRootBuilder (Metadata),
 			ILBuilder);
 		var peBlob = new BlobBuilder ();
 		peBuilder.Serialize (peBlob);
-		using var fs = File.Create (outputPath);
-		peBlob.WriteContentTo (fs);
+		peBlob.WriteContentTo (output);
 	}
 
 	/// <summary>

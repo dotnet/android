@@ -12,50 +12,47 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 
 public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 {
-	static string GenerateAssembly (IReadOnlyList<JavaPeerInfo> peers, string outputDir, string? assemblyName = null)
+	static MemoryStream GenerateAssembly (IReadOnlyList<JavaPeerInfo> peers, string? assemblyName = null)
 	{
-		var outputPath = Path.Combine (outputDir, (assemblyName ?? "TestTypeMap") + ".dll");
+		var stream = new MemoryStream ();
 		var generator = new TypeMapAssemblyGenerator (new Version (11, 0, 0, 0));
-		generator.Generate (peers, outputPath, assemblyName);
-		return outputPath;
+		generator.Generate (peers, stream, assemblyName ?? "TestTypeMap");
+		stream.Position = 0;
+		return stream;
 	}
 
-	static (PEReader pe, MetadataReader reader) OpenAssembly (string path)
+	static (PEReader pe, MetadataReader reader) OpenAssembly (Stream stream)
 	{
-		var pe = new PEReader (File.OpenRead (path));
+		var pe = new PEReader (stream);
 		return (pe, pe.GetMetadataReader ());
 	}
 
-	public class BasicAssemblyStructure : IDisposable
+	public class BasicAssemblyStructure : FixtureTestBase
 	{
-		readonly string _outputDir = CreateTempDir ();
-		public void Dispose () => DeleteTempDir (_outputDir);
 
 		[Fact]
 		public void Generate_ProducesValidPEAssembly ()
 		{
 			var peers = ScanFixtures ();
-			var path = GenerateAssembly (peers, _outputDir);
-			Assert.True (File.Exists (path));
-			using var pe = new PEReader (File.OpenRead (path));
-			Assert.True (pe.HasMetadata);
-			var reader = pe.GetMetadataReader ();
-			Assert.NotNull (reader);
+			using var stream = GenerateAssembly (peers);
+			var (pe, reader) = OpenAssembly (stream);
+			using (pe) {
+				Assert.True (pe.HasMetadata);
+				Assert.NotNull (reader);
+			}
 		}
 
 	}
 
-	public class AssemblyReference : IDisposable
+	public class AssemblyReference : FixtureTestBase
 	{
-		readonly string _outputDir = CreateTempDir ();
-		public void Dispose () => DeleteTempDir (_outputDir);
 
 		[Fact]
 		public void Generate_HasRequiredAssemblyReferences ()
 		{
 			var peers = ScanFixtures ();
-			var path = GenerateAssembly (peers, _outputDir);
-			var (pe, reader) = OpenAssembly (path);
+			using var stream = GenerateAssembly (peers);
+			var (pe, reader) = OpenAssembly (stream);
 			using (pe) {
 				var asmRefs = reader.AssemblyReferences
 					.Select (h => reader.GetString (reader.GetAssemblyReference (h).Name))
@@ -69,17 +66,15 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 	}
 
-	public class ProxyType : IDisposable
+	public class ProxyType : FixtureTestBase
 	{
-		readonly string _outputDir = CreateTempDir ();
-		public void Dispose () => DeleteTempDir (_outputDir);
 
 		[Fact]
 		public void Generate_CreatesProxyTypes ()
 		{
 			var peers = ScanFixtures ();
-			var path = GenerateAssembly (peers, _outputDir);
-			var (pe, reader) = OpenAssembly (path);
+			using var stream = GenerateAssembly (peers);
+			var (pe, reader) = OpenAssembly (stream);
 			using (pe) {
 				var proxyTypes = reader.TypeDefinitions
 					.Select (h => reader.GetTypeDefinition (h))
@@ -95,8 +90,8 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		public void Generate_ProxyType_HasCtorAndCreateInstance ()
 		{
 			var peers = ScanFixtures ();
-			var path = GenerateAssembly (peers, _outputDir);
-			var (pe, reader) = OpenAssembly (path);
+			using var stream = GenerateAssembly (peers);
+			var (pe, reader) = OpenAssembly (stream);
 			using (pe) {
 				var objectProxy = reader.TypeDefinitions
 					.Select (h => reader.GetTypeDefinition (h))
@@ -115,18 +110,16 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 	}
 
-	public class AcwProxy : IDisposable
+	public class AcwProxy : FixtureTestBase
 	{
-		readonly string _outputDir = CreateTempDir ();
-		public void Dispose () => DeleteTempDir (_outputDir);
 
 		[Fact]
 		public void Generate_AcwProxy_HasRegisterNativesAndUcoMethods ()
 		{
 			var peers = ScanFixtures ();
 			var acwPeer = peers.First (p => p.JavaName == "my/app/TouchHandler");
-			var path = GenerateAssembly (new [] { acwPeer }, _outputDir, "AcwTest");
-			var (pe, reader) = OpenAssembly (path);
+			using var stream = GenerateAssembly (new [] { acwPeer }, "AcwTest");
+			var (pe, reader) = OpenAssembly (stream);
 			using (pe) {
 				var proxy = reader.TypeDefinitions
 					.Select (h => reader.GetTypeDefinition (h))
@@ -147,8 +140,8 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		{
 			var peers = ScanFixtures ();
 			var acwPeer = peers.First (p => p.JavaName == "my/app/TouchHandler");
-			var path = GenerateAssembly (new [] { acwPeer }, _outputDir, "UcoTest");
-			var (pe, reader) = OpenAssembly (path);
+			using var stream = GenerateAssembly (new [] { acwPeer }, "UcoTest");
+			var (pe, reader) = OpenAssembly (stream);
 			using (pe) {
 				var proxy = reader.TypeDefinitions
 					.Select (h => reader.GetTypeDefinition (h))
@@ -173,17 +166,15 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 	}
 
-	public class IgnoresAccessChecksTo : IDisposable
+	public class IgnoresAccessChecksTo : FixtureTestBase
 	{
-		readonly string _outputDir = CreateTempDir ();
-		public void Dispose () => DeleteTempDir (_outputDir);
 
 		[Fact]
 		public void Generate_HasIgnoresAccessChecksToAttribute ()
 		{
 			var peers = ScanFixtures ();
-			var path = GenerateAssembly (peers, _outputDir);
-			var (pe, reader) = OpenAssembly (path);
+			using var stream = GenerateAssembly (peers);
+			var (pe, reader) = OpenAssembly (stream);
 			using (pe) {
 				var types = reader.TypeDefinitions
 					.Select (h => reader.GetTypeDefinition (h))
@@ -196,10 +187,8 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 	}
 
-	public class Alias : IDisposable
+	public class Alias : FixtureTestBase
 	{
-		readonly string _outputDir = CreateTempDir ();
-		public void Dispose () => DeleteTempDir (_outputDir);
 
 		static List<JavaPeerInfo> MakeDuplicateAliasPeers () => new List<JavaPeerInfo> {
 			new JavaPeerInfo {
@@ -229,8 +218,8 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		public void Generate_DuplicateJniNames_CreatesAliasEntries ()
 		{
 			var peers = MakeDuplicateAliasPeers ();
-			var path = GenerateAssembly (peers, _outputDir, "AliasTest");
-			var (pe, reader) = OpenAssembly (path);
+			using var stream = GenerateAssembly (peers, "AliasTest");
+			var (pe, reader) = OpenAssembly (stream);
 			using (pe) {
 				var assemblyAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
 				Assert.True (assemblyAttrs.Count () >= 3);
@@ -241,8 +230,8 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		public void Generate_DuplicateJniNames_EmitsTypeMapAssociationAttribute ()
 		{
 			var peers = MakeDuplicateAliasPeers ();
-			var path = GenerateAssembly (peers, _outputDir, "AliasAssocTest");
-			var (pe, reader) = OpenAssembly (path);
+			using var stream = GenerateAssembly (peers, "AliasAssocTest");
+			var (pe, reader) = OpenAssembly (stream);
 			using (pe) {
 				var memberRefs = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
 					.Select (i => reader.GetMemberReference (MetadataTokens.MemberReferenceHandle (i)))
@@ -256,17 +245,14 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 	}
 
-	public class EmptyInput : IDisposable
+	public class EmptyInput : FixtureTestBase
 	{
-		readonly string _outputDir = CreateTempDir ();
-		public void Dispose () => DeleteTempDir (_outputDir);
 
 		[Fact]
 		public void Generate_EmptyPeerList_ProducesValidAssembly ()
 		{
-			var path = GenerateAssembly (Array.Empty<JavaPeerInfo> (), _outputDir, "EmptyTest");
-			Assert.True (File.Exists (path));
-			var (pe, reader) = OpenAssembly (path);
+			using var stream = GenerateAssembly (Array.Empty<JavaPeerInfo> (), "EmptyTest");
+			var (pe, reader) = OpenAssembly (stream);
 			using (pe) {
 				Assert.NotNull (reader);
 				var asmDef = reader.GetAssemblyDefinition ();
@@ -345,10 +331,8 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 	}
 
-	public class CreateInstancePaths : IDisposable
+	public class CreateInstancePaths : FixtureTestBase
 	{
-		readonly string _outputDir = CreateTempDir ();
-		public void Dispose () => DeleteTempDir (_outputDir);
 
 		[Fact]
 		public void Generate_SimpleActivity_UsesGetUninitializedObject ()
@@ -358,8 +342,8 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			Assert.NotNull (simpleActivity.ActivationCtor);
 			Assert.NotEqual (simpleActivity.ManagedTypeName, simpleActivity.ActivationCtor.DeclaringTypeName);
 
-			var path = GenerateAssembly (new [] { simpleActivity }, _outputDir, "InheritedCtorTest");
-			var (pe, reader) = OpenAssembly (path);
+			using var stream = GenerateAssembly (new [] { simpleActivity }, "InheritedCtorTest");
+			var (pe, reader) = OpenAssembly (stream);
 			using (pe) {
 				var typeNames = GetTypeRefNames (reader);
 				Assert.Contains ("RuntimeHelpers", typeNames);
@@ -379,8 +363,8 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			Assert.NotNull (clickableView.ActivationCtor);
 			Assert.Equal (clickableView.ManagedTypeName, clickableView.ActivationCtor.DeclaringTypeName);
 
-			var path = GenerateAssembly (new [] { clickableView }, _outputDir, "LeafCtorTest");
-			var (pe, reader) = OpenAssembly (path);
+			using var stream = GenerateAssembly (new [] { clickableView }, "LeafCtorTest");
+			var (pe, reader) = OpenAssembly (stream);
 			using (pe) {
 				var memberNames = GetMemberRefNames (reader);
 				Assert.DoesNotContain ("CreateManagedPeer", memberNames);
@@ -400,8 +384,8 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			var generic = peers.First (p => p.JavaName == "my/app/GenericHolder");
 			Assert.True (generic.IsGenericDefinition);
 
-			var path = GenerateAssembly (new [] { generic }, _outputDir, "GenericTest");
-			var (pe, reader) = OpenAssembly (path);
+			using var stream = GenerateAssembly (new [] { generic }, "GenericTest");
+			var (pe, reader) = OpenAssembly (stream);
 			using (pe) {
 				var typeNames = GetTypeRefNames (reader);
 				Assert.Contains ("NotSupportedException", typeNames);
@@ -410,10 +394,8 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 	}
 
-	public class IgnoresAccessChecksToForBaseCtor : IDisposable
+	public class IgnoresAccessChecksToForBaseCtor : FixtureTestBase
 	{
-		readonly string _outputDir = CreateTempDir ();
-		public void Dispose () => DeleteTempDir (_outputDir);
 
 		[Fact]
 		public void Generate_InheritedCtor_IncludesBaseCtorAssembly ()
@@ -424,8 +406,8 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			var peers = ScanFixtures ();
 			var simpleActivity = peers.First (p => p.JavaName == "my/app/SimpleActivity");
 
-			var path = GenerateAssembly (new [] { simpleActivity }, _outputDir, "IgnoresAccessTest");
-			var (pe, reader) = OpenAssembly (path);
+			using var stream = GenerateAssembly (new [] { simpleActivity }, "IgnoresAccessTest");
+			var (pe, reader) = OpenAssembly (stream);
 			using (pe) {
 				var ignoresAttrType = reader.TypeDefinitions
 					.Select (h => reader.GetTypeDefinition (h))
