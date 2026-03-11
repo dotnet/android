@@ -50,7 +50,7 @@ static class ModelBuilder
 		// Invoker types are NOT emitted as separate proxies or TypeMap entries —
 		// they only appear as a TypeRef in the interface proxy's get_InvokerType property.
 		var invokerTypeNames = new HashSet<string> (
-			peers.Where (p => p.InvokerTypeName != null).Select (p => p.InvokerTypeName!),
+			peers.Where (p => p.InvokerTypeName != null).Select (p => p.InvokerTypeName ?? ""),
 			StringComparer.Ordinal);
 
 		// Group non-invoker peers by JNI name to detect aliases (multiple .NET types → same Java class).
