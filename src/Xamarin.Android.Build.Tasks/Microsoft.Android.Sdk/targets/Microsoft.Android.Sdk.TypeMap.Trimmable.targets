@@ -14,6 +14,12 @@
     <_TypeMapJavaOutputDirectory>$(IntermediateOutputPath)typemap\java</_TypeMapJavaOutputDirectory>
   </PropertyGroup>
 
+  <!-- Tell the runtime which assembly contains the TypeMap attributes -->
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="System.Runtime.InteropServices.TypeMappingEntryAssembly"
+        Value="$(_TypeMapAssemblyName)" />
+  </ItemGroup>
+
   <Target Name="_ValidateTrimmableTypeMapRuntime"
       BeforeTargets="Build"
       Condition=" '$(_AndroidRuntime)' != 'CoreCLR' And '$(_AndroidRuntime)' != 'NativeAOT' ">

@@ -2,12 +2,6 @@
      Adds generated typemap assemblies to the linker inputs. -->
 <Project>
 
-  <!-- Configure the runtime to use the trimmable TypeMap entry assembly -->
-  <ItemGroup>
-    <RuntimeHostConfigurationOption Include="System.Runtime.InteropServices.TypeMappingEntryAssembly"
-        Value="$(_TypeMapAssemblyName)" />
-  </ItemGroup>
-
   <!-- After typemap generation, add generated assemblies to resolved assemblies for the linker.
        NOT as TrimmerRootAssembly — the trimmer must process TypeMapAttributes and trim entries
        whose trimTarget types were removed. -->
