@@ -1,9 +1,11 @@
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
+using System;
 using System.Collections.Generic;
-using System.Reflection;
+using System.Linq;
 using Xamarin.Android.Tasks;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -41,6 +43,11 @@ namespace Xamarin.Android.Build.Tests
 				return null;
 			}
 
+			/// <summary>
+			/// Public accessor for tests to call the protected GetEmulatorAvdName.
+			/// </summary>
+			public string? GetEmulatorAvdNameForTest (string serial) => GetEmulatorAvdName (serial);
+
 			protected override List<string> GetAvailableEmulators ()
 			{
 				return MockAvailableEmulators;
@@ -48,14 +55,22 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		/// <summary>
-		/// Helper method to invoke the private ParseAdbDevicesOutput method via reflection
+		/// Helper method that parses adb output using AdbRunner, applies mock AVD name resolution,
+		/// and converts to ITaskItem array via GetAvailableAndroidDevices.ConvertToTaskItems.
 		/// </summary>
 		ITaskItem [] ParseAdbDevicesOutput (MockGetAvailableAndroidDevices task, List<string> lines)
 		{
-			var method = typeof (GetAvailableAndroidDevices).GetMethod ("ParseAdbDevicesOutput", BindingFlags.NonPublic | BindingFlags.Instance);
-			Assert.IsNotNull (method, "ParseAdbDevicesOutput method should exist");
-			var result = (List<ITaskItem>) method.Invoke (task, [lines]);
-			return result.ToArray ();
+			var devices = AdbRunner.ParseAdbDevicesOutput (lines);
+
+			// Apply AVD name resolution for emulators (same logic as RunTask)
+			foreach (var device in devices) {
+				if (device.Type == AdbDeviceType.Emulator) {
+					device.AvdName = task.GetEmulatorAvdNameForTest (device.Serial);
+					device.Description = AdbRunner.BuildDeviceDescription (device);
+				}
+			}
+
+			return GetAvailableAndroidDevices.ConvertToTaskItems (devices);
 		}
 
 		[Test]
@@ -451,11 +466,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void FormatDisplayName_ReplacesUnderscoresWithSpaces ()
 		{
-			var task = new MockGetAvailableAndroidDevices {
-				BuildEngine = engine,
-			};
-
-			var result = task.FormatDisplayName ("emulator-5554", "pixel_7_pro");
+			var result = AdbRunner.FormatDisplayName ("pixel_7_pro");
 
 			Assert.AreEqual ("Pixel 7 Pro", result, "Should replace underscores with spaces");
 		}
@@ -463,11 +474,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void FormatDisplayName_AppliesTitleCase ()
 		{
-			var task = new MockGetAvailableAndroidDevices {
-				BuildEngine = engine,
-			};
-
-			var result = task.FormatDisplayName ("emulator-5554", "pixel 7 pro");
+			var result = AdbRunner.FormatDisplayName ("pixel 7 pro");
 
 			Assert.AreEqual ("Pixel 7 Pro", result, "Should apply title case");
 		}
@@ -475,11 +482,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void FormatDisplayName_ReplacesApiWithAPIUppercase ()
 		{
-			var task = new MockGetAvailableAndroidDevices {
-				BuildEngine = engine,
-			};
-
-			var result = task.FormatDisplayName ("emulator-5554", "pixel_5_api_34");
+			var result = AdbRunner.FormatDisplayName ("pixel_5_api_34");
 
 			Assert.AreEqual ("Pixel 5 API 34", result, "Should replace 'Api' with 'API'");
 		}
@@ -487,11 +490,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void FormatDisplayName_HandlesMultipleApiOccurrences ()
 		{
-			var task = new MockGetAvailableAndroidDevices {
-				BuildEngine = engine,
-			};
-
-			var result = task.FormatDisplayName ("emulator-5554", "test_api_device_api_35");
+			var result = AdbRunner.FormatDisplayName ("test_api_device_api_35");
 
 			Assert.AreEqual ("Test API Device API 35", result, "Should replace all 'Api' occurrences with 'API'");
 		}
@@ -499,11 +498,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void FormatDisplayName_HandlesMixedCaseInput ()
 		{
-			var task = new MockGetAvailableAndroidDevices {
-				BuildEngine = engine,
-			};
-
-			var result = task.FormatDisplayName ("emulator-5554", "PiXeL_7_API_35");
+			var result = AdbRunner.FormatDisplayName ("PiXeL_7_API_35");
 
 			Assert.AreEqual ("Pixel 7 API 35", result, "Should normalize mixed case input");
 		}
@@ -511,11 +506,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void FormatDisplayName_HandlesComplexNames ()
 		{
-			var task = new MockGetAvailableAndroidDevices {
-				BuildEngine = engine,
-			};
-
-			var result = task.FormatDisplayName ("emulator-5554", "pixel_9_pro_xl_api_36");
+			var result = AdbRunner.FormatDisplayName ("pixel_9_pro_xl_api_36");
 
 			Assert.AreEqual ("Pixel 9 Pro Xl API 36", result, "Should format complex names correctly");
 		}
@@ -523,11 +514,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void FormatDisplayName_PreservesNumbersAndSpecialChars ()
 		{
-			var task = new MockGetAvailableAndroidDevices {
-				BuildEngine = engine,
-			};
-
-			var result = task.FormatDisplayName ("emulator-5554", "pixel_7-pro_api_35");
+			var result = AdbRunner.FormatDisplayName ("pixel_7-pro_api_35");
 
 			Assert.AreEqual ("Pixel 7-Pro API 35", result, "Should preserve hyphens and numbers");
 		}
@@ -535,11 +522,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void FormatDisplayName_HandlesEmptyString ()
 		{
-			var task = new MockGetAvailableAndroidDevices {
-				BuildEngine = engine,
-			};
-
-			var result = task.FormatDisplayName ("emulator-5554", "");
+			var result = AdbRunner.FormatDisplayName ("");
 
 			Assert.AreEqual ("", result, "Should handle empty string");
 		}
@@ -547,11 +530,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void FormatDisplayName_HandlesSingleWord ()
 		{
-			var task = new MockGetAvailableAndroidDevices {
-				BuildEngine = engine,
-			};
-
-			var result = task.FormatDisplayName ("emulator-5554", "pixel");
+			var result = AdbRunner.FormatDisplayName ("pixel");
 
 			Assert.AreEqual ("Pixel", result, "Should capitalize single word");
 		}
@@ -559,11 +538,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void FormatDisplayName_DoesNotReplaceApiInsideWords ()
 		{
-			var task = new MockGetAvailableAndroidDevices {
-				BuildEngine = engine,
-			};
-
-			var result = task.FormatDisplayName ("emulator-5554", "erapidevice");
+			var result = AdbRunner.FormatDisplayName ("erapidevice");
 
 			Assert.AreEqual ("Erapidevice", result, "Should not replace 'api' when it's part of a larger word");
 		}
@@ -571,36 +546,30 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void MergeDevicesAndEmulators_NoEmulators_ReturnsAdbDevicesOnly ()
 		{
-			var task = new MockGetAvailableAndroidDevices {
-				BuildEngine = engine,
-			};
-
-			var adbDevices = new List<ITaskItem> {
-				CreateDeviceItem ("0A041FDD400327", "Pixel 5", "Device", "Online"),
+			var adbDevices = new List<AdbDeviceInfo> {
+				CreateDeviceInfo ("0A041FDD400327", "Pixel 5", AdbDeviceType.Device, AdbDeviceStatus.Online),
 			};
 			var availableEmulators = new List<string> ();
 
-			var result = task.MergeDevicesAndEmulators (adbDevices, availableEmulators);
+			var merged = AdbRunner.MergeDevicesAndEmulators (adbDevices, availableEmulators);
+			var result = GetAvailableAndroidDevices.ConvertToTaskItems (merged);
 
-			Assert.AreEqual (1, result.Count, "Should return only adb devices");
+			Assert.AreEqual (1, result.Length, "Should return only adb devices");
 			Assert.AreEqual ("0A041FDD400327", result [0].ItemSpec);
 		}
 
 		[Test]
 		public void MergeDevicesAndEmulators_NoRunningEmulators_AddsAllAvailableEmulators ()
 		{
-			var task = new MockGetAvailableAndroidDevices {
-				BuildEngine = engine,
-			};
-
-			var adbDevices = new List<ITaskItem> {
-				CreateDeviceItem ("0A041FDD400327", "Pixel 5", "Device", "Online"),
+			var adbDevices = new List<AdbDeviceInfo> {
+				CreateDeviceInfo ("0A041FDD400327", "Pixel 5", AdbDeviceType.Device, AdbDeviceStatus.Online),
 			};
 			var availableEmulators = new List<string> { "pixel_7_api_35", "pixel_9_api_36" };
 
-			var result = task.MergeDevicesAndEmulators (adbDevices, availableEmulators);
+			var merged = AdbRunner.MergeDevicesAndEmulators (adbDevices, availableEmulators);
+			var result = GetAvailableAndroidDevices.ConvertToTaskItems (merged);
 
-			Assert.AreEqual (3, result.Count, "Should return adb device + 2 available emulators");
+			Assert.AreEqual (3, result.Length, "Should return adb device + 2 available emulators");
 
 			// First item: physical device (online, sorted first)
 			Assert.AreEqual ("0A041FDD400327", result [0].ItemSpec);
@@ -621,20 +590,17 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void MergeDevicesAndEmulators_RunningEmulator_NoDuplicate ()
 		{
-			var task = new MockGetAvailableAndroidDevices {
-				BuildEngine = engine,
-			};
-
 			// Emulator is running (has adb entry with AvdName metadata)
-			var runningEmulator = CreateDeviceItem ("emulator-5554", "Pixel 7 API 35", "Emulator", "Online");
-			runningEmulator.SetMetadata ("AvdName", "pixel_7_api_35");
+			var runningEmulator = CreateDeviceInfo ("emulator-5554", "Pixel 7 API 35", AdbDeviceType.Emulator, AdbDeviceStatus.Online);
+			runningEmulator.AvdName = "pixel_7_api_35";
 
-			var adbDevices = new List<ITaskItem> { runningEmulator };
+			var adbDevices = new List<AdbDeviceInfo> { runningEmulator };
 			var availableEmulators = new List<string> { "pixel_7_api_35" };
 
-			var result = task.MergeDevicesAndEmulators (adbDevices, availableEmulators);
+			var merged = AdbRunner.MergeDevicesAndEmulators (adbDevices, availableEmulators);
+			var result = GetAvailableAndroidDevices.ConvertToTaskItems (merged);
 
-			Assert.AreEqual (1, result.Count, "Should not duplicate running emulator");
+			Assert.AreEqual (1, result.Length, "Should not duplicate running emulator");
 			Assert.AreEqual ("emulator-5554", result [0].ItemSpec, "Should keep the running emulator entry");
 			Assert.AreEqual ("Online", result [0].GetMetadata ("Status"));
 		}
@@ -642,22 +608,19 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void MergeDevicesAndEmulators_MixedRunningAndNotRunning ()
 		{
-			var task = new MockGetAvailableAndroidDevices {
-				BuildEngine = engine,
-			};
-
 			// One emulator is running
-			var runningEmulator = CreateDeviceItem ("emulator-5554", "Pixel 7 API 35", "Emulator", "Online");
-			runningEmulator.SetMetadata ("AvdName", "pixel_7_api_35");
+			var runningEmulator = CreateDeviceInfo ("emulator-5554", "Pixel 7 API 35", AdbDeviceType.Emulator, AdbDeviceStatus.Online);
+			runningEmulator.AvdName = "pixel_7_api_35";
 
-			var physicalDevice = CreateDeviceItem ("0A041FDD400327", "Pixel 5", "Device", "Online");
+			var physicalDevice = CreateDeviceInfo ("0A041FDD400327", "Pixel 5", AdbDeviceType.Device, AdbDeviceStatus.Online);
 
-			var adbDevices = new List<ITaskItem> { runningEmulator, physicalDevice };
+			var adbDevices = new List<AdbDeviceInfo> { runningEmulator, physicalDevice };
 			var availableEmulators = new List<string> { "pixel_7_api_35", "pixel_9_api_36", "nexus_5_api_30" };
 
-			var result = task.MergeDevicesAndEmulators (adbDevices, availableEmulators);
+			var merged = AdbRunner.MergeDevicesAndEmulators (adbDevices, availableEmulators);
+			var result = GetAvailableAndroidDevices.ConvertToTaskItems (merged);
 
-			Assert.AreEqual (4, result.Count, "Should have: 1 running emulator + 1 device + 2 non-running emulators");
+			Assert.AreEqual (4, result.Length, "Should have: 1 running emulator + 1 device + 2 non-running emulators");
 
 			// Online devices come first, sorted alphabetically by description
 			Assert.AreEqual ("0A041FDD400327", result [0].ItemSpec);
@@ -679,36 +642,30 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void MergeDevicesAndEmulators_CaseInsensitiveAvdNameMatching ()
 		{
-			var task = new MockGetAvailableAndroidDevices {
-				BuildEngine = engine,
-			};
-
 			// Running emulator with different case
-			var runningEmulator = CreateDeviceItem ("emulator-5554", "Pixel 7 API 35", "Emulator", "Online");
-			runningEmulator.SetMetadata ("AvdName", "Pixel_7_API_35");
+			var runningEmulator = CreateDeviceInfo ("emulator-5554", "Pixel 7 API 35", AdbDeviceType.Emulator, AdbDeviceStatus.Online);
+			runningEmulator.AvdName = "Pixel_7_API_35";
 
-			var adbDevices = new List<ITaskItem> { runningEmulator };
+			var adbDevices = new List<AdbDeviceInfo> { runningEmulator };
 			var availableEmulators = new List<string> { "pixel_7_api_35" }; // lowercase
 
-			var result = task.MergeDevicesAndEmulators (adbDevices, availableEmulators);
+			var merged = AdbRunner.MergeDevicesAndEmulators (adbDevices, availableEmulators);
+			var result = GetAvailableAndroidDevices.ConvertToTaskItems (merged);
 
-			Assert.AreEqual (1, result.Count, "Should match AVD names case-insensitively");
+			Assert.AreEqual (1, result.Length, "Should match AVD names case-insensitively");
 			Assert.AreEqual ("emulator-5554", result [0].ItemSpec);
 		}
 
 		[Test]
 		public void MergeDevicesAndEmulators_EmptyAdbDevices_ReturnsAllAvailableEmulators ()
 		{
-			var task = new MockGetAvailableAndroidDevices {
-				BuildEngine = engine,
-			};
-
-			var adbDevices = new List<ITaskItem> ();
+			var adbDevices = new List<AdbDeviceInfo> ();
 			var availableEmulators = new List<string> { "pixel_7_api_35", "pixel_9_api_36" };
 
-			var result = task.MergeDevicesAndEmulators (adbDevices, availableEmulators);
+			var merged = AdbRunner.MergeDevicesAndEmulators (adbDevices, availableEmulators);
+			var result = GetAvailableAndroidDevices.ConvertToTaskItems (merged);
 
-			Assert.AreEqual (2, result.Count, "Should return all available emulators");
+			Assert.AreEqual (2, result.Length, "Should return all available emulators");
 			Assert.AreEqual ("pixel_7_api_35", result [0].ItemSpec);
 			Assert.AreEqual ("Pixel 7 API 35 (Not Running)", result [0].GetMetadata ("Description"));
 			Assert.AreEqual ("pixel_9_api_36", result [1].ItemSpec);
@@ -718,53 +675,48 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void MergeDevicesAndEmulators_AllEmulatorsRunning_NoDuplicates ()
 		{
-			var task = new MockGetAvailableAndroidDevices {
-				BuildEngine = engine,
-			};
+			var emulator1 = CreateDeviceInfo ("emulator-5554", "Pixel 7 API 35", AdbDeviceType.Emulator, AdbDeviceStatus.Online);
+			emulator1.AvdName = "pixel_7_api_35";
 
-			var emulator1 = CreateDeviceItem ("emulator-5554", "Pixel 7 API 35", "Emulator", "Online");
-			emulator1.SetMetadata ("AvdName", "pixel_7_api_35");
+			var emulator2 = CreateDeviceInfo ("emulator-5556", "Pixel 9 API 36", AdbDeviceType.Emulator, AdbDeviceStatus.Online);
+			emulator2.AvdName = "pixel_9_api_36";
 
-			var emulator2 = CreateDeviceItem ("emulator-5556", "Pixel 9 API 36", "Emulator", "Online");
-			emulator2.SetMetadata ("AvdName", "pixel_9_api_36");
-
-			var adbDevices = new List<ITaskItem> { emulator1, emulator2 };
+			var adbDevices = new List<AdbDeviceInfo> { emulator1, emulator2 };
 			var availableEmulators = new List<string> { "pixel_7_api_35", "pixel_9_api_36" };
 
-			var result = task.MergeDevicesAndEmulators (adbDevices, availableEmulators);
+			var merged = AdbRunner.MergeDevicesAndEmulators (adbDevices, availableEmulators);
+			var result = GetAvailableAndroidDevices.ConvertToTaskItems (merged);
 
-			Assert.AreEqual (2, result.Count, "Should not add duplicates when all emulators are running");
+			Assert.AreEqual (2, result.Length, "Should not add duplicates when all emulators are running");
 			Assert.AreEqual ("Pixel 7 API 35", result [0].GetMetadata ("Description"), "First should be alphabetically first");
 			Assert.AreEqual ("Pixel 9 API 36", result [1].GetMetadata ("Description"), "Second should be alphabetically second");
-			Assert.IsTrue (result.TrueForAll (d => d.GetMetadata ("Status") == "Online"), "All should be Online (running)");
+			Assert.IsTrue (result.All (d => d.GetMetadata ("Status") == "Online"), "All should be Online (running)");
 		}
 
 		[Test]
 		public void MergeDevicesAndEmulators_NonRunningEmulatorHasFormattedDescription ()
 		{
-			var task = new MockGetAvailableAndroidDevices {
-				BuildEngine = engine,
-			};
-
-			var adbDevices = new List<ITaskItem> ();
+			var adbDevices = new List<AdbDeviceInfo> ();
 			var availableEmulators = new List<string> { "pixel_7_pro_api_35" };
 
-			var result = task.MergeDevicesAndEmulators (adbDevices, availableEmulators);
+			var merged = AdbRunner.MergeDevicesAndEmulators (adbDevices, availableEmulators);
+			var result = GetAvailableAndroidDevices.ConvertToTaskItems (merged);
 
-			Assert.AreEqual (1, result.Count);
+			Assert.AreEqual (1, result.Length);
 			Assert.AreEqual ("Pixel 7 Pro API 35 (Not Running)", result [0].GetMetadata ("Description"), "Description should be formatted with (Not Running) suffix");
 		}
 
 		/// <summary>
-		/// Helper method to create a device ITaskItem for testing
+		/// Helper method to create an AdbDeviceInfo for testing
 		/// </summary>
-		static ITaskItem CreateDeviceItem (string serial, string description, string type, string status)
+		static AdbDeviceInfo CreateDeviceInfo (string serial, string description, AdbDeviceType type, AdbDeviceStatus status)
 		{
-			var item = new TaskItem (serial);
-			item.SetMetadata ("Description", description);
-			item.SetMetadata ("Type", type);
-			item.SetMetadata ("Status", status);
-			return item;
+			return new AdbDeviceInfo {
+				Serial = serial,
+				Description = description,
+				Type = type,
+				Status = status,
+			};
 		}
 	}
 }
