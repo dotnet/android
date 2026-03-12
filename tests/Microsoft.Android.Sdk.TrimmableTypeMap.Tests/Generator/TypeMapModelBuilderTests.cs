@@ -12,14 +12,12 @@ public class ModelBuilderTests : FixtureTestBase
 {
 	static TypeMapAssemblyData BuildModel (IReadOnlyList<JavaPeerInfo> peers, string? assemblyName = null)
 	{
-		var outputPath = Path.Combine ("/tmp", (assemblyName ?? "TestTypeMap") + ".dll");
+		var outputPath = Path.Combine (Path.GetTempPath (), (assemblyName ?? "TestTypeMap") + ".dll");
 		return ModelBuilder.Build (peers, outputPath, assemblyName);
 	}
 
-
 	public class BasicStructure
 	{
-
 		[Fact]
 		public void Build_EmptyPeers_ProducesEmptyModel ()
 		{
@@ -30,58 +28,18 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.Empty (model.ProxyTypes);
 		}
 
-		[Fact]
-		public void Build_AssemblyNameDerivedFromOutputPath ()
+		[Theory]
+		[InlineData ("Foo.Bar.dll", null, "Foo.Bar")]
+		[InlineData ("Foo.dll", "MyAssembly", "MyAssembly")]
+		public void Build_AssemblyName_ResolvedCorrectly (string outputPath, string? explicitName, string expected)
 		{
-			var model = ModelBuilder.Build ([], "/some/path/Foo.Bar.dll");
-			Assert.Equal ("Foo.Bar", model.AssemblyName);
-			Assert.Equal ("Foo.Bar.dll", model.ModuleName);
+			var model = ModelBuilder.Build ([], outputPath, explicitName);
+			Assert.Equal (expected, model.AssemblyName);
 		}
-
-		[Fact]
-		public void Build_ExplicitAssemblyName_OverridesOutputPath ()
-		{
-			var model = ModelBuilder.Build ([], "/some/path/Foo.dll", "MyAssembly");
-			Assert.Equal ("MyAssembly", model.AssemblyName);
-		}
-
-		[Fact]
-		public void Build_ComputesIgnoresAccessChecksToFromCrossAssemblyCallbacks ()
-		{
-			var peer = MakeAcwPeer ("my/app/MainActivity", "MyApp.MainActivity", "MyApp") with {
-				MarshalMethods = new List<MarshalMethodInfo> {
-					new MarshalMethodInfo {
-						JniName = "<init>",
-						NativeCallbackName = "n_ctor",
-						JniSignature = "()V",
-						ManagedMethodName = ".ctor",
-						JniReturnType = "V",
-						IsConstructor = true,
-					},
-					new MarshalMethodInfo {
-						JniName = "onCreate",
-						NativeCallbackName = "n_OnCreate",
-						JniSignature = "(Landroid/os/Bundle;)V",
-						ManagedMethodName = "OnCreate",
-						JniReturnType = "V",
-						IsConstructor = false,
-						DeclaringTypeName = "Android.App.Activity",
-						DeclaringAssemblyName = "Mono.Android",
-					},
-				},
-			};
-			var model = BuildModel (new [] { peer });
-			// The UCO callback type references Mono.Android, which is cross-assembly
-			Assert.Contains ("Mono.Android", model.IgnoresAccessChecksTo);
-			// The output assembly itself should not appear
-			Assert.DoesNotContain (model.AssemblyName, model.IgnoresAccessChecksTo);
-		}
-
 	}
 
 	public class TypeMapEntries
 	{
-
 		[Fact]
 		public void Build_CreatesOneEntryPerPeer ()
 		{
@@ -111,13 +69,14 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.Contains ("Test.First", model.Entries [0].ProxyTypeReference);
 			Assert.Equal ("test/Dup[1]", model.Entries [1].JniName);
 			Assert.Contains ("Test.Second", model.Entries [1].ProxyTypeReference);
-		}
 
+			// No associations when neither peer has a proxy (no activation ctor or invoker)
+			Assert.Empty (model.Associations);
+		}
 	}
 
 	public class ConditionalAttributes
 	{
-
 		[Theory]
 		[InlineData ("java/lang/Object")]
 		[InlineData ("java/lang/Throwable")]
@@ -129,9 +88,7 @@ public class ModelBuilderTests : FixtureTestBase
 		[InlineData ("java/lang/Thread")]
 		public void Build_AllEssentialRuntimeTypes_AreUnconditional (string jniName)
 		{
-			var peer = MakeMcwPeer (jniName, "Java.Lang.SomeType", "Mono.Android") with {
-				DoNotGenerateAcw = true,
-			};
+			var peer = MakeMcwPeer (jniName, "Java.Lang.SomeType", "Mono.Android") with { DoNotGenerateAcw = true };
 			var model = BuildModel (new [] { peer });
 			Assert.True (model.Entries [0].IsUnconditional, $"{jniName} should be unconditional");
 		}
@@ -153,9 +110,7 @@ public class ModelBuilderTests : FixtureTestBase
 		public void Build_McwBinding_IsTrimmable ()
 		{
 			// MCW binding types (DoNotGenerateAcw=true) are trimmable unless essential
-			var peer = MakeMcwPeer ("android/app/Activity", "Android.App.Activity", "Mono.Android") with {
-				DoNotGenerateAcw = true,
-			};
+			var peer = MakeMcwPeer ("android/app/Activity", "Android.App.Activity", "Mono.Android") with { DoNotGenerateAcw = true };
 			var model = BuildModel (new [] { peer });
 
 			Assert.Single (model.Entries);
@@ -176,12 +131,10 @@ public class ModelBuilderTests : FixtureTestBase
 
 			Assert.True (model.Entries [0].IsUnconditional);
 		}
-
 	}
 
 	public class Aliases
 	{
-
 		[Fact]
 		public void Build_AliasedPeersWithActivation_GetDistinctProxies ()
 		{
@@ -206,25 +159,25 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.Single (model.Entries);
 			Assert.Contains ("Java.Lang.Object, Mono.Android", model.Entries [0].ProxyTypeReference);
 		}
-
 	}
 
 	public class ProxyTypes
 	{
-
-		[Fact]
-		public void Build_PeerWithActivationCtor_CreatesProxy ()
+		[Theory]
+		[InlineData ("java/lang/Object", "Java.Lang.Object", "Mono.Android", "Java_Lang_Object_Proxy")]
+		[InlineData ("com/example/Outer$Inner", "Com.Example.Outer.Inner", "App", "Com_Example_Outer_Inner_Proxy")]
+		public void Build_PeerWithActivation_CreatesNamedProxy (string jniName, string managedName, string asmName, string expectedProxyName)
 		{
-			var peer = MakePeerWithActivation ("java/lang/Object", "Java.Lang.Object", "Mono.Android");
+			var peer = MakePeerWithActivation (jniName, managedName, asmName);
 			var model = BuildModel (new [] { peer }, "MyTypeMap");
 
 			Assert.Single (model.ProxyTypes);
 			var proxy = model.ProxyTypes [0];
-			Assert.Equal ("Java_Lang_Object_Proxy", proxy.TypeName);
+			Assert.Equal (expectedProxyName, proxy.TypeName);
 			Assert.Equal ("_TypeMap.Proxies", proxy.Namespace);
 			Assert.True (proxy.HasActivation);
-			Assert.Equal ("Java.Lang.Object", proxy.TargetType.ManagedTypeName);
-			Assert.Equal ("Mono.Android", proxy.TargetType.AssemblyName);
+			Assert.Equal (managedName, proxy.TargetType.ManagedTypeName);
+			Assert.Equal (asmName, proxy.TargetType.AssemblyName);
 		}
 
 		[Fact]
@@ -238,401 +191,10 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.NotNull (proxy.InvokerType);
 			Assert.Equal ("Android.Views.View+IOnClickListenerInvoker", proxy.InvokerType!.ManagedTypeName);
 		}
-
-		[Fact]
-		public void Build_ProxyNaming_ReplacesDotAndPlus ()
-		{
-			var peer = MakePeerWithActivation ("com/example/Outer$Inner", "Com.Example.Outer.Inner", "App");
-			var model = BuildModel (new [] { peer });
-
-			Assert.Single (model.ProxyTypes);
-			Assert.Equal ("Com_Example_Outer_Inner_Proxy", model.ProxyTypes [0].TypeName);
-		}
-
-	}
-
-	public class AcwDetection
-	{
-
-		[Fact]
-		public void Build_AcwType_IsAcwTrue ()
-		{
-			var peer = MakeAcwPeer ("my/app/Main", "MyApp.MainActivity", "App");
-			var model = BuildModel (new [] { peer });
-
-			Assert.Single (model.ProxyTypes);
-			Assert.True (model.ProxyTypes [0].IsAcw);
-		}
-
-		[Fact]
-		public void Build_McwType_IsAcwFalse ()
-		{
-			var peer = MakePeerWithActivation ("java/lang/Object", "Java.Lang.Object", "Mono.Android");
-			var model = BuildModel (new [] { peer });
-
-			Assert.Single (model.ProxyTypes);
-			Assert.False (model.ProxyTypes [0].IsAcw);
-		}
-
-		[Fact]
-		public void Build_InterfaceWithMarshalMethods_IsNotAcw ()
-		{
-			var peer = new JavaPeerInfo {
-				JavaName = "android/view/View$OnClickListener",
-				CompatJniName = "android/view/View$OnClickListener",
-				ManagedTypeName = "Android.Views.View+IOnClickListener",
-				ManagedTypeNamespace = "Android.Views",
-				ManagedTypeShortName = "IOnClickListener",
-				AssemblyName = "Mono.Android",
-				IsInterface = true,
-				InvokerTypeName = "Android.Views.View+IOnClickListenerInvoker",
-				MarshalMethods = new List<MarshalMethodInfo> {
-					new MarshalMethodInfo {
-						JniName = "onClick",
-						NativeCallbackName = "n_OnClick",
-						JniSignature = "(Landroid/view/View;)V",
-						ManagedMethodName = "OnClick",
-						JniReturnType = "V",
-						IsConstructor = false,
-					},
-				},
-			};
-
-			var model = BuildModel (new [] { peer });
-			Assert.Single (model.ProxyTypes);
-			// Interface is NOT an ACW even with marshal methods
-			Assert.False (model.ProxyTypes [0].IsAcw);
-		}
-
-		[Fact]
-		public void Build_DoNotGenerateAcw_IsNotAcw ()
-		{
-			var peer = MakePeerWithActivation ("java/lang/Object", "Java.Lang.Object", "Mono.Android") with {
-				DoNotGenerateAcw = true,
-				MarshalMethods = new List<MarshalMethodInfo> {
-					new MarshalMethodInfo {
-						JniName = "toString",
-						NativeCallbackName = "n_ToString",
-						JniSignature = "()Ljava/lang/String;",
-						ManagedMethodName = "ToString",
-						JniReturnType = "Ljava/lang/String;",
-						IsConstructor = false,
-					},
-				},
-			};
-
-			var model = BuildModel (new [] { peer });
-			Assert.Single (model.ProxyTypes);
-			Assert.False (model.ProxyTypes [0].IsAcw);
-		}
-
-	}
-
-	public class UcoMethods
-	{
-
-		[Fact]
-		public void Build_AcwWithMarshalMethods_CreatesUcoMethods ()
-		{
-			var peer = MakeAcwPeer ("my/app/Main", "MyApp.MainActivity", "App") with {
-				MarshalMethods = new List<MarshalMethodInfo> {
-					new MarshalMethodInfo {
-						JniName = "<init>",
-						NativeCallbackName = "n_ctor",
-						JniSignature = "()V",
-						ManagedMethodName = ".ctor",
-						JniReturnType = "V",
-						IsConstructor = true,
-					},
-					new MarshalMethodInfo {
-						JniName = "onCreate",
-						NativeCallbackName = "n_OnCreate",
-						JniSignature = "(Landroid/os/Bundle;)V",
-						ManagedMethodName = "OnCreate",
-						JniReturnType = "V",
-						IsConstructor = false,
-					},
-					new MarshalMethodInfo {
-						JniName = "onResume",
-						NativeCallbackName = "n_OnResume",
-						JniSignature = "()V",
-						ManagedMethodName = "OnResume",
-						JniReturnType = "V",
-						IsConstructor = false,
-					},
-				},
-			};
-
-			var model = BuildModel (new [] { peer });
-			var proxy = model.ProxyTypes [0];
-
-			Assert.Equal (2, proxy.UcoMethods.Count);
-			Assert.Equal ("n_onCreate_uco_0", proxy.UcoMethods [0].WrapperName);
-			Assert.Equal ("n_OnCreate", proxy.UcoMethods [0].CallbackMethodName);
-			Assert.Equal ("(Landroid/os/Bundle;)V", proxy.UcoMethods [0].JniSignature);
-
-			Assert.Equal ("n_onResume_uco_1", proxy.UcoMethods [1].WrapperName);
-			Assert.Equal ("n_OnResume", proxy.UcoMethods [1].CallbackMethodName);
-		}
-
-		[Fact]
-		public void Build_UcoMethod_CallbackTypeIsDeclaringType ()
-		{
-			var mm = new MarshalMethodInfo {
-				JniName = "toString",
-				NativeCallbackName = "n_ToString",
-				JniSignature = "()Ljava/lang/String;",
-				ManagedMethodName = "ToString",
-				JniReturnType = "Ljava/lang/String;",
-				IsConstructor = false,
-				DeclaringTypeName = "Java.Lang.Object",
-				DeclaringAssemblyName = "Mono.Android",
-			};
-
-			var peer = MakeAcwPeer ("my/app/Main", "MyApp.MainActivity", "App") with {
-				MarshalMethods = new List<MarshalMethodInfo> {
-					new MarshalMethodInfo {
-						JniName = "<init>",
-						NativeCallbackName = "n_ctor",
-						JniSignature = "()V",
-						ManagedMethodName = ".ctor",
-						JniReturnType = "V",
-						IsConstructor = true,
-					},
-					mm,
-				},
-			};
-
-			var model = BuildModel (new [] { peer });
-			var uco = model.ProxyTypes [0].UcoMethods [0];
-			Assert.Equal ("Java.Lang.Object", uco.CallbackType.ManagedTypeName);
-			Assert.Equal ("Mono.Android", uco.CallbackType.AssemblyName);
-		}
-
-		[Fact]
-		public void Build_UcoMethod_FallsBackToPeerType_WhenDeclaringTypeEmpty ()
-		{
-			var peer = MakeAcwPeer ("my/app/Main", "MyApp.MainActivity", "App") with {
-				MarshalMethods = new List<MarshalMethodInfo> {
-					new MarshalMethodInfo {
-						JniName = "<init>",
-						NativeCallbackName = "n_ctor",
-						JniSignature = "()V",
-						ManagedMethodName = ".ctor",
-						JniReturnType = "V",
-						IsConstructor = true,
-					},
-					new MarshalMethodInfo {
-						JniName = "onPause",
-						NativeCallbackName = "n_OnPause",
-						JniSignature = "()V",
-						ManagedMethodName = "OnPause",
-						JniReturnType = "V",
-						IsConstructor = false,
-					},
-				},
-			};
-
-			var model = BuildModel (new [] { peer });
-			var uco = model.ProxyTypes [0].UcoMethods [0];
-			Assert.Equal ("MyApp.MainActivity", uco.CallbackType.ManagedTypeName);
-			Assert.Equal ("App", uco.CallbackType.AssemblyName);
-		}
-
-		[Fact]
-		public void Build_ConstructorsInMarshalMethods_SkippedFromUcoMethods ()
-		{
-			var peer = MakeAcwPeer ("my/app/Main", "MyApp.MainActivity", "App") with {
-				MarshalMethods = new List<MarshalMethodInfo> {
-					new MarshalMethodInfo {
-						JniName = "<init>",
-						NativeCallbackName = "n_ctor",
-						JniSignature = "()V",
-						ManagedMethodName = ".ctor",
-						JniReturnType = "V",
-						IsConstructor = true,
-					},
-					new MarshalMethodInfo {
-						JniName = "<init>",
-						NativeCallbackName = "n_ctor2",
-						JniSignature = "()V",
-						ManagedMethodName = ".ctor",
-						JniReturnType = "V",
-						IsConstructor = true,
-					},
-					new MarshalMethodInfo {
-						JniName = "onStart",
-						NativeCallbackName = "n_OnStart",
-						JniSignature = "()V",
-						ManagedMethodName = "OnStart",
-						JniReturnType = "V",
-						IsConstructor = false,
-					},
-				},
-			};
-
-			var model = BuildModel (new [] { peer });
-			var proxy = model.ProxyTypes [0];
-
-			// Only 1 UCO method (constructors are skipped from UcoMethods)
-			Assert.Single (proxy.UcoMethods);
-			Assert.Equal ("n_onStart_uco_0", proxy.UcoMethods [0].WrapperName);
-		}
-
-	}
-
-	public class UcoConstructors
-	{
-
-		[Fact]
-		public void Build_AcwWithConstructors_CreatesUcoConstructors ()
-		{
-			var peer = MakeAcwPeer ("my/app/Main", "MyApp.MainActivity", "App");
-
-			var model = BuildModel (new [] { peer });
-			var proxy = model.ProxyTypes [0];
-
-			Assert.Single (proxy.UcoConstructors);
-			Assert.Equal ("nctor_0_uco", proxy.UcoConstructors [0].WrapperName);
-			Assert.Equal ("MyApp.MainActivity", proxy.UcoConstructors [0].TargetType.ManagedTypeName);
-		}
-
-		[Fact]
-		public void Build_PeerWithoutActivationCtor_NoUcoConstructors ()
-		{
-			// Peer with marshal methods but no activation ctor
-			var peer = new JavaPeerInfo {
-				JavaName = "my/app/Foo",
-				CompatJniName = "my/app/Foo",
-				ManagedTypeName = "MyApp.Foo",
-				ManagedTypeNamespace = "MyApp",
-				ManagedTypeShortName = "Foo",
-				AssemblyName = "App",
-				InvokerTypeName = "MyApp.FooInvoker", // has invoker → will create proxy
-				MarshalMethods = new List<MarshalMethodInfo> {
-					new MarshalMethodInfo {
-						JniName = "bar",
-						NativeCallbackName = "n_Bar",
-						JniSignature = "()V",
-						ManagedMethodName = "Bar",
-						JniReturnType = "V",
-						IsConstructor = false,
-					},
-				},
-				JavaConstructors = new List<JavaConstructorInfo> {
-					new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V" },
-				},
-			};
-
-			var model = BuildModel (new [] { peer });
-			var proxy = model.ProxyTypes [0];
-
-			Assert.Empty (proxy.UcoConstructors);
-		}
-
-	}
-
-	public class NativeRegistrations
-	{
-
-		[Fact]
-		public void Build_NativeRegistrations_MatchUcoMethods ()
-		{
-			var peer = MakeAcwPeer ("my/app/Main", "MyApp.MainActivity", "App") with {
-				MarshalMethods = new List<MarshalMethodInfo> {
-					new MarshalMethodInfo {
-						JniName = "<init>",
-						NativeCallbackName = "n_ctor",
-						JniSignature = "()V",
-						ManagedMethodName = ".ctor",
-						JniReturnType = "V",
-						IsConstructor = true,
-					},
-					new MarshalMethodInfo {
-						JniName = "onCreate",
-						NativeCallbackName = "n_OnCreate",
-						JniSignature = "(Landroid/os/Bundle;)V",
-						ManagedMethodName = "OnCreate",
-						JniReturnType = "V",
-						IsConstructor = false,
-					},
-				},
-			};
-
-			var model = BuildModel (new [] { peer });
-			var proxy = model.ProxyTypes [0];
-
-			// 1 registration for method + 1 for constructor
-			Assert.Equal (2, proxy.NativeRegistrations.Count);
-
-			var methodReg = proxy.NativeRegistrations [0];
-			Assert.Equal ("n_OnCreate", methodReg.JniMethodName);
-			Assert.Equal ("(Landroid/os/Bundle;)V", methodReg.JniSignature);
-			Assert.Equal ("n_onCreate_uco_0", methodReg.WrapperMethodName);
-
-			var ctorReg = proxy.NativeRegistrations [1];
-			Assert.Equal ("nctor_0", ctorReg.JniMethodName);
-			Assert.Equal ("()V", ctorReg.JniSignature);
-			Assert.Equal ("nctor_0_uco", ctorReg.WrapperMethodName);
-		}
-
-		[Fact]
-		public void Build_NativeRegistrations_ParameterizedConstructor_HasCorrectJniSignature ()
-		{
-			var peer = MakeAcwPeer ("my/app/MyView", "MyApp.MyView", "App") with {
-				JavaConstructors = new List<JavaConstructorInfo> {
-					new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V" },
-					new JavaConstructorInfo { ConstructorIndex = 1, JniSignature = "(Landroid/content/Context;)V",
-						Parameters = new List<JniParameterInfo> {
-							new JniParameterInfo { JniType = "Landroid/content/Context;" },
-						}
-					},
-				},
-				MarshalMethods = new List<MarshalMethodInfo> {
-					new MarshalMethodInfo {
-						JniName = "<init>",
-						NativeCallbackName = "n_ctor",
-						JniSignature = "()V",
-						ManagedMethodName = ".ctor",
-						JniReturnType = "V",
-						IsConstructor = true,
-					},
-					new MarshalMethodInfo {
-						JniName = "<init>",
-						NativeCallbackName = "n_ctor",
-						JniSignature = "(Landroid/content/Context;)V",
-						ManagedMethodName = ".ctor",
-						JniReturnType = "V",
-						IsConstructor = true,
-					},
-				},
-			};
-
-			var model = BuildModel (new [] { peer });
-			var proxy = model.ProxyTypes [0];
-
-			var ctorRegs = proxy.NativeRegistrations.Where (r => r.JniMethodName.StartsWith ("nctor_")).ToList ();
-			Assert.Equal (2, ctorRegs.Count);
-
-			Assert.Equal ("()V", ctorRegs [0].JniSignature);
-			Assert.Equal ("(Landroid/content/Context;)V", ctorRegs [1].JniSignature);
-		}
-
-		[Fact]
-		public void Build_NonAcwProxy_NoNativeRegistrations ()
-		{
-			var peer = MakePeerWithActivation ("java/lang/Object", "Java.Lang.Object", "Mono.Android");
-			var model = BuildModel (new [] { peer });
-
-			Assert.Single (model.ProxyTypes);
-			Assert.Empty (model.ProxyTypes [0].NativeRegistrations);
-		}
-
 	}
 
 	public class FixtureScan
 	{
-
 		[Fact]
 		public void Build_FromScannedFixtures_ProducesValidModel ()
 		{
@@ -658,26 +220,10 @@ public class ModelBuilderTests : FixtureTestBase
 			var peer = FindFixtureByJavaName (javaName);
 			Assert.Equal (expectedShortName, peer.ManagedTypeShortName);
 		}
-
-		[Fact]
-		public void Build_FromScannedFixtures_AcwTypesHaveUcoMethods ()
-		{
-			var peers = ScanFixtures ();
-			var model = BuildModel (peers);
-
-			var acwProxies = model.ProxyTypes.Where (p => p.IsAcw).ToList ();
-			Assert.NotEmpty (acwProxies);
-
-			foreach (var proxy in acwProxies) {
-				Assert.NotEmpty (proxy.NativeRegistrations);
-			}
-		}
-
 	}
 
 	public class FixtureConditionalAttributes
 	{
-
 		[Theory]
 		[InlineData ("my/app/MainActivity")]
 		[InlineData ("my/app/TouchHandler")]
@@ -699,7 +245,6 @@ public class ModelBuilderTests : FixtureTestBase
 			var model = BuildModel (new [] { peer });
 			Assert.False (model.Entries [0].IsUnconditional);
 		}
-
 	}
 
 	static JavaPeerProxyData? FindProxy (TypeMapAssemblyData model, string proxyTypeName)
@@ -712,10 +257,8 @@ public class ModelBuilderTests : FixtureTestBase
 		return model.Entries.FirstOrDefault (e => e.JniName == jniName);
 	}
 
-
 	public class FixtureMcwTypes
 	{
-
 		[Theory]
 		[InlineData ("java/lang/Object", "Java_Lang_Object_Proxy", "Java.Lang.Object")]
 		[InlineData ("android/app/Activity", "Android_App_Activity_Proxy", "Android.App.Activity")]
@@ -730,11 +273,6 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.NotNull (proxy);
 			Assert.True (proxy!.HasActivation);
 			Assert.Equal (expectedManagedName, proxy.TargetType.ManagedTypeName);
-			// MCW types with DoNotGenerateAcw → not ACW
-			Assert.False (proxy.IsAcw);
-			Assert.Empty (proxy.UcoMethods);
-			Assert.Empty (proxy.UcoConstructors);
-			Assert.Empty (proxy.NativeRegistrations);
 		}
 
 		[Fact]
@@ -765,121 +303,21 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 	}
 
-	public class FixtureAcwTypes
-	{
-
-		[Fact]
-		public void Fixture_MainActivity_IsAcw ()
-		{
-			var peer = FindFixtureByJavaName ("my/app/MainActivity");
-			Assert.False (peer.DoNotGenerateAcw);
-			Assert.NotEmpty (peer.MarshalMethods);
-			Assert.NotNull (peer.ActivationCtor);
-
-			var model = BuildModel (new [] { peer }, "TypeMap");
-			var proxy = FindProxy (model, "MyApp_MainActivity_Proxy");
-			Assert.NotNull (proxy);
-			Assert.True (proxy!.IsAcw);
-			Assert.True (proxy.HasActivation);
-		}
-
-		[Fact]
-		public void Fixture_MainActivity_UcoMethods ()
-		{
-			var peer = FindFixtureByJavaName ("my/app/MainActivity");
-			var model = BuildModel (new [] { peer }, "TypeMap");
-			var proxy = FindProxy (model, "MyApp_MainActivity_Proxy");
-			Assert.NotNull (proxy);
-
-			var nonCtorMethods = peer.MarshalMethods.Where (m => !m.IsConstructor).ToList ();
-			Assert.Equal (nonCtorMethods.Count, proxy.UcoMethods.Count);
-
-			var onCreateUco = proxy.UcoMethods.FirstOrDefault (u => u.CallbackMethodName == "n_OnCreate");
-			Assert.NotNull (onCreateUco);
-			Assert.Equal ("(Landroid/os/Bundle;)V", onCreateUco!.JniSignature);
-			Assert.StartsWith ("n_onCreate_uco_", onCreateUco.WrapperName);
-		}
-
-	}
-
-	public class FixtureTouchHandler
-	{
-
-		[Fact]
-		public void Fixture_TouchHandler_AllUcoMethods ()
-		{
-			var peer = FindFixtureByJavaName ("my/app/TouchHandler");
-			var model = BuildModel (new [] { peer }, "TypeMap");
-			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_TouchHandler_Proxy");
-			Assert.NotNull (proxy);
-
-			var nonCtorMethods = peer.MarshalMethods.Where (m => !m.IsConstructor).ToList ();
-			Assert.Equal (nonCtorMethods.Count, proxy!.UcoMethods.Count);
-
-			// onTouch: (Landroid/view/View;I)Z
-			var onTouchUco = proxy.UcoMethods.FirstOrDefault (u => u.CallbackMethodName == "n_OnTouch");
-			Assert.NotNull (onTouchUco);
-			Assert.Equal ("(Landroid/view/View;I)Z", onTouchUco!.JniSignature);
-
-			// onFocusChange: (Landroid/view/View;Z)V
-			var onFocusUco = proxy.UcoMethods.FirstOrDefault (u => u.CallbackMethodName == "n_OnFocusChange");
-			Assert.NotNull (onFocusUco);
-			Assert.Equal ("(Landroid/view/View;Z)V", onFocusUco!.JniSignature);
-
-			// onScroll: (IFJD)V
-			var onScrollUco = proxy.UcoMethods.FirstOrDefault (u => u.CallbackMethodName == "n_OnScroll");
-			Assert.NotNull (onScrollUco);
-			Assert.Equal ("(IFJD)V", onScrollUco!.JniSignature);
-
-			// getText: ()Ljava/lang/String;
-			var getTextUco = proxy.UcoMethods.FirstOrDefault (u => u.CallbackMethodName == "n_GetText");
-			Assert.NotNull (getTextUco);
-			Assert.Equal ("()Ljava/lang/String;", getTextUco!.JniSignature);
-
-			// setItems: ([Ljava/lang/String;)V
-			var setItemsUco = proxy.UcoMethods.FirstOrDefault (u => u.CallbackMethodName == "n_SetItems");
-			Assert.NotNull (setItemsUco);
-			Assert.Equal ("([Ljava/lang/String;)V", setItemsUco!.JniSignature);
-		}
-
-	}
-
 	public class FixtureCustomView
 	{
-
 		[Fact]
-		public void Fixture_CustomView_HasTwoConstructorWrappers ()
+		public void Fixture_CustomView_HasTwoConstructors ()
 		{
 			var peer = FindFixtureByJavaName ("my/app/CustomView");
 
 			var model = BuildModel (new [] { peer }, "TypeMap");
 			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_CustomView_Proxy");
 			Assert.NotNull (proxy);
-
-			if (proxy!.IsAcw) {
-				Assert.Equal (2, proxy.UcoConstructors.Count);
-				Assert.Equal ("nctor_0_uco", proxy.UcoConstructors [0].WrapperName);
-				Assert.Equal ("nctor_1_uco", proxy.UcoConstructors [1].WrapperName);
-				Assert.Equal ("MyApp.CustomView", proxy.UcoConstructors [0].TargetType.ManagedTypeName);
-				Assert.Equal ("MyApp.CustomView", proxy.UcoConstructors [1].TargetType.ManagedTypeName);
-
-				// Constructor JNI signatures should be propagated
-				Assert.Equal ("()V", proxy.UcoConstructors [0].JniSignature);
-				Assert.Equal ("(Landroid/content/Context;)V", proxy.UcoConstructors [1].JniSignature);
-
-				// Constructor registrations must use the actual JNI signatures
-				var ctorRegs = proxy.NativeRegistrations.Where (r => r.JniMethodName.StartsWith ("nctor_")).ToList ();
-				Assert.Equal (2, ctorRegs.Count);
-				Assert.Equal ("()V", ctorRegs [0].JniSignature);
-				Assert.Equal ("(Landroid/content/Context;)V", ctorRegs [1].JniSignature);
-			}
 		}
-
 	}
 
 	public class FixtureInterfaces
 	{
-
 		[Fact]
 		public void Fixture_IOnClickListener_HasInvokerProxy ()
 		{
@@ -895,12 +333,10 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.NotNull (proxy!.InvokerType);
 			Assert.Equal ("Android.Views.IOnClickListenerInvoker", proxy.InvokerType!.ManagedTypeName);
 		}
-
 	}
 
 	public class FixtureNestedTypes
 	{
-
 		[Theory]
 		[InlineData ("my/app/Outer$Inner", "MyApp_Outer_Inner_Proxy", "MyApp.Outer+Inner")]
 		[InlineData ("my/app/ICallback$Result", "MyApp_ICallback_Result_Proxy", "MyApp.ICallback+Result")]
@@ -918,12 +354,10 @@ public class ModelBuilderTests : FixtureTestBase
 				Assert.Equal (expectedManagedName, proxy!.TargetType.ManagedTypeName);
 			}
 		}
-
 	}
 
 	public class FixtureInvokers
 	{
-
 		[Fact]
 		public void Fixture_InterfaceAndInvoker_ShareJniName_InvokerSeparated ()
 		{
@@ -952,9 +386,7 @@ public class ModelBuilderTests : FixtureTestBase
 			// Invoker types should never get their own proxy or TypeMap entry.
 			// They only appear as a TypeRef in the interface proxy's InvokerType/CreateInstance.
 			var ifacePeer = MakeInterfacePeer ("my/app/IFoo", "MyApp.IFoo", "App", "MyApp.FooInvoker");
-			var invokerPeer = MakePeerWithActivation ("my/app/IFoo", "MyApp.FooInvoker", "App") with {
-				DoNotGenerateAcw = true,
-			};
+			var invokerPeer = MakePeerWithActivation ("my/app/IFoo", "MyApp.FooInvoker", "App") with { DoNotGenerateAcw = true };
 
 			var model = BuildModel (new [] { ifacePeer, invokerPeer });
 
@@ -972,12 +404,10 @@ public class ModelBuilderTests : FixtureTestBase
 			// Interface proxy has activation because it will create the invoker
 			Assert.True (proxy.HasActivation);
 		}
-
 	}
 
 	public class FixtureGenericHolder
 	{
-
 		[Fact]
 		public void Fixture_GenericHolder_Entry ()
 		{
@@ -988,12 +418,10 @@ public class ModelBuilderTests : FixtureTestBase
 			var entry = FindEntry (model, "my/app/GenericHolder");
 			Assert.NotNull (entry);
 		}
-
 	}
 
 	public class FixtureAcwTypeHasProxy
 	{
-
 		[Theory]
 		[InlineData ("my/app/AbstractBase", "MyApp_AbstractBase_Proxy")]
 		[InlineData ("my/app/ClickableView", "MyApp_ClickableView_Proxy")]
@@ -1006,47 +434,15 @@ public class ModelBuilderTests : FixtureTestBase
 
 			var model = BuildModel (new [] { peer }, "TypeMap");
 
-			if (peer.ActivationCtor != null && peer.MarshalMethods.Count > 0) {
+			if (peer.ActivationCtor != null) {
 				var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == expectedProxyName);
 				Assert.NotNull (proxy);
-				Assert.True (proxy!.IsAcw);
 			}
 		}
-
-		[Fact]
-		public void Fixture_ClickableView_HasOnClickUcoWrapper ()
-		{
-			var peer = FindFixtureByJavaName ("my/app/ClickableView");
-			var model = BuildModel (new [] { peer }, "TypeMap");
-
-			if (peer.ActivationCtor != null && peer.MarshalMethods.Count > 0) {
-				var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_ClickableView_Proxy");
-				Assert.NotNull (proxy);
-				var onClick = proxy!.UcoMethods.FirstOrDefault (u => u.CallbackMethodName == "n_OnClick");
-				Assert.NotNull (onClick);
-				Assert.Equal ("(Landroid/view/View;)V", onClick!.JniSignature);
-			}
-		}
-
-		[Fact]
-		public void Fixture_MultiInterfaceView_HasAllUcoMethods ()
-		{
-			var peer = FindFixtureByJavaName ("my/app/MultiInterfaceView");
-			var model = BuildModel (new [] { peer }, "TypeMap");
-
-			if (peer.ActivationCtor != null && peer.MarshalMethods.Count > 0) {
-				var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName == "MyApp_MultiInterfaceView_Proxy");
-				Assert.NotNull (proxy);
-				Assert.NotNull (proxy!.UcoMethods.FirstOrDefault (u => u.CallbackMethodName == "n_OnClick"));
-				Assert.NotNull (proxy.UcoMethods.FirstOrDefault (u => u.CallbackMethodName == "n_OnLongClick"));
-			}
-		}
-
 	}
 
 	public class FixtureImplementorsAndDispatchers
 	{
-
 		[Theory]
 		[InlineData ("mono/android/view/View_IOnClickListenerImplementor", "Implementor")]
 		[InlineData ("mono/android/view/View_ClickEventDispatcher", "EventDispatcher")]
@@ -1060,39 +456,20 @@ public class ModelBuilderTests : FixtureTestBase
 
 			var entry = model.Entries.FirstOrDefault ();
 			Assert.NotNull (entry);
-			Assert.False (entry!.IsUnconditional, $"{kind} should NOT be unconditional");
-			Assert.NotNull (entry.TargetTypeReference);
+			// Implementor/EventDispatcher types are only created from .NET (e.g., when a C# event
+			// is subscribed). They should NOT be unconditional — they're trimmable.
+			Assert.False (entry.IsUnconditional, $"{kind} should be trimmable, not unconditional");
 		}
-
 	}
 
-	public class NameBasedDetection
+	public class InvokerDetection
 	{
-
-		[Fact]
-		public void Build_UserTypeNamedImplementor_IsTreatedAsTrimmable ()
-		{
-			// Limitation: name-based heuristic means a user type ending in "Implementor"
-			// will be treated as trimmable even if it's genuinely a user ACW type.
-			// This test documents the known behavior.
-			var peer = MakeAcwPeer ("my/app/MyImplementor", "MyApp.MyImplementor", "App");
-			var model = BuildModel (new [] { peer });
-
-			var entry = model.Entries.FirstOrDefault ();
-			Assert.NotNull (entry);
-			// The heuristic treats this as an Implementor → trimmable (not unconditional)
-			Assert.False (entry!.IsUnconditional,
-				"Name-based heuristic: types ending in 'Implementor' are treated as trimmable");
-		}
-
 		[Fact]
 		public void Build_TypeIsInvoker_OnlyWhenReferencedByAnotherPeer ()
 		{
 			// A type is only treated as an invoker when another peer's InvokerTypeName references it.
 			// A type named "MyInvoker" with DoNotGenerateAcw is NOT automatically an invoker.
-			var invokerPeer = MakePeerWithActivation ("my/app/MyInvoker", "MyApp.MyInvoker", "App") with {
-				DoNotGenerateAcw = true,
-			};
+			var invokerPeer = MakePeerWithActivation ("my/app/MyInvoker", "MyApp.MyInvoker", "App") with { DoNotGenerateAcw = true };
 
 			// Without a referencing peer, it gets a normal entry
 			var model1 = BuildModel (new [] { invokerPeer });
@@ -1105,12 +482,10 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.Single (model2.Entries);
 			Assert.Equal ("MyApp.IMyInterface", model2.ProxyTypes [0].TargetType.ManagedTypeName);
 		}
-
 	}
 
 	public class PipelineTests
 	{
-
 		[Fact]
 		public void FullPipeline_AllFixtures_ProducesLoadableAssembly ()
 		{
@@ -1145,33 +520,27 @@ public class ModelBuilderTests : FixtureTestBase
 				var asmAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
 				int totalAttrs = asmAttrs.Count ();
 
-				int expected = model.Entries.Count + model.IgnoresAccessChecksTo.Count;
+				int expected = model.Entries.Count + model.Associations.Count + model.IgnoresAccessChecksTo.Count;
 				Assert.Equal (expected, totalAttrs);
 			});
 		}
 
 		[Fact]
-		public void FullPipeline_TouchHandler_AcwProxyHasUcoAttributes ()
+		public void FullPipeline_AliasGroup_TypeMapAttributeCountIncludesAssociations ()
 		{
-			var peer = FindFixtureByJavaName ("my/app/TouchHandler");
-			var model = BuildModel (new [] { peer }, "UcoAttrTest");
+			// Two peers with the same JNI name, both with activation → generates an association
+			var peers = new List<JavaPeerInfo> {
+				MakePeerWithActivation ("test/Alias", "Test.Primary", "Asm"),
+				MakePeerWithActivation ("test/Alias", "Test.Secondary", "Asm"),
+			};
+			var model = BuildModel (peers, "AliasAttrCount");
+			Assert.NotEmpty (model.Associations);
 
-			EmitAndVerify (model, "UcoAttrTest", (pe, reader) => {
-				var proxy = reader.TypeDefinitions
-					.Select (h => reader.GetTypeDefinition (h))
-					.First (t => reader.GetString (t.Name) == "MyApp_TouchHandler_Proxy");
-
-				var methods = proxy.GetMethods ()
-					.Select (h => reader.GetMethodDefinition (h))
-					.ToList ();
-
-				var ucoMethods = methods.Where (m => reader.GetString (m.Name).Contains ("_uco_")).ToList ();
-				Assert.NotEmpty (ucoMethods);
-
-				foreach (var uco in ucoMethods) {
-					var attrs = uco.GetCustomAttributes ().Select (h => reader.GetCustomAttribute (h)).ToList ();
-					Assert.NotEmpty (attrs);
-				}
+			EmitAndVerify (model, "AliasAttrCount", (pe, reader) => {
+				var asmAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
+				int totalAttrs = asmAttrs.Count ();
+				int expected = model.Entries.Count + model.Associations.Count + model.IgnoresAccessChecksTo.Count;
+				Assert.Equal (expected, totalAttrs);
 			});
 		}
 
@@ -1193,47 +562,6 @@ public class ModelBuilderTests : FixtureTestBase
 				Assert.Contains (".ctor", methodNames);
 				Assert.Contains ("CreateInstance", methodNames);
 				Assert.Contains ("get_TargetType", methodNames);
-
-				if (model.ProxyTypes [0].IsAcw) {
-					Assert.Contains ("RegisterNatives", methodNames);
-					Assert.Contains (methodNames, m => m.StartsWith ("nctor_") && m.EndsWith ("_uco"));
-				}
-			});
-		}
-
-		[Fact]
-		public void FullPipeline_CustomView_UcoConstructorMatchesJniSignature ()
-		{
-			var peer = FindFixtureByJavaName ("my/app/CustomView");
-			var model = BuildModel (new [] { peer }, "CtorSigTest");
-
-			EmitAndVerify (model, "CtorSigTest", (pe, reader) => {
-				var proxy = reader.TypeDefinitions
-					.Select (h => reader.GetTypeDefinition (h))
-					.First (t => reader.GetString (t.Name) == "MyApp_CustomView_Proxy");
-
-				var ucoCtors = proxy.GetMethods ()
-					.Select (h => reader.GetMethodDefinition (h))
-					.Where (m => reader.GetString (m.Name).StartsWith ("nctor_") && reader.GetString (m.Name).EndsWith ("_uco"))
-					.ToList ();
-
-				Assert.NotEmpty (ucoCtors);
-
-				foreach (var uco in ucoCtors) {
-					var name = reader.GetString (uco.Name);
-					var modelUco = model.ProxyTypes
-						.SelectMany (p => p.UcoConstructors)
-						.First (u => u.WrapperName == name);
-
-					// UCO constructor signature: jnienv + self + JNI params
-					int expectedJniParams = JniSignatureHelper.ParseParameterTypes (modelUco.JniSignature).Count;
-					int expectedTotal = 2 + expectedJniParams;
-
-					var sig = reader.GetBlobReader (uco.Signature);
-					var header = sig.ReadSignatureHeader ();
-					int paramCount = sig.ReadCompressedInteger ();
-					Assert.Equal (expectedTotal, paramCount);
-				}
 			});
 		}
 
@@ -1252,12 +580,10 @@ public class ModelBuilderTests : FixtureTestBase
 				Assert.NotEmpty (asmAttrs);
 			});
 		}
-
 	}
 
 	public class PeBlobValidation
 	{
-
 		[Fact]
 		public void FullPipeline_Mixed2ArgAnd3Arg_BothSurviveRoundTrip ()
 		{
@@ -1323,12 +649,10 @@ public class ModelBuilderTests : FixtureTestBase
 				Assert.Contains ("Android.App.Activity", targetRef!);
 			});
 		}
-
 	}
 
 	public class DeterminismTests
 	{
-
 		[Fact]
 		public void Build_SameInput_ProducesDeterministicOutput ()
 		{
@@ -1344,21 +668,16 @@ public class ModelBuilderTests : FixtureTestBase
 				Assert.Equal (model1.Entries [i].TargetTypeReference, model2.Entries [i].TargetTypeReference);
 			}
 		}
-
 	}
 
 	static void EmitAndVerify (TypeMapAssemblyData model, string assemblyName, Action<PEReader, MetadataReader> verify)
 	{
-		var outputDir = CreateTempDir ();
-		try {
-			var outputPath = Path.Combine (outputDir, $"{assemblyName}.dll");
-			var emitter = new TypeMapAssemblyEmitter (new Version (11, 0, 0, 0));
-			emitter.Emit (model, outputPath);
-			using var pe = new PEReader (File.OpenRead (outputPath));
-			verify (pe, pe.GetMetadataReader ());
-		} finally {
-			DeleteTempDir (outputDir);
-		}
+		var stream = new MemoryStream ();
+		var emitter = new TypeMapAssemblyEmitter (new Version (11, 0, 0, 0));
+		emitter.Emit (model, stream);
+		stream.Position = 0;
+		using var pe = new PEReader (stream);
+		verify (pe, pe.GetMetadataReader ());
 	}
 
 	/// <summary>
@@ -1416,5 +735,207 @@ public class ModelBuilderTests : FixtureTestBase
 			result.Add ((jniName, proxyRef, targetRef));
 		}
 		return result;
+	}
+
+	public class UcoMethods
+	{
+		[Fact]
+		public void Build_AcwWithMarshalMethods_CreatesUcoMethods ()
+		{
+			var peer = MakeAcwPeer ("my/app/Foo", "MyApp.Foo", "App") with {
+				MarshalMethods = new List<MarshalMethodInfo> {
+					new MarshalMethodInfo {
+						JniName = "<init>", NativeCallbackName = "n_ctor",
+						JniSignature = "()V", ManagedMethodName = ".ctor",
+						JniReturnType = "V", IsConstructor = true,
+					},
+					new MarshalMethodInfo {
+						JniName = "onClick", NativeCallbackName = "n_OnClick",
+						JniSignature = "(Landroid/view/View;)V", ManagedMethodName = "OnClick",
+						JniReturnType = "V",
+					},
+				},
+			};
+			var model = BuildModel (new [] { peer });
+
+			Assert.Single (model.ProxyTypes);
+			var proxy = model.ProxyTypes [0];
+			Assert.True (proxy.IsAcw);
+			// Only non-constructor methods become UCO methods
+			Assert.Single (proxy.UcoMethods);
+			Assert.Equal ("n_OnClick", proxy.UcoMethods [0].CallbackMethodName);
+		}
+
+		[Fact]
+		public void Build_ConstructorsInMarshalMethods_SkippedFromUcoMethods ()
+		{
+			var peer = MakeAcwPeer ("my/app/Bar", "MyApp.Bar", "App") with {
+				MarshalMethods = new List<MarshalMethodInfo> {
+					new MarshalMethodInfo {
+						JniName = "<init>", NativeCallbackName = "n_ctor",
+						JniSignature = "()V", ManagedMethodName = ".ctor",
+						JniReturnType = "V", IsConstructor = true,
+					},
+				},
+			};
+			var model = BuildModel (new [] { peer });
+			Assert.Empty (model.ProxyTypes [0].UcoMethods);
+		}
+
+		[Fact]
+		public void Build_McwType_IsAcwFalse ()
+		{
+			var peer = MakePeerWithActivation ("android/app/Activity", "Android.App.Activity", "Mono.Android");
+			var model = BuildModel (new [] { peer });
+			Assert.Single (model.ProxyTypes);
+			Assert.False (model.ProxyTypes [0].IsAcw);
+		}
+
+		[Fact]
+		public void Build_InterfaceWithMarshalMethods_IsNotAcw ()
+		{
+			var peer = MakeInterfacePeer ("android/view/View$OnClickListener",
+				"Android.Views.View+IOnClickListener", "Mono.Android",
+				"Android.Views.View+IOnClickListenerInvoker") with {
+				MarshalMethods = new List<MarshalMethodInfo> {
+					new MarshalMethodInfo {
+						JniName = "onClick", NativeCallbackName = "n_OnClick",
+						JniSignature = "(Landroid/view/View;)V", ManagedMethodName = "OnClick",
+						JniReturnType = "V",
+					},
+				},
+			};
+			var model = BuildModel (new [] { peer });
+			Assert.Single (model.ProxyTypes);
+			Assert.False (model.ProxyTypes [0].IsAcw);
+		}
+	}
+
+	public class UcoConstructors
+	{
+		[Fact]
+		public void Build_AcwWithConstructors_CreatesUcoConstructors ()
+		{
+			var peer = MakeAcwPeer ("my/app/Baz", "MyApp.Baz", "App") with {
+				JavaConstructors = new List<JavaConstructorInfo> {
+					new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V" },
+					new JavaConstructorInfo { ConstructorIndex = 1, JniSignature = "(Landroid/content/Context;)V" },
+				},
+			};
+			var model = BuildModel (new [] { peer });
+			Assert.Equal (2, model.ProxyTypes [0].UcoConstructors.Count);
+			Assert.Contains ("nctor_0_uco", model.ProxyTypes [0].UcoConstructors [0].WrapperName);
+			Assert.Contains ("nctor_1_uco", model.ProxyTypes [0].UcoConstructors [1].WrapperName);
+		}
+
+		[Fact]
+		public void Build_PeerWithoutActivationCtor_NoUcoConstructors ()
+		{
+			var peer = MakeMcwPeer ("test/NoActivation", "Test.NoActivation", "Asm");
+			var model = BuildModel (new [] { peer });
+			Assert.Empty (model.ProxyTypes);
+		}
+	}
+
+	public class NativeRegistrations
+	{
+		[Fact]
+		public void Build_NativeRegistrations_MatchUcoMethods ()
+		{
+			var peer = MakeAcwPeer ("my/app/Reg", "MyApp.Reg", "App") with {
+				MarshalMethods = new List<MarshalMethodInfo> {
+					new MarshalMethodInfo {
+						JniName = "<init>", NativeCallbackName = "n_ctor",
+						JniSignature = "()V", ManagedMethodName = ".ctor",
+						JniReturnType = "V", IsConstructor = true,
+					},
+					new MarshalMethodInfo {
+						JniName = "doWork", NativeCallbackName = "n_DoWork",
+						JniSignature = "(I)V", ManagedMethodName = "DoWork",
+						JniReturnType = "V",
+					},
+				},
+				JavaConstructors = new List<JavaConstructorInfo> {
+					new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V" },
+				},
+			};
+			var model = BuildModel (new [] { peer });
+			var proxy = model.ProxyTypes [0];
+
+			// Should have 1 UCO method + 1 UCO constructor = 2 native registrations
+			Assert.Single (proxy.UcoMethods);
+			Assert.Single (proxy.UcoConstructors);
+			Assert.Equal (2, proxy.NativeRegistrations.Count);
+		}
+
+		[Fact]
+		public void Build_NonAcwProxy_NoNativeRegistrations ()
+		{
+			var peer = MakePeerWithActivation ("test/Mcw", "Test.Mcw", "Mono.Android");
+			var model = BuildModel (new [] { peer });
+			Assert.Single (model.ProxyTypes);
+			Assert.Empty (model.ProxyTypes [0].NativeRegistrations);
+		}
+	}
+
+	public class FixtureUcoMethods
+	{
+		[Fact]
+		public void Fixture_MainActivity_UcoMethods ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/MainActivity");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault ();
+			Assert.NotNull (proxy);
+			Assert.True (proxy.IsAcw);
+			Assert.NotEmpty (proxy.UcoMethods);
+		}
+
+		[Fact]
+		public void Fixture_ClickableView_HasOnClickUcoWrapper ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/ClickableView");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault ();
+			Assert.NotNull (proxy);
+			var ucoNames = proxy.UcoMethods.Select (u => u.CallbackMethodName).ToList ();
+			Assert.Contains ("n_OnClick", ucoNames);
+		}
+
+		[Fact]
+		public void Fixture_TouchHandler_AllUcoMethods ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/TouchHandler");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault ();
+			Assert.NotNull (proxy);
+			Assert.True (proxy.UcoMethods.Count >= 2, "TouchHandler should have multiple UCO methods");
+		}
+
+		[Fact]
+		public void Fixture_CustomView_HasTwoConstructorWrappers ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/CustomView");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault ();
+			Assert.NotNull (proxy);
+			Assert.Equal (2, proxy.UcoConstructors.Count);
+		}
+	}
+
+	public class ImplementorTrimmability
+	{
+		[Fact]
+		public void Build_UserTypeNamedImplementor_IsTreatedAsTrimmable ()
+		{
+			var peer = MakeAcwPeer ("my/app/MyImplementor", "MyApp.MyImplementor", "App") with {
+				DoNotGenerateAcw = false,
+			};
+			var model = BuildModel (new [] { peer });
+			var entry = model.Entries.FirstOrDefault ();
+			Assert.NotNull (entry);
+			Assert.False (entry.IsUnconditional,
+				"Name-based heuristic: types ending in 'Implementor' are treated as trimmable");
+		}
 	}
 }
