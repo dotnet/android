@@ -124,4 +124,43 @@ public class RunnerIntegrationTests
 		Assert.IsTrue (File.Exists (adbPath), $"adb should exist at {adbPath}");
 		StringAssert.StartsWith (sdkPath, adbPath);
 	}
+
+	[Test]
+	public void AvdManagerRunner_ToolDiscovery_FindsAvdManager ()
+	{
+		var ext = OS.IsWindows ? ".bat" : "";
+		var avdManagerPath = ProcessUtils.FindCmdlineTool (sdkPath, "avdmanager", ext);
+
+		// avdmanager may not be present if cmdline-tools are not installed
+		if (avdManagerPath is null) {
+			Assert.Ignore ("avdmanager not found in SDK — cmdline-tools may not be installed.");
+			return;
+		}
+
+		Assert.IsTrue (File.Exists (avdManagerPath), $"avdmanager should exist at {avdManagerPath}");
+		TestContext.Progress.WriteLine ($"Found avdmanager at: {avdManagerPath}");
+	}
+
+	[Test]
+	public async Task AvdManagerRunner_ListAvdsAsync_ReturnsWithoutError ()
+	{
+		var ext = OS.IsWindows ? ".bat" : "";
+		var avdManagerPath = ProcessUtils.FindCmdlineTool (sdkPath, "avdmanager", ext);
+
+		if (avdManagerPath is null) {
+			Assert.Ignore ("avdmanager not found in SDK — cmdline-tools may not be installed.");
+			return;
+		}
+
+		var env = new System.Collections.Generic.Dictionary<string, string> {
+			{ EnvironmentVariableNames.JavaHome, jdkPath },
+			{ EnvironmentVariableNames.AndroidHome, sdkPath },
+		};
+
+		var runner = new AvdManagerRunner (avdManagerPath, env);
+		var avds = await runner.ListAvdsAsync ();
+
+		Assert.IsNotNull (avds);
+		TestContext.Progress.WriteLine ($"ListAvdsAsync returned {avds.Count} AVD(s)");
+	}
 }

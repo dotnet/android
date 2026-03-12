@@ -132,3 +132,16 @@ static Xamarin.Android.Tools.JdkInstaller.SupportedVersions.get -> System.Collec
 static Xamarin.Android.Tools.ProcessUtils.CreateProcessStartInfo(string! fileName, params string![]! args) -> System.Diagnostics.ProcessStartInfo!
 static Xamarin.Android.Tools.ProcessUtils.IsElevated() -> bool
 static Xamarin.Android.Tools.ProcessUtils.StartProcess(System.Diagnostics.ProcessStartInfo! psi, System.IO.TextWriter? stdout, System.IO.TextWriter? stderr, System.Threading.CancellationToken cancellationToken, System.Collections.Generic.IDictionary<string!, string!>? environmentVariables = null, System.Action<System.Diagnostics.Process!>? onStarted = null) -> System.Threading.Tasks.Task<int>!
+Xamarin.Android.Tools.AvdInfo
+Xamarin.Android.Tools.AvdInfo.AvdInfo(string! Name, string? DeviceProfile = null, string? Path = null) -> void
+Xamarin.Android.Tools.AvdInfo.DeviceProfile.get -> string?
+Xamarin.Android.Tools.AvdInfo.DeviceProfile.init -> void
+Xamarin.Android.Tools.AvdInfo.Name.get -> string!
+Xamarin.Android.Tools.AvdInfo.Name.init -> void
+Xamarin.Android.Tools.AvdInfo.Path.get -> string?
+Xamarin.Android.Tools.AvdInfo.Path.init -> void
+Xamarin.Android.Tools.AvdManagerRunner
+Xamarin.Android.Tools.AvdManagerRunner.AvdManagerRunner(string! avdManagerPath, System.Collections.Generic.IDictionary<string!, string!>? environmentVariables = null, System.Action<System.Diagnostics.TraceLevel, string!>? logger = null) -> void
+Xamarin.Android.Tools.AvdManagerRunner.GetOrCreateAvdAsync(string! name, string! systemImage, string? deviceProfile = null, bool force = false, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Xamarin.Android.Tools.AvdInfo!>!
+Xamarin.Android.Tools.AvdManagerRunner.DeleteAvdAsync(string! name, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Xamarin.Android.Tools.AvdManagerRunner.ListAvdsAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.AvdInfo!>!>!
