@@ -67,7 +67,8 @@ namespace UserApp.Receivers
 
 namespace UserApp.Providers
 {
-	[ContentProvider (Name = "com.example.userapp.SettingsProvider")]
+	// Authorities use Android manifest naming conventions; Name is the generated JNI type name.
+	[ContentProvider (new [] { "com.example.userapp.settingsprovider" }, Name = "com.example.userapp.SettingsProvider")]
 	public class SettingsProvider : ContentProvider
 	{
 		public override bool OnCreate () => true;
