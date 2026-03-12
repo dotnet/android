@@ -78,7 +78,7 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 	[Fact]
 	public void Generate_MultipleTargets_HasCorrectAttributeCount ()
 	{
-		var targets = new [] { "_App.TypeMap", "_Mono.Android.TypeMap", "_Java.Interop.TypeMap" };
+		string[] targets = ["_App.TypeMap", "_Mono.Android.TypeMap", "_Java.Interop.TypeMap"];
 		using var stream = GenerateRootAssembly (targets);
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
