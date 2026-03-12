@@ -1,5 +1,22 @@
-<!-- Trimmable typemap targets for CoreCLR runtime (stub).
-     The actual implementation will be added in a follow-up. -->
+<!-- Trimmable typemap targets for CoreCLR runtime.
+     Adds generated typemap assemblies to the linker inputs. -->
 <Project>
+
+  <!-- Configure the runtime to use the trimmable TypeMap entry assembly -->
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="System.Runtime.InteropServices.TypeMappingEntryAssembly"
+        Value="$(_TypeMapAssemblyName)" />
+  </ItemGroup>
+
+  <!-- After typemap generation, add generated assemblies to the linker's input -->
+  <Target Name="_AddTrimmableTypeMapAssembliesToLinker"
+      AfterTargets="_GenerateJavaStubs"
+      Condition=" '@(_GeneratedTypeMapAssemblies)' != '' ">
+    <ItemGroup>
+      <_ResolvedAssemblies Include="@(_GeneratedTypeMapAssemblies)">
+        <TrimmerRootAssembly>true</TrimmerRootAssembly>
+      </_ResolvedAssemblies>
+    </ItemGroup>
+  </Target>
 
 </Project>
