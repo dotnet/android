@@ -16,6 +16,14 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 		return writer.ToString ();
 	}
 
+	static void AssertContainsLine (string expected, string actual)
+	{
+		Assert.Contains (
+			expected.ReplaceLineEndings ("\n"),
+			actual.ReplaceLineEndings ("\n")
+		);
+	}
+
 	static string GenerateFixture (string javaName)
 	{
 		var peer = FindFixtureByJavaName (javaName);
@@ -117,8 +125,8 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 		public void Generate_AcwType_HasRegisterNativesStaticBlock ()
 		{
 			var java = GenerateFixture ("my/app/MainActivity");
-			Assert.Contains ("static {\n", java);
-			Assert.Contains ("mono.android.Runtime.registerNatives (MainActivity.class);\n", java);
+			AssertContainsLine ("static {\n", java);
+			AssertContainsLine ("mono.android.Runtime.registerNatives (MainActivity.class);\n", java);
 		}
 
 	}
@@ -130,11 +138,11 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 		public void Generate_CustomView_HasExpectedConstructorElements ()
 		{
 			var java = GenerateFixture ("my/app/CustomView");
-			Assert.Contains ("public CustomView ()\n", java);
-			Assert.Contains ("public CustomView (android.content.Context p0)\n", java);
-			Assert.Contains ("private native void nctor_0 ();\n", java);
-			Assert.Contains ("private native void nctor_1 (android.content.Context p0);\n", java);
-			Assert.Contains ("if (getClass () == CustomView.class) nctor_0 ();\n", java);
+			AssertContainsLine ("public CustomView ()\n", java);
+			AssertContainsLine ("public CustomView (android.content.Context p0)\n", java);
+			AssertContainsLine ("private native void nctor_0 ();\n", java);
+			AssertContainsLine ("private native void nctor_1 (android.content.Context p0);\n", java);
+			AssertContainsLine ("if (getClass () == CustomView.class) nctor_0 ();\n", java);
 		}
 
 		[Fact]
@@ -222,10 +230,10 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 		public void Generate_MarshalMethod_HasOverrideAndNativeDeclaration ()
 		{
 			var java = GenerateFixture ("my/app/MainActivity");
-			Assert.Contains ("@Override\n", java);
-			Assert.Contains ("public void onCreate (android.os.Bundle p0)\n", java);
-			Assert.Contains ("n_OnCreate (p0);\n", java);
-			Assert.Contains ("public native void n_OnCreate (android.os.Bundle p0);\n", java);
+			AssertContainsLine ("@Override\n", java);
+			AssertContainsLine ("public void onCreate (android.os.Bundle p0)\n", java);
+			AssertContainsLine ("n_OnCreate (p0);\n", java);
+			AssertContainsLine ("public native void n_OnCreate (android.os.Bundle p0);\n", java);
 		}
 
 	}
@@ -303,7 +311,7 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 		public void Generate_ExportWithThrows_HasThrowsClause ()
 		{
 			var java = GenerateFixture ("my/app/ExportWithThrows");
-			Assert.Contains ("throws java.io.IOException, java.lang.IllegalStateException\n", java);
+			AssertContainsLine ("throws java.io.IOException, java.lang.IllegalStateException\n", java);
 		}
 
 	}
@@ -315,10 +323,10 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 		public void Generate_TouchHandler_HasExpectedMethodSignatures ()
 		{
 			var java = GenerateFixture ("my/app/TouchHandler");
-			Assert.Contains ("public boolean onTouch (android.view.View p0, int p1)\n", java);
-			Assert.Contains ("public void onScroll (int p0, float p1, long p2, double p3)\n", java);
-			Assert.Contains ("public java.lang.String getText ()\n", java);
-			Assert.Contains ("public void setItems (java.lang.String[] p0)\n", java);
+			AssertContainsLine ("public boolean onTouch (android.view.View p0, int p1)\n", java);
+			AssertContainsLine ("public void onScroll (int p0, float p1, long p2, double p3)\n", java);
+			AssertContainsLine ("public java.lang.String getText ()\n", java);
+			AssertContainsLine ("public void setItems (java.lang.String[] p0)\n", java);
 		}
 
 	}
