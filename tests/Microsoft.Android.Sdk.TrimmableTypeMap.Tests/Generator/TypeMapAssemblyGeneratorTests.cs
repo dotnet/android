@@ -421,4 +421,203 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 	}
 
+	public class EmitterBehavior
+	{
+
+		[Fact]
+		public void Emit_CalledTwice_Throws ()
+		{
+			var model = ModelBuilder.Build ([], "Double.dll", "Double");
+			var emitter = new TypeMapAssemblyEmitter (new Version (11, 0, 0, 0));
+			emitter.Emit (model, new MemoryStream ());
+			// MetadataBuilder.AddAssembly throws on second call (only one assembly definition per PE)
+			Assert.ThrowsAny<Exception> (() => emitter.Emit (model, new MemoryStream ()));
+		}
+
+		[Fact]
+		public void EmitBody_ILCallbackCallsAddMemberRef_SignatureNotCorrupted ()
+		{
+			// Regression test: EmitBody uses shared _sigBlob for the method signature.
+			// If the emitIL callback calls AddMemberRef (which also uses _sigBlob),
+			// the method signature must not be corrupted.
+			var pe = new PEAssemblyBuilder (new Version (11, 0, 0, 0));
+			pe.EmitPreamble ("SigTest", "SigTest.dll");
+
+			var objectRef = pe.Metadata.AddTypeReference (pe.SystemRuntimeRef,
+				pe.Metadata.GetOrAddString ("System"), pe.Metadata.GetOrAddString ("Object"));
+
+			// <Module> already defined; add a type to host the method
+			pe.Metadata.AddTypeDefinition (
+				System.Reflection.TypeAttributes.Public | System.Reflection.TypeAttributes.Class,
+				pe.Metadata.GetOrAddString ("Test"),
+				pe.Metadata.GetOrAddString ("MyType"),
+				objectRef,
+				MetadataTokens.FieldDefinitionHandle (pe.Metadata.GetRowCount (TableIndex.Field) + 1),
+				MetadataTokens.MethodDefinitionHandle (pe.Metadata.GetRowCount (TableIndex.MethodDef) + 1));
+
+			// EmitBody with an IL callback that calls AddMemberRef (clearing _sigBlob)
+			pe.EmitBody ("TestMethod",
+				MethodAttributes.Public | MethodAttributes.Static,
+				sig => sig.MethodSignature ().Parameters (1,
+					rt => rt.Void (),
+					p => p.AddParameter ().Type ().Int32 ()),
+				encoder => {
+					// This AddMemberRef call clears and repopulates _sigBlob
+					pe.AddMemberRef (objectRef, ".ctor",
+						s => s.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }));
+					encoder.OpCode (ILOpCode.Ret);
+				});
+
+			// If the sig blob was corrupted, the PE metadata will have a wrong signature.
+			// Write and read back to verify.
+			var stream = new MemoryStream ();
+			pe.WritePE (stream);
+			stream.Position = 0;
+
+			using var peReader = new PEReader (stream);
+			var reader = peReader.GetMetadataReader ();
+			var methods = reader.TypeDefinitions
+				.SelectMany (h => reader.GetTypeDefinition (h).GetMethods ())
+				.Select (h => reader.GetMethodDefinition (h))
+				.ToList ();
+
+			var testMethod = methods.First (m => reader.GetString (m.Name) == "TestMethod");
+			var sig = testMethod.DecodeSignature (SignatureTypeProvider.Instance, null);
+			var paramType = Assert.Single (sig.ParameterTypes);
+			Assert.Equal ("System.Int32", paramType);
+		}
+
+	}
+
+	public class DeterminismTests : FixtureTestBase
+	{
+
+		[Fact]
+		public void Generate_DifferentContent_ProducesDifferentMVIDs ()
+		{
+			var peer1 = MakePeerWithActivation ("test/TypeA", "Test.TypeA", "TestAsm");
+			var peer2 = MakePeerWithActivation ("test/TypeB", "Test.TypeB", "TestAsm");
+
+			using var stream1 = GenerateAssembly (new [] { peer1 }, "SameName");
+			using var stream2 = GenerateAssembly (new [] { peer2 }, "SameName");
+
+			var (pe1, reader1) = OpenAssembly (stream1);
+			var (pe2, reader2) = OpenAssembly (stream2);
+			using (pe1)
+			using (pe2) {
+				var mvid1 = reader1.GetGuid (reader1.GetModuleDefinition ().Mvid);
+				var mvid2 = reader2.GetGuid (reader2.GetModuleDefinition ().Mvid);
+				Assert.NotEqual (mvid1, mvid2);
+			}
+		}
+
+		[Fact]
+		public void Generate_IdenticalContent_ProducesIdenticalMVIDs ()
+		{
+			var peer = MakePeerWithActivation ("test/TypeA", "Test.TypeA", "TestAsm");
+
+			using var stream1 = GenerateAssembly (new [] { peer }, "SameName");
+			using var stream2 = GenerateAssembly (new [] { peer }, "SameName");
+
+			var (pe1, reader1) = OpenAssembly (stream1);
+			var (pe2, reader2) = OpenAssembly (stream2);
+			using (pe1)
+			using (pe2) {
+				var mvid1 = reader1.GetGuid (reader1.GetModuleDefinition ().Mvid);
+				var mvid2 = reader2.GetGuid (reader2.GetModuleDefinition ().Mvid);
+				Assert.Equal (mvid1, mvid2);
+			}
+		}
+
+	}
+
+	public class JavaInteropActivation : FixtureTestBase
+	{
+
+		[Fact]
+		public void Generate_JiStyleCtor_EmitsJavaInteropActivation ()
+		{
+			var peers = ScanFixtures ();
+			var jiPeer = peers.First (p => p.JavaName == "my/app/JiStylePeer");
+			Assert.NotNull (jiPeer.ActivationCtor);
+			Assert.Equal (ActivationCtorStyle.JavaInterop, jiPeer.ActivationCtor.Style);
+
+			using var stream = GenerateAssembly (new [] { jiPeer }, "JiStyleTest");
+			var (pe, reader) = OpenAssembly (stream);
+			using (pe) {
+				// JI-style activation should emit JniObjectReference and JniObjectReferenceOptions type refs
+				var typeNames = GetTypeRefNames (reader);
+				Assert.Contains ("JniObjectReference", typeNames);
+				Assert.Contains ("JniObjectReferenceOptions", typeNames);
+
+				// The proxy still exists (with a TargetType property)
+				var proxyTypes = reader.TypeDefinitions
+					.Select (h => reader.GetTypeDefinition (h))
+					.Where (t => reader.GetString (t.Namespace) == "_TypeMap.Proxies")
+					.ToList ();
+				Assert.Single (proxyTypes);
+			}
+		}
+
+		[Fact]
+		public void Generate_JiStyleCtor_FirstParamIsByRef ()
+		{
+			var peers = ScanFixtures ();
+			var jiPeer = peers.First (p => p.JavaName == "my/app/JiStylePeer");
+			Assert.NotNull (jiPeer.ActivationCtor);
+			Assert.Equal (ActivationCtorStyle.JavaInterop, jiPeer.ActivationCtor.Style);
+
+			using var stream = GenerateAssembly (new [] { jiPeer }, "JiByRefTest");
+			var (pe, reader) = OpenAssembly (stream);
+			using (pe) {
+				// Find the .ctor member reference whose parent type is the JI peer's declaring type
+				var ctorRefs = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
+					.Select (i => reader.GetMemberReference (MetadataTokens.MemberReferenceHandle (i)))
+					.Where (m => reader.GetString (m.Name) == ".ctor")
+					.ToList ();
+
+				// Decode each .ctor signature and find the JI-style one (2 params, first is byref JniObjectReference)
+				bool foundByRefCtor = false;
+				foreach (var ctor in ctorRefs) {
+					var sig = ctor.DecodeMethodSignature (SignatureTypeProvider.Instance, null);
+					if (sig.ParameterTypes.Length == 2 &&
+						sig.ParameterTypes [0].Contains ("JniObjectReference")) {
+						// The byref encoding should produce "Java.Interop.JniObjectReference&"
+						Assert.True (sig.ParameterTypes [0].EndsWith ("&"),
+							$"JI-style .ctor first param must be byref, got: {sig.ParameterTypes [0]}");
+						foundByRefCtor = true;
+					}
+				}
+				Assert.True (foundByRefCtor, "Expected to find a .ctor with byref JniObjectReference parameter");
+			}
+		}
+
+		[Fact]
+		public void Generate_JiStyleCtor_EmitsDeleteRefCall ()
+		{
+			var peers = ScanFixtures ();
+			var jiPeer = peers.First (p => p.JavaName == "my/app/JiStylePeer");
+
+			using var stream = GenerateAssembly (new [] { jiPeer }, "JiDeleteRefTest");
+			var (pe, reader) = OpenAssembly (stream);
+			using (pe) {
+				// The JI-style activation path must emit a call to JNIEnv.DeleteRef(IntPtr, JniHandleOwnership)
+				// to match the legacy TypeManager.CreateProxy behavior.
+				var memberRefs = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
+					.Select (i => reader.GetMemberReference (MetadataTokens.MemberReferenceHandle (i)))
+					.ToList ();
+
+				var deleteRefRef = memberRefs.FirstOrDefault (m => reader.GetString (m.Name) == "DeleteRef");
+				Assert.True (!deleteRefRef.Equals (default (MemberReference)),
+					"JI-style activation must emit a DeleteRef member reference for JNI handle cleanup");
+
+				// Verify it's on the JNIEnv type
+				var parentTypeRef = reader.GetTypeReference ((TypeReferenceHandle) deleteRefRef.Parent);
+				Assert.Equal ("JNIEnv", reader.GetString (parentTypeRef.Name));
+				Assert.Equal ("Android.Runtime", reader.GetString (parentTypeRef.Namespace));
+			}
+		}
+
+	}
+
 }
