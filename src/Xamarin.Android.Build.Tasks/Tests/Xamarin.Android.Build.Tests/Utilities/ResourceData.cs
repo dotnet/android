@@ -77,7 +77,8 @@ namespace Xamarin.Android.Build.Tests
 
 		public static void GenerateKeystore (string keystorePath, string storePass = "android", string keyAlias = "mykey", string keyPass = "android")
 		{
-			var keytoolPath = Path.Combine (AndroidSdkResolver.GetJavaSdkPath (), "bin", "keytool");
+			var keytoolName = TestEnvironment.IsWindows ? "keytool.exe" : "keytool";
+			var keytoolPath = Path.Combine (AndroidSdkResolver.GetJavaSdkPath (), "bin", keytoolName);
 			var psi = new ProcessStartInfo {
 				FileName = keytoolPath,
 				Arguments = $"-genkeypair -v -keystore \"{keystorePath}\" -alias {keyAlias} -keyalg RSA -keysize 2048 -validity 10000 -storepass {storePass} -keypass {keyPass} -dname \"CN=Test, OU=Test, O=Test, L=Test, ST=Test, C=US\"",

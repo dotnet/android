@@ -215,7 +215,9 @@
       <_KeyAlias>mykey</_KeyAlias>
       <_KeyPass>android</_KeyPass>
       <_StorePass>android</_StorePass>
-      <_KeytoolPath>$(JavaSdkDirectory)\bin\keytool</_KeytoolPath>
+      <_KeytoolExe Condition=" '$(HostOS)' == 'Windows' ">keytool.exe</_KeytoolExe>
+      <_KeytoolExe Condition=" '$(HostOS)' != 'Windows' ">keytool</_KeytoolExe>
+      <_KeytoolPath>$(JavaSdkDirectory)\bin\$(_KeytoolExe)</_KeytoolPath>
       <!-- Support for running against a system installation of XA. -->
       <BundleToolJarPath Condition=" !Exists('$(BundleToolJarPath)') ">$(AndroidBundleToolJarPath)</BundleToolJarPath>
       <JavaPath Condition=" '$(JavaPath)' == '' ">$(JavaSdkDirectory)\bin\java</JavaPath>
