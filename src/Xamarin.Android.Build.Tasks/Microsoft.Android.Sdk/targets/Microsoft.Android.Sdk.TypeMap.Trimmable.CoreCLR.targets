@@ -8,14 +8,14 @@
         Value="$(_TypeMapAssemblyName)" />
   </ItemGroup>
 
-  <!-- After typemap generation, add generated assemblies to the linker's input -->
+  <!-- After typemap generation, add generated assemblies to resolved assemblies for the linker.
+       NOT as TrimmerRootAssembly — the trimmer must process TypeMapAttributes and trim entries
+       whose trimTarget types were removed. -->
   <Target Name="_AddTrimmableTypeMapAssembliesToLinker"
       AfterTargets="_GenerateJavaStubs"
       Condition=" '@(_GeneratedTypeMapAssemblies)' != '' ">
     <ItemGroup>
-      <_ResolvedAssemblies Include="@(_GeneratedTypeMapAssemblies)">
-        <TrimmerRootAssembly>true</TrimmerRootAssembly>
-      </_ResolvedAssemblies>
+      <_ResolvedAssemblies Include="@(_GeneratedTypeMapAssemblies)" />
     </ItemGroup>
   </Target>
 
