@@ -107,7 +107,7 @@ The first command verifies that the file is a valid ELF image and shows the head
 target platform/abi/machine:
 
 ```shell
-$ llvm-readelf --file-header libassemblies.arm64-v8a.blob.so
+$ llvm-readelf --file-header libassembly-store.so
 ELF Header:
   Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00
   Class:                             ELF64
@@ -134,7 +134,7 @@ The second command lists the sections contained within the ELF image, their alig
 into the file where the sections begin:
 
 ```shell
-$ llvm-readelf --section-headers libassemblies.arm64-v8a.blob.so
+$ llvm-readelf --section-headers libassembly-store.so
 There are 11 section headers, starting at offset 0xcf648:
 
 Section Headers:
@@ -167,7 +167,7 @@ shared library.
 In order to extract payload from the ELF image, one can use the following command:
 
 ```shell
-$ llvm-objcopy --dump-section=payload=payload.bin libassemblies.arm64-v8a.blob.so
+$ llvm-objcopy --dump-section=payload=payload.bin libassembly-store.so
 $ ls -gG payload.bin
 -rw-rw-r-- 1 833095 Sep 12 11:32 payload.bin
 ```

@@ -75,12 +75,12 @@ namespace UnnamedProject
 			{
 				var asm = typeof(Library1.SomeClass).Assembly;
 				var t = asm.GetType("Library1.LinkerClass");
-				var m = t.GetMethod("PreserveAttribMethod");
+				var m = t.GetMethod("DynamicDependencyTargetMethod");
 				Android.Util.Log.Info(TAG, $"[PASS] Able to locate method '{m.Name}'.");
 			}
 			catch (Exception ex)
 			{
-				Android.Util.Log.Info(TAG, $"[FAIL] Unable to access 'PreserveAttribMethod ()' method of 'LinkerClass'.\n{ex}");
+				Android.Util.Log.Info(TAG, $"[FAIL] Unable to access 'DynamicDependencyTargetMethod ()' method of 'LinkerClass'.\n{ex}");
 			}
 
 			// [Test] TryAccessXmlPreservedFieldOfLinkerClass

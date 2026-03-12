@@ -39,7 +39,6 @@ set(XAMARIN_MONODROID_SOURCES
   runtime-environment.cc
   runtime-util.cc
   typemap.cc
-  xamarin_getifaddrs.cc
 )
 
 if(DEBUG_BUILD)

@@ -55,8 +55,3 @@ void monodroid_timing_stop (
 {
 	pinvoke_unreachable ();
 }
-
-void* _monodroid_timezone_get_default_id ()
-{
-	pinvoke_unreachable ();
-}

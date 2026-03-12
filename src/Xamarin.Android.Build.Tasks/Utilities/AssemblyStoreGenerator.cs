@@ -107,7 +107,7 @@ partial class AssemblyStoreGenerator
 		Directory.CreateDirectory (outputDir);
 
 		uint infoCount = (uint)infos.Count;
-		string storePath = Path.Combine (outputDir, androidAbi, $"assemblies.{androidAbi}.blob.so");
+		string storePath = Path.Combine (outputDir, "assembly-store.so");
 		var index = new List<AssemblyStoreIndexEntry> ();
 		var descriptors = new List<AssemblyStoreEntryDescriptor> ();
 		ulong namesSize = 0;

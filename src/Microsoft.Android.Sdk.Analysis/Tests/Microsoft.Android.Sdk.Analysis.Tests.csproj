@@ -2,7 +2,6 @@
   <Import Project="..\..\..\Configuration.props" />
   <PropertyGroup>
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
-    <LangVersion>latest</LangVersion>
     <OutputPath>..\..\..\bin\Test$(Configuration)</OutputPath>
   </PropertyGroup>
   <ItemGroup>

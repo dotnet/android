@@ -6,6 +6,7 @@
 
 #include <constants.hh>
 #include <xamarin-app.hh>
+#include <host/host-environment-clr.hh>
 #include <runtime-base/android-system.hh>
 #include <runtime-base/cpu-arch.hh>
 #include <runtime-base/dso-loader.hh>
@@ -171,6 +172,7 @@ AndroidSystem::setup_apk_directories (unsigned short running_on_cpu, jstring_arr
 	std::string_view const& abi = android_abi_names [running_on_cpu];
 	size_t number_of_added_directories = 0uz;
 
+	std::string_view base_apk{};
 	for (size_t i = 0uz; i < runtimeApks.get_length (); ++i) {
 		jstring_wrapper &e = runtimeApks [i];
 		std::string_view apk = e.get_string_view ();
@@ -179,12 +181,22 @@ AndroidSystem::setup_apk_directories (unsigned short running_on_cpu, jstring_arr
 			if (apk.ends_with (Constants::split_config_abi_apk_name.data ())) {
 				add_apk_libdir (apk, number_of_added_directories, abi);
 				break;
+			} else if (base_apk.empty () && apk.ends_with (Constants::base_apk_name)) {
+				base_apk = apk;
 			}
 		} else {
 			add_apk_libdir (apk, number_of_added_directories, abi);
 		}
 	}
 
+	// This apparently can happen now... It seems that sometimes (when and why? No idea) when AAB format is used, bundletool
+	// won't put the native libraries in a separate split config file, but it will instead put **all** of the ABIs
+	// in base.apk
+	if (have_split_apks && number_of_added_directories == 0 && !base_apk.empty ()) {
+		add_apk_libdir (base_apk, number_of_added_directories, abi);
+	}
+
+	log_debug (LOG_DEFAULT, "Number of added dirs: {}", number_of_added_directories);
 	if (app_lib_directories.size () == number_of_added_directories) [[likely]] {
 		return;
 	}
@@ -224,32 +236,34 @@ AndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtimeApks
 void
 AndroidSystem::setup_environment () noexcept
 {
-	const char *var_name;
-	const char *var_value;
-	for (size_t i = 0uz; i < application_config.environment_variable_count; i++) {
-		AppEnvironmentVariable const& env_var = app_environment_variables [i];
-		var_name = &app_environment_variable_contents[env_var.name_index];
-		var_value = &app_environment_variable_contents[env_var.value_index];
+	if (application_config.environment_variable_count > 0) {
+		log_debug (LOG_DEFAULT, "Setting environment variables ({})", application_config.environment_variable_count);
+		HostEnvironment::set_values<HostEnvironment::set_variable> (
+            application_config.environment_variable_count,
+            app_environment_variables,
+            app_environment_variable_contents
+        );
+	}
 
-		if constexpr (Constants::is_debug_build) {
-			log_info (LOG_DEFAULT, "Setting environment variable '{}' to '{}'", var_name, var_value);
-		}
-
-		if (setenv (var_name, var_value, 1) < 0) {
-			log_warn (LOG_DEFAULT, "Failed to set environment variable: {}", strerror (errno));
-		}
+	if (application_config.system_property_count > 0) {
+		log_debug (LOG_DEFAULT, "Setting system properties ({})", application_config.system_property_count);
+		HostEnvironment::set_values<HostEnvironment::set_system_property> (
+            application_config.system_property_count,
+            app_system_properties,
+            app_system_property_contents
+        );
 	}
 
 #if defined(DEBUG)
-		log_debug (LOG_DEFAULT, "Loading environment from the override directory."sv);
+	log_debug (LOG_DEFAULT, "Loading environment from the override directory."sv);
 
-		dynamic_local_string<Constants::SENSIBLE_PATH_MAX> env_override_file;
-		Util::path_combine (env_override_file, std::string_view {primary_override_dir}, Constants::OVERRIDE_ENVIRONMENT_FILE_NAME);
-		log_debug (LOG_DEFAULT, "{}", env_override_file.get ());
-		if (Util::file_exists (env_override_file)) {
-			log_debug (LOG_DEFAULT, "Loading {}"sv, env_override_file.get ());
-			setup_environment_from_override_file (env_override_file);
-		}
+	dynamic_local_string<Constants::SENSIBLE_PATH_MAX> env_override_file;
+	Util::path_combine (env_override_file, std::string_view {primary_override_dir}, Constants::OVERRIDE_ENVIRONMENT_FILE_NAME);
+	log_debug (LOG_DEFAULT, "{}", env_override_file.get ());
+	if (Util::file_exists (env_override_file)) {
+		log_debug (LOG_DEFAULT, "Loading {}"sv, env_override_file.get ());
+		setup_environment_from_override_file (env_override_file);
+	}
 #endif // def DEBUG
 }
 
@@ -289,27 +303,13 @@ AndroidSystem::lookup_system_property (std::string_view const& name, size_t &val
 		return nullptr;
 	}
 
-	const char *prop_name;
-	const char *prop_value;
-	for (size_t i = 0uz; i < application_config.system_property_count; i += 2uz) {
-		prop_name = app_system_properties[i];
-		if (prop_name == nullptr || *prop_name == '\0') {
-			continue;
-		}
-
-		if (strcmp (prop_name, name.data ()) == 0) {
-			prop_value = app_system_properties [i + 1uz];
-			if (prop_value == nullptr || *prop_value == '\0') {
-				value_len = 0uz;
-				return "";
-			}
-
-			value_len = strlen (prop_value);
-			return prop_value;
-		}
-	}
-
-	return nullptr;
+	return HostEnvironment::lookup_system_property (
+		name,
+		value_len,
+		application_config.system_property_count,
+		app_system_properties,
+		app_system_property_contents
+	);
 }
 
 auto AndroidSystem::get_full_dso_path (std::string const& base_dir, std::string_view const& dso_path, dynamic_local_string<SENSIBLE_PATH_MAX>& path) noexcept -> bool

@@ -8,6 +8,7 @@ using Mono.Debugging.Client;
 using Mono.Debugging.Soft;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
+using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -15,38 +16,27 @@ namespace Xamarin.Android.Build.Tests
 	[Category ("UsesDevice")]
 	public class MonoAndroidExportTest : DeviceTest
 	{
-#pragma warning disable 414
-		static object [] MonoAndroidExportTestCases = new object [] {
-			new object[] {
-				/* embedAssemblies */    true,
-				/* isRelease */          false,
-			},
-			new object[] {
-				/* embedAssemblies */    false,
-				/* isRelease */          false,
-			},
-			new object[] {
-				/* embedAssemblies */    true,
-				/* isRelease */          false,
-			},
-			new object[] {
-				/* embedAssemblies */    true,
-				/* isRelease */          true,
-			},
-		};
-#pragma warning restore 414
-
 		[Test]
-		[TestCaseSource (nameof (MonoAndroidExportTestCases))]
-		public void MonoAndroidExportReferencedAppStarts (bool embedAssemblies, bool isRelease)
+		public void MonoAndroidExportReferencedAppStarts (
+			[Values] bool embedAssemblies,
+			[Values] bool isRelease,
+			[Values] AndroidRuntime runtime)
 		{
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT does not support Mono.Android.Export");
+			}
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			AssertCommercialBuild ();
-			var proj = new XamarinAndroidApplicationProject () {
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 				References = {
 					new BuildItem.Reference ("Mono.Android.Export"),
 				},
 			};
+			proj.SetRuntime (runtime);
 			proj.Sources.Add (new BuildItem.Source ("ContainsExportedMethods.cs") {
 				TextContent = () => @"using System;
 using Java.Interop;

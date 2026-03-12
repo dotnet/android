@@ -56,6 +56,7 @@ namespace Xamarin.ProjectTools
 		}
 
 		static readonly char[] NugetFieldSeparator = new char[]{ ':' };
+		static string CachedNugetGlobalPackageFolder;
 
 		/// <summary>
 		/// Finds the NuGet global packages folder by checking environment variables and using dotnet CLI.
@@ -65,13 +66,18 @@ namespace Xamarin.ProjectTools
 		/// First checks the NUGET_PACKAGES environment variable, then uses 'dotnet nuget locals' 
 		/// command to determine the global packages location. This is used for configuring
 		/// test projects with the correct package restore location.
+		/// The result is cached to avoid repeated process invocations.
 		/// </remarks>
 		/// <seealso cref="TestEnvironment"/>
 		public static string FindNugetGlobalPackageFolder ()
 		{
+			if (!string.IsNullOrEmpty (CachedNugetGlobalPackageFolder)) {
+				return CachedNugetGlobalPackageFolder;
+			}
+
 			string packagesPath = Environment.GetEnvironmentVariable ("NUGET_PACKAGES");
 			if (!String.IsNullOrEmpty (packagesPath)) {
-				return packagesPath;
+				return CachedNugetGlobalPackageFolder = packagesPath;
 			}
 
 			bool isWindows = Environment.OSVersion.Platform == PlatformID.Win32NT;
@@ -143,16 +149,16 @@ namespace Xamarin.ProjectTools
 				}
 
 				if (!gotOutput) {
-					return GetDefaultPackagesPath ();
+					return CachedNugetGlobalPackageFolder = GetDefaultPackagesPath ();
 				}
 
 				string[] parts = stdout_lines[0].Split (NugetFieldSeparator, 2);
 				if (parts.Length < 2) {
 					Console.Error.WriteLine ($"Process `{psi.FileName} {psi.Arguments}` did not return expected output, using default nuget package cache path.");
-					return GetDefaultPackagesPath ();
+					return CachedNugetGlobalPackageFolder = GetDefaultPackagesPath ();
 				}
 
-				return parts[1].Trim ();
+				return CachedNugetGlobalPackageFolder = parts [1].Trim ();
 
 				string GetDefaultPackagesPath ()
 				{

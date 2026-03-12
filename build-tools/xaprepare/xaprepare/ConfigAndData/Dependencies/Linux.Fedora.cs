@@ -29,7 +29,6 @@ namespace Xamarin.Android.Prepare
 			new FedoraLinuxProgram ("make"),
 			new FedoraLinuxProgram ("patch"),
 			new FedoraLinuxProgram ("pkgconf"),
-			new FedoraLinuxProgram ("referenceassemblies-pcl"),
 			new FedoraLinuxProgram ("sed"),
 			new FedoraLinuxProgram ("texinfo"),
 			new FedoraLinuxProgram ("unzip"),

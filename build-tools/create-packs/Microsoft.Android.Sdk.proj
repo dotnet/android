@@ -8,8 +8,14 @@ core workload SDK packs imported by WorkloadManifest.targets.
 -->
 <Project Sdk="Microsoft.Build.NoTargets">
 
-  <Sdk Name="Microsoft.DotNet.SharedFramework.Sdk" Version="$(MicrosoftDotNetBuildTasksFeedPackageVersion)" />
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateUnixFilePermissions" />
+  <!-- Use net10.0 version since CI only has the .NET 10 SDK installed for BAR manifest publishing -->
+  <Sdk Name="Microsoft.DotNet.SharedFramework.Sdk" Version="$(MicrosoftDotNetBuildTasksFeedPackageVersionNet10)" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateUnixFilePermissions" TaskFactory="TaskHostFactory" Runtime="NET" />
+
+  <PropertyGroup>
+    <!-- Use stable TFM since CI only has the stable .NET SDK installed -->
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+  </PropertyGroup>
 
   <PropertyGroup>
     <PackageId>Microsoft.Android.Sdk.$(HostOS)</PackageId>
@@ -65,6 +71,9 @@ core workload SDK packs imported by WorkloadManifest.targets.
       <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)generator.dll" TargetPath="tools" />
       <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)generator.pdb" TargetPath="..\tools" IsSymbolFile="true" />
       <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)generator.runtimeconfig.json" TargetPath="tools" />
+      <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Run.dll" TargetPath="tools" />
+      <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Run.pdb" TargetPath="..\tools" IsSymbolFile="true" />
+      <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Run.runtimeconfig.json" TargetPath="tools" />
       <FilesToPackage Include="@(VersionFiles)" TargetPath="tools" />
       <FilesToPackage Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\Sdk\**" TargetPath="Sdk" />
       <FilesToPackage Include="$(XamarinAndroidSourcePath)src\Microsoft.Android.Sdk.ILLink\PreserveLists\**" TargetPath="PreserveLists" />

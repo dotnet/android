@@ -5,6 +5,7 @@ using System.Linq;
 using System.Xml;
 using Microsoft.Build.Construction;
 using System.Text;
+using System.Diagnostics;
 
 namespace Xamarin.ProjectTools
 {
@@ -300,7 +301,6 @@ namespace Xamarin.ProjectTools
 		/// Sets the binary content by downloading from a web URL.
 		/// </summary>
 		/// <exception cref="NotSupportedException">Thrown when attempting to get the value.</exception>
-		/// <seealso cref="WebContentFileNameFromAzure"/>
 		/// <seealso cref="DownloadedCache"/>
 		public string WebContent {
 			get { throw new NotSupportedException (); }
@@ -313,13 +313,25 @@ namespace Xamarin.ProjectTools
 		}
 
 		/// <summary>
-		/// NOTE: downloads a file from our https://github.com/dellis1972/xamarin-android-unittest-files repo
+		/// Sets the binary content from an embedded test resource file in Resources/Tests/.
 		/// </summary>
 		/// <exception cref="NotSupportedException">Thrown when attempting to get the value.</exception>
-		/// <seealso cref="WebContent"/>
-		public string WebContentFileNameFromAzure {
+		/// <exception cref="InvalidOperationException">Thrown when the specified resource file is not found.</exception>
+		/// <seealso cref="BinaryContent"/>
+		public string TestResourceFileName {
 			get { throw new NotSupportedException (); }
-			set { WebContent = $"https://github.com/dellis1972/xamarin-android-unittest-files/blob/main/{value}?raw=true"; }
+			set {
+				var resourceName = $"Xamarin.ProjectTools.Resources.Tests.{value}";
+				BinaryContent = () => {
+					var assembly = typeof (BuildItem).Assembly;
+					using var stream = assembly.GetManifestResourceStream (resourceName) ??
+						throw new InvalidOperationException ($"Could not find embedded resource '{resourceName}' in assembly '{assembly.FullName}'.");
+					var data = new byte [stream.Length];
+					int read = stream.Read (data, 0, data.Length);
+					Debug.Assert (read == data.Length, $"Expected to read {data.Length} bytes but read {read} bytes.");
+					return data;
+				};
+			}
 		}
 
 		/// <summary>

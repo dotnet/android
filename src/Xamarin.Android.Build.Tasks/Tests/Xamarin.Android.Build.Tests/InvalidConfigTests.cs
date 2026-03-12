@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using System.IO;
+using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -49,6 +50,8 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 				EnableDefaultItems = true,
 			};
+			// MonoVM-only test
+			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
 			proj.SetProperty ("UseInterpreter", useInterpreter.ToString ());
 			proj.SetProperty ("PublishTrimmed", publishTrimmed.ToString ());
 			proj.SetProperty ("RunAOTCompilation", aot.ToString ());
@@ -76,7 +79,7 @@ namespace Xamarin.Android.Build.Tests
 			AssertCommercialBuild ();
 
 			var proj = new XamarinAndroidApplicationProject ();
-			proj.SetProperty ("_XASupportsFastDev", "True");
+			proj.SetProperty ("_AndroidFastDeploymentSupported", "true");
 			proj.SetProperty (proj.DebugProperties, "AndroidLinkMode", "Full");
 			using (var b = CreateApkBuilder ()) {
 				b.Target = "Build"; // SignAndroidPackage would fail for OSS builds
@@ -91,7 +94,7 @@ namespace Xamarin.Android.Build.Tests
 			AssertCommercialBuild ();
 
 			var proj = new XamarinAndroidApplicationProject ();
-			proj.SetProperty ("_XASupportsFastDev", "True");
+			proj.SetProperty ("_AndroidFastDeploymentSupported", "true");
 			proj.SetProperty ("AndroidPackageFormat", "aab");
 			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;
@@ -107,6 +110,8 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 				AotAssemblies = true,
 			};
+			// Mono-only test
+			proj.SetRuntime (AndroidRuntime.MonoVM);
 			proj.SetProperty ("UseInterpreter", "true");
 			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;

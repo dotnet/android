@@ -2,6 +2,7 @@
 
 parameters:
   macTestAgentsUseCleanImages: 
+  use1ESTemplate: true
 
 stages:
 - stage: smoke_tests
@@ -22,6 +23,7 @@ stages:
     - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
       parameters:
         xaprepareScenario: EmulatorTestDependencies
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -86,7 +88,7 @@ stages:
         testName: Mono.Android.NET_Tests-Interpreter
         project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)Interpreter.xml
-        extraBuildArgs: -p:TestsFlavor=Interpreter -p:UseInterpreter=True
+        extraBuildArgs: -p:TestsFlavor=Interpreter -p:UseInterpreter=True -p:UseMonoRuntime=true
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: $(DotNetTargetFramework)-Interpreter
 
@@ -98,11 +100,13 @@ stages:
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
         artifactName: Test Results - APKs .NET $(XA.Build.Configuration) - macOS 1
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
         artifactName: Test Results - APKs .NET Debug - macOS 1
         configuration: Debug
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
 
@@ -119,6 +123,7 @@ stages:
     - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
       parameters:
         xaprepareScenario: EmulatorTestDependencies
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -154,7 +159,7 @@ stages:
         testName: Mono.Android.NET_Tests-NoAot
         project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)NoAot.xml
-        extraBuildArgs: -p:TestsFlavor=NoAot -p:RunAOTCompilation=false
+        extraBuildArgs: -p:TestsFlavor=NoAot -p:RunAOTCompilation=false -p:UseMonoRuntime=true
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: $(DotNetTargetFramework)-NoAot
 
@@ -164,7 +169,7 @@ stages:
         testName: Mono.Android.NET_Tests-TrimModePartial
         project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)TrimModePartial.xml
-        extraBuildArgs: -p:TestsFlavor=TrimModePartial -p:TrimMode=partial
+        extraBuildArgs: -p:TestsFlavor=TrimModePartial -p:TrimMode=partial -p:UseMonoRuntime=true
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: $(DotNetTargetFramework)-TrimModePartial
 
@@ -174,7 +179,7 @@ stages:
         testName: Mono.Android.NET_Tests-AotLlvm
         project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)AotLlvm.xml
-        extraBuildArgs: -p:TestsFlavor=AotLlvm -p:EnableLLVM=true -p:AndroidEnableProfiledAot=false
+        extraBuildArgs: -p:TestsFlavor=AotLlvm -p:EnableLLVM=true -p:AndroidEnableProfiledAot=false -p:UseMonoRuntime=true
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: $(DotNetTargetFramework)-AotLlvm
 
@@ -184,7 +189,7 @@ stages:
         testName: Mono.Android.NET_Tests-IsAssignableFrom
         project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)IsAssignableFrom.xml
-        extraBuildArgs: -p:TestsFlavor=IsAssignableFrom -p:IncludeCategories=Intune -p:_AndroidIsAssignableFromCheck=false
+        extraBuildArgs: -p:TestsFlavor=IsAssignableFrom -p:IncludeCategories=Intune -p:_AndroidIsAssignableFromCheck=false -p:UseMonoRuntime=true
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: $(DotNetTargetFramework)-IsAssignableFrom
 
@@ -236,10 +241,12 @@ stages:
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
         artifactName: Test Results - APKs .NET $(XA.Build.Configuration) - macOS 2
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
         artifactName: Test Results - APKs .NET Debug - macOS 2
         configuration: Debug
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml

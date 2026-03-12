@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Mono.Cecil;
 using NUnit.Framework;
+using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
@@ -12,36 +14,71 @@ namespace Xamarin.Android.Build.Tests
 	[Parallelizable (ParallelScope.Children)]
 	public partial class SingleProjectTest : BaseTest
 	{
-		static readonly object [] AndroidManifestPropertiesSource = new object [] {
-			new object [] {
-				/* versionName */  "2.1",
-				/* versionCode */  "42",
-				/* errorMessage */ "",
-			},
-			new object [] {
-				/* versionName */  "1.0.0",
-				/* versionCode */  "1.0.0",
-				/* errorMessage */ "XA0003",
-			},
-			new object [] {
-				/* versionName */  "3.1.3a1",
-				/* versionCode */  "42",
-				/* errorMessage */ "",
-			},
-			new object [] {
-				/* versionName */  "6.0-preview.7",
-				/* versionCode */  "42",
-				/* errorMessage */ "",
-			},
-		};
+		static IEnumerable<object[]> Get_AndroidManifestProperties_Data ()
+		{
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				AddTestData (
+					// TODO: this has changed across all the runtimes from the previous "2.1" to its current value.
+					//       Check if it's a valid change.
+					versionName: "2.1+29f8376059d032c8eb436e757b146148a71d069e",
+					versionCode: "42",
+					errorMessage: "",
+					runtime: runtime
+				);
+
+				AddTestData (
+					versionName: "1.0.0",
+					versionCode: "1.0.0",
+					errorMessage: "XA0003",
+					runtime: runtime
+				);
+
+				AddTestData (
+					versionName: "3.1.3a1",
+					versionCode: "42",
+					errorMessage: "",
+					runtime: runtime
+				);
+
+				AddTestData (
+					versionName: "6.0-preview.7",
+					versionCode: "42",
+					errorMessage: "",
+					runtime: runtime
+				);
+			}
+
+			return ret;
+
+			void AddTestData (string versionName, string versionCode, string errorMessage, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					versionName,
+					versionCode,
+					errorMessage,
+					runtime,
+				});
+			}
+		}
 
 		[Test]
-		[TestCaseSource (nameof (AndroidManifestPropertiesSource))]
-		public void AndroidManifestProperties (string versionName, string versionCode, string errorMessage)
+		[TestCaseSource (nameof (Get_AndroidManifestProperties_Data))]
+		public void AndroidManifestProperties (string versionName, string versionCode, string errorMessage, AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var packageName = "com.xamarin.singleproject";
 			var applicationLabel = "My Sweet App";
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+
 			proj.AndroidManifest = proj.AndroidManifest
 				.Replace ("package=\"${PACKAGENAME}\"", "")
 				.Replace ("android:label=\"${PROJECT_NAME}\"", "")
@@ -73,7 +110,11 @@ namespace Xamarin.Android.Build.Tests
 					Assert.AreEqual (applicationLabel, doc.Root.Element("application").Attribute (AndroidAppManifest.AndroidXNamespace + "label")?.Value);
 				}
 
-				var apk = b.Output.GetIntermediaryPath ($"android/bin/{packageName}.apk");
+				string packageExtension = runtime switch {
+					AndroidRuntime.NativeAOT => "aab",
+					_ => "apk"
+				};
+				var apk = b.Output.GetIntermediaryPath ($"android/bin/{packageName}.{packageExtension}");
 				FileAssert.Exists (apk);
 
 				// If not valid version, skip
@@ -86,7 +127,10 @@ namespace Xamarin.Android.Build.Tests
 					$"{versionName.Substring (0, index)}.0.0";
 
 				foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
-					var assemblyPath = b.Output.GetIntermediaryPath ($"android/assets/{abi}/{proj.ProjectName}.dll");
+					string assemblyPath = runtime switch {
+						AndroidRuntime.NativeAOT => b.Output.GetIntermediaryPath ($"{MonoAndroidHelper.AbiToRid (abi)}/linked/{proj.ProjectName}.dll"),
+						_ => b.Output.GetIntermediaryPath ($"android/assets/{abi}/{proj.ProjectName}.dll")
+					};
 					FileAssert.Exists (assemblyPath);
 					using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath);
 
@@ -107,13 +151,22 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void AndroidManifestValuesWin ()
+		public void AndroidManifestValuesWin ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var packageName = "com.xamarin.singleproject";
 			var applicationLabel = "My Sweet App";
 			var versionName = "99.0";
 			var versionCode = "99";
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+
 			proj.AndroidManifest = proj.AndroidManifest
 				.Replace ("package=\"${PACKAGENAME}\"", $"package=\"{packageName}\"")
 				.Replace ("android:label=\"${PROJECT_NAME}\"", $"android:label=\"{applicationLabel}\"")

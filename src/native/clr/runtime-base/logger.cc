@@ -22,47 +22,53 @@ using namespace xamarin::android;
 using std::operator""sv;
 
 namespace {
-	FILE*
-	open_file (LogCategories category, std::string const& custom_path, std::string_view const& override_dir, std::string_view const& filename)
-	{
-		bool ignore_path = false;
-		if (!custom_path.empty () && access (custom_path.c_str (), W_OK) < 0) {
-			log_warn (category,
-				"Could not open path '{}' for logging (\"{}\"). Using '{}/{}' instead.",
-				custom_path,
-				strerror (errno),
-				override_dir,
-				filename
-			);
-			ignore_path = true;
-		}
-
-		std::string p{};
-		if (custom_path.empty () || ignore_path) {
-			Util::create_public_directory (override_dir);
-			p.assign (override_dir);
-			p.append ("/");
-			p.append (filename);
-		}
-
-		std::string const& path = p.empty () ? custom_path : p;
-		unlink (path.c_str ());
-
-		FILE *f = Util::monodroid_fopen (path, "a"sv);
-
-		if (f) {
-			Util::set_world_accessable (path);
-		} else {
-			log_warn (category, "Could not open path '{}' for logging: {}", path, strerror (errno));
-		}
-
-		return f;
-	}
-
 	std::string gref_file{};
 	std::string lref_file{};
 	bool light_gref  = false;
 	bool light_lref  = false;
+}
+
+[[gnu::always_inline]]
+auto Logger::open_file (std::string_view const& path) noexcept -> FILE*
+{
+	if (path.empty ()) {
+		return nullptr;
+	}
+
+	// Ignore errors, by design
+	unlink (path.data ());
+
+	// `monodroid_fopen` will log any errors
+	FILE *ret = Util::monodroid_fopen (path, "a"sv);
+	if (ret != nullptr) {
+		Util::set_world_accessable (path);
+	}
+
+	return ret;
+}
+
+[[gnu::flatten, gnu::always_inline]]
+auto Logger::open_file (LogCategories category, std::string_view const& custom_path, std::string_view const& override_dir, std::string_view const& fallback_filename) noexcept -> FILE*
+{
+	auto log_and_return = [&category](FILE *f, std::string_view const& path) -> FILE* {
+		if (f != nullptr) {
+			log_debug (category, "Opened file '{}' for logging.", path);
+		}
+		return f;
+	};
+
+	FILE *ret = open_file (custom_path);
+	if (ret != nullptr) {
+		return log_and_return (ret, custom_path);
+	}
+
+	std::string p{};
+	Util::create_public_directory (override_dir);
+	p.assign (override_dir);
+	p.append ("/");
+	p.append (fallback_filename);
+
+	return log_and_return (open_file (p), p);
 }
 
 void

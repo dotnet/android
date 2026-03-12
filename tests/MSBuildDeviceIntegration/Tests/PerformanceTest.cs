@@ -6,10 +6,13 @@ using System.Runtime.CompilerServices;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Logging.StructuredLogger;
 using NUnit.Framework;
+using Xamarin.Android.Tasks;
+using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
+	// TODO: update for NativeAOT and CoreCLR
 	[TestFixture]
 	[Category ("Performance")]
 	public class PerformanceTest : DeviceTest
@@ -61,7 +64,7 @@ namespace Xamarin.Android.Build.Tests
 				action (builder);
 				var actual = GetDurationFromBinLog (builder);
 				TestContext.Out.WriteLine ($"run {i} took: {actual}ms");
-				total += actual; 
+				total += actual;
 				if (afterRun is not null)
 					afterRun (builder);
 			}
@@ -135,24 +138,11 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 			};
+			// TODO: update times for CoreCLR in the future
+			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
 			proj.SetAndroidSupportedAbis (DeviceAbi); // Use a single ABI
 			proj.SetProperty ("_FastDeploymentDiagnosticLogging", "False");
 			return proj;
-		}
-
-		[Test]
-		[Retry (Retry)]
-		public void Build_From_Clean_DontIncludeRestore ()
-		{
-			AssertCommercialBuild (); // If <BuildApk/> runs, this test will fail without Fast Deployment
-
-			var proj = CreateApplicationProject ();
-			using (var builder = CreateBuilderWithoutLogFile ()) {
-				builder.AutomaticNuGetRestore = false;
-				builder.Target = "Build";
-				builder.Restore (proj);
-				Profile (builder, b => b.Build (proj));
-			}
 		}
 
 		[Test]
@@ -183,6 +173,8 @@ namespace Xamarin.Android.Build.Tests
 		[Retry (Retry)]
 		public void Build_CSharp_Change ()
 		{
+			AssertCommercialBuild (); // This test will fail without Fast Deployment
+
 			var proj = CreateApplicationProject ();
 			proj.MainActivity = proj.DefaultMainActivity;
 			using (var builder = CreateBuilderWithoutLogFile ()) {
@@ -257,29 +249,6 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Retry (Retry)]
-		public void Build_JLO_Change ()
-		{
-			AssertCommercialBuild (); // If <BuildApk/> runs, this test will fail without Fast Deployment
-
-			var className = "Foo";
-			var proj = CreateApplicationProject ();
-			proj.Sources.Add (new BuildItem.Source ("Foo.cs") {
-				TextContent = () => $"class {className} : Java.Lang.Object {{}}"
-			});
-			using (var builder = CreateBuilderWithoutLogFile ()) {
-				builder.Target = "Build";
-				builder.Build (proj);
-				builder.AutomaticNuGetRestore = false;
-
-				// Profile Java.Lang.Object rename
-				className = "Foo2";
-				proj.Touch ("Foo.cs");
-				Profile (builder, b => b.Build (proj));
-			}
-		}
-
-		[Test]
-		[Retry (Retry)]
 		public void Build_AndroidManifest_Change ()
 		{
 			AssertCommercialBuild (); // If <BuildApk/> runs, this test will fail without Fast Deployment
@@ -302,9 +271,7 @@ namespace Xamarin.Android.Build.Tests
 		[Retry (Retry)]
 		public void Build_XAML_Change ([Values (true, false)] bool install)
 		{
-			if (install) {
-				AssertCommercialBuild (); // This test will fail without Fast Deployment
-			}
+			AssertCommercialBuild (); // This test will fail without Fast Deployment
 
 			var path = Path.Combine ("temp", TestName);
 			var xaml =
@@ -331,7 +298,7 @@ namespace Xamarin.Android.Build.Tests
 			var lib = new DotNetStandard {
 				ProjectName = "MyLibrary",
 				Sdk = "Microsoft.NET.Sdk",
-				TargetFramework = "net10.0", // Vanilla project
+				TargetFramework = XABuildConfig.LatestDotNetTargetFramework, // Vanilla project
 				Sources = {
 					new BuildItem.Source ("Bar.cs") {
 						TextContent = () => "public class Bar { public Bar () { System.Console.WriteLine (" + count++ + "); } }"

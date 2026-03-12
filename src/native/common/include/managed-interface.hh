@@ -14,6 +14,8 @@ namespace xamarin::android {
 		Signals = 0x08,
 	};
 
+	using jnienv_propagate_uncaught_exception_fn = void (*)(JNIEnv *env, jobject javaThread, jthrowable javaException);
+
 	// NOTE: Keep this in sync with managed side in src/Mono.Android/Android.Runtime/JNIEnvInit.cs
 	struct JnienvInitializeArgs {
 		JavaVM         *javaVm;
@@ -33,6 +35,7 @@ namespace xamarin::android {
 		bool            marshalMethodsEnabled;
 		jobject         grefGCUserPeerable;
 		bool            managedMarshalMethodsLookupEnabled;
+		jnienv_propagate_uncaught_exception_fn propagateUncaughtExceptionFn;
 	};
 
 	// Keep the enum values in sync with those in src/Mono.Android/AndroidRuntime/BoundExceptionType.cs

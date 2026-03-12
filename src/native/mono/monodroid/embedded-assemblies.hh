@@ -102,17 +102,11 @@ namespace xamarin::android::internal {
 		static constexpr std::string_view dso_suffix { ".so" };
 
 		static constexpr std::string_view apk_lib_prefix = assemblies_prefix; // concat_const (apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator);
-		static constexpr std::string_view assembly_store_prefix { "libassemblies." };
-		static constexpr std::string_view assembly_store_extension { ".blob" };
 
-		static constexpr size_t assembly_store_file_name_size = calc_size (assembly_store_prefix, SharedConstants::android_lib_abi, assembly_store_extension, dso_suffix);
-		static constexpr auto assembly_store_file_name_array = concat_string_views<assembly_store_file_name_size> (assembly_store_prefix, SharedConstants::android_lib_abi, assembly_store_extension, dso_suffix);
+		static constexpr std::string_view assembly_store_file_name { "libassembly-store.so" };
 
-		// .data() must be used otherwise string_view length will include the trailing \0 in the array
-		static constexpr std::string_view assembly_store_file_name { assembly_store_file_name_array.data () };
-
-		static constexpr size_t assembly_store_file_path_size = calc_size(apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator, assembly_store_prefix, SharedConstants::android_lib_abi, assembly_store_extension, dso_suffix);
-		static constexpr auto assembly_store_file_path_array = concat_string_views<assembly_store_file_path_size> (apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator, assembly_store_prefix, SharedConstants::android_lib_abi, assembly_store_extension, dso_suffix);
+		static constexpr size_t assembly_store_file_path_size = calc_size(apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator, assembly_store_file_name);
+		static constexpr auto assembly_store_file_path_array = concat_string_views<assembly_store_file_path_size> (apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator, assembly_store_file_name);
 		// .data() must be used otherwise string_view length will include the trailing \0 in the array
 		static constexpr std::string_view assembly_store_file_path { assembly_store_file_path_array.data () };
 

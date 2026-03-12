@@ -37,7 +37,7 @@ namespace xamarin::android {
 
 		void *entry_handle = internal::MonodroidDl::monodroid_dlsym (lib_handle, symbol_name, nullptr, nullptr);
 		if (entry_handle == nullptr) {
-			log_warn (LOG_ASSEMBLY, "Symbol '{}' not found in shared library '{}', p/invoke may fail", optional_string (library_name), optional_string (symbol_name));
+			log_warn (LOG_ASSEMBLY, "Symbol '{}' not found in shared library '{}', p/invoke may fail", optional_string (symbol_name), optional_string (library_name));
 			return nullptr;
 		}
 

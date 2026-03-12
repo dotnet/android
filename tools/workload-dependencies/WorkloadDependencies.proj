@@ -51,9 +51,9 @@
       DependsOnTargets="_CheckDeps">
 
     <PropertyGroup>
-      <_AndroidPlatformSupportFeed>$(MSBuildThisFileDirectory)/../../external/android-platform-support/Feeds/AndroidManifestFeed_d17.12.xml</_AndroidPlatformSupportFeed>
+      <_AndroidPlatformSupportFeed>$(MSBuildThisFileDirectory)/../../external/android-platform-support/Feeds/AndroidManifestFeed_d18.0.xml</_AndroidPlatformSupportFeed>
       <_Feed Condition=" Exists($(_AndroidPlatformSupportFeed)) ">$(_AndroidPlatformSupportFeed)</_Feed>
-      <_Feed Condition=" '$(_Feed)' == '' ">https://aka.ms/AndroidManifestFeed/d17-12</_Feed>
+      <_Feed Condition=" '$(_Feed)' == '' ">https://aka.ms/AndroidManifestFeed/d18-0</_Feed>
       <_Project>$(MSBuildThisFileDirectory)workload-dependencies.csproj</_Project>
       <WorkloadDependenciesPath Condition=" '$(WorkloadDependenciesPath)' == '' ">$(OutputPath)workload-manifest\WorkloadDependencies.json</WorkloadDependenciesPath>
     </PropertyGroup>

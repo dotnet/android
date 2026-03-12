@@ -25,14 +25,21 @@
       DependsOnTargets="Build">
 
     <PropertyGroup>
-      <_ManifestAttributeCodeGen>..\..\bin\Build$(Configuration)\manifest-attribute-codegen.dll</_ManifestAttributeCodeGen>
-      <_ConfigurationFile>$(MSBuildThisFileDirectory)metadata.xml</_ConfigurationFile>
-      <_RepositoryBaseDirectory>..\..\</_RepositoryBaseDirectory>
+      <_ManifestAttributeCodeGen>$(TargetPath)</_ManifestAttributeCodeGen>
       <_ManifestFile>$(MSBuildThisFileDirectory)manifest-definition.xml</_ManifestFile>
     </PropertyGroup>
+    <ItemGroup>
+      <_MacArgs Include="&quot;$(TargetPath)&quot;" />
+      <_MacArgs Include="&quot;-sdk-path=$(AndroidSdkFullPath)&quot;" />
+      <_MacArgs Include="&quot;-base-dir=$(MSBuildThisFileDirectory)..\..&quot;" />
+      <_MacArgs Include="&quot;-metadata-file=$(MSBuildThisFileDirectory)metadata.xml&quot;" />
+      <_MacArgs Include="&quot;-output-manifest=$(MSBuildThisFileDirectory)manifest-definition.xml&quot;" />
+    </ItemGroup>
 
     <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; &quot;$(_ManifestAttributeCodeGen)&quot; &quot;-sdk-path=$(AndroidSdkFullPath)&quot; -base-dir=$(_RepositoryBaseDirectory) &quot;-metadata-file=$(_ConfigurationFile)&quot; &quot;-output-manifest=$(_ManifestFile)&quot;" />
+        Command="&quot;$(DotNetPreviewTool)&quot; @(_MacArgs, ' ')"
+        CustomWarningRegularExpression=".*"
+    />
 
   </Target>
 

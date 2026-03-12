@@ -10,6 +10,7 @@ namespace Xamarin.Android.Prepare
 			properties.Add (KnownProperties.AndroidCmakeVersion,                 StripQuotes ("@AndroidCmakeVersion@"));
 			properties.Add (KnownProperties.AndroidCmakeVersionPath,             StripQuotes (@"@AndroidCmakeVersionPath@"));
 			properties.Add (KnownProperties.AndroidMinimumDotNetApiLevel,        StripQuotes ("@AndroidMinimumDotNetApiLevel@"));
+			properties.Add (KnownProperties.AndroidMinimumNonMonoApiLevel,       StripQuotes ("@AndroidMinimumNonMonoApiLevel@"));
 			properties.Add (KnownProperties.AndroidDefaultTargetDotnetApiLevel,  StripQuotes ("@AndroidDefaultTargetDotnetApiLevel@"));
 			properties.Add (KnownProperties.AndroidLatestStableApiLevel,         StripQuotes ("@AndroidLatestStableApiLevel@"));
 			properties.Add (KnownProperties.AndroidLatestUnstableApiLevel,       StripQuotes ("@AndroidLatestUnstableApiLevel@"));
@@ -59,6 +60,7 @@ namespace Xamarin.Android.Prepare
 			properties.Add (KnownProperties.PkgXamarin_LibZipSharp,              StripQuotes (@"@PkgXamarin_LibZipSharp@"));
 			properties.Add (KnownProperties.ProductVersion,                      StripQuotes ("@ProductVersion@"));
 			properties.Add (KnownProperties.RuntimeRedistDirName,                StripQuotes ("@_RuntimeRedistDirName@"));
+			properties.Add (KnownProperties.TestOutputDirectory,                 StripQuotes (@"@TestOutputDirectory@"));
 			properties.Add (KnownProperties.XABuildToolsFolder,                  StripQuotes (@"@XABuildToolsFolder@"));
 			properties.Add (KnownProperties.XABuildToolsVersion,                 StripQuotes ("@XABuildToolsVersion@"));
 			properties.Add (KnownProperties.XABuildToolsPackagePrefixMacOS,      StripQuotes ("@XABuildToolsPackagePrefixMacOS@"));

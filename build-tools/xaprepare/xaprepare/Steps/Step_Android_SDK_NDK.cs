@@ -175,11 +175,8 @@ namespace Xamarin.Android.Prepare
 				return false;
 			}
 
-			// Ignore NDK property setting if not installing the NDK
-			if (!DependencyTypeToInstall.HasFlag (AndroidToolchainComponentType.BuildDependency))
-				return true;
-			else
-				return context.BuildInfo.GatherNDKInfo (context);
+			// Always install the NDK, as NativeAOT-based tests require it
+			return context.BuildInfo.GatherNDKInfo (context);
 		}
 
 		bool CopyRedistributableFiles (Context context)
@@ -210,7 +207,7 @@ namespace Xamarin.Android.Prepare
 			foreach (var kvp in Configurables.Defaults.AndroidToolchainPrefixes) {
 				string abi = kvp.Key;
 				string abiDir = Path.Combine (Configurables.Paths.AndroidToolchainSysrootLibDirectory, kvp.Value);
-				string crtFilesPath = Path.Combine (abiDir, BuildAndroidPlatforms.NdkMinimumAPI.ToString (CultureInfo.InvariantCulture));
+				string crtFilesPath = Path.Combine (abiDir, BuildAndroidPlatforms.NdkMinimumAPI);
 				string clangArch = Configurables.Defaults.AbiToClangArch[abi];
 
 				foreach (string file in CRTFiles) {

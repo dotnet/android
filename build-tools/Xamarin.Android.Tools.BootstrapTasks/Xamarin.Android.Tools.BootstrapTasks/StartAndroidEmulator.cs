@@ -34,10 +34,38 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		public                  string          ToolPath        {get; set;}
 		public                  string          ToolExe         {get; set;}
 		public                  string          LogcatFile      {get; set;}
+		public                  int             MaxRetries      {get; set;} = 3;
 
 		public override bool Execute ()
 		{
-			var ranSuccessfully = Run (GetEmulatorPath ());
+			string emulatorPath = GetEmulatorPath ();
+			if (string.IsNullOrEmpty (emulatorPath)) {
+				return false;
+			}
+
+			bool ranSuccessfully = false;
+			int attempt = 0;
+
+			while (attempt < MaxRetries && !ranSuccessfully) {
+				attempt++;
+				if (attempt > 1) {
+					Log.LogMessage (MessageImportance.High, $"Retrying emulator start (attempt {attempt} of {MaxRetries})...");
+					// Wait a bit before retrying
+					Thread.Sleep (2000);
+				}
+
+				ranSuccessfully = Run (emulatorPath, out bool shouldRetry);
+
+				if (!ranSuccessfully && shouldRetry && attempt < MaxRetries) {
+					Log.LogMessage (MessageImportance.High, $"Emulator failed to start due to transient error. Will retry...");
+					continue;
+				}
+
+				if (!ranSuccessfully && !shouldRetry) {
+					// Non-retryable error, break immediately
+					break;
+				}
+			}
 
 			if (!string.IsNullOrEmpty (Port)) {
 				AdbTarget   = $"-s emulator-{Port}";
@@ -63,8 +91,10 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			return path;
 		}
 
-		bool Run (string emulator)
+		bool Run (string emulator, out bool shouldRetry)
 		{
+			shouldRetry = false;
+
 			if (emulator == null)
 				return false;
 
@@ -93,6 +123,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			Log.LogMessage (MessageImportance.Low, $"\tANDROID_SDK_ROOT=\"{psi.EnvironmentVariables ["ANDROID_SDK_ROOT"]}\"");
 
 			var sawError        = new AutoResetEvent (false);
+			bool isRetryableError = false;
 
 			DataReceivedEventHandler output = null;
 			output = (o, e) => {
@@ -114,14 +145,18 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				Log.LogMessage (MessageImportance.Low, $"[emulator stderr] {e.Data}");
 				if (string.IsNullOrWhiteSpace (e.Data))
 					return;
-				if (e.Data.StartsWith ("Failed to sync", StringComparison.Ordinal) ||
+				if (e.Data.IndexOf ("failed to initialize WHPX", StringComparison.OrdinalIgnoreCase) >= 0 ||
+						e.Data.IndexOf ("failed to initialize HAX", StringComparison.OrdinalIgnoreCase) >= 0 ||
+						e.Data.StartsWith ("Unknown hax vcpu return", StringComparison.Ordinal) ||
 						e.Data.Contains ("Internal error")) {
+					Log.LogWarning ($"Emulator failed to start: {e.Data}");
+					isRetryableError = true;
+					sawError.Set ();
+					return;
+				}
+				if (e.Data.StartsWith ("Failed to sync", StringComparison.Ordinal)) {
 					Log.LogError ($"Emulator failed to start: {e.Data}");
 					Log.LogError ($"Do you have another VM running on the machine? If so, please try exiting the VM and try again.");
-					sawError.Set ();
-				}
-				if (e.Data.StartsWith ("Unknown hax vcpu return", StringComparison.Ordinal)) {
-					Log.LogError ($"Emulator failed to start: `{e.Data}`. Please try again?");
 					sawError.Set ();
 				}
 				// The following may not be fatal:
@@ -146,6 +181,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				int i = WaitHandle.WaitAny (new[]{sawError}, millisecondsTimeout: Timeout);
 				if (i == 0 || Log.HasLoggedErrors) {
 					p.Kill ();
+					shouldRetry = isRetryableError;
 					return false;
 				}
 			} finally {

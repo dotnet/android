@@ -564,6 +564,32 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		protected bool IgnoreUnsupportedConfiguration (AndroidRuntime runtime, bool aot = false, bool release = false)
+		{
+			if (runtime == AndroidRuntime.NativeAOT) {
+				// NativeAOT is release-only, AOT is always implied
+				if (release) {
+					return false;
+				}
+
+				Assert.Ignore ($"NativeAOT: unsupported configuration (release == {release})");
+				return true;
+			}
+
+			if (runtime == AndroidRuntime.CoreCLR) {
+				// CoreCLR doesn't support AOT
+				if (!aot) {
+					return false;
+				}
+
+				Assert.Ignore ($"CoreCLR: unsupported configuration (aot == {aot})");
+				return true;
+			}
+
+			// MonoVM supports all the combinations
+			return false;
+		}
+
 		[SetUp]
 		public void TestSetup ()
 		{

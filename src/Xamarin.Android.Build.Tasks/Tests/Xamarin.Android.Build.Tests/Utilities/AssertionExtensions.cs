@@ -138,5 +138,11 @@ namespace Xamarin.Android.Build.Tests
 		{
 			Assert.IsTrue (StringAssertEx.ContainsText (dotnet.LastBuildOutput, " 0 Warning(s)"), $"{dotnet.BuildLogFile} should have no MSBuild warnings.");
 		}
+
+		[DebuggerHidden]
+		public static void AssertHasSomeWarnings (this DotNetCLI dotnet, uint numOfExpectedWarnings)
+		{
+			Assert.IsTrue (StringAssertEx.ContainsText (dotnet.LastBuildOutput, $" {numOfExpectedWarnings} Warning(s)"), $"{dotnet.BuildLogFile} should have {numOfExpectedWarnings} MSBuild warnings.");
+		}
 	}
 }

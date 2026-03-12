@@ -43,6 +43,7 @@ stages:
         repositoryAlias: ${{ parameters.repositoryAlias }}
         commit: ${{ parameters.commit }}
         xaprepareScenario: EmulatorTestDependencies
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -110,6 +111,7 @@ stages:
         repositoryAlias: ${{ parameters.repositoryAlias }}
         commit: ${{ parameters.commit }}
         xaprepareScenario: EmulatorTestDependencies
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -173,6 +175,7 @@ stages:
         repositoryAlias: ${{ parameters.repositoryAlias }}
         commit: ${{ parameters.commit }}
         xaprepareScenario: EmulatorTestDependencies
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -182,13 +185,14 @@ stages:
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
       parameters:
         xaSourcePath: ${{ parameters.xaSourcePath }}
-        startContinueOnError: ${{ parameters.emulatorStartContinueOnError }}
+        startContinueOnError: true
 
     - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
       parameters:
         testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\MSBuildDeviceIntegration\$(DotNetStableTargetFramework)\MSBuildDeviceIntegration.dll
         testFilter: name == DebuggingTest
         testRunTitle: DebuggingTest tests on Windows
+        condition: and(succeeded(), eq(variables['EMULATOR_STARTED'], 'true'))
 
     - ${{ if ne(parameters.usesCleanImages, true) }}:
       - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
@@ -203,6 +207,8 @@ stages:
         xaSourcePath: ${{ parameters.xaSourcePath }}
         use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
+    # Only fail on issues if the emulator started successfully
+    # If the emulator failed to start on Windows, we skip tests and don't fail the job
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
       parameters:
-        condition: ${{ parameters.shouldFailOnIssue }}
+        condition: and(${{ parameters.shouldFailOnIssue }}, eq(variables['EMULATOR_STARTED'], 'true'))

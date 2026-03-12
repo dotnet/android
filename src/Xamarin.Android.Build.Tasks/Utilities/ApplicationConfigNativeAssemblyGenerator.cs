@@ -202,6 +202,8 @@ namespace Xamarin.Android.Tasks
 		public MonoComponent MonoComponents { get; set; }
 		public PackageNamingPolicy PackageNamingPolicy { get; set; }
 		public List<ITaskItem> NativeLibraries { get; set; } = [];
+		public ICollection<ITaskItem>? NativeLibrariesNoJniPreload { get; set; }
+		public ICollection<ITaskItem>? NativeLibrariesAlwaysJniPreload { get; set; }
 		public bool MarshalMethodsEnabled { get; set; }
 		public bool ManagedMarshalMethodsLookupEnabled { get; set; }
 		public bool IgnoreSplitConfigs { get; set; }
@@ -279,7 +281,7 @@ namespace Xamarin.Android.Tasks
 			module.AddGlobalVariable ("dso_jni_preloads_idx_stride", dsoState.NameMutationsCount);
 
 			// This variable MUST be written after `dso_cache` since it relies on sorting performed by HashAndSortDSOCache
-			var dso_jni_preloads_idx = new LlvmIrGlobalVariable (new List<uint> (), "dso_jni_preloads_idx", LlvmIrVariableOptions.GlobalConstant) {
+			var dso_jni_preloads_idx = new LlvmIrGlobalVariable (typeof(List<uint>), "dso_jni_preloads_idx", LlvmIrVariableOptions.GlobalConstant) {
 				Comment = " Indices into dso_cache[] of DSO libraries to preload because of JNI use",
 				ArrayItemCount = (uint)dsoState.JniPreloadDSOs.Count,
 				GetArrayItemCommentCallback = GetPreloadIndicesLibraryName,
@@ -369,11 +371,6 @@ namespace Xamarin.Android.Tasks
 
 		void PopulatePreloadIndices (LlvmIrVariable variable, LlvmIrModuleTarget target, object? state)
 		{
-			var indices = variable.Value as List<uint>;
-			if (indices == null) {
-				throw new InvalidOperationException ($"Internal error: DSO preload indices list instance not present.");
-			}
-
 			var dsoState = state as DsoCacheState;
 			if (dsoState == null) {
 				throw new InvalidOperationException ($"Internal error: DSO state not present.");
@@ -382,6 +379,8 @@ namespace Xamarin.Android.Tasks
 			var dsoNames = new List<string> ();
 
 			// Indices array MUST NOT be sorted, since it groups alias entries together with the main entry
+			var indices = new List<uint> ();
+			variable.Value = indices;
 			foreach (DSOCacheEntry preload in dsoState.JniPreloadDSOs) {
 				int dsoIdx = dsoState.DsoCache.FindIndex (entry => {
 					if (entry.Instance == null) {
@@ -453,13 +452,14 @@ namespace Xamarin.Android.Tasks
 			var aotDsoCache = new List<StructureInstance<DSOCacheEntry>> ();
 			var nameMutations = new List<string> ();
 			int nameMutationsCount = -1;
+			ICollection<string> ignorePreload = ApplicationConfigNativeAssemblyGeneratorCLR.MakeJniPreloadIgnoreCollection (Log, NativeLibrariesAlwaysJniPreload, NativeLibrariesNoJniPreload);
 
 			for (int i = 0; i < dsos.Count; i++) {
 				string name = dsos[i].name;
 
 				bool isJniLibrary = ELFHelper.IsJniLibrary (Log, dsos[i].item.ItemSpec);
 				bool ignore = dsos[i].ignore;
-				bool ignore_for_preload = !ApplicationConfigNativeAssemblyGeneratorCLR.DsoCacheJniPreloadIgnore.Contains (name);
+				bool ignore_for_preload = ApplicationConfigNativeAssemblyGeneratorCLR.ShouldIgnoreForJniPreload (Log, ignorePreload, dsos[i].item);
 
 				nameMutations.Clear();
 				AddNameMutations (name);
@@ -485,7 +485,7 @@ namespace Xamarin.Android.Tasks
 
 					// We must add all aliases to the preloads indices array so that all of them have their handle
 					// set when the library is preloaded.
-					if (entry.is_jni_library && ignore_for_preload) {
+					if (entry.is_jni_library && !ignore_for_preload) {
 						jniPreloads.Add (entry);
 					}
 

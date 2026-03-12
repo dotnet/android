@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 
 using Java.Interop.Tools.TypeNameMappings;
+using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tasks.LLVMIR;
@@ -281,6 +282,8 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	public int JniRemappingReplacementMethodIndexEntryCount { get; set; }
 	public PackageNamingPolicy PackageNamingPolicy { get; set; }
 	public List<ITaskItem> NativeLibraries { get; set; } = [];
+	public ICollection<ITaskItem>? NativeLibrariesNoJniPreload { get; set; }
+	public ICollection<ITaskItem>? NativeLibrariesAlwaysJniPreload { get; set; }
 	public bool MarshalMethodsEnabled { get; set; }
 	public bool ManagedMarshalMethodsLookupEnabled { get; set; }
 	public bool IgnoreSplitConfigs { get; set; }
@@ -332,10 +335,21 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		module.Add (envVars);
 		module.AddGlobalVariable ("app_environment_variable_contents", envVarsBlob, LlvmIrVariableOptions.GlobalConstant);
 
-		var sysProps = new LlvmIrGlobalVariable (systemProperties ?? new SortedDictionary<string, string>(), "app_system_properties") {
+		// We reuse the same structure as for environment variables, there's no point in adding a new, identical, one
+		var sysPropsBlob = new LlvmIrStringBlob ();
+		List<StructureInstance<LlvmIrHelpers.AppEnvironmentVariable>> appSysProps = LlvmIrHelpers.MakeEnvironmentVariableList (
+			Log,
+			systemProperties,
+			sysPropsBlob,
+			appEnvironmentVariableStructureInfo
+		);
+
+		var sysProps = new LlvmIrGlobalVariable (appSysProps, "app_system_properties") {
 			Comment = " System properties defined by the application",
+			Options = LlvmIrVariableOptions.GlobalConstant,
 		};
-		module.Add (sysProps, stringGroupName: "sysprop", stringGroupComment: " System properties name:value pairs");
+		module.Add (sysProps);
+		module.AddGlobalVariable ("app_system_property_contents", sysPropsBlob, LlvmIrVariableOptions.GlobalConstant);
 
 		DsoCacheState dsoState = InitDSOCache ();
 		var app_cfg = new ApplicationConfigCLR {
@@ -347,7 +361,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			number_of_runtime_properties = (uint)(runtimeProperties == null ? 0 : runtimeProperties.Count),
 			package_naming_policy = (uint)PackageNamingPolicy,
 			environment_variable_count = (uint)(environmentVariables == null ? 0 : environmentVariables.Count),
-			system_property_count = (uint)(systemProperties == null ? 0 : systemProperties.Count * 2),
+			system_property_count = (uint)(appSysProps.Count),
 			number_of_assemblies_in_apk = (uint)NumberOfAssembliesInApk,
 			number_of_shared_libraries = (uint)NativeLibraries.Count,
 			bundled_assembly_name_width = (uint)BundledAssemblyNameWidth,
@@ -372,7 +386,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		module.AddGlobalVariable ("dso_jni_preloads_idx_stride", dsoState.NameMutationsCount);
 
 		// This variable MUST be written after `dso_cache` since it relies on sorting performed by HashAndSortDSOCache
-		var dso_jni_preloads_idx = new LlvmIrGlobalVariable (new List<uint> (), "dso_jni_preloads_idx", LlvmIrVariableOptions.GlobalConstant) {
+		var dso_jni_preloads_idx = new LlvmIrGlobalVariable (typeof (List<uint>), "dso_jni_preloads_idx", LlvmIrVariableOptions.GlobalConstant) {
 			Comment = " Indices into dso_cache[] of DSO libraries to preload because of JNI use",
 			ArrayItemCount = (uint)dsoState.JniPreloadDSOs.Count,
 			GetArrayItemCommentCallback = GetPreloadIndicesLibraryName,
@@ -590,11 +604,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 	void PopulatePreloadIndices (LlvmIrVariable variable, LlvmIrModuleTarget target, object? state)
 	{
-		var indices = variable.Value as List<uint>;
-		if (indices == null) {
-			throw new InvalidOperationException ("Internal error: DSO preload indices list instance not present.");
-		}
-
 		var dsoState = state as DsoCacheState;
 		if (dsoState == null) {
 			throw new InvalidOperationException ("Internal error: DSO state not present.");
@@ -603,6 +612,8 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		var dsoNames = new List<string> ();
 
 		// Indices array MUST NOT be sorted, since it groups alias entries together with the main entry
+		var indices = new List<uint> ();
+		variable.Value = indices;
 		foreach (DSOCacheEntry preload in dsoState.JniPreloadDSOs) {
 			int dsoIdx = dsoState.DsoCache.FindIndex (entry => {
 				if (entry.Instance == null) {
@@ -675,6 +686,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		var nameMutations = new List<string> ();
 		var dsoNamesBlob = new LlvmIrStringBlob ();
 		int nameMutationsCount = -1;
+		ICollection<string> ignorePreload = MakeJniPreloadIgnoreCollection (Log, NativeLibrariesAlwaysJniPreload, NativeLibrariesNoJniPreload);
 
 		for (int i = 0; i < dsos.Count; i++) {
 			string name = dsos[i].name;
@@ -682,7 +694,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 			bool isJniLibrary = ELFHelper.IsJniLibrary (Log, dsos[i].item.ItemSpec);
 			bool ignore = dsos[i].ignore;
-			bool ignore_for_preload = !DsoCacheJniPreloadIgnore.Contains (name);
+			bool ignore_for_preload = ShouldIgnoreForJniPreload (Log, ignorePreload, dsos[i].item);
 
 			nameMutations.Clear();
 			AddNameMutations (name);
@@ -710,7 +722,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 				// We must add all aliases to the preloads indices array so that all of them have their handle
 				// set when the library is preloaded.
-				if (entry.is_jni_library && ignore_for_preload) {
+				if (entry.is_jni_library && !ignore_for_preload) {
 					jniPreloads.Add (entry);
 				}
 
@@ -766,5 +778,73 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		runtimePropertyStructureInfo = module.MapStructure<RuntimeProperty> ();
 		runtimePropertyIndexEntryStructureInfo = module.MapStructure<RuntimePropertyIndexEntry> ();
 		appEnvironmentVariableStructureInfo = module.MapStructure<LlvmIrHelpers.AppEnvironmentVariable> ();
+	}
+
+	internal static bool ShouldIgnoreForJniPreload (TaskLoggingHelper log, ICollection<string> libsToIgnore, ITaskItem libItem)
+	{
+		if (libsToIgnore.Count == 0) {
+			return false;
+		}
+
+		string? libFileName = GetFileName (log, libItem);
+		if (libFileName == null) {
+			return false; // We have no idea what it is, so let the caller handle the situation
+		}
+
+		return libsToIgnore.Contains (libFileName);
+	}
+
+	internal static ICollection<string> MakeJniPreloadIgnoreCollection (TaskLoggingHelper log, ICollection<ITaskItem>? alwaysPreload, ICollection<ITaskItem>? ignorePreload)
+	{
+		// There Can Be Only One, no matter what name casing is on the user's build OS.
+		var libsToIgnore = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+		if (ignorePreload == null || ignorePreload.Count == 0) {
+			return libsToIgnore;
+		}
+
+		var neverIgnore = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+
+		string? fileName;
+		if (alwaysPreload != null) {
+			foreach (ITaskItem item in alwaysPreload) {
+				fileName = GetFileName (log, item);
+				if (fileName == null) {
+					continue;
+				}
+
+				neverIgnore.Add (fileName);
+			}
+		}
+
+		foreach (ITaskItem item in ignorePreload) {
+			fileName = GetFileName (log, item);
+			if (fileName == null) {
+				continue;
+			}
+
+			if (neverIgnore.Contains (fileName)) {
+				log.LogDebugMessage ($"Native library '{item.ItemSpec}' cannot be ignored when preloading JNI native libraries.");
+				continue;
+			}
+
+			libsToIgnore.Add (fileName);
+		}
+
+		return libsToIgnore;
+	}
+
+	static string? GetFileName (TaskLoggingHelper log, ITaskItem item)
+	{
+		string? name = item.GetMetadata ("ArchiveFileName");
+		if (String.IsNullOrEmpty (name)) {
+			name = MonoAndroidHelper.GetNormalizedNativeLibraryName (item);
+		}
+
+		if (String.IsNullOrEmpty (name)) {
+			log.LogDebugMessage ($"Failed to convert item path '{item.ItemSpec}' to canonical native shared library name.");
+			return null;
+		}
+
+		return name;
 	}
 }

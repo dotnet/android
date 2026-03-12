@@ -1,5 +1,6 @@
 using Android.Runtime;
 using Java.Interop;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Microsoft.Android.Runtime;
@@ -8,8 +9,9 @@ static partial class JavaInteropRuntime
 {
 	static JniRuntime? runtime;
 
-	[DllImport("xa-internal-api")]
-	static extern int XA_Host_NativeAOT_JNI_OnLoad (IntPtr vm, IntPtr reserved);
+	[LibraryImport ("xa-internal-api")]
+	[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+	private static partial int XA_Host_NativeAOT_JNI_OnLoad (IntPtr vm, IntPtr reserved);
 
 	[UnmanagedCallersOnly (EntryPoint="JNI_OnLoad")]
 	static int JNI_OnLoad (IntPtr vm, IntPtr reserved)
@@ -40,15 +42,22 @@ static partial class JavaInteropRuntime
 		runtime?.Dispose ();
 	}
 
-	[DllImport("xa-internal-api")]
-	static extern void XA_Host_NativeAOT_OnInit ();
+	[LibraryImport ("xa-internal-api")]
+	[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+	private static partial void XA_Host_NativeAOT_OnInit (IntPtr language, IntPtr filesDir, IntPtr cacheDir, ref JNIEnvInit.JnienvInitializeArgs initArgs);
 
 	// symbol name from `$(IntermediateOutputPath)obj/Release/osx-arm64/h-classes/net_dot_jni_hello_JavaInteropRuntime.h`
 	[UnmanagedCallersOnly (EntryPoint="Java_net_dot_jni_nativeaot_JavaInteropRuntime_init")]
-	static void init (IntPtr jnienv, IntPtr klass, IntPtr classLoader)
+	static void init (IntPtr jnienv, IntPtr klass, IntPtr classLoader, IntPtr language, IntPtr filesDir, IntPtr cacheDir)
 	{
 		JniTransition   transition  = default;
 		try {
+			var initArgs = new JNIEnvInit.JnienvInitializeArgs ();
+
+			// This needs to be called first, since it sets up locations, environment variables, logging etc
+			XA_Host_NativeAOT_OnInit (language, filesDir, cacheDir, ref initArgs);
+			JNIEnvInit.InitializeJniRuntimeEarly (initArgs);
+
 			var settings    = new DiagnosticSettings ();
 			settings.AddDebugDotnetLog ();
 
@@ -63,9 +72,8 @@ static partial class JavaInteropRuntime
 			};
 			runtime = options.CreateJreVM ();
 
-			// Entry point into Mono.Android.dll
-			JNIEnvInit.InitializeJniRuntime (runtime);
-			XA_Host_NativeAOT_OnInit ();
+			// Entry point into Mono.Android.dll. Log categories are initialized in JNI_OnLoad.
+			JNIEnvInit.InitializeJniRuntime (runtime, initArgs);
 
 			transition  = new JniTransition (jnienv);
 

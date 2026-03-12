@@ -13,7 +13,7 @@ using RuntimeFeature = Microsoft.Android.Runtime.RuntimeFeature;
 
 namespace Android.Runtime
 {
-	static internal class JNIEnvInit
+	static internal partial class JNIEnvInit
 	{
 #pragma warning disable 0649
 		// NOTE: Keep this in sync with the native side in src/native/common/include/managed-interface.hh
@@ -35,6 +35,7 @@ namespace Android.Runtime
 			public bool            marshalMethodsEnabled;
 			public IntPtr          grefGCUserPeerable;
 			public bool            managedMarshalMethodsLookupEnabled;
+			public IntPtr          propagateUncaughtExceptionFn;
 		}
 #pragma warning restore 0649
 
@@ -48,6 +49,12 @@ namespace Android.Runtime
 		internal static IntPtr java_class_loader;
 
 		internal static JniRuntime? androidRuntime;
+
+		[UnmanagedCallersOnly]
+		static void PropagateUncaughtException (IntPtr env, IntPtr javaThread, IntPtr javaException)
+		{
+			JNIEnv.PropagateUncaughtException (env, javaThread, javaException);
+		}
 
 		[UnmanagedCallersOnly]
 		static unsafe void RegisterJniNatives (IntPtr typeName_ptr, int typeName_len, IntPtr jniClass, IntPtr methods_ptr, int methods_len)
@@ -86,9 +93,17 @@ namespace Android.Runtime
 			}
 		}
 
+		// This is needed to initialize e.g. logging before anything else (useful with e.g. gref
+		// logging where runtime creation causes several grefs to be created and logged without
+		// stack traces because logging categories on the managed side aren't yet set)
+		internal static void InitializeJniRuntimeEarly (JnienvInitializeArgs args)
+		{
+			Logger.SetLogCategories ((LogCategories)args.logCategories);
+		}
+
 		// NOTE: should have different name than `Initialize` to avoid:
 		// * Assertion at /__w/1/s/src/mono/mono/metadata/icall.c:6258, condition `!only_unmanaged_callers_only' not met
-		internal static void InitializeJniRuntime (JniRuntime runtime)
+		internal static void InitializeJniRuntime (JniRuntime runtime, JnienvInitializeArgs args)
 		{
 			androidRuntime = runtime;
 			SetSynchronizationContext ();
@@ -149,11 +164,53 @@ namespace Android.Runtime
 				xamarin_app_init (args->env, getFunctionPointer);
 			}
 
+			args->propagateUncaughtExceptionFn = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&PropagateUncaughtException;
+			RunStartupHooksIfNeeded ();
 			SetSynchronizationContext ();
 		}
 
-		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		static extern unsafe void xamarin_app_init (IntPtr env, delegate* unmanaged <int, int, int, IntPtr*, void> get_function_pointer);
+		[LibraryImport (RuntimeConstants.InternalDllName)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		private static unsafe partial void xamarin_app_init (IntPtr env, delegate* unmanaged <int, int, int, IntPtr*, void> get_function_pointer);
+
+		static void RunStartupHooksIfNeeded ()
+		{
+			// Return if startup hooks are disabled or not CoreCLR
+			if (!RuntimeFeature.IsCoreClrRuntime)
+				return;
+			if (!RuntimeFeature.StartupHookSupport)
+				return;
+
+			RunStartupHooks ();
+		}
+
+		[RequiresUnreferencedCode ("Uses reflection to access System.StartupHookProvider.")]
+		static void RunStartupHooks ()
+		{
+			const string typeName = "System.StartupHookProvider";
+			const string methodName = "ProcessStartupHooks";
+
+			var type = typeof(object).Assembly.GetType (typeName, throwOnError: false);
+			if (type is null) {
+				RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default,
+					$"Could not load type '{typeName}'. Skipping startup hooks.");
+				return;
+			}
+
+			var method = type.GetMethod (methodName, 
+				BindingFlags.NonPublic | BindingFlags.Static, null, [ typeof(string) ], null);
+			if (method is null) {
+				RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default,
+					$"Could not load method '{typeName}.{methodName}'. Skipping startup hooks.");
+				return;
+			}
+
+			// ProcessStartupHooks accepts startup hooks directly via parameter.
+			// It will also read STARTUP_HOOKS from AppContext internally.
+			// Pass DOTNET_STARTUP_HOOKS env var value so it works without needing AppContext setup.
+			string? startupHooks = Environment.GetEnvironmentVariable ("DOTNET_STARTUP_HOOKS");
+			method.Invoke (null, [ startupHooks ?? "" ]);
+		}
 
 		static void SetSynchronizationContext () =>
 			SynchronizationContext.SetSynchronizationContext (Android.App.Application.SynchronizationContext);

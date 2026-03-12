@@ -1,6 +1,10 @@
 # https://docs.github.com/code-security/supply-chain-security/keeping-your-dependencies-updated-automatically/
 version: 2
 updates:
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly"
   - package-ecosystem: "gradle"
     directory: "/src/r8/"
     schedule:

@@ -6,7 +6,7 @@
     Xamarin.Android.Common.props from WorkloadDependencies.proj.
     -->
   <PropertyGroup>
-    <DotNetStableTargetFramework Condition=" '$(DotNetStableTargetFramework)' == '' ">net9.0</DotNetStableTargetFramework>
+    <DotNetStableTargetFramework Condition=" '$(DotNetStableTargetFramework)' == '' ">net10.0</DotNetStableTargetFramework>
     <!-- Disables the transitive restore of packages like Microsoft.AspNetCore.App.Ref, Microsoft.WindowsDesktop.App.Ref -->
     <DisableTransitiveFrameworkReferenceDownloads>true</DisableTransitiveFrameworkReferenceDownloads>
   </PropertyGroup>

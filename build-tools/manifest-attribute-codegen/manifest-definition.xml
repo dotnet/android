@@ -96,10 +96,10 @@
         <a name='knownActivityEmbeddingCerts' api-level='33' />
         <a name='enableOnBackInvokedCallback' format='boolean' api-level='33' />
         <a name='allowCrossUidActivitySwitchFromBelow' format='boolean' api-level='35' />
-        <a name='pageSizeCompat' api-level='36' />
-        <a name='intentMatchingFlags' api-level='36' />
-        <a name='alternateLauncherIcons' format='reference' api-level='36' />
-        <a name='alternateLauncherLabels' format='reference' api-level='36' />
+        <a name='pageSizeCompat' api-level='36.1' />
+        <a name='intentMatchingFlags' api-level='36.1' />
+        <a name='alternateLauncherIcons' format='reference' api-level='36.1' />
+        <a name='alternateLauncherLabels' format='reference' api-level='36.1' />
     </e>
     <e name='permission' api-level='10'>
         <parent>manifest</parent>
@@ -117,6 +117,8 @@
         <a name='backgroundPermission' format='string' api-level='29' />
         <a name='knownCerts' api-level='31' />
         <a name='maxSdkVersion' api-level='34' />
+        <a name='requiresPurpose' format='boolean' api-level='36.1' />
+        <a name='requiresPurposeTargetSdkVersion' format='integer' api-level='36.1' />
     </e>
     <e name='permission-group' api-level='10'>
         <parent>manifest</parent>
@@ -172,7 +174,7 @@
         <a name='minSdkVersion' format='integer|string' />
         <a name='targetSdkVersion' format='integer|string' />
         <a name='maxSdkVersion' format='integer' />
-        <a name='minSdkVersionFull' format='string' api-level='36' />
+        <a name='minSdkVersionFull' format='string' api-level='Baklava' />
     </e>
     <e name='uses-library' api-level='10'>
         <parent>application</parent>
@@ -226,7 +228,7 @@
         <a name='forceUriPermissions' api-level='29' />
         <a name='attributionTags' api-level='31' />
         <a name='systemUserOnly' format='boolean' api-level='35' />
-        <a name='intentMatchingFlags' api-level='36' />
+        <a name='intentMatchingFlags' api-level='36.1' />
     </e>
     <e name='grant-uri-permission' api-level='10'>
         <parent>provider</parent>
@@ -272,7 +274,7 @@
         <a name='attributionTags' api-level='31' />
         <a name='allowSharedIsolatedProcess' format='boolean' api-level='34' />
         <a name='systemUserOnly' format='boolean' api-level='35' />
-        <a name='intentMatchingFlags' api-level='36' />
+        <a name='intentMatchingFlags' api-level='36.1' />
     </e>
     <e name='receiver' api-level='10'>
         <parent>application</parent>
@@ -290,7 +292,7 @@
         <a name='directBootAware' api-level='24' />
         <a name='roundIcon' api-level='25' />
         <a name='attributionTags' api-level='31' />
-        <a name='intentMatchingFlags' api-level='36' />
+        <a name='intentMatchingFlags' api-level='36.1' />
     </e>
     <e name='activity' api-level='10'>
         <parent>application</parent>
@@ -362,7 +364,7 @@
         <a name='requiredDisplayCategory' format='string' api-level='34' />
         <a name='enableOnBackInvokedCallback' format='boolean' api-level='34' />
         <a name='requireContentUriPermissionFromCaller' format='string' api-level='35' />
-        <a name='intentMatchingFlags' api-level='36' />
+        <a name='intentMatchingFlags' api-level='36.1' />
     </e>
     <e name='activity-alias' api-level='10'>
         <parent>application</parent>
@@ -381,7 +383,7 @@
         <a name='attributionTags' api-level='31' />
         <a name='allowUntrustedActivityEmbedding' api-level='33' />
         <a name='knownActivityEmbeddingCerts' api-level='33' />
-        <a name='intentMatchingFlags' api-level='36' />
+        <a name='intentMatchingFlags' api-level='36.1' />
     </e>
     <e name='meta-data' api-level='10'>
         <parent>application</parent>
@@ -666,8 +668,19 @@
         <parent>intent-filter</parent>
         <a name='allow' format='boolean' api-level='35' />
     </e>
-    <e name='adopt-permissions' api-level='36'>
+    <e name='valid-purpose' api-level='36.1'>
+        <parent>permission</parent>
+        <a name='name' api-level='36.1' />
+        <a name='maxTargetSdkVersion' format='integer' api-level='36.1' />
+    </e>
+    <e name='purpose' api-level='36.1'>
+        <parent>uses-permission</parent>
+        <a name='name' api-level='36.1' />
+        <a name='minSdkVersion' format='integer|string' api-level='36.1' />
+        <a name='maxSdkVersion' format='integer' api-level='36.1' />
+    </e>
+    <e name='adopt-permissions' api-level='36.1'>
         <parent>manifest</parent>
-        <a name='name' api-level='36' />
+        <a name='name' api-level='36.1' />
     </e>
 </m>

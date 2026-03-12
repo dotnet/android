@@ -1,0 +1,68 @@
+name: Log Disk Space
+description: Logs disk space usage on the runner
+inputs:
+  detailed:
+    description: 'Whether to include detailed disk analysis (true/false)'
+    required: false
+    default: 'false'
+runs:
+  using: composite
+  steps:
+  - name: Display disk space
+    shell: bash
+    run: |
+      MAX_LINES=20
+      
+      echo "=== Disk Space Usage ==="
+      df -h
+      echo ""
+      echo "=== Inode Usage ==="
+      df -i
+      echo ""
+      echo "=== Disk Usage Summary ==="
+      df -h / | tail -1 | awk '{print "Used: " $3 " / " $2 " (" $5 " full)"}'
+      echo ""
+      echo "=== /mnt disk info ==="
+      echo "Permissions:"
+      ls -la / | grep mnt
+      echo "Contents:"
+      ls -la /mnt 2>/dev/null || echo "/mnt is empty or not accessible"
+      echo "Disk usage:"
+      df -h /mnt
+
+      # Detailed analysis if requested
+      if [ "${{ inputs.detailed }}" = "true" ]; then
+        echo ""
+        echo "=== DETAILED ANALYSIS ==="
+        echo ""
+        echo "=== Largest directories in /home/runner ==="
+        sudo du -h /home/runner 2>/dev/null | sort -rh | head -$MAX_LINES || true
+        echo ""
+        echo "=== Largest directories in /opt ==="
+        sudo du -h /opt 2>/dev/null | sort -rh | head -$MAX_LINES || true
+        echo ""
+        echo "=== Workspace breakdown (top level) ==="
+        du -h --max-depth=1 . 2>/dev/null | sort -rh || true
+        echo ""
+        echo "=== Workspace breakdown (2 levels deep) ==="
+        du -h --max-depth=2 . 2>/dev/null | sort -rh | head -$MAX_LINES || true
+        echo ""
+        echo "=== bin directory ==="
+        du -sh ./bin/* 2>/dev/null | sort -rh | head -$MAX_LINES || echo "No bin"
+        echo ""
+        echo "=== external directory ==="
+        du -sh ./external/* 2>/dev/null | sort -rh | head -$MAX_LINES || echo "No external"
+        echo ""
+        echo "=== Android toolchain directories ==="
+        du -sh /mnt/android-archives 2>/dev/null || echo "No android-archives"
+        du -sh /mnt/android-toolchain 2>/dev/null || echo "No android-toolchain"
+        echo ""
+        echo "=== /mnt disk usage ==="
+        du -h --max-depth=1 /mnt 2>/dev/null | sort -rh || true
+        echo ""
+        echo "=== Docker usage ==="
+        docker system df 2>/dev/null || echo "Docker not available"
+        echo ""
+        echo "=== Temp directories ==="
+        du -sh /tmp /var/tmp 2>/dev/null || true
+      fi

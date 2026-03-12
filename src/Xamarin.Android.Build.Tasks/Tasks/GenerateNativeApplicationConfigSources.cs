@@ -28,6 +28,8 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem[] ResolvedAssemblies { get; set; } = [];
 
 		public ITaskItem[]? NativeLibraries { get; set; }
+		public ITaskItem[]? NativeLibrariesNoJniPreload { get; set; }
+		public ITaskItem[]? NativeLibrariesAlwaysJniPreload { get; set; }
 
 		public ITaskItem[]? MonoComponents { get; set; }
 
@@ -49,6 +51,9 @@ namespace Xamarin.Android.Tasks
 
 		[Required]
 		public bool TargetsCLR { get; set; }
+
+		[Required]
+		public string AndroidRuntime { get; set; } = "";
 
 		public bool EnableMarshalMethods { get; set; }
 		public bool EnableManagedMarshalMethodsLookup { get; set; }
@@ -76,8 +81,19 @@ namespace Xamarin.Android.Tasks
 
 		static internal AndroidTargetArch GetAndroidTargetArchForAbi (string abi) => MonoAndroidHelper.AbiToTargetArch (abi);
 
+		AndroidRuntime androidRuntime;
+
+		internal static void AddDefaultEnvironmentVariables (EnvironmentBuilder envBuilder, string? httpClientHandlerType, bool enableSGenConcurrent)
+		{
+			envBuilder.AddDefaultMonoDebug ();
+			envBuilder.AddHttpClientHandlerType (httpClientHandlerType);
+			envBuilder.AddMonoGcParams (enableSGenConcurrent);
+		}
+
 		public override bool RunTask ()
 		{
+			androidRuntime = MonoAndroidHelper.ParseAndroidRuntime (AndroidRuntime);
+
 			bool usesMonoAOT = false;
 
 			if (!Enum.TryParse (PackageNamingPolicy, out PackageNamingPolicy pnp)) {
@@ -101,9 +117,15 @@ namespace Xamarin.Android.Tasks
 			if (_Debug) {
 				envBuilder.AddDefaultDebugBuildLogLevel ();
 			}
-			envBuilder.AddDefaultMonoDebug ();
-			envBuilder.AddHttpClientHandlerType (HttpClientHandlerType);
-			envBuilder.AddMonoGcParams (EnableSGenConcurrent);
+
+			if (androidRuntime != Xamarin.Android.Tasks.AndroidRuntime.NativeAOT) {
+				AddDefaultEnvironmentVariables (envBuilder, HttpClientHandlerType, EnableSGenConcurrent);
+			} else {
+				// NativeAOT sets all the environment variables from Java, we don't want to repeat that
+				// process in the native code. This is just a precaution, because NativeAOT builds should
+				// not even use this task.
+				envBuilder.EnvironmentVariables.Clear ();
+			}
 
 			global::Android.Runtime.BoundExceptionType boundExceptionType;
 			if (String.IsNullOrEmpty (BoundExceptionType) || MonoAndroidHelper.StringEquals (BoundExceptionType, "System", StringComparison.OrdinalIgnoreCase)) {
@@ -233,6 +255,8 @@ namespace Xamarin.Android.Tasks
 					NumberOfAssembliesInApk = assemblyCount,
 					BundledAssemblyNameWidth = assemblyNameWidth,
 					NativeLibraries = uniqueNativeLibraries,
+					NativeLibrariesNoJniPreload = NativeLibrariesNoJniPreload,
+					NativeLibrariesAlwaysJniPreload = NativeLibrariesAlwaysJniPreload,
 					AndroidRuntimeJNIEnvToken = android_runtime_jnienv_class_token,
 					JNIEnvInitializeToken = jnienv_initialize_method_token,
 					JNIEnvRegisterJniNativesToken = jnienv_registerjninatives_method_token,
@@ -259,6 +283,8 @@ namespace Xamarin.Android.Tasks
 					BundledAssemblyNameWidth = assemblyNameWidth,
 					MonoComponents = (MonoComponent)monoComponents,
 					NativeLibraries = uniqueNativeLibraries,
+					NativeLibrariesNoJniPreload = NativeLibrariesNoJniPreload,
+					NativeLibrariesAlwaysJniPreload = NativeLibrariesAlwaysJniPreload,
 					HaveAssemblyStore = UseAssemblyStore,
 					AndroidRuntimeJNIEnvToken = android_runtime_jnienv_class_token,
 					JNIEnvInitializeToken = jnienv_initialize_method_token,

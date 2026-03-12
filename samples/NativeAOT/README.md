@@ -83,7 +83,7 @@ lldb
 > settings set target.process.thread.step-out-avoid-nodebug true
 > command script import samples/NativeAOT/lldb_commands.py,
 > command script add -f lldb_commands.clearjdb clearjdb
-> target create samples/NativeAOT/bin/Debug/net10.0-android/android-arm64/native/NativeAOT.so
+> target create samples/NativeAOT/bin/Debug/net11.0-android/android-arm64/native/NativeAOT.so
 > target select 0
 > process attach --pid <processid>
 ```
@@ -95,7 +95,7 @@ Debugger dialog you get when you launch your app.
 If your symbols are in a separate `.dbg` file, you can use the following.
 
 ```shell
-> target symbols add samples/NativeAOT/bin/Debug/net10.0-android/android-arm64/native/NativeAOT.so.dbg
+> target symbols add samples/NativeAOT/bin/Debug/net11.0-android/android-arm64/native/NativeAOT.so.dbg
 ```
 
 Next you need to attach the java debugger to clear the dialog which is currently blocking the application execution. You can skip this step if you omitted the `-D` when

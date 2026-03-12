@@ -25,9 +25,10 @@
     <File Path="api-34.xml.in" Level="34" />
     <File Path="api-35.xml.in" Level="35" />
     <File Path="api-36.xml.in" Level="36" />
-    <File Path="api-CANARY.xml.in" Level="36.1" />
+    <File Path="api-36.1.xml.in"  Level="36.1" />
+    <File Path="api-CinnamonBun.xml.in"  Level="37" />
   </Inputs>
   <Outputs>
-    <File Path="api-CANARY.xml" LastLevel="36.1" />
+    <File Path="api-CinnamonBun.xml"     LastLevel="37" />
   </Outputs>
 </Configuration>

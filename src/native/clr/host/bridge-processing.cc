@@ -283,7 +283,7 @@ void BridgeProcessingShared::abort_unless_all_collected_or_all_alive (const Stro
 
 	abort_unless (scc.Contexts [0] != nullptr, "Context must not be null");
 	bool is_collected = scc.Contexts [0]->is_collected ();
-	
+
 	for (size_t j = 1; j < scc.Count; j++) {
 		const HandleContext *context = scc.Contexts [j];
 		abort_unless (context != nullptr, "Context must not be null");
@@ -352,9 +352,9 @@ void BridgeProcessingShared::log_weak_to_gref (jobject weak, jobject handle) noe
 		OSBridge::_monodroid_gref_log_new (weak, OSBridge::get_object_ref_type (env, weak),
 			handle, OSBridge::get_object_ref_type (env, handle),
 			"finalizer", gettid (),
-			"   at [[clr-gc:take_global_ref]]", 0);
+			"   at [[clr-gc:take_global_ref]]");
 	}
-	
+
 	if (!Logger::gref_log ()) [[likely]] {
 		return;
 	}
@@ -391,21 +391,21 @@ void BridgeProcessingShared::log_weak_gref_new (jobject handle, jobject weak) no
 {
 	OSBridge::_monodroid_weak_gref_new (handle, OSBridge::get_object_ref_type (env, handle),
 		weak, OSBridge::get_object_ref_type (env, weak),
-		"finalizer", gettid (), "   at [[clr-gc:take_weak_global_ref]]", 0);
+		"finalizer", gettid (), "   at [[clr-gc:take_weak_global_ref]]");
 }
 
 [[gnu::always_inline]]
 void BridgeProcessingShared::log_gref_delete (jobject handle) noexcept
 {
 	OSBridge::_monodroid_gref_log_delete (handle, OSBridge::get_object_ref_type (env, handle),
-		"finalizer", gettid (), "   at [[clr-gc:take_weak_global_ref]]", 0);
+		"finalizer", gettid (), "   at [[clr-gc:take_weak_global_ref]]");
 }
 
 [[gnu::always_inline]]
 void BridgeProcessingShared::log_weak_ref_delete (jobject weak) noexcept
 {
 	OSBridge::_monodroid_weak_gref_delete (weak, OSBridge::get_object_ref_type (env, weak),
-		"finalizer", gettid (), "   at [[clr-gc:take_global_ref]]", 0);
+		"finalizer", gettid (), "   at [[clr-gc:take_global_ref]]");
 }
 
 [[gnu::always_inline]]

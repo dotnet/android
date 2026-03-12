@@ -1,0 +1,48 @@
+{
+  "Comment": null,
+  "Entries": {
+    "AndroidManifest.xml": {
+      "Size": 3124
+    },
+    "classes.dex": {
+      "Size": 24224
+    },
+    "lib/arm64-v8a/libUnnamedProject.so": {
+      "Size": 4968680
+    },
+    "META-INF/BNDLTOOL.RSA": {
+      "Size": 1211
+    },
+    "META-INF/BNDLTOOL.SF": {
+      "Size": 1211
+    },
+    "META-INF/MANIFEST.MF": {
+      "Size": 1084
+    },
+    "res/drawable-hdpi-v4/icon.png": {
+      "Size": 2178
+    },
+    "res/drawable-mdpi-v4/icon.png": {
+      "Size": 1490
+    },
+    "res/drawable-xhdpi-v4/icon.png": {
+      "Size": 3098
+    },
+    "res/drawable-xxhdpi-v4/icon.png": {
+      "Size": 4674
+    },
+    "res/drawable-xxxhdpi-v4/icon.png": {
+      "Size": 6832
+    },
+    "res/layout/main.xml": {
+      "Size": 544
+    },
+    "res/xml/splits0.xml": {
+      "Size": 120
+    },
+    "resources.arsc": {
+      "Size": 1904
+    }
+  },
+  "PackageSize": 2094050
+}

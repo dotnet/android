@@ -10,7 +10,7 @@ using Microsoft.Build.Utilities;
 namespace Xamarin.Android.Tasks;
 
 /// <summary>
-/// If using $(AndroidUseAssemblyStore), place all the assemblies in a single .blob file.
+/// If using $(AndroidUseAssemblyStore), place all the assemblies in a single assembly store file.
 /// </summary>
 public class CreateAssemblyStore : AndroidTask
 {

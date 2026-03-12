@@ -2,7 +2,10 @@
 title: .NET for Android error JAVAC0000
 description: JAVAC0000 error code
 ms.date: 04/11/2024
+f1_keywords:
+  - "JAVAC0000"
 ---
+
 # .NET for Android error JAVAC0000
 
 ## Example messages

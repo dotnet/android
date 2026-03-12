@@ -13,8 +13,6 @@ public class GenerateNativeAotEnvironmentAssemblerSources : AndroidTask
 
 	[Required]
 	public string RID { get; set; } = "";
-
-	public bool Debug { get; set; }
 	public ITaskItem[]? Environments { get; set; }
 	public string? HttpClientHandlerType { get; set; }
 
@@ -23,10 +21,9 @@ public class GenerateNativeAotEnvironmentAssemblerSources : AndroidTask
 		var envBuilder = new EnvironmentBuilder (Log);
 		envBuilder.Read (Environments);
 
-		if (Debug) {
-			envBuilder.AddDefaultDebugBuildLogLevel ();
-		}
-		envBuilder.AddHttpClientHandlerType (HttpClientHandlerType);
+		// Environment variables are set by Java (code generated in the GenerateAdditionalProviderSources task)
+		// We still want to set system properties, if any
+		envBuilder.EnvironmentVariables.Clear ();
 
 		string abi = MonoAndroidHelper.RidToAbi (RID);
 		AndroidTargetArch targetArch = MonoAndroidHelper.RidToArch (RID);

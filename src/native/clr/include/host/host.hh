@@ -20,6 +20,7 @@ namespace xamarin::android {
 			jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset, jobject loader,
 			jobjectArray assembliesJava, jboolean isEmulator, jboolean haveSplitApks) noexcept;
 		static void Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods) noexcept;
+		static void propagate_uncaught_exception (JNIEnv *env, jobject javaThread, jthrowable javaException) noexcept;
 
 		static auto get_timing () -> std::shared_ptr<Timing>
 		{
@@ -32,8 +33,6 @@ namespace xamarin::android {
 		}
 
 	private:
-		static void create_xdg_directory (jstring_wrapper& home, size_t home_len, std::string_view const& relative_path, std::string_view const& environment_variable_name) noexcept;
-		static void create_xdg_directories_and_environment (jstring_wrapper &homeDir) noexcept;
 		static auto zip_scan_callback (std::string_view const& apk_path, int apk_fd, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, uint32_t offset, uint32_t size) -> bool;
 		static void gather_assemblies_and_libraries (jstring_array_wrapper& runtimeApks, bool have_split_apks);
 		static void scan_filesystem_for_assemblies_and_libraries () noexcept;
@@ -55,6 +54,7 @@ namespace xamarin::android {
 		static inline std::shared_ptr<Timing> _timing{};
 		static inline bool found_assembly_store = false;
 		static inline jnienv_register_jni_natives_fn jnienv_register_jni_natives = nullptr;
+		static inline jnienv_propagate_uncaught_exception_fn jnienv_propagate_uncaught_exception = nullptr;
 
 		static inline jclass java_TimeZone = nullptr;
 

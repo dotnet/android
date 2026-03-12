@@ -4,7 +4,6 @@
   <PropertyGroup>
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <OutputType>Exe</OutputType>
-    <LangVersion>$(LangVersion)</LangVersion>
     <RootNamespace>Xamarin.Android.Prepare</RootNamespace>
     <AssemblyName>xaprepare</AssemblyName>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

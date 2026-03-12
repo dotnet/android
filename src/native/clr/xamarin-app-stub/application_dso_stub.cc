@@ -76,7 +76,8 @@ const ApplicationConfig application_config = {
 // TODO: migrate to std::string_view for these two
 const AppEnvironmentVariable app_environment_variables[] = {};
 const char app_environment_variable_contents[] = {};
-const char* const app_system_properties[] = {};
+const AppEnvironmentVariable app_system_properties[] = {};
+const char app_system_property_contents[] = {};
 
 
 
@@ -138,6 +139,7 @@ DSOCacheEntry aot_dso_cache[] = {
 		.hash = xamarin::android::xxhash::hash (fake_dso_name, sizeof(fake_dso_name) - 1),
 		.real_name_hash = xamarin::android::xxhash::hash (fake_dso_name, sizeof(fake_dso_name) - 1),
 		.ignore = true,
+		.is_jni_library = true,
 		.name_index = 3,
 		.handle = nullptr,
 	},
@@ -146,6 +148,7 @@ DSOCacheEntry aot_dso_cache[] = {
 		.hash = xamarin::android::xxhash::hash (fake_dso_name2, sizeof(fake_dso_name2) - 1),
 		.real_name_hash = xamarin::android::xxhash::hash (fake_dso_name2, sizeof(fake_dso_name2) - 1),
 		.ignore = true,
+		.is_jni_library = false,
 		.name_index = 4,
 		.handle = nullptr,
 	},

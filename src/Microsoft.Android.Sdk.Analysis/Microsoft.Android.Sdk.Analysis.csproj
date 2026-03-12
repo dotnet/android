@@ -5,7 +5,6 @@
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<OutputPath>$(MicrosoftAndroidSdkAnalysisOutDir)</OutputPath>
 		<IsRoslynComponent>true</IsRoslynComponent>
-		<LangVersion>latest</LangVersion>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 		<AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
 	</PropertyGroup>

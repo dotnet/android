@@ -62,7 +62,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
   <ItemGroup>
     <_ProjectReferenceResourceDirectory Include="$(MSBuildProjectDirectory)\$(MonoAndroidResourcePrefix)"
         Condition=" !Exists('$(OutputPath)$(TargetName).aar') "
-        StampFile="$(MSBuildProjectFile)"
+        StampFile="$(MSBuildProjectFullPath)"
     />
   </ItemGroup>
 </Target>

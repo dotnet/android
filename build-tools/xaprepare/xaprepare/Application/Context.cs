@@ -287,7 +287,12 @@ namespace Xamarin.Android.Prepare
 		/// </summary>
 		public IEnumerable<string> AndroidSdkPlatforms { get; set; } = Enumerable.Empty<string> ();
 
-		// <summary>
+		/// <summary>
+		///   Path to a local .NET SDK archive to use instead of downloading.
+		/// </summary>
+		public string? LocalDotNetSdkArchive { get; set; }
+
+		/// <summary>
 		///   Set by <see cref="Step_Get_Android_BuildTools"/> if the archive has been downloaded and validated.
 		/// </summary>
 		public bool BuildToolsArchiveDownloaded { get; set; }

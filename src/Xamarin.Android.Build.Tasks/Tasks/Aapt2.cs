@@ -36,7 +36,9 @@ namespace Xamarin.Android.Tasks {
 
 		public ITaskItem []? ResourceDirectories { get; set; }
 
-		public ITaskItem? AndroidManifestFile { get; set;}
+		public ITaskItem? AndroidManifestFile { get; set; }
+
+		public string? SupportedOSPlatformVersion { get; set; }
 
 		public string? ResourceSymbolsTextFile { get; set; }
 

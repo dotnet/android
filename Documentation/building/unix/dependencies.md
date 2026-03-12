@@ -34,7 +34,7 @@ to provide install instructions to obtain the missing dependency, e.g.:
 ## Homebrew
 
 [Homebrew](https://brew.sh) must be installed and available via `$PATH` in
-order to provision xamarin-android.
+order to provision dotnet/android.
 
 When building on Apple Silicon (arm64) machines, use the **arch**(1) command to
 allow Homebrew to be installed:
@@ -88,7 +88,7 @@ On macOS, autotools are should be used from `brew`, and may be installed via:
 
 ## Android NDK, SDK
 
-*Note*: A xamarin-android checkout maintains *its own* Android NDK + SDK
+*Note*: A dotnet/android checkout maintains *its own* Android NDK + SDK
 to ensure consistent builds and build behavior, permitting reproducible
 builds and providing greater flexibility around when we need to perform
 Android SDK + NDK updates. The Android SDK and NDK are maintained by default
@@ -101,7 +101,7 @@ via two directories in your home directory:
 
 Developers may use these directories for their own use, but *please* **DO NOT**
 update or alter the contents of the `$(AndroidToolchainDirectory)`, as that may
-prevent the xamarin-android build from working as expected.
+prevent the dotnet/android build from working as expected.
 
 The files that will be downloaded and installed are controlled by
 [build-tools/android-toolchain/android-toolchain.projitems][android-toolchain.projitems]

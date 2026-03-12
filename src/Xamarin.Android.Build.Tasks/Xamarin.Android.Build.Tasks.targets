@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateProfile" />
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateSupportedPlatforms" />
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" />
-  <UsingTask AssemblyFile="$(PrepTasksAssembly)"      TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
-  <UsingTask AssemblyFile="$(PrepTasksAssembly)"      TaskName="Xamarin.Android.BuildTools.PrepTasks.Which" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateProfile" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateSupportedPlatforms" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)"      TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)"      TaskName="Xamarin.Android.BuildTools.PrepTasks.Which" TaskFactory="TaskHostFactory" Runtime="NET" />
 
   <PropertyGroup>
     <_SharedRuntimeBuildPath Condition=" '$(_SharedRuntimeBuildPath)' == '' ">$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\</_SharedRuntimeBuildPath>
@@ -150,8 +150,10 @@
       <!-- <_XACommonPropsReplacement Include="@NDK_PKG_REVISION@=$(AndroidNdkPkgRevision)" /> -->
       <_XACommonPropsReplacement Include="@NDK_PKG_REVISION@=26.3.11579264" />
       <_XACommonPropsReplacement Include="@NDK_ARM64_V8A_API@=$(AndroidNdkApiLevel_ArmV8a)" />
+      <_XACommonPropsReplacement Include="@NDK_ARM64_V8A_API_NON_MONO@=$(AndroidNdkApiLevelNonMono_Arm64)" />
       <_XACommonPropsReplacement Include="@NDK_ARMEABI_V7_API@=$(AndroidNdkApiLevel_ArmV7a)" />
       <_XACommonPropsReplacement Include="@NDK_X86_64_API@=$(AndroidNdkApiLevel_X86_64)" />
+      <_XACommonPropsReplacement Include="@NDK_X86_64_API_NON_MONO@=$(AndroidNdkApiLevelNonMono_X64)" />
       <_XACommonPropsReplacement Include="@NDK_X86_API@=$(AndroidNdkApiLevel_X86)" />
       <_XACommonPropsReplacement Include="@PACKAGE_VERSION_BUILD@=$(XAVersionCommitCount)" />
       <_XACommonPropsReplacement Include="@PACKAGE_VERSION@=$(ProductVersion)" />
@@ -172,6 +174,7 @@
         AndroidApiInfo="@(AndroidApiInfo)"
         TargetApiLevel="$(AndroidDefaultTargetDotnetApiLevel)"
         MinimumApiLevel="$(AndroidMinimumDotNetApiLevel)"
+        MinimumNonMonoApiLevel="$(AndroidMinimumNonMonoApiLevel)"
         OutputFile="Microsoft.Android.Sdk\targets\Microsoft.Android.Sdk.SupportedPlatforms.targets"
     />
   </Target>
@@ -266,11 +269,30 @@
     </PropertyGroup>
   </Target>
 
+  <Target Name="_WriteBundledVersionsCache"
+      DependsOnTargets="GetXAVersionInfo">
+    <ItemGroup>
+      <_BundledVersionsCacheLines Include="AndroidPackVersionLong=$(AndroidPackVersionLong)" />
+      <_BundledVersionsCacheLines Include="AndroidLatestStableApiLevel=$(AndroidLatestStableApiLevel)" />
+      <_BundledVersionsCacheLines Include="AndroidLatestUnstableApiLevel=$(AndroidLatestUnstableApiLevel)" />
+      <_BundledVersionsCacheLines Include="DotNetTargetFramework=$(DotNetTargetFramework)" />
+      <_BundledVersionsCacheLines Include="DotNetTargetFrameworkVersion=$(DotNetTargetFrameworkVersion)" />
+    </ItemGroup>
+    <WriteLinesToFile
+        File="$(IntermediateOutputPath)_GenerateBundledVersions.cache"
+        Lines="@(_BundledVersionsCacheLines)"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true"
+    />
+  </Target>
+
   <!-- Generate and include this file in our SDK for now, but we may eventually want to migrate to:
        https://github.com/dotnet/installer/blob/d98f5f18bce44014aeacd2f99923b4779d89459d/src/redist/targets/GenerateBundledVersions.targets
        -->
   <Target Name="_GenerateBundledVersions"
-      DependsOnTargets="GetXAVersionInfo">
+      DependsOnTargets="_WriteBundledVersionsCache"
+      Inputs="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk\in\Microsoft.Android.Sdk.BundledVersions.in.targets;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk\Sdk\AutoImport.in.props;$(IntermediateOutputPath)_GenerateBundledVersions.cache"
+      Outputs="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk\targets\Microsoft.Android.Sdk.BundledVersions.targets;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk\Sdk\AutoImport.props">
     <ReplaceFileContents
         SourceFile="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk\in\Microsoft.Android.Sdk.BundledVersions.in.targets"
         DestinationFile="$(MSBuildThisFileDirectory)\Microsoft.Android.Sdk\targets\Microsoft.Android.Sdk.BundledVersions.targets"
@@ -281,6 +303,9 @@
         DestinationFile="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk\Sdk\AutoImport.props"
         Replacements="@DOTNET_TARGET_FRAMEWORK_VERSION@=$(DotNetTargetFrameworkVersion)">
     </ReplaceFileContents>
+    <Touch
+        Files="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk\targets\Microsoft.Android.Sdk.BundledVersions.targets;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk\Sdk\AutoImport.props"
+    />
   </Target>
 
   <Target Name="_CopyNetSdkTargets">

@@ -1,0 +1,115 @@
+steps:
+- bash: |
+    echo "=========================================="
+    echo "Diagnosing potentially hanging processes"
+    echo "=========================================="
+    echo ""
+    echo "All running processes:"
+    ps aux || true
+    echo ""
+    echo "=========================================="
+    echo "MSBuild processes:"
+    ps aux | grep -i msbuild || echo "No MSBuild processes found"
+    echo ""
+    echo "=========================================="
+    echo "dotnet processes:"
+    ps aux | grep -i dotnet || echo "No dotnet processes found"
+    echo ""
+    echo "=========================================="
+    echo "adb processes:"
+    ps aux | grep -i adb || echo "No adb processes found"
+    echo ""
+    echo "=========================================="
+    echo "Java processes:"
+    ps aux | grep -i java || echo "No Java processes found"
+    echo ""
+    echo "=========================================="
+    echo "nunit processes:"
+    ps aux | grep -i nunit || echo "No nunit processes found"
+    echo ""
+    echo "=========================================="
+    echo "Process tree:"
+    pstree -p $$ 2>/dev/null || echo "pstree not available"
+    echo ""
+    echo "=========================================="
+    echo "Open files by dotnet processes:"
+    lsof -c dotnet 2>/dev/null | head -100 || echo "lsof not available or no dotnet processes"
+    echo ""
+    echo "=========================================="
+    echo "Open files by MSBuild processes:"
+    lsof -c MSBuild 2>/dev/null | head -100 || echo "lsof not available or no MSBuild processes"
+    echo ""
+    echo "=========================================="
+    echo "Network connections:"
+    netstat -an 2>/dev/null | grep ESTABLISHED | head -50 || echo "netstat not available"
+    echo ""
+    echo "=========================================="
+    echo "Disk usage:"
+    df -h || true
+    echo ""
+    echo "=========================================="
+    echo "Memory usage:"
+    vm_stat 2>/dev/null || free -h 2>/dev/null || true
+    echo ""
+    echo "=========================================="
+    echo "Recent system messages (last 50 lines):"
+    tail -50 /var/log/system.log 2>/dev/null || dmesg 2>/dev/null | tail -50 || echo "System logs not accessible"
+    echo ""
+    echo "=========================================="
+  displayName: diagnose hanging processes (macOS/Linux)
+  condition: and(always(), in(variables['agent.os'], 'Darwin', 'Linux'))
+  continueOnError: true
+
+- powershell: |
+    Write-Host "=========================================="
+    Write-Host "Diagnosing potentially hanging processes"
+    Write-Host "=========================================="
+    Write-Host ""
+    Write-Host "All running processes:"
+    Get-Process | Format-Table -AutoSize
+    Write-Host ""
+    Write-Host "=========================================="
+    Write-Host "MSBuild processes:"
+    Get-Process -Name *MSBuild* -ErrorAction SilentlyContinue | Format-Table -AutoSize
+    if (-not $?) { Write-Host "No MSBuild processes found" }
+    Write-Host ""
+    Write-Host "=========================================="
+    Write-Host "dotnet processes:"
+    Get-Process -Name dotnet* -ErrorAction SilentlyContinue | Format-Table -AutoSize
+    if (-not $?) { Write-Host "No dotnet processes found" }
+    Write-Host ""
+    Write-Host "=========================================="
+    Write-Host "adb processes:"
+    Get-Process -Name adb* -ErrorAction SilentlyContinue | Format-Table -AutoSize
+    if (-not $?) { Write-Host "No adb processes found" }
+    Write-Host ""
+    Write-Host "=========================================="
+    Write-Host "Java processes:"
+    Get-Process -Name java* -ErrorAction SilentlyContinue | Format-Table -AutoSize
+    if (-not $?) { Write-Host "No Java processes found" }
+    Write-Host ""
+    Write-Host "=========================================="
+    Write-Host "nunit processes:"
+    Get-Process -Name *nunit* -ErrorAction SilentlyContinue | Format-Table -AutoSize
+    if (-not $?) { Write-Host "No nunit processes found" }
+    Write-Host ""
+    Write-Host "=========================================="
+    Write-Host "Network connections (ESTABLISHED):"
+    netstat -ano | Select-String "ESTABLISHED" | Select-Object -First 50
+    Write-Host ""
+    Write-Host "=========================================="
+    Write-Host "Disk usage:"
+    Get-PSDrive -PSProvider FileSystem | Format-Table -AutoSize
+    Write-Host ""
+    Write-Host "=========================================="
+    Write-Host "Memory usage:"
+    Get-CimInstance Win32_OperatingSystem | Select-Object FreePhysicalMemory, TotalVisibleMemorySize | Format-List
+    Write-Host ""
+    Write-Host "=========================================="
+    Write-Host "Recent Application Event Log errors (last 20):"
+    Get-EventLog -LogName Application -EntryType Error -Newest 20 -ErrorAction SilentlyContinue | Format-Table -AutoSize
+    Write-Host ""
+    Write-Host "=========================================="
+  displayName: diagnose hanging processes (Windows)
+  condition: and(always(), eq(variables['agent.os'], 'Windows_NT'))
+  continueOnError: true

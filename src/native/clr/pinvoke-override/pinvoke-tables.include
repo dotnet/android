@@ -11,9 +11,7 @@
 namespace {
 #if INTPTR_MAX == INT64_MAX
 	//64-bit internal p/invoke table
-	std::array<PinvokeEntry, 27> internal_pinvokes {{
-		{0xa50ce5de13bf8b5, "_monodroid_timezone_get_default_id", reinterpret_cast<void*>(&_monodroid_timezone_get_default_id)},
-		{0x3ade4348ac8ce0fa, "_monodroid_freeifaddrs", reinterpret_cast<void*>(&_monodroid_freeifaddrs)},
+	std::array<PinvokeEntry, 24> internal_pinvokes {{
 		{0x3b2467e7eadd4a6a, "_monodroid_lref_log_new", reinterpret_cast<void*>(&_monodroid_lref_log_new)},
 		{0x423c8f539a2c56d2, "_monodroid_lookup_replacement_type", reinterpret_cast<void*>(&_monodroid_lookup_replacement_type)},
 		{0x4310c1531ddddc14, "__android_log_print", reinterpret_cast<void*>(&__android_log_print)},
@@ -34,7 +32,6 @@ namespace {
 		{0xd1e121b94ea63f2e, "_monodroid_gref_get", reinterpret_cast<void*>(&_monodroid_gref_get)},
 		{0xd5151b00eb33d85e, "monodroid_TypeManager_get_java_class_name", reinterpret_cast<void*>(&monodroid_TypeManager_get_java_class_name)},
 		{0xe27b9849b7e982cb, "_monodroid_max_gref_get", reinterpret_cast<void*>(&_monodroid_max_gref_get)},
-		{0xe370a0d91cd63bc0, "_monodroid_getifaddrs", reinterpret_cast<void*>(&_monodroid_getifaddrs)},
 		{0xe86307aac9a2631a, "_monodroid_weak_gref_new", reinterpret_cast<void*>(&_monodroid_weak_gref_new)},
 		{0xf3048baf83034541, "_monodroid_gc_wait_for_bridge_processing", reinterpret_cast<void*>(&_monodroid_gc_wait_for_bridge_processing)},
 		{0xf41c48df6f9be476, "monodroid_free", reinterpret_cast<void*>(&monodroid_free)},
@@ -42,7 +39,7 @@ namespace {
 	}};
 
 	//64-bit DotNet p/invoke table
-	std::array<PinvokeEntry, 490> dotnet_pinvokes {{
+	std::array<PinvokeEntry, 494> dotnet_pinvokes {{
 		{0x99f2ee02463000, "CompressionNative_Crc32", nullptr},
 		{0xb38afc8bfe830b, "SystemNative_Bind", nullptr},
 		{0x190fe65d8736dcb, "SystemNative_TryGetIPPacketInformation", nullptr},
@@ -100,6 +97,7 @@ namespace {
 		{0x146cd1dc4fb2ba58, "SystemNative_LChflagsCanSetHiddenFlag", nullptr},
 		{0x14b7e3527b60e83f, "CryptoNative_ErrErrorStringN", nullptr},
 		{0x15bd710d3a9b3b0c, "CryptoNative_EvpDigestFinalEx", nullptr},
+		{0x1757413d3fb3c492, "SystemNative_LowLevelFutex_WaitOnAddress", nullptr},
 		{0x18580a4592ed1ea6, "GlobalizationNative_GetSortKey", nullptr},
 		{0x185f5d25252c3c72, "SystemNative_FAllocate", nullptr},
 		{0x18d6b5e9fec9b0dc, "SystemNative_Connectx", nullptr},
@@ -157,6 +155,7 @@ namespace {
 		{0x35c0aa811b7a83c8, "BrotliDecoderSetMetadataCallbacks", nullptr},
 		{0x35c1fa8dffcbbd8c, "CryptoNative_EvpDigestReset", nullptr},
 		{0x36128eed665b1923, "SystemNative_ShmUnlink", nullptr},
+		{0x362dd6799f8caed6, "SystemNative_LowLevelFutex_WaitOnAddressTimeout", nullptr},
 		{0x364dcf65ae63adff, "SystemNative_GetSocketErrorOption", nullptr},
 		{0x3757b327944abb54, "SystemNative_EnablePosixSignalHandling", nullptr},
 		{0x376f5dc6f9cfc714, "BrotliSharedDictionaryAttach", nullptr},
@@ -185,6 +184,7 @@ namespace {
 		{0x43741165a5ba60d5, "AndroidCryptoNative_CipherUpdateAAD", nullptr},
 		{0x44ccb27979f980ce, "SystemNative_AlignedAlloc", nullptr},
 		{0x44f1a5c46033eec2, "SystemNative_SysLog", nullptr},
+		{0x4628c74628891cfe, "SystemNative_FileSystemSupportsLocking", nullptr},
 		{0x469898c8d892af83, "BrotliEncoderCompress", nullptr},
 		{0x483b434d7b089c7e, "SystemNative_Write", nullptr},
 		{0x4845e1c76265acc9, "AndroidCryptoNative_X509StoreEnumerateCertificates", nullptr},
@@ -439,6 +439,7 @@ namespace {
 		{0xceba527295694651, "BrotliDecoderCreateInstance", nullptr},
 		{0xd0899515dfe85287, "GlobalizationNative_LoadICU", nullptr},
 		{0xd185dfe303ab91dd, "GlobalizationNative_CompareString", nullptr},
+		{0xd1ee731900924bec, "SystemNative_LowLevelFutex_WakeByAddressSingle", nullptr},
 		{0xd392d6ed5dcc111c, "SystemNative_GetDomainName", nullptr},
 		{0xd513a641103f8971, "SystemNative_IsMemfdSupported", nullptr},
 		{0xd5264d57a926edfb, "GlobalizationNative_InitICUFunctions", nullptr},
@@ -545,13 +546,12 @@ constexpr hash_t system_security_cryptography_native_android_library_hash = 0x18
 constexpr hash_t system_globalization_native_library_hash = 0x28b5c8fca080abd5;
 #else
 	//32-bit internal p/invoke table
-	std::array<PinvokeEntry, 27> internal_pinvokes {{
+	std::array<PinvokeEntry, 24> internal_pinvokes {{
 		{0xb7a486a, "monodroid_TypeManager_get_java_class_name", reinterpret_cast<void*>(&monodroid_TypeManager_get_java_class_name)},
 		{0x2aea7c33, "_monodroid_max_gref_get", reinterpret_cast<void*>(&_monodroid_max_gref_get)},
 		{0x3227d81a, "monodroid_timing_start", reinterpret_cast<void*>(&monodroid_timing_start)},
 		{0x333d4835, "_monodroid_lookup_replacement_method_info", reinterpret_cast<void*>(&_monodroid_lookup_replacement_method_info)},
 		{0x39e5b5d4, "__android_log_print", reinterpret_cast<void*>(&__android_log_print)},
-		{0x434ad3e4, "_monodroid_getifaddrs", reinterpret_cast<void*>(&_monodroid_getifaddrs)},
 		{0x656e00bd, "clr_typemap_managed_to_java", reinterpret_cast<void*>(&clr_typemap_managed_to_java)},
 		{0x9070e02c, "_monodroid_lref_log_delete", reinterpret_cast<void*>(&_monodroid_lref_log_delete)},
 		{0x910452d0, "monodroid_timing_stop", reinterpret_cast<void*>(&monodroid_timing_stop)},
@@ -559,14 +559,12 @@ constexpr hash_t system_globalization_native_library_hash = 0x28b5c8fca080abd5;
 		{0x9c5b24a8, "_monodroid_weak_gref_new", reinterpret_cast<void*>(&_monodroid_weak_gref_new)},
 		{0xa04e5d1c, "monodroid_free", reinterpret_cast<void*>(&monodroid_free)},
 		{0xa3c1e548, "clr_initialize_gc_bridge", reinterpret_cast<void*>(&clr_initialize_gc_bridge)},
-		{0xad511c82, "_monodroid_timezone_get_default_id", reinterpret_cast<void*>(&_monodroid_timezone_get_default_id)},
 		{0xb02468aa, "_monodroid_gref_get", reinterpret_cast<void*>(&_monodroid_gref_get)},
 		{0xb6431f9a, "clr_typemap_java_to_managed", reinterpret_cast<void*>(&clr_typemap_java_to_managed)},
 		{0xbe8d7701, "_monodroid_gref_log_new", reinterpret_cast<void*>(&_monodroid_gref_log_new)},
 		{0xc0d097a7, "_monodroid_lref_log_new", reinterpret_cast<void*>(&_monodroid_lref_log_new)},
 		{0xc439b5d7, "_monodroid_lookup_replacement_type", reinterpret_cast<void*>(&_monodroid_lookup_replacement_type)},
 		{0xc5146c54, "_monodroid_gref_log_delete", reinterpret_cast<void*>(&_monodroid_gref_log_delete)},
-		{0xd3b5d2c1, "_monodroid_freeifaddrs", reinterpret_cast<void*>(&_monodroid_freeifaddrs)},
 		{0xe215a17c, "_monodroid_weak_gref_delete", reinterpret_cast<void*>(&_monodroid_weak_gref_delete)},
 		{0xe7e77ca5, "_monodroid_gref_log", reinterpret_cast<void*>(&_monodroid_gref_log)},
 		{0xea2184e3, "_monodroid_gc_wait_for_bridge_processing", reinterpret_cast<void*>(&_monodroid_gc_wait_for_bridge_processing)},
@@ -576,7 +574,7 @@ constexpr hash_t system_globalization_native_library_hash = 0x28b5c8fca080abd5;
 	}};
 
 	//32-bit DotNet p/invoke table
-	std::array<PinvokeEntry, 490> dotnet_pinvokes {{
+	std::array<PinvokeEntry, 494> dotnet_pinvokes {{
 		{0xaf6b1c, "AndroidCryptoNative_RsaPrivateDecrypt", nullptr},
 		{0x1733089, "SystemNative_SetTerminalInvalidationHandler", nullptr},
 		{0x1dd1f00, "AndroidCryptoNative_Aes192Cfb8", nullptr},
@@ -622,6 +620,7 @@ constexpr hash_t system_globalization_native_library_hash = 0x28b5c8fca080abd5;
 		{0x19b6a696, "AndroidCryptoNative_X509DecodeCollection", nullptr},
 		{0x1a302b28, "SystemNative_SchedSetAffinity", nullptr},
 		{0x1aa4105d, "GlobalizationNative_GetSortKey", nullptr},
+		{0x1ab05213, "SystemNative_LowLevelFutex_WakeByAddressSingle", nullptr},
 		{0x1ab1248e, "SystemNative_GetHostName", nullptr},
 		{0x1ad0dc45, "SystemNative_ReadDir", nullptr},
 		{0x1ae2353d, "SystemNative_MemfdCreate", nullptr},
@@ -800,6 +799,7 @@ constexpr hash_t system_globalization_native_library_hash = 0x28b5c8fca080abd5;
 		{0x70d4f7e6, "SystemNative_GetActiveTcpConnectionInfos", nullptr},
 		{0x70e91ddd, "SystemNative_FChMod", nullptr},
 		{0x71698a7f, "SystemNative_GetDomainSocketSizes", nullptr},
+		{0x72189e8a, "SystemNative_LowLevelFutex_WaitOnAddress", nullptr},
 		{0x7243c4b4, "AndroidCryptoNative_Des3Cfb8", nullptr},
 		{0x758dd6aa, "SystemNative_GetTimeZoneData", nullptr},
 		{0x759f5b1e, "AndroidCryptoNative_Aes256Cfb8", nullptr},
@@ -854,6 +854,7 @@ constexpr hash_t system_globalization_native_library_hash = 0x28b5c8fca080abd5;
 		{0x990163b4, "SystemNative_Receive", nullptr},
 		{0x996952b3, "AndroidCryptoNative_CipherFinalEx", nullptr},
 		{0x9a005080, "SystemNative_Bind", nullptr},
+		{0x9a1188d3, "SystemNative_LowLevelFutex_WaitOnAddressTimeout", nullptr},
 		{0x9a84ffd3, "AndroidCryptoNative_ChaCha20Poly1305", nullptr},
 		{0x9abfce84, "SystemNative_GetEnviron", nullptr},
 		{0x9bda7eb1, "SystemNative_ReadProcessStatusInfo", nullptr},
@@ -950,6 +951,7 @@ constexpr hash_t system_globalization_native_library_hash = 0x28b5c8fca080abd5;
 		{0xc3812682, "AndroidCryptoNative_X509ChainGetErrors", nullptr},
 		{0xc3dcc3a0, "AndroidCryptoNative_SetRsaParameters", nullptr},
 		{0xc3e6ff56, "SystemNative_LowLevelMonitor_Create", nullptr},
+		{0xc3ed5db4, "SystemNative_FileSystemSupportsLocking", nullptr},
 		{0xc475f41c, "AndroidCryptoNative_X509StoreContainsCertificate", nullptr},
 		{0xc4ac1723, "AndroidCryptoNative_Aes256Cbc", nullptr},
 		{0xc55548f2, "SystemNative_HandleNonCanceledPosixSignal", nullptr},
@@ -1079,6 +1081,6 @@ constexpr hash_t system_security_cryptography_native_android_library_hash = 0x93
 constexpr hash_t system_globalization_native_library_hash = 0xa66f1e5a;
 #endif
 
-constexpr size_t internal_pinvokes_count = 27;
-constexpr size_t dotnet_pinvokes_count = 490;
+constexpr size_t internal_pinvokes_count = 24;
+constexpr size_t dotnet_pinvokes_count = 494;
 } // end of anonymous namespace

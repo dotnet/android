@@ -94,6 +94,48 @@ properties that determine build ordering.
     </_PrepareBuildApkDependsOnTargets>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <InstallDependsOnTargets>
+      SignAndroidPackage;
+      _DeployApk;
+      _DeployAppBundle;
+    </InstallDependsOnTargets>
+    <UninstallDependsOnTargets>
+      AndroidPrepareForBuild;
+      _Uninstall
+    </UninstallDependsOnTargets>
+    <!-- When inside an IDE, Build has just been run. This is a minimal list of targets for SignAndroidPackage. -->
+    <_MinimalSignAndroidPackageDependsOn>
+      BuildOnlySettings;
+      _CreatePropertiesCache;
+      ResolveReferences;
+      PrepareResources;
+      CreateSatelliteAssemblies;
+      _CopyPackage;
+      _Sign;
+      _CreateUniversalApkFromBundle;
+    </_MinimalSignAndroidPackageDependsOn>
+    <SignAndroidPackageDependsOn Condition=" '$(BuildingInsideVisualStudio)' != 'true' ">
+      Build;
+      Package;
+      _Sign;
+      _CreateUniversalApkFromBundle;
+    </SignAndroidPackageDependsOn>
+    <SignAndroidPackageDependsOn Condition=" '$(BuildingInsideVisualStudio)' == 'true' ">
+      $(_MinimalSignAndroidPackageDependsOn);
+    </SignAndroidPackageDependsOn>
+    <!-- This should function similar to SignAndroidPackage inside VS plus also deploy -->
+    <DeployToDeviceDependsOnTargets Condition=" '$(_AndroidFastDeploymentSupported)' == 'true' ">
+      $(_MinimalSignAndroidPackageDependsOn);
+      _Upload;
+    </DeployToDeviceDependsOnTargets>
+    <DeployToDeviceDependsOnTargets Condition=" '$(_AndroidFastDeploymentSupported)' != 'true' ">
+      $(_MinimalSignAndroidPackageDependsOn);
+      _DeployApk;
+      _DeployAppBundle;
+    </DeployToDeviceDependsOnTargets>
+  </PropertyGroup>
+
   <PropertyGroup Condition=" '$(AndroidApplication)' != 'True' ">
     <BuildDependsOn>
       $(_AndroidBuildDependsOn);

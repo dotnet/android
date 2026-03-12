@@ -2,7 +2,7 @@
 - [Build Configuration](#build-configuration)
   - [Options suitable to use in builds for public use](#options-suitable-to-use-in-builds-for-public-use)
   - [Options suitable for local development](#options-suitable-for-local-development)
-    - [Native runtime (`src/monodroid`)](#native-runtime-srcmonodroid)
+    - [Native runtime (`src/native`)](#native-runtime-srcnative)
       - [Disable function inlining](#disable-function-inlining)
       - [Don't strip the runtime shared libraries](#dont-strip-the-runtime-shared-libraries)
 <!--toc:end-->
@@ -146,13 +146,13 @@ Overridable MSBuild properties include:
 
 ## Options suitable for local development
 
-### Native runtime (`src/monodroid`)
+### Native runtime (`src/native`)
 
 Note that in order for the native build settings to have full effect, one needs to make sure that
 the entire native runtime is rebuilt **and** that all `cmake` files are regenerated.  This is true
 on the very first build, but rebuilds may require forcing the entire runtime to be rebuilt.
 
-The simplest way to do it is to remove `src/monodroid/obj` and run the usual build from the
+The simplest way to do it is to remove `src/native/obj` and run the usual build from the
 repository's root directory.
 
 #### Disable function inlining
@@ -164,8 +164,8 @@ location instead of the inlined function where crash actually happened.  There a
 enable this mode of operation:
 
   1. Export the `XA_NO_INLINE` environment variable before building either the entire repository
-     or just `src/monodroid/`
-  2. Set the MSBuild property `DoNotInlineMonodroid` to `true`, when building `src/monodroid/monodroid.csproj`
+     or just `src/native/`
+  2. Set the MSBuild property `DoNotInlineMonodroid` to `true`, when building `src/native/native-*.csproj`
 
 Doing either will force all normally inlined functions to be strictly preserved and kept
 separate.  The generated code will be slower, but crash stack traces should be much more precise.
@@ -178,5 +178,5 @@ stack traces rarely point to anything more than the surrounding function name (w
 be misleading, too).  Just as for inlining, the no-strip mode can be enabled with one of two ways:
 
   1. Export the `XA_NO_STRIP` environment variable before building either the entire repository
-     or just `src/monodroid/`
-  2. Set the MSBuild property `DoNotStripMonodroid` to `true`, when building `src/monodroid/monodroid.csproj`
+     or just `src/native/`
+  2. Set the MSBuild property `DoNotStripMonodroid` to `true`, when building `src/native/native-*.csproj`

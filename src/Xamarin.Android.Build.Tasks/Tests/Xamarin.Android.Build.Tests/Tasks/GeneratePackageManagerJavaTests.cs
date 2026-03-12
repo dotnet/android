@@ -76,7 +76,6 @@ namespace Xamarin.Android.Build.Tests
 				BuildEngine = new MockBuildEngine (TestContext.Out),
 				MainAssembly = "linked/HelloAndroid.dll",
 				OutputDirectory = Path.Combine (path, "src", "mono"),
-				ResolvedUserAssemblies = resolvedUserAssembliesList.ToArray (),
 			};
 
 			var configTask = new GenerateNativeApplicationConfigSources {

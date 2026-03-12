@@ -1,5 +1,5 @@
 <Project>
-  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" TaskFactory="TaskHostFactory" Runtime="NET" />
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
@@ -13,7 +13,6 @@
     <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
-    <LangVersion>10</LangVersion>
     <NoStdLib>true</NoStdLib>
     <Nullable>enable</Nullable>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>

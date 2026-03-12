@@ -22,6 +22,9 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <DisableUnsupportedError Condition=" $([MSBuild]::IsOSPlatform('windows')) and '$(DisableUnsupportedError)' == '' ">true</DisableUnsupportedError>
     <!-- HACK: make dotnet restore include Microsoft.NETCore.App.Runtime.NativeAOT.linux-bionic-arm64 -->
     <_IsPublishing Condition=" '$(_IsPublishing)' == '' ">true</_IsPublishing>
+    <!-- ResolvedFileToPublish is not populated until _AndroidComputeIlcCompileInputs, so
+         proguard generation must run after that target instead of after ILLink. -->
+    <_GenerateProguardAfterTargets>_AndroidComputeIlcCompileInputs</_GenerateProguardAfterTargets>
   </PropertyGroup>
 
   <!-- Default property values for NativeAOT Debug configuration -->
@@ -63,14 +66,50 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <PropertyGroup>
       <_NdkAbi Condition=" '$(RuntimeIdentifier)' == 'android-arm64' ">aarch64</_NdkAbi>
       <_NdkAbi Condition=" '$(RuntimeIdentifier)' == 'android-x64' ">x86_64</_NdkAbi>
+      <_NDKApiLevel Condition=" '$(RuntimeIdentifier)' == 'android-arm64' ">$(AndroidNdkApiLevel_Arm64)</_NDKApiLevel>
+      <_NDKApiLevel Condition=" '$(RuntimeIdentifier)' == 'android-x64' ">$(AndroidNdkAPiLevel_X64)</_NDKApiLevel>
       <_NdkSysrootAbi>$(_NdkAbi)-linux-android</_NdkSysrootAbi>
       <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('windows')) ">windows-x86_64</_NdkPrebuiltAbi>
       <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('osx')) ">darwin-x86_64</_NdkPrebuiltAbi>
       <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('linux')) ">linux-x86_64</_NdkPrebuiltAbi>
+
+      <!-- We need to explicitly specify the extension on Windows, since some Android NDK versions
+           for Windows contain bash shell scripts without the extension, in addition to the
+           Windows-specific .cmd ones. We must use the latter since end users might not have bash
+           installed on Windows -->
+      <_NdkWrapperScriptExt Condition=" $([MSBuild]::IsOSPlatform('windows')) ">.cmd</_NdkWrapperScriptExt>
       <_NdkSysrootDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/sysroot/usr/lib/$(_NdkSysrootAbi)/</_NdkSysrootDir>
       <_NdkBinDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/bin/</_NdkBinDir>
-      <CppCompilerAndLinker>clang++</CppCompilerAndLinker>
+
+      <!--
+          Don't call `clang` directly, use the wrapper scripts instead since they properly pass
+          arguments required to link the application using the right API level libraries.
+          Using the script also makes it certain that we're not invoking a random `clang` in
+          from the system but rather the NDK one.
+
+          Also, we cannot use $(_NdkBinDir) here because, on Windows, the `Exec` task will get
+          confused by the forward slash in the path (even though it's a valid path separator
+          character on Windows) and signal the following error:
+
+            SetupOSSpecificProps:
+              where /Q "C:\Android\android-sdk\ndk\29.0.14206865\toolchains/llvm/prebuilt/windows-x86_64/bin/clang++"
+            1>EXEC : error : Invalid pattern is specified in "path:pattern".
+            The command "where /Q "C:\Android\android-sdk\ndk\29.0.14206865\toolchains/llvm/prebuilt/windows-x86_64/bin/clang++"" exited with code 2.
+
+          This could be fixed by making sure $(_NdkBinDir) path is fixed-up to use the canonical
+          form of path separation for the host OS, but it's simpler to just use the NDK-specific
+          compiler/linker wrapper script name.
+
+          Also, do NOT use `clang++` here because it will link the dynamic libc++ library into the
+          application. If, for some reason, `clang++` has to be used, `<LinkerArgs>` need to be
+          added to pass `-nostdlib` to it.
+      -->
+      <CppCompilerAndLinker>$(_NdkAbi)-linux-android$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppCompilerAndLinker>
+      <CppLinker>$(_NdkAbi)-linux-android$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppLinker>
       <ObjCopyName>llvm-objcopy</ObjCopyName>
+
+      <!-- We must ensure this is `false`, as it would interfere with statically linking libc++ -->
+      <LinkStandardCPlusPlusLibrary>false</LinkStandardCPlusPlusLibrary>
 
       <!-- Example settings from: https://github.com/xamarin/xamarin-macios/blob/c43d4ea40bc777969e3b158cf46446df292d8449/dotnet/targets/Xamarin.Shared.Sdk.targets#L541-L550 -->
       <RunILLink>true</RunILLink>
@@ -111,13 +150,21 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <TrimmerRootAssembly Include="@(_AndroidILLinkAssemblies->'%(Filename)')" Exclude="System.Private.CoreLib" TrimMode="All" />
       <!-- Passes linked assemblies to outer MSBuild tasks/targets -->
       <ResolvedFileToPublish Include="@(IlcCompileInput);@(_AndroidILLinkAssemblies)" RuntimeIdentifier="$(RuntimeIdentifier)" />
-      <!-- Include libc++ -->
-      <ResolvedFileToPublish Include="$(_NdkSysrootDir)libc++_shared.so" RuntimeIdentifier="$(RuntimeIdentifier)" />
+
       <!-- Satellite assemblies -->
       <IlcSatelliteAssembly Include="$(_OuterIntermediateSatelliteAssembliesWithTargetPath)" />
 
-      <LinkerArg Include="@(RuntimePackAsset->WithMetadataValue('Filename', 'libnaot-android.$(Configuration.ToLower())-static-$(Configuration.ToLower())'))" />
-      <LinkerArg Include="$(_NdkSysrootDir)libc++_shared.so" />
+      <_NdkLibs Include="@(RuntimePackAsset->WithMetadataValue('Filename', 'libnaot-android.$(Configuration.ToLower())-static-$(Configuration.ToLower())'))" />
+
+      <!-- Include libc++ -->
+      <_NdkLibs Include="$(_NdkSysrootDir)libc++_static.a" />
+      <_NdkLibs Include="$(_NdkSysrootDir)libc++abi.a" />
+
+      <LinkerArg Include="&quot;%(_NdkLibs.Identity)&quot;" />
+
+      <!-- This library conflicts with static libc++ -->
+      <NativeLibrary Remove="$(IlcSdkPath)libstdc++compat.a" />
+      <LinkerArg Remove="$(IlcSdkPath)libstdc++compat.a" />
 
       <!-- Every p/invoke using the `xa-internal-api` "library" will be called directly -->
       <DirectPInvoke Include="xa-internal-api" />
@@ -156,6 +203,15 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       </_PrivateEnvironmentNativeObjectFile>
 
       <_PrivateAndroidNaotResolvedAssemblyFiles Include="@(ResolvedFileToPublish->Distinct())" Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' " />
+      <!-- In .NET 11+, the SDK's ILLink target populates ResolvedFileToPublish with linked assemblies
+           (via _LinkedResolvedFileToPublish) WITHOUT RuntimeIdentifier metadata. _AndroidComputeIlcCompileInputs
+           adds the same items WITH RuntimeIdentifier, but ->Distinct() keeps the first occurrence (without metadata).
+           Stamp RuntimeIdentifier on any items that lack it, since we're in the inner build with a single RID. -->
+      <_PrivateAndroidNaotResolvedAssemblyFiles
+          Update="@(_PrivateAndroidNaotResolvedAssemblyFiles)"
+          Condition=" '%(_PrivateAndroidNaotResolvedAssemblyFiles.RuntimeIdentifier)' == '' "
+          RuntimeIdentifier="$(RuntimeIdentifier)"
+      />
     </ItemGroup>
   </Target>
 
@@ -170,7 +226,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
         OutputSources="@(_PrivateJniInitFuncsAssemblySource)" />
 
     <GenerateNativeAotEnvironmentAssemblerSources
-        Debug="$(AndroidIncludeDebugSymbols)"
         Environments="@(AndroidEnvironment);@(LibraryEnvironments)"
         HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
         OutputSources="@(_PrivateEnvironmentAssemblySource)"
