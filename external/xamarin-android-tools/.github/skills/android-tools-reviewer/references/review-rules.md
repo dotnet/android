@@ -127,6 +127,7 @@ Framework. Every API call must work on both targets.
 | Check | What to look for |
 |-------|-----------------|
 | **Use `ProcessUtils`** | All process creation must go through `ProcessUtils.CreateProcessStartInfo()` and `ProcessUtils.StartProcess()`. No direct `new ProcessStartInfo()` or `Process.Start()`. |
+| **Use `Action<TraceLevel, string>` logger, not `Debug.WriteLine`** | Diagnostic output must use the existing `Action<TraceLevel, string>? logger` delegate pattern — never `System.Diagnostics.Debug.WriteLine()` or `Console.WriteLine()`. `Debug.WriteLine()` only reaches attached debuggers (invisible in CI and production), and `Console.WriteLine()` bypasses MSBuild's logging pipeline. Methods that might be called from MSBuild tasks must accept a `logger` parameter and invoke it with the appropriate `TraceLevel`. See `AndroidSdkInfo.DefaultConsoleLogger` for the canonical implementation. |
 | **Use `FileUtil`** | File extraction, downloads, checksum verification, and path operations belong in `FileUtil`. Don't duplicate file helpers in domain classes. |
 | **Null-object pattern** | Methods accepting nullable dependencies (`IProgress<T>?`, `ILogger?`, `Action<string>?`) should assign a null-object sentinel early (e.g., `progress ??= NullProgress.Instance`, `logger ??= NullLogger.Instance`) and then use the dependency without `?.` null checks throughout the method. Scattered `logger?.Log(...)` or `progress?.Report(...)` calls are a code smell — they add noise, invite missed spots, and signal a missing null-object type. If no null-object type exists yet, recommend creating one. |
 | **Version-based directories** | Install SDK/JDK to versioned paths (`cmdline-tools/19.0/`, not `cmdline-tools/latest/`). Versioned paths are self-documenting and allow side-by-side installs. |
@@ -137,7 +138,7 @@ Framework. Every API call must work on both targets.
 | **Track TODOs as issues** | A `// TODO` hidden in code will be forgotten. File an issue and reference it in the comment. |
 | **Remove stale comments** | If the code changed, update the comment. Comments that describe old behavior are misleading. |
 
-**Postmortem refs:** #15, #16, #23, #36, #38
+**Postmortem refs:** #15, #16, #23, #36, #38, [#282 comment](https://github.com/dotnet/android-tools/pull/282#discussion_r2925449030)
 
 ---
 
@@ -157,6 +158,7 @@ These are patterns that AI-generated code consistently gets wrong:
 | **Docs describe intent not reality** | AI doc comments often describe what the code *should* do, not what it *actually* does. Review doc comments against the implementation. |
 | **Unused parameters** | AI adds `CancellationToken` parameters but never observes them, or accepts `additionalArgs` as a string and interpolates it into a command. Unused CancellationToken is a broken contract; string args are injection risks. |
 | **Null-forgiving operator (`!`)** | The postfix `!` null-forgiving operator (e.g., `foo!.Bar`) is banned. If the value can be null, add a proper null check. If it can't be null, make the parameter/variable non-nullable. AI frequently sprinkles `!` to make the compiler happy — this turns compile-time warnings into runtime `NullReferenceException`s. Use `IsNullOrEmpty()` extension methods or null-coalescing instead. Note: this rule is about the postfix `!` operator, not the logical negation `!` (e.g., `if (!someBool)` or `if (!string.IsNullOrEmpty (s))`). |
+| **`Debug.WriteLine` for logging** | AI catch blocks often log with `System.Diagnostics.Debug.WriteLine()` or `Console.WriteLine()` — neither integrates with the codebase logger pattern (`Action<TraceLevel, string>`). See rule in §9. |
 | **`git commit --amend`** | AI uses `--amend` on commits that are already pushed or belong to another author. Always create new commits — the maintainer will squash as needed. |
 | **Commit messages omit non-obvious choices** | Behavioral decisions and known limitations belong in the commit message, not just the code. |
 | **Typos in user-visible strings** | Users copy-paste error messages into bug reports. Get them right. |
