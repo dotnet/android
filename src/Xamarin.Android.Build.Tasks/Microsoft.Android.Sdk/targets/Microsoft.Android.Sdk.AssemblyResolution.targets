@@ -57,6 +57,11 @@ _ResolveAssemblies MSBuild target.
             Condition=" '%(Extension)' == '.dll' or '%(Extension)' == '.pdb' "
             OriginalItemSpec="%(Identity)" />
         <_MissingAssemblyNames Remove="@(_ResolvedPublishFileNames)" />
+        <!-- Exclude native DLLs: NuGet packages place native binaries under lib/native/ or
+             runtimes/*/native/ paths. These are not managed assemblies and must not be passed
+             to the linker (Mono.Cecil will throw BadImageFormatException). -->
+        <_MissingAssemblyNames Remove="@(_MissingAssemblyNames)"
+            Condition=" $([System.String]::new('%(OriginalItemSpec)').Replace('\','/').Contains('/native/')) " />
         <_ResolvedPublishFileNames Remove="@(_ResolvedPublishFileNames)" />
       </ItemGroup>
       <!-- _SourceItemsToCopyToPublishDirectory may contain multiple items with the same filename
