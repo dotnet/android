@@ -67,18 +67,8 @@ public sealed class JcwJavaSourceGenerator
 				Directory.CreateDirectory (dir);
 			}
 
-			using var stringWriter = new StringWriter ();
-			stringWriter.NewLine = "\n";
-			Generate (type, stringWriter);
-			string newContent = stringWriter.ToString ();
-
-			// Skip writing if content hasn't changed — avoids unnecessary javac recompilation
-			if (File.Exists (filePath) && File.ReadAllText (filePath) == newContent) {
-				generatedFiles.Add (filePath);
-				continue;
-			}
-
-			File.WriteAllText (filePath, newContent);
+			using var writer = new StreamWriter (filePath);
+			Generate (type, writer);
 			generatedFiles.Add (filePath);
 		}
 
