@@ -56,7 +56,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			return !Log.HasLoggedErrors;
 		}
 
-		GeneratedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion);
+		GeneratedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, assemblyPaths);
 		GeneratedJavaFiles = GenerateJcwJavaSources (allPeers);
 
 		return !Log.HasLoggedErrors;
@@ -70,8 +70,16 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		return peers;
 	}
 
-	ITaskItem [] GenerateTypeMapAssemblies (List<JavaPeerInfo> allPeers, Version systemRuntimeVersion)
+	ITaskItem [] GenerateTypeMapAssemblies (List<JavaPeerInfo> allPeers, Version systemRuntimeVersion,
+		IReadOnlyList<string> assemblyPaths)
 	{
+		// Build a map from assembly name → source path for timestamp comparison
+		var sourcePathByName = new Dictionary<string, string> (StringComparer.Ordinal);
+		foreach (var path in assemblyPaths) {
+			var name = Path.GetFileNameWithoutExtension (path);
+			sourcePathByName [name] = path;
+		}
+
 		var peersByAssembly = allPeers
 			.GroupBy (p => p.AssemblyName, StringComparer.Ordinal)
 			.OrderBy (g => g.Key, StringComparer.Ordinal);
@@ -79,25 +87,50 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		var generatedAssemblies = new List<ITaskItem> ();
 		var perAssemblyNames = new List<string> ();
 		var generator = new TypeMapAssemblyGenerator (systemRuntimeVersion);
+		bool anyRegenerated = false;
 
 		foreach (var group in peersByAssembly) {
 			string assemblyName = $"_{group.Key}.TypeMap";
 			string outputPath = Path.Combine (OutputDirectory, assemblyName + ".dll");
+			perAssemblyNames.Add (assemblyName);
+
+			if (IsUpToDate (outputPath, group.Key, sourcePathByName)) {
+				Log.LogDebugMessage ($"  {assemblyName}: up to date, skipping");
+				generatedAssemblies.Add (new TaskItem (outputPath));
+				continue;
+			}
 
 			generator.Generate (group.ToList (), outputPath, assemblyName);
 			generatedAssemblies.Add (new TaskItem (outputPath));
-			perAssemblyNames.Add (assemblyName);
+			anyRegenerated = true;
 
 			Log.LogDebugMessage ($"  {assemblyName}: {group.Count ()} types");
 		}
 
-		var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
+		// Root assembly references all per-assembly typemaps — regenerate if any changed
 		string rootOutputPath = Path.Combine (OutputDirectory, "_Microsoft.Android.TypeMaps.dll");
-		rootGenerator.Generate (perAssemblyNames, rootOutputPath);
+		if (anyRegenerated || !File.Exists (rootOutputPath)) {
+			var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
+			rootGenerator.Generate (perAssemblyNames, rootOutputPath);
+			Log.LogDebugMessage ($"  Root: {perAssemblyNames.Count} per-assembly refs");
+		} else {
+			Log.LogDebugMessage ($"  Root: up to date, skipping");
+		}
 		generatedAssemblies.Add (new TaskItem (rootOutputPath));
 
-		Log.LogDebugMessage ($"Generated {generatedAssemblies.Count} typemap assemblies ({perAssemblyNames.Count} per-assembly + root).");
+		Log.LogDebugMessage ($"Generated {generatedAssemblies.Count} typemap assemblies.");
 		return generatedAssemblies.ToArray ();
+	}
+
+	static bool IsUpToDate (string outputPath, string assemblyName, Dictionary<string, string> sourcePathByName)
+	{
+		if (!File.Exists (outputPath)) {
+			return false;
+		}
+		if (!sourcePathByName.TryGetValue (assemblyName, out var sourcePath)) {
+			return false;
+		}
+		return File.GetLastWriteTimeUtc (outputPath) >= File.GetLastWriteTimeUtc (sourcePath);
 	}
 
 	ITaskItem [] GenerateJcwJavaSources (List<JavaPeerInfo> allPeers)
