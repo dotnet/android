@@ -258,7 +258,7 @@
   -->
   <Target Name="_StripEmbeddedLibraries"
       AfterTargets="ILLink"
-      Condition=" '$(PublishTrimmed)' == 'true' ">
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(MSBuildLastTaskResult)' != 'false' ">
     <ItemGroup>
       <_StripEmbeddedLibrariesAssembly Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
     </ItemGroup>

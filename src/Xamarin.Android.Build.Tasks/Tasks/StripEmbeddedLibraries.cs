@@ -110,8 +110,9 @@ public class StripEmbeddedLibraries : AndroidTask
 			if (Directory.Exists (directory) && !Directory.EnumerateFileSystemEntries (directory).Any ()) {
 				Directory.Delete (directory);
 			}
-		} catch (Exception) {
-			// Ignore cleanup failures
+		} catch (Exception ex) {
+			Log.LogDebugMessage ($"  Failed to clean up directory '{directory}'");
+			Log.LogDebugMessage ($"  {ex}");
 		}
 	}
 
@@ -170,7 +171,7 @@ public class StripEmbeddedLibraries : AndroidTask
 			Log.LogDebugMessage ($"  Deleting: {path}");
 			File.Delete (path);
 		} catch (Exception ex) {
-			Log.LogWarning ($"Unable to delete temporary file '{path}'");
+			Log.LogDebugMessage ($"  Unable to delete temporary file '{path}'");
 			Log.LogDebugMessage ($"  {ex}");
 		}
 	}
