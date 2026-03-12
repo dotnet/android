@@ -8,8 +8,8 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests;
 
 public partial class ScannerComparisonTests
 {
-	static readonly Lazy<List<JavaPeerInfo>> monoAndroidPeers = new (() => ScanPeers (AllAssemblyPaths));
-	static readonly Lazy<List<JavaPeerInfo>> userFixturePeers = new (() => {
+	static readonly Lazy<List<JavaPeerInfo>> MonoAndroidPeers = new (() => ScanPeers (AllAssemblyPaths));
+	static readonly Lazy<List<JavaPeerInfo>> UserFixturePeers = new (() => {
 		var paths = AllUserTypesAssemblyPaths
 			?? throw new InvalidOperationException ("UserTypesFixture.dll not found.");
 		return ScanPeers (paths);
@@ -103,9 +103,9 @@ public partial class ScannerComparisonTests
 			method.ManagedMethodName == "OnCreate" && method.JniName == "onCreate");
 	}
 
-	static List<JavaPeerInfo> ScanMonoAndroidPeers () => monoAndroidPeers.Value;
+	static List<JavaPeerInfo> ScanMonoAndroidPeers () => MonoAndroidPeers.Value;
 
-	static List<JavaPeerInfo> ScanUserFixturePeers () => userFixturePeers.Value;
+	static List<JavaPeerInfo> ScanUserFixturePeers () => UserFixturePeers.Value;
 
 	static List<JavaPeerInfo> ScanPeers (string[] assemblyPaths)
 	{

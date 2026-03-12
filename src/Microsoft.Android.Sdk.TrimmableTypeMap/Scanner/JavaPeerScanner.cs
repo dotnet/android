@@ -673,6 +673,7 @@ sealed class JavaPeerScanner : IDisposable
 
 		string compatName = ns.Length == 0
 			? typeName
+			// Compat format: UserApp.Models -> userapp.models/TypeName (preserves dots, no slash replacement)
 			: $"{ns.ToLowerInvariant ()}/{typeName}";
 
 		return (jniName, compatName);
