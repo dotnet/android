@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -79,22 +79,15 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var keytoolName = TestEnvironment.IsWindows ? "keytool.exe" : "keytool";
 			var keytoolPath = Path.Combine (AndroidSdkResolver.GetJavaSdkPath (), "bin", keytoolName);
-			var psi = new ProcessStartInfo {
-				FileName = keytoolPath,
-				Arguments = $"-genkeypair -v -keystore \"{keystorePath}\" -alias {keyAlias} -keyalg RSA -keysize 2048 -validity 10000 -storepass {storePass} -keypass {keyPass} -dname \"CN=Test, OU=Test, O=Test, L=Test, ST=Test, C=US\"",
-				CreateNoWindow = true,
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				UseShellExecute = false,
-			};
-			using (var proc = Process.Start (psi)) {
-				// Read streams before WaitForExit to avoid deadlock
-				proc.StandardOutput.ReadToEnd ();
-				var stderr = proc.StandardError.ReadToEnd ();
-				proc.WaitForExit ();
-				if (proc.ExitCode != 0) {
-					throw new InvalidOperationException ($"keytool failed with exit code {proc.ExitCode}: {stderr}");
-				}
+			var arguments = $"-genkeypair -v -keystore \"{keystorePath}\" -alias {keyAlias} -keyalg RSA -keysize 2048 -validity 10000 -storepass {storePass} -keypass {keyPass} -dname \"CN=Test, OU=Test, O=Test, L=Test, ST=Test, C=US\"";
+			var stderr = new List<string> ();
+			int exitCode = MonoAndroidHelper.RunProcess (
+				keytoolPath, arguments,
+				onOutput: (s, e) => { },
+				onError: (s, e) => { if (e.Data != null) stderr.Add (e.Data); }
+			);
+			if (exitCode != 0) {
+				throw new InvalidOperationException ($"keytool failed with exit code {exitCode}: {string.Join (Environment.NewLine, stderr)}");
 			}
 		}
 	}
