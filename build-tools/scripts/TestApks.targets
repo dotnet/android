@@ -224,7 +224,7 @@
     </PropertyGroup>
     <Exec
         Condition=" !Exists('$(_KeyStore)') "
-        Command="&quot;$(_KeytoolPath)&quot; -genkeypair -v -keystore &quot;$(_KeyStore)&quot; -alias $(_KeyAlias) -keyalg RSA -keysize 2048 -validity 10000 -storepass $(_StorePass) -keypass $(_KeyPass) -dname &quot;CN=Test, OU=Test, O=Test, L=Test, ST=Test, C=US&quot;"
+        Command="&quot;$(_KeytoolPath)&quot; -genkeypair -v -storetype pkcs12 -keystore &quot;$(_KeyStore)&quot; -alias $(_KeyAlias) -keyalg RSA -keysize 2048 -validity 10000 -storepass $(_StorePass) -keypass $(_KeyPass) -dname &quot;CN=Test, OU=Test, O=Test, L=Test, ST=Test, C=US&quot;"
     />
     <Xamarin.Android.Tools.BootstrapTasks.BundleTool
         Arguments="build-apks --connected-device --overwrite --mode default --bundle &quot;%(TestAab.Identity)&quot; --output &quot;%(TestAab.Identity).apks&quot;"

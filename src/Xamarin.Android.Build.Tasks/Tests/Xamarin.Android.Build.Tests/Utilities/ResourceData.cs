@@ -79,7 +79,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var keytoolName = TestEnvironment.IsWindows ? "keytool.exe" : "keytool";
 			var keytoolPath = Path.Combine (AndroidSdkResolver.GetJavaSdkPath (), "bin", keytoolName);
-			var arguments = $"-genkeypair -v -keystore \"{keystorePath}\" -alias {keyAlias} -keyalg RSA -keysize 2048 -validity 10000 -storepass {storePass} -keypass {keyPass} -dname \"CN=Test, OU=Test, O=Test, L=Test, ST=Test, C=US\"";
+			var arguments = $"-genkeypair -v -storetype pkcs12 -keystore \"{keystorePath}\" -alias {keyAlias} -keyalg RSA -keysize 2048 -validity 10000 -storepass {storePass} -keypass {keyPass} -dname \"CN=Test, OU=Test, O=Test, L=Test, ST=Test, C=US\"";
 			var stderr = new List<string> ();
 			int exitCode = MonoAndroidHelper.RunProcess (
 				keytoolPath, arguments,
