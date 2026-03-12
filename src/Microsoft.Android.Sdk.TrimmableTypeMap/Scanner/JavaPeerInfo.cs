@@ -8,7 +8,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// Contains all data needed by downstream generators (TypeMap IL, UCO wrappers, JCW Java sources).
 /// Generators consume this data model — they never touch PEReader/MetadataReader.
 /// </summary>
-sealed record JavaPeerInfo
+public sealed record JavaPeerInfo
 {
 	/// <summary>
 	/// JNI type name, e.g., "android/app/Activity".
@@ -116,7 +116,7 @@ sealed record JavaPeerInfo
 /// Contains all data needed to generate a UCO wrapper, a JCW native declaration,
 /// and a RegisterNatives call.
 /// </summary>
-sealed record MarshalMethodInfo
+public sealed record MarshalMethodInfo
 {
 	/// <summary>
 	/// JNI method name, e.g., "onCreate".
@@ -200,7 +200,7 @@ sealed record MarshalMethodInfo
 /// <summary>
 /// Describes a JNI parameter for UCO method generation.
 /// </summary>
-sealed record JniParameterInfo
+public sealed record JniParameterInfo
 {
 	/// <summary>
 	/// JNI type descriptor, e.g., "Landroid/os/Bundle;", "I", "Z".
@@ -216,7 +216,7 @@ sealed record JniParameterInfo
 /// <summary>
 /// Describes a Java constructor to emit in the JCW .java source file.
 /// </summary>
-sealed record JavaConstructorInfo
+public sealed record JavaConstructorInfo
 {
 	/// <summary>
 	/// JNI constructor signature, e.g., "(Landroid/content/Context;)V".
@@ -270,7 +270,7 @@ sealed record JavaFieldInfo
 /// <summary>
 /// Describes how to call the activation constructor for a Java peer type.
 /// </summary>
-sealed record ActivationCtorInfo
+public sealed record ActivationCtorInfo
 {
 	/// <summary>
 	/// The type that declares the activation constructor.
@@ -289,7 +289,7 @@ sealed record ActivationCtorInfo
 	public required ActivationCtorStyle Style { get; init; }
 }
 
-enum ActivationCtorStyle
+public enum ActivationCtorStyle
 {
 	/// <summary>
 	/// Xamarin.Android style: (IntPtr handle, JniHandleOwnership transfer)

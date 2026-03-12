@@ -14,7 +14,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 ///   Phase 1: Build per-assembly indices (fast, O(1) lookups)
 ///   Phase 2: Analyze types using cached indices
 /// </summary>
-sealed class JavaPeerScanner : IDisposable
+public sealed class JavaPeerScanner : IDisposable
 {
 	readonly Dictionary<string, AssemblyIndex> assemblyCache = new (StringComparer.Ordinal);
 	readonly Dictionary<(string typeName, string assemblyName), ActivationCtorInfo> activationCtorCache = new ();
