@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Build.Framework;
 using NUnit.Framework;
 using System.Collections.Generic;
@@ -36,9 +37,21 @@ namespace Xamarin.Android.Build.Tests
 
 		void GetValidKeyStore ()
 		{
-			using (var keyStream = typeof (XamarinAndroidCommonProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.test.keystore"))
-			using (var fileStream = File.Create (temp)) {
-				keyStream.CopyTo (fileStream);
+			File.Delete (temp);
+			var task = new AndroidCreateDebugKey {
+				BuildEngine = engine,
+				KeyStore = temp,
+				StorePass = "android",
+				KeyAlias = "mykey",
+				KeyPass = "android",
+				KeyAlgorithm = "RSA",
+				Validity = 10000,
+				StoreType = "pkcs12",
+				Command = "-genkeypair",
+				ToolPath = keyToolPath,
+			};
+			if (!task.Execute ()) {
+				throw new InvalidOperationException ("Failed to generate test keystore");
 			}
 		}
 

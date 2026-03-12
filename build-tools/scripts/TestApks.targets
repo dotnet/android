@@ -211,14 +211,19 @@
   <Target Name="DeployTestAabs"
       Condition=" '@(TestAab)' != '' ">
     <PropertyGroup>
-      <_KeyStore>$(XamarinAndroidSourcePath)\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Resources\Base\test.keystore</_KeyStore>
+      <_KeyStore>$([System.IO.Path]::Combine ('$(IntermediateOutputPath)', 'test.keystore'))</_KeyStore>
       <_KeyAlias>mykey</_KeyAlias>
       <_KeyPass>android</_KeyPass>
       <_StorePass>android</_StorePass>
+      <_KeytoolPath>$(JavaSdkDirectory)\bin\keytool</_KeytoolPath>
       <!-- Support for running against a system installation of XA. -->
       <BundleToolJarPath Condition=" !Exists('$(BundleToolJarPath)') ">$(AndroidBundleToolJarPath)</BundleToolJarPath>
       <JavaPath Condition=" '$(JavaPath)' == '' ">$(JavaSdkDirectory)\bin\java</JavaPath>
     </PropertyGroup>
+    <Exec
+        Condition=" !Exists('$(_KeyStore)') "
+        Command="&quot;$(_KeytoolPath)&quot; -genkeypair -v -keystore &quot;$(_KeyStore)&quot; -alias $(_KeyAlias) -keyalg RSA -keysize 2048 -validity 10000 -storepass $(_StorePass) -keypass $(_KeyPass) -dname &quot;CN=Test, OU=Test, O=Test, L=Test, ST=Test, C=US&quot;"
+    />
     <Xamarin.Android.Tools.BootstrapTasks.BundleTool
         Arguments="build-apks --connected-device --overwrite --mode default --bundle &quot;%(TestAab.Identity)&quot; --output &quot;%(TestAab.Identity).apks&quot;"
         ContinueOnError="ErrorAndContinue"

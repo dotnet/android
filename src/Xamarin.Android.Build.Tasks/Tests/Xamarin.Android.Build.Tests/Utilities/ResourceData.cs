@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -54,13 +55,45 @@ namespace Xamarin.Android.Build.Tests
 			return m.ToArray ();
 		}
 
-		public static byte [] GetKeystore (string keyname = "test.keystore")
+		static readonly object keystoreLock = new object ();
+		static byte [] cachedKeystore;
+
+		public static byte [] GetKeystore ()
 		{
-			var assembly = typeof (XamarinAndroidCommonProject).Assembly;
-			using (var stream = assembly.GetManifestResourceStream ($"Xamarin.ProjectTools.Resources.Base.{keyname}")) {
-				var data = new byte [stream.Length];
-				_ = stream.Read (data, 0, (int) stream.Length);
-				return data;
+			lock (keystoreLock) {
+				if (cachedKeystore != null)
+					return cachedKeystore;
+
+				var keystorePath = Path.Combine (Path.GetTempPath (), $"test-{Guid.NewGuid ()}.keystore");
+				try {
+					GenerateKeystore (keystorePath);
+					cachedKeystore = File.ReadAllBytes (keystorePath);
+				} finally {
+					File.Delete (keystorePath);
+				}
+				return cachedKeystore;
+			}
+		}
+
+		public static void GenerateKeystore (string keystorePath, string storePass = "android", string keyAlias = "mykey", string keyPass = "android")
+		{
+			var keytoolPath = Path.Combine (AndroidSdkResolver.GetJavaSdkPath (), "bin", "keytool");
+			var psi = new ProcessStartInfo {
+				FileName = keytoolPath,
+				Arguments = $"-genkeypair -v -keystore \"{keystorePath}\" -alias {keyAlias} -keyalg RSA -keysize 2048 -validity 10000 -storepass {storePass} -keypass {keyPass} -dname \"CN=Test, OU=Test, O=Test, L=Test, ST=Test, C=US\"",
+				CreateNoWindow = true,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				UseShellExecute = false,
+			};
+			using (var proc = Process.Start (psi)) {
+				// Read streams before WaitForExit to avoid deadlock
+				proc.StandardOutput.ReadToEnd ();
+				var stderr = proc.StandardError.ReadToEnd ();
+				proc.WaitForExit ();
+				if (proc.ExitCode != 0) {
+					throw new InvalidOperationException ($"keytool failed with exit code {proc.ExitCode}: {stderr}");
+				}
 			}
 		}
 	}
