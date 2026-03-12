@@ -153,9 +153,10 @@ sealed class JcwJavaSourceGenerator
 		string simpleClassName = JniSignatureHelper.GetJavaSimpleName (type.JavaName);
 
 		foreach (var ctor in type.JavaConstructors) {
-			string parameters = FormatParameterList (ctor.Parameters);
-			string superArgs = ctor.SuperArgumentsString ?? FormatArgumentList (ctor.Parameters);
-			string args = FormatArgumentList (ctor.Parameters);
+			var ctorParams = JniSignatureHelper.ParseParameters (ctor.JniSignature);
+			string parameters = FormatParameterList (ctorParams);
+			string superArgs = ctor.SuperArgumentsString ?? FormatArgumentList (ctorParams);
+			string args = FormatArgumentList (ctorParams);
 
 			writer.Write ($$"""
 	public {{simpleClassName}} ({{parameters}})
@@ -170,7 +171,8 @@ sealed class JcwJavaSourceGenerator
 
 		// Write native constructor declarations
 		foreach (var ctor in type.JavaConstructors) {
-			string parameters = FormatParameterList (ctor.Parameters);
+			var nativeCtorParams = JniSignatureHelper.ParseParameters (ctor.JniSignature);
+			string parameters = FormatParameterList (nativeCtorParams);
 			writer.WriteLine ($"\tprivate native void nctor_{ctor.ConstructorIndex} ({parameters});");
 		}
 
@@ -186,10 +188,12 @@ sealed class JcwJavaSourceGenerator
 				continue;
 			}
 
-			string javaReturnType = JniSignatureHelper.JniTypeToJava (method.JniReturnType);
-			bool isVoid = method.JniReturnType == "V";
-			string parameters = FormatParameterList (method.Parameters);
-			string args = FormatArgumentList (method.Parameters);
+			string jniReturnType = JniSignatureHelper.ParseReturnTypeString (method.JniSignature);
+			string javaReturnType = JniSignatureHelper.JniTypeToJava (jniReturnType);
+			bool isVoid = jniReturnType == "V";
+			var methodParams = JniSignatureHelper.ParseParameters (method.JniSignature);
+			string parameters = FormatParameterList (methodParams);
+			string args = FormatArgumentList (methodParams);
 			string returnPrefix = isVoid ? "" : "return ";
 
 			// throws clause for [Export] methods
