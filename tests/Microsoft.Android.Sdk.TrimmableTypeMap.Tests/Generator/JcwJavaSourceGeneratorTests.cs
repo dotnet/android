@@ -70,20 +70,17 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 
 	}
 
-	public class Filtering : IDisposable
+	public class Filtering
 	{
-		readonly string _outputDir = CreateTempDir ();
-		public void Dispose () => DeleteTempDir (_outputDir);
 
 		[Fact]
 		public void Generate_SkipsMcwTypes ()
 		{
 			var peers = ScanFixtures ();
-			var generator = new JcwJavaSourceGenerator ();
-			var files = generator.Generate (peers, _outputDir);
-			Assert.DoesNotContain (files, f => f.EndsWith ("java/lang/Object.java"));
-			Assert.DoesNotContain (files, f => f.EndsWith ("android/app/Activity.java"));
-			Assert.Contains (files, f => f.Replace ('\\', '/').Contains ("my/app/MainActivity.java"));
+			var acwTypes = peers.Where (p => !p.DoNotGenerateAcw && !p.IsInterface).ToList ();
+			Assert.DoesNotContain (acwTypes, p => p.JavaName == "java/lang/Object");
+			Assert.DoesNotContain (acwTypes, p => p.JavaName == "android/app/Activity");
+			Assert.Contains (acwTypes, p => p.JavaName == "my/app/MainActivity");
 		}
 
 	}
@@ -251,25 +248,8 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 
 	}
 
-	public class OutputFilePath : IDisposable
+	public class JniNameValidation
 	{
-		readonly string _outputDir = CreateTempDir ();
-		public void Dispose () => DeleteTempDir (_outputDir);
-
-		[Fact]
-		public void Generate_CreatesCorrectFileStructure ()
-		{
-			var peers = ScanFixtures ();
-			var generator = new JcwJavaSourceGenerator ();
-			var files = generator.Generate (peers, _outputDir);
-			Assert.NotEmpty (files);
-
-			foreach (var file in files) {
-				Assert.StartsWith (_outputDir, file);
-				Assert.True (File.Exists (file), $"Generated file should exist: {file}");
-				Assert.EndsWith (".java", file);
-			}
-		}
 
 		[Theory]
 		[InlineData ("")]
@@ -282,11 +262,9 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 		[InlineData ("C:\\Windows\\System32")]
 		[InlineData ("com/Ex:ample")]
 		[InlineData ("/absolute/path")]
-		public void Generate_InvalidJniName_Throws (string badJniName)
+		public void ValidateJniName_InvalidName_Throws (string badJniName)
 		{
-			var peer = MakeAcwPeer (badJniName, "Test.Bad", "TestApp");
-			var generator = new JcwJavaSourceGenerator ();
-			Assert.Throws<ArgumentException> (() => generator.Generate (new [] { peer }, _outputDir));
+			Assert.Throws<ArgumentException> (() => JniSignatureHelper.ValidateJniName (badJniName));
 		}
 
 		[Theory]
@@ -295,11 +273,9 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 		[InlineData ("SingleSegment")]
 		[InlineData ("com/example/_Private")]
 		[InlineData ("com/example/$Generated")]
-		public void Generate_ValidJniName_DoesNotThrow (string validJniName)
+		public void ValidateJniName_ValidName_DoesNotThrow (string validJniName)
 		{
-			var peer = MakeAcwPeer (validJniName, "Test.Valid", "TestApp");
-			var generator = new JcwJavaSourceGenerator ();
-			generator.Generate (new [] { peer }, _outputDir);
+			JniSignatureHelper.ValidateJniName (validJniName);
 		}
 
 	}

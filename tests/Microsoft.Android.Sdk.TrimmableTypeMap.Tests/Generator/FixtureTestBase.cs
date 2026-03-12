@@ -125,21 +125,4 @@ public abstract class FixtureTestBase
 			.Select (i => reader.GetMemberReference (MetadataTokens.MemberReferenceHandle (i)))
 			.Select (m => reader.GetString (m.Name))
 			.ToList ();
-
-	private protected static string CreateTempDir ()
-	{
-		var dir = Path.Combine (Path.GetTempPath (), $"typemap-test-{Guid.NewGuid ():N}");
-		Directory.CreateDirectory (dir);
-		return dir;
-	}
-
-	private protected static void DeleteTempDir (string dir)
-	{
-		if (Directory.Exists (dir)) {
-			try {
-				Directory.Delete (dir, true);
-			} catch (IOException) {
-			}
-		}
-	}
 }
