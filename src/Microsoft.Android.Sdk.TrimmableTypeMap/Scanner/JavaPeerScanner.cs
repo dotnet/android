@@ -673,7 +673,7 @@ sealed class JavaPeerScanner : IDisposable
 
 		string compatName = ns.Length == 0
 			? typeName
-			: $"{ns.ToLowerInvariant ().Replace ('.', '/')}/{typeName}";
+			: $"{ns.ToLowerInvariant ()}/{typeName}";
 
 		return (jniName, compatName);
 	}

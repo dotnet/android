@@ -65,6 +65,25 @@ namespace UserApp.Receivers
 	}
 }
 
+namespace UserApp.Providers
+{
+	[ContentProvider (Name = "com.example.userapp.SettingsProvider")]
+	public class SettingsProvider : ContentProvider
+	{
+		public override bool OnCreate () => true;
+
+		public override int Delete (Android.Net.Uri? uri, string? selection, string[]? selectionArgs) => 0;
+
+		public override string? GetType (Android.Net.Uri? uri) => null;
+
+		public override Android.Net.Uri? Insert (Android.Net.Uri? uri, ContentValues? values) => null;
+
+		public override Android.Database.ICursor? Query (Android.Net.Uri? uri, string[]? projection, string? selection, string[]? selectionArgs, string? sortOrder) => null;
+
+		public override int Update (Android.Net.Uri? uri, ContentValues? values, string? selection, string[]? selectionArgs) => 0;
+	}
+}
+
 namespace UserApp
 {
 	public class MyBackupAgent : Android.App.Backup.BackupAgent
@@ -87,6 +106,57 @@ namespace UserApp
 	{
 		public MyApp (IntPtr handle, JniHandleOwnership transfer)
 			: base (handle, transfer)
+		{
+		}
+	}
+}
+
+namespace UserApp.Interfaces
+{
+	[Register ("com/example/userapp/IWidgetListener", "", "UserApp.Interfaces.IWidgetListenerInvoker")]
+	public interface IWidgetListener
+	{
+		[Register ("onWidgetChanged", "(Ljava/lang/String;)V", "GetOnWidgetChanged_Ljava_lang_String_Handler:UserApp.Interfaces.IWidgetListenerInvoker")]
+		void OnWidgetChanged (string? value);
+	}
+
+	[Register ("com/example/userapp/IWidgetListener", DoNotGenerateAcw = true)]
+	internal sealed class IWidgetListenerInvoker : Java.Lang.Object, IWidgetListener
+	{
+		public IWidgetListenerInvoker (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+
+		public void OnWidgetChanged (string? value)
+		{
+		}
+	}
+}
+
+namespace UserApp.AbstractWidgets
+{
+	[Register ("com/example/userapp/AbstractWidget")]
+	public abstract class AbstractWidget : Java.Lang.Object
+	{
+		protected AbstractWidget (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+
+		[Register ("performAction", "()V", "GetPerformActionHandler")]
+		public abstract void PerformAction ();
+	}
+
+	[Register ("com/example/userapp/AbstractWidget", DoNotGenerateAcw = true)]
+	internal sealed class AbstractWidgetInvoker : AbstractWidget
+	{
+		public AbstractWidgetInvoker (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+
+		public override void PerformAction ()
 		{
 		}
 	}
