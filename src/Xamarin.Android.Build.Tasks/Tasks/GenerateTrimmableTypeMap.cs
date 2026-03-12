@@ -62,6 +62,13 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		return !Log.HasLoggedErrors;
 	}
 
+	// Future optimization: the scanner currently scans all assemblies on every run.
+	// For incremental builds, we could:
+	// 1. Add a Scan(allPaths, changedPaths) overload that only produces JavaPeerInfo
+	//    for changed assemblies while still indexing all assemblies for cross-assembly
+	//    resolution (base types, interfaces, activation ctors).
+	// 2. Cache scan results per assembly to skip PE I/O entirely for unchanged assemblies.
+	// Both require profiling to determine if they meaningfully improve build times.
 	List<JavaPeerInfo> ScanAssemblies (IReadOnlyList<string> assemblyPaths)
 	{
 		using var scanner = new JavaPeerScanner ();
