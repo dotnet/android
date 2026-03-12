@@ -129,7 +129,18 @@ class AssemblyExtractor : BaseExtractorWithOptions<AssemblyExtractorOptions>
 	// `assemblies` and `pdbs` are expected to contain only entries for the architectures selected by the user.
 	bool Extract (GetOutputStreamForPathFn getOutputStreamForPath, List<ApplicationAssembly> assemblies, List<AssemblyPdb> pdbs)
 	{
+		try {
+			return DoExtract (getOutputStreamForPath, assemblies, pdbs);
+		} finally {
+			Log.Info ();
+			Log.LabeledInfo ("Output directory", Options.TargetDir);
+		}
+	}
+
+	bool DoExtract (GetOutputStreamForPathFn getOutputStreamForPath, List<ApplicationAssembly> assemblies, List<AssemblyPdb> pdbs)
+	{
 		if (assemblies.Count == 0 && pdbs.Count == 0) {
+			Log.Info ("No assemblies or PDBs to extract.");
 			return true;
 		}
 
@@ -180,27 +191,38 @@ class AssemblyExtractor : BaseExtractorWithOptions<AssemblyExtractorOptions>
 
 	bool Extract (Regex? nameRegex, GetOutputStreamForPathFn getOutputStreamForPath, List<AssemblyPdb> pdbs)
 	{
+		if (pdbs.Count == 0) {
+			return true;
+		}
+
 		// `null` nameRegex means match all the assemblies
 		bool processAll = nameRegex == null;
 		var pdbName = new StringBuilder ();
 		bool allIsFine = true;
-		foreach (AssemblyPdb pdb in pdbs) {
-			if (!processAll && !nameRegex!.IsMatch (pdb.Name)) {
-				continue;
+		ulong nExtracted = 0;
+
+		Log.Info ("Extracting PDB files.");
+		try {
+			foreach (AssemblyPdb pdb in pdbs) {
+				if (!processAll && !nameRegex!.IsMatch (pdb.Name)) {
+					continue;
+				}
+
+				pdbName.Clear ().Append (pdb.Name);
+
+				string relName = Path.Combine (Utilities.ArchNameForPath (pdb.Architecture), pdbName.ToString ());
+				string destPath = Path.Combine (Options.TargetDir, relName);
+				Log.Debug ($"Requesting output stream for path '{destPath}'");
+
+				// We don't own the stream, the caller does
+				Stream stream = getOutputStreamForPath (destPath);
+				if (!pdb.WriteToStream (stream)) {
+					Log.Error ($"Failed to write PDB {relName} data to file.");
+					allIsFine = false;
+				}
 			}
-
-			pdbName.Clear ().Append (pdb.Name);
-
-			string relName = Path.Combine (Utilities.ArchNameForPath (pdb.Architecture), pdbName.ToString ());
-			string destPath = Path.Combine (Options.TargetDir, relName);
-			Log.Debug ($"Requesting output stream for path '{destPath}'");
-
-			// We don't own the stream, the caller does
-			Stream stream = getOutputStreamForPath (destPath);
-			if (!pdb.WriteToStream (stream)) {
-				Log.Error ($"Failed to write PDB {relName} data to file.");
-				allIsFine = false;
-			}
+		} finally {
+			Log.LabeledInfo ("Number of extracted PDB files", $"{nExtracted}");
 		}
 
 		return allIsFine;
@@ -208,35 +230,48 @@ class AssemblyExtractor : BaseExtractorWithOptions<AssemblyExtractorOptions>
 
 	bool Extract (Regex? nameRegex, GetOutputStreamForPathFn getOutputStreamForPath, List<ApplicationAssembly> assemblies)
 	{
+		if (assemblies.Count == 0) {
+			return true;
+		}
+
 		// `null` nameRegex means match all the assemblies
 		bool processAll = nameRegex == null;
 		var asmName = new StringBuilder ();
 		bool allIsFine = true;
-		foreach (ApplicationAssembly asm in assemblies) {
-			if (!processAll && !nameRegex!.IsMatch (asm.Name)) {
-				continue;
-			}
+		ulong nExtracted = 0;
 
-			if (asm.IgnoreOnLoad || asm.Size == 0) {
-				Log.Info ($"Not extracting assembly '{asm.Name}' as it has no data (ignored? {asm.IgnoreOnLoad}; size {asm.Size})");
-				continue;
-			}
+		Log.Info ("Extracting assemblies.");
+		try {
+			foreach (ApplicationAssembly asm in assemblies) {
+				if (!processAll && !nameRegex!.IsMatch (asm.Name)) {
+					continue;
+				}
 
-			asmName.Clear ().Append (asm.Name);
-			if (Options.NoDecompress && asm.IsCompressed) {
-				asmName.Append (".lz4");
-			}
+				if (asm.IgnoreOnLoad || asm.Size == 0) {
+					Log.Debug ($"Not extracting assembly as it has no data: '{asm.Name}' (ignored? {asm.IgnoreOnLoad}; size {asm.Size})");
+					continue;
+				}
 
-			string relName = Path.Combine (Utilities.ArchNameForPath (asm.Architecture), asmName.ToString ());
-			string destPath = Path.Combine (Options.TargetDir, relName);
-			Log.Debug ($"Requesting output stream for path '{destPath}'");
+				asmName.Clear ().Append (asm.Name);
+				if (Options.NoDecompress && asm.IsCompressed) {
+					asmName.Append (".lz4");
+				}
 
-			// We don't own the stream, the caller does
-			Stream stream = getOutputStreamForPath (destPath);
-			if (!asm.WriteToStream (stream, decompress: !Options.NoDecompress)) {
-				Log.Error ($"Failed to write assembly {relName} data to file.");
-				allIsFine = false;
+				string relName = Path.Combine (Utilities.ArchNameForPath (asm.Architecture), asmName.ToString ());
+				string destPath = Path.Combine (Options.TargetDir, relName);
+				Log.Debug ($"Requesting output stream for path '{destPath}'");
+
+				// We don't own the stream, the caller does
+				Stream stream = getOutputStreamForPath (destPath);
+				if (!asm.WriteToStream (stream, decompress: !Options.NoDecompress)) {
+					Log.Error ($"Failed to write assembly {relName} data to file.");
+					allIsFine = false;
+				} else {
+					nExtracted++;
+				}
 			}
+		} finally {
+			Log.LabeledInfo ("Number of extracted assemblies", $"{nExtracted}");
 		}
 
 		return allIsFine;
