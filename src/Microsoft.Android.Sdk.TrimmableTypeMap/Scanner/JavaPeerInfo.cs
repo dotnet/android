@@ -155,16 +155,6 @@ sealed record MarshalMethodInfo
 	public required string NativeCallbackName { get; init; }
 
 	/// <summary>
-	/// JNI parameter types for UCO generation.
-	/// </summary>
-	public IReadOnlyList<JniParameterInfo> Parameters { get; init; } = [];
-
-	/// <summary>
-	/// JNI return type descriptor, e.g., "V", "Landroid/os/Bundle;".
-	/// </summary>
-	public required string JniReturnType { get; init; }
-
-	/// <summary>
 	/// True if this is a constructor registration.
 	/// </summary>
 	public bool IsConstructor { get; init; }
@@ -212,12 +202,6 @@ sealed record JavaConstructorInfo
 	/// Ordinal index for the native constructor method (nctor_0, nctor_1, ...).
 	/// </summary>
 	public required int ConstructorIndex { get; init; }
-
-	/// <summary>
-	/// JNI parameter types parsed from the signature.
-	/// Used to generate the Java constructor parameter list.
-	/// </summary>
-	public IReadOnlyList<JniParameterInfo> Parameters { get; init; } = [];
 
 	/// <summary>
 	/// For [Export] constructors: super constructor arguments string.

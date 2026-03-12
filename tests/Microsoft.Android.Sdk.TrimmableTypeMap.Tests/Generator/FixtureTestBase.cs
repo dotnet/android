@@ -89,7 +89,6 @@ public abstract class FixtureTestBase
 					NativeCallbackName = "n_ctor",
 					JniSignature = "()V",
 					ManagedMethodName = ".ctor",
-					JniReturnType = "V",
 					IsConstructor = true,
 				},
 			},

@@ -153,10 +153,6 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 					new JavaConstructorInfo {
 						JniSignature = "(Landroid/content/Context;I)V",
 						ConstructorIndex = 0,
-						Parameters = new List<JniParameterInfo> {
-							new JniParameterInfo { JniType = "Landroid/content/Context;" },
-							new JniParameterInfo { JniType = "I" },
-						},
 						SuperArgumentsString = "p0",
 					},
 				},
@@ -183,9 +179,6 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 					new JavaConstructorInfo {
 						JniSignature = "(Landroid/content/Context;)V",
 						ConstructorIndex = 0,
-						Parameters = new List<JniParameterInfo> {
-							new JniParameterInfo { JniType = "Landroid/content/Context;" },
-						},
 						SuperArgumentsString = "",
 					},
 				},
@@ -212,10 +205,6 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 					new JavaConstructorInfo {
 						JniSignature = "(Landroid/content/Context;Landroid/util/AttributeSet;)V",
 						ConstructorIndex = 0,
-						Parameters = new List<JniParameterInfo> {
-							new JniParameterInfo { JniType = "Landroid/content/Context;" },
-							new JniParameterInfo { JniType = "Landroid/util/AttributeSet;" },
-						},
 					},
 				},
 			};

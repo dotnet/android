@@ -747,12 +747,11 @@ public class ModelBuilderTests : FixtureTestBase
 					new MarshalMethodInfo {
 						JniName = "<init>", NativeCallbackName = "n_ctor",
 						JniSignature = "()V", ManagedMethodName = ".ctor",
-						JniReturnType = "V", IsConstructor = true,
+						IsConstructor = true,
 					},
 					new MarshalMethodInfo {
 						JniName = "onClick", NativeCallbackName = "n_OnClick",
 						JniSignature = "(Landroid/view/View;)V", ManagedMethodName = "OnClick",
-						JniReturnType = "V",
 					},
 				},
 			};
@@ -774,7 +773,7 @@ public class ModelBuilderTests : FixtureTestBase
 					new MarshalMethodInfo {
 						JniName = "<init>", NativeCallbackName = "n_ctor",
 						JniSignature = "()V", ManagedMethodName = ".ctor",
-						JniReturnType = "V", IsConstructor = true,
+						IsConstructor = true,
 					},
 				},
 			};
@@ -801,7 +800,6 @@ public class ModelBuilderTests : FixtureTestBase
 					new MarshalMethodInfo {
 						JniName = "onClick", NativeCallbackName = "n_OnClick",
 						JniSignature = "(Landroid/view/View;)V", ManagedMethodName = "OnClick",
-						JniReturnType = "V",
 					},
 				},
 			};
@@ -847,12 +845,11 @@ public class ModelBuilderTests : FixtureTestBase
 					new MarshalMethodInfo {
 						JniName = "<init>", NativeCallbackName = "n_ctor",
 						JniSignature = "()V", ManagedMethodName = ".ctor",
-						JniReturnType = "V", IsConstructor = true,
+						IsConstructor = true,
 					},
 					new MarshalMethodInfo {
 						JniName = "doWork", NativeCallbackName = "n_DoWork",
 						JniSignature = "(I)V", ManagedMethodName = "DoWork",
-						JniReturnType = "V",
 					},
 				},
 				JavaConstructors = new List<JavaConstructorInfo> {

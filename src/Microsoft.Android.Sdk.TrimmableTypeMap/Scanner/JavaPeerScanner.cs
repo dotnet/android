@@ -287,8 +287,6 @@ sealed class JavaPeerScanner : IDisposable
 			Connector = registerInfo.Connector,
 			ManagedMethodName = managedName,
 			NativeCallbackName = isConstructor ? "n_ctor" : $"n_{managedName}",
-			JniReturnType = JniSignatureHelper.ParseReturnTypeString (jniSignature),
-			Parameters = JniSignatureHelper.ParseParameters (jniSignature),
 			IsConstructor = isConstructor,
 			ThrownNames = exportInfo?.ThrownNames,
 			SuperArgumentsString = exportInfo?.SuperArgumentsString,
@@ -772,7 +770,6 @@ sealed class JavaPeerScanner : IDisposable
 			ctors.Add (new JavaConstructorInfo {
 				JniSignature = mm.JniSignature,
 				ConstructorIndex = ctorIndex,
-				Parameters = mm.Parameters,
 				SuperArgumentsString = mm.SuperArgumentsString,
 			});
 			ctorIndex++;
