@@ -11,7 +11,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 {
 
-	MemoryStream GenerateRootAssembly (IReadOnlyList<string> perAssemblyNames, string? assemblyName = null)
+	static MemoryStream GenerateRootAssembly (IReadOnlyList<string> perAssemblyNames, string? assemblyName = null)
 	{
 		var stream = new MemoryStream ();
 		var generator = new RootTypeMapAssemblyGenerator (new Version (11, 0, 0, 0));
