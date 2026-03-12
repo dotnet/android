@@ -446,7 +446,7 @@ public class ModelBuilderTests : FixtureTestBase
 		[Theory]
 		[InlineData ("mono/android/view/View_IOnClickListenerImplementor", "Implementor")]
 		[InlineData ("mono/android/view/View_ClickEventDispatcher", "EventDispatcher")]
-		public void Fixture_HelperType_IsTrimmable_NotUnconditional (string javaName, string kind)
+		public void Fixture_HelperType_IsUnconditional (string javaName, string kind)
 		{
 			var peer = FindFixtureByJavaName (javaName);
 			Assert.False (peer.DoNotGenerateAcw);
@@ -456,9 +456,9 @@ public class ModelBuilderTests : FixtureTestBase
 
 			var entry = model.Entries.FirstOrDefault ();
 			Assert.NotNull (entry);
-			// Implementor/EventDispatcher types are only created from .NET (e.g., when a C# event
-			// is subscribed). They should NOT be unconditional — they're trimmable.
-			Assert.False (entry.IsUnconditional, $"{kind} should be trimmable, not unconditional");
+			// Implementor/EventDispatcher types are treated as unconditional ACW types.
+			// Future optimization (see #10911) may make them trimmable.
+			Assert.True (entry.IsUnconditional, $"{kind} should be unconditional");
 		}
 	}
 
@@ -920,22 +920,6 @@ public class ModelBuilderTests : FixtureTestBase
 			var proxy = model.ProxyTypes.FirstOrDefault ();
 			Assert.NotNull (proxy);
 			Assert.Equal (2, proxy.UcoConstructors.Count);
-		}
-	}
-
-	public class ImplementorTrimmability
-	{
-		[Fact]
-		public void Build_UserTypeNamedImplementor_IsTreatedAsTrimmable ()
-		{
-			var peer = MakeAcwPeer ("my/app/MyImplementor", "MyApp.MyImplementor", "App") with {
-				DoNotGenerateAcw = false,
-			};
-			var model = BuildModel (new [] { peer });
-			var entry = model.Entries.FirstOrDefault ();
-			Assert.NotNull (entry);
-			Assert.False (entry.IsUnconditional,
-				"Name-based heuristic: types ending in 'Implementor' are treated as trimmable");
 		}
 	}
 }
