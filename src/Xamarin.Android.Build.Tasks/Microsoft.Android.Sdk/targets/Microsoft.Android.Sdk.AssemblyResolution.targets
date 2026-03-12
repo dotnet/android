@@ -277,13 +277,13 @@ _ResolveAssemblies MSBuild target.
       <Output TaskParameter="OutputLibraries" ItemName="FrameworkNativeLibrary" />
     </ProcessNativeLibraries>
 
-    <ItemGroup Condition=" '$(AndroidEnableCoreClrDebugger)' == 'true' and '$(_AndroidRuntime)' == 'CoreCLR' ">
-      <AndroidNativeLibrary Include="$(CoreClrDebuggerNativeLibraryPath)\arm64-v8a\libremotemscordbitarget.so"
-                            Condition="Exists('$(CoreClrDebuggerNativeLibraryPath)\arm64-v8a\libremotemscordbitarget.so')">
+    <ItemGroup Condition=" '$(AndroidEnableDebugger)' == 'true' and '$(_AndroidRuntime)' == 'CoreCLR' ">
+      <AndroidNativeLibrary Include="$(AndroidDebuggerNativeLibraryPath)\arm64-v8a\libremotemscordbitarget.so"
+                            Condition="Exists('$(AndroidDebuggerNativeLibraryPath)\arm64-v8a\libremotemscordbitarget.so')">
         <Abi>arm64-v8a</Abi>
       </AndroidNativeLibrary>
-      <AndroidNativeLibrary Include="$(CoreClrDebuggerNativeLibraryPath)\x86_64\libremotemscordbitarget.so"
-                            Condition="Exists('$(CoreClrDebuggerNativeLibraryPath)\x86_64\libremotemscordbitarget.so')">
+      <AndroidNativeLibrary Include="$(AndroidDebuggerNativeLibraryPath)\x86_64\libremotemscordbitarget.so"
+                            Condition="Exists('$(AndroidDebuggerNativeLibraryPath)\x86_64\libremotemscordbitarget.so')">
         <Abi>x86_64</Abi>
       </AndroidNativeLibrary>
     </ItemGroup>

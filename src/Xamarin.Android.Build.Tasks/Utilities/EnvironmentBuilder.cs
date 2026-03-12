@@ -108,7 +108,7 @@ class EnvironmentBuilder
 		AddEnvironmentVariable ("MONO_GC_PARAMS", enableSgenConcurrent ? "major=marksweep-conc" : "major=marksweep");
 	}
 
-	public void AddCoreClrDebuggerEnvironment ()
+	public void AddDebuggerEnvironment ()
 	{
 		AddEnvironmentVariable ("CORECLR_ENABLE_PROFILING", "1");
 		AddEnvironmentVariable ("CORECLR_PROFILER", "{9DC623E8-C88F-4FD5-AD99-77E67E1D9631}");

@@ -239,7 +239,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckCoreClrDebuggerEnvironmentVariables ()
+		public void CheckDebuggerEnvironmentVariables ()
 		{
 			const string supportedAbis = "arm64-v8a;x86_64";
 
@@ -248,7 +248,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty ("AndroidEnableCoreClrDebugger", "true");
+			proj.SetProperty ("AndroidEnableDebugger", "true");
 			proj.SetAndroidSupportedAbis (supportedAbis);
 
 			using (var b = CreateApkBuilder ()) {
@@ -274,7 +274,59 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckCoreClrDebuggerNotEnabledInRelease ()
+		public void CheckDebuggerNativeLibraryInApk ()
+		{
+			const string supportedAbis = "arm64-v8a;x86_64";
+
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = false,
+			};
+
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("AndroidEnableDebugger", "true");
+			proj.SetAndroidSupportedAbis (supportedAbis);
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				string apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+				Assert.IsTrue (File.Exists (apk), $"APK not found at {apk}");
+
+				foreach (var abi in supportedAbis.Split (';')) {
+					string entryPath = $"lib/{abi}/libremotemscordbitarget.so";
+					var data = ZipHelper.ReadFileFromZip (apk, entryPath);
+					Assert.IsNotNull (data, $"{entryPath} should be present in the APK");
+					Assert.IsTrue (data.Length > 0, $"{entryPath} should not be empty");
+				}
+			}
+		}
+
+		[Test]
+		public void CheckDebuggerNativeLibraryNotInReleaseApk ()
+		{
+			const string supportedAbis = "arm64-v8a";
+
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+			};
+
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetAndroidSupportedAbis (supportedAbis);
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				string apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+				Assert.IsTrue (File.Exists (apk), $"APK not found at {apk}");
+
+				string entryPath = $"lib/{supportedAbis}/libremotemscordbitarget.so";
+				var data = ZipHelper.ReadFileFromZip (apk, entryPath);
+				Assert.IsNull (data, $"{entryPath} should NOT be present in Release APK");
+			}
+		}
+
+		[Test]
+		public void CheckDebuggerNotEnabledInRelease ()
 		{
 			const string supportedAbis = "arm64-v8a";
 

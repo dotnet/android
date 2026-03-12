@@ -72,7 +72,7 @@ namespace Xamarin.Android.Tasks
 		public string? AndroidSequencePointsMode { get; set; }
 		public bool EnableSGenConcurrent { get; set; }
 		public string? CustomBundleConfigFile { get; set; }
-		public bool EnableCoreClrDebugger { get; set; }
+		public bool EnableDebugger { get; set; }
 
 		bool _Debug {
 			get {
@@ -131,8 +131,8 @@ namespace Xamarin.Android.Tasks
 				AddDefaultEnvironmentVariables (envBuilder, HttpClientHandlerType, EnableSGenConcurrent);
 			}
 
-			if (EnableCoreClrDebugger && TargetsCLR) {
-				envBuilder.AddCoreClrDebuggerEnvironment ();
+			if (EnableDebugger && TargetsCLR) {
+				envBuilder.AddDebuggerEnvironment ();
 			}
 
 			global::Android.Runtime.BoundExceptionType boundExceptionType;

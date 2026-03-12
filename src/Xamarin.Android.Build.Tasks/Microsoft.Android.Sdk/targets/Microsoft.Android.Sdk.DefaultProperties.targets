@@ -54,11 +54,10 @@
     <AndroidEnableProfiler Condition=" '$(AndroidEnableProfiler)' == '' and ('$(DiagnosticConfiguration)' != '' or '$(DiagnosticAddress)' != '' or '$(DiagnosticPort)' != '' or '$(DiagnosticSuspend)' != '' or '$(DiagnosticListenMode)' != '') ">true</AndroidEnableProfiler>
     <AndroidEnableProfiler Condition=" '$(AndroidEnableProfiler)' == '' ">false</AndroidEnableProfiler>
 
-    <AndroidEnableCoreClrDebugger Condition=" '$(AndroidEnableCoreClrDebugger)' == '' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(Configuration)' != 'Release' ">true</AndroidEnableCoreClrDebugger>
-    <AndroidEnableCoreClrDebugger Condition=" '$(AndroidEnableCoreClrDebugger)' == '' ">false</AndroidEnableCoreClrDebugger>
-    <CoreClrDebuggerPort Condition=" '$(CoreClrDebuggerPort)' == '' ">4711</CoreClrDebuggerPort>
-    <CoreClrDebuggerIsServer Condition=" '$(CoreClrDebuggerIsServer)' == '' ">1</CoreClrDebuggerIsServer>
-    <CoreClrDebuggerNativeLibraryPath Condition=" '$(CoreClrDebuggerNativeLibraryPath)' == '' ">$(MSBuildThisFileDirectory)..\tools\libremotemscordbitarget</CoreClrDebuggerNativeLibraryPath>
+    <AndroidEnableDebugger Condition=" '$(AndroidEnableDebugger)' == '' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(Configuration)' != 'Release' ">true</AndroidEnableDebugger>
+    <AndroidEnableDebugger Condition=" '$(AndroidEnableDebugger)' == '' ">false</AndroidEnableDebugger>
+    <AndroidDebuggerPort Condition=" '$(AndroidDebuggerPort)' == '' ">4711</AndroidDebuggerPort>
+    <AndroidDebuggerNativeLibraryPath Condition=" '$(AndroidDebuggerNativeLibraryPath)' == '' ">$(MSBuildThisFileDirectory)..\tools\libremotemscordbitarget</AndroidDebuggerNativeLibraryPath>
 
     <!--
         Android package (apt/aab) alignment, expressed as the page size in kilobytes.  Two values are supported: 4 and 16.
@@ -157,7 +156,7 @@
     <!-- profiler won't work without internet permission, we must thus force it -->
     <AndroidNeedsInternetPermission Condition=" '$(AndroidEnableProfiler)' == 'true' ">True</AndroidNeedsInternetPermission>
     <!-- CoreCLR debugger uses gRPC which requires network access -->
-    <AndroidNeedsInternetPermission Condition=" '$(AndroidEnableCoreClrDebugger)' == 'true' ">True</AndroidNeedsInternetPermission>
+    <AndroidNeedsInternetPermission Condition=" '$(AndroidEnableDebugger)' == 'true' ">True</AndroidNeedsInternetPermission>
   </PropertyGroup>
   <!-- Trimmer switches that default to OFF in Release mode -->
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' and '$(Optimize)' == 'true' ">
