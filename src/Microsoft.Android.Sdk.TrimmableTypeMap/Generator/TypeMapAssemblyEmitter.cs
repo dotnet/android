@@ -361,9 +361,10 @@ sealed class TypeMapAssemblyEmitter
 			wrapperHandles [uco.WrapperName] = handle;
 		}
 
-		// RegisterNatives
+		// RegisterNatives + GetFunctionPointer
 		if (proxy.IsAcw) {
 			EmitRegisterNatives (proxy.NativeRegistrations, wrapperHandles);
+			EmitGetFunctionPointer (proxy.NativeRegistrations, wrapperHandles);
 		}
 	}
 
@@ -727,6 +728,52 @@ sealed class TypeMapAssemblyEmitter
 	void AddUnmanagedCallersOnlyAttribute (MethodDefinitionHandle handle)
 	{
 		_pe.Metadata.AddCustomAttribute (handle, _ucoAttrCtorRef, _ucoAttrBlobHandle);
+	}
+
+	/// <summary>
+	/// Emits GetFunctionPointer(int methodIndex) → IntPtr that maps ordinals to UCO wrapper function pointers.
+	/// Used as an alternative dispatch mechanism to RegisterNatives.
+	/// </summary>
+	void EmitGetFunctionPointer (List<NativeRegistrationData> registrations,
+		Dictionary<string, MethodDefinitionHandle> wrapperHandles)
+	{
+		// Collect resolved handles in registration order
+		var resolvedHandles = new List<MethodDefinitionHandle> ();
+		foreach (var reg in registrations) {
+			if (wrapperHandles.TryGetValue (reg.WrapperMethodName, out var handle)) {
+				resolvedHandles.Add (handle);
+			}
+		}
+
+		_pe.EmitBody ("GetFunctionPointer",
+			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig |
+			MethodAttributes.NewSlot | MethodAttributes.Final,
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
+				rt => rt.Type ().IntPtr (),
+				p => p.AddParameter ().Type ().Int32 ()),
+			encoder => {
+				// For each registration, emit:
+				//   ldarg.1          // load methodIndex
+				//   ldc.i4 <index>   // load constant
+				//   bne.un.s <skip>  // if not equal, skip to next
+				//   ldftn <wrapper>  // load function pointer
+				//   ret
+				//   <skip>:
+				for (int i = 0; i < resolvedHandles.Count; i++) {
+					encoder.LoadArgument (1);
+					encoder.LoadConstantI4 (i);
+					// bne.un.s with offset = 7 (ldftn is 2-byte opcode + 4-byte token = 6, ret is 1 byte)
+					encoder.OpCode (ILOpCode.Bne_un_s);
+					encoder.CodeBuilder.WriteSByte (7);
+					encoder.OpCode (ILOpCode.Ldftn);
+					encoder.Token (resolvedHandles [i]);
+					encoder.OpCode (ILOpCode.Ret);
+				}
+				// Default: return IntPtr.Zero
+				encoder.OpCode (ILOpCode.Ldc_i4_0);
+				encoder.OpCode (ILOpCode.Conv_i);
+				encoder.OpCode (ILOpCode.Ret);
+			});
 	}
 
 	void EmitTypeMapAttribute (TypeMapAttributeData entry)

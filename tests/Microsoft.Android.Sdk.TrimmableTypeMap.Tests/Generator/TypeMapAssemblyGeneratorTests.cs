@@ -504,4 +504,22 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	{
 		Assert.Empty (JniSignatureHelper.ParseParameterTypes ("("));
 	}
+
+	[Fact]
+	public void Generate_AcwProxy_HasGetFunctionPointer ()
+	{
+		var peers = ScanFixtures ();
+		var acwPeer = peers.First (p => p.JavaName == "my/app/MainActivity");
+		Assert.False (acwPeer.DoNotGenerateAcw);
+
+		using var stream = GenerateAssembly (new [] { acwPeer }, "GetFnPtrTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var methodDefs = reader.MethodDefinitions
+			.Select (h => reader.GetMethodDefinition (h))
+			.Select (m => reader.GetString (m.Name))
+			.ToList ();
+		Assert.Contains ("GetFunctionPointer", methodDefs);
+	}
 }
