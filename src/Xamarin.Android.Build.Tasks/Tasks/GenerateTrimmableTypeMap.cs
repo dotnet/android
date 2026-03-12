@@ -56,11 +56,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			return !Log.HasLoggedErrors;
 		}
 
-		var generatedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion);
-		var generatedJavaFiles = GenerateJcwJavaSources (allPeers);
-
-		GeneratedAssemblies = generatedAssemblies.ToArray ();
-		GeneratedJavaFiles = generatedJavaFiles.Select (p => (ITaskItem) new TaskItem (p)).ToArray ();
+		GeneratedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion);
+		GeneratedJavaFiles = GenerateJcwJavaSources (allPeers);
 
 		return !Log.HasLoggedErrors;
 	}
@@ -73,7 +70,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		return peers;
 	}
 
-	List<ITaskItem> GenerateTypeMapAssemblies (List<JavaPeerInfo> allPeers, Version systemRuntimeVersion)
+	ITaskItem [] GenerateTypeMapAssemblies (List<JavaPeerInfo> allPeers, Version systemRuntimeVersion)
 	{
 		var peersByAssembly = allPeers
 			.GroupBy (p => p.AssemblyName, StringComparer.Ordinal)
@@ -100,15 +97,15 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		generatedAssemblies.Add (new TaskItem (rootOutputPath));
 
 		Log.LogDebugMessage ($"Generated {generatedAssemblies.Count} typemap assemblies ({perAssemblyNames.Count} per-assembly + root).");
-		return generatedAssemblies;
+		return generatedAssemblies.ToArray ();
 	}
 
-	IReadOnlyList<string> GenerateJcwJavaSources (List<JavaPeerInfo> allPeers)
+	ITaskItem [] GenerateJcwJavaSources (List<JavaPeerInfo> allPeers)
 	{
 		var jcwGenerator = new JcwJavaSourceGenerator ();
 		var files = jcwGenerator.Generate (allPeers, JavaSourceOutputDirectory);
 		Log.LogDebugMessage ($"Generated {files.Count} JCW Java source files.");
-		return files;
+		return files.Select (p => (ITaskItem) new TaskItem (p)).ToArray ();
 	}
 
 	static Version ParseTargetFrameworkVersion (string tfv)

@@ -11,7 +11,7 @@
   <PropertyGroup>
     <_TypeMapAssemblyName>_Microsoft.Android.TypeMaps</_TypeMapAssemblyName>
     <_TypeMapOutputDirectory>$(IntermediateOutputPath)typemap\</_TypeMapOutputDirectory>
-    <_TypeMapJavaOutputDirectory>$(IntermediateOutputPath)android\src</_TypeMapJavaOutputDirectory>
+    <_TypeMapJavaOutputDirectory>$(IntermediateOutputPath)typemap\java</_TypeMapJavaOutputDirectory>
   </PropertyGroup>
 
   <Target Name="_ValidateTrimmableTypeMapRuntime"
