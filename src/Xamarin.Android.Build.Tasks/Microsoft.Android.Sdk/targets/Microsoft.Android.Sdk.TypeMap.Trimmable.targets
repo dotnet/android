@@ -1,11 +1,18 @@
 <!-- Trimmable typemap: managed type mapping instead of native binary typemaps.
-     This is a stub — the actual implementation will be added in a follow-up. -->
+     Generates per-assembly TypeMap .dll assemblies, a root _Microsoft.Android.TypeMaps.dll,
+     and JCW .java source files with registerNatives. -->
 <Project>
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.TypeMap.Trimmable.CoreCLR.targets"
       Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.TypeMap.Trimmable.NativeAOT.targets"
       Condition=" '$(_AndroidRuntime)' == 'NativeAOT' " />
+
+  <PropertyGroup>
+    <_TypeMapAssemblyName>_Microsoft.Android.TypeMaps</_TypeMapAssemblyName>
+    <_TypeMapOutputDirectory>$(IntermediateOutputPath)typemap\</_TypeMapOutputDirectory>
+    <_TypeMapJavaOutputDirectory>$(IntermediateOutputPath)android\src</_TypeMapJavaOutputDirectory>
+  </PropertyGroup>
 
   <Target Name="_ValidateTrimmableTypeMapRuntime"
       BeforeTargets="Build"
@@ -21,7 +28,16 @@
       DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;_GetGenerateJavaStubsInputs"
       Inputs="@(_GenerateJavaStubsInputs)"
       Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
-    <Message Text="Trimmable typemap: skipping legacy _GenerateJavaStubs" Importance="High" />
+
+    <GenerateTrimmableTypeMap
+        ResolvedAssemblies="@(_ResolvedAssemblies)"
+        OutputDirectory="$(_TypeMapOutputDirectory)"
+        JavaSourceOutputDirectory="$(_TypeMapJavaOutputDirectory)"
+        TargetFrameworkVersion="$(TargetFrameworkVersion)">
+      <Output TaskParameter="GeneratedAssemblies" ItemName="_GeneratedTypeMapAssemblies" />
+      <Output TaskParameter="GeneratedJavaFiles" ItemName="_GeneratedJavaFiles" />
+    </GenerateTrimmableTypeMap>
+
     <Touch Files="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" AlwaysCreate="True" />
   </Target>
 
