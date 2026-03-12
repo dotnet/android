@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Android.Sdk.TrimmableTypeMap;
 using Microsoft.Build.Framework;
@@ -42,17 +43,12 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public override bool RunTask ()
 	{
 		var systemRuntimeVersion = ParseTargetFrameworkVersion (TargetFrameworkVersion);
-		var assemblyPaths = GetAssemblyPaths (ResolvedAssemblies);
+		var assemblyPaths = GetJavaInteropAssemblyPaths (ResolvedAssemblies);
 
 		Directory.CreateDirectory (OutputDirectory);
 		Directory.CreateDirectory (JavaSourceOutputDirectory);
 
-		// Phase 1: Scan assemblies
-		List<JavaPeerInfo> allPeers;
-		using (var scanner = new JavaPeerScanner ()) {
-			allPeers = scanner.Scan (assemblyPaths);
-		}
-
+		var allPeers = ScanAssemblies (assemblyPaths);
 		if (allPeers.Count == 0) {
 			Log.LogDebugMessage ("No Java peer types found, skipping typemap generation.");
 			GeneratedAssemblies = [];
@@ -60,72 +56,89 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			return !Log.HasLoggedErrors;
 		}
 
-		// Phase 2: Group peers by source assembly
-		var peersByAssembly = new Dictionary<string, List<JavaPeerInfo>> (StringComparer.Ordinal);
-		foreach (var peer in allPeers) {
-			if (!peersByAssembly.TryGetValue (peer.AssemblyName, out var list)) {
-				list = new List<JavaPeerInfo> ();
-				peersByAssembly [peer.AssemblyName] = list;
-			}
-			list.Add (peer);
-		}
+		var generatedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion);
+		var generatedJavaFiles = GenerateJcwJavaSources (allPeers);
 
-		// Phase 3: Generate per-assembly typemap assemblies
+		GeneratedAssemblies = generatedAssemblies.ToArray ();
+		GeneratedJavaFiles = generatedJavaFiles.Select (p => (ITaskItem) new TaskItem (p)).ToArray ();
+
+		return !Log.HasLoggedErrors;
+	}
+
+	List<JavaPeerInfo> ScanAssemblies (IReadOnlyList<string> assemblyPaths)
+	{
+		using var scanner = new JavaPeerScanner ();
+		var peers = scanner.Scan (assemblyPaths);
+		Log.LogDebugMessage ($"Scanned {assemblyPaths.Count} assemblies, found {peers.Count} Java peer types.");
+		return peers;
+	}
+
+	List<ITaskItem> GenerateTypeMapAssemblies (List<JavaPeerInfo> allPeers, Version systemRuntimeVersion)
+	{
+		var peersByAssembly = allPeers
+			.GroupBy (p => p.AssemblyName, StringComparer.Ordinal)
+			.OrderBy (g => g.Key, StringComparer.Ordinal);
+
 		var generatedAssemblies = new List<ITaskItem> ();
 		var perAssemblyNames = new List<string> ();
-
 		var generator = new TypeMapAssemblyGenerator (systemRuntimeVersion);
-		foreach (var kvp in peersByAssembly) {
-			string assemblyName = $"_{kvp.Key}.TypeMap";
+
+		foreach (var group in peersByAssembly) {
+			string assemblyName = $"_{group.Key}.TypeMap";
 			string outputPath = Path.Combine (OutputDirectory, assemblyName + ".dll");
 
-			generator.Generate (kvp.Value, outputPath, assemblyName);
+			generator.Generate (group.ToList (), outputPath, assemblyName);
 			generatedAssemblies.Add (new TaskItem (outputPath));
 			perAssemblyNames.Add (assemblyName);
 
-			Log.LogDebugMessage ($"Generated typemap assembly: {outputPath} ({kvp.Value.Count} types)");
+			Log.LogDebugMessage ($"  {assemblyName}: {group.Count ()} types");
 		}
 
-		// Phase 4: Generate root _Microsoft.Android.TypeMaps.dll
 		var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
 		string rootOutputPath = Path.Combine (OutputDirectory, "_Microsoft.Android.TypeMaps.dll");
 		rootGenerator.Generate (perAssemblyNames, rootOutputPath);
 		generatedAssemblies.Add (new TaskItem (rootOutputPath));
 
-		Log.LogDebugMessage ($"Generated root typemap assembly: {rootOutputPath} ({perAssemblyNames.Count} per-assembly refs)");
+		Log.LogDebugMessage ($"Generated {generatedAssemblies.Count} typemap assemblies ({perAssemblyNames.Count} per-assembly + root).");
+		return generatedAssemblies;
+	}
 
-		// Phase 5: Generate JCW Java source files
+	IReadOnlyList<string> GenerateJcwJavaSources (List<JavaPeerInfo> allPeers)
+	{
 		var jcwGenerator = new JcwJavaSourceGenerator ();
-		var generatedJavaFiles = jcwGenerator.Generate (allPeers, JavaSourceOutputDirectory);
-
-		Log.LogDebugMessage ($"Generated {generatedJavaFiles.Count} JCW Java source files.");
-
-		GeneratedAssemblies = generatedAssemblies.ToArray ();
-		GeneratedJavaFiles = generatedJavaFiles
-			.ConvertAll (path => (ITaskItem) new TaskItem (path))
-			.ToArray ();
-
-		return !Log.HasLoggedErrors;
+		var files = jcwGenerator.Generate (allPeers, JavaSourceOutputDirectory);
+		Log.LogDebugMessage ($"Generated {files.Count} JCW Java source files.");
+		return files;
 	}
 
 	static Version ParseTargetFrameworkVersion (string tfv)
 	{
-		// Strip leading 'v' if present (e.g., "v11.0" → "11.0")
 		if (tfv.Length > 0 && (tfv [0] == 'v' || tfv [0] == 'V')) {
 			tfv = tfv.Substring (1);
 		}
 		if (Version.TryParse (tfv, out var version)) {
 			return version;
 		}
-		return new Version (11, 0, 0, 0);
+		throw new ArgumentException ($"Cannot parse TargetFrameworkVersion '{tfv}' as a Version.");
 	}
 
-	static IReadOnlyList<string> GetAssemblyPaths (ITaskItem [] items)
+	/// <summary>
+	/// Filters resolved assemblies to only those that reference Mono.Android or Java.Interop
+	/// (i.e., assemblies that could contain [Register] types). Skips BCL assemblies.
+	/// </summary>
+	static IReadOnlyList<string> GetJavaInteropAssemblyPaths (ITaskItem [] items)
 	{
-		var paths = new List<string> (items.Length);
-		foreach (var item in items) {
-			paths.Add (item.ItemSpec);
-		}
-		return paths;
+		return items
+			.Where (item => {
+				var frameworkAssembly = item.GetMetadata ("FrameworkAssembly");
+				if (string.Equals (frameworkAssembly, "true", StringComparison.OrdinalIgnoreCase)) {
+					// Framework assemblies that reference Mono.Android (like Mono.Android itself) are included
+					var hasRef = item.GetMetadata ("HasMonoAndroidReference");
+					return string.Equals (hasRef, "True", StringComparison.OrdinalIgnoreCase);
+				}
+				return true; // Non-framework assemblies are always included
+			})
+			.Select (item => item.ItemSpec)
+			.ToList ();
 	}
 }
