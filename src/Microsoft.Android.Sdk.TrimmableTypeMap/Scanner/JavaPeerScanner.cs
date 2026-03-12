@@ -745,16 +745,20 @@ sealed class JavaPeerScanner : IDisposable
 
 	static string ExtractNamespace (string fullName)
 	{
-		int lastDot = fullName.LastIndexOf ('.');
-		return lastDot >= 0 ? fullName.Substring (0, lastDot) : "";
+		// Strip nested type suffix (e.g., "My.Namespace.Outer+Inner" → "My.Namespace.Outer")
+		int plusIndex = fullName.IndexOf ('+');
+		var nameForNamespace = plusIndex >= 0 ? fullName.Substring (0, plusIndex) : fullName;
+		int lastDot = nameForNamespace.LastIndexOf ('.');
+		return lastDot >= 0 ? nameForNamespace.Substring (0, lastDot) : "";
 	}
 
 	static string ExtractShortName (string fullName)
 	{
-		int lastDot = fullName.LastIndexOf ('.');
-		string typePart = lastDot >= 0 ? fullName.Substring (lastDot + 1) : fullName;
+		var span = fullName.AsSpan ();
+		int lastDot = span.LastIndexOf ('.');
+		var typePart = lastDot >= 0 ? span.Slice (lastDot + 1) : span;
 		int lastPlus = typePart.LastIndexOf ('+');
-		return lastPlus >= 0 ? typePart.Substring (lastPlus + 1) : typePart;
+		return (lastPlus >= 0 ? typePart.Slice (lastPlus + 1) : typePart).ToString ();
 	}
 
 	static List<JavaConstructorInfo> BuildJavaConstructors (List<MarshalMethodInfo> marshalMethods)
