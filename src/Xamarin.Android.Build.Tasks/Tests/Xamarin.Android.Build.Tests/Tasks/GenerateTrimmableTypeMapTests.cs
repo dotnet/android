@@ -7,6 +7,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
+using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests {
 	[TestFixture]
@@ -143,21 +144,23 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
-		public void Execute_InvalidTargetFrameworkVersion_Throws ()
+		public void Execute_InvalidTargetFrameworkVersion_Fails ()
 		{
 			var path = Path.Combine ("temp", TestName);
 			var outputDir = Path.Combine (Root, path, "typemap");
 			var javaDir = Path.Combine (Root, path, "java");
 
+			var errors = new List<BuildErrorEventArgs> ();
 			var task = new GenerateTrimmableTypeMap {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
+				BuildEngine = new MockBuildEngine (TestContext.Out, errors),
 				ResolvedAssemblies = [],
 				OutputDirectory = outputDir,
 				JavaSourceOutputDirectory = javaDir,
 				TargetFrameworkVersion = "not-a-version",
 			};
 
-			Assert.Throws<ArgumentException> (() => task.Execute ());
+			Assert.IsFalse (task.Execute (), "Task should fail with invalid TargetFrameworkVersion.");
+			Assert.IsNotEmpty (errors, "Should have logged an error.");
 		}
 
 		[TestCase ("v11.0")]
