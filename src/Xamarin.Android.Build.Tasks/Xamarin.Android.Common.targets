@@ -1572,6 +1572,11 @@ because xbuild doesn't support framework reference assemblies.
 
   <Touch Files="$(_AdditionalPostLinkerStepsFlag)" AlwaysCreate="true" />
 
+  <ItemGroup>
+    <FileWrites Include="@(_AfterILLinkAssemblies->'%(RootDir)%(Directory)%(Filename).jlo.xml')" />
+    <FileWrites Include="@(_AfterILLinkAssemblies->'%(RootDir)%(Directory)%(Filename).typemap.xml')" />
+  </ItemGroup>
+
   <!-- Clean up temporary item groups -->
   <ItemGroup>
     <_AfterILLinkAssembliesRaw Remove="@(_AfterILLinkAssembliesRaw)" />
@@ -1666,6 +1671,10 @@ because xbuild doesn't support framework reference assemblies.
       SourceFiles="@(_SidecarXmlCopySource)"
       DestinationFiles="@(_SidecarXmlCopyDestination)"
       SkipUnchangedFiles="true" />
+
+  <ItemGroup>
+    <FileWrites Include="@(_SidecarXmlCopyDestination)" />
+  </ItemGroup>
 
   <ItemGroup>
     <_SidecarXmlCopySource Remove="@(_SidecarXmlCopySource)" />
