@@ -95,9 +95,9 @@ sealed class PEAssemblyBuilder
 	}
 
 	/// <summary>
-	/// Serialises the metadata + IL into a PE DLL written to <paramref name="output"/>.
+	/// Serialises the metadata + IL into a PE DLL and writes it to the given <paramref name="stream"/>.
 	/// </summary>
-	public void WritePE (Stream output)
+	public void WritePE (Stream stream)
 	{
 		var peBuilder = new ManagedPEBuilder (
 			new PEHeaderBuilder (imageCharacteristics: Characteristics.Dll),
@@ -105,7 +105,7 @@ sealed class PEAssemblyBuilder
 			ILBuilder);
 		var peBlob = new BlobBuilder ();
 		peBuilder.Serialize (peBlob);
-		peBlob.WriteContentTo (output);
+		peBlob.WriteContentTo (stream);
 	}
 
 	/// <summary>
@@ -127,12 +127,7 @@ sealed class PEAssemblyBuilder
 	/// Finds an existing assembly reference or adds one with version 0.0.0.0.
 	/// </summary>
 	public AssemblyReferenceHandle FindOrAddAssemblyRef (string assemblyName)
-	{
-		if (_asmRefCache.TryGetValue (assemblyName, out var handle)) {
-			return handle;
-		}
-		return AddAssemblyRef (assemblyName, new Version (0, 0, 0, 0));
-	}
+		=> AddAssemblyRef (assemblyName, new Version (0, 0, 0, 0));
 
 	/// <summary>
 	/// Adds a member reference using the reusable signature blob builder.
