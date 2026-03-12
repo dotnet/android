@@ -1,29 +1,75 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Mono.Options;
 
 namespace ApplicationUtility;
 
-// TODO: add support for individual assemblies as payload in shared libraries
 class Program
 {
-	const string AppName = "apput";
+	public const string AppName = "apput";
+	const LogLevel DefaultLogLevel = LogLevel.Info;
 
 	static int Main (string[] args)
 	{
-		Log.SetVerbose (true);
+		var logBuffer = new StandardLogBuffer (DefaultLogLevel);
+		logBuffer.SetLogFile (null); // will use the default path
+		Log.SetLogBuffer (logBuffer);
+
 		try {
-			return Run (args);
+			Log.Debug ($"Session started at: {DateTime.Now}");
+			return Run (args, logBuffer);
 		} catch (Exception ex) {
-			Log.ExceptionError ("Unhandled exception", ex);
+			Log.Error ("Unhandled exception.", ex);
 			return 1;
 		} finally {
 			TempFileManager.Cleanup ();
+			WriteLogFilePathToConsole (logBuffer);
+			logBuffer.Dispose (); // Make sure it's done last
 		}
 	}
 
-	static int Run (string[] args)
+	static void WriteLogFilePathToConsole (StandardLogBuffer logBuffer)
+	{
+		if (String.IsNullOrWhiteSpace (logBuffer.LogFilePath)) {
+			return;
+		}
+
+		try {
+			Console.Error.WriteLine ();
+			Console.Error.WriteLine ($"Session log file: {logBuffer.LogFilePath}");
+		} catch (Exception) {
+			// Ignore, there's not much we can do here anyway
+		}
+	}
+
+	static string GetLogLevels ()
+	{
+		return String.Join (", ", Enum.GetValues<LogLevel> ().Select (v => v.ToString ().ToLowerInvariant ()));
+	}
+
+	static LogLevel ParseLogLevel (string? l)
+	{
+		if (String.IsNullOrEmpty (l)) {
+			return GetDefaultAndLog (invalid: false);
+		}
+
+		if (Enum.TryParse<LogLevel> (l, ignoreCase: true, out LogLevel level)) {
+			return level;
+		}
+
+		return GetDefaultAndLog (invalid: true);
+
+		LogLevel GetDefaultAndLog (bool invalid)
+		{
+			string what = invalid ? "Invalid" : "No";
+			Log.Debug ($"{what} log level name specified, using default: {DefaultLogLevel}");
+			return DefaultLogLevel;
+		}
+	}
+
+	static int Run (string[] args, StandardLogBuffer logBuffer)
 	{
 		bool showHelp = false;
 
@@ -33,7 +79,8 @@ class Program
 			".NET for Android application analysis utility.",
 			"",
 			"Global options:",
-			{ "l=", $"Log level. One of: ", (string? l) => throw new NotImplementedException () },
+			{ "v=", $"Log/verbosity level. One of (case-insensitive): {GetLogLevels ()}", (string? l) => logBuffer.MinimumConsoleLogLevel = ParseLogLevel (l) },
+			{ "l=", $"Write all log messages to the specified file.", (string? l) => logBuffer.SetLogFile (l) },
 			{ "help|h|?", "Show this message and exit.", v => showHelp = v != null },
 			"",
 			"Available commands (all commands support the `--help` parameter):",

@@ -2,14 +2,16 @@ using System;
 
 namespace ApplicationUtility;
 
-static class Log
+public static class Log
 {
-	public const ConsoleColor ErrorColor       = ConsoleColor.Red;
-	public const ConsoleColor WarningColor     = ConsoleColor.Yellow;
-	public const ConsoleColor InfoColor        = ConsoleColor.Green;
-	public const ConsoleColor DebugColor       = ConsoleColor.DarkGray;
+	static LogBuffer? buffer;
 
-	static bool showDebug = false;
+	static LogBuffer Buffer => buffer ?? throw new InvalidOperationException ("Log buffer implementation not set.");
+
+	public static void SetLogBuffer (LogBuffer bufferImpl)
+	{
+		buffer = bufferImpl;
+	}
 
 	static void WriteStderr (string message)
 	{
@@ -63,104 +65,58 @@ static class Log
 		Console.ForegroundColor = oldFG;
 	}
 
-	public static void SetVerbose (bool verbose)
+	/// <summary>
+	/// Writes exception, if `ex` isn't `null`. The exception type and message are
+	/// logged using `messageLogLevel`. Stack trace is written using the `Debug` level
+	/// unless `messageLogLevel` is `Error` or higher, in which case the same level is
+	/// used for the stack trace.
+	/// </summary>
+	static void WriteException (Exception? ex, LogLevel messageLogLevel)
 	{
-		showDebug = verbose;
-	}
-
-	public static void Error (string message = "")
-	{
-		Error (tag: String.Empty, message);
-	}
-
-	public static void Error (string tag, string message)
-	{
-		if (message.Length > 0) {
-			WriteStderr (ErrorColor, "[E] ");
-		}
-
-		if (tag.Length > 0) {
-			WriteStderr (ErrorColor, $"{tag}: ");
-		}
-
-		WriteLineStderr (message);
-	}
-
-	public static void Warning (string message = "")
-	{
-		Warning (tag: String.Empty, message);
-	}
-
-	public static void Warning (string message, Exception ex)
-	{
-		Warning (tag: String.Empty, message);
-		Warning (tag: String.Empty, ex.ToString ());
-	}
-
-	public static void Warning (string tag, string message)
-	{
-		if (message.Length > 0) {
-			WriteStderr (WarningColor, "[W] ");
-		}
-
-		if (tag.Length > 0) {
-			WriteStderr (WarningColor, $"{tag}: ");
-		}
-
-		WriteLineStderr (message);
-	}
-
-	public static void Info (string message = "")
-	{
-		Info (tag: String.Empty, message);
-	}
-
-	public static void Info (string tag, string message)
-	{
-		if (tag.Length > 0) {
-			Write (InfoColor, $"{tag}: ");
-		}
-
-		WriteLineStderr (InfoColor,message);
-	}
-
-	public static void Debug (string message = "")
-	{
-		Debug (tag: String.Empty, message);
-	}
-
-	// TODO: debug should go to file if verbose output isn't enabled
-	public static void Debug (string tag, string message)
-	{
-		if (!showDebug) {
+		if (ex == null) {
 			return;
 		}
 
-		if (message.Length > 0) {
-			Write (DebugColor, "[D] ");
-		}
+		Buffer.Write (
+			$"Exception '{ex.GetType ()}' was thrown: {ex.Message}",
+			messageLogLevel,
+			writeLine: true
+		);
+		Buffer.Write (
+			ex.StackTrace ?? "Missing exception stack trace",
+			messageLogLevel >= LogLevel.Error ? messageLogLevel : LogLevel.Debug,
+			writeLine: true
+		);
 
-		if (tag.Length > 0) {
-			Write (DebugColor, $"{tag}: ");
-		}
-
-		WriteLineStderr (message);
 	}
 
-	public static void Debug (string message, Exception ex)
+	public static void Error (string message = "", Exception? ex = null, bool writeLine = true)
 	{
-		if (!showDebug) {
-			return;
-		}
-
-		Debug (tag: String.Empty, message);
-		Debug (tag: String.Empty, ex.ToString ());
+		Buffer.Write (message, LogLevel.Error, writeLine);
+		WriteException (ex, LogLevel.Error);
 	}
 
-	public static void ExceptionError (string message, Exception ex)
+	public static void Warning (string message = "", Exception? ex = null, bool writeLine = true)
 	{
-		Log.Error (message);
-		Log.Error ("Exception was thrown:");
-		Log.Error (ex.ToString ());
+		Buffer.Write (message, LogLevel.Warning, writeLine);
+		WriteException (ex, LogLevel.Warning);
+	}
+
+	public static void Info (string message = "", Exception? ex = null, bool writeLine = true)
+	{
+		Buffer.Write (message, LogLevel.Info, writeLine);
+		WriteException (ex, LogLevel.Info);
+	}
+
+	public static void Debug (string message = "", Exception? ex = null, bool writeLine = true)
+	{
+		Buffer.Write (message, LogLevel.Debug, writeLine);
+		WriteException (ex, LogLevel.Debug);
+	}
+
+	public static void LabeledInfo (string label, string message)
+	{
+		Buffer.Write ($"{label}: ", LogLevel.Info, writeLine: false, colorOverride: ConsoleColor.White);
+		Buffer.Write (message, LogLevel.Info, colorOverride: ConsoleColor.Cyan, doNotTag: true);
 	}
 }
