@@ -7,7 +7,7 @@
        whose trimTarget types were removed. -->
   <Target Name="_AddTrimmableTypeMapAssembliesToLinker"
       AfterTargets="_GenerateJavaStubs"
-      Condition=" '@(_GeneratedTypeMapAssemblies)' != '' ">
+      Condition=" '@(_GeneratedTypeMapAssemblies->Count())' != '0' ">
     <ItemGroup>
       <_ResolvedAssemblies Include="@(_GeneratedTypeMapAssemblies)" />
     </ItemGroup>
