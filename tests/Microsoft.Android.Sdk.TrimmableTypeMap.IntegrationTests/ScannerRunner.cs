@@ -163,6 +163,13 @@ static class ScannerRunner
 			return ExtractDirectRegisterAttributes (typeDef);
 		}
 
+		// Types with DoNotGenerateAcw=true are never passed to CecilImporter.CreateType
+		// in the real build (JavaTypeScanner skips them for JCW generation). Use direct
+		// attribute extraction to match what actually happens at build time.
+		if (HasDoNotGenerateAcw (typeDef)) {
+			return ExtractDirectRegisterAttributes (typeDef);
+		}
+
 		// Build a set of method names from implemented interfaces so we can
 		// filter them out of the CecilImporter output.
 		var interfaceMethodKeys = new HashSet<string> (StringComparer.Ordinal);
@@ -243,8 +250,26 @@ static class ScannerRunner
 		return false;
 	}
 
+	static bool HasDoNotGenerateAcw (TypeDefinition typeDef)
+	{
+		if (!typeDef.HasCustomAttributes) {
+			return false;
+		}
+		foreach (var attr in typeDef.CustomAttributes) {
+			if (attr.AttributeType.FullName != "Android.Runtime.RegisterAttribute") {
+				continue;
+			}
+			var v = attr.Properties.FirstOrDefault (p => p.Name == "DoNotGenerateAcw");
+			if (v.Name != null && v.Argument.Value is bool b && b) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/// <summary>
-	/// Fallback: extract [Register] from methods/properties directly (for interfaces).
+	/// Fallback: extract [Register] from methods/properties directly (for interfaces
+	/// and DoNotGenerateAcw types that are never passed through CecilImporter).
 	/// </summary>
 	static List<MethodEntry> ExtractDirectRegisterAttributes (TypeDefinition typeDef)
 	{
@@ -255,8 +280,13 @@ static class ScannerRunner
 			}
 			foreach (var attr in method.CustomAttributes) {
 				if (attr.AttributeType.FullName == "Android.Runtime.RegisterAttribute" && attr.ConstructorArguments.Count >= 2) {
+					var jniName = (string) attr.ConstructorArguments [0].Value;
+					// Skip constructors — compared separately in ExactJavaConstructors
+					if (jniName == "<init>" || jniName == ".ctor") {
+						continue;
+					}
 					methods.Add (new MethodEntry (
-						(string) attr.ConstructorArguments [0].Value,
+						jniName,
 						(string) attr.ConstructorArguments [1].Value,
 						attr.ConstructorArguments.Count > 2 ? (string) attr.ConstructorArguments [2].Value : null
 					));

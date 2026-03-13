@@ -243,7 +243,7 @@ sealed class JavaPeerScanner : IDisposable
 	List<MarshalMethodInfo> CollectMarshalMethods (TypeDefinition typeDef, AssemblyIndex index, bool detectBaseOverrides)
 	{
 		var methods = new List<MarshalMethodInfo> ();
-		var registeredMethodNames = new HashSet<string> (StringComparer.Ordinal);
+		var registeredMethodKeys = new HashSet<string> (StringComparer.Ordinal);
 
 		// Pass 1: collect methods with [Register] or [Export] directly on them
 		foreach (var methodHandle in typeDef.GetMethods ()) {
@@ -253,7 +253,8 @@ sealed class JavaPeerScanner : IDisposable
 			}
 
 			AddMarshalMethod (methods, registerInfo, methodDef, index, exportInfo);
-			registeredMethodNames.Add (index.Reader.GetString (methodDef.Name));
+			var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+			registeredMethodKeys.Add ($"{index.Reader.GetString (methodDef.Name)}({string.Join (",", sig.ParameterTypes)})");
 		}
 
 		// Pass 2: collect [Register] from properties (attribute is on the property, not the getter)
@@ -268,7 +269,8 @@ sealed class JavaPeerScanner : IDisposable
 			if (!accessors.Getter.IsNil) {
 				var getterDef = index.Reader.GetMethodDefinition (accessors.Getter);
 				AddMarshalMethod (methods, propRegister, getterDef, index);
-				registeredMethodNames.Add (index.Reader.GetString (getterDef.Name));
+				var sig = getterDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+				registeredMethodKeys.Add ($"{index.Reader.GetString (getterDef.Name)}({string.Join (",", sig.ParameterTypes)})");
 			}
 		}
 
@@ -277,7 +279,7 @@ sealed class JavaPeerScanner : IDisposable
 		// [Register] on every method that matters. Running override detection on them
 		// would incorrectly pick up internal overrides (e.g., JavaObject.equals).
 		if (detectBaseOverrides) {
-			CollectBaseMethodOverrides (typeDef, index, methods, registeredMethodNames);
+			CollectBaseMethodOverrides (typeDef, index, methods, registeredMethodKeys);
 		}
 
 		// Pass 4: detect non-activation constructors that chain to base registered ctors.
@@ -311,8 +313,18 @@ sealed class JavaPeerScanner : IDisposable
 
 			var methodName = index.Reader.GetString (methodDef.Name);
 
-			// Skip constructors and methods already collected from direct [Register]
-			if (methodName == ".ctor" || methodName == ".cctor" || alreadyRegistered.Contains (methodName)) {
+			// Skip constructors
+			if (methodName == ".ctor" || methodName == ".cctor") {
+				continue;
+			}
+
+			// Build a unique key from the managed signature to allow multiple
+			// overloads with the same name (e.g., Read(), Read(byte[]), Read(byte[],int,int))
+			var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+			var sigKey = $"{methodName}({string.Join (",", sig.ParameterTypes)})";
+
+			// Skip methods already collected from direct [Register]
+			if (alreadyRegistered.Contains (sigKey)) {
 				continue;
 			}
 
@@ -320,7 +332,7 @@ sealed class JavaPeerScanner : IDisposable
 			var baseRegistration = FindBaseRegisteredMethod (typeDef, index, methodName, methodDef);
 			if (baseRegistration is not null) {
 				methods.Add (baseRegistration);
-				alreadyRegistered.Add (methodName);
+				alreadyRegistered.Add (sigKey);
 			}
 		}
 
@@ -374,10 +386,6 @@ sealed class JavaPeerScanner : IDisposable
 	///    has compatible parameters.
 	/// 3. Fallback: if any base registered ctor is parameterless, accept the user ctor and
 	///    compute its JNI signature from the managed parameter types.
-	///
-	/// Known differences from legacy CecilImporter:
-	/// - Legacy threads outerType for nested inner-class constructors (generator concern).
-	/// - Legacy deduplicates by managed parameter string in addition to JNI signature.
 	/// </summary>
 	void CollectBaseConstructorChain (TypeDefinition typeDef, AssemblyIndex index,
 		List<MarshalMethodInfo> methods)
