@@ -598,10 +598,12 @@ sealed class JavaPeerScanner : IDisposable
 
 	/// <summary>
 	/// Walks the base type hierarchy looking for a method with [Register] that matches
-	/// the given method name and has a compatible signature.
+	/// the given method name and has a compatible signature. Returns the registration
+	/// info along with the declaring type's full name and assembly name (needed so
+	/// UCO wrappers call n_* on the correct base type).
 	/// </summary>
-	RegisterInfo? FindBaseRegisteredMethodInfo (TypeDefinition typeDef, AssemblyIndex index,
-		string methodName, MethodDefinition derivedMethod)
+	(RegisterInfo Info, string DeclaringTypeName, string DeclaringAssemblyName)? FindBaseRegisteredMethodInfo (
+		TypeDefinition typeDef, AssemblyIndex index, string methodName, MethodDefinition derivedMethod)
 	{
 		var baseInfo = GetBaseTypeInfo (typeDef, index);
 		if (baseInfo is null) {
@@ -635,7 +637,7 @@ sealed class JavaPeerScanner : IDisposable
 
 			// Found a matching base method — check if it has [Register]
 			if (TryGetMethodRegisterInfo (baseMethodDef, baseIndex, out var registerInfo, out _) && registerInfo is not null) {
-				return registerInfo;
+				return (registerInfo, baseTypeName, baseAssemblyName);
 			}
 		}
 
@@ -649,11 +651,12 @@ sealed class JavaPeerScanner : IDisposable
 	MarshalMethodInfo? FindBaseRegisteredMethod (TypeDefinition typeDef, AssemblyIndex index,
 		string methodName, MethodDefinition derivedMethod)
 	{
-		var registerInfo = FindBaseRegisteredMethodInfo (typeDef, index, methodName, derivedMethod);
-		if (registerInfo is null || registerInfo.Signature is null) {
+		var result = FindBaseRegisteredMethodInfo (typeDef, index, methodName, derivedMethod);
+		if (result is null || result.Value.Info.Signature is null) {
 			return null;
 		}
 
+		var registerInfo = result.Value.Info;
 		bool isConstructor = registerInfo.JniName == "<init>" || registerInfo.JniName == ".ctor";
 		return new MarshalMethodInfo {
 			JniName = registerInfo.JniName,
@@ -662,6 +665,8 @@ sealed class JavaPeerScanner : IDisposable
 			ManagedMethodName = methodName,
 			NativeCallbackName = isConstructor ? "n_ctor" : $"n_{methodName}",
 			IsConstructor = isConstructor,
+			DeclaringTypeName = result.Value.DeclaringTypeName,
+			DeclaringAssemblyName = result.Value.DeclaringAssemblyName,
 		};
 	}
 
@@ -713,6 +718,8 @@ sealed class JavaPeerScanner : IDisposable
 					ManagedMethodName = getterName,
 					NativeCallbackName = $"n_{getterName}",
 					IsConstructor = false,
+					DeclaringTypeName = baseTypeName,
+					DeclaringAssemblyName = baseAssemblyName,
 				};
 			}
 		}

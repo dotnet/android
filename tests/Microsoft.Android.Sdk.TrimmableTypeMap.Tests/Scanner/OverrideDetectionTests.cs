@@ -23,6 +23,9 @@ public class OverrideDetectionTests : FixtureTestBase
 		Assert.False (onCreate.IsConstructor);
 		// Activity.OnCreate has connector "GetOnCreate_Landroid_os_Bundle_Handler"
 		Assert.Equal ("GetOnCreate_Landroid_os_Bundle_Handler", onCreate.Connector);
+		// The n_OnCreate callback lives on Activity, not UserActivity
+		Assert.Equal ("Android.App.Activity", onCreate.DeclaringTypeName);
+		Assert.Equal ("TestFixtures", onCreate.DeclaringAssemblyName);
 
 		// UserActivity has an activation ctor
 		Assert.NotNull (peer.ActivationCtor);
@@ -81,6 +84,9 @@ public class OverrideDetectionTests : FixtureTestBase
 
 		var getMessage = peer.MarshalMethods.First (m => m.JniName == "getMessage");
 		Assert.Equal ("()Ljava/lang/String;", getMessage.JniSignature);
+		// The n_get_Message callback lives on Throwable, not CustomException
+		Assert.Equal ("Java.Lang.Throwable", getMessage.DeclaringTypeName);
+		Assert.Equal ("TestFixtures", getMessage.DeclaringAssemblyName);
 	}
 
 	[Fact]
