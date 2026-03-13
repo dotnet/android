@@ -78,6 +78,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("NativeAOTIgnore")]
 		public void ReplacementTypeUsedForMethodLookup ()
 		{
 			using var o = new RenameClassDerived ();
@@ -86,6 +87,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("NativeAOTIgnore")]
 		public void ReplaceInstanceMethodName ()
 		{
 			using var o = new JavaLangRemappingTestObject ();
@@ -95,6 +97,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("NativeAOTIgnore")]
 		public void ReplaceStaticMethodName ()
 		{
 			var r = JavaLangRemappingTestRuntime.remappedToGetRuntime ();
@@ -102,6 +105,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("NativeAOTIgnore")]
 		public void ReplaceInstanceMethodWithStaticMethod ()
 		{
 			using var o = new JavaLangRemappingTestObject ();
