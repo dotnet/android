@@ -39,7 +39,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// }
 /// </code>
 /// </remarks>
-sealed class JcwJavaSourceGenerator
+public sealed class JcwJavaSourceGenerator
 {
 	/// <summary>
 	/// Generates .java source files for all ACW types and writes them to the output directory.
