@@ -98,6 +98,8 @@ Write a temp JSON file:
 
 If no issues found **and CI is green**, submit with empty `comments` and a positive summary.
 
+**Copilot-authored PRs:** If the PR author is `Copilot` (the GitHub Copilot coding agent) and the verdict is ⚠️ Needs Changes or ❌ Reject, prefix the review `body` with `@copilot ` so the comment automatically triggers Copilot to address the feedback. Do NOT add the prefix for ✅ LGTM verdicts.
+
 ### 8. Submit as a single batch
 
 ```powershell
