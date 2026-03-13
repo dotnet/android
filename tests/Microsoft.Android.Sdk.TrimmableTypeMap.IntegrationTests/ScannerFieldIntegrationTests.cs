@@ -51,9 +51,7 @@ public partial class ScannerComparisonTests
 		Assert.All (interfaces, peer => {
 			var invokerTypeName = peer.InvokerTypeName;
 			Assert.False (string.IsNullOrEmpty (invokerTypeName), $"{peer.ManagedTypeName} should have an invoker.");
-			if (invokerTypeName is not null) {
-				Assert.Contains (invokerTypeName, managedNames);
-			}
+			Assert.Contains (invokerTypeName, managedNames);
 		});
 
 		var clickListener = interfaces.Single (p => p.JavaName == "android/view/View$OnClickListener");
