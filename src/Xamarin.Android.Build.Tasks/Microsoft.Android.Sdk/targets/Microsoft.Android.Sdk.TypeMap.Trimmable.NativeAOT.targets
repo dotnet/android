@@ -7,7 +7,7 @@
        whose trimTarget types were removed. -->
   <Target Name="_AddTrimmableTypeMapAssembliesToIlc"
       AfterTargets="_GenerateJavaStubs"
-      Condition=" '@(_GeneratedTypeMapAssemblies)' != '' ">
+      Condition=" '@(_GeneratedTypeMapAssemblies->Count())' != '0' ">
     <ItemGroup>
       <IlcReference Include="@(_GeneratedTypeMapAssemblies)" />
       <UnmanagedEntryPointsAssembly Include="@(_GeneratedTypeMapAssemblies)" />

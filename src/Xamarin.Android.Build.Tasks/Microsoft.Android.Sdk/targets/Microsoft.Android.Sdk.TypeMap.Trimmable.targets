@@ -46,7 +46,12 @@
       <Output TaskParameter="GeneratedJavaFiles" ItemName="_GeneratedJavaFiles" />
     </GenerateTrimmableTypeMap>
 
-    <Touch Files="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" AlwaysCreate="True" />
+    <ItemGroup>
+      <FileWrites Include="@(_GeneratedTypeMapAssemblies)" />
+      <FileWrites Include="@(_GeneratedJavaFiles)" />
+    </ItemGroup>
+
+    <TouchFiles="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" AlwaysCreate="True" />
   </Target>
 
 </Project>
