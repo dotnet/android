@@ -310,6 +310,50 @@ namespace MyApp
 		public void DoExportedWork () { }
 	}
 
+	// --- Interface implementation without [Register] test types ---
+	// These mimic real user code where a class implements a Java interface
+	// but doesn't have [Register] on the implementing method.
+
+	/// <summary>
+	/// Implements IOnClickListener.OnClick without [Register] on the method.
+	/// The scanner must detect this from the interface definition.
+	/// </summary>
+	[Register ("my/app/ImplicitClickListener")]
+	public class ImplicitClickListener : Java.Lang.Object, Android.Views.IOnClickListener
+	{
+		protected ImplicitClickListener (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		// No [Register] — real user code doesn't have it
+		public void OnClick (Android.Views.View v) { }
+	}
+
+	/// <summary>
+	/// Implements multiple interfaces without [Register] on any method.
+	/// </summary>
+	[Register ("my/app/ImplicitMultiListener")]
+	public class ImplicitMultiListener : Java.Lang.Object, Android.Views.IOnClickListener, Android.Views.IOnLongClickListener
+	{
+		protected ImplicitMultiListener (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public void OnClick (Android.Views.View v) { }
+		public bool OnLongClick (Android.Views.View v) => false;
+	}
+
+	/// <summary>
+	/// Has one interface method with [Register] and one without.
+	/// </summary>
+	[Register ("my/app/MixedInterfaceImpl")]
+	public class MixedInterfaceImpl : Java.Lang.Object, Android.Views.IOnClickListener, Android.Views.IOnLongClickListener
+	{
+		protected MixedInterfaceImpl (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Register ("onClick", "(Landroid/view/View;)V", "")]
+		public void OnClick (Android.Views.View v) { }
+
+		// No [Register] — should be detected from interface
+		public bool OnLongClick (Android.Views.View v) => false;
+	}
+
 	// --- Override detection test types ---
 	// These types override registered base methods WITHOUT [Register] on the override,
 	// mimicking real user code where the attribute is only on the base class in Mono.Android.
