@@ -34,7 +34,8 @@ public class OverrideDetectionTests : FixtureTestBase
 	[Fact]
 	public void MultipleOverrides_AllDetected ()
 	{
-		// FullActivity overrides both OnCreate and OnStart
+		// FullActivity overrides both OnCreate and OnStart — and nothing else.
+		// Non-registered Object virtuals (ToString, Equals, GetHashCode) must NOT appear.
 		var peer = FindFixtureByJavaName ("my/app/FullActivity");
 		var nonCtorMarshalNames = peer.MarshalMethods.Where (m => !m.IsConstructor).Select (m => m.JniName).ToList ();
 		Assert.Equal (2, nonCtorMarshalNames.Count);
@@ -47,8 +48,10 @@ public class OverrideDetectionTests : FixtureTestBase
 	{
 		// DeeplyDerived → UserActivity → Activity, [Register] is on Activity.OnCreate
 		var peer = FindFixtureByJavaName ("my/app/DeeplyDerived");
-		var marshalNames = peer.MarshalMethods.Select (m => m.JniName).ToList ();
-		Assert.Contains ("onCreate", marshalNames);
+		var onCreate = Assert.Single (peer.MarshalMethods, m => m.JniName == "onCreate");
+		// DeclaringType must be Activity (where [Register] lives), not UserActivity
+		Assert.Equal ("Android.App.Activity", onCreate.DeclaringTypeName);
+		Assert.Equal ("TestFixtures", onCreate.DeclaringAssemblyName);
 	}
 
 	[Fact]
@@ -96,5 +99,32 @@ public class OverrideDetectionTests : FixtureTestBase
 		var peer = FindFixtureByJavaName ("my/app/MainActivity");
 		var marshalNames = peer.MarshalMethods.Select (m => m.JniName).ToList ();
 		Assert.Contains ("onCreate", marshalNames);
+	}
+
+	[Fact]
+	public void DerivedFragment_DeclaringTypePointsToCorrectBase ()
+	{
+		// DerivedFragment overrides Activity.OnCreate (MCW, 2 levels up) and
+		// BaseFragment.OnViewCreated (user ACW, 1 level up). Each override
+		// must point to the type that owns the [Register].
+		var peer = FindFixtureByJavaName ("my/app/DerivedFragment");
+		var nonCtorMethods = peer.MarshalMethods.Where (m => !m.IsConstructor).ToList ();
+
+		var onCreate = Assert.Single (nonCtorMethods, m => m.JniName == "onCreate");
+		Assert.Equal ("Android.App.Activity", onCreate.DeclaringTypeName);
+
+		var onViewCreated = Assert.Single (nonCtorMethods, m => m.JniName == "onViewCreated");
+		Assert.Equal ("MyApp.BaseFragment", onViewCreated.DeclaringTypeName);
+		Assert.Equal ("TestFixtures", onViewCreated.DeclaringAssemblyName);
+	}
+
+	[Fact]
+	public void GrandchildFragment_ThreeLevelDeepOverride ()
+	{
+		// GrandchildFragment → DerivedFragment → BaseFragment → Activity
+		// OnCreate [Register] is on Activity, 3 levels up
+		var peer = FindFixtureByJavaName ("my/app/GrandchildFragment");
+		var onCreate = Assert.Single (peer.MarshalMethods, m => m.JniName == "onCreate");
+		Assert.Equal ("Android.App.Activity", onCreate.DeclaringTypeName);
 	}
 }

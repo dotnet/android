@@ -93,4 +93,31 @@ public class ConstructorDetectionTests : FixtureTestBase
 		var fallbackCtor = peer.JavaConstructors.First (c => c.JniSignature == "(Ljava/lang/String;)V");
 		Assert.Equal ("", fallbackCtor.SuperArgumentsString);
 	}
+
+	[Fact]
+	public void CustomDialog_SameArityTypeMismatch_UsesParameterlessFallback ()
+	{
+		// CustomDialog has ctor(string). DialogBase has registered ctor(Context).
+		// Same arity (1 param) but different types — must NOT be treated as "already covered".
+		// DialogBase also has registered ()V → parameterless fallback accepts ctor(string).
+		var peer = FindFixtureByJavaName ("my/app/CustomDialog");
+		var ctorSigs = peer.JavaConstructors.Select (c => c.JniSignature).ToList ();
+
+		// Base seeds: ()V and (Landroid/content/Context;)V from DialogBase
+		Assert.Contains ("()V", ctorSigs);
+		Assert.Contains ("(Landroid/content/Context;)V", ctorSigs);
+
+		// Fallback: ctor(string) accepted via parameterless base ctor
+		Assert.Contains ("(Ljava/lang/String;)V", ctorSigs);
+	}
+
+	[Fact]
+	public void ActivityWithMultiParamCtor_FallbackComputesFullSignature ()
+	{
+		// ctor(string, int, bool) should produce "(Ljava/lang/String;IZ)V"
+		// via BuildJniCtorSignature mapping each managed type to JNI.
+		var peer = FindFixtureByJavaName ("my/app/ActivityWithMultiParamCtor");
+		var ctorSigs = peer.JavaConstructors.Select (c => c.JniSignature).ToList ();
+		Assert.Contains ("(Ljava/lang/String;IZ)V", ctorSigs);
+	}
 }

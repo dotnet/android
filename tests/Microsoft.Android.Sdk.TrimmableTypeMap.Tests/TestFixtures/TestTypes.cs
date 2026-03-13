@@ -425,6 +425,96 @@ namespace MyApp
 		// but Activity has a registered ()V ctor → fallback accepts this.
 		public ActivityWithCustomCtor (string label) { }
 	}
+
+	// --- Additional deep hierarchy test types ---
+
+	/// <summary>
+	/// User ACW base type that adds its own registered method. Used to test
+	/// multi-level user type hierarchies (ACW → ACW → MCW).
+	/// </summary>
+	[Register ("my/app/BaseFragment")]
+	public class BaseFragment : Android.App.Activity
+	{
+		protected BaseFragment (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Register ("onViewCreated", "()V", "GetOnViewCreatedHandler")]
+		protected virtual void OnViewCreated () { }
+	}
+
+	/// <summary>
+	/// Overrides both a method registered on a user ACW base (BaseFragment.OnViewCreated)
+	/// and one on an MCW base (Activity.OnCreate). Tests that DeclaringTypeName points
+	/// to the correct type for each.
+	/// </summary>
+	[Register ("my/app/DerivedFragment")]
+	public class DerivedFragment : BaseFragment
+	{
+		protected DerivedFragment (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		protected override void OnCreate (object? savedInstanceState) { }
+		protected override void OnViewCreated () { }
+	}
+
+	/// <summary>
+	/// Three levels deep: GrandchildFragment → DerivedFragment → BaseFragment → Activity.
+	/// OnCreate [Register] is on Activity (3 levels up). Tests deep recursive walk.
+	/// </summary>
+	[Register ("my/app/GrandchildFragment")]
+	public class GrandchildFragment : DerivedFragment
+	{
+		protected GrandchildFragment (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		protected override void OnCreate (object? savedInstanceState) { }
+	}
+
+	// --- Constructor chaining: same-arity type mismatch ---
+
+	/// <summary>
+	/// MCW base with a registered ctor that takes a Context parameter.
+	/// Used to test that ctor parameter type matching is strict (same arity,
+	/// different types should NOT match).
+	/// </summary>
+	[Register ("my/app/DialogBase", DoNotGenerateAcw = true)]
+	public class DialogBase : Java.Lang.Object
+	{
+		[Register (".ctor", "()V", "")]
+		public DialogBase () { }
+
+		[Register (".ctor", "(Landroid/content/Context;)V", "")]
+		public DialogBase (Context context) { }
+
+		protected DialogBase (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+	}
+
+	/// <summary>
+	/// Derived type with a ctor(string) that has the same arity as
+	/// DialogBase's registered ctor(Context) but a different parameter type.
+	/// The scanner must NOT treat it as "already covered" — it should fall
+	/// through to the parameterless fallback and compute the JNI signature.
+	/// </summary>
+	[Register ("my/app/CustomDialog")]
+	public class CustomDialog : DialogBase
+	{
+		protected CustomDialog (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		// Same arity as DialogBase(Context) but different type → not covered.
+		// Parameterless fallback: super() + nctor_N(string).
+		public CustomDialog (string title) { }
+	}
+
+	// --- Constructor chaining: multi-parameter fallback ---
+
+	/// <summary>
+	/// Has a ctor with multiple primitive/string params to test that
+	/// BuildJniCtorSignature correctly handles multi-parameter signatures.
+	/// </summary>
+	[Register ("my/app/ActivityWithMultiParamCtor")]
+	public class ActivityWithMultiParamCtor : Android.App.Activity
+	{
+		protected ActivityWithMultiParamCtor (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public ActivityWithMultiParamCtor (string name, int count, bool enabled) { }
+	}
 }
 
 namespace MyApp.Generic
