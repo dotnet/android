@@ -217,21 +217,12 @@ namespace Xamarin.Android.Build.Tests {
 
 		static string? FindMonoAndroidDll ()
 		{
-			var candidates = new [] {
-				Path.Combine (TestEnvironment.DotNetPreviewPacksDirectory, "Microsoft.Android.Ref.35"),
-				Path.Combine (TestEnvironment.MonoAndroidFrameworkDirectory ?? ""),
-			};
-
-			foreach (var dir in candidates) {
-				if (string.IsNullOrEmpty (dir) || !Directory.Exists (dir)) {
-					continue;
-				}
-				var files = Directory.GetFiles (dir, "Mono.Android.dll", SearchOption.AllDirectories);
-				if (files.Length > 0) {
-					return files [0];
-				}
+			var frameworkDir = TestEnvironment.MonoAndroidFrameworkDirectory;
+			if (string.IsNullOrEmpty (frameworkDir) || !Directory.Exists (frameworkDir)) {
+				return null;
 			}
-			return null;
+			var path = Path.Combine (frameworkDir, "Mono.Android.dll");
+			return File.Exists (path) ? path : null;
 		}
 	}
 }
