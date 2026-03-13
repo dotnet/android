@@ -203,8 +203,10 @@ sealed class JavaPeerScanner : IDisposable
 			// Resolve implemented Java interface names
 			var implementedInterfaces = ResolveImplementedInterfaceJavaNames (typeDef, index);
 
-			// Collect marshal methods (including constructors) in a single pass over methods
-			var marshalMethods = CollectMarshalMethods (typeDef, index);
+			// Collect marshal methods (including constructors).
+			// Override detection is only for user ACW types — MCW types (DoNotGenerateAcw)
+			// already have [Register] on every method that matters.
+			var marshalMethods = CollectMarshalMethods (typeDef, index, detectBaseOverrides: !doNotGenerateAcw);
 
 			// Resolve activation constructor
 			var activationCtor = ResolveActivationCtor (fullName, typeDef, index);
@@ -238,11 +240,12 @@ sealed class JavaPeerScanner : IDisposable
 		}
 	}
 
-	List<MarshalMethodInfo> CollectMarshalMethods (TypeDefinition typeDef, AssemblyIndex index)
+	List<MarshalMethodInfo> CollectMarshalMethods (TypeDefinition typeDef, AssemblyIndex index, bool detectBaseOverrides)
 	{
 		var methods = new List<MarshalMethodInfo> ();
+		var registeredMethodNames = new HashSet<string> (StringComparer.Ordinal);
 
-		// Single pass over methods: collect marshal methods (including constructors)
+		// Pass 1: collect methods with [Register] or [Export] directly on them
 		foreach (var methodHandle in typeDef.GetMethods ()) {
 			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
 			if (!TryGetMethodRegisterInfo (methodDef, index, out var registerInfo, out var exportInfo) || registerInfo is null) {
@@ -250,9 +253,10 @@ sealed class JavaPeerScanner : IDisposable
 			}
 
 			AddMarshalMethod (methods, registerInfo, methodDef, index, exportInfo);
+			registeredMethodNames.Add (index.Reader.GetString (methodDef.Name));
 		}
 
-		// Collect [Register] from properties (attribute is on the property, not the getter)
+		// Pass 2: collect [Register] from properties (attribute is on the property, not the getter)
 		foreach (var propHandle in typeDef.GetProperties ()) {
 			var propDef = index.Reader.GetPropertyDefinition (propHandle);
 			var propRegister = TryGetPropertyRegisterInfo (propDef, index);
@@ -264,10 +268,242 @@ sealed class JavaPeerScanner : IDisposable
 			if (!accessors.Getter.IsNil) {
 				var getterDef = index.Reader.GetMethodDefinition (accessors.Getter);
 				AddMarshalMethod (methods, propRegister, getterDef, index);
+				registeredMethodNames.Add (index.Reader.GetString (getterDef.Name));
 			}
 		}
 
+		// Pass 3: detect overrides of registered base methods.
+		// Only for user ACW types — MCW types (DoNotGenerateAcw=true) already have
+		// [Register] on every method that matters. Running override detection on them
+		// would incorrectly pick up internal overrides (e.g., JavaObject.equals).
+		if (detectBaseOverrides) {
+			CollectBaseMethodOverrides (typeDef, index, methods, registeredMethodNames);
+		}
+
 		return methods;
+	}
+
+	/// <summary>
+	/// For each virtual override method on <paramref name="typeDef"/> that wasn't already
+	/// collected (no direct [Register]), walks up the base type hierarchy to find a
+	/// registered base method with matching name and compatible signature. If found,
+	/// adds the registration info as a marshal method with the declaring type set to
+	/// the base type that owns the [Register] attribute.
+	/// </summary>
+	void CollectBaseMethodOverrides (TypeDefinition typeDef, AssemblyIndex index,
+		List<MarshalMethodInfo> methods, HashSet<string> alreadyRegistered)
+	{
+		foreach (var methodHandle in typeDef.GetMethods ()) {
+			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
+			var attrs = methodDef.Attributes;
+
+			// Only virtual overrides: must be Virtual and NOT NewSlot (new keyword).
+			// NewSlot means a new virtual method, not an override.
+			if ((attrs & MethodAttributes.Virtual) == 0 ||
+			    (attrs & MethodAttributes.NewSlot) != 0 ||
+			    (attrs & MethodAttributes.Static) != 0) {
+				continue;
+			}
+
+			var methodName = index.Reader.GetString (methodDef.Name);
+
+			// Skip constructors and methods already collected from direct [Register]
+			if (methodName == ".ctor" || methodName == ".cctor" || alreadyRegistered.Contains (methodName)) {
+				continue;
+			}
+
+			// Walk base types looking for a registered method with this name
+			var baseRegistration = FindBaseRegisteredMethod (typeDef, index, methodName, methodDef);
+			if (baseRegistration is not null) {
+				methods.Add (baseRegistration);
+				alreadyRegistered.Add (methodName);
+			}
+		}
+
+		// Also check property overrides: a derived type may override a property
+		// whose getter is registered on a base type (e.g., Throwable.Message)
+		CollectBasePropertyOverrides (typeDef, index, methods, alreadyRegistered);
+	}
+
+	/// <summary>
+	/// Checks for property overrides where the base property has [Register] on the property
+	/// definition. Property [Register] attributes are on the PropertyDefinition, not the getter,
+	/// so we need separate handling.
+	/// </summary>
+	void CollectBasePropertyOverrides (TypeDefinition typeDef, AssemblyIndex index,
+		List<MarshalMethodInfo> methods, HashSet<string> alreadyRegistered)
+	{
+		foreach (var propHandle in typeDef.GetProperties ()) {
+			var propDef = index.Reader.GetPropertyDefinition (propHandle);
+			var accessors = propDef.GetAccessors ();
+			if (accessors.Getter.IsNil) {
+				continue;
+			}
+
+			var getterDef = index.Reader.GetMethodDefinition (accessors.Getter);
+			var attrs = getterDef.Attributes;
+
+			if ((attrs & MethodAttributes.Virtual) == 0 ||
+			    (attrs & MethodAttributes.NewSlot) != 0 ||
+			    (attrs & MethodAttributes.Static) != 0) {
+				continue;
+			}
+
+			var getterName = index.Reader.GetString (getterDef.Name);
+			if (alreadyRegistered.Contains (getterName)) {
+				continue;
+			}
+
+			var baseRegistration = FindBaseRegisteredProperty (typeDef, index, getterName, getterDef);
+			if (baseRegistration is not null) {
+				methods.Add (baseRegistration);
+				alreadyRegistered.Add (getterName);
+			}
+		}
+	}
+
+	/// <summary>
+	/// Walks the base type hierarchy looking for a method with [Register] that matches
+	/// the given method name and has a compatible signature.
+	/// </summary>
+	RegisterInfo? FindBaseRegisteredMethodInfo (TypeDefinition typeDef, AssemblyIndex index,
+		string methodName, MethodDefinition derivedMethod)
+	{
+		var baseInfo = GetBaseTypeInfo (typeDef, index);
+		if (baseInfo is null) {
+			return null;
+		}
+
+		var (baseTypeName, baseAssemblyName) = baseInfo.Value;
+		if (!TryResolveType (baseTypeName, baseAssemblyName, out var baseHandle, out var baseIndex)) {
+			return null;
+		}
+
+		var baseTypeDef = baseIndex.Reader.GetTypeDefinition (baseHandle);
+
+		// Check methods on this base type
+		foreach (var baseMethodHandle in baseTypeDef.GetMethods ()) {
+			var baseMethodDef = baseIndex.Reader.GetMethodDefinition (baseMethodHandle);
+			var baseName = baseIndex.Reader.GetString (baseMethodDef.Name);
+
+			if (baseName != methodName) {
+				continue;
+			}
+
+			if ((baseMethodDef.Attributes & MethodAttributes.Virtual) == 0 &&
+			    (baseMethodDef.Attributes & MethodAttributes.Abstract) == 0) {
+				continue;
+			}
+
+			if (!AreParametersCompatible (derivedMethod, index, baseMethodDef, baseIndex)) {
+				continue;
+			}
+
+			// Found a matching base method — check if it has [Register]
+			if (TryGetMethodRegisterInfo (baseMethodDef, baseIndex, out var registerInfo, out _) && registerInfo is not null) {
+				return registerInfo;
+			}
+		}
+
+		// Recurse up the hierarchy
+		return FindBaseRegisteredMethodInfo (baseTypeDef, baseIndex, methodName, derivedMethod);
+	}
+
+	MarshalMethodInfo? FindBaseRegisteredMethod (TypeDefinition typeDef, AssemblyIndex index,
+		string methodName, MethodDefinition derivedMethod)
+	{
+		var registerInfo = FindBaseRegisteredMethodInfo (typeDef, index, methodName, derivedMethod);
+		if (registerInfo is null || registerInfo.Signature is null) {
+			return null;
+		}
+
+		bool isConstructor = registerInfo.JniName == "<init>" || registerInfo.JniName == ".ctor";
+		return new MarshalMethodInfo {
+			JniName = registerInfo.JniName,
+			JniSignature = registerInfo.Signature,
+			Connector = registerInfo.Connector,
+			ManagedMethodName = methodName,
+			NativeCallbackName = isConstructor ? "n_ctor" : $"n_{methodName}",
+			IsConstructor = isConstructor,
+		};
+	}
+
+	/// <summary>
+	/// Walks the base type hierarchy looking for a property with [Register] whose getter
+	/// matches the given getter name and has a compatible signature.
+	/// </summary>
+	MarshalMethodInfo? FindBaseRegisteredProperty (TypeDefinition typeDef, AssemblyIndex index,
+		string getterName, MethodDefinition derivedGetter)
+	{
+		var baseInfo = GetBaseTypeInfo (typeDef, index);
+		if (baseInfo is null) {
+			return null;
+		}
+
+		var (baseTypeName, baseAssemblyName) = baseInfo.Value;
+		if (!TryResolveType (baseTypeName, baseAssemblyName, out var baseHandle, out var baseIndex)) {
+			return null;
+		}
+
+		var baseTypeDef = baseIndex.Reader.GetTypeDefinition (baseHandle);
+
+		// Check properties on this base type
+		foreach (var basePropHandle in baseTypeDef.GetProperties ()) {
+			var basePropDef = baseIndex.Reader.GetPropertyDefinition (basePropHandle);
+			var baseAccessors = basePropDef.GetAccessors ();
+			if (baseAccessors.Getter.IsNil) {
+				continue;
+			}
+
+			var baseGetterDef = baseIndex.Reader.GetMethodDefinition (baseAccessors.Getter);
+			var baseGetterName = baseIndex.Reader.GetString (baseGetterDef.Name);
+			if (baseGetterName != getterName) {
+				continue;
+			}
+
+			if ((baseGetterDef.Attributes & MethodAttributes.Virtual) == 0 &&
+			    (baseGetterDef.Attributes & MethodAttributes.Abstract) == 0) {
+				continue;
+			}
+
+			// Check if the base property has [Register]
+			var propRegister = TryGetPropertyRegisterInfo (basePropDef, baseIndex);
+			if (propRegister is not null && propRegister.Signature is not null) {
+				return new MarshalMethodInfo {
+					JniName = propRegister.JniName,
+					JniSignature = propRegister.Signature,
+					Connector = propRegister.Connector,
+					ManagedMethodName = getterName,
+					NativeCallbackName = $"n_{getterName}",
+					IsConstructor = false,
+				};
+			}
+		}
+
+		// Recurse up
+		return FindBaseRegisteredProperty (baseTypeDef, baseIndex, getterName, derivedGetter);
+	}
+
+	/// <summary>
+	/// Checks if two methods have compatible parameter lists by comparing their decoded signatures.
+	/// </summary>
+	static bool AreParametersCompatible (MethodDefinition method1, AssemblyIndex index1,
+		MethodDefinition method2, AssemblyIndex index2)
+	{
+		var sig1 = method1.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+		var sig2 = method2.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+
+		if (sig1.ParameterTypes.Length != sig2.ParameterTypes.Length) {
+			return false;
+		}
+
+		for (int i = 0; i < sig1.ParameterTypes.Length; i++) {
+			if (!string.Equals (sig1.ParameterTypes [i], sig2.ParameterTypes [i], StringComparison.Ordinal)) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	static void AddMarshalMethod (List<MarshalMethodInfo> methods, RegisterInfo registerInfo, MethodDefinition methodDef, AssemblyIndex index, ExportInfo? exportInfo = null)

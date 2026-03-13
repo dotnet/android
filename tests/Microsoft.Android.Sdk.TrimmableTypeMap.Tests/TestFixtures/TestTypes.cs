@@ -308,6 +308,89 @@ namespace MyApp
 		[Java.Interop.Export ("doExportedWork")]
 		public void DoExportedWork () { }
 	}
+
+	// --- Override detection test types ---
+	// These types override registered base methods WITHOUT [Register] on the override,
+	// mimicking real user code where the attribute is only on the base class in Mono.Android.
+
+	/// <summary>
+	/// Overrides Activity.OnCreate without [Register] — the scanner must detect this
+	/// by walking the base type hierarchy and finding [Register] on Activity.OnCreate.
+	/// </summary>
+	[Register ("my/app/UserActivity")]
+	public class UserActivity : Android.App.Activity
+	{
+		protected UserActivity (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		// No [Register] here — real user code doesn't have it
+		protected override void OnCreate (object? savedInstanceState) => base.OnCreate (savedInstanceState);
+	}
+
+	/// <summary>
+	/// Overrides multiple registered base methods without [Register].
+	/// </summary>
+	[Register ("my/app/FullActivity")]
+	public class FullActivity : Android.App.Activity
+	{
+		protected FullActivity (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		protected override void OnCreate (object? savedInstanceState) { }
+		protected override void OnStart () { }
+	}
+
+	/// <summary>
+	/// Deep inheritance: overrides a method registered two levels up.
+	/// Activity has [Register("onCreate",...)], UserActivity overrides it (no [Register]),
+	/// DeeplyDerived overrides it again (no [Register]).
+	/// </summary>
+	[Register ("my/app/DeeplyDerived")]
+	public class DeeplyDerived : UserActivity
+	{
+		protected DeeplyDerived (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		protected override void OnCreate (object? savedInstanceState) { }
+	}
+
+	/// <summary>
+	/// Has both a direct [Register] method AND an override of a base registered method.
+	/// The override should be detected; the direct one should not be duplicated.
+	/// </summary>
+	[Register ("my/app/MixedMethods")]
+	public class MixedMethods : Android.App.Activity
+	{
+		protected MixedMethods (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		// Override without [Register] — should be detected from base
+		protected override void OnCreate (object? savedInstanceState) { }
+
+		// Direct [Register] — should be collected normally
+		[Register ("customMethod", "()V", "GetCustomMethodHandler")]
+		public virtual void CustomMethod () { }
+	}
+
+	/// <summary>
+	/// Uses 'new' keyword (IsNewSlot) — should NOT be detected as an override.
+	/// </summary>
+	[Register ("my/app/NewSlotActivity")]
+	public class NewSlotActivity : Android.App.Activity
+	{
+		protected NewSlotActivity (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		// 'new' hides the base method rather than overriding it
+		protected new void OnCreate (object? savedInstanceState) { }
+	}
+
+	/// <summary>
+	/// Overrides a registered property getter without [Register] on the override.
+	/// </summary>
+	[Register ("my/app/CustomException")]
+	public class CustomException : Java.Lang.Throwable
+	{
+		protected CustomException (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		// Overrides Throwable.Message which has [Register("getMessage",...)]
+		public override string? Message => "custom";
+	}
 }
 
 namespace MyApp.Generic
