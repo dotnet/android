@@ -103,7 +103,7 @@ namespace Xamarin.Android.NetTests
 
 		static int GetAvailablePort ()
 		{
-			var tcpListener = new TcpListener (IPAddress.Loopback, 0);
+			using var tcpListener = new TcpListener (IPAddress.Any, 0);
 			tcpListener.Start ();
 			int port = ((IPEndPoint) tcpListener.LocalEndpoint).Port;
 			tcpListener.Stop ();
