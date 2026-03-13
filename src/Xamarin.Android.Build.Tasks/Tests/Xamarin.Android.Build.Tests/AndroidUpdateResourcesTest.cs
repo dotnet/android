@@ -277,9 +277,6 @@ namespace Xamarin.Android.Build.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("Incremental build timing is not tested for NativeAOT.");
-			}
 
 			var proj = new XamarinAndroidApplicationProject  {
 				IsRelease = isRelease,
@@ -297,7 +294,9 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "First build was supposed to build without errors");
 				var firstBuildTime = b.LastBuildTime;
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "Second build was supposed to build without errors");
-				Assert.IsTrue (firstBuildTime > b.LastBuildTime, "Second build was supposed to be quicker than the first");
+				if (runtime != AndroidRuntime.NativeAOT) {
+					Assert.IsTrue (firstBuildTime > b.LastBuildTime, "Second build was supposed to be quicker than the first");
+				}
 				b.Output.AssertTargetIsSkipped ("_UpdateAndroidResgen");
 				b.Output.AssertTargetIsSkipped ("_GenerateAndroidResourceDir");
 				b.Output.AssertTargetIsSkipped ("_CompileJava");
