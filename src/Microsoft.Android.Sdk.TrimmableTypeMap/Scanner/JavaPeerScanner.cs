@@ -232,6 +232,7 @@ sealed class JavaPeerScanner : IDisposable
 				IsUnconditional = isUnconditional,
 				MarshalMethods = marshalMethods,
 				JavaConstructors = BuildJavaConstructors (marshalMethods),
+				JavaFields = CollectExportFields (typeDef, index),
 				ActivationCtor = activationCtor,
 				InvokerTypeName = invokerTypeName,
 				IsGenericDefinition = isGenericDefinition,
@@ -972,6 +973,11 @@ sealed class JavaPeerScanner : IDisposable
 				return true;
 			}
 
+			if (attrName == "ExportFieldAttribute") {
+				(registerInfo, exportInfo) = ParseExportFieldAsMethod (ca, methodDef, index);
+				return true;
+			}
+
 			// JI-style constructor registration: [JniConstructorSignature("()V")]
 			// Single arg = JNI signature; name is always ".ctor", connector is empty.
 			if (attrName == "JniConstructorSignatureAttribute") {
@@ -1054,6 +1060,23 @@ sealed class JavaPeerScanner : IDisposable
 		sb.Append (')');
 		sb.Append (ManagedTypeToJniDescriptor (sig.ReturnType));
 		return sb.ToString ();
+	}
+
+	/// <summary>
+	/// Parses an [ExportField] attribute as a marshal method registration.
+	/// [ExportField] methods use the managed method name as the JNI name and have
+	/// a connector of "__export__" (matching legacy CecilImporter behavior).
+	/// </summary>
+	static (RegisterInfo registerInfo, ExportInfo exportInfo) ParseExportFieldAsMethod (CustomAttribute ca, MethodDefinition methodDef, AssemblyIndex index)
+	{
+		var managedName = index.Reader.GetString (methodDef.Name);
+		var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+		var jniSig = BuildJniSignatureFromManaged (sig);
+
+		return (
+			new RegisterInfo { JniName = managedName, Signature = jniSig, Connector = "__export__", DoNotGenerateAcw = false },
+			new ExportInfo { ThrownNames = null, SuperArgumentsString = null }
+		);
 	}
 
 	static string ManagedTypeToJniDescriptor (string managedType)
@@ -1403,5 +1426,78 @@ sealed class JavaPeerScanner : IDisposable
 			ctorIndex++;
 		}
 		return ctors;
+	}
+
+	/// <summary>
+	/// Collects Java field declarations from [ExportField] attributes on methods.
+	/// Each [ExportField("name")] on a method produces a Java field initialized by
+	/// calling that method.
+	/// </summary>
+	static List<JavaFieldInfo> CollectExportFields (TypeDefinition typeDef, AssemblyIndex index)
+	{
+		var fields = new List<JavaFieldInfo> ();
+
+		foreach (var methodHandle in typeDef.GetMethods ()) {
+			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
+
+			foreach (var caHandle in methodDef.GetCustomAttributes ()) {
+				var ca = index.Reader.GetCustomAttribute (caHandle);
+				var attrName = AssemblyIndex.GetCustomAttributeName (ca, index.Reader);
+
+				if (attrName != "ExportFieldAttribute") {
+					continue;
+				}
+
+				var value = index.DecodeAttribute (ca);
+				if (value.FixedArguments.Length == 0) {
+					continue;
+				}
+
+				var fieldName = (string?)value.FixedArguments [0].Value;
+				if (fieldName is null) {
+					continue;
+				}
+
+				var managedName = index.Reader.GetString (methodDef.Name);
+				var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+				var javaReturnType = ManagedReturnTypeToJava (sig.ReturnType);
+				var access = GetJavaAccess (methodDef.Attributes & MethodAttributes.MemberAccessMask);
+				var isStatic = (methodDef.Attributes & MethodAttributes.Static) != 0;
+
+				fields.Add (new JavaFieldInfo {
+					FieldName = fieldName,
+					JavaTypeName = javaReturnType,
+					InitializerMethodName = managedName,
+					Visibility = access,
+					IsStatic = isStatic,
+				});
+			}
+		}
+
+		return fields;
+	}
+
+	static string ManagedReturnTypeToJava (string managedType)
+	{
+		switch (managedType) {
+		case "System.String": return "java.lang.String";
+		case "System.Boolean": return "boolean";
+		case "System.Byte":
+		case "System.SByte": return "byte";
+		case "System.Char": return "char";
+		case "System.Int16":
+		case "System.UInt16": return "short";
+		case "System.Int32":
+		case "System.UInt32": return "int";
+		case "System.Int64":
+		case "System.UInt64": return "long";
+		case "System.Single": return "float";
+		case "System.Double": return "double";
+		case "System.Void": return "void";
+		default:
+			// For reference types, use java.lang.Object as fallback.
+			// The exact Java type would require JNI signature resolution.
+			return "java.lang.Object";
+		}
 	}
 }

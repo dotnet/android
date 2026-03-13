@@ -85,6 +85,7 @@ sealed class JcwJavaSourceGenerator
 		WriteClassDeclaration (type, writer);
 		WriteStaticInitializer (type, writer);
 		WriteConstructors (type, writer);
+		WriteFields (type, writer);
 		WriteMethods (type, writer);
 		WriteGCUserPeerMethods (writer);
 		WriteClassClose (writer);
@@ -177,6 +178,28 @@ sealed class JcwJavaSourceGenerator
 		}
 
 		if (type.JavaConstructors.Count > 0) {
+			writer.WriteLine ();
+		}
+	}
+
+	static void WriteFields (JavaPeerInfo type, TextWriter writer)
+	{
+		foreach (var field in type.JavaFields) {
+			writer.Write ('\t');
+			writer.Write (field.Visibility);
+			writer.Write (' ');
+			if (field.IsStatic) {
+				writer.Write ("static ");
+			}
+			writer.Write (field.JavaTypeName);
+			writer.Write (' ');
+			writer.Write (field.FieldName);
+			writer.Write (" = ");
+			writer.Write (field.InitializerMethodName);
+			writer.WriteLine (" ();");
+		}
+
+		if (type.JavaFields.Count > 0) {
 			writer.WriteLine ();
 		}
 	}

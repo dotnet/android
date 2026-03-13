@@ -254,6 +254,21 @@ namespace MyApp
 	[Application (Name = "my.app.MyApplication", BackupAgent = typeof (MyBackupAgent), ManageSpaceActivity = typeof (MyManageSpaceActivity))]
 	public class MyApplication : Java.Lang.Object { }
 
+	/// <summary>
+	/// Has [ExportField] methods that should produce Java field declarations.
+	/// </summary>
+	[Register ("my/app/ExportFieldExample")]
+	public class ExportFieldExample : Java.Lang.Object
+	{
+		protected ExportFieldExample (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Java.Interop.ExportField ("STATIC_INSTANCE")]
+		public static ExportFieldExample GetInstance () => default!;
+
+		[Java.Interop.ExportField ("VALUE")]
+		public string GetValue () => "";
+	}
+
 	[Instrumentation (Name = "my.app.MyInstrumentation")]
 	public class MyInstrumentation : Java.Lang.Object { }
 
