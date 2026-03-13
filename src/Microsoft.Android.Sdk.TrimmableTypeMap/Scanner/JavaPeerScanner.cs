@@ -207,7 +207,7 @@ sealed class JavaPeerScanner : IDisposable
 			// Override and interface detection is only for user ACW class types:
 			// - MCW types (DoNotGenerateAcw) already have [Register] on every method
 			// - Interface types don't implement other interfaces' methods in JCWs
-			var marshalMethods = CollectMarshalMethods (typeDef, index, detectBaseOverrides: !doNotGenerateAcw && !isInterface);
+			var (marshalMethods, exportFields) = CollectMarshalMethods (typeDef, index, detectBaseOverrides: !doNotGenerateAcw && !isInterface);
 
 			// Resolve activation constructor
 			var activationCtor = ResolveActivationCtor (fullName, typeDef, index);
@@ -232,7 +232,7 @@ sealed class JavaPeerScanner : IDisposable
 				IsUnconditional = isUnconditional,
 				MarshalMethods = marshalMethods,
 				JavaConstructors = BuildJavaConstructors (marshalMethods),
-				JavaFields = CollectExportFields (typeDef, index),
+				JavaFields = exportFields,
 				ActivationCtor = activationCtor,
 				InvokerTypeName = invokerTypeName,
 				IsGenericDefinition = isGenericDefinition,
@@ -242,14 +242,19 @@ sealed class JavaPeerScanner : IDisposable
 		}
 	}
 
-	List<MarshalMethodInfo> CollectMarshalMethods (TypeDefinition typeDef, AssemblyIndex index, bool detectBaseOverrides)
+	(List<MarshalMethodInfo>, List<JavaFieldInfo>) CollectMarshalMethods (TypeDefinition typeDef, AssemblyIndex index, bool detectBaseOverrides)
 	{
 		var methods = new List<MarshalMethodInfo> ();
+		var fields = new List<JavaFieldInfo> ();
 		var registeredMethodKeys = new HashSet<string> (StringComparer.Ordinal);
 
-		// Pass 1: collect methods with [Register] or [Export] directly on them
+		// Pass 1: collect methods with [Register], [Export], or [ExportField] directly on them
 		foreach (var methodHandle in typeDef.GetMethods ()) {
 			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
+
+			// Check for [ExportField] — produces both a marshal method AND a field
+			CollectExportField (methodDef, index, fields);
+
 			if (!TryGetMethodRegisterInfo (methodDef, index, out var registerInfo, out var exportInfo) || registerInfo is null) {
 				continue;
 			}
@@ -297,7 +302,7 @@ sealed class JavaPeerScanner : IDisposable
 			CollectBaseConstructorChain (typeDef, index, methods);
 		}
 
-		return methods;
+		return (methods, fields);
 	}
 
 	/// <summary>
@@ -1429,75 +1434,44 @@ sealed class JavaPeerScanner : IDisposable
 	}
 
 	/// <summary>
-	/// Collects Java field declarations from [ExportField] attributes on methods.
-	/// Each [ExportField("name")] on a method produces a Java field initialized by
-	/// calling that method.
+	/// Checks a single method for [ExportField] and adds a JavaFieldInfo if found.
+	/// Called inline during Pass 1 to avoid a separate iteration.
 	/// </summary>
-	static List<JavaFieldInfo> CollectExportFields (TypeDefinition typeDef, AssemblyIndex index)
+	static void CollectExportField (MethodDefinition methodDef, AssemblyIndex index, List<JavaFieldInfo> fields)
 	{
-		var fields = new List<JavaFieldInfo> ();
+		foreach (var caHandle in methodDef.GetCustomAttributes ()) {
+			var ca = index.Reader.GetCustomAttribute (caHandle);
+			var attrName = AssemblyIndex.GetCustomAttributeName (ca, index.Reader);
 
-		foreach (var methodHandle in typeDef.GetMethods ()) {
-			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
-
-			foreach (var caHandle in methodDef.GetCustomAttributes ()) {
-				var ca = index.Reader.GetCustomAttribute (caHandle);
-				var attrName = AssemblyIndex.GetCustomAttributeName (ca, index.Reader);
-
-				if (attrName != "ExportFieldAttribute") {
-					continue;
-				}
-
-				var value = index.DecodeAttribute (ca);
-				if (value.FixedArguments.Length == 0) {
-					continue;
-				}
-
-				var fieldName = (string?)value.FixedArguments [0].Value;
-				if (fieldName is null) {
-					continue;
-				}
-
-				var managedName = index.Reader.GetString (methodDef.Name);
-				var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
-				var javaReturnType = ManagedReturnTypeToJava (sig.ReturnType);
-				var access = GetJavaAccess (methodDef.Attributes & MethodAttributes.MemberAccessMask);
-				var isStatic = (methodDef.Attributes & MethodAttributes.Static) != 0;
-
-				fields.Add (new JavaFieldInfo {
-					FieldName = fieldName,
-					JavaTypeName = javaReturnType,
-					InitializerMethodName = managedName,
-					Visibility = access,
-					IsStatic = isStatic,
-				});
+			if (attrName != "ExportFieldAttribute") {
+				continue;
 			}
-		}
 
-		return fields;
-	}
+			var value = index.DecodeAttribute (ca);
+			if (value.FixedArguments.Length == 0) {
+				continue;
+			}
 
-	static string ManagedReturnTypeToJava (string managedType)
-	{
-		switch (managedType) {
-		case "System.String": return "java.lang.String";
-		case "System.Boolean": return "boolean";
-		case "System.Byte":
-		case "System.SByte": return "byte";
-		case "System.Char": return "char";
-		case "System.Int16":
-		case "System.UInt16": return "short";
-		case "System.Int32":
-		case "System.UInt32": return "int";
-		case "System.Int64":
-		case "System.UInt64": return "long";
-		case "System.Single": return "float";
-		case "System.Double": return "double";
-		case "System.Void": return "void";
-		default:
-			// For reference types, use java.lang.Object as fallback.
-			// The exact Java type would require JNI signature resolution.
-			return "java.lang.Object";
+			var fieldName = (string?)value.FixedArguments [0].Value;
+			if (fieldName is null) {
+				continue;
+			}
+
+			var managedName = index.Reader.GetString (methodDef.Name);
+			var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+			var jniSig = BuildJniSignatureFromManaged (sig);
+			var jniReturnType = JniSignatureHelper.ParseReturnTypeString (jniSig);
+			var javaReturnType = JniSignatureHelper.JniTypeToJava (jniReturnType);
+			var access = GetJavaAccess (methodDef.Attributes & MethodAttributes.MemberAccessMask);
+			var isStatic = (methodDef.Attributes & MethodAttributes.Static) != 0;
+
+			fields.Add (new JavaFieldInfo {
+				FieldName = fieldName,
+				JavaTypeName = javaReturnType,
+				InitializerMethodName = managedName,
+				Visibility = access,
+				IsStatic = isStatic,
+			});
 		}
 	}
 }

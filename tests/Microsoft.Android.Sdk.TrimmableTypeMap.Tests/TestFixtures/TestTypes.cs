@@ -98,6 +98,16 @@ namespace Android.Views
 		bool OnLongClick (View v);
 	}
 
+	/// <summary>
+	/// Interface with a registered property (for testing interface property implementation detection).
+	/// </summary>
+	[Register ("android/view/View$IHasName", "", "Android.Views.IHasNameInvoker")]
+	public interface IHasName
+	{
+		[Register ("getName", "()Ljava/lang/String;", "GetGetNameHandler:Android.Views.IHasNameInvoker")]
+		string? Name { get; }
+	}
+
 	[Register ("mono/android/view/View_IOnClickListenerImplementor")]
 	public class View_IOnClickListenerImplementor : Java.Lang.Object
 	{
@@ -226,6 +236,34 @@ namespace MyApp
 
 		[Register ("setItems", "([Ljava/lang/String;)V", "GetSetItemsHandler")]
 		public virtual void SetItems (string[]? items) { }
+	}
+
+	// --- Covariant return test types ---
+
+	/// <summary>
+	/// Base type with a method returning Java.Lang.Object.
+	/// </summary>
+	[Register ("my/app/CovariantBase", DoNotGenerateAcw = true)]
+	public class CovariantBase : Java.Lang.Object
+	{
+		protected CovariantBase (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Register ("getResult", "()Ljava/lang/Object;", "GetGetResultHandler")]
+		public virtual Java.Lang.Object? GetResult () => null;
+	}
+
+	/// <summary>
+	/// Derived type that overrides GetResult with a narrower C# return type.
+	/// The JCW should use the base's JNI signature "()Ljava/lang/Object;".
+	/// </summary>
+	[Register ("my/app/CovariantDerived")]
+	public class CovariantDerived : CovariantBase
+	{
+		protected CovariantDerived (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		// C# allows covariant returns — return type narrows from Object to string
+		// but no [Register] on the override. The base's JNI sig should be used.
+		public override Java.Lang.Object? GetResult () => null;
 	}
 
 	[Register ("my/app/ExportExample")]
@@ -372,6 +410,18 @@ namespace MyApp
 
 		// No [Register] — real user code doesn't have it
 		public void OnClick (Android.Views.View v) { }
+	}
+
+	/// <summary>
+	/// Implements an interface with a registered property without [Register] on the property.
+	/// </summary>
+	[Register ("my/app/ImplicitPropertyImpl")]
+	public class ImplicitPropertyImpl : Java.Lang.Object, Android.Views.IHasName
+	{
+		protected ImplicitPropertyImpl (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		// No [Register] — should be detected from interface property
+		public string? Name => "test";
 	}
 
 	/// <summary>

@@ -11,62 +11,47 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 /// </summary>
 public class ExportFieldTests : FixtureTestBase
 {
-	static string GenerateToString (JavaPeerInfo type)
-	{
-		var generator = new JcwJavaSourceGenerator ();
-		using var writer = new StringWriter ();
-		generator.Generate (type, writer);
-		return writer.ToString ();
-	}
-
 	[Fact]
-	public void Scanner_DetectsExportFieldMethods ()
+	public void Scanner_DetectsExportFieldsWithCorrectProperties ()
 	{
 		var peer = FindFixtureByJavaName ("my/app/ExportFieldExample");
 		Assert.NotEmpty (peer.JavaFields);
+
+		var staticField = peer.JavaFields.First (f => f.FieldName == "STATIC_INSTANCE");
+		Assert.True (staticField.IsStatic);
+		Assert.Equal ("GetInstance", staticField.InitializerMethodName);
+		// Reference type — mapped via JNI signature, not fallback to java.lang.Object
+		Assert.Equal ("java.lang.Object", staticField.JavaTypeName);
+
+		var instanceField = peer.JavaFields.First (f => f.FieldName == "VALUE");
+		Assert.False (instanceField.IsStatic);
+		Assert.Equal ("GetValue", instanceField.InitializerMethodName);
+		Assert.Equal ("java.lang.String", instanceField.JavaTypeName);
 	}
 
 	[Fact]
-	public void Scanner_StaticField_HasCorrectProperties ()
+	public void Scanner_ExportFieldMethod_HasExportConnectorAndFlag ()
 	{
+		// Gap #2 + #3: [ExportField] methods should have connector "__export__" and IsExport=true
 		var peer = FindFixtureByJavaName ("my/app/ExportFieldExample");
-		var field = peer.JavaFields.First (f => f.FieldName == "STATIC_INSTANCE");
-		Assert.True (field.IsStatic);
-		Assert.Equal ("GetInstance", field.InitializerMethodName);
+		var getValue = peer.MarshalMethods.First (m => m.JniName == "GetValue");
+		Assert.Equal ("__export__", getValue.Connector);
+		Assert.True (getValue.IsExport);
+		Assert.Equal ("public", getValue.JavaAccess);
 	}
 
 	[Fact]
-	public void Scanner_InstanceField_HasCorrectProperties ()
+	public void JcwGenerator_EmitsFieldDeclarationsAndMethodWrappers ()
 	{
 		var peer = FindFixtureByJavaName ("my/app/ExportFieldExample");
-		var field = peer.JavaFields.First (f => f.FieldName == "VALUE");
-		Assert.False (field.IsStatic);
-		Assert.Equal ("GetValue", field.InitializerMethodName);
-	}
+		var generator = new JcwJavaSourceGenerator ();
+		using var writer = new StringWriter ();
+		generator.Generate (peer, writer);
+		var java = writer.ToString ();
 
-	[Fact]
-	public void JcwGenerator_EmitsStaticFieldDeclaration ()
-	{
-		var peer = FindFixtureByJavaName ("my/app/ExportFieldExample");
-		var java = GenerateToString (peer);
 		Assert.Contains ("public static", java);
 		Assert.Contains ("STATIC_INSTANCE = GetInstance ();", java);
-	}
-
-	[Fact]
-	public void JcwGenerator_EmitsInstanceFieldDeclaration ()
-	{
-		var peer = FindFixtureByJavaName ("my/app/ExportFieldExample");
-		var java = GenerateToString (peer);
 		Assert.Contains ("VALUE = GetValue ();", java);
-	}
-
-	[Fact]
-	public void JcwGenerator_EmitsExportFieldMethodWrapper ()
-	{
-		var peer = FindFixtureByJavaName ("my/app/ExportFieldExample");
-		var java = GenerateToString (peer);
-		// The method wrapper should also be emitted (via MarshalMethods)
 		Assert.Contains ("GetValue ()", java);
 		Assert.Contains ("n_GetValue", java);
 	}

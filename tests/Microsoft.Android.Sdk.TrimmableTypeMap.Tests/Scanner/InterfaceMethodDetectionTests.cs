@@ -12,26 +12,11 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 public class InterfaceMethodDetectionTests : FixtureTestBase
 {
 	[Fact]
-	public void ImplicitInterfaceImpl_OnClick_IsDetected ()
-	{
-		var peer = FindFixtureByJavaName ("my/app/ImplicitClickListener");
-		var marshalNames = peer.MarshalMethods.Select (m => m.JniName).ToList ();
-		Assert.Contains ("onClick", marshalNames);
-	}
-
-	[Fact]
-	public void ImplicitInterfaceImpl_HasCorrectJniSignature ()
+	public void ImplicitInterfaceImpl_DetectsOnClickWithCorrectSignatureAndConnector ()
 	{
 		var peer = FindFixtureByJavaName ("my/app/ImplicitClickListener");
 		var onClick = peer.MarshalMethods.First (m => m.JniName == "onClick");
 		Assert.Equal ("(Landroid/view/View;)V", onClick.JniSignature);
-	}
-
-	[Fact]
-	public void ImplicitInterfaceImpl_HasCorrectConnector ()
-	{
-		var peer = FindFixtureByJavaName ("my/app/ImplicitClickListener");
-		var onClick = peer.MarshalMethods.First (m => m.JniName == "onClick");
 		Assert.Equal ("GetOnClick_Landroid_view_View_Handler:Android.Views.IOnClickListenerInvoker", onClick.Connector);
 	}
 
@@ -45,29 +30,53 @@ public class InterfaceMethodDetectionTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void MixedInterfaceImpl_DirectAndImplicitBothPresent ()
+	public void MixedInterfaceImpl_DirectAndImplicitBothPresentWithNoDuplicates ()
 	{
-		// OnClick has [Register] directly, OnLongClick is implicit from interface
 		var peer = FindFixtureByJavaName ("my/app/MixedInterfaceImpl");
 		var marshalNames = peer.MarshalMethods.Select (m => m.JniName).ToList ();
 		Assert.Contains ("onClick", marshalNames);
 		Assert.Contains ("onLongClick", marshalNames);
-	}
-
-	[Fact]
-	public void MixedInterfaceImpl_NoDuplicates ()
-	{
-		var peer = FindFixtureByJavaName ("my/app/MixedInterfaceImpl");
-		var marshalNames = peer.MarshalMethods.Select (m => m.JniName).ToList ();
 		Assert.Equal (marshalNames.Count, marshalNames.Distinct ().Count ());
 	}
 
 	[Fact]
 	public void ExplicitRegister_StillWorks ()
 	{
-		// ClickableView has [Register("onClick",...)] directly — should still work
 		var peer = FindFixtureByJavaName ("my/app/ClickableView");
-		var marshalNames = peer.MarshalMethods.Select (m => m.JniName).ToList ();
-		Assert.Contains ("onClick", marshalNames);
+		Assert.Contains (peer.MarshalMethods, m => m.JniName == "onClick");
+	}
+
+	[Fact]
+	public void InterfacePropertyImpl_DetectedWithCorrectSignature ()
+	{
+		// Gap #1: ImplicitPropertyImpl implements IHasName.Name without [Register]
+		var peer = FindFixtureByJavaName ("my/app/ImplicitPropertyImpl");
+		var getName = peer.MarshalMethods.First (m => m.JniName == "getName");
+		Assert.Equal ("()Ljava/lang/String;", getName.JniSignature);
+		Assert.Equal ("GetGetNameHandler:Android.Views.IHasNameInvoker", getName.Connector);
+	}
+
+	[Fact]
+	public void InterfaceType_DoesNotGetInterfaceMethodDetection ()
+	{
+		// Gap #5: interfaces themselves should not have interface method detection applied
+		// IOnClickListener has [Register] on onClick — it should NOT also pick up
+		// methods from other interfaces it might extend
+		var peer = FindFixtureByManagedName ("Android.Views.IOnClickListener");
+		// Should only have the directly-registered onClick, nothing extra
+		Assert.Single (peer.MarshalMethods);
+		Assert.Equal ("onClick", peer.MarshalMethods [0].JniName);
+	}
+
+	[Fact]
+	public void NonJavaPeerInterface_IsIgnored ()
+	{
+		// Gap #4: interfaces without [Register] should be skipped entirely
+		// ImplicitClickListener implements IOnClickListener (Java peer) — should be found
+		// If it also implemented a non-Java interface, those methods should NOT appear
+		var peer = FindFixtureByJavaName ("my/app/ImplicitClickListener");
+		// Only onClick from IOnClickListener, nothing from System.IDisposable etc.
+		var nonCtorMethods = peer.MarshalMethods.Where (m => !m.IsConstructor).ToList ();
+		Assert.Single (nonCtorMethods);
 	}
 }
