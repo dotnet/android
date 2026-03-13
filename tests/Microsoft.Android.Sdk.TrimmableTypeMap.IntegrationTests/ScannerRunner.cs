@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Java.Interop.Tools.Cecil;
+using Java.Interop.Tools.JavaCallableWrappers.Adapters;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
 using Xamarin.Android.Tasks;
@@ -56,7 +57,7 @@ static class ScannerRunner
 			}
 
 			var managedName = GetManagedName (typeDef);
-			var methods = ExtractMethodRegistrations (typeDef);
+			var methods = ExtractMethodRegistrations (typeDef, cache);
 
 			if (!methodsByJavaName.TryGetValue (javaName, out var groups)) {
 				groups = new List<TypeMethodGroup> ();
@@ -113,6 +114,7 @@ static class ScannerRunner
 			groups.Add (new TypeMethodGroup (
 				managedName,
 				peer.MarshalMethods
+					.Where (m => !m.IsConstructor)
 					.Select (m => new MethodEntry (m.JniName, m.JniSignature, m.Connector))
 					.OrderBy (m => m.JniName, StringComparer.Ordinal)
 					.ThenBy (m => m.JniSignature, StringComparer.Ordinal)
@@ -147,44 +149,157 @@ static class ScannerRunner
 		return $"{typeDef.FullName.Replace ('/', '+')}, {typeDef.Module.Assembly.Name.Name}";
 	}
 
-	static List<MethodEntry> ExtractMethodRegistrations (TypeDefinition typeDef)
+	/// <summary>
+	/// Extracts marshal methods using the real legacy JCW pipeline via
+	/// <see cref="CecilImporter.CreateType"/>. Excludes interface method
+	/// implementations since the new scanner places those on the interface
+	/// peer type rather than the implementing type.
+	/// </summary>
+	static List<MethodEntry> ExtractMethodRegistrations (TypeDefinition typeDef, TypeDefinitionCache cache)
 	{
+		if (typeDef.IsInterface) {
+			// CecilImporter throws XA4200 for interfaces.
+			// Extract [Register] from interface methods directly.
+			return ExtractDirectRegisterAttributes (typeDef);
+		}
+
+		// Build a set of method names from implemented interfaces so we can
+		// filter them out of the CecilImporter output.
+		var interfaceMethodKeys = new HashSet<string> (StringComparer.Ordinal);
+		foreach (var ifaceImpl in typeDef.Interfaces) {
+			var ifaceType = cache.Resolve (ifaceImpl.InterfaceType);
+			if (ifaceType is null) {
+				continue;
+			}
+			foreach (var method in ifaceType.Methods) {
+				if (method.IsStatic) {
+					continue;
+				}
+				foreach (var attr in method.CustomAttributes) {
+					if (attr.AttributeType.FullName == "Android.Runtime.RegisterAttribute" && attr.ConstructorArguments.Count >= 2) {
+						var name = (string) attr.ConstructorArguments [0].Value;
+						var sig = (string) attr.ConstructorArguments [1].Value;
+						interfaceMethodKeys.Add ($"{name}:{sig}");
+					}
+				}
+			}
+		}
+
+		var wrapper = CecilImporter.CreateType (typeDef, cache);
 		var methods = new List<MethodEntry> ();
 
-		foreach (var method in typeDef.Methods) {
-			if (!method.HasCustomAttributes) {
+		foreach (var m in wrapper.Methods) {
+			var key = $"{m.Name}:{m.JniSignature}";
+
+			// Skip methods that came from interface implementations — the new
+			// scanner places these on the interface peer, not the implementing type.
+			// Only skip if the type doesn't also have a direct [Register] for this
+			// method (which would mean the type explicitly registers it).
+			if (interfaceMethodKeys.Contains (key) && !HasDirectRegister (typeDef, m.Name, m.JniSignature)) {
 				continue;
 			}
 
-			AddRegisterMethods (method.CustomAttributes, methods);
-		}
-
-		if (typeDef.HasProperties) {
-			foreach (var prop in typeDef.Properties) {
-				if (!prop.HasCustomAttributes) {
-					continue;
-				}
-
-				AddRegisterMethods (prop.CustomAttributes, methods);
-			}
+			// Extract connector from Method string "n_name:sig:connector"
+			string? connector = ParseConnectorFromMethodString (m.Method);
+			methods.Add (new MethodEntry (m.Name, m.JniSignature, connector));
 		}
 
 		return methods;
 	}
 
-	static void AddRegisterMethods (IEnumerable<CustomAttribute> attributes, List<MethodEntry> methods)
+	/// <summary>
+	/// Checks if the type has a direct [Register] attribute for this method name + signature.
+	/// </summary>
+	static bool HasDirectRegister (TypeDefinition typeDef, string jniName, string jniSignature)
 	{
-		foreach (var attr in attributes) {
-			if (attr.AttributeType.FullName != "Android.Runtime.RegisterAttribute" || attr.ConstructorArguments.Count < 2) {
+		foreach (var method in typeDef.Methods) {
+			if (!method.HasCustomAttributes) {
 				continue;
 			}
-
-			var jniMethodName = (string) attr.ConstructorArguments [0].Value;
-			var jniSignature = (string) attr.ConstructorArguments [1].Value;
-			var connector = attr.ConstructorArguments.Count > 2
-				? (string) attr.ConstructorArguments [2].Value
-				: null;
-			methods.Add (new MethodEntry (jniMethodName, jniSignature, connector));
+			foreach (var attr in method.CustomAttributes) {
+				if (attr.AttributeType.FullName == "Android.Runtime.RegisterAttribute" &&
+				    attr.ConstructorArguments.Count >= 2 &&
+				    (string) attr.ConstructorArguments [0].Value == jniName &&
+				    (string) attr.ConstructorArguments [1].Value == jniSignature) {
+					return true;
+				}
+			}
 		}
+		if (typeDef.HasProperties) {
+			foreach (var prop in typeDef.Properties) {
+				if (!prop.HasCustomAttributes) {
+					continue;
+				}
+				foreach (var attr in prop.CustomAttributes) {
+					if (attr.AttributeType.FullName == "Android.Runtime.RegisterAttribute" &&
+					    attr.ConstructorArguments.Count >= 2 &&
+					    (string) attr.ConstructorArguments [0].Value == jniName &&
+					    (string) attr.ConstructorArguments [1].Value == jniSignature) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	/// <summary>
+	/// Fallback: extract [Register] from methods/properties directly (for interfaces).
+	/// </summary>
+	static List<MethodEntry> ExtractDirectRegisterAttributes (TypeDefinition typeDef)
+	{
+		var methods = new List<MethodEntry> ();
+		foreach (var method in typeDef.Methods) {
+			if (!method.HasCustomAttributes) {
+				continue;
+			}
+			foreach (var attr in method.CustomAttributes) {
+				if (attr.AttributeType.FullName == "Android.Runtime.RegisterAttribute" && attr.ConstructorArguments.Count >= 2) {
+					methods.Add (new MethodEntry (
+						(string) attr.ConstructorArguments [0].Value,
+						(string) attr.ConstructorArguments [1].Value,
+						attr.ConstructorArguments.Count > 2 ? (string) attr.ConstructorArguments [2].Value : null
+					));
+				}
+			}
+		}
+		if (typeDef.HasProperties) {
+			foreach (var prop in typeDef.Properties) {
+				if (!prop.HasCustomAttributes) {
+					continue;
+				}
+				foreach (var attr in prop.CustomAttributes) {
+					if (attr.AttributeType.FullName == "Android.Runtime.RegisterAttribute" && attr.ConstructorArguments.Count >= 2) {
+						methods.Add (new MethodEntry (
+							(string) attr.ConstructorArguments [0].Value,
+							(string) attr.ConstructorArguments [1].Value,
+							attr.ConstructorArguments.Count > 2 ? (string) attr.ConstructorArguments [2].Value : null
+						));
+					}
+				}
+			}
+		}
+		return methods;
+	}
+
+	/// <summary>
+	/// Parses the connector from a CallableWrapperMethod.Method string.
+	/// Format: "n_{name}:{signature}:{connector}" where connector has '/' replaced with '+'.
+	/// </summary>
+	static string? ParseConnectorFromMethodString (string? methodStr)
+	{
+		if (methodStr is null) {
+			return null;
+		}
+		int firstColon = methodStr.IndexOf (':');
+		if (firstColon < 0) {
+			return null;
+		}
+		int secondColon = methodStr.IndexOf (':', firstColon + 1);
+		if (secondColon < 0 || secondColon + 1 >= methodStr.Length) {
+			return null;
+		}
+		var connector = methodStr.Substring (secondColon + 1);
+		return connector.Replace ('+', '/');
 	}
 }
