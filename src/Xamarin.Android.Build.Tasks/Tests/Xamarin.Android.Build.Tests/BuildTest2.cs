@@ -2219,5 +2219,30 @@ namespace App1
 			Assert.NotNull (method, $"Failed to find the '{MethodName}' method in type '{TypeName}'");
 			Assert.IsTrue (method.IsPublic, $"Method '{MethodName}' should be public");
 		}
+
+		[Test]
+		public void InvalidCustomJniInitFunctionName ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.NativeAOT, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+
+			// A malicious NuGet package could inject LLVM IR via a function name containing
+			// newlines or non-identifier characters (VULN-341/342).  The build must reject
+			// names that are not valid C identifiers.
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidStaticJniInitFunction", "valid_name"));
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidStaticJniInitFunction", "evil\ndefine void @injected()"));
+
+			using (var b = CreateApkBuilder ()) {
+				b.ThrowOnBuildFailure = false;
+				Assert.IsFalse (b.Build (proj), "Build should have failed due to invalid CustomJniInitFunctions names.");
+				StringAssertEx.ContainsRegex (@"is not a valid C identifier", b.LastBuildOutput, "Expected an error about invalid C identifier");
+			}
+		}
 	}
 }
