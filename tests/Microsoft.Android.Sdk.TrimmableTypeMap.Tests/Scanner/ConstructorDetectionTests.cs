@@ -18,7 +18,7 @@ public class ConstructorDetectionTests : FixtureTestBase
 		var peer = FindFixtureByJavaName ("my/app/MainActivity");
 
 		// The ctor should appear in MarshalMethods as a constructor
-		var ctorMethod = Assert.Single (peer.MarshalMethods.Where (m => m.IsConstructor));
+		var ctorMethod = Assert.Single (peer.MarshalMethods, m => m.IsConstructor);
 		Assert.Equal ("()V", ctorMethod.JniSignature);
 		Assert.Equal (".ctor", ctorMethod.JniName);
 
