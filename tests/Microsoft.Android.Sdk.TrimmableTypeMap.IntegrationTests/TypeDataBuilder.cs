@@ -103,17 +103,11 @@ static class TypeDataBuilder
 			// attribute scanning which only found directly-attributed ctors.
 			var javaCtorSignatures = new List<string> ();
 			if (!typeDef.IsInterface && !ScannerRunner.HasDoNotGenerateAcw (typeDef)) {
-				try {
-					var wrapper = CecilImporter.CreateType (typeDef, cache);
-					foreach (var ctor in wrapper.Constructors) {
-						if (!string.IsNullOrEmpty (ctor.JniSignature)) {
-							javaCtorSignatures.Add (ctor.JniSignature);
-						}
+				var wrapper = CecilImporter.CreateType (typeDef, cache);
+				foreach (var ctor in wrapper.Constructors) {
+					if (!string.IsNullOrEmpty (ctor.JniSignature)) {
+						javaCtorSignatures.Add (ctor.JniSignature);
 					}
-				} catch {
-					// Some types may fail CecilImporter (e.g., missing base types).
-					// Fall back to direct attribute scanning.
-					ExtractDirectRegisterCtors (typeDef, javaCtorSignatures);
 				}
 			} else {
 				ExtractDirectRegisterCtors (typeDef, javaCtorSignatures);

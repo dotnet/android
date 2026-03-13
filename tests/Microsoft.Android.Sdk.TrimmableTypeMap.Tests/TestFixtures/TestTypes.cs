@@ -183,10 +183,10 @@ namespace MyApp
 		protected CustomView (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 
 		[Register ("<init>", "()V", "")]
-		public CustomView () : base (default!, default) { }
+		public CustomView () : base (default, default) { }
 
 		[Register ("<init>", "(Landroid/content/Context;)V", "")]
-		public CustomView (Context context) : base (default!, default) { }
+		public CustomView (Context context) : base (default, default) { }
 	}
 
 	[Register ("my/app/Outer")]
@@ -405,10 +405,10 @@ namespace MyApp
 		protected JiStyleView (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 
 		[Java.Interop.JniConstructorSignature ("()V")]
-		public JiStyleView () : base (default!, default) { }
+		public JiStyleView () : base (default, default) { }
 
 		[Java.Interop.JniConstructorSignature ("(Landroid/content/Context;)V")]
-		public JiStyleView (Context context) : base (default!, default) { }
+		public JiStyleView (Context context) : base (default, default) { }
 	}
 
 	/// <summary>

@@ -10,43 +10,21 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 public class OverrideDetectionTests : FixtureTestBase
 {
 	[Fact]
-	public void Override_WithoutRegister_IsDetectedAsMarshalMethod ()
+	public void UserActivity_OverrideDetectedWithCorrectRegistration ()
 	{
 		// UserActivity overrides Activity.OnCreate without [Register] on the override
 		var peer = FindFixtureByJavaName ("my/app/UserActivity");
 		var marshalNames = peer.MarshalMethods.Select (m => m.JniName).ToList ();
 		Assert.Contains ("onCreate", marshalNames);
-	}
 
-	[Fact]
-	public void Override_HasCorrectJniSignature ()
-	{
-		var peer = FindFixtureByJavaName ("my/app/UserActivity");
 		var onCreate = peer.MarshalMethods.First (m => m.JniName == "onCreate");
 		Assert.Equal ("(Landroid/os/Bundle;)V", onCreate.JniSignature);
-	}
-
-	[Fact]
-	public void Override_HasCorrectNativeCallbackName ()
-	{
-		var peer = FindFixtureByJavaName ("my/app/UserActivity");
-		var onCreate = peer.MarshalMethods.First (m => m.JniName == "onCreate");
 		Assert.Equal ("n_OnCreate", onCreate.NativeCallbackName);
-	}
-
-	[Fact]
-	public void Override_IsNotMarkedAsConstructor ()
-	{
-		var peer = FindFixtureByJavaName ("my/app/UserActivity");
-		var onCreate = peer.MarshalMethods.First (m => m.JniName == "onCreate");
 		Assert.False (onCreate.IsConstructor);
-	}
+		// Activity.OnCreate has connector "GetOnCreate_Landroid_os_Bundle_Handler"
+		Assert.Equal ("GetOnCreate_Landroid_os_Bundle_Handler", onCreate.Connector);
 
-	[Fact]
-	public void Override_ProducesJavaConstructorsFromActivationCtor ()
-	{
-		// UserActivity has an activation ctor → should get JavaConstructors
-		var peer = FindFixtureByJavaName ("my/app/UserActivity");
+		// UserActivity has an activation ctor
 		Assert.NotNull (peer.ActivationCtor);
 	}
 
@@ -78,12 +56,8 @@ public class OverrideDetectionTests : FixtureTestBase
 		var marshalNames = peer.MarshalMethods.Select (m => m.JniName).ToList ();
 		Assert.Contains ("onCreate", marshalNames);
 		Assert.Contains ("customMethod", marshalNames);
-	}
 
-	[Fact]
-	public void MixedMethods_NoDuplicates ()
-	{
-		var peer = FindFixtureByJavaName ("my/app/MixedMethods");
+		// No duplicate entries
 		var marshalKeys = peer.MarshalMethods.Select (m => $"{m.JniName}:{m.JniSignature}").ToList ();
 		Assert.Equal (marshalKeys.Count, marshalKeys.Distinct ().Count ());
 	}
@@ -104,12 +78,7 @@ public class OverrideDetectionTests : FixtureTestBase
 		var peer = FindFixtureByJavaName ("my/app/CustomException");
 		var marshalNames = peer.MarshalMethods.Select (m => m.JniName).ToList ();
 		Assert.Contains ("getMessage", marshalNames);
-	}
 
-	[Fact]
-	public void PropertyOverride_HasCorrectJniSignature ()
-	{
-		var peer = FindFixtureByJavaName ("my/app/CustomException");
 		var getMessage = peer.MarshalMethods.First (m => m.JniName == "getMessage");
 		Assert.Equal ("()Ljava/lang/String;", getMessage.JniSignature);
 	}
@@ -121,14 +90,5 @@ public class OverrideDetectionTests : FixtureTestBase
 		var peer = FindFixtureByJavaName ("my/app/MainActivity");
 		var marshalNames = peer.MarshalMethods.Select (m => m.JniName).ToList ();
 		Assert.Contains ("onCreate", marshalNames);
-	}
-
-	[Fact]
-	public void Override_ConnectorFromBase_IsPreserved ()
-	{
-		var peer = FindFixtureByJavaName ("my/app/UserActivity");
-		var onCreate = peer.MarshalMethods.First (m => m.JniName == "onCreate");
-		// Activity.OnCreate has connector "GetOnCreate_Landroid_os_Bundle_Handler"
-		Assert.Equal ("GetOnCreate_Landroid_os_Bundle_Handler", onCreate.Connector);
 	}
 }

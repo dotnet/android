@@ -274,19 +274,12 @@ sealed class JavaPeerScanner : IDisposable
 			}
 		}
 
-		// Pass 3: detect overrides of registered base methods.
+		// Pass 3–4: detect overrides and constructors from base hierarchy.
 		// Only for user ACW types — MCW types (DoNotGenerateAcw=true) already have
 		// [Register] on every method that matters. Running override detection on them
 		// would incorrectly pick up internal overrides (e.g., JavaObject.equals).
 		if (detectBaseOverrides) {
 			CollectBaseMethodOverrides (typeDef, index, methods, registeredMethodKeys);
-		}
-
-		// Pass 4: detect Java constructors that chain from base registered ctors.
-		// Only for ACW types — MCW types (DoNotGenerateAcw) already have [Register]
-		// on their ctors and are not processed through CecilImporter.CreateType
-		// in the legacy build pipeline.
-		if (detectBaseOverrides) {
 			CollectBaseConstructorChain (typeDef, index, methods);
 		}
 
@@ -370,14 +363,16 @@ sealed class JavaPeerScanner : IDisposable
 			}
 
 			var getterName = index.Reader.GetString (getterDef.Name);
-			if (alreadyRegistered.Contains (getterName)) {
+			var sig = getterDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+			var sigKey = $"{getterName}({string.Join (",", sig.ParameterTypes)})";
+			if (alreadyRegistered.Contains (sigKey)) {
 				continue;
 			}
 
 			var baseRegistration = FindBaseRegisteredProperty (typeDef, index, getterName, getterDef);
 			if (baseRegistration is not null) {
 				methods.Add (baseRegistration);
-				alreadyRegistered.Add (getterName);
+				alreadyRegistered.Add (sigKey);
 			}
 		}
 	}
@@ -414,18 +409,22 @@ sealed class JavaPeerScanner : IDisposable
 		// their registered ctors directly to the wrapper's Constructors list.
 		bool hasParameterlessBaseCtor = false;
 		foreach (var baseCtor in baseRegisteredCtors) {
-			if (!alreadyRegisteredSignatures.Contains (baseCtor.RegisterInfo.Signature!)) {
+			var signature = baseCtor.RegisterInfo.Signature;
+			if (signature is null) {
+				continue;
+			}
+			if (!alreadyRegisteredSignatures.Contains (signature)) {
 				methods.Add (new MarshalMethodInfo {
 					JniName = baseCtor.RegisterInfo.JniName,
-					JniSignature = baseCtor.RegisterInfo.Signature!,
+					JniSignature = signature,
 					Connector = baseCtor.RegisterInfo.Connector,
 					ManagedMethodName = ".ctor",
 					NativeCallbackName = "n_ctor",
 					IsConstructor = true,
 				});
-				alreadyRegisteredSignatures.Add (baseCtor.RegisterInfo.Signature!);
+				alreadyRegisteredSignatures.Add (signature);
 			}
-			if (baseCtor.RegisterInfo.Signature == "()V") {
+			if (signature == "()V") {
 				hasParameterlessBaseCtor = true;
 			}
 		}
@@ -640,7 +639,10 @@ sealed class JavaPeerScanner : IDisposable
 			}
 		}
 
-		// Recurse up the hierarchy
+		// Recurse up the hierarchy (stop at DoNotGenerateAcw boundary)
+		if (baseIndex.RegisterInfoByType.TryGetValue (baseHandle, out var baseRegInfo) && baseRegInfo.DoNotGenerateAcw) {
+			return null;
+		}
 		return FindBaseRegisteredMethodInfo (baseTypeDef, baseIndex, methodName, derivedMethod);
 	}
 
@@ -715,7 +717,10 @@ sealed class JavaPeerScanner : IDisposable
 			}
 		}
 
-		// Recurse up
+		// Recurse up (stop at DoNotGenerateAcw boundary)
+		if (baseIndex.RegisterInfoByType.TryGetValue (baseHandle, out var baseRegInfo) && baseRegInfo.DoNotGenerateAcw) {
+			return null;
+		}
 		return FindBaseRegisteredProperty (baseTypeDef, baseIndex, getterName, derivedGetter);
 	}
 
