@@ -160,6 +160,19 @@ sealed record MarshalMethodInfo
 	public bool IsConstructor { get; init; }
 
 	/// <summary>
+	/// True if this method comes from an [Export] attribute (rather than [Register]).
+	/// [Export] methods use the C# method's access modifier in the JCW Java file
+	/// instead of always being "public".
+	/// </summary>
+	public bool IsExport { get; init; }
+
+	/// <summary>
+	/// Java access modifier for [Export] methods ("public", "protected", "private").
+	/// Null for [Register] methods (always "public").
+	/// </summary>
+	public string? JavaAccess { get; init; }
+
+	/// <summary>
 	/// For [Export] methods: Java exception types that the method declares it can throw.
 	/// Null for [Register] methods.
 	/// </summary>

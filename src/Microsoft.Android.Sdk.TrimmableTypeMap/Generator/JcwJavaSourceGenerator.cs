@@ -214,13 +214,14 @@ sealed class JcwJavaSourceGenerator
 
 """);
 			} else {
+				string access = method.IsExport && method.JavaAccess != null ? method.JavaAccess : "public";
 				writer.Write ($$"""
 
-	public {{javaReturnType}} {{method.JniName}} ({{parameters}}){{throwsClause}}
+	{{access}} {{javaReturnType}} {{method.JniName}} ({{parameters}}){{throwsClause}}
 	{
 		{{returnPrefix}}{{method.NativeCallbackName}} ({{args}});
 	}
-	public native {{javaReturnType}} {{method.NativeCallbackName}} ({{parameters}});
+	{{access}} native {{javaReturnType}} {{method.NativeCallbackName}} ({{parameters}});
 
 """);
 			}

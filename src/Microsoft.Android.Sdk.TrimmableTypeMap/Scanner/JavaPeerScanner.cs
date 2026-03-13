@@ -882,6 +882,7 @@ sealed class JavaPeerScanner : IDisposable
 		}
 
 		bool isConstructor = registerInfo.JniName == "<init>" || registerInfo.JniName == ".ctor";
+		bool isExport = exportInfo is not null;
 		string managedName = index.Reader.GetString (methodDef.Name);
 		string jniSignature = registerInfo.Signature ?? "()V";
 
@@ -892,9 +893,21 @@ sealed class JavaPeerScanner : IDisposable
 			ManagedMethodName = managedName,
 			NativeCallbackName = isConstructor ? "n_ctor" : $"n_{managedName}",
 			IsConstructor = isConstructor,
+			IsExport = isExport,
+			JavaAccess = isExport ? GetJavaAccess (methodDef.Attributes & MethodAttributes.MemberAccessMask) : null,
 			ThrownNames = exportInfo?.ThrownNames,
 			SuperArgumentsString = exportInfo?.SuperArgumentsString,
 		});
+	}
+
+	static string GetJavaAccess (MethodAttributes access)
+	{
+		return access switch {
+			MethodAttributes.Public => "public",
+			MethodAttributes.FamORAssem => "protected",
+			MethodAttributes.Family => "protected",
+			_ => "private",
+		};
 	}
 
 	string? ResolveBaseJavaName (TypeDefinition typeDef, AssemblyIndex index, Dictionary<string, JavaPeerInfo> results)

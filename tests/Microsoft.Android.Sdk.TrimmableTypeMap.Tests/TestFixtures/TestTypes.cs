@@ -235,6 +235,22 @@ namespace MyApp
 		public void MyExportedMethod () { }
 	}
 
+	/// <summary>
+	/// Has [Export] methods with different access modifiers.
+	/// The JCW should respect the C# visibility for [Export] methods.
+	/// </summary>
+	[Register ("my/app/ExportAccessTest")]
+	public class ExportAccessTest : Java.Lang.Object
+	{
+		protected ExportAccessTest (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Java.Interop.Export ("publicMethod")]
+		public void PublicMethod () { }
+
+		[Java.Interop.Export ("protectedMethod")]
+		protected void ProtectedMethod () { }
+	}
+
 	[Application (Name = "my.app.MyApplication", BackupAgent = typeof (MyBackupAgent), ManageSpaceActivity = typeof (MyManageSpaceActivity))]
 	public class MyApplication : Java.Lang.Object { }
 
