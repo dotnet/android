@@ -204,9 +204,10 @@ sealed class JavaPeerScanner : IDisposable
 			var implementedInterfaces = ResolveImplementedInterfaceJavaNames (typeDef, index);
 
 			// Collect marshal methods (including constructors).
-			// Override detection is only for user ACW types — MCW types (DoNotGenerateAcw)
-			// already have [Register] on every method that matters.
-			var marshalMethods = CollectMarshalMethods (typeDef, index, detectBaseOverrides: !doNotGenerateAcw);
+			// Override and interface detection is only for user ACW class types:
+			// - MCW types (DoNotGenerateAcw) already have [Register] on every method
+			// - Interface types don't implement other interfaces' methods in JCWs
+			var (marshalMethods, exportFields) = CollectMarshalMethods (typeDef, index, detectBaseOverrides: !doNotGenerateAcw && !isInterface);
 
 			// Resolve activation constructor
 			var activationCtor = ResolveActivationCtor (fullName, typeDef, index);
@@ -231,6 +232,7 @@ sealed class JavaPeerScanner : IDisposable
 				IsUnconditional = isUnconditional,
 				MarshalMethods = marshalMethods,
 				JavaConstructors = BuildJavaConstructors (marshalMethods),
+				JavaFields = exportFields,
 				ActivationCtor = activationCtor,
 				InvokerTypeName = invokerTypeName,
 				IsGenericDefinition = isGenericDefinition,
@@ -240,14 +242,19 @@ sealed class JavaPeerScanner : IDisposable
 		}
 	}
 
-	List<MarshalMethodInfo> CollectMarshalMethods (TypeDefinition typeDef, AssemblyIndex index, bool detectBaseOverrides)
+	(List<MarshalMethodInfo>, List<JavaFieldInfo>) CollectMarshalMethods (TypeDefinition typeDef, AssemblyIndex index, bool detectBaseOverrides)
 	{
 		var methods = new List<MarshalMethodInfo> ();
+		var fields = new List<JavaFieldInfo> ();
 		var registeredMethodKeys = new HashSet<string> (StringComparer.Ordinal);
 
-		// Pass 1: collect methods with [Register] or [Export] directly on them
+		// Pass 1: collect methods with [Register], [Export], or [ExportField] directly on them
 		foreach (var methodHandle in typeDef.GetMethods ()) {
 			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
+
+			// Check for [ExportField] — produces both a marshal method AND a field
+			CollectExportField (methodDef, index, fields);
+
 			if (!TryGetMethodRegisterInfo (methodDef, index, out var registerInfo, out var exportInfo) || registerInfo is null) {
 				continue;
 			}
@@ -280,10 +287,22 @@ sealed class JavaPeerScanner : IDisposable
 		// would incorrectly pick up internal overrides (e.g., JavaObject.equals).
 		if (detectBaseOverrides) {
 			CollectBaseMethodOverrides (typeDef, index, methods, registeredMethodKeys);
+		}
+
+		// Pass 4: detect interface method implementations.
+		// When a type implements a Java interface (e.g., IOnClickListener), the
+		// implementing method may not have [Register]. The legacy pipeline adds
+		// these via the interface loop in CecilImporter.cs lines 100-120.
+		if (detectBaseOverrides) {
+			CollectInterfaceMethodImplementations (typeDef, index, methods, registeredMethodKeys);
+		}
+
+		// Pass 5: detect Java constructors that chain from base registered ctors.
+		if (detectBaseOverrides) {
 			CollectBaseConstructorChain (typeDef, index, methods);
 		}
 
-		return methods;
+		return (methods, fields);
 	}
 
 	/// <summary>
@@ -373,6 +392,114 @@ sealed class JavaPeerScanner : IDisposable
 			if (baseRegistration is not null) {
 				methods.Add (baseRegistration);
 				alreadyRegistered.Add (sigKey);
+			}
+		}
+	}
+
+	/// <summary>
+	/// Detects methods from implemented Java interfaces that aren't directly [Register]'d
+	/// on the implementing type. Mirrors the legacy CecilImporter interface loop (lines 100-120):
+	/// for each implemented interface with [Register], adds its registered methods to the type.
+	/// </summary>
+	void CollectInterfaceMethodImplementations (TypeDefinition typeDef, AssemblyIndex index,
+		List<MarshalMethodInfo> methods, HashSet<string> alreadyRegistered)
+	{
+		foreach (var implHandle in typeDef.GetInterfaceImplementations ()) {
+			var impl = index.Reader.GetInterfaceImplementation (implHandle);
+			var resolved = ResolveEntityHandle (impl.Interface, index);
+			if (resolved is null) {
+				continue;
+			}
+
+			var (ifaceTypeName, ifaceAssemblyName) = resolved.Value;
+			if (!TryResolveType (ifaceTypeName, ifaceAssemblyName, out var ifaceHandle, out var ifaceIndex)) {
+				continue;
+			}
+
+			// Only process interfaces that are Java peers (have [Register])
+			if (!ifaceIndex.RegisterInfoByType.ContainsKey (ifaceHandle)) {
+				continue;
+			}
+
+			var ifaceTypeDef = ifaceIndex.Reader.GetTypeDefinition (ifaceHandle);
+
+			// Add registered methods from this interface
+			foreach (var ifaceMethodHandle in ifaceTypeDef.GetMethods ()) {
+				var ifaceMethodDef = ifaceIndex.Reader.GetMethodDefinition (ifaceMethodHandle);
+
+				if ((ifaceMethodDef.Attributes & MethodAttributes.Static) != 0) {
+					continue;
+				}
+
+				if (!TryGetMethodRegisterInfo (ifaceMethodDef, ifaceIndex, out var registerInfo, out _) || registerInfo is null) {
+					continue;
+				}
+
+				// Skip type-level [Register] (no signature = just the JNI name)
+				if (registerInfo.Signature is null && registerInfo.Connector is null) {
+					continue;
+				}
+
+				string jniSignature = registerInfo.Signature ?? "()V";
+				var jniKey = $"{registerInfo.JniName}:{jniSignature}";
+
+				if (alreadyRegistered.Contains (jniKey)) {
+					continue;
+				}
+
+				// Also check by managed signature to avoid duplicates from
+				// direct [Register] that used different dedup keys
+				var managedName = ifaceIndex.Reader.GetString (ifaceMethodDef.Name);
+				var sig = ifaceMethodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+				var managedKey = $"{managedName}({string.Join (",", sig.ParameterTypes)})";
+				if (alreadyRegistered.Contains (managedKey)) {
+					continue;
+				}
+
+				bool isConstructor = registerInfo.JniName == "<init>" || registerInfo.JniName == ".ctor";
+				methods.Add (new MarshalMethodInfo {
+					JniName = registerInfo.JniName,
+					JniSignature = jniSignature,
+					Connector = registerInfo.Connector,
+					ManagedMethodName = managedName,
+					NativeCallbackName = isConstructor ? "n_ctor" : $"n_{managedName}",
+					IsConstructor = isConstructor,
+				});
+
+				alreadyRegistered.Add (jniKey);
+				alreadyRegistered.Add (managedKey);
+			}
+
+			// Also add registered properties from this interface
+			foreach (var ifacePropHandle in ifaceTypeDef.GetProperties ()) {
+				var ifacePropDef = ifaceIndex.Reader.GetPropertyDefinition (ifacePropHandle);
+				var propRegister = TryGetPropertyRegisterInfo (ifacePropDef, ifaceIndex);
+				if (propRegister is null || propRegister.Signature is null) {
+					continue;
+				}
+
+				var jniKey = $"{propRegister.JniName}:{propRegister.Signature}";
+				if (alreadyRegistered.Contains (jniKey)) {
+					continue;
+				}
+
+				var accessors = ifacePropDef.GetAccessors ();
+				string managedName = "";
+				if (!accessors.Getter.IsNil) {
+					managedName = ifaceIndex.Reader.GetString (
+						ifaceIndex.Reader.GetMethodDefinition (accessors.Getter).Name);
+				}
+
+				methods.Add (new MarshalMethodInfo {
+					JniName = propRegister.JniName,
+					JniSignature = propRegister.Signature,
+					Connector = propRegister.Connector,
+					ManagedMethodName = managedName,
+					NativeCallbackName = $"n_{managedName}",
+					IsConstructor = false,
+				});
+
+				alreadyRegistered.Add (jniKey);
 			}
 		}
 	}
@@ -761,6 +888,7 @@ sealed class JavaPeerScanner : IDisposable
 		}
 
 		bool isConstructor = registerInfo.JniName == "<init>" || registerInfo.JniName == ".ctor";
+		bool isExport = exportInfo is not null;
 		string managedName = index.Reader.GetString (methodDef.Name);
 		string jniSignature = registerInfo.Signature ?? "()V";
 
@@ -771,9 +899,21 @@ sealed class JavaPeerScanner : IDisposable
 			ManagedMethodName = managedName,
 			NativeCallbackName = isConstructor ? "n_ctor" : $"n_{managedName}",
 			IsConstructor = isConstructor,
+			IsExport = isExport,
+			JavaAccess = isExport ? GetJavaAccess (methodDef.Attributes & MethodAttributes.MemberAccessMask) : null,
 			ThrownNames = exportInfo?.ThrownNames,
 			SuperArgumentsString = exportInfo?.SuperArgumentsString,
 		});
+	}
+
+	static string GetJavaAccess (MethodAttributes access)
+	{
+		return access switch {
+			MethodAttributes.Public => "public",
+			MethodAttributes.FamORAssem => "protected",
+			MethodAttributes.Family => "protected",
+			_ => "private",
+		};
 	}
 
 	string? ResolveBaseJavaName (TypeDefinition typeDef, AssemblyIndex index, Dictionary<string, JavaPeerInfo> results)
@@ -835,6 +975,11 @@ sealed class JavaPeerScanner : IDisposable
 
 			if (attrName == "ExportAttribute") {
 				(registerInfo, exportInfo) = ParseExportAttribute (ca, methodDef, index);
+				return true;
+			}
+
+			if (attrName == "ExportFieldAttribute") {
+				(registerInfo, exportInfo) = ParseExportFieldAsMethod (ca, methodDef, index);
 				return true;
 			}
 
@@ -920,6 +1065,23 @@ sealed class JavaPeerScanner : IDisposable
 		sb.Append (')');
 		sb.Append (ManagedTypeToJniDescriptor (sig.ReturnType));
 		return sb.ToString ();
+	}
+
+	/// <summary>
+	/// Parses an [ExportField] attribute as a marshal method registration.
+	/// [ExportField] methods use the managed method name as the JNI name and have
+	/// a connector of "__export__" (matching legacy CecilImporter behavior).
+	/// </summary>
+	static (RegisterInfo registerInfo, ExportInfo exportInfo) ParseExportFieldAsMethod (CustomAttribute ca, MethodDefinition methodDef, AssemblyIndex index)
+	{
+		var managedName = index.Reader.GetString (methodDef.Name);
+		var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+		var jniSig = BuildJniSignatureFromManaged (sig);
+
+		return (
+			new RegisterInfo { JniName = managedName, Signature = jniSig, Connector = "__export__", DoNotGenerateAcw = false },
+			new ExportInfo { ThrownNames = null, SuperArgumentsString = null }
+		);
 	}
 
 	static string ManagedTypeToJniDescriptor (string managedType)
@@ -1269,5 +1431,47 @@ sealed class JavaPeerScanner : IDisposable
 			ctorIndex++;
 		}
 		return ctors;
+	}
+
+	/// <summary>
+	/// Checks a single method for [ExportField] and adds a JavaFieldInfo if found.
+	/// Called inline during Pass 1 to avoid a separate iteration.
+	/// </summary>
+	static void CollectExportField (MethodDefinition methodDef, AssemblyIndex index, List<JavaFieldInfo> fields)
+	{
+		foreach (var caHandle in methodDef.GetCustomAttributes ()) {
+			var ca = index.Reader.GetCustomAttribute (caHandle);
+			var attrName = AssemblyIndex.GetCustomAttributeName (ca, index.Reader);
+
+			if (attrName != "ExportFieldAttribute") {
+				continue;
+			}
+
+			var value = index.DecodeAttribute (ca);
+			if (value.FixedArguments.Length == 0) {
+				continue;
+			}
+
+			var fieldName = (string?)value.FixedArguments [0].Value;
+			if (fieldName is null) {
+				continue;
+			}
+
+			var managedName = index.Reader.GetString (methodDef.Name);
+			var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+			var jniSig = BuildJniSignatureFromManaged (sig);
+			var jniReturnType = JniSignatureHelper.ParseReturnTypeString (jniSig);
+			var javaReturnType = JniSignatureHelper.JniTypeToJava (jniReturnType);
+			var access = GetJavaAccess (methodDef.Attributes & MethodAttributes.MemberAccessMask);
+			var isStatic = (methodDef.Attributes & MethodAttributes.Static) != 0;
+
+			fields.Add (new JavaFieldInfo {
+				FieldName = fieldName,
+				JavaTypeName = javaReturnType,
+				InitializerMethodName = managedName,
+				Visibility = access,
+				IsStatic = isStatic,
+			});
+		}
 	}
 }
