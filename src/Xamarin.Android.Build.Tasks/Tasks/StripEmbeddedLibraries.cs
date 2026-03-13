@@ -61,13 +61,11 @@ public class StripEmbeddedLibraries : AndroidTask
 
 		var readerParams = new ReaderParameters {
 			ReadSymbols = havePdb,
-			ReadWrite = false,
+			ReadWrite = true,
 			AssemblyResolver = resolver,
 		};
 
 		bool assembly_modified = false;
-		string directory = Path.Combine (Path.GetDirectoryName (assemblyPath) ?? "", "stripped");
-		string tempOutput = Path.Combine (directory, Path.GetFileName (assemblyPath));
 
 		using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath, readerParams)) {
 			foreach (var module in assembly.Modules) {
@@ -84,35 +82,11 @@ public class StripEmbeddedLibraries : AndroidTask
 				return;
 			}
 
-			Directory.CreateDirectory (directory);
-
-			var writerParams = new WriterParameters {
+			Log.LogDebugMessage ($"  Writing stripped assembly: {assemblyPath}");
+			assembly.Write (new WriterParameters {
 				WriteSymbols = havePdb,
 				DeterministicMvid = Deterministic,
-			};
-
-			Log.LogDebugMessage ($"  Writing stripped assembly: {assemblyPath}");
-			assembly.Write (tempOutput, writerParams);
-		}
-
-		CopyFile (tempOutput, assemblyPath);
-		RemoveFile (tempOutput);
-
-		if (havePdb) {
-			string tempPdb = Path.ChangeExtension (tempOutput, ".pdb");
-			if (File.Exists (tempPdb)) {
-				CopyFile (tempPdb, pdbPath);
-			}
-			RemoveFile (tempPdb);
-		}
-
-		try {
-			if (Directory.Exists (directory) && !Directory.EnumerateFileSystemEntries (directory).Any ()) {
-				Directory.Delete (directory);
-			}
-		} catch (Exception ex) {
-			Log.LogDebugMessage ($"  Failed to clean up directory '{directory}'");
-			Log.LogDebugMessage ($"  {ex}");
+			});
 		}
 	}
 
@@ -139,40 +113,4 @@ public class StripEmbeddedLibraries : AndroidTask
 		return false;
 	}
 
-	void CopyFile (string source, string target)
-	{
-		Log.LogDebugMessage ($"  Copying stripped assembly: {source} -> {target}");
-
-		string targetBackup = $"{target}.bak";
-		if (File.Exists (target)) {
-			// Try to avoid sharing violations by first renaming the target
-			File.Move (target, targetBackup);
-		}
-
-		File.Copy (source, target, true);
-
-		if (File.Exists (targetBackup)) {
-			try {
-				File.Delete (targetBackup);
-			} catch (Exception ex) {
-				Log.LogDebugMessage ($"  While trying to delete '{targetBackup}', exception was thrown: {ex}");
-				Log.LogDebugMessage ($"  Failed to delete backup file '{targetBackup}', ignoring.");
-			}
-		}
-	}
-
-	void RemoveFile (string? path)
-	{
-		if (string.IsNullOrEmpty (path) || !File.Exists (path)) {
-			return;
-		}
-
-		try {
-			Log.LogDebugMessage ($"  Deleting: {path}");
-			File.Delete (path);
-		} catch (Exception ex) {
-			Log.LogDebugMessage ($"  Unable to delete temporary file '{path}'");
-			Log.LogDebugMessage ($"  {ex}");
-		}
-	}
 }
