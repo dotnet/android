@@ -84,8 +84,8 @@ public class OverrideDetectionTests : FixtureTestBase
 	public void MixedMethods_NoDuplicates ()
 	{
 		var peer = FindFixtureByJavaName ("my/app/MixedMethods");
-		var marshalNames = peer.MarshalMethods.Select (m => m.JniName).ToList ();
-		Assert.Equal (marshalNames.Count, marshalNames.Distinct ().Count ());
+		var marshalKeys = peer.MarshalMethods.Select (m => $"{m.JniName}:{m.JniSignature}").ToList ();
+		Assert.Equal (marshalKeys.Count, marshalKeys.Distinct ().Count ());
 	}
 
 	[Fact]

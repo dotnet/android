@@ -38,26 +38,23 @@ public class ConstructorDetectionTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void UserActivity_ActivationCtor_AcceptedViaFallback ()
+	public void UserActivity_OnlyGetsBaseCtorSeed ()
 	{
 		// UserActivity only has an activation ctor (IntPtr, JniHandleOwnership).
-		// Legacy CecilImporter accepts it via the parameterless fallback because
-		// Activity has a registered ()V ctor. The ctor's managed types map to
-		// JNI Object types → super() is called (not super(p0, p1)).
+		// The activation ctor is rejected by the fallback (IntPtr is not a Java type).
+		// Only the base ()V seed from Activity remains.
 		var peer = FindFixtureByJavaName ("my/app/UserActivity");
 		var javaCtor = Assert.Single (peer.JavaConstructors);
-		Assert.Equal ("(Ljava/lang/Object;Ljava/lang/Object;)V", javaCtor.JniSignature);
-		Assert.Equal ("", javaCtor.SuperArgumentsString);
+		Assert.Equal ("()V", javaCtor.JniSignature);
 	}
 
 	[Fact]
-	public void FullActivity_ActivationCtor_AcceptedViaFallback ()
+	public void FullActivity_OnlyGetsBaseCtorSeed ()
 	{
-		// Same as UserActivity — activation ctor accepted via parameterless fallback.
+		// Same as UserActivity — activation ctor rejected, only base ()V seed.
 		var peer = FindFixtureByJavaName ("my/app/FullActivity");
 		var javaCtor = Assert.Single (peer.JavaConstructors);
-		Assert.Equal ("(Ljava/lang/Object;Ljava/lang/Object;)V", javaCtor.JniSignature);
-		Assert.Equal ("", javaCtor.SuperArgumentsString);
+		Assert.Equal ("()V", javaCtor.JniSignature);
 	}
 
 	[Fact]

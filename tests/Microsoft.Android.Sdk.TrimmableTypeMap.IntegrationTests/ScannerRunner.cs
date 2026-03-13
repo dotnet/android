@@ -250,7 +250,7 @@ static class ScannerRunner
 		return false;
 	}
 
-	static bool HasDoNotGenerateAcw (TypeDefinition typeDef)
+	internal static bool HasDoNotGenerateAcw (TypeDefinition typeDef)
 	{
 		if (!typeDef.HasCustomAttributes) {
 			return false;

@@ -282,9 +282,13 @@ sealed class JavaPeerScanner : IDisposable
 			CollectBaseMethodOverrides (typeDef, index, methods, registeredMethodKeys);
 		}
 
-		// Pass 4: detect non-activation constructors that chain to base registered ctors.
-		// Runs for all types (including MCW), matching legacy CecilImporter behavior.
-		CollectBaseConstructorChain (typeDef, index, methods);
+		// Pass 4: detect Java constructors that chain from base registered ctors.
+		// Only for ACW types — MCW types (DoNotGenerateAcw) already have [Register]
+		// on their ctors and are not processed through CecilImporter.CreateType
+		// in the legacy build pipeline.
+		if (detectBaseOverrides) {
+			CollectBaseConstructorChain (typeDef, index, methods);
+		}
 
 		return methods;
 	}
@@ -379,12 +383,13 @@ sealed class JavaPeerScanner : IDisposable
 	}
 
 	/// <summary>
-	/// Detects non-activation constructors that should become Java constructors by chaining
-	/// from base registered ctors. Mirrors the legacy CecilImporter behavior:
+	/// Detects Java constructors by chaining from base registered ctors.
+	/// Mirrors the legacy CecilImporter behavior:
 	/// 1. Walk the base type hierarchy collecting registered ctors (stopping at DoNotGenerateAcw)
-	/// 2. For each ctor on this type without [Register], accept it if a base registered ctor
+	/// 2. Add all base registered ctors as seed constructors (legacy adds them to the wrapper directly)
+	/// 3. For each ctor on this type without [Register], accept it if a base registered ctor
 	///    has compatible parameters.
-	/// 3. Fallback: if any base registered ctor is parameterless, accept the user ctor and
+	/// 4. Fallback: if any base registered ctor is parameterless, accept the user ctor and
 	///    compute its JNI signature from the managed parameter types.
 	/// </summary>
 	void CollectBaseConstructorChain (TypeDefinition typeDef, AssemblyIndex index,
@@ -404,15 +409,28 @@ sealed class JavaPeerScanner : IDisposable
 			return;
 		}
 
+		// Add all base registered ctors as seed constructors.
+		// Legacy CecilImporter processes base types first (ctorTypes is reversed) and adds
+		// their registered ctors directly to the wrapper's Constructors list.
 		bool hasParameterlessBaseCtor = false;
 		foreach (var baseCtor in baseRegisteredCtors) {
+			if (!alreadyRegisteredSignatures.Contains (baseCtor.RegisterInfo.Signature!)) {
+				methods.Add (new MarshalMethodInfo {
+					JniName = baseCtor.RegisterInfo.JniName,
+					JniSignature = baseCtor.RegisterInfo.Signature!,
+					Connector = baseCtor.RegisterInfo.Connector,
+					ManagedMethodName = ".ctor",
+					NativeCallbackName = "n_ctor",
+					IsConstructor = true,
+				});
+				alreadyRegisteredSignatures.Add (baseCtor.RegisterInfo.Signature!);
+			}
 			if (baseCtor.RegisterInfo.Signature == "()V") {
 				hasParameterlessBaseCtor = true;
-				break;
 			}
 		}
 
-		// Check each ctor on this type
+		// Check each ctor on this type for additional constructors not yet covered
 		foreach (var methodHandle in typeDef.GetMethods ()) {
 			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
 			var name = index.Reader.GetString (methodDef.Name);
@@ -426,26 +444,16 @@ sealed class JavaPeerScanner : IDisposable
 				continue;
 			}
 
-			// Try to find a base registered ctor with compatible parameters.
-			// Activation ctors (IntPtr, JniHandleOwnership) will never match because
-			// no base type registers a ctor with those parameter types.
-			bool matched = false;
+			// Check if this ctor's params are already covered by a base registered ctor
+			bool alreadyCovered = false;
 			foreach (var baseCtor in baseRegisteredCtors) {
 				if (AreParametersCompatible (methodDef, index, baseCtor.Method, baseCtor.Index)) {
-					if (!alreadyRegisteredSignatures.Contains (baseCtor.RegisterInfo.Signature!)) {
-						methods.Add (new MarshalMethodInfo {
-							JniName = baseCtor.RegisterInfo.JniName,
-							JniSignature = baseCtor.RegisterInfo.Signature!,
-							Connector = baseCtor.RegisterInfo.Connector,
-							ManagedMethodName = ".ctor",
-							NativeCallbackName = "n_ctor",
-							IsConstructor = true,
-						});
-						alreadyRegisteredSignatures.Add (baseCtor.RegisterInfo.Signature!);
-					}
-					matched = true;
+					alreadyCovered = true;
 					break;
 				}
+			}
+			if (alreadyCovered) {
+				continue;
 			}
 
 			// Fallback: if any base registered ctor is parameterless, accept this ctor
@@ -453,10 +461,10 @@ sealed class JavaPeerScanner : IDisposable
 			// The generated Java ctor calls super() (the parameterless base ctor),
 			// then delegates to nctor_N(...) which handles the args on the managed side.
 			// This matches legacy CecilImporter behavior (CecilImporter.cs:394-397).
-			if (!matched && hasParameterlessBaseCtor) {
+			if (hasParameterlessBaseCtor) {
 				var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
 				var jniSignature = BuildJniCtorSignature (sig);
-				if (!alreadyRegisteredSignatures.Contains (jniSignature)) {
+				if (jniSignature is not null && !alreadyRegisteredSignatures.Contains (jniSignature)) {
 					methods.Add (new MarshalMethodInfo {
 						JniName = ".ctor",
 						JniSignature = jniSignature,
@@ -472,15 +480,56 @@ sealed class JavaPeerScanner : IDisposable
 		}
 	}
 
-	static string BuildJniCtorSignature (MethodSignature<string> sig)
+	static string? BuildJniCtorSignature (MethodSignature<string> sig)
 	{
 		var sb = new System.Text.StringBuilder ();
 		sb.Append ('(');
 		foreach (var param in sig.ParameterTypes) {
-			sb.Append (ManagedTypeToJniDescriptor (param));
+			// Legacy GetJniSignature returns null for non-Java types (System.IntPtr,
+			// System.Object, System.Action, etc.). ManagedTypeToJniDescriptor maps
+			// these to "Ljava/lang/Object;" by default, but legacy would reject the
+			// whole ctor. Use the nullable variant to match legacy behavior.
+			var jniType = ManagedTypeToJniDescriptorOrNull (param);
+			if (jniType is null) {
+				return null;
+			}
+			sb.Append (jniType);
 		}
 		sb.Append (")V");
 		return sb.ToString ();
+	}
+
+	/// <summary>
+	/// Like <see cref="ManagedTypeToJniDescriptor"/> but returns null for types that
+	/// don't have a proper JNI mapping (matching legacy GetJniSignature behavior).
+	/// </summary>
+	static string? ManagedTypeToJniDescriptorOrNull (string managedType)
+	{
+		switch (managedType) {
+		case "System.Void": return "V";
+		case "System.Boolean": return "Z";
+		case "System.Byte":
+		case "System.SByte": return "B";
+		case "System.Char": return "C";
+		case "System.Int16":
+		case "System.UInt16": return "S";
+		case "System.Int32":
+		case "System.UInt32": return "I";
+		case "System.Int64":
+		case "System.UInt64": return "J";
+		case "System.Single": return "F";
+		case "System.Double": return "D";
+		case "System.String": return "Ljava/lang/String;";
+		default:
+			if (managedType.EndsWith ("[]")) {
+				var elementType = ManagedTypeToJniDescriptorOrNull (managedType.Substring (0, managedType.Length - 2));
+				return elementType is not null ? $"[{elementType}" : null;
+			}
+			// Non-primitive, non-string, non-array types don't have a reliable JNI mapping.
+			// Legacy GetJniSignature returns null for these (System.Object, System.IntPtr,
+			// System.Action, etc.), causing the whole ctor to be skipped.
+			return null;
+		}
 	}
 
 	/// <summary>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Java.Interop.Tools.Cecil;
+using Java.Interop.Tools.JavaCallableWrappers.Adapters;
 using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
@@ -96,22 +97,26 @@ static class TypeDataBuilder
 			FindLegacyActivationCtor (typeDef, cache,
 				out bool hasActivationCtor, out string? activationCtorDeclaringType, out string? activationCtorStyle);
 
+			// Use the real legacy JCW pipeline (CecilImporter.CreateType) to extract
+			// Java constructors, including the base ctor chain and parameterless fallback.
+			// This matches what the actual build does, unlike the previous manual [Register]
+			// attribute scanning which only found directly-attributed ctors.
 			var javaCtorSignatures = new List<string> ();
-			foreach (var method in typeDef.Methods) {
-				if (!method.IsConstructor || method.IsStatic || !method.HasCustomAttributes) {
-					continue;
-				}
-				foreach (var attr in method.CustomAttributes) {
-					if (attr.AttributeType.FullName != "Android.Runtime.RegisterAttribute") {
-						continue;
-					}
-					if (attr.ConstructorArguments.Count >= 2) {
-						var regName = (string) attr.ConstructorArguments [0].Value;
-						if (regName == "<init>" || regName == ".ctor") {
-							javaCtorSignatures.Add ((string) attr.ConstructorArguments [1].Value);
+			if (!typeDef.IsInterface && !ScannerRunner.HasDoNotGenerateAcw (typeDef)) {
+				try {
+					var wrapper = CecilImporter.CreateType (typeDef, cache);
+					foreach (var ctor in wrapper.Constructors) {
+						if (!string.IsNullOrEmpty (ctor.JniSignature)) {
+							javaCtorSignatures.Add (ctor.JniSignature);
 						}
 					}
+				} catch {
+					// Some types may fail CecilImporter (e.g., missing base types).
+					// Fall back to direct attribute scanning.
+					ExtractDirectRegisterCtors (typeDef, javaCtorSignatures);
 				}
+			} else {
+				ExtractDirectRegisterCtors (typeDef, javaCtorSignatures);
 			}
 			javaCtorSignatures.Sort (StringComparer.Ordinal);
 
@@ -244,5 +249,25 @@ static class TypeDataBuilder
 		}
 
 		return false;
+	}
+
+	static void ExtractDirectRegisterCtors (TypeDefinition typeDef, List<string> javaCtorSignatures)
+	{
+		foreach (var method in typeDef.Methods) {
+			if (!method.IsConstructor || method.IsStatic || !method.HasCustomAttributes) {
+				continue;
+			}
+			foreach (var attr in method.CustomAttributes) {
+				if (attr.AttributeType.FullName != "Android.Runtime.RegisterAttribute") {
+					continue;
+				}
+				if (attr.ConstructorArguments.Count >= 2) {
+					var regName = (string) attr.ConstructorArguments [0].Value;
+					if (regName == "<init>" || regName == ".ctor") {
+						javaCtorSignatures.Add ((string) attr.ConstructorArguments [1].Value);
+					}
+				}
+			}
+		}
 	}
 }
