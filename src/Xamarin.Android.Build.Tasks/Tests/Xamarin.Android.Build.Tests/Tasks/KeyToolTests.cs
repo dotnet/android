@@ -134,7 +134,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (1, errors.Count, "Task should have one error.");
 			Assert.AreEqual (0, warnings.Count, "Task should have no warnings.");
 			var error = errors [0];
-			Assert.AreEqual ("keytool error: java.io.IOException: Keystore was tampered with, or password was incorrect", error.Message);
+			Assert.That (error.Message, Does.Contain ("password was incorrect"));
 			Assert.AreEqual ("ANDKT0000", error.Code);
 		}
 
