@@ -176,6 +176,33 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (task.Execute (), $"Task should succeed with TargetFrameworkVersion='{tfv}'.");
 		}
 
+		[Test]
+		public void Execute_NoPeersFound_ReturnsEmpty ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+
+			// Use a real assembly that has no [Register] types
+			var testAssemblyDir = Path.GetDirectoryName (GetType ().Assembly.Location)!;
+			var nunitDll = Path.Combine (testAssemblyDir, "nunit.framework.dll");
+			if (!File.Exists (nunitDll)) {
+				Assert.Ignore ("nunit.framework.dll not found; skipping.");
+				return;
+			}
+
+			var messages = new List<BuildMessageEventArgs> ();
+			var task = CreateTask (new [] { new TaskItem (nunitDll) }, outputDir, javaDir, messages);
+
+			Assert.IsTrue (task.Execute (), "Task should succeed with no peer types.");
+			Assert.IsNotNull (task.GeneratedAssemblies);
+			Assert.IsEmpty (task.GeneratedAssemblies);
+			Assert.IsNotNull (task.GeneratedJavaFiles);
+			Assert.IsEmpty (task.GeneratedJavaFiles);
+			Assert.IsTrue (messages.Any (m => m.Message.Contains ("No Java peer types found")),
+				"Should log that no peers were found.");
+		}
+
 		GenerateTrimmableTypeMap CreateTask (ITaskItem [] assemblies, string outputDir, string javaDir,
 			IList<BuildMessageEventArgs>? messages = null, string tfv = "v11.0")
 		{
