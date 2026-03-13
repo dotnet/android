@@ -248,6 +248,16 @@ _ResolveAssemblies MSBuild target.
     </PropertyGroup>
     <ItemGroup>
       <_ResolvedNativeLibraries Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.so' " />
+      <!-- Exclude native libraries from non-Android RIDs (e.g. runtimes/linux-x64/native/).
+           The .NET SDK sets RuntimeIdentifier metadata to the current Android RID on all
+           ResolvedFileToPublish items, causing non-Android .so files to pass ABI checks
+           downstream. Use %(PathInPackage) metadata to detect the actual source RID.
+           Note: both 'android-*' and 'linux-bionic-*' RIDs are valid Android targets. -->
+      <_ResolvedNativeLibraries Remove="@(_ResolvedNativeLibraries)"
+          Condition=" '%(PathInPackage)' != '' And
+                      $([System.String]::new('%(PathInPackage)').StartsWith('runtimes/')) And
+                      !$([System.String]::new('%(PathInPackage)').StartsWith('runtimes/android')) And
+                      !$([System.String]::new('%(PathInPackage)').StartsWith('runtimes/linux-bionic')) " />
     </ItemGroup>
     <ItemGroup>
       <_MonoComponent Condition=" '$(AndroidEnableProfiler)' == 'true' " Include="diagnostics_tracing" />
