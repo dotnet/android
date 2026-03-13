@@ -17,15 +17,14 @@ public class ConstructorDetectionTests : FixtureTestBase
 		// Activity has [Register(".ctor", "()V", "")] — the scanner should chain from it.
 		var peer = FindFixtureByJavaName ("my/app/MainActivity");
 
-		// Should produce exactly one JavaConstructor with correct signature
-		Assert.Equal (1, peer.JavaConstructors.Count);
-		Assert.Equal ("()V", peer.JavaConstructors [0].JniSignature);
-
 		// The ctor should appear in MarshalMethods as a constructor
-		var ctorMethods = peer.MarshalMethods.Where (m => m.IsConstructor).ToList ();
-		Assert.Single (ctorMethods);
-		Assert.Equal ("()V", ctorMethods [0].JniSignature);
-		Assert.Equal (".ctor", ctorMethods [0].JniName);
+		var ctorMethod = Assert.Single (peer.MarshalMethods.Where (m => m.IsConstructor));
+		Assert.Equal ("()V", ctorMethod.JniSignature);
+		Assert.Equal (".ctor", ctorMethod.JniName);
+
+		// Should produce exactly one JavaConstructor with correct signature
+		var javaCtor = Assert.Single (peer.JavaConstructors);
+		Assert.Equal ("()V", javaCtor.JniSignature);
 	}
 
 	[Fact]
@@ -34,8 +33,8 @@ public class ConstructorDetectionTests : FixtureTestBase
 		// SimpleActivity has no explicit ctor — the compiler generates a default public one.
 		// It should chain from Activity's registered ()V ctor.
 		var peer = FindFixtureByJavaName ("my/app/SimpleActivity");
-		Assert.NotEmpty (peer.JavaConstructors);
-		Assert.Equal ("()V", peer.JavaConstructors [0].JniSignature);
+		var javaCtor = Assert.Single (peer.JavaConstructors);
+		Assert.Equal ("()V", javaCtor.JniSignature);
 	}
 
 	[Fact]
@@ -43,10 +42,12 @@ public class ConstructorDetectionTests : FixtureTestBase
 	{
 		// UserActivity only has an activation ctor (IntPtr, JniHandleOwnership).
 		// Legacy CecilImporter accepts it via the parameterless fallback because
-		// Activity has a registered ()V ctor. The ctor's managed parameter types
-		// are mapped to JNI Object types.
+		// Activity has a registered ()V ctor. The ctor's managed types map to
+		// JNI Object types → super() is called (not super(p0, p1)).
 		var peer = FindFixtureByJavaName ("my/app/UserActivity");
-		Assert.NotEmpty (peer.JavaConstructors);
+		var javaCtor = Assert.Single (peer.JavaConstructors);
+		Assert.Equal ("(Ljava/lang/Object;Ljava/lang/Object;)V", javaCtor.JniSignature);
+		Assert.Equal ("", javaCtor.SuperArgumentsString);
 	}
 
 	[Fact]
@@ -54,7 +55,9 @@ public class ConstructorDetectionTests : FixtureTestBase
 	{
 		// Same as UserActivity — activation ctor accepted via parameterless fallback.
 		var peer = FindFixtureByJavaName ("my/app/FullActivity");
-		Assert.NotEmpty (peer.JavaConstructors);
+		var javaCtor = Assert.Single (peer.JavaConstructors);
+		Assert.Equal ("(Ljava/lang/Object;Ljava/lang/Object;)V", javaCtor.JniSignature);
+		Assert.Equal ("", javaCtor.SuperArgumentsString);
 	}
 
 	[Fact]
@@ -83,10 +86,14 @@ public class ConstructorDetectionTests : FixtureTestBase
 	public void ActivityWithCustomCtor_ParameterlessFallback ()
 	{
 		// ActivityWithCustomCtor has a ctor(string) that doesn't match any base registered
-		// ctor's params. But Activity has a registered ()V ctor, so the parameterless
-		// fallback path should accept it (matching legacy CecilImporter.cs:394-397).
+		// ctor's params. Activity has a registered ()V ctor, so the parameterless fallback
+		// accepts it — Java calls super() and delegates args via nctor_N(p0).
 		var peer = FindFixtureByJavaName ("my/app/ActivityWithCustomCtor");
 		var ctorSigs = peer.JavaConstructors.Select (c => c.JniSignature).ToList ();
 		Assert.Contains ("(Ljava/lang/String;)V", ctorSigs);
+
+		// Verify the fallback ctor uses super() (empty SuperArgumentsString)
+		var fallbackCtor = peer.JavaConstructors.First (c => c.JniSignature == "(Ljava/lang/String;)V");
+		Assert.Equal ("", fallbackCtor.SuperArgumentsString);
 	}
 }

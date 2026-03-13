@@ -442,6 +442,8 @@ sealed class JavaPeerScanner : IDisposable
 
 			// Fallback: if any base registered ctor is parameterless, accept this ctor
 			// and compute its JNI signature from the managed parameter types.
+			// The generated Java ctor calls super() (the parameterless base ctor),
+			// then delegates to nctor_N(...) which handles the args on the managed side.
 			// This matches legacy CecilImporter behavior (CecilImporter.cs:394-397).
 			if (!matched && hasParameterlessBaseCtor) {
 				var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
@@ -454,6 +456,7 @@ sealed class JavaPeerScanner : IDisposable
 						ManagedMethodName = ".ctor",
 						NativeCallbackName = "n_ctor",
 						IsConstructor = true,
+						SuperArgumentsString = "",
 					});
 					alreadyRegisteredSignatures.Add (jniSignature);
 				}
