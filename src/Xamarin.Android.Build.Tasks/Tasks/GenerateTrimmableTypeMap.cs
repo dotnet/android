@@ -53,8 +53,6 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		var allPeers = ScanAssemblies (assemblyPaths);
 		if (allPeers.Count == 0) {
 			Log.LogDebugMessage ("No Java peer types found, skipping typemap generation.");
-			GeneratedAssemblies = [];
-			GeneratedJavaFiles = [];
 			return !Log.HasLoggedErrors;
 		}
 
@@ -147,7 +145,12 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		var jcwGenerator = new JcwJavaSourceGenerator ();
 		var files = jcwGenerator.Generate (allPeers, JavaSourceOutputDirectory);
 		Log.LogDebugMessage ($"Generated {files.Count} JCW Java source files.");
-		return files.Select (p => (ITaskItem) new TaskItem (p)).ToArray ();
+
+		var items = new ITaskItem [files.Count];
+		for (int i = 0; i < files.Count; i++) {
+			items [i] = new TaskItem (files [i]);
+		}
+		return items;
 	}
 
 	static Version ParseTargetFrameworkVersion (string tfv)
@@ -167,17 +170,12 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	/// </summary>
 	static IReadOnlyList<string> GetJavaInteropAssemblyPaths (ITaskItem [] items)
 	{
-		return items
-			.Where (item => {
-				var frameworkAssembly = item.GetMetadata ("FrameworkAssembly");
-				if (string.Equals (frameworkAssembly, "true", StringComparison.OrdinalIgnoreCase)) {
-					// Framework assemblies that reference Mono.Android (like Mono.Android itself) are included
-					var hasRef = item.GetMetadata ("HasMonoAndroidReference");
-					return string.Equals (hasRef, "True", StringComparison.OrdinalIgnoreCase);
-				}
-				return true; // Non-framework assemblies are always included
-			})
-			.Select (item => item.ItemSpec)
-			.ToList ();
+		var paths = new List<string> (items.Length);
+		foreach (var item in items) {
+			if (MonoAndroidHelper.IsMonoAndroidAssembly (item)) {
+				paths.Add (item.ItemSpec);
+			}
+		}
+		return paths;
 	}
 }
