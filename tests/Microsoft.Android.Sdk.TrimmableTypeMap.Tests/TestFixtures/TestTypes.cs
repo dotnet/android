@@ -341,6 +341,22 @@ namespace MyApp
 		public void DoExportedWork () { }
 	}
 
+	// --- Constructor super() argument test types ---
+
+	/// <summary>
+	/// Has a ctor with custom params that don't match any base registered ctor.
+	/// Activity has parameterless [Register(".ctor","()V",...)] so the fallback
+	/// should produce super() (empty super args).
+	/// </summary>
+	[Register ("my/app/CustomParamActivity")]
+	public class CustomParamActivity : Android.App.Activity
+	{
+		protected CustomParamActivity (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		// Custom ctor with params that don't match Activity's ()V ctor
+		public CustomParamActivity (string title, int count) : base () { }
+	}
+
 	// --- Interface implementation without [Register] test types ---
 	// These mimic real user code where a class implements a Java interface
 	// but doesn't have [Register] on the implementing method.
