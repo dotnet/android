@@ -98,6 +98,16 @@ namespace Android.Views
 		bool OnLongClick (View v);
 	}
 
+	/// <summary>
+	/// Interface with a registered property (for testing interface property implementation detection).
+	/// </summary>
+	[Register ("android/view/View$IHasName", "", "Android.Views.IHasNameInvoker")]
+	public interface IHasName
+	{
+		[Register ("getName", "()Ljava/lang/String;", "GetGetNameHandler:Android.Views.IHasNameInvoker")]
+		string? Name { get; }
+	}
+
 	[Register ("mono/android/view/View_IOnClickListenerImplementor")]
 	public class View_IOnClickListenerImplementor : Java.Lang.Object
 	{
@@ -228,6 +238,34 @@ namespace MyApp
 		public virtual void SetItems (string[]? items) { }
 	}
 
+	// --- Covariant return test types ---
+
+	/// <summary>
+	/// Base type with a method returning Java.Lang.Object.
+	/// </summary>
+	[Register ("my/app/CovariantBase", DoNotGenerateAcw = true)]
+	public class CovariantBase : Java.Lang.Object
+	{
+		protected CovariantBase (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Register ("getResult", "()Ljava/lang/Object;", "GetGetResultHandler")]
+		public virtual Java.Lang.Object? GetResult () => null;
+	}
+
+	/// <summary>
+	/// Derived type that overrides GetResult with a narrower C# return type.
+	/// The JCW should use the base's JNI signature "()Ljava/lang/Object;".
+	/// </summary>
+	[Register ("my/app/CovariantDerived")]
+	public class CovariantDerived : CovariantBase
+	{
+		protected CovariantDerived (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		// C# allows covariant returns — return type narrows from Object to string
+		// but no [Register] on the override. The base's JNI sig should be used.
+		public override Java.Lang.Object? GetResult () => null;
+	}
+
 	[Register ("my/app/ExportExample")]
 	public class ExportExample : Java.Lang.Object
 	{
@@ -235,8 +273,39 @@ namespace MyApp
 		public void MyExportedMethod () { }
 	}
 
+	/// <summary>
+	/// Has [Export] methods with different access modifiers.
+	/// The JCW should respect the C# visibility for [Export] methods.
+	/// </summary>
+	[Register ("my/app/ExportAccessTest")]
+	public class ExportAccessTest : Java.Lang.Object
+	{
+		protected ExportAccessTest (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Java.Interop.Export ("publicMethod")]
+		public void PublicMethod () { }
+
+		[Java.Interop.Export ("protectedMethod")]
+		protected void ProtectedMethod () { }
+	}
+
 	[Application (Name = "my.app.MyApplication", BackupAgent = typeof (MyBackupAgent), ManageSpaceActivity = typeof (MyManageSpaceActivity))]
 	public class MyApplication : Java.Lang.Object { }
+
+	/// <summary>
+	/// Has [ExportField] methods that should produce Java field declarations.
+	/// </summary>
+	[Register ("my/app/ExportFieldExample")]
+	public class ExportFieldExample : Java.Lang.Object
+	{
+		protected ExportFieldExample (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Java.Interop.ExportField ("STATIC_INSTANCE")]
+		public static ExportFieldExample GetInstance () => default!;
+
+		[Java.Interop.ExportField ("VALUE")]
+		public string GetValue () => "";
+	}
 
 	[Instrumentation (Name = "my.app.MyInstrumentation")]
 	public class MyInstrumentation : Java.Lang.Object { }
@@ -308,6 +377,78 @@ namespace MyApp
 	{
 		[Java.Interop.Export ("doExportedWork")]
 		public void DoExportedWork () { }
+	}
+
+	// --- Constructor super() argument test types ---
+
+	/// <summary>
+	/// Has a ctor with custom params that don't match any base registered ctor.
+	/// Activity has parameterless [Register(".ctor","()V",...)] so the fallback
+	/// should produce super() (empty super args).
+	/// </summary>
+	[Register ("my/app/CustomParamActivity")]
+	public class CustomParamActivity : Android.App.Activity
+	{
+		protected CustomParamActivity (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		// Custom ctor with params that don't match Activity's ()V ctor
+		public CustomParamActivity (string title, int count) : base () { }
+	}
+
+	// --- Interface implementation without [Register] test types ---
+	// These mimic real user code where a class implements a Java interface
+	// but doesn't have [Register] on the implementing method.
+
+	/// <summary>
+	/// Implements IOnClickListener.OnClick without [Register] on the method.
+	/// The scanner must detect this from the interface definition.
+	/// </summary>
+	[Register ("my/app/ImplicitClickListener")]
+	public class ImplicitClickListener : Java.Lang.Object, Android.Views.IOnClickListener
+	{
+		protected ImplicitClickListener (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		// No [Register] — real user code doesn't have it
+		public void OnClick (Android.Views.View v) { }
+	}
+
+	/// <summary>
+	/// Implements an interface with a registered property without [Register] on the property.
+	/// </summary>
+	[Register ("my/app/ImplicitPropertyImpl")]
+	public class ImplicitPropertyImpl : Java.Lang.Object, Android.Views.IHasName
+	{
+		protected ImplicitPropertyImpl (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		// No [Register] — should be detected from interface property
+		public string? Name => "test";
+	}
+
+	/// <summary>
+	/// Implements multiple interfaces without [Register] on any method.
+	/// </summary>
+	[Register ("my/app/ImplicitMultiListener")]
+	public class ImplicitMultiListener : Java.Lang.Object, Android.Views.IOnClickListener, Android.Views.IOnLongClickListener
+	{
+		protected ImplicitMultiListener (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public void OnClick (Android.Views.View v) { }
+		public bool OnLongClick (Android.Views.View v) => false;
+	}
+
+	/// <summary>
+	/// Has one interface method with [Register] and one without.
+	/// </summary>
+	[Register ("my/app/MixedInterfaceImpl")]
+	public class MixedInterfaceImpl : Java.Lang.Object, Android.Views.IOnClickListener, Android.Views.IOnLongClickListener
+	{
+		protected MixedInterfaceImpl (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Register ("onClick", "(Landroid/view/View;)V", "")]
+		public void OnClick (Android.Views.View v) { }
+
+		// No [Register] — should be detected from interface
+		public bool OnLongClick (Android.Views.View v) => false;
 	}
 
 	// --- Override detection test types ---

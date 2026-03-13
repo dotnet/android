@@ -87,6 +87,12 @@ sealed record JavaPeerInfo
 	public IReadOnlyList<JavaConstructorInfo> JavaConstructors { get; init; } = [];
 
 	/// <summary>
+	/// Java fields from [ExportField] attributes.
+	/// Each field is initialized by calling the annotated method.
+	/// </summary>
+	public IReadOnlyList<JavaFieldInfo> JavaFields { get; init; } = [];
+
+	/// <summary>
 	/// Information about the activation constructor for this type.
 	/// May reference a base type's constructor if the type doesn't define its own.
 	/// </summary>
@@ -160,6 +166,19 @@ sealed record MarshalMethodInfo
 	public bool IsConstructor { get; init; }
 
 	/// <summary>
+	/// True if this method comes from an [Export] attribute (rather than [Register]).
+	/// [Export] methods use the C# method's access modifier in the JCW Java file
+	/// instead of always being "public".
+	/// </summary>
+	public bool IsExport { get; init; }
+
+	/// <summary>
+	/// Java access modifier for [Export] methods ("public", "protected", "private").
+	/// Null for [Register] methods (always "public").
+	/// </summary>
+	public string? JavaAccess { get; init; }
+
+	/// <summary>
 	/// For [Export] methods: Java exception types that the method declares it can throw.
 	/// Null for [Register] methods.
 	/// </summary>
@@ -208,6 +227,38 @@ sealed record JavaConstructorInfo
 	/// Null for [Register] constructors.
 	/// </summary>
 	public string? SuperArgumentsString { get; init; }
+}
+
+/// <summary>
+/// Describes a Java field from an [ExportField] attribute.
+/// The field is initialized by calling the annotated method.
+/// </summary>
+sealed record JavaFieldInfo
+{
+	/// <summary>
+	/// Java field name, e.g., "STATIC_INSTANCE".
+	/// </summary>
+	public required string FieldName { get; init; }
+
+	/// <summary>
+	/// Java type name for the field, e.g., "java.lang.String".
+	/// </summary>
+	public required string JavaTypeName { get; init; }
+
+	/// <summary>
+	/// Name of the method that initializes this field, e.g., "GetInstance".
+	/// </summary>
+	public required string InitializerMethodName { get; init; }
+
+	/// <summary>
+	/// Java access modifier ("public", "protected", "private").
+	/// </summary>
+	public required string Visibility { get; init; }
+
+	/// <summary>
+	/// Whether the field is static.
+	/// </summary>
+	public bool IsStatic { get; init; }
 }
 
 /// <summary>

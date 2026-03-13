@@ -85,6 +85,7 @@ sealed class JcwJavaSourceGenerator
 		WriteClassDeclaration (type, writer);
 		WriteStaticInitializer (type, writer);
 		WriteConstructors (type, writer);
+		WriteFields (type, writer);
 		WriteMethods (type, writer);
 		WriteGCUserPeerMethods (writer);
 		WriteClassClose (writer);
@@ -181,6 +182,28 @@ sealed class JcwJavaSourceGenerator
 		}
 	}
 
+	static void WriteFields (JavaPeerInfo type, TextWriter writer)
+	{
+		foreach (var field in type.JavaFields) {
+			writer.Write ('\t');
+			writer.Write (field.Visibility);
+			writer.Write (' ');
+			if (field.IsStatic) {
+				writer.Write ("static ");
+			}
+			writer.Write (field.JavaTypeName);
+			writer.Write (' ');
+			writer.Write (field.FieldName);
+			writer.Write (" = ");
+			writer.Write (field.InitializerMethodName);
+			writer.WriteLine (" ();");
+		}
+
+		if (type.JavaFields.Count > 0) {
+			writer.WriteLine ();
+		}
+	}
+
 	static void WriteMethods (JavaPeerInfo type, TextWriter writer)
 	{
 		foreach (var method in type.MarshalMethods) {
@@ -214,13 +237,14 @@ sealed class JcwJavaSourceGenerator
 
 """);
 			} else {
+				string access = method.IsExport && method.JavaAccess != null ? method.JavaAccess : "public";
 				writer.Write ($$"""
 
-	public {{javaReturnType}} {{method.JniName}} ({{parameters}}){{throwsClause}}
+	{{access}} {{javaReturnType}} {{method.JniName}} ({{parameters}}){{throwsClause}}
 	{
 		{{returnPrefix}}{{method.NativeCallbackName}} ({{args}});
 	}
-	public native {{javaReturnType}} {{method.NativeCallbackName}} ({{parameters}});
+	{{access}} native {{javaReturnType}} {{method.NativeCallbackName}} ({{parameters}});
 
 """);
 			}
