@@ -39,9 +39,6 @@ namespace Xamarin.Android.Tasks
 				pipeline.Steps.Add (addKeepAliveStep);
 			}
 
-			// StripEmbeddedLibrariesStep - strip embedded .jar, native libs, etc. for non-trimmed builds
-			pipeline.Steps.Add (new StripEmbeddedLibrariesStep (Log));
-
 			// Ensure the <AssemblyModifierPipeline> task's steps are added
 			base.BuildPipeline (pipeline, context);
 		}

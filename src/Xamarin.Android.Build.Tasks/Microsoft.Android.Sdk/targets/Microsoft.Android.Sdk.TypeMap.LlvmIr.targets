@@ -254,11 +254,10 @@
     Strip embedded Android resources (.jar, native libs, etc.) from trimmed assemblies.
     Runs in the inner build after ILLink but before ReadyToRun/crossgen2 compilation,
     so R2R images are generated from already-stripped assemblies.
-    For non-trimmed builds, this is done by StripEmbeddedLibrariesStep in LinkAssembliesNoShrink.
   -->
   <Target Name="_StripEmbeddedLibraries"
       AfterTargets="ILLink"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(MSBuildLastTaskResult)' != 'false' ">
+      Condition=" '$(PublishTrimmed)' == 'true' ">
     <ItemGroup>
       <_StripEmbeddedLibrariesAssembly Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
     </ItemGroup>
