@@ -1,5 +1,3 @@
-using NUnit.Framework;
 using Xamarin.ProjectTools;
 
-[assembly: NonParallelizable]
 [assembly: HandleTransientNetworkError]

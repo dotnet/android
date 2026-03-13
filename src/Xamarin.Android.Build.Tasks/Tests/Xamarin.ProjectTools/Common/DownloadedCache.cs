@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.IO;
-using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Net.Sockets;
-using System.Security.Cryptography;
 using NUnit.Framework;
 
 namespace Xamarin.ProjectTools
@@ -65,23 +61,8 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
-		static bool IsTransientError (HttpRequestException ex)
-		{
-			// Check for common transient HTTP status codes
-			if (ex.StatusCode is HttpStatusCode statusCode) {
-				return statusCode == HttpStatusCode.RequestTimeout ||
-						statusCode == HttpStatusCode.GatewayTimeout ||
-						statusCode == HttpStatusCode.ServiceUnavailable ||
-						statusCode == HttpStatusCode.BadGateway;
-			}
-
-			// Check for socket/DNS errors (e.g., "nodename nor servname provided, or not known")
-			if (ex.InnerException is SocketException) {
-				return true;
-			}
-
-			return false;
-		}
+		static bool IsTransientError (HttpRequestException ex) =>
+			TransientNetworkErrorDetector.IsTransientNetworkError (ex);
 	}
 }
 
