@@ -392,6 +392,39 @@ namespace MyApp
 		// Overrides Throwable.Message which has [Register("getMessage",...)]
 		public override string? Message => "custom";
 	}
+
+	// --- Constructor chaining test types ---
+
+	/// <summary>
+	/// Uses [JniConstructorSignature] instead of [Register] on its constructors.
+	/// Mimics Java.Interop-style binding types (e.g., Java.Base-ref.cs).
+	/// </summary>
+	[Register ("my/app/JiStyleView")]
+	public class JiStyleView : Android.Views.View
+	{
+		protected JiStyleView (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Java.Interop.JniConstructorSignature ("()V")]
+		public JiStyleView () : base (default!, default) { }
+
+		[Java.Interop.JniConstructorSignature ("(Landroid/content/Context;)V")]
+		public JiStyleView (Context context) : base (default!, default) { }
+	}
+
+	/// <summary>
+	/// Has a ctor with a parameter type that doesn't exist on any base registered ctor,
+	/// but since Activity has a registered parameterless ctor, legacy CecilImporter accepts
+	/// this ctor via the parameterless fallback (CecilImporter.cs:394-397).
+	/// </summary>
+	[Register ("my/app/ActivityWithCustomCtor")]
+	public class ActivityWithCustomCtor : Android.App.Activity
+	{
+		protected ActivityWithCustomCtor (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		// string param doesn't match any base registered ctor's params,
+		// but Activity has a registered ()V ctor → fallback accepts this.
+		public ActivityWithCustomCtor (string label) { }
+	}
 }
 
 namespace MyApp.Generic

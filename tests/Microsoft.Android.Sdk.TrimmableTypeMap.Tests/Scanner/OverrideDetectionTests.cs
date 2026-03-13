@@ -55,10 +55,10 @@ public class OverrideDetectionTests : FixtureTestBase
 	{
 		// FullActivity overrides both OnCreate and OnStart
 		var peer = FindFixtureByJavaName ("my/app/FullActivity");
-		var marshalNames = peer.MarshalMethods.Select (m => m.JniName).ToList ();
-		Assert.Contains ("onCreate", marshalNames);
-		Assert.Contains ("onStart", marshalNames);
-		Assert.Equal (2, marshalNames.Count);
+		var nonCtorMarshalNames = peer.MarshalMethods.Where (m => !m.IsConstructor).Select (m => m.JniName).ToList ();
+		Assert.Contains ("onCreate", nonCtorMarshalNames);
+		Assert.Contains ("onStart", nonCtorMarshalNames);
+		Assert.Equal (2, nonCtorMarshalNames.Count);
 	}
 
 	[Fact]

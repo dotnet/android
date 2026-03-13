@@ -122,6 +122,14 @@ namespace Java.Interop
 		public ExportAttribute () { }
 		public ExportAttribute (string name) => Name = name;
 	}
+
+	[AttributeUsage (AttributeTargets.Constructor, AllowMultiple = false)]
+	public sealed class JniConstructorSignatureAttribute : Attribute
+	{
+		public string MemberSignature { get; }
+
+		public JniConstructorSignatureAttribute (string memberSignature) => MemberSignature = memberSignature;
+	}
 }
 
 namespace MyApp

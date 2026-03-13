@@ -278,13 +278,11 @@ sealed class JavaPeerScanner : IDisposable
 		// would incorrectly pick up internal overrides (e.g., JavaObject.equals).
 		if (detectBaseOverrides) {
 			CollectBaseMethodOverrides (typeDef, index, methods, registeredMethodNames);
-
-			// Pass 4: detect non-activation constructors that chain to base registered ctors.
-			// Mirrors the legacy CecilImporter behavior: walk from base to derived, seed
-			// with registered ctors, then accept unregistered non-activation ctors whose
-			// parameters are compatible with an already-accepted base ctor.
-			CollectBaseConstructorChain (typeDef, index, methods);
 		}
+
+		// Pass 4: detect non-activation constructors that chain to base registered ctors.
+		// Runs for all types (including MCW), matching legacy CecilImporter behavior.
+		CollectBaseConstructorChain (typeDef, index, methods);
 
 		return methods;
 	}
@@ -374,11 +372,11 @@ sealed class JavaPeerScanner : IDisposable
 	/// 1. Walk the base type hierarchy collecting registered ctors (stopping at DoNotGenerateAcw)
 	/// 2. For each ctor on this type without [Register], accept it if a base registered ctor
 	///    has compatible parameters.
+	/// 3. Fallback: if any base registered ctor is parameterless, accept the user ctor and
+	///    compute its JNI signature from the managed parameter types.
 	///
 	/// Known differences from legacy CecilImporter:
-	/// - Legacy also accepts ctors when any base ctor is parameterless (fallback path).
-	///   This is rare and not yet implemented.
-	/// - Legacy threads outerType for nested inner-class constructors.
+	/// - Legacy threads outerType for nested inner-class constructors (generator concern).
 	/// - Legacy deduplicates by managed parameter string in addition to JNI signature.
 	/// </summary>
 	void CollectBaseConstructorChain (TypeDefinition typeDef, AssemblyIndex index,
@@ -398,6 +396,14 @@ sealed class JavaPeerScanner : IDisposable
 			return;
 		}
 
+		bool hasParameterlessBaseCtor = false;
+		foreach (var baseCtor in baseRegisteredCtors) {
+			if (baseCtor.RegisterInfo.Signature == "()V") {
+				hasParameterlessBaseCtor = true;
+				break;
+			}
+		}
+
 		// Check each ctor on this type
 		foreach (var methodHandle in typeDef.GetMethods ()) {
 			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
@@ -407,7 +413,7 @@ sealed class JavaPeerScanner : IDisposable
 				continue;
 			}
 
-			// Skip if this ctor already has [Register] (collected in Pass 1)
+			// Skip if this ctor already has [Register] or [JniConstructorSignature] (collected in Pass 1)
 			if (TryGetMethodRegisterInfo (methodDef, index, out _, out _)) {
 				continue;
 			}
@@ -415,6 +421,7 @@ sealed class JavaPeerScanner : IDisposable
 			// Try to find a base registered ctor with compatible parameters.
 			// Activation ctors (IntPtr, JniHandleOwnership) will never match because
 			// no base type registers a ctor with those parameter types.
+			bool matched = false;
 			foreach (var baseCtor in baseRegisteredCtors) {
 				if (AreParametersCompatible (methodDef, index, baseCtor.Method, baseCtor.Index)) {
 					if (!alreadyRegisteredSignatures.Contains (baseCtor.RegisterInfo.Signature!)) {
@@ -428,10 +435,41 @@ sealed class JavaPeerScanner : IDisposable
 						});
 						alreadyRegisteredSignatures.Add (baseCtor.RegisterInfo.Signature!);
 					}
+					matched = true;
 					break;
 				}
 			}
+
+			// Fallback: if any base registered ctor is parameterless, accept this ctor
+			// and compute its JNI signature from the managed parameter types.
+			// This matches legacy CecilImporter behavior (CecilImporter.cs:394-397).
+			if (!matched && hasParameterlessBaseCtor) {
+				var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+				var jniSignature = BuildJniCtorSignature (sig);
+				if (!alreadyRegisteredSignatures.Contains (jniSignature)) {
+					methods.Add (new MarshalMethodInfo {
+						JniName = ".ctor",
+						JniSignature = jniSignature,
+						Connector = "",
+						ManagedMethodName = ".ctor",
+						NativeCallbackName = "n_ctor",
+						IsConstructor = true,
+					});
+					alreadyRegisteredSignatures.Add (jniSignature);
+				}
+			}
 		}
+	}
+
+	static string BuildJniCtorSignature (MethodSignature<string> sig)
+	{
+		var sb = new System.Text.StringBuilder ();
+		sb.Append ('(');
+		foreach (var param in sig.ParameterTypes) {
+			sb.Append (ManagedTypeToJniDescriptor (param));
+		}
+		sb.Append (")V");
+		return sb.ToString ();
 	}
 
 	/// <summary>
@@ -726,6 +764,17 @@ sealed class JavaPeerScanner : IDisposable
 			if (attrName == "ExportAttribute") {
 				(registerInfo, exportInfo) = ParseExportAttribute (ca, methodDef, index);
 				return true;
+			}
+
+			// JI-style constructor registration: [JniConstructorSignature("()V")]
+			// Single arg = JNI signature; name is always ".ctor", connector is empty.
+			if (attrName == "JniConstructorSignatureAttribute") {
+				var value = index.DecodeAttribute (ca);
+				var jniSignature = value.FixedArguments.Length > 0 ? (string?)value.FixedArguments [0].Value : null;
+				if (jniSignature is not null) {
+					registerInfo = new RegisterInfo { JniName = ".ctor", Signature = jniSignature, Connector = "", DoNotGenerateAcw = false };
+					return true;
+				}
 			}
 		}
 		registerInfo = null;

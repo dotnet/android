@@ -39,20 +39,22 @@ public class ConstructorDetectionTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void UserActivity_ActivationCtorOnly_NoJavaConstructors ()
+	public void UserActivity_ActivationCtor_AcceptedViaFallback ()
 	{
 		// UserActivity only has an activation ctor (IntPtr, JniHandleOwnership).
-		// No non-activation ctor exists, so no Java constructor should be generated.
+		// Legacy CecilImporter accepts it via the parameterless fallback because
+		// Activity has a registered ()V ctor. The ctor's managed parameter types
+		// are mapped to JNI Object types.
 		var peer = FindFixtureByJavaName ("my/app/UserActivity");
-		Assert.Empty (peer.JavaConstructors);
+		Assert.NotEmpty (peer.JavaConstructors);
 	}
 
 	[Fact]
-	public void FullActivity_ActivationCtorOnly_NoJavaConstructors ()
+	public void FullActivity_ActivationCtor_AcceptedViaFallback ()
 	{
-		// FullActivity only has an activation ctor — no Java constructors.
+		// Same as UserActivity — activation ctor accepted via parameterless fallback.
 		var peer = FindFixtureByJavaName ("my/app/FullActivity");
-		Assert.Empty (peer.JavaConstructors);
+		Assert.NotEmpty (peer.JavaConstructors);
 	}
 
 	[Fact]
@@ -64,5 +66,27 @@ public class ConstructorDetectionTests : FixtureTestBase
 		Assert.Equal (2, peer.JavaConstructors.Count);
 		Assert.Equal ("()V", peer.JavaConstructors [0].JniSignature);
 		Assert.Equal ("(Landroid/content/Context;)V", peer.JavaConstructors [1].JniSignature);
+	}
+
+	[Fact]
+	public void JiStyleView_JniConstructorSignatureAttribute ()
+	{
+		// JiStyleView uses [JniConstructorSignature] instead of [Register].
+		// The scanner must recognize this attribute and collect both ctors.
+		var peer = FindFixtureByJavaName ("my/app/JiStyleView");
+		Assert.Equal (2, peer.JavaConstructors.Count);
+		Assert.Equal ("()V", peer.JavaConstructors [0].JniSignature);
+		Assert.Equal ("(Landroid/content/Context;)V", peer.JavaConstructors [1].JniSignature);
+	}
+
+	[Fact]
+	public void ActivityWithCustomCtor_ParameterlessFallback ()
+	{
+		// ActivityWithCustomCtor has a ctor(string) that doesn't match any base registered
+		// ctor's params. But Activity has a registered ()V ctor, so the parameterless
+		// fallback path should accept it (matching legacy CecilImporter.cs:394-397).
+		var peer = FindFixtureByJavaName ("my/app/ActivityWithCustomCtor");
+		var ctorSigs = peer.JavaConstructors.Select (c => c.JniSignature).ToList ();
+		Assert.Contains ("(Ljava/lang/String;)V", ctorSigs);
 	}
 }
