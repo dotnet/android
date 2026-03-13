@@ -22,6 +22,9 @@ namespace Xamarin.Android.Build.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("Incremental build timing is not tested for NativeAOT.");
+			}
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
@@ -526,6 +529,9 @@ namespace Lib2
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
+			}
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("Incremental build timing is not tested for NativeAOT.");
 			}
 
 			var targets = new List<(string target, bool ignoreOnNAOT)> {
