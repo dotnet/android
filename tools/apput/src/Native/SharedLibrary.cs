@@ -79,17 +79,29 @@ public class SharedLibrary : BaseAspect
 
 	public static IAspect LoadAspect (Stream stream, IAspectState? state, string? description)
 	{
-		if (String.IsNullOrEmpty (description)) {
-			throw new ArgumentException ("Must be a shared library name", nameof (description));
+		LogLoadAspectStart (typeof(SharedLibrary));
+		try {
+			if (String.IsNullOrEmpty (description)) {
+				throw new ArgumentException ("Must be a shared library name", nameof (description));
+			}
+
+			var libState = EnsureValidAspectState<SharedLibraryAspectState> (state);
+
+			return new SharedLibrary (stream, description, libState);
+		} finally {
+			LogLoadAspectEnd ();
 		}
-
-		var libState = EnsureValidAspectState<SharedLibraryAspectState> (state);
-
-		return new SharedLibrary (stream, description, libState);
 	}
 
-	public static IAspectState ProbeAspect (Stream stream, string? description) => IsSupportedELFSharedLibrary (stream, description);
-
+	public static IAspectState ProbeAspect (Stream stream, string? description)
+	{
+		LogProbeAspectStart (typeof(SharedLibrary));
+		try {
+			return IsSupportedELFSharedLibrary (stream, description);
+		} finally {
+			LogProbeAspectEnd ();
+		}
+	}
 
 	protected static bool IsSupportedELFSharedLibrary (Stream stream, string? description, out IELF? elf)
 	{

@@ -101,39 +101,44 @@ public abstract class ApplicationPackage : BaseAspect
 		base.Dispose (disposing);
 	}
 
-	public static IAspect LoadAspect (Stream stream, IAspectState state, string? description)
+	protected static IAspect LoadAspect (Type aspectType, Stream stream, IAspectState state, string? description)
 	{
-		Log.Debug ($"ApplicationPackage: opening stream ('{description}') as a ZIP archive");
-		ZipArchive? zip = TryOpenAsZip (stream);
-		if (zip == null) {
-			throw new InvalidOperationException ("Stream is not a ZIP archive. Call ProbeAspect first.");
+		LogLoadAspectStart (aspectType);
+		try {
+			Log.Debug ($"ApplicationPackage: opening stream ('{description}') as a ZIP archive");
+			ZipArchive? zip = TryOpenAsZip (stream);
+			if (zip == null) {
+				throw new InvalidOperationException ("Stream is not a ZIP archive. Call ProbeAspect first.");
+			}
+
+			ApplicationPackage ret;
+			if (IsAPK (zip)) {
+				ret = new PackageAPK (stream, zip, description);
+			} else if (IsAAB (zip)) {
+				ret = new PackageAAB (stream, zip, description);
+			} else if (IsBase (zip)) {
+				ret = new PackageBase (stream, zip, description);
+			} else {
+				throw new InvalidOperationException ("Stream is not a supported Android ZIP package. Call ProbeAspect first.");
+			}
+			Log.Debug ($"ApplicationPackage: stream ('{description}') is: {ret.PackageFormat}");
+
+			// TODO: for all of the below, add support for detection of older XA apps (just to warn that this version doesn't support
+			//       and that people should use older tools)
+			ret.TryDetectArchitectures (); // This must be called first, some further steps depend on it
+			ret.CollectSharedLibraries (); // This must be called second, some further steps need the collection of shared libraries
+			ret.TryDetectRuntime ();
+			ret.TryDetectWhetherIsSigned ();
+			ret.TryLoadAssemblyStores ();
+			ret.TryLoadStandaloneAssemblies ();
+			ret.TryLoadStandalonePdbs ();
+			ret.TryLoadAndroidManifest ();
+			ret.TryLoadXamarinAppLibraries ();
+
+			return ret;
+		} finally {
+			LogLoadAspectEnd ();
 		}
-
-		ApplicationPackage ret;
-		if (IsAPK (zip)) {
-			ret = new PackageAPK (stream, zip, description);
-		} else if (IsAAB (zip)) {
-			ret = new PackageAAB (stream, zip, description);
-		} else if (IsBase (zip)) {
-			ret = new PackageBase (stream, zip, description);
-		} else {
-			throw new InvalidOperationException ("Stream is not a supported Android ZIP package. Call ProbeAspect first.");
-		}
-		Log.Debug ($"ApplicationPackage: stream ('{description}') is: {ret.PackageFormat}");
-
-		// TODO: for all of the below, add support for detection of older XA apps (just to warn that this version doesn't support
-		//       and that people should use older tools)
-		ret.TryDetectArchitectures (); // This must be called first, some further steps depend on it
-		ret.CollectSharedLibraries (); // This must be called second, some further steps need the collection of shared libraries
-		ret.TryDetectRuntime ();
-		ret.TryDetectWhetherIsSigned ();
-		ret.TryLoadAssemblyStores ();
-		ret.TryLoadStandaloneAssemblies ();
-		ret.TryLoadStandalonePdbs ();
-		ret.TryLoadAndroidManifest ();
-		ret.TryLoadXamarinAppLibraries ();
-
-		return ret;
 	}
 
 	void CollectSharedLibraries ()
@@ -456,29 +461,34 @@ public abstract class ApplicationPackage : BaseAspect
 		}
 	}
 
-	public static IAspectState ProbeAspect (Stream stream, string? description)
+	protected static IAspectState ProbeAspect (Type aspectType, Stream stream, string? description)
 	{
-		Log.Debug ($"ApplicationPackage: checking if stream ('{description}') is a ZIP archive");
-		using ZipArchive? zip = TryOpenAsZip (stream);
-		if (zip == null) {
-			return new BasicAspectState (false);
-		}
+		LogProbeAspectStart (aspectType);
+		try {
+			Log.Debug ($"ApplicationPackage: checking if stream ('{description}') is a ZIP archive");
+			using ZipArchive? zip = TryOpenAsZip (stream);
+			if (zip == null) {
+				return new BasicAspectState (false);
+			}
 
-		Log.Debug ($"ApplicationPackage: checking if stream ('{description}') is a supported Android ZIP package");
-		// OK, it's a ZIP. Find out if it's what we support
-		string? kind = null;
-		if (IsAPK (zip)) {
-			kind = "APK";
-		} else if (IsAAB (zip)) {
-			kind = "AAB";
-		} else if (IsBase (zip)) {
-			kind = "Base";
-		} else {
-			return new BasicAspectState (false);
-		}
+			Log.Debug ($"ApplicationPackage: checking if stream ('{description}') is a supported Android ZIP package");
+			// OK, it's a ZIP. Find out if it's what we support
+			string? kind = null;
+			if (IsAPK (zip)) {
+				kind = "APK";
+			} else if (IsAAB (zip)) {
+				kind = "AAB";
+			} else if (IsBase (zip)) {
+				kind = "Base";
+			} else {
+				return new BasicAspectState (false);
+			}
 
-		Log.Debug ($"ApplicationPackage: archive is {kind}");
-		return new BasicAspectState (true);
+			Log.Debug ($"ApplicationPackage: archive is {kind}");
+			return new BasicAspectState (true);
+		} finally {
+			LogProbeAspectEnd ();
+		}
 	}
 
 	static bool IsAPK (ZipArchive zip) => HasAllEntries (zip, KnownApkEntries);

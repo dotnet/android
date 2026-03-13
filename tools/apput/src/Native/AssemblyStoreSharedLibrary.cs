@@ -21,50 +21,60 @@ class AssemblyStoreSharedLibrary : DotNetAndroidWrapperSharedLibrary
 
 	public new static IAspect LoadAspect (Stream stream, IAspectState? state, string? description)
 	{
-		if (String.IsNullOrEmpty (description)) {
-			throw new ArgumentException ("Must be a shared library name", nameof (description));
-		}
+		LogLoadAspectStart (typeof(AssemblyStoreSharedLibrary));
+		try {
+			if (String.IsNullOrEmpty (description)) {
+				throw new ArgumentException ("Must be a shared library name", nameof (description));
+			}
 
-		var libraryState = EnsureValidAspectState<AssemblyStoreSharedLibraryAspectState> (state);
-		if (libraryState == null || libraryState.AssemblyStoreState == null) {
-			throw new InvalidOperationException ("Internal error: unexpected aspect state. Was ProbeAspect unsuccessful?");
-		}
+			var libraryState = EnsureValidAspectState<AssemblyStoreSharedLibraryAspectState> (state);
+			if (libraryState == null || libraryState.AssemblyStoreState == null) {
+				throw new InvalidOperationException ("Internal error: unexpected aspect state. Was ProbeAspect unsuccessful?");
+			}
 
-		using Stream? storeStream = GetStoreStream (libraryState, stream, description);
-		if (storeStream == null) {
-			throw new InvalidOperationException ("Internal error: failed to create store stream.");
-		}
+			using Stream? storeStream = GetStoreStream (libraryState, stream, description);
+			if (storeStream == null) {
+				throw new InvalidOperationException ("Internal error: failed to create store stream.");
+			}
 
-		return new AssemblyStoreSharedLibrary (storeStream, description, libraryState);
+			return new AssemblyStoreSharedLibrary (storeStream, description, libraryState);
+		} finally {
+			LogLoadAspectEnd ();
+		}
 	}
 
 	public new static IAspectState ProbeAspect (Stream stream, string? description)
 	{
-		var baseState = DotNetAndroidWrapperSharedLibrary.ProbeAspect (stream, description) as DotNetAndroidWrapperSharedLibraryAspectState;
-		if (baseState == null) {
-			throw new InvalidOperationException ("Unexpected base aspect state");
-		}
+		LogProbeAspectStart (typeof(AssemblyStoreSharedLibrary));
+		try {
+			var baseState = DotNetAndroidWrapperSharedLibrary.ProbeAspect (stream, description) as DotNetAndroidWrapperSharedLibraryAspectState;
+			if (baseState == null) {
+				throw new InvalidOperationException ("Unexpected base aspect state");
+			}
 
-		if (!baseState.Success) {
-			return GetErrorState ();
-		}
+			if (!baseState.Success) {
+				return GetErrorState ();
+			}
 
-		using Stream? storeStream = GetStoreStream (baseState, stream, description);
-		if (storeStream == null) {
-			return GetErrorState ();
-		}
+			using Stream? storeStream = GetStoreStream (baseState, stream, description);
+			if (storeStream == null) {
+				return GetErrorState ();
+			}
 
-		IAspectState storeState = AssemblyStore.ProbeAspect (storeStream, description);
-		if (!storeState.Success) {
-			return GetErrorState ();
-		}
+			IAspectState storeState = AssemblyStore.ProbeAspect (storeStream, description);
+			if (!storeState.Success) {
+				return GetErrorState ();
+			}
 
-		return new AssemblyStoreSharedLibraryAspectState (
-			success: true,
-			assemblyStoreAspectState: storeState,
-			elf: baseState.LoadedELF,
-			storeDataOffset: baseState.PayloadOffset
-		);
+			return new AssemblyStoreSharedLibraryAspectState (
+				success: true,
+				assemblyStoreAspectState: storeState,
+				elf: baseState.LoadedELF,
+				storeDataOffset: baseState.PayloadOffset
+			);
+		} finally {
+			LogProbeAspectEnd ();
+		}
 
 		AssemblyStoreSharedLibraryAspectState GetErrorState ()
 		{

@@ -13,56 +13,14 @@ public static class Log
 		buffer = bufferImpl;
 	}
 
-	static void WriteStderr (string message)
+	public static void StartContext (string? name = null)
 	{
-		Console.Error.Write (message);
+		Buffer.PushContext (name);
 	}
 
-	static void WriteStderr (ConsoleColor color, string message)
+	public static void EndContext ()
 	{
-		ConsoleColor oldFG = Console.ForegroundColor;
-		Console.ForegroundColor = color;
-		WriteStderr (message);
-		Console.ForegroundColor = oldFG;
-	}
-
-	static void WriteLineStderr (string message)
-	{
-		Console.Error.WriteLine (message);
-	}
-
-	static void WriteLineStderr (ConsoleColor color, string message)
-	{
-		ConsoleColor oldFG = Console.ForegroundColor;
-		Console.ForegroundColor = color;
-		WriteLineStderr (message);
-		Console.ForegroundColor = oldFG;
-	}
-
-	static void Write (string message)
-	{
-		WriteStderr (message);
-	}
-
-	static void Write (ConsoleColor color, string message)
-	{
-		ConsoleColor oldFG = Console.ForegroundColor;
-		Console.ForegroundColor = color;
-		WriteStderr (message);
-		Console.ForegroundColor = oldFG;
-	}
-
-	static void WriteLine (string message)
-	{
-		WriteLineStderr (message);
-	}
-
-	static void WriteLine (ConsoleColor color, string message)
-	{
-		ConsoleColor oldFG = Console.ForegroundColor;
-		Console.ForegroundColor = color;
-		WriteLineStderr (message);
-		Console.ForegroundColor = oldFG;
+		Buffer.PopContext ();
 	}
 
 	/// <summary>
@@ -87,7 +45,6 @@ public static class Log
 			messageLogLevel >= LogLevel.Error ? messageLogLevel : LogLevel.Debug,
 			writeLine: true
 		);
-
 	}
 
 	public static void Error (string message = "", Exception? ex = null, bool writeLine = true)

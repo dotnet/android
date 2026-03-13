@@ -100,9 +100,17 @@ class Program
 
 class ReportCommand : BaseProgramCommand
 {
+	string? outputFile;
+
 	public ReportCommand ()
 		: base ("report", "Generate a full report on <input_file>")
-	{}
+	{
+		Options.Add (
+			"output|o=",
+			"Write report to the specified output file. Defaults to the current directory, with report file name based on the aspect name as passed on the command line. Pass `-` to write to console.",
+			v => outputFile = v
+		);
+	}
 
 	protected override int DoInvoke (List<string> rest)
 	{
@@ -112,7 +120,20 @@ class ReportCommand : BaseProgramCommand
 			return 1;
 		}
 
-		Reporter.Report (aspect, plainTextRendering: NoColor == true);
+		if (String.IsNullOrEmpty (outputFile)) {
+			outputFile = $"report-{Path.GetFileNameWithoutExtension (rest[0])}.md";
+		} else if (outputFile == "-") {
+			outputFile = null;
+		}
+
+		try {
+			Reporter.Report (aspect, plainTextRendering: NoColor == true, outputFile: outputFile);
+		} finally {
+			if (!String.IsNullOrEmpty (outputFile)) {
+				Console.Error.WriteLine ($"Report file: '{outputFile}'");
+			}
+		}
+
 		return 0;
 	}
 }

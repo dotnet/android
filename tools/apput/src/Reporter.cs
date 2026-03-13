@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Reflection;
 
 using Microsoft.PowerShell.MarkdownRender;
@@ -7,7 +8,7 @@ namespace ApplicationUtility;
 
 class Reporter
 {
-	public static void Report (IAspect aspect, bool plainTextRendering, ReportForm form = ReportForm.Standalone, MarkdownDocument? doc = null)
+	public static void Report (IAspect aspect, bool plainTextRendering, ReportForm form = ReportForm.Standalone, MarkdownDocument? doc = null, string? outputFile = null)
 	{
 		Type aspectType = aspect.GetType ();
 
@@ -37,15 +38,20 @@ class Reporter
 		} finally {
 			// Write report only when we're not nested
 			if (doc == null) {
-				WriteReport (reportDoc, plainTextRendering);
+				WriteReport (reportDoc, plainTextRendering, outputFile);
 			}
 		}
 	}
 
-	static void WriteReport (MarkdownDocument reportDoc, bool plainTextRendering)
+	static void WriteReport (MarkdownDocument reportDoc, bool plainTextRendering, string? outputFile)
 	{
-		if (plainTextRendering || Console.IsOutputRedirected) {
-			Console.WriteLine (reportDoc.Text);
+		bool haveOutputFile = !String.IsNullOrWhiteSpace (outputFile);
+		if (plainTextRendering || Console.IsOutputRedirected || haveOutputFile) {
+			if (haveOutputFile) {
+				File.WriteAllText (outputFile!, reportDoc.Text);
+			} else {
+				Console.WriteLine (reportDoc.Text);
+			}
 			return;
 		}
 
