@@ -11,34 +11,25 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 public class ConstructorDetectionTests : FixtureTestBase
 {
 	[Fact]
-	public void MainActivity_HasJavaConstructor ()
+	public void MainActivity_ChainsFromBaseRegisteredCtor ()
 	{
 		// MainActivity has an explicit public parameterless ctor without [Register].
 		// Activity has [Register(".ctor", "()V", "")] — the scanner should chain from it.
 		var peer = FindFixtureByJavaName ("my/app/MainActivity");
-		Assert.NotEmpty (peer.JavaConstructors);
-	}
 
-	[Fact]
-	public void MainActivity_JavaConstructor_HasCorrectSignature ()
-	{
-		var peer = FindFixtureByJavaName ("my/app/MainActivity");
-		var ctorSigs = peer.JavaConstructors.Select (c => c.JniSignature).ToList ();
-		Assert.Contains ("()V", ctorSigs);
-	}
+		// Should produce exactly one JavaConstructor with correct signature
+		Assert.Equal (1, peer.JavaConstructors.Count);
+		Assert.Equal ("()V", peer.JavaConstructors [0].JniSignature);
 
-	[Fact]
-	public void MainActivity_HasConstructorMarshalMethod ()
-	{
-		// The ctor should appear in MarshalMethods with IsConstructor=true
-		var peer = FindFixtureByJavaName ("my/app/MainActivity");
+		// The ctor should appear in MarshalMethods as a constructor
 		var ctorMethods = peer.MarshalMethods.Where (m => m.IsConstructor).ToList ();
-		Assert.NotEmpty (ctorMethods);
+		Assert.Single (ctorMethods);
 		Assert.Equal ("()V", ctorMethods [0].JniSignature);
+		Assert.Equal (".ctor", ctorMethods [0].JniName);
 	}
 
 	[Fact]
-	public void SimpleActivity_HasJavaConstructor ()
+	public void SimpleActivity_ChainsImplicitDefaultCtor ()
 	{
 		// SimpleActivity has no explicit ctor — the compiler generates a default public one.
 		// It should chain from Activity's registered ()V ctor.
@@ -48,7 +39,7 @@ public class ConstructorDetectionTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void UserActivity_HasNoJavaConstructors ()
+	public void UserActivity_ActivationCtorOnly_NoJavaConstructors ()
 	{
 		// UserActivity only has an activation ctor (IntPtr, JniHandleOwnership).
 		// No non-activation ctor exists, so no Java constructor should be generated.
@@ -57,7 +48,7 @@ public class ConstructorDetectionTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void FullActivity_HasNoJavaConstructors ()
+	public void FullActivity_ActivationCtorOnly_NoJavaConstructors ()
 	{
 		// FullActivity only has an activation ctor — no Java constructors.
 		var peer = FindFixtureByJavaName ("my/app/FullActivity");
@@ -65,7 +56,7 @@ public class ConstructorDetectionTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void CustomView_StillWorksWithDirectRegister ()
+	public void CustomView_DirectRegisterNotAffected ()
 	{
 		// CustomView has explicit [Register("<init>", ...)] on its ctors.
 		// This must continue to work via Pass 1 (direct collection).
@@ -73,34 +64,5 @@ public class ConstructorDetectionTests : FixtureTestBase
 		Assert.Equal (2, peer.JavaConstructors.Count);
 		Assert.Equal ("()V", peer.JavaConstructors [0].JniSignature);
 		Assert.Equal ("(Landroid/content/Context;)V", peer.JavaConstructors [1].JniSignature);
-	}
-
-	[Fact]
-	public void ConstructorMarshalMethod_IsMarkedAsConstructor ()
-	{
-		var peer = FindFixtureByJavaName ("my/app/MainActivity");
-		var ctorMethods = peer.MarshalMethods.Where (m => m.IsConstructor).ToList ();
-		Assert.Single (ctorMethods);
-		Assert.True (ctorMethods [0].IsConstructor);
-	}
-
-	[Fact]
-	public void ConstructorMarshalMethod_HasCorrectJniName ()
-	{
-		var peer = FindFixtureByJavaName ("my/app/MainActivity");
-		var ctor = peer.MarshalMethods.First (m => m.IsConstructor);
-		// The JNI name should be ".ctor" (matching the base's [Register] name)
-		Assert.Equal (".ctor", ctor.JniName);
-	}
-
-	[Fact]
-	public void OnlyNonActivationCtors_BecomeJavaConstructors ()
-	{
-		// MainActivity has both:
-		//   - public MainActivity() → should become JavaConstructor
-		//   - implicit activation ctor from base → should NOT become JavaConstructor
-		// Verify exactly 1 JavaConstructor
-		var peer = FindFixtureByJavaName ("my/app/MainActivity");
-		Assert.Equal (1, peer.JavaConstructors.Count);
 	}
 }

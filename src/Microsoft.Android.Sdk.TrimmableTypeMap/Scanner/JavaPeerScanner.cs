@@ -371,9 +371,15 @@ sealed class JavaPeerScanner : IDisposable
 	/// <summary>
 	/// Detects non-activation constructors that should become Java constructors by chaining
 	/// from base registered ctors. Mirrors the legacy CecilImporter behavior:
-	/// 1. Walk the base type hierarchy collecting registered ctors
-	/// 2. For each non-activation ctor on this type without [Register], accept it if
-	///    a base registered ctor has compatible parameters (or is parameterless).
+	/// 1. Walk the base type hierarchy collecting registered ctors (stopping at DoNotGenerateAcw)
+	/// 2. For each ctor on this type without [Register], accept it if a base registered ctor
+	///    has compatible parameters.
+	///
+	/// Known differences from legacy CecilImporter:
+	/// - Legacy also accepts ctors when any base ctor is parameterless (fallback path).
+	///   This is rare and not yet implemented.
+	/// - Legacy threads outerType for nested inner-class constructors.
+	/// - Legacy deduplicates by managed parameter string in addition to JNI signature.
 	/// </summary>
 	void CollectBaseConstructorChain (TypeDefinition typeDef, AssemblyIndex index,
 		List<MarshalMethodInfo> methods)
@@ -406,12 +412,9 @@ sealed class JavaPeerScanner : IDisposable
 				continue;
 			}
 
-			// Skip activation ctors
-			if (IsActivationCtor (methodDef, index)) {
-				continue;
-			}
-
-			// Try to find a base registered ctor with compatible parameters
+			// Try to find a base registered ctor with compatible parameters.
+			// Activation ctors (IntPtr, JniHandleOwnership) will never match because
+			// no base type registers a ctor with those parameter types.
 			foreach (var baseCtor in baseRegisteredCtors) {
 				if (AreParametersCompatible (methodDef, index, baseCtor.Method, baseCtor.Index)) {
 					if (!alreadyRegisteredSignatures.Contains (baseCtor.RegisterInfo.Signature!)) {
@@ -428,18 +431,12 @@ sealed class JavaPeerScanner : IDisposable
 					break;
 				}
 			}
-
-			// Fallback: if any accepted base ctor is parameterless, accept this ctor too.
-			// The legacy CecilImporter does this to allow user types to define ctors with
-			// parameters that don't exist on the base (e.g., custom string label).
-			// In that case we need to compute the JNI signature from the ctor's parameters.
-			// For now, only the compatible-parameters path is implemented, which covers the
-			// common cases (parameterless ctors, View(Context) ctors, etc.).
 		}
 	}
 
 	/// <summary>
 	/// Walks the base type hierarchy collecting constructors that have [Register] attributes.
+	/// Stops after the first base type with DoNotGenerateAcw=true (matching legacy CecilImporter).
 	/// Returns them ordered from nearest base to furthest ancestor.
 	/// </summary>
 	List<BaseCtorInfo> CollectBaseRegisteredCtors (TypeDefinition typeDef, AssemblyIndex index)
@@ -448,19 +445,7 @@ sealed class JavaPeerScanner : IDisposable
 		var currentTypeDef = typeDef;
 		var currentIndex = index;
 
-		while (true) {
-			var baseInfo = GetBaseTypeInfo (currentTypeDef, currentIndex);
-			if (baseInfo is null) {
-				break;
-			}
-
-			var (baseTypeName, baseAssemblyName) = baseInfo.Value;
-			if (!TryResolveType (baseTypeName, baseAssemblyName, out var baseHandle, out var baseIndex)) {
-				break;
-			}
-
-			var baseTypeDef = baseIndex.Reader.GetTypeDefinition (baseHandle);
-
+		while (TryResolveBaseType (currentTypeDef, currentIndex, out var baseTypeDef, out var baseHandle, out var baseIndex)) {
 			foreach (var methodHandle in baseTypeDef.GetMethods ()) {
 				var methodDef = baseIndex.Reader.GetMethodDefinition (methodHandle);
 				var name = baseIndex.Reader.GetString (methodDef.Name);
@@ -474,6 +459,12 @@ sealed class JavaPeerScanner : IDisposable
 				}
 			}
 
+			// Stop after the first MCW base type — its registered ctors are collected above,
+			// but we don't need to walk further up (matching legacy CecilImporter behavior).
+			if (baseIndex.RegisterInfoByType.TryGetValue (baseHandle, out var baseRegInfo) && baseRegInfo.DoNotGenerateAcw) {
+				break;
+			}
+
 			currentTypeDef = baseTypeDef;
 			currentIndex = baseIndex;
 		}
@@ -481,26 +472,29 @@ sealed class JavaPeerScanner : IDisposable
 		return result;
 	}
 
-	static bool IsActivationCtor (MethodDefinition methodDef, AssemblyIndex index)
+	/// <summary>
+	/// Resolves the base type of the given type definition, returning its TypeDefinition,
+	/// TypeDefinitionHandle, and AssemblyIndex for further inspection.
+	/// </summary>
+	bool TryResolveBaseType (TypeDefinition typeDef, AssemblyIndex index,
+		out TypeDefinition baseTypeDef, out TypeDefinitionHandle baseHandle, [NotNullWhen (true)] out AssemblyIndex? baseIndex)
 	{
-		var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
-		if (sig.ParameterTypes.Length != 2) {
+		baseTypeDef = default;
+		baseHandle = default;
+		baseIndex = null;
+
+		var baseInfo = GetBaseTypeInfo (typeDef, index);
+		if (baseInfo is null) {
 			return false;
 		}
 
-		// XI style: (IntPtr, JniHandleOwnership)
-		if (sig.ParameterTypes [0] == "System.IntPtr" &&
-		    sig.ParameterTypes [1] == "Android.Runtime.JniHandleOwnership") {
-			return true;
+		var (baseTypeName, baseAssemblyName) = baseInfo.Value;
+		if (!TryResolveType (baseTypeName, baseAssemblyName, out baseHandle, out baseIndex)) {
+			return false;
 		}
 
-		// JI style: (ref JniObjectReference, JniObjectReferenceOptions)
-		if ((sig.ParameterTypes [0] == "Java.Interop.JniObjectReference&" || sig.ParameterTypes [0] == "Java.Interop.JniObjectReference") &&
-		    sig.ParameterTypes [1] == "Java.Interop.JniObjectReferenceOptions") {
-			return true;
-		}
-
-		return false;
+		baseTypeDef = baseIndex.Reader.GetTypeDefinition (baseHandle);
+		return true;
 	}
 
 	readonly record struct BaseCtorInfo (MethodDefinition Method, AssemblyIndex Index, RegisterInfo RegisterInfo);
