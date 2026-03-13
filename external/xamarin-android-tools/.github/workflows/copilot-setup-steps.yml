@@ -1,0 +1,20 @@
+name: Copilot Setup Steps CI
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/copilot-setup-steps.yml'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - run: dotnet restore Xamarin.Android.Tools.sln || true
