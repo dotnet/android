@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -16,6 +17,8 @@ public class GenerateNativeAotLibraryLoadAssemblerSources : AndroidTask
 		".dll",
 		".dylib",
 	};
+
+	static readonly Regex ValidCIdentifier = new Regex (@"^[A-Za-z_][A-Za-z0-9_]*$", RegexOptions.Compiled);
 
 	static readonly HashSet<string> LibraryNamesToIgnore = new (StringComparer.OrdinalIgnoreCase) {
 		"*",
@@ -128,6 +131,12 @@ public class GenerateNativeAotLibraryLoadAssemblerSources : AndroidTask
 				string name = func.ItemSpec;
 				if (seen.Contains (name)) {
 					continue;
+				}
+				// Reject names containing newlines or non-identifier characters: they would break out of
+				// the LLVM IR function declaration context and inject arbitrary IR directives (CWE-74).
+				if (name.IndexOfAny (['\n', '\r']) >= 0 ||
+				    !ValidCIdentifier.IsMatch (name)) {
+					throw new InvalidOperationException ($"CustomJniInitFunctions item '{name}' is not a valid C identifier and cannot be used as a JNI init function name.");
 				}
 				seen.Add (name);
 				customInitFunctions.Add (name);
