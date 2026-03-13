@@ -12,4 +12,14 @@ class PackageBase : ApplicationPackage
 	public PackageBase (Stream stream, ZipArchive zip, string? description)
 		: base (stream, zip, description)
 	{}
+
+	public static IAspect LoadAspect (Stream stream, IAspectState state, string? description)
+	{
+		return LoadAspect (typeof(PackageBase), stream, state, description);
+	}
+
+	public static IAspectState ProbeAspect (Stream stream, string? description)
+	{
+		return ProbeAspect (typeof(PackageBase), stream, description);
+	}
 }

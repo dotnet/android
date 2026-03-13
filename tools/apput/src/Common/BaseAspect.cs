@@ -37,4 +37,28 @@ public abstract class BaseAspect : IAspect
 		Dispose (disposing: true);
 		GC.SuppressFinalize (this);
 	}
+
+	protected static void LogProbeAspectStart (Type aspectType)
+	{
+		LogStart ($"ProbeAspect", aspectType);
+	}
+
+	protected static void LogProbeAspectEnd () => LogEnd ();
+
+	protected static void LogLoadAspectStart (Type aspectType)
+	{
+		LogStart ($"LoadAspect", aspectType);
+	}
+
+	protected static void LogLoadAspectEnd () => LogEnd ();
+
+	static void LogStart (string ofWhat, Type aspectType)
+	{
+		Log.StartContext ($"{ofWhat} for '{aspectType}'");
+	}
+
+	static void LogEnd ()
+	{
+		Log.EndContext ();
+	}
 }

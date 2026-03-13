@@ -85,6 +85,7 @@ public class Detector
 	static IAspect? TryFindAspect (List<Type> aspectTypes, Stream stream, string? description)
 	{
 		foreach (Type aspectType in aspectTypes) {
+			Log.StartContext ("Aspect detection");
 			try {
 				IAspect? aspect = TryProbeAndLoadAspect (aspectType, stream, description);
 				if (aspect != null) {
@@ -92,6 +93,8 @@ public class Detector
 				}
 			} catch (Exception ex) {
 				Log.Warning ($"Failed to probe and load aspect '{aspectType}'", ex);
+			} finally {
+				Log.EndContext ();
 			}
 		}
 

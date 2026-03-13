@@ -7,6 +7,12 @@ namespace ApplicationUtility;
 
 class StandardLogBuffer : LogBuffer, IDisposable
 {
+	sealed class ContextFrame
+	{
+		public string? SavedIndent;
+		public string? Name;
+	}
+
 	const ConsoleColor ErrorColor    = ConsoleColor.Red;
 	const ConsoleColor WarningColor  = ConsoleColor.Yellow;
 	const ConsoleColor InfoColor     = ConsoleColor.Green;
@@ -18,6 +24,7 @@ class StandardLogBuffer : LogBuffer, IDisposable
 	sealed class LogMessage
 	{
 		public string? Message;
+		public string? Indent;
 		public LogLevel Level;
 		public bool WriteLine;
 		public bool DoNotTag;
@@ -29,6 +36,9 @@ class StandardLogBuffer : LogBuffer, IDisposable
 
 	StreamWriter? logFileWriter;
 	string? logFilePath;
+	bool logFileOpenFailed;
+	string currentIndent = "";
+	Stack<ContextFrame> contexts = new ();
 
 	public string? LogFilePath => logFilePath;
 
@@ -41,34 +51,114 @@ class StandardLogBuffer : LogBuffer, IDisposable
 
 	public void SetLogFile (string? filePath)
 	{
-		// TODO: if we already have a log file and someone calls us again, move the old log into the new one
-		if (String.IsNullOrWhiteSpace (filePath)) {
-			DateTime now = DateTime.Now;
-			string logTag = $"{now.Year}-{now.Month}-{now.Day}_{now.Hour}-{now.Minute}-{now.Second}";
-			logFilePath = Path.Combine (Path.GetTempPath (), $"{Program.AppName}-{logTag}.log");
-		} else {
-			logFilePath = filePath;
+		(logFilePath, logFileWriter) = OpenLogFile (filePath);
+		if (logFileWriter == null) {
+			return;
 		}
 
-		var stream = File.Open (logFilePath, FileMode.Create, FileAccess.Write, FileShare.Read);
-		logFileWriter = new StreamWriter (stream, Encoding.UTF8);
+		// TODO: if we already have a log file and someone calls us again, move the old log into the new one
 		FlushPendingMessagesToFile ();
+	}
+
+	(string? path, StreamWriter? writer) OpenLogFile (string? filePath)
+	{
+		string fullFilePath;
+		if (String.IsNullOrEmpty (filePath)) {
+			DateTime now = DateTime.Now;
+			string logTag = $"{now.Year}-{now.Month}-{now.Day}_{now.Hour}-{now.Minute}-{now.Second}";
+			string fileName = $"{Program.AppName}-{logTag}.log";
+
+			// First we try in the current directory
+			fullFilePath = Path.Combine (Environment.CurrentDirectory, fileName);
+		} else {
+			fullFilePath = filePath;
+		}
+
+		if (!TryOpenStream (fullFilePath, out Stream? stream) || stream == null) {
+			LogFailureAlternate ();
+			// Then in the temporary directory
+			fullFilePath = Path.Combine (Path.GetTempPath (), Path.GetFileName (fullFilePath));
+			if (!TryOpenStream (fullFilePath, out stream) || stream == null) {
+				LogFailureWillUseConsole ();
+				logFileOpenFailed = true;
+				return (null, null);
+			}
+		}
+
+		return (Path.GetFullPath (fullFilePath), new StreamWriter (stream, new UTF8Encoding (false)));
+
+		void LogFailureAlternate () => LogFailure ("Trying alternate location.");
+		void LogFailureWillUseConsole () => LogFailure ("All logging will be written to the console.");
+
+		void LogFailure (string whatNext)
+		{
+			Write ($"Failed to open log file '{fullFilePath}' for writing. {whatNext}", LogLevel.Warning);
+		}
+
+		bool TryOpenStream (string path, out Stream? stream)
+		{
+			stream = null;
+			try {
+				stream = File.Open (fullFilePath, FileMode.Create, FileAccess.Write, FileShare.Read);
+			} catch (IOException ex) {
+				// Ignore
+			} catch (UnauthorizedAccessException) {
+				// Ignore
+			}
+
+			return stream != null;
+		}
 	}
 
 	public override void PopContext ()
 	{
-		throw new System.NotImplementedException ();
+		if (contexts.Count == 0) {
+			currentIndent = "";
+			return;
+		}
+
+		ContextFrame frame = contexts.Pop ();
+		currentIndent = frame.SavedIndent ?? "";
+
+		if (logFileWriter != null) {
+			ReallyWriteToFile (
+				$"----- Context end: {GetContextName (frame.Name)}",
+				LogLevel.None,
+				writeLine: true,
+				doNotTag: true,
+				indent: null
+			);
+		}
 	}
 
 	public override void PushContext (string? name)
 	{
-		throw new System.NotImplementedException ();
+		contexts.Push (
+			new ContextFrame {
+				Name = name,
+				SavedIndent = currentIndent,
+			}
+		);
+
+		if (logFileWriter != null) {
+			ReallyWriteToFile (
+				$"----- Context start: {GetContextName (name)}",
+				LogLevel.None,
+				writeLine: true,
+				doNotTag: true,
+				indent: null
+			);
+		}
+
+		currentIndent = $"{currentIndent}  ";
 	}
+
+	string GetContextName (string? name) => String.IsNullOrEmpty (name) ? "Unnamed" : name;
 
 	public override void Write (string? message, LogLevel level, bool writeLine = true, ConsoleColor? colorOverride = null, bool doNotTag = false)
 	{
-		WriteToFile (message, level, writeLine, doNotTag);
-		if (level < MinimumConsoleLogLevel) {
+		WriteToFileOrSave (message, level, writeLine, doNotTag, currentIndent);
+		if (!logFileOpenFailed && level < MinimumConsoleLogLevel) {
 			return;
 		}
 
@@ -91,6 +181,10 @@ class StandardLogBuffer : LogBuffer, IDisposable
 
 		Action<LogLevel, ConsoleColor?, Action> writeWrapper = useColor ? ColorWrapper : NoColorWrapper;
 		writeWrapper (level, colorOverride, () => {
+			if (level < LogLevel.Warning && !String.IsNullOrEmpty (currentIndent)) {
+				writer.Write (currentIndent);
+			}
+
 			if (writeLine) {
 				writer.WriteLine (message);
 			} else {
@@ -132,6 +226,7 @@ class StandardLogBuffer : LogBuffer, IDisposable
 			}
 
 			try {
+				Console.ResetColor ();
 				Console.ForegroundColor = oldFG.Value;
 			} catch (Exception) {
 				// ignore
@@ -154,22 +249,32 @@ class StandardLogBuffer : LogBuffer, IDisposable
 	void FlushPendingMessagesToFile ()
 	{
 		foreach (LogMessage message in pendingMessages) {
-			WriteToFile (message.Message, message.Level, message.WriteLine, message.DoNotTag);
+			WriteToFileOrSave (message.Message, message.Level, message.WriteLine, message.DoNotTag, message.Indent);
 		}
 		pendingMessages.Clear ();
 	}
 
-	void WriteToFile (string? message, LogLevel level, bool writeLine, bool doNotTag)
+	void WriteToFileOrSave (string? message, LogLevel level, bool writeLine, bool doNotTag, string? indent)
+	{
+		if (logFileWriter != null) {
+			ReallyWriteToFile (message, level, writeLine, doNotTag, indent);
+			return;
+		}
+
+		pendingMessages.Add (
+			new LogMessage {
+				Message = message,
+				Indent = indent,
+				Level = level,
+				WriteLine = writeLine,
+				DoNotTag = doNotTag,
+			}
+		);
+	}
+
+	void ReallyWriteToFile (string? message, LogLevel level, bool writeLine, bool doNotTag, string? indent)
 	{
 		if (logFileWriter == null) {
-			pendingMessages.Add (
-				new LogMessage {
-					Message = message,
-					Level = level,
-					WriteLine = writeLine,
-					DoNotTag = doNotTag,
-				}
-			);
 			return;
 		}
 
@@ -193,6 +298,10 @@ class StandardLogBuffer : LogBuffer, IDisposable
 			};
 
 			formatted = $"<{levelTag}> {message}";
+		}
+
+		if (!String.IsNullOrEmpty (indent)) {
+			logFileWriter.Write (indent);
 		}
 
 		if (writeLine) {

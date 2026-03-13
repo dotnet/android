@@ -27,15 +27,28 @@ class DotNetAndroidWrapperSharedLibrary : SharedLibrary
 
 	public new static IAspect LoadAspect (Stream stream, IAspectState? state, string? description)
 	{
-		if (String.IsNullOrEmpty (description)) {
-			throw new ArgumentException ("Must be a shared library name", nameof (description));
-		}
+		LogLoadAspectStart (typeof(DotNetAndroidWrapperSharedLibrary));
+		try {
+			if (String.IsNullOrEmpty (description)) {
+				throw new ArgumentException ("Must be a shared library name", nameof (description));
+			}
 
-		var libState = EnsureValidAspectState<DotNetAndroidWrapperSharedLibraryAspectState> (state);
-		return new DotNetAndroidWrapperSharedLibrary (stream, description, libState);
+			var libState = EnsureValidAspectState<DotNetAndroidWrapperSharedLibraryAspectState> (state);
+			return new DotNetAndroidWrapperSharedLibrary (stream, description, libState);
+		} finally {
+			LogLoadAspectEnd ();
+		}
 	}
 
-	public static new IAspectState ProbeAspect (Stream stream, string? description) => IsDotNetAndroidWrapperSharedLibrary (stream, description);
+	public static new IAspectState ProbeAspect (Stream stream, string? description)
+	{
+		LogProbeAspectStart (typeof(DotNetAndroidWrapperSharedLibrary));
+		try {
+			return IsDotNetAndroidWrapperSharedLibrary (stream, description);
+		} finally {
+			LogProbeAspectEnd ();
+		}
+	}
 
 	/// <summary>
 	/// If the library has .NET for Android payload section, this

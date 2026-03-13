@@ -12,4 +12,14 @@ class PackageAPK : ApplicationPackage
 	public PackageAPK (Stream stream, ZipArchive zip, string? description)
 		: base (stream, zip, description)
 	{}
+
+	public static IAspect LoadAspect (Stream stream, IAspectState state, string? description)
+	{
+		return LoadAspect (typeof(PackageAPK), stream, state, description);
+	}
+
+	public static IAspectState ProbeAspect (Stream stream, string? description)
+	{
+		return ProbeAspect (typeof(PackageAPK), stream, description);
+	}
 }
