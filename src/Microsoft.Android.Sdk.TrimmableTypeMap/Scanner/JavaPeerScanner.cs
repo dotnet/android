@@ -278,6 +278,12 @@ sealed class JavaPeerScanner : IDisposable
 		// would incorrectly pick up internal overrides (e.g., JavaObject.equals).
 		if (detectBaseOverrides) {
 			CollectBaseMethodOverrides (typeDef, index, methods, registeredMethodNames);
+
+			// Pass 4: detect non-activation constructors that chain to base registered ctors.
+			// Mirrors the legacy CecilImporter behavior: walk from base to derived, seed
+			// with registered ctors, then accept unregistered non-activation ctors whose
+			// parameters are compatible with an already-accepted base ctor.
+			CollectBaseConstructorChain (typeDef, index, methods);
 		}
 
 		return methods;
@@ -361,6 +367,143 @@ sealed class JavaPeerScanner : IDisposable
 			}
 		}
 	}
+
+	/// <summary>
+	/// Detects non-activation constructors that should become Java constructors by chaining
+	/// from base registered ctors. Mirrors the legacy CecilImporter behavior:
+	/// 1. Walk the base type hierarchy collecting registered ctors
+	/// 2. For each non-activation ctor on this type without [Register], accept it if
+	///    a base registered ctor has compatible parameters (or is parameterless).
+	/// </summary>
+	void CollectBaseConstructorChain (TypeDefinition typeDef, AssemblyIndex index,
+		List<MarshalMethodInfo> methods)
+	{
+		// Collect JNI signatures of ctors already registered via Pass 1 (direct [Register])
+		var alreadyRegisteredSignatures = new HashSet<string> (StringComparer.Ordinal);
+		foreach (var m in methods) {
+			if (m.IsConstructor) {
+				alreadyRegisteredSignatures.Add (m.JniSignature);
+			}
+		}
+
+		// Collect registered ctors from base type hierarchy
+		var baseRegisteredCtors = CollectBaseRegisteredCtors (typeDef, index);
+		if (baseRegisteredCtors.Count == 0) {
+			return;
+		}
+
+		// Check each ctor on this type
+		foreach (var methodHandle in typeDef.GetMethods ()) {
+			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
+			var name = index.Reader.GetString (methodDef.Name);
+
+			if (name != ".ctor") {
+				continue;
+			}
+
+			// Skip if this ctor already has [Register] (collected in Pass 1)
+			if (TryGetMethodRegisterInfo (methodDef, index, out _, out _)) {
+				continue;
+			}
+
+			// Skip activation ctors
+			if (IsActivationCtor (methodDef, index)) {
+				continue;
+			}
+
+			// Try to find a base registered ctor with compatible parameters
+			foreach (var baseCtor in baseRegisteredCtors) {
+				if (AreParametersCompatible (methodDef, index, baseCtor.Method, baseCtor.Index)) {
+					if (!alreadyRegisteredSignatures.Contains (baseCtor.RegisterInfo.Signature!)) {
+						methods.Add (new MarshalMethodInfo {
+							JniName = baseCtor.RegisterInfo.JniName,
+							JniSignature = baseCtor.RegisterInfo.Signature!,
+							Connector = baseCtor.RegisterInfo.Connector,
+							ManagedMethodName = ".ctor",
+							NativeCallbackName = "n_ctor",
+							IsConstructor = true,
+						});
+						alreadyRegisteredSignatures.Add (baseCtor.RegisterInfo.Signature!);
+					}
+					break;
+				}
+			}
+
+			// Fallback: if any accepted base ctor is parameterless, accept this ctor too.
+			// The legacy CecilImporter does this to allow user types to define ctors with
+			// parameters that don't exist on the base (e.g., custom string label).
+			// In that case we need to compute the JNI signature from the ctor's parameters.
+			// For now, only the compatible-parameters path is implemented, which covers the
+			// common cases (parameterless ctors, View(Context) ctors, etc.).
+		}
+	}
+
+	/// <summary>
+	/// Walks the base type hierarchy collecting constructors that have [Register] attributes.
+	/// Returns them ordered from nearest base to furthest ancestor.
+	/// </summary>
+	List<BaseCtorInfo> CollectBaseRegisteredCtors (TypeDefinition typeDef, AssemblyIndex index)
+	{
+		var result = new List<BaseCtorInfo> ();
+		var currentTypeDef = typeDef;
+		var currentIndex = index;
+
+		while (true) {
+			var baseInfo = GetBaseTypeInfo (currentTypeDef, currentIndex);
+			if (baseInfo is null) {
+				break;
+			}
+
+			var (baseTypeName, baseAssemblyName) = baseInfo.Value;
+			if (!TryResolveType (baseTypeName, baseAssemblyName, out var baseHandle, out var baseIndex)) {
+				break;
+			}
+
+			var baseTypeDef = baseIndex.Reader.GetTypeDefinition (baseHandle);
+
+			foreach (var methodHandle in baseTypeDef.GetMethods ()) {
+				var methodDef = baseIndex.Reader.GetMethodDefinition (methodHandle);
+				var name = baseIndex.Reader.GetString (methodDef.Name);
+				if (name != ".ctor") {
+					continue;
+				}
+
+				if (TryGetMethodRegisterInfo (methodDef, baseIndex, out var registerInfo, out _) &&
+				    registerInfo is not null && registerInfo.Signature is not null) {
+					result.Add (new BaseCtorInfo (methodDef, baseIndex, registerInfo));
+				}
+			}
+
+			currentTypeDef = baseTypeDef;
+			currentIndex = baseIndex;
+		}
+
+		return result;
+	}
+
+	static bool IsActivationCtor (MethodDefinition methodDef, AssemblyIndex index)
+	{
+		var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+		if (sig.ParameterTypes.Length != 2) {
+			return false;
+		}
+
+		// XI style: (IntPtr, JniHandleOwnership)
+		if (sig.ParameterTypes [0] == "System.IntPtr" &&
+		    sig.ParameterTypes [1] == "Android.Runtime.JniHandleOwnership") {
+			return true;
+		}
+
+		// JI style: (ref JniObjectReference, JniObjectReferenceOptions)
+		if ((sig.ParameterTypes [0] == "Java.Interop.JniObjectReference&" || sig.ParameterTypes [0] == "Java.Interop.JniObjectReference") &&
+		    sig.ParameterTypes [1] == "Java.Interop.JniObjectReferenceOptions") {
+			return true;
+		}
+
+		return false;
+	}
+
+	readonly record struct BaseCtorInfo (MethodDefinition Method, AssemblyIndex Index, RegisterInfo RegisterInfo);
 
 	/// <summary>
 	/// Walks the base type hierarchy looking for a method with [Register] that matches
