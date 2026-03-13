@@ -51,7 +51,7 @@
       <FileWrites Include="@(_GeneratedJavaFiles)" />
     </ItemGroup>
 
-    <TouchFiles="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" AlwaysCreate="True" />
+    <Touch Files="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" AlwaysCreate="True" />
   </Target>
 
 </Project>
