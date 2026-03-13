@@ -33,6 +33,7 @@ namespace Android.App
 	[Register ("android/app/Activity", DoNotGenerateAcw = true)]
 	public class Activity : Java.Lang.Object
 	{
+		[Register (".ctor", "()V", "")]
 		public Activity () { }
 		protected Activity (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 
