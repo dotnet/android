@@ -256,6 +256,10 @@ namespace Xamarin.Android.Tasks
 				Log.LogDebugMessage ($"Refreshing {fileName}");
 
 				using (var pe = new PEReader (File.OpenRead (assemblyPath))) {
+					if (!pe.HasMetadata) {
+						Log.LogDebugMessage ($"Skipping non-.NET assembly: {assemblyPath}");
+						continue;
+					}
 					var reader = pe.GetMetadataReader ();
 					foreach (var handle in reader.ManifestResources) {
 						var resource = reader.GetManifestResource (handle);

@@ -21,6 +21,9 @@ namespace Xamarin.Android.Tasks
 			if (!cache.TryGetValue (assemblyPath, out PEReader reader)) {
 				cache.Add (assemblyPath, reader = new PEReader (File.OpenRead (assemblyPath)));
 			}
+			if (!reader.HasMetadata) {
+				throw new InvalidOperationException ($"Assembly '{assemblyPath}' is not a .NET assembly.");
+			}
 			return reader.GetMetadataReader ();
 		}
 

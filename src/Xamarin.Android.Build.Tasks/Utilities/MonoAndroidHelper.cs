@@ -377,6 +377,10 @@ namespace Xamarin.Android.Tasks
 		{
 			using (var stream = File.OpenRead (assembly))
 			using (var pe = new PEReader (stream)) {
+				if (!pe.HasMetadata) {
+					log.LogDebugMessage ($"Skipping non-.NET assembly: {assembly}");
+					return false;
+				}
 				var reader = pe.GetMetadataReader ();
 				var assemblyDefinition = reader.GetAssemblyDefinition ();
 				foreach (var handle in assemblyDefinition.GetCustomAttributes ()) {

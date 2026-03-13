@@ -44,6 +44,10 @@ namespace Xamarin.Android.Tasks
 			primary.Members.Add (method);
 			foreach (var assemblyPath in libraries) {
 				using (var pe = new PEReader (File.OpenRead (assemblyPath.ItemSpec))) {
+					if (!pe.HasMetadata) {
+						Log.LogDebugMessage ($"Skipping non-.NET assembly: {assemblyPath.ItemSpec}");
+						continue;
+					}
 					var reader = pe.GetMetadataReader ();
 					var resourceDesignerName = GetResourceDesignerClass (reader);
 					if (string.IsNullOrEmpty (resourceDesignerName)) {
