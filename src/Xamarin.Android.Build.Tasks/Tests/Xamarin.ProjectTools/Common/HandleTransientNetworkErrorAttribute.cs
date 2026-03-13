@@ -58,6 +58,16 @@ namespace Xamarin.ProjectTools
 				return IsTransientHttpError (httpEx);
 			}
 
+			// Flatten AggregateException to check all inner exceptions
+			if (ex is AggregateException aggEx) {
+				foreach (var inner in aggEx.Flatten ().InnerExceptions) {
+					if (IsTransientNetworkError (inner)) {
+						return true;
+					}
+				}
+				return false;
+			}
+
 			// Walk the inner exception chain looking for transient network errors
 			if (ex.InnerException != null) {
 				return IsTransientNetworkError (ex.InnerException);
