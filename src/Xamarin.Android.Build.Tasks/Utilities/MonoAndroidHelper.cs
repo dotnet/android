@@ -353,6 +353,9 @@ namespace Xamarin.Android.Tasks
 				return true;
 
 			using var pe = new PEReader (File.OpenRead (assembly.ItemSpec));
+			if (!pe.HasMetadata) {
+				return false; // this is a native Windows .dll, not a .NET assembly
+			}
 			var reader = pe.GetMetadataReader ();
 			return HasMonoAndroidReference (reader);
 		}
