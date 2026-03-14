@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup>
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
@@ -14,7 +14,6 @@
 
     <!--Include shared linker sources-->
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\External\Linker\BaseMarkHandler.cs" Link="External\BaseMarkHandler.cs" />
-    <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\AddKeepAlivesStep.cs" Link="MonoDroid.Tuner\AddKeepAlivesStep.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\AndroidLinkConfiguration.cs" Link="MonoDroid.Tuner\AndroidLinkConfiguration.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\Extensions.cs" Link="MonoDroid.Tuner\Extensions.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\FixAbstractMethodsStep.cs" Link="MonoDroid.Tuner\FixAbstractMethodsStep.cs" />

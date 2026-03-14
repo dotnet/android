@@ -3,31 +3,14 @@ using System.Linq;
 using Java.Interop.Tools.Cecil;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
-using Mono.Linker;
 using Mono.Linker.Steps;
 using Xamarin.Android.Tasks;
 
 namespace MonoDroid.Tuner
 {
-	public class AddKeepAlivesStep : BaseStep
-#if !ILLINK
-		, IAssemblyModifierPipelineStep
-#endif  // !ILLINK
+	public class AddKeepAlivesStep : BaseStep, IAssemblyModifierPipelineStep
 	{
 
-		protected override void ProcessAssembly (AssemblyDefinition assembly)
-		{
-			var action = Annotations.HasAction (assembly) ? Annotations.GetAction (assembly) : AssemblyAction.Skip;
-			if (action == AssemblyAction.Delete)
-				return;
-
-			if (AddKeepAlives (assembly)) {
-				if (action == AssemblyAction.Skip || action == AssemblyAction.Copy)
-					Annotations.SetAction (assembly, AssemblyAction.Save);
-			}
-		}
-
-#if !ILLINK
 		public void ProcessAssembly (AssemblyDefinition assembly, StepContext context)
 		{
 			// Only run this step on user Android assemblies
@@ -36,7 +19,6 @@ namespace MonoDroid.Tuner
 
 			context.IsAssemblyModified |= AddKeepAlives (assembly);
 		}
-#endif  // !ILLINK
 
 		internal bool AddKeepAlives (AssemblyDefinition assembly)
 		{
@@ -145,11 +127,7 @@ namespace MonoDroid.Tuner
 			return Extensions.GetMethod (gcType, "KeepAlive", new string [] { "System.Object" });
 		}
 
-		public
-#if !ILLINK
-		override
-#endif
-		void LogMessage (string message)
+		public override void LogMessage (string message)
 		{
 			Context.LogMessage (message);
 		}
