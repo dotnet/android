@@ -1715,6 +1715,11 @@ because xbuild doesn't support framework reference assemblies.
     <_AllNativeLibraries Include="@(AndroidNativeLibrary);@(EmbeddedNativeLibrary);@(FrameworkNativeLibrary)" />
   </ItemGroup>
 
+  <ItemGroup Condition=" '$(AndroidEnableDebugger)' == 'true' ">
+    <!-- CoreCLR remote debugger target library should not be preloaded via JNI; it is loaded as a CLR profiler -->
+    <_AndroidNativeLibraryNeverJniPreload Include="libremotemscordbitarget.so" />
+  </ItemGroup>
+
   <ItemGroup Condition=" '$(AndroidIgnoreAllJniPreload)' == 'true' ">
     <!-- We include everything, tasks below will take care of exclusion of certain libs from this
          item group -->
@@ -1751,6 +1756,7 @@ because xbuild doesn't support framework reference assemblies.
       TargetsCLR="$(_AndroidUseCLR)"
       AndroidRuntime="$(_AndroidRuntime)"
       ProjectRuntimeConfigFilePath="$(ProjectRuntimeConfigFilePath)"
+      EnableDebugger="$(AndroidEnableDebugger)"
       >
   </GenerateNativeApplicationConfigSources>
 

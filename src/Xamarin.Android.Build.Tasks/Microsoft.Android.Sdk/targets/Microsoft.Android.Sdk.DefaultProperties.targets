@@ -21,9 +21,6 @@
     <_AndroidFastDeploymentSupported Condition=" Exists ('$(MSBuildThisFileDirectory)../tools/Xamarin.Android.Common.Debugging.targets') ">true</_AndroidFastDeploymentSupported>
     <_AndroidFastDeploymentSupported Condition=" '$(_AndroidFastDeploymentSupported)' == '' ">False</_AndroidFastDeploymentSupported>
 
-    <!-- TODO: remove when we have debugger support for CoreCLR -->
-    <UseMonoRuntime Condition=" '$(UseMonoRuntime)' == '' and '$(Configuration)' == 'Debug' ">true</UseMonoRuntime>
-
     <!--
       Disable @(Content) from referenced projects
       See: https://github.com/dotnet/sdk/blob/955c0fc7b06e2fa34bacd076ed39f61e4fb61716/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Publish.targets#L16
@@ -56,6 +53,11 @@
     <AndroidEnableProfiler Condition=" '$(AndroidEnableProfiler)' == '' ">$(EnableDiagnostics)</AndroidEnableProfiler>
     <AndroidEnableProfiler Condition=" '$(AndroidEnableProfiler)' == '' and ('$(DiagnosticConfiguration)' != '' or '$(DiagnosticAddress)' != '' or '$(DiagnosticPort)' != '' or '$(DiagnosticSuspend)' != '' or '$(DiagnosticListenMode)' != '') ">true</AndroidEnableProfiler>
     <AndroidEnableProfiler Condition=" '$(AndroidEnableProfiler)' == '' ">false</AndroidEnableProfiler>
+
+    <AndroidEnableDebugger Condition=" '$(AndroidEnableDebugger)' == '' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(Configuration)' != 'Release' ">true</AndroidEnableDebugger>
+    <AndroidEnableDebugger Condition=" '$(AndroidEnableDebugger)' == '' ">false</AndroidEnableDebugger>
+    <AndroidDebuggerPort Condition=" '$(AndroidDebuggerPort)' == '' ">4711</AndroidDebuggerPort>
+    <AndroidDebuggerNativeLibraryPath Condition=" '$(AndroidDebuggerNativeLibraryPath)' == '' ">$(MSBuildThisFileDirectory)..\tools\libremotemscordbitarget</AndroidDebuggerNativeLibraryPath>
 
     <!--
         Android package (apt/aab) alignment, expressed as the page size in kilobytes.  Two values are supported: 4 and 16.
@@ -153,6 +155,8 @@
 
     <!-- profiler won't work without internet permission, we must thus force it -->
     <AndroidNeedsInternetPermission Condition=" '$(AndroidEnableProfiler)' == 'true' ">True</AndroidNeedsInternetPermission>
+    <!-- CoreCLR debugger uses gRPC which requires network access -->
+    <AndroidNeedsInternetPermission Condition=" '$(AndroidEnableDebugger)' == 'true' ">True</AndroidNeedsInternetPermission>
   </PropertyGroup>
   <!-- Trimmer switches that default to OFF in Release mode -->
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' and '$(Optimize)' == 'true' ">

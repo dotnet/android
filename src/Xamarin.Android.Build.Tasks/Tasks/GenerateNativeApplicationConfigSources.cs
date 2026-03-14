@@ -72,6 +72,7 @@ namespace Xamarin.Android.Tasks
 		public string? AndroidSequencePointsMode { get; set; }
 		public bool EnableSGenConcurrent { get; set; }
 		public string? CustomBundleConfigFile { get; set; }
+		public bool EnableDebugger { get; set; }
 
 		bool _Debug {
 			get {
@@ -118,13 +119,20 @@ namespace Xamarin.Android.Tasks
 				envBuilder.AddDefaultDebugBuildLogLevel ();
 			}
 
-			if (androidRuntime != Xamarin.Android.Tasks.AndroidRuntime.NativeAOT) {
-				AddDefaultEnvironmentVariables (envBuilder, HttpClientHandlerType, EnableSGenConcurrent);
-			} else {
+			if (androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.NativeAOT) {
 				// NativeAOT sets all the environment variables from Java, we don't want to repeat that
 				// process in the native code. This is just a precaution, because NativeAOT builds should
 				// not even use this task.
 				envBuilder.EnvironmentVariables.Clear ();
+			} else if (androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.CoreCLR) {
+				// CoreCLR needs the HTTP client handler type
+				envBuilder.AddHttpClientHandlerType (HttpClientHandlerType);
+			} else {
+				AddDefaultEnvironmentVariables (envBuilder, HttpClientHandlerType, EnableSGenConcurrent);
+			}
+
+			if (EnableDebugger && TargetsCLR) {
+				envBuilder.AddDebuggerEnvironment ();
 			}
 
 			global::Android.Runtime.BoundExceptionType boundExceptionType;
