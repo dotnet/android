@@ -41,22 +41,22 @@ namespace Xamarin.ProjectTools
 		/// </summary>
 		/// <seealso cref="TestEnvironment"/>
 		public bool IsUnix { get; set; }
-		
+
 		/// <summary>
 		/// This passes /p:BuildingInsideVisualStudio=True, command-line to MSBuild
 		/// </summary>
 		public bool BuildingInsideVisualStudio { get; set; } = true;
-		
+
 		/// <summary>
 		/// Passes /m:N to MSBuild, defaults to null to omit the /m parameter completely.
 		/// </summary>
 		public int? MaxCpuCount { get; set; }
-		
+
 		/// <summary>
 		/// Gets or sets the MSBuild logger verbosity level.
 		/// </summary>
 		public LoggerVerbosity Verbosity { get; set; } = LoggerVerbosity.Normal;
-		
+
 		/// <summary>
 		/// Gets the output lines from the last build operation.
 		/// </summary>
@@ -81,28 +81,36 @@ namespace Xamarin.ProjectTools
 				return lastBuildOutput;
 			}
 		}
-		
+
 		/// <summary>
 		/// Gets the duration of the last build operation.
 		/// </summary>
 		/// <seealso cref="LastBuildOutput"/>
 		public TimeSpan LastBuildTime { get; protected set; }
-		
+
 		/// <summary>
 		/// Gets or sets the filename for the build log file.
 		/// </summary>
 		/// <seealso cref="LastBuildOutput"/>
 		public string BuildLogFile { get; set; }
-		
+
 		/// <summary>
 		/// Gets or sets a value indicating whether to throw an exception when builds fail.
 		/// </summary>
 		public bool ThrowOnBuildFailure { get; set; }
-		
+
 		/// <summary>
 		/// True if NuGet restore occurs automatically (default)
 		/// </summary>
 		public bool AutomaticNuGetRestore { get; set; } = true;
+
+		/// <summary>
+		/// If not `null` or empty, sets the configuration to use for the build.
+		/// This property must be set to `Release` for all the NativeAOT builds, since otherwise
+		/// the build will default to `Debug` when building a solution and that will cause the
+		/// **project** build to fail to locate the NativeAOT host library.
+		/// </summary>
+		public string? Configuration { get; set; }
 
 		/// <summary>
 		/// Checks whether cross-compilers are available for the specified Android ABIs.
@@ -246,6 +254,10 @@ namespace Xamarin.ProjectTools
 			var psi   = new ProcessStartInfo (Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet"));
 			var responseFile = Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), "project.rsp");
 			args.Append ("build ");
+
+			if (!String.IsNullOrEmpty (Configuration)) {
+				args.Append ($"-c {Configuration} ");
+			}
 
 			if (TestEnvironment.UseLocalBuildOutput) {
 				psi.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_MANIFEST_ROOTS", TestEnvironment.WorkloadManifestOverridePath);
