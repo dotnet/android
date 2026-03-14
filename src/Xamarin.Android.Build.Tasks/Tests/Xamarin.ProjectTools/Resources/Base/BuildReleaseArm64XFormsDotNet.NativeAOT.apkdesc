@@ -5,7 +5,7 @@
       "Size": 6740
     },
     "classes.dex": {
-      "Size": 9136980
+      "Size": 9132020
     },
     "kotlin/annotation/annotation.kotlin_builtins": {
       "Size": 928
@@ -29,7 +29,7 @@
       "Size": 2396
     },
     "lib/arm64-v8a/libUnnamedProject.so": {
-      "Size": 21592848
+      "Size": 22047616
     },
     "META-INF/androidx.activity_activity.version": {
       "Size": 6
@@ -182,7 +182,7 @@
       "Size": 6
     },
     "META-INF/BNDLTOOL.RSA": {
-      "Size": 1223
+      "Size": 1213
     },
     "META-INF/BNDLTOOL.SF": {
       "Size": 89178
@@ -2252,5 +2252,5 @@
       "Size": 812848
     }
   },
-  "PackageSize": 12521545
+  "PackageSize": 12652617
 }

@@ -68,6 +68,14 @@ class DSOWrapperGenerator
 
 			string stubPath = Path.Combine (packLibDir.ItemSpec, StubFileName);
 			if (!File.Exists (stubPath)) {
+				// NativeAOT runtime packs don't include the DSO stub because they don't need
+				// DSO wrapping. Skip them gracefully instead of failing the build.
+				string? packageId = packLibDir.GetMetadata ("NuGetPackageId");
+				if (!String.IsNullOrEmpty (packageId) && packageId.StartsWith ("Microsoft.Android.Runtime.NativeAOT.", StringComparison.OrdinalIgnoreCase)) {
+					log.LogDebugMessage ($"Skipping NativeAOT runtime pack directory '{packLibDir.ItemSpec}': no DSO stub needed");
+					continue;
+				}
+
 				throw new InvalidOperationException ($"Internal error: archive DSO stub file '{stubPath}' does not exist in runtime pack at {packLibDir}");
 			}
 

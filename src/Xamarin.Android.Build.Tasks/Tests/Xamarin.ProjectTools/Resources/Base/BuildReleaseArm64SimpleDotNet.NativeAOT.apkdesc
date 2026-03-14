@@ -5,13 +5,13 @@
       "Size": 3124
     },
     "classes.dex": {
-      "Size": 24224
+      "Size": 25320
     },
     "lib/arm64-v8a/libUnnamedProject.so": {
-      "Size": 4968680
+      "Size": 5424528
     },
     "META-INF/BNDLTOOL.RSA": {
-      "Size": 1211
+      "Size": 1213
     },
     "META-INF/BNDLTOOL.SF": {
       "Size": 1211
@@ -44,5 +44,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 2094050
+  "PackageSize": 2225122
 }
