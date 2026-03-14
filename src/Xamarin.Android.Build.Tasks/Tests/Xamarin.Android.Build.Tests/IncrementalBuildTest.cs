@@ -145,12 +145,12 @@ namespace Xamarin.Android.Build.Tests
 					FileAssert.Exists (file);
 					File.SetLastWriteTimeUtc (file, DateTime.UtcNow);
 				}
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Second should have succeeded");
-				b.Output.AssertTargetIsNotSkipped ("_CleanMonoAndroidIntermediateDir");
-				var stampFiles = Path.Combine (intermediate, "stamp", "_ResolveLibraryProjectImports.stamp");
-				FileAssert.Exists (stampFiles, $"{stampFiles} should exist!");
-				var libraryProjectImports = Path.Combine (intermediate, "libraryprojectimports.cache");
-				FileAssert.Exists (libraryProjectImports, $"{libraryProjectImports} should exist!");
+			Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Second should have succeeded");
+			b.Output.AssertTargetIsNotSkipped ("_CleanMonoAndroidIntermediateDir");
+			var stampFiles = Path.Combine (intermediate, "stamp", "_ResolveLibraryProjectImports.stamp");
+			FileAssert.Exists (stampFiles, $"{stampFiles} should exist!");
+			var libraryProjectImports = Path.Combine (intermediate, "libraryprojectimports.cache");
+			FileAssert.Exists (libraryProjectImports, $"{libraryProjectImports} should exist!");
 
 				//No changes
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Third should have succeeded");

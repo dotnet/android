@@ -126,6 +126,19 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <SetNdkPathForIlc NdkBinDirectory="$(_NdkBinDir)" />
   </Target>
 
+  <!-- WORKAROUND: Android reorders IlcCompileDependsOn so that ILLink runs before ComputeIlcCompileInputs
+       (the standard pipeline has the opposite order since it doesn't actually run ILLink). This means
+       @(ManagedBinary) is empty when _ComputeManagedAssemblyForILLink builds @(ManagedAssemblyToLink),
+       so the project assembly is missing and _RunILLink's incremental check doesn't see changes to it.
+       Fix: add @(IntermediateAssembly) to @(ManagedAssemblyToLink) after the replacement happens. -->
+  <Target Name="_AndroidFixManagedAssemblyToLink"
+      AfterTargets="_ComputeManagedAssemblyForILLink"
+      Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' ">
+    <ItemGroup>
+      <ManagedAssemblyToLink Include="@(IntermediateAssembly)" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="_AndroidComputeIlcCompileInputs">
     <PropertyGroup>
       <!-- Turn trimmer warnings back to original value -->
@@ -142,7 +155,10 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <!-- Give ILLink's output to ILC -->
       <IlcCompileInput Remove="@(IlcCompileInput)" />
       <IlcCompileInput Include="$(IntermediateLinkDir)$(TargetName)$(TargetExt)" />
-      <_AndroidILLinkAssemblies Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')" Condition="Exists('$(IntermediateLinkDir)%(Filename)%(Extension)')" />
+      <!-- Exclude the project assembly (%(Filename) != $(TargetName)) because it is already
+           added above via @(IlcCompileInput). Both are included in @(ResolvedFileToPublish)
+           below, and duplicates would cause GetPerArchAssemblies to throw. -->
+      <_AndroidILLinkAssemblies Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')" Condition="Exists('$(IntermediateLinkDir)%(Filename)%(Extension)') and '%(Filename)' != '$(TargetName)'" />
       <IlcReference Remove="@(IlcReference)" />
       <IlcReference Include="@(PrivateSdkAssemblies)" />
       <IlcReference Include="@(_AndroidILLinkAssemblies)" />

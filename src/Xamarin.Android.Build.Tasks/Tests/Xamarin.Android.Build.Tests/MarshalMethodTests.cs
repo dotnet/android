@@ -142,7 +142,8 @@ public class MarshalMethodTests : BaseTest
 		builder.AssertHasNoWarnings ();
 
 		// Rescan for modified marshal methods
-		var intermediateReleaseOutputPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android-arm64", "linked");
+		// RewriteMarshalMethods modifies assemblies in android/assets/ (after _AfterILLinkAdditionalSteps copies them there)
+		var intermediateReleaseOutputPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", "arm64-v8a");
 		var outputReleaseDll = Path.Combine (intermediateReleaseOutputPath, $"{proj.ProjectName}.dll");
 
 		xaResolver = new XAAssemblyResolver (Tools.AndroidTargetArch.Arm64, log, false);

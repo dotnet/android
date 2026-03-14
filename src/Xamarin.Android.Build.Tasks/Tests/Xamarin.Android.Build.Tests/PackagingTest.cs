@@ -560,11 +560,9 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 				item.TextContent = () => proj.StringsXml.Replace ("${PROJECT_NAME}", "Foo");
 				item.Timestamp = null;
 				Assert.IsTrue (b.Build (proj), "Second build failed");
-				if (runtime != AndroidRuntime.NativeAOT) {
-					b.AssertHasNoWarnings ();
-				} else {
-					StringAssertEx.Contains ("2 Warning(s)", b.LastBuildOutput, "NativeAOT should produce two IL3053 warnings");
-				}
+				// The second build only changes a resource file, so IlcCompile is correctly
+				// skipped and no IL3053 warnings are produced on the incremental build.
+				b.AssertHasNoWarnings ();
 
 				//Make sure the APKs are signed
 				foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {

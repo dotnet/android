@@ -924,7 +924,6 @@ because xbuild doesn't support framework reference assemblies.
 	<_AndroidLinkFlag>$(IntermediateOutputPath)link.flag</_AndroidLinkFlag>
 	<_AndroidApkPerAbiFlagFile>$(IntermediateOutputPath)android\bin\apk_per_abi.flag</_AndroidApkPerAbiFlagFile>
 	<_AndroidDebugKeyStoreFlag>$(IntermediateOutputPath)android_debug_keystore.flag</_AndroidDebugKeyStoreFlag>
-	<_AdditionalPostLinkerStepsFlag>$(_AndroidStampDirectory)_AdditionalPostLinkerSteps.stamp</_AdditionalPostLinkerStepsFlag>
 	<_AcwMapFile>$(IntermediateOutputPath)acw-map.txt</_AcwMapFile>
 	<_CustomViewMapFile>$(IntermediateOutputPath)customview-map.txt</_CustomViewMapFile>
 	<AndroidResgenNamespace Condition="'$(AndroidResgenNamespace)'==''" >$(RootNamespace)</AndroidResgenNamespace>
@@ -1450,7 +1449,7 @@ because xbuild doesn't support framework reference assemblies.
   </LinkAssembliesNoShrink>
 
   <ItemGroup>
-    <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)**" />
+    <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)**" Exclude="$(MonoAndroidIntermediateAssemblyDir)shrunk\**" />
   </ItemGroup>
 </Target>
 
@@ -1458,13 +1457,13 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_AfterILLinkAdditionalSteps"
     DependsOnTargets="_LinkAssembliesNoShrinkInputs"
     Condition="'$(PublishTrimmed)' == 'true'"
-    Inputs="$(_AndroidLinkFlag)"
-    Outputs="$(_AdditionalPostLinkerStepsFlag)">
+    Inputs="@(ResolvedAssemblies)"
+    Outputs="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')">
   <AssemblyModifierPipeline
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
       CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
       Debug="$(AndroidIncludeDebugSymbols)"
-      DestinationFiles="@(ResolvedAssemblies)"
+      DestinationFiles="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')"
       Deterministic="$(Deterministic)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
       ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
@@ -1476,7 +1475,9 @@ because xbuild doesn't support framework reference assemblies.
       TargetName="$(TargetName)">
   </AssemblyModifierPipeline>
 
-  <Touch Files="$(_AdditionalPostLinkerStepsFlag)" AlwaysCreate="true" />
+  <ItemGroup>
+    <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)**" Exclude="$(MonoAndroidIntermediateAssemblyDir)shrunk\**" />
+  </ItemGroup>
 </Target>
 
 <!-- _PrepareAssemblies lives in Microsoft.Android.Sdk.AssemblyResolution.targets -->
@@ -1947,6 +1948,9 @@ because xbuild doesn't support framework reference assemblies.
     SourceFiles="@(_ResolvedAssemblies->'%(Identity).config')"
     DestinationFiles="@(_ShrunkAssemblies->'%(Identity).config')" />
   <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)shrunk" />
+  <ItemGroup>
+    <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)shrunk\**" />
+  </ItemGroup>
 </Target>
 
 <Target Name="_ResolveSatellitePaths"
