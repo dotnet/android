@@ -57,6 +57,10 @@ namespace Xamarin.Android.Tasks
 		void ProcessAssembly(ITaskItem assemblyItem, List<ITaskItem> output)
 		{
 			using var pe = new PEReader (File.OpenRead (assemblyItem.ItemSpec));
+			if (!pe.HasMetadata) {
+				Log.LogDebugMessage ($"Skipping non-.NET assembly: {assemblyItem.ItemSpec}");
+				return;
+			}
 			var reader = pe.GetMetadataReader ();
 			// Check in-memory cache
 			var module = reader.GetModuleDefinition ();
