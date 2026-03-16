@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <UsingTask AssemblyFile="$(PrepTasksAssembly)"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitBlame" TaskFactory="TaskHostFactory" Runtime="NET" />
-  <UsingTask AssemblyFile="$(PrepTasksAssembly)"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitBranch" TaskFactory="TaskHostFactory" Runtime="NET" />
-  <UsingTask AssemblyFile="$(PrepTasksAssembly)"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitHash" TaskFactory="TaskHostFactory" Runtime="NET" />
-  <UsingTask AssemblyFile="$(PrepTasksAssembly)"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitsInRange" TaskFactory="TaskHostFactory" Runtime="NET" />
-  <UsingTask AssemblyFile="$(PrepTasksAssembly)"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitTime" TaskFactory="TaskHostFactory" Runtime="NET" />
-  <UsingTask AssemblyFile="$(PrepTasksAssembly)"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitInfo" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <!-- NOTE: Do NOT use TaskFactory="TaskHostFactory" Runtime="NET" on these UsingTask elements.
+       MSBuild 18+ (dotnet/msbuild#13175) added app host support which changed how TaskHostFactory
+       spawns .NET task hosts. The MetadataLoadContext used to inspect task assemblies is disposed
+       before output validation completes, causing MSB4027. These tasks only run git commands and
+       don't need out-of-proc isolation. See https://github.com/dotnet/msbuild/issues/13175 -->
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitBlame" />
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitBranch" />
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitHash" />
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitsInRange" />
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitTime" />
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitInfo" />
   <Target Name="_GetSubmodulesVersionInfo">
     <ItemGroup>
       <!-- If anything changes in this list, make sure to update:

@@ -27,7 +27,6 @@ DOTNET_ROOT   = $(topdir)/bin/$(CONFIGURATION)/dotnet/
 DOTNET_TOOL   = $(DOTNET_ROOT)dotnet
 DOTNET_VERB   = build
 MSBUILD_FLAGS = /p:Configuration=$(CONFIGURATION) $(MSBUILD_ARGS)
-export DOTNET_HOST_PATH = $(DOTNET_TOOL)
 
 ifeq ($(OS_NAME),Darwin)
 _PKG_CONFIG   = /Library/Frameworks/Mono.framework/Commands/pkg-config
