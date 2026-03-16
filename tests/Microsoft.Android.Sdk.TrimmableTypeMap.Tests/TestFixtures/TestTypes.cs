@@ -108,6 +108,17 @@ namespace Android.Views
 		string? Name { get; }
 	}
 
+	/// <summary>
+	/// Interface that extends another registered interface.
+	/// Tests that implementing types get methods from the parent interface too.
+	/// </summary>
+	[Register ("android/view/View$INamedClickListener", "", "Android.Views.INamedClickListenerInvoker")]
+	public interface INamedClickListener : IOnClickListener
+	{
+		[Register ("getLabel", "()Ljava/lang/String;", "GetGetLabelHandler:Android.Views.INamedClickListenerInvoker")]
+		string? Label { get; }
+	}
+
 	[Register ("mono/android/view/View_IOnClickListenerImplementor")]
 	public class View_IOnClickListenerImplementor : Java.Lang.Object
 	{
@@ -451,6 +462,19 @@ namespace MyApp
 		public bool OnLongClick (Android.Views.View v) => false;
 	}
 
+	/// <summary>
+	/// Implements an interface that extends another registered interface.
+	/// Should get methods from both the child and parent interface.
+	/// </summary>
+	[Register ("my/app/NamedClickListenerImpl")]
+	public class NamedClickListenerImpl : Java.Lang.Object, Android.Views.INamedClickListener
+	{
+		protected NamedClickListenerImpl (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public void OnClick (Android.Views.View v) { }
+		public string? Label => "test";
+	}
+
 	// --- Override detection test types ---
 	// These types override registered base methods WITHOUT [Register] on the override,
 	// mimicking real user code where the attribute is only on the base class in Mono.Android.
@@ -655,6 +679,70 @@ namespace MyApp
 		protected ActivityWithMultiParamCtor (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 
 		public ActivityWithMultiParamCtor (string name, int count, bool enabled) { }
+	}
+
+	// --- Test gap fixtures ---
+
+	/// <summary>
+	/// Has a ctor taking an array of Java peer objects.
+	/// Tests that TryResolveJniObjectDescriptor + array recursion produces [Landroid/view/View;
+	/// </summary>
+	[Register ("my/app/ViewArrayActivity")]
+	public class ViewArrayActivity : Android.App.Activity
+	{
+		protected ViewArrayActivity (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public ViewArrayActivity (Android.Views.View[] views) { }
+	}
+
+	/// <summary>
+	/// Overrides an abstract base method without [Register].
+	/// AbstractBase.DoWork has [Register("doWork", "()V", "")].
+	/// </summary>
+	[Register ("my/app/ConcreteImpl")]
+	public class ConcreteImpl : AbstractBase
+	{
+		protected ConcreteImpl (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public override void DoWork () { }
+	}
+
+	/// <summary>
+	/// MCW base with two overloaded methods — same name, different params.
+	/// Tests that override detection picks the correct overload.
+	/// </summary>
+	[Register ("my/app/OverloadBase", DoNotGenerateAcw = true)]
+	public class OverloadBase : Java.Lang.Object
+	{
+		protected OverloadBase (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Register ("process", "()V", "GetProcessHandler")]
+		public virtual void Process () { }
+
+		[Register ("process", "(I)V", "GetProcess_IHandler")]
+		public virtual void Process (int value) { }
+	}
+
+	/// <summary>
+	/// Overrides only one of two overloads — Process(int) but not Process().
+	/// </summary>
+	[Register ("my/app/OverloadDerived")]
+	public class OverloadDerived : OverloadBase
+	{
+		protected OverloadDerived (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public override void Process (int value) { }
+	}
+
+	/// <summary>
+	/// Has a ctor with unsigned primitive params to test JNI mapping.
+	/// </summary>
+	[Register ("my/app/UnsignedParamActivity")]
+	public class UnsignedParamActivity : Android.App.Activity
+	{
+		protected UnsignedParamActivity (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public UnsignedParamActivity (ushort a, uint b, ulong c) { }
 	}
 }
 

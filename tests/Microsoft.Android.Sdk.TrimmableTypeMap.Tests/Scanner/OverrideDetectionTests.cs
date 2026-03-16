@@ -70,4 +70,45 @@ public class OverrideDetectionTests : FixtureTestBase
 		var peer = FindFixtureByJavaName ("my/app/MainActivity");
 		Assert.Contains (peer.MarshalMethods, m => m.JniName == "onCreate");
 	}
+
+	[Fact]
+	public void DerivedFragment_OnViewCreated_DeclaringTypePointsToBaseFragment ()
+	{
+		// DerivedFragment overrides BaseFragment.OnViewCreated (ACW→ACW chain)
+		var peer = FindFixtureByJavaName ("my/app/DerivedFragment");
+		var onViewCreated = Assert.Single (peer.MarshalMethods, m => m.JniName == "onViewCreated");
+		Assert.Equal ("MyApp.BaseFragment", onViewCreated.DeclaringTypeName);
+		Assert.Equal ("TestFixtures", onViewCreated.DeclaringAssemblyName);
+	}
+
+	[Fact]
+	public void AbstractBaseMethod_OverrideDetected ()
+	{
+		// ConcreteImpl overrides AbstractBase.DoWork which is abstract + [Register]
+		var peer = FindFixtureByJavaName ("my/app/ConcreteImpl");
+		var doWork = Assert.Single (peer.MarshalMethods, m => m.JniName == "doWork");
+		Assert.Equal ("()V", doWork.JniSignature);
+	}
+
+	[Fact]
+	public void MultipleOverloads_PicksCorrectOne ()
+	{
+		// OverloadDerived overrides Process(int) but NOT Process()
+		var peer = FindFixtureByJavaName ("my/app/OverloadDerived");
+		var nonCtorMethods = peer.MarshalMethods.Where (m => !m.IsConstructor).ToList ();
+		var processInt = Assert.Single (nonCtorMethods, m => m.JniName == "process" && m.JniSignature == "(I)V");
+		Assert.Equal ("GetProcess_IHandler", processInt.Connector);
+		// Process() should NOT be detected (not overridden)
+		Assert.DoesNotContain (nonCtorMethods, m => m.JniName == "process" && m.JniSignature == "()V");
+	}
+
+	[Fact]
+	public void EmptyConnector_OverrideStillDetected ()
+	{
+		// Activity.OnStart has [Register("onStart", "()V", "")] — empty connector
+		// FullActivity overrides it without [Register]
+		var peer = FindFixtureByJavaName ("my/app/FullActivity");
+		var onStart = Assert.Single (peer.MarshalMethods, m => m.JniName == "onStart");
+		Assert.Equal ("", onStart.Connector);
+	}
 }

@@ -120,4 +120,24 @@ public class ConstructorDetectionTests : FixtureTestBase
 		var ctorSigs = peer.JavaConstructors.Select (c => c.JniSignature).ToList ();
 		Assert.Contains ("(Ljava/lang/String;IZ)V", ctorSigs);
 	}
+
+	[Fact]
+	public void ViewArrayCtor_ResolvesObjectArraySignature ()
+	{
+		// ctor(View[]) should produce "([Landroid/view/View;)V"
+		// via TryResolveJniObjectDescriptor looking up View's [Register] JNI name
+		var peer = FindFixtureByJavaName ("my/app/ViewArrayActivity");
+		var ctorSigs = peer.JavaConstructors.Select (c => c.JniSignature).ToList ();
+		Assert.Contains ("([Landroid/view/View;)V", ctorSigs);
+	}
+
+	[Fact]
+	public void UnsignedPrimitiveCtor_MapsCorrectly ()
+	{
+		// ctor(ushort, uint, ulong) should produce "(SIJ)V"
+		// UInt16→S, UInt32→I, UInt64→J
+		var peer = FindFixtureByJavaName ("my/app/UnsignedParamActivity");
+		var ctorSigs = peer.JavaConstructors.Select (c => c.JniSignature).ToList ();
+		Assert.Contains ("(SIJ)V", ctorSigs);
+	}
 }

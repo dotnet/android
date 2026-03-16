@@ -79,4 +79,15 @@ public class InterfaceMethodDetectionTests : FixtureTestBase
 		var nonCtorMethods = peer.MarshalMethods.Where (m => !m.IsConstructor).ToList ();
 		Assert.Single (nonCtorMethods);
 	}
+
+	[Fact]
+	public void InterfaceExtendsInterface_ParentMethodsDetected ()
+	{
+		// NamedClickListenerImpl implements INamedClickListener which extends IOnClickListener.
+		// Should get both getLabel (from child) and onClick (from parent).
+		var peer = FindFixtureByJavaName ("my/app/NamedClickListenerImpl");
+		var nonCtorMethods = peer.MarshalMethods.Where (m => !m.IsConstructor).ToList ();
+		Assert.Contains (nonCtorMethods, m => m.JniName == "getLabel");
+		Assert.Contains (nonCtorMethods, m => m.JniName == "onClick");
+	}
 }
