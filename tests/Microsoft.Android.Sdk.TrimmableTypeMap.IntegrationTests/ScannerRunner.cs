@@ -114,7 +114,7 @@ static class ScannerRunner
 			groups.Add (new TypeMethodGroup (
 				managedName,
 				peer.MarshalMethods
-					.Where (m => !m.IsConstructor)
+					.Where (m => !m.IsConstructor && !m.IsInterfaceImplementation)
 					.Select (m => new MethodEntry (m.JniName, m.JniSignature, m.Connector))
 					.OrderBy (m => m.JniName, StringComparer.Ordinal)
 					.ThenBy (m => m.JniSignature, StringComparer.Ordinal)
@@ -152,8 +152,7 @@ static class ScannerRunner
 	/// <summary>
 	/// Extracts marshal methods using the real legacy JCW pipeline via
 	/// <see cref="CecilImporter.CreateType"/>. Excludes interface method
-	/// implementations since the new scanner places those on the interface
-	/// peer type rather than the implementing type.
+	/// implementations — those are compared via interface peer types.
 	/// </summary>
 	static List<MethodEntry> ExtractMethodRegistrations (TypeDefinition typeDef, TypeDefinitionCache cache)
 	{
@@ -170,8 +169,10 @@ static class ScannerRunner
 			return ExtractDirectRegisterAttributes (typeDef);
 		}
 
-		// Build a set of method names from implemented interfaces so we can
-		// filter them out of the CecilImporter output.
+		// Build a set of interface method keys to filter from CecilImporter output.
+		// Both legacy and new scanner include interface methods, but they come from
+		// different codepaths with different dedup strategies. Since interface methods
+		// are tested via interface peer types, exclude them here.
 		var interfaceMethodKeys = new HashSet<string> (StringComparer.Ordinal);
 		foreach (var ifaceImpl in typeDef.Interfaces) {
 			var ifaceType = cache.Resolve (ifaceImpl.InterfaceType);
@@ -196,12 +197,8 @@ static class ScannerRunner
 		var methods = new List<MethodEntry> ();
 
 		foreach (var m in wrapper.Methods) {
+			// Skip interface methods — compared via interface peer types
 			var key = $"{m.Name}:{m.JniSignature}";
-
-			// Skip methods that came from interface implementations — the new
-			// scanner places these on the interface peer, not the implementing type.
-			// Only skip if the type doesn't also have a direct [Register] for this
-			// method (which would mean the type explicitly registers it).
 			if (interfaceMethodKeys.Contains (key) && !HasDirectRegister (typeDef, m.Name, m.JniSignature)) {
 				continue;
 			}

@@ -464,6 +464,7 @@ sealed class JavaPeerScanner : IDisposable
 					ManagedMethodName = managedName,
 					NativeCallbackName = isConstructor ? "n_ctor" : $"n_{managedName}",
 					IsConstructor = isConstructor,
+					IsInterfaceImplementation = true,
 				});
 
 				alreadyRegistered.Add (jniKey);
@@ -497,6 +498,7 @@ sealed class JavaPeerScanner : IDisposable
 					ManagedMethodName = managedName,
 					NativeCallbackName = $"n_{managedName}",
 					IsConstructor = false,
+					IsInterfaceImplementation = true,
 				});
 
 				alreadyRegistered.Add (jniKey);

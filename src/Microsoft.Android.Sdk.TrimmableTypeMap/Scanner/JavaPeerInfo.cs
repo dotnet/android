@@ -189,6 +189,12 @@ sealed record MarshalMethodInfo
 	/// Null for [Register] methods.
 	/// </summary>
 	public string? SuperArgumentsString { get; init; }
+
+	/// <summary>
+	/// True if this method was collected from an implemented interface
+	/// (Pass 4: CollectInterfaceMethodImplementations), not from the type itself.
+	/// </summary>
+	public bool IsInterfaceImplementation { get; init; }
 }
 
 /// <summary>
