@@ -40,44 +40,19 @@ _ResolveAssemblies MSBuild target.
       DependsOnTargets="BuildOnlySettings;_FixupIntermediateAssembly;ResolveReferences;ComputeFilesToPublish;$(_RunAotMaybe)"
       Returns="@(ResolvedFileToPublish)">
       <ItemGroup>
-        <!-- NuGet packages like MSTest add assemblies as both properly-resolved publish assets
-             (with DestinationSubPath metadata) and as None items (without DestinationSubPath)
-             that flow into _SourceItemsToCopyToPublishDirectory. Remove the "bad" copies without
-             DestinationSubPath, preserving properly-resolved copies. Then re-add any assemblies
-             that were completely stripped (no surviving copy in ResolvedFileToPublish). -->
+        <!-- Give DestinationSubPath to .dll/.pdb items from _SourceItemsToCopyToPublishDirectory
+             that don't have it (e.g. @(None) or @(Content) with CopyToOutputDirectory), so they
+             survive the Remove below. Items that already have DestinationSubPath are unaffected. -->
+        <ResolvedFileToPublish
+            Update="@(_SourceItemsToCopyToPublishDirectory)"
+            Condition=" '%(ResolvedFileToPublish.DestinationSubPath)' == '' and ('%(Extension)' == '.dll' or '%(Extension)' == '.pdb') "
+            DestinationSubPath="%(Filename)%(Extension)"
+            TargetPath=""
+        />
         <ResolvedFileToPublish
             Remove="@(_SourceItemsToCopyToPublishDirectory)"
             Condition=" '%(ResolvedFileToPublish.DestinationSubPath)' == '' "
         />
-        <!-- Build a set of filenames already in ResolvedFileToPublish so we can compare
-             by filename rather than full path (native DLLs like KernelTraceControl.dll may
-             exist under a different path in _SourceItemsToCopyToPublishDirectory). -->
-        <_ResolvedPublishFileNames Include="@(ResolvedFileToPublish->'%(Filename)%(Extension)')" />
-        <_MissingAssemblyNames Include="@(_SourceItemsToCopyToPublishDirectory->'%(Filename)%(Extension)')"
-            Condition=" '%(Extension)' == '.dll' or '%(Extension)' == '.pdb' "
-            OriginalItemSpec="%(Identity)" />
-        <_MissingAssemblyNames Remove="@(_ResolvedPublishFileNames)" />
-        <!-- Exclude native DLLs: NuGet packages place native binaries under lib/native/ or
-             runtimes/*/native/ paths. These are not managed assemblies and must not be passed
-             to the linker (Mono.Cecil will throw BadImageFormatException). -->
-        <_MissingAssemblyNames Remove="@(_MissingAssemblyNames)"
-            Condition=" $([System.String]::new('%(OriginalItemSpec)').Replace('\','/').Contains('/native/')) " />
-        <_ResolvedPublishFileNames Remove="@(_ResolvedPublishFileNames)" />
-      </ItemGroup>
-      <!-- _SourceItemsToCopyToPublishDirectory may contain multiple items with the same filename
-           from different source paths (e.g., KernelTraceControl.dll). Deduplicate by filename
-           before re-adding to ResolvedFileToPublish to avoid duplicate key errors downstream. -->
-      <RemoveDuplicates Inputs="@(_MissingAssemblyNames)">
-        <Output TaskParameter="Filtered" ItemName="_UniqueMissingAssemblyNames" />
-      </RemoveDuplicates>
-      <ItemGroup>
-        <ResolvedFileToPublish
-            Include="@(_UniqueMissingAssemblyNames->'%(OriginalItemSpec)')"
-            DestinationSubPath="%(Filename)%(Extension)"
-            TargetPath=""
-        />
-        <_MissingAssemblyNames Remove="@(_MissingAssemblyNames)" />
-        <_UniqueMissingAssemblyNames Remove="@(_UniqueMissingAssemblyNames)" />
         <ResolvedFileToPublish
             Condition=" '%(ResolvedFileToPublish.RuntimeIdentifier)' == '' "
             Update="@(ResolvedFileToPublish)"
