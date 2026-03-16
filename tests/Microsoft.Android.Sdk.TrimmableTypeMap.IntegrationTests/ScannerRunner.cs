@@ -104,7 +104,6 @@ static class ScannerRunner
 			groups.Add (new TypeMethodGroup (
 				managedName,
 				peer.MarshalMethods
-					.Where (m => !m.IsConstructor)
 					.Select (m => new MethodEntry (m.JniName, m.JniSignature, m.Connector))
 					.OrderBy (m => m.JniName, StringComparer.Ordinal)
 					.ThenBy (m => m.JniSignature, StringComparer.Ordinal)
@@ -168,6 +167,10 @@ static class ScannerRunner
 			methods.Add (new MethodEntry (m.JavaName, m.JniSignature, connector));
 		}
 
+		foreach (var c in wrapper.Constructors) {
+			methods.Add (new MethodEntry (".ctor", c.JniSignature, null));
+		}
+
 		return methods;
 	}
 
@@ -201,13 +204,8 @@ static class ScannerRunner
 			}
 			foreach (var attr in method.CustomAttributes) {
 				if (attr.AttributeType.FullName == "Android.Runtime.RegisterAttribute" && attr.ConstructorArguments.Count >= 2) {
-					var jniName = (string) attr.ConstructorArguments [0].Value;
-					// Skip constructors — compared separately in ExactJavaConstructors
-					if (jniName == "<init>" || jniName == ".ctor") {
-						continue;
-					}
 					methods.Add (new MethodEntry (
-						jniName,
+						(string) attr.ConstructorArguments [0].Value,
 						(string) attr.ConstructorArguments [1].Value,
 						attr.ConstructorArguments.Count > 2 ? (string) attr.ConstructorArguments [2].Value : null
 					));
