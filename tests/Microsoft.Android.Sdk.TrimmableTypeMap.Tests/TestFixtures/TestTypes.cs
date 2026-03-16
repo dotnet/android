@@ -301,7 +301,7 @@ namespace MyApp
 		protected ExportFieldExample (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 
 		[Java.Interop.ExportField ("STATIC_INSTANCE")]
-		public static ExportFieldExample GetInstance () => default!;
+		public static ExportFieldExample? GetInstance () => default;
 
 		[Java.Interop.ExportField ("VALUE")]
 		public string GetValue () => "";
