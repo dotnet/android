@@ -575,7 +575,7 @@ sealed class JavaPeerScanner : IDisposable
 			// Check if this ctor's params are already covered by a base registered ctor
 			bool alreadyCovered = false;
 			foreach (var baseCtor in baseRegisteredCtors) {
-				if (AreParametersCompatible (methodDef, index, baseCtor.Method, baseCtor.Index)) {
+				if (HaveIdenticalParameterTypes (methodDef, baseCtor.Method)) {
 					alreadyCovered = true;
 					break;
 				}
@@ -628,42 +628,30 @@ sealed class JavaPeerScanner : IDisposable
 	}
 
 	/// <summary>
-	/// Like <see cref="ManagedTypeToJniDescriptor"/> but returns null for types that
-	/// don't have a proper JNI mapping (matching legacy GetJniSignature behavior).
-	/// For Java peer object types (types with [Register]), resolves to "L&lt;jniName&gt;;".
+	/// Maps a managed type name to its JNI descriptor for constructor signature
+	/// computation. Returns null for types that can't be mapped to JNI
+	/// (matching legacy GetJniSignature behavior). For Java peer object types
+	/// (types with [Register]), resolves to "L&lt;jniName&gt;;" via assembly cache.
 	/// </summary>
 	string? ManagedTypeToJniDescriptorOrNull (string managedType)
 	{
-		switch (managedType) {
-		case "System.Void": return "V";
-		case "System.Boolean": return "Z";
-		case "System.Byte":
-		case "System.SByte": return "B";
-		case "System.Char": return "C";
-		case "System.Int16":
-		case "System.UInt16": return "S";
-		case "System.Int32":
-		case "System.UInt32": return "I";
-		case "System.Int64":
-		case "System.UInt64": return "J";
-		case "System.Single": return "F";
-		case "System.Double": return "D";
-		case "System.String": return "Ljava/lang/String;";
-		default:
-			if (managedType.EndsWith ("[]")) {
-				var elementType = ManagedTypeToJniDescriptorOrNull (managedType.Substring (0, managedType.Length - 2));
-				return elementType is not null ? $"[{elementType}" : null;
-			}
-			// Try to resolve as a Java peer type with [Register]
-			return TryResolveJniObjectDescriptor (managedType);
+		var primitive = TryGetPrimitiveJniDescriptor (managedType);
+		if (primitive is not null) {
+			return primitive;
 		}
+
+		if (managedType.EndsWith ("[]")) {
+			var elementType = ManagedTypeToJniDescriptorOrNull (managedType.Substring (0, managedType.Length - 2));
+			return elementType is not null ? $"[{elementType}" : null;
+		}
+
+		// Try to resolve as a Java peer type with [Register]
+		return TryResolveJniObjectDescriptor (managedType);
 	}
 
 	/// <summary>
 	/// Looks up a managed type name across loaded assemblies. If the type has
 	/// [Register], returns "L&lt;jniName&gt;;". Otherwise returns null.
-	/// Matches legacy JavaNativeTypeManager.GetJniTypeName behavior which resolves
-	/// Java peer types to their JNI descriptor and returns null for non-Java types.
 	/// </summary>
 	string? TryResolveJniObjectDescriptor (string managedType)
 	{
@@ -776,7 +764,7 @@ sealed class JavaPeerScanner : IDisposable
 				continue;
 			}
 
-			if (!AreParametersCompatible (derivedMethod, index, baseMethodDef, baseIndex)) {
+			if (!HaveIdenticalParameterTypes (derivedMethod, baseMethodDef)) {
 				continue;
 			}
 
@@ -877,10 +865,9 @@ sealed class JavaPeerScanner : IDisposable
 	}
 
 	/// <summary>
-	/// Checks if two methods have compatible parameter lists by comparing their decoded signatures.
+	/// Checks if two methods have identical parameter types by comparing their decoded signatures.
 	/// </summary>
-	static bool AreParametersCompatible (MethodDefinition method1, AssemblyIndex index1,
-		MethodDefinition method2, AssemblyIndex index2)
+	static bool HaveIdenticalParameterTypes (MethodDefinition method1, MethodDefinition method2)
 	{
 		var sig1 = method1.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
 		var sig2 = method2.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
@@ -1113,29 +1100,47 @@ sealed class JavaPeerScanner : IDisposable
 		);
 	}
 
+	/// <summary>
+	/// Maps a managed type name to its JNI descriptor. Falls back to
+	/// "Ljava/lang/Object;" for unknown types (used by [Export] signature computation).
+	/// </summary>
 	static string ManagedTypeToJniDescriptor (string managedType)
 	{
-		switch (managedType) {
-		case "System.Void": return "V";
-		case "System.Boolean": return "Z";
-		case "System.Byte":
-		case "System.SByte": return "B";
-		case "System.Char": return "C";
-		case "System.Int16":
-		case "System.UInt16": return "S";
-		case "System.Int32":
-		case "System.UInt32": return "I";
-		case "System.Int64":
-		case "System.UInt64": return "J";
-		case "System.Single": return "F";
-		case "System.Double": return "D";
-		case "System.String": return "Ljava/lang/String;";
-		default:
-			if (managedType.EndsWith ("[]")) {
-				return $"[{ManagedTypeToJniDescriptor (managedType.Substring (0, managedType.Length - 2))}";
-			}
-			return "Ljava/lang/Object;";
+		var primitive = TryGetPrimitiveJniDescriptor (managedType);
+		if (primitive is not null) {
+			return primitive;
 		}
+
+		if (managedType.EndsWith ("[]")) {
+			return $"[{ManagedTypeToJniDescriptor (managedType.Substring (0, managedType.Length - 2))}";
+		}
+
+		return "Ljava/lang/Object;";
+	}
+
+	/// <summary>
+	/// Returns the JNI descriptor for primitive types and System.String.
+	/// Returns null for all other types.
+	/// </summary>
+	static string? TryGetPrimitiveJniDescriptor (string managedType)
+	{
+		return managedType switch {
+			"System.Void" => "V",
+			"System.Boolean" => "Z",
+			"System.Byte" => "B",
+			"System.SByte" => "B",
+			"System.Char" => "C",
+			"System.Int16" => "S",
+			"System.UInt16" => "S",
+			"System.Int32" => "I",
+			"System.UInt32" => "I",
+			"System.Int64" => "J",
+			"System.UInt64" => "J",
+			"System.Single" => "F",
+			"System.Double" => "D",
+			"System.String" => "Ljava/lang/String;",
+			_ => null,
+		};
 	}
 
 	ActivationCtorInfo? ResolveActivationCtor (string typeName, TypeDefinition typeDef, AssemblyIndex index)
