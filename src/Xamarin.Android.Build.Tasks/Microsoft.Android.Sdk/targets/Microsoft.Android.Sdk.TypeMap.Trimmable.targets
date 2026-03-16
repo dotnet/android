@@ -3,7 +3,7 @@
      and JCW .java source files with registerNatives. -->
 <Project>
 
-  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateTrimmableTypeMap" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateTrimmableTypeMap" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.TypeMap.Trimmable.CoreCLR.targets"
       Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
