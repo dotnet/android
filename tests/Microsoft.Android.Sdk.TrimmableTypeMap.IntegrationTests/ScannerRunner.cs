@@ -72,16 +72,6 @@ static class ScannerRunner
 			));
 		}
 
-		foreach (var entry in dataSets.JavaToManaged) {
-			if (methodsByJavaName.ContainsKey (entry.JavaName)) {
-				continue;
-			}
-
-			methodsByJavaName [entry.JavaName] = new List<TypeMethodGroup> {
-				new TypeMethodGroup (entry.ManagedName, new List<MethodEntry> ())
-			};
-		}
-
 		return (entries, methodsByJavaName);
 	}
 
