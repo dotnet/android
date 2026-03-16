@@ -364,8 +364,10 @@ public class GlobalType : Java.Lang.Object
 }
 public class GlobalUnregisteredType : Java.Lang.Object { }
 
-// Type with dot-format [Register] name (matches Android app project template pattern)
-[Register ("com.example.dotformat.DotActivity")]
+// Matches the Android app project template pattern from
+// Tests/Xamarin.ProjectTools/Resources/DotNet/MainActivity.cs:
+//   [Register ("${JAVA_PACKAGENAME}.MainActivity"), Activity (Label = "...", MainLauncher = true, Icon = "@drawable/icon")]
+[Register ("com.example.dotformat.MainActivity"), Activity (Label = "DotFormat", MainLauncher = true)]
 public class DotFormatActivity : Android.App.Activity
 {
 	protected DotFormatActivity (IntPtr handle, Android.Runtime.JniHandleOwnership transfer) : base (handle, transfer) { }
