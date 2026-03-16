@@ -167,7 +167,7 @@ class ManagedTypeManager : JniRuntime.JniTypeManager {
 		}
 
 		return new[] {
-			desugarType.ToString (),
+			$"{desugarType}$_CC",
 			$"{jniSimpleReference}$-CC",
 		};
 	}
