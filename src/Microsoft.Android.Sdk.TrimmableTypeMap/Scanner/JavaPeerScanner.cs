@@ -608,7 +608,7 @@ sealed class JavaPeerScanner : IDisposable
 		}
 	}
 
-	static string? BuildJniCtorSignature (MethodSignature<string> sig)
+	string? BuildJniCtorSignature (MethodSignature<string> sig)
 	{
 		var sb = new System.Text.StringBuilder ();
 		sb.Append ('(');
@@ -630,8 +630,9 @@ sealed class JavaPeerScanner : IDisposable
 	/// <summary>
 	/// Like <see cref="ManagedTypeToJniDescriptor"/> but returns null for types that
 	/// don't have a proper JNI mapping (matching legacy GetJniSignature behavior).
+	/// For Java peer object types (types with [Register]), resolves to "L&lt;jniName&gt;;".
 	/// </summary>
-	static string? ManagedTypeToJniDescriptorOrNull (string managedType)
+	string? ManagedTypeToJniDescriptorOrNull (string managedType)
 	{
 		switch (managedType) {
 		case "System.Void": return "V";
@@ -653,11 +654,26 @@ sealed class JavaPeerScanner : IDisposable
 				var elementType = ManagedTypeToJniDescriptorOrNull (managedType.Substring (0, managedType.Length - 2));
 				return elementType is not null ? $"[{elementType}" : null;
 			}
-			// Non-primitive, non-string, non-array types don't have a reliable JNI mapping.
-			// Legacy GetJniSignature returns null for these (System.Object, System.IntPtr,
-			// System.Action, etc.), causing the whole ctor to be skipped.
-			return null;
+			// Try to resolve as a Java peer type with [Register]
+			return TryResolveJniObjectDescriptor (managedType);
 		}
+	}
+
+	/// <summary>
+	/// Looks up a managed type name across loaded assemblies. If the type has
+	/// [Register], returns "L&lt;jniName&gt;;". Otherwise returns null.
+	/// Matches legacy JavaNativeTypeManager.GetJniTypeName behavior which resolves
+	/// Java peer types to their JNI descriptor and returns null for non-Java types.
+	/// </summary>
+	string? TryResolveJniObjectDescriptor (string managedType)
+	{
+		foreach (var index in assemblyCache.Values) {
+			if (index.TypesByFullName.TryGetValue (managedType, out var handle) &&
+			    index.RegisterInfoByType.TryGetValue (handle, out var registerInfo)) {
+				return $"L{registerInfo.JniName};";
+			}
+		}
+		return null;
 	}
 
 	/// <summary>
