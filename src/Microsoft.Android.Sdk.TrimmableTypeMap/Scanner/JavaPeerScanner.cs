@@ -954,6 +954,17 @@ sealed class JavaPeerScanner : IDisposable
 			return basePeer.JavaName;
 		}
 
+		// Base type may be a Java peer without [Register] that hasn't been scanned yet
+		// (scan order within an assembly is not guaranteed). Resolve it the same way
+		// ScanAssembly does: check ExtendsJavaPeer and compute the auto JNI name.
+		if (TryResolveType (baseTypeName, baseAssemblyName, out var baseHandle, out var baseIndex)) {
+			var baseTypeDef = baseIndex.Reader.GetTypeDefinition (baseHandle);
+			if (ExtendsJavaPeer (baseTypeDef, baseIndex)) {
+				var (jniName, _) = ComputeAutoJniNames (baseTypeDef, baseIndex);
+				return jniName;
+			}
+		}
+
 		return null;
 	}
 
