@@ -354,7 +354,7 @@ namespace Xamarin.Android.Tasks
 
 			using var pe = new PEReader (File.OpenRead (assembly.ItemSpec));
 			if (!pe.HasMetadata) {
-				return false; // this is a native Windows .dll, not a .NET assembly
+				return false; // not a .NET assembly (no CLI metadata)
 			}
 			var reader = pe.GetMetadataReader ();
 			return HasMonoAndroidReference (reader);
@@ -377,6 +377,10 @@ namespace Xamarin.Android.Tasks
 		{
 			using (var stream = File.OpenRead (assembly))
 			using (var pe = new PEReader (stream)) {
+				if (!pe.HasMetadata) {
+					log.LogDebugMessage ($"Skipping non-.NET assembly: {assembly}");
+					return false;
+				}
 				var reader = pe.GetMetadataReader ();
 				var assemblyDefinition = reader.GetAssemblyDefinition ();
 				foreach (var handle in assemblyDefinition.GetCustomAttributes ()) {

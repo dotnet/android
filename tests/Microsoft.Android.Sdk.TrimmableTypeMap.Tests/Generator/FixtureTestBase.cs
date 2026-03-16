@@ -77,7 +77,23 @@ public abstract class FixtureTestBase
 	}
 
 	private protected static JavaPeerInfo MakeAcwPeer (string jniName, string managedName, string asmName)
-		=> MakePeerWithActivation (jniName, managedName, asmName);
+	{
+		return MakePeerWithActivation (jniName, managedName, asmName) with {
+			DoNotGenerateAcw = false,
+			JavaConstructors = new List<JavaConstructorInfo> {
+				new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V" },
+			},
+			MarshalMethods = new List<MarshalMethodInfo> {
+				new MarshalMethodInfo {
+					JniName = "<init>",
+					NativeCallbackName = "n_ctor",
+					JniSignature = "()V",
+					ManagedMethodName = ".ctor",
+					IsConstructor = true,
+				},
+			},
+		};
+	}
 
 	private protected static JavaPeerInfo MakeInterfacePeer (
 		string jniName,

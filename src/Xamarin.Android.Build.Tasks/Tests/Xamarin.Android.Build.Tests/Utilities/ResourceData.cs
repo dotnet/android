@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -54,13 +55,39 @@ namespace Xamarin.Android.Build.Tests
 			return m.ToArray ();
 		}
 
-		public static byte [] GetKeystore (string keyname = "test.keystore")
+		static readonly object keystoreLock = new object ();
+		static byte [] cachedKeystore;
+
+		public static byte [] GetKeystore ()
 		{
-			var assembly = typeof (XamarinAndroidCommonProject).Assembly;
-			using (var stream = assembly.GetManifestResourceStream ($"Xamarin.ProjectTools.Resources.Base.{keyname}")) {
-				var data = new byte [stream.Length];
-				_ = stream.Read (data, 0, (int) stream.Length);
-				return data;
+			lock (keystoreLock) {
+				if (cachedKeystore != null)
+					return cachedKeystore;
+
+				var keystorePath = Path.Combine (Path.GetTempPath (), $"test-{Guid.NewGuid ()}.keystore");
+				try {
+					GenerateKeystore (keystorePath);
+					cachedKeystore = File.ReadAllBytes (keystorePath);
+				} finally {
+					File.Delete (keystorePath);
+				}
+				return cachedKeystore;
+			}
+		}
+
+		public static void GenerateKeystore (string keystorePath, string storePass = "android", string keyAlias = "mykey", string keyPass = "android")
+		{
+			var keytoolName = TestEnvironment.IsWindows ? "keytool.exe" : "keytool";
+			var keytoolPath = Path.Combine (AndroidSdkResolver.GetJavaSdkPath (), "bin", keytoolName);
+			var arguments = $"-genkeypair -v -storetype pkcs12 -keystore \"{keystorePath}\" -alias {keyAlias} -keyalg RSA -keysize 2048 -validity 10000 -storepass {storePass} -keypass {keyPass} -dname \"CN=Test, OU=Test, O=Test, L=Test, ST=Test, C=US\"";
+			var stderr = new List<string> ();
+			int exitCode = MonoAndroidHelper.RunProcess (
+				keytoolPath, arguments,
+				onOutput: (s, e) => { },
+				onError: (s, e) => { if (e.Data != null) stderr.Add (e.Data); }
+			);
+			if (exitCode != 0) {
+				throw new InvalidOperationException ($"keytool failed with exit code {exitCode}: {string.Join (Environment.NewLine, stderr)}");
 			}
 		}
 	}

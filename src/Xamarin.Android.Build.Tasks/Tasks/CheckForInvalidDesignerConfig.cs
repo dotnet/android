@@ -39,6 +39,9 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 			using var pe = new PEReader (File.OpenRead (assembly.ItemSpec));
+			if (!pe.HasMetadata) {
+				return false;
+			}
 			var reader = pe.GetMetadataReader ();
 			return HasResourceDesignerAssemblyReference (reader);
 		}

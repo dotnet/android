@@ -187,6 +187,7 @@ namespace Android.Runtime {
 			int gc 		= RuntimeNativeMethods._monodroid_gref_log_new (value.Handle, ctype, r.Handle, ntype, tname, tid, from, 1);
 			if (gc >= JNIEnvInit.gref_gc_threshold) {
 				Logger.Log (LogLevel.Warn, "monodroid-gc", gc + " outstanding GREFs. Performing a full GC!");
+				System.GC.WaitForPendingFinalizers ();
 				System.GC.Collect ();
 			}
 

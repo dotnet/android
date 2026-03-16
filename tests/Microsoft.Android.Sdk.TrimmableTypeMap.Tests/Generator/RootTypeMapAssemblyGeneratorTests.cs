@@ -10,6 +10,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 
 public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 {
+
 	static MemoryStream GenerateRootAssembly (IReadOnlyList<string> perAssemblyNames, string? assemblyName = null)
 	{
 		var stream = new MemoryStream ();
@@ -64,17 +65,25 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 			reader.GetString (t.Name).Contains ("TypeMapAssemblyTarget"));
 	}
 
-	[Theory]
-	[InlineData (0, 0)]
-	[InlineData (3, 3)]
-	public void Generate_AttributeCount_MatchesTargetCount (int targetCount, int expectedCount)
+	[Fact]
+	public void Generate_EmptyList_ProducesValidAssemblyWithNoTargetAttributes ()
 	{
-		var targets = Enumerable.Range (0, targetCount).Select (i => $"_Target{i}.TypeMap").ToArray ();
+		using var stream = GenerateRootAssembly ([]);
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+		var asmAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
+		Assert.Empty (asmAttrs);
+	}
+
+	[Fact]
+	public void Generate_MultipleTargets_HasCorrectAttributeCount ()
+	{
+		string[] targets = ["_App.TypeMap", "_Mono.Android.TypeMap", "_Java.Interop.TypeMap"];
 		using var stream = GenerateRootAssembly (targets);
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 		var asmAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
-		Assert.Equal (expectedCount, asmAttrs.Count ());
+		Assert.Equal (3, asmAttrs.Count ());
 	}
 
 	[Fact]
