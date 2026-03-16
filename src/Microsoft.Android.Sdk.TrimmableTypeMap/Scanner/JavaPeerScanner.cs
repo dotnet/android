@@ -456,16 +456,7 @@ sealed class JavaPeerScanner : IDisposable
 					continue;
 				}
 
-				bool isConstructor = registerInfo.JniName == "<init>" || registerInfo.JniName == ".ctor";
-				methods.Add (new MarshalMethodInfo {
-					JniName = registerInfo.JniName,
-					JniSignature = jniSignature,
-					Connector = registerInfo.Connector,
-					ManagedMethodName = managedName,
-					NativeCallbackName = isConstructor ? "n_ctor" : $"n_{managedName}",
-					IsConstructor = isConstructor,
-					IsInterfaceImplementation = true,
-				});
+				AddMarshalMethod (methods, registerInfo, ifaceMethodDef, ifaceIndex, isInterfaceImplementation: true);
 
 				alreadyRegistered.Add (jniKey);
 				alreadyRegistered.Add (managedKey);
@@ -485,21 +476,10 @@ sealed class JavaPeerScanner : IDisposable
 				}
 
 				var accessors = ifacePropDef.GetAccessors ();
-				string managedName = "";
 				if (!accessors.Getter.IsNil) {
-					managedName = ifaceIndex.Reader.GetString (
-						ifaceIndex.Reader.GetMethodDefinition (accessors.Getter).Name);
+					var getterDef = ifaceIndex.Reader.GetMethodDefinition (accessors.Getter);
+					AddMarshalMethod (methods, propRegister, getterDef, ifaceIndex, isInterfaceImplementation: true);
 				}
-
-				methods.Add (new MarshalMethodInfo {
-					JniName = propRegister.JniName,
-					JniSignature = propRegister.Signature,
-					Connector = propRegister.Connector,
-					ManagedMethodName = managedName,
-					NativeCallbackName = $"n_{managedName}",
-					IsConstructor = false,
-					IsInterfaceImplementation = true,
-				});
 
 				alreadyRegistered.Add (jniKey);
 			}
@@ -872,7 +852,7 @@ sealed class JavaPeerScanner : IDisposable
 		return true;
 	}
 
-	static void AddMarshalMethod (List<MarshalMethodInfo> methods, RegisterInfo registerInfo, MethodDefinition methodDef, AssemblyIndex index, ExportInfo? exportInfo = null)
+	static void AddMarshalMethod (List<MarshalMethodInfo> methods, RegisterInfo registerInfo, MethodDefinition methodDef, AssemblyIndex index, ExportInfo? exportInfo = null, bool isInterfaceImplementation = false)
 	{
 		// Skip methods that are just the JNI name (type-level [Register])
 		if (registerInfo.Signature is null && registerInfo.Connector is null) {
@@ -892,6 +872,7 @@ sealed class JavaPeerScanner : IDisposable
 			NativeCallbackName = isConstructor ? "n_ctor" : $"n_{managedName}",
 			IsConstructor = isConstructor,
 			IsExport = isExport,
+			IsInterfaceImplementation = isInterfaceImplementation,
 			JavaAccess = isExport ? GetJavaAccess (methodDef.Attributes & MethodAttributes.MemberAccessMask) : null,
 			ThrownNames = exportInfo?.ThrownNames,
 			SuperArgumentsString = exportInfo?.SuperArgumentsString,
