@@ -363,3 +363,10 @@ public class GlobalType : Java.Lang.Object
 	protected GlobalType (IntPtr handle, Android.Runtime.JniHandleOwnership transfer) : base (handle, transfer) { }
 }
 public class GlobalUnregisteredType : Java.Lang.Object { }
+
+// Type with dot-format [Register] name (matches Android app project template pattern)
+[Register ("com.example.dotformat.DotActivity")]
+public class DotFormatActivity : Android.App.Activity
+{
+	protected DotFormatActivity (IntPtr handle, Android.Runtime.JniHandleOwnership transfer) : base (handle, transfer) { }
+}

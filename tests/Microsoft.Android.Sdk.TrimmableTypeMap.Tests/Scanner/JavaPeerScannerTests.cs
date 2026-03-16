@@ -73,4 +73,14 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 			Assert.False (string.IsNullOrEmpty (peer.AssemblyName),
 				$"Type {peer.ManagedTypeName} should have assembly name"));
 	}
+
+	[Fact]
+	public void Scan_RegisterAttribute_DotFormat_NormalizedToSlashes ()
+	{
+		// [Register ("com.example.dotformat.DotActivity")] uses dots — scanner should normalize to slashes
+		var peer = FindFixtureByJavaName ("com/example/dotformat/DotActivity");
+		Assert.Equal ("com/example/dotformat/DotActivity", peer.JavaName);
+		Assert.Equal ("com/example/dotformat/DotActivity", peer.CompatJniName);
+		Assert.False (peer.DoNotGenerateAcw);
+	}
 }

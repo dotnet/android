@@ -215,7 +215,7 @@ sealed class AssemblyIndex : IDisposable
 		}
 
 		return new RegisterInfo {
-			JniName = jniName,
+			JniName = jniName.Replace ('.', '/'),
 			Signature = signature,
 			Connector = connector,
 			DoNotGenerateAcw = doNotGenerateAcw,
