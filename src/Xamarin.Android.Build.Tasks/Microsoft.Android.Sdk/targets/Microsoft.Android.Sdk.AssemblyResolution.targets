@@ -36,23 +36,25 @@ _ResolveAssemblies MSBuild target.
     <_RunAotMaybe Condition=" '$(_AndroidUseMarshalMethods)' != 'True' ">_AndroidAot</_RunAotMaybe>
   </PropertyGroup>
 
+  <!-- Some NuGet packages (e.g. MSTest.TestFramework) add assemblies as @(Reference) items
+       with CopyToOutputDirectory metadata via their .targets files. This causes the assemblies
+       to flow into @(_SourceItemsToCopyToPublishDirectory) in addition to the normal reference
+       resolution path, creating duplicate entries in @(ResolvedFileToPublish) that crash
+       downstream tasks. Strip CopyToOutputDirectory from all @(Reference) items during the
+       inner per-RID publish build so they only flow through normal reference resolution.
+       See: https://github.com/microsoft/testfx/blob/35cc3cd6/src/TestFramework/TestFramework.Extensions/buildTransitive/net8.0AndLater/MSTest.TestFramework.targets#L15-L21 -->
+  <Target Name="_PatchNuGetReferenceMetadata"
+      Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' ">
+    <ItemGroup>
+      <Reference Update="@(Reference)" CopyToOutputDirectory="" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="_ComputeFilesToPublishForRuntimeIdentifiers"
-      DependsOnTargets="BuildOnlySettings;_FixupIntermediateAssembly;ResolveReferences;ComputeFilesToPublish;$(_RunAotMaybe)"
+      DependsOnTargets="BuildOnlySettings;_FixupIntermediateAssembly;_PatchNuGetReferenceMetadata;ResolveReferences;ComputeFilesToPublish;$(_RunAotMaybe)"
       Returns="@(ResolvedFileToPublish)">
       <ItemGroup>
-        <!-- Give DestinationSubPath to .dll/.pdb items from _SourceItemsToCopyToPublishDirectory
-             that don't have it (e.g. @(None) or @(Content) with CopyToOutputDirectory), so they
-             survive the Remove below. Items that already have DestinationSubPath are unaffected. -->
-        <ResolvedFileToPublish
-            Update="@(_SourceItemsToCopyToPublishDirectory)"
-            Condition=" '%(ResolvedFileToPublish.DestinationSubPath)' == '' and ('%(Extension)' == '.dll' or '%(Extension)' == '.pdb') "
-            DestinationSubPath="%(Filename)%(Extension)"
-            TargetPath=""
-        />
-        <ResolvedFileToPublish
-            Remove="@(_SourceItemsToCopyToPublishDirectory)"
-            Condition=" '%(ResolvedFileToPublish.DestinationSubPath)' == '' "
-        />
+        <ResolvedFileToPublish Remove="@(_SourceItemsToCopyToPublishDirectory)" />
         <ResolvedFileToPublish
             Condition=" '%(ResolvedFileToPublish.RuntimeIdentifier)' == '' "
             Update="@(ResolvedFileToPublish)"
