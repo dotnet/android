@@ -51,13 +51,52 @@ class StandardLogBuffer : LogBuffer, IDisposable
 
 	public void SetLogFile (string? filePath)
 	{
-		(logFilePath, logFileWriter) = OpenLogFile (filePath);
+		(string? newLogFilePath, StreamWriter? newLogFileWriter) = OpenLogFile (filePath);
+		if (newLogFileWriter == null) {
+			return;
+		}
+
+		CopyOldLog (newLogFileWriter, newLogFilePath);
+
+		logFilePath = newLogFilePath;
+		logFileWriter = newLogFileWriter;
+		FlushPendingMessagesToFile ();
+	}
+
+	void CopyOldLog (StreamWriter? newLogFileWriter, string? newLogFilePath)
+	{
 		if (logFileWriter == null) {
 			return;
 		}
 
-		// TODO: if we already have a log file and someone calls us again, move the old log into the new one
-		FlushPendingMessagesToFile ();
+		bool canCopy = true;
+		try {
+			logFileWriter.Flush ();
+			logFileWriter.Close ();
+			logFileWriter.Dispose ();
+		} catch (Exception ex) {
+			Console.Error.WriteLine ($"Error closing old log file. {ex}");
+			canCopy = false;
+		}
+
+		if (!canCopy || logFilePath == null || newLogFileWriter == null) {
+			return;
+		}
+
+		try {
+			string oldLog = File.ReadAllText (logFilePath);
+			newLogFileWriter.Write (oldLog);
+			newLogFileWriter.Flush ();
+		} catch (Exception ex) {
+			Console.Error.WriteLine ($"Failed to copy old log file '{logFilePath}' contents to new log file '{newLogFilePath ?? String.Empty}'");
+			Console.Error.WriteLine (ex.ToString ());
+		}
+
+		try {
+			File.Delete (logFilePath);
+		} catch (Exception) {
+			Console.Error.WriteLine ($"Failed to delete old log file '{logFilePath}'");
+		}
 	}
 
 	(string? path, StreamWriter? writer) OpenLogFile (string? filePath)

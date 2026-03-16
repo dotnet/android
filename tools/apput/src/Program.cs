@@ -72,6 +72,8 @@ class Program
 	static int Run (string[] args, StandardLogBuffer logBuffer)
 	{
 		bool showHelp = false;
+		bool logFileSetByUser = false;
+		var defaultCommand = new ReportCommand ();
 
 		var commands = new CommandSet (AppName) {
 			$"usage: {AppName} COMMAND <input_file>",
@@ -79,12 +81,12 @@ class Program
 			".NET for Android application analysis utility.",
 			"",
 			"Global options:",
-			{ "v=", $"Log/verbosity level. One of (case-insensitive): {GetLogLevels ()}", (string? l) => logBuffer.MinimumConsoleLogLevel = ParseLogLevel (l) },
-			{ "l=", $"Write all log messages to the specified file.", (string? l) => logBuffer.SetLogFile (l) },
+			{ "v=", $"Log/verbosity level. One of (case-insensitive): {GetLogLevels ()}", (string l) => logBuffer.MinimumConsoleLogLevel = ParseLogLevel (l) },
+			{ "l=", $"Write all log messages to the specified file.", (string l) => { logBuffer.SetLogFile (l); logFileSetByUser = true; }},
 			{ "help|h|?", "Show this message and exit.", v => showHelp = v != null },
 			"",
 			"Available commands (all commands support the `--help` parameter):",
-			new ReportCommand (),
+			defaultCommand,
 			new SummaryCommand (),
 			new CommandSet ("extract") {
 				new ExtractAssemblyCommand (),
@@ -93,7 +95,32 @@ class Program
 			new ListCommand (),
 		};
 
-		// TODO: figure out a way to implement a default command without having to modify Mono.Options
+		commands.GetDefaultCommand = (List<string> extra) => {
+			var newExtra = new List<string> {
+				defaultCommand.Name,
+			};
+			newExtra.AddRange (extra);
+
+			return newExtra;
+		};
+
+		commands.BeforeCommandInvoke = (Command command, List<string> extra) => {
+			// All our commands require an input file as the first positional parameter.
+			// If there's none, then we don't signal any error, just do nothing.
+			if (extra.Count == 0) {
+				return;
+			}
+
+			// If, however, there is one, we use it to override the log file name, if not
+			// otherwise overridden by the user.
+			if (logFileSetByUser) {
+				return;
+			}
+
+			string fileName = $"{Program.AppName}-{Path.GetFileNameWithoutExtension (extra[0])}.log";
+			logBuffer.SetLogFile (fileName);
+		};
+
 		return commands.Run (args);
 	}
 }
