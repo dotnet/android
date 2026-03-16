@@ -363,3 +363,12 @@ public class GlobalType : Java.Lang.Object
 	protected GlobalType (IntPtr handle, Android.Runtime.JniHandleOwnership transfer) : base (handle, transfer) { }
 }
 public class GlobalUnregisteredType : Java.Lang.Object { }
+
+// Matches the Android app project template pattern from
+// Tests/Xamarin.ProjectTools/Resources/DotNet/MainActivity.cs:
+//   [Register ("${JAVA_PACKAGENAME}.MainActivity"), Activity (Label = "...", MainLauncher = true, Icon = "@drawable/icon")]
+[Register ("com.example.dotformat.MainActivity"), Activity (Label = "DotFormat", MainLauncher = true)]
+public class DotFormatActivity : Android.App.Activity
+{
+	protected DotFormatActivity (IntPtr handle, Android.Runtime.JniHandleOwnership transfer) : base (handle, transfer) { }
+}
