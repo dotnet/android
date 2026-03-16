@@ -60,6 +60,8 @@ extends:
         enableAllTools: false
       binskim:
         scanOutputDirectoryOnly: true
+        # Only scan actual build output, not test assemblies under bin/Test*
+        analyzeTargetGlob: +|bin\Build*\**
       codeql:
         compiled:
           enabled: false
