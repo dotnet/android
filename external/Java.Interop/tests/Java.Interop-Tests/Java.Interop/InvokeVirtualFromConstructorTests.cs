@@ -15,6 +15,7 @@ namespace Java.InteropTests {
 	public class InvokeVirtualFromConstructorTests : JavaVMFixture
 	{
 		[Test]
+		[Category ("NativeAOTIgnore")] // https://github.com/dotnet/android/issues/10950
 		public void CreateManagedInstanceFirst_WithAllocObject ()
 		{
 			CallVirtualFromConstructorDerived.Intermediate_FromActivationConstructor    = null;
@@ -61,6 +62,7 @@ namespace Java.InteropTests {
 		}
 
 		[Test]
+		[Category ("NativeAOTIgnore")] // https://github.com/dotnet/android/issues/10950
 		public void CreateManagedInstanceFirst_WithNewObject ()
 		{
 			CallVirtualFromConstructorDerived.Intermediate_FromActivationConstructor    = null;
@@ -111,6 +113,7 @@ namespace Java.InteropTests {
 		}
 
 		[Test]
+		[Category ("NativeAOTIgnore")] // https://github.com/dotnet/android/issues/10950
 		public void CreateJavaInstanceFirst ()
 		{
 			CallVirtualFromConstructorDerived.Intermediate_FromActivationConstructor    = null;
