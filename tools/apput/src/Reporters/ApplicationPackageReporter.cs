@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
-using Xamarin.Android.Tools;
 
 namespace ApplicationUtility;
 
@@ -15,7 +15,6 @@ class ApplicationPackageReporter : BaseReporter
 	sealed class AssemblyInfo
 	{
 		public ApplicationAssembly Assembly;
-		public AndroidTargetArch Architecture;
 		public bool IsSatellite;
 	}
 
@@ -298,12 +297,22 @@ class ApplicationPackageReporter : BaseReporter
 
 	void ReportStandaloneAssemblies ()
 	{
-		throw new NotImplementedException ();
+		const uint TopSectionLevel = 2;
+
+		if (package.StandaloneAssemblies == null || package.StandaloneAssemblies.Count == 0) {
+			return;
+		}
+
+		AddSection ("Individual assemblies", TopSectionLevel);
+		AddText ($"Application contains {package.StandaloneAssemblies.Count} individually stored {GetCountable (Countable.Assembly, package.StandaloneAssemblies.Count)}");
+		AddParagraph ();
+
+		ReportAssemblies (package.StandaloneAssemblies, package.StandalonePdbs, TopSectionLevel);
 	}
 
 	void ReportAssemblyStores ()
 	{
-		const int TopSectionLevel = 2;
+		const uint TopSectionLevel = 2;
 
 		AddSection ("Assembly stores", TopSectionLevel);
 		if (package.AssemblyStores == null || package.AssemblyStores.Count == 0) {
@@ -323,41 +332,60 @@ class ApplicationPackageReporter : BaseReporter
 			return;
 		}
 
-		// To make output more compact, we group assemblies by name. For that reason we cannot use the designated
-		// assembly reporter.
-		var architectures = new HashSet<AndroidTargetArch> ();
-		var assembliesByName = new SortedDictionary<string, List<AssemblyInfo>> (StringComparer.Ordinal);
-		var assemblyCounts = new SortedDictionary<string, int> (StringComparer.Ordinal);
-
+		var allAssemblies = new List<ApplicationAssembly> ();
+		var allPdbs = new List<AssemblyPdb> ();
 		foreach (AssemblyStore store in package.AssemblyStores) {
-			architectures.Add (store.Architecture);
-			assemblyCounts[store.Architecture.ToString ()] = store.Assemblies.Count;
+			allAssemblies.AddRange (store.Assemblies.Values);
+			allPdbs.AddRange (store.PDBs.Values);
+		}
 
-			foreach (var kvp in store.Assemblies) {
-				ApplicationAssembly asm = kvp.Value;
-				bool isSatellite = asm.Name.Contains ('/');
-				string name = isSatellite switch {
-					true => GetModifiedSatelliteName (asm.Name),
-					false => asm.Name,
-				};
+		ReportAssemblies (allAssemblies, allPdbs, TopSectionLevel);
+	}
 
-				if (!assembliesByName.TryGetValue (name, out List<AssemblyInfo>? assemblyInfos) || assemblyInfos == null) {
-					assemblyInfos = new List<AssemblyInfo> ();
-					assembliesByName[name] = assemblyInfos;
-				}
-				assemblyInfos.Add (
-					new AssemblyInfo {
-						Architecture = store.Architecture,
-						Assembly = asm,
-						IsSatellite = isSatellite,
-					}
-				);
+	void ReportAssemblies (ICollection<ApplicationAssembly> assemblies, ICollection<AssemblyPdb>? pdbs, uint topSectionLevel)
+	{
+		var asmPdbs = new HashSet<string> (StringComparer.Ordinal);
+		if (pdbs != null && pdbs.Count > 0) {
+			foreach (AssemblyPdb pdb in pdbs) {
+				asmPdbs.Add (Path.ChangeExtension (pdb.Name, ".dll"));
 			}
 		}
+
+		// To make output more compact, we group assemblies by name. For that reason we cannot use the designated
+		// assembly reporter.
+		var architectures = new HashSet<NativeArchitecture> ();
+		var assembliesByName = new SortedDictionary<string, List<AssemblyInfo>> (StringComparer.Ordinal);
+		var assemblyCounts = new SortedDictionary<NativeArchitecture, int> ();
+
+		foreach (ApplicationAssembly asm in assemblies) {
+			architectures.Add (asm.Architecture);
+			if (!assemblyCounts.ContainsKey (asm.Architecture)) {
+				assemblyCounts.Add (asm.Architecture, 0);
+			}
+			assemblyCounts[asm.Architecture]++;
+
+			bool isSatellite = asm.Name.Contains ('/');
+			string name = isSatellite switch {
+				true => GetModifiedSatelliteName (asm.Name),
+				false => asm.Name,
+			};
+
+			if (!assembliesByName.TryGetValue (name, out List<AssemblyInfo>? assemblyInfos) || assemblyInfos == null) {
+				assemblyInfos = new List<AssemblyInfo> ();
+				assembliesByName[name] = assemblyInfos;
+			}
+			assemblyInfos.Add (
+				new AssemblyInfo {
+					Assembly = asm,
+					IsSatellite = isSatellite,
+				}
+			);
+		}
+
 		AddLabeledItem ("Architectures", String.Join (", ", architectures));
 		AddLabeledItem ("Assembly count", String.Join (", ", assemblyCounts.Select (kvp => $"{kvp.Value} ({kvp.Key})")));
 
-		AddSection ("Assemblies", TopSectionLevel + 1);
+		AddSection ("Assemblies", topSectionLevel + 1);
 		ReportDoc.BeginList (appendLine: false);
 		foreach (var kvp in assembliesByName) {
 			List<AssemblyInfo> infos = kvp.Value;
@@ -367,12 +395,13 @@ class ApplicationPackageReporter : BaseReporter
 
 			ReportDoc.StartListItem ($"{infos[0].Assembly.Name}").BeginList();
 
-			ReportDoc.AddLabeledListItem ("Architectures", String.Join (", ", infos.Select (info => info.Architecture.ToString ()).Distinct ()));
+			ReportDoc.AddLabeledListItem ("Architectures", String.Join (", ", infos.Select (info => info.Assembly.Architecture.ToString ()).Distinct ()));
 			if (infos[0].IsSatellite) {
 				ReportDoc.AddLabeledListItem ("Satellite", "yes");
 				ReportDoc.AddLabeledListItem ("Culture", GetCultureInfo (infos));
 			}
 
+			ReportDoc.AddLabeledListItem ("Debug info (PDB) present", GetHasPdbValue (infos));
 			ReportDoc.AddLabeledListItem ("Compressed", GetCompressedValue (infos));
 			if (infos.Any (info => info.Assembly.IsCompressed)) {
 				ReportDoc.AddLabeledListItem ("Compressed size", GetCompressedSizeValue (infos));
@@ -411,13 +440,23 @@ class ApplicationPackageReporter : BaseReporter
 			return String.Join (", ", cultureList);
 		}
 
+		string GetHasPdbValue (List<AssemblyInfo> infos)
+		{
+			return GetAggregatedValue (
+				infos,
+				(AssemblyInfo info) => asmPdbs.Contains (info.Assembly.Name),
+				(AssemblyInfo info, bool v) => YesNo (v),
+				(AssemblyInfo info) => info.Assembly.Architecture.ToString ()
+			);
+		}
+
 		string GetIgnoreOnLoadValue (List<AssemblyInfo> infos)
 		{
 			return GetAggregatedValue (
 				infos,
 				(AssemblyInfo info) => info.Assembly.IgnoreOnLoad,
 				(AssemblyInfo info, bool v) => YesNo (v),
-				(AssemblyInfo info) => info.Architecture.ToString ()
+				(AssemblyInfo info) => info.Assembly.Architecture.ToString ()
 			);
 		}
 
@@ -427,7 +466,7 @@ class ApplicationPackageReporter : BaseReporter
 				infos,
 				(AssemblyInfo info) => info.Assembly.NameHash,
 				(AssemblyInfo info, ulong v) => $"0x{v:x}",
-				(AssemblyInfo info) => info.Architecture.ToString ()
+				(AssemblyInfo info) => info.Assembly.Architecture.ToString ()
 			);
 		}
 
@@ -437,7 +476,7 @@ class ApplicationPackageReporter : BaseReporter
 				infos,
 				(AssemblyInfo info) => info.Assembly.Size,
 				(AssemblyInfo info, ulong v) => Utilities.SizeToString (v),
-				(AssemblyInfo info) => info.Architecture.ToString ()
+				(AssemblyInfo info) => info.Assembly.Architecture.ToString ()
 			);
 		}
 
@@ -447,7 +486,7 @@ class ApplicationPackageReporter : BaseReporter
 				infos,
 				(AssemblyInfo info) => info.Assembly.CompressedSize,
 				(AssemblyInfo info, ulong v) => Utilities.SizeToString (v),
-				(AssemblyInfo info) => info.Architecture.ToString ()
+				(AssemblyInfo info) => info.Assembly.Architecture.ToString ()
 			);
 		}
 
@@ -457,7 +496,7 @@ class ApplicationPackageReporter : BaseReporter
 				infos,
 				(AssemblyInfo info) => info.Assembly.IsCompressed,
 				(AssemblyInfo info, bool v) => YesNo (v),
-				(AssemblyInfo info) => info.Architecture.ToString ()
+				(AssemblyInfo info) => info.Assembly.Architecture.ToString ()
 			);
 		}
 
@@ -508,7 +547,7 @@ class ApplicationPackageReporter : BaseReporter
 	string GetAggregatedValue<V, T> (List<T> infos, Func<T, V> getValue, Func<T, V, string> valToString, Func<T, string> getArchName) where V: notnull where T: class
 	{
 		if (infos.Count == 1) {
-			return getValue (infos[0]).ToString () ?? String.Empty;
+			return valToString (infos[0], getValue (infos[0]));
 		}
 
 		V expected = getValue (infos[0]);

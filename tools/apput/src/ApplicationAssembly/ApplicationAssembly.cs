@@ -51,10 +51,11 @@ public class ApplicationAssembly : BaseAspect
 	// This is a special case, as much as I hate to have one. Ignored assemblies exist only in the assembly store's
 	// index. They have an associated descriptor, but no data whatsoever. For that reason, we can't go the `ProbeAspect`
 	// + `LoadAspect` route, so `AssemblyStore` will call this method for them.
-	public static IAspect CreateIgnoredAssembly (string? description, ulong nameHash)
+	public static IAspect CreateIgnoredAssembly (string? description, ulong nameHash, NativeArchitecture arch)
 	{
 		Log.Debug ($"{LogTag}: stream ('{description}') is an ignored assembly.");
 		return new ApplicationAssembly (description, isIgnored: true) {
+			Architecture = arch,
 			NameHash = nameHash,
 		};
 	}

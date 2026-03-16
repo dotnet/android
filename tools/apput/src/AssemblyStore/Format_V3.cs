@@ -161,7 +161,7 @@ class Format_V3 : FormatBase
 			bool isIgnored = CheckIgnored (hash);
 			if (isIgnored) {
 				Log.Debug ($"{LogTag}: assembly '{name}' added, marked as ignore on load");
-				loadedAssemblies.Add ((ApplicationAssembly)ApplicationAssembly.CreateIgnoredAssembly (name, hash));
+				loadedAssemblies.Add ((ApplicationAssembly)ApplicationAssembly.CreateIgnoredAssembly (name, hash, arch));
 				continue;
 			}
 
