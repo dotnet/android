@@ -228,6 +228,7 @@ sealed class JavaPeerScanner : IDisposable
 				DoNotGenerateAcw = doNotGenerateAcw,
 				IsUnconditional = isUnconditional,
 				MarshalMethods = marshalMethods,
+				JavaConstructors = BuildJavaConstructors (marshalMethods),
 				ActivationCtor = activationCtor,
 				InvokerTypeName = invokerTypeName,
 				IsGenericDefinition = isGenericDefinition,
@@ -276,12 +277,17 @@ sealed class JavaPeerScanner : IDisposable
 			return;
 		}
 
+		bool isConstructor = registerInfo.JniName == "<init>" || registerInfo.JniName == ".ctor";
+		string managedName = index.Reader.GetString (methodDef.Name);
+		string jniSignature = registerInfo.Signature ?? "()V";
+
 		methods.Add (new MarshalMethodInfo {
 			JniName = registerInfo.JniName,
-			JniSignature = registerInfo.Signature ?? "()V",
+			JniSignature = jniSignature,
 			Connector = registerInfo.Connector,
-			ManagedMethodName = index.Reader.GetString (methodDef.Name),
-			IsConstructor = registerInfo.JniName == "<init>" || registerInfo.JniName == ".ctor",
+			ManagedMethodName = managedName,
+			NativeCallbackName = isConstructor ? "n_ctor" : $"n_{managedName}",
+			IsConstructor = isConstructor,
 			ThrownNames = exportInfo?.ThrownNames,
 			SuperArgumentsString = exportInfo?.SuperArgumentsString,
 		});
@@ -751,5 +757,23 @@ sealed class JavaPeerScanner : IDisposable
 		var typePart = lastDot >= 0 ? span.Slice (lastDot + 1) : span;
 		int lastPlus = typePart.LastIndexOf ('+');
 		return (lastPlus >= 0 ? typePart.Slice (lastPlus + 1) : typePart).ToString ();
+	}
+
+	static List<JavaConstructorInfo> BuildJavaConstructors (List<MarshalMethodInfo> marshalMethods)
+	{
+		var ctors = new List<JavaConstructorInfo> ();
+		int ctorIndex = 0;
+		foreach (var mm in marshalMethods) {
+			if (!mm.IsConstructor) {
+				continue;
+			}
+			ctors.Add (new JavaConstructorInfo {
+				JniSignature = mm.JniSignature,
+				ConstructorIndex = ctorIndex,
+				SuperArgumentsString = mm.SuperArgumentsString,
+			});
+			ctorIndex++;
+		}
+		return ctors;
 	}
 }

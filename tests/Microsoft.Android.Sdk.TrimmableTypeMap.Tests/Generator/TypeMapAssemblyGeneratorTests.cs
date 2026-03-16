@@ -410,4 +410,98 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 		Assert.Equal (mvid1, mvid2);
 	}
+
+	[Fact]
+	public void Generate_AcwProxy_HasRegisterNativesAndUcoMethods ()
+	{
+		var peers = ScanFixtures ();
+		var acwPeer = peers.First (p => p.JavaName == "my/app/MainActivity");
+		Assert.False (acwPeer.DoNotGenerateAcw);
+		Assert.True (acwPeer.MarshalMethods.Count > 0, "ACW peer should have marshal methods");
+
+		using var stream = GenerateAssembly (new [] { acwPeer }, "AcwTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var memberNames = GetMemberRefNames (reader);
+
+		// RegisterNatives is a method definition on the proxy type, not a member reference
+		var methodDefs = reader.MethodDefinitions
+			.Select (h => reader.GetMethodDefinition (h))
+			.Select (m => reader.GetString (m.Name))
+			.ToList ();
+		Assert.Contains ("RegisterNatives", methodDefs);
+	}
+
+	[Fact]
+	public void Generate_AcwProxy_HasUnmanagedCallersOnlyAttribute ()
+	{
+		var peers = ScanFixtures ();
+		var acwPeer = peers.First (p => p.JavaName == "my/app/MainActivity");
+
+		using var stream = GenerateAssembly (new [] { acwPeer }, "UcoTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var typeNames = GetTypeRefNames (reader);
+		Assert.Contains ("UnmanagedCallersOnlyAttribute", typeNames);
+
+		// Verify UCO wrapper methods exist — they should have names like n_<method>_uco_<index>
+		var methodDefs = reader.MethodDefinitions
+			.Select (h => reader.GetMethodDefinition (h))
+			.Select (m => reader.GetString (m.Name))
+			.ToList ();
+		Assert.Contains (methodDefs, name => name.Contains ("_uco_"));
+	}
+
+	[Theory]
+	[InlineData ("()V", 0)]
+	[InlineData ("(I)V", 1)]
+	[InlineData ("(Landroid/os/Bundle;)V", 1)]
+	[InlineData ("(IFJ)V", 3)]
+	[InlineData ("(ZLandroid/view/View;I)Z", 3)]
+	[InlineData ("([Ljava/lang/String;)V", 1)]
+	public void ParseParameterTypes_ParsesCorrectCount (string signature, int expectedCount)
+	{
+		var actual = JniSignatureHelper.ParseParameterTypes (signature);
+		Assert.Equal (expectedCount, actual.Count);
+	}
+
+	[Theory]
+	[InlineData ("(Z)V", 1)]    // JniParamKind.Boolean
+	[InlineData ("(Ljava/lang/String;)V", 9)]  // JniParamKind.Object
+	public void ParseParameterTypes_SingleParam_MapsToCorrectKind (string signature, int expectedKind)
+	{
+		var types = JniSignatureHelper.ParseParameterTypes (signature);
+		Assert.Single (types);
+		Assert.Equal ((JniParamKind) expectedKind, types [0]);
+	}
+
+	[Theory]
+	[InlineData ("()V", 0)]    // JniParamKind.Void
+	[InlineData ("()I", 5)]    // JniParamKind.Int
+	[InlineData ("()Z", 1)]    // JniParamKind.Boolean
+	[InlineData ("()Ljava/lang/String;", 9)]  // JniParamKind.Object
+	public void ParseReturnType_MapsToCorrectKind (string signature, int expectedKind)
+	{
+		Assert.Equal ((JniParamKind) expectedKind, JniSignatureHelper.ParseReturnType (signature));
+	}
+
+	[Fact]
+	public void ParseParameterTypes_EmptyString_ReturnsEmptyList ()
+	{
+		Assert.Empty (JniSignatureHelper.ParseParameterTypes (""));
+	}
+
+	[Fact]
+	public void ParseParameterTypes_InvalidSignature_Throws ()
+	{
+		Assert.ThrowsAny<ArgumentException> (() => JniSignatureHelper.ParseParameterTypes ("not-a-sig"));
+	}
+
+	[Fact]
+	public void ParseParameterTypes_UnterminatedSignature_ReturnsEmptyList ()
+	{
+		Assert.Empty (JniSignatureHelper.ParseParameterTypes ("("));
+	}
 }

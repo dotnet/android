@@ -629,6 +629,38 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		[Test]
+		public void NonAndroidNativeLibrariesDoNotProduceWarnings ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			// Create a dummy .so at a path mimicking a non-Android NuGet native library
+			proj.OtherBuildItems.Add (new BuildItem ("None", "runtimes/linux-x64/native/libFake.so") {
+				BinaryContent = () => new byte [128],
+			});
+			// Inject it into ResolvedFileToPublish with RuntimeIdentifier=android-arm64,
+			// simulating what the .NET SDK does for packages like Microsoft.Testing.Extensions.CodeCoverage
+			proj.Imports.Add (new Import ("non-android-so.targets") {
+				TextContent = () =>
+					"""
+					<?xml version="1.0" encoding="utf-8"?>
+					<Project>
+					  <Target Name="_InjectFakeLinuxSo" BeforeTargets="_IncludeNativeSystemLibraries">
+					    <ItemGroup>
+					      <ResolvedFileToPublish Include="$(MSBuildProjectDirectory)/runtimes/linux-x64/native/libFake.so">
+					        <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
+					        <NuGetPackageId>FakePackage</NuGetPackageId>
+					        <NuGetPackageVersion>1.0.0</NuGetPackageVersion>
+					      </ResolvedFileToPublish>
+					    </ItemGroup>
+					  </Target>
+					</Project>
+					""",
+			});
+			using var b = CreateApkBuilder ();
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			b.AssertHasNoWarnings ();
+		}
+
 		static IEnumerable<object[]> Get_XA1037PropertyDeprecatedWarningData ()
 		{
 			var ret = new List<object[]> ();
@@ -2218,6 +2250,31 @@ namespace App1
 
 			Assert.NotNull (method, $"Failed to find the '{MethodName}' method in type '{TypeName}'");
 			Assert.IsTrue (method.IsPublic, $"Method '{MethodName}' should be public");
+		}
+
+		[Test]
+		public void InvalidCustomJniInitFunctionName ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.NativeAOT, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+
+			// A malicious NuGet package could inject LLVM IR via a function name containing
+			// newlines or non-identifier characters (VULN-341/342).  The build must reject
+			// names that are not valid C identifiers.
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidStaticJniInitFunction", "valid_name"));
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidStaticJniInitFunction", "evil\ndefine void @injected()"));
+
+			using (var b = CreateApkBuilder ()) {
+				b.ThrowOnBuildFailure = false;
+				Assert.IsFalse (b.Build (proj), "Build should have failed due to invalid CustomJniInitFunctions names.");
+				StringAssertEx.ContainsRegex (@"is not a valid C identifier", b.LastBuildOutput, "Expected an error about invalid C identifier");
+			}
 		}
 	}
 }

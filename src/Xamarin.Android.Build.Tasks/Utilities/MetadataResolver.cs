@@ -19,7 +19,12 @@ namespace Xamarin.Android.Tasks
 		{
 			var assemblyPath = Resolve (assemblyName);
 			if (!cache.TryGetValue (assemblyPath, out PEReader reader)) {
-				cache.Add (assemblyPath, reader = new PEReader (File.OpenRead (assemblyPath)));
+				reader = new PEReader (File.OpenRead (assemblyPath));
+				if (!reader.HasMetadata) {
+					reader.Dispose ();
+					throw new InvalidOperationException ($"Assembly '{assemblyPath}' is not a .NET assembly.");
+				}
+				cache.Add (assemblyPath, reader);
 			}
 			return reader.GetMetadataReader ();
 		}

@@ -340,6 +340,15 @@ namespace MyApp.Generic
 		protected GenericCallbackImpl (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 	}
 
+	[Register ("my/app/ExportWithThrows")]
+	public class ExportWithThrows : Java.Lang.Object
+	{
+		protected ExportWithThrows (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Java.Interop.Export ("riskyMethod", ThrownNames = new [] { "java.io.IOException", "java.lang.IllegalStateException" })]
+		public void RiskyMethod () { }
+	}
+
 	[Register ("my/app/JiStylePeer", DoNotGenerateAcw = true)]
 	public class JiStylePeer : Java.Lang.Object
 	{
