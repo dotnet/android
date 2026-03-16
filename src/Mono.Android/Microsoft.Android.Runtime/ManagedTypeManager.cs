@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Text;
 using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
 
@@ -155,16 +154,10 @@ class ManagedTypeManager : JniRuntime.JniTypeManager {
 
 	protected override IReadOnlyList<string>? GetStaticMethodFallbackTypesCore (string jniSimpleReference)
 	{
-		ReadOnlySpan<char> name = jniSimpleReference;
-		int slash = name.LastIndexOf ('/');
-		var desugarType = new StringBuilder (jniSimpleReference.Length + "Desugar".Length);
-		if (slash > 0) {
-			desugarType.Append (name.Slice (0, slash + 1))
-				.Append ("Desugar")
-				.Append (name.Slice (slash + 1));
-		} else {
-			desugarType.Append ("Desugar").Append (name);
-		}
+		int slash = jniSimpleReference.LastIndexOf ('/');
+		var desugarType = slash > 0
+			? $"{jniSimpleReference.Substring (0, slash + 1)}Desugar{jniSimpleReference.Substring (slash + 1)}"
+			: $"Desugar{jniSimpleReference}";
 
 		return new[] {
 			$"{desugarType}$_CC",
