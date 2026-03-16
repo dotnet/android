@@ -51,7 +51,7 @@ static class ScannerRunner
 
 		var methodsByJavaName = new Dictionary<string, List<TypeMethodGroup>> ();
 		foreach (var typeDef in javaTypes) {
-			var javaName = GetCecilJavaName (typeDef);
+			var javaName = GetCecilJavaName (typeDef, cache);
 			if (javaName == null) {
 				continue;
 			}
@@ -114,7 +114,7 @@ static class ScannerRunner
 			groups.Add (new TypeMethodGroup (
 				managedName,
 				peer.MarshalMethods
-					.Where (m => !m.IsConstructor && !m.IsInterfaceImplementation)
+					.Where (m => !m.IsConstructor)
 					.Select (m => new MethodEntry (m.JniName, m.JniSignature, m.Connector))
 					.OrderBy (m => m.JniName, StringComparer.Ordinal)
 					.ThenBy (m => m.JniSignature, StringComparer.Ordinal)
@@ -125,23 +125,24 @@ static class ScannerRunner
 		return (entries, methodsByJavaName);
 	}
 
-	public static string? GetCecilJavaName (TypeDefinition typeDef)
+	public static string? GetCecilJavaName (TypeDefinition typeDef, IMetadataResolver cache)
 	{
-		if (!typeDef.HasCustomAttributes) {
-			return null;
-		}
+		if (typeDef.HasCustomAttributes) {
+			foreach (var attr in typeDef.CustomAttributes) {
+				if (attr.AttributeType.FullName != "Android.Runtime.RegisterAttribute") {
+					continue;
+				}
 
-		foreach (var attr in typeDef.CustomAttributes) {
-			if (attr.AttributeType.FullName != "Android.Runtime.RegisterAttribute") {
-				continue;
-			}
-
-			if (attr.ConstructorArguments.Count > 0) {
-				return ((string) attr.ConstructorArguments [0].Value).Replace ('.', '/');
+				if (attr.ConstructorArguments.Count > 0) {
+					return ((string) attr.ConstructorArguments [0].Value).Replace ('.', '/');
+				}
 			}
 		}
 
-		return null;
+		// Types without [Register] (e.g., user ACW types like ActivityTracker)
+		// get their JNI name computed by JavaNativeTypeManager — same as
+		// CecilImporter.CreateType (line 26).
+		return Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.ToJniName (typeDef, cache);
 	}
 
 	public static string GetManagedName (TypeDefinition typeDef)
@@ -151,8 +152,7 @@ static class ScannerRunner
 
 	/// <summary>
 	/// Extracts marshal methods using the real legacy JCW pipeline via
-	/// <see cref="CecilImporter.CreateType"/>. Excludes interface method
-	/// implementations — those are compared via interface peer types.
+	/// <see cref="CecilImporter.CreateType"/>.
 	/// </summary>
 	static List<MethodEntry> ExtractMethodRegistrations (TypeDefinition typeDef, TypeDefinitionCache cache)
 	{
@@ -169,82 +169,16 @@ static class ScannerRunner
 			return ExtractDirectRegisterAttributes (typeDef);
 		}
 
-		// Build a set of interface method keys to filter from CecilImporter output.
-		// Both legacy and new scanner include interface methods, but they come from
-		// different codepaths with different dedup strategies. Since interface methods
-		// are tested via interface peer types, exclude them here.
-		var interfaceMethodKeys = new HashSet<string> (StringComparer.Ordinal);
-		foreach (var ifaceImpl in typeDef.Interfaces) {
-			var ifaceType = cache.Resolve (ifaceImpl.InterfaceType);
-			if (ifaceType is null) {
-				continue;
-			}
-			foreach (var method in ifaceType.Methods) {
-				if (method.IsStatic) {
-					continue;
-				}
-				foreach (var attr in method.CustomAttributes) {
-					if (attr.AttributeType.FullName == "Android.Runtime.RegisterAttribute" && attr.ConstructorArguments.Count >= 2) {
-						var name = (string) attr.ConstructorArguments [0].Value;
-						var sig = (string) attr.ConstructorArguments [1].Value;
-						interfaceMethodKeys.Add ($"{name}:{sig}");
-					}
-				}
-			}
-		}
-
 		var wrapper = CecilImporter.CreateType (typeDef, cache);
 		var methods = new List<MethodEntry> ();
 
 		foreach (var m in wrapper.Methods) {
-			// Skip interface methods — compared via interface peer types
-			var key = $"{m.Name}:{m.JniSignature}";
-			if (interfaceMethodKeys.Contains (key) && !HasDirectRegister (typeDef, m.Name, m.JniSignature)) {
-				continue;
-			}
-
 			// Extract connector from Method string "n_name:sig:connector"
 			string? connector = ParseConnectorFromMethodString (m.Method);
 			methods.Add (new MethodEntry (m.JavaName, m.JniSignature, connector));
 		}
 
 		return methods;
-	}
-
-	/// <summary>
-	/// Checks if the type has a direct [Register] attribute for this method name + signature.
-	/// </summary>
-	static bool HasDirectRegister (TypeDefinition typeDef, string jniName, string jniSignature)
-	{
-		foreach (var method in typeDef.Methods) {
-			if (!method.HasCustomAttributes) {
-				continue;
-			}
-			foreach (var attr in method.CustomAttributes) {
-				if (attr.AttributeType.FullName == "Android.Runtime.RegisterAttribute" &&
-				    attr.ConstructorArguments.Count >= 2 &&
-				    (string) attr.ConstructorArguments [0].Value == jniName &&
-				    (string) attr.ConstructorArguments [1].Value == jniSignature) {
-					return true;
-				}
-			}
-		}
-		if (typeDef.HasProperties) {
-			foreach (var prop in typeDef.Properties) {
-				if (!prop.HasCustomAttributes) {
-					continue;
-				}
-				foreach (var attr in prop.CustomAttributes) {
-					if (attr.AttributeType.FullName == "Android.Runtime.RegisterAttribute" &&
-					    attr.ConstructorArguments.Count >= 2 &&
-					    (string) attr.ConstructorArguments [0].Value == jniName &&
-					    (string) attr.ConstructorArguments [1].Value == jniSignature) {
-						return true;
-					}
-				}
-			}
-		}
-		return false;
 	}
 
 	internal static bool HasDoNotGenerateAcw (TypeDefinition typeDef)

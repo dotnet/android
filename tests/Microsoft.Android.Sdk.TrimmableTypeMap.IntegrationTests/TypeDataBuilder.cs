@@ -62,7 +62,7 @@ static class TypeDataBuilder
 		var perType = new Dictionary<string, TypeComparisonData> (StringComparer.Ordinal);
 
 		foreach (var typeDef in javaTypes) {
-			var javaName = ScannerRunner.GetCecilJavaName (typeDef);
+			var javaName = ScannerRunner.GetCecilJavaName (typeDef, cache);
 			if (javaName == null) {
 				continue;
 			}
