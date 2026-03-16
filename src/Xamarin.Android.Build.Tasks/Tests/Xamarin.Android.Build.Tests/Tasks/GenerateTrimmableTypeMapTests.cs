@@ -35,13 +35,13 @@ namespace Xamarin.Android.Build.Tests {
 			var outputDir = Path.Combine (Root, path, "typemap");
 			var javaDir = Path.Combine (Root, path, "java");
 
-			var monoAndroidPath = FindMonoAndroidDll ();
-			if (monoAndroidPath is null) {
+			var monoAndroidItem = FindMonoAndroidDll ();
+			if (monoAndroidItem is null) {
 				Assert.Ignore ("Mono.Android.dll not found; skipping.");
 				return;
 			}
 
-			var task = CreateTask (new [] { new TaskItem (monoAndroidPath) }, outputDir, javaDir);
+			var task = CreateTask (new [] { monoAndroidItem }, outputDir, javaDir);
 
 			Assert.IsTrue (task.Execute (), "Task should succeed.");
 			Assert.IsNotNull (task.GeneratedAssemblies);
@@ -65,13 +65,13 @@ namespace Xamarin.Android.Build.Tests {
 			var outputDir = Path.Combine (Root, path, "typemap");
 			var javaDir = Path.Combine (Root, path, "java");
 
-			var monoAndroidPath = FindMonoAndroidDll ();
-			if (monoAndroidPath is null) {
+			var monoAndroidItem = FindMonoAndroidDll ();
+			if (monoAndroidItem is null) {
 				Assert.Ignore ("Mono.Android.dll not found; skipping.");
 				return;
 			}
 
-			var assemblies = new [] { new TaskItem (monoAndroidPath) };
+			var assemblies = new [] { monoAndroidItem };
 
 			// First run: generates everything
 			var task1 = CreateTask (assemblies, outputDir, javaDir);
@@ -105,8 +105,8 @@ namespace Xamarin.Android.Build.Tests {
 			var outputDir = Path.Combine (Root, path, "typemap");
 			var javaDir = Path.Combine (Root, path, "java");
 
-			var monoAndroidPath = FindMonoAndroidDll ();
-			if (monoAndroidPath is null) {
+			var monoAndroidItem = FindMonoAndroidDll ();
+			if (monoAndroidItem is null) {
 				Assert.Ignore ("Mono.Android.dll not found; skipping.");
 				return;
 			}
@@ -115,9 +115,11 @@ namespace Xamarin.Android.Build.Tests {
 			var tempDir = Path.Combine (Root, path, "assemblies");
 			Directory.CreateDirectory (tempDir);
 			var tempAssemblyPath = Path.Combine (tempDir, "Mono.Android.dll");
-			File.Copy (monoAndroidPath, tempAssemblyPath, true);
+			File.Copy (monoAndroidItem.ItemSpec, tempAssemblyPath, true);
 
-			var assemblies = new [] { new TaskItem (tempAssemblyPath) };
+			var tempItem = new TaskItem (tempAssemblyPath);
+			tempItem.SetMetadata ("HasMonoAndroidReference", "True");
+			var assemblies = new [] { tempItem };
 
 			// First run
 			var task1 = CreateTask (assemblies, outputDir, javaDir);
@@ -133,7 +135,9 @@ namespace Xamarin.Android.Build.Tests {
 			File.SetLastWriteTimeUtc (tempAssemblyPath, DateTime.UtcNow);
 
 			// Second run: source is newer → should regenerate
-			var task2 = CreateTask (new [] { new TaskItem (tempAssemblyPath) }, outputDir, javaDir);
+			var tempItem2 = new TaskItem (tempAssemblyPath);
+			tempItem2.SetMetadata ("HasMonoAndroidReference", "True");
+			var task2 = CreateTask (new [] { tempItem2 }, outputDir, javaDir);
 			Assert.IsTrue (task2.Execute (), "Second run should succeed.");
 
 			var secondWriteTime = File.GetLastWriteTimeUtc (typeMapPath);
@@ -211,14 +215,19 @@ namespace Xamarin.Android.Build.Tests {
 			};
 		}
 
-		static string? FindMonoAndroidDll ()
+		static ITaskItem? FindMonoAndroidDll ()
 		{
 			var frameworkDir = TestEnvironment.MonoAndroidFrameworkDirectory;
 			if (string.IsNullOrEmpty (frameworkDir) || !Directory.Exists (frameworkDir)) {
 				return null;
 			}
 			var path = Path.Combine (frameworkDir, "Mono.Android.dll");
-			return File.Exists (path) ? path : null;
+			if (!File.Exists (path)) {
+				return null;
+			}
+			var item = new TaskItem (path);
+			item.SetMetadata ("HasMonoAndroidReference", "True");
+			return item;
 		}
 	}
 }
