@@ -32,6 +32,8 @@ namespace Xamarin.Android.Tasks
 
 		public string? ExtraArgs { get; set; }
 
+		public bool SkipLenientManifestHandling { get; set; }
+
 		/*
 		 * obj\Debug\AndroidManifest.xml:12:5-16:15 Error:
 		 * 	android:exported needs to be explicitly specified for element <service#crc642ecd25190884e03d.TestService>. Apps targeting Android 12 and higher are required to specify an explicit value for `android:exported` when the corresponding component has an intent filter defined. See https://developer.android.com/guide/topics/manifest/activity-element#exported for details.
@@ -135,6 +137,9 @@ namespace Xamarin.Android.Tasks
 				foreach (var entry in ExtraArgs.Split (new char[] { ' ' })) {
 					sb.AppendLine (entry);
 				}
+			}
+			if (!SkipLenientManifestHandling) {
+				sb.AppendLine ("--lenientUsesSdkInManifestHandling");
 			}
 			sb.AppendLine ("--out");
 			sb.AppendLine (tempFile);
