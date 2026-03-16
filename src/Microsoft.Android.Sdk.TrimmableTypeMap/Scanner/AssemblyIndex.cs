@@ -93,6 +93,7 @@ sealed class AssemblyIndex : IDisposable
 
 			if (attrName == "RegisterAttribute") {
 				registerInfo = ParseRegisterAttribute (ca);
+				registerInfo = registerInfo with { JniName = registerInfo.JniName.Replace ('.', '/') };
 			} else if (attrName == "ExportAttribute") {
 				// [Export] is a method-level attribute; it is parsed at scan time by JavaPeerScanner
 			} else if (IsKnownComponentAttribute (attrName)) {
@@ -215,7 +216,7 @@ sealed class AssemblyIndex : IDisposable
 		}
 
 		return new RegisterInfo {
-			JniName = jniName.Replace ('.', '/'),
+			JniName = jniName,
 			Signature = signature,
 			Connector = connector,
 			DoNotGenerateAcw = doNotGenerateAcw,
