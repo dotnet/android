@@ -205,7 +205,7 @@ static class ScannerRunner
 
 			// Extract connector from Method string "n_name:sig:connector"
 			string? connector = ParseConnectorFromMethodString (m.Method);
-			methods.Add (new MethodEntry (m.Name, m.JniSignature, connector));
+			methods.Add (new MethodEntry (m.JavaName, m.JniSignature, connector));
 		}
 
 		return methods;
