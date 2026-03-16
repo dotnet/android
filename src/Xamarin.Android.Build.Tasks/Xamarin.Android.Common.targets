@@ -1514,6 +1514,7 @@ because xbuild doesn't support framework reference assemblies.
       ManifestPlaceholders="$(AndroidManifestPlaceholders)"
       ManifestOverlayFiles="@(AndroidManifestOverlay)"
       ExtraArgs="$(AndroidManifestMergerExtraArgs)"
+      SkipLenientManifestHandling="$(_AndroidSkipLenientManifestHandling)"
       IntermediateOutputPath="$(IntermediateOutputPath)"
       AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
   />
