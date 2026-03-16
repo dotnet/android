@@ -675,7 +675,7 @@ sealed class JavaPeerScanner : IDisposable
 		var currentTypeDef = typeDef;
 		var currentIndex = index;
 
-		while (TryResolveBaseType (currentTypeDef, currentIndex, out var baseTypeDef, out var baseHandle, out var baseIndex)) {
+		while (TryResolveBaseType (currentTypeDef, currentIndex, out var baseTypeDef, out var baseHandle, out var baseIndex, out _, out _)) {
 			foreach (var methodHandle in baseTypeDef.GetMethods ()) {
 				var methodDef = baseIndex.Reader.GetMethodDefinition (methodHandle);
 				var name = baseIndex.Reader.GetString (methodDef.Name);
@@ -707,18 +707,21 @@ sealed class JavaPeerScanner : IDisposable
 	/// TypeDefinitionHandle, and AssemblyIndex for further inspection.
 	/// </summary>
 	bool TryResolveBaseType (TypeDefinition typeDef, AssemblyIndex index,
-		out TypeDefinition baseTypeDef, out TypeDefinitionHandle baseHandle, [NotNullWhen (true)] out AssemblyIndex? baseIndex)
+		out TypeDefinition baseTypeDef, out TypeDefinitionHandle baseHandle, [NotNullWhen (true)] out AssemblyIndex? baseIndex,
+		out string baseTypeName, out string baseAssemblyName)
 	{
 		baseTypeDef = default;
 		baseHandle = default;
 		baseIndex = null;
+		baseTypeName = "";
+		baseAssemblyName = "";
 
 		var baseInfo = GetBaseTypeInfo (typeDef, index);
 		if (baseInfo is null) {
 			return false;
 		}
 
-		var (baseTypeName, baseAssemblyName) = baseInfo.Value;
+		(baseTypeName, baseAssemblyName) = baseInfo.Value;
 		if (!TryResolveType (baseTypeName, baseAssemblyName, out baseHandle, out baseIndex)) {
 			return false;
 		}
@@ -738,17 +741,9 @@ sealed class JavaPeerScanner : IDisposable
 	(RegisterInfo Info, string DeclaringTypeName, string DeclaringAssemblyName)? FindBaseRegisteredMethodInfo (
 		TypeDefinition typeDef, AssemblyIndex index, string methodName, MethodDefinition derivedMethod)
 	{
-		var baseInfo = GetBaseTypeInfo (typeDef, index);
-		if (baseInfo is null) {
+		if (!TryResolveBaseType (typeDef, index, out var baseTypeDef, out var baseHandle, out var baseIndex, out var baseTypeName, out var baseAssemblyName)) {
 			return null;
 		}
-
-		var (baseTypeName, baseAssemblyName) = baseInfo.Value;
-		if (!TryResolveType (baseTypeName, baseAssemblyName, out var baseHandle, out var baseIndex)) {
-			return null;
-		}
-
-		var baseTypeDef = baseIndex.Reader.GetTypeDefinition (baseHandle);
 
 		// Check methods on this base type
 		foreach (var baseMethodHandle in baseTypeDef.GetMethods ()) {
@@ -810,17 +805,9 @@ sealed class JavaPeerScanner : IDisposable
 	MarshalMethodInfo? FindBaseRegisteredProperty (TypeDefinition typeDef, AssemblyIndex index,
 		string getterName, MethodDefinition derivedGetter)
 	{
-		var baseInfo = GetBaseTypeInfo (typeDef, index);
-		if (baseInfo is null) {
+		if (!TryResolveBaseType (typeDef, index, out var baseTypeDef, out var baseHandle, out var baseIndex, out var baseTypeName, out var baseAssemblyName)) {
 			return null;
 		}
-
-		var (baseTypeName, baseAssemblyName) = baseInfo.Value;
-		if (!TryResolveType (baseTypeName, baseAssemblyName, out var baseHandle, out var baseIndex)) {
-			return null;
-		}
-
-		var baseTypeDef = baseIndex.Reader.GetTypeDefinition (baseHandle);
 
 		// Check properties on this base type
 		foreach (var basePropHandle in baseTypeDef.GetProperties ()) {
@@ -923,15 +910,12 @@ sealed class JavaPeerScanner : IDisposable
 
 	string? ResolveBaseJavaName (TypeDefinition typeDef, AssemblyIndex index, Dictionary<string, JavaPeerInfo> results)
 	{
-		var baseInfo = GetBaseTypeInfo (typeDef, index);
-		if (baseInfo is null) {
+		if (!TryResolveBaseType (typeDef, index, out var baseTypeDef, out _, out var baseIndex, out var baseTypeName, out _)) {
 			return null;
 		}
 
-		var (baseTypeName, baseAssemblyName) = baseInfo.Value;
-
 		// First try [Register] attribute
-		var registerJniName = ResolveRegisterJniName (baseTypeName, baseAssemblyName);
+		var registerJniName = ResolveRegisterJniName (baseTypeName, baseIndex.AssemblyName);
 		if (registerJniName is not null) {
 			return registerJniName;
 		}
@@ -944,12 +928,9 @@ sealed class JavaPeerScanner : IDisposable
 		// Base type may be a Java peer without [Register] that hasn't been scanned yet
 		// (scan order within an assembly is not guaranteed). Resolve it the same way
 		// ScanAssembly does: check ExtendsJavaPeer and compute the auto JNI name.
-		if (TryResolveType (baseTypeName, baseAssemblyName, out var baseHandle, out var baseIndex)) {
-			var baseTypeDef = baseIndex.Reader.GetTypeDefinition (baseHandle);
-			if (ExtendsJavaPeer (baseTypeDef, baseIndex)) {
-				var (jniName, _) = ComputeAutoJniNames (baseTypeDef, baseIndex);
-				return jniName;
-			}
+		if (ExtendsJavaPeer (baseTypeDef, baseIndex)) {
+			var (jniName, _) = ComputeAutoJniNames (baseTypeDef, baseIndex);
+			return jniName;
 		}
 
 		return null;
