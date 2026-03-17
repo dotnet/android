@@ -12,9 +12,9 @@ using Microsoft.Build.Utilities;
 namespace Xamarin.Android.Tasks;
 
 /// <summary>
-/// Generates trimmable TypeMap assemblies and JCW Java source files from resolved assemblies.
-/// Runs before the trimmer to produce per-assembly typemap .dll files and a root
-/// _Microsoft.Android.TypeMaps.dll, plus .java files for ACW types with registerNatives.
+/// Generates trimmable TypeMap assemblies, JCW Java source files, and per-assembly
+/// acw-map files from resolved assemblies. The acw-map files are later merged into
+/// a single acw-map.txt consumed by _ConvertCustomView for layout XML fixups.
 /// </summary>
 public class GenerateTrimmableTypeMap : AndroidTask
 {
@@ -30,6 +30,12 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public string JavaSourceOutputDirectory { get; set; } = "";
 
 	/// <summary>
+	/// Directory for per-assembly acw-map.{AssemblyName}.txt files.
+	/// </summary>
+	[Required]
+	public string AcwMapDirectory { get; set; } = "";
+
+	/// <summary>
 	/// The .NET target framework version (e.g., "v11.0"). Used to set the System.Runtime
 	/// assembly reference version in generated typemap assemblies.
 	/// </summary>
@@ -42,6 +48,13 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	[Output]
 	public ITaskItem []? GeneratedJavaFiles { get; set; }
 
+	/// <summary>
+	/// Per-assembly acw-map files produced during scanning. Each file contains
+	/// ManagedName;JavaName lines for types in that assembly.
+	/// </summary>
+	[Output]
+	public ITaskItem []? PerAssemblyAcwMapFiles { get; set; }
+
 	public override bool RunTask ()
 	{
 		var systemRuntimeVersion = ParseTargetFrameworkVersion (TargetFrameworkVersion);
@@ -49,6 +62,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 		Directory.CreateDirectory (OutputDirectory);
 		Directory.CreateDirectory (JavaSourceOutputDirectory);
+		Directory.CreateDirectory (AcwMapDirectory);
 
 		var allPeers = ScanAssemblies (assemblyPaths);
 		if (allPeers.Count == 0) {
@@ -58,6 +72,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 		GeneratedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, assemblyPaths);
 		GeneratedJavaFiles = GenerateJcwJavaSources (allPeers);
+		PerAssemblyAcwMapFiles = GeneratePerAssemblyAcwMaps (allPeers);
 
 		return !Log.HasLoggedErrors;
 	}
@@ -151,6 +166,32 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			items [i] = new TaskItem (files [i]);
 		}
 		return items;
+	}
+
+	ITaskItem [] GeneratePerAssemblyAcwMaps (List<JavaPeerInfo> allPeers)
+	{
+		var peersByAssembly = allPeers
+			.GroupBy (p => p.AssemblyName, StringComparer.Ordinal)
+			.OrderBy (g => g.Key, StringComparer.Ordinal);
+
+		var outputFiles = new List<ITaskItem> ();
+
+		foreach (var group in peersByAssembly) {
+			var peers = group.ToList ();
+			string outputFile = Path.Combine (AcwMapDirectory, $"acw-map.{group.Key}.txt");
+			bool written = AcwMapWriter.WriteToFile (outputFile, peers);
+
+			Log.LogDebugMessage (written
+				? $"  acw-map.{group.Key}.txt: {peers.Count} types"
+				: $"  acw-map.{group.Key}.txt: unchanged");
+
+			var item = new TaskItem (outputFile);
+			item.SetMetadata ("AssemblyName", group.Key);
+			outputFiles.Add (item);
+		}
+
+		Log.LogDebugMessage ($"Generated {outputFiles.Count} per-assembly ACW map files.");
+		return outputFiles.ToArray ();
 	}
 
 	static Version ParseTargetFrameworkVersion (string tfv)
