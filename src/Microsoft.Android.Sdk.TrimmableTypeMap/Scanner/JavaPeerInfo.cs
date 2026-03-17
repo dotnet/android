@@ -239,7 +239,7 @@ public sealed record JavaConstructorInfo
 /// Describes a Java field from an [ExportField] attribute.
 /// The field is initialized by calling the annotated method.
 /// </summary>
-sealed record JavaFieldInfo
+public sealed record JavaFieldInfo
 {
 	/// <summary>
 	/// Java field name, e.g., "STATIC_INSTANCE".
