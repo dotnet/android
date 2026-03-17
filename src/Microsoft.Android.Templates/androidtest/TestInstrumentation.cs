@@ -83,7 +83,7 @@ public class TestInstrumentation : Instrumentation
                 {
                     PassedTestNodeStateProperty => "passed",
                     FailedTestNodeStateProperty or ErrorTestNodeStateProperty
-                        or TimeoutTestNodeStateProperty or CancelledTestNodeStateProperty => "failed",
+                        or TimeoutTestNodeStateProperty => "failed",
                     SkippedTestNodeStateProperty => "skipped",
                     _ => null
                 };
