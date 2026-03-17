@@ -195,8 +195,7 @@ sealed class JavaPeerScanner : IDisposable
 			var isGenericDefinition = typeDef.GetGenericParameters ().Count > 0;
 
 			var isUnconditional = attrInfo is not null;
-			var cannotRegisterInStaticConstructor = attrInfo is ApplicationAttributeInfo
-				|| attrInfo?.AttributeName == "InstrumentationAttribute";
+			var cannotRegisterInStaticConstructor = attrInfo is ApplicationAttributeInfo or InstrumentationAttributeInfo;
 			string? invokerTypeName = null;
 
 			// Resolve base Java type name
