@@ -406,7 +406,7 @@ public class AndroidManifest : BaseAspect
 			return null;
 		}
 
-		XmlNode? manifest = root.SelectSingleNode ("//manifest", nsmgr);
+		XmlNode? manifest = root.SelectSingleNode ("//manifest", nsmgr!);
 		if (manifest == null || manifest.Attributes == null) {
 			Log.Debug ("`manifest` element not found or it has no attributes");
 			return null;

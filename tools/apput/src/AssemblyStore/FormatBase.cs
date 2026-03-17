@@ -101,7 +101,7 @@ abstract class FormatBase
 		return header != null;
 	}
 
-	AssemblyStoreHeader? DoReadHeader (BinaryReader reader)
+	AssemblyStoreHeader DoReadHeader (BinaryReader reader)
 	{
 		reader.BaseStream.Seek (0, SeekOrigin.Begin);
 

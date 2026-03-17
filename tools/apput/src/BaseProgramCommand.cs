@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Mono.Options;
@@ -27,11 +28,11 @@ abstract class BaseProgramCommand : Command
 		List<string> rest = Options.Parse (args);
 
 		if (ShowHelp) {
-			Options.WriteOptionDescriptions (CommandSet.Out);
+			Options.WriteOptionDescriptions (CommandSet?.Out ?? Console.Error);
 			return 0;
 		}
 
-		if (rest.Count == 0) {
+		if (rest == null || rest.Count == 0) {
 			Log.Error ($"Command '{Name}' requires at least a single input file.");
 			return 1;
 		}

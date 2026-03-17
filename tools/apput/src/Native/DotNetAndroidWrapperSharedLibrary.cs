@@ -123,7 +123,7 @@ class DotNetAndroidWrapperSharedLibrary : SharedLibrary
 		DotNetAndroidWrapperSharedLibraryAspectState GetErrorState () => new DotNetAndroidWrapperSharedLibraryAspectState (false, null, 0);
 	}
 
-	static (ulong offset, ulong size) FindAndroidPayload (IELF elf, bool is64Bit, string libraryName)
+	static (ulong offset, ulong size) FindAndroidPayload (IELF elf, bool is64Bit, string? libraryName)
 	{
 		if (!elf.TryGetSection (PayloadSectionName, out ISection? payloadSection)) {
 			Log.Debug ($"Shared library '{libraryName}' doesn't have the '{PayloadSectionName}' section.");

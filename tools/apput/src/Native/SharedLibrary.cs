@@ -404,7 +404,7 @@ public class SharedLibrary : BaseAspect
 		return HasSection (elf, libraryName, name, type);
 	}
 
-	protected static bool HasSection (IELF elf, string libraryName, string sectionName, SectionType type = SectionType.Null)
+	protected static bool HasSection (IELF elf, string? libraryName, string sectionName, SectionType type = SectionType.Null)
 	{
 		Log.Debug ($"Checking for section '{sectionName}' with type {type} in library '{libraryName}'");
 		if (!elf.TryGetSection (sectionName, out ISection? section)) {

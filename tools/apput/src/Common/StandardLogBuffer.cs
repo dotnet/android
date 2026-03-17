@@ -139,7 +139,7 @@ class StandardLogBuffer : LogBuffer, IDisposable
 			stream = null;
 			try {
 				stream = File.Open (fullFilePath, FileMode.Create, FileAccess.Write, FileShare.Read);
-			} catch (IOException ex) {
+			} catch (IOException) {
 				// Ignore
 			} catch (UnauthorizedAccessException) {
 				// Ignore

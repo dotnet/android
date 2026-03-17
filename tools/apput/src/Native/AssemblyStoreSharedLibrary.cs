@@ -5,7 +5,6 @@ namespace ApplicationUtility;
 
 class AssemblyStoreSharedLibrary : DotNetAndroidWrapperSharedLibrary
 {
-	AssemblyStore? store;
 	readonly AssemblyStoreSharedLibraryAspectState state;
 
 	public AssemblyStore AssemblyStore { get; }
@@ -106,10 +105,6 @@ class AssemblyStoreSharedLibrary : DotNetAndroidWrapperSharedLibrary
 
 	AssemblyStore LoadStore (Stream stream, string libraryName)
 	{
-		if (store != null) {
-			return store;
-		}
-
 		return (AssemblyStore)AssemblyStore.LoadAspect (stream, state.AssemblyStoreState!, libraryName);
 	}
 }

@@ -310,14 +310,14 @@ namespace Mono.Options
 		#endregion
 
 		#region IList
-		int IList.Add (object value)                {return (values as IList).Add (value);}
-		bool IList.Contains (object value)          {return (values as IList).Contains (value);}
-		int IList.IndexOf (object value)            {return (values as IList).IndexOf (value);}
-		void IList.Insert (int index, object value) {(values as IList).Insert (index, value);}
-		void IList.Remove (object value)            {(values as IList).Remove (value);}
-		void IList.RemoveAt (int index)             {(values as IList).RemoveAt (index);}
-		bool IList.IsFixedSize                      {get {return false;}}
-		object IList.this [int index]               {get {return this [index];} set {(values as IList)[index] = value;}}
+		int IList.Add (object? value)                {return (values as IList).Add (value);}
+		bool IList.Contains (object? value)          {return (values as IList).Contains (value);}
+		int IList.IndexOf (object? value)            {return (values as IList).IndexOf (value);}
+		void IList.Insert (int index, object? value) {(values as IList).Insert (index, value);}
+		void IList.Remove (object? value)            {(values as IList).Remove (value);}
+		void IList.RemoveAt (int index)              {(values as IList).RemoveAt (index);}
+		bool IList.IsFixedSize                       {get {return false;}}
+		object? IList.this [int index]               {get {return this [index];} set {(values as IList)[index] = value ?? String.Empty;}}
 		#endregion
 
 		#region IList<T>
@@ -335,13 +335,13 @@ namespace Mono.Options
 					index >= values.Count)
 				throw new OptionException (string.Format (
 							c.OptionSet.MessageLocalizer ("Missing required value for option '{0}'."), c.OptionName),
-						c.OptionName);
+						c.OptionName ?? String.Empty);
 		}
 
 		public string this [int index] {
 			get {
 				AssertValid (index);
-				return index >= values.Count ? null : values [index];
+				return index >= values.Count ? String.Empty : values [index];
 			}
 			set {
 				values [index] = value;
@@ -366,8 +366,8 @@ namespace Mono.Options
 	}
 
 	public class OptionContext {
-		private Option                option;
-		private string                name;
+		private Option?               option;
+		private string?               name;
 		private int                   index;
 		private OptionSet             set;
 		private OptionValueCollection c;
@@ -378,12 +378,12 @@ namespace Mono.Options
 			this.c   = new OptionValueCollection (this);
 		}
 
-		public Option Option {
+		public Option? Option {
 			get {return option;}
 			set {option = value;}
 		}
 
-		public string OptionName {
+		public string? OptionName {
 			get {return name;}
 			set {name = value;}
 		}
@@ -413,20 +413,20 @@ namespace Mono.Options
 		string[] names;
 		OptionValueType type;
 		int count;
-		string[] separators;
+		string[]? separators;
 		bool hidden;
 
-		protected Option (string prototype, string description)
+		protected Option (string prototype, string? description)
 			: this (prototype, description, 1, false)
 		{
 		}
 
-		protected Option (string prototype, string description, int maxValueCount)
+		protected Option (string prototype, string? description, int maxValueCount)
 			: this (prototype, description, maxValueCount, false)
 		{
 		}
 
-		protected Option (string prototype, string description, int maxValueCount, bool hidden)
+		protected Option (string prototype, string? description, int maxValueCount, bool hidden)
 		{
 			if (prototype == null)
 				throw new ArgumentNullException ("prototype");
@@ -436,7 +436,7 @@ namespace Mono.Options
 				throw new ArgumentOutOfRangeException ("maxValueCount");
 
 			this.prototype   = prototype;
-			this.description = description;
+			this.description = description ?? String.Empty;
 			this.count       = maxValueCount;
 			this.names       = (this is OptionSet.Category)
 				// append GetHashCode() so that "duplicate" categories have distinct
@@ -503,7 +503,7 @@ namespace Mono.Options
 #else
 			Type targetType = nullable ? tt.GetGenericArguments () [0] : tt;
 #endif
-			T t = default (T);
+			T? t = default (T);
 			try {
 				if (value != null) {
 #if PCL
@@ -513,7 +513,7 @@ namespace Mono.Options
 						t = (T) Convert.ChangeType (value, targetType);
 #else
 					TypeConverter conv = TypeDescriptor.GetConverter (targetType);
-					t = (T) conv.ConvertFromString (value);
+					t = (T?) conv.ConvertFromString (value);
 #endif
 				}
 			}
@@ -522,13 +522,13 @@ namespace Mono.Options
 						string.Format (
 							c.OptionSet.MessageLocalizer ("Could not convert string `{0}' to type {1} for option `{2}'."),
 							value, targetType.Name, c.OptionName),
-						c.OptionName, e);
+						c.OptionName ?? String.Empty, e);
 			}
-			return t;
+			return t ?? throw new InvalidOperationException ($"Unable to convert value '{value}' to type {typeof (T)}");
 		}
 
 		internal string[] Names           {get {return names;}}
-		internal string[] ValueSeparators {get {return separators;}}
+		internal string[]? ValueSeparators {get {return separators;}}
 
 		static readonly char[] NameTerminator = new char[]{'=', ':'};
 
@@ -634,7 +634,7 @@ namespace Mono.Options
 
 		public abstract string[] GetNames ();
 		public abstract string Description { get; }
-		public abstract bool GetArguments (string value, out IEnumerable<string> replacement);
+		public abstract bool GetArguments (string value, out IEnumerable<string>? replacement);
 
 #if !PCL || NETSTANDARD1_3
 		public static IEnumerable<string> GetArgumentsFromFile (string file)
@@ -654,7 +654,7 @@ namespace Mono.Options
 			try {
 				StringBuilder arg = new StringBuilder ();
 
-				string line;
+				string? line;
 				while ((line = reader.ReadLine ()) != null) {
 					int t = line.Length;
 
@@ -704,7 +704,7 @@ namespace Mono.Options
 			get {return "Read response file for more options.";}
 		}
 
-		public override bool GetArguments (string value, out IEnumerable<string> replacement)
+		public override bool GetArguments (string value, out IEnumerable<string>? replacement)
 		{
 			if (string.IsNullOrEmpty (value) || !value.StartsWith ("@")) {
 				replacement = null;
@@ -720,7 +720,7 @@ namespace Mono.Options
 	[Serializable]
 #endif
 	public class OptionException : Exception {
-		private string option;
+		private string? option;
 
 		public OptionException ()
 		{
@@ -738,22 +738,12 @@ namespace Mono.Options
 			this.option = optionName;
 		}
 
-#if !PCL
-		protected OptionException (SerializationInfo info, StreamingContext context)
-			: base (info, context)
-		{
-			this.option = info.GetString ("OptionName");
-		}
-#endif
-
-		public string OptionName {
+		public string? OptionName {
 			get {return this.option;}
 		}
 
 #if !PCL
-#pragma warning disable 618 // SecurityPermissionAttribute is obsolete
-		[SecurityPermission (SecurityAction.LinkDemand, SerializationFormatter = true)]
-#pragma warning restore 618
+		[Obsolete]
 		public override void GetObjectData (SerializationInfo info, StreamingContext context)
 		{
 			base.GetObjectData (info, context);
@@ -771,7 +761,7 @@ namespace Mono.Options
 		{
 		}
 
-		public OptionSet (MessageLocalizerConverter localizer)
+		public OptionSet (MessageLocalizerConverter? localizer)
 			: this (localizer, null)
 		{
 		}
@@ -781,15 +771,16 @@ namespace Mono.Options
 		{
 		}
 
-		public OptionSet (MessageLocalizerConverter localizer, StringComparer comparer)
+		public OptionSet (MessageLocalizerConverter? localizer, StringComparer? comparer)
 			: base (comparer)
 		{
 			this.roSources = new ReadOnlyCollection<ArgumentSource> (sources);
-			this.localizer = localizer;
-			if (this.localizer == null) {
+			if (localizer == null) {
 				this.localizer = delegate (string f) {
 					return f;
 				};
+			} else {
+				this.localizer = localizer;
 			}
 		}
 
@@ -820,7 +811,7 @@ namespace Mono.Options
 		}
 
 		[Obsolete ("Use KeyedCollection.this[string]")]
-		protected Option GetOptionForName (string option)
+		protected Option? GetOptionForName (string? option)
 		{
 			if (option == null)
 				throw new ArgumentNullException ("option");
@@ -842,6 +833,11 @@ namespace Mono.Options
 		{
 			Option p = Items [index];
 			base.RemoveItem (index);
+
+			if (Dictionary == null) {
+				return;
+			}
+
 			// KeyedCollection.RemoveItem() handles the 0th item
 			for (int i = 1; i < p.Names.Length; ++i) {
 				Dictionary.Remove (p.Names [i]);
@@ -860,6 +856,10 @@ namespace Mono.Options
 				throw new ArgumentNullException ("option");
 			List<string> added = new List<string> (option.Names.Length);
 			try {
+				if (Dictionary == null) {
+					return;
+				}
+
 				// KeyedCollection.InsertItem/SetItem handle the 0th name.
 				for (int i = 1; i < option.Names.Length; ++i) {
 					Dictionary.Add (option.Names [i], option);
@@ -867,8 +867,11 @@ namespace Mono.Options
 				}
 			}
 			catch (Exception) {
-				foreach (string name in added)
-					Dictionary.Remove (name);
+				if (Dictionary != null) {
+					foreach (string name in added) {
+						Dictionary.Remove (name);
+					}
+				}
 				throw;
 			}
 		}
@@ -907,12 +910,12 @@ namespace Mono.Options
 		sealed class ActionOption : Option {
 			Action<OptionValueCollection> action;
 
-			public ActionOption (string prototype, string description, int count, Action<OptionValueCollection> action)
+			public ActionOption (string prototype, string? description, int count, Action<OptionValueCollection> action)
 				: this (prototype, description, count, action, false)
 			{
 			}
 
-			public ActionOption (string prototype, string description, int count, Action<OptionValueCollection> action, bool hidden)
+			public ActionOption (string prototype, string? description, int count, Action<OptionValueCollection> action, bool hidden)
 				: base (prototype, description, count, hidden)
 			{
 				if (action == null)
@@ -931,12 +934,12 @@ namespace Mono.Options
 			return Add (prototype, null, action);
 		}
 
-		public OptionSet Add (string prototype, string description, Action<string> action)
+		public OptionSet Add (string prototype, string? description, Action<string> action)
 		{
 			return Add (prototype, description, action, false);
 		}
 
-		public OptionSet Add (string prototype, string description, Action<string> action, bool hidden)
+		public OptionSet Add (string prototype, string? description, Action<string> action, bool hidden)
 		{
 			if (action == null)
 				throw new ArgumentNullException ("action");
@@ -951,12 +954,12 @@ namespace Mono.Options
 			return Add (prototype, null, action);
 		}
 
-		public OptionSet Add (string prototype, string description, OptionAction<string, string> action)
+		public OptionSet Add (string prototype, string? description, OptionAction<string, string> action)
 		{
 			return Add (prototype, description, action, false);
 		}
 
-		public OptionSet Add (string prototype, string description, OptionAction<string, string> action, bool hidden)	{
+		public OptionSet Add (string prototype, string? description, OptionAction<string, string> action, bool hidden)	{
 			if (action == null)
 				throw new ArgumentNullException ("action");
 			Option p = new ActionOption (prototype, description, 2,
@@ -968,7 +971,7 @@ namespace Mono.Options
 		sealed class ActionOption<T> : Option {
 			Action<T> action;
 
-			public ActionOption (string prototype, string description, Action<T> action)
+			public ActionOption (string prototype, string? description, Action<T> action)
 				: base (prototype, description, 1)
 			{
 				if (action == null)
@@ -985,7 +988,7 @@ namespace Mono.Options
 		sealed class ActionOption<TKey, TValue> : Option {
 			OptionAction<TKey, TValue> action;
 
-			public ActionOption (string prototype, string description, OptionAction<TKey, TValue> action)
+			public ActionOption (string prototype, string? description, OptionAction<TKey, TValue> action)
 				: base (prototype, description, 2)
 			{
 				if (action == null)
@@ -1006,7 +1009,7 @@ namespace Mono.Options
 			return Add (prototype, null, action);
 		}
 
-		public OptionSet Add<T> (string prototype, string description, Action<T> action)
+		public OptionSet Add<T> (string prototype, string? description, Action<T> action)
 		{
 			return Add (new ActionOption<T> (prototype, description, action));
 		}
@@ -1016,7 +1019,7 @@ namespace Mono.Options
 			return Add (prototype, null, action);
 		}
 
-		public OptionSet Add<TKey, TValue> (string prototype, string description, OptionAction<TKey, TValue> action)
+		public OptionSet Add<TKey, TValue> (string prototype, string? description, OptionAction<TKey, TValue> action)
 		{
 			return Add (new ActionOption<TKey, TValue> (prototype, description, action));
 		}
@@ -1042,7 +1045,7 @@ namespace Mono.Options
 			c.OptionIndex = -1;
 			bool process = true;
 			List<string> unprocessed = new List<string> ();
-			Option def = Contains ("<>") ? this ["<>"] : null;
+			Option? def = Contains ("<>") ? this ["<>"] : null;
 			ArgumentEnumerator ae = new ArgumentEnumerator (arguments);
 			foreach (string argument in ae) {
 				++c.OptionIndex;
@@ -1099,8 +1102,8 @@ namespace Mono.Options
 		bool AddSource (ArgumentEnumerator ae, string argument)
 		{
 			foreach (ArgumentSource source in sources) {
-				IEnumerable<string> replacement;
-				if (!source.GetArguments (argument, out replacement))
+				IEnumerable<string>? replacement;
+				if (!source.GetArguments (argument, out replacement) || replacement == null)
 					continue;
 				ae.Add (replacement);
 				return true;
@@ -1108,7 +1111,7 @@ namespace Mono.Options
 			return false;
 		}
 
-		private static bool Unprocessed (ICollection<string> extra, Option def, OptionContext c, string argument)
+		private static bool Unprocessed (ICollection<string> extra, Option? def, OptionContext c, string argument)
 		{
 			if (def == null) {
 				extra.Add (argument);
@@ -1123,7 +1126,7 @@ namespace Mono.Options
 		private readonly Regex ValueOption = new Regex (
 			@"^(?<flag>--|-|/)(?<name>[^:=]+)((?<sep>[:=])(?<value>.*))?$");
 
-		protected bool GetOptionParts (string argument, out string flag, out string name, out string sep, out string value)
+		protected bool GetOptionParts (string argument, out string? flag, out string? name, out string? sep, out string? value)
 		{
 			if (argument == null)
 				throw new ArgumentNullException ("argument");
@@ -1149,12 +1152,12 @@ namespace Mono.Options
 				return true;
 			}
 
-			string f, n, s, v;
+			string? f, n, s, v;
 			if (!GetOptionParts (argument, out f, out n, out s, out v))
 				return false;
 
 			Option p;
-			if (Contains (n)) {
+			if (n != null && Contains (n)) {
 				p = this [n];
 				c.OptionName = f + n;
 				c.Option     = p;
@@ -1171,31 +1174,34 @@ namespace Mono.Options
 				return true;
 			}
 			// no match; is it a bool option?
-			if (ParseBool (argument, n, c))
+			if (n != null && ParseBool (argument, n, c))
 				return true;
 			// is it a bundled option?
-			if (ParseBundledValue (f, string.Concat (n + s + v), c))
+			if (f != null && ParseBundledValue (f, string.Concat (n + s + v), c))
 				return true;
 
 			return false;
 		}
 
-		private void ParseValue (string option, OptionContext c)
+		private void ParseValue (string? option, OptionContext c)
 		{
+			if (c.Option == null) {
+				return;
+			}
+
 			if (option != null)
 				foreach (string o in c.Option.ValueSeparators != null
 						? option.Split (c.Option.ValueSeparators, c.Option.MaxValueCount - c.OptionValues.Count, StringSplitOptions.None)
 						: new string[]{option}) {
 					c.OptionValues.Add (o);
 				}
-			if (c.OptionValues.Count == c.Option.MaxValueCount ||
-					c.Option.OptionValueType == OptionValueType.Optional)
+			if (c.OptionValues.Count == c.Option.MaxValueCount || c.Option.OptionValueType == OptionValueType.Optional) {
 				c.Option.Invoke (c);
-			else if (c.OptionValues.Count > c.Option.MaxValueCount) {
+			} else if (c.OptionValues.Count > c.Option.MaxValueCount) {
 				throw new OptionException (localizer (string.Format (
 								"Error: Found {0} option values when expecting {1}.",
 								c.OptionValues.Count, c.Option.MaxValueCount)),
-						c.OptionName);
+						c.OptionName ?? String.Empty);
 			}
 		}
 
@@ -1206,10 +1212,10 @@ namespace Mono.Options
 			if (n.Length >= 1 && (n [n.Length-1] == '+' || n [n.Length-1] == '-') &&
 					Contains ((rn = n.Substring (0, n.Length-1)))) {
 				p = this [rn];
-				string v = n [n.Length-1] == '+' ? option : null;
+				string? v = n [n.Length-1] == '+' ? option : null;
 				c.OptionName  = option;
 				c.Option      = p;
-				c.OptionValues.Add (v);
+				c.OptionValues.Add (v ?? String.Empty);
 				p.Invoke (c);
 				return true;
 			}
@@ -1228,7 +1234,7 @@ namespace Mono.Options
 					if (i == 0)
 						return false;
 					throw new OptionException (string.Format (localizer (
-									"Cannot use unregistered option '{0}' in bundle '{1}'."), rn, f + n), null);
+									"Cannot use unregistered option '{0}' in bundle '{1}'."), rn, f + n), String.Empty);
 				}
 				p = this [rn];
 				switch (p.OptionValueType) {
@@ -1273,12 +1279,12 @@ namespace Mono.Options
 				if (p.Hidden)
 					continue;
 
-				Category c = p as Category;
+				Category? c = p as Category;
 				if (c != null) {
 					WriteDescription (o, p.Description, "", 80, 80);
 					continue;
 				}
-				CommandOption co = p as CommandOption;
+				CommandOption? co = p as CommandOption;
 				if (co != null) {
 					WriteCommandDescription (o, co.Command, co.CommandName);
 					continue;
@@ -1477,14 +1483,14 @@ namespace Mono.Options
 	public class Command
 	{
 		public      string                              Name            {get;}
-		public      string                              Help            {get;}
+		public      string?                             Help            {get;}
 
-		public      OptionSet                           Options         {get; set;}
-		public      Action<IEnumerable<string>>         Run             {get; set;}
+		public      OptionSet                           Options         {get; set;} = new OptionSet ();
+		public      Action<IEnumerable<string>>?        Run             {get; set;}
 
-		public      CommandSet                          CommandSet      {get; internal set;}
+		public      CommandSet?                         CommandSet      {get; internal set;}
 
-		public Command (string name, string help = null)
+		public Command (string name, string? help = null)
 		{
 			if (string.IsNullOrEmpty (name))
 				throw new ArgumentNullException (nameof (name));
@@ -1526,8 +1532,8 @@ namespace Mono.Options
 		// Prototype starts with '=' because this is an invalid prototype
 		// (see Option.ParsePrototype(), and thus it'll prevent Category
 		// instances from being accidentally used as normal options.
-		public CommandOption (Command command, string commandName = null, bool hidden = false)
-			: base ("=:Command:= " + (commandName ?? command?.Name), (commandName ?? command?.Name), maxValueCount: 0, hidden: hidden)
+		public CommandOption (Command command, string? commandName = null, bool hidden = false)
+			: base ("=:Command:= " + (commandName ?? command?.Name ?? String.Empty), (commandName ?? command?.Name ?? String.Empty), maxValueCount: 0, hidden: hidden)
 		{
 			if (command == null)
 				throw new ArgumentNullException (nameof (command));
@@ -1565,7 +1571,7 @@ namespace Mono.Options
 	{
 		CommandSet  commands;
 
-		public CommandOptionSet (CommandSet commands, MessageLocalizerConverter localizer)
+		public CommandOptionSet (CommandSet commands, MessageLocalizerConverter? localizer)
 			: base (localizer)
 		{
 			this.commands = commands;
@@ -1612,22 +1618,22 @@ namespace Mono.Options
 		TextWriter                  outWriter;
 		TextWriter                  errorWriter;
 
-		internal    List<CommandSet>        NestedCommandSets;
+		internal    List<CommandSet>?        NestedCommandSets;
 
-		internal    HelpCommand     help;
+		internal    HelpCommand?     help;
 
 		internal    bool            showHelp;
 
 		internal    OptionSet       Options     => options;
 
 #if !PCL || NETSTANDARD1_3
-		public CommandSet(string suite, MessageLocalizerConverter localizer = null)
+		public CommandSet(string suite, MessageLocalizerConverter? localizer = null)
 			: this(suite, Console.Out, Console.Error, localizer)
 		{
 		}
 #endif
 
-		public CommandSet (string suite, TextWriter output, TextWriter error, MessageLocalizerConverter localizer = null)
+		public CommandSet (string suite, TextWriter output, TextWriter error, MessageLocalizerConverter? localizer = null)
 		{
 			if (suite == null)
 				throw new ArgumentNullException (nameof (suite));
@@ -1651,7 +1657,7 @@ namespace Mono.Options
 
 		protected override string GetKeyForItem (Command item)
 		{
-			return item?.Name;
+			return item?.Name ?? String.Empty;
 		}
 
 		public new CommandSet Add (Command value)
@@ -1797,22 +1803,27 @@ namespace Mono.Options
 			return false;
 		}
 
-		public IEnumerable<string> GetCompletions (string prefix = null)
+		public IEnumerable<string> GetCompletions (string? prefix = null)
 		{
+			if (prefix == null) {
+				yield break;
+			}
+
 			string rest;
 			ExtractToken (ref prefix, out rest);
 
 			foreach (var command in this) {
-				if (command.Name.StartsWith (prefix, StringComparison.OrdinalIgnoreCase)) {
+				if (command.Name.StartsWith (prefix!, StringComparison.OrdinalIgnoreCase)) {
 					yield return command.Name;
 				}
 			}
+
 
 			if (NestedCommandSets == null)
 				yield break;
 
 			foreach (var subset in NestedCommandSets) {
-				if (subset.Suite.StartsWith (prefix, StringComparison.OrdinalIgnoreCase)) {
+				if (subset.Suite.StartsWith (prefix!, StringComparison.OrdinalIgnoreCase)) {
 					foreach (var c in subset.GetCompletions (rest)) {
 						yield return $"{subset.Suite} {c}";
 					}
@@ -1820,7 +1831,7 @@ namespace Mono.Options
 			}
 		}
 
-		static void ExtractToken (ref string input, out string rest)
+		static void ExtractToken (ref string? input, out string rest)
 		{
 			rest      = "";
 			input     = input ?? "";
@@ -1893,12 +1904,12 @@ namespace Mono.Options
 			return command.Invoke (extra);
 		}
 
-		internal Command GetCommand (List<string> extra)
+		internal Command? GetCommand (List<string> extra)
 		{
 			return TryGetLocalCommand (extra) ?? TryGetNestedCommand (extra);
 		}
 
-		Command TryGetLocalCommand (List<string> extra)
+		Command? TryGetLocalCommand (List<string> extra)
 		{
 			var name    = extra [0];
 			if (Contains (name)) {
@@ -1915,7 +1926,7 @@ namespace Mono.Options
 			return null;
 		}
 
-		Command TryGetNestedCommand (List<string> extra)
+		Command? TryGetNestedCommand (List<string> extra)
 		{
 			if (NestedCommandSets == null)
 				return null;
@@ -1948,12 +1959,17 @@ namespace Mono.Options
 
 		public override int Invoke (IEnumerable<string> arguments)
 		{
+			if (CommandSet == null) {
+				return 1;
+			}
+
 			var extra   = new List<string> (arguments ?? new string [0]);
 			var _       = CommandSet.Options.MessageLocalizer;
 			if (extra.Count == 0) {
-				CommandSet.Options.WriteOptionDescriptions (CommandSet.Out);
+				CommandSet?.Options.WriteOptionDescriptions (CommandSet.Out);
 				return 0;
 			}
+
 			var command = CommandSet.GetCommand (extra);
 			if (command == this || extra.Contains ("--help")) {
 				CommandSet.Out.WriteLine (_ ($"Usage: {CommandSet.Suite} COMMAND [OPTIONS]"));
@@ -1969,7 +1985,9 @@ namespace Mono.Options
 					}
 					CommandSet.Options.WriteCommandDescription (CommandSet.Out, c.Value, c.Key);
 				}
-				CommandSet.Options.WriteCommandDescription (CommandSet.Out, CommandSet.help, "help");
+				if (CommandSet.help != null) {
+					CommandSet.Options.WriteCommandDescription (CommandSet.Out, CommandSet.help, "help");
+				}
 				return 0;
 			}
 			if (command == null) {
@@ -1986,6 +2004,9 @@ namespace Mono.Options
 		List<KeyValuePair<string, Command>> GetCommands ()
 		{
 			var commands    = new List<KeyValuePair<string, Command>> ();
+			if (CommandSet == null) {
+				return commands;
+			}
 
 			foreach (var c in CommandSet) {
 				commands.Add (new KeyValuePair<string, Command>(c.Name, c));
@@ -2015,6 +2036,12 @@ namespace Mono.Options
 
 		internal void WriteUnknownCommand (string unknownCommand)
 		{
+			if (CommandSet == null) {
+				Console.Error.WriteLine ($"Unknown command: {unknownCommand}");
+				return;
+
+			}
+
 			CommandSet.Error.WriteLine (CommandSet.Options.MessageLocalizer ($"{CommandSet.Suite}: Unknown command: {unknownCommand}"));
 			CommandSet.Error.WriteLine (CommandSet.Options.MessageLocalizer ($"{CommandSet.Suite}: Use `{CommandSet.Suite} help` for usage."));
 		}

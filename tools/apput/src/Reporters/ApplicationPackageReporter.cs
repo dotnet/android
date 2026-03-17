@@ -14,7 +14,7 @@ class ApplicationPackageReporter : BaseReporter
 {
 	sealed class AssemblyInfo
 	{
-		public ApplicationAssembly Assembly;
+		public ApplicationAssembly Assembly = null!;
 		public bool IsSatellite;
 	}
 
