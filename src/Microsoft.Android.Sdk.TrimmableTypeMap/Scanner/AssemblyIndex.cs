@@ -128,12 +128,11 @@ sealed class AssemblyIndex : IDisposable
 		"InstrumentationAttribute",
 	};
 
-	static TypeAttributeInfo CreateTypeAttributeInfo (string attrName)
-	{
-		return attrName == "ApplicationAttribute"
-			? new ApplicationAttributeInfo ()
-			: new TypeAttributeInfo (attrName);
-	}
+	static TypeAttributeInfo CreateTypeAttributeInfo (string attrName) => attrName switch {
+		"ApplicationAttribute" => new ApplicationAttributeInfo (),
+		"InstrumentationAttribute" => new InstrumentationAttributeInfo (),
+		_ => new TypeAttributeInfo (attrName),
+	};
 
 	static bool IsKnownComponentAttribute (string attrName) => KnownComponentAttributes.Contains (attrName);
 
@@ -298,3 +297,5 @@ sealed class ApplicationAttributeInfo () : TypeAttributeInfo ("ApplicationAttrib
 	public string? BackupAgent { get; set; }
 	public string? ManageSpaceActivity { get; set; }
 }
+
+sealed class InstrumentationAttributeInfo () : TypeAttributeInfo ("InstrumentationAttribute") { }

@@ -139,6 +139,13 @@ sealed class JcwJavaSourceGenerator
 
 	static void WriteStaticInitializer (JavaPeerInfo type, TextWriter writer)
 	{
+		// Application and Instrumentation types cannot call registerNatives in their
+		// static initializer — the native library isn't loaded yet at that point.
+		// Their registration is deferred to ApplicationRegistration.registerApplications().
+		if (type.CannotRegisterInStaticConstructor) {
+			return;
+		}
+
 		string className = JniSignatureHelper.GetJavaSimpleName (type.JavaName);
 		writer.Write ($$"""
 	static {
