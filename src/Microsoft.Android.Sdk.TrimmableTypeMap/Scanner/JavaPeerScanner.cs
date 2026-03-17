@@ -203,8 +203,11 @@ sealed class JavaPeerScanner : IDisposable
 			// Resolve implemented Java interface names
 			var implementedInterfaces = ResolveImplementedInterfaceJavaNames (typeDef, index);
 
-			// Collect marshal methods (including constructors) in a single pass over methods
-			var marshalMethods = CollectMarshalMethods (typeDef, index);
+			// Collect marshal methods (including constructors).
+			// Override and interface detection is only for user ACW class types:
+			// - MCW types (DoNotGenerateAcw) already have [Register] on every method
+			// - Interface types don't implement other interfaces' methods in JCWs
+			var (marshalMethods, exportFields) = CollectMarshalMethods (typeDef, index, detectBaseOverrides: !doNotGenerateAcw && !isInterface);
 
 			// Resolve activation constructor
 			var activationCtor = ResolveActivationCtor (fullName, typeDef, index);
@@ -229,6 +232,7 @@ sealed class JavaPeerScanner : IDisposable
 				IsUnconditional = isUnconditional,
 				MarshalMethods = marshalMethods,
 				JavaConstructors = BuildJavaConstructors (marshalMethods),
+				JavaFields = exportFields,
 				ActivationCtor = activationCtor,
 				InvokerTypeName = invokerTypeName,
 				IsGenericDefinition = isGenericDefinition,
@@ -238,21 +242,29 @@ sealed class JavaPeerScanner : IDisposable
 		}
 	}
 
-	List<MarshalMethodInfo> CollectMarshalMethods (TypeDefinition typeDef, AssemblyIndex index)
+	(List<MarshalMethodInfo>, List<JavaFieldInfo>) CollectMarshalMethods (TypeDefinition typeDef, AssemblyIndex index, bool detectBaseOverrides)
 	{
 		var methods = new List<MarshalMethodInfo> ();
+		var fields = new List<JavaFieldInfo> ();
+		var registeredMethodKeys = new HashSet<string> (StringComparer.Ordinal);
 
-		// Single pass over methods: collect marshal methods (including constructors)
+		// Pass 1: collect methods with [Register], [Export], or [ExportField] directly on them
 		foreach (var methodHandle in typeDef.GetMethods ()) {
 			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
+
+			// Check for [ExportField] — produces both a marshal method AND a field
+			CollectExportField (methodDef, index, fields);
+
 			if (!TryGetMethodRegisterInfo (methodDef, index, out var registerInfo, out var exportInfo) || registerInfo is null) {
 				continue;
 			}
 
 			AddMarshalMethod (methods, registerInfo, methodDef, index, exportInfo);
+			var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+			registeredMethodKeys.Add ($"{index.Reader.GetString (methodDef.Name)}({string.Join (",", sig.ParameterTypes)})");
 		}
 
-		// Collect [Register] from properties (attribute is on the property, not the getter)
+		// Pass 2: collect [Register] from properties (attribute is on the property, not the getter)
 		foreach (var propHandle in typeDef.GetProperties ()) {
 			var propDef = index.Reader.GetPropertyDefinition (propHandle);
 			var propRegister = TryGetPropertyRegisterInfo (propDef, index);
@@ -264,13 +276,583 @@ sealed class JavaPeerScanner : IDisposable
 			if (!accessors.Getter.IsNil) {
 				var getterDef = index.Reader.GetMethodDefinition (accessors.Getter);
 				AddMarshalMethod (methods, propRegister, getterDef, index);
+				var sig = getterDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+				registeredMethodKeys.Add ($"{index.Reader.GetString (getterDef.Name)}({string.Join (",", sig.ParameterTypes)})");
 			}
 		}
 
-		return methods;
+		// Pass 3–4: detect overrides and constructors from base hierarchy.
+		// Only for user ACW types — MCW types (DoNotGenerateAcw=true) already have
+		// [Register] on every method that matters. Running override detection on them
+		// would incorrectly pick up internal overrides (e.g., JavaObject.equals).
+		if (detectBaseOverrides) {
+			CollectBaseMethodOverrides (typeDef, index, methods, registeredMethodKeys);
+		}
+
+		// Pass 4: detect interface method implementations.
+		// When a type implements a Java interface (e.g., IOnClickListener), the
+		// implementing method may not have [Register]. The legacy pipeline adds
+		// these via the interface loop in CecilImporter.cs lines 100-120.
+		if (detectBaseOverrides) {
+			CollectInterfaceMethodImplementations (typeDef, index, methods, registeredMethodKeys);
+		}
+
+		// Pass 5: detect Java constructors that chain from base registered ctors.
+		if (detectBaseOverrides) {
+			CollectBaseConstructorChain (typeDef, index, methods);
+		}
+
+		return (methods, fields);
 	}
 
-	static void AddMarshalMethod (List<MarshalMethodInfo> methods, RegisterInfo registerInfo, MethodDefinition methodDef, AssemblyIndex index, ExportInfo? exportInfo = null)
+	/// <summary>
+	/// For each virtual override method on <paramref name="typeDef"/> that wasn't already
+	/// collected (no direct [Register]), walks up the base type hierarchy to find a
+	/// registered base method with matching name and compatible signature. If found,
+	/// adds the registration info as a marshal method with the declaring type set to
+	/// the base type that owns the [Register] attribute.
+	/// </summary>
+	void CollectBaseMethodOverrides (TypeDefinition typeDef, AssemblyIndex index,
+		List<MarshalMethodInfo> methods, HashSet<string> alreadyRegistered)
+	{
+		foreach (var methodHandle in typeDef.GetMethods ()) {
+			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
+			var attrs = methodDef.Attributes;
+
+			// Only virtual overrides: must be Virtual and NOT NewSlot (new keyword).
+			// NewSlot means a new virtual method, not an override.
+			if ((attrs & MethodAttributes.Virtual) == 0 ||
+			    (attrs & MethodAttributes.NewSlot) != 0 ||
+			    (attrs & MethodAttributes.Static) != 0) {
+				continue;
+			}
+
+			var methodName = index.Reader.GetString (methodDef.Name);
+
+			// Skip constructors
+			if (methodName == ".ctor" || methodName == ".cctor") {
+				continue;
+			}
+
+			// Build a unique key from the managed signature to allow multiple
+			// overloads with the same name (e.g., Read(), Read(byte[]), Read(byte[],int,int))
+			var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+			var sigKey = $"{methodName}({string.Join (",", sig.ParameterTypes)})";
+
+			// Skip methods already collected from direct [Register]
+			if (alreadyRegistered.Contains (sigKey)) {
+				continue;
+			}
+
+			// Walk base types looking for a registered method with this name
+			var baseRegistration = FindBaseRegisteredMethod (typeDef, index, methodName, methodDef);
+			if (baseRegistration is not null) {
+				methods.Add (baseRegistration);
+				alreadyRegistered.Add (sigKey);
+			}
+		}
+
+		// Also check property overrides: a derived type may override a property
+		// whose getter is registered on a base type (e.g., Throwable.Message)
+		CollectBasePropertyOverrides (typeDef, index, methods, alreadyRegistered);
+	}
+
+	/// <summary>
+	/// Checks for property overrides where the base property has [Register] on the property
+	/// definition. Property [Register] attributes are on the PropertyDefinition, not the getter,
+	/// so we need separate handling.
+	/// </summary>
+	void CollectBasePropertyOverrides (TypeDefinition typeDef, AssemblyIndex index,
+		List<MarshalMethodInfo> methods, HashSet<string> alreadyRegistered)
+	{
+		foreach (var propHandle in typeDef.GetProperties ()) {
+			var propDef = index.Reader.GetPropertyDefinition (propHandle);
+			var accessors = propDef.GetAccessors ();
+			if (accessors.Getter.IsNil) {
+				continue;
+			}
+
+			var getterDef = index.Reader.GetMethodDefinition (accessors.Getter);
+			var attrs = getterDef.Attributes;
+
+			if ((attrs & MethodAttributes.Virtual) == 0 ||
+			    (attrs & MethodAttributes.NewSlot) != 0 ||
+			    (attrs & MethodAttributes.Static) != 0) {
+				continue;
+			}
+
+			var getterName = index.Reader.GetString (getterDef.Name);
+			var sig = getterDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+			var sigKey = $"{getterName}({string.Join (",", sig.ParameterTypes)})";
+			if (alreadyRegistered.Contains (sigKey)) {
+				continue;
+			}
+
+			var baseRegistration = FindBaseRegisteredProperty (typeDef, index, getterName, getterDef);
+			if (baseRegistration is not null) {
+				methods.Add (baseRegistration);
+				alreadyRegistered.Add (sigKey);
+			}
+		}
+	}
+
+	/// <summary>
+	/// Detects methods from implemented Java interfaces that aren't directly [Register]'d
+	/// on the implementing type. Mirrors the legacy CecilImporter interface loop (lines 100-120):
+	/// for each implemented interface with [Register], adds its registered methods to the type.
+	/// </summary>
+	void CollectInterfaceMethodImplementations (TypeDefinition typeDef, AssemblyIndex index,
+		List<MarshalMethodInfo> methods, HashSet<string> alreadyRegistered)
+	{
+		foreach (var implHandle in typeDef.GetInterfaceImplementations ()) {
+			var impl = index.Reader.GetInterfaceImplementation (implHandle);
+			var resolved = ResolveEntityHandle (impl.Interface, index);
+			if (resolved is null) {
+				continue;
+			}
+
+			var (ifaceTypeName, ifaceAssemblyName) = resolved.Value;
+			if (!TryResolveType (ifaceTypeName, ifaceAssemblyName, out var ifaceHandle, out var ifaceIndex)) {
+				continue;
+			}
+
+			// Only process interfaces that are Java peers (have [Register])
+			if (!ifaceIndex.RegisterInfoByType.ContainsKey (ifaceHandle)) {
+				continue;
+			}
+
+			var ifaceTypeDef = ifaceIndex.Reader.GetTypeDefinition (ifaceHandle);
+
+			// Add registered methods from this interface
+			foreach (var ifaceMethodHandle in ifaceTypeDef.GetMethods ()) {
+				var ifaceMethodDef = ifaceIndex.Reader.GetMethodDefinition (ifaceMethodHandle);
+
+				if ((ifaceMethodDef.Attributes & MethodAttributes.Static) != 0) {
+					continue;
+				}
+
+				if (!TryGetMethodRegisterInfo (ifaceMethodDef, ifaceIndex, out var registerInfo, out _) || registerInfo is null) {
+					continue;
+				}
+
+				// Skip type-level [Register] (no signature = just the JNI name)
+				if (registerInfo.Signature is null && registerInfo.Connector is null) {
+					continue;
+				}
+
+				string jniSignature = registerInfo.Signature ?? "()V";
+				var jniKey = $"{registerInfo.JniName}:{jniSignature}";
+
+				if (alreadyRegistered.Contains (jniKey)) {
+					continue;
+				}
+
+				// Also check by managed signature to avoid duplicates from
+				// direct [Register] that used different dedup keys
+				var managedName = ifaceIndex.Reader.GetString (ifaceMethodDef.Name);
+				var sig = ifaceMethodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+				var managedKey = $"{managedName}({string.Join (",", sig.ParameterTypes)})";
+				if (alreadyRegistered.Contains (managedKey)) {
+					continue;
+				}
+
+				AddMarshalMethod (methods, registerInfo, ifaceMethodDef, ifaceIndex, isInterfaceImplementation: true);
+
+				alreadyRegistered.Add (jniKey);
+				alreadyRegistered.Add (managedKey);
+			}
+
+			// Also add registered properties from this interface
+			foreach (var ifacePropHandle in ifaceTypeDef.GetProperties ()) {
+				var ifacePropDef = ifaceIndex.Reader.GetPropertyDefinition (ifacePropHandle);
+				var propRegister = TryGetPropertyRegisterInfo (ifacePropDef, ifaceIndex);
+				if (propRegister is null || propRegister.Signature is null) {
+					continue;
+				}
+
+				var jniKey = $"{propRegister.JniName}:{propRegister.Signature}";
+				if (alreadyRegistered.Contains (jniKey)) {
+					continue;
+				}
+
+				var accessors = ifacePropDef.GetAccessors ();
+				if (!accessors.Getter.IsNil) {
+					var getterDef = ifaceIndex.Reader.GetMethodDefinition (accessors.Getter);
+					AddMarshalMethod (methods, propRegister, getterDef, ifaceIndex, isInterfaceImplementation: true);
+				}
+
+				alreadyRegistered.Add (jniKey);
+			}
+		}
+	}
+
+	/// <summary>
+	/// Detects Java constructors by chaining from base registered ctors.
+	/// Mirrors the legacy CecilImporter behavior:
+	/// 1. Walk the base type hierarchy collecting registered ctors (stopping at DoNotGenerateAcw)
+	/// 2. Add all base registered ctors as seed constructors (legacy adds them to the wrapper directly)
+	/// 3. For each ctor on this type without [Register], accept it if a base registered ctor
+	///    has compatible parameters.
+	/// 4. Fallback: if any base registered ctor is parameterless, accept the user ctor and
+	///    compute its JNI signature from the managed parameter types.
+	/// </summary>
+	void CollectBaseConstructorChain (TypeDefinition typeDef, AssemblyIndex index,
+		List<MarshalMethodInfo> methods)
+	{
+		// Collect JNI signatures of ctors already registered via Pass 1 (direct [Register])
+		var alreadyRegisteredSignatures = new HashSet<string> (StringComparer.Ordinal);
+		foreach (var m in methods) {
+			if (m.IsConstructor) {
+				alreadyRegisteredSignatures.Add (m.JniSignature);
+			}
+		}
+
+		// Collect registered ctors from base type hierarchy
+		var baseRegisteredCtors = CollectBaseRegisteredCtors (typeDef, index);
+		if (baseRegisteredCtors.Count == 0) {
+			return;
+		}
+
+		// Add all base registered ctors as seed constructors.
+		// Legacy CecilImporter processes base types first (ctorTypes is reversed) and adds
+		// their registered ctors directly to the wrapper's Constructors list.
+		bool hasParameterlessBaseCtor = false;
+		foreach (var baseCtor in baseRegisteredCtors) {
+			var signature = baseCtor.RegisterInfo.Signature;
+			if (signature is null) {
+				continue;
+			}
+			if (!alreadyRegisteredSignatures.Contains (signature)) {
+				methods.Add (new MarshalMethodInfo {
+					JniName = baseCtor.RegisterInfo.JniName,
+					JniSignature = signature,
+					Connector = baseCtor.RegisterInfo.Connector,
+					ManagedMethodName = ".ctor",
+					NativeCallbackName = "n_ctor",
+					IsConstructor = true,
+				});
+				alreadyRegisteredSignatures.Add (signature);
+			}
+			if (signature == "()V") {
+				hasParameterlessBaseCtor = true;
+			}
+		}
+
+		// Check each ctor on this type for additional constructors not yet covered
+		foreach (var methodHandle in typeDef.GetMethods ()) {
+			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
+			var name = index.Reader.GetString (methodDef.Name);
+
+			if (name != ".ctor") {
+				continue;
+			}
+
+			// Skip if this ctor already has [Register] or [JniConstructorSignature] (collected in Pass 1)
+			if (TryGetMethodRegisterInfo (methodDef, index, out _, out _)) {
+				continue;
+			}
+
+			// Check if this ctor's params are already covered by a base registered ctor
+			bool alreadyCovered = false;
+			foreach (var baseCtor in baseRegisteredCtors) {
+				if (HaveIdenticalParameterTypes (methodDef, baseCtor.Method)) {
+					alreadyCovered = true;
+					break;
+				}
+			}
+			if (alreadyCovered) {
+				continue;
+			}
+
+			// Fallback: if any base registered ctor is parameterless, accept this ctor
+			// and compute its JNI signature from the managed parameter types.
+			// The generated Java ctor calls super() (the parameterless base ctor),
+			// then delegates to nctor_N(...) which handles the args on the managed side.
+			// This matches legacy CecilImporter behavior (CecilImporter.cs:394-397).
+			if (hasParameterlessBaseCtor) {
+				var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+				var jniSignature = BuildJniCtorSignature (sig);
+				if (jniSignature is not null && !alreadyRegisteredSignatures.Contains (jniSignature)) {
+					methods.Add (new MarshalMethodInfo {
+						JniName = ".ctor",
+						JniSignature = jniSignature,
+						Connector = "",
+						ManagedMethodName = ".ctor",
+						NativeCallbackName = "n_ctor",
+						IsConstructor = true,
+						SuperArgumentsString = "",
+					});
+					alreadyRegisteredSignatures.Add (jniSignature);
+				}
+			}
+		}
+	}
+
+	string? BuildJniCtorSignature (MethodSignature<string> sig)
+	{
+		var sb = new System.Text.StringBuilder ();
+		sb.Append ('(');
+		foreach (var param in sig.ParameterTypes) {
+			// Legacy GetJniSignature returns null for non-Java types (System.IntPtr,
+			// System.Object, System.Action, etc.). ManagedTypeToJniDescriptor maps
+			// these to "Ljava/lang/Object;" by default, but legacy would reject the
+			// whole ctor. Use the nullable variant to match legacy behavior.
+			var jniType = ManagedTypeToJniDescriptorOrNull (param);
+			if (jniType is null) {
+				return null;
+			}
+			sb.Append (jniType);
+		}
+		sb.Append (")V");
+		return sb.ToString ();
+	}
+
+	/// <summary>
+	/// Maps a managed type name to its JNI descriptor for constructor signature
+	/// computation. Returns null for types that can't be mapped to JNI
+	/// (matching legacy GetJniSignature behavior). For Java peer object types
+	/// (types with [Register]), resolves to "L&lt;jniName&gt;;" via assembly cache.
+	/// </summary>
+	string? ManagedTypeToJniDescriptorOrNull (string managedType)
+	{
+		var primitive = TryGetPrimitiveJniDescriptor (managedType);
+		if (primitive is not null) {
+			return primitive;
+		}
+
+		if (managedType.EndsWith ("[]")) {
+			var elementType = ManagedTypeToJniDescriptorOrNull (managedType.Substring (0, managedType.Length - 2));
+			return elementType is not null ? $"[{elementType}" : null;
+		}
+
+		// Try to resolve as a Java peer type with [Register]
+		return TryResolveJniObjectDescriptor (managedType);
+	}
+
+	/// <summary>
+	/// Looks up a managed type name across loaded assemblies. If the type has
+	/// [Register], returns "L&lt;jniName&gt;;". Otherwise returns null.
+	/// </summary>
+	string? TryResolveJniObjectDescriptor (string managedType)
+	{
+		foreach (var index in assemblyCache.Values) {
+			if (index.TypesByFullName.TryGetValue (managedType, out var handle) &&
+			    index.RegisterInfoByType.TryGetValue (handle, out var registerInfo)) {
+				return $"L{registerInfo.JniName};";
+			}
+		}
+		return null;
+	}
+
+	/// <summary>
+	/// Walks the base type hierarchy collecting constructors that have [Register] attributes.
+	/// Stops after the first base type with DoNotGenerateAcw=true (matching legacy CecilImporter).
+	/// Returns them ordered from nearest base to furthest ancestor.
+	/// </summary>
+	List<BaseCtorInfo> CollectBaseRegisteredCtors (TypeDefinition typeDef, AssemblyIndex index)
+	{
+		var result = new List<BaseCtorInfo> ();
+		var currentTypeDef = typeDef;
+		var currentIndex = index;
+
+		while (TryResolveBaseType (currentTypeDef, currentIndex, out var baseTypeDef, out var baseHandle, out var baseIndex, out _, out _)) {
+			foreach (var methodHandle in baseTypeDef.GetMethods ()) {
+				var methodDef = baseIndex.Reader.GetMethodDefinition (methodHandle);
+				var name = baseIndex.Reader.GetString (methodDef.Name);
+				if (name != ".ctor") {
+					continue;
+				}
+
+				if (TryGetMethodRegisterInfo (methodDef, baseIndex, out var registerInfo, out _) &&
+				    registerInfo is not null && registerInfo.Signature is not null) {
+					result.Add (new BaseCtorInfo (methodDef, baseIndex, registerInfo));
+				}
+			}
+
+			// Stop after the first MCW base type — its registered ctors are collected above,
+			// but we don't need to walk further up (matching legacy CecilImporter behavior).
+			if (baseIndex.RegisterInfoByType.TryGetValue (baseHandle, out var baseRegInfo) && baseRegInfo.DoNotGenerateAcw) {
+				break;
+			}
+
+			currentTypeDef = baseTypeDef;
+			currentIndex = baseIndex;
+		}
+
+		return result;
+	}
+
+	/// <summary>
+	/// Resolves the base type of the given type definition, returning its TypeDefinition,
+	/// TypeDefinitionHandle, and AssemblyIndex for further inspection.
+	/// </summary>
+	bool TryResolveBaseType (TypeDefinition typeDef, AssemblyIndex index,
+		out TypeDefinition baseTypeDef, out TypeDefinitionHandle baseHandle, [NotNullWhen (true)] out AssemblyIndex? baseIndex,
+		out string baseTypeName, out string baseAssemblyName)
+	{
+		baseTypeDef = default;
+		baseHandle = default;
+		baseIndex = null;
+		baseTypeName = "";
+		baseAssemblyName = "";
+
+		var baseInfo = GetBaseTypeInfo (typeDef, index);
+		if (baseInfo is null) {
+			return false;
+		}
+
+		(baseTypeName, baseAssemblyName) = baseInfo.Value;
+		if (!TryResolveType (baseTypeName, baseAssemblyName, out baseHandle, out baseIndex)) {
+			return false;
+		}
+
+		baseTypeDef = baseIndex.Reader.GetTypeDefinition (baseHandle);
+		return true;
+	}
+
+	readonly record struct BaseCtorInfo (MethodDefinition Method, AssemblyIndex Index, RegisterInfo RegisterInfo);
+
+	/// <summary>
+	/// Walks the base type hierarchy looking for a method with [Register] that matches
+	/// the given method name and has a compatible signature. Returns the registration
+	/// info along with the declaring type's full name and assembly name (needed so
+	/// UCO wrappers call n_* on the correct base type).
+	/// </summary>
+	(RegisterInfo Info, string DeclaringTypeName, string DeclaringAssemblyName)? FindBaseRegisteredMethodInfo (
+		TypeDefinition typeDef, AssemblyIndex index, string methodName, MethodDefinition derivedMethod)
+	{
+		if (!TryResolveBaseType (typeDef, index, out var baseTypeDef, out var baseHandle, out var baseIndex, out var baseTypeName, out var baseAssemblyName)) {
+			return null;
+		}
+
+		// Check methods on this base type
+		foreach (var baseMethodHandle in baseTypeDef.GetMethods ()) {
+			var baseMethodDef = baseIndex.Reader.GetMethodDefinition (baseMethodHandle);
+			var baseName = baseIndex.Reader.GetString (baseMethodDef.Name);
+
+			if (baseName != methodName) {
+				continue;
+			}
+
+			if ((baseMethodDef.Attributes & MethodAttributes.Virtual) == 0 &&
+			    (baseMethodDef.Attributes & MethodAttributes.Abstract) == 0) {
+				continue;
+			}
+
+			if (!HaveIdenticalParameterTypes (derivedMethod, baseMethodDef)) {
+				continue;
+			}
+
+			// Found a matching base method — check if it has [Register]
+			if (TryGetMethodRegisterInfo (baseMethodDef, baseIndex, out var registerInfo, out _) && registerInfo is not null) {
+				return (registerInfo, baseTypeName, baseAssemblyName);
+			}
+		}
+
+		// Recurse up the hierarchy (stop at DoNotGenerateAcw boundary)
+		if (baseIndex.RegisterInfoByType.TryGetValue (baseHandle, out var baseRegInfo) && baseRegInfo.DoNotGenerateAcw) {
+			return null;
+		}
+		return FindBaseRegisteredMethodInfo (baseTypeDef, baseIndex, methodName, derivedMethod);
+	}
+
+	MarshalMethodInfo? FindBaseRegisteredMethod (TypeDefinition typeDef, AssemblyIndex index,
+		string methodName, MethodDefinition derivedMethod)
+	{
+		var result = FindBaseRegisteredMethodInfo (typeDef, index, methodName, derivedMethod);
+		if (result is null || result.Value.Info.Signature is null) {
+			return null;
+		}
+
+		var registerInfo = result.Value.Info;
+		bool isConstructor = registerInfo.JniName == "<init>" || registerInfo.JniName == ".ctor";
+		return new MarshalMethodInfo {
+			JniName = registerInfo.JniName,
+			JniSignature = registerInfo.Signature,
+			Connector = registerInfo.Connector,
+			ManagedMethodName = methodName,
+			NativeCallbackName = isConstructor ? "n_ctor" : $"n_{methodName}",
+			IsConstructor = isConstructor,
+			DeclaringTypeName = result.Value.DeclaringTypeName,
+			DeclaringAssemblyName = result.Value.DeclaringAssemblyName,
+		};
+	}
+
+	/// <summary>
+	/// Walks the base type hierarchy looking for a property with [Register] whose getter
+	/// matches the given getter name and has a compatible signature.
+	/// </summary>
+	MarshalMethodInfo? FindBaseRegisteredProperty (TypeDefinition typeDef, AssemblyIndex index,
+		string getterName, MethodDefinition derivedGetter)
+	{
+		if (!TryResolveBaseType (typeDef, index, out var baseTypeDef, out var baseHandle, out var baseIndex, out var baseTypeName, out var baseAssemblyName)) {
+			return null;
+		}
+
+		// Check properties on this base type
+		foreach (var basePropHandle in baseTypeDef.GetProperties ()) {
+			var basePropDef = baseIndex.Reader.GetPropertyDefinition (basePropHandle);
+			var baseAccessors = basePropDef.GetAccessors ();
+			if (baseAccessors.Getter.IsNil) {
+				continue;
+			}
+
+			var baseGetterDef = baseIndex.Reader.GetMethodDefinition (baseAccessors.Getter);
+			var baseGetterName = baseIndex.Reader.GetString (baseGetterDef.Name);
+			if (baseGetterName != getterName) {
+				continue;
+			}
+
+			if ((baseGetterDef.Attributes & MethodAttributes.Virtual) == 0 &&
+			    (baseGetterDef.Attributes & MethodAttributes.Abstract) == 0) {
+				continue;
+			}
+
+			// Check if the base property has [Register]
+			var propRegister = TryGetPropertyRegisterInfo (basePropDef, baseIndex);
+			if (propRegister is not null && propRegister.Signature is not null) {
+				return new MarshalMethodInfo {
+					JniName = propRegister.JniName,
+					JniSignature = propRegister.Signature,
+					Connector = propRegister.Connector,
+					ManagedMethodName = getterName,
+					NativeCallbackName = $"n_{getterName}",
+					IsConstructor = false,
+					DeclaringTypeName = baseTypeName,
+					DeclaringAssemblyName = baseAssemblyName,
+				};
+			}
+		}
+
+		// Recurse up (stop at DoNotGenerateAcw boundary)
+		if (baseIndex.RegisterInfoByType.TryGetValue (baseHandle, out var baseRegInfo) && baseRegInfo.DoNotGenerateAcw) {
+			return null;
+		}
+		return FindBaseRegisteredProperty (baseTypeDef, baseIndex, getterName, derivedGetter);
+	}
+
+	/// <summary>
+	/// Checks if two methods have identical parameter types by comparing their decoded signatures.
+	/// </summary>
+	static bool HaveIdenticalParameterTypes (MethodDefinition method1, MethodDefinition method2)
+	{
+		var sig1 = method1.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+		var sig2 = method2.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+
+		if (sig1.ParameterTypes.Length != sig2.ParameterTypes.Length) {
+			return false;
+		}
+
+		for (int i = 0; i < sig1.ParameterTypes.Length; i++) {
+			if (!string.Equals (sig1.ParameterTypes [i], sig2.ParameterTypes [i], StringComparison.Ordinal)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	static void AddMarshalMethod (List<MarshalMethodInfo> methods, RegisterInfo registerInfo, MethodDefinition methodDef, AssemblyIndex index, ExportInfo? exportInfo = null, bool isInterfaceImplementation = false)
 	{
 		// Skip methods that are just the JNI name (type-level [Register])
 		if (registerInfo.Signature is null && registerInfo.Connector is null) {
@@ -278,6 +860,7 @@ sealed class JavaPeerScanner : IDisposable
 		}
 
 		bool isConstructor = registerInfo.JniName == "<init>" || registerInfo.JniName == ".ctor";
+		bool isExport = exportInfo is not null;
 		string managedName = index.Reader.GetString (methodDef.Name);
 		string jniSignature = registerInfo.Signature ?? "()V";
 
@@ -288,22 +871,32 @@ sealed class JavaPeerScanner : IDisposable
 			ManagedMethodName = managedName,
 			NativeCallbackName = isConstructor ? "n_ctor" : $"n_{managedName}",
 			IsConstructor = isConstructor,
+			IsExport = isExport,
+			IsInterfaceImplementation = isInterfaceImplementation,
+			JavaAccess = isExport ? GetJavaAccess (methodDef.Attributes & MethodAttributes.MemberAccessMask) : null,
 			ThrownNames = exportInfo?.ThrownNames,
 			SuperArgumentsString = exportInfo?.SuperArgumentsString,
 		});
 	}
 
+	static string GetJavaAccess (MethodAttributes access)
+	{
+		return access switch {
+			MethodAttributes.Public => "public",
+			MethodAttributes.FamORAssem => "protected",
+			MethodAttributes.Family => "protected",
+			_ => "private",
+		};
+	}
+
 	string? ResolveBaseJavaName (TypeDefinition typeDef, AssemblyIndex index, Dictionary<string, JavaPeerInfo> results)
 	{
-		var baseInfo = GetBaseTypeInfo (typeDef, index);
-		if (baseInfo is null) {
+		if (!TryResolveBaseType (typeDef, index, out var baseTypeDef, out _, out var baseIndex, out var baseTypeName, out _)) {
 			return null;
 		}
 
-		var (baseTypeName, baseAssemblyName) = baseInfo.Value;
-
 		// First try [Register] attribute
-		var registerJniName = ResolveRegisterJniName (baseTypeName, baseAssemblyName);
+		var registerJniName = ResolveRegisterJniName (baseTypeName, baseIndex.AssemblyName);
 		if (registerJniName is not null) {
 			return registerJniName;
 		}
@@ -311,6 +904,14 @@ sealed class JavaPeerScanner : IDisposable
 		// Fall back to already-scanned results (component-attributed or CRC64-computed peers)
 		if (results.TryGetValue (baseTypeName, out var basePeer)) {
 			return basePeer.JavaName;
+		}
+
+		// Base type may be a Java peer without [Register] that hasn't been scanned yet
+		// (scan order within an assembly is not guaranteed). Resolve it the same way
+		// ScanAssembly does: check ExtendsJavaPeer and compute the auto JNI name.
+		if (ExtendsJavaPeer (baseTypeDef, baseIndex)) {
+			var (jniName, _) = ComputeAutoJniNames (baseTypeDef, baseIndex);
+			return jniName;
 		}
 
 		return null;
@@ -353,6 +954,22 @@ sealed class JavaPeerScanner : IDisposable
 			if (attrName == "ExportAttribute") {
 				(registerInfo, exportInfo) = ParseExportAttribute (ca, methodDef, index);
 				return true;
+			}
+
+			if (attrName == "ExportFieldAttribute") {
+				(registerInfo, exportInfo) = ParseExportFieldAsMethod (ca, methodDef, index);
+				return true;
+			}
+
+			// JI-style constructor registration: [JniConstructorSignature("()V")]
+			// Single arg = JNI signature; name is always ".ctor", connector is empty.
+			if (attrName == "JniConstructorSignatureAttribute") {
+				var value = index.DecodeAttribute (ca);
+				var jniSignature = value.FixedArguments.Length > 0 ? (string?)value.FixedArguments [0].Value : null;
+				if (jniSignature is not null) {
+					registerInfo = new RegisterInfo { JniName = ".ctor", Signature = jniSignature, Connector = "", DoNotGenerateAcw = false };
+					return true;
+				}
 			}
 		}
 		registerInfo = null;
@@ -428,29 +1045,64 @@ sealed class JavaPeerScanner : IDisposable
 		return sb.ToString ();
 	}
 
+	/// <summary>
+	/// Parses an [ExportField] attribute as a marshal method registration.
+	/// [ExportField] methods use the managed method name as the JNI name and have
+	/// a connector of "__export__" (matching legacy CecilImporter behavior).
+	/// </summary>
+	static (RegisterInfo registerInfo, ExportInfo exportInfo) ParseExportFieldAsMethod (CustomAttribute ca, MethodDefinition methodDef, AssemblyIndex index)
+	{
+		var managedName = index.Reader.GetString (methodDef.Name);
+		var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+		var jniSig = BuildJniSignatureFromManaged (sig);
+
+		return (
+			new RegisterInfo { JniName = managedName, Signature = jniSig, Connector = "__export__", DoNotGenerateAcw = false },
+			new ExportInfo { ThrownNames = null, SuperArgumentsString = null }
+		);
+	}
+
+	/// <summary>
+	/// Maps a managed type name to its JNI descriptor. Falls back to
+	/// "Ljava/lang/Object;" for unknown types (used by [Export] signature computation).
+	/// </summary>
 	static string ManagedTypeToJniDescriptor (string managedType)
 	{
-		switch (managedType) {
-		case "System.Void": return "V";
-		case "System.Boolean": return "Z";
-		case "System.Byte":
-		case "System.SByte": return "B";
-		case "System.Char": return "C";
-		case "System.Int16":
-		case "System.UInt16": return "S";
-		case "System.Int32":
-		case "System.UInt32": return "I";
-		case "System.Int64":
-		case "System.UInt64": return "J";
-		case "System.Single": return "F";
-		case "System.Double": return "D";
-		case "System.String": return "Ljava/lang/String;";
-		default:
-			if (managedType.EndsWith ("[]")) {
-				return $"[{ManagedTypeToJniDescriptor (managedType.Substring (0, managedType.Length - 2))}";
-			}
-			return "Ljava/lang/Object;";
+		var primitive = TryGetPrimitiveJniDescriptor (managedType);
+		if (primitive is not null) {
+			return primitive;
 		}
+
+		if (managedType.EndsWith ("[]")) {
+			return $"[{ManagedTypeToJniDescriptor (managedType.Substring (0, managedType.Length - 2))}";
+		}
+
+		return "Ljava/lang/Object;";
+	}
+
+	/// <summary>
+	/// Returns the JNI descriptor for primitive types and System.String.
+	/// Returns null for all other types.
+	/// </summary>
+	static string? TryGetPrimitiveJniDescriptor (string managedType)
+	{
+		return managedType switch {
+			"System.Void" => "V",
+			"System.Boolean" => "Z",
+			"System.Byte" => "B",
+			"System.SByte" => "B",
+			"System.Char" => "C",
+			"System.Int16" => "S",
+			"System.UInt16" => "S",
+			"System.Int32" => "I",
+			"System.UInt32" => "I",
+			"System.Int64" => "J",
+			"System.UInt64" => "J",
+			"System.Single" => "F",
+			"System.Double" => "D",
+			"System.String" => "Ljava/lang/String;",
+			_ => null,
+		};
 	}
 
 	ActivationCtorInfo? ResolveActivationCtor (string typeName, TypeDefinition typeDef, AssemblyIndex index)
@@ -775,5 +1427,47 @@ sealed class JavaPeerScanner : IDisposable
 			ctorIndex++;
 		}
 		return ctors;
+	}
+
+	/// <summary>
+	/// Checks a single method for [ExportField] and adds a JavaFieldInfo if found.
+	/// Called inline during Pass 1 to avoid a separate iteration.
+	/// </summary>
+	static void CollectExportField (MethodDefinition methodDef, AssemblyIndex index, List<JavaFieldInfo> fields)
+	{
+		foreach (var caHandle in methodDef.GetCustomAttributes ()) {
+			var ca = index.Reader.GetCustomAttribute (caHandle);
+			var attrName = AssemblyIndex.GetCustomAttributeName (ca, index.Reader);
+
+			if (attrName != "ExportFieldAttribute") {
+				continue;
+			}
+
+			var value = index.DecodeAttribute (ca);
+			if (value.FixedArguments.Length == 0) {
+				continue;
+			}
+
+			var fieldName = (string?)value.FixedArguments [0].Value;
+			if (fieldName is null) {
+				continue;
+			}
+
+			var managedName = index.Reader.GetString (methodDef.Name);
+			var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+			var jniSig = BuildJniSignatureFromManaged (sig);
+			var jniReturnType = JniSignatureHelper.ParseReturnTypeString (jniSig);
+			var javaReturnType = JniSignatureHelper.JniTypeToJava (jniReturnType);
+			var access = GetJavaAccess (methodDef.Attributes & MethodAttributes.MemberAccessMask);
+			var isStatic = (methodDef.Attributes & MethodAttributes.Static) != 0;
+
+			fields.Add (new JavaFieldInfo {
+				FieldName = fieldName,
+				JavaTypeName = javaReturnType,
+				InitializerMethodName = managedName,
+				Visibility = access,
+				IsStatic = isStatic,
+			});
+		}
 	}
 }
