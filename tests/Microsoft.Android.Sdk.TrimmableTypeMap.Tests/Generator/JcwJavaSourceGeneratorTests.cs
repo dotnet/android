@@ -126,6 +126,22 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 			AssertContainsLine ("mono.android.Runtime.registerNatives (MainActivity.class);\n", java);
 		}
 
+		[Fact]
+		public void Generate_ApplicationType_SkipsRegisterNatives ()
+		{
+			var java = GenerateFixture ("my/app/MyApplication");
+			Assert.DoesNotContain ("registerNatives", java);
+			Assert.DoesNotContain ("static {", java);
+		}
+
+		[Fact]
+		public void Generate_InstrumentationType_SkipsRegisterNatives ()
+		{
+			var java = GenerateFixture ("my/app/MyInstrumentation");
+			Assert.DoesNotContain ("registerNatives", java);
+			Assert.DoesNotContain ("static {", java);
+		}
+
 	}
 
 	public class Constructor
