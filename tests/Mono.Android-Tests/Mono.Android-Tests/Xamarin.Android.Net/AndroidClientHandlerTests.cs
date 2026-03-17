@@ -123,15 +123,25 @@ namespace Xamarin.Android.NetTests {
 			if (IgnoreIfConnectionFailed (aex.InnerException as WebException, out connectionFailed))
 				return true;
 
-			if (IgnoreIfSocketException (aex, out connectionFailed))
-				return true;
-
-			return IgnoreIfIOException (aex, out connectionFailed);
+			return IgnoreIfSocketException (aex, out connectionFailed);
 		}
 
 		bool IgnoreIfConnectionFailed (HttpRequestException hrex, out bool connectionFailed)
 		{
-			return IgnoreIfConnectionFailed (hrex?.InnerException as WebException, out connectionFailed);
+			connectionFailed = false;
+			if (hrex == null)
+				return false;
+
+			if (IgnoreIfConnectionFailed (hrex.InnerException as WebException, out connectionFailed))
+				return true;
+
+			if (hrex.InnerException is System.IO.IOException ioEx) {
+				connectionFailed = true;
+				Assert.Ignore ($"Ignoring transient IO error: {ioEx}");
+				return true;
+			}
+
+			return false;
 		}
 
 		bool IgnoreIfConnectionFailed (WebException wex, out bool connectionFailed)
@@ -172,20 +182,6 @@ namespace Xamarin.Android.NetTests {
 			return false;
 		}
 
-		bool IgnoreIfIOException (Exception ex, out bool connectionFailed)
-		{
-			connectionFailed = false;
-			var current = ex;
-			while (current != null) {
-				if (current is System.IO.IOException ioEx) {
-					connectionFailed = true;
-					Assert.Ignore ($"Ignoring transient IO error: {ioEx}");
-					return true;
-				}
-				current = current.InnerException;
-			}
-			return false;
-		}
 	}
 
 	[Category ("AndroidClientHandler")]
