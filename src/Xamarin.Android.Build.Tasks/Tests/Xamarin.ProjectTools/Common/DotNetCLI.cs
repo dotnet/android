@@ -42,6 +42,10 @@ namespace Xamarin.ProjectTools
 			p.StartInfo.RedirectStandardOutput = true;
 			p.StartInfo.RedirectStandardError = true;
 			p.StartInfo.SetEnvironmentVariable ("DOTNET_MULTILEVEL_LOOKUP", "0");
+			// Workaround for dotnet/msbuild#13175: the MSBuild app host needs DOTNET_HOST_PATH
+			// to bootstrap the .NET runtime when spawning TaskHostFactory task hosts (e.g. ILLink).
+			// Without this, builds fail with MSB4221 when using a locally-installed SDK.
+			p.StartInfo.SetEnvironmentVariable ("DOTNET_HOST_PATH", p.StartInfo.FileName);
 			p.StartInfo.SetEnvironmentVariable ("PATH", TestEnvironment.DotNetPreviewDirectory + Path.PathSeparator + Environment.GetEnvironmentVariable ("PATH"));
 			if (TestEnvironment.UseLocalBuildOutput) {
 				p.StartInfo.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_MANIFEST_ROOTS", TestEnvironment.WorkloadManifestOverridePath);
