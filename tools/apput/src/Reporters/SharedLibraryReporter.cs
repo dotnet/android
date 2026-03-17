@@ -94,7 +94,7 @@ class SharedLibraryReporter : BaseReporter
 
 	void AddAlignment (bool appendLine = true)
 	{
-		ReportDoc.AddLabeledListItem (AlignmentLabel, $"{Library.Alignment}", appendLine: appendLine);
+		ReportDoc.AddLabeledListItem (AlignmentLabel, $"{Utilities.SizeToString (Library.Alignment)}", appendLine: appendLine);
 	}
 
 	void AddDebugInfo (bool appendLine = true)
@@ -113,7 +113,7 @@ class SharedLibraryReporter : BaseReporter
 
 	void AddSize (bool appendLine = true)
 	{
-		ReportDoc.AddLabeledListItem (SizeLabel, $"{Library.Size}", appendLine: appendLine);
+		ReportDoc.AddLabeledListItem (SizeLabel, $"{Utilities.SizeToString (Library.Size)}", appendLine: appendLine);
 	}
 
 	void AddDotNetWrapper (bool appendLine = true)
@@ -160,7 +160,6 @@ class SharedLibraryReporter : BaseReporter
 			return;
 		}
 
-		// TODO: fix output, currently produces gibberish
 		ReportDoc.AddLabeledListItem (AndroidIdentLabel, ValueOrNone (Library.AndroidIdent));
 	}
 

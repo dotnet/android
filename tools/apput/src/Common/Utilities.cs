@@ -8,6 +8,19 @@ namespace ApplicationUtility;
 
 class Utilities
 {
+	const ulong UL_KILOBYTE = 1024UL;
+        const decimal FL_KILOBYTE = 1024.0M;
+        const ulong UL_MEGABYTE = 1024UL * 1024UL;
+        const decimal FL_MEGABYTE = 1024.0M * 1024.0M;
+        const ulong UL_GIGABYTE = 1024UL * 1024UL * 1024UL;
+        const decimal FL_GIGABYTE = 1024.0M * 1024.0M * 1024.0M;
+        const ulong UL_TERABYTE = 1024UL * 1024UL * 1024UL * 1024UL;
+        const decimal FL_TERABYTE = 1024.0M * 1024.0M * 1024.0M * 1024.0M;
+        const ulong UL_PETABYTE = 1024UL * 1024UL * 1024UL * 1024UL * 1024UL;
+        const decimal FL_PETABYTE = 1024.0M * 1024.0M * 1024.0M * 1024.0M * 1024.0M;
+        const ulong UL_EXABYTE = 1024UL * 1024UL * 1024UL * 1024UL * 1024UL * 1024UL;
+        const decimal FL_EXABYTE = 1024.0M * 1024.0M * 1024.0M * 1024.0M * 1024.0M * 1024.0M;
+
 	public static void DeleteFile (string path, bool quiet = true)
 	{
 		try {
@@ -67,12 +80,61 @@ class Utilities
 		return entryName.Substring (idx + 1);
 	}
 
-	public static string SizeToString (ulong val)
+	public static string SizeToString (ulong val, bool reportBytes = true, bool reportHuman = true)
 	{
-		// TODO: return both bytes and a "human readable" value (kb, mb etc)
-		// TODO: format the byte size according to the current culture
-		return val.ToString ();
+		return SizeToString ((decimal)val, reportBytes, reportHuman);
 	}
+
+	public static string SizeToString (decimal val, bool reportBytes = true, bool reportHuman = true)
+	{
+		var sb = new StringBuilder ();
+
+		if (reportBytes) {
+			sb.Append ($"{val} B");
+		}
+
+		if (!reportBytes || (reportHuman && val > UL_KILOBYTE)) {
+			bool needParens = sb.Length > 0;
+			if (needParens) {
+				sb.Append (" (");
+			}
+
+			FormatBytes (val, out decimal value, out string unit);
+			sb.Append ($"{value:#.##} {unit}");
+
+			if (needParens) {
+				sb.Append (')');
+			}
+		}
+
+		return sb.ToString ();
+	}
+
+	static void FormatBytes (decimal bytes, out decimal value, out string unit)
+        {
+                if (bytes < FL_KILOBYTE) {
+                        unit = "B";
+                        value = (decimal)bytes;
+                } else if (bytes >= FL_KILOBYTE && bytes < FL_MEGABYTE) {
+                        unit = "KB";
+                        value = (decimal)bytes / FL_KILOBYTE;
+                } else if (bytes >= FL_MEGABYTE && bytes < FL_GIGABYTE) {
+                        unit = "MB";
+                        value = (decimal)bytes / FL_MEGABYTE;
+                } else if (bytes >= FL_GIGABYTE && bytes < FL_TERABYTE) {
+                        unit = "GB";
+                        value = (decimal)bytes / FL_GIGABYTE;
+                } else if (bytes >= FL_TERABYTE && bytes < FL_PETABYTE) {
+                        unit = "TB";
+                        value = (decimal)bytes / FL_TERABYTE;
+                } else if (bytes >= FL_PETABYTE && bytes < FL_EXABYTE) {
+                        unit = "PB";
+                        value = (decimal)bytes / FL_PETABYTE;
+                } else {
+                        unit = "EB";
+                        value = (decimal)bytes / FL_EXABYTE;
+                }
+        }
 
 	// TODO: consider replacing all uses of `AndroidTargetArch` with `NativeArchitecture`
 	public static NativeArchitecture TargetArchToNative (AndroidTargetArch arch)

@@ -72,11 +72,12 @@ class ApplicationPackageReporter : BaseReporter
 			return;
 		}
 
-		AddText ($"Application contains a total of {package.SharedLibraries.Count} native shared {GetCountable (Countable.SharedLibrary, package.SharedLibraries.Count)}.");
-		AddParagraph ();
+		AddLabeledItem ("Total number of native shared libraries", $"{package.SharedLibraries.Count}");
+		AddLabeledItem ("Total size of all shared libraries", Utilities.SizeToString (package.SharedLibraries.Sum (l => (decimal)l.Size), reportBytes: false));
 
 		var architectures = new HashSet<NativeArchitecture> ();
-		var libraryCounts = new SortedDictionary<string, int> (StringComparer.Ordinal);
+		var libraryCounts = new SortedDictionary<string, ulong> (StringComparer.Ordinal);
+		var librarySizes = new SortedDictionary<string, decimal> (StringComparer.Ordinal);
 		var libsByName = new SortedDictionary<string, List<SharedLibrary>> (StringComparer.Ordinal);
 		foreach (SharedLibrary lib in package.SharedLibraries) {
 			architectures.Add (lib.TargetArchitecture);
@@ -84,7 +85,12 @@ class ApplicationPackageReporter : BaseReporter
 			if (!libraryCounts.ContainsKey (archName)) {
 				libraryCounts[archName] = 0;
 			}
+			if (!librarySizes.ContainsKey (archName)) {
+				librarySizes[archName] = 0;
+			}
+
 			libraryCounts[archName]++;
+			librarySizes[archName] += lib.Size;
 
 			string name = Utilities.GetZipEntryFileName (lib.Name);
 			if (!libsByName.TryGetValue (name, out List<SharedLibrary>? libs) || libs == null) {
@@ -115,7 +121,8 @@ class ApplicationPackageReporter : BaseReporter
 			return;
 		}
 
-		AddLabeledItem ("Library count", String.Join (", ", libraryCounts.Select (kvp => $"{kvp.Value} ({kvp.Key})")));
+		AddLabeledItem ("Library count per architecture", String.Join (", ", libraryCounts.Select (kvp => $"{kvp.Value} ({kvp.Key})")));
+		AddLabeledItem ("Libraries size per architecture", String.Join (", ", librarySizes.Select (kvp => $"{Utilities.SizeToString (kvp.Value, reportBytes: false)} ({kvp.Key})")));
 
 		ReportDoc.BeginList ();
 		foreach (var kvp in libsByName) {
@@ -171,7 +178,7 @@ class ApplicationPackageReporter : BaseReporter
 			return GetAggregatedValue (
 				libs,
 				(SharedLibrary lib) => lib is DotNetAndroidWrapperSharedLibrary,
-				(SharedLibrary lib, bool v) => $"{YesNo (v)}; Payload size: {GetFormatTag (lib)}",
+				(SharedLibrary lib, bool v) => $"{YesNo (v)}; Payload size: {Utilities.SizeToString (GetFormatTag (lib))}",
 				(SharedLibrary lib) => lib.TargetArchitecture.ToString ()
 			);
 
@@ -561,7 +568,7 @@ class ApplicationPackageReporter : BaseReporter
 				sb.Append ("; ");
 			}
 
-			sb.Append ($"{getArchName(info)}: {getValue (info)}");
+			sb.Append ($"{getArchName(info)}: {valToString (info, getValue (info))}");
 		}
 
 		return sb.ToString ();
