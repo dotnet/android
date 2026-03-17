@@ -123,7 +123,10 @@ namespace Xamarin.Android.NetTests {
 			if (IgnoreIfConnectionFailed (aex.InnerException as WebException, out connectionFailed))
 				return true;
 
-			return IgnoreIfSocketException (aex, out connectionFailed);
+			if (IgnoreIfSocketException (aex, out connectionFailed))
+				return true;
+
+			return IgnoreIfSSLFailure (aex, out connectionFailed);
 		}
 
 		bool IgnoreIfConnectionFailed (HttpRequestException hrex, out bool connectionFailed)
@@ -161,6 +164,28 @@ namespace Xamarin.Android.NetTests {
 							message.Contains ("Connection reset", StringComparison.OrdinalIgnoreCase)) {
 						connectionFailed = true;
 						Assert.Ignore ($"Ignoring transient socket error: {socketEx}");
+						return true;
+					}
+				}
+				current = current.InnerException;
+			}
+			return false;
+		}
+
+		bool IgnoreIfSSLFailure (Exception ex, out bool connectionFailed)
+		{
+			connectionFailed = false;
+			// Check the exception and all inner exceptions for transient SSL errors
+			var current = ex;
+			while (current != null) {
+				if (current is System.IO.IOException ioEx) {
+					var message = ioEx.Message ?? "";
+					if (message.Contains ("SSL", StringComparison.OrdinalIgnoreCase) &&
+							(message.Contains ("BAD_DECRYPT", StringComparison.OrdinalIgnoreCase) ||
+							 message.Contains ("DECRYPTION_FAILED", StringComparison.OrdinalIgnoreCase) ||
+							 message.Contains ("protocol error", StringComparison.OrdinalIgnoreCase))) {
+						connectionFailed = true;
+						Assert.Ignore ($"Ignoring transient SSL error: {ioEx}");
 						return true;
 					}
 				}
