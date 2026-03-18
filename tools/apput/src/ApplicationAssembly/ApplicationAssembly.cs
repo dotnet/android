@@ -24,6 +24,8 @@ public class ApplicationAssembly : BaseAspect
 	public bool IgnoreOnLoad               { get; }
 	public ulong NameHash                  { get; internal set; }
 	public NativeArchitecture Architecture { get; internal set; }
+	public bool IsSatellite                { get; }
+	public string? Culture                 { get; }
 
 	static readonly ArrayPool<byte> bytePool = ArrayPool<byte>.Shared;
 
@@ -33,20 +35,41 @@ public class ApplicationAssembly : BaseAspect
 		Size = uncompressedSize;
 		CompressedSize = isCompressed ? (ulong)stream.Length : 0;
 		IsCompressed = isCompressed;
-		Name = NameMe (description);
-		if (!Name.EndsWith (".dll", StringComparison.OrdinalIgnoreCase)) {
-			Name = $"{Name}.dll";
+		string name = NameMe (description);
+		if (!name.EndsWith (".dll", StringComparison.OrdinalIgnoreCase)) {
+			name = $"{name}.dll";
 		}
+
+		(IsSatellite, Culture, Name) = DetectSatellite (name);
 	}
 
 	ApplicationAssembly (string? description, bool isIgnored)
 		: base (null)
 	{
 		IgnoreOnLoad = isIgnored;
-		Name = NameMe (description);
+		string name = NameMe (description);
+		(IsSatellite, Culture, Name) = DetectSatellite (name);
 	}
 
 	static string NameMe (string? description) => String.IsNullOrEmpty (description) ? "Unnamed" : description;
+
+	static (bool isSatellite, string? culture, string name) DetectSatellite (string name)
+	{
+		int idx = name.IndexOf ('/');
+		bool isSatellite = idx > 0;
+		if (!isSatellite) {
+			return (false, null, name);
+		}
+
+		if (idx == name.Length - 1) {
+			return (false, null, name);
+		}
+
+		string newName = name.Substring (idx + 1);
+		string culture = name.Substring (0, idx);
+
+		return (true, culture, newName);
+	}
 
 	// This is a special case, as much as I hate to have one. Ignored assemblies exist only in the assembly store's
 	// index. They have an associated descriptor, but no data whatsoever. For that reason, we can't go the `ProbeAspect`

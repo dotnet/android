@@ -361,7 +361,7 @@ class ApplicationPackageReporter : BaseReporter
 		// To make output more compact, we group assemblies by name. For that reason we cannot use the designated
 		// assembly reporter.
 		var architectures = new HashSet<NativeArchitecture> ();
-		var assembliesByName = new SortedDictionary<string, List<AssemblyInfo>> (StringComparer.Ordinal);
+		var assembliesByName = new SortedDictionary<string, List<ApplicationAssembly>> (StringComparer.Ordinal);
 		var assemblyCounts = new SortedDictionary<NativeArchitecture, int> ();
 
 		foreach (ApplicationAssembly asm in assemblies) {
@@ -371,22 +371,12 @@ class ApplicationPackageReporter : BaseReporter
 			}
 			assemblyCounts[asm.Architecture]++;
 
-			bool isSatellite = asm.Name.Contains ('/');
-			string name = isSatellite switch {
-				true => GetModifiedSatelliteName (asm.Name),
-				false => asm.Name,
-			};
-
-			if (!assembliesByName.TryGetValue (name, out List<AssemblyInfo>? assemblyInfos) || assemblyInfos == null) {
-				assemblyInfos = new List<AssemblyInfo> ();
-				assembliesByName[name] = assemblyInfos;
+			string name = GetModifiedSatelliteName (asm);
+			if (!assembliesByName.TryGetValue (name, out List<ApplicationAssembly>? assemblyList) || assemblyList == null) {
+				assemblyList = new List<ApplicationAssembly> ();
+				assembliesByName[name] = assemblyList;
 			}
-			assemblyInfos.Add (
-				new AssemblyInfo {
-					Assembly = asm,
-					IsSatellite = isSatellite,
-				}
-			);
+			assemblyList.Add (asm);
 		}
 
 		AddLabeledItem ("Architectures", String.Join (", ", architectures));
@@ -395,42 +385,41 @@ class ApplicationPackageReporter : BaseReporter
 		AddSection ("Assemblies", topSectionLevel + 1);
 		ReportDoc.BeginList (appendLine: false);
 		foreach (var kvp in assembliesByName) {
-			List<AssemblyInfo> infos = kvp.Value;
-			if (infos.Count == 0) {
+			List<ApplicationAssembly> assemblyList = kvp.Value;
+			if (assemblyList.Count == 0) {
 				continue;
 			}
 
-			ReportDoc.StartListItem ($"{infos[0].Assembly.Name}").BeginList();
+			ReportDoc.StartListItem ($"{assemblyList[0].Name}").BeginList();
 
-			ReportDoc.AddLabeledListItem ("Architectures", String.Join (", ", infos.Select (info => info.Assembly.Architecture.ToString ()).Distinct ()));
-			if (infos[0].IsSatellite) {
+			ReportDoc.AddLabeledListItem ("Architectures", String.Join (", ", assemblyList.Select (asm => asm.Architecture.ToString ()).Distinct ()));
+			if (assemblyList[0].IsSatellite) {
 				ReportDoc.AddLabeledListItem ("Satellite", "yes");
-				ReportDoc.AddLabeledListItem ("Culture", GetCultureInfo (infos));
+				ReportDoc.AddLabeledListItem ("Culture", GetCultureInfo (assemblyList));
 			}
 
-			ReportDoc.AddLabeledListItem ("Debug info (PDB) present", GetHasPdbValue (infos));
-			ReportDoc.AddLabeledListItem ("Compressed", GetCompressedValue (infos));
-			if (infos.Any (info => info.Assembly.IsCompressed)) {
-				ReportDoc.AddLabeledListItem ("Compressed size", GetCompressedSizeValue (infos));
+			ReportDoc.AddLabeledListItem ("Debug info (PDB) present", GetHasPdbValue (assemblyList));
+			ReportDoc.AddLabeledListItem ("Compressed", GetCompressedValue (assemblyList));
+			if (assemblyList.Any (asm => asm.IsCompressed)) {
+				ReportDoc.AddLabeledListItem ("Compressed size", GetCompressedSizeValue (assemblyList));
 			}
-			ReportDoc.AddLabeledListItem ("Size", GetSizeValue (infos));
-			ReportDoc.AddLabeledListItem ("Name hash", GetNameHashValue (infos));
-			ReportDoc.AddLabeledListItem ("Ignore on load", GetIgnoreOnLoadValue (infos));
+			ReportDoc.AddLabeledListItem ("Size", GetSizeValue (assemblyList));
+			ReportDoc.AddLabeledListItem ("Name hash", GetNameHashValue (assemblyList));
+			ReportDoc.AddLabeledListItem ("Ignore on load", GetIgnoreOnLoadValue (assemblyList));
 
 			ReportDoc.EndList ().EndListItem (appendLine: false);
 		}
 		ReportDoc.AddNewline ().EndList ();
 
-		string GetCultureInfo (List<AssemblyInfo> infos)
+		string GetCultureInfo (List<ApplicationAssembly> assemblyList)
 		{
 			var cultures = new HashSet<string> (StringComparer.Ordinal);
 			var sb = new StringBuilder ();
-			foreach (AssemblyInfo info in infos) {
-				string cultureName = GetSatelliteCultureName (info.Assembly.Name);
+			foreach (ApplicationAssembly asm in assemblyList) {
 				sb.Clear ();
-				sb.Append (cultureName);
+				sb.Append (asm.Culture ?? "<?>");
 
-				var ci = !String.IsNullOrEmpty (cultureName) ? CultureInfo.GetCultureInfo (cultureName): null;
+				var ci = !String.IsNullOrEmpty (asm.Culture) ? CultureInfo.GetCultureInfo (asm.Culture): null;
 				if (ci != null) {
 					sb.Append (" (");
 					sb.Append (ci.NativeName);
@@ -447,95 +436,73 @@ class ApplicationPackageReporter : BaseReporter
 			return String.Join (", ", cultureList);
 		}
 
-		string GetHasPdbValue (List<AssemblyInfo> infos)
+		string GetHasPdbValue (List<ApplicationAssembly> assemblyList)
 		{
 			return GetAggregatedValue (
-				infos,
-				(AssemblyInfo info) => asmPdbs.Contains (info.Assembly.Name),
-				(AssemblyInfo info, bool v) => YesNo (v),
-				(AssemblyInfo info) => info.Assembly.Architecture.ToString ()
+				assemblyList,
+				(ApplicationAssembly asm) => asmPdbs.Contains (asm.Name),
+				(ApplicationAssembly asm, bool v) => YesNo (v),
+				(ApplicationAssembly asm) => asm.Architecture.ToString ()
 			);
 		}
 
-		string GetIgnoreOnLoadValue (List<AssemblyInfo> infos)
+		string GetIgnoreOnLoadValue (List<ApplicationAssembly> assemblyList)
 		{
 			return GetAggregatedValue (
-				infos,
-				(AssemblyInfo info) => info.Assembly.IgnoreOnLoad,
-				(AssemblyInfo info, bool v) => YesNo (v),
-				(AssemblyInfo info) => info.Assembly.Architecture.ToString ()
+				assemblyList,
+				(ApplicationAssembly asm) => asm.IgnoreOnLoad,
+				(ApplicationAssembly asm, bool v) => YesNo (v),
+				(ApplicationAssembly asm) => asm.Architecture.ToString ()
 			);
 		}
 
-		string GetNameHashValue (List<AssemblyInfo> infos)
+		string GetNameHashValue (List<ApplicationAssembly> assemblyList)
 		{
 			return GetAggregatedValue (
-				infos,
-				(AssemblyInfo info) => info.Assembly.NameHash,
-				(AssemblyInfo info, ulong v) => $"0x{v:x}",
-				(AssemblyInfo info) => info.Assembly.Architecture.ToString ()
+				assemblyList,
+				(ApplicationAssembly asm) => asm.NameHash,
+				(ApplicationAssembly asm, ulong v) => $"0x{v:x}",
+				(ApplicationAssembly asm) => asm.Architecture.ToString ()
 			);
 		}
 
-		string GetSizeValue (List<AssemblyInfo> infos)
+		string GetSizeValue (List<ApplicationAssembly> assemblyList)
 		{
 			return GetAggregatedValue (
-				infos,
-				(AssemblyInfo info) => info.Assembly.Size,
-				(AssemblyInfo info, ulong v) => Utilities.SizeToString (v),
-				(AssemblyInfo info) => info.Assembly.Architecture.ToString ()
+				assemblyList,
+				(ApplicationAssembly asm) => asm.Size,
+				(ApplicationAssembly asm, ulong v) => Utilities.SizeToString (v),
+				(ApplicationAssembly asm) => asm.Architecture.ToString ()
 			);
 		}
 
-		string GetCompressedSizeValue (List<AssemblyInfo> infos)
+		string GetCompressedSizeValue (List<ApplicationAssembly> assemblyList)
 		{
 			return GetAggregatedValue (
-				infos,
-				(AssemblyInfo info) => info.Assembly.CompressedSize,
-				(AssemblyInfo info, ulong v) => Utilities.SizeToString (v),
-				(AssemblyInfo info) => info.Assembly.Architecture.ToString ()
+				assemblyList,
+				(ApplicationAssembly asm) => asm.CompressedSize,
+				(ApplicationAssembly asm, ulong v) => Utilities.SizeToString (v),
+				(ApplicationAssembly asm) => asm.Architecture.ToString ()
 			);
 		}
 
-		string GetCompressedValue (List<AssemblyInfo> infos)
+		string GetCompressedValue (List<ApplicationAssembly> assemblyList)
 		{
 			return GetAggregatedValue (
-				infos,
-				(AssemblyInfo info) => info.Assembly.IsCompressed,
-				(AssemblyInfo info, bool v) => YesNo (v),
-				(AssemblyInfo info) => info.Assembly.Architecture.ToString ()
+				assemblyList,
+				(ApplicationAssembly asm) => asm.IsCompressed,
+				(ApplicationAssembly asm, bool v) => YesNo (v),
+				(ApplicationAssembly asm) => asm.Architecture.ToString ()
 			);
 		}
 
-		string GetSatelliteCultureName (string fullName)
+		string GetModifiedSatelliteName (ApplicationAssembly asm)
 		{
-			if (fullName.Length == 0) {
-				return fullName;
+			if (!asm.IsSatellite) {
+				return asm.Name;
 			}
 
-			int idx = fullName.IndexOf ('/');
-			if (idx < 0 || idx == fullName.Length - 1) {
-				return fullName;
-			}
-
-			return fullName.Substring (0, idx);
-		}
-
-		string GetModifiedSatelliteName (string fullName)
-		{
-			if (fullName.Length == 0) {
-				return fullName;
-			}
-
-			int idx = fullName.IndexOf ('/');
-			if (idx < 0 || idx == fullName.Length - 1) {
-				return fullName;
-			}
-
-			string name = fullName.Substring (idx + 1);
-			string culture = fullName.Substring (0, idx);
-
-			return $"{name} ({culture})";
+			return $"{asm.Name} ({asm.Culture})";
 		}
 	}
 
