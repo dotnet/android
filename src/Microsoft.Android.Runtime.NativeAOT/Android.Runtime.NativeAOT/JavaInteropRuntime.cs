@@ -62,14 +62,12 @@ static partial class JavaInteropRuntime
 			settings.AddDebugDotnetLog ();
 
 			var (typeManager, trimmableTypeMap) = CreateTypeManager ();
-			var jmvm = JavaMarshalValueManager.GetOrCreateInstance ();
-			jmvm.TypeMap = trimmableTypeMap;
 
 			var options = new NativeAotRuntimeOptions {
 				EnvironmentPointer          = jnienv,
 				ClassLoader                 = new JniObjectReference (classLoader, JniObjectReferenceType.Global),
 				TypeManager                 = typeManager,
-				ValueManager                = jmvm,
+				ValueManager                = new JavaMarshalValueManager (trimmableTypeMap),
 				UseMarshalMemberBuilder     = false,
 				JniGlobalReferenceLogWriter = settings.GrefLog,
 				JniLocalReferenceLogWriter  = settings.LrefLog,

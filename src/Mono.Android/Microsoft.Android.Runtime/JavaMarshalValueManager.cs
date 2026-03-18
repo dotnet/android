@@ -29,11 +29,20 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 
 	static readonly SemaphoreSlim bridgeProcessingSemaphore = new (1, 1);
 
-	static Lazy<JavaMarshalValueManager> s_instance = new (() => new JavaMarshalValueManager ());
-	public static JavaMarshalValueManager GetOrCreateInstance () => s_instance.Value;
+	static JavaMarshalValueManager? s_instance;
 
-	unsafe JavaMarshalValueManager ()
+	public static JavaMarshalValueManager Instance =>
+		s_instance ?? throw new InvalidOperationException ("JavaMarshalValueManager has not been initialized. Call the constructor first.");
+
+	readonly TrimmableTypeMap? _typeMap;
+
+	unsafe internal JavaMarshalValueManager (TrimmableTypeMap? typeMap = null)
 	{
+		_typeMap = typeMap;
+
+		var previous = Interlocked.CompareExchange (ref s_instance, this, null);
+		Debug.Assert (previous is null, "JavaMarshalValueManager must only be created once.");
+
 		// There can only be one instance because JavaMarshal.Initialize can only be called once.
 		var mark_cross_references_ftn = RuntimeNativeMethods.clr_initialize_gc_bridge (&BridgeProcessingStarted, &BridgeProcessingFinished);
 		JavaMarshal.Initialize (mark_cross_references_ftn);
@@ -458,7 +467,7 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 	static unsafe ReadOnlySpan<GCHandle> ProcessCollectedContexts (MarkCrossReferencesArgs* mcr)
 	{
 		List<GCHandle> handlesToFree = [];
-		JavaMarshalValueManager instance = GetOrCreateInstance ();
+		JavaMarshalValueManager instance = Instance;
 
 		for (int i = 0; (nuint)i < mcr->ComponentCount; i++) {
 			StronglyConnectedComponent component = mcr->Components [i];
@@ -496,8 +505,6 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 
 	static  readonly    Type[]  XAConstructorSignature  = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
 
-	internal TrimmableTypeMap? TypeMap { get; set; }
-
 	protected override bool TryConstructPeer (
 			IJavaPeerable self,
 			ref JniObjectReference reference,
@@ -505,8 +512,8 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 			[DynamicallyAccessedMembers (Constructors)]
 			Type type)
 	{
-		if (TypeMap != null) {
-			if (TypeMap.TryCreatePeer (type, reference.Handle, JniHandleOwnership.DoNotTransfer)) {
+		if (_typeMap != null) {
+			if (_typeMap.TryCreatePeer (type, reference.Handle, JniHandleOwnership.DoNotTransfer)) {
 				JniObjectReference.Dispose (ref reference, options);
 				return true;
 			}

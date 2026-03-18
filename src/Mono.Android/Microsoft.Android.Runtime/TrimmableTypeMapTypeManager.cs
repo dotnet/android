@@ -39,9 +39,9 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			yield return r;
 		}
 
-		var attr = type.GetCustomAttribute<IJniNameProviderAttribute> (inherit: false);
-		if (attr != null && !attr.Name.IsNullOrEmpty ()) {
-			yield return attr.Name.Replace ('.', '/');
+		var attr = type.GetCustomAttributes (typeof (IJniNameProviderAttribute), inherit: false);
+		if (attr.Length > 0 && attr [0] is IJniNameProviderAttribute jniNameProvider && !string.IsNullOrEmpty (jniNameProvider.Name)) {
+			yield return jniNameProvider.Name.Replace ('.', '/');
 		}
 	}
 
