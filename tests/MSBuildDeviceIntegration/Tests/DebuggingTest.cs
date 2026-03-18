@@ -529,5 +529,77 @@ namespace ${ROOT_NAMESPACE} {
 				}
 			}
 		}
+
+		[Test, Category ("Debugger")]
+		[Retry (1)]
+		public void CoreClrRemoteDebuggerListens ()
+		{
+			AssertCommercialBuild ();
+
+			// CoreCLR-only test: verify the remote mscordbi profiler loads and listens for debugger connections.
+			// Sets @(RuntimeEnvironmentVariable) items in the .csproj for the CORECLR_* env vars,
+			// matching how vscode-maui enables the CoreCLR mobile debugger engine.
+			var rnd = new Random ();
+			int port = rnd.Next (10000, 20000);
+			var mscordbiPackageVersion = "10.0.0-preview.26159.3";
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = false,
+				ExtraNuGetConfigSources = {
+					"https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-tools-internal/nuget/v3/index.json",
+				},
+				PackageReferences = {
+					new Package { Id = "Microsoft.Diagnostics.RemoteMscordbiTarget.android-arm64", Version = mscordbiPackageVersion },
+					new Package { Id = "Microsoft.Diagnostics.RemoteMscordbiTarget.android-x64", Version = mscordbiPackageVersion },
+				},
+				OtherBuildItems = {
+					new BuildItem ("RuntimeEnvironmentVariable", "CORECLR_ENABLE_PROFILING") { Metadata = { { "Value", "1" } } },
+					new BuildItem ("RuntimeEnvironmentVariable", "CORECLR_PROFILER") { Metadata = { { "Value", "{9DC623E8-C88F-4FD5-AD99-77E67E1D9631}" } } },
+					new BuildItem ("RuntimeEnvironmentVariable", "CORECLR_PROFILER_PATH") { Metadata = { { "Value", "libremotemscordbitarget.so" } } },
+					new BuildItem ("RuntimeEnvironmentVariable", "CORECLR_REMOTE_DEBUGGER_PORT") { Metadata = { { "Value", port.ToString () } } },
+					new BuildItem ("RuntimeEnvironmentVariable", "CORECLR_REMOTE_DEBUGGER_ISSERVER") { Metadata = { { "Value", "1" } } },
+					new BuildItem ("RuntimeEnvironmentVariable", "CORECLR_REMOTE_DEBUGGER_IP") { Metadata = { { "Value", "127.0.0.1" } } },
+				},
+			};
+			proj.SetProperty ("UseMonoRuntime", "false");
+			proj.SetRuntimeIdentifier (DeviceAbi);
+			proj.SetProperty ("AndroidSdbTargetPort", port.ToString ());
+			proj.SetProperty ("AndroidSdbHostPort", port.ToString ());
+			proj.SetProperty ("AndroidAttachDebugger", "true");
+
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
+		Console.WriteLine ("CORECLR_ENABLE_PROFILING=" + Environment.GetEnvironmentVariable("CORECLR_ENABLE_PROFILING"));
+		Console.WriteLine ("CORECLR_PROFILER_PATH=" + Environment.GetEnvironmentVariable("CORECLR_PROFILER_PATH"));
+		Console.WriteLine ("CORECLR_REMOTE_DEBUGGER_PORT=" + Environment.GetEnvironmentVariable("CORECLR_REMOTE_DEBUGGER_PORT"));
+		""");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "Project should have installed.");
+
+			// The profiler checks `debug.coreclr.enabled` system property before initializing
+			RunAdbCommand ("shell setprop debug.coreclr.enabled 1");
+			try {
+				RunProjectAndAssert (proj, builder);
+
+				WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
+				bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
+					Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+				Assert.IsTrue (didLaunch, "Activity should have started.");
+
+				var logcatOutput = File.ReadAllText (Path.Combine (Root, builder.ProjectDirectory, "logcat.log"));
+				StringAssert.Contains ("CORECLR_ENABLE_PROFILING=1", logcatOutput,
+					"The CORECLR_ENABLE_PROFILING env var was not set.");
+				StringAssert.Contains ("CORECLR_PROFILER_PATH=libremotemscordbitarget.so", logcatOutput,
+					"The CORECLR_PROFILER_PATH env var was not set.");
+				StringAssert.Contains ($"CORECLR_REMOTE_DEBUGGER_PORT={port}", logcatOutput,
+					"The CORECLR_REMOTE_DEBUGGER_PORT env var was not set.");
+
+				// Verify the remote mscordbi profiler initialized (logged by libremotemscordbitarget.so with tag "CORDBG")
+				StringAssert.Contains ("CoreCLR debugger initialized", logcatOutput,
+					"The CoreCLR remote debugger profiler did not initialize. Check that libremotemscordbitarget.so is included in the APK.");
+			} finally {
+				RunAdbCommand ("shell setprop debug.coreclr.enabled 0");
+			}
+		}
 	}
 }
