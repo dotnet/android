@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -32,7 +33,7 @@ class TrimmableTypeMap
 		Debug.Assert (previous is null, "TrimmableTypeMap must only be created once.");
 	}
 
-	internal bool TryGetType (string jniSimpleReference, out Type type)
+	internal bool TryGetType (string jniSimpleReference, [NotNullWhen (true)] out Type? type)
 		=> _typeMap.TryGetValue (jniSimpleReference, out type);
 
 	/// <summary>
@@ -48,9 +49,12 @@ class TrimmableTypeMap
 		return proxy.CreateInstance (handle, transfer) != null;
 	}
 
+	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+
 	/// <summary>
 	/// Gets the invoker type for an interface or abstract class from the proxy attribute.
 	/// </summary>
+	[return: DynamicallyAccessedMembers (Constructors)]
 	internal Type? GetInvokerType (Type type)
 	{
 		var proxy = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
@@ -85,7 +89,7 @@ class TrimmableTypeMap
 		}
 	}
 
-	// TODO: The generator currently emits per-method RegisterMethod() calls.
+	// TODO (https://github.com/dotnet/android/issues/10794): The generator currently emits per-method RegisterMethod() calls.
 	// This should be changed to emit a single JNI RegisterNatives call with
 	// all methods at once, eliminating this helper. Follow-up generator change.
 
@@ -99,7 +103,7 @@ class TrimmableTypeMap
 		// a raw function pointer from an [UnmanagedCallersOnly] method. JNI only uses the
 		// function pointer extracted via Marshal.GetFunctionPointerForDelegate(), so the
 		// delegate type doesn't matter — Action is used as a lightweight wrapper.
-		// TODO: Add an IntPtr overload to java-interop's RegisterNatives to avoid this allocation.
+		// TODO (https://github.com/dotnet/java-interop/pull/1391): Use JniNativeMethod overload to avoid delegate allocation.
 		var registration = new JniNativeMethodRegistration (name, signature,
 			Marshal.GetDelegateForFunctionPointer<Action> (functionPointer));
 		JniEnvironment.Types.RegisterNatives (
@@ -107,6 +111,10 @@ class TrimmableTypeMap
 			new [] { registration },
 			1);
 	}
+
+	static readonly RegisterNativesHandler s_onRegisterNatives = OnRegisterNatives;
+
+	delegate void RegisterNativesHandler (IntPtr jnienv, IntPtr klass, IntPtr nativeClassHandle);
 
 	/// <summary>
 	/// Registers the <c>mono.android.Runtime.registerNatives</c> JNI native method.
@@ -118,21 +126,20 @@ class TrimmableTypeMap
 		JniEnvironment.Types.RegisterNatives (
 			runtimeClass.PeerReference,
 			new [] { new JniNativeMethodRegistration ("registerNatives", "(Ljava/lang/Class;)V",
-				(RegisterNativesHandler) OnRegisterNatives) },
+				s_onRegisterNatives) },
 			1);
 	}
 
-	delegate void RegisterNativesHandler (IntPtr jnienv, IntPtr klass, IntPtr nativeClassHandle);
-
 	static void OnRegisterNatives (IntPtr jnienv, IntPtr klass, IntPtr nativeClassHandle)
 	{
+		string? className = null;
 		try {
 			if (s_instance is null) {
 				return;
 			}
 
 			var classRef = new JniObjectReference (nativeClassHandle);
-			var className = JniEnvironment.Types.GetJniTypeNameFromInstance (classRef);
+			className = JniEnvironment.Types.GetJniTypeNameFromInstance (classRef);
 			if (className is null) {
 				return;
 			}
@@ -143,12 +150,11 @@ class TrimmableTypeMap
 
 			var proxy = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
 			if (proxy is IAndroidCallableWrapper acw) {
-				using var jniType = new JniType (classRef);
+				using var jniType = new JniType (className);
 				acw.RegisterNatives (jniType);
 			}
 		} catch (Exception ex) {
-			Logger.Log (LogLevel.Error, "TrimmableTypeMap",
-				$"Failed to register natives: {ex}");
+			Environment.FailFast ($"TrimmableTypeMap: Failed to register natives for class '{className}'.", ex);
 		}
 	}
 }

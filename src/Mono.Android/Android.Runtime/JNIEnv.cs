@@ -30,7 +30,9 @@ namespace Android.Runtime {
 			if (factory != null)
 				return factory.CreateArray (length, 1);
 
+			#pragma warning disable IL3050 // Array.CreateInstance is not AOT-safe, but this is the legacy fallback path
 			return Array.CreateInstance (elementType, length);
+			#pragma warning restore IL3050
 		}
 
 		static Type MakeArrayType (Type type) =>

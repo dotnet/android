@@ -3,7 +3,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using Android.Runtime;
 
 namespace Java.Interop
 {
@@ -47,7 +49,10 @@ namespace Java.Interop
 		/// <summary>
 		/// Creates a <see cref="JavaPeerContainerFactory{T}"/> singleton for the specified type.
 		/// </summary>
-		public static JavaPeerContainerFactory Create<T> () where T : class, IJavaPeerable
+		public static JavaPeerContainerFactory Create<
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			T
+		> () where T : class, IJavaPeerable
 			=> JavaPeerContainerFactory<T>.Instance;
 	}
 
@@ -55,14 +60,18 @@ namespace Java.Interop
 	/// Typed container factory. All creation uses direct <c>new</c> expressions — fully AOT-safe.
 	/// </summary>
 	/// <typeparam name="T">The Java peer element type.</typeparam>
-	public sealed class JavaPeerContainerFactory<T> : JavaPeerContainerFactory
+	public sealed class JavaPeerContainerFactory<
+	 	// TODO (https://github.com/dotnet/android/issues/10794): Remove this DAM annotation — it preserves too much reflection metadata on all types in the typemap.
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+		T
+	> : JavaPeerContainerFactory
 		where T : class, IJavaPeerable
 	{
 		internal static readonly JavaPeerContainerFactory<T> Instance = new ();
 
 		JavaPeerContainerFactory () { }
 
-		// TODO: I am afraid this might cause unnecessary code bloat for Native AOT. I think we should revisit
+		// TODO (https://github.com/dotnet/android/issues/10794): This might cause unnecessary code bloat for NativeAOT. Revisit
 		// how we use this API and instead use a differnet approach that uses AOT-safe `Array.CreateInstanceFromArrayType`
 		// with statically provided array types based on a statically known array type.
 		internal override Array CreateArray (int length, int rank) => rank switch {
@@ -96,8 +105,10 @@ namespace Java.Interop
 		internal override IDictionary? CreateDictionary (JavaPeerContainerFactory keyFactory, IntPtr handle, JniHandleOwnership transfer)
 			=> keyFactory.CreateDictionaryWithValueFactory (this, handle, transfer);
 
+		#pragma warning disable IL2091 // DynamicallyAccessedMembers on base method type parameter cannot be repeated on override in C#
 		internal override IDictionary? CreateDictionaryWithValueFactory<TValue> (
 			JavaPeerContainerFactory<TValue> valueFactory, IntPtr handle, JniHandleOwnership transfer)
 			=> new Android.Runtime.JavaDictionary<T, TValue> (handle, transfer);
+		#pragma warning restore IL2091
 	}
 }

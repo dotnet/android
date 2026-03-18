@@ -1,6 +1,8 @@
 #nullable enable
 
 using System;
+using System.Diagnostics.CodeAnalysis;
+using Android.Runtime;
 
 namespace Java.Interop
 {
@@ -34,6 +36,7 @@ namespace Java.Interop
 		/// Gets the invoker type for interfaces and abstract classes.
 		/// Returns null for concrete types that can be directly instantiated.
 		/// </summary>
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 		public virtual Type? InvokerType => null;
 
 		/// <summary>
@@ -50,7 +53,11 @@ namespace Java.Interop
 	/// </summary>
 	/// <typeparam name="T">The target .NET peer type this proxy represents.</typeparam>
 	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
-	public abstract class JavaPeerProxy<T> : JavaPeerProxy where T : class, IJavaPeerable
+	public abstract class JavaPeerProxy<
+		// TODO (https://github.com/dotnet/android/issues/10794): Remove this DAM annotation
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+		T
+	> : JavaPeerProxy where T : class, IJavaPeerable
 	{
 		public override Type TargetType => typeof (T);
 
