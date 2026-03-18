@@ -131,7 +131,11 @@ namespace Android.Runtime
 			BoundExceptionType = (BoundExceptionType)args->ioExceptionType;
 			JniRuntime.JniTypeManager typeManager;
 			JniRuntime.JniValueManager valueManager;
-			if (RuntimeFeature.ManagedTypeMap) {
+			TrimmableTypeMap? trimmableTypeMap = null;
+			if (RuntimeFeature.TrimmableTypeMap) {
+				trimmableTypeMap = new TrimmableTypeMap ();
+				typeManager     = new TrimmableTypeMapTypeManager (trimmableTypeMap);
+			} else if (RuntimeFeature.ManagedTypeMap) {
 				typeManager     = new ManagedTypeManager ();
 			} else {
 				typeManager     = new AndroidTypeManager (args->jniAddNativeMethodRegistrationAttributePresent != 0);
@@ -139,7 +143,9 @@ namespace Android.Runtime
 			if (RuntimeFeature.IsMonoRuntime) {
 				valueManager = new AndroidValueManager ();
 			} else if (RuntimeFeature.IsCoreClrRuntime) {
-				valueManager = ManagedValueManager.GetOrCreateInstance ();
+				var jmvm = JavaMarshalValueManager.GetOrCreateInstance ();
+				jmvm.TypeMap = trimmableTypeMap;
+				valueManager = jmvm;
 			} else {
 				throw new NotSupportedException ("Internal error: unknown runtime not supported");
 			}

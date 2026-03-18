@@ -61,11 +61,15 @@ static partial class JavaInteropRuntime
 			var settings    = new DiagnosticSettings ();
 			settings.AddDebugDotnetLog ();
 
+			var (typeManager, trimmableTypeMap) = CreateTypeManager ();
+			var jmvm = JavaMarshalValueManager.GetOrCreateInstance ();
+			jmvm.TypeMap = trimmableTypeMap;
+
 			var options = new NativeAotRuntimeOptions {
 				EnvironmentPointer          = jnienv,
 				ClassLoader                 = new JniObjectReference (classLoader, JniObjectReferenceType.Global),
-				TypeManager                 = new ManagedTypeManager (),
-				ValueManager                = ManagedValueManager.GetOrCreateInstance (),
+				TypeManager                 = typeManager,
+				ValueManager                = jmvm,
 				UseMarshalMemberBuilder     = false,
 				JniGlobalReferenceLogWriter = settings.GrefLog,
 				JniLocalReferenceLogWriter  = settings.LrefLog,
@@ -85,5 +89,15 @@ static partial class JavaInteropRuntime
 			transition.SetPendingException (e);
 		}
 		transition.Dispose ();
+	}
+
+	static (JniRuntime.JniTypeManager, TrimmableTypeMap?) CreateTypeManager ()
+	{
+		if (RuntimeFeature.TrimmableTypeMap) {
+			var map = new TrimmableTypeMap ();
+			return (new TrimmableTypeMapTypeManager (map), map);
+		}
+
+		return (new ManagedTypeManager (), null);
 	}
 }
