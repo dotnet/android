@@ -1,7 +1,5 @@
 #nullable enable
 
-using System;
-using System.Collections.Generic;
 using System.IO;
 using Java.Interop.Tools.Cecil;
 using Microsoft.Android.Build.Tasks;
@@ -28,64 +26,42 @@ public class AddKeepAlives : AndroidTask
 
 	public override bool RunTask ()
 	{
-		var resolver = new DefaultAssemblyResolver ();
+		using var resolver = new DirectoryAssemblyResolver (
+			this.CreateTaskLogger (), loadDebugSymbols: true,
+			loadReaderParameters: new ReaderParameters { ReadWrite = true });
 		var cache = new TypeDefinitionCache ();
-		var searchDirectories = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
 		foreach (var assembly in Assemblies) {
 			var dir = Path.GetFullPath (Path.GetDirectoryName (assembly.ItemSpec) ?? "");
-			if (searchDirectories.Add (dir)) {
-				resolver.AddSearchDirectory (dir);
+			if (!resolver.SearchDirectories.Contains (dir)) {
+				resolver.SearchDirectories.Add (dir);
 			}
 		}
 
-		try {
-			foreach (var assembly in Assemblies) {
-				if (MonoAndroidHelper.IsFrameworkAssembly (assembly)) {
-					continue;
-				}
-
-				ProcessAssembly (assembly.ItemSpec, resolver, cache);
+		foreach (var item in Assemblies) {
+			if (MonoAndroidHelper.IsFrameworkAssembly (item)) {
+				continue;
 			}
-		} finally {
-			resolver.Dispose ();
-		}
 
-		return !Log.HasLoggedErrors;
-	}
+			var assembly = resolver.GetAssembly (item.ItemSpec);
 
-	void ProcessAssembly (string assemblyPath, IAssemblyResolver resolver, IMetadataResolver cache)
-	{
-		string pdbPath = Path.ChangeExtension (assemblyPath, ".pdb");
-		bool havePdb = File.Exists (pdbPath);
-
-		var readerParams = new ReaderParameters {
-			ReadSymbols = havePdb,
-			ReadWrite = true,
-			AssemblyResolver = resolver,
-		};
-
-		using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath, readerParams)) {
 			bool modified = AddKeepAlivesHelper.AddKeepAlives (
 				assembly,
 				cache,
-				() => GetCorlibAssembly (resolver),
+				() => resolver.Resolve (AssemblyNameReference.Parse ("System.Private.CoreLib")),
 				(msg) => Log.LogDebugMessage (msg));
 
 			if (!modified) {
-				return;
+				continue;
 			}
 
-			Log.LogDebugMessage ($"  Writing modified assembly: {assemblyPath}");
+			Log.LogDebugMessage ($"  Writing modified assembly: {item.ItemSpec}");
 			assembly.Write (new WriterParameters {
-				WriteSymbols = havePdb,
+				WriteSymbols = assembly.MainModule.HasSymbols,
 				DeterministicMvid = Deterministic,
 			});
 		}
-	}
 
-	static AssemblyDefinition GetCorlibAssembly (IAssemblyResolver resolver)
-	{
-		return resolver.Resolve (AssemblyNameReference.Parse ("System.Private.CoreLib"));
+		return !Log.HasLoggedErrors;
 	}
 }
