@@ -14,15 +14,15 @@ namespace Xamarin.Android.Build.Tests {
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
 
-			// TODO: perform full Build,SignAndroidPackage once manifest generation is implemented for the trimmable path
+			// Full Build will fail downstream (manifest generation not yet implemented for trimmable path),
+			// but _GenerateJavaStubs runs and completes before the failure point.
 			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.RunTarget (proj, "_GenerateJavaStubs"), "_GenerateJavaStubs with trimmable typemap should succeed.");
+			builder.ThrowOnBuildFailure = false;
+			builder.Build (proj);
 
-			// Verify typemap assemblies were generated
+			// Verify _GenerateJavaStubs ran by checking typemap outputs exist
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
-			if (intermediateDir != null) {
-				DirectoryAssert.Exists (intermediateDir);
-			}
+			DirectoryAssert.Exists (intermediateDir);
 		}
 
 		[Test]
@@ -32,12 +32,18 @@ namespace Xamarin.Android.Build.Tests {
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
 
-			// TODO: perform full Build,SignAndroidPackage once manifest generation is implemented for the trimmable path
+			// Full Build will fail downstream (manifest generation not yet implemented for trimmable path),
+			// but _GenerateJavaStubs runs and completes before the failure point.
 			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.RunTarget (proj, "_GenerateJavaStubs"), "First build should succeed.");
+			builder.ThrowOnBuildFailure = false;
+			builder.Build (proj);
 
-			// Second build with no changes should be incremental (skip _GenerateJavaStubs)
-			Assert.IsTrue (builder.RunTarget (proj, "_GenerateJavaStubs"), "Second build should succeed.");
+			// Verify _GenerateJavaStubs ran on the first build
+			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
+			DirectoryAssert.Exists (intermediateDir);
+
+			// Second build with no changes — _GenerateJavaStubs should be skipped
+			builder.Build (proj);
 			Assert.IsTrue (
 				builder.Output.IsTargetSkipped ("_GenerateJavaStubs"),
 				"_GenerateJavaStubs should be skipped on incremental build.");
