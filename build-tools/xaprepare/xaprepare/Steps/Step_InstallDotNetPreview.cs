@@ -48,17 +48,29 @@ namespace Xamarin.Android.Prepare
 			// Install runtime packs associated with the SDK previously installed.
 			var packageDownloadProj = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "build-tools", "xaprepare", "xaprepare", "package-download.proj");
 			var logPath = Path.Combine (Configurables.Paths.BuildBinDir, $"msbuild-{context.BuildTimeStamp}-download-runtime-packs.binlog");
-			var runner = new ProcessRunner (Configurables.Paths.DotNetPreviewTool, "restore",
-				ProcessRunner.QuoteArgument (packageDownloadProj),
-				"--configfile", Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "NuGet.config"),
-				ProcessRunner.QuoteArgument ($"-bl:{logPath}"),
-				"--verbosity", "normal"
-			) {
-				EchoStandardOutput = true,
-				EchoStandardError = true,
-			};
-			if (!runner.Run ()) {
-				Log.ErrorLine ($"Failed to restore runtime packs using '{packageDownloadProj}'.");
+
+			const int maxAttempts = 3;
+			bool restoreSucceeded = false;
+			for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+				var runner = new ProcessRunner (Configurables.Paths.DotNetPreviewTool, "restore",
+					ProcessRunner.QuoteArgument (packageDownloadProj),
+					"--configfile", Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "NuGet.config"),
+					ProcessRunner.QuoteArgument ($"-bl:{logPath}"),
+					"--verbosity", "normal"
+				) {
+					EchoStandardOutput = true,
+					EchoStandardError = true,
+				};
+				if (runner.Run ()) {
+					restoreSucceeded = true;
+					break;
+				}
+				if (attempt < maxAttempts) {
+					Log.WarningLine ($"Failed to restore runtime packs (attempt {attempt}/{maxAttempts}), retrying...");
+				}
+			}
+			if (!restoreSucceeded) {
+				Log.ErrorLine ($"Failed to restore runtime packs using '{packageDownloadProj}' after {maxAttempts} attempts.");
 				return false;
 			}
 
