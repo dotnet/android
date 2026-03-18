@@ -79,7 +79,7 @@ public class AssemblyStore : BaseAspect
 		}
 
 		foreach (ApplicationAssembly asm in storeState.Format.Assemblies) {
-			Assemblies.Add (asm.Name, asm);
+			Assemblies.Add (asm.FullName, asm);
 		}
 
 		foreach (AssemblyPdb pdb in storeState.Format.PDBs) {

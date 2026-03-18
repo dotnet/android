@@ -19,6 +19,7 @@ public class ApplicationAssembly : BaseAspect
 
 	public bool IsCompressed               { get; }
 	public string Name                     { get; }
+	public string FullName                 { get; }
 	public ulong CompressedSize            { get; }
 	public ulong Size                      { get; }
 	public bool IgnoreOnLoad               { get; }
@@ -39,7 +40,7 @@ public class ApplicationAssembly : BaseAspect
 		if (!name.EndsWith (".dll", StringComparison.OrdinalIgnoreCase)) {
 			name = $"{name}.dll";
 		}
-
+		FullName = name;
 		(IsSatellite, Culture, Name) = DetectSatellite (name);
 	}
 
@@ -48,6 +49,7 @@ public class ApplicationAssembly : BaseAspect
 	{
 		IgnoreOnLoad = isIgnored;
 		string name = NameMe (description);
+		FullName = name;
 		(IsSatellite, Culture, Name) = DetectSatellite (name);
 	}
 

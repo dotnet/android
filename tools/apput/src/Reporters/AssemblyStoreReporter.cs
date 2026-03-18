@@ -49,7 +49,7 @@ class AssemblyStoreReporter : BaseReporter
 		foreach (var kvp in store.Assemblies) {
 			ApplicationAssembly asm = kvp.Value;
 
-			ReportDoc.StartListItem (asm.Name);
+			ReportDoc.StartListItem (asm.FullName);
 			ReportDoc.BeginList ();
 			AddYesNoListItem ("Compressed", asm.IsCompressed);
 			ReportDoc.AddLabeledListItem ("Size", $"{asm.Size}");

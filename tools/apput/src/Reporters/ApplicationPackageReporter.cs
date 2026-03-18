@@ -12,12 +12,6 @@ namespace ApplicationUtility;
 [AspectReporter (typeof (PackageBase))]
 class ApplicationPackageReporter : BaseReporter
 {
-	sealed class AssemblyInfo
-	{
-		public ApplicationAssembly Assembly = null!;
-		public bool IsSatellite;
-	}
-
 	readonly ApplicationPackage package;
 
 	protected override string AspectName => package.AspectName;
@@ -390,7 +384,7 @@ class ApplicationPackageReporter : BaseReporter
 				continue;
 			}
 
-			ReportDoc.StartListItem ($"{assemblyList[0].Name}").BeginList();
+			ReportDoc.StartListItem (assemblyList[0].FullName).BeginList();
 
 			ReportDoc.AddLabeledListItem ("Architectures", String.Join (", ", assemblyList.Select (asm => asm.Architecture.ToString ()).Distinct ()));
 			if (assemblyList[0].IsSatellite) {

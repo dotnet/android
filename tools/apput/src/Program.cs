@@ -117,7 +117,7 @@ class Program
 				return;
 			}
 
-			string fileName = $"{Program.AppName}-{Path.GetFileNameWithoutExtension (extra[0])}.log";
+			string fileName = $"{Program.AppName}-{Path.GetFileName (extra[0])}.log";
 			logBuffer.SetLogFile (fileName);
 		};
 
@@ -148,7 +148,7 @@ class ReportCommand : BaseProgramCommand
 		}
 
 		if (String.IsNullOrEmpty (outputFile)) {
-			outputFile = $"report-{Path.GetFileNameWithoutExtension (rest[0])}.md";
+			outputFile = $"report-{Path.GetFileName (rest[0])}.md";
 		} else if (outputFile == "-") {
 			outputFile = null;
 		}
