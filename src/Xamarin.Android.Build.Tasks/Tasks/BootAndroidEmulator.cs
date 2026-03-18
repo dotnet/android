@@ -3,6 +3,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
@@ -26,7 +27,7 @@ namespace Xamarin.Android.Tasks;
 /// Boot logic is delegated to <see cref="EmulatorRunner.BootEmulatorAsync"/> and
 /// <see cref="AdbRunner"/> in Xamarin.Android.Tools.AndroidSdk.
 /// </summary>
-public class BootAndroidEmulator : AndroidTask
+public class BootAndroidEmulator : AsyncTask
 {
 	const int DefaultBootTimeoutSeconds = 300;
 
@@ -92,7 +93,7 @@ public class BootAndroidEmulator : AndroidTask
 	[Output]
 	public string? AdbTarget { get; set; }
 
-	public override bool RunTask ()
+	public override async Task RunTaskAsync ()
 	{
 		var adbPath = ResolveAdbPath ();
 		var emulatorPath = ResolveEmulatorPath ();
@@ -103,55 +104,51 @@ public class BootAndroidEmulator : AndroidTask
 			AdditionalArgs = ParseExtraArguments (EmulatorExtraArguments),
 		};
 
-		var result = ExecuteBoot (adbPath, emulatorPath, logger, Device, options);
+		var result = await ExecuteBootAsync (adbPath, emulatorPath, logger, Device, options, CancellationToken).ConfigureAwait (false);
 
 		if (result.Success) {
 			ResolvedDevice = result.Serial;
 			AdbTarget = $"-s {result.Serial}";
 			Log.LogMessage (MessageImportance.High, $"Emulator '{Device}' ({result.Serial}) is fully booted and ready.");
-			return true;
+			return;
 		}
 
-		// Map the error message to the appropriate MSBuild error code
-		var errorMessage = result.ErrorMessage ?? "Unknown error";
-
-		if (errorMessage.Contains ("Failed to launch")) {
-			Log.LogCodedError ("XA0143", Properties.Resources.XA0143, Device, errorMessage);
-		} else if (errorMessage.Contains ("Timed out")) {
+		switch (result.ErrorKind) {
+		case EmulatorBootErrorKind.LaunchFailed:
+			Log.LogCodedError ("XA0143", Properties.Resources.XA0143, Device, result.ErrorMessage ?? "Unknown launch error");
+			break;
+		default:
 			Log.LogCodedError ("XA0145", Properties.Resources.XA0145, Device, BootTimeoutSeconds);
-		} else {
-			Log.LogCodedError ("XA0145", Properties.Resources.XA0145, Device, BootTimeoutSeconds);
+			break;
 		}
-
-		return false;
 	}
 
 	/// <summary>
 	/// Executes the full boot flow via <see cref="EmulatorRunner.BootEmulatorAsync"/>.
 	/// Virtual so tests can return canned results without launching real processes.
 	/// </summary>
-	protected virtual EmulatorBootResult ExecuteBoot (
+	protected virtual async Task<EmulatorBootResult> ExecuteBootAsync (
 		string adbPath,
 		string emulatorPath,
 		Action<TraceLevel, string> logger,
 		string device,
-		EmulatorBootOptions options)
+		EmulatorBootOptions options,
+		System.Threading.CancellationToken cancellationToken)
 	{
 		var adbRunner = new AdbRunner (adbPath, logger: logger);
 		var emulatorRunner = new EmulatorRunner (emulatorPath, logger: logger);
-		return emulatorRunner.BootEmulatorAsync (device, adbRunner, options)
-			.GetAwaiter ().GetResult ();
+		return await emulatorRunner.BootEmulatorAsync (device, adbRunner, options, cancellationToken).ConfigureAwait (false);
 	}
 
 	/// <summary>
-	/// Parses space-separated extra arguments into an array suitable for <see cref="EmulatorBootOptions.AdditionalArgs"/>.
+	/// Parses space-separated extra arguments into a list suitable for <see cref="EmulatorBootOptions.AdditionalArgs"/>.
 	/// </summary>
-	static string[]? ParseExtraArguments (string? extraArgs)
+	static List<string>? ParseExtraArguments (string? extraArgs)
 	{
 		if (extraArgs.IsNullOrEmpty ())
 			return null;
 
-		return extraArgs.Split ([' '], StringSplitOptions.RemoveEmptyEntries);
+		return new List<string> (extraArgs.Split ([' '], StringSplitOptions.RemoveEmptyEntries));
 	}
 
 	/// <summary>
