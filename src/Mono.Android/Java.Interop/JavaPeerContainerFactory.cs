@@ -3,6 +3,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Java.Interop
 {
@@ -13,7 +14,7 @@ namespace Java.Interop
 	public abstract class JavaPeerContainerFactory
 	{
 		/// <summary>
-		/// Creates a typed array. Rank 1 = T[], rank 2 = T[][], rank 3 = T[][][].
+		/// Creates a typed jagged array. Rank 1 = T[], rank 2 = T[][], etc.
 		/// </summary>
 		internal abstract Array CreateArray (int length, int rank);
 
@@ -61,12 +62,30 @@ namespace Java.Interop
 
 		JavaPeerContainerFactory () { }
 
+		// TODO: I am afraid this might cause unnecessary code bloat for Native AOT. I think we should revisit
+		// how we use this API and instead use a differnet approach that uses AOT-safe `Array.CreateInstanceFromArrayType`
+		// with statically provided array types based on a statically known array type.
 		internal override Array CreateArray (int length, int rank) => rank switch {
 			1 => new T [length],
 			2 => new T [length][],
 			3 => new T [length][][],
-			_ => throw new ArgumentOutOfRangeException (nameof (rank), rank, "Array rank must be 1, 2, or 3."),
+			_ when rank >= 0 => CreateHigherRankArray (length, rank),
+			_ => throw new ArgumentOutOfRangeException (nameof (rank), rank, "Rank must be non-negative."),
 		};
+
+		static Array CreateHigherRankArray (int length, int rank)
+		{
+			if (!RuntimeFeature.IsDynamicCodeSupported) {
+				throw new NotSupportedException ($"Cannot create array of rank {rank} because dynamic code is not supported.");
+			}
+
+			var arrayType = typeof (T);
+			for (int i = 0; i < rank; i++) {
+				arrayType = arrayType.MakeArrayType ();
+			}
+
+			return Array.CreateInstanceFromArrayType (arrayType, length);
+		}
 
 		internal override IList CreateList (IntPtr handle, JniHandleOwnership transfer)
 			=> new Android.Runtime.JavaList<T> (handle, transfer);
