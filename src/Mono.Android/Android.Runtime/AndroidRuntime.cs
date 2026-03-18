@@ -73,6 +73,19 @@ namespace Android.Runtime {
 			return peekedExc;
 		}
 
+		public override void OnUserUnhandledException (ref JniTransition transition, Exception e)
+		{
+			// Raise the UnhandledExceptionRaiser event via AndroidEnvironment.UnhandledException().
+			// If a subscriber sets Handled = true, UnhandledException() returns without calling
+			// RaiseThrowable() and we should not transition to JNI.
+			// See: https://github.com/dotnet/android/issues/10654
+			if (AndroidEnvironment.TryRaiseUnhandledException (e)) {
+				return;
+			}
+
+			base.OnUserUnhandledException (ref transition, e);
+		}
+
 		public override void RaisePendingException (Exception pendingException)
 		{
 			var je  = pendingException as JavaException;

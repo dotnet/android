@@ -429,6 +429,45 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		}
 
 		[Test]
+		public void UnhandledExceptionFromButtonClick ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		{
+			proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (runtime);
+			proj.SetAndroidSupportedAbis (DeviceAbi);
+
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
+				Android.Runtime.AndroidEnvironment.UnhandledExceptionRaiser += (sender, e) => {
+					Android.Util.Log.Error ("UnhandledTest", $"UnhandledExceptionRaiser: {e.Exception}");
+					e.Handled = true;
+				};
+
+				AppDomain.CurrentDomain.UnhandledException += (sender, e) => {
+					Android.Util.Log.Error ("UnhandledTest",
+						$"AppDomain.UnhandledException: {e.ExceptionObject}, IsTerminating: {e.IsTerminating}");
+				};
+
+				button!.Click += (sender, e) => {
+					throw new Exception ("Unhandled exception test");
+				};
+			""");
+
+			builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+			AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+			WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"));
+			ClearAdbLogcat ();
+			ClearBlockingDialogs ();
+			ClickButton (proj.PackageName, "myButton", "MY BUTTON");
+
+			string expectedLogcatOutput = "UnhandledExceptionRaiser: System.Exception: Unhandled exception test";
+			Assert.IsTrue (
+				MonitorAdbLogcat (CreateLineChecker (expectedLogcatOutput),
+					logcatFilePath: Path.Combine (Root, builder.ProjectDirectory, "unhandled-logcat.log"), timeout: 60),
+				$"Output did not contain {expectedLogcatOutput}!");
+		}
+
+		[Test]
 		[Category ("UsesDevice")]
 		[TestCase ("テスト")]
 		[TestCase ("随机生成器")]
