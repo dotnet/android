@@ -512,11 +512,15 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 			[DynamicallyAccessedMembers (Constructors)]
 			Type type)
 	{
-		if (_typeMap != null) {
+		if (RuntimeFeature.TrimmableTypeMap) {
+			Debug.Assert (_typeMap != null, "TrimmableTypeMap should not be null when RuntimeFeature.TrimmableTypeMap is true.");
+
 			if (_typeMap.TryCreatePeer (type, reference.Handle, JniHandleOwnership.DoNotTransfer)) {
 				JniObjectReference.Dispose (ref reference, options);
 				return true;
 			}
+		
+			return base.TryConstructPeer (self, ref reference, options, type);
 		}
 
 		var c = type.GetConstructor (ActivationConstructorBindingFlags, null, XAConstructorSignature, null);
