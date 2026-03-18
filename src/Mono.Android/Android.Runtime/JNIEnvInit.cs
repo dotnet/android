@@ -130,11 +130,12 @@ namespace Android.Runtime
 
 			BoundExceptionType = (BoundExceptionType)args->ioExceptionType;
 			JniRuntime.JniTypeManager typeManager;
-			JniRuntime.JniValueManager valueManager;
+			JniRuntime.JniValueManager? valueManager = null;
 			TrimmableTypeMap? trimmableTypeMap = null;
 			if (RuntimeFeature.TrimmableTypeMap) {
 				trimmableTypeMap = new TrimmableTypeMap ();
 				typeManager     = new TrimmableTypeMapTypeManager (trimmableTypeMap);
+				valueManager    = new JavaMarshalValueManager (trimmableTypeMap);
 			} else if (RuntimeFeature.ManagedTypeMap) {
 				typeManager     = new ManagedTypeManager ();
 			} else {
@@ -143,7 +144,8 @@ namespace Android.Runtime
 			if (RuntimeFeature.IsMonoRuntime) {
 				valueManager = new AndroidValueManager ();
 			} else if (RuntimeFeature.IsCoreClrRuntime) {
-				valueManager = new JavaMarshalValueManager (trimmableTypeMap);
+				// Note: this will be removed once trimmable typemap is the only supported option for CoreCLR runtime
+				valueManager ??= new JavaMarshalValueManager ();
 			} else {
 				throw new NotSupportedException ("Internal error: unknown runtime not supported");
 			}
@@ -156,9 +158,7 @@ namespace Android.Runtime
 					args->jniAddNativeMethodRegistrationAttributePresent != 0
 			);
 
-			if (trimmableTypeMap != null) {
-				trimmableTypeMap.RegisterBootstrapNativeMethod ();
-			}
+			trimmableTypeMap?.RegisterBootstrapNativeMethod ();
 
 			grefIGCUserPeer_class = args->grefIGCUserPeer;
 			grefGCUserPeerable_class = args->grefGCUserPeerable;
