@@ -75,9 +75,9 @@ namespace Android.Runtime {
 
 		public override void OnUserUnhandledException (ref JniTransition transition, Exception e)
 		{
-			// Raise the UnhandledExceptionRaiser event via AndroidEnvironment.UnhandledException().
-			// If a subscriber sets Handled = true, UnhandledException() returns without calling
-			// RaiseThrowable() and we should not transition to JNI.
+			// Raise the UnhandledExceptionRaiser event via TryRaiseUnhandledException().
+			// If a subscriber sets Handled = true, the exception is considered handled
+			// and we return without transitioning to JNI.
 			// See: https://github.com/dotnet/android/issues/10654
 			if (AndroidEnvironment.TryRaiseUnhandledException (e)) {
 				return;

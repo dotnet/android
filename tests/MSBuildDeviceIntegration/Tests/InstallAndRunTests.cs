@@ -435,15 +435,11 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			proj.SetRuntime (runtime);
 			proj.SetAndroidSupportedAbis (DeviceAbi);
 
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
+"""
 				Android.Runtime.AndroidEnvironment.UnhandledExceptionRaiser += (sender, e) => {
 					Android.Util.Log.Error ("UnhandledTest", $"UnhandledExceptionRaiser: {e.Exception}");
 					e.Handled = true;
-				};
-
-				AppDomain.CurrentDomain.UnhandledException += (sender, e) => {
-					Android.Util.Log.Error ("UnhandledTest",
-						$"AppDomain.UnhandledException: {e.ExceptionObject}, IsTerminating: {e.IsTerminating}");
 				};
 
 				button!.Click += (sender, e) => {
@@ -454,17 +450,17 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 			AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
-			WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"));
+			Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log")), "Activity should have started.");
 			ClearAdbLogcat ();
 			ClearBlockingDialogs ();
 			ClickButton (proj.PackageName, "myButton", "MY BUTTON");
 
-			string expectedLogcatOutput = "UnhandledExceptionRaiser: System.Exception: Unhandled exception test";
+			string expectedRaiser = "UnhandledExceptionRaiser: System.Exception: Unhandled exception test";
 			Assert.IsTrue (
-				MonitorAdbLogcat (CreateLineChecker (expectedLogcatOutput),
+				MonitorAdbLogcat (CreateLineChecker (expectedRaiser),
 					logcatFilePath: Path.Combine (Root, builder.ProjectDirectory, "unhandled-logcat.log"), timeout: 60),
-				$"Output did not contain {expectedLogcatOutput}!");
+				$"Output did not contain {expectedRaiser}!");
 		}
 
 		[Test]
