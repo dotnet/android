@@ -4,6 +4,9 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Net;
+using Grpc.Core;
+using Grpc.Net.Client;
+using Remoteicordebug;
 using Mono.Debugging.Client;
 using Mono.Debugging.Soft;
 using NUnit.Framework;
@@ -658,6 +661,111 @@ namespace ${ROOT_NAMESPACE} {
 					session.Exit ();
 				}
 			}
+		}
+
+		[Test, Category ("Debugger")]
+		[Retry (1)]
+		public async Task CoreClrRemoteDebuggerListens ()
+		{
+			AssertCommercialBuild ();
+
+			int port = Random.Shared.Next (10000, 20000);
+			var mscordbiPackageVersion = "10.0.0-preview.26170.1";
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = false,
+				ExtraNuGetConfigSources = {
+					"https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-tools-internal/nuget/v3/index.json",
+				},
+				PackageReferences = {
+					new Package { Id = "Microsoft.Diagnostics.RemoteMscordbiTarget.android-arm64", Version = mscordbiPackageVersion },
+					new Package { Id = "Microsoft.Diagnostics.RemoteMscordbiTarget.android-x64", Version = mscordbiPackageVersion },
+				},
+				OtherBuildItems = {
+					new BuildItem ("RuntimeEnvironmentVariable", "CORECLR_ENABLE_PROFILING") { Metadata = { { "Value", "1" } } },
+					new BuildItem ("RuntimeEnvironmentVariable", "CORECLR_PROFILER") { Metadata = { { "Value", "{9DC623E8-C88F-4FD5-AD99-77E67E1D9631}" } } },
+					new BuildItem ("RuntimeEnvironmentVariable", "CORECLR_PROFILER_PATH") { Metadata = { { "Value", "libremotemscordbitarget.so" } } },
+					new BuildItem ("RuntimeEnvironmentVariable", "CORECLR_REMOTE_DEBUGGER_PORT") { Metadata = { { "Value", port.ToString () } } },
+					new BuildItem ("RuntimeEnvironmentVariable", "CORECLR_REMOTE_DEBUGGER_ISSERVER") { Metadata = { { "Value", "1" } } },
+					new BuildItem ("RuntimeEnvironmentVariable", "CORECLR_REMOTE_DEBUGGER_IP") { Metadata = { { "Value", "127.0.0.1" } } },
+				},
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifier (DeviceAbi);
+			proj.SetProperty ("AndroidSdbTargetPort", port.ToString ());
+			proj.SetProperty ("AndroidSdbHostPort", port.ToString ());
+			proj.SetProperty ("AndroidAttachDebugger", "true");
+
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
+				Console.WriteLine ("CORECLR_ENABLE_PROFILING=" + Environment.GetEnvironmentVariable("CORECLR_ENABLE_PROFILING"));
+				Console.WriteLine ("CORECLR_PROFILER_PATH=" + Environment.GetEnvironmentVariable("CORECLR_PROFILER_PATH"));
+				Console.WriteLine ("CORECLR_REMOTE_DEBUGGER_PORT=" + Environment.GetEnvironmentVariable("CORECLR_REMOTE_DEBUGGER_PORT"));
+				""");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "Project should have installed.");
+
+			using var cts = new CancellationTokenSource ();
+			RunAdbCommand ("shell setprop debug.coreclr.enabled 1");
+			try {
+				RunProjectAndAssert (proj, builder);
+
+				// The profiler starts a gRPC server and blocks until a client connects.
+				// Connect and send the two handshake messages to unblock the runtime.
+				using var channel = GrpcChannel.ForAddress ($"http://127.0.0.1:{port}");
+				var grpcClient = new RemoteICorDebug.RemoteICorDebugClient (channel);
+				using var call = await ConnectToDebuggerAsync (grpcClient);
+
+				// Keep the gRPC stream alive in the background while we wait for the activity
+				_ = Task.Run (async () => {
+					try { while (await call.ResponseStream.MoveNext (cts.Token)) { } } catch { }
+				}, cts.Token);
+
+				WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
+				WaitForActivityToStart (proj.PackageName, "MainActivity",
+					Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 60);
+
+				var logcatOutput = File.ReadAllText (Path.Combine (Root, builder.ProjectDirectory, "logcat.log"));
+				StringAssert.Contains ("CoreCLR debugger initialized", logcatOutput,
+					"The CoreCLR remote debugger profiler did not initialize. Check that libremotemscordbitarget.so is included in the APK.");
+				StringAssert.Contains ("CORECLR_ENABLE_PROFILING=1", logcatOutput,
+					"The CORECLR_ENABLE_PROFILING env var was not set.");
+				StringAssert.Contains ("CORECLR_PROFILER_PATH=libremotemscordbitarget.so", logcatOutput,
+					"The CORECLR_PROFILER_PATH env var was not set.");
+				StringAssert.Contains ($"CORECLR_REMOTE_DEBUGGER_PORT={port}", logcatOutput,
+					"The CORECLR_REMOTE_DEBUGGER_PORT env var was not set.");
+			} finally {
+				cts.Cancel ();
+				RunAdbCommand ("shell setprop debug.coreclr.enabled 0");
+			}
+		}
+
+		/// <summary>
+		/// Connects to the libremotemscordbi profiler's gRPC server with retry
+		/// </summary>
+		static async Task<AsyncDuplexStreamingCall<CallbackRequest, CallbackResponse>>
+			ConnectToDebuggerAsync (RemoteICorDebug.RemoteICorDebugClient client)
+		{
+			// Wait for the profiler's gRPC server to start listening
+			await Task.Delay (3000);
+
+			var call = client.CallbackReverse ();
+
+			// unblocks WaitForDebuggerAttach()
+			await call.RequestStream.WriteAsync (new CallbackRequest {
+				Type = 0,
+				DefaultCordbObjectRequest = new DefaultCorDebugObjectRequest (),
+			});
+			await call.ResponseStream.MoveNext (CancellationToken.None);
+
+			// signals so managed code runs
+			var objectId = call.ResponseStream.Current.DefaultCordbObjectResponse?.ObjectId ?? 0;
+			await call.RequestStream.WriteAsync (new CallbackRequest {
+				Type = 2,
+				DefaultCordbObjectRequest = new DefaultCorDebugObjectRequest { ObjectId = objectId },
+			});
+
+			return call;
 		}
 	}
 }

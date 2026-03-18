@@ -43,6 +43,13 @@
     <PackageReference Include="MSBuild.StructuredLogger" Version="2.3.17" />
     <PackageReference Include="ICSharpCode.Decompiler" Version="7.2.1.6856" />
     <PackageReference Include="Humanizer" Version="$(HumanizerVersion)" />
+    <PackageReference Include="Google.Protobuf" Version="3.34.1" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.76.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.78.0" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="Protos\remoteicordebug.proto" GrpcServices="Client" />
   </ItemGroup>
 
   <ItemGroup>

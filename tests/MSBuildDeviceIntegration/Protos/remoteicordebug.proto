@@ -1,0 +1,26 @@
+// Minimal subset of the gRPC protocol, used only for testing.
+
+syntax = "proto3";
+package remoteicordebug;
+
+service RemoteICorDebug {
+    rpc CallbackReverse(stream CallbackRequest) returns (stream CallbackResponse);
+}
+
+message CallbackRequest {
+    int32 type = 1;
+    DefaultCorDebugObjectRequest default_cordb_object_request = 2;
+}
+
+message CallbackResponse {
+    DefaultCorDebugObjectResponse default_cordb_object_response = 1;
+}
+
+message DefaultCorDebugObjectRequest {
+    int32 objectId = 1;
+}
+
+message DefaultCorDebugObjectResponse {
+    int32 hresult = 1;
+    int32 objectId = 2;
+}
