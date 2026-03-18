@@ -6,11 +6,6 @@ using Xamarin.Android.Tools;
 
 namespace ApplicationUtility;
 
-// TODO: generate Markdown
-// TODO: detect whether we can output colors
-// TODO: reporters should be used for all items contained in the aspect being reported on. This requires
-//       changes to support different write formats depending on whether an aspect is being reported on
-//       in standalone or "embedded" mode.
 abstract class BaseReporter : IReporter
 {
 	protected enum Countable
@@ -34,15 +29,8 @@ abstract class BaseReporter : IReporter
 		{ Countable.SharedLibrary, ("library", "libraries") },
 	};
 
-	protected const ConsoleColor LabelColor = ConsoleColor.Gray;
-	protected const ConsoleColor ValidValueColor = ConsoleColor.Green;
-	protected const ConsoleColor InvalidValueColor = ConsoleColor.Red;
-	protected const ConsoleColor BannerColor = ConsoleColor.Cyan;
-
 	protected abstract string AspectName { get; }
 	protected abstract string ShortDescription { get; }
-
-	protected static readonly bool CanUseColor = !Console.IsOutputRedirected;
 
 	protected MarkdownDocument ReportDoc { get; }
 
@@ -62,7 +50,7 @@ abstract class BaseReporter : IReporter
 		DoReport (form, sectionLevel);
 
 		if (standalone) {
-			WriteLine ();
+			ReportDoc.AddNewline ();
 		}
 	}
 
@@ -98,22 +86,6 @@ abstract class BaseReporter : IReporter
 		return ReportDoc;
 	}
 
-	protected void WriteSubsectionBanner (string text)
-	{
-		WriteLine ();
-		WriteLine (BannerColor, $"## {text}");
-	}
-
-	protected void WriteAspectDesc (string text)
-	{
-		WriteItem ("Aspect type", text);
-	}
-
-	protected void WriteNativeArch (NativeArchitecture arch)
-	{
-		WriteItem (NativeArchitectureLabel, arch.ToString ());
-	}
-
 	protected MarkdownDocument AddNativeArchListItem (NativeArchitecture arch)
 	{
 		ReportDoc.AddLabeledListItem (NativeArchitectureLabel, arch.ToString ());
@@ -130,11 +102,6 @@ abstract class BaseReporter : IReporter
 	{
 		AddLabeledItem (TargetArchitectureLabel, arch.ToString (), appendNewline);
 		return ReportDoc;
-	}
-
-	protected void WriteNativeArch (AndroidTargetArch arch)
-	{
-		WriteItem (NativeArchitectureLabel, arch.ToString ());
 	}
 
 	protected void AddNativeArchDesc (AndroidTargetArch arch)
@@ -162,37 +129,9 @@ abstract class BaseReporter : IReporter
 		AddLabeledItem (NativeArchitecturesLabel, String.Join (", ", architectures));
 	}
 
-	protected void WriteNativeArch (ICollection<AndroidTargetArch> arches)
-	{
-		if (arches.Count == 1) {
-			WriteNativeArch (arches.First ());
-			return;
-		}
-
-		WriteLabel (NativeArchitecturesLabel);
-		if (arches.Count == 0) {
-			WriteLine (InvalidValueColor, "none");
-			return;
-		}
-
-		var architectures = new List<string> ();
-		foreach (AndroidTargetArch arch in arches) {
-			architectures.Add (arch.ToString ());
-		}
-
-		WriteLine (ValidValueColor, String.Join (", ", architectures));
-	}
-
 	protected MarkdownDocument AddYesNo (string label, bool value, bool appendNewLine = true) => AddLabeledItem (label, YesNo (value), appendNewLine);
 
 	protected MarkdownDocument AddYesNoListItem (string label, bool value, bool appendNewLine = true) => ReportDoc.AddLabeledListItem (label, YesNo (value), appendLine: appendNewLine);
-
-	protected void WriteYesNo (string label, bool value) => WriteItem (label, YesNo (value));
-
-	protected void WriteLabel (string label)
-	{
-		Write (LabelColor, $"{label}: ");
-	}
 
 	protected MarkdownDocument AddText (string text, MarkdownTextStyle style = MarkdownTextStyle.Plain, bool addIndent = true)
 	{
@@ -208,34 +147,6 @@ abstract class BaseReporter : IReporter
 	public MarkdownDocument AddListItemText (string text, MarkdownTextStyle style = MarkdownTextStyle.Plain)
 	{
 		return AddText (text, style, addIndent: false);
-	}
-
-	protected void WriteItem (string label, string value)
-	{
-		WriteLabel (label);
-		WriteLine (ValidValueColor, value);
-	}
-
-	protected void WriteLine ()
-	{
-		Console.WriteLine ();
-	}
-
-	protected void WriteLine (ConsoleColor color, string text)
-	{
-		Write (color, text);
-		WriteLine ();
-	}
-
-	protected void Write (ConsoleColor color, string text)
-	{
-		ConsoleColor oldFG = Console.ForegroundColor;
-		try {
-			Console.ForegroundColor = color;
-			Console.Write (text);
-		} finally {
-			Console.ForegroundColor = oldFG;
-		}
 	}
 
 	protected string GetCountable (Countable countable, ulong count)

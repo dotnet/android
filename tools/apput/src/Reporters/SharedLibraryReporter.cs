@@ -1,5 +1,4 @@
 using System;
-using System.Text;
 
 namespace ApplicationUtility;
 
@@ -46,7 +45,6 @@ class SharedLibraryReporter : BaseReporter
 		}
 	}
 
-	// TODO: migrate to Markdown
 	protected virtual void DoStandaloneReport ()
 	{
 		AddAspectDesc (LibraryKind);
@@ -161,30 +159,5 @@ class SharedLibraryReporter : BaseReporter
 		}
 
 		ReportDoc.AddLabeledListItem (AndroidIdentLabel, ValueOrNone (Library.AndroidIdent));
-	}
-
-	protected void WriteDebugInfoDesc ()
-	{
-		WriteItem ("Has debug info", YesNo (Library.HasDebugInfo));
-
-		var sb = new StringBuilder (YesNo (Library.HasDebugLink));
-		if (Library.HasDebugLink) {
-			sb.Append (" ('");
-			sb.Append (Library.DebugLink);
-			sb.Append ("')");
-		}
-		WriteItem ("Has debug link", sb.ToString ());
-	}
-
-	protected void WriteAlignmentInfo ()
-	{
-		var sb = new StringBuilder ();
-		sb.Append ($"0x{Library.Alignment:x} (");
-		if (!Library.AlignmentCompatibleWith16k) {
-			sb.Append ("NOT ");
-		}
-		sb.Append ("compatible with Android 16k library alignment requirement)");
-		WriteLabel ("Alignment");
-		WriteLine (Library.AlignmentCompatibleWith16k ? ValidValueColor : InvalidValueColor, sb.ToString ());
 	}
 }
