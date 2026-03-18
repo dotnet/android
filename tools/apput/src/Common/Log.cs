@@ -40,8 +40,15 @@ public static class Log
 			messageLogLevel,
 			writeLine: true
 		);
+
 		Buffer.Write (
-			ex.StackTrace ?? "Missing exception stack trace",
+			"See the log file for full exception trace.",
+			messageLogLevel,
+			writeLine: true
+		);
+
+		Buffer.Write (
+			ex.ToString (),
 			messageLogLevel >= LogLevel.Error ? messageLogLevel : LogLevel.Debug,
 			writeLine: true
 		);
