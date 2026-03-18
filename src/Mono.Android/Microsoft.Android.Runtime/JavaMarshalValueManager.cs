@@ -18,7 +18,7 @@ using Java.Interop;
 
 namespace Microsoft.Android.Runtime;
 
-class ManagedValueManager : JniRuntime.JniValueManager
+class JavaMarshalValueManager : JniRuntime.JniValueManager
 {
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
@@ -29,12 +29,12 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	static readonly SemaphoreSlim bridgeProcessingSemaphore = new (1, 1);
 
-	static Lazy<ManagedValueManager> s_instance = new (() => new ManagedValueManager ());
-	public static ManagedValueManager GetOrCreateInstance () => s_instance.Value;
+	static Lazy<JavaMarshalValueManager> s_instance = new (() => new JavaMarshalValueManager ());
+	public static JavaMarshalValueManager GetOrCreateInstance () => s_instance.Value;
 
-	unsafe ManagedValueManager ()
+	unsafe JavaMarshalValueManager ()
 	{
-		// There can only be one instance of ManagedValueManager because we can call JavaMarshal.Initialize only once.
+		// There can only be one instance because JavaMarshal.Initialize can only be called once.
 		var mark_cross_references_ftn = RuntimeNativeMethods.clr_initialize_gc_bridge (&BridgeProcessingStarted, &BridgeProcessingFinished);
 		JavaMarshal.Initialize (mark_cross_references_ftn);
 	}
@@ -48,7 +48,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	void ThrowIfDisposed ()
 	{
 		if (disposed)
-			throw new ObjectDisposedException (nameof (ManagedValueManager));
+			throw new ObjectDisposedException (nameof (JavaMarshalValueManager));
 	}
 
 	public override void WaitForGCBridgeProcessing ()
@@ -458,7 +458,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	static unsafe ReadOnlySpan<GCHandle> ProcessCollectedContexts (MarkCrossReferencesArgs* mcr)
 	{
 		List<GCHandle> handlesToFree = [];
-		ManagedValueManager instance = GetOrCreateInstance ();
+		JavaMarshalValueManager instance = GetOrCreateInstance ();
 
 		for (int i = 0; (nuint)i < mcr->ComponentCount; i++) {
 			StronglyConnectedComponent component = mcr->Components [i];
@@ -496,6 +496,8 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	static  readonly    Type[]  XAConstructorSignature  = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
 
+	internal TrimmableTypeMap? TypeMap { get; set; }
+
 	protected override bool TryConstructPeer (
 			IJavaPeerable self,
 			ref JniObjectReference reference,
@@ -503,6 +505,13 @@ class ManagedValueManager : JniRuntime.JniValueManager
 			[DynamicallyAccessedMembers (Constructors)]
 			Type type)
 	{
+		if (TypeMap != null) {
+			if (TypeMap.TryCreatePeer (type, reference.Handle, JniHandleOwnership.DoNotTransfer)) {
+				JniObjectReference.Dispose (ref reference, options);
+				return true;
+			}
+		}
+
 		var c = type.GetConstructor (ActivationConstructorBindingFlags, null, XAConstructorSignature, null);
 		if (c != null) {
 			var args = new object[] {
