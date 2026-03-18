@@ -24,12 +24,14 @@ namespace Android.Runtime {
 
 		public static IntPtr Handle => JniEnvironment.EnvironmentPointer;
 
-		static Array ArrayCreateInstance (Type elementType, int length) =>
-			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
-			// IL3050 disabled in source: if someone uses NativeAOT, they will get the warning.
-			#pragma warning disable IL3050
-			Array.CreateInstance (elementType, length);
-			#pragma warning restore IL3050
+		static Array ArrayCreateInstance (Type elementType, int length)
+		{
+			var factory = TrimmableTypeMap.Instance?.GetContainerFactory (elementType);
+			if (factory != null)
+				return factory.CreateArray (length, 1);
+
+			return Array.CreateInstance (elementType, length);
+		}
 
 		static Type MakeArrayType (Type type) =>
 			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
