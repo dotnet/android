@@ -435,8 +435,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			proj.SetRuntime (runtime);
 			proj.SetAndroidSupportedAbis (DeviceAbi);
 
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
-"""
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
 				Android.Runtime.AndroidEnvironment.UnhandledExceptionRaiser += (sender, e) => {
 					Android.Util.Log.Error ("UnhandledTest", $"UnhandledExceptionRaiser: {e.Exception}");
 					e.Handled = true;
