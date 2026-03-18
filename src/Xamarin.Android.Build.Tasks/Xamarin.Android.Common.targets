@@ -995,24 +995,9 @@ because xbuild doesn't support framework reference assemblies.
 			Overwrite="true"
 			WriteOnlyWhenDifferent="true"
 	/>
-	<!--
-	  Cache the selected Device in a .props file so the deploy build can restore it.
-	  The .NET SDK's `dotnet run` invokes DeployToDevice via ProjectInstance.Build() in-process
-	  but may not pass the Device global property. The _RestoreDeviceFromCache target
-	  (in Microsoft.Android.Sdk.Application.targets) reads this file via XmlPeek at runtime
-	  to restore $(Device) and $(AdbTarget).
-	-->
-	<WriteLinesToFile
-			Condition=" '$(DesignTimeBuild)' != 'True' And '$(Device)' != '' "
-			File="$(IntermediateOutputPath)device.props"
-			Lines="&lt;Project&gt;&lt;PropertyGroup&gt;&lt;Device&gt;$(Device)&lt;/Device&gt;&lt;/PropertyGroup&gt;&lt;/Project&gt;"
-			Overwrite="true"
-			WriteOnlyWhenDifferent="true"
-	/>
 	<ItemGroup>
 		<FileWrites Include="$(_AndroidBuildPropertiesCache)" />
 		<FileWrites Include="$(_AdbPropertiesCache)" />
-		<FileWrites Include="$(IntermediateOutputPath)device.props" Condition=" '$(Device)' != '' " />
 	</ItemGroup>
 </Target>
 

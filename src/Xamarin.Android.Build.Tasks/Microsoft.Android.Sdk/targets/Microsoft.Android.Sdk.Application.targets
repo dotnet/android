@@ -56,28 +56,6 @@ This file contains targets specific for Android application projects.
 
   <!--
   ***********************************************************************************************
-  _RestoreDeviceFromCache
-
-  Restores $(Device) and $(AdbTarget) from a cached device.props file when the .NET SDK's
-  `dotnet run` invokes DeployToDevice via ProjectInstance.Build() in-process and fails to
-  pass the Device global property. The device.props file is written during the main build
-  (see _CreatePropertiesCache in Xamarin.Android.Common.targets) and read here at runtime
-  via XmlPeek to restore the Device value selected during the ComputeAvailableDevices step.
-  ***********************************************************************************************
-  -->
-  <Target Name="_RestoreDeviceFromCache"
-      Condition=" '$(Device)' == '' And Exists('$(IntermediateOutputPath)device.props') ">
-    <XmlPeek XmlInputPath="$(IntermediateOutputPath)device.props"
-        Query="/Project/PropertyGroup/Device/text()">
-      <Output TaskParameter="Result" PropertyName="Device" />
-    </XmlPeek>
-    <PropertyGroup Condition=" '$(Device)' != '' ">
-      <AdbTarget>-s $(Device)</AdbTarget>
-    </PropertyGroup>
-  </Target>
-
-  <!--
-  ***********************************************************************************************
   _EnsureDeviceBooted
 
   Target that ensures the selected device is online and ready. If $(Device) refers to an

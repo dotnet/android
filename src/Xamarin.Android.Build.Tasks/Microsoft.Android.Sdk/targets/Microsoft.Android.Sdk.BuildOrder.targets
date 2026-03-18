@@ -129,7 +129,6 @@ properties that determine build ordering.
     <DeployToDeviceDependsOnTargets Condition=" '$(_AndroidFastDeploymentSupported)' == 'true' ">
       $(_MinimalSignAndroidPackageDependsOn);
       _GenerateEnvironmentFiles;
-      _RestoreDeviceFromCache;
       _EnsureDeviceBooted;
       _Upload;
       _AndroidConfigureAdbReverse;
@@ -137,7 +136,6 @@ properties that determine build ordering.
     <DeployToDeviceDependsOnTargets Condition=" '$(_AndroidFastDeploymentSupported)' != 'true' ">
       $(_MinimalSignAndroidPackageDependsOn);
       _GenerateEnvironmentFiles;
-      _RestoreDeviceFromCache;
       _EnsureDeviceBooted;
       _DeployApk;
       _DeployAppBundle;
