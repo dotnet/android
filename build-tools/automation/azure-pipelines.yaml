@@ -300,6 +300,11 @@ extends:
           ${{ else }}:
             signType: Test
           preConvertSteps:
+          # The global sdl.binskim.analyzeTargetGlob (bin\Build*\**) doesn't match
+          # any directory in this job. Create an empty one so BinSkim doesn't fail
+          # with ERR997.NoValidAnalysisTargets.
+          - pwsh: New-Item -ItemType Directory -Path "$(Build.SourcesDirectory)\bin\Build$(XA.Build.Configuration)" -Force
+            displayName: create bin\Build$(XA.Build.Configuration) for BinSkim
           - task: DownloadPipelineArtifact@2
             inputs:
               artifactName: nuget-signed
