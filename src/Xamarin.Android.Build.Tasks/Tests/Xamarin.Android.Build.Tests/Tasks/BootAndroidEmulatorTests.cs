@@ -48,7 +48,7 @@ public class BootAndroidEmulatorTests : BaseTest
 		{
 			LastBootedDevice = device;
 			LastBootOptions = options;
-			return Task.FromResult (BootResult);
+			return System.Threading.Tasks.Task.FromResult (BootResult);
 		}
 	}
 
