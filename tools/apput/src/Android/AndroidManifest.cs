@@ -62,7 +62,7 @@ public class AndroidManifest : BaseAspect
 		} else if (manifestState.ProtoManifestRoot != null) {
 			ret = new AndroidManifest (stream, manifestState.ProtoManifestRoot, description);
 		} else {
-			throw new NotImplementedException ();
+			ret = new AndroidManifest (stream, manifestState.Xml, description, AndroidManifestFormat.Plain);
 		}
 
 		return ret;
@@ -208,12 +208,8 @@ public class AndroidManifest : BaseAspect
 		return WithNamespaceMaybe (nsmgr, protoAttr.NamespaceUri, out ns, out prefix);
 	}
 
-	static XmlDocument? Read (AXMLParser? binaryParser, string? description)
+	static XmlDocument? Read (AXMLParser binaryParser, string? description)
 	{
-		if (binaryParser == null) {
-			throw new NotImplementedException ();
-		}
-
 		XmlDocument? doc = binaryParser.Parse ();
 		if (doc == null || !binaryParser.IsValid) {
 			Log.Debug ($"AXML parser didn't render a valid document for '{description}'");
