@@ -47,6 +47,12 @@ _ResolveAssemblies MSBuild target.
       Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' ">
     <ItemGroup>
       <Reference Update="@(Reference)" CopyToOutputDirectory="" />
+      <!-- Some NuGet packages (e.g. MSTest.TestAdapter) also add the same assemblies as @(None)
+           items, which flow into @(_SourceItemsToCopyToPublishDirectory) and create duplicate
+           entries that conflict with the properly-resolved @(Reference) copies. Remove @(None)
+           items that match @(Reference) HintPaths so they only flow through reference resolution.
+           See: https://github.com/microsoft/testfx/blob/35cc3cd6/src/Adapter/MSTest.TestAdapter/buildTransitive/common/MSTest.TestAdapter.targets#L31-L37 -->
+      <None Remove="@(Reference->'%(HintPath)')" />
     </ItemGroup>
   </Target>
 
