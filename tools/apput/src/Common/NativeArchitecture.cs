@@ -2,6 +2,9 @@ using System;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Identifies supported Android native CPU architectures. Values are flags and may be combined.
+/// </summary>
 [Flags]
 public enum NativeArchitecture
 {

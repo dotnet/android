@@ -6,6 +6,10 @@ using Xamarin.Android.Tools;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// General-purpose utility methods for file operations, stream handling,
+/// size formatting, architecture conversions, and shared library name demangling.
+/// </summary>
 class Utilities
 {
 	const ulong UL_KILOBYTE = 1024UL;
@@ -21,6 +25,11 @@ class Utilities
         const ulong UL_EXABYTE = 1024UL * 1024UL * 1024UL * 1024UL * 1024UL * 1024UL;
         const decimal FL_EXABYTE = 1024.0M * 1024.0M * 1024.0M * 1024.0M * 1024.0M * 1024.0M;
 
+	/// <summary>
+	/// Deletes the file at the specified path. Failures are logged at debug level.
+	/// </summary>
+	/// <param name="path">Path to the file to delete.</param>
+	/// <param name="quiet">If <c>true</c>, exceptions are swallowed; if <c>false</c>, they are rethrown.</param>
 	public static void DeleteFile (string path, bool quiet = true)
 	{
 		try {
@@ -33,6 +42,11 @@ class Utilities
 		}
 	}
 
+	/// <summary>
+	/// Closes the given file stream and deletes the underlying file.
+	/// </summary>
+	/// <param name="stream">The file stream to close.</param>
+	/// <param name="quiet">If <c>true</c>, exceptions are swallowed; if <c>false</c>, they are rethrown.</param>
 	public static void CloseAndDeleteFile (FileStream stream, bool quiet = true)
 	{
 		string path = stream.Name;
@@ -49,6 +63,12 @@ class Utilities
 	}
 
 	// TODO: review all the call sites, now that `rewindStream` default is different
+	/// <summary>
+	/// Creates a <see cref="BinaryReader"/> for the given stream, optionally rewinding to the beginning first.
+	/// </summary>
+	/// <param name="stream">The stream to read from.</param>
+	/// <param name="rewindStream">If <c>true</c>, seek to the beginning of the stream before creating the reader.</param>
+	/// <returns>A <see cref="BinaryReader"/> that leaves the stream open when disposed.</returns>
 	public static BinaryReader GetReaderAndRewindStream (Stream stream, bool rewindStream = true)
 	{
 		if (rewindStream) {
@@ -58,14 +78,23 @@ class Utilities
 		return new BinaryReader (stream, Encoding.UTF8, leaveOpen: true);
 	}
 
+	/// <summary>
+	/// Creates a failed <see cref="BasicAspectState"/> and logs the given message at debug level.
+	/// </summary>
 	public static BasicAspectState GetFailureAspectState (string message)
 	{
 		Log.Debug (message);
 		return new BasicAspectState (false);
 	}
 
+	/// <summary>
+	/// Returns the string representation of <paramref name="reference"/>, or "&lt;NULL&gt;" if it is null.
+	/// </summary>
 	public static string ToStringOrNull<T> (T? reference) => reference == null ? "<NULL>" : reference.ToString () ?? "[unknown]";
 
+	/// <summary>
+	/// Extracts the file name from a zip entry name (strips directory components).
+	/// </summary>
 	public static string GetZipEntryFileName (string entryName)
 	{
 		int idx = entryName.LastIndexOf ('/');
@@ -80,6 +109,12 @@ class Utilities
 		return entryName.Substring (idx + 1);
 	}
 
+	/// <summary>
+	/// Formats a byte size as a human-readable string with appropriate unit (B, KB, MB, etc.).
+	/// </summary>
+	/// <param name="val">The size in bytes.</param>
+	/// <param name="reportBytes">If <c>true</c>, include the raw byte count.</param>
+	/// <param name="reportHuman">If <c>true</c>, include the human-readable unit.</param>
 	public static string SizeToString (ulong val, bool reportBytes = true, bool reportHuman = true)
 	{
 		return SizeToString ((decimal)val, reportBytes, reportHuman);
@@ -137,6 +172,9 @@ class Utilities
         }
 
 	// TODO: consider replacing all uses of `AndroidTargetArch` with `NativeArchitecture`
+	/// <summary>
+	/// Converts an <see cref="AndroidTargetArch"/> to a <see cref="NativeArchitecture"/>.
+	/// </summary>
 	public static NativeArchitecture TargetArchToNative (AndroidTargetArch arch)
 	{
 		return arch switch {
@@ -148,6 +186,9 @@ class Utilities
 		};
 	}
 
+	/// <summary>
+	/// Converts an <see cref="AssemblyStoreABI"/> to a <see cref="NativeArchitecture"/>.
+	/// </summary>
 	public static NativeArchitecture AssemblyStoreAbiToNative (AssemblyStoreABI abi)
 	{
 		return abi switch {
@@ -159,6 +200,9 @@ class Utilities
 		};
 	}
 
+	/// <summary>
+	/// Returns the short architecture name used for file system paths (e.g. "arm64", "x86-64").
+	/// </summary>
 	public static string ArchNameForPath (NativeArchitecture arch)
 	{
 		return arch switch {
@@ -171,7 +215,14 @@ class Utilities
 		};
 	}
 
+	/// <summary>
+	/// Demangles a shared library name that wraps a .NET assembly (e.g. "lib_Foo.dll.so" → "Foo.dll").
+	/// </summary>
 	public static string DemangleSharedAssemblyLibraryName (string sharedLibraryName) => DemangleSharedLibraryName (sharedLibraryName, ".dll.so");
+
+	/// <summary>
+	/// Demangles a shared library name that wraps a PDB file (e.g. "lib_Foo.pdb.so" → "Foo.pdb").
+	/// </summary>
 	public static string DemangleSharedPdbLibraryName (string sharedLibraryName) => DemangleSharedLibraryName (sharedLibraryName, ".pdb.so");
 
 	public static string DemangleSharedLibraryName (string sharedLibraryName, string removeExtensionIfEndsWith)

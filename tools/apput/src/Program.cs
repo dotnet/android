@@ -6,6 +6,9 @@ using Mono.Options;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Application entry point for the <c>apput</c> (.NET for Android application analysis) command-line tool.
+/// </summary>
 class Program
 {
 	public const string AppName = "apput";
@@ -125,6 +128,9 @@ class Program
 	}
 }
 
+/// <summary>
+/// CLI command that generates a full analysis report for an application aspect.
+/// </summary>
 class ReportCommand : BaseProgramCommand
 {
 	string? outputFile;
@@ -165,6 +171,9 @@ class ReportCommand : BaseProgramCommand
 	}
 }
 
+/// <summary>
+/// CLI command that displays a short summary of the given application aspect. Not yet implemented.
+/// </summary>
 class SummaryCommand : BaseProgramCommand
 {
 	public SummaryCommand ()
@@ -177,6 +186,9 @@ class SummaryCommand : BaseProgramCommand
 	}
 }
 
+/// <summary>
+/// CLI command that lists selected components of an application package. Not yet implemented.
+/// </summary>
 class ListCommand : BaseProgramCommand
 {
 	public ListCommand ()
@@ -189,6 +201,9 @@ class ListCommand : BaseProgramCommand
 	}
 }
 
+/// <summary>
+/// CLI command that extracts .NET assemblies (and optionally PDB files) from an application package.
+/// </summary>
 class ExtractAssemblyCommand : BaseProgramCommand
 {
 	const string AssembliesOutputDirDefault = "assemblies";
@@ -252,6 +267,9 @@ class ExtractAssemblyCommand : BaseProgramCommand
 	}
 }
 
+/// <summary>
+/// CLI command that extracts the Android manifest as plain XML from an application package.
+/// </summary>
 class ExtractManifestCommand : BaseProgramCommand
 {
 	const string ManifestOutputDefault = "AndroidManifest.xml";

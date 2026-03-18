@@ -1,5 +1,9 @@
 namespace ApplicationUtility;
 
+/// <summary>
+/// Aspect state for <see cref="DotNetAndroidWrapperSharedLibrary"/>. Carries the loaded <see cref="AnELF"/>
+/// and the offset to the .NET payload section.
+/// </summary>
 class DotNetAndroidWrapperSharedLibraryAspectState : SharedLibraryAspectState
 {
 	public AnELF? LoadedELF { get; }

@@ -1,5 +1,8 @@
 namespace ApplicationUtility;
 
-// Format is identical to V2, class exists merely for versioning consistency
+/// <summary>
+/// Assembly descriptor for version 3 of the assembly store format.
+/// Format is identical to V2; this class exists for versioning consistency.
+/// </summary>
 class AssemblyStoreAssemblyDescriptorV3 : AssemblyStoreAssemblyDescriptorV2
 {}

@@ -6,9 +6,11 @@ using System.Xml;
 
 namespace ApplicationUtility;
 
-//
-// Based on https://github.com/androguard/androguard/tree/832104db3eb5dc3cc66b30883fa8ce8712dfa200/androguard/core/axml
-//
+/// <summary>
+/// Parser for Android binary XML (AXML) format. Converts the binary representation
+/// back into a <see cref="System.Xml.XmlDocument"/>.
+/// Based on the androguard project.
+/// </summary>
 class AXMLParser
 {
 	// Position of fields inside an attribute

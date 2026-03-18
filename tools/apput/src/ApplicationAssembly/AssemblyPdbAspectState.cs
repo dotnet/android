@@ -2,6 +2,10 @@ using System.Collections.Generic;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Stores state from <see cref="AssemblyPdb.ProbeAspect"/>, including Portable PDB metadata
+/// header information and stream descriptors.
+/// </summary>
 class AssemblyPdbAspectState : BasicAspectState
 {
 	internal sealed class StreamInfo

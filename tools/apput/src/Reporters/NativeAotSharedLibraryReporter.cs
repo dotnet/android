@@ -1,5 +1,8 @@
 namespace ApplicationUtility;
 
+/// <summary>
+/// Generates a report for a NativeAOT shared library.
+/// </summary>
 [AspectReporter (typeof (NativeAotSharedLibrary))]
 class NativeAotSharedLibraryReporter : SharedLibraryReporter
 {

@@ -4,6 +4,10 @@ using System.Linq;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Maps textual architecture names (e.g. "arm64-v8a", "x86_64") to <see cref="NativeArchitecture"/> values
+/// and provides helpers for parsing user-supplied architecture lists.
+/// </summary>
 class ArchitectureName
 {
 	static readonly Dictionary<string, NativeArchitecture> NameMap = new (StringComparer.OrdinalIgnoreCase) {
@@ -25,6 +29,10 @@ class ArchitectureName
 		{ "amd64",       NativeArchitecture.X64 },
 	};
 
+	/// <summary>
+	/// Returns a dictionary mapping each known <see cref="NativeArchitecture"/> value to a comma-separated
+	/// string of all recognized name aliases for that architecture.
+	/// </summary>
 	public static IDictionary<NativeArchitecture, string> GetSupportedNames ()
 	{
 		var ret = new Dictionary<NativeArchitecture, string> ();
@@ -43,6 +51,12 @@ class ArchitectureName
 		return ret;
 	}
 
+	/// <summary>
+	/// Parses a comma-separated string of architecture names into a set of <see cref="NativeArchitecture"/> values.
+	/// The special value "all" includes every known architecture.
+	/// </summary>
+	/// <param name="v">A comma-separated list of architecture names, or "all".</param>
+	/// <returns>A collection of parsed <see cref="NativeArchitecture"/> values.</returns>
 	public static ICollection<NativeArchitecture> ParseList (string v)
 	{
 		var ret = new HashSet<NativeArchitecture> ();

@@ -1,5 +1,8 @@
 namespace ApplicationUtility;
 
+/// <summary>
+/// Generates a report for a Xamarin/MAUI application shared library (<c>libxamarin-app.so</c>).
+/// </summary>
 [AspectReporter (typeof (XamarinAppSharedLibrary))]
 class XamarinAppSharedLibraryReporter : SharedLibraryReporter
 {

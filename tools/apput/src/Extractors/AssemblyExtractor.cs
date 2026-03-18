@@ -7,6 +7,10 @@ using System.Text.RegularExpressions;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Extracts .NET assemblies (and optionally PDB files) from assembly stores or application packages.
+/// Supports filtering by architecture, name patterns (glob or regex), and decompression control.
+/// </summary>
 // TODO: implement config file extraction
 [AspectExtractor (containerAspectType: typeof (AssemblyStore),              storedAspectType: typeof (ApplicationAssembly))]
 [AspectExtractor (containerAspectType: typeof (AssemblyStoreSharedLibrary), storedAspectType: typeof (ApplicationAssembly))]

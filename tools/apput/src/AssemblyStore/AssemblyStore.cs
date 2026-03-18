@@ -7,6 +7,10 @@ using Xamarin.Android.Tools;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Represents a .NET for Android assembly store—a binary container holding multiple
+/// managed assemblies, PDB files, and config data for a single ABI target.
+/// </summary>
 public class AssemblyStore : BaseAspect
 {
 	const int MinimumStoreSize = 8;
@@ -93,6 +97,9 @@ public class AssemblyStore : BaseAspect
 		return true;
 	}
 
+	/// <summary>
+	/// Loads an assembly store from the given stream and probe state.
+	/// </summary>
 	public static IAspect LoadAspect (Stream stream, IAspectState state, string? description)
 	{
 		var storeState = state as AssemblyStoreAspectState;

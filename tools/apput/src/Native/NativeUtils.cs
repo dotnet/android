@@ -2,6 +2,10 @@ using System;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Provides native-layer utility methods for computing padding, alignment, and native type sizes
+/// for 32-bit and 64-bit architectures.
+/// </summary>
 class NativeUtils
 {
 	static ulong GetPadding<S> (ulong sizeSoFar, bool is64Bit, out ulong typeSize)

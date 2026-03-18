@@ -5,6 +5,10 @@ using System.Text;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Represents a Portable PDB (Program Database) file associated with a .NET assembly.
+/// Detects PDB files by verifying the ECMA-335 metadata signature and the <c>#Pdb</c> stream.
+/// </summary>
 public class AssemblyPdb : BaseAspect
 {
 	const string LogTag = "PPDB";
@@ -21,6 +25,9 @@ public class AssemblyPdb : BaseAspect
 		Name = pdbName;
 	}
 
+	/// <summary>
+	/// Loads a PDB aspect from the given stream.
+	/// </summary>
 	public static IAspect LoadAspect (Stream stream, IAspectState state, string? description)
 	{
 		string desc = EnsureValidName (description);
@@ -28,6 +35,9 @@ public class AssemblyPdb : BaseAspect
 		return new AssemblyPdb (stream, desc);
 	}
 
+	/// <summary>
+	/// Probes the stream to determine whether it contains a valid Portable PDB file.
+	/// </summary>
 	public static IAspectState ProbeAspect (Stream stream, string? description)
 	{
 		string desc = EnsureValidName (description);
@@ -156,6 +166,9 @@ public class AssemblyPdb : BaseAspect
 		return description;
 	}
 
+	/// <summary>
+	/// Writes the PDB data to the given stream.
+	/// </summary>
 	public bool WriteToStream (Stream stream)
 	{
 		AspectStream.Seek (0, SeekOrigin.Begin);

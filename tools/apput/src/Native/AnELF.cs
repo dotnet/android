@@ -9,6 +9,10 @@ using ELFSharp.ELF.Sections;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Abstract base class for ELF binary access. Provides symbol lookup, data extraction,
+/// and integer reading from ELF sections. Subclassed for 32-bit and 64-bit ELF formats.
+/// </summary>
 abstract class AnELF
 {
 	protected static readonly byte[] EmptyArray = Array.Empty<byte> ();
@@ -46,6 +50,11 @@ abstract class AnELF
 		symbolsSection = symSection;
 	}
 
+	/// <summary>
+	/// Looks up a symbol by name in the symbol table or dynamic symbol table.
+	/// </summary>
+	/// <param name="symbolName">The name of the symbol to find.</param>
+	/// <returns>The symbol entry, or <c>null</c> if not found.</returns>
 	public ISymbolEntry? GetSymbol (string symbolName)
 	{
 		ISymbolEntry? symbol = null;
@@ -71,6 +80,9 @@ abstract class AnELF
 		return symtab?.Entries.Where (entry => entry.Value.Equals (symbolValue)).FirstOrDefault ();
 	}
 
+	/// <summary>
+	/// Checks whether a symbol with the given name exists in the ELF binary.
+	/// </summary>
 	public bool HasSymbol (string symbolName)
 	{
 		return GetSymbol (symbolName) != null;
@@ -237,12 +249,25 @@ abstract class AnELF
 		return ret;
 	}
 
+	/// <summary>
+	/// Attempts to load and parse a shared library from a file, returning an <see cref="AnELF"/> instance.
+	/// </summary>
+	/// <param name="filePath">Path to the ELF shared library file.</param>
+	/// <param name="anElf">On success, the loaded AnELF instance.</param>
+	/// <returns><c>true</c> if loading succeeded; <c>false</c> otherwise.</returns>
 	public static bool TryLoad (string filePath, out AnELF? anElf)
 	{
 		using var fs = File.OpenRead (filePath);
 		return TryLoad (fs, filePath, out anElf);
 	}
 
+	/// <summary>
+	/// Attempts to load and parse a shared library from a stream, returning an <see cref="AnELF"/> instance.
+	/// </summary>
+	/// <param name="stream">Stream containing the ELF binary.</param>
+	/// <param name="filePath">A name/description for the library.</param>
+	/// <param name="anElf">On success, the loaded AnELF instance.</param>
+	/// <returns><c>true</c> if loading succeeded; <c>false</c> otherwise.</returns>
 	public static bool TryLoad (Stream stream, string filePath, out AnELF? anElf)
 	{
 		anElf = null;

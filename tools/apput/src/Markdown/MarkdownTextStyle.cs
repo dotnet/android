@@ -2,6 +2,9 @@ using System;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Defines Markdown text formatting styles that can be combined as flags.
+/// </summary>
 [Flags]
 enum MarkdownTextStyle
 {

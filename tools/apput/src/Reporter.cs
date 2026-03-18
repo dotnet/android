@@ -6,8 +6,20 @@ using Microsoft.PowerShell.MarkdownRender;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Discovers and invokes the appropriate <see cref="IReporter"/> for a given aspect,
+/// then renders the resulting Markdown report to a file or the console.
+/// </summary>
 class Reporter
 {
+	/// <summary>
+	/// Generates a report for the specified <paramref name="aspect"/>.
+	/// </summary>
+	/// <param name="aspect">The application aspect to report on.</param>
+	/// <param name="plainTextRendering">If <c>true</c>, render as plain text instead of VT100 colored output.</param>
+	/// <param name="form">The report form (standalone or nested).</param>
+	/// <param name="doc">An existing <see cref="MarkdownDocument"/> to append to, or <c>null</c> to create a new one.</param>
+	/// <param name="outputFile">Path to write the report file, or <c>null</c> to write to the console.</param>
 	public static void Report (IAspect aspect, bool plainTextRendering, ReportForm form = ReportForm.Standalone, MarkdownDocument? doc = null, string? outputFile = null)
 	{
 		Type aspectType = aspect.GetType ();

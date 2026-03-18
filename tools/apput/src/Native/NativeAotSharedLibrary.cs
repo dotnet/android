@@ -6,6 +6,10 @@ using ELFSharp.ELF.Sections;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Represents a NativeAOT shared library, identified by the presence
+/// of specific ELF sections such as <c>__managedcode</c> or <c>.dotnet_eh_table</c>.
+/// </summary>
 public class NativeAotSharedLibrary : SharedLibrary
 {
 	public override string AspectName => $"{base.AspectName} (NativeAOT)";

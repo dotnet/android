@@ -5,6 +5,10 @@ using ELFSharp.ELF;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Represents a Xamarin/MAUI application shared library (<c>libxamarin-app.so</c>),
+/// which contains the application runtime configuration data.
+/// </summary>
 // TODO: make it an abstract class, we need to support different formats
 class XamarinAppSharedLibrary : SharedLibrary
 {

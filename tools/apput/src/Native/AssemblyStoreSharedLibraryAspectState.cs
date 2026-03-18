@@ -1,5 +1,8 @@
 namespace ApplicationUtility;
 
+/// <summary>
+/// Aspect state for <see cref="AssemblyStoreSharedLibrary"/>. Carries the probed assembly store aspect state.
+/// </summary>
 class AssemblyStoreSharedLibraryAspectState : DotNetAndroidWrapperSharedLibraryAspectState
 {
 	public IAspectState? AssemblyStoreState { get; }

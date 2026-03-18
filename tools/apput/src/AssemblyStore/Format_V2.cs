@@ -4,6 +4,9 @@ using System.IO;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Validator and reader for version 2 of the assembly store format. Currently unimplemented.
+/// </summary>
 class Format_V2 : FormatBase
 {
 	protected override string LogTag => "AssemblyStore/Format_V2";

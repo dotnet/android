@@ -1,5 +1,8 @@
 namespace ApplicationUtility;
 
+/// <summary>
+/// Identifies the type of chunk in an Android resource container (ARSC) or binary XML file.
+/// </summary>
 enum AndroidManifestChunkType : ushort
 {
 	Null              = 0x0000,

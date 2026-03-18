@@ -1,5 +1,8 @@
 namespace ApplicationUtility;
 
+/// <summary>
+/// ARM64 (AArch64) ELF relocation types.
+/// </summary>
 enum RelocationTypeARM64
 {
 	R_AARCH64_TLSGD_MOVW_G1                = 515, //  GOT-rel. MOV{N,Z} 31:16.
@@ -72,6 +75,9 @@ enum RelocationTypeARM64
 	R_AARCH64_IRELATIVE                    = 1032, //  STT_GNU_IFUNC relocation.
 }
 
+/// <summary>
+/// x86-64 (AMD64) ELF relocation types.
+/// </summary>
 enum RelocationTypeX64
 {
 	R_X86_64_NONE            = 0, //  No reloc

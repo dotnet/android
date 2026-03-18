@@ -3,6 +3,9 @@ using System.IO;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Represents a shared library that wraps a single .NET assembly (e.g. <c>lib_Foo.dll.so</c>).
+/// </summary>
 class AssemblySharedLibrary : DotNetAndroidWrapperSharedLibrary
 {
 	const string LogTag = "Assembly";

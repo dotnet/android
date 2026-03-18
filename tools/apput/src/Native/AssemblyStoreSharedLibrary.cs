@@ -3,6 +3,9 @@ using System.IO;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Represents a shared library that contains an embedded assembly store.
+/// </summary>
 class AssemblyStoreSharedLibrary : DotNetAndroidWrapperSharedLibrary
 {
 	readonly AssemblyStoreSharedLibraryAspectState state;

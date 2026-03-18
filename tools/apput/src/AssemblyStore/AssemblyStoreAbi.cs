@@ -1,6 +1,9 @@
 namespace ApplicationUtility;
 
-// Values correspond to those in `xamarin-app.hh`
+/// <summary>
+/// Identifies the ABI (Application Binary Interface) target of an assembly store.
+/// Values correspond to those in the native <c>xamarin-app.hh</c> header.
+/// </summary>
 enum AssemblyStoreABI : uint
 {
 	Unknown = 0x00000000,

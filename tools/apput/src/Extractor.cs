@@ -5,8 +5,18 @@ using System.Reflection;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Provides static methods for extracting sub-aspects (e.g. assemblies, manifests) from container aspects
+/// (e.g. APK/AAB packages) using reflection-based extractor discovery.
+/// </summary>
 public class Extractor
 {
+	/// <summary>
+	/// Determines whether an extractor exists that can extract an aspect of type <typeparamref name="TStored"/> from <paramref name="fromAspect"/>.
+	/// </summary>
+	/// <typeparam name="TStored">The type of aspect to extract.</typeparam>
+	/// <param name="fromAspect">The container aspect to extract from.</param>
+	/// <returns><c>true</c> if extraction is supported; <c>false</c> otherwise.</returns>
 	public static bool Supports<TStored> (IAspect? fromAspect) where TStored: class, IAspect
 	{
 		if (fromAspect == null) {
@@ -39,6 +49,13 @@ public class Extractor
 		return true;
 	}
 
+	/// <summary>
+	/// Extracts an aspect of type <typeparamref name="TStored"/> from <paramref name="fromAspect"/> into a destination stream.
+	/// </summary>
+	/// <typeparam name="TStored">The type of aspect to extract.</typeparam>
+	/// <param name="fromAspect">The container aspect to extract from.</param>
+	/// <param name="destinationStream">The stream to write the extracted data to.</param>
+	/// <returns><c>true</c> if a matching extractor was found; <c>false</c> otherwise.</returns>
 	public static bool Extract<TStored> (IAspect? fromAspect, Stream destinationStream) where TStored: class, IAspect
 	{
 		if (!GetExtractor (typeof(TStored), fromAspect, out IExtractor? extractor) || extractor == null) {
@@ -53,6 +70,16 @@ public class Extractor
 		return true;
 	}
 
+	/// <summary>
+	/// Extracts an aspect of type <typeparamref name="TStored"/> from <paramref name="fromAspect"/> into a file,
+	/// using extractor options of type <typeparamref name="TOptions"/>.
+	/// </summary>
+	/// <typeparam name="TStored">The type of aspect to extract.</typeparam>
+	/// <typeparam name="TOptions">The type of extractor options.</typeparam>
+	/// <param name="fromAspect">The container aspect to extract from.</param>
+	/// <param name="destinationPath">Path to the output file (will be overwritten).</param>
+	/// <param name="extractorOptions">Options to pass to the extractor.</param>
+	/// <returns><c>true</c> if a matching extractor was found; <c>false</c> otherwise.</returns>
 	public static bool Extract<TStored, TOptions> (IAspect? fromAspect, string destinationPath, TOptions extractorOptions) where TStored: class, IAspect
 	{
 		if (!GetExtractor<TOptions> (typeof(TStored), fromAspect, extractorOptions, out IExtractorWithOptions<TOptions>? extractor) || extractor == null) {
@@ -68,6 +95,16 @@ public class Extractor
 		return true;
 	}
 
+	/// <summary>
+	/// Extracts multiple entries of type <typeparamref name="TStored"/> from <paramref name="fromAspect"/> into
+	/// the given destination directory, using extractor options of type <typeparamref name="TOptions"/>.
+	/// </summary>
+	/// <typeparam name="TStored">The type of aspect to extract.</typeparam>
+	/// <typeparam name="TOptions">The type of extractor options.</typeparam>
+	/// <param name="fromAspect">The container aspect to extract from.</param>
+	/// <param name="destinationPath">Path to the output directory.</param>
+	/// <param name="extractorOptions">Options to pass to the extractor.</param>
+	/// <returns><c>true</c> if extraction succeeded; <c>false</c> otherwise.</returns>
 	public static bool ExtractMultiple<TStored, TOptions> (IAspect? fromAspect, string destinationPath, TOptions extractorOptions) where TStored: class, IAspect
 	{
 		if (!GetExtractor<TOptions> (typeof(TStored), fromAspect, extractorOptions, out IExtractorWithOptions<TOptions>? extractor) || extractor == null) {

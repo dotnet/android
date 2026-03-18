@@ -2,6 +2,9 @@ using System.Collections.Generic;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Options controlling assembly extraction: target architectures, name patterns, PDB extraction, and decompression.
+/// </summary>
 public class AssemblyExtractorOptions
 {
 	public ICollection<NativeArchitecture>? Architectures { get; set; }

@@ -8,6 +8,11 @@ using ProtoManifest = Aapt.Pb;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Represents an Android manifest as an application aspect. Supports parsing binary AXML,
+/// protobuf, and plain XML manifest formats. Extracts key properties such as package name,
+/// SDK versions, permissions, main activity, and debuggable flag.
+/// </summary>
 public class AndroidManifest : BaseAspect
 {
 	public string Description           { get; }
@@ -49,6 +54,13 @@ public class AndroidManifest : BaseAspect
 		: this (stream, Read (rootNode, description), description, AndroidManifestFormat.Protobuf)
 	{}
 
+	/// <summary>
+	/// Loads an Android manifest aspect from the given stream and state produced by <see cref="ProbeAspect"/>.
+	/// </summary>
+	/// <param name="stream">The stream containing the manifest data.</param>
+	/// <param name="state">The state returned by <see cref="ProbeAspect"/>.</param>
+	/// <param name="description">A human-readable description (e.g. file name).</param>
+	/// <returns>A loaded <see cref="AndroidManifest"/> instance.</returns>
 	public static IAspect LoadAspect (Stream stream, IAspectState state, string? description)
 	{
 		var manifestState = state as AndroidManifestAspectState;
@@ -68,6 +80,13 @@ public class AndroidManifest : BaseAspect
 		return ret;
 	}
 
+	/// <summary>
+	/// Probes the given stream to determine whether it contains a recognizable Android manifest
+	/// (binary AXML, plain XML, or protobuf format).
+	/// </summary>
+	/// <param name="stream">The stream to probe.</param>
+	/// <param name="description">A human-readable description (e.g. file name).</param>
+	/// <returns>An <see cref="IAspectState"/> indicating success and the detected format.</returns>
 	public static IAspectState ProbeAspect (Stream stream, string? description)
 	{
 		Log.Debug ($"Checking if '{description}' is an Android binary XML document.");

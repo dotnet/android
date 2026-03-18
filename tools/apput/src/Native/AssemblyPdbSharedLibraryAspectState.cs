@@ -1,5 +1,9 @@
 namespace ApplicationUtility;
 
+/// <summary>
+/// Aspect state for <see cref="AssemblyPdbSharedLibrary"/>. Carries the probed PDB aspect state
+/// alongside the ELF and payload offset information.
+/// </summary>
 class AssemblyPdbSharedLibraryAspectState : DotNetAndroidWrapperSharedLibraryAspectState
 {
 	public IAspectState? AssemblyPdbState { get; }

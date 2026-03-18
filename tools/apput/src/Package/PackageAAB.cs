@@ -3,6 +3,9 @@ using System.IO.Compression;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Represents an Android App Bundle (AAB) file.
+/// </summary>
 class PackageAAB : ApplicationPackage
 {
 	public override string PackageFormat { get; } = "AAB package";

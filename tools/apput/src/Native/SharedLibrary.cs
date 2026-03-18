@@ -8,6 +8,10 @@ using ELFSharp.ELF.Segments;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Represents an ELF shared library (.so file). Extracts metadata such as architecture,
+/// alignment, debug info, build ID, Android ident, and SONAME.
+/// </summary>
 public class SharedLibrary : BaseAspect
 {
 	const uint ELF_MAGIC = 0x464c457f;

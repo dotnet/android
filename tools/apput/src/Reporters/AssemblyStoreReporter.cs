@@ -2,6 +2,9 @@ using System;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Generates a report for an assembly store, listing contained assemblies, PDBs, and config files.
+/// </summary>
 [AspectReporter (typeof (AssemblyStore))]
 class AssemblyStoreReporter : BaseReporter
 {

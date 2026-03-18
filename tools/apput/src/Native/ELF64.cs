@@ -6,6 +6,10 @@ using ELFSharp.ELF.Sections;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// 64-bit ELF binary implementation of <see cref="AnELF"/>.
+/// Supports ARM64 and AMD64 architectures.
+/// </summary>
 class ELF64 : AnELF
 {
 	public override bool Is64Bit => true;

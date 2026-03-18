@@ -3,6 +3,10 @@ using System.IO;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// A read-only stream that represents a sub-range of a parent stream.
+/// All reads and seeks are constrained to the specified offset and length within the parent.
+/// </summary>
 class SubStream : Stream
 {
 	readonly Stream baseStream;

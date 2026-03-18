@@ -2,6 +2,9 @@ using ELFSharp.ELF;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Aspect state for <see cref="SharedLibrary"/>. Carries the parsed ELF image reference.
+/// </summary>
 class SharedLibraryAspectState : BasicAspectState
 {
 	public IELF? ElfImage { get; }

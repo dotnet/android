@@ -2,6 +2,9 @@ using System.IO;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Base class for all aspect extractors. Provides access to the container aspect.
+/// </summary>
 abstract class BaseExtractor : IExtractor
 {
 	protected IAspect ContainerAspect { get; }

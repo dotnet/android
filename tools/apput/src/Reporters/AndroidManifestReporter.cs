@@ -2,6 +2,10 @@ using System;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Generates a report for an Android manifest, including package name, SDK versions,
+/// main activity, permissions, debuggable flag, and manifest format.
+/// </summary>
 [AspectReporter (typeof (AndroidManifest))]
 class AndroidManifestReporter : BaseReporter
 {

@@ -4,6 +4,9 @@ using System.Text;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Extracts the Android manifest as plain XML from a manifest aspect or application package.
+/// </summary>
 [AspectExtractor (containerAspectType: typeof (AndroidManifest), storedAspectType: typeof (AndroidManifest))]
 [AspectExtractor (containerAspectType: typeof (PackageAPK),      storedAspectType: typeof (AndroidManifest))]
 [AspectExtractor (containerAspectType: typeof (PackageAAB),      storedAspectType: typeof (AndroidManifest))]

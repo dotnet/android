@@ -3,6 +3,10 @@ using System.IO;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Reads and validates an Android Resource Container (ARSC) chunk header,
+/// which consists of a chunk type, header size, and total chunk size.
+/// </summary>
 class ARSCHeader
 {
 	// This is the minimal size such a header must have. There might be other header data too!

@@ -2,6 +2,10 @@ using System;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Decodes the raw version word from an assembly store header into the main version number,
+/// ABI identifier, and 64-bit flag.
+/// </summary>
 class AssemblyStoreVersion
 {
 	public uint RawVersion      { get; }

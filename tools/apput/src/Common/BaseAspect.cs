@@ -3,6 +3,10 @@ using System.IO;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Base class for all aspect implementations. Manages the underlying stream and provides
+/// common probe/load logging helpers.
+/// </summary>
 public abstract class BaseAspect : IAspect
 {
 	bool disposed;

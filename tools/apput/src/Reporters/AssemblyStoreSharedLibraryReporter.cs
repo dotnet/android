@@ -2,6 +2,10 @@ using System;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Generates a report for a shared library containing an embedded assembly store.
+/// Reports the library metadata as well as the contained assembly store details.
+/// </summary>
 [AspectReporter (typeof (AssemblyStoreSharedLibrary))]
 class AssemblyStoreSharedLibraryReporter : SharedLibraryReporter
 {

@@ -3,6 +3,11 @@ using System.IO;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Abstract representation of an ELF relocation-with-addend (<c>Rela</c>) entry.
+/// </summary>
+/// <typeparam name="TUnsigned">The unsigned integer type (uint or ulong) matching the ELF class.</typeparam>
+/// <typeparam name="TSigned">The signed integer type (int or long) matching the ELF class.</typeparam>
 abstract class ELF_Rela<TUnsigned, TSigned>
 {
 	protected abstract long StructureSize { get; }
@@ -27,14 +32,9 @@ abstract class ELF_Rela<TUnsigned, TSigned>
 	}
 }
 
-// Corresponds to Elf64_Rela structure from ELF documentation:
-//
-//  typedef struct {
-//     Elf64_Addr r_offset;
-//     uint64_t   r_info;
-//     int64_t    r_addend;
-//  } Elf64_Rela;
-//
+/// <summary>
+/// 64-bit ELF relocation-with-addend entry (<c>Elf64_Rela</c>).
+/// </summary>
 sealed class ELF64_Rela : ELF_Rela<ulong, long>
 {
 	protected override long StructureSize => 3 * sizeof (ulong);

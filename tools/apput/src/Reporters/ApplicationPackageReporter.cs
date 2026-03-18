@@ -7,6 +7,10 @@ using System.Text;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Generates a comprehensive report for an Android application package (APK, AAB, or base module),
+/// including package metadata, manifest info, assembly stores, shared libraries, and architecture details.
+/// </summary>
 [AspectReporter (typeof (PackageAPK))]
 [AspectReporter (typeof (PackageAAB))]
 [AspectReporter (typeof (PackageBase))]

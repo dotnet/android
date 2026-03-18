@@ -8,6 +8,10 @@ using Xamarin.Android.Tasks;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Validator and reader for version 3 of the assembly store format. Handles the index,
+/// assembly descriptors, names, and data extraction.
+/// </summary>
 class Format_V3 : FormatBase
 {
 	protected override string LogTag => "AssemblyStore/Format_V3";

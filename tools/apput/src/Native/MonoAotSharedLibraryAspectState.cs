@@ -1,5 +1,8 @@
 namespace ApplicationUtility;
 
+/// <summary>
+/// Aspect state for <see cref="MonoAotSharedLibrary"/>.
+/// </summary>
 class MonoAotSharedLibraryAspectState : SharedLibraryAspectState
 {
 	public AnELF? LoadedELF { get; }

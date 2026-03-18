@@ -6,6 +6,10 @@ using Xamarin.Android.Tools;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Abstract base class for all aspect reporters. Handles common report structure (headings, sections)
+/// and delegates to subclasses for aspect-specific content via <see cref="DoReport"/>.
+/// </summary>
 abstract class BaseReporter : IReporter
 {
 	protected enum Countable

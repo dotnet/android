@@ -2,6 +2,10 @@ using System;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Generates a report for an ELF shared library, including name, architecture, size,
+/// alignment, debug info, build ID, and Android identification.
+/// </summary>
 [AspectReporter (typeof (SharedLibrary))]
 class SharedLibraryReporter : BaseReporter
 {

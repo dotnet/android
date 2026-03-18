@@ -7,6 +7,10 @@ using K4os.Compression.LZ4;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Represents a .NET managed assembly contained within an Android application package or assembly store.
+/// Supports both compressed (LZ4) and uncompressed PE assemblies.
+/// </summary>
 public class ApplicationAssembly : BaseAspect
 {
 	const string LogTag = "ApplicationAssembly";
@@ -73,11 +77,19 @@ public class ApplicationAssembly : BaseAspect
 		return (true, culture, newName);
 	}
 
-	// This is a special case, as much as I hate to have one. Ignored assemblies exist only in the assembly store's
-	// index. They have an associated descriptor, but no data whatsoever. For that reason, we can't go the `ProbeAspect`
-	// + `LoadAspect` route, so `AssemblyStore` will call this method for them.
+	/// <summary>
+	/// Creates a special ignored-on-load assembly instance for entries that exist in the store index but have no data.
+	/// </summary>
+	/// <param name="description">Assembly name or description.</param>
+	/// <param name="nameHash">The xxHash of the assembly name.</param>
+	/// <param name="arch">The target native architecture.</param>
+	/// <returns>A new <see cref="ApplicationAssembly"/> marked as ignored.</returns>
 	public static IAspect CreateIgnoredAssembly (string? description, ulong nameHash, NativeArchitecture arch)
 	{
+		// This is a special case, as much as I hate to have one. Ignored assemblies exist only in the assembly store's
+		// index. They have an associated descriptor, but no data whatsoever. For that reason, we can't go the `ProbeAspect`
+		// + `LoadAspect` route, so `AssemblyStore` will call this method for them.
+
 		Log.Debug ($"{LogTag}: stream ('{description}') is an ignored assembly.");
 		return new ApplicationAssembly (description, isIgnored: true) {
 			Architecture = arch,
@@ -85,6 +97,9 @@ public class ApplicationAssembly : BaseAspect
 		};
 	}
 
+	/// <summary>
+	/// Loads an assembly aspect from the given stream and probe state.
+	/// </summary>
 	public static IAspect LoadAspect (Stream stream, IAspectState state, string? description)
 	{
 		Log.Debug ($"Loading assembly from stream '{description}'");
@@ -96,6 +111,9 @@ public class ApplicationAssembly : BaseAspect
 		return new ApplicationAssembly (stream, (uint)stream.Length, description, isCompressed: false);
 	}
 
+	/// <summary>
+	/// Probes the stream to determine whether it contains a valid .NET assembly (compressed or PE).
+	/// </summary>
 	public static IAspectState ProbeAspect (Stream stream, string? description)
 	{
 		Log.Debug ($"{LogTag}: probing stream ('{description}')");
@@ -149,6 +167,12 @@ public class ApplicationAssembly : BaseAspect
 		return new BasicAspectState (true);
 	}
 
+	/// <summary>
+	/// Writes the assembly data to the given stream, optionally decompressing LZ4-compressed data.
+	/// </summary>
+	/// <param name="stream">The destination stream.</param>
+	/// <param name="decompress">If <c>true</c>, decompress the assembly data before writing.</param>
+	/// <returns><c>true</c> if the write succeeded.</returns>
 	public bool WriteToStream (Stream stream, bool decompress)
 	{
 		Log.Debug ($"Writing assembly '{Name}' to stream");

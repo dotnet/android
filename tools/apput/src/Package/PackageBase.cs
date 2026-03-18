@@ -3,6 +3,9 @@ using System.IO.Compression;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Represents the base module of an Android App Bundle (the <c>base/</c> split).
+/// </summary>
 class PackageBase : ApplicationPackage
 {
 	public override string PackageFormat { get; } = "Base application package";

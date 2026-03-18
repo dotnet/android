@@ -4,6 +4,10 @@ using System.Text;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Reads and caches strings from an Android binary XML (AXML) string pool chunk.
+/// Supports both UTF-8 and UTF-16 encoded strings.
+/// </summary>
 class AndroidManifestStringBlock
 {
 	const uint FlagSorted = 1 << 0;

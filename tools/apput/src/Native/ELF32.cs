@@ -6,6 +6,9 @@ using ELFSharp.ELF.Sections;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// 32-bit ELF binary implementation of <see cref="AnELF"/>.
+/// </summary>
 class ELF32 : AnELF
 {
 	public override bool Is64Bit => false;

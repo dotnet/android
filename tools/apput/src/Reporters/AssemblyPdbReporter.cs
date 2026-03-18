@@ -1,7 +1,9 @@
 using System;
 
 namespace ApplicationUtility;
-
+/// <summary>
+/// Generates a report for a Portable PDB file associated with a .NET assembly.
+/// </summary>
 [AspectReporter (typeof (AssemblyPdb))]
 class AssemblyPdbReporter : BaseReporter
 {

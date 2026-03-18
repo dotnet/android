@@ -1,5 +1,8 @@
 namespace ApplicationUtility;
 
+/// <summary>
+/// Aspect state for <see cref="XamarinAppSharedLibrary"/>. Carries the format tag and loaded ELF instance.
+/// </summary>
 class XamarinAppLibraryAspectState : SharedLibraryAspectState
 {
 	public AnELF? LoadedELF { get; }

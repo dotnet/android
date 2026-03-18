@@ -3,6 +3,9 @@ using System.IO;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Represents a shared library that wraps a Portable PDB file (e.g. <c>lib_Foo.pdb.so</c>).
+/// </summary>
 class AssemblyPdbSharedLibrary : DotNetAndroidWrapperSharedLibrary
 {
 	const string LogTag = "PDB";

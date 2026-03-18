@@ -1,5 +1,8 @@
 namespace ApplicationUtility;
 
+/// <summary>
+/// Defines the data types used in Android binary XML (AXML) manifest attributes.
+/// </summary>
 enum AndroidManifestAttributeType : uint
 {
 	// The 'data' field is either 0 or 1, specifying this resource is either undefined or empty, respectively.

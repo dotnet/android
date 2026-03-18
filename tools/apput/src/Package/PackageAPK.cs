@@ -3,6 +3,9 @@ using System.IO.Compression;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Represents an Android APK (Android Package Kit) file.
+/// </summary>
 class PackageAPK : ApplicationPackage
 {
 	public override string PackageFormat { get; } = "APK package";

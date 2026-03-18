@@ -4,6 +4,10 @@ using ELFSharp.ELF;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Represents a Mono AOT (Ahead-of-Time compiled) shared library,
+/// identified by the presence of the <c>mono_aot_file_info</c> symbol.
+/// </summary>
 class MonoAotSharedLibrary : SharedLibrary
 {
 	const string MonoAotDataSymbol = "mono_aot_file_info";

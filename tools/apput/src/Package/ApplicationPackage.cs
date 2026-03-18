@@ -9,6 +9,11 @@ using Xamarin.Android.Tools;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Abstract base for Android application packages (APK, AAB, base module). Handles ZIP-based
+/// container access, architecture detection, assembly store loading, shared library collection,
+/// runtime detection, and manifest parsing.
+/// </summary>
 public abstract class ApplicationPackage : BaseAspect
 {
 	readonly static HashSet<string> KnownApkEntries = new (StringComparer.Ordinal) {

@@ -5,6 +5,10 @@ using ELFSharp.ELF.Sections;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Represents a .NET for Android wrapper shared library—an ELF binary containing a <c>payload</c> section
+/// with embedded .NET data (assemblies, assembly stores, or PDB files).
+/// </summary>
 class DotNetAndroidWrapperSharedLibrary : SharedLibrary
 {
 	const string PayloadSectionName = "payload";

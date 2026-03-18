@@ -1,5 +1,8 @@
 namespace ApplicationUtility;
 
+/// <summary>
+/// Defines the severity levels for log messages.
+/// </summary>
 public enum LogLevel
 {
 	None    = 0,

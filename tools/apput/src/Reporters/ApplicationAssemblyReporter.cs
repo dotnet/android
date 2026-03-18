@@ -2,6 +2,10 @@ using System;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Generates a report for a single .NET application assembly, including name, size,
+/// compression status, architecture, and satellite assembly info.
+/// </summary>
 [AspectReporter (typeof (ApplicationAssembly))]
 class ApplicationAssemblyReporter : BaseReporter
 {

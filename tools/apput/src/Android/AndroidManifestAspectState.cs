@@ -4,6 +4,10 @@ using ProtoManifest = Aapt.Pb;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Preserves state from <see cref="AndroidManifest.ProbeAspect"/> for use in <see cref="AndroidManifest.LoadAspect"/>.
+/// Carries the parser or document used during probing so parsing is not repeated.
+/// </summary>
 class AndroidManifestAspectState : IAspectState
 {
 	public bool Success => true;

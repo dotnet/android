@@ -4,6 +4,10 @@ using System.Text;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// A simple Markdown document builder supporting headings, styled text, and lists
+/// with configurable line width and indentation.
+/// </summary>
 class MarkdownDocument
 {
 	const int DefaultLineWidth = 100;
@@ -20,6 +24,11 @@ class MarkdownDocument
 		ResetIndent ();
 	}
 
+	/// <summary>
+	/// Appends a Markdown heading of the given level.
+	/// </summary>
+	/// <param name="level">Heading level (1–6).</param>
+	/// <param name="text">The heading text.</param>
 	public MarkdownDocument AddHeading (uint level, string text)
 	{
 		// Headings don't break on `lineWidth`...
@@ -39,12 +48,18 @@ class MarkdownDocument
 		return this;
 	}
 
+	/// <summary>
+	/// Appends styled text to the document.
+	/// </summary>
 	public MarkdownDocument AddText (string text, MarkdownTextStyle style = MarkdownTextStyle.Plain, bool addIndent = true)
 	{
 		AppendText (text, style, breakLine: true, addIndent);
 		return this;
 	}
 
+	/// <summary>
+	/// Appends one or more blank lines to the document.
+	/// </summary>
 	public MarkdownDocument AddNewline (int count = 1)
 	{
 		if (count < 1) {
@@ -106,6 +121,9 @@ class MarkdownDocument
 		doc.Append (textToAppend);
 	}
 
+	/// <summary>
+	/// Begins a new list context with increased indentation.
+	/// </summary>
 	public MarkdownDocument BeginList (bool appendLine = true)
 	{
 		if (appendLine) {
@@ -115,6 +133,9 @@ class MarkdownDocument
 		return this;
 	}
 
+	/// <summary>
+	/// Starts a new list item prefix (<c>* </c>), optionally with initial text.
+	/// </summary>
 	public MarkdownDocument StartListItem (string? text = null, MarkdownTextStyle style = MarkdownTextStyle.Plain)
 	{
 		AppendIndent ();
@@ -127,6 +148,9 @@ class MarkdownDocument
 		return this;
 	}
 
+	/// <summary>
+	/// Ends the current list item, optionally appending a newline.
+	/// </summary>
 	public MarkdownDocument EndListItem (bool appendLine = true)
 	{
 		if (appendLine) {
@@ -151,6 +175,9 @@ class MarkdownDocument
 		return this;
 	}
 
+	/// <summary>
+	/// Adds a labeled list item with a bold label followed by styled text.
+	/// </summary>
 	public MarkdownDocument AddLabeledListItem (string label, string text, MarkdownTextStyle textStyle = MarkdownTextStyle.Plain, bool appendLine = true)
 	{
 		StartListItem ($"{label}:", MarkdownTextStyle.Bold);
@@ -159,6 +186,9 @@ class MarkdownDocument
 		return this;
 	}
 
+	/// <summary>
+	/// Ends the current list context, restoring the previous indentation.
+	/// </summary>
 	public MarkdownDocument EndList ()
 	{
 		RestorePreviousIndent ();

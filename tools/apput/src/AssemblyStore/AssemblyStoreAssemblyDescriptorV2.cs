@@ -1,5 +1,9 @@
 namespace ApplicationUtility;
 
+/// <summary>
+/// Assembly descriptor for version 2 of the assembly store format. Contains offsets and sizes
+/// for assembly data, debug data, and config data.
+/// </summary>
 class AssemblyStoreAssemblyDescriptorV2 : AssemblyStoreAssemblyDescriptor
 {
 	public uint MappingIndex     { get; internal set; }

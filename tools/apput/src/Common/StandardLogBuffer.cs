@@ -5,6 +5,10 @@ using System.Text;
 
 namespace ApplicationUtility;
 
+/// <summary>
+/// Default <see cref="LogBuffer"/> implementation that writes colored messages to the console
+/// and plain messages to an optional log file, with support for context-based indentation.
+/// </summary>
 class StandardLogBuffer : LogBuffer, IDisposable
 {
 	sealed class ContextFrame
