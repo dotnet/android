@@ -60,10 +60,6 @@ extends:
         enableAllTools: false
       binskim:
         scanOutputDirectoryOnly: true
-        # Only scan actual build output, not test assemblies under bin/Test*
-        # which produce BA2021 false positives. The "Convert NuGet to MSI" job
-        # overrides this glob in its own templateContext (in Xamarin.yaml-templates).
-        analyzeTargetGlob: bin\Build*\**
       codeql:
         compiled:
           enabled: false
