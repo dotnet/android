@@ -65,15 +65,21 @@ jobs:
       arguments: -p:Version=$(xat.nuget.version) -p:PackageOutputPath=$(Build.ArtifactStagingDirectory) -bl:$(Build.ArtifactStagingDirectory)/pack.binlog
     condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
 
+  - powershell: |
+      $suffix = if ($(System.JobAttempt) -gt 1) { " (Attempt $(System.JobAttempt))" } else { "" }
+      Write-Host "##vso[task.setvariable variable=ArtifactSuffix;]$suffix"
+    displayName: Set artifact suffix for retries
+    condition: always()
+
   - task: PublishPipelineArtifact@1
     displayName: Upload Build Output
     inputs:
       path: bin/Debug
-      artifactName: Output - $(System.JobName)
+      artifactName: Output - $(System.JobName)$(ArtifactSuffix)
 
   - task: PublishPipelineArtifact@1
     displayName: Upload Artifacts
     inputs:
       path: $(Build.ArtifactStagingDirectory)
-      artifactName: Artifacts - $(System.JobName)
+      artifactName: Artifacts - $(System.JobName)$(ArtifactSuffix)
     condition: always()
