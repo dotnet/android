@@ -130,7 +130,8 @@ static Xamarin.Android.Tools.JdkInstaller.RecommendedMajorVersion.get -> int
 static Xamarin.Android.Tools.JdkInstaller.SupportedVersions.get -> System.Collections.Generic.IReadOnlyList<int>!
 static Xamarin.Android.Tools.ProcessUtils.CreateProcessStartInfo(string! fileName, params string![]! args) -> System.Diagnostics.ProcessStartInfo!
 static Xamarin.Android.Tools.ProcessUtils.IsElevated() -> bool
-static Xamarin.Android.Tools.ProcessUtils.StartProcess(System.Diagnostics.ProcessStartInfo! psi, System.IO.TextWriter? stdout, System.IO.TextWriter? stderr, System.Threading.CancellationToken cancellationToken, System.Collections.Generic.IDictionary<string!, string!>? environmentVariables = null, System.Action<System.Diagnostics.Process!>? onStarted = null) -> System.Threading.Tasks.Task<int>!
+static Xamarin.Android.Tools.ProcessUtils.StartProcess(System.Diagnostics.ProcessStartInfo! psi, System.IO.TextWriter? stdout, System.IO.TextWriter? stderr, System.Threading.CancellationToken cancellationToken, System.Collections.Generic.IDictionary<string!, string!>? environmentVariables, System.Action<System.Diagnostics.Process!>? onStarted) -> System.Threading.Tasks.Task<int>!
+static Xamarin.Android.Tools.ProcessUtils.StartProcess(System.Diagnostics.ProcessStartInfo! psi, System.IO.TextWriter? stdout, System.IO.TextWriter? stderr, System.Threading.CancellationToken cancellationToken, System.Collections.Generic.IDictionary<string!, string!>? environmentVariables) -> System.Threading.Tasks.Task<int>!
 Xamarin.Android.Tools.AvdInfo
 Xamarin.Android.Tools.AvdInfo.AvdInfo(string! Name, string? DeviceProfile = null, string? Path = null) -> void
 Xamarin.Android.Tools.AvdInfo.DeviceProfile.get -> string?

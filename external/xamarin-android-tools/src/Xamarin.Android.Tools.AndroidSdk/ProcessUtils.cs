@@ -24,7 +24,21 @@ namespace Xamarin.Android.Tools
 			ExecutableFileExtensions    = pathExts;
 		}
 
-		public static async Task<int> StartProcess (ProcessStartInfo psi, TextWriter? stdout, TextWriter? stderr, CancellationToken cancellationToken, IDictionary<string, string>? environmentVariables = null, Action<Process>? onStarted = null)
+		/// Backward-compatible overload matching the original shipped API (without environmentVariables).
+#pragma warning disable RS0027 // Public API with optional parameter(s) should have the most parameters amongst its public overloads
+		public static Task<int> StartProcess (ProcessStartInfo psi, TextWriter? stdout, TextWriter? stderr, CancellationToken cancellationToken, Action<Process>? onStarted = null)
+#pragma warning restore RS0027
+		{
+			return StartProcess (psi, stdout, stderr, cancellationToken, null, onStarted);
+		}
+
+		/// Convenience overload accepting environmentVariables without requiring onStarted.
+		public static Task<int> StartProcess (ProcessStartInfo psi, TextWriter? stdout, TextWriter? stderr, CancellationToken cancellationToken, IDictionary<string, string>? environmentVariables)
+		{
+			return StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables, null);
+		}
+
+		public static async Task<int> StartProcess (ProcessStartInfo psi, TextWriter? stdout, TextWriter? stderr, CancellationToken cancellationToken, IDictionary<string, string>? environmentVariables, Action<Process>? onStarted)
 		{
 			cancellationToken.ThrowIfCancellationRequested ();
 			psi.UseShellExecute = false;
