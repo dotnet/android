@@ -59,7 +59,7 @@ public class PostTrimmingPipeline : AndroidTask
 			foreach (var item in Assemblies) {
 				allAssemblies.Add (resolver.GetAssembly (item.ItemSpec));
 			}
-			steps.Add (new PostTrimmingRemoveResourceDesignerStep (allAssemblies, (msg) => Log.LogDebugMessage (msg)));
+			steps.Add (new RemoveResourceDesignerStep (allAssemblies, (msg) => Log.LogDebugMessage (msg)));
 		}
 
 		foreach (var item in Assemblies) {
