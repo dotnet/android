@@ -47,11 +47,13 @@ namespace Xamarin.Android.Prepare
 
 			// Install runtime packs associated with the SDK previously installed.
 			var packageDownloadProj = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "build-tools", "xaprepare", "xaprepare", "package-download.proj");
-			var logPath = Path.Combine (Configurables.Paths.BuildBinDir, $"msbuild-{context.BuildTimeStamp}-download-runtime-packs.binlog");
+			var logPathBase = Path.Combine (Configurables.Paths.BuildBinDir, $"msbuild-{context.BuildTimeStamp}-download-runtime-packs");
 
 			const int maxAttempts = 3;
+			const int initialBackoffDelayMilliseconds = 2000;
 			bool restoreSucceeded = false;
 			for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+				var logPath = $"{logPathBase}-attempt{attempt}.binlog";
 				var runner = new ProcessRunner (Configurables.Paths.DotNetPreviewTool, "restore",
 					ProcessRunner.QuoteArgument (packageDownloadProj),
 					"--configfile", Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "NuGet.config"),
@@ -67,6 +69,8 @@ namespace Xamarin.Android.Prepare
 				}
 				if (attempt < maxAttempts) {
 					Log.WarningLine ($"Failed to restore runtime packs (attempt {attempt}/{maxAttempts}), retrying...");
+					var delayMilliseconds = initialBackoffDelayMilliseconds * (1 << (attempt - 1));
+					await Task.Delay (delayMilliseconds);
 				}
 			}
 			if (!restoreSucceeded) {
