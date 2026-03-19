@@ -195,3 +195,4 @@ This pattern ensures proper encoding, timestamps, and file attributes are handle
 - **MSBuild:** Test in isolation, validate inputs
 - **Device:** Use update directories for rapid Debug iteration
 - **Performance:** See `../Documentation/guides/profiling.md` and `../Documentation/guides/tracing.md`
+- **Emulator black screen on macOS:** If the Android emulator launches but shows only a black screen, the emulator tools are likely outdated. Update via `sdkmanager --install "emulator"` or Android Studio SDK Manager. Versions older than ~35.x are known to render incorrectly on Apple Silicon Macs.
