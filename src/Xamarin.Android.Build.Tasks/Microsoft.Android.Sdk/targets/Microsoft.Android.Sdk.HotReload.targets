@@ -76,7 +76,7 @@ See: https://github.com/dotnet/sdk/pull/52581
     </PropertyGroup>
 
     <Exec Condition=" '$(_AndroidWebSocketPort)' != '' "
-          Command="&quot;$(_AdbToolPath)&quot; reverse tcp:$(_AndroidWebSocketPort) tcp:$(_AndroidWebSocketPort)" />
+          Command="&quot;$(_AdbToolPath)&quot; $(AdbTarget) reverse tcp:$(_AndroidWebSocketPort) tcp:$(_AndroidWebSocketPort)" />
 
   </Target>
 
