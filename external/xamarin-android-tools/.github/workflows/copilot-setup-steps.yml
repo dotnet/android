@@ -10,7 +10,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  validate:
+  copilot-setup-steps:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
