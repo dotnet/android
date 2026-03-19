@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace Xamarin.Android.Tools.Tests;
@@ -713,5 +714,146 @@ public class AdbRunnerTests
 		// adb shell pm path android returns "package:/system/framework/framework-res.apk\n"
 		var output = "package:/system/framework/framework-res.apk\n";
 		Assert.AreEqual ("package:/system/framework/framework-res.apk", AdbRunner.FirstNonEmptyLine (output));
+	}
+
+	// --- GetEmulatorAvdNameAsync + ListDevicesAsync tests ---
+	// These tests use a fake 'adb' script to control process output,
+	// verifying AVD detection order and offline emulator handling.
+
+	static string CreateFakeAdb (string scriptBody)
+	{
+		if (OS.IsWindows)
+			Assert.Ignore ("Fake adb tests use bash scripts and are not supported on Windows.");
+
+		var dir = Path.Combine (Path.GetTempPath (), $"fake-adb-{Guid.NewGuid ():N}");
+		Directory.CreateDirectory (dir);
+		var path = Path.Combine (dir, "adb");
+		File.WriteAllText (path, "#!/bin/bash\n" + scriptBody);
+		FileUtil.Chmod (path, 0x1ED); // 0755
+
+		return path;
+	}
+
+	static void CleanupFakeAdb (string adbPath)
+	{
+		var dir = Path.GetDirectoryName (adbPath);
+		if (dir is { Length: > 0 }) {
+			File.Delete (adbPath);
+			Directory.Delete (dir);
+		}
+	}
+
+	[Test]
+	public async Task GetEmulatorAvdNameAsync_PrefersGetprop ()
+	{
+		// getprop returns a value — should be used, emu avd name should NOT be needed
+		var adbPath = CreateFakeAdb ("""
+			if [[ "$3" == "shell" && "$4" == "getprop" ]]; then
+			    echo "My_AVD_Name"
+			    exit 0
+			fi
+			if [[ "$3" == "emu" ]]; then
+			    echo "WRONG_NAME"
+			    echo "OK"
+			    exit 0
+			fi
+			exit 1
+			""");
+
+		try {
+			var runner = new AdbRunner (adbPath);
+			var name = await runner.GetEmulatorAvdNameAsync ("emulator-5554");
+			Assert.AreEqual ("My_AVD_Name", name, "Should return getprop result");
+		} finally {
+			CleanupFakeAdb (adbPath);
+		}
+	}
+
+	[Test]
+	public async Task GetEmulatorAvdNameAsync_FallsBackToEmuAvdName ()
+	{
+		// getprop returns empty — should fall back to emu avd name
+		var adbPath = CreateFakeAdb ("""
+			if [[ "$3" == "shell" && "$4" == "getprop" ]]; then
+			    echo ""
+			    exit 0
+			fi
+			if [[ "$3" == "emu" ]]; then
+			    echo "Fallback_AVD"
+			    echo "OK"
+			    exit 0
+			fi
+			exit 1
+			""");
+
+		try {
+			var runner = new AdbRunner (adbPath);
+			var name = await runner.GetEmulatorAvdNameAsync ("emulator-5554");
+			Assert.AreEqual ("Fallback_AVD", name, "Should fall back to emu avd name");
+		} finally {
+			CleanupFakeAdb (adbPath);
+		}
+	}
+
+	[Test]
+	public async Task GetEmulatorAvdNameAsync_BothFail_ReturnsNull ()
+	{
+		// Both getprop and emu avd name return empty
+		var adbPath = CreateFakeAdb ("""
+			echo ""
+			exit 0
+			""");
+
+		try {
+			var runner = new AdbRunner (adbPath);
+			var name = await runner.GetEmulatorAvdNameAsync ("emulator-5554");
+			Assert.IsNull (name, "Should return null when both methods fail");
+		} finally {
+			CleanupFakeAdb (adbPath);
+		}
+	}
+
+	[Test]
+	public async Task ListDevicesAsync_SkipsAvdQueryForOfflineEmulators ()
+	{
+		// adb devices returns one online emulator and one offline emulator.
+		// Only the online one should get an AVD name query.
+		var adbPath = CreateFakeAdb ("""
+			if [[ "$1" == "devices" ]]; then
+			    echo "List of devices attached"
+			    echo "emulator-5554          device product:sdk_gphone64_arm64 model:sdk_gphone64_arm64 device:emu64a transport_id:1"
+			    echo "emulator-5556          offline"
+			    exit 0
+			fi
+			if [[ "$1" == "-s" && "$2" == "emulator-5554" && "$3" == "shell" && "$4" == "getprop" ]]; then
+			    echo "Online_AVD"
+			    exit 0
+			fi
+			if [[ "$1" == "-s" && "$2" == "emulator-5556" ]]; then
+			    # This should NOT be called for offline emulators.
+			    # Return a name anyway so we can detect if it was incorrectly queried.
+			    echo "OFFLINE_SHOULD_NOT_APPEAR"
+			    exit 0
+			fi
+			exit 1
+			""");
+
+		try {
+			var runner = new AdbRunner (adbPath);
+			var devices = await runner.ListDevicesAsync ();
+
+			Assert.AreEqual (2, devices.Count, "Should return both emulators");
+
+			var online = devices.First (d => d.Serial == "emulator-5554");
+			var offline = devices.First (d => d.Serial == "emulator-5556");
+
+			Assert.AreEqual (AdbDeviceStatus.Online, online.Status);
+			Assert.AreEqual ("Online_AVD", online.AvdName, "Online emulator should have AVD name");
+
+			Assert.AreEqual (AdbDeviceStatus.Offline, offline.Status);
+			Assert.IsNull (offline.AvdName, "Offline emulator should NOT have AVD name queried");
+		} finally {
+			CleanupFakeAdb (adbPath);
+		}
 	}
 }

@@ -36,7 +36,7 @@ public class AdbRunner
 	/// </summary>
 	/// <param name="adbPath">Full path to the adb executable (e.g., "/path/to/sdk/platform-tools/adb").</param>
 	/// <param name="environmentVariables">Optional environment variables to pass to adb processes.</param>
-	/// <param name="logger">Optional logger callback for diagnostic messages.</param>
+	/// <param name="logger">Optional logger callback receiving a <see cref="TraceLevel"/> and message string.</param>
 	public AdbRunner (string adbPath, IDictionary<string, string>? environmentVariables = null, Action<TraceLevel, string>? logger = null)
 	{
 		if (string.IsNullOrWhiteSpace (adbPath))
@@ -48,7 +48,8 @@ public class AdbRunner
 
 	/// <summary>
 	/// Lists connected devices using 'adb devices -l'.
-	/// For emulators, queries the AVD name using 'adb -s &lt;serial&gt; emu avd name'.
+	/// For online emulators, queries the AVD name via <c>getprop</c> / <c>emu avd name</c>.
+	/// Offline emulators are included but without AVD names (querying them would fail).
 	/// </summary>
 	public virtual async Task<IReadOnlyList<AdbDeviceInfo>> ListDevicesAsync (CancellationToken cancellationToken = default)
 	{
@@ -61,11 +62,15 @@ public class AdbRunner
 
 		var devices = ParseAdbDevicesOutput (stdout.ToString ().Split ('\n'));
 
-		// For each emulator, try to get the AVD name
+		// For each online emulator, try to get the AVD name.
+		// Skip offline emulators — neither getprop nor 'emu avd name' work on them
+		// and attempting these commands causes unnecessary delays during boot polling.
 		foreach (var device in devices) {
-			if (device.Type == AdbDeviceType.Emulator) {
+			if (device.Type == AdbDeviceType.Emulator && device.Status == AdbDeviceStatus.Online) {
 				device.AvdName = await GetEmulatorAvdNameAsync (device.Serial, cancellationToken).ConfigureAwait (false);
 				device.Description = BuildDeviceDescription (device);
+			} else if (device.Type == AdbDeviceType.Emulator) {
+				logger.Invoke (TraceLevel.Verbose, $"Skipping AVD name query for {device.Status} emulator {device.Serial}");
 			}
 		}
 
@@ -74,15 +79,26 @@ public class AdbRunner
 
 	/// <summary>
 	/// Queries the emulator for its AVD name.
-	/// Tries <c>adb -s &lt;serial&gt; emu avd name</c> first (emulator console protocol),
-	/// then falls back to <c>adb shell getprop ro.boot.qemu.avd_name</c> which reads the
-	/// boot property set by the emulator kernel. The fallback is needed because
-	/// <c>emu avd name</c> can return empty output on some adb/emulator version
-	/// combinations (observed with adb v36).
+	/// Tries <c>adb shell getprop ro.boot.qemu.avd_name</c> first (reliable on all modern
+	/// emulators), then falls back to <c>adb -s &lt;serial&gt; emu avd name</c> (emulator
+	/// console protocol) for older emulator versions. The <c>emu avd name</c> command returns
+	/// empty output on emulator 36.4.10+ (observed with adb v36), so <c>getprop</c> is the
+	/// preferred method.
 	/// </summary>
 	internal async Task<string?> GetEmulatorAvdNameAsync (string serial, CancellationToken cancellationToken = default)
 	{
-		// Try 1: Console command (fast, works on most emulator versions)
+		// Try 1: Shell property (reliable on modern emulators, always set by the emulator kernel)
+		try {
+			var avdName = await GetShellPropertyAsync (serial, "ro.boot.qemu.avd_name", cancellationToken).ConfigureAwait (false);
+			if (avdName is { Length: > 0 } name && !string.IsNullOrWhiteSpace (name))
+				return name.Trim ();
+		} catch (OperationCanceledException) {
+			throw;
+		} catch (Exception ex) {
+			logger.Invoke (TraceLevel.Warning, $"GetEmulatorAvdNameAsync: getprop failed for {serial}: {ex.Message}");
+		}
+
+		// Try 2: Console command (fallback for older emulators where getprop may not be available)
 		try {
 			using var stdout = new StringWriter ();
 			var psi = ProcessUtils.CreateProcessStartInfo (adbPath, "-s", serial, "emu", "avd", "name");
@@ -97,19 +113,8 @@ public class AdbRunner
 			}
 		} catch (OperationCanceledException) {
 			throw;
-		} catch {
-			// Fall through to getprop fallback
-		}
-
-		// Try 2: Shell property (fallback when 'adb emu avd name' returns empty on some adb/emulator versions)
-		try {
-			var avdName = await GetShellPropertyAsync (serial, "ro.boot.qemu.avd_name", cancellationToken).ConfigureAwait (false);
-			if (avdName is { Length: > 0 } name && !string.IsNullOrWhiteSpace (name))
-				return name.Trim ();
-		} catch (OperationCanceledException) {
-			throw;
-		} catch {
-			// Both methods failed
+		} catch (Exception ex) {
+			logger.Invoke (TraceLevel.Warning, $"GetEmulatorAvdNameAsync: both methods failed for {serial}: {ex.Message}");
 		}
 
 		return null;
