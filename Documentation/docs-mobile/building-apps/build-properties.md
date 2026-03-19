@@ -553,9 +553,9 @@ of values to control what types can be deployed to the
 on the target device
 when the [`$(EmbedAssembliesIntoApk)`](#embedassembliesintoapk) MSBuild
 property is `False`. If a resource is fast deployed, it is *not*
-embedded into the generated `.apk`, which can speed up deployment
+embedded into the generated `.apk` or `.aab`, which can speed up deployment
 times. (The more that is fast deployed, then the less frequently
-the `.apk` needs to be rebuilt, and the install process can be
+the package needs to be rebuilt, and the install process can be
 faster.) Valid values include:
 
 - `Assemblies`: Deploy application assemblies.
@@ -695,7 +695,7 @@ A boolean value which, if set to `true`, exempts all the native JNI libraries
 from being preloaded at application startup.  By default, all such libraries
 will be loaded by the runtime early during application startup in order to
 assure their proper initialization. However, in some cases it might not be the
-desired behavior and this property allows to effectively disable this behavior.
+desired behavior and this property allows you to effectively disable it.
 
 Some framework libraries which must be loaded at application startup will not
 be affected by this property.
@@ -1042,7 +1042,8 @@ being generated. Setting `AndroidPackageFormats` to either `aab`
 or `apk` will generate only one file.
 
 The default value is `aab;apk` for `Release` builds only.
-It is recommended that you continue to use just `apk` for debugging.
+Using `apk` for debugging is faster, but `aab` is also supported
+with fast deployment if needed (for example, when testing asset packs).
 
 ## AndroidPackageNamingPolicy
 
@@ -1639,7 +1640,7 @@ Deployment doesn't support the target device.
 When this property is `False`, then the
 [`$(AndroidFastDeploymentType)`](#androidfastdeploymenttype)
 MSBuild property also controls what
-will be embedded into the `.apk`, which can impact deployment and
+will be embedded into the `.apk` or `.aab`, which can impact deployment and
 rebuild times.
 
 ## EnableDiagnostics

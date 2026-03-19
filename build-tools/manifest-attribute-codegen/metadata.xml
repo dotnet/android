@@ -429,7 +429,7 @@
   <element path="uses-feature.glEsVersion" name="GLESVersion" manualMap="true" />
   <element path="uses-feature.name" readonly="true" />
   <element path="uses-feature.required" visible="true" />
-  <element path="uses-feature.version" readonly="true" />
+  <element path="uses-feature.version" visible="true" />
 
   <!-- <uses-library> - https://developer.android.com/guide/topics/manifest/uses-library-element -->
   <element path="uses-library.name" visible="true" />

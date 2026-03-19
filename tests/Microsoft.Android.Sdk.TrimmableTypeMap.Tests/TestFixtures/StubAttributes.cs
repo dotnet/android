@@ -40,6 +40,21 @@ namespace Android.Runtime
 	}
 }
 
+namespace Java.Interop
+{
+	public struct JniObjectReference
+	{
+		public IntPtr Handle;
+	}
+
+	public enum JniObjectReferenceOptions
+	{
+		None = 0,
+		Copy = 1,
+		CopyAndDispose = 2,
+	}
+}
+
 namespace Android.App
 {
 	[AttributeUsage (AttributeTargets.Class)]
@@ -102,9 +117,26 @@ namespace Java.Interop
 	public sealed class ExportAttribute : Attribute
 	{
 		public string? Name { get; set; }
+		public string[]? ThrownNames { get; set; }
 
 		public ExportAttribute () { }
 		public ExportAttribute (string name) => Name = name;
+	}
+
+	[AttributeUsage (AttributeTargets.Method, AllowMultiple = false)]
+	public sealed class ExportFieldAttribute : Attribute
+	{
+		public string Name { get; set; }
+
+		public ExportFieldAttribute (string name) => Name = name;
+	}
+
+	[AttributeUsage (AttributeTargets.Constructor, AllowMultiple = false)]
+	public sealed class JniConstructorSignatureAttribute : Attribute
+	{
+		public string MemberSignature { get; }
+
+		public JniConstructorSignatureAttribute (string memberSignature) => MemberSignature = memberSignature;
 	}
 }
 

@@ -100,5 +100,78 @@ namespace Xamarin.Android.Build.Tests
 			var expected = new [] { "Xamarin.Google.Guava.ListenableFuture.dll" };
 			CollectionAssert.AreEqual (expected, actual);
 		}
+
+		[Test]
+		public void NativeDll_Skipped ()
+		{
+			// Create a minimal valid PE file without CLI metadata (a native DLL)
+			var nativeDll = Path.Combine (tempDirectory, "native.dll");
+			CreateNativePE (nativeDll);
+			var actual = Run (nativeDll);
+			CollectionAssert.IsEmpty (actual, "Native DLLs without CLI metadata should be skipped.");
+		}
+
+		/// <summary>
+		/// Creates a minimal valid PE file without CLI metadata, simulating a native DLL.
+		/// </summary>
+		static void CreateNativePE (string path)
+		{
+			using var fs = File.Create (path);
+			using var writer = new BinaryWriter (fs);
+
+			// DOS header: 'MZ' magic + padding to e_lfanew at offset 0x3C
+			writer.Write ((ushort) 0x5A4D);         // e_magic = 'MZ'
+			writer.Write (new byte [58]);            // pad to offset 0x3C
+			writer.Write ((uint) 0x80);              // e_lfanew = 0x80
+
+			// Pad to PE signature at offset 0x80
+			writer.Write (new byte [0x80 - 0x40]);
+
+			// PE signature: 'PE\0\0'
+			writer.Write ((uint) 0x00004550);
+
+			// COFF header (20 bytes)
+			writer.Write ((ushort) 0x14C);           // Machine = IMAGE_FILE_MACHINE_I386
+			writer.Write ((ushort) 0);               // NumberOfSections = 0
+			writer.Write ((uint) 0);                 // TimeDateStamp
+			writer.Write ((uint) 0);                 // PointerToSymbolTable
+			writer.Write ((uint) 0);                 // NumberOfSymbols
+			writer.Write ((ushort) 0xE0);            // SizeOfOptionalHeader (PE32)
+			writer.Write ((ushort) 0x2102);          // Characteristics = DLL | EXECUTABLE_IMAGE | LARGE_ADDRESS_AWARE
+
+			// Optional header (PE32) — minimal, no CLI header directory entry
+			writer.Write ((ushort) 0x10B);           // Magic = PE32
+			writer.Write ((byte) 0);                 // MajorLinkerVersion
+			writer.Write ((byte) 0);                 // MinorLinkerVersion
+			writer.Write ((uint) 0);                 // SizeOfCode
+			writer.Write ((uint) 0);                 // SizeOfInitializedData
+			writer.Write ((uint) 0);                 // SizeOfUninitializedData
+			writer.Write ((uint) 0);                 // AddressOfEntryPoint
+			writer.Write ((uint) 0);                 // BaseOfCode
+			writer.Write ((uint) 0);                 // BaseOfData
+			writer.Write ((uint) 0x10000);           // ImageBase
+			writer.Write ((uint) 0x1000);            // SectionAlignment
+			writer.Write ((uint) 0x200);             // FileAlignment
+			writer.Write ((ushort) 4);               // MajorOperatingSystemVersion
+			writer.Write ((ushort) 0);               // MinorOperatingSystemVersion
+			writer.Write ((ushort) 0);               // MajorImageVersion
+			writer.Write ((ushort) 0);               // MinorImageVersion
+			writer.Write ((ushort) 4);               // MajorSubsystemVersion
+			writer.Write ((ushort) 0);               // MinorSubsystemVersion
+			writer.Write ((uint) 0);                 // Win32VersionValue
+			writer.Write ((uint) 0x1000);            // SizeOfImage
+			writer.Write ((uint) 0x200);             // SizeOfHeaders
+			writer.Write ((uint) 0);                 // CheckSum
+			writer.Write ((ushort) 3);               // Subsystem = WINDOWS_CUI
+			writer.Write ((ushort) 0);               // DllCharacteristics
+			writer.Write ((uint) 0x100000);          // SizeOfStackReserve
+			writer.Write ((uint) 0x1000);            // SizeOfStackCommit
+			writer.Write ((uint) 0x100000);          // SizeOfHeapReserve
+			writer.Write ((uint) 0x1000);            // SizeOfHeapCommit
+			writer.Write ((uint) 0);                 // LoaderFlags
+			writer.Write ((uint) 16);                // NumberOfRvaAndSizes
+			// Data directories (16 entries × 8 bytes = 128 bytes), all zeroed — no CLI header
+			writer.Write (new byte [128]);
+		}
 	}
 }

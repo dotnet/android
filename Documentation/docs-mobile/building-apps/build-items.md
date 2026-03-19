@@ -343,7 +343,7 @@ JNI library preload mechanism. By default, all such libraries will be loaded
 by the runtime early during application startup in order to assure their
 proper initialization. However, in some cases it might not be the desired
 behavior and this item group allows exclusion of libraries from this process
-on individual basis.
+on an individual basis.
 
 Some framework libraries which must be loaded at application startup will not
 be affected if included in this item group.
@@ -581,3 +581,29 @@ this build action, see
 These files are ignored unless the
 [`$(EnableProguard)`](/xamarin/android/deploy-test/building-apps/build-properties#enableproguard)
 MSBuild property is `True`.
+
+## RuntimeEnvironmentVariable
+
+`@(RuntimeEnvironmentVariable)` items allow environment variables to be
+passed to the Android application at runtime via `dotnet run -e`. For example:
+
+```sh
+dotnet run -e DOTNET_RUN_FOO=TestValue123 -e DOTNET_RUN_BAR=AnotherValue456
+```
+
+These items are automatically populated by the .NET SDK when using
+`dotnet run -e NAME=VALUE` and are included in the generated
+environment file during the build. Each item's `%(Identity)` is the
+variable name and `%(Value)` is the variable value.
+
+```xml
+<ItemGroup>
+  <RuntimeEnvironmentVariable Include="DOTNET_RUN_FOO" Value="TestValue123" />
+</ItemGroup>
+```
+
+This feature is only available for Android application projects and
+requires a .NET SDK that supports the
+`RuntimeEnvironmentVariableSupport` project capability.
+
+This build item was introduced in .NET 10.0.300 SDK and .NET 11.

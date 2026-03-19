@@ -1,0 +1,56 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests</RootNamespace>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
+    <OutputPath>..\..\bin\Test$(Configuration)</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.0.2" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
+  </ItemGroup>
+
+  <!-- Exclude the fixture assembly source files from this project -->
+  <ItemGroup>
+    <Compile Remove="UserTypesFixture\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
+    <ProjectReference Include="..\..\src\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj" />
+    <!-- Mono.Android is built as a dependency so the ref assembly is available on disk.
+         ReferenceOutputAssembly=false because we read it with SRM/Cecil, not compile against it directly.
+         Instead, we reference the ref assembly below so we can use typeof(Java.Lang.Object). -->
+    <ProjectReference Include="..\..\src\Mono.Android\Mono.Android.csproj"
+                      ReferenceOutputAssembly="false" />
+    <!-- User-type fixture assembly: built as a dependency, scanned via SRM/Cecil in tests.
+         ReferenceOutputAssembly=false because we don't compile against it — we just need the DLL on disk. -->
+    <ProjectReference Include="UserTypesFixture\UserTypesFixture.csproj"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <!-- Discover the Mono.Android ref assembly path and add a direct Reference to it.
+       This lets tests use typeof(Java.Lang.Object).Assembly.Location to find the assembly. -->
+  <Target Name="_AddMonoAndroidReference" BeforeTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <_MonoAndroidRefCandidate Include="$(MSBuildThisFileDirectory)..\..\bin\$(Configuration)\lib\packs\Microsoft.Android.Ref.*\*\ref\net*\Mono.Android.dll" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_MonoAndroidRefAssembly>@(_MonoAndroidRefCandidate, ';')</_MonoAndroidRefAssembly>
+      <_MonoAndroidRefAssembly>$(_MonoAndroidRefAssembly.Split(';')[0])</_MonoAndroidRefAssembly>
+    </PropertyGroup>
+    <ItemGroup Condition=" '$(_MonoAndroidRefAssembly)' != '' ">
+      <Reference Include="Mono.Android">
+        <HintPath>$(_MonoAndroidRefAssembly)</HintPath>
+      </Reference>
+    </ItemGroup>
+  </Target>
+
+</Project>

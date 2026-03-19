@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.Adb" />
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.ApkDiffCheckRegression" />
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.BundleTool" />
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.CheckAdbTarget" />
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.CreateAndroidEmulator" />
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RenameTestCases" />
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunAndroidEmulatorCheckBootTimes" />
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunInstrumentationTests" />
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunUITests" />
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.StartAndroidEmulator" />
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.KillProcess" />
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.WaitForAndroidEmulator" />
-  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.XASleepInternal" />
-  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ProcessLogcatTiming" />
-  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ProcessApkSizes" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.Adb" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.ApkDiffCheckRegression" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.BundleTool" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.CheckAdbTarget" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.CreateAndroidEmulator" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RenameTestCases" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunAndroidEmulatorCheckBootTimes" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunInstrumentationTests" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunUITests" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.StartAndroidEmulator" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.KillProcess" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.WaitForAndroidEmulator" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.XASleepInternal" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ProcessLogcatTiming" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ProcessApkSizes" TaskFactory="TaskHostFactory" Runtime="NET" />
 
   <PropertyGroup>
     <!-- APK tests might run on 32-bit emulators -->
@@ -211,14 +211,21 @@
   <Target Name="DeployTestAabs"
       Condition=" '@(TestAab)' != '' ">
     <PropertyGroup>
-      <_KeyStore>$(XamarinAndroidSourcePath)\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Resources\Base\test.keystore</_KeyStore>
+      <_KeyStore>$([System.IO.Path]::Combine ('$(IntermediateOutputPath)', 'test.keystore'))</_KeyStore>
       <_KeyAlias>mykey</_KeyAlias>
       <_KeyPass>android</_KeyPass>
       <_StorePass>android</_StorePass>
+      <_KeytoolExe Condition=" '$(HostOS)' == 'Windows' ">keytool.exe</_KeytoolExe>
+      <_KeytoolExe Condition=" '$(HostOS)' != 'Windows' ">keytool</_KeytoolExe>
+      <_KeytoolPath>$(JavaSdkDirectory)\bin\$(_KeytoolExe)</_KeytoolPath>
       <!-- Support for running against a system installation of XA. -->
       <BundleToolJarPath Condition=" !Exists('$(BundleToolJarPath)') ">$(AndroidBundleToolJarPath)</BundleToolJarPath>
       <JavaPath Condition=" '$(JavaPath)' == '' ">$(JavaSdkDirectory)\bin\java</JavaPath>
     </PropertyGroup>
+    <Exec
+        Condition=" !Exists('$(_KeyStore)') "
+        Command="&quot;$(_KeytoolPath)&quot; -genkeypair -v -storetype pkcs12 -keystore &quot;$(_KeyStore)&quot; -alias $(_KeyAlias) -keyalg RSA -keysize 2048 -validity 10000 -storepass $(_StorePass) -keypass $(_KeyPass) -dname &quot;CN=Test, OU=Test, O=Test, L=Test, ST=Test, C=US&quot;"
+    />
     <Xamarin.Android.Tools.BootstrapTasks.BundleTool
         Arguments="build-apks --connected-device --overwrite --mode default --bundle &quot;%(TestAab.Identity)&quot; --output &quot;%(TestAab.Identity).apks&quot;"
         ContinueOnError="ErrorAndContinue"

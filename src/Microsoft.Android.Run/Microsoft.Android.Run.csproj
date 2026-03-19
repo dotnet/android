@@ -11,6 +11,7 @@
     <Nullable>enable</Nullable>
     <DebugType>portable</DebugType>
     <RollForward>Major</RollForward>
+    <StartupHookSupport>false</StartupHookSupport>
   </PropertyGroup>
 
   <ItemGroup>

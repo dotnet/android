@@ -49,15 +49,6 @@
       "justification": "Javax.Security.Auth.Callback.PasswordCallback API documentation with generic example password.",
       "createdDate": "2024-06-27 20:43:25Z"
     },
-    "1ccf925aa704efd1035bac38e94d2e629fb5b0d1784d5473e4a52e6d13db16ee": {
-      "signature": "1ccf925aa704efd1035bac38e94d2e629fb5b0d1784d5473e4a52e6d13db16ee",
-      "alternativeSignatures": [],
-      "memberOf": [
-        "default"
-      ],
-      "justification": "Dummy test.keystore file used for testing.",
-      "createdDate": "2024-02-21 20:58:02Z"
-    },
     "ad733d624486984da63461d2a23f266714f76e1788c271d90d45687579f51099": {
       "signature": "ad733d624486984da63461d2a23f266714f76e1788c271d90d45687579f51099",
       "alternativeSignatures": [],
