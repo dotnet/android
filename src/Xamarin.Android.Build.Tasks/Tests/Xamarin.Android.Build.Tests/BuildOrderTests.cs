@@ -52,7 +52,44 @@ namespace Xamarin.Android.Build.Tests
 			// _EnsureDeviceBooted must be in DeployToDeviceDependsOnTargets so that it fires
 			// when the .NET SDK calls ProjectInstance.Build(["DeployToDevice"]) in-process,
 			// where BeforeTargets hooks are not reliably triggered.
-			// Use MSBuild property functions for validation since the property value is multi-line.
+			var checkTargets = new Import (() => "CheckDeployOrder.targets") {
+				TextContent = () => """
+<Project>
+  <Target Name="_CheckDeployOrder">
+    <Message Text="DeployToDeviceDependsOnTargets=$(DeployToDeviceDependsOnTargets)" Importance="high" />
+  </Target>
+</Project>
+"""
+			};
+
+			var proj = new XamarinAndroidApplicationProject {
+				Imports = { checkTargets }
+			};
+
+			using var builder = CreateApkBuilder ();
+			builder.Verbosity = LoggerVerbosity.Detailed;
+			Assert.IsTrue (builder.RunTarget (proj, "_CheckDeployOrder"),
+				"Build should have succeeded.");
+
+			// The property is multi-line, so join all build output into a single string for matching
+			string allOutput = string.Join ("\n", builder.LastBuildOutput);
+			StringAssert.Contains ("_EnsureDeviceBooted", allOutput,
+				"DeployToDeviceDependsOnTargets must contain _EnsureDeviceBooted");
+
+			// _EnsureDeviceBooted must appear before _DeployApk to set AdbTarget first
+			int bootIndex = allOutput.IndexOf ("_EnsureDeviceBooted", StringComparison.Ordinal);
+			int deployIndex = allOutput.IndexOf ("_DeployApk", StringComparison.Ordinal);
+			if (deployIndex >= 0) {
+				Assert.Less (bootIndex, deployIndex,
+					"_EnsureDeviceBooted must appear before _DeployApk in DeployToDeviceDependsOnTargets");
+			}
+		}
+
+		[Test]
+		public void DeployToDeviceDependsOn_MSBuildValidation ()
+		{
+			// Validates the same constraint using MSBuild property functions directly,
+			// as a safety net in case log parsing has edge cases.
 			var checkTargets = new Import (() => "CheckDeployOrder.targets") {
 				TextContent = () => """
 <Project>
