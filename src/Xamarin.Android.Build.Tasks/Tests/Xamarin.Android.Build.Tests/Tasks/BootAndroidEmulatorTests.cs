@@ -37,6 +37,8 @@ public class BootAndroidEmulatorTests : BaseTest
 		public EmulatorBootResult BootResult { get; set; } = new () { Success = true, Serial = "emulator-5554" };
 		public string? LastBootedDevice { get; private set; }
 		public EmulatorBootOptions? LastBootOptions { get; private set; }
+		public string? LastAdbPath { get; private set; }
+		public string? LastEmulatorPath { get; private set; }
 
 		protected override Task<EmulatorBootResult> ExecuteBootAsync (
 			string adbPath,
@@ -46,6 +48,8 @@ public class BootAndroidEmulatorTests : BaseTest
 			EmulatorBootOptions options,
 			CancellationToken cancellationToken)
 		{
+			LastAdbPath = adbPath;
+			LastEmulatorPath = emulatorPath;
 			LastBootedDevice = device;
 			LastBootOptions = options;
 			return System.Threading.Tasks.Task.FromResult (BootResult);
@@ -183,6 +187,8 @@ public class BootAndroidEmulatorTests : BaseTest
 
 		Assert.IsTrue (task.Execute (), "Task should succeed");
 		Assert.AreEqual ("emulator-5554", task.ResolvedDevice);
+		StringAssert.EndsWith ("platform-tools/adb", task.LastAdbPath?.Replace ('\\', '/'), "adb path should be resolved from AndroidSdkDirectory");
+		StringAssert.EndsWith ("emulator/emulator", task.LastEmulatorPath?.Replace ('\\', '/'), "emulator path should be resolved from AndroidSdkDirectory");
 	}
 
 	[Test]
@@ -253,5 +259,34 @@ public class BootAndroidEmulatorTests : BaseTest
 
 		Assert.IsFalse (task.Execute (), "Task should fail");
 		Assert.IsTrue (errors.Any (e => e.Code == "XA0145"), "Unknown errors should map to XA0145");
+		Assert.IsTrue (messages.Any (m => m.Message.Contains ("Some unexpected error occurred")), "Error details should be logged");
+	}
+
+	[Test]
+	public void Cancelled_DoesNotLogError ()
+	{
+		var task = CreateTask ("Pixel_6_API_33");
+		task.BootResult = new EmulatorBootResult {
+			Success = false,
+			ErrorKind = EmulatorBootErrorKind.Cancelled,
+		};
+
+		Assert.IsTrue (task.Execute (), "Cancelled task should not fail the build");
+		Assert.AreEqual (0, errors.Count, "Cancelled should not produce errors");
+		Assert.IsTrue (messages.Any (m => m.Message.Contains ("cancelled")), "Should log cancellation message");
+	}
+
+	[Test]
+	public void Success_NullSerial_ReturnsError ()
+	{
+		var task = CreateTask ("Pixel_6_API_33");
+		task.BootResult = new EmulatorBootResult {
+			Success = true,
+			Serial = null,
+		};
+
+		Assert.IsFalse (task.Execute (), "Task should fail when serial is null");
+		Assert.IsTrue (errors.Any (e => e.Code == "XA0145"), "Null serial should map to XA0145");
+		Assert.IsNull (task.ResolvedDevice, "ResolvedDevice should be null");
 	}
 }

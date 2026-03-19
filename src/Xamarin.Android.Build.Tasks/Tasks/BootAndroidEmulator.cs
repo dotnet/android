@@ -108,6 +108,10 @@ public class BootAndroidEmulator : AsyncTask
 		var result = await ExecuteBootAsync (adbPath, emulatorPath, logger, Device, options, CancellationToken).ConfigureAwait (false);
 
 		if (result.Success) {
+			if (string.IsNullOrEmpty (result.Serial)) {
+				Log.LogCodedError ("XA0145", Properties.Resources.XA0145, Device, BootTimeoutSeconds);
+				return;
+			}
 			ResolvedDevice = result.Serial;
 			AdbTarget = $"-s {result.Serial}";
 			Log.LogMessage (MessageImportance.High, $"Emulator '{Device}' ({result.Serial}) is fully booted and ready.");
@@ -118,8 +122,17 @@ public class BootAndroidEmulator : AsyncTask
 		case EmulatorBootErrorKind.LaunchFailed:
 			Log.LogCodedError ("XA0143", Properties.Resources.XA0143, Device, result.ErrorMessage ?? "Unknown launch error");
 			break;
+		case EmulatorBootErrorKind.Cancelled:
+			Log.LogMessage (MessageImportance.High, $"Emulator boot for '{Device}' was cancelled.");
+			break;
+		case EmulatorBootErrorKind.Timeout:
+			Log.LogCodedError ("XA0145", Properties.Resources.XA0145, Device, BootTimeoutSeconds);
+			break;
 		default:
 			Log.LogCodedError ("XA0145", Properties.Resources.XA0145, Device, BootTimeoutSeconds);
+			if (!string.IsNullOrEmpty (result.ErrorMessage)) {
+				Log.LogMessage (MessageImportance.High, $"Error details: {result.ErrorMessage}");
+			}
 			break;
 		}
 	}
