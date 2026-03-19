@@ -248,6 +248,33 @@ public class BootAndroidEmulatorTests : BaseTest
 	}
 
 	[Test]
+	public void ExtraArguments_EscapedQuotesPreserved ()
+	{
+		var task = new MockBootAndroidEmulator {
+			BuildEngine = engine,
+			Device = "Pixel_6_API_33",
+			EmulatorToolPath = "/sdk/emulator/",
+			EmulatorToolExe = "emulator",
+			AdbToolPath = "/sdk/platform-tools/",
+			AdbToolExe = "adb",
+			BootTimeoutSeconds = 10,
+			EmulatorExtraArguments = "-prop \"persist.sys.timezone=\\\"America/New_York\\\"\"",
+			BootResult = new EmulatorBootResult {
+				Success = true,
+				Serial = "emulator-5554",
+			},
+		};
+
+		Assert.IsTrue (task.Execute (), "Task should succeed");
+		var bootOptions = task.LastBootOptions;
+		Assert.IsNotNull (bootOptions?.AdditionalArgs, "AdditionalArgs should not be null");
+		CollectionAssert.AreEqual (
+			new[] { "-prop", "persist.sys.timezone=\"America/New_York\"" },
+			bootOptions?.AdditionalArgs,
+			"Escaped quotes inside quoted values should be preserved as literal quotes");
+	}
+
+	[Test]
 	public void UnknownError_MapsToXA0144 ()
 	{
 		var task = CreateTask ("Pixel_6_API_33");
