@@ -74,8 +74,13 @@ namespace Xamarin.ProjectTools
 					Cleanup ();
 		}
 
-		bool built_before;
 		bool last_build_result;
+
+		/// <summary>
+		/// Indicates whether the project has been built at least once.
+		/// Set to true after Build(), or manually when using external build tools (e.g. DotNetCLI.StartWatch).
+		/// </summary>
+		public bool BuiltBefore { get; set; }
 
 		/// <summary>
 		/// Gets the build output from the last build operation.
@@ -97,7 +102,7 @@ namespace Xamarin.ProjectTools
 		{
 			var files = project.Save (saveProject);
 
-			if (!built_before) {
+			if (!BuiltBefore) {
 				if (project.ShouldPopulate) {
 					if (Directory.Exists (ProjectDirectory)) {
 						FileSystemUtils.SetDirectoryWriteable (ProjectDirectory);
@@ -130,7 +135,7 @@ namespace Xamarin.ProjectTools
 			Output = project.CreateBuildOutput (this);
 
 			bool result = BuildInternal (Path.Combine (ProjectDirectory, project.ProjectFilePath), Target, parameters, environmentVariables, restore: project.ShouldRestorePackageReferences, binlogName: Path.GetFileNameWithoutExtension (BuildLogFile));
-			built_before = true;
+			BuiltBefore = true;
 
 			if (CleanupAfterSuccessfulBuild)
 				Cleanup ();
@@ -194,7 +199,7 @@ namespace Xamarin.ProjectTools
 			//logs
 			if (!last_build_result)
 				return;
-			built_before = false;
+			BuiltBefore = false;
 
 			var projectDirectory = Path.Combine (XABuildPaths.TestOutputDirectory, ProjectDirectory);
 			if (Directory.Exists (projectDirectory)) {

@@ -32,4 +32,5 @@ This file is imported *after* the Microsoft.NET.Sdk/Sdk.targets.
   <Import Project="Microsoft.Android.Sdk.Publish.targets" />
   <Import Project="Microsoft.Android.Sdk.RuntimeConfig.targets" />
   <Import Project="Microsoft.Android.Sdk.Tooling.targets" />
+  <Import Project="Microsoft.Android.Sdk.HotReload.targets" Condition=" '$(AndroidApplication)' == 'true' " />
 </Project>

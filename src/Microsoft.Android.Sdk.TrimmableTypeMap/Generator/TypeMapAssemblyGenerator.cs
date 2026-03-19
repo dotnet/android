@@ -8,7 +8,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// High-level API: builds the model from peers, then emits the PE assembly.
 /// Composes <see cref="ModelBuilder"/> + <see cref="TypeMapAssemblyEmitter"/>.
 /// </summary>
-sealed class TypeMapAssemblyGenerator
+public sealed class TypeMapAssemblyGenerator
 {
 	readonly Version _systemRuntimeVersion;
 
