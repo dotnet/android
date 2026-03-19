@@ -12,3 +12,7 @@ Java.Interop.JniRuntime.JniValueManager.GetPeer(Java.Interop.JniObjectReference 
 Java.Interop.JniTypeSignatureAttribute.InvokerType.get -> System.Type?
 Java.Interop.JniTypeSignatureAttribute.InvokerType.set -> void
 Java.Interop.IJavaPeerable.JniObjectReferenceControlBlock.get -> nint
+Java.Interop.JniNativeMethod
+Java.Interop.JniNativeMethod.JniNativeMethod() -> void
+Java.Interop.JniNativeMethod.JniNativeMethod(byte* name, byte* signature, nint functionPointer) -> void
+static Java.Interop.JniEnvironment.Types.RegisterNatives(Java.Interop.JniObjectReference type, System.ReadOnlySpan<Java.Interop.JniNativeMethod> methods) -> void

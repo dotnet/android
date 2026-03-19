@@ -67,6 +67,7 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage ("Performance", "CA1813:Avoid unsealed attributes", Justification = "Can't break public API", Scope = "type", Target = "~T:Java.Interop.JniValueMarshalerAttribute")]
 
 [assembly: SuppressMessage ("Performance", "CA1815:Override equals and operator equals on value types", Justification = "<Pending>", Scope = "type", Target = "~T:Java.Interop.JniNativeMethodRegistration")]
+[assembly: SuppressMessage ("Performance", "CA1815:Override equals and operator equals on value types", Justification = "<Pending>", Scope = "type", Target = "~T:Java.Interop.JniNativeMethod")]
 [assembly: SuppressMessage ("Performance", "CA1815:Override equals and operator equals on value types", Justification = "<Pending>", Scope = "type", Target = "~T:Java.Interop.JniNativeMethodRegistrationArguments")]
 [assembly: SuppressMessage ("Performance", "CA1815:Override equals and operator equals on value types", Justification = "<Pending>", Scope = "type", Target = "~T:Java.Interop.JniTransition")]
 

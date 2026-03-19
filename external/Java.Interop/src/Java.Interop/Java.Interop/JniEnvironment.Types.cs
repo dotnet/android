@@ -276,6 +276,29 @@ namespace Java.Interop
 				}
 			}
 
+			/// <summary>
+			/// Registers JNI native methods using blittable <see cref="JniNativeMethod"/> structs
+			/// with raw function pointers and UTF-8 name/signature pointers.
+			/// Calls the JNI RegisterNatives function directly without delegate marshaling.
+			/// </summary>
+			public static unsafe void RegisterNatives (JniObjectReference type, ReadOnlySpan<JniNativeMethod> methods)
+			{
+				IntPtr env = JniEnvironment.EnvironmentPointer;
+				fixed (JniNativeMethod* methodsPtr = methods) {
+#if FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
+					var registerNatives = (delegate* unmanaged<IntPtr, IntPtr, JniNativeMethod*, int, int>)
+						(void*) (*((JNIEnv**)env))->RegisterNatives;
+#else
+					var registerNatives = (delegate* unmanaged<IntPtr, IntPtr, JniNativeMethod*, int, int>)
+						JniEnvironment.CurrentInfo.Invoker.env.RegisterNatives;
+#endif
+					int r = registerNatives (env, type.Handle, methodsPtr, methods.Length);
+					if (r != 0) {
+						throw new InvalidOperationException ($"Could not register native methods for class '{GetJniTypeNameFromClass (type)}'; JNIEnv::RegisterNatives() returned {r}.");
+					}
+				}
+			}
+
 			public static void UnregisterNatives (JniObjectReference type)
 			{
 				int r   = _UnregisterNatives (type);

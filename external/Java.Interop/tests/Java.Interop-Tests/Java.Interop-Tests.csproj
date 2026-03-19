@@ -53,6 +53,7 @@
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\RenameClassDerived.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\AndroidInterface.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\DesugarAndroidInterface$_CC.java" />
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\RegisterNativesTestType.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\SelfRegistration.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\TestType.java" />
   </ItemGroup>

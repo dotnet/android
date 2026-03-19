@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 
 using Java.Interop;
 
@@ -182,6 +183,37 @@ namespace Java.InteropTests
 				Assert.AreEqual (JniObjectReferenceType.Global, TestType_class.PeerReference.Type);
 			}
 		}
+
+		[Test]
+		public unsafe void RegisterNativeMethods_JniNativeMethod ()
+		{
+			using (var nativeClass = new JniType ("net/dot/jni/test/RegisterNativesTestType")) {
+				Span<JniNativeMethod> methods = stackalloc JniNativeMethod [1];
+				fixed (byte* namePtr = "add"u8)
+				fixed (byte* sigPtr = "(II)I"u8) {
+					methods [0] = new JniNativeMethod (namePtr, sigPtr,
+						(IntPtr) (delegate* unmanaged<IntPtr, IntPtr, int, int, int>) &NativeAdd);
+					JniEnvironment.Types.RegisterNatives (nativeClass.PeerReference, methods);
+				}
+
+				// Call the native method from Java to verify registration worked
+				var ctor = JniEnvironment.InstanceMethods.GetMethodID (nativeClass.PeerReference, "<init>", "()V");
+				var obj = JniEnvironment.Object.NewObject (nativeClass.PeerReference, ctor);
+				try {
+					var addMethod = JniEnvironment.InstanceMethods.GetMethodID (nativeClass.PeerReference, "add", "(II)I");
+					var args = stackalloc JniArgumentValue [2];
+					args [0] = new JniArgumentValue (3);
+					args [1] = new JniArgumentValue (4);
+					int result = JniEnvironment.InstanceMethods.CallIntMethod (obj, addMethod, args);
+					Assert.AreEqual (7, result);
+				} finally {
+					JniObjectReference.Dispose (ref obj);
+				}
+			}
+		}
+
+		[UnmanagedCallersOnly]
+		static int NativeAdd (IntPtr jnienv, IntPtr self, int a, int b) => a + b;
 	}
 }
 
