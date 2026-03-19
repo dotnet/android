@@ -50,6 +50,7 @@
     <Compile Include="Linker\MonoDroid.Tuner\FindJavaObjectsStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\AddKeepAlivesStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\AddKeepAlivesHelper.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\StripEmbeddedLibrariesStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\AndroidLinkConfiguration.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\Extensions.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\FixAbstractMethodsStep.cs" />

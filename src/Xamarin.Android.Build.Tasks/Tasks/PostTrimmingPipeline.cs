@@ -1,0 +1,84 @@
+#nullable enable
+
+using System.Collections.Generic;
+using System.IO;
+using Java.Interop.Tools.Cecil;
+using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Framework;
+using Mono.Cecil;
+using MonoDroid.Tuner;
+
+namespace Xamarin.Android.Tasks;
+
+/// <summary>
+/// An MSBuild task that runs post-trimming assembly modifications in a single pass.
+///
+/// This opens each assembly once (via DirectoryAssemblyResolver with ReadWrite) and
+/// runs all registered steps on it, then writes modified assemblies in-place. Currently
+/// runs StripEmbeddedLibrariesStep and (optionally) AddKeepAlivesStep.
+///
+/// Runs in the inner build after ILLink but before ReadyToRun/crossgen2 compilation,
+/// so that R2R images are generated from the already-modified assemblies.
+/// </summary>
+public class PostTrimmingPipeline : AndroidTask
+{
+	public override string TaskPrefix => "PTP";
+
+	[Required]
+	public ITaskItem [] Assemblies { get; set; } = [];
+
+	public bool AddKeepAlives { get; set; }
+
+	public bool Deterministic { get; set; }
+
+	public override bool RunTask ()
+	{
+		using var resolver = new DirectoryAssemblyResolver (
+			this.CreateTaskLogger (), loadDebugSymbols: true,
+			loadReaderParameters: new ReaderParameters { ReadWrite = true });
+
+		foreach (var assembly in Assemblies) {
+			var dir = Path.GetFullPath (Path.GetDirectoryName (assembly.ItemSpec) ?? "");
+			if (!resolver.SearchDirectories.Contains (dir)) {
+				resolver.SearchDirectories.Add (dir);
+			}
+		}
+
+		var steps = new List<IAssemblyModifierPipelineStep> ();
+
+		steps.Add (new StripEmbeddedLibrariesStep (Log));
+
+		if (AddKeepAlives) {
+			var linkContext = new MSBuildLinkContext (resolver, Log);
+			var addKeepAlivesStep = new AddKeepAlivesStep ();
+			addKeepAlivesStep.Initialize (linkContext);
+			steps.Add (addKeepAlivesStep);
+		}
+
+		foreach (var item in Assemblies) {
+			if (MonoAndroidHelper.IsFrameworkAssembly (item)) {
+				continue;
+			}
+
+			var assembly = resolver.GetAssembly (item.ItemSpec);
+			var context = new StepContext (item, item) {
+				IsAndroidAssembly = MonoAndroidHelper.IsAndroidAssembly (item),
+				IsUserAssembly = true,
+			};
+
+			foreach (var step in steps) {
+				step.ProcessAssembly (assembly, context);
+			}
+
+			if (context.IsAssemblyModified) {
+				Log.LogDebugMessage ($"  Writing modified assembly: {item.ItemSpec}");
+				assembly.Write (new WriterParameters {
+					WriteSymbols = assembly.MainModule.HasSymbols,
+					DeterministicMvid = Deterministic,
+				});
+			}
+		}
+
+		return !Log.HasLoggedErrors;
+	}
+}

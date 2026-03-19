@@ -7,8 +7,7 @@
   <UsingTask TaskName="Xamarin.Android.Tasks.GetMonoPlatformJar" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.RemoveRegisterAttribute" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateProguardConfiguration" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.StripEmbeddedLibraries" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.AddKeepAlives" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.PostTrimmingPipeline" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <PropertyGroup>
     <_RemoveRegisterFlag>$(MonoAndroidIntermediateAssemblyDir)shrunk\shrunk.flag</_RemoveRegisterFlag>
@@ -246,34 +245,20 @@
   </Target>
 
   <!--
-    Strip embedded Android resources (.jar, native libs, etc.) from trimmed assemblies.
-    Runs in the inner build after ILLink but before ReadyToRun/crossgen2 compilation,
-    so R2R images are generated from already-stripped assemblies.
-  -->
-  <Target Name="_StripEmbeddedLibraries"
-      AfterTargets="ILLink"
-      Condition=" '$(PublishTrimmed)' == 'true' ">
-    <ItemGroup>
-      <_StripEmbeddedLibrariesAssembly Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
-    </ItemGroup>
-    <StripEmbeddedLibraries
-        Assemblies="@(_StripEmbeddedLibrariesAssembly)"
-        Deterministic="$(Deterministic)" />
-  </Target>
-
-  <!--
-    Inject GC.KeepAlive() calls into binding methods of trimmed assemblies.
+    Post-trimming assembly modifications: strips embedded Android resources and
+    (optionally) injects GC.KeepAlive() calls, in a single pass over assemblies.
     Runs in the inner build after ILLink but before ReadyToRun/crossgen2 compilation,
     so R2R images are generated from the already-modified assemblies.
   -->
-  <Target Name="_AddKeepAlives"
+  <Target Name="_PostTrimmingPipeline"
       AfterTargets="ILLink"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidAddKeepAlives)' == 'true' ">
+      Condition=" '$(PublishTrimmed)' == 'true' ">
     <ItemGroup>
-      <_AddKeepAlivesAssembly Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
+      <_PostTrimmingAssembly Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
     </ItemGroup>
-    <AddKeepAlives
-        Assemblies="@(_AddKeepAlivesAssembly)"
+    <PostTrimmingPipeline
+        Assemblies="@(_PostTrimmingAssembly)"
+        AddKeepAlives="$(AndroidAddKeepAlives)"
         Deterministic="$(Deterministic)" />
   </Target>
 
