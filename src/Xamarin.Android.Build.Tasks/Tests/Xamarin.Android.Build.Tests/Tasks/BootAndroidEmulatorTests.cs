@@ -248,7 +248,7 @@ public class BootAndroidEmulatorTests : BaseTest
 	}
 
 	[Test]
-	public void UnknownError_MapsToXA0145 ()
+	public void UnknownError_MapsToXA0144 ()
 	{
 		var task = CreateTask ("Pixel_6_API_33");
 		task.BootResult = new EmulatorBootResult {
@@ -258,8 +258,7 @@ public class BootAndroidEmulatorTests : BaseTest
 		};
 
 		Assert.IsFalse (task.Execute (), "Task should fail");
-		Assert.IsTrue (errors.Any (e => e.Code == "XA0145"), "Unknown errors should map to XA0145");
-		Assert.IsTrue (messages.Any (m => m.Message.Contains ("Some unexpected error occurred")), "Error details should be logged");
+		Assert.IsTrue (errors.Any (e => e.Code == "XA0144"), "Unknown errors should map to XA0144");
 	}
 
 	[Test]
