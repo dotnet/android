@@ -20,7 +20,7 @@ public class BootAndroidEmulatorTests : BaseTest
 	List<BuildErrorEventArgs> errors = [];
 	List<BuildWarningEventArgs> warnings = [];
 	List<BuildMessageEventArgs> messages = [];
-	MockBuildEngine engine = null!;
+	MockBuildEngine? engine;
 
 	[SetUp]
 	public void Setup ()
@@ -205,11 +205,12 @@ public class BootAndroidEmulatorTests : BaseTest
 
 		Assert.IsTrue (task.Execute (), "Task should succeed");
 		Assert.AreEqual ("emulator-5554", task.ResolvedDevice);
-		Assert.IsNotNull (task.LastBootOptions, "Boot options should be captured");
-		Assert.IsNotNull (task.LastBootOptions!.AdditionalArgs, "AdditionalArgs should not be null");
+		var bootOptions = task.LastBootOptions;
+		Assert.IsNotNull (bootOptions, "Boot options should be captured");
+		Assert.IsNotNull (bootOptions.AdditionalArgs, "AdditionalArgs should not be null");
 		CollectionAssert.AreEqual (
 			new[] { "-no-snapshot-load", "-gpu", "auto" },
-			task.LastBootOptions.AdditionalArgs,
+			bootOptions.AdditionalArgs,
 			"Extra arguments should be parsed and passed to options");
 	}
 
@@ -232,10 +233,11 @@ public class BootAndroidEmulatorTests : BaseTest
 		};
 
 		Assert.IsTrue (task.Execute (), "Task should succeed");
-		Assert.IsNotNull (task.LastBootOptions?.AdditionalArgs, "AdditionalArgs should not be null");
+		var bootOptions = task.LastBootOptions;
+		Assert.IsNotNull (bootOptions?.AdditionalArgs, "AdditionalArgs should not be null");
 		CollectionAssert.AreEqual (
 			new[] { "-no-snapshot-load", "-skin", "Nexus 5X" },
-			task.LastBootOptions!.AdditionalArgs,
+			bootOptions?.AdditionalArgs,
 			"Quoted arguments with spaces should be preserved as a single token");
 	}
 
