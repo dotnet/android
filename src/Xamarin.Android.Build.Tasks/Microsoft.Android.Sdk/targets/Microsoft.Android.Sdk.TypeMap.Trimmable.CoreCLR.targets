@@ -1,5 +1,16 @@
-<!-- Trimmable typemap targets for CoreCLR runtime (stub).
-     The actual implementation will be added in a follow-up. -->
+<!-- Trimmable typemap targets for CoreCLR runtime.
+     Adds generated typemap assemblies to the linker inputs. -->
 <Project>
+
+  <!-- After typemap generation, add generated assemblies to resolved assemblies for the linker.
+       NOT as TrimmerRootAssembly — the trimmer must process TypeMapAttributes and trim entries
+       whose trimTarget types were removed. -->
+  <Target Name="_AddTrimmableTypeMapAssembliesToLinker"
+      AfterTargets="_GenerateJavaStubs"
+      Condition=" '@(_GeneratedTypeMapAssemblies->Count())' != '0' ">
+    <ItemGroup>
+      <_ResolvedAssemblies Include="@(_GeneratedTypeMapAssemblies)" />
+    </ItemGroup>
+  </Target>
 
 </Project>
