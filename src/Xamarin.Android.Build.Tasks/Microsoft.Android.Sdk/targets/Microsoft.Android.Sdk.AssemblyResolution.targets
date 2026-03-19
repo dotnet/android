@@ -52,7 +52,7 @@ _ResolveAssemblies MSBuild target.
            @(_SourceItemsToCopyToPublishDirectory) and get stripped by
            _ComputeFilesToPublishForRuntimeIdentifiers. Promote them to @(Reference) so
            they flow through reference resolution instead. -->
-      <_NoneAssembliesToPromote Include="@(None)" Condition=" '%(Extension)' == '.dll' and ('%(CopyToOutputDirectory)' == 'Always' or '%(CopyToOutputDirectory)' == 'PreserveNewest') " />
+      <_NoneAssembliesToPromote Include="@(None)" Condition=" '%(None.Extension)' == '.dll' and ('%(None.CopyToOutputDirectory)' == 'Always' or '%(None.CopyToOutputDirectory)' == 'PreserveNewest') " />
       <None Remove="@(_NoneAssembliesToPromote)" />
       <Reference Include="@(_NoneAssembliesToPromote)" />
       <!-- Strip CopyToOutputDirectory from all @(Reference) items (including newly promoted
