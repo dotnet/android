@@ -2,6 +2,8 @@ using System;
 using System.Buffers;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 
 using K4os.Compression.LZ4;
 
@@ -21,16 +23,18 @@ public class ApplicationAssembly : BaseAspect
 
 	public override string AspectName { get; } = "Application assembly";
 
-	public bool IsCompressed               { get; }
-	public string Name                     { get; }
-	public string FullName                 { get; }
-	public ulong CompressedSize            { get; }
-	public ulong Size                      { get; }
-	public bool IgnoreOnLoad               { get; }
-	public ulong NameHash                  { get; internal set; }
-	public NativeArchitecture Architecture { get; internal set; }
-	public bool IsSatellite                { get; }
-	public string? Culture                 { get; }
+	public bool IsCompressed                      { get; }
+	public string Name                            { get; }
+	public string FullName                        { get; }
+	public ulong CompressedSize                   { get; }
+	public ulong Size                             { get; }
+	public bool IgnoreOnLoad                      { get; }
+	public ulong NameHash                         { get; internal set; }
+	public NativeArchitecture Architecture        { get; internal set; }
+	public bool IsSatellite                       { get; }
+	public string? Culture                        { get; }
+	public ApplicationAssemblyContainer Container { get; internal set; } = ApplicationAssemblyContainer.Standalone;
+	public bool IsRTR                             { get; }
 
 	static readonly ArrayPool<byte> bytePool = ArrayPool<byte>.Shared;
 
@@ -44,8 +48,10 @@ public class ApplicationAssembly : BaseAspect
 		if (!name.EndsWith (".dll", StringComparison.OrdinalIgnoreCase)) {
 			name = $"{name}.dll";
 		}
+
 		FullName = name;
 		(IsSatellite, Culture, Name) = DetectSatellite (name);
+		IsRTR = DetectRTR (stream);
 	}
 
 	ApplicationAssembly (string? description, bool isIgnored)
@@ -61,6 +67,19 @@ public class ApplicationAssembly : BaseAspect
 
 	static (bool isSatellite, string? culture, string name) DetectSatellite (string name)
 	{
+		// If we were passed full path to an actual file, detection of the culture based on its name is
+		// hard (if possible), so we will just look at the metadata then.
+		if (Path.IsPathRooted (name) && File.Exists (name)) {
+			try {
+				return DetectSateliteFromMetadata (name);
+			} catch (Exception ex) {
+				Log.Warning ($"Failed to detect culture of assembly '{name}'", ex);
+				return (false, null, Path.GetFileName (name));
+			}
+		}
+
+		// Otherwise we can take advantage of the name, since the container (assembly store or application package
+		// will give us either just the file name or one with the `culture/` prefix
 		int idx = name.IndexOf ('/');
 		bool isSatellite = idx > 0;
 		if (!isSatellite) {
@@ -77,6 +96,47 @@ public class ApplicationAssembly : BaseAspect
 		return (true, culture, newName);
 	}
 
+	static (bool isSatellite, string? culture, string name) DetectSateliteFromMetadata (string path)
+	{
+		using var fs = File.OpenRead (path);
+		using var peReader = new PEReader (fs);
+		var mdataReader = peReader.GetMetadataReader ();
+
+		AssemblyDefinition asmdef = mdataReader.GetAssemblyDefinition ();
+		AssemblyNameInfo nameInfo = asmdef.GetAssemblyNameInfo ();
+		string fileName = Path.GetFileName (path);
+		if (String.IsNullOrEmpty (nameInfo.CultureName)) {
+			return (false, null, fileName);
+		}
+
+		return (true, nameInfo.CultureName, fileName);
+	}
+
+	static bool DetectRTR (Stream stream)
+	{
+		stream.Seek (0, SeekOrigin.Begin);
+
+		using var peReader = new PEReader (stream, PEStreamOptions.LeaveOpen);
+		CorHeader? corHeader = peReader?.PEHeaders?.CorHeader;
+		if (corHeader == null) {
+			return false;
+		}
+
+		Console.WriteLine ($"CorHeader.Flags == {corHeader.Flags}; {corHeader.Flags & CorFlags.ILLibrary}");
+		bool isr2r = false;
+		if ((corHeader.Flags & CorFlags.ILLibrary) == CorFlags.ILLibrary) {
+			// TODO: fetch sources from dotnet/runtime/src/coreclr/tools/aot/ILCompiler.Reflection.ReadyToRun/PEReaderExtensions.cs
+		} else {
+			isr2r = corHeader.ManagedNativeHeaderDirectory.Size != 0;
+		}
+
+		if (!isr2r) {
+			return false;
+		}
+
+		throw new NotImplementedException ();
+	}
+
 	/// <summary>
 	/// Creates a special ignored-on-load assembly instance for entries that exist in the store index but have no data.
 	/// </summary>
@@ -84,7 +144,7 @@ public class ApplicationAssembly : BaseAspect
 	/// <param name="nameHash">The xxHash of the assembly name.</param>
 	/// <param name="arch">The target native architecture.</param>
 	/// <returns>A new <see cref="ApplicationAssembly"/> marked as ignored.</returns>
-	public static IAspect CreateIgnoredAssembly (string? description, ulong nameHash, NativeArchitecture arch)
+	public static IAspect CreateIgnoredAssembly (string? description, ulong nameHash, NativeArchitecture arch, ApplicationAssemblyContainer container)
 	{
 		// This is a special case, as much as I hate to have one. Ignored assemblies exist only in the assembly store's
 		// index. They have an associated descriptor, but no data whatsoever. For that reason, we can't go the `ProbeAspect`
@@ -94,6 +154,7 @@ public class ApplicationAssembly : BaseAspect
 		return new ApplicationAssembly (description, isIgnored: true) {
 			Architecture = arch,
 			NameHash = nameHash,
+			Container = container,
 		};
 	}
 

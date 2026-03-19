@@ -369,6 +369,7 @@ public abstract class ApplicationPackage : BaseAspect
 			}
 
 			Log.Debug ($"Assembly shared library '{assemblyLib.Name}' found (assembly name '{assemblyLib.Assembly.Name}')");
+			assemblyLib.Assembly.Container = ApplicationAssemblyContainer.ApplicationPackage;
 			assemblies.Add (assemblyLib.Assembly);
 		}
 

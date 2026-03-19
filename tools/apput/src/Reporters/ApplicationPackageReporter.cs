@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -412,21 +411,8 @@ class ApplicationPackageReporter : BaseReporter
 		string GetCultureInfo (List<ApplicationAssembly> assemblyList)
 		{
 			var cultures = new HashSet<string> (StringComparer.Ordinal);
-			var sb = new StringBuilder ();
 			foreach (ApplicationAssembly asm in assemblyList) {
-				sb.Clear ();
-				sb.Append (asm.Culture ?? "<?>");
-
-				var ci = !String.IsNullOrEmpty (asm.Culture) ? CultureInfo.GetCultureInfo (asm.Culture): null;
-				if (ci != null) {
-					sb.Append (" (");
-					sb.Append (ci.NativeName);
-					sb.Append ("; ");
-					sb.Append (ci.EnglishName);
-					sb.Append (')');
-				}
-
-				cultures.Add (sb.ToString ());
+				cultures.Add (Utilities.GetCultureInfo (asm.Culture));
 			}
 
 			var cultureList = cultures.ToList ();

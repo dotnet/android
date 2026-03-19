@@ -35,12 +35,10 @@ class AssemblyStoreReporter : BaseReporter
 		}
 	}
 
-	void DoStandaloneReport ()
-	{
-		throw new NotImplementedException ();
-	}
+	void DoStandaloneReport () => DoReport (1);
+	void DoSubsectionReport (uint sectionLevel) => DoReport (sectionLevel);
 
-	void DoSubsectionReport (uint sectionLevel)
+	void DoReport (uint sectionLevel)
 	{
 		AddTargetArchItem (store.Architecture);
 		AddLabeledItem ("Number of assemblies", store.NumberOfAssemblies.ToString ());

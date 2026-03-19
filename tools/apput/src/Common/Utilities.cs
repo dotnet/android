@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Text;
 
@@ -251,5 +252,24 @@ class Utilities
 
 		Log.Debug ($"Demangled library name: '{sharedLibraryName}'");
 		return sharedLibraryName;
+	}
+
+	public static string GetCultureInfo (string? culture)
+	{
+		var sb = new StringBuilder ();
+		sb.Append (culture ?? "<?>");
+
+		var ci = !String.IsNullOrEmpty (culture) ? CultureInfo.GetCultureInfo (culture): null;
+		if (ci == null) {
+			return sb.ToString ();
+		}
+
+		sb.Append (" (");
+		sb.Append (ci.NativeName);
+		sb.Append ("; ");
+		sb.Append (ci.EnglishName);
+		sb.Append (')');
+
+		return sb.ToString ();
 	}
 }

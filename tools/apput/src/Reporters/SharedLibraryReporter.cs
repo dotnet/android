@@ -54,7 +54,9 @@ class SharedLibraryReporter : BaseReporter
 		AddAspectDesc (LibraryKind);
 
 		AddSection ("Generic ELF shared library info");
-		DoListReport (startWithNewLine: false);
+		ReportDoc.BeginList (appendLine: false);
+		AddCommonItems ();
+		ReportDoc.EndList ().EndListItem (appendLine: false);
 	}
 
 	protected virtual void DoListReport (bool startWithNewLine = true)

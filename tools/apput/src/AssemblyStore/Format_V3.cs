@@ -165,7 +165,7 @@ class Format_V3 : FormatBase
 			bool isIgnored = CheckIgnored (hash);
 			if (isIgnored) {
 				Log.Debug ($"{LogTag}: assembly '{name}' added, marked as ignore on load");
-				loadedAssemblies.Add ((ApplicationAssembly)ApplicationAssembly.CreateIgnoredAssembly (name, hash, arch));
+				loadedAssemblies.Add ((ApplicationAssembly)ApplicationAssembly.CreateIgnoredAssembly (name, hash, arch, ApplicationAssemblyContainer.AssemblyStore));
 				continue;
 			}
 
@@ -178,6 +178,7 @@ class Format_V3 : FormatBase
 				var assembly = (ApplicationAssembly)ApplicationAssembly.LoadAspect (assemblyStream, assemblyState, name);
 				assembly.NameHash = hash;
 				assembly.Architecture = arch;
+				assembly.Container = ApplicationAssemblyContainer.AssemblyStore;
 				loadedAssemblies.Add (assembly);
 				Log.Debug ($"{LogTag}: assembly '{name}' loaded");
 			}

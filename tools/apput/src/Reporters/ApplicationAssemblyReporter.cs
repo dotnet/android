@@ -22,6 +22,40 @@ class ApplicationAssemblyReporter : BaseReporter
 
 	protected override void DoReport (ReportForm form, uint sectionLevel)
 	{
-		throw new NotImplementedException ();
+		switch (form) {
+			case ReportForm.Standalone:
+				DoStandaloneReport ();
+				break;
+
+			case ReportForm.Subsection:
+				DoSubsectionReport (sectionLevel);
+				break;
+
+			default:
+				throw new NotSupportedException ($"Report form '{form}' is not supported.");
+		};
+	}
+
+	void DoStandaloneReport () => DoReport (1);
+	void DoSubsectionReport (uint sectionLevel) => DoReport (sectionLevel);
+
+	void DoReport (uint sectionLevel)
+	{
+		AddLabeledItem ("Name", assembly.FullName);
+		AddLabeledItem ("Architecture", assembly.Architecture.ToString ());
+		if (assembly.IsSatellite) {
+			AddLabeledItem ("Satellite", "yes");
+			AddLabeledItem ("Culture", Utilities.GetCultureInfo (assembly.Culture));
+		}
+		AddLabeledItem ("Compressed", YesNo (assembly.IsCompressed));
+		if (assembly.IsCompressed) {
+			AddLabeledItem ("Compressed size", Utilities.SizeToString (assembly.CompressedSize));
+		}
+		AddLabeledItem ("Size", Utilities.SizeToString (assembly.Size));
+
+		if (assembly.Container == ApplicationAssemblyContainer.AssemblyStore) {
+			ReportDoc.AddLabeledListItem ("Name hash", $"0x{assembly.NameHash:x}");
+			ReportDoc.AddLabeledListItem ("Ignore on load", YesNo (assembly.IgnoreOnLoad));
+		}
 	}
 }
