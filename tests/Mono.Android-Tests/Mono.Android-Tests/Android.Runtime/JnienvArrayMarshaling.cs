@@ -267,22 +267,96 @@ namespace Android.RuntimeTests {
 		public void GetObjectArray ()
 		{
 			using (var byteArray = new Java.Lang.Object (JNIEnv.NewArray (new byte[]{1,2,3}), JniHandleOwnership.TransferLocalRef)) {
+				string jniClassName = JNIEnv.GetClassNameFromInstance (byteArray.Handle);
+				int jniArrayLength = JNIEnv.GetArrayLength (byteArray.Handle);
+				Log ($"GetObjectArray byte[]: JNI class='{jniClassName}', length={jniArrayLength}");
+
 				object[] data = JNIEnv.GetObjectArray (byteArray.Handle, new[]{typeof (byte), typeof (byte), typeof (byte)});
+				Log ($"GetObjectArray byte[]: data.Length={data?.Length}");
+				if (data != null) {
+					for (int i = 0; i < data.Length; i++)
+						Log ($"GetObjectArray byte[]: data[{i}] = {data [i]} (type: {data [i]?.GetType ()})");
+				}
 				AssertArrays ("GetObjectArray", data, (object) 1, (object) 2, (object) 3);
 			}
+
+			// Collect all diagnostics before asserting so we can see the full picture in CI
+			var diagnostics = new System.Text.StringBuilder ();
+			object[]? values = null;
+			Exception? marshalingException = null;
+
 			using (var objectArray =
 					new Java.Lang.Object (
 							JNIEnv.NewArray (
 								new Java.Lang.Object[]{Application.Context, 42L, "string"},
 								typeof (Java.Lang.Object)),
 						JniHandleOwnership.TransferLocalRef)) {
-				object[] values = JNIEnv.GetObjectArray (objectArray.Handle, new[]{typeof(Context), typeof (int)});
-				Assert.AreEqual (3, values.Length);
-				Assert.IsTrue (object.ReferenceEquals (values [0], Application.Context));
-				Assert.IsTrue (values [1] is int);
-				Assert.AreEqual (42, (int)values [1]);
-				Assert.AreEqual ("string", values [2].ToString ());
+				string jniClassName = JNIEnv.GetClassNameFromInstance (objectArray.Handle);
+				int jniArrayLength = JNIEnv.GetArrayLength (objectArray.Handle);
+				diagnostics.AppendLine ($"mixed[]: JNI class='{jniClassName}', length={jniArrayLength}");
+
+				for (int i = 0; i < jniArrayLength; i++) {
+					IntPtr elemHandle = JNIEnv.GetObjectArrayElement (objectArray.Handle, i);
+					string elemClass = elemHandle != IntPtr.Zero ? JNIEnv.GetClassNameFromInstance (elemHandle) : "(null)";
+					diagnostics.AppendLine ($"  raw[{i}] JNI class='{elemClass}', handle=0x{elemHandle:x}");
+					JNIEnv.DeleteLocalRef (elemHandle);
+				}
+
+				try {
+					values = JNIEnv.GetObjectArray (objectArray.Handle, new[]{typeof(Context), typeof (int)});
+				} catch (Exception ex) {
+					marshalingException = ex;
+				}
 			}
+
+			if (marshalingException != null) {
+				diagnostics.AppendLine ($"GetObjectArray THREW: {marshalingException}");
+				Log (diagnostics.ToString ());
+				Assert.Fail ($"GetObjectArray threw: {marshalingException.Message}\n{diagnostics}");
+				return;
+			}
+
+			diagnostics.AppendLine ($"values.Length={values?.Length}");
+			if (values != null) {
+				for (int i = 0; i < values.Length; i++) {
+					var v = values [i];
+					diagnostics.AppendLine ($"  values[{i}] = {v} (type: {v?.GetType ()}, IJavaPeerable: {v is Java.Interop.IJavaPeerable})");
+				}
+
+				if (values.Length >= 1) {
+					bool refEqual = object.ReferenceEquals (values [0], Application.Context);
+					diagnostics.AppendLine ($"  ReferenceEquals(values[0], Context) = {refEqual}");
+					diagnostics.AppendLine ($"  values[0] type = {values [0]?.GetType ()}, hash = {values [0]?.GetHashCode ()}");
+					diagnostics.AppendLine ($"  Context  type = {Application.Context?.GetType ()}, hash = {Application.Context?.GetHashCode ()}");
+				}
+				if (values.Length >= 2) {
+					diagnostics.AppendLine ($"  values[1] is int = {values [1] is int}");
+					if (values [1] is Java.Interop.IJavaPeerable jp)
+						diagnostics.AppendLine ($"  values[1] peer JNI type = {JNIEnv.GetClassNameFromInstance (jp.PeerReference.Handle)}");
+				}
+				if (values.Length >= 3) {
+					diagnostics.AppendLine ($"  values[2].ToString() = '{values [2]}'");
+				}
+			}
+
+			string diag = diagnostics.ToString ();
+			Log (diag);
+
+			// Now assert with full diagnostic context
+			Assert.AreEqual (3, values!.Length, $"Expected 3 elements\n{diag}");
+			Assert.IsTrue (object.ReferenceEquals (values [0], Application.Context),
+				$"values[0] should be ReferenceEquals to Application.Context\n{diag}");
+			Assert.IsTrue (values [1] is int,
+				$"values[1] should be int\n{diag}");
+			Assert.AreEqual (42, (int)values [1],
+				$"values[1] should be 42\n{diag}");
+			Assert.AreEqual ("string", values [2].ToString (),
+				$"values[2] should be 'string'\n{diag}");
+		}
+
+		static void Log (string message)
+		{
+			Console.WriteLine (message);
 		}
 
 		[Test]
@@ -354,9 +428,11 @@ namespace Android.RuntimeTests {
 
 		static void AssertArrays<T> (string message, IList<T> actual, params T[] expected)
 		{
-			Assert.AreEqual (expected.Length, actual.Count, message);
+			Assert.AreEqual (expected.Length, actual.Count,
+				$"{message}: expected length {expected.Length}, got {actual.Count}");
 			for (int i = 0; i < expected.Length; ++i)
-				Assert.AreEqual (expected [i], actual [i], message);
+				Assert.AreEqual (expected [i], actual [i],
+					$"{message}[{i}]: expected '{expected [i]}' ({expected [i]?.GetType ()}), got '{actual [i]}' ({actual [i]?.GetType ()})");
 		}
 	}
 }
