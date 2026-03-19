@@ -70,11 +70,13 @@ class ManagedTypeManager : JniRuntime.JniTypeManager {
 			ReadOnlySpan<char> methods)
 	{
 		if (methods.IsEmpty) {
+			base.RegisterNativeMembers (nativeClass, type, methods);
 			return;
 		}
 
 		int methodCount = CountMethods (methods);
 		if (methodCount < 1) {
+			base.RegisterNativeMembers (nativeClass, type, methods);
 			return;
 		}
 
@@ -129,11 +131,13 @@ class ManagedTypeManager : JniRuntime.JniTypeManager {
 
 	protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
 	{
-		if (ManagedTypeMapping.TryGetType (jniSimpleReference, out var target)) {
-			yield return target;
-		}
+		// Base class contains built-in mappings (e.g. java/lang/String → System.String)
+		// which must take priority over ManagedTypeMapping (which would return Java.Lang.String).
 		foreach (var t in base.GetTypesForSimpleReference (jniSimpleReference)) {
 			yield return t;
+		}
+		if (ManagedTypeMapping.TryGetType (jniSimpleReference, out var target)) {
+			yield return target;
 		}
 	}
 
@@ -146,6 +150,19 @@ class ManagedTypeManager : JniRuntime.JniTypeManager {
 		if (ManagedTypeMapping.TryGetJniName (type, out var jniName)) {
 			yield return jniName;
 		}
+	}
+
+	protected override IReadOnlyList<string>? GetStaticMethodFallbackTypesCore (string jniSimpleReference)
+	{
+		int slash = jniSimpleReference.LastIndexOf ('/');
+		var desugarType = slash > 0
+			? $"{jniSimpleReference.Substring (0, slash + 1)}Desugar{jniSimpleReference.Substring (slash + 1)}"
+			: $"Desugar{jniSimpleReference}";
+
+		return new[] {
+			$"{desugarType}$_CC",
+			$"{jniSimpleReference}$-CC",
+		};
 	}
 
 	static int CountMethods (ReadOnlySpan<char> methodsSpan)

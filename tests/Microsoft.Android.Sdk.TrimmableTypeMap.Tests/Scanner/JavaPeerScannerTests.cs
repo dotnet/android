@@ -73,4 +73,18 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 			Assert.False (string.IsNullOrEmpty (peer.AssemblyName),
 				$"Type {peer.ManagedTypeName} should have assembly name"));
 	}
+
+	[Fact]
+	public void Scan_RegisterAttribute_DotFormat_NormalizedToSlashes ()
+	{
+		// [Register ("com.example.dotformat.MainActivity")] uses dots (Java class name format)
+		// — the scanner must normalize to slashes (JNI format).
+		// Reproduces the crash from Tests/Xamarin.ProjectTools/Resources/DotNet/MainActivity.cs
+		// where the template expands to [Register ("${JAVA_PACKAGENAME}.MainActivity"), Activity (...)].
+		var peer = FindFixtureByJavaName ("com/example/dotformat/MainActivity");
+		Assert.Equal ("com/example/dotformat/MainActivity", peer.JavaName);
+		Assert.Equal ("com/example/dotformat/MainActivity", peer.CompatJniName);
+		Assert.False (peer.DoNotGenerateAcw);
+		Assert.True (peer.IsUnconditional, "Should be unconditional due to [Activity]");
+	}
 }
