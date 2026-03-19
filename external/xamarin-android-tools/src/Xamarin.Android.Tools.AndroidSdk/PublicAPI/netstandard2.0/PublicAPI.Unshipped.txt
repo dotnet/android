@@ -1,5 +1,4 @@
 #nullable enable
-*REMOVED*static Xamarin.Android.Tools.ProcessUtils.StartProcess(System.Diagnostics.ProcessStartInfo! psi, System.IO.TextWriter? stdout, System.IO.TextWriter? stderr, System.Threading.CancellationToken cancellationToken, System.Action<System.Diagnostics.Process!>? onStarted = null) -> System.Threading.Tasks.Task<int>!
 Xamarin.Android.Tools.AdbDeviceInfo
 Xamarin.Android.Tools.AdbDeviceInfo.AdbDeviceInfo() -> void
 Xamarin.Android.Tools.AdbDeviceInfo.AvdName.get -> string?
@@ -32,8 +31,8 @@ Xamarin.Android.Tools.AdbDeviceType
 Xamarin.Android.Tools.AdbDeviceType.Device = 0 -> Xamarin.Android.Tools.AdbDeviceType
 Xamarin.Android.Tools.AdbDeviceType.Emulator = 1 -> Xamarin.Android.Tools.AdbDeviceType
 Xamarin.Android.Tools.AdbRunner
-Xamarin.Android.Tools.AdbRunner.AdbRunner(string! adbPath, System.Collections.Generic.IDictionary<string!, string!>? environmentVariables = null) -> void
-Xamarin.Android.Tools.AdbRunner.ListDevicesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.AdbDeviceInfo!>!>!
+Xamarin.Android.Tools.AdbRunner.AdbRunner(string! adbPath, System.Collections.Generic.IDictionary<string!, string!>? environmentVariables = null, System.Action<System.Diagnostics.TraceLevel, string!>? logger = null) -> void
+virtual Xamarin.Android.Tools.AdbRunner.ListDevicesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.AdbDeviceInfo!>!>!
 Xamarin.Android.Tools.AdbRunner.StopEmulatorAsync(string! serial, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Xamarin.Android.Tools.AdbRunner.WaitForDeviceAsync(string? serial = null, System.TimeSpan? timeout = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Xamarin.Android.Tools.ChecksumType
@@ -145,3 +144,35 @@ Xamarin.Android.Tools.AvdManagerRunner.AvdManagerRunner(string! avdManagerPath, 
 Xamarin.Android.Tools.AvdManagerRunner.GetOrCreateAvdAsync(string! name, string! systemImage, string? deviceProfile = null, bool force = false, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Xamarin.Android.Tools.AvdInfo!>!
 Xamarin.Android.Tools.AvdManagerRunner.DeleteAvdAsync(string! name, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Xamarin.Android.Tools.AvdManagerRunner.ListAvdsAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.AvdInfo!>!>!
+virtual Xamarin.Android.Tools.AdbRunner.GetShellPropertyAsync(string! serial, string! propertyName, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<string?>!
+virtual Xamarin.Android.Tools.AdbRunner.RunShellCommandAsync(string! serial, string! command, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<string?>!
+virtual Xamarin.Android.Tools.AdbRunner.RunShellCommandAsync(string! serial, string! command, string![]! args, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<string?>!
+Xamarin.Android.Tools.EmulatorBootOptions
+Xamarin.Android.Tools.EmulatorBootOptions.AdditionalArgs.get -> System.Collections.Generic.List<string!>?
+Xamarin.Android.Tools.EmulatorBootOptions.AdditionalArgs.init -> void
+Xamarin.Android.Tools.EmulatorBootOptions.BootTimeout.get -> System.TimeSpan
+Xamarin.Android.Tools.EmulatorBootOptions.BootTimeout.init -> void
+Xamarin.Android.Tools.EmulatorBootOptions.ColdBoot.get -> bool
+Xamarin.Android.Tools.EmulatorBootOptions.ColdBoot.init -> void
+Xamarin.Android.Tools.EmulatorBootOptions.PollInterval.get -> System.TimeSpan
+Xamarin.Android.Tools.EmulatorBootOptions.PollInterval.init -> void
+Xamarin.Android.Tools.EmulatorBootErrorKind
+Xamarin.Android.Tools.EmulatorBootErrorKind.None = 0 -> Xamarin.Android.Tools.EmulatorBootErrorKind
+Xamarin.Android.Tools.EmulatorBootErrorKind.LaunchFailed = 1 -> Xamarin.Android.Tools.EmulatorBootErrorKind
+Xamarin.Android.Tools.EmulatorBootErrorKind.Timeout = 2 -> Xamarin.Android.Tools.EmulatorBootErrorKind
+Xamarin.Android.Tools.EmulatorBootErrorKind.Cancelled = 3 -> Xamarin.Android.Tools.EmulatorBootErrorKind
+Xamarin.Android.Tools.EmulatorBootErrorKind.Unknown = 4 -> Xamarin.Android.Tools.EmulatorBootErrorKind
+Xamarin.Android.Tools.EmulatorBootResult
+Xamarin.Android.Tools.EmulatorBootResult.ErrorKind.get -> Xamarin.Android.Tools.EmulatorBootErrorKind
+Xamarin.Android.Tools.EmulatorBootResult.ErrorKind.init -> void
+Xamarin.Android.Tools.EmulatorBootResult.ErrorMessage.get -> string?
+Xamarin.Android.Tools.EmulatorBootResult.ErrorMessage.init -> void
+Xamarin.Android.Tools.EmulatorBootResult.Serial.get -> string?
+Xamarin.Android.Tools.EmulatorBootResult.Serial.init -> void
+Xamarin.Android.Tools.EmulatorBootResult.Success.get -> bool
+Xamarin.Android.Tools.EmulatorBootResult.Success.init -> void
+Xamarin.Android.Tools.EmulatorRunner
+Xamarin.Android.Tools.EmulatorRunner.BootEmulatorAsync(string! deviceOrAvdName, Xamarin.Android.Tools.AdbRunner! adbRunner, Xamarin.Android.Tools.EmulatorBootOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Xamarin.Android.Tools.EmulatorBootResult!>!
+Xamarin.Android.Tools.EmulatorRunner.EmulatorRunner(string! emulatorPath, System.Collections.Generic.IDictionary<string!, string!>? environmentVariables = null, System.Action<System.Diagnostics.TraceLevel, string!>? logger = null) -> void
+Xamarin.Android.Tools.EmulatorRunner.ListAvdNamesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<string!>!>!
+Xamarin.Android.Tools.EmulatorRunner.LaunchEmulator(string! avdName, bool coldBoot = false, System.Collections.Generic.List<string!>? additionalArgs = null) -> System.Diagnostics.Process!

@@ -18,7 +18,7 @@ public class AvdManagerRunner
 {
 	readonly string avdManagerPath;
 	readonly IDictionary<string, string>? environmentVariables;
-	readonly Action<TraceLevel, string>? logger;
+	readonly Action<TraceLevel, string> logger;
 
 	/// <summary>
 	/// Creates a new AvdManagerRunner with the full path to the avdmanager executable.
@@ -32,7 +32,7 @@ public class AvdManagerRunner
 			throw new ArgumentException ("Path to avdmanager must not be empty.", nameof (avdManagerPath));
 		this.avdManagerPath = avdManagerPath;
 		this.environmentVariables = environmentVariables;
-		this.logger = logger;
+		this.logger = logger ?? RunnerDefaults.NullLogger;
 	}
 
 	public async Task<IReadOnlyList<AvdInfo>> ListAvdsAsync (CancellationToken cancellationToken = default)
@@ -40,7 +40,7 @@ public class AvdManagerRunner
 		using var stdout = new StringWriter ();
 		using var stderr = new StringWriter ();
 		var psi = ProcessUtils.CreateProcessStartInfo (avdManagerPath, "list", "avd");
-		logger?.Invoke (TraceLevel.Verbose, "Running: avdmanager list avd");
+		logger.Invoke (TraceLevel.Verbose, "Running: avdmanager list avd");
 		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
 
 		ProcessUtils.ThrowIfFailed (exitCode, "avdmanager list avd", stderr);
@@ -65,7 +65,7 @@ public class AvdManagerRunner
 			var existing = (await ListAvdsAsync (cancellationToken).ConfigureAwait (false))
 				.FirstOrDefault (a => string.Equals (a.Name, name, StringComparison.OrdinalIgnoreCase));
 			if (existing is not null) {
-				logger?.Invoke (TraceLevel.Verbose, $"AVD '{name}' already exists, returning existing");
+				logger.Invoke (TraceLevel.Verbose, $"AVD '{name}' already exists, returning existing");
 				return existing;
 			}
 		}
@@ -88,7 +88,7 @@ public class AvdManagerRunner
 					p.StandardInput.WriteLine ("no");
 					p.StandardInput.Close ();
 				} catch (IOException ex) {
-					logger?.Invoke (TraceLevel.Warning, $"Failed to write to avdmanager stdin: {ex.Message}");
+					logger.Invoke (TraceLevel.Warning, $"Failed to write to avdmanager stdin: {ex.Message}");
 				}
 			}).ConfigureAwait (false);
 
@@ -111,7 +111,7 @@ public class AvdManagerRunner
 		// Idempotent: if the AVD doesn't exist, treat as success
 		var avds = await ListAvdsAsync (cancellationToken).ConfigureAwait (false);
 		if (!avds.Any (a => string.Equals (a.Name, name, StringComparison.OrdinalIgnoreCase))) {
-			logger?.Invoke (TraceLevel.Verbose, $"AVD '{name}' does not exist, nothing to delete");
+			logger.Invoke (TraceLevel.Verbose, $"AVD '{name}' does not exist, nothing to delete");
 			return;
 		}
 

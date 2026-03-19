@@ -655,4 +655,63 @@ public class AdbRunnerTests
 		Assert.ThrowsAsync<System.ArgumentOutOfRangeException> (
 			async () => await runner.WaitForDeviceAsync (timeout: System.TimeSpan.Zero));
 	}
+
+	// --- FirstNonEmptyLine tests ---
+
+	[Test]
+	public void FirstNonEmptyLine_ReturnsFirstLine ()
+	{
+		Assert.AreEqual ("hello", AdbRunner.FirstNonEmptyLine ("hello\nworld\n"));
+	}
+
+	[Test]
+	public void FirstNonEmptyLine_SkipsBlankLines ()
+	{
+		Assert.AreEqual ("hello", AdbRunner.FirstNonEmptyLine ("\n\nhello\nworld\n"));
+	}
+
+	[Test]
+	public void FirstNonEmptyLine_TrimsWhitespace ()
+	{
+		Assert.AreEqual ("hello", AdbRunner.FirstNonEmptyLine ("  hello  \n"));
+	}
+
+	[Test]
+	public void FirstNonEmptyLine_HandlesWindowsNewlines ()
+	{
+		Assert.AreEqual ("hello", AdbRunner.FirstNonEmptyLine ("\r\nhello\r\nworld\r\n"));
+	}
+
+	[Test]
+	public void FirstNonEmptyLine_EmptyString_ReturnsNull ()
+	{
+		Assert.IsNull (AdbRunner.FirstNonEmptyLine (""));
+	}
+
+	[Test]
+	public void FirstNonEmptyLine_OnlyNewlines_ReturnsNull ()
+	{
+		Assert.IsNull (AdbRunner.FirstNonEmptyLine ("\n\n\n"));
+	}
+
+	[Test]
+	public void FirstNonEmptyLine_SingleValue_ReturnsIt ()
+	{
+		Assert.AreEqual ("1", AdbRunner.FirstNonEmptyLine ("1\n"));
+	}
+
+	[Test]
+	public void FirstNonEmptyLine_TypicalGetpropOutput ()
+	{
+		// adb shell getprop sys.boot_completed returns "1\n" or "1\r\n"
+		Assert.AreEqual ("1", AdbRunner.FirstNonEmptyLine ("1\r\n"));
+	}
+
+	[Test]
+	public void FirstNonEmptyLine_PmPathOutput ()
+	{
+		// adb shell pm path android returns "package:/system/framework/framework-res.apk\n"
+		var output = "package:/system/framework/framework-res.apk\n";
+		Assert.AreEqual ("package:/system/framework/framework-res.apk", AdbRunner.FirstNonEmptyLine (output));
+	}
 }
