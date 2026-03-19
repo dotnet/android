@@ -1078,11 +1078,6 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
     <comment>{0} - The AVD name.
 {1} - The exception message.</comment>
   </data>
-  <data name="XA0144" xml:space="preserve">
-    <value>The Android emulator for AVD '{0}' exited unexpectedly with exit code {1} before becoming available.</value>
-    <comment>{0} - The AVD name.
-{1} - The process exit code.</comment>
-  </data>
   <data name="XA0145" xml:space="preserve">
     <value>The Android emulator for AVD '{0}' did not finish booting within {1} seconds. Increase 'BootTimeoutSeconds' or check the emulator configuration.</value>
     <comment>The following is a literal name and should not be translated: BootTimeoutSeconds

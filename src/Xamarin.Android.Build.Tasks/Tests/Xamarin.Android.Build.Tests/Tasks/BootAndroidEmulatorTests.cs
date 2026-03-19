@@ -263,7 +263,7 @@ public class BootAndroidEmulatorTests : BaseTest
 	}
 
 	[Test]
-	public void Cancelled_DoesNotLogError ()
+	public void Cancelled_FailsTheBuild ()
 	{
 		var task = CreateTask ("Pixel_6_API_33");
 		task.BootResult = new EmulatorBootResult {
@@ -271,9 +271,8 @@ public class BootAndroidEmulatorTests : BaseTest
 			ErrorKind = EmulatorBootErrorKind.Cancelled,
 		};
 
-		Assert.IsTrue (task.Execute (), "Cancelled task should not fail the build");
-		Assert.AreEqual (0, errors.Count, "Cancelled should not produce errors");
-		Assert.IsTrue (messages.Any (m => m.Message.Contains ("cancelled")), "Should log cancellation message");
+		Assert.IsFalse (task.Execute (), "Cancelled task should fail the build");
+		Assert.IsNull (task.ResolvedDevice, "ResolvedDevice should be null on cancellation");
 	}
 
 	[Test]
@@ -286,7 +285,17 @@ public class BootAndroidEmulatorTests : BaseTest
 		};
 
 		Assert.IsFalse (task.Execute (), "Task should fail when serial is null");
-		Assert.IsTrue (errors.Any (e => e.Code == "XA0145"), "Null serial should map to XA0145");
+		Assert.IsTrue (errors.Any (e => e.Code == "XA0143"), "Null serial should map to XA0143");
 		Assert.IsNull (task.ResolvedDevice, "ResolvedDevice should be null");
+	}
+
+	[Test]
+	public void InvalidTimeout_ReturnsError ()
+	{
+		var task = CreateTask ("Pixel_6_API_33");
+		task.BootTimeoutSeconds = 0;
+
+		Assert.IsFalse (task.Execute (), "Task should fail with zero timeout");
+		Assert.IsTrue (errors.Any (e => e.Code == "XA0145"), "Invalid timeout should produce XA0145 error");
 	}
 }

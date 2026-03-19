@@ -96,6 +96,11 @@ public class BootAndroidEmulator : AsyncTask
 
 	public override async Task RunTaskAsync ()
 	{
+		if (BootTimeoutSeconds <= 0) {
+			LogCodedError ("XA0145", Properties.Resources.XA0145, Device, BootTimeoutSeconds);
+			return;
+		}
+
 		var adbPath = ResolveAdbPath ();
 		var emulatorPath = ResolveEmulatorPath ();
 		var logger = this.CreateTaskLogger ();
@@ -108,30 +113,29 @@ public class BootAndroidEmulator : AsyncTask
 		var result = await ExecuteBootAsync (adbPath, emulatorPath, logger, Device, options, CancellationToken).ConfigureAwait (false);
 
 		if (result.Success) {
-			if (string.IsNullOrEmpty (result.Serial)) {
-				Log.LogCodedError ("XA0145", Properties.Resources.XA0145, Device, BootTimeoutSeconds);
+			if (result.Serial.IsNullOrEmpty ()) {
+				LogCodedError ("XA0143", Properties.Resources.XA0143, Device, "Boot reported success but no device serial was returned.");
 				return;
 			}
 			ResolvedDevice = result.Serial;
 			AdbTarget = $"-s {result.Serial}";
-			Log.LogMessage (MessageImportance.High, $"Emulator '{Device}' ({result.Serial}) is fully booted and ready.");
+			LogMessage ($"Emulator '{Device}' ({result.Serial}) is fully booted and ready.");
 			return;
 		}
 
 		switch (result.ErrorKind) {
 		case EmulatorBootErrorKind.LaunchFailed:
-			Log.LogCodedError ("XA0143", Properties.Resources.XA0143, Device, result.ErrorMessage ?? "Unknown launch error");
+			LogCodedError ("XA0143", Properties.Resources.XA0143, Device, result.ErrorMessage ?? "Unknown launch error");
 			break;
 		case EmulatorBootErrorKind.Cancelled:
-			Log.LogMessage (MessageImportance.High, $"Emulator boot for '{Device}' was cancelled.");
-			break;
+			throw new OperationCanceledException ($"Emulator boot for '{Device}' was cancelled.");
 		case EmulatorBootErrorKind.Timeout:
-			Log.LogCodedError ("XA0145", Properties.Resources.XA0145, Device, BootTimeoutSeconds);
+			LogCodedError ("XA0145", Properties.Resources.XA0145, Device, BootTimeoutSeconds);
 			break;
 		default:
-			Log.LogCodedError ("XA0145", Properties.Resources.XA0145, Device, BootTimeoutSeconds);
-			if (!string.IsNullOrEmpty (result.ErrorMessage)) {
-				Log.LogMessage (MessageImportance.High, $"Error details: {result.ErrorMessage}");
+			LogCodedError ("XA0145", Properties.Resources.XA0145, Device, BootTimeoutSeconds);
+			if (!result.ErrorMessage.IsNullOrEmpty ()) {
+				LogMessage ($"Error details: {result.ErrorMessage}");
 			}
 			break;
 		}
@@ -157,6 +161,7 @@ public class BootAndroidEmulator : AsyncTask
 	/// <summary>
 	/// Parses extra arguments into a list suitable for <see cref="EmulatorBootOptions.AdditionalArgs"/>.
 	/// Supports double-quoted segments to allow values with embedded spaces (e.g. <c>-gpu "swiftshader_indirect"</c>).
+	/// Escaped quotes (<c>\"</c>) inside quoted values are not supported.
 	/// </summary>
 	static List<string>? ParseExtraArguments (string? extraArgs)
 	{

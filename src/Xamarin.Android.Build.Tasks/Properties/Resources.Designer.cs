@@ -558,15 +558,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to The Android emulator for AVD &apos;{0}&apos; exited unexpectedly with exit code {1} before becoming available..
-        /// </summary>
-        public static string XA0144 {
-            get {
-                return ResourceManager.GetString("XA0144", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to The Android emulator for AVD &apos;{0}&apos; did not finish booting within {1} seconds. Increase &apos;BootTimeoutSeconds&apos; or check the emulator configuration..
         /// </summary>
         public static string XA0145 {
