@@ -29,6 +29,8 @@ public class PostTrimmingPipeline : AndroidTask
 
 	public bool AddKeepAlives { get; set; }
 
+	public bool AndroidLinkResources { get; set; }
+
 	public bool Deterministic { get; set; }
 
 	public override bool RunTask ()
@@ -51,6 +53,13 @@ public class PostTrimmingPipeline : AndroidTask
 			steps.Add (new PostTrimmingAddKeepAlivesStep (cache,
 				() => resolver.Resolve (AssemblyNameReference.Parse ("System.Private.CoreLib")),
 				(msg) => Log.LogDebugMessage (msg)));
+		}
+		if (AndroidLinkResources) {
+			var allAssemblies = new List<AssemblyDefinition> (Assemblies.Length);
+			foreach (var item in Assemblies) {
+				allAssemblies.Add (resolver.GetAssembly (item.ItemSpec));
+			}
+			steps.Add (new PostTrimmingRemoveResourceDesignerStep (allAssemblies, (msg) => Log.LogDebugMessage (msg)));
 		}
 
 		foreach (var item in Assemblies) {
