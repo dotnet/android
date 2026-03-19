@@ -2,9 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection.PortableExecutable;
 using System.Text;
 
 namespace ApplicationUtility;
+
+using ReadyToRunOperatingSystem = ILCompiler.Reflection.ReadyToRun.OperatingSystem;
 
 /// <summary>
 /// Generates a comprehensive report for an Android application package (APK, AAB, or base module),
@@ -390,6 +393,11 @@ class ApplicationPackageReporter : BaseReporter
 			ReportDoc.StartListItem (assemblyList[0].FullName).BeginList();
 
 			ReportDoc.AddLabeledListItem ("Architectures", String.Join (", ", assemblyList.Select (asm => asm.Architecture.ToString ()).Distinct ()));
+			if (assemblyList[0].IsRTR) {
+				AddLabeledItem ("ReadyToRun image", GetIsRtrValue (assemblyList));
+				AddLabeledItem ("RTR target machine", GetRtrTargetMachineValue (assemblyList));
+				AddLabeledItem ("RTR target operating system", GetRtrTargetOperatingSystemValue (assemblyList));
+			}
 			if (assemblyList[0].IsSatellite) {
 				ReportDoc.AddLabeledListItem ("Satellite", "yes");
 				ReportDoc.AddLabeledListItem ("Culture", GetCultureInfo (assemblyList));
@@ -418,6 +426,36 @@ class ApplicationPackageReporter : BaseReporter
 			var cultureList = cultures.ToList ();
 			cultureList.Sort ();
 			return String.Join (", ", cultureList);
+		}
+
+		string GetIsRtrValue (List<ApplicationAssembly> assemblyList)
+		{
+			return GetAggregatedValue (
+				assemblyList,
+				(ApplicationAssembly asm) => asm.IsRTR,
+				(ApplicationAssembly asm, bool v) => YesNo (v),
+				(ApplicationAssembly asm) => asm.Architecture.ToString ()
+			);
+		}
+
+		string GetRtrTargetMachineValue (List<ApplicationAssembly> assemblyList)
+		{
+			return GetAggregatedValue (
+				assemblyList,
+				(ApplicationAssembly asm) => asm.RTRMachine,
+				(ApplicationAssembly asm, Machine v) => v.ToString (),
+				(ApplicationAssembly asm) => asm.Architecture.ToString ()
+			);
+		}
+
+		string GetRtrTargetOperatingSystemValue (List<ApplicationAssembly> assemblyList)
+		{
+			return GetAggregatedValue (
+				assemblyList,
+				(ApplicationAssembly asm) => asm.RTROS,
+				(ApplicationAssembly asm, ReadyToRunOperatingSystem v) => v.ToString (),
+				(ApplicationAssembly asm) => asm.Architecture.ToString ()
+			);
 		}
 
 		string GetHasPdbValue (List<ApplicationAssembly> assemblyList)

@@ -43,6 +43,12 @@ class ApplicationAssemblyReporter : BaseReporter
 	{
 		AddLabeledItem ("Name", assembly.FullName);
 		AddLabeledItem ("Architecture", assembly.Architecture.ToString ());
+		if (assembly.IsRTR) {
+			AddLabeledItem ("ReadyToRun image", "yes");
+			AddLabeledItem ("RTR target machine", assembly.RTRMachine.ToString ());
+			AddLabeledItem ("RTR target operating system", assembly.RTROS.ToString ());
+		}
+
 		if (assembly.IsSatellite) {
 			AddLabeledItem ("Satellite", "yes");
 			AddLabeledItem ("Culture", Utilities.GetCultureInfo (assembly.Culture));

@@ -5,9 +5,12 @@ using System.IO;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 
+using ILCompiler.Reflection.ReadyToRun;
 using K4os.Compression.LZ4;
 
 namespace ApplicationUtility;
+
+using ReadyToRunOperatingSystem = ILCompiler.Reflection.ReadyToRun.OperatingSystem;
 
 /// <summary>
 /// Represents a .NET managed assembly contained within an Android application package or assembly store.
@@ -35,6 +38,8 @@ public class ApplicationAssembly : BaseAspect
 	public string? Culture                        { get; }
 	public ApplicationAssemblyContainer Container { get; internal set; } = ApplicationAssemblyContainer.Standalone;
 	public bool IsRTR                             { get; }
+	public ReadyToRunOperatingSystem RTROS        { get; } = ReadyToRunOperatingSystem.Unknown;
+	public Machine RTRMachine                     { get; } = Machine.Unknown;
 
 	static readonly ArrayPool<byte> bytePool = ArrayPool<byte>.Shared;
 
@@ -50,8 +55,10 @@ public class ApplicationAssembly : BaseAspect
 		}
 
 		FullName = name;
+
+		// TODO: made these two work on compressed assemblies
 		(IsSatellite, Culture, Name) = DetectSatellite (name);
-		IsRTR = DetectRTR (stream);
+		(IsRTR, RTRMachine, RTROS) = DetectRTR (stream);
 	}
 
 	ApplicationAssembly (string? description, bool isIgnored)
@@ -67,9 +74,12 @@ public class ApplicationAssembly : BaseAspect
 
 	static (bool isSatellite, string? culture, string name) DetectSatellite (string name)
 	{
+		Log.Debug ("Detecting if it is a satellite assembly.");
+
 		// If we were passed full path to an actual file, detection of the culture based on its name is
 		// hard (if possible), so we will just look at the metadata then.
 		if (Path.IsPathRooted (name) && File.Exists (name)) {
+			Log.Debug ("Deciding based on assembly metadata");
 			try {
 				return DetectSateliteFromMetadata (name);
 			} catch (Exception ex) {
@@ -78,21 +88,20 @@ public class ApplicationAssembly : BaseAspect
 			}
 		}
 
+		Log.Debug ("Deciding based on assembly name");
 		// Otherwise we can take advantage of the name, since the container (assembly store or application package
 		// will give us either just the file name or one with the `culture/` prefix
 		int idx = name.IndexOf ('/');
 		bool isSatellite = idx > 0;
-		if (!isSatellite) {
-			return (false, null, name);
-		}
-
-		if (idx == name.Length - 1) {
+		if (!isSatellite || idx == name.Length - 1) {
+			Log.Debug ("Not a satellite assembly");
 			return (false, null, name);
 		}
 
 		string newName = name.Substring (idx + 1);
 		string culture = name.Substring (0, idx);
 
+		Log.Debug ($"Satellite assembly detected. Culture name: '{culture}'");
 		return (true, culture, newName);
 	}
 
@@ -106,35 +115,62 @@ public class ApplicationAssembly : BaseAspect
 		AssemblyNameInfo nameInfo = asmdef.GetAssemblyNameInfo ();
 		string fileName = Path.GetFileName (path);
 		if (String.IsNullOrEmpty (nameInfo.CultureName)) {
+			Log.Debug ("Not a satellite assembly");
 			return (false, null, fileName);
 		}
 
+		Log.Debug ($"Satellite assembly detected. Culture name: '{nameInfo.CultureName}'");
 		return (true, nameInfo.CultureName, fileName);
 	}
 
-	static bool DetectRTR (Stream stream)
+	static (bool isR2R, Machine machine, ReadyToRunOperatingSystem os) DetectRTR (Stream stream)
 	{
-		stream.Seek (0, SeekOrigin.Begin);
+		Log.Debug ("Detecting if it is a ReadyToRun assembly");
+		try {
+			stream.Seek (0, SeekOrigin.Begin);
 
-		using var peReader = new PEReader (stream, PEStreamOptions.LeaveOpen);
-		CorHeader? corHeader = peReader?.PEHeaders?.CorHeader;
-		if (corHeader == null) {
-			return false;
+			using var peReader = new PEReader (stream, PEStreamOptions.LeaveOpen);
+			CorHeader? corHeader = peReader?.PEHeaders?.CorHeader;
+			if (peReader == null || corHeader == null) {
+				return ThisIsNotTheRtrYouAreLookingFor ();
+			}
+
+			if ((corHeader.Flags & CorFlags.ILLibrary) == CorFlags.ILLibrary) {
+				return DetectCompositeRTR (peReader);
+			}
+
+			return DetectLegacyRTR (peReader);
+		} catch (Exception ex) {
+			Log.Warning ("Failed to detect whether assembly is a ReadyToRun image.", ex);
+			return ThisIsNotTheRtrYouAreLookingFor ();
+		}
+	}
+
+	static (bool isR2R, Machine machine, ReadyToRunOperatingSystem os) DetectCompositeRTR (PEReader peReader)
+	{
+		var compositeReader = new PEImageReader (peReader);
+		IAssemblyMetadata metadata = compositeReader.GetStandaloneAssemblyMetadata ();
+		bool ret = compositeReader.TryGetReadyToRunHeader (out _, out _);
+		if (!ret) {
+			return ThisIsNotTheRtrYouAreLookingFor ();
 		}
 
-		Console.WriteLine ($"CorHeader.Flags == {corHeader.Flags}; {corHeader.Flags & CorFlags.ILLibrary}");
-		bool isr2r = false;
-		if ((corHeader.Flags & CorFlags.ILLibrary) == CorFlags.ILLibrary) {
-			// TODO: fetch sources from dotnet/runtime/src/coreclr/tools/aot/ILCompiler.Reflection.ReadyToRun/PEReaderExtensions.cs
-		} else {
-			isr2r = corHeader.ManagedNativeHeaderDirectory.Size != 0;
-		}
+		Log.Debug ("ReadyToRun assembly detected.");
+		return (true, compositeReader.Machine, compositeReader.OperatingSystem);
+	}
 
-		if (!isr2r) {
-			return false;
-		}
+	static (bool isR2R, Machine machine, ReadyToRunOperatingSystem os) DetectLegacyRTR (PEReader peReader)
+	{
+		// TODO: implement
+		return ThisIsNotTheRtrYouAreLookingFor (log: false);
+	}
 
-		throw new NotImplementedException ();
+	static (bool isR2R, Machine machine, ReadyToRunOperatingSystem os) ThisIsNotTheRtrYouAreLookingFor (bool log = true)
+	{
+		if (log) {
+			Log.Debug ("Not a ReadyToRun assembly.");
+		}
+		return (false, Machine.Unknown, ReadyToRunOperatingSystem.Unknown);
 	}
 
 	/// <summary>
