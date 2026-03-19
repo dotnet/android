@@ -292,7 +292,7 @@ public class BootAndroidEmulatorTests : BaseTest
 	}
 
 	[Test]
-	public void Cancelled_FailsTheBuild ()
+	public void Cancelled_DoesNotFail ()
 	{
 		var task = CreateTask ("Pixel_6_API_33");
 		task.BootResult = new EmulatorBootResult {
@@ -300,8 +300,9 @@ public class BootAndroidEmulatorTests : BaseTest
 			ErrorKind = EmulatorBootErrorKind.Cancelled,
 		};
 
-		Assert.IsFalse (task.Execute (), "Cancelled task should fail the build");
+		Assert.IsTrue (task.Execute (), "Cancelled task should not fail — MSBuild handles cancellation");
 		Assert.IsNull (task.ResolvedDevice, "ResolvedDevice should be null on cancellation");
+		Assert.IsEmpty (errors, "No errors should be logged for cancellation");
 	}
 
 	[Test]

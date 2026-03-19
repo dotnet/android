@@ -128,7 +128,8 @@ public class BootAndroidEmulator : AsyncTask
 			LogCodedError ("XA0143", Properties.Resources.XA0143, Device, result.ErrorMessage ?? "Unknown launch error");
 			break;
 		case EmulatorBootErrorKind.Cancelled:
-			throw new OperationCanceledException ($"Emulator boot for '{Device}' was cancelled.");
+			LogMessage ($"Emulator boot for '{Device}' was cancelled.");
+			break;
 		case EmulatorBootErrorKind.Timeout:
 			LogCodedError ("XA0145", Properties.Resources.XA0145, Device, BootTimeoutSeconds);
 			break;
@@ -177,7 +178,7 @@ public class BootAndroidEmulator : AsyncTask
 				i++;
 			} else if (c == '"') {
 				inQuotes = !inQuotes;
-			} else if (c == ' ' && !inQuotes) {
+			} else if (char.IsWhiteSpace (c) && !inQuotes) {
 				if (current.Length > 0) {
 					args.Add (current.ToString ());
 					current.Clear ();
