@@ -20,15 +20,24 @@ class StripEmbeddedLibrariesStep : IAssemblyModifierPipelineStep
 
 	public void ProcessAssembly (AssemblyDefinition assembly, StepContext context)
 	{
+		if (MonoAndroidHelper.IsFrameworkAssembly (assembly))
+			return;
+		context.IsAssemblyModified |= StripEmbeddedLibraries (assembly, log);
+	}
+
+	internal static bool StripEmbeddedLibraries (AssemblyDefinition assembly, TaskLoggingHelper log)
+	{
+		bool modified = false;
 		foreach (var module in assembly.Modules) {
 			foreach (var resource in module.Resources.ToArray ()) {
 				if (ShouldStripResource (resource)) {
 					log.LogDebugMessage ($"  Stripped {resource.Name} from {assembly.Name.Name}.dll");
 					module.Resources.Remove (resource);
-					context.IsAssemblyModified = true;
+					modified = true;
 				}
 			}
 		}
+		return modified;
 	}
 
 	/// <summary>

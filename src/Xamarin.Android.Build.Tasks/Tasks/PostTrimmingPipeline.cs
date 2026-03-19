@@ -36,6 +36,7 @@ public class PostTrimmingPipeline : AndroidTask
 		using var resolver = new DirectoryAssemblyResolver (
 			this.CreateTaskLogger (), loadDebugSymbols: true,
 			loadReaderParameters: new ReaderParameters { ReadWrite = true });
+		var cache = new TypeDefinitionCache ();
 
 		foreach (var assembly in Assemblies) {
 			var dir = Path.GetFullPath (Path.GetDirectoryName (assembly.ItemSpec) ?? "");
@@ -45,31 +46,19 @@ public class PostTrimmingPipeline : AndroidTask
 		}
 
 		var steps = new List<IAssemblyModifierPipelineStep> ();
-
 		steps.Add (new StripEmbeddedLibrariesStep (Log));
-
 		if (AddKeepAlives) {
-			var linkContext = new MSBuildLinkContext (resolver, Log);
-			var addKeepAlivesStep = new AddKeepAlivesStep ();
-			addKeepAlivesStep.Initialize (linkContext);
-			steps.Add (addKeepAlivesStep);
+			steps.Add (new PostTrimmingAddKeepAlivesStep (cache,
+				() => resolver.Resolve (AssemblyNameReference.Parse ("System.Private.CoreLib")),
+				(msg) => Log.LogDebugMessage (msg)));
 		}
 
 		foreach (var item in Assemblies) {
-			if (MonoAndroidHelper.IsFrameworkAssembly (item)) {
-				continue;
-			}
-
 			var assembly = resolver.GetAssembly (item.ItemSpec);
-			var context = new StepContext (item, item) {
-				IsAndroidAssembly = MonoAndroidHelper.IsAndroidAssembly (item),
-				IsUserAssembly = true,
-			};
-
+			var context = new StepContext (item, item);
 			foreach (var step in steps) {
 				step.ProcessAssembly (assembly, context);
 			}
-
 			if (context.IsAssemblyModified) {
 				Log.LogDebugMessage ($"  Writing modified assembly: {item.ItemSpec}");
 				assembly.Write (new WriterParameters {
