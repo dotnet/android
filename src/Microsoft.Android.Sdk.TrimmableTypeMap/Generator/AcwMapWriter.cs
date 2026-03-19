@@ -22,8 +22,9 @@ public static class AcwMapWriter
 {
 	/// <summary>
 	/// Writes acw-map lines for the given <paramref name="peers"/> to the <paramref name="writer"/>.
-	/// Conflict detection is NOT performed here — it happens at merge time when all per-assembly
-	/// maps are combined. Per-assembly maps write all 3 line variants unconditionally.
+	/// Per-assembly maps write all 3 line variants unconditionally. No conflict detection
+	/// is performed — the merged acw-map.txt is a simple concatenation consumed by
+	/// LoadMapFile which uses first-entry-wins semantics for duplicate keys.
 	/// </summary>
 	public static void Write (TextWriter writer, IEnumerable<JavaPeerInfo> peers)
 	{

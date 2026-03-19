@@ -50,7 +50,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 	/// <summary>
 	/// Per-assembly acw-map files produced during scanning. Each file contains
-	/// ManagedName;JavaName lines for types in that assembly.
+	/// three lines per type: PartialAssemblyQualifiedName;JavaKey,
+	/// ManagedKey;JavaKey, and CompatJniName;JavaKey.
 	/// </summary>
 	[Output]
 	public ITaskItem []? PerAssemblyAcwMapFiles { get; set; }

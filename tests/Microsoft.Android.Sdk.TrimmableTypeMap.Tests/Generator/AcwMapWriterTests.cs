@@ -7,11 +7,15 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 
 public class AcwMapWriterTests : FixtureTestBase
 {
-	static string WriteToString (IEnumerable<JavaPeerInfo> peers)
+	static string [] WriteLines (IEnumerable<JavaPeerInfo> peers)
 	{
 		using var writer = new StringWriter ();
 		AcwMapWriter.Write (writer, peers);
-		return writer.ToString ();
+		var output = writer.ToString ().TrimEnd ();
+		if (output.Length == 0) {
+			return Array.Empty<string> ();
+		}
+		return output.Split (new [] { Environment.NewLine }, StringSplitOptions.None);
 	}
 
 	[Fact]
@@ -19,8 +23,7 @@ public class AcwMapWriterTests : FixtureTestBase
 	{
 		var peer = MakeMcwPeer ("android/app/Activity", "Android.App.Activity", "Mono.Android");
 
-		var output = WriteToString (new [] { peer });
-		var lines = output.TrimEnd ().Split (new [] { '\n' }, StringSplitOptions.None);
+		var lines = WriteLines (new [] { peer });
 
 		Assert.Equal (3, lines.Length);
 		// Line 1: PartialAssemblyQualifiedName;JavaKey
@@ -43,8 +46,7 @@ public class AcwMapWriterTests : FixtureTestBase
 			AssemblyName = "MyApp",
 		};
 
-		var output = WriteToString (new [] { peer });
-		var lines = output.TrimEnd ().Split (new [] { '\n' }, StringSplitOptions.None);
+		var lines = WriteLines (new [] { peer });
 
 		Assert.Equal (3, lines.Length);
 		Assert.Equal ("My.Namespace.MyActivity, MyApp;crc64abcdef.MyActivity", lines [0]);
@@ -61,8 +63,7 @@ public class AcwMapWriterTests : FixtureTestBase
 			MakeMcwPeer ("android/content/Context", "Android.Content.Context", "Mono.Android"),
 		};
 
-		var output = WriteToString (peers);
-		var lines = output.TrimEnd ().Split (new [] { '\n' }, StringSplitOptions.None);
+		var lines = WriteLines (peers);
 
 		// 3 types × 3 lines each = 9 lines
 		Assert.Equal (9, lines.Length);
@@ -78,8 +79,8 @@ public class AcwMapWriterTests : FixtureTestBase
 	[Fact]
 	public void Write_EmptyList_ProducesEmptyOutput ()
 	{
-		var output = WriteToString (Array.Empty<JavaPeerInfo> ());
-		Assert.Equal ("", output);
+		var lines = WriteLines (Array.Empty<JavaPeerInfo> ());
+		Assert.Empty (lines);
 	}
 
 	[Fact]
@@ -89,9 +90,9 @@ public class AcwMapWriterTests : FixtureTestBase
 		// each line is "key;value" where LoadMapFile splits on ';'
 		var peer = MakeMcwPeer ("android/app/Activity", "Android.App.Activity", "Mono.Android");
 
-		var output = WriteToString (new [] { peer });
+		var lines = WriteLines (new [] { peer });
 
-		foreach (var line in output.TrimEnd ().Split (new [] { '\n' }, StringSplitOptions.None)) {
+		foreach (var line in lines) {
 			var parts = line.Split (new [] { ';' }, count: 2);
 			Assert.Equal (2, parts.Length);
 			Assert.False (string.IsNullOrWhiteSpace (parts [0]), "Key should not be empty");
@@ -105,9 +106,9 @@ public class AcwMapWriterTests : FixtureTestBase
 		var peers = ScanFixtures ();
 		Assert.NotEmpty (peers);
 
-		var output = WriteToString (peers);
+		var lines = WriteLines (peers);
 
-		foreach (var line in output.TrimEnd ().Split (new [] { '\n' }, StringSplitOptions.None)) {
+		foreach (var line in lines) {
 			var parts = line.Split (new [] { ';' }, count: 2);
 			Assert.Equal (2, parts.Length);
 			// No slashes in the output — they should all be converted to dots
