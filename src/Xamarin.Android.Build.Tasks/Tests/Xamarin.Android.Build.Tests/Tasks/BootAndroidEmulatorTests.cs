@@ -285,7 +285,10 @@ public class BootAndroidEmulatorTests : BaseTest
 		};
 
 		Assert.IsFalse (task.Execute (), "Task should fail");
-		Assert.IsTrue (errors.Any (e => e.Code == "XA0144"), "Unknown errors should map to XA0144");
+		var error = errors.FirstOrDefault (e => e.Code == "XA0144");
+		Assert.IsNotNull (error, "Unknown errors should map to XA0144");
+		StringAssert.Contains ("Unknown", error.Message, "Error kind should be included in the message");
+		StringAssert.Contains ("Some unexpected error occurred", error.Message, "Error message should be included");
 	}
 
 	[Test]

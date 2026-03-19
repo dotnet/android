@@ -133,7 +133,7 @@ public class BootAndroidEmulator : AsyncTask
 			LogCodedError ("XA0145", Properties.Resources.XA0145, Device, BootTimeoutSeconds);
 			break;
 		default:
-			LogCodedError ("XA0144", Properties.Resources.XA0144, Device, result.ErrorMessage ?? "Unknown error");
+			LogCodedError ("XA0144", Properties.Resources.XA0144, Device, result.ErrorKind, result.ErrorMessage ?? "Unknown error");
 			break;
 		}
 	}
