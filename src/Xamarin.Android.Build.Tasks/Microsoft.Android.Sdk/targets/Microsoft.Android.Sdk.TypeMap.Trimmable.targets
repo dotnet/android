@@ -1,11 +1,26 @@
 <!-- Trimmable typemap: managed type mapping instead of native binary typemaps.
-     This is a stub — the actual implementation will be added in a follow-up. -->
+     Generates per-assembly TypeMap .dll assemblies, a root _Microsoft.Android.TypeMaps.dll,
+     and JCW .java source files with registerNatives. -->
 <Project>
+
+  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateTrimmableTypeMap" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.TypeMap.Trimmable.CoreCLR.targets"
       Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.TypeMap.Trimmable.NativeAOT.targets"
       Condition=" '$(_AndroidRuntime)' == 'NativeAOT' " />
+
+  <PropertyGroup>
+    <_TypeMapAssemblyName>_Microsoft.Android.TypeMaps</_TypeMapAssemblyName>
+    <_TypeMapOutputDirectory>$(IntermediateOutputPath)typemap\</_TypeMapOutputDirectory>
+    <_TypeMapJavaOutputDirectory>$(IntermediateOutputPath)typemap\java</_TypeMapJavaOutputDirectory>
+  </PropertyGroup>
+
+  <!-- Tell the runtime which assembly contains the TypeMap attributes -->
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="System.Runtime.InteropServices.TypeMappingEntryAssembly"
+        Value="$(_TypeMapAssemblyName)" />
+  </ItemGroup>
 
   <Target Name="_ValidateTrimmableTypeMapRuntime"
       BeforeTargets="Build"
@@ -18,10 +33,25 @@
        from the Cecil-based GenerateJavaStubs task. Extracting them into a shared target
        requires decoupling from NativeCodeGenState first. See #10807. -->
   <Target Name="_GenerateJavaStubs"
-      DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;_GetGenerateJavaStubsInputs"
+      DependsOnTargets="_SetLatestTargetFrameworkVersion;_CleanIntermediateIfNeeded;_PrepareAssemblies;_GetGenerateJavaStubsInputs"
       Inputs="@(_GenerateJavaStubsInputs)"
       Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
-    <Message Text="Trimmable typemap: skipping legacy _GenerateJavaStubs" Importance="High" />
+
+    <GenerateTrimmableTypeMap
+        ResolvedAssemblies="@(_ResolvedAssemblies)"
+        OutputDirectory="$(_TypeMapOutputDirectory)"
+        JavaSourceOutputDirectory="$(_TypeMapJavaOutputDirectory)"
+        TargetFrameworkVersion="$(TargetFrameworkVersion)">
+      <Output TaskParameter="GeneratedAssemblies" ItemName="_GeneratedTypeMapAssemblies" />
+      <Output TaskParameter="GeneratedJavaFiles" ItemName="_GeneratedJavaFiles" />
+    </GenerateTrimmableTypeMap>
+
+    <ItemGroup>
+      <FileWrites Include="@(_GeneratedTypeMapAssemblies)" />
+      <FileWrites Include="@(_GeneratedJavaFiles)" />
+    </ItemGroup>
+
+    <MakeDir Directories="$(_AndroidStampDirectory)" Condition=" !Exists('$(_AndroidStampDirectory)') " />
     <Touch Files="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" AlwaysCreate="True" />
   </Target>
 

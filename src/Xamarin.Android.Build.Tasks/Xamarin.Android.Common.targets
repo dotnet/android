@@ -1514,6 +1514,7 @@ because xbuild doesn't support framework reference assemblies.
       ManifestPlaceholders="$(AndroidManifestPlaceholders)"
       ManifestOverlayFiles="@(AndroidManifestOverlay)"
       ExtraArgs="$(AndroidManifestMergerExtraArgs)"
+      SkipLenientManifestHandling="$(_AndroidSkipLenientManifestHandling)"
       IntermediateOutputPath="$(IntermediateOutputPath)"
       AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
   />
@@ -1585,11 +1586,13 @@ because xbuild doesn't support framework reference assemblies.
   </PrepareAbiItems>
 </Target>
 
-<Target Name="_GenerateEnvironmentFiles">
+<Target Name="_GenerateEnvironmentFiles" DependsOnTargets="_AndroidConfigureHotReloadEnvironment">
   <ItemGroup>
     <_GeneratedAndroidEnvironment Include="mono.enable_assembly_preload=0" Condition=" '$(AndroidEnablePreloadAssemblies)' != 'True' " />
     <_GeneratedAndroidEnvironment Include="DOTNET_MODIFIABLE_ASSEMBLIES=Debug" Condition=" '$(AndroidIncludeDebugSymbols)' == 'true' and '$(AndroidUseInterpreter)' == 'true' " />
     <_GeneratedAndroidEnvironment Include="DOTNET_DiagnosticPorts=$(DiagnosticConfiguration)" Condition=" '$(DiagnosticConfiguration)' != '' " />
+    <!-- RuntimeEnvironmentVariable items come from 'dotnet run -e NAME=VALUE' -->
+    <_GeneratedAndroidEnvironment Include="@(RuntimeEnvironmentVariable->'%(Identity)=%(Value)')" />
   </ItemGroup>
   <WriteLinesToFile
       File="$(IntermediateOutputPath)__environment__.txt"

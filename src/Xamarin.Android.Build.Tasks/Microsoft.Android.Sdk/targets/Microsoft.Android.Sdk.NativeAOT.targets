@@ -148,6 +148,13 @@ This eliminates the NDK dependency for NativeAOT builds.
       <SuppressTrimAnalysisWarnings>$(_OriginalSuppressTrimAnalysisWarnings)</SuppressTrimAnalysisWarnings>
     </PropertyGroup>
     <ItemGroup>
+      <!-- Prevent ComputeLinkedFilesToPublish from removing trimmed assemblies from
+           ResolvedFileToPublish. We run ILLink before ILC (to support custom trimmer
+           steps), so the assemblies are already trimmed and must remain in
+           ResolvedFileToPublish for the outer build's _ResolveAssemblies target.
+           Context: https://github.com/dotnet/runtime/pull/124801 -->
+      <_IlcManagedInputAssemblies Remove="@(_IlcManagedInputAssemblies)" />
+
       <!-- Required for [UnmanagedCallersOnly] to work inside this assembly -->
       <UnmanagedEntryPointsAssembly Include="Microsoft.Android.Runtime.NativeAOT" />
 

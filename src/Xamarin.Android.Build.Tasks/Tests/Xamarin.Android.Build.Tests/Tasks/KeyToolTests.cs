@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Build.Framework;
 using NUnit.Framework;
 using System.Collections.Generic;
@@ -36,9 +37,21 @@ namespace Xamarin.Android.Build.Tests
 
 		void GetValidKeyStore ()
 		{
-			using (var keyStream = typeof (XamarinAndroidCommonProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.test.keystore"))
-			using (var fileStream = File.Create (temp)) {
-				keyStream.CopyTo (fileStream);
+			File.Delete (temp);
+			var task = new AndroidCreateDebugKey {
+				BuildEngine = engine,
+				KeyStore = temp,
+				StorePass = "android",
+				KeyAlias = "mykey",
+				KeyPass = "android",
+				KeyAlgorithm = "RSA",
+				Validity = 10000,
+				StoreType = "pkcs12",
+				Command = "-genkeypair",
+				ToolPath = keyToolPath,
+			};
+			if (!task.Execute ()) {
+				throw new InvalidOperationException ("Failed to generate test keystore");
 			}
 		}
 
@@ -121,7 +134,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (1, errors.Count, "Task should have one error.");
 			Assert.AreEqual (0, warnings.Count, "Task should have no warnings.");
 			var error = errors [0];
-			Assert.AreEqual ("keytool error: java.io.IOException: Keystore was tampered with, or password was incorrect", error.Message);
+			Assert.That (error.Message, Does.Contain ("password was incorrect"));
 			Assert.AreEqual ("ANDKT0000", error.Code);
 		}
 

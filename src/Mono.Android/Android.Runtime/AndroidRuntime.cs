@@ -73,6 +73,19 @@ namespace Android.Runtime {
 			return peekedExc;
 		}
 
+		public override void OnUserUnhandledException (ref JniTransition transition, Exception e)
+		{
+			// Raise the UnhandledExceptionRaiser event via TryRaiseUnhandledException().
+			// If a subscriber sets Handled = true, the exception is considered handled
+			// and we return without transitioning to JNI.
+			// See: https://github.com/dotnet/android/issues/10654
+			if (AndroidEnvironment.TryRaiseUnhandledException (e)) {
+				return;
+			}
+
+			base.OnUserUnhandledException (ref transition, e);
+		}
+
 		public override void RaisePendingException (Exception pendingException)
 		{
 			var je  = pendingException as JavaException;
@@ -187,6 +200,7 @@ namespace Android.Runtime {
 			int gc 		= RuntimeNativeMethods._monodroid_gref_log_new (value.Handle, ctype, r.Handle, ntype, tname, tid, from, 1);
 			if (gc >= JNIEnvInit.gref_gc_threshold) {
 				Logger.Log (LogLevel.Warn, "monodroid-gc", gc + " outstanding GREFs. Performing a full GC!");
+				System.GC.WaitForPendingFinalizers ();
 				System.GC.Collect ();
 			}
 

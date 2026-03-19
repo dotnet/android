@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Http;
 using System.Net.Security;
+using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
@@ -100,11 +101,21 @@ namespace Xamarin.Android.NetTests
 			return true;
 		}
 
+		static int GetAvailablePort ()
+		{
+			using var tcpListener = new TcpListener (IPAddress.Any, 0);
+			tcpListener.Start ();
+			int port = ((IPEndPoint) tcpListener.LocalEndpoint).Port;
+			tcpListener.Stop ();
+			return port;
+		}
+
 		[Test]
 		public async Task DoesNotDisposeContentStream()
 		{
+			int port = GetAvailablePort ();
 			using var listener = new HttpListener ();
-			listener.Prefixes.Add ("http://+:47663/");
+			listener.Prefixes.Add ($"http://+:{port}/");
 			listener.Start ();
 			listener.BeginGetContext (ar => {
 				var ctx = listener.EndGetContext (ar);
@@ -114,7 +125,7 @@ namespace Xamarin.Android.NetTests
 			}, null);
 
 			var jsonContent = new StringContent ("hello");
-			var request = new HttpRequestMessage (HttpMethod.Post, "http://localhost:47663/") { Content = jsonContent };
+			var request = new HttpRequestMessage (HttpMethod.Post, $"http://localhost:{port}/") { Content = jsonContent };
 
 			var response = await new HttpClient (new AndroidMessageHandler ()).SendAsync (request);
 			Assert.True (response.IsSuccessStatusCode);
@@ -344,7 +355,7 @@ namespace Xamarin.Android.NetTests
 		[Test]
 		public async Task HttpContentStreamIsRewoundAfterCancellation ()
 		{
-			const int testPort = 47664;
+			int testPort = GetAvailablePort ();
 			using var listener = new HttpListener ();
 			listener.Prefixes.Add ($"http://+:{testPort}/");
 			listener.Start ();

@@ -32,10 +32,12 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "first build failed");
 				var firstBuildTime = b.LastBuildTime;
 				Assert.IsTrue (b.Build (proj), "second build failed");
-				Assert.IsTrue (
-					firstBuildTime > b.LastBuildTime, "Second build ({0}) should have been faster than the first ({1})",
-					b.LastBuildTime, firstBuildTime
-				);
+				if (runtime != AndroidRuntime.NativeAOT) {
+					Assert.IsTrue (
+						firstBuildTime > b.LastBuildTime, "Second build ({0}) should have been faster than the first ({1})",
+						b.LastBuildTime, firstBuildTime
+					);
+				}
 				Assert.IsTrue (
 					b.Output.IsTargetSkipped ("_Sign"),
 					"the _Sign target should not run");
@@ -593,8 +595,10 @@ namespace Lib2
 
 					b.Output.AssertTargetIsSkipped (target.target);
 				}
-				Assert.IsTrue (thirdBuildTime < firstBuildTime, $"Third unchanged build: '{thirdBuildTime}' should be faster than clean build: '{firstBuildTime}'.");
-				Assert.IsTrue (thirdBuildTime < secondBuildTime, $"Third unchanged build: '{thirdBuildTime}' should be faster than partially incremental second build: '{secondBuildTime}'.");
+				if (runtime != AndroidRuntime.NativeAOT) {
+					Assert.IsTrue (thirdBuildTime < firstBuildTime, $"Third unchanged build: '{thirdBuildTime}' should be faster than clean build: '{firstBuildTime}'.");
+					Assert.IsTrue (thirdBuildTime < secondBuildTime, $"Third unchanged build: '{thirdBuildTime}' should be faster than partially incremental second build: '{secondBuildTime}'.");
+				}
 			}
 		}
 

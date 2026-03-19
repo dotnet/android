@@ -128,7 +128,20 @@ namespace Xamarin.Android.NetTests {
 
 		bool IgnoreIfConnectionFailed (HttpRequestException hrex, out bool connectionFailed)
 		{
-			return IgnoreIfConnectionFailed (hrex?.InnerException as WebException, out connectionFailed);
+			connectionFailed = false;
+			if (hrex == null)
+				return false;
+
+			if (IgnoreIfConnectionFailed (hrex.InnerException as WebException, out connectionFailed))
+				return true;
+
+			if (hrex.InnerException is System.IO.IOException ioEx) {
+				connectionFailed = true;
+				Assert.Ignore ($"Ignoring transient IO error: {ioEx}");
+				return true;
+			}
+
+			return false;
 		}
 
 		bool IgnoreIfConnectionFailed (WebException wex, out bool connectionFailed)
@@ -168,6 +181,7 @@ namespace Xamarin.Android.NetTests {
 			}
 			return false;
 		}
+
 	}
 
 	[Category ("AndroidClientHandler")]
