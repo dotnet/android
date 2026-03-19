@@ -109,17 +109,25 @@ namespace Android.Runtime {
 
 		internal static void UnhandledException (Exception e)
 		{
-			var raisers         = UnhandledExceptionRaiser;
+			if (TryRaiseUnhandledException (e))
+				return;
+
+			RaiseThrowable (Java.Lang.Throwable.FromException (e));
+		}
+
+		// Returns true if the exception was handled by a subscriber.
+		internal static bool TryRaiseUnhandledException (Exception e)
+		{
+			var raisers          = UnhandledExceptionRaiser;
 			if (raisers != null) {
 				var info    = new RaiseThrowableEventArgs (e);
 				foreach (EventHandler<RaiseThrowableEventArgs> handler in raisers.GetInvocationList ()) {
 					handler (null, info);
 					if (info.Handled)
-						return;
+						return true;
 				}
 			}
-
-			RaiseThrowable (Java.Lang.Throwable.FromException (e));
+			return false;
 		}
 
 		// This is invoked by
