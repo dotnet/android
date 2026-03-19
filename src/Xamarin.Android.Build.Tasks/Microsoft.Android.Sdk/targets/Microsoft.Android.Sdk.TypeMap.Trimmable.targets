@@ -60,20 +60,30 @@
   </Target>
 
   <!--
-    Merge per-assembly acw-map files into a single acw-map.txt.
-    Consumed by _ConvertCustomView (layout XML custom view fixups) and R8.
-    Runs after _GenerateJavaStubs produces the per-assembly files;
-    skipped on incremental builds when no *.txt is newer than acw-map.txt.
+    Collect per-assembly acw-map files from disk.  On a clean build _GenerateJavaStubs
+    already populated @(_PerAssemblyAcwMapFiles) via its task Output; on an incremental
+    build where that target was skipped the item group is empty.  Either way we clear it
+    and re-glob so there is exactly one authoritative copy of each item.
   -->
   <Target Name="_CollectPerAssemblyAcwMaps"
-      AfterTargets="_GenerateJavaStubs">
+      DependsOnTargets="_GenerateJavaStubs">
     <ItemGroup>
+      <_PerAssemblyAcwMapFiles Remove="@(_PerAssemblyAcwMapFiles)" />
       <_PerAssemblyAcwMapFiles Include="$(_PerAssemblyAcwMapDirectory)*.txt" />
     </ItemGroup>
   </Target>
 
+  <!--
+    Merge per-assembly acw-map files into a single acw-map.txt.
+    Consumed by _ConvertCustomView (layout XML custom view fixups) and R8.
+    AfterTargets hooks this into the build after _GenerateJavaStubs;
+    DependsOnTargets ensures _CollectPerAssemblyAcwMaps runs first so that
+    @(_PerAssemblyAcwMapFiles) is populated for the Inputs/Outputs check.
+    Skipped on incremental builds when no *.txt is newer than acw-map.txt.
+  -->
   <Target Name="_MergeAcwMaps"
-      AfterTargets="_CollectPerAssemblyAcwMaps"
+      AfterTargets="_GenerateJavaStubs"
+      DependsOnTargets="_CollectPerAssemblyAcwMaps"
       Inputs="@(_PerAssemblyAcwMapFiles)"
       Outputs="$(_AcwMapFile)">
 
