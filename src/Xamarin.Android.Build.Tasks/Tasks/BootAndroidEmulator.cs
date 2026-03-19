@@ -142,14 +142,37 @@ public class BootAndroidEmulator : AsyncTask
 	}
 
 	/// <summary>
-	/// Parses space-separated extra arguments into a list suitable for <see cref="EmulatorBootOptions.AdditionalArgs"/>.
+	/// Parses extra arguments into a list suitable for <see cref="EmulatorBootOptions.AdditionalArgs"/>.
+	/// Supports double-quoted segments to allow values with embedded spaces (e.g. <c>-gpu "swiftshader_indirect"</c>).
 	/// </summary>
 	static List<string>? ParseExtraArguments (string? extraArgs)
 	{
 		if (extraArgs.IsNullOrEmpty ())
 			return null;
 
-		return new List<string> (extraArgs.Split ([' '], StringSplitOptions.RemoveEmptyEntries));
+		var args = new List<string> ();
+		var current = new System.Text.StringBuilder ();
+		bool inQuotes = false;
+
+		for (int i = 0; i < extraArgs.Length; i++) {
+			char c = extraArgs [i];
+
+			if (c == '"') {
+				inQuotes = !inQuotes;
+			} else if (c == ' ' && !inQuotes) {
+				if (current.Length > 0) {
+					args.Add (current.ToString ());
+					current.Clear ();
+				}
+			} else {
+				current.Append (c);
+			}
+		}
+
+		if (current.Length > 0)
+			args.Add (current.ToString ());
+
+		return args.Count > 0 ? args : null;
 	}
 
 	/// <summary>

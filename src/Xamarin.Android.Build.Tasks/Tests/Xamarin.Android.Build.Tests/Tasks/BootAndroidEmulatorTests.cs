@@ -65,11 +65,6 @@ public class BootAndroidEmulatorTests : BaseTest
 		};
 	}
 
-	bool RunTaskSynchronously (MockBootAndroidEmulator task)
-	{
-		return task.Execute ();
-	}
-
 	[Test]
 	public void AlreadyOnlineDevice_PassesThrough ()
 	{
@@ -79,7 +74,7 @@ public class BootAndroidEmulatorTests : BaseTest
 			Serial = "emulator-5554",
 		};
 
-		Assert.IsTrue (RunTaskSynchronously (task), "Task should succeed");
+		Assert.IsTrue (task.Execute (), "Task should succeed");
 		Assert.AreEqual ("emulator-5554", task.ResolvedDevice);
 		Assert.AreEqual ("-s emulator-5554", task.AdbTarget);
 		Assert.AreEqual (0, errors.Count, "Should have no errors");
@@ -94,7 +89,7 @@ public class BootAndroidEmulatorTests : BaseTest
 			Serial = "0A041FDD400327",
 		};
 
-		Assert.IsTrue (RunTaskSynchronously (task), "Task should succeed");
+		Assert.IsTrue (task.Execute (), "Task should succeed");
 		Assert.AreEqual ("0A041FDD400327", task.ResolvedDevice);
 		Assert.AreEqual ("-s 0A041FDD400327", task.AdbTarget);
 	}
@@ -108,7 +103,7 @@ public class BootAndroidEmulatorTests : BaseTest
 			Serial = "emulator-5554",
 		};
 
-		Assert.IsTrue (RunTaskSynchronously (task), "Task should succeed");
+		Assert.IsTrue (task.Execute (), "Task should succeed");
 		Assert.AreEqual ("emulator-5554", task.ResolvedDevice);
 		Assert.AreEqual ("-s emulator-5554", task.AdbTarget);
 		Assert.AreEqual ("Pixel_6_API_33", task.LastBootedDevice);
@@ -123,7 +118,7 @@ public class BootAndroidEmulatorTests : BaseTest
 			Serial = "emulator-5556",
 		};
 
-		Assert.IsTrue (RunTaskSynchronously (task), "Task should succeed");
+		Assert.IsTrue (task.Execute (), "Task should succeed");
 		Assert.AreEqual ("emulator-5556", task.ResolvedDevice);
 		Assert.AreEqual ("-s emulator-5556", task.AdbTarget);
 		Assert.AreEqual ("Pixel_6_API_33", task.LastBootedDevice);
@@ -139,7 +134,7 @@ public class BootAndroidEmulatorTests : BaseTest
 			ErrorMessage = "Failed to launch emulator: Simulated launch failure",
 		};
 
-		Assert.IsFalse (RunTaskSynchronously (task), "Task should fail");
+		Assert.IsFalse (task.Execute (), "Task should fail");
 		Assert.IsTrue (errors.Any (e => e.Code == "XA0143"), "Should have XA0143 error");
 		Assert.IsNull (task.ResolvedDevice, "ResolvedDevice should be null");
 	}
@@ -154,7 +149,7 @@ public class BootAndroidEmulatorTests : BaseTest
 			ErrorMessage = "Timed out waiting for emulator 'Pixel_6_API_33' to boot within 10s.",
 		};
 
-		Assert.IsFalse (RunTaskSynchronously (task), "Task should fail");
+		Assert.IsFalse (task.Execute (), "Task should fail");
 		Assert.IsTrue (errors.Any (e => e.Code == "XA0145"), "Should have XA0145 timeout error");
 	}
 
@@ -167,7 +162,7 @@ public class BootAndroidEmulatorTests : BaseTest
 			Serial = "emulator-5556",
 		};
 
-		Assert.IsTrue (RunTaskSynchronously (task), "Task should succeed");
+		Assert.IsTrue (task.Execute (), "Task should succeed");
 		Assert.AreEqual ("emulator-5556", task.ResolvedDevice);
 		Assert.AreEqual ("-s emulator-5556", task.AdbTarget);
 	}
@@ -186,7 +181,7 @@ public class BootAndroidEmulatorTests : BaseTest
 			},
 		};
 
-		Assert.IsTrue (RunTaskSynchronously (task), "Task should succeed");
+		Assert.IsTrue (task.Execute (), "Task should succeed");
 		Assert.AreEqual ("emulator-5554", task.ResolvedDevice);
 	}
 
@@ -208,7 +203,7 @@ public class BootAndroidEmulatorTests : BaseTest
 			},
 		};
 
-		Assert.IsTrue (RunTaskSynchronously (task), "Task should succeed");
+		Assert.IsTrue (task.Execute (), "Task should succeed");
 		Assert.AreEqual ("emulator-5554", task.ResolvedDevice);
 		Assert.IsNotNull (task.LastBootOptions, "Boot options should be captured");
 		Assert.IsNotNull (task.LastBootOptions!.AdditionalArgs, "AdditionalArgs should not be null");
@@ -216,6 +211,32 @@ public class BootAndroidEmulatorTests : BaseTest
 			new[] { "-no-snapshot-load", "-gpu", "auto" },
 			task.LastBootOptions.AdditionalArgs,
 			"Extra arguments should be parsed and passed to options");
+	}
+
+	[Test]
+	public void ExtraArguments_QuotedValuesPreserved ()
+	{
+		var task = new MockBootAndroidEmulator {
+			BuildEngine = engine,
+			Device = "Pixel_6_API_33",
+			EmulatorToolPath = "/sdk/emulator/",
+			EmulatorToolExe = "emulator",
+			AdbToolPath = "/sdk/platform-tools/",
+			AdbToolExe = "adb",
+			BootTimeoutSeconds = 10,
+			EmulatorExtraArguments = "-no-snapshot-load -skin \"Nexus 5X\"",
+			BootResult = new EmulatorBootResult {
+				Success = true,
+				Serial = "emulator-5554",
+			},
+		};
+
+		Assert.IsTrue (task.Execute (), "Task should succeed");
+		Assert.IsNotNull (task.LastBootOptions?.AdditionalArgs, "AdditionalArgs should not be null");
+		CollectionAssert.AreEqual (
+			new[] { "-no-snapshot-load", "-skin", "Nexus 5X" },
+			task.LastBootOptions!.AdditionalArgs,
+			"Quoted arguments with spaces should be preserved as a single token");
 	}
 
 	[Test]
@@ -228,7 +249,7 @@ public class BootAndroidEmulatorTests : BaseTest
 			ErrorMessage = "Some unexpected error occurred",
 		};
 
-		Assert.IsFalse (RunTaskSynchronously (task), "Task should fail");
+		Assert.IsFalse (task.Execute (), "Task should fail");
 		Assert.IsTrue (errors.Any (e => e.Code == "XA0145"), "Unknown errors should map to XA0145");
 	}
 }
