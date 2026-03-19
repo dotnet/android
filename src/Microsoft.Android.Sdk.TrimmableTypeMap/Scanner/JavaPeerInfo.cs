@@ -73,6 +73,14 @@ public sealed record JavaPeerInfo
 	public bool IsUnconditional { get; init; }
 
 	/// <summary>
+	/// True for Application and Instrumentation types. These types cannot call
+	/// <c>registerNatives</c> in their static initializer because the native library
+	/// (<c>libmonodroid.so</c>) is not loaded until after the Application class is instantiated.
+	/// Registration is deferred to <c>ApplicationRegistration.registerApplications()</c>.
+	/// </summary>
+	public bool CannotRegisterInStaticConstructor { get; init; }
+
+	/// <summary>
 	/// Marshal methods: methods with [Register(name, sig, connector)], [Export], or
 	/// constructor registrations ([Register(".ctor", sig, "")] / [JniConstructorSignature]).
 	/// Constructors are identified by <see cref="MarshalMethodInfo.IsConstructor"/>.
