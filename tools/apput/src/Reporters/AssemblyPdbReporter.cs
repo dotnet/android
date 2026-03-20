@@ -20,6 +20,27 @@ class AssemblyPdbReporter : BaseReporter
 
 	protected override void DoReport (ReportForm form, uint sectionLevel)
 	{
-		throw new NotImplementedException ();
+		switch (form) {
+			case ReportForm.Standalone:
+				DoStandaloneReport ();
+				break;
+
+			case ReportForm.Subsection:
+				DoSubsectionReport (sectionLevel);
+				break;
+
+			default:
+				throw new NotSupportedException ($"Report form '{form}' is not supported.");
+		};
+	}
+
+	void DoStandaloneReport () => DoReport (1);
+	void DoSubsectionReport (uint sectionLevel) => DoReport (sectionLevel);
+
+	void DoReport (uint sectionLevel)
+	{
+		AddLabeledItem ("Name", pdb.Name);
+		AddLabeledItem ("Architecture", pdb.Architecture.ToString ());
+		AddLabeledItem ("Size", Utilities.SizeToString (pdb.Size));
 	}
 }

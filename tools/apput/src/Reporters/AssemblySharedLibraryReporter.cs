@@ -19,23 +19,23 @@ class AssemblySharedLibraryReporter : SharedLibraryReporter
 	protected override void DoListReport (bool startWithNewLine = true)
 	{
 		base.DoListReport (startWithNewLine);
-		ReportAssemblyStore ();
+		ReportAssembly ();
 	}
 
 	protected override void DoStandaloneReport ()
 	{
 		base.DoStandaloneReport ();
-		ReportAssemblyStore ();
+		ReportAssembly ();
 	}
 
-	void ReportAssemblyStore ()
+	void ReportAssembly ()
 	{
-		var storeLib = Library as AssemblySharedLibrary;
-		if (storeLib == null) {
+		var assemblyLib = Library as AssemblySharedLibrary;
+		if (assemblyLib == null) {
 			throw new InvalidOperationException ($"Internal error: expected instance of {nameof (AssemblySharedLibrary)}, got {Library.GetType ()} instead.");
 		}
 
 		AddSection ("Assembly");
-		Reporter.Report (storeLib.Assembly, plainTextRendering: false, ReportForm.Subsection, ReportDoc);
+		Reporter.Report (assemblyLib.Assembly, plainTextRendering: false, ReportForm.Subsection, ReportDoc);
 	}
 }

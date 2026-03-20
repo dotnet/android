@@ -18,11 +18,13 @@ public class AssemblyPdb : BaseAspect
 
 	public NativeArchitecture Architecture { get; internal set; }
 	public string Name { get; }
+	public ulong Size  { get; }
 
 	protected AssemblyPdb (Stream? aspectStream, string pdbName)
 		: base (aspectStream)
 	{
 		Name = pdbName;
+		Size = (ulong)(aspectStream?.Length ?? 0);
 	}
 
 	/// <summary>

@@ -351,17 +351,22 @@ class ApplicationPackageReporter : BaseReporter
 
 	void ReportAssemblies (ICollection<ApplicationAssembly> assemblies, ICollection<AssemblyPdb>? pdbs, uint topSectionLevel)
 	{
-		var asmPdbs = new HashSet<string> (StringComparer.Ordinal);
+		var asmPdbs = new Dictionary<string, List<AssemblyPdb>> (StringComparer.Ordinal);
 		if (pdbs != null && pdbs.Count > 0) {
 			foreach (AssemblyPdb pdb in pdbs) {
-				asmPdbs.Add (Path.ChangeExtension (pdb.Name, ".dll"));
+				string dllName = Path.ChangeExtension (pdb.Name, ".dll");
+				if (!asmPdbs.TryGetValue (dllName, out List<AssemblyPdb>? pdbList) || pdbList == null) {
+					pdbList = new ();
+				}
+				pdbList.Add (pdb);
+				asmPdbs.Add (dllName, pdbList);
 			}
 		}
 
 		// To make output more compact, we group assemblies by name. For that reason we cannot use the designated
 		// assembly reporter.
 		var architectures = new HashSet<NativeArchitecture> ();
-		var assembliesByName = new SortedDictionary<string, List<ApplicationAssembly>> (StringComparer.Ordinal);
+		var assembliesByName = new SortedDictionary<string, List<ApplicationAssembly>> (StringComparer.OrdinalIgnoreCase);
 		var assemblyCounts = new SortedDictionary<NativeArchitecture, int> ();
 
 		foreach (ApplicationAssembly asm in assemblies) {
@@ -393,22 +398,29 @@ class ApplicationPackageReporter : BaseReporter
 			ReportDoc.StartListItem (assemblyList[0].FullName).BeginList();
 
 			ReportDoc.AddLabeledListItem ("Architectures", String.Join (", ", assemblyList.Select (asm => asm.Architecture.ToString ()).Distinct ()));
-			if (assemblyList[0].IsRTR) {
-				AddLabeledItem ("ReadyToRun image", GetIsRtrValue (assemblyList));
-				AddLabeledItem ("RTR target machine", GetRtrTargetMachineValue (assemblyList));
-				AddLabeledItem ("RTR target operating system", GetRtrTargetOperatingSystemValue (assemblyList));
+
+			ReportDoc.AddLabeledListItem ("Size", GetSizeValue (assemblyList));
+			ReportDoc.AddLabeledListItem ("Compressed", GetCompressedValue (assemblyList));
+			if (assemblyList.Any (asm => asm.IsCompressed)) {
+				ReportDoc.AddLabeledListItem ("Compressed size", GetCompressedSizeValue (assemblyList));
 			}
+
+			ReportDoc.AddLabeledListItem ("Debug info (PDB) present", GetHasPdbValue (assemblyList));
+			if (asmPdbs.ContainsKey (assemblyList[0].Name)) {
+				ReportDoc.AddLabeledListItem ("PDB size", GetPdbSizeValue (assemblyList));
+			}
+
+			if (assemblyList[0].IsRTR) {
+				ReportDoc.AddLabeledListItem ("ReadyToRun image", GetIsRtrValue (assemblyList));
+				ReportDoc.AddLabeledListItem ("RTR target machine", GetRtrTargetMachineValue (assemblyList));
+				ReportDoc.AddLabeledListItem ("RTR target operating system", GetRtrTargetOperatingSystemValue (assemblyList));
+			}
+
 			if (assemblyList[0].IsSatellite) {
 				ReportDoc.AddLabeledListItem ("Satellite", "yes");
 				ReportDoc.AddLabeledListItem ("Culture", GetCultureInfo (assemblyList));
 			}
 
-			ReportDoc.AddLabeledListItem ("Debug info (PDB) present", GetHasPdbValue (assemblyList));
-			ReportDoc.AddLabeledListItem ("Compressed", GetCompressedValue (assemblyList));
-			if (assemblyList.Any (asm => asm.IsCompressed)) {
-				ReportDoc.AddLabeledListItem ("Compressed size", GetCompressedSizeValue (assemblyList));
-			}
-			ReportDoc.AddLabeledListItem ("Size", GetSizeValue (assemblyList));
 			ReportDoc.AddLabeledListItem ("Name hash", GetNameHashValue (assemblyList));
 			ReportDoc.AddLabeledListItem ("Ignore on load", GetIgnoreOnLoadValue (assemblyList));
 
@@ -462,10 +474,35 @@ class ApplicationPackageReporter : BaseReporter
 		{
 			return GetAggregatedValue (
 				assemblyList,
-				(ApplicationAssembly asm) => asmPdbs.Contains (asm.Name),
+				(ApplicationAssembly asm) => asmPdbs.ContainsKey (asm.Name),
 				(ApplicationAssembly asm, bool v) => YesNo (v),
 				(ApplicationAssembly asm) => asm.Architecture.ToString ()
 			);
+		}
+
+		string GetPdbSizeValue (List<ApplicationAssembly> assemblyList)
+		{
+			return GetAggregatedValue (
+				assemblyList,
+				(ApplicationAssembly asm) => GetPdbSize (asm),
+				(ApplicationAssembly asm, ulong v) => Utilities.SizeToString (v),
+				(ApplicationAssembly asm) => asm.Architecture.ToString ()
+			);
+
+			ulong GetPdbSize (ApplicationAssembly asm)
+			{
+				if (!asmPdbs.TryGetValue (asm.Name, out List<AssemblyPdb>? pdbList) || pdbList == null || pdbList.Count == 0) {
+					return 0;
+				}
+
+				foreach (AssemblyPdb pdb in pdbList) {
+					if (pdb.Architecture == asm.Architecture) {
+						return pdb.Size;
+					}
+				}
+
+				return 0;
+			}
 		}
 
 		string GetIgnoreOnLoadValue (List<ApplicationAssembly> assemblyList)
