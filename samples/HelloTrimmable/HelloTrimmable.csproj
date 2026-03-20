@@ -9,10 +9,6 @@
     <PublishReadyToRun>false</PublishReadyToRun>
   </PropertyGroup>
   <ItemGroup>
-    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap" Value="true" Trim="true" />
-    <RuntimeHostConfigurationOption Include="System.Runtime.InteropServices.TypeMappingEntryAssembly" Value="_Microsoft.Android.TypeMaps" />
-  </ItemGroup>
-  <ItemGroup>
     <TrimmerRootDescriptor Include="LinkerDescriptor.xml" />
   </ItemGroup>
 </Project>
