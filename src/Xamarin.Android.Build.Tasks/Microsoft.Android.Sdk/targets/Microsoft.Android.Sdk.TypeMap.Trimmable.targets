@@ -79,6 +79,16 @@
     </ItemGroup>
     <Copy SourceFiles="@(_TypeMapJavaFiles)" DestinationFolder="$(IntermediateOutputPath)android\src\%(RecursiveDir)" />
 
+    <!-- Add TRIMMED TypeMap DLLs (from ILLink output) to _ResolvedAssemblies so they're
+         counted by GenerateNativeApplicationConfigSources and included in the assembly store.
+         ILLink has already run in inner builds by the time _GenerateJavaStubs executes. -->
+    <ItemGroup>
+      <_LinkedTypeMapDlls Include="$(IntermediateOutputPath)android-arm64\linked\_*.TypeMap.dll;$(IntermediateOutputPath)android-arm64\linked\_Microsoft.Android.TypeMaps.dll" />
+      <_ResolvedAssemblies Include="@(_LinkedTypeMapDlls)">
+        <DestinationSubPath>%(Filename)%(Extension)</DestinationSubPath>
+      </_ResolvedAssemblies>
+    </ItemGroup>
+
     <!-- HACK: Copy user's AndroidManifest.xml (TODO: #10807) -->
     <Copy SourceFiles="$(_AndroidManifestAbs)" DestinationFiles="$(IntermediateOutputPath)AndroidManifest.xml"
         SkipUnchangedFiles="true"

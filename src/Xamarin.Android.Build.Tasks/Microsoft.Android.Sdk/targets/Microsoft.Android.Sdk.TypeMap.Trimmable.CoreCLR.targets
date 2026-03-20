@@ -23,23 +23,30 @@
     </PropertyGroup>
   </Target>
 
-  <!-- Add TypeMap DLLs to assembly store (outer build). -->
+  <!-- Add TRIMMED TypeMap DLLs to assembly store with per-ABI metadata.
+       Reads from linked/ (ILLink output, inner builds have completed by now). -->
   <Target Name="_AddTrimmableTypeMapAssembliesToStore"
       BeforeTargets="_BuildApkEmbed"
       DependsOnTargets="_GenerateJavaStubs"
       Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
     <ItemGroup>
-      <_TypeMapDlls Remove="@(_TypeMapDlls)" />
-      <_TypeMapDlls Include="$(_TypeMapOutputDirectory)*.dll" />
+      <_LinkedTypeMapDlls Remove="@(_LinkedTypeMapDlls)" />
+      <_LinkedTypeMapDlls Include="$(IntermediateOutputPath)android-arm64\linked\_*.TypeMap.dll;$(IntermediateOutputPath)android-arm64\linked\_Microsoft.Android.TypeMaps.dll" />
     </ItemGroup>
-    <ItemGroup Condition=" '@(_TypeMapDlls)' != '' ">
-      <_BuildApkResolvedUserAssemblies Include="@(_TypeMapDlls)">
+    <ItemGroup Condition=" '@(_LinkedTypeMapDlls)' != '' ">
+      <_BuildApkResolvedUserAssemblies Include="@(_LinkedTypeMapDlls)">
         <Abi>arm64-v8a</Abi>
         <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
         <DestinationSubPath>arm64-v8a/%(Filename)%(Extension)</DestinationSubPath>
         <DestinationSubDirectory>arm64-v8a/</DestinationSubDirectory>
       </_BuildApkResolvedUserAssemblies>
-      <_BuildApkResolvedUserAssemblies Include="@(_TypeMapDlls)">
+    </ItemGroup>
+    <ItemGroup>
+      <_LinkedTypeMapDlls Remove="@(_LinkedTypeMapDlls)" />
+      <_LinkedTypeMapDlls Include="$(IntermediateOutputPath)android-x64\linked\_*.TypeMap.dll;$(IntermediateOutputPath)android-x64\linked\_Microsoft.Android.TypeMaps.dll" />
+    </ItemGroup>
+    <ItemGroup Condition=" '@(_LinkedTypeMapDlls)' != '' ">
+      <_BuildApkResolvedUserAssemblies Include="@(_LinkedTypeMapDlls)">
         <Abi>x86_64</Abi>
         <RuntimeIdentifier>android-x64</RuntimeIdentifier>
         <DestinationSubPath>x86_64/%(Filename)%(Extension)</DestinationSubPath>
