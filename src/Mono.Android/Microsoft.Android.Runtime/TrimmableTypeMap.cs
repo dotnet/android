@@ -165,15 +165,15 @@ class TrimmableTypeMap
 		JniObjectReference.Dispose (ref jniClass);
 
 		if (className is null || !instance._typeMap.TryGetValue (className, out var proxyType)) {
-			throw new TypeMapException (
-				$"Failed to create peer for type '{targetType.FullName}' (jniClass='{className}'). " +
+			throw new InvalidOperationException (
+				$"Typemap failed to create peer for type '{targetType.FullName}' (jniClass='{className}'). " +
 				"Ensure the type has a generated proxy in the TypeMap assembly.");
 		}
 
 		var proxy = proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
 		if (proxy is null || proxy.CreateInstance (self, JniHandleOwnership.DoNotTransfer) is null) {
-			throw new TypeMapException (
-				$"Failed to create peer for type '{targetType.FullName}'. " +
+			throw new InvalidOperationException (
+				$"Typemap failed to create peer for type '{targetType.FullName}'. " +
 				"Ensure the type has a generated proxy in the TypeMap assembly.");
 		}
 	}
@@ -210,24 +210,30 @@ class TrimmableTypeMap
 		string? className = null;
 		try {
 			if (s_instance is null) {
+				Environment.FailFast ("TrimmableTypeMap: OnRegisterNatives called before TrimmableTypeMap was initialized.");
 				return;
 			}
 
 			var classRef = new JniObjectReference (nativeClassHandle);
 			className = JniEnvironment.Types.GetJniTypeNameFromClass (classRef);
 			if (className is null) {
+				Environment.FailFast ("TrimmableTypeMap: Failed to get JNI class name from class reference.");
 				return;
 			}
 
 			if (!s_instance._typeMap.TryGetValue (className, out var type)) {
+				Environment.FailFast ($"TrimmableTypeMap: Class '{className}' not found in the typemap. This is a bug in the typemap generator.");
 				return;
 			}
 
 			var proxy = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-			if (proxy is IAndroidCallableWrapper acw) {
-				using var jniType = new JniType (className);
-				acw.RegisterNatives (jniType);
+			if (proxy is not IAndroidCallableWrapper acw) {
+				Environment.FailFast ($"TrimmableTypeMap: Proxy for class '{className}' does not implement IAndroidCallableWrapper. This is a bug in the typemap generator.");
+				return;
 			}
+
+			using var jniType = new JniType (className);
+			acw.RegisterNatives (jniType);
 		} catch (Exception ex) {
 			Environment.FailFast ($"TrimmableTypeMap: Failed to register natives for class '{className}'.", ex);
 		}
