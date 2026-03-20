@@ -48,8 +48,22 @@ public class PostTrimmingPipeline : AndroidTask
 		var steps = new List<IAssemblyModifierPipelineStep> ();
 		steps.Add (new StripEmbeddedLibrariesStep (Log));
 		if (AddKeepAlives) {
+			// Memoize the corlib resolution so the attempt (and any error logging) happens at most once,
+			// regardless of how many assemblies/methods need KeepAlive injection.
+			AssemblyDefinition? corlibAssembly = null;
+			bool corlibResolutionAttempted = false;
 			steps.Add (new PostTrimmingAddKeepAlivesStep (cache,
-				() => resolver.Resolve (AssemblyNameReference.Parse ("System.Private.CoreLib")),
+				() => {
+					if (!corlibResolutionAttempted) {
+						corlibResolutionAttempted = true;
+						try {
+							corlibAssembly = resolver.Resolve (AssemblyNameReference.Parse ("System.Private.CoreLib"));
+						} catch (AssemblyResolutionException ex) {
+							Log.LogErrorFromException (ex, showStackTrace: false);
+						}
+					}
+					return corlibAssembly;
+				},
 				(msg) => Log.LogDebugMessage (msg)));
 		}
 

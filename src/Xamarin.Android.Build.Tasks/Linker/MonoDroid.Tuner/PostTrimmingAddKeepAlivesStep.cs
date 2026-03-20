@@ -13,10 +13,10 @@ namespace MonoDroid.Tuner;
 class PostTrimmingAddKeepAlivesStep : IAssemblyModifierPipelineStep
 {
 	readonly IMetadataResolver cache;
-	readonly Func<AssemblyDefinition> getCorlibAssembly;
+	readonly Func<AssemblyDefinition?> getCorlibAssembly;
 	readonly Action<string> logMessage;
 
-	public PostTrimmingAddKeepAlivesStep (IMetadataResolver cache, Func<AssemblyDefinition> getCorlibAssembly, Action<string> logMessage)
+	public PostTrimmingAddKeepAlivesStep (IMetadataResolver cache, Func<AssemblyDefinition?> getCorlibAssembly, Action<string> logMessage)
 	{
 		this.cache = cache;
 		this.getCorlibAssembly = getCorlibAssembly;
