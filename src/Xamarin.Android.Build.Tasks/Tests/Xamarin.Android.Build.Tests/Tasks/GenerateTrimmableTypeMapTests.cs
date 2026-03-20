@@ -158,6 +158,7 @@ namespace Xamarin.Android.Build.Tests {
 				ResolvedAssemblies = [],
 				OutputDirectory = outputDir,
 				JavaSourceOutputDirectory = javaDir,
+				AcwMapDirectory = Path.Combine (Root, path, "acw-maps"),
 				TargetFrameworkVersion = "not-a-version",
 			};
 
@@ -211,6 +212,7 @@ namespace Xamarin.Android.Build.Tests {
 				ResolvedAssemblies = assemblies,
 				OutputDirectory = outputDir,
 				JavaSourceOutputDirectory = javaDir,
+				AcwMapDirectory = Path.Combine (outputDir, "..", "acw-maps"),
 				TargetFrameworkVersion = tfv,
 			};
 		}
