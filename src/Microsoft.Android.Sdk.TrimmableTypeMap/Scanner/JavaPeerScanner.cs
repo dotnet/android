@@ -1420,13 +1420,9 @@ public sealed class JavaPeerScanner : IDisposable
 			return ns.ToLowerInvariant ().Replace ('.', '/');
 		}
 
-		// Use CRC64-Jones (same algorithm as the JCW generator) to produce matching package names
 		var data = System.Text.Encoding.UTF8.GetBytes ($"{ns}:{assemblyName}");
-		var hash = Java.Interop.Tools.JavaCallableWrappers.Crc64Helper.Compute (data);
-		var buf = new System.Text.StringBuilder (hash.Length * 2);
-		foreach (var b in hash)
-			buf.AppendFormat (System.Globalization.CultureInfo.InvariantCulture, "{0:x2}", b);
-		return $"crc64{buf}";
+		var hash = System.IO.Hashing.Crc64.Hash (data);
+		return $"crc64{BitConverter.ToString (hash).Replace ("-", "").ToLowerInvariant ()}";
 	}
 
 	static string ExtractNamespace (string fullName)

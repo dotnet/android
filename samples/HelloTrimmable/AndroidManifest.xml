@@ -6,7 +6,7 @@
               android:exported="false"
               android:initOrder="1999999999"
               android:authorities="com.example.hellotrimmable.mono.MonoRuntimeProvider.__mono_init__" />
-    <activity android:name="crc64d65a68dbbd3bc07d.MainActivity"
+    <activity android:name="crc643c0e839c0007b0b1.MainActivity"
               android:exported="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
