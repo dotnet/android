@@ -180,7 +180,13 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		foreach (var group in peersByAssembly) {
 			var peers = group.ToList ();
 			string outputFile = Path.Combine (AcwMapDirectory, $"acw-map.{group.Key}.txt");
-			bool written = AcwMapWriter.WriteToFile (outputFile, peers);
+
+			bool written;
+			using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
+				AcwMapWriter.Write (sw, peers);
+				sw.Flush ();
+				written = Files.CopyIfStreamChanged (sw.BaseStream, outputFile);
+			}
 
 			Log.LogDebugMessage (written
 				? $"  acw-map.{group.Key}.txt: {peers.Count} types"

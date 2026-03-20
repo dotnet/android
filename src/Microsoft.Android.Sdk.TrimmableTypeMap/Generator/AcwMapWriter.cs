@@ -51,33 +51,4 @@ public static class AcwMapWriter
 		}
 	}
 
-	/// <summary>
-	/// Writes acw-map lines to a file, only updating the file if the content has changed.
-	/// Returns true if the file was written (content changed or file didn't exist).
-	/// </summary>
-	public static bool WriteToFile (string filePath, IEnumerable<JavaPeerInfo> peers)
-	{
-		using var memoryStream = new MemoryStream ();
-		using (var writer = new StreamWriter (memoryStream, new System.Text.UTF8Encoding (encoderShouldEmitUTF8Identifier: false), bufferSize: 1024, leaveOpen: true)) {
-			Write (writer, peers);
-		}
-
-		memoryStream.Position = 0;
-		byte[] newContent = memoryStream.ToArray ();
-
-		if (File.Exists (filePath)) {
-			byte[] existingContent = File.ReadAllBytes (filePath);
-			if (existingContent.AsSpan ().SequenceEqual (newContent)) {
-				return false;
-			}
-		}
-
-		string? directory = Path.GetDirectoryName (filePath);
-		if (directory != null) {
-			Directory.CreateDirectory (directory);
-		}
-
-		File.WriteAllBytes (filePath, newContent);
-		return true;
-	}
 }
