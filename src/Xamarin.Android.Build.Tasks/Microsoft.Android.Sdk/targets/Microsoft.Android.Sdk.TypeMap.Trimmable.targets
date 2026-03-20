@@ -39,7 +39,7 @@
     Output goes to shared BaseIntermediateOutputPath so it's generated once.
   -->
   <Target Name="_GenerateTrimmableTypeMap"
-      AfterTargets="_ResolveAssemblies"
+      AfterTargets="CoreCompile"
       Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '@(ReferencePath)' != '' and !Exists('$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll') ">
 
     <ItemGroup>
