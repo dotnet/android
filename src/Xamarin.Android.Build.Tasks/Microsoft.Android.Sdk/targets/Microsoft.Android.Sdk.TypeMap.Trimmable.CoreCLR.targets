@@ -3,7 +3,7 @@
 
   <!-- Add TypeMap DLLs to ILLink input. ILLink natively understands TypeMapAttribute<T>. -->
   <Target Name="_AddTrimmableTypeMapToLinker"
-      BeforeTargets="_ComputeManagedAssemblyToLink"
+      BeforeTargets="PrepareForILLink;_RunILLink"
       DependsOnTargets="_GenerateTrimmableTypeMap"
       Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
     <ItemGroup>
@@ -15,12 +15,37 @@
 
   <!-- Pass TypeMap entry assembly name to ILLink -->
   <Target Name="_ConfigureTrimmableTypeMapForLinker"
-      BeforeTargets="_RunILLink"
+      BeforeTargets="PrepareForILLink;_RunILLink"
       DependsOnTargets="_GenerateTrimmableTypeMap"
       Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
     <PropertyGroup>
       <_ExtraTrimmerArgs>--typemap-entry-assembly $(_TypeMapAssemblyName) $(_ExtraTrimmerArgs)</_ExtraTrimmerArgs>
     </PropertyGroup>
+  </Target>
+
+  <!-- Add TypeMap DLLs to assembly store (outer build). -->
+  <Target Name="_AddTrimmableTypeMapAssembliesToStore"
+      BeforeTargets="_BuildApkEmbed"
+      DependsOnTargets="_GenerateJavaStubs"
+      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
+    <ItemGroup>
+      <_TypeMapDlls Remove="@(_TypeMapDlls)" />
+      <_TypeMapDlls Include="$(_TypeMapOutputDirectory)*.dll" />
+    </ItemGroup>
+    <ItemGroup Condition=" '@(_TypeMapDlls)' != '' ">
+      <_BuildApkResolvedUserAssemblies Include="@(_TypeMapDlls)">
+        <Abi>arm64-v8a</Abi>
+        <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
+        <DestinationSubPath>arm64-v8a/%(Filename)%(Extension)</DestinationSubPath>
+        <DestinationSubDirectory>arm64-v8a/</DestinationSubDirectory>
+      </_BuildApkResolvedUserAssemblies>
+      <_BuildApkResolvedUserAssemblies Include="@(_TypeMapDlls)">
+        <Abi>x86_64</Abi>
+        <RuntimeIdentifier>android-x64</RuntimeIdentifier>
+        <DestinationSubPath>x86_64/%(Filename)%(Extension)</DestinationSubPath>
+        <DestinationSubDirectory>x86_64/</DestinationSubDirectory>
+      </_BuildApkResolvedUserAssemblies>
+    </ItemGroup>
   </Target>
 
 </Project>
