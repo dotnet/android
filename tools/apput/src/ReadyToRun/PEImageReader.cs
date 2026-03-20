@@ -18,7 +18,7 @@ namespace ILCompiler.Reflection.ReadyToRun
 
         public Machine Machine { get; }
         public OperatingSystem OperatingSystem { get; }
-        public ulong ImageBase => _peReader.PEHeaders.PEHeader.ImageBase;
+        public ulong ImageBase => _peReader.PEHeaders.PEHeader?.ImageBase ?? 0;
 
         public PEImageReader(PEReader peReader)
         {
@@ -52,7 +52,7 @@ namespace ILCompiler.Reflection.ReadyToRun
 
         public bool TryGetReadyToRunHeader(out int rva, out bool isComposite)
         {
-            if ((_peReader.PEHeaders.CorHeader.Flags & CorFlags.ILLibrary) == 0)
+            if (_peReader.PEHeaders?.CorHeader != null && (_peReader.PEHeaders.CorHeader.Flags & CorFlags.ILLibrary) == 0)
             {
                 // Composite R2R - check for RTR_HEADER export
                 if (_peReader.TryGetCompositeReadyToRunHeader(out rva))
@@ -63,7 +63,7 @@ namespace ILCompiler.Reflection.ReadyToRun
             }
             else
             {
-                var r2rHeaderDirectory = _peReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory;
+                var r2rHeaderDirectory = _peReader.PEHeaders?.CorHeader?.ManagedNativeHeaderDirectory ?? new ();
                 if (r2rHeaderDirectory.Size != 0)
                 {
                     rva = r2rHeaderDirectory.RelativeVirtualAddress;
@@ -77,7 +77,7 @@ namespace ILCompiler.Reflection.ReadyToRun
             return false;
         }
 
-        public IAssemblyMetadata GetStandaloneAssemblyMetadata()
+        public IAssemblyMetadata? GetStandaloneAssemblyMetadata()
             => _peReader.HasMetadata ? new StandaloneAssemblyMetadata(_peReader) : null;
 
         public IAssemblyMetadata GetManifestAssemblyMetadata(System.Reflection.Metadata.MetadataReader manifestReader)

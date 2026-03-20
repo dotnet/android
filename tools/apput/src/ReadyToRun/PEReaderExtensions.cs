@@ -27,21 +27,15 @@ namespace ILCompiler.Reflection.ReadyToRun
             _namedExportRva = new Dictionary<string, int>();
             _ordinalRva = new Dictionary<int, int>();
 
-		DirectoryEntry exportTable = peReader.PEHeaders.PEHeader.ExportTableDirectory;
-		Console.WriteLine ("PEHere 1");
-		if ((exportTable.Size == 0) || (exportTable.RelativeVirtualAddress == 0)) {
-			Console.WriteLine ("PEHere 2");
+            DirectoryEntry exportTable = peReader.PEHeaders.PEHeader?.ExportTableDirectory ?? default;
+            if ((exportTable.Size == 0) || (exportTable.RelativeVirtualAddress == 0))
                 return;
-		}
             HasExportTable = true;
 
             PEMemoryBlock peImage = peReader.GetEntireImage();
             BlobReader exportTableHeader = peImage.GetReader(peReader.GetOffset(exportTable.RelativeVirtualAddress), exportTable.Size);
             if (exportTableHeader.Length == 0)
-            {
-		    Console.WriteLine ("PEHere 3");
                 return;
-            }
 
             ExportTableHeaderLength = exportTableHeader.Length;
 

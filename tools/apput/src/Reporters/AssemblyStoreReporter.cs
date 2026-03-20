@@ -69,7 +69,7 @@ class AssemblyStoreReporter : BaseReporter
 			bool hasPdb = store.PDBs.TryGetValue (Path.ChangeExtension (asm.Name, ".pdb"), out AssemblyPdb? pdb) && pdb != null;
 			ReportDoc.AddLabeledListItem ("Debug info (PDB) present", YesNo (hasPdb));
 			if (hasPdb) {
-				ReportDoc.AddLabeledListItem ("PDB size", Utilities.SizeToString (pdb.Size));
+				ReportDoc.AddLabeledListItem ("PDB size", Utilities.SizeToString (pdb!.Size));
 			}
 
 			if (asm.IsRTR) {

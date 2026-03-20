@@ -226,7 +226,7 @@ public class ApplicationAssembly : BaseAspect
 	static (bool isR2R, Machine machine, ReadyToRunOperatingSystem os) DetectCompositeRTR (PEReader peReader)
 	{
 		var compositeReader = new PEImageReader (peReader);
-		IAssemblyMetadata metadata = compositeReader.GetStandaloneAssemblyMetadata ();
+		IAssemblyMetadata? metadata = compositeReader.GetStandaloneAssemblyMetadata ();
 		bool ret = compositeReader.TryGetReadyToRunHeader (out _, out _);
 		if (!ret) {
 			return ThisIsNotTheRtrYouAreLookingFor ();

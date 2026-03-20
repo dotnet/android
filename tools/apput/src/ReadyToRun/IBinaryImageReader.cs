@@ -51,7 +51,7 @@ namespace ILCompiler.Reflection.ReadyToRun
         /// Creates standalone assembly metadata from the image's embedded metadata.
         /// </summary>
         /// <returns>Assembly metadata, or null if the image has no embedded metadata</returns>
-        IAssemblyMetadata GetStandaloneAssemblyMetadata();
+        IAssemblyMetadata? GetStandaloneAssemblyMetadata();
 
         /// <summary>
         /// Creates manifest assembly metadata from the R2R manifest
