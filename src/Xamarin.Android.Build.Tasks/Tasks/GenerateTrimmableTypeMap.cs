@@ -45,7 +45,19 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public override bool RunTask ()
 	{
 		var systemRuntimeVersion = ParseTargetFrameworkVersion (TargetFrameworkVersion);
-		var assemblyPaths = GetJavaInteropAssemblyPaths (ResolvedAssemblies);
+		// Don't filter by HasMonoAndroidReference — ReferencePath items from the compiler
+		// don't carry this metadata. The scanner handles non-Java assemblies gracefully.
+		var assemblyPaths = ResolvedAssemblies.Select (i => i.ItemSpec).Distinct ().ToList ();
+
+		// Framework assemblies (Mono.Android, etc.) already have JCW .java files in the SDK.
+		// Only generate JCWs for user assemblies.
+		var frameworkAssemblyNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+		foreach (var item in ResolvedAssemblies) {
+			if (!string.IsNullOrEmpty (item.GetMetadata ("FrameworkReferenceName"))
+				|| !string.IsNullOrEmpty (item.GetMetadata ("NuGetPackageId"))) {
+				frameworkAssemblyNames.Add (Path.GetFileNameWithoutExtension (item.ItemSpec));
+			}
+		}
 
 		Directory.CreateDirectory (OutputDirectory);
 		Directory.CreateDirectory (JavaSourceOutputDirectory);
@@ -57,7 +69,11 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		}
 
 		GeneratedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, assemblyPaths);
-		GeneratedJavaFiles = GenerateJcwJavaSources (allPeers);
+
+		// Filter JCW generation to user assemblies only
+		var userPeers = allPeers.Where (p => !frameworkAssemblyNames.Contains (p.AssemblyName)).ToList ();
+		Log.LogDebugMessage ($"Generating JCW files for {userPeers.Count} user types (filtered from {allPeers.Count} total).");
+		GeneratedJavaFiles = GenerateJcwJavaSources (userPeers);
 
 		return !Log.HasLoggedErrors;
 	}

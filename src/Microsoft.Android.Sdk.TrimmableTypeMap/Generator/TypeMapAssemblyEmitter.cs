@@ -168,7 +168,7 @@ sealed class TypeMapAssemblyEmitter
 	{
 		var metadata = _pe.Metadata;
 		_javaPeerProxyRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
-			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaPeerProxy"));
+			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaPeerProxy`1"));
 		_iJavaPeerableRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("IJavaPeerable"));
 		_jniHandleOwnershipRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
@@ -331,7 +331,7 @@ sealed class TypeMapAssemblyEmitter
 		// .ctor — call JavaPeerProxy<T>..ctor()
 		var genericBaseCtorRef = _pe.AddMemberRef (genericBaseSpec, ".ctor",
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }));
-		_pe.EmitBody (".ctor",
+		var ctorDefHandle = _pe.EmitBody (".ctor",
 			MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }),
 			encoder => {
@@ -339,6 +339,9 @@ sealed class TypeMapAssemblyEmitter
 				encoder.Call (genericBaseCtorRef);
 				encoder.OpCode (ILOpCode.Ret);
 			});
+
+		// Self-application: [ProxyType] on ProxyType — lets GetCustomAttribute<JavaPeerProxy>() instantiate it
+		metadata.AddCustomAttribute (typeDefHandle, ctorDefHandle, _pe.BuildAttributeBlob (_ => { }));
 
 		// CreateInstance
 		EmitCreateInstance (proxy);

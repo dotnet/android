@@ -1,15 +1,33 @@
-<!-- Trimmable typemap targets for CoreCLR runtime.
-     Adds generated typemap assemblies to the linker inputs. -->
+<!-- Trimmable typemap targets for CoreCLR runtime. -->
 <Project>
 
-  <!-- After typemap generation, add generated assemblies to resolved assemblies for the linker.
-       NOT as TrimmerRootAssembly — the trimmer must process TypeMapAttributes and trim entries
-       whose trimTarget types were removed. -->
-  <Target Name="_AddTrimmableTypeMapAssembliesToLinker"
-      AfterTargets="_GenerateJavaStubs"
-      Condition=" '@(_GeneratedTypeMapAssemblies->Count())' != '0' ">
+  <!-- OUTER BUILD: Inject TypeMap DLLs into the assembly store.
+       Creates per-ABI entries from the shared typemap output directory. -->
+  <Target Name="_AddTrimmableTypeMapAssembliesToStore"
+      BeforeTargets="_BuildApkEmbed"
+      DependsOnTargets="_GenerateJavaStubs"
+      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
     <ItemGroup>
-      <_ResolvedAssemblies Include="@(_GeneratedTypeMapAssemblies)" />
+      <_TypeMapDlls Remove="@(_TypeMapDlls)" />
+      <_TypeMapDlls Include="$(_TypeMapOutputDirectory)*.dll" />
+    </ItemGroup>
+    <!-- Create per-ABI entries: each DLL needs one entry per supported ABI -->
+    <CreateItem Include="@(_TypeMapDlls)" AdditionalMetadata="Abi=%(Identity)">
+      <Output TaskParameter="Include" ItemName="_TypeMapDllsFlat" />
+    </CreateItem>
+    <ItemGroup Condition=" '@(_TypeMapDlls)' != '' ">
+      <_BuildApkResolvedUserAssemblies Include="@(_TypeMapDlls)">
+        <Abi>arm64-v8a</Abi>
+        <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
+        <DestinationSubPath>arm64-v8a/%(Filename)%(Extension)</DestinationSubPath>
+        <DestinationSubDirectory>arm64-v8a/</DestinationSubDirectory>
+      </_BuildApkResolvedUserAssemblies>
+      <_BuildApkResolvedUserAssemblies Include="@(_TypeMapDlls)">
+        <Abi>x86_64</Abi>
+        <RuntimeIdentifier>android-x64</RuntimeIdentifier>
+        <DestinationSubPath>x86_64/%(Filename)%(Extension)</DestinationSubPath>
+        <DestinationSubDirectory>x86_64/</DestinationSubDirectory>
+      </_BuildApkResolvedUserAssemblies>
     </ItemGroup>
   </Target>
 

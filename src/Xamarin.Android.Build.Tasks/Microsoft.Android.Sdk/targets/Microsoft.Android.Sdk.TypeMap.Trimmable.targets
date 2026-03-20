@@ -1,9 +1,8 @@
-<!-- Trimmable typemap: managed type mapping instead of native binary typemaps.
-     Generates per-assembly TypeMap .dll assemblies, a root _Microsoft.Android.TypeMaps.dll,
-     and JCW .java source files with registerNatives. -->
+<!-- Trimmable typemap: managed type mapping instead of native binary typemaps. -->
 <Project>
 
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateTrimmableTypeMap" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateEmptyTypemapStub" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.TypeMap.Trimmable.CoreCLR.targets"
       Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
@@ -12,11 +11,12 @@
 
   <PropertyGroup>
     <_TypeMapAssemblyName>_Microsoft.Android.TypeMaps</_TypeMapAssemblyName>
-    <_TypeMapOutputDirectory>$(IntermediateOutputPath)typemap\</_TypeMapOutputDirectory>
-    <_TypeMapJavaOutputDirectory>$(IntermediateOutputPath)typemap\java</_TypeMapJavaOutputDirectory>
+    <!-- Shared across all RIDs — use BaseIntermediateOutputPath -->
+    <_TypeMapBaseOutputDir>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework)\</_TypeMapBaseOutputDir>
+    <_TypeMapOutputDirectory>$(_TypeMapBaseOutputDir)typemap\</_TypeMapOutputDirectory>
+    <_TypeMapJavaOutputDirectory>$(_TypeMapBaseOutputDir)typemap\java</_TypeMapJavaOutputDirectory>
   </PropertyGroup>
 
-  <!-- Tell the runtime which assembly contains the TypeMap attributes -->
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="System.Runtime.InteropServices.TypeMappingEntryAssembly"
         Value="$(_TypeMapAssemblyName)" />
@@ -28,23 +28,45 @@
     <Error Text="Trimmable typemap is not supported for runtime '$(_AndroidRuntime)'. Supported runtimes: CoreCLR, NativeAOT." />
   </Target>
 
-  <!-- TODO: GenerateMainAndroidManifest and GenerateAdditionalProviderSources are shared
-       tasks needed by all typemap paths, but they currently depend on NativeCodeGenState
-       from the Cecil-based GenerateJavaStubs task. Extracting them into a shared target
-       requires decoupling from NativeCodeGenState first. See #10807. -->
+  <!--
+    OUTER BUILD: Generate TypeMap assemblies and JCW files.
+    Runs inside _GenerateJavaStubs which is an outer-build target.
+    Uses @(ReferencePath) as input (populated during compilation).
+  -->
   <Target Name="_GenerateJavaStubs"
-      DependsOnTargets="_SetLatestTargetFrameworkVersion;_CleanIntermediateIfNeeded;_PrepareAssemblies;_GetGenerateJavaStubsInputs"
+      DependsOnTargets="_SetLatestTargetFrameworkVersion;_CleanIntermediateIfNeeded;_PrepareAssemblies;_GetGenerateJavaStubsInputs;_PrepareNativeAssemblySources"
       Inputs="@(_GenerateJavaStubsInputs)"
       Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
 
+    <ItemGroup>
+      <_TypeMapInputAssemblies Include="@(_ResolvedAssemblies)" />
+      <_TypeMapInputAssemblies Include="@(ReferencePath)" />
+      <_TypeMapInputAssemblies Include="$(IntermediateOutputPath)$(TargetFileName)" Condition="Exists('$(IntermediateOutputPath)$(TargetFileName)')" />
+    </ItemGroup>
+
     <GenerateTrimmableTypeMap
-        ResolvedAssemblies="@(_ResolvedAssemblies)"
+        ResolvedAssemblies="@(_TypeMapInputAssemblies)"
         OutputDirectory="$(_TypeMapOutputDirectory)"
         JavaSourceOutputDirectory="$(_TypeMapJavaOutputDirectory)"
         TargetFrameworkVersion="$(TargetFrameworkVersion)">
       <Output TaskParameter="GeneratedAssemblies" ItemName="_GeneratedTypeMapAssemblies" />
       <Output TaskParameter="GeneratedJavaFiles" ItemName="_GeneratedJavaFiles" />
     </GenerateTrimmableTypeMap>
+
+    <!-- Copy JCW java files -->
+    <Copy SourceFiles="@(_GeneratedJavaFiles)" DestinationFolder="$(IntermediateOutputPath)android\src\%(RecursiveDir)" />
+
+    <!-- HACK: Copy user's AndroidManifest.xml (TODO: #10807) -->
+    <Copy SourceFiles="$(_AndroidManifestAbs)" DestinationFiles="$(IntermediateOutputPath)AndroidManifest.xml" SkipUnchangedFiles="true"
+        Condition=" '$(_AndroidManifestAbs)' != '' And Exists('$(_AndroidManifestAbs)') " />
+
+    <!-- HACK: Create empty acw-map.txt -->
+    <Touch Files="$(IntermediateOutputPath)acw-map.txt" AlwaysCreate="true" />
+
+    <!-- HACK: Stub ApplicationRegistration.java -->
+    <MakeDir Directories="$(IntermediateOutputPath)android\src\net\dot\android" />
+    <WriteLinesToFile File="$(IntermediateOutputPath)android\src\net\dot\android\ApplicationRegistration.java" Overwrite="true"
+        Lines="package net.dot.android%3b;public class ApplicationRegistration { public static android.content.Context Context%3b public static void registerApplications () { } }" />
 
     <ItemGroup>
       <FileWrites Include="@(_GeneratedTypeMapAssemblies)" />
@@ -55,4 +77,26 @@
     <Touch Files="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" AlwaysCreate="True" />
   </Target>
 
+
+
+  <!-- Native typemap stubs so libxamarin-app.so has required symbols. -->
+  <Target Name="_PrepareNativeAssemblySources"
+      Condition=" '$(_AndroidRuntime)' != 'NativeAOT' ">
+    <ItemGroup>
+      <_TypeMapStubAbis Include="@(_BuildTargetAbis)" />
+    </ItemGroup>
+    <MakeDir Directories="$(_NativeAssemblySourceDir)" />
+    <GenerateEmptyTypemapStub
+        OutputDirectory="$(_NativeAssemblySourceDir)"
+        Abis="@(_TypeMapStubAbis)"
+        Debug="$(AndroidIncludeDebugSymbols)">
+      <Output TaskParameter="Sources" ItemName="_TypeMapAssemblySource" />
+    </GenerateEmptyTypemapStub>
+  </Target>
+
+  <!-- Override _RemoveRegisterAttribute: trimmable path doesn't strip [Register]. -->
+  <Target Name="_RemoveRegisterAttribute"
+      DependsOnTargets="_PrepareAssemblies">
+    <Copy SourceFiles="@(_ResolvedAssemblies)" DestinationFolder="%(RootDir)%(Directory)shrunk/" SkipUnchangedFiles="true" />
+  </Target>
 </Project>
