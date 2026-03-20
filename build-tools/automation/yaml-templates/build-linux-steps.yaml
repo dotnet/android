@@ -27,6 +27,10 @@ steps:
 
 - template: /build-tools/automation/yaml-templates/log-disk-space.yaml
 
+- template: /build-tools/automation/yaml-templates/cache-gradle.yaml
+  parameters:
+    xaSourcePath: ${{ parameters.xaSourcePath }}
+
 - script: make jenkins PREPARE_CI=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make jenkins

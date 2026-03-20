@@ -1,0 +1,17 @@
+# Shared Gradle dependency cache template
+# Caches Gradle downloads between pipeline runs to avoid transient network
+# failures when resolving Maven dependencies.
+#
+# See: https://learn.microsoft.com/azure/devops/pipelines/release/caching
+
+parameters:
+  xaSourcePath: $(System.DefaultWorkingDirectory)/android
+
+steps:
+- task: Cache@2
+  displayName: cache Gradle downloads
+  inputs:
+    key: '"gradle" | "v1" | "$(Agent.OS)" | ${{ parameters.xaSourcePath }}/build-tools/gradle/gradle/wrapper/gradle-wrapper.properties | ${{ parameters.xaSourcePath }}/external/Java.Interop/build-tools/gradle/gradle/wrapper/gradle-wrapper.properties | ${{ parameters.xaSourcePath }}/src/**/build.gradle | ${{ parameters.xaSourcePath }}/external/Java.Interop/**/build.gradle'
+    restoreKeys: |
+      "gradle" | "v1" | "$(Agent.OS)"
+    path: $(HOME)/.gradle/caches
