@@ -158,7 +158,9 @@ namespace Android.Runtime
 					args->jniAddNativeMethodRegistrationAttributePresent != 0
 			);
 
-			trimmableTypeMap?.RegisterBootstrapNativeMethod ();
+			if (RuntimeFeature.TrimmableTypeMap) {
+				trimmableTypeMap!.RegisterBootstrapNativeMethod ();
+			}
 
 			grefIGCUserPeer_class = args->grefIGCUserPeer;
 			grefGCUserPeerable_class = args->grefGCUserPeerable;

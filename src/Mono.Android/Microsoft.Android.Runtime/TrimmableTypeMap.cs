@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -24,6 +25,7 @@ class TrimmableTypeMap
 	internal static TrimmableTypeMap? Instance => s_instance;
 
 	readonly IReadOnlyDictionary<string, Type> _typeMap;
+	readonly ConcurrentDictionary<Type, JavaPeerProxy?> _proxyCache = new ();
 
 	internal TrimmableTypeMap ()
 	{
@@ -66,11 +68,68 @@ class TrimmableTypeMap
 		=> _typeMap.TryGetValue (jniSimpleReference, out type);
 
 	/// <summary>
+	/// Finds the proxy for a managed type by resolving its JNI name (from [Register] or
+	/// [JniTypeSignature] attributes) and looking it up in the TypeMap dictionary.
+	/// Results are cached per type.
+	/// </summary>
+	JavaPeerProxy? GetProxyForManagedType (Type managedType)
+	{
+		return _proxyCache.GetOrAdd (managedType, static (type, self) => {
+			// First check if the type itself IS a proxy (has self-applied attribute)
+			var direct = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+			if (direct is not null) {
+				return direct;
+			}
+
+			// Resolve the JNI name from the managed type's attributes
+			if (!TryGetJniNameForType (type, out var jniName)) {
+				return null;
+			}
+
+			// Look up the proxy type in the TypeMap dictionary
+			if (!self._typeMap.TryGetValue (jniName, out var proxyType)) {
+				return null;
+			}
+
+			return proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+		}, this);
+	}
+
+	/// <summary>
+	/// Resolves a managed type's JNI name from its [Register] or [JniTypeSignature] attributes.
+	/// </summary>
+	static bool TryGetJniNameForType (Type type, [NotNullWhen (true)] out string? jniName)
+	{
+		// Check [Register("jniName", ...)] attribute (Mono.Android binding types)
+		foreach (var attr in type.GetCustomAttributesData ()) {
+			if (attr.AttributeType.FullName == "Android.Runtime.RegisterAttribute"
+				&& attr.ConstructorArguments.Count > 0
+				&& attr.ConstructorArguments[0].Value is string name
+				&& name.Length > 0
+				&& !name.Contains ('(')) { // Skip method-level [Register]
+				jniName = name;
+				return true;
+			}
+		}
+
+		// Check [JniTypeSignature("jniName")] attribute (Java.Interop types)
+		var sigAttr = type.GetCustomAttribute<JniTypeSignatureAttribute> (inherit: false);
+		if (sigAttr is not null && !string.IsNullOrEmpty (sigAttr.SimpleReference)) {
+			jniName = sigAttr.SimpleReference;
+			return true;
+		}
+
+		jniName = null;
+		return false;
+	}
+
+	/// <summary>
 	/// Creates a peer instance using the proxy's CreateInstance method.
+	/// Given a managed type, resolves the JNI name, finds the proxy, and calls CreateInstance.
 	/// </summary>
 	internal bool TryCreatePeer (Type type, IntPtr handle, JniHandleOwnership transfer)
 	{
-		var proxy = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+		var proxy = GetProxyForManagedType (type);
 		if (proxy is null) {
 			return false;
 		}
@@ -86,8 +145,7 @@ class TrimmableTypeMap
 	[return: DynamicallyAccessedMembers (Constructors)]
 	internal Type? GetInvokerType (Type type)
 	{
-		var proxy = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-		return proxy?.InvokerType;
+		return GetProxyForManagedType (type)?.InvokerType;
 	}
 
 	/// <summary>
@@ -96,8 +154,7 @@ class TrimmableTypeMap
 	/// </summary>
 	internal JavaPeerContainerFactory? GetContainerFactory (Type type)
 	{
-		var proxy = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-		return proxy?.GetContainerFactory ();
+		return GetProxyForManagedType (type)?.GetContainerFactory ();
 	}
 
 	/// <summary>
