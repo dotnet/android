@@ -21,6 +21,9 @@
         Value="true" Trim="true" />
     <RuntimeHostConfigurationOption Include="System.Runtime.InteropServices.TypeMappingEntryAssembly"
         Value="$(_TypeMapAssemblyName)" />
+    <!-- Preserve the native→managed entry point (called via create_delegate from host.cc) -->
+    <TrimmerRootDescriptor Include="$(MSBuildThisFileDirectory)..\PreserveLists\Trimmable.CoreCLR.xml"
+        Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
   </ItemGroup>
 
   <Target Name="_ValidateTrimmableTypeMapRuntime"
