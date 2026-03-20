@@ -7,7 +7,9 @@
       DependsOnTargets="_GenerateTrimmableTypeMap"
       Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
     <ItemGroup>
-      <ManagedAssemblyToLink Include="$(_TypeMapOutputDirectory)*.dll" />
+      <ManagedAssemblyToLink Include="$(_TypeMapOutputDirectory)*.dll">
+        <DestinationSubPath>%(Filename)%(Extension)</DestinationSubPath>
+      </ManagedAssemblyToLink>
     </ItemGroup>
   </Target>
 

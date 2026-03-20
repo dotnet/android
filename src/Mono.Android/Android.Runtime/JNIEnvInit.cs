@@ -36,6 +36,7 @@ namespace Android.Runtime
 			public IntPtr          grefGCUserPeerable;
 			public bool            managedMarshalMethodsLookupEnabled;
 			public IntPtr          propagateUncaughtExceptionFn;
+			public IntPtr          registerJniNativesFn;
 		}
 #pragma warning restore 0649
 
@@ -175,6 +176,10 @@ namespace Android.Runtime
 			}
 
 			args->propagateUncaughtExceptionFn = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&PropagateUncaughtException;
+
+			if (!RuntimeFeature.TrimmableTypeMap) {
+				args->registerJniNativesFn = (IntPtr)(delegate* unmanaged<IntPtr, int, IntPtr, IntPtr, int, void>)&RegisterJniNatives;
+			}
 			RunStartupHooksIfNeeded ();
 			SetSynchronizationContext ();
 		}

@@ -7,5 +7,6 @@
     <_AndroidTypeMapImplementation>trimmable</_AndroidTypeMapImplementation>
     <RunAOTCompilation>false</RunAOTCompilation>
     <PublishReadyToRun>false</PublishReadyToRun>
+    <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
   </PropertyGroup>
 </Project>
