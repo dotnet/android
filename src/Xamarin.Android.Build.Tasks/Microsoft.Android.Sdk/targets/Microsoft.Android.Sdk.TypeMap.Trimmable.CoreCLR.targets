@@ -27,30 +27,22 @@
        Reads from linked/ (ILLink output, inner builds have completed by now). -->
   <Target Name="_AddTrimmableTypeMapAssembliesToStore"
       BeforeTargets="_BuildApkEmbed"
-      DependsOnTargets="_GenerateJavaStubs"
+      DependsOnTargets="_GenerateJavaStubs;_DefineBuildTargetAbis"
       Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
+    <!-- Derive ABI → RID mapping from the ABIs selected for this build -->
     <ItemGroup>
-      <_LinkedTypeMapDlls Remove="@(_LinkedTypeMapDlls)" />
-      <_LinkedTypeMapDlls Include="$(IntermediateOutputPath)android-arm64\linked\_*.TypeMap.dll;$(IntermediateOutputPath)android-arm64\linked\_Microsoft.Android.TypeMaps.dll" />
+      <_TypeMapAbiRid Include="@(_BuildTargetAbis)" />
+      <_TypeMapAbiRid Update="arm64-v8a"><Rid>android-arm64</Rid></_TypeMapAbiRid>
+      <_TypeMapAbiRid Update="x86_64"><Rid>android-x64</Rid></_TypeMapAbiRid>
     </ItemGroup>
-    <ItemGroup Condition=" '@(_LinkedTypeMapDlls)' != '' ">
-      <_BuildApkResolvedUserAssemblies Include="@(_LinkedTypeMapDlls)">
-        <Abi>arm64-v8a</Abi>
-        <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
-        <DestinationSubPath>arm64-v8a/%(Filename)%(Extension)</DestinationSubPath>
-        <DestinationSubDirectory>arm64-v8a/</DestinationSubDirectory>
-      </_BuildApkResolvedUserAssemblies>
-    </ItemGroup>
+    <!-- MSBuild batches over _TypeMapAbiRid: for each ABI, glob linked TypeMap DLLs and add them to the store -->
     <ItemGroup>
-      <_LinkedTypeMapDlls Remove="@(_LinkedTypeMapDlls)" />
-      <_LinkedTypeMapDlls Include="$(IntermediateOutputPath)android-x64\linked\_*.TypeMap.dll;$(IntermediateOutputPath)android-x64\linked\_Microsoft.Android.TypeMaps.dll" />
-    </ItemGroup>
-    <ItemGroup Condition=" '@(_LinkedTypeMapDlls)' != '' ">
-      <_BuildApkResolvedUserAssemblies Include="@(_LinkedTypeMapDlls)">
-        <Abi>x86_64</Abi>
-        <RuntimeIdentifier>android-x64</RuntimeIdentifier>
-        <DestinationSubPath>x86_64/%(Filename)%(Extension)</DestinationSubPath>
-        <DestinationSubDirectory>x86_64/</DestinationSubDirectory>
+      <_BuildApkResolvedUserAssemblies
+          Include="$(IntermediateOutputPath)%(_TypeMapAbiRid.Rid)\linked\_*.TypeMap.dll;$(IntermediateOutputPath)%(_TypeMapAbiRid.Rid)\linked\_Microsoft.Android.TypeMaps.dll">
+        <Abi>%(_TypeMapAbiRid.Identity)</Abi>
+        <RuntimeIdentifier>%(_TypeMapAbiRid.Rid)</RuntimeIdentifier>
+        <DestinationSubPath>%(_TypeMapAbiRid.Identity)/%(Filename)%(Extension)</DestinationSubPath>
+        <DestinationSubDirectory>%(_TypeMapAbiRid.Identity)/</DestinationSubDirectory>
       </_BuildApkResolvedUserAssemblies>
     </ItemGroup>
   </Target>
