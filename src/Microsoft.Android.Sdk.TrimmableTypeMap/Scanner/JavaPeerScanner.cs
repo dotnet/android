@@ -768,23 +768,12 @@ public sealed class JavaPeerScanner : IDisposable
 
 		var registerInfo = result.Value.Info;
 		bool isConstructor = registerInfo.JniName == "<init>" || registerInfo.JniName == ".ctor";
-		string callbackName;
-		if (isConstructor) {
-			callbackName = "n_ctor";
-		} else if (registerInfo.Connector is not null
-			&& registerInfo.Connector.StartsWith ("Get", StringComparison.Ordinal)
-			&& registerInfo.Connector.EndsWith ("Handler", StringComparison.Ordinal)) {
-			// Derive callback name from connector: "GetOnCreate_Landroid_os_Bundle_Handler" → "n_OnCreate_Landroid_os_Bundle_"
-			callbackName = "n_" + registerInfo.Connector.Substring (3, registerInfo.Connector.Length - 3 - "Handler".Length);
-		} else {
-			callbackName = $"n_{methodName}";
-		}
 		return new MarshalMethodInfo {
 			JniName = registerInfo.JniName,
 			JniSignature = registerInfo.Signature,
 			Connector = registerInfo.Connector,
 			ManagedMethodName = methodName,
-			NativeCallbackName = callbackName,
+			NativeCallbackName = GetNativeCallbackName (registerInfo.Connector, methodName, isConstructor),
 			IsConstructor = isConstructor,
 			DeclaringTypeName = result.Value.DeclaringTypeName,
 			DeclaringAssemblyName = result.Value.DeclaringAssemblyName,
@@ -824,20 +813,12 @@ public sealed class JavaPeerScanner : IDisposable
 			// Check if the base property has [Register]
 			var propRegister = TryGetPropertyRegisterInfo (basePropDef, baseIndex);
 			if (propRegister is not null && propRegister.Signature is not null) {
-				string propCallbackName;
-				if (propRegister.Connector is not null
-					&& propRegister.Connector.StartsWith ("Get", StringComparison.Ordinal)
-					&& propRegister.Connector.EndsWith ("Handler", StringComparison.Ordinal)) {
-					propCallbackName = "n_" + propRegister.Connector.Substring (3, propRegister.Connector.Length - 3 - "Handler".Length);
-				} else {
-					propCallbackName = $"n_{getterName}";
-				}
 				return new MarshalMethodInfo {
 					JniName = propRegister.JniName,
 					JniSignature = propRegister.Signature,
 					Connector = propRegister.Connector,
 					ManagedMethodName = getterName,
-					NativeCallbackName = propCallbackName,
+					NativeCallbackName = GetNativeCallbackName (propRegister.Connector, getterName, false),
 					IsConstructor = false,
 					DeclaringTypeName = baseTypeName,
 					DeclaringAssemblyName = baseAssemblyName,
@@ -885,23 +866,12 @@ public sealed class JavaPeerScanner : IDisposable
 		string managedName = index.Reader.GetString (methodDef.Name);
 		string jniSignature = registerInfo.Signature ?? "()V";
 
-		string nativeCallback;
-		if (isConstructor) {
-			nativeCallback = "n_ctor";
-		} else if (registerInfo.Connector is not null
-			&& registerInfo.Connector.StartsWith ("Get", StringComparison.Ordinal)
-			&& registerInfo.Connector.EndsWith ("Handler", StringComparison.Ordinal)) {
-			nativeCallback = "n_" + registerInfo.Connector.Substring (3, registerInfo.Connector.Length - 3 - "Handler".Length);
-		} else {
-			nativeCallback = $"n_{managedName}";
-		}
-
 		methods.Add (new MarshalMethodInfo {
 			JniName = registerInfo.JniName,
 			JniSignature = jniSignature,
 			Connector = registerInfo.Connector,
 			ManagedMethodName = managedName,
-			NativeCallbackName = nativeCallback,
+			NativeCallbackName = GetNativeCallbackName (registerInfo.Connector, managedName, isConstructor),
 			IsConstructor = isConstructor,
 			IsExport = isExport,
 			IsInterfaceImplementation = isInterfaceImplementation,
@@ -1411,6 +1381,26 @@ public sealed class JavaPeerScanner : IDisposable
 		var ns = index.Reader.GetString (current.Namespace);
 
 		return (typeName, parentJniName, ns);
+	}
+
+	/// <summary>
+	/// Derives the native callback method name from a <c>[Register]</c> attribute's Connector field.
+	/// E.g. <c>"GetOnCreate_Landroid_os_Bundle_Handler"</c> → <c>"n_OnCreate_Landroid_os_Bundle_"</c>.
+	/// Falls back to <c>"n_{managedName}"</c> when the Connector doesn't follow the expected pattern.
+	/// </summary>
+	static string GetNativeCallbackName (string? connector, string managedName, bool isConstructor)
+	{
+		if (isConstructor) {
+			return "n_ctor";
+		}
+
+		if (connector is not null
+			&& connector.StartsWith ("Get", StringComparison.Ordinal)
+			&& connector.EndsWith ("Handler", StringComparison.Ordinal)) {
+			return "n_" + connector.Substring (3, connector.Length - 3 - "Handler".Length);
+		}
+
+		return $"n_{managedName}";
 	}
 
 	static string GetCrc64PackageName (string ns, string assemblyName)
