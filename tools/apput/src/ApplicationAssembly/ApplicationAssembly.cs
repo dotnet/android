@@ -56,9 +56,18 @@ public class ApplicationAssembly : BaseAspect
 
 		FullName = name;
 
-		// TODO: made these two work on compressed assemblies
-		(IsSatellite, Culture, Name) = DetectSatellite (name);
-		(IsRTR, RTRMachine, RTROS) = DetectRTR (stream);
+		MemoryStream? decompressedStream = null;
+		try {
+			(IsSatellite, Culture, Name) = DetectSatellite (stream, CompressedSize, Size, isCompressed, name, ref decompressedStream);
+			(IsRTR, RTRMachine, RTROS) = DetectRTR (stream, CompressedSize, Size, isCompressed, ref decompressedStream);
+		} finally {
+			try {
+				decompressedStream?.Dispose ();
+			} catch (Exception ex) {
+				Log.Debug ("Failed to dispose decompressed memory stream.", ex);
+				// Ignore
+			}
+		}
 	}
 
 	ApplicationAssembly (string? description, bool isIgnored)
@@ -67,12 +76,30 @@ public class ApplicationAssembly : BaseAspect
 		IgnoreOnLoad = isIgnored;
 		string name = NameMe (description);
 		FullName = name;
-		(IsSatellite, Culture, Name) = DetectSatellite (name);
+
+		MemoryStream? decompressedStream = null;
+		try {
+			(IsSatellite, Culture, Name) = DetectSatellite (null, 0, 0, false, name, ref decompressedStream);
+		} finally {
+			try {
+				decompressedStream?.Dispose ();
+			} catch (Exception ex) {
+				Log.Debug ("Failed to dispose decompressed memory stream.", ex);
+				// Ignore
+			}
+		}
 	}
 
 	static string NameMe (string? description) => String.IsNullOrEmpty (description) ? "Unnamed" : description;
 
-	static (bool isSatellite, string? culture, string name) DetectSatellite (string name)
+	static (bool isSatellite, string? culture, string name) DetectSatellite (
+		Stream? aspectStream,
+		ulong compressedSize,
+		ulong size,
+		bool isCompressed,
+		string name,
+		ref MemoryStream? decompressedStream
+	)
 	{
 		Log.Debug ("Detecting if it is a satellite assembly.");
 
@@ -81,7 +108,7 @@ public class ApplicationAssembly : BaseAspect
 		if (Path.IsPathRooted (name) && File.Exists (name)) {
 			Log.Debug ("Deciding based on assembly metadata");
 			try {
-				return DetectSateliteFromMetadata (name);
+				return DetectSateliteFromMetadata (aspectStream, compressedSize, size, isCompressed, name, ref decompressedStream);
 			} catch (Exception ex) {
 				Log.Warning ($"Failed to detect culture of assembly '{name}'", ex);
 				return (false, null, Path.GetFileName (name));
@@ -105,10 +132,33 @@ public class ApplicationAssembly : BaseAspect
 		return (true, culture, newName);
 	}
 
-	static (bool isSatellite, string? culture, string name) DetectSateliteFromMetadata (string path)
+	static PEReader OpenPEReaderForCompressedStream (Stream aspectStream, ulong compressedSize, ulong size, out MemoryStream decompressedStream)
 	{
-		using var fs = File.OpenRead (path);
-		using var peReader = new PEReader (fs);
+		decompressedStream = new ();
+		DecompressTo (aspectStream, decompressedStream, compressedSize, size);
+		decompressedStream.Seek (0, SeekOrigin.Begin);
+		return new PEReader (decompressedStream, PEStreamOptions.LeaveOpen);
+	}
+
+	static (bool isSatellite, string? culture, string name) DetectSateliteFromMetadata (
+		Stream? aspectStream,
+		ulong compressedSize,
+		ulong size,
+		bool isCompressed,
+		string path,
+		ref MemoryStream? decompressedStream
+	)
+	{
+		if (aspectStream == null) {
+			throw new ArgumentNullException (nameof (aspectStream));
+		}
+
+		decompressedStream = null;
+		using PEReader peReader = isCompressed switch {
+			true  => OpenPEReaderForCompressedStream (aspectStream, compressedSize, size, out decompressedStream),
+			false => new PEReader (File.OpenRead (path))
+		};
+
 		var mdataReader = peReader.GetMetadataReader ();
 
 		AssemblyDefinition asmdef = mdataReader.GetAssemblyDefinition ();
@@ -123,13 +173,33 @@ public class ApplicationAssembly : BaseAspect
 		return (true, nameInfo.CultureName, fileName);
 	}
 
-	static (bool isR2R, Machine machine, ReadyToRunOperatingSystem os) DetectRTR (Stream stream)
+	static (bool isR2R, Machine machine, ReadyToRunOperatingSystem os) DetectRTR (
+		Stream? aspectStream,
+		ulong compressedSize,
+		ulong size,
+		bool isCompressed,
+		ref MemoryStream? decompressedStream
+	)
 	{
-		Log.Debug ("Detecting if it is a ReadyToRun assembly");
-		try {
-			stream.Seek (0, SeekOrigin.Begin);
+		if (aspectStream == null) {
+			throw new ArgumentNullException (nameof (aspectStream));
+		}
 
-			using var peReader = new PEReader (stream, PEStreamOptions.LeaveOpen);
+		Log.Debug ("Detecting if it is a ReadyToRun assembly");
+		PEReader? peReader = null;
+		try {
+			if (isCompressed) {
+				if (decompressedStream != null) {
+					decompressedStream.Seek (0, SeekOrigin.Begin);
+					peReader = new PEReader (aspectStream, PEStreamOptions.LeaveOpen);
+				} else {
+					peReader = OpenPEReaderForCompressedStream (aspectStream, compressedSize, size, out decompressedStream);
+				}
+			} else {
+				aspectStream.Seek (0, SeekOrigin.Begin);
+				peReader = new PEReader (aspectStream, PEStreamOptions.LeaveOpen);
+			};
+
 			CorHeader? corHeader = peReader?.PEHeaders?.CorHeader;
 			if (peReader == null || corHeader == null) {
 				return ThisIsNotTheRtrYouAreLookingFor ();
@@ -143,6 +213,13 @@ public class ApplicationAssembly : BaseAspect
 		} catch (Exception ex) {
 			Log.Warning ("Failed to detect whether assembly is a ReadyToRun image.", ex);
 			return ThisIsNotTheRtrYouAreLookingFor ();
+		} finally {
+			try {
+				peReader?.Dispose ();
+			} catch (Exception ex) {
+				Log.Debug ("Failed to dispose of a PE reader stream.", ex);
+				// Ignore
+			}
 		}
 	}
 
@@ -274,7 +351,7 @@ public class ApplicationAssembly : BaseAspect
 	{
 		Log.Debug ($"Writing assembly '{Name}' to stream");
 		if (decompress && IsCompressed) {
-			return DecompressTo (stream);
+			return DecompressTo (AspectStream, stream, CompressedSize, Size);
 		}
 
 		Log.Debug ($"Assembly is not compressed, copying {Utilities.SizeToString (Size)} bytes of data to stream verbatim.");
@@ -284,19 +361,19 @@ public class ApplicationAssembly : BaseAspect
 		return true;
 	}
 
-	bool DecompressTo (Stream stream)
+	static bool DecompressTo (Stream aspectStream, Stream destStream, ulong compressedSize, ulong size)
 	{
-		Log.Debug ($"Assembly is compressed. Decompressing {CompressedSize - CompressedHeaderSize} bytes to {Size} bytes (as per compression header info).");
-		using var reader = Utilities.GetReaderAndRewindStream (AspectStream);
+		Log.Debug ($"Assembly is compressed. Decompressing {compressedSize - CompressedHeaderSize} bytes to {size} bytes (as per compression header info).");
+		using var reader = Utilities.GetReaderAndRewindStream (aspectStream);
 		if (!ReadCompressedHeader (reader, out uint uncompressedLength)) {
 			Log.Error ($"Stream doesn't have the required compressed assembly header, or the header is invalid.");
 			return false;
 		}
 
-		int inputLength = (int)AspectStream.Length - (int)CompressedHeaderSize;
+		int inputLength = (int)aspectStream.Length - (int)CompressedHeaderSize;
 		Log.Debug ($"Input data length: {inputLength}");
 		byte[] inputData = bytePool.Rent (inputLength);
-		byte[] assemblyData = bytePool.Rent ((int)Size); // Let it throw if there's an integer overflow...
+		byte[] assemblyData = bytePool.Rent ((int)size); // Let it throw if there's an integer overflow...
 
 		Log.Debug ("Starting decompression...");
 		var watch = new Stopwatch ();
@@ -305,13 +382,13 @@ public class ApplicationAssembly : BaseAspect
 			watch.Start ();
 
 			reader.Read (inputData, 0, inputLength);
-			int decoded = LZ4Codec.Decode (inputData, 0, inputLength, assemblyData, 0, (int)Size);
-			if (decoded != (int)Size) {
-				Log.Error ($"Failed to decompress input stream data. Decoded {decoded} bytes, expected {Size}");
+			int decoded = LZ4Codec.Decode (inputData, 0, inputLength, assemblyData, 0, (int)size);
+			if (decoded != (int)size) {
+				Log.Error ($"Failed to decompress input stream data. Decoded {decoded} bytes, expected {size}");
 				return false;
 			}
-			stream.Write (assemblyData, 0, decoded);
-			stream.Flush ();
+			destStream.Write (assemblyData, 0, decoded);
+			destStream.Flush ();
 		} finally {
 			bytePool.Return (inputData);
 			bytePool.Return (assemblyData);
