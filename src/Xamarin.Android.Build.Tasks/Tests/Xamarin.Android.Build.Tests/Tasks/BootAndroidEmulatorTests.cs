@@ -187,8 +187,12 @@ public class BootAndroidEmulatorTests : BaseTest
 
 		Assert.IsTrue (task.Execute (), "Task should succeed");
 		Assert.AreEqual ("emulator-5554", task.ResolvedDevice);
-		StringAssert.EndsWith ("platform-tools/adb", task.LastAdbPath?.Replace ('\\', '/'), "adb path should be resolved from AndroidSdkDirectory");
-		StringAssert.EndsWith ("emulator/emulator", task.LastEmulatorPath?.Replace ('\\', '/'), "emulator path should be resolved from AndroidSdkDirectory");
+		var adbPath = task.LastAdbPath?.Replace ('\\', '/');
+		var emulatorPath = task.LastEmulatorPath?.Replace ('\\', '/');
+		Assert.IsTrue (adbPath?.EndsWith ("platform-tools/adb") == true || adbPath?.EndsWith ("platform-tools/adb.exe") == true,
+			$"adb path should be resolved from AndroidSdkDirectory, got: {adbPath}");
+		Assert.IsTrue (emulatorPath?.EndsWith ("emulator/emulator") == true || emulatorPath?.EndsWith ("emulator/emulator.exe") == true,
+			$"emulator path should be resolved from AndroidSdkDirectory, got: {emulatorPath}");
 	}
 
 	[Test]
