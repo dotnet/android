@@ -76,13 +76,10 @@ namespace Xamarin.Android.Build.Tests
 			StringAssert.Contains ("_EnsureDeviceBooted", allOutput,
 				"DeployToDeviceDependsOnTargets must contain _EnsureDeviceBooted");
 
-			// _EnsureDeviceBooted must appear before _DeployApk to set AdbTarget first
-			int bootIndex = allOutput.IndexOf ("_EnsureDeviceBooted", StringComparison.Ordinal);
-			int deployIndex = allOutput.IndexOf ("_DeployApk", StringComparison.Ordinal);
-			if (deployIndex >= 0) {
-				Assert.Less (bootIndex, deployIndex,
-					"_EnsureDeviceBooted must appear before _DeployApk in DeployToDeviceDependsOnTargets");
-			}
+			// Ordering (_EnsureDeviceBooted before _DeployApk) is validated by
+			// DeployToDeviceDependsOn_MSBuildValidation which checks the property
+			// value directly via MSBuild functions, avoiding false positives from
+			// target names appearing elsewhere in the full build log.
 		}
 
 		[Test]
