@@ -96,26 +96,14 @@ class TrimmableTypeMap
 	}
 
 	/// <summary>
-	/// Resolves a managed type's JNI name from its [Register] or [JniTypeSignature] attributes.
+	/// Resolves a managed type's JNI name from its <see cref="IJniNameProviderAttribute"/>
+	/// (implemented by both <c>[Register]</c> and <c>[JniTypeSignature]</c>).
 	/// </summary>
-	static bool TryGetJniNameForType (Type type, [NotNullWhen (true)] out string? jniName)
+	internal static bool TryGetJniNameForType (Type type, [NotNullWhen (true)] out string? jniName)
 	{
-		// Check [Register("jniName", ...)] attribute (Mono.Android binding types)
-		foreach (var attr in type.GetCustomAttributesData ()) {
-			if (attr.AttributeType.FullName == "Android.Runtime.RegisterAttribute"
-				&& attr.ConstructorArguments.Count > 0
-				&& attr.ConstructorArguments[0].Value is string name
-				&& name.Length > 0
-				&& !name.Contains ('(')) { // Skip method-level [Register]
-				jniName = name;
-				return true;
-			}
-		}
-
-		// Check [JniTypeSignature("jniName")] attribute (Java.Interop types)
-		var sigAttr = type.GetCustomAttribute<JniTypeSignatureAttribute> (inherit: false);
-		if (sigAttr is not null && !string.IsNullOrEmpty (sigAttr.SimpleReference)) {
-			jniName = sigAttr.SimpleReference;
+		if (type.GetCustomAttributes (typeof (IJniNameProviderAttribute), inherit: false) is [IJniNameProviderAttribute provider, ..]
+			&& !string.IsNullOrEmpty (provider.Name)) {
+			jniName = provider.Name.Replace ('.', '/');
 			return true;
 		}
 
