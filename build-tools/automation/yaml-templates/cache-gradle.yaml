@@ -8,10 +8,14 @@ parameters:
   xaSourcePath: $(System.DefaultWorkingDirectory)/android
 
 steps:
+- script: git submodule status --cached external/Java.Interop > $(Agent.TempDirectory)/java-interop-submodule-hash.txt
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: get Java.Interop submodule hash
+
 - task: Cache@2
   displayName: cache Gradle downloads
   inputs:
-    key: '"gradle" | "v1" | "$(Agent.OS)" | ${{ parameters.xaSourcePath }}/build-tools/gradle/gradle/wrapper/gradle-wrapper.properties | ${{ parameters.xaSourcePath }}/src/**/build.gradle'
+    key: '"gradle" | "v1" | "$(Agent.OS)" | ${{ parameters.xaSourcePath }}/build-tools/gradle/gradle/wrapper/gradle-wrapper.properties | ${{ parameters.xaSourcePath }}/src/**/build.gradle | $(Agent.TempDirectory)/java-interop-submodule-hash.txt'
     restoreKeys: |
       "gradle" | "v1" | "$(Agent.OS)"
     path: $(HOME)/.gradle/caches
