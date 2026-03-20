@@ -1,9 +1,10 @@
 <!-- Trimmable typemap: managed type mapping instead of native binary typemaps.
      Generates per-assembly TypeMap .dll assemblies, a root _Microsoft.Android.TypeMaps.dll,
-     and JCW .java source files with registerNatives. -->
+     JCW .java source files with registerNatives, and per-assembly acw-map files. -->
 <Project>
 
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateTrimmableTypeMap" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateEmptyTypemapStub" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.TypeMap.Trimmable.CoreCLR.targets"
       Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
@@ -14,6 +15,7 @@
     <_TypeMapAssemblyName>_Microsoft.Android.TypeMaps</_TypeMapAssemblyName>
     <_TypeMapOutputDirectory>$(IntermediateOutputPath)typemap\</_TypeMapOutputDirectory>
     <_TypeMapJavaOutputDirectory>$(IntermediateOutputPath)typemap\java</_TypeMapJavaOutputDirectory>
+    <_PerAssemblyAcwMapDirectory>$(IntermediateOutputPath)acw-maps\</_PerAssemblyAcwMapDirectory>
   </PropertyGroup>
 
   <!-- Tell the runtime which assembly contains the TypeMap attributes -->
@@ -33,7 +35,7 @@
        from the Cecil-based GenerateJavaStubs task. Extracting them into a shared target
        requires decoupling from NativeCodeGenState first. See #10807. -->
   <Target Name="_GenerateJavaStubs"
-      DependsOnTargets="_SetLatestTargetFrameworkVersion;_CleanIntermediateIfNeeded;_PrepareAssemblies;_GetGenerateJavaStubsInputs"
+      DependsOnTargets="_SetLatestTargetFrameworkVersion;_CleanIntermediateIfNeeded;_PrepareAssemblies;_GetGenerateJavaStubsInputs;_PrepareNativeAssemblySources"
       Inputs="@(_GenerateJavaStubsInputs)"
       Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
 
@@ -41,18 +43,113 @@
         ResolvedAssemblies="@(_ResolvedAssemblies)"
         OutputDirectory="$(_TypeMapOutputDirectory)"
         JavaSourceOutputDirectory="$(_TypeMapJavaOutputDirectory)"
+        AcwMapDirectory="$(_PerAssemblyAcwMapDirectory)"
         TargetFrameworkVersion="$(TargetFrameworkVersion)">
       <Output TaskParameter="GeneratedAssemblies" ItemName="_GeneratedTypeMapAssemblies" />
       <Output TaskParameter="GeneratedJavaFiles" ItemName="_GeneratedJavaFiles" />
+      <Output TaskParameter="PerAssemblyAcwMapFiles" ItemName="_PerAssemblyAcwMapFiles" />
     </GenerateTrimmableTypeMap>
+
+    <!-- Copy JCW java files to the location where _FindJavaStubFiles expects them -->
+    <Copy SourceFiles="@(_GeneratedJavaFiles)" DestinationFolder="$(IntermediateOutputPath)android\src\%(RecursiveDir)" />
+
+    <!-- HACK: Copy user's AndroidManifest.xml as the generated manifest (TODO: #10807 - proper manifest generation) -->
+    <Copy SourceFiles="$(_AndroidManifestAbs)" DestinationFiles="$(IntermediateOutputPath)AndroidManifest.xml" SkipUnchangedFiles="true"
+        Condition=" '$(_AndroidManifestAbs)' != '' And Exists('$(_AndroidManifestAbs)') " />
+
+    <!-- HACK: Create empty acw-map.txt (TODO: proper generation from scanner results) -->
+    <Touch Files="$(IntermediateOutputPath)acw-map.txt" AlwaysCreate="true" />
+
+    <!-- HACK: Generate stub ApplicationRegistration.java (TODO: GenerateAdditionalProviderSources) -->
+    <PropertyGroup>
+      <_AppRegJava>$(IntermediateOutputPath)android\src\net\dot\android\ApplicationRegistration.java</_AppRegJava>
+    </PropertyGroup>
+    <MakeDir Directories="$(IntermediateOutputPath)android\src\net\dot\android" />
+    <WriteLinesToFile File="$(_AppRegJava)" Overwrite="true" Lines="package net.dot.android%3b" />
+    <WriteLinesToFile File="$(_AppRegJava)" Overwrite="false" Lines="public class ApplicationRegistration {" />
+    <WriteLinesToFile File="$(_AppRegJava)" Overwrite="false" Lines="  public static android.content.Context Context%3b" />
+    <WriteLinesToFile File="$(_AppRegJava)" Overwrite="false" Lines="  public static void registerApplications () { }" />
+    <WriteLinesToFile File="$(_AppRegJava)" Overwrite="false" Lines="}" />
 
     <ItemGroup>
       <FileWrites Include="@(_GeneratedTypeMapAssemblies)" />
       <FileWrites Include="@(_GeneratedJavaFiles)" />
+      <FileWrites Include="@(_PerAssemblyAcwMapFiles)" />
     </ItemGroup>
+
+    <!-- Copy TypeMap DLLs to asset directories so they end up in the assembly store -->
+    <Copy SourceFiles="@(_GeneratedTypeMapAssemblies)" DestinationFolder="$(IntermediateOutputPath)android\assets\arm64-v8a" />
+    <Copy SourceFiles="@(_GeneratedTypeMapAssemblies)" DestinationFolder="$(IntermediateOutputPath)android\assets\x86_64" />
 
     <MakeDir Directories="$(_AndroidStampDirectory)" Condition=" !Exists('$(_AndroidStampDirectory)') " />
     <Touch Files="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" AlwaysCreate="True" />
   </Target>
 
+<!--
+    Collect per-assembly acw-map files from disk.  On a clean build _GenerateJavaStubs
+    already populated @(_PerAssemblyAcwMapFiles) via its task Output; on an incremental
+    build where that target was skipped the item group is empty.  Either way we clear it
+    and re-glob so there is exactly one authoritative copy of each item.
+  -->
+  <Target Name="_CollectPerAssemblyAcwMaps"
+      DependsOnTargets="_GenerateJavaStubs">
+    <ItemGroup>
+      <_PerAssemblyAcwMapFiles Remove="@(_PerAssemblyAcwMapFiles)" />
+      <_PerAssemblyAcwMapFiles Include="$(_PerAssemblyAcwMapDirectory)*.txt" />
+    </ItemGroup>
+  </Target>
+
+  <!--
+    Merge per-assembly acw-map files into a single acw-map.txt.
+    Consumed by _ConvertCustomView (layout XML custom view fixups) and R8.
+    AfterTargets hooks this into the build after _GenerateJavaStubs;
+    DependsOnTargets ensures _CollectPerAssemblyAcwMaps runs first so that
+    @(_PerAssemblyAcwMapFiles) is populated for the Inputs/Outputs check.
+    Skipped on incremental builds when no *.txt is newer than acw-map.txt.
+  -->
+  <Target Name="_MergeAcwMaps"
+      AfterTargets="_GenerateJavaStubs"
+      DependsOnTargets="_CollectPerAssemblyAcwMaps"
+      Inputs="@(_PerAssemblyAcwMapFiles)"
+      Outputs="$(_AcwMapFile)">
+
+    <ReadLinesFromFile File="%(_PerAssemblyAcwMapFiles.Identity)">
+      <Output TaskParameter="Lines" ItemName="_AcwMapLines" />
+    </ReadLinesFromFile>
+
+    <WriteLinesToFile
+        File="$(_AcwMapFile)"
+        Lines="@(_AcwMapLines)"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true" />
+
+    <ItemGroup>
+      <FileWrites Include="$(_AcwMapFile)" />
+    </ItemGroup>
+  </Target>
+
+
+  <!-- Provide empty native typemap stubs so libxamarin-app.so has the required symbols.
+       libmonodroid.so references type_map etc. at dlopen time. -->
+  <Target Name="_PrepareNativeAssemblySources"
+      Condition=" '$(_AndroidRuntime)' != 'NativeAOT' ">
+    <ItemGroup>
+      <_TypeMapStubAbis Include="@(_BuildTargetAbis)" />
+    </ItemGroup>
+    <MakeDir Directories="$(_NativeAssemblySourceDir)" />
+    <GenerateEmptyTypemapStub
+        OutputDirectory="$(_NativeAssemblySourceDir)"
+        Abis="@(_TypeMapStubAbis)"
+        Debug="$(AndroidIncludeDebugSymbols)">
+      <Output TaskParameter="Sources" ItemName="_TypeMapAssemblySource" />
+    </GenerateEmptyTypemapStub>
+  </Target>
+
+  <!-- Override _RemoveRegisterAttribute: the trimmable path doesn't use [Register] attributes.
+       The downstream _CompressAssemblies expects files in linked/shrunk/, so create a symlink. -->
+  <Target Name="_RemoveRegisterAttribute"
+      DependsOnTargets="_PrepareAssemblies">
+    <Exec Command="mkdir -p &quot;$(IntermediateOutputPath)android-arm64/linked/shrunk&quot; &amp;&amp; mkdir -p &quot;$(IntermediateOutputPath)android-x64/linked/shrunk&quot;" IgnoreExitCode="true" />
+    <Copy SourceFiles="@(_ResolvedAssemblies)" DestinationFolder="%(RootDir)%(Directory)shrunk/" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

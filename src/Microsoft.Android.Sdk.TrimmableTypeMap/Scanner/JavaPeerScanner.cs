@@ -768,12 +768,23 @@ public sealed class JavaPeerScanner : IDisposable
 
 		var registerInfo = result.Value.Info;
 		bool isConstructor = registerInfo.JniName == "<init>" || registerInfo.JniName == ".ctor";
+		string callbackName;
+		if (isConstructor) {
+			callbackName = "n_ctor";
+		} else if (registerInfo.Connector is not null
+			&& registerInfo.Connector.StartsWith ("Get", StringComparison.Ordinal)
+			&& registerInfo.Connector.EndsWith ("Handler", StringComparison.Ordinal)) {
+			// Derive callback name from connector: "GetOnCreate_Landroid_os_Bundle_Handler" → "n_OnCreate_Landroid_os_Bundle_"
+			callbackName = "n_" + registerInfo.Connector.Substring (3, registerInfo.Connector.Length - 3 - "Handler".Length);
+		} else {
+			callbackName = $"n_{methodName}";
+		}
 		return new MarshalMethodInfo {
 			JniName = registerInfo.JniName,
 			JniSignature = registerInfo.Signature,
 			Connector = registerInfo.Connector,
 			ManagedMethodName = methodName,
-			NativeCallbackName = isConstructor ? "n_ctor" : $"n_{methodName}",
+			NativeCallbackName = callbackName,
 			IsConstructor = isConstructor,
 			DeclaringTypeName = result.Value.DeclaringTypeName,
 			DeclaringAssemblyName = result.Value.DeclaringAssemblyName,
@@ -813,12 +824,20 @@ public sealed class JavaPeerScanner : IDisposable
 			// Check if the base property has [Register]
 			var propRegister = TryGetPropertyRegisterInfo (basePropDef, baseIndex);
 			if (propRegister is not null && propRegister.Signature is not null) {
+				string propCallbackName;
+				if (propRegister.Connector is not null
+					&& propRegister.Connector.StartsWith ("Get", StringComparison.Ordinal)
+					&& propRegister.Connector.EndsWith ("Handler", StringComparison.Ordinal)) {
+					propCallbackName = "n_" + propRegister.Connector.Substring (3, propRegister.Connector.Length - 3 - "Handler".Length);
+				} else {
+					propCallbackName = $"n_{getterName}";
+				}
 				return new MarshalMethodInfo {
 					JniName = propRegister.JniName,
 					JniSignature = propRegister.Signature,
 					Connector = propRegister.Connector,
 					ManagedMethodName = getterName,
-					NativeCallbackName = $"n_{getterName}",
+					NativeCallbackName = propCallbackName,
 					IsConstructor = false,
 					DeclaringTypeName = baseTypeName,
 					DeclaringAssemblyName = baseAssemblyName,
@@ -866,12 +885,23 @@ public sealed class JavaPeerScanner : IDisposable
 		string managedName = index.Reader.GetString (methodDef.Name);
 		string jniSignature = registerInfo.Signature ?? "()V";
 
+		string nativeCallback;
+		if (isConstructor) {
+			nativeCallback = "n_ctor";
+		} else if (registerInfo.Connector is not null
+			&& registerInfo.Connector.StartsWith ("Get", StringComparison.Ordinal)
+			&& registerInfo.Connector.EndsWith ("Handler", StringComparison.Ordinal)) {
+			nativeCallback = "n_" + registerInfo.Connector.Substring (3, registerInfo.Connector.Length - 3 - "Handler".Length);
+		} else {
+			nativeCallback = $"n_{managedName}";
+		}
+
 		methods.Add (new MarshalMethodInfo {
 			JniName = registerInfo.JniName,
 			JniSignature = jniSignature,
 			Connector = registerInfo.Connector,
 			ManagedMethodName = managedName,
-			NativeCallbackName = isConstructor ? "n_ctor" : $"n_{managedName}",
+			NativeCallbackName = nativeCallback,
 			IsConstructor = isConstructor,
 			IsExport = isExport,
 			IsInterfaceImplementation = isInterfaceImplementation,
@@ -1390,9 +1420,13 @@ public sealed class JavaPeerScanner : IDisposable
 			return ns.ToLowerInvariant ().Replace ('.', '/');
 		}
 
+		// Use CRC64-Jones (same algorithm as the JCW generator) to produce matching package names
 		var data = System.Text.Encoding.UTF8.GetBytes ($"{ns}:{assemblyName}");
-		var hash = System.IO.Hashing.Crc64.Hash (data);
-		return $"crc64{BitConverter.ToString (hash).Replace ("-", "").ToLowerInvariant ()}";
+		var hash = Java.Interop.Tools.JavaCallableWrappers.Crc64Helper.Compute (data);
+		var buf = new System.Text.StringBuilder (hash.Length * 2);
+		foreach (var b in hash)
+			buf.AppendFormat (System.Globalization.CultureInfo.InvariantCulture, "{0:x2}", b);
+		return $"crc64{buf}";
 	}
 
 	static string ExtractNamespace (string fullName)

@@ -20,6 +20,7 @@ namespace xamarin::android {
 			jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset, jobject loader,
 			jobjectArray assembliesJava, jboolean isEmulator, jboolean haveSplitApks) noexcept;
 		static void Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods) noexcept;
+		static void Java_mono_android_Runtime_registerNatives (JNIEnv *env, jclass nativeClass) noexcept;
 		static void propagate_uncaught_exception (JNIEnv *env, jobject javaThread, jthrowable javaException) noexcept;
 
 		static auto get_timing () -> std::shared_ptr<Timing>

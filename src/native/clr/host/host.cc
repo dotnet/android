@@ -605,6 +605,13 @@ void Host::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType,
 	}
 }
 
+void Host::Java_mono_android_Runtime_registerNatives ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] jclass nativeClass) noexcept
+{
+	// In the trimmable typemap path, registerNatives is handled entirely in managed code
+	// via a dynamically registered JNI native method. This C++ stub exists only as a
+	// fallback for the legacy code path (which doesn't use registerNatives).
+}
+
 auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) noexcept -> jint
 {
 	jvm = vm;
