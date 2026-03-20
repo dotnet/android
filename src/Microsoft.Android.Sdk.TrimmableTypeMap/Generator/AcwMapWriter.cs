@@ -50,5 +50,4 @@ public static class AcwMapWriter
 			writer.WriteLine (javaKey);
 		}
 	}
-
 }
