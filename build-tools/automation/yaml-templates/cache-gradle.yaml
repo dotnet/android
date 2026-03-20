@@ -11,7 +11,7 @@ steps:
 - task: Cache@2
   displayName: cache Gradle downloads
   inputs:
-    key: '"gradle" | "v1" | "$(Agent.OS)" | ${{ parameters.xaSourcePath }}/build-tools/gradle/gradle/wrapper/gradle-wrapper.properties | ${{ parameters.xaSourcePath }}/external/Java.Interop/build-tools/gradle/gradle/wrapper/gradle-wrapper.properties | ${{ parameters.xaSourcePath }}/src/**/build.gradle | ${{ parameters.xaSourcePath }}/external/Java.Interop/**/build.gradle'
+    key: '"gradle" | "v1" | "$(Agent.OS)" | ${{ parameters.xaSourcePath }}/build-tools/gradle/gradle/wrapper/gradle-wrapper.properties | ${{ parameters.xaSourcePath }}/src/**/build.gradle'
     restoreKeys: |
       "gradle" | "v1" | "$(Agent.OS)"
     path: $(HOME)/.gradle/caches
