@@ -90,12 +90,10 @@ class Program
 			"",
 			"Available commands (all commands support the `--help` parameter):",
 			defaultCommand,
-			new SummaryCommand (),
 			new CommandSet ("extract") {
 				new ExtractAssemblyCommand (),
 				new ExtractManifestCommand (),
 			},
-			new ListCommand (),
 		};
 
 		commands.GetDefaultCommand = (List<string> extra) => {
@@ -168,36 +166,6 @@ class ReportCommand : BaseProgramCommand
 		}
 
 		return 0;
-	}
-}
-
-/// <summary>
-/// CLI command that displays a short summary of the given application aspect. Not yet implemented.
-/// </summary>
-class SummaryCommand : BaseProgramCommand
-{
-	public SummaryCommand ()
-		: base ("summary", "Show a short summary of the application aspect passed on the command line.")
-	{}
-
-	protected override int DoInvoke (List<string> rest)
-	{
-		throw new NotImplementedException ();
-	}
-}
-
-/// <summary>
-/// CLI command that lists selected components of an application package. Not yet implemented.
-/// </summary>
-class ListCommand : BaseProgramCommand
-{
-	public ListCommand ()
-		: base ("list", "List selected components of the application package")
-	{}
-
-	protected override int DoInvoke (List<string> rest)
-	{
-		throw new NotImplementedException ();
 	}
 }
 
