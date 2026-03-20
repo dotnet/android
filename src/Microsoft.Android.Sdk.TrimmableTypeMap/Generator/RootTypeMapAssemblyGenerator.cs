@@ -19,7 +19,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// [assembly: TypeMapAssemblyTarget&lt;Java.Lang.Object&gt;("_MyApp.TypeMap")]
 /// </code>
 /// </remarks>
-sealed class RootTypeMapAssemblyGenerator
+public sealed class RootTypeMapAssemblyGenerator
 {
 	const string DefaultAssemblyName = "_Microsoft.Android.TypeMaps";
 

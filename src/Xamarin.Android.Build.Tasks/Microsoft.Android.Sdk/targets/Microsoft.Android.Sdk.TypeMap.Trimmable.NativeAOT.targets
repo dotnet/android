@@ -1,4 +1,17 @@
-<!-- Trimmable typemap targets for NativeAOT runtime (stub).
-     The actual implementation will be added in a follow-up. -->
+<!-- Trimmable typemap targets for NativeAOT runtime.
+     Adds generated typemap assemblies to ILC inputs. -->
 <Project>
+
+  <!-- After typemap generation, add generated assemblies to ILC inputs.
+       NOT as TrimmerRootAssembly — ILC must process TypeMapAttributes and trim entries
+       whose trimTarget types were removed. -->
+  <Target Name="_AddTrimmableTypeMapAssembliesToIlc"
+      AfterTargets="_GenerateJavaStubs"
+      Condition=" '@(_GeneratedTypeMapAssemblies->Count())' != '0' ">
+    <ItemGroup>
+      <IlcReference Include="@(_GeneratedTypeMapAssemblies)" />
+      <UnmanagedEntryPointsAssembly Include="@(_GeneratedTypeMapAssemblies)" />
+    </ItemGroup>
+  </Target>
+
 </Project>

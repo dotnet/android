@@ -25,7 +25,7 @@
     <TestAvdType Condition=" '$(TestAvdType)' == '' ">default</TestAvdType>
     <TestAvdForceCreation Condition=" '$(TestAvdForceCreation)' == '' ">true</TestAvdForceCreation>
     <TestAvdShowWindow Condition=" '$(TestAvdShowWindow)' == '' and '$(RunningOnCI)' == 'true' ">false</TestAvdShowWindow>
-    <TestAvdExtraBootArgs Condition=" '$(TestAvdShowWindow)' == 'false' ">-no-window -no-boot-anim $(TestAvdExtraBootArgs)</TestAvdExtraBootArgs>
+    <TestAvdExtraBootArgs Condition=" '$(TestAvdShowWindow)' == 'false' ">-no-window -no-boot-anim -gpu swiftshader $(TestAvdExtraBootArgs)</TestAvdExtraBootArgs>
     <TestDeviceName Condition=" '$(TestDeviceName)' == '' ">pixel_4</TestDeviceName>
     <SdkManagerImageName Condition=" '$(SdkManagerImageName)' == '' ">system-images;android-$(TestAvdApiLevel);$(TestAvdType);$(TestAvdAbi)</SdkManagerImageName>
     <TestAvdName>XamarinAndroidTestRunner$(TestAvdApiLevel)-$(TestAvdAbi)</TestAvdName>
