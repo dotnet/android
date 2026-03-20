@@ -159,7 +159,7 @@ namespace Android.Runtime
 			);
 
 			if (RuntimeFeature.TrimmableTypeMap) {
-				trimmableTypeMap!.RegisterBootstrapNativeMethod ();
+				trimmableTypeMap?.RegisterBootstrapNativeMethod ();
 			}
 
 			grefIGCUserPeer_class = args->grefIGCUserPeer;

@@ -36,11 +36,11 @@ class TrimmableTypeMap
 		foreach (var attrData in entryAsm.GetCustomAttributesData ()) {
 			if (attrData.AttributeType.Name.StartsWith ("TypeMapAssemblyTargetAttribute", StringComparison.Ordinal)
 				&& attrData.ConstructorArguments.Count > 0
-				&& attrData.ConstructorArguments[0].Value is string asmName) {
+				&& attrData.ConstructorArguments [0].Value is string asmName) {
 				try {
 					System.Reflection.Assembly.Load (asmName);
-				} catch {
-					// Best effort — assembly may not exist for this app
+				} catch (Exception ex) {
+					Debug.WriteLine ($"TrimmableTypeMap: Failed to pre-load assembly '{asmName}': {ex.Message}");
 				}
 			}
 		}
