@@ -9,7 +9,7 @@ namespace MonoDroid.Tuner
 {
 	static class AddKeepAlivesHelper
 	{
-		internal static bool AddKeepAlives (AssemblyDefinition assembly, IMetadataResolver resolver, Func<AssemblyDefinition> getCorlibAssembly, Action<string> logMessage)
+		internal static bool AddKeepAlives (AssemblyDefinition assembly, IMetadataResolver resolver, Func<AssemblyDefinition?> getCorlibAssembly, Action<string> logMessage)
 		{
 			if (!assembly.MainModule.HasTypeReference ("Java.Lang.Object"))
 				return false;
@@ -27,9 +27,9 @@ namespace MonoDroid.Tuner
 			return changed;
 		}
 
-		static bool ProcessType (TypeDefinition type, IMetadataResolver resolver, ref MethodDefinition? methodKeepAlive, Func<AssemblyDefinition> getCorlibAssembly, Action<string> logMessage)
+		static bool ProcessType (TypeDefinition type, IMetadataResolver resolver, ref MethodDefinition? methodKeepAlive, Func<AssemblyDefinition?> getCorlibAssembly, Action<string> logMessage)
 		{
-  			bool changed = false;
+			bool changed = false;
 			if (MightNeedFix (type, resolver))
 				changed |= AddKeepAlives (type, ref methodKeepAlive, getCorlibAssembly, logMessage);
 
@@ -47,7 +47,7 @@ namespace MonoDroid.Tuner
 			return !type.IsAbstract && type.IsSubclassOf ("Java.Lang.Object", resolver);
 		}
 
-		static bool AddKeepAlives (TypeDefinition type, ref MethodDefinition? methodKeepAlive, Func<AssemblyDefinition> getCorlibAssembly, Action<string> logMessage)
+		static bool AddKeepAlives (TypeDefinition type, ref MethodDefinition? methodKeepAlive, Func<AssemblyDefinition?> getCorlibAssembly, Action<string> logMessage)
 		{
 			bool changed = false;
 			foreach (MethodDefinition method in type.Methods) {
@@ -97,7 +97,7 @@ namespace MonoDroid.Tuner
 			return changed;
 		}
 
-		static MethodDefinition? GetKeepAliveMethod (Func<AssemblyDefinition> getCorlibAssembly, Action<string> logMessage)
+		static MethodDefinition? GetKeepAliveMethod (Func<AssemblyDefinition?> getCorlibAssembly, Action<string> logMessage)
 		{
 			var corlibAssembly = getCorlibAssembly ();
 			if (corlibAssembly == null)

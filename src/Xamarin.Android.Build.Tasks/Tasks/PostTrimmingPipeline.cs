@@ -49,7 +49,14 @@ public class PostTrimmingPipeline : AndroidTask
 		steps.Add (new StripEmbeddedLibrariesStep (Log));
 		if (AddKeepAlives) {
 			steps.Add (new PostTrimmingAddKeepAlivesStep (cache,
-				() => resolver.Resolve (AssemblyNameReference.Parse ("System.Private.CoreLib")),
+				() => {
+					try {
+						return resolver.Resolve (AssemblyNameReference.Parse ("System.Private.CoreLib"));
+					} catch (AssemblyResolutionException ex) {
+						Log.LogErrorFromException (ex, showStackTrace: false);
+						return null;
+					}
+				},
 				(msg) => Log.LogDebugMessage (msg)));
 		}
 

@@ -44,7 +44,8 @@
     <None Remove="Tests\**" />
     <Compile Include="..\..\bin\Build$(Configuration)\XABuildConfig.cs" />
 
-    <!-- Include only the linker sources required for LinkAssembliesNoShrink - AddKeepAlivesStep, FixAbstractMethodsStep, FixLegacyResourceDesignerStep -->
+    <!-- Include only the linker sources required for the build tasks (LinkAssembliesNoShrink and PostTrimmingPipeline) -->
+    <!-- These include: AddKeepAlivesStep, AddKeepAlivesHelper, StripEmbeddedLibrariesStep, PostTrimmingAddKeepAlivesStep, FixAbstractMethodsStep, FixLegacyResourceDesignerStep -->
     <Compile Remove="Linker\**" />
     <Compile Include="Linker\MonoDroid.Tuner\FindTypeMapObjectsStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\FindJavaObjectsStep.cs" />
