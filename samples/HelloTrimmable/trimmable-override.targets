@@ -1,8 +1,4 @@
 <Project>
-  <ItemGroup>
-    <_TrimmerFeatureSettings Include="Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap" Value="true" />
-  </ItemGroup>
-
   <!-- Patch bundled assemblies array size for TypeMap DLLs -->
   <Target Name="_PatchBundledAssembliesSize" AfterTargets="_GeneratePackageManagerJava"
       Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
