@@ -16,3 +16,21 @@ Java.Interop.JniNativeMethod
 Java.Interop.JniNativeMethod.JniNativeMethod() -> void
 Java.Interop.JniNativeMethod.JniNativeMethod(byte* name, byte* signature, nint functionPointer) -> void
 static Java.Interop.JniEnvironment.Types.RegisterNatives(Java.Interop.JniObjectReference type, System.ReadOnlySpan<Java.Interop.JniNativeMethod> methods) -> void
+Java.Interop.JniType.JniType(System.ReadOnlySpan<byte> classname) -> void
+Java.Interop.JniType.GetConstructor(System.ReadOnlySpan<byte> signature) -> Java.Interop.JniMethodInfo!
+Java.Interop.JniType.GetCachedConstructor(ref Java.Interop.JniMethodInfo? cachedMethod, System.ReadOnlySpan<byte> signature) -> Java.Interop.JniMethodInfo!
+Java.Interop.JniType.GetInstanceField(System.ReadOnlySpan<byte> name, System.ReadOnlySpan<byte> signature) -> Java.Interop.JniFieldInfo!
+Java.Interop.JniType.GetCachedInstanceField(ref Java.Interop.JniFieldInfo? cachedField, System.ReadOnlySpan<byte> name, System.ReadOnlySpan<byte> signature) -> Java.Interop.JniFieldInfo!
+Java.Interop.JniType.GetStaticField(System.ReadOnlySpan<byte> name, System.ReadOnlySpan<byte> signature) -> Java.Interop.JniFieldInfo!
+Java.Interop.JniType.GetCachedStaticField(ref Java.Interop.JniFieldInfo? cachedField, System.ReadOnlySpan<byte> name, System.ReadOnlySpan<byte> signature) -> Java.Interop.JniFieldInfo!
+Java.Interop.JniType.GetInstanceMethod(System.ReadOnlySpan<byte> name, System.ReadOnlySpan<byte> signature) -> Java.Interop.JniMethodInfo!
+Java.Interop.JniType.GetCachedInstanceMethod(ref Java.Interop.JniMethodInfo? cachedMethod, System.ReadOnlySpan<byte> name, System.ReadOnlySpan<byte> signature) -> Java.Interop.JniMethodInfo!
+Java.Interop.JniType.GetStaticMethod(System.ReadOnlySpan<byte> name, System.ReadOnlySpan<byte> signature) -> Java.Interop.JniMethodInfo!
+Java.Interop.JniType.GetCachedStaticMethod(ref Java.Interop.JniMethodInfo? cachedMethod, System.ReadOnlySpan<byte> name, System.ReadOnlySpan<byte> signature) -> Java.Interop.JniMethodInfo!
+static Java.Interop.JniType.GetCachedJniType(ref Java.Interop.JniType? cachedType, System.ReadOnlySpan<byte> classname) -> Java.Interop.JniType!
+static Java.Interop.JniEnvironment.Types.FindClass(System.ReadOnlySpan<byte> classname) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.Types.TryFindClass(System.ReadOnlySpan<byte> classname, out Java.Interop.JniObjectReference instance) -> bool
+static Java.Interop.JniEnvironment.InstanceFields.GetFieldID(Java.Interop.JniObjectReference type, System.ReadOnlySpan<byte> name, System.ReadOnlySpan<byte> signature) -> Java.Interop.JniFieldInfo!
+static Java.Interop.JniEnvironment.InstanceMethods.GetMethodID(Java.Interop.JniObjectReference type, System.ReadOnlySpan<byte> name, System.ReadOnlySpan<byte> signature) -> Java.Interop.JniMethodInfo!
+static Java.Interop.JniEnvironment.StaticFields.GetStaticFieldID(Java.Interop.JniObjectReference type, System.ReadOnlySpan<byte> name, System.ReadOnlySpan<byte> signature) -> Java.Interop.JniFieldInfo!
+static Java.Interop.JniEnvironment.StaticMethods.GetStaticMethodID(Java.Interop.JniObjectReference type, System.ReadOnlySpan<byte> name, System.ReadOnlySpan<byte> signature) -> Java.Interop.JniMethodInfo!

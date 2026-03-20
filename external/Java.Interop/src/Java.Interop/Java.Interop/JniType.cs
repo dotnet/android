@@ -372,5 +372,122 @@ namespace Java.Interop {
 			}
 			return cachedMethod;
 		}
+
+#if FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
+		/// <summary>
+		/// Creates a <see cref="JniType"/> from a null-terminated UTF-8 class name span.
+		/// Use with <c>"java/lang/Object"u8</c> literals to avoid string marshalling overhead.
+		/// </summary>
+		public JniType (ReadOnlySpan<byte> classname)
+		{
+			var peer = JniEnvironment.Types.FindClass (classname);
+			Initialize (ref peer, JniObjectReferenceOptions.CopyAndDispose);
+		}
+
+		public static JniType GetCachedJniType ([NotNull] ref JniType? cachedType, ReadOnlySpan<byte> classname)
+		{
+			if (cachedType != null && cachedType.PeerReference.IsValid)
+				return cachedType;
+			var t = new JniType (classname);
+			if (Interlocked.CompareExchange (ref cachedType, t, null) != null)
+				t.Dispose ();
+			cachedType.RegisterWithRuntime ();
+			return cachedType;
+		}
+
+		public JniMethodInfo GetConstructor (ReadOnlySpan<byte> signature)
+		{
+			AssertValid ();
+
+			return JniEnvironment.InstanceMethods.GetMethodID (PeerReference, "<init>"u8, signature);
+		}
+
+		public JniMethodInfo GetCachedConstructor ([NotNull] ref JniMethodInfo? cachedMethod, ReadOnlySpan<byte> signature)
+		{
+			AssertValid ();
+
+			return GetCachedInstanceMethod (ref cachedMethod, "<init>"u8, signature);
+		}
+
+		public JniFieldInfo GetInstanceField (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
+		{
+			AssertValid ();
+
+			return JniEnvironment.InstanceFields.GetFieldID (PeerReference, name, signature);
+		}
+
+		public JniFieldInfo GetCachedInstanceField ([NotNull] ref JniFieldInfo? cachedField, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
+		{
+			AssertValid ();
+
+			if (cachedField != null && cachedField.IsValid)
+				return cachedField;
+			var m = GetInstanceField (name, signature);
+			if (Interlocked.CompareExchange (ref cachedField, m, null) != null) {
+				// No cleanup required; let the GC collect the unused instance
+			}
+			return cachedField;
+		}
+
+		public JniFieldInfo GetStaticField (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
+		{
+			AssertValid ();
+
+			return JniEnvironment.StaticFields.GetStaticFieldID (PeerReference, name, signature);
+		}
+
+		public JniFieldInfo GetCachedStaticField ([NotNull] ref JniFieldInfo? cachedField, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
+		{
+			AssertValid ();
+
+			if (cachedField != null && cachedField.IsValid)
+				return cachedField;
+			var m = GetStaticField (name, signature);
+			if (Interlocked.CompareExchange (ref cachedField, m, null) != null) {
+				// No cleanup required; let the GC collect the unused instance
+			}
+			return cachedField;
+		}
+
+		public JniMethodInfo GetInstanceMethod (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
+		{
+			AssertValid ();
+
+			return JniEnvironment.InstanceMethods.GetMethodID (PeerReference, name, signature);
+		}
+
+		public JniMethodInfo GetCachedInstanceMethod ([NotNull] ref JniMethodInfo? cachedMethod, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
+		{
+			AssertValid ();
+
+			if (cachedMethod != null && cachedMethod.IsValid)
+				return cachedMethod;
+			var m = GetInstanceMethod (name, signature);
+			if (Interlocked.CompareExchange (ref cachedMethod, m, null) != null) {
+				// No cleanup required; let the GC collect the unused instance
+			}
+			return cachedMethod;
+		}
+
+		public JniMethodInfo GetStaticMethod (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
+		{
+			AssertValid ();
+
+			return JniEnvironment.StaticMethods.GetStaticMethodID (PeerReference, name, signature);
+		}
+
+		public JniMethodInfo GetCachedStaticMethod ([NotNull] ref JniMethodInfo? cachedMethod, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
+		{
+			AssertValid ();
+
+			if (cachedMethod != null && cachedMethod.IsValid)
+				return cachedMethod;
+			var m = GetStaticMethod (name, signature);
+			if (Interlocked.CompareExchange (ref cachedMethod, m, null) != null) {
+				// No cleanup required; let the GC collect the unused instance
+			}
+			return cachedMethod;
+		}
+#endif  // FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 	}
 }

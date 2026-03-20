@@ -48,11 +48,11 @@ namespace Java.InteropTests
 			t.Dispose ();
 			Assert.Throws<ObjectDisposedException> (() => t.AllocObject ());
 			Assert.Throws<ObjectDisposedException> (() => t.NewObject (null, null));
-			Assert.Throws<ObjectDisposedException> (() => t.GetConstructor (null));
-			Assert.Throws<ObjectDisposedException> (() => t.GetInstanceField (null, null));
-			Assert.Throws<ObjectDisposedException> (() => t.GetInstanceMethod (null, null));
-			Assert.Throws<ObjectDisposedException> (() => t.GetStaticField (null, null));
-			Assert.Throws<ObjectDisposedException> (() => t.GetStaticMethod (null, null));
+			Assert.Throws<ObjectDisposedException> (() => t.GetConstructor ((string) null));
+			Assert.Throws<ObjectDisposedException> (() => t.GetInstanceField ((string) null, (string) null));
+			Assert.Throws<ObjectDisposedException> (() => t.GetInstanceMethod ((string) null, (string) null));
+			Assert.Throws<ObjectDisposedException> (() => t.GetStaticField ((string) null, (string) null));
+			Assert.Throws<ObjectDisposedException> (() => t.GetStaticMethod ((string) null, (string) null));
 			Assert.Throws<ObjectDisposedException> (() => t.GetSuperclass ());
 			Assert.Throws<ObjectDisposedException> (() => t.IsAssignableFrom (null));
 			Assert.Throws<ObjectDisposedException> (() => t.IsInstanceOfType (new JniObjectReference ()));
@@ -61,14 +61,14 @@ namespace Java.InteropTests
 			Assert.Throws<ObjectDisposedException> (() => t.UnregisterNativeMethods ());
 
 			JniFieldInfo    jif = null;
-			Assert.Throws<ObjectDisposedException> (() => t.GetCachedInstanceField (ref jif, null, null));
+			Assert.Throws<ObjectDisposedException> (() => t.GetCachedInstanceField (ref jif, (string) null, (string) null));
 			JniMethodInfo   jim = null;
-			Assert.Throws<ObjectDisposedException> (() => t.GetCachedConstructor (ref jim, null));
-			Assert.Throws<ObjectDisposedException> (() => t.GetCachedInstanceMethod (ref jim, null, null));
+			Assert.Throws<ObjectDisposedException> (() => t.GetCachedConstructor (ref jim, (string) null));
+			Assert.Throws<ObjectDisposedException> (() => t.GetCachedInstanceMethod (ref jim, (string) null, (string) null));
 			JniFieldInfo    jsf = null;
-			Assert.Throws<ObjectDisposedException> (() => t.GetCachedStaticField (ref jsf, null, null));
+			Assert.Throws<ObjectDisposedException> (() => t.GetCachedStaticField (ref jsf, (string) null, (string) null));
 			JniMethodInfo   jsm = null;
-			Assert.Throws<ObjectDisposedException> (() => t.GetCachedStaticMethod (ref jsm, null, null));
+			Assert.Throws<ObjectDisposedException> (() => t.GetCachedStaticMethod (ref jsm, (string) null, (string) null));
 		}
 
 		[Test]

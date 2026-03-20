@@ -308,6 +308,53 @@ namespace Java.Interop
 							string.Format ("Could not unregister native methods for class '{0}'; JNIEnv::UnregisterNatives() returned {1}.", GetJniTypeNameFromClass (type), r));
 				}
 			}
+
+#if FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
+			/// <summary>
+			/// Finds a Java class using a null-terminated UTF-8 class name span.
+			/// Use with <c>"java/lang/Object"u8</c> literals to avoid string marshalling overhead.
+			/// </summary>
+			public static unsafe JniObjectReference FindClass (ReadOnlySpan<byte> classname)
+			{
+				return TryFindClass (classname, throwOnError: true);
+			}
+
+			/// <summary>
+			/// Tries to find a Java class using a null-terminated UTF-8 class name span.
+			/// Returns <c>true</c> if the class was found, <c>false</c> otherwise.
+			/// </summary>
+			public static unsafe bool TryFindClass (ReadOnlySpan<byte> classname, out JniObjectReference instance)
+			{
+				instance = TryFindClass (classname, throwOnError: false);
+				return instance.IsValid;
+			}
+
+			static unsafe JniObjectReference TryFindClass (ReadOnlySpan<byte> classname, bool throwOnError)
+			{
+				var info = JniEnvironment.CurrentInfo;
+				fixed (byte* _classname_ptr = classname) {
+					var c      = JniNativeMethods.FindClass (info.EnvironmentPointer, (IntPtr) _classname_ptr);
+					var thrown  = JniNativeMethods.ExceptionOccurred (info.EnvironmentPointer);
+					if (thrown == IntPtr.Zero) {
+						var r = new JniObjectReference (c, JniObjectReferenceType.Local);
+						JniEnvironment.LogCreateLocalRef (r);
+						return r;
+					}
+
+					RawExceptionClear (info.EnvironmentPointer);
+
+					var findClassThrown  = new JniObjectReference (thrown, JniObjectReferenceType.Local);
+					LogCreateLocalRef (findClassThrown);
+					var pendingException = info.Runtime.GetExceptionForThrowable (ref findClassThrown, JniObjectReferenceOptions.CopyAndDispose);
+
+					if (!throwOnError) {
+						(pendingException as IJavaPeerable)?.Dispose ();
+						return default;
+					}
+					throw pendingException!;
+				}
+			}
+#endif  // FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 		}
 	}
 }
