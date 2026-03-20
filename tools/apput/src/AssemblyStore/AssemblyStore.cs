@@ -21,7 +21,7 @@ public class AssemblyStore : BaseAspect
 	public IDictionary<string, ApplicationAssembly> Assemblies { get; private set; } = new Dictionary<string, ApplicationAssembly> (StringComparer.Ordinal);
 	public IDictionary<string, AssemblyPdb> PDBs { get; private set; } = new Dictionary<string, AssemblyPdb> (StringComparer.Ordinal);
 	public IDictionary<string, string> Configs { get; private set; } = new Dictionary<string, string> (StringComparer.Ordinal);
-	public AndroidTargetArch Architecture { get; }
+	public NativeArchitecture Architecture { get; }
 	public ulong NumberOfAssemblies => (ulong)(Assemblies?.Count ?? 0);
 
 	AssemblyStoreAspectState storeState;
@@ -39,10 +39,10 @@ public class AssemblyStore : BaseAspect
 		}
 
 		Architecture = header.Version.ABI switch {
-			AssemblyStoreABI.Arm   => AndroidTargetArch.Arm,
-			AssemblyStoreABI.Arm64 => AndroidTargetArch.Arm64,
-			AssemblyStoreABI.X86   => AndroidTargetArch.X86,
-			AssemblyStoreABI.X64   => AndroidTargetArch.X86_64,
+			AssemblyStoreABI.Arm   => NativeArchitecture.Arm,
+			AssemblyStoreABI.Arm64 => NativeArchitecture.Arm64,
+			AssemblyStoreABI.X86   => NativeArchitecture.X86,
+			AssemblyStoreABI.X64   => NativeArchitecture.X64,
 			_                      => throw new InvalidOperationException ($"Internal error: unsupported assembly store ABI '{header.Version.ABI}'")
 		};
 	}

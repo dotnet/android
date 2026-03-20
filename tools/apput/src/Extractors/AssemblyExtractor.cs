@@ -108,7 +108,7 @@ class AssemblyExtractor : BaseExtractorWithOptions<AssemblyExtractorOptions>
 
 		return Extract (getOutputStreamForPath, assemblies, pdbs);
 
-		bool StoreForRequestedArchitecture (AssemblyStore store) => MatchesRequestedArchitecture (Utilities.TargetArchToNative (store.Architecture));
+		bool StoreForRequestedArchitecture (AssemblyStore store) => MatchesRequestedArchitecture (store.Architecture);
 		bool AssemblyForRequestedArchitecture (ApplicationAssembly asm) => MatchesRequestedArchitecture (asm.Architecture);
 		bool PdbForRequestedArchitecture (AssemblyPdb pdb) => MatchesRequestedArchitecture (pdb.Architecture);
 

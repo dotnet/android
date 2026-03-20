@@ -83,37 +83,24 @@ abstract class BaseReporter : IReporter
 		return AddLabeledItem ("Aspect type", text);
 	}
 
-	protected MarkdownDocument AddSubsectionBanner (string text, uint level = 1)
-	{
-		ReportDoc.AddHeading (level, text);
-		ReportDoc.AddNewline ().AddNewline ();
-		return ReportDoc;
-	}
-
 	protected MarkdownDocument AddNativeArchListItem (NativeArchitecture arch)
 	{
 		ReportDoc.AddLabeledListItem (NativeArchitectureLabel, arch.ToString ());
 		return ReportDoc;
 	}
 
-	protected MarkdownDocument AddTargetArchListItem (AndroidTargetArch arch)
-	{
-		ReportDoc.AddLabeledListItem (TargetArchitectureLabel, arch.ToString ());
-		return ReportDoc;
-	}
-
-	protected MarkdownDocument AddTargetArchItem (AndroidTargetArch arch, bool appendNewline = true)
+	protected MarkdownDocument AddTargetArchItem (NativeArchitecture arch, bool appendNewline = true)
 	{
 		AddLabeledItem (TargetArchitectureLabel, arch.ToString (), appendNewline);
 		return ReportDoc;
 	}
 
-	protected void AddNativeArchDesc (AndroidTargetArch arch)
+	protected void AddNativeArchDesc (NativeArchitecture arch)
 	{
 		AddLabeledItem (NativeArchitectureLabel, arch.ToString ());
 	}
 
-	protected void AddNativeArchDesc (ICollection<AndroidTargetArch> arches)
+	protected void AddNativeArchDesc (ICollection<NativeArchitecture> arches)
 	{
 		if (arches.Count == 1) {
 			AddNativeArchDesc (arches.First ());
@@ -146,11 +133,6 @@ abstract class BaseReporter : IReporter
 	{
 		ReportDoc.AddNewline ();
 		return ReportDoc.AddNewline ();
-	}
-
-	public MarkdownDocument AddListItemText (string text, MarkdownTextStyle style = MarkdownTextStyle.Plain)
-	{
-		return AddText (text, style, addIndent: false);
 	}
 
 	protected string GetCountable (Countable countable, ulong count)

@@ -63,7 +63,6 @@ class Utilities
 		DeleteFile (path);
 	}
 
-	// TODO: review all the call sites, now that `rewindStream` default is different
 	/// <summary>
 	/// Creates a <see cref="BinaryReader"/> for the given stream, optionally rewinding to the beginning first.
 	/// </summary>
@@ -172,11 +171,24 @@ class Utilities
                 }
         }
 
-	// TODO: consider replacing all uses of `AndroidTargetArch` with `NativeArchitecture`
+	/// <summary>
+	/// Converts an <see cref="NativeArchitecture"/> to a <see cref="AndroidTargetArch"/>.
+	/// </summary>
+	public static AndroidTargetArch NativeArchToAndroidTarget (NativeArchitecture arch)
+	{
+		return arch switch {
+			NativeArchitecture.Arm   => AndroidTargetArch.Arm,
+			NativeArchitecture.Arm64 => AndroidTargetArch.Arm64,
+			NativeArchitecture.X86   => AndroidTargetArch.X86,
+			NativeArchitecture.X64   => AndroidTargetArch.X86_64,
+			_                        => throw new NotSupportedException ($"Unsupported native architecture '{arch}'")
+		};
+	}
+
 	/// <summary>
 	/// Converts an <see cref="AndroidTargetArch"/> to a <see cref="NativeArchitecture"/>.
 	/// </summary>
-	public static NativeArchitecture TargetArchToNative (AndroidTargetArch arch)
+	public static NativeArchitecture AndroidTargetArchToNative (AndroidTargetArch arch)
 	{
 		return arch switch {
 			AndroidTargetArch.Arm    => NativeArchitecture.Arm,
@@ -259,7 +271,7 @@ class Utilities
 		var sb = new StringBuilder ();
 		sb.Append (culture ?? "<?>");
 
-		var ci = !String.IsNullOrEmpty (culture) ? CultureInfo.GetCultureInfo (culture): null;
+		var ci = !String.IsNullOrEmpty (culture) ? CultureInfo.GetCultureInfo (culture) : null;
 		if (ci == null) {
 			return sb.ToString ();
 		}

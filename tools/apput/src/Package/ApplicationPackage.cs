@@ -46,7 +46,7 @@ public abstract class ApplicationPackage : BaseAspect
 	public abstract string PackageFormat { get; }
 
 	public AndroidManifest? AndroidManifest                => manifest;
-	public List<AndroidTargetArch> Architectures           { get; protected set; } = new ();
+	public List<NativeArchitecture> Architectures          { get; protected set; } = new ();
 	public List<AssemblyStore>? AssemblyStores             { get; protected set; }
 	public List<ApplicationAssembly>? StandaloneAssemblies { get; protected set; }
 	public List<AssemblyPdb>? StandalonePdbs               { get; protected set; }
@@ -149,7 +149,7 @@ public abstract class ApplicationPackage : BaseAspect
 	void CollectSharedLibraries ()
 	{
 		Log.Debug ("Collecting shared libraries");
-		foreach (AndroidTargetArch arch in Architectures) {
+		foreach (NativeArchitecture arch in Architectures) {
 			string libDir = GetNativeLibDir (arch);
 
 			foreach (ZipArchiveEntry? entry in Zip.Entries) {
@@ -190,7 +190,7 @@ public abstract class ApplicationPackage : BaseAspect
 			if (!HasEntryStartingWith (Zip, GetNativeLibDir (arch))) {
 				continue;
 			}
-			Architectures.Add (arch);
+			Architectures.Add (Utilities.AndroidTargetArchToNative (arch));
 			Log.Debug ($"Detected architecture: {arch}");
 		}
 	}
@@ -212,7 +212,7 @@ public abstract class ApplicationPackage : BaseAspect
 		Log.Debug ("Trying to detect runtime");
 		ApplicationRuntime runtime = ApplicationRuntime.Unknown;
 		string runtimePath;
-		foreach (AndroidTargetArch arch in Architectures) {
+		foreach (NativeArchitecture arch in Architectures) {
 			runtimePath = GetNativeLibFile (arch, "libcoreclr.so");
 			if (HasEntry (Zip, runtimePath)) {
 				runtime = ApplicationRuntime.CoreCLR;
@@ -261,7 +261,7 @@ public abstract class ApplicationPackage : BaseAspect
 
 	void TryLoadXamarinAppLibraries ()
 	{
-		foreach (AndroidTargetArch arch in Architectures) {
+		foreach (NativeArchitecture arch in Architectures) {
 			string libPath = GetNativeLibFile (arch, "libxamarin-app.so");
 			XamarinAppSharedLibrary? lib = TryLoadLibXamarinApp (libPath);
 			if (lib == null) {
@@ -313,8 +313,8 @@ public abstract class ApplicationPackage : BaseAspect
 			stores.Add (storeLib.AssemblyStore);
 		}
 
-		foreach (AndroidTargetArch arch in Architectures) {
-			string storePath = GetNativeLibFile (arch, $"libassemblies.{MonoAndroidHelper.ArchToAbi (arch)}.blob.so");
+		foreach (NativeArchitecture arch in Architectures) {
+			string storePath = GetNativeLibFile (arch, $"libassemblies.{MonoAndroidHelper.ArchToAbi (Utilities.NativeArchToAndroidTarget (arch))}.blob.so");
 			Log.Debug ($"Trying assembly store: {storePath}");
 			if (!HasEntry (Zip, storePath)) {
 				Log.Debug ($"Assembly store '{storePath}' not found");
@@ -425,7 +425,8 @@ public abstract class ApplicationPackage : BaseAspect
 	}
 
 	string GetNativeLibDir (AndroidTargetArch arch) => $"{NativeLibDirBase}/{MonoAndroidHelper.ArchToAbi (arch)}/";
-	string GetNativeLibFile (AndroidTargetArch arch, string fileName) => $"{GetNativeLibDir (arch)}{fileName}";
+	string GetNativeLibDir (NativeArchitecture arch) => GetNativeLibDir (Utilities.NativeArchToAndroidTarget (arch));
+	string GetNativeLibFile (NativeArchitecture arch, string fileName) => $"{GetNativeLibDir (arch)}{fileName}";
 
 	Stream? TryGetEntryStream (string path, bool extractToMemory = false)
 	{
