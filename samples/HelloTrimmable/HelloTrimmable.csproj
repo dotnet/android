@@ -8,7 +8,4 @@
     <RunAOTCompilation>false</RunAOTCompilation>
     <PublishReadyToRun>false</PublishReadyToRun>
   </PropertyGroup>
-  <ItemGroup>
-    <TrimmerRootDescriptor Include="LinkerDescriptor.xml" />
-  </ItemGroup>
 </Project>

@@ -11,7 +11,6 @@
 
   <PropertyGroup>
     <_TypeMapAssemblyName>_Microsoft.Android.TypeMaps</_TypeMapAssemblyName>
-    <!-- Shared across all RIDs — use BaseIntermediateOutputPath -->
     <_TypeMapBaseOutputDir>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework)\</_TypeMapBaseOutputDir>
     <_TypeMapOutputDirectory>$(_TypeMapBaseOutputDir)typemap\</_TypeMapOutputDirectory>
     <_TypeMapJavaOutputDirectory>$(_TypeMapBaseOutputDir)typemap\java</_TypeMapJavaOutputDirectory>
@@ -19,8 +18,7 @@
 
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap"
-        Value="true"
-        Trim="true" />
+        Value="true" Trim="true" />
     <RuntimeHostConfigurationOption Include="System.Runtime.InteropServices.TypeMappingEntryAssembly"
         Value="$(_TypeMapAssemblyName)" />
   </ItemGroup>
@@ -28,23 +26,25 @@
   <Target Name="_ValidateTrimmableTypeMapRuntime"
       BeforeTargets="Build"
       Condition=" '$(_AndroidRuntime)' != 'CoreCLR' And '$(_AndroidRuntime)' != 'NativeAOT' ">
-    <Error Text="Trimmable typemap is not supported for runtime '$(_AndroidRuntime)'. Supported runtimes: CoreCLR, NativeAOT." />
+    <Error Text="Trimmable typemap is not supported for runtime '$(_AndroidRuntime)'." />
   </Target>
 
   <!--
-    OUTER BUILD: Generate TypeMap assemblies and JCW files.
-    Runs inside _GenerateJavaStubs which is an outer-build target.
-    Uses @(ReferencePath) as input (populated during compilation).
+    Generate TypeMap assemblies and JCW files.
+    AfterTargets="_ResolveAssemblies" so it runs in both outer and inner builds.
+    Uses @(ReferencePath) as the primary input (available after compilation).
+    Output goes to shared BaseIntermediateOutputPath so it's generated once.
   -->
-  <Target Name="_GenerateJavaStubs"
-      DependsOnTargets="_SetLatestTargetFrameworkVersion;_CleanIntermediateIfNeeded;_PrepareAssemblies;_GetGenerateJavaStubsInputs;_PrepareNativeAssemblySources"
-      Inputs="@(_GenerateJavaStubsInputs)"
-      Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
+  <Target Name="_GenerateTrimmableTypeMap"
+      AfterTargets="_ResolveAssemblies"
+      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '@(ReferencePath)' != '' and !Exists('$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll') ">
 
     <ItemGroup>
-      <_TypeMapInputAssemblies Include="@(_ResolvedAssemblies)" />
       <_TypeMapInputAssemblies Include="@(ReferencePath)" />
-      <_TypeMapInputAssemblies Include="$(IntermediateOutputPath)$(TargetFileName)" Condition="Exists('$(IntermediateOutputPath)$(TargetFileName)')" />
+      <_TypeMapInputAssemblies Include="@(ResolvedAssemblies)" />
+      <_TypeMapInputAssemblies Include="@(ResolvedFrameworkAssemblies)" />
+      <_TypeMapInputAssemblies Include="$(IntermediateOutputPath)$(TargetFileName)"
+          Condition="Exists('$(IntermediateOutputPath)$(TargetFileName)')" />
     </ItemGroup>
 
     <GenerateTrimmableTypeMap
@@ -56,33 +56,44 @@
       <Output TaskParameter="GeneratedJavaFiles" ItemName="_GeneratedJavaFiles" />
     </GenerateTrimmableTypeMap>
 
-    <!-- Copy JCW java files -->
-    <Copy SourceFiles="@(_GeneratedJavaFiles)" DestinationFolder="$(IntermediateOutputPath)android\src\%(RecursiveDir)" />
-
-    <!-- HACK: Copy user's AndroidManifest.xml (TODO: #10807) -->
-    <Copy SourceFiles="$(_AndroidManifestAbs)" DestinationFiles="$(IntermediateOutputPath)AndroidManifest.xml" SkipUnchangedFiles="true"
-        Condition=" '$(_AndroidManifestAbs)' != '' And Exists('$(_AndroidManifestAbs)') " />
-
-    <!-- HACK: Create empty acw-map.txt -->
-    <Touch Files="$(IntermediateOutputPath)acw-map.txt" AlwaysCreate="true" />
-
-    <!-- HACK: Stub ApplicationRegistration.java -->
-    <MakeDir Directories="$(IntermediateOutputPath)android\src\net\dot\android" />
-    <WriteLinesToFile File="$(IntermediateOutputPath)android\src\net\dot\android\ApplicationRegistration.java" Overwrite="true"
-        Lines="package net.dot.android%3b;public class ApplicationRegistration { public static android.content.Context Context%3b public static void registerApplications () { } }" />
-
     <ItemGroup>
       <FileWrites Include="@(_GeneratedTypeMapAssemblies)" />
       <FileWrites Include="@(_GeneratedJavaFiles)" />
     </ItemGroup>
+  </Target>
+
+  <!--
+    _GenerateJavaStubs: lightweight — copies JCW files and generates stubs.
+    TypeMap generation already happened via _GenerateTrimmableTypeMap.
+  -->
+  <Target Name="_GenerateJavaStubs"
+      DependsOnTargets="_SetLatestTargetFrameworkVersion;_CleanIntermediateIfNeeded;_PrepareAssemblies;_GetGenerateJavaStubsInputs;_PrepareNativeAssemblySources"
+      Inputs="@(_GenerateJavaStubsInputs)"
+      Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
+
+    <ItemGroup>
+      <_TypeMapJavaFiles Include="$(_TypeMapJavaOutputDirectory)\**\*.java" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_TypeMapJavaFiles)" DestinationFolder="$(IntermediateOutputPath)android\src\%(RecursiveDir)" />
+
+    <!-- HACK: Copy user's AndroidManifest.xml (TODO: #10807) -->
+    <Copy SourceFiles="$(_AndroidManifestAbs)" DestinationFiles="$(IntermediateOutputPath)AndroidManifest.xml"
+        SkipUnchangedFiles="true"
+        Condition=" '$(_AndroidManifestAbs)' != '' And Exists('$(_AndroidManifestAbs)') " />
+
+    <Touch Files="$(IntermediateOutputPath)acw-map.txt" AlwaysCreate="true" />
+
+    <MakeDir Directories="$(IntermediateOutputPath)android\src\net\dot\android" />
+    <WriteLinesToFile
+        File="$(IntermediateOutputPath)android\src\net\dot\android\ApplicationRegistration.java"
+        Overwrite="true"
+        Lines="package net.dot.android%3b;public class ApplicationRegistration { public static android.content.Context Context%3b public static void registerApplications () { } }" />
 
     <MakeDir Directories="$(_AndroidStampDirectory)" Condition=" !Exists('$(_AndroidStampDirectory)') " />
     <Touch Files="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" AlwaysCreate="True" />
   </Target>
 
-
-
-  <!-- Native typemap stubs so libxamarin-app.so has required symbols. -->
+  <!-- Native typemap stubs -->
   <Target Name="_PrepareNativeAssemblySources"
       Condition=" '$(_AndroidRuntime)' != 'NativeAOT' ">
     <ItemGroup>
@@ -97,9 +108,8 @@
     </GenerateEmptyTypemapStub>
   </Target>
 
-  <!-- Override _RemoveRegisterAttribute: trimmable path doesn't strip [Register]. -->
-  <Target Name="_RemoveRegisterAttribute"
-      DependsOnTargets="_PrepareAssemblies">
+  <!-- Override _RemoveRegisterAttribute -->
+  <Target Name="_RemoveRegisterAttribute" DependsOnTargets="_PrepareAssemblies">
     <Copy SourceFiles="@(_ResolvedAssemblies)" DestinationFolder="%(RootDir)%(Directory)shrunk/" SkipUnchangedFiles="true" />
   </Target>
 </Project>

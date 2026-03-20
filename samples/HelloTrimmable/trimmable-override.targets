@@ -1,5 +1,5 @@
 <Project>
-  <!-- Patch bundled assemblies array size for TypeMap DLLs -->
+  <!-- Workaround: assembly_store_bundled_assemblies array too small for TypeMap DLLs -->
   <Target Name="_PatchBundledAssembliesSize" AfterTargets="_GeneratePackageManagerJava"
       Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
     <Exec Command="sed -i '' 's/\[\([0-9]*\) x %struct.AssemblyStoreSingleAssemblyRuntimeData\]/[256 x %struct.AssemblyStoreSingleAssemblyRuntimeData]/g' $(IntermediateOutputPath)android/environment.*.ll"

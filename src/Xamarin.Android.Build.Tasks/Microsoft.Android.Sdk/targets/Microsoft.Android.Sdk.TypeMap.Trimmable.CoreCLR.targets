@@ -1,34 +1,24 @@
-<!-- Trimmable typemap targets for CoreCLR runtime. -->
+<!-- Trimmable typemap: CoreCLR-specific (ILLink integration). -->
 <Project>
 
-  <!-- OUTER BUILD: Inject TypeMap DLLs into the assembly store.
-       Creates per-ABI entries from the shared typemap output directory. -->
-  <Target Name="_AddTrimmableTypeMapAssembliesToStore"
-      BeforeTargets="_BuildApkEmbed"
-      DependsOnTargets="_GenerateJavaStubs"
+  <!-- Add TypeMap DLLs to ILLink input. ILLink natively understands TypeMapAttribute<T>. -->
+  <Target Name="_AddTrimmableTypeMapToLinker"
+      BeforeTargets="_ComputeManagedAssemblyToLink"
+      DependsOnTargets="_GenerateTrimmableTypeMap"
       Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
     <ItemGroup>
-      <_TypeMapDlls Remove="@(_TypeMapDlls)" />
-      <_TypeMapDlls Include="$(_TypeMapOutputDirectory)*.dll" />
+      <ManagedAssemblyToLink Include="$(_TypeMapOutputDirectory)*.dll" />
     </ItemGroup>
-    <!-- Create per-ABI entries: each DLL needs one entry per supported ABI -->
-    <CreateItem Include="@(_TypeMapDlls)" AdditionalMetadata="Abi=%(Identity)">
-      <Output TaskParameter="Include" ItemName="_TypeMapDllsFlat" />
-    </CreateItem>
-    <ItemGroup Condition=" '@(_TypeMapDlls)' != '' ">
-      <_BuildApkResolvedUserAssemblies Include="@(_TypeMapDlls)">
-        <Abi>arm64-v8a</Abi>
-        <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
-        <DestinationSubPath>arm64-v8a/%(Filename)%(Extension)</DestinationSubPath>
-        <DestinationSubDirectory>arm64-v8a/</DestinationSubDirectory>
-      </_BuildApkResolvedUserAssemblies>
-      <_BuildApkResolvedUserAssemblies Include="@(_TypeMapDlls)">
-        <Abi>x86_64</Abi>
-        <RuntimeIdentifier>android-x64</RuntimeIdentifier>
-        <DestinationSubPath>x86_64/%(Filename)%(Extension)</DestinationSubPath>
-        <DestinationSubDirectory>x86_64/</DestinationSubDirectory>
-      </_BuildApkResolvedUserAssemblies>
-    </ItemGroup>
+  </Target>
+
+  <!-- Pass TypeMap entry assembly name to ILLink -->
+  <Target Name="_ConfigureTrimmableTypeMapForLinker"
+      BeforeTargets="_RunILLink"
+      DependsOnTargets="_GenerateTrimmableTypeMap"
+      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
+    <PropertyGroup>
+      <_ExtraTrimmerArgs>--typemap-entry-assembly $(_TypeMapAssemblyName) $(_ExtraTrimmerArgs)</_ExtraTrimmerArgs>
+    </PropertyGroup>
   </Target>
 
 </Project>
