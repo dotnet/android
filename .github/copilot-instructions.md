@@ -188,3 +188,4 @@ This pattern ensures proper encoding, timestamps, and file attributes are handle
 - **MSBuild:** Test in isolation, validate inputs
 - **Device:** Use update directories for rapid Debug iteration
 - **Performance:** See `../Documentation/guides/profiling.md` and `../Documentation/guides/tracing.md`
+- **CI failures:** Use the `azdo-build-investigator` skill to investigate Azure DevOps pipeline failures. The `az` CLI tool is available and authenticated — use it to fetch build timelines, download logs, and analyze `.binlog` artifacts from failing CI runs. This applies to both the public (`dev.azure.com/dnceng-public`) and internal (`devdiv.visualstudio.com`) pipelines.
