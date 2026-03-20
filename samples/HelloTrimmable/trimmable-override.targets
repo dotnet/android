@@ -1,0 +1,12 @@
+<Project>
+  <ItemGroup>
+    <_TrimmerFeatureSettings Include="Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap" Value="true" />
+  </ItemGroup>
+
+  <!-- Patch bundled assemblies array size for TypeMap DLLs -->
+  <Target Name="_PatchBundledAssembliesSize" AfterTargets="_GeneratePackageManagerJava"
+      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
+    <Exec Command="sed -i '' 's/\[\([0-9]*\) x %struct.AssemblyStoreSingleAssemblyRuntimeData\]/[256 x %struct.AssemblyStoreSingleAssemblyRuntimeData]/g' $(IntermediateOutputPath)android/environment.*.ll"
+        IgnoreExitCode="true" />
+  </Target>
+</Project>

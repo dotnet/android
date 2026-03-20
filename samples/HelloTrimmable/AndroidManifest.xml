@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.hellotrimmable">
+  <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="36" />
+  <application android:label="HelloTrimmable">
+    <provider android:name="mono.MonoRuntimeProvider"
+              android:exported="false"
+              android:initOrder="1999999999"
+              android:authorities="com.example.hellotrimmable.mono.MonoRuntimeProvider.__mono_init__" />
+    <activity android:name="crc64d65a68dbbd3bc07d.MainActivity"
+              android:exported="true">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+      </intent-filter>
+    </activity>
+  </application>
+</manifest>
