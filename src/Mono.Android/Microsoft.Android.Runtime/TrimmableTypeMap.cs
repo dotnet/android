@@ -27,6 +27,22 @@ class TrimmableTypeMap
 
 	internal TrimmableTypeMap ()
 	{
+		// Pre-load per-assembly TypeMap DLLs so the TypeMapping API can discover them.
+		// On Android with the assembly store, assemblies aren't automatically resolvable
+		// via Assembly.Load() unless the store's external_assembly_probe is triggered first.
+		var entryAsm = System.Reflection.Assembly.Load ("_Microsoft.Android.TypeMaps");
+		foreach (var attrData in entryAsm.GetCustomAttributesData ()) {
+			if (attrData.AttributeType.Name.StartsWith ("TypeMapAssemblyTargetAttribute", StringComparison.Ordinal)
+				&& attrData.ConstructorArguments.Count > 0
+				&& attrData.ConstructorArguments[0].Value is string asmName) {
+				try {
+					System.Reflection.Assembly.Load (asmName);
+				} catch {
+					// Best effort — assembly may not exist for this app
+				}
+			}
+		}
+
 		_typeMap = TypeMapping.GetOrCreateExternalTypeMapping<Java.Lang.Object> ();
 
 		var previous = Interlocked.CompareExchange (ref s_instance, this, null);
@@ -95,7 +111,22 @@ class TrimmableTypeMap
 			throw new InvalidOperationException ("TrimmableTypeMap has not been initialized.");
 		}
 
-		if (!instance.TryCreatePeer (targetType, self, JniHandleOwnership.DoNotTransfer)) {
+		// Look up the proxy via JNI class name → TypeMap dictionary.
+		// We can't use targetType.GetCustomAttribute<JavaPeerProxy>() because the
+		// self-application attribute is on the proxy type, not the target type.
+		var selfRef = new JniObjectReference (self);
+		var jniClass = JniEnvironment.Types.GetObjectClass (selfRef);
+		var className = JniEnvironment.Types.GetJniTypeNameFromClass (jniClass);
+		JniObjectReference.Dispose (ref jniClass);
+
+		if (className is null || !instance._typeMap.TryGetValue (className, out var proxyType)) {
+			throw new TypeMapException (
+				$"Failed to create peer for type '{targetType.FullName}' (jniClass='{className}'). " +
+				"Ensure the type has a generated proxy in the TypeMap assembly.");
+		}
+
+		var proxy = proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+		if (proxy is null || proxy.CreateInstance (self, JniHandleOwnership.DoNotTransfer) is null) {
 			throw new TypeMapException (
 				$"Failed to create peer for type '{targetType.FullName}'. " +
 				"Ensure the type has a generated proxy in the TypeMap assembly.");
@@ -138,7 +169,7 @@ class TrimmableTypeMap
 			}
 
 			var classRef = new JniObjectReference (nativeClassHandle);
-			className = JniEnvironment.Types.GetJniTypeNameFromInstance (classRef);
+			className = JniEnvironment.Types.GetJniTypeNameFromClass (classRef);
 			if (className is null) {
 				return;
 			}
