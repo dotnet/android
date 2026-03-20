@@ -4,8 +4,7 @@
   <!-- Add TypeMap DLLs to ILLink input. ILLink natively understands TypeMapAttribute<T>. -->
   <Target Name="_AddTrimmableTypeMapToLinker"
       BeforeTargets="PrepareForILLink;_RunILLink"
-      DependsOnTargets="_GenerateTrimmableTypeMap"
-      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
+      DependsOnTargets="_GenerateTrimmableTypeMap">
     <ItemGroup>
       <ManagedAssemblyToLink Include="$(_TypeMapOutputDirectory)*.dll">
         <DestinationSubPath>%(Filename)%(Extension)</DestinationSubPath>
@@ -16,8 +15,7 @@
   <!-- Pass TypeMap entry assembly name to ILLink -->
   <Target Name="_ConfigureTrimmableTypeMapForLinker"
       BeforeTargets="PrepareForILLink;_RunILLink"
-      DependsOnTargets="_GenerateTrimmableTypeMap"
-      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
+      DependsOnTargets="_GenerateTrimmableTypeMap">
     <PropertyGroup>
       <_ExtraTrimmerArgs>--typemap-entry-assembly $(_TypeMapAssemblyName) $(_ExtraTrimmerArgs)</_ExtraTrimmerArgs>
     </PropertyGroup>
@@ -27,8 +25,7 @@
        Reads from linked/ (ILLink output, inner builds have completed by now). -->
   <Target Name="_AddTrimmableTypeMapAssembliesToStore"
       BeforeTargets="_BuildApkEmbed"
-      DependsOnTargets="_GenerateJavaStubs;_DefineBuildTargetAbis"
-      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
+      DependsOnTargets="_GenerateJavaStubs;_DefineBuildTargetAbis">
     <!-- Derive ABI → RID mapping from the ABIs selected for this build -->
     <ItemGroup>
       <_TypeMapAbiRid Include="@(_BuildTargetAbis)" />
