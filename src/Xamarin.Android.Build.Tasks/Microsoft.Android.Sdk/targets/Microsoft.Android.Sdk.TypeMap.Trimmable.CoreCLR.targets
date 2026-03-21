@@ -21,26 +21,43 @@
     </PropertyGroup>
   </Target>
 
-  <!-- Add TRIMMED TypeMap DLLs to assembly store with per-ABI metadata.
-       Reads from linked/ (ILLink output, inner builds have completed by now). -->
+  <!-- Add TypeMap DLLs to assembly store with per-ABI metadata.
+       TypeMap DLLs are ABI-agnostic (pure IL), so the same DLLs are added for every ABI.
+       This target batches over @(_BuildTargetAbis) to add items per-ABI. -->
   <Target Name="_AddTrimmableTypeMapAssembliesToStore"
       BeforeTargets="_BuildApkEmbed"
-      DependsOnTargets="_GenerateJavaStubs;_DefineBuildTargetAbis">
-    <!-- Derive ABI → RID mapping from the ABIs selected for this build -->
+      DependsOnTargets="_GenerateJavaStubs;_DefineBuildTargetAbis"
+      Outputs="%(_BuildTargetAbis.Identity)">
+    <PropertyGroup>
+      <_CurrentAbi>%(_BuildTargetAbis.Identity)</_CurrentAbi>
+      <_CurrentRid Condition=" '$(_CurrentAbi)' == 'arm64-v8a' ">android-arm64</_CurrentRid>
+      <_CurrentRid Condition=" '$(_CurrentAbi)' == 'armeabi-v7a' ">android-arm</_CurrentRid>
+      <_CurrentRid Condition=" '$(_CurrentAbi)' == 'x86_64' ">android-x64</_CurrentRid>
+      <_CurrentRid Condition=" '$(_CurrentAbi)' == 'x86' ">android-x86</_CurrentRid>
+    </PropertyGroup>
+    <!-- Try linked/ first (trimmed by ILLink in inner builds) -->
     <ItemGroup>
-      <_TypeMapAbiRid Include="@(_BuildTargetAbis)" />
-      <_TypeMapAbiRid Update="arm64-v8a"><Rid>android-arm64</Rid></_TypeMapAbiRid>
-      <_TypeMapAbiRid Update="x86_64"><Rid>android-x64</Rid></_TypeMapAbiRid>
+      <_CurrentLinkedTypeMapDlls Include="$(IntermediateOutputPath)$(_CurrentRid)\linked\_*.TypeMap.dll;$(IntermediateOutputPath)$(_CurrentRid)\linked\_Microsoft.Android.TypeMap*.dll" />
     </ItemGroup>
-    <!-- MSBuild batches over _TypeMapAbiRid: for each ABI, glob linked TypeMap DLLs and add them to the store -->
-    <ItemGroup>
-      <_BuildApkResolvedUserAssemblies
-          Include="$(IntermediateOutputPath)%(_TypeMapAbiRid.Rid)\linked\_*.TypeMap.dll;$(IntermediateOutputPath)%(_TypeMapAbiRid.Rid)\linked\_Microsoft.Android.TypeMap*.dll">
-        <Abi>%(_TypeMapAbiRid.Identity)</Abi>
-        <RuntimeIdentifier>%(_TypeMapAbiRid.Rid)</RuntimeIdentifier>
-        <DestinationSubPath>%(_TypeMapAbiRid.Identity)/%(Filename)%(Extension)</DestinationSubPath>
-        <DestinationSubDirectory>%(_TypeMapAbiRid.Identity)/</DestinationSubDirectory>
+    <ItemGroup Condition=" '@(_CurrentLinkedTypeMapDlls)' != '' ">
+      <_BuildApkResolvedUserAssemblies Include="@(_CurrentLinkedTypeMapDlls)">
+        <Abi>$(_CurrentAbi)</Abi>
+        <RuntimeIdentifier>$(_CurrentRid)</RuntimeIdentifier>
+        <DestinationSubPath>$(_CurrentAbi)\%(Filename)%(Extension)</DestinationSubPath>
+        <DestinationSubDirectory>$(_CurrentAbi)\</DestinationSubDirectory>
       </_BuildApkResolvedUserAssemblies>
+    </ItemGroup>
+    <!-- Fallback: use untrimmed TypeMap DLLs when linked/ is empty (Debug builds without ILLink). -->
+    <ItemGroup Condition=" '@(_CurrentLinkedTypeMapDlls)' == '' ">
+      <_BuildApkResolvedUserAssemblies Include="$(_TypeMapOutputDirectory)*.dll">
+        <Abi>$(_CurrentAbi)</Abi>
+        <RuntimeIdentifier>$(_CurrentRid)</RuntimeIdentifier>
+        <DestinationSubPath>$(_CurrentAbi)\%(Filename)%(Extension)</DestinationSubPath>
+        <DestinationSubDirectory>$(_CurrentAbi)\</DestinationSubDirectory>
+      </_BuildApkResolvedUserAssemblies>
+    </ItemGroup>
+    <ItemGroup>
+      <_CurrentLinkedTypeMapDlls Remove="@(_CurrentLinkedTypeMapDlls)" />
     </ItemGroup>
   </Target>
 

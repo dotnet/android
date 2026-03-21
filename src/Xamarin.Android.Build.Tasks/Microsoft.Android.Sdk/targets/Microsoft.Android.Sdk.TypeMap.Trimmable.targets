@@ -98,10 +98,7 @@
     </ItemGroup>
     <Copy SourceFiles="@(_TypeMapJavaFiles)" DestinationFolder="$(IntermediateOutputPath)android\src\%(RecursiveDir)" />
 
-    <!-- TypeMap DLLs are already in _ResolvedAssemblies (added by the glob in _GenerateTrimmableTypeMap
-         output flowing through the pipeline). They go through _RemoveRegisterAttribute → shrunk/.
-         But they lack ABI metadata needed by CreateAssemblyStore.
-         Add the metadata and ensure they're in _ShrunkUserAssemblies for the compression pipeline. -->
+    <!-- Set properties for ABI/RID used by CoreCLR _AddTrimmableTypeMapAssembliesToStore fallback -->
     <PropertyGroup>
       <_TypeMapFirstAbi Condition=" '$(AndroidSupportedAbis)' != '' ">$([System.String]::Copy('$(AndroidSupportedAbis)').Split(';')[0])</_TypeMapFirstAbi>
       <_TypeMapFirstAbi Condition=" '$(_TypeMapFirstAbi)' == '' ">arm64-v8a</_TypeMapFirstAbi>
@@ -110,20 +107,19 @@
       <_TypeMapFirstRid Condition=" '$(_TypeMapFirstAbi)' == 'x86_64' ">android-x64</_TypeMapFirstRid>
       <_TypeMapFirstRid Condition=" '$(_TypeMapFirstAbi)' == 'x86' ">android-x86</_TypeMapFirstRid>
     </PropertyGroup>
+
+    <!-- Add TypeMap DLLs to a local item group for GenerateNativeApplicationConfigSources
+         without adding to _ResolvedAssemblies (which would cause duplicates in the store). -->
     <ItemGroup>
-      <!-- Update existing _ResolvedAssemblies items to have ABI metadata -->
-      <_ResolvedAssemblies Update="$(_TypeMapOutputDirectory)*.dll">
+      <_TypeMapDllsForConfig Include="$(_TypeMapOutputDirectory)*.dll">
         <Abi>$(_TypeMapFirstAbi)</Abi>
         <RuntimeIdentifier>$(_TypeMapFirstRid)</RuntimeIdentifier>
-        <DestinationSubPath>$(_TypeMapFirstAbi)/%(Filename)%(Extension)</DestinationSubPath>
-        <DestinationSubDirectory>$(_TypeMapFirstAbi)/</DestinationSubDirectory>
-      </_ResolvedAssemblies>
+      </_TypeMapDllsForConfig>
     </ItemGroup>
 
-    <!-- Generate native application config (assembly store hash table, environment, etc.).
-         Must run AFTER TypeMap DLLs are added to _ResolvedAssemblies above. -->
+    <!-- Generate native application config (assembly store hash table, environment, etc.). -->
     <GenerateNativeApplicationConfigSources
-        ResolvedAssemblies="@(_ResolvedAssemblies)"
+        ResolvedAssemblies="@(_ResolvedAssemblies);@(_TypeMapDllsForConfig)"
         SatelliteAssemblies="@(_AndroidResolvedSatellitePaths)"
         NativeLibraries="@(_AllNativeLibraries)"
         NativeLibrariesNoJniPreload="@(_AndroidNativeLibraryNeverJniPreload);@(AndroidNativeLibraryNoJniPreload)"
