@@ -25,12 +25,6 @@ JNICALL Java_mono_android_Runtime_register (JNIEnv *env, [[maybe_unused]] jclass
 	Host::Java_mono_android_Runtime_register (env, managedType, nativeClass, methods);
 }
 
-JNIEXPORT void
-JNICALL Java_mono_android_Runtime_registerNatives (JNIEnv *env, [[maybe_unused]] jclass klass, jclass nativeClass)
-{
-	Host::Java_mono_android_Runtime_registerNatives (env, nativeClass);
-}
-
 JNIEXPORT void JNICALL
 Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
 	jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset, jobject loader,

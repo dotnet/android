@@ -320,6 +320,7 @@
     <Compile Include="Java.Interop\ManagedMarshalMethodsLookupTable.cs" />
     <Compile Include="Java.Interop\Runtime.cs" />
     <Compile Include="Java.Interop\TypeManager.cs" />
+    <Compile Include="Java.Interop\TypeMapException.cs" />
     <Compile Include="Java.Lang\Boolean.cs" />
     <Compile Include="Java.Lang\Byte.cs" />
     <Compile Include="Java.Lang\Character.cs" />

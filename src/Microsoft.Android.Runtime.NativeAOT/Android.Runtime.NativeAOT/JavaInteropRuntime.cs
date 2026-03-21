@@ -77,8 +77,6 @@ static partial class JavaInteropRuntime
 			// Entry point into Mono.Android.dll. Log categories are initialized in JNI_OnLoad.
 			JNIEnvInit.InitializeJniRuntime (runtime, initArgs);
 
-			trimmableTypeMap?.RegisterBootstrapNativeMethod ();
-
 			transition  = new JniTransition (jnienv);
 
 			var handler = Java.Lang.Thread.DefaultUncaughtExceptionHandler;

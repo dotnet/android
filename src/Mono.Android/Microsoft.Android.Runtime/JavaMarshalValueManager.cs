@@ -519,7 +519,7 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 				JniObjectReference.Dispose (ref reference, options);
 				return true;
 			}
-
+		
 			return base.TryConstructPeer (self, ref reference, options, type);
 		}
 
