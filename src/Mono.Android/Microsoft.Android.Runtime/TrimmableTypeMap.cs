@@ -29,22 +29,6 @@ class TrimmableTypeMap
 
 	internal TrimmableTypeMap ()
 	{
-		// Pre-load per-assembly TypeMap DLLs so the TypeMapping API can discover them.
-		// On Android with the assembly store, assemblies aren't automatically resolvable
-		// via Assembly.Load() unless the store's external_assembly_probe is triggered first.
-		var entryAsm = System.Reflection.Assembly.Load ("_Microsoft.Android.TypeMaps");
-		foreach (var attrData in entryAsm.GetCustomAttributesData ()) {
-			if (attrData.AttributeType.Name.StartsWith ("TypeMapAssemblyTargetAttribute", StringComparison.Ordinal)
-				&& attrData.ConstructorArguments.Count > 0
-				&& attrData.ConstructorArguments [0].Value is string asmName) {
-				try {
-					System.Reflection.Assembly.Load (asmName);
-				} catch (Exception ex) {
-					Debug.WriteLine ($"TrimmableTypeMap: Failed to pre-load assembly '{asmName}': {ex.Message}");
-				}
-			}
-		}
-
 		_typeMap = TypeMapping.GetOrCreateExternalTypeMapping<Java.Lang.Object> ();
 
 		var previous = Interlocked.CompareExchange (ref s_instance, this, null);
