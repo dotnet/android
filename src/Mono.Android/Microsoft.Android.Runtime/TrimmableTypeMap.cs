@@ -165,14 +165,14 @@ class TrimmableTypeMap
 		JniObjectReference.Dispose (ref jniClass);
 
 		if (className is null || !instance._typeMap.TryGetValue (className, out var proxyType)) {
-			throw new TypeMapException (
+			throw new InvalidOperationException (
 				$"Failed to create peer for type '{targetType.FullName}' (jniClass='{className}'). " +
 				"Ensure the type has a generated proxy in the TypeMap assembly.");
 		}
 
 		var proxy = proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
 		if (proxy is null || proxy.CreateInstance (self, JniHandleOwnership.DoNotTransfer) is null) {
-			throw new TypeMapException (
+			throw new InvalidOperationException (
 				$"Failed to create peer for type '{targetType.FullName}'. " +
 				"Ensure the type has a generated proxy in the TypeMap assembly.");
 		}
