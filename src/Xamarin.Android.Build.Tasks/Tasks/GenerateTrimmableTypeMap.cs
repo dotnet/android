@@ -12,9 +12,9 @@ using Microsoft.Build.Utilities;
 namespace Xamarin.Android.Tasks;
 
 /// <summary>
-/// Generates trimmable TypeMap assemblies, JCW Java source files, and per-assembly
-/// acw-map files from resolved assemblies. The acw-map files are later merged into
-/// a single acw-map.txt consumed by _ConvertCustomView for layout XML fixups.
+/// Generates trimmable TypeMap assemblies and JCW Java source files from resolved assemblies.
+/// Runs before the trimmer to produce per-assembly typemap .dll files and a root
+/// _Microsoft.Android.TypeMaps.dll, plus .java files for ACW types with registerNatives.
 /// </summary>
 public class GenerateTrimmableTypeMap : AndroidTask
 {
@@ -30,17 +30,71 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public string JavaSourceOutputDirectory { get; set; } = "";
 
 	/// <summary>
-	/// Directory for per-assembly acw-map.{AssemblyName}.txt files.
-	/// </summary>
-	[Required]
-	public string AcwMapDirectory { get; set; } = "";
-
-	/// <summary>
 	/// The .NET target framework version (e.g., "v11.0"). Used to set the System.Runtime
 	/// assembly reference version in generated typemap assemblies.
 	/// </summary>
 	[Required]
 	public string TargetFrameworkVersion { get; set; } = "";
+
+	/// <summary>
+	/// User's AndroidManifest.xml template. May be null if no template exists.
+	/// </summary>
+	public string? ManifestTemplate { get; set; }
+
+	/// <summary>
+	/// Output path for the merged AndroidManifest.xml.
+	/// </summary>
+	public string? MergedAndroidManifestOutput { get; set; }
+
+	/// <summary>
+	/// Android package name (e.g., "com.example.myapp").
+	/// </summary>
+	public string? PackageName { get; set; }
+
+	/// <summary>
+	/// Application label for the manifest.
+	/// </summary>
+	public string? ApplicationLabel { get; set; }
+
+	public string? VersionCode { get; set; }
+
+	public string? VersionName { get; set; }
+
+	/// <summary>
+	/// Target Android API level (e.g., "36").
+	/// </summary>
+	public string? AndroidApiLevel { get; set; }
+
+	/// <summary>
+	/// Supported OS platform version (e.g., "21.0").
+	/// </summary>
+	public string? SupportedOSPlatformVersion { get; set; }
+
+	/// <summary>
+	/// Android runtime type ("mono", "coreclr", "nativeaot").
+	/// </summary>
+	public string? AndroidRuntime { get; set; }
+
+	public bool Debug { get; set; }
+
+	public bool NeedsInternet { get; set; }
+
+	public bool EmbedAssemblies { get; set; }
+
+	/// <summary>
+	/// Manifest placeholder values (e.g., "applicationId=com.example.app;key=value").
+	/// </summary>
+	public string? ManifestPlaceholders { get; set; }
+
+	/// <summary>
+	/// When set, forces android:debuggable="true" and android:extractNativeLibs="true".
+	/// </summary>
+	public string? CheckedBuild { get; set; }
+
+	/// <summary>
+	/// Optional custom Application Java class name.
+	/// </summary>
+	public string? ApplicationJavaClass { get; set; }
 
 	[Output]
 	public ITaskItem []? GeneratedAssemblies { get; set; }
@@ -49,31 +103,48 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public ITaskItem []? GeneratedJavaFiles { get; set; }
 
 	/// <summary>
-	/// Per-assembly acw-map files produced during scanning. Each file contains
-	/// three lines per type: PartialAssemblyQualifiedName;JavaKey,
-	/// ManagedKey;JavaKey, and CompatJniName;JavaKey.
+	/// Content provider names for ApplicationRegistration.java.
 	/// </summary>
 	[Output]
-	public ITaskItem []? PerAssemblyAcwMapFiles { get; set; }
+	public string []? AdditionalProviderSources { get; set; }
 
 	public override bool RunTask ()
 	{
 		var systemRuntimeVersion = ParseTargetFrameworkVersion (TargetFrameworkVersion);
-		var assemblyPaths = GetJavaInteropAssemblyPaths (ResolvedAssemblies);
+		// Don't filter by HasMonoAndroidReference — ReferencePath items from the compiler
+		// don't carry this metadata. The scanner handles non-Java assemblies gracefully.
+		var assemblyPaths = ResolvedAssemblies.Select (i => i.ItemSpec).Distinct ().ToList ();
+
+		// Framework assemblies (Mono.Android, etc.) already have JCW .java files in the SDK.
+		// Only generate JCWs for user assemblies.
+		var frameworkAssemblyNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+		foreach (var item in ResolvedAssemblies) {
+			if (!item.GetMetadata ("FrameworkReferenceName").IsNullOrEmpty ()
+				|| !item.GetMetadata ("NuGetPackageId").IsNullOrEmpty ()) {
+				frameworkAssemblyNames.Add (Path.GetFileNameWithoutExtension (item.ItemSpec));
+			}
+		}
 
 		Directory.CreateDirectory (OutputDirectory);
 		Directory.CreateDirectory (JavaSourceOutputDirectory);
-		Directory.CreateDirectory (AcwMapDirectory);
 
-		var allPeers = ScanAssemblies (assemblyPaths);
+		var (allPeers, assemblyManifestInfo) = ScanAssemblies (assemblyPaths);
 		if (allPeers.Count == 0) {
 			Log.LogDebugMessage ("No Java peer types found, skipping typemap generation.");
 			return !Log.HasLoggedErrors;
 		}
 
 		GeneratedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, assemblyPaths);
-		GeneratedJavaFiles = GenerateJcwJavaSources (allPeers);
-		PerAssemblyAcwMapFiles = GeneratePerAssemblyAcwMaps (allPeers);
+
+		// Filter JCW generation to user assemblies only
+		var userPeers = allPeers.Where (p => !frameworkAssemblyNames.Contains (p.AssemblyName)).ToList ();
+		Log.LogDebugMessage ($"Generating JCW files for {userPeers.Count} user types (filtered from {allPeers.Count} total).");
+		GeneratedJavaFiles = GenerateJcwJavaSources (userPeers);
+
+		// Generate manifest if output path is configured
+		if (!MergedAndroidManifestOutput.IsNullOrEmpty () && !PackageName.IsNullOrEmpty ()) {
+			GenerateManifest (allPeers, assemblyManifestInfo);
+		}
 
 		return !Log.HasLoggedErrors;
 	}
@@ -85,12 +156,13 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	//    resolution (base types, interfaces, activation ctors).
 	// 2. Cache scan results per assembly to skip PE I/O entirely for unchanged assemblies.
 	// Both require profiling to determine if they meaningfully improve build times.
-	List<JavaPeerInfo> ScanAssemblies (IReadOnlyList<string> assemblyPaths)
+	(List<JavaPeerInfo> peers, AssemblyManifestInfo manifestInfo) ScanAssemblies (IReadOnlyList<string> assemblyPaths)
 	{
 		using var scanner = new JavaPeerScanner ();
 		var peers = scanner.Scan (assemblyPaths);
+		var manifestInfo = scanner.ScanAssemblyManifestInfo ();
 		Log.LogDebugMessage ($"Scanned {assemblyPaths.Count} assemblies, found {peers.Count} Java peer types.");
-		return peers;
+		return (peers, manifestInfo);
 	}
 
 	ITaskItem [] GenerateTypeMapAssemblies (List<JavaPeerInfo> allPeers, Version systemRuntimeVersion,
@@ -169,36 +241,49 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		return items;
 	}
 
-	ITaskItem [] GeneratePerAssemblyAcwMaps (List<JavaPeerInfo> allPeers)
+	void GenerateManifest (List<JavaPeerInfo> allPeers, AssemblyManifestInfo assemblyManifestInfo)
 	{
-		var peersByAssembly = allPeers
-			.GroupBy (p => p.AssemblyName, StringComparer.Ordinal)
-			.OrderBy (g => g.Key, StringComparer.Ordinal);
-
-		var outputFiles = new List<ITaskItem> ();
-
-		foreach (var group in peersByAssembly) {
-			var peers = group.ToList ();
-			string outputFile = Path.Combine (AcwMapDirectory, $"acw-map.{group.Key}.txt");
-
-			bool written;
-			using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-				AcwMapWriter.Write (sw, peers);
-				sw.Flush ();
-				written = Files.CopyIfStreamChanged (sw.BaseStream, outputFile);
-			}
-
-			Log.LogDebugMessage (written
-				? $"  acw-map.{group.Key}.txt: {peers.Count} types"
-				: $"  acw-map.{group.Key}.txt: unchanged");
-
-			var item = new TaskItem (outputFile);
-			item.SetMetadata ("AssemblyName", group.Key);
-			outputFiles.Add (item);
+		if (PackageName is null || MergedAndroidManifestOutput is null) {
+			return;
 		}
 
-		Log.LogDebugMessage ($"Generated {outputFiles.Count} per-assembly ACW map files.");
-		return outputFiles.ToArray ();
+		// Validate components
+		ValidateComponents (allPeers, assemblyManifestInfo);
+		if (Log.HasLoggedErrors) {
+			return;
+		}
+
+		string minSdk = "21";
+		if (!SupportedOSPlatformVersion.IsNullOrEmpty () && Version.TryParse (SupportedOSPlatformVersion, out var sopv)) {
+			minSdk = sopv.Major.ToString ();
+		}
+
+		string targetSdk = AndroidApiLevel ?? "36";
+		if (Version.TryParse (targetSdk, out var apiVersion)) {
+			targetSdk = apiVersion.Major.ToString ();
+		}
+
+		bool forceDebuggable = !CheckedBuild.IsNullOrEmpty ();
+
+		var generator = new TrimmableManifestGenerator {
+			PackageName = PackageName,
+			ApplicationLabel = ApplicationLabel ?? PackageName,
+			VersionCode = VersionCode ?? "",
+			VersionName = VersionName ?? "",
+			MinSdkVersion = minSdk,
+			TargetSdkVersion = targetSdk,
+			AndroidRuntime = AndroidRuntime ?? "coreclr",
+			Debug = Debug,
+			NeedsInternet = NeedsInternet,
+			EmbedAssemblies = EmbedAssemblies,
+			ForceDebuggable = forceDebuggable,
+			ForceExtractNativeLibs = forceDebuggable,
+			ManifestPlaceholders = ManifestPlaceholders,
+			ApplicationJavaClass = ApplicationJavaClass,
+		};
+
+		var providerNames = generator.Generate (Log, ManifestTemplate, allPeers, assemblyManifestInfo, MergedAndroidManifestOutput);
+		AdditionalProviderSources = providerNames.ToArray ();
 	}
 
 	static Version ParseTargetFrameworkVersion (string tfv)
@@ -210,6 +295,37 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			return version;
 		}
 		throw new ArgumentException ($"Cannot parse TargetFrameworkVersion '{tfv}' as a Version.");
+	}
+
+	void ValidateComponents (List<JavaPeerInfo> allPeers, AssemblyManifestInfo assemblyManifestInfo)
+	{
+		// XA4213: component types must have a public parameterless constructor
+		foreach (var peer in allPeers) {
+			if (peer.ComponentAttribute is null || peer.IsAbstract) {
+				continue;
+			}
+			if (!peer.ComponentAttribute.HasPublicDefaultConstructor) {
+				Log.LogCodedError ("XA4213", Properties.Resources.XA4213, peer.ManagedTypeName);
+			}
+		}
+
+		// Validate only one Application type
+		var applicationTypes = new List<string> ();
+		foreach (var peer in allPeers) {
+			if (peer.ComponentAttribute?.Kind == ComponentKind.Application && !peer.IsAbstract) {
+				applicationTypes.Add (peer.ManagedTypeName);
+			}
+		}
+
+		bool hasAssemblyLevelApplication = assemblyManifestInfo.ApplicationProperties is not null;
+		// These match the legacy ManifestDocument behavior (InvalidOperationException with same messages).
+		// No XA error code — legacy doesn't have one either.
+		if (applicationTypes.Count > 1) {
+			Log.LogError ("There can be only one type with an [Application] attribute; found: " +
+				string.Join (", ", applicationTypes));
+		} else if (applicationTypes.Count > 0 && hasAssemblyLevelApplication) {
+			Log.LogError ("Application cannot have both a type with an [Application] attribute and an [assembly:Application] attribute.");
+		}
 	}
 
 	/// <summary>

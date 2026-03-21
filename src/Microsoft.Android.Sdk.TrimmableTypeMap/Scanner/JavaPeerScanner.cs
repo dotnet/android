@@ -101,6 +101,19 @@ public sealed class JavaPeerScanner : IDisposable
 	}
 
 	/// <summary>
+	/// Scans all loaded assemblies for assembly-level manifest attributes.
+	/// Must be called after <see cref="Scan"/>.
+	/// </summary>
+	public AssemblyManifestInfo ScanAssemblyManifestInfo ()
+	{
+		var info = new AssemblyManifestInfo ();
+		foreach (var index in assemblyCache.Values) {
+			index.ScanAssemblyAttributes (info);
+		}
+		return info;
+	}
+
+	/// <summary>
 	/// Types referenced by [Application(BackupAgent = typeof(X))] or
 	/// [Application(ManageSpaceActivity = typeof(X))] must be unconditional,
 	/// because the manifest will reference them even if nothing else does.
@@ -238,6 +251,7 @@ public sealed class JavaPeerScanner : IDisposable
 				ActivationCtor = activationCtor,
 				InvokerTypeName = invokerTypeName,
 				IsGenericDefinition = isGenericDefinition,
+				ComponentAttribute = ToComponentInfo (attrInfo, typeDef, index),
 			};
 
 			results [fullName] = peer;
@@ -773,7 +787,7 @@ public sealed class JavaPeerScanner : IDisposable
 			JniSignature = registerInfo.Signature,
 			Connector = registerInfo.Connector,
 			ManagedMethodName = methodName,
-			NativeCallbackName = isConstructor ? "n_ctor" : $"n_{methodName}",
+			NativeCallbackName = GetNativeCallbackName (registerInfo.Connector, methodName, isConstructor),
 			IsConstructor = isConstructor,
 			DeclaringTypeName = result.Value.DeclaringTypeName,
 			DeclaringAssemblyName = result.Value.DeclaringAssemblyName,
@@ -818,7 +832,7 @@ public sealed class JavaPeerScanner : IDisposable
 					JniSignature = propRegister.Signature,
 					Connector = propRegister.Connector,
 					ManagedMethodName = getterName,
-					NativeCallbackName = $"n_{getterName}",
+					NativeCallbackName = GetNativeCallbackName (propRegister.Connector, getterName, false),
 					IsConstructor = false,
 					DeclaringTypeName = baseTypeName,
 					DeclaringAssemblyName = baseAssemblyName,
@@ -871,7 +885,7 @@ public sealed class JavaPeerScanner : IDisposable
 			JniSignature = jniSignature,
 			Connector = registerInfo.Connector,
 			ManagedMethodName = managedName,
-			NativeCallbackName = isConstructor ? "n_ctor" : $"n_{managedName}",
+			NativeCallbackName = GetNativeCallbackName (registerInfo.Connector, managedName, isConstructor),
 			IsConstructor = isConstructor,
 			IsExport = isExport,
 			IsInterfaceImplementation = isInterfaceImplementation,
@@ -1383,6 +1397,26 @@ public sealed class JavaPeerScanner : IDisposable
 		return (typeName, parentJniName, ns);
 	}
 
+	/// <summary>
+	/// Derives the native callback method name from a <c>[Register]</c> attribute's Connector field.
+	/// E.g. <c>"GetOnCreate_Landroid_os_Bundle_Handler"</c> → <c>"n_OnCreate_Landroid_os_Bundle_"</c>.
+	/// Falls back to <c>"n_{managedName}"</c> when the Connector doesn't follow the expected pattern.
+	/// </summary>
+	static string GetNativeCallbackName (string? connector, string managedName, bool isConstructor)
+	{
+		if (isConstructor) {
+			return "n_ctor";
+		}
+
+		if (connector is not null
+			&& connector.StartsWith ("Get", StringComparison.Ordinal)
+			&& connector.EndsWith ("Handler", StringComparison.Ordinal)) {
+			return "n_" + connector.Substring (3, connector.Length - 3 - "Handler".Length);
+		}
+
+		return $"n_{managedName}";
+	}
+
 	static string GetCrc64PackageName (string ns, string assemblyName)
 	{
 		// Only Mono.Android preserves the namespace directly
@@ -1471,5 +1505,52 @@ public sealed class JavaPeerScanner : IDisposable
 				IsStatic = isStatic,
 			});
 		}
+	}
+
+	static ComponentInfo? ToComponentInfo (TypeAttributeInfo? attrInfo, TypeDefinition typeDef, AssemblyIndex index)
+	{
+		if (attrInfo is null) {
+			return null;
+		}
+
+		var kind = attrInfo.AttributeName switch {
+			"ActivityAttribute" => ComponentKind.Activity,
+			"ServiceAttribute" => ComponentKind.Service,
+			"BroadcastReceiverAttribute" => ComponentKind.BroadcastReceiver,
+			"ContentProviderAttribute" => ComponentKind.ContentProvider,
+			"ApplicationAttribute" => ComponentKind.Application,
+			"InstrumentationAttribute" => ComponentKind.Instrumentation,
+			_ => (ComponentKind?)null,
+		};
+
+		if (kind is null) {
+			return null;
+		}
+
+		return new ComponentInfo {
+			Kind = kind.Value,
+			Properties = attrInfo.Properties,
+			IntentFilters = attrInfo.IntentFilters,
+			MetaData = attrInfo.MetaData,
+			HasPublicDefaultConstructor = HasPublicParameterlessCtor (typeDef, index),
+		};
+	}
+
+	static bool HasPublicParameterlessCtor (TypeDefinition typeDef, AssemblyIndex index)
+	{
+		foreach (var methodHandle in typeDef.GetMethods ()) {
+			var method = index.Reader.GetMethodDefinition (methodHandle);
+			if (index.Reader.GetString (method.Name) != ".ctor") {
+				continue;
+			}
+			if ((method.Attributes & MethodAttributes.MemberAccessMask) != MethodAttributes.Public) {
+				continue;
+			}
+			var sig = method.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+			if (sig.ParameterTypes.Length == 0) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
