@@ -54,14 +54,31 @@
         ResolvedAssemblies="@(_TypeMapInputAssemblies)"
         OutputDirectory="$(_TypeMapOutputDirectory)"
         JavaSourceOutputDirectory="$(_TypeMapJavaOutputDirectory)"
-        TargetFrameworkVersion="$(TargetFrameworkVersion)">
+        TargetFrameworkVersion="$(TargetFrameworkVersion)"
+        ManifestTemplate="$(_AndroidManifestAbs)"
+        MergedAndroidManifestOutput="$(_TypeMapBaseOutputDir)AndroidManifest.xml"
+        PackageName="$(_AndroidPackage)"
+        ApplicationLabel="$(_ApplicationLabel)"
+        VersionCode="$(_AndroidVersionCode)"
+        VersionName="$(_AndroidVersionName)"
+        AndroidApiLevel="$(_AndroidApiLevel)"
+        SupportedOSPlatformVersion="$(SupportedOSPlatformVersion)"
+        AndroidRuntime="$(_AndroidRuntime)"
+        Debug="$(AndroidIncludeDebugSymbols)"
+        NeedsInternet="$(AndroidNeedsInternetPermission)"
+        EmbedAssemblies="$(EmbedAssembliesIntoApk)"
+        ManifestPlaceholders="$(AndroidManifestPlaceholders)"
+        CheckedBuild="$(_AndroidCheckedBuild)"
+        ApplicationJavaClass="$(AndroidApplicationJavaClass)">
       <Output TaskParameter="GeneratedAssemblies" ItemName="_GeneratedTypeMapAssemblies" />
       <Output TaskParameter="GeneratedJavaFiles" ItemName="_GeneratedJavaFiles" />
+      <Output TaskParameter="AdditionalProviderSources" ItemName="_AdditionalProviderSources" />
     </GenerateTrimmableTypeMap>
 
     <ItemGroup>
       <FileWrites Include="@(_GeneratedTypeMapAssemblies)" />
       <FileWrites Include="@(_GeneratedJavaFiles)" />
+      <FileWrites Include="$(_TypeMapBaseOutputDir)AndroidManifest.xml" />
     </ItemGroup>
   </Target>
 
@@ -137,10 +154,11 @@
         ProjectRuntimeConfigFilePath="$(ProjectRuntimeConfigFilePath)"
     />
 
-    <!-- HACK: Copy user's AndroidManifest.xml (TODO: #10807) -->
-    <Copy SourceFiles="$(_AndroidManifestAbs)" DestinationFiles="$(IntermediateOutputPath)AndroidManifest.xml"
+    <!-- Copy generated manifest to expected location -->
+    <Copy SourceFiles="$(_TypeMapBaseOutputDir)AndroidManifest.xml"
+        DestinationFiles="$(IntermediateOutputPath)AndroidManifest.xml"
         SkipUnchangedFiles="true"
-        Condition=" '$(_AndroidManifestAbs)' != '' And Exists('$(_AndroidManifestAbs)') " />
+        Condition="Exists('$(_TypeMapBaseOutputDir)AndroidManifest.xml')" />
 
     <Touch Files="$(IntermediateOutputPath)acw-map.txt" AlwaysCreate="true" />
 
