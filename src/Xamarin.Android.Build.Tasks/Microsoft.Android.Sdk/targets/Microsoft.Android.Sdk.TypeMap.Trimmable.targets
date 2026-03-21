@@ -66,11 +66,13 @@
   </Target>
 
   <!--
-    _GenerateJavaStubs: lightweight — copies JCW files and generates stubs.
-    TypeMap generation already happened via _GenerateTrimmableTypeMap.
+    _GenerateJavaStubs: overrides the legacy target from BuildOrder.targets.
+    In the trimmable path, TypeMap generation already happened in _GenerateTrimmableTypeMap,
+    so this target only handles JCW file copying, manifest, assembly store setup, and native config.
+    We keep the name _GenerateJavaStubs because BuildOrder.targets references it.
   -->
   <Target Name="_GenerateJavaStubs"
-      DependsOnTargets="_SetLatestTargetFrameworkVersion;_CleanIntermediateIfNeeded;_PrepareAssemblies;_GetGenerateJavaStubsInputs;_PrepareNativeAssemblySources"
+      DependsOnTargets="_SetLatestTargetFrameworkVersion;_CleanIntermediateIfNeeded;_PrepareAssemblies;_GetGenerateJavaStubsInputs;_DefineBuildTargetAbis;_PrepareNativeAssemblySources"
       Inputs="@(_GenerateJavaStubsInputs)"
       Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
 
@@ -79,15 +81,61 @@
     </ItemGroup>
     <Copy SourceFiles="@(_TypeMapJavaFiles)" DestinationFolder="$(IntermediateOutputPath)android\src\%(RecursiveDir)" />
 
-    <!-- Add TRIMMED TypeMap DLLs (from ILLink output) to _ResolvedAssemblies so they're
-         counted by GenerateNativeApplicationConfigSources and included in the assembly store.
-         ILLink has already run in inner builds by the time _GenerateJavaStubs executes. -->
+    <!-- TypeMap DLLs are already in _ResolvedAssemblies (added by the glob in _GenerateTrimmableTypeMap
+         output flowing through the pipeline). They go through _RemoveRegisterAttribute → shrunk/.
+         But they lack ABI metadata needed by CreateAssemblyStore.
+         Add the metadata and ensure they're in _ShrunkUserAssemblies for the compression pipeline. -->
+    <PropertyGroup>
+      <_TypeMapFirstAbi Condition=" '$(AndroidSupportedAbis)' != '' ">$([System.String]::Copy('$(AndroidSupportedAbis)').Split(';')[0])</_TypeMapFirstAbi>
+      <_TypeMapFirstAbi Condition=" '$(_TypeMapFirstAbi)' == '' ">arm64-v8a</_TypeMapFirstAbi>
+      <_TypeMapFirstRid Condition=" '$(_TypeMapFirstAbi)' == 'arm64-v8a' ">android-arm64</_TypeMapFirstRid>
+      <_TypeMapFirstRid Condition=" '$(_TypeMapFirstAbi)' == 'armeabi-v7a' ">android-arm</_TypeMapFirstRid>
+      <_TypeMapFirstRid Condition=" '$(_TypeMapFirstAbi)' == 'x86_64' ">android-x64</_TypeMapFirstRid>
+      <_TypeMapFirstRid Condition=" '$(_TypeMapFirstAbi)' == 'x86' ">android-x86</_TypeMapFirstRid>
+    </PropertyGroup>
     <ItemGroup>
-      <_LinkedTypeMapDlls Include="$(IntermediateOutputPath)android-arm64\linked\_*.TypeMap.dll;$(IntermediateOutputPath)android-arm64\linked\_Microsoft.Android.TypeMaps.dll" />
-      <_ResolvedAssemblies Include="@(_LinkedTypeMapDlls)">
-        <DestinationSubPath>%(Filename)%(Extension)</DestinationSubPath>
+      <!-- Update existing _ResolvedAssemblies items to have ABI metadata -->
+      <_ResolvedAssemblies Update="$(_TypeMapOutputDirectory)*.dll">
+        <Abi>$(_TypeMapFirstAbi)</Abi>
+        <RuntimeIdentifier>$(_TypeMapFirstRid)</RuntimeIdentifier>
+        <DestinationSubPath>$(_TypeMapFirstAbi)/%(Filename)%(Extension)</DestinationSubPath>
+        <DestinationSubDirectory>$(_TypeMapFirstAbi)/</DestinationSubDirectory>
       </_ResolvedAssemblies>
     </ItemGroup>
+
+    <!-- Generate native application config (assembly store hash table, environment, etc.).
+         Must run AFTER TypeMap DLLs are added to _ResolvedAssemblies above. -->
+    <GenerateNativeApplicationConfigSources
+        ResolvedAssemblies="@(_ResolvedAssemblies)"
+        SatelliteAssemblies="@(_AndroidResolvedSatellitePaths)"
+        NativeLibraries="@(_AllNativeLibraries)"
+        NativeLibrariesNoJniPreload="@(_AndroidNativeLibraryNeverJniPreload);@(AndroidNativeLibraryNoJniPreload)"
+        NativeLibrariesAlwaysJniPreload="@(_AndroidNativeLibraryAlwaysJniPreload)"
+        MonoComponents="@(_MonoComponent)"
+        EnvironmentOutputDirectory="$(IntermediateOutputPath)android"
+        Environments="@(_EnvironmentFiles)"
+        AndroidAotMode="$(AndroidAotMode)"
+        AndroidAotEnableLazyLoad="$(AndroidAotEnableLazyLoad)"
+        EnableLLVM="$(EnableLLVM)"
+        HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
+        TlsProvider="$(AndroidTlsProvider)"
+        Debug="$(AndroidIncludeDebugSymbols)"
+        AndroidSequencePointsMode="$(_SequencePointsMode)"
+        EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)"
+        SupportedAbis="@(_BuildTargetAbis)"
+        AndroidPackageName="$(_AndroidPackage)"
+        EnablePreloadAssembliesDefault="$(_AndroidEnablePreloadAssembliesDefault)"
+        PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
+        BoundExceptionType="$(AndroidBoundExceptionType)"
+        RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
+        UseAssemblyStore="$(_AndroidUseAssemblyStore)"
+        EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
+        EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
+        CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
+        TargetsCLR="$(_AndroidUseCLR)"
+        AndroidRuntime="$(_AndroidRuntime)"
+        ProjectRuntimeConfigFilePath="$(ProjectRuntimeConfigFilePath)"
+    />
 
     <!-- HACK: Copy user's AndroidManifest.xml (TODO: #10807) -->
     <Copy SourceFiles="$(_AndroidManifestAbs)" DestinationFiles="$(IntermediateOutputPath)AndroidManifest.xml"
