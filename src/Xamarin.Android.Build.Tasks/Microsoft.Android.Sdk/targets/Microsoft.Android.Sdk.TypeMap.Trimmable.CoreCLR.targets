@@ -35,7 +35,7 @@
     <!-- MSBuild batches over _TypeMapAbiRid: for each ABI, glob linked TypeMap DLLs and add them to the store -->
     <ItemGroup>
       <_BuildApkResolvedUserAssemblies
-          Include="$(IntermediateOutputPath)%(_TypeMapAbiRid.Rid)\linked\_*.TypeMap.dll;$(IntermediateOutputPath)%(_TypeMapAbiRid.Rid)\linked\_Microsoft.Android.TypeMaps.dll">
+          Include="$(IntermediateOutputPath)%(_TypeMapAbiRid.Rid)\linked\_*.TypeMap.dll;$(IntermediateOutputPath)%(_TypeMapAbiRid.Rid)\linked\_Microsoft.Android.TypeMap*.dll">
         <Abi>%(_TypeMapAbiRid.Identity)</Abi>
         <RuntimeIdentifier>%(_TypeMapAbiRid.Rid)</RuntimeIdentifier>
         <DestinationSubPath>%(_TypeMapAbiRid.Identity)/%(Filename)%(Extension)</DestinationSubPath>
