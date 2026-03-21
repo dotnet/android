@@ -148,7 +148,11 @@ namespace Java.Interop {
 			if (!typeof (IJavaPeerable).IsAssignableFrom (elementType))
 				return null;
 
-			return TrimmableTypeMap.Instance?.GetContainerFactory (elementType);
+			if (RuntimeFeature.TrimmableTypeMap) {
+				return TrimmableTypeMap.Instance?.GetContainerFactory (elementType);
+			}
+
+			return null;
 		}
 
 		static Func<IntPtr, JniHandleOwnership, object> GetJniHandleConverterForType ([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)] Type t)
