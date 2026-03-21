@@ -184,6 +184,7 @@ public class ManifestGeneratorTests : IDisposable
 		Assert.Equal ("@xml/config", (string?)meta2?.Attribute (AndroidNs + "resource"));
 	}
 
+	[Theory]
 	[InlineData (ComponentKind.Service, "service")]
 	[InlineData (ComponentKind.BroadcastReceiver, "receiver")]
 	public void Component_BasicProperties (ComponentKind kind, string elementName)
@@ -318,6 +319,7 @@ public class ManifestGeneratorTests : IDisposable
 		Assert.Equal ("@mipmap/ic_launcher", (string?)app?.Attribute (AndroidNs + "icon"));
 	}
 
+	[Theory]
 	[InlineData ("", "", "1", "1.0")]
 	[InlineData ("42", "2.5", "42", "2.5")]
 	public void VersionDefaults (string versionCode, string versionName, string expectedCode, string expectedName)
@@ -346,6 +348,7 @@ public class ManifestGeneratorTests : IDisposable
 		Assert.Equal ("34", (string?)usesSdk?.Attribute (AndroidNs + "targetSdkVersion"));
 	}
 
+	[Theory]
 	[InlineData (true, false, false, "debuggable", "true")]
 	[InlineData (false, true, false, "debuggable", "true")]
 	[InlineData (false, false, true, "extractNativeLibs", "true")]
