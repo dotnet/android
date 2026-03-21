@@ -45,4 +45,11 @@ extern "C" {
 	 */
 	JNIEXPORT void JNICALL Java_mono_android_Runtime_register (JNIEnv *, jclass, jstring, jclass, jstring);
 
+	/*
+	 * Class:     mono_android_Runtime
+	 * Method:    registerNatives
+	 * Signature: (Ljava/lang/Class;)V
+	 */
+	JNIEXPORT void JNICALL Java_mono_android_Runtime_registerNatives (JNIEnv *, jclass, jclass);
+
 }
