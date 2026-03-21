@@ -82,7 +82,10 @@ namespace Android.Runtime
 			JniType.GetCachedJniType (ref jniType, className);
 
 			ReadOnlySpan<char> methods = new ReadOnlySpan<char> ((void*) methods_ptr, methods_len);
-			androidRuntime!.TypeManager.RegisterNativeMembers (jniType, type, methods);
+			if (androidRuntime is null) {
+				throw new InvalidOperationException ("androidRuntime has not been initialized");
+			}
+			androidRuntime.TypeManager.RegisterNativeMembers (jniType, type, methods);
 		}
 
 		// This must be called by NativeAOT before InitializeJniRuntime, as early as possible
@@ -159,8 +162,8 @@ namespace Android.Runtime
 					args->jniAddNativeMethodRegistrationAttributePresent != 0
 			);
 
-			if (RuntimeFeature.TrimmableTypeMap) {
-				trimmableTypeMap!.RegisterBootstrapNativeMethod ();
+			if (RuntimeFeature.TrimmableTypeMap && trimmableTypeMap is not null) {
+				trimmableTypeMap.RegisterBootstrapNativeMethod ();
 			}
 
 			grefIGCUserPeer_class = args->grefIGCUserPeer;
