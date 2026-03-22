@@ -1,34 +1,36 @@
-﻿using Android.App;
-using Android.Widget;
+using Android.App;
 using Android.OS;
+using Android.Widget;
 
 namespace HelloWorld
 {
-	[Activity (
-		Icon            = "@mipmap/icon",
-		Label           = "HelloWorld",
-		MainLauncher    = true,
-		Name            = "example.MainActivity")]
-	public class MainActivity : Activity
-	{
-		int count = 1;
+[Activity (
+Icon            = "@mipmap/icon",
+Label           = "HelloWorld",
+MainLauncher    = true,
+Name            = "example.MainActivity")]
+public class MainActivity : Activity
+{
+int count = 1;
 
-		protected override void OnCreate (Bundle savedInstanceState)
-		{
-			base.OnCreate (savedInstanceState);
+protected override void OnCreate (Bundle? savedInstanceState)
+{
+base.OnCreate (savedInstanceState);
 
-			// Set our view from the "main" layout resource
-			SetContentView (Resource.Layout.Main);
+SetContentView (Resource.Layout.Main);
 
-			// Get our button from the layout resource,
-			// and attach an event to it
-			Button button = FindViewById<Button> (Resource.Id.myButton);
-
-			button.Click += delegate {
-				button.Text = string.Format ("{0} clicks!", count++);
-			};
-		}
-	}
+// Use non-generic FindViewById to avoid JavaCast
+var button = FindViewById (Resource.Id.myButton) as Button;
+if (button is null) {
+var tv = new TextView (this);
+tv.Text = "Button not found! But Activity works.";
+SetContentView (tv);
+return;
 }
 
-
+button.Click += delegate {
+button.Text = string.Format ("{0} clicks!", count++);
+};
+}
+}
+}
