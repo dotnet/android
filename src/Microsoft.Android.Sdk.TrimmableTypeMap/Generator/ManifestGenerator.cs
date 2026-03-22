@@ -13,7 +13,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// This is the trimmable-path equivalent of ManifestDocument — it works from ComponentInfo
 /// records instead of Cecil TypeDefinitions.
 /// </summary>
-class ManifestGenerator
+public class ManifestGenerator
 {
 	static readonly XNamespace AndroidNs = ManifestConstants.AndroidNs;
 	static readonly XName AttName = ManifestConstants.AttName;
