@@ -11,13 +11,17 @@ MainLauncher    = true,
 Name            = "example.MainActivity")]
 public class MainActivity : Activity
 {
+int count = 1;
+
 protected override void OnCreate (Bundle? savedInstanceState)
 {
 base.OnCreate (savedInstanceState);
 SetContentView (Resource.Layout.Main);
 
 Button button = FindViewById<Button> (Resource.Id.myButton);
-button.Text = "Hello from Trimmable TypeMap!";
+button.Click += delegate {
+button.Text = string.Format ("{0} clicks!", count++);
+};
 }
 }
 }

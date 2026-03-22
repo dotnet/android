@@ -140,10 +140,15 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 		GeneratedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, assemblyPaths);
 
-		// Filter JCW generation to user assemblies only
-		var userPeers = allPeers.Where (p => !frameworkAssemblyNames.Contains (p.AssemblyName)).ToList ();
-		Log.LogDebugMessage ($"Generating JCW files for {userPeers.Count} user types (filtered from {allPeers.Count} total).");
-		GeneratedJavaFiles = GenerateJcwJavaSources (userPeers);
+		// Generate JCW .java files for user assemblies + framework Implementor types.
+		// Framework binding types (Activity, View, etc.) already have JCWs in the SDK.
+		// But Implementor types (View_OnClickListenerImplementor, etc.) are generated
+		// per-app at build time — they must be included.
+		var jcwPeers = allPeers.Where (p =>
+			!frameworkAssemblyNames.Contains (p.AssemblyName)
+			|| p.JavaName.StartsWith ("mono/", StringComparison.Ordinal)).ToList ();
+		Log.LogDebugMessage ($"Generating JCW files for {jcwPeers.Count} types (filtered from {allPeers.Count} total).");
+		GeneratedJavaFiles = GenerateJcwJavaSources (jcwPeers);
 
 		// Generate manifest if output path is configured
 		if (!MergedAndroidManifestOutput.IsNullOrEmpty () && !PackageName.IsNullOrEmpty ()) {
