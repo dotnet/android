@@ -41,6 +41,16 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 
 		if (TrimmableTypeMap.TryGetJniNameForType (type, out var jniName)) {
 			yield return jniName;
+			yield break;
+		}
+
+		// Walk the base type chain for managed-only subclasses (e.g., JavaProxyThrowable
+		// extends Java.Lang.Error but has no [Register] attribute itself).
+		for (var baseType = type.BaseType; baseType is not null; baseType = baseType.BaseType) {
+			if (TrimmableTypeMap.TryGetJniNameForType (baseType, out var baseJniName)) {
+				yield return baseJniName;
+				yield break;
+			}
 		}
 	}
 
