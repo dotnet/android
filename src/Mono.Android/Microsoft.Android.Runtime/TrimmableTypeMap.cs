@@ -72,7 +72,7 @@ class TrimmableTypeMap
 	/// [JniTypeSignature] attributes) and looking it up in the TypeMap dictionary.
 	/// Results are cached per type.
 	/// </summary>
-	JavaPeerProxy? GetProxyForManagedType (Type managedType)
+	internal JavaPeerProxy? GetProxyForManagedType (Type managedType)
 	{
 		return _proxyCache.GetOrAdd (managedType, static (type, self) => {
 			// First check if the type itself IS a proxy (has self-applied attribute)

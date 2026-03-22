@@ -505,6 +505,27 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 
 	static  readonly    Type[]  XAConstructorSignature  = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
 
+	public override IJavaPeerable? CreatePeer (
+			ref JniObjectReference reference,
+			JniObjectReferenceOptions transfer,
+			[DynamicallyAccessedMembers (Constructors)]
+			Type? targetType)
+	{
+		if (RuntimeFeature.TrimmableTypeMap && _typeMap is not null && targetType is not null) {
+			var proxy = _typeMap.GetProxyForManagedType (targetType);
+			if (proxy is not null) {
+				var peer = proxy.CreateInstance (reference.Handle, JniHandleOwnership.DoNotTransfer);
+				if (peer is not null) {
+					peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable);
+					JniObjectReference.Dispose (ref reference, transfer);
+					return peer;
+				}
+			}
+		}
+
+		return base.CreatePeer (ref reference, transfer, targetType);
+	}
+
 	protected override bool TryConstructPeer (
 			IJavaPeerable self,
 			ref JniObjectReference reference,
@@ -512,17 +533,6 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 			[DynamicallyAccessedMembers (Constructors)]
 			Type type)
 	{
-		if (RuntimeFeature.TrimmableTypeMap) {
-			Debug.Assert (_typeMap != null, "TrimmableTypeMap should not be null when RuntimeFeature.TrimmableTypeMap is true.");
-
-			if (_typeMap.TryCreatePeer (type, reference.Handle, JniHandleOwnership.DoNotTransfer)) {
-				JniObjectReference.Dispose (ref reference, options);
-				return true;
-			}
-		
-			return base.TryConstructPeer (self, ref reference, options, type);
-		}
-
 		var c = type.GetConstructor (ActivationConstructorBindingFlags, null, XAConstructorSignature, null);
 		if (c != null) {
 			var args = new object[] {
