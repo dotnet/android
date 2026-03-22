@@ -29,6 +29,9 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	[Required]
 	public string JavaSourceOutputDirectory { get; set; } = "";
 
+	[Required]
+	public string AcwMapDirectory { get; set; } = "";
+
 	/// <summary>
 	/// The .NET target framework version (e.g., "v11.0"). Used to set the System.Runtime
 	/// assembly reference version in generated typemap assemblies.
@@ -127,6 +130,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 		Directory.CreateDirectory (OutputDirectory);
 		Directory.CreateDirectory (JavaSourceOutputDirectory);
+		Directory.CreateDirectory (AcwMapDirectory);
 
 		var (allPeers, assemblyManifestInfo) = ScanAssemblies (assemblyPaths);
 		if (allPeers.Count == 0) {
@@ -265,7 +269,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 		bool forceDebuggable = !CheckedBuild.IsNullOrEmpty ();
 
-		var generator = new TrimmableManifestGenerator {
+		var generator = new ManifestGenerator {
 			PackageName = PackageName,
 			ApplicationLabel = ApplicationLabel ?? PackageName,
 			VersionCode = VersionCode ?? "",
@@ -282,7 +286,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			ApplicationJavaClass = ApplicationJavaClass,
 		};
 
-		var providerNames = generator.Generate (Log, ManifestTemplate, allPeers, assemblyManifestInfo, MergedAndroidManifestOutput);
+		var providerNames = generator.Generate (ManifestTemplate, allPeers, assemblyManifestInfo, MergedAndroidManifestOutput);
 		AdditionalProviderSources = providerNames.ToArray ();
 	}
 
