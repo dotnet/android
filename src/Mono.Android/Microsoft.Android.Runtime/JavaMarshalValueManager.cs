@@ -511,14 +511,16 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 			[DynamicallyAccessedMembers (Constructors)]
 			Type? targetType)
 	{
-		if (RuntimeFeature.TrimmableTypeMap && _typeMap is not null && targetType is not null) {
-			var proxy = _typeMap.GetProxyForManagedType (targetType);
-			if (proxy is not null) {
-				var peer = proxy.CreateInstance (reference.Handle, JniHandleOwnership.DoNotTransfer);
-				if (peer is not null) {
-					peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable);
-					JniObjectReference.Dispose (ref reference, transfer);
-					return peer;
+		if (RuntimeFeature.TrimmableTypeMap) {
+			if (_typeMap is not null && targetType is not null) {
+				var proxy = _typeMap.GetProxyForManagedType (targetType);
+				if (proxy is not null) {
+					var peer = proxy.CreateInstance (reference.Handle, JniHandleOwnership.DoNotTransfer);
+					if (peer is not null) {
+						peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable);
+						JniObjectReference.Dispose (ref reference, transfer);
+						return peer;
+					}
 				}
 			}
 		}
