@@ -40,8 +40,10 @@
     Output goes to shared BaseIntermediateOutputPath so it's generated once.
   -->
   <Target Name="_GenerateTrimmableTypeMap"
-      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '@(ReferencePath)' != '' and !Exists('$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll') "
-      AfterTargets="CoreCompile">
+      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '@(ReferencePath)' != '' "
+      AfterTargets="CoreCompile"
+      Inputs="@(ReferencePath);$(IntermediateOutputPath)$(TargetFileName)"
+      Outputs="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll">
 
     <ItemGroup>
       <_TypeMapInputAssemblies Include="@(ReferencePath)" />
@@ -128,7 +130,9 @@
         SkipUnchangedFiles="true"
         Condition="Exists('$(_TypeMapBaseOutputDir)AndroidManifest.xml')" />
 
-    <Touch Files="$(IntermediateOutputPath)acw-map.txt" AlwaysCreate="true" />
+    <Touch Files="$(IntermediateOutputPath)acw-map.txt"
+        AlwaysCreate="true"
+        Condition=" !Exists('$(IntermediateOutputPath)acw-map.txt') " />
 
     <MakeDir Directories="$(IntermediateOutputPath)android\src\net\dot\android" />
     <WriteLinesToFile

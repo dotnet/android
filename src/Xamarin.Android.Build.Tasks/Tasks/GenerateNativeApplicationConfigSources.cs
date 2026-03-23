@@ -334,7 +334,11 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (android_runtime_jnienv_class_token == -1 || jnienv_initialize_method_token == -1 || jnienv_registerjninatives_method_token == -1) {
-				// In the trimmable typemap path, some JNIEnvInit methods may be trimmed.
+				if (!TargetsCLR) {
+					throw new InvalidOperationException ($"Required JNIEnvInit tokens not found in '{assemblyFilePath}' (class={android_runtime_jnienv_class_token}, init={jnienv_initialize_method_token}, register={jnienv_registerjninatives_method_token}).");
+				}
+
+				// In the trimmable typemap path (CoreCLR), some JNIEnvInit methods may be trimmed.
 				// Use token 0 for missing tokens — native code will skip them.
 				if (jnienv_registerjninatives_method_token == -1) {
 					jnienv_registerjninatives_method_token = 0;
