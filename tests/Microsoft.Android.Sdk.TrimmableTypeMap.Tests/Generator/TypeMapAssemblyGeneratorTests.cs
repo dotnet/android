@@ -82,6 +82,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 		Assert.Contains (".ctor", methods);
 		Assert.Contains ("CreateInstance", methods);
+		Assert.Contains ("get_TargetType", methods);
 	}
 
 	[Fact]

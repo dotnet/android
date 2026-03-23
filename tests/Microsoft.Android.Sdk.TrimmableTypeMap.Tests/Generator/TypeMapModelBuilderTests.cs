@@ -561,6 +561,7 @@ public class ModelBuilderTests : FixtureTestBase
 
 				Assert.Contains (".ctor", methodNames);
 				Assert.Contains ("CreateInstance", methodNames);
+				Assert.Contains ("get_TargetType", methodNames);
 			});
 		}
 

@@ -20,7 +20,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// [assembly: TypeMapAssociation(typeof(MyTextView), typeof(Android_Widget_TextView_Proxy))]                              // alias
 ///
 /// // One proxy type per Java peer that needs activation or UCO wrappers:
-/// public sealed class Activity_Proxy : JavaPeerProxy<Activity>, IAndroidCallableWrapper   // IAndroidCallableWrapper for ACWs only
+/// public sealed class Activity_Proxy : JavaPeerProxy, IAndroidCallableWrapper   // IAndroidCallableWrapper for ACWs only
 /// {
 ///     public Activity_Proxy() : base() { }
 ///
@@ -33,7 +33,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 ///         // or: null;                                                // no activation
 ///         // or: throw new NotSupportedException(...);                // open generic
 ///
-///     // TargetType and GetContainerFactory() are inherited from JavaPeerProxy<Activity>
+///     public override Type TargetType =&gt; typeof(Activity);
 ///     public Type InvokerType =&gt; typeof(IOnClickListenerInvoker);    // interfaces only
 ///
 ///     // UCO wrappers — [UnmanagedCallersOnly] entry points for JNI native methods (ACWs only):
@@ -43,13 +43,13 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 ///
 ///     [UnmanagedCallersOnly]
 ///     public static void nctor_0_uco(IntPtr jnienv, IntPtr self)
-///         =&gt; TrimmableTypeMap.ActivateInstance(self, typeof(Activity));
+///         =&gt; TrimmableNativeRegistration.ActivateInstance(self, typeof(Activity));
 ///
 ///     // Registers JNI native methods (ACWs only):
 ///     public void RegisterNatives(JniType jniType)
 ///     {
-///         TrimmableTypeMap.RegisterMethod(jniType, "n_OnCreate", "(Landroid/os/Bundle;)V", &amp;n_OnCreate_uco_0);
-///         TrimmableTypeMap.RegisterMethod(jniType, "nctor_0", "()V", &amp;nctor_0_uco);
+///         TrimmableNativeRegistration.RegisterMethod(jniType, "n_OnCreate", "(Landroid/os/Bundle;)V", &amp;n_OnCreate_uco_0);
+///         TrimmableNativeRegistration.RegisterMethod(jniType, "nctor_0", "()V", &amp;nctor_0_uco);
 ///     }
 /// }
 ///
@@ -75,10 +75,11 @@ sealed class TypeMapAssemblyEmitter
 	TypeReferenceHandle _systemTypeRef;
 	TypeReferenceHandle _runtimeTypeHandleRef;
 	TypeReferenceHandle _jniTypeRef;
-	TypeReferenceHandle _trimmableTypeMapRef;
+	TypeReferenceHandle _trimmableNativeRegistrationRef;
 	TypeReferenceHandle _notSupportedExceptionRef;
 	TypeReferenceHandle _runtimeHelpersRef;
 
+	MemberReferenceHandle _baseCtorRef;
 	MemberReferenceHandle _getTypeFromHandleRef;
 	MemberReferenceHandle _getUninitializedObjectRef;
 	MemberReferenceHandle _notSupportedExceptionCtorRef;
@@ -187,8 +188,8 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("RuntimeTypeHandle"));
 		_jniTypeRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniType"));
-		_trimmableTypeMapRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
-			metadata.GetOrAddString ("Microsoft.Android.Runtime"), metadata.GetOrAddString ("TrimmableTypeMap"));
+		_trimmableNativeRegistrationRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("TrimmableNativeRegistration"));
 		_notSupportedExceptionRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("NotSupportedException"));
 		_runtimeHelpersRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
@@ -197,6 +198,9 @@ sealed class TypeMapAssemblyEmitter
 
 	void EmitMemberReferences ()
 	{
+		_baseCtorRef = _pe.AddMemberRef (_javaPeerProxyRef, ".ctor",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }));
+
 		_getTypeFromHandleRef = _pe.AddMemberRef (_systemTypeRef, "GetTypeFromHandle",
 			sig => sig.MethodSignature ().Parameters (1,
 				rt => rt.Type ().Type (_systemTypeRef, false),
@@ -228,7 +232,7 @@ sealed class TypeMapAssemblyEmitter
 					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
 				}));
 
-		_activateInstanceRef = _pe.AddMemberRef (_trimmableTypeMapRef, "ActivateInstance",
+		_activateInstanceRef = _pe.AddMemberRef (_trimmableNativeRegistrationRef, "ActivateInstance",
 			sig => sig.MethodSignature ().Parameters (2,
 				rt => rt.Void (),
 				p => {
@@ -236,7 +240,7 @@ sealed class TypeMapAssemblyEmitter
 					p.AddParameter ().Type ().Type (_systemTypeRef, false);
 				}));
 
-		_registerMethodRef = _pe.AddMemberRef (_trimmableTypeMapRef, "RegisterMethod",
+		_registerMethodRef = _pe.AddMemberRef (_trimmableNativeRegistrationRef, "RegisterMethod",
 			sig => sig.MethodSignature ().Parameters (4,
 				rt => rt.Void (),
 				p => {
@@ -311,16 +315,11 @@ sealed class TypeMapAssemblyEmitter
 	void EmitProxyType (JavaPeerProxyData proxy, Dictionary<string, MethodDefinitionHandle> wrapperHandles)
 	{
 		var metadata = _pe.Metadata;
-
-		// Create JavaPeerProxy<TargetType> as the base class
-		var targetTypeRef = _pe.ResolveTypeRef (proxy.TargetType);
-		var genericBaseSpec = _pe.MakeGenericTypeSpec (_javaPeerProxyRef, targetTypeRef);
-
 		var typeDefHandle = metadata.AddTypeDefinition (
 			TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Class,
 			metadata.GetOrAddString (proxy.Namespace),
 			metadata.GetOrAddString (proxy.TypeName),
-			genericBaseSpec,
+			_javaPeerProxyRef,
 			MetadataTokens.FieldDefinitionHandle (metadata.GetRowCount (TableIndex.Field) + 1),
 			MetadataTokens.MethodDefinitionHandle (metadata.GetRowCount (TableIndex.MethodDef) + 1));
 
@@ -328,24 +327,24 @@ sealed class TypeMapAssemblyEmitter
 			metadata.AddInterfaceImplementation (typeDefHandle, _iAndroidCallableWrapperRef);
 		}
 
-		// .ctor — call JavaPeerProxy<T>..ctor()
-		var genericBaseCtorRef = _pe.AddMemberRef (genericBaseSpec, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }));
+		// .ctor
 		_pe.EmitBody (".ctor",
 			MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }),
 			encoder => {
 				encoder.OpCode (ILOpCode.Ldarg_0);
-				encoder.Call (genericBaseCtorRef);
+				encoder.Call (_baseCtorRef);
 				encoder.OpCode (ILOpCode.Ret);
 			});
 
 		// CreateInstance
 		EmitCreateInstance (proxy);
 
-		// get_TargetType and GetContainerFactory() are inherited from JavaPeerProxy<T>
+		// get_TargetType
+		EmitTypeGetter ("get_TargetType", proxy.TargetType,
+			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.SpecialName | MethodAttributes.HideBySig);
 
-		// get_InvokerType — only for interfaces/abstract types
+		// get_InvokerType
 		if (proxy.InvokerType != null) {
 			EmitTypeGetter ("get_InvokerType", proxy.InvokerType,
 				MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig);
