@@ -141,9 +141,11 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		GeneratedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, assemblyPaths);
 
 		// Generate JCW .java files for user assemblies + framework Implementor types.
-		// Framework binding types (Activity, View, etc.) already have JCWs in the SDK.
-		// But Implementor types (View_OnClickListenerImplementor, etc.) are generated
-		// per-app at build time — they must be included.
+		// Framework binding types already have compiled JCWs in the SDK but their constructors
+		// use the legacy TypeManager.Activate() JNI native which isn't available in the
+		// trimmable runtime. Implementor types (View_OnClickListenerImplementor, etc.) are
+		// in the mono.* Java package so we use the mono/ prefix to identify them.
+		// We generate fresh JCWs that use Runtime.registerNatives() for activation.
 		var jcwPeers = allPeers.Where (p =>
 			!frameworkAssemblyNames.Contains (p.AssemblyName)
 			|| p.JavaName.StartsWith ("mono/", StringComparison.Ordinal)).ToList ();
