@@ -44,7 +44,8 @@
     <None Remove="Tests\**" />
     <Compile Include="..\..\bin\Build$(Configuration)\XABuildConfig.cs" />
 
-    <!-- Include only the linker sources required for LinkAssembliesNoShrink - AddKeepAlivesStep, FixAbstractMethodsStep, FixLegacyResourceDesignerStep -->
+    <!-- Include only the linker sources required for the build tasks (LinkAssembliesNoShrink and PostTrimmingPipeline) -->
+    <!-- These include: AddKeepAlivesStep, AddKeepAlivesHelper, StripEmbeddedLibrariesStep, PostTrimmingAddKeepAlivesStep, FixAbstractMethodsStep, FixLegacyResourceDesignerStep -->
     <Compile Remove="Linker\**" />
     <Compile Include="Linker\MonoDroid.Tuner\FindTypeMapObjectsStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\FindJavaObjectsStep.cs" />
@@ -53,6 +54,7 @@
     <Compile Include="Linker\MonoDroid.Tuner\StripEmbeddedLibrariesStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\PostTrimmingAddKeepAlivesStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\RemoveResourceDesignerStep.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\AndroidLinkConfiguration.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\Extensions.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\FixAbstractMethodsStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\FixLegacyResourceDesignerStep.cs" />
@@ -231,6 +233,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Xamarin.Android.Tools.Aidl\Xamarin.Android.Tools.Aidl.csproj" />
+    <ProjectReference Include="..\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Diagnostics\Java.Interop.Tools.Diagnostics.csproj" />
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj" />
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers.csproj" />

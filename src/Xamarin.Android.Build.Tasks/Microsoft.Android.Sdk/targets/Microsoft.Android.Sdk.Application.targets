@@ -26,6 +26,7 @@ This file contains targets specific for Android application projects.
     <_AndroidComputeRunArgumentsDependsOn Condition=" '$(_AndroidComputeRunArgumentsDependsOn)' == '' ">
       _ResolveMonoAndroidSdks;
       _GetAndroidPackageName;
+      _AndroidAdbToolPath;
     </_AndroidComputeRunArgumentsDependsOn>
   </PropertyGroup>
 
@@ -86,6 +87,15 @@ This file contains targets specific for Android application projects.
     </BootAndroidEmulator>
   </Target>
 
+  <Target Name="_AndroidAdbToolPath">
+    <PropertyGroup>
+      <_AdbToolPath>$(AdbToolExe)</_AdbToolPath>
+      <_AdbToolPath Condition=" '$(_AdbToolPath)' == '' and $([MSBuild]::IsOSPlatform('windows')) ">adb.exe</_AdbToolPath>
+      <_AdbToolPath Condition=" '$(_AdbToolPath)' == '' and !$([MSBuild]::IsOSPlatform('windows')) ">adb</_AdbToolPath>
+      <_AdbToolPath>$([System.IO.Path]::Combine ('$(AdbToolPath)', '$(_AdbToolPath)'))</_AdbToolPath>
+    </PropertyGroup>
+  </Target>
+
   <Target Name="_AndroidComputeRunArguments"
       BeforeTargets="ComputeRunArguments"
       DependsOnTargets="$(_AndroidComputeRunArgumentsDependsOn)">
@@ -95,10 +105,6 @@ This file contains targets specific for Android application projects.
       <Output TaskParameter="ActivityName" PropertyName="AndroidLaunchActivity" />
     </GetAndroidActivityName>
     <PropertyGroup>
-      <_AdbToolPath>$(AdbToolExe)</_AdbToolPath>
-      <_AdbToolPath Condition=" '$(_AdbToolPath)' == '' and $([MSBuild]::IsOSPlatform('windows')) ">adb.exe</_AdbToolPath>
-      <_AdbToolPath Condition=" '$(_AdbToolPath)' == '' and !$([MSBuild]::IsOSPlatform('windows')) ">adb</_AdbToolPath>
-      <_AdbToolPath>$([System.IO.Path]::Combine ('$(AdbToolPath)', '$(_AdbToolPath)'))</_AdbToolPath>
       <RunWorkingDirectory>$(MSBuildProjectDirectory)</RunWorkingDirectory>
     </PropertyGroup>
     <!-- By default, use `Microsoft.Android.Run` tool to stream logcat and handle Ctrl+C -->

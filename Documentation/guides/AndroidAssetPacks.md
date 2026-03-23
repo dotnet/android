@@ -125,9 +125,12 @@ away during the Release build.
 In order to test your asset packs in the `Debug` configuration, you will need to
 make some changes to your `.csproj`. Firstly we need to change the
 `$(AndroidPackageFormat)` to `aab`. It will be `aab` by default for `Release` builds,
-but will default to `apk` for `Debug` builds. Setting the `AndroidPackageFormat` to `aab`
-will disable fast deployment, so it is advised that you only do this when you need to test
-your `AssetPacks`.
+but will default to `apk` for `Debug` builds.
+
+> [!NOTE]
+> Fast deployment is supported with `.aab` files. However, using `.aab` with fast deployment
+> will be slower than using `.apk` because the `.aab` file must be processed through `bundletool`
+> for packaging and installation.
 
 To test your asset packs add the following to the first `<PropertyGroup/>` in your `.csproj`. 
 

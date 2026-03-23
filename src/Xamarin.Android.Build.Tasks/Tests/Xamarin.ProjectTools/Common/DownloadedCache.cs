@@ -80,6 +80,11 @@ namespace Xamarin.ProjectTools
 				return true;
 			}
 
+			// Check for SSL/TLS errors (e.g., "Received an unexpected EOF or 0 bytes from the transport stream")
+			if (ex.InnerException is IOException) {
+				return true;
+			}
+
 			return false;
 		}
 	}

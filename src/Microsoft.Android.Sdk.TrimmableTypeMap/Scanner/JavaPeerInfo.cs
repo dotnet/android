@@ -8,7 +8,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// Contains all data needed by downstream generators (TypeMap IL, UCO wrappers, JCW Java sources).
 /// Generators consume this data model — they never touch PEReader/MetadataReader.
 /// </summary>
-sealed record JavaPeerInfo
+public sealed record JavaPeerInfo
 {
 	/// <summary>
 	/// JNI type name, e.g., "android/app/Activity".
@@ -73,6 +73,14 @@ sealed record JavaPeerInfo
 	public bool IsUnconditional { get; init; }
 
 	/// <summary>
+	/// True for Application and Instrumentation types. These types cannot call
+	/// <c>registerNatives</c> in their static initializer because the native library
+	/// (<c>libmonodroid.so</c>) is not loaded until after the Application class is instantiated.
+	/// Registration is deferred to <c>ApplicationRegistration.registerApplications()</c>.
+	/// </summary>
+	public bool CannotRegisterInStaticConstructor { get; init; }
+
+	/// <summary>
 	/// Marshal methods: methods with [Register(name, sig, connector)], [Export], or
 	/// constructor registrations ([Register(".ctor", sig, "")] / [JniConstructorSignature]).
 	/// Constructors are identified by <see cref="MarshalMethodInfo.IsConstructor"/>.
@@ -85,6 +93,12 @@ sealed record JavaPeerInfo
 	/// Each has a JNI signature and an ordinal index for the nctor_N native method.
 	/// </summary>
 	public IReadOnlyList<JavaConstructorInfo> JavaConstructors { get; init; } = [];
+
+	/// <summary>
+	/// Java fields from [ExportField] attributes.
+	/// Each field is initialized by calling the annotated method.
+	/// </summary>
+	public IReadOnlyList<JavaFieldInfo> JavaFields { get; init; } = [];
 
 	/// <summary>
 	/// Information about the activation constructor for this type.
@@ -110,7 +124,7 @@ sealed record JavaPeerInfo
 /// Contains all data needed to generate a UCO wrapper, a JCW native declaration,
 /// and a RegisterNatives call.
 /// </summary>
-sealed record MarshalMethodInfo
+public sealed record MarshalMethodInfo
 {
 	/// <summary>
 	/// JNI method name, e.g., "onCreate".
@@ -160,6 +174,19 @@ sealed record MarshalMethodInfo
 	public bool IsConstructor { get; init; }
 
 	/// <summary>
+	/// True if this method comes from an [Export] attribute (rather than [Register]).
+	/// [Export] methods use the C# method's access modifier in the JCW Java file
+	/// instead of always being "public".
+	/// </summary>
+	public bool IsExport { get; init; }
+
+	/// <summary>
+	/// Java access modifier for [Export] methods ("public", "protected", "private").
+	/// Null for [Register] methods (always "public").
+	/// </summary>
+	public string? JavaAccess { get; init; }
+
+	/// <summary>
 	/// For [Export] methods: Java exception types that the method declares it can throw.
 	/// Null for [Register] methods.
 	/// </summary>
@@ -170,12 +197,18 @@ sealed record MarshalMethodInfo
 	/// Null for [Register] methods.
 	/// </summary>
 	public string? SuperArgumentsString { get; init; }
+
+	/// <summary>
+	/// True if this method was collected from an implemented interface
+	/// (Pass 4: CollectInterfaceMethodImplementations), not from the type itself.
+	/// </summary>
+	public bool IsInterfaceImplementation { get; init; }
 }
 
 /// <summary>
 /// Describes a JNI parameter for UCO method generation.
 /// </summary>
-sealed record JniParameterInfo
+public sealed record JniParameterInfo
 {
 	/// <summary>
 	/// JNI type descriptor, e.g., "Landroid/os/Bundle;", "I", "Z".
@@ -191,7 +224,7 @@ sealed record JniParameterInfo
 /// <summary>
 /// Describes a Java constructor to emit in the JCW .java source file.
 /// </summary>
-sealed record JavaConstructorInfo
+public sealed record JavaConstructorInfo
 {
 	/// <summary>
 	/// JNI constructor signature, e.g., "(Landroid/content/Context;)V".
@@ -211,9 +244,41 @@ sealed record JavaConstructorInfo
 }
 
 /// <summary>
+/// Describes a Java field from an [ExportField] attribute.
+/// The field is initialized by calling the annotated method.
+/// </summary>
+public sealed record JavaFieldInfo
+{
+	/// <summary>
+	/// Java field name, e.g., "STATIC_INSTANCE".
+	/// </summary>
+	public required string FieldName { get; init; }
+
+	/// <summary>
+	/// Java type name for the field, e.g., "java.lang.String".
+	/// </summary>
+	public required string JavaTypeName { get; init; }
+
+	/// <summary>
+	/// Name of the method that initializes this field, e.g., "GetInstance".
+	/// </summary>
+	public required string InitializerMethodName { get; init; }
+
+	/// <summary>
+	/// Java access modifier ("public", "protected", "private").
+	/// </summary>
+	public required string Visibility { get; init; }
+
+	/// <summary>
+	/// Whether the field is static.
+	/// </summary>
+	public bool IsStatic { get; init; }
+}
+
+/// <summary>
 /// Describes how to call the activation constructor for a Java peer type.
 /// </summary>
-sealed record ActivationCtorInfo
+public sealed record ActivationCtorInfo
 {
 	/// <summary>
 	/// The type that declares the activation constructor.
@@ -232,7 +297,7 @@ sealed record ActivationCtorInfo
 	public required ActivationCtorStyle Style { get; init; }
 }
 
-enum ActivationCtorStyle
+public enum ActivationCtorStyle
 {
 	/// <summary>
 	/// Xamarin.Android style: (IntPtr handle, JniHandleOwnership transfer)

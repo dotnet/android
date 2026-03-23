@@ -119,4 +119,25 @@ public partial class JavaPeerScannerTests
 	{
 		Assert.Equal (managedName, FindFixtureByJavaName (javaName).ManagedTypeName);
 	}
+
+	[Fact]
+	public void Scan_ApplicationType_HasCannotRegisterInStaticConstructor ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/MyApplication");
+		Assert.True (peer.CannotRegisterInStaticConstructor);
+	}
+
+	[Fact]
+	public void Scan_InstrumentationType_HasCannotRegisterInStaticConstructor ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/MyInstrumentation");
+		Assert.True (peer.CannotRegisterInStaticConstructor);
+	}
+
+	[Fact]
+	public void Scan_ActivityType_DoesNotHaveCannotRegisterInStaticConstructor ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/MainActivity");
+		Assert.False (peer.CannotRegisterInStaticConstructor);
+	}
 }
