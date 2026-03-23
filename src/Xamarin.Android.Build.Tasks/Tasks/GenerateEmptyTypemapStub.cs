@@ -10,8 +10,8 @@ using Microsoft.Build.Utilities;
 namespace Xamarin.Android.Tasks;
 
 /// <summary>
-/// Generates empty native typemap stub C files for the trimmable typemap path.
-/// These provide the type_map and related symbols that libmonodroid.so expects.
+/// Generates empty native typemap LLVM IR stub files (typemap.{abi}.ll) for the trimmable typemap path.
+/// These are compiled by the native toolchain to provide the type_map and related symbols that libmonodroid.so expects.
 /// </summary>
 public class GenerateEmptyTypemapStub : AndroidTask
 {
@@ -36,7 +36,7 @@ public class GenerateEmptyTypemapStub : AndroidTask
 		foreach (var abi in Abis) {
 			string abiName = abi.ItemSpec;
 			string stubPath = Path.Combine (OutputDirectory, $"typemap.{abiName}.ll");
-			File.WriteAllText (stubPath, GenerateStubLlvmIr (abiName));
+			Files.CopyIfStringChanged (GenerateStubLlvmIr (abiName), stubPath);
 			var item = new TaskItem (stubPath);
 			item.SetMetadata ("abi", abiName);
 			sources.Add (item);
