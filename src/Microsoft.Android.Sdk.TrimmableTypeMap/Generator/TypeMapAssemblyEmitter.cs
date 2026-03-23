@@ -860,12 +860,7 @@ sealed class TypeMapAssemblyEmitter
 				localSig.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniObjectReferenceRef));
 
 				// local 2: ReadOnlySpan<JniNativeMethod>
-				localSig.WriteByte (0x15); // ELEMENT_TYPE_GENERICINST
-				localSig.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
-				localSig.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_readOnlySpanOpenRef));
-				localSig.WriteCompressedInteger (1);
-				localSig.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
-				localSig.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniNativeMethodRef));
+				EncodeGenericValueTypeInst (localSig, _readOnlySpanOpenRef, _jniNativeMethodRef);
 			});
 	}
 
