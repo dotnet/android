@@ -158,8 +158,11 @@
     </ItemGroup>
   </Target>
 
-  <!-- Override _RemoveRegisterAttribute -->
-  <Target Name="_RemoveRegisterAttribute" DependsOnTargets="_PrepareAssemblies">
+  <!-- Override _RemoveRegisterAttribute: trimmable types don't need register attribute stripping.
+       When PublishTrimmed=true, ILLink handles assembly processing and the source DLLs may no
+       longer exist at the original paths. Skip this target entirely in that case. -->
+  <Target Name="_RemoveRegisterAttribute" DependsOnTargets="_PrepareAssemblies"
+      Condition=" '$(PublishTrimmed)' != 'true' ">
     <Copy SourceFiles="@(_ResolvedAssemblies)" DestinationFolder="%(RootDir)%(Directory)shrunk/" SkipUnchangedFiles="true" />
   </Target>
 </Project>
