@@ -52,7 +52,7 @@ class TrimmableTypeMap
 	/// </summary>
 	unsafe void RegisterNatives ()
 	{
-		using var runtimeClass = new JniType ("mono/android/Runtime");
+		using var runtimeClass = new JniType ("mono/android/Runtime"u8);
 		fixed (byte* namePtr = "registerNatives"u8)
 		fixed (byte* sigPtr = "(Ljava/lang/Class;)V"u8) {
 			Span<JniNativeMethod> methods = stackalloc JniNativeMethod[1];
