@@ -796,7 +796,7 @@ sealed class TypeMapAssemblyEmitter
 				encoder.StoreLocal (0);
 
 				for (int i = 0; i < methodCount; i++) {
-					// &methods[i]
+					// &methods[i] — destination address for stobj
 					encoder.LoadLocal (0);
 					if (i > 0) {
 						encoder.LoadConstantI4 (i);
@@ -818,12 +818,21 @@ sealed class TypeMapAssemblyEmitter
 					encoder.OpCode (ILOpCode.Ldftn);
 					encoder.Token (validRegs [i].Wrapper);
 
-					encoder.Call (_jniNativeMethodCtorRef);
+					// Construct the struct on the evaluation stack and store it
+					// at the destination address. This matches the Roslyn pattern:
+					//   newobj JniNativeMethod::.ctor(byte*, byte*, IntPtr)
+					//   stobj  JniNativeMethod
+					encoder.OpCode (ILOpCode.Newobj);
+					encoder.Token (_jniNativeMethodCtorRef);
+					encoder.OpCode (ILOpCode.Stobj);
+					encoder.Token (_jniNativeMethodRef);
 				}
 
 				// JniObjectReference peerRef = jniType.PeerReference
-				encoder.LoadArgumentAddress (1);
-				encoder.Call (_jniTypePeerReferenceRef);
+				// JniType is a sealed reference type, so use ldarg + callvirt
+				encoder.LoadArgument (1);
+				encoder.OpCode (ILOpCode.Callvirt);
+				encoder.Token (_jniTypePeerReferenceRef);
 				encoder.StoreLocal (1);
 
 				// new ReadOnlySpan<JniNativeMethod>(methods, count)

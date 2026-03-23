@@ -186,7 +186,8 @@ sealed class PEAssemblyBuilder
 	/// Returns a deduplicated RVA field containing the null-terminated UTF-8 encoding of
 	/// <paramref name="value"/>. Strings like <c>"()V"</c> that appear across many proxy
 	/// types are stored once and share the same <see cref="FieldDefinitionHandle"/>.
-	/// The field lives on a shared <c>&lt;PrivateImplementationDetails&gt;</c> type.
+	/// The field is declared on an internal sized helper type (e.g. <c>__utf8_10</c>)
+	/// nested under <c>&lt;PrivateImplementationDetails&gt;</c>.
 	/// </summary>
 	public FieldDefinitionHandle GetOrAddUtf8Field (string value)
 	{
