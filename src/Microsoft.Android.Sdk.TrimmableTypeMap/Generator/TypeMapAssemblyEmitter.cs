@@ -752,7 +752,7 @@ sealed class TypeMapAssemblyEmitter
 		Dictionary<string, MethodDefinitionHandle> wrapperHandles)
 	{
 		// Filter to only registrations that have corresponding wrapper methods
-		var validRegs = new List<(NativeRegistrationData Reg, MethodDefinitionHandle Wrapper)> ();
+		var validRegs = new List<(NativeRegistrationData Reg, MethodDefinitionHandle Wrapper)> (registrations.Count);
 		foreach (var reg in registrations) {
 			if (wrapperHandles.TryGetValue (reg.WrapperMethodName, out var wrapperHandle)) {
 				validRegs.Add ((reg, wrapperHandle));
@@ -900,18 +900,27 @@ sealed class TypeMapAssemblyEmitter
 	}
 
 	/// <summary>
+	/// Writes the ECMA-335 blob for a closed generic value type with a single value-type argument.
+	/// E.g., <c>ReadOnlySpan&lt;JniNativeMethod&gt;</c>.
+	/// </summary>
+	static void EncodeGenericValueTypeInst (BlobBuilder builder, EntityHandle openType, EntityHandle valueTypeArg)
+	{
+		builder.WriteByte (0x15); // ELEMENT_TYPE_GENERICINST
+		builder.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
+		builder.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (openType));
+		builder.WriteCompressedInteger (1); // generic arity = 1
+		builder.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
+		builder.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (valueTypeArg));
+	}
+
+	/// <summary>
 	/// Builds a <c>TypeSpec</c> for a closed generic type with a single value-type argument.
 	/// E.g., <c>ReadOnlySpan&lt;JniNativeMethod&gt;</c>.
 	/// </summary>
 	TypeSpecificationHandle MakeGenericTypeSpec_ValueType (EntityHandle openType, EntityHandle valueTypeArg)
 	{
 		var sigBlob = new BlobBuilder (32);
-		sigBlob.WriteByte (0x15); // ELEMENT_TYPE_GENERICINST
-		sigBlob.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE (ReadOnlySpan is a struct)
-		sigBlob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (openType));
-		sigBlob.WriteCompressedInteger (1); // generic arity = 1
-		sigBlob.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
-		sigBlob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (valueTypeArg));
+		EncodeGenericValueTypeInst (sigBlob, openType, valueTypeArg);
 		return _pe.Metadata.AddTypeSpecification (_pe.Metadata.GetOrAddBlob (sigBlob));
 	}
 
@@ -921,12 +930,6 @@ sealed class TypeMapAssemblyEmitter
 	/// </summary>
 	void EncodeReadOnlySpanOfJniNativeMethod (SignatureTypeEncoder encoder)
 	{
-		var builder = encoder.Builder;
-		builder.WriteByte (0x15); // ELEMENT_TYPE_GENERICINST
-		builder.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
-		builder.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_readOnlySpanOpenRef));
-		builder.WriteCompressedInteger (1); // arity = 1
-		builder.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
-		builder.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniNativeMethodRef));
+		EncodeGenericValueTypeInst (encoder.Builder, _readOnlySpanOpenRef, _jniNativeMethodRef);
 	}
 }
