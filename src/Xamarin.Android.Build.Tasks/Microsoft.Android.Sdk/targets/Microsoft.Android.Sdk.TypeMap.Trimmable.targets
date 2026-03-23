@@ -130,9 +130,10 @@
         SkipUnchangedFiles="true"
         Condition="Exists('$(_TypeMapBaseOutputDir)AndroidManifest.xml')" />
 
-    <Touch Files="$(IntermediateOutputPath)acw-map.txt"
-        AlwaysCreate="true"
-        Condition=" !Exists('$(IntermediateOutputPath)acw-map.txt') " />
+    <!-- acw-map.txt is consumed as an Input by _ConvertCustomView and _UpdateAndroidResgen.
+         Create an empty file if it doesn't exist yet. The trimmable path doesn't populate it
+         (no Cecil-based ACW mapping), but it must exist for downstream targets to evaluate. -->
+    <Touch Files="$(IntermediateOutputPath)acw-map.txt" AlwaysCreate="true" />
 
     <MakeDir Directories="$(IntermediateOutputPath)android\src\net\dot\android" />
     <WriteLinesToFile
