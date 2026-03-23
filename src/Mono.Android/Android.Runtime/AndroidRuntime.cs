@@ -428,7 +428,7 @@ namespace Android.Runtime {
 		// [Export] callback delegates are created dynamically via DynamicCallbackCodeGenerator and are not
 		// cached in static fields (unlike non-[Export] connector delegates). Without rooting them here,
 		// CoreCLR's GC can collect them between JNI registration and first invocation, causing a crash.
-		static readonly object prevent_delegate_gc_lock = new object ();
+		static readonly Lock prevent_delegate_gc_lock = new Lock ();
 		static readonly List<Delegate> prevent_delegate_gc = new List<Delegate> ();
 		static List<JniNativeMethodRegistration> sharedRegistrations = new List<JniNativeMethodRegistration> ();
 
