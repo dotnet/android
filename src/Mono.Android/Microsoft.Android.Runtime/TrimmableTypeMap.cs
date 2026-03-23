@@ -55,14 +55,14 @@ class TrimmableTypeMap
 		using var runtimeClass = new JniType ("mono/android/Runtime");
 		fixed (byte* namePtr = "registerNatives"u8)
 		fixed (byte* sigPtr = "(Ljava/lang/Class;)V"u8) {
-			JniNativeMethod* methods = stackalloc JniNativeMethod[1];
+			Span<JniNativeMethod> methods = stackalloc JniNativeMethod[1];
 			methods[0] = new JniNativeMethod (
 				namePtr,
 				sigPtr,
 				(IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&OnRegisterNatives);
 			JniEnvironment.Types.RegisterNatives (
 				runtimeClass.PeerReference,
-				new ReadOnlySpan<JniNativeMethod> (methods, 1));
+				methods);
 		}
 	}
 
