@@ -135,11 +135,19 @@
          (no Cecil-based ACW mapping), but it must exist for downstream targets to evaluate. -->
     <Touch Files="$(IntermediateOutputPath)acw-map.txt" AlwaysCreate="true" />
 
+    <!-- Generate ApplicationRegistration.java.
+         In the trimmable path, Application/Instrumentation types are activated via
+         Runtime.registerNatives() + UCO wrappers, so registerApplications() is empty. -->
     <MakeDir Directories="$(IntermediateOutputPath)android\src\net\dot\android" />
     <WriteLinesToFile
         File="$(IntermediateOutputPath)android\src\net\dot\android\ApplicationRegistration.java"
         Overwrite="true"
         Lines="package net.dot.android%3b;public class ApplicationRegistration { public static android.content.Context Context%3b public static void registerApplications () { } }" />
+
+    <!-- Generate per-process provider .java files from @(_AdditionalProviderSources).
+         These are copies of MonoRuntimeProvider.java with the class name replaced.
+         Only needed for multi-process apps; single-process apps have no additional providers.
+         TODO: implement per-provider generation when multi-process is tested (#10792). -->
 
     <MakeDir Directories="$(_AndroidStampDirectory)" Condition=" !Exists('$(_AndroidStampDirectory)') " />
     <Touch Files="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" AlwaysCreate="True" />

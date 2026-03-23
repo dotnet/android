@@ -290,14 +290,13 @@ sealed class AssemblyIndex : IDisposable
 		}
 
 		var categories = new List<string> ();
-		if (TryGetNamedArgument<string> (value, "Categories", out _)) {
-			// Categories is a string[] property — decode it from the raw named argument
-			foreach (var named in value.NamedArguments) {
-				if (named.Name == "Categories" && named.Value is IReadOnlyCollection<CustomAttributeTypedArgument<string>> catArgs) {
-					foreach (var arg in catArgs) {
-						if (arg.Value is string cat) {
-							categories.Add (cat);
-						}
+		// Categories is a string[] property — the SRM decoder sees it as
+		// IReadOnlyCollection<CustomAttributeTypedArgument<string>>, not string.
+		foreach (var named in value.NamedArguments) {
+			if (named.Name == "Categories" && named.Value is IReadOnlyCollection<CustomAttributeTypedArgument<string>> catArgs) {
+				foreach (var arg in catArgs) {
+					if (arg.Value is string cat) {
+						categories.Add (cat);
 					}
 				}
 			}
