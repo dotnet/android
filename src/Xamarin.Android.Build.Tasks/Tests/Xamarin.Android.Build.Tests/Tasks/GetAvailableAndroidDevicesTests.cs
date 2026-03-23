@@ -706,6 +706,106 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("Pixel 7 Pro API 35 (Not Running)", result [0].GetMetadata ("Description"), "Description should be formatted with (Not Running) suffix");
 		}
 
+		[Test]
+		public void FilterDevicesForSelection_SingleOnlineDevice_WithNonRunningEmulators_ReturnsOnlyOnline ()
+		{
+			var devices = new List<AdbDeviceInfo> {
+				CreateDeviceInfo ("emulator-5554", "Pixel 8 API 36 X64", AdbDeviceType.Emulator, AdbDeviceStatus.Online),
+				CreateDeviceInfo ("pixel_3_xl_api_22_arm", "Pixel 3 XL API 22 Arm (Not Running)", AdbDeviceType.Emulator, AdbDeviceStatus.NotRunning),
+				CreateDeviceInfo ("pixel_3_xl_api_22_x86", "Pixel 3 XL API 22 X86 (Not Running)", AdbDeviceType.Emulator, AdbDeviceStatus.NotRunning),
+				CreateDeviceInfo ("pixel_4_api_30_amd64", "Pixel 4 API 30 Amd64 (Not Running)", AdbDeviceType.Emulator, AdbDeviceStatus.NotRunning),
+			};
+
+			var filtered = GetAvailableAndroidDevices.FilterDevicesForSelection (devices);
+
+			Assert.AreEqual (1, filtered.Count, "Should return only the single running device");
+			Assert.AreEqual ("emulator-5554", filtered [0].Serial);
+			Assert.AreEqual (AdbDeviceStatus.Online, filtered [0].Status);
+		}
+
+		[Test]
+		public void FilterDevicesForSelection_SinglePhysicalDevice_WithNonRunningEmulators_ReturnsOnlyOnline ()
+		{
+			var devices = new List<AdbDeviceInfo> {
+				CreateDeviceInfo ("0A041FDD400327", "Pixel 5", AdbDeviceType.Device, AdbDeviceStatus.Online),
+				CreateDeviceInfo ("pixel_7_api_35", "Pixel 7 API 35 (Not Running)", AdbDeviceType.Emulator, AdbDeviceStatus.NotRunning),
+				CreateDeviceInfo ("pixel_9_api_36", "Pixel 9 API 36 (Not Running)", AdbDeviceType.Emulator, AdbDeviceStatus.NotRunning),
+			};
+
+			var filtered = GetAvailableAndroidDevices.FilterDevicesForSelection (devices);
+
+			Assert.AreEqual (1, filtered.Count, "Should return only the single running physical device");
+			Assert.AreEqual ("0A041FDD400327", filtered [0].Serial);
+		}
+
+		[Test]
+		public void FilterDevicesForSelection_MultipleOnlineDevices_ReturnsOnlyOnline ()
+		{
+			var devices = new List<AdbDeviceInfo> {
+				CreateDeviceInfo ("0A041FDD400327", "Pixel 5", AdbDeviceType.Device, AdbDeviceStatus.Online),
+				CreateDeviceInfo ("emulator-5554", "Pixel 8 API 36", AdbDeviceType.Emulator, AdbDeviceStatus.Online),
+				CreateDeviceInfo ("pixel_7_api_35", "Pixel 7 API 35 (Not Running)", AdbDeviceType.Emulator, AdbDeviceStatus.NotRunning),
+			};
+
+			var filtered = GetAvailableAndroidDevices.FilterDevicesForSelection (devices);
+
+			Assert.AreEqual (2, filtered.Count, "Should return only the 2 online devices");
+			Assert.IsTrue (filtered.All (d => d.Status == AdbDeviceStatus.Online), "All returned devices should be online");
+		}
+
+		[Test]
+		public void FilterDevicesForSelection_NoOnlineDevices_ReturnsAll ()
+		{
+			var devices = new List<AdbDeviceInfo> {
+				CreateDeviceInfo ("pixel_7_api_35", "Pixel 7 API 35 (Not Running)", AdbDeviceType.Emulator, AdbDeviceStatus.NotRunning),
+				CreateDeviceInfo ("pixel_9_api_36", "Pixel 9 API 36 (Not Running)", AdbDeviceType.Emulator, AdbDeviceStatus.NotRunning),
+			};
+
+			var filtered = GetAvailableAndroidDevices.FilterDevicesForSelection (devices);
+
+			Assert.AreEqual (2, filtered.Count, "Should return all devices when none are online");
+		}
+
+		[Test]
+		public void FilterDevicesForSelection_EmptyList_ReturnsEmpty ()
+		{
+			var devices = new List<AdbDeviceInfo> ();
+
+			var filtered = GetAvailableAndroidDevices.FilterDevicesForSelection (devices);
+
+			Assert.AreEqual (0, filtered.Count, "Should return empty list");
+		}
+
+		[Test]
+		public void FilterDevicesForSelection_OnlineDeviceWithOfflineDevice_ReturnsOnlyOnline ()
+		{
+			var devices = new List<AdbDeviceInfo> {
+				CreateDeviceInfo ("0A041FDD400327", "Pixel 5", AdbDeviceType.Device, AdbDeviceStatus.Online),
+				CreateDeviceInfo ("DEADBEEF123456", "Pixel 3", AdbDeviceType.Device, AdbDeviceStatus.Offline),
+				CreateDeviceInfo ("pixel_7_api_35", "Pixel 7 API 35 (Not Running)", AdbDeviceType.Emulator, AdbDeviceStatus.NotRunning),
+			};
+
+			var filtered = GetAvailableAndroidDevices.FilterDevicesForSelection (devices);
+
+			Assert.AreEqual (1, filtered.Count, "Should return only the online device, filtering offline and non-running");
+			Assert.AreEqual ("0A041FDD400327", filtered [0].Serial);
+		}
+
+		[Test]
+		public void FilterDevicesForSelection_OnlineDeviceWithUnauthorizedDevice_ReturnsOnlyOnline ()
+		{
+			var devices = new List<AdbDeviceInfo> {
+				CreateDeviceInfo ("0A041FDD400327", "Pixel 5", AdbDeviceType.Device, AdbDeviceStatus.Online),
+				CreateDeviceInfo ("UNAUTHORIZED001", "Unknown", AdbDeviceType.Device, AdbDeviceStatus.Unauthorized),
+				CreateDeviceInfo ("pixel_7_api_35", "Pixel 7 API 35 (Not Running)", AdbDeviceType.Emulator, AdbDeviceStatus.NotRunning),
+			};
+
+			var filtered = GetAvailableAndroidDevices.FilterDevicesForSelection (devices);
+
+			Assert.AreEqual (1, filtered.Count, "Should return only the online device, filtering unauthorized and non-running");
+			Assert.AreEqual ("0A041FDD400327", filtered [0].Serial);
+		}
+
 		/// <summary>
 		/// Helper method to create an AdbDeviceInfo for testing
 		/// </summary>
