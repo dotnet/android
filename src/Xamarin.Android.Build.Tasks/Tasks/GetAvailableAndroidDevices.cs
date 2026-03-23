@@ -97,36 +97,15 @@ public class GetAvailableAndroidDevices : AndroidAdb
     /// </summary>
     internal static IReadOnlyList<AdbDeviceInfo> FilterDevicesForSelection (IReadOnlyList<AdbDeviceInfo> devices)
     {
-        bool anyOnline = false;
-        bool anyOffline = false;
-        int onlineCount = 0;
-
-        for (int i = 0; i < devices.Count; i++) {
-            var device = devices [i];
-            if (device.Status == AdbDeviceStatus.Online) {
-                anyOnline = true;
-                onlineCount++;
-            } else {
-                anyOffline = true;
-            }
-        }
-
-        // No online devices: return all devices (including non-running emulators)
-        if (!anyOnline)
-            return devices;
-
-        // All devices are online: no filtering needed, return original list
-        if (!anyOffline)
-            return devices;
-
-        // Mixed online and offline: return only online devices
-        var onlineDevices = new List<AdbDeviceInfo> (onlineCount);
-        for (int i = 0; i < devices.Count; i++) {
-            var device = devices [i];
+        var onlineDevices = new List<AdbDeviceInfo> (devices.Count);
+        foreach (var device in devices) {
             if (device.Status == AdbDeviceStatus.Online) {
                 onlineDevices.Add (device);
             }
         }
+
+        if (onlineDevices.Count == 0)
+            return devices;
 
         return onlineDevices;
     }
