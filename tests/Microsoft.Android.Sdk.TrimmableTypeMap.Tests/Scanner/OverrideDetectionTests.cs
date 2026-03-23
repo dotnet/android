@@ -15,7 +15,7 @@ public class OverrideDetectionTests : FixtureTestBase
 		var peer = FindFixtureByJavaName ("my/app/UserActivity");
 		var onCreate = peer.MarshalMethods.First (m => m.JniName == "onCreate");
 		Assert.Equal ("(Landroid/os/Bundle;)V", onCreate.JniSignature);
-		Assert.Equal ("n_OnCreate", onCreate.NativeCallbackName);
+		Assert.Equal ("n_OnCreate_Landroid_os_Bundle_", onCreate.NativeCallbackName);
 		Assert.False (onCreate.IsConstructor);
 		Assert.Equal ("GetOnCreate_Landroid_os_Bundle_Handler", onCreate.Connector);
 		Assert.NotNull (peer.ActivationCtor);
