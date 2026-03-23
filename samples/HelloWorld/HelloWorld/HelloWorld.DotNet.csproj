@@ -3,10 +3,8 @@
     <TargetFramework>$(DotNetAndroidTargetFramework)</TargetFramework>
     <OutputType>Exe</OutputType>
     <RootNamespace>HelloWorld</RootNamespace>
-    <UseMonoRuntime>false</UseMonoRuntime>
     <_AndroidTypeMapImplementation>trimmable</_AndroidTypeMapImplementation>
-    <RunAOTCompilation>false</RunAOTCompilation>
-    <PublishReadyToRun>false</PublishReadyToRun>
+    <UseMonoRuntime>false</UseMonoRuntime>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\HelloLibrary\HelloLibrary.DotNet.csproj" />
