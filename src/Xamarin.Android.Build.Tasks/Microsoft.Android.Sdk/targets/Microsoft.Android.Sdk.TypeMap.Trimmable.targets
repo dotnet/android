@@ -158,11 +158,10 @@
     </ItemGroup>
   </Target>
 
-  <!-- Override _RemoveRegisterAttribute: trimmable types don't need register attribute stripping.
-       When PublishTrimmed=true, ILLink handles assembly processing and the source DLLs may no
-       longer exist at the original paths. Skip this target entirely in that case. -->
-  <Target Name="_RemoveRegisterAttribute" DependsOnTargets="_PrepareAssemblies"
-      Condition=" '$(PublishTrimmed)' != 'true' ">
-    <Copy SourceFiles="@(_ResolvedAssemblies)" DestinationFolder="%(RootDir)%(Directory)shrunk/" SkipUnchangedFiles="true" />
-  </Target>
+  <!-- Override _RemoveRegisterAttribute: trimmable types need [Register] attributes
+       at runtime for type resolution (TryGetJniNameForType uses IJniNameProviderAttribute).
+       The legacy target strips them to reduce assembly size, but the trimmable path
+       requires them. _ShrunkAssemblies is already set to _ResolvedAssemblies by
+       AssemblyResolution.targets, so no copy is needed. -->
+  <Target Name="_RemoveRegisterAttribute" />
 </Project>
