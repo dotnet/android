@@ -118,9 +118,11 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		// don't carry this metadata. The scanner handles non-Java assemblies gracefully.
 		var assemblyPaths = ResolvedAssemblies.Select (i => i.ItemSpec).Distinct ().ToList ();
 
-		// Framework/runtime-pack assemblies (Mono.Android, Java.Interop, etc.) already have JCW .java
-		// files in the SDK. Only generate JCWs for user assemblies. Detect framework assemblies via
-		// FrameworkReferenceName (not NuGetPackageId — user libraries from NuGet need JCWs too).
+		// Framework binding types (Activity, View, etc.) already exist in java_runtime.dex and don't
+		// need JCW .java files. Framework Implementor types (mono/ prefix, e.g. OnClickListenerImplementor)
+		// DO need JCWs — they're included via the mono/ filter below.
+		// User NuGet libraries also need JCWs, so we only filter by FrameworkReferenceName.
+		// Note: Pre-generating SDK-compatible JCWs (mono.android-trimmable.jar) is tracked by #10792.
 		var frameworkAssemblyNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 		foreach (var item in ResolvedAssemblies) {
 			if (!item.GetMetadata ("FrameworkReferenceName").IsNullOrEmpty ()) {
