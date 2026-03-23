@@ -53,8 +53,7 @@ abstract class BaseProgramCommand : Command
 			return 1;
 		}
 
-		DoInvoke (rest);
-		return 0;
+		return DoInvoke (rest);
 	}
 
 	/// <summary>

@@ -20,7 +20,7 @@ class Reporter
 	/// <param name="form">The report form (standalone or nested).</param>
 	/// <param name="doc">An existing <see cref="MarkdownDocument"/> to append to, or <c>null</c> to create a new one.</param>
 	/// <param name="outputFile">Path to write the report file, or <c>null</c> to write to the console.</param>
-	public static void Report (IAspect aspect, bool plainTextRendering, ReportForm form = ReportForm.Standalone, MarkdownDocument? doc = null, string? outputFile = null)
+	public static void Report (IAspect aspect, bool plainTextRendering, ReportForm form = ReportForm.Standalone, MarkdownDocument? doc = null, string? outputFile = null, uint sectionLevel = 1)
 	{
 		Type aspectType = aspect.GetType ();
 
@@ -46,7 +46,7 @@ class Reporter
 				throw new InvalidOperationException ($"Internal error: failed to instantiate reporter for type '{aspectType}'");
 			}
 
-			reporter.Report (form);
+			reporter.Report (form, sectionLevel);
 		} finally {
 			// Write report only when we're not nested
 			if (doc == null) {

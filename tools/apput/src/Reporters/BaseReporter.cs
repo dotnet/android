@@ -113,7 +113,7 @@ abstract class BaseReporter : IReporter
 		}
 
 		var architectures = new List<string> ();
-		foreach (AndroidTargetArch arch in arches) {
+		foreach (NativeArchitecture arch in arches) {
 			architectures.Add (arch.ToString ());
 		}
 

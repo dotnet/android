@@ -76,7 +76,7 @@ class ArchitectureName
 				break;
 			}
 
-			if (NameMap.TryGetValue (a, out NativeArchitecture arch)) {
+			if (!NameMap.TryGetValue (a, out NativeArchitecture arch)) {
 				Log.Warning ($"Unrecognized architecture name '{a}', ignoring.");
 				continue;
 			}
