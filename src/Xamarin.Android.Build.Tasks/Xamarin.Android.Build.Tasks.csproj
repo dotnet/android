@@ -45,7 +45,7 @@
     <Compile Include="..\..\bin\Build$(Configuration)\XABuildConfig.cs" />
 
     <!-- Include only the linker sources required for the build tasks (LinkAssembliesNoShrink and PostTrimmingPipeline) -->
-    <!-- These include: AddKeepAlivesStep, AddKeepAlivesHelper, StripEmbeddedLibrariesStep, PostTrimmingAddKeepAlivesStep, FixAbstractMethodsStep, FixLegacyResourceDesignerStep -->
+    <!-- These include: AddKeepAlivesStep, AddKeepAlivesHelper, StripEmbeddedLibrariesStep, PostTrimmingAddKeepAlivesStep, FixAbstractMethodsStep, FixAbstractMethodsHelper, PostTrimmingFixAbstractMethodsStep, FixLegacyResourceDesignerStep -->
     <Compile Remove="Linker\**" />
     <Compile Include="Linker\MonoDroid.Tuner\FindTypeMapObjectsStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\FindJavaObjectsStep.cs" />
@@ -56,6 +56,8 @@
     <Compile Include="Linker\MonoDroid.Tuner\AndroidLinkConfiguration.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\Extensions.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\FixAbstractMethodsStep.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\FixAbstractMethodsHelper.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\PostTrimmingFixAbstractMethodsStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\FixLegacyResourceDesignerStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\LinkDesignerBase.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\RemoveResourceDesignerStep.cs" />

@@ -22,7 +22,7 @@ namespace Xamarin.Android.Tasks
 		{
 			// FixAbstractMethodsStep
 			var fixAbstractMethodsStep = new FixAbstractMethodsStep ();
-			fixAbstractMethodsStep.Initialize (context, new EmptyMarkContext ());
+			fixAbstractMethodsStep.Initialize (context);
 			pipeline.Steps.Add (fixAbstractMethodsStep);
 
 			// FixLegacyResourceDesignerStep

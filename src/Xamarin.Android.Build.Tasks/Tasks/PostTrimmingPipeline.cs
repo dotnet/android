@@ -15,7 +15,7 @@ namespace Xamarin.Android.Tasks;
 ///
 /// This opens each assembly once (via DirectoryAssemblyResolver with ReadWrite) and
 /// runs all registered steps on it, then writes modified assemblies in-place. Currently
-/// runs StripEmbeddedLibrariesStep and (optionally) AddKeepAlivesStep.
+/// runs StripEmbeddedLibrariesStep, FixAbstractMethodsStep, and (optionally) AddKeepAlivesStep.
 ///
 /// Runs in the inner build after ILLink but before ReadyToRun/crossgen2 compilation,
 /// so that R2R images are generated from the already-modified assemblies.
@@ -47,6 +47,27 @@ public class PostTrimmingPipeline : AndroidTask
 
 		var steps = new List<IAssemblyModifierPipelineStep> ();
 		steps.Add (new StripEmbeddedLibrariesStep (Log));
+
+		// Fix abstract methods: add stub implementations that throw Java.Lang.AbstractMethodError
+		// for unimplemented interface methods on Java.Lang.Object subclasses.
+		// Memoize the Mono.Android resolution so the attempt happens at most once.
+		AssemblyDefinition? monoAndroidAssembly = null;
+		bool monoAndroidResolutionAttempted = false;
+		steps.Add (new PostTrimmingFixAbstractMethodsStep (cache,
+			() => {
+				if (!monoAndroidResolutionAttempted) {
+					monoAndroidResolutionAttempted = true;
+					try {
+						monoAndroidAssembly = resolver.Resolve (AssemblyNameReference.Parse ("Mono.Android"));
+					} catch (AssemblyResolutionException ex) {
+						Log.LogErrorFromException (ex, showStackTrace: false);
+					}
+				}
+				return monoAndroidAssembly;
+			},
+			(msg) => Log.LogDebugMessage (msg),
+			(msg) => Log.LogCodedWarning ("XA2000", msg)));
+
 		if (AddKeepAlives) {
 			// Memoize the corlib resolution so the attempt (and any error logging) happens at most once,
 			// regardless of how many assemblies/methods need KeepAlive injection.

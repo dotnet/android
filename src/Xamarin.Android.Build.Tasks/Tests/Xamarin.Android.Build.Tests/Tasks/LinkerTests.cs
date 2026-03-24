@@ -7,8 +7,6 @@ using System.Text;
 using Java.Interop.Tools.Cecil;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
-using Mono.Linker;
-using Mono.Linker.Steps;
 using Mono.Tuner;
 using MonoDroid.Tuner;
 using NUnit.Framework;
@@ -27,30 +25,34 @@ namespace Xamarin.Android.Build.Tests
 		public void FixAbstractMethodsStep_SkipDimMembers ()
 		{
 			var path = Path.Combine (Root, "temp", TestName);
-			var step = new FixAbstractMethodsStep ();
 
 			Directory.CreateDirectory (path);
 
-			using (var resolver = new DirectoryAssemblyResolver (Logger, false))
-			using (var context = new LinkContext (resolver)) {
-				step.Initialize (context, new EmptyMarkContext ());
+			using (var resolver = new DirectoryAssemblyResolver (Logger, false)) {
+				var cache = new TypeDefinitionCache ();
 				resolver.SearchDirectories.Add (path);
 
 				var myAssemblyPath = Path.Combine (path, "MyAssembly.dll");
+				var monoAndroidPath = Path.Combine (path, "Mono.Android.dll");
 
 				using (var android = CreateFauxMonoAndroidAssembly ()) {
-					android.Write (Path.Combine (path, "Mono.Android.dll"));
+					android.Write (monoAndroidPath);
 					CreateAbstractIfaceImplementation (myAssemblyPath, android);
 				}
 
-				using (var assm = context.Resolve ("MyAssembly")) {
-					step.FixAbstractMethods (assm);
+				var assm = resolver.GetAssembly (myAssemblyPath);
+				MethodDefinition? errorCtor = null;
+				FixAbstractMethodsHelper.FixAbstractMethods (
+					assm,
+					cache,
+					ref errorCtor,
+					() => resolver.GetAssembly (monoAndroidPath),
+					(msg) => TestContext.WriteLine (msg));
 
-					var impl = assm.MainModule.GetType ("MyNamespace.MyClass");
+				var impl = assm.MainModule.GetType ("MyNamespace.MyClass");
 
-					Assert.IsTrue (impl.Methods.Any (m => m.Name == "MyAbstractMethod"), "We should have generated an override for MyAbstractMethod");
-					Assert.IsFalse (impl.Methods.Any (m => m.Name == "MyDefaultMethod"), "We should not have generated an override for MyDefaultMethod");
-				}
+				Assert.IsTrue (impl.Methods.Any (m => m.Name == "MyAbstractMethod"), "We should have generated an override for MyAbstractMethod");
+				Assert.IsFalse (impl.Methods.Any (m => m.Name == "MyDefaultMethod"), "We should not have generated an override for MyDefaultMethod");
 			}
 
 			Directory.Delete (path, true);
@@ -86,32 +88,36 @@ namespace Xamarin.Android.Build.Tests
 		public void FixAbstractMethodsStep_Explicit ()
 		{
 			var path = Path.Combine (Root, "temp", TestName);
-			var step = new FixAbstractMethodsStep ();
 
 			Directory.CreateDirectory (path);
 
-			using (var resolver = new DirectoryAssemblyResolver (Logger, false))
-			using (var context = new LinkContext (resolver)) {
-				step.Initialize (context, new EmptyMarkContext ());
+			using (var resolver = new DirectoryAssemblyResolver (Logger, false)) {
+				var cache = new TypeDefinitionCache ();
 				resolver.SearchDirectories.Add (path);
 
 				var myAssemblyPath = Path.Combine (path, "MyAssembly.dll");
+				var monoAndroidPath = Path.Combine (path, "Mono.Android.dll");
 
 				using (var android = CreateFauxMonoAndroidAssembly ()) {
-					android.Write (Path.Combine (path, "Mono.Android.dll"));
+					android.Write (monoAndroidPath);
 					CreateExplicitInterface (myAssemblyPath, android);
 				}
 
-				using (var assm = context.Resolve ("MyAssembly")) {
-					step.FixAbstractMethods (assm);
+				var assm = resolver.GetAssembly (myAssemblyPath);
+				MethodDefinition? errorCtor = null;
+				FixAbstractMethodsHelper.FixAbstractMethods (
+					assm,
+					cache,
+					ref errorCtor,
+					() => resolver.GetAssembly (monoAndroidPath),
+					(msg) => TestContext.WriteLine (msg));
 
-					var impl = assm.MainModule.GetType ("MyNamespace.MyClass");
-					Assert.AreEqual (2, impl.Methods.Count, "MyClass should contain 2 methods");
-					var method = impl.Methods.FirstOrDefault (m => m.Name == "MyNamespace.IMyInterface.MyMethod");
-					Assert.IsNotNull (method, "MyNamespace.IMyInterface.MyMethod should exist");
-					method = impl.Methods.FirstOrDefault (m => m.Name == "MyMissingMethod");
-					Assert.IsNotNull (method, "MyMissingMethod should exist");
-				}
+				var impl = assm.MainModule.GetType ("MyNamespace.MyClass");
+				Assert.AreEqual (2, impl.Methods.Count, "MyClass should contain 2 methods");
+				var method = impl.Methods.FirstOrDefault (m => m.Name == "MyNamespace.IMyInterface.MyMethod");
+				Assert.IsNotNull (method, "MyNamespace.IMyInterface.MyMethod should exist");
+				method = impl.Methods.FirstOrDefault (m => m.Name == "MyMissingMethod");
+				Assert.IsNotNull (method, "MyMissingMethod should exist");
 			}
 
 			Directory.Delete (path, true);
