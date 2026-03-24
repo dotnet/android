@@ -7,9 +7,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 -->
 <Project>
 
-  <!-- Deliberate invalid XML to test build-summary template -->
-  <This is not valid XML>
-
   <UsingTask TaskName="Xamarin.Android.Tasks.SetNdkPathForIlc" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotLibraryLoadAssemblerSources" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotEnvironmentAssemblerSources" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
