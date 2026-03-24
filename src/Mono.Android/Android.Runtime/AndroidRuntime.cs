@@ -425,6 +425,11 @@ namespace Android.Runtime {
 			return (Delegate)dynamic_callback_gen.Invoke (null, new object [] { method })!;
 		}
 
+		// [Export] callback delegates are created dynamically via DynamicCallbackCodeGenerator and are not
+		// cached in static fields (unlike non-[Export] connector delegates). Without rooting them here,
+		// CoreCLR's GC can collect them between JNI registration and first invocation, causing a crash.
+		static readonly Lock prevent_delegate_gc_lock = new Lock ();
+		static readonly List<Delegate> prevent_delegate_gc = new List<Delegate> ();
 		static List<JniNativeMethodRegistration> sharedRegistrations = new List<JniNativeMethodRegistration> ();
 
 		static bool FastRegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)
@@ -562,6 +567,9 @@ namespace Android.Runtime {
 							if (minfo == null)
 								throw new InvalidOperationException (FormattableString.Invariant ($"Specified managed method '{mname.ToString ()}' was not found. Signature: {signature.ToString ()}"));
 							callback = CreateDynamicCallback (minfo);
+							lock (prevent_delegate_gc_lock) {
+								prevent_delegate_gc.Add (callback);
+							}
 							needToRegisterNatives = true;
 						} else {
 							Type callbackDeclaringType = type;
