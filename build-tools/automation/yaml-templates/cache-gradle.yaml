@@ -8,9 +8,19 @@ parameters:
   xaSourcePath: $(System.DefaultWorkingDirectory)/android
 
 steps:
-- script: git submodule status --cached external/Java.Interop > $(Agent.TempDirectory)/java-interop-submodule-hash.txt
+- script: |
+    git submodule status --cached external/Java.Interop > $(Agent.TempDirectory)/java-interop-submodule-hash.txt
+    echo "##vso[task.setvariable variable=GRADLE_CACHE_DIR]$HOME/.gradle/caches"
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: get Java.Interop submodule hash
+  condition: ne(variables['Agent.OS'], 'Windows_NT')
+
+- pwsh: |
+    git submodule status --cached external/Java.Interop > $(Agent.TempDirectory)/java-interop-submodule-hash.txt
+    Write-Host "##vso[task.setvariable variable=GRADLE_CACHE_DIR]$env:USERPROFILE/.gradle/caches"
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: get Java.Interop submodule hash
+  condition: eq(variables['Agent.OS'], 'Windows_NT')
 
 - task: Cache@2
   displayName: cache Gradle downloads
@@ -18,4 +28,4 @@ steps:
     key: '"gradle" | "v1" | "$(Agent.OS)" | ${{ parameters.xaSourcePath }}/build-tools/gradle/gradle/wrapper/gradle-wrapper.properties | ${{ parameters.xaSourcePath }}/src/**/build.gradle | $(Agent.TempDirectory)/java-interop-submodule-hash.txt'
     restoreKeys: |
       "gradle" | "v1" | "$(Agent.OS)"
-    path: $(HOME)/.gradle/caches
+    path: $(GRADLE_CACHE_DIR)
