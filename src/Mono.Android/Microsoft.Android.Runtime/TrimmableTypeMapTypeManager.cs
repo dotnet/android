@@ -15,20 +15,13 @@ namespace Microsoft.Android.Runtime;
 /// </summary>
 class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 {
-	readonly TrimmableTypeMap _map;
-
-	internal TrimmableTypeMapTypeManager (TrimmableTypeMap map)
-	{
-		_map = map;
-	}
-
 	protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
 	{
 		foreach (var t in base.GetTypesForSimpleReference (jniSimpleReference)) {
 			yield return t;
 		}
 
-		if (_map.TryGetType (jniSimpleReference, out var type)) {
+		if (TrimmableTypeMap.Instance.TryGetType (jniSimpleReference, out var type)) {
 			yield return type;
 		}
 	}
@@ -59,7 +52,7 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 			Type type)
 	{
-		var invokerType = _map.GetInvokerType (type);
+		var invokerType = TrimmableTypeMap.Instance.GetInvokerType (type);
 		if (invokerType != null) {
 			return invokerType;
 		}

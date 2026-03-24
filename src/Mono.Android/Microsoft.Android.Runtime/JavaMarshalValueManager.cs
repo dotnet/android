@@ -34,12 +34,8 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 	public static JavaMarshalValueManager Instance =>
 		s_instance ?? throw new InvalidOperationException ("JavaMarshalValueManager has not been initialized. Call the constructor first.");
 
-	readonly TrimmableTypeMap? _typeMap;
-
-	unsafe internal JavaMarshalValueManager (TrimmableTypeMap? typeMap = null)
+	unsafe internal JavaMarshalValueManager ()
 	{
-		_typeMap = typeMap;
-
 		var previous = Interlocked.CompareExchange (ref s_instance, this, null);
 		Debug.Assert (previous is null, "JavaMarshalValueManager must only be created once.");
 
@@ -512,8 +508,9 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 			Type? targetType)
 	{
 		if (RuntimeFeature.TrimmableTypeMap) {
-			if (_typeMap is not null && targetType is not null) {
-				var proxy = _typeMap.GetProxyForManagedType (targetType);
+			var typeMap = TrimmableTypeMap.Instance;
+			if (typeMap is not null && targetType is not null) {
+				var proxy = typeMap.GetProxyForManagedType (targetType);
 				if (proxy is not null) {
 					var peer = proxy.CreateInstance (reference.Handle, JniHandleOwnership.DoNotTransfer);
 					if (peer is not null) {

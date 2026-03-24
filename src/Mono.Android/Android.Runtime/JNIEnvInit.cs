@@ -135,11 +135,9 @@ namespace Android.Runtime
 			BoundExceptionType = (BoundExceptionType)args->ioExceptionType;
 			JniRuntime.JniTypeManager typeManager;
 			JniRuntime.JniValueManager? valueManager = null;
-			TrimmableTypeMap? trimmableTypeMap = null;
 			if (RuntimeFeature.TrimmableTypeMap) {
-				trimmableTypeMap = new TrimmableTypeMap ();
-				typeManager     = new TrimmableTypeMapTypeManager (trimmableTypeMap);
-				valueManager    = new JavaMarshalValueManager (trimmableTypeMap);
+				typeManager     = new TrimmableTypeMapTypeManager ();
+				valueManager    = new JavaMarshalValueManager ();
 			} else if (RuntimeFeature.ManagedTypeMap) {
 				typeManager     = new ManagedTypeManager ();
 			} else {
@@ -163,7 +161,7 @@ namespace Android.Runtime
 			);
 
 			if (RuntimeFeature.TrimmableTypeMap) {
-				trimmableTypeMap?.RegisterBootstrapNativeMethod ();
+				TrimmableTypeMap.Initialize ();
 			}
 
 			grefIGCUserPeer_class = args->grefIGCUserPeer;

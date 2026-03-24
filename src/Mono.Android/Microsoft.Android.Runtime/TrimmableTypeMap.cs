@@ -22,29 +22,36 @@ class TrimmableTypeMap
 {
 	static TrimmableTypeMap? s_instance;
 
-	internal static TrimmableTypeMap? Instance => s_instance;
+	internal static TrimmableTypeMap Instance =>
+		s_instance ?? throw new InvalidOperationException (
+			"TrimmableTypeMap has not been initialized. Ensure RuntimeFeature.TrimmableTypeMap is enabled and the JNI runtime is initialized.");
 
 	readonly IReadOnlyDictionary<string, Type> _typeMap;
 	readonly ConcurrentDictionary<Type, JavaPeerProxy?> _proxyCache = new ();
 
-	internal TrimmableTypeMap ()
+	TrimmableTypeMap ()
 	{
-		// The runtime's GetOrCreateExternalTypeMapping handles assembly resolution
-		// automatically via the System.Runtime.InteropServices.TypeMappingEntryAssembly
-		// config property (set in Trimmable.targets). It loads the entry assembly
-		// (_Microsoft.Android.TypeMaps), walks its TypeMapAssemblyTargetAttribute
-		// attributes, and recursively loads each referenced assembly.
 		_typeMap = TypeMapping.GetOrCreateExternalTypeMapping<Java.Lang.Object> ();
+	}
 
-		var previous = Interlocked.CompareExchange (ref s_instance, this, null);
+	/// <summary>
+	/// Initializes the singleton instance and registers the bootstrap JNI native method.
+	/// Must be called after the JNI runtime is initialized and before any JCW class is loaded.
+	/// </summary>
+	internal static void Initialize ()
+	{
+		var instance = new TrimmableTypeMap ();
+		var previous = Interlocked.CompareExchange (ref s_instance, instance, null);
 		Debug.Assert (previous is null, "TrimmableTypeMap must only be created once.");
+
+		instance.RegisterBootstrapNativeMethod ();
 	}
 
 	/// <summary>
 	/// Registers the <c>mono.android.Runtime.registerNatives</c> JNI native method.
 	/// Must be called after the JNI runtime is initialized and before any JCW class is loaded.
 	/// </summary>
-	internal void RegisterBootstrapNativeMethod ()
+	void RegisterBootstrapNativeMethod ()
 	{
 		using var runtimeClass = new JniType ("mono/android/Runtime");
 		JniEnvironment.Types.RegisterNatives (

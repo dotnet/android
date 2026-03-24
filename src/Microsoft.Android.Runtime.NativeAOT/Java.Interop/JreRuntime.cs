@@ -78,7 +78,7 @@ namespace Java.Interop {
 		static JniRuntime.JniTypeManager CreateDefaultTypeManager ()
 		{
 			if (RuntimeFeature.TrimmableTypeMap) {
-				return new TrimmableTypeMapTypeManager (new TrimmableTypeMap ());
+				return new TrimmableTypeMapTypeManager ();
 			}
 
 			return new ManagedTypeManager ();
