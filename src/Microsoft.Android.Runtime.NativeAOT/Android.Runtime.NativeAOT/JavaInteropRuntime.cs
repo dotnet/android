@@ -61,11 +61,13 @@ static partial class JavaInteropRuntime
 			var settings    = new DiagnosticSettings ();
 			settings.AddDebugDotnetLog ();
 
+			var typeManager = CreateTypeManager ();
+
 			var options = new NativeAotRuntimeOptions {
 				EnvironmentPointer          = jnienv,
 				ClassLoader                 = new JniObjectReference (classLoader, JniObjectReferenceType.Global),
-				TypeManager                 = new ManagedTypeManager (),
-				ValueManager                = ManagedValueManager.GetOrCreateInstance (),
+				TypeManager                 = typeManager,
+				ValueManager                = new JavaMarshalValueManager (),
 				UseMarshalMemberBuilder     = false,
 				JniGlobalReferenceLogWriter = settings.GrefLog,
 				JniLocalReferenceLogWriter  = settings.LrefLog,
@@ -85,5 +87,14 @@ static partial class JavaInteropRuntime
 			transition.SetPendingException (e);
 		}
 		transition.Dispose ();
+	}
+
+	static JniRuntime.JniTypeManager CreateTypeManager ()
+	{
+		if (RuntimeFeature.TrimmableTypeMap) {
+			return new TrimmableTypeMapTypeManager ();
+		}
+
+		return new ManagedTypeManager ();
 	}
 }
