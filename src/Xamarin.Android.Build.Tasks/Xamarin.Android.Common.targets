@@ -1495,7 +1495,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_ManifestMerger"
     Condition=" '$(AndroidManifestMerger)' == 'manifestmerger.jar' "
-    Inputs="$(IntermediateOutputPath)AndroidManifest.xml;@(ExtractedManifestDocuments);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
+    Inputs="$(IntermediateOutputPath)AndroidManifest.xml;@(ExtractedManifestDocuments);@(AndroidManifestOverlay);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
     Outputs="$(IntermediateOutputPath)android\AndroidManifest.xml"
   >
   <ItemGroup>
