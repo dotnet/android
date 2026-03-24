@@ -316,7 +316,17 @@ namespace Xamarin.Android.Build.Tests
 
 			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
 			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
-			Assert.IsTrue (dotnet.Build ("DeployToDevice"), "`dotnet build -t:DeployToDevice` should succeed");
+
+			// Pass the device serial as $(Device) — this is the `dotnet run` code path.
+			// _EnsureDeviceBooted must be in DeployToDeviceDependsOnTargets (not just BeforeTargets)
+			// because the .NET SDK invokes DeployToDevice via in-process ProjectInstance.Build()
+			// where BeforeTargets hooks don't reliably fire.
+			var serial = RunAdbCommand ("get-serialno").Trim ();
+			Assert.IsTrue (dotnet.Build ("DeployToDevice", parameters: new [] { $"Device={serial}" }),
+				"`dotnet build -t:DeployToDevice` should succeed");
+
+			// Verify _EnsureDeviceBooted actually ran in the chain
+			dotnet.AssertTargetIsNotSkipped ("_EnsureDeviceBooted");
 
 			// Verify correct targets ran based on FastDev support
 			if (TestEnvironment.CommercialBuildAvailable) {
