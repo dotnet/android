@@ -4,15 +4,5 @@
       <method signature="System.Boolean get_NegotiateAuthenticationIsEnabled()" body="stub" feature="Xamarin.Android.Net.UseNegotiateAuthentication" featurevalue="false" value="false" />
       <method signature="System.Boolean get_NegotiateAuthenticationIsEnabled()" body="stub" feature="Xamarin.Android.Net.UseNegotiateAuthentication" featurevalue="true" value="true" />
     </type>
-    <type fullname="Microsoft.Android.Runtime.RuntimeFeature">
-      <method signature="System.Boolean get_IsMonoRuntime()" body="stub" feature="Microsoft.Android.Runtime.RuntimeFeature.IsMonoRuntime" featurevalue="false" value="false" />
-      <method signature="System.Boolean get_IsMonoRuntime()" body="stub" feature="Microsoft.Android.Runtime.RuntimeFeature.IsMonoRuntime" featurevalue="true" value="true" />
-      <method signature="System.Boolean get_IsCoreClrRuntime()" body="stub" feature="Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime" featurevalue="false" value="false" />
-      <method signature="System.Boolean get_IsCoreClrRuntime()" body="stub" feature="Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime" featurevalue="true" value="true" />
-      <method signature="System.Boolean get_ManagedTypeMap()" body="stub" feature="Microsoft.Android.Runtime.RuntimeFeature.ManagedTypeMap" featurevalue="false" value="false" />
-      <method signature="System.Boolean get_ManagedTypeMap()" body="stub" feature="Microsoft.Android.Runtime.RuntimeFeature.ManagedTypeMap" featurevalue="true" value="true" />
-      <method signature="System.Boolean get_TrimmableTypeMap()" body="stub" feature="Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap" featurevalue="false" value="false" />
-      <method signature="System.Boolean get_TrimmableTypeMap()" body="stub" feature="Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap" featurevalue="true" value="true" />
-    </type>
   </assembly>
 </linker>
