@@ -82,7 +82,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 		Assert.Contains (".ctor", methods);
 		Assert.Contains ("CreateInstance", methods);
-		Assert.Contains ("get_TargetType", methods);
+		// get_TargetType is inherited from JavaPeerProxy<T>, not emitted on the proxy type
 	}
 
 	[Fact]

@@ -561,7 +561,7 @@ public class ModelBuilderTests : FixtureTestBase
 
 				Assert.Contains (".ctor", methodNames);
 				Assert.Contains ("CreateInstance", methodNames);
-				Assert.Contains ("get_TargetType", methodNames);
+				// get_TargetType is inherited from JavaPeerProxy<T>, not emitted on the proxy type
 			});
 		}
 
