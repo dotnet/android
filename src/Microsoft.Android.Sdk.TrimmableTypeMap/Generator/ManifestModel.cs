@@ -1,6 +1,5 @@
 #nullable enable
 
-using System;
 using System.Collections.Generic;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
@@ -20,14 +19,14 @@ public class ComponentInfo
 	public bool HasPublicDefaultConstructor { get; set; }
 	public ComponentKind Kind { get; set; }
 	public Dictionary<string, object?> Properties { get; set; } = new Dictionary<string, object?> ();
-	public IReadOnlyList<IntentFilterInfo> IntentFilters { get; set; } = Array.Empty<IntentFilterInfo> ();
-	public IReadOnlyList<MetaDataInfo> MetaData { get; set; } = Array.Empty<MetaDataInfo> ();
+	public IReadOnlyList<IntentFilterInfo> IntentFilters { get; set; } = [];
+	public IReadOnlyList<MetaDataInfo> MetaData { get; set; } = [];
 }
 
 public class IntentFilterInfo
 {
-	public IReadOnlyList<string> Actions { get; set; } = Array.Empty<string> ();
-	public IReadOnlyList<string> Categories { get; set; } = Array.Empty<string> ();
+	public IReadOnlyList<string> Actions { get; set; } = [];
+	public IReadOnlyList<string> Categories { get; set; } = [];
 	public Dictionary<string, object?> Properties { get; set; } = new Dictionary<string, object?> ();
 }
 
