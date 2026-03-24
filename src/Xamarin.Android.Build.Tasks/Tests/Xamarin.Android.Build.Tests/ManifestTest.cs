@@ -253,7 +253,7 @@ namespace Bug12935
 	<uses-permission android:name=""android.permission.RECORD_AUDIO"" />
 </manifest>
 ";
-				overlay.Timestamp = null;
+				proj.Touch ("ManifestOverlay.xml");
 
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Third build should have succeeded.");
 				b.Output.AssertTargetIsNotSkipped ("_ManifestMerger");

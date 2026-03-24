@@ -1494,13 +1494,9 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
-  <PropertyGroup>
-    <_ManifestMergerTimingOverlay Condition=" '$(_AndroidFastTiming)' == 'True' ">$(MSBuildThisFileDirectory)\ManifestOverlays\Timing.xml</_ManifestMergerTimingOverlay>
-  </PropertyGroup>
-
   <Target Name="_ManifestMerger"
     Condition=" '$(AndroidManifestMerger)' == 'manifestmerger.jar' "
-    Inputs="$(IntermediateOutputPath)AndroidManifest.xml;@(ExtractedManifestDocuments);@(AndroidManifestOverlay);$(_ManifestMergerTimingOverlay);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
+    Inputs="$(IntermediateOutputPath)AndroidManifest.xml;@(ExtractedManifestDocuments);@(AndroidManifestOverlay);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
     Outputs="$(IntermediateOutputPath)android\AndroidManifest.xml"
   >
   <ItemGroup>
