@@ -205,7 +205,7 @@ namespace Bug12935
 </manifest>
 "
 			});
-			using (var b = CreateApkBuilder (cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
+			using (var b = CreateApkBuilder (cleanupAfterSuccessfulBuild: true, cleanupOnDispose: false)) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var manifestFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
 				var text = File.ReadAllText (manifestFile);
@@ -238,7 +238,7 @@ namespace Bug12935
 "
 			};
 			proj.OtherBuildItems.Add (overlay);
-			using (var b = CreateApkBuilder (cleanupAfterSuccessfulBuild: true, cleanupOnDispose: false)) {
+			using (var b = CreateApkBuilder (cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
 				Assert.IsTrue (b.Build (proj), "First build should have succeeded.");
 				var text = b.Output.GetIntermediaryAsText ("android/AndroidManifest.xml");
 				StringAssert.Contains ("android.permission.CAMERA", text, "Merged manifest should contain the initial overlay permission.");
