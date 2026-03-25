@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -72,6 +73,8 @@ public class TrimmableTypeMapGenerator
 			log.LogMessage (MessageImportance.Low, "No Java peer types found, skipping typemap generation.");
 			return new TrimmableTypeMapResult ([], [], null);
 		}
+
+		RootManifestReferencedTypes (allPeers, manifestTemplatePath);
 
 		var generatedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, assemblyPaths, outputDirectory);
 
@@ -261,6 +264,76 @@ public class TrimmableTypeMapGenerator
 			log.LogError (null, "XA4212", null, null, 0, 0, 0, 0, "There can be only one type with an [Application] attribute; found: {0}", string.Join (", ", applicationTypes));
 		} else if (applicationTypes.Count > 0 && hasAssemblyLevelApplication) {
 			log.LogError (null, "XA4217", null, null, 0, 0, 0, 0, "Application cannot have both a type with an [Application] attribute and an [assembly:Application] attribute.");
+		}
+	}
+
+	void RootManifestReferencedTypes (List<JavaPeerInfo> allPeers, string? manifestTemplatePath)
+	{
+		if (string.IsNullOrEmpty (manifestTemplatePath) || !File.Exists (manifestTemplatePath)) {
+			return;
+		}
+
+		XDocument doc;
+		try {
+			doc = XDocument.Load (manifestTemplatePath);
+		} catch (Exception ex) {
+			log.LogWarning ("Failed to parse ManifestTemplate '{0}': {1}", manifestTemplatePath, ex.Message);
+			return;
+		}
+
+		RootManifestReferencedTypes (allPeers, doc);
+	}
+
+	internal void RootManifestReferencedTypes (List<JavaPeerInfo> allPeers, XDocument doc)
+	{
+		var root = doc.Root;
+		if (root is null) {
+			return;
+		}
+
+		XNamespace androidNs = "http://schemas.android.com/apk/res/android";
+		XName attName = androidNs + "name";
+
+		var componentNames = new HashSet<string> (StringComparer.Ordinal);
+		foreach (var element in root.Descendants ()) {
+			switch (element.Name.LocalName) {
+			case "activity":
+			case "service":
+			case "receiver":
+			case "provider":
+				var name = (string?) element.Attribute (attName);
+				if (name is not null) {
+					componentNames.Add (name);
+				}
+				break;
+			}
+		}
+
+		if (componentNames.Count == 0) {
+			return;
+		}
+
+		var peersByDotName = new Dictionary<string, List<JavaPeerInfo>> (StringComparer.Ordinal);
+		foreach (var peer in allPeers) {
+			var dotName = peer.JavaName.Replace ('/', '.').Replace ('$', '.');
+			if (!peersByDotName.TryGetValue (dotName, out var list)) {
+				list = [];
+				peersByDotName [dotName] = list;
+			}
+			list.Add (peer);
+		}
+
+		foreach (var name in componentNames) {
+			if (peersByDotName.TryGetValue (name, out var peers)) {
+				foreach (var peer in peers) {
+					if (!peer.IsUnconditional) {
+						peer.IsUnconditional = true;
+						log.LogMessage (MessageImportance.Low, "Rooting manifest-referenced type '{0}' ({1}) as unconditional.", name, peer.ManagedTypeName);
+					}
+				}
+			} else {
+				log.LogWarning ("Manifest-referenced type '{0}' was not found in any scanned assembly. It may be a framework type.", name);
+			}
 		}
 	}
 }
