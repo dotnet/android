@@ -331,13 +331,10 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		}
 
 		bool hasAssemblyLevelApplication = assemblyManifestInfo.ApplicationProperties is not null;
-		// These match the legacy ManifestDocument behavior (InvalidOperationException with same messages).
-		// No XA error code — legacy doesn't have one either.
 		if (applicationTypes.Count > 1) {
-			Log.LogError ("There can be only one type with an [Application] attribute; found: " +
-				string.Join (", ", applicationTypes));
+			Log.LogCodedError ("XA4212", Properties.Resources.XA4212, string.Join (", ", applicationTypes));
 		} else if (applicationTypes.Count > 0 && hasAssemblyLevelApplication) {
-			Log.LogError ("Application cannot have both a type with an [Application] attribute and an [assembly:Application] attribute.");
+			Log.LogCodedError ("XA4217", Properties.Resources.XA4217);
 		}
 	}
 

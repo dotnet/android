@@ -40,9 +40,9 @@
     Output goes to shared BaseIntermediateOutputPath so it's generated once.
   -->
   <Target Name="_GenerateTrimmableTypeMap"
-      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '@(ReferencePath)' != '' "
+      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '@(ReferencePath->Count())' != '0' "
       AfterTargets="CoreCompile"
-      Inputs="@(ReferencePath);$(IntermediateOutputPath)$(TargetFileName)"
+      Inputs="@(ReferencePath);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs)"
       Outputs="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll">
 
     <ItemGroup>
@@ -102,6 +102,10 @@
     </ItemGroup>
     <Copy SourceFiles="@(_TypeMapJavaFiles)" DestinationFolder="$(IntermediateOutputPath)android\src\%(RecursiveDir)" />
 
+    <ItemGroup>
+      <FileWrites Include="@(_TypeMapJavaFiles->'$(IntermediateOutputPath)android\src\%(RecursiveDir)%(Filename)%(Extension)')" />
+    </ItemGroup>
+
     <!-- Set properties for ABI/RID used by CoreCLR _AddTrimmableTypeMapAssembliesToStore fallback -->
     <PropertyGroup>
       <_TypeMapFirstAbi Condition=" '$(AndroidSupportedAbis)' != '' ">$([System.String]::Copy('$(AndroidSupportedAbis)').Split(';')[0])</_TypeMapFirstAbi>
@@ -144,6 +148,12 @@
         Overwrite="true"
         Lines="package net.dot.android%3b;public class ApplicationRegistration { public static android.content.Context Context%3b public static void registerApplications () { } }" />
 
+    <ItemGroup>
+      <FileWrites Include="$(IntermediateOutputPath)android\src\net\dot\android\ApplicationRegistration.java" />
+      <FileWrites Include="$(IntermediateOutputPath)AndroidManifest.xml" />
+      <FileWrites Include="$(IntermediateOutputPath)acw-map.txt" />
+    </ItemGroup>
+
     <!-- Generate per-process provider .java files from @(_AdditionalProviderSources).
          These are copies of MonoRuntimeProvider.java with the class name replaced.
          Only needed for multi-process apps; single-process apps have no additional providers.
@@ -155,7 +165,9 @@
 
   <!-- Native typemap stubs -->
   <Target Name="_PrepareNativeAssemblySources"
-      Condition=" '$(_AndroidRuntime)' != 'NativeAOT' ">
+      Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
+      Inputs="@(_BuildTargetAbis)"
+      Outputs="@(_BuildTargetAbis->'$(_NativeAssemblySourceDir)typemaps.%(Identity).ll')">
     <ItemGroup>
       <_TypeMapStubAbis Include="@(_BuildTargetAbis)" />
     </ItemGroup>
