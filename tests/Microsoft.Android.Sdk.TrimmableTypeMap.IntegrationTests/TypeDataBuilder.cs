@@ -23,21 +23,6 @@ record ManifestAttributeComparisonData (
 	IReadOnlyList<string> UsesFeatures
 );
 
-/// <summary>
-/// Encodes a uses-permission as "name" or "name;maxSdkVersion=N" for richer comparison.
-/// </summary>
-static string EncodePermission (string name, int? maxSdkVersion)
-	=> maxSdkVersion.HasValue ? $"{name};maxSdkVersion={maxSdkVersion.Value}" : name;
-
-/// <summary>
-/// Encodes a uses-feature as "name;required=true/false" or "glEsVersion=0xNNNN;required=true/false".
-/// </summary>
-static string EncodeFeature (string? name, int glesVersion, bool required)
-{
-	var key = name ?? $"glEsVersion=0x{glesVersion:X8}";
-	return $"{key};required={required}";
-}
-
 record TypeComparisonData (
 	string ManagedName,
 	string JavaName,
@@ -55,6 +40,21 @@ record TypeComparisonData (
 
 static class TypeDataBuilder
 {
+	/// <summary>
+	/// Encodes a uses-permission as "name" or "name;maxSdkVersion=N" for richer comparison.
+	/// </summary>
+	static string EncodePermission (string name, int? maxSdkVersion)
+		=> maxSdkVersion.HasValue ? $"{name};maxSdkVersion={maxSdkVersion.Value}" : name;
+
+	/// <summary>
+	/// Encodes a uses-feature as "name;required=true/false" or "glEsVersion=0xNNNN;required=true/false".
+	/// </summary>
+	static string EncodeFeature (string? name, int glesVersion, bool required)
+	{
+		var key = name ?? $"glEsVersion=0x{glesVersion:X8}";
+		return $"{key};required={required}";
+	}
+
 	public static (Dictionary<string, TypeComparisonData> perType, List<TypeMapEntry> entries) BuildLegacy (string assemblyPath)
 	{
 		var cache = new TypeDefinitionCache ();
