@@ -19,6 +19,18 @@ namespace Xamarin.Android.Build.Tests
 	[Category ("UsesDevice")]
 	public class InstallAndRunTests : DeviceTest
 	{
+		// When running on CI we often see failures where the test fails to spot the "Displayed:" line
+		// because time between when we start logging and when the application actually is launched
+		// by the emulator is longer than the timeout we specify (usually 30s). Use this constant as the
+		// default timeout for all the activity start monitoring calls, adjust per-test as necessary.
+		//
+		// Sometimes emulators, for whatever reason, launch the app after a delay of up to 100s and the
+		// logcat is filled with time-consuming Java exceptions unrelated to our test. We need to account
+		// for that. Most of the tests used 30s as the activity start timeout, so let's give the emulator
+		// up to 2 minutes to gather all its ducks in the row + 30 "standard" seconds for our test app
+		// to start.
+		const int ActivityStartTimeoutInSeconds = 150;
+
 		static ProjectBuilder builder;
 		static XamarinAndroidApplicationProject proj;
 
@@ -88,7 +100,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (dotnet.Run (), "`dotnet run --no-build` should succeed");
 
 			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds);
 			Assert.IsTrue (didLaunch, "Activity should have started.");
 		}
 
@@ -377,7 +389,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (result.Contains ("Starting: Intent"), $"Activity should have launched. adb output:\n{result}");
 
 			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds);
 			Assert.IsTrue (didLaunch, "Activity should have started.");
 		}
 
@@ -410,7 +422,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 			RunProjectAndAssert (proj, builder);
 			Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivityAlias",
-				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30), "Activity MainActivityAlias should have started.");
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds), "Activity MainActivityAlias should have started.");
 		}
 
 		[Test]
@@ -481,7 +493,7 @@ namespace Xamarin.Android.Build.Tests
 
 				RunProjectAndAssert (proj, builder);
 				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
-				                                     Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");
+				                                     Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
 			}
 		}
 
@@ -641,7 +653,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 			AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
 			Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log")), "Activity should have started.");
+				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
 			ClearAdbLogcat ();
 			ClearBlockingDialogs ();
 			ClickButton (proj.PackageName, "myButton", "MY BUTTON");
@@ -687,9 +699,8 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			using (var builder = CreateApkBuilder (Path.Combine (rootPath, proj.ProjectName))){
 				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 				RunProjectAndAssert (proj, builder);
-				var timeoutInSeconds = 120;
 				Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
-					Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), timeoutInSeconds));
+					Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), ActivityStartTimeoutInSeconds));
 			}
 		}
 
@@ -1009,7 +1020,7 @@ using System.Runtime.Serialization.Json;
 			Func<string, bool> checkForInterpMessage = line => {
 				return line.Contains ("Enabling Mono Interpreter");
 			};
-			var timeoutInSeconds = 120;
+			var timeoutInSeconds = ActivityStartTimeoutInSeconds;
 			var didPrintInterpMessage = MonitorAdbLogcat (
 				action: checkForInterpMessage,
 				logcatFilePath: Path.Combine (Root, builder.ProjectDirectory, "interpreter-logcat.log"),
@@ -1046,7 +1057,7 @@ using System.Runtime.Serialization.Json;
 				if (SeenFailedToLoad (line))
 					failedToLoad.Add (line);
 				return SeenActivityDisplayed (line);
-			}, logcatFilePath, timeout: 120);
+			}, logcatFilePath, timeout: ActivityStartTimeoutInSeconds);
 
 			Assert.IsTrue (appLaunched, "LLVM app did not launch");
 			Assert.AreEqual (0, failedToLoad.Count, $"LLVM .so files not loaded:\n{string.Join ("\n", failedToLoad)}");
@@ -1096,7 +1107,7 @@ using System.Runtime.Serialization.Json;
 			RunProjectAndAssert (proj, builder);
 
 			var didStart = WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"));
+				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), ActivityStartTimeoutInSeconds);
 			Assert.IsTrue (didStart, "Activity should have started.");
 		}
 
@@ -1252,7 +1263,7 @@ namespace Styleable.Library {
 			RunProjectAndAssert (proj, builder, environmentVariables: environmentVariables);
 
 			var didStart = WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"));
+				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), ActivityStartTimeoutInSeconds);
 			Assert.IsTrue (didStart, "Activity should have started.");
 		}
 
@@ -1286,7 +1297,7 @@ namespace Styleable.Library {
 			ClearAdbLogcat ();
 			AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
 			WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 15);
+				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), ActivityStartTimeoutInSeconds);
 			ClearAdbLogcat ();
 			ClearBlockingDialogs ();
 			ClickButton (proj.PackageName, "myXFButton", "CLICK ME");
@@ -1412,7 +1423,7 @@ namespace UnnamedProject
 				WaitForPermissionActivity (Path.Combine (Root, b.ProjectDirectory, "permission-logcat.log"));
 				ClearAdbLogcat ();
 				WaitForActivityToStart (app.PackageName, "MainActivity",
-					Path.Combine (Root, b.ProjectDirectory, "startup-logcat.log"), 15);
+					Path.Combine (Root, b.ProjectDirectory, "startup-logcat.log"), ActivityStartTimeoutInSeconds);
 			}
 		}
 
@@ -1481,7 +1492,7 @@ namespace UnnamedProject
 				AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
 				WaitForPermissionActivity (Path.Combine (Root, b.ProjectDirectory, "permission-logcat.log"));
 				WaitForActivityToStart (app.PackageName, "MainActivity",
-					Path.Combine (Root, b.ProjectDirectory, "startup-logcat.log"), 15);
+					Path.Combine (Root, b.ProjectDirectory, "startup-logcat.log"), ActivityStartTimeoutInSeconds);
 				ClearBlockingDialogs ();
 				XDocument ui = GetUI ();
 				XElement node = ui.XPathSelectElement ($"//node[contains(@resource-id,'myButton')]");
@@ -1515,7 +1526,7 @@ namespace UnnamedProject
 				AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
 				WaitForPermissionActivity (Path.Combine (Root, b.ProjectDirectory, "permission-logcat.log"));
 				WaitForActivityToStart (app.PackageName, "MainActivity",
-					Path.Combine (Root, b.ProjectDirectory, "startup-logcat.log"), 15);
+					Path.Combine (Root, b.ProjectDirectory, "startup-logcat.log"), ActivityStartTimeoutInSeconds);
 				ui = GetUI ();
 				node = ui.XPathSelectElement ($"//node[contains(@resource-id,'myButton')]");
 				StringAssert.AreEqualIgnoringCase ("Click Me! One", node.Attribute ("text").Value, "Text of Button myButton should have been \"Click Me! One\"");
@@ -1553,7 +1564,7 @@ namespace UnnamedProject
 
 			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
 			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds);
 			Assert.IsTrue(didLaunch, "Activity should have started.");
 		}
 
@@ -1602,7 +1613,7 @@ namespace UnnamedProject
 
 			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
 			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds);
 			Assert.IsTrue(didLaunch, "Activity should have started.");
 		}
 
@@ -1669,7 +1680,7 @@ namespace UnnamedProject
 
 			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
 			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds);
 			Assert.IsTrue(didLaunch, "Activity should have started.");
 		}
 
@@ -1708,7 +1719,7 @@ namespace UnnamedProject
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
 			RunProjectAndAssert (proj, builder);
 			var appStartupLogcatFile = Path.Combine (Root, builder.ProjectDirectory, "logcat.log");
-			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity", appStartupLogcatFile);
+			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity", appStartupLogcatFile, ActivityStartTimeoutInSeconds);
 			Assert.IsTrue (didLaunch, "MainActivity should have launched!");
 			var logcatOutput = File.ReadAllText (appStartupLogcatFile);
 
@@ -1767,7 +1778,7 @@ namespace UnnamedProject
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
 			RunProjectAndAssert (proj, builder);
 			var appStartupLogcatFile = Path.Combine (Root, builder.ProjectDirectory, "logcat.log");
-			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity", appStartupLogcatFile);
+			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity", appStartupLogcatFile, ActivityStartTimeoutInSeconds);
 			Assert.IsTrue (didLaunch, "MainActivity should have launched!");
 			var logcatOutput = File.ReadAllText (appStartupLogcatFile);
 
@@ -1832,7 +1843,7 @@ MONO_GC_PARAMS=bridge-implementation=new",
 
 			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
 			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds);
 			Assert.IsTrue(didLaunch, "Activity should have started.");
 			var appStartupLogcatFile = Path.Combine (Root, builder.ProjectDirectory, "logcat.log");
 			var logcatOutput = File.ReadAllText (appStartupLogcatFile);
@@ -1894,7 +1905,7 @@ MONO_GC_PARAMS=bridge-implementation=new",
 
 			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
 			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds);
 			Assert.IsTrue (didLaunch, "Activity should have started.");
 			var appStartupLogcatFile = Path.Combine (Root, builder.ProjectDirectory, "logcat.log");
 			var logcatOutput = File.ReadAllText (appStartupLogcatFile);
@@ -1965,7 +1976,7 @@ MONO_GC_PARAMS=bridge-implementation=new",
 
 				WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
 				bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
-					Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+					Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds);
 				Assert.IsTrue (didLaunch, "Activity should have started.");
 			}
 		}
@@ -2006,7 +2017,7 @@ MONO_GC_PARAMS=bridge-implementation=new",
 
 			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
 			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds);
 			Assert.IsTrue (didLaunch, "Activity should have started.");
 		}
 
@@ -2149,7 +2160,7 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				Assert.IsTrue (dotnet.Build (target: "Run", parameters: properties), "`dotnet build -t:Run` should succeed");
 
 				bool didLaunch = WaitForActivityToStart ("my", "MainActivity",
-					Path.Combine (projectDirectory, "logcat.log"), 30);
+					Path.Combine (projectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds);
 				Assert.IsTrue (didLaunch, "Activity should have started.");
 			} catch {
 				foreach (var file in Directory.GetFiles (projectDirectory, "*.log", SearchOption.AllDirectories)) {
@@ -2185,7 +2196,7 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			Assert.IsTrue (dotnet.Run (), "`dotnet run --no-build` should succeed");
 
 			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds);
 			Assert.IsTrue (didLaunch, "Activity should have started.");
 		}
 
