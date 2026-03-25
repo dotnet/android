@@ -6,13 +6,13 @@ Mapping of test area keywords to assemblies, filters, and build prerequisites.
 - **Assembly**: The test DLL to pass to `dotnet test` (relative to repo root). `${TFM}` = current `DotNetStableTargetFramework` from `Directory.Build.props`.
 - **Filter**: The `--filter` argument for `dotnet test`, or special instructions for non-`dotnet test` runs.
 - **Build**: What must be built before running:
-  - **None (Tier 1)** — Can run with plain `dotnet test <project>.csproj`. No local SDK needed.
-  - **Standard (Tier 2)** — Requires the local SDK (`dotnet-local.sh`). Build with `./dotnet-local.sh build Xamarin.Android.sln -c Debug` or `make`.
+  - **Standalone** — Can run with plain `dotnet test <project>.csproj`. No local SDK needed.
+  - **Full-build** — Requires the local SDK (`dotnet-local.sh`). Build with `./dotnet-local.sh build Xamarin.Android.sln -c Debug` or `make`.
 - **Device**: Whether an Android device/emulator is required.
 
 ---
 
-## Standalone Tests (Tier 1) — No Local SDK Required
+## Standalone Tests — No Local SDK Required
 
 These tests can be run immediately with `dotnet test` on the `.csproj`, even if the repo has not been fully built.
 
@@ -38,10 +38,10 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 
 ---
 
-## Host-Side MSBuild Tests (Tier 2 — requires local SDK)
+## Host-Side MSBuild Tests (full-build — requires local SDK)
 
 Assembly: `bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll`
-Build: Standard (Tier 2) — `./dotnet-local.sh build Xamarin.Android.sln -c Debug` or `make`
+Build: Full-build — `./dotnet-local.sh build Xamarin.Android.sln -c Debug` or `make`
 Device: No
 
 | Test Area | Filter | Test Classes / Notes |
@@ -87,10 +87,10 @@ Same assembly as above. These test individual MSBuild tasks in isolation with `M
 
 ---
 
-## Device Integration Tests (Tier 2 — requires local SDK + device)
+## Device Integration Tests (full-build — requires local SDK + device)
 
 Assembly: `bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll`
-Build: Standard (Tier 2) + device/emulator connected
+Build: Full-build + device/emulator connected
 Device: **Yes** (most tests have `[Category("UsesDevice")]`)
 
 | Test Area | Filter | Notes |
@@ -112,11 +112,11 @@ Device: **Yes** (most tests have `[Category("UsesDevice")]`)
 
 ---
 
-## On-Device Runtime Tests (Tier 2 — requires local SDK + device)
+## On-Device Runtime Tests (full-build — requires local SDK + device)
 
 These use NUnitLite and run directly on the device via `-t:RunTestApp`. They do NOT use `dotnet test`.
 
-Build: Standard (Tier 2) + the test project itself
+Build: Full-build + the test project itself
 Device: **Yes**
 
 | Test Area | Project | Notes |
@@ -154,10 +154,10 @@ Results appear in `TestResult-*.xml` in the repo root.
 
 ## Java.Interop Tests — Mixed Tiers
 
-Tooling tests are Tier 1 (standalone, listed in the Standalone Tests table above).
-JVM-based tests are Tier 2 (require local SDK + JVM).
+Tooling tests are standalone (listed in the Standalone Tests table above).
+JVM-based tests are full-build (require local SDK + JVM).
 
-Build (Tier 2 only): `./dotnet-local.sh build external/Java.Interop/Java.Interop.sln -c Debug`
+Build (full-build only): `./dotnet-local.sh build external/Java.Interop/Java.Interop.sln -c Debug`
 Device: **No** (runs on host JVM via `TestJVM`)
 
 | Test Area | Assembly / Project | Notes |
@@ -185,8 +185,8 @@ Use `make run-ji-tests` as a convenience on macOS/Linux.
 
 | Test Area | Tier | Assembly | Notes |
 |-----------|------|----------|-------|
-| **trimmable type map** (unit) | **Tier 1** (standalone) | `tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/` | Scanner + generator unit tests — `dotnet test` on `.csproj` |
-| **trimmable type map** (integration) | **Tier 2** (local SDK) | `tests/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests/` | End-to-end with Mono.Android + build tasks |
+| **trimmable type map** (unit) | **Standalone** | `tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/` | Scanner + generator unit tests — `dotnet test` on `.csproj` |
+| **trimmable type map** (integration) | **Full-build** | `tests/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests/` | End-to-end with Mono.Android + build tasks |
 
 ---
 
@@ -194,6 +194,6 @@ Use `make run-ji-tests` as a convenience on macOS/Linux.
 
 | Test Area | Tier | Assembly / Project | Notes |
 |-----------|------|--------------------|-------|
-| **aidl** | **Tier 1** (standalone) | `tests/Xamarin.Android.Tools.Aidl-Tests/` | AIDL compiler tests — `dotnet test` on `.csproj` |
+| **aidl** | **Standalone** | `tests/Xamarin.Android.Tools.Aidl-Tests/` | AIDL compiler tests — `dotnet test` on `.csproj` |
 | **api compatibility** | N/A | `tests/api-compatibility/` | Not a test runner — reference data for API surface checks |
-| **android sdk tools** | **Tier 1** (standalone) | `external/Java.Interop/external/xamarin-android-tools/tests/` | Android SDK helper tooling tests — `dotnet test` on `.csproj` |
+| **android sdk tools** | **Standalone** | `external/Java.Interop/external/xamarin-android-tools/tests/` | Android SDK helper tooling tests — `dotnet test` on `.csproj` |
