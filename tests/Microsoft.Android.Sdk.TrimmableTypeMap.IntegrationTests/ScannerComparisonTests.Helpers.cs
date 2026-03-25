@@ -222,4 +222,59 @@ public partial class ScannerComparisonTests
 		AssertNoDiffs ("USES-FEATURE MISSING from new scanner", missingFeats);
 		AssertNoDiffs ("USES-FEATURE EXTRA in new scanner", extraFeats);
 	}
+
+	[Fact]
+	public void ExactJavaFields_UserTypesFixture ()
+	{
+		var paths = AllUserTypesAssemblyPaths;
+		Assert.NotNull (paths);
+
+		var primaryAssemblyName = Path.GetFileNameWithoutExtension (paths! [0]);
+		using var scanner = new JavaPeerScanner ();
+		var peers = scanner.Scan (paths);
+
+		var peersWithFields = peers
+			.Where (p => p.AssemblyName == primaryAssemblyName && p.JavaFields.Count > 0)
+			.ToList ();
+
+		// The FieldExporter fixture type should have at least one field
+		Assert.True (peersWithFields.Count > 0,
+			"Expected at least one user type with JavaFields (FieldExporter)");
+
+		foreach (var peer in peersWithFields) {
+			foreach (var field in peer.JavaFields) {
+				// Every field should have required properties populated
+				Assert.False (string.IsNullOrEmpty (field.FieldName),
+					$"{peer.ManagedTypeName}: JavaField has empty FieldName");
+				Assert.False (string.IsNullOrEmpty (field.JavaTypeName),
+					$"{peer.ManagedTypeName}: JavaField '{field.FieldName}' has empty JavaTypeName");
+				Assert.False (string.IsNullOrEmpty (field.InitializerMethodName),
+					$"{peer.ManagedTypeName}: JavaField '{field.FieldName}' has empty InitializerMethodName");
+				Assert.False (string.IsNullOrEmpty (field.Visibility),
+					$"{peer.ManagedTypeName}: JavaField '{field.FieldName}' has empty Visibility");
+			}
+		}
+	}
+
+	[Fact]
+	public void ExportWithThrows_HasThrownNames ()
+	{
+		var paths = AllUserTypesAssemblyPaths;
+		Assert.NotNull (paths);
+
+		var primaryAssemblyName = Path.GetFileNameWithoutExtension (paths! [0]);
+		using var scanner = new JavaPeerScanner ();
+		var peers = scanner.Scan (paths);
+
+		var exportPeer = peers.FirstOrDefault (p =>
+			p.AssemblyName == primaryAssemblyName &&
+			p.ManagedTypeName.Contains ("ExportWithThrows", StringComparison.Ordinal));
+		Assert.NotNull (exportPeer);
+
+		var exportMethod = exportPeer.MarshalMethods.FirstOrDefault (m => m.IsExport && m.JniName == "riskyOperation");
+		Assert.NotNull (exportMethod);
+		Assert.NotNull (exportMethod.ThrownNames);
+		Assert.True (exportMethod.ThrownNames.Count >= 2,
+			$"Expected >=2 ThrownNames, got {exportMethod.ThrownNames.Count}");
+	}
 }
