@@ -204,6 +204,140 @@ namespace Xamarin.Android.Build.Tests {
 				"Should log that no peers were found.");
 		}
 
+		[Test]
+		public void Execute_WithMonoAndroid_PopulatesAcwMap ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+			var acwMapFile = Path.Combine (Root, path, "acw-map.txt");
+
+			var monoAndroidItem = FindMonoAndroidDll ();
+			if (monoAndroidItem is null) {
+				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				return;
+			}
+
+			var task = CreateTask (new [] { monoAndroidItem }, outputDir, javaDir);
+			task.AcwMapOutputFile = acwMapFile;
+
+			Assert.IsTrue (task.Execute (), "Task should succeed.");
+			FileAssert.Exists (acwMapFile);
+
+			var lines = File.ReadAllLines (acwMapFile);
+			Assert.IsNotEmpty (lines, "acw-map.txt should not be empty when types are found.");
+
+			// Each type produces 3 lines, so the line count should be a multiple of 3
+			Assert.AreEqual (0, lines.Length % 3, "acw-map.txt should have 3 lines per type.");
+
+			// Check that Activity mapping exists (Mono.Android contains Android.App.Activity)
+			Assert.IsTrue (lines.Any (l => l.Contains ("Android.App.Activity") && l.Contains ("android.app.Activity")),
+				"Should contain Activity mapping.");
+
+			// Verify format: each line should be "key;value"
+			foreach (var line in lines) {
+				Assert.IsTrue (line.Contains (';'), $"Line should contain ';' separator: {line}");
+				var parts = line.Split (';');
+				Assert.AreEqual (2, parts.Length, $"Line should have exactly 2 parts: {line}");
+				Assert.IsNotEmpty (parts [0], $"Key should not be empty: {line}");
+				Assert.IsNotEmpty (parts [1], $"Value should not be empty: {line}");
+			}
+		}
+
+		[Test]
+		public void Execute_EmptyAssemblyList_WritesEmptyAcwMap ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+			var acwMapFile = Path.Combine (Root, path, "acw-map.txt");
+
+			var task = CreateTask ([], outputDir, javaDir);
+			task.AcwMapOutputFile = acwMapFile;
+
+			Assert.IsTrue (task.Execute (), "Task should succeed.");
+			FileAssert.Exists (acwMapFile);
+			Assert.IsEmpty (File.ReadAllText (acwMapFile),
+				"acw-map.txt should be empty when no peers are found.");
+		}
+
+		[Test]
+		public void Execute_ManifestReferencedType_IsRootedAsUnconditional ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+
+			var monoAndroidItem = FindMonoAndroidDll ();
+			if (monoAndroidItem is null) {
+				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				return;
+			}
+
+			// Create a manifest template that references a known MCW binding type.
+			// android.app.Activity has DoNotGenerateAcw=true so it is normally conditional.
+			var manifestDir = Path.Combine (Root, path, "manifest");
+			Directory.CreateDirectory (manifestDir);
+			var manifestPath = Path.Combine (manifestDir, "AndroidManifest.xml");
+			File.WriteAllText (manifestPath, """
+				<?xml version="1.0" encoding="utf-8"?>
+				<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.test">
+				  <application>
+				    <activity android:name="android.app.Activity" />
+				  </application>
+				</manifest>
+				""");
+
+			var messages = new List<BuildMessageEventArgs> ();
+			var task = CreateTask (new [] { monoAndroidItem }, outputDir, javaDir, messages);
+			task.ManifestTemplate = manifestPath;
+
+			Assert.IsTrue (task.Execute (), "Task should succeed.");
+			Assert.IsTrue (messages.Any (m => m.Message.Contains ("Rooting manifest-referenced type")),
+				"Should log that a manifest-referenced type was rooted.");
+		}
+
+		[Test]
+		public void Execute_ManifestReferencedType_NotFound_LogsWarning ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+
+			var monoAndroidItem = FindMonoAndroidDll ();
+			if (monoAndroidItem is null) {
+				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				return;
+			}
+
+			var manifestDir = Path.Combine (Root, path, "manifest");
+			Directory.CreateDirectory (manifestDir);
+			var manifestPath = Path.Combine (manifestDir, "AndroidManifest.xml");
+			File.WriteAllText (manifestPath, """
+				<?xml version="1.0" encoding="utf-8"?>
+				<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.test">
+				  <application>
+				    <activity android:name="com.example.NonExistentActivity" />
+				  </application>
+				</manifest>
+				""");
+
+			var warnings = new List<BuildWarningEventArgs> ();
+			var task = new GenerateTrimmableTypeMap {
+				BuildEngine = new MockBuildEngine (TestContext.Out, warnings: warnings),
+				ResolvedAssemblies = new [] { monoAndroidItem },
+				OutputDirectory = outputDir,
+				JavaSourceOutputDirectory = javaDir,
+				AcwMapDirectory = Path.Combine (outputDir, "..", "acw-maps"),
+				TargetFrameworkVersion = "v11.0",
+				ManifestTemplate = manifestPath,
+			};
+
+			Assert.IsTrue (task.Execute (), "Task should succeed even with unresolved manifest types.");
+			Assert.IsTrue (warnings.Any (w => w.Message.Contains ("com.example.NonExistentActivity")),
+				"Should warn about unresolved manifest-referenced type.");
+		}
+
 		GenerateTrimmableTypeMap CreateTask (ITaskItem [] assemblies, string outputDir, string javaDir,
 			IList<BuildMessageEventArgs>? messages = null, string tfv = "v11.0")
 		{
