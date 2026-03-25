@@ -29,7 +29,9 @@ namespace Xamarin.Android.Build.Tests
 		// for that. Most of the tests used 30s as the activity start timeout, so let's give the emulator
 		// up to 2 minutes to gather all its ducks in the row + 30 "standard" seconds for our test app
 		// to start.
-		const int ActivityStartTimeoutInSeconds = 150;
+		//
+		// It is recommended that no test waiting for the "Displayed:" message waits shorter than this
+		public const int ActivityStartTimeoutInSeconds = 150;
 
 		static ProjectBuilder builder;
 		static XamarinAndroidApplicationProject proj;
@@ -2179,6 +2181,11 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
+			}
+
+			// TODO: Segfaults on Mono currently
+			if (runtime == AndroidRuntime.MonoVM) {
+				Assert.Ignore ("MonoVM segfaults in this test.");
 			}
 
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
