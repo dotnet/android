@@ -248,8 +248,7 @@
       AfterTargets="ILLink"
       Condition=" '$(PublishTrimmed)' == 'true' ">
     <ItemGroup>
-      <_PostTrimmingAssembly Include="@(ResolvedFileToPublish)"
-          Condition=" '%(PostprocessAssembly)' == 'true' " />
+      <_PostTrimmingAssembly Include="@(ResolvedFileToPublish->WithMetadataValue('PostprocessAssembly', 'true'))" />
     </ItemGroup>
     <PostTrimmingPipeline
         Assemblies="@(_PostTrimmingAssembly)"
