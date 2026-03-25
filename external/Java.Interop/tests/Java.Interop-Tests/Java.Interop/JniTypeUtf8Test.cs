@@ -90,9 +90,11 @@ namespace Java.InteropTests
 		[Test]
 		public void GetFieldID_Utf8_MatchesStringOverload ()
 		{
-			using (var Integer_class = new JniType ("java/lang/Integer"u8)) {
-				var fromString = JniEnvironment.InstanceFields.GetFieldID (Integer_class.PeerReference, "value", "I");
-				var fromUtf8   = JniEnvironment.InstanceFields.GetFieldID (Integer_class.PeerReference, "value"u8, "I"u8);
+			// Integer.value is private and blocked by ART hidden API restrictions.
+			// StreamTokenizer.ttype is a public instance field available on both JVM and Android.
+			using (var StreamTokenizer_class = new JniType ("java/io/StreamTokenizer"u8)) {
+				var fromString = JniEnvironment.InstanceFields.GetFieldID (StreamTokenizer_class.PeerReference, "ttype", "I");
+				var fromUtf8   = JniEnvironment.InstanceFields.GetFieldID (StreamTokenizer_class.PeerReference, "ttype"u8, "I"u8);
 				Assert.AreEqual (fromString.ID, fromUtf8.ID);
 			}
 		}
