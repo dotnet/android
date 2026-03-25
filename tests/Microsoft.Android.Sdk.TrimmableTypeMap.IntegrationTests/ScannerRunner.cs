@@ -12,7 +12,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests;
 
 record TypeMapEntry (string JavaName, string ManagedName, bool SkipInJavaToManaged);
 
-record MethodEntry (string JniName, string JniSignature, string? Connector);
+record MethodEntry (string JniName, string JniSignature, string? Connector, bool IsExport = false, string? JavaAccess = null);
 
 record TypeMethodGroup (string ManagedName, List<MethodEntry> Methods);
 
@@ -104,7 +104,7 @@ static class ScannerRunner
 			groups.Add (new TypeMethodGroup (
 				managedName,
 				peer.MarshalMethods
-					.Select (m => new MethodEntry (m.JniName, m.JniSignature, m.Connector))
+					.Select (m => new MethodEntry (m.JniName, m.JniSignature, m.Connector, m.IsExport, m.JavaAccess))
 					.OrderBy (m => m.JniName, StringComparer.Ordinal)
 					.ThenBy (m => m.JniSignature, StringComparer.Ordinal)
 					.ToList ()
@@ -161,10 +161,27 @@ static class ScannerRunner
 		var wrapper = CecilImporter.CreateType (typeDef, cache);
 		var methods = new List<MethodEntry> ();
 
+		// Build a set of Java method names that come from [Export] attributes
+		var exportedJavaNames = new HashSet<string> (StringComparer.Ordinal);
+		foreach (var method in typeDef.Methods) {
+			if (!method.HasCustomAttributes) {
+				continue;
+			}
+			foreach (var attr in method.CustomAttributes) {
+				if (attr.AttributeType.FullName == "Java.Interop.ExportAttribute") {
+					string? exportName = attr.ConstructorArguments.Count > 0
+						? attr.ConstructorArguments [0].Value as string
+						: null;
+					exportedJavaNames.Add (exportName ?? method.Name);
+				}
+			}
+		}
+
 		foreach (var m in wrapper.Methods) {
 			// Extract connector from Method string "n_name:sig:connector"
 			string? connector = ParseConnectorFromMethodString (m.Method);
-			methods.Add (new MethodEntry (m.JavaName, m.JniSignature, connector));
+			bool isExport = exportedJavaNames.Contains (m.JavaName);
+			methods.Add (new MethodEntry (m.JavaName, m.JniSignature, connector, isExport));
 		}
 
 		foreach (var c in wrapper.Constructors) {

@@ -11,6 +11,13 @@ using Xamarin.Android.Tasks;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests;
 
+record ComponentComparisonData (
+	string ManagedName,
+	string? ComponentKind,
+	string? ComponentName,
+	IReadOnlyList<string> ComponentProperties
+);
+
 record TypeComparisonData (
 	string ManagedName,
 	string JavaName,
@@ -263,5 +270,138 @@ static class TypeDataBuilder
 				}
 			}
 		}
+	}
+
+	static readonly HashSet<string> ComponentAttributeNames = new (StringComparer.Ordinal) {
+		"Android.App.ActivityAttribute",
+		"Android.App.ServiceAttribute",
+		"Android.Content.BroadcastReceiverAttribute",
+		"Android.Content.ContentProviderAttribute",
+		"Android.App.ApplicationAttribute",
+		"Android.App.InstrumentationAttribute",
+	};
+
+	static string GetComponentKindFromAttributeName (string attributeFullName)
+	{
+		return attributeFullName switch {
+			"Android.App.ActivityAttribute" => "Activity",
+			"Android.App.ServiceAttribute" => "Service",
+			"Android.Content.BroadcastReceiverAttribute" => "BroadcastReceiver",
+			"Android.Content.ContentProviderAttribute" => "ContentProvider",
+			"Android.App.ApplicationAttribute" => "Application",
+			"Android.App.InstrumentationAttribute" => "Instrumentation",
+			_ => attributeFullName,
+		};
+	}
+
+	public static Dictionary<string, ComponentComparisonData> BuildLegacyComponentData (string assemblyPath)
+	{
+		var cache = new TypeDefinitionCache ();
+		var resolver = new DefaultAssemblyResolver ();
+		resolver.AddSearchDirectory (Path.GetDirectoryName (assemblyPath)!);
+
+		var runtimeDir = Path.GetDirectoryName (typeof (object).Assembly.Location);
+		if (runtimeDir != null) {
+			resolver.AddSearchDirectory (runtimeDir);
+		}
+
+		var readerParams = new ReaderParameters { AssemblyResolver = resolver };
+		using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath, readerParams);
+
+		var scanner = new XAJavaTypeScanner (
+			Xamarin.Android.Tools.AndroidTargetArch.Arm64,
+			new TaskLoggingHelper (new MockBuildEngine (), "test"),
+			cache
+		);
+
+		var javaTypes = scanner.GetJavaTypes (assembly);
+		var result = new Dictionary<string, ComponentComparisonData> (StringComparer.Ordinal);
+
+		foreach (var typeDef in javaTypes) {
+			if (!typeDef.HasCustomAttributes) {
+				continue;
+			}
+
+			foreach (var attr in typeDef.CustomAttributes) {
+				if (!ComponentAttributeNames.Contains (attr.AttributeType.FullName)) {
+					continue;
+				}
+
+				var managedName = ScannerRunner.GetManagedName (typeDef);
+				var kind = GetComponentKindFromAttributeName (attr.AttributeType.FullName);
+
+				string? componentName = null;
+				var properties = new List<string> ();
+
+				if (attr.HasProperties) {
+					foreach (var prop in attr.Properties.OrderBy (p => p.Name, StringComparer.Ordinal)) {
+						if (prop.Name == "Name") {
+							componentName = prop.Argument.Value as string;
+						} else {
+							var valueStr = prop.Argument.Value?.ToString () ?? "(null)";
+							properties.Add ($"{prop.Name}={valueStr}");
+						}
+					}
+				}
+
+				properties.Sort (StringComparer.Ordinal);
+
+				result [managedName] = new ComponentComparisonData (
+					managedName,
+					kind,
+					componentName,
+					properties
+				);
+				break;
+			}
+		}
+
+		return result;
+	}
+
+	public static Dictionary<string, ComponentComparisonData> BuildNewComponentData (string[] assemblyPaths)
+	{
+		var primaryAssemblyName = Path.GetFileNameWithoutExtension (assemblyPaths [0]);
+		using var scanner = new JavaPeerScanner ();
+		var peers = scanner.Scan (assemblyPaths);
+
+		var result = new Dictionary<string, ComponentComparisonData> (StringComparer.Ordinal);
+
+		foreach (var peer in peers) {
+			if (peer.AssemblyName != primaryAssemblyName) {
+				continue;
+			}
+
+			if (peer.ComponentAttribute == null) {
+				continue;
+			}
+
+			var managedName = $"{peer.ManagedTypeName}, {peer.AssemblyName}";
+			var component = peer.ComponentAttribute;
+			var kind = component.Kind.ToString ();
+
+			string? componentName = null;
+			var properties = new List<string> ();
+
+			foreach (var kvp in component.Properties.OrderBy (p => p.Key, StringComparer.Ordinal)) {
+				if (kvp.Key == "Name") {
+					componentName = kvp.Value as string;
+				} else {
+					var valueStr = kvp.Value?.ToString () ?? "(null)";
+					properties.Add ($"{kvp.Key}={valueStr}");
+				}
+			}
+
+			properties.Sort (StringComparer.Ordinal);
+
+			result [managedName] = new ComponentComparisonData (
+				managedName,
+				kind,
+				componentName,
+				properties
+			);
+		}
+
+		return result;
 	}
 }

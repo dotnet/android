@@ -162,4 +162,45 @@ static class MarshalMethodDiffHelper
 			}
 		}
 	}
+
+	public static List<string> CompareExportFlags (
+		Dictionary<string, List<TypeMethodGroup>> legacyMethods,
+		Dictionary<string, List<TypeMethodGroup>> newMethods)
+	{
+		var mismatches = new List<string> ();
+
+		var allJavaNames = new HashSet<string> (legacyMethods.Keys);
+		allJavaNames.IntersectWith (newMethods.Keys);
+
+		foreach (var javaName in allJavaNames.OrderBy (n => n, StringComparer.Ordinal)) {
+			var legacyGroups = legacyMethods [javaName];
+			var newGroups = newMethods [javaName];
+
+			var legacyByManaged = legacyGroups.ToDictionary (g => g.ManagedName, g => g.Methods);
+			var newByManaged = newGroups.ToDictionary (g => g.ManagedName, g => g.Methods);
+
+			foreach (var managedName in legacyByManaged.Keys.Intersect (newByManaged.Keys)) {
+				var legacyMethodList = legacyByManaged [managedName];
+				var newMethodList = newByManaged [managedName];
+
+				var legacyByKey = legacyMethodList
+					.GroupBy (m => (m.JniName, m.JniSignature))
+					.ToDictionary (g => g.Key, g => g.First ());
+				var newByKey = newMethodList
+					.GroupBy (m => (m.JniName, m.JniSignature))
+					.ToDictionary (g => g.Key, g => g.First ());
+
+				foreach (var key in legacyByKey.Keys.Intersect (newByKey.Keys)) {
+					var lm = legacyByKey [key];
+					var nm = newByKey [key];
+
+					if (lm.IsExport != nm.IsExport) {
+						mismatches.Add ($"{javaName} [{managedName}]: {key.JniName}{key.JniSignature} legacy.IsExport={lm.IsExport} new.IsExport={nm.IsExport}");
+					}
+				}
+			}
+		}
+
+		return mismatches;
+	}
 }

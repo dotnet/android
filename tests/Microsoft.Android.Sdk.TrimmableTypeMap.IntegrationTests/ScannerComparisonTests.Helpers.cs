@@ -137,4 +137,72 @@ public partial class ScannerComparisonTests
 		var details = string.Join (Environment.NewLine, items.Take (20).Select (item => $"  {item}"));
 		Assert.Fail ($"{label} ({items.Count}){Environment.NewLine}{details}");
 	}
+
+	[Fact]
+	public void Scanner_NonPeerAssembly_ProducesEmptyResults ()
+	{
+		// Scan an assembly with no Java peers (the test assembly itself has no [Register] types)
+		var testAssemblyPath = typeof (ScannerComparisonTests).Assembly.Location;
+		using var scanner = new JavaPeerScanner ();
+		var peers = scanner.Scan (new [] { testAssemblyPath });
+
+		// The test assembly has no Java peer types — scan should succeed with empty results
+		Assert.Empty (peers);
+	}
+
+	[Fact]
+	public void ImplementorTypes_HaveCorrectMonoPrefix ()
+	{
+		using var scanner = new JavaPeerScanner ();
+		var peers = scanner.Scan (AllAssemblyPaths);
+
+		// Find implementor types — these follow the pattern *_*Implementor
+		var implementors = peers.Where (p =>
+			p.ManagedTypeName.Contains ("Implementor", StringComparison.Ordinal) &&
+			!p.IsInterface).ToList ();
+
+		Assert.True (implementors.Count > 10,
+			$"Expected >10 implementor types in Mono.Android, got {implementors.Count}");
+
+		// Verify all implementors have the mono/ package prefix in their JNI name
+		var missingPrefix = implementors
+			.Where (p => !p.JavaName.StartsWith ("mono/", StringComparison.Ordinal))
+			.Select (p => $"{p.ManagedTypeName} → {p.JavaName}")
+			.ToList ();
+
+		AssertNoDiffs ("IMPLEMENTORS MISSING mono/ PREFIX", missingPrefix);
+	}
+
+	[Fact]
+	public void ExactComponentAttributes_MonoAndroid ()
+	{
+		var legacyData = TypeDataBuilder.BuildLegacyComponentData (MonoAndroidAssemblyPath);
+		var newData = TypeDataBuilder.BuildNewComponentData (AllAssemblyPaths);
+
+		Assert.True (legacyData.Count > 50, $"Expected >50 legacy component entries, got {legacyData.Count}");
+		Assert.True (newData.Count > 50, $"Expected >50 new component entries, got {newData.Count}");
+
+		var (missing, extra, kindMismatches, nameMismatches) = ComparisonDiffHelper.CompareComponentAttributes (legacyData, newData);
+
+		AssertNoDiffs ("COMPONENTS MISSING from new scanner", missing);
+		AssertNoDiffs ("COMPONENTS EXTRA in new scanner", extra);
+		AssertNoDiffs ("COMPONENT KIND MISMATCHES", kindMismatches);
+		AssertNoDiffs ("COMPONENT NAME MISMATCHES", nameMismatches);
+	}
+
+	[Fact]
+	public void ExactComponentAttributes_UserTypesFixture ()
+	{
+		var paths = AllUserTypesAssemblyPaths;
+		Assert.NotNull (paths);
+
+		var legacyData = TypeDataBuilder.BuildLegacyComponentData (paths! [0]);
+		var newData = TypeDataBuilder.BuildNewComponentData (paths);
+		var (missing, extra, kindMismatches, nameMismatches) = ComparisonDiffHelper.CompareComponentAttributes (legacyData, newData);
+
+		AssertNoDiffs ("COMPONENTS MISSING from new scanner", missing);
+		AssertNoDiffs ("COMPONENTS EXTRA in new scanner", extra);
+		AssertNoDiffs ("COMPONENT KIND MISMATCHES", kindMismatches);
+		AssertNoDiffs ("COMPONENT NAME MISMATCHES", nameMismatches);
+	}
 }

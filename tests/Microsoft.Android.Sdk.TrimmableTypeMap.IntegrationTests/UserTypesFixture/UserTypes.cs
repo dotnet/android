@@ -155,4 +155,36 @@ namespace UserApp
 		{
 		}
 	}
+
+	// Export with Throws for export metadata comparison
+	public class ExportWithThrows : Java.Lang.Object
+	{
+		[Export ("riskyOperation", Throws = new [] { typeof (Java.IO.IOException) })]
+		public void RiskyOperation ()
+		{
+		}
+	}
+
+	// ExportField for Java field generation comparison
+	public class FieldExporter : Java.Lang.Object
+	{
+		[ExportField ("MY_CONSTANT")]
+		public static string GetMyConstant () => "hello";
+	}
+
+	// Activity with intent filters and categories
+	[Activity (Name = "com.example.userapp.ShareActivity", Label = "Share")]
+	[IntentFilter (
+		new [] { "android.intent.action.SEND" },
+		Categories = new [] { "android.intent.category.DEFAULT" },
+		DataMimeType = "text/plain")]
+	public class ShareActivity : Activity
+	{
+	}
+
+	// Instrumentation component
+	[Instrumentation (Name = "com.example.userapp.TestRunner")]
+	public class TestRunner : Android.App.Instrumentation
+	{
+	}
 }

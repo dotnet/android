@@ -11,6 +11,10 @@ public void ExactTypeMap_MonoAndroid ()
 {
 var (legacy, _) = ScannerRunner.RunLegacy (MonoAndroidAssemblyPath);
 var (newEntries, _) = ScannerRunner.RunNew (AllAssemblyPaths);
+
+Assert.True (legacy.Count > 3000, $"Expected >3000 legacy type map entries, got {legacy.Count}");
+Assert.True (newEntries.Count > 3000, $"Expected >3000 new type map entries, got {newEntries.Count}");
+
 AssertTypeMapMatch (legacy, newEntries);
 }
 
@@ -19,6 +23,10 @@ public void ExactMarshalMethods_MonoAndroid ()
 {
 var (_, legacyMethods) = ScannerRunner.RunLegacy (MonoAndroidAssemblyPath);
 var (_, newMethods) = ScannerRunner.RunNew (AllAssemblyPaths);
+
+Assert.True (legacyMethods.Count > 500, $"Expected >500 legacy method groups, got {legacyMethods.Count}");
+Assert.True (newMethods.Count > 500, $"Expected >500 new method groups, got {newMethods.Count}");
+
 var result = MarshalMethodDiffHelper.CompareMarshalMethods (legacyMethods, newMethods);
 
 AssertNoDiffs ("MANAGED TYPES MISSING from new scanner", result.MissingTypes);
@@ -46,6 +54,10 @@ public void ExactBaseJavaNames_MonoAndroid ()
 {
 var (legacyData, _) = TypeDataBuilder.BuildLegacy (MonoAndroidAssemblyPath);
 var newData = TypeDataBuilder.BuildNew (AllAssemblyPaths);
+
+Assert.True (legacyData.Count > 3000, $"Expected >3000 legacy type data entries, got {legacyData.Count}");
+Assert.True (newData.Count > 3000, $"Expected >3000 new type data entries, got {newData.Count}");
+
 var mismatches = ComparisonDiffHelper.CompareBaseJavaNames (legacyData, newData);
 
 AssertNoDiffs ("BASE JAVA NAME MISMATCHES", mismatches);
@@ -56,6 +68,10 @@ public void ExactImplementedInterfaces_MonoAndroid ()
 {
 var (legacyData, _) = TypeDataBuilder.BuildLegacy (MonoAndroidAssemblyPath);
 var newData = TypeDataBuilder.BuildNew (AllAssemblyPaths);
+
+Assert.True (legacyData.Count > 3000, $"Expected >3000 legacy type data entries, got {legacyData.Count}");
+Assert.True (newData.Count > 3000, $"Expected >3000 new type data entries, got {newData.Count}");
+
 var (missingInterfaces, extraInterfaces) = ComparisonDiffHelper.CompareImplementedInterfaces (legacyData, newData);
 
 AssertNoDiffs ("INTERFACES MISSING from new scanner", missingInterfaces);
@@ -67,6 +83,10 @@ public void ExactActivationCtors_MonoAndroid ()
 {
 var (legacyData, _) = TypeDataBuilder.BuildLegacy (MonoAndroidAssemblyPath);
 var newData = TypeDataBuilder.BuildNew (AllAssemblyPaths);
+
+Assert.True (legacyData.Count > 3000, $"Expected >3000 legacy type data entries, got {legacyData.Count}");
+Assert.True (newData.Count > 3000, $"Expected >3000 new type data entries, got {newData.Count}");
+
 var (presenceMismatches, declaringTypeMismatches, styleMismatches) = ComparisonDiffHelper.CompareActivationCtors (legacyData, newData);
 
 AssertNoDiffs ("ACTIVATION CTOR PRESENCE MISMATCHES", presenceMismatches);
@@ -79,6 +99,10 @@ public void ExactJavaConstructors_MonoAndroid ()
 {
 var (legacyData, _) = TypeDataBuilder.BuildLegacy (MonoAndroidAssemblyPath);
 var newData = TypeDataBuilder.BuildNew (AllAssemblyPaths);
+
+Assert.True (legacyData.Count > 3000, $"Expected >3000 legacy type data entries, got {legacyData.Count}");
+Assert.True (newData.Count > 3000, $"Expected >3000 new type data entries, got {newData.Count}");
+
 var (missingCtors, extraCtors) = ComparisonDiffHelper.CompareJavaConstructors (legacyData, newData);
 
 AssertNoDiffs ("JAVA CONSTRUCTORS MISSING from new scanner", missingCtors);
@@ -90,6 +114,10 @@ public void ExactTypeFlags_MonoAndroid ()
 {
 var (legacyData, _) = TypeDataBuilder.BuildLegacy (MonoAndroidAssemblyPath);
 var newData = TypeDataBuilder.BuildNew (AllAssemblyPaths);
+
+Assert.True (legacyData.Count > 3000, $"Expected >3000 legacy type data entries, got {legacyData.Count}");
+Assert.True (newData.Count > 3000, $"Expected >3000 new type data entries, got {newData.Count}");
+
 var (interfaceMismatches, abstractMismatches, genericMismatches, acwMismatches) = ComparisonDiffHelper.CompareTypeFlags (legacyData, newData);
 
 AssertNoDiffs ("IsInterface MISMATCHES", interfaceMismatches);

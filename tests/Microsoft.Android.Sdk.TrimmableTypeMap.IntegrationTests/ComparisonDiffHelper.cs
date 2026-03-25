@@ -170,4 +170,46 @@ static class ComparisonDiffHelper
 
 		return (interfaceMismatches, abstractMismatches, genericMismatches, acwMismatches);
 	}
+
+	public static (List<string> missingComponents, List<string> extraComponents, List<string> kindMismatches, List<string> nameMismatches) CompareComponentAttributes (
+		Dictionary<string, ComponentComparisonData> legacyData,
+		Dictionary<string, ComponentComparisonData> newData)
+	{
+		var allManagedNames = new HashSet<string> (legacyData.Keys);
+		allManagedNames.UnionWith (newData.Keys);
+
+		var missingComponents = new List<string> ();
+		var extraComponents = new List<string> ();
+		var kindMismatches = new List<string> ();
+		var nameMismatches = new List<string> ();
+
+		foreach (var managedName in allManagedNames.OrderBy (n => n, System.StringComparer.Ordinal)) {
+			var inLegacy = legacyData.TryGetValue (managedName, out var legacy);
+			var inNew = newData.TryGetValue (managedName, out var newInfo);
+
+			if (inLegacy && !inNew) {
+				missingComponents.Add ($"{managedName}: {(legacy?.ComponentKind ?? "(null)")}");
+				continue;
+			}
+
+			if (!inLegacy && inNew) {
+				extraComponents.Add ($"{managedName}: {(newInfo?.ComponentKind ?? "(null)")}");
+				continue;
+			}
+
+			if (legacy == null || newInfo == null) {
+				continue;
+			}
+
+			if (legacy.ComponentKind != newInfo.ComponentKind) {
+				kindMismatches.Add ($"{managedName}: legacy='{legacy.ComponentKind ?? "(null)"}' new='{newInfo.ComponentKind ?? "(null)"}'");
+			}
+
+			if (legacy.ComponentName != newInfo.ComponentName) {
+				nameMismatches.Add ($"{managedName}: legacy='{legacy.ComponentName ?? "(null)"}' new='{newInfo.ComponentName ?? "(null)"}'");
+			}
+		}
+
+		return (missingComponents, extraComponents, kindMismatches, nameMismatches);
+	}
 }
