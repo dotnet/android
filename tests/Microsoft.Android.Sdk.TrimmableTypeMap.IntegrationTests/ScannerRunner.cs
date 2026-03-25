@@ -12,7 +12,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests;
 
 record TypeMapEntry (string JavaName, string ManagedName, bool SkipInJavaToManaged);
 
-record MethodEntry (string JniName, string JniSignature, string? Connector, bool IsExport = false, string? JavaAccess = null);
+record MethodEntry (string JniName, string JniSignature, string? Connector, bool IsExport = false, string? JavaAccess = null, string? NativeCallbackName = null, string DeclaringTypeName = "");
 
 record TypeMethodGroup (string ManagedName, List<MethodEntry> Methods);
 
@@ -104,7 +104,7 @@ static class ScannerRunner
 			groups.Add (new TypeMethodGroup (
 				managedName,
 				peer.MarshalMethods
-					.Select (m => new MethodEntry (m.JniName, m.JniSignature, m.Connector, m.IsExport, m.JavaAccess))
+					.Select (m => new MethodEntry (m.JniName, m.JniSignature, m.Connector, m.IsExport, m.JavaAccess, m.NativeCallbackName, m.DeclaringTypeName))
 					.OrderBy (m => m.JniName, StringComparer.Ordinal)
 					.ThenBy (m => m.JniSignature, StringComparer.Ordinal)
 					.ToList ()
@@ -180,12 +180,14 @@ static class ScannerRunner
 		foreach (var m in wrapper.Methods) {
 			// Extract connector from Method string "n_name:sig:connector"
 			string? connector = ParseConnectorFromMethodString (m.Method);
+			string? nativeCallback = ParseNativeCallbackFromMethodString (m.Method);
 			bool isExport = exportedJavaNames.Contains (m.JavaName);
-			methods.Add (new MethodEntry (m.JavaName, m.JniSignature, connector, isExport));
+			methods.Add (new MethodEntry (m.JavaName, m.JniSignature, connector, isExport, NativeCallbackName: nativeCallback));
 		}
 
 		foreach (var c in wrapper.Constructors) {
-			methods.Add (new MethodEntry (".ctor", c.JniSignature, null));
+			string? nativeCallback = ParseNativeCallbackFromMethodString (c.Method);
+			methods.Add (new MethodEntry (".ctor", c.JniSignature, null, NativeCallbackName: nativeCallback));
 		}
 
 		return methods;
@@ -267,5 +269,21 @@ static class ScannerRunner
 		}
 		var connector = methodStr.Substring (secondColon + 1);
 		return connector.Replace ('+', '/');
+	}
+
+	/// <summary>
+	/// Parses the native callback name from a CallableWrapperMethod.Method string.
+	/// Format: "n_{name}:{signature}:{connector}" — returns "n_{name}".
+	/// </summary>
+	static string? ParseNativeCallbackFromMethodString (string? methodStr)
+	{
+		if (methodStr is null) {
+			return null;
+		}
+		int firstColon = methodStr.IndexOf (':');
+		if (firstColon < 0) {
+			return methodStr;
+		}
+		return methodStr.Substring (0, firstColon);
 	}
 }

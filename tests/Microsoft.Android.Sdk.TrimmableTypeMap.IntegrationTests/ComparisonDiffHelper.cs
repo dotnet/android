@@ -258,4 +258,116 @@ static class ComparisonDiffHelper
 
 		return (missingPermissions, extraPermissions, missingFeatures, extraFeatures);
 	}
+
+	public static List<string> CompareCompatJniNames (
+		Dictionary<string, TypeComparisonData> legacyData,
+		Dictionary<string, TypeComparisonData> newData)
+	{
+		var allManagedNames = new HashSet<string> (legacyData.Keys);
+		allManagedNames.IntersectWith (newData.Keys);
+
+		var mismatches = new List<string> ();
+
+		foreach (var managedName in allManagedNames.OrderBy (n => n, System.StringComparer.Ordinal)) {
+			var legacy = legacyData [managedName];
+			var newInfo = newData [managedName];
+
+			if (!string.Equals (legacy.CompatJniName, newInfo.CompatJniName, System.StringComparison.Ordinal)) {
+				mismatches.Add ($"{managedName}: legacy='{legacy.CompatJniName}' new='{newInfo.CompatJniName}'");
+			}
+		}
+
+		return mismatches;
+	}
+
+	public static List<string> CompareCannotRegisterInStaticCtor (
+		Dictionary<string, TypeComparisonData> legacyData,
+		Dictionary<string, TypeComparisonData> newData)
+	{
+		var allManagedNames = new HashSet<string> (legacyData.Keys);
+		allManagedNames.IntersectWith (newData.Keys);
+
+		var mismatches = new List<string> ();
+
+		foreach (var managedName in allManagedNames.OrderBy (n => n, System.StringComparer.Ordinal)) {
+			var legacy = legacyData [managedName];
+			var newInfo = newData [managedName];
+
+			if (legacy.CannotRegisterInStaticConstructor != newInfo.CannotRegisterInStaticConstructor) {
+				mismatches.Add ($"{managedName}: legacy={legacy.CannotRegisterInStaticConstructor} new={newInfo.CannotRegisterInStaticConstructor}");
+			}
+		}
+
+		return mismatches;
+	}
+
+	public static List<string> CompareInvokerTypes (
+		Dictionary<string, TypeComparisonData> legacyData,
+		Dictionary<string, TypeComparisonData> newData)
+	{
+		var allManagedNames = new HashSet<string> (legacyData.Keys);
+		allManagedNames.IntersectWith (newData.Keys);
+
+		var mismatches = new List<string> ();
+
+		foreach (var managedName in allManagedNames.OrderBy (n => n, System.StringComparer.Ordinal)) {
+			var legacy = legacyData [managedName];
+			var newInfo = newData [managedName];
+
+			// The legacy [Register] attribute only stores InvokerTypeName for
+			// interface types (as the third ctor arg). Abstract class invokers
+			// are resolved differently and not available from Cecil attributes.
+			// Only compare when legacy has a value.
+			if (legacy.InvokerTypeName == null && newInfo.InvokerTypeName != null) {
+				continue;
+			}
+
+			if (!string.Equals (legacy.InvokerTypeName, newInfo.InvokerTypeName, System.StringComparison.Ordinal)) {
+				mismatches.Add ($"{managedName}: legacy='{legacy.InvokerTypeName ?? "(null)"}' new='{newInfo.InvokerTypeName ?? "(null)"}'");
+			}
+		}
+
+		return mismatches;
+	}
+
+	public static List<string> CompareConstructorSuperArgs (
+		Dictionary<string, List<ConstructorSuperArgData>> legacyData,
+		Dictionary<string, List<ConstructorSuperArgData>> newData)
+	{
+		var allManagedNames = new HashSet<string> (legacyData.Keys);
+		allManagedNames.IntersectWith (newData.Keys);
+
+		var mismatches = new List<string> ();
+
+		foreach (var managedName in allManagedNames.OrderBy (n => n, System.StringComparer.Ordinal)) {
+			var legacyCtors = legacyData [managedName];
+			var newCtors = newData [managedName];
+
+			var legacyBySig = new Dictionary<string, string?> (System.StringComparer.Ordinal);
+			foreach (var c in legacyCtors) {
+				legacyBySig [c.JniSignature] = c.SuperArgs;
+			}
+
+			var newBySig = new Dictionary<string, string?> (System.StringComparer.Ordinal);
+			foreach (var c in newCtors) {
+				newBySig [c.JniSignature] = c.SuperArgs;
+			}
+
+			foreach (var sig in legacyBySig.Keys.Intersect (newBySig.Keys)) {
+				var legacyArgs = legacyBySig [sig];
+				var newArgs = newBySig [sig];
+
+				// Only compare when the new scanner reports non-null SuperArgs ([Export] constructors)
+				if (newArgs == null) {
+					continue;
+				}
+
+				if (!string.Equals (legacyArgs, newArgs, System.StringComparison.Ordinal)) {
+					mismatches.Add ($"{managedName} <init>{sig}: legacy='{legacyArgs ?? "(null)"}' new='{newArgs}'");
+				}
+			}
+		}
+
+		return mismatches;
+	}
 }

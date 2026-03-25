@@ -203,4 +203,116 @@ static class MarshalMethodDiffHelper
 
 		return mismatches;
 	}
+
+	public static List<string> CompareNativeCallbackNames (
+		Dictionary<string, List<TypeMethodGroup>> legacyMethods,
+		Dictionary<string, List<TypeMethodGroup>> newMethods)
+	{
+		var mismatches = new List<string> ();
+
+		var allJavaNames = new HashSet<string> (legacyMethods.Keys);
+		allJavaNames.IntersectWith (newMethods.Keys);
+
+		foreach (var javaName in allJavaNames.OrderBy (n => n, StringComparer.Ordinal)) {
+			var legacyGroups = legacyMethods [javaName];
+			var newGroups = newMethods [javaName];
+
+			var legacyByManaged = legacyGroups.ToDictionary (g => g.ManagedName, g => g.Methods);
+			var newByManaged = newGroups.ToDictionary (g => g.ManagedName, g => g.Methods);
+
+			foreach (var managedName in legacyByManaged.Keys.Intersect (newByManaged.Keys)) {
+				var legacyMethodList = legacyByManaged [managedName];
+				var newMethodList = newByManaged [managedName];
+
+				var legacyByKey = legacyMethodList
+					.GroupBy (m => (m.JniName, m.JniSignature))
+					.ToDictionary (g => g.Key, g => g.First ());
+				var newByKey = newMethodList
+					.GroupBy (m => (m.JniName, m.JniSignature))
+					.ToDictionary (g => g.Key, g => g.First ());
+
+				foreach (var key in legacyByKey.Keys.Intersect (newByKey.Keys)) {
+					var lm = legacyByKey [key];
+					var nm = newByKey [key];
+
+					// Skip constructors — legacy uses "n_ClassName" format while
+					// new scanner uses "n_ctor", which are different by design
+					if (key.JniName == ".ctor") {
+						continue;
+					}
+
+					var lc = lm.NativeCallbackName ?? "";
+					var nc = nm.NativeCallbackName ?? "";
+
+					// DoNotGenerateAcw types and interfaces use direct [Register]
+					// attribute extraction which doesn't produce NativeCallbackName.
+					// Only compare when legacy has a value.
+					if (lc == "") {
+						continue;
+					}
+
+					// Legacy format: "n_jniMethodName"
+					// New format: "n_ManagedMethodName_EncodedParams"
+					// The naming conventions differ by design — legacy uses JNI names
+					// while new scanner uses managed names. Just verify both have a
+					// callback and start with "n_".
+					if (nc == "") {
+						mismatches.Add ($"{javaName} [{managedName}]: {key.JniName}{key.JniSignature} legacy='{lc}' new=(missing)");
+					} else if (!nc.StartsWith ("n_", StringComparison.Ordinal)) {
+						mismatches.Add ($"{javaName} [{managedName}]: {key.JniName}{key.JniSignature} new callback '{nc}' does not start with 'n_'");
+					}
+				}
+			}
+		}
+
+		return mismatches;
+	}
+
+	public static List<string> CompareDeclaringTypes (
+		Dictionary<string, List<TypeMethodGroup>> legacyMethods,
+		Dictionary<string, List<TypeMethodGroup>> newMethods)
+	{
+		var mismatches = new List<string> ();
+
+		var allJavaNames = new HashSet<string> (legacyMethods.Keys);
+		allJavaNames.IntersectWith (newMethods.Keys);
+
+		foreach (var javaName in allJavaNames.OrderBy (n => n, StringComparer.Ordinal)) {
+			var legacyGroups = legacyMethods [javaName];
+			var newGroups = newMethods [javaName];
+
+			var legacyByManaged = legacyGroups.ToDictionary (g => g.ManagedName, g => g.Methods);
+			var newByManaged = newGroups.ToDictionary (g => g.ManagedName, g => g.Methods);
+
+			foreach (var managedName in legacyByManaged.Keys.Intersect (newByManaged.Keys)) {
+				var legacyMethodList = legacyByManaged [managedName];
+				var newMethodList = newByManaged [managedName];
+
+				var legacyByKey = legacyMethodList
+					.GroupBy (m => (m.JniName, m.JniSignature))
+					.ToDictionary (g => g.Key, g => g.First ());
+				var newByKey = newMethodList
+					.GroupBy (m => (m.JniName, m.JniSignature))
+					.ToDictionary (g => g.Key, g => g.First ());
+
+				foreach (var key in legacyByKey.Keys.Intersect (newByKey.Keys)) {
+					var lm = legacyByKey [key];
+					var nm = newByKey [key];
+
+					// The legacy pipeline doesn't track declaring types for
+					// interface method implementations. Only compare when
+					// legacy has a non-empty value.
+					if (lm.DeclaringTypeName == "" && nm.DeclaringTypeName != "") {
+						continue;
+					}
+
+					if (lm.DeclaringTypeName != nm.DeclaringTypeName) {
+						mismatches.Add ($"{javaName} [{managedName}]: {key.JniName}{key.JniSignature} legacy='{lm.DeclaringTypeName}' new='{nm.DeclaringTypeName}'");
+					}
+				}
+			}
+		}
+
+		return mismatches;
+	}
 }

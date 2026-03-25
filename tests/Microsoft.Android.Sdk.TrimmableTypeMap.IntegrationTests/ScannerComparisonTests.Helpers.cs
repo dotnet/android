@@ -274,4 +274,88 @@ public partial class ScannerComparisonTests
 		Assert.NotNull (exportMethod);
 		Assert.Equal ("()V", exportMethod.JniSignature);
 	}
+
+	[Fact]
+	public void ExactCompatJniNames_MonoAndroid ()
+	{
+		var (legacyData, _) = TypeDataBuilder.BuildLegacy (MonoAndroidAssemblyPath);
+		var newData = TypeDataBuilder.BuildNew (AllAssemblyPaths);
+
+		Assert.True (legacyData.Count > 3000, $"Expected >3000 legacy type data entries, got {legacyData.Count}");
+		Assert.True (newData.Count > 3000, $"Expected >3000 new type data entries, got {newData.Count}");
+
+		var mismatches = ComparisonDiffHelper.CompareCompatJniNames (legacyData, newData);
+
+		AssertNoDiffs ("COMPAT JNI NAME MISMATCHES", mismatches);
+	}
+
+	[Fact]
+	public void ExactNativeCallbackNames_MonoAndroid ()
+	{
+		var (_, legacyMethods) = ScannerRunner.RunLegacy (MonoAndroidAssemblyPath);
+		var (_, newMethods) = ScannerRunner.RunNew (AllAssemblyPaths);
+
+		Assert.True (legacyMethods.Count > 500, $"Expected >500 legacy method groups, got {legacyMethods.Count}");
+		Assert.True (newMethods.Count > 500, $"Expected >500 new method groups, got {newMethods.Count}");
+
+		var mismatches = MarshalMethodDiffHelper.CompareNativeCallbackNames (legacyMethods, newMethods);
+
+		AssertNoDiffs ("NATIVE CALLBACK NAME MISMATCHES", mismatches);
+	}
+
+	[Fact]
+	public void ExactDeclaringTypes_MonoAndroid ()
+	{
+		var (_, legacyMethods) = ScannerRunner.RunLegacy (MonoAndroidAssemblyPath);
+		var (_, newMethods) = ScannerRunner.RunNew (AllAssemblyPaths);
+
+		Assert.True (legacyMethods.Count > 500, $"Expected >500 legacy method groups, got {legacyMethods.Count}");
+		Assert.True (newMethods.Count > 500, $"Expected >500 new method groups, got {newMethods.Count}");
+
+		var mismatches = MarshalMethodDiffHelper.CompareDeclaringTypes (legacyMethods, newMethods);
+
+		AssertNoDiffs ("DECLARING TYPE MISMATCHES", mismatches);
+	}
+
+	[Fact]
+	public void ExactConstructorSuperArgs_UserTypesFixture ()
+	{
+		var paths = AllUserTypesAssemblyPaths;
+		Assert.NotNull (paths);
+
+		var legacyData = TypeDataBuilder.BuildLegacyConstructorSuperArgs (paths! [0]);
+		var newData = TypeDataBuilder.BuildNewConstructorSuperArgs (paths);
+
+		var mismatches = ComparisonDiffHelper.CompareConstructorSuperArgs (legacyData, newData);
+
+		AssertNoDiffs ("CONSTRUCTOR SUPER ARGS MISMATCHES", mismatches);
+	}
+
+	[Fact]
+	public void ExactInvokerTypes_MonoAndroid ()
+	{
+		var (legacyData, _) = TypeDataBuilder.BuildLegacy (MonoAndroidAssemblyPath);
+		var newData = TypeDataBuilder.BuildNew (AllAssemblyPaths);
+
+		Assert.True (legacyData.Count > 3000, $"Expected >3000 legacy type data entries, got {legacyData.Count}");
+		Assert.True (newData.Count > 3000, $"Expected >3000 new type data entries, got {newData.Count}");
+
+		var mismatches = ComparisonDiffHelper.CompareInvokerTypes (legacyData, newData);
+
+		AssertNoDiffs ("INVOKER TYPE MISMATCHES", mismatches);
+	}
+
+	[Fact]
+	public void ExactCannotRegisterInStaticCtor_MonoAndroid ()
+	{
+		var (legacyData, _) = TypeDataBuilder.BuildLegacy (MonoAndroidAssemblyPath);
+		var newData = TypeDataBuilder.BuildNew (AllAssemblyPaths);
+
+		Assert.True (legacyData.Count > 3000, $"Expected >3000 legacy type data entries, got {legacyData.Count}");
+		Assert.True (newData.Count > 3000, $"Expected >3000 new type data entries, got {newData.Count}");
+
+		var mismatches = ComparisonDiffHelper.CompareCannotRegisterInStaticCtor (legacyData, newData);
+
+		AssertNoDiffs ("CANNOT REGISTER IN STATIC CTOR MISMATCHES", mismatches);
+	}
 }

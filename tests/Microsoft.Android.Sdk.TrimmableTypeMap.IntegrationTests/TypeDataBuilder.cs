@@ -35,7 +35,15 @@ record TypeComparisonData (
 	bool IsInterface,
 	bool IsAbstract,
 	bool IsGenericDefinition,
-	bool DoNotGenerateAcw
+	bool DoNotGenerateAcw,
+	string CompatJniName,
+	bool CannotRegisterInStaticConstructor,
+	string? InvokerTypeName
+);
+
+record ConstructorSuperArgData (
+	string JniSignature,
+	string? SuperArgs
 );
 
 static class TypeDataBuilder
@@ -124,13 +132,29 @@ static class TypeDataBuilder
 			FindLegacyActivationCtor (typeDef, cache,
 				out bool hasActivationCtor, out string? activationCtorDeclaringType, out string? activationCtorStyle);
 
+			// Extract InvokerTypeName from [Register] attribute's 3rd constructor arg
+			string? invokerTypeName = null;
+			if (typeDef.HasCustomAttributes) {
+				foreach (var attr in typeDef.CustomAttributes) {
+					if (attr.AttributeType.FullName == "Android.Runtime.RegisterAttribute" &&
+					    attr.ConstructorArguments.Count >= 3) {
+						var invoker = attr.ConstructorArguments [2].Value as string;
+						if (!string.IsNullOrEmpty (invoker)) {
+							invokerTypeName = invoker;
+						}
+					}
+				}
+			}
+
 			// Use the real legacy JCW pipeline (CecilImporter.CreateType) to extract
 			// Java constructors, including the base ctor chain and parameterless fallback.
 			// This matches what the actual build does, unlike the previous manual [Register]
 			// attribute scanning which only found directly-attributed ctors.
+			bool cannotRegisterInStaticCtor = false;
 			var javaCtorSignatures = new List<string> ();
 			if (!typeDef.IsInterface && !ScannerRunner.HasDoNotGenerateAcw (typeDef)) {
 				var wrapper = CecilImporter.CreateType (typeDef, cache);
+				cannotRegisterInStaticCtor = wrapper.CannotRegisterInStaticConstructor;
 				foreach (var ctor in wrapper.Constructors) {
 					if (!string.IsNullOrEmpty (ctor.JniSignature)) {
 						javaCtorSignatures.Add (ctor.JniSignature);
@@ -153,7 +177,10 @@ static class TypeDataBuilder
 				typeDef.IsInterface,
 				typeDef.IsAbstract && !typeDef.IsInterface,
 				typeDef.HasGenericParameters,
-				GetCecilDoNotGenerateAcw (typeDef)
+				GetCecilDoNotGenerateAcw (typeDef),
+				javaName,
+				cannotRegisterInStaticCtor,
+				invokerTypeName
 			);
 		}
 
@@ -205,11 +232,88 @@ static class TypeDataBuilder
 				peer.IsInterface,
 				peer.IsAbstract && !peer.IsInterface,
 				peer.IsGenericDefinition,
-				peer.DoNotGenerateAcw
+				peer.DoNotGenerateAcw,
+				peer.CompatJniName,
+				peer.CannotRegisterInStaticConstructor,
+				peer.InvokerTypeName
 			);
 		}
 
 		return perType;
+	}
+
+	public static Dictionary<string, List<ConstructorSuperArgData>> BuildLegacyConstructorSuperArgs (string assemblyPath)
+	{
+		var cache = new TypeDefinitionCache ();
+		var resolver = new DefaultAssemblyResolver ();
+		resolver.AddSearchDirectory (Path.GetDirectoryName (assemblyPath)!);
+
+		var runtimeDir = Path.GetDirectoryName (typeof (object).Assembly.Location);
+		if (runtimeDir != null) {
+			resolver.AddSearchDirectory (runtimeDir);
+		}
+
+		var readerParams = new ReaderParameters { AssemblyResolver = resolver };
+		using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath, readerParams);
+
+		var scanner = new XAJavaTypeScanner (
+			Xamarin.Android.Tools.AndroidTargetArch.Arm64,
+			new TaskLoggingHelper (new MockBuildEngine (), "test"),
+			cache
+		);
+
+		var javaTypes = scanner.GetJavaTypes (assembly);
+		var result = new Dictionary<string, List<ConstructorSuperArgData>> (StringComparer.Ordinal);
+
+		foreach (var typeDef in javaTypes) {
+			if (typeDef.IsInterface || ScannerRunner.HasDoNotGenerateAcw (typeDef)) {
+				continue;
+			}
+
+			var managedName = ScannerRunner.GetManagedName (typeDef);
+			var wrapper = CecilImporter.CreateType (typeDef, cache);
+			var ctors = new List<ConstructorSuperArgData> ();
+
+			foreach (var ctor in wrapper.Constructors) {
+				if (!string.IsNullOrEmpty (ctor.JniSignature)) {
+					ctors.Add (new ConstructorSuperArgData (ctor.JniSignature, ctor.SuperCall));
+				}
+			}
+
+			if (ctors.Count > 0) {
+				result [managedName] = ctors;
+			}
+		}
+
+		return result;
+	}
+
+	public static Dictionary<string, List<ConstructorSuperArgData>> BuildNewConstructorSuperArgs (string[] assemblyPaths)
+	{
+		var primaryAssemblyName = Path.GetFileNameWithoutExtension (assemblyPaths [0]);
+		using var scanner = new JavaPeerScanner ();
+		var peers = scanner.Scan (assemblyPaths);
+
+		var result = new Dictionary<string, List<ConstructorSuperArgData>> (StringComparer.Ordinal);
+
+		foreach (var peer in peers) {
+			if (peer.AssemblyName != primaryAssemblyName) {
+				continue;
+			}
+
+			var managedName = $"{peer.ManagedTypeName}, {peer.AssemblyName}";
+			var ctors = new List<ConstructorSuperArgData> ();
+
+			foreach (var ctor in peer.JavaConstructors) {
+				ctors.Add (new ConstructorSuperArgData (ctor.JniSignature, ctor.SuperArgumentsString));
+			}
+
+			if (ctors.Count > 0) {
+				result [managedName] = ctors;
+			}
+		}
+
+		return result;
 	}
 
 	static void FindLegacyActivationCtor (TypeDefinition typeDef, TypeDefinitionCache cache,
