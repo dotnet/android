@@ -281,8 +281,8 @@ public partial class ScannerComparisonTests
 		var (legacyData, _) = TypeDataBuilder.BuildLegacy (MonoAndroidAssemblyPath);
 		var newData = TypeDataBuilder.BuildNew (AllAssemblyPaths);
 
-		Assert.True (legacyData.Count > 3000, $"Expected >3000 legacy type data entries, got {legacyData.Count}");
-		Assert.True (newData.Count > 3000, $"Expected >3000 new type data entries, got {newData.Count}");
+		Assert.True (legacyData.Count > 8000, $"Expected >8000 legacy type data entries, got {legacyData.Count}");
+		Assert.True (newData.Count > 8000, $"Expected >8000 new type data entries, got {newData.Count}");
 
 		var mismatches = ComparisonDiffHelper.CompareCompatJniNames (legacyData, newData);
 
@@ -337,8 +337,8 @@ public partial class ScannerComparisonTests
 		var (legacyData, _) = TypeDataBuilder.BuildLegacy (MonoAndroidAssemblyPath);
 		var newData = TypeDataBuilder.BuildNew (AllAssemblyPaths);
 
-		Assert.True (legacyData.Count > 3000, $"Expected >3000 legacy type data entries, got {legacyData.Count}");
-		Assert.True (newData.Count > 3000, $"Expected >3000 new type data entries, got {newData.Count}");
+		Assert.True (legacyData.Count > 8000, $"Expected >8000 legacy type data entries, got {legacyData.Count}");
+		Assert.True (newData.Count > 8000, $"Expected >8000 new type data entries, got {newData.Count}");
 
 		var mismatches = ComparisonDiffHelper.CompareInvokerTypes (legacyData, newData);
 
@@ -351,8 +351,8 @@ public partial class ScannerComparisonTests
 		var (legacyData, _) = TypeDataBuilder.BuildLegacy (MonoAndroidAssemblyPath);
 		var newData = TypeDataBuilder.BuildNew (AllAssemblyPaths);
 
-		Assert.True (legacyData.Count > 3000, $"Expected >3000 legacy type data entries, got {legacyData.Count}");
-		Assert.True (newData.Count > 3000, $"Expected >3000 new type data entries, got {newData.Count}");
+		Assert.True (legacyData.Count > 8000, $"Expected >8000 legacy type data entries, got {legacyData.Count}");
+		Assert.True (newData.Count > 8000, $"Expected >8000 new type data entries, got {newData.Count}");
 
 		var mismatches = ComparisonDiffHelper.CompareCannotRegisterInStaticCtor (legacyData, newData);
 
