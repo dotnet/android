@@ -35,7 +35,8 @@ public class TrimmableTypeMapGenerator
 		HashSet<string> frameworkAssemblyNames,
 		ManifestConfig? manifestConfig,
 		string? manifestTemplatePath,
-		string? mergedManifestOutputPath)
+		string? mergedManifestOutputPath,
+		string? acwMapOutputPath = null)
 	{
 		Directory.CreateDirectory (outputDirectory);
 		Directory.CreateDirectory (javaSourceOutputDirectory);
@@ -65,6 +66,13 @@ public class TrimmableTypeMapGenerator
 		string[]? additionalProviderSources = null;
 		if (mergedManifestOutputPath is not null && mergedManifestOutputPath.Length > 0 && manifestConfig is not null && !manifestConfig.PackageName.IsNullOrEmpty ()) {
 			additionalProviderSources = GenerateManifest (allPeers, assemblyManifestInfo, manifestConfig, manifestTemplatePath, mergedManifestOutputPath);
+		}
+
+		// Write acw-map.txt so _ConvertCustomView and _UpdateAndroidResgen can resolve custom view names.
+		if (!acwMapOutputPath.IsNullOrEmpty ()) {
+			using var writer = new StreamWriter (acwMapOutputPath!, append: false);
+			AcwMapWriter.Write (writer, allPeers);
+			log.LogMessage (MessageImportance.Low, "Written acw-map.txt with {0} entries to {1}.", allPeers.Count, acwMapOutputPath);
 		}
 
 		return new TrimmableTypeMapResult (generatedAssemblies, generatedJavaFiles, additionalProviderSources);

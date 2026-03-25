@@ -32,6 +32,11 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public string AcwMapDirectory { get; set; } = "";
 
 	/// <summary>
+	/// Output path for the merged acw-map.txt consumed by _ConvertCustomView and _UpdateAndroidResgen.
+	/// </summary>
+	public string? AcwMapOutputFile { get; set; }
+
+	/// <summary>
 	/// The .NET target framework version (e.g., "v11.0"). Used to set the System.Runtime
 	/// assembly reference version in generated typemap assemblies.
 	/// </summary>
@@ -158,7 +163,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			frameworkAssemblyNames,
 			manifestConfig,
 			ManifestTemplate,
-			MergedAndroidManifestOutput);
+			MergedAndroidManifestOutput,
+			AcwMapOutputFile);
 
 		GeneratedAssemblies = result.GeneratedAssemblies.Select (p => (ITaskItem) new TaskItem (p)).ToArray ();
 		GeneratedJavaFiles = result.GeneratedJavaFiles.Select (p => (ITaskItem) new TaskItem (p)).ToArray ();

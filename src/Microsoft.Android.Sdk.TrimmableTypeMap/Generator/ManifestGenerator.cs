@@ -13,7 +13,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// This is the trimmable-path equivalent of ManifestDocument — it works from ComponentInfo
 /// records instead of Cecil TypeDefinitions.
 /// </summary>
-public class ManifestGenerator
+class ManifestGenerator
 {
 	static readonly XNamespace AndroidNs = ManifestConstants.AndroidNs;
 	static readonly XName AttName = ManifestConstants.AttName;
@@ -40,7 +40,7 @@ public class ManifestGenerator
 	/// Generates the merged manifest and writes it to <paramref name="outputPath"/>.
 	/// Returns the list of additional content provider names (for ApplicationRegistration.java).
 	/// </summary>
-	public IList<string> Generate (
+	public IReadOnlyList<string> Generate (
 		string? manifestTemplatePath,
 		IReadOnlyList<JavaPeerInfo> allPeers,
 		AssemblyManifestInfo assemblyInfo,
@@ -57,7 +57,7 @@ public class ManifestGenerator
 	/// Generates the merged manifest from an optional pre-loaded template and writes it to <paramref name="outputPath"/>.
 	/// Returns the list of additional content provider names (for ApplicationRegistration.java).
 	/// </summary>
-	public IList<string> Generate (
+	public IReadOnlyList<string> Generate (
 		XDocument? manifestTemplate,
 		IReadOnlyList<JavaPeerInfo> allPeers,
 		AssemblyManifestInfo assemblyInfo,
@@ -201,7 +201,7 @@ public class ManifestGenerator
 		return app;
 	}
 
-	IList<string> AddRuntimeProviders (XElement app)
+	List<string> AddRuntimeProviders (XElement app)
 	{
 		string packageName = "mono";
 		string className = "MonoRuntimeProvider";
