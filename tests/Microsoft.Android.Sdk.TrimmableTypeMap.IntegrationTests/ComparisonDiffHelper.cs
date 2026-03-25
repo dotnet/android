@@ -212,4 +212,37 @@ static class ComparisonDiffHelper
 
 		return (missingComponents, extraComponents, kindMismatches, nameMismatches);
 	}
+
+	public static (List<string> missingPermissions, List<string> extraPermissions, List<string> missingFeatures, List<string> extraFeatures) CompareAssemblyManifestAttributes (
+		ManifestAttributeComparisonData legacy,
+		ManifestAttributeComparisonData newData)
+	{
+		var legacyPermSet = new HashSet<string> (legacy.UsesPermissions, System.StringComparer.Ordinal);
+		var newPermSet = new HashSet<string> (newData.UsesPermissions, System.StringComparer.Ordinal);
+
+		var missingPermissions = legacyPermSet.Except (newPermSet)
+			.Select (p => $"uses-permission: {p}")
+			.OrderBy (s => s, System.StringComparer.Ordinal)
+			.ToList ();
+
+		var extraPermissions = newPermSet.Except (legacyPermSet)
+			.Select (p => $"uses-permission: {p}")
+			.OrderBy (s => s, System.StringComparer.Ordinal)
+			.ToList ();
+
+		var legacyFeatSet = new HashSet<string> (legacy.UsesFeatures, System.StringComparer.Ordinal);
+		var newFeatSet = new HashSet<string> (newData.UsesFeatures, System.StringComparer.Ordinal);
+
+		var missingFeatures = legacyFeatSet.Except (newFeatSet)
+			.Select (f => $"uses-feature: {f}")
+			.OrderBy (s => s, System.StringComparer.Ordinal)
+			.ToList ();
+
+		var extraFeatures = newFeatSet.Except (legacyFeatSet)
+			.Select (f => $"uses-feature: {f}")
+			.OrderBy (s => s, System.StringComparer.Ordinal)
+			.ToList ();
+
+		return (missingPermissions, extraPermissions, missingFeatures, extraFeatures);
+	}
 }

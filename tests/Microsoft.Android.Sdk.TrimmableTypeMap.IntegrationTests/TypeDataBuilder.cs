@@ -18,6 +18,11 @@ record ComponentComparisonData (
 	IReadOnlyList<string> ComponentProperties
 );
 
+record ManifestAttributeComparisonData (
+	IReadOnlyList<string> UsesPermissions,
+	IReadOnlyList<string> UsesFeatures
+);
+
 record TypeComparisonData (
 	string ManagedName,
 	string JavaName,
@@ -403,5 +408,63 @@ static class TypeDataBuilder
 		}
 
 		return result;
+	}
+
+	public static ManifestAttributeComparisonData BuildLegacyManifestData (string assemblyPath)
+	{
+		var resolver = new DefaultAssemblyResolver ();
+		resolver.AddSearchDirectory (Path.GetDirectoryName (assemblyPath)!);
+
+		var runtimeDir = Path.GetDirectoryName (typeof (object).Assembly.Location);
+		if (runtimeDir != null) {
+			resolver.AddSearchDirectory (runtimeDir);
+		}
+
+		var readerParams = new ReaderParameters { AssemblyResolver = resolver };
+		using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath, readerParams);
+
+		var permissions = new List<string> ();
+		var features = new List<string> ();
+
+		foreach (var attr in assembly.CustomAttributes) {
+			var attrName = attr.AttributeType.Name;
+			switch (attrName) {
+			case "UsesPermissionAttribute":
+				if (attr.ConstructorArguments.Count > 0 && attr.ConstructorArguments [0].Value is string permName) {
+					permissions.Add (permName);
+				}
+				break;
+			case "UsesFeatureAttribute":
+				if (attr.ConstructorArguments.Count > 0 && attr.ConstructorArguments [0].Value is string featName) {
+					features.Add (featName);
+				}
+				break;
+			}
+		}
+
+		permissions.Sort (StringComparer.Ordinal);
+		features.Sort (StringComparer.Ordinal);
+
+		return new ManifestAttributeComparisonData (permissions, features);
+	}
+
+	public static ManifestAttributeComparisonData BuildNewManifestData (string[] assemblyPaths)
+	{
+		using var scanner = new JavaPeerScanner ();
+		scanner.Scan (assemblyPaths);
+		var manifestInfo = scanner.ScanAssemblyManifestInfo ();
+
+		var permissions = manifestInfo.UsesPermissions
+			.Select (p => p.Name)
+			.OrderBy (n => n, StringComparer.Ordinal)
+			.ToList ();
+
+		var features = manifestInfo.UsesFeatures
+			.Where (f => f.Name != null)
+			.Select (f => f.Name!)
+			.OrderBy (n => n, StringComparer.Ordinal)
+			.ToList ();
+
+		return new ManifestAttributeComparisonData (permissions, features);
 	}
 }

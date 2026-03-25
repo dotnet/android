@@ -205,4 +205,19 @@ public partial class ScannerComparisonTests
 		AssertNoDiffs ("COMPONENT KIND MISMATCHES", kindMismatches);
 		AssertNoDiffs ("COMPONENT NAME MISMATCHES", nameMismatches);
 	}
+
+	[Fact]
+	public void ExactAssemblyManifestAttributes_MonoAndroid ()
+	{
+		var legacy = TypeDataBuilder.BuildLegacyManifestData (MonoAndroidAssemblyPath);
+		var newData = TypeDataBuilder.BuildNewManifestData (AllAssemblyPaths);
+
+		var (missingPerms, extraPerms, missingFeats, extraFeats) =
+			ComparisonDiffHelper.CompareAssemblyManifestAttributes (legacy, newData);
+
+		AssertNoDiffs ("USES-PERMISSION MISSING from new scanner", missingPerms);
+		AssertNoDiffs ("USES-PERMISSION EXTRA in new scanner", extraPerms);
+		AssertNoDiffs ("USES-FEATURE MISSING from new scanner", missingFeats);
+		AssertNoDiffs ("USES-FEATURE EXTRA in new scanner", extraFeats);
+	}
 }
