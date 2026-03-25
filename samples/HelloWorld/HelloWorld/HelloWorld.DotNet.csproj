@@ -4,7 +4,6 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>HelloWorld</RootNamespace>
     <_AndroidTypeMapImplementation>trimmable</_AndroidTypeMapImplementation>
-    <UseMonoRuntime>false</UseMonoRuntime>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\HelloLibrary\HelloLibrary.DotNet.csproj" />

@@ -146,10 +146,10 @@
          In the trimmable path, Application/Instrumentation types are activated via
          Runtime.registerNatives() + UCO wrappers, so registerApplications() is empty. -->
     <MakeDir Directories="$(IntermediateOutputPath)android\src\net\dot\android" />
-    <WriteLinesToFile
-        File="$(IntermediateOutputPath)android\src\net\dot\android\ApplicationRegistration.java"
-        Overwrite="true"
-        Lines="package net.dot.android%3b;public class ApplicationRegistration { public static android.content.Context Context%3b public static void registerApplications () { } }" />
+    <Copy
+        SourceFiles="$(MSBuildThisFileDirectory)ApplicationRegistration.Trimmable.java"
+        DestinationFiles="$(IntermediateOutputPath)android\src\net\dot\android\ApplicationRegistration.java"
+        SkipUnchangedFiles="true" />
 
     <ItemGroup>
       <FileWrites Include="$(IntermediateOutputPath)android\src\net\dot\android\ApplicationRegistration.java" />

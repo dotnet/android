@@ -45,7 +45,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
         Trim="true"
     />
     <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap"
-        Value="false"
+        Value="true"
         Trim="true"
     />
   </ItemGroup>

@@ -10,10 +10,6 @@
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <MSBuildPackageReferenceVersion Condition=" '$(MSBuildPackageReferenceVersion)' == '' ">17.14.28</MSBuildPackageReferenceVersion>
-  </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Framework" Version="$(MSBuildPackageReferenceVersion)" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MSBuildPackageReferenceVersion)" />
