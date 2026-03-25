@@ -11,7 +11,7 @@
 
   <PropertyGroup>
     <_TypeMapAssemblyName>_Microsoft.Android.TypeMaps</_TypeMapAssemblyName>
-    <_TypeMapBaseOutputDir>$(BaseIntermediateOutputPath)$(Configuration)/$(TargetFramework)/</_TypeMapBaseOutputDir>
+    <_TypeMapBaseOutputDir>$(IntermediateOutputPath)</_TypeMapBaseOutputDir>
     <_TypeMapBaseOutputDir>$(_TypeMapBaseOutputDir.Replace('\','/'))</_TypeMapBaseOutputDir>
     <_TypeMapOutputDirectory>$(_TypeMapBaseOutputDir)typemap/</_TypeMapOutputDirectory>
     <_TypeMapJavaOutputDirectory>$(_TypeMapBaseOutputDir)typemap/java</_TypeMapJavaOutputDirectory>
