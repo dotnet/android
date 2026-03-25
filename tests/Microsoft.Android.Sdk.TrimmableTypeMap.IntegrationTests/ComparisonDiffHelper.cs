@@ -171,7 +171,7 @@ static class ComparisonDiffHelper
 		return (interfaceMismatches, abstractMismatches, genericMismatches, acwMismatches);
 	}
 
-	public static (List<string> missingComponents, List<string> extraComponents, List<string> kindMismatches, List<string> nameMismatches) CompareComponentAttributes (
+	public static (List<string> missingComponents, List<string> extraComponents, List<string> kindMismatches, List<string> nameMismatches, List<string> propertyMismatches) CompareComponentAttributes (
 		Dictionary<string, ComponentComparisonData> legacyData,
 		Dictionary<string, ComponentComparisonData> newData)
 	{
@@ -182,6 +182,7 @@ static class ComparisonDiffHelper
 		var extraComponents = new List<string> ();
 		var kindMismatches = new List<string> ();
 		var nameMismatches = new List<string> ();
+		var propertyMismatches = new List<string> ();
 
 		foreach (var managedName in allManagedNames.OrderBy (n => n, System.StringComparer.Ordinal)) {
 			var inLegacy = legacyData.TryGetValue (managedName, out var legacy);
@@ -208,9 +209,21 @@ static class ComparisonDiffHelper
 			if (legacy.ComponentName != newInfo.ComponentName) {
 				nameMismatches.Add ($"{managedName}: legacy='{legacy.ComponentName ?? "(null)"}' new='{newInfo.ComponentName ?? "(null)"}'");
 			}
+
+			// Compare component properties
+			var legacyPropSet = new HashSet<string> (legacy.ComponentProperties, System.StringComparer.Ordinal);
+			var newPropSet = new HashSet<string> (newInfo.ComponentProperties, System.StringComparer.Ordinal);
+
+			foreach (var prop in legacyPropSet.Except (newPropSet)) {
+				propertyMismatches.Add ($"{managedName}: missing property '{prop}'");
+			}
+
+			foreach (var prop in newPropSet.Except (legacyPropSet)) {
+				propertyMismatches.Add ($"{managedName}: extra property '{prop}'");
+			}
 		}
 
-		return (missingComponents, extraComponents, kindMismatches, nameMismatches);
+		return (missingComponents, extraComponents, kindMismatches, nameMismatches, propertyMismatches);
 	}
 
 	public static (List<string> missingPermissions, List<string> extraPermissions, List<string> missingFeatures, List<string> extraFeatures) CompareAssemblyManifestAttributes (

@@ -182,12 +182,13 @@ public partial class ScannerComparisonTests
 		Assert.True (legacyData.Count > 50, $"Expected >50 legacy component entries, got {legacyData.Count}");
 		Assert.True (newData.Count > 50, $"Expected >50 new component entries, got {newData.Count}");
 
-		var (missing, extra, kindMismatches, nameMismatches) = ComparisonDiffHelper.CompareComponentAttributes (legacyData, newData);
+		var (missing, extra, kindMismatches, nameMismatches, propertyMismatches) = ComparisonDiffHelper.CompareComponentAttributes (legacyData, newData);
 
 		AssertNoDiffs ("COMPONENTS MISSING from new scanner", missing);
 		AssertNoDiffs ("COMPONENTS EXTRA in new scanner", extra);
 		AssertNoDiffs ("COMPONENT KIND MISMATCHES", kindMismatches);
 		AssertNoDiffs ("COMPONENT NAME MISMATCHES", nameMismatches);
+		AssertNoDiffs ("COMPONENT PROPERTY MISMATCHES", propertyMismatches);
 	}
 
 	[Fact]
@@ -198,12 +199,13 @@ public partial class ScannerComparisonTests
 
 		var legacyData = TypeDataBuilder.BuildLegacyComponentData (paths! [0]);
 		var newData = TypeDataBuilder.BuildNewComponentData (paths);
-		var (missing, extra, kindMismatches, nameMismatches) = ComparisonDiffHelper.CompareComponentAttributes (legacyData, newData);
+		var (missing, extra, kindMismatches, nameMismatches, propertyMismatches) = ComparisonDiffHelper.CompareComponentAttributes (legacyData, newData);
 
 		AssertNoDiffs ("COMPONENTS MISSING from new scanner", missing);
 		AssertNoDiffs ("COMPONENTS EXTRA in new scanner", extra);
 		AssertNoDiffs ("COMPONENT KIND MISMATCHES", kindMismatches);
 		AssertNoDiffs ("COMPONENT NAME MISMATCHES", nameMismatches);
+		AssertNoDiffs ("COMPONENT PROPERTY MISMATCHES", propertyMismatches);
 	}
 
 	[Fact]

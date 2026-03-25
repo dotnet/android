@@ -34,6 +34,9 @@ AssertNoDiffs ("MANAGED TYPES EXTRA in new scanner", result.ExtraTypes);
 AssertNoDiffs ("METHODS MISSING from new scanner", result.MissingMethods);
 AssertNoDiffs ("METHODS EXTRA in new scanner", result.ExtraMethods);
 AssertNoDiffs ("CONNECTOR MISMATCHES", result.ConnectorMismatches);
+
+var exportMismatches = MarshalMethodDiffHelper.CompareExportFlags (legacyMethods, newMethods);
+AssertNoDiffs ("EXPORT FLAG MISMATCHES", exportMismatches);
 }
 
 [Fact]

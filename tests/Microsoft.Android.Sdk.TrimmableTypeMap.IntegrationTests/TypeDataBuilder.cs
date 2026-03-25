@@ -23,6 +23,21 @@ record ManifestAttributeComparisonData (
 	IReadOnlyList<string> UsesFeatures
 );
 
+/// <summary>
+/// Encodes a uses-permission as "name" or "name;maxSdkVersion=N" for richer comparison.
+/// </summary>
+static string EncodePermission (string name, int? maxSdkVersion)
+	=> maxSdkVersion.HasValue ? $"{name};maxSdkVersion={maxSdkVersion.Value}" : name;
+
+/// <summary>
+/// Encodes a uses-feature as "name;required=true/false" or "glEsVersion=0xNNNN;required=true/false".
+/// </summary>
+static string EncodeFeature (string? name, int glesVersion, bool required)
+{
+	var key = name ?? $"glEsVersion=0x{glesVersion:X8}";
+	return $"{key};required={required}";
+}
+
 record TypeComparisonData (
 	string ManagedName,
 	string JavaName,
@@ -431,12 +446,31 @@ static class TypeDataBuilder
 			switch (attrName) {
 			case "UsesPermissionAttribute":
 				if (attr.ConstructorArguments.Count > 0 && attr.ConstructorArguments [0].Value is string permName) {
-					permissions.Add (permName);
+					int? maxSdk = null;
+					foreach (var prop in attr.Properties) {
+						if (prop.Name == "MaxSdkVersion" && prop.Argument.Value is int sdk) {
+							maxSdk = sdk;
+						}
+					}
+					permissions.Add (EncodePermission (permName, maxSdk));
 				}
 				break;
 			case "UsesFeatureAttribute":
-				if (attr.ConstructorArguments.Count > 0 && attr.ConstructorArguments [0].Value is string featName) {
-					features.Add (featName);
+				string? featName = null;
+				int glesVersion = 0;
+				bool required = true;
+				if (attr.ConstructorArguments.Count > 0 && attr.ConstructorArguments [0].Value is string fn) {
+					featName = fn;
+				}
+				foreach (var prop in attr.Properties) {
+					if (prop.Name == "GLESVersion" && prop.Argument.Value is int gles) {
+						glesVersion = gles;
+					} else if (prop.Name == "Required" && prop.Argument.Value is bool req) {
+						required = req;
+					}
+				}
+				if (featName != null || glesVersion != 0) {
+					features.Add (EncodeFeature (featName, glesVersion, required));
 				}
 				break;
 			}
@@ -455,13 +489,12 @@ static class TypeDataBuilder
 		var manifestInfo = scanner.ScanAssemblyManifestInfo ();
 
 		var permissions = manifestInfo.UsesPermissions
-			.Select (p => p.Name)
+			.Select (p => EncodePermission (p.Name, p.MaxSdkVersion))
 			.OrderBy (n => n, StringComparer.Ordinal)
 			.ToList ();
 
 		var features = manifestInfo.UsesFeatures
-			.Where (f => f.Name != null)
-			.Select (f => f.Name!)
+			.Select (f => EncodeFeature (f.Name, f.GLESVersion, f.Required))
 			.OrderBy (n => n, StringComparer.Ordinal)
 			.ToList ();
 
