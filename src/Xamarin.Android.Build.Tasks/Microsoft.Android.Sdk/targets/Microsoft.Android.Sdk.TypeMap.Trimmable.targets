@@ -23,7 +23,7 @@
     <RuntimeHostConfigurationOption Include="System.Runtime.InteropServices.TypeMappingEntryAssembly"
         Value="$(_TypeMapAssemblyName)" />
     <!-- Preserve the native→managed entry point (called via create_delegate from host.cc) -->
-    <TrimmerRootDescriptor Include="$(MSBuildThisFileDirectory)..\PreserveLists\Trimmable.CoreCLR.xml"
+    <TrimmerRootDescriptor Include="$(MSBuildThisFileDirectory)../PreserveLists/Trimmable.CoreCLR.xml"
         Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
   </ItemGroup>
 
@@ -100,12 +100,12 @@
       Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
 
     <ItemGroup>
-      <_TypeMapJavaFiles Include="$(_TypeMapJavaOutputDirectory)\**\*.java" />
+      <_TypeMapJavaFiles Include="$(_TypeMapJavaOutputDirectory)/**/*.java" />
     </ItemGroup>
-    <Copy SourceFiles="@(_TypeMapJavaFiles)" DestinationFolder="$(IntermediateOutputPath)android\src\%(RecursiveDir)" />
+    <Copy SourceFiles="@(_TypeMapJavaFiles)" DestinationFolder="$(IntermediateOutputPath)android/src/%(RecursiveDir)" />
 
     <ItemGroup>
-      <FileWrites Include="@(_TypeMapJavaFiles->'$(IntermediateOutputPath)android\src\%(RecursiveDir)%(Filename)%(Extension)')" />
+      <FileWrites Include="@(_TypeMapJavaFiles->'$(IntermediateOutputPath)android/src/%(RecursiveDir)%(Filename)%(Extension)')" />
     </ItemGroup>
 
     <!-- Set properties for ABI/RID used by CoreCLR _AddTrimmableTypeMapAssembliesToStore fallback -->
@@ -145,14 +145,14 @@
     <!-- Generate ApplicationRegistration.java.
          In the trimmable path, Application/Instrumentation types are activated via
          Runtime.registerNatives() + UCO wrappers, so registerApplications() is empty. -->
-    <MakeDir Directories="$(IntermediateOutputPath)android\src\net\dot\android" />
+    <MakeDir Directories="$(IntermediateOutputPath)android/src/net/dot/android" />
     <Copy
         SourceFiles="$(MSBuildThisFileDirectory)ApplicationRegistration.Trimmable.java"
-        DestinationFiles="$(IntermediateOutputPath)android\src\net\dot\android\ApplicationRegistration.java"
+        DestinationFiles="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java"
         SkipUnchangedFiles="true" />
 
     <ItemGroup>
-      <FileWrites Include="$(IntermediateOutputPath)android\src\net\dot\android\ApplicationRegistration.java" />
+      <FileWrites Include="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java" />
       <FileWrites Include="$(IntermediateOutputPath)AndroidManifest.xml" />
       <FileWrites Include="$(IntermediateOutputPath)acw-map.txt" />
     </ItemGroup>

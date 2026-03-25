@@ -19,6 +19,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="..\..\src-ThirdParty\System.Runtime.CompilerServices\CompilerFeaturePolyfills.cs" Link="CompilerFeaturePolyfills.cs" />
   </ItemGroup>
 

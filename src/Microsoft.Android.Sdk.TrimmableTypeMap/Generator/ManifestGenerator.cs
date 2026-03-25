@@ -47,7 +47,7 @@ public class ManifestGenerator
 		string outputPath)
 	{
 		XDocument? template = null;
-		if (!string.IsNullOrEmpty (manifestTemplatePath) && File.Exists (manifestTemplatePath)) {
+		if (!manifestTemplatePath.IsNullOrEmpty () && File.Exists (manifestTemplatePath)) {
 			template = XDocument.Load (manifestTemplatePath);
 		}
 		return Generate (template, allPeers, assemblyInfo, outputPath);
@@ -115,7 +115,7 @@ public class ManifestGenerator
 		var providerNames = AddRuntimeProviders (app);
 
 		// Set ApplicationJavaClass
-		if (!string.IsNullOrEmpty (ApplicationJavaClass) && app.Attribute (AttName) is null) {
+		if (!ApplicationJavaClass.IsNullOrEmpty () && app.Attribute (AttName) is null) {
 			app.SetAttributeValue (AttName, ApplicationJavaClass);
 		}
 
@@ -164,18 +164,18 @@ public class ManifestGenerator
 	{
 		manifest.SetAttributeValue (XNamespace.Xmlns + "android", AndroidNs.NamespaceName);
 
-		if (string.IsNullOrEmpty ((string?)manifest.Attribute ("package"))) {
+		if (((string?)manifest.Attribute ("package")).IsNullOrEmpty ()) {
 			manifest.SetAttributeValue ("package", PackageName);
 		}
 
 		if (manifest.Attribute (AndroidNs + "versionCode") is null) {
 			manifest.SetAttributeValue (AndroidNs + "versionCode",
-				string.IsNullOrEmpty (VersionCode) ? "1" : VersionCode);
+				VersionCode.IsNullOrEmpty () ? "1" : VersionCode);
 		}
 
 		if (manifest.Attribute (AndroidNs + "versionName") is null) {
 			manifest.SetAttributeValue (AndroidNs + "versionName",
-				string.IsNullOrEmpty (VersionName) ? "1.0" : VersionName);
+				VersionName.IsNullOrEmpty () ? "1.0" : VersionName);
 		}
 
 		// Add <uses-sdk>
@@ -194,7 +194,7 @@ public class ManifestGenerator
 			manifest.Add (app);
 		}
 
-		if (app.Attribute (AndroidNs + "label") is null && !string.IsNullOrEmpty (ApplicationLabel)) {
+		if (app.Attribute (AndroidNs + "label") is null && !ApplicationLabel.IsNullOrEmpty ()) {
 			app.SetAttributeValue (AndroidNs + "label", ApplicationLabel);
 		}
 

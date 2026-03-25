@@ -11,32 +11,6 @@ using Microsoft.Build.Utilities;
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
 /// <summary>
-/// Configuration for manifest generation, passed from the MSBuild task.
-/// </summary>
-public record ManifestConfig (
-	string PackageName,
-	string? ApplicationLabel,
-	string? VersionCode,
-	string? VersionName,
-	string? AndroidApiLevel,
-	string? SupportedOSPlatformVersion,
-	string? AndroidRuntime,
-	bool Debug,
-	bool NeedsInternet,
-	bool EmbedAssemblies,
-	string? ManifestPlaceholders,
-	string? CheckedBuild,
-	string? ApplicationJavaClass);
-
-/// <summary>
-/// Result of the trimmable type map generation.
-/// </summary>
-public record TrimmableTypeMapResult (
-	List<string> GeneratedAssemblies,
-	List<string> GeneratedJavaFiles,
-	string[]? AdditionalProviderSources);
-
-/// <summary>
 /// Core logic for generating trimmable TypeMap assemblies, JCW Java sources, and manifest.
 /// Extracted from the MSBuild task so it can be tested directly without MSBuild ceremony.
 /// </summary>
@@ -89,7 +63,7 @@ public class TrimmableTypeMapGenerator
 
 		// Generate manifest if output path is configured
 		string[]? additionalProviderSources = null;
-		if (mergedManifestOutputPath is not null && mergedManifestOutputPath.Length > 0 && manifestConfig is not null && !string.IsNullOrEmpty (manifestConfig.PackageName)) {
+		if (mergedManifestOutputPath is not null && mergedManifestOutputPath.Length > 0 && manifestConfig is not null && !manifestConfig.PackageName.IsNullOrEmpty ()) {
 			additionalProviderSources = GenerateManifest (allPeers, assemblyManifestInfo, manifestConfig, manifestTemplatePath, mergedManifestOutputPath);
 		}
 
@@ -193,7 +167,7 @@ public class TrimmableTypeMapGenerator
 		}
 
 		string minSdk = "21";
-		if (!string.IsNullOrEmpty (config.SupportedOSPlatformVersion) && Version.TryParse (config.SupportedOSPlatformVersion, out var sopv)) {
+		if (!config.SupportedOSPlatformVersion.IsNullOrEmpty () && Version.TryParse (config.SupportedOSPlatformVersion, out var sopv)) {
 			minSdk = sopv.Major.ToString (CultureInfo.InvariantCulture);
 		}
 
@@ -202,7 +176,7 @@ public class TrimmableTypeMapGenerator
 			targetSdk = apiVersion.Major.ToString (CultureInfo.InvariantCulture);
 		}
 
-		bool forceDebuggable = !string.IsNullOrEmpty (config.CheckedBuild);
+		bool forceDebuggable = !config.CheckedBuild.IsNullOrEmpty ();
 
 		var generator = new ManifestGenerator {
 			PackageName = config.PackageName,
@@ -244,7 +218,7 @@ public class TrimmableTypeMapGenerator
 				continue;
 			}
 			if (!peer.ComponentAttribute.HasPublicDefaultConstructor) {
-				log.LogError (null, "XA4213", null, null, 0, 0, 0, 0, "The type '{0}' must provide a public default constructor", peer.ManagedTypeName);
+				log.LogError (null, "XA4213", null, null, 0, 0, 0, 0, Properties.Resources.XA4213, peer.ManagedTypeName);
 			}
 		}
 
@@ -258,9 +232,9 @@ public class TrimmableTypeMapGenerator
 
 		bool hasAssemblyLevelApplication = assemblyManifestInfo.ApplicationProperties is not null;
 		if (applicationTypes.Count > 1) {
-			log.LogError (null, "XA4212", null, null, 0, 0, 0, 0, "There can be only one type with an [Application] attribute; found: {0}", string.Join (", ", applicationTypes));
+			log.LogError (null, "XA4212", null, null, 0, 0, 0, 0, Properties.Resources.XA4212, string.Join (", ", applicationTypes));
 		} else if (applicationTypes.Count > 0 && hasAssemblyLevelApplication) {
-			log.LogError (null, "XA4217", null, null, 0, 0, 0, 0, "Application cannot have both a type with an [Application] attribute and an [assembly:Application] attribute.");
+			log.LogError (null, "XA4217", null, null, 0, 0, 0, 0, Properties.Resources.XA4217);
 		}
 	}
 }

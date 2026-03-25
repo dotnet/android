@@ -1101,24 +1101,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to There can be only one type with an [Application] attribute; found: {0}.
-        /// </summary>
-        public static string XA4212 {
-            get {
-                return ResourceManager.GetString("XA4212", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Application cannot have both a type with an [Application] attribute and an [assembly:Application] attribute..
-        /// </summary>
-        public static string XA4217 {
-            get {
-                return ResourceManager.GetString("XA4217", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to The managed type `{0}` exists in multiple assemblies: {1}. Please refactor the managed type names in these assemblies so that they are not identical..
         /// </summary>
         public static string XA4214 {
