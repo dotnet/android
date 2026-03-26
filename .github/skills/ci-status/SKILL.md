@@ -58,11 +58,13 @@ Note which checks passed/failed/pending. The `link` field contains the AZDO buil
 
 #### Step 3 — Get Azure DevOps build status (repeat for EACH build)
 
-There are typically **two separate AZDO builds** for a dotnet/android PR:
-- **`dotnet-android`** on `dev.azure.com/dnceng-public` — compiles on Linux, macOS, Windows
-- **`Xamarin.Android-PR`** on `devdiv.visualstudio.com` — full test suite, MAUI integration, compliance
+There are typically **two separate AZDO builds** for a dotnet/android PR. They run **independently** — neither waits for the other:
+- **`dotnet-android`** on `dev.azure.com/dnceng-public` — compiles on Linux, macOS, Windows. Defined in `azure-pipelines-public.yaml` with an explicit `pr:` trigger. For non-fork PRs, test stages are skipped (those run on DevDiv instead).
+- **`Xamarin.Android-PR`** on `devdiv.visualstudio.com` — full test suite, MAUI integration, compliance. Defined in `azure-pipelines.yaml` but its PR trigger is configured in the AZDO UI, not in YAML. It may take a few minutes to start after a push.
 
 Use the **pipeline definition name** (from the `definitionName` field) as the label in output — do NOT label them "Public" or "Internal".
+
+When a check shows **"Expected — Waiting for status to be reported"** on GitHub (typically `Xamarin.Android-PR`), it means the pipeline hasn't been triggered yet. This is normal — it's not waiting for the other build, just for AZDO to pick it up. Report it as: "⏳ Not triggered yet — typically starts within a few minutes of a push."
 
 Extract AZDO build URLs from the check `link` fields. Parse `{orgUrl}`, `{project}`, and `{buildId}` from patterns:
 - `https://dev.azure.com/{org}/{project}/_build/results?buildId={id}`
@@ -219,8 +221,9 @@ Use this format — **one section per AZDO build**, each with its own progress a
 - Always show elapsed time when `startTime` is available
 - Show ETA when the build is in progress and historical data is available. If the build has been running longer than the median, say "overdue by ~X min"
 - Show job counters as "N/Total completed · M running · P waiting"
-- If the build hasn't started yet, show "⏳ Build queued, not started yet"
-- If only one AZDO build exists (e.g., `.github/`-only PRs don't trigger internal), just show that one
+- If the build hasn't started yet, show "⏳ Not triggered yet — typically starts within a few minutes of a push"
+- If a check is in "Expected" state with no build URL, it means the AZDO pipeline hasn't picked it up yet — this is normal and not gated on other builds
+- If only one AZDO build exists (e.g., `.github/`-only PRs don't trigger `Xamarin.Android-PR`), just show that one
 
 **If the build is still running but tests have already failed**, highlight these prominently so the user can start fixing them immediately. Use a note like:
 
@@ -264,7 +267,7 @@ See [references/error-patterns.md](references/error-patterns.md) for dotnet/andr
 ## Error Handling
 
 - **Build in progress:** Still query for failed timeline records AND test runs. Report any early failures alongside the in-progress status. Only offer `gh pr checks --watch` if there are no failures yet.
-- **No AZDO build found:** The PR may not have triggered internal CI yet. Report GitHub checks only.
+- **Check in "Expected" state (no build URL):** The AZDO pipeline hasn't been triggered yet. This is normal — the two pipelines (`dotnet-android` and `Xamarin.Android-PR`) run independently, not sequentially. Report: "⏳ Not triggered yet — typically starts within a few minutes of a push." Do NOT say it's waiting for the other build.
 - **Auth expired:** Tell user to run `az login` and retry.
 - **Build not found:** Verify the PR number/build ID is correct.
 - **No test runs yet:** The build may not have reached the test phase. Report what's available and note that tests haven't started.
