@@ -59,8 +59,10 @@ Note which checks passed/failed/pending. The `link` field contains the AZDO buil
 #### Step 3 — Get Azure DevOps build status (repeat for EACH build)
 
 There are typically **two separate AZDO builds** for a dotnet/android PR:
-- **Public** (`dotnet-android`) on `dev.azure.com/dnceng-public` — compiles on Linux, macOS, Windows
-- **Internal** (`Xamarin.Android-PR`) on `devdiv.visualstudio.com` — full test suite, MAUI integration, compliance
+- **`dotnet-android`** on `dev.azure.com/dnceng-public` — compiles on Linux, macOS, Windows
+- **`Xamarin.Android-PR`** on `devdiv.visualstudio.com` — full test suite, MAUI integration, compliance
+
+Use the **pipeline definition name** (from the `definitionName` field) as the label in output — do NOT label them "Public" or "Internal".
 
 Extract AZDO build URLs from the check `link` fields. Parse `{orgUrl}`, `{project}`, and `{buildId}` from patterns:
 - `https://dev.azure.com/{org}/{project}/_build/results?buildId={id}`
@@ -178,7 +180,7 @@ Use this format — **one section per AZDO build**, each with its own progress a
 |-------|--------|
 | check-name | ✅ / ❌ / 🟡 |
 
-## Public Build: dotnet-android [#BuildId](link)
+## dotnet-android [#BuildId](link)
 **Result:** ✅ Succeeded / ❌ Failed / 🟡 In Progress
 ⏱️ Running for **12 min** · ETA: ~15:15 UTC (typical: ~1h 45min)
 📊 Jobs: **0/3 completed** · 1 running · 2 waiting
@@ -189,7 +191,7 @@ Use this format — **one section per AZDO build**, each with its own progress a
 | Linux > Build | ⏳ Waiting |
 | Windows > Build & Smoke Test | ⏳ Waiting |
 
-## Internal Build: Xamarin.Android-PR [#BuildId](link)
+## Xamarin.Android-PR [#BuildId](link)
 **Result:** ✅ Succeeded / ❌ Failed / 🟡 In Progress
 ⏱️ Running for **42 min** · ETA: ~15:45 UTC (typical: ~2h 30min)
 📊 Jobs: **18/56 completed** · 6 running · 32 waiting
