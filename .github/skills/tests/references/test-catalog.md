@@ -177,7 +177,7 @@ Device: **No** (runs on host JVM via `TestJVM`)
 | **source writer** | `external/Java.Interop/tests/Xamarin.SourceWriter-Tests/` | Source code generation |
 | **logcat** | `external/Java.Interop/tests/logcat-parse-Tests/` | Logcat parser |
 
-Use `make run-ji-tests` as a convenience on macOS/Linux.
+Run these tests with `dotnet test` from each test project directory listed above.
 
 ---
 
