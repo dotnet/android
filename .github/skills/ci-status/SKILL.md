@@ -27,21 +27,31 @@ If `az` is not authenticated, stop and tell the user to run `az login`.
 
 ### Phase 1: Quick Status (always do this first)
 
-#### Step 1 — Resolve the PR
+#### Step 1 — Resolve the PR and detect fork status
 
 **No PR specified** — detect from current branch:
 
 ```bash
-gh pr view --json number,title,url,headRefName --jq '{number,title,url,headRefName}'
+gh pr view --json number,title,url,headRefName,isCrossRepository --jq '{number,title,url,headRefName,isCrossRepository}'
 ```
 
-```powershell
-gh pr view --json number,title,url,headRefName | ConvertFrom-Json
+**PR number given** — use it directly:
+
+```bash
+gh pr view $PR --repo dotnet/android --json number,title,url,headRefName,isCrossRepository --jq '{number,title,url,headRefName,isCrossRepository}'
 ```
 
 If no PR exists for the current branch, tell the user and stop.
 
-**PR number given** — use it directly.
+**`isCrossRepository`** tells you whether the PR is from a fork:
+- `true` → **fork PR** (external contributor)
+- `false` → **direct PR** (team member, branch in dotnet/android)
+
+This matters for CI behavior:
+- **Fork PRs:** `Xamarin.Android-PR` does NOT run. `dotnet-android` runs the full pipeline including tests.
+- **Direct PRs:** `Xamarin.Android-PR` runs the full test suite. `dotnet-android` skips test stages (build-only) since tests run on DevDiv instead.
+
+Highlight the fork status in the output so the user understands which checks to expect.
 
 #### Step 2 — Get GitHub check status
 
@@ -59,12 +69,18 @@ Note which checks passed/failed/pending. The `link` field contains the AZDO buil
 #### Step 3 — Get Azure DevOps build status (repeat for EACH build)
 
 There are typically **two separate AZDO builds** for a dotnet/android PR. They run **independently** — neither waits for the other:
-- **`dotnet-android`** on `dev.azure.com/dnceng-public` — compiles on Linux, macOS, Windows. Defined in `azure-pipelines-public.yaml` with an explicit `pr:` trigger. For non-fork PRs, test stages are skipped (those run on DevDiv instead).
-- **`Xamarin.Android-PR`** on `devdiv.visualstudio.com` — full test suite, MAUI integration, compliance. Defined in `azure-pipelines.yaml` but its PR trigger is configured in the AZDO UI, not in YAML. It may take a few minutes to start after a push.
+- **`dotnet-android`** on `dev.azure.com/dnceng-public` — Defined in `azure-pipelines-public.yaml` with an explicit `pr:` trigger.
+  - **Fork PRs:** runs the full pipeline including build + tests (since `Xamarin.Android-PR` won't run for forks).
+  - **Direct PRs:** runs **build-only** — test stages are auto-skipped because those run on DevDiv instead. This means the `dotnet-android` build will be significantly shorter for direct PRs.
+- **`Xamarin.Android-PR`** on `devdiv.visualstudio.com` — full test suite, MAUI integration, compliance. Defined in `azure-pipelines.yaml` but its PR trigger is configured in the AZDO UI, not in YAML.
+  - **Fork PRs:** does NOT run at all (no access to internal resources).
+  - **Direct PRs:** runs the full test matrix. May take a few minutes to start after a push.
 
 Use the **pipeline definition name** (from the `definitionName` field) as the label in output — do NOT label them "Public" or "Internal".
 
-When a check shows **"Expected — Waiting for status to be reported"** on GitHub (typically `Xamarin.Android-PR`), it means the pipeline hasn't been triggered yet. This is normal — it's not waiting for the other build, just for AZDO to pick it up. Report it as: "⏳ Not triggered yet — typically starts within a few minutes of a push."
+When a check shows **"Expected — Waiting for status to be reported"** on GitHub (typically `Xamarin.Android-PR`):
+- **For direct PRs:** the pipeline hasn't been triggered yet — this is normal, it's not waiting for the other build, just for AZDO to pick it up. Report it as: "⏳ Not triggered yet — typically starts within a few minutes of a push."
+- **For fork PRs:** `Xamarin.Android-PR` will NOT run. Report: "⏳ Will not run — fork PRs don't trigger the internal pipeline."
 
 Extract AZDO build URLs from the check `link` fields. Parse `{orgUrl}`, `{project}`, and `{buildId}` from patterns:
 - `https://dev.azure.com/{org}/{project}/_build/results?buildId={id}`
@@ -114,22 +130,29 @@ Check `issues` arrays first — they often contain the root cause directly.
 
 #### Step 3a — Estimate completion time per build (when build is in progress)
 
-Use the `definitionId` from the build to query recent successful builds of the **same pipeline definition** and compute the median duration. **Do this separately for each build** — the public and internal pipelines have very different durations.
+Use the `definitionId` from the build to query recent successful builds of the **same pipeline definition** and compute the median duration. **Do this separately for each build** — the pipelines have very different durations.
+
+**Important:** The `dotnet-android` pipeline duration varies significantly based on whether the PR is from a fork:
+- **Direct PRs:** `dotnet-android` runs build-only (tests skipped) — typically much shorter (~1h 45min)
+- **Fork PRs:** `dotnet-android` runs the full pipeline with tests — typically much longer
+
+To get accurate ETAs, filter historical builds to match the current PR type. You can approximate this by looking at the **job count** of the current build vs historical builds — build-only runs have ~3 jobs while full runs have many more. Alternatively, compare the historical durations and pick the ones that are similar in magnitude to what you'd expect for the current build type.
 
 ```bash
 az devops invoke --area build --resource builds \
   --route-parameters project=$PROJECT \
   --org $ORG_URL \
-  --query-parameters "definitions=$DEF_ID&statusFilter=completed&resultFilter=succeeded&\$top=5" \
+  --query-parameters "definitions=$DEF_ID&statusFilter=completed&resultFilter=succeeded&\$top=10" \
   --query "value[].{startTime:startTime, finishTime:finishTime}" \
   --output json 2>&1
 ```
 
 **Compute ETA:**
 1. For each recent build, calculate `duration = finishTime - startTime`
-2. Compute the **median** duration (more robust than average against outliers)
-3. `ETA = startTime + medianDuration`
-4. Present as: "ETA: ~14:30 UTC (median of last 5 runs: ~2h 15min)"
+2. Filter to builds with similar duration profile (short ~1-2h for build-only, long ~3h+ for full runs) matching the current PR type
+3. Compute the **median** duration of the filtered set (more robust than average against outliers)
+4. `ETA = startTime + medianDuration`
+5. Present as: "ETA: ~14:30 UTC (typical for direct PRs: ~1h 45min)"
 
 If `startTime` is null (build hasn't started yet), skip the ETA and say "Build queued, not started yet".
 If the build already completed, skip the ETA and show the actual duration instead.
@@ -176,6 +199,7 @@ Use this format — **one section per AZDO build**, each with its own progress a
 
 ```
 # CI Status for PR #NNNN — "PR Title"
+🔀 **Direct PR** (branch in dotnet/android) — or 🍴 **Fork PR** (external contributor)
 
 ## GitHub Checks
 | Check | Status |
@@ -184,7 +208,8 @@ Use this format — **one section per AZDO build**, each with its own progress a
 
 ## dotnet-android [#BuildId](link)
 **Result:** ✅ Succeeded / ❌ Failed / 🟡 In Progress
-⏱️ Running for **12 min** · ETA: ~15:15 UTC (typical: ~1h 45min)
+ℹ️ Build-only (tests run on Xamarin.Android-PR for direct PRs) — or ℹ️ Full pipeline with tests (fork PR)
+⏱️ Running for **12 min** · ETA: ~15:15 UTC (typical for direct PRs: ~1h 45min)
 📊 Jobs: **0/3 completed** · 1 running · 2 waiting
 
 | Job | Status |
@@ -195,6 +220,7 @@ Use this format — **one section per AZDO build**, each with its own progress a
 
 ## Xamarin.Android-PR [#BuildId](link)
 **Result:** ✅ Succeeded / ❌ Failed / 🟡 In Progress
+— or for fork PRs: ⏳ **Will not run** — fork PRs don't trigger this pipeline
 ⏱️ Running for **42 min** · ETA: ~15:45 UTC (typical: ~2h 30min)
 📊 Jobs: **18/56 completed** · 6 running · 32 waiting
 
@@ -218,12 +244,14 @@ Use this format — **one section per AZDO build**, each with its own progress a
 ```
 
 **Progress section guidelines:**
+- Always show fork status (🔀 Direct PR / 🍴 Fork PR) at the top — it determines which builds run and their expected durations
+- For `dotnet-android`, note whether it's build-only (direct PR) or full pipeline (fork PR)
+- For `Xamarin.Android-PR` on fork PRs, don't try to query it — just report "Will not run"
 - Always show elapsed time when `startTime` is available
 - Show ETA when the build is in progress and historical data is available. If the build has been running longer than the median, say "overdue by ~X min"
 - Show job counters as "N/Total completed · M running · P waiting"
 - If the build hasn't started yet, show "⏳ Not triggered yet — typically starts within a few minutes of a push"
-- If a check is in "Expected" state with no build URL, it means the AZDO pipeline hasn't picked it up yet — this is normal and not gated on other builds
-- If only one AZDO build exists (e.g., `.github/`-only PRs don't trigger `Xamarin.Android-PR`), just show that one
+- If a check is in "Expected" state with no build URL on a direct PR, the AZDO pipeline hasn't picked it up yet — this is normal and not gated on other builds
 
 **If the build is still running but tests have already failed**, highlight these prominently so the user can start fixing them immediately. Use a note like:
 
