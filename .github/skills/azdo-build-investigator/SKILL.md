@@ -1,16 +1,9 @@
 ---
 name: azdo-build-investigator
-description: >
-  ALWAYS use this skill when the user asks about CI status, CI failures, build status, why CI is failing,
-  why a PR is blocked, or anything related to CI/build investigation on a PR. This is the PRIMARY CI
-  investigation tool because dotnet/android's main CI runs on Azure DevOps (not GitHub Actions). GitHub
-  check status alone is insufficient — all GitHub checks may show green while the internal Azure DevOps
-  build is failing. Also use when the user shares an AZDO build URL or asks about a failing pipeline.
+description: Investigate Azure DevOps (AZDO) pipeline build failures by fetching logs, downloading artifacts, and analyzing .binlog files to find the root cause of errors. Use this when users share an AZDO build URL, a GitHub PR URL, or ask about a failing pipeline, build errors, or CI failures.
 ---
 
 # AZDO Build Investigator
-
-**This is the primary CI investigation tool for dotnet/android.** The repo's real CI runs on Azure DevOps internally. GitHub Actions checks (visible via `gh pr checks`) only cover a subset of validation. When a user asks about CI status or failures, ALWAYS use this skill — do NOT rely solely on GitHub check status.
 
 Given a build URL or GitHub PR URL, fetch run details, find failed jobs/tasks, download logs and .binlog artifacts, and produce a summarized root-cause error trail.
 
