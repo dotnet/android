@@ -53,16 +53,10 @@ class TrimmableTypeMap
 	unsafe void RegisterNatives ()
 	{
 		using var runtimeClass = new JniType ("mono/android/Runtime"u8);
-		fixed (byte* namePtr = "registerNatives"u8)
-		fixed (byte* sigPtr = "(Ljava/lang/Class;)V"u8) {
-			Span<JniNativeMethod> methods = stackalloc JniNativeMethod[1];
-			methods[0] = new JniNativeMethod (
-				namePtr,
-				sigPtr,
-				(IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&OnRegisterNatives);
-			JniEnvironment.Types.RegisterNatives (
-				runtimeClass.PeerReference,
-				methods);
+		fixed (byte* name = "registerNatives"u8, sig = "(Ljava/lang/Class;)V"u8) {
+			var onRegisterNatives = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&OnRegisterNatives;
+			var method = new JniNativeMethod (name, sig, onRegisterNatives);
+			JniEnvironment.Types.RegisterNatives (runtimeClass.PeerReference, [method]);
 		}
 	}
 
