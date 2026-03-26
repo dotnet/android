@@ -44,9 +44,13 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
         Value="false"
         Trim="true"
     />
+    <!-- When _AndroidTypeMapImplementation=trimmable, Microsoft.Android.Sdk.TypeMap.Trimmable.targets
+         adds Value="true" for this feature. For all other NativeAOT builds the trimmable typemap
+         code paths are not active, so tell the trimmer to eliminate them. -->
     <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap"
-        Value="true"
+        Value="false"
         Trim="true"
+        Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' "
     />
   </ItemGroup>
 
