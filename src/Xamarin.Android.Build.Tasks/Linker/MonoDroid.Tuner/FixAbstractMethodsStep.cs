@@ -10,68 +10,43 @@ using Mono.Linker;
 using Mono.Linker.Steps;
 using Mono.Tuner;
 using Xamarin.Android.Tasks;
-
-#if ILLINK
-using Resources = Microsoft.Android.Sdk.ILLink.Properties.Resources;
-#else   // !ILLINK
 using Resources = Xamarin.Android.Tasks.Properties.Resources;
-#endif  // !ILLINK
 
 namespace MonoDroid.Tuner
 {
-	/// <summary>
-	/// NOTE: this step is subclassed so it can be called directly from Xamarin.Android.Build.Tasks
-	/// </summary>
-	public class FixAbstractMethodsStep : BaseMarkHandler
-#if !ILLINK
-		, IAssemblyModifierPipelineStep
-#endif  // !ILLINK
+	public class FixAbstractMethodsStep : BaseStep, IAssemblyModifierPipelineStep
 	{
-		public override void Initialize (LinkContext context, MarkContext markContext)
+		readonly IMetadataResolver _injectedCache;
+		readonly Func<AssemblyDefinition> _injectedGetMonoAndroidAssembly;
+		readonly Action<string> _injectedLogMessage;
+
+		/// <summary>
+		/// Used by LinkAssembliesNoShrink and tests. Call <see cref="BaseStep.Initialize(LinkContext)"/> before use.
+		/// </summary>
+		public FixAbstractMethodsStep () { }
+
+		/// <summary>
+		/// Used by <see cref="PostTrimmingFixAbstractMethodsStep"/> when no <see cref="LinkContext"/> is available.
+		/// </summary>
+		internal FixAbstractMethodsStep (
+			IMetadataResolver cache,
+			Func<AssemblyDefinition> getMonoAndroidAssembly,
+			Action<string> logMessage)
 		{
-			base.Initialize (context, markContext);
-			markContext.RegisterMarkTypeAction (type => ProcessType (type));
+			_injectedCache = cache;
+			_injectedGetMonoAndroidAssembly = getMonoAndroidAssembly;
+			_injectedLogMessage = logMessage;
 		}
 
-		bool CheckShouldProcessAssembly (AssemblyDefinition assembly)
+		IMetadataResolver TypeCache => _injectedCache ?? Context;
+
+		public void ProcessAssembly (AssemblyDefinition assembly, StepContext context)
 		{
-			if (!Annotations.HasAction (assembly))
-				Annotations.SetAction (assembly, AssemblyAction.Skip);
-
-			if (MonoAndroidHelper.IsFrameworkAssembly (assembly))
-				return false;
-
-			CheckAppDomainUsage (assembly, (string msg) =>
-#if ILLINK
-				Context.LogMessage (MessageContainer.CreateCustomWarningMessage (Context, msg, 6200, new MessageOrigin (), WarnVersion.ILLink5))
-#else   // !ILLINK
-				Context.LogWarning ("XA2000", msg)
-#endif  // !ILLINK
-			);
-
-			return assembly.MainModule.HasTypeReference ("Java.Lang.Object");
-		}
-
-		void UpdateAssemblyAction (AssemblyDefinition assembly)
-		{
-			if (Annotations.GetAction (assembly) == AssemblyAction.Copy)
-				Annotations.SetAction (assembly, AssemblyAction.Save);
-		}
-
-		void ProcessType (TypeDefinition type)
-		{
-			var assembly = type.Module.Assembly;
-			if (!CheckShouldProcessAssembly (assembly))
+			// Only run this step on non-main user Android assemblies
+			if (context.IsMainAssembly || !context.IsAndroidUserAssembly)
 				return;
 
-			if (!MightNeedFix (type))
-				return;
-
-			if (!FixAbstractMethods (type))
-				return;
-
-			UpdateAssemblyAction (assembly);
-			MarkAbstractMethodErrorType ();
+			context.IsAssemblyModified |= FixAbstractMethods (assembly);
 		}
 
 		internal bool FixAbstractMethods (AssemblyDefinition assembly)
@@ -83,17 +58,6 @@ namespace MonoDroid.Tuner
 			}
 			return changed;
 		}
-
-#if !ILLINK
-		public void ProcessAssembly (AssemblyDefinition assembly, StepContext context)
-		{
-			// Only run this step on non-main user Android assemblies
-			if (context.IsMainAssembly || !context.IsAndroidUserAssembly)
-				return;
-
-			context.IsAssemblyModified |= FixAbstractMethods (assembly);
-		}
-#endif  // !ILLINK
 
 		readonly HashSet<string> warnedAssemblies = new (StringComparer.Ordinal);
 
@@ -114,7 +78,7 @@ namespace MonoDroid.Tuner
 
 		bool MightNeedFix (TypeDefinition type)
 		{
-			return !type.IsAbstract && type.IsSubclassOf ("Java.Lang.Object", cache);
+			return !type.IsAbstract && type.IsSubclassOf ("Java.Lang.Object", TypeCache);
 		}
 
 		bool CompareTypes (TypeReference iType, TypeReference tType)
@@ -140,11 +104,11 @@ namespace MonoDroid.Tuner
 			if (iType.Namespace != tType.Namespace)
 				return false;
 
-			TypeDefinition iTypeDef = cache.Resolve (iType);
+			TypeDefinition iTypeDef = TypeCache.Resolve (iType);
 			if (iTypeDef == null)
 				return false;
 
-			TypeDefinition tTypeDef = cache.Resolve (tType);
+			TypeDefinition tTypeDef = TypeCache.Resolve (tType);
 			if (tTypeDef == null)
 				return false;
 
@@ -174,7 +138,7 @@ namespace MonoDroid.Tuner
 				return false;
 
 			foreach (var o in tMethod.Overrides)
-				if (o != null && iMethod.Name == o.Name && iMethod == cache.Resolve (o))
+				if (o != null && iMethod.Name == o.Name && iMethod == TypeCache.Resolve (o))
 					return true;
 
 			return false;
@@ -223,12 +187,12 @@ namespace MonoDroid.Tuner
 
 			bool rv = false;
 			List<MethodDefinition> typeMethods = new List<MethodDefinition> (type.Methods);
-			foreach (var baseType in type.GetBaseTypes (cache))
+			foreach (var baseType in type.GetBaseTypes (TypeCache))
 				typeMethods.AddRange (baseType.Methods);
 
 			foreach (var ifaceInfo in type.Interfaces) {
 				var iface    = ifaceInfo.InterfaceType;
-				var ifaceDef = cache.Resolve (iface);
+				var ifaceDef = TypeCache.Resolve (iface);
 				if (ifaceDef == null) {
 					LogMessage ($"Unable to unresolve interface: {iface.FullName}");
 					continue;
@@ -308,33 +272,20 @@ namespace MonoDroid.Tuner
 			}
 		}
 
-		bool markedAbstractMethodErrorType;
-
-		void MarkAbstractMethodErrorType ()
+		public override void LogMessage (string message)
 		{
-			if (markedAbstractMethodErrorType)
+			if (_injectedLogMessage != null) {
+				_injectedLogMessage (message);
 				return;
-			markedAbstractMethodErrorType = true;
-
-
-			var td = AbstractMethodErrorConstructor.DeclaringType;
-			Annotations.Mark (td);
-			Annotations.SetPreserve (td, TypePreserve.Nothing);
-			Annotations.AddPreservedMethod (td, AbstractMethodErrorConstructor);
-		}
-
-		public virtual void LogMessage (string message)
-		{
-			Context.LogMessage (message);
+			}
+			base.LogMessage (message);
 		}
 
 		AssemblyDefinition GetMonoAndroidAssembly ()
 		{
-#if !ILLINK
+			if (_injectedGetMonoAndroidAssembly != null)
+				return _injectedGetMonoAndroidAssembly ();
 			return Context.Resolver.GetAssembly ("Mono.Android.dll");
-#else   // ILLINK
-			return Context.GetLoadedAssembly ("Mono.Android");
-#endif  // ILLINK
 		}
 	}
 }
