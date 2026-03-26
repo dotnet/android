@@ -44,20 +44,26 @@ class TrimmableTypeMap
 		var previous = Interlocked.CompareExchange (ref s_instance, instance, null);
 		Debug.Assert (previous is null, "TrimmableTypeMap must only be created once.");
 
-		instance.RegisterBootstrapNativeMethod ();
+		instance.RegisterNatives ();
 	}
 
 	/// <summary>
 	/// Registers the <c>mono.android.Runtime.registerNatives</c> JNI native method.
-	/// Must be called after the JNI runtime is initialized and before any JCW class is loaded.
 	/// </summary>
-	void RegisterBootstrapNativeMethod ()
+	unsafe void RegisterNatives ()
 	{
 		using var runtimeClass = new JniType ("mono/android/Runtime");
-		JniEnvironment.Types.RegisterNatives (
-			runtimeClass.PeerReference,
-			[new JniNativeMethodRegistration ("registerNatives", "(Ljava/lang/Class;)V", s_onRegisterNatives)],
-			1);
+		fixed (byte* namePtr = "registerNatives"u8)
+		fixed (byte* sigPtr = "(Ljava/lang/Class;)V"u8) {
+			JniNativeMethod* methods = stackalloc JniNativeMethod[1];
+			methods[0] = new JniNativeMethod (
+				namePtr,
+				sigPtr,
+				(IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&OnRegisterNatives);
+			JniEnvironment.Types.RegisterNatives (
+				runtimeClass.PeerReference,
+				new ReadOnlySpan<JniNativeMethod> (methods, 1));
+		}
 	}
 
 	internal bool TryGetType (string jniSimpleReference, [NotNullWhen (true)] out Type? type)
@@ -174,10 +180,30 @@ class TrimmableTypeMap
 		}
 	}
 
-	static readonly RegisterNativesHandler s_onRegisterNatives = OnRegisterNatives;
+	// TODO (https://github.com/dotnet/android/issues/10794): The generator currently emits per-method RegisterMethod() calls.
+	// This should be changed to emit a single JNI RegisterNatives call with
+	// all methods at once, eliminating this helper. Follow-up generator change.
 
-	delegate void RegisterNativesHandler (IntPtr jnienv, IntPtr klass, IntPtr nativeClassHandle);
+	/// <summary>
+	/// Registers a single JNI native method. Called from generated
+	/// <see cref="IAndroidCallableWrapper"/> implementations.
+	/// </summary>
+	public static void RegisterMethod (JniType nativeClass, string name, string signature, IntPtr functionPointer)
+	{
+		// The java-interop JniNativeMethodRegistration API requires a Delegate, but we have
+		// a raw function pointer from an [UnmanagedCallersOnly] method. JNI only uses the
+		// function pointer extracted via Marshal.GetFunctionPointerForDelegate(), so the
+		// delegate type doesn't matter — Action is used as a lightweight wrapper.
+		// TODO (https://github.com/dotnet/java-interop/pull/1391): Use JniNativeMethod overload to avoid delegate allocation.
+		var registration = new JniNativeMethodRegistration (name, signature,
+			Marshal.GetDelegateForFunctionPointer<Action> (functionPointer));
+		JniEnvironment.Types.RegisterNatives (
+			nativeClass.PeerReference,
+			new [] { registration },
+			1);
+	}
 
+	[UnmanagedCallersOnly]
 	static void OnRegisterNatives (IntPtr jnienv, IntPtr klass, IntPtr nativeClassHandle)
 	{
 		string? className = null;
