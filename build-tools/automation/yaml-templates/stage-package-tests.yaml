@@ -231,7 +231,7 @@ stages:
       displayName: Test dotnet-local.sh
       inputs:
         scriptPath: dotnet-local.sh
-        args: build samples/HelloWorld/HelloWorld/HelloWorld.DotNet.csproj
+        args: build samples/HelloWorld/HelloWorld/HelloWorld.DotNet.csproj -p:UseMonoRuntime=false
 
     - ${{ if ne(parameters.macTestAgentsUseCleanImages, true) }}:
       - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml

@@ -85,6 +85,7 @@ stages:
         args: >-
           build samples/HelloWorld/HelloWorld/HelloWorld.DotNet.csproj
           -p:AndroidSdkDirectory="$(HOME)/android-toolchain/sdk"
+          -p:UseMonoRuntime=false
           -bl:$(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/build-helloworld.binlog
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
