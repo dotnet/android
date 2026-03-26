@@ -1487,7 +1487,7 @@ because xbuild doesn't support framework reference assemblies.
   Microsoft.Android.Sdk.NativeAOT.targets adds it back.
 -->
 <Target Name="_AfterILLinkAdditionalSteps"
-    AfterTargets="ILLink"
+    AfterTargets="_PostTrimmingPipeline"
     Condition=" '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' "
     Inputs="$(_LinkSemaphore)"
     Outputs="$(_AdditionalPostLinkerStepsFlag)">
