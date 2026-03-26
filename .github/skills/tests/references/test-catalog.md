@@ -57,7 +57,7 @@ Device: No
 | **aapt2** | `--filter "FullyQualifiedName~Aapt2"` | aapt2 task-level tests (in `Tasks/`) |
 | **manifest** | `--filter "FullyQualifiedName~ManifestTest"` | AndroidManifest.xml generation and merging |
 | **sdk** | `--filter "FullyQualifiedName~XASdkTests"` | .NET SDK-style project tests |
-| **single project** | `--filter "FullyQualifiedName~SingleProjectTest"` | Single-project MSIX/packaging tests |
+| **single project** | `--filter "FullyQualifiedName~SingleProjectTest"` | Android single-project build and packaging tests |
 | **fsharp** | `--filter "cat=FSharp"` | F# project build tests |
 | **wear** | `--filter "FullyQualifiedName~WearTests"` | Wear OS build tests |
 | **code behind** | `--filter "FullyQualifiedName~CodeBehindTests"` | Layout code-behind generation |
