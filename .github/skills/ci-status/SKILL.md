@@ -56,23 +56,29 @@ gh pr checks $PR --repo dotnet/android --json "name,state,link,bucket" | Convert
 
 Note which checks passed/failed/pending. The `link` field contains the AZDO build URL for internal checks.
 
-#### Step 3 — Get Azure DevOps build status
+#### Step 3 — Get Azure DevOps build status (repeat for EACH build)
 
-Extract the AZDO build URL from the check `link` fields. Parse `{orgUrl}`, `{project}`, and `{buildId}` from patterns:
+There are typically **two separate AZDO builds** for a dotnet/android PR:
+- **Public** (`dotnet-android`) on `dev.azure.com/dnceng-public` — compiles on Linux, macOS, Windows
+- **Internal** (`Xamarin.Android-PR`) on `devdiv.visualstudio.com` — full test suite, MAUI integration, compliance
+
+Extract AZDO build URLs from the check `link` fields. Parse `{orgUrl}`, `{project}`, and `{buildId}` from patterns:
 - `https://dev.azure.com/{org}/{project}/_build/results?buildId={id}`
 - `https://{org}.visualstudio.com/{project}/_build/results?buildId={id}`
 
-First, get the overall build status including start time and definition ID:
+**Run Steps 3, 3a, and 3b for each AZDO build independently.** The builds have different pipelines, different job counts, and different typical durations — each gets its own progress and ETA.
+
+For each build, first get the overall status including start time and definition ID:
 
 ```bash
 az devops invoke --area build --resource builds \
   --route-parameters project=$PROJECT buildId=$BUILD_ID \
   --org $ORG_URL \
-  --query "{status:status, result:result, startTime:startTime, definitionId:definition.id, definitionName:definition.name}" \
+  --query "{status:status, result:result, startTime:startTime, finishTime:finishTime, definitionId:definition.id, definitionName:definition.name}" \
   --output json 2>&1
 ```
 
-**Compute elapsed time:** Subtract `startTime` from the current time. Present as e.g. "Running for 42 min".
+**Compute elapsed time:** Subtract `startTime` from the current time (or from `finishTime` if the build is complete). Present as e.g. "Ran for 42 min" or "Running for 42 min".
 
 Then fetch the build timeline for **all jobs** (to get progress counts) and **any failures so far** — even when the build is still in progress:
 
@@ -102,9 +108,9 @@ az devops invoke --area build --resource timeline \
 
 Check `issues` arrays first — they often contain the root cause directly.
 
-#### Step 3a — Estimate completion time (when build is in progress)
+#### Step 3a — Estimate completion time per build (when build is in progress)
 
-Use the `definitionId` from the build to query recent successful builds of the **same pipeline** and compute average duration:
+Use the `definitionId` from the build to query recent successful builds of the **same pipeline definition** and compute the median duration. **Do this separately for each build** — the public and internal pipelines have very different durations.
 
 ```bash
 az devops invoke --area build --resource builds \
@@ -119,9 +125,10 @@ az devops invoke --area build --resource builds \
 1. For each recent build, calculate `duration = finishTime - startTime`
 2. Compute the **median** duration (more robust than average against outliers)
 3. `ETA = startTime + medianDuration`
-4. Present as: "ETA: ~14:30 UTC (based on median of last 5 runs: ~2h 15min)"
+4. Present as: "ETA: ~14:30 UTC (median of last 5 runs: ~2h 15min)"
 
 If `startTime` is null (build hasn't started yet), skip the ETA and say "Build queued, not started yet".
+If the build already completed, skip the ETA and show the actual duration instead.
 
 #### Step 3b — Check for failed tests (always do this, especially when the build is still running)
 
@@ -161,7 +168,7 @@ az devops invoke --area test --resource results \
 
 #### Step 4 — Present summary
 
-Use this format:
+Use this format — **one section per AZDO build**, each with its own progress and ETA:
 
 ```
 # CI Status for PR #NNNN — "PR Title"
@@ -171,17 +178,21 @@ Use this format:
 |-------|--------|
 | check-name | ✅ / ❌ / 🟡 |
 
-## Azure DevOps Build [#BuildId](link)
+## Public Build: dotnet-android [#BuildId](link)
 **Result:** ✅ Succeeded / ❌ Failed / 🟡 In Progress
+⏱️ Running for **12 min** · ETA: ~15:15 UTC (typical: ~1h 45min)
+📊 Jobs: **0/3 completed** · 1 running · 2 waiting
 
-### Progress (show when build is in progress)
-⏱️ Running for **42 min** · ETA: ~14:30 UTC (median of last 5 runs: ~2h 15min)
-📊 Jobs: **18/56 completed** · 6 running · 32 waiting
-
-### Job Status
 | Job | Status |
 |-----|--------|
-| job-name | ✅ Succeeded / ❌ Failed / 🟡 In Progress / ⏳ Waiting |
+| macOS > Build | 🟡 In Progress |
+| Linux > Build | ⏳ Waiting |
+| Windows > Build & Smoke Test | ⏳ Waiting |
+
+## Internal Build: Xamarin.Android-PR [#BuildId](link)
+**Result:** ✅ Succeeded / ❌ Failed / 🟡 In Progress
+⏱️ Running for **42 min** · ETA: ~15:45 UTC (typical: ~2h 30min)
+📊 Jobs: **18/56 completed** · 6 running · 32 waiting
 
 ### Failures (if any)
 ❌ Stage > Job > Task
@@ -207,6 +218,7 @@ Use this format:
 - Show ETA when the build is in progress and historical data is available. If the build has been running longer than the median, say "overdue by ~X min"
 - Show job counters as "N/Total completed · M running · P waiting"
 - If the build hasn't started yet, show "⏳ Build queued, not started yet"
+- If only one AZDO build exists (e.g., `.github/`-only PRs don't trigger internal), just show that one
 
 **If the build is still running but tests have already failed**, highlight these prominently so the user can start fixing them immediately. Use a note like:
 
