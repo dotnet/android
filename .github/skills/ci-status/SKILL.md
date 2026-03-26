@@ -62,25 +62,70 @@ Extract the AZDO build URL from the check `link` fields. Parse `{orgUrl}`, `{pro
 - `https://dev.azure.com/{org}/{project}/_build/results?buildId={id}`
 - `https://{org}.visualstudio.com/{project}/_build/results?buildId={id}`
 
-Then fetch the build timeline:
+First, get the overall build status:
+
+```bash
+az devops invoke --area build --resource builds \
+  --route-parameters project=$PROJECT buildId=$BUILD_ID \
+  --org $ORG_URL \
+  --query "{status:status, result:result}" --output json 2>&1
+```
+
+Then fetch the build timeline for **all completed jobs** and **any failures so far** — even when the build is still in progress:
 
 ```bash
 az devops invoke --area build --resource timeline \
   --route-parameters project=$PROJECT buildId=$BUILD_ID \
-  --org $ORG_URL --project $PROJECT \
+  --org $ORG_URL \
+  --query "records[?type=='Job'] | [].{name:name, state:state, result:result}" \
+  --output json 2>&1
+```
+
+```bash
+az devops invoke --area build --resource timeline \
+  --route-parameters project=$PROJECT buildId=$BUILD_ID \
+  --org $ORG_URL \
   --query "records[?result=='failed'] | [].{name:name, type:type, result:result, issues:issues, errorCount:errorCount, log:log}" \
   --output json 2>&1
 ```
 
-```powershell
-az devops invoke --area build --resource timeline `
-  --route-parameters project=$PROJECT buildId=$BUILD_ID `
-  --org $ORG_URL --project $PROJECT `
-  --query "records[?result=='failed'] | [].{name:name, type:type, result:result, issues:issues, errorCount:errorCount, log:log}" `
-  --output json
+Check `issues` arrays first — they often contain the root cause directly.
+
+#### Step 3b — Check for failed tests (always do this, especially when the build is still running)
+
+**This step is critical when the build is in progress.** Test results are published as jobs complete, so failures may already be visible before the build finishes. Surfacing these early lets the user start fixing them immediately.
+
+Query test runs for this build:
+
+```bash
+az devops invoke --area test --resource runs \
+  --route-parameters project=$PROJECT \
+  --org $ORG_URL \
+  --query-parameters "buildUri=vstfs:///Build/Build/$BUILD_ID" \
+  --query "value[?runStatistics[?outcome=='Failed']] | [].{id:id, name:name, totalTests:totalTests, state:state, stats:runStatistics}" \
+  --output json 2>&1
 ```
 
-Check `issues` arrays first — they often contain the root cause directly.
+For each test run that has failures, fetch the failed test results:
+
+```bash
+az devops invoke --area test --resource results \
+  --route-parameters project=$PROJECT runId=$RUN_ID \
+  --org $ORG_URL \
+  --query-parameters "outcomes=Failed&\$top=20" \
+  --query "value[].{testName:testCaseTitle, outcome:outcome, errorMessage:errorMessage, durationMs:durationInMs}" \
+  --output json 2>&1
+```
+
+If the `errorMessage` is truncated or absent, you can fetch a single test result's full details:
+
+```bash
+az devops invoke --area test --resource results \
+  --route-parameters project=$PROJECT runId=$RUN_ID testId=$TEST_ID \
+  --org $ORG_URL \
+  --query "{testName:testCaseTitle, errorMessage:errorMessage, stackTrace:stackTrace}" \
+  --output json 2>&1
+```
 
 #### Step 4 — Present summary
 
@@ -97,15 +142,33 @@ Use this format:
 ## Azure DevOps Build [#BuildId](link)
 **Result:** ✅ Succeeded / ❌ Failed / 🟡 In Progress
 
+### Job Status (when build is in progress, show all jobs)
+| Job | Status |
+|-----|--------|
+| job-name | ✅ Succeeded / ❌ Failed / 🟡 In Progress |
+
 ### Failures (if any)
 ❌ Stage > Job > Task
    Error: <first error message>
 
+### Failed Tests (if any — even while build is still running)
+| Test Run | Failed | Total |
+|----------|--------|-------|
+| run-name | N | M |
+
+**Failed test names:**
+- `Namespace.TestClass.TestMethod` — brief error message
+- ...
+
 ## What next?
-1. View full logs for a failure
+1. View full logs / stack traces for a test failure
 2. Download and analyze .binlog artifacts
 3. Retry failed stages
 ```
+
+**If the build is still running but tests have already failed**, highlight these prominently so the user can start fixing them immediately. Use a note like:
+
+> ⚠️ Build still in progress, but **N tests have already failed** — you can start investigating these now.
 
 **If no failures found anywhere**, report CI as green and stop.
 
@@ -144,10 +207,11 @@ See [references/error-patterns.md](references/error-patterns.md) for dotnet/andr
 
 ## Error Handling
 
-- **Build in progress:** Report current status and offer to watch with `gh pr checks --watch`
+- **Build in progress:** Still query for failed timeline records AND test runs. Report any early failures alongside the in-progress status. Only offer `gh pr checks --watch` if there are no failures yet.
 - **No AZDO build found:** The PR may not have triggered internal CI yet. Report GitHub checks only.
 - **Auth expired:** Tell user to run `az login` and retry.
 - **Build not found:** Verify the PR number/build ID is correct.
+- **No test runs yet:** The build may not have reached the test phase. Report what's available and note that tests haven't started.
 
 ## Tips
 
