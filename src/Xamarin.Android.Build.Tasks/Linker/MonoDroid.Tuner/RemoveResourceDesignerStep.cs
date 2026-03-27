@@ -9,13 +9,10 @@ using Xamarin.Android.Tasks;
 using System.Collections.Generic;
 using Mono.Cecil.Cil;
 using System.Text.RegularExpressions;
-#if ILLINK
-using Microsoft.Android.Sdk.ILLink;
-#endif
 
 namespace MonoDroid.Tuner
 {
-	public class RemoveResourceDesignerStep : LinkDesignerBase
+	public class RemoveResourceDesignerStep : LinkDesignerBase, IAssemblyModifierPipelineStep
 	{
 		TypeDefinition mainDesigner = null;
 		AssemblyDefinition mainAssembly = null;
@@ -23,15 +20,32 @@ namespace MonoDroid.Tuner
 		Dictionary<string, int> designerConstants;
 		Regex opCodeRegex = new Regex (@"([\w]+): ([\w]+) ([\w.]+) ([\w:./]+)");
 
+		IList<AssemblyDefinition> allAssemblies;
+		Action<string> log;
+
+		public RemoveResourceDesignerStep (IList<AssemblyDefinition> allAssemblies, Action<string> logger)
+		{
+			this.allAssemblies = allAssemblies;
+			this.log = logger;
+		}
+
+		public override void LogMessage (string message)
+		{
+			log (message);
+		}
+
+		public void ProcessAssembly (AssemblyDefinition assembly, StepContext context)
+		{
+			LoadDesigner ();
+			context.IsAssemblyModified |= ProcessAssemblyDesigner (assembly);
+		}
+
 		protected override void LoadDesigner ()
 		{
 			if (mainAssembly != null)
 				return;
 			// resolve the MainAssembly Resource designer TypeDefinition
-			AndroidLinkConfiguration config = AndroidLinkConfiguration.GetInstance (Context);
-			if (config == null)
-				return;
-			foreach(var asm in config.Assemblies) {
+			foreach(var asm in allAssemblies) {
 				if (FindResourceDesigner (asm, mainApplication: true, designer: out mainDesigner, designerAttribute: out mainDesignerAttribute)) {
 					mainAssembly = asm;
 				 	break;
@@ -43,14 +57,6 @@ namespace MonoDroid.Tuner
 			}
 			LogMessage ($"  Main Designer found {mainDesigner.FullName}.");
 			designerConstants = BuildResourceDesignerFieldLookup (mainDesigner);
-		}
-
-		protected override void EndProcess ()
-		{
-			if (mainDesigner != null) {
-				LogMessage ($"  Setting Action on {mainAssembly.Name} to Save.");
-				Annotations.SetAction (mainAssembly, AssemblyAction.Save);
-			}
 		}
 
 		protected override void FixBody (MethodBody body, TypeDefinition designer)
@@ -100,7 +106,7 @@ namespace MonoDroid.Tuner
 			if (assembly != mainAssembly) {
 				LogMessage ($"   {assembly.Name.Name} is not the main assembly. ");
 				if (!FindResourceDesigner (assembly, mainApplication: false, designer: out localDesigner, designerAttribute: out designerAttribute)) {
-					Context.LogMessage ($"   {assembly.Name.Name} does not have a designer file.");
+					LogMessage ($"   {assembly.Name.Name} does not have a designer file.");
 					return false;
 				}
 			} else {

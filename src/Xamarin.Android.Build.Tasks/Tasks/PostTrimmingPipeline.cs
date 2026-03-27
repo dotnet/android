@@ -29,6 +29,8 @@ public class PostTrimmingPipeline : AndroidTask
 
 	public bool AddKeepAlives { get; set; }
 
+	public bool AndroidLinkResources { get; set; }
+
 	public bool Deterministic { get; set; }
 
 	public override bool RunTask ()
@@ -47,6 +49,13 @@ public class PostTrimmingPipeline : AndroidTask
 
 		var steps = new List<IAssemblyModifierPipelineStep> ();
 		steps.Add (new StripEmbeddedLibrariesStep (Log));
+		if (AndroidLinkResources) {
+			var allAssemblies = new List<AssemblyDefinition> (Assemblies.Length);
+			foreach (var item in Assemblies) {
+				allAssemblies.Add (resolver.GetAssembly (item.ItemSpec));
+			}
+			steps.Add (new RemoveResourceDesignerStep (allAssemblies, (msg) => Log.LogDebugMessage (msg)));
+		}
 		if (AddKeepAlives) {
 			// Memoize the corlib resolution so the attempt (and any error logging) happens at most once,
 			// regardless of how many assemblies/methods need KeepAlive injection.
