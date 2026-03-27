@@ -46,7 +46,24 @@ class ManifestGenerator
 		AssemblyManifestInfo assemblyInfo,
 		string outputPath)
 	{
-		var doc = LoadOrCreateManifest (manifestTemplatePath);
+		XDocument? template = null;
+		if (!string.IsNullOrEmpty (manifestTemplatePath) && File.Exists (manifestTemplatePath)) {
+			template = XDocument.Load (manifestTemplatePath);
+		}
+		return Generate (template, allPeers, assemblyInfo, outputPath);
+	}
+
+	/// <summary>
+	/// Generates the merged manifest from an optional pre-loaded template and writes it to <paramref name="outputPath"/>.
+	/// Returns the list of additional content provider names (for ApplicationRegistration.java).
+	/// </summary>
+	public IList<string> Generate (
+		XDocument? manifestTemplate,
+		IReadOnlyList<JavaPeerInfo> allPeers,
+		AssemblyManifestInfo assemblyInfo,
+		string outputPath)
+	{
+		var doc = manifestTemplate ?? CreateDefaultManifest ();
 		var manifest = doc.Root;
 		if (manifest is null) {
 			throw new InvalidOperationException ("Manifest document has no root element.");
@@ -134,12 +151,8 @@ class ManifestGenerator
 		return providerNames;
 	}
 
-	XDocument LoadOrCreateManifest (string? templatePath)
+	XDocument CreateDefaultManifest ()
 	{
-		if (!string.IsNullOrEmpty (templatePath) && File.Exists (templatePath)) {
-			return XDocument.Load (templatePath);
-		}
-
 		return new XDocument (
 			new XDeclaration ("1.0", "utf-8", null),
 			new XElement ("manifest",
