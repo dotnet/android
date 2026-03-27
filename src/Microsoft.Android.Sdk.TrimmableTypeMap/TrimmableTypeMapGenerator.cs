@@ -30,8 +30,7 @@ public class TrimmableTypeMapGenerator
 		string outputDirectory,
 		string javaSourceOutputDirectory,
 		Version systemRuntimeVersion,
-		HashSet<string> frameworkAssemblyNames,
-		string? acwMapOutputPath = null)
+		HashSet<string> frameworkAssemblyNames)
 	{
 		Directory.CreateDirectory (outputDirectory);
 		Directory.CreateDirectory (javaSourceOutputDirectory);
@@ -40,7 +39,7 @@ public class TrimmableTypeMapGenerator
 
 		if (allPeers.Count == 0) {
 			log ("No Java peer types found, skipping typemap generation.");
-			return new TrimmableTypeMapResult ([], []);
+			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
 
 		var generatedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, assemblyPaths, outputDirectory);
@@ -57,14 +56,7 @@ public class TrimmableTypeMapGenerator
 		log ($"Generating JCW files for {jcwPeers.Count} types (filtered from {allPeers.Count} total).");
 		var generatedJavaFiles = GenerateJcwJavaSources (jcwPeers, javaSourceOutputDirectory);
 
-		// Write acw-map.txt so _ConvertCustomView and _UpdateAndroidResgen can resolve custom view names.
-		if (!acwMapOutputPath.IsNullOrEmpty ()) {
-			using var writer = new StreamWriter (acwMapOutputPath, append: false);
-			AcwMapWriter.Write (writer, allPeers);
-			log ($"Written acw-map.txt with {allPeers.Count} entries to {acwMapOutputPath}.");
-		}
-
-		return new TrimmableTypeMapResult (generatedAssemblies, generatedJavaFiles);
+		return new TrimmableTypeMapResult (generatedAssemblies, generatedJavaFiles, allPeers);
 	}
 
 	// Future optimization: the scanner currently scans all assemblies on every run.

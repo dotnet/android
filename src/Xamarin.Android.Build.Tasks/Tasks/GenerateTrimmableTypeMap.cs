@@ -32,11 +32,6 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public string AcwMapDirectory { get; set; } = "";
 
 	/// <summary>
-	/// Output path for the merged acw-map.txt consumed by _ConvertCustomView and _UpdateAndroidResgen.
-	/// </summary>
-	public string? AcwMapOutputFile { get; set; }
-
-	/// <summary>
 	/// The .NET target framework version (e.g., "v11.0"). Used to set the System.Runtime
 	/// assembly reference version in generated typemap assemblies.
 	/// </summary>
@@ -49,6 +44,11 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	[Output]
 	public ITaskItem [] GeneratedJavaFiles { get; set; } = [];
 
+	/// <summary>
+	/// Per-assembly acw-map files produced during scanning. Each file contains
+	/// three lines per type: PartialAssemblyQualifiedName;JavaKey,
+	/// ManagedKey;JavaKey, and CompatJniName;JavaKey.
+	/// </summary>
 	[Output]
 	public ITaskItem []? PerAssemblyAcwMapFiles { get; set; }
 
@@ -79,12 +79,44 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			OutputDirectory,
 			JavaSourceOutputDirectory,
 			systemRuntimeVersion,
-			frameworkAssemblyNames,
-			AcwMapOutputFile);
+			frameworkAssemblyNames);
 
 		GeneratedAssemblies = result.GeneratedAssemblies.Select (p => (ITaskItem) new TaskItem (p)).ToArray ();
 		GeneratedJavaFiles = result.GeneratedJavaFiles.Select (p => (ITaskItem) new TaskItem (p)).ToArray ();
+		PerAssemblyAcwMapFiles = GeneratePerAssemblyAcwMaps (result.AllPeers);
 
 		return !Log.HasLoggedErrors;
+	}
+
+	ITaskItem [] GeneratePerAssemblyAcwMaps (IReadOnlyList<JavaPeerInfo> allPeers)
+	{
+		var peersByAssembly = allPeers
+			.GroupBy (p => p.AssemblyName, StringComparer.Ordinal)
+			.OrderBy (g => g.Key, StringComparer.Ordinal);
+
+		var outputFiles = new List<ITaskItem> ();
+
+		foreach (var group in peersByAssembly) {
+			var peers = group.ToList ();
+			string outputFile = Path.Combine (AcwMapDirectory, $"acw-map.{group.Key}.txt");
+
+			bool written;
+			using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
+				AcwMapWriter.Write (sw, peers);
+				sw.Flush ();
+				written = Files.CopyIfStreamChanged (sw.BaseStream, outputFile);
+			}
+
+			Log.LogDebugMessage (written
+				? $"  acw-map.{group.Key}.txt: {peers.Count} types"
+				: $"  acw-map.{group.Key}.txt: unchanged");
+
+			var item = new TaskItem (outputFile);
+			item.SetMetadata ("AssemblyName", group.Key);
+			outputFiles.Add (item);
+		}
+
+		Log.LogDebugMessage ($"Generated {outputFiles.Count} per-assembly ACW map files.");
+		return outputFiles.ToArray ();
 	}
 }

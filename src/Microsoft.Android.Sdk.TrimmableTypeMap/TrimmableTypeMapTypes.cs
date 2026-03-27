@@ -7,4 +7,5 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// </summary>
 public record TrimmableTypeMapResult (
 	IReadOnlyList<string> GeneratedAssemblies,
-	IReadOnlyList<string> GeneratedJavaFiles);
+	IReadOnlyList<string> GeneratedJavaFiles,
+	IReadOnlyList<JavaPeerInfo> AllPeers);
