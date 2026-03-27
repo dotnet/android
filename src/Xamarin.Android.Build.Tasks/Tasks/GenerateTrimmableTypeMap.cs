@@ -94,7 +94,9 @@ public class GenerateTrimmableTypeMap : AndroidTask
 					ApplicationJavaClass: ApplicationJavaClass);
 			}
 
-			var generator = new TrimmableTypeMapGenerator (msg => Log.LogMessage (MessageImportance.Low, msg));
+			var generator = new TrimmableTypeMapGenerator (
+				msg => Log.LogMessage (MessageImportance.Low, msg),
+				msg => Log.LogWarning (msg));
 
 			XDocument? manifestTemplate = null;
 			if (!ManifestTemplate.IsNullOrEmpty () && File.Exists (ManifestTemplate)) {
