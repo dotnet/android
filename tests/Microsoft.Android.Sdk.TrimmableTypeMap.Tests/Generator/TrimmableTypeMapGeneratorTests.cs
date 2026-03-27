@@ -12,7 +12,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 {
 	readonly List<string> logMessages = new ();
 
-	sealed class TestTrimmableTypeMapLogger (List<string> logMessages) : ITrimmableTypeMapLogger
+	sealed class TestTrimmableTypeMapLogger (List<string> logMessages, List<string>? warnings = null) : ITrimmableTypeMapLogger
 	{
 		public void LogNoJavaPeerTypesFound () =>
 			logMessages.Add ("No Java peer types found, skipping typemap generation.");
@@ -30,6 +30,10 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			logMessages.Add ($"Generated {assemblyCount} typemap assemblies.");
 		public void LogGeneratedJcwFilesInfo (int sourceCount) =>
 			logMessages.Add ($"Generated {sourceCount} JCW Java source files.");
+		public void LogRootingManifestReferencedTypeInfo (string javaTypeName, string managedTypeName) =>
+			logMessages.Add ($"Rooting manifest-referenced type '{javaTypeName}' ({managedTypeName}) as unconditional.");
+		public void LogManifestReferencedTypeNotFoundWarning (string javaTypeName) =>
+			warnings?.Add ($"Manifest-referenced type '{javaTypeName}' was not found in any scanned assembly. It may be a framework type.");
 	}
 
 	[Fact]
@@ -100,6 +104,119 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	TrimmableTypeMapGenerator CreateGenerator () => new (new TestTrimmableTypeMapLogger (logMessages));
+
+	TrimmableTypeMapGenerator CreateGenerator (List<string> warnings) =>
+		new (new TestTrimmableTypeMapLogger (logMessages, warnings));
+
+	[Fact]
+	public void RootManifestReferencedTypes_RootsMatchingPeers ()
+	{
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "com/example/MyActivity", CompatJniName = "com.example.MyActivity",
+				ManagedTypeName = "MyApp.MyActivity", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "MyActivity",
+				AssemblyName = "MyApp", IsUnconditional = false,
+			},
+			new JavaPeerInfo {
+				JavaName = "com/example/MyService", CompatJniName = "com.example.MyService",
+				ManagedTypeName = "MyApp.MyService", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "MyService",
+				AssemblyName = "MyApp", IsUnconditional = false,
+			},
+		};
+
+		var doc = System.Xml.Linq.XDocument.Parse ("""
+			<?xml version="1.0" encoding="utf-8"?>
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example">
+			  <application>
+			    <activity android:name="com.example.MyActivity" />
+			  </application>
+			</manifest>
+			""");
+
+		var generator = CreateGenerator ();
+		generator.RootManifestReferencedTypes (peers, doc);
+
+		Assert.True (peers [0].IsUnconditional, "MyActivity should be rooted as unconditional.");
+		Assert.False (peers [1].IsUnconditional, "MyService should remain conditional.");
+		Assert.Contains (logMessages, m => m.Contains ("Rooting manifest-referenced type"));
+	}
+
+	[Fact]
+	public void RootManifestReferencedTypes_WarnsForUnresolvedTypes ()
+	{
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "com/example/MyActivity", CompatJniName = "com.example.MyActivity",
+				ManagedTypeName = "MyApp.MyActivity", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "MyActivity",
+				AssemblyName = "MyApp",
+			},
+		};
+
+		var doc = System.Xml.Linq.XDocument.Parse ("""
+			<?xml version="1.0" encoding="utf-8"?>
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example">
+			  <application>
+			    <service android:name="com.example.NonExistentService" />
+			  </application>
+			</manifest>
+			""");
+
+		var warnings = new List<string> ();
+		var generator = CreateGenerator (warnings);
+		generator.RootManifestReferencedTypes (peers, doc);
+
+		Assert.Contains (warnings, w => w.Contains ("com.example.NonExistentService"));
+	}
+
+	[Fact]
+	public void RootManifestReferencedTypes_SkipsAlreadyUnconditional ()
+	{
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "com/example/MyActivity", CompatJniName = "com.example.MyActivity",
+				ManagedTypeName = "MyApp.MyActivity", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "MyActivity",
+				AssemblyName = "MyApp", IsUnconditional = true,
+			},
+		};
+
+		var doc = System.Xml.Linq.XDocument.Parse ("""
+			<?xml version="1.0" encoding="utf-8"?>
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example">
+			  <application>
+			    <activity android:name="com.example.MyActivity" />
+			  </application>
+			</manifest>
+			""");
+
+		var generator = CreateGenerator ();
+		generator.RootManifestReferencedTypes (peers, doc);
+
+		Assert.True (peers [0].IsUnconditional);
+		Assert.DoesNotContain (logMessages, m => m.Contains ("Rooting manifest-referenced type"));
+	}
+
+	[Fact]
+	public void RootManifestReferencedTypes_EmptyManifest_NoChanges ()
+	{
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "com/example/MyActivity", CompatJniName = "com.example.MyActivity",
+				ManagedTypeName = "MyApp.MyActivity", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "MyActivity",
+				AssemblyName = "MyApp",
+			},
+		};
+
+		var doc = System.Xml.Linq.XDocument.Parse ("""
+			<?xml version="1.0" encoding="utf-8"?>
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example">
+			</manifest>
+			""");
+
+		var generator = CreateGenerator ();
+		generator.RootManifestReferencedTypes (peers, doc);
+
+		Assert.False (peers [0].IsUnconditional);
+	}
 
 	static PEReader CreateTestFixturePEReader ()
 	{

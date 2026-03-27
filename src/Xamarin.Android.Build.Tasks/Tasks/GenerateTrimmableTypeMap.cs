@@ -33,6 +33,10 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			log.LogMessage (MessageImportance.Low, $"Generated {assemblyCount} typemap assemblies.");
 		public void LogGeneratedJcwFilesInfo (int sourceCount) =>
 			log.LogMessage (MessageImportance.Low, $"Generated {sourceCount} JCW Java source files.");
+		public void LogRootingManifestReferencedTypeInfo (string javaTypeName, string managedTypeName) =>
+			log.LogMessage (MessageImportance.Low, $"Rooting manifest-referenced type '{javaTypeName}' ({managedTypeName}) as unconditional.");
+		public void LogManifestReferencedTypeNotFoundWarning (string javaTypeName) =>
+			log.LogWarning ($"Manifest-referenced type '{javaTypeName}' was not found in any scanned assembly. It may be a framework type.");
 	}
 
 	public override string TaskPrefix => "GTT";
@@ -114,6 +118,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 					ApplicationJavaClass: ApplicationJavaClass);
 			}
 
+			var generator = new TrimmableTypeMapGenerator (new MSBuildTrimmableTypeMapLogger (Log));
 			var generator = new TrimmableTypeMapGenerator (new MSBuildTrimmableTypeMapLogger (Log));
 
 			XDocument? manifestTemplate = null;

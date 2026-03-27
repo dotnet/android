@@ -38,6 +38,10 @@ public class TrimmableTypeMapGenerator
 			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
 
+		if (manifestTemplate is not null) {
+			RootManifestReferencedTypes (allPeers, manifestTemplate);
+		}
+
 		var generatedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion);
 		var jcwPeers = allPeers.Where (p =>
 			!frameworkAssemblyNames.Contains (p.AssemblyName)
@@ -138,5 +142,58 @@ public class TrimmableTypeMapGenerator
 		var sources = jcwGenerator.GenerateContent (allPeers);
 		logger.LogGeneratedJcwFilesInfo (sources.Count);
 		return sources.ToList ();
+	}
+
+	internal void RootManifestReferencedTypes (List<JavaPeerInfo> allPeers, XDocument doc)
+	{
+		var root = doc.Root;
+		if (root is null) {
+			return;
+		}
+
+		XNamespace androidNs = "http://schemas.android.com/apk/res/android";
+		XName attName = androidNs + "name";
+
+		var componentNames = new HashSet<string> (StringComparer.Ordinal);
+		foreach (var element in root.Descendants ()) {
+			switch (element.Name.LocalName) {
+			case "activity":
+			case "service":
+			case "receiver":
+			case "provider":
+				var name = (string?) element.Attribute (attName);
+				if (name is not null) {
+					componentNames.Add (name);
+				}
+				break;
+			}
+		}
+
+		if (componentNames.Count == 0) {
+			return;
+		}
+
+		var peersByDotName = new Dictionary<string, List<JavaPeerInfo>> (StringComparer.Ordinal);
+		foreach (var peer in allPeers) {
+			var dotName = peer.JavaName.Replace ('/', '.').Replace ('$', '.');
+			if (!peersByDotName.TryGetValue (dotName, out var list)) {
+				list = [];
+				peersByDotName [dotName] = list;
+			}
+			list.Add (peer);
+		}
+
+		foreach (var name in componentNames) {
+			if (peersByDotName.TryGetValue (name, out var peers)) {
+				foreach (var peer in peers) {
+					if (!peer.IsUnconditional) {
+						peer.IsUnconditional = true;
+						logger.LogRootingManifestReferencedTypeInfo (name, peer.ManagedTypeName);
+					}
+				}
+			} else {
+				logger.LogManifestReferencedTypeNotFoundWarning (name);
+			}
+		}
 	}
 }
