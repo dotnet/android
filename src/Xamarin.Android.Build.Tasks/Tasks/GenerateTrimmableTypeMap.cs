@@ -55,9 +55,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public override bool RunTask ()
 	{
 		var systemRuntimeVersion = TrimmableTypeMapGenerator.ParseTargetFrameworkVersion (TargetFrameworkVersion);
-		// Don't filter by HasMonoAndroidReference — ReferencePath items from the compiler
-		// don't carry this metadata. The scanner handles non-Java assemblies gracefully.
-		var assemblyPaths = ResolvedAssemblies.Select (i => i.ItemSpec).Distinct ().ToList ();
+		var assemblyPaths = GetJavaInteropAssemblyPaths (ResolvedAssemblies);
 
 		// Framework binding types (Activity, View, etc.) already exist in java_runtime.dex and don't
 		// need JCW .java files. Framework Implementor types (mono/ prefix, e.g. OnClickListenerImplementor)
@@ -86,6 +84,17 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		PerAssemblyAcwMapFiles = GeneratePerAssemblyAcwMaps (result.AllPeers);
 
 		return !Log.HasLoggedErrors;
+	}
+
+	static IReadOnlyList<string> GetJavaInteropAssemblyPaths (ITaskItem [] items)
+	{
+		var paths = new List<string> (items.Length);
+		foreach (var item in items) {
+			if (MonoAndroidHelper.IsMonoAndroidAssembly (item)) {
+				paths.Add (item.ItemSpec);
+			}
+		}
+		return paths;
 	}
 
 	ITaskItem [] GeneratePerAssemblyAcwMaps (IReadOnlyList<JavaPeerInfo> allPeers)

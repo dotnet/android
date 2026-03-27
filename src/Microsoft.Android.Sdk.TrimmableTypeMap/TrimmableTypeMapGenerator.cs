@@ -32,6 +32,22 @@ public class TrimmableTypeMapGenerator
 		Version systemRuntimeVersion,
 		HashSet<string> frameworkAssemblyNames)
 	{
+		if (assemblyPaths is null) {
+			throw new ArgumentNullException (nameof (assemblyPaths));
+		}
+		if (outputDirectory is null) {
+			throw new ArgumentNullException (nameof (outputDirectory));
+		}
+		if (javaSourceOutputDirectory is null) {
+			throw new ArgumentNullException (nameof (javaSourceOutputDirectory));
+		}
+		if (systemRuntimeVersion is null) {
+			throw new ArgumentNullException (nameof (systemRuntimeVersion));
+		}
+		if (frameworkAssemblyNames is null) {
+			throw new ArgumentNullException (nameof (frameworkAssemblyNames));
+		}
+
 		Directory.CreateDirectory (outputDirectory);
 		Directory.CreateDirectory (javaSourceOutputDirectory);
 
