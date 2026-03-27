@@ -477,6 +477,9 @@ sealed class AssemblyIndex : IDisposable
 		string? name = null;
 		int glesVersion = 0;
 		bool required = true;
+		if (value.FixedArguments.Length > 0 && value.FixedArguments [0].Value is string featureName) {
+			name = featureName;
+		}
 		foreach (var named in value.NamedArguments) {
 			if (named.Name == "Name" && named.Value is string n) {
 				name = n;
