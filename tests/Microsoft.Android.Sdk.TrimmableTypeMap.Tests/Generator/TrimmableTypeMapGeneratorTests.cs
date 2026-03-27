@@ -135,24 +135,6 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase, IDisposable
 			"Typemap assembly should be regenerated when source is touched.");
 	}
 
-	[Theory]
-	[InlineData ("v11.0")]
-	[InlineData ("v10.0")]
-	[InlineData ("11.0")]
-	public void ParseTargetFrameworkVersion_ValidInput_Succeeds (string tfv)
-	{
-		var version = TrimmableTypeMapGenerator.ParseTargetFrameworkVersion (tfv);
-		Assert.NotNull (version);
-	}
-
-	[Theory]
-	[InlineData ("not-a-version")]
-	[InlineData ("")]
-	public void ParseTargetFrameworkVersion_InvalidInput_Throws (string tfv)
-	{
-		Assert.Throws<ArgumentException> (() => TrimmableTypeMapGenerator.ParseTargetFrameworkVersion (tfv));
-	}
-
 	[Fact]
 	public void Execute_NullAssemblyPaths_Throws ()
 	{

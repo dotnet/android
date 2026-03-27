@@ -161,15 +161,4 @@ public class TrimmableTypeMapGenerator
 		log ($"Generated {files.Count} JCW Java source files.");
 		return files.ToList ();
 	}
-
-	public static Version ParseTargetFrameworkVersion (string tfv)
-	{
-		if (tfv.Length > 0 && (tfv [0] == 'v' || tfv [0] == 'V')) {
-			tfv = tfv.Substring (1);
-		}
-		if (Version.TryParse (tfv, out var version)) {
-			return version;
-		}
-		throw new ArgumentException ($"Cannot parse TargetFrameworkVersion '{tfv}' as a Version.");
-	}
 }

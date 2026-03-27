@@ -57,7 +57,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 	public override bool RunTask ()
 	{
-		var systemRuntimeVersion = TrimmableTypeMapGenerator.ParseTargetFrameworkVersion (TargetFrameworkVersion);
+		var systemRuntimeVersion = ParseTargetFrameworkVersion (TargetFrameworkVersion);
 		// Don't filter by HasMonoAndroidReference — ReferencePath items from the compiler
 		// don't carry this metadata. The scanner handles non-Java assemblies gracefully.
 		var assemblyPaths = ResolvedAssemblies.Select (i => i.ItemSpec).Distinct ().ToList ();
@@ -114,5 +114,16 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 		Log.LogDebugMessage ($"Generated {outputFiles.Count} per-assembly ACW map files.");
 		return outputFiles.ToArray ();
+	}
+
+	static Version ParseTargetFrameworkVersion (string tfv)
+	{
+		if (tfv.Length > 0 && (tfv [0] == 'v' || tfv [0] == 'V')) {
+			tfv = tfv.Substring (1);
+		}
+		if (Version.TryParse (tfv, out var version)) {
+			return version;
+		}
+		throw new ArgumentException ($"Cannot parse TargetFrameworkVersion '{tfv}' as a Version.");
 	}
 }
