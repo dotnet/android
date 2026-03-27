@@ -44,20 +44,20 @@ class TrimmableTypeMap
 		var previous = Interlocked.CompareExchange (ref s_instance, instance, null);
 		Debug.Assert (previous is null, "TrimmableTypeMap must only be created once.");
 
-		instance.RegisterBootstrapNativeMethod ();
+		instance.RegisterNatives ();
 	}
 
 	/// <summary>
 	/// Registers the <c>mono.android.Runtime.registerNatives</c> JNI native method.
-	/// Must be called after the JNI runtime is initialized and before any JCW class is loaded.
 	/// </summary>
-	void RegisterBootstrapNativeMethod ()
+	unsafe void RegisterNatives ()
 	{
-		using var runtimeClass = new JniType ("mono/android/Runtime");
-		JniEnvironment.Types.RegisterNatives (
-			runtimeClass.PeerReference,
-			[new JniNativeMethodRegistration ("registerNatives", "(Ljava/lang/Class;)V", s_onRegisterNatives)],
-			1);
+		using var runtimeClass = new JniType ("mono/android/Runtime"u8);
+		fixed (byte* name = "registerNatives"u8, sig = "(Ljava/lang/Class;)V"u8) {
+			var onRegisterNatives = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&OnRegisterNatives;
+			var method = new JniNativeMethod (name, sig, onRegisterNatives);
+			JniEnvironment.Types.RegisterNatives (runtimeClass.PeerReference, [method]);
+		}
 	}
 
 	internal bool TryGetType (string jniSimpleReference, [NotNullWhen (true)] out Type? type)
@@ -174,10 +174,7 @@ class TrimmableTypeMap
 		}
 	}
 
-	static readonly RegisterNativesHandler s_onRegisterNatives = OnRegisterNatives;
-
-	delegate void RegisterNativesHandler (IntPtr jnienv, IntPtr klass, IntPtr nativeClassHandle);
-
+	[UnmanagedCallersOnly]
 	static void OnRegisterNatives (IntPtr jnienv, IntPtr klass, IntPtr nativeClassHandle)
 	{
 		string? className = null;
