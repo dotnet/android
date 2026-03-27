@@ -89,6 +89,62 @@ namespace Android.App
 		public string? Name { get; set; }
 		string Java.Interop.IJniNameProviderAttribute.Name => Name ?? "";
 	}
+
+	[AttributeUsage (AttributeTargets.Assembly, AllowMultiple = true)]
+	public sealed class UsesFeatureAttribute : Attribute
+	{
+		public UsesFeatureAttribute () { }
+		public UsesFeatureAttribute (string name) => Name = name;
+
+		// Name has a private setter — only settable via ctor (matches the real attribute)
+		public string? Name { get; private set; }
+		public int GLESVersion { get; set; }
+		public bool Required { get; set; } = true;
+	}
+
+	[AttributeUsage (AttributeTargets.Assembly, AllowMultiple = true)]
+	public sealed class UsesPermissionAttribute : Attribute
+	{
+		public UsesPermissionAttribute () { }
+		public UsesPermissionAttribute (string name) => Name = name;
+
+		public string? Name { get; set; }
+		public int MaxSdkVersion { get; set; }
+	}
+
+	[AttributeUsage (AttributeTargets.Assembly, AllowMultiple = true)]
+	public sealed class UsesLibraryAttribute : Attribute
+	{
+		public UsesLibraryAttribute () { }
+		public UsesLibraryAttribute (string name) => Name = name;
+		public UsesLibraryAttribute (string name, bool required)
+		{
+			Name = name;
+			Required = required;
+		}
+
+		public string? Name { get; set; }
+		public bool Required { get; set; } = true;
+	}
+
+	[AttributeUsage (AttributeTargets.Assembly | AttributeTargets.Class, AllowMultiple = true)]
+	public sealed class MetaDataAttribute : Attribute
+	{
+		public MetaDataAttribute (string name) => Name = name;
+
+		public string Name { get; }
+		public string? Value { get; set; }
+		public string? Resource { get; set; }
+	}
+
+	[AttributeUsage (AttributeTargets.Assembly | AttributeTargets.Class, AllowMultiple = true)]
+	public sealed class IntentFilterAttribute : Attribute
+	{
+		public IntentFilterAttribute (string [] actions) => Actions = actions;
+
+		public string [] Actions { get; }
+		public string []? Categories { get; set; }
+	}
 }
 
 namespace Android.Content
