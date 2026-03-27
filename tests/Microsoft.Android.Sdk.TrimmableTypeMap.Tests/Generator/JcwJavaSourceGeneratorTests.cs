@@ -113,6 +113,14 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 			Assert.Contains ("public abstract class AbstractBase\n", java);
 		}
 
+		[Fact]
+		public void Generate_ClickableView_UsesDotsForNestedInterfaceName ()
+		{
+			var java = GenerateFixture ("my/app/ClickableView");
+			Assert.Contains ("\t\tandroid.view.View.OnClickListener", java);
+			Assert.DoesNotContain ("View$OnClickListener", java);
+		}
+
 	}
 
 	public class StaticInitializer
