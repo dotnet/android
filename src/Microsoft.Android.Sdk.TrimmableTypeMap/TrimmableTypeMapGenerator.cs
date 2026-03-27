@@ -14,7 +14,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// Core logic for generating trimmable TypeMap assemblies, JCW Java sources, and manifest.
 /// Extracted from the MSBuild task so it can be tested directly without MSBuild ceremony.
 /// </summary>
-public class TrimmableTypeMapGenerator
+internal class TrimmableTypeMapGenerator
 {
 	readonly TaskLoggingHelper log;
 
@@ -64,13 +64,13 @@ public class TrimmableTypeMapGenerator
 
 		// Generate manifest if output path is configured
 		string[]? additionalProviderSources = null;
-		if (mergedManifestOutputPath is not null && mergedManifestOutputPath.Length > 0 && manifestConfig is not null && !manifestConfig.PackageName.IsNullOrEmpty ()) {
+		if (!mergedManifestOutputPath.IsNullOrEmpty () && manifestConfig is not null && !manifestConfig.PackageName.IsNullOrEmpty ()) {
 			additionalProviderSources = GenerateManifest (allPeers, assemblyManifestInfo, manifestConfig, manifestTemplatePath, mergedManifestOutputPath);
 		}
 
 		// Write acw-map.txt so _ConvertCustomView and _UpdateAndroidResgen can resolve custom view names.
 		if (!acwMapOutputPath.IsNullOrEmpty ()) {
-			using var writer = new StreamWriter (acwMapOutputPath!, append: false);
+			using var writer = new StreamWriter (acwMapOutputPath, append: false);
 			AcwMapWriter.Write (writer, allPeers);
 			log.LogMessage (MessageImportance.Low, "Written acw-map.txt with {0} entries to {1}.", allPeers.Count, acwMapOutputPath);
 		}
@@ -124,11 +124,12 @@ public class TrimmableTypeMapGenerator
 				continue;
 			}
 
-			generator.Generate (group.ToList (), outputPath, assemblyName);
+			var peers = group.ToList ();
+			generator.Generate (peers, outputPath, assemblyName);
 			generatedAssemblies.Add (outputPath);
 			anyRegenerated = true;
 
-			log.LogMessage (MessageImportance.Low, "  {0}: {1} types", assemblyName, group.Count ());
+			log.LogMessage (MessageImportance.Low, "  {0}: {1} types", assemblyName, peers.Count);
 		}
 
 		// Root assembly references all per-assembly typemaps — regenerate if any changed

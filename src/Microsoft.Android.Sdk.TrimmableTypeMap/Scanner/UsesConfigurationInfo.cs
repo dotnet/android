@@ -2,7 +2,7 @@
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
-public sealed record UsesConfigurationInfo
+internal sealed record UsesConfigurationInfo
 {
 	public bool ReqFiveWayNav { get; init; }
 	public bool ReqHardKeyboard { get; init; }

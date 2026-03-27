@@ -263,12 +263,12 @@ sealed class AssemblyIndex : IDisposable
 
 	static string? TryGetNameFromDecodedAttribute (CustomAttributeValue<string> value)
 	{
-		if (TryGetNamedArgument<string> (value, "Name", out var name) && !string.IsNullOrEmpty (name)) {
+		if (TryGetNamedArgument<string> (value, "Name", out var name) && !name.IsNullOrEmpty ()) {
 			return name;
 		}
 
 		// Fall back to first constructor argument (e.g., [CustomJniName("...")])
-		if (value.FixedArguments.Length > 0 && value.FixedArguments [0].Value is string ctorName && !string.IsNullOrEmpty (ctorName)) {
+		if (value.FixedArguments.Length > 0 && value.FixedArguments [0].Value is string ctorName && !ctorName.IsNullOrEmpty ()) {
 			return ctorName;
 		}
 

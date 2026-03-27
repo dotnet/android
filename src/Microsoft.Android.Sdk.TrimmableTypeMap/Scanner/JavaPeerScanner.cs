@@ -104,7 +104,7 @@ public sealed class JavaPeerScanner : IDisposable
 	/// Scans all loaded assemblies for assembly-level manifest attributes.
 	/// Must be called after <see cref="Scan"/>.
 	/// </summary>
-	public AssemblyManifestInfo ScanAssemblyManifestInfo ()
+	internal AssemblyManifestInfo ScanAssemblyManifestInfo ()
 	{
 		var info = new AssemblyManifestInfo ();
 		foreach (var index in assemblyCache.Values) {

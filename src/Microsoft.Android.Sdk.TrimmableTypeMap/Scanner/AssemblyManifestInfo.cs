@@ -9,7 +9,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// Aggregated across assemblies — used to generate top-level manifest elements
 /// like <![CDATA[<uses-permission>]]>, <![CDATA[<uses-feature>]]>, etc.
 /// </summary>
-public sealed class AssemblyManifestInfo
+internal sealed class AssemblyManifestInfo
 {
 	public List<PermissionInfo> Permissions { get; } = [];
 	public List<PermissionGroupInfo> PermissionGroups { get; } = [];

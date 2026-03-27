@@ -5,7 +5,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// <summary>
 /// Describes a [UsesFeature] attribute.
 /// </summary>
-public sealed record UsesFeatureInfo
+internal sealed record UsesFeatureInfo
 {
 	/// <summary>
 	/// Feature name (e.g., "android.hardware.camera"). Null for GL ES version features.
