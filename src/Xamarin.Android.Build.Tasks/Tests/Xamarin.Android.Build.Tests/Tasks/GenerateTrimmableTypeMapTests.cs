@@ -24,8 +24,8 @@ namespace Xamarin.Android.Build.Tests {
 			var task = CreateTask ([], outputDir, javaDir);
 
 			Assert.IsTrue (task.Execute (), "Task should succeed with empty assembly list.");
-			Assert.IsNull (task.GeneratedAssemblies);
-			Assert.IsNull (task.GeneratedJavaFiles);
+			Assert.IsEmpty (task.GeneratedAssemblies);
+			Assert.IsEmpty (task.GeneratedJavaFiles);
 		}
 
 		[Test]
@@ -198,8 +198,8 @@ namespace Xamarin.Android.Build.Tests {
 			var task = CreateTask (new [] { new TaskItem (nunitDll) }, outputDir, javaDir, messages);
 
 			Assert.IsTrue (task.Execute (), "Task should succeed with no peer types.");
-			Assert.IsNull (task.GeneratedAssemblies);
-			Assert.IsNull (task.GeneratedJavaFiles);
+			Assert.IsEmpty (task.GeneratedAssemblies);
+			Assert.IsEmpty (task.GeneratedJavaFiles);
 			Assert.IsTrue (messages.Any (m => m.Message.Contains ("No Java peer types found")),
 				"Should log that no peers were found.");
 		}
