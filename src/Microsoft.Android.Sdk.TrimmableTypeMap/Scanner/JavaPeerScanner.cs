@@ -1418,8 +1418,10 @@ public sealed class JavaPeerScanner : IDisposable
 
 	/// <summary>
 	/// Parses the type qualifier from a Connector string.
-	/// Connector format: <c>"GetOnClickHandler:Android.Views.View/IOnClickListenerInvoker, Mono.Android, Version=…"</c>.
-	/// Extracts the managed type name (converting <c>/</c> → <c>+</c> for nested types) and assembly name.
+	/// Connector format is either assembly-qualified:
+	/// <c>"GetOnClickHandler:Android.Views.View/IOnClickListenerInvoker, Mono.Android, Version=…"</c>
+	/// or type-only: <c>"GetOnClickHandler:Android.Views.IOnClickListenerInvoker"</c>.
+	/// Extracts the managed type name (converting <c>/</c> → <c>+</c> for nested types) and assembly name (if present).
 	/// </summary>
 	static void ParseConnectorDeclaringType (string? connector, out string declaringTypeName, out string declaringAssemblyName)
 	{
@@ -1435,10 +1437,14 @@ public sealed class JavaPeerScanner : IDisposable
 			return;
 		}
 
-		// After ':' is "TypeName, AssemblyName, Version=…" (assembly-qualified name)
+		// After ':' is typically "TypeName, AssemblyName, Version=…" (assembly-qualified name),
+		// but some connectors only provide "TypeName" without an assembly.
 		string typeQualified = connector.Substring (colonIndex + 1);
 		int commaIndex = typeQualified.IndexOf (',');
+
 		if (commaIndex < 0) {
+			// No assembly information; treat the whole segment as the type name
+			declaringTypeName = typeQualified.Trim ().Replace ('/', '+');
 			return;
 		}
 
