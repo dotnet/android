@@ -7,7 +7,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// <summary>
 /// Configuration for manifest generation, passed from the MSBuild task.
 /// </summary>
-internal record ManifestConfig (
+public record ManifestConfig (
 	string PackageName,
 	string? ApplicationLabel,
 	string? VersionCode,
@@ -25,7 +25,7 @@ internal record ManifestConfig (
 /// <summary>
 /// Result of the trimmable type map generation.
 /// </summary>
-internal record TrimmableTypeMapResult (
+public record TrimmableTypeMapResult (
 	IReadOnlyList<string> GeneratedAssemblies,
 	IReadOnlyList<string> GeneratedJavaFiles,
 	string[]? AdditionalProviderSources);

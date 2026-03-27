@@ -14,7 +14,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// Core logic for generating trimmable TypeMap assemblies, JCW Java sources, and manifest.
 /// Extracted from the MSBuild task so it can be tested directly without MSBuild ceremony.
 /// </summary>
-internal class TrimmableTypeMapGenerator
+public class TrimmableTypeMapGenerator
 {
 	readonly TaskLoggingHelper log;
 
