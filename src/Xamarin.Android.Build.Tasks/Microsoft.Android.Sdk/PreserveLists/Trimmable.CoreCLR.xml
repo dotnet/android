@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<linker>
+  <assembly fullname="Mono.Android">
+    <!-- Native entry point: called from host.cc via create_delegate -->
+    <type fullname="Android.Runtime.JNIEnvInit">
+      <method name="Initialize" />
+    </type>
+  </assembly>
+</linker>

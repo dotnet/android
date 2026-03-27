@@ -27,12 +27,35 @@ public string JavaSourceOutputDirectory { get; set; } = "";
 public string AcwMapDirectory { get; set; } = "";
 [Required]
 public string TargetFrameworkVersion { get; set; } = "";
+
+public string? AcwMapOutputFile { get; set; }
+
+public string? ManifestTemplate { get; set; }
+
+public string? MergedAndroidManifestOutput { get; set; }
+
+public string? PackageName { get; set; }
+public string? ApplicationLabel { get; set; }
+public string? VersionCode { get; set; }
+public string? VersionName { get; set; }
+public string? AndroidApiLevel { get; set; }
+public string? SupportedOSPlatformVersion { get; set; }
+public string? AndroidRuntime { get; set; }
+public bool Debug { get; set; }
+public bool NeedsInternet { get; set; }
+public bool EmbedAssemblies { get; set; }
+public string? ManifestPlaceholders { get; set; }
+public string? CheckedBuild { get; set; }
+public string? ApplicationJavaClass { get; set; }
+
 [Output]
 public ITaskItem [] GeneratedAssemblies { get; set; } = [];
 [Output]
 public ITaskItem [] GeneratedJavaFiles { get; set; } = [];
 [Output]
 public ITaskItem []? PerAssemblyAcwMapFiles { get; set; }
+[Output]
+public string[]? AdditionalProviderSources { get; set; }
 
 public override bool RunTask ()
 {
@@ -56,12 +79,38 @@ var mdReader = peReader.GetMetadataReader ();
 assemblies.Add ((mdReader.GetString (mdReader.GetAssemblyDefinition ().Name), peReader));
 }
 
+ManifestConfig? manifestConfig = null;
+if (!string.IsNullOrEmpty (MergedAndroidManifestOutput) && !string.IsNullOrEmpty (PackageName)) {
+manifestConfig = new ManifestConfig (
+PackageName: PackageName,
+ApplicationLabel: ApplicationLabel,
+VersionCode: VersionCode,
+VersionName: VersionName,
+AndroidApiLevel: AndroidApiLevel,
+SupportedOSPlatformVersion: SupportedOSPlatformVersion,
+AndroidRuntime: AndroidRuntime,
+Debug: Debug,
+NeedsInternet: NeedsInternet,
+EmbedAssemblies: EmbedAssemblies,
+ManifestPlaceholders: ManifestPlaceholders,
+CheckedBuild: CheckedBuild,
+ApplicationJavaClass: ApplicationJavaClass);
+}
+
 var generator = new TrimmableTypeMapGenerator (msg => Log.LogMessage (MessageImportance.Low, msg));
-result = generator.Execute (assemblies, systemRuntimeVersion, frameworkAssemblyNames);
+result = generator.Execute (
+assemblies,
+systemRuntimeVersion,
+frameworkAssemblyNames,
+manifestConfig,
+ManifestTemplate,
+MergedAndroidManifestOutput,
+AcwMapOutputFile);
 
 GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyPaths);
 GeneratedJavaFiles = WriteJavaSourcesToDisk (result.GeneratedJavaSources);
 PerAssemblyAcwMapFiles = GeneratePerAssemblyAcwMaps (result.AllPeers);
+AdditionalProviderSources = result.AdditionalProviderSources;
 } finally {
 if (result is not null) {
 foreach (var assembly in result.GeneratedAssemblies) {

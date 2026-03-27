@@ -15,16 +15,24 @@ public class TrimmableTypeMapGenerator
 		this.log = log ?? throw new ArgumentNullException (nameof (log));
 	}
 
+	/// <summary>
+	/// Runs the full generation pipeline: scan assemblies, generate typemap
+	/// assemblies, generate JCW Java sources, optionally generate manifest and acw-map.
+	/// </summary>
 	public TrimmableTypeMapResult Execute (
 		IReadOnlyList<(string Name, PEReader Reader)> assemblies,
 		Version systemRuntimeVersion,
-		HashSet<string> frameworkAssemblyNames)
+		HashSet<string> frameworkAssemblyNames,
+		ManifestConfig? manifestConfig = null,
+		string? manifestTemplatePath = null,
+		string? mergedManifestOutputPath = null,
+		string? acwMapOutputPath = null)
 	{
 		_ = assemblies ?? throw new ArgumentNullException (nameof (assemblies));
 		_ = systemRuntimeVersion ?? throw new ArgumentNullException (nameof (systemRuntimeVersion));
 		_ = frameworkAssemblyNames ?? throw new ArgumentNullException (nameof (frameworkAssemblyNames));
 
-		var allPeers = ScanAssemblies (assemblies);
+		var (allPeers, assemblyManifestInfo) = ScanAssemblies (assemblies);
 		if (allPeers.Count == 0) {
 			log ("No Java peer types found, skipping typemap generation.");
 			return new TrimmableTypeMapResult ([], [], allPeers);
@@ -36,15 +44,71 @@ public class TrimmableTypeMapGenerator
 			|| p.JavaName.StartsWith ("mono/", StringComparison.Ordinal)).ToList ();
 		log ($"Generating JCW files for {jcwPeers.Count} types (filtered from {allPeers.Count} total).");
 		var generatedJavaSources = GenerateJcwJavaSources (jcwPeers);
-		return new TrimmableTypeMapResult (generatedAssemblies, generatedJavaSources, allPeers);
+
+		string[]? additionalProviderSources = null;
+
+		// Generate merged AndroidManifest.xml if requested
+		if (!mergedManifestOutputPath.IsNullOrEmpty () && manifestConfig is not null) {
+			var providerSources = GenerateManifest (allPeers, assemblyManifestInfo, manifestConfig, manifestTemplatePath, mergedManifestOutputPath);
+			if (providerSources.Count > 0) {
+				additionalProviderSources = providerSources.ToArray ();
+			}
+		}
+
+		// Write merged acw-map.txt if requested
+		if (!acwMapOutputPath.IsNullOrEmpty ()) {
+			Directory.CreateDirectory (Path.GetDirectoryName (acwMapOutputPath));
+			using (var writer = new StreamWriter (acwMapOutputPath)) {
+				AcwMapWriter.Write (writer, allPeers);
+			}
+			log ($"Wrote merged acw-map.txt with {allPeers.Count} types to {acwMapOutputPath}.");
+		}
+
+		return new TrimmableTypeMapResult (generatedAssemblies, generatedJavaSources, allPeers, additionalProviderSources);
 	}
 
-	List<JavaPeerInfo> ScanAssemblies (IReadOnlyList<(string Name, PEReader Reader)> assemblies)
+	IList<string> GenerateManifest (List<JavaPeerInfo> allPeers, AssemblyManifestInfo assemblyManifestInfo,
+		ManifestConfig config, string? manifestTemplatePath, string mergedManifestOutputPath)
+	{
+		string minSdk = "21";
+		if (!config.SupportedOSPlatformVersion.IsNullOrEmpty () && Version.TryParse (config.SupportedOSPlatformVersion, out var sopv)) {
+			minSdk = sopv.Major.ToString (System.Globalization.CultureInfo.InvariantCulture);
+		}
+
+		string targetSdk = config.AndroidApiLevel ?? "36";
+		if (Version.TryParse (targetSdk, out var apiVersion)) {
+			targetSdk = apiVersion.Major.ToString (System.Globalization.CultureInfo.InvariantCulture);
+		}
+
+		bool forceDebuggable = !config.CheckedBuild.IsNullOrEmpty ();
+
+		var generator = new ManifestGenerator {
+			PackageName = config.PackageName,
+			ApplicationLabel = config.ApplicationLabel ?? config.PackageName,
+			VersionCode = config.VersionCode ?? "",
+			VersionName = config.VersionName ?? "",
+			MinSdkVersion = minSdk,
+			TargetSdkVersion = targetSdk,
+			AndroidRuntime = config.AndroidRuntime ?? "coreclr",
+			Debug = config.Debug,
+			NeedsInternet = config.NeedsInternet,
+			EmbedAssemblies = config.EmbedAssemblies,
+			ForceDebuggable = forceDebuggable,
+			ForceExtractNativeLibs = forceDebuggable,
+			ManifestPlaceholders = config.ManifestPlaceholders,
+			ApplicationJavaClass = config.ApplicationJavaClass,
+		};
+
+		return generator.Generate (manifestTemplatePath, allPeers, assemblyManifestInfo, mergedManifestOutputPath);
+	}
+
+	(List<JavaPeerInfo> peers, AssemblyManifestInfo manifestInfo) ScanAssemblies (IReadOnlyList<(string Name, PEReader Reader)> assemblies)
 	{
 		using var scanner = new JavaPeerScanner ();
 		var peers = scanner.Scan (assemblies);
+		var manifestInfo = scanner.ScanAssemblyManifestInfo ();
 		log ($"Scanned {assemblies.Count} assemblies, found {peers.Count} Java peer types.");
-		return peers;
+		return (peers, manifestInfo);
 	}
 
 	List<GeneratedAssembly> GenerateTypeMapAssemblies (List<JavaPeerInfo> allPeers, Version systemRuntimeVersion)
