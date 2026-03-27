@@ -1,5 +1,3 @@
-#nullable enable
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -80,7 +78,7 @@ assemblies.Add ((mdReader.GetString (mdReader.GetAssemblyDefinition ().Name), pe
 }
 
 ManifestConfig? manifestConfig = null;
-if (!string.IsNullOrEmpty (MergedAndroidManifestOutput) && !string.IsNullOrEmpty (PackageName)) {
+if (!MergedAndroidManifestOutput.IsNullOrEmpty () && !PackageName.IsNullOrEmpty ()) {
 manifestConfig = new ManifestConfig (
 PackageName: PackageName,
 ApplicationLabel: ApplicationLabel,
