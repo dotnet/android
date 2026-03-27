@@ -28,6 +28,9 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	[Required]
 	public string JavaSourceOutputDirectory { get; set; } = "";
 
+	/// <summary>
+	/// Directory for per-assembly acw-map.{AssemblyName}.txt files.
+	/// </summary>
 	[Required]
 	public string AcwMapDirectory { get; set; } = "";
 
@@ -55,19 +58,14 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public override bool RunTask ()
 	{
 		var systemRuntimeVersion = TrimmableTypeMapGenerator.ParseTargetFrameworkVersion (TargetFrameworkVersion);
-		var assemblyPaths = GetJavaInteropAssemblyPaths (ResolvedAssemblies);
+		// Don't filter by HasMonoAndroidReference — ReferencePath items from the compiler
+		// don't carry this metadata. The scanner handles non-Java assemblies gracefully.
+		var assemblyPaths = ResolvedAssemblies.Select (i => i.ItemSpec).Distinct ().ToList ();
 
-		// Framework binding types (Activity, View, etc.) already exist in java_runtime.dex and don't
-		// need JCW .java files. Framework Implementor types (mono/ prefix, e.g. OnClickListenerImplementor)
-		// DO need JCWs — they're included via the mono/ filter below.
-		// User NuGet libraries also need JCWs, so we only filter by FrameworkReferenceName.
-		// Note: Pre-generating SDK-compatible JCWs (mono.android-trimmable.jar) is tracked by #10792.
+		// Currently we generate JCWs for ALL assemblies including framework bindings.
+		// Pre-generating SDK-compatible JCWs (mono.android-trimmable.jar) is tracked by #10792.
+		// Once that's done, we can skip framework assemblies here.
 		var frameworkAssemblyNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
-		foreach (var item in ResolvedAssemblies) {
-			if (!item.GetMetadata ("FrameworkReferenceName").IsNullOrEmpty ()) {
-				frameworkAssemblyNames.Add (Path.GetFileNameWithoutExtension (item.ItemSpec));
-			}
-		}
 
 		Directory.CreateDirectory (AcwMapDirectory);
 
@@ -84,17 +82,6 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		PerAssemblyAcwMapFiles = GeneratePerAssemblyAcwMaps (result.AllPeers);
 
 		return !Log.HasLoggedErrors;
-	}
-
-	static IReadOnlyList<string> GetJavaInteropAssemblyPaths (ITaskItem [] items)
-	{
-		var paths = new List<string> (items.Length);
-		foreach (var item in items) {
-			if (MonoAndroidHelper.IsMonoAndroidAssembly (item)) {
-				paths.Add (item.ItemSpec);
-			}
-		}
-		return paths;
 	}
 
 	ITaskItem [] GeneratePerAssemblyAcwMaps (IReadOnlyList<JavaPeerInfo> allPeers)
