@@ -35,23 +35,6 @@ class ManifestGenerator
 	public string? ApplicationJavaClass { get; set; }
 
 	/// <summary>
-	/// Generates the merged manifest and writes it to <paramref name="outputPath"/>.
-	/// Returns the list of additional content provider names (for ApplicationRegistration.java).
-	/// </summary>
-	public IList<string> Generate (
-		string? manifestTemplatePath,
-		IReadOnlyList<JavaPeerInfo> allPeers,
-		AssemblyManifestInfo assemblyInfo,
-		string outputPath)
-	{
-		XDocument? template = null;
-		if (!string.IsNullOrEmpty (manifestTemplatePath) && File.Exists (manifestTemplatePath)) {
-			template = XDocument.Load (manifestTemplatePath);
-		}
-		return Generate (template, allPeers, assemblyInfo, outputPath);
-	}
-
-	/// <summary>
 	/// Generates the merged manifest from an optional pre-loaded template and writes it to <paramref name="outputPath"/>.
 	/// Returns the list of additional content provider names (for ApplicationRegistration.java).
 	/// </summary>

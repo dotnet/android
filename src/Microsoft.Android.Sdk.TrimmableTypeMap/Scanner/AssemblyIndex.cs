@@ -358,60 +358,42 @@ sealed class AssemblyIndex : IDisposable
 				continue;
 			}
 
+			var (name, props) = ParseNameAndProperties (ca);
+
 			switch (attrName) {
-			case "PermissionAttribute": {
-				var (name, props) = ParseNameAndProperties (ca);
-				info.Permissions.Add (CreatePermissionInfo (name, props));
+			case "PermissionAttribute":
+				info.Permissions.Add (new PermissionInfo { Name = name, Properties = props });
 				break;
-			}
-			case "PermissionGroupAttribute": {
-				var (name, props) = ParseNameAndProperties (ca);
-				info.PermissionGroups.Add (CreatePermissionGroupInfo (name, props));
+			case "PermissionGroupAttribute":
+				info.PermissionGroups.Add (new PermissionGroupInfo { Name = name, Properties = props });
 				break;
-			}
-			case "PermissionTreeAttribute": {
-				var (name, props) = ParseNameAndProperties (ca);
-				info.PermissionTrees.Add (CreatePermissionTreeInfo (name, props));
+			case "PermissionTreeAttribute":
+				info.PermissionTrees.Add (new PermissionTreeInfo { Name = name, Properties = props });
 				break;
-			}
-			case "UsesPermissionAttribute": {
-				var (name, props) = ParseNameAndProperties (ca);
+			case "UsesPermissionAttribute":
 				info.UsesPermissions.Add (CreateUsesPermissionInfo (name, props));
 				break;
-			}
-			case "UsesFeatureAttribute": {
-				var (name, props) = ParseNameAndProperties (ca);
+			case "UsesFeatureAttribute":
 				info.UsesFeatures.Add (CreateUsesFeatureInfo (name, props));
 				break;
-			}
-			case "UsesLibraryAttribute": {
-				var (name, props) = ParseNameAndProperties (ca);
+			case "UsesLibraryAttribute":
 				info.UsesLibraries.Add (CreateUsesLibraryInfo (name, props));
 				break;
-			}
-			case "UsesConfigurationAttribute": {
-				var (_, props) = ParseNameAndProperties (ca);
+			case "UsesConfigurationAttribute":
 				info.UsesConfigurations.Add (CreateUsesConfigurationInfo (props));
 				break;
-			}
-			case "MetaDataAttribute": {
-				var (name, props) = ParseNameAndProperties (ca);
+			case "MetaDataAttribute":
 				info.MetaData.Add (CreateMetaDataInfo (name, props));
 				break;
-			}
-			case "PropertyAttribute": {
-				var (name, props) = ParseNameAndProperties (ca);
+			case "PropertyAttribute":
 				info.Properties.Add (CreatePropertyInfo (name, props));
 				break;
-			}
-			case "ApplicationAttribute": {
-				var (_, props) = ParseNameAndProperties (ca);
+			case "ApplicationAttribute":
 				info.ApplicationProperties ??= new Dictionary<string, object?> (StringComparer.Ordinal);
 				foreach (var kvp in props) {
 					info.ApplicationProperties [kvp.Key] = kvp.Value;
 				}
 				break;
-			}
 			}
 		}
 	}
@@ -434,15 +416,6 @@ sealed class AssemblyIndex : IDisposable
 		}
 		return (name, props);
 	}
-
-	static PermissionInfo CreatePermissionInfo (string name, Dictionary<string, object?> props)
-		=> new PermissionInfo { Name = name, Properties = props };
-
-	static PermissionGroupInfo CreatePermissionGroupInfo (string name, Dictionary<string, object?> props)
-		=> new PermissionGroupInfo { Name = name, Properties = props };
-
-	static PermissionTreeInfo CreatePermissionTreeInfo (string name, Dictionary<string, object?> props)
-		=> new PermissionTreeInfo { Name = name, Properties = props };
 
 	static UsesPermissionInfo CreateUsesPermissionInfo (string name, Dictionary<string, object?> props)
 	{

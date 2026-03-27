@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -75,7 +74,11 @@ public class ManifestGeneratorTests : IDisposable
 	{
 		peers ??= [];
 		assemblyInfo ??= new AssemblyManifestInfo ();
-		gen.Generate (templatePath, peers, assemblyInfo, OutputPath);
+		XDocument? template = null;
+		if (!string.IsNullOrEmpty (templatePath) && File.Exists (templatePath)) {
+			template = XDocument.Load (templatePath);
+		}
+		gen.Generate (template, peers, assemblyInfo, OutputPath);
 		return XDocument.Load (OutputPath);
 	}
 
