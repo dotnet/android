@@ -1,4 +1,3 @@
-#nullable enable
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 

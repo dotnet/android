@@ -83,6 +83,12 @@ sealed class AssemblyIndex : IDisposable
 		RegisterInfo? registerInfo = null;
 		TypeAttributeInfo? attrInfo = null;
 
+		// Collect intent filters and metadata separately to avoid ordering issues:
+		// if [IntentFilter] appears before [Activity], we must not create attrInfo
+		// with the wrong AttributeName.
+		List<IntentFilterInfo>? intentFilters = null;
+		List<MetaDataInfo>? metaData = null;
+
 		foreach (var caHandle in typeDef.GetCustomAttributes ()) {
 			var ca = Reader.GetCustomAttribute (caHandle);
 			var attrName = GetCustomAttributeName (ca, Reader);
@@ -120,11 +126,11 @@ sealed class AssemblyIndex : IDisposable
 					}
 				}
 			} else if (attrName == "IntentFilterAttribute") {
-				attrInfo ??= new TypeAttributeInfo ("IntentFilterAttribute");
-				attrInfo.IntentFilters.Add (ParseIntentFilterAttribute (ca));
+				intentFilters ??= new List<IntentFilterInfo> ();
+				intentFilters.Add (ParseIntentFilterAttribute (ca));
 			} else if (attrName == "MetaDataAttribute") {
-				attrInfo ??= new TypeAttributeInfo ("MetaDataAttribute");
-				attrInfo.MetaData.Add (ParseMetaDataAttribute (ca));
+				metaData ??= new List<MetaDataInfo> ();
+				metaData.Add (ParseMetaDataAttribute (ca));
 			} else if (attrInfo is null && ImplementsJniNameProviderAttribute (ca)) {
 				// Custom attribute implementing IJniNameProviderAttribute (e.g., user-defined [CustomJniName])
 				var name = TryGetNameProperty (ca);
@@ -132,6 +138,16 @@ sealed class AssemblyIndex : IDisposable
 					attrInfo = new TypeAttributeInfo (attrName);
 					attrInfo.JniName = name.Replace ('.', '/');
 				}
+			}
+		}
+
+		// Attach collected intent filters and metadata to the component attribute
+		if (attrInfo is not null) {
+			if (intentFilters is not null) {
+				attrInfo.IntentFilters.AddRange (intentFilters);
+			}
+			if (metaData is not null) {
+				attrInfo.MetaData.AddRange (metaData);
 			}
 		}
 
