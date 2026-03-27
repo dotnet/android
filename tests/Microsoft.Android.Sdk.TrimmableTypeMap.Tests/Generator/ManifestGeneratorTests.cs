@@ -1,4 +1,3 @@
-#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -84,7 +83,7 @@ public class ManifestGeneratorTests : IDisposable
 	public void Activity_MainLauncher ()
 	{
 		var gen = CreateDefaultGenerator ();
-		var peer = CreatePeer ("com/example/app/MainActivity", new ComponentInfo { HasPublicDefaultConstructor = true,
+		var peer = CreatePeer ("com/example/app/MainActivity", new ComponentInfo { 
 			Kind = ComponentKind.Activity,
 			Properties = new Dictionary<string, object?> { ["MainLauncher"] = true },
 		});
@@ -108,7 +107,7 @@ public class ManifestGeneratorTests : IDisposable
 	public void Activity_WithProperties ()
 	{
 		var gen = CreateDefaultGenerator ();
-		var peer = CreatePeer ("com/example/app/MyActivity", new ComponentInfo { HasPublicDefaultConstructor = true,
+		var peer = CreatePeer ("com/example/app/MyActivity", new ComponentInfo { 
 			Kind = ComponentKind.Activity,
 			Properties = new Dictionary<string, object?> {
 				["Label"] = "My Activity",
@@ -131,7 +130,7 @@ public class ManifestGeneratorTests : IDisposable
 	public void Activity_IntentFilter ()
 	{
 		var gen = CreateDefaultGenerator ();
-		var peer = CreatePeer ("com/example/app/ShareActivity", new ComponentInfo { HasPublicDefaultConstructor = true,
+		var peer = CreatePeer ("com/example/app/ShareActivity", new ComponentInfo { 
 			Kind = ComponentKind.Activity,
 			IntentFilters = [
 				new IntentFilterInfo {
@@ -161,7 +160,7 @@ public class ManifestGeneratorTests : IDisposable
 	public void Activity_MetaData ()
 	{
 		var gen = CreateDefaultGenerator ();
-		var peer = CreatePeer ("com/example/app/MetaActivity", new ComponentInfo { HasPublicDefaultConstructor = true,
+		var peer = CreatePeer ("com/example/app/MetaActivity", new ComponentInfo { 
 			Kind = ComponentKind.Activity,
 			MetaData = [
 				new MetaDataInfo { Name = "com.example.key", Value = "my_value" },
@@ -190,7 +189,7 @@ public class ManifestGeneratorTests : IDisposable
 	public void Component_BasicProperties (ComponentKind kind, string elementName)
 	{
 		var gen = CreateDefaultGenerator ();
-		var peer = CreatePeer ("com/example/app/MyComponent", new ComponentInfo { HasPublicDefaultConstructor = true,
+		var peer = CreatePeer ("com/example/app/MyComponent", new ComponentInfo { 
 			Kind = kind,
 			Properties = new Dictionary<string, object?> {
 				["Exported"] = true,
@@ -211,7 +210,7 @@ public class ManifestGeneratorTests : IDisposable
 	public void ContentProvider_WithAuthorities ()
 	{
 		var gen = CreateDefaultGenerator ();
-		var peer = CreatePeer ("com/example/app/MyProvider", new ComponentInfo { HasPublicDefaultConstructor = true,
+		var peer = CreatePeer ("com/example/app/MyProvider", new ComponentInfo { 
 			Kind = ComponentKind.ContentProvider,
 			Properties = new Dictionary<string, object?> {
 				["Authorities"] = "com.example.app.provider",
@@ -234,7 +233,7 @@ public class ManifestGeneratorTests : IDisposable
 	public void Application_TypeLevel ()
 	{
 		var gen = CreateDefaultGenerator ();
-		var peer = CreatePeer ("com/example/app/MyApp", new ComponentInfo { HasPublicDefaultConstructor = true,
+		var peer = CreatePeer ("com/example/app/MyApp", new ComponentInfo { 
 			Kind = ComponentKind.Application,
 			Properties = new Dictionary<string, object?> {
 				["Label"] = "Custom App",
@@ -256,7 +255,7 @@ public class ManifestGeneratorTests : IDisposable
 	public void Instrumentation_GoesToManifest ()
 	{
 		var gen = CreateDefaultGenerator ();
-		var peer = CreatePeer ("com/example/app/MyInstrumentation", new ComponentInfo { HasPublicDefaultConstructor = true,
+		var peer = CreatePeer ("com/example/app/MyInstrumentation", new ComponentInfo { 
 			Kind = ComponentKind.Instrumentation,
 			Properties = new Dictionary<string, object?> {
 				["Label"] = "My Test",
@@ -418,7 +417,7 @@ public class ManifestGeneratorTests : IDisposable
 	public void AbstractTypes_Skipped ()
 	{
 		var gen = CreateDefaultGenerator ();
-		var peer = CreatePeer ("com/example/app/AbstractActivity", new ComponentInfo { HasPublicDefaultConstructor = true,
+		var peer = CreatePeer ("com/example/app/AbstractActivity", new ComponentInfo { 
 			Kind = ComponentKind.Activity,
 			Properties = new Dictionary<string, object?> { ["Label"] = "Abstract" },
 		}, isAbstract: true);
@@ -442,7 +441,7 @@ public class ManifestGeneratorTests : IDisposable
 			</manifest>
 			""");
 
-		var peer = CreatePeer ("com/example/app/ExistingActivity", new ComponentInfo { HasPublicDefaultConstructor = true,
+		var peer = CreatePeer ("com/example/app/ExistingActivity", new ComponentInfo { 
 			Kind = ComponentKind.Activity,
 			Properties = new Dictionary<string, object?> { ["Label"] = "New Label" },
 		});
@@ -595,7 +594,7 @@ public class ManifestGeneratorTests : IDisposable
 		var gen = CreateDefaultGenerator ();
 		// orientation (0x0080) | keyboardHidden (0x0020) | screenSize (0x0400)
 		int configChanges = 0x0080 | 0x0020 | 0x0400;
-		var peer = CreatePeer ("com/example/app/ConfigActivity", new ComponentInfo { HasPublicDefaultConstructor = true,
+		var peer = CreatePeer ("com/example/app/ConfigActivity", new ComponentInfo { 
 			Kind = ComponentKind.Activity,
 			Properties = new Dictionary<string, object?> {
 				["ConfigurationChanges"] = configChanges,

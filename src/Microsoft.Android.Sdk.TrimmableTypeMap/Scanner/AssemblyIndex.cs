@@ -130,7 +130,8 @@ sealed class AssemblyIndex : IDisposable
 				intentFilters.Add (ParseIntentFilterAttribute (ca));
 			} else if (attrName == "MetaDataAttribute") {
 				metaData ??= new List<MetaDataInfo> ();
-				metaData.Add (ParseMetaDataAttribute (ca));
+				var (mdName, mdProps) = ParseNameAndProperties (ca);
+				metaData.Add (CreateMetaDataInfo (mdName, mdProps));
 			} else if (attrInfo is null && ImplementsJniNameProviderAttribute (ca)) {
 				// Custom attribute implementing IJniNameProviderAttribute (e.g., user-defined [CustomJniName])
 				var name = TryGetNameProperty (ca);
@@ -332,27 +333,6 @@ sealed class AssemblyIndex : IDisposable
 		};
 	}
 
-	MetaDataInfo ParseMetaDataAttribute (CustomAttribute ca)
-	{
-		var value = DecodeAttribute (ca);
-
-		string name = "";
-		if (value.FixedArguments.Length > 0 && value.FixedArguments [0].Value is string nameArg) {
-			name = nameArg;
-		}
-
-		string? metaValue = null;
-		string? resource = null;
-		TryGetNamedArgument<string> (value, "Value", out metaValue);
-		TryGetNamedArgument<string> (value, "Resource", out resource);
-
-		return new MetaDataInfo {
-			Name = name,
-			Value = metaValue,
-			Resource = resource,
-		};
-	}
-
 	static bool TryGetNamedArgument<T> (CustomAttributeValue<string> value, string argumentName, [MaybeNullWhen (false)] out T argumentValue) where T : notnull
 	{
 		foreach (var named in value.NamedArguments) {
@@ -379,42 +359,59 @@ sealed class AssemblyIndex : IDisposable
 			}
 
 			switch (attrName) {
-			case "PermissionAttribute":
-				info.Permissions.Add (ParsePermissionAttribute (ca));
+			case "PermissionAttribute": {
+				var (name, props) = ParseNameAndProperties (ca);
+				info.Permissions.Add (CreatePermissionInfo (name, props));
 				break;
-			case "PermissionGroupAttribute":
-				info.PermissionGroups.Add (ParsePermissionGroupAttribute (ca));
+			}
+			case "PermissionGroupAttribute": {
+				var (name, props) = ParseNameAndProperties (ca);
+				info.PermissionGroups.Add (CreatePermissionGroupInfo (name, props));
 				break;
-			case "PermissionTreeAttribute":
-				info.PermissionTrees.Add (ParsePermissionTreeAttribute (ca));
+			}
+			case "PermissionTreeAttribute": {
+				var (name, props) = ParseNameAndProperties (ca);
+				info.PermissionTrees.Add (CreatePermissionTreeInfo (name, props));
 				break;
-			case "UsesPermissionAttribute":
-				info.UsesPermissions.Add (ParseUsesPermissionAttribute (ca));
+			}
+			case "UsesPermissionAttribute": {
+				var (name, props) = ParseNameAndProperties (ca);
+				info.UsesPermissions.Add (CreateUsesPermissionInfo (name, props));
 				break;
-			case "UsesFeatureAttribute":
-				info.UsesFeatures.Add (ParseUsesFeatureAttribute (ca));
+			}
+			case "UsesFeatureAttribute": {
+				var (name, props) = ParseNameAndProperties (ca);
+				info.UsesFeatures.Add (CreateUsesFeatureInfo (name, props));
 				break;
-			case "UsesLibraryAttribute":
-				info.UsesLibraries.Add (ParseUsesLibraryAttribute (ca));
+			}
+			case "UsesLibraryAttribute": {
+				var (name, props) = ParseNameAndProperties (ca);
+				info.UsesLibraries.Add (CreateUsesLibraryInfo (name, props));
 				break;
-			case "UsesConfigurationAttribute":
-				info.UsesConfigurations.Add (ParseUsesConfigurationAttribute (ca));
+			}
+			case "UsesConfigurationAttribute": {
+				var (_, props) = ParseNameAndProperties (ca);
+				info.UsesConfigurations.Add (CreateUsesConfigurationInfo (props));
 				break;
-			case "MetaDataAttribute":
-				info.MetaData.Add (ParseMetaDataAttribute (ca));
+			}
+			case "MetaDataAttribute": {
+				var (name, props) = ParseNameAndProperties (ca);
+				info.MetaData.Add (CreateMetaDataInfo (name, props));
 				break;
-			case "PropertyAttribute":
-				info.Properties.Add (ParsePropertyAttribute (ca));
+			}
+			case "PropertyAttribute": {
+				var (name, props) = ParseNameAndProperties (ca);
+				info.Properties.Add (CreatePropertyInfo (name, props));
 				break;
-			case "ApplicationAttribute":
+			}
+			case "ApplicationAttribute": {
+				var (_, props) = ParseNameAndProperties (ca);
 				info.ApplicationProperties ??= new Dictionary<string, object?> (StringComparer.Ordinal);
-				var appValue = DecodeAttribute (ca);
-				foreach (var named in appValue.NamedArguments) {
-					if (named.Name is not null) {
-						info.ApplicationProperties [named.Name] = named.Value;
-					}
+				foreach (var kvp in props) {
+					info.ApplicationProperties [kvp.Key] = kvp.Value;
 				}
 				break;
+			}
 			}
 		}
 	}
@@ -424,6 +421,9 @@ sealed class AssemblyIndex : IDisposable
 		var value = DecodeAttribute (ca);
 		string name = "";
 		var props = new Dictionary<string, object?> (StringComparer.Ordinal);
+		if (value.FixedArguments.Length > 0 && value.FixedArguments [0].Value is string ctorName) {
+			name = ctorName;
+		}
 		foreach (var named in value.NamedArguments) {
 			if (named.Name == "Name" && named.Value is string n) {
 				name = n;
@@ -435,124 +435,65 @@ sealed class AssemblyIndex : IDisposable
 		return (name, props);
 	}
 
-	PermissionInfo ParsePermissionAttribute (CustomAttribute ca)
-	{
-		var (name, props) = ParseNameAndProperties (ca);
-		return new PermissionInfo { Name = name, Properties = props };
-	}
+	static PermissionInfo CreatePermissionInfo (string name, Dictionary<string, object?> props)
+		=> new PermissionInfo { Name = name, Properties = props };
 
-	PermissionGroupInfo ParsePermissionGroupAttribute (CustomAttribute ca)
-	{
-		var (name, props) = ParseNameAndProperties (ca);
-		return new PermissionGroupInfo { Name = name, Properties = props };
-	}
+	static PermissionGroupInfo CreatePermissionGroupInfo (string name, Dictionary<string, object?> props)
+		=> new PermissionGroupInfo { Name = name, Properties = props };
 
-	PermissionTreeInfo ParsePermissionTreeAttribute (CustomAttribute ca)
-	{
-		var (name, props) = ParseNameAndProperties (ca);
-		return new PermissionTreeInfo { Name = name, Properties = props };
-	}
+	static PermissionTreeInfo CreatePermissionTreeInfo (string name, Dictionary<string, object?> props)
+		=> new PermissionTreeInfo { Name = name, Properties = props };
 
-	UsesPermissionInfo ParseUsesPermissionAttribute (CustomAttribute ca)
+	static UsesPermissionInfo CreateUsesPermissionInfo (string name, Dictionary<string, object?> props)
 	{
-		var value = DecodeAttribute (ca);
-		string name = "";
-		int? maxSdk = null;
-		if (value.FixedArguments.Length > 0 && value.FixedArguments [0].Value is string n) {
-			name = n;
-		}
-		foreach (var named in value.NamedArguments) {
-			if (named.Name == "Name" && named.Value is string nameVal) {
-				name = nameVal;
-			} else if (named.Name == "MaxSdkVersion" && named.Value is int max) {
-				maxSdk = max;
-			}
-		}
+		int? maxSdk = props.TryGetValue ("MaxSdkVersion", out var v) && v is int max ? max : null;
 		return new UsesPermissionInfo { Name = name, MaxSdkVersion = maxSdk };
 	}
 
-	UsesFeatureInfo ParseUsesFeatureAttribute (CustomAttribute ca)
+	static UsesFeatureInfo CreateUsesFeatureInfo (string name, Dictionary<string, object?> props)
 	{
-		var value = DecodeAttribute (ca);
-		string? name = null;
-		int glesVersion = 0;
-		bool required = true;
-		if (value.FixedArguments.Length > 0 && value.FixedArguments [0].Value is string featureName) {
-			name = featureName;
-		}
-		foreach (var named in value.NamedArguments) {
-			if (named.Name == "Name" && named.Value is string n) {
-				name = n;
-			} else if (named.Name == "GLESVersion" && named.Value is int v) {
-				glesVersion = v;
-			} else if (named.Name == "Required" && named.Value is bool r) {
-				required = r;
-			}
-		}
-		return new UsesFeatureInfo { Name = name, GLESVersion = glesVersion, Required = required };
-	}
-
-	UsesLibraryInfo ParseUsesLibraryAttribute (CustomAttribute ca)
-	{
-		var value = DecodeAttribute (ca);
-		string name = "";
-		bool required = true;
-		if (value.FixedArguments.Length > 0 && value.FixedArguments [0].Value is string n) {
-			name = n;
-		}
-		foreach (var named in value.NamedArguments) {
-			if (named.Name == "Name" && named.Value is string nameVal) {
-				name = nameVal;
-			} else if (named.Name == "Required" && named.Value is bool r) {
-				required = r;
-			}
-		}
-		return new UsesLibraryInfo { Name = name, Required = required };
-	}
-
-	UsesConfigurationInfo ParseUsesConfigurationAttribute (CustomAttribute ca)
-	{
-		var value = DecodeAttribute (ca);
-		bool reqFiveWayNav = false;
-		bool reqHardKeyboard = false;
-		string? reqKeyboardType = null;
-		string? reqNavigation = null;
-		string? reqTouchScreen = null;
-		foreach (var named in value.NamedArguments) {
-			switch (named.Name) {
-			case "ReqFiveWayNav" when named.Value is bool b: reqFiveWayNav = b; break;
-			case "ReqHardKeyboard" when named.Value is bool b: reqHardKeyboard = b; break;
-			case "ReqKeyboardType" when named.Value is string s: reqKeyboardType = s; break;
-			case "ReqNavigation" when named.Value is string s: reqNavigation = s; break;
-			case "ReqTouchScreen" when named.Value is string s: reqTouchScreen = s; break;
-			}
-		}
-		return new UsesConfigurationInfo {
-			ReqFiveWayNav = reqFiveWayNav,
-			ReqHardKeyboard = reqHardKeyboard,
-			ReqKeyboardType = reqKeyboardType,
-			ReqNavigation = reqNavigation,
-			ReqTouchScreen = reqTouchScreen,
+		var required = !props.TryGetValue ("Required", out var r) || r is not bool req || req;
+		var glesVersion = props.TryGetValue ("GLESVersion", out var g) && g is int gles ? gles : 0;
+		return new UsesFeatureInfo {
+			Name = name.Length > 0 ? name : null,
+			GLESVersion = glesVersion,
+			Required = required,
 		};
 	}
 
-	PropertyInfo ParsePropertyAttribute (CustomAttribute ca)
+	static UsesLibraryInfo CreateUsesLibraryInfo (string name, Dictionary<string, object?> props)
 	{
-		var value = DecodeAttribute (ca);
-		string name = "";
-		string? propValue = null;
-		string? resource = null;
-		if (value.FixedArguments.Length > 0 && value.FixedArguments [0].Value is string n) {
-			name = n;
-		}
-		foreach (var named in value.NamedArguments) {
-			switch (named.Name) {
-			case "Name" when named.Value is string s: name = s; break;
-			case "Value" when named.Value is string s: propValue = s; break;
-			case "Resource" when named.Value is string s: resource = s; break;
-			}
-		}
-		return new PropertyInfo { Name = name, Value = propValue, Resource = resource };
+		var required = !props.TryGetValue ("Required", out var r) || r is not bool req || req;
+		return new UsesLibraryInfo { Name = name, Required = required };
+	}
+
+	static UsesConfigurationInfo CreateUsesConfigurationInfo (Dictionary<string, object?> props)
+	{
+		return new UsesConfigurationInfo {
+			ReqFiveWayNav = props.TryGetValue ("ReqFiveWayNav", out var v1) && v1 is bool b1 && b1,
+			ReqHardKeyboard = props.TryGetValue ("ReqHardKeyboard", out var v2) && v2 is bool b2 && b2,
+			ReqKeyboardType = props.TryGetValue ("ReqKeyboardType", out var v3) && v3 is string s3 ? s3 : null,
+			ReqNavigation = props.TryGetValue ("ReqNavigation", out var v4) && v4 is string s4 ? s4 : null,
+			ReqTouchScreen = props.TryGetValue ("ReqTouchScreen", out var v5) && v5 is string s5 ? s5 : null,
+		};
+	}
+
+	static MetaDataInfo CreateMetaDataInfo (string name, Dictionary<string, object?> props)
+	{
+		return new MetaDataInfo {
+			Name = name,
+			Value = props.TryGetValue ("Value", out var v) && v is string val ? val : null,
+			Resource = props.TryGetValue ("Resource", out var r) && r is string res ? res : null,
+		};
+	}
+
+	static PropertyInfo CreatePropertyInfo (string name, Dictionary<string, object?> props)
+	{
+		return new PropertyInfo {
+			Name = name,
+			Value = props.TryGetValue ("Value", out var v) && v is string val ? val : null,
+			Resource = props.TryGetValue ("Resource", out var r) && r is string res ? res : null,
+		};
 	}
 
 	public void Dispose ()

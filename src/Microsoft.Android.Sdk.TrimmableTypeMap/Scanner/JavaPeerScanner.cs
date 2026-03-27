@@ -1512,25 +1512,6 @@ public sealed class JavaPeerScanner : IDisposable
 			Properties = attrInfo.Properties,
 			IntentFilters = attrInfo.IntentFilters,
 			MetaData = attrInfo.MetaData,
-			HasPublicDefaultConstructor = HasPublicParameterlessCtor (typeDef, index),
 		};
-	}
-
-	static bool HasPublicParameterlessCtor (TypeDefinition typeDef, AssemblyIndex index)
-	{
-		foreach (var methodHandle in typeDef.GetMethods ()) {
-			var method = index.Reader.GetMethodDefinition (methodHandle);
-			if (index.Reader.GetString (method.Name) != ".ctor") {
-				continue;
-			}
-			if ((method.Attributes & MethodAttributes.MemberAccessMask) != MethodAttributes.Public) {
-				continue;
-			}
-			var sig = method.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
-			if (sig.ParameterTypes.Length == 0) {
-				return true;
-			}
-		}
-		return false;
 	}
 }

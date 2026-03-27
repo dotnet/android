@@ -1,4 +1,3 @@
-
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
 internal sealed record PropertyInfo
