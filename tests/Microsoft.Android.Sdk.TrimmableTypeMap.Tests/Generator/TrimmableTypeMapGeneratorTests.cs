@@ -29,7 +29,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase, IDisposable
 	{
 		var generator = CreateGenerator ();
 		var result = generator.Execute (
-			Array.Empty<string> (),
+			[],
 			Path.Combine (testDir, "typemap"),
 			Path.Combine (testDir, "java"),
 			new Version (11, 0),
@@ -77,7 +77,6 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase, IDisposable
 		var assemblyPath = GetTestFixtureAssemblyPath ();
 		var outputDir = Path.Combine (testDir, "typemap");
 		var javaDir = Path.Combine (testDir, "java");
-		var args = new object [] { assemblyPath, outputDir, javaDir };
 
 		// First run
 		var generator1 = CreateGenerator ();
@@ -126,7 +125,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase, IDisposable
 
 		// Second run
 		var generator2 = CreateGenerator ();
-		var result2 = generator2.Execute (
+		generator2.Execute (
 			new [] { assemblyPath }, outputDir, javaDir,
 			new Version (11, 0), new HashSet<string> ());
 
@@ -139,9 +138,12 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase, IDisposable
 	public void Execute_NullAssemblyPaths_Throws ()
 	{
 		var generator = CreateGenerator ();
+		string[]? nullPaths = null;
+#pragma warning disable CS8604 // Possible null reference argument — intentionally testing null guard
 		Assert.Throws<ArgumentNullException> (() => generator.Execute (
-			null!, Path.Combine (testDir, "out"), Path.Combine (testDir, "java"),
+			nullPaths, Path.Combine (testDir, "out"), Path.Combine (testDir, "java"),
 			new Version (11, 0), new HashSet<string> ()));
+#pragma warning restore CS8604
 	}
 
 	TrimmableTypeMapGenerator CreateGenerator ()
