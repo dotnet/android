@@ -54,6 +54,19 @@ public partial class JavaPeerScannerTests
 	}
 
 	[Theory]
+	[InlineData ("processView", "(Landroid/view/View;)V")]
+	[InlineData ("handleClick", "(Landroid/view/View;I)Z")]
+	[InlineData ("getViewName", "(Landroid/view/View;)Ljava/lang/String;")]
+	public void Scan_ExportMethod_ResolvesJavaBoundParameterTypes (string jniName, string expectedSig)
+	{
+		var method = FindFixtureByJavaName ("my/app/ExportWithJavaBoundParams")
+			.MarshalMethods.FirstOrDefault (m => m.JniName == jniName);
+		Assert.NotNull (method);
+		Assert.Equal (expectedSig, method.JniSignature);
+		Assert.Null (method.Connector);
+	}
+
+	[Theory]
 	[InlineData ("android/app/Activity", "Android.App.Activity")]
 	[InlineData ("my/app/SimpleActivity", "Android.App.Activity")]
 	[InlineData ("my/app/MyButton", "MyApp.MyButton")]

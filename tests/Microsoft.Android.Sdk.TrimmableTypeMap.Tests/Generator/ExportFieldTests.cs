@@ -20,8 +20,8 @@ public class ExportFieldTests : FixtureTestBase
 		var staticField = peer.JavaFields.First (f => f.FieldName == "STATIC_INSTANCE");
 		Assert.True (staticField.IsStatic);
 		Assert.Equal ("GetInstance", staticField.InitializerMethodName);
-		// Reference type — mapped via JNI signature, not fallback to java.lang.Object
-		Assert.Equal ("java.lang.Object", staticField.JavaTypeName);
+		// Reference type — mapped via JNI signature to the actual Java type
+		Assert.Equal ("my.app.ExportFieldExample", staticField.JavaTypeName);
 
 		var instanceField = peer.JavaFields.First (f => f.FieldName == "VALUE");
 		Assert.False (instanceField.IsStatic);
