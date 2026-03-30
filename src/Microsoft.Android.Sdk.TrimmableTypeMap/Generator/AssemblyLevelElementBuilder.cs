@@ -1,5 +1,3 @@
-#nullable enable
-
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -21,6 +19,10 @@ static class AssemblyLevelElementBuilder
 	{
 		var existingPermissions = new HashSet<string> (
 			manifest.Elements ("permission").Select (e => (string?)e.Attribute (AttName)).OfType<string> ());
+		var existingPermissionGroups = new HashSet<string> (
+			manifest.Elements ("permission-group").Select (e => (string?)e.Attribute (AttName)).OfType<string> ());
+		var existingPermissionTrees = new HashSet<string> (
+			manifest.Elements ("permission-tree").Select (e => (string?)e.Attribute (AttName)).OfType<string> ());
 		var existingUsesPermissions = new HashSet<string> (
 			manifest.Elements ("uses-permission").Select (e => (string?)e.Attribute (AttName)).OfType<string> ());
 
@@ -41,7 +43,7 @@ static class AssemblyLevelElementBuilder
 
 		// <permission-group> elements
 		foreach (var pg in info.PermissionGroups) {
-			if (string.IsNullOrEmpty (pg.Name)) {
+			if (string.IsNullOrEmpty (pg.Name) || existingPermissionGroups.Contains (pg.Name)) {
 				continue;
 			}
 			var element = new XElement ("permission-group", new XAttribute (AttName, pg.Name));
@@ -53,7 +55,7 @@ static class AssemblyLevelElementBuilder
 
 		// <permission-tree> elements
 		foreach (var pt in info.PermissionTrees) {
-			if (string.IsNullOrEmpty (pt.Name)) {
+			if (string.IsNullOrEmpty (pt.Name) || existingPermissionTrees.Contains (pt.Name)) {
 				continue;
 			}
 			var element = new XElement ("permission-tree", new XAttribute (AttName, pt.Name));

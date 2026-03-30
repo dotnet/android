@@ -343,13 +343,27 @@ sealed class AssemblyIndex : IDisposable
 	/// <summary>
 	/// Scans assembly-level custom attributes for manifest-related data.
 	/// </summary>
+	static readonly HashSet<string> KnownAssemblyAttributes = new (StringComparer.Ordinal) {
+		"PermissionAttribute",
+		"PermissionGroupAttribute",
+		"PermissionTreeAttribute",
+		"UsesPermissionAttribute",
+		"UsesFeatureAttribute",
+		"UsesLibraryAttribute",
+		"UsesConfigurationAttribute",
+		"MetaDataAttribute",
+		"PropertyAttribute",
+		"SupportsGLTextureAttribute",
+		"ApplicationAttribute",
+	};
+
 	internal void ScanAssemblyAttributes (AssemblyManifestInfo info)
 	{
 		var asmDef = Reader.GetAssemblyDefinition ();
 		foreach (var caHandle in asmDef.GetCustomAttributes ()) {
 			var ca = Reader.GetCustomAttribute (caHandle);
 			var attrName = GetCustomAttributeName (ca, Reader);
-			if (attrName is null) {
+			if (attrName is null || !KnownAssemblyAttributes.Contains (attrName)) {
 				continue;
 			}
 
