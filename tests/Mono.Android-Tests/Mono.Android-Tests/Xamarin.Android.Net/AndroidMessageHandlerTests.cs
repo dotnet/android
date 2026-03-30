@@ -287,14 +287,7 @@ namespace Xamarin.Android.NetTests
 			handler.ClientCertificates.Add (certificate);
 
 			using var client = new HttpClient (handler);
-			HttpResponseMessage response;
-			try {
-				response = await client.GetAsync ("https://corefx-net-tls.azurewebsites.net/EchoClientCertificate.ashx");
-			} catch (HttpRequestException ex) {
-				if (IgnoreIfConnectionFailed (new AggregateException (ex), out _))
-					return;
-				throw;
-			}
+			var response = await client.GetAsync ("https://corefx-net-tls.azurewebsites.net/EchoClientCertificate.ashx");
 			var content = await response.EnsureSuccessStatusCode ().Content.ReadAsStringAsync ();
 
 			X509Certificate2 certificate2 = new X509Certificate2 (global::System.Convert.FromBase64String (content));
