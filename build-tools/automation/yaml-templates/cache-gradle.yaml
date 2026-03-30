@@ -17,7 +17,8 @@ steps:
 
 - pwsh: |
     git submodule status --cached external/Java.Interop > $(Agent.TempDirectory)/java-interop-submodule-hash.txt
-    Write-Host "##vso[task.setvariable variable=GRADLE_CACHE_DIR]$env:USERPROFILE/.gradle/caches"
+    $gradleCacheDir = Join-Path $env:USERPROFILE ".gradle\caches"
+    Write-Host "##vso[task.setvariable variable=GRADLE_CACHE_DIR]$gradleCacheDir"
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: prepare Gradle cache variables
   condition: eq(variables['Agent.OS'], 'Windows_NT')
