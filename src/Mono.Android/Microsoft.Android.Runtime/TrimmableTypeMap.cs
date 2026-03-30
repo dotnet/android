@@ -42,7 +42,8 @@ class TrimmableTypeMap
 	{
 		var instance = new TrimmableTypeMap ();
 		var previous = Interlocked.CompareExchange (ref s_instance, instance, null);
-		Debug.Assert (previous is null, "TrimmableTypeMap must only be created once.");
+		if (previous is not null)
+			return;
 
 		instance.RegisterNatives ();
 	}
