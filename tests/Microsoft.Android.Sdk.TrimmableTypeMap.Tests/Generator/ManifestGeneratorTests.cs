@@ -665,4 +665,54 @@ public class ManifestGeneratorTests : IDisposable
 		Assert.NotNull (perm);
 		Assert.Equal ("@mipmap/ic_launcher_round", (string?)perm?.Attribute (AndroidNs + "roundIcon"));
 	}
+
+	[Fact]
+	public void AssemblyLevel_ApplicationBackupAgent ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var info = new AssemblyManifestInfo ();
+		info.ApplicationProperties = new Dictionary<string, object?> {
+			["BackupAgent"] = "MyApp.MyBackupAgent",
+		};
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "com/example/app/MyBackupAgent",
+				CompatJniName = "com/example/app/MyBackupAgent",
+				ManagedTypeName = "MyApp.MyBackupAgent",
+				ManagedTypeNamespace = "MyApp",
+				ManagedTypeShortName = "MyBackupAgent",
+				AssemblyName = "TestApp",
+			},
+		};
+
+		var doc = GenerateAndLoad (gen, peers: peers, assemblyInfo: info);
+		var app = doc.Root?.Element ("application");
+		Assert.NotNull (app);
+		Assert.Equal ("com.example.app.MyBackupAgent", (string?)app?.Attribute (AndroidNs + "backupAgent"));
+	}
+
+	[Fact]
+	public void AssemblyLevel_ApplicationManageSpaceActivity ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var info = new AssemblyManifestInfo ();
+		info.ApplicationProperties = new Dictionary<string, object?> {
+			["ManageSpaceActivity"] = "MyApp.ManageActivity",
+		};
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "com/example/app/ManageActivity",
+				CompatJniName = "com/example/app/ManageActivity",
+				ManagedTypeName = "MyApp.ManageActivity",
+				ManagedTypeNamespace = "MyApp",
+				ManagedTypeShortName = "ManageActivity",
+				AssemblyName = "TestApp",
+			},
+		};
+
+		var doc = GenerateAndLoad (gen, peers: peers, assemblyInfo: info);
+		var app = doc.Root?.Element ("application");
+		Assert.NotNull (app);
+		Assert.Equal ("com.example.app.ManageActivity", (string?)app?.Attribute (AndroidNs + "manageSpaceActivity"));
+	}
 }

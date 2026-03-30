@@ -171,11 +171,44 @@ static class AssemblyLevelElementBuilder
 		}
 	}
 
-	internal static void ApplyApplicationProperties (XElement app, Dictionary<string, object?> properties)
+	internal static void ApplyApplicationProperties (
+		XElement app,
+		Dictionary<string, object?> properties,
+		IReadOnlyList<JavaPeerInfo> allPeers)
 	{
-		// TODO: Application BackupAgent and ManageSpaceActivity properties require type→JNI-name
-		// resolution before they can be emitted to the manifest. Add support in a follow-up PR.
 		PropertyMapper.ApplyMappings (app, properties, PropertyMapper.ApplicationPropertyMappings, skipExisting: true);
+
+		// BackupAgent and ManageSpaceActivity are Type properties — resolve managed type names to JNI names
+		ApplyTypeProperty (app, properties, allPeers, "BackupAgent", "backupAgent");
+		ApplyTypeProperty (app, properties, allPeers, "ManageSpaceActivity", "manageSpaceActivity");
+	}
+
+	static void ApplyTypeProperty (
+		XElement app,
+		Dictionary<string, object?> properties,
+		IReadOnlyList<JavaPeerInfo> allPeers,
+		string propertyName,
+		string xmlAttrName)
+	{
+		if (app.Attribute (AndroidNs + xmlAttrName) is not null) {
+			return;
+		}
+		if (!properties.TryGetValue (propertyName, out var value) || value is not string managedName || managedName.Length == 0) {
+			return;
+		}
+
+		// Strip assembly qualification if present (e.g., "MyApp.MyAgent, MyAssembly")
+		var commaIndex = managedName.IndexOf (',');
+		if (commaIndex > 0) {
+			managedName = managedName.Substring (0, commaIndex).Trim ();
+		}
+
+		foreach (var peer in allPeers) {
+			if (peer.ManagedTypeName == managedName) {
+				app.SetAttributeValue (AndroidNs + xmlAttrName, peer.JavaName.Replace ('/', '.'));
+				return;
+			}
+		}
 	}
 
 	internal static void AddInternetPermission (XElement manifest)

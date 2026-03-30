@@ -55,7 +55,7 @@ class ManifestGenerator
 
 		// Apply assembly-level [Application] properties
 		if (assemblyInfo.ApplicationProperties is not null) {
-			AssemblyLevelElementBuilder.ApplyApplicationProperties (app, assemblyInfo.ApplicationProperties);
+			AssemblyLevelElementBuilder.ApplyApplicationProperties (app, assemblyInfo.ApplicationProperties, allPeers);
 		}
 
 		var existingTypes = new HashSet<string> (
