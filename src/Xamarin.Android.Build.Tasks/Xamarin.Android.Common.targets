@@ -1493,6 +1493,48 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
+<Target Name="_GetGenerateJavaCallableWrappersInputs" DependsOnTargets="_PrepareAssemblies">
+  <ItemGroup>
+    <_GenerateJavaCallableWrappersInputs Include="@(_AndroidMSBuildAllProjects)" />
+    <_GenerateJavaCallableWrappersInputs Include="$(_AndroidBuildPropertiesCache)" />
+    <_GenerateJavaCallableWrappersInputs Include="@(_ResolvedAssemblies->'$([System.IO.Path]::ChangeExtension(&quot;%(Identity)&quot;, &quot;.jlo.xml&quot;))')" />
+  </ItemGroup>
+</Target>
+
+<Target Name="_GetGenerateJavaStubsCoreInputs" DependsOnTargets="_PrepareAssemblies">
+  <ItemGroup>
+    <_GenerateJavaStubsCoreInputs Include="@(_AndroidMSBuildAllProjects)" />
+    <_GenerateJavaStubsCoreInputs Include="$(_ResolvedUserAssembliesHashFile)" />
+    <_GenerateJavaStubsCoreInputs Include="@(_ResolvedUserMonoAndroidAssemblies)" />
+    <_GenerateJavaStubsCoreInputs Include="$(_AndroidBuildPropertiesCache)" />
+    <_GenerateJavaStubsCoreInputs Include="$(_AndroidManifestAbs)" />
+    <_GenerateJavaStubsCoreInputs Include="@(AndroidEnvironment);@(LibraryEnvironments)" Condition=" '$(_AndroidFastDeployEnvironmentFiles)' != 'true' " />
+  </ItemGroup>
+</Target>
+
+<Target Name="_GetGenerateTypeMappingsInputs" DependsOnTargets="_PrepareAssemblies">
+  <ItemGroup>
+    <_GenerateTypeMappingsInputs Include="@(_AndroidMSBuildAllProjects)" />
+    <_GenerateTypeMappingsInputs Include="$(_AndroidBuildPropertiesCache)" />
+    <_GenerateTypeMappingsInputs Include="@(_ResolvedAssemblies->'$([System.IO.Path]::ChangeExtension(&quot;%(Identity)&quot;, &quot;.typemap.xml&quot;))')" />
+    <_GenerateTypeMappingsInputs
+        Condition=" '$(_AndroidUseMarshalMethods)' == 'true' Or '$(_AndroidJLOCheckedBuild)' == 'true' "
+        Include="$(_AndroidStampDirectory)_GenerateJavaStubsCore.stamp" />
+  </ItemGroup>
+</Target>
+
+<Target Name="_GetGenerateAndroidManifestInputs" DependsOnTargets="_PrepareAssemblies">
+  <ItemGroup>
+    <_GenerateAndroidManifestInputs Include="@(_AndroidMSBuildAllProjects)" />
+    <_GenerateAndroidManifestInputs Include="$(_AndroidManifestAbs)" />
+    <_GenerateAndroidManifestInputs Include="$(_AndroidBuildPropertiesCache)" />
+    <_GenerateAndroidManifestInputs Include="@(_ResolvedUserMonoAndroidAssemblies)" />
+    <_GenerateAndroidManifestInputs Include="@(AndroidEnvironment);@(LibraryEnvironments)" Condition=" '$(_AndroidFastDeployEnvironmentFiles)' != 'true' " />
+    <!-- Must run if code gen state was regenerated to clean up Cecil resolvers -->
+    <_GenerateAndroidManifestInputs Include="$(_AndroidStampDirectory)_GenerateJavaStubsCore.stamp" />
+  </ItemGroup>
+</Target>
+
 <Target Name="_ManifestMerger"
     Condition=" '$(AndroidManifestMerger)' == 'manifestmerger.jar' "
     Inputs="$(IntermediateOutputPath)AndroidManifest.xml;@(ExtractedManifestDocuments);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
@@ -1724,6 +1766,13 @@ because xbuild doesn't support framework reference assemblies.
     <AndroidNativeLibraryNoJniPreload Include="@(_AllNativeLibraries)" />
   </ItemGroup>
 
+  <!-- Read cached JNI registration flag from _GenerateTypeMappings (may be skipped on incremental builds) -->
+  <ReadLinesFromFile
+      File="$(IntermediateOutputPath)jni-registration-attribute.cache"
+      Condition="Exists('$(IntermediateOutputPath)jni-registration-attribute.cache')">
+    <Output TaskParameter="Lines" PropertyName="_JniAddNativeMethodRegistrationAttributePresent" />
+  </ReadLinesFromFile>
+
   <GenerateNativeApplicationConfigSources
       ResolvedAssemblies="@(_ResolvedAssemblies)"
       SatelliteAssemblies="@(_AndroidResolvedSatellitePaths)"
@@ -1754,6 +1803,7 @@ because xbuild doesn't support framework reference assemblies.
       TargetsCLR="$(_AndroidUseCLR)"
       AndroidRuntime="$(_AndroidRuntime)"
       ProjectRuntimeConfigFilePath="$(ProjectRuntimeConfigFilePath)"
+      JniAddNativeMethodRegistrationAttributePresent="$(_JniAddNativeMethodRegistrationAttributePresent)"
       >
   </GenerateNativeApplicationConfigSources>
 
