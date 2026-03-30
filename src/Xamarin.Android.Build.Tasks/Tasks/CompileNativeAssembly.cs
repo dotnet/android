@@ -22,6 +22,7 @@ namespace Xamarin.Android.Tasks
 			public string? AssemblerPath;
 			public string? AssemblerOptions;
 			public string? InputSource;
+			public string? OutputFile;
 		}
 
 		[Required]
@@ -43,6 +44,14 @@ namespace Xamarin.Android.Tasks
 
 		void RunAssembler (Config config)
 		{
+			if (config.OutputFile is not null && config.InputSource is not null && File.Exists (config.OutputFile)) {
+				string sourceFile = Path.Combine (WorkingDirectory, Path.GetFileName (config.InputSource));
+				if (File.Exists (sourceFile) && File.GetLastWriteTimeUtc (config.OutputFile) >= File.GetLastWriteTimeUtc (sourceFile)) {
+					LogDebugMessage ($"[LLVM llc] Skipping '{Path.GetFileName (config.InputSource)}' because '{Path.GetFileName (config.OutputFile)}' is up to date");
+					return;
+				}
+			}
+
 			var stdout_completed = new ManualResetEvent (false);
 			var stderr_completed = new ManualResetEvent (false);
 			var psi = new ProcessStartInfo () {
@@ -118,10 +127,13 @@ namespace Xamarin.Android.Tasks
 				string executableDir = Path.GetDirectoryName (llcPath);
 				string executableName = MonoAndroidHelper.GetExecutablePath (executableDir, Path.GetFileName (llcPath));
 
+				string outputFilePath = Path.Combine (WorkingDirectory, sourceFile.Replace (".ll", ".o"));
+
 				yield return new Config {
 					InputSource = item.ItemSpec,
 					AssemblerPath = Path.Combine (executableDir, executableName),
 					AssemblerOptions = $"{assemblerOptions} -o={outputFile} {QuoteFileName (sourceFile)}",
+					OutputFile = outputFilePath,
 				};
 			}
 		}
