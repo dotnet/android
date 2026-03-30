@@ -31,6 +31,9 @@ public class GenerateTypeMappings : AndroidTask
 	[Required]
 	public string IntermediateOutputDirectory { get; set; } = "";
 
+	[Output]
+	public bool JniAddNativeMethodRegistrationAttributePresent { get; set; }
+
 	public bool SkipJniAddNativeMethodRegistrationAttributeScan { get; set; }
 
 	[Required]
@@ -102,6 +105,7 @@ public class GenerateTypeMappings : AndroidTask
 
 		// Set for use by <GeneratePackageManagerJava/> task later
 		NativeCodeGenState.TemplateJniAddNativeMethodRegistrationAttributePresent = state.JniAddNativeMethodRegistrationAttributePresent;
+		JniAddNativeMethodRegistrationAttributePresent = NativeCodeGenState.TemplateJniAddNativeMethodRegistrationAttributePresent;
 
 		AddOutputTypeMaps (tmg, state.TargetArch);
 	}
@@ -126,8 +130,10 @@ public class GenerateTypeMappings : AndroidTask
 			throw new InvalidOperationException ($"Internal error: no native code generator state defined");
 
 		// Set for use by <GenerateNativeApplicationConfigSources/> task later
-		if (useMarshalMethods)
+		if (useMarshalMethods) {
 			NativeCodeGenState.TemplateJniAddNativeMethodRegistrationAttributePresent = templateCodeGenState.JniAddNativeMethodRegistrationAttributePresent;
+			JniAddNativeMethodRegistrationAttributePresent = NativeCodeGenState.TemplateJniAddNativeMethodRegistrationAttributePresent;
+		}
 	}
 
 	void GenerateTypeMapFromNativeState (NativeCodeGenState state, bool useMarshalMethods)
