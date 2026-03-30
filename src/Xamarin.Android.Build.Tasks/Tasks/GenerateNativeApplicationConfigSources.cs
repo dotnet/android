@@ -57,6 +57,7 @@ namespace Xamarin.Android.Tasks
 
 		public bool EnableMarshalMethods { get; set; }
 		public bool EnableManagedMarshalMethodsLookup { get; set; }
+		public bool JniAddNativeMethodRegistrationAttributePresent { get; set; }
 		public string? RuntimeConfigBinFilePath { get; set; }
 		public string ProjectRuntimeConfigFilePath { get; set; } = String.Empty;
 		public string? BoundExceptionType { get; set; }
@@ -251,7 +252,7 @@ namespace Xamarin.Android.Tasks
 					UsesAssemblyPreload = envBuilder.Parser.UsesAssemblyPreload,
 					AndroidPackageName = AndroidPackageName,
 					PackageNamingPolicy = pnp,
-					JniAddNativeMethodRegistrationAttributePresent = NativeCodeGenState.TemplateJniAddNativeMethodRegistrationAttributePresent,
+					JniAddNativeMethodRegistrationAttributePresent = JniAddNativeMethodRegistrationAttributePresent,
 					NumberOfAssembliesInApk = assemblyCount,
 					BundledAssemblyNameWidth = assemblyNameWidth,
 					NativeLibraries = uniqueNativeLibraries,
@@ -277,7 +278,7 @@ namespace Xamarin.Android.Tasks
 					BrokenExceptionTransitions = envBuilder.Parser.BrokenExceptionTransitions,
 					PackageNamingPolicy = pnp,
 					BoundExceptionType = boundExceptionType,
-					JniAddNativeMethodRegistrationAttributePresent = NativeCodeGenState.TemplateJniAddNativeMethodRegistrationAttributePresent,
+					JniAddNativeMethodRegistrationAttributePresent = JniAddNativeMethodRegistrationAttributePresent,
 					HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
 					NumberOfAssembliesInApk = assemblyCount,
 					BundledAssemblyNameWidth = assemblyNameWidth,
