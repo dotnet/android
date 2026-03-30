@@ -23,6 +23,21 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Execute_AssemblyWithNoPeers_ReturnsEmpty ()
+	{
+		// Use the test assembly itself — it has no [Register] types
+		var testAssemblyPath = typeof (TrimmableTypeMapGeneratorTests).Assembly.Location;
+		using var peReader = new PEReader (File.OpenRead (testAssemblyPath));
+		var result = CreateGenerator ().Execute (
+			new List<(string, PEReader)> { ("TestAssembly", peReader) },
+			new Version (11, 0),
+			new HashSet<string> ());
+		Assert.Empty (result.GeneratedAssemblies);
+		Assert.Empty (result.GeneratedJavaSources);
+		Assert.Contains (logMessages, m => m.Contains ("No Java peer types found"));
+	}
+
+	[Fact]
 	public void Execute_WithTestFixtures_ProducesOutputs ()
 	{
 		using var peReader = CreateTestFixturePEReader ();

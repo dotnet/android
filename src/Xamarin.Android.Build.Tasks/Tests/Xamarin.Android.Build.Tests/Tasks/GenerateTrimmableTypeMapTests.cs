@@ -78,6 +78,52 @@ namespace Xamarin.Android.Build.Tests {
 			}
 		}
 
+		[Test]
+		public void Execute_SecondRun_OutputsAreUpToDate ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+
+			var monoAndroidItem = FindMonoAndroidDll ();
+			if (monoAndroidItem is null) {
+				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				return;
+			}
+
+			var assemblies = new [] { monoAndroidItem };
+
+			// First run: generates everything
+			var task1 = CreateTask (assemblies, outputDir, javaDir);
+			Assert.IsTrue (task1.Execute (), "First run should succeed.");
+
+			var typeMapPath = task1.GeneratedAssemblies
+				.Select (i => i.ItemSpec)
+				.First (p => p.Contains ("_Mono.Android.TypeMap.dll"));
+			var firstWriteTime = File.GetLastWriteTimeUtc (typeMapPath);
+
+			// Second run: same inputs — outputs should not be rewritten (CopyIfStreamChanged)
+			var task2 = CreateTask (assemblies, outputDir, javaDir);
+			Assert.IsTrue (task2.Execute (), "Second run should succeed.");
+
+			var secondWriteTime = File.GetLastWriteTimeUtc (typeMapPath);
+			Assert.AreEqual (firstWriteTime, secondWriteTime,
+				"Typemap assembly should NOT be rewritten when content hasn't changed.");
+		}
+
+		[TestCase ("v11.0")]
+		[TestCase ("v10.0")]
+		[TestCase ("11.0")]
+		public void Execute_ParsesTargetFrameworkVersion (string tfv)
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+
+			var task = CreateTask ([], outputDir, javaDir, tfv: tfv);
+			Assert.IsTrue (task.Execute (), $"Task should succeed with TargetFrameworkVersion='{tfv}'.");
+		}
+
 		GenerateTrimmableTypeMap CreateTask (ITaskItem [] assemblies, string outputDir, string javaDir,
 			IList<BuildMessageEventArgs>? messages = null, string tfv = "v11.0")
 		{
