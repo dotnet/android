@@ -33,6 +33,7 @@ static class AssemblyLevelElementBuilder
 			PropertyMapper.MapDictionaryProperties (element, perm.Properties, "Label", "label");
 			PropertyMapper.MapDictionaryProperties (element, perm.Properties, "Description", "description");
 			PropertyMapper.MapDictionaryProperties (element, perm.Properties, "Icon", "icon");
+			PropertyMapper.MapDictionaryProperties (element, perm.Properties, "RoundIcon", "roundIcon");
 			PropertyMapper.MapDictionaryProperties (element, perm.Properties, "PermissionGroup", "permissionGroup");
 			PropertyMapper.MapDictionaryEnumProperty (element, perm.Properties, "ProtectionLevel", "protectionLevel", AndroidEnumConverter.ProtectionToString);
 			manifest.Add (element);
@@ -47,8 +48,8 @@ static class AssemblyLevelElementBuilder
 			PropertyMapper.MapDictionaryProperties (element, pg.Properties, "Label", "label");
 			PropertyMapper.MapDictionaryProperties (element, pg.Properties, "Description", "description");
 			PropertyMapper.MapDictionaryProperties (element, pg.Properties, "Icon", "icon");
-			manifest.Add (element);
-		}
+			PropertyMapper.MapDictionaryProperties (element, pg.Properties, "RoundIcon", "roundIcon");
+			manifest.Add (element);		}
 
 		// <permission-tree> elements
 		foreach (var pt in info.PermissionTrees) {
@@ -58,6 +59,7 @@ static class AssemblyLevelElementBuilder
 			var element = new XElement ("permission-tree", new XAttribute (AttName, pt.Name));
 			PropertyMapper.MapDictionaryProperties (element, pt.Properties, "Label", "label");
 			PropertyMapper.MapDictionaryProperties (element, pt.Properties, "Icon", "icon");
+			PropertyMapper.MapDictionaryProperties (element, pt.Properties, "RoundIcon", "roundIcon");
 			manifest.Add (element);
 		}
 
@@ -69,6 +71,9 @@ static class AssemblyLevelElementBuilder
 			var element = new XElement ("uses-permission", new XAttribute (AttName, up.Name));
 			if (up.MaxSdkVersion.HasValue) {
 				element.SetAttributeValue (AndroidNs + "maxSdkVersion", up.MaxSdkVersion.Value.ToString (CultureInfo.InvariantCulture));
+			}
+			if (!string.IsNullOrEmpty (up.UsesPermissionFlags)) {
+				element.SetAttributeValue (AndroidNs + "usesPermissionFlags", up.UsesPermissionFlags);
 			}
 			manifest.Add (element);
 		}
@@ -153,10 +158,21 @@ static class AssemblyLevelElementBuilder
 			}
 			manifest.Add (element);
 		}
+
+		// <supports-gl-texture> elements
+		var existingGLTextures = new HashSet<string> (
+			manifest.Elements ("supports-gl-texture").Select (e => (string?)e.Attribute (AttName)).OfType<string> ());
+		foreach (var gl in info.SupportsGLTextures) {
+			if (!existingGLTextures.Contains (gl.Name)) {
+				manifest.Add (new XElement ("supports-gl-texture", new XAttribute (AttName, gl.Name)));
+			}
+		}
 	}
 
 	internal static void ApplyApplicationProperties (XElement app, Dictionary<string, object?> properties)
 	{
+		// TODO: Application BackupAgent and ManageSpaceActivity properties require type→JNI-name
+		// resolution before they can be emitted to the manifest. Add support in a follow-up PR.
 		PropertyMapper.ApplyMappings (app, properties, PropertyMapper.ApplicationPropertyMappings, skipExisting: true);
 	}
 

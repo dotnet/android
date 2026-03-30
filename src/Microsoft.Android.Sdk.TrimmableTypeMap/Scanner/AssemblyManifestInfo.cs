@@ -13,6 +13,7 @@ internal sealed class AssemblyManifestInfo
 	public List<UsesConfigurationInfo> UsesConfigurations { get; } = [];
 	public List<MetaDataInfo> MetaData { get; } = [];
 	public List<PropertyInfo> Properties { get; } = [];
+	public List<SupportsGLTextureInfo> SupportsGLTextures { get; } = [];
 
 	public Dictionary<string, object?>? ApplicationProperties { get; set; }
 }

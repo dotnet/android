@@ -616,4 +616,53 @@ public class ManifestGeneratorTests : IDisposable
 		Assert.True (parts.Contains ("screenSize"), "configChanges should contain 'screenSize'");
 		Assert.Equal (3, parts.Length);
 	}
+
+	[Fact]
+	public void AssemblyLevel_SupportsGLTexture ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var info = new AssemblyManifestInfo ();
+		info.SupportsGLTextures.Add (new SupportsGLTextureInfo { Name = "GL_OES_compressed_ETC1_RGB8_texture" });
+
+		var doc = GenerateAndLoad (gen, assemblyInfo: info);
+		var element = doc.Root?.Elements ("supports-gl-texture")
+			.FirstOrDefault (e => (string?)e.Attribute (AttName) == "GL_OES_compressed_ETC1_RGB8_texture");
+		Assert.NotNull (element);
+	}
+
+	[Fact]
+	public void AssemblyLevel_UsesPermissionFlags ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var info = new AssemblyManifestInfo ();
+		info.UsesPermissions.Add (new UsesPermissionInfo {
+			Name = "android.permission.POST_NOTIFICATIONS",
+			UsesPermissionFlags = "neverForLocation",
+		});
+
+		var doc = GenerateAndLoad (gen, assemblyInfo: info);
+		var perm = doc.Root?.Elements ("uses-permission")
+			.FirstOrDefault (e => (string?)e.Attribute (AttName) == "android.permission.POST_NOTIFICATIONS");
+		Assert.NotNull (perm);
+		Assert.Equal ("neverForLocation", (string?)perm?.Attribute (AndroidNs + "usesPermissionFlags"));
+	}
+
+	[Fact]
+	public void AssemblyLevel_PermissionRoundIcon ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var info = new AssemblyManifestInfo ();
+		info.Permissions.Add (new PermissionInfo {
+			Name = "com.example.MY_PERMISSION",
+			Properties = new Dictionary<string, object?> {
+				["RoundIcon"] = "@mipmap/ic_launcher_round",
+			},
+		});
+
+		var doc = GenerateAndLoad (gen, assemblyInfo: info);
+		var perm = doc.Root?.Elements ("permission")
+			.FirstOrDefault (e => (string?)e.Attribute (AttName) == "com.example.MY_PERMISSION");
+		Assert.NotNull (perm);
+		Assert.Equal ("@mipmap/ic_launcher_round", (string?)perm?.Attribute (AndroidNs + "roundIcon"));
+	}
 }

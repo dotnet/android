@@ -383,6 +383,11 @@ sealed class AssemblyIndex : IDisposable
 			case "PropertyAttribute":
 				info.Properties.Add (CreatePropertyInfo (name, props));
 				break;
+			case "SupportsGLTextureAttribute":
+				if (name.Length > 0) {
+					info.SupportsGLTextures.Add (new SupportsGLTextureInfo { Name = name });
+				}
+				break;
 			case "ApplicationAttribute":
 				info.ApplicationProperties ??= new Dictionary<string, object?> (StringComparer.Ordinal);
 				foreach (var kvp in props) {
@@ -421,7 +426,8 @@ sealed class AssemblyIndex : IDisposable
 	static UsesPermissionInfo CreateUsesPermissionInfo (string name, Dictionary<string, object?> props)
 	{
 		int? maxSdk = props.TryGetValue ("MaxSdkVersion", out var v) && v is int max ? max : null;
-		return new UsesPermissionInfo { Name = name, MaxSdkVersion = maxSdk };
+		string? flags = props.TryGetValue ("UsesPermissionFlags", out var f) && f is string s ? s : null;
+		return new UsesPermissionInfo { Name = name, MaxSdkVersion = maxSdk, UsesPermissionFlags = flags };
 	}
 
 	static UsesFeatureInfo CreateUsesFeatureInfo (string name, Dictionary<string, object?> props)
