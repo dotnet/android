@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
+using System.Reflection.PortableExecutable;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -81,22 +82,29 @@ public sealed class JavaPeerScanner : IDisposable
 	/// </summary>
 	public List<JavaPeerInfo> Scan (IReadOnlyList<string> assemblyPaths)
 	{
-		// Phase 1: Build indices for all assemblies
 		foreach (var path in assemblyPaths) {
 			var index = AssemblyIndex.Create (path);
 			assemblyCache [index.AssemblyName] = index;
 		}
+		return ScanCore ();
+	}
 
-		// Phase 2: Analyze types using cached indices
+	public List<JavaPeerInfo> Scan (IReadOnlyList<(string Name, PEReader Reader)> assemblies)
+	{
+		foreach (var (name, reader) in assemblies) {
+			var index = AssemblyIndex.Create (reader, name);
+			assemblyCache [index.AssemblyName] = index;
+		}
+		return ScanCore ();
+	}
+
+	List<JavaPeerInfo> ScanCore ()
+	{
 		var resultsByManagedName = new Dictionary<string, JavaPeerInfo> (StringComparer.Ordinal);
-
 		foreach (var index in assemblyCache.Values) {
 			ScanAssembly (index, resultsByManagedName);
 		}
-
-		// Phase 3: Force unconditional on types referenced by [Application] attributes
 		ForceUnconditionalCrossReferences (resultsByManagedName, assemblyCache);
-
 		return new List<JavaPeerInfo> (resultsByManagedName.Values);
 	}
 

@@ -75,10 +75,23 @@ public sealed class JcwJavaSourceGenerator
 		return generatedFiles;
 	}
 
-	/// <summary>
+	public IReadOnlyList<GeneratedJavaSource> GenerateContent (IReadOnlyList<JavaPeerInfo> types)
+	{
+		if (types is null) throw new ArgumentNullException (nameof (types));
+		var results = new List<GeneratedJavaSource> ();
+		foreach (var type in types) {
+			if (type.DoNotGenerateAcw || type.IsInterface) continue;
+			using var writer = new StringWriter ();
+			Generate (type, writer);
+			results.Add (new GeneratedJavaSource (GetRelativePath (type), writer.ToString ()));
+		}
+		return results;
+	}
+
+		/// <summary>
 	/// Generates a single .java source file for the given type.
 	/// </summary>
-	internal void Generate (JavaPeerInfo type, TextWriter writer)
+	public void Generate (JavaPeerInfo type, TextWriter writer)
 	{
 		writer.NewLine = "\n";
 		WritePackageDeclaration (type, writer);
@@ -91,11 +104,15 @@ public sealed class JcwJavaSourceGenerator
 		WriteClassClose (writer);
 	}
 
-	static string GetOutputFilePath (JavaPeerInfo type, string outputDirectory)
+	static string GetRelativePath (JavaPeerInfo type)
 	{
 		JniSignatureHelper.ValidateJniName (type.JavaName);
-		string relativePath = type.JavaName + ".java";
-		return Path.Combine (outputDirectory, relativePath);
+		return type.JavaName + ".java";
+	}
+
+	static string GetOutputFilePath (JavaPeerInfo type, string outputDirectory)
+	{
+		return Path.Combine (outputDirectory, GetRelativePath (type));
 	}
 
 	/// <summary>
