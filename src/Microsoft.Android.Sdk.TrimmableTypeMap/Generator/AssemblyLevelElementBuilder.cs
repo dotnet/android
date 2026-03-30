@@ -28,7 +28,7 @@ static class AssemblyLevelElementBuilder
 
 		// <permission> elements
 		foreach (var perm in info.Permissions) {
-			if (string.IsNullOrEmpty (perm.Name) || existingPermissions.Contains (perm.Name)) {
+			if (string.IsNullOrEmpty (perm.Name) || !existingPermissions.Add (perm.Name)) {
 				continue;
 			}
 			var element = new XElement ("permission", new XAttribute (AttName, perm.Name));
@@ -43,7 +43,7 @@ static class AssemblyLevelElementBuilder
 
 		// <permission-group> elements
 		foreach (var pg in info.PermissionGroups) {
-			if (string.IsNullOrEmpty (pg.Name) || existingPermissionGroups.Contains (pg.Name)) {
+			if (string.IsNullOrEmpty (pg.Name) || !existingPermissionGroups.Add (pg.Name)) {
 				continue;
 			}
 			var element = new XElement ("permission-group", new XAttribute (AttName, pg.Name));
@@ -51,11 +51,12 @@ static class AssemblyLevelElementBuilder
 			PropertyMapper.MapDictionaryProperties (element, pg.Properties, "Description", "description");
 			PropertyMapper.MapDictionaryProperties (element, pg.Properties, "Icon", "icon");
 			PropertyMapper.MapDictionaryProperties (element, pg.Properties, "RoundIcon", "roundIcon");
-			manifest.Add (element);		}
+			manifest.Add (element);
+		}
 
 		// <permission-tree> elements
 		foreach (var pt in info.PermissionTrees) {
-			if (string.IsNullOrEmpty (pt.Name) || existingPermissionTrees.Contains (pt.Name)) {
+			if (string.IsNullOrEmpty (pt.Name) || !existingPermissionTrees.Add (pt.Name)) {
 				continue;
 			}
 			var element = new XElement ("permission-tree", new XAttribute (AttName, pt.Name));
@@ -67,7 +68,7 @@ static class AssemblyLevelElementBuilder
 
 		// <uses-permission> elements
 		foreach (var up in info.UsesPermissions) {
-			if (string.IsNullOrEmpty (up.Name) || existingUsesPermissions.Contains (up.Name)) {
+			if (string.IsNullOrEmpty (up.Name) || !existingUsesPermissions.Add (up.Name)) {
 				continue;
 			}
 			var element = new XElement ("uses-permission", new XAttribute (AttName, up.Name));
@@ -84,7 +85,7 @@ static class AssemblyLevelElementBuilder
 		var existingFeatures = new HashSet<string> (
 			manifest.Elements ("uses-feature").Select (e => (string?)e.Attribute (AttName)).OfType<string> ());
 		foreach (var uf in info.UsesFeatures) {
-			if (uf.Name is not null && !existingFeatures.Contains (uf.Name)) {
+			if (uf.Name is not null && existingFeatures.Add (uf.Name)) {
 				var element = new XElement ("uses-feature",
 					new XAttribute (AttName, uf.Name),
 					new XAttribute (AndroidNs + "required", uf.Required ? "true" : "false"));
@@ -165,7 +166,7 @@ static class AssemblyLevelElementBuilder
 		var existingGLTextures = new HashSet<string> (
 			manifest.Elements ("supports-gl-texture").Select (e => (string?)e.Attribute (AttName)).OfType<string> ());
 		foreach (var gl in info.SupportsGLTextures) {
-			if (!existingGLTextures.Contains (gl.Name)) {
+			if (existingGLTextures.Add (gl.Name)) {
 				manifest.Add (new XElement ("supports-gl-texture", new XAttribute (AttName, gl.Name)));
 			}
 		}
