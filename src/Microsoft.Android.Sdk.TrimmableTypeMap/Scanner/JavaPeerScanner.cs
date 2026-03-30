@@ -80,26 +80,13 @@ public sealed class JavaPeerScanner : IDisposable
 	/// Phase 1: Build indices for all assemblies.
 	/// Phase 2: Scan all types and produce JavaPeerInfo records.
 	/// </summary>
-	public List<JavaPeerInfo> Scan (IReadOnlyList<string> assemblyPaths)
-	{
-		foreach (var path in assemblyPaths) {
-			var index = AssemblyIndex.Create (path);
-			assemblyCache [index.AssemblyName] = index;
-		}
-		return ScanCore ();
-	}
-
 	public List<JavaPeerInfo> Scan (IReadOnlyList<(string Name, PEReader Reader)> assemblies)
 	{
 		foreach (var (name, reader) in assemblies) {
 			var index = AssemblyIndex.Create (reader, name);
 			assemblyCache [index.AssemblyName] = index;
 		}
-		return ScanCore ();
-	}
 
-	List<JavaPeerInfo> ScanCore ()
-	{
 		var resultsByManagedName = new Dictionary<string, JavaPeerInfo> (StringComparer.Ordinal);
 		foreach (var index in assemblyCache.Values) {
 			ScanAssembly (index, resultsByManagedName);

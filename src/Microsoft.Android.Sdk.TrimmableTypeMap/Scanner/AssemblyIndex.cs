@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 
@@ -40,16 +39,6 @@ sealed class AssemblyIndex : IDisposable
 		this.customAttributeTypeProvider = new CustomAttributeTypeProvider (reader);
 		Reader = reader;
 		AssemblyName = assemblyName;
-	}
-
-	public static AssemblyIndex Create (string filePath)
-	{
-		var peReader = new PEReader (File.OpenRead (filePath));
-		var reader = peReader.GetMetadataReader ();
-		var assemblyName = reader.GetString (reader.GetAssemblyDefinition ().Name);
-		var index = new AssemblyIndex (peReader, reader, assemblyName);
-		index.Build ();
-		return index;
 	}
 
 	public static AssemblyIndex Create (PEReader peReader, string assemblyName)
@@ -483,7 +472,6 @@ sealed class AssemblyIndex : IDisposable
 
 	public void Dispose ()
 	{
-		peReader.Dispose ();
 	}
 }
 

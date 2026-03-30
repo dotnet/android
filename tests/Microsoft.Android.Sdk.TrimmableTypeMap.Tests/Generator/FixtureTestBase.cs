@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
+using System.Reflection.PortableExecutable;
 using Xunit;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
@@ -23,8 +24,13 @@ public abstract class FixtureTestBase
 
 	static readonly Lazy<(List<JavaPeerInfo> peers, AssemblyManifestInfo manifestInfo)> _cachedScanResult = new (() => {
 		var scanner = new JavaPeerScanner ();
-		var peers = scanner.Scan (new [] { TestFixtureAssemblyPath });
+		var peReader = new PEReader (File.OpenRead (TestFixtureAssemblyPath));
+		var mdReader = peReader.GetMetadataReader ();
+		var assemblyName = mdReader.GetString (mdReader.GetAssemblyDefinition ().Name);
+		var assemblies = new [] { (assemblyName, peReader) };
+		var peers = scanner.Scan (assemblies);
 		var manifestInfo = scanner.ScanAssemblyManifestInfo ();
+		peReader.Dispose ();
 		return (peers, manifestInfo);
 	});
 

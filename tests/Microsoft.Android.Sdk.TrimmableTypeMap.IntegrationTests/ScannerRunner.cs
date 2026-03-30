@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.JavaCallableWrappers.Adapters;
 using Microsoft.Build.Utilities;
@@ -77,9 +79,18 @@ static class ScannerRunner
 
 	public static (List<TypeMapEntry> entries, Dictionary<string, List<TypeMethodGroup>> methodsByJavaName) RunNew (string[] assemblyPaths)
 	{
-		var primaryAssemblyName = Path.GetFileNameWithoutExtension (assemblyPaths [0]);
 		using var scanner = new JavaPeerScanner ();
-		var allPeers = scanner.Scan (assemblyPaths);
+		var peReaders = new List<PEReader> ();
+		var assemblies = new List<(string Name, PEReader Reader)> ();
+		foreach (var path in assemblyPaths) {
+			var peReader = new PEReader (File.OpenRead (path));
+			peReaders.Add (peReader);
+			var mdReader = peReader.GetMetadataReader ();
+			assemblies.Add ((mdReader.GetString (mdReader.GetAssemblyDefinition ().Name), peReader));
+		}
+		var primaryAssemblyName = assemblies [0].Name;
+		var allPeers = scanner.Scan (assemblies);
+		foreach (var peReader in peReaders) peReader.Dispose ();
 		var peers = allPeers.Where (p => p.AssemblyName == primaryAssemblyName).ToList ();
 
 		var entries = peers

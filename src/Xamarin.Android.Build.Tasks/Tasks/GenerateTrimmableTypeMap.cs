@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Android.Sdk.TrimmableTypeMap;
@@ -47,7 +48,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			foreach (var path in assemblyPaths) {
 				var peReader = new PEReader (File.OpenRead (path));
 				peReaders.Add (peReader);
-				assemblies.Add ((Path.GetFileNameWithoutExtension (path), peReader));
+				var mdReader = peReader.GetMetadataReader ();
+				assemblies.Add ((mdReader.GetString (mdReader.GetAssemblyDefinition ().Name), peReader));
 			}
 			var generator = new TrimmableTypeMapGenerator (msg => Log.LogMessage (MessageImportance.Low, msg));
 			var result = generator.Execute (assemblies, systemRuntimeVersion, frameworkAssemblyNames);

@@ -12,10 +12,7 @@ public class TrimmableTypeMapGenerator
 
 	public TrimmableTypeMapGenerator (Action<string> log)
 	{
-		if (log is null) {
-			throw new ArgumentNullException (nameof (log));
-		}
-		this.log = log;
+		this.log = log ?? throw new ArgumentNullException (nameof (log));
 	}
 
 	public TrimmableTypeMapResult Execute (
@@ -23,9 +20,9 @@ public class TrimmableTypeMapGenerator
 		Version systemRuntimeVersion,
 		HashSet<string> frameworkAssemblyNames)
 	{
-		if (assemblies is null) throw new ArgumentNullException (nameof (assemblies));
-		if (systemRuntimeVersion is null) throw new ArgumentNullException (nameof (systemRuntimeVersion));
-		if (frameworkAssemblyNames is null) throw new ArgumentNullException (nameof (frameworkAssemblyNames));
+		_ = assemblies ?? throw new ArgumentNullException (nameof (assemblies));
+		_ = systemRuntimeVersion ?? throw new ArgumentNullException (nameof (systemRuntimeVersion));
+		_ = frameworkAssemblyNames ?? throw new ArgumentNullException (nameof (frameworkAssemblyNames));
 
 		var allPeers = ScanAssemblies (assemblies);
 		if (allPeers.Count == 0) {
@@ -35,6 +32,7 @@ public class TrimmableTypeMapGenerator
 
 		var generatedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion);
 		var jcwPeers = allPeers.Where (p =>
+			!frameworkAssemblyNames.Contains (p.AssemblyName)
 			|| p.JavaName.StartsWith ("mono/", StringComparison.Ordinal)).ToList ();
 		log ($"Generating JCW files for {jcwPeers.Count} types (filtered from {allPeers.Count} total).");
 		var generatedJavaSources = GenerateJcwJavaSources (jcwPeers);
