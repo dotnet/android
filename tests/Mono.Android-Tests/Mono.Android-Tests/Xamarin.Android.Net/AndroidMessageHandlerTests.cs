@@ -290,9 +290,10 @@ namespace Xamarin.Android.NetTests
 			HttpResponseMessage response;
 			try {
 				response = await client.GetAsync ("https://corefx-net-tls.azurewebsites.net/EchoClientCertificate.ashx");
-			} catch (HttpRequestException ex) when (ex.InnerException is Java.Net.ConnectException) {
-				Assert.Inconclusive ($"Ignoring transient connection failure: {ex.InnerException.Message}");
-				return;
+			} catch (HttpRequestException ex) {
+				if (IgnoreIfConnectionFailed (new AggregateException (ex), out _))
+					return;
+				throw;
 			}
 			var content = await response.EnsureSuccessStatusCode ().Content.ReadAsStringAsync ();
 
