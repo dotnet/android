@@ -199,12 +199,6 @@
       <!-- Custom steps that run after MarkStep -->
       <!-- Custom steps that run after CleanStep -->
       <_TrimmerCustomSteps
-          Condition=" '$(AndroidUseDesignerAssembly)' == 'true' "
-          Include="$(_AndroidLinkerCustomStepAssembly)"
-          BeforeStep="MarkStep"
-          Type="MonoDroid.Tuner.FixLegacyResourceDesignerStep"
-      />
-      <_TrimmerCustomSteps
           Condition=" '$(_AndroidTypeMapImplementation)' == 'managed' "
           Include="$(_AndroidLinkerCustomStepAssembly)"
           AfterStep="CleanStep"
@@ -248,7 +242,8 @@
         Assemblies="@(_PostTrimmingAssembly)"
         AddKeepAlives="$(AndroidAddKeepAlives)"
         AndroidLinkResources="$(AndroidLinkResources)"
-        Deterministic="$(Deterministic)" />
+        Deterministic="$(Deterministic)"
+        UseDesignerAssembly="$(AndroidUseDesignerAssembly)" />
   </Target>
 
   <!-- Inject _TypeMapKind into the property cache -->
