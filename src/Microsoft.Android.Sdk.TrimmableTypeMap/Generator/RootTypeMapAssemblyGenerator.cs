@@ -32,28 +32,6 @@ public sealed class RootTypeMapAssemblyGenerator
 	}
 
 	/// <summary>
-	/// Generates the root typemap assembly and writes it to a file.
-	/// </summary>
-	/// <param name="perAssemblyTypeMapNames">Names of per-assembly typemap assemblies to reference.</param>
-	/// <param name="outputPath">Path to write the output .dll.</param>
-	/// <param name="assemblyName">Optional assembly name (defaults to _Microsoft.Android.TypeMaps).</param>
-	public void Generate (IReadOnlyList<string> perAssemblyTypeMapNames, string outputPath, string? assemblyName = null)
-	{
-		if (outputPath is null) {
-			throw new ArgumentNullException (nameof (outputPath));
-		}
-
-		var dir = Path.GetDirectoryName (outputPath);
-		if (!string.IsNullOrEmpty (dir)) {
-			Directory.CreateDirectory (dir);
-		}
-
-		var moduleName = Path.GetFileName (outputPath);
-		using var fs = File.Create (outputPath);
-		Generate (perAssemblyTypeMapNames, fs, assemblyName, moduleName);
-	}
-
-	/// <summary>
 	/// Generates the root typemap assembly and writes it to the given stream.
 	/// </summary>
 	/// <param name="perAssemblyTypeMapNames">Names of per-assembly typemap assemblies to reference.</param>

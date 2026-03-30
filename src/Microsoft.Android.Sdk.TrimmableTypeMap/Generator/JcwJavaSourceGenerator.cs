@@ -41,40 +41,6 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// </remarks>
 public sealed class JcwJavaSourceGenerator
 {
-	/// <summary>
-	/// Generates .java source files for all ACW types and writes them to the output directory.
-	/// Returns the list of generated file paths.
-	/// </summary>
-	public IReadOnlyList<string> Generate (IReadOnlyList<JavaPeerInfo> types, string outputDirectory)
-	{
-		if (types is null) {
-			throw new ArgumentNullException (nameof (types));
-		}
-		if (outputDirectory is null) {
-			throw new ArgumentNullException (nameof (outputDirectory));
-		}
-
-		var generatedFiles = new List<string> ();
-
-		foreach (var type in types) {
-			if (type.DoNotGenerateAcw || type.IsInterface) {
-				continue;
-			}
-
-			string filePath = GetOutputFilePath (type, outputDirectory);
-			string? dir = Path.GetDirectoryName (filePath);
-			if (dir != null) {
-				Directory.CreateDirectory (dir);
-			}
-
-			using var writer = new StreamWriter (filePath);
-			Generate (type, writer);
-			generatedFiles.Add (filePath);
-		}
-
-		return generatedFiles;
-	}
-
 	public IReadOnlyList<GeneratedJavaSource> GenerateContent (IReadOnlyList<JavaPeerInfo> types)
 	{
 		if (types is null) throw new ArgumentNullException (nameof (types));
@@ -110,10 +76,6 @@ public sealed class JcwJavaSourceGenerator
 		return type.JavaName + ".java";
 	}
 
-	static string GetOutputFilePath (JavaPeerInfo type, string outputDirectory)
-	{
-		return Path.Combine (outputDirectory, GetRelativePath (type));
-	}
 
 	/// <summary>
 	/// Validates that the JNI name is well-formed: non-empty, each segment separated by '/'
