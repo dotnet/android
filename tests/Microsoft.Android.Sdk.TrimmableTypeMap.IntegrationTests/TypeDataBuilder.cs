@@ -33,7 +33,7 @@ static class TypeDataBuilder
 {
 	public static (Dictionary<string, TypeComparisonData> perType, List<TypeMapEntry> entries) BuildLegacy (string assemblyPath)
 	{
-		var cache = new CecilTypeDefinitionCache ();
+		var cache = new TypeDefinitionCache ();
 		var resolver = new DefaultAssemblyResolver ();
 		resolver.AddSearchDirectory (Path.GetDirectoryName (assemblyPath)!);
 
@@ -197,7 +197,7 @@ static class TypeDataBuilder
 		return perType;
 	}
 
-	static void FindLegacyActivationCtor (CecilTypeDefinition typeDef, CecilTypeDefinitionCache cache,
+	static void FindLegacyActivationCtor (CecilTypeDefinition typeDef, TypeDefinitionCache cache,
 		out bool found, out string? declaringType, out string? style)
 	{
 		found = false;

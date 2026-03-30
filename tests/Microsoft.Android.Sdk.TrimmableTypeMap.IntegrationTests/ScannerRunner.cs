@@ -23,7 +23,7 @@ static class ScannerRunner
 {
 	public static (List<TypeMapEntry> entries, Dictionary<string, List<TypeMethodGroup>> methodsByJavaName) RunLegacy (string assemblyPath)
 	{
-		var cache = new CecilTypeDefinitionCache ();
+		var cache = new TypeDefinitionCache ();
 		var resolver = new DefaultAssemblyResolver ();
 		resolver.AddSearchDirectory (Path.GetDirectoryName (assemblyPath)!);
 
@@ -155,7 +155,7 @@ static class ScannerRunner
 	/// Extracts marshal methods using the real legacy JCW pipeline via
 	/// <see cref="CecilImporter.CreateType"/>.
 	/// </summary>
-	static List<MethodEntry> ExtractMethodRegistrations (CecilTypeDefinition typeDef, CecilTypeDefinitionCache cache)
+	static List<MethodEntry> ExtractMethodRegistrations (CecilTypeDefinition typeDef, TypeDefinitionCache cache)
 	{
 		if (typeDef.IsInterface) {
 			// CecilImporter throws XA4200 for interfaces.
