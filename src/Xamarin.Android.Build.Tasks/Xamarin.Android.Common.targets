@@ -1764,6 +1764,13 @@ because xbuild doesn't support framework reference assemblies.
     <AndroidNativeLibraryNoJniPreload Include="@(_AllNativeLibraries)" />
   </ItemGroup>
 
+  <!-- Read cached JNI registration flag from _GenerateTypeMappings (may be skipped on incremental builds) -->
+  <ReadLinesFromFile
+      File="$(IntermediateOutputPath)jni-registration-attribute.cache"
+      Condition="Exists('$(IntermediateOutputPath)jni-registration-attribute.cache')">
+    <Output TaskParameter="Lines" PropertyName="_JniAddNativeMethodRegistrationAttributePresent" />
+  </ReadLinesFromFile>
+
   <GenerateNativeApplicationConfigSources
       ResolvedAssemblies="@(_ResolvedAssemblies)"
       SatelliteAssemblies="@(_AndroidResolvedSatellitePaths)"
@@ -1794,6 +1801,7 @@ because xbuild doesn't support framework reference assemblies.
       TargetsCLR="$(_AndroidUseCLR)"
       AndroidRuntime="$(_AndroidRuntime)"
       ProjectRuntimeConfigFilePath="$(ProjectRuntimeConfigFilePath)"
+      JniAddNativeMethodRegistrationAttributePresent="$(_JniAddNativeMethodRegistrationAttributePresent)"
       >
   </GenerateNativeApplicationConfigSources>
 
