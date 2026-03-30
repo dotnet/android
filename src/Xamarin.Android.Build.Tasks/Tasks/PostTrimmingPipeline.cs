@@ -84,13 +84,6 @@ public class PostTrimmingPipeline : AndroidTask
 				},
 				(msg) => Log.LogDebugMessage (msg)));
 		}
-		if (AndroidLinkResources) {
-			var allAssemblies = new List<AssemblyDefinition> (Assemblies.Length);
-			foreach (var item in Assemblies) {
-				allAssemblies.Add (resolver.GetAssembly (item.ItemSpec));
-			}
-			steps.Add (new RemoveResourceDesignerStep (allAssemblies, (msg) => Log.LogDebugMessage (msg)));
-		}
 
 		foreach (var (item, assembly) in loadedAssemblies) {
 			var context = new StepContext (item, item);
