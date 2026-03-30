@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.JavaCallableWrappers.Adapters;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
+using CecilTypeDefinition = Mono.Cecil.TypeDefinition;
 using Xamarin.Android.Tasks;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests;
@@ -21,7 +23,7 @@ static class ScannerRunner
 {
 	public static (List<TypeMapEntry> entries, Dictionary<string, List<TypeMethodGroup>> methodsByJavaName) RunLegacy (string assemblyPath)
 	{
-		var cache = new TypeDefinitionCache ();
+		var cache = new CecilTypeDefinitionCache ();
 		var resolver = new DefaultAssemblyResolver ();
 		resolver.AddSearchDirectory (Path.GetDirectoryName (assemblyPath)!);
 
@@ -124,7 +126,7 @@ static class ScannerRunner
 		return (entries, methodsByJavaName);
 	}
 
-	public static string? GetCecilJavaName (TypeDefinition typeDef, IMetadataResolver cache)
+	public static string? GetCecilJavaName (CecilTypeDefinition typeDef, IMetadataResolver cache)
 	{
 		if (typeDef.HasCustomAttributes) {
 			foreach (var attr in typeDef.CustomAttributes) {
@@ -144,7 +146,7 @@ static class ScannerRunner
 		return Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.ToJniName (typeDef, cache);
 	}
 
-	public static string GetManagedName (TypeDefinition typeDef)
+	public static string GetManagedName (CecilTypeDefinition typeDef)
 	{
 		return $"{typeDef.FullName.Replace ('/', '+')}, {typeDef.Module.Assembly.Name.Name}";
 	}
@@ -153,7 +155,7 @@ static class ScannerRunner
 	/// Extracts marshal methods using the real legacy JCW pipeline via
 	/// <see cref="CecilImporter.CreateType"/>.
 	/// </summary>
-	static List<MethodEntry> ExtractMethodRegistrations (TypeDefinition typeDef, TypeDefinitionCache cache)
+	static List<MethodEntry> ExtractMethodRegistrations (CecilTypeDefinition typeDef, CecilTypeDefinitionCache cache)
 	{
 		if (typeDef.IsInterface) {
 			// CecilImporter throws XA4200 for interfaces.
@@ -184,7 +186,7 @@ static class ScannerRunner
 		return methods;
 	}
 
-	internal static bool HasDoNotGenerateAcw (TypeDefinition typeDef)
+	internal static bool HasDoNotGenerateAcw (CecilTypeDefinition typeDef)
 	{
 		if (!typeDef.HasCustomAttributes) {
 			return false;
@@ -205,7 +207,7 @@ static class ScannerRunner
 	/// Fallback: extract [Register] from methods/properties directly (for interfaces
 	/// and DoNotGenerateAcw types that are never passed through CecilImporter).
 	/// </summary>
-	static List<MethodEntry> ExtractDirectRegisterAttributes (TypeDefinition typeDef)
+	static List<MethodEntry> ExtractDirectRegisterAttributes (CecilTypeDefinition typeDef)
 	{
 		var methods = new List<MethodEntry> ();
 		foreach (var method in typeDef.Methods) {

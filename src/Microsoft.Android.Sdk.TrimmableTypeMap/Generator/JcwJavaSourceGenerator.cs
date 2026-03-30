@@ -41,6 +41,10 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// </remarks>
 public sealed class JcwJavaSourceGenerator
 {
+	/// <summary>
+	/// Generates .java source content for all ACW types and returns them as in-memory
+	/// (relativePath, content) pairs. No filesystem IO is performed.
+	/// </summary>
 	public IReadOnlyList<GeneratedJavaSource> GenerateContent (IReadOnlyList<JavaPeerInfo> types)
 	{
 		if (types is null) throw new ArgumentNullException (nameof (types));
@@ -54,7 +58,7 @@ public sealed class JcwJavaSourceGenerator
 		return results;
 	}
 
-		/// <summary>
+	/// <summary>
 	/// Generates a single .java source file for the given type.
 	/// </summary>
 	public void Generate (JavaPeerInfo type, TextWriter writer)

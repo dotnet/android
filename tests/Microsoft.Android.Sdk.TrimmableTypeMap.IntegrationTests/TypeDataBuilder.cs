@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.JavaCallableWrappers.Adapters;
 using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
+using CecilTypeDefinition = Mono.Cecil.TypeDefinition;
 using Xamarin.Android.Tasks;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests;
@@ -31,7 +33,7 @@ static class TypeDataBuilder
 {
 	public static (Dictionary<string, TypeComparisonData> perType, List<TypeMapEntry> entries) BuildLegacy (string assemblyPath)
 	{
-		var cache = new TypeDefinitionCache ();
+		var cache = new CecilTypeDefinitionCache ();
 		var resolver = new DefaultAssemblyResolver ();
 		resolver.AddSearchDirectory (Path.GetDirectoryName (assemblyPath)!);
 
@@ -195,14 +197,14 @@ static class TypeDataBuilder
 		return perType;
 	}
 
-	static void FindLegacyActivationCtor (TypeDefinition typeDef, TypeDefinitionCache cache,
+	static void FindLegacyActivationCtor (CecilTypeDefinition typeDef, CecilTypeDefinitionCache cache,
 		out bool found, out string? declaringType, out string? style)
 	{
 		found = false;
 		declaringType = null;
 		style = null;
 
-		TypeDefinition? current = typeDef;
+		CecilTypeDefinition? current = typeDef;
 		while (current != null) {
 			foreach (var method in current.Methods) {
 				if (!method.IsConstructor || method.IsStatic || method.Parameters.Count != 2) {
@@ -232,7 +234,7 @@ static class TypeDataBuilder
 		}
 	}
 
-	static bool GetCecilDoNotGenerateAcw (TypeDefinition typeDef)
+	static bool GetCecilDoNotGenerateAcw (CecilTypeDefinition typeDef)
 	{
 		if (!typeDef.HasCustomAttributes) {
 			return false;
@@ -255,7 +257,7 @@ static class TypeDataBuilder
 		return false;
 	}
 
-	static void ExtractDirectRegisterCtors (TypeDefinition typeDef, List<string> javaCtorSignatures)
+	static void ExtractDirectRegisterCtors (CecilTypeDefinition typeDef, List<string> javaCtorSignatures)
 	{
 		foreach (var method in typeDef.Methods) {
 			if (!method.IsConstructor || method.IsStatic || !method.HasCustomAttributes) {
