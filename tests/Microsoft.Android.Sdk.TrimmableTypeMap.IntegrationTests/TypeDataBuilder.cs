@@ -9,6 +9,7 @@ using Java.Interop.Tools.JavaCallableWrappers.Adapters;
 using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
+using CecilAssemblyDefinition = Mono.Cecil.AssemblyDefinition;
 using CecilTypeDefinition = Mono.Cecil.TypeDefinition;
 using Xamarin.Android.Tasks;
 
@@ -43,7 +44,7 @@ static class TypeDataBuilder
 		}
 
 		var readerParams = new ReaderParameters { AssemblyResolver = resolver };
-		using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath, readerParams);
+		using var assembly = CecilAssemblyDefinition.ReadAssembly (assemblyPath, readerParams);
 
 		var scanner = new XAJavaTypeScanner (
 			Xamarin.Android.Tools.AndroidTargetArch.Arm64,
