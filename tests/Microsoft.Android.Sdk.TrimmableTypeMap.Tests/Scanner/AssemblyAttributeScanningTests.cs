@@ -46,6 +46,16 @@ public class AssemblyAttributeScanningTests : FixtureTestBase
 		var info = ScanAssemblyManifestInfo ();
 		var lib = info.UsesLibraries.FirstOrDefault (l => l.Name == "org.apache.http.legacy");
 		Assert.NotNull (lib);
+		Assert.True (lib.Required);
+	}
+
+	[Fact]
+	public void UsesLibrary_TwoArgConstructor ()
+	{
+		var info = ScanAssemblyManifestInfo ();
+		var lib = info.UsesLibraries.FirstOrDefault (l => l.Name == "com.example.optional");
+		Assert.NotNull (lib);
+		Assert.False (lib.Required);
 	}
 
 	[Fact]

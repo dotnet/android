@@ -406,6 +406,12 @@ sealed class AssemblyIndex : IDisposable
 		if (value.FixedArguments.Length > 0 && value.FixedArguments [0].Value is string ctorName) {
 			name = ctorName;
 		}
+		// Handle 2-arg ctors like UsesLibrary(string, bool) — store extra ctor args in props
+		for (int i = 1; i < value.FixedArguments.Length; i++) {
+			if (value.FixedArguments [i].Value is bool boolVal) {
+				props ["Required"] = boolVal;
+			}
+		}
 		foreach (var named in value.NamedArguments) {
 			if (named.Name == "Name" && named.Value is string n) {
 				name = n;
