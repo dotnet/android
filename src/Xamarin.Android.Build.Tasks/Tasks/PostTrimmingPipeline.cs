@@ -48,24 +48,20 @@ public class PostTrimmingPipeline : AndroidTask
 		var steps = new List<IAssemblyModifierPipelineStep> ();
 		steps.Add (new StripEmbeddedLibrariesStep (Log));
 
-		// FixAbstractMethods — memoize Mono.Android resolution so the attempt (and any error
-		// logging) happens at most once, regardless of how many assemblies need fixing.
+		// FixAbstractMethods — resolve Mono.Android once up front. If resolution fails, log
+		// the error and skip running the fix step entirely to avoid later unhandled exceptions.
 		AssemblyDefinition? monoAndroidAssembly = null;
-		bool monoAndroidResolutionAttempted = false;
-		steps.Add (new PostTrimmingFixAbstractMethodsStep (cache,
-			() => {
-				if (!monoAndroidResolutionAttempted) {
-					monoAndroidResolutionAttempted = true;
-					try {
-						monoAndroidAssembly = resolver.Resolve (AssemblyNameReference.Parse ("Mono.Android"));
-					} catch (AssemblyResolutionException ex) {
-						Log.LogErrorFromException (ex, showStackTrace: false);
-					}
-				}
-				return monoAndroidAssembly;
-			},
-			(msg) => Log.LogDebugMessage (msg),
-			(msg) => Log.LogCodedWarning ("XA2000", msg)));
+		try {
+			monoAndroidAssembly = resolver.Resolve (AssemblyNameReference.Parse ("Mono.Android"));
+		} catch (AssemblyResolutionException ex) {
+			Log.LogErrorFromException (ex, showStackTrace: false);
+		}
+		if (monoAndroidAssembly != null) {
+			steps.Add (new PostTrimmingFixAbstractMethodsStep (cache,
+				() => monoAndroidAssembly,
+				(msg) => Log.LogDebugMessage (msg),
+				(msg) => Log.LogCodedWarning ("XA2000", msg)));
+		}
 
 		if (AddKeepAlives) {
 			// Memoize the corlib resolution so the attempt (and any error logging) happens at most once,
