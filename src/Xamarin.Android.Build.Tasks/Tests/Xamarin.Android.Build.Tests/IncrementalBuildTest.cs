@@ -746,7 +746,7 @@ namespace Lib2
 				appBuilder.Output.AssertTargetIsSkipped ("CoreCompile");
 				appBuilder.Output.AssertTargetIsSkipped ("_BuildLibraryImportsCache");
 				appBuilder.Output.AssertTargetIsSkipped ("_ResolveLibraryProjectImports");
-				appBuilder.Output.AssertTargetIsSkipped ("_GenerateJavaStubs");
+				appBuilder.Output.AssertTargetIsSkipped ("_GenerateJavaStubsCore");
 
 				appBuilder.Output.AssertTargetIsPartiallyBuilt (KnownTargets.LinkAssembliesNoShrink);
 
@@ -1237,7 +1237,10 @@ namespace Lib2
 			}
 
 			var targets = new [] {
-				"_GenerateJavaStubs",
+				"_GenerateJavaCallableWrappers",
+				"_GenerateJavaStubsCore",
+				"_GenerateTypeMappings",
+				"_GenerateAndroidManifest",
 				"_GeneratePackageManagerJava",
 			};
 			var proj = new XamarinAndroidApplicationProject {
@@ -1286,6 +1289,34 @@ namespace Lib2
 					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
 				}
 				AssertAssemblyFilesInFileWrites (proj, b, abi, runtime);
+			}
+		}
+
+		[Test]
+		public void GenerateJavaStubsSubTargetIncrementality ([Values (false, true)] bool isRelease)
+		{
+			// Test that all sub-targets correctly skip on no-change rebuilds.
+			var targets = new [] {
+				"_GenerateJavaCallableWrappers",
+				"_GenerateJavaStubsCore",
+				"_GenerateTypeMappings",
+				"_GenerateAndroidManifest",
+			};
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
+				foreach (var target in targets) {
+					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"first build: `{target}` should *not* be skipped!");
+				}
+
+				// No-change rebuild: all sub-targets should skip
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "no-change rebuild should have succeeded.");
+				foreach (var target in targets) {
+					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"no-change: `{target}` should be skipped!");
+				}
 			}
 		}
 
@@ -1683,7 +1714,7 @@ namespace Lib2
 
 				// TODO: NativeAOT doesn't skip this target
 				if (runtime != AndroidRuntime.NativeAOT) {
-					builder.Output.AssertTargetIsSkipped ("_GenerateJavaStubs");
+					builder.Output.AssertTargetIsSkipped ("_GenerateJavaStubsCore");
 				}
 				builder.Output.AssertTargetIsSkipped ("_CompileJava");
 				builder.Output.AssertTargetIsSkipped ("_CompileToDalvik");

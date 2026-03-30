@@ -543,7 +543,7 @@ namespace UnnamedProject
 				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "AndroidResgen: Warning while updating Resource XML"),
 					"Warning while processing resources should not have been raised.");
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "Build should have succeeded.");
-				Assert.IsTrue (b.Output.IsTargetSkipped ("_GenerateJavaStubs"), "Target _GenerateJavaStubs should have been skipped");
+				Assert.IsTrue (b.Output.IsTargetSkipped ("_GenerateJavaStubsCore"), "Target _GenerateJavaStubsCore should have been skipped");
 
 				lib.Touch ("CustomTextView.cs");
 
