@@ -237,8 +237,12 @@ _ResolveAssemblies MSBuild target.
     </ItemGroup>
   </Target>
 
-  <Target Name="_CheckForObsoletePreserveAttribute" AfterTargets="_PrepareAssemblies">
+  <Target Name="_CheckForObsoletePreserveAttribute"
+      AfterTargets="_PrepareAssemblies"
+      Inputs="@(_ResolvedUserAssemblies)"
+      Outputs="$(_AndroidStampDirectory)_CheckForObsoletePreserveAttribute.stamp">
     <CheckForObsoletePreserveAttribute Assemblies="@(_ResolvedUserAssemblies)" />
+    <Touch Files="$(_AndroidStampDirectory)_CheckForObsoletePreserveAttribute.stamp" AlwaysCreate="true" />
   </Target>
 
   <Target Name="_IncludeNativeSystemLibraries">

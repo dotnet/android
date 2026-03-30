@@ -531,6 +531,7 @@ namespace Lib2
 			}
 
 			var targets = new List<(string target, bool ignoreOnNAOT)> {
+				("_CheckForObsoletePreserveAttribute", false),
 				("_GeneratePackageManagerJava", true), // TODO: NativeAOT doesn't skip this target on 3rd attempt, check if that's ok?
 				("_ResolveLibraryProjectImports", false),
 				("_CleanIntermediateIfNeeded", false),
