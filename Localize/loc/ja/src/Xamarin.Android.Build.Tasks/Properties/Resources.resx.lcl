@@ -488,10 +488,13 @@
       </Item>
       <Item ItemId=";XA0144" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The Android emulator for AVD '{0}' exited unexpectedly with exit code {1} before becoming available.]]></Val>
+          <Val><![CDATA[The Android emulator for AVD '{0}' failed with error '{1}': {2}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[AVD '{0}' 用 Android Emulator は、使用可能になる前に終了コード {1} で予期せず終了しました。]]></Val>
+            <Val><![CDATA[AVD '{0}' の Android エミュレーターがエラー '{1}': {2} で失敗しました]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The Android emulator for AVD '{0}' exited unexpectedly with exit code {1} before becoming available.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>

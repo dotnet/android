@@ -190,6 +190,15 @@ This pattern ensures proper encoding, timestamps, and file attributes are handle
 - **Error code lifecycle:** When removing functionality that used an `XA####` code, either repurpose the code or remove it from `Resources.resx` and `Resources.Designer.cs`. Don't leave orphaned codes.
 - **Logging in `AsyncTask`:** Use the thread-safe helpers (`LogCodedError()`, `LogMessage()`, `LogCodedWarning()`, `LogDebugMessage()`) instead of `Log.*`. The `Log` property is marked `[Obsolete]` on `AsyncTask` because calling `Log.LogMessage` directly from a background thread can hang Visual Studio.
 
+## CI / Build Investigation
+
+**dotnet/android's primary CI runs on Azure DevOps (internal), not GitHub Actions.** When a user asks about CI status, CI failures, why a PR is blocked, or build errors:
+
+1. **ALWAYS invoke the `ci-status` skill first** — do NOT rely on `gh pr checks` alone. GitHub checks may all show ✅ while the internal Azure DevOps build is failing.
+2. The skill auto-detects the current PR from the git branch when no PR number is given.
+3. For deep .binlog analysis, use the `azdo-build-investigator` skill.
+4. Only after the skill confirms no Azure DevOps failures should you report CI as passing.
+
 ## Troubleshooting
 - **Build:** Clean `bin/`+`obj/`, check Android SDK/NDK, `make clean`
 - **MSBuild:** Test in isolation, validate inputs

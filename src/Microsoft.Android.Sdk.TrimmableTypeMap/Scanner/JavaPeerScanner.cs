@@ -773,7 +773,7 @@ public sealed class JavaPeerScanner : IDisposable
 			JniSignature = registerInfo.Signature,
 			Connector = registerInfo.Connector,
 			ManagedMethodName = methodName,
-			NativeCallbackName = isConstructor ? "n_ctor" : $"n_{methodName}",
+			NativeCallbackName = GetNativeCallbackName (registerInfo.Connector, methodName, isConstructor),
 			IsConstructor = isConstructor,
 			DeclaringTypeName = result.Value.DeclaringTypeName,
 			DeclaringAssemblyName = result.Value.DeclaringAssemblyName,
@@ -818,7 +818,7 @@ public sealed class JavaPeerScanner : IDisposable
 					JniSignature = propRegister.Signature,
 					Connector = propRegister.Connector,
 					ManagedMethodName = getterName,
-					NativeCallbackName = $"n_{getterName}",
+					NativeCallbackName = GetNativeCallbackName (propRegister.Connector, getterName, false),
 					IsConstructor = false,
 					DeclaringTypeName = baseTypeName,
 					DeclaringAssemblyName = baseAssemblyName,
@@ -866,12 +866,18 @@ public sealed class JavaPeerScanner : IDisposable
 		string managedName = index.Reader.GetString (methodDef.Name);
 		string jniSignature = registerInfo.Signature ?? "()V";
 
+		string declaringTypeName = "";
+		string declaringAssemblyName = "";
+		ParseConnectorDeclaringType (registerInfo.Connector, out declaringTypeName, out declaringAssemblyName);
+
 		methods.Add (new MarshalMethodInfo {
 			JniName = registerInfo.JniName,
 			JniSignature = jniSignature,
 			Connector = registerInfo.Connector,
 			ManagedMethodName = managedName,
-			NativeCallbackName = isConstructor ? "n_ctor" : $"n_{managedName}",
+			DeclaringTypeName = declaringTypeName,
+			DeclaringAssemblyName = declaringAssemblyName,
+			NativeCallbackName = GetNativeCallbackName (registerInfo.Connector, managedName, isConstructor),
 			IsConstructor = isConstructor,
 			IsExport = isExport,
 			IsInterfaceImplementation = isInterfaceImplementation,
@@ -1381,6 +1387,71 @@ public sealed class JavaPeerScanner : IDisposable
 		var ns = index.Reader.GetString (current.Namespace);
 
 		return (typeName, parentJniName, ns);
+	}
+
+	/// <summary>
+	/// Derives the native callback method name from a <c>[Register]</c> attribute's Connector field.
+	/// The Connector may be a simple name like <c>"GetOnCreate_Landroid_os_Bundle_Handler"</c>
+	/// or a qualified name like <c>"GetOnClick_Landroid_view_View_Handler:Android.Views.View/IOnClickListenerInvoker, Mono.Android, …"</c>.
+	/// In both cases the result is e.g. <c>"n_OnCreate_Landroid_os_Bundle_"</c>.
+	/// Falls back to <c>"n_{managedName}"</c> when the Connector doesn't follow the expected pattern.
+	/// </summary>
+	static string GetNativeCallbackName (string? connector, string managedName, bool isConstructor)
+	{
+		if (isConstructor) {
+			return "n_ctor";
+		}
+
+		if (connector is not null) {
+			// Strip the optional type qualifier after ':'
+			int colonIndex = connector.IndexOf (':');
+			string handlerName = colonIndex >= 0 ? connector.Substring (0, colonIndex) : connector;
+
+			if (handlerName.StartsWith ("Get", StringComparison.Ordinal)
+				&& handlerName.EndsWith ("Handler", StringComparison.Ordinal)) {
+				return "n_" + handlerName.Substring (3, handlerName.Length - 3 - "Handler".Length);
+			}
+		}
+
+		return $"n_{managedName}";
+	}
+
+	/// <summary>
+	/// Parses the type qualifier from a Connector string.
+	/// Connector format is either assembly-qualified:
+	/// <c>"GetOnClickHandler:Android.Views.View/IOnClickListenerInvoker, Mono.Android, Version=…"</c>
+	/// or type-only: <c>"GetOnClickHandler:Android.Views.IOnClickListenerInvoker"</c>.
+	/// Extracts the managed type name (converting <c>/</c> → <c>+</c> for nested types) and assembly name (if present).
+	/// </summary>
+	static void ParseConnectorDeclaringType (string? connector, out string declaringTypeName, out string declaringAssemblyName)
+	{
+		declaringTypeName = "";
+		declaringAssemblyName = "";
+
+		if (connector is null) {
+			return;
+		}
+
+		int colonIndex = connector.IndexOf (':');
+		if (colonIndex < 0) {
+			return;
+		}
+
+		// After ':' is typically "TypeName, AssemblyName, Version=…" (assembly-qualified name),
+		// but some connectors only provide "TypeName" without an assembly.
+		string typeQualified = connector.Substring (colonIndex + 1);
+		int commaIndex = typeQualified.IndexOf (',');
+
+		if (commaIndex < 0) {
+			// No assembly information; treat the whole segment as the type name
+			declaringTypeName = typeQualified.Trim ().Replace ('/', '+');
+			return;
+		}
+
+		declaringTypeName = typeQualified.Substring (0, commaIndex).Trim ().Replace ('/', '+');
+		string rest = typeQualified.Substring (commaIndex + 1).Trim ();
+		int nextComma = rest.IndexOf (',');
+		declaringAssemblyName = nextComma >= 0 ? rest.Substring (0, nextComma).Trim () : rest.Trim ();
 	}
 
 	static string GetCrc64PackageName (string ns, string assemblyName)
