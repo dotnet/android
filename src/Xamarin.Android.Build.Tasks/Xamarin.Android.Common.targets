@@ -1457,9 +1457,12 @@ because xbuild doesn't support framework reference assemblies.
 <!--
   Run AssemblyModifierPipeline in the inner (per-RID) build, AFTER ILLink trims assemblies
   but BEFORE CreateReadyToRunImages/IlcCompile compiles them to native code. This ensures that
-  assembly modifications (FindJavaObjects, SaveChangedAssembly, FindTypeMapObjects) operate on
-  trimmed IL assemblies before they get R2R/AOT-compiled, so we don't overwrite native code
-  with pure IL.
+  assembly modifications operate on trimmed IL assemblies before they get R2R/AOT-compiled,
+  so we don't overwrite native code with pure IL.
+
+  This single pipeline handles both post-trimming steps (CheckForObsoletePreserveAttribute,
+  StripEmbeddedLibraries, AddKeepAlives, RemoveResourceDesigner) and common steps
+  (FindJavaObjects, SaveChangedAssembly, FindTypeMapObjects) in one pass.
 
   Assemblies are located using @(ManagedAssemblyToLink) transformed to $(IntermediateLinkDir)
   paths (with an existence check). This is the same mechanism _AndroidComputeIlcCompileInputs
@@ -1487,7 +1490,7 @@ because xbuild doesn't support framework reference assemblies.
   Microsoft.Android.Sdk.NativeAOT.targets adds it back.
 -->
 <Target Name="_AfterILLinkAdditionalSteps"
-    AfterTargets="_PostTrimmingPipeline"
+    AfterTargets="ILLink"
     Condition=" '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' "
     Inputs="$(_LinkSemaphore)"
     Outputs="$(_AdditionalPostLinkerStepsFlag)">
@@ -1555,6 +1558,8 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 
   <AssemblyModifierPipeline
+      AddKeepAlives="$(AndroidAddKeepAlives)"
+      AndroidLinkResources="$(AndroidLinkResources)"
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
       CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
       Debug="$(AndroidIncludeDebugSymbols)"

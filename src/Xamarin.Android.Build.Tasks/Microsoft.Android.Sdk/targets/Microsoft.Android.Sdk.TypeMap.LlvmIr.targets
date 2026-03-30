@@ -7,7 +7,6 @@
   <UsingTask TaskName="Xamarin.Android.Tasks.GetMonoPlatformJar" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.RemoveRegisterAttribute" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateProguardConfiguration" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.PostTrimmingPipeline" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <PropertyGroup>
     <_RemoveRegisterFlag>$(MonoAndroidIntermediateAssemblyDir)shrunk\shrunk.flag</_RemoveRegisterFlag>
@@ -230,22 +229,6 @@
       Outputs="$(_AndroidLinkFlag)">
     <!-- This file is an input for _RemoveRegisterAttribute -->
     <Touch Files="$(_AndroidLinkFlag)" AlwaysCreate="true" />
-  </Target>
-
-  <Target Name="_PostTrimmingPipeline"
-      AfterTargets="ILLink"
-      Condition=" '$(PublishTrimmed)' == 'true' ">
-    <ItemGroup>
-      <_PostTrimmingAssembly Include="@(ResolvedFileToPublish->WithMetadataValue('PostprocessAssembly', 'true'))" />
-    </ItemGroup>
-    <PostTrimmingPipeline
-        Assemblies="@(_PostTrimmingAssembly)"
-        AddKeepAlives="$(AndroidAddKeepAlives)"
-        AndroidLinkResources="$(AndroidLinkResources)"
-        Deterministic="$(Deterministic)" />
-    <ItemGroup>
-      <_PostTrimmingAssembly Remove="@(_PostTrimmingAssembly)" />
-    </ItemGroup>
   </Target>
 
   <!-- Inject _TypeMapKind into the property cache -->

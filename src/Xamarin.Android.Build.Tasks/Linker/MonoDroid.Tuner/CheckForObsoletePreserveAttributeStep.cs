@@ -9,7 +9,7 @@ namespace MonoDroid.Tuner;
 
 /// <summary>
 /// Post-trimming step that warns when an assembly references the obsolete
-/// Android.Runtime.PreserveAttribute. Runs as part of PostTrimmingPipeline
+/// Android.Runtime.PreserveAttribute. Runs as part of AssemblyModifierPipeline
 /// so the assemblies are already loaded by Mono.Cecil and the check is free.
 /// </summary>
 class CheckForObsoletePreserveAttributeStep : IAssemblyModifierPipelineStep
