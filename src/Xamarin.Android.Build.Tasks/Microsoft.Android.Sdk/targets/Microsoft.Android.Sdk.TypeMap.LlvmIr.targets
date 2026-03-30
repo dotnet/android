@@ -24,25 +24,21 @@
       _PrepareNativeAssemblySources;
       $(_AfterPrepareAssemblies);
       _GetGenerateJavaStubsInputs;
+      _GetGenerateJavaCallableWrappersInputs;
+      _GetGenerateJavaStubsCoreInputs;
+      _GetGenerateTypeMappingsInputs;
+      _GetGenerateAndroidManifestInputs;
+      _GenerateJavaCallableWrappers;
+      _GenerateJavaStubsCore;
+      _GenerateTypeMappings;
+      _GenerateAndroidManifest;
     </_GenerateJavaStubsDependsOnTargets>
   </PropertyGroup>
 
-  <Target Name="_GenerateJavaStubs"
-      DependsOnTargets="$(_GenerateJavaStubsDependsOnTargets);$(BeforeGenerateAndroidManifest)"
-      Inputs="@(_GenerateJavaStubsInputs)"
-      Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
-
-    <PropertyGroup>
-      <_ManifestOutput Condition=" '$(AndroidManifestMerger)' == 'legacy' ">$(IntermediateOutputPath)android\AndroidManifest.xml</_ManifestOutput>
-      <_ManifestOutput Condition=" '$(AndroidManifestMerger)' != 'legacy' ">$(IntermediateOutputPath)AndroidManifest.xml</_ManifestOutput>
-      <_LinkingEnabled Condition=" '$(AndroidLinkMode)' != 'None'">True</_LinkingEnabled>
-      <_LinkingEnabled Condition=" '$(AndroidLinkMode)' == 'None'">False</_LinkingEnabled>
-      <_HaveMultipleRIDs Condition=" '$(RuntimeIdentifiers)' != '' ">True</_HaveMultipleRIDs>
-      <_HaveMultipleRIDs Condition=" '$(RuntimeIdentifiers)' == '' ">False</_HaveMultipleRIDs>
-    </PropertyGroup>
-    <ItemGroup>
-      <_MergedManifestDocuments Condition=" '$(AndroidManifestMerger)' == 'legacy' " Include="@(ExtractedManifestDocuments)" />
-    </ItemGroup>
+  <Target Name="_GenerateJavaCallableWrappers"
+      DependsOnTargets="_PrepareAssemblies;_GetGenerateJavaCallableWrappersInputs"
+      Inputs="@(_GenerateJavaCallableWrappersInputs)"
+      Outputs="$(_AndroidStampDirectory)_GenerateJavaCallableWrappers.stamp">
 
     <GenerateJavaCallableWrappers
         CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
@@ -60,6 +56,16 @@
         SupportedAbis="@(_BuildTargetAbis)">
     </GenerateACWMap>
 
+    <Touch Files="$(_AndroidStampDirectory)_GenerateJavaCallableWrappers.stamp" AlwaysCreate="True" />
+  </Target>
+
+  <Target Name="_GenerateJavaStubsCore"
+      DependsOnTargets="_PrepareAssemblies;_GetGenerateJavaStubsCoreInputs"
+      Inputs="@(_GenerateJavaStubsCoreInputs)"
+      Outputs="$(_AndroidStampDirectory)_GenerateJavaStubsCore.stamp">
+
+    <!-- GeneratedJavaFiles may be empty when _GenerateJavaCallableWrappers is skipped;
+         safe because it's only used in RunCheckedBuild validation -->
     <GenerateJavaStubs
         CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
         ResolvedAssemblies="@(_ResolvedAssemblies)"
@@ -85,6 +91,14 @@
         IntermediateOutputDirectory="$(IntermediateOutputPath)">
     </RewriteMarshalMethods>
 
+    <Touch Files="$(_AndroidStampDirectory)_GenerateJavaStubsCore.stamp" AlwaysCreate="True" />
+  </Target>
+
+  <Target Name="_GenerateTypeMappings"
+      DependsOnTargets="_GenerateJavaStubsCore;_PrepareNativeAssemblySources;_GetGenerateTypeMappingsInputs"
+      Inputs="@(_GenerateTypeMappingsInputs)"
+      Outputs="$(_AndroidStampDirectory)_GenerateTypeMappings.stamp">
+
     <GenerateTypeMappings
         AndroidRuntime="$(_AndroidRuntime)"
         Debug="$(AndroidIncludeDebugSymbols)"
@@ -96,7 +110,38 @@
         SupportedAbis="@(_BuildTargetAbis)"
         TypemapImplementation="$(_AndroidTypeMapImplementation)"
         TypemapOutputDirectory="$(_NativeAssemblySourceDir)">
+      <Output TaskParameter="JniAddNativeMethodRegistrationAttributePresent" PropertyName="_JniAddNativeMethodRegistrationAttributePresent" />
     </GenerateTypeMappings>
+
+    <!-- Persist the JNI registration flag for downstream targets that may run
+         even when this target is skipped on subsequent incremental builds -->
+    <WriteLinesToFile
+        File="$(IntermediateOutputPath)jni-registration-attribute.cache"
+        Lines="$(_JniAddNativeMethodRegistrationAttributePresent)"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true" />
+
+    <ItemGroup>
+      <FileWrites Include="@(_TypeMapAssemblySource)" />
+      <FileWrites Include="@(_TypeMapAssemblyInclude)" />
+      <FileWrites Include="@(_AndroidTypeMapping)" Condition=" '@(_AndroidTypeMapping->Count())' == '0' " />
+    </ItemGroup>
+
+    <Touch Files="$(_AndroidStampDirectory)_GenerateTypeMappings.stamp" AlwaysCreate="True" />
+  </Target>
+
+  <Target Name="_GenerateAndroidManifest"
+      DependsOnTargets="_GenerateJavaStubsCore;$(BeforeGenerateAndroidManifest);_GetGenerateAndroidManifestInputs"
+      Inputs="@(_GenerateAndroidManifestInputs)"
+      Outputs="$(_AndroidStampDirectory)_GenerateAndroidManifest.stamp">
+
+    <PropertyGroup>
+      <_ManifestOutput Condition=" '$(AndroidManifestMerger)' == 'legacy' ">$(IntermediateOutputPath)android\AndroidManifest.xml</_ManifestOutput>
+      <_ManifestOutput Condition=" '$(AndroidManifestMerger)' != 'legacy' ">$(IntermediateOutputPath)AndroidManifest.xml</_ManifestOutput>
+    </PropertyGroup>
+    <ItemGroup>
+      <_MergedManifestDocuments Condition=" '$(AndroidManifestMerger)' == 'legacy' " Include="@(ExtractedManifestDocuments)" />
+    </ItemGroup>
 
     <GenerateACWMap
         Condition=" '$(_AndroidJLOCheckedBuild)' == 'true' "
@@ -147,13 +192,16 @@
     </GenerateAdditionalProviderSources>
 
     <ItemGroup>
-      <FileWrites Include="@(_TypeMapAssemblySource)" />
-      <FileWrites Include="@(_TypeMapAssemblyInclude)" />
-      <FileWrites Include="@(_AndroidTypeMapping)" Condition=" '@(_AndroidTypeMapping->Count())' == '0' " />
       <FileWrites Include="$(_ManifestOutput)" />
     </ItemGroup>
 
-    <Touch Files="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" AlwaysCreate="True" />
+    <Touch Files="$(_AndroidStampDirectory)_GenerateAndroidManifest.stamp" AlwaysCreate="True" />
+  </Target>
+
+  <Target Name="_GenerateJavaStubs"
+      DependsOnTargets="$(_GenerateJavaStubsDependsOnTargets)">
+    <!-- This target is preserved for backward compatibility.
+         All work is done by the sub-targets listed in _GenerateJavaStubsDependsOnTargets. -->
   </Target>
 
   <!-- ILLink customization: custom trimmer steps, root descriptors, etc. -->
