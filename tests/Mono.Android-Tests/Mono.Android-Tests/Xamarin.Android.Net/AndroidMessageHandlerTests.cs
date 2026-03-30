@@ -287,7 +287,13 @@ namespace Xamarin.Android.NetTests
 			handler.ClientCertificates.Add (certificate);
 
 			using var client = new HttpClient (handler);
-			var response = await client.GetAsync ("https://corefx-net-tls.azurewebsites.net/EchoClientCertificate.ashx");
+			HttpResponseMessage response;
+			try {
+				response = await client.GetAsync ("https://corefx-net-tls.azurewebsites.net/EchoClientCertificate.ashx");
+			} catch (HttpRequestException ex) when (ex.InnerException is Java.Net.ConnectException) {
+				Assert.Inconclusive ($"Ignoring transient connection failure: {ex.InnerException.Message}");
+				return;
+			}
 			var content = await response.EnsureSuccessStatusCode ().Content.ReadAsStringAsync ();
 
 			X509Certificate2 certificate2 = new X509Certificate2 (global::System.Convert.FromBase64String (content));
