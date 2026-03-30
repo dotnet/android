@@ -1289,6 +1289,38 @@ namespace Lib2
 			}
 		}
 
+		[Test]
+		public void CompileNativeAssemblySourcesSkipsUnchangedFiles ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: false)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (runtime);
+
+			string abi = "arm64-v8a";
+			proj.SetRuntimeIdentifier (abi);
+
+			using (var b = CreateApkBuilder ()) {
+				b.Verbosity = LoggerVerbosity.Detailed;
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
+
+				// Modify MainActivity to trigger recompilation of typemap sources
+				proj.MainActivity = proj.DefaultMainActivity + Environment.NewLine + "// test comment";
+				proj.Touch ("MainActivity.cs");
+				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+
+				Assert.IsFalse (b.Output.IsTargetSkipped ("_CompileNativeAssemblySources"), "`_CompileNativeAssemblySources` should *not* be skipped!");
+
+				// At least one .ll file should have been skipped as up to date (e.g., environment.arm64-v8a.ll)
+				Assert.IsTrue (
+					StringAssertEx.ContainsRegex (@"\[LLVM llc\] Skipping.*up to date", b.LastBuildOutput),
+					"Expected at least one .ll file to be skipped as up to date"
+				);
+			}
+		}
+
 		readonly string [] ExpectedAssemblyFiles = new [] {
 			Path.Combine ("android", "environment.@ABI@.o"),
 			Path.Combine ("android", "environment.@ABI@.ll"),
