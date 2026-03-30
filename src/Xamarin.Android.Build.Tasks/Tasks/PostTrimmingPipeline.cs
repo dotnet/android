@@ -15,7 +15,8 @@ namespace Xamarin.Android.Tasks;
 ///
 /// This opens each assembly once (via DirectoryAssemblyResolver with ReadWrite) and
 /// runs all registered steps on it, then writes modified assemblies in-place. Currently
-/// runs StripEmbeddedLibrariesStep and (optionally) AddKeepAlivesStep.
+/// runs CheckForObsoletePreserveAttributeStep, StripEmbeddedLibrariesStep and
+/// (optionally) AddKeepAlivesStep.
 ///
 /// Runs in the inner build after ILLink but before ReadyToRun/crossgen2 compilation,
 /// so that R2R images are generated from the already-modified assemblies.
@@ -46,6 +47,7 @@ public class PostTrimmingPipeline : AndroidTask
 		}
 
 		var steps = new List<IAssemblyModifierPipelineStep> ();
+		steps.Add (new CheckForObsoletePreserveAttributeStep (Log));
 		steps.Add (new StripEmbeddedLibrariesStep (Log));
 		if (AddKeepAlives) {
 			// Memoize the corlib resolution so the attempt (and any error logging) happens at most once,
