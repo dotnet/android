@@ -117,6 +117,13 @@ public sealed record JavaPeerInfo
 	/// Generic types get TypeMap entries but CreateInstance throws NotSupportedException.
 	/// </summary>
 	public bool IsGenericDefinition { get; init; }
+
+	/// <summary>
+	/// Component attribute information ([Activity], [Service], [BroadcastReceiver],
+	/// [ContentProvider], [Application], [Instrumentation]).
+	/// Null for types that are not Android components.
+	/// </summary>
+	public ComponentInfo? ComponentAttribute { get; init; }
 }
 
 /// <summary>

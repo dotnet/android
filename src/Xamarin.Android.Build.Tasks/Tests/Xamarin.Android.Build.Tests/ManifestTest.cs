@@ -214,6 +214,56 @@ namespace Bug12935
 		}
 
 		[Test]
+		public void OverlayManifestIncrementalBuildTest ([Values] AndroidRuntime runtime)
+		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
+				ManifestMerger = "manifestmerger.jar",
+			};
+			proj.SetRuntime (runtime);
+			proj.AndroidManifest = @"<?xml version=""1.0"" encoding=""utf-8""?>
+<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""foo.foo"">
+	<application android:label=""foo"">
+	</application>
+</manifest>";
+			var overlay = new BuildItem ("AndroidManifestOverlay", "ManifestOverlay.xml") {
+				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+<manifest xmlns:android=""http://schemas.android.com/apk/res/android"">
+	<uses-permission android:name=""android.permission.CAMERA"" />
+</manifest>
+"
+			};
+			proj.OtherBuildItems.Add (overlay);
+			using (var b = CreateApkBuilder (cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
+				Assert.IsTrue (b.Build (proj), "First build should have succeeded.");
+				var text = b.Output.GetIntermediaryAsText ("android/AndroidManifest.xml");
+				StringAssert.Contains ("android.permission.CAMERA", text, "Merged manifest should contain the initial overlay permission.");
+				StringAssert.DoesNotContain ("android.permission.RECORD_AUDIO", text, "Merged manifest should not contain the updated overlay permission yet.");
+
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Second build should have succeeded.");
+				b.Output.AssertTargetIsSkipped ("_ManifestMerger");
+
+				overlay.TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+<manifest xmlns:android=""http://schemas.android.com/apk/res/android"">
+	<uses-permission android:name=""android.permission.CAMERA"" />
+	<uses-permission android:name=""android.permission.RECORD_AUDIO"" />
+</manifest>
+";
+				proj.Touch ("ManifestOverlay.xml");
+
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Third build should have succeeded.");
+				b.Output.AssertTargetIsNotSkipped ("_ManifestMerger");
+
+				text = b.Output.GetIntermediaryAsText ("android/AndroidManifest.xml");
+				StringAssert.Contains ("android.permission.RECORD_AUDIO", text, "Merged manifest should include permissions from the updated overlay.");
+			}
+		}
+
+		[Test]
 		public void RemovePermissionTest ([Values] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;

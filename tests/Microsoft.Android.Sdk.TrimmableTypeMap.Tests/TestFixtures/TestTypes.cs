@@ -104,7 +104,7 @@ namespace Android.Views
 	[Register ("android/view/View$IHasName", "", "Android.Views.IHasNameInvoker")]
 	public interface IHasName
 	{
-		[Register ("getName", "()Ljava/lang/String;", "GetGetNameHandler:Android.Views.IHasNameInvoker")]
+		[Register ("getName", "()Ljava/lang/String;", "GetGetNameHandler:Android.Views.IHasNameInvoker, TestFixtures, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]
 		string? Name { get; }
 	}
 
