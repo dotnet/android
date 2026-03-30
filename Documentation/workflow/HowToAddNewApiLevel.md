@@ -243,7 +243,7 @@ cp src/Mono.Android/PublicAPI/API-36/* src/Mono.Android/PublicAPI/API-36.1
 To build *just* `src/Mono.Android/Mono.Android.csproj`:
 
 ```dotnetcli
-./dotnet-local.sh build src/Mono.Android/*.csproj -p:AndroidApiLevel=36.1 -p:AndroidPlatformId=CANARY -p:AndroidFrameworkVersion=v16.1 -p:IsUnstableVersion=true
+./dotnet-local.sh build -bl src/Mono.Android/*.csproj -p:AndroidApiLevel=36.1 -p:AndroidPlatformId=CANARY -p:AndroidFrameworkVersion=v16.1 -p:IsUnstableVersion=true
 ```
 
 ### New AndroidManifest.xml Elements
