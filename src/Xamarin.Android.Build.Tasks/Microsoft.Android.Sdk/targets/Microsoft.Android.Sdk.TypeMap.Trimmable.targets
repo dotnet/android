@@ -17,12 +17,42 @@
        tasks needed by all typemap paths, but they currently depend on NativeCodeGenState
        from the Cecil-based GenerateJavaStubs task. Extracting them into a shared target
        requires decoupling from NativeCodeGenState first. See #10807. -->
+  <Target Name="_GenerateJavaCallableWrappers"
+      DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;_GetGenerateJavaCallableWrappersInputs"
+      Inputs="@(_GenerateJavaCallableWrappersInputs)"
+      Outputs="$(_AndroidStampDirectory)_GenerateJavaCallableWrappers.stamp">
+    <Message Text="Trimmable typemap: skipping _GenerateJavaCallableWrappers" Importance="High" />
+    <Touch Files="$(_AndroidStampDirectory)_GenerateJavaCallableWrappers.stamp" AlwaysCreate="True" />
+  </Target>
+
+  <Target Name="_GenerateJavaStubsCore"
+      DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;_GetGenerateJavaStubsCoreInputs"
+      Inputs="@(_GenerateJavaStubsCoreInputs)"
+      Outputs="$(_AndroidStampDirectory)_GenerateJavaStubsCore.stamp">
+    <Message Text="Trimmable typemap: skipping _GenerateJavaStubsCore" Importance="High" />
+    <Touch Files="$(_AndroidStampDirectory)_GenerateJavaStubsCore.stamp" AlwaysCreate="True" />
+  </Target>
+
+  <Target Name="_GenerateTypeMappings"
+      DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;_GetGenerateTypeMappingsInputs"
+      Inputs="@(_GenerateTypeMappingsInputs)"
+      Outputs="$(_AndroidStampDirectory)_GenerateTypeMappings.stamp">
+    <Message Text="Trimmable typemap: skipping _GenerateTypeMappings" Importance="High" />
+    <Touch Files="$(_AndroidStampDirectory)_GenerateTypeMappings.stamp" AlwaysCreate="True" />
+  </Target>
+
+  <Target Name="_GenerateAndroidManifest"
+      DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;_GetGenerateAndroidManifestInputs"
+      Inputs="@(_GenerateAndroidManifestInputs)"
+      Outputs="$(_AndroidStampDirectory)_GenerateAndroidManifest.stamp">
+    <Message Text="Trimmable typemap: skipping _GenerateAndroidManifest" Importance="High" />
+    <Touch Files="$(_AndroidStampDirectory)_GenerateAndroidManifest.stamp" AlwaysCreate="True" />
+  </Target>
+
   <Target Name="_GenerateJavaStubs"
-      DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;_GetGenerateJavaStubsInputs"
-      Inputs="@(_GenerateJavaStubsInputs)"
-      Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
-    <Message Text="Trimmable typemap: skipping legacy _GenerateJavaStubs" Importance="High" />
-    <Touch Files="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" AlwaysCreate="True" />
+      DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;_GetGenerateJavaStubsInputs;_GenerateJavaCallableWrappers;_GenerateJavaStubsCore;_GenerateTypeMappings;_GenerateAndroidManifest">
+    <!-- This target is preserved for backward compatibility.
+         In the trimmable typemap path, all sub-targets are stubs. -->
   </Target>
 
 </Project>
