@@ -253,8 +253,8 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 			var java = GenerateFixture ("my/app/MainActivity");
 			AssertContainsLine ("@Override\n", java);
 			AssertContainsLine ("public void onCreate (android.os.Bundle p0)\n", java);
-			AssertContainsLine ("n_OnCreate (p0);\n", java);
-			AssertContainsLine ("public native void n_OnCreate (android.os.Bundle p0);\n", java);
+			AssertContainsLine ("n_OnCreate_Landroid_os_Bundle_ (p0);\n", java);
+			AssertContainsLine ("public native void n_OnCreate_Landroid_os_Bundle_ (android.os.Bundle p0);\n", java);
 		}
 
 	}
