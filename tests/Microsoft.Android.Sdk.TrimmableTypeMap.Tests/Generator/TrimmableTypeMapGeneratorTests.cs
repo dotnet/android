@@ -218,6 +218,65 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.False (peers [0].IsUnconditional);
 	}
 
+	[Fact]
+	public void RootManifestReferencedTypes_ResolvesRelativeNames ()
+	{
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "com/example/MyActivity", CompatJniName = "com.example.MyActivity",
+				ManagedTypeName = "MyApp.MyActivity", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "MyActivity",
+				AssemblyName = "MyApp", IsUnconditional = false,
+			},
+			new JavaPeerInfo {
+				JavaName = "com/example/MyService", CompatJniName = "com.example.MyService",
+				ManagedTypeName = "MyApp.MyService", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "MyService",
+				AssemblyName = "MyApp", IsUnconditional = false,
+			},
+		};
+
+		var doc = System.Xml.Linq.XDocument.Parse ("""
+			<?xml version="1.0" encoding="utf-8"?>
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example">
+			  <application>
+			    <activity android:name=".MyActivity" />
+			    <service android:name="MyService" />
+			  </application>
+			</manifest>
+			""");
+
+		var generator = CreateGenerator ();
+		generator.RootManifestReferencedTypes (peers, doc);
+
+		Assert.True (peers [0].IsUnconditional, "Dot-relative name '.MyActivity' should resolve to com.example.MyActivity.");
+		Assert.True (peers [1].IsUnconditional, "Simple name 'MyService' should resolve to com.example.MyService.");
+	}
+
+	[Fact]
+	public void RootManifestReferencedTypes_MatchesNestedTypes ()
+	{
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "com/example/Outer$Inner", CompatJniName = "com.example.Outer$Inner",
+				ManagedTypeName = "MyApp.Outer.Inner", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "Inner",
+				AssemblyName = "MyApp", IsUnconditional = false,
+			},
+		};
+
+		var doc = System.Xml.Linq.XDocument.Parse ("""
+			<?xml version="1.0" encoding="utf-8"?>
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example">
+			  <application>
+			    <activity android:name="com.example.Outer$Inner" />
+			  </application>
+			</manifest>
+			""");
+
+		var generator = CreateGenerator ();
+		generator.RootManifestReferencedTypes (peers, doc);
+
+		Assert.True (peers [0].IsUnconditional, "Nested type 'Outer$Inner' should be matched using '$' separator.");
+	}
+
 	static PEReader CreateTestFixturePEReader ()
 	{
 		var dir = Path.GetDirectoryName (typeof (FixtureTestBase).Assembly.Location)
