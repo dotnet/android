@@ -1491,7 +1491,7 @@ because xbuild doesn't support framework reference assemblies.
 -->
 <Target Name="_AfterILLinkAdditionalSteps"
     AfterTargets="ILLink"
-    Condition=" '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' "
+    Condition=" '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' and Exists('$(_LinkSemaphore)') "
     Inputs="$(_LinkSemaphore)"
     Outputs="$(_AdditionalPostLinkerStepsFlag)">
 
@@ -1623,10 +1623,21 @@ because xbuild doesn't support framework reference assemblies.
     <_NonCompositeAssemblies Include="@(_ResolvedAssemblies)" Condition=" !$([System.String]::Copy('%(Filename)').EndsWith('.r2r')) " />
   </ItemGroup>
 
-  <!-- Create empty sidecar files for R2R composite assemblies (zero-length = WasScanned=false) -->
+  <!-- Compute sidecar file paths for R2R composite assemblies -->
+  <ItemGroup Condition=" '@(_R2RCompositeAssemblies)' != '' ">
+    <_R2RCompositeSidecarFiles Include="@(_R2RCompositeAssemblies->'%(RootDir)%(Directory)%(Filename).jlo.xml')" />
+    <_R2RCompositeSidecarFiles Include="@(_R2RCompositeAssemblies->'%(RootDir)%(Directory)%(Filename).typemap.xml')" />
+  </ItemGroup>
+
+  <!-- Filter to sidecar files that do not yet exist -->
+  <ItemGroup Condition=" '@(_R2RCompositeSidecarFiles)' != '' ">
+    <_MissingR2RCompositeSidecarFiles Include="@(_R2RCompositeSidecarFiles)" Condition=" !Exists('%(Identity)') " />
+  </ItemGroup>
+
+  <!-- Create empty sidecar files only for missing R2R composite assemblies (zero-length = WasScanned=false) -->
   <Touch
-      Condition=" '@(_R2RCompositeAssemblies)' != '' "
-      Files="@(_R2RCompositeAssemblies->'%(RootDir)%(Directory)%(Filename).jlo.xml');@(_R2RCompositeAssemblies->'%(RootDir)%(Directory)%(Filename).typemap.xml')"
+      Condition=" '@(_MissingR2RCompositeSidecarFiles)' != '' "
+      Files="@(_MissingR2RCompositeSidecarFiles)"
       AlwaysCreate="true" />
 
   <!-- Compute the path to the inner build's linked/ directory where sidecar XML files reside.
@@ -1658,14 +1669,20 @@ because xbuild doesn't support framework reference assemblies.
        The linked/ directory may not exist if the RID changed between builds without a clean
        (e.g. switching from android-arm64 to android-x64 via RuntimeIdentifier parameter while
        RuntimeIdentifiers still points to the old RID). In that case the inner build ran for the
-       old RID and never created the new RID's linked/ directory. MakeDir ensures it exists. -->
+       old RID and never created the new RID's linked/ directory. MakeDir ensures it exists.
+
+       Only touch files that don't already exist to preserve timestamps and avoid breaking
+       incremental builds (Copy SkipUnchangedFiles="true" compares timestamps). -->
   <MakeDir
       Directories="@(_SidecarXmlCopySource->'%(RootDir)%(Directory)')"
       Condition=" '@(_SidecarXmlCopySource)' != '' " />
+  <ItemGroup Condition=" '@(_SidecarXmlCopySource)' != '' ">
+    <_MissingSidecarXmlCopySource Include="@(_SidecarXmlCopySource)" Condition=" !Exists('%(Identity)') " />
+  </ItemGroup>
   <Touch
-      Files="@(_SidecarXmlCopySource)"
+      Files="@(_MissingSidecarXmlCopySource)"
       AlwaysCreate="true"
-      Condition=" '@(_SidecarXmlCopySource)' != '' " />
+      Condition=" '@(_MissingSidecarXmlCopySource)' != '' " />
 
   <ItemGroup>
     <_SidecarXmlCopyDestination Include="@(_NonCompositeAssemblies->'%(RootDir)%(Directory)%(Filename).jlo.xml')" />
@@ -1683,9 +1700,12 @@ because xbuild doesn't support framework reference assemblies.
 
   <ItemGroup>
     <_SidecarXmlCopySource Remove="@(_SidecarXmlCopySource)" />
+    <_MissingSidecarXmlCopySource Remove="@(_MissingSidecarXmlCopySource)" />
     <_SidecarXmlCopyDestination Remove="@(_SidecarXmlCopyDestination)" />
     <_NonCompositeAssemblies Remove="@(_NonCompositeAssemblies)" />
     <_R2RCompositeAssemblies Remove="@(_R2RCompositeAssemblies)" />
+    <_R2RCompositeSidecarFiles Remove="@(_R2RCompositeSidecarFiles)" />
+    <_MissingR2RCompositeSidecarFiles Remove="@(_MissingR2RCompositeSidecarFiles)" />
   </ItemGroup>
 </Target>
 
