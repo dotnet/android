@@ -126,6 +126,23 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <SetNdkPathForIlc NdkBinDirectory="$(_NdkBinDir)" />
   </Target>
 
+  <!--
+    The standard NativeAOT targets (_ComputeManagedAssemblyForILLink) replace @(ManagedAssemblyToLink)
+    with framework-only assemblies, removing the user assembly. This is fine in the standard NativeAOT
+    flow where RunILLink=false (ILC does its own trimming). But Android re-enables ILLink (RunILLink=true
+    above), so the user assembly must be in @(ManagedAssemblyToLink) for two reasons:
+      1. ILLink needs it in AssemblyPaths to process it (not just as a root name)
+      2. _RunILLink's Inputs include @(ManagedAssemblyToLink), so changes to the user assembly
+         correctly trigger ILLink to re-run on incremental builds
+  -->
+  <Target Name="_AndroidFixManagedAssemblyToLinkForILLink"
+      AfterTargets="_ComputeManagedAssemblyForILLink"
+      Condition="'$(NativeCompilationDuringPublish)' == 'true'">
+    <ItemGroup>
+      <ManagedAssemblyToLink Include="@(IntermediateAssembly)" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="_AndroidComputeIlcCompileInputs">
     <PropertyGroup>
       <!-- Turn trimmer warnings back to original value -->
@@ -150,6 +167,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <IlcCompileInput Remove="@(IlcCompileInput)" />
       <IlcCompileInput Include="$(IntermediateLinkDir)$(TargetName)$(TargetExt)" />
       <_AndroidILLinkAssemblies Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')" Condition="Exists('$(IntermediateLinkDir)%(Filename)%(Extension)')" />
+      <!-- Exclude the user assembly: it's already in IlcCompileInput above and must not also appear in IlcReference -->
+      <_AndroidILLinkAssemblies Remove="$(IntermediateLinkDir)$(TargetName)$(TargetExt)" />
       <IlcReference Remove="@(IlcReference)" />
       <IlcReference Include="@(PrivateSdkAssemblies)" />
       <IlcReference Include="@(_AndroidILLinkAssemblies)" />

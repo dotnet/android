@@ -18,13 +18,23 @@ using PackageNamingPolicyEnum = Java.Interop.Tools.TypeNameMappings.PackageNamin
 namespace Xamarin.Android.Tasks;
 
 /// <summary>
-/// This task runs additional "linker steps" that are not part of ILLink. These steps
-/// are run *after* the linker has run. Additionally, this task is run by
-/// LinkAssembliesNoShrink to modify assemblies when ILLink is not used.
+/// This task runs assembly modification steps that are not part of ILLink.
+///
+/// For trimmed builds, this runs after ILLink and includes post-trimming steps
+/// (CheckForObsoletePreserveAttribute, StripEmbeddedLibraries, AddKeepAlives,
+/// RemoveResourceDesigner) followed by common steps (FindJavaObjects,
+/// SaveChangedAssembly, FindTypeMapObjects).
+///
+/// For non-trimmed builds, LinkAssembliesNoShrink extends this task and overrides
+/// BuildAssemblyModificationSteps to add non-trimmed-specific steps instead.
 /// </summary>
 public class AssemblyModifierPipeline : AndroidTask
 {
 	public override string TaskPrefix => "AMP";
+
+	public bool AddKeepAlives { get; set; }
+
+	public bool AndroidLinkResources { get; set; }
 
 	public string ApplicationJavaClass { get; set; } = "";
 
@@ -111,7 +121,6 @@ public class AssemblyModifierPipeline : AndroidTask
 					}
 				}
 
-				// Set up the FixAbstractMethodsStep and AddKeepAlivesStep
 				var context = new MSBuildLinkContext (resolver, Log);
 				pipeline = new AssemblyPipeline (resolver);
 
@@ -130,6 +139,8 @@ public class AssemblyModifierPipeline : AndroidTask
 
 	protected virtual void BuildPipeline (AssemblyPipeline pipeline, MSBuildLinkContext context)
 	{
+		BuildAssemblyModificationSteps (pipeline, context);
+
 		// FindJavaObjectsStep
 		var findJavaObjectsStep = new FindJavaObjectsStep (Log) {
 			ApplicationJavaClass = ApplicationJavaClass,
@@ -156,6 +167,53 @@ public class AssemblyModifierPipeline : AndroidTask
 
 		findTypeMapObjectsStep.Initialize (context);
 		pipeline.Steps.Add (findTypeMapObjectsStep);
+	}
+
+	/// <summary>
+	/// Builds the assembly modification steps that run before FindJavaObjects/Save/FindTypeMapObjects.
+	/// For trimmed builds (default), this adds post-trimming steps.
+	/// LinkAssembliesNoShrink overrides this for non-trimmed builds.
+	/// </summary>
+	protected virtual void BuildAssemblyModificationSteps (AssemblyPipeline pipeline, MSBuildLinkContext context)
+	{
+		// CheckForObsoletePreserveAttributeStep
+		pipeline.Steps.Add (new CheckForObsoletePreserveAttributeStep (Log));
+
+		// StripEmbeddedLibrariesStep
+		pipeline.Steps.Add (new StripEmbeddedLibrariesStep (Log));
+
+		// PostTrimmingAddKeepAlivesStep
+		if (AddKeepAlives) {
+			var cache = new TypeDefinitionCache ();
+
+			// Memoize the corlib resolution so the attempt (and any error logging) happens at most once,
+			// regardless of how many assemblies/methods need KeepAlive injection.
+			AssemblyDefinition? corlibAssembly = null;
+			bool corlibResolutionAttempted = false;
+
+			pipeline.Steps.Add (new PostTrimmingAddKeepAlivesStep (cache,
+				() => {
+					if (!corlibResolutionAttempted) {
+						corlibResolutionAttempted = true;
+						try {
+							corlibAssembly = pipeline.Resolver.Resolve (AssemblyNameReference.Parse ("System.Private.CoreLib"));
+						} catch (AssemblyResolutionException ex) {
+							Log.LogErrorFromException (ex, showStackTrace: false);
+						}
+					}
+					return corlibAssembly;
+				},
+				(msg) => Log.LogDebugMessage (msg)));
+		}
+
+		// RemoveResourceDesignerStep
+		if (AndroidLinkResources) {
+			var allAssemblies = new List<AssemblyDefinition> (SourceFiles.Length);
+			foreach (var item in SourceFiles) {
+				allAssemblies.Add (pipeline.Resolver.GetAssembly (item.ItemSpec));
+			}
+			pipeline.Steps.Add (new RemoveResourceDesignerStep (allAssemblies, (msg) => Log.LogDebugMessage (msg)));
+		}
 	}
 
 	void RunPipeline (AssemblyPipeline pipeline, ITaskItem source, ITaskItem destination)
