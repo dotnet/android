@@ -101,6 +101,19 @@ public sealed class JavaPeerScanner : IDisposable
 	}
 
 	/// <summary>
+	/// Scans all loaded assemblies for assembly-level manifest attributes.
+	/// Must be called after <see cref="Scan"/>.
+	/// </summary>
+	internal AssemblyManifestInfo ScanAssemblyManifestInfo ()
+	{
+		var info = new AssemblyManifestInfo ();
+		foreach (var index in assemblyCache.Values) {
+			index.ScanAssemblyAttributes (info);
+		}
+		return info;
+	}
+
+	/// <summary>
 	/// Types referenced by [Application(BackupAgent = typeof(X))] or
 	/// [Application(ManageSpaceActivity = typeof(X))] must be unconditional,
 	/// because the manifest will reference them even if nothing else does.
@@ -238,6 +251,7 @@ public sealed class JavaPeerScanner : IDisposable
 				ActivationCtor = activationCtor,
 				InvokerTypeName = invokerTypeName,
 				IsGenericDefinition = isGenericDefinition,
+				ComponentAttribute = ToComponentInfo (attrInfo, typeDef, index),
 			};
 
 			results [fullName] = peer;
@@ -1542,5 +1556,33 @@ public sealed class JavaPeerScanner : IDisposable
 				IsStatic = isStatic,
 			});
 		}
+	}
+
+	static ComponentInfo? ToComponentInfo (TypeAttributeInfo? attrInfo, TypeDefinition typeDef, AssemblyIndex index)
+	{
+		if (attrInfo is null) {
+			return null;
+		}
+
+		var kind = attrInfo.AttributeName switch {
+			"ActivityAttribute" => ComponentKind.Activity,
+			"ServiceAttribute" => ComponentKind.Service,
+			"BroadcastReceiverAttribute" => ComponentKind.BroadcastReceiver,
+			"ContentProviderAttribute" => ComponentKind.ContentProvider,
+			"ApplicationAttribute" => ComponentKind.Application,
+			"InstrumentationAttribute" => ComponentKind.Instrumentation,
+			_ => (ComponentKind?)null,
+		};
+
+		if (kind is null) {
+			return null;
+		}
+
+		return new ComponentInfo {
+			Kind = kind.Value,
+			Properties = attrInfo.Properties,
+			IntentFilters = attrInfo.IntentFilters,
+			MetaData = attrInfo.MetaData,
+		};
 	}
 }
