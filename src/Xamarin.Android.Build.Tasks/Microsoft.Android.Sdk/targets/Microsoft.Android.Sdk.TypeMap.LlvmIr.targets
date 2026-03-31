@@ -198,18 +198,6 @@
       <!-- Custom steps that run after MarkStep -->
       <!-- Custom steps that run after CleanStep -->
       <_TrimmerCustomSteps
-          Condition=" '$(AndroidLinkResources)' == 'true' "
-          Include="$(_AndroidLinkerCustomStepAssembly)"
-          AfterStep="CleanStep"
-          Type="MonoDroid.Tuner.RemoveResourceDesignerStep"
-      />
-      <_TrimmerCustomSteps
-          Condition=" '$(AndroidLinkResources)' == 'true' "
-          Include="$(_AndroidLinkerCustomStepAssembly)"
-          AfterStep="CleanStep"
-          Type="MonoDroid.Tuner.GetAssembliesStep"
-      />
-      <_TrimmerCustomSteps
           Condition=" '$(AndroidUseDesignerAssembly)' == 'true' "
           Include="$(_AndroidLinkerCustomStepAssembly)"
           BeforeStep="MarkStep"
@@ -258,6 +246,7 @@
     <PostTrimmingPipeline
         Assemblies="@(_PostTrimmingAssembly)"
         AddKeepAlives="$(AndroidAddKeepAlives)"
+        AndroidLinkResources="$(AndroidLinkResources)"
         Deterministic="$(Deterministic)" />
   </Target>
 

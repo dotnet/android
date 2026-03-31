@@ -1,0 +1,32 @@
+# Shared Gradle dependency cache template
+# Caches Gradle downloads between pipeline runs to avoid transient network
+# failures when resolving Maven dependencies.
+#
+# See: https://learn.microsoft.com/azure/devops/pipelines/release/caching
+
+parameters:
+  xaSourcePath: $(System.DefaultWorkingDirectory)/android
+
+steps:
+- script: |
+    git submodule status --cached external/Java.Interop > $(Agent.TempDirectory)/java-interop-submodule-hash.txt
+    echo "##vso[task.setvariable variable=GRADLE_CACHE_DIR]$HOME/.gradle/caches"
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: prepare Gradle cache variables
+  condition: ne(variables['Agent.OS'], 'Windows_NT')
+
+- pwsh: |
+    git submodule status --cached external/Java.Interop > $(Agent.TempDirectory)/java-interop-submodule-hash.txt
+    $gradleCacheDir = Join-Path $env:USERPROFILE ".gradle\caches"
+    Write-Host "##vso[task.setvariable variable=GRADLE_CACHE_DIR]$gradleCacheDir"
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: prepare Gradle cache variables
+  condition: eq(variables['Agent.OS'], 'Windows_NT')
+
+- task: Cache@2
+  displayName: cache Gradle downloads
+  inputs:
+    key: '"gradle" | "v1" | "$(Agent.OS)" | ${{ parameters.xaSourcePath }}/build-tools/gradle/gradle/wrapper/gradle-wrapper.properties | ${{ parameters.xaSourcePath }}/src/**/build.gradle | $(Agent.TempDirectory)/java-interop-submodule-hash.txt'
+    restoreKeys: |
+      "gradle" | "v1" | "$(Agent.OS)"
+    path: $(GRADLE_CACHE_DIR)
