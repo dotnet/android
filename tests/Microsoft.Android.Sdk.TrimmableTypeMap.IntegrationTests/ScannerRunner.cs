@@ -84,15 +84,22 @@ static class ScannerRunner
 		using var scanner = new JavaPeerScanner ();
 		var peReaders = new List<PEReader> ();
 		var assemblies = new List<(string Name, PEReader Reader)> ();
-		foreach (var path in assemblyPaths) {
-			var peReader = new PEReader (File.OpenRead (path));
-			peReaders.Add (peReader);
-			var mdReader = peReader.GetMetadataReader ();
-			assemblies.Add ((mdReader.GetString (mdReader.GetAssemblyDefinition ().Name), peReader));
+		List<JavaPeerInfo> allPeers;
+		string primaryAssemblyName;
+		try {
+			foreach (var path in assemblyPaths) {
+				var peReader = new PEReader (File.OpenRead (path));
+				peReaders.Add (peReader);
+				var mdReader = peReader.GetMetadataReader ();
+				assemblies.Add ((mdReader.GetString (mdReader.GetAssemblyDefinition ().Name), peReader));
+			}
+			primaryAssemblyName = assemblies [0].Name;
+			allPeers = scanner.Scan (assemblies);
+		} finally {
+			foreach (var peReader in peReaders) {
+				peReader.Dispose ();
+			}
 		}
-		var primaryAssemblyName = assemblies [0].Name;
-		var allPeers = scanner.Scan (assemblies);
-		foreach (var peReader in peReaders) peReader.Dispose ();
 		var peers = allPeers.Where (p => p.AssemblyName == primaryAssemblyName).ToList ();
 
 		var entries = peers

@@ -38,6 +38,7 @@ public override bool RunTask ()
 {
 var systemRuntimeVersion = ParseTargetFrameworkVersion (TargetFrameworkVersion);
 var assemblyPaths = ResolvedAssemblies.Select (i => i.ItemSpec).Distinct ().ToList ();
+// TODO(#10792): populate with framework assembly names to skip JCW generation for pre-compiled framework types
 var frameworkAssemblyNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
 Directory.CreateDirectory (OutputDirectory);
@@ -86,7 +87,6 @@ sourcePathByName [name] = path;
 
 var items = new List<ITaskItem> ();
 bool anyRegenerated = false;
-var perAssemblyItems = new List<(string Name, string OutputPath)> ();
 
 foreach (var assembly in assemblies) {
 if (assembly.Name == "_Microsoft.Android.TypeMaps") {
@@ -109,7 +109,6 @@ Log.LogDebugMessage ($"  {assembly.Name}: written");
 }
 
 items.Add (new TaskItem (outputPath));
-perAssemblyItems.Add ((assembly.Name, outputPath));
 }
 
 // Root assembly — regenerate if any per-assembly typemap changed
