@@ -164,7 +164,7 @@
   <Target Name="_PrepareNativeAssemblySources"
       Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
       Inputs="@(_BuildTargetAbis)"
-      Outputs="@(_BuildTargetAbis->'$(_NativeAssemblySourceDir)typemaps.%(Identity).ll')">
+      Outputs="@(_BuildTargetAbis->'$(_NativeAssemblySourceDir)typemap.%(Identity).ll')">
     <ItemGroup>
       <_TypeMapStubAbis Include="@(_BuildTargetAbis)" />
     </ItemGroup>
