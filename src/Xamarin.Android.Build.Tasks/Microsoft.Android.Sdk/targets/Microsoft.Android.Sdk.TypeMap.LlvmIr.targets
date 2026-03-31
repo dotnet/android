@@ -195,7 +195,6 @@
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="MonoDroid.Tuner.PreserveApplications" />
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="Microsoft.Android.Sdk.ILLink.PreserveRegistrations" />
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="Microsoft.Android.Sdk.ILLink.PreserveJavaInterfaces" />
-      <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="MonoDroid.Tuner.FixAbstractMethodsStep" />
       <!-- Custom steps that run after MarkStep -->
       <!-- Custom steps that run after CleanStep -->
       <_TrimmerCustomSteps

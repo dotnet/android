@@ -58,6 +58,7 @@
     <Compile Include="Linker\MonoDroid.Tuner\AndroidLinkConfiguration.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\Extensions.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\FixAbstractMethodsStep.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\PostTrimmingFixAbstractMethodsStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\FixLegacyResourceDesignerStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\LinkDesignerBase.cs" />
     <Compile Include="Linker\External\Linker\Annotations.cs" />
