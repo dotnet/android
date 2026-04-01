@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 
@@ -18,7 +17,6 @@ sealed class AssemblyIndex : IDisposable
 
 	public MetadataReader Reader { get; }
 	public string AssemblyName { get; }
-	public string FilePath { get; }
 
 	/// <summary>
 	/// Maps full managed type name (e.g., "Android.App.Activity") to its TypeDefinitionHandle.
@@ -35,21 +33,18 @@ sealed class AssemblyIndex : IDisposable
 	/// </summary>
 	public Dictionary<TypeDefinitionHandle, TypeAttributeInfo> AttributesByType { get; } = new ();
 
-	AssemblyIndex (PEReader peReader, MetadataReader reader, string assemblyName, string filePath)
+	AssemblyIndex (PEReader peReader, MetadataReader reader, string assemblyName)
 	{
 		this.peReader = peReader;
 		this.customAttributeTypeProvider = new CustomAttributeTypeProvider (reader);
 		Reader = reader;
 		AssemblyName = assemblyName;
-		FilePath = filePath;
 	}
 
-	public static AssemblyIndex Create (string filePath)
+	public static AssemblyIndex Create (PEReader peReader, string assemblyName)
 	{
-		var peReader = new PEReader (File.OpenRead (filePath));
 		var reader = peReader.GetMetadataReader ();
-		var assemblyName = reader.GetString (reader.GetAssemblyDefinition ().Name);
-		var index = new AssemblyIndex (peReader, reader, assemblyName, filePath);
+		var index = new AssemblyIndex (peReader, reader, assemblyName);
 		index.Build ();
 		return index;
 	}
@@ -477,7 +472,6 @@ sealed class AssemblyIndex : IDisposable
 
 	public void Dispose ()
 	{
-		peReader.Dispose ();
 	}
 }
 
