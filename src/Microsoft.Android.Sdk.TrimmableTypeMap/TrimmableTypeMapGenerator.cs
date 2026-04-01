@@ -38,9 +38,7 @@ public class TrimmableTypeMapGenerator
 			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
 
-		if (manifestTemplate is not null) {
-			RootManifestReferencedTypes (allPeers, manifestTemplate);
-		}
+		RootManifestReferencedTypes (allPeers, manifestTemplate);
 
 		var generatedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion);
 		var jcwPeers = allPeers.Where (p =>
@@ -144,15 +142,15 @@ public class TrimmableTypeMapGenerator
 		return sources.ToList ();
 	}
 
-	internal void RootManifestReferencedTypes (List<JavaPeerInfo> allPeers, XDocument doc)
+	internal void RootManifestReferencedTypes (List<JavaPeerInfo> allPeers, XDocument? doc)
 	{
-		var root = doc.Root;
-		if (root is null) {
+		if (doc?.Root is not { } root) {
 			return;
 		}
 
 		XNamespace androidNs = "http://schemas.android.com/apk/res/android";
 		XName attName = androidNs + "name";
+		var packageName = (string?) root.Attribute ("package") ?? "";
 
 		var componentNames = new HashSet<string> (StringComparer.Ordinal);
 		foreach (var element in root.Descendants ()) {
@@ -163,7 +161,7 @@ public class TrimmableTypeMapGenerator
 			case "provider":
 				var name = (string?) element.Attribute (attName);
 				if (name is not null) {
-					componentNames.Add (name);
+					componentNames.Add (ResolveManifestClassName (name, packageName));
 				}
 				break;
 			}
@@ -173,9 +171,10 @@ public class TrimmableTypeMapGenerator
 			return;
 		}
 
+		// Build lookup by dot-name, keeping '$' for nested types (manifests use '$' too).
 		var peersByDotName = new Dictionary<string, List<JavaPeerInfo>> (StringComparer.Ordinal);
 		foreach (var peer in allPeers) {
-			var dotName = peer.JavaName.Replace ('/', '.').Replace ('$', '.');
+			var dotName = peer.JavaName.Replace ('/', '.');
 			if (!peersByDotName.TryGetValue (dotName, out var list)) {
 				list = [];
 				peersByDotName [dotName] = list;
@@ -195,5 +194,23 @@ public class TrimmableTypeMapGenerator
 				logger.LogManifestReferencedTypeNotFoundWarning (name);
 			}
 		}
+	}
+
+	/// <summary>
+	/// Resolves an android:name value to a fully-qualified class name.
+	/// Names starting with '.' are relative to the package. Names with no '.' at all
+	/// are also treated as relative (Android tooling convention).
+	/// </summary>
+	static string ResolveManifestClassName (string name, string packageName)
+	{
+		if (name.StartsWith (".", StringComparison.Ordinal)) {
+			return packageName + name;
+		}
+
+		if (name.IndexOf ('.') < 0 && !packageName.IsNullOrEmpty ()) {
+			return packageName + "." + name;
+		}
+
+		return name;
 	}
 }
