@@ -23,6 +23,10 @@ steps:
   parameters:
     remove_dotnet: true
 
+- template: /build-tools/automation/yaml-templates/cache-gradle.yaml
+  parameters:
+    xaSourcePath: $(System.DefaultWorkingDirectory)
+
 - task: DotNetCoreCLI@2
   displayName: Prepare Solution
   inputs:

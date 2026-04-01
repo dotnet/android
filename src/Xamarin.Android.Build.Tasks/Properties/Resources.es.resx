@@ -1079,7 +1079,7 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
 {1} - The exception message.</comment>
   </data>
   <data name="XA0144" xml:space="preserve">
-    <value>The Android emulator for AVD '{0}' failed with error '{1}': {2}</value>
+    <value>Error del emulador de Android para AVD "{0}" con el error "{1}": {2}</value>
     <comment>{0} - The AVD name.
 {1} - The error kind (e.g. Unknown).
 {2} - Error details from the emulator runner.</comment>

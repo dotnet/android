@@ -98,7 +98,7 @@ namespace UnnamedProject
 				Assert.True (b.Install (proj), "Project should have installed.");
 				RunProjectAndAssert (proj, b, doNotCleanupOnUpdate: true);
 				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
-					Path.Combine (Root, b.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");
+					Path.Combine (Root, b.ProjectDirectory, "logcat.log"), InstallAndRunTests.ActivityStartTimeoutInSeconds), "Activity should have started.");
 				string expectedLogcatOutput = "ContainsExportedMethods: constructed! Handle=";
 				Assert.IsTrue (MonitorAdbLogcat ((line) => {
 					return line.Contains (expectedLogcatOutput);
@@ -187,7 +187,7 @@ namespace UnnamedProject
 				Assert.True (b.Install (proj), "Project should have installed.");
 				RunProjectAndAssert (proj, b, doNotCleanupOnUpdate: true);
 				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
-					Path.Combine (Root, b.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");
+					Path.Combine (Root, b.ProjectDirectory, "logcat.log"), InstallAndRunTests.ActivityStartTimeoutInSeconds), "Activity should have started.");
 				string expectedLogcatOutput = "ExportCallbackSurvivedGC";
 				Assert.IsTrue (MonitorAdbLogcat ((line) => {
 					return line.Contains (expectedLogcatOutput);

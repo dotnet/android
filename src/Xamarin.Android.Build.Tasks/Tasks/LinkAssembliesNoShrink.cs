@@ -1,7 +1,6 @@
 #nullable enable
 
 using System;
-using Mono.Linker.Steps;
 using MonoDroid.Tuner;
 
 namespace Xamarin.Android.Tasks
@@ -22,7 +21,7 @@ namespace Xamarin.Android.Tasks
 		{
 			// FixAbstractMethodsStep
 			var fixAbstractMethodsStep = new FixAbstractMethodsStep ();
-			fixAbstractMethodsStep.Initialize (context, new EmptyMarkContext ());
+			fixAbstractMethodsStep.Initialize (context);
 			pipeline.Steps.Add (fixAbstractMethodsStep);
 
 			// FixLegacyResourceDesignerStep

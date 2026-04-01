@@ -119,9 +119,8 @@ public sealed record JavaPeerInfo
 	public bool IsGenericDefinition { get; init; }
 
 	/// <summary>
-	/// Component attribute information ([Activity], [Service], [BroadcastReceiver],
-	/// [ContentProvider], [Application], [Instrumentation]).
-	/// Null for types that are not Android components.
+	/// Android component attribute data ([Activity], [Service], [BroadcastReceiver], [ContentProvider],
+	/// [Application], [Instrumentation]) if present on this type. Used for manifest generation.
 	/// </summary>
 	public ComponentInfo? ComponentAttribute { get; init; }
 }
