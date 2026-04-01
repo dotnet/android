@@ -160,7 +160,7 @@
   <Target Name="_PrepareLinking"
       Condition=" '$(PublishTrimmed)' == 'true' "
       AfterTargets="ComputeResolvedFilesToPublishList"
-      DependsOnTargets="GetReferenceAssemblyPaths;_CreatePropertiesCache">
+      DependsOnTargets="GetReferenceAssemblyPaths;_CreatePropertiesCache;_AddResourceDesignerToPublishFiles">
     <PropertyGroup>
       <TrimmerRemoveSymbols Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' ">true</TrimmerRemoveSymbols>
       <_ExtraTrimmerArgs Condition=" '$(_EnableSerializationDiscovery)' != 'false' ">--enable-serialization-discovery $(_ExtraTrimmerArgs)</_ExtraTrimmerArgs>
