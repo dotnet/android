@@ -175,13 +175,14 @@ static class AssemblyLevelElementBuilder
 	internal static void ApplyApplicationProperties (
 		XElement app,
 		Dictionary<string, object?> properties,
-		IReadOnlyList<JavaPeerInfo> allPeers)
+		IReadOnlyList<JavaPeerInfo> allPeers,
+		Action<string>? warn = null)
 	{
 		PropertyMapper.ApplyMappings (app, properties, PropertyMapper.ApplicationPropertyMappings, skipExisting: true);
 
 		// BackupAgent and ManageSpaceActivity are Type properties — resolve managed type names to JNI names
-		ApplyTypeProperty (app, properties, allPeers, "BackupAgent", "backupAgent");
-		ApplyTypeProperty (app, properties, allPeers, "ManageSpaceActivity", "manageSpaceActivity");
+		ApplyTypeProperty (app, properties, allPeers, "BackupAgent", "backupAgent", warn);
+		ApplyTypeProperty (app, properties, allPeers, "ManageSpaceActivity", "manageSpaceActivity", warn);
 	}
 
 	static void ApplyTypeProperty (
@@ -189,7 +190,8 @@ static class AssemblyLevelElementBuilder
 		Dictionary<string, object?> properties,
 		IReadOnlyList<JavaPeerInfo> allPeers,
 		string propertyName,
-		string xmlAttrName)
+		string xmlAttrName,
+		Action<string>? warn)
 	{
 		if (app.Attribute (AndroidNs + xmlAttrName) is not null) {
 			return;
@@ -210,6 +212,8 @@ static class AssemblyLevelElementBuilder
 				return;
 			}
 		}
+
+		warn?.Invoke ($"Could not resolve {propertyName} type '{managedName}' to a Java peer for android:{xmlAttrName}.");
 	}
 
 	internal static void AddInternetPermission (XElement manifest)
