@@ -115,7 +115,7 @@ public class MainActivity extends AppCompatActivity {{
 			});
 			AndroidManifestContent = $@"
   <application android:label=""App"">
-    <activity android:name="".TestActivity"">
+    <activity android:name="".TestActivity"" android:exported=""true"">
       <intent-filter>
         <action android:name=""android.intent.action.MAIN"" />
         <category android:name=""android.intent.category.LAUNCHER"" />
