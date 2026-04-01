@@ -28,6 +28,8 @@ public string TargetFrameworkVersion { get; set; } = "";
 
 public string? AcwMapOutputFile { get; set; }
 
+public string? ApplicationRegistrationOutputFile { get; set; }
+
 public string? ManifestTemplate { get; set; }
 
 public string? MergedAndroidManifestOutput { get; set; }
@@ -135,6 +137,17 @@ if (!AcwMapOutputFile.IsNullOrEmpty ()) {
 		Files.CopyIfStreamChanged (sw.BaseStream, AcwMapOutputFile);
 	}
 	Log.LogDebugMessage ($"Wrote merged acw-map.txt with {result.AllPeers.Count} types to {AcwMapOutputFile}.");
+}
+
+// Generate ApplicationRegistration.java with registerNatives calls for
+// Application/Instrumentation types whose static initializers were skipped.
+if (!ApplicationRegistrationOutputFile.IsNullOrEmpty ()) {
+	var appRegDir = Path.GetDirectoryName (ApplicationRegistrationOutputFile);
+	if (!appRegDir.IsNullOrEmpty ()) {
+		Directory.CreateDirectory (appRegDir);
+	}
+	Files.CopyIfStringChanged (GenerateApplicationRegistrationJava (result.ApplicationRegistrationTypes), ApplicationRegistrationOutputFile);
+	Log.LogDebugMessage ($"Generated ApplicationRegistration.java with {result.ApplicationRegistrationTypes.Count} deferred registration(s).");
 }
 } finally {
 if (result is not null) {
@@ -261,5 +274,24 @@ if (Version.TryParse (tfv, out var version)) {
 return version;
 }
 throw new ArgumentException ($"Cannot parse TargetFrameworkVersion '{tfv}' as a Version.");
+}
+
+static string GenerateApplicationRegistrationJava (IReadOnlyList<string> registrationTypes)
+{
+	var sb = new System.Text.StringBuilder ();
+	sb.AppendLine ("package net.dot.android;");
+	sb.AppendLine ();
+	sb.AppendLine ("public class ApplicationRegistration {");
+	sb.AppendLine ();
+	sb.AppendLine ("\tpublic static android.content.Context Context;");
+	sb.AppendLine ();
+	sb.AppendLine ("\tpublic static void registerApplications ()");
+	sb.AppendLine ("\t{");
+	foreach (var javaClassName in registrationTypes) {
+		sb.AppendLine ($"\t\tmono.android.Runtime.registerNatives ({javaClassName}.class);");
+	}
+	sb.AppendLine ("\t}");
+	sb.AppendLine ("}");
+	return sb.ToString ();
 }
 }

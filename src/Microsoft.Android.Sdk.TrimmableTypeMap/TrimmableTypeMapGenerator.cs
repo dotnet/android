@@ -45,6 +45,15 @@ public class TrimmableTypeMapGenerator
 		log ($"Generating JCW files for {jcwPeers.Count} types (filtered from {allPeers.Count} total).");
 		var generatedJavaSources = GenerateJcwJavaSources (jcwPeers);
 
+		// Collect Application/Instrumentation types that need deferred registerNatives
+		var appRegTypes = allPeers
+			.Where (p => p.CannotRegisterInStaticConstructor && !p.IsAbstract)
+			.Select (p => p.JavaName.Replace ('/', '.'))
+			.ToList ();
+		if (appRegTypes.Count > 0) {
+			log ($"Found {appRegTypes.Count} Application/Instrumentation types for deferred registration.");
+		}
+
 		GeneratedManifest? manifest = null;
 
 		// Generate merged AndroidManifest.xml if requested
@@ -52,7 +61,7 @@ public class TrimmableTypeMapGenerator
 			manifest = GenerateManifest (allPeers, assemblyManifestInfo, manifestConfig, manifestTemplate);
 		}
 
-		return new TrimmableTypeMapResult (generatedAssemblies, generatedJavaSources, allPeers, manifest);
+		return new TrimmableTypeMapResult (generatedAssemblies, generatedJavaSources, allPeers, manifest, appRegTypes);
 	}
 
 	GeneratedManifest GenerateManifest (List<JavaPeerInfo> allPeers, AssemblyManifestInfo assemblyManifestInfo,

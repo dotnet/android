@@ -73,7 +73,8 @@
         ManifestPlaceholders="$(AndroidManifestPlaceholders)"
         CheckedBuild="$(_AndroidCheckedBuild)"
         ApplicationJavaClass="$(AndroidApplicationJavaClass)"
-        AcwMapOutputFile="$(IntermediateOutputPath)acw-map.txt">
+        AcwMapOutputFile="$(IntermediateOutputPath)acw-map.txt"
+        ApplicationRegistrationOutputFile="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java">
       <Output TaskParameter="GeneratedAssemblies" ItemName="_GeneratedTypeMapAssemblies" />
       <Output TaskParameter="GeneratedJavaFiles" ItemName="_GeneratedJavaFiles" />
       <Output TaskParameter="AdditionalProviderSources" ItemName="_AdditionalProviderSources" />
@@ -84,6 +85,7 @@
       <FileWrites Include="@(_GeneratedJavaFiles)" />
       <FileWrites Include="$(_TypeMapBaseOutputDir)AndroidManifest.xml" />
       <FileWrites Include="$(IntermediateOutputPath)acw-map.txt" />
+      <FileWrites Include="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java" />
     </ItemGroup>
   </Target>
 
@@ -140,15 +142,6 @@
          downstream targets (_ConvertCustomView, _UpdateAndroidResgen) can evaluate their Inputs. -->
     <Touch Files="$(IntermediateOutputPath)acw-map.txt" AlwaysCreate="true"
         Condition="!Exists('$(IntermediateOutputPath)acw-map.txt')" />
-
-    <!-- Generate ApplicationRegistration.java.
-         In the trimmable path, Application/Instrumentation types are activated via
-         Runtime.registerNatives() + UCO wrappers, so registerApplications() is empty. -->
-    <MakeDir Directories="$(IntermediateOutputPath)android/src/net/dot/android" />
-    <Copy
-        SourceFiles="$(MSBuildThisFileDirectory)ApplicationRegistration.Trimmable.java"
-        DestinationFiles="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java"
-        SkipUnchangedFiles="true" />
 
     <ItemGroup>
       <FileWrites Include="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java" />

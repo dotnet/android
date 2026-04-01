@@ -8,7 +8,17 @@ public record TrimmableTypeMapResult (
 	IReadOnlyList<GeneratedAssembly> GeneratedAssemblies,
 	IReadOnlyList<GeneratedJavaSource> GeneratedJavaSources,
 	IReadOnlyList<JavaPeerInfo> AllPeers,
-	GeneratedManifest? Manifest = null);
+	GeneratedManifest? Manifest = null,
+	IReadOnlyList<string> ApplicationRegistrationTypes = null!)
+{
+	/// <summary>
+	/// Java class names (dot-separated) of Application/Instrumentation types
+	/// that need deferred <c>Runtime.registerNatives()</c> calls in
+	/// <c>ApplicationRegistration.registerApplications()</c>.
+	/// </summary>
+	public IReadOnlyList<string> ApplicationRegistrationTypes { get; init; } =
+		ApplicationRegistrationTypes ?? [];
+}
 
 public record GeneratedAssembly (string Name, MemoryStream Content);
 
