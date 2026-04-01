@@ -2,11 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.JavaCallableWrappers.Adapters;
 using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
+using CecilAssemblyDefinition = Mono.Cecil.AssemblyDefinition;
+using CecilTypeDefinition = Mono.Cecil.TypeDefinition;
 using Xamarin.Android.Tasks;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests;
@@ -40,7 +44,7 @@ static class TypeDataBuilder
 		}
 
 		var readerParams = new ReaderParameters { AssemblyResolver = resolver };
-		using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath, readerParams);
+		using var assembly = CecilAssemblyDefinition.ReadAssembly (assemblyPath, readerParams);
 
 		var scanner = new XAJavaTypeScanner (
 			Xamarin.Android.Tools.AndroidTargetArch.Arm64,
@@ -135,9 +139,18 @@ static class TypeDataBuilder
 
 	public static Dictionary<string, TypeComparisonData> BuildNew (string[] assemblyPaths)
 	{
-		var primaryAssemblyName = Path.GetFileNameWithoutExtension (assemblyPaths [0]);
 		using var scanner = new JavaPeerScanner ();
-		var peers = scanner.Scan (assemblyPaths);
+		var peReaders = new List<PEReader> ();
+		var assemblies = new List<(string Name, PEReader Reader)> ();
+		foreach (var path in assemblyPaths) {
+			var peReader = new PEReader (File.OpenRead (path));
+			peReaders.Add (peReader);
+			var mdReader = peReader.GetMetadataReader ();
+			assemblies.Add ((mdReader.GetString (mdReader.GetAssemblyDefinition ().Name), peReader));
+		}
+		var primaryAssemblyName = assemblies [0].Name;
+		var peers = scanner.Scan (assemblies);
+		foreach (var peReader in peReaders) peReader.Dispose ();
 
 		var perType = new Dictionary<string, TypeComparisonData> (StringComparer.Ordinal);
 
@@ -185,14 +198,14 @@ static class TypeDataBuilder
 		return perType;
 	}
 
-	static void FindLegacyActivationCtor (TypeDefinition typeDef, TypeDefinitionCache cache,
+	static void FindLegacyActivationCtor (CecilTypeDefinition typeDef, TypeDefinitionCache cache,
 		out bool found, out string? declaringType, out string? style)
 	{
 		found = false;
 		declaringType = null;
 		style = null;
 
-		TypeDefinition? current = typeDef;
+		CecilTypeDefinition? current = typeDef;
 		while (current != null) {
 			foreach (var method in current.Methods) {
 				if (!method.IsConstructor || method.IsStatic || method.Parameters.Count != 2) {
@@ -222,7 +235,7 @@ static class TypeDataBuilder
 		}
 	}
 
-	static bool GetCecilDoNotGenerateAcw (TypeDefinition typeDef)
+	static bool GetCecilDoNotGenerateAcw (CecilTypeDefinition typeDef)
 	{
 		if (!typeDef.HasCustomAttributes) {
 			return false;
@@ -245,7 +258,7 @@ static class TypeDataBuilder
 		return false;
 	}
 
-	static void ExtractDirectRegisterCtors (TypeDefinition typeDef, List<string> javaCtorSignatures)
+	static void ExtractDirectRegisterCtors (CecilTypeDefinition typeDef, List<string> javaCtorSignatures)
 	{
 		foreach (var method in typeDef.Methods) {
 			if (!method.IsConstructor || method.IsStatic || !method.HasCustomAttributes) {

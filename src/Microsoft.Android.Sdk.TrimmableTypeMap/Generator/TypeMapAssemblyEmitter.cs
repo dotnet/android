@@ -119,22 +119,6 @@ sealed class TypeMapAssemblyEmitter
 	}
 
 	/// <summary>
-	/// Emits a PE assembly from the given model and writes it to <paramref name="outputPath"/>.
-	/// </summary>
-	public void Emit (TypeMapAssemblyData model, string outputPath)
-	{
-		if (model is null) {
-			throw new ArgumentNullException (nameof (model));
-		}
-		if (outputPath is null) {
-			throw new ArgumentNullException (nameof (outputPath));
-		}
-
-		EmitCore (model);
-		_pe.WritePE (outputPath);
-	}
-
-	/// <summary>
 	/// Emits a PE assembly from the given model and writes it to <paramref name="stream"/>.
 	/// </summary>
 	public void Emit (TypeMapAssemblyData model, Stream stream)

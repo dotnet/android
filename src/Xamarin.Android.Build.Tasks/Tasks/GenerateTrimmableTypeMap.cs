@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Android.Sdk.TrimmableTypeMap;
 using Microsoft.Build.Framework;
@@ -11,219 +13,179 @@ using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks;
 
-/// <summary>
-/// Generates trimmable TypeMap assemblies, JCW Java source files, and per-assembly
-/// acw-map files from resolved assemblies. The acw-map files are later merged into
-/// a single acw-map.txt consumed by _ConvertCustomView for layout XML fixups.
-/// </summary>
 public class GenerateTrimmableTypeMap : AndroidTask
 {
-	public override string TaskPrefix => "GTT";
+public override string TaskPrefix => "GTT";
 
-	[Required]
-	public ITaskItem [] ResolvedAssemblies { get; set; } = [];
+[Required]
+public ITaskItem [] ResolvedAssemblies { get; set; } = [];
+[Required]
+public string OutputDirectory { get; set; } = "";
+[Required]
+public string JavaSourceOutputDirectory { get; set; } = "";
+[Required]
+public string AcwMapDirectory { get; set; } = "";
+[Required]
+public string TargetFrameworkVersion { get; set; } = "";
+[Output]
+public ITaskItem [] GeneratedAssemblies { get; set; } = [];
+[Output]
+public ITaskItem [] GeneratedJavaFiles { get; set; } = [];
+[Output]
+public ITaskItem []? PerAssemblyAcwMapFiles { get; set; }
 
-	[Required]
-	public string OutputDirectory { get; set; } = "";
+public override bool RunTask ()
+{
+var systemRuntimeVersion = ParseTargetFrameworkVersion (TargetFrameworkVersion);
+var assemblyPaths = ResolvedAssemblies.Select (i => i.ItemSpec).Distinct ().ToList ();
+// TODO(#10792): populate with framework assembly names to skip JCW generation for pre-compiled framework types
+var frameworkAssemblyNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
-	[Required]
-	public string JavaSourceOutputDirectory { get; set; } = "";
+Directory.CreateDirectory (OutputDirectory);
+Directory.CreateDirectory (JavaSourceOutputDirectory);
+Directory.CreateDirectory (AcwMapDirectory);
 
-	/// <summary>
-	/// Directory for per-assembly acw-map.{AssemblyName}.txt files.
-	/// </summary>
-	[Required]
-	public string AcwMapDirectory { get; set; } = "";
+var peReaders = new List<PEReader> ();
+var assemblies = new List<(string Name, PEReader Reader)> ();
+TrimmableTypeMapResult? result = null;
+try {
+foreach (var path in assemblyPaths) {
+var peReader = new PEReader (File.OpenRead (path));
+peReaders.Add (peReader);
+var mdReader = peReader.GetMetadataReader ();
+assemblies.Add ((mdReader.GetString (mdReader.GetAssemblyDefinition ().Name), peReader));
+}
 
-	/// <summary>
-	/// The .NET target framework version (e.g., "v11.0"). Used to set the System.Runtime
-	/// assembly reference version in generated typemap assemblies.
-	/// </summary>
-	[Required]
-	public string TargetFrameworkVersion { get; set; } = "";
+var generator = new TrimmableTypeMapGenerator (msg => Log.LogMessage (MessageImportance.Low, msg));
+result = generator.Execute (assemblies, systemRuntimeVersion, frameworkAssemblyNames);
 
-	[Output]
-	public ITaskItem []? GeneratedAssemblies { get; set; }
+GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyPaths);
+GeneratedJavaFiles = WriteJavaSourcesToDisk (result.GeneratedJavaSources);
+PerAssemblyAcwMapFiles = GeneratePerAssemblyAcwMaps (result.AllPeers);
+} finally {
+if (result is not null) {
+foreach (var assembly in result.GeneratedAssemblies) {
+assembly.Content.Dispose ();
+}
+}
+foreach (var peReader in peReaders) {
+peReader.Dispose ();
+}
+}
 
-	[Output]
-	public ITaskItem []? GeneratedJavaFiles { get; set; }
+return !Log.HasLoggedErrors;
+}
 
-	/// <summary>
-	/// Per-assembly acw-map files produced during scanning. Each file contains
-	/// three lines per type: PartialAssemblyQualifiedName;JavaKey,
-	/// ManagedKey;JavaKey, and CompatJniName;JavaKey.
-	/// </summary>
-	[Output]
-	public ITaskItem []? PerAssemblyAcwMapFiles { get; set; }
+ITaskItem [] WriteAssembliesToDisk (IReadOnlyList<GeneratedAssembly> assemblies, IReadOnlyList<string> assemblyPaths)
+{
+// Build a map from assembly name -> source path for timestamp comparison
+var sourcePathByName = new Dictionary<string, string> (StringComparer.Ordinal);
+foreach (var path in assemblyPaths) {
+var name = Path.GetFileNameWithoutExtension (path);
+sourcePathByName [name] = path;
+}
 
-	public override bool RunTask ()
-	{
-		var systemRuntimeVersion = ParseTargetFrameworkVersion (TargetFrameworkVersion);
-		var assemblyPaths = GetJavaInteropAssemblyPaths (ResolvedAssemblies);
+var items = new List<ITaskItem> ();
+bool anyRegenerated = false;
 
-		Directory.CreateDirectory (OutputDirectory);
-		Directory.CreateDirectory (JavaSourceOutputDirectory);
-		Directory.CreateDirectory (AcwMapDirectory);
+foreach (var assembly in assemblies) {
+if (assembly.Name == "_Microsoft.Android.TypeMaps") {
+continue; // Handle root assembly separately below
+}
 
-		var allPeers = ScanAssemblies (assemblyPaths);
-		if (allPeers.Count == 0) {
-			Log.LogDebugMessage ("No Java peer types found, skipping typemap generation.");
-			return !Log.HasLoggedErrors;
-		}
+string outputPath = Path.Combine (OutputDirectory, assembly.Name + ".dll");
+// Extract the original assembly name from the typemap name (e.g., "_Foo.TypeMap" -> "Foo")
+string originalName = assembly.Name;
+if (originalName.StartsWith ("_", StringComparison.Ordinal) && originalName.EndsWith (".TypeMap", StringComparison.Ordinal)) {
+originalName = originalName.Substring (1, originalName.Length - ".TypeMap".Length - 1);
+}
 
-		GeneratedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, assemblyPaths);
-		GeneratedJavaFiles = GenerateJcwJavaSources (allPeers);
-		PerAssemblyAcwMapFiles = GeneratePerAssemblyAcwMaps (allPeers);
+if (IsUpToDate (outputPath, originalName, sourcePathByName)) {
+Log.LogDebugMessage ($"  {assembly.Name}: up to date, skipping");
+} else {
+Files.CopyIfStreamChanged (assembly.Content, outputPath);
+anyRegenerated = true;
+Log.LogDebugMessage ($"  {assembly.Name}: written");
+}
 
-		return !Log.HasLoggedErrors;
-	}
+items.Add (new TaskItem (outputPath));
+}
 
-	// Future optimization: the scanner currently scans all assemblies on every run.
-	// For incremental builds, we could:
-	// 1. Add a Scan(allPaths, changedPaths) overload that only produces JavaPeerInfo
-	//    for changed assemblies while still indexing all assemblies for cross-assembly
-	//    resolution (base types, interfaces, activation ctors).
-	// 2. Cache scan results per assembly to skip PE I/O entirely for unchanged assemblies.
-	// Both require profiling to determine if they meaningfully improve build times.
-	List<JavaPeerInfo> ScanAssemblies (IReadOnlyList<string> assemblyPaths)
-	{
-		using var scanner = new JavaPeerScanner ();
-		var peers = scanner.Scan (assemblyPaths);
-		Log.LogDebugMessage ($"Scanned {assemblyPaths.Count} assemblies, found {peers.Count} Java peer types.");
-		return peers;
-	}
+// Root assembly — regenerate if any per-assembly typemap changed
+var rootAssembly = assemblies.FirstOrDefault (a => a.Name == "_Microsoft.Android.TypeMaps");
+if (rootAssembly is not null) {
+string rootOutputPath = Path.Combine (OutputDirectory, rootAssembly.Name + ".dll");
+if (anyRegenerated || !File.Exists (rootOutputPath)) {
+Files.CopyIfStreamChanged (rootAssembly.Content, rootOutputPath);
+Log.LogDebugMessage ($"  Root: written");
+} else {
+Log.LogDebugMessage ($"  Root: up to date, skipping");
+}
+items.Add (new TaskItem (rootOutputPath));
+}
 
-	ITaskItem [] GenerateTypeMapAssemblies (List<JavaPeerInfo> allPeers, Version systemRuntimeVersion,
-		IReadOnlyList<string> assemblyPaths)
-	{
-		// Build a map from assembly name → source path for timestamp comparison
-		var sourcePathByName = new Dictionary<string, string> (StringComparer.Ordinal);
-		foreach (var path in assemblyPaths) {
-			var name = Path.GetFileNameWithoutExtension (path);
-			sourcePathByName [name] = path;
-		}
+return items.ToArray ();
+}
 
-		var peersByAssembly = allPeers
-			.GroupBy (p => p.AssemblyName, StringComparer.Ordinal)
-			.OrderBy (g => g.Key, StringComparer.Ordinal);
+static bool IsUpToDate (string outputPath, string assemblyName, Dictionary<string, string> sourcePathByName)
+{
+if (!File.Exists (outputPath)) {
+return false;
+}
+if (!sourcePathByName.TryGetValue (assemblyName, out var sourcePath)) {
+return false;
+}
+return File.GetLastWriteTimeUtc (outputPath) >= File.GetLastWriteTimeUtc (sourcePath);
+}
 
-		var generatedAssemblies = new List<ITaskItem> ();
-		var perAssemblyNames = new List<string> ();
-		var generator = new TypeMapAssemblyGenerator (systemRuntimeVersion);
-		bool anyRegenerated = false;
+ITaskItem [] WriteJavaSourcesToDisk (IReadOnlyList<GeneratedJavaSource> javaSources)
+{
+var items = new List<ITaskItem> ();
+foreach (var source in javaSources) {
+string outputPath = Path.Combine (JavaSourceOutputDirectory, source.RelativePath);
+string? dir = Path.GetDirectoryName (outputPath);
+if (!string.IsNullOrEmpty (dir)) {
+Directory.CreateDirectory (dir);
+}
+using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
+sw.Write (source.Content);
+sw.Flush ();
+Files.CopyIfStreamChanged (sw.BaseStream, outputPath);
+}
+items.Add (new TaskItem (outputPath));
+}
+return items.ToArray ();
+}
 
-		foreach (var group in peersByAssembly) {
-			string assemblyName = $"_{group.Key}.TypeMap";
-			string outputPath = Path.Combine (OutputDirectory, assemblyName + ".dll");
-			perAssemblyNames.Add (assemblyName);
+ITaskItem [] GeneratePerAssemblyAcwMaps (IReadOnlyList<JavaPeerInfo> allPeers)
+{
+var peersByAssembly = allPeers
+.GroupBy (p => p.AssemblyName, StringComparer.Ordinal)
+.OrderBy (g => g.Key, StringComparer.Ordinal);
+var outputFiles = new List<ITaskItem> ();
+foreach (var group in peersByAssembly) {
+var peers = group.ToList ();
+string outputFile = Path.Combine (AcwMapDirectory, $"acw-map.{group.Key}.txt");
+using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
+AcwMapWriter.Write (sw, peers);
+sw.Flush ();
+Files.CopyIfStreamChanged (sw.BaseStream, outputFile);
+}
+var item = new TaskItem (outputFile);
+item.SetMetadata ("AssemblyName", group.Key);
+outputFiles.Add (item);
+}
+return outputFiles.ToArray ();
+}
 
-			if (IsUpToDate (outputPath, group.Key, sourcePathByName)) {
-				Log.LogDebugMessage ($"  {assemblyName}: up to date, skipping");
-				generatedAssemblies.Add (new TaskItem (outputPath));
-				continue;
-			}
-
-			generator.Generate (group.ToList (), outputPath, assemblyName);
-			generatedAssemblies.Add (new TaskItem (outputPath));
-			anyRegenerated = true;
-
-			Log.LogDebugMessage ($"  {assemblyName}: {group.Count ()} types");
-		}
-
-		// Root assembly references all per-assembly typemaps — regenerate if any changed
-		string rootOutputPath = Path.Combine (OutputDirectory, "_Microsoft.Android.TypeMaps.dll");
-		if (anyRegenerated || !File.Exists (rootOutputPath)) {
-			var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
-			rootGenerator.Generate (perAssemblyNames, rootOutputPath);
-			Log.LogDebugMessage ($"  Root: {perAssemblyNames.Count} per-assembly refs");
-		} else {
-			Log.LogDebugMessage ($"  Root: up to date, skipping");
-		}
-		generatedAssemblies.Add (new TaskItem (rootOutputPath));
-
-		Log.LogDebugMessage ($"Generated {generatedAssemblies.Count} typemap assemblies.");
-		return generatedAssemblies.ToArray ();
-	}
-
-	static bool IsUpToDate (string outputPath, string assemblyName, Dictionary<string, string> sourcePathByName)
-	{
-		if (!File.Exists (outputPath)) {
-			return false;
-		}
-		if (!sourcePathByName.TryGetValue (assemblyName, out var sourcePath)) {
-			return false;
-		}
-		return File.GetLastWriteTimeUtc (outputPath) >= File.GetLastWriteTimeUtc (sourcePath);
-	}
-
-	ITaskItem [] GenerateJcwJavaSources (List<JavaPeerInfo> allPeers)
-	{
-		var jcwGenerator = new JcwJavaSourceGenerator ();
-		var files = jcwGenerator.Generate (allPeers, JavaSourceOutputDirectory);
-		Log.LogDebugMessage ($"Generated {files.Count} JCW Java source files.");
-
-		var items = new ITaskItem [files.Count];
-		for (int i = 0; i < files.Count; i++) {
-			items [i] = new TaskItem (files [i]);
-		}
-		return items;
-	}
-
-	ITaskItem [] GeneratePerAssemblyAcwMaps (List<JavaPeerInfo> allPeers)
-	{
-		var peersByAssembly = allPeers
-			.GroupBy (p => p.AssemblyName, StringComparer.Ordinal)
-			.OrderBy (g => g.Key, StringComparer.Ordinal);
-
-		var outputFiles = new List<ITaskItem> ();
-
-		foreach (var group in peersByAssembly) {
-			var peers = group.ToList ();
-			string outputFile = Path.Combine (AcwMapDirectory, $"acw-map.{group.Key}.txt");
-
-			bool written;
-			using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-				AcwMapWriter.Write (sw, peers);
-				sw.Flush ();
-				written = Files.CopyIfStreamChanged (sw.BaseStream, outputFile);
-			}
-
-			Log.LogDebugMessage (written
-				? $"  acw-map.{group.Key}.txt: {peers.Count} types"
-				: $"  acw-map.{group.Key}.txt: unchanged");
-
-			var item = new TaskItem (outputFile);
-			item.SetMetadata ("AssemblyName", group.Key);
-			outputFiles.Add (item);
-		}
-
-		Log.LogDebugMessage ($"Generated {outputFiles.Count} per-assembly ACW map files.");
-		return outputFiles.ToArray ();
-	}
-
-	static Version ParseTargetFrameworkVersion (string tfv)
-	{
-		if (tfv.Length > 0 && (tfv [0] == 'v' || tfv [0] == 'V')) {
-			tfv = tfv.Substring (1);
-		}
-		if (Version.TryParse (tfv, out var version)) {
-			return version;
-		}
-		throw new ArgumentException ($"Cannot parse TargetFrameworkVersion '{tfv}' as a Version.");
-	}
-
-	/// <summary>
-	/// Filters resolved assemblies to only those that reference Mono.Android or Java.Interop
-	/// (i.e., assemblies that could contain [Register] types). Skips BCL assemblies.
-	/// </summary>
-	static IReadOnlyList<string> GetJavaInteropAssemblyPaths (ITaskItem [] items)
-	{
-		var paths = new List<string> (items.Length);
-		foreach (var item in items) {
-			if (MonoAndroidHelper.IsMonoAndroidAssembly (item)) {
-				paths.Add (item.ItemSpec);
-			}
-		}
-		return paths;
-	}
+static Version ParseTargetFrameworkVersion (string tfv)
+{
+if (tfv.Length > 0 && (tfv [0] == 'v' || tfv [0] == 'V')) {
+tfv = tfv.Substring (1);
+}
+if (Version.TryParse (tfv, out var version)) {
+return version;
+}
+throw new ArgumentException ($"Cannot parse TargetFrameworkVersion '{tfv}' as a Version.");
+}
 }

@@ -1,5 +1,3 @@
-#nullable enable
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -76,7 +74,11 @@ public class ManifestGeneratorTests : IDisposable
 	{
 		peers ??= [];
 		assemblyInfo ??= new AssemblyManifestInfo ();
-		gen.Generate (templatePath, peers, assemblyInfo, OutputPath);
+		XDocument? template = null;
+		if (!string.IsNullOrEmpty (templatePath) && File.Exists (templatePath)) {
+			template = XDocument.Load (templatePath);
+		}
+		gen.Generate (template, peers, assemblyInfo, OutputPath);
 		return XDocument.Load (OutputPath);
 	}
 
@@ -84,7 +86,7 @@ public class ManifestGeneratorTests : IDisposable
 	public void Activity_MainLauncher ()
 	{
 		var gen = CreateDefaultGenerator ();
-		var peer = CreatePeer ("com/example/app/MainActivity", new ComponentInfo { HasPublicDefaultConstructor = true,
+		var peer = CreatePeer ("com/example/app/MainActivity", new ComponentInfo { 
 			Kind = ComponentKind.Activity,
 			Properties = new Dictionary<string, object?> { ["MainLauncher"] = true },
 		});
@@ -108,7 +110,7 @@ public class ManifestGeneratorTests : IDisposable
 	public void Activity_WithProperties ()
 	{
 		var gen = CreateDefaultGenerator ();
-		var peer = CreatePeer ("com/example/app/MyActivity", new ComponentInfo { HasPublicDefaultConstructor = true,
+		var peer = CreatePeer ("com/example/app/MyActivity", new ComponentInfo { 
 			Kind = ComponentKind.Activity,
 			Properties = new Dictionary<string, object?> {
 				["Label"] = "My Activity",
@@ -131,7 +133,7 @@ public class ManifestGeneratorTests : IDisposable
 	public void Activity_IntentFilter ()
 	{
 		var gen = CreateDefaultGenerator ();
-		var peer = CreatePeer ("com/example/app/ShareActivity", new ComponentInfo { HasPublicDefaultConstructor = true,
+		var peer = CreatePeer ("com/example/app/ShareActivity", new ComponentInfo { 
 			Kind = ComponentKind.Activity,
 			IntentFilters = [
 				new IntentFilterInfo {
@@ -161,7 +163,7 @@ public class ManifestGeneratorTests : IDisposable
 	public void Activity_MetaData ()
 	{
 		var gen = CreateDefaultGenerator ();
-		var peer = CreatePeer ("com/example/app/MetaActivity", new ComponentInfo { HasPublicDefaultConstructor = true,
+		var peer = CreatePeer ("com/example/app/MetaActivity", new ComponentInfo { 
 			Kind = ComponentKind.Activity,
 			MetaData = [
 				new MetaDataInfo { Name = "com.example.key", Value = "my_value" },
@@ -190,7 +192,7 @@ public class ManifestGeneratorTests : IDisposable
 	public void Component_BasicProperties (ComponentKind kind, string elementName)
 	{
 		var gen = CreateDefaultGenerator ();
-		var peer = CreatePeer ("com/example/app/MyComponent", new ComponentInfo { HasPublicDefaultConstructor = true,
+		var peer = CreatePeer ("com/example/app/MyComponent", new ComponentInfo { 
 			Kind = kind,
 			Properties = new Dictionary<string, object?> {
 				["Exported"] = true,
@@ -211,7 +213,7 @@ public class ManifestGeneratorTests : IDisposable
 	public void ContentProvider_WithAuthorities ()
 	{
 		var gen = CreateDefaultGenerator ();
-		var peer = CreatePeer ("com/example/app/MyProvider", new ComponentInfo { HasPublicDefaultConstructor = true,
+		var peer = CreatePeer ("com/example/app/MyProvider", new ComponentInfo { 
 			Kind = ComponentKind.ContentProvider,
 			Properties = new Dictionary<string, object?> {
 				["Authorities"] = "com.example.app.provider",
@@ -234,7 +236,7 @@ public class ManifestGeneratorTests : IDisposable
 	public void Application_TypeLevel ()
 	{
 		var gen = CreateDefaultGenerator ();
-		var peer = CreatePeer ("com/example/app/MyApp", new ComponentInfo { HasPublicDefaultConstructor = true,
+		var peer = CreatePeer ("com/example/app/MyApp", new ComponentInfo { 
 			Kind = ComponentKind.Application,
 			Properties = new Dictionary<string, object?> {
 				["Label"] = "Custom App",
@@ -256,7 +258,7 @@ public class ManifestGeneratorTests : IDisposable
 	public void Instrumentation_GoesToManifest ()
 	{
 		var gen = CreateDefaultGenerator ();
-		var peer = CreatePeer ("com/example/app/MyInstrumentation", new ComponentInfo { HasPublicDefaultConstructor = true,
+		var peer = CreatePeer ("com/example/app/MyInstrumentation", new ComponentInfo { 
 			Kind = ComponentKind.Instrumentation,
 			Properties = new Dictionary<string, object?> {
 				["Label"] = "My Test",
@@ -418,7 +420,7 @@ public class ManifestGeneratorTests : IDisposable
 	public void AbstractTypes_Skipped ()
 	{
 		var gen = CreateDefaultGenerator ();
-		var peer = CreatePeer ("com/example/app/AbstractActivity", new ComponentInfo { HasPublicDefaultConstructor = true,
+		var peer = CreatePeer ("com/example/app/AbstractActivity", new ComponentInfo { 
 			Kind = ComponentKind.Activity,
 			Properties = new Dictionary<string, object?> { ["Label"] = "Abstract" },
 		}, isAbstract: true);
@@ -442,7 +444,7 @@ public class ManifestGeneratorTests : IDisposable
 			</manifest>
 			""");
 
-		var peer = CreatePeer ("com/example/app/ExistingActivity", new ComponentInfo { HasPublicDefaultConstructor = true,
+		var peer = CreatePeer ("com/example/app/ExistingActivity", new ComponentInfo { 
 			Kind = ComponentKind.Activity,
 			Properties = new Dictionary<string, object?> { ["Label"] = "New Label" },
 		});
@@ -595,7 +597,7 @@ public class ManifestGeneratorTests : IDisposable
 		var gen = CreateDefaultGenerator ();
 		// orientation (0x0080) | keyboardHidden (0x0020) | screenSize (0x0400)
 		int configChanges = 0x0080 | 0x0020 | 0x0400;
-		var peer = CreatePeer ("com/example/app/ConfigActivity", new ComponentInfo { HasPublicDefaultConstructor = true,
+		var peer = CreatePeer ("com/example/app/ConfigActivity", new ComponentInfo { 
 			Kind = ComponentKind.Activity,
 			Properties = new Dictionary<string, object?> {
 				["ConfigurationChanges"] = configChanges,
@@ -613,5 +615,104 @@ public class ManifestGeneratorTests : IDisposable
 		Assert.True (parts.Contains ("keyboardHidden"), "configChanges should contain 'keyboardHidden'");
 		Assert.True (parts.Contains ("screenSize"), "configChanges should contain 'screenSize'");
 		Assert.Equal (3, parts.Length);
+	}
+
+	[Fact]
+	public void AssemblyLevel_SupportsGLTexture ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var info = new AssemblyManifestInfo ();
+		info.SupportsGLTextures.Add (new SupportsGLTextureInfo { Name = "GL_OES_compressed_ETC1_RGB8_texture" });
+
+		var doc = GenerateAndLoad (gen, assemblyInfo: info);
+		var element = doc.Root?.Elements ("supports-gl-texture")
+			.FirstOrDefault (e => (string?)e.Attribute (AttName) == "GL_OES_compressed_ETC1_RGB8_texture");
+		Assert.NotNull (element);
+	}
+
+	[Fact]
+	public void AssemblyLevel_UsesPermissionFlags ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var info = new AssemblyManifestInfo ();
+		info.UsesPermissions.Add (new UsesPermissionInfo {
+			Name = "android.permission.POST_NOTIFICATIONS",
+			UsesPermissionFlags = "neverForLocation",
+		});
+
+		var doc = GenerateAndLoad (gen, assemblyInfo: info);
+		var perm = doc.Root?.Elements ("uses-permission")
+			.FirstOrDefault (e => (string?)e.Attribute (AttName) == "android.permission.POST_NOTIFICATIONS");
+		Assert.NotNull (perm);
+		Assert.Equal ("neverForLocation", (string?)perm?.Attribute (AndroidNs + "usesPermissionFlags"));
+	}
+
+	[Fact]
+	public void AssemblyLevel_PermissionRoundIcon ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var info = new AssemblyManifestInfo ();
+		info.Permissions.Add (new PermissionInfo {
+			Name = "com.example.MY_PERMISSION",
+			Properties = new Dictionary<string, object?> {
+				["RoundIcon"] = "@mipmap/ic_launcher_round",
+			},
+		});
+
+		var doc = GenerateAndLoad (gen, assemblyInfo: info);
+		var perm = doc.Root?.Elements ("permission")
+			.FirstOrDefault (e => (string?)e.Attribute (AttName) == "com.example.MY_PERMISSION");
+		Assert.NotNull (perm);
+		Assert.Equal ("@mipmap/ic_launcher_round", (string?)perm?.Attribute (AndroidNs + "roundIcon"));
+	}
+
+	[Fact]
+	public void AssemblyLevel_ApplicationBackupAgent ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var info = new AssemblyManifestInfo ();
+		info.ApplicationProperties = new Dictionary<string, object?> {
+			["BackupAgent"] = "MyApp.MyBackupAgent",
+		};
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "com/example/app/MyBackupAgent",
+				CompatJniName = "com/example/app/MyBackupAgent",
+				ManagedTypeName = "MyApp.MyBackupAgent",
+				ManagedTypeNamespace = "MyApp",
+				ManagedTypeShortName = "MyBackupAgent",
+				AssemblyName = "TestApp",
+			},
+		};
+
+		var doc = GenerateAndLoad (gen, peers: peers, assemblyInfo: info);
+		var app = doc.Root?.Element ("application");
+		Assert.NotNull (app);
+		Assert.Equal ("com.example.app.MyBackupAgent", (string?)app?.Attribute (AndroidNs + "backupAgent"));
+	}
+
+	[Fact]
+	public void AssemblyLevel_ApplicationManageSpaceActivity ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var info = new AssemblyManifestInfo ();
+		info.ApplicationProperties = new Dictionary<string, object?> {
+			["ManageSpaceActivity"] = "MyApp.ManageActivity",
+		};
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "com/example/app/ManageActivity",
+				CompatJniName = "com/example/app/ManageActivity",
+				ManagedTypeName = "MyApp.ManageActivity",
+				ManagedTypeNamespace = "MyApp",
+				ManagedTypeShortName = "ManageActivity",
+				AssemblyName = "TestApp",
+			},
+		};
+
+		var doc = GenerateAndLoad (gen, peers: peers, assemblyInfo: info);
+		var app = doc.Root?.Element ("application");
+		Assert.NotNull (app);
+		Assert.Equal ("com.example.app.ManageActivity", (string?)app?.Attribute (AndroidNs + "manageSpaceActivity"));
 	}
 }

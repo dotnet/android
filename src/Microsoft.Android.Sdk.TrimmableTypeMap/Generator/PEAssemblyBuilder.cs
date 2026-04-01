@@ -95,20 +95,6 @@ sealed class PEAssemblyBuilder
 	}
 
 	/// <summary>
-	/// Serialises the metadata + IL into a PE DLL at <paramref name="outputPath"/>.
-	/// </summary>
-	public void WritePE (string outputPath)
-	{
-		var dir = Path.GetDirectoryName (outputPath);
-		if (!string.IsNullOrEmpty (dir)) {
-			Directory.CreateDirectory (dir);
-		}
-
-		using var fs = File.Create (outputPath);
-		WritePE (fs);
-	}
-
-	/// <summary>
 	/// Serialises the metadata + IL into a PE DLL and writes it to the given <paramref name="stream"/>.
 	/// </summary>
 	public void WritePE (Stream stream)

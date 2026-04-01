@@ -1079,7 +1079,7 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
 {1} - The exception message.</comment>
   </data>
   <data name="XA0144" xml:space="preserve">
-    <value>The Android emulator for AVD '{0}' failed with error '{1}': {2}</value>
+    <value>L'emulatore Android per AVD '{0}' ha generato l'errore '{1}': {2}</value>
     <comment>{0} - The AVD name.
 {1} - The error kind (e.g. Unknown).
 {2} - Error details from the emulator runner.</comment>
