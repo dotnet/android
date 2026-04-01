@@ -343,13 +343,27 @@ sealed class AssemblyIndex : IDisposable
 	/// <summary>
 	/// Scans assembly-level custom attributes for manifest-related data.
 	/// </summary>
+	static readonly HashSet<string> KnownAssemblyAttributes = new (StringComparer.Ordinal) {
+		"PermissionAttribute",
+		"PermissionGroupAttribute",
+		"PermissionTreeAttribute",
+		"UsesPermissionAttribute",
+		"UsesFeatureAttribute",
+		"UsesLibraryAttribute",
+		"UsesConfigurationAttribute",
+		"MetaDataAttribute",
+		"PropertyAttribute",
+		"SupportsGLTextureAttribute",
+		"ApplicationAttribute",
+	};
+
 	internal void ScanAssemblyAttributes (AssemblyManifestInfo info)
 	{
 		var asmDef = Reader.GetAssemblyDefinition ();
 		foreach (var caHandle in asmDef.GetCustomAttributes ()) {
 			var ca = Reader.GetCustomAttribute (caHandle);
 			var attrName = GetCustomAttributeName (ca, Reader);
-			if (attrName is null) {
+			if (attrName is null || !KnownAssemblyAttributes.Contains (attrName)) {
 				continue;
 			}
 
@@ -382,6 +396,11 @@ sealed class AssemblyIndex : IDisposable
 				break;
 			case "PropertyAttribute":
 				info.Properties.Add (CreatePropertyInfo (name, props));
+				break;
+			case "SupportsGLTextureAttribute":
+				if (name.Length > 0) {
+					info.SupportsGLTextures.Add (new SupportsGLTextureInfo { Name = name });
+				}
 				break;
 			case "ApplicationAttribute":
 				info.ApplicationProperties ??= new Dictionary<string, object?> (StringComparer.Ordinal);
@@ -421,7 +440,8 @@ sealed class AssemblyIndex : IDisposable
 	static UsesPermissionInfo CreateUsesPermissionInfo (string name, Dictionary<string, object?> props)
 	{
 		int? maxSdk = props.TryGetValue ("MaxSdkVersion", out var v) && v is int max ? max : null;
-		return new UsesPermissionInfo { Name = name, MaxSdkVersion = maxSdk };
+		string? flags = props.TryGetValue ("UsesPermissionFlags", out var f) && f is string s ? s : null;
+		return new UsesPermissionInfo { Name = name, MaxSdkVersion = maxSdk, UsesPermissionFlags = flags };
 	}
 
 	static UsesFeatureInfo CreateUsesFeatureInfo (string name, Dictionary<string, object?> props)

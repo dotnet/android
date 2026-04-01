@@ -33,6 +33,7 @@ class ManifestGenerator
 	public bool ForceExtractNativeLibs { get; set; }
 	public string? ManifestPlaceholders { get; set; }
 	public string? ApplicationJavaClass { get; set; }
+	public Action<string>? Warn { get; set; }
 
 	/// <summary>
 	/// Generates the merged manifest from an optional pre-loaded template and writes it to <paramref name="outputPath"/>.
@@ -55,7 +56,7 @@ class ManifestGenerator
 
 		// Apply assembly-level [Application] properties
 		if (assemblyInfo.ApplicationProperties is not null) {
-			AssemblyLevelElementBuilder.ApplyApplicationProperties (app, assemblyInfo.ApplicationProperties);
+			AssemblyLevelElementBuilder.ApplyApplicationProperties (app, assemblyInfo.ApplicationProperties, allPeers, Warn);
 		}
 
 		var existingTypes = new HashSet<string> (

@@ -66,4 +66,21 @@ public class AssemblyAttributeScanningTests : FixtureTestBase
 		Assert.NotNull (meta);
 		Assert.Equal ("test-value", meta.Value);
 	}
+
+	[Fact]
+	public void UsesPermission_Flags ()
+	{
+		var info = ScanAssemblyManifestInfo ();
+		var perm = info.UsesPermissions.FirstOrDefault (p => p.Name == "android.permission.POST_NOTIFICATIONS");
+		Assert.NotNull (perm);
+		Assert.Equal ("neverForLocation", perm.UsesPermissionFlags);
+	}
+
+	[Fact]
+	public void SupportsGLTexture_ConstructorArg ()
+	{
+		var info = ScanAssemblyManifestInfo ();
+		var gl = info.SupportsGLTextures.FirstOrDefault (g => g.Name == "GL_OES_compressed_ETC1_RGB8_texture");
+		Assert.NotNull (gl);
+	}
 }

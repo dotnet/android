@@ -616,4 +616,103 @@ public class ManifestGeneratorTests : IDisposable
 		Assert.True (parts.Contains ("screenSize"), "configChanges should contain 'screenSize'");
 		Assert.Equal (3, parts.Length);
 	}
+
+	[Fact]
+	public void AssemblyLevel_SupportsGLTexture ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var info = new AssemblyManifestInfo ();
+		info.SupportsGLTextures.Add (new SupportsGLTextureInfo { Name = "GL_OES_compressed_ETC1_RGB8_texture" });
+
+		var doc = GenerateAndLoad (gen, assemblyInfo: info);
+		var element = doc.Root?.Elements ("supports-gl-texture")
+			.FirstOrDefault (e => (string?)e.Attribute (AttName) == "GL_OES_compressed_ETC1_RGB8_texture");
+		Assert.NotNull (element);
+	}
+
+	[Fact]
+	public void AssemblyLevel_UsesPermissionFlags ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var info = new AssemblyManifestInfo ();
+		info.UsesPermissions.Add (new UsesPermissionInfo {
+			Name = "android.permission.POST_NOTIFICATIONS",
+			UsesPermissionFlags = "neverForLocation",
+		});
+
+		var doc = GenerateAndLoad (gen, assemblyInfo: info);
+		var perm = doc.Root?.Elements ("uses-permission")
+			.FirstOrDefault (e => (string?)e.Attribute (AttName) == "android.permission.POST_NOTIFICATIONS");
+		Assert.NotNull (perm);
+		Assert.Equal ("neverForLocation", (string?)perm?.Attribute (AndroidNs + "usesPermissionFlags"));
+	}
+
+	[Fact]
+	public void AssemblyLevel_PermissionRoundIcon ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var info = new AssemblyManifestInfo ();
+		info.Permissions.Add (new PermissionInfo {
+			Name = "com.example.MY_PERMISSION",
+			Properties = new Dictionary<string, object?> {
+				["RoundIcon"] = "@mipmap/ic_launcher_round",
+			},
+		});
+
+		var doc = GenerateAndLoad (gen, assemblyInfo: info);
+		var perm = doc.Root?.Elements ("permission")
+			.FirstOrDefault (e => (string?)e.Attribute (AttName) == "com.example.MY_PERMISSION");
+		Assert.NotNull (perm);
+		Assert.Equal ("@mipmap/ic_launcher_round", (string?)perm?.Attribute (AndroidNs + "roundIcon"));
+	}
+
+	[Fact]
+	public void AssemblyLevel_ApplicationBackupAgent ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var info = new AssemblyManifestInfo ();
+		info.ApplicationProperties = new Dictionary<string, object?> {
+			["BackupAgent"] = "MyApp.MyBackupAgent",
+		};
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "com/example/app/MyBackupAgent",
+				CompatJniName = "com/example/app/MyBackupAgent",
+				ManagedTypeName = "MyApp.MyBackupAgent",
+				ManagedTypeNamespace = "MyApp",
+				ManagedTypeShortName = "MyBackupAgent",
+				AssemblyName = "TestApp",
+			},
+		};
+
+		var doc = GenerateAndLoad (gen, peers: peers, assemblyInfo: info);
+		var app = doc.Root?.Element ("application");
+		Assert.NotNull (app);
+		Assert.Equal ("com.example.app.MyBackupAgent", (string?)app?.Attribute (AndroidNs + "backupAgent"));
+	}
+
+	[Fact]
+	public void AssemblyLevel_ApplicationManageSpaceActivity ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var info = new AssemblyManifestInfo ();
+		info.ApplicationProperties = new Dictionary<string, object?> {
+			["ManageSpaceActivity"] = "MyApp.ManageActivity",
+		};
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "com/example/app/ManageActivity",
+				CompatJniName = "com/example/app/ManageActivity",
+				ManagedTypeName = "MyApp.ManageActivity",
+				ManagedTypeNamespace = "MyApp",
+				ManagedTypeShortName = "ManageActivity",
+				AssemblyName = "TestApp",
+			},
+		};
+
+		var doc = GenerateAndLoad (gen, peers: peers, assemblyInfo: info);
+		var app = doc.Root?.Element ("application");
+		Assert.NotNull (app);
+		Assert.Equal ("com.example.app.ManageActivity", (string?)app?.Attribute (AndroidNs + "manageSpaceActivity"));
+	}
 }

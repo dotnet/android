@@ -246,7 +246,7 @@ public sealed class JavaPeerScanner : IDisposable
 				ActivationCtor = activationCtor,
 				InvokerTypeName = invokerTypeName,
 				IsGenericDefinition = isGenericDefinition,
-				ComponentAttribute = ToComponentInfo (attrInfo, typeDef, index),
+				ComponentAttribute = ToComponentInfo (attrInfo),
 			};
 
 			results [fullName] = peer;
@@ -1560,7 +1560,7 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 	}
 
-	static ComponentInfo? ToComponentInfo (TypeAttributeInfo? attrInfo, TypeDefinition typeDef, AssemblyIndex index)
+	static ComponentInfo? ToComponentInfo (TypeAttributeInfo? attrInfo)
 	{
 		if (attrInfo is null) {
 			return null;

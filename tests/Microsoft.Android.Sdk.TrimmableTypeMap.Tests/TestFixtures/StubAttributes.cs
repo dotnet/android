@@ -110,6 +110,7 @@ namespace Android.App
 
 		public string? Name { get; set; }
 		public int MaxSdkVersion { get; set; }
+		public string? UsesPermissionFlags { get; set; }
 	}
 
 	[AttributeUsage (AttributeTargets.Assembly, AllowMultiple = true)]
@@ -144,6 +145,14 @@ namespace Android.App
 
 		public string [] Actions { get; }
 		public string []? Categories { get; set; }
+	}
+
+	[AttributeUsage (AttributeTargets.Assembly, AllowMultiple = true)]
+	public sealed class SupportsGLTextureAttribute : Attribute
+	{
+		public SupportsGLTextureAttribute (string name) => Name = name;
+
+		public string Name { get; private set; }
 	}
 }
 
