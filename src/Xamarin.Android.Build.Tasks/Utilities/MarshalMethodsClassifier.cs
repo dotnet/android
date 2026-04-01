@@ -240,13 +240,6 @@ namespace Xamarin.Android.Tasks
 			: base (declaringType, nativeCallback, connector, registeredMethod, implementedMethod, callbackField, jniTypeName, jniName, jniSignature, needsBlittableWorkaround)
 		{
 			ConvertedNativeCallback = convertedNativeCallback ?? throw new ArgumentNullException (nameof (convertedNativeCallback));
-
-			// Set NativeCallbackWrapper so that the base NativeCallback property returns the
-			// converted wrapper method (e.g. n_MyMethod_mm_wrapper) instead of the original
-			// native callback.  Downstream consumers (MarshalMethodCecilAdapter, native code
-			// generators) rely on NativeCallback returning the wrapper's MetadataToken and
-			// FullName to produce correct native callback tables.
-			NativeCallbackWrapper = convertedNativeCallback;
 		}
 	}
 

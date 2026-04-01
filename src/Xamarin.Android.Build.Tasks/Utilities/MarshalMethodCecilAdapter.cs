@@ -91,6 +91,14 @@ class MarshalMethodCecilAdapter
 
 	static MarshalMethodEntryObject CreateEntry (MarshalMethodEntry entry, ManagedMarshalMethodsLookupInfo? info)
 	{
+		// For converted entries, use the wrapper method (ConvertedNativeCallback) for native
+		// callback tables — it has the correct MetadataToken and [UnmanagedCallersOnly] attribute.
+		// For regular entries, NativeCallback already returns the wrapper after the rewriter sets
+		// NativeCallbackWrapper.
+		MethodDefinition nativeCallbackMethod = entry is ConvertedMarshalMethodEntry converted
+			? converted.ConvertedNativeCallback
+			: entry.NativeCallback;
+
 		var obj = new MarshalMethodEntryObject (
 			declaringType: CreateDeclaringType (entry.DeclaringType),
 			implementedMethod: CreateMethod (entry.ImplementedMethod),
@@ -98,12 +106,12 @@ class MarshalMethodCecilAdapter
 			jniTypeName: entry.JniTypeName,
 			jniMethodName: entry.JniMethodName,
 			jniMethodSignature: entry.JniMethodSignature,
-			nativeCallback: CreateMethod (entry.NativeCallback),
+			nativeCallback: CreateMethod (nativeCallbackMethod),
 			registeredMethod: CreateMethodBase (entry.RegisteredMethod)
 		);
 
 		if (info is not null) {
-			(uint assemblyIndex, uint classIndex, uint methodIndex) = info.GetIndex (entry.NativeCallback);
+			(uint assemblyIndex, uint classIndex, uint methodIndex) = info.GetIndex (nativeCallbackMethod);
 
 			obj.NativeCallback.AssemblyIndex = assemblyIndex;
 			obj.NativeCallback.ClassIndex = classIndex;
