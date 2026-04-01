@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -38,11 +37,10 @@ class ManifestGenerator
 	/// Generates the merged manifest from an optional pre-loaded template and writes it to <paramref name="outputPath"/>.
 	/// Returns the list of additional content provider names (for ApplicationRegistration.java).
 	/// </summary>
-	public IList<string> Generate (
+	public (XDocument Document, IList<string> ProviderNames) Generate (
 		XDocument? manifestTemplate,
 		IReadOnlyList<JavaPeerInfo> allPeers,
-		AssemblyManifestInfo assemblyInfo,
-		string outputPath)
+		AssemblyManifestInfo assemblyInfo)
 	{
 		var doc = manifestTemplate ?? CreateDefaultManifest ();
 		var manifest = doc.Root;
@@ -122,14 +120,7 @@ class ManifestGenerator
 			ApplyPlaceholders (doc, placeholders);
 		}
 
-		// Write output
-		var outputDir = Path.GetDirectoryName (outputPath);
-		if (outputDir is not null) {
-			Directory.CreateDirectory (outputDir);
-		}
-		doc.Save (outputPath);
-
-		return providerNames;
+		return (doc, providerNames);
 	}
 
 	XDocument CreateDefaultManifest ()

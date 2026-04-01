@@ -96,19 +96,46 @@ ApplicationJavaClass: ApplicationJavaClass);
 }
 
 var generator = new TrimmableTypeMapGenerator (msg => Log.LogMessage (MessageImportance.Low, msg));
+
+XDocument? manifestTemplate = null;
+if (!ManifestTemplate.IsNullOrEmpty () && File.Exists (ManifestTemplate)) {
+	manifestTemplate = System.Xml.Linq.XDocument.Load (ManifestTemplate);
+}
+
 result = generator.Execute (
-assemblies,
-systemRuntimeVersion,
-frameworkAssemblyNames,
-manifestConfig,
-ManifestTemplate,
-MergedAndroidManifestOutput,
-AcwMapOutputFile);
+	assemblies,
+	systemRuntimeVersion,
+	frameworkAssemblyNames,
+	manifestConfig,
+	manifestTemplate);
 
 GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyPaths);
 GeneratedJavaFiles = WriteJavaSourcesToDisk (result.GeneratedJavaSources);
 PerAssemblyAcwMapFiles = GeneratePerAssemblyAcwMaps (result.AllPeers);
-AdditionalProviderSources = result.AdditionalProviderSources;
+
+// Write manifest to disk if generated
+if (result.Manifest is not null && !MergedAndroidManifestOutput.IsNullOrEmpty ()) {
+	var manifestDir = Path.GetDirectoryName (MergedAndroidManifestOutput);
+	if (!manifestDir.IsNullOrEmpty ()) {
+		Directory.CreateDirectory (manifestDir);
+	}
+	result.Manifest.Document.Save (MergedAndroidManifestOutput);
+	AdditionalProviderSources = result.Manifest.AdditionalProviderSources;
+}
+
+// Write merged acw-map.txt if requested
+if (!AcwMapOutputFile.IsNullOrEmpty ()) {
+	var acwDirectory = Path.GetDirectoryName (AcwMapOutputFile);
+	if (!acwDirectory.IsNullOrEmpty ()) {
+		Directory.CreateDirectory (acwDirectory);
+	}
+	using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
+		AcwMapWriter.Write (sw, result.AllPeers);
+		sw.Flush ();
+		Files.CopyIfStreamChanged (sw.BaseStream, AcwMapOutputFile);
+	}
+	Log.LogDebugMessage ($"Wrote merged acw-map.txt with {result.AllPeers.Count} types to {AcwMapOutputFile}.");
+}
 } finally {
 if (result is not null) {
 foreach (var assembly in result.GeneratedAssemblies) {

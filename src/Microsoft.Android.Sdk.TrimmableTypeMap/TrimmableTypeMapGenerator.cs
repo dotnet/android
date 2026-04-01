@@ -18,16 +18,15 @@ public class TrimmableTypeMapGenerator
 
 	/// <summary>
 	/// Runs the full generation pipeline: scan assemblies, generate typemap
-	/// assemblies, generate JCW Java sources, optionally generate manifest and acw-map.
+	/// assemblies, generate JCW Java sources, and optionally generate a merged manifest.
+	/// No file IO is performed — all results are returned in memory.
 	/// </summary>
 	public TrimmableTypeMapResult Execute (
 		IReadOnlyList<(string Name, PEReader Reader)> assemblies,
 		Version systemRuntimeVersion,
 		HashSet<string> frameworkAssemblyNames,
 		ManifestConfig? manifestConfig = null,
-		string? manifestTemplatePath = null,
-		string? mergedManifestOutputPath = null,
-		string? acwMapOutputPath = null)
+		XDocument? manifestTemplate = null)
 	{
 		_ = assemblies ?? throw new ArgumentNullException (nameof (assemblies));
 		_ = systemRuntimeVersion ?? throw new ArgumentNullException (nameof (systemRuntimeVersion));
@@ -46,33 +45,18 @@ public class TrimmableTypeMapGenerator
 		log ($"Generating JCW files for {jcwPeers.Count} types (filtered from {allPeers.Count} total).");
 		var generatedJavaSources = GenerateJcwJavaSources (jcwPeers);
 
-		string[]? additionalProviderSources = null;
+		GeneratedManifest? manifest = null;
 
 		// Generate merged AndroidManifest.xml if requested
-		if (!mergedManifestOutputPath.IsNullOrEmpty () && manifestConfig is not null) {
-			var providerSources = GenerateManifest (allPeers, assemblyManifestInfo, manifestConfig, manifestTemplatePath, mergedManifestOutputPath);
-			if (providerSources.Count > 0) {
-				additionalProviderSources = providerSources.ToArray ();
-			}
+		if (manifestConfig is not null) {
+			manifest = GenerateManifest (allPeers, assemblyManifestInfo, manifestConfig, manifestTemplate);
 		}
 
-		// Write merged acw-map.txt if requested
-		if (!acwMapOutputPath.IsNullOrEmpty ()) {
-			var acwDirectory = Path.GetDirectoryName (acwMapOutputPath);
-			if (!acwDirectory.IsNullOrEmpty ()) {
-				Directory.CreateDirectory (acwDirectory);
-			}
-			using (var writer = new StreamWriter (acwMapOutputPath)) {
-				AcwMapWriter.Write (writer, allPeers);
-			}
-			log ($"Wrote merged acw-map.txt with {allPeers.Count} types to {acwMapOutputPath}.");
-		}
-
-		return new TrimmableTypeMapResult (generatedAssemblies, generatedJavaSources, allPeers, additionalProviderSources);
+		return new TrimmableTypeMapResult (generatedAssemblies, generatedJavaSources, allPeers, manifest);
 	}
 
-	IList<string> GenerateManifest (List<JavaPeerInfo> allPeers, AssemblyManifestInfo assemblyManifestInfo,
-		ManifestConfig config, string? manifestTemplatePath, string mergedManifestOutputPath)
+	GeneratedManifest GenerateManifest (List<JavaPeerInfo> allPeers, AssemblyManifestInfo assemblyManifestInfo,
+		ManifestConfig config, XDocument? manifestTemplate)
 	{
 		string minSdk = "21";
 		if (!config.SupportedOSPlatformVersion.IsNullOrEmpty () && Version.TryParse (config.SupportedOSPlatformVersion, out var sopv)) {
@@ -103,12 +87,8 @@ public class TrimmableTypeMapGenerator
 			ApplicationJavaClass = config.ApplicationJavaClass,
 		};
 
-		XDocument? manifestTemplateDoc = null;
-		if (!manifestTemplatePath.IsNullOrEmpty () && File.Exists (manifestTemplatePath)) {
-			manifestTemplateDoc = XDocument.Load (manifestTemplatePath);
-		}
-
-		return generator.Generate (manifestTemplateDoc, allPeers, assemblyManifestInfo, mergedManifestOutputPath);
+		var (doc, providerNames) = generator.Generate (manifestTemplate, allPeers, assemblyManifestInfo);
+		return new GeneratedManifest (doc, providerNames.Count > 0 ? providerNames.ToArray () : []);
 	}
 
 	(List<JavaPeerInfo> peers, AssemblyManifestInfo manifestInfo) ScanAssemblies (IReadOnlyList<(string Name, PEReader Reader)> assemblies)
