@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection.PortableExecutable;
+using System.Xml.Linq;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -57,7 +58,10 @@ public class TrimmableTypeMapGenerator
 
 		// Write merged acw-map.txt if requested
 		if (!acwMapOutputPath.IsNullOrEmpty ()) {
-			Directory.CreateDirectory (Path.GetDirectoryName (acwMapOutputPath));
+			var acwDirectory = Path.GetDirectoryName (acwMapOutputPath);
+			if (!acwDirectory.IsNullOrEmpty ()) {
+				Directory.CreateDirectory (acwDirectory);
+			}
 			using (var writer = new StreamWriter (acwMapOutputPath)) {
 				AcwMapWriter.Write (writer, allPeers);
 			}
@@ -99,7 +103,12 @@ public class TrimmableTypeMapGenerator
 			ApplicationJavaClass = config.ApplicationJavaClass,
 		};
 
-		return generator.Generate (manifestTemplatePath, allPeers, assemblyManifestInfo, mergedManifestOutputPath);
+		XDocument? manifestTemplateDoc = null;
+		if (!manifestTemplatePath.IsNullOrEmpty () && File.Exists (manifestTemplatePath)) {
+			manifestTemplateDoc = XDocument.Load (manifestTemplatePath);
+		}
+
+		return generator.Generate (manifestTemplateDoc, allPeers, assemblyManifestInfo, mergedManifestOutputPath);
 	}
 
 	(List<JavaPeerInfo> peers, AssemblyManifestInfo manifestInfo) ScanAssemblies (IReadOnlyList<(string Name, PEReader Reader)> assemblies)
