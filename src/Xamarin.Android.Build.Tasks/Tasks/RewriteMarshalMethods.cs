@@ -1,6 +1,7 @@
 #nullable enable
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
+using Java.Interop.Tools.Cecil;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
@@ -13,15 +14,22 @@ namespace Xamarin.Android.Tasks;
 /// attributes, significantly improving startup performance and reducing runtime overhead for Android applications.
 /// </summary>
 /// <remarks>
-/// This task operates on the marshal method classifications produced by earlier pipeline stages and:
-/// 
-/// 1. Retrieves marshal method classifications from the build pipeline state
-/// 2. Parses environment files to determine exception transition behavior
-/// 3. Rewrites assemblies to replace dynamic registration with static marshal methods
-/// 4. Optionally builds managed lookup tables for runtime marshal method resolution
-/// 5. Reports statistics on marshal method generation and any fallback to dynamic registration
-/// 
-/// The rewriting process creates native callback wrappers for methods that have non-blittable
+/// This task runs in the inner (per-RID) build after ILLink and <c>_PostTrimmingPipeline</c> but before
+/// <c>CreateReadyToRunImages</c> or <c>IlcCompile</c>. It is fully self-contained: it creates its own
+/// assembly resolver, scans assemblies for marshal method candidates, classifies them, and rewrites them
+/// in a single pass.
+///
+/// The rewriting process:
+///
+/// 1. Derives the target architecture from the <see cref="RuntimeIdentifier"/>
+/// 2. Creates an assembly resolver with ReadWrite+InMemory mode for Cecil
+/// 3. Scans assemblies to discover marshal method candidates via <see cref="MarshalMethodsCollection.FromAssemblies"/>
+/// 4. Parses environment files to determine exception transition behavior
+/// 5. Rewrites assemblies to replace dynamic registration with static marshal methods
+/// 6. Optionally builds managed lookup tables for runtime marshal method resolution
+/// 7. Reports statistics on marshal method generation and any fallback to dynamic registration
+///
+/// The rewriting creates native callback wrappers for methods that have non-blittable
 /// parameters or return types, ensuring compatibility with the [UnmanagedCallersOnly] attribute
 /// while maintaining proper marshaling semantics.
 /// </remarks>
@@ -31,6 +39,13 @@ public class RewriteMarshalMethods : AndroidTask
 	/// Gets the task prefix used for logging and error messages.
 	/// </summary>
 	public override string TaskPrefix => "RMM";
+
+	/// <summary>
+	/// Gets or sets the resolved assemblies to scan and rewrite.
+	/// These are the post-ILLink assemblies from <c>ResolvedFileToPublish</c> in the inner build.
+	/// </summary>
+	[Required]
+	public ITaskItem [] Assemblies { get; set; } = [];
 
 	/// <summary>
 	/// Gets or sets whether to enable managed marshal methods lookup tables.
@@ -47,42 +62,53 @@ public class RewriteMarshalMethods : AndroidTask
 	public ITaskItem [] Environments { get; set; } = [];
 
 	/// <summary>
-	/// Gets or sets the intermediate output directory path. Required for retrieving
-	/// build state objects that contain marshal method classifications.
+	/// Gets or sets the runtime identifier for this inner build (e.g., "android-arm64").
+	/// Used to derive the target architecture and ABI for assembly scanning and rewriting.
 	/// </summary>
 	[Required]
-	public string IntermediateOutputDirectory { get; set; } = "";
+	public string RuntimeIdentifier { get; set; } = "";
 
 	/// <summary>
 	/// Executes the marshal method rewriting task. This is the main entry point that
-	/// coordinates the entire assembly rewriting process across all target architectures.
+	/// coordinates the entire assembly rewriting process for the current target architecture.
 	/// </summary>
 	/// <returns>
 	/// true if the task completed successfully; false if errors occurred during processing.
 	/// </returns>
 	/// <remarks>
 	/// The execution flow is:
-	/// 
-	/// 1. Retrieve native code generation state from previous pipeline stages
-	/// 2. Parse environment files for configuration (e.g., broken exception transitions)
-	/// 3. For each target architecture:
-	///    - Rewrite assemblies to use marshal methods
-	///    - Add special case methods (e.g., TypeManager methods)
-	///    - Optionally build managed lookup tables
-	/// 4. Report statistics on marshal method generation
-	/// 5. Log warnings for methods that must fall back to dynamic registration
-	/// 
+	///
+	/// 1. Derive the target architecture and ABI from the RuntimeIdentifier
+	/// 2. Build a dictionary of assemblies and set Abi metadata on each item
+	/// 3. Create an assembly resolver with ReadWrite+InMemory mode
+	/// 4. Scan assemblies and classify marshal methods via MarshalMethodsCollection.FromAssemblies
+	/// 5. Parse environment files for configuration (e.g., broken exception transitions)
+	/// 6. Rewrite assemblies to use marshal methods
+	/// 7. Add special case methods (e.g., TypeManager methods)
+	/// 8. Optionally build managed lookup tables
+	/// 9. Report statistics on marshal method generation
+	/// 10. Log warnings for methods that must fall back to dynamic registration
+	///
 	/// The task handles the ordering dependency between special case methods and managed
 	/// lookup tables - special cases must be added first so they appear in the lookup tables.
 	/// </remarks>
 	public override bool RunTask ()
 	{
-		// Retrieve the stored NativeCodeGenState from the build pipeline
-		// This contains marshal method classifications from earlier stages
-		var nativeCodeGenStates = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ConcurrentDictionary<AndroidTargetArch, NativeCodeGenState>> (
-			MonoAndroidHelper.GetProjectBuildSpecificTaskObjectKey (GenerateJavaStubs.NativeCodeGenStateRegisterTaskKey, WorkingDirectory, IntermediateOutputDirectory),
-			RegisteredTaskObjectLifetime.Build
-		);
+		AndroidTargetArch arch = MonoAndroidHelper.RidToArch (RuntimeIdentifier);
+		string abi = MonoAndroidHelper.RidToAbi (RuntimeIdentifier);
+
+		// Build the assemblies dictionary and set Abi metadata required by XAJavaTypeScanner
+		var assemblies = new Dictionary<string, ITaskItem> (Assemblies.Length);
+		foreach (var asm in Assemblies) {
+			asm.SetMetadata ("Abi", abi);
+			assemblies [asm.ItemSpec] = asm;
+		}
+
+		// Create a resolver with ReadWrite+InMemory mode so Cecil can modify assemblies in place
+		using XAAssemblyResolver resolver = MonoAndroidHelper.MakeResolver (Log, useMarshalMethods: true, arch, assemblies);
+
+		// Scan and classify marshal methods
+		MarshalMethodsCollection classifier = MarshalMethodsCollection.FromAssemblies (arch, [.. assemblies.Values], resolver, Log);
 
 		// Parse environment files to determine configuration settings
 		// We need to parse the environment files supplied by the user to see if they want to use broken exception transitions. This information is needed
@@ -91,42 +117,33 @@ public class RewriteMarshalMethods : AndroidTask
 		var environmentParser = new EnvironmentFilesParser ();
 		bool brokenExceptionTransitionsEnabled = environmentParser.AreBrokenExceptionTransitionsEnabled (Environments);
 
-		// Process each target architecture
-		foreach (var kvp in nativeCodeGenStates) {
-			NativeCodeGenState state = kvp.Value;
+		// Handle the ordering dependency between special case methods and managed lookup tables
+		ManagedMarshalMethodsLookupInfo? managedLookupInfo = null;
+		if (!EnableManagedMarshalMethodsLookup) {
+			// Standard path: rewrite first, then add special cases
+			RewriteAssemblies (arch, classifier, resolver, managedLookupInfo, brokenExceptionTransitionsEnabled);
+			classifier.AddSpecialCaseMethods ();
+		} else {
+			// Managed lookup path: add special cases first so they appear in lookup tables
+			// We need to run `AddSpecialCaseMethods` before `RewriteMarshalMethods` so that we can see the special case
+			// methods (such as TypeManager.n_Activate_mm) when generating the managed lookup tables.
+			classifier.AddSpecialCaseMethods ();
+			managedLookupInfo = new ManagedMarshalMethodsLookupInfo (Log);
+			RewriteAssemblies (arch, classifier, resolver, managedLookupInfo, brokenExceptionTransitionsEnabled);
+		}
 
-			if (state.Classifier is null) {
-				Log.LogError ("state.Classifier cannot be null if marshal methods are enabled");
-				return false;
-			}
+		// Report statistics on marshal method generation
+		Log.LogDebugMessage ($"[{arch}] Number of generated marshal methods: {classifier.MarshalMethods.Count}");
+		if (classifier.DynamicallyRegisteredMarshalMethods.Count > 0) {
+			Log.LogWarning ($"[{arch}] Number of methods in the project that will be registered dynamically: {classifier.DynamicallyRegisteredMarshalMethods.Count}");
+		}
 
-			// Handle the ordering dependency between special case methods and managed lookup tables
-			if (!EnableManagedMarshalMethodsLookup) {
-				// Standard path: rewrite first, then add special cases
-				RewriteMethods (state, brokenExceptionTransitionsEnabled);
-				state.Classifier.AddSpecialCaseMethods ();
-			} else {
-				// Managed lookup path: add special cases first so they appear in lookup tables
-				// We need to run `AddSpecialCaseMethods` before `RewriteMarshalMethods` so that we can see the special case
-				// methods (such as TypeManager.n_Activate_mm) when generating the managed lookup tables.
-				state.Classifier.AddSpecialCaseMethods ();
-				state.ManagedMarshalMethodsLookupInfo = new ManagedMarshalMethodsLookupInfo (Log);
-				RewriteMethods (state, brokenExceptionTransitionsEnabled);
-			}
+		// Count and report methods that need blittable workaround wrappers
+		var wrappedCount = classifier.MarshalMethods.Sum (m => m.Value.Count (m2 => m2.NeedsBlittableWorkaround));
 
-			// Report statistics on marshal method generation
-			Log.LogDebugMessage ($"[{state.TargetArch}] Number of generated marshal methods: {state.Classifier.MarshalMethods.Count}");
-			if (state.Classifier.DynamicallyRegisteredMarshalMethods.Count > 0) {
-				Log.LogWarning ($"[{state.TargetArch}] Number of methods in the project that will be registered dynamically: {state.Classifier.DynamicallyRegisteredMarshalMethods.Count}");
-			}
-
-			// Count and report methods that need blittable workaround wrappers
-			var wrappedCount = state.Classifier.MarshalMethods.Sum (m => m.Value.Count (m2 => m2.NeedsBlittableWorkaround));
-
-			if (wrappedCount > 0) {
-				// TODO: change to LogWarning once the generator can output code which requires no non-blittable wrappers
-				Log.LogDebugMessage ($"[{state.TargetArch}] Number of methods in the project that need marshal method wrappers: {wrappedCount}");
-			}
+		if (wrappedCount > 0) {
+			// TODO: change to LogWarning once the generator can output code which requires no non-blittable wrappers
+			Log.LogDebugMessage ($"[{arch}] Number of methods in the project that need marshal method wrappers: {wrappedCount}");
 		}
 
 		return !Log.HasLoggedErrors;
@@ -137,7 +154,10 @@ public class RewriteMarshalMethods : AndroidTask
 	/// Creates and executes the <see cref="MarshalMethodsAssemblyRewriter"/> that handles
 	/// the low-level assembly modification operations.
 	/// </summary>
-	/// <param name="state">The native code generation state containing marshal method classifications and resolver.</param>
+	/// <param name="arch">The target Android architecture.</param>
+	/// <param name="classifier">The marshal methods classifier containing method classifications.</param>
+	/// <param name="resolver">The assembly resolver used to load and resolve assemblies.</param>
+	/// <param name="managedLookupInfo">Optional managed marshal methods lookup info for building lookup tables.</param>
 	/// <param name="brokenExceptionTransitionsEnabled">
 	/// Whether to generate code compatible with broken exception transitions.
 	/// This affects how wrapper methods handle exceptions during JNI calls.
@@ -150,13 +170,9 @@ public class RewriteMarshalMethods : AndroidTask
 	/// - Modifying assembly references and imports
 	/// - Building managed lookup table entries
 	/// </remarks>
-	void RewriteMethods (NativeCodeGenState state, bool brokenExceptionTransitionsEnabled)
+	void RewriteAssemblies (AndroidTargetArch arch, MarshalMethodsCollection classifier, XAAssemblyResolver resolver, ManagedMarshalMethodsLookupInfo? managedLookupInfo, bool brokenExceptionTransitionsEnabled)
 	{
-		if (state.Classifier == null) {
-			return;
-		}
-
-		var rewriter = new MarshalMethodsAssemblyRewriter (Log, state.TargetArch, state.Classifier, state.Resolver, state.ManagedMarshalMethodsLookupInfo);
+		var rewriter = new MarshalMethodsAssemblyRewriter (Log, arch, classifier, resolver, managedLookupInfo);
 		rewriter.Rewrite (brokenExceptionTransitionsEnabled);
 	}
 }

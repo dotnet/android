@@ -68,6 +68,24 @@ class MarshalMethodCecilAdapter
 			obj.MarshalMethods.Add (group.Key, methods);
 		}
 
+		// Also include methods that were already rewritten in the inner build.
+		// After the inner build rewrites assemblies, the outer build's GenerateJavaStubs
+		// re-classifies them and puts already-rewritten methods (with _mm_wrapper +
+		// [UnmanagedCallersOnly]) into ConvertedMarshalMethods instead of MarshalMethods.
+		// We must include these so that GenerateNativeMarshalMethodSources produces
+		// correct native callback tables.
+		foreach (var group in state.Classifier.ConvertedMarshalMethods) {
+			if (!obj.MarshalMethods.TryGetValue (group.Key, out var methods)) {
+				methods = new List<MarshalMethodEntryObject> (group.Value.Count);
+				obj.MarshalMethods.Add (group.Key, methods);
+			}
+
+			foreach (var method in group.Value) {
+				var entry = CreateEntry (method, state.ManagedMarshalMethodsLookupInfo);
+				methods.Add (entry);
+			}
+		}
+
 		return obj;
 	}
 

@@ -78,13 +78,6 @@
         EnableNativeRuntimeLinking="$(_AndroidEnableNativeRuntimeLinking)">
     </GenerateJavaStubs>
 
-    <RewriteMarshalMethods
-        Condition=" '$(_AndroidUseMarshalMethods)' == 'true' And '$(AndroidIncludeDebugSymbols)' == 'false' "
-        EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
-        Environments="@(_EnvironmentFiles)"
-        IntermediateOutputDirectory="$(IntermediateOutputPath)">
-    </RewriteMarshalMethods>
-
     <GenerateTypeMappings
         AndroidRuntime="$(_AndroidRuntime)"
         Debug="$(AndroidIncludeDebugSymbols)"
@@ -248,6 +241,26 @@
         AddKeepAlives="$(AndroidAddKeepAlives)"
         AndroidLinkResources="$(AndroidLinkResources)"
         Deterministic="$(Deterministic)" />
+  </Target>
+
+  <!--
+    Rewrite assemblies to use marshal methods (static native callbacks with [UnmanagedCallersOnly])
+    instead of dynamic JNI registration. Runs in the inner (per-RID) build after ILLink and
+    _PostTrimmingPipeline but before ReadyToRun/crossgen2 or NativeAOT compilation, so these
+    tools operate on the already-rewritten assemblies.
+  -->
+  <Target Name="_RewriteMarshalMethods"
+      AfterTargets="_PostTrimmingPipeline"
+      BeforeTargets="CreateReadyToRunImages;IlcCompile"
+      Condition=" '$(_AndroidUseMarshalMethods)' == 'true' and '$(AndroidIncludeDebugSymbols)' == 'false' and '$(PublishTrimmed)' == 'true' ">
+    <ItemGroup>
+      <_RewriteMarshalMethodsAssembly Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
+    </ItemGroup>
+    <RewriteMarshalMethods
+        Assemblies="@(_RewriteMarshalMethodsAssembly)"
+        EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
+        Environments="@(AndroidEnvironment);@(LibraryEnvironments)"
+        RuntimeIdentifier="$(RuntimeIdentifier)" />
   </Target>
 
   <!-- Inject _TypeMapKind into the property cache -->
