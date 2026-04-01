@@ -1,4 +1,7 @@
+using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 using Xamarin.Android.Tasks;
 using Xunit;
 
@@ -32,7 +35,12 @@ AssertNoDiffs ("CONNECTOR MISMATCHES", result.ConnectorMismatches);
 public void ScannerDiagnostics_MonoAndroid ()
 {
 using var scanner = new JavaPeerScanner ();
-var peers = scanner.Scan (new [] { MonoAndroidAssemblyPath });
+var peReader = new PEReader (File.OpenRead (MonoAndroidAssemblyPath));
+var mdReader = peReader.GetMetadataReader ();
+var assemblyName = mdReader.GetString (mdReader.GetAssemblyDefinition ().Name);
+var assemblies = new [] { (assemblyName, peReader) };
+var peers = scanner.Scan (assemblies);
+peReader.Dispose ();
 
 var interfaces = peers.Count (p => p.IsInterface);
 var totalMethods = peers.Sum (p => p.MarshalMethods.Count);

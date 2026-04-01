@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -130,19 +131,30 @@ namespace Xamarin.Android.Build.Tests
 		[DebuggerHidden]
 		public static void AssertHasNoWarnings (this ProjectBuilder builder)
 		{
-			Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, " 0 Warning(s)"), $"{builder.BuildLogFile} should have no MSBuild warnings.");
+			AssertHasSomeWarnings (builder.LastBuildOutput, 0, builder.BuildLogFile);
+		}
+
+		[DebuggerHidden]
+		public static void AssertHasSomeWarnings (this ProjectBuilder builder, uint numOfExpectedWarnings)
+		{
+			AssertHasSomeWarnings (builder.LastBuildOutput, numOfExpectedWarnings, builder.BuildLogFile);
 		}
 
 		[DebuggerHidden]
 		public static void AssertHasNoWarnings (this DotNetCLI dotnet)
 		{
-			Assert.IsTrue (StringAssertEx.ContainsText (dotnet.LastBuildOutput, " 0 Warning(s)"), $"{dotnet.BuildLogFile} should have no MSBuild warnings.");
+			AssertHasSomeWarnings (dotnet.LastBuildOutput, 0, dotnet.BuildLogFile);
 		}
 
 		[DebuggerHidden]
 		public static void AssertHasSomeWarnings (this DotNetCLI dotnet, uint numOfExpectedWarnings)
 		{
-			Assert.IsTrue (StringAssertEx.ContainsText (dotnet.LastBuildOutput, $" {numOfExpectedWarnings} Warning(s)"), $"{dotnet.BuildLogFile} should have {numOfExpectedWarnings} MSBuild warnings.");
+			AssertHasSomeWarnings (dotnet.LastBuildOutput, numOfExpectedWarnings, dotnet.BuildLogFile);
+		}
+
+		static void AssertHasSomeWarnings (IEnumerable<string> lastBuildOutput, uint numOfExpectedWarnings, string logFile)
+		{
+			Assert.IsTrue (StringAssertEx.ContainsText (lastBuildOutput, $" {numOfExpectedWarnings} Warning(s)"), $"{logFile} should have {numOfExpectedWarnings} MSBuild warnings.");
 		}
 	}
 }

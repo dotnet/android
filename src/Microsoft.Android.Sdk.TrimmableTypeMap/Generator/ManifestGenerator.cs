@@ -1,5 +1,3 @@
-#nullable enable
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -37,16 +35,16 @@ class ManifestGenerator
 	public string? ApplicationJavaClass { get; set; }
 
 	/// <summary>
-	/// Generates the merged manifest and writes it to <paramref name="outputPath"/>.
+	/// Generates the merged manifest from an optional pre-loaded template and writes it to <paramref name="outputPath"/>.
 	/// Returns the list of additional content provider names (for ApplicationRegistration.java).
 	/// </summary>
 	public IList<string> Generate (
-		string? manifestTemplatePath,
+		XDocument? manifestTemplate,
 		IReadOnlyList<JavaPeerInfo> allPeers,
 		AssemblyManifestInfo assemblyInfo,
 		string outputPath)
 	{
-		var doc = LoadOrCreateManifest (manifestTemplatePath);
+		var doc = manifestTemplate ?? CreateDefaultManifest ();
 		var manifest = doc.Root;
 		if (manifest is null) {
 			throw new InvalidOperationException ("Manifest document has no root element.");
@@ -134,12 +132,8 @@ class ManifestGenerator
 		return providerNames;
 	}
 
-	XDocument LoadOrCreateManifest (string? templatePath)
+	XDocument CreateDefaultManifest ()
 	{
-		if (!string.IsNullOrEmpty (templatePath) && File.Exists (templatePath)) {
-			return XDocument.Load (templatePath);
-		}
-
 		return new XDocument (
 			new XDeclaration ("1.0", "utf-8", null),
 			new XElement ("manifest",

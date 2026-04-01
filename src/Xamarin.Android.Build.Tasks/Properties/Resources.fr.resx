@@ -1079,7 +1079,7 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
 {1} - The exception message.</comment>
   </data>
   <data name="XA0144" xml:space="preserve">
-    <value>The Android emulator for AVD '{0}' failed with error '{1}': {2}</value>
+    <value>L'émulateur Android pour l'AVD « {0} » a échoué avec l'erreur « {1} » : {2}</value>
     <comment>{0} - The AVD name.
 {1} - The error kind (e.g. Unknown).
 {2} - Error details from the emulator runner.</comment>
