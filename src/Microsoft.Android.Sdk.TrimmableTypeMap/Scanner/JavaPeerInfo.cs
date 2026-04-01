@@ -69,8 +69,9 @@ public sealed record JavaPeerInfo
 	/// Types with component attributes ([Activity], [Service], etc.),
 	/// custom views from layout XML, or manifest-declared components
 	/// are unconditionally preserved (not trimmable).
-	/// May be set after scanning when the manifest references a type
-	/// that the scanner did not mark as unconditional.
+	/// May be set to <c>true</c> after scanning when the manifest references a type
+	/// that the scanner did not mark as unconditional. Should only ever be set
+	/// to <c>true</c>, never back to <c>false</c>.
 	/// </summary>
 	public bool IsUnconditional { get; set; }
 
