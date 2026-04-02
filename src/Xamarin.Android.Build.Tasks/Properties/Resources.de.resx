@@ -1079,9 +1079,10 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
 {1} - The exception message.</comment>
   </data>
   <data name="XA0144" xml:space="preserve">
-    <value>Der Android-Emulator für AVD „{0}“ wurde unerwartet mit Exitcode {1} beendet, bevor er aktiv wurde.</value>
+    <value>Der Android-Emulator für AVD „{0}“ ist mit dem Fehler „{1}“: {2} fehlgeschlagen</value>
     <comment>{0} - The AVD name.
-{1} - The process exit code.</comment>
+{1} - The error kind (e.g. Unknown).
+{2} - Error details from the emulator runner.</comment>
   </data>
   <data name="XA0145" xml:space="preserve">
     <value>Der Android-Emulator für AVD „{0}“ hat den Start nicht innerhalb von {1} Sekunden abgeschlossen. Erhöhen Sie „BootTimeoutSeconds“, oder überprüfen Sie die Emulatorkonfiguration.</value>

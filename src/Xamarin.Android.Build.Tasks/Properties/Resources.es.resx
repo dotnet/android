@@ -1079,9 +1079,10 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
 {1} - The exception message.</comment>
   </data>
   <data name="XA0144" xml:space="preserve">
-    <value>El emulador de Android para AVD "{0}" se cerró inesperadamente con código {1} de salida antes de estar disponible.</value>
+    <value>Error del emulador de Android para AVD "{0}" con el error "{1}": {2}</value>
     <comment>{0} - The AVD name.
-{1} - The process exit code.</comment>
+{1} - The error kind (e.g. Unknown).
+{2} - Error details from the emulator runner.</comment>
   </data>
   <data name="XA0145" xml:space="preserve">
     <value>El emulador de Android para AVD "{0}" no finalizó el arranque en cuestión {1} de segundos. Aumente "BootTimeoutSeconds" o compruebe la configuración del emulador.</value>

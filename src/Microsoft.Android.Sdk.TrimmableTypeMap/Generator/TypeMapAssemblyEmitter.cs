@@ -48,8 +48,10 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 ///     // Registers JNI native methods (ACWs only):
 ///     public void RegisterNatives(JniType jniType)
 ///     {
-///         TrimmableNativeRegistration.RegisterMethod(jniType, "n_OnCreate", "(Landroid/os/Bundle;)V", &amp;n_OnCreate_uco_0);
-///         TrimmableNativeRegistration.RegisterMethod(jniType, "nctor_0", "()V", &amp;nctor_0_uco);
+///         JniNativeMethod* methods = stackalloc JniNativeMethod[2];
+///         methods[0] = new JniNativeMethod(&amp;__utf8_0, &amp;__utf8_1, &amp;n_OnCreate_uco_0);
+///         methods[1] = new JniNativeMethod(&amp;__utf8_2, &amp;__utf8_3, &amp;nctor_0_uco);
+///         JniEnvironment.Types.RegisterNatives(jniType.PeerReference, new ReadOnlySpan&lt;JniNativeMethod&gt;(methods, 2));
 ///     }
 /// }
 ///
@@ -86,12 +88,22 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _jniObjectReferenceCtorRef;
 	MemberReferenceHandle _jniEnvDeleteRefRef;
 	MemberReferenceHandle _activateInstanceRef;
-	MemberReferenceHandle _registerMethodRef;
 	MemberReferenceHandle _ucoAttrCtorRef;
 	BlobHandle _ucoAttrBlobHandle;
 	MemberReferenceHandle _typeMapAttrCtorRef2Arg;
 	MemberReferenceHandle _typeMapAttrCtorRef3Arg;
 	MemberReferenceHandle _typeMapAssociationAttrCtorRef;
+
+	// RegisterNatives with JniNativeMethod
+	TypeReferenceHandle _jniNativeMethodRef;
+	TypeReferenceHandle _jniEnvironmentRef;
+	TypeReferenceHandle _jniEnvironmentTypesRef;
+	TypeReferenceHandle _readOnlySpanOpenRef;
+	TypeSpecificationHandle _readOnlySpanOfJniNativeMethodSpec;
+	MemberReferenceHandle _jniNativeMethodCtorRef;
+	MemberReferenceHandle _jniTypePeerReferenceRef;
+	MemberReferenceHandle _jniEnvTypesRegisterNativesRef;
+	MemberReferenceHandle _readOnlySpanOfJniNativeMethodCtorRef;
 
 	/// <summary>
 	/// Creates a new emitter.
@@ -104,22 +116,6 @@ sealed class TypeMapAssemblyEmitter
 	{
 		_systemRuntimeVersion = systemRuntimeVersion ?? throw new ArgumentNullException (nameof (systemRuntimeVersion));
 		_pe = new PEAssemblyBuilder (_systemRuntimeVersion);
-	}
-
-	/// <summary>
-	/// Emits a PE assembly from the given model and writes it to <paramref name="outputPath"/>.
-	/// </summary>
-	public void Emit (TypeMapAssemblyData model, string outputPath)
-	{
-		if (model is null) {
-			throw new ArgumentNullException (nameof (model));
-		}
-		if (outputPath is null) {
-			throw new ArgumentNullException (nameof (outputPath));
-		}
-
-		EmitCore (model);
-		_pe.WritePE (outputPath);
 	}
 
 	/// <summary>
@@ -194,6 +190,18 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("NotSupportedException"));
 		_runtimeHelpersRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
 			metadata.GetOrAddString ("System.Runtime.CompilerServices"), metadata.GetOrAddString ("RuntimeHelpers"));
+
+		_jniNativeMethodRef = metadata.AddTypeReference (_javaInteropRef,
+			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniNativeMethod"));
+		_jniEnvironmentRef = metadata.AddTypeReference (_javaInteropRef,
+			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniEnvironment"));
+		_jniEnvironmentTypesRef = metadata.AddTypeReference (_jniEnvironmentRef,
+			default, metadata.GetOrAddString ("Types"));
+
+		// ReadOnlySpan<JniNativeMethod> — TypeSpec for generic instantiation
+		_readOnlySpanOpenRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
+			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("ReadOnlySpan`1"));
+		_readOnlySpanOfJniNativeMethodSpec = MakeGenericTypeSpec_ValueType (_readOnlySpanOpenRef, _jniNativeMethodRef);
 	}
 
 	void EmitMemberReferences ()
@@ -240,14 +248,39 @@ sealed class TypeMapAssemblyEmitter
 					p.AddParameter ().Type ().Type (_systemTypeRef, false);
 				}));
 
-		_registerMethodRef = _pe.AddMemberRef (_trimmableNativeRegistrationRef, "RegisterMethod",
-			sig => sig.MethodSignature ().Parameters (4,
+		// JniNativeMethod..ctor(byte*, byte*, IntPtr)
+		_jniNativeMethodCtorRef = _pe.AddMemberRef (_jniNativeMethodRef, ".ctor",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (3,
 				rt => rt.Void (),
 				p => {
-					p.AddParameter ().Type ().Type (_jniTypeRef, false);
-					p.AddParameter ().Type ().String ();
-					p.AddParameter ().Type ().String ();
+					p.AddParameter ().Type ().Pointer ().Byte ();
+					p.AddParameter ().Type ().Pointer ().Byte ();
 					p.AddParameter ().Type ().IntPtr ();
+				}));
+
+		// JniType.get_PeerReference() -> JniObjectReference
+		_jniTypePeerReferenceRef = _pe.AddMemberRef (_jniTypeRef, "get_PeerReference",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0,
+				rt => rt.Type ().Type (_jniObjectReferenceRef, true),
+				p => { }));
+
+		// JniEnvironment.Types.RegisterNatives(JniObjectReference, ReadOnlySpan<JniNativeMethod>)
+		_jniEnvTypesRegisterNativesRef = _pe.AddMemberRef (_jniEnvironmentTypesRef, "RegisterNatives",
+			sig => sig.MethodSignature ().Parameters (2,
+				rt => rt.Void (),
+				p => {
+					p.AddParameter ().Type ().Type (_jniObjectReferenceRef, true);
+					// ReadOnlySpan<JniNativeMethod> — must encode as GENERICINST manually
+					EncodeReadOnlySpanOfJniNativeMethod (p.AddParameter ().Type ());
+				}));
+
+		// ReadOnlySpan<JniNativeMethod>..ctor(void*, int)
+		_readOnlySpanOfJniNativeMethodCtorRef = _pe.AddMemberRef (_readOnlySpanOfJniNativeMethodSpec, ".ctor",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+				rt => rt.Void (),
+				p => {
+					p.AddParameter ().Type ().VoidPointer ();
+					p.AddParameter ().Type ().Int32 ();
 				}));
 
 		var ucoAttrTypeRef = _pe.Metadata.AddTypeReference (_pe.SystemRuntimeInteropServicesRef,
@@ -702,6 +735,35 @@ sealed class TypeMapAssemblyEmitter
 	void EmitRegisterNatives (List<NativeRegistrationData> registrations,
 		Dictionary<string, MethodDefinitionHandle> wrapperHandles)
 	{
+		// Filter to only registrations that have corresponding wrapper methods
+		var validRegs = new List<(NativeRegistrationData Reg, MethodDefinitionHandle Wrapper)> (registrations.Count);
+		foreach (var reg in registrations) {
+			if (wrapperHandles.TryGetValue (reg.WrapperMethodName, out var wrapperHandle)) {
+				validRegs.Add ((reg, wrapperHandle));
+			}
+		}
+
+		if (validRegs.Count == 0) {
+			_pe.EmitBody ("RegisterNatives",
+				MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig |
+				MethodAttributes.NewSlot | MethodAttributes.Final,
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
+					rt => rt.Void (),
+					p => p.AddParameter ().Type ().Type (_jniTypeRef, false)),
+				encoder => encoder.OpCode (ILOpCode.Ret));
+			return;
+		}
+
+		// Get or create deduplicated RVA fields for each unique name/signature string.
+		var nameFields = new FieldDefinitionHandle [validRegs.Count];
+		var sigFields = new FieldDefinitionHandle [validRegs.Count];
+		for (int i = 0; i < validRegs.Count; i++) {
+			nameFields [i] = _pe.GetOrAddUtf8Field (validRegs [i].Reg.JniMethodName);
+			sigFields [i] = _pe.GetOrAddUtf8Field (validRegs [i].Reg.JniSignature);
+		}
+
+		int methodCount = validRegs.Count;
+
 		_pe.EmitBody ("RegisterNatives",
 			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig |
 			MethodAttributes.NewSlot | MethodAttributes.Final,
@@ -709,18 +771,80 @@ sealed class TypeMapAssemblyEmitter
 				rt => rt.Void (),
 				p => p.AddParameter ().Type ().Type (_jniTypeRef, false)),
 			encoder => {
-				foreach (var reg in registrations) {
-					if (!wrapperHandles.TryGetValue (reg.WrapperMethodName, out var wrapperHandle)) {
-						continue;
+				// stackalloc JniNativeMethod[N]
+				encoder.LoadConstantI4 (methodCount);
+				encoder.OpCode (ILOpCode.Sizeof);
+				encoder.Token (_jniNativeMethodRef);
+				encoder.OpCode (ILOpCode.Mul);
+				encoder.OpCode (ILOpCode.Localloc);
+				encoder.StoreLocal (0);
+
+				for (int i = 0; i < methodCount; i++) {
+					// &methods[i] — destination address for stobj
+					encoder.LoadLocal (0);
+					if (i > 0) {
+						encoder.LoadConstantI4 (i);
+						encoder.OpCode (ILOpCode.Sizeof);
+						encoder.Token (_jniNativeMethodRef);
+						encoder.OpCode (ILOpCode.Mul);
+						encoder.OpCode (ILOpCode.Add);
 					}
-					encoder.LoadArgument (1);
-					encoder.LoadString (_pe.Metadata.GetOrAddUserString (reg.JniMethodName));
-					encoder.LoadString (_pe.Metadata.GetOrAddUserString (reg.JniSignature));
+
+					// byte* name — ldsflda of deduplicated field
+					encoder.OpCode (ILOpCode.Ldsflda);
+					encoder.Token (nameFields [i]);
+
+					// byte* signature
+					encoder.OpCode (ILOpCode.Ldsflda);
+					encoder.Token (sigFields [i]);
+
+					// IntPtr functionPointer
 					encoder.OpCode (ILOpCode.Ldftn);
-					encoder.Token (wrapperHandle);
-					encoder.Call (_registerMethodRef);
+					encoder.Token (validRegs [i].Wrapper);
+
+					// Construct the struct on the evaluation stack and store it
+					// at the destination address. This matches the Roslyn pattern:
+					//   newobj JniNativeMethod::.ctor(byte*, byte*, IntPtr)
+					//   stobj  JniNativeMethod
+					encoder.OpCode (ILOpCode.Newobj);
+					encoder.Token (_jniNativeMethodCtorRef);
+					encoder.OpCode (ILOpCode.Stobj);
+					encoder.Token (_jniNativeMethodRef);
 				}
+
+				// JniObjectReference peerRef = jniType.PeerReference
+				// JniType is a sealed reference type, so use ldarg + callvirt
+				encoder.LoadArgument (1);
+				encoder.OpCode (ILOpCode.Callvirt);
+				encoder.Token (_jniTypePeerReferenceRef);
+				encoder.StoreLocal (1);
+
+				// new ReadOnlySpan<JniNativeMethod>(methods, count)
+				encoder.LoadLocalAddress (2);
+				encoder.LoadLocal (0);
+				encoder.LoadConstantI4 (methodCount);
+				encoder.Call (_readOnlySpanOfJniNativeMethodCtorRef);
+
+				// JniEnvironment.Types.RegisterNatives(peerRef, span)
+				encoder.LoadLocal (1);
+				encoder.LoadLocal (2);
+				encoder.Call (_jniEnvTypesRegisterNativesRef);
+
 				encoder.OpCode (ILOpCode.Ret);
+			},
+			encodeLocals: localSig => {
+				localSig.WriteByte (0x07); // IMAGE_CEE_CS_CALLCONV_LOCAL_SIG
+				localSig.WriteCompressedInteger (3);
+
+				// local 0: native int (stackalloc pointer)
+				localSig.WriteByte (0x18); // ELEMENT_TYPE_I
+
+				// local 1: JniObjectReference
+				localSig.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
+				localSig.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniObjectReferenceRef));
+
+				// local 2: ReadOnlySpan<JniNativeMethod>
+				EncodeGenericValueTypeInst (localSig, _readOnlySpanOpenRef, _jniNativeMethodRef);
 			});
 	}
 
@@ -752,5 +876,39 @@ sealed class TypeMapAssemblyEmitter
 			b.WriteSerializedString (assoc.AliasProxyTypeReference);
 		});
 		_pe.Metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, _typeMapAssociationAttrCtorRef, blob);
+	}
+
+	/// <summary>
+	/// Writes the ECMA-335 blob for a closed generic value type with a single value-type argument.
+	/// E.g., <c>ReadOnlySpan&lt;JniNativeMethod&gt;</c>.
+	/// </summary>
+	static void EncodeGenericValueTypeInst (BlobBuilder builder, EntityHandle openType, EntityHandle valueTypeArg)
+	{
+		builder.WriteByte (0x15); // ELEMENT_TYPE_GENERICINST
+		builder.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
+		builder.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (openType));
+		builder.WriteCompressedInteger (1); // generic arity = 1
+		builder.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
+		builder.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (valueTypeArg));
+	}
+
+	/// <summary>
+	/// Builds a <c>TypeSpec</c> for a closed generic type with a single value-type argument.
+	/// E.g., <c>ReadOnlySpan&lt;JniNativeMethod&gt;</c>.
+	/// </summary>
+	TypeSpecificationHandle MakeGenericTypeSpec_ValueType (EntityHandle openType, EntityHandle valueTypeArg)
+	{
+		var sigBlob = new BlobBuilder (32);
+		EncodeGenericValueTypeInst (sigBlob, openType, valueTypeArg);
+		return _pe.Metadata.AddTypeSpecification (_pe.Metadata.GetOrAddBlob (sigBlob));
+	}
+
+	/// <summary>
+	/// Encodes <c>ReadOnlySpan&lt;JniNativeMethod&gt;</c> directly into a signature type encoder.
+	/// Required because <see cref="SignatureTypeEncoder.Type"/> doesn't accept TypeSpec handles.
+	/// </summary>
+	void EncodeReadOnlySpanOfJniNativeMethod (SignatureTypeEncoder encoder)
+	{
+		EncodeGenericValueTypeInst (encoder.Builder, _readOnlySpanOpenRef, _jniNativeMethodRef);
 	}
 }

@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
+using System.Reflection.PortableExecutable;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -79,25 +80,32 @@ public sealed class JavaPeerScanner : IDisposable
 	/// Phase 1: Build indices for all assemblies.
 	/// Phase 2: Scan all types and produce JavaPeerInfo records.
 	/// </summary>
-	public List<JavaPeerInfo> Scan (IReadOnlyList<string> assemblyPaths)
+	public List<JavaPeerInfo> Scan (IReadOnlyList<(string Name, PEReader Reader)> assemblies)
 	{
-		// Phase 1: Build indices for all assemblies
-		foreach (var path in assemblyPaths) {
-			var index = AssemblyIndex.Create (path);
+		foreach (var (name, reader) in assemblies) {
+			var index = AssemblyIndex.Create (reader, name);
 			assemblyCache [index.AssemblyName] = index;
 		}
 
-		// Phase 2: Analyze types using cached indices
 		var resultsByManagedName = new Dictionary<string, JavaPeerInfo> (StringComparer.Ordinal);
-
 		foreach (var index in assemblyCache.Values) {
 			ScanAssembly (index, resultsByManagedName);
 		}
-
-		// Phase 3: Force unconditional on types referenced by [Application] attributes
 		ForceUnconditionalCrossReferences (resultsByManagedName, assemblyCache);
-
 		return new List<JavaPeerInfo> (resultsByManagedName.Values);
+	}
+
+	/// <summary>
+	/// Scans all loaded assemblies for assembly-level manifest attributes.
+	/// Must be called after <see cref="Scan"/>.
+	/// </summary>
+	internal AssemblyManifestInfo ScanAssemblyManifestInfo ()
+	{
+		var info = new AssemblyManifestInfo ();
+		foreach (var index in assemblyCache.Values) {
+			index.ScanAssemblyAttributes (info);
+		}
+		return info;
 	}
 
 	/// <summary>
@@ -238,6 +246,7 @@ public sealed class JavaPeerScanner : IDisposable
 				ActivationCtor = activationCtor,
 				InvokerTypeName = invokerTypeName,
 				IsGenericDefinition = isGenericDefinition,
+				ComponentAttribute = ToComponentInfo (attrInfo),
 			};
 
 			results [fullName] = peer;
@@ -773,7 +782,7 @@ public sealed class JavaPeerScanner : IDisposable
 			JniSignature = registerInfo.Signature,
 			Connector = registerInfo.Connector,
 			ManagedMethodName = methodName,
-			NativeCallbackName = isConstructor ? "n_ctor" : $"n_{methodName}",
+			NativeCallbackName = GetNativeCallbackName (registerInfo.Connector, methodName, isConstructor),
 			IsConstructor = isConstructor,
 			DeclaringTypeName = result.Value.DeclaringTypeName,
 			DeclaringAssemblyName = result.Value.DeclaringAssemblyName,
@@ -818,7 +827,7 @@ public sealed class JavaPeerScanner : IDisposable
 					JniSignature = propRegister.Signature,
 					Connector = propRegister.Connector,
 					ManagedMethodName = getterName,
-					NativeCallbackName = $"n_{getterName}",
+					NativeCallbackName = GetNativeCallbackName (propRegister.Connector, getterName, false),
 					IsConstructor = false,
 					DeclaringTypeName = baseTypeName,
 					DeclaringAssemblyName = baseAssemblyName,
@@ -866,12 +875,18 @@ public sealed class JavaPeerScanner : IDisposable
 		string managedName = index.Reader.GetString (methodDef.Name);
 		string jniSignature = registerInfo.Signature ?? "()V";
 
+		string declaringTypeName = "";
+		string declaringAssemblyName = "";
+		ParseConnectorDeclaringType (registerInfo.Connector, out declaringTypeName, out declaringAssemblyName);
+
 		methods.Add (new MarshalMethodInfo {
 			JniName = registerInfo.JniName,
 			JniSignature = jniSignature,
 			Connector = registerInfo.Connector,
 			ManagedMethodName = managedName,
-			NativeCallbackName = isConstructor ? "n_ctor" : $"n_{managedName}",
+			DeclaringTypeName = declaringTypeName,
+			DeclaringAssemblyName = declaringAssemblyName,
+			NativeCallbackName = GetNativeCallbackName (registerInfo.Connector, managedName, isConstructor),
 			IsConstructor = isConstructor,
 			IsExport = isExport,
 			IsInterfaceImplementation = isInterfaceImplementation,
@@ -941,7 +956,7 @@ public sealed class JavaPeerScanner : IDisposable
 		return resolved is not null ? ResolveRegisterJniName (resolved.Value.typeName, resolved.Value.assemblyName) : null;
 	}
 
-	static bool TryGetMethodRegisterInfo (MethodDefinition methodDef, AssemblyIndex index, out RegisterInfo? registerInfo, out ExportInfo? exportInfo)
+	bool TryGetMethodRegisterInfo (MethodDefinition methodDef, AssemblyIndex index, out RegisterInfo? registerInfo, out ExportInfo? exportInfo)
 	{
 		exportInfo = null;
 		foreach (var caHandle in methodDef.GetCustomAttributes ()) {
@@ -991,7 +1006,7 @@ public sealed class JavaPeerScanner : IDisposable
 		return null;
 	}
 
-	static (RegisterInfo registerInfo, ExportInfo exportInfo) ParseExportAttribute (CustomAttribute ca, MethodDefinition methodDef, AssemblyIndex index)
+	(RegisterInfo registerInfo, ExportInfo exportInfo) ParseExportAttribute (CustomAttribute ca, MethodDefinition methodDef, AssemblyIndex index)
 	{
 		var value = index.DecodeAttribute (ca);
 
@@ -1035,7 +1050,7 @@ public sealed class JavaPeerScanner : IDisposable
 		);
 	}
 
-	static string BuildJniSignatureFromManaged (MethodSignature<string> sig)
+	string BuildJniSignatureFromManaged (MethodSignature<string> sig)
 	{
 		var sb = new System.Text.StringBuilder ();
 		sb.Append ('(');
@@ -1052,7 +1067,7 @@ public sealed class JavaPeerScanner : IDisposable
 	/// [ExportField] methods use the managed method name as the JNI name and have
 	/// a connector of "__export__" (matching legacy CecilImporter behavior).
 	/// </summary>
-	static (RegisterInfo registerInfo, ExportInfo exportInfo) ParseExportFieldAsMethod (CustomAttribute ca, MethodDefinition methodDef, AssemblyIndex index)
+	(RegisterInfo registerInfo, ExportInfo exportInfo) ParseExportFieldAsMethod (CustomAttribute ca, MethodDefinition methodDef, AssemblyIndex index)
 	{
 		var managedName = index.Reader.GetString (methodDef.Name);
 		var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
@@ -1065,10 +1080,11 @@ public sealed class JavaPeerScanner : IDisposable
 	}
 
 	/// <summary>
-	/// Maps a managed type name to its JNI descriptor. Falls back to
-	/// "Ljava/lang/Object;" for unknown types (used by [Export] signature computation).
+	/// Maps a managed type name to its JNI descriptor. Resolves Java-bound types
+	/// via their [Register] attribute, falling back to "Ljava/lang/Object;" only
+	/// for types that cannot be resolved (used by [Export] signature computation).
 	/// </summary>
-	static string ManagedTypeToJniDescriptor (string managedType)
+	string ManagedTypeToJniDescriptor (string managedType)
 	{
 		var primitive = TryGetPrimitiveJniDescriptor (managedType);
 		if (primitive is not null) {
@@ -1077,6 +1093,12 @@ public sealed class JavaPeerScanner : IDisposable
 
 		if (managedType.EndsWith ("[]")) {
 			return $"[{ManagedTypeToJniDescriptor (managedType.Substring (0, managedType.Length - 2))}";
+		}
+
+		// Try to resolve as a Java peer type with [Register]
+		var resolved = TryResolveJniObjectDescriptor (managedType);
+		if (resolved is not null) {
+			return resolved;
 		}
 
 		return "Ljava/lang/Object;";
@@ -1383,6 +1405,71 @@ public sealed class JavaPeerScanner : IDisposable
 		return (typeName, parentJniName, ns);
 	}
 
+	/// <summary>
+	/// Derives the native callback method name from a <c>[Register]</c> attribute's Connector field.
+	/// The Connector may be a simple name like <c>"GetOnCreate_Landroid_os_Bundle_Handler"</c>
+	/// or a qualified name like <c>"GetOnClick_Landroid_view_View_Handler:Android.Views.View/IOnClickListenerInvoker, Mono.Android, …"</c>.
+	/// In both cases the result is e.g. <c>"n_OnCreate_Landroid_os_Bundle_"</c>.
+	/// Falls back to <c>"n_{managedName}"</c> when the Connector doesn't follow the expected pattern.
+	/// </summary>
+	static string GetNativeCallbackName (string? connector, string managedName, bool isConstructor)
+	{
+		if (isConstructor) {
+			return "n_ctor";
+		}
+
+		if (connector is not null) {
+			// Strip the optional type qualifier after ':'
+			int colonIndex = connector.IndexOf (':');
+			string handlerName = colonIndex >= 0 ? connector.Substring (0, colonIndex) : connector;
+
+			if (handlerName.StartsWith ("Get", StringComparison.Ordinal)
+				&& handlerName.EndsWith ("Handler", StringComparison.Ordinal)) {
+				return "n_" + handlerName.Substring (3, handlerName.Length - 3 - "Handler".Length);
+			}
+		}
+
+		return $"n_{managedName}";
+	}
+
+	/// <summary>
+	/// Parses the type qualifier from a Connector string.
+	/// Connector format is either assembly-qualified:
+	/// <c>"GetOnClickHandler:Android.Views.View/IOnClickListenerInvoker, Mono.Android, Version=…"</c>
+	/// or type-only: <c>"GetOnClickHandler:Android.Views.IOnClickListenerInvoker"</c>.
+	/// Extracts the managed type name (converting <c>/</c> → <c>+</c> for nested types) and assembly name (if present).
+	/// </summary>
+	static void ParseConnectorDeclaringType (string? connector, out string declaringTypeName, out string declaringAssemblyName)
+	{
+		declaringTypeName = "";
+		declaringAssemblyName = "";
+
+		if (connector is null) {
+			return;
+		}
+
+		int colonIndex = connector.IndexOf (':');
+		if (colonIndex < 0) {
+			return;
+		}
+
+		// After ':' is typically "TypeName, AssemblyName, Version=…" (assembly-qualified name),
+		// but some connectors only provide "TypeName" without an assembly.
+		string typeQualified = connector.Substring (colonIndex + 1);
+		int commaIndex = typeQualified.IndexOf (',');
+
+		if (commaIndex < 0) {
+			// No assembly information; treat the whole segment as the type name
+			declaringTypeName = typeQualified.Trim ().Replace ('/', '+');
+			return;
+		}
+
+		declaringTypeName = typeQualified.Substring (0, commaIndex).Trim ().Replace ('/', '+');
+		string rest = typeQualified.Substring (commaIndex + 1).Trim ();
+		int nextComma = rest.IndexOf (',');
+		declaringAssemblyName = nextComma >= 0 ? rest.Substring (0, nextComma).Trim () : rest.Trim ();
+	}
+
 	static string GetCrc64PackageName (string ns, string assemblyName)
 	{
 		// Only Mono.Android preserves the namespace directly
@@ -1435,7 +1522,7 @@ public sealed class JavaPeerScanner : IDisposable
 	/// Checks a single method for [ExportField] and adds a JavaFieldInfo if found.
 	/// Called inline during Pass 1 to avoid a separate iteration.
 	/// </summary>
-	static void CollectExportField (MethodDefinition methodDef, AssemblyIndex index, List<JavaFieldInfo> fields)
+	void CollectExportField (MethodDefinition methodDef, AssemblyIndex index, List<JavaFieldInfo> fields)
 	{
 		foreach (var caHandle in methodDef.GetCustomAttributes ()) {
 			var ca = index.Reader.GetCustomAttribute (caHandle);
@@ -1471,5 +1558,33 @@ public sealed class JavaPeerScanner : IDisposable
 				IsStatic = isStatic,
 			});
 		}
+	}
+
+	static ComponentInfo? ToComponentInfo (TypeAttributeInfo? attrInfo)
+	{
+		if (attrInfo is null) {
+			return null;
+		}
+
+		var kind = attrInfo.AttributeName switch {
+			"ActivityAttribute" => ComponentKind.Activity,
+			"ServiceAttribute" => ComponentKind.Service,
+			"BroadcastReceiverAttribute" => ComponentKind.BroadcastReceiver,
+			"ContentProviderAttribute" => ComponentKind.ContentProvider,
+			"ApplicationAttribute" => ComponentKind.Application,
+			"InstrumentationAttribute" => ComponentKind.Instrumentation,
+			_ => (ComponentKind?)null,
+		};
+
+		if (kind is null) {
+			return null;
+		}
+
+		return new ComponentInfo {
+			Kind = kind.Value,
+			Properties = attrInfo.Properties,
+			IntentFilters = attrInfo.IntentFilters,
+			MetaData = attrInfo.MetaData,
+		};
 	}
 }

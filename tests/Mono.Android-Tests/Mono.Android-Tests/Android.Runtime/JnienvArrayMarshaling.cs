@@ -264,6 +264,7 @@ namespace Android.RuntimeTests {
 		}
 
 		[Test]
+		[Category ("CoreCLRIgnore")] //TODO: https://github.com/dotnet/android/issues/10973
 		public void GetObjectArray ()
 		{
 			using (var byteArray = new Java.Lang.Object (JNIEnv.NewArray (new byte[]{1,2,3}), JniHandleOwnership.TransferLocalRef)) {

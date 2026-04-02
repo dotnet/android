@@ -12,8 +12,10 @@ namespace Xamarin.Android.Tasks;
 
 /// <summary>
 /// MSBuild task that queries available Android devices and emulators using 'adb devices -l'
-/// and 'emulator -list-avds'. Merges the results to provide a complete list of available
-/// devices including emulators that are not currently running.
+/// and 'emulator -list-avds'. Merges the results and filters them for device selection:
+/// when any online devices exist, only online devices are returned (enabling auto-selection
+/// when a single device is running). When no online devices exist, all devices are returned
+/// including non-running emulators (allowing the user to pick one to boot).
 /// Returns a list of devices with metadata for device selection in dotnet run.
 ///
 /// Parsing and merging logic is delegated to <see cref="AdbRunner"/> in Xamarin.Android.Tools.AndroidSdk.
@@ -74,12 +76,38 @@ public class GetAvailableAndroidDevices : AndroidAdb
         // Merge using shared logic
         var mergedDevices = AdbRunner.MergeDevicesAndEmulators (adbDevices, availableEmulators, logger);
 
-        // Convert to ITaskItem array
-        Devices = ConvertToTaskItems (mergedDevices);
+        // Filter: if any online devices exist, return only those so auto-selection works
+        // when a single device is running. If none are online, return all (including
+        // non-running emulators) so the user can pick one to boot.
+        var filteredDevices = FilterDevicesForSelection (mergedDevices);
+        Log.LogDebugMessage ($"Filtered from {mergedDevices.Count} to {filteredDevices.Count} device(s) (online devices take priority)");
 
-        Log.LogDebugMessage ($"Total {Devices.Length} Android device(s)/emulator(s) after merging");
+        // Convert to ITaskItem array
+        Devices = ConvertToTaskItems (filteredDevices);
+
+        Log.LogDebugMessage ($"Total {Devices.Length} Android device(s)/emulator(s) after filtering");
 
         return !Log.HasLoggedErrors;
+    }
+
+    /// <summary>
+    /// Filters the merged device list for device selection:
+    /// - If any online devices exist, returns only those (so auto-selection works with a single running device)
+    /// - If no online devices exist, returns all (including non-running emulators for user selection)
+    /// </summary>
+    internal static IReadOnlyList<AdbDeviceInfo> FilterDevicesForSelection (IReadOnlyList<AdbDeviceInfo> devices)
+    {
+        var onlineDevices = new List<AdbDeviceInfo> (devices.Count);
+        foreach (var device in devices) {
+            if (device.Status == AdbDeviceStatus.Online) {
+                onlineDevices.Add (device);
+            }
+        }
+
+        if (onlineDevices.Count == 0)
+            return devices;
+
+        return onlineDevices;
     }
 
     /// <summary>

@@ -1,6 +1,6 @@
 <!-- Trimmable typemap: managed type mapping instead of native binary typemaps.
      Generates per-assembly TypeMap .dll assemblies, a root _Microsoft.Android.TypeMaps.dll,
-     and JCW .java source files with registerNatives. -->
+     JCW .java source files with registerNatives, and per-assembly acw-map files. -->
 <Project>
 
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateTrimmableTypeMap" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
@@ -14,6 +14,7 @@
     <_TypeMapAssemblyName>_Microsoft.Android.TypeMaps</_TypeMapAssemblyName>
     <_TypeMapOutputDirectory>$(IntermediateOutputPath)typemap\</_TypeMapOutputDirectory>
     <_TypeMapJavaOutputDirectory>$(IntermediateOutputPath)typemap\java</_TypeMapJavaOutputDirectory>
+    <_PerAssemblyAcwMapDirectory>$(IntermediateOutputPath)acw-maps\</_PerAssemblyAcwMapDirectory>
   </PropertyGroup>
 
   <!-- Tell the runtime which assembly contains the TypeMap attributes -->
@@ -41,18 +42,64 @@
         ResolvedAssemblies="@(_ResolvedAssemblies)"
         OutputDirectory="$(_TypeMapOutputDirectory)"
         JavaSourceOutputDirectory="$(_TypeMapJavaOutputDirectory)"
+        AcwMapDirectory="$(_PerAssemblyAcwMapDirectory)"
         TargetFrameworkVersion="$(TargetFrameworkVersion)">
       <Output TaskParameter="GeneratedAssemblies" ItemName="_GeneratedTypeMapAssemblies" />
       <Output TaskParameter="GeneratedJavaFiles" ItemName="_GeneratedJavaFiles" />
+      <Output TaskParameter="PerAssemblyAcwMapFiles" ItemName="_PerAssemblyAcwMapFiles" />
     </GenerateTrimmableTypeMap>
 
     <ItemGroup>
       <FileWrites Include="@(_GeneratedTypeMapAssemblies)" />
       <FileWrites Include="@(_GeneratedJavaFiles)" />
+      <FileWrites Include="@(_PerAssemblyAcwMapFiles)" />
     </ItemGroup>
 
     <MakeDir Directories="$(_AndroidStampDirectory)" Condition=" !Exists('$(_AndroidStampDirectory)') " />
     <Touch Files="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" AlwaysCreate="True" />
+  </Target>
+
+  <!--
+    Collect per-assembly acw-map files from disk.  On a clean build _GenerateJavaStubs
+    already populated @(_PerAssemblyAcwMapFiles) via its task Output; on an incremental
+    build where that target was skipped the item group is empty.  Either way we clear it
+    and re-glob so there is exactly one authoritative copy of each item.
+  -->
+  <Target Name="_CollectPerAssemblyAcwMaps"
+      DependsOnTargets="_GenerateJavaStubs">
+    <ItemGroup>
+      <_PerAssemblyAcwMapFiles Remove="@(_PerAssemblyAcwMapFiles)" />
+      <_PerAssemblyAcwMapFiles Include="$(_PerAssemblyAcwMapDirectory)*.txt" />
+    </ItemGroup>
+  </Target>
+
+  <!--
+    Merge per-assembly acw-map files into a single acw-map.txt.
+    Consumed by _ConvertCustomView (layout XML custom view fixups) and R8.
+    AfterTargets hooks this into the build after _GenerateJavaStubs;
+    DependsOnTargets ensures _CollectPerAssemblyAcwMaps runs first so that
+    @(_PerAssemblyAcwMapFiles) is populated for the Inputs/Outputs check.
+    Skipped on incremental builds when no *.txt is newer than acw-map.txt.
+  -->
+  <Target Name="_MergeAcwMaps"
+      AfterTargets="_GenerateJavaStubs"
+      DependsOnTargets="_CollectPerAssemblyAcwMaps"
+      Inputs="@(_PerAssemblyAcwMapFiles)"
+      Outputs="$(_AcwMapFile)">
+
+    <ReadLinesFromFile File="%(_PerAssemblyAcwMapFiles.Identity)">
+      <Output TaskParameter="Lines" ItemName="_AcwMapLines" />
+    </ReadLinesFromFile>
+
+    <WriteLinesToFile
+        File="$(_AcwMapFile)"
+        Lines="@(_AcwMapLines)"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true" />
+
+    <ItemGroup>
+      <FileWrites Include="$(_AcwMapFile)" />
+    </ItemGroup>
   </Target>
 
 </Project>

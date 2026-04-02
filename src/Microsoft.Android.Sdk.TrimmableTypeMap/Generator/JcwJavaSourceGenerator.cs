@@ -42,43 +42,26 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 public sealed class JcwJavaSourceGenerator
 {
 	/// <summary>
-	/// Generates .java source files for all ACW types and writes them to the output directory.
-	/// Returns the list of generated file paths.
+	/// Generates .java source content for all ACW types and returns them as in-memory
+	/// (relativePath, content) pairs. No filesystem IO is performed.
 	/// </summary>
-	public IReadOnlyList<string> Generate (IReadOnlyList<JavaPeerInfo> types, string outputDirectory)
+	public IReadOnlyList<GeneratedJavaSource> GenerateContent (IReadOnlyList<JavaPeerInfo> types)
 	{
-		if (types is null) {
-			throw new ArgumentNullException (nameof (types));
-		}
-		if (outputDirectory is null) {
-			throw new ArgumentNullException (nameof (outputDirectory));
-		}
-
-		var generatedFiles = new List<string> ();
-
+		if (types is null) throw new ArgumentNullException (nameof (types));
+		var results = new List<GeneratedJavaSource> ();
 		foreach (var type in types) {
-			if (type.DoNotGenerateAcw || type.IsInterface) {
-				continue;
-			}
-
-			string filePath = GetOutputFilePath (type, outputDirectory);
-			string? dir = Path.GetDirectoryName (filePath);
-			if (dir != null) {
-				Directory.CreateDirectory (dir);
-			}
-
-			using var writer = new StreamWriter (filePath);
+			if (type.DoNotGenerateAcw || type.IsInterface) continue;
+			using var writer = new StringWriter ();
 			Generate (type, writer);
-			generatedFiles.Add (filePath);
+			results.Add (new GeneratedJavaSource (GetRelativePath (type), writer.ToString ()));
 		}
-
-		return generatedFiles;
+		return results;
 	}
 
 	/// <summary>
 	/// Generates a single .java source file for the given type.
 	/// </summary>
-	internal void Generate (JavaPeerInfo type, TextWriter writer)
+	public void Generate (JavaPeerInfo type, TextWriter writer)
 	{
 		writer.NewLine = "\n";
 		WritePackageDeclaration (type, writer);
@@ -91,12 +74,12 @@ public sealed class JcwJavaSourceGenerator
 		WriteClassClose (writer);
 	}
 
-	static string GetOutputFilePath (JavaPeerInfo type, string outputDirectory)
+	static string GetRelativePath (JavaPeerInfo type)
 	{
 		JniSignatureHelper.ValidateJniName (type.JavaName);
-		string relativePath = type.JavaName + ".java";
-		return Path.Combine (outputDirectory, relativePath);
+		return type.JavaName + ".java";
 	}
+
 
 	/// <summary>
 	/// Validates that the JNI name is well-formed: non-empty, each segment separated by '/'

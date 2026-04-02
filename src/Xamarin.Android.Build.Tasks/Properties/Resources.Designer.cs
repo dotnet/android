@@ -558,7 +558,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to The Android emulator for AVD &apos;{0}&apos; exited unexpectedly with exit code {1} before becoming available..
+        ///   Looks up a localized string similar to The Android emulator for AVD &apos;{0}&apos; failed with error &apos;{1}&apos;: {2}.
         /// </summary>
         public static string XA0144 {
             get {

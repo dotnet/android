@@ -7,6 +7,7 @@
 - `src/Xamarin.Android.Build.Tasks/` - MSBuild tasks for Android apps  
 - `src/native/` - Native runtime (MonoVM/CoreCLR/NativeAOT)
 - `external/Java.Interop/` - JNI bindings and Java-to-.NET interop
+- `external/xamarin-android-tools/` - Shared SDK tooling: `AndroidTask`/`AsyncTask` base classes, `AdbRunner`, `EmulatorRunner`, NRT extensions (`IsNullOrEmpty()`, `IsNullOrWhiteSpace()`), `CreateTaskLogger`, and SDK info utilities
 - `tests/` - NUnit tests, integration tests, device tests
 
 **Build System:** MSBuild + .NET Arcade SDK + CMake (native)
@@ -32,7 +33,7 @@ Reference official Android documentation where helpful:
 
 **Use Microsoft docs:** Search MS Learn before making .NET, Windows, or Microsoft features, APIs, or integrations. Use the `microsoft_docs_search` tool.
 
-**MSBuild Tasks:** Extend `AndroidTask` base class, use `XA####` error codes, test in isolation.
+**MSBuild Tasks:** Extend `AndroidTask` base class, use `XA####` error codes, test in isolation. Use `AsyncTask` for tasks that need `async`/`await` — it handles `Yield()`, `try`/`finally`, and `Reacquire()` automatically.
 
 **Internal build `<UsingTask/>` elements:** For `xa-prep-tasks` and `BootstrapTasks` (internal build-time tasks, not shipped to customers), always use `TaskFactory="TaskHostFactory"` and `Runtime="NET"` attributes on `<UsingTask/>` elements. This runs the task in a separate process to avoid Windows file locking issues and ensures the task runs on .NET (even when MSBuild.exe in Visual Studio uses .NET Framework). Example:
 
@@ -56,6 +57,10 @@ When opting C# code into nullable reference types:
 * Add `#nullable enable` at the top of the file without any preceding blank lines.
 
 * Don't *ever* use `!` (null-forgiving operator) to handle `null`! Always check for null explicitly and throw appropriate exceptions.
+
+* **In test code**, avoid `!` too. Common workarounds:
+  - `[SetUp]`-initialized fields: declare as nullable (`MockBuildEngine? engine;`) instead of `MockBuildEngine engine = null!;`
+  - After `Assert.IsNotNull`: extract into a local variable (`var opts = task.Options; Assert.IsNotNull (opts); opts.Foo...`) instead of using `task.Options!.Foo`
 
 * Declare variables non-nullable, and check for `null` at entry points.
 
@@ -181,7 +186,18 @@ This pattern ensures proper encoding, timestamps, and file attributes are handle
 
 ## Error Patterns
 - **MSBuild Errors:** `XA####` (errors), `XA####` (warnings), `APT####` (Android tools)
-- **Logging:** Use `Log.LogError`, `Log.LogWarning` with error codes and context
+- **Error messages:** Must come from `Properties.Resources` (e.g., `Properties.Resources.XA0143`) for localization support. Add new messages to the English `Resources.resx` file.
+- **Error code lifecycle:** When removing functionality that used an `XA####` code, either repurpose the code or remove it from `Resources.resx` and `Resources.Designer.cs`. Don't leave orphaned codes.
+- **Logging in `AsyncTask`:** Use the thread-safe helpers (`LogCodedError()`, `LogMessage()`, `LogCodedWarning()`, `LogDebugMessage()`) instead of `Log.*`. The `Log` property is marked `[Obsolete]` on `AsyncTask` because calling `Log.LogMessage` directly from a background thread can hang Visual Studio.
+
+## CI / Build Investigation
+
+**dotnet/android's primary CI runs on Azure DevOps (internal), not GitHub Actions.** When a user asks about CI status, CI failures, why a PR is blocked, or build errors:
+
+1. **ALWAYS invoke the `ci-status` skill first** — do NOT rely on `gh pr checks` alone. GitHub checks may all show ✅ while the internal Azure DevOps build is failing.
+2. The skill auto-detects the current PR from the git branch when no PR number is given.
+3. For deep .binlog analysis, use the `azdo-build-investigator` skill.
+4. Only after the skill confirms no Azure DevOps failures should you report CI as passing.
 
 ## Troubleshooting
 - **Build:** Clean `bin/`+`obj/`, check Android SDK/NDK, `make clean`

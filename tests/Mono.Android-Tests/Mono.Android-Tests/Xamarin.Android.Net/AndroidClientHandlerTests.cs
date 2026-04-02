@@ -141,6 +141,12 @@ namespace Xamarin.Android.NetTests {
 				return true;
 			}
 
+			if (hrex.InnerException is Java.Net.ConnectException connectEx) {
+				connectionFailed = true;
+				Assert.Ignore ($"Ignoring transient connection error: {connectEx}");
+				return true;
+			}
+
 			return false;
 		}
 

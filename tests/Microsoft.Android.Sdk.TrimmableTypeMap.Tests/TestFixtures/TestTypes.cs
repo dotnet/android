@@ -104,7 +104,7 @@ namespace Android.Views
 	[Register ("android/view/View$IHasName", "", "Android.Views.IHasNameInvoker")]
 	public interface IHasName
 	{
-		[Register ("getName", "()Ljava/lang/String;", "GetGetNameHandler:Android.Views.IHasNameInvoker")]
+		[Register ("getName", "()Ljava/lang/String;", "GetGetNameHandler:Android.Views.IHasNameInvoker, TestFixtures, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]
 		string? Name { get; }
 	}
 
@@ -282,6 +282,23 @@ namespace MyApp
 	{
 		[Java.Interop.Export ("myExportedMethod")]
 		public void MyExportedMethod () { }
+	}
+
+	/// <summary>
+	/// Has [Export] methods with non-primitive Java-bound parameter types.
+	/// The JCW should resolve parameter types via [Register] instead of falling back to Object.
+	/// </summary>
+	[Register ("my/app/ExportWithJavaBoundParams")]
+	public class ExportWithJavaBoundParams : Java.Lang.Object
+	{
+		[Java.Interop.Export ("processView")]
+		public void ProcessView (Android.Views.View view) { }
+
+		[Java.Interop.Export ("handleClick")]
+		public bool HandleClick (Android.Views.View view, int action) { return false; }
+
+		[Java.Interop.Export ("getViewName")]
+		public string GetViewName (Android.Views.View view) { return ""; }
 	}
 
 	/// <summary>
