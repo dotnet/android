@@ -634,6 +634,44 @@ namespace Xamarin.Android.Tools.Tests
 		}
 
 		[Test]
+		public void TryGetPlatformDirectoryFromApiLevel_MajorFallsBackToMajorDotZero ()
+		{
+			// Starting with API 37, Google installs platforms to "android-37.0"
+			// instead of "android-37". Verify the fallback works.
+			// See: https://github.com/dotnet/android-tools/issues/319
+			CreateSdks (out string root, out string jdk, out string ndk, out string sdk);
+
+			// Only create android-37.0, not android-37
+			var platformsPath = Path.Combine (sdk, "platforms");
+			var platform370Path = Path.Combine (platformsPath, "android-37.0");
+			Directory.CreateDirectory (platform370Path);
+			File.WriteAllText (Path.Combine (platform370Path, "android.jar"), "");
+
+			var logs = new StringWriter ();
+			Action<TraceLevel, string> logger = (level, message) => {
+				logs.WriteLine ($"[{level}] {message}");
+			};
+
+			try {
+				var info = new AndroidSdkInfo (logger, androidSdkPath: sdk, androidNdkPath: ndk, javaSdkPath: jdk);
+				var versions = new AndroidVersions (new [] {
+					new AndroidVersion (37, "17.0"),
+				});
+
+				// Requesting "37" should fall back to android-37.0
+				var dir37 = info.TryGetPlatformDirectoryFromApiLevel ("37", versions);
+				Assert.IsNotNull (dir37, "Should fall back from android-37 to android-37.0");
+				Assert.AreEqual (platform370Path, dir37);
+
+				// IsPlatformInstalled should also find android-37.0
+				Assert.IsTrue (info.IsPlatformInstalled (37), "IsPlatformInstalled should find android-37.0");
+			}
+			finally {
+				Directory.Delete (root, recursive: true);
+			}
+		}
+
+		[Test]
 		public void GetBuildToolsPaths_StableVersionsFirst ()
 		{
 			CreateSdks (out string root, out string jdk, out string ndk, out string sdk);
