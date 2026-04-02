@@ -226,6 +226,10 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     In additon we MUST set the `PostprocessAssembly` metadata to `true` so that the file
     is processed by the ILLink step. If we do not do this then the reference to
     `netstandard.dll` is not replaced with `System.Private.CoreLib` and the app crashes.
+
+    We also add a TrimmerRootAssembly entry to prevent ILLink from trimming the designer's
+    resource properties. FixLegacyResourceDesignerStep now runs after ILLink and needs
+    all properties to be present when rewriting library assemblies.
 -->
 <Target Name="_AddResourceDesignerToPublishFiles"
     Condition=" '$(AndroidUseDesignerAssembly)' == 'True' "
@@ -238,6 +242,9 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       <PostprocessAssembly>true</PostprocessAssembly>
       <IsTrimmable>true</IsTrimmable>
     </ResolvedFileToPublish>
+    <!-- Root all types/members in the designer so ILLink does not trim any resource
+         properties. The action remains 'link' which rewrites the netstandard reference. -->
+    <TrimmerRootAssembly Include="$(_DesignerAssemblyName)" />
   </ItemGroup>
 </Target>
 
