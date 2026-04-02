@@ -48,7 +48,7 @@ cause performance regressions, or silently delete files.
 
 | Check | What to look for |
 |-------|-----------------|
-| **`#nullable enable`** | New files should have `#nullable enable` at the top with no preceding blank lines — **unless** the project's `.csproj` already has `<Nullable>enable</Nullable>`, in which case it is not needed per-file. |
+| **`#nullable enable`** | New files should have `#nullable enable` at the top with no preceding blank lines — **unless** nullable is already enabled at the project level (for example via the `Nullable` MSBuild property in the project or imported props), in which case it is not needed per-file. |
 | **Never use `!` (null-forgiving operator)** | The postfix `!` null-forgiving operator (e.g., `foo!.Bar`) is banned. If the value can be null, add a proper null check. If it can't be null, make the type non-nullable. AI-generated code frequently sprinkles `!` to silence warnings — this turns compile-time safety into runtime `NullReferenceException`s. Note: this rule is about the postfix `!` operator, not the logical negation `!` (e.g., `if (!someBool)` or `if (!string.IsNullOrEmpty (s))`). |
 | **Use `IsNullOrEmpty()` extension** | Use the `NullableExtensions` instance methods (`str.IsNullOrEmpty()`, `str.IsNullOrWhiteSpace()`) instead of the static `string.IsNullOrEmpty(str)` / `string.IsNullOrWhiteSpace(str)` — they integrate with `[NotNullWhen]` for NRT flow analysis. |
 | **`ArgumentNullException.ThrowIfNull`** | Android-targeted code (.NET 10+) should use `ArgumentNullException.ThrowIfNull(param)`. |
