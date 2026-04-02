@@ -1,6 +1,6 @@
 #nullable enable
-using System.Xml;
 using Microsoft.Build.Framework;
+using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
@@ -21,20 +21,28 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			using var reader = XmlReader.Create (ManifestFile);
-			while (reader.Read ()) {
-				if (reader.NodeType == XmlNodeType.Element && reader.LocalName == "instrumentation") {
-					InstrumentationName = reader.GetAttribute ("name", ManifestDocument.AndroidXmlNamespace.ToString ());
-					if (InstrumentationName.IsNullOrEmpty ()) {
-						Log.LogError ("The <instrumentation> element is missing the android:name attribute.");
-						return false;
-					}
-					return !Log.HasLoggedErrors;
-				}
+			var manifest = AndroidAppManifest.Load (ManifestFile, MonoAndroidHelper.SupportedVersions);
+			var androidNs = AndroidAppManifest.AndroidXNamespace;
+			var doc = manifest.Document;
+
+			if (doc?.Root == null) {
+				Log.LogCodedError ("XA1043", Properties.Resources.XA1043);
+				return false;
 			}
 
-			Log.LogError ("No <instrumentation> element found in AndroidManifest.xml.");
-			return false;
+			var instrumentation = doc.Root.Element (androidNs + "instrumentation");
+			if (instrumentation == null) {
+				Log.LogCodedError ("XA1043", Properties.Resources.XA1043);
+				return false;
+			}
+
+			InstrumentationName = instrumentation.Attribute (androidNs + "name")?.Value;
+			if (string.IsNullOrEmpty (InstrumentationName)) {
+				Log.LogCodedError ("XA1042", Properties.Resources.XA1042);
+				return false;
+			}
+
+			return !Log.HasLoggedErrors;
 		}
 	}
 }

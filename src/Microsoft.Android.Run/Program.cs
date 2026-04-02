@@ -229,11 +229,19 @@ async Task<int> RunInstrumentationAsync ()
 
 	// Wait for instrumentation to complete or Ctrl+C
 	try {
-		while (!instrumentProcess.HasExited && !cts.Token.IsCancellationRequested)
-			await Task.Delay (250, cts.Token).ConfigureAwait (ConfigureAwaitOptions.SuppressThrowing);
+		while (!instrumentProcess.HasExited && !cts.Token.IsCancellationRequested) {
+			try {
+				await Task.Delay (250, cts.Token);
+			} catch (OperationCanceledException) {
+				break;
+			}
+		}
 
 		if (cts.Token.IsCancellationRequested) {
-			try { instrumentProcess.Kill (); } catch { }
+			try { instrumentProcess.Kill (); } catch (Exception ex) {
+				if (verbose)
+					Console.Error.WriteLine ($"Cleanup: {ex.Message}");
+			}
 			return 1;
 		}
 
@@ -245,7 +253,10 @@ async Task<int> RunInstrumentationAsync ()
 				logcatProcess.Kill ();
 				logcatProcess.WaitForExit (1000);
 			}
-		} catch { }
+		} catch (Exception ex) {
+			if (verbose)
+				Console.Error.WriteLine ($"Logcat cleanup: {ex.Message}");
+		}
 	}
 
 	// Check exit status

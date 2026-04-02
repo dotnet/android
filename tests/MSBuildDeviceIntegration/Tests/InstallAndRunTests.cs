@@ -2254,7 +2254,6 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 
 			var locker = new Lock ();
 			var output = new StringBuilder ();
-			var processExited = new ManualResetEventSlim (false);
 
 			process.OutputDataReceived += (sender, e) => {
 				if (e.Data != null)
@@ -2274,6 +2273,9 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			bool completed = process.WaitForExit ((int) TimeSpan.FromMinutes (5).TotalMilliseconds);
 			if (!completed) {
 				try { process.Kill (entireProcessTree: true); } catch { }
+			} else {
+				// Ensure async output events are fully drained
+				process.WaitForExit ();
 			}
 
 			// Write the output to a log file for debugging

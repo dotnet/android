@@ -59,7 +59,10 @@ public class TestInstrumentation : Instrumentation
 
     class ResultConsumer(Instrumentation instrumentation) : IDataConsumer
     {
-        public int Passed, Failed, Skipped;
+        int _passed, _failed, _skipped;
+        public int Passed => _passed;
+        public int Failed => _failed;
+        public int Skipped => _skipped;
         public string? TrxReportPath;
 
         public string Uid => nameof(ResultConsumer);
@@ -90,7 +93,7 @@ public class TestInstrumentation : Instrumentation
                 if (outcome is null)
                     return Task.CompletedTask;
 
-                _ = outcome switch { "passed" => Passed++, "failed" => Failed++, _ => Skipped++ };
+                _ = outcome switch { "passed" => Interlocked.Increment(ref _passed), "failed" => Interlocked.Increment(ref _failed), _ => Interlocked.Increment(ref _skipped) };
 
                 var id = node.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
                 var b = new Bundle();

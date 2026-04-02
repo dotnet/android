@@ -1009,6 +1009,14 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
 {1} - The current value of the property
 </comment>
   </data>
+  <data name="XA1042" xml:space="preserve">
+    <value>The &lt;instrumentation&gt; element in AndroidManifest.xml is missing the android:name attribute.</value>
+    <comment>The following are literal names and should not be translated: AndroidManifest.xml, android:name, instrumentation.</comment>
+  </data>
+  <data name="XA1043" xml:space="preserve">
+    <value>No &lt;instrumentation&gt; element found in AndroidManifest.xml.</value>
+    <comment>The following are literal names and should not be translated: AndroidManifest.xml, instrumentation.</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>Java dependency '{0}' is not satisfied.</value>
     <comment>The following are literal names and should not be translated: Java.
