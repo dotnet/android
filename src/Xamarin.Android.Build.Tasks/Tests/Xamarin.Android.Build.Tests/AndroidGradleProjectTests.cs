@@ -582,10 +582,11 @@ public class Foo {{
 		static IEnumerable<object[]> GetAgpGradleVersionTestData ()
 		{
 			// AGP 8.5.0 with Gradle 8.7 - baseline, tests existing behavior
-			yield return new object[] { "8.5.0", "8.7" };
+			// AGP 8.5.0 only supports up to compileSdk 34
+			yield return new object[] { "8.5.0", "8.7", 34 };
 			// AGP 9.0.0 with Gradle 9.1.0 - tests the Gradle 9.x stricter Kotlin type checking fix
 			// Note: Full version "9.1.0" is required for the download URL to work correctly
-			yield return new object[] { "9.0.0", "9.1.0" };
+			yield return new object[] { "9.0.0", "9.1.0", XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major };
 		}
 
 		/// <summary>
@@ -595,9 +596,9 @@ public class Foo {{
 		/// </summary>
 		[Test]
 		[TestCaseSource (nameof (GetAgpGradleVersionTestData))]
-		public void BindLibraryWithMultipleGradleVersions (string agpVersion, string gradleVersion)
+		public void BindLibraryWithMultipleGradleVersions (string agpVersion, string gradleVersion, int compileSdk)
 		{
-			var gradleProject = AndroidGradleProject.CreateDefault (GradleTestProjectDir, agpVersion, gradleVersion);
+			var gradleProject = AndroidGradleProject.CreateDefault (GradleTestProjectDir, agpVersion, gradleVersion, compileSdk: compileSdk);
 			var gradleModule = gradleProject.Modules.First ();
 			var moduleName = gradleModule.Name;
 

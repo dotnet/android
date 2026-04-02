@@ -285,6 +285,23 @@ namespace MyApp
 	}
 
 	/// <summary>
+	/// Has [Export] methods with non-primitive Java-bound parameter types.
+	/// The JCW should resolve parameter types via [Register] instead of falling back to Object.
+	/// </summary>
+	[Register ("my/app/ExportWithJavaBoundParams")]
+	public class ExportWithJavaBoundParams : Java.Lang.Object
+	{
+		[Java.Interop.Export ("processView")]
+		public void ProcessView (Android.Views.View view) { }
+
+		[Java.Interop.Export ("handleClick")]
+		public bool HandleClick (Android.Views.View view, int action) { return false; }
+
+		[Java.Interop.Export ("getViewName")]
+		public string GetViewName (Android.Views.View view) { return ""; }
+	}
+
+	/// <summary>
 	/// Has [Export] methods with different access modifiers.
 	/// The JCW should respect the C# visibility for [Export] methods.
 	/// </summary>

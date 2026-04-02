@@ -16,7 +16,6 @@
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\External\Linker\BaseMarkHandler.cs" Link="External\BaseMarkHandler.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\AndroidLinkConfiguration.cs" Link="MonoDroid.Tuner\AndroidLinkConfiguration.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\Extensions.cs" Link="MonoDroid.Tuner\Extensions.cs" />
-    <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\FixAbstractMethodsStep.cs" Link="MonoDroid.Tuner\FixAbstractMethodsStep.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\FixLegacyResourceDesignerStep.cs" Link="MonoDroid.Tuner\FixLegacyResourceDesignerStep.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\LinkDesignerBase.cs" Link="MonoDroid.Tuner\LinkDesignerBase.cs" />
 

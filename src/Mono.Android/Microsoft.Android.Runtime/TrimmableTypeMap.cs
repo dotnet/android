@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -20,6 +19,7 @@ namespace Microsoft.Android.Runtime;
 /// </summary>
 class TrimmableTypeMap
 {
+	static readonly Lock s_initLock = new ();
 	static TrimmableTypeMap? s_instance;
 
 	internal static TrimmableTypeMap Instance =>
@@ -40,11 +40,17 @@ class TrimmableTypeMap
 	/// </summary>
 	internal static void Initialize ()
 	{
-		var instance = new TrimmableTypeMap ();
-		var previous = Interlocked.CompareExchange (ref s_instance, instance, null);
-		Debug.Assert (previous is null, "TrimmableTypeMap must only be created once.");
+		if (s_instance is not null)
+			return;
 
-		instance.RegisterNatives ();
+		lock (s_initLock) {
+			if (s_instance is not null)
+				return;
+
+			var instance = new TrimmableTypeMap ();
+			instance.RegisterNatives ();
+			s_instance = instance;
+		}
 	}
 
 	/// <summary>
