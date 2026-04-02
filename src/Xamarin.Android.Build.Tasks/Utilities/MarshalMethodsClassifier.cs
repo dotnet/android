@@ -778,8 +778,10 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
-			// Look for a converted callback method (indicates the method has already been processed)
-			MethodDefinition? nativeConvertedCallbackMethod = FindMethod (connectorDeclaringType, nativeConvertedCallbackName, ncbs);
+			// Look for a converted callback method (indicates the method has already been processed).
+			// Search by name only — the wrapper's parameter types will differ from the original
+			// signature due to blittable substitutions (e.g., System.Boolean -> System.Byte).
+			MethodDefinition? nativeConvertedCallbackMethod = FindMethod (connectorDeclaringType, nativeConvertedCallbackName);
 
 			// Find the connector method that returns the delegate
 			MethodDefinition connectorMethod = FindMethod (connectorDeclaringType, connectorName);
