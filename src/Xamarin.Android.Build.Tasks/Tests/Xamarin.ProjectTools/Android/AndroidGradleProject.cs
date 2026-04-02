@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-
 namespace Xamarin.ProjectTools
 {
 	public class AndroidGradleProject 
@@ -82,8 +81,8 @@ android.useAndroidX=true
 		const string build_gradle_kts_content =
 @"
 plugins {
-    id(""com.android.application"") version ""8.5.0"" apply false
-    id(""com.android.library"") version ""8.5.0"" apply false
+    id(""com.android.application"") version ""8.10.0"" apply false
+    id(""com.android.library"") version ""8.10.0"" apply false
 }
 ";
 		string GetSettingsGradleKtsContent ()
