@@ -48,18 +48,15 @@ public class TrimmableTypeMapGenerator
 		// Collect Application/Instrumentation types that need deferred registerNatives
 		var appRegTypes = allPeers
 			.Where (p => p.CannotRegisterInStaticConstructor && !p.IsAbstract)
-			.Select (p => p.JavaName.Replace ('/', '.'))
+			.Select (p => JniSignatureHelper.JniNameToJavaName (p.JavaName))
 			.ToList ();
 		if (appRegTypes.Count > 0) {
 			log ($"Found {appRegTypes.Count} Application/Instrumentation types for deferred registration.");
 		}
 
-		GeneratedManifest? manifest = null;
-
-		// Generate merged AndroidManifest.xml if requested
-		if (manifestConfig is not null) {
-			manifest = GenerateManifest (allPeers, assemblyManifestInfo, manifestConfig, manifestTemplate);
-		}
+		var manifest = manifestConfig is not null
+			? GenerateManifest (allPeers, assemblyManifestInfo, manifestConfig, manifestTemplate)
+			: null;
 
 		return new TrimmableTypeMapResult (generatedAssemblies, generatedJavaSources, allPeers, manifest, appRegTypes);
 	}
@@ -67,12 +64,12 @@ public class TrimmableTypeMapGenerator
 	GeneratedManifest GenerateManifest (List<JavaPeerInfo> allPeers, AssemblyManifestInfo assemblyManifestInfo,
 		ManifestConfig config, XDocument? manifestTemplate)
 	{
-		string minSdk = "21";
-		if (!config.SupportedOSPlatformVersion.IsNullOrEmpty () && Version.TryParse (config.SupportedOSPlatformVersion, out var sopv)) {
+		string minSdk = config.SupportedOSPlatformVersion ?? throw new InvalidOperationException ("SupportedOSPlatformVersion must be provided by MSBuild.");
+		if (Version.TryParse (minSdk, out var sopv)) {
 			minSdk = sopv.Major.ToString (System.Globalization.CultureInfo.InvariantCulture);
 		}
 
-		string targetSdk = config.AndroidApiLevel ?? "36";
+		string targetSdk = config.AndroidApiLevel ?? throw new InvalidOperationException ("AndroidApiLevel must be provided by MSBuild.");
 		if (Version.TryParse (targetSdk, out var apiVersion)) {
 			targetSdk = apiVersion.Major.ToString (System.Globalization.CultureInfo.InvariantCulture);
 		}
@@ -86,7 +83,7 @@ public class TrimmableTypeMapGenerator
 			VersionName = config.VersionName ?? "",
 			MinSdkVersion = minSdk,
 			TargetSdkVersion = targetSdk,
-			AndroidRuntime = config.AndroidRuntime ?? "coreclr",
+			RuntimeProviderJavaName = config.RuntimeProviderJavaName ?? throw new InvalidOperationException ("RuntimeProviderJavaName must be provided by MSBuild."),
 			Debug = config.Debug,
 			NeedsInternet = config.NeedsInternet,
 			EmbedAssemblies = config.EmbedAssemblies,

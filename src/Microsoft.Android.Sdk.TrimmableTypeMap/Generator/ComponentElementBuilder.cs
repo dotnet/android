@@ -1,4 +1,3 @@
-
 using System;
 using System.Globalization;
 using System.Linq;
@@ -156,7 +155,7 @@ static class ComponentElementBuilder
 
 	internal static void UpdateApplicationElement (XElement app, JavaPeerInfo peer)
 	{
-		string jniName = peer.JavaName.Replace ('/', '.');
+		string jniName = JniSignatureHelper.JniNameToJavaName (peer.JavaName);
 		app.SetAttributeValue (AttName, jniName);
 
 		var component = peer.ComponentAttribute;
@@ -168,7 +167,7 @@ static class ComponentElementBuilder
 
 	internal static void AddInstrumentation (XElement manifest, JavaPeerInfo peer)
 	{
-		string jniName = peer.JavaName.Replace ('/', '.');
+		string jniName = JniSignatureHelper.JniNameToJavaName (peer.JavaName);
 		var element = new XElement ("instrumentation",
 			new XAttribute (AttName, jniName));
 

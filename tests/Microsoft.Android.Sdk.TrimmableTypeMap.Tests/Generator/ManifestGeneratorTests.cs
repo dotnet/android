@@ -19,7 +19,7 @@ public class ManifestGeneratorTests
 		VersionName = "1.0",
 		MinSdkVersion = "21",
 		TargetSdkVersion = "36",
-		AndroidRuntime = "coreclr",
+		RuntimeProviderJavaName = "mono.MonoRuntimeProvider",
 	};
 
 	static XDocument ParseTemplate (string xml) => XDocument.Parse (xml);

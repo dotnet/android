@@ -40,7 +40,7 @@ public string? VersionCode { get; set; }
 public string? VersionName { get; set; }
 public string? AndroidApiLevel { get; set; }
 public string? SupportedOSPlatformVersion { get; set; }
-public string? AndroidRuntime { get; set; }
+public string? RuntimeProviderJavaName { get; set; }
 public bool Debug { get; set; }
 public bool NeedsInternet { get; set; }
 public bool EmbedAssemblies { get; set; }
@@ -88,7 +88,7 @@ VersionCode: VersionCode,
 VersionName: VersionName,
 AndroidApiLevel: AndroidApiLevel,
 SupportedOSPlatformVersion: SupportedOSPlatformVersion,
-AndroidRuntime: AndroidRuntime,
+RuntimeProviderJavaName: RuntimeProviderJavaName,
 Debug: Debug,
 NeedsInternet: NeedsInternet,
 EmbedAssemblies: EmbedAssemblies,

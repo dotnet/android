@@ -28,10 +28,10 @@ public static class AcwMapWriter
 	public static void Write (TextWriter writer, IEnumerable<JavaPeerInfo> peers)
 	{
 		foreach (var peer in peers.OrderBy (p => p.ManagedTypeName, StringComparer.Ordinal)) {
-			string javaKey = peer.JavaName.Replace ('/', '.');
+			string javaKey = JniSignatureHelper.JniNameToJavaName (peer.JavaName);
 			string managedKey = peer.ManagedTypeName;
 			string partialAsmQualifiedName = $"{managedKey}, {peer.AssemblyName}";
-			string compatJniName = peer.CompatJniName.Replace ('/', '.');
+			string compatJniName = JniSignatureHelper.JniNameToJavaName (peer.CompatJniName);
 
 			// Line 1: PartialAssemblyQualifiedName;JavaKey
 			writer.Write (partialAsmQualifiedName);

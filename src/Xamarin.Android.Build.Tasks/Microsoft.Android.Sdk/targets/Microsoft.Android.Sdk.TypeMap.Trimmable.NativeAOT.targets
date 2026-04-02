@@ -2,6 +2,10 @@
      Adds generated typemap assemblies to ILC inputs. -->
 <Project>
 
+  <PropertyGroup>
+    <_TrimmableRuntimeProviderJavaName Condition=" '$(_TrimmableRuntimeProviderJavaName)' == '' ">net.dot.jni.nativeaot.NativeAotRuntimeProvider</_TrimmableRuntimeProviderJavaName>
+  </PropertyGroup>
+
   <!-- After typemap generation, add generated assemblies to ILC inputs.
        NOT as TrimmerRootAssembly — ILC must process TypeMapAttributes and trim entries
        whose trimTarget types were removed. -->

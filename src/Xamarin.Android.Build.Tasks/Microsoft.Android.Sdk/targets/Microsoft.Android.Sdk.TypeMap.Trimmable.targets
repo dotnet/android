@@ -66,7 +66,7 @@
         VersionName="$(_AndroidVersionName)"
         AndroidApiLevel="$(_AndroidApiLevel)"
         SupportedOSPlatformVersion="$(SupportedOSPlatformVersion)"
-        AndroidRuntime="$(_AndroidRuntime)"
+        RuntimeProviderJavaName="$(_TrimmableRuntimeProviderJavaName)"
         Debug="$(AndroidIncludeDebugSymbols)"
         NeedsInternet="$(AndroidNeedsInternetPermission)"
         EmbedAssemblies="$(EmbedAssembliesIntoApk)"

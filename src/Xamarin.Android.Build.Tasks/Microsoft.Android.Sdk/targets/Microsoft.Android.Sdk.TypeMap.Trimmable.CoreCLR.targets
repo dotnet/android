@@ -1,6 +1,10 @@
 <!-- Trimmable typemap: CoreCLR-specific (ILLink integration). -->
 <Project>
 
+  <PropertyGroup>
+    <_TrimmableRuntimeProviderJavaName Condition=" '$(_TrimmableRuntimeProviderJavaName)' == '' ">mono.MonoRuntimeProvider</_TrimmableRuntimeProviderJavaName>
+  </PropertyGroup>
+
   <!-- Add TypeMap DLLs to ILLink input. ILLink natively understands TypeMapAttribute<T>. -->
   <Target Name="_AddTrimmableTypeMapToLinker"
       BeforeTargets="PrepareForILLink;_RunILLink"

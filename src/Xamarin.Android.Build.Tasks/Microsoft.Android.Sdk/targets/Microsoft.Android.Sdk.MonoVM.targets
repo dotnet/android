@@ -17,10 +17,6 @@ This file contains the MonoVM-specific MSBuild logic for .NET for Android.
         Value="false"
         Trim="true"
     />
-    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap"
-        Value="false"
-        Trim="true"
-    />
   </ItemGroup>
 
 </Project>

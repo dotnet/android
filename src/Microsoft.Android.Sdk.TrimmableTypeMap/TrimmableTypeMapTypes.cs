@@ -40,7 +40,7 @@ public record ManifestConfig (
 	string? VersionName = null,
 	string? AndroidApiLevel = null,
 	string? SupportedOSPlatformVersion = null,
-	string? AndroidRuntime = null,
+	string? RuntimeProviderJavaName = null,
 	bool Debug = false,
 	bool NeedsInternet = false,
 	bool EmbedAssemblies = false,
