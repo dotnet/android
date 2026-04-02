@@ -456,3 +456,18 @@ extends:
         policheckPtbScanFolder: $(Build.SourcesDirectory)\Localize\loc\pt-BR
         policheckRusScanFolder: $(Build.SourcesDirectory)\Localize\loc\ru
         policheckTrkScanFolder: $(Build.SourcesDirectory)\Localize\loc\tr
+
+    - ${{ if eq(variables['Build.DefinitionName'], 'Xamarin.Android-PR') }}:
+      - stage: BuildSummary
+        dependsOn:
+        - mac_build
+        - win_build_test
+        - linux_build
+        - smoke_tests
+        - linux_tests
+        - msbuild_dotnet
+        - msbuilddevice_tests
+        - maui_tests
+        condition: failed()
+        jobs:
+        - template: build-summary/v1.yml@yaml-templates

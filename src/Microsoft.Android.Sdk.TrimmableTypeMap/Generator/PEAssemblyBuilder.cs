@@ -28,6 +28,20 @@ sealed class PEAssemblyBuilder
 	readonly BlobBuilder _codeBlob = new BlobBuilder (256);
 	readonly BlobBuilder _attrBlob = new BlobBuilder (64);
 
+	// Holds raw byte data for fields with FieldAttributes.HasFieldRVA (e.g., UTF-8 string literals).
+	// Passed to ManagedPEBuilder as the mappedFieldData section.
+	readonly BlobBuilder _mappedFieldData = new BlobBuilder ();
+
+	// Cache of sized value types for RVA fields, keyed by byte length.
+	// Avoids creating duplicate __utf8_N types when multiple fields share the same size.
+	readonly Dictionary<int, TypeDefinitionHandle> _sizedTypeCache = new ();
+
+	// Deduplication cache for UTF-8 string RVA fields. Strings like "()V" that repeat across
+	// many proxy types are stored once and shared via the same FieldDefinitionHandle.
+	readonly Dictionary<string, FieldDefinitionHandle> _utf8FieldCache = new (StringComparer.Ordinal);
+	TypeDefinitionHandle _privateImplDetailsType;
+	int _utf8FieldCounter;
+
 	readonly Version _systemRuntimeVersion;
 
 	public MetadataBuilder Metadata { get; } = new MetadataBuilder ();
@@ -81,20 +95,6 @@ sealed class PEAssemblyBuilder
 	}
 
 	/// <summary>
-	/// Serialises the metadata + IL into a PE DLL at <paramref name="outputPath"/>.
-	/// </summary>
-	public void WritePE (string outputPath)
-	{
-		var dir = Path.GetDirectoryName (outputPath);
-		if (!string.IsNullOrEmpty (dir)) {
-			Directory.CreateDirectory (dir);
-		}
-
-		using var fs = File.Create (outputPath);
-		WritePE (fs);
-	}
-
-	/// <summary>
 	/// Serialises the metadata + IL into a PE DLL and writes it to the given <paramref name="stream"/>.
 	/// </summary>
 	public void WritePE (Stream stream)
@@ -102,7 +102,8 @@ sealed class PEAssemblyBuilder
 		var peBuilder = new ManagedPEBuilder (
 			new PEHeaderBuilder (imageCharacteristics: Characteristics.Dll),
 			new MetadataRootBuilder (Metadata),
-			ILBuilder);
+			ILBuilder,
+			mappedFieldData: _mappedFieldData.Count > 0 ? _mappedFieldData : null);
 		var peBlob = new BlobBuilder ();
 		peBuilder.Serialize (peBlob);
 		peBlob.WriteContentTo (stream);
@@ -165,6 +166,92 @@ sealed class PEAssemblyBuilder
 		var ns = lastDot >= 0 ? managedTypeName.Substring (0, lastDot) : "";
 		var name = lastDot >= 0 ? managedTypeName.Substring (lastDot + 1) : managedTypeName;
 		return Metadata.AddTypeReference (scope, Metadata.GetOrAddString (ns), Metadata.GetOrAddString (name));
+	}
+
+	/// <summary>
+	/// Returns a deduplicated RVA field containing the null-terminated UTF-8 encoding of
+	/// <paramref name="value"/>. Strings like <c>"()V"</c> that appear across many proxy
+	/// types are stored once and share the same <see cref="FieldDefinitionHandle"/>.
+	/// The field is declared on an internal sized helper type (e.g. <c>__utf8_10</c>)
+	/// nested under <c>&lt;PrivateImplementationDetails&gt;</c>.
+	/// </summary>
+	public FieldDefinitionHandle GetOrAddUtf8Field (string value)
+	{
+		if (_utf8FieldCache.TryGetValue (value, out var existing)) {
+			return existing;
+		}
+
+		EnsurePrivateImplDetailsType ();
+
+		// Encode to null-terminated UTF-8 (all JNI names/signatures are ASCII).
+		int byteCount = System.Text.Encoding.UTF8.GetByteCount (value);
+		var bytes = new byte [byteCount + 1];
+		System.Text.Encoding.UTF8.GetBytes (value, 0, value.Length, bytes, 0);
+		// bytes[byteCount] is already 0 (null terminator)
+
+		var sizedType = GetOrCreateSizedType (bytes.Length);
+
+		_sigBlob.Clear ();
+		new BlobEncoder (_sigBlob).FieldSignature ().Type (sizedType, true);
+
+		int rva = _mappedFieldData.Count;
+		_mappedFieldData.WriteBytes (bytes);
+
+		var fieldHandle = Metadata.AddFieldDefinition (
+			FieldAttributes.Static | FieldAttributes.Assembly | FieldAttributes.HasFieldRVA | FieldAttributes.InitOnly,
+			Metadata.GetOrAddString ($"__utf8_{_utf8FieldCounter++}"),
+			Metadata.GetOrAddBlob (_sigBlob));
+
+		Metadata.AddFieldRelativeVirtualAddress (fieldHandle, rva);
+
+		_utf8FieldCache [value] = fieldHandle;
+		return fieldHandle;
+	}
+
+	void EnsurePrivateImplDetailsType ()
+	{
+		if (!_privateImplDetailsType.IsNil) {
+			return;
+		}
+
+		int typeFieldStart = Metadata.GetRowCount (TableIndex.Field) + 1;
+		int typeMethodStart = Metadata.GetRowCount (TableIndex.MethodDef) + 1;
+
+		_privateImplDetailsType = Metadata.AddTypeDefinition (
+			TypeAttributes.NotPublic | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+			default,
+			Metadata.GetOrAddString ("<PrivateImplementationDetails>"),
+			Metadata.AddTypeReference (SystemRuntimeRef,
+				Metadata.GetOrAddString ("System"), Metadata.GetOrAddString ("Object")),
+			MetadataTokens.FieldDefinitionHandle (typeFieldStart),
+			MetadataTokens.MethodDefinitionHandle (typeMethodStart));
+	}
+
+	TypeDefinitionHandle GetOrCreateSizedType (int size)
+	{
+		if (_sizedTypeCache.TryGetValue (size, out var existing)) {
+			return existing;
+		}
+
+		EnsurePrivateImplDetailsType ();
+
+		int typeFieldStart = Metadata.GetRowCount (TableIndex.Field) + 1;
+		int typeMethodStart = Metadata.GetRowCount (TableIndex.MethodDef) + 1;
+
+		var handle = Metadata.AddTypeDefinition (
+			TypeAttributes.NestedPrivate | TypeAttributes.ExplicitLayout | TypeAttributes.Sealed | TypeAttributes.AnsiClass,
+			default,
+			Metadata.GetOrAddString ($"__utf8_{size}"),
+			Metadata.AddTypeReference (SystemRuntimeRef,
+				Metadata.GetOrAddString ("System"), Metadata.GetOrAddString ("ValueType")),
+			MetadataTokens.FieldDefinitionHandle (typeFieldStart),
+			MetadataTokens.MethodDefinitionHandle (typeMethodStart));
+
+		Metadata.AddTypeLayout (handle, packingSize: 1, size: (uint) size);
+		Metadata.AddNestedType (handle, _privateImplDetailsType);
+
+		_sizedTypeCache [size] = handle;
+		return handle;
 	}
 
 	/// <summary>

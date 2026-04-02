@@ -25,6 +25,7 @@ This file contains targets specific for Android application projects.
     </_RunDependsOn>
     <_AndroidComputeRunArgumentsDependsOn Condition=" '$(_AndroidComputeRunArgumentsDependsOn)' == '' ">
       _ResolveMonoAndroidSdks;
+      _EnsureDeviceBooted;
       _GetAndroidPackageName;
       _AndroidAdbToolPath;
     </_AndroidComputeRunArgumentsDependsOn>
@@ -60,9 +61,14 @@ This file contains targets specific for Android application projects.
   Target that ensures the selected device is online and ready. If $(Device) refers to an
   unbooted AVD, this target boots the emulator and updates $(AdbTarget) to the resolved
   ADB serial (e.g. "-s emulator-5554").
-  Runs before _GetPrimaryCpuAbi (in commercial builds) so $(AdbTarget) is correct,
-  and before _DeployApk/_DeployAppBundle (which use AdbTarget for adb commands)
-  when $(Device) is set.
+
+  This target is included in DeployToDeviceDependsOnTargets (in BuildOrder.targets) so it runs
+  before _DeployApk/_DeployAppBundle/_Upload via DependsOnTargets. Using BeforeTargets alone
+  is insufficient because the .NET SDK's `dotnet run` invokes DeployToDevice via
+  ProjectInstance.Build() in-process, where BeforeTargets hooks may not fire.
+
+  The BeforeTargets="_GetPrimaryCpuAbi" entry is kept for commercial builds where
+  _GetPrimaryCpuAbi needs AdbTarget resolved before it runs.
 
   Note: this target CANNOT use DependsOnTargets="_ResolveMonoAndroidSdks" because in commercial
   builds _GetPrimaryCpuAbi is in $(_ResolveMonoAndroidSdksDependsOn), which would create a cycle:
@@ -72,7 +78,7 @@ This file contains targets specific for Android application projects.
   ***********************************************************************************************
   -->
   <Target Name="_EnsureDeviceBooted"
-      BeforeTargets="_GetPrimaryCpuAbi;_DeployApk;_DeployAppBundle"
+      BeforeTargets="_GetPrimaryCpuAbi"
       Condition=" '$(Device)' != '' ">
     <BootAndroidEmulator
         Device="$(Device)"

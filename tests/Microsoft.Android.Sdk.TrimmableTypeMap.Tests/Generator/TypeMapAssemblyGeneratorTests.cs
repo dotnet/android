@@ -82,7 +82,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 		Assert.Contains (".ctor", methods);
 		Assert.Contains ("CreateInstance", methods);
-		Assert.Contains ("get_TargetType", methods);
 	}
 
 	[Fact]
@@ -503,5 +502,85 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	public void ParseParameterTypes_UnterminatedSignature_ReturnsEmptyList ()
 	{
 		Assert.Empty (JniSignatureHelper.ParseParameterTypes ("("));
+	}
+
+	[Fact]
+	public void Generate_AcwProxy_UsesJniNativeMethodDirectly ()
+	{
+		var peers = ScanFixtures ();
+		var acwPeer = peers.First (p => p.JavaName == "my/app/MainActivity");
+
+		using var stream = GenerateAssembly (new [] { acwPeer }, "DirectRegisterTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var memberNames = GetMemberRefNames (reader);
+		var typeNames = GetTypeRefNames (reader);
+
+		// Should reference JniNativeMethod and RegisterNatives directly
+		Assert.Contains ("JniNativeMethod", typeNames);
+		Assert.Contains ("Types", typeNames); // JniEnvironment.Types nested type
+		Assert.Contains ("RegisterNatives", memberNames);
+		Assert.Contains ("get_PeerReference", memberNames);
+
+		// Should NOT reference the old RegisterMethod helper
+		Assert.DoesNotContain ("RegisterMethod", memberNames);
+	}
+
+	[Fact]
+	public void Generate_AcwProxy_HasPrivateImplementationDetails ()
+	{
+		var peers = ScanFixtures ();
+		var acwPeer = peers.First (p => p.JavaName == "my/app/MainActivity");
+
+		using var stream = GenerateAssembly (new [] { acwPeer }, "PrivImplTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var typeDefNames = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Select (t => reader.GetString (t.Name))
+			.ToList ();
+
+		Assert.Contains ("<PrivateImplementationDetails>", typeDefNames);
+	}
+
+	[Fact]
+	public void Generate_MultipleAcwProxies_DeduplicatesUtf8Strings ()
+	{
+		var peers = ScanFixtures ();
+		// Get all ACW peers — they likely share signatures like "()V"
+		var acwPeers = peers.Where (p => !p.DoNotGenerateAcw && p.MarshalMethods.Count > 0).ToList ();
+		Assert.True (acwPeers.Count >= 2, "Need at least 2 ACW peers to test deduplication");
+
+		using var stream = GenerateAssembly (acwPeers, "DedupTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		// Count fields with HasFieldRVA — these are our UTF-8 RVA fields.
+		// With deduplication, common strings like "()V" should appear only once.
+		var rvaFields = reader.FieldDefinitions
+			.Select (h => reader.GetFieldDefinition (h))
+			.Where (f => (f.Attributes & FieldAttributes.HasFieldRVA) != 0)
+			.ToList ();
+
+		// Collect all JNI method names and signatures from the ACW peers
+		var allStrings = acwPeers
+			.SelectMany (p => p.MarshalMethods)
+			.SelectMany (m => new [] { m.JniName, m.JniSignature })
+			.ToList ();
+		var uniqueStrings = allStrings.Distinct ().Count ();
+
+		// With dedup, RVA field count should equal unique string count, not total string count.
+		// Also include constructor registrations (nctor_*), so use <= for a safe assertion.
+		Assert.True (rvaFields.Count <= uniqueStrings + acwPeers.Count * 2,
+			$"Expected at most {uniqueStrings + acwPeers.Count * 2} RVA fields (unique strings + ctor names/sigs), " +
+			$"but found {rvaFields.Count}. Deduplication may not be working.");
+
+		// The key assertion: fewer RVA fields than total strings means dedup is working
+		if (allStrings.Count > uniqueStrings) {
+			Assert.True (rvaFields.Count < allStrings.Count,
+				$"Expected fewer RVA fields ({rvaFields.Count}) than total strings ({allStrings.Count}) due to deduplication");
+		}
 	}
 }

@@ -1079,9 +1079,10 @@ In this message, the term "handheld app" means "app for handheld devices."
 {1} - The exception message.</comment>
   </data>
   <data name="XA0144" xml:space="preserve">
-    <value>AVD '{0}' 的 Android 模擬器在變得可用之前，意外地結束，出現結束代碼 {1}。</value>
+    <value>AVD '{0}' 的 Android Emulator 失敗，發生錯誤 '{1}': {2}</value>
     <comment>{0} - The AVD name.
-{1} - The process exit code.</comment>
+{1} - The error kind (e.g. Unknown).
+{2} - Error details from the emulator runner.</comment>
   </data>
   <data name="XA0145" xml:space="preserve">
     <value>AVD '{0}' 的 Android 模擬器未在 {1} 秒內完成開機。增加 'BootTimeoutSeconds' 或檢查模擬器設定。</value>

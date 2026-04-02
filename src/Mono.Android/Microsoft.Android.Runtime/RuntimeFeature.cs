@@ -10,6 +10,7 @@ static class RuntimeFeature
 	const bool IsCoreClrRuntimeEnabledByDefault = false;
 	const bool IsAssignableFromCheckEnabledByDefault = true;
 	const bool StartupHookSupportEnabledByDefault = true;
+	const bool TrimmableTypeMapEnabledByDefault = false;
 
 	const string FeatureSwitchPrefix = "Microsoft.Android.Runtime.RuntimeFeature.";
 	const string StartupHookProviderSwitch = "System.StartupHookProvider.IsSupported";
@@ -34,4 +35,8 @@ static class RuntimeFeature
 	[FeatureGuard (typeof (RequiresUnreferencedCodeAttribute))]
 	internal static bool StartupHookSupport { get; } =
 		AppContext.TryGetSwitch (StartupHookProviderSwitch, out bool isEnabled) ? isEnabled : StartupHookSupportEnabledByDefault;
+
+	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (TrimmableTypeMap)}")]
+	internal static bool TrimmableTypeMap { get; } =
+		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (TrimmableTypeMap)}", out bool isEnabled) ? isEnabled : TrimmableTypeMapEnabledByDefault;
 }

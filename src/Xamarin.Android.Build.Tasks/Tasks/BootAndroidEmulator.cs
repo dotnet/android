@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
@@ -24,11 +24,13 @@ namespace Xamarin.Android.Tasks;
 ///     the emulator and waits for it to become fully ready.
 ///
 /// On success, outputs the resolved ADB serial and AdbTarget for use by subsequent tasks.
+///
+/// Boot logic is delegated to <see cref="EmulatorRunner.BootEmulatorAsync"/> and
+/// <see cref="AdbRunner"/> in Xamarin.Android.Tools.AndroidSdk.
 /// </summary>
-public class BootAndroidEmulator : AndroidTask
+public class BootAndroidEmulator : AsyncTask
 {
 	const int DefaultBootTimeoutSeconds = 300;
-	const int PollIntervalMilliseconds = 500;
 
 	public override string TaskPrefix => "BAE";
 
@@ -92,74 +94,104 @@ public class BootAndroidEmulator : AndroidTask
 	[Output]
 	public string? AdbTarget { get; set; }
 
-	public override bool RunTask ()
+	public override async Task RunTaskAsync ()
 	{
+		if (BootTimeoutSeconds <= 0) {
+			LogCodedError ("XA0145", Properties.Resources.XA0145, Device, BootTimeoutSeconds);
+			return;
+		}
+
 		var adbPath = ResolveAdbPath ();
-
-		// Check if DeviceId is already a known online ADB serial
-		if (IsOnlineAdbDevice (adbPath, Device)) {
-			Log.LogMessage (MessageImportance.Normal, $"Device '{Device}' is already online.");
-			ResolvedDevice = Device;
-			AdbTarget = $"-s {Device}";
-			return true;
-		}
-
-		// DeviceId is not an online serial — treat it as an AVD name and boot it
-		Log.LogMessage (MessageImportance.Normal, $"Device '{Device}' is not an online ADB device. Treating as AVD name.");
-
 		var emulatorPath = ResolveEmulatorPath ();
-		var avdName = Device;
+		var logger = this.CreateTaskLogger ();
 
-		// Check if this AVD is already running (but perhaps still booting)
-		var existingSerial = FindRunningEmulatorForAvd (adbPath, avdName);
-		if (existingSerial != null) {
-			Log.LogMessage (MessageImportance.High, $"Emulator '{avdName}' is already running as '{existingSerial}'");
-			ResolvedDevice = existingSerial;
-			AdbTarget = $"-s {existingSerial}";
-			return WaitForFullBoot (adbPath, avdName, existingSerial);
+		var options = new EmulatorBootOptions {
+			BootTimeout = TimeSpan.FromSeconds (BootTimeoutSeconds),
+			AdditionalArgs = ParseExtraArguments (EmulatorExtraArguments),
+		};
+
+		var result = await ExecuteBootAsync (adbPath, emulatorPath, logger, Device, options, CancellationToken).ConfigureAwait (false);
+
+		if (result.Success) {
+			if (result.Serial.IsNullOrEmpty ()) {
+				LogCodedError ("XA0143", Properties.Resources.XA0143, Device, "Boot reported success but no device serial was returned.");
+				return;
+			}
+			ResolvedDevice = result.Serial;
+			AdbTarget = $"-s {result.Serial}";
+			LogMessage ($"Emulator '{Device}' ({result.Serial}) is fully booted and ready.");
+			return;
 		}
 
-		// Launch the emulator process in the background
-		Log.LogMessage (MessageImportance.High, $"Booting emulator '{avdName}'...");
-		using var emulatorProcess = LaunchEmulatorProcess (emulatorPath, avdName);
-		if (emulatorProcess == null) {
-			return false;
+		switch (result.ErrorKind) {
+		case EmulatorBootErrorKind.LaunchFailed:
+			LogCodedError ("XA0143", Properties.Resources.XA0143, Device, result.ErrorMessage ?? "Unknown launch error");
+			break;
+		case EmulatorBootErrorKind.Cancelled:
+			LogMessage ($"Emulator boot for '{Device}' was cancelled.");
+			break;
+		case EmulatorBootErrorKind.Timeout:
+			LogCodedError ("XA0145", Properties.Resources.XA0145, Device, BootTimeoutSeconds);
+			break;
+		default:
+			LogCodedError ("XA0144", Properties.Resources.XA0144, Device, result.ErrorKind, result.ErrorMessage ?? "Unknown error");
+			break;
 		}
+	}
 
-		try {
-			var timeout = TimeSpan.FromSeconds (BootTimeoutSeconds);
-			var stopwatch = Stopwatch.StartNew ();
+	/// <summary>
+	/// Executes the full boot flow via <see cref="EmulatorRunner.BootEmulatorAsync"/>.
+	/// Virtual so tests can return canned results without launching real processes.
+	/// </summary>
+	protected virtual async Task<EmulatorBootResult> ExecuteBootAsync (
+		string adbPath,
+		string emulatorPath,
+		Action<TraceLevel, string> logger,
+		string device,
+		EmulatorBootOptions options,
+		System.Threading.CancellationToken cancellationToken)
+	{
+		var adbRunner = new AdbRunner (adbPath, logger: logger);
+		var emulatorRunner = new EmulatorRunner (emulatorPath, logger: logger);
+		return await emulatorRunner.BootEmulatorAsync (device, adbRunner, options, cancellationToken).ConfigureAwait (false);
+	}
 
-			// Phase 1: Wait for the emulator to appear in 'adb devices' as online
-			Log.LogMessage (MessageImportance.Normal, "Waiting for emulator to appear in adb devices...");
-			var serial = WaitForEmulatorOnline (adbPath, avdName, emulatorProcess, stopwatch, timeout);
-			if (serial == null) {
-				if (emulatorProcess.HasExited) {
-					Log.LogCodedError ("XA0144", Properties.Resources.XA0144, avdName, emulatorProcess.ExitCode);
-				} else {
-					Log.LogCodedError ("XA0145", Properties.Resources.XA0145, avdName, BootTimeoutSeconds);
+	/// <summary>
+	/// Parses extra arguments into a list suitable for <see cref="EmulatorBootOptions.AdditionalArgs"/>.
+	/// Supports double-quoted segments to allow values with embedded spaces (e.g. <c>-gpu "swiftshader_indirect"</c>).
+	/// Backslash-escaped quotes (<c>\"</c>) inside quoted values are preserved as literal quote characters.
+	/// </summary>
+	static List<string>? ParseExtraArguments (string? extraArgs)
+	{
+		if (extraArgs.IsNullOrEmpty ())
+			return null;
+
+		var args = new List<string> ();
+		var current = new System.Text.StringBuilder ();
+		bool inQuotes = false;
+
+		for (int i = 0; i < extraArgs.Length; i++) {
+			char c = extraArgs [i];
+
+			if (c == '\\' && i + 1 < extraArgs.Length && extraArgs [i + 1] == '"') {
+				current.Append ('"');
+				i++;
+			} else if (c == '"') {
+				inQuotes = !inQuotes;
+			} else if (char.IsWhiteSpace (c) && !inQuotes) {
+				if (current.Length > 0) {
+					args.Add (current.ToString ());
+					current.Clear ();
 				}
-				return false;
+			} else {
+				current.Append (c);
 			}
-
-			ResolvedDevice = serial;
-			AdbTarget = $"-s {serial}";
-			Log.LogMessage (MessageImportance.Normal, $"Emulator appeared as '{serial}'");
-
-			// Phase 2: Wait for the device to fully boot
-			return WaitForFullBoot (adbPath, avdName, serial);
-		} finally {
-			// Stop async reads and unsubscribe events; using var handles Dispose
-			try {
-				emulatorProcess.CancelOutputRead ();
-				emulatorProcess.CancelErrorRead ();
-			} catch (InvalidOperationException e) {
-				// Async reads may not have been started or process already exited
-				Log.LogDebugMessage ($"Failed to cancel async reads: {e}");
-			}
-			emulatorProcess.OutputDataReceived -= EmulatorOutputDataReceived;
-			emulatorProcess.ErrorDataReceived -= EmulatorErrorDataReceived;
 		}
+
+		if (current.Length > 0)
+			args.Add (current.ToString ());
+
+		return args.Count > 0 ? args : null;
 	}
 
 	/// <summary>
@@ -192,263 +224,5 @@ public class BootAndroidEmulator : AndroidTask
 		}
 
 		return dir.IsNullOrEmpty () ? exe : Path.Combine (dir, exe);
-	}
-
-	/// <summary>
-	/// Checks whether the given deviceId is currently listed as an online device in 'adb devices'.
-	/// </summary>
-	protected virtual bool IsOnlineAdbDevice (string adbPath, string deviceId)
-	{
-		bool found = false;
-
-		MonoAndroidHelper.RunProcess (
-			adbPath, "devices",
-			Log,
-			onOutput: (sender, e) => {
-				if (e.Data != null && e.Data.Contains ("device") && !e.Data.Contains ("List of devices")) {
-					var parts = e.Data.Split (['\t', ' '], StringSplitOptions.RemoveEmptyEntries);
-					if (parts.Length >= 2 && parts [1] == "device" &&
-					    string.Equals (parts [0], deviceId, StringComparison.OrdinalIgnoreCase)) {
-						found = true;
-					}
-				}
-			},
-			logWarningOnFailure: false
-		);
-
-		return found;
-	}
-
-	/// <summary>
-	/// Checks if an emulator with the specified AVD name is already running by querying
-	/// 'adb devices' and then 'adb -s serial emu avd name' for each running emulator.
-	/// </summary>
-	protected virtual string? FindRunningEmulatorForAvd (string adbPath, string avdName)
-	{
-		var emulatorSerials = new List<string> ();
-
-		MonoAndroidHelper.RunProcess (
-			adbPath, "devices",
-			Log,
-			onOutput: (sender, e) => {
-				if (e.Data != null && e.Data.StartsWith ("emulator-", StringComparison.OrdinalIgnoreCase) && e.Data.Contains ("device")) {
-					var parts = e.Data.Split (['\t', ' '], StringSplitOptions.RemoveEmptyEntries);
-					if (parts.Length >= 2 && parts [1] == "device") {
-						emulatorSerials.Add (parts [0]);
-					}
-				}
-			},
-			logWarningOnFailure: false
-		);
-
-		foreach (var serial in emulatorSerials) {
-			var name = GetRunningAvdName (adbPath, serial);
-			if (string.Equals (name, avdName, StringComparison.OrdinalIgnoreCase)) {
-				return serial;
-			}
-		}
-
-		return null;
-	}
-
-	/// <summary>
-	/// Gets the AVD name from a running emulator via 'adb -s serial emu avd name'.
-	/// </summary>
-	protected virtual string? GetRunningAvdName (string adbPath, string serial)
-	{
-		string? avdName = null;
-		try {
-			var outputLines = new List<string> ();
-			MonoAndroidHelper.RunProcess (
-				adbPath, $"-s {serial} emu avd name",
-				Log,
-				onOutput: (sender, e) => {
-					if (!e.Data.IsNullOrEmpty ()) {
-						outputLines.Add (e.Data);
-					}
-				},
-				logWarningOnFailure: false
-			);
-
-			if (outputLines.Count > 0) {
-				var name = outputLines [0].Trim ();
-				if (!name.IsNullOrEmpty () && !name.Equals ("OK", StringComparison.OrdinalIgnoreCase)) {
-					avdName = name;
-				}
-			}
-		} catch (Exception ex) {
-			Log.LogDebugMessage ($"Failed to get AVD name for {serial}: {ex.Message}");
-		}
-
-		return avdName;
-	}
-
-	/// <summary>
-	/// Launches the emulator process in the background. The emulator window is shown by default,
-	/// but this can be customized (for example, by passing -no-window) via EmulatorExtraArguments.
-	/// </summary>
-	protected virtual Process? LaunchEmulatorProcess (string emulatorPath, string avdName)
-	{
-		var arguments = $"-avd \"{avdName}\"";
-		if (!EmulatorExtraArguments.IsNullOrEmpty ()) {
-			arguments += $" {EmulatorExtraArguments}";
-		}
-
-		Log.LogMessage (MessageImportance.Normal, $"Starting: {emulatorPath} {arguments}");
-
-		try {
-			var psi = new ProcessStartInfo {
-				FileName = emulatorPath,
-				Arguments = arguments,
-				UseShellExecute = false,
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				CreateNoWindow = true,
-			};
-
-			var process = new Process { StartInfo = psi };
-
-			// Capture output for diagnostics but don't block on it
-			process.OutputDataReceived += EmulatorOutputDataReceived;
-			process.ErrorDataReceived += EmulatorErrorDataReceived;
-
-			process.Start ();
-			process.BeginOutputReadLine ();
-			process.BeginErrorReadLine ();
-
-			return process;
-		} catch (Exception ex) {
-			Log.LogCodedError ("XA0143", Properties.Resources.XA0143, avdName, ex.Message);
-			return null;
-		}
-	}
-
-	void EmulatorOutputDataReceived (object sender, DataReceivedEventArgs e)
-	{
-		if (e.Data != null) {
-			Log.LogDebugMessage ($"emulator stdout: {e.Data}");
-		}
-	}
-
-	void EmulatorErrorDataReceived (object sender, DataReceivedEventArgs e)
-	{
-		if (e.Data != null) {
-			Log.LogDebugMessage ($"emulator stderr: {e.Data}");
-		}
-	}
-
-	/// <summary>
-	/// Polls 'adb devices' until a new emulator serial appears with state "device" (online).
-	/// Returns the serial or null on timeout / emulator process exit.
-	/// </summary>
-	string? WaitForEmulatorOnline (string adbPath, string avdName, Process emulatorProcess, Stopwatch stopwatch, TimeSpan timeout)
-	{
-		while (stopwatch.Elapsed < timeout) {
-			if (emulatorProcess.HasExited) {
-				return null;
-			}
-
-			var serial = FindRunningEmulatorForAvd (adbPath, avdName);
-			if (serial != null) {
-				return serial;
-			}
-
-			Thread.Sleep (PollIntervalMilliseconds);
-		}
-
-		return null;
-	}
-
-	/// <summary>
-	/// Waits for the emulator to fully boot by checking:
-	/// 1. sys.boot_completed property equals "1"
-	/// 2. Package manager is responsive (pm path android returns "package:")
-	/// </summary>
-	bool WaitForFullBoot (string adbPath, string avdName, string serial)
-	{
-		Log.LogMessage (MessageImportance.Normal, "Waiting for emulator to fully boot...");
-		var stopwatch = Stopwatch.StartNew ();
-		var timeout = TimeSpan.FromSeconds (BootTimeoutSeconds);
-
-		// Phase 1: Wait for sys.boot_completed == 1
-		while (stopwatch.Elapsed < timeout) {
-			var bootCompleted = GetShellProperty (adbPath, serial, "sys.boot_completed");
-			if (bootCompleted == "1") {
-				Log.LogMessage (MessageImportance.Normal, "sys.boot_completed = 1");
-				break;
-			}
-
-			Thread.Sleep (PollIntervalMilliseconds);
-		}
-
-		if (stopwatch.Elapsed >= timeout) {
-			Log.LogCodedError ("XA0145", Properties.Resources.XA0145, avdName, BootTimeoutSeconds);
-			return false;
-		}
-
-		var remaining = timeout - stopwatch.Elapsed;
-		Log.LogMessage (MessageImportance.Normal, $"Phase 1 complete. {remaining.TotalSeconds:F0}s remaining for package manager.");
-
-		// Phase 2: Wait for package manager to be responsive
-		while (stopwatch.Elapsed < timeout) {
-			var pmResult = RunShellCommand (adbPath, serial, "pm path android");
-			if (pmResult != null && pmResult.StartsWith ("package:", StringComparison.OrdinalIgnoreCase)) {
-				Log.LogMessage (MessageImportance.High, $"Emulator '{avdName}' ({serial}) is fully booted and ready.");
-				return true;
-			}
-
-			Thread.Sleep (PollIntervalMilliseconds);
-		}
-
-		Log.LogCodedError ("XA0145", Properties.Resources.XA0145, avdName, BootTimeoutSeconds);
-		return false;
-	}
-
-	/// <summary>
-	/// Gets a system property from the device via 'adb -s serial shell getprop property'.
-	/// </summary>
-	protected virtual string? GetShellProperty (string adbPath, string serial, string propertyName)
-	{
-		string? value = null;
-		try {
-			MonoAndroidHelper.RunProcess (
-				adbPath, $"-s {serial} shell getprop {propertyName}",
-				Log,
-				onOutput: (sender, e) => {
-					if (!e.Data.IsNullOrEmpty ()) {
-						value = e.Data.Trim ();
-					}
-				},
-				logWarningOnFailure: false
-			);
-		} catch (Exception ex) {
-			Log.LogDebugMessage ($"Failed to get property '{propertyName}' from {serial}: {ex.Message}");
-		}
-
-		return value;
-	}
-
-	/// <summary>
-	/// Runs a shell command on the device and returns the first line of output.
-	/// </summary>
-	protected virtual string? RunShellCommand (string adbPath, string serial, string command)
-	{
-		string? result = null;
-		try {
-			MonoAndroidHelper.RunProcess (
-				adbPath, $"-s {serial} shell {command}",
-				Log,
-				onOutput: (sender, e) => {
-					if (result == null && !e.Data.IsNullOrEmpty ()) {
-						result = e.Data.Trim ();
-					}
-				},
-				logWarningOnFailure: false
-			);
-		} catch (Exception ex) {
-			Log.LogDebugMessage ($"Failed to run shell command '{command}' on {serial}: {ex.Message}");
-		}
-
-		return result;
 	}
 }

@@ -1080,9 +1080,10 @@ In this message, the term "handheld app" means "app for handheld devices."
 {1} - The exception message.</comment>
   </data>
   <data name="XA0144" xml:space="preserve">
-    <value>AVD '{0}' 用 Android Emulator は、使用可能になる前に終了コード {1} で予期せず終了しました。</value>
+    <value>AVD '{0}' の Android エミュレーターがエラー '{1}': {2} で失敗しました</value>
     <comment>{0} - The AVD name.
-{1} - The process exit code.</comment>
+{1} - The error kind (e.g. Unknown).
+{2} - Error details from the emulator runner.</comment>
   </data>
   <data name="XA0145" xml:space="preserve">
     <value>AVD '{0}' 用 Android Emulator は、{1} 秒以内に起動を完了しませんでした。'BootTimeoutSeconds' を増やすか、エミュレーターの構成を確認してください。</value>

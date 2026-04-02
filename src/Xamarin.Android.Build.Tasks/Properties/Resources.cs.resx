@@ -1079,9 +1079,10 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
 {1} - The exception message.</comment>
   </data>
   <data name="XA0144" xml:space="preserve">
-    <value>Emulátor Androidu pro AVD {0} byl neočekávaně ukončen s ukončovacím kódem {1} předtím, než byl k dispozici.</value>
+    <value>Emulátor Androidu pro AVD {0} selhal s chybou :{1}: {2}</value>
     <comment>{0} - The AVD name.
-{1} - The process exit code.</comment>
+{1} - The error kind (e.g. Unknown).
+{2} - Error details from the emulator runner.</comment>
   </data>
   <data name="XA0145" xml:space="preserve">
     <value>Emulátor Androidu pro AVD {0} nedokončil spuštění během {1} sekund. Zvyšte hodnotu BootTimeoutSeconds nebo zkontrolujte konfiguraci emulátoru.</value>

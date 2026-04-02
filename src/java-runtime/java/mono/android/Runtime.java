@@ -28,6 +28,7 @@ public class Runtime {
 		boolean haveSplitApks
 	);
 	public static native void register (String managedType, java.lang.Class nativeClass, String methods);
+	public static native void registerNatives (java.lang.Class nativeClass);
 	public static native void notifyTimeZoneChanged ();
 	public static native int createNewContext (String[] runtimeApks, String[] assemblies, ClassLoader loader);
 	public static native int createNewContextWithData (String[] runtimeApks, String[] assemblies, byte[][] assembliesBytes, String[] assembliesPaths, ClassLoader loader, boolean forcePreloadAssemblies);

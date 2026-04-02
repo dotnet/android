@@ -1079,9 +1079,10 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
 {1} - The exception message.</comment>
   </data>
   <data name="XA0144" xml:space="preserve">
-    <value>L'emulatore Android per AVD '{0}' è terminato in modo imprevisto con codice di uscita {1} prima di diventare disponibile.</value>
+    <value>L'emulatore Android per AVD '{0}' ha generato l'errore '{1}': {2}</value>
     <comment>{0} - The AVD name.
-{1} - The process exit code.</comment>
+{1} - The error kind (e.g. Unknown).
+{2} - Error details from the emulator runner.</comment>
   </data>
   <data name="XA0145" xml:space="preserve">
     <value>L'emulatore Android per AVD '{0}' non ha completato l'avvio entro {1} secondi. Aumentare 'BootTimeoutSeconds' o verificare la configurazione dell'emulatore.</value>

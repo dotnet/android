@@ -1079,9 +1079,10 @@ Para usar um caminho JDK personalizado para um build de linha de comando, defina
 {1} - The exception message.</comment>
   </data>
   <data name="XA0144" xml:space="preserve">
-    <value>O Android Emulator para o AVD ''{0}'' foi encerrado inesperadamente com o código de saída {1} antes de ficar disponível.</value>
+    <value>O emulador Android para AVD '{0}' falhou com o erro '{1}': {2}</value>
     <comment>{0} - The AVD name.
-{1} - The process exit code.</comment>
+{1} - The error kind (e.g. Unknown).
+{2} - Error details from the emulator runner.</comment>
   </data>
   <data name="XA0145" xml:space="preserve">
     <value>O Android Emulator para o AVD ''{0}'' não terminou a inicialização em {1} segundos. Aumente ''BootTimeoutSeconds'' ou verifique a configuração do emulador.</value>

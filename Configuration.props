@@ -36,7 +36,7 @@
     -->
     <!-- *Latest* *unstable* API level binding that we support; this can be the same as *stable* -->
     <AndroidLatestUnstableApiLevel Condition="'$(AndroidLatestUnstableApiLevel)' == ''">37</AndroidLatestUnstableApiLevel>
-    <AndroidLatestUnstablePlatformId Condition="'$(AndroidLatestUnstablePlatformId)' == ''">CinnamonBun</AndroidLatestUnstablePlatformId>
+    <AndroidLatestUnstablePlatformId Condition="'$(AndroidLatestUnstablePlatformId)' == ''">37</AndroidLatestUnstablePlatformId>
     <AndroidLatestUnstableFrameworkVersion Condition="'$(AndroidLatestUnstableFrameworkVersion)'==''">v17.0</AndroidLatestUnstableFrameworkVersion>
     <!-- The default API level used for $(TargetPlatformVersion) -->
     <AndroidDefaultTargetDotnetApiLevel Condition=" '$(AndroidDefaultTargetDotnetApiLevel)' == '' ">$(AndroidLatestStableApiLevel)</AndroidDefaultTargetDotnetApiLevel>
@@ -166,8 +166,8 @@
     <CommandLineToolsVersion Condition=" '$(CommandLineToolsVersion)' == '' ">13114758_latest</CommandLineToolsVersion>
     <CommandLineToolsBinPath Condition=" '$(CommandLineToolsBinPath)' == '' ">$(AndroidSdkFullPath)\cmdline-tools\$(CommandLineToolsFolder)\bin</CommandLineToolsBinPath>
     <!-- Version numbers and PkgVersion are found in https://dl-ssl.google.com/android/repository/repository2-3.xml -->
-    <EmulatorVersion Condition=" '$(EmulatorVersion)' == '' ">9364964</EmulatorVersion>
-    <EmulatorPkgRevision Condition=" '$(EmulatorPkgRevision)' == '' ">32.1.9</EmulatorPkgRevision>
+    <EmulatorVersion Condition=" '$(EmulatorVersion)' == '' ">15004761</EmulatorVersion>
+    <EmulatorPkgRevision Condition=" '$(EmulatorPkgRevision)' == '' ">36.4.10</EmulatorPkgRevision>
     <EmulatorToolPath Condition=" '$(EmulatorToolPath)' == '' ">$(AndroidSdkFullPath)\emulator</EmulatorToolPath>
     <EmulatorToolExe Condition=" '$(EmulatorToolExe)' == '' and '$(HostOS)' != 'Windows'  ">emulator</EmulatorToolExe>
     <EmulatorToolExe Condition=" '$(EmulatorToolExe)' == '' and '$(HostOS)' == 'Windows'  ">emulator.exe</EmulatorToolExe>

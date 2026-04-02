@@ -37,7 +37,7 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 		[Theory]
 		[InlineData ("android/app/Activity", "android.app.Activity")]
 		[InlineData ("java/lang/Object", "java.lang.Object")]
-		[InlineData ("android/view/View$OnClickListener", "android.view.View$OnClickListener")]
+		[InlineData ("android/view/View$OnClickListener", "android.view.View.OnClickListener")]
 		public void JniNameToJavaName_ConvertsCorrectly (string jniName, string expected)
 		{
 			Assert.Equal (expected, JniSignatureHelper.JniNameToJavaName (jniName));
@@ -111,6 +111,14 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 		{
 			var java = GenerateFixture ("my/app/AbstractBase");
 			Assert.Contains ("public abstract class AbstractBase\n", java);
+		}
+
+		[Fact]
+		public void Generate_ClickableView_UsesDotsForNestedInterfaceName ()
+		{
+			var java = GenerateFixture ("my/app/ClickableView");
+			Assert.Contains ("\t\tandroid.view.View.OnClickListener", java);
+			Assert.DoesNotContain ("View$OnClickListener", java);
 		}
 
 	}
@@ -245,8 +253,8 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 			var java = GenerateFixture ("my/app/MainActivity");
 			AssertContainsLine ("@Override\n", java);
 			AssertContainsLine ("public void onCreate (android.os.Bundle p0)\n", java);
-			AssertContainsLine ("n_OnCreate (p0);\n", java);
-			AssertContainsLine ("public native void n_OnCreate (android.os.Bundle p0);\n", java);
+			AssertContainsLine ("n_OnCreate_Landroid_os_Bundle_ (p0);\n", java);
+			AssertContainsLine ("public native void n_OnCreate_Landroid_os_Bundle_ (android.os.Bundle p0);\n", java);
 		}
 
 	}
