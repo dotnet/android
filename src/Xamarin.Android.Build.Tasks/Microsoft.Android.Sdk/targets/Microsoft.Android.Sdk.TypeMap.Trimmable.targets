@@ -56,7 +56,6 @@
         ResolvedAssemblies="@(_TypeMapInputAssemblies)"
         OutputDirectory="$(_TypeMapOutputDirectory)"
         JavaSourceOutputDirectory="$(_TypeMapJavaOutputDirectory)"
-        AcwMapDirectory="$(_TypeMapBaseOutputDir)acw-maps/"
         TargetFrameworkVersion="$(TargetFrameworkVersion)"
         ManifestTemplate="$(_AndroidManifestAbs)"
         MergedAndroidManifestOutput="$(_TypeMapBaseOutputDir)AndroidManifest.xml"

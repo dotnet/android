@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
+using System.Text;
 using System.Xml.Linq;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Android.Sdk.TrimmableTypeMap;
@@ -22,8 +23,6 @@ public ITaskItem [] ResolvedAssemblies { get; set; } = [];
 public string OutputDirectory { get; set; } = "";
 [Required]
 public string JavaSourceOutputDirectory { get; set; } = "";
-[Required]
-public string AcwMapDirectory { get; set; } = "";
 [Required]
 public string TargetFrameworkVersion { get; set; } = "";
 
@@ -54,8 +53,6 @@ public ITaskItem [] GeneratedAssemblies { get; set; } = [];
 [Output]
 public ITaskItem [] GeneratedJavaFiles { get; set; } = [];
 [Output]
-public ITaskItem []? PerAssemblyAcwMapFiles { get; set; }
-[Output]
 public string[]? AdditionalProviderSources { get; set; }
 
 public override bool RunTask ()
@@ -67,7 +64,6 @@ var frameworkAssemblyNames = new HashSet<string> (StringComparer.OrdinalIgnoreCa
 
 Directory.CreateDirectory (OutputDirectory);
 Directory.CreateDirectory (JavaSourceOutputDirectory);
-Directory.CreateDirectory (AcwMapDirectory);
 
 var peReaders = new List<PEReader> ();
 var assemblies = new List<(string Name, PEReader Reader)> ();
@@ -114,7 +110,6 @@ result = generator.Execute (
 
 GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyPaths);
 GeneratedJavaFiles = WriteJavaSourcesToDisk (result.GeneratedJavaSources);
-PerAssemblyAcwMapFiles = GeneratePerAssemblyAcwMaps (result.AllPeers);
 
 // Write manifest to disk if generated
 if (result.Manifest is not null && !MergedAndroidManifestOutput.IsNullOrEmpty ()) {
@@ -122,7 +117,7 @@ if (result.Manifest is not null && !MergedAndroidManifestOutput.IsNullOrEmpty ()
 	if (!manifestDir.IsNullOrEmpty ()) {
 		Directory.CreateDirectory (manifestDir);
 	}
-	result.Manifest.Document.Save (MergedAndroidManifestOutput);
+	Files.CopyIfStringChanged (result.Manifest.Document.ToString (), MergedAndroidManifestOutput);
 	AdditionalProviderSources = result.Manifest.AdditionalProviderSources;
 }
 
@@ -245,27 +240,6 @@ items.Add (new TaskItem (outputPath));
 return items.ToArray ();
 }
 
-ITaskItem [] GeneratePerAssemblyAcwMaps (IReadOnlyList<JavaPeerInfo> allPeers)
-{
-var peersByAssembly = allPeers
-.GroupBy (p => p.AssemblyName, StringComparer.Ordinal)
-.OrderBy (g => g.Key, StringComparer.Ordinal);
-var outputFiles = new List<ITaskItem> ();
-foreach (var group in peersByAssembly) {
-var peers = group.ToList ();
-string outputFile = Path.Combine (AcwMapDirectory, $"acw-map.{group.Key}.txt");
-using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-AcwMapWriter.Write (sw, peers);
-sw.Flush ();
-Files.CopyIfStreamChanged (sw.BaseStream, outputFile);
-}
-var item = new TaskItem (outputFile);
-item.SetMetadata ("AssemblyName", group.Key);
-outputFiles.Add (item);
-}
-return outputFiles.ToArray ();
-}
-
 static Version ParseTargetFrameworkVersion (string tfv)
 {
 if (tfv.Length > 0 && (tfv [0] == 'v' || tfv [0] == 'V')) {
@@ -279,7 +253,7 @@ throw new ArgumentException ($"Cannot parse TargetFrameworkVersion '{tfv}' as a 
 
 static string GenerateApplicationRegistrationJava (IReadOnlyList<string> registrationTypes)
 {
-	var sb = new System.Text.StringBuilder ();
+	var sb = new StringBuilder ();
 	sb.AppendLine ("package net.dot.android;");
 	sb.AppendLine ();
 	sb.AppendLine ("public class ApplicationRegistration {");
