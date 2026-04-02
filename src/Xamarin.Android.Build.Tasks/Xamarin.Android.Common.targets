@@ -550,6 +550,16 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       ResourceName="XA1030"
       Condition=" $(_AndroidXA1030) == 'true' "
   />
+  <AndroidWarning Code="XA1042"
+      ResourceName="XA1042"
+      FormatArguments="RunAOTCompilation;$(_AndroidRuntime)"
+      Condition=" '$(_AndroidXA1042_RunAOTCompilation)' == 'true' "
+  />
+  <AndroidWarning Code="XA1042"
+      ResourceName="XA1042"
+      FormatArguments="EnableLLVM;$(_AndroidRuntime)"
+      Condition=" '$(_AndroidXA1042_EnableLLVM)' == 'true' "
+  />
   <AndroidError Code="XA1011"
       ResourceName="XA1011"
       Condition=" '$(AndroidLinkTool)' == 'proguard' And '$(AndroidDexTool)' == 'd8' "
