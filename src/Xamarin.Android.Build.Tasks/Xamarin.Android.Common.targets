@@ -1419,18 +1419,64 @@ because xbuild doesn't support framework reference assemblies.
   <Error Text="%24(AndroidGenerateJniMarshalMethods)=True is not supported at this time." />
 </Target>
 
-<Target Name="_LinkAssembliesNoShrinkInputs">
-  <ItemGroup>
-    <!-- We need this in its own item group so it isn't lost during a partial build -->
-    <_AllResolvedAssemblies Include="@(ResolvedAssemblies)" />
-  </ItemGroup>
-</Target>
+<!--
+  Inner build only: runs assembly modifications (FixAbstractMethods, FixLegacyResourceDesigner,
+  AddKeepAlives, FindJavaObjects, SaveChangedAssembly, FindTypeMapObjects) for non-trimmed builds
+  BEFORE crossgen2 creates R2R images.
 
+  @(ResolvedAssemblies) is empty in the inner build (the Android-specific _ResolveAssemblies
+  target only runs in the outer build), so we gather assemblies from @(ResolvedFileToPublish).
+
+  Assemblies are copied to an intermediate directory (not modified in-place) because
+  ResolvedFileToPublish items may point to shared locations (NuGet cache, runtime packs)
+  that must not be mutated. After the task runs, ResolvedFileToPublish is updated to point
+  to the intermediate copies so that downstream targets (R2R, publish) pick them up.
+
+  The condition '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' ensures this only
+  runs in the inner build. In the outer build the target is a no-op, so existing dependency
+  chain references are harmlessly satisfied.
+-->
 <Target Name="_LinkAssembliesNoShrink"
-    DependsOnTargets="_LinkAssembliesNoShrinkInputs"
-    Condition="'$(PublishTrimmed)' != 'true'"
-    Inputs="@(ResolvedAssemblies);$(_AndroidBuildPropertiesCache)"
-    Outputs="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')">
+    BeforeTargets="_PrepareForReadyToRunCompilation"
+    Condition=" '$(PublishTrimmed)' != 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' "
+    Inputs="@(IntermediateAssembly);$(_AndroidBuildPropertiesCache)"
+    Outputs="$(_AndroidStampDirectory)_LinkAssembliesNoShrink.stamp">
+  <PropertyGroup>
+    <_LinkAssembliesNoShrinkDir>$(IntermediateOutputPath)android\linked-noshrink\</_LinkAssembliesNoShrinkDir>
+  </PropertyGroup>
+
+  <!-- Compute ABI from RuntimeIdentifier since _ResolveAndroidTooling doesn't run in the inner build -->
+  <RuntimeIdentifierToAbi RuntimeIdentifier="$(RuntimeIdentifier)">
+    <Output TaskParameter="SupportedAbis" PropertyName="_LinkAssembliesNoShrinkAbi" />
+  </RuntimeIdentifierToAbi>
+
+  <!-- Collect all DLL files from ResolvedFileToPublish and set Abi metadata -->
+  <ItemGroup>
+    <_LinkNoShrinkAllAssemblies Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' ">
+      <Abi>$(_LinkAssembliesNoShrinkAbi)</Abi>
+    </_LinkNoShrinkAllAssemblies>
+  </ItemGroup>
+
+  <!-- Ensure the root assembly has HasMonoAndroidReference=true so that IsAndroidAssembly()
+       returns true for it in FindJavaObjectsStep and FixAbstractMethodsStep -->
+  <ItemGroup>
+    <_LinkNoShrinkAllAssemblies
+        Update="@(_LinkNoShrinkAllAssemblies)"
+        Condition=" '%(Filename)' == '$(TargetName)' "
+        HasMonoAndroidReference="true" />
+  </ItemGroup>
+
+  <!-- Classify user vs framework assemblies for FindJavaObjectsStep.
+       Framework assemblies (Mono.Android, Java.Interop, etc.) already have their JCWs
+       pre-built in mono.android.jar — marking them as user assemblies would cause
+       duplicate JCW generation that conflicts at Java compilation time.
+       Filter by the same 4 known framework assembly names used by
+       MonoAndroidHelper.IsFrameworkAssembly(string). -->
+  <ItemGroup>
+    <_LinkNoShrinkUserAssemblies Include="@(_LinkNoShrinkAllAssemblies)"
+        Condition=" '%(Filename)' != 'Mono.Android' and '%(Filename)' != 'Mono.Android.Export' and '%(Filename)' != 'Mono.Android.Runtime' and '%(Filename)' != 'Java.Interop' " />
+  </ItemGroup>
+
   <LinkAssembliesNoShrink
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
       CodeGenerationTarget="$(AndroidCodegenTarget)"
@@ -1438,10 +1484,10 @@ because xbuild doesn't support framework reference assemblies.
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
       ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
       PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
-      ResolvedAssemblies="@(_AllResolvedAssemblies)"
-      ResolvedUserAssemblies="@(ResolvedUserAssemblies)"
-      SourceFiles="@(ResolvedAssemblies)"
-      DestinationFiles="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')"
+      ResolvedAssemblies="@(_LinkNoShrinkAllAssemblies)"
+      ResolvedUserAssemblies="@(_LinkNoShrinkUserAssemblies)"
+      SourceFiles="@(_LinkNoShrinkAllAssemblies)"
+      DestinationFiles="@(_LinkNoShrinkAllAssemblies->'$(_LinkAssembliesNoShrinkDir)%(RelativePath)')"
       TargetName="$(TargetName)"
       AddKeepAlives="$(AndroidAddKeepAlives)"
       UseDesignerAssembly="$(AndroidUseDesignerAssembly)"
@@ -1449,8 +1495,23 @@ because xbuild doesn't support framework reference assemblies.
       ReadSymbols="$(_AndroidLinkAssembliesReadSymbols)">
   </LinkAssembliesNoShrink>
 
+  <!-- Replace ResolvedFileToPublish DLL items with their intermediate copies so that
+       downstream targets (R2R, publish) consume the modified assemblies. -->
   <ItemGroup>
-    <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)**" />
+    <ResolvedFileToPublish Remove="@(_LinkNoShrinkAllAssemblies)" />
+    <ResolvedFileToPublish Include="@(_LinkNoShrinkAllAssemblies->'$(_LinkAssembliesNoShrinkDir)%(RelativePath)')" />
+  </ItemGroup>
+
+  <Touch Files="$(_AndroidStampDirectory)_LinkAssembliesNoShrink.stamp" AlwaysCreate="true" />
+
+  <ItemGroup>
+    <FileWrites Include="$(_LinkAssembliesNoShrinkDir)**" />
+  </ItemGroup>
+
+  <!-- Clean up temporary item groups -->
+  <ItemGroup>
+    <_LinkNoShrinkAllAssemblies Remove="@(_LinkNoShrinkAllAssemblies)" />
+    <_LinkNoShrinkUserAssemblies Remove="@(_LinkNoShrinkUserAssemblies)" />
   </ItemGroup>
 </Target>
 
@@ -1595,23 +1656,27 @@ because xbuild doesn't support framework reference assemblies.
 <!--
   _CopySidecarXmlToAssemblyPaths
   ===============================
-  When _AfterILLinkAdditionalSteps runs in the inner build (AfterTargets="ILLink"), it generates
-  sidecar XML files next to the trimmed assemblies in $(IntermediateLinkDir):
+  When _AfterILLinkAdditionalSteps (trimmed) or _LinkAssembliesNoShrink (non-trimmed) runs
+  in the inner build, it generates sidecar XML files next to the processed assemblies:
     - .jlo.xml (Java-like objects found by FindJavaObjectsStep)
     - .typemap.xml (type mappings found by FindTypeMapObjectsStep)
 
-  After ILLink, subsequent inner-build steps (CreateReadyToRunImages, IlcCompile, AOT) may move
-  assemblies to different directories (e.g. R2R/, publish/). The sidecar XML files stay in linked/.
+  For trimmed builds, these reside in $(IntermediateLinkDir) (linked/).
+  For non-trimmed builds, these reside in android/linked-noshrink/.
+
+  After assembly processing, subsequent inner-build steps (CreateReadyToRunImages, IlcCompile, AOT)
+  may move assemblies to different directories (e.g. R2R/, publish/). The sidecar XML files stay
+  in their original directory.
 
   The outer build's _GenerateJavaStubs and GenerateTypeMappings expect these files next to the
   assembly paths in @(_ResolvedAssemblies) (which may point to R2R/, publish/, etc.).
-  This target copies sidecar XML files from linked/ to those locations.
+  This target copies sidecar XML files from the inner build directory to those locations.
 
-  Only runs in the outer build (_ComputeFilesToPublishForRuntimeIdentifiers != 'true') for trimmed builds.
+  Only runs in the outer build (_ComputeFilesToPublishForRuntimeIdentifiers != 'true').
 -->
 <Target Name="_CopySidecarXmlToAssemblyPaths"
     AfterTargets="_PrepareAssemblies"
-    Condition=" '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' ">
+    Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' ">
 
   <!-- Separate R2R composite assemblies (e.g. UnnamedProject.r2r.dll) from regular assemblies.
        R2R composites are produced by CreateReadyToRunImages AFTER ILLink by merging individual
@@ -1640,36 +1705,41 @@ because xbuild doesn't support framework reference assemblies.
       Files="@(_MissingR2RCompositeSidecarFiles)"
       AlwaysCreate="true" />
 
-  <!-- Compute the path to the inner build's linked/ directory where sidecar XML files reside.
+  <!-- Compute the path to the inner build's sidecar directory where XML files reside.
+       For trimmed builds, sidecar files are in linked/ (alongside ILLink output).
+       For non-trimmed builds, sidecar files are in android/linked-noshrink/ (alongside
+       _LinkAssembliesNoShrink output).
        The inner build is dispatched by _ResolveAssemblies with AppendRuntimeIdentifierToOutputPath=true,
        so its IntermediateOutputPath is always $(OuterIntermediateOutputPath)$(RuntimeIdentifier)/.
        In the outer build:
-         - Multi-RID (RuntimeIdentifier == ''): use $(IntermediateOutputPath)%(RuntimeIdentifier)/linked/
+         - Multi-RID (RuntimeIdentifier == ''): use $(IntermediateOutputPath)%(RuntimeIdentifier)/<subdir>/
          - Single-RID (RuntimeIdentifier != ''): $(IntermediateOutputPath) may or may not already
-           contain the RID. If it does (normal SDK behavior), use $(IntermediateOutputPath)linked/.
+           contain the RID. If it does (normal SDK behavior), use $(IntermediateOutputPath)<subdir>/.
            If it doesn't (e.g. RuntimeIdentifier set after path evaluation), append the RID first. -->
+  <PropertyGroup>
+    <_SidecarSubDir Condition=" '$(PublishTrimmed)' == 'true' ">linked\</_SidecarSubDir>
+    <_SidecarSubDir Condition=" '$(PublishTrimmed)' != 'true' ">android\linked-noshrink\</_SidecarSubDir>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(RuntimeIdentifier)' != '' ">
-    <_SidecarLinkedDir Condition=" $(IntermediateOutputPath.Replace('\','/').TrimEnd('/').EndsWith('$(RuntimeIdentifier)')) ">$(IntermediateOutputPath)linked\</_SidecarLinkedDir>
-    <_SidecarLinkedDir Condition=" '$(_SidecarLinkedDir)' == '' ">$(IntermediateOutputPath)$(RuntimeIdentifier)\linked\</_SidecarLinkedDir>
+    <_SidecarLinkedDir Condition=" $(IntermediateOutputPath.Replace('\','/').TrimEnd('/').EndsWith('$(RuntimeIdentifier)')) ">$(IntermediateOutputPath)$(_SidecarSubDir)</_SidecarLinkedDir>
+    <_SidecarLinkedDir Condition=" '$(_SidecarLinkedDir)' == '' ">$(IntermediateOutputPath)$(RuntimeIdentifier)\$(_SidecarSubDir)</_SidecarLinkedDir>
   </PropertyGroup>
   <ItemGroup Condition=" '$(RuntimeIdentifier)' == '' ">
-    <_SidecarXmlCopySource Include="@(_NonCompositeAssemblies->'$(IntermediateOutputPath)%(RuntimeIdentifier)\linked\%(Filename).jlo.xml')" />
-    <_SidecarXmlCopySource Include="@(_NonCompositeAssemblies->'$(IntermediateOutputPath)%(RuntimeIdentifier)\linked\%(Filename).typemap.xml')" />
+    <_SidecarXmlCopySource Include="@(_NonCompositeAssemblies->'$(IntermediateOutputPath)%(RuntimeIdentifier)\$(_SidecarSubDir)%(Filename).jlo.xml')" />
+    <_SidecarXmlCopySource Include="@(_NonCompositeAssemblies->'$(IntermediateOutputPath)%(RuntimeIdentifier)\$(_SidecarSubDir)%(Filename).typemap.xml')" />
   </ItemGroup>
   <ItemGroup Condition=" '$(RuntimeIdentifier)' != '' ">
     <_SidecarXmlCopySource Include="@(_NonCompositeAssemblies->'$(_SidecarLinkedDir)%(Filename).jlo.xml')" />
     <_SidecarXmlCopySource Include="@(_NonCompositeAssemblies->'$(_SidecarLinkedDir)%(Filename).typemap.xml')" />
   </ItemGroup>
 
-  <!-- Some assemblies (e.g. _Microsoft.Android.Resource.Designer.dll) end up in linked/ but were
-       NOT processed by AssemblyModifierPipeline (they weren't in @(ManagedAssemblyToLink) at ILLink
-       time). They have no sidecar files in linked/. Create empty (zero-length) sidecar files for
-       them so the Copy below doesn't fail. Zero-length = "not scanned" which is correct.
+  <!-- Some assemblies (e.g. _Microsoft.Android.Resource.Designer.dll) end up in the assembly
+       output but were NOT processed by the assembly modification pipeline. They have no sidecar
+       files. Create empty (zero-length) sidecar files for them so the Copy below doesn't fail.
+       Zero-length = "not scanned" which is correct.
 
-       The linked/ directory may not exist if the RID changed between builds without a clean
-       (e.g. switching from android-arm64 to android-x64 via RuntimeIdentifier parameter while
-       RuntimeIdentifiers still points to the old RID). In that case the inner build ran for the
-       old RID and never created the new RID's linked/ directory. MakeDir ensures it exists.
+       The sidecar directory may not exist if the RID changed between builds without a clean.
+       MakeDir ensures it exists.
 
        Only touch files that don't already exist to preserve timestamps and avoid breaking
        incremental builds (Copy SkipUnchangedFiles="true" compares timestamps). -->
@@ -3109,7 +3179,7 @@ because xbuild doesn't support framework reference assemblies.
   </Target>
 
   <Target Name="_LinkAssemblies"
-      DependsOnTargets="_ResolveAssemblies;_CreatePackageWorkspace;$(_BeforeLinkAssemblies);_GenerateJniMarshalMethods;_LinkAssembliesNoShrink"
+      DependsOnTargets="_ResolveAssemblies;_CreatePackageWorkspace;$(_BeforeLinkAssemblies);_GenerateJniMarshalMethods"
   />
 
 <!-- TypeMap imports must be last so their target overrides (e.g. _RemoveRegisterAttribute) take precedence -->
