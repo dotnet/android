@@ -1438,7 +1438,9 @@ because xbuild doesn't support framework reference assemblies.
 -->
 <Target Name="_LinkAssembliesNoShrink"
     BeforeTargets="_PrepareForReadyToRunCompilation"
-    Condition=" '$(PublishTrimmed)' != 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' ">
+    Condition=" '$(PublishTrimmed)' != 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' "
+    Inputs="@(IntermediateAssembly);$(_AndroidBuildPropertiesCache)"
+    Outputs="$(_AndroidStampDirectory)_LinkAssembliesNoShrink.stamp">
   <PropertyGroup>
     <_LinkAssembliesNoShrinkDir>$(IntermediateOutputPath)android\linked-noshrink\</_LinkAssembliesNoShrinkDir>
   </PropertyGroup>
@@ -1498,13 +1500,12 @@ because xbuild doesn't support framework reference assemblies.
   <ItemGroup>
     <ResolvedFileToPublish Remove="@(_LinkNoShrinkAllAssemblies)" />
     <ResolvedFileToPublish Include="@(_LinkNoShrinkAllAssemblies->'$(_LinkAssembliesNoShrinkDir)%(RelativePath)')" />
-    <FileWrites Include="$(_LinkAssembliesNoShrinkDir)**" />
   </ItemGroup>
 
+  <Touch Files="$(_AndroidStampDirectory)_LinkAssembliesNoShrink.stamp" AlwaysCreate="true" />
+
   <ItemGroup>
-    <FileWrites Include="@(_LinkNoShrinkAllAssemblies->'$(_LinkAssembliesNoShrinkDir)%(RelativePath)')" />
-    <FileWrites Include="@(_LinkNoShrinkAllAssemblies->'$(_LinkAssembliesNoShrinkDir)%(Filename).jlo.xml')" />
-    <FileWrites Include="@(_LinkNoShrinkAllAssemblies->'$(_LinkAssembliesNoShrinkDir)%(Filename).typemap.xml')" />
+    <FileWrites Include="$(_LinkAssembliesNoShrinkDir)**" />
   </ItemGroup>
 
   <!-- Clean up temporary item groups -->
