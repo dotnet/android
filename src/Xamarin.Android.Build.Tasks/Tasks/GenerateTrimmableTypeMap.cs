@@ -117,7 +117,11 @@ if (result.Manifest is not null && !MergedAndroidManifestOutput.IsNullOrEmpty ()
 	if (!manifestDir.IsNullOrEmpty ()) {
 		Directory.CreateDirectory (manifestDir);
 	}
-	Files.CopyIfStringChanged (result.Manifest.Document.ToString (), MergedAndroidManifestOutput);
+	using (var ms = new MemoryStream ()) {
+		result.Manifest.Document.Save (ms);
+		ms.Position = 0;
+		Files.CopyIfStreamChanged (ms, MergedAndroidManifestOutput);
+	}
 	AdditionalProviderSources = result.Manifest.AdditionalProviderSources;
 }
 
