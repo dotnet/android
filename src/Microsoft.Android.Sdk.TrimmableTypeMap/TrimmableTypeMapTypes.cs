@@ -9,7 +9,7 @@ public record TrimmableTypeMapResult (
 	IReadOnlyList<GeneratedJavaSource> GeneratedJavaSources,
 	IReadOnlyList<JavaPeerInfo> AllPeers,
 	GeneratedManifest? Manifest = null,
-	IReadOnlyList<string> ApplicationRegistrationTypes = null!)
+	IReadOnlyList<string>? ApplicationRegistrationTypes = null)
 {
 	/// <summary>
 	/// Java class names (dot-separated) of Application/Instrumentation types
