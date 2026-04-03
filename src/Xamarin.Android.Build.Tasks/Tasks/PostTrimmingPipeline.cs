@@ -48,9 +48,23 @@ public class PostTrimmingPipeline : AndroidTask
 			}
 		}
 
+		// Pre-load all assemblies once so that every step (and the processing loop)
+		// operates on the same AssemblyDefinition instances.
+		var loadedAssemblies = new List<(ITaskItem item, AssemblyDefinition assembly)> (Assemblies.Length);
+		foreach (var item in Assemblies) {
+			loadedAssemblies.Add ((item, resolver.GetAssembly (item.ItemSpec)));
+		}
+
 		var steps = new List<IAssemblyModifierPipelineStep> ();
 		steps.Add (new CheckForObsoletePreserveAttributeStep (Log));
 		steps.Add (new StripEmbeddedLibrariesStep (Log));
+		if (AndroidLinkResources) {
+			var allAssemblies = new List<AssemblyDefinition> (loadedAssemblies.Count);
+			foreach (var (_, assembly) in loadedAssemblies) {
+				allAssemblies.Add (assembly);
+			}
+			steps.Add (new RemoveResourceDesignerStep (allAssemblies, (msg) => Log.LogDebugMessage (msg)));
+		}
 
 		// FixAbstractMethods — resolve Mono.Android once up front. If resolution fails, log
 		// the error and skip running the fix step entirely to avoid later unhandled exceptions.
@@ -86,16 +100,8 @@ public class PostTrimmingPipeline : AndroidTask
 				},
 				(msg) => Log.LogDebugMessage (msg)));
 		}
-		if (AndroidLinkResources) {
-			var allAssemblies = new List<AssemblyDefinition> (Assemblies.Length);
-			foreach (var item in Assemblies) {
-				allAssemblies.Add (resolver.GetAssembly (item.ItemSpec));
-			}
-			steps.Add (new RemoveResourceDesignerStep (allAssemblies, (msg) => Log.LogDebugMessage (msg)));
-		}
 
-		foreach (var item in Assemblies) {
-			var assembly = resolver.GetAssembly (item.ItemSpec);
+		foreach (var (item, assembly) in loadedAssemblies) {
 			var context = new StepContext (item, item);
 			foreach (var step in steps) {
 				step.ProcessAssembly (assembly, context);
