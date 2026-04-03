@@ -19,11 +19,21 @@ public static class ProjectExtensions
 
 	public static void SetRuntime (this XamarinAndroidApplicationProject project, AndroidRuntime runtime)
 	{
+		SetRuntime (project, runtime, useNdkForNativeAot: true);
+	}
+
+	public static void SetRuntime (this XamarinAndroidApplicationProject project, AndroidRuntime runtime, bool useNdkForNativeAot)
+	{
 		if (runtime != AndroidRuntime.NativeAOT) {
 			DoSetRuntime (project, runtime);
 			return;
 		}
-		project.SetPublishAot (true, BaseTest.AndroidNdkPath);
+		if (useNdkForNativeAot) {
+			project.SetPublishAot (true, BaseTest.AndroidNdkPath);
+		} else {
+			project.SetPublishAot (true);
+			project.SetProperty ("AndroidNativeAotUseNdk", "false");
+		}
 		EnablePreviewFeaturesIfNeeded (project, runtime);
 	}
 

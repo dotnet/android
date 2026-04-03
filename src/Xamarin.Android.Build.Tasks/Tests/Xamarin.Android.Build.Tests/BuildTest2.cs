@@ -278,6 +278,42 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void NativeAOT_WorkloadPack ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				ProjectName = "HelloNdkFree",
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT, useNdkForNativeAot: false);
+
+			using var b = CreateApkBuilder ();
+			b.SuppressNdkInjection = true;
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+			// Verify the workload pack linker was used, not the NDK
+			Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput,
+				"NativeAOT linking used workload pack"),
+				"Build output should confirm workload pack linker was used");
+			Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput,
+				"NativeAOT linking used NDK clang"),
+				"Build output should NOT mention NDK clang linker");
+
+			// Verify NativeAOT .so files are in the APK
+			string [] nativeaot_files = [
+				$"lib/arm64-v8a/lib{proj.ProjectName}.so",
+				$"lib/x86_64/lib{proj.ProjectName}.so",
+			];
+
+			var output = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
+			var apkFile = Path.Combine (output, $"{proj.PackageName}-Signed.apk");
+			FileAssert.Exists (apkFile);
+			using var zip = ZipHelper.OpenZip (apkFile);
+			foreach (var nativeaot_file in nativeaot_files) {
+				Assert.IsTrue (zip.ContainsEntry (nativeaot_file, caseSensitive: true), $"APK must contain `{nativeaot_file}`.");
+			}
+		}
+
+		[Test]
 		public void BuildBasicApplicationThenMoveIt ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {

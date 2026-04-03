@@ -216,6 +216,19 @@ stages:
     - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
+        testName: Mono.Android.NET_Tests-NativeAOTWorkload
+        project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
+        testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)NativeAOTWorkload.xml
+        extraBuildArgs: >-
+          -p:TestsFlavor=NativeAOTWorkload
+          -p:PublishAot=true
+          -p:AndroidNativeAotUseNdk=false
+        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
+        artifactFolder: $(DotNetTargetFramework)-NativeAOTWorkload
+
+    - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
+      parameters:
+        configuration: $(XA.Build.Configuration)
         testName: Xamarin.Android.JcwGen_Tests
         project: tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj
         testResultsFiles: TestResult-Xamarin.Android.JcwGen_Tests-$(XA.Build.Configuration).xml

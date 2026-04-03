@@ -105,6 +105,12 @@ namespace Xamarin.ProjectTools
 		public bool AutomaticNuGetRestore { get; set; } = true;
 
 		/// <summary>
+		/// When true, suppresses the automatic injection of /p:AndroidNdkDirectory into MSBuild invocations.
+		/// Used for NativeAOT workload pack tests that must not use the NDK.
+		/// </summary>
+		public bool SuppressNdkInjection { get; set; }
+
+		/// <summary>
 		/// Checks whether cross-compilers are available for the specified Android ABIs.
 		/// </summary>
 		/// <param name="supportedAbis">Semicolon-separated list of Android ABIs to check (e.g., "armeabi-v7a;arm64-v8a").</param>
@@ -276,7 +282,7 @@ namespace Xamarin.ProjectTools
 					sw.WriteLine ("/p:AndroidSdkDirectory=\"{0}\"", sdkPath);
 				}
 				string ndkPath = AndroidSdkResolver.GetAndroidNdkPath ();
-				if (Directory.Exists (ndkPath)) {
+				if (!SuppressNdkInjection && Directory.Exists (ndkPath)) {
 					sw.WriteLine ("/p:AndroidNdkDirectory=\"{0}\"", ndkPath);
 				}
 				string jdkPath = AndroidSdkResolver.GetJavaSdkPath ();

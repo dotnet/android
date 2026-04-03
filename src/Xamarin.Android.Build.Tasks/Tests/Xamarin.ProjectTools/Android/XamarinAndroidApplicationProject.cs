@@ -207,6 +207,17 @@ namespace Xamarin.ProjectTools
 			SetProperty ("AndroidNdkDirectory", androidNdkPath);
 		}
 
+		/// <summary>
+		/// Sets properties required for $(PublishAot)=true without requiring the NDK.
+		/// Used for NativeAOT builds that use the workload pack instead of the NDK.
+		/// </summary>
+		public void SetPublishAot (bool value)
+		{
+			if (value)
+				IsRelease = true;
+			PublishAot = value;
+		}
+
 		public string AndroidManifest { get; set; }
 		public string LayoutMain { get; set; }
 		public string MainActivity { get; set; }

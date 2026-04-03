@@ -450,6 +450,16 @@ This eliminates the NDK dependency for NativeAOT builds.
     </ItemGroup>
   </Target>
 
+  <Target Name="_ValidateNativeAotLinkerChoice"
+      AfterTargets="_LinkNativeAotLibrary;_GenerateNativeAotAndroidAppLibrary">
+    <Message Importance="high"
+        Condition=" '$(AndroidNativeAotUseNdk)' != 'true' "
+        Text="NativeAOT linking used workload pack (ld.lld from android-native-tools)" />
+    <Message Importance="high"
+        Condition=" '$(AndroidNativeAotUseNdk)' == 'true' "
+        Text="NativeAOT linking used NDK clang" />
+  </Target>
+
   <Target Name="_AndroidFixNativeLibraryFileName" AfterTargets="ComputeFilesToPublish">
     <ItemGroup>
       <!-- Fix paths to contain lib-prefix -->

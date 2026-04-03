@@ -19,6 +19,12 @@ namespace Xamarin.ProjectTools
 		public string JavaSdkPath { get; set; } = AndroidSdkResolver.GetJavaSdkPath ();
 		public string ProjectDirectory { get; set; }
 
+		/// <summary>
+		/// When true, suppresses the automatic injection of /p:AndroidNdkDirectory into dotnet build invocations.
+		/// Used for NativeAOT workload pack tests that must not use the NDK.
+		/// </summary>
+		public bool SuppressNdkInjection { get; set; }
+
 		readonly string projectOrSolution;
 
 		public DotNetCLI (string projectOrSolution)
@@ -236,7 +242,7 @@ namespace Xamarin.ProjectTools
 			if (Directory.Exists (AndroidSdkPath)) {
 				arguments.Add ($"/p:AndroidSdkDirectory=\"{AndroidSdkPath.TrimEnd('\\')}\"");
 			}
-			if (Directory.Exists (AndroidNdkPath)) {
+			if (!SuppressNdkInjection && Directory.Exists (AndroidNdkPath)) {
 				arguments.Add ($"/p:AndroidNdkDirectory=\"{AndroidNdkPath.TrimEnd('\\')}\"");
 			}
 			if (Directory.Exists (JavaSdkPath)) {
