@@ -189,6 +189,26 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void NativeAotRequiresNdk ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+			using (var builder = CreateApkBuilder ()) {
+				builder.Verbosity = LoggerVerbosity.Detailed;
+				builder.Target = "GetAndroidDependencies";
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+				IEnumerable<string> taskOutput = builder.LastBuildOutput
+					.Select (x => x.Trim ())
+					.SkipWhile (x => !x.StartsWith ("Task \"CalculateProjectDependencies\"", StringComparison.Ordinal))
+					.SkipWhile (x => !x.StartsWith ("Output Item(s):", StringComparison.Ordinal))
+					.TakeWhile (x => !x.StartsWith ("Done executing task \"CalculateProjectDependencies\"", StringComparison.Ordinal));
+				StringAssertEx.Contains ("ndk-bundle", taskOutput, "ndk-bundle should be a dependency for NativeAOT.");
+			}
+		}
+
+		[Test]
 		public void GetDependencyWhenBuildToolsAreMissingTest ([Values] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
