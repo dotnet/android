@@ -1423,7 +1423,7 @@ namespace UnnamedProject
 				// TODO: fix for NativeAOT
 				if (!addResource && runtime != AndroidRuntime.NativeAOT) {
 					Assert.IsFalse (b.Build (app, doNotCleanupOnUpdate: true), $"Build of {app.ProjectName} should have failed.");
-					Assert.IsTrue (b.LastBuildOutput.ContainsText (isRelease ? "IL8000" : "XA8000"));
+					Assert.IsTrue (b.LastBuildOutput.ContainsText ("XA8000"));
 					Assert.IsTrue (b.LastBuildOutput.ContainsText ("@styleable/SKCanvasView"), "Expected '@styleable/SKCanvasView' in build output.");
 					Assert.IsTrue (b.LastBuildOutput.ContainsText ("@styleable/SKCanvasView_ignorePixelScaling"), "Expected '@styleable/SKCanvasView_ignorePixelScaling' in build output.");
 					return;
