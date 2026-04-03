@@ -227,14 +227,24 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     is processed by the ILLink step. If we do not do this then the reference to
     `netstandard.dll` is not replaced with `System.Private.CoreLib` and the app crashes.
 
-    We also add a TrimmerRootAssembly entry to prevent ILLink from trimming the designer's
-    resource properties. FixLegacyResourceDesignerStep now runs after ILLink and needs
-    all properties to be present when rewriting library assemblies.
+    We use a TrimmerRootDescriptor (not TrimmerRootAssembly) to prevent ILLink from
+    trimming the designer's resource properties. FixLegacyResourceDesignerStep runs
+    after ILLink and needs all properties present when rewriting library assemblies.
+    A descriptor (-x) preserves types without making the assembly an entry point,
+    which avoids pulling netstandard.dll into the output.
 -->
 <Target Name="_AddResourceDesignerToPublishFiles"
     Condition=" '$(AndroidUseDesignerAssembly)' == 'True' "
     AfterTargets="ComputeResolvedFilesToPublishList"
     DependsOnTargets="_SetupDesignerProperties">
+  <PropertyGroup>
+    <_DesignerLinkerDescriptor>$(IntermediateOutputPath)_Microsoft.Android.Resource.Designer.xml</_DesignerLinkerDescriptor>
+  </PropertyGroup>
+  <WriteLinesToFile
+      File="$(_DesignerLinkerDescriptor)"
+      Overwrite="true"
+      Lines="&lt;linker&gt;&lt;assembly fullname=&quot;$(_DesignerAssemblyName)&quot;&gt;&lt;type fullname=&quot;*&quot; preserve=&quot;all&quot; /&gt;&lt;/assembly&gt;&lt;/linker&gt;"
+  />
   <ItemGroup>
     <ResolvedFileToPublish Include="$(_GenerateResourceDesignerAssemblyOutput)">
       <RelativePath>$(_DesignerAssemblyName).dll</RelativePath>
@@ -242,9 +252,11 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       <PostprocessAssembly>true</PostprocessAssembly>
       <IsTrimmable>true</IsTrimmable>
     </ResolvedFileToPublish>
-    <!-- Root all types/members in the designer so ILLink does not trim any resource
-         properties. The action remains 'link' which rewrites the netstandard reference. -->
-    <TrimmerRootAssembly Include="$(_DesignerAssemblyName)" />
+    <!-- Preserve all designer types/members via descriptor so ILLink keeps resource
+         properties. Using a descriptor (not TrimmerRootAssembly) avoids making the
+         assembly an entry point, which would pull netstandard.dll into the output. -->
+    <TrimmerRootDescriptor Include="$(_DesignerLinkerDescriptor)" />
+    <FileWrites Include="$(_DesignerLinkerDescriptor)" />
   </ItemGroup>
 </Target>
 
