@@ -244,25 +244,37 @@
   </Target>
 
   <!--
-    Inner-build marshal method rewrite: classifies marshal methods, rewrites assemblies
-    (adds [UnmanagedCallersOnly] wrappers, removes connectors), and generates the
-    marshal_methods.<abi>.ll LLVM IR file.  Runs after _PostTrimmingPipeline so that
-    assemblies are already trimmed, and before ReadyToRun/crossgen2 so that R2R images
-    are generated from the rewritten assemblies.
+    Inner-build marshal method handling.  Always runs (for every RID) to generate
+    the marshal_methods.<abi>.ll LLVM IR file.
 
-    The .ll file is written to $(_OuterIntermediateOutputPath)android/ so the outer build's
-    GenerateNativeMarshalMethodSources can skip generation (the file is already on disk).
+    When marshal methods are enabled (Release + PublishTrimmed), the task also
+    classifies marshal methods, rewrites assemblies (adds [UnmanagedCallersOnly]
+    wrappers, removes connectors), and generates a full .ll with marshal method
+    native functions.
+
+    When marshal methods are disabled (Debug, or Release without marshal methods),
+    the task generates an empty/minimal .ll containing only the structural
+    scaffolding the native runtime always links against.
+
+    Runs AfterTargets="_PostTrimmingPipeline" which is itself AfterTargets="ILLink".
+    MSBuild fires AfterTargets hooks even when the referenced target is
+    condition-skipped, so this target runs in both trimmed and untrimmed builds.
+    When trimming IS active, _PostTrimmingPipeline completes first, ensuring
+    assemblies are trimmed before any rewrite.  Runs before ReadyToRun/crossgen2
+    so that R2R images are generated from the rewritten assemblies.
+
+    The .ll file is written to $(_OuterIntermediateOutputPath)android/ so the
+    outer build's _CompileNativeAssemblySources can compile it.
   -->
   <Target Name="_RewriteMarshalMethodsInner"
-      AfterTargets="_PostTrimmingPipeline"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(_AndroidUseMarshalMethods)' == 'true' and '$(AndroidIncludeDebugSymbols)' == 'false' ">
+      AfterTargets="_PostTrimmingPipeline">
     <ItemGroup>
       <_MarshalMethodsAssembly Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
     </ItemGroup>
     <RewriteMarshalMethods
         Assemblies="@(_MarshalMethodsAssembly)"
         EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
-        EnableMarshalMethods="true"
+        EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
         Environments="@(_EnvironmentFiles)"
         MarshalMethodsOutputDirectory="$(_OuterIntermediateOutputPath)android"
         AndroidRuntime="$(_AndroidRuntime)"
