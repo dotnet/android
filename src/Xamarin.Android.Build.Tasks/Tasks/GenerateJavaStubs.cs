@@ -244,12 +244,10 @@ namespace Xamarin.Android.Tasks
 				return (false, null);
 			}
 
-			MarshalMethodsCollection? marshalMethodsCollection = null;
-
-			if (useMarshalMethods)
-				marshalMethodsCollection = MarshalMethodsCollection.FromAssemblies (arch, assemblies.Values.ToList (), resolver, Log);
-
-			return (true, new NativeCodeGenState (arch, tdCache, resolver, allJavaTypes, javaTypesForJCW, marshalMethodsCollection));
+			// Marshal method classification is now done in the inner build by
+			// RewriteMarshalMethods, so we never classify here.  The NativeCodeGenState
+			// will have a null Classifier; downstream tasks must handle that.
+			return (true, new NativeCodeGenState (arch, tdCache, resolver, allJavaTypes, javaTypesForJCW, classifier: null));
 		}
 
 		(List<TypeDefinition> allJavaTypes, List<TypeDefinition> javaTypesForJCW) ScanForJavaTypes (XAAssemblyResolver res, TypeDefinitionCache cache, Dictionary<string, ITaskItem> assemblies, Dictionary<string, ITaskItem> userAssemblies, bool useMarshalMethods)

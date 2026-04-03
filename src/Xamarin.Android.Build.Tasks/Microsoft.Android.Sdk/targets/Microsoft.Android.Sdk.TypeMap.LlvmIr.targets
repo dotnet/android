@@ -78,13 +78,6 @@
         EnableNativeRuntimeLinking="$(_AndroidEnableNativeRuntimeLinking)">
     </GenerateJavaStubs>
 
-    <RewriteMarshalMethods
-        Condition=" '$(_AndroidUseMarshalMethods)' == 'true' And '$(AndroidIncludeDebugSymbols)' == 'false' "
-        EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
-        Environments="@(_EnvironmentFiles)"
-        IntermediateOutputDirectory="$(IntermediateOutputPath)">
-    </RewriteMarshalMethods>
-
     <GenerateTypeMappings
         AndroidRuntime="$(_AndroidRuntime)"
         Debug="$(AndroidIncludeDebugSymbols)"
@@ -248,6 +241,32 @@
         AddKeepAlives="$(AndroidAddKeepAlives)"
         AndroidLinkResources="$(AndroidLinkResources)"
         Deterministic="$(Deterministic)" />
+  </Target>
+
+  <!--
+    Inner-build marshal method rewrite: classifies marshal methods, rewrites assemblies
+    (adds [UnmanagedCallersOnly] wrappers, removes connectors), and generates the
+    marshal_methods.<abi>.ll LLVM IR file.  Runs after _PostTrimmingPipeline so that
+    assemblies are already trimmed, and before ReadyToRun/crossgen2 so that R2R images
+    are generated from the rewritten assemblies.
+
+    The .ll file is written to $(_OuterIntermediateOutputPath)android/ so the outer build's
+    GenerateNativeMarshalMethodSources can skip generation (the file is already on disk).
+  -->
+  <Target Name="_RewriteMarshalMethodsInner"
+      AfterTargets="_PostTrimmingPipeline"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_AndroidUseMarshalMethods)' == 'true' and '$(AndroidIncludeDebugSymbols)' == 'false' ">
+    <ItemGroup>
+      <_MarshalMethodsAssembly Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
+    </ItemGroup>
+    <RewriteMarshalMethods
+        Assemblies="@(_MarshalMethodsAssembly)"
+        EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
+        EnableMarshalMethods="true"
+        Environments="@(_EnvironmentFiles)"
+        MarshalMethodsOutputDirectory="$(_OuterIntermediateOutputPath)android"
+        AndroidRuntime="$(_AndroidRuntime)"
+        RuntimeIdentifier="$(RuntimeIdentifier)" />
   </Target>
 
   <!-- Inject _TypeMapKind into the property cache -->

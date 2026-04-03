@@ -71,6 +71,32 @@ class MarshalMethodCecilAdapter
 		return obj;
 	}
 
+	/// <summary>
+	/// Creates a <see cref="NativeCodeGenStateObject"/> from a marshal methods classifier,
+	/// for use in the inner build where the full <see cref="NativeCodeGenState"/> (with
+	/// JavaTypesForJCW, TypeCache, etc.) is not available.  Only populates marshal methods
+	/// data needed for LLVM IR generation.
+	/// </summary>
+	public static NativeCodeGenStateObject CreateNativeCodeGenStateObjectFromClassifier (AndroidTargetArch arch, MarshalMethodsCollection classifier)
+	{
+		var obj = new NativeCodeGenStateObject {
+			TargetArch = arch,
+		};
+
+		foreach (var group in classifier.MarshalMethods) {
+			var methods = new List<MarshalMethodEntryObject> (group.Value.Count);
+
+			foreach (var method in group.Value) {
+				var entry = CreateEntry (method, info: null);
+				methods.Add (entry);
+			}
+
+			obj.MarshalMethods.Add (group.Key, methods);
+		}
+
+		return obj;
+	}
+
 	static MarshalMethodEntryObject CreateEntry (MarshalMethodEntry entry, ManagedMarshalMethodsLookupInfo? info)
 	{
 		var obj = new MarshalMethodEntryObject (
