@@ -2,5 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
   <application android:label="AndroidTest1">
   </application>
+  <instrumentation android:name="com.companyname.AndroidTest1.TestInstrumentation"
+                   android:targetPackage="com.companyname.AndroidTest1" />
   <uses-permission android:name="android.permission.INTERNET" />
 </manifest>
