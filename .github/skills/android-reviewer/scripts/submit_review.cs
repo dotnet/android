@@ -20,8 +20,16 @@ var owner = args [0];
 var repo = args [1];
 var prNumber = args [2];
 var jsonPath = args [3];
-var dryRun = args.Length == 5 && args [4] == "--dry-run";
+var dryRun = false;
 
+if (args.Length == 5) {
+	if (args [4] != "--dry-run") {
+		Console.Error.WriteLine ($"Usage: dotnet run submit_review.cs <owner> <repo> <pr_number> <review_json_path> [--dry-run]");
+		return 1;
+	}
+
+	dryRun = true;
+}
 if (!File.Exists (jsonPath)) {
 	Console.Error.WriteLine ($"❌ File not found: {jsonPath}");
 	return 1;
