@@ -30,14 +30,6 @@ This file contains targets specific for Android application projects.
       _GetAndroidPackageName;
       _AndroidAdbToolPath;
     </_AndroidComputeRunArgumentsDependsOn>
-    <!-- When EnableMSTestRunner=true, the [Instrumentation] attribute generates the
-         <instrumentation> element in the merged manifest during Build. We need Build
-         to complete before GetAndroidInstrumentationName can read it. -->
-    <_AndroidComputeRunArgumentsDependsOn Condition=" '$(EnableMSTestRunner)' == 'true' ">
-      $(_AndroidComputeRunArgumentsDependsOn);
-      Build;
-      DeployToDevice;
-    </_AndroidComputeRunArgumentsDependsOn>
   </PropertyGroup>
 
   <!--
@@ -121,7 +113,7 @@ This file contains targets specific for Android application projects.
     </GetAndroidActivityName>
     <GetAndroidInstrumentationName
         Condition=" '$(AndroidLaunchActivity)' == '' and '$(AndroidInstrumentation)' == '' and '$(EnableMSTestRunner)' == 'true' "
-        ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml">
+        ManifestFile="$(IntermediateOutputPath)AndroidManifest.xml">
       <Output TaskParameter="InstrumentationName" PropertyName="AndroidInstrumentation" />
     </GetAndroidInstrumentationName>
     <PropertyGroup>
