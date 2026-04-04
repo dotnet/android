@@ -1424,6 +1424,14 @@ because xbuild doesn't support framework reference assemblies.
   AddKeepAlives, FindJavaObjects, SaveChangedAssembly, FindTypeMapObjects) for non-trimmed builds
   BEFORE crossgen2 creates R2R images.
 
+  Scheduling:
+    AfterTargets="ComputeResolvedFilesToPublishList" ensures the target runs in ALL inner builds
+    (Debug and Release) after @(ResolvedFileToPublish) is populated. The .NET SDK publish pipeline
+    evaluates DependsOnTargets in order: ComputeResolvedFilesToPublishList → ILLink →
+    CreateReadyToRunImages, so our AfterTargets fires between the first two.
+    BeforeTargets="_PrepareForReadyToRunCompilation" is an additional ordering constraint that
+    ensures we run before R2R compilation when ReadyToRun is active (Release builds).
+
   @(ResolvedAssemblies) is empty in the inner build (the Android-specific _ResolveAssemblies
   target only runs in the outer build), so we gather assemblies from @(ResolvedFileToPublish).
 
@@ -1432,11 +1440,16 @@ because xbuild doesn't support framework reference assemblies.
   that must not be mutated. After the task runs, ResolvedFileToPublish is updated to point
   to the intermediate copies so that downstream targets (R2R, publish) pick them up.
 
+  The sidecar XML files (.jlo.xml, .typemap.xml) produced by FindJavaObjectsStep and
+  FindTypeMapObjectsStep are written next to the intermediate copies. The outer build's
+  _CopySidecarXmlToAssemblyPaths target copies them to where _GenerateJavaStubs expects them.
+
   The condition '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' ensures this only
   runs in the inner build. In the outer build the target is a no-op, so existing dependency
   chain references are harmlessly satisfied.
 -->
 <Target Name="_LinkAssembliesNoShrink"
+    AfterTargets="ComputeResolvedFilesToPublishList"
     BeforeTargets="_PrepareForReadyToRunCompilation"
     Condition=" '$(PublishTrimmed)' != 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' "
     Inputs="@(IntermediateAssembly);$(_AndroidBuildPropertiesCache)"
