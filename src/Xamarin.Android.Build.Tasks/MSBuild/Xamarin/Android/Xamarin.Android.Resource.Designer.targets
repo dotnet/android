@@ -243,6 +243,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
   <WriteLinesToFile
       File="$(_DesignerLinkerDescriptor)"
       Overwrite="true"
+      WriteOnlyWhenDifferent="true"
       Lines="&lt;linker&gt;&lt;assembly fullname=&quot;$(_DesignerAssemblyName)&quot;&gt;&lt;type fullname=&quot;*&quot; preserve=&quot;all&quot; /&gt;&lt;/assembly&gt;&lt;/linker&gt;"
   />
   <ItemGroup>
