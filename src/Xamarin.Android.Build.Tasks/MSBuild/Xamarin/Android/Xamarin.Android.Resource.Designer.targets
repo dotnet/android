@@ -232,6 +232,10 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     after ILLink and needs all properties present when rewriting library assemblies.
     A descriptor (-x) preserves types without making the assembly an entry point,
     which avoids pulling netstandard.dll into the output.
+    See https://github.com/dotnet/runtime/issues/126518
+
+    TODO: Once dotnet/runtime#126518 is fixed and flows to dotnet/android,
+    simplify this to use TrimmerRootAssembly instead of the XML descriptor.
 -->
 <Target Name="_AddResourceDesignerToPublishFiles"
     Condition=" '$(AndroidUseDesignerAssembly)' == 'True' "
@@ -255,7 +259,8 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     </ResolvedFileToPublish>
     <!-- Preserve all designer types/members via descriptor so ILLink keeps resource
          properties. Using a descriptor (not TrimmerRootAssembly) avoids making the
-         assembly an entry point, which would pull netstandard.dll into the output. -->
+         assembly an entry point, which would pull netstandard.dll into the output.
+         See https://github.com/dotnet/runtime/issues/126518 -->
     <TrimmerRootDescriptor Include="$(_DesignerLinkerDescriptor)" />
     <FileWrites Include="$(_DesignerLinkerDescriptor)" />
   </ItemGroup>
