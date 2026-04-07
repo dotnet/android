@@ -8,6 +8,7 @@
   <UsingTask TaskName="Xamarin.Android.Tasks.RemoveRegisterAttribute" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateProguardConfiguration" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.PostTrimmingPipeline" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.PreTrimmingFixLegacyDesigner" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <PropertyGroup>
     <_RemoveRegisterFlag>$(MonoAndroidIntermediateAssemblyDir)shrunk\shrunk.flag</_RemoveRegisterFlag>
@@ -216,6 +217,24 @@
     </ItemGroup>
   </Target>
 
+  <!--
+    Fix legacy resource designer references *before* ILLink runs. This rewrites
+    library assemblies so their resource field accesses (ldsfld) become calls to the
+    designer assembly's property getters, and clears the per-library designer classes.
+    Because the rewritten IL no longer references the old designer fields, ILLink can
+    freely trim unused designer types without needing a root descriptor.
+  -->
+  <Target Name="_PreTrimmingFixLegacyDesigner"
+      BeforeTargets="ILLink"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidUseDesignerAssembly)' == 'True' ">
+    <ItemGroup>
+      <_PreTrimmingAssembly Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
+    </ItemGroup>
+    <PreTrimmingFixLegacyDesigner
+        Assemblies="@(_PreTrimmingAssembly)"
+        Deterministic="$(Deterministic)" />
+  </Target>
+
   <Target Name="_TouchAndroidLinkFlag"
       AfterTargets="ILLink"
       Condition=" '$(PublishTrimmed)' == 'true' and '$(RunILLink)' != 'false' and Exists('$(_LinkSemaphore)') "
@@ -241,8 +260,7 @@
         Assemblies="@(_PostTrimmingAssembly)"
         AddKeepAlives="$(AndroidAddKeepAlives)"
         AndroidLinkResources="$(AndroidLinkResources)"
-        Deterministic="$(Deterministic)"
-        UseDesignerAssembly="$(AndroidUseDesignerAssembly)" />
+        Deterministic="$(Deterministic)" />
   </Target>
 
   <!-- Inject _TypeMapKind into the property cache -->
