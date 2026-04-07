@@ -9,13 +9,16 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
 public class TrimmableTypeMapGenerator
 {
-	readonly Action<string> log;
-	readonly Action<string>? warn;
+	readonly ILogger logger;
 
-	public TrimmableTypeMapGenerator (Action<string> log, Action<string>? warn = null)
+	public TrimmableTypeMapGenerator ()
+		: this (NullLogger.Instance)
 	{
-		this.log = log ?? throw new ArgumentNullException (nameof (log));
-		this.warn = warn;
+	}
+
+	public TrimmableTypeMapGenerator (ILogger logger)
+	{
+		this.logger = logger ?? throw new ArgumentNullException (nameof (logger));
 	}
 
 	/// <summary>
@@ -36,7 +39,7 @@ public class TrimmableTypeMapGenerator
 
 		var (allPeers, assemblyManifestInfo) = ScanAssemblies (assemblies);
 		if (allPeers.Count == 0) {
-			log ("No Java peer types found, skipping typemap generation.");
+			logger.LogMessage ("No Java peer types found, skipping typemap generation.");
 			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
 
@@ -46,7 +49,7 @@ public class TrimmableTypeMapGenerator
 		var jcwPeers = allPeers.Where (p =>
 			!frameworkAssemblyNames.Contains (p.AssemblyName)
 			|| p.JavaName.StartsWith ("mono/", StringComparison.Ordinal)).ToList ();
-		log ($"Generating JCW files for {jcwPeers.Count} types (filtered from {allPeers.Count} total).");
+		logger.LogMessage ($"Generating JCW files for {jcwPeers.Count} types (filtered from {allPeers.Count} total).");
 		var generatedJavaSources = GenerateJcwJavaSources (jcwPeers);
 
 		// Collect Application/Instrumentation types that need deferred registerNatives
@@ -55,7 +58,7 @@ public class TrimmableTypeMapGenerator
 			.Select (p => JniSignatureHelper.JniNameToJavaName (p.JavaName))
 			.ToList ();
 		if (appRegTypes.Count > 0) {
-			log ($"Found {appRegTypes.Count} Application/Instrumentation types for deferred registration.");
+			logger.LogMessage ($"Found {appRegTypes.Count} Application/Instrumentation types for deferred registration.");
 		}
 
 		var manifest = manifestConfig is not null
@@ -106,7 +109,7 @@ public class TrimmableTypeMapGenerator
 		using var scanner = new JavaPeerScanner ();
 		var peers = scanner.Scan (assemblies);
 		var manifestInfo = scanner.ScanAssemblyManifestInfo ();
-		log ($"Scanned {assemblies.Count} assemblies, found {peers.Count} Java peer types.");
+		logger.LogMessage ($"Scanned {assemblies.Count} assemblies, found {peers.Count} Java peer types.");
 		return (peers, manifestInfo);
 	}
 
@@ -124,15 +127,15 @@ public class TrimmableTypeMapGenerator
 			generator.Generate (peers, stream, assemblyName);
 			stream.Position = 0;
 			generatedAssemblies.Add (new GeneratedAssembly (assemblyName, stream));
-			log ($"  {assemblyName}: {peers.Count} types");
+			logger.LogMessage ($"  {assemblyName}: {peers.Count} types");
 		}
 		var rootStream = new MemoryStream ();
 		var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
 		rootGenerator.Generate (perAssemblyNames, rootStream);
 		rootStream.Position = 0;
 		generatedAssemblies.Add (new GeneratedAssembly ("_Microsoft.Android.TypeMaps", rootStream));
-		log ($"  Root: {perAssemblyNames.Count} per-assembly refs");
-		log ($"Generated {generatedAssemblies.Count} typemap assemblies.");
+		logger.LogMessage ($"  Root: {perAssemblyNames.Count} per-assembly refs");
+		logger.LogMessage ($"Generated {generatedAssemblies.Count} typemap assemblies.");
 		return generatedAssemblies;
 	}
 
@@ -140,7 +143,7 @@ public class TrimmableTypeMapGenerator
 	{
 		var jcwGenerator = new JcwJavaSourceGenerator ();
 		var sources = jcwGenerator.GenerateContent (allPeers);
-		log ($"Generated {sources.Count} JCW Java source files.");
+		logger.LogMessage ($"Generated {sources.Count} JCW Java source files.");
 		return sources.ToList ();
 	}
 
@@ -195,11 +198,11 @@ public class TrimmableTypeMapGenerator
 				foreach (var peer in peers) {
 					if (!peer.IsUnconditional) {
 						peer.IsUnconditional = true;
-						log ($"Rooting manifest-referenced type '{name}' ({peer.ManagedTypeName}) as unconditional.");
+						logger.LogMessage ($"Rooting manifest-referenced type '{name}' ({peer.ManagedTypeName}) as unconditional.");
 					}
 				}
 			} else {
-				warn?.Invoke (name);
+				logger.LogWarning (name);
 			}
 		}
 	}
