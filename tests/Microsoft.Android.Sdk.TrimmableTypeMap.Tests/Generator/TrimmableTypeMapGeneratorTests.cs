@@ -12,6 +12,28 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 {
 	readonly List<string> logMessages = new ();
 
+	sealed class TestTrimmableTypeMapLogger : ITrimmableTypeMapLogger
+	{
+		readonly List<string> logMessages;
+		readonly List<string>? warnings;
+
+		public TestTrimmableTypeMapLogger (List<string> logMessages, List<string>? warnings = null)
+		{
+			this.logMessages = logMessages;
+			this.warnings = warnings;
+		}
+
+		public void LogUnresolvedTypeWarning (string name)
+		{
+			warnings?.Add (name);
+		}
+
+		public void LogRootingManifestReferencedTypeInfo (string name, string managedTypeName)
+		{
+			logMessages.Add ($"Rooting manifest-referenced type '{name}' ({managedTypeName}) as unconditional.");
+		}
+	}
+
 	[Fact]
 	public void Execute_EmptyAssemblyList_ReturnsEmptyResults ()
 	{
@@ -79,10 +101,10 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			Assert.Contains ("class ", source.Content);
 	}
 
-	TrimmableTypeMapGenerator CreateGenerator () => new (msg => logMessages.Add (msg));
+	TrimmableTypeMapGenerator CreateGenerator () => new (msg => logMessages.Add (msg), new TestTrimmableTypeMapLogger (logMessages));
 
 	TrimmableTypeMapGenerator CreateGenerator (List<string> warnings) =>
-		new (msg => logMessages.Add (msg), (code, message, args) => warnings.Add ($"{code}: {string.Format (message, args)}"));
+		new (msg => logMessages.Add (msg), new TestTrimmableTypeMapLogger (logMessages, warnings));
 
 	[Theory]
 	[InlineData ("com/example/MyActivity", "com.example.MyActivity", "com.example", "activity", "com.example.MyActivity")]

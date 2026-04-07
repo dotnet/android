@@ -15,6 +15,26 @@ namespace Xamarin.Android.Tasks;
 
 public class GenerateTrimmableTypeMap : AndroidTask
 {
+	sealed class MSBuildTrimmableTypeMapLogger : ITrimmableTypeMapLogger
+	{
+		readonly TaskLoggingHelper log;
+
+		public MSBuildTrimmableTypeMapLogger (TaskLoggingHelper log)
+		{
+			this.log = log ?? throw new ArgumentNullException (nameof (log));
+		}
+
+		public void LogUnresolvedTypeWarning (string name)
+		{
+			log.LogCodedWarning ("XA4250", Properties.Resources.XA4250, name);
+		}
+
+		public void LogRootingManifestReferencedTypeInfo (string name, string managedTypeName)
+		{
+			log.LogMessage (MessageImportance.Low, $"Rooting manifest-referenced type '{name}' ({managedTypeName}) as unconditional.");
+		}
+	}
+
 	public override string TaskPrefix => "GTT";
 
 	[Required]
@@ -96,8 +116,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 			var generator = new TrimmableTypeMapGenerator (
 				msg => Log.LogMessage (MessageImportance.Low, msg),
-				Log.LogCodedWarning,
-				Properties.Resources.XA4250);
+				new MSBuildTrimmableTypeMapLogger (Log));
 
 			XDocument? manifestTemplate = null;
 			if (!ManifestTemplate.IsNullOrEmpty () && File.Exists (ManifestTemplate)) {
