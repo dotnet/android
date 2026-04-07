@@ -41,6 +41,16 @@ This eliminates the NDK dependency for NativeAOT builds.
     -->
     <NativeCompilationDuringPublish>false</NativeCompilationDuringPublish>
 
+    <!--
+      ILCompiler sets RunILLink=false at property-eval time, but we need ILLink to run so that
+      _PostTrimmingPipeline operates on per-RID linked/ directory files instead of NuGet cache paths.
+      Without this, parallel multi-RID inner builds race on the same NuGet cache PDB files.
+      This must be set here (property-eval time), not inside a target, because the .NET SDK's
+      ComputeFilesToPublish evaluates ILLink before our _AndroidBeforeIlcCompile target runs.
+      This matches the approach used by xamarin-macios (Xamarin.Shared.Sdk.targets).
+    -->
+    <RunILLink Condition=" '$(PublishAot)' == 'true' ">true</RunILLink>
+
     <!-- We must find the BCL libraries using the runtime pack instead of using the built-in NativeAOT BCL -->
     <PublishAotUsingRuntimePack>true</PublishAotUsingRuntimePack>
 
@@ -117,9 +127,6 @@ This eliminates the NDK dependency for NativeAOT builds.
       -->
       <_AndroidNativeAotStripSymbols Condition=" '$(_AndroidNativeAotStripSymbols)' == '' ">$(StripSymbols)</_AndroidNativeAotStripSymbols>
       <StripSymbols>false</StripSymbols>
-
-      <!-- We want to run ILLink ourselves before ILC -->
-      <RunILLink>true</RunILLink>
 
       <!--
         We want to suppress warnings from trimmer and only show warnings from ILC.
@@ -283,6 +290,27 @@ This eliminates the NDK dependency for NativeAOT builds.
       DependsOnTargets="IlcCompile;$(_AndroidNativeAotLinkTarget)">
     <!-- IlcCompile produces $(NativeObject), then linking target links it into a .so -->
   </Target>
+
+  <!--
+    Hook into ComputeResolvedFilesToPublishList to trigger our NativeAOT ILC pipeline
+    before ComputeFilesToPublish reaches ILLink in its DependsOnTargets chain.
+
+    When NativeCompilationDuringPublish=false, the ILC SDK's ComputeLinkedFilesToPublish
+    hook (which normally triggers LinkNative -> IlcCompile -> ILLink) is not imported.
+    Without this hook, ComputeFilesToPublish triggers ILLink directly, but our
+    _AndroidBeforeIlcCompile target hasn't run yet to set up the trimming context.
+    This causes _PostTrimmingPipeline (AfterTargets=ILLink) to operate on assemblies
+    at their original NuGet cache paths instead of in the per-RID linked/ directory.
+
+    This target mirrors the ILC SDK's ComputeLinkedFilesToPublish pattern:
+    fire after ComputeResolvedFilesToPublishList populates @(ResolvedFileToPublish),
+    which triggers our IlcCompileDependsOn chain (including _AndroidBeforeIlcCompile
+    and ILLink with proper setup) before ComputeFilesToPublish reaches ILLink.
+  -->
+  <Target Name="_AndroidTriggerNativeAotPipeline"
+      AfterTargets="ComputeResolvedFilesToPublishList"
+      Condition=" '$(PublishAot)' == 'true' and '$(RuntimeIdentifier)' != '' "
+      DependsOnTargets="_AndroidNativeAotCompileAndLink" />
 
   <!--
     Collect all native libraries that ILC SDK would have linked.
