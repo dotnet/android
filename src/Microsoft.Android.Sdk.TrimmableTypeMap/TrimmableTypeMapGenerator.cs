@@ -199,7 +199,7 @@ public class TrimmableTypeMapGenerator
 					}
 				}
 			} else {
-				warn?.Invoke ($"Manifest-referenced type '{name}' was not found in any scanned assembly. It may be a framework type.");
+				warn?.Invoke (name);
 			}
 		}
 	}

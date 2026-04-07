@@ -96,7 +96,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 			var generator = new TrimmableTypeMapGenerator (
 				msg => Log.LogMessage (MessageImportance.Low, msg),
-				msg => Log.LogWarning (msg));
+				typeName => Log.LogCodedWarning ("XA4250", Properties.Resources.XA4250, typeName));
 
 			XDocument? manifestTemplate = null;
 			if (!ManifestTemplate.IsNullOrEmpty () && File.Exists (ManifestTemplate)) {
