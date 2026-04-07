@@ -232,6 +232,7 @@
     </ItemGroup>
     <PreTrimmingFixLegacyDesigner
         Assemblies="@(_PreTrimmingAssembly)"
+        TargetName="$(TargetName)"
         Deterministic="$(Deterministic)" />
   </Target>
 

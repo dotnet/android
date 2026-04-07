@@ -1,6 +1,5 @@
 #nullable enable
 
-using System.Collections.Generic;
 using System.IO;
 using Java.Interop.Tools.Cecil;
 using Microsoft.Android.Build.Tasks;
@@ -26,6 +25,9 @@ public class PreTrimmingFixLegacyDesigner : AndroidTask
 	[Required]
 	public ITaskItem [] Assemblies { get; set; } = [];
 
+	[Required]
+	public string TargetName { get; set; } = "";
+
 	public bool Deterministic { get; set; }
 
 	public override bool RunTask ()
@@ -46,6 +48,15 @@ public class PreTrimmingFixLegacyDesigner : AndroidTask
 		fixLegacyStep.Initialize (linkContext);
 
 		foreach (var item in Assemblies) {
+			// Match the filtering in FixLegacyResourceDesignerStep.ProcessAssembly:
+			// skip the main assembly and framework/BCL assemblies.
+			if (Path.GetFileNameWithoutExtension (item.ItemSpec) == TargetName) {
+				continue;
+			}
+			if (MonoAndroidHelper.IsFrameworkAssembly (item)) {
+				continue;
+			}
+
 			var assembly = resolver.GetAssembly (item.ItemSpec);
 			if (fixLegacyStep.ProcessAssemblyDesigner (assembly)) {
 				Log.LogDebugMessage ($"  Writing modified assembly: {item.ItemSpec}");
