@@ -1420,8 +1420,7 @@ namespace UnnamedProject
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName, app.ProjectName))) {
 				b.BuildLogFile = "build1.log";
 				b.ThrowOnBuildFailure = false;
-				// TODO: fix for NativeAOT
-				if (!addResource && runtime != AndroidRuntime.NativeAOT) {
+				if (!addResource) {
 					Assert.IsFalse (b.Build (app, doNotCleanupOnUpdate: true), $"Build of {app.ProjectName} should have failed.");
 					Assert.IsTrue (b.LastBuildOutput.ContainsText ("XA8000"));
 					Assert.IsTrue (b.LastBuildOutput.ContainsText ("@styleable/SKCanvasView"), "Expected '@styleable/SKCanvasView' in build output.");
