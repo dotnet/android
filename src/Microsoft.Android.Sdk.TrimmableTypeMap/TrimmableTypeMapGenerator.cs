@@ -10,9 +10,9 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 public class TrimmableTypeMapGenerator
 {
 	readonly Action<string> log;
-	readonly Action<string>? warn;
+	readonly Action<string, string>? warn;
 
-	public TrimmableTypeMapGenerator (Action<string> log, Action<string>? warn = null)
+	public TrimmableTypeMapGenerator (Action<string> log, Action<string, string>? warn = null)
 	{
 		this.log = log ?? throw new ArgumentNullException (nameof (log));
 		this.warn = warn;
@@ -179,14 +179,10 @@ public class TrimmableTypeMapGenerator
 		// because manifests commonly use '$', but also include the Java source form.
 		var peersByDotName = new Dictionary<string, List<JavaPeerInfo>> (StringComparer.Ordinal);
 		foreach (var peer in allPeers) {
-			var dotName = GetManifestLookupName (peer.JavaName);
-			AddPeerByDotName (peersByDotName, dotName, peer);
-			AddJavaSourceLookupName (peersByDotName, dotName, peer);
+			AddJniLookupNames (peersByDotName, peer.JavaName, peer);
 
-			var compatDotName = GetManifestLookupName (peer.CompatJniName);
-			if (compatDotName != dotName) {
-				AddPeerByDotName (peersByDotName, compatDotName, peer);
-				AddJavaSourceLookupName (peersByDotName, compatDotName, peer);
+			if (peer.CompatJniName != peer.JavaName) {
+				AddJniLookupNames (peersByDotName, peer.CompatJniName, peer);
 			}
 		}
 
@@ -199,7 +195,7 @@ public class TrimmableTypeMapGenerator
 					}
 				}
 			} else {
-				warn?.Invoke (name);
+				warn?.Invoke ("XA4250", name);
 			}
 		}
 	}
@@ -214,17 +210,17 @@ public class TrimmableTypeMapGenerator
 		list.Add (peer);
 	}
 
-	static void AddJavaSourceLookupName (Dictionary<string, List<JavaPeerInfo>> peersByDotName, string dotName, JavaPeerInfo peer)
+	static void AddJniLookupNames (Dictionary<string, List<JavaPeerInfo>> peersByDotName, string jniName, JavaPeerInfo peer)
 	{
-		var javaSourceName = dotName.Replace ('$', '.');
-		if (javaSourceName != dotName) {
+		var simpleName = JniSignatureHelper.GetJavaSimpleName (jniName);
+		var packageName = JniSignatureHelper.GetJavaPackageName (jniName);
+		var manifestName = packageName.IsNullOrEmpty () ? simpleName : packageName + "." + simpleName;
+		AddPeerByDotName (peersByDotName, manifestName, peer);
+
+		var javaSourceName = JniSignatureHelper.JniNameToJavaName (jniName);
+		if (javaSourceName != manifestName) {
 			AddPeerByDotName (peersByDotName, javaSourceName, peer);
 		}
-	}
-
-	static string GetManifestLookupName (string jniName)
-	{
-		return jniName.Replace ('/', '.');
 	}
 
 	/// <summary>
@@ -234,10 +230,14 @@ public class TrimmableTypeMapGenerator
 	/// </summary>
 	static string ResolveManifestClassName (string name, string packageName)
 	{
-		return name switch {
-			_ when name.StartsWith (".", StringComparison.Ordinal) => packageName + name,
-			_ when name.IndexOf ('.') < 0 && !packageName.IsNullOrEmpty () => packageName + "." + name,
-			_ => name,
-		};
+		if (name.StartsWith (".", StringComparison.Ordinal)) {
+			return packageName + name;
+		}
+
+		if (name.IndexOf ('.') < 0 && !packageName.IsNullOrEmpty ()) {
+			return packageName + "." + name;
+		}
+
+		return name;
 	}
 }

@@ -82,7 +82,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	TrimmableTypeMapGenerator CreateGenerator () => new (msg => logMessages.Add (msg));
 
 	TrimmableTypeMapGenerator CreateGenerator (List<string> warnings) =>
-		new (msg => logMessages.Add (msg), msg => warnings.Add (msg));
+		new (msg => logMessages.Add (msg), (code, message) => warnings.Add ($"{code}: {message}"));
 
 	[Fact]
 	public void RootManifestReferencedTypes_RootsMatchingPeers ()
