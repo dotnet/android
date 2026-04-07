@@ -84,27 +84,37 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	TrimmableTypeMapGenerator CreateGenerator (List<string> warnings) =>
 		new (msg => logMessages.Add (msg), (code, message) => warnings.Add ($"{code}: {message}"));
 
-	[Fact]
-	public void RootManifestReferencedTypes_RootsMatchingPeers ()
+	[Theory]
+	[InlineData ("com/example/MyActivity", "com.example.MyActivity", "com.example.MyActivity", "activity", "com.example.MyActivity")]
+	[InlineData ("com/example/MyActivity", "com.example.MyActivity", "com.example", "activity", ".MyActivity")]
+	[InlineData ("com/example/MyService", "com.example.MyService", "com.example", "service", "MyService")]
+	[InlineData ("crc64123456789abc/MyActivity", "my/app/MyActivity", "my.app", "activity", ".MyActivity")]
+	[InlineData ("com/example/Outer$Inner", "com.example.Outer$Inner", "com.example", "activity", "com.example.Outer$Inner")]
+	public void RootManifestReferencedTypes_RootsManifestReferencedTypes (
+		string javaName,
+		string compatJniName,
+		string packageName,
+		string elementName,
+		string manifestName)
 	{
 		var peers = new List<JavaPeerInfo> {
 			new JavaPeerInfo {
-				JavaName = "com/example/MyActivity", CompatJniName = "com.example.MyActivity",
-				ManagedTypeName = "MyApp.MyActivity", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "MyActivity",
+				JavaName = javaName, CompatJniName = compatJniName,
+				ManagedTypeName = "MyApp.MyTarget", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "MyTarget",
 				AssemblyName = "MyApp", IsUnconditional = false,
 			},
 			new JavaPeerInfo {
-				JavaName = "com/example/MyService", CompatJniName = "com.example.MyService",
-				ManagedTypeName = "MyApp.MyService", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "MyService",
+				JavaName = "com/example/OtherType", CompatJniName = "com.example.OtherType",
+				ManagedTypeName = "MyApp.OtherType", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "OtherType",
 				AssemblyName = "MyApp", IsUnconditional = false,
 			},
 		};
 
-		var doc = System.Xml.Linq.XDocument.Parse ("""
+		var doc = System.Xml.Linq.XDocument.Parse ($$"""
 			<?xml version="1.0" encoding="utf-8"?>
-			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example">
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="{{packageName}}">
 			  <application>
-			    <activity android:name="com.example.MyActivity" />
+			    <{{elementName}} android:name="{{manifestName}}" />
 			  </application>
 			</manifest>
 			""");
@@ -112,8 +122,8 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		var generator = CreateGenerator ();
 		generator.RootManifestReferencedTypes (peers, doc);
 
-		Assert.True (peers [0].IsUnconditional, "MyActivity should be rooted as unconditional.");
-		Assert.False (peers [1].IsUnconditional, "MyService should remain conditional.");
+		Assert.True (peers [0].IsUnconditional, "The manifest-referenced type should be rooted as unconditional.");
+		Assert.False (peers [1].IsUnconditional, "Non-matching peers should remain conditional.");
 		Assert.Contains (logMessages, m => m.Contains ("Rooting manifest-referenced type"));
 	}
 
@@ -223,91 +233,6 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		generator.RootManifestReferencedTypes (peers, doc);
 
 		Assert.False (peers [0].IsUnconditional);
-	}
-
-	[Fact]
-	public void RootManifestReferencedTypes_ResolvesRelativeNames ()
-	{
-		var peers = new List<JavaPeerInfo> {
-			new JavaPeerInfo {
-				JavaName = "com/example/MyActivity", CompatJniName = "com.example.MyActivity",
-				ManagedTypeName = "MyApp.MyActivity", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "MyActivity",
-				AssemblyName = "MyApp", IsUnconditional = false,
-			},
-			new JavaPeerInfo {
-				JavaName = "com/example/MyService", CompatJniName = "com.example.MyService",
-				ManagedTypeName = "MyApp.MyService", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "MyService",
-				AssemblyName = "MyApp", IsUnconditional = false,
-			},
-		};
-
-		var doc = System.Xml.Linq.XDocument.Parse ("""
-			<?xml version="1.0" encoding="utf-8"?>
-			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example">
-			  <application>
-			    <activity android:name=".MyActivity" />
-			    <service android:name="MyService" />
-			  </application>
-			</manifest>
-			""");
-
-		var generator = CreateGenerator ();
-		generator.RootManifestReferencedTypes (peers, doc);
-
-		Assert.True (peers [0].IsUnconditional, "Dot-relative name '.MyActivity' should resolve to com.example.MyActivity.");
-		Assert.True (peers [1].IsUnconditional, "Simple name 'MyService' should resolve to com.example.MyService.");
-	}
-
-	[Fact]
-	public void RootManifestReferencedTypes_MatchesCompatNames ()
-	{
-		var peers = new List<JavaPeerInfo> {
-			new JavaPeerInfo {
-				JavaName = "crc64123456789abc/MyActivity", CompatJniName = "my/app/MyActivity",
-				ManagedTypeName = "My.App.MyActivity", ManagedTypeNamespace = "My.App", ManagedTypeShortName = "MyActivity",
-				AssemblyName = "MyApp", IsUnconditional = false,
-			},
-		};
-
-		var doc = System.Xml.Linq.XDocument.Parse ("""
-			<?xml version="1.0" encoding="utf-8"?>
-			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="my.app">
-			  <application>
-			    <activity android:name=".MyActivity" />
-			  </application>
-			</manifest>
-			""");
-
-		var generator = CreateGenerator ();
-		generator.RootManifestReferencedTypes (peers, doc);
-
-		Assert.True (peers [0].IsUnconditional, "Relative manifest name should match CompatJniName when JavaName uses a CRC64 package.");
-	}
-
-	[Fact]
-	public void RootManifestReferencedTypes_MatchesNestedTypes ()
-	{
-		var peers = new List<JavaPeerInfo> {
-			new JavaPeerInfo {
-				JavaName = "com/example/Outer$Inner", CompatJniName = "com.example.Outer$Inner",
-				ManagedTypeName = "MyApp.Outer.Inner", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "Inner",
-				AssemblyName = "MyApp", IsUnconditional = false,
-			},
-		};
-
-		var doc = System.Xml.Linq.XDocument.Parse ("""
-			<?xml version="1.0" encoding="utf-8"?>
-			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example">
-			  <application>
-			    <activity android:name="com.example.Outer$Inner" />
-			  </application>
-			</manifest>
-			""");
-
-		var generator = CreateGenerator ();
-		generator.RootManifestReferencedTypes (peers, doc);
-
-		Assert.True (peers [0].IsUnconditional, "Nested type 'Outer$Inner' should be matched using '$' separator.");
 	}
 
 	static PEReader CreateTestFixturePEReader ()
