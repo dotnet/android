@@ -85,7 +85,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		new (msg => logMessages.Add (msg), (code, message, args) => warnings.Add ($"{code}: {string.Format (message, args)}"));
 
 	[Theory]
-	[InlineData ("com/example/MyActivity", "com.example.MyActivity", "com.example.MyActivity", "activity", "com.example.MyActivity")]
+	[InlineData ("com/example/MyActivity", "com.example.MyActivity", "com.example", "activity", "com.example.MyActivity")]
 	[InlineData ("com/example/MyActivity", "com.example.MyActivity", "com.example", "activity", ".MyActivity")]
 	[InlineData ("com/example/MyService", "com.example.MyService", "com.example", "service", "MyService")]
 	[InlineData ("crc64123456789abc/MyActivity", "my/app/MyActivity", "my.app", "activity", ".MyActivity")]
