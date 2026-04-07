@@ -36,7 +36,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		public void LogRootingManifestReferencedTypeInfo (string javaTypeName, string managedTypeName) =>
 			log.LogMessage (MessageImportance.Low, $"Rooting manifest-referenced type '{javaTypeName}' ({managedTypeName}) as unconditional.");
 		public void LogManifestReferencedTypeNotFoundWarning (string javaTypeName) =>
-			log.LogWarning ($"Manifest-referenced type '{javaTypeName}' was not found in any scanned assembly. It may be a framework type.");
+			log.LogCodedWarning ("XA4250", Properties.Resources.XA4250, javaTypeName);
 	}
 
 	public override string TaskPrefix => "GTT";
@@ -118,7 +118,6 @@ public class GenerateTrimmableTypeMap : AndroidTask
 					ApplicationJavaClass: ApplicationJavaClass);
 			}
 
-			var generator = new TrimmableTypeMapGenerator (new MSBuildTrimmableTypeMapLogger (Log));
 			var generator = new TrimmableTypeMapGenerator (new MSBuildTrimmableTypeMapLogger (Log));
 
 			XDocument? manifestTemplate = null;
