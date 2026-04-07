@@ -124,7 +124,8 @@ public sealed class JcwJavaSourceGenerator
 	{
 		// Application and Instrumentation types cannot call registerNatives in their
 		// static initializer — the native library isn't loaded yet at that point.
-		// Their registration is deferred to ApplicationRegistration.registerApplications().
+		// Their registerNatives call is emitted in the generated
+		// ApplicationRegistration.registerApplications() method instead.
 		if (type.CannotRegisterInStaticConstructor) {
 			return;
 		}
