@@ -175,15 +175,19 @@ public class TrimmableTypeMapGenerator
 			return;
 		}
 
-		// Build lookup by dot-name, keeping '$' for nested types (manifests use '$' too).
+		// Build lookup by both Java and compat dot-names. Keep '$' for nested types,
+		// because manifests commonly use '$', but also include the Java source form.
 		var peersByDotName = new Dictionary<string, List<JavaPeerInfo>> (StringComparer.Ordinal);
 		foreach (var peer in allPeers) {
-			var dotName = peer.JavaName.Replace ('/', '.');
-			if (!peersByDotName.TryGetValue (dotName, out var list)) {
-				list = [];
-				peersByDotName [dotName] = list;
+			var dotName = GetManifestLookupName (peer.JavaName);
+			AddPeerByDotName (peersByDotName, dotName, peer);
+			AddJavaSourceLookupName (peersByDotName, dotName, peer);
+
+			var compatDotName = GetManifestLookupName (peer.CompatJniName);
+			if (compatDotName != dotName) {
+				AddPeerByDotName (peersByDotName, compatDotName, peer);
+				AddJavaSourceLookupName (peersByDotName, compatDotName, peer);
 			}
-			list.Add (peer);
 		}
 
 		foreach (var name in componentNames) {
@@ -198,6 +202,29 @@ public class TrimmableTypeMapGenerator
 				warn?.Invoke ($"Manifest-referenced type '{name}' was not found in any scanned assembly. It may be a framework type.");
 			}
 		}
+	}
+
+	static void AddPeerByDotName (Dictionary<string, List<JavaPeerInfo>> peersByDotName, string dotName, JavaPeerInfo peer)
+	{
+		if (!peersByDotName.TryGetValue (dotName, out var list)) {
+			list = [];
+			peersByDotName [dotName] = list;
+		}
+
+		list.Add (peer);
+	}
+
+	static void AddJavaSourceLookupName (Dictionary<string, List<JavaPeerInfo>> peersByDotName, string dotName, JavaPeerInfo peer)
+	{
+		var javaSourceName = dotName.Replace ('$', '.');
+		if (javaSourceName != dotName) {
+			AddPeerByDotName (peersByDotName, javaSourceName, peer);
+		}
+	}
+
+	static string GetManifestLookupName (string jniName)
+	{
+		return jniName.Replace ('/', '.');
 	}
 
 	/// <summary>

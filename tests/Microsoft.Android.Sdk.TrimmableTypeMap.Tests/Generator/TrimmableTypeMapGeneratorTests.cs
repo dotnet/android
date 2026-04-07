@@ -259,6 +259,32 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void RootManifestReferencedTypes_MatchesCompatNames ()
+	{
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "crc64123456789abc/MyActivity", CompatJniName = "my/app/MyActivity",
+				ManagedTypeName = "My.App.MyActivity", ManagedTypeNamespace = "My.App", ManagedTypeShortName = "MyActivity",
+				AssemblyName = "MyApp", IsUnconditional = false,
+			},
+		};
+
+		var doc = System.Xml.Linq.XDocument.Parse ("""
+			<?xml version="1.0" encoding="utf-8"?>
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="my.app">
+			  <application>
+			    <activity android:name=".MyActivity" />
+			  </application>
+			</manifest>
+			""");
+
+		var generator = CreateGenerator ();
+		generator.RootManifestReferencedTypes (peers, doc);
+
+		Assert.True (peers [0].IsUnconditional, "Relative manifest name should match CompatJniName when JavaName uses a CRC64 package.");
+	}
+
+	[Fact]
 	public void RootManifestReferencedTypes_MatchesNestedTypes ()
 	{
 		var peers = new List<JavaPeerInfo> {
