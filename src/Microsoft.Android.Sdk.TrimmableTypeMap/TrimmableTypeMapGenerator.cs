@@ -34,6 +34,7 @@ public class TrimmableTypeMapGenerator
 
 		var (allPeers, assemblyManifestInfo) = ScanAssemblies (assemblies);
 		if (allPeers.Count == 0) {
+			logger?.LogNoJavaPeerTypesFound ();
 			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
 
@@ -43,6 +44,7 @@ public class TrimmableTypeMapGenerator
 		var jcwPeers = allPeers.Where (p =>
 			!frameworkAssemblyNames.Contains (p.AssemblyName)
 			|| p.JavaName.StartsWith ("mono/", StringComparison.Ordinal)).ToList ();
+		logger?.LogGeneratingJcwFilesInfo (jcwPeers.Count, allPeers.Count);
 		var generatedJavaSources = GenerateJcwJavaSources (jcwPeers);
 
 		// Collect Application/Instrumentation types that need deferred registerNatives
@@ -50,6 +52,9 @@ public class TrimmableTypeMapGenerator
 			.Where (p => p.CannotRegisterInStaticConstructor && !p.IsAbstract)
 			.Select (p => JniSignatureHelper.JniNameToJavaName (p.JavaName))
 			.ToList ();
+		if (appRegTypes.Count > 0) {
+			logger?.LogDeferredRegistrationTypesInfo (appRegTypes.Count);
+		}
 
 		var manifest = manifestConfig is not null
 			? GenerateManifest (allPeers, assemblyManifestInfo, manifestConfig, manifestTemplate)
@@ -99,6 +104,7 @@ public class TrimmableTypeMapGenerator
 		using var scanner = new JavaPeerScanner ();
 		var peers = scanner.Scan (assemblies);
 		var manifestInfo = scanner.ScanAssemblyManifestInfo ();
+		logger?.LogJavaPeerScanInfo (assemblies.Count, peers.Count);
 		return (peers, manifestInfo);
 	}
 
@@ -116,12 +122,15 @@ public class TrimmableTypeMapGenerator
 			generator.Generate (peers, stream, assemblyName);
 			stream.Position = 0;
 			generatedAssemblies.Add (new GeneratedAssembly (assemblyName, stream));
+			logger?.LogGeneratedTypeMapAssemblyInfo (assemblyName, peers.Count);
 		}
 		var rootStream = new MemoryStream ();
 		var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
 		rootGenerator.Generate (perAssemblyNames, rootStream);
 		rootStream.Position = 0;
 		generatedAssemblies.Add (new GeneratedAssembly ("_Microsoft.Android.TypeMaps", rootStream));
+		logger?.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);
+		logger?.LogGeneratedTypeMapAssembliesInfo (generatedAssemblies.Count);
 		return generatedAssemblies;
 	}
 
@@ -129,6 +138,7 @@ public class TrimmableTypeMapGenerator
 	{
 		var jcwGenerator = new JcwJavaSourceGenerator ();
 		var sources = jcwGenerator.GenerateContent (allPeers);
+		logger?.LogGeneratedJcwFilesInfo (sources.Count);
 		return sources.ToList ();
 	}
 

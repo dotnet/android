@@ -23,6 +23,46 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			this.warnings = warnings;
 		}
 
+		public void LogNoJavaPeerTypesFound ()
+		{
+			logMessages.Add ("No Java peer types found, skipping typemap generation.");
+		}
+
+		public void LogJavaPeerScanInfo (int assemblyCount, int peerCount)
+		{
+			logMessages.Add ($"Scanned {assemblyCount} assemblies, found {peerCount} Java peer types.");
+		}
+
+		public void LogGeneratingJcwFilesInfo (int jcwPeerCount, int totalPeerCount)
+		{
+			logMessages.Add ($"Generating JCW files for {jcwPeerCount} types (filtered from {totalPeerCount} total).");
+		}
+
+		public void LogDeferredRegistrationTypesInfo (int typeCount)
+		{
+			logMessages.Add ($"Found {typeCount} Application/Instrumentation types for deferred registration.");
+		}
+
+		public void LogGeneratedTypeMapAssemblyInfo (string assemblyName, int typeCount)
+		{
+			logMessages.Add ($"  {assemblyName}: {typeCount} types");
+		}
+
+		public void LogGeneratedRootTypeMapInfo (int assemblyReferenceCount)
+		{
+			logMessages.Add ($"  Root: {assemblyReferenceCount} per-assembly refs");
+		}
+
+		public void LogGeneratedTypeMapAssembliesInfo (int assemblyCount)
+		{
+			logMessages.Add ($"Generated {assemblyCount} typemap assemblies.");
+		}
+
+		public void LogGeneratedJcwFilesInfo (int sourceCount)
+		{
+			logMessages.Add ($"Generated {sourceCount} JCW Java source files.");
+		}
+
 		public void LogUnresolvedTypeWarning (string name)
 		{
 			warnings?.Add (name);
@@ -41,6 +81,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.Empty (result.GeneratedAssemblies);
 		Assert.Empty (result.GeneratedJavaSources);
 		Assert.Empty (result.AllPeers);
+		Assert.Contains (logMessages, m => m.Contains ("No Java peer types found"));
 	}
 
 	[Fact]
@@ -55,6 +96,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			new HashSet<string> ());
 		Assert.Empty (result.GeneratedAssemblies);
 		Assert.Empty (result.GeneratedJavaSources);
+		Assert.Contains (logMessages, m => m.Contains ("No Java peer types found"));
 	}
 
 	[Fact]
