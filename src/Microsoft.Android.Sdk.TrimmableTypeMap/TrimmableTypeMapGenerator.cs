@@ -10,12 +10,17 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 public class TrimmableTypeMapGenerator
 {
 	readonly Action<string> log;
-	readonly Action<string, string>? warn;
+	readonly Action<string, string, object []>? warn;
+	readonly string unresolvedTypeWarningMessage;
 
-	public TrimmableTypeMapGenerator (Action<string> log, Action<string, string>? warn = null)
+	public TrimmableTypeMapGenerator (
+		Action<string> log,
+		Action<string, string, object []>? warn = null,
+		string unresolvedTypeWarningMessage = "Manifest-referenced type '{0}' was not found in any scanned assembly. It may be a framework type.")
 	{
 		this.log = log ?? throw new ArgumentNullException (nameof (log));
 		this.warn = warn;
+		this.unresolvedTypeWarningMessage = unresolvedTypeWarningMessage ?? throw new ArgumentNullException (nameof (unresolvedTypeWarningMessage));
 	}
 
 	/// <summary>
@@ -195,7 +200,7 @@ public class TrimmableTypeMapGenerator
 					}
 				}
 			} else {
-				warn?.Invoke ("XA4250", name);
+				warn?.Invoke ("XA4250", unresolvedTypeWarningMessage, [name]);
 			}
 		}
 	}

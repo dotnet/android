@@ -82,7 +82,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	TrimmableTypeMapGenerator CreateGenerator () => new (msg => logMessages.Add (msg));
 
 	TrimmableTypeMapGenerator CreateGenerator (List<string> warnings) =>
-		new (msg => logMessages.Add (msg), (code, message) => warnings.Add ($"{code}: {message}"));
+		new (msg => logMessages.Add (msg), (code, message, args) => warnings.Add ($"{code}: {string.Format (message, args)}"));
 
 	[Theory]
 	[InlineData ("com/example/MyActivity", "com.example.MyActivity", "com.example.MyActivity", "activity", "com.example.MyActivity")]
