@@ -237,14 +237,10 @@ public class TrimmableTypeMapGenerator
 	/// </summary>
 	static string ResolveManifestClassName (string name, string packageName)
 	{
-		if (name.StartsWith (".", StringComparison.Ordinal)) {
-			return packageName + name;
-		}
-
-		if (name.IndexOf ('.') < 0 && !packageName.IsNullOrEmpty ()) {
-			return packageName + "." + name;
-		}
-
-		return name;
+		return name switch {
+			_ when name.StartsWith (".", StringComparison.Ordinal) => packageName + name,
+			_ when name.IndexOf ('.') < 0 && !packageName.IsNullOrEmpty () => packageName + "." + name,
+			_ => name,
+		};
 	}
 }
