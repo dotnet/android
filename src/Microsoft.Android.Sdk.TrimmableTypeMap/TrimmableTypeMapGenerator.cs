@@ -39,6 +39,7 @@ public class TrimmableTypeMapGenerator
 		}
 
 		RootManifestReferencedTypes (allPeers, PrepareManifestForRooting (manifestTemplate, manifestConfig));
+		PropagateDeferredRegistrationToManagedBaseTypes (allPeers);
 
 		var generatedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion);
 		var jcwPeers = allPeers.Where (p =>
@@ -49,8 +50,9 @@ public class TrimmableTypeMapGenerator
 
 		// Collect Application/Instrumentation types that need deferred registerNatives
 		var appRegTypes = allPeers
-			.Where (p => p.CannotRegisterInStaticConstructor && !p.IsAbstract)
+			.Where (p => p.CannotRegisterInStaticConstructor && !p.DoNotGenerateAcw)
 			.Select (p => JniSignatureHelper.JniNameToJavaName (p.JavaName))
+			.Distinct (StringComparer.Ordinal)
 			.ToList ();
 		if (appRegTypes.Count > 0) {
 			logger?.LogDeferredRegistrationTypesInfo (appRegTypes.Count);
@@ -192,7 +194,9 @@ public class TrimmableTypeMapGenerator
 
 		foreach (var name in componentNames) {
 			if (peersByDotName.TryGetValue (name, out var peers)) {
-				foreach (var peer in peers) {
+				foreach (var peer in peers.Distinct ()) {
+					PromoteManifestCompatibleJavaName (allPeers, peer, name);
+
 					if (deferredRegistrationNames.Contains (name)) {
 						peer.CannotRegisterInStaticConstructor = true;
 					}
@@ -205,6 +209,61 @@ public class TrimmableTypeMapGenerator
 			} else {
 				logger?.LogUnresolvedTypeWarning (name);
 			}
+		}
+	}
+
+	static void PromoteManifestCompatibleJavaName (List<JavaPeerInfo> allPeers, JavaPeerInfo peer, string manifestName)
+	{
+		if (peer.JavaName == peer.CompatJniName || !MatchesManifestName (peer.CompatJniName, manifestName)) {
+			return;
+		}
+
+		var promotedJavaName = NormalizeJniName (peer.CompatJniName);
+		var previousJavaName = peer.JavaName;
+		if (promotedJavaName == previousJavaName) {
+			return;
+		}
+
+		peer.JavaName = promotedJavaName;
+
+		foreach (var candidate in allPeers) {
+			if (candidate.BaseJavaName == previousJavaName) {
+				candidate.BaseJavaName = promotedJavaName;
+			}
+		}
+	}
+
+	void PropagateDeferredRegistrationToManagedBaseTypes (List<JavaPeerInfo> allPeers)
+	{
+		var peersByJavaName = new Dictionary<string, JavaPeerInfo> (StringComparer.Ordinal);
+		foreach (var peer in allPeers) {
+			if (!peersByJavaName.ContainsKey (peer.JavaName)) {
+				peersByJavaName.Add (peer.JavaName, peer);
+			}
+			if (peer.CompatJniName != peer.JavaName && !peersByJavaName.ContainsKey (peer.CompatJniName)) {
+				peersByJavaName.Add (peer.CompatJniName, peer);
+			}
+		}
+
+		foreach (var peer in allPeers.Where (p => p.CannotRegisterInStaticConstructor)) {
+			PropagateDeferredRegistrationToManagedBaseTypes (peer, peersByJavaName);
+		}
+	}
+
+	void PropagateDeferredRegistrationToManagedBaseTypes (JavaPeerInfo peer, Dictionary<string, JavaPeerInfo> peersByJavaName)
+	{
+		var visited = new HashSet<string> (StringComparer.Ordinal);
+		var baseJavaName = peer.BaseJavaName;
+
+		while (!baseJavaName.IsNullOrEmpty () && visited.Add (baseJavaName)) {
+			if (!peersByJavaName.TryGetValue (baseJavaName, out var basePeer) || basePeer.DoNotGenerateAcw) {
+				break;
+			}
+
+			basePeer.CannotRegisterInStaticConstructor = true;
+			basePeer.IsUnconditional = true;
+
+			baseJavaName = basePeer.BaseJavaName;
 		}
 	}
 
@@ -252,12 +311,29 @@ public class TrimmableTypeMapGenerator
 				root.Add (app);
 			}
 
-			if (app.Attribute (ManifestConstants.AttName) is null) {
-				app.SetAttributeValue (ManifestConstants.AttName, manifestConfig.ApplicationJavaClass);
-			}
+		if (app.Attribute (ManifestConstants.AttName) is null) {
+			app.SetAttributeValue (ManifestConstants.AttName, manifestConfig.ApplicationJavaClass);
 		}
+	}
 
-		return doc;
+	return doc;
+}
+
+	static bool MatchesManifestName (string jniOrJavaName, string manifestName)
+	{
+		var normalizedName = NormalizeJniName (jniOrJavaName);
+		var simpleName = JniSignatureHelper.GetJavaSimpleName (normalizedName);
+		var packageName = JniSignatureHelper.GetJavaPackageName (normalizedName);
+		var manifestStyleName = packageName.IsNullOrEmpty () ? simpleName : packageName + "." + simpleName;
+
+		return manifestStyleName == manifestName || JniSignatureHelper.JniNameToJavaName (normalizedName) == manifestName;
+	}
+
+	static string NormalizeJniName (string jniOrJavaName)
+	{
+		return jniOrJavaName.IndexOf ('/') >= 0
+			? jniOrJavaName
+			: jniOrJavaName.Replace ('.', '/');
 	}
 
 	static void AddJniLookupNames (Dictionary<string, List<JavaPeerInfo>> peersByDotName, string jniName, JavaPeerInfo peer)

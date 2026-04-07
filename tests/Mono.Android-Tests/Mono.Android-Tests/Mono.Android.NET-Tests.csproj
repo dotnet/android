@@ -37,6 +37,15 @@
     <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):InetAccess:NetworkInterfaces</ExcludeCategories>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <MonoAndroidTypeMapFlavor Condition=" '$(MonoAndroidTypeMapFlavor)' == '' "></MonoAndroidTypeMapFlavor>
+    <UseMonoRuntime Condition=" '$(MonoAndroidTypeMapFlavor)' != '' and '$(UseMonoRuntime)' == '' and '$(PublishAot)' != 'true' ">false</UseMonoRuntime>
+    <_AndroidTypeMapImplementation Condition=" '$(MonoAndroidTypeMapFlavor)' == 'legacy' and '$(_AndroidTypeMapImplementation)' == '' ">llvm-ir</_AndroidTypeMapImplementation>
+    <_AndroidTypeMapImplementation Condition=" '$(MonoAndroidTypeMapFlavor)' == 'trimmable' and '$(_AndroidTypeMapImplementation)' == '' ">trimmable</_AndroidTypeMapImplementation>
+    <TestsFlavor Condition=" '$(TestsFlavor)' == '' and '$(MonoAndroidTypeMapFlavor)' == 'legacy' ">CoreCLR</TestsFlavor>
+    <TestsFlavor Condition=" '$(TestsFlavor)' == '' and '$(MonoAndroidTypeMapFlavor)' == 'trimmable' ">CoreCLRTrimmable</TestsFlavor>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Mono.Linq.Expressions" Version="2.0.0" />
   </ItemGroup>
@@ -259,6 +268,18 @@
       <ApkSizesResultsFilename>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage)-values-$(Configuration).csv</ApkSizesResultsFilename>
     </TestAab>
   </ItemGroup>
+
+  <Target Name="_ValidateMonoAndroidTypeMapFlavor"
+      BeforeTargets="Build">
+    <Error Condition=" '$(MonoAndroidTypeMapFlavor)' != '' and '$(MonoAndroidTypeMapFlavor)' != 'legacy' and '$(MonoAndroidTypeMapFlavor)' != 'trimmable' "
+        Text="Invalid value for MonoAndroidTypeMapFlavor: '$(MonoAndroidTypeMapFlavor)'. Valid values are: legacy, trimmable." />
+    <Error Condition=" '$(MonoAndroidTypeMapFlavor)' != '' and '$(PublishAot)' == 'true' "
+        Text="MonoAndroidTypeMapFlavor only supports the Mono.Android.NET-Tests CoreCLR configurations." />
+    <Error Condition=" '$(MonoAndroidTypeMapFlavor)' != '' and '$(UseMonoRuntime)' == 'true' "
+        Text="MonoAndroidTypeMapFlavor requires CoreCLR. Remove UseMonoRuntime=true." />
+    <Error Condition=" '$(MonoAndroidTypeMapFlavor)' == 'trimmable' and '$(_AndroidTypeMapImplementation)' != 'trimmable' "
+        Text="MonoAndroidTypeMapFlavor=trimmable requires _AndroidTypeMapImplementation=trimmable." />
+  </Target>
 
   <Import Project="$(XamarinAndroidSourcePath)build-tools\scripts\TestApks.targets" />
 

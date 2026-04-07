@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using Android.Runtime;
 using Java.Interop;
+using Java.Interop.Tools.TypeNameMappings;
 
 namespace Microsoft.Android.Runtime;
 
@@ -28,6 +29,7 @@ class TrimmableTypeMap
 
 	readonly IReadOnlyDictionary<string, Type> _typeMap;
 	readonly ConcurrentDictionary<Type, JavaPeerProxy?> _proxyCache = new ();
+	readonly ConcurrentDictionary<Type, string?> _jniNameCache = new ();
 
 	TrimmableTypeMap ()
 	{
@@ -67,7 +69,20 @@ class TrimmableTypeMap
 	}
 
 	internal bool TryGetType (string jniSimpleReference, [NotNullWhen (true)] out Type? type)
-		=> _typeMap.TryGetValue (jniSimpleReference, out type);
+	{
+		if (!_typeMap.TryGetValue (jniSimpleReference, out var mappedType)) {
+			type = null;
+			return false;
+		}
+
+		// External typemap entries point at the generated proxy for ACW-backed types.
+		// The JniTypeManager, however, must surface the real managed peer type so
+		// Java object activation and virtual dispatch resolve to the user's override
+		// instead of the bound Android base type.
+		var proxy = mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+		type = proxy?.TargetType ?? mappedType;
+		return true;
+	}
 
 	/// <summary>
 	/// Finds the proxy for a managed type by resolving its JNI name (from [Register] or
@@ -83,8 +98,10 @@ class TrimmableTypeMap
 				return direct;
 			}
 
-			// Resolve the JNI name from the managed type's attributes
-			if (!TryGetJniNameForType (type, out var jniName)) {
+			// Resolve the JNI name from attributes first, then fall back to the
+			// generated TypeMap entries for ACW/component types which don't carry
+			// [Register]/[JniTypeSignature] themselves.
+			if (!self.TryGetJniName (type, out var jniName)) {
 				return null;
 			}
 
@@ -95,6 +112,82 @@ class TrimmableTypeMap
 
 			return proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
 		}, this);
+	}
+
+	internal bool TryGetJniName (Type type, [NotNullWhen (true)] out string? jniName)
+	{
+		if (_jniNameCache.TryGetValue (type, out jniName)) {
+			return jniName != null;
+		}
+
+		if (TryGetJniNameForType (type, out jniName)) {
+			_jniNameCache [type] = jniName;
+			return true;
+		}
+
+		if (TryGetCompatJniNameForAndroidComponent (type, out jniName)) {
+			_jniNameCache [type] = jniName;
+			return true;
+		}
+
+		// Prefer the JavaNativeTypeManager calculation for user/application types,
+		// as it matches the ACW generation rules used during the build.
+		if (typeof (IJavaPeerable).IsAssignableFrom (type)) {
+			jniName = JavaNativeTypeManager.ToJniName (type);
+			if (!string.IsNullOrEmpty (jniName) && jniName != "java/lang/Object") {
+				_jniNameCache [type] = jniName;
+				return true;
+			}
+		}
+
+		jniName = global::Java.Interop.TypeManager.GetJniTypeName (type);
+		if (!string.IsNullOrEmpty (jniName)) {
+			_jniNameCache [type] = jniName;
+			return true;
+		}
+
+		jniName = null;
+		return false;
+	}
+
+	internal JavaPeerProxy? GetProxyForPeer (IntPtr handle, Type? targetType = null)
+	{
+		if (handle == IntPtr.Zero) {
+			return null;
+		}
+
+		var selfRef = new JniObjectReference (handle);
+		var jniClass = JniEnvironment.Types.GetObjectClass (selfRef);
+
+		try {
+			while (jniClass.IsValid) {
+				var className = JniEnvironment.Types.GetJniTypeNameFromClass (jniClass);
+				if (className != null && _typeMap.TryGetValue (className, out var mappedType)) {
+					var proxy = mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+					if (proxy != null && (targetType is null || targetType.IsAssignableFrom (proxy.TargetType))) {
+						return proxy;
+					}
+				}
+
+				var super = JniEnvironment.Types.GetSuperclass (jniClass);
+				JniObjectReference.Dispose (ref jniClass);
+				jniClass = super;
+			}
+		} finally {
+			JniObjectReference.Dispose (ref jniClass);
+		}
+
+		return null;
+	}
+
+	internal IJavaPeerable? CreatePeer (IntPtr handle, JniHandleOwnership transfer, Type? targetType = null)
+	{
+		var proxy = GetProxyForPeer (handle, targetType);
+		if (proxy is null && targetType is not null) {
+			proxy = GetProxyForManagedType (targetType);
+		}
+
+		return proxy?.CreateInstance (handle, transfer);
 	}
 
 	/// <summary>
@@ -113,18 +206,66 @@ class TrimmableTypeMap
 		return false;
 	}
 
+	static bool TryGetCompatJniNameForAndroidComponent (Type type, [NotNullWhen (true)] out string? jniName)
+	{
+		if (!IsAndroidComponentType (type)) {
+			jniName = null;
+			return false;
+		}
+
+		var (typeName, parentJniName, ns) = GetCompatTypeNameParts (type);
+		jniName = parentJniName is not null
+			? $"{parentJniName}_{typeName}"
+			: ns.Length == 0
+				? typeName
+				: $"{ns.ToLowerInvariant ().Replace ('.', '/')}/{typeName}";
+		return true;
+	}
+
+	static bool IsAndroidComponentType (Type type)
+	{
+		return type.IsDefined (typeof (global::Android.App.ActivityAttribute), inherit: false) ||
+			type.IsDefined (typeof (global::Android.App.ApplicationAttribute), inherit: false) ||
+			type.IsDefined (typeof (global::Android.App.InstrumentationAttribute), inherit: false) ||
+			type.IsDefined (typeof (global::Android.App.ServiceAttribute), inherit: false) ||
+			type.IsDefined (typeof (global::Android.Content.BroadcastReceiverAttribute), inherit: false) ||
+			type.IsDefined (typeof (global::Android.Content.ContentProviderAttribute), inherit: false);
+	}
+
+	static (string TypeName, string? ParentJniName, string Namespace) GetCompatTypeNameParts (Type type)
+	{
+		var nameParts = new List<string> { SanitizeTypeName (type.Name) };
+		var current = type;
+		string? parentJniName = null;
+
+		while (current.DeclaringType is Type parentType) {
+			if (TryGetJniNameForType (parentType, out var explicitJniName) ||
+					TryGetCompatJniNameForAndroidComponent (parentType, out explicitJniName)) {
+				parentJniName = explicitJniName;
+				break;
+			}
+
+			nameParts.Add (SanitizeTypeName (parentType.Name));
+			current = parentType;
+		}
+
+		nameParts.Reverse ();
+		return (string.Join ("_", nameParts), parentJniName, current.Namespace ?? "");
+	}
+
+	static string SanitizeTypeName (string name)
+	{
+		var tick = name.IndexOf ('`');
+		return (tick >= 0 ? name.Substring (0, tick) : name).Replace ('+', '_');
+	}
+
 	/// <summary>
 	/// Creates a peer instance using the proxy's CreateInstance method.
 	/// Given a managed type, resolves the JNI name, finds the proxy, and calls CreateInstance.
 	/// </summary>
 	internal bool TryCreatePeer (Type type, IntPtr handle, JniHandleOwnership transfer)
 	{
-		var proxy = GetProxyForManagedType (type);
-		if (proxy is null) {
-			return false;
-		}
-
-		return proxy.CreateInstance (handle, transfer) != null;
+		return CreatePeer (handle, transfer, type) != null;
 	}
 
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
@@ -149,13 +290,39 @@ class TrimmableTypeMap
 
 	/// <summary>
 	/// Creates a managed peer instance for a Java object being constructed.
-	/// Called from generated UCO constructor wrappers (nctor_*_uco).
+	/// Called from generated UCO constructor wrappers (nctor_*_uco) which are
+	/// [UnmanagedCallersOnly] — exceptions must not leak across the boundary.
 	/// </summary>
 	internal static void ActivateInstance (IntPtr self, Type targetType)
 	{
 		var instance = s_instance;
 		if (instance is null) {
-			throw new InvalidOperationException ("TrimmableTypeMap has not been initialized.");
+			Logger.Log (LogLevel.Error, "monodroid", "TrimmableTypeMap has not been initialized.");
+			return;
+		}
+
+		if (global::Java.Lang.Object.PeekObject (self) is IJavaPeerable peer) {
+			var state = peer.JniManagedPeerState;
+			if (!state.HasFlag (JniManagedPeerStates.Activatable) &&
+					!state.HasFlag (JniManagedPeerStates.Replaceable)) {
+				return;
+			}
+		}
+
+		if (JniEnvironment.WithinNewObjectScope) {
+			return;
+		}
+
+		if (targetType.IsGenericTypeDefinition) {
+			// Mirror legacy TypeManager.n_Activate behavior: open generic types
+			// cannot be activated from Java because the type parameters are unknown.
+			// The test NewOpenGenericTypeThrows expects this to throw
+			// NotSupportedException, but since we're called from [UnmanagedCallersOnly]
+			// we must propagate it via JNI instead of letting it crash the process.
+			JniEnvironment.Runtime.RaisePendingException (
+				new NotSupportedException (
+					"Constructing instances of generic types from Java is not supported, as the type parameters cannot be determined."));
+			return;
 		}
 
 		// Look up the proxy via JNI class name → TypeMap dictionary.
@@ -166,17 +333,20 @@ class TrimmableTypeMap
 		var className = JniEnvironment.Types.GetJniTypeNameFromClass (jniClass);
 		JniObjectReference.Dispose (ref jniClass);
 
-		if (className is null || !instance._typeMap.TryGetValue (className, out var proxyType)) {
-			throw new InvalidOperationException (
-				$"Failed to create peer for type '{targetType.FullName}' (jniClass='{className}'). " +
-				"Ensure the type has a generated proxy in the TypeMap assembly.");
+		if (className is null || !instance._typeMap.TryGetValue (className, out _)) {
+			JniEnvironment.Runtime.RaisePendingException (
+				new InvalidOperationException (
+					$"Failed to create peer for type '{targetType.FullName}' (jniClass='{className}'). " +
+					"Ensure the type has a generated proxy in the TypeMap assembly."));
+			return;
 		}
 
-		var proxy = proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+		var proxy = instance.GetProxyForPeer (self, targetType);
 		if (proxy is null || proxy.CreateInstance (self, JniHandleOwnership.DoNotTransfer) is null) {
-			throw new InvalidOperationException (
-				$"Failed to create peer for type '{targetType.FullName}'. " +
-				"Ensure the type has a generated proxy in the TypeMap assembly.");
+			JniEnvironment.Runtime.RaisePendingException (
+				new InvalidOperationException (
+					$"Failed to create peer for type '{targetType.FullName}'. " +
+					"Ensure the type has a generated proxy in the TypeMap assembly."));
 		}
 	}
 

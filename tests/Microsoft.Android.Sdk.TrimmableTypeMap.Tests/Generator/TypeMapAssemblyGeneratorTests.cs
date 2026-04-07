@@ -85,6 +85,26 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_ProxyType_HasSelfAppliedJavaPeerProxyAttribute ()
+	{
+		var peers = ScanFixtures ();
+		using var stream = GenerateAssembly (peers);
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+		var objectProxy = reader.TypeDefinitions
+			.Select (h => (Handle: h, Type: reader.GetTypeDefinition (h)))
+			.First (t => reader.GetString (t.Type.Namespace) == "_TypeMap.Proxies" &&
+				reader.GetString (t.Type.Name) == "Java_Lang_Object_Proxy");
+
+		var attrs = objectProxy.Type.GetCustomAttributes ().ToList ();
+		Assert.Single (attrs);
+
+		var attr = reader.GetCustomAttribute (attrs [0]);
+		var ctor = reader.GetMethodDefinition ((MethodDefinitionHandle) attr.Constructor);
+		Assert.Equal (".ctor", reader.GetString (ctor.Name));
+	}
+
+	[Fact]
 	public void Generate_HasIgnoresAccessChecksToAttribute ()
 	{
 		var peers = ScanFixtures ();
@@ -199,7 +219,21 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 		var typeNames = GetTypeRefNames (reader);
+		var generatedTypeNames = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Select (t => reader.GetString (t.Name))
+			.ToList ();
+		var proxyMethods = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Where (t => reader.GetString (t.Namespace) == "_TypeMap.Proxies")
+			.Where (t => reader.GetString (t.Name) == "MyApp_Generic_GenericHolder_1_Proxy")
+			.SelectMany (t => t.GetMethods ())
+			.Select (h => reader.GetString (reader.GetMethodDefinition (h).Name))
+			.ToList ();
 		Assert.Contains ("NotSupportedException", typeNames);
+		Assert.Contains ("MyApp_Generic_GenericHolder_1_Proxy", generatedTypeNames);
+		Assert.DoesNotContain (generatedTypeNames, name => name.Contains ('`'));
+		Assert.Contains ("RegisterNatives", proxyMethods);
 	}
 
 	[Fact]
@@ -422,14 +456,15 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 
-		var memberNames = GetMemberRefNames (reader);
-
-		// RegisterNatives is a method definition on the proxy type, not a member reference
-		var methodDefs = reader.MethodDefinitions
-			.Select (h => reader.GetMethodDefinition (h))
-			.Select (m => reader.GetString (m.Name))
+		var proxyMethods = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Where (t => reader.GetString (t.Namespace) == "_TypeMap.Proxies")
+			.Where (t => reader.GetString (t.Name) == "MyApp_MainActivity_Proxy")
+			.SelectMany (t => t.GetMethods ())
+			.Select (h => reader.GetString (reader.GetMethodDefinition (h).Name))
 			.ToList ();
-		Assert.Contains ("RegisterNatives", methodDefs);
+		Assert.Contains ("RegisterNatives", proxyMethods);
+		Assert.Contains (proxyMethods, name => name.Contains ("_uco_"));
 	}
 
 	[Fact]
@@ -543,6 +578,26 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			.ToList ();
 
 		Assert.Contains ("<PrivateImplementationDetails>", typeDefNames);
+	}
+
+	[Fact]
+	public void Generate_AcwProxy_UsesAssemblyVisibleUtf8HelperTypes ()
+	{
+		var peers = ScanFixtures ();
+		var acwPeer = peers.First (p => p.JavaName == "my/app/MainActivity");
+
+		using var stream = GenerateAssembly (new [] { acwPeer }, "Utf8VisibilityTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var utf8Helpers = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Where (t => reader.GetString (t.Name).StartsWith ("__utf8_", StringComparison.Ordinal))
+			.ToList ();
+
+		Assert.NotEmpty (utf8Helpers);
+		Assert.All (utf8Helpers, t =>
+			Assert.Equal (TypeAttributes.NestedAssembly, t.Attributes & TypeAttributes.VisibilityMask));
 	}
 
 	[Fact]

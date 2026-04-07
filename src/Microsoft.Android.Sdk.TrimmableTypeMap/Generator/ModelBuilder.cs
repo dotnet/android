@@ -173,7 +173,9 @@ static class ModelBuilder
 	{
 		// Use managed type name for proxy naming to guarantee uniqueness across aliases
 		// (two types with the same JNI name will have different managed names).
-		var proxyTypeName = peer.ManagedTypeName.Replace ('.', '_').Replace ('+', '_') + "_Proxy";
+		// Replace generic arity markers too, because backticks would make the emitted
+		// proxy type itself look generic even though we don't emit generic parameters.
+		var proxyTypeName = peer.ManagedTypeName.Replace ('.', '_').Replace ('+', '_').Replace ('`', '_') + "_Proxy";
 
 		// Guard against name collisions (e.g., "My.Type" and "My_Type" both map to "My_Type_Proxy")
 		if (!usedProxyNames.Add (proxyTypeName)) {

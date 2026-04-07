@@ -252,6 +252,63 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void RootManifestReferencedTypes_PromotesCompatJniNameForManifestDeclaredApplication ()
+	{
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "crc64123456789abc/MyApplication", CompatJniName = "my/app/MyApplication",
+				ManagedTypeName = "MyApp.MyApplication", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "MyApplication",
+				AssemblyName = "MyApp", BaseJavaName = "android/app/Application", IsUnconditional = false,
+			},
+			new JavaPeerInfo {
+				JavaName = "crc64123456789abc/MyDerivedApplication", CompatJniName = "my/app/MyDerivedApplication",
+				ManagedTypeName = "MyApp.MyDerivedApplication", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "MyDerivedApplication",
+				AssemblyName = "MyApp", BaseJavaName = "crc64123456789abc/MyApplication", IsUnconditional = false,
+			},
+		};
+
+		var doc = System.Xml.Linq.XDocument.Parse ("""
+			<?xml version="1.0" encoding="utf-8"?>
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="my.app">
+			  <application android:name=".MyApplication" />
+			</manifest>
+			""");
+
+		var generator = CreateGenerator ();
+		generator.RootManifestReferencedTypes (peers, doc);
+
+		Assert.Equal ("my/app/MyApplication", peers [0].JavaName);
+		Assert.Equal ("my/app/MyApplication", peers [1].BaseJavaName);
+		Assert.True (peers [0].CannotRegisterInStaticConstructor);
+	}
+
+	[Fact]
+	public void Execute_DeferredRegistrationIncludesManagedBaseHierarchy ()
+	{
+		using var peReader = CreateTestFixturePEReader ();
+		var result = CreateGenerator ().Execute (
+			new List<(string, PEReader)> { ("TestFixtures", peReader) },
+			new Version (11, 0),
+			new HashSet<string> ());
+
+		Assert.Contains ("my.app.BaseApplication", result.ApplicationRegistrationTypes);
+		Assert.Contains ("my.app.MyApplication", result.ApplicationRegistrationTypes);
+		Assert.Contains ("my.app.BaseInstrumentation", result.ApplicationRegistrationTypes);
+		Assert.Contains ("my.app.IntermediateInstrumentation", result.ApplicationRegistrationTypes);
+		Assert.Contains ("my.app.MyInstrumentation", result.ApplicationRegistrationTypes);
+
+		var baseInstrumentation = result.GeneratedJavaSources.Single (s => s.RelativePath == "my/app/BaseInstrumentation.java");
+		var intermediateInstrumentation = result.GeneratedJavaSources.Single (s => s.RelativePath == "my/app/IntermediateInstrumentation.java");
+
+		Assert.DoesNotContain ("static {", baseInstrumentation.Content);
+		Assert.DoesNotContain ("static {", intermediateInstrumentation.Content);
+		Assert.Contains ("private static synchronized void __md_registerNatives ()", baseInstrumentation.Content);
+		Assert.Contains ("private static synchronized void __md_registerNatives ()", intermediateInstrumentation.Content);
+		Assert.DoesNotContain ("if (getClass () == BaseInstrumentation.class) nctor_0 ();", baseInstrumentation.Content);
+		Assert.DoesNotContain ("if (getClass () == IntermediateInstrumentation.class) nctor_0 ();", intermediateInstrumentation.Content);
+	}
+
+	[Fact]
 	public void RootManifestReferencedTypes_WarnsForUnresolvedTypes ()
 	{
 		var peers = new List<JavaPeerInfo> {

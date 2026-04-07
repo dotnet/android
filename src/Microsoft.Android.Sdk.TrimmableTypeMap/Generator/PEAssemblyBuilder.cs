@@ -239,7 +239,7 @@ sealed class PEAssemblyBuilder
 		int typeMethodStart = Metadata.GetRowCount (TableIndex.MethodDef) + 1;
 
 		var handle = Metadata.AddTypeDefinition (
-			TypeAttributes.NestedPrivate | TypeAttributes.ExplicitLayout | TypeAttributes.Sealed | TypeAttributes.AnsiClass,
+			TypeAttributes.NestedAssembly | TypeAttributes.ExplicitLayout | TypeAttributes.Sealed | TypeAttributes.AnsiClass,
 			default,
 			Metadata.GetOrAddString ($"__utf8_{size}"),
 			Metadata.AddTypeReference (SystemRuntimeRef,

@@ -268,7 +268,11 @@ namespace Java.Interop {
 				return type;
 			}
 
-			if (RuntimeFeature.IsMonoRuntime) {
+			if (RuntimeFeature.TrimmableTypeMap) {
+				if (!TrimmableTypeMap.Instance.TryGetType (class_name, out type)) {
+					return null;
+				}
+			} else if (RuntimeFeature.IsMonoRuntime) {
 				type = monovm_typemap_java_to_managed (class_name);
 			} else if (RuntimeFeature.IsCoreClrRuntime) {
 				type = clr_typemap_java_to_managed (class_name);

@@ -103,6 +103,24 @@ public class OverrideDetectionTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void OverrideAcrossIntermediateMcwBase_Detected ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/SelectableList");
+		var setSelection = Assert.Single (peer.MarshalMethods, m => m.JniName == "setSelection");
+		Assert.Equal ("(I)V", setSelection.JniSignature);
+		Assert.Equal ("GetSetSelection_IHandler", setSelection.Connector);
+	}
+
+	[Fact]
+	public void OverrideAcrossGenericIntermediateMcwBase_Detected ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/GenericSelectableList");
+		var setSelection = Assert.Single (peer.MarshalMethods, m => m.JniName == "setSelection");
+		Assert.Equal ("(I)V", setSelection.JniSignature);
+		Assert.Equal ("GetSetSelection_IHandler", setSelection.Connector);
+	}
+
+	[Fact]
 	public void EmptyConnector_OverrideStillDetected ()
 	{
 		// Activity.OnStart has [Register("onStart", "()V", "")] — empty connector

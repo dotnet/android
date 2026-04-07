@@ -347,6 +347,16 @@ sealed class TypeMapAssemblyEmitter
 
 	void EmitProxyType (JavaPeerProxyData proxy, Dictionary<string, MethodDefinitionHandle> wrapperHandles)
 	{
+		if (proxy.IsAcw) {
+			// RegisterNatives uses RVA-backed UTF-8 fields under <PrivateImplementationDetails>.
+			// Materialize those helper types before adding the proxy TypeDef, otherwise the
+			// later RegisterNatives method can be attached to the helper type instead.
+			foreach (var reg in proxy.NativeRegistrations) {
+				_pe.GetOrAddUtf8Field (reg.JniMethodName);
+				_pe.GetOrAddUtf8Field (reg.JniSignature);
+			}
+		}
+
 		var metadata = _pe.Metadata;
 		var typeDefHandle = metadata.AddTypeDefinition (
 			TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Class,
@@ -361,7 +371,7 @@ sealed class TypeMapAssemblyEmitter
 		}
 
 		// .ctor
-		_pe.EmitBody (".ctor",
+		var ctorHandle = _pe.EmitBody (".ctor",
 			MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }),
 			encoder => {
@@ -369,6 +379,7 @@ sealed class TypeMapAssemblyEmitter
 				encoder.Call (_baseCtorRef);
 				encoder.OpCode (ILOpCode.Ret);
 			});
+		metadata.AddCustomAttribute (typeDefHandle, ctorHandle, _ucoAttrBlobHandle);
 
 		// CreateInstance
 		EmitCreateInstance (proxy);
