@@ -142,6 +142,37 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void RootManifestReferencedTypes_RootsApplicationAndInstrumentationTypes ()
+	{
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "com/example/MyApplication", CompatJniName = "com.example.MyApplication",
+				ManagedTypeName = "MyApp.MyApplication", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "MyApplication",
+				AssemblyName = "MyApp", IsUnconditional = false,
+			},
+			new JavaPeerInfo {
+				JavaName = "com/example/MyInstrumentation", CompatJniName = "com.example.MyInstrumentation",
+				ManagedTypeName = "MyApp.MyInstrumentation", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "MyInstrumentation",
+				AssemblyName = "MyApp", IsUnconditional = false,
+			},
+		};
+
+		var doc = System.Xml.Linq.XDocument.Parse ("""
+			<?xml version="1.0" encoding="utf-8"?>
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example">
+			  <application android:name=".MyApplication" />
+			  <instrumentation android:name="MyInstrumentation" />
+			</manifest>
+			""");
+
+		var generator = CreateGenerator ();
+		generator.RootManifestReferencedTypes (peers, doc);
+
+		Assert.True (peers [0].IsUnconditional, "Application type should be rooted from <application android:name>.");
+		Assert.True (peers [1].IsUnconditional, "Instrumentation type should be rooted from <instrumentation android:name>.");
+	}
+
+	[Fact]
 	public void RootManifestReferencedTypes_WarnsForUnresolvedTypes ()
 	{
 		var peers = new List<JavaPeerInfo> {

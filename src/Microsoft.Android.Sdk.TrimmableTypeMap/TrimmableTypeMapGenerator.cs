@@ -155,7 +155,9 @@ public class TrimmableTypeMapGenerator
 		var componentNames = new HashSet<string> (StringComparer.Ordinal);
 		foreach (var element in root.Descendants ()) {
 			switch (element.Name.LocalName) {
+			case "application":
 			case "activity":
+			case "instrumentation":
 			case "service":
 			case "receiver":
 			case "provider":
