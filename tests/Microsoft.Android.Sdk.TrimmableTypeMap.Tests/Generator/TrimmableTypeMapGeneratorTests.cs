@@ -663,6 +663,8 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.True (peers [0].IsUnconditional, "Nested type 'Outer$Inner' should be matched using '$' separator.");
 	}
 
+||||||| parent of ae6ff207c ([TrimmableTypeMap] Merge manifest matching tests into theory)
+
 	static PEReader CreateTestFixturePEReader ()
 	{
 		var dir = Path.GetDirectoryName (typeof (FixtureTestBase).Assembly.Location)
