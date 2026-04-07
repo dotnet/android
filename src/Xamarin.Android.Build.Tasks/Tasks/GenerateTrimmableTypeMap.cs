@@ -1,11 +1,11 @@
-#nullable enable
-
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
+using System.Text;
+using System.Xml.Linq;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Android.Sdk.TrimmableTypeMap;
 using Microsoft.Build.Framework;
@@ -15,177 +15,262 @@ namespace Xamarin.Android.Tasks;
 
 public class GenerateTrimmableTypeMap : AndroidTask
 {
-public override string TaskPrefix => "GTT";
+	public override string TaskPrefix => "GTT";
 
-[Required]
-public ITaskItem [] ResolvedAssemblies { get; set; } = [];
-[Required]
-public string OutputDirectory { get; set; } = "";
-[Required]
-public string JavaSourceOutputDirectory { get; set; } = "";
-[Required]
-public string AcwMapDirectory { get; set; } = "";
-[Required]
-public string TargetFrameworkVersion { get; set; } = "";
-[Output]
-public ITaskItem [] GeneratedAssemblies { get; set; } = [];
-[Output]
-public ITaskItem [] GeneratedJavaFiles { get; set; } = [];
-[Output]
-public ITaskItem []? PerAssemblyAcwMapFiles { get; set; }
+	[Required]
+	public ITaskItem [] ResolvedAssemblies { get; set; } = [];
+	[Required]
+	public string OutputDirectory { get; set; } = "";
+	[Required]
+	public string JavaSourceOutputDirectory { get; set; } = "";
+	[Required]
+	public string TargetFrameworkVersion { get; set; } = "";
 
-public override bool RunTask ()
-{
-var systemRuntimeVersion = ParseTargetFrameworkVersion (TargetFrameworkVersion);
-var assemblyPaths = ResolvedAssemblies.Select (i => i.ItemSpec).Distinct ().ToList ();
-// TODO(#10792): populate with framework assembly names to skip JCW generation for pre-compiled framework types
-var frameworkAssemblyNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+	public string? AcwMapOutputFile { get; set; }
 
-Directory.CreateDirectory (OutputDirectory);
-Directory.CreateDirectory (JavaSourceOutputDirectory);
-Directory.CreateDirectory (AcwMapDirectory);
+	public string? ApplicationRegistrationOutputFile { get; set; }
 
-var peReaders = new List<PEReader> ();
-var assemblies = new List<(string Name, PEReader Reader)> ();
-TrimmableTypeMapResult? result = null;
-try {
-foreach (var path in assemblyPaths) {
-var peReader = new PEReader (File.OpenRead (path));
-peReaders.Add (peReader);
-var mdReader = peReader.GetMetadataReader ();
-assemblies.Add ((mdReader.GetString (mdReader.GetAssemblyDefinition ().Name), peReader));
-}
+	public string? ManifestTemplate { get; set; }
 
-var generator = new TrimmableTypeMapGenerator (msg => Log.LogMessage (MessageImportance.Low, msg));
-result = generator.Execute (assemblies, systemRuntimeVersion, frameworkAssemblyNames);
+	public string? MergedAndroidManifestOutput { get; set; }
 
-GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyPaths);
-GeneratedJavaFiles = WriteJavaSourcesToDisk (result.GeneratedJavaSources);
-PerAssemblyAcwMapFiles = GeneratePerAssemblyAcwMaps (result.AllPeers);
-} finally {
-if (result is not null) {
-foreach (var assembly in result.GeneratedAssemblies) {
-assembly.Content.Dispose ();
-}
-}
-foreach (var peReader in peReaders) {
-peReader.Dispose ();
-}
-}
+	public string? PackageName { get; set; }
+	public string? ApplicationLabel { get; set; }
+	public string? VersionCode { get; set; }
+	public string? VersionName { get; set; }
+	public string? AndroidApiLevel { get; set; }
+	public string? SupportedOSPlatformVersion { get; set; }
+	public string? RuntimeProviderJavaName { get; set; }
+	public bool Debug { get; set; }
+	public bool NeedsInternet { get; set; }
+	public bool EmbedAssemblies { get; set; }
+	public string? ManifestPlaceholders { get; set; }
+	public string? CheckedBuild { get; set; }
+	public string? ApplicationJavaClass { get; set; }
 
-return !Log.HasLoggedErrors;
-}
+	[Output]
+	public ITaskItem [] GeneratedAssemblies { get; set; } = [];
+	[Output]
+	public ITaskItem [] GeneratedJavaFiles { get; set; } = [];
+	[Output]
+	public string[]? AdditionalProviderSources { get; set; }
 
-ITaskItem [] WriteAssembliesToDisk (IReadOnlyList<GeneratedAssembly> assemblies, IReadOnlyList<string> assemblyPaths)
-{
-// Build a map from assembly name -> source path for timestamp comparison
-var sourcePathByName = new Dictionary<string, string> (StringComparer.Ordinal);
-foreach (var path in assemblyPaths) {
-var name = Path.GetFileNameWithoutExtension (path);
-sourcePathByName [name] = path;
-}
+	public override bool RunTask ()
+	{
+		var systemRuntimeVersion = ParseTargetFrameworkVersion (TargetFrameworkVersion);
+		var assemblyPaths = ResolvedAssemblies.Select (i => i.ItemSpec).Distinct ().ToList ();
+		// TODO(#10792): populate with framework assembly names to skip JCW generation for pre-compiled framework types
+		var frameworkAssemblyNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
-var items = new List<ITaskItem> ();
-bool anyRegenerated = false;
+		Directory.CreateDirectory (OutputDirectory);
+		Directory.CreateDirectory (JavaSourceOutputDirectory);
 
-foreach (var assembly in assemblies) {
-if (assembly.Name == "_Microsoft.Android.TypeMaps") {
-continue; // Handle root assembly separately below
-}
+		var peReaders = new List<PEReader> ();
+		var assemblies = new List<(string Name, PEReader Reader)> ();
+		TrimmableTypeMapResult? result = null;
+		try {
+			foreach (var path in assemblyPaths) {
+				var peReader = new PEReader (File.OpenRead (path));
+				peReaders.Add (peReader);
+				var mdReader = peReader.GetMetadataReader ();
+				assemblies.Add ((mdReader.GetString (mdReader.GetAssemblyDefinition ().Name), peReader));
+			}
 
-string outputPath = Path.Combine (OutputDirectory, assembly.Name + ".dll");
-// Extract the original assembly name from the typemap name (e.g., "_Foo.TypeMap" -> "Foo")
-string originalName = assembly.Name;
-if (originalName.StartsWith ("_", StringComparison.Ordinal) && originalName.EndsWith (".TypeMap", StringComparison.Ordinal)) {
-originalName = originalName.Substring (1, originalName.Length - ".TypeMap".Length - 1);
-}
+			ManifestConfig? manifestConfig = null;
+			if (!MergedAndroidManifestOutput.IsNullOrEmpty () && !PackageName.IsNullOrEmpty ()) {
+				manifestConfig = new ManifestConfig (
+					PackageName: PackageName,
+					ApplicationLabel: ApplicationLabel,
+					VersionCode: VersionCode,
+					VersionName: VersionName,
+					AndroidApiLevel: AndroidApiLevel,
+					SupportedOSPlatformVersion: SupportedOSPlatformVersion,
+					RuntimeProviderJavaName: RuntimeProviderJavaName,
+					Debug: Debug,
+					NeedsInternet: NeedsInternet,
+					EmbedAssemblies: EmbedAssemblies,
+					ManifestPlaceholders: ManifestPlaceholders,
+					CheckedBuild: CheckedBuild,
+					ApplicationJavaClass: ApplicationJavaClass);
+			}
 
-if (IsUpToDate (outputPath, originalName, sourcePathByName)) {
-Log.LogDebugMessage ($"  {assembly.Name}: up to date, skipping");
-} else {
-Files.CopyIfStreamChanged (assembly.Content, outputPath);
-anyRegenerated = true;
-Log.LogDebugMessage ($"  {assembly.Name}: written");
-}
+			var generator = new TrimmableTypeMapGenerator (msg => Log.LogMessage (MessageImportance.Low, msg));
 
-items.Add (new TaskItem (outputPath));
-}
+			XDocument? manifestTemplate = null;
+			if (!ManifestTemplate.IsNullOrEmpty () && File.Exists (ManifestTemplate)) {
+				manifestTemplate = XDocument.Load (ManifestTemplate);
+			}
 
-// Root assembly — regenerate if any per-assembly typemap changed
-var rootAssembly = assemblies.FirstOrDefault (a => a.Name == "_Microsoft.Android.TypeMaps");
-if (rootAssembly is not null) {
-string rootOutputPath = Path.Combine (OutputDirectory, rootAssembly.Name + ".dll");
-if (anyRegenerated || !File.Exists (rootOutputPath)) {
-Files.CopyIfStreamChanged (rootAssembly.Content, rootOutputPath);
-Log.LogDebugMessage ($"  Root: written");
-} else {
-Log.LogDebugMessage ($"  Root: up to date, skipping");
-}
-items.Add (new TaskItem (rootOutputPath));
-}
+			result = generator.Execute (
+				assemblies,
+				systemRuntimeVersion,
+				frameworkAssemblyNames,
+				manifestConfig,
+				manifestTemplate);
 
-return items.ToArray ();
-}
+			GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyPaths);
+			GeneratedJavaFiles = WriteJavaSourcesToDisk (result.GeneratedJavaSources);
 
-static bool IsUpToDate (string outputPath, string assemblyName, Dictionary<string, string> sourcePathByName)
-{
-if (!File.Exists (outputPath)) {
-return false;
-}
-if (!sourcePathByName.TryGetValue (assemblyName, out var sourcePath)) {
-return false;
-}
-return File.GetLastWriteTimeUtc (outputPath) >= File.GetLastWriteTimeUtc (sourcePath);
-}
+			// Write manifest to disk if generated
+			if (result.Manifest is not null && !MergedAndroidManifestOutput.IsNullOrEmpty ()) {
+				var manifestDir = Path.GetDirectoryName (MergedAndroidManifestOutput);
+				if (!manifestDir.IsNullOrEmpty ()) {
+					Directory.CreateDirectory (manifestDir);
+				}
+				using (var ms = new MemoryStream ()) {
+					result.Manifest.Document.Save (ms);
+					ms.Position = 0;
+					Files.CopyIfStreamChanged (ms, MergedAndroidManifestOutput);
+				}
+				AdditionalProviderSources = result.Manifest.AdditionalProviderSources;
+			}
 
-ITaskItem [] WriteJavaSourcesToDisk (IReadOnlyList<GeneratedJavaSource> javaSources)
-{
-var items = new List<ITaskItem> ();
-foreach (var source in javaSources) {
-string outputPath = Path.Combine (JavaSourceOutputDirectory, source.RelativePath);
-string? dir = Path.GetDirectoryName (outputPath);
-if (!string.IsNullOrEmpty (dir)) {
-Directory.CreateDirectory (dir);
-}
-using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-sw.Write (source.Content);
-sw.Flush ();
-Files.CopyIfStreamChanged (sw.BaseStream, outputPath);
-}
-items.Add (new TaskItem (outputPath));
-}
-return items.ToArray ();
-}
+			// Write merged acw-map.txt if requested
+			if (!AcwMapOutputFile.IsNullOrEmpty ()) {
+				var acwDirectory = Path.GetDirectoryName (AcwMapOutputFile);
+				if (!acwDirectory.IsNullOrEmpty ()) {
+					Directory.CreateDirectory (acwDirectory);
+				}
+				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
+					AcwMapWriter.Write (sw, result.AllPeers);
+					sw.Flush ();
+					Files.CopyIfStreamChanged (sw.BaseStream, AcwMapOutputFile);
+				}
+				Log.LogDebugMessage ($"Wrote merged acw-map.txt with {result.AllPeers.Count} types to {AcwMapOutputFile}.");
+			}
 
-ITaskItem [] GeneratePerAssemblyAcwMaps (IReadOnlyList<JavaPeerInfo> allPeers)
-{
-var peersByAssembly = allPeers
-.GroupBy (p => p.AssemblyName, StringComparer.Ordinal)
-.OrderBy (g => g.Key, StringComparer.Ordinal);
-var outputFiles = new List<ITaskItem> ();
-foreach (var group in peersByAssembly) {
-var peers = group.ToList ();
-string outputFile = Path.Combine (AcwMapDirectory, $"acw-map.{group.Key}.txt");
-using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-AcwMapWriter.Write (sw, peers);
-sw.Flush ();
-Files.CopyIfStreamChanged (sw.BaseStream, outputFile);
-}
-var item = new TaskItem (outputFile);
-item.SetMetadata ("AssemblyName", group.Key);
-outputFiles.Add (item);
-}
-return outputFiles.ToArray ();
-}
+			// Generate ApplicationRegistration.java with registerNatives calls for
+			// Application/Instrumentation types whose static initializers were skipped.
+			if (!ApplicationRegistrationOutputFile.IsNullOrEmpty ()) {
+				var appRegDir = Path.GetDirectoryName (ApplicationRegistrationOutputFile);
+				if (!appRegDir.IsNullOrEmpty ()) {
+					Directory.CreateDirectory (appRegDir);
+				}
+				Files.CopyIfStringChanged (GenerateApplicationRegistrationJava (result.ApplicationRegistrationTypes), ApplicationRegistrationOutputFile);
+				Log.LogDebugMessage ($"Generated ApplicationRegistration.java with {result.ApplicationRegistrationTypes.Count} deferred registration(s).");
+			}
+		} finally {
+			if (result is not null) {
+				foreach (var assembly in result.GeneratedAssemblies) {
+					assembly.Content.Dispose ();
+				}
+			}
+			foreach (var peReader in peReaders) {
+				peReader.Dispose ();
+			}
+		}
 
-static Version ParseTargetFrameworkVersion (string tfv)
-{
-if (tfv.Length > 0 && (tfv [0] == 'v' || tfv [0] == 'V')) {
-tfv = tfv.Substring (1);
-}
-if (Version.TryParse (tfv, out var version)) {
-return version;
-}
-throw new ArgumentException ($"Cannot parse TargetFrameworkVersion '{tfv}' as a Version.");
-}
+		return !Log.HasLoggedErrors;
+	}
+
+	ITaskItem [] WriteAssembliesToDisk (IReadOnlyList<GeneratedAssembly> assemblies, IReadOnlyList<string> assemblyPaths)
+	{
+		// Build a map from assembly name -> source path for timestamp comparison
+		var sourcePathByName = new Dictionary<string, string> (StringComparer.Ordinal);
+		foreach (var path in assemblyPaths) {
+			var name = Path.GetFileNameWithoutExtension (path);
+			sourcePathByName [name] = path;
+		}
+
+		var items = new List<ITaskItem> ();
+		bool anyRegenerated = false;
+
+		foreach (var assembly in assemblies) {
+			if (assembly.Name == "_Microsoft.Android.TypeMaps") {
+				continue; // Handle root assembly separately below
+			}
+
+			string outputPath = Path.Combine (OutputDirectory, assembly.Name + ".dll");
+			// Extract the original assembly name from the typemap name (e.g., "_Foo.TypeMap" -> "Foo")
+			string originalName = assembly.Name;
+			if (originalName.StartsWith ("_", StringComparison.Ordinal) && originalName.EndsWith (".TypeMap", StringComparison.Ordinal)) {
+				originalName = originalName.Substring (1, originalName.Length - ".TypeMap".Length - 1);
+			}
+
+			if (IsUpToDate (outputPath, originalName, sourcePathByName)) {
+				Log.LogDebugMessage ($"  {assembly.Name}: up to date, skipping");
+			} else {
+				Files.CopyIfStreamChanged (assembly.Content, outputPath);
+				anyRegenerated = true;
+				Log.LogDebugMessage ($"  {assembly.Name}: written");
+			}
+
+			items.Add (new TaskItem (outputPath));
+		}
+
+		// Root assembly — regenerate if any per-assembly typemap changed
+		var rootAssembly = assemblies.FirstOrDefault (a => a.Name == "_Microsoft.Android.TypeMaps");
+		if (rootAssembly is not null) {
+			string rootOutputPath = Path.Combine (OutputDirectory, rootAssembly.Name + ".dll");
+			if (anyRegenerated || !File.Exists (rootOutputPath)) {
+				Files.CopyIfStreamChanged (rootAssembly.Content, rootOutputPath);
+				Log.LogDebugMessage ($"  Root: written");
+			} else {
+				Log.LogDebugMessage ($"  Root: up to date, skipping");
+			}
+			items.Add (new TaskItem (rootOutputPath));
+		}
+
+		return items.ToArray ();
+	}
+
+	static bool IsUpToDate (string outputPath, string assemblyName, Dictionary<string, string> sourcePathByName)
+	{
+		if (!File.Exists (outputPath)) {
+			return false;
+		}
+		if (!sourcePathByName.TryGetValue (assemblyName, out var sourcePath)) {
+			return false;
+		}
+		return File.GetLastWriteTimeUtc (outputPath) >= File.GetLastWriteTimeUtc (sourcePath);
+	}
+
+	ITaskItem [] WriteJavaSourcesToDisk (IReadOnlyList<GeneratedJavaSource> javaSources)
+	{
+		var items = new List<ITaskItem> ();
+		foreach (var source in javaSources) {
+			string outputPath = Path.Combine (JavaSourceOutputDirectory, source.RelativePath);
+			string? dir = Path.GetDirectoryName (outputPath);
+			if (!string.IsNullOrEmpty (dir)) {
+				Directory.CreateDirectory (dir);
+			}
+			using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
+				sw.Write (source.Content);
+				sw.Flush ();
+				Files.CopyIfStreamChanged (sw.BaseStream, outputPath);
+			}
+			items.Add (new TaskItem (outputPath));
+		}
+		return items.ToArray ();
+	}
+
+	static Version ParseTargetFrameworkVersion (string tfv)
+	{
+		if (tfv.Length > 0 && (tfv [0] == 'v' || tfv [0] == 'V')) {
+			tfv = tfv.Substring (1);
+		}
+		if (Version.TryParse (tfv, out var version)) {
+			return version;
+		}
+		throw new ArgumentException ($"Cannot parse TargetFrameworkVersion '{tfv}' as a Version.");
+	}
+
+	static string GenerateApplicationRegistrationJava (IReadOnlyList<string> registrationTypes)
+	{
+		var sb = new StringBuilder ();
+		sb.AppendLine ("package net.dot.android;");
+		sb.AppendLine ();
+		sb.AppendLine ("public class ApplicationRegistration {");
+		sb.AppendLine ();
+		sb.AppendLine ("\tpublic static android.content.Context Context;");
+		sb.AppendLine ();
+		sb.AppendLine ("\tpublic static void registerApplications ()");
+		sb.AppendLine ("\t{");
+		foreach (var javaClassName in registrationTypes) {
+			sb.AppendLine ($"\t\tmono.android.Runtime.registerNatives ({javaClassName}.class);");
+		}
+		sb.AppendLine ("\t}");
+		sb.AppendLine ("}");
+		return sb.ToString ();
+	}
 }

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -23,9 +22,9 @@ class ManifestGenerator
 	public string ApplicationLabel { get; set; } = "";
 	public string VersionCode { get; set; } = "";
 	public string VersionName { get; set; } = "";
-	public string MinSdkVersion { get; set; } = "21";
-	public string TargetSdkVersion { get; set; } = "36";
-	public string AndroidRuntime { get; set; } = "coreclr";
+	public string MinSdkVersion { get; set; } = "";
+	public string TargetSdkVersion { get; set; } = "";
+	public string RuntimeProviderJavaName { get; set; } = "";
 	public bool Debug { get; set; }
 	public bool NeedsInternet { get; set; }
 	public bool EmbedAssemblies { get; set; }
@@ -39,11 +38,10 @@ class ManifestGenerator
 	/// Generates the merged manifest from an optional pre-loaded template and writes it to <paramref name="outputPath"/>.
 	/// Returns the list of additional content provider names (for ApplicationRegistration.java).
 	/// </summary>
-	public IList<string> Generate (
+	public (XDocument Document, IList<string> ProviderNames) Generate (
 		XDocument? manifestTemplate,
 		IReadOnlyList<JavaPeerInfo> allPeers,
-		AssemblyManifestInfo assemblyInfo,
-		string outputPath)
+		AssemblyManifestInfo assemblyInfo)
 	{
 		var doc = manifestTemplate ?? CreateDefaultManifest ();
 		var manifest = doc.Root;
@@ -79,7 +77,7 @@ class ManifestGenerator
 				continue;
 			}
 
-			string jniName = peer.JavaName.Replace ('/', '.');
+			string jniName = JniSignatureHelper.JniNameToJavaName (peer.JavaName);
 			if (existingTypes.Contains (jniName)) {
 				continue;
 			}
@@ -123,14 +121,7 @@ class ManifestGenerator
 			ApplyPlaceholders (doc, placeholders);
 		}
 
-		// Write output
-		var outputDir = Path.GetDirectoryName (outputPath);
-		if (outputDir is not null) {
-			Directory.CreateDirectory (outputDir);
-		}
-		doc.Save (outputPath);
-
-		return providerNames;
+		return (doc, providerNames);
 	}
 
 	XDocument CreateDefaultManifest ()
@@ -162,6 +153,12 @@ class ManifestGenerator
 
 		// Add <uses-sdk>
 		if (!manifest.Elements ("uses-sdk").Any ()) {
+			if (MinSdkVersion.IsNullOrEmpty ()) {
+				throw new InvalidOperationException ("MinSdkVersion must be provided by MSBuild.");
+			}
+			if (TargetSdkVersion.IsNullOrEmpty ()) {
+				throw new InvalidOperationException ("TargetSdkVersion must be provided by MSBuild.");
+			}
 			manifest.AddFirst (new XElement ("uses-sdk",
 				new XAttribute (AndroidNs + "minSdkVersion", MinSdkVersion),
 				new XAttribute (AndroidNs + "targetSdkVersion", TargetSdkVersion)));
@@ -185,16 +182,19 @@ class ManifestGenerator
 
 	IList<string> AddRuntimeProviders (XElement app)
 	{
-		string packageName = "mono";
-		string className = "MonoRuntimeProvider";
-
-		if (string.Equals (AndroidRuntime, "nativeaot", StringComparison.OrdinalIgnoreCase)) {
-			packageName = "net.dot.jni.nativeaot";
-			className = "NativeAotRuntimeProvider";
+		if (RuntimeProviderJavaName.IsNullOrEmpty ()) {
+			throw new InvalidOperationException ("RuntimeProviderJavaName must be provided by MSBuild.");
+		}
+		int lastDot = RuntimeProviderJavaName.LastIndexOf ('.');
+		if (lastDot < 0 || lastDot == RuntimeProviderJavaName.Length - 1) {
+			throw new InvalidOperationException ($"RuntimeProviderJavaName must be a fully-qualified Java type name: '{RuntimeProviderJavaName}'.");
 		}
 
+		string packageName = RuntimeProviderJavaName.Substring (0, lastDot);
+		string className = RuntimeProviderJavaName.Substring (lastDot + 1);
+
 		// Check if runtime provider already exists in template
-		string runtimeProviderName = $"{packageName}.{className}";
+		string runtimeProviderName = RuntimeProviderJavaName;
 		if (!app.Elements ("provider").Any (p => {
 			var name = (string?)p.Attribute (ManifestConstants.AttName);
 			return name == runtimeProviderName ||

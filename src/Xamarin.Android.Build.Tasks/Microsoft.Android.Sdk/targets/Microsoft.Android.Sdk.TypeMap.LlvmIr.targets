@@ -17,6 +17,13 @@
     <_BeforeCompileToDalvik>$(_BeforeCompileToDalvik);_GetMonoPlatformJarPath</_BeforeCompileToDalvik>
   </PropertyGroup>
 
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap"
+        Value="false"
+        Trim="true"
+    />
+  </ItemGroup>
+
   <PropertyGroup>
     <_GenerateJavaStubsDependsOnTargets>
       _SetLatestTargetFrameworkVersion;
