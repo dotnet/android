@@ -12,30 +12,6 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 {
 	readonly List<string> logMessages = new ();
 
-	sealed class TestLogger : ILogger
-	{
-		readonly List<string> messages;
-		readonly List<string>? warnings;
-
-		public TestLogger (List<string> messages, List<string>? warnings = null)
-		{
-			this.messages = messages;
-			this.warnings = warnings;
-		}
-
-		public void LogMessage (string message)
-		{
-			messages.Add (message);
-		}
-
-		public void LogWarning (string typeName)
-		{
-			if (warnings is not null) {
-				warnings.Add (typeName);
-			}
-		}
-	}
-
 	[Fact]
 	public void Execute_EmptyAssemblyList_ReturnsEmptyResults ()
 	{
@@ -103,10 +79,10 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			Assert.Contains ("class ", source.Content);
 	}
 
-	TrimmableTypeMapGenerator CreateGenerator () => new (new TestLogger (logMessages));
+	TrimmableTypeMapGenerator CreateGenerator () => new (msg => logMessages.Add (msg));
 
 	TrimmableTypeMapGenerator CreateGenerator (List<string> warnings) =>
-		new (new TestLogger (logMessages, warnings));
+		new (msg => logMessages.Add (msg), msg => warnings.Add (msg));
 
 	[Fact]
 	public void RootManifestReferencedTypes_RootsMatchingPeers ()
