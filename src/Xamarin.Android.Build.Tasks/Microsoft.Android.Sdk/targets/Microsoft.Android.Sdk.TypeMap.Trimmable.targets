@@ -15,6 +15,7 @@
     <_TypeMapBaseOutputDir>$(_TypeMapBaseOutputDir.Replace('\','/'))</_TypeMapBaseOutputDir>
     <_TypeMapOutputDirectory>$(_TypeMapBaseOutputDir)typemap/</_TypeMapOutputDirectory>
     <_TypeMapJavaOutputDirectory>$(_TypeMapBaseOutputDir)typemap/java</_TypeMapJavaOutputDirectory>
+    <_TrimmableTypeMapInputsCacheFile>$(_TypeMapBaseOutputDir)trimmable-typemap.inputs</_TrimmableTypeMapInputsCacheFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -33,6 +34,41 @@
     <Error Text="Trimmable typemap is not supported for runtime '$(_AndroidRuntime)'." />
   </Target>
 
+  <Target Name="_CreateTrimmableTypeMapInputsCache"
+      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '@(ReferencePath->Count())' != '0' "
+      AfterTargets="CoreCompile">
+    <ItemGroup>
+      <_TrimmableTypeMapInputs Include="$(TargetFrameworkVersion)" />
+      <_TrimmableTypeMapInputs Include="$(_AndroidPackage)" />
+      <_TrimmableTypeMapInputs Include="$(_ApplicationLabel)" />
+      <_TrimmableTypeMapInputs Include="$(_AndroidVersionCode)" />
+      <_TrimmableTypeMapInputs Include="$(_AndroidVersionName)" />
+      <_TrimmableTypeMapInputs Include="$(_AndroidApiLevel)" />
+      <_TrimmableTypeMapInputs Include="$(SupportedOSPlatformVersion)" />
+      <_TrimmableTypeMapInputs Include="$(_TrimmableRuntimeProviderJavaName)" />
+      <_TrimmableTypeMapInputs Include="$(AndroidIncludeDebugSymbols)" />
+      <_TrimmableTypeMapInputs Include="$(AndroidNeedsInternetPermission)" />
+      <_TrimmableTypeMapInputs Include="$(EmbedAssembliesIntoApk)" />
+      <_TrimmableTypeMapInputs Include="$(AndroidManifestPlaceholders)" />
+      <_TrimmableTypeMapInputs Include="$(_AndroidCheckedBuild)" />
+      <_TrimmableTypeMapInputs Include="$(AndroidApplicationJavaClass)" />
+    </ItemGroup>
+
+    <Hash ItemsToHash="@(_TrimmableTypeMapInputs)">
+      <Output TaskParameter="HashResult" PropertyName="_TrimmableTypeMapInputsHash" />
+    </Hash>
+
+    <WriteLinesToFile
+        File="$(_TrimmableTypeMapInputsCacheFile)"
+        Lines="$(_TrimmableTypeMapInputsHash)"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true" />
+
+    <ItemGroup>
+      <FileWrites Include="$(_TrimmableTypeMapInputsCacheFile)" />
+    </ItemGroup>
+  </Target>
+
   <!--
     Generate TypeMap assemblies and JCW files.
     AfterTargets="CoreCompile" so it runs after compilation.
@@ -40,8 +76,9 @@
   -->
   <Target Name="_GenerateTrimmableTypeMap"
       Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '@(ReferencePath->Count())' != '0' "
+      DependsOnTargets="_CreateTrimmableTypeMapInputsCache"
       AfterTargets="CoreCompile"
-      Inputs="@(ReferencePath);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs)"
+      Inputs="@(ReferencePath);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs);$(_TrimmableTypeMapInputsCacheFile)"
       Outputs="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll">
 
     <ItemGroup>
