@@ -41,7 +41,6 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.Empty (result.GeneratedAssemblies);
 		Assert.Empty (result.GeneratedJavaSources);
 		Assert.Empty (result.AllPeers);
-		Assert.Contains (logMessages, m => m.Contains ("No Java peer types found"));
 	}
 
 	[Fact]
@@ -56,7 +55,6 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			new HashSet<string> ());
 		Assert.Empty (result.GeneratedAssemblies);
 		Assert.Empty (result.GeneratedJavaSources);
-		Assert.Contains (logMessages, m => m.Contains ("No Java peer types found"));
 	}
 
 	[Fact]
@@ -101,10 +99,10 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			Assert.Contains ("class ", source.Content);
 	}
 
-	TrimmableTypeMapGenerator CreateGenerator () => new (msg => logMessages.Add (msg), new TestTrimmableTypeMapLogger (logMessages));
+	TrimmableTypeMapGenerator CreateGenerator () => new (new TestTrimmableTypeMapLogger (logMessages));
 
 	TrimmableTypeMapGenerator CreateGenerator (List<string> warnings) =>
-		new (msg => logMessages.Add (msg), new TestTrimmableTypeMapLogger (logMessages, warnings));
+		new (new TestTrimmableTypeMapLogger (logMessages, warnings));
 
 	[Theory]
 	[InlineData ("com/example/MyActivity", "com.example.MyActivity", "com.example", "activity", "com.example.MyActivity")]
