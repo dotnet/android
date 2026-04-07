@@ -103,6 +103,35 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			Assert.Contains ("class ", source.Content);
 	}
 
+	[Fact]
+	public void Execute_ManifestPlaceholdersAreResolvedBeforeRooting ()
+	{
+		using var peReader = CreateTestFixturePEReader ();
+		var manifestTemplate = System.Xml.Linq.XDocument.Parse ("""
+			<?xml version="1.0" encoding="utf-8"?>
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="${applicationId}">
+			  <application>
+			    <activity android:name=".SimpleActivity" />
+			  </application>
+			</manifest>
+			""");
+
+		var result = CreateGenerator ().Execute (
+			new List<(string, PEReader)> { ("TestFixtures", peReader) },
+			new Version (11, 0),
+			new HashSet<string> (),
+			new ManifestConfig (
+				PackageName: "my.app",
+				AndroidApiLevel: "35",
+				SupportedOSPlatformVersion: "21",
+				RuntimeProviderJavaName: "mono.MonoRuntimeProvider",
+				ManifestPlaceholders: "applicationId=my.app"),
+			manifestTemplate);
+
+		var peer = result.AllPeers.First (p => p.ManagedTypeName == "MyApp.SimpleActivity");
+		Assert.True (peer.IsUnconditional, "Relative manifest names should root correctly after placeholder substitution.");
+	}
+
 	TrimmableTypeMapGenerator CreateGenerator () => new (new TestTrimmableTypeMapLogger (logMessages));
 
 	TrimmableTypeMapGenerator CreateGenerator (List<string> warnings) =>
@@ -180,6 +209,8 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 
 		Assert.True (peers [0].IsUnconditional, "Application type should be rooted from <application android:name>.");
 		Assert.True (peers [1].IsUnconditional, "Instrumentation type should be rooted from <instrumentation android:name>.");
+		Assert.True (peers [0].CannotRegisterInStaticConstructor, "Application type should defer Runtime.registerNatives().");
+		Assert.True (peers [1].CannotRegisterInStaticConstructor, "Instrumentation type should defer Runtime.registerNatives().");
 	}
 
 	[Fact]

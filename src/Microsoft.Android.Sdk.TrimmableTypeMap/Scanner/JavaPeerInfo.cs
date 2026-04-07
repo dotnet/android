@@ -80,8 +80,11 @@ public sealed record JavaPeerInfo
 	/// <c>registerNatives</c> in their static initializer because the native library
 	/// (<c>libmonodroid.so</c>) is not loaded until after the Application class is instantiated.
 	/// Registration is deferred to <c>ApplicationRegistration.registerApplications()</c>.
+	/// This may also be set after scanning when a type is only discovered from
+	/// manifest <c>android:name</c> usage on <c>&lt;application&gt;</c> or
+	/// <c>&lt;instrumentation&gt;</c>.
 	/// </summary>
-	public bool CannotRegisterInStaticConstructor { get; init; }
+	public bool CannotRegisterInStaticConstructor { get; set; }
 
 	/// <summary>
 	/// Marshal methods: methods with [Register(name, sig, connector)], [Export], or

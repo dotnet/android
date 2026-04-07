@@ -38,7 +38,7 @@ public class TrimmableTypeMapGenerator
 			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
 
-		RootManifestReferencedTypes (allPeers, manifestTemplate);
+		RootManifestReferencedTypes (allPeers, PrepareManifestForRooting (manifestTemplate, manifestConfig));
 
 		var generatedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion);
 		var jcwPeers = allPeers.Where (p =>
@@ -153,6 +153,7 @@ public class TrimmableTypeMapGenerator
 		var packageName = (string?) root.Attribute ("package") ?? "";
 
 		var componentNames = new HashSet<string> (StringComparer.Ordinal);
+		var deferredRegistrationNames = new HashSet<string> (StringComparer.Ordinal);
 		foreach (var element in root.Descendants ()) {
 			switch (element.Name.LocalName) {
 			case "application":
@@ -163,7 +164,12 @@ public class TrimmableTypeMapGenerator
 			case "provider":
 				var name = (string?) element.Attribute (attName);
 				if (name is not null) {
-					componentNames.Add (ResolveManifestClassName (name, packageName));
+					var resolvedName = ResolveManifestClassName (name, packageName);
+					componentNames.Add (resolvedName);
+
+					if (element.Name.LocalName is "application" or "instrumentation") {
+						deferredRegistrationNames.Add (resolvedName);
+					}
 				}
 				break;
 			}
@@ -177,20 +183,19 @@ public class TrimmableTypeMapGenerator
 		// because manifests commonly use '$', but also include the Java source form.
 		var peersByDotName = new Dictionary<string, List<JavaPeerInfo>> (StringComparer.Ordinal);
 		foreach (var peer in allPeers) {
-			var dotName = GetManifestLookupName (peer.JavaName);
-			AddPeerByDotName (peersByDotName, dotName, peer);
-			AddJavaSourceLookupName (peersByDotName, dotName, peer);
-
-			var compatDotName = GetManifestLookupName (peer.CompatJniName);
-			if (compatDotName != dotName) {
-				AddPeerByDotName (peersByDotName, compatDotName, peer);
-				AddJavaSourceLookupName (peersByDotName, compatDotName, peer);
+			AddJniLookupNames (peersByDotName, peer.JavaName, peer);
+			if (peer.CompatJniName != peer.JavaName) {
+				AddJniLookupNames (peersByDotName, peer.CompatJniName, peer);
 			}
 		}
 
 		foreach (var name in componentNames) {
 			if (peersByDotName.TryGetValue (name, out var peers)) {
 				foreach (var peer in peers) {
+					if (deferredRegistrationNames.Contains (name)) {
+						peer.CannotRegisterInStaticConstructor = true;
+					}
+
 					if (!peer.IsUnconditional) {
 						peer.IsUnconditional = true;
 						logger.LogRootingManifestReferencedTypeInfo (name, peer.ManagedTypeName);
@@ -212,17 +217,59 @@ public class TrimmableTypeMapGenerator
 		list.Add (peer);
 	}
 
-	static void AddJavaSourceLookupName (Dictionary<string, List<JavaPeerInfo>> peersByDotName, string dotName, JavaPeerInfo peer)
+	static XDocument? PrepareManifestForRooting (XDocument? manifestTemplate, ManifestConfig? manifestConfig)
 	{
-		var javaSourceName = dotName.Replace ('$', '.');
-		if (javaSourceName != dotName) {
-			AddPeerByDotName (peersByDotName, javaSourceName, peer);
+		if (manifestTemplate is null && manifestConfig is null) {
+			return null;
 		}
+
+		var doc = manifestTemplate is not null
+			? new XDocument (manifestTemplate)
+			: new XDocument (
+				new XElement (
+					"manifest",
+					new XAttribute (XNamespace.Xmlns + "android", ManifestConstants.AndroidNs.NamespaceName)));
+
+		if (doc.Root is not { } root) {
+			return doc;
+		}
+
+		if (manifestConfig is null) {
+			return doc;
+		}
+
+		if (((string?) root.Attribute ("package")).IsNullOrEmpty () && !manifestConfig.PackageName.IsNullOrEmpty ()) {
+			root.SetAttributeValue ("package", manifestConfig.PackageName);
+		}
+
+		ManifestGenerator.ApplyPlaceholders (doc, manifestConfig.ManifestPlaceholders);
+
+		if (!manifestConfig.ApplicationJavaClass.IsNullOrEmpty ()) {
+			var app = root.Element ("application");
+			if (app is null) {
+				app = new XElement ("application");
+				root.Add (app);
+			}
+
+			if (app.Attribute (ManifestConstants.AttName) is null) {
+				app.SetAttributeValue (ManifestConstants.AttName, manifestConfig.ApplicationJavaClass);
+			}
+		}
+
+		return doc;
 	}
 
-	static string GetManifestLookupName (string jniName)
+	static void AddJniLookupNames (Dictionary<string, List<JavaPeerInfo>> peersByDotName, string jniName, JavaPeerInfo peer)
 	{
-		return jniName.Replace ('/', '.');
+		var simpleName = JniSignatureHelper.GetJavaSimpleName (jniName);
+		var packageName = JniSignatureHelper.GetJavaPackageName (jniName);
+		var manifestName = packageName.IsNullOrEmpty () ? simpleName : packageName + "." + simpleName;
+		AddPeerByDotName (peersByDotName, manifestName, peer);
+
+		var javaSourceName = JniSignatureHelper.JniNameToJavaName (jniName);
+		if (javaSourceName != manifestName) {
+			AddPeerByDotName (peersByDotName, javaSourceName, peer);
+		}
 	}
 
 	/// <summary>
