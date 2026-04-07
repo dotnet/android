@@ -109,7 +109,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		new (new TestTrimmableTypeMapLogger (logMessages, warnings));
 
 	[Theory]
-	[InlineData ("com/example/MyActivity", "com.example.MyActivity", "com.example.MyActivity", "activity", "com.example.MyActivity")]
+	[InlineData ("com/example/MyActivity", "com.example.MyActivity", "com.example", "activity", "com.example.MyActivity")]
 	[InlineData ("com/example/MyActivity", "com.example.MyActivity", "com.example", "activity", ".MyActivity")]
 	[InlineData ("com/example/MyService", "com.example.MyService", "com.example", "service", "MyService")]
 	[InlineData ("crc64123456789abc/MyActivity", "my/app/MyActivity", "my.app", "activity", ".MyActivity")]
