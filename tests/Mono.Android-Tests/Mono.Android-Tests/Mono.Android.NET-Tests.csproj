@@ -32,7 +32,6 @@
     <ExcludeCategories Condition=" '$(UseMonoRuntime)' != 'true' ">$(ExcludeCategories):CoreCLRIgnore:NTLM</ExcludeCategories>
     <!-- TODO: https://github.com/dotnet/android/issues/10079 -->
     <ExcludeCategories Condition=" '$(PublishAot)' == 'true' ">$(ExcludeCategories):NativeAOTIgnore:SSL:NTLM:AndroidClientHandler:Export:NativeTypeMap</ExcludeCategories>
-    <ExcludeCategories Condition=" '$(MonoAndroidTypeMapFlavor)' == 'trimmable' ">$(ExcludeCategories):NativeTypeMap:TrimmableIgnore</ExcludeCategories>
     <!-- FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190 -->
     <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):LLVMIgnore</ExcludeCategories>
     <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):InetAccess:NetworkInterfaces</ExcludeCategories>
@@ -45,6 +44,7 @@
     <_AndroidTypeMapImplementation Condition=" '$(MonoAndroidTypeMapFlavor)' == 'trimmable' and '$(_AndroidTypeMapImplementation)' == '' ">trimmable</_AndroidTypeMapImplementation>
     <TestsFlavor Condition=" '$(TestsFlavor)' == '' and '$(MonoAndroidTypeMapFlavor)' == 'legacy' ">CoreCLR</TestsFlavor>
     <TestsFlavor Condition=" '$(TestsFlavor)' == '' and '$(MonoAndroidTypeMapFlavor)' == 'trimmable' ">CoreCLRTrimmable</TestsFlavor>
+    <ExcludeCategories Condition=" '$(MonoAndroidTypeMapFlavor)' == 'trimmable' ">$(ExcludeCategories):NativeTypeMap:TrimmableIgnore:SSL</ExcludeCategories>
   </PropertyGroup>
 
   <ItemGroup>
