@@ -769,6 +769,8 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");");
 								AfterTargets="_PostTrimmingPipeline"
 								Condition=" '$(PublishTrimmed)' == 'true' ">
 							<Message Importance="high" Text="DIAG_PTA: %(_PostTrimmingAssembly.Identity)" />
+							<Message Importance="high" Text="DIAG_RFP: %(ResolvedFileToPublish.Identity)"
+								Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' and '%(Filename)' != '' and $([System.String]::Copy('%(Filename)').EndsWith('.resources')) " />
 						</Target>
 					</Project>
 				""",
@@ -781,6 +783,11 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");");
 			Assert.IsTrue (
 				b.LastBuildOutput.ContainsText ("DIAG_PTA:"),
 				"Diagnostic target should have logged _PostTrimmingAssembly items");
+
+			// Verify satellite assemblies ARE present in ResolvedFileToPublish (positive check)
+			Assert.IsTrue (
+				b.LastBuildOutput.ContainsText ("DIAG_RFP:") && b.LastBuildOutput.ContainsText (".resources.dll"),
+				"Satellite assemblies should be present in ResolvedFileToPublish to confirm the scenario is exercised");
 
 			// Verify satellite assemblies were NOT included in _PostTrimmingAssembly
 			var satelliteLines = new List<string> ();
