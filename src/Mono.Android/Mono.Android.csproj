@@ -264,7 +264,6 @@
     <Compile Include="Android.Runtime\RuntimeNativeMethods.cs" />
     <Compile Include="Android.Runtime\StringDefAttribute.cs" />
     <Compile Include="Android.Runtime\TimingLogger.cs" />
-    <Compile Include="Android.Runtime\TrimmableNativeRegistration.cs" />
     <Compile Include="Android.Runtime\TypeManager.cs" />
     <Compile Include="Android.Runtime\XAPeerMembers.cs" />
     <Compile Include="Android.Runtime\XmlPullParserReader.cs" />

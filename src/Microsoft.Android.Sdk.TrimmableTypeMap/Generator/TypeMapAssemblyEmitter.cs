@@ -43,7 +43,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 ///
 ///     [UnmanagedCallersOnly]
 ///     public static void nctor_0_uco(IntPtr jnienv, IntPtr self)
-///         =&gt; TrimmableNativeRegistration.ActivateInstance(self, typeof(Activity));
+///         =&gt; TrimmableTypeMap.ActivateInstance(self, typeof(Activity));
 ///
 ///     // Registers JNI native methods (ACWs only):
 ///     public void RegisterNatives(JniType jniType)
@@ -185,7 +185,7 @@ sealed class TypeMapAssemblyEmitter
 		_jniTypeRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniType"));
 		_trimmableNativeRegistrationRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
-			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("TrimmableNativeRegistration"));
+			metadata.GetOrAddString ("Microsoft.Android.Runtime"), metadata.GetOrAddString ("TrimmableTypeMap"));
 		_notSupportedExceptionRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("NotSupportedException"));
 		_runtimeHelpersRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
