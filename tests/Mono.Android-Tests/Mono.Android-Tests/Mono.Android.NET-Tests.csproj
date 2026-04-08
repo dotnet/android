@@ -37,6 +37,12 @@
     <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):InetAccess:NetworkInterfaces</ExcludeCategories>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <UseMonoRuntime Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(UseMonoRuntime)' == '' and '$(PublishAot)' != 'true' ">false</UseMonoRuntime>
+    <TestsFlavor Condition=" '$(TestsFlavor)' == '' and '$(_AndroidTypeMapImplementation)' == 'trimmable' ">CoreCLRTrimmable</TestsFlavor>
+    <ExcludeCategories Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">$(ExcludeCategories):NativeTypeMap:TrimmableIgnore:SSL</ExcludeCategories>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Mono.Linq.Expressions" Version="2.0.0" />
   </ItemGroup>

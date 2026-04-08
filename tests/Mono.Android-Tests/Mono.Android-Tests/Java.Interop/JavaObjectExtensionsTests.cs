@@ -15,7 +15,7 @@ namespace Java.InteropTests {
 	[TestFixture]
 	public class JavaObjectExtensionsTests {
 
-		[Test]
+		[Test, Category ("TrimmableIgnore")]
 		public void JavaCast_BaseToGenericWrapper ()
 		{
 			using (var list = new JavaList (new[]{ 1, 2, 3 }))
