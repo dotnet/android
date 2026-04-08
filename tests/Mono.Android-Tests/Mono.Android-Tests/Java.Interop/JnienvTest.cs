@@ -301,7 +301,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[Test, Category ("TrimmableIgnore")]
 		public void ActivatedDirectThrowableSubclassesShouldBeRegistered ()
 		{
 			if (Build.VERSION.SdkInt <= BuildVersionCodes.GingerbreadMr1)

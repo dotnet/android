@@ -26,13 +26,17 @@ namespace Xamarin.Android.RuntimeTests
             : base(handle, transfer)
         {
             if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
-                // Java.Interop-Tests types that use JavaObject (not Java.Lang.Object)
-                // don't have JCW Java classes generated in the trimmable path.
-                // Exclude tests that create these types to prevent ClassNotFoundException
-                // crashes on background threads.
+                // Java.Interop-Tests fixtures that use JavaObject types (not Java.Lang.Object)
+                // don't have JCW Java classes in the trimmable APK, and method remapping
+                // tests require Java-side support not present in the trimmable path.
+                // Exclude these entire fixtures to prevent ClassNotFoundException crashes.
                 ExcludedTestNames = new [] {
-                    "Java.InteropTests.JavaObjectTest.Dispose",
-                    "Java.InteropTests.JavaObjectTest.Dispose_Finalized",
+                    "Java.InteropTests.JavaObjectTest",
+                    "Java.InteropTests.InvokeVirtualFromConstructorTests",
+                    "Java.InteropTests.JniPeerMembersTests",
+                    "Java.InteropTests.JniTypeManagerTests",
+                    "Java.InteropTests.JniValueMarshaler_object_ContractTests",
+                    "Java.InteropTests.JavaExceptionTests.InnerExceptionIsNotAProxy",
                 };
             }
         }
