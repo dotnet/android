@@ -147,39 +147,6 @@ class TrimmableTypeMap
 		return GetProxyForManagedType (type)?.GetContainerFactory ();
 	}
 
-	/// <summary>
-	/// Creates a managed peer instance for a Java object being constructed.
-	/// Called from generated UCO constructor wrappers (nctor_*_uco).
-	/// </summary>
-	internal static void ActivateInstance (IntPtr self, Type targetType)
-	{
-		var instance = s_instance;
-		if (instance is null) {
-			throw new InvalidOperationException ("TrimmableTypeMap has not been initialized.");
-		}
-
-		// Look up the proxy via JNI class name → TypeMap dictionary.
-		// We can't use targetType.GetCustomAttribute<JavaPeerProxy>() because the
-		// self-application attribute is on the proxy type, not the target type.
-		var selfRef = new JniObjectReference (self);
-		var jniClass = JniEnvironment.Types.GetObjectClass (selfRef);
-		var className = JniEnvironment.Types.GetJniTypeNameFromClass (jniClass);
-		JniObjectReference.Dispose (ref jniClass);
-
-		if (className is null || !instance._typeMap.TryGetValue (className, out var proxyType)) {
-			throw new InvalidOperationException (
-				$"Failed to create peer for type '{targetType.FullName}' (jniClass='{className}'). " +
-				"Ensure the type has a generated proxy in the TypeMap assembly.");
-		}
-
-		var proxy = proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-		if (proxy is null || proxy.CreateInstance (self, JniHandleOwnership.DoNotTransfer) is null) {
-			throw new InvalidOperationException (
-				$"Failed to create peer for type '{targetType.FullName}'. " +
-				"Ensure the type has a generated proxy in the TypeMap assembly.");
-		}
-	}
-
 	[UnmanagedCallersOnly]
 	static void OnRegisterNatives (IntPtr jnienv, IntPtr klass, IntPtr nativeClassHandle)
 	{

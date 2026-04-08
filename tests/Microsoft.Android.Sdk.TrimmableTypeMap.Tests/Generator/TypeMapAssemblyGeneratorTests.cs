@@ -189,7 +189,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_InheritedCtor_UcoUsesGuardWithoutReflectionFallback ()
+	public void Generate_InheritedCtor_UcoUsesGuardAndInlinedActivation ()
 	{
 		var peers = ScanFixtures ();
 		var simpleActivity = peers.First (p => p.JavaName == "my/app/SimpleActivity");
@@ -202,7 +202,8 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		var memberNames = GetMemberRefNames (reader);
 
 		Assert.Contains ("get_WithinNewObjectScope", memberNames);
-		Assert.Contains ("ActivateInstance", memberNames);
+		Assert.Contains ("GetUninitializedObject", memberNames);
+		Assert.DoesNotContain ("ActivateInstance", memberNames);
 		Assert.DoesNotContain ("ActivatePeerFromJavaConstructor", memberNames);
 	}
 
