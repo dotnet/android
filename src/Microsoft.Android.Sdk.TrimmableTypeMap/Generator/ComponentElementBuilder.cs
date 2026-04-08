@@ -165,7 +165,7 @@ static class ComponentElementBuilder
 		PropertyMapper.ApplyMappings (app, component.Properties, PropertyMapper.ApplicationElementMappings);
 	}
 
-	internal static void AddInstrumentation (XElement manifest, JavaPeerInfo peer)
+	internal static void AddInstrumentation (XElement manifest, JavaPeerInfo peer, string packageName)
 	{
 		string jniName = JniSignatureHelper.JniNameToJavaName (peer.JavaName);
 		var element = new XElement ("instrumentation",
@@ -176,6 +176,9 @@ static class ComponentElementBuilder
 			return;
 		}
 		PropertyMapper.ApplyMappings (element, component.Properties, PropertyMapper.InstrumentationMappings);
+		if (element.Attribute (AndroidNs + "targetPackage") is null && !string.IsNullOrEmpty (packageName)) {
+			element.SetAttributeValue (AndroidNs + "targetPackage", packageName);
+		}
 
 		manifest.Add (element);
 	}

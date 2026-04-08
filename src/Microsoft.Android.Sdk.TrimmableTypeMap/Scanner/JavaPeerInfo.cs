@@ -12,9 +12,11 @@ public sealed record JavaPeerInfo
 {
 	/// <summary>
 	/// JNI type name, e.g., "android/app/Activity".
-	/// Extracted from the [Register] attribute.
+	/// Extracted from the [Register] attribute or auto-computed during scanning.
+	/// Manifest rooting may later promote this to <see cref="CompatJniName"/> when
+	/// a component is referenced by its managed-namespace form.
 	/// </summary>
-	public required string JavaName { get; init; }
+	public required string JavaName { get; set; }
 
 	/// <summary>
 	/// Compat JNI type name, e.g., "myapp.namespace/MyType" for user types (uses raw namespace, not CRC64).
@@ -48,7 +50,7 @@ public sealed record JavaPeerInfo
 	/// that extends Activity. Null for java/lang/Object or types without a Java base.
 	/// Needed by JCW Java source generation ("extends" clause).
 	/// </summary>
-	public string? BaseJavaName { get; init; }
+	public string? BaseJavaName { get; set; }
 
 	/// <summary>
 	/// JNI names of Java interfaces this type implements, e.g., ["android/view/View$OnClickListener"].
@@ -69,16 +71,23 @@ public sealed record JavaPeerInfo
 	/// Types with component attributes ([Activity], [Service], etc.),
 	/// custom views from layout XML, or manifest-declared components
 	/// are unconditionally preserved (not trimmable).
+	/// May be set to <c>true</c> after scanning when the manifest references a type
+	/// that the scanner did not mark as unconditional. Should only ever be set
+	/// to <c>true</c>, never back to <c>false</c>.
 	/// </summary>
-	public bool IsUnconditional { get; init; }
+	public bool IsUnconditional { get; set; }
 
 	/// <summary>
-	/// True for Application and Instrumentation types. These types cannot call
+	/// True for Application and Instrumentation types, plus any generated managed
+	/// base classes they rely on during startup. These types cannot call
 	/// <c>registerNatives</c> in their static initializer because the native library
 	/// (<c>libmonodroid.so</c>) is not loaded until after the Application class is instantiated.
 	/// Registration is deferred to <c>ApplicationRegistration.registerApplications()</c>.
+	/// This may also be set after scanning when a type is only discovered from
+	/// manifest <c>android:name</c> usage on <c>&lt;application&gt;</c> or
+	/// <c>&lt;instrumentation&gt;</c>.
 	/// </summary>
-	public bool CannotRegisterInStaticConstructor { get; init; }
+	public bool CannotRegisterInStaticConstructor { get; set; }
 
 	/// <summary>
 	/// Marshal methods: methods with [Register(name, sig, connector)], [Export], or
