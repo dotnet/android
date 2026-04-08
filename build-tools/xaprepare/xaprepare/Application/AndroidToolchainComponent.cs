@@ -63,7 +63,8 @@ namespace Xamarin.Android.Prepare
 		CoreDependency          = 0,
 		BuildDependency         = 1 << 0,
 		EmulatorDependency      = 1 << 1,
-		All                     = CoreDependency | BuildDependency | EmulatorDependency,
+		NdkDependency           = 1 << 2,
+		All                     = CoreDependency | BuildDependency | EmulatorDependency | NdkDependency,
 	}
 
 }

@@ -104,6 +104,7 @@ namespace Xamarin.Android.Prepare
 				new AndroidToolchainComponent ($"android-ndk-r{AndroidNdkVersion}-{osTag}",
 					destDir: AndroidNdkDirectory,
 					pkgRevision: AndroidPkgRevision,
+					dependencyType: AndroidToolchainComponentType.NdkDependency,
 					buildToolName: $"android-ndk-r{AndroidNdkVersion}",
 					buildToolVersion: AndroidPkgRevision
 				),

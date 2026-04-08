@@ -171,6 +171,11 @@ namespace Xamarin.Android.Prepare
 
 		bool GatherNDKInfo (Context context)
 		{
+			if (!DependencyTypeToInstall.HasFlag (AndroidToolchainComponentType.NdkDependency)) {
+				Log.StatusLine ("NDK not requested, skipping NDK info gathering");
+				return true;
+			}
+
 			if (!CopyRedistributableFiles (context)) {
 				return false;
 			}
