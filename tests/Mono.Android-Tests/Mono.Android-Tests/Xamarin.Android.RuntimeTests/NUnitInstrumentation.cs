@@ -25,6 +25,16 @@ namespace Xamarin.Android.RuntimeTests
         protected NUnitInstrumentation(IntPtr handle, JniHandleOwnership transfer)
             : base(handle, transfer)
         {
+            if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
+                // Java.Interop-Tests types that use JavaObject (not Java.Lang.Object)
+                // don't have JCW Java classes generated in the trimmable path.
+                // Exclude tests that create these types to prevent ClassNotFoundException
+                // crashes on background threads.
+                ExcludedTestNames = new [] {
+                    "Java.InteropTests.JavaObjectTest.Dispose",
+                    "Java.InteropTests.JavaObjectTest.Dispose_Finalized",
+                };
+            }
         }
 
         protected override IList<TestAssemblyInfo> GetTestAssemblies()

@@ -191,6 +191,27 @@ class TrimmableTypeMap
 		var proxy = GetProxyForPeer (handle, targetType);
 		if (proxy is null && targetType is not null) {
 			proxy = GetProxyForManagedType (targetType);
+			// Verify the Java object is actually assignable to the target Java type
+			// before creating the peer. Without this, we'd create invalid peers
+			// (e.g., IAppendableInvoker wrapping a java.lang.Integer).
+			if (proxy is not null && TryGetJniName (targetType, out var targetJniName)) {
+				var selfRef = new JniObjectReference (handle);
+				var objClass = JniEnvironment.Types.GetObjectClass (selfRef);
+				JniObjectReference targetClass;
+				try {
+					targetClass = JniEnvironment.Types.FindClass (targetJniName);
+				} catch {
+					JniObjectReference.Dispose (ref objClass);
+					proxy = null;
+					return null;
+				}
+				bool isAssignable = JniEnvironment.Types.IsAssignableFrom (objClass, targetClass);
+				JniObjectReference.Dispose (ref objClass);
+				JniObjectReference.Dispose (ref targetClass);
+				if (!isAssignable) {
+					proxy = null;
+				}
+			}
 		}
 
 		return proxy?.CreateInstance (handle, transfer);
