@@ -259,7 +259,7 @@ sealed class PEAssemblyBuilder
 	/// </summary>
 	public MethodDefinitionHandle EmitBody (string name, MethodAttributes attrs,
 		Action<BlobEncoder> encodeSig, Action<InstructionEncoder> emitIL)
-		=> EmitBody (name, attrs, encodeSig, emitIL, encodeLocals: null);
+		=> EmitBody (name, attrs, encodeSig, emitIL, encodeLocals: null, useBranches: false);
 
 	/// <summary>
 	/// Emits a method body and definition with optional local variable declarations.
@@ -269,9 +269,14 @@ sealed class PEAssemblyBuilder
 	/// <see cref="BlobBuilder"/> and must write the full <c>LOCAL_SIG</c> blob (header 0x07,
 	/// compressed count, then each variable type).
 	/// </param>
+	/// <param name="useBranches">
+	/// If true, creates a <see cref="ControlFlowBuilder"/> so the emitted IL can use
+	/// <see cref="InstructionEncoder.DefineLabel"/>, <see cref="InstructionEncoder.Branch"/>,
+	/// and <see cref="InstructionEncoder.MarkLabel"/>.
+	/// </param>
 	public MethodDefinitionHandle EmitBody (string name, MethodAttributes attrs,
 		Action<BlobEncoder> encodeSig, Action<InstructionEncoder> emitIL,
-		Action<BlobBuilder>? encodeLocals)
+		Action<BlobBuilder>? encodeLocals, bool useBranches = false)
 	{
 		_sigBlob.Clear ();
 		encodeSig (new BlobEncoder (_sigBlob));
@@ -287,7 +292,11 @@ sealed class PEAssemblyBuilder
 		}
 
 		_codeBlob.Clear ();
-		var encoder = new InstructionEncoder (_codeBlob);
+		ControlFlowBuilder? cfb = null;
+		if (useBranches) {
+			cfb = new ControlFlowBuilder ();
+		}
+		var encoder = cfb != null ? new InstructionEncoder (_codeBlob, cfb) : new InstructionEncoder (_codeBlob);
 		emitIL (encoder);
 
 		while (ILBuilder.Count % 4 != 0) {
