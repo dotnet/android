@@ -87,6 +87,7 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _jniObjectReferenceCtorRef;
 	MemberReferenceHandle _jniEnvDeleteRefRef;
 	MemberReferenceHandle _withinNewObjectScopeRef;
+	MemberReferenceHandle _throwIfOpenGenericActivationRef;
 	MemberReferenceHandle _ucoAttrCtorRef;
 	BlobHandle _ucoAttrBlobHandle;
 	MemberReferenceHandle _typeMapAttrCtorRef2Arg;
@@ -243,6 +244,15 @@ sealed class TypeMapAssemblyEmitter
 		_withinNewObjectScopeRef = _pe.AddMemberRef (_jniEnvironmentRef, "get_WithinNewObjectScope",
 			sig => sig.MethodSignature ().Parameters (0,
 				rt => rt.Type ().Boolean (),
+				p => { }));
+
+		// TrimmableTypeMap.ThrowIfOpenGenericActivation() — static, internal
+		// Called by no-op UCO constructors for open generic types.
+		var trimmableTypeMapRef = _pe.Metadata.AddTypeReference (_pe.MonoAndroidRef,
+			_pe.Metadata.GetOrAddString ("Microsoft.Android.Runtime"), _pe.Metadata.GetOrAddString ("TrimmableTypeMap"));
+		_throwIfOpenGenericActivationRef = _pe.AddMemberRef (trimmableTypeMapRef, "ThrowIfOpenGenericActivation",
+			sig => sig.MethodSignature ().Parameters (0,
+				rt => rt.Void (),
 				p => { }));
 
 		// JniNativeMethod..ctor(byte*, byte*, IntPtr)
@@ -733,6 +743,7 @@ sealed class TypeMapAssemblyEmitter
 				MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 				encodeSig,
 				encoder => {
+					encoder.Call (_throwIfOpenGenericActivationRef);
 					encoder.OpCode (ILOpCode.Ret);
 				});
 			AddUnmanagedCallersOnlyAttribute (noopHandle);
