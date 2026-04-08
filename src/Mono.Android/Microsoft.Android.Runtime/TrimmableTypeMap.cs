@@ -30,6 +30,7 @@ class TrimmableTypeMap
 	readonly IReadOnlyDictionary<string, Type> _typeMap;
 	readonly ConcurrentDictionary<Type, JavaPeerProxy?> _proxyCache = new ();
 	readonly ConcurrentDictionary<Type, string?> _jniNameCache = new ();
+	readonly ConcurrentDictionary<string, JavaPeerProxy?> _peerProxyCache = new (StringComparer.Ordinal);
 
 	TrimmableTypeMap ()
 	{
@@ -80,7 +81,11 @@ class TrimmableTypeMap
 		// Java object activation and virtual dispatch resolve to the user's override
 		// instead of the bound Android base type.
 		var proxy = mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-		type = proxy?.TargetType ?? mappedType;
+		if (proxy is null) {
+			type = null;
+			return false;
+		}
+		type = proxy.TargetType;
 		return true;
 	}
 
@@ -140,12 +145,6 @@ class TrimmableTypeMap
 			}
 		}
 
-		jniName = global::Java.Interop.TypeManager.GetJniTypeName (type);
-		if (!string.IsNullOrEmpty (jniName)) {
-			_jniNameCache [type] = jniName;
-			return true;
-		}
-
 		jniName = null;
 		return false;
 	}
@@ -162,10 +161,17 @@ class TrimmableTypeMap
 		try {
 			while (jniClass.IsValid) {
 				var className = JniEnvironment.Types.GetJniTypeNameFromClass (jniClass);
-				if (className != null && _typeMap.TryGetValue (className, out var mappedType)) {
-					var proxy = mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-					if (proxy != null && (targetType is null || targetType.IsAssignableFrom (proxy.TargetType))) {
-						return proxy;
+				if (className != null) {
+					if (_peerProxyCache.TryGetValue (className, out var cached)) {
+						if (cached != null && (targetType is null || targetType.IsAssignableFrom (cached.TargetType))) {
+							return cached;
+						}
+					} else if (_typeMap.TryGetValue (className, out var mappedType)) {
+						var proxy = mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+						_peerProxyCache [className] = proxy;
+						if (proxy != null && (targetType is null || targetType.IsAssignableFrom (proxy.TargetType))) {
+							return proxy;
+						}
 					}
 				}
 

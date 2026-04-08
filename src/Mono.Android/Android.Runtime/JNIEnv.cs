@@ -442,10 +442,6 @@ namespace Android.Runtime {
 
 		internal static unsafe string? TypemapManagedToJava (Type type)
 		{
-			if (RuntimeFeature.TrimmableTypeMap) {
-				return TrimmableTypeMap.Instance.TryGetJniName (type, out var jniName) ? jniName : null;
-			}
-
 			if (mvid_bytes == null)
 				mvid_bytes = new byte[16];
 

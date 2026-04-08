@@ -509,13 +509,11 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 	{
 		if (RuntimeFeature.TrimmableTypeMap) {
 			var typeMap = TrimmableTypeMap.Instance;
-			if (typeMap is not null) {
-				var peer = typeMap.CreatePeer (reference.Handle, JniHandleOwnership.DoNotTransfer, targetType);
-				if (peer is not null) {
-					peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable);
-					JniObjectReference.Dispose (ref reference, transfer);
-					return peer;
-				}
+			var peer = typeMap.CreatePeer (reference.Handle, JniHandleOwnership.DoNotTransfer, targetType);
+			if (peer is not null) {
+				peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable);
+				JniObjectReference.Dispose (ref reference, transfer);
+				return peer;
 			}
 		}
 
