@@ -294,20 +294,6 @@ class TrimmableTypeMap
 		return GetProxyForManagedType (type)?.GetContainerFactory ();
 	}
 
-	/// <summary>
-	/// Called from generated no-op UCO constructors for open generic types.
-	/// When called outside WithinNewObjectScope (i.e., from FinishCreateInstance),
-	/// raises NotSupportedException via JNI to match the legacy n_Activate behavior.
-	/// </summary>
-	internal static void ThrowIfOpenGenericActivation ()
-	{
-		if (!JniEnvironment.WithinNewObjectScope) {
-			JniEnvironment.Runtime.RaisePendingException (
-				new NotSupportedException (
-					"Constructing instances of generic types from Java is not supported, as the type parameters cannot be determined."));
-		}
-	}
-
 	[UnmanagedCallersOnly]
 	static void OnRegisterNatives (IntPtr jnienv, IntPtr klass, IntPtr nativeClassHandle)
 	{

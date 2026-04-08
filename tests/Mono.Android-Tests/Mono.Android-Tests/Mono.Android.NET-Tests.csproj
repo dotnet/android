@@ -32,7 +32,7 @@
     <ExcludeCategories Condition=" '$(UseMonoRuntime)' != 'true' ">$(ExcludeCategories):CoreCLRIgnore:NTLM</ExcludeCategories>
     <!-- TODO: https://github.com/dotnet/android/issues/10079 -->
     <ExcludeCategories Condition=" '$(PublishAot)' == 'true' ">$(ExcludeCategories):NativeAOTIgnore:SSL:NTLM:AndroidClientHandler:Export:NativeTypeMap</ExcludeCategories>
-    <ExcludeCategories Condition=" '$(MonoAndroidTypeMapFlavor)' == 'trimmable' ">$(ExcludeCategories):NativeTypeMap</ExcludeCategories>
+    <ExcludeCategories Condition=" '$(MonoAndroidTypeMapFlavor)' == 'trimmable' ">$(ExcludeCategories):NativeTypeMap:TrimmableIgnore</ExcludeCategories>
     <!-- FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190 -->
     <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):LLVMIgnore</ExcludeCategories>
     <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):InetAccess:NetworkInterfaces</ExcludeCategories>

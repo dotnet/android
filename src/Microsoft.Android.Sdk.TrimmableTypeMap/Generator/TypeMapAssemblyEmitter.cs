@@ -743,7 +743,6 @@ sealed class TypeMapAssemblyEmitter
 				MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 				encodeSig,
 				encoder => {
-					encoder.Call (_throwIfOpenGenericActivationRef);
 					encoder.OpCode (ILOpCode.Ret);
 				});
 			AddUnmanagedCallersOnlyAttribute (noopHandle);

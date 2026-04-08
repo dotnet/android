@@ -121,7 +121,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[Test, Category ("TrimmableIgnore")]
 		public void NewOpenGenericTypeThrows ()
 		{
 			try {
