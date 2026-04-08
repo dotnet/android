@@ -250,7 +250,7 @@ static class ModelBuilder
 
 	static void BuildUcoConstructors (JavaPeerInfo peer, JavaPeerProxyData proxy)
 	{
-		if (peer.ActivationCtor == null || peer.JavaConstructors.Count == 0) {
+		if (peer.ActivationCtor == null || peer.JavaConstructors.Count == 0 || peer.IsGenericDefinition) {
 			return;
 		}
 

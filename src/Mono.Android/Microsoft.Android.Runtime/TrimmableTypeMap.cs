@@ -294,68 +294,6 @@ class TrimmableTypeMap
 		return GetProxyForManagedType (type)?.GetContainerFactory ();
 	}
 
-	/// <summary>
-	/// Creates a managed peer instance for a Java object being constructed.
-	/// Called from generated UCO constructor wrappers (nctor_*_uco) which are
-	/// [UnmanagedCallersOnly] — exceptions must not leak across the boundary.
-	/// </summary>
-	internal static void ActivateInstance (IntPtr self, Type targetType)
-	{
-		var instance = s_instance;
-		if (instance is null) {
-			Logger.Log (LogLevel.Error, "monodroid", "TrimmableTypeMap has not been initialized.");
-			return;
-		}
-
-		if (global::Java.Lang.Object.PeekObject (self) is IJavaPeerable peer) {
-			var state = peer.JniManagedPeerState;
-			if (!state.HasFlag (JniManagedPeerStates.Activatable) &&
-					!state.HasFlag (JniManagedPeerStates.Replaceable)) {
-				return;
-			}
-		}
-
-		if (JniEnvironment.WithinNewObjectScope) {
-			return;
-		}
-
-		if (targetType.IsGenericTypeDefinition) {
-			// Mirror legacy TypeManager.n_Activate behavior: open generic types
-			// cannot be activated from Java because the type parameters are unknown.
-			// The test NewOpenGenericTypeThrows expects this to throw
-			// NotSupportedException, but since we're called from [UnmanagedCallersOnly]
-			// we must propagate it via JNI instead of letting it crash the process.
-			JniEnvironment.Runtime.RaisePendingException (
-				new NotSupportedException (
-					"Constructing instances of generic types from Java is not supported, as the type parameters cannot be determined."));
-			return;
-		}
-
-		// Look up the proxy via JNI class name → TypeMap dictionary.
-		// We can't use targetType.GetCustomAttribute<JavaPeerProxy>() because the
-		// self-application attribute is on the proxy type, not the target type.
-		var selfRef = new JniObjectReference (self);
-		var jniClass = JniEnvironment.Types.GetObjectClass (selfRef);
-		var className = JniEnvironment.Types.GetJniTypeNameFromClass (jniClass);
-		JniObjectReference.Dispose (ref jniClass);
-
-		if (className is null || !instance._typeMap.TryGetValue (className, out _)) {
-			JniEnvironment.Runtime.RaisePendingException (
-				new InvalidOperationException (
-					$"Failed to create peer for type '{targetType.FullName}' (jniClass='{className}'). " +
-					"Ensure the type has a generated proxy in the TypeMap assembly."));
-			return;
-		}
-
-		var proxy = instance.GetProxyForPeer (self, targetType);
-		if (proxy is null || proxy.CreateInstance (self, JniHandleOwnership.DoNotTransfer) is null) {
-			JniEnvironment.Runtime.RaisePendingException (
-				new InvalidOperationException (
-					$"Failed to create peer for type '{targetType.FullName}'. " +
-					"Ensure the type has a generated proxy in the TypeMap assembly."));
-		}
-	}
-
 	[UnmanagedCallersOnly]
 	static void OnRegisterNatives (IntPtr jnienv, IntPtr klass, IntPtr nativeClassHandle)
 	{

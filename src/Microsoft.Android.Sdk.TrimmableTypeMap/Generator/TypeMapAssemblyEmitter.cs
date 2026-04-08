@@ -77,7 +77,6 @@ sealed class TypeMapAssemblyEmitter
 	TypeReferenceHandle _systemTypeRef;
 	TypeReferenceHandle _runtimeTypeHandleRef;
 	TypeReferenceHandle _jniTypeRef;
-	TypeReferenceHandle _trimmableNativeRegistrationRef;
 	TypeReferenceHandle _notSupportedExceptionRef;
 	TypeReferenceHandle _runtimeHelpersRef;
 
@@ -87,7 +86,6 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _notSupportedExceptionCtorRef;
 	MemberReferenceHandle _jniObjectReferenceCtorRef;
 	MemberReferenceHandle _jniEnvDeleteRefRef;
-	MemberReferenceHandle _activateInstanceRef;
 	MemberReferenceHandle _ucoAttrCtorRef;
 	BlobHandle _ucoAttrBlobHandle;
 	MemberReferenceHandle _typeMapAttrCtorRef2Arg;
@@ -184,8 +182,6 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("RuntimeTypeHandle"));
 		_jniTypeRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniType"));
-		_trimmableNativeRegistrationRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
-			metadata.GetOrAddString ("Microsoft.Android.Runtime"), metadata.GetOrAddString ("TrimmableTypeMap"));
 		_notSupportedExceptionRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("NotSupportedException"));
 		_runtimeHelpersRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
@@ -238,14 +234,6 @@ sealed class TypeMapAssemblyEmitter
 				p => {
 					p.AddParameter ().Type ().IntPtr ();
 					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
-				}));
-
-		_activateInstanceRef = _pe.AddMemberRef (_trimmableNativeRegistrationRef, "ActivateInstance",
-			sig => sig.MethodSignature ().Parameters (2,
-				rt => rt.Void (),
-				p => {
-					p.AddParameter ().Type ().IntPtr ();
-					p.AddParameter ().Type ().Type (_systemTypeRef, false);
 				}));
 
 		// JniNativeMethod..ctor(byte*, byte*, IntPtr)
@@ -401,7 +389,7 @@ sealed class TypeMapAssemblyEmitter
 		}
 
 		foreach (var uco in proxy.UcoConstructors) {
-			var handle = EmitUcoConstructor (uco);
+			var handle = EmitUcoConstructor (uco, proxy);
 			wrapperHandles [uco.WrapperName] = handle;
 		}
 
@@ -706,38 +694,108 @@ sealed class TypeMapAssemblyEmitter
 		return handle;
 	}
 
-	MethodDefinitionHandle EmitUcoConstructor (UcoConstructorData uco)
+	MethodDefinitionHandle EmitUcoConstructor (UcoConstructorData uco, JavaPeerProxyData proxy)
 	{
-		var userTypeRef = _pe.ResolveTypeRef (uco.TargetType);
+		var targetRef = _pe.ResolveTypeRef (uco.TargetType);
 
 		// UCO constructor wrappers must match the JNI native method signature exactly.
-		// The Java JCW declares e.g. "private native void nctor_0(Context p0)" and calls
-		// it with arguments. JNI dispatches with (JNIEnv*, jobject, <ctor params...>),
-		// so the wrapper signature must include all parameters to match the ABI.
 		// Only jnienv (arg 0) and self (arg 1) are used — the constructor parameters
-		// are not forwarded because ActivateInstance creates the managed peer using the
+		// are not forwarded because we create the managed peer using the
 		// activation ctor (IntPtr, JniHandleOwnership), not the user-visible constructor.
 		var jniParams = JniSignatureHelper.ParseParameterTypes (uco.JniSignature);
 		int paramCount = 2 + jniParams.Count;
 
-		var handle = _pe.EmitBody (uco.WrapperName,
-			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-			sig => sig.MethodSignature ().Parameters (paramCount,
-				rt => rt.Void (),
-				p => {
-					p.AddParameter ().Type ().IntPtr (); // jnienv
-					p.AddParameter ().Type ().IntPtr (); // self
-					for (int j = 0; j < jniParams.Count; j++)
-						JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniParams [j]);
-				}),
-			encoder => {
-				encoder.LoadArgument (1); // self
-				encoder.OpCode (ILOpCode.Ldtoken);
-				encoder.Token (userTypeRef);
-				encoder.Call (_getTypeFromHandleRef);
-				encoder.Call (_activateInstanceRef);
-				encoder.OpCode (ILOpCode.Ret);
-			});
+		// Directly invoke the activation ctor instead of going through ActivateInstance.
+		// The UCO already knows the exact type to create at build time.
+		var activationCtor = proxy.ActivationCtor ?? throw new InvalidOperationException (
+			$"UCO constructor wrapper requires an activation ctor for '{uco.TargetType.ManagedTypeName}'");
+
+		MethodDefinitionHandle handle;
+		if (activationCtor.Style == ActivationCtorStyle.JavaInterop) {
+			var ctorRef = AddJavaInteropActivationCtorRef (
+				activationCtor.IsOnLeafType ? targetRef : _pe.ResolveTypeRef (activationCtor.DeclaringType));
+
+			handle = _pe.EmitBody (uco.WrapperName,
+				MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+				sig => sig.MethodSignature ().Parameters (paramCount,
+					rt => rt.Void (),
+					p => {
+						p.AddParameter ().Type ().IntPtr (); // jnienv
+						p.AddParameter ().Type ().IntPtr (); // self
+						for (int j = 0; j < jniParams.Count; j++)
+							JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniParams [j]);
+					}),
+				encoder => {
+					if (!activationCtor.IsOnLeafType) {
+						// var obj = (TargetType)RuntimeHelpers.GetUninitializedObject(typeof(TargetType));
+						encoder.OpCode (ILOpCode.Ldtoken);
+						encoder.Token (targetRef);
+						encoder.Call (_getTypeFromHandleRef);
+						encoder.Call (_getUninitializedObjectRef);
+						encoder.OpCode (ILOpCode.Castclass);
+						encoder.Token (targetRef);
+					}
+
+					// var jniRef = new JniObjectReference(self);
+					encoder.LoadLocalAddress (0);
+					encoder.LoadArgument (1); // self
+					encoder.Call (_jniObjectReferenceCtorRef);
+
+					if (activationCtor.IsOnLeafType) {
+						// new TargetType(ref jniRef, JniObjectReferenceOptions.Copy);
+						encoder.LoadLocalAddress (0);
+						encoder.LoadConstantI4 (1); // JniObjectReferenceOptions.Copy
+						encoder.OpCode (ILOpCode.Newobj);
+						encoder.Token (ctorRef);
+						encoder.OpCode (ILOpCode.Pop); // discard the instance (peer is registered via JNI handle)
+					} else {
+						// obj.BaseCtor(ref jniRef, JniObjectReferenceOptions.Copy);
+						encoder.LoadLocalAddress (0);
+						encoder.LoadConstantI4 (1); // JniObjectReferenceOptions.Copy
+						encoder.Call (ctorRef);
+					}
+					encoder.OpCode (ILOpCode.Ret);
+				},
+				EncodeJniObjectReferenceLocal);
+		} else {
+			var ctorRef = AddActivationCtorRef (
+				activationCtor.IsOnLeafType ? targetRef : _pe.ResolveTypeRef (activationCtor.DeclaringType));
+
+			handle = _pe.EmitBody (uco.WrapperName,
+				MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+				sig => sig.MethodSignature ().Parameters (paramCount,
+					rt => rt.Void (),
+					p => {
+						p.AddParameter ().Type ().IntPtr (); // jnienv
+						p.AddParameter ().Type ().IntPtr (); // self
+						for (int j = 0; j < jniParams.Count; j++)
+							JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniParams [j]);
+					}),
+				encoder => {
+					if (activationCtor.IsOnLeafType) {
+						// new TargetType(self, JniHandleOwnership.DoNotTransfer);
+						encoder.LoadArgument (1); // self
+						encoder.LoadConstantI4 (0); // JniHandleOwnership.DoNotTransfer
+						encoder.OpCode (ILOpCode.Newobj);
+						encoder.Token (ctorRef);
+						encoder.OpCode (ILOpCode.Pop);
+					} else {
+						// var obj = (TargetType)RuntimeHelpers.GetUninitializedObject(typeof(TargetType));
+						encoder.OpCode (ILOpCode.Ldtoken);
+						encoder.Token (targetRef);
+						encoder.Call (_getTypeFromHandleRef);
+						encoder.Call (_getUninitializedObjectRef);
+						encoder.OpCode (ILOpCode.Castclass);
+						encoder.Token (targetRef);
+
+						// obj.BaseCtor(self, JniHandleOwnership.DoNotTransfer);
+						encoder.LoadArgument (1); // self
+						encoder.LoadConstantI4 (0); // JniHandleOwnership.DoNotTransfer
+						encoder.Call (ctorRef);
+					}
+					encoder.OpCode (ILOpCode.Ret);
+				});
+		}
 
 		AddUnmanagedCallersOnlyAttribute (handle);
 		return handle;
