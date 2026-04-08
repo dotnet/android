@@ -182,7 +182,7 @@ sealed record UcoMethodData
 /// An [UnmanagedCallersOnly] static wrapper for a constructor callback.
 /// Signature must match the full JNI native method signature (jnienv + self + ctor params)
 /// so the ABI is correct when JNI dispatches the call.
-/// Body: TrimmableNativeRegistration.ActivateInstance(self, typeof(TargetType)).
+/// Body: directly activates the target type using its generated activation ctor.
 /// </summary>
 sealed record UcoConstructorData
 {
@@ -192,7 +192,7 @@ sealed record UcoConstructorData
 	public required string WrapperName { get; init; }
 
 	/// <summary>
-	/// Target type to pass to ActivateInstance.
+	/// Target type to activate in the generated wrapper.
 	/// </summary>
 	public required TypeRefData TargetType { get; init; }
 
