@@ -714,11 +714,6 @@ sealed class TypeMapAssemblyEmitter
 		var jniParams = JniSignatureHelper.ParseParameterTypes (uco.JniSignature);
 		int paramCount = 2 + jniParams.Count;
 
-		// Directly invoke the activation ctor instead of going through ActivateInstance.
-		// The UCO already knows the exact type to create at build time.
-		var activationCtor = proxy.ActivationCtor ?? throw new InvalidOperationException (
-			$"UCO constructor wrapper requires an activation ctor for '{uco.TargetType.ManagedTypeName}'");
-
 		Action<BlobEncoder> encodeSig = sig => sig.MethodSignature ().Parameters (paramCount,
 			rt => rt.Void (),
 			p => {
@@ -727,6 +722,25 @@ sealed class TypeMapAssemblyEmitter
 				for (int j = 0; j < jniParams.Count; j++)
 					JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniParams [j]);
 			});
+
+		// Open generic types can't be activated from Java — the type parameters are unknown.
+		// Emit a no-op UCO so the nctor native method is registered (avoiding UnsatisfiedLinkError).
+		// The WithinNewObjectScope guard will cause this to return immediately when called
+		// from JNIEnv.StartCreateInstance, and the legacy NewOpenGenericTypeThrows test
+		// expects NotSupportedException from the FinishCreateInstance path.
+		if (proxy.IsGenericDefinition) {
+			var noopHandle = _pe.EmitBody (uco.WrapperName,
+				MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+				encodeSig,
+				encoder => {
+					encoder.OpCode (ILOpCode.Ret);
+				});
+			AddUnmanagedCallersOnlyAttribute (noopHandle);
+			return noopHandle;
+		}
+
+		var activationCtor = proxy.ActivationCtor ?? throw new InvalidOperationException (
+			$"UCO constructor wrapper requires an activation ctor for '{uco.TargetType.ManagedTypeName}'");
 
 		MethodDefinitionHandle handle;
 		if (activationCtor.Style == ActivationCtorStyle.JavaInterop) {

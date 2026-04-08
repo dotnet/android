@@ -170,9 +170,7 @@ public sealed class JcwJavaSourceGenerator
 
 """);
 
-			// Open generic types can't be activated from Java (type parameters unknown).
-			// Skip the nctor call — no UCO wrapper is generated for these either.
-			if (!type.IsGenericDefinition && !type.CannotRegisterInStaticConstructor) {
+			if (!type.CannotRegisterInStaticConstructor) {
 				writer.Write ($$"""
 		if (getClass () == {{simpleClassName}}.class) nctor_{{ctor.ConstructorIndex}} ({{args}});
 
@@ -186,13 +184,11 @@ public sealed class JcwJavaSourceGenerator
 """);
 		}
 
-		// Write native constructor declarations (skip for open generic types)
-		if (!type.IsGenericDefinition) {
-			foreach (var ctor in type.JavaConstructors) {
-				var nativeCtorParams = JniSignatureHelper.ParseParameters (ctor.JniSignature);
-				string parameters = FormatParameterList (nativeCtorParams);
-				writer.WriteLine ($"\tprivate native void nctor_{ctor.ConstructorIndex} ({parameters});");
-			}
+		// Write native constructor declarations
+		foreach (var ctor in type.JavaConstructors) {
+			var nativeCtorParams = JniSignatureHelper.ParseParameters (ctor.JniSignature);
+			string parameters = FormatParameterList (nativeCtorParams);
+			writer.WriteLine ($"\tprivate native void nctor_{ctor.ConstructorIndex} ({parameters});");
 		}
 
 		if (type.JavaConstructors.Count > 0) {
