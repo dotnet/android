@@ -182,7 +182,7 @@ sealed record UcoMethodData
 /// An [UnmanagedCallersOnly] static wrapper for a constructor callback.
 /// Signature must match the full JNI native method signature (jnienv + self + ctor params)
 /// so the ABI is correct when JNI dispatches the call.
-/// Body: TrimmableNativeRegistration.ActivateInstance(self, typeof(TargetType)).
+/// Body: TrimmableTypeMap.ActivateInstance(self, typeof(TargetType)).
 /// </summary>
 sealed record UcoConstructorData
 {
