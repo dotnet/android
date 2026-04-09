@@ -14,7 +14,6 @@
     <_TypeMapBaseOutputDir>$(IntermediateOutputPath)</_TypeMapBaseOutputDir>
     <_TypeMapBaseOutputDir>$(_TypeMapBaseOutputDir.Replace('\','/'))</_TypeMapBaseOutputDir>
     <_TypeMapOutputDirectory>$(_TypeMapBaseOutputDir)typemap/</_TypeMapOutputDirectory>
-    <_TypeMapJavaOutputDirectory>$(_TypeMapBaseOutputDir)typemap/java</_TypeMapJavaOutputDirectory>
   </PropertyGroup>
 
   <ItemGroup>
@@ -55,7 +54,7 @@
     <GenerateTrimmableTypeMap
         ResolvedAssemblies="@(_TypeMapInputAssemblies)"
         OutputDirectory="$(_TypeMapOutputDirectory)"
-        JavaSourceOutputDirectory="$(_TypeMapJavaOutputDirectory)"
+        JavaSourceOutputDirectory="$(_AndroidIntermediateJavaSourceDirectory)"
         TargetFrameworkVersion="$(TargetFrameworkVersion)"
         ManifestTemplate="$(_AndroidManifestAbs)"
         MergedAndroidManifestOutput="$(_TypeMapBaseOutputDir)AndroidManifest.xml"
@@ -98,15 +97,6 @@
       DependsOnTargets="_SetLatestTargetFrameworkVersion;_CleanIntermediateIfNeeded;_PrepareAssemblies;_GetGenerateJavaStubsInputs;_DefineBuildTargetAbis;_PrepareNativeAssemblySources"
       Inputs="@(_GenerateJavaStubsInputs)"
       Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
-
-    <ItemGroup>
-      <_TypeMapJavaFiles Include="$(_TypeMapJavaOutputDirectory)/**/*.java" />
-    </ItemGroup>
-    <Copy SourceFiles="@(_TypeMapJavaFiles)" DestinationFolder="$(IntermediateOutputPath)android/src/%(RecursiveDir)" />
-
-    <ItemGroup>
-      <FileWrites Include="@(_TypeMapJavaFiles->'$(IntermediateOutputPath)android/src/%(RecursiveDir)%(Filename)%(Extension)')" />
-    </ItemGroup>
 
     <!-- Set properties for ABI/RID used by CoreCLR _AddTrimmableTypeMapAssembliesToStore fallback -->
     <PropertyGroup>
