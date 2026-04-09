@@ -380,7 +380,7 @@ sealed class TypeMapAssemblyEmitter
 		// get_InvokerType
 		if (proxy.InvokerType != null) {
 			EmitTypeGetter ("get_InvokerType", proxy.InvokerType,
-				MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig);
+				MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.SpecialName | MethodAttributes.HideBySig);
 		}
 
 		// UCO wrappers
