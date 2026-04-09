@@ -18,51 +18,79 @@ namespace Java.Interop
 	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
 	public abstract class JavaPeerProxy : Attribute
 	{
-		/// <summary>
-		/// Initializes a new proxy with the specified JNI, target, and invoker types.
-		/// </summary>
-		/// <param name="jniName">The JNI type name, e.g., "android/app/Activity" or "crc64abc.../MyButton".</param>
-		/// <param name="targetType">The managed peer type this proxy represents.</param>
-		/// <param name="invokerType">The invoker type for interfaces/abstract classes, or <c>null</c> for concrete types.</param>
+		string? jniName;
+		Type? targetType;
+		Type? invokerType;
+
+		protected JavaPeerProxy ()
+		{
+		}
+
 		protected JavaPeerProxy (
 			string jniName,
 			Type targetType,
 			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 			Type? invokerType)
 		{
-			JniName = jniName ?? throw new ArgumentNullException (nameof (jniName));
-			TargetType = targetType ?? throw new ArgumentNullException (nameof (targetType));
-			InvokerType = invokerType;
+			this.jniName = jniName ?? throw new ArgumentNullException (nameof (jniName));
+			this.targetType = targetType ?? throw new ArgumentNullException (nameof (targetType));
+			this.invokerType = invokerType;
+		}
+
+		protected JavaPeerProxy (
+			Type targetType,
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			Type? invokerType)
+		{
+			this.targetType = targetType ?? throw new ArgumentNullException (nameof (targetType));
+			this.invokerType = invokerType;
 		}
 
 		/// <summary>
-		/// Gets the JNI type name of the Java class this proxy represents.
-		/// Used for managed → Java type lookups at runtime.
+		/// Gets the final JNI type name of the Java class this proxy represents.
 		/// </summary>
-		public string JniName { get; }
+		public virtual string JniName => jniName ?? GetJniName (TargetType);
+
+		static string GetJniName (Type targetType)
+		{
+			if (targetType.GetCustomAttributes (typeof (IJniNameProviderAttribute), inherit: false) is [IJniNameProviderAttribute provider, ..]
+				&& !string.IsNullOrEmpty (provider.Name)) {
+				return provider.Name.Replace ('.', '/');
+			}
+
+			throw new InvalidOperationException (
+				$"No JNI name is available for proxy target type '{targetType.FullName}'. " +
+				$"Use the JavaPeerProxy(string jniName, Type targetType, Type? invokerType) constructor " +
+				$"or apply an {nameof (IJniNameProviderAttribute)}.");
+		}
 
 		/// <summary>
 		/// Creates an instance of the target type using the JNI handle and ownership semantics.
 		/// This replaces the reflection-based constructor invocation used in the legacy path.
 		/// </summary>
+		/// <param name="handle">The JNI object reference handle.</param>
+		/// <param name="transfer">How to handle JNI reference ownership.</param>
+		/// <returns>A new instance of the target type wrapping the JNI handle, or null if activation is not supported.</returns>
 		public abstract IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer);
 
 		/// <summary>
 		/// Gets the target .NET type that this proxy represents.
 		/// </summary>
-		public Type TargetType { get; }
+		public virtual Type TargetType => targetType ?? throw new InvalidOperationException (
+			$"{GetType ().FullName} did not provide a target type.");
 
 		/// <summary>
 		/// Gets the invoker type for interfaces and abstract classes.
 		/// Returns null for concrete types that can be directly instantiated.
 		/// </summary>
 		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-		public Type? InvokerType { get; }
+		public virtual Type? InvokerType => invokerType;
 
 		/// <summary>
 		/// Gets a factory for creating containers (arrays, collections) of the target type.
 		/// Enables AOT-safe creation of generic collections without <c>MakeGenericType()</c>.
 		/// </summary>
+		/// <returns>A factory for creating containers of the target type, or null if not supported.</returns>
 		public virtual JavaPeerContainerFactory? GetContainerFactory () => null;
 	}
 
@@ -78,10 +106,17 @@ namespace Java.Interop
 		T
 	> : JavaPeerProxy where T : class, IJavaPeerable
 	{
+		protected JavaPeerProxy ()
+			: base (typeof (T), invokerType: null)
+		{
+		}
+
 		protected JavaPeerProxy (
 			string jniName,
 			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-			Type? invokerType) : base (jniName, typeof (T), invokerType) { }
+			Type? invokerType) : base (jniName, typeof (T), invokerType)
+		{
+		}
 
 		public override JavaPeerContainerFactory GetContainerFactory ()
 			=> JavaPeerContainerFactory<T>.Instance;

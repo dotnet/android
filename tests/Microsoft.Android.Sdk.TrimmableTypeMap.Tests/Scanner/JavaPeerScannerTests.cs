@@ -89,20 +89,16 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 		Assert.False (peer.DoNotGenerateAcw);
 		Assert.True (peer.IsUnconditional, "Should be unconditional due to [Activity]");
 	}
+
 	[Theory]
 	[InlineData ("MyApp.PlainActivitySubclass")]
 	[InlineData ("MyApp.UnregisteredClickListener")]
 	[InlineData ("MyApp.UnregisteredExporter")]
 	public void Scan_UnregisteredType_UsesCrc64PackageName (string managedName)
 	{
-		var testAssemblyDir = Path.GetDirectoryName (typeof (FixtureTestBase).Assembly.Location)
-			?? throw new InvalidOperationException ("Cannot determine test assembly directory");
-		var fixtureAssemblyPath = Path.Combine (testAssemblyDir, "TestFixtures.dll");
-		var fixtureAssembly = Assembly.LoadFrom (fixtureAssemblyPath);
-		var fixtureType = fixtureAssembly.GetType (managedName);
-		if (fixtureType is null) {
-			throw new InvalidOperationException ($"Could not load fixture type '{managedName}' from '{fixtureAssemblyPath}'.");
-		}
+		var fixtureAssembly = Assembly.LoadFrom (TestFixtureAssemblyPath);
+		var fixtureType = fixtureAssembly.GetType (managedName)
+			?? throw new InvalidOperationException ($"Could not load fixture type '{managedName}' from '{TestFixtureAssemblyPath}'.");
 
 		var assemblyName = fixtureType.Assembly.GetName ().Name
 			?? throw new InvalidOperationException ($"Could not determine assembly name for '{managedName}'.");

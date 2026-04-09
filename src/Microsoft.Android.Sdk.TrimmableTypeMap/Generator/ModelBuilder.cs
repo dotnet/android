@@ -127,8 +127,8 @@ static class ModelBuilder
 
 			model.Entries.Add (BuildEntry (peer, proxy, assemblyName, entryJniName));
 
-			// Emit TypeMapAssociation for all types with proxies (enables managed → Java lookups).
-			// For aliases (i > 0), link to the primary proxy.
+			// Emit TypeMapAssociation for all proxy-backed types so managed → proxy
+			// lookup works even when the final JNI name differs from the type's attributes.
 			var assocProxy = (i > 0 && primaryProxy != null) ? primaryProxy : proxy;
 			if (assocProxy != null) {
 				model.Associations.Add (new TypeMapAssociationData {

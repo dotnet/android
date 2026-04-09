@@ -203,6 +203,25 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.NotNull (proxy.InvokerType);
 			Assert.Equal ("Android.Views.View+IOnClickListenerInvoker", proxy.InvokerType!.ManagedTypeName);
 		}
+
+		[Theory]
+		[InlineData ("MyApp.PlainActivitySubclass")]
+		[InlineData ("MyApp.UnnamedActivity")]
+		[InlineData ("MyApp.UnregisteredClickListener")]
+		[InlineData ("MyApp.UnregisteredExporter")]
+		[InlineData ("MyApp.UnregisteredHelper")]
+		[InlineData ("MyApp.DerivedFromComponentBase")]
+		public void Build_Crc64RenamedPeer_StoresFinalJavaNameOnProxy (string managedName)
+		{
+			var peer = FindFixtureByManagedName (managedName);
+			Assert.StartsWith ("crc64", peer.JavaName);
+			Assert.NotEqual (peer.CompatJniName, peer.JavaName);
+
+			var model = BuildModel (new [] { peer }, "MyTypeMap");
+			var proxy = Assert.Single (model.ProxyTypes);
+
+			Assert.Equal (peer.JavaName, proxy.JniName);
+		}
 	}
 
 	public class FixtureScan
@@ -725,9 +744,9 @@ public class ModelBuilderTests : FixtureTestBase
 		var asmAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
 		foreach (var attrHandle in asmAttrs) {
 			var attr = reader.GetCustomAttribute (attrHandle);
-			// Skip non-TypeMap attributes.
 			if (attr.Constructor.Kind != HandleKind.MemberReference)
 				continue;
+
 			var ctor = reader.GetMemberReference ((MemberReferenceHandle) attr.Constructor);
 			if (ctor.Parent.Kind != HandleKind.TypeSpecification)
 				continue;

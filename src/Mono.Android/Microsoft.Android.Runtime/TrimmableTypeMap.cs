@@ -28,7 +28,7 @@ class TrimmableTypeMap
 
 	readonly IReadOnlyDictionary<string, Type> _typeMap;
 	readonly IReadOnlyDictionary<Type, Type> _proxyTypeMap;
-	readonly ConcurrentDictionary<Type, JavaPeerProxy> _proxyCache = new ();
+	readonly ConcurrentDictionary<Type, JavaPeerProxy?> _proxyCache = new ();
 
 	TrimmableTypeMap ()
 	{
@@ -72,23 +72,12 @@ class TrimmableTypeMap
 		=> _typeMap.TryGetValue (jniSimpleReference, out type);
 
 	/// <summary>
-	/// Finds the proxy for a managed type via the proxy type map.
-	/// Falls back to the external type map for types that only expose a JNI name attribute.
+	/// Finds the proxy for a managed type using the proxy type map first and
+	/// attribute-based lookup as a fallback.
 	/// Results are cached per type.
 	/// </summary>
 	internal JavaPeerProxy? GetProxyForManagedType (Type managedType)
-	{
-		if (_proxyCache.TryGetValue (managedType, out var cachedProxy)) {
-			return cachedProxy;
-		}
-
-		var proxy = ResolveProxyForManagedType (managedType);
-		if (proxy is not null) {
-			_proxyCache.TryAdd (managedType, proxy);
-		}
-
-		return proxy;
-	}
+		=> _proxyCache.GetOrAdd (managedType, static (type, self) => self.ResolveProxyForManagedType (type), this);
 
 	JavaPeerProxy? ResolveProxyForManagedType (Type managedType)
 	{
