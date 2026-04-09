@@ -174,10 +174,22 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.Single (model.ProxyTypes);
 			var proxy = model.ProxyTypes [0];
 			Assert.Equal (expectedProxyName, proxy.TypeName);
+			Assert.Equal (jniName, proxy.JniName);
 			Assert.Equal ("_TypeMap.Proxies", proxy.Namespace);
 			Assert.True (proxy.HasActivation);
 			Assert.Equal (managedName, proxy.TargetType.ManagedTypeName);
 			Assert.Equal (asmName, proxy.TargetType.AssemblyName);
+		}
+
+		[Fact]
+		public void Build_PeerWithActivation_CreatesAssociation ()
+		{
+			var peer = MakePeerWithActivation ("my/app/MainActivity", "MyApp.MainActivity", "App");
+			var model = BuildModel (new [] { peer }, "MyTypeMap");
+
+			var assoc = Assert.Single (model.Associations);
+			Assert.Equal ("MyApp.MainActivity, App", assoc.SourceTypeReference);
+			Assert.Equal ("_TypeMap.Proxies.MyApp_MainActivity_Proxy, MyTypeMap", assoc.AliasProxyTypeReference);
 		}
 
 		[Fact]
@@ -713,8 +725,11 @@ public class ModelBuilderTests : FixtureTestBase
 		var asmAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
 		foreach (var attrHandle in asmAttrs) {
 			var attr = reader.GetCustomAttribute (attrHandle);
-			// Skip IgnoresAccessChecksTo attributes (their ctor is a MethodDefinition, not MemberRef)
-			if (attr.Constructor.Kind == HandleKind.MethodDefinition)
+			// Skip non-TypeMap attributes.
+			if (attr.Constructor.Kind != HandleKind.MemberReference)
+				continue;
+			var ctor = reader.GetMemberReference ((MemberReferenceHandle) attr.Constructor);
+			if (ctor.Parent.Kind != HandleKind.TypeSpecification)
 				continue;
 
 			var blobReader = reader.GetBlobReader (attr.Value);
@@ -729,6 +744,10 @@ public class ModelBuilderTests : FixtureTestBase
 			string? targetRef = null;
 			if (blobReader.RemainingBytes > 2) {
 				targetRef = blobReader.ReadSerializedString ();
+			}
+
+			if (string.IsNullOrEmpty (jniName) || !jniName.Contains ('/')) {
+				continue;
 			}
 
 			result.Add ((jniName, proxyRef, targetRef));

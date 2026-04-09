@@ -19,18 +19,27 @@ namespace Java.Interop
 	public abstract class JavaPeerProxy : Attribute
 	{
 		/// <summary>
-		/// Initializes a new proxy with the specified target and invoker types.
+		/// Initializes a new proxy with the specified JNI, target, and invoker types.
 		/// </summary>
+		/// <param name="jniName">The JNI type name, e.g., "android/app/Activity" or "crc64abc.../MyButton".</param>
 		/// <param name="targetType">The managed peer type this proxy represents.</param>
 		/// <param name="invokerType">The invoker type for interfaces/abstract classes, or <c>null</c> for concrete types.</param>
 		protected JavaPeerProxy (
+			string jniName,
 			Type targetType,
 			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 			Type? invokerType)
 		{
-			TargetType = targetType;
+			JniName = jniName ?? throw new ArgumentNullException (nameof (jniName));
+			TargetType = targetType ?? throw new ArgumentNullException (nameof (targetType));
 			InvokerType = invokerType;
 		}
+
+		/// <summary>
+		/// Gets the JNI type name of the Java class this proxy represents.
+		/// Used for managed → Java type lookups at runtime.
+		/// </summary>
+		public string JniName { get; }
 
 		/// <summary>
 		/// Creates an instance of the target type using the JNI handle and ownership semantics.
@@ -70,8 +79,9 @@ namespace Java.Interop
 	> : JavaPeerProxy where T : class, IJavaPeerable
 	{
 		protected JavaPeerProxy (
+			string jniName,
 			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-			Type? invokerType) : base (typeof (T), invokerType) { }
+			Type? invokerType) : base (jniName, typeof (T), invokerType) { }
 
 		public override JavaPeerContainerFactory GetContainerFactory ()
 			=> JavaPeerContainerFactory<T>.Instance;

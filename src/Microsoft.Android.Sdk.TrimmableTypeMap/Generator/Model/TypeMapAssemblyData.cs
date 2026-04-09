@@ -85,6 +85,12 @@ sealed class JavaPeerProxyData
 	public required string TypeName { get; init; }
 
 	/// <summary>
+	/// JNI type name, e.g., "android/app/Activity" or "crc64abc.../MyButton".
+	/// Passed to the JavaPeerProxy base constructor for managed → Java lookups.
+	/// </summary>
+	public required string JniName { get; init; }
+
+	/// <summary>
 	/// Namespace for all proxy types.
 	/// </summary>
 	public string Namespace { get; init; } = "_TypeMap.Proxies";

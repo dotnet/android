@@ -133,7 +133,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.True (assemblyAttrs.Count () >= 3);
 
 		var typeNames = GetTypeRefNames (reader);
-		Assert.Contains ("TypeMapAssociationAttribute", typeNames);
+		Assert.Contains (typeNames, name => name.StartsWith ("TypeMapAssociationAttribute", StringComparison.Ordinal));
 	}
 
 	[Fact]

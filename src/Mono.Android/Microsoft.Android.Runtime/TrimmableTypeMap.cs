@@ -27,11 +27,13 @@ class TrimmableTypeMap
 			"TrimmableTypeMap has not been initialized. Ensure RuntimeFeature.TrimmableTypeMap is enabled and the JNI runtime is initialized.");
 
 	readonly IReadOnlyDictionary<string, Type> _typeMap;
-	readonly ConcurrentDictionary<Type, JavaPeerProxy?> _proxyCache = new ();
+	readonly IReadOnlyDictionary<Type, Type> _proxyTypeMap;
+	readonly ConcurrentDictionary<Type, JavaPeerProxy> _proxyCache = new ();
 
 	TrimmableTypeMap ()
 	{
 		_typeMap = TypeMapping.GetOrCreateExternalTypeMapping<Java.Lang.Object> ();
+		_proxyTypeMap = TypeMapping.GetOrCreateProxyTypeMapping<Java.Lang.Object> ();
 	}
 
 	/// <summary>
@@ -70,31 +72,55 @@ class TrimmableTypeMap
 		=> _typeMap.TryGetValue (jniSimpleReference, out type);
 
 	/// <summary>
-	/// Finds the proxy for a managed type by resolving its JNI name (from [Register] or
-	/// [JniTypeSignature] attributes) and looking it up in the TypeMap dictionary.
+	/// Finds the proxy for a managed type via the proxy type map.
+	/// Falls back to the external type map for types that only expose a JNI name attribute.
 	/// Results are cached per type.
 	/// </summary>
 	internal JavaPeerProxy? GetProxyForManagedType (Type managedType)
 	{
-		return _proxyCache.GetOrAdd (managedType, static (type, self) => {
-			// First check if the type itself IS a proxy (has self-applied attribute)
-			var direct = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-			if (direct is not null) {
-				return direct;
-			}
+		if (_proxyCache.TryGetValue (managedType, out var cachedProxy)) {
+			return cachedProxy;
+		}
 
-			// Resolve the JNI name from the managed type's attributes
-			if (!TryGetJniNameForType (type, out var jniName)) {
-				return null;
-			}
+		var proxy = ResolveProxyForManagedType (managedType);
+		if (proxy is not null) {
+			_proxyCache.TryAdd (managedType, proxy);
+		}
 
-			// Look up the proxy type in the TypeMap dictionary
-			if (!self._typeMap.TryGetValue (jniName, out var proxyType)) {
-				return null;
-			}
+		return proxy;
+	}
 
+	JavaPeerProxy? ResolveProxyForManagedType (Type managedType)
+	{
+		var direct = managedType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+		if (direct is not null) {
+			return direct;
+		}
+
+		if (_proxyTypeMap.TryGetValue (managedType, out var proxyType)) {
 			return proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-		}, this);
+		}
+
+		if (!TryGetJniNameForType (managedType, out var jniName)) {
+			return null;
+		}
+
+		if (!_typeMap.TryGetValue (jniName, out proxyType)) {
+			return null;
+		}
+
+		return proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+	}
+
+	internal bool TryGetJniNameForManagedType (Type managedType, [NotNullWhen (true)] out string? jniName)
+	{
+		var proxy = GetProxyForManagedType (managedType);
+		if (proxy is not null) {
+			jniName = proxy.JniName;
+			return true;
+		}
+
+		return TryGetJniNameForType (managedType, out jniName);
 	}
 
 	/// <summary>

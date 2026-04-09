@@ -206,10 +206,12 @@ sealed class TypeMapAssemblyEmitter
 
 	void EmitMemberReferences ()
 	{
+		// JavaPeerProxy..ctor(string jniName, Type targetType, Type? invokerType)
 		_baseCtorRef = _pe.AddMemberRef (_javaPeerProxyRef, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (3,
 				rt => rt.Void (),
 				p => {
+					p.AddParameter ().Type ().String ();
 					p.AddParameter ().Type ().Type (_systemTypeRef, false);
 					p.AddParameter ().Type ().Type (_systemTypeRef, false);
 				}));
@@ -335,13 +337,15 @@ sealed class TypeMapAssemblyEmitter
 	void EmitTypeMapAssociationAttributeCtorRef ()
 	{
 		var metadata = _pe.Metadata;
-		// TypeMapAssociationAttribute is in System.Runtime.InteropServices, takes 2 Type args:
-		// TypeMapAssociation(Type sourceType, Type aliasProxyType)
-		var typeMapAssociationAttrRef = metadata.AddTypeReference (_pe.SystemRuntimeInteropServicesRef,
+		var typeMapAssociationAttrOpenRef = metadata.AddTypeReference (_pe.SystemRuntimeInteropServicesRef,
 			metadata.GetOrAddString ("System.Runtime.InteropServices"),
-			metadata.GetOrAddString ("TypeMapAssociationAttribute"));
+			metadata.GetOrAddString ("TypeMapAssociationAttribute`1"));
+		var javaLangObjectRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Java.Lang"), metadata.GetOrAddString ("Object"));
+		var closedAttrTypeSpec = _pe.MakeGenericTypeSpec (typeMapAssociationAttrOpenRef, javaLangObjectRef);
 
-		_typeMapAssociationAttrCtorRef = _pe.AddMemberRef (typeMapAssociationAttrRef, ".ctor",
+		// TypeMapAssociation<Java.Lang.Object>(Type sourceType, Type aliasProxyType)
+		_typeMapAssociationAttrCtorRef = _pe.AddMemberRef (closedAttrTypeSpec, ".ctor",
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
 				rt => rt.Void (),
 				p => {
@@ -371,6 +375,7 @@ sealed class TypeMapAssemblyEmitter
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }),
 			encoder => {
 				encoder.OpCode (ILOpCode.Ldarg_0);
+				encoder.LoadString (metadata.GetOrAddUserString (proxy.JniName));
 				// arg 1: typeof(TargetType)
 				encoder.OpCode (ILOpCode.Ldtoken);
 				encoder.Token (_pe.ResolveTypeRef (proxy.TargetType));

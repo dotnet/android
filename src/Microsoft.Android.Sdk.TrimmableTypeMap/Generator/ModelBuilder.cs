@@ -117,7 +117,7 @@ static class ModelBuilder
 
 			JavaPeerProxyData? proxy = null;
 			if (hasProxy) {
-				proxy = BuildProxyType (peer, usedProxyNames, isAcw);
+				proxy = BuildProxyType (peer, jniName, usedProxyNames, isAcw);
 				model.ProxyTypes.Add (proxy);
 			}
 
@@ -127,11 +127,13 @@ static class ModelBuilder
 
 			model.Entries.Add (BuildEntry (peer, proxy, assemblyName, entryJniName));
 
-			// Emit TypeMapAssociation linking alias types to the primary proxy
-			if (i > 0 && primaryProxy != null) {
+			// Emit TypeMapAssociation for all types with proxies (enables managed → Java lookups).
+			// For aliases (i > 0), link to the primary proxy.
+			var assocProxy = (i > 0 && primaryProxy != null) ? primaryProxy : proxy;
+			if (assocProxy != null) {
 				model.Associations.Add (new TypeMapAssociationData {
 					SourceTypeReference = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName),
-					AliasProxyTypeReference = AssemblyQualify ($"{primaryProxy.Namespace}.{primaryProxy.TypeName}", assemblyName),
+					AliasProxyTypeReference = AssemblyQualify ($"{assocProxy.Namespace}.{assocProxy.TypeName}", assemblyName),
 				});
 			}
 		}
@@ -169,7 +171,7 @@ static class ModelBuilder
 		}
 	}
 
-	static JavaPeerProxyData BuildProxyType (JavaPeerInfo peer, HashSet<string> usedProxyNames, bool isAcw)
+	static JavaPeerProxyData BuildProxyType (JavaPeerInfo peer, string jniName, HashSet<string> usedProxyNames, bool isAcw)
 	{
 		// Use managed type name for proxy naming to guarantee uniqueness across aliases
 		// (two types with the same JNI name will have different managed names).
@@ -188,6 +190,7 @@ static class ModelBuilder
 
 		var proxy = new JavaPeerProxyData {
 			TypeName = proxyTypeName,
+			JniName = jniName,
 			TargetType = new TypeRefData {
 				ManagedTypeName = peer.ManagedTypeName,
 				AssemblyName = peer.AssemblyName,
