@@ -368,7 +368,7 @@ sealed class TypeMapAssemblyEmitter
 		}
 
 		// .ctor
-		var ctorHandle = _pe.EmitBody (".ctor",
+		_pe.EmitBody (".ctor",
 			MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }),
 			encoder => {
@@ -376,7 +376,6 @@ sealed class TypeMapAssemblyEmitter
 				encoder.Call (_baseCtorRef);
 				encoder.OpCode (ILOpCode.Ret);
 			});
-		metadata.AddCustomAttribute (typeDefHandle, ctorHandle, _ucoAttrBlobHandle);
 
 		// CreateInstance
 		EmitCreateInstance (proxy);
