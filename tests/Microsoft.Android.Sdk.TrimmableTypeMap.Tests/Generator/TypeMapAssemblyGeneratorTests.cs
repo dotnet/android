@@ -441,14 +441,26 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 
-		var memberNames = GetMemberRefNames (reader);
-
-		// RegisterNatives is a method definition on the proxy type, not a member reference
-		var methodDefs = reader.MethodDefinitions
+		var proxyType = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Single (t =>
+				reader.GetString (t.Namespace) == "_TypeMap.Proxies" &&
+				reader.GetString (t.Name) == "MyApp_MainActivity_Proxy");
+		var proxyMethodNames = proxyType.GetMethods ()
 			.Select (h => reader.GetMethodDefinition (h))
 			.Select (m => reader.GetString (m.Name))
 			.ToList ();
-		Assert.Contains ("RegisterNatives", methodDefs);
+		Assert.Contains ("RegisterNatives", proxyMethodNames);
+		Assert.Contains (proxyMethodNames, name => name.Contains ("_uco_"));
+
+		var privateImplDetailsType = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Single (t => reader.GetString (t.Name) == "<PrivateImplementationDetails>");
+		var privateImplMethodNames = privateImplDetailsType.GetMethods ()
+			.Select (h => reader.GetMethodDefinition (h))
+			.Select (m => reader.GetString (m.Name))
+			.ToList ();
+		Assert.DoesNotContain ("RegisterNatives", privateImplMethodNames);
 	}
 
 	[Fact]
