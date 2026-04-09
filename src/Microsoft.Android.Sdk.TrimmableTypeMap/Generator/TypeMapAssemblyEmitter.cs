@@ -207,7 +207,12 @@ sealed class TypeMapAssemblyEmitter
 	void EmitMemberReferences ()
 	{
 		_baseCtorRef = _pe.AddMemberRef (_javaPeerProxyRef, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }));
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+				rt => rt.Void (),
+				p => {
+					p.AddParameter ().Type ().Type (_systemTypeRef, false);
+					p.AddParameter ().Type ().Type (_systemTypeRef, false);
+				}));
 
 		_getTypeFromHandleRef = _pe.AddMemberRef (_systemTypeRef, "GetTypeFromHandle",
 			sig => sig.MethodSignature ().Parameters (1,
@@ -360,28 +365,30 @@ sealed class TypeMapAssemblyEmitter
 			metadata.AddInterfaceImplementation (typeDefHandle, _iAndroidCallableWrapperRef);
 		}
 
-		// .ctor
+		// .ctor — pass TargetType and InvokerType to base ctor
 		_pe.EmitBody (".ctor",
 			MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }),
 			encoder => {
 				encoder.OpCode (ILOpCode.Ldarg_0);
+				// arg 1: typeof(TargetType)
+				encoder.OpCode (ILOpCode.Ldtoken);
+				encoder.Token (_pe.ResolveTypeRef (proxy.TargetType));
+				encoder.Call (_getTypeFromHandleRef);
+				// arg 2: typeof(InvokerType) or null
+				if (proxy.InvokerType != null) {
+					encoder.OpCode (ILOpCode.Ldtoken);
+					encoder.Token (_pe.ResolveTypeRef (proxy.InvokerType));
+					encoder.Call (_getTypeFromHandleRef);
+				} else {
+					encoder.OpCode (ILOpCode.Ldnull);
+				}
 				encoder.Call (_baseCtorRef);
 				encoder.OpCode (ILOpCode.Ret);
 			});
 
 		// CreateInstance
 		EmitCreateInstance (proxy);
-
-		// get_TargetType
-		EmitTypeGetter ("get_TargetType", proxy.TargetType,
-			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.SpecialName | MethodAttributes.HideBySig);
-
-		// get_InvokerType
-		if (proxy.InvokerType != null) {
-			EmitTypeGetter ("get_InvokerType", proxy.InvokerType,
-				MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig);
-		}
 
 		// UCO wrappers
 		foreach (var uco in proxy.UcoMethods) {
@@ -644,22 +651,6 @@ sealed class TypeMapAssemblyEmitter
 					p.AddParameter ().Type ().IntPtr ();
 					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
 				}));
-	}
-
-	void EmitTypeGetter (string methodName, TypeRefData typeRef, MethodAttributes attrs)
-	{
-		var handle = _pe.ResolveTypeRef (typeRef);
-
-		_pe.EmitBody (methodName, attrs,
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0,
-				rt => rt.Type ().Type (_systemTypeRef, false),
-				p => { }),
-			encoder => {
-				encoder.OpCode (ILOpCode.Ldtoken);
-				encoder.Token (handle);
-				encoder.Call (_getTypeFromHandleRef);
-				encoder.OpCode (ILOpCode.Ret);
-			});
 	}
 
 	MethodDefinitionHandle EmitUcoMethod (UcoMethodData uco)
