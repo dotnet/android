@@ -19,31 +19,41 @@ namespace Java.Interop
 	public abstract class JavaPeerProxy : Attribute
 	{
 		/// <summary>
+		/// Initializes a new proxy with the specified target and invoker types.
+		/// </summary>
+		/// <param name="targetType">The managed peer type this proxy represents.</param>
+		/// <param name="invokerType">The invoker type for interfaces/abstract classes, or <c>null</c> for concrete types.</param>
+		protected JavaPeerProxy (
+			Type targetType,
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			Type? invokerType)
+		{
+			TargetType = targetType;
+			InvokerType = invokerType;
+		}
+
+		/// <summary>
 		/// Creates an instance of the target type using the JNI handle and ownership semantics.
 		/// This replaces the reflection-based constructor invocation used in the legacy path.
 		/// </summary>
-		/// <param name="handle">The JNI object reference handle.</param>
-		/// <param name="transfer">How to handle JNI reference ownership.</param>
-		/// <returns>A new instance of the target type wrapping the JNI handle, or null if activation is not supported.</returns>
 		public abstract IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer);
 
 		/// <summary>
 		/// Gets the target .NET type that this proxy represents.
 		/// </summary>
-		public abstract Type TargetType { get; }
+		public Type TargetType { get; }
 
 		/// <summary>
 		/// Gets the invoker type for interfaces and abstract classes.
 		/// Returns null for concrete types that can be directly instantiated.
 		/// </summary>
 		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-		public virtual Type? InvokerType => null;
+		public Type? InvokerType { get; }
 
 		/// <summary>
 		/// Gets a factory for creating containers (arrays, collections) of the target type.
 		/// Enables AOT-safe creation of generic collections without <c>MakeGenericType()</c>.
 		/// </summary>
-		/// <returns>A factory for creating containers of the target type, or null if not supported.</returns>
 		public virtual JavaPeerContainerFactory? GetContainerFactory () => null;
 	}
 
@@ -59,7 +69,9 @@ namespace Java.Interop
 		T
 	> : JavaPeerProxy where T : class, IJavaPeerable
 	{
-		public override Type TargetType => typeof (T);
+		protected JavaPeerProxy (
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			Type? invokerType) : base (typeof (T), invokerType) { }
 
 		public override JavaPeerContainerFactory GetContainerFactory ()
 			=> JavaPeerContainerFactory<T>.Instance;
