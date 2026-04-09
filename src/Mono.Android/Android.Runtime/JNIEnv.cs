@@ -170,6 +170,10 @@ namespace Android.Runtime {
 
 		public static unsafe IntPtr StartCreateInstance (Type type, string jniCtorSignature, JValue* constructorParameters)
 		{
+			if (type.IsGenericTypeDefinition) {
+				throw new NotSupportedException (
+					"Constructing instances of generic types from Java is not supported, as the type parameters cannot be determined.");
+			}
 			return AllocObject (type);
 		}
 
