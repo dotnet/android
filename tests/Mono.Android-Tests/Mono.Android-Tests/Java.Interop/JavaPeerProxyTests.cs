@@ -12,7 +12,7 @@ namespace Java.InteropTests
 	public class JavaPeerProxyTests
 	{
 		[Test]
-		public void ExplicitJniName_WinsOverTargetAttribute ()
+		public void Constructor_StoresJniNameAndTargetType ()
 		{
 			var proxy = new ExplicitNameProxy ();
 
@@ -22,22 +22,13 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void LegacyConstructor_UsesTargetAttribute ()
+		public void Constructor_StoresInvokerType ()
 		{
-			var proxy = new LegacyProxy ();
+			var proxy = new InvokerProxy ();
 
-			Assert.AreEqual ("test/ProxyTestPeer", proxy.JniName);
+			Assert.AreEqual ("custom/InvokerProxy", proxy.JniName);
 			Assert.AreEqual (typeof (ProxyTestPeer), proxy.TargetType);
-			Assert.IsNull (proxy.InvokerType);
-		}
-
-		[Test]
-		public void LegacyConstructor_ThrowsForTypeWithoutJniAttribute ()
-		{
-			var proxy = new LegacyUnregisteredProxy ();
-
-			var ex = Assert.Throws<InvalidOperationException> (() => _ = proxy.JniName);
-			Assert.That (ex?.Message, Does.Contain ("No JNI name is available"));
+			Assert.AreEqual (typeof (ProxyTestPeerInvoker), proxy.InvokerType);
 		}
 	}
 
@@ -54,42 +45,32 @@ namespace Java.InteropTests
 		}
 	}
 
-	sealed class UnregisteredProxyPeer : Java.Lang.Object
+	sealed class ProxyTestPeerInvoker : Java.Lang.Object
 	{
-		public UnregisteredProxyPeer ()
+		public ProxyTestPeerInvoker ()
 		{
 		}
 
-		public UnregisteredProxyPeer (IntPtr handle, JniHandleOwnership transfer)
+		public ProxyTestPeerInvoker (IntPtr handle, JniHandleOwnership transfer)
 			: base (handle, transfer)
 		{
 		}
 	}
 
-	sealed class ExplicitNameProxy : JavaPeerProxy<ProxyTestPeer>
+	sealed class ExplicitNameProxy : JavaPeerProxy
 	{
 		public ExplicitNameProxy ()
-			: base ("custom/ExplicitName", invokerType: null)
+			: base ("custom/ExplicitName", typeof (ProxyTestPeer), invokerType: null)
 		{
 		}
 
 		public override IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer) => null;
 	}
 
-	sealed class LegacyProxy : JavaPeerProxy
+	sealed class InvokerProxy : JavaPeerProxy<ProxyTestPeer>
 	{
-		public LegacyProxy ()
-			: base (typeof (ProxyTestPeer), invokerType: null)
-		{
-		}
-
-		public override IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer) => null;
-	}
-
-	sealed class LegacyUnregisteredProxy : JavaPeerProxy
-	{
-		public LegacyUnregisteredProxy ()
-			: base (typeof (UnregisteredProxyPeer), invokerType: null)
+		public InvokerProxy ()
+			: base ("custom/InvokerProxy", typeof (ProxyTestPeerInvoker))
 		{
 		}
 

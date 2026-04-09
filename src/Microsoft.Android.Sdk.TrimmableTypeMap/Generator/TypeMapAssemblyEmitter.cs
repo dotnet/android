@@ -33,8 +33,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 ///         // or: null;                                                // no activation
 ///         // or: throw new NotSupportedException(...);                // open generic
 ///
-///     public override Type TargetType =&gt; typeof(Activity);
-///     public Type InvokerType =&gt; typeof(IOnClickListenerInvoker);    // interfaces only
+///     // JniName / TargetType / InvokerType are supplied by the base JavaPeerProxy constructor.
 ///
 ///     // UCO wrappers — [UnmanagedCallersOnly] entry points for JNI native methods (ACWs only):
 ///     [UnmanagedCallersOnly]
@@ -652,22 +651,6 @@ sealed class TypeMapAssemblyEmitter
 					p.AddParameter ().Type ().IntPtr ();
 					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
 				}));
-	}
-
-	void EmitTypeGetter (string methodName, TypeRefData typeRef, MethodAttributes attrs)
-	{
-		var handle = _pe.ResolveTypeRef (typeRef);
-
-		_pe.EmitBody (methodName, attrs,
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0,
-				rt => rt.Type ().Type (_systemTypeRef, false),
-				p => { }),
-			encoder => {
-				encoder.OpCode (ILOpCode.Ldtoken);
-				encoder.Token (handle);
-				encoder.Call (_getTypeFromHandleRef);
-				encoder.OpCode (ILOpCode.Ret);
-			});
 	}
 
 	MethodDefinitionHandle EmitUcoMethod (UcoMethodData uco)
