@@ -91,9 +91,25 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		using var stream = GenerateAssembly (peers);
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
-		var typeNames = GetTypeRefNames (reader);
+		var proxyTypes = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Where (t => reader.GetString (t.Namespace) == "_TypeMap.Proxies")
+			.ToList ();
 
-		Assert.Contains ("JavaPeerProxy`1", typeNames);
+		Assert.NotEmpty (proxyTypes);
+		Assert.All (proxyTypes, proxyType => {
+			Assert.Equal (HandleKind.TypeSpecification, proxyType.BaseType.Kind);
+
+			var baseTypeSpec = reader.GetTypeSpecification ((TypeSpecificationHandle) proxyType.BaseType);
+			var baseTypeName = baseTypeSpec.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null);
+
+			Assert.StartsWith ("Java.Interop.JavaPeerProxy`1<", baseTypeName, StringComparison.Ordinal);
+		});
+
+		var objectProxy = proxyTypes.First (t => reader.GetString (t.Name) == "Java_Lang_Object_Proxy");
+		var objectProxyBaseType = reader.GetTypeSpecification ((TypeSpecificationHandle) objectProxy.BaseType);
+		Assert.Equal ("Java.Interop.JavaPeerProxy`1<Java.Lang.Object>",
+			objectProxyBaseType.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null));
 	}
 
 	[Fact]
