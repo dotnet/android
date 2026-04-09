@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 using Xunit;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
@@ -91,21 +88,11 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 	}
 
 	[Theory]
-	[InlineData ("MyApp.PlainActivitySubclass")]
-	[InlineData ("MyApp.UnregisteredClickListener")]
-	[InlineData ("MyApp.UnregisteredExporter")]
-	public void Scan_UnregisteredType_UsesCrc64PackageName (string managedName)
+	[InlineData ("MyApp.PlainActivitySubclass", "crc64eb3df85c64aa1af6/PlainActivitySubclass")]
+	[InlineData ("MyApp.UnregisteredClickListener", "crc64eb3df85c64aa1af6/UnregisteredClickListener")]
+	[InlineData ("MyApp.UnregisteredExporter", "crc64eb3df85c64aa1af6/UnregisteredExporter")]
+	public void Scan_UnregisteredType_UsesCrc64PackageName (string managedName, string expectedJavaName)
 	{
-		var fixtureAssembly = Assembly.LoadFrom (TestFixtureAssemblyPath);
-		var fixtureType = fixtureAssembly.GetType (managedName)
-			?? throw new InvalidOperationException ($"Could not load fixture type '{managedName}' from '{TestFixtureAssemblyPath}'.");
-
-		var assemblyName = fixtureType.Assembly.GetName ().Name
-			?? throw new InvalidOperationException ($"Could not determine assembly name for '{managedName}'.");
-		var data = Encoding.UTF8.GetBytes ($"{fixtureType.Namespace}:{assemblyName}");
-		var hash = System.IO.Hashing.Crc64.Hash (data);
-		var expectedJavaName = $"crc64{BitConverter.ToString (hash).Replace ("-", "").ToLowerInvariant ()}/{fixtureType.Name}";
-
 		Assert.Equal (expectedJavaName, FindFixtureByManagedName (managedName).JavaName);
 	}
 }
