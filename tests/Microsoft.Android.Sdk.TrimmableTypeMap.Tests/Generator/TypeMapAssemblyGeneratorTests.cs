@@ -189,6 +189,24 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_InheritedCtor_UcoUsesGuardWithoutReflectionFallback ()
+	{
+		var peers = ScanFixtures ();
+		var simpleActivity = peers.First (p => p.JavaName == "my/app/SimpleActivity");
+		Assert.NotNull (simpleActivity.ActivationCtor);
+		Assert.NotEqual (simpleActivity.ManagedTypeName, simpleActivity.ActivationCtor.DeclaringTypeName);
+
+		using var stream = GenerateAssembly (new [] { simpleActivity }, "InheritedCtorUcoTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+		var memberNames = GetMemberRefNames (reader);
+
+		Assert.Contains ("get_WithinNewObjectScope", memberNames);
+		Assert.Contains ("ActivateInstance", memberNames);
+		Assert.DoesNotContain ("ActivatePeerFromJavaConstructor", memberNames);
+	}
+
+	[Fact]
 	public void Generate_GenericType_ThrowsNotSupportedException ()
 	{
 		var peers = ScanFixtures ();

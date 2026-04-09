@@ -87,7 +87,7 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _jniObjectReferenceCtorRef;
 	MemberReferenceHandle _jniEnvDeleteRefRef;
 	MemberReferenceHandle _withinNewObjectScopeRef;
-	MemberReferenceHandle _activatePeerFromJavaConstructorRef;
+	MemberReferenceHandle _activateInstanceRef;
 	MemberReferenceHandle _ucoAttrCtorRef;
 	BlobHandle _ucoAttrBlobHandle;
 	MemberReferenceHandle _typeMapAttrCtorRef2Arg;
@@ -244,16 +244,15 @@ sealed class TypeMapAssemblyEmitter
 				rt => rt.Type ().Boolean (),
 				p => { }));
 
-		// TrimmableTypeMap.ActivatePeerFromJavaConstructor(Type, IntPtr, string)
+		// TrimmableTypeMap.ActivateInstance(IntPtr, Type)
 		var trimmableTypeMapRef = _pe.Metadata.AddTypeReference (_pe.MonoAndroidRef,
 			_pe.Metadata.GetOrAddString ("Microsoft.Android.Runtime"), _pe.Metadata.GetOrAddString ("TrimmableTypeMap"));
-		_activatePeerFromJavaConstructorRef = _pe.AddMemberRef (trimmableTypeMapRef, "ActivatePeerFromJavaConstructor",
-			sig => sig.MethodSignature ().Parameters (3,
+		_activateInstanceRef = _pe.AddMemberRef (trimmableTypeMapRef, "ActivateInstance",
+			sig => sig.MethodSignature ().Parameters (2,
 				rt => rt.Void (),
 				p => {
-					p.AddParameter ().Type ().Type (_systemTypeRef, false);
 					p.AddParameter ().Type ().IntPtr ();
-					p.AddParameter ().Type ().String ();
+					p.AddParameter ().Type ().Type (_systemTypeRef, false);
 				}));
 
 		// JniNativeMethod..ctor(byte*, byte*, IntPtr)
@@ -735,11 +734,8 @@ sealed class TypeMapAssemblyEmitter
 
 		MethodDefinitionHandle handle;
 
-		// For types where the activation ctor is NOT on the leaf type, use the runtime
-		// ActivatePeerFromJavaConstructor helper which matches legacy ManagedPeer.Construct
-		// behavior: finds the managed ctor matching the JNI signature, creates an
-		// uninitialized instance of the correct target type, sets peer reference, and
-		// invokes the matching ctor (preserving user ctor side effects).
+		// For non-leaf activation, keep the WithinNewObjectScope guard but route back
+		// through the generated proxy activation path instead of a runtime reflection helper.
 		if (!activationCtor.IsOnLeafType) {
 			handle = _pe.EmitBody (uco.WrapperName,
 				MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
@@ -749,12 +745,11 @@ sealed class TypeMapAssemblyEmitter
 					encoder.Call (_withinNewObjectScopeRef);
 					encoder.Branch (ILOpCode.Brtrue, skipLabel);
 
+					encoder.LoadArgument (1); // jniSelf
 					encoder.OpCode (ILOpCode.Ldtoken);
 					encoder.Token (userTypeRef);
 					encoder.Call (_getTypeFromHandleRef);
-					encoder.LoadArgument (1); // jniSelf
-					encoder.LoadString (_pe.Metadata.GetOrAddUserString (uco.JniSignature));
-					encoder.Call (_activatePeerFromJavaConstructorRef);
+					encoder.Call (_activateInstanceRef);
 
 					encoder.MarkLabel (skipLabel);
 					encoder.OpCode (ILOpCode.Ret);
