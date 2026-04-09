@@ -6,8 +6,6 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
-using Java.Interop.Tools.JavaCallableWrappers;
-
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
 /// <summary>
@@ -1474,11 +1472,8 @@ public sealed class JavaPeerScanner : IDisposable
 			return ns.ToLowerInvariant ().Replace ('.', '/');
 		}
 
-		// Keep this in sync with JavaNativeTypeManager.ToJniName(Type)/(TypeDefinition).
-		// The trimmable build path must emit the exact same CRC64 package names that the
-		// runtime later computes for FindClass(Type) and peer activation.
 		var data = System.Text.Encoding.UTF8.GetBytes ($"{ns}:{assemblyName}");
-		var hash = Crc64Helper.Compute (data);
+		var hash = System.IO.Hashing.Crc64.Hash (data);
 		return $"crc64{BitConverter.ToString (hash).Replace ("-", "").ToLowerInvariant ()}";
 	}
 
