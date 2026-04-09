@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks;
@@ -13,19 +14,25 @@ namespace Xamarin.Android.Tasks;
 /// MSBuild task that runs in the inner (per-RID) build to generate the
 /// <c>marshal_methods.{abi}.ll</c> LLVM IR file.
 ///
-/// When marshal methods are enabled (Release + trimmed), the task also classifies
-/// marshal methods, rewrites assemblies in-place (adds [UnmanagedCallersOnly]
-/// wrappers, removes connectors), and generates a full .ll with native marshal
-/// method functions.
+/// When marshal methods are enabled (Release + MonoVM), the task classifies
+/// marshal methods, rewrites assemblies (adds [UnmanagedCallersOnly] wrappers,
+/// removes connectors), and generates a full .ll with native marshal method
+/// functions.  Rewritten assemblies are written to a separate per-RID output
+/// directory (<see cref="RewrittenAssembliesOutputDirectory"/>), never in-place,
+/// so that parallel inner builds don't conflict even when the input assemblies
+/// point to a shared location (e.g. the NuGet runtime pack when PublishTrimmed
+/// is false).  The output items (<see cref="RewrittenAssemblies"/>) allow the
+/// target to update <c>@(ResolvedFileToPublish)</c> so downstream processing
+/// uses the rewritten copies.
 ///
-/// When marshal methods are disabled (Debug, or Release without marshal methods),
-/// the task generates an empty/minimal .ll containing only the structural
-/// scaffolding the native runtime always links against.
+/// When marshal methods are disabled (Debug, or Release without marshal
+/// methods), the task generates an empty/minimal .ll containing only the
+/// structural scaffolding the native runtime always links against.
 ///
-/// Runs AfterTargets="_PostTrimmingPipeline" (which is AfterTargets="ILLink") so
-/// that trimmed assemblies are available for rewriting when trimming is active.
-/// MSBuild fires AfterTargets hooks even when the referenced target is
-/// condition-skipped, so this target also runs in untrimmed builds.
+/// Runs AfterTargets="_PostTrimmingPipeline" (which is AfterTargets="ILLink")
+/// so that trimmed assemblies are available for rewriting when trimming is
+/// active.  MSBuild fires AfterTargets hooks even when the referenced target
+/// is condition-skipped, so this target also runs in untrimmed builds.
 /// </summary>
 public class RewriteMarshalMethods : AndroidTask
 {
@@ -70,11 +77,32 @@ public class RewriteMarshalMethods : AndroidTask
 	public string MarshalMethodsOutputDirectory { get; set; } = "";
 
 	/// <summary>
+	/// Per-RID directory where rewritten assemblies are written.  Rewritten
+	/// assemblies are always written to this directory (never in-place) so that
+	/// parallel inner builds for different RIDs don't conflict, even when the
+	/// input assemblies reside in a shared location such as the NuGet runtime pack.
+	/// Only used when <see cref="EnableMarshalMethods"/> is true.
+	/// </summary>
+	[Required]
+	public string RewrittenAssembliesOutputDirectory { get; set; } = "";
+
+	/// <summary>
 	/// The RuntimeIdentifier for this inner build (e.g. <c>android-arm64</c>).
 	/// Converted to an ABI and target architecture internally.
 	/// </summary>
 	[Required]
 	public string RuntimeIdentifier { get; set; } = "";
+
+	/// <summary>
+	/// Output: assemblies (and PDBs) that were rewritten to
+	/// <see cref="RewrittenAssembliesOutputDirectory"/>.  Each item carries all
+	/// metadata from the original input assembly plus <c>OriginalItemSpec</c>
+	/// pointing to the original path.  The calling target uses these to replace
+	/// the original items in <c>@(ResolvedFileToPublish)</c> so downstream
+	/// processing picks up the rewritten copies.
+	/// </summary>
+	[Output]
+	public ITaskItem []? RewrittenAssemblies { get; set; }
 
 	public override bool RunTask ()
 	{
@@ -82,6 +110,11 @@ public class RewriteMarshalMethods : AndroidTask
 
 		string abi = MonoAndroidHelper.RidToAbi (RuntimeIdentifier);
 		var targetArch = MonoAndroidHelper.AbiToTargetArch (abi);
+
+		// The inner build's @(ResolvedFileToPublish) items don't have %(Abi) metadata yet —
+		// that's normally stamped later by ProcessAssemblies in the outer build.  Downstream
+		// code (XAJavaTypeScanner) reads %(Abi) from each ITaskItem, so we need to set it here.
+		EnsureAbiMetadata (abi);
 
 		if (EnableMarshalMethods) {
 			ProcessMarshalMethods (targetArch, abi, androidRuntime);
@@ -93,7 +126,7 @@ public class RewriteMarshalMethods : AndroidTask
 	}
 
 	/// <summary>
-	/// Marshal methods enabled path: classify, rewrite assemblies, generate full .ll.
+	/// Marshal methods enabled path: classify, rewrite assemblies to output directory, generate full .ll.
 	/// </summary>
 	void ProcessMarshalMethods (AndroidTargetArch targetArch, string abi, AndroidRuntime androidRuntime)
 	{
@@ -120,23 +153,27 @@ public class RewriteMarshalMethods : AndroidTask
 			return;
 		}
 
-		// Step 2: Rewrite assemblies
+		// Step 2: Rewrite assemblies to the per-RID output directory
+		HashSet<string> rewrittenOriginalPaths;
 		if (!EnableManagedMarshalMethodsLookup) {
-			RewriteAssemblies (targetArch, classifier, resolver, brokenExceptionTransitionsEnabled);
+			rewrittenOriginalPaths = RewriteAssemblies (targetArch, classifier, resolver, brokenExceptionTransitionsEnabled);
 			classifier.AddSpecialCaseMethods ();
 		} else {
 			classifier.AddSpecialCaseMethods ();
 			var lookupInfo = new ManagedMarshalMethodsLookupInfo (Log);
-			RewriteAssemblies (targetArch, classifier, resolver, brokenExceptionTransitionsEnabled, lookupInfo);
+			rewrittenOriginalPaths = RewriteAssemblies (targetArch, classifier, resolver, brokenExceptionTransitionsEnabled, lookupInfo);
 		}
 
 		ReportStatistics (targetArch, classifier);
 
-		// Step 3: Build NativeCodeGenStateObject and generate .ll
+		// Step 3: Build output items for rewritten assemblies (DLLs and PDBs)
+		BuildRewrittenAssembliesOutput (rewrittenOriginalPaths);
+
+		// Step 4: Build NativeCodeGenStateObject and generate .ll
 		var codeGenState = MarshalMethodCecilAdapter.CreateNativeCodeGenStateObjectFromClassifier (targetArch, classifier);
 		GenerateLlvmIr (targetArch, abi, androidRuntime, codeGenState);
 
-		// Step 4: Dispose Cecil resolvers
+		// Step 5: Dispose Cecil resolvers
 		resolver.Dispose ();
 	}
 
@@ -151,10 +188,50 @@ public class RewriteMarshalMethods : AndroidTask
 		GenerateLlvmIr (targetArch, abi, androidRuntime, emptyCodeGenState);
 	}
 
-	void RewriteAssemblies (AndroidTargetArch targetArch, MarshalMethodsCollection classifier, XAAssemblyResolver resolver, bool brokenExceptionTransitionsEnabled, ManagedMarshalMethodsLookupInfo? lookupInfo = null)
+	HashSet<string> RewriteAssemblies (AndroidTargetArch targetArch, MarshalMethodsCollection classifier, XAAssemblyResolver resolver, bool brokenExceptionTransitionsEnabled, ManagedMarshalMethodsLookupInfo? lookupInfo = null)
 	{
 		var rewriter = new MarshalMethodsAssemblyRewriter (Log, targetArch, classifier, resolver, lookupInfo);
-		rewriter.Rewrite (brokenExceptionTransitionsEnabled);
+		return rewriter.Rewrite (brokenExceptionTransitionsEnabled, RewrittenAssembliesOutputDirectory);
+	}
+
+	/// <summary>
+	/// Build output items for assemblies (and PDBs) that were rewritten to the output directory.
+	/// Each output item has the rewritten path as its ItemSpec, all metadata copied from the
+	/// corresponding input assembly, and <c>OriginalItemSpec</c> set to the original path.
+	/// </summary>
+	void BuildRewrittenAssembliesOutput (HashSet<string> rewrittenOriginalPaths)
+	{
+		if (rewrittenOriginalPaths.Count == 0) {
+			return;
+		}
+
+		var rewrittenItems = new List<ITaskItem> ();
+
+		foreach (var item in Assemblies) {
+			if (!rewrittenOriginalPaths.Contains (item.ItemSpec)) {
+				continue;
+			}
+
+			string rewrittenPath = Path.Combine (RewrittenAssembliesOutputDirectory, Path.GetFileName (item.ItemSpec));
+
+			// Output item for the rewritten DLL
+			var dllItem = new TaskItem (rewrittenPath);
+			item.CopyMetadataTo (dllItem);
+			dllItem.SetMetadata ("OriginalItemSpec", item.ItemSpec);
+			rewrittenItems.Add (dllItem);
+
+			// Output item for the rewritten PDB, if one was produced
+			string rewrittenPdb = Path.ChangeExtension (rewrittenPath, ".pdb");
+			if (File.Exists (rewrittenPdb)) {
+				string originalPdb = Path.ChangeExtension (item.ItemSpec, ".pdb");
+				var pdbItem = new TaskItem (rewrittenPdb);
+				item.CopyMetadataTo (pdbItem);
+				pdbItem.SetMetadata ("OriginalItemSpec", originalPdb);
+				rewrittenItems.Add (pdbItem);
+			}
+		}
+
+		RewrittenAssemblies = rewrittenItems.ToArray ();
 	}
 
 	void ReportStatistics (AndroidTargetArch targetArch, MarshalMethodsCollection classifier)
@@ -210,6 +287,23 @@ public class RewriteMarshalMethods : AndroidTask
 		} finally {
 			if (!fileFullyWritten) {
 				MonoAndroidHelper.LogTextStreamContents (Log, $"Partial contents of file '{llFilePath}'", writer.BaseStream);
+			}
+		}
+	}
+
+	/// <summary>
+	/// Stamp <c>%(Abi)</c> metadata on every assembly item that doesn't already have it.
+	/// The inner build's <c>@(ResolvedFileToPublish)</c> items carry <c>%(RuntimeIdentifier)</c>
+	/// but not <c>%(Abi)</c> — that is normally set later by <c>ProcessAssemblies</c> in the
+	/// outer build.  Downstream code (<c>XAJavaTypeScanner</c>) reads <c>%(Abi)</c> from each
+	/// <c>ITaskItem</c>, so we set it here from the task's <c>RuntimeIdentifier</c> parameter.
+	/// </summary>
+	void EnsureAbiMetadata (string abi)
+	{
+		foreach (var item in Assemblies) {
+			string? existingAbi = item.GetMetadata ("Abi");
+			if (existingAbi.IsNullOrEmpty ()) {
+				item.SetMetadata ("Abi", abi);
 			}
 		}
 	}

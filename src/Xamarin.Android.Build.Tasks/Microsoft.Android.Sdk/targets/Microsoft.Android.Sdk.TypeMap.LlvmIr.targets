@@ -247,10 +247,13 @@
     Inner-build marshal method handling.  Always runs (for every RID) to generate
     the marshal_methods.<abi>.ll LLVM IR file.
 
-    When marshal methods are enabled (Release + PublishTrimmed), the task also
-    classifies marshal methods, rewrites assemblies (adds [UnmanagedCallersOnly]
-    wrappers, removes connectors), and generates a full .ll with marshal method
-    native functions.
+    When marshal methods are enabled (Release + MonoVM), the task also classifies
+    marshal methods, rewrites assemblies (adds [UnmanagedCallersOnly] wrappers,
+    removes connectors), and generates a full .ll with marshal method native
+    functions.  Rewritten assemblies are always written to a separate per-RID
+    output directory (never in-place), so parallel inner builds don't conflict
+    even when the input assemblies point to a shared location (e.g. the NuGet
+    runtime pack when PublishTrimmed is false).
 
     When marshal methods are disabled (Debug, or Release without marshal methods),
     the task generates an empty/minimal .ll containing only the structural
@@ -277,8 +280,18 @@
         EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
         Environments="@(_EnvironmentFiles)"
         MarshalMethodsOutputDirectory="$(_OuterIntermediateOutputPath)android"
+        RewrittenAssembliesOutputDirectory="$(IntermediateOutputPath)rewritten-marshal-methods"
         AndroidRuntime="$(_AndroidRuntime)"
-        RuntimeIdentifier="$(RuntimeIdentifier)" />
+        RuntimeIdentifier="$(RuntimeIdentifier)">
+      <Output TaskParameter="RewrittenAssemblies" ItemName="_RewrittenMarshalMethodFile" />
+    </RewriteMarshalMethods>
+    <!-- Replace original items in @(ResolvedFileToPublish) with the rewritten copies.
+         This covers both DLLs and their PDBs.  The updated items flow back to the outer
+         build via _ComputeFilesToPublishForRuntimeIdentifiers' Returns attribute. -->
+    <ItemGroup Condition=" '@(_RewrittenMarshalMethodFile)' != '' ">
+      <ResolvedFileToPublish Remove="@(_RewrittenMarshalMethodFile->'%(OriginalItemSpec)')" />
+      <ResolvedFileToPublish Include="@(_RewrittenMarshalMethodFile)" />
+    </ItemGroup>
   </Target>
 
   <!-- Inject _TypeMapKind into the property cache -->
