@@ -272,6 +272,11 @@ sealed class PEAssemblyBuilder
 	public MethodDefinitionHandle EmitBody (string name, MethodAttributes attrs,
 		Action<BlobEncoder> encodeSig, Action<InstructionEncoder> emitIL,
 		Action<BlobBuilder>? encodeLocals)
+		=> EmitBody (name, attrs, encodeSig, emitIL, encodeLocals, useBranches: false);
+
+	public MethodDefinitionHandle EmitBody (string name, MethodAttributes attrs,
+		Action<BlobEncoder> encodeSig, Action<InstructionEncoder> emitIL,
+		Action<BlobBuilder>? encodeLocals, bool useBranches)
 	{
 		_sigBlob.Clear ();
 		encodeSig (new BlobEncoder (_sigBlob));
@@ -287,7 +292,8 @@ sealed class PEAssemblyBuilder
 		}
 
 		_codeBlob.Clear ();
-		var encoder = new InstructionEncoder (_codeBlob);
+		ControlFlowBuilder? cfb = useBranches ? new ControlFlowBuilder () : null;
+		var encoder = new InstructionEncoder (_codeBlob, cfb);
 		emitIL (encoder);
 
 		while (ILBuilder.Count % 4 != 0) {
