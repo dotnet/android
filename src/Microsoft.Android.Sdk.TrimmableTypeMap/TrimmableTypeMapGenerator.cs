@@ -38,6 +38,9 @@ public class TrimmableTypeMapGenerator
 			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
 
+		RootManifestReferencedTypes (allPeers, PrepareManifestForRooting (manifestTemplate, manifestConfig));
+		PropagateDeferredRegistrationToManagedBaseTypes (allPeers);
+
 		var generatedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion);
 		var jcwPeers = allPeers.Where (p =>
 			!frameworkAssemblyNames.Contains (p.AssemblyName)
@@ -47,8 +50,9 @@ public class TrimmableTypeMapGenerator
 
 		// Collect Application/Instrumentation types that need deferred registerNatives
 		var appRegTypes = allPeers
-			.Where (p => p.CannotRegisterInStaticConstructor && !p.IsAbstract)
+			.Where (p => p.CannotRegisterInStaticConstructor && !p.DoNotGenerateAcw)
 			.Select (p => JniSignatureHelper.JniNameToJavaName (p.JavaName))
+			.Distinct (StringComparer.Ordinal)
 			.ToList ();
 		if (appRegTypes.Count > 0) {
 			logger.LogDeferredRegistrationTypesInfo (appRegTypes.Count);
@@ -138,5 +142,228 @@ public class TrimmableTypeMapGenerator
 		var sources = jcwGenerator.GenerateContent (allPeers);
 		logger.LogGeneratedJcwFilesInfo (sources.Count);
 		return sources.ToList ();
+	}
+
+	internal void RootManifestReferencedTypes (List<JavaPeerInfo> allPeers, XDocument? doc)
+	{
+		if (doc?.Root is not { } root) {
+			return;
+		}
+
+		XNamespace androidNs = "http://schemas.android.com/apk/res/android";
+		XName attName = androidNs + "name";
+		var packageName = (string?) root.Attribute ("package") ?? "";
+
+		var componentNames = new HashSet<string> (StringComparer.Ordinal);
+		var deferredRegistrationNames = new HashSet<string> (StringComparer.Ordinal);
+		foreach (var element in root.Descendants ()) {
+			switch (element.Name.LocalName) {
+			case "application":
+			case "activity":
+			case "instrumentation":
+			case "service":
+			case "receiver":
+			case "provider":
+				var name = (string?) element.Attribute (attName);
+				if (name is not null) {
+					var resolvedName = ResolveManifestClassName (name, packageName);
+					componentNames.Add (resolvedName);
+
+					if (element.Name.LocalName is "application" or "instrumentation") {
+						deferredRegistrationNames.Add (resolvedName);
+					}
+				}
+				break;
+			}
+		}
+
+		if (componentNames.Count == 0) {
+			return;
+		}
+
+		// Build lookup by both Java and compat dot-names. Keep '$' for nested types,
+		// because manifests commonly use '$', but also include the Java source form.
+		var peersByDotName = new Dictionary<string, List<JavaPeerInfo>> (StringComparer.Ordinal);
+		foreach (var peer in allPeers) {
+			AddJniLookupNames (peersByDotName, peer.JavaName, peer);
+
+			if (peer.CompatJniName != peer.JavaName) {
+				AddJniLookupNames (peersByDotName, peer.CompatJniName, peer);
+			}
+		}
+
+		foreach (var name in componentNames) {
+			if (peersByDotName.TryGetValue (name, out var peers)) {
+				foreach (var peer in peers.Distinct ()) {
+					PromoteManifestCompatibleJavaName (allPeers, peer, name);
+
+					if (deferredRegistrationNames.Contains (name)) {
+						peer.CannotRegisterInStaticConstructor = true;
+					}
+
+					if (!peer.IsUnconditional) {
+						peer.IsUnconditional = true;
+						logger.LogRootingManifestReferencedTypeInfo (name, peer.ManagedTypeName);
+					}
+				}
+			} else {
+				logger.LogUnresolvedTypeWarning (name);
+			}
+		}
+	}
+
+	static void PromoteManifestCompatibleJavaName (List<JavaPeerInfo> allPeers, JavaPeerInfo peer, string manifestName)
+	{
+		if (peer.JavaName == peer.CompatJniName || !MatchesManifestName (peer.CompatJniName, manifestName)) {
+			return;
+		}
+
+		var promotedJavaName = NormalizeJniName (peer.CompatJniName);
+		var previousJavaName = peer.JavaName;
+		if (promotedJavaName == previousJavaName) {
+			return;
+		}
+
+		peer.JavaName = promotedJavaName;
+
+		foreach (var candidate in allPeers) {
+			if (candidate.BaseJavaName == previousJavaName) {
+				candidate.BaseJavaName = promotedJavaName;
+			}
+		}
+	}
+
+	void PropagateDeferredRegistrationToManagedBaseTypes (List<JavaPeerInfo> allPeers)
+	{
+		var peersByJavaName = new Dictionary<string, JavaPeerInfo> (StringComparer.Ordinal);
+		foreach (var peer in allPeers) {
+			if (!peersByJavaName.ContainsKey (peer.JavaName)) {
+				peersByJavaName.Add (peer.JavaName, peer);
+			}
+			if (peer.CompatJniName != peer.JavaName && !peersByJavaName.ContainsKey (peer.CompatJniName)) {
+				peersByJavaName.Add (peer.CompatJniName, peer);
+			}
+		}
+
+		foreach (var peer in allPeers.Where (p => p.CannotRegisterInStaticConstructor)) {
+			PropagateDeferredRegistrationToManagedBaseTypes (peer, peersByJavaName);
+		}
+	}
+
+	void PropagateDeferredRegistrationToManagedBaseTypes (JavaPeerInfo peer, Dictionary<string, JavaPeerInfo> peersByJavaName)
+	{
+		var visited = new HashSet<string> (StringComparer.Ordinal);
+		var baseJavaName = peer.BaseJavaName;
+
+		while (!baseJavaName.IsNullOrEmpty () && visited.Add (baseJavaName)) {
+			if (!peersByJavaName.TryGetValue (baseJavaName, out var basePeer) || basePeer.DoNotGenerateAcw) {
+				break;
+			}
+
+			basePeer.CannotRegisterInStaticConstructor = true;
+			basePeer.IsUnconditional = true;
+
+			baseJavaName = basePeer.BaseJavaName;
+		}
+	}
+
+	static void AddPeerByDotName (Dictionary<string, List<JavaPeerInfo>> peersByDotName, string dotName, JavaPeerInfo peer)
+	{
+		if (!peersByDotName.TryGetValue (dotName, out var list)) {
+			list = [];
+			peersByDotName [dotName] = list;
+		}
+
+		list.Add (peer);
+	}
+
+	static XDocument? PrepareManifestForRooting (XDocument? manifestTemplate, ManifestConfig? manifestConfig)
+	{
+		if (manifestTemplate is null && manifestConfig is null) {
+			return null;
+		}
+
+		var doc = manifestTemplate is not null
+			? new XDocument (manifestTemplate)
+			: new XDocument (
+				new XElement (
+					"manifest",
+					new XAttribute (XNamespace.Xmlns + "android", ManifestConstants.AndroidNs.NamespaceName)));
+
+		if (doc.Root is not { } root) {
+			return doc;
+		}
+
+		if (manifestConfig is null) {
+			return doc;
+		}
+
+		if (((string?) root.Attribute ("package")).IsNullOrEmpty () && !manifestConfig.PackageName.IsNullOrEmpty ()) {
+			root.SetAttributeValue ("package", manifestConfig.PackageName);
+		}
+
+		ManifestGenerator.ApplyPlaceholders (doc, manifestConfig.ManifestPlaceholders);
+
+		if (!manifestConfig.ApplicationJavaClass.IsNullOrEmpty ()) {
+			var app = root.Element ("application");
+			if (app is null) {
+				app = new XElement ("application");
+				root.Add (app);
+			}
+
+		if (app.Attribute (ManifestConstants.AttName) is null) {
+			app.SetAttributeValue (ManifestConstants.AttName, manifestConfig.ApplicationJavaClass);
+		}
+	}
+
+	return doc;
+}
+
+	static bool MatchesManifestName (string jniOrJavaName, string manifestName)
+	{
+		var normalizedName = NormalizeJniName (jniOrJavaName);
+		var simpleName = JniSignatureHelper.GetJavaSimpleName (normalizedName);
+		var packageName = JniSignatureHelper.GetJavaPackageName (normalizedName);
+		var manifestStyleName = packageName.IsNullOrEmpty () ? simpleName : packageName + "." + simpleName;
+
+		return manifestStyleName == manifestName || JniSignatureHelper.JniNameToJavaName (normalizedName) == manifestName;
+	}
+
+	static string NormalizeJniName (string jniOrJavaName)
+	{
+		return jniOrJavaName.IndexOf ('/') >= 0
+			? jniOrJavaName
+			: jniOrJavaName.Replace ('.', '/');
+	}
+
+	static void AddJniLookupNames (Dictionary<string, List<JavaPeerInfo>> peersByDotName, string jniName, JavaPeerInfo peer)
+	{
+		var simpleName = JniSignatureHelper.GetJavaSimpleName (jniName);
+		var packageName = JniSignatureHelper.GetJavaPackageName (jniName);
+		var manifestName = packageName.IsNullOrEmpty () ? simpleName : packageName + "." + simpleName;
+		AddPeerByDotName (peersByDotName, manifestName, peer);
+
+		var javaSourceName = JniSignatureHelper.JniNameToJavaName (jniName);
+		if (javaSourceName != manifestName) {
+			AddPeerByDotName (peersByDotName, javaSourceName, peer);
+		}
+	}
+
+	/// <summary>
+	/// Resolves an android:name value to a fully-qualified class name.
+	/// Names starting with '.' are relative to the package. Names with no '.' at all
+	/// are also treated as relative (Android tooling convention).
+	/// </summary>
+	static string ResolveManifestClassName (string name, string packageName)
+	{
+		if (name.StartsWith (".", StringComparison.Ordinal)) {
+			return packageName + name;
+		}
+
+		if (name.IndexOf ('.') < 0 && !packageName.IsNullOrEmpty ()) {
+			return packageName + "." + name;
+		}
+
+		return name;
 	}
 }

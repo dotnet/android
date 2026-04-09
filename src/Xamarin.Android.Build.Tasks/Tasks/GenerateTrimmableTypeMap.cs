@@ -33,6 +33,10 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			log.LogMessage (MessageImportance.Low, $"Generated {assemblyCount} typemap assemblies.");
 		public void LogGeneratedJcwFilesInfo (int sourceCount) =>
 			log.LogMessage (MessageImportance.Low, $"Generated {sourceCount} JCW Java source files.");
+		public void LogUnresolvedTypeWarning (string name) =>
+			log.LogCodedWarning ("XA4250", Properties.Resources.XA4250, name);
+		public void LogRootingManifestReferencedTypeInfo (string name, string managedTypeName) =>
+			log.LogMessage (MessageImportance.Low, $"Rooting manifest-referenced type '{name}' ({managedTypeName}) as unconditional.");
 	}
 
 	public override string TaskPrefix => "GTT";
