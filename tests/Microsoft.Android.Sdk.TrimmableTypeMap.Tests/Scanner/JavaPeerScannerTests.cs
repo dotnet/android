@@ -1,6 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Text;
+using Java.Interop.Tools.JavaCallableWrappers;
 using Xunit;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
@@ -88,11 +92,26 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 	}
 
 	[Theory]
-	[InlineData ("MyApp.PlainActivitySubclass", "crc64eb3df85c64aa1af6/PlainActivitySubclass")]
-	[InlineData ("MyApp.UnregisteredClickListener", "crc64eb3df85c64aa1af6/UnregisteredClickListener")]
-	[InlineData ("MyApp.UnregisteredExporter", "crc64eb3df85c64aa1af6/UnregisteredExporter")]
-	public void Scan_UnregisteredType_UsesCrc64PackageName (string managedName, string expectedJavaName)
+	[InlineData ("MyApp.PlainActivitySubclass")]
+	[InlineData ("MyApp.UnregisteredClickListener")]
+	[InlineData ("MyApp.UnregisteredExporter")]
+	public void Scan_UnregisteredType_MatchesJavaNativeTypeManager (string managedName)
 	{
+		var testAssemblyDir = Path.GetDirectoryName (typeof (FixtureTestBase).Assembly.Location)
+			?? throw new InvalidOperationException ("Cannot determine test assembly directory");
+		var fixtureAssemblyPath = Path.Combine (testAssemblyDir, "TestFixtures.dll");
+		var fixtureAssembly = Assembly.LoadFrom (fixtureAssemblyPath);
+		var fixtureType = fixtureAssembly.GetType (managedName);
+		if (fixtureType is null) {
+			throw new InvalidOperationException ($"Could not load fixture type '{managedName}' from '{fixtureAssemblyPath}'.");
+		}
+
+		var assemblyName = fixtureType.Assembly.GetName ().Name
+			?? throw new InvalidOperationException ($"Could not determine assembly name for '{managedName}'.");
+		var data = Encoding.UTF8.GetBytes ($"{fixtureType.Namespace}:{assemblyName}");
+		var hash = Crc64Helper.Compute (data);
+		var expectedJavaName = $"crc64{BitConverter.ToString (hash).Replace ("-", "").ToLowerInvariant ()}/{fixtureType.Name}";
+
 		Assert.Equal (expectedJavaName, FindFixtureByManagedName (managedName).JavaName);
 	}
 }
