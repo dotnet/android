@@ -10,8 +10,6 @@ public interface ITrimmableTypeMapLogger
 	void LogGeneratedRootTypeMapInfo (int assemblyReferenceCount);
 	void LogGeneratedTypeMapAssembliesInfo (int assemblyCount);
 	void LogGeneratedJcwFilesInfo (int sourceCount);
-
 	void LogUnresolvedTypeWarning (string name);
-
 	void LogRootingManifestReferencedTypeInfo (string name, string managedTypeName);
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection.PortableExecutable;
+using System.Runtime.CompilerServices;
 using System.Xml.Linq;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
@@ -194,7 +195,12 @@ public class TrimmableTypeMapGenerator
 
 		foreach (var name in componentNames) {
 			if (peersByDotName.TryGetValue (name, out var peers)) {
-				foreach (var peer in peers.Distinct ()) {
+				var processedPeers = new HashSet<JavaPeerInfo> (ReferenceEqualityComparer<JavaPeerInfo>.Instance);
+				foreach (var peer in peers) {
+					if (!processedPeers.Add (peer)) {
+						continue;
+					}
+
 					PromoteManifestCompatibleJavaName (allPeers, peer, name);
 
 					if (deferredRegistrationNames.Contains (name)) {
@@ -277,6 +283,15 @@ public class TrimmableTypeMapGenerator
 		list.Add (peer);
 	}
 
+	sealed class ReferenceEqualityComparer<T> : IEqualityComparer<T> where T : class
+	{
+		public static ReferenceEqualityComparer<T> Instance { get; } = new ();
+
+		public bool Equals (T? x, T? y) => ReferenceEquals (x, y);
+
+		public int GetHashCode (T obj) => RuntimeHelpers.GetHashCode (obj);
+	}
+
 	static XDocument? PrepareManifestForRooting (XDocument? manifestTemplate, ManifestConfig? manifestConfig)
 	{
 		if (manifestTemplate is null && manifestConfig is null) {
@@ -311,13 +326,13 @@ public class TrimmableTypeMapGenerator
 				root.Add (app);
 			}
 
-		if (app.Attribute (ManifestConstants.AttName) is null) {
-			app.SetAttributeValue (ManifestConstants.AttName, manifestConfig.ApplicationJavaClass);
+			if (app.Attribute (ManifestConstants.AttName) is null) {
+				app.SetAttributeValue (ManifestConstants.AttName, manifestConfig.ApplicationJavaClass);
+			}
 		}
-	}
 
-	return doc;
-}
+		return doc;
+	}
 
 	static bool MatchesManifestName (string jniOrJavaName, string manifestName)
 	{

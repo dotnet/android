@@ -176,7 +176,7 @@ static class ComponentElementBuilder
 			return;
 		}
 		PropertyMapper.ApplyMappings (element, component.Properties, PropertyMapper.InstrumentationMappings);
-		if (element.Attribute (AndroidNs + "targetPackage") is null && !string.IsNullOrEmpty (packageName)) {
+		if (element.Attribute (AndroidNs + "targetPackage") is null && !packageName.IsNullOrEmpty ()) {
 			element.SetAttributeValue (AndroidNs + "targetPackage", packageName);
 		}
 
