@@ -9,11 +9,11 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
 public class TrimmableTypeMapGenerator
 {
-	readonly Action<string> log;
+	readonly ITrimmableTypeMapLogger logger;
 
-	public TrimmableTypeMapGenerator (Action<string> log)
+	public TrimmableTypeMapGenerator (ITrimmableTypeMapLogger logger)
 	{
-		this.log = log ?? throw new ArgumentNullException (nameof (log));
+		this.logger = logger ?? throw new ArgumentNullException (nameof (logger));
 	}
 
 	/// <summary>
@@ -34,7 +34,7 @@ public class TrimmableTypeMapGenerator
 
 		var (allPeers, assemblyManifestInfo) = ScanAssemblies (assemblies);
 		if (allPeers.Count == 0) {
-			log ("No Java peer types found, skipping typemap generation.");
+			logger.LogNoJavaPeerTypesFound ();
 			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
 
@@ -42,7 +42,7 @@ public class TrimmableTypeMapGenerator
 		var jcwPeers = allPeers.Where (p =>
 			!frameworkAssemblyNames.Contains (p.AssemblyName)
 			|| p.JavaName.StartsWith ("mono/", StringComparison.Ordinal)).ToList ();
-		log ($"Generating JCW files for {jcwPeers.Count} types (filtered from {allPeers.Count} total).");
+		logger.LogGeneratingJcwFilesInfo (jcwPeers.Count, allPeers.Count);
 		var generatedJavaSources = GenerateJcwJavaSources (jcwPeers);
 
 		// Collect Application/Instrumentation types that need deferred registerNatives
@@ -51,7 +51,7 @@ public class TrimmableTypeMapGenerator
 			.Select (p => JniSignatureHelper.JniNameToJavaName (p.JavaName))
 			.ToList ();
 		if (appRegTypes.Count > 0) {
-			log ($"Found {appRegTypes.Count} Application/Instrumentation types for deferred registration.");
+			logger.LogDeferredRegistrationTypesInfo (appRegTypes.Count);
 		}
 
 		var manifest = manifestConfig is not null
@@ -102,7 +102,7 @@ public class TrimmableTypeMapGenerator
 		using var scanner = new JavaPeerScanner ();
 		var peers = scanner.Scan (assemblies);
 		var manifestInfo = scanner.ScanAssemblyManifestInfo ();
-		log ($"Scanned {assemblies.Count} assemblies, found {peers.Count} Java peer types.");
+		logger.LogJavaPeerScanInfo (assemblies.Count, peers.Count);
 		return (peers, manifestInfo);
 	}
 
@@ -120,15 +120,15 @@ public class TrimmableTypeMapGenerator
 			generator.Generate (peers, stream, assemblyName);
 			stream.Position = 0;
 			generatedAssemblies.Add (new GeneratedAssembly (assemblyName, stream));
-			log ($"  {assemblyName}: {peers.Count} types");
+			logger.LogGeneratedTypeMapAssemblyInfo (assemblyName, peers.Count);
 		}
 		var rootStream = new MemoryStream ();
 		var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
 		rootGenerator.Generate (perAssemblyNames, rootStream);
 		rootStream.Position = 0;
 		generatedAssemblies.Add (new GeneratedAssembly ("_Microsoft.Android.TypeMaps", rootStream));
-		log ($"  Root: {perAssemblyNames.Count} per-assembly refs");
-		log ($"Generated {generatedAssemblies.Count} typemap assemblies.");
+		logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);
+		logger.LogGeneratedTypeMapAssembliesInfo (generatedAssemblies.Count);
 		return generatedAssemblies;
 	}
 
@@ -136,7 +136,7 @@ public class TrimmableTypeMapGenerator
 	{
 		var jcwGenerator = new JcwJavaSourceGenerator ();
 		var sources = jcwGenerator.GenerateContent (allPeers);
-		log ($"Generated {sources.Count} JCW Java source files.");
+		logger.LogGeneratedJcwFilesInfo (sources.Count);
 		return sources.ToList ();
 	}
 }

@@ -15,6 +15,26 @@ namespace Xamarin.Android.Tasks;
 
 public class GenerateTrimmableTypeMap : AndroidTask
 {
+	sealed class MSBuildTrimmableTypeMapLogger (TaskLoggingHelper log) : ITrimmableTypeMapLogger
+	{
+		public void LogNoJavaPeerTypesFound () =>
+			log.LogMessage (MessageImportance.Low, "No Java peer types found, skipping typemap generation.");
+		public void LogJavaPeerScanInfo (int assemblyCount, int peerCount) =>
+			log.LogMessage (MessageImportance.Low, $"Scanned {assemblyCount} assemblies, found {peerCount} Java peer types.");
+		public void LogGeneratingJcwFilesInfo (int jcwPeerCount, int totalPeerCount) =>
+			log.LogMessage (MessageImportance.Low, $"Generating JCW files for {jcwPeerCount} types (filtered from {totalPeerCount} total).");
+		public void LogDeferredRegistrationTypesInfo (int typeCount) =>
+			log.LogMessage (MessageImportance.Low, $"Found {typeCount} Application/Instrumentation types for deferred registration.");
+		public void LogGeneratedTypeMapAssemblyInfo (string assemblyName, int typeCount) =>
+			log.LogMessage (MessageImportance.Low, $"  {assemblyName}: {typeCount} types");
+		public void LogGeneratedRootTypeMapInfo (int assemblyReferenceCount) =>
+			log.LogMessage (MessageImportance.Low, $"  Root: {assemblyReferenceCount} per-assembly refs");
+		public void LogGeneratedTypeMapAssembliesInfo (int assemblyCount) =>
+			log.LogMessage (MessageImportance.Low, $"Generated {assemblyCount} typemap assemblies.");
+		public void LogGeneratedJcwFilesInfo (int sourceCount) =>
+			log.LogMessage (MessageImportance.Low, $"Generated {sourceCount} JCW Java source files.");
+	}
+
 	public override string TaskPrefix => "GTT";
 
 	[Required]
@@ -94,7 +114,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 					ApplicationJavaClass: ApplicationJavaClass);
 			}
 
-			var generator = new TrimmableTypeMapGenerator (msg => Log.LogMessage (MessageImportance.Low, msg));
+			var generator = new TrimmableTypeMapGenerator (new MSBuildTrimmableTypeMapLogger (Log));
 
 			XDocument? manifestTemplate = null;
 			if (!ManifestTemplate.IsNullOrEmpty () && File.Exists (ManifestTemplate)) {
