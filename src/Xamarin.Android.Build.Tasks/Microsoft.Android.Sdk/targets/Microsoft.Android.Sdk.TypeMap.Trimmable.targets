@@ -19,7 +19,6 @@
     <_TypeMapBaseOutputDir Condition=" '$(_TypeMapBaseOutputDir)' == '' ">$(IntermediateOutputPath)</_TypeMapBaseOutputDir>
     <_TypeMapBaseOutputDir>$(_TypeMapBaseOutputDir.Replace('\','/'))</_TypeMapBaseOutputDir>
     <_TypeMapOutputDirectory>$(_TypeMapBaseOutputDir)typemap/</_TypeMapOutputDirectory>
-    <_TypeMapJavaOutputDirectory>$(_TypeMapBaseOutputDir)typemap/java</_TypeMapJavaOutputDirectory>
   </PropertyGroup>
 
   <ItemGroup>
@@ -63,7 +62,7 @@
     <GenerateTrimmableTypeMap
         ResolvedAssemblies="@(_TypeMapInputAssemblies)"
         OutputDirectory="$(_TypeMapOutputDirectory)"
-        JavaSourceOutputDirectory="$(_TypeMapJavaOutputDirectory)"
+        JavaSourceOutputDirectory="$(_AndroidIntermediateJavaSourceDirectory)"
         TargetFrameworkVersion="$(TargetFrameworkVersion)"
         ManifestTemplate="$(_AndroidManifestAbs)"
         MergedAndroidManifestOutput="$(_TypeMapBaseOutputDir)AndroidManifest.xml"

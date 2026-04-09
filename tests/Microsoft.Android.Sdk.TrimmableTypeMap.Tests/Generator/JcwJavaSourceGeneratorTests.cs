@@ -135,6 +135,16 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 		}
 
 		[Fact]
+		public void Generate_AcwType_NeverCallsRuntimeRegister ()
+		{
+			var java = GenerateFixture ("my/app/MainActivity");
+			// Trimmable JCWs must only call Runtime.registerNatives(klass).
+			// Runtime.register(typeName, klass, methods) is the legacy path that
+			// relies on reflection-based callback registration — incompatible with trimming.
+			Assert.DoesNotContain ("Runtime.register (\"", java);
+		}
+
+		[Fact]
 		public void Generate_ApplicationType_SkipsRegisterNatives ()
 		{
 			var java = GenerateFixture ("my/app/MyApplication");
