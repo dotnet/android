@@ -20,9 +20,9 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// [assembly: TypeMapAssociation&lt;Java.Lang.Object&gt;(typeof(MyTextView), typeof(Android_Widget_TextView_Proxy))]          // managed → proxy
 ///
 /// // One proxy type per Java peer that needs activation or UCO wrappers:
-/// public sealed class Activity_Proxy : JavaPeerProxy, IAndroidCallableWrapper   // IAndroidCallableWrapper for ACWs only
+/// public sealed class Activity_Proxy : JavaPeerProxy&lt;Activity&gt;, IAndroidCallableWrapper   // IAndroidCallableWrapper for ACWs only
 /// {
-///     public Activity_Proxy() : base("android/app/Activity", typeof(Activity), null) { }
+///     public Activity_Proxy() : base("android/app/Activity", null) { }
 ///
 ///     // Creates the managed peer when Java calls into .NET
 ///     public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership ownership)
@@ -80,7 +80,6 @@ sealed class TypeMapAssemblyEmitter
 	TypeReferenceHandle _notSupportedExceptionRef;
 	TypeReferenceHandle _runtimeHelpersRef;
 
-	MemberReferenceHandle _baseCtorRef;
 	MemberReferenceHandle _getTypeFromHandleRef;
 	MemberReferenceHandle _getUninitializedObjectRef;
 	MemberReferenceHandle _notSupportedExceptionCtorRef;
@@ -164,7 +163,7 @@ sealed class TypeMapAssemblyEmitter
 	{
 		var metadata = _pe.Metadata;
 		_javaPeerProxyRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
-			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaPeerProxy"));
+			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaPeerProxy`1"));
 		_iJavaPeerableRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("IJavaPeerable"));
 		_jniHandleOwnershipRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
@@ -205,15 +204,6 @@ sealed class TypeMapAssemblyEmitter
 
 	void EmitMemberReferences ()
 	{
-		_baseCtorRef = _pe.AddMemberRef (_javaPeerProxyRef, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (3,
-				rt => rt.Void (),
-				p => {
-					p.AddParameter ().Type ().String ();
-					p.AddParameter ().Type ().Type (_systemTypeRef, false);
-					p.AddParameter ().Type ().Type (_systemTypeRef, false);
-				}));
-
 		_getTypeFromHandleRef = _pe.AddMemberRef (_systemTypeRef, "GetTypeFromHandle",
 			sig => sig.MethodSignature ().Parameters (1,
 				rt => rt.Type ().Type (_systemTypeRef, false),
@@ -354,11 +344,21 @@ sealed class TypeMapAssemblyEmitter
 	void EmitProxyType (JavaPeerProxyData proxy, Dictionary<string, MethodDefinitionHandle> wrapperHandles)
 	{
 		var metadata = _pe.Metadata;
+		var targetTypeRef = _pe.ResolveTypeRef (proxy.TargetType);
+		var proxyBaseType = _pe.MakeGenericTypeSpec (_javaPeerProxyRef, targetTypeRef);
+		var baseCtorRef = _pe.AddMemberRef (proxyBaseType, ".ctor",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+				rt => rt.Void (),
+				p => {
+					p.AddParameter ().Type ().String ();
+					p.AddParameter ().Type ().Type (_systemTypeRef, false);
+				}));
+
 		var typeDefHandle = metadata.AddTypeDefinition (
 			TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Class,
 			metadata.GetOrAddString (proxy.Namespace),
 			metadata.GetOrAddString (proxy.TypeName),
-			_javaPeerProxyRef,
+			proxyBaseType,
 			MetadataTokens.FieldDefinitionHandle (metadata.GetRowCount (TableIndex.Field) + 1),
 			MetadataTokens.MethodDefinitionHandle (metadata.GetRowCount (TableIndex.MethodDef) + 1));
 
@@ -366,16 +366,13 @@ sealed class TypeMapAssemblyEmitter
 			metadata.AddInterfaceImplementation (typeDefHandle, _iAndroidCallableWrapperRef);
 		}
 
-		// .ctor — pass the resolved JNI name and peer types to the base proxy
+		// .ctor — pass the resolved JNI name and optional invoker type to the generic base proxy
 		_pe.EmitBody (".ctor",
 			MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }),
 			encoder => {
 				encoder.OpCode (ILOpCode.Ldarg_0);
 				encoder.LoadString (metadata.GetOrAddUserString (proxy.JniName));
-				encoder.OpCode (ILOpCode.Ldtoken);
-				encoder.Token (_pe.ResolveTypeRef (proxy.TargetType));
-				encoder.Call (_getTypeFromHandleRef);
 				if (proxy.InvokerType != null) {
 					encoder.OpCode (ILOpCode.Ldtoken);
 					encoder.Token (_pe.ResolveTypeRef (proxy.InvokerType));
@@ -383,7 +380,7 @@ sealed class TypeMapAssemblyEmitter
 				} else {
 					encoder.OpCode (ILOpCode.Ldnull);
 				}
-				encoder.Call (_baseCtorRef);
+				encoder.Call (baseCtorRef);
 				encoder.OpCode (ILOpCode.Ret);
 			});
 

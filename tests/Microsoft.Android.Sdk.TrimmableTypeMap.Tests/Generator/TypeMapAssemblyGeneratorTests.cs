@@ -85,6 +85,18 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_ProxyType_UsesGenericJavaPeerProxyBase ()
+	{
+		var peers = ScanFixtures ();
+		using var stream = GenerateAssembly (peers);
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+		var typeNames = GetTypeRefNames (reader);
+
+		Assert.Contains ("JavaPeerProxy`1", typeNames);
+	}
+
+	[Fact]
 	public void Generate_HasIgnoresAccessChecksToAttribute ()
 	{
 		var peers = ScanFixtures ();
