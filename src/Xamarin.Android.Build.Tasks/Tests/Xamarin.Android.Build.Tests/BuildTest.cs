@@ -850,6 +850,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		public void SwitchingTypeMapImplementationTriggersClean ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
 
 			using (var b = CreateApkBuilder ()) {
 				b.CleanupAfterSuccessfulBuild = b.CleanupOnDispose = false;
