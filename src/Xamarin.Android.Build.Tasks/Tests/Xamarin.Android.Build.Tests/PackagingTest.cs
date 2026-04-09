@@ -785,8 +785,14 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");");
 				"Diagnostic target should have logged _PostTrimmingAssembly items");
 
 			// Verify satellite assemblies ARE present in ResolvedFileToPublish (positive check)
-			Assert.IsTrue (
-				b.LastBuildOutput.ContainsText ("DIAG_RFP:") && b.LastBuildOutput.ContainsText (".resources.dll"),
+			bool hasSatelliteInRfp = false;
+			foreach (var line in b.LastBuildOutput) {
+				if (line.Contains ("DIAG_RFP:") && line.Contains (".resources.dll")) {
+					hasSatelliteInRfp = true;
+					break;
+				}
+			}
+			Assert.IsTrue (hasSatelliteInRfp,
 				"Satellite assemblies should be present in ResolvedFileToPublish to confirm the scenario is exercised");
 
 			// Verify satellite assemblies were NOT included in _PostTrimmingAssembly
