@@ -31,7 +31,7 @@ sealed class TypeMapAssemblyData
 	public List<JavaPeerProxyData> ProxyTypes { get; } = new ();
 
 	/// <summary>
-	/// TypeMapAssociation entries for alias groups (multiple managed types → same JNI name).
+	/// TypeMapAssociation entries for managed types backed by generated proxies.
 	/// </summary>
 	public List<TypeMapAssociationData> Associations { get; } = new ();
 
@@ -83,6 +83,12 @@ sealed class JavaPeerProxyData
 	/// Simple type name, e.g., "Java_Lang_Object_Proxy".
 	/// </summary>
 	public required string TypeName { get; init; }
+
+	/// <summary>
+	/// JNI type name, e.g., "android/app/Activity" or "crc64abc.../MyButton".
+	/// Used for managed → Java reverse lookups at runtime.
+	/// </summary>
+	public required string JniName { get; init; }
 
 	/// <summary>
 	/// Namespace for all proxy types.

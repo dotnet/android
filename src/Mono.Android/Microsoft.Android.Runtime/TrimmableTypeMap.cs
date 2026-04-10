@@ -27,11 +27,13 @@ class TrimmableTypeMap
 			"TrimmableTypeMap has not been initialized. Ensure RuntimeFeature.TrimmableTypeMap is enabled and the JNI runtime is initialized.");
 
 	readonly IReadOnlyDictionary<string, Type> _typeMap;
+	readonly IReadOnlyDictionary<Type, Type> _proxyTypeMap;
 	readonly ConcurrentDictionary<Type, JavaPeerProxy?> _proxyCache = new ();
 
 	TrimmableTypeMap ()
 	{
 		_typeMap = TypeMapping.GetOrCreateExternalTypeMapping<Java.Lang.Object> ();
+		_proxyTypeMap = TypeMapping.GetOrCreateProxyTypeMapping<Java.Lang.Object> ();
 	}
 
 	/// <summary>
@@ -70,42 +72,26 @@ class TrimmableTypeMap
 		=> _typeMap.TryGetValue (jniSimpleReference, out type);
 
 	/// <summary>
-	/// Finds the proxy for a managed type by resolving its JNI name (from [Register] or
-	/// [JniTypeSignature] attributes) and looking it up in the TypeMap dictionary.
+	/// Finds the proxy for a managed type using the generated proxy type map.
 	/// Results are cached per type.
 	/// </summary>
 	internal JavaPeerProxy? GetProxyForManagedType (Type managedType)
+		=> _proxyCache.GetOrAdd (managedType, static (type, self) => self.ResolveProxyForManagedType (type), this);
+
+	JavaPeerProxy? ResolveProxyForManagedType (Type managedType)
 	{
-		return _proxyCache.GetOrAdd (managedType, static (type, self) => {
-			// First check if the type itself IS a proxy (has self-applied attribute)
-			var direct = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-			if (direct is not null) {
-				return direct;
-			}
+		if (!_proxyTypeMap.TryGetValue (managedType, out var proxyType)) {
+			return null;
+		}
 
-			// Resolve the JNI name from the managed type's attributes
-			if (!TryGetJniNameForType (type, out var jniName)) {
-				return null;
-			}
-
-			// Look up the proxy type in the TypeMap dictionary
-			if (!self._typeMap.TryGetValue (jniName, out var proxyType)) {
-				return null;
-			}
-
-			return proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-		}, this);
+		return proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
 	}
 
-	/// <summary>
-	/// Resolves a managed type's JNI name from its <see cref="IJniNameProviderAttribute"/>
-	/// (implemented by both <c>[Register]</c> and <c>[JniTypeSignature]</c>).
-	/// </summary>
-	internal static bool TryGetJniNameForType (Type type, [NotNullWhen (true)] out string? jniName)
+	internal bool TryGetJniNameForManagedType (Type managedType, [NotNullWhen (true)] out string? jniName)
 	{
-		if (type.GetCustomAttributes (typeof (IJniNameProviderAttribute), inherit: false) is [IJniNameProviderAttribute provider, ..]
-			&& !string.IsNullOrEmpty (provider.Name)) {
-			jniName = provider.Name.Replace ('.', '/');
+		var proxy = GetProxyForManagedType (managedType);
+		if (proxy is not null) {
+			jniName = proxy.JniName;
 			return true;
 		}
 

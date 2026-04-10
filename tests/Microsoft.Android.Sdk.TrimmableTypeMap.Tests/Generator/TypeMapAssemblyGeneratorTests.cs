@@ -85,6 +85,34 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_ProxyType_UsesGenericJavaPeerProxyBase ()
+	{
+		var peers = ScanFixtures ();
+		using var stream = GenerateAssembly (peers);
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+		var proxyTypes = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Where (t => reader.GetString (t.Namespace) == "_TypeMap.Proxies")
+			.ToList ();
+
+		Assert.NotEmpty (proxyTypes);
+		Assert.All (proxyTypes, proxyType => {
+			Assert.Equal (HandleKind.TypeSpecification, proxyType.BaseType.Kind);
+
+			var baseTypeSpec = reader.GetTypeSpecification ((TypeSpecificationHandle) proxyType.BaseType);
+			var baseTypeName = baseTypeSpec.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null);
+
+			Assert.StartsWith ("Java.Interop.JavaPeerProxy`1<", baseTypeName, StringComparison.Ordinal);
+		});
+
+		var objectProxy = proxyTypes.First (t => reader.GetString (t.Name) == "Java_Lang_Object_Proxy");
+		var objectProxyBaseType = reader.GetTypeSpecification ((TypeSpecificationHandle) objectProxy.BaseType);
+		Assert.Equal ("Java.Interop.JavaPeerProxy`1<Java.Lang.Object>",
+			objectProxyBaseType.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null));
+	}
+
+	[Fact]
 	public void Generate_HasIgnoresAccessChecksToAttribute ()
 	{
 		var peers = ScanFixtures ();
@@ -133,7 +161,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.True (assemblyAttrs.Count () >= 3);
 
 		var typeNames = GetTypeRefNames (reader);
-		Assert.Contains ("TypeMapAssociationAttribute", typeNames);
+		Assert.Contains (typeNames, name => name.StartsWith ("TypeMapAssociationAttribute", StringComparison.Ordinal));
 	}
 
 	[Fact]
