@@ -74,12 +74,15 @@ class TrimmableTypeMap
 			return false;
 		}
 
-		// External typemap entries for ACW-backed types resolve to the generated proxy-bearing
-		// helper (including alias slots such as "jni/name[1]"). Surface the actual managed peer
-		// when a JavaPeerProxy attribute is present so activation and virtual dispatch land on
-		// the user's type instead of the generated helper.
 		var proxy = mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-		type = proxy?.TargetType ?? mappedType;
+		if (proxy is null) {
+			// Alias typemap entries (for example "jni/name[1]") are not implemented yet.
+			// Support for them will be added in a follow-up for https://github.com/dotnet/android/issues/10788.
+			throw new NotImplementedException (
+				$"Trimmable typemap alias handling is not implemented yet for '{jniSimpleReference}'.");
+		}
+
+		type = proxy.TargetType;
 		return true;
 	}
 
