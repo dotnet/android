@@ -29,7 +29,6 @@ class TrimmableTypeMap
 
 	readonly IReadOnlyDictionary<string, Type> _typeMap;
 	readonly IReadOnlyDictionary<Type, Type> _proxyTypeMap;
-	// ConcurrentDictionary doesn't accept null values, so misses are cached with s_noPeerSentinel.
 	readonly ConcurrentDictionary<Type, JavaPeerProxy> _proxyCache = new ();
 	readonly ConcurrentDictionary<string, JavaPeerProxy> _peerProxyCache = new (StringComparer.Ordinal);
 
@@ -121,7 +120,7 @@ class TrimmableTypeMap
 		}
 
 		return TryGetProxyFromHierarchy (this, handle, targetType) ??
-			(targetType is null ? null : TryGetProxyFromTargetType (this, handle, targetType));
+			TryGetProxyFromTargetType (this, handle, targetType);
 
 		static JavaPeerProxy? TryGetProxyFromHierarchy (TrimmableTypeMap self, IntPtr handle, Type? targetType)
 		{
@@ -149,8 +148,12 @@ class TrimmableTypeMap
 			return null;
 		}
 
-		static JavaPeerProxy? TryGetProxyFromTargetType (TrimmableTypeMap self, IntPtr handle, Type targetType)
+		static JavaPeerProxy? TryGetProxyFromTargetType (TrimmableTypeMap self, IntPtr handle, Type? targetType)
 		{
+			if (targetType is null) {
+				return null;
+			}
+
 			var proxy = self.GetProxyForManagedType (targetType);
 			// Verify the Java object is actually assignable to the target Java type
 			// before returning the fallback proxy. Without this, we'd create invalid peers
