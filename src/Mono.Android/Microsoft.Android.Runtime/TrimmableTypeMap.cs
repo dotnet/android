@@ -77,9 +77,10 @@ class TrimmableTypeMap
 			return false;
 		}
 
-		// External typemap entries usually point at the generated proxy for ACW-backed types.
-		// Surface the real managed peer when possible so activation and virtual dispatch land
-		// on the user's override instead of the generated proxy type.
+		// External typemap entries for ACW-backed types resolve to the generated proxy-bearing
+		// helper (including alias slots such as "jni/name[1]"). Surface the actual managed peer
+		// when a JavaPeerProxy attribute is present so activation and virtual dispatch land on
+		// the user's type instead of the generated helper.
 		var proxy = mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
 		type = proxy?.TargetType ?? mappedType;
 		return true;
@@ -103,20 +104,8 @@ class TrimmableTypeMap
 
 	internal bool TryGetJniName (Type type, [NotNullWhen (true)] out string? jniName)
 	{
-		if (_jniNameCache.TryGetValue (type, out jniName)) {
-			return jniName != null;
-		}
-
-		var proxy = GetProxyForManagedType (type);
-		if (proxy is not null) {
-			jniName = proxy.JniName;
-			_jniNameCache [type] = jniName;
-			return true;
-		}
-
-		jniName = null;
-		_jniNameCache [type] = null;
-		return false;
+		jniName = _jniNameCache.GetOrAdd (type, static (type, self) => self.GetProxyForManagedType (type)?.JniName, this);
+		return jniName is not null;
 	}
 
 	internal bool TryGetJniNameForManagedType (Type managedType, [NotNullWhen (true)] out string? jniName)
@@ -135,16 +124,16 @@ class TrimmableTypeMap
 			while (jniClass.IsValid) {
 				var className = JniEnvironment.Types.GetJniTypeNameFromClass (jniClass);
 				if (className != null) {
-					if (_peerProxyCache.TryGetValue (className, out var cached)) {
-						if (cached != null && (targetType is null || targetType.IsAssignableFrom (cached.TargetType))) {
-							return cached;
+					var cached = _peerProxyCache.GetOrAdd (className, static (name, self) => {
+						if (!self._typeMap.TryGetValue (name, out var mappedType)) {
+							return null;
 						}
-					} else if (_typeMap.TryGetValue (className, out var mappedType)) {
-						var proxy = mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-						_peerProxyCache [className] = proxy;
-						if (proxy != null && (targetType is null || targetType.IsAssignableFrom (proxy.TargetType))) {
-							return proxy;
-						}
+
+						return mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+					}, this);
+
+					if (cached != null && (targetType is null || targetType.IsAssignableFrom (cached.TargetType))) {
+						return cached;
 					}
 				}
 

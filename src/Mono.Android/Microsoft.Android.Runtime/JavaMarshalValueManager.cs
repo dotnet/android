@@ -508,10 +508,16 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 			Type? targetType)
 	{
 		if (RuntimeFeature.TrimmableTypeMap) {
+			// Prefer proxy-backed activation first, but keep the generic JniValueManager
+			// fallback for parity when there is no proxy match for the requested target type.
 			var typeMap = TrimmableTypeMap.Instance;
 			var peer = typeMap.CreatePeer (reference.Handle, JniHandleOwnership.DoNotTransfer, targetType);
 			if (peer is not null) {
-				peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable);
+				var peerState = peer.JniManagedPeerState | JniManagedPeerStates.Replaceable;
+				if (Android.Runtime.Runtime.IsGCUserPeer (peer.PeerReference.Handle)) {
+					peerState |= JniManagedPeerStates.Activatable;
+				}
+				peer.SetJniManagedPeerState (peerState);
 				JniObjectReference.Dispose (ref reference, transfer);
 				return peer;
 			}

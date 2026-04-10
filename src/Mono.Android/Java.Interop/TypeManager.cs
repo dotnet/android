@@ -269,11 +269,10 @@ namespace Java.Interop {
 			}
 
 			if (RuntimeFeature.TrimmableTypeMap) {
-				// The trimmable typemap doesn't use the native typemap tables.
-				// Delegate to the managed TrimmableTypeMap instead.
-				if (!TrimmableTypeMap.Instance.TryGetType (class_name, out type)) {
-					return null;
-				}
+				throw new System.Diagnostics.UnreachableException (
+					$"{nameof (TypeManager)}.{nameof (GetJavaToManagedTypeCore)} should not be used when " +
+					$"{nameof (RuntimeFeature.TrimmableTypeMap)} is enabled. The trimmable path should resolve " +
+					$"types through {nameof (TrimmableTypeMapTypeManager)}.");
 			} else if (RuntimeFeature.IsMonoRuntime) {
 				type = monovm_typemap_java_to_managed (class_name);
 			} else if (RuntimeFeature.IsCoreClrRuntime) {
