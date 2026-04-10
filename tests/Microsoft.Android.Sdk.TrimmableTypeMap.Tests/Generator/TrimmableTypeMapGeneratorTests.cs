@@ -69,6 +69,19 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Execute_CollectsDeferredRegistrationTypes_ForConcreteApplicationAndInstrumentation ()
+	{
+		using var peReader = CreateTestFixturePEReader ();
+		var result = CreateGenerator ().Execute (new List<(string, PEReader)> { ("TestFixtures", peReader) }, new Version (11, 0), new HashSet<string> ());
+
+		Assert.Contains ("my.app.MyApplication", result.ApplicationRegistrationTypes);
+		Assert.Contains ("my.app.MyInstrumentation", result.ApplicationRegistrationTypes);
+		Assert.DoesNotContain ("my.app.BaseApplication", result.ApplicationRegistrationTypes);
+		Assert.DoesNotContain ("my.app.BaseInstrumentation", result.ApplicationRegistrationTypes);
+		Assert.DoesNotContain ("my.app.IntermediateInstrumentation", result.ApplicationRegistrationTypes);
+	}
+
+	[Fact]
 	public void Execute_NullAssemblyList_Throws ()
 	{
 		IReadOnlyList<(string Name, PEReader Reader)>? n = null;

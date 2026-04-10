@@ -246,7 +246,13 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 		var typeNames = GetTypeRefNames (reader);
+		var generatedTypeNames = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Select (t => reader.GetString (t.Name))
+			.ToList ();
 		Assert.Contains ("NotSupportedException", typeNames);
+		Assert.Contains ("MyApp_Generic_GenericHolder_1_Proxy", generatedTypeNames);
+		Assert.DoesNotContain (generatedTypeNames, name => name.Contains ('`'));
 	}
 
 	[Fact]
