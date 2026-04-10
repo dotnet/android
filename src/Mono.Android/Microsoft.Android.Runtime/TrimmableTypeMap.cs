@@ -108,7 +108,7 @@ class TrimmableTypeMap
 		return jniName is not null;
 	}
 
-	JavaPeerProxy? GetProxyForPeer (IntPtr handle, Type? targetType = null)
+	JavaPeerProxy? GetProxyForJavaObject (IntPtr handle, Type? targetType = null)
 	{
 		if (handle == IntPtr.Zero) {
 			return null;
@@ -147,7 +147,7 @@ class TrimmableTypeMap
 
 	internal IJavaPeerable? CreatePeer (IntPtr handle, JniHandleOwnership transfer, Type? targetType = null)
 	{
-		var proxy = GetProxyForPeer (handle, targetType);
+		var proxy = GetProxyForJavaObject (handle, targetType);
 		if (proxy is null && targetType is not null) {
 			proxy = GetProxyForManagedType (targetType);
 			// Verify the Java object is actually assignable to the target Java type
