@@ -118,7 +118,7 @@ class TrimmableTypeMap
 		return true;
 	}
 
-	JavaPeerProxy? GetProxyForJavaObject (IntPtr handle, Type? targetType = null)
+	internal JavaPeerProxy? GetProxyForJavaObject (IntPtr handle, Type? targetType = null)
 	{
 		if (handle == IntPtr.Zero) {
 			return null;
@@ -145,7 +145,29 @@ class TrimmableTypeMap
 			JniObjectReference.Dispose (ref jniClass);
 		}
 
-		return null;
+		if (targetType is null) {
+			return null;
+		}
+
+		var proxy = GetProxyForManagedType (targetType);
+		// Verify the Java object is actually assignable to the target Java type
+		// before creating the peer. Without this, we'd create invalid peers
+		// (e.g., IAppendableInvoker wrapping a java.lang.Integer).
+		if (proxy is null || !TryGetJniNameForManagedType (targetType, out var targetJniName)) {
+			return null;
+		}
+
+		var selfRef = new JniObjectReference (handle);
+		var objClass = default (JniObjectReference);
+		var targetClass = default (JniObjectReference);
+		try {
+			objClass = JniEnvironment.Types.GetObjectClass (selfRef);
+			targetClass = JniEnvironment.Types.FindClass (targetJniName);
+			return JniEnvironment.Types.IsAssignableFrom (objClass, targetClass) ? proxy : null;
+		} finally {
+			JniObjectReference.Dispose (ref objClass);
+			JniObjectReference.Dispose (ref targetClass);
+		}
 	}
 
 	JavaPeerProxy? GetProxyForJavaType (string className)
@@ -161,34 +183,6 @@ class TrimmableTypeMap
 		}
 
 		return GetProxyForManagedType (managedType);
-	}
-
-	internal IJavaPeerable? CreatePeer (IntPtr handle, JniHandleOwnership transfer, Type? targetType = null)
-	{
-		var proxy = GetProxyForJavaObject (handle, targetType);
-		if (proxy is null && targetType is not null) {
-			proxy = GetProxyForManagedType (targetType);
-			// Verify the Java object is actually assignable to the target Java type
-			// before creating the peer. Without this, we'd create invalid peers
-			// (e.g., IAppendableInvoker wrapping a java.lang.Integer).
-			if (proxy is not null && TryGetJniNameForManagedType (targetType, out var targetJniName)) {
-				var selfRef = new JniObjectReference (handle);
-				var objClass = default (JniObjectReference);
-				var targetClass = default (JniObjectReference);
-				try {
-					objClass = JniEnvironment.Types.GetObjectClass (selfRef);
-					targetClass = JniEnvironment.Types.FindClass (targetJniName);
-					if (!JniEnvironment.Types.IsAssignableFrom (objClass, targetClass)) {
-						proxy = null;
-					}
-				} finally {
-					JniObjectReference.Dispose (ref objClass);
-					JniObjectReference.Dispose (ref targetClass);
-				}
-			}
-		}
-
-		return proxy?.CreateInstance (handle, transfer);
 	}
 
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;

@@ -516,7 +516,8 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 		if (RuntimeFeature.TrimmableTypeMap) {
 			try {
 				var typeMap = TrimmableTypeMap.Instance;
-				var peer = typeMap.CreatePeer (reference.Handle, JniHandleOwnership.DoNotTransfer, targetType);
+				var proxy = typeMap.GetProxyForJavaObject (reference.Handle, targetType);
+				var peer = proxy?.CreateInstance (reference.Handle, JniHandleOwnership.DoNotTransfer);
 				if (peer is not null) {
 					var peerState = peer.JniManagedPeerState | JniManagedPeerStates.Replaceable;
 					if (Android.Runtime.Runtime.IsGCUserPeer (peer.PeerReference.Handle)) {
