@@ -520,7 +520,7 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 				var peer = proxy?.CreateInstance (reference.Handle, JniHandleOwnership.DoNotTransfer);
 				if (peer is not null) {
 					var peerState = peer.JniManagedPeerState | JniManagedPeerStates.Replaceable;
-					if (Android.Runtime.Runtime.IsGCUserPeer (peer.PeerReference.Handle)) {
+					if (global::Java.Interop.Runtime.IsGCUserPeer (peer.PeerReference.Handle)) {
 						peerState |= JniManagedPeerStates.Activatable;
 					}
 					peer.SetJniManagedPeerState (peerState);
