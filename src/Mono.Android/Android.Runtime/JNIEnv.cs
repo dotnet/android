@@ -445,7 +445,7 @@ namespace Android.Runtime {
 			if (RuntimeFeature.TrimmableTypeMap) {
 				// The trimmable typemap doesn't use the native typemap tables.
 				// Delegate to the managed TrimmableTypeMap instead.
-				return TrimmableTypeMap.Instance.TryGetJniName (type, out var jniName) ? jniName : null;
+				return TrimmableTypeMap.Instance.TryGetJniNameForManagedType (type, out var jniName) ? jniName : null;
 			}
 
 			if (mvid_bytes == null)

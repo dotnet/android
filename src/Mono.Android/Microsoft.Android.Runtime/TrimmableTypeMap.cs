@@ -102,14 +102,11 @@ class TrimmableTypeMap
 		return proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
 	}
 
-	internal bool TryGetJniName (Type type, [NotNullWhen (true)] out string? jniName)
+	internal bool TryGetJniNameForManagedType (Type managedType, [NotNullWhen (true)] out string? jniName)
 	{
-		jniName = _jniNameCache.GetOrAdd (type, static (type, self) => self.GetProxyForManagedType (type)?.JniName, this);
+		jniName = _jniNameCache.GetOrAdd (managedType, static (type, self) => self.GetProxyForManagedType (type)?.JniName, this);
 		return jniName is not null;
 	}
-
-	internal bool TryGetJniNameForManagedType (Type managedType, [NotNullWhen (true)] out string? jniName)
-		=> TryGetJniName (managedType, out jniName);
 
 	internal JavaPeerProxy? GetProxyForPeer (IntPtr handle, Type? targetType = null)
 	{
@@ -156,7 +153,7 @@ class TrimmableTypeMap
 			// Verify the Java object is actually assignable to the target Java type
 			// before creating the peer. Without this, we'd create invalid peers
 			// (e.g., IAppendableInvoker wrapping a java.lang.Integer).
-			if (proxy is not null && TryGetJniName (targetType, out var targetJniName)) {
+			if (proxy is not null && TryGetJniNameForManagedType (targetType, out var targetJniName)) {
 				var selfRef = new JniObjectReference (handle);
 				var objClass = JniEnvironment.Types.GetObjectClass (selfRef);
 				var targetClass = JniEnvironment.Types.FindClass (targetJniName);
