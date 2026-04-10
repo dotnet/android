@@ -238,23 +238,20 @@
     <Touch Files="$(_AndroidLinkFlag)" AlwaysCreate="true" />
   </Target>
 
-  <!--
-    Post-trimming assembly modifications: strips embedded Android resources and
-    (optionally) injects GC.KeepAlive() calls, in a single pass over assemblies.
-    Runs in the inner build after ILLink but before ReadyToRun/crossgen2 compilation,
-    so R2R images are generated from the already-modified assemblies.
-  -->
   <Target Name="_PostTrimmingPipeline"
       AfterTargets="ILLink"
       Condition=" '$(PublishTrimmed)' == 'true' ">
     <ItemGroup>
-      <_PostTrimmingAssembly Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
+      <_PostTrimmingAssembly Include="@(ResolvedFileToPublish->WithMetadataValue('PostprocessAssembly', 'true'))" />
     </ItemGroup>
     <PostTrimmingPipeline
         Assemblies="@(_PostTrimmingAssembly)"
         AddKeepAlives="$(AndroidAddKeepAlives)"
         AndroidLinkResources="$(AndroidLinkResources)"
         Deterministic="$(Deterministic)" />
+    <ItemGroup>
+      <_PostTrimmingAssembly Remove="@(_PostTrimmingAssembly)" />
+    </ItemGroup>
   </Target>
 
   <!-- Inject _TypeMapKind into the property cache -->

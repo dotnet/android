@@ -340,9 +340,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <_AndroidAotStripLibraries Condition=" '$(_AndroidAotStripLibraries)' == '' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</_AndroidAotStripLibraries>
   <AndroidAotEnableLazyLoad Condition=" '$(AndroidAotEnableLazyLoad)' == '' And '$(AotAssemblies)' == 'true' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</AndroidAotEnableLazyLoad>
   <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and ('$(UsingMicrosoftNETSdkRazor)' == 'true') ">False</AndroidEnableMarshalMethods>
-  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and '$(_AndroidRuntime)' == 'MonoVM' and '$(PublishReadyToRun)' != 'true' ">True</AndroidEnableMarshalMethods>
-  <!-- NOTE: temporarily disable for NativeAOT and CoreCLR for now -->
-  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and ('$(_AndroidRuntime)' != 'MonoVM' or '$(PublishReadyToRun)' == 'true') ">False</AndroidEnableMarshalMethods>
+  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and '$(_AndroidRuntime)' != 'NativeAOT' ">True</AndroidEnableMarshalMethods>
+  <!-- NOTE: temporarily disable for NativeAOT for now -->
+  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and '$(_AndroidRuntime)' == 'NativeAOT' ">False</AndroidEnableMarshalMethods>
 
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' ">False</_AndroidUseMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' ">$(AndroidEnableMarshalMethods)</_AndroidUseMarshalMethods>
@@ -1454,32 +1454,235 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
-<!-- Runs additional steps after ILLink runs (_LinkAssemblies) -->
+<!--
+  Run AssemblyModifierPipeline in the inner (per-RID) build, AFTER ILLink trims assemblies
+  but BEFORE CreateReadyToRunImages/IlcCompile compiles them to native code. This ensures that
+  assembly modifications (FindJavaObjects, SaveChangedAssembly, FindTypeMapObjects) operate on
+  trimmed IL assemblies before they get R2R/AOT-compiled, so we don't overwrite native code
+  with pure IL.
+
+  Assemblies are located using @(ManagedAssemblyToLink) transformed to $(IntermediateLinkDir)
+  paths (with an existence check). This is the same mechanism _AndroidComputeIlcCompileInputs
+  uses to find trimmed assemblies for ILC, and works uniformly for all runtimes (CoreCLR,
+  MonoVM, NativeAOT). The transform preserves all metadata from the source items, including
+  NuGetPackageId which is used for framework/user assembly classification.
+
+  The condition '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' ensures this only runs
+  in the inner build. In the outer build the target is a no-op (the condition is false), so existing
+  dependency chain references in _PrepareAssembliesDependsOnTargets and _PrepareBuildApkDependsOnTargets
+  are harmlessly satisfied.
+
+  For non-trimmed builds, _LinkAssembliesNoShrink handles assembly modifications instead.
+
+  Incrementality: Input is $(_LinkSemaphore) (touched by ILLink when it runs). When ILLink is
+  skipped on a no-change rebuild, the semaphore is unchanged, so this target is also skipped.
+  This is important because SaveChangedAssemblyStep always updates assembly timestamps (even
+  when unchanged), which would cascade through _GenerateJavaStubs -> _CompileJava ->
+  _CompileToDalvik -> _BuildApkEmbed -> _Sign, breaking incremental builds.
+
+  For all runtimes (MonoVM, CoreCLR, NativeAOT), the user assembly is in @(ManagedAssemblyToLink)
+  which is part of _RunILLink's Inputs, so $(_LinkSemaphore) correctly updates whenever the user
+  assembly changes. For NativeAOT specifically, the standard SDK targets strip the user assembly
+  from @(ManagedAssemblyToLink), but _AndroidFixManagedAssemblyToLinkForILLink in
+  Microsoft.Android.Sdk.NativeAOT.targets adds it back.
+-->
 <Target Name="_AfterILLinkAdditionalSteps"
-    DependsOnTargets="_LinkAssembliesNoShrinkInputs"
-    Condition="'$(PublishTrimmed)' == 'true'"
-    Inputs="$(_AndroidLinkFlag)"
+    AfterTargets="_PostTrimmingPipeline"
+    Condition=" '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' "
+    Inputs="$(_LinkSemaphore)"
     Outputs="$(_AdditionalPostLinkerStepsFlag)">
+
+  <!-- Convert $(RuntimeIdentifier) (e.g. 'android-arm64') to ABI (e.g. 'arm64-v8a') -->
+  <RuntimeIdentifierToAbi RuntimeIdentifier="$(RuntimeIdentifier)">
+    <Output TaskParameter="SupportedAbis" PropertyName="_AfterILLinkAbi" />
+  </RuntimeIdentifierToAbi>
+
+  <!-- Collect trimmed assemblies from $(IntermediateLinkDir) using the same transform that
+       _AndroidComputeIlcCompileInputs uses. RemoveDuplicates deduplicates by ItemSpec only,
+       which is needed because NativeAOT builds can have duplicate @(ManagedAssemblyToLink)
+       entries for the same assembly with different metadata. -->
+  <ItemGroup>
+    <_AfterILLinkAssembliesRaw
+        Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')"
+        Condition=" Exists('$(IntermediateLinkDir)%(Filename)%(Extension)') " />
+  </ItemGroup>
+  <RemoveDuplicates Inputs="@(_AfterILLinkAssembliesRaw)">
+    <Output TaskParameter="Filtered" ItemName="_AfterILLinkAssemblies" />
+  </RemoveDuplicates>
+
+  <!-- The project's own assembly ($(TargetName)$(TargetExt)) should be in
+       @(ManagedAssemblyToLink) for all runtimes (for NativeAOT, _AndroidFixManagedAssemblyToLinkForILLink
+       ensures this). This explicit Include is a safety net in case some code path doesn't include it.
+       Exclude="@(_AfterILLinkAssemblies)" prevents duplicates by ItemSpec (KeepDuplicates compares
+       including metadata, which would miss matches when metadata differs). -->
+  <ItemGroup>
+    <_AfterILLinkAssemblies
+        Include="$(IntermediateLinkDir)$(TargetName)$(TargetExt)"
+        Exclude="@(_AfterILLinkAssemblies)"
+        Condition=" Exists('$(IntermediateLinkDir)$(TargetName)$(TargetExt)') " />
+  </ItemGroup>
+
+  <!-- Set Abi on all items, and ensure the root assembly has HasMonoAndroidReference=true
+       so that IsAndroidAssembly() returns true for it (it may lack TargetFrameworkIdentifier/
+       TargetPlatformIdentifier metadata if it came from the explicit Include above rather
+       than from @(ManagedAssemblyToLink)). This Update is harmless if the root assembly was
+       already in @(ManagedAssemblyToLink) — it will already have this metadata or equivalent. -->
+  <ItemGroup>
+    <_AfterILLinkAssemblies Update="@(_AfterILLinkAssemblies)" Abi="$(_AfterILLinkAbi)" />
+    <_AfterILLinkAssemblies
+        Update="$(IntermediateLinkDir)$(TargetName)$(TargetExt)"
+        HasMonoAndroidReference="true" />
+  </ItemGroup>
+
+  <!-- Classify user vs framework assemblies for FindJavaObjectsStep.
+       FindJavaObjectsStep uses IsUserAssembly to decide whether to scan an assembly for
+       JCW (Java Callable Wrapper) types. Framework assemblies like Mono.Android.dll already
+       have their JCWs pre-built in mono.android.jar — if we mark them as user assemblies,
+       FindJavaObjectsStep generates duplicate JCWs that conflict at Java compilation time.
+
+       We filter by %(Filename) against the 4 known framework assembly names used by
+       MonoAndroidHelper.IsFrameworkAssembly(string): Mono.Android, Mono.Android.Export,
+       Mono.Android.Runtime, Java.Interop. No other framework assemblies matter here because
+       BCL assemblies (System.Runtime, etc.) fail the IsAndroidAssembly check in
+       FindJavaObjectsStep and are never scanned for Java types regardless.
+
+       We deliberately avoid %(NuGetPackageId) because it is not uniformly defined on all
+       @(ManagedAssemblyToLink) items (e.g. _Microsoft.Android.Resource.Designer.dll lacks
+       it, causing MSB4096 on any %(NuGetPackageId) reference). -->
+  <ItemGroup>
+    <_AfterILLinkUserAssemblies Include="@(_AfterILLinkAssemblies)"
+        Condition=" '%(Filename)' != 'Mono.Android' and '%(Filename)' != 'Mono.Android.Export' and '%(Filename)' != 'Mono.Android.Runtime' and '%(Filename)' != 'Java.Interop' " />
+  </ItemGroup>
+
   <AssemblyModifierPipeline
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
       CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
       Debug="$(AndroidIncludeDebugSymbols)"
-      DestinationFiles="@(ResolvedAssemblies)"
+      DestinationFiles="@(_AfterILLinkAssemblies)"
       Deterministic="$(Deterministic)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
       ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
       PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
       ReadSymbols="$(_AndroidLinkAssembliesReadSymbols)"
-      ResolvedAssemblies="@(_AllResolvedAssemblies)"
-      ResolvedUserAssemblies="@(ResolvedUserAssemblies)"
-      SourceFiles="@(ResolvedAssemblies)"
+      ResolvedAssemblies="@(_AfterILLinkAssemblies)"
+      ResolvedUserAssemblies="@(_AfterILLinkUserAssemblies)"
+      SourceFiles="@(_AfterILLinkAssemblies)"
       TargetName="$(TargetName)">
   </AssemblyModifierPipeline>
 
   <Touch Files="$(_AdditionalPostLinkerStepsFlag)" AlwaysCreate="true" />
+
+  <ItemGroup>
+    <FileWrites Include="@(_AfterILLinkAssemblies->'%(RootDir)%(Directory)%(Filename).jlo.xml')" />
+    <FileWrites Include="@(_AfterILLinkAssemblies->'%(RootDir)%(Directory)%(Filename).typemap.xml')" />
+  </ItemGroup>
+
+  <!-- Clean up temporary item groups -->
+  <ItemGroup>
+    <_AfterILLinkAssembliesRaw Remove="@(_AfterILLinkAssembliesRaw)" />
+    <_AfterILLinkAssemblies Remove="@(_AfterILLinkAssemblies)" />
+    <_AfterILLinkUserAssemblies Remove="@(_AfterILLinkUserAssemblies)" />
+  </ItemGroup>
 </Target>
 
 <!-- _PrepareAssemblies lives in Microsoft.Android.Sdk.AssemblyResolution.targets -->
+
+<!--
+  _CopySidecarXmlToAssemblyPaths
+  ===============================
+  When _AfterILLinkAdditionalSteps runs in the inner build (AfterTargets="ILLink"), it generates
+  sidecar XML files next to the trimmed assemblies in $(IntermediateLinkDir):
+    - .jlo.xml (Java-like objects found by FindJavaObjectsStep)
+    - .typemap.xml (type mappings found by FindTypeMapObjectsStep)
+
+  After ILLink, subsequent inner-build steps (CreateReadyToRunImages, IlcCompile, AOT) may move
+  assemblies to different directories (e.g. R2R/, publish/). The sidecar XML files stay in linked/.
+
+  The outer build's _GenerateJavaStubs and GenerateTypeMappings expect these files next to the
+  assembly paths in @(_ResolvedAssemblies) (which may point to R2R/, publish/, etc.).
+  This target copies sidecar XML files from linked/ to those locations.
+
+  Only runs in the outer build (_ComputeFilesToPublishForRuntimeIdentifiers != 'true') for trimmed builds.
+-->
+<Target Name="_CopySidecarXmlToAssemblyPaths"
+    AfterTargets="_PrepareAssemblies"
+    Condition=" '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' ">
+
+  <!-- Separate R2R composite assemblies (e.g. UnnamedProject.r2r.dll) from regular assemblies.
+       R2R composites are produced by CreateReadyToRunImages AFTER ILLink by merging individual
+       assemblies into a single native image. They have no sidecar files in linked/ because
+       AssemblyModifierPipeline runs in the inner build before R2R creates them.
+       We create empty sidecar files for them (zero-length = "not scanned, no JLOs/type mappings"). -->
+  <ItemGroup>
+    <_R2RCompositeAssemblies Include="@(_ResolvedAssemblies)" Condition=" $([System.String]::Copy('%(Filename)').EndsWith('.r2r')) " />
+    <_NonCompositeAssemblies Include="@(_ResolvedAssemblies)" Condition=" !$([System.String]::Copy('%(Filename)').EndsWith('.r2r')) " />
+  </ItemGroup>
+
+  <!-- Create empty sidecar files for R2R composite assemblies (zero-length = WasScanned=false) -->
+  <Touch
+      Condition=" '@(_R2RCompositeAssemblies)' != '' "
+      Files="@(_R2RCompositeAssemblies->'%(RootDir)%(Directory)%(Filename).jlo.xml');@(_R2RCompositeAssemblies->'%(RootDir)%(Directory)%(Filename).typemap.xml')"
+      AlwaysCreate="true" />
+
+  <!-- Compute the path to the inner build's linked/ directory where sidecar XML files reside.
+       The inner build is dispatched by _ResolveAssemblies with AppendRuntimeIdentifierToOutputPath=true,
+       so its IntermediateOutputPath is always $(OuterIntermediateOutputPath)$(RuntimeIdentifier)/.
+       In the outer build:
+         - Multi-RID (RuntimeIdentifier == ''): use $(IntermediateOutputPath)%(RuntimeIdentifier)/linked/
+         - Single-RID (RuntimeIdentifier != ''): $(IntermediateOutputPath) may or may not already
+           contain the RID. If it does (normal SDK behavior), use $(IntermediateOutputPath)linked/.
+           If it doesn't (e.g. RuntimeIdentifier set after path evaluation), append the RID first. -->
+  <PropertyGroup Condition=" '$(RuntimeIdentifier)' != '' ">
+    <_SidecarLinkedDir Condition=" $(IntermediateOutputPath.Replace('\','/').TrimEnd('/').EndsWith('$(RuntimeIdentifier)')) ">$(IntermediateOutputPath)linked\</_SidecarLinkedDir>
+    <_SidecarLinkedDir Condition=" '$(_SidecarLinkedDir)' == '' ">$(IntermediateOutputPath)$(RuntimeIdentifier)\linked\</_SidecarLinkedDir>
+  </PropertyGroup>
+  <ItemGroup Condition=" '$(RuntimeIdentifier)' == '' ">
+    <_SidecarXmlCopySource Include="@(_NonCompositeAssemblies->'$(IntermediateOutputPath)%(RuntimeIdentifier)\linked\%(Filename).jlo.xml')" />
+    <_SidecarXmlCopySource Include="@(_NonCompositeAssemblies->'$(IntermediateOutputPath)%(RuntimeIdentifier)\linked\%(Filename).typemap.xml')" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(RuntimeIdentifier)' != '' ">
+    <_SidecarXmlCopySource Include="@(_NonCompositeAssemblies->'$(_SidecarLinkedDir)%(Filename).jlo.xml')" />
+    <_SidecarXmlCopySource Include="@(_NonCompositeAssemblies->'$(_SidecarLinkedDir)%(Filename).typemap.xml')" />
+  </ItemGroup>
+
+  <!-- Some assemblies (e.g. _Microsoft.Android.Resource.Designer.dll) end up in linked/ but were
+       NOT processed by AssemblyModifierPipeline (they weren't in @(ManagedAssemblyToLink) at ILLink
+       time). They have no sidecar files in linked/. Create empty (zero-length) sidecar files for
+       them so the Copy below doesn't fail. Zero-length = "not scanned" which is correct.
+
+       The linked/ directory may not exist if the RID changed between builds without a clean
+       (e.g. switching from android-arm64 to android-x64 via RuntimeIdentifier parameter while
+       RuntimeIdentifiers still points to the old RID). In that case the inner build ran for the
+       old RID and never created the new RID's linked/ directory. MakeDir ensures it exists. -->
+  <MakeDir
+      Directories="@(_SidecarXmlCopySource->'%(RootDir)%(Directory)')"
+      Condition=" '@(_SidecarXmlCopySource)' != '' " />
+  <Touch
+      Files="@(_SidecarXmlCopySource)"
+      AlwaysCreate="true"
+      Condition=" '@(_SidecarXmlCopySource)' != '' " />
+
+  <ItemGroup>
+    <_SidecarXmlCopyDestination Include="@(_NonCompositeAssemblies->'%(RootDir)%(Directory)%(Filename).jlo.xml')" />
+    <_SidecarXmlCopyDestination Include="@(_NonCompositeAssemblies->'%(RootDir)%(Directory)%(Filename).typemap.xml')" />
+  </ItemGroup>
+
+  <Copy
+      SourceFiles="@(_SidecarXmlCopySource)"
+      DestinationFiles="@(_SidecarXmlCopyDestination)"
+      SkipUnchangedFiles="true" />
+
+  <ItemGroup>
+    <FileWrites Include="@(_SidecarXmlCopyDestination)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_SidecarXmlCopySource Remove="@(_SidecarXmlCopySource)" />
+    <_SidecarXmlCopyDestination Remove="@(_SidecarXmlCopyDestination)" />
+    <_NonCompositeAssemblies Remove="@(_NonCompositeAssemblies)" />
+    <_R2RCompositeAssemblies Remove="@(_R2RCompositeAssemblies)" />
+  </ItemGroup>
+</Target>
 
 <Target Name="_GetGenerateJavaStubsInputs" DependsOnTargets="_GenerateEnvironmentFiles">
   <ItemGroup>
