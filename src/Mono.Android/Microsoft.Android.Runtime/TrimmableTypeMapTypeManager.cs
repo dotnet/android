@@ -28,7 +28,7 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 
 	protected override IEnumerable<string> GetSimpleReferences (Type type)
 	{
-		if (TrimmableTypeMap.Instance.TryGetJniNameForManagedType (type, out var jniName)) {
+		if (TrimmableTypeMap.Instance.TryGetJniName (type, out var jniName)) {
 			yield return jniName;
 			yield break;
 		}
@@ -40,7 +40,7 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 		// Walk the base type chain for managed-only subclasses (e.g., JavaProxyThrowable
 		// extends Java.Lang.Error but has no [Register] attribute itself).
 		for (var baseType = type.BaseType; baseType is not null; baseType = baseType.BaseType) {
-			if (TrimmableTypeMap.Instance.TryGetJniNameForManagedType (baseType, out var baseJniName)) {
+			if (TrimmableTypeMap.Instance.TryGetJniName (baseType, out var baseJniName)) {
 				yield return baseJniName;
 				yield break;
 			}
