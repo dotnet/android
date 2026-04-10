@@ -151,11 +151,11 @@ class TrimmableTypeMap
 
 	JavaPeerProxy? ResolveProxyForJavaType (string className)
 	{
-		if (!_typeMap.TryGetValue (className, out var mappedType)) {
+		if (!TryGetType (className, out var managedType)) {
 			return null;
 		}
 
-		return mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+		return GetProxyForManagedType (managedType);
 	}
 
 	internal IJavaPeerable? CreatePeer (IntPtr handle, JniHandleOwnership transfer, Type? targetType = null)
