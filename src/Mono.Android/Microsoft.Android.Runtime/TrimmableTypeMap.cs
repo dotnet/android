@@ -9,7 +9,6 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using Android.Runtime;
 using Java.Interop;
-using Java.Interop.Tools.TypeNameMappings;
 
 namespace Microsoft.Android.Runtime;
 
@@ -115,26 +114,6 @@ class TrimmableTypeMap
 			return true;
 		}
 
-		if (TryGetJniNameForType (type, out jniName)) {
-			_jniNameCache [type] = jniName;
-			return true;
-		}
-
-		if (TryGetCompatJniNameForAndroidComponent (type, out jniName)) {
-			_jniNameCache [type] = jniName;
-			return true;
-		}
-
-		// Prefer the JavaNativeTypeManager calculation for user/application types,
-		// as it matches the ACW generation rules used during the build.
-		if (typeof (IJavaPeerable).IsAssignableFrom (type)) {
-			jniName = JavaNativeTypeManager.ToJniName (type);
-			if (!string.IsNullOrEmpty (jniName) && jniName != "java/lang/Object") {
-				_jniNameCache [type] = jniName;
-				return true;
-			}
-		}
-
 		jniName = null;
 		_jniNameCache [type] = null;
 		return false;
@@ -204,59 +183,6 @@ class TrimmableTypeMap
 		}
 
 		return proxy?.CreateInstance (handle, transfer);
-	}
-
-	static bool TryGetCompatJniNameForAndroidComponent (Type type, [NotNullWhen (true)] out string? jniName)
-	{
-		if (!IsAndroidComponentType (type)) {
-			jniName = null;
-			return false;
-		}
-
-		var (typeName, parentJniName, ns) = GetCompatTypeNameParts (type);
-		jniName = parentJniName is not null
-			? $"{parentJniName}_{typeName}"
-			: ns.Length == 0
-				? typeName
-				: $"{ns.ToLowerInvariant ().Replace ('.', '/')}/{typeName}";
-		return true;
-	}
-
-	static bool IsAndroidComponentType (Type type)
-	{
-		return type.IsDefined (typeof (global::Android.App.ActivityAttribute), inherit: false) ||
-			type.IsDefined (typeof (global::Android.App.ApplicationAttribute), inherit: false) ||
-			type.IsDefined (typeof (global::Android.App.InstrumentationAttribute), inherit: false) ||
-			type.IsDefined (typeof (global::Android.App.ServiceAttribute), inherit: false) ||
-			type.IsDefined (typeof (global::Android.Content.BroadcastReceiverAttribute), inherit: false) ||
-			type.IsDefined (typeof (global::Android.Content.ContentProviderAttribute), inherit: false);
-	}
-
-	static (string TypeName, string? ParentJniName, string Namespace) GetCompatTypeNameParts (Type type)
-	{
-		var nameParts = new List<string> { SanitizeTypeName (type.Name) };
-		var current = type;
-		string? parentJniName = null;
-
-		while (current.DeclaringType is Type parentType) {
-			if (TryGetJniNameForType (parentType, out var explicitJniName) ||
-					TryGetCompatJniNameForAndroidComponent (parentType, out explicitJniName)) {
-				parentJniName = explicitJniName;
-				break;
-			}
-
-			nameParts.Add (SanitizeTypeName (parentType.Name));
-			current = parentType;
-		}
-
-		nameParts.Reverse ();
-		return (string.Join ("_", nameParts), parentJniName, current.Namespace ?? "");
-	}
-
-	static string SanitizeTypeName (string name)
-	{
-		var tick = name.IndexOf ('`');
-		return (tick >= 0 ? name.Substring (0, tick) : name).Replace ('+', '_');
 	}
 
 	/// <summary>
