@@ -527,7 +527,13 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 			}
 
 			var targetName = targetType?.AssemblyQualifiedName ?? "<null>";
-			var javaType = JniEnvironment.Types.GetJniTypeNameFromInstance (reference);
+			string? javaType = null;
+			try {
+				javaType = JniEnvironment.Types.GetJniTypeNameFromInstance (reference);
+			} finally {
+				JniObjectReference.Dispose (ref reference, transfer);
+			}
+
 			throw new NotSupportedException (
 				$"No generated {nameof (JavaPeerProxy)} was found for Java type '{javaType}' " +
 				$"with targetType '{targetName}' while {nameof (RuntimeFeature.TrimmableTypeMap)} is enabled. " +

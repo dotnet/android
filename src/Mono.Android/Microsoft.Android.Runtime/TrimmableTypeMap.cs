@@ -28,9 +28,10 @@ class TrimmableTypeMap
 
 	readonly IReadOnlyDictionary<string, Type> _typeMap;
 	readonly IReadOnlyDictionary<Type, Type> _proxyTypeMap;
-	readonly ConcurrentDictionary<Type, JavaPeerProxy?> _proxyCache = new ();
-	readonly ConcurrentDictionary<Type, string?> _jniNameCache = new ();
-	readonly ConcurrentDictionary<string, JavaPeerProxy?> _peerProxyCache = new (StringComparer.Ordinal);
+	// ConcurrentDictionary doesn't accept null values, so these caches only store hits.
+	readonly ConcurrentDictionary<Type, JavaPeerProxy> _proxyCache = new ();
+	readonly ConcurrentDictionary<Type, string> _jniNameCache = new ();
+	readonly ConcurrentDictionary<string, JavaPeerProxy> _peerProxyCache = new (StringComparer.Ordinal);
 
 	TrimmableTypeMap ()
 	{
@@ -91,7 +92,18 @@ class TrimmableTypeMap
 	/// Results are cached per type.
 	/// </summary>
 	JavaPeerProxy? GetProxyForManagedType (Type managedType)
-		=> _proxyCache.GetOrAdd (managedType, static (type, self) => self.ResolveProxyForManagedType (type), this);
+	{
+		if (_proxyCache.TryGetValue (managedType, out var cached)) {
+			return cached;
+		}
+
+		var resolved = ResolveProxyForManagedType (managedType);
+		if (resolved is null) {
+			return null;
+		}
+
+		return _proxyCache.GetOrAdd (managedType, resolved);
+	}
 
 	JavaPeerProxy? ResolveProxyForManagedType (Type managedType)
 	{
@@ -104,8 +116,19 @@ class TrimmableTypeMap
 
 	internal bool TryGetJniNameForManagedType (Type managedType, [NotNullWhen (true)] out string? jniName)
 	{
-		jniName = _jniNameCache.GetOrAdd (managedType, static (type, self) => self.GetProxyForManagedType (type)?.JniName, this);
-		return jniName is not null;
+		if (_jniNameCache.TryGetValue (managedType, out var cached)) {
+			jniName = cached;
+			return true;
+		}
+
+		var proxy = GetProxyForManagedType (managedType);
+		if (proxy is null) {
+			jniName = null;
+			return false;
+		}
+
+		jniName = _jniNameCache.GetOrAdd (managedType, proxy.JniName);
+		return true;
 	}
 
 	JavaPeerProxy? GetProxyForJavaObject (IntPtr handle, Type? targetType = null)
@@ -121,13 +144,13 @@ class TrimmableTypeMap
 			while (jniClass.IsValid) {
 				var className = JniEnvironment.Types.GetJniTypeNameFromClass (jniClass);
 				if (className != null) {
-					var cached = _peerProxyCache.GetOrAdd (className, static (name, self) => {
-						if (!self._typeMap.TryGetValue (name, out var mappedType)) {
-							return null;
+					JavaPeerProxy? cached = null;
+					if (!_peerProxyCache.TryGetValue (className, out cached) && _typeMap.TryGetValue (className, out var mappedType)) {
+						var resolved = mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+						if (resolved is not null) {
+							cached = _peerProxyCache.GetOrAdd (className, resolved);
 						}
-
-						return mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-					}, this);
+					}
 
 					if (cached != null && (targetType is null || targetType.IsAssignableFrom (cached.TargetType))) {
 						return cached;
@@ -155,9 +178,11 @@ class TrimmableTypeMap
 			// (e.g., IAppendableInvoker wrapping a java.lang.Integer).
 			if (proxy is not null && TryGetJniNameForManagedType (targetType, out var targetJniName)) {
 				var selfRef = new JniObjectReference (handle);
-				var objClass = JniEnvironment.Types.GetObjectClass (selfRef);
-				var targetClass = JniEnvironment.Types.FindClass (targetJniName);
+				var objClass = default (JniObjectReference);
+				var targetClass = default (JniObjectReference);
 				try {
+					objClass = JniEnvironment.Types.GetObjectClass (selfRef);
+					targetClass = JniEnvironment.Types.FindClass (targetJniName);
 					if (!JniEnvironment.Types.IsAssignableFrom (objClass, targetClass)) {
 						proxy = null;
 					}
