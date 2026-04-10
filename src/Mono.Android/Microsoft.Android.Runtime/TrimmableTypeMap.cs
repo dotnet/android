@@ -131,10 +131,9 @@ class TrimmableTypeMap
 			while (jniClass.IsValid) {
 				var className = JniEnvironment.Types.GetJniTypeNameFromClass (jniClass);
 				if (className != null) {
-					var cached = _peerProxyCache.GetOrAdd (className, static (name, self) => self.ResolveProxyForJavaType (name) ?? s_noPeerSentinel, this);
-
-					if (!ReferenceEquals (cached, s_noPeerSentinel) && (targetType is null || targetType.IsAssignableFrom (cached.TargetType))) {
-						return cached;
+					var proxy = GetProxyForJavaType (className);
+					if (proxy != null && (targetType is null || targetType.IsAssignableFrom (proxy.TargetType))) {
+						return proxy;
 					}
 				}
 
@@ -147,6 +146,12 @@ class TrimmableTypeMap
 		}
 
 		return null;
+	}
+
+	JavaPeerProxy? GetProxyForJavaType (string className)
+	{
+		var proxy = _peerProxyCache.GetOrAdd (className, static (name, self) => self.ResolveProxyForJavaType (name) ?? s_noPeerSentinel, this);
+		return ReferenceEquals (proxy, s_noPeerSentinel) ? null : proxy;
 	}
 
 	JavaPeerProxy? ResolveProxyForJavaType (string className)
