@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -13,6 +14,8 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// </summary>
 static class ModelBuilder
 {
+	const string ProxyTypeSuffix = "_Proxy";
+
 	static readonly HashSet<string> EssentialRuntimeTypes = new (StringComparer.Ordinal) {
 		"java/lang/Object",
 		"java/lang/Class",
@@ -171,13 +174,25 @@ static class ModelBuilder
 		}
 	}
 
+	static string ManagedTypeNameToProxyTypeName (string managedTypeName)
+	{
+		var builder = new StringBuilder (managedTypeName.Length + ProxyTypeSuffix.Length);
+		for (int i = 0; i < managedTypeName.Length; i++) {
+			char c = managedTypeName [i];
+			builder.Append (c == '.' || c == '+' || c == '`' ? '_' : c);
+		}
+
+		builder.Append (ProxyTypeSuffix);
+		return builder.ToString ();
+	}
+
 	static JavaPeerProxyData BuildProxyType (JavaPeerInfo peer, string jniName, HashSet<string> usedProxyNames, bool isAcw)
 	{
 		// Use managed type name for proxy naming to guarantee uniqueness across aliases
 		// (two types with the same JNI name will have different managed names).
 		// Replace generic arity markers too, because backticks would make the emitted
 		// proxy type itself look generic even though we don't emit generic parameters.
-		var proxyTypeName = JniSignatureHelper.ManagedTypeNameToProxyTypeName (peer.ManagedTypeName);
+		var proxyTypeName = ManagedTypeNameToProxyTypeName (peer.ManagedTypeName);
 
 		// Guard against name collisions (e.g., "My.Type" and "My_Type" both map to "My_Type_Proxy")
 		if (!usedProxyNames.Add (proxyTypeName)) {

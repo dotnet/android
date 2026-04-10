@@ -68,15 +68,6 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 			Assert.Equal (expected, JniSignatureHelper.JniTypeToJava (jniType));
 		}
 
-		[Theory]
-		[InlineData ("MyApp.MainActivity", "MyApp_MainActivity_Proxy")]
-		[InlineData ("MyApp.Outer+Inner", "MyApp_Outer_Inner_Proxy")]
-		[InlineData ("MyApp.Generic.GenericHolder`1", "MyApp_Generic_GenericHolder_1_Proxy")]
-		public void ManagedTypeNameToProxyTypeName_ConvertsCorrectly (string managedTypeName, string expected)
-		{
-			Assert.Equal (expected, JniSignatureHelper.ManagedTypeNameToProxyTypeName (managedTypeName));
-		}
-
 	}
 
 	public class Filtering

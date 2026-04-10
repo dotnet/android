@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 
@@ -28,8 +27,6 @@ enum JniParamKind
 /// </summary>
 static class JniSignatureHelper
 {
-	const string ProxyTypeSuffix = "_Proxy";
-
 	/// <summary>
 	/// Parses the parameter types from a JNI method signature like "(Landroid/os/Bundle;)V".
 	/// </summary>
@@ -199,26 +196,6 @@ static class JniSignatureHelper
 	{
 		int lastSlash = jniName.LastIndexOf ('/');
 		return lastSlash >= 0 ? jniName.Substring (lastSlash + 1) : jniName;
-	}
-
-	/// <summary>
-	/// Converts a managed type name into a legal generated proxy type name.
-	/// Replaces namespace/nesting/generic arity separators and appends "_Proxy".
-	/// </summary>
-	internal static string ManagedTypeNameToProxyTypeName (string managedTypeName)
-	{
-		if (managedTypeName is null) {
-			throw new ArgumentNullException (nameof (managedTypeName));
-		}
-
-		var builder = new StringBuilder (managedTypeName.Length + ProxyTypeSuffix.Length);
-		for (int i = 0; i < managedTypeName.Length; i++) {
-			char c = managedTypeName [i];
-			builder.Append (c == '.' || c == '+' || c == '`' ? '_' : c);
-		}
-
-		builder.Append (ProxyTypeSuffix);
-		return builder.ToString ();
 	}
 
 	/// <summary>
