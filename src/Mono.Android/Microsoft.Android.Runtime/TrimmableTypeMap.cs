@@ -20,6 +20,7 @@ namespace Microsoft.Android.Runtime;
 class TrimmableTypeMap
 {
 	static readonly Lock s_initLock = new ();
+	static readonly JavaPeerProxy s_noPeerSentinel = new MissingJavaPeerProxy ();
 	static TrimmableTypeMap? s_instance;
 
 	internal static TrimmableTypeMap Instance =>
@@ -28,7 +29,7 @@ class TrimmableTypeMap
 
 	readonly IReadOnlyDictionary<string, Type> _typeMap;
 	readonly IReadOnlyDictionary<Type, Type> _proxyTypeMap;
-	// ConcurrentDictionary doesn't accept null values, so these caches only store hits.
+	// ConcurrentDictionary doesn't accept null values, so misses are cached with s_noPeerSentinel.
 	readonly ConcurrentDictionary<Type, JavaPeerProxy> _proxyCache = new ();
 	readonly ConcurrentDictionary<string, JavaPeerProxy> _peerProxyCache = new (StringComparer.Ordinal);
 
@@ -92,16 +93,8 @@ class TrimmableTypeMap
 	/// </summary>
 	JavaPeerProxy? GetProxyForManagedType (Type managedType)
 	{
-		if (_proxyCache.TryGetValue (managedType, out var cached)) {
-			return cached;
-		}
-
-		var resolved = ResolveProxyForManagedType (managedType);
-		if (resolved is null) {
-			return null;
-		}
-
-		return _proxyCache.GetOrAdd (managedType, resolved);
+		var proxy = _proxyCache.GetOrAdd (managedType, static (type, self) => self.ResolveProxyForManagedType (type) ?? s_noPeerSentinel, this);
+		return ReferenceEquals (proxy, s_noPeerSentinel) ? null : proxy;
 	}
 
 	JavaPeerProxy? ResolveProxyForManagedType (Type managedType)
@@ -138,15 +131,9 @@ class TrimmableTypeMap
 			while (jniClass.IsValid) {
 				var className = JniEnvironment.Types.GetJniTypeNameFromClass (jniClass);
 				if (className != null) {
-					JavaPeerProxy? cached = null;
-					if (!_peerProxyCache.TryGetValue (className, out cached) && _typeMap.TryGetValue (className, out var mappedType)) {
-						var resolved = mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-						if (resolved is not null) {
-							cached = _peerProxyCache.GetOrAdd (className, resolved);
-						}
-					}
+					var cached = _peerProxyCache.GetOrAdd (className, static (name, self) => self.ResolveProxyForJavaType (name) ?? s_noPeerSentinel, this);
 
-					if (cached != null && (targetType is null || targetType.IsAssignableFrom (cached.TargetType))) {
+					if (!ReferenceEquals (cached, s_noPeerSentinel) && (targetType is null || targetType.IsAssignableFrom (cached.TargetType))) {
 						return cached;
 					}
 				}
@@ -160,6 +147,15 @@ class TrimmableTypeMap
 		}
 
 		return null;
+	}
+
+	JavaPeerProxy? ResolveProxyForJavaType (string className)
+	{
+		if (!_typeMap.TryGetValue (className, out var mappedType)) {
+			return null;
+		}
+
+		return mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
 	}
 
 	internal IJavaPeerable? CreatePeer (IntPtr handle, JniHandleOwnership transfer, Type? targetType = null)
@@ -237,6 +233,15 @@ class TrimmableTypeMap
 		} catch (Exception ex) {
 			Environment.FailFast ($"TrimmableTypeMap: Failed to register natives for class '{className}'.", ex);
 		}
+	}
+
+	sealed class MissingJavaPeerProxy : JavaPeerProxy
+	{
+		public MissingJavaPeerProxy () : base ("<missing>", typeof (Java.Lang.Object), null)
+		{
+		}
+
+		public override IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer) => null;
 	}
 
 }
