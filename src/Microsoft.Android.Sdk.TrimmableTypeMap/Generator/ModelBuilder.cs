@@ -177,7 +177,7 @@ static class ModelBuilder
 		// (two types with the same JNI name will have different managed names).
 		// Replace generic arity markers too, because backticks would make the emitted
 		// proxy type itself look generic even though we don't emit generic parameters.
-		var proxyTypeName = peer.ManagedTypeName.Replace ('.', '_').Replace ('+', '_').Replace ('`', '_') + "_Proxy";
+		var proxyTypeName = JniSignatureHelper.ManagedTypeNameToProxyTypeName (peer.ManagedTypeName);
 
 		// Guard against name collisions (e.g., "My.Type" and "My_Type" both map to "My_Type_Proxy")
 		if (!usedProxyNames.Add (proxyTypeName)) {
