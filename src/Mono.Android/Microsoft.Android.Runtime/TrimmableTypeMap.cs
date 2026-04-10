@@ -30,7 +30,6 @@ class TrimmableTypeMap
 	readonly IReadOnlyDictionary<Type, Type> _proxyTypeMap;
 	// ConcurrentDictionary doesn't accept null values, so these caches only store hits.
 	readonly ConcurrentDictionary<Type, JavaPeerProxy> _proxyCache = new ();
-	readonly ConcurrentDictionary<Type, string> _jniNameCache = new ();
 	readonly ConcurrentDictionary<string, JavaPeerProxy> _peerProxyCache = new (StringComparer.Ordinal);
 
 	TrimmableTypeMap ()
@@ -116,18 +115,13 @@ class TrimmableTypeMap
 
 	internal bool TryGetJniNameForManagedType (Type managedType, [NotNullWhen (true)] out string? jniName)
 	{
-		if (_jniNameCache.TryGetValue (managedType, out var cached)) {
-			jniName = cached;
-			return true;
-		}
-
 		var proxy = GetProxyForManagedType (managedType);
 		if (proxy is null) {
 			jniName = null;
 			return false;
 		}
 
-		jniName = _jniNameCache.GetOrAdd (managedType, proxy.JniName);
+		jniName = proxy.JniName;
 		return true;
 	}
 
