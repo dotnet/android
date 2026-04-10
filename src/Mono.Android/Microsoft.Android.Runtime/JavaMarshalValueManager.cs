@@ -508,8 +508,6 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 			Type? targetType)
 	{
 		if (RuntimeFeature.TrimmableTypeMap) {
-			// Prefer proxy-backed activation first, but keep the generic JniValueManager
-			// fallback for parity when there is no proxy match for the requested target type.
 			var typeMap = TrimmableTypeMap.Instance;
 			var peer = typeMap.CreatePeer (reference.Handle, JniHandleOwnership.DoNotTransfer, targetType);
 			if (peer is not null) {
@@ -521,6 +519,13 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 				JniObjectReference.Dispose (ref reference, transfer);
 				return peer;
 			}
+
+			var targetName = targetType?.AssemblyQualifiedName ?? "<null>";
+			var javaType = JniEnvironment.Types.GetJniTypeNameFromInstance (reference);
+			throw new NotSupportedException (
+				$"No generated {nameof (JavaPeerProxy)} was found for Java type '{javaType}' " +
+				$"with targetType '{targetName}' while {nameof (RuntimeFeature.TrimmableTypeMap)} is enabled. " +
+				$"This indicates a missing trimmable typemap proxy or association and should be fixed in the generator.");
 		}
 
 		return base.CreatePeer (ref reference, transfer, targetType);
