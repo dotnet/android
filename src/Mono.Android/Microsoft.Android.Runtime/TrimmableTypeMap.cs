@@ -86,23 +86,26 @@ class TrimmableTypeMap
 
 	JavaPeerProxy? GetProxyForManagedType (Type managedType)
 	{
-		var proxy = _proxyCache.GetOrAdd (managedType, static (type, self) => self.ResolveProxyForManagedType (type) ?? s_noPeerSentinel, this);
+		var proxy = _proxyCache.GetOrAdd (managedType, static (type, self) => {
+			if (!self._proxyTypeMap.TryGetValue (type, out var proxyType)) {
+				return s_noPeerSentinel;
+			}
+
+			return proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false) ?? s_noPeerSentinel;
+		}, this);
 		return ReferenceEquals (proxy, s_noPeerSentinel) ? null : proxy;
 	}
 
 	JavaPeerProxy? GetProxyForJavaType (string className)
 	{
-		var proxy = _peerProxyCache.GetOrAdd (className, static (name, self) => self.ResolveProxyForJavaType (name) ?? s_noPeerSentinel, this);
+		var proxy = _peerProxyCache.GetOrAdd (className, static (name, self) => {
+			if (!self.TryGetTargetType (name, out var managedType)) {
+				return s_noPeerSentinel;
+			}
+
+			return self.GetProxyForManagedType (managedType) ?? s_noPeerSentinel;
+		}, this);
 		return ReferenceEquals (proxy, s_noPeerSentinel) ? null : proxy;
-	}
-
-	JavaPeerProxy? ResolveProxyForManagedType (Type managedType)
-	{
-		if (!_proxyTypeMap.TryGetValue (managedType, out var proxyType)) {
-			return null;
-		}
-
-		return proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
 	}
 
 	internal bool TryGetJniNameForManagedType (Type managedType, [NotNullWhen (true)] out string? jniName)
@@ -117,9 +120,10 @@ class TrimmableTypeMap
 			return null;
 		}
 
-		return TryGetProxyFromHierarchy () ?? TryGetProxyFromTargetType ();
+		return TryGetProxyFromHierarchy (this, handle, targetType) ??
+			(targetType is null ? null : TryGetProxyFromTargetType (this, handle, targetType));
 
-		JavaPeerProxy? TryGetProxyFromHierarchy ()
+		static JavaPeerProxy? TryGetProxyFromHierarchy (TrimmableTypeMap self, IntPtr handle, Type? targetType)
 		{
 			var selfRef = new JniObjectReference (handle);
 			var jniClass = JniEnvironment.Types.GetObjectClass (selfRef);
@@ -128,7 +132,7 @@ class TrimmableTypeMap
 				while (jniClass.IsValid) {
 					var className = JniEnvironment.Types.GetJniTypeNameFromClass (jniClass);
 					if (className != null) {
-						var proxy = GetProxyForJavaType (className);
+						var proxy = self.GetProxyForJavaType (className);
 						if (proxy != null && (targetType is null || targetType.IsAssignableFrom (proxy.TargetType))) {
 							return proxy;
 						}
@@ -145,17 +149,13 @@ class TrimmableTypeMap
 			return null;
 		}
 
-		JavaPeerProxy? TryGetProxyFromTargetType ()
+		static JavaPeerProxy? TryGetProxyFromTargetType (TrimmableTypeMap self, IntPtr handle, Type targetType)
 		{
-			if (targetType is null) {
-				return null;
-			}
-
-			var proxy = GetProxyForManagedType (targetType);
+			var proxy = self.GetProxyForManagedType (targetType);
 			// Verify the Java object is actually assignable to the target Java type
 			// before returning the fallback proxy. Without this, we'd create invalid peers
 			// (e.g., IAppendableInvoker wrapping a java.lang.Integer).
-			if (proxy is null || !TryGetJniNameForManagedType (targetType, out var targetJniName)) {
+			if (proxy is null || !self.TryGetJniNameForManagedType (targetType, out var targetJniName)) {
 				return null;
 			}
 
@@ -171,15 +171,6 @@ class TrimmableTypeMap
 				JniObjectReference.Dispose (ref targetClass);
 			}
 		}
-	}
-
-	JavaPeerProxy? ResolveProxyForJavaType (string className)
-	{
-		if (!TryGetTargetType (className, out var managedType)) {
-			return null;
-		}
-
-		return GetProxyForManagedType (managedType);
 	}
 
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
