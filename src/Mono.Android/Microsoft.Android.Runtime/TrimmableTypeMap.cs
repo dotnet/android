@@ -69,21 +69,8 @@ class TrimmableTypeMap
 
 	internal bool TryGetTargetType (string jniSimpleReference, [NotNullWhen (true)] out Type? type)
 	{
-		if (!_typeMap.TryGetValue (jniSimpleReference, out var mappedType)) {
-			type = null;
-			return false;
-		}
-
-		var proxy = mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-		if (proxy is null) {
-			// Alias typemap entries (for example "jni/name[1]") are not implemented yet.
-			// Support for them will be added in a follow-up for https://github.com/dotnet/android/issues/10788.
-			throw new NotImplementedException (
-				$"Trimmable typemap alias handling is not implemented yet for '{jniSimpleReference}'.");
-		}
-
-		type = proxy.TargetType;
-		return true;
+		type = GetProxyForJavaType (jniSimpleReference)?.TargetType;
+		return type is not null;
 	}
 
 	JavaPeerProxy? GetProxyForManagedType (Type managedType)
@@ -101,11 +88,19 @@ class TrimmableTypeMap
 	JavaPeerProxy? GetProxyForJavaType (string className)
 	{
 		var proxy = _peerProxyCache.GetOrAdd (className, static (name, self) => {
-			if (!self.TryGetTargetType (name, out var managedType)) {
+			if (!self._typeMap.TryGetValue (name, out var mappedType)) {
 				return s_noPeerSentinel;
 			}
 
-			return self.GetProxyForManagedType (managedType) ?? s_noPeerSentinel;
+			var proxy = mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+			if (proxy is null) {
+				// Alias typemap entries (for example "jni/name[1]") are not implemented yet.
+				// Support for them will be added in a follow-up for https://github.com/dotnet/android/issues/10788.
+				throw new NotImplementedException (
+					$"Trimmable typemap alias handling is not implemented yet for '{name}'.");
+			}
+
+			return proxy;
 		}, this);
 		return ReferenceEquals (proxy, s_noPeerSentinel) ? null : proxy;
 	}
