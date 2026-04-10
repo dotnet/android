@@ -58,9 +58,6 @@ class TrimmableTypeMap
 		}
 	}
 
-	/// <summary>
-	/// Registers the <c>mono.android.Runtime.registerNatives</c> JNI native method.
-	/// </summary>
 	unsafe void RegisterNatives ()
 	{
 		using var runtimeClass = new JniType ("mono/android/Runtime"u8);
@@ -87,13 +84,15 @@ class TrimmableTypeMap
 		return true;
 	}
 
-	/// <summary>
-	/// Finds the proxy for a managed type using the generated proxy type map.
-	/// Results are cached per type.
-	/// </summary>
 	JavaPeerProxy? GetProxyForManagedType (Type managedType)
 	{
 		var proxy = _proxyCache.GetOrAdd (managedType, static (type, self) => self.ResolveProxyForManagedType (type) ?? s_noPeerSentinel, this);
+		return ReferenceEquals (proxy, s_noPeerSentinel) ? null : proxy;
+	}
+
+	JavaPeerProxy? GetProxyForJavaType (string className)
+	{
+		var proxy = _peerProxyCache.GetOrAdd (className, static (name, self) => self.ResolveProxyForJavaType (name) ?? s_noPeerSentinel, this);
 		return ReferenceEquals (proxy, s_noPeerSentinel) ? null : proxy;
 	}
 
@@ -108,14 +107,8 @@ class TrimmableTypeMap
 
 	internal bool TryGetJniNameForManagedType (Type managedType, [NotNullWhen (true)] out string? jniName)
 	{
-		var proxy = GetProxyForManagedType (managedType);
-		if (proxy is null) {
-			jniName = null;
-			return false;
-		}
-
-		jniName = proxy.JniName;
-		return true;
+		jniName = GetProxyForManagedType (managedType)?.JniName;
+		return jniName is not null;
 	}
 
 	internal JavaPeerProxy? GetProxyForJavaObject (IntPtr handle, Type? targetType = null)
@@ -124,56 +117,60 @@ class TrimmableTypeMap
 			return null;
 		}
 
-		var selfRef = new JniObjectReference (handle);
-		var jniClass = JniEnvironment.Types.GetObjectClass (selfRef);
+		return TryGetProxyFromHierarchy () ?? TryGetProxyFromTargetType ();
 
-		try {
-			while (jniClass.IsValid) {
-				var className = JniEnvironment.Types.GetJniTypeNameFromClass (jniClass);
-				if (className != null) {
-					var proxy = GetProxyForJavaType (className);
-					if (proxy != null && (targetType is null || targetType.IsAssignableFrom (proxy.TargetType))) {
-						return proxy;
+		JavaPeerProxy? TryGetProxyFromHierarchy ()
+		{
+			var selfRef = new JniObjectReference (handle);
+			var jniClass = JniEnvironment.Types.GetObjectClass (selfRef);
+
+			try {
+				while (jniClass.IsValid) {
+					var className = JniEnvironment.Types.GetJniTypeNameFromClass (jniClass);
+					if (className != null) {
+						var proxy = GetProxyForJavaType (className);
+						if (proxy != null && (targetType is null || targetType.IsAssignableFrom (proxy.TargetType))) {
+							return proxy;
+						}
 					}
+
+					var super = JniEnvironment.Types.GetSuperclass (jniClass);
+					JniObjectReference.Dispose (ref jniClass);
+					jniClass = super;
 				}
-
-				var super = JniEnvironment.Types.GetSuperclass (jniClass);
+			} finally {
 				JniObjectReference.Dispose (ref jniClass);
-				jniClass = super;
 			}
-		} finally {
-			JniObjectReference.Dispose (ref jniClass);
-		}
 
-		if (targetType is null) {
 			return null;
 		}
 
-		var proxy = GetProxyForManagedType (targetType);
-		// Verify the Java object is actually assignable to the target Java type
-		// before creating the peer. Without this, we'd create invalid peers
-		// (e.g., IAppendableInvoker wrapping a java.lang.Integer).
-		if (proxy is null || !TryGetJniNameForManagedType (targetType, out var targetJniName)) {
-			return null;
-		}
+		JavaPeerProxy? TryGetProxyFromTargetType ()
+		{
+			if (targetType is null) {
+				return null;
+			}
 
-		var selfRef = new JniObjectReference (handle);
-		var objClass = default (JniObjectReference);
-		var targetClass = default (JniObjectReference);
-		try {
-			objClass = JniEnvironment.Types.GetObjectClass (selfRef);
-			targetClass = JniEnvironment.Types.FindClass (targetJniName);
-			return JniEnvironment.Types.IsAssignableFrom (objClass, targetClass) ? proxy : null;
-		} finally {
-			JniObjectReference.Dispose (ref objClass);
-			JniObjectReference.Dispose (ref targetClass);
-		}
-	}
+			var proxy = GetProxyForManagedType (targetType);
+			// Verify the Java object is actually assignable to the target Java type
+			// before returning the fallback proxy. Without this, we'd create invalid peers
+			// (e.g., IAppendableInvoker wrapping a java.lang.Integer).
+			if (proxy is null || !TryGetJniNameForManagedType (targetType, out var targetJniName)) {
+				return null;
+			}
 
-	JavaPeerProxy? GetProxyForJavaType (string className)
-	{
-		var proxy = _peerProxyCache.GetOrAdd (className, static (name, self) => self.ResolveProxyForJavaType (name) ?? s_noPeerSentinel, this);
-		return ReferenceEquals (proxy, s_noPeerSentinel) ? null : proxy;
+			var selfRef = new JniObjectReference (handle);
+			var objClass = default (JniObjectReference);
+			var targetClass = default (JniObjectReference);
+			try {
+				objClass = JniEnvironment.Types.GetObjectClass (selfRef);
+				targetClass = JniEnvironment.Types.FindClass (targetJniName);
+				return JniEnvironment.Types.IsAssignableFrom (objClass, targetClass) ? proxy : null;
+			} finally {
+				JniObjectReference.Dispose (ref objClass);
+				JniObjectReference.Dispose (ref targetClass);
+			}
+		}
 	}
 
 	JavaPeerProxy? ResolveProxyForJavaType (string className)
