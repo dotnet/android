@@ -71,7 +71,7 @@ class TrimmableTypeMap
 		}
 	}
 
-	internal bool TryGetType (string jniSimpleReference, [NotNullWhen (true)] out Type? type)
+	internal bool TryGetTargetType (string jniSimpleReference, [NotNullWhen (true)] out Type? type)
 	{
 		if (!_typeMap.TryGetValue (jniSimpleReference, out var mappedType)) {
 			type = null;
@@ -151,7 +151,7 @@ class TrimmableTypeMap
 
 	JavaPeerProxy? ResolveProxyForJavaType (string className)
 	{
-		if (!TryGetType (className, out var managedType)) {
+		if (!TryGetTargetType (className, out var managedType)) {
 			return null;
 		}
 
