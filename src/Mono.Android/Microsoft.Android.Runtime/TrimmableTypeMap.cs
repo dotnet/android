@@ -90,7 +90,7 @@ class TrimmableTypeMap
 	/// Finds the proxy for a managed type using the generated proxy type map.
 	/// Results are cached per type.
 	/// </summary>
-	internal JavaPeerProxy? GetProxyForManagedType (Type managedType)
+	JavaPeerProxy? GetProxyForManagedType (Type managedType)
 		=> _proxyCache.GetOrAdd (managedType, static (type, self) => self.ResolveProxyForManagedType (type), this);
 
 	JavaPeerProxy? ResolveProxyForManagedType (Type managedType)
@@ -108,7 +108,7 @@ class TrimmableTypeMap
 		return jniName is not null;
 	}
 
-	internal JavaPeerProxy? GetProxyForPeer (IntPtr handle, Type? targetType = null)
+	JavaPeerProxy? GetProxyForPeer (IntPtr handle, Type? targetType = null)
 	{
 		if (handle == IntPtr.Zero) {
 			return null;
@@ -169,15 +169,6 @@ class TrimmableTypeMap
 		}
 
 		return proxy?.CreateInstance (handle, transfer);
-	}
-
-	/// <summary>
-	/// Creates a peer instance using the proxy's CreateInstance method.
-	/// Given a managed type, resolves the JNI name, finds the proxy, and calls CreateInstance.
-	/// </summary>
-	internal bool TryCreatePeer (Type type, IntPtr handle, JniHandleOwnership transfer)
-	{
-		return CreatePeer (handle, transfer, type) != null;
 	}
 
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
