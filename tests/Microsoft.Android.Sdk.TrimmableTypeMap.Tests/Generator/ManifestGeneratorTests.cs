@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Microsoft.Android.Sdk.TrimmableTypeMap;
@@ -9,25 +7,10 @@ using Xunit;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 
-public class ManifestGeneratorTests : IDisposable
+public class ManifestGeneratorTests
 {
 	static readonly XNamespace AndroidNs = "http://schemas.android.com/apk/res/android";
 	static readonly XName AttName = AndroidNs + "name";
-
-	string tempDir;
-
-	public ManifestGeneratorTests ()
-	{
-		tempDir = Path.Combine (Path.GetTempPath (), "ManifestGeneratorTests_" + Guid.NewGuid ().ToString ("N"));
-		Directory.CreateDirectory (tempDir);
-	}
-
-	public void Dispose ()
-	{
-		if (Directory.Exists (tempDir)) {
-			Directory.Delete (tempDir, recursive: true);
-		}
-	}
 
 	ManifestGenerator CreateDefaultGenerator () => new ManifestGenerator {
 		PackageName = "com.example.app",
@@ -36,17 +19,10 @@ public class ManifestGeneratorTests : IDisposable
 		VersionName = "1.0",
 		MinSdkVersion = "21",
 		TargetSdkVersion = "36",
-		AndroidRuntime = "coreclr",
+		RuntimeProviderJavaName = "mono.MonoRuntimeProvider",
 	};
 
-	string OutputPath => Path.Combine (tempDir, "AndroidManifest.xml");
-
-	string WriteTemplate (string xml)
-	{
-		var path = Path.Combine (tempDir, "template.xml");
-		File.WriteAllText (path, xml);
-		return path;
-	}
+	static XDocument ParseTemplate (string xml) => XDocument.Parse (xml);
 
 	static JavaPeerInfo CreatePeer (
 		string javaName,
@@ -70,16 +46,12 @@ public class ManifestGeneratorTests : IDisposable
 		ManifestGenerator gen,
 		IReadOnlyList<JavaPeerInfo>? peers = null,
 		AssemblyManifestInfo? assemblyInfo = null,
-		string? templatePath = null)
+		XDocument? template = null)
 	{
 		peers ??= [];
 		assemblyInfo ??= new AssemblyManifestInfo ();
-		XDocument? template = null;
-		if (!string.IsNullOrEmpty (templatePath) && File.Exists (templatePath)) {
-			template = XDocument.Load (templatePath);
-		}
-		gen.Generate (template, peers, assemblyInfo, OutputPath);
-		return XDocument.Load (OutputPath);
+		var (doc, _) = gen.Generate (template, peers, assemblyInfo);
+		return doc;
 	}
 
 	[Fact]
@@ -305,7 +277,7 @@ public class ManifestGeneratorTests : IDisposable
 	public void TemplateManifest_Preserved ()
 	{
 		var gen = CreateDefaultGenerator ();
-		var template = WriteTemplate (
+		var template = ParseTemplate (
 			"""
 			<?xml version="1.0" encoding="utf-8"?>
 			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.app">
@@ -314,7 +286,7 @@ public class ManifestGeneratorTests : IDisposable
 			</manifest>
 			""");
 
-		var doc = GenerateAndLoad (gen, templatePath: template);
+		var doc = GenerateAndLoad (gen, template: template);
 		var app = doc.Root?.Element ("application");
 
 		Assert.Equal ("false", (string?)app?.Attribute (AndroidNs + "allowBackup"));
@@ -384,7 +356,7 @@ public class ManifestGeneratorTests : IDisposable
 		var gen = CreateDefaultGenerator ();
 		gen.ManifestPlaceholders = "myAuthority=com.example.auth;myKey=12345";
 
-		var template = WriteTemplate (
+		var template = ParseTemplate (
 			"""
 			<?xml version="1.0" encoding="utf-8"?>
 			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.app">
@@ -395,7 +367,7 @@ public class ManifestGeneratorTests : IDisposable
 			</manifest>
 			""");
 
-		var doc = GenerateAndLoad (gen, templatePath: template);
+		var doc = GenerateAndLoad (gen, template: template);
 		var provider = doc.Root?.Element ("application")?.Elements ("provider")
 			.FirstOrDefault (p => (string?)p.Attribute (AndroidNs + "name") == "com.example.MyProvider");
 		Assert.Equal ("com.example.auth", (string?)provider?.Attribute (AndroidNs + "authorities"));
@@ -434,7 +406,7 @@ public class ManifestGeneratorTests : IDisposable
 	public void ExistingType_NotDuplicated ()
 	{
 		var gen = CreateDefaultGenerator ();
-		var template = WriteTemplate (
+		var template = ParseTemplate (
 			"""
 			<?xml version="1.0" encoding="utf-8"?>
 			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.app">
@@ -449,7 +421,7 @@ public class ManifestGeneratorTests : IDisposable
 			Properties = new Dictionary<string, object?> { ["Label"] = "New Label" },
 		});
 
-		var doc = GenerateAndLoad (gen, [peer], templatePath: template);
+		var doc = GenerateAndLoad (gen, [peer], template: template);
 		var activities = doc.Root?.Element ("application")?.Elements ("activity")
 			.Where (a => (string?)a.Attribute (AttName) == "com.example.app.ExistingActivity")
 			.ToList ();
@@ -556,7 +528,7 @@ public class ManifestGeneratorTests : IDisposable
 	public void AssemblyLevel_Deduplication ()
 	{
 		var gen = CreateDefaultGenerator ();
-		var template = WriteTemplate (
+		var template = ParseTemplate (
 			"""
 			<?xml version="1.0" encoding="utf-8"?>
 			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.app">
@@ -573,7 +545,7 @@ public class ManifestGeneratorTests : IDisposable
 		info.UsesLibraries.Add (new UsesLibraryInfo { Name = "org.apache.http.legacy" });
 		info.MetaData.Add (new MetaDataInfo { Name = "existing.key", Value = "new_value" });
 
-		var doc = GenerateAndLoad (gen, assemblyInfo: info, templatePath: template);
+		var doc = GenerateAndLoad (gen, assemblyInfo: info, template: template);
 
 		var cameraPerms = doc.Root?.Elements ("uses-permission")
 			.Where (p => (string?)p.Attribute (AttName) == "android.permission.CAMERA")

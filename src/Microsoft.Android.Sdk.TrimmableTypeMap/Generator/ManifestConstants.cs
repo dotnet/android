@@ -1,5 +1,3 @@
-#nullable enable
-
 using System.Xml.Linq;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
