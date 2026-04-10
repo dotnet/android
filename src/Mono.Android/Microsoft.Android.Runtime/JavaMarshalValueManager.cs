@@ -507,6 +507,12 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 			[DynamicallyAccessedMembers (Constructors)]
 			Type? targetType)
 	{
+		ThrowIfDisposed ();
+
+		if (!reference.IsValid) {
+			return null;
+		}
+
 		if (RuntimeFeature.TrimmableTypeMap) {
 			var typeMap = TrimmableTypeMap.Instance;
 			var peer = typeMap.CreatePeer (reference.Handle, JniHandleOwnership.DoNotTransfer, targetType);
