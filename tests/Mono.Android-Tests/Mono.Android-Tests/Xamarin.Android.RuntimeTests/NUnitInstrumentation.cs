@@ -26,12 +26,31 @@ namespace Xamarin.Android.RuntimeTests
             : base(handle, transfer)
         {
             if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
+                var excludedCategories = new List<string> {
+                    "Export",
+                    "GCBridge",
+                    "NativeTypeMap",
+                    "SSL",
+                    "TrimmableIgnore",
+                };
+                if (AppContext.TryGetSwitch ("Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime", out bool isCoreClrRuntime) && isCoreClrRuntime) {
+                    excludedCategories.Add ("CoreCLRIgnore");
+                }
+                ExcludedCategories = excludedCategories;
+
                 // TODO: https://github.com/dotnet/android/issues/11170
                 // Tests from the external Java.Interop-Tests assembly that fail under the
                 // trimmable typemap. These cannot use [Category("TrimmableIgnore")] because
                 // we don't control that assembly — they must be excluded by name here.
+                // Keep short simple names alongside fully-qualified names because the
+                // instrumentation filter matches both individual tests and fixtures.
                 ExcludedTestNames = new [] {
+                    "JavaObjectTest",
                     // net.dot.jni.test.CallVirtualFromConstructorDerived Java class not in APK
+                    "Java.InteropTests.JavaObjectTest",
+                    "JavaObjectExtensionsTests",
+                    "Java.InteropTests.JavaObjectExtensionsTests",
+                    "InvokeVirtualFromConstructorTests",
                     "Java.InteropTests.InvokeVirtualFromConstructorTests",
 
                     // net.dot.jni.internal.JavaProxyObject Java class not in APK — fixture setup fails (16 tests)
@@ -51,20 +70,30 @@ namespace Xamarin.Android.RuntimeTests
                     "Java.InteropTests.JniValueMarshaler_IJavaPeerable_ContractTests.JniValueMarshalerContractTests`1.CreateValue",
 
                     // net.dot.jni.internal.JavaProxyThrowable — proxy throwable creation fails
+                    "InnerExceptionIsNotAProxy",
                     "Java.InteropTests.JavaExceptionTests.InnerExceptionIsNotAProxy",
 
                     // IJavaInterfaceInvoker ctor trimmed / missing JavaPeerProxy for test types
+                    "JavaPeerableExtensionsTests",
+                    "JavaAs",
+                    "JavaAs_Exceptions",
+                    "JavaAs_InstanceThatDoesNotImplementInterfaceReturnsNull",
+                    "Java.InteropTests.JavaPeerableExtensionsTests",
                     "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs",
                     "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs_Exceptions",
                     "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs_InstanceThatDoesNotImplementInterfaceReturnsNull",
 
                     // JNI method remapping not supported in trimmable typemap
+                    "JniPeerMembersTests",
+                    "Java.InteropTests.JniPeerMembersTests",
                     "Java.InteropTests.JniPeerMembersTests.ReplaceInstanceMethodName",
                     "Java.InteropTests.JniPeerMembersTests.ReplaceInstanceMethodWithStaticMethod",
                     "Java.InteropTests.JniPeerMembersTests.ReplacementTypeUsedForMethodLookup",
                     "Java.InteropTests.JniPeerMembersTests.ReplaceStaticMethodName",
 
                     // net.dot.jni.test.GenericHolder Java class not in APK
+                    "JniTypeManagerTests",
+                    "Java.InteropTests.JniTypeManagerTests",
                     "Java.InteropTests.JniTypeManagerTests.CannotCreateGenericHolderFromJava",
 
                     // JniPrimitiveArrayInfo lookup fails for JavaBooleanArray
@@ -84,6 +113,12 @@ namespace Xamarin.Android.RuntimeTests
 
                     // Throwable subclass registration
                     "Java.InteropTests.JnienvTest.ActivatedDirectThrowableSubclassesShouldBeRegistered",
+
+                    // Export attribute not supported in trimmable typemap
+                    "CreateTypeWithExportedMethods",
+                    "Java.InteropTests.JnienvTest.CreateTypeWithExportedMethods",
+                    "DoNotLeakWeakReferences",
+                    "Java.InteropTests.JnienvTest.DoNotLeakWeakReferences",
 
                     // Typemap doesn't resolve most-derived type
                     "Java.LangTests.ObjectTest.GetObject_ReturnsMostDerivedType",

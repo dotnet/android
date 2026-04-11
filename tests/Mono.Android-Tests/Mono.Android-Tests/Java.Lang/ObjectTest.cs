@@ -73,7 +73,6 @@ namespace Java.LangTests
 
 				var intermediate  = CreateInstance_OverrideAbsListView_Adapter.Intermediate;
 				var registered    = Java.Lang.Object.GetObject<CreateInstance_OverrideAbsListView_Adapter>(adapter.Handle, JniHandleOwnership.DoNotTransfer);
-
 				Assert.AreNotSame (adapter, intermediate);
 				Assert.AreSame (adapter, registered);
 			}
