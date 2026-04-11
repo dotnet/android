@@ -25,6 +25,8 @@
     <Compile Include="$(JavaInteropTestDirectory)**\*.cs" Exclude="$(JavaInteropTestDirectory)obj\**;$(JavaInteropTestDirectory)bin\**" />
     <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JavaVMFixture.cs" />
     <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JniReferenceSafeHandleTest.cs" />
+    <!-- Uses FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS-only APIs that are not exposed by the Android product assembly -->
+    <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JniTypeUtf8Test.cs" />
     <Compile Remove="$(JavaInteropTestDirectory)obj\Release\net7.0-android/designtime/Resource.designer.cs" />
   </ItemGroup>
 

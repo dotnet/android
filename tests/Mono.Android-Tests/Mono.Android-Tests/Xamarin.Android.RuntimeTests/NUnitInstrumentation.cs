@@ -25,7 +25,7 @@ namespace Xamarin.Android.RuntimeTests
         protected NUnitInstrumentation(IntPtr handle, JniHandleOwnership transfer)
             : base(handle, transfer)
         {
-            if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
+            if (AppContext.TryGetSwitch ("Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap", out bool trimmableTypeMap) && trimmableTypeMap) {
                 // Java.Interop-Tests fixtures that use JavaObject types (not Java.Lang.Object)
                 // don't have JCW Java classes in the trimmable APK, and method remapping
                 // tests require Java-side support not present in the trimmable path.

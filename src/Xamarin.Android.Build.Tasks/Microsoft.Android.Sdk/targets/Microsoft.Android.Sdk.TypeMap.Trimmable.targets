@@ -36,11 +36,14 @@
   <!--
     Generate TypeMap assemblies and JCW files.
     AfterTargets="CoreCompile" so it runs after compilation.
+    BeforeTargets="_GenerateJavaStubs" so the generated manifest + Java sources
+    are available when _GenerateJavaStubs copies typemap sources into android/src.
     Uses @(ReferencePath) as the primary input (available after compilation).
   -->
   <Target Name="_GenerateTrimmableTypeMap"
       Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '@(ReferencePath->Count())' != '0' "
       AfterTargets="CoreCompile"
+      BeforeTargets="_GenerateJavaStubs"
       Inputs="@(ReferencePath);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs)"
       Outputs="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll">
 
