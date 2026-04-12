@@ -26,12 +26,7 @@ namespace Xamarin.Android.RuntimeTests
             : base(handle, transfer)
         {
 			if (AppContext.TryGetSwitch ("Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap", out bool trimmableTypeMap) && trimmableTypeMap) {
-				var excludedCategories = new List<string> {
-					"Export",
-					"SSL",
-					"TrimmableIgnore",
-				};
-				ExcludedCategories = excludedCategories;
+				ExcludedCategories = ["Export", "SSL", "TrimmableIgnore"];
 
 				// Keep the temporary Java.Interop exclusions centralized here so
 				// we don't need a PR against the Java.Interop submodule.
