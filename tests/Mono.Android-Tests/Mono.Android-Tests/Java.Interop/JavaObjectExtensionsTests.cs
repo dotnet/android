@@ -12,10 +12,9 @@ using NUnit.Framework;
 
 namespace Java.InteropTests {
 
-	[TestFixture]
-	public class JavaObjectExtensionsTests {
+[TestFixture, Category ("TrimmableIgnore")]
+public class JavaObjectExtensionsTests {
 
-		// TODO: https://github.com/dotnet/android/issues/11170 — cannot create instance of open generic type under trimmable typemap
 		[Test]
 		public void JavaCast_BaseToGenericWrapper ()
 		{
