@@ -30,7 +30,6 @@ namespace Xamarin.Android.RuntimeTests
 					"Export",
 					"SSL",
 					"TrimmableIgnore",
-					"CoreCLRIgnore",
 				};
 				ExcludedCategories = excludedCategories;
 
