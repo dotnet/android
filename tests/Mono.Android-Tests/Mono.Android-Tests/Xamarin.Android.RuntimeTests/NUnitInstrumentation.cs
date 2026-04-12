@@ -30,11 +30,22 @@ namespace Xamarin.Android.RuntimeTests
                     "Export",
                     "SSL",
                     "TrimmableIgnore",
+                    "CoreCLRIgnore",
                 };
-                if (AppContext.TryGetSwitch ("Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime", out bool isCoreClrRuntime) && isCoreClrRuntime) {
-                    excludedCategories.Add ("CoreCLRIgnore");
-                }
                 ExcludedCategories = excludedCategories;
+
+                // Keep the temporary Java.Interop exclusions centralized here so
+                // we don't need a PR against the Java.Interop submodule.
+                ExcludedTestNames = new [] {
+                    "Java.InteropTests.JavaObjectTest",
+                    "Java.InteropTests.JavaObjectExtensionsTests",
+                    "Java.InteropTests.InvokeVirtualFromConstructorTests",
+                    "Java.InteropTests.JniPeerMembersTests",
+                    "Java.InteropTests.JniTypeManagerTests",
+                    "Java.InteropTests.JniValueMarshaler_object_ContractTests",
+                    "Java.InteropTests.JavaExceptionTests.InnerExceptionIsNotAProxy",
+                    "Java.InteropTests.JavaPeerableExtensionsTests",
+                };
             }
         }
 
