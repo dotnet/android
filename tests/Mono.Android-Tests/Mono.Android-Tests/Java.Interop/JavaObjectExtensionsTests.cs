@@ -12,10 +12,10 @@ using NUnit.Framework;
 
 namespace Java.InteropTests {
 
-	[TestFixture]
-	public class JavaObjectExtensionsTests {
+[TestFixture, Category ("TrimmableIgnore")]
+public class JavaObjectExtensionsTests {
 
-		[Test, Category ("TrimmableIgnore")]
+		[Test]
 		public void JavaCast_BaseToGenericWrapper ()
 		{
 			using (var list = new JavaList (new[]{ 1, 2, 3 }))
