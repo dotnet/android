@@ -26,20 +26,7 @@ namespace Xamarin.Android.RuntimeTests
             : base(handle, transfer)
         {
             if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
-            	ExcludedCategories = ["SSL", "TrimmableIgnore"];
-
-                // Keep the temporary Java.Interop exclusions centralized here so
-                // we don't need a PR against the Java.Interop submodule.
-                ExcludedTestNames = new [] {
-                    "Java.InteropTests.JavaObjectTest",
-                    "Java.InteropTests.JavaObjectExtensionsTests",
-                    "Java.InteropTests.InvokeVirtualFromConstructorTests",
-                    "Java.InteropTests.JniPeerMembersTests",
-                    "Java.InteropTests.JniTypeManagerTests",
-                    "Java.InteropTests.JniValueMarshaler_object_ContractTests",
-                    "Java.InteropTests.JavaExceptionTests.InnerExceptionIsNotAProxy",
-                    "Java.InteropTests.JavaPeerableExtensionsTests",
-                };
+                ExcludedCategories = ["NativeTypeMap", "TrimmableIgnore"];
             }
         }
 

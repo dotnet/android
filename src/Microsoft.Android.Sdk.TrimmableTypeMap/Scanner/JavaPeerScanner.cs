@@ -1126,20 +1126,13 @@ public sealed class JavaPeerScanner : IDisposable
 
 	static bool TryConvertExportParameterKind (object? value, out ExportParameterKindInfo kind)
 	{
-		switch (value) {
-			case int i when Enum.IsDefined (typeof (ExportParameterKindInfo), i):
-				kind = (ExportParameterKindInfo) i;
-				return true;
-			case short s when Enum.IsDefined (typeof (ExportParameterKindInfo), (int) s):
-				kind = (ExportParameterKindInfo) s;
-				return true;
-			case byte b when Enum.IsDefined (typeof (ExportParameterKindInfo), (int) b):
-				kind = (ExportParameterKindInfo) b;
-				return true;
-			default:
-				kind = ExportParameterKindInfo.Unspecified;
-				return false;
+		if (value is int i && Enum.IsDefined (typeof (ExportParameterKindInfo), i)) {
+			kind = (ExportParameterKindInfo) i;
+			return true;
 		}
+
+		kind = ExportParameterKindInfo.Unspecified;
+		return false;
 	}
 
 	string BuildJniSignatureFromManaged (MethodSignature<TypeRefData> sig, IReadOnlyList<ExportParameterKindInfo> parameterKinds, ExportParameterKindInfo returnKind)
