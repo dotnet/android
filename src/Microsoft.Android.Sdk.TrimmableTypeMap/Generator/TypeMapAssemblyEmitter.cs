@@ -507,9 +507,9 @@ sealed class TypeMapAssemblyEmitter
 				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
 					rt => rt.Void (),
 					p => {
-						p.AddParameter ().Type ().String ();
-						p.AddParameter ().Type ().Type (_systemTypeRef, false);
-					}));
+					p.AddParameter ().Type ().String ();
+					p.AddParameter ().Type ().Type (_systemTypeRef, false);
+				}));
 		}
 
 		var typeDefHandle = metadata.AddTypeDefinition (

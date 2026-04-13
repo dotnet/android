@@ -287,6 +287,7 @@ static class ModelBuilder
 			},
 			IsAcw = isAcw,
 			IsGenericDefinition = peer.IsGenericDefinition,
+			CannotRegisterInStaticConstructor = peer.CannotRegisterInStaticConstructor,
 		};
 
 		if (peer.InvokerTypeName != null) {
