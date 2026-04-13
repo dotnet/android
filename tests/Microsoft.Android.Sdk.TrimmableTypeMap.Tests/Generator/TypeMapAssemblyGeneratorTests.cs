@@ -454,6 +454,44 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Theory]
+	[InlineData ("Javax.Net.Ssl.IHostnameVerifierInvoker", "n_Verify_Ljava_lang_String_Ljavax_net_ssl_SSLSession_", "(Ljava/lang/String;Ljavax/net/ssl/SSLSession;)Z")]
+	[InlineData ("Javax.Net.Ssl.ISSLSessionInvoker", "n_GetPeerCertificates", "()[Ljava/security/cert/Certificate;")]
+	[InlineData ("Javax.Net.Ssl.IX509TrustManagerInvoker", "n_CheckServerTrusted_arrayLjava_security_cert_X509Certificate_Ljava_lang_String_", "([Ljava/security/cert/X509Certificate;Ljava/lang/String;)V")]
+	public void Generate_SslInvokerCallbacks_EmitStaticMemberRefs (string callbackTypeName, string callbackMethodName, string jniSignature)
+	{
+		var peer = MakeAcwPeer ("mono/android/net/SslHelper", "Xamarin.Android.Net.SslHelper", "Mono.Android") with {
+			MarshalMethods = [
+				new MarshalMethodInfo {
+					JniName = "sslCallback",
+					NativeCallbackName = callbackMethodName,
+					JniSignature = jniSignature,
+					ManagedMethodName = "SslCallback",
+					DeclaringTypeName = callbackTypeName,
+					DeclaringAssemblyName = "Mono.Android",
+				},
+			],
+			JavaConstructors = [
+				new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V" },
+			],
+		};
+
+		using var stream = GenerateAssembly (new [] { peer }, "SslInvokerTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var memberNames = GetMemberRefNames (reader);
+		Assert.Contains (callbackMethodName, memberNames);
+
+		var methodDefs = reader.MethodDefinitions
+			.Select (h => reader.GetMethodDefinition (h))
+			.Select (m => reader.GetString (m.Name))
+			.ToList ();
+
+		Assert.Contains ("RegisterNatives", methodDefs);
+		Assert.Contains (methodDefs, name => name.Contains ("_uco"));
+	}
+
+	[Theory]
 	[InlineData ("()V", 0)]
 	[InlineData ("(I)V", 1)]
 	[InlineData ("(Landroid/os/Bundle;)V", 1)]

@@ -641,13 +641,62 @@ namespace UnnamedProject {
 				using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
 					Assert.IsTrue (assembly != null);
 
-					var types = new[] { "Javax.Net.Ssl.X509ExtendedTrustManager", "Javax.Net.Ssl.IX509TrustManagerInvoker" };
-					foreach (var typeName in types) {
+					var requiredTypes = new[] {
+						"Javax.Net.Ssl.X509ExtendedTrustManager",
+						"Javax.Net.Ssl.IX509TrustManagerInvoker",
+						"Javax.Net.Ssl.IHostnameVerifierInvoker",
+						"Javax.Net.Ssl.ISSLSessionInvoker",
+					};
+					foreach (var typeName in requiredTypes) {
+						var td = assembly.MainModule.GetType (typeName);
+						// These interface invokers can also be rooted by the shared trimmable typemap/proxy
+						// path, so only require them for the callback-enabled case in this SSL-specific test.
+						if (!hasServerCertificateCustomValidationCallback &&
+								(typeName == "Javax.Net.Ssl.IHostnameVerifierInvoker" || typeName == "Javax.Net.Ssl.ISSLSessionInvoker")) {
+							continue;
+						}
+						if (hasServerCertificateCustomValidationCallback) {
+							Assert.IsNotNull (td, $"{typeName} shouldn't have been linked out");
+						} else {
+							Assert.IsNull (td, $"{typeName} should have been linked out");
+						}
+					}
+
+					var registrationTypes = new[] {
+						"Xamarin.Android.Net.ServerCertificateCustomValidator/TrustManager",
+						"Xamarin.Android.Net.ServerCertificateCustomValidator/TrustManager/FakeSSLSession",
+						"Xamarin.Android.Net.ServerCertificateCustomValidator/AlwaysAcceptingHostnameVerifier",
+					};
+					foreach (var typeName in registrationTypes) {
 						var td = assembly.MainModule.GetType (typeName);
 						if (hasServerCertificateCustomValidationCallback) {
 							Assert.IsNotNull (td, $"{typeName} shouldn't have been linked out");
 						} else {
 							Assert.IsNull (td, $"{typeName} should have been linked out");
+						}
+					}
+
+					if (hasServerCertificateCustomValidationCallback) {
+						var requiredMethods = new Dictionary<string, string[]> {
+							["Javax.Net.Ssl.IX509TrustManagerInvoker"] = [
+								"n_CheckServerTrusted_arrayLjava_security_cert_X509Certificate_Ljava_lang_String_",
+							],
+							["Javax.Net.Ssl.IHostnameVerifierInvoker"] = [
+								"n_Verify_Ljava_lang_String_Ljavax_net_ssl_SSLSession_",
+							],
+							["Javax.Net.Ssl.ISSLSessionInvoker"] = [
+								"n_GetPeerCertificates",
+							],
+						};
+
+						foreach (var kvp in requiredMethods) {
+							var td = assembly.MainModule.GetType (kvp.Key);
+							Assert.IsNotNull (td, $"{kvp.Key} shouldn't have been linked out");
+							var typeDefinition = td ?? throw new InvalidOperationException ($"{kvp.Key} should have been preserved");
+							var methods = typeDefinition.Methods.Select (m => m.Name).ToArray ();
+							foreach (var methodName in kvp.Value) {
+								Assert.IsTrue (methods.Contains (methodName), $"{kvp.Key}.{methodName} shouldn't have been linked out");
+							}
 						}
 					}
 				}

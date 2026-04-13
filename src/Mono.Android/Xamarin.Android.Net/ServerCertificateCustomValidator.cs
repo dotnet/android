@@ -25,6 +25,14 @@ namespace Xamarin.Android.Net
 			Callback = callback;
 		}
 
+		// The trimmable typemap path still dispatches interface callbacks through the
+		// generated invoker helpers (`Get*Handler`/`n_*`). Keep those members rooted so
+		// JCW static native registration remains trimming-safe without falling back to
+		// RegisterNativeMembers().
+		[DynamicDependency (DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods, typeof (IX509TrustManagerInvoker))]
+		[DynamicDependency (DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods, typeof (IHostnameVerifierInvoker))]
+		[DynamicDependency (DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods, typeof (ISSLSessionInvoker))]
+		[DynamicDependency (DynamicallyAccessedMemberTypes.PublicMethods, typeof (X509ExtendedTrustManagerInvoker))]
 		public ITrustManager[] ReplaceX509TrustManager (ITrustManager[]? trustManagers, HttpRequestMessage requestMessage)
 		{
 			trustManagers ??= [];
@@ -33,6 +41,7 @@ namespace Xamarin.Android.Net
 			return ModifyTrustManagersArray (trustManagers, originalTrustManagerIndex, trustManagerWithCallback);
 		}
 
+		[Register ("mono/android/net/ServerCertificateCustomValidator_TrustManager")]
 		private sealed class TrustManager : Java.Lang.Object, IX509TrustManager
 		{
 			private readonly IX509TrustManager _internalTrustManager;
@@ -123,6 +132,7 @@ namespace Xamarin.Android.Net
 			// verifier on Android uses the SSLSession object only to get the peer certificates (as of 2022).
 			// This could change in future Android versions and we would have to implement more methods
 			// and properties of this interface.
+			[Register ("mono/android/net/ServerCertificateCustomValidator_TrustManager_FakeSSLSession")]
 			private sealed class FakeSSLSession : Java.Lang.Object, ISSLSession
 			{
 				private readonly JavaX509Certificate[] _certificates;
@@ -161,6 +171,7 @@ namespace Xamarin.Android.Net
 		// When the hostname verifier is reached, the trust manager has already invoked the
 		// custom validation callback and approved the remote certificate (including hostname
 		// mismatch) so at this point there's no verification left to.
+		[Register ("mono/android/net/ServerCertificateCustomValidator_AlwaysAcceptingHostnameVerifier")]
 		private sealed class AlwaysAcceptingHostnameVerifier : Java.Lang.Object, IHostnameVerifier
 		{
 			private readonly static Lazy<AlwaysAcceptingHostnameVerifier> s_instance = new Lazy<AlwaysAcceptingHostnameVerifier> (() => new AlwaysAcceptingHostnameVerifier ());
@@ -170,8 +181,6 @@ namespace Xamarin.Android.Net
 			public bool Verify (string? hostname, ISSLSession? session) => true;
 		}
 
-		[DynamicDependency(nameof(IX509TrustManager.CheckServerTrusted), typeof(IX509TrustManagerInvoker))]
-		[DynamicDependency(nameof(IX509TrustManager.CheckServerTrusted), typeof(X509ExtendedTrustManagerInvoker))]
 		private static IX509TrustManager FindX509TrustManager(ITrustManager[] trustManagers, out int index)
 		{
 			for (int i = 0; i < trustManagers.Length; i++) {

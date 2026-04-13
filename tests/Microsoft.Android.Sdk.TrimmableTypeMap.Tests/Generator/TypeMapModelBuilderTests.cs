@@ -764,6 +764,36 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.Equal ("n_OnClick", proxy.UcoMethods [0].CallbackMethodName);
 		}
 
+		[Theory]
+		[InlineData ("Javax.Net.Ssl.IX509TrustManagerInvoker", "n_CheckServerTrusted_arrayLjava_security_cert_X509Certificate_Ljava_lang_String_", "([Ljava/security/cert/X509Certificate;Ljava/lang/String;)V")]
+		[InlineData ("Javax.Net.Ssl.IHostnameVerifierInvoker", "n_Verify_Ljava_lang_String_Ljavax_net_ssl_SSLSession_", "(Ljava/lang/String;Ljavax/net/ssl/SSLSession;)Z")]
+		[InlineData ("Javax.Net.Ssl.ISSLSessionInvoker", "n_GetPeerCertificates", "()[Ljava/security/cert/Certificate;")]
+		public void Build_SslStyleMarshalMethods_RouteThroughInvokerCallbacks (string callbackTypeName, string nativeCallbackName, string jniSignature)
+		{
+			var peer = MakeAcwPeer ("mono/android/net/SslHelper", "Xamarin.Android.Net.SslHelper", "Mono.Android") with {
+				MarshalMethods = [
+					new MarshalMethodInfo {
+						JniName = "sslCallback",
+						NativeCallbackName = nativeCallbackName,
+						JniSignature = jniSignature,
+						ManagedMethodName = "SslCallback",
+						DeclaringTypeName = callbackTypeName,
+						DeclaringAssemblyName = "Mono.Android",
+					},
+				],
+			};
+
+			var model = BuildModel (new [] { peer });
+
+			var proxy = Assert.Single (model.ProxyTypes);
+			var uco = Assert.Single (proxy.UcoMethods);
+
+			Assert.Equal (nativeCallbackName, uco.CallbackMethodName);
+			Assert.Equal (callbackTypeName, uco.CallbackType.ManagedTypeName);
+			Assert.Equal ("Mono.Android", uco.CallbackType.AssemblyName);
+			Assert.Contains (proxy.NativeRegistrations, r => r.JniMethodName == nativeCallbackName && r.WrapperMethodName == uco.WrapperName);
+		}
+
 		[Fact]
 		public void Build_ConstructorsInMarshalMethods_SkippedFromUcoMethods ()
 		{
