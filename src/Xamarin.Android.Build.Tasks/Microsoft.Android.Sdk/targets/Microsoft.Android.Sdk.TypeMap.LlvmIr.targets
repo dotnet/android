@@ -252,6 +252,7 @@
       <_PreTrimmingOriginalAssembly Include="@(_PreTrimmingModifiedAssembly->'%(OriginalPath)')" />
       <ResolvedFileToPublish Remove="@(_PreTrimmingOriginalAssembly)" />
       <ResolvedFileToPublish Include="@(_PreTrimmingModifiedAssembly)" />
+      <FileWrites Include="@(_PreTrimmingModifiedAssembly)" />
     </ItemGroup>
   </Target>
 
