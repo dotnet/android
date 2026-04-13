@@ -166,6 +166,11 @@ namespace Xamarin.Android.Build.Tests
 				Assert.Ignore ("NativeAOT doesn't support profiled AOT");
 			}
 
+			// NativeAOT always requires the NDK (PublishAot=true), so ndkRequired=false cases don't apply
+			if (runtime == AndroidRuntime.NativeAOT && !ndkRequired) {
+				Assert.Ignore ("NativeAOT always requires NDK via PublishAot=true");
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
@@ -182,9 +187,9 @@ namespace Xamarin.Android.Build.Tests
 					.SkipWhile (x => !x.StartsWith ("Output Item(s):", StringComparison.Ordinal))
 					.TakeWhile (x => !x.StartsWith ("Done executing task \"CalculateProjectDependencies\"", StringComparison.Ordinal));
 				if (ndkRequired)
-					StringAssertEx.Contains ("ndk", taskOutput, "ndk should be a dependency.");
+					StringAssertEx.Contains ("ndk/", taskOutput, "ndk should be a dependency.");
 				else
-					StringAssertEx.DoesNotContain ("ndk", taskOutput, "ndk should not be a dependency.");
+					StringAssertEx.DoesNotContain ("ndk/", taskOutput, "ndk should not be a dependency.");
 			}
 		}
 
@@ -204,7 +209,7 @@ namespace Xamarin.Android.Build.Tests
 					.SkipWhile (x => !x.StartsWith ("Task \"CalculateProjectDependencies\"", StringComparison.Ordinal))
 					.SkipWhile (x => !x.StartsWith ("Output Item(s):", StringComparison.Ordinal))
 					.TakeWhile (x => !x.StartsWith ("Done executing task \"CalculateProjectDependencies\"", StringComparison.Ordinal));
-				StringAssertEx.Contains ("ndk-bundle", taskOutput, "ndk-bundle should be a dependency for NativeAOT.");
+				StringAssertEx.Contains ("ndk/", taskOutput, "ndk should be a dependency for NativeAOT.");
 			}
 		}
 
