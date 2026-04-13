@@ -578,7 +578,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.Single (model.Entries, e => e.JniName == "java/lang/Throwable");
 	}
 
-||||||| parent of 5414c3041 (Address PR review: fix manifest name matching and null guard)	[Fact]
+	[Fact]
 	public void RootManifestReferencedTypes_ResolvesRelativeNames ()
 	{
 		var peers = new List<JavaPeerInfo> {
@@ -663,7 +663,6 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.True (peers [0].IsUnconditional, "Nested type 'Outer$Inner' should be matched using '$' separator.");
 	}
 
-||||||| parent of ae6ff207c ([TrimmableTypeMap] Merge manifest matching tests into theory)
 
 	static PEReader CreateTestFixturePEReader ()
 	{
