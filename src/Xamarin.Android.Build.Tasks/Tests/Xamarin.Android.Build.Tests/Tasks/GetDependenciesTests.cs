@@ -43,11 +43,11 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platform-tools" && x.GetMetadata ("Version") == "26.0.3"),
 				"Dependencies should contains a platform-tools version 26.0.3");
 			if (ndkRequred) {
-				Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "ndk-bundle" && x.GetMetadata ("Version") == "12.1"),
-					"Dependencies should contain a ndk-bundle version 12.1");
+				Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "ndk" && x.GetMetadata ("Version") == "12.1"),
+					"Dependencies should contain a ndk version 12.1");
 			} else {
-				Assert.IsNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "ndk-bundle"),
-					"Dependencies should not contain a ndk-bundle item");
+				Assert.IsNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "ndk"),
+					"Dependencies should not contain a ndk item");
 			}
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
@@ -80,8 +80,8 @@ namespace Xamarin.Android.Build.Tests {
 				"Dependencies should contains a platform version android-26");
 			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platform-tools" && x.GetMetadata ("Version") == "26.0.3"),
 				"Dependencies should contains a platform-tools version 26.0.3");
-			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "ndk-bundle" && x.GetMetadata ("Version") == "12.1"),
-				"Dependencies should contains a ndk-bundle version 12.1");
+			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "ndk" && x.GetMetadata ("Version") == "12.1"),
+				"Dependencies should contains a ndk version 12.1");
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
@@ -121,8 +121,8 @@ namespace Xamarin.Android.Build.Tests {
 				"Dependencies should contains a platform version android-26");
 			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platform-tools" && x.GetMetadata ("Version") == "26.0.3"),
 				"Dependencies should contains a platform-tools version 26.0.3");
-			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "ndk-bundle" && x.GetMetadata ("Version") == "12.1"),
-				"Dependencies should contains a ndk-bundle version 12.1");
+			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "ndk" && x.GetMetadata ("Version") == "12.1"),
+				"Dependencies should contains a ndk version 12.1");
 
 			Directory.Delete (path, recursive: true);
 		}
