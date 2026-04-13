@@ -1,15 +1,15 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
-using NUnit.Framework;
-using Xamarin.ProjectTools;
 using System.Linq;
 using System.Text;
-using System.Collections.Generic;
 using System.Xml.Linq;
-using Xamarin.Tools.Zip;
+using Microsoft.Build.Framework;
+using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
-using Microsoft.Build.Framework;
+using Xamarin.ProjectTools;
+using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -106,7 +106,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true
 			};
 
-			AndroidTargetArch[] supportedArches = new[] {
+			AndroidTargetArch [] supportedArches = new [] {
 				runtime switch {
 					AndroidRuntime.MonoVM => AndroidTargetArch.Arm,
 					AndroidRuntime.CoreCLR => AndroidTargetArch.Arm64,
@@ -172,9 +172,9 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 			}
 		}
 
-		static IEnumerable<object[]> Get_CheckProjectWithSpaceInNameWorks_Data ()
+		static IEnumerable<object []> Get_CheckProjectWithSpaceInNameWorks_Data ()
 		{
-			var ret = new List<object[]> ();
+			var ret = new List<object []> ();
 
 			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
 				AddTestData ("Test Me", runtime);
@@ -191,7 +191,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 
 			void AddTestData (string projectName, AndroidRuntime runtime)
 			{
-				ret.Add (new object[] {
+				ret.Add (new object [] {
 					projectName,
 					runtime,
 				});
@@ -251,7 +251,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
-			proj.PackageReferences.Add(KnownPackages.SQLitePCLRaw_Core);
+			proj.PackageReferences.Add (KnownPackages.SQLitePCLRaw_Core);
 			proj.SetAndroidSupportedAbis ("x86_64");
 			proj.SetProperty (proj.ReleaseProperties, "AndroidStoreUncompressedFileExtensions", compressNativeLibraries ? "" : "so");
 			using (var b = CreateApkBuilder ()) {
@@ -261,8 +261,8 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				CompressionMethod method = compressNativeLibraries ? CompressionMethod.Deflate : CompressionMethod.Store;
 				using (var zip = ZipHelper.OpenZip (apk)) {
-					var libFiles = zip.Where (x => x.FullName.StartsWith("lib/", StringComparison.Ordinal) && !x.FullName.Equals("lib/", StringComparison.InvariantCultureIgnoreCase));
-					var abiPaths = new string[] { "lib/x86_64/" };
+					var libFiles = zip.Where (x => x.FullName.StartsWith ("lib/", StringComparison.Ordinal) && !x.FullName.Equals ("lib/", StringComparison.InvariantCultureIgnoreCase));
+					var abiPaths = new string [] { "lib/x86_64/" };
 					foreach (var file in libFiles) {
 						Assert.IsTrue (abiPaths.Any (x => file.FullName.Contains (x)), $"Apk contains an unnesscary lib file: {file.FullName}");
 						Assert.IsTrue (file.CompressionMethod == method, $"{file.FullName} should have been CompressionMethod.{method} in the apk, but was CompressionMethod.{file.CompressionMethod}");
@@ -469,6 +469,49 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 		}
 
 		[Test]
+		[NonParallelizable]
+		public void MonoAndroidExportIsNotPackagedWithTrimmableTypeMap ()
+		{
+			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
+			const bool isRelease = false;
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				References = {
+					new BuildItem.Reference ("Mono.Android.Export"),
+				},
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.Sources.Add (new BuildItem.Source ("ContainsExportedMethods.cs") {
+				TextContent = () => @"using System;
+using Java.Interop;
+
+namespace UnnamedProject {
+	class ContainsExportedMethods : Java.Lang.Object {
+		[Export]
+		public void Exported ()
+		{
+			Console.WriteLine (""# ExportedCallbackInvoked"");
+		}
+	}
+}"
+			});
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "build failed");
+
+				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+				var helper = new ArchiveAssemblyHelper (apk, useAssemblyStores: true);
+				var contents = helper.ListArchiveContents ();
+
+				Assert.IsFalse (
+					contents.Any (e => e.EndsWith ("/Mono.Android.Export.dll", StringComparison.Ordinal) || e.Contains ("Mono.Android.Export.dll", StringComparison.Ordinal)),
+					$"APK file `{apk}` should not contain Mono.Android.Export.dll when the trimmable type map is enabled.");
+			}
+		}
+
+		[Test]
 		public void CheckSignApk ([Values] bool useApkSigner, [Values] bool perAbiApk, [Values] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
@@ -476,7 +519,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 				return;
 			}
 			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".bat" : "";
-			var foundApkSigner = Directory.EnumerateDirectories (Path.Combine (AndroidSdkPath, "build-tools")).Any (dir => Directory.EnumerateFiles (dir, "apksigner"+ ext).Any ());
+			var foundApkSigner = Directory.EnumerateDirectories (Path.Combine (AndroidSdkPath, "build-tools")).Any (dir => Directory.EnumerateFiles (dir, "apksigner" + ext).Any ());
 			if (useApkSigner && !foundApkSigner) {
 				Assert.Ignore ("Skipping test. Required build-tools verison which contains apksigner is not installed.");
 			}
@@ -493,10 +536,10 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 				StorePass = pass,
 				KeyAlias = alias,
 				KeyPass = pass,
-				KeyAlgorithm="RSA",
-				Validity=30,
-				StoreType="pkcs12",
-				Command="-genkeypair",
+				KeyAlgorithm = "RSA",
+				Validity = 30,
+				StoreType = "pkcs12",
+				Command = "-genkeypair",
 				ToolPath = keyToolPath,
 			};
 			Assert.IsTrue (task.Execute (), "Task should have succeeded.");
@@ -642,7 +685,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			};
 			lib.SetRuntime (runtime);
 
-			var languages = new string[] {"es", "de", "fr", "he", "it", "pl", "pt", "ru", "sl" };
+			var languages = new string [] { "es", "de", "fr", "he", "it", "pl", "pt", "ru", "sl" };
 			foreach (string lang in languages) {
 				lib.OtherBuildItems.Add (
 					new BuildItem ("EmbeddedResource", $"Foo.{lang}.resx") {
@@ -946,9 +989,9 @@ public class Test
 			}
 		}
 
-		static IEnumerable<object[]> Get_BuildApkWithZipFlushLimits_Data ()
+		static IEnumerable<object []> Get_BuildApkWithZipFlushLimits_Data ()
 		{
-			var ret = new List<object[]> ();
+			var ret = new List<object []> ();
 
 			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
 				AddTestData (1, -1, runtime);
@@ -968,7 +1011,7 @@ public class Test
 
 			void AddTestData (int filesLimit, int sizeLimit, AndroidRuntime runtime)
 			{
-				ret.Add (new object[] {
+				ret.Add (new object [] {
 					filesLimit,
 					sizeLimit,
 					runtime,
