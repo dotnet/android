@@ -33,7 +33,8 @@ public class PreTrimmingFixLegacyDesigner : AndroidTask
 	public override bool RunTask ()
 	{
 		using var resolver = new DirectoryAssemblyResolver (
-			this.CreateTaskLogger (), loadDebugSymbols: true);
+			this.CreateTaskLogger (), loadDebugSymbols: true,
+			loadReaderParameters: new ReaderParameters { InMemory = true });
 
 		foreach (var assembly in Assemblies) {
 			var dir = Path.GetFullPath (Path.GetDirectoryName (assembly.ItemSpec) ?? "");
