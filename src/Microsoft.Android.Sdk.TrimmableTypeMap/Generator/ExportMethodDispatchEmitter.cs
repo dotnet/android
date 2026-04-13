@@ -6,12 +6,12 @@ using System.Reflection.Metadata.Ecma335;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
-sealed class ExportEmitter
+sealed class ExportMethodDispatchEmitter
 {
 	readonly PEAssemblyBuilder _pe;
-	readonly ExportEmitterContext _context;
+	readonly ExportMethodDispatchEmitterContext _context;
 
-	public ExportEmitter (PEAssemblyBuilder pe, ExportEmitterContext context)
+	public ExportMethodDispatchEmitter (PEAssemblyBuilder pe, ExportMethodDispatchEmitterContext context)
 	{
 		_pe = pe ?? throw new ArgumentNullException (nameof (pe));
 		_context = context ?? throw new ArgumentNullException (nameof (context));
@@ -23,9 +23,9 @@ sealed class ExportEmitter
 		var returnKind = JniSignatureHelper.ParseReturnType (uco.JniSignature);
 		int paramCount = 2 + jniParams.Count;
 		bool isVoid = returnKind == JniParamKind.Void;
-		var dispatchLocals = uco.UseDirectManagedDispatch
-			? CreateDirectDispatchLocals (uco, isVoid)
-			: DirectDispatchLocals.Empty;
+		var exportMethodDispatchLocals = uco.UsesExportMethodDispatch
+			? CreateExportMethodDispatchLocals (GetRequiredExportMethodDispatch (uco), isVoid)
+			: ExportMethodDispatchLocals.Empty;
 
 		// UCO wrapper signature: uses JNI ABI types (byte for boolean)
 		Action<BlobEncoder> encodeSig = sig => sig.MethodSignature ().Parameters (paramCount,
@@ -50,27 +50,27 @@ sealed class ExportEmitter
 			});
 
 		var callbackTypeHandle = _pe.ResolveTypeRef (uco.CallbackType);
-		var callbackRef = uco.UseDirectManagedDispatch
-			? AddDirectManagedDispatchRef (uco, callbackTypeHandle)
+		var callbackRef = uco.UsesExportMethodDispatch
+			? AddExportMethodDispatchRef (uco, callbackTypeHandle)
 			: _pe.AddMemberRef (callbackTypeHandle, uco.CallbackMethodName, encodeCallbackSig);
 
 		var handle = _pe.EmitBody (uco.WrapperName,
 			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 			encodeSig,
 			encoder => {
-				if (!uco.UseDirectManagedDispatch) {
+				if (!uco.UsesExportMethodDispatch) {
 					for (int p = 0; p < paramCount; p++) {
 						encoder.LoadArgument (p);
 					}
 
 					encoder.Call (callbackRef);
 				} else {
-					EmitDirectManagedDispatch (encoder, uco, callbackTypeHandle, callbackRef, jniParams, returnKind, dispatchLocals);
+					EmitExportMethodDispatch (encoder, uco, callbackTypeHandle, callbackRef, jniParams, returnKind, exportMethodDispatchLocals);
 				}
 				encoder.OpCode (ILOpCode.Ret);
 			},
-			dispatchLocals.EncodeLocals,
-			useBranches: uco.UseDirectManagedDispatch);
+			exportMethodDispatchLocals.EncodeLocals,
+			useBranches: uco.UsesExportMethodDispatch);
 
 		AddUnmanagedCallersOnlyAttribute (handle);
 		return handle;
@@ -201,11 +201,11 @@ sealed class ExportEmitter
 			});
 	}
 
-	sealed class DirectDispatchLocals
+	sealed class ExportMethodDispatchLocals
 	{
-		public static readonly DirectDispatchLocals Empty = new (new Dictionary<int, int> (), -1, null);
+		public static readonly ExportMethodDispatchLocals Empty = new (new Dictionary<int, int> (), -1, null);
 
-		public DirectDispatchLocals (Dictionary<int, int> arrayParameterLocals, int returnLocalIndex, Action<BlobBuilder>? encodeLocals)
+		public ExportMethodDispatchLocals (Dictionary<int, int> arrayParameterLocals, int returnLocalIndex, Action<BlobBuilder>? encodeLocals)
 		{
 			ArrayParameterLocals = arrayParameterLocals;
 			ReturnLocalIndex = returnLocalIndex;
@@ -219,27 +219,32 @@ sealed class ExportEmitter
 		public bool HasArrayParameters => ArrayParameterLocals.Count > 0;
 	}
 
-	DirectDispatchLocals CreateDirectDispatchLocals (UcoMethodData uco, bool isVoid)
+	static ExportMethodDispatchData GetRequiredExportMethodDispatch (UcoMethodData uco)
+	{
+		return uco.ExportMethodDispatch ?? throw new InvalidOperationException ($"UCO method '{uco.WrapperName}' is missing ExportMethodDispatch metadata.");
+	}
+
+	ExportMethodDispatchLocals CreateExportMethodDispatchLocals (ExportMethodDispatchData exportMethodDispatch, bool isVoid)
 	{
 		var localTypes = new List<TypeRefData> ();
 		var arrayParameterLocals = new Dictionary<int, int> ();
 
-		for (int i = 0; i < uco.ManagedParameterTypeNames.Count; i++) {
-			if (!IsManagedArrayType (uco.ManagedParameterTypeNames [i])) {
+		for (int i = 0; i < exportMethodDispatch.ParameterTypes.Count; i++) {
+			if (!IsManagedArrayType (exportMethodDispatch.ParameterTypes [i].ManagedTypeName)) {
 				continue;
 			}
 
 			arrayParameterLocals.Add (i, localTypes.Count);
-			localTypes.Add (GetManagedParameterType (uco, i));
+			localTypes.Add (exportMethodDispatch.ParameterTypes [i]);
 		}
 
 		int returnLocalIndex = -1;
 		if (arrayParameterLocals.Count > 0 && !isVoid) {
 			returnLocalIndex = localTypes.Count;
-			localTypes.Add (GetManagedReturnType (uco));
+			localTypes.Add (exportMethodDispatch.ReturnType);
 		}
 
-		return new DirectDispatchLocals (
+		return new ExportMethodDispatchLocals (
 			arrayParameterLocals,
 			returnLocalIndex,
 			localTypes.Count > 0 ? blob => EncodeManagedLocals (blob, localTypes) : null);
@@ -257,53 +262,33 @@ sealed class ExportEmitter
 	static bool IsManagedArrayType (string managedTypeName)
 		=> managedTypeName.EndsWith ("[]", StringComparison.Ordinal);
 
-	static TypeRefData GetManagedParameterType (UcoMethodData uco, int index)
+	MemberReferenceHandle AddExportMethodDispatchRef (UcoMethodData uco, EntityHandle callbackTypeHandle)
 	{
-		if (index < uco.ManagedParameterTypes.Count) {
-			return uco.ManagedParameterTypes [index];
-		}
+		var exportMethodDispatch = GetRequiredExportMethodDispatch (uco);
 
-		return new TypeRefData {
-			ManagedTypeName = uco.ManagedParameterTypeNames [index],
-			AssemblyName = uco.CallbackType.AssemblyName,
-		};
-	}
-
-	static TypeRefData GetManagedReturnType (UcoMethodData uco)
-	{
-		if (uco.ManagedReturnType.ManagedTypeName.Length > 0) {
-			return uco.ManagedReturnType;
-		}
-
-		return new TypeRefData {
-			ManagedTypeName = uco.ManagedReturnTypeName,
-			AssemblyName = uco.CallbackType.AssemblyName,
-		};
-	}
-
-	MemberReferenceHandle AddDirectManagedDispatchRef (UcoMethodData uco, EntityHandle callbackTypeHandle)
-	{
-		return _pe.AddMemberRef (callbackTypeHandle, uco.ManagedMethodName,
-			sig => sig.MethodSignature (isInstanceMethod: !uco.IsStatic).Parameters (uco.ManagedParameterTypeNames.Count,
+		return _pe.AddMemberRef (callbackTypeHandle, exportMethodDispatch.ManagedMethodName,
+			sig => sig.MethodSignature (isInstanceMethod: !exportMethodDispatch.IsStatic).Parameters (exportMethodDispatch.ParameterTypes.Count,
 				rt => {
-					if (uco.ManagedReturnTypeName == "System.Void") {
+					if (exportMethodDispatch.ReturnType.ManagedTypeName == "System.Void") {
 						rt.Void ();
 					} else {
-						EncodeManagedType (rt.Type (), GetManagedReturnType (uco));
+						EncodeManagedType (rt.Type (), exportMethodDispatch.ReturnType);
 					}
 				},
 				p => {
-					for (int i = 0; i < uco.ManagedParameterTypeNames.Count; i++) {
-						EncodeManagedType (p.AddParameter ().Type (), GetManagedParameterType (uco, i));
+					for (int i = 0; i < exportMethodDispatch.ParameterTypes.Count; i++) {
+						EncodeManagedType (p.AddParameter ().Type (), exportMethodDispatch.ParameterTypes [i]);
 					}
 				}));
 	}
 
-	void EmitDirectManagedDispatch (InstructionEncoder encoder, UcoMethodData uco, EntityHandle callbackTypeHandle,
+	void EmitExportMethodDispatch (InstructionEncoder encoder, UcoMethodData uco, EntityHandle callbackTypeHandle,
 		MemberReferenceHandle callbackRef, List<JniParamKind> jniParams, JniParamKind returnKind,
-		DirectDispatchLocals dispatchLocals)
+		ExportMethodDispatchLocals exportMethodDispatchLocals)
 	{
-		if (!uco.IsStatic) {
+		var exportMethodDispatch = GetRequiredExportMethodDispatch (uco);
+
+		if (!exportMethodDispatch.IsStatic) {
 			encoder.LoadArgument (1);
 			encoder.LoadConstantI4 (0);
 			EmitManagedTypeToken (encoder, callbackTypeHandle);
@@ -312,56 +297,56 @@ sealed class ExportEmitter
 			encoder.Token (callbackTypeHandle);
 		}
 
-		for (int i = 0; i < uco.ManagedParameterTypeNames.Count; i++) {
+		for (int i = 0; i < exportMethodDispatch.ParameterTypes.Count; i++) {
 			LoadManagedArgument (encoder,
-				GetManagedParameterType (uco, i),
-				GetManagedParameterExportKind (uco, i),
+				exportMethodDispatch.ParameterTypes [i],
+				GetExportMethodDispatchParameterKind (exportMethodDispatch, i),
 				jniParams [i],
 				2 + i);
 
-			if (dispatchLocals.ArrayParameterLocals.TryGetValue (i, out var localIndex)) {
+			if (exportMethodDispatchLocals.ArrayParameterLocals.TryGetValue (i, out var localIndex)) {
 				encoder.StoreLocal (localIndex);
 				encoder.LoadLocal (localIndex);
 			}
 		}
 
-		if (uco.IsStatic) {
+		if (exportMethodDispatch.IsStatic) {
 			encoder.Call (callbackRef);
 		} else {
 			encoder.OpCode (ILOpCode.Callvirt);
 			encoder.Token (callbackRef);
 		}
 
-		EmitManagedArrayCopyBacks (encoder, uco, returnKind, dispatchLocals);
-		ConvertManagedReturnValue (encoder, GetManagedReturnType (uco), uco.ManagedReturnExportKind, returnKind);
+		EmitManagedArrayCopyBacks (encoder, exportMethodDispatch, returnKind, exportMethodDispatchLocals);
+		ConvertManagedReturnValue (encoder, exportMethodDispatch.ReturnType, exportMethodDispatch.ReturnKind, returnKind);
 	}
 
-	static ExportParameterKindInfo GetManagedParameterExportKind (UcoMethodData uco, int index)
-		=> index < uco.ManagedParameterExportKinds.Count ? uco.ManagedParameterExportKinds [index] : ExportParameterKindInfo.Unspecified;
+	static ExportParameterKindInfo GetExportMethodDispatchParameterKind (ExportMethodDispatchData exportMethodDispatch, int index)
+		=> index < exportMethodDispatch.ParameterKinds.Count ? exportMethodDispatch.ParameterKinds [index] : ExportParameterKindInfo.Unspecified;
 
-	void EmitManagedArrayCopyBacks (InstructionEncoder encoder, UcoMethodData uco, JniParamKind returnKind, DirectDispatchLocals dispatchLocals)
+	void EmitManagedArrayCopyBacks (InstructionEncoder encoder, ExportMethodDispatchData exportMethodDispatch, JniParamKind returnKind, ExportMethodDispatchLocals exportMethodDispatchLocals)
 	{
-		if (!dispatchLocals.HasArrayParameters) {
+		if (!exportMethodDispatchLocals.HasArrayParameters) {
 			return;
 		}
 
 		if (returnKind != JniParamKind.Void) {
-			encoder.StoreLocal (dispatchLocals.ReturnLocalIndex);
+			encoder.StoreLocal (exportMethodDispatchLocals.ReturnLocalIndex);
 		}
 
-		foreach (var kvp in dispatchLocals.ArrayParameterLocals) {
+		foreach (var kvp in exportMethodDispatchLocals.ArrayParameterLocals) {
 			var skipCopy = encoder.DefineLabel ();
 			encoder.LoadLocal (kvp.Value);
 			encoder.Branch (ILOpCode.Brfalse_s, skipCopy);
 			encoder.LoadLocal (kvp.Value);
-			EmitManagedArrayElementTypeToken (encoder, GetManagedParameterType (uco, kvp.Key));
+			EmitManagedArrayElementTypeToken (encoder, exportMethodDispatch.ParameterTypes [kvp.Key]);
 			encoder.LoadArgument (2 + kvp.Key);
 			encoder.Call (_context.JniEnvCopyArrayRef);
 			encoder.MarkLabel (skipCopy);
 		}
 
 		if (returnKind != JniParamKind.Void) {
-			encoder.LoadLocal (dispatchLocals.ReturnLocalIndex);
+			encoder.LoadLocal (exportMethodDispatchLocals.ReturnLocalIndex);
 		}
 	}
 
@@ -631,7 +616,7 @@ sealed class ExportEmitter
 	}
 }
 
-sealed class ExportEmitterContext
+sealed class ExportMethodDispatchEmitterContext
 {
 	public required TypeReferenceHandle JniObjectReferenceRef { get; init; }
 	public required TypeReferenceHandle IJavaObjectRef { get; init; }
