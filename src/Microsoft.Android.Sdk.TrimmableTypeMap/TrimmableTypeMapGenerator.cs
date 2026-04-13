@@ -216,26 +216,42 @@ public class TrimmableTypeMapGenerator
 	/// </summary>
 	internal static void PropagateDeferredRegistrationToBaseClasses (List<JavaPeerInfo> allPeers)
 	{
-		var peersByJniName = new Dictionary<string, JavaPeerInfo> (StringComparer.Ordinal);
+		var peersByJniName = new Dictionary<string, List<JavaPeerInfo>> (StringComparer.Ordinal);
 		foreach (var peer in allPeers) {
-			if (!peersByJniName.ContainsKey (peer.JavaName)) {
-				peersByJniName [peer.JavaName] = peer;
+			if (!peersByJniName.TryGetValue (peer.JavaName, out var peers)) {
+				peers = [];
+				peersByJniName [peer.JavaName] = peers;
 			}
+
+			peers.Add (peer);
 		}
 
 		foreach (var peer in allPeers) {
-			if (!peer.CannotRegisterInStaticConstructor) {
+			if (!peer.CannotRegisterInStaticConstructor || peer.BaseJavaName is not { } baseJniName) {
 				continue;
 			}
 
-			var current = peer;
-			while (current.BaseJavaName is { } baseJniName && peersByJniName.TryGetValue (baseJniName, out var basePeer)) {
-				if (basePeer.DoNotGenerateAcw) {
-					break;
+			var pendingBaseJniNames = new Queue<string> ();
+			var visitedPeers = new HashSet<JavaPeerInfo> ();
+			pendingBaseJniNames.Enqueue (baseJniName);
+
+			while (pendingBaseJniNames.Count > 0) {
+				var currentBaseJniName = pendingBaseJniNames.Dequeue ();
+				if (!peersByJniName.TryGetValue (currentBaseJniName, out var basePeers)) {
+					continue;
 				}
 
-				basePeer.CannotRegisterInStaticConstructor = true;
-				current = basePeer;
+				foreach (var basePeer in basePeers) {
+					if (!visitedPeers.Add (basePeer) || basePeer.DoNotGenerateAcw) {
+						continue;
+					}
+
+					basePeer.CannotRegisterInStaticConstructor = true;
+
+					if (basePeer.BaseJavaName is { } nextBaseJniName) {
+						pendingBaseJniNames.Enqueue (nextBaseJniName);
+					}
+				}
 			}
 		}
 	}

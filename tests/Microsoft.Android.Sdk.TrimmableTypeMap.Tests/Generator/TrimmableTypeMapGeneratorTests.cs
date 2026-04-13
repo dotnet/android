@@ -227,7 +227,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Execute_PropagatesDeferredRegistrationToBaseClasses ()
+	public void PropagateDeferredRegistrationToBaseClasses_PropagatesToBaseClassesOfManifestReferencedTypes ()
 	{
 		var basePeer = new JavaPeerInfo {
 			JavaName = "crc64aaa/TestInstrumentation_1", CompatJniName = "crc64aaa/TestInstrumentation_1",
