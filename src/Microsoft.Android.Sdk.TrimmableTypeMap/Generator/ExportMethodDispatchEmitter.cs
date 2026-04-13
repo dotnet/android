@@ -19,13 +19,12 @@ sealed class ExportMethodDispatchEmitter
 
 	public MethodDefinitionHandle EmitUcoMethod (UcoMethodData uco)
 	{
+		var exportMethodDispatch = GetRequiredExportMethodDispatch (uco);
 		var jniParams = JniSignatureHelper.ParseParameterTypes (uco.JniSignature);
 		var returnKind = JniSignatureHelper.ParseReturnType (uco.JniSignature);
 		int paramCount = 2 + jniParams.Count;
 		bool isVoid = returnKind == JniParamKind.Void;
-		var exportMethodDispatchLocals = uco.UsesExportMethodDispatch
-			? CreateExportMethodDispatchLocals (GetRequiredExportMethodDispatch (uco), isVoid)
-			: ExportMethodDispatchLocals.Empty;
+		var exportMethodDispatchLocals = CreateExportMethodDispatchLocals (exportMethodDispatch, isVoid);
 
 		// UCO wrapper signature: uses JNI ABI types (byte for boolean)
 		Action<BlobEncoder> encodeSig = sig => sig.MethodSignature ().Parameters (paramCount,
@@ -50,23 +49,13 @@ sealed class ExportMethodDispatchEmitter
 			});
 
 		var callbackTypeHandle = _pe.ResolveTypeRef (uco.CallbackType);
-		var callbackRef = uco.UsesExportMethodDispatch
-			? AddExportMethodDispatchRef (uco, callbackTypeHandle)
-			: _pe.AddMemberRef (callbackTypeHandle, uco.CallbackMethodName, encodeCallbackSig);
+		var callbackRef = AddExportMethodDispatchRef (uco, callbackTypeHandle);
 
 		var handle = _pe.EmitBody (uco.WrapperName,
 			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 			encodeSig,
 			encoder => {
-				if (!uco.UsesExportMethodDispatch) {
-					for (int p = 0; p < paramCount; p++) {
-						encoder.LoadArgument (p);
-					}
-
-					encoder.Call (callbackRef);
-				} else {
-					EmitExportMethodDispatch (encoder, uco, callbackTypeHandle, callbackRef, jniParams, returnKind, exportMethodDispatchLocals);
-				}
+				EmitExportMethodDispatch (encoder, uco, callbackTypeHandle, callbackRef, jniParams, returnKind, exportMethodDispatchLocals);
 				encoder.OpCode (ILOpCode.Ret);
 			},
 			exportMethodDispatchLocals.EncodeLocals,
@@ -74,131 +63,6 @@ sealed class ExportMethodDispatchEmitter
 
 		AddUnmanagedCallersOnlyAttribute (handle);
 		return handle;
-	}
-
-	public MethodDefinitionHandle EmitUcoConstructor (UcoConstructorData uco)
-	{
-		var userTypeRef = _pe.ResolveTypeRef (uco.TargetType);
-
-		// UCO constructor wrappers must match the JNI native method signature exactly.
-		var jniParams = JniSignatureHelper.ParseParameterTypes (uco.JniSignature);
-		int paramCount = 2 + jniParams.Count;
-
-		var handle = _pe.EmitBody (uco.WrapperName,
-			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-			sig => sig.MethodSignature ().Parameters (paramCount,
-				rt => rt.Void (),
-				p => {
-					p.AddParameter ().Type ().IntPtr ();
-					p.AddParameter ().Type ().IntPtr ();
-					for (int j = 0; j < jniParams.Count; j++) {
-						JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniParams [j]);
-					}
-				}),
-			encoder => {
-				encoder.LoadArgument (1);
-				encoder.OpCode (ILOpCode.Ldtoken);
-				encoder.Token (userTypeRef);
-				encoder.Call (_context.GetTypeFromHandleRef);
-				encoder.Call (_context.ActivateInstanceRef);
-				encoder.OpCode (ILOpCode.Ret);
-			});
-
-		AddUnmanagedCallersOnlyAttribute (handle);
-		return handle;
-	}
-
-	public void EmitRegisterNatives (List<NativeRegistrationData> registrations, Dictionary<string, MethodDefinitionHandle> wrapperHandles)
-	{
-		var validRegs = new List<(NativeRegistrationData Reg, MethodDefinitionHandle Wrapper)> (registrations.Count);
-		foreach (var reg in registrations) {
-			if (wrapperHandles.TryGetValue (reg.WrapperMethodName, out var wrapperHandle)) {
-				validRegs.Add ((reg, wrapperHandle));
-			}
-		}
-
-		if (validRegs.Count == 0) {
-			_pe.EmitBody ("RegisterNatives",
-				MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig |
-				MethodAttributes.NewSlot | MethodAttributes.Final,
-				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
-					rt => rt.Void (),
-					p => p.AddParameter ().Type ().Type (_context.JniTypeRef, false)),
-				encoder => encoder.OpCode (ILOpCode.Ret));
-			return;
-		}
-
-		var nameFields = new FieldDefinitionHandle [validRegs.Count];
-		var sigFields = new FieldDefinitionHandle [validRegs.Count];
-		for (int i = 0; i < validRegs.Count; i++) {
-			nameFields [i] = _pe.GetOrAddUtf8Field (validRegs [i].Reg.JniMethodName);
-			sigFields [i] = _pe.GetOrAddUtf8Field (validRegs [i].Reg.JniSignature);
-		}
-
-		int methodCount = validRegs.Count;
-
-		_pe.EmitBody ("RegisterNatives",
-			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig |
-			MethodAttributes.NewSlot | MethodAttributes.Final,
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
-				rt => rt.Void (),
-				p => p.AddParameter ().Type ().Type (_context.JniTypeRef, false)),
-			encoder => {
-				encoder.LoadConstantI4 (methodCount);
-				encoder.OpCode (ILOpCode.Sizeof);
-				encoder.Token (_context.JniNativeMethodRef);
-				encoder.OpCode (ILOpCode.Mul);
-				encoder.OpCode (ILOpCode.Localloc);
-				encoder.StoreLocal (0);
-
-				for (int i = 0; i < methodCount; i++) {
-					encoder.LoadLocal (0);
-					if (i > 0) {
-						encoder.LoadConstantI4 (i);
-						encoder.OpCode (ILOpCode.Sizeof);
-						encoder.Token (_context.JniNativeMethodRef);
-						encoder.OpCode (ILOpCode.Mul);
-						encoder.OpCode (ILOpCode.Add);
-					}
-
-					encoder.OpCode (ILOpCode.Ldsflda);
-					encoder.Token (nameFields [i]);
-
-					encoder.OpCode (ILOpCode.Ldsflda);
-					encoder.Token (sigFields [i]);
-
-					encoder.OpCode (ILOpCode.Ldftn);
-					encoder.Token (validRegs [i].Wrapper);
-
-					encoder.OpCode (ILOpCode.Newobj);
-					encoder.Token (_context.JniNativeMethodCtorRef);
-					encoder.OpCode (ILOpCode.Stobj);
-					encoder.Token (_context.JniNativeMethodRef);
-				}
-
-				encoder.LoadArgument (1);
-				encoder.OpCode (ILOpCode.Callvirt);
-				encoder.Token (_context.JniTypePeerReferenceRef);
-				encoder.StoreLocal (1);
-
-				encoder.LoadLocalAddress (2);
-				encoder.LoadLocal (0);
-				encoder.LoadConstantI4 (methodCount);
-				encoder.Call (_context.ReadOnlySpanOfJniNativeMethodCtorRef);
-
-				encoder.LoadLocal (1);
-				encoder.LoadLocal (2);
-				encoder.Call (_context.JniEnvTypesRegisterNativesRef);
-				encoder.OpCode (ILOpCode.Ret);
-			},
-			encodeLocals: localSig => {
-				localSig.WriteByte (0x07);
-				localSig.WriteCompressedInteger (3);
-				localSig.WriteByte (0x18);
-				localSig.WriteByte (0x11);
-				localSig.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_context.JniObjectReferenceRef));
-				EncodeGenericValueTypeInst (localSig, _context.ReadOnlySpanOpenRef, _context.JniNativeMethodRef);
-			});
 	}
 
 	sealed class ExportMethodDispatchLocals
@@ -221,7 +85,7 @@ sealed class ExportMethodDispatchEmitter
 
 	static ExportMethodDispatchData GetRequiredExportMethodDispatch (UcoMethodData uco)
 	{
-		return uco.ExportMethodDispatch ?? throw new InvalidOperationException ($"UCO method '{uco.WrapperName}' is missing ExportMethodDispatch metadata.");
+		return uco.ExportMethodDispatch ?? throw new InvalidOperationException ($"ExportMethodDispatchEmitter only supports UCO methods with ExportMethodDispatch metadata.");
 	}
 
 	ExportMethodDispatchLocals CreateExportMethodDispatchLocals (ExportMethodDispatchData exportMethodDispatch, bool isVoid)
@@ -605,15 +469,6 @@ sealed class ExportMethodDispatchEmitter
 		_pe.Metadata.AddCustomAttribute (handle, _context.UcoAttrCtorRef, _context.UcoAttrBlobHandle);
 	}
 
-	static void EncodeGenericValueTypeInst (BlobBuilder builder, EntityHandle openType, EntityHandle valueTypeArg)
-	{
-		builder.WriteByte (0x15);
-		builder.WriteByte (0x11);
-		builder.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (openType));
-		builder.WriteCompressedInteger (1);
-		builder.WriteByte (0x11);
-		builder.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (valueTypeArg));
-	}
 }
 
 sealed class ExportMethodDispatchEmitterContext
