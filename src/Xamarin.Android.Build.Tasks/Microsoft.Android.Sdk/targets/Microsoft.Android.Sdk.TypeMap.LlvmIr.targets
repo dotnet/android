@@ -234,14 +234,20 @@
     Modified assemblies are written to an intermediate directory (not in-place) to
     avoid mutating files in the shared NuGet cache or shared intermediate output paths.
   -->
-  <Target Name="_PreTrimmingFixLegacyDesigner"
-      BeforeTargets="ILLink"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidUseDesignerAssembly)' == 'True' "
-      Inputs="@(ResolvedFileToPublish->'%(FullPath)')"
-      Outputs="$(_AndroidStampDirectory)_PreTrimmingFixLegacyDesigner.stamp">
+  <Target Name="_CollectPreTrimmingAssemblies"
+      BeforeTargets="_PreTrimmingFixLegacyDesigner"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidUseDesignerAssembly)' == 'True' ">
     <ItemGroup>
       <_PreTrimmingAssembly Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' and '%(ResolvedFileToPublish.PostprocessAssembly)' == 'true' " />
     </ItemGroup>
+  </Target>
+
+  <Target Name="_PreTrimmingFixLegacyDesigner"
+      BeforeTargets="ILLink"
+      DependsOnTargets="_CollectPreTrimmingAssemblies"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidUseDesignerAssembly)' == 'True' "
+      Inputs="@(_PreTrimmingAssembly)"
+      Outputs="$(_AndroidStampDirectory)_PreTrimmingFixLegacyDesigner.stamp">
     <PreTrimmingFixLegacyDesigner
         Assemblies="@(_PreTrimmingAssembly)"
         TargetName="$(TargetName)"
