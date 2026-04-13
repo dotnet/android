@@ -130,4 +130,4 @@ _{Rule: Brief name (Postmortem `#N`)}_
 
 Where `{severity}` is ❌, ⚠️, or 💡. Always wrap `#N` in backticks so GitHub doesn't auto-link to issues.
 
-**Categories:** MSBuild tasks · MSBuild targets · Nullable · Async pattern · Error handling · Resource management · Security · Formatting · Performance · Assembly & file pipeline · Code organization · Patterns · Native memory · Native C++ · Symbol visibility · Platform-specific · Testing · YAGNI · API design · Documentation
+**Categories:** MSBuild tasks · MSBuild targets · Nullable · Async pattern · Error handling · Resource management · Security · Formatting · Performance · Code organization · Patterns · Native memory · Native C++ · Symbol visibility · Platform-specific · Testing · YAGNI · API design · Documentation

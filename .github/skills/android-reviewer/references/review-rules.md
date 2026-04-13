@@ -41,6 +41,10 @@ cause performance regressions, or silently delete files.
 | **Avoid `BeforeTargets`/`AfterTargets`** | Prefer `$(XDependsOn)` properties (e.g., `$(BuildDependsOn)`) to order targets. `AfterTargets` runs even if the predecessor *failed*, causing confusing cascading errors. Use `BeforeTargets`/`AfterTargets` only when no `DependsOn` property exists, and consider checking `$(MSBuildLastTaskResult)`. |
 | **XML indentation** | MSBuild/XML files use 2 spaces for indentation (per `.editorconfig`), not tabs. |
 | **`Condition` attribute first** | On `<Target>` and task elements, put the `Condition` attribute first — it's the most important for debugging. Be consistent with attribute ordering within a file. (Postmortem `#33`) |
+| **Never modify assemblies in-place** | A task must not read an assembly from a path and write the modified assembly back to the same path. Instead, read from an input location, write to a separate output location, and update the in-memory MSBuild `ItemGroup` so downstream targets pick up the new paths. |
+| **Preserve MSBuild metadata on updated items** | When a task replaces items in an `ItemGroup` to point at new output paths, it must copy all existing metadata from the original `ITaskItem` to the replacement item (`ITaskItem.CopyMetadataTo` or manual metadata transfer). Downstream targets rely on metadata like `%(DestinationSubDirectory)`, `%(Culture)`, `%(TargetPath)`, etc. Dropping metadata silently breaks later steps. |
+| **Use `[Output]` items for relocated files** | If a task moves files to a new location, expose the updated items via an `[Output] ITaskItem[]?` property so the calling target can replace the original item group with the new paths. |
+| **Separate input and output directories** | Input and output directories should be distinct (e.g., `$(IntermediateOutputPath)original/` → `$(IntermediateOutputPath)modified/`). Writing outputs alongside inputs makes cleanup and incremental-build tracking fragile. |
 
 ---
 
@@ -294,19 +298,3 @@ These are patterns that AI-generated code consistently gets wrong in this repo:
 | **Commit messages omit non-obvious choices** | Behavioral decisions ("styleable arrays are cached, not copied per-access") and known limitations ("this leaks N bytes on Android 9") belong in the commit message. (Postmortem `#13`, `#69`) |
 | **Typos in user-visible strings** | Users copy-paste error messages into bug reports. Get them right. (Postmortem `#61`) |
 | **Filler words in docs** | "So" at the start of a sentence adds nothing. Be direct. (Postmortem `#71`) |
-
----
-
-## 15. Assembly & File Pipeline
-
-Build tasks that transform assemblies (e.g., linking, stripping, instrumentation)
-must never read from and write to the same file on disk. In-place modification
-causes races with parallel tasks, breaks incremental builds, and makes debugging
-impossible because the original input is destroyed.
-
-| Check | What to look for |
-|-------|-----------------|
-| **Never modify assemblies in-place** | A task must not read an assembly from a path and write the modified assembly back to the same path. Instead, read from an input location, write to a separate output location, and update the in-memory MSBuild `ItemGroup` so downstream targets pick up the new paths. |
-| **Preserve MSBuild metadata on updated items** | When a task replaces items in an `ItemGroup` to point at new output paths, it must copy all existing metadata from the original `ITaskItem` to the replacement item (`ITaskItem.CopyMetadataTo` or manual metadata transfer). Downstream targets rely on metadata like `%(DestinationSubDirectory)`, `%(Culture)`, `%(TargetPath)`, etc. Dropping metadata silently breaks later steps. |
-| **Use `[Output]` items for relocated files** | If a task moves files to a new location, expose the updated items via an `[Output] ITaskItem[]?` property so the calling target can replace the original item group with the new paths. |
-| **Separate input and output directories** | Input and output directories should be distinct (e.g., `$(IntermediateOutputPath)original/` → `$(IntermediateOutputPath)modified/`). Writing outputs alongside inputs makes cleanup and incremental-build tracking fragile. |
