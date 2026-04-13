@@ -43,6 +43,7 @@
     <ExcludeCategories Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">$(ExcludeCategories):NativeTypeMap:Export</ExcludeCategories>
   </PropertyGroup>
 
+
   <ItemGroup>
     <PackageReference Include="Mono.Linq.Expressions" Version="2.0.0" />
   </ItemGroup>
