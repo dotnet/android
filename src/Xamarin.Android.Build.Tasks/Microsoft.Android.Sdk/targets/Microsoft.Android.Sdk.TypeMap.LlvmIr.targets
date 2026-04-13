@@ -230,6 +230,9 @@
     designer assembly's property getters, and clears the per-library designer classes.
     Because the rewritten IL no longer references the old designer fields, ILLink can
     freely trim unused designer types without needing a root descriptor.
+
+    Modified assemblies are written to an intermediate directory (not in-place) to
+    avoid mutating files in the shared NuGet cache or shared intermediate output paths.
   -->
   <Target Name="_PreTrimmingFixLegacyDesigner"
       BeforeTargets="ILLink"
@@ -240,7 +243,16 @@
     <PreTrimmingFixLegacyDesigner
         Assemblies="@(_PreTrimmingAssembly)"
         TargetName="$(TargetName)"
-        Deterministic="$(Deterministic)" />
+        OutputDirectory="$(IntermediateOutputPath)prelink"
+        Deterministic="$(Deterministic)">
+      <Output TaskParameter="ModifiedAssemblies" ItemName="_PreTrimmingModifiedAssembly" />
+    </PreTrimmingFixLegacyDesigner>
+    <!-- Replace ResolvedFileToPublish entries with the modified copies so ILLink picks them up -->
+    <ItemGroup>
+      <_PreTrimmingOriginalAssembly Include="@(_PreTrimmingModifiedAssembly->'%(OriginalPath)')" />
+      <ResolvedFileToPublish Remove="@(_PreTrimmingOriginalAssembly)" />
+      <ResolvedFileToPublish Include="@(_PreTrimmingModifiedAssembly)" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_TouchAndroidLinkFlag"
