@@ -216,52 +216,30 @@ public class TrimmableTypeMapGenerator
 	/// </summary>
 	internal static void PropagateDeferredRegistrationToBaseClasses (List<JavaPeerInfo> allPeers)
 	{
-		var peersByJniName = BuildJniNameLookup (allPeers);
-
+		// In practice only 1–2 types need propagation (one Application, maybe one
+		// Instrumentation), each with a short base-class chain.  A linear scan per
+		// ancestor is simpler and cheaper than building a Dictionary<JavaName, List<Peer>>
+		// lookup over all peers up front.
 		foreach (var peer in allPeers) {
-			if (peer.CannotRegisterInStaticConstructor && peer.BaseJavaName is { } baseJniName) {
-				PropagateToAncestors (baseJniName, peersByJniName);
+			if (peer.CannotRegisterInStaticConstructor) {
+				PropagateToAncestors (peer.BaseJavaName, allPeers);
 			}
 		}
 
-		static Dictionary<string, List<JavaPeerInfo>> BuildJniNameLookup (List<JavaPeerInfo> allPeers)
+		static void PropagateToAncestors (string? baseJniName, List<JavaPeerInfo> allPeers)
 		{
-			var lookup = new Dictionary<string, List<JavaPeerInfo>> (StringComparer.Ordinal);
-			foreach (var peer in allPeers) {
-				if (!lookup.TryGetValue (peer.JavaName, out var peers)) {
-					peers = [];
-					lookup [peer.JavaName] = peers;
-				}
-
-				peers.Add (peer);
-			}
-
-			return lookup;
-		}
-
-		static void PropagateToAncestors (string startJniName, Dictionary<string, List<JavaPeerInfo>> peersByJniName)
-		{
-			var pending = new Queue<string> ();
-			var visited = new HashSet<string> (StringComparer.Ordinal);
-			pending.Enqueue (startJniName);
-
-			while (pending.Count > 0) {
-				var jniName = pending.Dequeue ();
-				if (!visited.Add (jniName) || !peersByJniName.TryGetValue (jniName, out var peers)) {
-					continue;
-				}
-
-				foreach (var peer in peers) {
-					if (peer.DoNotGenerateAcw) {
+			while (baseJniName is not null) {
+				string? nextBase = null;
+				foreach (var basePeer in allPeers) {
+					if (basePeer.JavaName != baseJniName || basePeer.DoNotGenerateAcw) {
 						continue;
 					}
 
-					peer.CannotRegisterInStaticConstructor = true;
-
-					if (peer.BaseJavaName is { } nextJniName) {
-						pending.Enqueue (nextJniName);
-					}
+					basePeer.CannotRegisterInStaticConstructor = true;
+					nextBase = basePeer.BaseJavaName;
 				}
+
+				baseJniName = nextBase;
 			}
 		}
 	}
