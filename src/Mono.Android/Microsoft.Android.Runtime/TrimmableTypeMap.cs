@@ -77,23 +77,31 @@ class TrimmableTypeMap
 	internal JavaPeerProxy? GetProxyForManagedType (Type managedType)
 	{
 		return _proxyCache.GetOrAdd (managedType, static (type, self) => {
-			// First check if the type itself IS a proxy (has self-applied attribute)
-			var direct = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-			if (direct is not null) {
-				return direct;
+			for (var currentType = type; currentType is not null; currentType = currentType.BaseType) {
+				// First check if the type itself IS a proxy (has self-applied attribute)
+				var direct = currentType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+				if (direct is not null) {
+					return direct;
+				}
+
+				// Managed-only Java subclasses such as JavaProxyThrowable do not have their own
+				// [Register] attribute, so fall back to the nearest Java base type with one.
+				if (!TryGetJniNameForType (currentType, out var jniName)) {
+					continue;
+				}
+
+				// Look up the proxy type in the TypeMap dictionary
+				if (!self._typeMap.TryGetValue (jniName, out var proxyType)) {
+					continue;
+				}
+
+				var proxy = proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+				if (proxy is not null) {
+					return proxy;
+				}
 			}
 
-			// Resolve the JNI name from the managed type's attributes
-			if (!TryGetJniNameForType (type, out var jniName)) {
-				return null;
-			}
-
-			// Look up the proxy type in the TypeMap dictionary
-			if (!self._typeMap.TryGetValue (jniName, out var proxyType)) {
-				return null;
-			}
-
-			return proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+			return null;
 		}, this);
 	}
 
