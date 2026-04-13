@@ -236,7 +236,9 @@
   -->
   <Target Name="_PreTrimmingFixLegacyDesigner"
       BeforeTargets="ILLink"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidUseDesignerAssembly)' == 'True' ">
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidUseDesignerAssembly)' == 'True' "
+      Inputs="@(ResolvedFileToPublish->'%(FullPath)')"
+      Outputs="$(_AndroidStampDirectory)_PreTrimmingFixLegacyDesigner.stamp">
     <ItemGroup>
       <_PreTrimmingAssembly Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' and '%(ResolvedFileToPublish.PostprocessAssembly)' == 'true' " />
     </ItemGroup>
@@ -247,12 +249,26 @@
         Deterministic="$(Deterministic)">
       <Output TaskParameter="ModifiedAssemblies" ItemName="_PreTrimmingModifiedAssembly" />
     </PreTrimmingFixLegacyDesigner>
-    <!-- Replace ResolvedFileToPublish entries with the modified copies so ILLink picks them up -->
+    <Touch Files="$(_AndroidStampDirectory)_PreTrimmingFixLegacyDesigner.stamp" AlwaysCreate="true" />
     <ItemGroup>
-      <_PreTrimmingOriginalAssembly Include="@(_PreTrimmingModifiedAssembly->'%(OriginalPath)')" />
-      <ResolvedFileToPublish Remove="@(_PreTrimmingOriginalAssembly)" />
-      <ResolvedFileToPublish Include="@(_PreTrimmingModifiedAssembly)" />
       <FileWrites Include="@(_PreTrimmingModifiedAssembly)" />
+    </ItemGroup>
+  </Target>
+
+  <!--
+    Replace ResolvedFileToPublish entries with the prelink copies so ILLink picks them up.
+    This must run even when _PreTrimmingFixLegacyDesigner is skipped (up-to-date) because
+    ResolvedFileToPublish is populated fresh each build.
+  -->
+  <Target Name="_PreTrimmingFixLegacyDesignerUpdateItems"
+      BeforeTargets="ILLink"
+      DependsOnTargets="_PreTrimmingFixLegacyDesigner"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidUseDesignerAssembly)' == 'True' ">
+    <ItemGroup>
+      <_PreTrimmingSwappableItem Include="@(ResolvedFileToPublish)"
+          Condition=" '%(Extension)' == '.dll' and Exists('$(IntermediateOutputPath)prelink/%(Filename)%(Extension)') " />
+      <ResolvedFileToPublish Remove="@(_PreTrimmingSwappableItem)" />
+      <ResolvedFileToPublish Include="@(_PreTrimmingSwappableItem->'$(IntermediateOutputPath)prelink/%(Filename)%(Extension)')" />
     </ItemGroup>
   </Target>
 
