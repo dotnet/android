@@ -113,7 +113,7 @@ This file contains targets specific for Android application projects.
     </GetAndroidActivityName>
     <GetAndroidInstrumentationName
         Condition=" '$(AndroidLaunchActivity)' == '' and '$(AndroidInstrumentation)' == '' and '$(EnableMSTestRunner)' == 'true' "
-        ManifestFile="$(IntermediateOutputPath)AndroidManifest.xml">
+        ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml">
       <Output TaskParameter="InstrumentationName" PropertyName="AndroidInstrumentation" />
     </GetAndroidInstrumentationName>
     <PropertyGroup>

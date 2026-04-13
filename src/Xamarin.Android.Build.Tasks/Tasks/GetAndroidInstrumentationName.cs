@@ -25,7 +25,7 @@ namespace Xamarin.Android.Tasks
 			var androidNs = AndroidAppManifest.AndroidXNamespace;
 			var doc = manifest.Document;
 
-			var instrumentation = doc?.Root?.Element (androidNs + "instrumentation");
+			var instrumentation = doc?.Root?.Element ("instrumentation");
 			InstrumentationName = instrumentation?.Attribute (androidNs + "name")?.Value;
 
 			return !Log.HasLoggedErrors;
