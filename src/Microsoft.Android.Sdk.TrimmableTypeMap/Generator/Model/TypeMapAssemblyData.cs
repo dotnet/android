@@ -126,6 +126,13 @@ sealed class JavaPeerProxyData
 	public bool IsGenericDefinition { get; init; }
 
 	/// <summary>
+	/// True when the Java stub must not call RegisterNatives from a static initializer because
+	/// the type can be instantiated before the runtime is fully ready (for example Application
+	/// or Instrumentation subclasses).
+	/// </summary>
+	public bool CannotRegisterInStaticConstructor { get; init; }
+
+	/// <summary>
 	/// Whether this proxy needs ACW support (RegisterNatives + UCO wrappers + IAndroidCallableWrapper).
 	/// </summary>
 	public bool IsAcw { get; init; }
