@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
@@ -9,12 +10,33 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests;
 
 public partial class ScannerComparisonTests
 {
+	static readonly string [] SslCallbackManagedTypes = [
+		"Xamarin.Android.Net.ServerCertificateCustomValidator+TrustManager, Mono.Android",
+		"Xamarin.Android.Net.ServerCertificateCustomValidator+TrustManager+FakeSSLSession, Mono.Android",
+		"Xamarin.Android.Net.ServerCertificateCustomValidator+AlwaysAcceptingHostnameVerifier, Mono.Android",
+	];
+
 [Fact]
 public void ExactTypeMap_MonoAndroid ()
 {
 var (legacy, _) = ScannerRunner.RunLegacy (MonoAndroidAssemblyPath);
 var (newEntries, _) = ScannerRunner.RunNew (AllAssemblyPaths);
 AssertTypeMapMatch (legacy, newEntries);
+}
+
+[Fact]
+public void SslCallbackNestedTypes_MonoAndroid_MatchLegacyNames ()
+{
+var (legacy, _) = ScannerRunner.RunLegacy (MonoAndroidAssemblyPath);
+var (newEntries, _) = ScannerRunner.RunNew (AllAssemblyPaths);
+
+foreach (var managedType in SslCallbackManagedTypes) {
+	var legacyEntry = Assert.Single (legacy, e => e.ManagedName == managedType);
+	var newEntry = Assert.Single (newEntries, e => e.ManagedName == managedType);
+
+	Assert.Equal (legacyEntry.JavaName, newEntry.JavaName);
+	Assert.Equal (legacyEntry.SkipInJavaToManaged, newEntry.SkipInJavaToManaged);
+}
 }
 
 [Fact]
@@ -29,6 +51,34 @@ AssertNoDiffs ("MANAGED TYPES EXTRA in new scanner", result.ExtraTypes);
 AssertNoDiffs ("METHODS MISSING from new scanner", result.MissingMethods);
 AssertNoDiffs ("METHODS EXTRA in new scanner", result.ExtraMethods);
 AssertNoDiffs ("CONNECTOR MISMATCHES", result.ConnectorMismatches);
+}
+
+[Fact]
+public void SslCallbackMarshalMethods_MonoAndroid_MatchLegacy ()
+{
+var (legacyEntries, legacyMethods) = ScannerRunner.RunLegacy (MonoAndroidAssemblyPath);
+var (newEntries, newMethods) = ScannerRunner.RunNew (AllAssemblyPaths);
+
+var sslJavaNames = legacyEntries
+	.Where (e => SslCallbackManagedTypes.Contains (e.ManagedName))
+	.Select (e => e.JavaName)
+	.Distinct (StringComparer.Ordinal)
+	.ToHashSet (StringComparer.Ordinal);
+
+var legacySubset = legacyMethods
+	.Where (kvp => sslJavaNames.Contains (kvp.Key))
+	.ToDictionary (kvp => kvp.Key, kvp => kvp.Value);
+var newSubset = newMethods
+	.Where (kvp => sslJavaNames.Contains (kvp.Key) || newEntries.Any (e => SslCallbackManagedTypes.Contains (e.ManagedName) && e.JavaName == kvp.Key))
+	.ToDictionary (kvp => kvp.Key, kvp => kvp.Value);
+
+var result = MarshalMethodDiffHelper.CompareMarshalMethods (legacySubset, newSubset);
+
+AssertNoDiffs ("SSL TYPES MISSING from new scanner", result.MissingTypes);
+AssertNoDiffs ("SSL TYPES EXTRA in new scanner", result.ExtraTypes);
+AssertNoDiffs ("SSL METHODS MISSING from new scanner", result.MissingMethods);
+AssertNoDiffs ("SSL METHODS EXTRA in new scanner", result.ExtraMethods);
+AssertNoDiffs ("SSL CONNECTOR MISMATCHES", result.ConnectorMismatches);
 }
 
 [Fact]
