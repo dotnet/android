@@ -26,6 +26,11 @@
         Value="true" Trim="true" />
     <RuntimeHostConfigurationOption Include="System.Runtime.InteropServices.TypeMappingEntryAssembly"
         Value="$(_TypeMapAssemblyName)" />
+    <!-- [Export] metadata is still needed at compile time, but the legacy runtime helper
+         assembly must stay out of the packaged app on the trimmable path. -->
+    <AndroidCustomMetaDataForReferences Include="Mono.Android.Export">
+      <AndroidSkipAddToPackage>true</AndroidSkipAddToPackage>
+    </AndroidCustomMetaDataForReferences>
     <!-- Preserve the native→managed entry point (called via create_delegate from host.cc) -->
     <TrimmerRootDescriptor Include="$(MSBuildThisFileDirectory)../PreserveLists/Trimmable.CoreCLR.xml"
         Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
