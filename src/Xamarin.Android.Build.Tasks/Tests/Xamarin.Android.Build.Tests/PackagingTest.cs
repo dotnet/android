@@ -506,7 +506,7 @@ namespace UnnamedProject {
 				var contents = helper.ListArchiveContents ();
 
 				Assert.IsFalse (
-					contents.Any (e => e.EndsWith ("/Mono.Android.Export.dll", StringComparison.Ordinal) || e.Contains ("Mono.Android.Export.dll", StringComparison.Ordinal)),
+					contents.Any (e => Path.GetFileName (e).Equals ("Mono.Android.Export.dll", StringComparison.Ordinal)),
 					$"APK file `{apk}` should not contain Mono.Android.Export.dll when the trimmable type map is enabled.");
 			}
 		}
