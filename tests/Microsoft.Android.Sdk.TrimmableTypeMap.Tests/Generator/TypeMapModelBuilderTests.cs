@@ -1092,28 +1092,32 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
-		public void Fixture_ExportExample_UsesDirectManagedDispatch ()
+		public void Fixture_ExportExample_UsesExportMethodDispatch ()
 		{
 			var peer = FindFixtureByJavaName ("my/app/ExportExample");
 			var model = BuildModel (new [] { peer }, "TypeMap");
 			var proxy = model.ProxyTypes.FirstOrDefault ();
 			Assert.NotNull (proxy);
 			var exportUco = Assert.Single (proxy.UcoMethods);
-			Assert.True (exportUco.UseDirectManagedDispatch);
-			Assert.Equal ("MyExportedMethod", exportUco.ManagedMethodName);
+			var exportDispatch = exportUco.ExportMethodDispatch;
+			Assert.True (exportUco.UsesExportMethodDispatch);
+			Assert.NotNull (exportDispatch);
+			Assert.Equal ("MyExportedMethod", exportDispatch.ManagedMethodName);
 		}
 
 		[Fact]
-		public void Fixture_StaticExportExample_UsesStaticDirectManagedDispatch ()
+		public void Fixture_StaticExportExample_UsesStaticExportMethodDispatch ()
 		{
 			var peer = FindFixtureByJavaName ("my/app/StaticExportExample");
 			var model = BuildModel (new [] { peer }, "TypeMap");
 			var proxy = model.ProxyTypes.FirstOrDefault ();
 			Assert.NotNull (proxy);
 			var exportUco = Assert.Single (proxy.UcoMethods);
-			Assert.True (exportUco.UseDirectManagedDispatch);
-			Assert.True (exportUco.IsStatic);
-			Assert.Equal ("ComputeLabel", exportUco.ManagedMethodName);
+			var exportDispatch = exportUco.ExportMethodDispatch;
+			Assert.True (exportUco.UsesExportMethodDispatch);
+			Assert.NotNull (exportDispatch);
+			Assert.True (exportDispatch.IsStatic);
+			Assert.Equal ("ComputeLabel", exportDispatch.ManagedMethodName);
 		}
 
 		[Fact]
@@ -1124,15 +1128,19 @@ public class ModelBuilderTests : FixtureTestBase
 			var proxy = model.ProxyTypes.FirstOrDefault ();
 			Assert.NotNull (proxy);
 
-			var xmlUco = proxy.UcoMethods.First (u => u.ManagedMethodName == "ReadXml");
-			Assert.Equal ("System.Xml.XmlReader", xmlUco.ManagedParameterTypes [0].ManagedTypeName);
-			Assert.Equal ("System.Xml.ReaderWriter", xmlUco.ManagedParameterTypes [0].AssemblyName);
-			Assert.Equal (ExportParameterKindInfo.XmlPullParser, xmlUco.ManagedParameterExportKinds [0]);
-			Assert.Equal (ExportParameterKindInfo.XmlPullParser, xmlUco.ManagedReturnExportKind);
+			var xmlUco = proxy.UcoMethods.First (u => u.ExportMethodDispatch?.ManagedMethodName == "ReadXml");
+			var xmlDispatch = xmlUco.ExportMethodDispatch;
+			Assert.NotNull (xmlDispatch);
+			Assert.Equal ("System.Xml.XmlReader", xmlDispatch.ParameterTypes [0].ManagedTypeName);
+			Assert.Equal ("System.Xml.ReaderWriter", xmlDispatch.ParameterTypes [0].AssemblyName);
+			Assert.Equal (ExportParameterKindInfo.XmlPullParser, xmlDispatch.ParameterKinds [0]);
+			Assert.Equal (ExportParameterKindInfo.XmlPullParser, xmlDispatch.ReturnKind);
 
-			var resourceXmlUco = proxy.UcoMethods.First (u => u.ManagedMethodName == "ReadResourceXml");
-			Assert.Equal (ExportParameterKindInfo.XmlResourceParser, resourceXmlUco.ManagedParameterExportKinds [0]);
-			Assert.Equal (ExportParameterKindInfo.XmlResourceParser, resourceXmlUco.ManagedReturnExportKind);
+			var resourceXmlUco = proxy.UcoMethods.First (u => u.ExportMethodDispatch?.ManagedMethodName == "ReadResourceXml");
+			var resourceXmlDispatch = resourceXmlUco.ExportMethodDispatch;
+			Assert.NotNull (resourceXmlDispatch);
+			Assert.Equal (ExportParameterKindInfo.XmlResourceParser, resourceXmlDispatch.ParameterKinds [0]);
+			Assert.Equal (ExportParameterKindInfo.XmlResourceParser, resourceXmlDispatch.ReturnKind);
 		}
 
 		[Fact]

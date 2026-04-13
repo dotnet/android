@@ -147,7 +147,7 @@ sealed class TypeMapAssemblyEmitter
 
 	EntityHandle _anchorTypeHandle;
 
-	ExportEmitter? _exportEmitter;
+	ExportMethodDispatchEmitter? _exportMethodDispatchEmitter;
 
 	/// <summary>
 	/// Creates a new emitter.
@@ -199,7 +199,7 @@ sealed class TypeMapAssemblyEmitter
 			EmitAnchorType ();
 		}
 		EmitMemberReferences ();
-		_exportEmitter = new ExportEmitter (_pe, CreateExportEmitterContext ());
+		_exportMethodDispatchEmitter = new ExportMethodDispatchEmitter (_pe, CreateExportMethodDispatchEmitterContext ());
 
 		// Track wrapper method names → handles for RegisterNatives
 		var wrapperHandles = new Dictionary<string, MethodDefinitionHandle> ();
@@ -593,8 +593,53 @@ sealed class TypeMapAssemblyEmitter
 				}));
 	}
 
+	ExportMethodDispatchEmitterContext CreateExportMethodDispatchEmitterContext ()
+	{
+		return new ExportMethodDispatchEmitterContext {
+			GetTypeFromHandleRef = _getTypeFromHandleRef,
+			JniObjectReferenceRef = _jniObjectReferenceRef,
+			IJavaObjectRef = _iJavaObjectRef,
+			JniTypeRef = _jniTypeRef,
+			JniNativeMethodRef = _jniNativeMethodRef,
+			ReadOnlySpanOpenRef = _readOnlySpanOpenRef,
+			JniEnvGetStringRef = _jniEnvGetStringRef,
+			JniEnvGetArrayRef = _jniEnvGetArrayRef,
+			JniEnvCopyArrayRef = _jniEnvCopyArrayRef,
+			JniEnvNewArrayRef = _jniEnvNewArrayRef,
+			JniEnvNewStringRef = _jniEnvNewStringRef,
+			JniEnvToLocalJniHandleRef = _jniEnvToLocalJniHandleRef,
+			JavaLangObjectGetObjectRef = _javaLangObjectGetObjectRef,
+			InputStreamInvokerFromJniHandleRef = _inputStreamInvokerFromJniHandleRef,
+			OutputStreamInvokerFromJniHandleRef = _outputStreamInvokerFromJniHandleRef,
+			InputStreamAdapterToLocalJniHandleRef = _inputStreamAdapterToLocalJniHandleRef,
+			OutputStreamAdapterToLocalJniHandleRef = _outputStreamAdapterToLocalJniHandleRef,
+			XmlPullParserReaderFromJniHandleRef = _xmlPullParserReaderFromJniHandleRef,
+			XmlResourceParserReaderFromJniHandleRef = _xmlResourceParserReaderFromJniHandleRef,
+			XmlReaderPullParserToLocalJniHandleRef = _xmlReaderPullParserToLocalJniHandleRef,
+			XmlReaderResourceParserToLocalJniHandleRef = _xmlReaderResourceParserToLocalJniHandleRef,
+			ActivateInstanceRef = default,
+			UcoAttrCtorRef = _ucoAttrCtorRef,
+			UcoAttrBlobHandle = _ucoAttrBlobHandle,
+			JniNativeMethodCtorRef = _jniNativeMethodCtorRef,
+			JniTypePeerReferenceRef = _jniTypePeerReferenceRef,
+			JniEnvTypesRegisterNativesRef = _jniEnvTypesRegisterNativesRef,
+			ReadOnlySpanOfJniNativeMethodCtorRef = _readOnlySpanOfJniNativeMethodCtorRef,
+		};
+	}
+
+	ExportMethodDispatchEmitter GetExportMethodDispatchEmitter ()
+	{
+		if (_exportMethodDispatchEmitter == null) {
+			throw new InvalidOperationException ("ExportMethodDispatchEmitter has not been initialized.");
+		}
+
+		return _exportMethodDispatchEmitter;
+	}
+
 	void EmitProxyType (JavaPeerProxyData proxy, Dictionary<string, MethodDefinitionHandle> wrapperHandles)
 	{
+		var exportMethodDispatchEmitter = GetExportMethodDispatchEmitter ();
+
 		if (proxy.IsAcw) {
 			// RegisterNatives uses RVA-backed UTF-8 fields under <PrivateImplementationDetails>.
 			// Materialize those helper types before adding the proxy TypeDef, otherwise the
@@ -603,6 +648,7 @@ sealed class TypeMapAssemblyEmitter
 				_pe.GetOrAddUtf8Field (reg.JniMethodName);
 				_pe.GetOrAddUtf8Field (reg.JniSignature);
 			}
+
 		}
 
 		var metadata = _pe.Metadata;
@@ -686,9 +732,8 @@ sealed class TypeMapAssemblyEmitter
 		EmitCreateInstance (proxy);
 
 		// UCO wrappers
-		var exportEmitter = GetExportEmitter ();
 		foreach (var uco in proxy.UcoMethods) {
-			var handle = exportEmitter.EmitUcoMethod (uco);
+			var handle = exportMethodDispatchEmitter.EmitUcoMethod (uco);
 			wrapperHandles [uco.WrapperName] = handle;
 		}
 
@@ -699,51 +744,8 @@ sealed class TypeMapAssemblyEmitter
 
 		// RegisterNatives
 		if (proxy.IsAcw) {
-			exportEmitter.EmitRegisterNatives (proxy.NativeRegistrations, wrapperHandles);
+			exportMethodDispatchEmitter.EmitRegisterNatives (proxy.NativeRegistrations, wrapperHandles);
 		}
-	}
-
-	ExportEmitter GetExportEmitter ()
-	{
-		if (_exportEmitter == null) {
-			throw new InvalidOperationException ("ExportEmitter has not been initialized.");
-		}
-
-		return _exportEmitter;
-	}
-
-	ExportEmitterContext CreateExportEmitterContext ()
-	{
-		return new ExportEmitterContext {
-			JniObjectReferenceRef = _jniObjectReferenceRef,
-			IJavaObjectRef = _iJavaObjectRef,
-			JniTypeRef = _jniTypeRef,
-			JniNativeMethodRef = _jniNativeMethodRef,
-			ReadOnlySpanOpenRef = _readOnlySpanOpenRef,
-			GetTypeFromHandleRef = _getTypeFromHandleRef,
-			JniEnvGetStringRef = _jniEnvGetStringRef,
-			JniEnvGetArrayRef = _jniEnvGetArrayRef,
-			JniEnvCopyArrayRef = _jniEnvCopyArrayRef,
-			JniEnvNewArrayRef = _jniEnvNewArrayRef,
-			JniEnvNewStringRef = _jniEnvNewStringRef,
-			JniEnvToLocalJniHandleRef = _jniEnvToLocalJniHandleRef,
-			JavaLangObjectGetObjectRef = _javaLangObjectGetObjectRef,
-			InputStreamInvokerFromJniHandleRef = _inputStreamInvokerFromJniHandleRef,
-			OutputStreamInvokerFromJniHandleRef = _outputStreamInvokerFromJniHandleRef,
-			InputStreamAdapterToLocalJniHandleRef = _inputStreamAdapterToLocalJniHandleRef,
-			OutputStreamAdapterToLocalJniHandleRef = _outputStreamAdapterToLocalJniHandleRef,
-			XmlPullParserReaderFromJniHandleRef = _xmlPullParserReaderFromJniHandleRef,
-			XmlResourceParserReaderFromJniHandleRef = _xmlResourceParserReaderFromJniHandleRef,
-			XmlReaderPullParserToLocalJniHandleRef = _xmlReaderPullParserToLocalJniHandleRef,
-			XmlReaderResourceParserToLocalJniHandleRef = _xmlReaderResourceParserToLocalJniHandleRef,
-			ActivateInstanceRef = default,
-			JniNativeMethodCtorRef = _jniNativeMethodCtorRef,
-			JniTypePeerReferenceRef = _jniTypePeerReferenceRef,
-			JniEnvTypesRegisterNativesRef = _jniEnvTypesRegisterNativesRef,
-			ReadOnlySpanOfJniNativeMethodCtorRef = _readOnlySpanOfJniNativeMethodCtorRef,
-			UcoAttrCtorRef = _ucoAttrCtorRef,
-			UcoAttrBlobHandle = _ucoAttrBlobHandle,
-		};
 	}
 
 	void EmitAliasHolderType (AliasHolderData holder)

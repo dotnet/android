@@ -190,34 +190,38 @@ sealed record UcoMethodData
 	public required string JniSignature { get; init; }
 
 	/// <summary>
-	/// Managed method name on <see cref="CallbackType"/> for static [Export] dispatch.
+	/// Optional [Export]-only metadata for wrappers that dispatch directly to the
+	/// managed export target instead of forwarding to a generated n_* callback.
+	/// </summary>
+	public ExportMethodDispatchData? ExportMethodDispatch { get; init; }
+
+	/// <summary>
+	/// True when this wrapper performs the static [Export] direct-dispatch path.
+	/// </summary>
+	public bool UsesExportMethodDispatch => ExportMethodDispatch != null;
+}
+
+sealed record ExportMethodDispatchData
+{
+	/// <summary>
+	/// Managed method name on the callback type that should be invoked for [Export].
 	/// </summary>
 	public required string ManagedMethodName { get; init; }
 
 	/// <summary>
-	/// Managed parameter type names for the target method.
-	/// </summary>
-	public IReadOnlyList<string> ManagedParameterTypeNames { get; init; } = [];
-
-	/// <summary>
 	/// Managed parameter types for the target method, including the defining assembly.
 	/// </summary>
-	public IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = [];
+	public IReadOnlyList<TypeRefData> ParameterTypes { get; init; } = [];
 
 	/// <summary>
 	/// Per-parameter [ExportParameter] kinds for legacy callback marshalling.
 	/// </summary>
-	public IReadOnlyList<ExportParameterKindInfo> ManagedParameterExportKinds { get; init; } = [];
-
-	/// <summary>
-	/// Managed return type name for the target method.
-	/// </summary>
-	public string ManagedReturnTypeName { get; init; } = "System.Void";
+	public IReadOnlyList<ExportParameterKindInfo> ParameterKinds { get; init; } = [];
 
 	/// <summary>
 	/// Managed return type for the target method, including the defining assembly.
 	/// </summary>
-	public TypeRefData ManagedReturnType { get; init; } = new () {
+	public TypeRefData ReturnType { get; init; } = new () {
 		ManagedTypeName = "System.Void",
 		AssemblyName = "System.Runtime",
 	};
@@ -225,18 +229,12 @@ sealed record UcoMethodData
 	/// <summary>
 	/// [ExportParameter] kind applied to the return value, if any.
 	/// </summary>
-	public ExportParameterKindInfo ManagedReturnExportKind { get; init; }
+	public ExportParameterKindInfo ReturnKind { get; init; }
 
 	/// <summary>
 	/// Whether the managed target method is static.
 	/// </summary>
 	public bool IsStatic { get; init; }
-
-	/// <summary>
-	/// True when the wrapper should dispatch directly to the managed method instead of
-	/// forwarding to a pre-existing n_* callback.
-	/// </summary>
-	public bool UseDirectManagedDispatch { get; init; }
 }
 
 /// <summary>
