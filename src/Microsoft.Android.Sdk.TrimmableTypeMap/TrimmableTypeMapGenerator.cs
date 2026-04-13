@@ -39,6 +39,7 @@ public class TrimmableTypeMapGenerator
 		}
 
 		RootManifestReferencedTypes (allPeers, PrepareManifestForRooting (manifestTemplate, manifestConfig));
+		PropagateDeferredRegistrationToBaseClasses (allPeers);
 
 		var generatedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion);
 		var jcwPeers = allPeers.Where (p =>
@@ -203,6 +204,38 @@ public class TrimmableTypeMapGenerator
 				}
 			} else {
 				logger.LogManifestReferencedTypeNotFoundWarning (name);
+			}
+		}
+	}
+
+	/// <summary>
+	/// Propagates <see cref="JavaPeerInfo.CannotRegisterInStaticConstructor"/> up the base class chain.
+	/// When a type like NUnitInstrumentation has deferred registration, its base class
+	/// TestInstrumentation_1 must also defer — otherwise the base class <c>&lt;clinit&gt;</c> will call
+	/// <c>registerNatives</c> before the managed runtime is ready.
+	/// </summary>
+	internal static void PropagateDeferredRegistrationToBaseClasses (List<JavaPeerInfo> allPeers)
+	{
+		var peersByJniName = new Dictionary<string, JavaPeerInfo> (StringComparer.Ordinal);
+		foreach (var peer in allPeers) {
+			if (!peersByJniName.ContainsKey (peer.JavaName)) {
+				peersByJniName [peer.JavaName] = peer;
+			}
+		}
+
+		foreach (var peer in allPeers) {
+			if (!peer.CannotRegisterInStaticConstructor) {
+				continue;
+			}
+
+			var current = peer;
+			while (current.BaseJavaName is { } baseJniName && peersByJniName.TryGetValue (baseJniName, out var basePeer)) {
+				if (basePeer.DoNotGenerateAcw) {
+					break;
+				}
+
+				basePeer.CannotRegisterInStaticConstructor = true;
+				current = basePeer;
 			}
 		}
 	}

@@ -227,6 +227,52 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Execute_PropagatesDeferredRegistrationToBaseClasses ()
+	{
+		var basePeer = new JavaPeerInfo {
+			JavaName = "crc64aaa/TestInstrumentation_1", CompatJniName = "crc64aaa/TestInstrumentation_1",
+			ManagedTypeName = "Tests.TestInstrumentation`1", ManagedTypeNamespace = "Tests", ManagedTypeShortName = "TestInstrumentation`1",
+			AssemblyName = "Tests", IsUnconditional = false,
+			BaseJavaName = "android/app/Instrumentation",
+		};
+		var midPeer = new JavaPeerInfo {
+			JavaName = "crc64bbb/NUnitTestInstrumentation", CompatJniName = "crc64bbb/NUnitTestInstrumentation",
+			ManagedTypeName = "Tests.NUnitTestInstrumentation", ManagedTypeNamespace = "Tests", ManagedTypeShortName = "NUnitTestInstrumentation",
+			AssemblyName = "Tests", IsUnconditional = false,
+			BaseJavaName = "crc64aaa/TestInstrumentation_1",
+		};
+		var leafPeer = new JavaPeerInfo {
+			JavaName = "crc64ccc/NUnitInstrumentation", CompatJniName = "crc64ccc/NUnitInstrumentation",
+			ManagedTypeName = "Tests.NUnitInstrumentation", ManagedTypeNamespace = "Tests", ManagedTypeShortName = "NUnitInstrumentation",
+			AssemblyName = "Tests", IsUnconditional = false,
+			BaseJavaName = "crc64bbb/NUnitTestInstrumentation",
+		};
+		var peers = new List<JavaPeerInfo> { basePeer, midPeer, leafPeer };
+
+		var doc = System.Xml.Linq.XDocument.Parse ("""
+			<?xml version="1.0" encoding="utf-8"?>
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example">
+			  <instrumentation android:name="crc64ccc.NUnitInstrumentation" />
+			</manifest>
+			""");
+
+		var generator = CreateGenerator ();
+		generator.RootManifestReferencedTypes (peers, doc);
+
+		// RootManifestReferencedTypes sets the flag only on the directly matched leaf
+		Assert.True (leafPeer.CannotRegisterInStaticConstructor, "Leaf instrumentation should have deferred registration after manifest rooting.");
+		Assert.False (midPeer.CannotRegisterInStaticConstructor, "Mid peer should NOT have deferred registration before propagation.");
+		Assert.False (basePeer.CannotRegisterInStaticConstructor, "Base peer should NOT have deferred registration before propagation.");
+
+		// PropagateDeferredRegistrationToBaseClasses walks the BaseJavaName chain
+		TrimmableTypeMapGenerator.PropagateDeferredRegistrationToBaseClasses (peers);
+
+		Assert.True (leafPeer.CannotRegisterInStaticConstructor, "Leaf instrumentation should still have deferred registration.");
+		Assert.True (midPeer.CannotRegisterInStaticConstructor, "Mid peer should have deferred registration after propagation.");
+		Assert.True (basePeer.CannotRegisterInStaticConstructor, "Base peer should have deferred registration after propagation.");
+	}
+
+	[Fact]
 	public void RootManifestReferencedTypes_WarnsForUnresolvedTypes ()
 	{
 		var peers = new List<JavaPeerInfo> {
