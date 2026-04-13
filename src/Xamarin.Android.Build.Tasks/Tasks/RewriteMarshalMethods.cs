@@ -94,12 +94,14 @@ public class RewriteMarshalMethods : AndroidTask
 	public string RuntimeIdentifier { get; set; } = "";
 
 	/// <summary>
-	/// Output: assemblies (and PDBs) that were rewritten to
+	/// Output: rewritten assembly DLLs in
 	/// <see cref="RewrittenAssembliesOutputDirectory"/>.  Each item carries all
 	/// metadata from the original input assembly plus <c>OriginalItemSpec</c>
 	/// pointing to the original path.  The calling target uses these to replace
 	/// the original items in <c>@(ResolvedFileToPublish)</c> so downstream
-	/// processing picks up the rewritten copies.
+	/// processing picks up the rewritten copies.  PDB files are NOT included —
+	/// they sit alongside the DLLs and are discovered by <c>ProcessAssemblies</c>
+	/// in the outer build via filesystem fallback.
 	/// </summary>
 	[Output]
 	public ITaskItem []? RewrittenAssemblies { get; set; }
@@ -166,7 +168,7 @@ public class RewriteMarshalMethods : AndroidTask
 
 		ReportStatistics (targetArch, classifier);
 
-		// Step 3: Build output items for rewritten assemblies (DLLs and PDBs)
+		// Step 3: Build output items for rewritten assemblies
 		BuildRewrittenAssembliesOutput (rewrittenOriginalPaths);
 
 		// Step 4: Build NativeCodeGenStateObject and generate .ll
@@ -195,9 +197,15 @@ public class RewriteMarshalMethods : AndroidTask
 	}
 
 	/// <summary>
-	/// Build output items for assemblies (and PDBs) that were rewritten to the output directory.
+	/// Build output items for assemblies that were rewritten to the output directory.
 	/// Each output item has the rewritten path as its ItemSpec, all metadata copied from the
 	/// corresponding input assembly, and <c>OriginalItemSpec</c> set to the original path.
+	///
+	/// PDB files are NOT included as output items — they are written alongside the rewritten
+	/// DLLs and will be discovered by <c>ProcessAssemblies</c> in the outer build via its
+	/// filesystem fallback (<c>GetOrCreateSymbolItem</c>).  Reference PDBs are typically
+	/// not present in <c>@(ResolvedFileToPublish)</c>, so adding them here would introduce
+	/// items the SDK conflict resolution doesn't expect.
 	/// </summary>
 	void BuildRewrittenAssembliesOutput (HashSet<string> rewrittenOriginalPaths)
 	{
@@ -214,21 +222,10 @@ public class RewriteMarshalMethods : AndroidTask
 
 			string rewrittenPath = Path.Combine (RewrittenAssembliesOutputDirectory, Path.GetFileName (item.ItemSpec));
 
-			// Output item for the rewritten DLL
 			var dllItem = new TaskItem (rewrittenPath);
 			item.CopyMetadataTo (dllItem);
 			dllItem.SetMetadata ("OriginalItemSpec", item.ItemSpec);
 			rewrittenItems.Add (dllItem);
-
-			// Output item for the rewritten PDB, if one was produced
-			string rewrittenPdb = Path.ChangeExtension (rewrittenPath, ".pdb");
-			if (File.Exists (rewrittenPdb)) {
-				string originalPdb = Path.ChangeExtension (item.ItemSpec, ".pdb");
-				var pdbItem = new TaskItem (rewrittenPdb);
-				item.CopyMetadataTo (pdbItem);
-				pdbItem.SetMetadata ("OriginalItemSpec", originalPdb);
-				rewrittenItems.Add (pdbItem);
-			}
 		}
 
 		RewrittenAssemblies = rewrittenItems.ToArray ();

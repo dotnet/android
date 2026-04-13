@@ -268,9 +268,13 @@
 
     The .ll file is written to $(_OuterIntermediateOutputPath)android/ so the
     outer build's _CompileNativeAssemblySources can compile it.
+
+    Skipped for NativeAOT because it does not use .ll-based marshal methods
+    or native assembly sources (those targets are also NativeAOT-excluded).
   -->
   <Target Name="_RewriteMarshalMethodsInner"
-      AfterTargets="_PostTrimmingPipeline">
+      AfterTargets="_PostTrimmingPipeline"
+      Condition=" '$(_AndroidRuntime)' != 'NativeAOT' ">
     <ItemGroup>
       <_MarshalMethodsAssembly Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
     </ItemGroup>
@@ -285,9 +289,11 @@
         RuntimeIdentifier="$(RuntimeIdentifier)">
       <Output TaskParameter="RewrittenAssemblies" ItemName="_RewrittenMarshalMethodFile" />
     </RewriteMarshalMethods>
-    <!-- Replace original items in @(ResolvedFileToPublish) with the rewritten copies.
-         This covers both DLLs and their PDBs.  The updated items flow back to the outer
-         build via _ComputeFilesToPublishForRuntimeIdentifiers' Returns attribute. -->
+    <!-- Replace original DLL items in @(ResolvedFileToPublish) with the rewritten copies.
+         PDB files are written alongside the rewritten DLLs and are discovered by
+         ProcessAssemblies in the outer build via filesystem fallback.
+         The updated items flow back to the outer build via
+         _ComputeFilesToPublishForRuntimeIdentifiers' Returns attribute. -->
     <ItemGroup Condition=" '@(_RewrittenMarshalMethodFile)' != '' ">
       <ResolvedFileToPublish Remove="@(_RewrittenMarshalMethodFile->'%(OriginalItemSpec)')" />
       <ResolvedFileToPublish Include="@(_RewrittenMarshalMethodFile)" />
