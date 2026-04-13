@@ -17,7 +17,7 @@ namespace Xamarin.Android.Tasks;
 /// This opens each assembly once (via DirectoryAssemblyResolver with ReadWrite) and
 /// runs all registered steps on it, then writes modified assemblies in-place. Currently
 /// runs CheckForObsoletePreserveAttributeStep, StripEmbeddedLibrariesStep and
-/// (optionally) AddKeepAlivesStep.
+/// (optionally) AddKeepAlivesStep and FixLegacyResourceDesignerStep.
 ///
 /// Runs in the inner build after ILLink but before ReadyToRun/crossgen2 compilation,
 /// so that R2R images are generated from the already-modified assemblies.
