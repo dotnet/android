@@ -25,8 +25,8 @@ namespace Xamarin.Android.RuntimeTests
         protected NUnitInstrumentation(IntPtr handle, JniHandleOwnership transfer)
             : base(handle, transfer)
         {
-			if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
-				ExcludedCategories = ["Export", "SSL", "TrimmableIgnore"];
+            if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
+            	ExcludedCategories = ["SSL", "TrimmableIgnore"];
 
                 // Keep the temporary Java.Interop exclusions centralized here so
                 // we don't need a PR against the Java.Interop submodule.

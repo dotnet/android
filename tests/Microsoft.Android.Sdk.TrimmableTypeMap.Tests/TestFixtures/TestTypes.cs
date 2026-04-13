@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using System.Xml;
 using Android.App;
 using Android.Content;
 using Android.Runtime;
@@ -298,6 +300,13 @@ namespace MyApp
 		public void MyExportedMethod () { }
 	}
 
+	[Register ("my/app/StaticExportExample")]
+	public class StaticExportExample : Java.Lang.Object
+	{
+		[Java.Interop.Export ("computeLabel")]
+		public static string ComputeLabel (int value) => value.ToString ();
+	}
+
 	/// <summary>
 	/// Has [Export] methods with non-primitive Java-bound parameter types.
 	/// The JCW should resolve parameter types via [Register] instead of falling back to Object.
@@ -313,6 +322,32 @@ namespace MyApp
 
 		[Java.Interop.Export ("getViewName")]
 		public string GetViewName (Android.Views.View view) { return ""; }
+	}
+
+	[Register ("my/app/ExportMarshallingShapes")]
+	public class ExportMarshallingShapes : Java.Lang.Object
+	{
+		[Java.Interop.Export ("roundTripNames")]
+		public string[]? RoundTripNames (string[]? names) => names;
+
+		[Java.Interop.Export ("openStream")]
+		public int OpenStream ([Java.Interop.ExportParameter (Java.Interop.ExportParameterKind.InputStream)] Stream? stream)
+			=> stream is null ? 0 : 1;
+
+		[return: Java.Interop.ExportParameter (Java.Interop.ExportParameterKind.OutputStream)]
+		[Java.Interop.Export ("wrapStream")]
+		public Stream? WrapStream ([Java.Interop.ExportParameter (Java.Interop.ExportParameterKind.OutputStream)] Stream? stream)
+			=> stream;
+
+		[return: Java.Interop.ExportParameter (Java.Interop.ExportParameterKind.XmlPullParser)]
+		[Java.Interop.Export ("readXml")]
+		public XmlReader? ReadXml ([Java.Interop.ExportParameter (Java.Interop.ExportParameterKind.XmlPullParser)] XmlReader? reader)
+			=> reader;
+
+		[return: Java.Interop.ExportParameter (Java.Interop.ExportParameterKind.XmlResourceParser)]
+		[Java.Interop.Export ("readResourceXml")]
+		public XmlReader? ReadResourceXml ([Java.Interop.ExportParameter (Java.Interop.ExportParameterKind.XmlResourceParser)] XmlReader? reader)
+			=> reader;
 	}
 
 	/// <summary>

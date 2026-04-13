@@ -73,19 +73,32 @@ sealed class TypeMapAssemblyEmitter
 	TypeReferenceHandle _javaPeerProxyRef;
 	TypeReferenceHandle _javaPeerProxyNonGenericRef;
 	TypeReferenceHandle _iJavaPeerableRef;
+	TypeReferenceHandle _iJavaObjectRef;
 	TypeReferenceHandle _jniHandleOwnershipRef;
 	TypeReferenceHandle _jniObjectReferenceRef;
 	TypeReferenceHandle _jniObjectReferenceTypeRef;
 	TypeReferenceHandle _jniObjectReferenceOptionsRef;
 	TypeReferenceHandle _iAndroidCallableWrapperRef;
 	TypeReferenceHandle _jniEnvRef;
+	TypeReferenceHandle _javaLangObjectRef;
 	TypeReferenceHandle _systemTypeRef;
+	TypeReferenceHandle _systemArrayRef;
+	TypeReferenceHandle _systemStreamRef;
+	TypeReferenceHandle _systemXmlReaderRef;
 	TypeReferenceHandle _runtimeTypeHandleRef;
 	TypeReferenceHandle _jniTypeRef;
 	TypeReferenceHandle _notSupportedExceptionRef;
 	TypeReferenceHandle _runtimeHelpersRef;
 	TypeReferenceHandle _javaPeerAliasesAttrRef;
 	MemberReferenceHandle _javaPeerAliasesAttrCtorRef;
+	TypeReferenceHandle _inputStreamInvokerRef;
+	TypeReferenceHandle _outputStreamInvokerRef;
+	TypeReferenceHandle _inputStreamAdapterRef;
+	TypeReferenceHandle _outputStreamAdapterRef;
+	TypeReferenceHandle _xmlPullParserReaderRef;
+	TypeReferenceHandle _xmlResourceParserReaderRef;
+	TypeReferenceHandle _xmlReaderPullParserRef;
+	TypeReferenceHandle _xmlReaderResourceParserRef;
 
 	MemberReferenceHandle _getTypeFromHandleRef;
 	MemberReferenceHandle _getUninitializedObjectRef;
@@ -93,6 +106,21 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _jniObjectReferenceCtorRef;
 	MemberReferenceHandle _jniEnvDeleteRefRef;
 	MemberReferenceHandle _shouldSkipActivationRef;
+	MemberReferenceHandle _jniEnvGetStringRef;
+	MemberReferenceHandle _jniEnvGetArrayRef;
+	MemberReferenceHandle _jniEnvCopyArrayRef;
+	MemberReferenceHandle _jniEnvNewArrayRef;
+	MemberReferenceHandle _jniEnvNewStringRef;
+	MemberReferenceHandle _jniEnvToLocalJniHandleRef;
+	MemberReferenceHandle _javaLangObjectGetObjectRef;
+	MemberReferenceHandle _inputStreamInvokerFromJniHandleRef;
+	MemberReferenceHandle _outputStreamInvokerFromJniHandleRef;
+	MemberReferenceHandle _inputStreamAdapterToLocalJniHandleRef;
+	MemberReferenceHandle _outputStreamAdapterToLocalJniHandleRef;
+	MemberReferenceHandle _xmlPullParserReaderFromJniHandleRef;
+	MemberReferenceHandle _xmlResourceParserReaderFromJniHandleRef;
+	MemberReferenceHandle _xmlReaderPullParserToLocalJniHandleRef;
+	MemberReferenceHandle _xmlReaderResourceParserToLocalJniHandleRef;
 	MemberReferenceHandle _ucoAttrCtorRef;
 	BlobHandle _ucoAttrBlobHandle;
 	MemberReferenceHandle _typeMapAttrCtorRef2Arg;
@@ -201,10 +229,14 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaPeerProxy"));
 		_iJavaPeerableRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("IJavaPeerable"));
+		_iJavaObjectRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("IJavaObject"));
 		_jniHandleOwnershipRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
 			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("JniHandleOwnership"));
 		_jniEnvRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
 			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("JNIEnv"));
+		_javaLangObjectRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Java.Lang"), metadata.GetOrAddString ("Object"));
 		_jniObjectReferenceRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniObjectReference"));
 		_jniObjectReferenceTypeRef = metadata.AddTypeReference (_javaInteropRef,
@@ -215,6 +247,13 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("IAndroidCallableWrapper"));
 		_systemTypeRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Type"));
+		_systemArrayRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
+			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Array"));
+		_systemStreamRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
+			metadata.GetOrAddString ("System.IO"), metadata.GetOrAddString ("Stream"));
+		var systemXmlRef = _pe.FindOrAddAssemblyRef ("System.Xml.ReaderWriter");
+		_systemXmlReaderRef = metadata.AddTypeReference (systemXmlRef,
+			metadata.GetOrAddString ("System.Xml"), metadata.GetOrAddString ("XmlReader"));
 		_runtimeTypeHandleRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("RuntimeTypeHandle"));
 		_jniTypeRef = metadata.AddTypeReference (_javaInteropRef,
@@ -225,6 +264,22 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("System.Runtime.CompilerServices"), metadata.GetOrAddString ("RuntimeHelpers"));
 		_javaPeerAliasesAttrRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaPeerAliasesAttribute"));
+		_inputStreamInvokerRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("InputStreamInvoker"));
+		_outputStreamInvokerRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("OutputStreamInvoker"));
+		_inputStreamAdapterRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("InputStreamAdapter"));
+		_outputStreamAdapterRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("OutputStreamAdapter"));
+		_xmlPullParserReaderRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("XmlPullParserReader"));
+		_xmlResourceParserReaderRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("XmlResourceParserReader"));
+		_xmlReaderPullParserRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("XmlReaderPullParser"));
+		_xmlReaderResourceParserRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("XmlReaderResourceParser"));
 
 		_jniNativeMethodRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniNativeMethod"));
@@ -309,6 +364,111 @@ sealed class TypeMapAssemblyEmitter
 			sig => sig.MethodSignature ().Parameters (1,
 				rt => rt.Type ().Boolean (),
 				p => { p.AddParameter ().Type ().IntPtr (); }));
+
+		_jniEnvGetStringRef = _pe.AddMemberRef (_jniEnvRef, "GetString",
+			sig => sig.MethodSignature ().Parameters (2,
+				rt => rt.Type ().String (),
+				p => {
+					p.AddParameter ().Type ().IntPtr ();
+					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+				}));
+
+		_jniEnvGetArrayRef = _pe.AddMemberRef (_jniEnvRef, "GetArray",
+			sig => sig.MethodSignature ().Parameters (3,
+				rt => rt.Type ().Type (_systemArrayRef, false),
+				p => {
+					p.AddParameter ().Type ().IntPtr ();
+					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+					p.AddParameter ().Type ().Type (_systemTypeRef, false);
+				}));
+
+		_jniEnvCopyArrayRef = _pe.AddMemberRef (_jniEnvRef, "CopyArray",
+			sig => sig.MethodSignature ().Parameters (3,
+				rt => rt.Void (),
+				p => {
+					p.AddParameter ().Type ().Type (_systemArrayRef, false);
+					p.AddParameter ().Type ().Type (_systemTypeRef, false);
+					p.AddParameter ().Type ().IntPtr ();
+				}));
+
+		_jniEnvNewArrayRef = _pe.AddMemberRef (_jniEnvRef, "NewArray",
+			sig => sig.MethodSignature ().Parameters (2,
+				rt => rt.Type ().IntPtr (),
+				p => {
+					p.AddParameter ().Type ().Type (_systemArrayRef, false);
+					p.AddParameter ().Type ().Type (_systemTypeRef, false);
+				}));
+
+		_jniEnvNewStringRef = _pe.AddMemberRef (_jniEnvRef, "NewString",
+			sig => sig.MethodSignature ().Parameters (1,
+				rt => rt.Type ().IntPtr (),
+				p => p.AddParameter ().Type ().String ()));
+
+		_jniEnvToLocalJniHandleRef = _pe.AddMemberRef (_jniEnvRef, "ToLocalJniHandle",
+			sig => sig.MethodSignature ().Parameters (1,
+				rt => rt.Type ().IntPtr (),
+				p => p.AddParameter ().Type ().Type (_iJavaObjectRef, false)));
+
+		_javaLangObjectGetObjectRef = _pe.AddMemberRef (_javaLangObjectRef, "GetObject",
+			sig => sig.MethodSignature ().Parameters (3,
+				rt => rt.Type ().Type (_iJavaPeerableRef, false),
+				p => {
+					p.AddParameter ().Type ().IntPtr ();
+					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+					p.AddParameter ().Type ().Type (_systemTypeRef, false);
+				}));
+
+		_inputStreamInvokerFromJniHandleRef = _pe.AddMemberRef (_inputStreamInvokerRef, "FromJniHandle",
+			sig => sig.MethodSignature ().Parameters (2,
+				rt => rt.Type ().Type (_systemStreamRef, false),
+				p => {
+					p.AddParameter ().Type ().IntPtr ();
+					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+				}));
+
+		_outputStreamInvokerFromJniHandleRef = _pe.AddMemberRef (_outputStreamInvokerRef, "FromJniHandle",
+			sig => sig.MethodSignature ().Parameters (2,
+				rt => rt.Type ().Type (_systemStreamRef, false),
+				p => {
+					p.AddParameter ().Type ().IntPtr ();
+					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+				}));
+
+		_inputStreamAdapterToLocalJniHandleRef = _pe.AddMemberRef (_inputStreamAdapterRef, "ToLocalJniHandle",
+			sig => sig.MethodSignature ().Parameters (1,
+				rt => rt.Type ().IntPtr (),
+				p => p.AddParameter ().Type ().Type (_systemStreamRef, false)));
+
+		_outputStreamAdapterToLocalJniHandleRef = _pe.AddMemberRef (_outputStreamAdapterRef, "ToLocalJniHandle",
+			sig => sig.MethodSignature ().Parameters (1,
+				rt => rt.Type ().IntPtr (),
+				p => p.AddParameter ().Type ().Type (_systemStreamRef, false)));
+
+		_xmlPullParserReaderFromJniHandleRef = _pe.AddMemberRef (_xmlPullParserReaderRef, "FromJniHandle",
+			sig => sig.MethodSignature ().Parameters (2,
+				rt => rt.Type ().Type (_systemXmlReaderRef, false),
+				p => {
+					p.AddParameter ().Type ().IntPtr ();
+					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+				}));
+
+		_xmlResourceParserReaderFromJniHandleRef = _pe.AddMemberRef (_xmlResourceParserReaderRef, "FromJniHandle",
+			sig => sig.MethodSignature ().Parameters (2,
+				rt => rt.Type ().Type (_systemXmlReaderRef, false),
+				p => {
+					p.AddParameter ().Type ().IntPtr ();
+					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+				}));
+
+		_xmlReaderPullParserToLocalJniHandleRef = _pe.AddMemberRef (_xmlReaderPullParserRef, "ToLocalJniHandle",
+			sig => sig.MethodSignature ().Parameters (1,
+				rt => rt.Type ().IntPtr (),
+				p => p.AddParameter ().Type ().Type (_systemXmlReaderRef, false)));
+
+		_xmlReaderResourceParserToLocalJniHandleRef = _pe.AddMemberRef (_xmlReaderResourceParserRef, "ToLocalJniHandle",
+			sig => sig.MethodSignature ().Parameters (1,
+				rt => rt.Type ().IntPtr (),
+				p => p.AddParameter ().Type ().Type (_systemXmlReaderRef, false)));
 
 		// JniNativeMethod..ctor(byte*, byte*, IntPtr)
 		_jniNativeMethodCtorRef = _pe.AddMemberRef (_jniNativeMethodRef, ".ctor",
@@ -829,6 +989,24 @@ sealed class TypeMapAssemblyEmitter
 			encodeLocals);
 	}
 
+	sealed class DirectDispatchLocals
+	{
+		public static readonly DirectDispatchLocals Empty = new (new Dictionary<int, int> (), -1, null);
+
+		public DirectDispatchLocals (Dictionary<int, int> arrayParameterLocals, int returnLocalIndex, Action<BlobBuilder>? encodeLocals)
+		{
+			ArrayParameterLocals = arrayParameterLocals;
+			ReturnLocalIndex = returnLocalIndex;
+			EncodeLocals = encodeLocals;
+		}
+
+		public Dictionary<int, int> ArrayParameterLocals { get; }
+		public int ReturnLocalIndex { get; }
+		public Action<BlobBuilder>? EncodeLocals { get; }
+
+		public bool HasArrayParameters => ArrayParameterLocals.Count > 0;
+	}
+
 	MemberReferenceHandle AddActivationCtorRef (EntityHandle declaringTypeRef)
 	{
 		return _pe.AddMemberRef (declaringTypeRef, ".ctor",
@@ -846,6 +1024,9 @@ sealed class TypeMapAssemblyEmitter
 		var returnKind = JniSignatureHelper.ParseReturnType (uco.JniSignature);
 		int paramCount = 2 + jniParams.Count;
 		bool isVoid = returnKind == JniParamKind.Void;
+		var dispatchLocals = uco.UseDirectManagedDispatch
+			? CreateDirectDispatchLocals (uco, isVoid)
+			: DirectDispatchLocals.Empty;
 
 		// UCO wrapper signature: uses JNI ABI types (byte for boolean)
 		Action<BlobEncoder> encodeSig = sig => sig.MethodSignature ().Parameters (paramCount,
@@ -868,20 +1049,426 @@ sealed class TypeMapAssemblyEmitter
 			});
 
 		var callbackTypeHandle = _pe.ResolveTypeRef (uco.CallbackType);
-		var callbackRef = _pe.AddMemberRef (callbackTypeHandle, uco.CallbackMethodName, encodeCallbackSig);
+		var callbackRef = uco.UseDirectManagedDispatch
+			? AddDirectManagedDispatchRef (uco, callbackTypeHandle)
+			: _pe.AddMemberRef (callbackTypeHandle, uco.CallbackMethodName, encodeCallbackSig);
 
 		var handle = _pe.EmitBody (uco.WrapperName,
 			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 			encodeSig,
 			encoder => {
-				for (int p = 0; p < paramCount; p++)
-					encoder.LoadArgument (p);
-				encoder.Call (callbackRef);
+				if (!uco.UseDirectManagedDispatch) {
+					for (int p = 0; p < paramCount; p++)
+						encoder.LoadArgument (p);
+					encoder.Call (callbackRef);
+				} else {
+					EmitDirectManagedDispatch (encoder, uco, callbackTypeHandle, callbackRef, jniParams, returnKind, dispatchLocals);
+				}
 				encoder.OpCode (ILOpCode.Ret);
-			});
+			},
+			dispatchLocals.EncodeLocals,
+			useBranches: uco.UseDirectManagedDispatch);
 
 		AddUnmanagedCallersOnlyAttribute (handle);
 		return handle;
+	}
+
+	MethodDefinitionHandle EmitUcoConstructor (UcoConstructorData uco, JavaPeerProxyData proxy)
+
+	DirectDispatchLocals CreateDirectDispatchLocals (UcoMethodData uco, bool isVoid)
+	{
+		var localTypes = new List<TypeRefData> ();
+		var arrayParameterLocals = new Dictionary<int, int> ();
+
+		for (int i = 0; i < uco.ManagedParameterTypeNames.Count; i++) {
+			if (!IsManagedArrayType (uco.ManagedParameterTypeNames [i])) {
+				continue;
+			}
+
+			arrayParameterLocals.Add (i, localTypes.Count);
+			localTypes.Add (GetManagedParameterType (uco, i));
+		}
+
+		int returnLocalIndex = -1;
+		if (arrayParameterLocals.Count > 0 && !isVoid) {
+			returnLocalIndex = localTypes.Count;
+			localTypes.Add (GetManagedReturnType (uco));
+		}
+
+		return new DirectDispatchLocals (
+			arrayParameterLocals,
+			returnLocalIndex,
+			localTypes.Count > 0 ? blob => EncodeManagedLocals (blob, localTypes) : null);
+	}
+
+	void EncodeManagedLocals (BlobBuilder blob, IReadOnlyList<TypeRefData> localTypes)
+	{
+		blob.WriteByte (0x07); // IMAGE_CEE_CS_CALLCONV_LOCAL_SIG
+		blob.WriteCompressedInteger (localTypes.Count);
+		foreach (var localType in localTypes) {
+			EncodeManagedType (new SignatureTypeEncoder (blob), localType);
+		}
+	}
+
+	static bool IsManagedArrayType (string managedTypeName)
+		=> managedTypeName.EndsWith ("[]", StringComparison.Ordinal);
+
+	static TypeRefData GetManagedParameterType (UcoMethodData uco, int index)
+	{
+		if (index < uco.ManagedParameterTypes.Count) {
+			return uco.ManagedParameterTypes [index];
+		}
+
+		return new TypeRefData {
+			ManagedTypeName = uco.ManagedParameterTypeNames [index],
+			AssemblyName = uco.CallbackType.AssemblyName,
+		};
+	}
+
+	static TypeRefData GetManagedReturnType (UcoMethodData uco)
+	{
+		if (uco.ManagedReturnType.ManagedTypeName.Length > 0) {
+			return uco.ManagedReturnType;
+		}
+
+		return new TypeRefData {
+			ManagedTypeName = uco.ManagedReturnTypeName,
+			AssemblyName = uco.CallbackType.AssemblyName,
+		};
+	}
+
+	MemberReferenceHandle AddDirectManagedDispatchRef (UcoMethodData uco, EntityHandle callbackTypeHandle)
+	{
+		return _pe.AddMemberRef (callbackTypeHandle, uco.ManagedMethodName,
+			sig => sig.MethodSignature (isInstanceMethod: !uco.IsStatic).Parameters (uco.ManagedParameterTypeNames.Count,
+				rt => {
+					if (uco.ManagedReturnTypeName == "System.Void") {
+						rt.Void ();
+					} else {
+						EncodeManagedType (rt.Type (), GetManagedReturnType (uco));
+					}
+				},
+				p => {
+					for (int i = 0; i < uco.ManagedParameterTypeNames.Count; i++) {
+						EncodeManagedType (p.AddParameter ().Type (), GetManagedParameterType (uco, i));
+					}
+				}));
+	}
+
+	void EmitDirectManagedDispatch (InstructionEncoder encoder, UcoMethodData uco, EntityHandle callbackTypeHandle,
+		MemberReferenceHandle callbackRef, List<JniParamKind> jniParams, JniParamKind returnKind,
+		DirectDispatchLocals dispatchLocals)
+	{
+		if (!uco.IsStatic) {
+			encoder.LoadArgument (1);
+			encoder.LoadConstantI4 (0); // JniHandleOwnership.DoNotTransfer
+			EmitManagedTypeToken (encoder, callbackTypeHandle);
+			encoder.Call (_javaLangObjectGetObjectRef);
+			encoder.OpCode (ILOpCode.Castclass);
+			encoder.Token (callbackTypeHandle);
+		}
+
+		for (int i = 0; i < uco.ManagedParameterTypeNames.Count; i++) {
+			LoadManagedArgument (encoder,
+				GetManagedParameterType (uco, i),
+				GetManagedParameterExportKind (uco, i),
+				jniParams [i],
+				2 + i);
+
+			if (dispatchLocals.ArrayParameterLocals.TryGetValue (i, out var localIndex)) {
+				encoder.StoreLocal (localIndex);
+				encoder.LoadLocal (localIndex);
+			}
+		}
+
+		if (uco.IsStatic) {
+			encoder.Call (callbackRef);
+		} else {
+			encoder.OpCode (ILOpCode.Callvirt);
+			encoder.Token (callbackRef);
+		}
+
+		EmitManagedArrayCopyBacks (encoder, uco, returnKind, dispatchLocals);
+
+		ConvertManagedReturnValue (encoder, GetManagedReturnType (uco), uco.ManagedReturnExportKind, returnKind);
+	}
+
+	static ExportParameterKindInfo GetManagedParameterExportKind (UcoMethodData uco, int index)
+		=> index < uco.ManagedParameterExportKinds.Count ? uco.ManagedParameterExportKinds [index] : ExportParameterKindInfo.Unspecified;
+
+	void EmitManagedArrayCopyBacks (InstructionEncoder encoder, UcoMethodData uco, JniParamKind returnKind, DirectDispatchLocals dispatchLocals)
+	{
+		if (!dispatchLocals.HasArrayParameters) {
+			return;
+		}
+
+		if (returnKind != JniParamKind.Void) {
+			encoder.StoreLocal (dispatchLocals.ReturnLocalIndex);
+		}
+
+		foreach (var kvp in dispatchLocals.ArrayParameterLocals) {
+			var skipCopy = encoder.DefineLabel ();
+			encoder.LoadLocal (kvp.Value);
+			encoder.Branch (ILOpCode.Brfalse_s, skipCopy);
+			encoder.LoadLocal (kvp.Value);
+			EmitManagedArrayElementTypeToken (encoder, GetManagedParameterType (uco, kvp.Key));
+			encoder.LoadArgument (2 + kvp.Key);
+			encoder.Call (_jniEnvCopyArrayRef);
+			encoder.MarkLabel (skipCopy);
+		}
+
+		if (returnKind != JniParamKind.Void) {
+			encoder.LoadLocal (dispatchLocals.ReturnLocalIndex);
+		}
+	}
+
+	void LoadManagedArgument (InstructionEncoder encoder, TypeRefData managedType, ExportParameterKindInfo exportKind, JniParamKind jniKind, int argumentIndex)
+	{
+		string managedTypeName = managedType.ManagedTypeName;
+
+		ThrowIfUnsupportedManagedType (managedTypeName);
+
+		if (TryEmitExportParameterArgument (encoder, exportKind, argumentIndex)) {
+			return;
+		}
+
+		if (TryEmitPrimitiveManagedArgument (encoder, managedTypeName, argumentIndex)) {
+			return;
+		}
+
+		if (jniKind != JniParamKind.Object) {
+			encoder.LoadArgument (argumentIndex);
+			return;
+		}
+
+		if (IsManagedArrayType (managedTypeName)) {
+			encoder.LoadArgument (argumentIndex);
+			encoder.LoadConstantI4 (0); // JniHandleOwnership.DoNotTransfer
+			EmitManagedArrayElementTypeToken (encoder, managedType);
+			encoder.Call (_jniEnvGetArrayRef);
+			encoder.OpCode (ILOpCode.Castclass);
+			encoder.Token (ResolveManagedTypeHandle (managedType));
+			return;
+		}
+
+		EmitManagedObjectArgument (encoder, managedType, argumentIndex);
+	}
+
+	void ConvertManagedReturnValue (InstructionEncoder encoder, TypeRefData managedReturnType, ExportParameterKindInfo exportKind, JniParamKind returnKind)
+	{
+		string managedReturnTypeName = managedReturnType.ManagedTypeName;
+
+		if (returnKind == JniParamKind.Void) {
+			return;
+		}
+
+		if (returnKind != JniParamKind.Object) {
+			if (managedReturnTypeName == "System.Boolean") {
+				encoder.OpCode (ILOpCode.Conv_u1);
+			}
+			return;
+		}
+
+		if (managedReturnTypeName == "System.String") {
+			encoder.Call (_jniEnvNewStringRef);
+			return;
+		}
+
+		if (managedReturnTypeName == "System.Void") {
+			return;
+		}
+
+		if (IsManagedArrayType (managedReturnTypeName)) {
+			EmitManagedArrayReturn (encoder, managedReturnType);
+			return;
+		}
+
+		if (TryEmitExportParameterReturn (encoder, exportKind)) {
+			return;
+		}
+
+		encoder.OpCode (ILOpCode.Castclass);
+		encoder.Token (_iJavaObjectRef);
+		encoder.Call (_jniEnvToLocalJniHandleRef);
+	}
+
+	void ThrowIfUnsupportedManagedType (string managedTypeName)
+	{
+		if (managedTypeName.EndsWith ("&", StringComparison.Ordinal) || managedTypeName.EndsWith ("*", StringComparison.Ordinal)) {
+			throw new NotSupportedException ($"[Export] methods with by-ref or pointer signature types are not supported: '{managedTypeName}'.");
+		}
+		if (managedTypeName.IndexOf ('<') >= 0) {
+			throw new NotSupportedException ($"[Export] methods with generic signature types are not supported: '{managedTypeName}'.");
+		}
+	}
+
+	bool TryEmitExportParameterArgument (InstructionEncoder encoder, ExportParameterKindInfo exportKind, int argumentIndex)
+	{
+		encoder.LoadArgument (argumentIndex);
+		encoder.LoadConstantI4 (0);
+
+		switch (exportKind) {
+			case ExportParameterKindInfo.InputStream:
+				encoder.Call (_inputStreamInvokerFromJniHandleRef);
+				return true;
+			case ExportParameterKindInfo.OutputStream:
+				encoder.Call (_outputStreamInvokerFromJniHandleRef);
+				return true;
+			case ExportParameterKindInfo.XmlPullParser:
+				encoder.Call (_xmlPullParserReaderFromJniHandleRef);
+				return true;
+			case ExportParameterKindInfo.XmlResourceParser:
+				encoder.Call (_xmlResourceParserReaderFromJniHandleRef);
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	bool TryEmitPrimitiveManagedArgument (InstructionEncoder encoder, string managedTypeName, int argumentIndex)
+	{
+		switch (managedTypeName) {
+			case "System.Boolean":
+				encoder.LoadArgument (argumentIndex);
+				encoder.LoadConstantI4 (0);
+				encoder.OpCode (ILOpCode.Cgt_un);
+				return true;
+			case "System.Byte":
+			case "System.SByte":
+			case "System.Char":
+			case "System.Int16":
+			case "System.UInt16":
+			case "System.Int32":
+			case "System.UInt32":
+			case "System.Int64":
+			case "System.UInt64":
+			case "System.Single":
+			case "System.Double":
+			case "System.IntPtr":
+				encoder.LoadArgument (argumentIndex);
+				return true;
+			case "System.String":
+				encoder.LoadArgument (argumentIndex);
+				encoder.LoadConstantI4 (0);
+				encoder.Call (_jniEnvGetStringRef);
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	void EmitManagedObjectArgument (InstructionEncoder encoder, TypeRefData managedType, int argumentIndex)
+	{
+		encoder.LoadArgument (argumentIndex);
+		encoder.LoadConstantI4 (0);
+		if (managedType.ManagedTypeName == "System.Object") {
+			encoder.OpCode (ILOpCode.Ldnull);
+		} else {
+			EmitManagedTypeToken (encoder, ResolveManagedTypeHandle (managedType));
+		}
+		encoder.Call (_javaLangObjectGetObjectRef);
+
+		if (managedType.ManagedTypeName != "System.Object") {
+			var managedTypeHandle = ResolveManagedTypeHandle (managedType);
+			encoder.OpCode (ILOpCode.Castclass);
+			encoder.Token (managedTypeHandle);
+		}
+	}
+
+	void EmitManagedArrayReturn (InstructionEncoder encoder, TypeRefData managedReturnType)
+	{
+		var nonNullArray = encoder.DefineLabel ();
+		var done = encoder.DefineLabel ();
+
+		encoder.OpCode (ILOpCode.Dup);
+		encoder.Branch (ILOpCode.Brtrue_s, nonNullArray);
+		encoder.OpCode (ILOpCode.Pop);
+		encoder.LoadConstantI4 (0);
+		encoder.Branch (ILOpCode.Br_s, done);
+		encoder.MarkLabel (nonNullArray);
+		EmitManagedArrayElementTypeToken (encoder, managedReturnType);
+		encoder.Call (_jniEnvNewArrayRef);
+		encoder.MarkLabel (done);
+	}
+
+	bool TryEmitExportParameterReturn (InstructionEncoder encoder, ExportParameterKindInfo exportKind)
+	{
+		switch (exportKind) {
+			case ExportParameterKindInfo.InputStream:
+				encoder.Call (_inputStreamAdapterToLocalJniHandleRef);
+				return true;
+			case ExportParameterKindInfo.OutputStream:
+				encoder.Call (_outputStreamAdapterToLocalJniHandleRef);
+				return true;
+			case ExportParameterKindInfo.XmlPullParser:
+				encoder.Call (_xmlReaderPullParserToLocalJniHandleRef);
+				return true;
+			case ExportParameterKindInfo.XmlResourceParser:
+				encoder.Call (_xmlReaderResourceParserToLocalJniHandleRef);
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	void EmitManagedTypeToken (InstructionEncoder encoder, EntityHandle typeHandle)
+	{
+		encoder.OpCode (ILOpCode.Ldtoken);
+		encoder.Token (typeHandle);
+		encoder.Call (_getTypeFromHandleRef);
+	}
+
+	void EmitManagedArrayElementTypeToken (InstructionEncoder encoder, TypeRefData arrayType)
+	{
+		var elementType = arrayType with {
+			ManagedTypeName = arrayType.ManagedTypeName.Substring (0, arrayType.ManagedTypeName.Length - 2),
+		};
+		EmitManagedTypeToken (encoder, ResolveManagedTypeHandle (elementType));
+	}
+
+	EntityHandle ResolveManagedTypeHandle (TypeRefData managedType)
+	{
+		if (IsManagedArrayType (managedType.ManagedTypeName)) {
+			var blob = new BlobBuilder ();
+			EncodeManagedType (new SignatureTypeEncoder (blob), managedType);
+			return _pe.Metadata.AddTypeSpecification (_pe.Metadata.GetOrAddBlob (blob));
+		}
+
+		return _pe.ResolveTypeRef (managedType);
+	}
+
+	void EncodeManagedType (SignatureTypeEncoder encoder, TypeRefData managedType)
+	{
+		string managedTypeName = managedType.ManagedTypeName;
+
+		ThrowIfUnsupportedManagedType (managedTypeName);
+		if (managedTypeName.EndsWith ("[]", StringComparison.Ordinal)) {
+			EncodeManagedType (encoder.SZArray (), managedType with {
+				ManagedTypeName = managedTypeName.Substring (0, managedTypeName.Length - 2),
+			});
+			return;
+		}
+
+		switch (managedTypeName) {
+			case "System.Boolean": encoder.Boolean (); return;
+			case "System.Byte": encoder.Byte (); return;
+			case "System.SByte": encoder.SByte (); return;
+			case "System.Char": encoder.Char (); return;
+			case "System.Int16": encoder.Int16 (); return;
+			case "System.UInt16": encoder.UInt16 (); return;
+			case "System.Int32": encoder.Int32 (); return;
+			case "System.UInt32": encoder.UInt32 (); return;
+			case "System.Int64": encoder.Int64 (); return;
+			case "System.UInt64": encoder.UInt64 (); return;
+			case "System.Single": encoder.Single (); return;
+			case "System.Double": encoder.Double (); return;
+			case "System.String": encoder.String (); return;
+			case "System.Object": encoder.Object (); return;
+			case "System.IntPtr": encoder.IntPtr (); return;
+		}
+
+		var typeHandle = ResolveManagedTypeHandle (managedType);
+		encoder.Type (typeHandle, isValueType: false);
 	}
 
 	MethodDefinitionHandle EmitUcoConstructor (UcoConstructorData uco, JavaPeerProxyData proxy)

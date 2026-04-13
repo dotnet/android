@@ -149,7 +149,7 @@ sealed class JavaPeerProxyData
 /// <summary>
 /// A cross-assembly type reference (assembly name + full managed type name).
 /// </summary>
-sealed record TypeRefData
+public sealed record TypeRefData
 {
 	/// <summary>
 	/// Full managed type name, e.g., "Android.App.Activity" or "MyApp.Outer+Inner".
@@ -164,7 +164,8 @@ sealed record TypeRefData
 
 /// <summary>
 /// An [UnmanagedCallersOnly] static wrapper for a marshal method.
-/// Body: load all args → call n_* callback → ret.
+/// Body: either forward to an existing n_* callback or dispatch directly to the
+/// managed export target when the trimmable path can avoid dynamic callback generation.
 /// </summary>
 sealed record UcoMethodData
 {
@@ -174,7 +175,7 @@ sealed record UcoMethodData
 	public required string WrapperName { get; init; }
 
 	/// <summary>
-	/// Name of the n_* callback to call, e.g., "n_OnCreate".
+	/// Java/JNI-visible native method name, e.g., "n_OnCreate".
 	/// </summary>
 	public required string CallbackMethodName { get; init; }
 
@@ -187,6 +188,55 @@ sealed record UcoMethodData
 	/// JNI method signature, e.g., "(Landroid/os/Bundle;)V". Used to determine CLR parameter types.
 	/// </summary>
 	public required string JniSignature { get; init; }
+
+	/// <summary>
+	/// Managed method name on <see cref="CallbackType"/> for static [Export] dispatch.
+	/// </summary>
+	public required string ManagedMethodName { get; init; }
+
+	/// <summary>
+	/// Managed parameter type names for the target method.
+	/// </summary>
+	public IReadOnlyList<string> ManagedParameterTypeNames { get; init; } = [];
+
+	/// <summary>
+	/// Managed parameter types for the target method, including the defining assembly.
+	/// </summary>
+	public IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = [];
+
+	/// <summary>
+	/// Per-parameter [ExportParameter] kinds for legacy callback marshalling.
+	/// </summary>
+	public IReadOnlyList<ExportParameterKindInfo> ManagedParameterExportKinds { get; init; } = [];
+
+	/// <summary>
+	/// Managed return type name for the target method.
+	/// </summary>
+	public string ManagedReturnTypeName { get; init; } = "System.Void";
+
+	/// <summary>
+	/// Managed return type for the target method, including the defining assembly.
+	/// </summary>
+	public TypeRefData ManagedReturnType { get; init; } = new () {
+		ManagedTypeName = "System.Void",
+		AssemblyName = "System.Runtime",
+	};
+
+	/// <summary>
+	/// [ExportParameter] kind applied to the return value, if any.
+	/// </summary>
+	public ExportParameterKindInfo ManagedReturnExportKind { get; init; }
+
+	/// <summary>
+	/// Whether the managed target method is static.
+	/// </summary>
+	public bool IsStatic { get; init; }
+
+	/// <summary>
+	/// True when the wrapper should dispatch directly to the managed method instead of
+	/// forwarding to a pre-existing n_* callback.
+	/// </summary>
+	public bool UseDirectManagedDispatch { get; init; }
 }
 
 /// <summary>

@@ -492,7 +492,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			"JI-style activation must emit a DeleteRef member reference for JNI handle cleanup");
 
 		// Verify it's on the JNIEnv type
-		var parentTypeRef = reader.GetTypeReference ((TypeReferenceHandle)deleteRefRef.Parent);
+		var parentTypeRef = reader.GetTypeReference ((TypeReferenceHandle) deleteRefRef.Parent);
 		Assert.Equal ("JNIEnv", reader.GetString (parentTypeRef.Name));
 		Assert.Equal ("Android.Runtime", reader.GetString (parentTypeRef.Namespace));
 	}
@@ -823,6 +823,168 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			.ToList ();
 
 		Assert.Contains ("<PrivateImplementationDetails>", typeDefNames);
+	}
+
+	[Fact]
+	public void Generate_ExportProxy_CallsManagedMethodDirectly ()
+	{
+		var peers = ScanFixtures ();
+		var exportPeer = peers.First (p => p.JavaName == "my/app/ExportExample");
+
+		using var stream = GenerateAssembly (new [] { exportPeer }, "ExportDispatch");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var memberNames = GetMemberRefNames (reader);
+		Assert.Contains ("MyExportedMethod", memberNames);
+		Assert.DoesNotContain ("n_MyExportedMethod", memberNames);
+	}
+
+	[Fact]
+	public void Generate_StaticExportProxy_CallsManagedMethodDirectly ()
+	{
+		var peers = ScanFixtures ();
+		var exportPeer = peers.First (p => p.JavaName == "my/app/StaticExportExample");
+
+		using var stream = GenerateAssembly (new [] { exportPeer }, "StaticExportDispatch");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var memberNames = GetMemberRefNames (reader);
+		Assert.Contains ("ComputeLabel", memberNames);
+		Assert.DoesNotContain ("n_ComputeLabel", memberNames);
+	}
+
+	[Fact]
+	public void Generate_ExportProxy_UsesStaticMarshallingHelpers ()
+	{
+		var peers = ScanFixtures ();
+		var exportPeer = peers.First (p => p.JavaName == "my/app/ExportWithJavaBoundParams");
+
+		using var stream = GenerateAssembly (new [] { exportPeer }, "ExportMarshalling");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var memberNames = GetMemberRefNames (reader);
+		Assert.Contains ("GetObject", memberNames);
+		Assert.Contains ("NewString", memberNames);
+		Assert.Contains ("HandleClick", memberNames);
+		Assert.Contains ("ProcessView", memberNames);
+		Assert.Contains ("GetViewName", memberNames);
+	}
+
+	[Fact]
+	public void Generate_ExportFieldProxy_UsesToLocalJniHandleForObjectReturn ()
+	{
+		var peers = ScanFixtures ();
+		var exportFieldPeer = peers.First (p => p.JavaName == "my/app/ExportFieldExample");
+
+		using var stream = GenerateAssembly (new [] { exportFieldPeer }, "ExportFieldDispatch");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var memberNames = GetMemberRefNames (reader);
+		Assert.Contains ("ToLocalJniHandle", memberNames);
+		Assert.Contains ("GetInstance", memberNames);
+	}
+
+	[Fact]
+	public void Generate_ExportProxy_SupportsArrayAndLegacyMarshallerHelpers ()
+	{
+		var peers = ScanFixtures ();
+		var exportPeer = peers.First (p => p.JavaName == "my/app/ExportMarshallingShapes");
+
+		using var stream = GenerateAssembly (new [] { exportPeer }, "ExportLegacyMarshalling");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var memberNames = GetMemberRefNames (reader);
+		Assert.Contains ("FromJniHandle", memberNames);
+		Assert.Contains ("CopyArray", memberNames);
+		Assert.Contains ("NewArray", memberNames);
+		Assert.Contains ("WrapStream", memberNames);
+		Assert.Contains ("ReadXml", memberNames);
+		Assert.Contains ("ReadResourceXml", memberNames);
+
+		var typeNames = GetTypeRefNames (reader);
+		Assert.Contains ("XmlResourceParserReader", typeNames);
+		Assert.Contains ("XmlReaderResourceParser", typeNames);
+	}
+
+	[Fact]
+	public void Generate_ExportProxy_UsesExactCrossAssemblyTypeReferences ()
+	{
+		var peer = MakePeerWithActivation ("my/app/CrossAssemblyExport", "MyApp.CrossAssemblyExport", "App") with {
+			DoNotGenerateAcw = false,
+			MarshalMethods = new List<MarshalMethodInfo> {
+				new () {
+					JniName = "convert",
+					NativeCallbackName = "n_convert",
+					JniSignature = "(Lthird/party/Widget;)Lthird/party/Result;",
+					ManagedMethodName = "Convert",
+					ManagedParameterTypeNames = new [] { "ThirdParty.Widget" },
+					ManagedParameterTypes = new [] {
+						new TypeRefData { ManagedTypeName = "ThirdParty.Widget", AssemblyName = "ThirdParty.Library" },
+					},
+					ManagedReturnTypeName = "ThirdParty.Result",
+					ManagedReturnType = new TypeRefData { ManagedTypeName = "ThirdParty.Result", AssemblyName = "ThirdParty.Library" },
+					IsExport = true,
+				},
+			},
+		};
+
+		using var stream = GenerateAssembly (new [] { peer }, "CrossAssemblyExport");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var thirdPartyAsmRef = reader.AssemblyReferences
+			.First (h => reader.GetString (reader.GetAssemblyReference (h).Name) == "ThirdParty.Library");
+
+		var typeRefs = reader.TypeReferences
+			.Select (h => (Handle: h, Ref: reader.GetTypeReference (h)))
+			.ToList ();
+
+		var widgetRef = typeRefs.First (t => reader.GetString (t.Ref.Name) == "Widget");
+		var resultRef = typeRefs.First (t => reader.GetString (t.Ref.Name) == "Result");
+
+		Assert.Equal (thirdPartyAsmRef, widgetRef.Ref.ResolutionScope);
+		Assert.Equal (thirdPartyAsmRef, resultRef.Ref.ResolutionScope);
+	}
+
+	[Theory]
+	[InlineData ("System.Int32&", "System.Void", "(I)V", "by-ref or pointer")]
+	[InlineData ("System.Int32*", "System.Void", "(I)V", "by-ref or pointer")]
+	[InlineData ("System.Int32", "System.Collections.Generic.List<System.String>", "(I)Ljava/lang/Object;", "generic")]
+	public void Generate_ExportProxy_UnsupportedManagedShapesThrow (string parameterType, string returnType, string jniSignature, string expectedMessage)
+	{
+		var peer = MakePeerWithActivation ("my/app/UnsupportedExport", "MyApp.UnsupportedExport", "App") with {
+			DoNotGenerateAcw = false,
+			MarshalMethods = new List<MarshalMethodInfo> {
+				new () {
+					JniName = "badExport",
+					NativeCallbackName = "n_badExport",
+					JniSignature = jniSignature,
+					ManagedMethodName = "BadExport",
+					ManagedParameterTypeNames = new [] { parameterType },
+					ManagedParameterTypes = new [] {
+						new TypeRefData { ManagedTypeName = parameterType, AssemblyName = "System.Runtime" },
+					},
+					ManagedReturnTypeName = returnType,
+					ManagedReturnType = new TypeRefData {
+						ManagedTypeName = returnType,
+						AssemblyName = returnType.StartsWith ("System.Collections.Generic.", StringComparison.Ordinal)
+							? "System.Collections"
+							: "System.Runtime",
+					},
+					IsExport = true,
+				},
+			},
+		};
+
+		var ex = Assert.Throws<NotSupportedException> (() => {
+			using var stream = GenerateAssembly (new [] { peer }, "UnsupportedExport");
+		});
+		Assert.Contains (expectedMessage, ex.Message);
 	}
 
 	[Fact]

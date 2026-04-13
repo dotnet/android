@@ -138,6 +138,15 @@ public sealed record JavaPeerInfo
 	public ComponentInfo? ComponentAttribute { get; init; }
 }
 
+public enum ExportParameterKindInfo
+{
+	Unspecified = 0,
+	InputStream = 1,
+	OutputStream = 2,
+	XmlPullParser = 3,
+	XmlResourceParser = 4,
+}
+
 /// <summary>
 /// Describes a marshal method (a method with [Register] or [Export]) on a Java peer type.
 /// Contains all data needed to generate a UCO wrapper, a JCW native declaration,
@@ -183,9 +192,50 @@ public sealed record MarshalMethodInfo
 
 	/// <summary>
 	/// The native callback method name, e.g., "n_onCreate".
-	/// This is the actual method the UCO wrapper delegates to.
+	/// This is the Java/JNI-visible native method name that the generated JCW calls.
 	/// </summary>
 	public required string NativeCallbackName { get; init; }
+
+	/// <summary>
+	/// Managed parameter type names decoded from the method signature.
+	/// Used for static [Export] callback generation in the trimmable path.
+	/// </summary>
+	public IReadOnlyList<string> ManagedParameterTypeNames { get; init; } = [];
+
+	/// <summary>
+	/// Managed parameter types decoded from the method signature, including the
+	/// defining assembly for each type.
+	/// </summary>
+	public IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = [];
+
+	/// <summary>
+	/// Per-parameter [ExportParameter] kinds for legacy callback marshalling.
+	/// </summary>
+	public IReadOnlyList<ExportParameterKindInfo> ManagedParameterExportKinds { get; init; } = [];
+
+	/// <summary>
+	/// Managed return type name decoded from the method signature.
+	/// Used for static [Export] callback generation in the trimmable path.
+	/// </summary>
+	public string ManagedReturnTypeName { get; init; } = "System.Void";
+
+	/// <summary>
+	/// Managed return type, including the defining assembly.
+	/// </summary>
+	public TypeRefData ManagedReturnType { get; init; } = new () {
+		ManagedTypeName = "System.Void",
+		AssemblyName = "System.Runtime",
+	};
+
+	/// <summary>
+	/// [ExportParameter] kind applied to the return value, if any.
+	/// </summary>
+	public ExportParameterKindInfo ManagedReturnExportKind { get; init; }
+
+	/// <summary>
+	/// Whether the managed target method is static.
+	/// </summary>
+	public bool IsStatic { get; init; }
 
 	/// <summary>
 	/// True if this is a constructor registration.

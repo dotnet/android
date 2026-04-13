@@ -1092,6 +1092,50 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
+		public void Fixture_ExportExample_UsesDirectManagedDispatch ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/ExportExample");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault ();
+			Assert.NotNull (proxy);
+			var exportUco = Assert.Single (proxy.UcoMethods);
+			Assert.True (exportUco.UseDirectManagedDispatch);
+			Assert.Equal ("MyExportedMethod", exportUco.ManagedMethodName);
+		}
+
+		[Fact]
+		public void Fixture_StaticExportExample_UsesStaticDirectManagedDispatch ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/StaticExportExample");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault ();
+			Assert.NotNull (proxy);
+			var exportUco = Assert.Single (proxy.UcoMethods);
+			Assert.True (exportUco.UseDirectManagedDispatch);
+			Assert.True (exportUco.IsStatic);
+			Assert.Equal ("ComputeLabel", exportUco.ManagedMethodName);
+		}
+
+		[Fact]
+		public void Fixture_ExportMarshallingShapes_PropagatesExactManagedTypeMetadata ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/ExportMarshallingShapes");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault ();
+			Assert.NotNull (proxy);
+
+			var xmlUco = proxy.UcoMethods.First (u => u.ManagedMethodName == "ReadXml");
+			Assert.Equal ("System.Xml.XmlReader", xmlUco.ManagedParameterTypes [0].ManagedTypeName);
+			Assert.Equal ("System.Xml.ReaderWriter", xmlUco.ManagedParameterTypes [0].AssemblyName);
+			Assert.Equal (ExportParameterKindInfo.XmlPullParser, xmlUco.ManagedParameterExportKinds [0]);
+			Assert.Equal (ExportParameterKindInfo.XmlPullParser, xmlUco.ManagedReturnExportKind);
+
+			var resourceXmlUco = proxy.UcoMethods.First (u => u.ManagedMethodName == "ReadResourceXml");
+			Assert.Equal (ExportParameterKindInfo.XmlResourceParser, resourceXmlUco.ManagedParameterExportKinds [0]);
+			Assert.Equal (ExportParameterKindInfo.XmlResourceParser, resourceXmlUco.ManagedReturnExportKind);
+		}
+
+		[Fact]
 		public void Fixture_CustomView_HasTwoConstructorWrappers ()
 		{
 			var peer = FindFixtureByJavaName ("my/app/CustomView");

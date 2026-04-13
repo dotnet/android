@@ -46,20 +46,20 @@ public sealed class JavaPeerScanner : IDisposable
 
 		var scope = typeRef.ResolutionScope;
 		switch (scope.Kind) {
-		case HandleKind.AssemblyReference: {
-			var asmRef = index.Reader.GetAssemblyReference ((AssemblyReferenceHandle)scope);
-			var fullName = MetadataTypeNameResolver.JoinNamespaceAndName (ns, name);
-			return (fullName, index.Reader.GetString (asmRef.Name));
-		}
-		case HandleKind.TypeReference: {
-			// Nested type: recurse to get the declaring type's full name and assembly
-			var (parentFullName, assemblyName) = ResolveTypeReference ((TypeReferenceHandle)scope, index);
-			return (MetadataTypeNameResolver.JoinNestedTypeName (parentFullName, name), assemblyName);
-		}
-		default: {
-			var fullName = MetadataTypeNameResolver.JoinNamespaceAndName (ns, name);
-			return (fullName, index.AssemblyName);
-		}
+			case HandleKind.AssemblyReference: {
+					var asmRef = index.Reader.GetAssemblyReference ((AssemblyReferenceHandle) scope);
+					var fullName = MetadataTypeNameResolver.JoinNamespaceAndName (ns, name);
+					return (fullName, index.Reader.GetString (asmRef.Name));
+				}
+			case HandleKind.TypeReference: {
+					// Nested type: recurse to get the declaring type's full name and assembly
+					var (parentFullName, assemblyName) = ResolveTypeReference ((TypeReferenceHandle) scope, index);
+					return (MetadataTypeNameResolver.JoinNestedTypeName (parentFullName, name), assemblyName);
+				}
+			default: {
+					var fullName = MetadataTypeNameResolver.JoinNamespaceAndName (ns, name);
+					return (fullName, index.AssemblyName);
+				}
 		}
 	}
 
@@ -873,7 +873,10 @@ public sealed class JavaPeerScanner : IDisposable
 		bool isConstructor = registerInfo.JniName == "<init>" || registerInfo.JniName == ".ctor";
 		bool isExport = exportInfo is not null;
 		string managedName = index.Reader.GetString (methodDef.Name);
+		var managedSig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+		var managedTypeSig = methodDef.DecodeSignature (TypeRefSignatureTypeProvider.Instance, index);
 		string jniSignature = registerInfo.Signature ?? "()V";
+		var parameterKinds = exportInfo?.ParameterKinds ?? CreateDefaultExportKinds (managedTypeSig.ParameterTypes.Length);
 
 		string declaringTypeName = "";
 		string declaringAssemblyName = "";
@@ -887,6 +890,13 @@ public sealed class JavaPeerScanner : IDisposable
 			DeclaringTypeName = declaringTypeName,
 			DeclaringAssemblyName = declaringAssemblyName,
 			NativeCallbackName = GetNativeCallbackName (registerInfo.Connector, managedName, isConstructor),
+			ManagedParameterTypeNames = new List<string> (managedSig.ParameterTypes),
+			ManagedParameterTypes = new List<TypeRefData> (managedTypeSig.ParameterTypes),
+			ManagedParameterExportKinds = parameterKinds,
+			ManagedReturnTypeName = managedSig.ReturnType,
+			ManagedReturnType = managedTypeSig.ReturnType,
+			ManagedReturnExportKind = exportInfo?.ReturnKind ?? ExportParameterKindInfo.Unspecified,
+			IsStatic = (methodDef.Attributes & MethodAttributes.Static) == MethodAttributes.Static,
 			IsConstructor = isConstructor,
 			IsExport = isExport,
 			IsInterfaceImplementation = isInterfaceImplementation,
@@ -982,7 +992,7 @@ public sealed class JavaPeerScanner : IDisposable
 			// Single arg = JNI signature; name is always ".ctor", connector is empty.
 			if (attrName == "JniConstructorSignatureAttribute") {
 				var value = index.DecodeAttribute (ca);
-				var jniSignature = value.FixedArguments.Length > 0 ? (string?)value.FixedArguments [0].Value : null;
+				var jniSignature = value.FixedArguments.Length > 0 ? (string?) value.FixedArguments [0].Value : null;
 				if (jniSignature is not null) {
 					registerInfo = new RegisterInfo { JniName = ".ctor", Signature = jniSignature, Connector = "", DoNotGenerateAcw = false };
 					return true;
@@ -1013,7 +1023,7 @@ public sealed class JavaPeerScanner : IDisposable
 		// [Export("name")] or [Export] (uses method name)
 		string? exportName = null;
 		if (value.FixedArguments.Length > 0) {
-			exportName = (string?)value.FixedArguments [0].Value;
+			exportName = (string?) value.FixedArguments [0].Value;
 		}
 
 		List<string>? thrownNames = null;
@@ -1041,24 +1051,107 @@ public sealed class JavaPeerScanner : IDisposable
 		string resolvedExportName = exportName ?? throw new InvalidOperationException ("Export name should not be null at this point.");
 
 		// Build JNI signature from method signature
-		var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
-		var jniSig = BuildJniSignatureFromManaged (sig);
+		var sig = methodDef.DecodeSignature (TypeRefSignatureTypeProvider.Instance, index);
+		var (parameterKinds, returnKind) = GetExportParameterKinds (methodDef, index, sig.ParameterTypes.Length);
+		var jniSig = BuildJniSignatureFromManaged (sig, parameterKinds, returnKind);
 
 		return (
 			new RegisterInfo { JniName = resolvedExportName, Signature = jniSig, Connector = null, DoNotGenerateAcw = false },
-			new ExportInfo { ThrownNames = thrownNames, SuperArgumentsString = superArguments }
+			new ExportInfo {
+				ThrownNames = thrownNames,
+				SuperArgumentsString = superArguments,
+				ParameterKinds = parameterKinds,
+				ReturnKind = returnKind,
+			}
 		);
 	}
 
-	string BuildJniSignatureFromManaged (MethodSignature<string> sig)
+	static List<ExportParameterKindInfo> CreateDefaultExportKinds (int parameterCount)
+	{
+		var kinds = new List<ExportParameterKindInfo> (parameterCount);
+		for (int i = 0; i < parameterCount; i++) {
+			kinds.Add (ExportParameterKindInfo.Unspecified);
+		}
+		return kinds;
+	}
+
+	static (List<ExportParameterKindInfo> parameterKinds, ExportParameterKindInfo returnKind) GetExportParameterKinds (MethodDefinition methodDef, AssemblyIndex index, int parameterCount)
+	{
+		var parameterKinds = CreateDefaultExportKinds (parameterCount);
+		var returnKind = ExportParameterKindInfo.Unspecified;
+
+		foreach (var parameterHandle in methodDef.GetParameters ()) {
+			var parameter = index.Reader.GetParameter (parameterHandle);
+			var kind = GetExportParameterKind (parameter, index);
+			if (kind == ExportParameterKindInfo.Unspecified) {
+				continue;
+			}
+
+			if (parameter.SequenceNumber == 0) {
+				returnKind = kind;
+			} else {
+				int parameterIndex = parameter.SequenceNumber - 1;
+				if (parameterIndex >= 0 && parameterIndex < parameterKinds.Count) {
+					parameterKinds [parameterIndex] = kind;
+				}
+			}
+		}
+
+		return (parameterKinds, returnKind);
+	}
+
+	static ExportParameterKindInfo GetExportParameterKind (Parameter parameter, AssemblyIndex index)
+	{
+		foreach (var caHandle in parameter.GetCustomAttributes ()) {
+			var ca = index.Reader.GetCustomAttribute (caHandle);
+			var attrName = AssemblyIndex.GetCustomAttributeName (ca, index.Reader);
+			if (attrName != "ExportParameterAttribute") {
+				continue;
+			}
+
+			var value = index.DecodeAttribute (ca);
+			if (value.FixedArguments.Length > 0 && TryConvertExportParameterKind (value.FixedArguments [0].Value, out var ctorKind)) {
+				return ctorKind;
+			}
+
+			foreach (var named in value.NamedArguments) {
+				if (named.Name == "Kind" && TryConvertExportParameterKind (named.Value, out var namedKind)) {
+					return namedKind;
+				}
+			}
+		}
+
+		return ExportParameterKindInfo.Unspecified;
+	}
+
+	static bool TryConvertExportParameterKind (object? value, out ExportParameterKindInfo kind)
+	{
+		switch (value) {
+			case int i when Enum.IsDefined (typeof (ExportParameterKindInfo), i):
+				kind = (ExportParameterKindInfo) i;
+				return true;
+			case short s when Enum.IsDefined (typeof (ExportParameterKindInfo), (int) s):
+				kind = (ExportParameterKindInfo) s;
+				return true;
+			case byte b when Enum.IsDefined (typeof (ExportParameterKindInfo), (int) b):
+				kind = (ExportParameterKindInfo) b;
+				return true;
+			default:
+				kind = ExportParameterKindInfo.Unspecified;
+				return false;
+		}
+	}
+
+	string BuildJniSignatureFromManaged (MethodSignature<TypeRefData> sig, IReadOnlyList<ExportParameterKindInfo> parameterKinds, ExportParameterKindInfo returnKind)
 	{
 		var sb = new System.Text.StringBuilder ();
 		sb.Append ('(');
-		foreach (var param in sig.ParameterTypes) {
-			sb.Append (ManagedTypeToJniDescriptor (param));
+		for (int i = 0; i < sig.ParameterTypes.Length; i++) {
+			var exportKind = i < parameterKinds.Count ? parameterKinds [i] : ExportParameterKindInfo.Unspecified;
+			sb.Append (ManagedTypeToJniDescriptor (sig.ParameterTypes [i], exportKind));
 		}
 		sb.Append (')');
-		sb.Append (ManagedTypeToJniDescriptor (sig.ReturnType));
+		sb.Append (ManagedTypeToJniDescriptor (sig.ReturnType, returnKind));
 		return sb.ToString ();
 	}
 
@@ -1070,8 +1163,8 @@ public sealed class JavaPeerScanner : IDisposable
 	(RegisterInfo registerInfo, ExportInfo exportInfo) ParseExportFieldAsMethod (CustomAttribute ca, MethodDefinition methodDef, AssemblyIndex index)
 	{
 		var managedName = index.Reader.GetString (methodDef.Name);
-		var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
-		var jniSig = BuildJniSignatureFromManaged (sig);
+		var sig = methodDef.DecodeSignature (TypeRefSignatureTypeProvider.Instance, index);
+		var jniSig = BuildJniSignatureFromManaged (sig, CreateDefaultExportKinds (sig.ParameterTypes.Length), ExportParameterKindInfo.Unspecified);
 
 		return (
 			new RegisterInfo { JniName = managedName, Signature = jniSig, Connector = "__export__", DoNotGenerateAcw = false },
@@ -1084,19 +1177,29 @@ public sealed class JavaPeerScanner : IDisposable
 	/// via their [Register] attribute, falling back to "Ljava/lang/Object;" only
 	/// for types that cannot be resolved (used by [Export] signature computation).
 	/// </summary>
-	string ManagedTypeToJniDescriptor (string managedType)
+	string ManagedTypeToJniDescriptor (TypeRefData managedType, ExportParameterKindInfo exportKind = ExportParameterKindInfo.Unspecified)
 	{
-		var primitive = TryGetPrimitiveJniDescriptor (managedType);
+		if (exportKind != ExportParameterKindInfo.Unspecified) {
+			return exportKind switch {
+				ExportParameterKindInfo.InputStream => "Ljava/io/InputStream;",
+				ExportParameterKindInfo.OutputStream => "Ljava/io/OutputStream;",
+				ExportParameterKindInfo.XmlPullParser => "Lorg/xmlpull/v1/XmlPullParser;",
+				ExportParameterKindInfo.XmlResourceParser => "Landroid/content/res/XmlResourceParser;",
+				_ => "Ljava/lang/Object;",
+			};
+		}
+
+		var primitive = TryGetPrimitiveJniDescriptor (managedType.ManagedTypeName);
 		if (primitive is not null) {
 			return primitive;
 		}
 
-		if (managedType.EndsWith ("[]")) {
-			return $"[{ManagedTypeToJniDescriptor (managedType.Substring (0, managedType.Length - 2))}";
+		if (managedType.ManagedTypeName.EndsWith ("[]", StringComparison.Ordinal)) {
+			return $"[{ManagedTypeToJniDescriptor (managedType with { ManagedTypeName = managedType.ManagedTypeName.Substring (0, managedType.ManagedTypeName.Length - 2) })}";
 		}
 
 		// Try to resolve as a Java peer type with [Register]
-		var resolved = TryResolveJniObjectDescriptor (managedType);
+		var resolved = TryResolveJniObjectDescriptor (managedType.ManagedTypeName);
 		if (resolved is not null) {
 			return resolved;
 		}
@@ -1217,15 +1320,15 @@ public sealed class JavaPeerScanner : IDisposable
 		var row = codedToken >> 2;
 
 		switch (tag) {
-		case 0: { // TypeDef
-			var handle = MetadataTokens.TypeDefinitionHandle (row);
-			var baseDef = index.Reader.GetTypeDefinition (handle);
-			return (MetadataTypeNameResolver.GetFullName (baseDef, index.Reader), index.AssemblyName);
-		}
-		case 1: // TypeRef
-			return ResolveTypeReference (MetadataTokens.TypeReferenceHandle (row), index);
-		default:
-			return null;
+			case 0: { // TypeDef
+					var handle = MetadataTokens.TypeDefinitionHandle (row);
+					var baseDef = index.Reader.GetTypeDefinition (handle);
+					return (MetadataTypeNameResolver.GetFullName (baseDef, index.Reader), index.AssemblyName);
+				}
+			case 1: // TypeRef
+				return ResolveTypeReference (MetadataTokens.TypeReferenceHandle (row), index);
+			default:
+				return null;
 		}
 	}
 
@@ -1236,16 +1339,16 @@ public sealed class JavaPeerScanner : IDisposable
 	(string typeName, string assemblyName)? ResolveEntityHandle (EntityHandle handle, AssemblyIndex index)
 	{
 		switch (handle.Kind) {
-		case HandleKind.TypeDefinition: {
-			var td = index.Reader.GetTypeDefinition ((TypeDefinitionHandle)handle);
-			return (MetadataTypeNameResolver.GetFullName (td, index.Reader), index.AssemblyName);
-		}
-		case HandleKind.TypeReference:
-			return ResolveTypeReference ((TypeReferenceHandle)handle, index);
-		case HandleKind.TypeSpecification:
-			return ResolveTypeSpecification ((TypeSpecificationHandle)handle, index);
-		default:
-			return null;
+			case HandleKind.TypeDefinition: {
+					var td = index.Reader.GetTypeDefinition ((TypeDefinitionHandle) handle);
+					return (MetadataTypeNameResolver.GetFullName (td, index.Reader), index.AssemblyName);
+				}
+			case HandleKind.TypeReference:
+				return ResolveTypeReference ((TypeReferenceHandle) handle, index);
+			case HandleKind.TypeSpecification:
+				return ResolveTypeSpecification ((TypeSpecificationHandle) handle, index);
+			default:
+				return null;
 		}
 	}
 
@@ -1537,14 +1640,14 @@ public sealed class JavaPeerScanner : IDisposable
 				continue;
 			}
 
-			var fieldName = (string?)value.FixedArguments [0].Value;
+			var fieldName = (string?) value.FixedArguments [0].Value;
 			if (fieldName is null) {
 				continue;
 			}
 
 			var managedName = index.Reader.GetString (methodDef.Name);
-			var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
-			var jniSig = BuildJniSignatureFromManaged (sig);
+			var sig = methodDef.DecodeSignature (TypeRefSignatureTypeProvider.Instance, index);
+			var jniSig = BuildJniSignatureFromManaged (sig, CreateDefaultExportKinds (sig.ParameterTypes.Length), ExportParameterKindInfo.Unspecified);
 			var jniReturnType = JniSignatureHelper.ParseReturnTypeString (jniSig);
 			var javaReturnType = JniSignatureHelper.JniTypeToJava (jniReturnType);
 			var access = GetJavaAccess (methodDef.Attributes & MethodAttributes.MemberAccessMask);
@@ -1573,7 +1676,7 @@ public sealed class JavaPeerScanner : IDisposable
 			"ContentProviderAttribute" => ComponentKind.ContentProvider,
 			"ApplicationAttribute" => ComponentKind.Application,
 			"InstrumentationAttribute" => ComponentKind.Instrumentation,
-			_ => (ComponentKind?)null,
+			_ => (ComponentKind?) null,
 		};
 
 		if (kind is null) {
