@@ -216,15 +216,15 @@ public class TrimmableTypeMapGenerator
 	/// </summary>
 	internal static void PropagateDeferredRegistrationToBaseClasses (List<JavaPeerInfo> allPeers)
 	{
-		var peersByJniName = buildJniNameLookup (allPeers);
+		var peersByJniName = BuildJniNameLookup (allPeers);
 
 		foreach (var peer in allPeers) {
 			if (peer.CannotRegisterInStaticConstructor && peer.BaseJavaName is { } baseJniName) {
-				propagateToAncestors (baseJniName, peersByJniName);
+				PropagateToAncestors (baseJniName, peersByJniName);
 			}
 		}
 
-		static Dictionary<string, List<JavaPeerInfo>> buildJniNameLookup (List<JavaPeerInfo> allPeers)
+		static Dictionary<string, List<JavaPeerInfo>> BuildJniNameLookup (List<JavaPeerInfo> allPeers)
 		{
 			var lookup = new Dictionary<string, List<JavaPeerInfo>> (StringComparer.Ordinal);
 			foreach (var peer in allPeers) {
@@ -239,7 +239,7 @@ public class TrimmableTypeMapGenerator
 			return lookup;
 		}
 
-		static void propagateToAncestors (string startJniName, Dictionary<string, List<JavaPeerInfo>> peersByJniName)
+		static void PropagateToAncestors (string startJniName, Dictionary<string, List<JavaPeerInfo>> peersByJniName)
 		{
 			var pending = new Queue<string> ();
 			var visited = new HashSet<string> (StringComparer.Ordinal);
