@@ -174,10 +174,22 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.Single (model.ProxyTypes);
 			var proxy = model.ProxyTypes [0];
 			Assert.Equal (expectedProxyName, proxy.TypeName);
+			Assert.Equal (jniName, proxy.JniName);
 			Assert.Equal ("_TypeMap.Proxies", proxy.Namespace);
 			Assert.True (proxy.HasActivation);
 			Assert.Equal (managedName, proxy.TargetType.ManagedTypeName);
 			Assert.Equal (asmName, proxy.TargetType.AssemblyName);
+		}
+
+		[Fact]
+		public void Build_PeerWithActivation_CreatesAssociation ()
+		{
+			var peer = MakePeerWithActivation ("my/app/MainActivity", "MyApp.MainActivity", "App");
+			var model = BuildModel (new [] { peer }, "MyTypeMap");
+
+			var assoc = Assert.Single (model.Associations);
+			Assert.Equal ("MyApp.MainActivity, App", assoc.SourceTypeReference);
+			Assert.Equal ("_TypeMap.Proxies.MyApp_MainActivity_Proxy, MyTypeMap", assoc.AliasProxyTypeReference);
 		}
 
 		[Fact]
@@ -190,6 +202,25 @@ public class ModelBuilderTests : FixtureTestBase
 			var proxy = model.ProxyTypes [0];
 			Assert.NotNull (proxy.InvokerType);
 			Assert.Equal ("Android.Views.View+IOnClickListenerInvoker", proxy.InvokerType!.ManagedTypeName);
+		}
+
+		[Theory]
+		[InlineData ("MyApp.PlainActivitySubclass")]
+		[InlineData ("MyApp.UnnamedActivity")]
+		[InlineData ("MyApp.UnregisteredClickListener")]
+		[InlineData ("MyApp.UnregisteredExporter")]
+		[InlineData ("MyApp.UnregisteredHelper")]
+		[InlineData ("MyApp.DerivedFromComponentBase")]
+		public void Build_Crc64RenamedPeer_StoresFinalJavaNameOnProxy (string managedName)
+		{
+			var peer = FindFixtureByManagedName (managedName);
+			Assert.StartsWith ("crc64", peer.JavaName);
+			Assert.NotEqual (peer.CompatJniName, peer.JavaName);
+
+			var model = BuildModel (new [] { peer }, "MyTypeMap");
+			var proxy = Assert.Single (model.ProxyTypes);
+
+			Assert.Equal (peer.JavaName, proxy.JniName);
 		}
 	}
 
@@ -368,16 +399,20 @@ public class ModelBuilderTests : FixtureTestBase
 
 			var model = BuildModel (clickPeers, "TypeMap");
 
-			// Invoker is excluded entirely — no TypeMap entry, no proxy.
+			// Invoker is excluded from standalone TypeMap entries/proxies.
 			// Only the interface gets a TypeMap entry and a proxy.
 			Assert.Single (model.Entries);
 			Assert.Equal ("android/view/View$OnClickListener", model.Entries [0].JniName);
 
 			// Only the interface proxy exists; the invoker type is referenced
-			// only as a TypeRef in the interface proxy's InvokerType property.
+			// as InvokerType and associated back to the proxy for managed->JNI lookup.
 			Assert.Single (model.ProxyTypes);
 			Assert.NotNull (model.ProxyTypes [0].InvokerType);
 			Assert.Equal ("Android.Views.IOnClickListenerInvoker", model.ProxyTypes [0].InvokerType!.ManagedTypeName);
+
+			var assoc = Assert.Single (model.Associations);
+			Assert.Equal ("Android.Views.IOnClickListener, TestFixtures", assoc.SourceTypeReference);
+			Assert.Equal ("_TypeMap.Proxies.Android_Views_IOnClickListener_Proxy, TypeMap", assoc.AliasProxyTypeReference);
 		}
 
 		[Fact]
@@ -403,6 +438,10 @@ public class ModelBuilderTests : FixtureTestBase
 
 			// Interface proxy has activation because it will create the invoker
 			Assert.True (proxy.HasActivation);
+
+			var assoc = Assert.Single (model.Associations);
+			Assert.Equal ("MyApp.IFoo, App", assoc.SourceTypeReference);
+			Assert.Equal ("_TypeMap.Proxies.MyApp_IFoo_Proxy, TestTypeMap", assoc.AliasProxyTypeReference);
 		}
 	}
 
@@ -713,8 +752,11 @@ public class ModelBuilderTests : FixtureTestBase
 		var asmAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
 		foreach (var attrHandle in asmAttrs) {
 			var attr = reader.GetCustomAttribute (attrHandle);
-			// Skip IgnoresAccessChecksTo attributes (their ctor is a MethodDefinition, not MemberRef)
-			if (attr.Constructor.Kind == HandleKind.MethodDefinition)
+			if (attr.Constructor.Kind != HandleKind.MemberReference)
+				continue;
+
+			var ctor = reader.GetMemberReference ((MemberReferenceHandle) attr.Constructor);
+			if (ctor.Parent.Kind != HandleKind.TypeSpecification)
 				continue;
 
 			var blobReader = reader.GetBlobReader (attr.Value);
@@ -729,6 +771,10 @@ public class ModelBuilderTests : FixtureTestBase
 			string? targetRef = null;
 			if (blobReader.RemainingBytes > 2) {
 				targetRef = blobReader.ReadSerializedString ();
+			}
+
+			if (string.IsNullOrEmpty (jniName) || !jniName.Contains ('/')) {
+				continue;
 			}
 
 			result.Add ((jniName, proxyRef, targetRef));

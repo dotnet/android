@@ -18,24 +18,29 @@ namespace Java.Interop
 	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
 	public abstract class JavaPeerProxy : Attribute
 	{
-		/// <summary>
-		/// Initializes a new proxy with the specified target and invoker types.
-		/// </summary>
-		/// <param name="targetType">The managed peer type this proxy represents.</param>
-		/// <param name="invokerType">The invoker type for interfaces/abstract classes, or <c>null</c> for concrete types.</param>
 		protected JavaPeerProxy (
+			string jniName,
 			Type targetType,
 			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 			Type? invokerType)
 		{
-			TargetType = targetType;
+			JniName = jniName ?? throw new ArgumentNullException (nameof (jniName));
+			TargetType = targetType ?? throw new ArgumentNullException (nameof (targetType));
 			InvokerType = invokerType;
 		}
+
+		/// <summary>
+		/// Gets the final JNI type name of the Java class this proxy represents.
+		/// </summary>
+		public string JniName { get; }
 
 		/// <summary>
 		/// Creates an instance of the target type using the JNI handle and ownership semantics.
 		/// This replaces the reflection-based constructor invocation used in the legacy path.
 		/// </summary>
+		/// <param name="handle">The JNI object reference handle.</param>
+		/// <param name="transfer">How to handle JNI reference ownership.</param>
+		/// <returns>A new instance of the target type wrapping the JNI handle, or null if activation is not supported.</returns>
 		public abstract IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer);
 
 		/// <summary>
@@ -54,6 +59,7 @@ namespace Java.Interop
 		/// Gets a factory for creating containers (arrays, collections) of the target type.
 		/// Enables AOT-safe creation of generic collections without <c>MakeGenericType()</c>.
 		/// </summary>
+		/// <returns>A factory for creating containers of the target type, or null if not supported.</returns>
 		public virtual JavaPeerContainerFactory? GetContainerFactory () => null;
 	}
 
@@ -70,8 +76,11 @@ namespace Java.Interop
 	> : JavaPeerProxy where T : class, IJavaPeerable
 	{
 		protected JavaPeerProxy (
+			string jniName,
 			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-			Type? invokerType) : base (typeof (T), invokerType) { }
+			Type? invokerType) : base (jniName, typeof (T), invokerType)
+		{
+		}
 
 		public override JavaPeerContainerFactory GetContainerFactory ()
 			=> JavaPeerContainerFactory<T>.Instance;
