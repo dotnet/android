@@ -335,6 +335,15 @@ static class ModelBuilder
 					AssemblyName = !mm.DeclaringAssemblyName.IsNullOrEmpty () ? mm.DeclaringAssemblyName : peer.AssemblyName,
 				},
 				JniSignature = mm.JniSignature,
+				ManagedMethodName = mm.ManagedMethodName,
+				ManagedParameterTypeNames = mm.ManagedParameterTypeNames,
+				ManagedParameterTypes = mm.ManagedParameterTypes,
+				ManagedParameterExportKinds = mm.ManagedParameterExportKinds,
+				ManagedReturnTypeName = mm.ManagedReturnTypeName,
+				ManagedReturnType = mm.ManagedReturnType,
+				ManagedReturnExportKind = mm.ManagedReturnExportKind,
+				IsStatic = mm.IsStatic,
+				UseDirectManagedDispatch = mm.IsExport,
 			});
 			ucoIndex++;
 		}

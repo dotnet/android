@@ -26,6 +26,8 @@ namespace Xamarin.Android.RuntimeTests
             : base(handle, transfer)
         {
             if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
+                ExcludedCategories = ["SSL", "TrimmableIgnore"];
+
                 // TODO: https://github.com/dotnet/android/issues/11170
                 // Tests from the external Java.Interop-Tests assembly that fail under the
                 // trimmable typemap. These cannot use [Category("TrimmableIgnore")] because
