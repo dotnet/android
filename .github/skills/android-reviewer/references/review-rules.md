@@ -151,23 +151,7 @@ and merge conflicts.
 
 ---
 
-## 10. Assembly & File Pipeline
-
-Build tasks that transform assemblies (e.g., linking, stripping, instrumentation)
-must never read from and write to the same file on disk. In-place modification
-causes races with parallel tasks, breaks incremental builds, and makes debugging
-impossible because the original input is destroyed.
-
-| Check | What to look for |
-|-------|-----------------|
-| **Never modify assemblies in-place** | A task must not read an assembly from a path and write the modified assembly back to the same path. Instead, read from an input location, write to a separate output location, and update the in-memory MSBuild `ItemGroup` so downstream targets pick up the new paths. |
-| **Preserve MSBuild metadata on updated items** | When a task replaces items in an `ItemGroup` to point at new output paths, it must copy all existing metadata from the original `ITaskItem` to the replacement item (`ITaskItem.CopyMetadataTo` or manual metadata transfer). Downstream targets rely on metadata like `%(DestinationSubDirectory)`, `%(Culture)`, `%(TargetPath)`, etc. Dropping metadata silently breaks later steps. |
-| **Use `[Output]` items for relocated files** | If a task moves files to a new location, expose the updated items via an `[Output] ITaskItem[]?` property so the calling target can replace the original item group with the new paths. |
-| **Separate input and output directories** | Input and output directories should be distinct (e.g., `$(IntermediateOutputPath)original/` → `$(IntermediateOutputPath)modified/`). Writing outputs alongside inputs makes cleanup and incremental-build tracking fragile. |
-
----
-
-## 11. Code Organization
+## 10. Code Organization
 
 | Check | What to look for |
 |-------|-----------------|
@@ -185,7 +169,7 @@ impossible because the original input is destroyed.
 
 ---
 
-## 12. Patterns & Conventions
+## 11. Patterns & Conventions
 
 | Check | What to look for |
 |-------|-----------------|
@@ -206,13 +190,13 @@ impossible because the original input is destroyed.
 
 ---
 
-## 13. Native Code (C/C++)
+## 12. Native Code (C/C++)
 
 The native runtime (`src/native/`, historically `src/monodroid/`) is critical path
 code running on every Android device. Bugs here cause crashes, memory leaks, and
 security vulnerabilities that are extremely hard to diagnose remotely.
 
-### 13a. Memory Management
+### 12a. Memory Management
 
 | Check | What to look for |
 |-------|-----------------|
@@ -223,7 +207,7 @@ security vulnerabilities that are extremely hard to diagnose remotely.
 | **Use RAII (`std::unique_ptr`, etc.)** | If a library can be unloaded or an object has a clear owner, use smart pointers or RAII to ensure cleanup. Don't rely on manual `delete`. (Postmortem `#15`) |
 | **Stack memory adds up on Android** | Android threads can have only 2–4 KB of stack. A struct with 88 bytes of wrappers is non-trivial on the stack. Make sentinel/invalid instances `static` to avoid per-instance overhead. (Postmortem `#43`) |
 
-### 13b. C++ Best Practices
+### 12b. C++ Best Practices
 
 | Check | What to look for |
 |-------|-----------------|
@@ -239,7 +223,7 @@ security vulnerabilities that are extremely hard to diagnose remotely.
 | **Prefer `nothrow new` + null check where appropriate** | Have `operator new(size_t)` abort on OOM, but `operator new(size_t, nothrow_t)` return `nullptr` for callers that want to handle failure gracefully. |
 | **Avoid merging lines for no reason** | Don't combine two 80-char lines into one 160-char line. Keep code readable. (Postmortem `#36`) |
 
-### 13c. Symbol Visibility & Naming
+### 12c. Symbol Visibility & Naming
 
 | Check | What to look for |
 |-------|-----------------|
@@ -249,7 +233,7 @@ security vulnerabilities that are extremely hard to diagnose remotely.
 | **Remove dead symbols proactively** | When an upstream consumer (e.g., a Mono branch) no longer uses a function, remove it now. Don't wait for "someday." (Postmortem `#29`) |
 | **Avoid "monodroid" in new filenames** | The runtime libraries use `libmono-android*` names. Keep new files consistent. (Postmortem `#1`) |
 
-### 13d. Platform-Specific Code
+### 12d. Platform-Specific Code
 
 | Check | What to look for |
 |-------|-----------------|
@@ -257,14 +241,14 @@ security vulnerabilities that are extremely hard to diagnose remotely.
 | **Don't change platform-guarded code unnecessarily** | If a change is in a `#if defined(WINDOWS)` block, verify it's actually needed on that platform. (Postmortem `#26`) |
 | **Check return codes on all platform APIs** | Even APIs that "shouldn't fail" (like `PathRemoveFileSpec`) have return values. Check them. (Postmortem `#8`) |
 
-### 13e. Build & ABI
+### 12e. Build & ABI
 
 | Check | What to look for |
 |-------|-----------------|
 | **CMake** | Native code uses CMake. Changes must build for all ABIs: `arm64-v8a`, `armeabi-v7a`, `x86_64`, `x86`. |
 | **API bindings** | Use `[Register]` attributes. Follow `Android.*` namespace patterns. |
 
-### 13f. Managed ↔ Native Interop
+### 12f. Managed ↔ Native Interop
 
 | Check | What to look for |
 |-------|-----------------|
@@ -276,7 +260,7 @@ security vulnerabilities that are extremely hard to diagnose remotely.
 
 ---
 
-## 14. Testing
+## 13. Testing
 
 | Check | What to look for |
 |-------|-----------------|
@@ -290,7 +274,7 @@ security vulnerabilities that are extremely hard to diagnose remotely.
 
 ---
 
-## 15. YAGNI & AI-Specific Pitfalls
+## 14. YAGNI & AI-Specific Pitfalls
 
 These are patterns that AI-generated code consistently gets wrong in this repo:
 
@@ -310,3 +294,19 @@ These are patterns that AI-generated code consistently gets wrong in this repo:
 | **Commit messages omit non-obvious choices** | Behavioral decisions ("styleable arrays are cached, not copied per-access") and known limitations ("this leaks N bytes on Android 9") belong in the commit message. (Postmortem `#13`, `#69`) |
 | **Typos in user-visible strings** | Users copy-paste error messages into bug reports. Get them right. (Postmortem `#61`) |
 | **Filler words in docs** | "So" at the start of a sentence adds nothing. Be direct. (Postmortem `#71`) |
+
+---
+
+## 15. Assembly & File Pipeline
+
+Build tasks that transform assemblies (e.g., linking, stripping, instrumentation)
+must never read from and write to the same file on disk. In-place modification
+causes races with parallel tasks, breaks incremental builds, and makes debugging
+impossible because the original input is destroyed.
+
+| Check | What to look for |
+|-------|-----------------|
+| **Never modify assemblies in-place** | A task must not read an assembly from a path and write the modified assembly back to the same path. Instead, read from an input location, write to a separate output location, and update the in-memory MSBuild `ItemGroup` so downstream targets pick up the new paths. |
+| **Preserve MSBuild metadata on updated items** | When a task replaces items in an `ItemGroup` to point at new output paths, it must copy all existing metadata from the original `ITaskItem` to the replacement item (`ITaskItem.CopyMetadataTo` or manual metadata transfer). Downstream targets rely on metadata like `%(DestinationSubDirectory)`, `%(Culture)`, `%(TargetPath)`, etc. Dropping metadata silently breaks later steps. |
+| **Use `[Output]` items for relocated files** | If a task moves files to a new location, expose the updated items via an `[Output] ITaskItem[]?` property so the calling target can replace the original item group with the new paths. |
+| **Separate input and output directories** | Input and output directories should be distinct (e.g., `$(IntermediateOutputPath)original/` → `$(IntermediateOutputPath)modified/`). Writing outputs alongside inputs makes cleanup and incremental-build tracking fragile. |
