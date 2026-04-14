@@ -879,26 +879,58 @@ namespace Android.Runtime {
 			if (value == null)
 				throw new ArgumentNullException (nameof (value));
 
+			var handle = value.PeerReference;
+
 			if (Logger.LogGlobalRef) {
 				RuntimeNativeMethods._monodroid_gref_log (
 						string.Format (CultureInfo.InvariantCulture,
 							"Finalizing Instance.Type={0} PeerReference={1} IdentityHashCode=0x{2:x} Instance=0x{3:x}",
 							value.GetType ().ToString (),
-							value.PeerReference.ToString (),
+							handle.ToString (),
 							value.JniIdentityHashCode,
 							RuntimeHelpers.GetHashCode (value)));
 			}
 
-			// FIXME: need hash cleanup mechanism.
-			// Finalization occurs after a test of java persistence.  If the
-			// handle still contains a java reference, we can't finalize the
-			// object and should "resurrect" it.
-			if (value.PeerReference.IsValid) {
-				GC.ReRegisterForFinalize (value);
-			} else {
+			if (!handle.IsValid || handle.Type == JniObjectReferenceType.Local) {
 				RemovePeer (value, (IntPtr) value.JniIdentityHashCode);
 				value.SetPeerReference (new JniObjectReference ());
 				value.Finalized ();
+				return;
+			}
+
+			try {
+				bool collected = TryGC (value, ref handle);
+				if (!collected) {
+					value.SetPeerReference (handle);
+					GC.ReRegisterForFinalize (value);
+					return;
+				}
+
+				RemovePeer (value, (IntPtr) value.JniIdentityHashCode);
+				value.SetPeerReference (new JniObjectReference ());
+				value.Finalized ();
+			} catch (Exception e) {
+				Runtime.FailFast ("Unable to perform a GC! " + e);
+			}
+		}
+
+		internal protected virtual bool TryGC (IJavaPeerable value, ref JniObjectReference handle)
+		{
+			if (!handle.IsValid)
+				return true;
+
+			// Replace the strong global reference with a weak one so Java GC can
+			// tell us whether the peer is still alive independently of managed code.
+			var weakReference = handle.NewWeakGlobalRef ();
+			try {
+				JniObjectReference.Dispose (ref handle);
+				using (var runtime = Java.Lang.Runtime.GetRuntime ()) {
+					runtime.Gc ();
+				}
+				handle = weakReference.NewGlobalRef ();
+				return !handle.IsValid;
+			} finally {
+				JniObjectReference.Dispose (ref weakReference);
 			}
 		}
 
