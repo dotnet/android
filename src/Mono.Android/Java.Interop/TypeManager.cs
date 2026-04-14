@@ -183,11 +183,26 @@ namespace Java.Interop {
 			try {
 				var newobj = RuntimeHelpers.GetUninitializedObject (cinfo.DeclaringType!);
 				if (newobj is IJavaPeerable peer) {
+					// Set Activatable BEFORE ConstructPeer so that the
+					// constructor chain's ConstructPeer (via SetHandle) will
+					// see the existing PeerReference and return early, avoiding
+					// a duplicate global ref.
+					peer.SetJniManagedPeerState (JniManagedPeerStates.Activatable);
+					// Create a proper JNI global ref and register the peer
+					// BEFORE invoking the constructor. This eliminates a race
+					// window: if SetPeerReference stored a raw local ref and a
+					// GC triggered bridge processing before ConstructPeer ran,
+					// the bridge would call DeleteGlobalRef on a local ref
+					// (JNI error) and create an orphaned global ref that keeps
+					// the Java object alive forever.
+					// See: https://github.com/dotnet/android/issues/11101
+					var reference = new JniObjectReference (jobject);
 					Logger.Log (LogLevel.Info, "monodroid-peer",
-						FormattableString.Invariant ($"Activate: SetPeerReference handle=0x{jobject:x} type={cinfo.DeclaringType?.FullName}"));
-					peer.SetPeerReference (new JniObjectReference (jobject));
+						FormattableString.Invariant ($"Activate: ConstructPeer handle=0x{jobject:x} type={cinfo.DeclaringType?.FullName}"));
+					JniEnvironment.Runtime.ValueManager.ConstructPeer (
+						peer, ref reference, JniObjectReferenceOptions.Copy);
 					Logger.Log (LogLevel.Info, "monodroid-peer",
-						FormattableString.Invariant ($"Activate: after SetPeerReference PeerRef={peer.PeerReference} PeerRef.Type={peer.PeerReference.Type} State={peer.JniManagedPeerState}"));
+						FormattableString.Invariant ($"Activate: after ConstructPeer PeerRef={peer.PeerReference} PeerRef.Type={peer.PeerReference.Type} State={peer.JniManagedPeerState}"));
 				} else {
 					throw new InvalidOperationException ($"Unsupported type: '{newobj}'");
 				}
