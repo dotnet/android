@@ -52,7 +52,16 @@ auto Logger::open_file (LogCategories category, std::string_view const& custom_p
 {
 	auto log_and_return = [&category](FILE *f, std::string_view const& path) -> FILE* {
 		if (f != nullptr) {
-			log_debug (category, "Opened file '{}' for logging.", path);
+			log_debug (
+				category,
+#if defined(XA_HOST_NATIVEAOT)
+				"Opened file '%s' for logging.",
+				path.data ()
+#else
+				"Opened file '{}' for logging."sv,
+				path
+#endif
+			);
 		}
 		return f;
 	};
@@ -162,7 +171,20 @@ Logger::init_logging_categories () noexcept
 			auto file_name = segment.at (offset);
 
 			if (!file_name.has_value ()) {
-				log_warn (LOG_DEFAULT, "Unable to set path to {} log file: {}", file_kind, to_string (file_name.error ()));
+				const std::string_view file_name_str = to_string (file_name.error ());
+
+				log_warn (
+					LOG_DEFAULT,
+#if defined(XA_HOST_NATIVEAOT)
+					"Unable to set path to %s log file: %s",
+					file_kind.data (),
+					file_name_str.data ()
+#else
+					"Unable to set path to {} log file: {}"sv,
+					file_kind,
+					file_name_str
+#endif
+				);
 				return nullptr;
 			}
 

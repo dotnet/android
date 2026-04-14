@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cstdio>
 #include <cstring>
 #include <cerrno>
 #include <expected>
@@ -10,6 +11,7 @@
 #include <type_traits>
 #include <unistd.h>
 
+#include <shared/log_types.hh>
 #include <shared/helpers.hh>
 
 #if defined(XA_HOST_MONOVM)
@@ -205,7 +207,15 @@ namespace xamarin::android {
 			}
 
 			if (!can_access (start_index)) {
-				log_error (LOG_DEFAULT, "Cannot convert string to integer, index {} is out of range", start_index);
+				log_error (
+					LOG_DEFAULT,
+#if defined(XA_HOST_NATIVEAOT)
+					"Cannot convert string to integer, index %zu is out of range",
+#else
+					"Cannot convert string to integer, index {} is out of range"sv,
+#endif
+					start_index
+				);
 				return false;
 			}
 
@@ -229,17 +239,44 @@ namespace xamarin::android {
 			}
 
 			if (out_of_range || errno == ERANGE) {
-				log_error (LOG_DEFAULT, "Value {} is out of range of this type ({}..{})", reinterpret_cast<char*>(s), static_cast<int64_t>(min), static_cast<uint64_t>(max));
+				log_error (
+					LOG_DEFAULT,
+#if defined(XA_HOST_NATIVEAOT)
+					"Value %s is out of range of this type (%lld..%llu)",
+#else
+					"Value {} is out of range of this type ({}..{})"sv,
+#endif
+					reinterpret_cast<char*>(s),
+					static_cast<int64_t>(min),
+					static_cast<uint64_t>(max)
+				);
 				return false;
 			}
 
 			if (endp == s) {
-				log_error (LOG_DEFAULT, "Value {} does not represent a base {} integer", reinterpret_cast<char*>(s), base);
+				log_error (
+					LOG_DEFAULT,
+#if defined(XA_HOST_NATIVEAOT)
+					"Value %s does not represent a base %d integer",
+#else
+					"Value {} does not represent a base {} integer"sv,
+#endif
+					reinterpret_cast<char*>(s),
+					base
+				);
 				return false;
 			}
 
 			if (*endp != '\0') {
-				log_error (LOG_DEFAULT, "Value {} has non-numeric characters at the end", reinterpret_cast<char*>(s));
+				log_error (
+					LOG_DEFAULT,
+#if defined(XA_HOST_NATIVEAOT)
+					"Value %s has non-numeric characters at the end",
+#else
+					"Value {} has non-numeric characters at the end"sv,
+#endif
+					reinterpret_cast<char*>(s)
+				);
 				return false;
 			}
 
@@ -909,6 +946,7 @@ namespace xamarin::android {
 			}
 		}
 
+	public:
 		[[gnu::always_inline]]
 		void resize_for_extra (size_t needed_space) noexcept
 		{
@@ -981,4 +1019,35 @@ namespace xamarin::android {
 	// Useful aliases
 	using dynamic_local_property_string = dynamic_local_string<Constants::PROPERTY_VALUE_BUFFER_LEN>;
 	using dynamic_local_path_string = dynamic_local_string<SENSIBLE_PATH_MAX>;
+
+	// helpers
+	template<size_t MaxStackSize>
+	static inline auto format_printf (dynamic_local_string<MaxStackSize>& dest, const char* format, ...)  noexcept -> bool
+	{
+		va_list args;
+		va_start (args, format);
+		int n = vsnprintf (dest.get (), dest.size (), format, args);
+		va_end (args);
+
+		if (n < 0) {
+			return false;
+		}
+
+		auto res = static_cast<size_t>(n);
+		if (res < dest.size ()) {
+			return true;
+		}
+
+		// resize_for_extra adds one more byte for the NUL character
+		dest.resize_for_extra (res - dest.size ());
+		if (dest.size () <= res) {
+			return false;
+		}
+
+		va_start (args, format);
+		n = vsnprintf (dest.get (), dest.size (), format, args);
+		va_end (args);
+
+		return n != -1;
+	}
 }

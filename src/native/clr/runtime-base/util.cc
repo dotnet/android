@@ -58,7 +58,17 @@ Util::create_public_directory (std::string_view const& dir)
 			// Try to change the mode, just in case
 			chmod (dir.data (), 0777);
 		} else {
-			log_warn (LOG_DEFAULT, "Failed to create directory '{}'. {}"sv, dir, std::strerror (errno));
+			log_warn (
+				LOG_DEFAULT,
+#if defined(XA_HOST_NATIVEAOT)
+				"Failed to create directory '%s'. %s",
+				dir.data (),
+#else
+				"Failed to create directory '{}'. {}"sv,
+				dir,
+#endif
+				std::strerror (errno)
+			);
 		}
 	}
 	umask (m);
@@ -72,7 +82,16 @@ Util::monodroid_fopen (std::string_view const& filename, std::string_view const&
 	 */
 	FILE *ret = fopen (filename.data (), mode.data ());
 	if (ret == nullptr) {
-		log_error (LOG_DEFAULT, "fopen failed for file {}: {}", filename, strerror (errno));
+		log_error (
+			LOG_DEFAULT,
+#if defined(XA_HOST_NATIVEAOT)
+			"fopen failed for file %s: %s",
+#else
+			"fopen failed for file {}: {}"sv,
+#endif
+			filename,
+			strerror (errno)
+		);
 		return nullptr;
 	}
 
@@ -87,7 +106,16 @@ void Util::set_world_accessable (std::string_view const& path)
 	} while (r == -1 && errno == EINTR);
 
 	if (r == -1) {
-		log_error (LOG_DEFAULT, "chmod(\"{}\", 0664) failed: {}", path, strerror (errno));
+		log_error (
+			LOG_DEFAULT,
+#if defined(XA_HOST_NATIVEAOT)
+			"chmod(\"%s\", 0664) failed: %s",
+#else
+			"chmod(\"{}\", 0664) failed: {}"sv,
+#endif
+			path,
+			strerror (errno)
+		);
 	}
 }
 
@@ -99,7 +127,15 @@ auto Util::set_world_accessible (int fd) noexcept -> bool
 	} while (r == -1 && errno == EINTR);
 
 	if (r == -1) {
-		log_error (LOG_DEFAULT, "fchmod() failed: {}"sv, strerror (errno));
+		log_error (
+			LOG_DEFAULT,
+#if defined(XA_HOST_NATIVEAOT)
+			"fchmod() failed: %s",
+#else
+			"fchmod() failed: {}"sv,
+#endif
+			strerror (errno)
+		);
 		return false;
 	}
 

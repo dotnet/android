@@ -260,7 +260,16 @@ namespace xamarin::android {
 					// likely we'll run out of memory way, way, way before that happens
 					size_t old_size = events.capacity ();
 					events.reserve (old_size << 1);
-					log_warn (LOG_TIMING, "Reallocated timing event buffer from {} to {}"sv, old_size, events.size ());
+					log_warn (
+						LOG_TIMING,
+#if defined (XA_HOST_NATIVEAOT)
+						"Reallocated timing event buffer from %z to %z",
+#else
+						"Reallocated timing event buffer from {} to {}"sv,
+#endif
+						old_size,
+						events.size ()
+					);
 				}
 			}
 
@@ -378,7 +387,15 @@ namespace xamarin::android {
 		{
 			struct timespec t;
 			if (clock_gettime (CLOCK_MONOTONIC_RAW, &t) != 0) [[unlikely]] {
-				log_warn (LOG_TIMING, "clock_gettime failed for CLOCK_MONOTONIC_RAW: {}"sv, optional_string (strerror (errno)));
+				log_warn (
+					LOG_TIMING,
+#if defined(XA_HOST_NATIVEAOT)
+					"clock_gettime failed for CLOCK_MONOTONIC_RAW: %s",
+#else
+					"clock_gettime failed for CLOCK_MONOTONIC_RAW: {}"sv,
+#endif
+					optional_string (strerror (errno))
+				);
 				return {}; // Results will be nonsensical, but no point in aborting the app
 			}
 			return time_point (chrono::seconds (t.tv_sec) + chrono::nanoseconds (t.tv_nsec));
@@ -496,7 +513,11 @@ namespace xamarin::android {
 
 			log_warn (
 				LOG_TIMING,
+#if defined(XA_HOST_NATIVEAOT)
+				"Unknown event kind '%u' logged",
+#else
 				"Unknown event kind '{}' logged"sv,
+#endif
 				static_cast<std::underlying_type_t<decltype(kind)>>(kind)
 			);
 			append_desc ("unknown event kind"sv);
@@ -510,7 +531,15 @@ namespace xamarin::android {
 		auto is_valid_event_index (size_t index, std::source_location sloc = std::source_location::current ()) const noexcept -> bool
 		{
 			if (index >= events.capacity ()) [[unlikely]] {
-				log_warn (LOG_TIMING, "Invalid event index passed to method '{}'"sv, sloc.function_name ());
+				log_warn (
+					LOG_TIMING,
+#if defined(XA_HOST_NATIVEAOT)
+					"Invalid event index passed to method '%s'",
+#else
+					"Invalid event index passed to method '{}'"sv,
+#endif
+					sloc.function_name ()
+				);
 				return false;
 			}
 

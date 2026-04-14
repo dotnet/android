@@ -35,7 +35,11 @@ Helpers::abort_application (LogCategories category, const char *message, bool lo
 
 		log_fatal (
 			category,
-			"Abort at {}:{}:{} ('{}')",
+#if defined(XA_HOST_NATIVEAOT)
+			"Abort at %s:%u:%u ('%s')",
+#else
+			"Abort at {}:{}:{} ('{}')"sv,
+#endif
 			file_name,
 			sloc.line (),
 			sloc.column (),

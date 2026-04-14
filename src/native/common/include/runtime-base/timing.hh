@@ -3,6 +3,7 @@
 #include <sys/time.h>
 
 #include <chrono>
+#include <cstdio>
 #include <mutex>
 #include <vector>
 #include <string_view>
@@ -10,6 +11,7 @@
 #include <android/log.h>
 
 #include "timing-internal.hh"
+#include <runtime-base/strings.hh>
 
 namespace xamarin::android
 {
@@ -85,15 +87,34 @@ namespace xamarin::android
 
 			using namespace std::literals;
 			auto interval = seq->end - seq->start; // nanoseconds
+			auto seconds = static_cast<uint64_t>((std::chrono::duration_cast<std::chrono::seconds>(interval).count ()));
+			auto milliseconds = static_cast<uint64_t>((std::chrono::duration_cast<std::chrono::milliseconds>(interval)).count ());
+			auto nanoseconds = static_cast<uint64_t>((interval % 1ms).count ());
+
+#if defined(XA_HOST_NATIVEAOT)
+			constexpr size_t BufferSize = 256;
+			dynamic_local_string<BufferSize> log_message;
+			bool formatted = format_printf (
+				log_message,
+				"%s; elapsed: %lu:%lu::%lu",
+				message == nullptr ? "" : message,
+				seconds, milliseconds, nanoseconds
+			);
+
+			if (formatted) [[likely]] {
+				log_write (LOG_TIMING, level, log_message.get ());
+			} else {
+				log_error (LOG_TIMING, "format_printf failed. %s", strerror (errno));
+			}
+#else
 			auto text = std::format (
 				"{}; elapsed: {}:{}::{}"sv,
 				message == nullptr ? ""sv : message,
-				static_cast<uint64_t>((std::chrono::duration_cast<std::chrono::seconds>(interval).count ())),
-				static_cast<uint64_t>((std::chrono::duration_cast<std::chrono::milliseconds>(interval)).count ()),
-				static_cast<uint64_t>((interval % 1ms).count ())
+				seconds, milliseconds, nanoseconds
 			);
 
 			log_write (LOG_TIMING, level, text.c_str ());
+#endif
 		}
 
 	private:
