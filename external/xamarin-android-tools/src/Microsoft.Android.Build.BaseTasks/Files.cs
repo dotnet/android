@@ -472,7 +472,7 @@ namespace Microsoft.Android.Build.Tasks
 					var fullName = modifyCallback?.Invoke (entry.FullName) ?? entry.FullName;
 					var outfile = Path.GetFullPath (Path.Combine (destination, fullName));
 					if (!outfile.StartsWith (fullDestination, StringComparison.OrdinalIgnoreCase)) {
-						log?.LogWarning ($"Skipping zip entry \"{entry.FullName}\" (resolved as \"{fullName}\") because it would extract outside the destination directory: \"{outfile}\".");
+						log?.LogDebugMessage ($"Skipping zip entry \"{entry.FullName}\" (resolved as \"{fullName}\") because it would extract outside the destination directory: \"{outfile}\".");
 						continue;
 					}
 					files.Add (outfile);
