@@ -181,12 +181,12 @@ namespace Java.Interop {
 		internal static void Activate (IntPtr jobject, ConstructorInfo cinfo, object? []? parms)
 		{
 			try {
-				var newobj = RuntimeHelpers.GetUninitializedObject (cinfo.DeclaringType!);
-				if (newobj is IJavaPeerable peer) {
-					peer.SetPeerReference (new JniObjectReference (jobject));
-				} else {
-					throw new InvalidOperationException ($"Unsupported type: '{newobj}'");
-				}
+				var newobj = GetUninitializedObject (cinfo.DeclaringType!);
+				var reference = new JniObjectReference (jobject);
+				JniEnvironment.Runtime.ValueManager.ConstructPeer (
+					newobj,
+					ref reference,
+					JniObjectReferenceOptions.Copy);
 				cinfo.Invoke (newobj, parms);
 			} catch (Exception e) {
 				var m = FormattableString.Invariant (
@@ -425,15 +425,15 @@ namespace Java.Interop {
 			throw new MissingMethodException (
 					"No constructor found for " + type.FullName + "::.ctor(System.IntPtr, Android.Runtime.JniHandleOwnership)",
 					CreateJavaLocationException ());
+		}
 
-			static IJavaPeerable GetUninitializedObject (
-					[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-					Type type)
-			{
-				var v   = (IJavaPeerable) System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject (type);
-				v.SetJniManagedPeerState (JniManagedPeerStates.Replaceable | JniManagedPeerStates.Activatable);
-				return v;
-			}
+		static IJavaPeerable GetUninitializedObject (
+				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+				Type type)
+		{
+			var v   = (IJavaPeerable) System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject (type);
+			v.SetJniManagedPeerState (JniManagedPeerStates.Replaceable | JniManagedPeerStates.Activatable);
+			return v;
 		}
 
 		public static void RegisterType (string java_class, Type t)
