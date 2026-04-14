@@ -50,7 +50,8 @@ namespace Xamarin.Android.RuntimeTests
 		[Test]
 		public void InflateCustomView_ShouldNotLeakGlobalRefs ()
 		{
-			var inflater = (LayoutInflater) Application.Context.GetSystemService (Context.LayoutInflaterService)!;
+			var inflater = (LayoutInflater) Application.Context.GetSystemService (Context.LayoutInflaterService);
+			Assert.IsNotNull (inflater);
 
 			// Warm up: inflate once to ensure all caches and type mappings are populated
 			inflater.Inflate (Resource.Layout.lowercase_custom, null);
