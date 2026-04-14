@@ -821,8 +821,12 @@ namespace Android.Runtime {
 
 		internal void RemovePeer (IJavaPeerable value, IntPtr hash)
 		{
+			Logger.Log (LogLevel.Info, "monodroid-peer",
+				FormattableString.Invariant ($"RemovePeer: hash=0x{hash:x} type={value.GetType ().FullName}"));
 			lock (instances) {
 				if (!instances.TryGetValue (hash, out var targets)) {
+					Logger.Log (LogLevel.Info, "monodroid-peer",
+						FormattableString.Invariant ($"RemovePeer: no entry for hash=0x{hash:x}"));
 					return;
 				}
 				for (int i = targets.Count - 1; i >= 0; i--) {
@@ -840,6 +844,8 @@ namespace Android.Runtime {
 				if (targets.Count == 0) {
 					instances.Remove (hash);
 				}
+				Logger.Log (LogLevel.Info, "monodroid-peer",
+					FormattableString.Invariant ($"RemovePeer: done, instances.Count={instances.Count}"));
 			}
 		}
 
