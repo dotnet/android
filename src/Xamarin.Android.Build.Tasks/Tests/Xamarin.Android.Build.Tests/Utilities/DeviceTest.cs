@@ -176,9 +176,9 @@ namespace Xamarin.Android.Build.Tests
 			dotnet.ProjectDirectory = XABuildPaths.TestAssemblyOutputDirectory;
 			if (!dotnet.Build ("AcquireAndroidTarget", parameters: new string[] { "TestAvdForceCreation=false", $"Configuration={XABuildPaths.Configuration}" })) {
 				var output = string.Join (Environment.NewLine, dotnet.LastBuildOutput);
-				if (output.Contains ("did not finish launching") ||
-					output.Contains ("Emulator failed to start") ||
-					output.Contains ("failed to exit within the timeout")) {
+				if (output.Contains ("did not finish launching", StringComparison.OrdinalIgnoreCase) ||
+					output.Contains ("Emulator failed to start", StringComparison.OrdinalIgnoreCase) ||
+					output.Contains ("failed to exit within the timeout", StringComparison.OrdinalIgnoreCase)) {
 					Assert.Inconclusive ("Failed to acquire emulator due to transient infrastructure issue.");
 				}
 				Assert.Fail ($"Failed to acquire emulator:{Environment.NewLine}{output}");
