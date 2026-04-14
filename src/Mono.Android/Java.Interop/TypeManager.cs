@@ -197,18 +197,24 @@ namespace Java.Interop {
 					// the Java object alive forever.
 					// See: https://github.com/dotnet/android/issues/11101
 					var reference = new JniObjectReference (jobject);
-					Logger.Log (LogLevel.Info, "monodroid-peer",
-						FormattableString.Invariant ($"Activate: ConstructPeer handle=0x{jobject:x} type={cinfo.DeclaringType?.FullName}"));
+					if (Logger.LogGlobalRef) {
+						Logger.Log (LogLevel.Info, "monodroid-peer",
+							FormattableString.Invariant ($"Activate: ConstructPeer handle=0x{jobject:x} type={cinfo.DeclaringType?.FullName}"));
+					}
 					JniEnvironment.Runtime.ValueManager.ConstructPeer (
 						peer, ref reference, JniObjectReferenceOptions.Copy);
-					Logger.Log (LogLevel.Info, "monodroid-peer",
-						FormattableString.Invariant ($"Activate: after ConstructPeer PeerRef={peer.PeerReference} PeerRef.Type={peer.PeerReference.Type} State={peer.JniManagedPeerState}"));
+					if (Logger.LogGlobalRef) {
+						Logger.Log (LogLevel.Info, "monodroid-peer",
+							FormattableString.Invariant ($"Activate: after ConstructPeer PeerRef={peer.PeerReference} PeerRef.Type={peer.PeerReference.Type} State={peer.JniManagedPeerState}"));
+					}
 				} else {
 					throw new InvalidOperationException ($"Unsupported type: '{newobj}'");
 				}
 				cinfo.Invoke (newobj, parms);
-				Logger.Log (LogLevel.Info, "monodroid-peer",
-					FormattableString.Invariant ($"Activate: after ctor PeerRef={peer.PeerReference} PeerRef.Type={peer.PeerReference.Type} State={peer.JniManagedPeerState} IdentityHashCode=0x{peer.JniIdentityHashCode:x}"));
+				if (Logger.LogGlobalRef) {
+					Logger.Log (LogLevel.Info, "monodroid-peer",
+						FormattableString.Invariant ($"Activate: after ctor PeerRef={peer.PeerReference} PeerRef.Type={peer.PeerReference.Type} State={peer.JniManagedPeerState} IdentityHashCode=0x{peer.JniIdentityHashCode:x}"));
+				}
 			} catch (Exception e) {
 				var m = FormattableString.Invariant (
 					$"Could not activate JNI Handle 0x{jobject:x} (key_handle 0x{JNIEnv.IdentityHash (jobject):x}) of Java type '{JNIEnv.GetClassNameFromInstance (jobject)}' as managed type '{cinfo?.DeclaringType?.FullName}'.");

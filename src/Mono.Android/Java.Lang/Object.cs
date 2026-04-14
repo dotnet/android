@@ -109,18 +109,21 @@ namespace Java.Lang {
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		protected void SetHandle (IntPtr value, JniHandleOwnership transfer)
 		{
-			var existingRef = PeerReference;
 			var effectiveOptions = value == IntPtr.Zero ? JniObjectReferenceOptions.None : FromJniHandleOwnership (transfer);
-			Logger.Log (LogLevel.Info, "monodroid-peer",
-				FormattableString.Invariant ($"SetHandle: value=0x{value:x} transfer={transfer} existingPeerRef={existingRef} existingPeerRef.Type={existingRef.Type} effectiveOptions={effectiveOptions} State={((IJavaPeerable)this).JniManagedPeerState} type={GetType ().FullName}"));
+			if (Logger.LogGlobalRef) {
+				var existingRef = PeerReference;
+				Logger.Log (LogLevel.Info, "monodroid-peer",
+					FormattableString.Invariant ($"SetHandle: value=0x{value:x} transfer={transfer} existingPeerRef={existingRef} existingPeerRef.Type={existingRef.Type} effectiveOptions={effectiveOptions} State={((IJavaPeerable)this).JniManagedPeerState} type={GetType ().FullName}"));
+			}
 			var reference = new JniObjectReference (value);
-			var options   = FromJniHandleOwnership (transfer);
 			JniEnvironment.Runtime.ValueManager.ConstructPeer (
 					this,
 					ref reference,
 					effectiveOptions);
-			Logger.Log (LogLevel.Info, "monodroid-peer",
-				FormattableString.Invariant ($"SetHandle: after ConstructPeer PeerRef={PeerReference} PeerRef.Type={PeerReference.Type} State={((IJavaPeerable)this).JniManagedPeerState} IdentityHashCode=0x{JniIdentityHashCode:x}"));
+			if (Logger.LogGlobalRef) {
+				Logger.Log (LogLevel.Info, "monodroid-peer",
+					FormattableString.Invariant ($"SetHandle: after ConstructPeer PeerRef={PeerReference} PeerRef.Type={PeerReference.Type} State={((IJavaPeerable)this).JniManagedPeerState} IdentityHashCode=0x{JniIdentityHashCode:x}"));
+			}
 			JNIEnv.DeleteRef (value, transfer);
 		}
 

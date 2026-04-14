@@ -232,7 +232,13 @@ class SimpleValueManager : JniRuntime.JniValueManager
 #pragma warning disable IL2072
 		var self      = (IJavaPeerable) System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject (declType);
 #pragma warning restore IL2072
-		self.SetPeerReference (reference);
+		// Set Activatable + ConstructPeer BEFORE the constructor to
+		// create a proper global ref and eliminate the race window
+		// where bridge processing could see a raw local ref.
+		// See: https://github.com/dotnet/android/issues/11101
+		self.SetJniManagedPeerState (JniManagedPeerStates.Activatable);
+		JniEnvironment.Runtime.ValueManager.ConstructPeer (
+			self, ref reference, JniObjectReferenceOptions.Copy);
 
 		cinfo.Invoke (self, argumentValues);
 
