@@ -122,14 +122,28 @@ public sealed class JcwJavaSourceGenerator
 
 	static void WriteStaticInitializer (JavaPeerInfo type, TextWriter writer)
 	{
+		string className = JniSignatureHelper.GetJavaSimpleName (type.JavaName);
+
 		// Application and Instrumentation types cannot call registerNatives in their
-		// static initializer — the native library isn't loaded yet at that point.
-		// Their registration is deferred to ApplicationRegistration.registerApplications().
+		// static initializer — the runtime isn't ready yet at that point. Emit a
+		// lazy one-time helper instead so the first managed callback can register
+		// the class just before invoking its native method.
 		if (type.CannotRegisterInStaticConstructor) {
+			writer.Write ($$"""
+	private static boolean __md_natives_registered;
+	private static synchronized void __md_registerNatives ()
+	{
+		if (!__md_natives_registered) {
+			mono.android.Runtime.registerNatives ({{className}}.class);
+			__md_natives_registered = true;
+		}
+	}
+
+
+""");
 			return;
 		}
 
-		string className = JniSignatureHelper.GetJavaSimpleName (type.JavaName);
 		writer.Write ($$"""
 	static {
 		mono.android.Runtime.registerNatives ({{className}}.class);
@@ -153,7 +167,17 @@ public sealed class JcwJavaSourceGenerator
 	public {{simpleClassName}} ({{parameters}})
 	{
 		super ({{superArgs}});
+
+""");
+
+			if (!type.CannotRegisterInStaticConstructor) {
+				writer.Write ($$"""
 		if (getClass () == {{simpleClassName}}.class) nctor_{{ctor.ConstructorIndex}} ({{args}});
+
+""");
+			}
+
+			writer.Write ($$"""
 	}
 
 
@@ -196,6 +220,10 @@ public sealed class JcwJavaSourceGenerator
 
 	static void WriteMethods (JavaPeerInfo type, TextWriter writer)
 	{
+		string registerNativesLine = type.CannotRegisterInStaticConstructor
+			? "\t\t__md_registerNatives ();\n"
+			: "";
+
 		foreach (var method in type.MarshalMethods) {
 			if (method.IsConstructor) {
 				continue;
@@ -221,7 +249,7 @@ public sealed class JcwJavaSourceGenerator
 	@Override
 	public {{javaReturnType}} {{method.JniName}} ({{parameters}}){{throwsClause}}
 	{
-		{{returnPrefix}}{{method.NativeCallbackName}} ({{args}});
+{{registerNativesLine}}		{{returnPrefix}}{{method.NativeCallbackName}} ({{args}});
 	}
 	public native {{javaReturnType}} {{method.NativeCallbackName}} ({{parameters}});
 
@@ -232,7 +260,7 @@ public sealed class JcwJavaSourceGenerator
 
 	{{access}} {{javaReturnType}} {{method.JniName}} ({{parameters}}){{throwsClause}}
 	{
-		{{returnPrefix}}{{method.NativeCallbackName}} ({{args}});
+{{registerNativesLine}}		{{returnPrefix}}{{method.NativeCallbackName}} ({{args}});
 	}
 	{{access}} native {{javaReturnType}} {{method.NativeCallbackName}} ({{parameters}});
 

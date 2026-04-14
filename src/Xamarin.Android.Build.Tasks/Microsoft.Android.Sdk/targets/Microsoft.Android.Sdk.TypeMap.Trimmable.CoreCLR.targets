@@ -1,15 +1,71 @@
-<!-- Trimmable typemap targets for CoreCLR runtime.
-     Adds generated typemap assemblies to the linker inputs. -->
+<!-- Trimmable typemap: CoreCLR-specific (ILLink integration). -->
 <Project>
 
-  <!-- After typemap generation, add generated assemblies to resolved assemblies for the linker.
-       NOT as TrimmerRootAssembly — the trimmer must process TypeMapAttributes and trim entries
-       whose trimTarget types were removed. -->
-  <Target Name="_AddTrimmableTypeMapAssembliesToLinker"
-      AfterTargets="_GenerateJavaStubs"
-      Condition=" '@(_GeneratedTypeMapAssemblies->Count())' != '0' ">
+  <PropertyGroup>
+    <_TrimmableRuntimeProviderJavaName Condition=" '$(_TrimmableRuntimeProviderJavaName)' == '' ">mono.MonoRuntimeProvider</_TrimmableRuntimeProviderJavaName>
+  </PropertyGroup>
+
+  <!-- Add TypeMap DLLs to ILLink input. ILLink natively understands TypeMapAttribute<T>. -->
+  <Target Name="_AddTrimmableTypeMapToLinker"
+      BeforeTargets="PrepareForILLink;_RunILLink"
+      DependsOnTargets="_GenerateTrimmableTypeMap">
     <ItemGroup>
-      <_ResolvedAssemblies Include="@(_GeneratedTypeMapAssemblies)" />
+      <ManagedAssemblyToLink Include="$(_TypeMapOutputDirectory)*.dll">
+        <DestinationSubPath>%(Filename)%(Extension)</DestinationSubPath>
+      </ManagedAssemblyToLink>
+    </ItemGroup>
+  </Target>
+
+  <!-- Pass TypeMap entry assembly name to ILLink -->
+  <Target Name="_ConfigureTrimmableTypeMapForLinker"
+      BeforeTargets="PrepareForILLink;_RunILLink"
+      DependsOnTargets="_GenerateTrimmableTypeMap">
+    <PropertyGroup>
+      <_ExtraTrimmerArgs>--typemap-entry-assembly $(_TypeMapAssemblyName) $(_ExtraTrimmerArgs)</_ExtraTrimmerArgs>
+    </PropertyGroup>
+  </Target>
+
+  <!-- Add TypeMap DLLs to assembly store with per-ABI metadata.
+       TypeMap DLLs are ABI-agnostic (pure IL), so the same DLLs are added for every ABI.
+       This target batches over @(_BuildTargetAbis) to add items per-ABI. -->
+  <Target Name="_AddTrimmableTypeMapAssembliesToStore"
+      BeforeTargets="_BuildApkEmbed"
+      DependsOnTargets="_GenerateJavaStubs;_DefineBuildTargetAbis"
+      Outputs="%(_BuildTargetAbis.Identity)">
+    <PropertyGroup>
+      <_CurrentAbi>%(_BuildTargetAbis.Identity)</_CurrentAbi>
+      <_CurrentRid Condition=" '$(_CurrentAbi)' == 'arm64-v8a' ">android-arm64</_CurrentRid>
+      <_CurrentRid Condition=" '$(_CurrentAbi)' == 'armeabi-v7a' ">android-arm</_CurrentRid>
+      <_CurrentRid Condition=" '$(_CurrentAbi)' == 'x86_64' ">android-x64</_CurrentRid>
+      <_CurrentRid Condition=" '$(_CurrentAbi)' == 'x86' ">android-x86</_CurrentRid>
+    </PropertyGroup>
+    <!-- Try linked/ first (trimmed by ILLink in inner builds) -->
+    <ItemGroup>
+      <_CurrentLinkedTypeMapDlls Include="$(IntermediateOutputPath)$(_CurrentRid)/linked/_*.TypeMap.dll;$(IntermediateOutputPath)$(_CurrentRid)/linked/_Microsoft.Android.TypeMap*.dll" />
+    </ItemGroup>
+    <ItemGroup Condition=" '@(_CurrentLinkedTypeMapDlls->Count())' != '0' ">
+      <_BuildApkResolvedUserAssemblies Include="@(_CurrentLinkedTypeMapDlls)">
+        <Abi>$(_CurrentAbi)</Abi>
+        <RuntimeIdentifier>$(_CurrentRid)</RuntimeIdentifier>
+        <DestinationSubPath>$(_CurrentAbi)/%(_CurrentLinkedTypeMapDlls.Filename)%(_CurrentLinkedTypeMapDlls.Extension)</DestinationSubPath>
+        <DestinationSubDirectory>$(_CurrentAbi)/</DestinationSubDirectory>
+      </_BuildApkResolvedUserAssemblies>
+    </ItemGroup>
+    <!-- Fallback: use untrimmed TypeMap DLLs when linked/ is empty (Debug builds without ILLink). -->
+    <ItemGroup Condition=" '@(_CurrentLinkedTypeMapDlls->Count())' == '0' ">
+      <_CurrentTypeMapDlls Include="$(_TypeMapOutputDirectory)*.dll" />
+    </ItemGroup>
+    <ItemGroup Condition=" '@(_CurrentLinkedTypeMapDlls->Count())' == '0' ">
+      <_BuildApkResolvedUserAssemblies Include="@(_CurrentTypeMapDlls)">
+        <Abi>$(_CurrentAbi)</Abi>
+        <RuntimeIdentifier>$(_CurrentRid)</RuntimeIdentifier>
+        <DestinationSubPath>$(_CurrentAbi)/%(_CurrentTypeMapDlls.Filename)%(_CurrentTypeMapDlls.Extension)</DestinationSubPath>
+        <DestinationSubDirectory>$(_CurrentAbi)/</DestinationSubDirectory>
+      </_BuildApkResolvedUserAssemblies>
+    </ItemGroup>
+    <ItemGroup>
+      <_CurrentLinkedTypeMapDlls Remove="@(_CurrentLinkedTypeMapDlls)" />
+      <_CurrentTypeMapDlls Remove="@(_CurrentTypeMapDlls)" />
     </ItemGroup>
   </Target>
 

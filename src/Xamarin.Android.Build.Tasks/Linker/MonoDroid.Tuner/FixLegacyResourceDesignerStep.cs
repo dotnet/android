@@ -14,18 +14,11 @@ using Mono.Linker;
 using Mono.Linker.Steps;
 
 using Mono.Tuner;
-#if ILLINK
-using Resources = Microsoft.Android.Sdk.ILLink.Properties.Resources;
-#else   // !ILLINK
 using Resources = Xamarin.Android.Tasks.Properties.Resources;
-#endif  // ILLINK
 
 namespace MonoDroid.Tuner
 {
-	public class FixLegacyResourceDesignerStep : LinkDesignerBase
-#if !ILLINK
-		, Xamarin.Android.Tasks.IAssemblyModifierPipelineStep
-#endif  // !ILLINK
+	public class FixLegacyResourceDesignerStep : LinkDesignerBase, Xamarin.Android.Tasks.IAssemblyModifierPipelineStep
 	{
 		internal const string DesignerAssemblyName = "_Microsoft.Android.Resource.Designer";
 		internal const string DesignerAssemblyNamespace = "_Microsoft.Android.Resource.Designer";
@@ -35,14 +28,6 @@ namespace MonoDroid.Tuner
 		TypeDefinition designerType = null;
 		Dictionary<string, MethodDefinition> lookup;
 		Dictionary<string, MethodDefinition> lookupCaseInsensitive;
-
-		protected override void EndProcess ()
-		{
-			if (designerAssembly != null) {
-				LogMessage ($"  Setting Action on {designerAssembly.Name} to Link.");
-				Annotations.SetAction (designerAssembly, AssemblyAction.Link);
-			}
-		}
 
 		protected override void LoadDesigner ()
 		{
@@ -72,7 +57,6 @@ namespace MonoDroid.Tuner
 			}
 		}
 
-#if !ILLINK
 		public void ProcessAssembly (AssemblyDefinition assembly, Xamarin.Android.Tasks.StepContext context)
 		{
 			// Only run this step on non-main user Android assemblies
@@ -81,7 +65,6 @@ namespace MonoDroid.Tuner
 
 			context.IsAssemblyModified |= ProcessAssemblyDesigner (assembly);
 		}
-#endif  // !ILLINK
 
 		internal override bool ProcessAssemblyDesigner (AssemblyDefinition assembly)
 		{
