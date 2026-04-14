@@ -1069,6 +1069,11 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>The following are literal names and should not be translated: Maven, group_id, artifact_id
 {0} - A Maven artifact specification</comment>
   </data>
+  <data name="XA4250" xml:space="preserve">
+    <value>Manifest-referenced type '{0}' was not found in any scanned assembly. It may be a framework type.</value>
+    <comment>The following are literal names and should not be translated: Manifest, framework.
+{0} - Java type name from AndroidManifest.xml</comment>
+  </data>
   <data name="XA0142" xml:space="preserve">
     <value>指令 '{0}' 失敗。\n{1}</value>
     <comment>'{0}' is a failed command name (potentially with path) followed by all the arguments passed to it. {1} is the combined output on the standard error and standard output streams.</comment>
