@@ -26,7 +26,15 @@ namespace Xamarin.Android.Tasks
 			var doc = manifest.Document;
 
 			var instrumentation = doc?.Root?.Element ("instrumentation");
-			InstrumentationName = instrumentation?.Attribute (androidNs + "name")?.Value;
+			if (instrumentation is null) {
+				Log.LogCodedError ("XA1043", Properties.Resources.XA1043);
+				return false;
+			}
+			InstrumentationName = instrumentation.Attribute (androidNs + "name")?.Value;
+			if (string.IsNullOrEmpty (InstrumentationName)) {
+				Log.LogCodedError ("XA1042", Properties.Resources.XA1042);
+				return false;
+			}
 
 			return !Log.HasLoggedErrors;
 		}
