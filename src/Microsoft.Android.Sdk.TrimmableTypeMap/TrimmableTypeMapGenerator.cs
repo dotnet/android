@@ -231,7 +231,7 @@ public class TrimmableTypeMapGenerator
 			while (baseJniName is not null) {
 				string? nextBase = null;
 				foreach (var basePeer in allPeers) {
-					if (basePeer.JavaName != baseJniName || basePeer.DoNotGenerateAcw) {
+					if (!string.Equals (basePeer.JavaName, baseJniName, StringComparison.Ordinal) || basePeer.DoNotGenerateAcw) {
 						continue;
 					}
 
