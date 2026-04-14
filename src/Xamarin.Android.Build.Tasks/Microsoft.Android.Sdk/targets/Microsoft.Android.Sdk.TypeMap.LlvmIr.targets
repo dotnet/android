@@ -235,7 +235,8 @@
     avoid mutating files in the shared NuGet cache or shared intermediate output paths.
   -->
   <Target Name="_CollectPreTrimmingAssemblies"
-      BeforeTargets="_PreTrimmingFixLegacyDesigner"
+      AfterTargets="ComputeResolvedFilesToPublishList"
+      DependsOnTargets="_ComputeAssembliesToPostprocessOnPublish"
       Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidUseDesignerAssembly)' == 'True' ">
     <ItemGroup>
       <_PreTrimmingAssembly Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' and '%(ResolvedFileToPublish.PostprocessAssembly)' == 'true' " />
@@ -243,7 +244,7 @@
   </Target>
 
   <Target Name="_PreTrimmingFixLegacyDesigner"
-      BeforeTargets="ILLink"
+      AfterTargets="ComputeResolvedFilesToPublishList"
       DependsOnTargets="_CollectPreTrimmingAssemblies"
       Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidUseDesignerAssembly)' == 'True' "
       Inputs="@(_PreTrimmingAssembly)"
@@ -267,7 +268,7 @@
     ResolvedFileToPublish is populated fresh each build.
   -->
   <Target Name="_PreTrimmingFixLegacyDesignerUpdateItems"
-      BeforeTargets="ILLink"
+      AfterTargets="ComputeResolvedFilesToPublishList"
       DependsOnTargets="_PreTrimmingFixLegacyDesigner"
       Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidUseDesignerAssembly)' == 'True' ">
     <ItemGroup>
