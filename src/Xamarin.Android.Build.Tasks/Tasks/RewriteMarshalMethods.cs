@@ -145,38 +145,39 @@ public class RewriteMarshalMethods : AndroidTask
 		var assemblyItems = assemblyDict.Values.ToList ();
 
 		XAAssemblyResolver resolver = MonoAndroidHelper.MakeResolver (Log, useMarshalMethods: true, targetArch, assemblyDict);
-
-		MarshalMethodsCollection classifier;
 		try {
-			classifier = MarshalMethodsCollection.FromAssemblies (targetArch, assemblyItems, resolver, Log);
-		} catch (Exception ex) {
-			Log.LogError ($"[{targetArch}] Failed to classify marshal methods: {ex.Message}");
-			Log.LogDebugMessage (ex.ToString ());
-			return;
+			MarshalMethodsCollection classifier;
+			try {
+				classifier = MarshalMethodsCollection.FromAssemblies (targetArch, assemblyItems, resolver, Log);
+			} catch (Exception ex) {
+				Log.LogError ($"[{targetArch}] Failed to classify marshal methods: {ex.Message}");
+				Log.LogDebugMessage (ex.ToString ());
+				return;
+			}
+
+			// Step 2: Rewrite assemblies to the per-RID output directory
+			ManagedMarshalMethodsLookupInfo? lookupInfo = null;
+			HashSet<string> rewrittenOriginalPaths;
+			if (!EnableManagedMarshalMethodsLookup) {
+				rewrittenOriginalPaths = RewriteAssemblies (targetArch, classifier, resolver, brokenExceptionTransitionsEnabled);
+				classifier.AddSpecialCaseMethods ();
+			} else {
+				classifier.AddSpecialCaseMethods ();
+				lookupInfo = new ManagedMarshalMethodsLookupInfo (Log);
+				rewrittenOriginalPaths = RewriteAssemblies (targetArch, classifier, resolver, brokenExceptionTransitionsEnabled, lookupInfo);
+			}
+
+			ReportStatistics (targetArch, classifier);
+
+			// Step 3: Build output items for rewritten assemblies
+			BuildRewrittenAssembliesOutput (rewrittenOriginalPaths);
+
+			// Step 4: Build NativeCodeGenStateObject and generate .ll
+			var codeGenState = MarshalMethodCecilAdapter.CreateNativeCodeGenStateObjectFromClassifier (targetArch, classifier, lookupInfo);
+			GenerateLlvmIr (targetArch, abi, androidRuntime, codeGenState);
+		} finally {
+			resolver.Dispose ();
 		}
-
-		// Step 2: Rewrite assemblies to the per-RID output directory
-		HashSet<string> rewrittenOriginalPaths;
-		if (!EnableManagedMarshalMethodsLookup) {
-			rewrittenOriginalPaths = RewriteAssemblies (targetArch, classifier, resolver, brokenExceptionTransitionsEnabled);
-			classifier.AddSpecialCaseMethods ();
-		} else {
-			classifier.AddSpecialCaseMethods ();
-			var lookupInfo = new ManagedMarshalMethodsLookupInfo (Log);
-			rewrittenOriginalPaths = RewriteAssemblies (targetArch, classifier, resolver, brokenExceptionTransitionsEnabled, lookupInfo);
-		}
-
-		ReportStatistics (targetArch, classifier);
-
-		// Step 3: Build output items for rewritten assemblies
-		BuildRewrittenAssembliesOutput (rewrittenOriginalPaths);
-
-		// Step 4: Build NativeCodeGenStateObject and generate .ll
-		var codeGenState = MarshalMethodCecilAdapter.CreateNativeCodeGenStateObjectFromClassifier (targetArch, classifier);
-		GenerateLlvmIr (targetArch, abi, androidRuntime, codeGenState);
-
-		// Step 5: Dispose Cecil resolvers
-		resolver.Dispose ();
 	}
 
 	/// <summary>

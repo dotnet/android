@@ -77,7 +77,7 @@ class MarshalMethodCecilAdapter
 	/// JavaTypesForJCW, TypeCache, etc.) is not available.  Only populates marshal methods
 	/// data needed for LLVM IR generation.
 	/// </summary>
-	public static NativeCodeGenStateObject CreateNativeCodeGenStateObjectFromClassifier (AndroidTargetArch arch, MarshalMethodsCollection classifier)
+	public static NativeCodeGenStateObject CreateNativeCodeGenStateObjectFromClassifier (AndroidTargetArch arch, MarshalMethodsCollection classifier, ManagedMarshalMethodsLookupInfo? lookupInfo = null)
 	{
 		var obj = new NativeCodeGenStateObject {
 			TargetArch = arch,
@@ -87,7 +87,7 @@ class MarshalMethodCecilAdapter
 			var methods = new List<MarshalMethodEntryObject> (group.Value.Count);
 
 			foreach (var method in group.Value) {
-				var entry = CreateEntry (method, info: null);
+				var entry = CreateEntry (method, lookupInfo);
 				methods.Add (entry);
 			}
 
