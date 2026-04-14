@@ -39,6 +39,7 @@ public class TrimmableTypeMapGenerator
 		}
 
 		RootManifestReferencedTypes (allPeers, PrepareManifestForRooting (manifestTemplate, manifestConfig));
+		PropagateDeferredRegistrationToBaseClasses (allPeers);
 
 		var generatedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion);
 		var jcwPeers = allPeers.Where (p =>
@@ -203,6 +204,42 @@ public class TrimmableTypeMapGenerator
 				}
 			} else {
 				logger.LogManifestReferencedTypeNotFoundWarning (name);
+			}
+		}
+	}
+
+	/// <summary>
+	/// Propagates <see cref="JavaPeerInfo.CannotRegisterInStaticConstructor"/> up the base class chain.
+	/// When a type like NUnitInstrumentation has deferred registration, its base class
+	/// TestInstrumentation_1 must also defer — otherwise the base class <c>&lt;clinit&gt;</c> will call
+	/// <c>registerNatives</c> before the managed runtime is ready.
+	/// </summary>
+	internal static void PropagateDeferredRegistrationToBaseClasses (List<JavaPeerInfo> allPeers)
+	{
+		// In practice only 1–2 types need propagation (one Application, maybe one
+		// Instrumentation), each with a short base-class chain.  A linear scan per
+		// ancestor is simpler and cheaper than building a Dictionary<JavaName, List<Peer>>
+		// lookup over all peers up front.
+		foreach (var peer in allPeers) {
+			if (peer.CannotRegisterInStaticConstructor) {
+				PropagateToAncestors (peer.BaseJavaName, allPeers);
+			}
+		}
+
+		static void PropagateToAncestors (string? baseJniName, List<JavaPeerInfo> allPeers)
+		{
+			while (baseJniName is not null) {
+				string? nextBase = null;
+				foreach (var basePeer in allPeers) {
+					if (!string.Equals (basePeer.JavaName, baseJniName, StringComparison.Ordinal) || basePeer.DoNotGenerateAcw) {
+						continue;
+					}
+
+					basePeer.CannotRegisterInStaticConstructor = true;
+					nextBase = basePeer.BaseJavaName;
+				}
+
+				baseJniName = nextBase;
 			}
 		}
 	}
