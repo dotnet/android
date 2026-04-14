@@ -196,16 +196,66 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 	public TypeMappingDebugNativeAssemblyGeneratorCLR (TaskLoggingHelper log, TypeMapGenerator.ModuleDebugData data)
 		: base (log)
 	{
-		if (data.UniqueAssemblies == null || data.UniqueAssemblies.Count == 0) {
-			throw new InvalidOperationException ("Internal error: set of unique assemblies must be provided.");
-		}
-
-		this.data = data;
+		this.data = data ?? throw new ArgumentNullException (nameof (data));
+		this.data.UniqueAssemblies = EnsureUniqueAssemblies (this.data);
 
 		javaToManagedMap = new ();
 		managedToJavaMap = new ();
 		uniqueAssemblies = new ();
 		managedTypeInfos = new ();
+	}
+
+	static List<TypeMapGenerator.TypeMapDebugAssembly> EnsureUniqueAssemblies (TypeMapGenerator.ModuleDebugData data)
+	{
+		if (data.UniqueAssemblies != null && data.UniqueAssemblies.Count > 0) {
+			return data.UniqueAssemblies;
+		}
+
+		var unique = new Dictionary<string, TypeMapGenerator.TypeMapDebugAssembly> (StringComparer.OrdinalIgnoreCase);
+
+		AddUniqueAssemblies (unique, data.ManagedToJavaMap);
+		AddUniqueAssemblies (unique, data.JavaToManagedMap);
+
+		return new List<TypeMapGenerator.TypeMapDebugAssembly> (unique.Values);
+	}
+
+	static void AddUniqueAssemblies (Dictionary<string, TypeMapGenerator.TypeMapDebugAssembly> unique, List<TypeMapGenerator.TypeMapDebugEntry> entries)
+	{
+		if (entries == null) {
+			return;
+		}
+
+		foreach (var entry in entries) {
+			if (entry == null) {
+				continue;
+			}
+
+			var td = entry.TypeDefinition;
+			if (td == null) {
+				continue;
+			}
+
+			string? asmName = entry.AssemblyName;
+			if (String.IsNullOrEmpty (asmName)) {
+				asmName = td.Module.Assembly?.Name?.Name;
+			}
+
+			if (asmName is null || asmName.Length == 0) {
+				continue;
+			}
+
+			string assemblyName = asmName;
+			if (unique.ContainsKey (assemblyName)) {
+				continue;
+			}
+
+			var asmInfo = new TypeMapGenerator.TypeMapDebugAssembly {
+				MVID = td.Module.Mvid,
+				MVIDBytes = td.Module.Mvid.ToByteArray (),
+				Name = assemblyName,
+			};
+			unique.Add (assemblyName, asmInfo);
+		}
 	}
 
 	protected override void Construct (LlvmIrModule module)

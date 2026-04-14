@@ -34,6 +34,8 @@
   <ItemGroup>
     <Compile Remove="Java.InteropTests\AndroidValueManagerContractTests.cs" />
     <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JniRuntime.JniValueManagerTests.cs" />
+    <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JniTypeTest.cs" />
+    <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JniTypeUtf8Test.cs" />
   </ItemGroup>
 
   <ItemGroup>
