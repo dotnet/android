@@ -236,6 +236,15 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     Condition=" '$(AndroidUseDesignerAssembly)' == 'True' "
     AfterTargets="ComputeResolvedFilesToPublishList"
     DependsOnTargets="_SetupDesignerProperties">
+  <PropertyGroup>
+    <_DesignerLinkerDescriptor>$(IntermediateOutputPath)_Microsoft.Android.Resource.Designer.xml</_DesignerLinkerDescriptor>
+  </PropertyGroup>
+  <WriteLinesToFile
+      File="$(_DesignerLinkerDescriptor)"
+      Overwrite="true"
+      WriteOnlyWhenDifferent="true"
+      Lines="&lt;linker&gt;&lt;assembly fullname=&quot;$(_DesignerAssemblyName)&quot;&gt;&lt;type fullname=&quot;*&quot; preserve=&quot;all&quot; /&gt;&lt;/assembly&gt;&lt;/linker&gt;"
+  />
   <ItemGroup>
     <ResolvedFileToPublish Include="$(_GenerateResourceDesignerAssemblyOutput)">
       <RelativePath>$(_DesignerAssemblyName).dll</RelativePath>
@@ -243,6 +252,12 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       <PostprocessAssembly>true</PostprocessAssembly>
       <IsTrimmable>true</IsTrimmable>
     </ResolvedFileToPublish>
+    <!-- Preserve all designer types/members via descriptor so ILLink keeps resource
+         properties. Using a descriptor (not TrimmerRootAssembly) avoids making the
+         assembly an entry point, which would pull netstandard.dll into the output.
+         See https://github.com/dotnet/runtime/issues/126518 -->
+    <TrimmerRootDescriptor Include="$(_DesignerLinkerDescriptor)" />
+    <FileWrites Include="$(_DesignerLinkerDescriptor)" />
   </ItemGroup>
 </Target>
 

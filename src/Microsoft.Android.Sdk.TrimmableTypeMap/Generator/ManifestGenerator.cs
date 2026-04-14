@@ -116,10 +116,7 @@ class ManifestGenerator
 		}
 
 		// Apply manifest placeholders
-		string? placeholders = ManifestPlaceholders;
-		if (placeholders is not null && placeholders.Length > 0) {
-			ApplyPlaceholders (doc, placeholders);
-		}
+		ApplyPlaceholders (doc, ManifestPlaceholders);
 
 		return (doc, providerNames);
 	}
@@ -250,8 +247,12 @@ class ManifestGenerator
 	/// Replaces ${key} placeholders in all attribute values throughout the document.
 	/// Placeholder format: "key1=value1;key2=value2"
 	/// </summary>
-	static void ApplyPlaceholders (XDocument doc, string placeholders)
+	internal static void ApplyPlaceholders (XDocument doc, string? placeholders)
 	{
+		if (placeholders.IsNullOrEmpty ()) {
+			return;
+		}
+
 		var replacements = new Dictionary<string, string> (StringComparer.Ordinal);
 		foreach (var entry in placeholders.Split (PlaceholderSeparators, StringSplitOptions.RemoveEmptyEntries)) {
 			var eqIndex = entry.IndexOf ('=');

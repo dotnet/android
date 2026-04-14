@@ -21,7 +21,7 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			yield return t;
 		}
 
-		if (TrimmableTypeMap.Instance.TryGetType (jniSimpleReference, out var type)) {
+		if (TrimmableTypeMap.Instance.TryGetTargetType (jniSimpleReference, out var type)) {
 			yield return type;
 		}
 	}
@@ -58,6 +58,18 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 		}
 
 		return base.GetInvokerTypeCore (type);
+	}
+
+	protected override IReadOnlyList<string>? GetStaticMethodFallbackTypesCore (string jniSimpleReference)
+	{
+		int slash = jniSimpleReference.LastIndexOf ('/');
+		var desugarType = slash > 0
+			? $"{jniSimpleReference.Substring (0, slash + 1)}Desugar{jniSimpleReference.Substring (slash + 1)}"
+			: $"Desugar{jniSimpleReference}";
+		return new[] {
+			$"{desugarType}$_CC",
+			$"{jniSimpleReference}$-CC",
+		};
 	}
 
 	public override void RegisterNativeMembers (

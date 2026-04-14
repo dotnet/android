@@ -166,6 +166,7 @@ public class ModelBuilderTests : FixtureTestBase
 		[Theory]
 		[InlineData ("java/lang/Object", "Java.Lang.Object", "Mono.Android", "Java_Lang_Object_Proxy")]
 		[InlineData ("com/example/Outer$Inner", "Com.Example.Outer.Inner", "App", "Com_Example_Outer_Inner_Proxy")]
+		[InlineData ("my/app/GenericHolder", "MyApp.Generic.GenericHolder`1", "App", "MyApp_Generic_GenericHolder_1_Proxy")]
 		public void Build_PeerWithActivation_CreatesNamedProxy (string jniName, string managedName, string asmName, string expectedProxyName)
 		{
 			var peer = MakePeerWithActivation (jniName, managedName, asmName);
