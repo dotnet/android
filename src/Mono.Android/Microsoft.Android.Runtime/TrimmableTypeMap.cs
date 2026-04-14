@@ -20,6 +20,7 @@ namespace Microsoft.Android.Runtime;
 class TrimmableTypeMap
 {
 	static readonly Lock s_initLock = new ();
+	static readonly JavaPeerProxy s_noPeerSentinel = new MissingJavaPeerProxy ();
 	static TrimmableTypeMap? s_instance;
 
 	internal static TrimmableTypeMap Instance =>
@@ -27,11 +28,14 @@ class TrimmableTypeMap
 			"TrimmableTypeMap has not been initialized. Ensure RuntimeFeature.TrimmableTypeMap is enabled and the JNI runtime is initialized.");
 
 	readonly IReadOnlyDictionary<string, Type> _typeMap;
-	readonly ConcurrentDictionary<Type, JavaPeerProxy?> _proxyCache = new ();
+	readonly IReadOnlyDictionary<Type, Type> _proxyTypeMap;
+	readonly ConcurrentDictionary<Type, JavaPeerProxy> _proxyCache = new ();
+	readonly ConcurrentDictionary<string, JavaPeerProxy> _peerProxyCache = new (StringComparer.Ordinal);
 
 	TrimmableTypeMap ()
 	{
 		_typeMap = TypeMapping.GetOrCreateExternalTypeMapping<Java.Lang.Object> ();
+		_proxyTypeMap = TypeMapping.GetOrCreateProxyTypeMapping<Java.Lang.Object> ();
 	}
 
 	/// <summary>
@@ -53,9 +57,6 @@ class TrimmableTypeMap
 		}
 	}
 
-	/// <summary>
-	/// Registers the <c>mono.android.Runtime.registerNatives</c> JNI native method.
-	/// </summary>
 	unsafe void RegisterNatives ()
 	{
 		using var runtimeClass = new JniType ("mono/android/Runtime"u8);
@@ -66,65 +67,111 @@ class TrimmableTypeMap
 		}
 	}
 
-	internal bool TryGetType (string jniSimpleReference, [NotNullWhen (true)] out Type? type)
-		=> _typeMap.TryGetValue (jniSimpleReference, out type);
-
-	/// <summary>
-	/// Finds the proxy for a managed type by resolving its JNI name (from [Register] or
-	/// [JniTypeSignature] attributes) and looking it up in the TypeMap dictionary.
-	/// Results are cached per type.
-	/// </summary>
-	internal JavaPeerProxy? GetProxyForManagedType (Type managedType)
+	internal bool TryGetTargetType (string jniSimpleReference, [NotNullWhen (true)] out Type? type)
 	{
-		return _proxyCache.GetOrAdd (managedType, static (type, self) => {
-			// First check if the type itself IS a proxy (has self-applied attribute)
-			var direct = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-			if (direct is not null) {
-				return direct;
+		type = GetProxyForJavaType (jniSimpleReference)?.TargetType;
+		return type is not null;
+	}
+
+	JavaPeerProxy? GetProxyForManagedType (Type managedType)
+	{
+		var proxy = _proxyCache.GetOrAdd (managedType, static (type, self) => {
+			if (!self._proxyTypeMap.TryGetValue (type, out var proxyType)) {
+				return s_noPeerSentinel;
 			}
 
-			// Resolve the JNI name from the managed type's attributes
-			if (!TryGetJniNameForType (type, out var jniName)) {
-				return null;
-			}
-
-			// Look up the proxy type in the TypeMap dictionary
-			if (!self._typeMap.TryGetValue (jniName, out var proxyType)) {
-				return null;
-			}
-
-			return proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+			return proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false) ?? s_noPeerSentinel;
 		}, this);
+		return ReferenceEquals (proxy, s_noPeerSentinel) ? null : proxy;
 	}
 
-	/// <summary>
-	/// Resolves a managed type's JNI name from its <see cref="IJniNameProviderAttribute"/>
-	/// (implemented by both <c>[Register]</c> and <c>[JniTypeSignature]</c>).
-	/// </summary>
-	internal static bool TryGetJniNameForType (Type type, [NotNullWhen (true)] out string? jniName)
+	JavaPeerProxy? GetProxyForJavaType (string className)
 	{
-		if (type.GetCustomAttributes (typeof (IJniNameProviderAttribute), inherit: false) is [IJniNameProviderAttribute provider, ..]
-			&& !string.IsNullOrEmpty (provider.Name)) {
-			jniName = provider.Name.Replace ('.', '/');
-			return true;
-		}
+		var proxy = _peerProxyCache.GetOrAdd (className, static (name, self) => {
+			if (!self._typeMap.TryGetValue (name, out var mappedType)) {
+				return s_noPeerSentinel;
+			}
 
-		jniName = null;
-		return false;
+			var proxy = mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+			if (proxy is null) {
+				// Alias typemap entries (for example "jni/name[1]") are not implemented yet.
+				// Support for them will be added in a follow-up for https://github.com/dotnet/android/issues/10788.
+				throw new NotImplementedException (
+					$"Trimmable typemap alias handling is not implemented yet for '{name}'.");
+			}
+
+			return proxy;
+		}, this);
+		return ReferenceEquals (proxy, s_noPeerSentinel) ? null : proxy;
 	}
 
-	/// <summary>
-	/// Creates a peer instance using the proxy's CreateInstance method.
-	/// Given a managed type, resolves the JNI name, finds the proxy, and calls CreateInstance.
-	/// </summary>
-	internal bool TryCreatePeer (Type type, IntPtr handle, JniHandleOwnership transfer)
+	internal bool TryGetJniNameForManagedType (Type managedType, [NotNullWhen (true)] out string? jniName)
 	{
-		var proxy = GetProxyForManagedType (type);
-		if (proxy is null) {
-			return false;
+		jniName = GetProxyForManagedType (managedType)?.JniName;
+		return jniName is not null;
+	}
+
+	internal JavaPeerProxy? GetProxyForJavaObject (IntPtr handle, Type? targetType = null)
+	{
+		if (handle == IntPtr.Zero) {
+			return null;
 		}
 
-		return proxy.CreateInstance (handle, transfer) != null;
+		return TryGetProxyFromHierarchy (this, handle, targetType) ??
+			TryGetProxyFromTargetType (this, handle, targetType);
+
+		static JavaPeerProxy? TryGetProxyFromHierarchy (TrimmableTypeMap self, IntPtr handle, Type? targetType)
+		{
+			var selfRef = new JniObjectReference (handle);
+			var jniClass = JniEnvironment.Types.GetObjectClass (selfRef);
+
+			try {
+				while (jniClass.IsValid) {
+					var className = JniEnvironment.Types.GetJniTypeNameFromClass (jniClass);
+					if (className != null) {
+						var proxy = self.GetProxyForJavaType (className);
+						if (proxy != null && (targetType is null || targetType.IsAssignableFrom (proxy.TargetType))) {
+							return proxy;
+						}
+					}
+
+					var super = JniEnvironment.Types.GetSuperclass (jniClass);
+					JniObjectReference.Dispose (ref jniClass);
+					jniClass = super;
+				}
+			} finally {
+				JniObjectReference.Dispose (ref jniClass);
+			}
+
+			return null;
+		}
+
+		static JavaPeerProxy? TryGetProxyFromTargetType (TrimmableTypeMap self, IntPtr handle, Type? targetType)
+		{
+			if (targetType is null) {
+				return null;
+			}
+
+			var proxy = self.GetProxyForManagedType (targetType);
+			// Verify the Java object is actually assignable to the target Java type
+			// before returning the fallback proxy. Without this, we'd create invalid peers
+			// (e.g., IAppendableInvoker wrapping a java.lang.Integer).
+			if (proxy is null || !self.TryGetJniNameForManagedType (targetType, out var targetJniName)) {
+				return null;
+			}
+
+			var selfRef = new JniObjectReference (handle);
+			var objClass = default (JniObjectReference);
+			var targetClass = default (JniObjectReference);
+			try {
+				objClass = JniEnvironment.Types.GetObjectClass (selfRef);
+				targetClass = JniEnvironment.Types.FindClass (targetJniName);
+				return JniEnvironment.Types.IsAssignableFrom (objClass, targetClass) ? proxy : null;
+			} finally {
+				JniObjectReference.Dispose (ref objClass);
+				JniObjectReference.Dispose (ref targetClass);
+			}
+		}
 	}
 
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
@@ -145,39 +192,6 @@ class TrimmableTypeMap
 	internal JavaPeerContainerFactory? GetContainerFactory (Type type)
 	{
 		return GetProxyForManagedType (type)?.GetContainerFactory ();
-	}
-
-	/// <summary>
-	/// Creates a managed peer instance for a Java object being constructed.
-	/// Called from generated UCO constructor wrappers (nctor_*_uco).
-	/// </summary>
-	internal static void ActivateInstance (IntPtr self, Type targetType)
-	{
-		var instance = s_instance;
-		if (instance is null) {
-			throw new InvalidOperationException ("TrimmableTypeMap has not been initialized.");
-		}
-
-		// Look up the proxy via JNI class name → TypeMap dictionary.
-		// We can't use targetType.GetCustomAttribute<JavaPeerProxy>() because the
-		// self-application attribute is on the proxy type, not the target type.
-		var selfRef = new JniObjectReference (self);
-		var jniClass = JniEnvironment.Types.GetObjectClass (selfRef);
-		var className = JniEnvironment.Types.GetJniTypeNameFromClass (jniClass);
-		JniObjectReference.Dispose (ref jniClass);
-
-		if (className is null || !instance._typeMap.TryGetValue (className, out var proxyType)) {
-			throw new InvalidOperationException (
-				$"Failed to create peer for type '{targetType.FullName}' (jniClass='{className}'). " +
-				"Ensure the type has a generated proxy in the TypeMap assembly.");
-		}
-
-		var proxy = proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-		if (proxy is null || proxy.CreateInstance (self, JniHandleOwnership.DoNotTransfer) is null) {
-			throw new InvalidOperationException (
-				$"Failed to create peer for type '{targetType.FullName}'. " +
-				"Ensure the type has a generated proxy in the TypeMap assembly.");
-		}
 	}
 
 	[UnmanagedCallersOnly]
@@ -208,4 +222,14 @@ class TrimmableTypeMap
 			Environment.FailFast ($"TrimmableTypeMap: Failed to register natives for class '{className}'.", ex);
 		}
 	}
+
+	sealed class MissingJavaPeerProxy : JavaPeerProxy
+	{
+		public MissingJavaPeerProxy () : base ("<missing>", typeof (Java.Lang.Object), null)
+		{
+		}
+
+		public override IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer) => null;
+	}
+
 }

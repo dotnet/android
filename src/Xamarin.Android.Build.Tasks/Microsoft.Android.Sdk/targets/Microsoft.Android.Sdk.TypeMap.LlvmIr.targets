@@ -17,6 +17,13 @@
     <_BeforeCompileToDalvik>$(_BeforeCompileToDalvik);_GetMonoPlatformJarPath</_BeforeCompileToDalvik>
   </PropertyGroup>
 
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap"
+        Value="false"
+        Trim="true"
+    />
+  </ItemGroup>
+
   <PropertyGroup>
     <_GenerateJavaStubsDependsOnTargets>
       _SetLatestTargetFrameworkVersion;
@@ -160,7 +167,7 @@
   <Target Name="_PrepareLinking"
       Condition=" '$(PublishTrimmed)' == 'true' "
       AfterTargets="ComputeResolvedFilesToPublishList"
-      DependsOnTargets="GetReferenceAssemblyPaths;_CreatePropertiesCache">
+      DependsOnTargets="GetReferenceAssemblyPaths;_CreatePropertiesCache;_AddResourceDesignerToPublishFiles">
     <PropertyGroup>
       <TrimmerRemoveSymbols Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' ">true</TrimmerRemoveSymbols>
       <_ExtraTrimmerArgs Condition=" '$(_EnableSerializationDiscovery)' != 'false' ">--enable-serialization-discovery $(_ExtraTrimmerArgs)</_ExtraTrimmerArgs>
@@ -197,12 +204,6 @@
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="Microsoft.Android.Sdk.ILLink.PreserveJavaInterfaces" />
       <!-- Custom steps that run after MarkStep -->
       <!-- Custom steps that run after CleanStep -->
-      <_TrimmerCustomSteps
-          Condition=" '$(AndroidUseDesignerAssembly)' == 'true' "
-          Include="$(_AndroidLinkerCustomStepAssembly)"
-          BeforeStep="MarkStep"
-          Type="MonoDroid.Tuner.FixLegacyResourceDesignerStep"
-      />
       <_TrimmerCustomSteps
           Condition=" '$(_AndroidTypeMapImplementation)' == 'managed' "
           Include="$(_AndroidLinkerCustomStepAssembly)"
@@ -241,13 +242,14 @@
       AfterTargets="ILLink"
       Condition=" '$(PublishTrimmed)' == 'true' ">
     <ItemGroup>
-      <_PostTrimmingAssembly Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
+      <_PostTrimmingAssembly Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' and '%(ResolvedFileToPublish.PostprocessAssembly)' == 'true' " />
     </ItemGroup>
     <PostTrimmingPipeline
         Assemblies="@(_PostTrimmingAssembly)"
         AddKeepAlives="$(AndroidAddKeepAlives)"
         AndroidLinkResources="$(AndroidLinkResources)"
-        Deterministic="$(Deterministic)" />
+        Deterministic="$(Deterministic)"
+        UseDesignerAssembly="$(AndroidUseDesignerAssembly)" />
   </Target>
 
   <!-- Inject _TypeMapKind into the property cache -->

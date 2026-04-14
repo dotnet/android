@@ -1,16 +1,18 @@
-// Usage: dotnet run submit_review.cs <owner> <repo> <pr_number> <review_json_path>
+// Usage: dotnet run submit_review.cs <owner> <repo> <pr_number> <review_json_path> [--dry-run]
 //
 // Validates the review JSON structure, then submits it as a batched PR review
 // via `gh api`. Requires the `gh` CLI to be installed and authenticated.
+//
+// --dry-run: Validate and print the review JSON without submitting to GitHub.
 
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 
-if (args.Length != 4)
+if (args.Length < 4 || args.Length > 5)
 {
-	Console.Error.WriteLine ($"Usage: dotnet run submit_review.cs <owner> <repo> <pr_number> <review_json_path>");
+	Console.Error.WriteLine ($"Usage: dotnet run submit_review.cs <owner> <repo> <pr_number> <review_json_path> [--dry-run]");
 	return 1;
 }
 
@@ -18,7 +20,16 @@ var owner = args [0];
 var repo = args [1];
 var prNumber = args [2];
 var jsonPath = args [3];
+var dryRun = false;
 
+if (args.Length == 5) {
+	if (args [4] != "--dry-run") {
+		Console.Error.WriteLine ($"Usage: dotnet run submit_review.cs <owner> <repo> <pr_number> <review_json_path> [--dry-run]");
+		return 1;
+	}
+
+	dryRun = true;
+}
 if (!File.Exists (jsonPath)) {
 	Console.Error.WriteLine ($"❌ File not found: {jsonPath}");
 	return 1;
@@ -96,6 +107,18 @@ if (errors.Count > 0) {
 
 var commentCount = root.TryGetProperty ("comments", out var cp) && cp.ValueKind == JsonValueKind.Array ? cp.GetArrayLength () : 0;
 Console.WriteLine ($"✅ Review validated: {commentCount} comment(s)");
+
+if (dryRun) {
+	Console.WriteLine ($"🔍 Dry run — review for {owner}/{repo}#{prNumber} would be submitted with the following JSON:");
+	Console.WriteLine ();
+	using var stream = new MemoryStream ();
+	using (var writer = new Utf8JsonWriter (stream, new JsonWriterOptions { Indented = true })) {
+		root.WriteTo (writer);
+	}
+	Console.WriteLine (System.Text.Encoding.UTF8.GetString (stream.ToArray ()));
+	return 0;
+}
+
 Console.WriteLine ($"📤 Submitting review to {owner}/{repo}#{prNumber}...");
 
 // Submit via gh api
