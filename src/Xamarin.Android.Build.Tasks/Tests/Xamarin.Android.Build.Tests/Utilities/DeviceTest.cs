@@ -174,7 +174,9 @@ namespace Xamarin.Android.Build.Tests
 			// shell out to msbuild and start the emulator again
 			var dotnet = new DotNetCLI (Path.Combine (XABuildPaths.TopDirectory, "src", "Xamarin.Android.Build.Tasks", "Tests", "Xamarin.Android.Build.Tests", "Emulator.csproj"));
 			dotnet.ProjectDirectory = XABuildPaths.TestAssemblyOutputDirectory;
-			Assert.IsTrue (dotnet.Build ("AcquireAndroidTarget", parameters: new string[] { "TestAvdForceCreation=false", $"Configuration={XABuildPaths.Configuration}" }), "Failed to acquire emulator.");
+			if (!dotnet.Build ("AcquireAndroidTarget", parameters: new string[] { "TestAvdForceCreation=false", $"Configuration={XABuildPaths.Configuration}" })) {
+				Assert.Inconclusive ("Failed to acquire emulator.");
+			}
 			WaitFor ((int)TimeSpan.FromSeconds (5).TotalMilliseconds);
 		}
 
