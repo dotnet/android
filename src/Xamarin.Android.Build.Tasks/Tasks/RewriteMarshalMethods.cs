@@ -3,9 +3,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
+using Java.Interop.Tools.Cecil;
+using Java.Interop.Tools.JavaCallableWrappers;
+using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Mono.Cecil;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks;
@@ -63,6 +68,12 @@ public class RewriteMarshalMethods : AndroidTask
 	public bool EnableMarshalMethods { get; set; }
 
 	/// <summary>
+	/// Code generation target style (e.g. XAJavaInterop1).  Determines which Java API
+	/// is used in the <c>ApplicationRegistration.java</c> register calls.
+	/// </summary>
+	public string CodeGenerationTarget { get; set; } = "";
+
+	/// <summary>
 	/// Environment files to parse for configuration (e.g. XA_BROKEN_EXCEPTION_TRANSITIONS).
 	/// Only used when marshal methods are enabled.
 	/// </summary>
@@ -87,6 +98,14 @@ public class RewriteMarshalMethods : AndroidTask
 	public string RewrittenAssembliesOutputDirectory { get; set; } = "";
 
 	/// <summary>
+	/// Per-RID output directory for <c>ApplicationRegistration.java</c>.
+	/// Each inner build writes its own copy here; the outer build picks one
+	/// deterministic RID's file and copies it into the shared Java source tree.
+	/// </summary>
+	[Required]
+	public string ApplicationRegistrationOutputDirectory { get; set; } = "";
+
+	/// <summary>
 	/// The RuntimeIdentifier for this inner build (e.g. <c>android-arm64</c>).
 	/// Converted to an ABI and target architecture internally.
 	/// </summary>
@@ -105,6 +124,17 @@ public class RewriteMarshalMethods : AndroidTask
 	/// </summary>
 	[Output]
 	public ITaskItem []? RewrittenAssemblies { get; set; }
+
+	/// <summary>
+	/// Output: path to the <c>ApplicationRegistration.java</c> file generated
+	/// by this inner build.  When marshal methods are enabled, Application and
+	/// Instrumentation types that have no dynamically registered methods are
+	/// excluded from the registration list.  The outer build copies one RID's
+	/// file into the shared Java source tree.  When marshal methods are disabled,
+	/// this output is empty and the outer build generates the file itself.
+	/// </summary>
+	[Output]
+	public string? ApplicationRegistrationJavaFile { get; set; }
 
 	public override bool RunTask ()
 	{
@@ -175,6 +205,9 @@ public class RewriteMarshalMethods : AndroidTask
 			// Step 4: Build NativeCodeGenStateObject and generate .ll
 			var codeGenState = MarshalMethodCecilAdapter.CreateNativeCodeGenStateObjectFromClassifier (targetArch, classifier, lookupInfo);
 			GenerateLlvmIr (targetArch, abi, androidRuntime, codeGenState);
+
+			// Step 5: Generate ApplicationRegistration.java with classifier-filtered types
+			GenerateApplicationRegistration (classifier, resolver, assemblyDict);
 		} finally {
 			resolver.Dispose ();
 		}
@@ -328,5 +361,74 @@ public class RewriteMarshalMethods : AndroidTask
 		}
 
 		return (assemblyCount, uniqueAssemblyNames);
+	}
+
+	/// <summary>
+	/// Generates <c>ApplicationRegistration.java</c> in the per-RID output directory.
+	/// When marshal methods are enabled, Application and Instrumentation types that have
+	/// no dynamically registered methods are excluded — their JCWs no longer have the
+	/// <c>__md_methods</c> field, so referencing it from <c>ApplicationRegistration.java</c>
+	/// would cause a <c>javac</c> error.
+	/// </summary>
+	void GenerateApplicationRegistration (MarshalMethodsCollection classifier, XAAssemblyResolver resolver, Dictionary<string, ITaskItem> assemblyDict)
+	{
+		var codeGenerationTarget = MonoAndroidHelper.ParseCodeGenerationTarget (CodeGenerationTarget);
+		var tdCache = new TypeDefinitionCache ();
+
+		var regCallsWriter = new StringWriter ();
+		regCallsWriter.WriteLine ("\t\t// Application and Instrumentation ACWs must be registered first.");
+
+		foreach (var kvp in assemblyDict) {
+			var assemblyDef = resolver.Resolve (AssemblyNameReference.Parse (kvp.Key));
+			if (assemblyDef is null) {
+				continue;
+			}
+
+			foreach (var module in assemblyDef.Modules) {
+				foreach (var type in module.Types) {
+					if (!JavaNativeTypeManager.IsApplication (type, tdCache) && !JavaNativeTypeManager.IsInstrumentation (type, tdCache)) {
+						continue;
+					}
+
+					if (!classifier.TypeHasDynamicallyRegisteredMethods (type)) {
+						Log.LogDebugMessage ($"Skipping Application/Instrumentation type '{type.FullName}' from ApplicationRegistration — no dynamically registered methods");
+						continue;
+					}
+
+					var jniName = JavaNativeTypeManager.ToJniName (type, tdCache).Replace ('/', '.');
+					var assemblyQualifiedName = type.GetAssemblyQualifiedName (tdCache);
+
+					regCallsWriter.WriteLine (
+						codeGenerationTarget == JavaPeerStyle.XAJavaInterop1 ?
+							"\t\tmono.android.Runtime.register (\"{0}\", {1}.class, {1}.__md_methods);" :
+							"\t\tnet.dot.jni.ManagedPeer.registerNativeMembers ({1}.class, {1}.__md_methods);",
+						assemblyQualifiedName,
+						jniName
+					);
+				}
+			}
+		}
+
+		regCallsWriter.Close ();
+
+		string template = GetApplicationRegistrationTemplate ();
+		string content = template.Replace ("// REGISTER_APPLICATION_AND_INSTRUMENTATION_CLASSES_HERE", regCallsWriter.ToString ());
+
+		Directory.CreateDirectory (ApplicationRegistrationOutputDirectory);
+
+		string outputPath = Path.Combine (ApplicationRegistrationOutputDirectory, "ApplicationRegistration.java");
+		Files.CopyIfStringChanged (content, outputPath);
+		ApplicationRegistrationJavaFile = outputPath;
+		Log.LogDebugMessage ($"Generated ApplicationRegistration.java: {outputPath}");
+	}
+
+	static string GetApplicationRegistrationTemplate ()
+	{
+		using var stream = typeof (RewriteMarshalMethods).Assembly.GetManifestResourceStream ("ApplicationRegistration.java");
+		if (stream is null) {
+			throw new InvalidOperationException ("Could not find embedded resource 'ApplicationRegistration.java'");
+		}
+		using var reader = new StreamReader (stream);
+		return reader.ReadToEnd ();
 	}
 }

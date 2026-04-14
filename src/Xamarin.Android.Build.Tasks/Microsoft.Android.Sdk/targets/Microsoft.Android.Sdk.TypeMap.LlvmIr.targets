@@ -130,6 +130,7 @@
     <GenerateAdditionalProviderSources
         AdditionalProviderSources="@(_AdditionalProviderSources)"
         AndroidRuntime="$(_AndroidRuntime)"
+        EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
         Environments="@(_EnvironmentFiles)"
         HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
         EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)"
@@ -280,14 +281,17 @@
     </ItemGroup>
     <RewriteMarshalMethods
         Assemblies="@(_MarshalMethodsAssembly)"
+        CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
         EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
         EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
         Environments="@(_EnvironmentFiles)"
         MarshalMethodsOutputDirectory="$(_OuterIntermediateOutputPath)android"
         RewrittenAssembliesOutputDirectory="$(IntermediateOutputPath)rewritten-marshal-methods"
+        ApplicationRegistrationOutputDirectory="$(IntermediateOutputPath)application-registration"
         AndroidRuntime="$(_AndroidRuntime)"
         RuntimeIdentifier="$(RuntimeIdentifier)">
       <Output TaskParameter="RewrittenAssemblies" ItemName="_RewrittenMarshalMethodFile" />
+      <Output TaskParameter="ApplicationRegistrationJavaFile" PropertyName="_InnerBuildApplicationRegistrationJavaFile" />
     </RewriteMarshalMethods>
     <!-- Replace original DLL items in @(ResolvedFileToPublish) with the rewritten copies.
          PDB files are written alongside the rewritten DLLs and are discovered by
@@ -298,6 +302,13 @@
       <ResolvedFileToPublish Remove="@(_RewrittenMarshalMethodFile->'%(OriginalItemSpec)')" />
       <ResolvedFileToPublish Include="@(_RewrittenMarshalMethodFile)" />
     </ItemGroup>
+    <!-- Copy ApplicationRegistration.java into the shared Java source tree so javac can find it.
+         All RIDs produce identical content; whichever inner build runs last wins (safe). -->
+    <Copy
+        Condition=" '$(_InnerBuildApplicationRegistrationJavaFile)' != '' "
+        SourceFiles="$(_InnerBuildApplicationRegistrationJavaFile)"
+        DestinationFiles="$(_OuterIntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java"
+        SkipUnchangedFiles="true" />
   </Target>
 
   <!-- Inject _TypeMapKind into the property cache -->
