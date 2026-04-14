@@ -183,11 +183,17 @@ namespace Java.Interop {
 			try {
 				var newobj = RuntimeHelpers.GetUninitializedObject (cinfo.DeclaringType!);
 				if (newobj is IJavaPeerable peer) {
+					Logger.Log (LogLevel.Info, "monodroid-peer",
+						FormattableString.Invariant ($"Activate: SetPeerReference handle=0x{jobject:x} type={cinfo.DeclaringType?.FullName}"));
 					peer.SetPeerReference (new JniObjectReference (jobject));
+					Logger.Log (LogLevel.Info, "monodroid-peer",
+						FormattableString.Invariant ($"Activate: after SetPeerReference PeerRef={peer.PeerReference} PeerRef.Type={peer.PeerReference.Type} State={peer.JniManagedPeerState}"));
 				} else {
 					throw new InvalidOperationException ($"Unsupported type: '{newobj}'");
 				}
 				cinfo.Invoke (newobj, parms);
+				Logger.Log (LogLevel.Info, "monodroid-peer",
+					FormattableString.Invariant ($"Activate: after ctor PeerRef={peer.PeerReference} PeerRef.Type={peer.PeerReference.Type} State={peer.JniManagedPeerState} IdentityHashCode=0x{peer.JniIdentityHashCode:x}"));
 			} catch (Exception e) {
 				var m = FormattableString.Invariant (
 					$"Could not activate JNI Handle 0x{jobject:x} (key_handle 0x{JNIEnv.IdentityHash (jobject):x}) of Java type '{JNIEnv.GetClassNameFromInstance (jobject)}' as managed type '{cinfo?.DeclaringType?.FullName}'.");

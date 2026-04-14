@@ -685,23 +685,33 @@ namespace Android.Runtime {
 
 		internal void AddPeer (IJavaPeerable value, JniObjectReference reference, IntPtr hash)
 		{
+			Logger.Log (LogLevel.Info, "monodroid-peer",
+				FormattableString.Invariant ($"AddPeer: hash=0x{hash:x} PeerRef={reference} PeerRef.Type={reference.Type} State={value.JniManagedPeerState} type={value.GetType ().FullName}"));
 			lock (instances) {
 				if (!instances.TryGetValue (hash, out var targets)) {
 					targets = new IdentityHashTargets (value);
 					instances.Add (hash, targets);
+					Logger.Log (LogLevel.Info, "monodroid-peer",
+						FormattableString.Invariant ($"AddPeer: new entry, instances.Count={instances.Count}"));
 					return;
 				}
 				bool found = false;
+				Logger.Log (LogLevel.Info, "monodroid-peer",
+					FormattableString.Invariant ($"AddPeer: existing hash with {targets.Count} entries"));
 				for (int i = 0; i < targets.Count; ++i) {
 					IJavaPeerable? target;
 					var wref = targets [i];
 					if (ShouldReplaceMapping (wref!, reference, value, out target)) {
 						found = true;
+						Logger.Log (LogLevel.Info, "monodroid-peer",
+							FormattableString.Invariant ($"AddPeer: REPLACING entry[{i}] (target.State={target?.JniManagedPeerState} target.Type={target?.GetType ().FullName})"));
 						targets [i] = IdentityHashTargets.CreateWeakReference (value);
 						break;
 					}
 					if (JniEnvironment.Types.IsSameObject (value.PeerReference, target!.PeerReference)) {
 						found = true;
+						Logger.Log (LogLevel.Info, "monodroid-peer",
+							FormattableString.Invariant ($"AddPeer: SAME object already registered at [{i}] (target.State={target.JniManagedPeerState} target.Type={target.GetType ().FullName})"));
 						if (Logger.LogGlobalRef) {
 							Logger.Log (LogLevel.Info, "monodroid-gref", FormattableString.Invariant (
 								$"warning: not replacing previous registered handle {target.PeerReference} with handle {reference} for key_handle 0x{hash:x}"));
@@ -710,6 +720,8 @@ namespace Android.Runtime {
 				}
 				if (!found) {
 					targets.Add (value);
+					Logger.Log (LogLevel.Info, "monodroid-peer",
+						FormattableString.Invariant ($"AddPeer: APPENDED as entry[{targets.Count - 1}]"));
 				}
 			}
 		}
@@ -879,6 +891,9 @@ namespace Android.Runtime {
 			if (value == null)
 				throw new ArgumentNullException (nameof (value));
 
+			Logger.Log (LogLevel.Info, "monodroid-peer",
+				FormattableString.Invariant ($"FinalizePeer: PeerRef={value.PeerReference} PeerRef.Type={value.PeerReference.Type} PeerRef.IsValid={value.PeerReference.IsValid} State={value.JniManagedPeerState} IdentityHashCode=0x{value.JniIdentityHashCode:x} type={value.GetType ().FullName}"));
+
 			if (Logger.LogGlobalRef) {
 				RuntimeNativeMethods._monodroid_gref_log (
 						string.Format (CultureInfo.InvariantCulture,
@@ -894,8 +909,12 @@ namespace Android.Runtime {
 			// handle still contains a java reference, we can't finalize the
 			// object and should "resurrect" it.
 			if (value.PeerReference.IsValid) {
+				Logger.Log (LogLevel.Info, "monodroid-peer",
+					FormattableString.Invariant ($"FinalizePeer: RESURRECTING (PeerReference still valid) type={value.GetType ().FullName}"));
 				GC.ReRegisterForFinalize (value);
 			} else {
+				Logger.Log (LogLevel.Info, "monodroid-peer",
+					FormattableString.Invariant ($"FinalizePeer: DISPOSING type={value.GetType ().FullName}"));
 				RemovePeer (value, (IntPtr) value.JniIdentityHashCode);
 				value.SetPeerReference (new JniObjectReference ());
 				value.Finalized ();
