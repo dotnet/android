@@ -25,16 +25,11 @@ namespace Xamarin.Android.Tasks
 			var androidNs = AndroidAppManifest.AndroidXNamespace;
 			var doc = manifest.Document;
 
-			var instrumentation = doc?.Root?.Element ("instrumentation");
-			if (instrumentation is null) {
-				Log.LogCodedError ("XA1043", Properties.Resources.XA1043);
-				return false;
-			}
+			var instrumentation = doc?.Root?.Element ("instrumentation")
+				?? throw new InvalidOperationException ("No <instrumentation> element found in AndroidManifest.xml.");
 			InstrumentationName = instrumentation.Attribute (androidNs + "name")?.Value;
-			if (string.IsNullOrEmpty (InstrumentationName)) {
-				Log.LogCodedError ("XA1042", Properties.Resources.XA1042);
-				return false;
-			}
+			if (string.IsNullOrEmpty (InstrumentationName))
+				throw new InvalidOperationException ("The <instrumentation> element in AndroidManifest.xml is missing the android:name attribute.");
 
 			return !Log.HasLoggedErrors;
 		}
