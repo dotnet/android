@@ -49,5 +49,21 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 			Assert.IsNotNull (assembly);
 			Assert.AreEqual (loadDebugSymbols, assembly.MainModule.HasSymbols);
 		}
+
+		[Test]
+		public void LoadSymbols_LockedPdb ([Values (true, false)] bool readWrite)
+		{
+			// Lock the PDB file exclusively so LoadSymbols will fail with IOException
+			using var lockStream = new FileStream (symbol_path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+
+			using var resolver = new DirectoryAssemblyResolver (Log, loadDebugSymbols: true, new ReaderParameters {
+				ReadWrite = readWrite
+			});
+
+			// Should succeed by retrying without symbols instead of throwing
+			var assembly = resolver.Load (assembly_path);
+			Assert.IsNotNull (assembly);
+			Assert.IsFalse (assembly.MainModule.HasSymbols);
+		}
 	}
 }

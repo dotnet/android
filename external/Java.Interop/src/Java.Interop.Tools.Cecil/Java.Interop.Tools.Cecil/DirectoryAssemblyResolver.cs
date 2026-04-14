@@ -162,24 +162,26 @@ namespace Java.Interop.Tools.Cecil {
 				SymbolReaderProvider            = loadReaderParameters.SymbolReaderProvider,
 			};
 			try {
-				return LoadFromMemoryMappedFile (file, reader_parameters);
+				return LoadFromMemoryMappedFile (file, reader_parameters, loadDebugSymbols);
 			} catch (Exception ex) {
+				if (!loadDebugSymbols)
+					throw;
 				logger (
 						TraceLevel.Verbose,
 						$"Failed to read '{file}' with debugging symbols. Retrying to load it without it. Error details are logged below.");
 				logger (TraceLevel.Verbose, ex.ToString ());
 				reader_parameters.ReadSymbols = false;
-				return LoadFromMemoryMappedFile (file, reader_parameters);
+				return LoadFromMemoryMappedFile (file, reader_parameters, loadSymbols: false);
 			} finally {
 				reader_parameters.SymbolStream?.Dispose ();
 			}
 		}
 
-		AssemblyDefinition LoadFromMemoryMappedFile (string file, ReaderParameters options)
+		AssemblyDefinition LoadFromMemoryMappedFile (string file, ReaderParameters options, bool loadSymbols)
 		{
 			// We can't use MemoryMappedFile when ReadWrite is true
 			if (options.ReadWrite) {
-				if (loadDebugSymbols) {
+				if (loadSymbols) {
 					LoadSymbols (file, options, File.OpenRead);
 				}
 				return AssemblyDefinition.ReadAssembly (file, options);
@@ -187,9 +189,9 @@ namespace Java.Interop.Tools.Cecil {
 
 			// We know the capacity for disposables
 			var disposables = new List<IDisposable> (
-				(1 + (loadDebugSymbols ? 1 : 0)) * OpenMemoryMappedViewStream_disposables_Add_calls);
+				(1 + (loadSymbols ? 1 : 0)) * OpenMemoryMappedViewStream_disposables_Add_calls);
 			try {
-				if (loadDebugSymbols) {
+				if (loadSymbols) {
 					LoadSymbols (file, options, f => OpenMemoryMappedViewStream (f, disposables));
 				}
 
