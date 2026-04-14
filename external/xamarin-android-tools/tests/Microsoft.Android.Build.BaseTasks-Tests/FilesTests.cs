@@ -626,6 +626,76 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		}
 
 		[Test]
+		public void ExtractAll_SkipsPathTraversal ()
+		{
+			using (var zip = ZipArchive.Create (stream)) {
+				zip.AddEntry ("a.txt", "a", encoding);
+			}
+
+			var destinationDir = Path.Combine (tempDir, "dest");
+			stream.Position = 0;
+			using (var zip = ZipArchive.Open (stream)) {
+				// modifyCallback introduces a path traversal
+				bool changes = Files.ExtractAll (zip, destinationDir, modifyCallback: e => "../" + e);
+				Assert.IsFalse (changes, "ExtractAll should not report changes for skipped entries.");
+			}
+			FileAssert.DoesNotExist (Path.Combine (tempDir, "a.txt"));
+		}
+
+		[Test]
+		public void ExtractAll_SkipsPathTraversal_ExtractsValidEntries ()
+		{
+			using (var zip = ZipArchive.Create (stream)) {
+				zip.AddEntry ("good.txt", "good", encoding);
+				zip.AddEntry ("evil.txt", "evil", encoding);
+			}
+
+			var destinationDir = Path.Combine (tempDir, "dest");
+			stream.Position = 0;
+			using (var zip = ZipArchive.Open (stream)) {
+				// Only evil.txt gets a traversal prefix
+				bool changes = Files.ExtractAll (zip, destinationDir, modifyCallback: e =>
+					e == "evil.txt" ? "../" + e : e);
+				Assert.IsTrue (changes, "ExtractAll should report changes for the valid entry.");
+			}
+			AssertFile (Path.Combine ("dest", "good.txt"), "good");
+			FileAssert.DoesNotExist (Path.Combine (tempDir, "evil.txt"));
+		}
+
+		[TestCase ("../../")]
+		[TestCase ("foo/../../../")]
+		public void ExtractAll_SkipsPathTraversal_ForwardSlash (string prefix)
+		{
+			using (var zip = ZipArchive.Create (stream)) {
+				zip.AddEntry ("a.txt", "a", encoding);
+			}
+
+			var destinationDir = Path.Combine (tempDir, "dest");
+			stream.Position = 0;
+			using (var zip = ZipArchive.Open (stream)) {
+				bool changes = Files.ExtractAll (zip, destinationDir, modifyCallback: e => prefix + e);
+				Assert.IsFalse (changes, $"Entry with prefix '{prefix}' should be skipped.");
+			}
+		}
+
+		[TestCase ("..\\")]
+		[TestCase ("..\\..\\")]
+		[Platform ("Win")]
+		public void ExtractAll_SkipsPathTraversal_BackSlash (string prefix)
+		{
+			using (var zip = ZipArchive.Create (stream)) {
+				zip.AddEntry ("a.txt", "a", encoding);
+			}
+
+			var destinationDir = Path.Combine (tempDir, "dest");
+			stream.Position = 0;
+			using (var zip = ZipArchive.Open (stream)) {
+				bool changes = Files.ExtractAll (zip, destinationDir, modifyCallback: e => prefix + e);
+				Assert.IsFalse (changes, $"Entry with prefix '{prefix}' should be skipped.");
+			}
+		}
+
+		[Test]
 		public void ToHashString ()
 		{
 			var bytes = new byte [] { 0x12, 0x34, 0x56, 0x78, 0x90, 0xAB, 0xCD, 0xEF };

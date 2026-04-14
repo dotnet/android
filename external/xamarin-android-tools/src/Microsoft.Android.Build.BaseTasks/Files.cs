@@ -441,14 +441,22 @@ namespace Microsoft.Android.Build.Tasks
 			}
 		}
 
+		[Obsolete ("Use the overload that accepts a TaskLoggingHelper parameter.")]
+		public static bool ExtractAll (ZipArchive zip, string destination, Action<int, int> progressCallback,
+			Func<string, string> modifyCallback, Func<string, bool> deleteCallback, Func<string, bool> skipCallback)
+		{
+			return ExtractAll (zip, destination, progressCallback, modifyCallback, deleteCallback, skipCallback, log: null);
+		}
+
 		public static bool ExtractAll (ZipArchive zip, string destination, Action<int, int> progressCallback = null, Func<string, string> modifyCallback = null,
-			Func<string, bool> deleteCallback = null, Func<string, bool> skipCallback = null)
+			Func<string, bool> deleteCallback = null, Func<string, bool> skipCallback = null, TaskLoggingHelper log = null)
 		{
 			int i = 0;
 			int total = (int)zip.EntryCount;
 			bool updated = false;
 			var files = new HashSet<string> ();
 			var memoryStream = MemoryStreamPool.Shared.Rent ();
+			var fullDestination = Path.GetFullPath (destination + Path.DirectorySeparatorChar);
 			try {
 				foreach (var entry in zip) {
 					progressCallback?.Invoke (i++, total);
@@ -463,6 +471,10 @@ namespace Microsoft.Android.Build.Tasks
 						continue;
 					var fullName = modifyCallback?.Invoke (entry.FullName) ?? entry.FullName;
 					var outfile = Path.GetFullPath (Path.Combine (destination, fullName));
+					if (!outfile.StartsWith (fullDestination, StringComparison.OrdinalIgnoreCase)) {
+						log?.LogWarning ($"Skipping zip entry \"{entry.FullName}\" (resolved as \"{fullName}\") because it would extract outside the destination directory: \"{outfile}\".");
+						continue;
+					}
 					files.Add (outfile);
 					memoryStream.SetLength (0); //Reuse the stream
 					entry.Extract (memoryStream);
