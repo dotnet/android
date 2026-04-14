@@ -49,6 +49,20 @@ namespace Android.App
 	{
 		protected Service (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 	}
+
+	[Register ("android/app/Application", DoNotGenerateAcw = true)]
+	public class Application : Java.Lang.Object
+	{
+		public Application () { }
+		protected Application (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+	}
+
+	[Register ("android/app/Instrumentation", DoNotGenerateAcw = true)]
+	public class Instrumentation : Java.Lang.Object
+	{
+		public Instrumentation () { }
+		protected Instrumentation (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+	}
 }
 
 namespace Android.App.Backup
@@ -320,6 +334,18 @@ namespace MyApp
 	[Application (Name = "my.app.MyApplication", BackupAgent = typeof (MyBackupAgent), ManageSpaceActivity = typeof (MyManageSpaceActivity))]
 	public class MyApplication : Java.Lang.Object { }
 
+	[Register ("my/app/BaseApplication")]
+	public abstract class BaseApplication : Android.App.Application
+	{
+		protected BaseApplication (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+	}
+
+	[Application (Name = "my.app.DerivedApplication")]
+	public class DerivedApplication : BaseApplication
+	{
+		public DerivedApplication () : base (default, default) { }
+	}
+
 	/// <summary>
 	/// Has [ExportField] methods that should produce Java field declarations.
 	/// </summary>
@@ -337,6 +363,18 @@ namespace MyApp
 
 	[Instrumentation (Name = "my.app.MyInstrumentation")]
 	public class MyInstrumentation : Java.Lang.Object { }
+
+	[Register ("my/app/BaseInstrumentation")]
+	public abstract class BaseInstrumentation : Android.App.Instrumentation
+	{
+		protected BaseInstrumentation (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+	}
+
+	[Instrumentation (Name = "my.app.DerivedInstrumentation")]
+	public class DerivedInstrumentation : BaseInstrumentation
+	{
+		public DerivedInstrumentation () : base (default, default) { }
+	}
 
 	[Register ("my/app/MyBackupAgent")]
 	public class MyBackupAgent : Android.App.Backup.BackupAgent

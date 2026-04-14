@@ -488,6 +488,7 @@ namespace Java.InteropTests
 	class RegisterMeOnNewThreadTwo : Java.Lang.Object
 	{}
 
+	[Register ("java/interops/tests/MyRegistrationThread")]
 	class MyRegistrationThread : Java.Lang.Thread
 	{
 		public RegisterMeOnNewThreadTwo Instance { get; private set; }
@@ -541,6 +542,7 @@ namespace Java.InteropTests
 	}
 
 	#region BXC_374
+	[Register ("java/interops/tests/MyPaint")]
 	class MyPaint : Paint {
 
 		public Color SetColor;

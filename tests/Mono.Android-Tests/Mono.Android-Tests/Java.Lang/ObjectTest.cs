@@ -185,9 +185,10 @@ namespace Java.LangTests
 			}
 		}
 
+		[Register ("setSelection", "(I)V", "GetSetSelection_IHandler")]
 		public override void SetSelection (int position)
 		{
-			throw new NotImplementedException();
+			throw new NotImplementedException ();
 		}
 	}
 

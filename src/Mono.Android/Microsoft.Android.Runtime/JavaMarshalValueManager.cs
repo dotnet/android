@@ -509,15 +509,27 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 	{
 		if (RuntimeFeature.TrimmableTypeMap) {
 			var typeMap = TrimmableTypeMap.Instance;
-			if (typeMap is not null && targetType is not null) {
-				var proxy = typeMap.GetProxyForManagedType (targetType);
-				if (proxy is not null) {
-					var peer = proxy.CreateInstance (reference.Handle, JniHandleOwnership.DoNotTransfer);
-					if (peer is not null) {
-						peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable);
-						JniObjectReference.Dispose (ref reference, transfer);
-						return peer;
+			JavaPeerProxy? proxy = null;
+
+			if (reference.IsValid) {
+				string? jniTypeName = JniEnvironment.Types.GetJniTypeNameFromInstance (reference);
+				if (jniTypeName is not null && typeMap.TryGetType (jniTypeName, out var runtimeType)) {
+					if (targetType is null || targetType.IsAssignableFrom (runtimeType)) {
+						proxy = typeMap.GetProxyForManagedType (runtimeType);
 					}
+				}
+			}
+
+			if (proxy is null && targetType is not null) {
+				proxy = typeMap.GetProxyForManagedType (targetType);
+			}
+
+			if (proxy is not null) {
+				var peer = proxy.CreateInstance (reference.Handle, JniHandleOwnership.DoNotTransfer);
+				if (peer is not null) {
+					peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable);
+					JniObjectReference.Dispose (ref reference, transfer);
+					return peer;
 				}
 			}
 		}

@@ -214,6 +214,78 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void RootManifestReferencedTypes_AlsoDefersRegisterNativesForBaseTypes ()
+	{
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "com/example/BaseApplication", CompatJniName = "com.example.BaseApplication",
+				ManagedTypeName = "MyApp.BaseApplication", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "BaseApplication",
+				AssemblyName = "MyApp", BaseJavaName = "android/app/Application",
+			},
+			new JavaPeerInfo {
+				JavaName = "com/example/MyApplication", CompatJniName = "com.example.MyApplication",
+				ManagedTypeName = "MyApp.MyApplication", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "MyApplication",
+				AssemblyName = "MyApp", BaseJavaName = "com/example/BaseApplication",
+			},
+			new JavaPeerInfo {
+				JavaName = "com/example/BaseInstrumentation", CompatJniName = "com.example.BaseInstrumentation",
+				ManagedTypeName = "MyApp.BaseInstrumentation", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "BaseInstrumentation",
+				AssemblyName = "MyApp", BaseJavaName = "android/app/Instrumentation",
+			},
+			new JavaPeerInfo {
+				JavaName = "com/example/MyInstrumentation", CompatJniName = "com.example.MyInstrumentation",
+				ManagedTypeName = "MyApp.MyInstrumentation", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "MyInstrumentation",
+				AssemblyName = "MyApp", BaseJavaName = "com/example/BaseInstrumentation",
+			},
+		};
+
+		var doc = System.Xml.Linq.XDocument.Parse ("""
+			<?xml version="1.0" encoding="utf-8"?>
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example">
+			  <application android:name=".MyApplication" />
+			  <instrumentation android:name="MyInstrumentation" />
+			</manifest>
+			""");
+
+		var generator = CreateGenerator ();
+		generator.RootManifestReferencedTypes (peers, doc);
+
+		Assert.True (peers [0].CannotRegisterInStaticConstructor, "Base application type should defer Runtime.registerNatives().");
+		Assert.True (peers [1].CannotRegisterInStaticConstructor, "Application type should defer Runtime.registerNatives().");
+		Assert.True (peers [2].CannotRegisterInStaticConstructor, "Base instrumentation type should defer Runtime.registerNatives().");
+		Assert.True (peers [3].CannotRegisterInStaticConstructor, "Instrumentation type should defer Runtime.registerNatives().");
+	}
+
+	[Fact]
+	public void Execute_ApplicationRegistrationTypes_IncludeAbstractDeferredBaseTypes ()
+	{
+		using var peReader = CreateTestFixturePEReader ();
+		var manifestTemplate = System.Xml.Linq.XDocument.Parse ("""
+			<?xml version="1.0" encoding="utf-8"?>
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="my.app">
+			  <application android:name="my.app.DerivedApplication" />
+			  <instrumentation android:name="my.app.DerivedInstrumentation" />
+			</manifest>
+			""");
+
+		var result = CreateGenerator ().Execute (
+			new List<(string, PEReader)> { ("TestFixtures", peReader) },
+			new Version (11, 0),
+			new HashSet<string> (),
+			new ManifestConfig (
+				PackageName: "my.app",
+				AndroidApiLevel: "35",
+				SupportedOSPlatformVersion: "21",
+				RuntimeProviderJavaName: "mono.MonoRuntimeProvider"),
+			manifestTemplate);
+
+		Assert.Contains ("my.app.BaseApplication", result.ApplicationRegistrationTypes);
+		Assert.Contains ("my.app.DerivedApplication", result.ApplicationRegistrationTypes);
+		Assert.Contains ("my.app.BaseInstrumentation", result.ApplicationRegistrationTypes);
+		Assert.Contains ("my.app.DerivedInstrumentation", result.ApplicationRegistrationTypes);
+	}
+
+	[Fact]
 	public void RootManifestReferencedTypes_WarnsForUnresolvedTypes ()
 	{
 		var peers = new List<JavaPeerInfo> {

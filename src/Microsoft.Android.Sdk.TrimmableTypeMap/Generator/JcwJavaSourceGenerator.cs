@@ -143,6 +143,7 @@ public sealed class JcwJavaSourceGenerator
 	static void WriteConstructors (JavaPeerInfo type, TextWriter writer)
 	{
 		string simpleClassName = JniSignatureHelper.GetJavaSimpleName (type.JavaName);
+		bool deferNativeCtorRegistration = type.CannotRegisterInStaticConstructor;
 
 		foreach (var ctor in type.JavaConstructors) {
 			var ctorParams = JniSignatureHelper.ParseParameters (ctor.JniSignature);
@@ -150,15 +151,18 @@ public sealed class JcwJavaSourceGenerator
 			string superArgs = ctor.SuperArgumentsString ?? FormatArgumentList (ctorParams);
 			string args = FormatArgumentList (ctorParams);
 
-			writer.Write ($$"""
-	public {{simpleClassName}} ({{parameters}})
-	{
-		super ({{superArgs}});
-		if (getClass () == {{simpleClassName}}.class) nctor_{{ctor.ConstructorIndex}} ({{args}});
-	}
+			writer.WriteLine ($"\tpublic {simpleClassName} ({parameters})");
+			writer.WriteLine ("\t{");
+			writer.WriteLine ($"\t\tsuper ({superArgs});");
+			if (!deferNativeCtorRegistration) {
+				writer.WriteLine ($"\t\tif (getClass () == {simpleClassName}.class) nctor_{ctor.ConstructorIndex} ({args});");
+			}
+			writer.WriteLine ("\t}");
+			writer.WriteLine ();
+		}
 
-
-""");
+		if (deferNativeCtorRegistration) {
+			return;
 		}
 
 		// Write native constructor declarations

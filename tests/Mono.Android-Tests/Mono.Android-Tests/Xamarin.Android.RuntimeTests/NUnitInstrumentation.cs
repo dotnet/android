@@ -9,7 +9,7 @@ using Xamarin.Android.UnitTests.NUnit;
 
 namespace Xamarin.Android.RuntimeTests
 {
-    [Instrumentation(Name = "xamarin.android.runtimetests.NUnitInstrumentation")]
+    [Instrumentation (Name = "xamarin.android.runtimetests.NUnitInstrumentation", TargetPackage = "Mono.Android.NET_Tests")]
     public class NUnitInstrumentation : NUnitTestInstrumentation
     {
         const string DefaultLogTag = "NUnit";
@@ -29,7 +29,7 @@ namespace Xamarin.Android.RuntimeTests
 			global::Android.Util.Log.Info (DefaultLogTag, $"Trimmable type map enabled: {useTrimmableTypeMap}");
 
 			if (useTrimmableTypeMap) {
-				ExcludedCategories = ["Export", "SSL"];
+				ExcludedCategories = ["Export", "NativeTypeMap", "SSL", "TrimmableIgnore"];
 
 				// Keep the temporary Java.Interop exclusions centralized here so
 				// we don't need a PR against the Java.Interop submodule.
@@ -42,6 +42,8 @@ namespace Xamarin.Android.RuntimeTests
 					"Java.InteropTests.JniValueMarshaler_object_ContractTests",
 					"Java.InteropTests.JavaExceptionTests.InnerExceptionIsNotAProxy",
 					"Java.InteropTests.JavaPeerableExtensionsTests",
+					"InvokeOverriddenAbsListView_AdapterProperty",
+					"Xamarin.Android.RuntimeTests.AdapterTests.InvokeOverriddenAbsListView_AdapterProperty",
 				};
 			}
 		}

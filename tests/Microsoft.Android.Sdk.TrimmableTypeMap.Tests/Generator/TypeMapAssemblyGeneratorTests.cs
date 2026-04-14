@@ -257,6 +257,41 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_CallbackWrapper_PreActivatesPeer_WhenTypeHasActivationCtor ()
+	{
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "my/app/CallbackDuringCtor",
+				CompatJniName = "my/app/CallbackDuringCtor",
+				ManagedTypeName = "MyApp.CallbackDuringCtor",
+				ManagedTypeNamespace = "MyApp",
+				ManagedTypeShortName = "CallbackDuringCtor",
+				AssemblyName = "TestAssembly",
+				ActivationCtor = new ActivationCtorInfo {
+					DeclaringTypeName = "MyApp.CallbackDuringCtor",
+					DeclaringAssemblyName = "TestAssembly",
+					Style = ActivationCtorStyle.XamarinAndroid,
+				},
+				MarshalMethods = [
+					new MarshalMethodInfo {
+						JniName = "getAdapter",
+						JniSignature = "()Landroid/widget/Adapter;",
+						ManagedMethodName = "get_Adapter",
+						NativeCallbackName = "n_GetAdapter",
+					},
+				],
+			},
+		};
+
+		using var stream = GenerateAssembly (peers, "CallbackActivationTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+		var memberNames = GetMemberRefNames (reader);
+
+		Assert.Contains ("ActivateInstance", memberNames);
+	}
+
+	[Fact]
 	public void Emit_CalledTwice_Throws ()
 	{
 		var model = ModelBuilder.Build ([], "Double.dll", "Double");
@@ -430,6 +465,126 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			.Select (m => reader.GetString (m.Name))
 			.ToList ();
 		Assert.Contains ("RegisterNatives", methodDefs);
+	}
+
+	[Fact]
+	public void Generate_AllAcwProxiesImplementRegisterNatives ()
+	{
+		var peers = ScanFixtures ();
+		var acwPeers = peers.Where (p => !p.DoNotGenerateAcw && !p.IsInterface && p.MarshalMethods.Count > 0).ToList ();
+
+		using var stream = GenerateAssembly (acwPeers, "AllAcwRegisterNatives");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		foreach (var typeHandle in reader.TypeDefinitions) {
+			var type = reader.GetTypeDefinition (typeHandle);
+			if (reader.GetString (type.Namespace) != "_TypeMap.Proxies") {
+				continue;
+			}
+
+			bool implementsAcw = type.GetInterfaceImplementations ()
+				.Select (h => reader.GetInterfaceImplementation (h))
+				.Any (ii => {
+					if (ii.Interface.Kind != HandleKind.TypeReference) {
+						return false;
+					}
+
+					var iface = reader.GetTypeReference ((TypeReferenceHandle) ii.Interface);
+					return reader.GetString (iface.Namespace) == "Java.Interop"
+						&& reader.GetString (iface.Name) == "IAndroidCallableWrapper";
+				});
+
+			if (!implementsAcw) {
+				continue;
+			}
+
+			var methodNames = type.GetMethods ()
+				.Select (h => reader.GetMethodDefinition (h))
+				.Select (m => reader.GetString (m.Name))
+				.ToList ();
+
+			Assert.Contains ("RegisterNatives", methodNames);
+		}
+	}
+
+	[Fact]
+	public void Generate_ProxyTypes_HaveSelfAppliedJavaPeerProxyAttribute ()
+	{
+		var peers = ScanFixtures ();
+		var acwPeer = peers.First (p => p.JavaName == "my/app/MainActivity");
+
+		using var stream = GenerateAssembly (new [] { acwPeer }, "SelfAppliedProxyAttribute");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var proxyType = reader.TypeDefinitions
+			.Select (h => (Handle: h, Type: reader.GetTypeDefinition (h)))
+			.First (t => reader.GetString (t.Type.Namespace) == "_TypeMap.Proxies");
+
+		var customAttributes = proxyType.Type.GetCustomAttributes ()
+			.Select (h => reader.GetCustomAttribute (h))
+			.ToList ();
+
+		Assert.NotEmpty (customAttributes);
+	}
+
+	[Fact]
+	public void Generate_RegisterNativesUtf8Helpers_AreAssemblyVisible ()
+	{
+		var peers = ScanFixtures ();
+		var acwPeer = peers.First (p => p.JavaName == "my/app/MainActivity");
+
+		using var stream = GenerateAssembly (new [] { acwPeer }, "Utf8HelperVisibility");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var helperTypes = reader.TypeDefinitions
+			.Select (reader.GetTypeDefinition)
+			.Where (t => reader.GetString (t.Name).StartsWith ("__utf8_", StringComparison.Ordinal))
+			.ToList ();
+
+		Assert.NotEmpty (helperTypes);
+		Assert.All (helperTypes, t => Assert.Equal (TypeAttributes.NestedPublic, t.Attributes & TypeAttributes.VisibilityMask));
+	}
+
+	[Fact]
+	public void Generate_DeferredInstrumentation_DoesNotEmitConstructorWrappers ()
+	{
+		var peers = ScanFixtures ();
+		var deferredInstrumentation = peers.First (p => p.JavaName == "my/app/DerivedInstrumentation");
+
+		using var stream = GenerateAssembly (new [] { deferredInstrumentation }, "DeferredInstrumentation");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var proxyType = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.First (t => reader.GetString (t.Namespace) == "_TypeMap.Proxies");
+
+		var methodNames = proxyType.GetMethods ()
+			.Select (h => reader.GetMethodDefinition (h))
+			.Select (m => reader.GetString (m.Name))
+			.ToList ();
+
+		Assert.DoesNotContain (methodNames, name => name.StartsWith ("nctor_", StringComparison.Ordinal));
+	}
+
+	[Fact]
+	public void Generate_DeferredInstrumentation_ActivatesInstanceBeforeMethodDispatch ()
+	{
+		var peers = ScanFixtures ();
+		var deferredInstrumentation = peers.First (p => p.JavaName == "my/app/DerivedInstrumentation");
+
+		using var stream = GenerateAssembly (new [] { deferredInstrumentation }, "DeferredInstrumentationActivation");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var typeNames = GetTypeRefNames (reader);
+		var memberNames = GetMemberRefNames (reader);
+		Assert.Contains ("TrimmableTypeMap", typeNames);
+		Assert.DoesNotContain ("TrimmableNativeRegistration", typeNames);
+		Assert.Contains ("ActivateInstance", memberNames);
 	}
 
 	[Fact]

@@ -150,6 +150,20 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 			Assert.DoesNotContain ("static {", java);
 		}
 
+		[Fact]
+		public void Generate_DerivedApplication_SkipsNativeCtorActivation ()
+		{
+			var java = GenerateFixture ("my/app/DerivedApplication");
+			Assert.DoesNotContain ("nctor_0", java);
+		}
+
+		[Fact]
+		public void Generate_DerivedInstrumentation_SkipsNativeCtorActivation ()
+		{
+			var java = GenerateFixture ("my/app/DerivedInstrumentation");
+			Assert.DoesNotContain ("nctor_0", java);
+		}
+
 	}
 
 	public class Constructor

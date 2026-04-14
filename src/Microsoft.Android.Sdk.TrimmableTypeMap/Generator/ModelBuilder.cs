@@ -227,6 +227,19 @@ static class ModelBuilder
 	static void BuildUcoMethods (JavaPeerInfo peer, JavaPeerProxyData proxy)
 	{
 		int ucoIndex = 0;
+		TypeRefData? activationTargetType = null;
+
+		// A Java callback can arrive before the generated nctor_* activation runs,
+		// e.g. when a base Java constructor dispatches a virtual method override.
+		// In that case, pre-activate the peer on first callback; ActivateInstance ()
+		// is a no-op once the object has already been surfaced.
+		if (peer.ActivationCtor != null) {
+			activationTargetType = new TypeRefData {
+				ManagedTypeName = peer.ManagedTypeName,
+				AssemblyName = peer.AssemblyName,
+			};
+		}
+
 		for (int i = 0; i < peer.MarshalMethods.Count; i++) {
 			var mm = peer.MarshalMethods [i];
 			if (mm.IsConstructor) {
@@ -241,6 +254,7 @@ static class ModelBuilder
 					AssemblyName = !string.IsNullOrEmpty (mm.DeclaringAssemblyName) ? mm.DeclaringAssemblyName : peer.AssemblyName,
 				},
 				JniSignature = mm.JniSignature,
+				ActivationTargetType = activationTargetType,
 			});
 			ucoIndex++;
 		}
@@ -248,7 +262,10 @@ static class ModelBuilder
 
 	static void BuildUcoConstructors (JavaPeerInfo peer, JavaPeerProxyData proxy)
 	{
-		if (peer.ActivationCtor == null || peer.JavaConstructors.Count == 0) {
+		// Application/Instrumentation types that defer native registration also skip
+		// emitting Java nctor_* methods, so we must not try to register constructor
+		// callbacks for them either.
+		if (peer.CannotRegisterInStaticConstructor || peer.ActivationCtor == null || peer.JavaConstructors.Count == 0) {
 			return;
 		}
 

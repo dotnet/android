@@ -67,7 +67,17 @@ class TrimmableTypeMap
 	}
 
 	internal bool TryGetType (string jniSimpleReference, [NotNullWhen (true)] out Type? type)
-		=> _typeMap.TryGetValue (jniSimpleReference, out type);
+	{
+		if (!_typeMap.TryGetValue (jniSimpleReference, out type)) {
+			return false;
+		}
+
+		if (type.GetCustomAttribute<JavaPeerProxy> (inherit: false) is JavaPeerProxy proxy) {
+			type = proxy.TargetType;
+		}
+
+		return true;
+	}
 
 	/// <summary>
 	/// Finds the proxy for a managed type by resolving its JNI name (from [Register] or
@@ -103,8 +113,21 @@ class TrimmableTypeMap
 	/// </summary>
 	internal static bool TryGetJniNameForType (Type type, [NotNullWhen (true)] out string? jniName)
 	{
-		if (type.GetCustomAttributes (typeof (IJniNameProviderAttribute), inherit: false) is [IJniNameProviderAttribute provider, ..]
-			&& !string.IsNullOrEmpty (provider.Name)) {
+		// Prefer the explicit Java peer name on the managed type, if present.
+		if (type.GetCustomAttribute<RegisterAttribute> (inherit: false) is RegisterAttribute register &&
+			!string.IsNullOrEmpty (register.Name)) {
+			jniName = register.Name.Replace ('.', '/');
+			return true;
+		}
+
+		if (type.GetCustomAttribute<JniTypeSignatureAttribute> (inherit: false) is JniTypeSignatureAttribute signature &&
+			!string.IsNullOrEmpty (signature.SimpleReference)) {
+			jniName = signature.SimpleReference.Replace ('.', '/');
+			return true;
+		}
+
+		if (type.GetCustomAttributes (typeof (IJniNameProviderAttribute), inherit: false) is [IJniNameProviderAttribute provider, ..] &&
+			!string.IsNullOrEmpty (provider.Name)) {
 			jniName = provider.Name.Replace ('.', '/');
 			return true;
 		}
@@ -162,6 +185,10 @@ class TrimmableTypeMap
 		// We can't use targetType.GetCustomAttribute<JavaPeerProxy>() because the
 		// self-application attribute is on the proxy type, not the target type.
 		var selfRef = new JniObjectReference (self);
+		if (JniEnvironment.Runtime.ValueManager.PeekPeer (selfRef) is not null) {
+			return;
+		}
+
 		var jniClass = JniEnvironment.Types.GetObjectClass (selfRef);
 		var className = JniEnvironment.Types.GetJniTypeNameFromClass (jniClass);
 		JniObjectReference.Dispose (ref jniClass);
@@ -173,11 +200,14 @@ class TrimmableTypeMap
 		}
 
 		var proxy = proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-		if (proxy is null || proxy.CreateInstance (self, JniHandleOwnership.DoNotTransfer) is null) {
+		var peer = proxy?.CreateInstance (self, JniHandleOwnership.DoNotTransfer);
+		if (peer is null) {
 			throw new InvalidOperationException (
 				$"Failed to create peer for type '{targetType.FullName}'. " +
 				"Ensure the type has a generated proxy in the TypeMap assembly.");
 		}
+
+		peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable | JniManagedPeerStates.Activatable);
 	}
 
 	[UnmanagedCallersOnly]

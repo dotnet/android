@@ -185,7 +185,7 @@ sealed class TypeMapAssemblyEmitter
 		_jniTypeRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniType"));
 		_trimmableNativeRegistrationRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
-			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("TrimmableNativeRegistration"));
+			metadata.GetOrAddString ("Microsoft.Android.Runtime"), metadata.GetOrAddString ("TrimmableTypeMap"));
 		_notSupportedExceptionRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("NotSupportedException"));
 		_runtimeHelpersRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
@@ -353,6 +353,18 @@ sealed class TypeMapAssemblyEmitter
 	void EmitProxyType (JavaPeerProxyData proxy, Dictionary<string, MethodDefinitionHandle> wrapperHandles)
 	{
 		var metadata = _pe.Metadata;
+
+		// Pre-create UTF-8 RVA fields before adding the proxy type definition.
+		// GetOrAddUtf8Field() may introduce nested <PrivateImplementationDetails> types,
+		// and if that happens after AddTypeDefinition() the current proxy's MethodList
+		// boundary can end before RegisterNatives is emitted.
+		if (proxy.IsAcw) {
+			foreach (var registration in proxy.NativeRegistrations) {
+				_pe.GetOrAddUtf8Field (registration.JniMethodName);
+				_pe.GetOrAddUtf8Field (registration.JniSignature);
+			}
+		}
+
 		var typeDefHandle = metadata.AddTypeDefinition (
 			TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Class,
 			metadata.GetOrAddString (proxy.Namespace),
@@ -366,7 +378,7 @@ sealed class TypeMapAssemblyEmitter
 		}
 
 		// .ctor — pass TargetType and InvokerType to base ctor
-		_pe.EmitBody (".ctor",
+		var ctorHandle = _pe.EmitBody (".ctor",
 			MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }),
 			encoder => {
@@ -386,6 +398,10 @@ sealed class TypeMapAssemblyEmitter
 				encoder.Call (_baseCtorRef);
 				encoder.OpCode (ILOpCode.Ret);
 			});
+
+		// Self-apply the proxy attribute so runtime lookup can instantiate it via
+		// Type.GetCustomAttribute<JavaPeerProxy>() without Activator.CreateInstance().
+		metadata.AddCustomAttribute (typeDefHandle, ctorHandle, _ucoAttrBlobHandle);
 
 		// CreateInstance
 		EmitCreateInstance (proxy);
@@ -676,6 +692,14 @@ sealed class TypeMapAssemblyEmitter
 			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 			encodeSig,
 			encoder => {
+				if (uco.ActivationTargetType != null) {
+					encoder.LoadArgument (1); // self
+					encoder.OpCode (ILOpCode.Ldtoken);
+					encoder.Token (_pe.ResolveTypeRef (uco.ActivationTargetType));
+					encoder.Call (_getTypeFromHandleRef);
+					encoder.Call (_activateInstanceRef);
+				}
+
 				for (int p = 0; p < paramCount; p++)
 					encoder.LoadArgument (p);
 				encoder.Call (callbackRef);

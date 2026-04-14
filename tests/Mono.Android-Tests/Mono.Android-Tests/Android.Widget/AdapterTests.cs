@@ -57,10 +57,18 @@ namespace Android.WidgetTests {
 		}
 	}
 
+	[Register (CanOverrideAbsListView_Adapter.JcwType)]
 	public class CanOverrideAbsListView_Adapter : AbsListView {
 
+		internal const string JcwType = "com/xamarin/android/runtimetests/CanOverrideAbsListView_Adapter";
+
 		public CanOverrideAbsListView_Adapter (Context context)
-			: base (context)
+			: base (
+					JNIEnv.CreateInstance (
+						JcwType,
+						"(Landroid/content/Context;)V",
+						new JValue (context)),
+					JniHandleOwnership.TransferLocalRef)
 		{
 			AdapterValue = new ArrayAdapter (context, 0);
 		}
@@ -84,9 +92,10 @@ namespace Android.WidgetTests {
 			}
 		}
 
+		[Register ("setSelection", "(I)V", "GetSetSelection_IHandler")]
 		public override void SetSelection (int position)
 		{
-			throw new NotImplementedException();
+			throw new NotImplementedException ();
 		}
 
 

@@ -172,7 +172,7 @@ sealed class PEAssemblyBuilder
 	/// Returns a deduplicated RVA field containing the null-terminated UTF-8 encoding of
 	/// <paramref name="value"/>. Strings like <c>"()V"</c> that appear across many proxy
 	/// types are stored once and share the same <see cref="FieldDefinitionHandle"/>.
-	/// The field is declared on an internal sized helper type (e.g. <c>__utf8_10</c>)
+	/// The field is declared on a sized helper type (e.g. <c>__utf8_10</c>)
 	/// nested under <c>&lt;PrivateImplementationDetails&gt;</c>.
 	/// </summary>
 	public FieldDefinitionHandle GetOrAddUtf8Field (string value)
@@ -198,7 +198,7 @@ sealed class PEAssemblyBuilder
 		_mappedFieldData.WriteBytes (bytes);
 
 		var fieldHandle = Metadata.AddFieldDefinition (
-			FieldAttributes.Static | FieldAttributes.Assembly | FieldAttributes.HasFieldRVA | FieldAttributes.InitOnly,
+			FieldAttributes.Static | FieldAttributes.Public | FieldAttributes.HasFieldRVA | FieldAttributes.InitOnly,
 			Metadata.GetOrAddString ($"__utf8_{_utf8FieldCounter++}"),
 			Metadata.GetOrAddBlob (_sigBlob));
 
@@ -218,7 +218,7 @@ sealed class PEAssemblyBuilder
 		int typeMethodStart = Metadata.GetRowCount (TableIndex.MethodDef) + 1;
 
 		_privateImplDetailsType = Metadata.AddTypeDefinition (
-			TypeAttributes.NotPublic | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+			TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
 			default,
 			Metadata.GetOrAddString ("<PrivateImplementationDetails>"),
 			Metadata.AddTypeReference (SystemRuntimeRef,
@@ -239,7 +239,7 @@ sealed class PEAssemblyBuilder
 		int typeMethodStart = Metadata.GetRowCount (TableIndex.MethodDef) + 1;
 
 		var handle = Metadata.AddTypeDefinition (
-			TypeAttributes.NestedPrivate | TypeAttributes.ExplicitLayout | TypeAttributes.Sealed | TypeAttributes.AnsiClass,
+			TypeAttributes.NestedPublic | TypeAttributes.ExplicitLayout | TypeAttributes.Sealed | TypeAttributes.AnsiClass,
 			default,
 			Metadata.GetOrAddString ($"__utf8_{size}"),
 			Metadata.AddTypeReference (SystemRuntimeRef,

@@ -251,6 +251,46 @@ public sealed class JavaPeerScanner : IDisposable
 
 			results [fullName] = peer;
 		}
+
+		PropagateCannotRegisterInStaticConstructor (results);
+	}
+
+	static void PropagateCannotRegisterInStaticConstructor (Dictionary<string, JavaPeerInfo> results)
+	{
+		var peersByJavaName = new Dictionary<string, JavaPeerInfo> (StringComparer.Ordinal);
+		foreach (var peer in results.Values) {
+			peersByJavaName [peer.JavaName] = peer;
+			if (peer.CompatJniName != peer.JavaName) {
+				peersByJavaName [peer.CompatJniName] = peer;
+			}
+		}
+
+		foreach (var peer in results.Values) {
+			if (ShouldCannotRegisterInStaticConstructor (peer, peersByJavaName, [])) {
+				peer.CannotRegisterInStaticConstructor = true;
+			}
+		}
+	}
+
+	static bool ShouldCannotRegisterInStaticConstructor (JavaPeerInfo peer, Dictionary<string, JavaPeerInfo> peersByJavaName, HashSet<string> visited)
+	{
+		if (peer.CannotRegisterInStaticConstructor) {
+			return true;
+		}
+
+		if (peer.BaseJavaName is null || !visited.Add (peer.JavaName)) {
+			return false;
+		}
+
+		if (peer.BaseJavaName is "android/app/Application" or "android/app/Instrumentation") {
+			return true;
+		}
+
+		if (!peersByJavaName.TryGetValue (peer.BaseJavaName, out var basePeer)) {
+			return false;
+		}
+
+		return ShouldCannotRegisterInStaticConstructor (basePeer, peersByJavaName, visited);
 	}
 
 	(List<MarshalMethodInfo>, List<JavaFieldInfo>) CollectMarshalMethods (TypeDefinition typeDef, AssemblyIndex index, bool detectBaseOverrides)

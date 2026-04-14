@@ -63,6 +63,7 @@ namespace Android.AppTests
 #if ANDROID_30
 	[Application (Debuggable=true)]
 #endif
+	[Register ("android/apptests/App")]
 	public class App : Application {
 
 		public static bool            Created;
@@ -80,6 +81,7 @@ namespace Android.AppTests
 	}
 
 	[Activity]
+	[Register ("android/apptests/RenamedActivity")]
 	public class RenamedActivity : Activity {
 
 		protected override void OnCreate (Bundle bundle)

@@ -176,6 +176,13 @@ sealed record UcoMethodData
 	/// JNI method signature, e.g., "(Landroid/os/Bundle;)V". Used to determine CLR parameter types.
 	/// </summary>
 	public required string JniSignature { get; init; }
+
+	/// <summary>
+	/// Optional target type to activate before dispatching the callback.
+	/// Used for deferred Application/Instrumentation registration where the Java instance
+	/// already exists before the runtime can register natives.
+	/// </summary>
+	public TypeRefData? ActivationTargetType { get; init; }
 }
 
 /// <summary>

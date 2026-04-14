@@ -48,8 +48,8 @@ public class TrimmableTypeMapGenerator
 		var generatedJavaSources = GenerateJcwJavaSources (jcwPeers);
 
 		// Collect Application/Instrumentation types that need deferred registerNatives
-		var appRegTypes = allPeers
-			.Where (p => p.CannotRegisterInStaticConstructor && !p.IsAbstract)
+		var appRegTypes = jcwPeers
+			.Where (p => p.CannotRegisterInStaticConstructor && !p.DoNotGenerateAcw)
 			.Select (p => JniSignatureHelper.JniNameToJavaName (p.JavaName))
 			.ToList ();
 		if (appRegTypes.Count > 0) {
@@ -193,7 +193,7 @@ public class TrimmableTypeMapGenerator
 			if (peersByDotName.TryGetValue (name, out var peers)) {
 				foreach (var peer in peers) {
 					if (deferredRegistrationNames.Contains (name)) {
-						peer.CannotRegisterInStaticConstructor = true;
+						MarkCannotRegisterInStaticConstructor (peer, peersByDotName);
 					}
 
 					if (!peer.IsUnconditional) {
@@ -203,6 +203,36 @@ public class TrimmableTypeMapGenerator
 				}
 			} else {
 				logger.LogManifestReferencedTypeNotFoundWarning (name);
+			}
+		}
+	}
+
+	static void MarkCannotRegisterInStaticConstructor (JavaPeerInfo peer, Dictionary<string, List<JavaPeerInfo>> peersByDotName)
+	{
+		var pending = new Queue<JavaPeerInfo> ();
+		var visited = new HashSet<string> (StringComparer.Ordinal);
+
+		pending.Enqueue (peer);
+		while (pending.Count > 0) {
+			var current = pending.Dequeue ();
+			if (!visited.Add (current.JavaName)) {
+				continue;
+			}
+
+			current.CannotRegisterInStaticConstructor = true;
+
+			if (current.BaseJavaName is null) {
+				continue;
+			}
+
+			if (!peersByDotName.TryGetValue (current.BaseJavaName, out var basePeers)) {
+				continue;
+			}
+
+			foreach (var basePeer in basePeers) {
+				if (!basePeer.DoNotGenerateAcw) {
+					pending.Enqueue (basePeer);
+				}
 			}
 		}
 	}
@@ -261,6 +291,8 @@ public class TrimmableTypeMapGenerator
 
 	static void AddJniLookupNames (Dictionary<string, List<JavaPeerInfo>> peersByDotName, string jniName, JavaPeerInfo peer)
 	{
+		AddPeerByDotName (peersByDotName, jniName, peer);
+
 		var simpleName = JniSignatureHelper.GetJavaSimpleName (jniName);
 		var packageName = JniSignatureHelper.GetJavaPackageName (jniName);
 		var manifestName = packageName.IsNullOrEmpty () ? simpleName : packageName + "." + simpleName;
