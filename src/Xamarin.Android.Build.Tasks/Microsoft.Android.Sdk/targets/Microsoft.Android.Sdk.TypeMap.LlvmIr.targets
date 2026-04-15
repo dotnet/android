@@ -304,8 +304,7 @@
         Assemblies="@(_PostTrimmingAssembly)"
         AddKeepAlives="$(AndroidAddKeepAlives)"
         AndroidLinkResources="$(AndroidLinkResources)"
-        Deterministic="$(Deterministic)"
-        UseDesignerAssembly="$(AndroidUseDesignerAssembly)" />
+        Deterministic="$(Deterministic)" />
   </Target>
 
   <!-- Inject _TypeMapKind into the property cache -->
