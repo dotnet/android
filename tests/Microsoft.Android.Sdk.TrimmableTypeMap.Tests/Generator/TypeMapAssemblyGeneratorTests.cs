@@ -176,7 +176,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_SimpleActivity_UsesGetUninitializedObject ()
+	public void Generate_SimpleActivity_UsesSharedActivationHelper ()
 	{
 		var peers = ScanFixtures ();
 		var simpleActivity = peers.First (p => p.JavaName == "my/app/SimpleActivity");
@@ -186,13 +186,11 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		using var stream = GenerateAssembly (new [] { simpleActivity }, "InheritedCtorTest");
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
-		var typeNames = GetTypeRefNames (reader);
-		Assert.Contains ("RuntimeHelpers", typeNames);
 
 		var memberNames = GetMemberRefNames (reader);
 		Assert.DoesNotContain ("CreateManagedPeer", memberNames);
-		Assert.Contains ("ConstructActivatedPeer", memberNames);
-		Assert.Contains ("GetUninitializedObject", memberNames);
+		Assert.Contains ("CreateUninitializedInstance", memberNames);
+		Assert.DoesNotContain ("GetUninitializedObject", memberNames);
 	}
 
 	[Fact]
@@ -230,9 +228,9 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		var reader = pe.GetMetadataReader ();
 		var memberNames = GetMemberRefNames (reader);
 
-		Assert.Contains ("ConstructActivatedPeer", memberNames);
 		Assert.Contains ("get_WithinNewObjectScope", memberNames);
-		Assert.Contains ("GetUninitializedObject", memberNames);
+		Assert.Contains ("CreateUninitializedInstance", memberNames);
+		Assert.DoesNotContain ("GetUninitializedObject", memberNames);
 		Assert.DoesNotContain ("ActivateInstance", memberNames);
 		Assert.DoesNotContain ("ActivatePeerFromJavaConstructor", memberNames);
 	}
