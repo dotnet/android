@@ -82,10 +82,7 @@ namespace Xamarin.Android.Tasks
 				dependencies.Add (CreateAndroidDependency ($"cmdline-tools/{CommandLineToolsVersion}", CommandLineToolsVersion));
 			}
 			if (!NdkVersion.IsNullOrEmpty () && NdkRequired) {
-				// Emit both identities so the dependency resolves against either
-				// the legacy "ndk-bundle" manifest entries or the modern "ndk" entries.
 				dependencies.Add (CreateAndroidDependency ("ndk-bundle", NdkVersion));
-				dependencies.Add (CreateAndroidDependency ("ndk", NdkVersion));
 			}
 			if (!JdkVersion.IsNullOrEmpty () && GetJavaDependencies) {
 				javaDependencies.Add (CreateAndroidDependency ("jdk", JdkVersion));
