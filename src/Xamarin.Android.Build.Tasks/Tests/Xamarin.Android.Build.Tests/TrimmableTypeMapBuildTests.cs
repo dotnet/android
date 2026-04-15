@@ -1,3 +1,4 @@
+using System.IO;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
@@ -47,6 +48,14 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (
 				builder.Output.IsTargetSkipped ("_GenerateJavaStubs"),
 				"_GenerateJavaStubs should be skipped on incremental build.");
+		}
+
+		[Test]
+		public void TrimmableTypeMap_PreserveList_IsPackagedInSdk ()
+		{
+			var path = Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "PreserveLists", "Trimmable.CoreCLR.xml");
+
+			FileAssert.Exists (path, $"{path} should exist in the SDK pack.");
 		}
 	}
 }
