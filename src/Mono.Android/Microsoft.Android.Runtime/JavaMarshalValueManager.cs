@@ -27,9 +27,10 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 
 	bool disposed;
 
-	// Gate that blocks JNI wrapper threads during bridge processing.
-	// Signaled (open) = no bridge processing, unsignaled (closed) = bridge active.
-	static readonly ManualResetEventSlim bridgeGate = new (initialState: true);
+	// Gate that blocks JNI wrapper threads during GC bridge processing.
+	// 0 = open (idle), 1 = closed (bridge active). Uses a volatile field
+	// for the fast path and SpinWait for the rare blocking case.
+	static volatile int bridgeGateState; // 0 = open
 
 	static JavaMarshalValueManager? s_instance;
 
@@ -67,11 +68,19 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 	internal static void WaitIfBridgeProcessing ()
 	{
 		// JNI wrappers call this on every transition, so the idle case must be very cheap.
-		// ManualResetEventSlim.IsSet reads a volatile field — no kernel transition.
-		if (bridgeGate.IsSet)
+		// A single volatile read is the cheapest possible fast path.
+		if (bridgeGateState == 0)
 			return;
 
-		bridgeGate.Wait ();
+		WaitForBridgeProcessingSlow ();
+	}
+
+	[MethodImpl (MethodImplOptions.NoInlining)]
+	static void WaitForBridgeProcessingSlow ()
+	{
+		SpinWait sw = default;
+		while (Volatile.Read (ref bridgeGateState) != 0)
+			sw.SpinOnce ();
 	}
 
 	public unsafe override void CollectPeers ()
@@ -459,7 +468,7 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 		}
 
 		HandleContext.EnsureAllContextsAreOurs (mcr);
-		bridgeGate.Reset ();
+		Volatile.Write (ref bridgeGateState, 1);
 	}
 
 	[UnmanagedCallersOnly]
@@ -473,7 +482,7 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 			ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (mcr);
 			JavaMarshal.FinishCrossReferenceProcessing (mcr, handlesToFree);
 		} finally {
-			bridgeGate.Set ();
+			Volatile.Write (ref bridgeGateState, 0);
 		}
 	}
 

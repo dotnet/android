@@ -453,10 +453,10 @@ namespace Java.InteropTests
 				Assert.Ignore ("Requires CoreCLR runtime.");
 			}
 
-			var bridgeGate = GetJavaMarshalBridgeGate ();
+			var gateField = GetBridgeGateField ();
 
-			// Gate is open (signaled) — fast path should return immediately
-			bridgeGate.Set ();
+			// Gate is open (0) — fast path should return immediately
+			gateField.SetValue (null, 0);
 
 			using var started = new ManualResetEventSlim ();
 			using var completed = new ManualResetEventSlim ();
@@ -480,12 +480,12 @@ namespace Java.InteropTests
 				Assert.Ignore ("Requires CoreCLR runtime.");
 			}
 
-			var bridgeGate = GetJavaMarshalBridgeGate ();
+			var gateField = GetBridgeGateField ();
 			using var started = new ManualResetEventSlim ();
 			using var completed = new ManualResetEventSlim ();
 
-			// Close the gate to simulate bridge processing
-			bridgeGate.Reset ();
+			// Close the gate (1) to simulate bridge processing
+			gateField.SetValue (null, 1);
 			try {
 				var thread = new Thread (() => {
 					started.Set ();
@@ -498,12 +498,12 @@ namespace Java.InteropTests
 				Assert.IsFalse (completed.Wait (250), "#2 - should be blocked while gate is closed");
 
 				// Open the gate
-				bridgeGate.Set ();
+				gateField.SetValue (null, 0);
 
 				Assert.IsTrue (completed.Wait (1000), "#3 - should complete after gate opens");
 				thread.Join (1000);
 			} finally {
-				bridgeGate.Set ();
+				gateField.SetValue (null, 0);
 			}
 		}
 
@@ -514,8 +514,8 @@ namespace Java.InteropTests
 				Assert.Ignore ("Requires CoreCLR runtime.");
 			}
 
-			var bridgeGate = GetJavaMarshalBridgeGate ();
-			bridgeGate.Set ();
+			var gateField = GetBridgeGateField ();
+			gateField.SetValue (null, 0);
 
 			const int threadCount = 8;
 			const int iterations = 200;
@@ -542,9 +542,9 @@ namespace Java.InteropTests
 			var toggler = new Thread (() => {
 				go.Wait ();
 				for (int j = 0; j < iterations; j++) {
-					bridgeGate.Reset ();
+					gateField.SetValue (null, 1);
 					Thread.SpinWait (50);
-					bridgeGate.Set ();
+					gateField.SetValue (null, 0);
 				}
 			});
 			toggler.Start ();
@@ -557,21 +557,18 @@ namespace Java.InteropTests
 			Assert.AreEqual (threadCount, completedCount, "All threads should complete");
 
 			// Leave gate open for other tests
-			bridgeGate.Set ();
+			gateField.SetValue (null, 0);
 		}
 
-		static ManualResetEventSlim GetJavaMarshalBridgeGate ()
+		static FieldInfo GetBridgeGateField ()
 		{
 			Type? managerType = Type.GetType ("Microsoft.Android.Runtime.JavaMarshalValueManager, Mono.Android");
 			Assert.IsNotNull (managerType, "#gate-1");
 
-			FieldInfo? gateField = managerType.GetField ("bridgeGate", BindingFlags.NonPublic | BindingFlags.Static);
+			FieldInfo? gateField = managerType.GetField ("bridgeGateState", BindingFlags.NonPublic | BindingFlags.Static);
 			Assert.IsNotNull (gateField, "#gate-2");
 
-			var gate = gateField.GetValue (null) as ManualResetEventSlim;
-			Assert.IsNotNull (gate, "#gate-3");
-
-			return gate;
+			return gateField;
 		}
 
 		[Test, Category ("GCBridge")]
