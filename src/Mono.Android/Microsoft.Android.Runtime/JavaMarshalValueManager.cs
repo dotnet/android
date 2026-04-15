@@ -268,13 +268,25 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 	void ActivateViaReflection (JniObjectReference reference, ConstructorInfo cinfo, object?[]? argumentValues)
 	{
 		var declType  = GetDeclaringType (cinfo);
+		var self      = GetUninitializedObject (declType);
 
-#pragma warning disable IL2072
-		var self      = (IJavaPeerable) System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject (declType);
-#pragma warning restore IL2072
-		self.SetPeerReference (reference);
+		// ConstructPeer BEFORE the constructor to create a proper
+		// global ref and eliminate the race window where bridge
+		// processing could see a raw local ref.
+		// See: https://github.com/dotnet/android/issues/11101
+		JniEnvironment.Runtime.ValueManager.ConstructPeer (
+			self, ref reference, JniObjectReferenceOptions.Copy);
 
 		cinfo.Invoke (self, argumentValues);
+
+		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "Activation constructors are preserved by the runtime typemap.")]
+		static IJavaPeerable GetUninitializedObject (
+				[DynamicallyAccessedMembers (Constructors)] Type type)
+		{
+			var value = (IJavaPeerable) System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject (type);
+			value.SetJniManagedPeerState (JniManagedPeerStates.Replaceable | JniManagedPeerStates.Activatable);
+			return value;
+		}
 
 		[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "🤷‍♂️")]
 		[return: DynamicallyAccessedMembers (Constructors)]
