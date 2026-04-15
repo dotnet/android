@@ -66,7 +66,7 @@ namespace Java.Interop
 		/// binds it to the provided JNI handle before the activation constructor runs.
 		/// </summary>
 		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "Generated proxy activation passes the runtime handle for the peer type that must be allocated uninitialized.")]
-		protected static IJavaPeerable CreateUninitializedInstance (RuntimeTypeHandle typeHandle, IntPtr handle)
+		protected static IJavaPeerable CreateActivatedPeer (RuntimeTypeHandle typeHandle, IntPtr handle)
 		{
 			var type = Type.GetTypeFromHandle (typeHandle);
 			var peer = (IJavaPeerable) System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject (type);

@@ -189,7 +189,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 		var memberNames = GetMemberRefNames (reader);
 		Assert.DoesNotContain ("CreateManagedPeer", memberNames);
-		Assert.Contains ("CreateUninitializedInstance", memberNames);
+		Assert.Contains ("CreateActivatedPeer", memberNames);
 		Assert.DoesNotContain ("GetUninitializedObject", memberNames);
 	}
 
@@ -229,7 +229,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		var memberNames = GetMemberRefNames (reader);
 
 		Assert.Contains ("get_WithinNewObjectScope", memberNames);
-		Assert.Contains ("CreateUninitializedInstance", memberNames);
+		Assert.Contains ("CreateActivatedPeer", memberNames);
 		Assert.DoesNotContain ("GetUninitializedObject", memberNames);
 		Assert.DoesNotContain ("ActivateInstance", memberNames);
 		Assert.DoesNotContain ("ActivatePeerFromJavaConstructor", memberNames);

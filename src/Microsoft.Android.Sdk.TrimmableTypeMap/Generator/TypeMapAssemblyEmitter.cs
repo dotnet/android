@@ -27,7 +27,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 ///     // Creates the managed peer when Java calls into .NET
 ///     public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership ownership)
 ///         =&gt; new Activity(handle, ownership);                        // leaf ctor
-///         // or: (Activity)CreateUninitializedInstance(typeof(Activity).TypeHandle, handle);
+///         // or: (Activity)CreateActivatedPeer(typeof(Activity).TypeHandle, handle);
 ///         //     obj.BaseCtor(handle, ownership);                     // inherited ctor
 ///         // or: new IOnClickListenerInvoker(handle, ownership);      // interface invoker
 ///         // or: null;                                                // no activation
@@ -43,7 +43,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 ///     [UnmanagedCallersOnly]
 ///     public static void nctor_0_uco(IntPtr jnienv, IntPtr self)
 ///         =&gt; new Activity(self, JniHandleOwnership.DoNotTransfer);
-///         // or: var obj = (Activity)CreateUninitializedInstance(typeof(Activity).TypeHandle, self);
+///         // or: var obj = (Activity)CreateActivatedPeer(typeof(Activity).TypeHandle, self);
 ///         //     obj.BaseCtor(self, JniHandleOwnership.DoNotTransfer);
 ///
 ///     // Registers JNI native methods (ACWs only):
@@ -82,7 +82,7 @@ sealed class TypeMapAssemblyEmitter
 	TypeReferenceHandle _notSupportedExceptionRef;
 
 	MemberReferenceHandle _getTypeFromHandleRef;
-	MemberReferenceHandle _createUninitializedInstanceRef;
+	MemberReferenceHandle _createActivatedPeerRef;
 	MemberReferenceHandle _notSupportedExceptionCtorRef;
 	MemberReferenceHandle _jniObjectReferenceCtorRef;
 	MemberReferenceHandle _jniEnvDeleteRefRef;
@@ -208,7 +208,7 @@ sealed class TypeMapAssemblyEmitter
 				rt => rt.Type ().Type (_systemTypeRef, false),
 				p => p.AddParameter ().Type ().Type (_runtimeTypeHandleRef, true)));
 
-		_createUninitializedInstanceRef = _pe.AddMemberRef (_javaPeerProxyBaseRef, "CreateUninitializedInstance",
+		_createActivatedPeerRef = _pe.AddMemberRef (_javaPeerProxyBaseRef, "CreateActivatedPeer",
 			sig => sig.MethodSignature ().Parameters (2,
 				rt => rt.Type ().Type (_iJavaPeerableRef, false),
 				p => {
@@ -496,7 +496,7 @@ sealed class TypeMapAssemblyEmitter
 			encoder.OpCode (ILOpCode.Ldtoken);
 			encoder.Token (targetTypeRef);
 			encoder.OpCode (ILOpCode.Ldarg_1);
-			encoder.Call (_createUninitializedInstanceRef);
+			encoder.Call (_createActivatedPeerRef);
 			encoder.OpCode (ILOpCode.Castclass);
 			encoder.Token (targetTypeRef);
 
@@ -546,7 +546,7 @@ sealed class TypeMapAssemblyEmitter
 
 	/// <summary>
 	/// Emits CreateInstance for JavaInterop-style activation (inherited ctor):
-	///   var obj = (TargetType)CreateUninitializedInstance(typeof(TargetType).TypeHandle, handle);
+	///   var obj = (TargetType)CreateActivatedPeer(typeof(TargetType).TypeHandle, handle);
 	///   var jniRef = new JniObjectReference(handle);
 	///   obj.BaseCtor(ref jniRef, JniObjectReferenceOptions.Copy);
 	///   JNIEnv.DeleteRef(handle, ownership);
@@ -558,11 +558,11 @@ sealed class TypeMapAssemblyEmitter
 		EmitCreateInstanceBodyWithLocals (
 			EncodeJniObjectReferenceLocal,
 			encoder => {
-				// var obj = (TargetType)CreateUninitializedInstance(typeof(TargetType).TypeHandle, handle);
+				// var obj = (TargetType)CreateActivatedPeer(typeof(TargetType).TypeHandle, handle);
 				encoder.OpCode (ILOpCode.Ldtoken);
 				encoder.Token (targetTypeRef);
 				encoder.OpCode (ILOpCode.Ldarg_1); // handle
-				encoder.Call (_createUninitializedInstanceRef);
+				encoder.Call (_createActivatedPeerRef);
 				encoder.OpCode (ILOpCode.Castclass);
 				encoder.Token (targetTypeRef);
 
@@ -746,7 +746,7 @@ sealed class TypeMapAssemblyEmitter
 						encoder.OpCode (ILOpCode.Ldtoken);
 						encoder.Token (targetTypeRef);
 						encoder.LoadArgument (1); // self
-						encoder.Call (_createUninitializedInstanceRef);
+						encoder.Call (_createActivatedPeerRef);
 						encoder.OpCode (ILOpCode.Castclass);
 						encoder.Token (targetTypeRef);
 					}
@@ -795,7 +795,7 @@ sealed class TypeMapAssemblyEmitter
 						encoder.OpCode (ILOpCode.Ldtoken);
 						encoder.Token (targetTypeRef);
 						encoder.LoadArgument (1); // self
-						encoder.Call (_createUninitializedInstanceRef);
+						encoder.Call (_createActivatedPeerRef);
 						encoder.OpCode (ILOpCode.Castclass);
 						encoder.Token (targetTypeRef);
 
