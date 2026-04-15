@@ -2,7 +2,8 @@
 using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using Microsoft.Android.Runtime;
+using JavaMarshalValueManager = Microsoft.Android.Runtime.JavaMarshalValueManager;
+using RuntimeFeature = Microsoft.Android.Runtime.RuntimeFeature;
 
 namespace Android.Runtime
 {
