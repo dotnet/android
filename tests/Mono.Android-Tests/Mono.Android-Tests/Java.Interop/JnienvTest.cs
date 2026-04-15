@@ -453,28 +453,24 @@ namespace Java.InteropTests
 				Assert.Ignore ("Requires CoreCLR runtime.");
 			}
 
-			var (bridgeProcessingField, semaphore) = GetJavaMarshalBridgeSynchronization ();
-			bridgeProcessingField.SetValue (null, false);
+			var bridgeGate = GetJavaMarshalBridgeGate ();
+
+			// Gate is open (signaled) — fast path should return immediately
+			bridgeGate.Set ();
 
 			using var started = new ManualResetEventSlim ();
 			using var completed = new ManualResetEventSlim ();
 
-			semaphore.Wait ();
-			try {
-				var thread = new Thread (() => {
-					started.Set ();
-					JNIEnv.WaitForBridgeProcessing ();
-					completed.Set ();
-				});
+			var thread = new Thread (() => {
+				started.Set ();
+				JNIEnv.WaitForBridgeProcessing ();
+				completed.Set ();
+			});
 
-				thread.Start ();
-				Assert.IsTrue (started.Wait (1000), "#1");
-				Assert.IsTrue (completed.Wait (1000), "#2");
-				thread.Join (1000);
-			} finally {
-				bridgeProcessingField.SetValue (null, false);
-				semaphore.Release ();
-			}
+			thread.Start ();
+			Assert.IsTrue (started.Wait (1000), "#1");
+			Assert.IsTrue (completed.Wait (1000), "#2 - should complete immediately when gate is open");
+			thread.Join (1000);
 		}
 
 		[Test, Category ("GCBridge"), NonParallelizable]
@@ -484,13 +480,12 @@ namespace Java.InteropTests
 				Assert.Ignore ("Requires CoreCLR runtime.");
 			}
 
-			var (bridgeProcessingField, semaphore) = GetJavaMarshalBridgeSynchronization ();
+			var bridgeGate = GetJavaMarshalBridgeGate ();
 			using var started = new ManualResetEventSlim ();
 			using var completed = new ManualResetEventSlim ();
 
-			bridgeProcessingField.SetValue (null, true);
-			bool releaseSemaphore = true;
-			semaphore.Wait ();
+			// Close the gate to simulate bridge processing
+			bridgeGate.Reset ();
 			try {
 				var thread = new Thread (() => {
 					started.Set ();
@@ -500,36 +495,83 @@ namespace Java.InteropTests
 
 				thread.Start ();
 				Assert.IsTrue (started.Wait (1000), "#1");
-				Assert.IsFalse (completed.Wait (250), "#2");
+				Assert.IsFalse (completed.Wait (250), "#2 - should be blocked while gate is closed");
 
-				semaphore.Release ();
-				releaseSemaphore = false;
+				// Open the gate
+				bridgeGate.Set ();
 
-				Assert.IsTrue (completed.Wait (1000), "#3");
+				Assert.IsTrue (completed.Wait (1000), "#3 - should complete after gate opens");
 				thread.Join (1000);
 			} finally {
-				bridgeProcessingField.SetValue (null, false);
-				if (releaseSemaphore) {
-					semaphore.Release ();
-				}
+				bridgeGate.Set ();
 			}
 		}
 
-		static (FieldInfo BridgeProcessingField, SemaphoreSlim Semaphore) GetJavaMarshalBridgeSynchronization ()
+		[Test, Category ("GCBridge"), NonParallelizable]
+		public void WaitForBridgeProcessingConcurrentStress ()
+		{
+			if (!Android.Runtime.RuntimeFeature.IsCoreClrRuntime) {
+				Assert.Ignore ("Requires CoreCLR runtime.");
+			}
+
+			var bridgeGate = GetJavaMarshalBridgeGate ();
+			bridgeGate.Set ();
+
+			const int threadCount = 8;
+			const int iterations = 200;
+			int completedCount = 0;
+			var allStarted = new CountdownEvent (threadCount);
+			var go = new ManualResetEventSlim ();
+
+			var threads = new Thread [threadCount];
+			for (int i = 0; i < threadCount; i++) {
+				threads [i] = new Thread (() => {
+					allStarted.Signal ();
+					go.Wait ();
+					for (int j = 0; j < iterations; j++) {
+						JNIEnv.WaitForBridgeProcessing ();
+					}
+					Interlocked.Increment (ref completedCount);
+				});
+				threads [i].Start ();
+			}
+
+			allStarted.Wait ();
+
+			// Toggle the gate while threads are hammering WaitIfBridgeProcessing
+			var toggler = new Thread (() => {
+				go.Wait ();
+				for (int j = 0; j < iterations; j++) {
+					bridgeGate.Reset ();
+					Thread.SpinWait (50);
+					bridgeGate.Set ();
+				}
+			});
+			toggler.Start ();
+
+			go.Set ();
+
+			foreach (var t in threads)
+				Assert.IsTrue (t.Join (5000), "Thread did not complete within timeout");
+			Assert.IsTrue (toggler.Join (5000), "Toggler did not complete within timeout");
+			Assert.AreEqual (threadCount, completedCount, "All threads should complete");
+
+			// Leave gate open for other tests
+			bridgeGate.Set ();
+		}
+
+		static ManualResetEventSlim GetJavaMarshalBridgeGate ()
 		{
 			Type? managerType = Type.GetType ("Microsoft.Android.Runtime.JavaMarshalValueManager, Mono.Android");
-			Assert.IsNotNull (managerType, "#1");
+			Assert.IsNotNull (managerType, "#gate-1");
 
-			FieldInfo? bridgeProcessingField = managerType.GetField ("bridgeProcessingActive", BindingFlags.NonPublic | BindingFlags.Static);
-			Assert.IsNotNull (bridgeProcessingField, "#2");
+			FieldInfo? gateField = managerType.GetField ("bridgeGate", BindingFlags.NonPublic | BindingFlags.Static);
+			Assert.IsNotNull (gateField, "#gate-2");
 
-			FieldInfo? semaphoreField = managerType.GetField ("bridgeProcessingSemaphore", BindingFlags.NonPublic | BindingFlags.Static);
-			Assert.IsNotNull (semaphoreField, "#3");
+			var gate = gateField.GetValue (null) as ManualResetEventSlim;
+			Assert.IsNotNull (gate, "#gate-3");
 
-			var semaphore = semaphoreField.GetValue (null) as SemaphoreSlim;
-			Assert.IsNotNull (semaphore, "#4");
-
-			return (bridgeProcessingField, semaphore);
+			return gate;
 		}
 
 		[Test, Category ("GCBridge")]

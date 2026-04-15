@@ -27,8 +27,9 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 
 	bool disposed;
 
-	static readonly SemaphoreSlim bridgeProcessingSemaphore = new (1, 1);
-	static volatile bool bridgeProcessingActive;
+	// Gate that blocks JNI wrapper threads during bridge processing.
+	// Signaled (open) = no bridge processing, unsignaled (closed) = bridge active.
+	static readonly ManualResetEventSlim bridgeGate = new (initialState: true);
 
 	static JavaMarshalValueManager? s_instance;
 
@@ -65,12 +66,12 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 	[MethodImpl (MethodImplOptions.AggressiveInlining)]
 	internal static void WaitIfBridgeProcessing ()
 	{
-		// JNI wrappers call this on every transition, so the idle case must avoid synchronization.
-		if (!bridgeProcessingActive)
+		// JNI wrappers call this on every transition, so the idle case must be very cheap.
+		// ManualResetEventSlim.IsSet reads a volatile field — no kernel transition.
+		if (bridgeGate.IsSet)
 			return;
 
-		bridgeProcessingSemaphore.Wait ();
-		bridgeProcessingSemaphore.Release ();
+		bridgeGate.Wait ();
 	}
 
 	public unsafe override void CollectPeers ()
@@ -458,8 +459,7 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 		}
 
 		HandleContext.EnsureAllContextsAreOurs (mcr);
-		bridgeProcessingActive = true;
-		bridgeProcessingSemaphore.Wait ();
+		bridgeGate.Reset ();
 	}
 
 	[UnmanagedCallersOnly]
@@ -473,8 +473,7 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 			ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (mcr);
 			JavaMarshal.FinishCrossReferenceProcessing (mcr, handlesToFree);
 		} finally {
-			bridgeProcessingSemaphore.Release ();
-			bridgeProcessingActive = false;
+			bridgeGate.Set ();
 		}
 	}
 
