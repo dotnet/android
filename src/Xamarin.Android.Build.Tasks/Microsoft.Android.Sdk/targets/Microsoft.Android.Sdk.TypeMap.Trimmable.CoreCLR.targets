@@ -16,6 +16,15 @@
     </ItemGroup>
   </Target>
 
+  <!-- Android apps don't have a traditional Main() entry point.
+       Change the root assembly from EntryPoint to All so ILLink doesn't fail with IL1034. -->
+  <Target Name="_FixRootAssembly"
+      AfterTargets="PrepareForILLink">
+    <ItemGroup>
+      <TrimmerRootAssembly Update="@(TrimmerRootAssembly)" Condition=" '%(TrimmerRootAssembly.RootMode)' == 'EntryPoint' " RootMode="All" />
+    </ItemGroup>
+  </Target>
+
   <!-- Pass TypeMap entry assembly name to ILLink -->
   <Target Name="_ConfigureTrimmableTypeMapForLinker"
       BeforeTargets="PrepareForILLink;_RunILLink"
