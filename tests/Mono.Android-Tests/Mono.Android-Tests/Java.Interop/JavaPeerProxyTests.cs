@@ -30,6 +30,17 @@ namespace Java.InteropTests
 			Assert.AreEqual (typeof (ProxyTestPeer), proxy.TargetType);
 			Assert.AreEqual (typeof (ProxyTestPeerInvoker), proxy.InvokerType);
 		}
+
+		[Test]
+		public void JniName_Getter_IsNotVirtual ()
+		{
+			var property = typeof (JavaPeerProxy).GetProperty (nameof (JavaPeerProxy.JniName));
+			Assert.IsNotNull (property);
+
+			var getter = property.GetMethod;
+			Assert.IsNotNull (getter);
+			Assert.False (getter.IsVirtual);
+		}
 	}
 
 	[Register ("test/ProxyTestPeer", DoNotGenerateAcw = true)]

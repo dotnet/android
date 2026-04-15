@@ -85,6 +85,39 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_ProxyCtor_PassesJniNameWithoutMetadataOverrides ()
+	{
+		var peer = MakePeerWithActivation ("test/TypeA", "Test.TypeA", "TestAsm");
+
+		using var stream = GenerateAssembly (new [] { peer }, "CtorJniNameTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+		var proxyType = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Single (t => reader.GetString (t.Name) == "Test_TypeA_Proxy");
+
+		var methods = proxyType.GetMethods ()
+			.Select (h => reader.GetMethodDefinition (h))
+			.Select (m => reader.GetString (m.Name))
+			.ToList ();
+
+		Assert.DoesNotContain ("get_JniName", methods);
+		Assert.DoesNotContain ("get_TargetType", methods);
+		Assert.DoesNotContain ("get_InvokerType", methods);
+
+		var ctorHandle = proxyType.GetMethods ()
+			.First (h => reader.GetString (reader.GetMethodDefinition (h).Name) == ".ctor");
+		var ctor = reader.GetMethodDefinition (ctorHandle);
+		var body = pe.GetMethodBody (ctor.RelativeVirtualAddress);
+		var ilBytes = body.GetILBytes ();
+		if (ilBytes == null) {
+			throw new InvalidOperationException ("Expected proxy constructor IL.");
+		}
+
+		Assert.Equal ("test/TypeA", TryGetLdstrOperand (ilBytes, reader));
+	}
+
+	[Fact]
 	public void Generate_ProxyType_UsesGenericJavaPeerProxyBase ()
 	{
 		var peers = ScanFixtures ();
@@ -647,5 +680,22 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			Assert.True (rvaFields.Count < allStrings.Count,
 				$"Expected fewer RVA fields ({rvaFields.Count}) than total strings ({allStrings.Count}) due to deduplication");
 		}
+	}
+
+	static string? TryGetLdstrOperand (IReadOnlyList<byte> il, MetadataReader reader)
+	{
+		for (int i = 0; i <= il.Count - 5; i++) {
+			if (il [i] != (byte) ILOpCode.Ldstr) {
+				continue;
+			}
+
+			int token = il [i + 1]
+				| (il [i + 2] << 8)
+				| (il [i + 3] << 16)
+				| (il [i + 4] << 24);
+			return reader.GetUserString (MetadataTokens.UserStringHandle (token));
+		}
+
+		return null;
 	}
 }

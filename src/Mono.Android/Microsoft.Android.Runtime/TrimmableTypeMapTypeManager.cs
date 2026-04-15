@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using Java.Interop;
 
 namespace Microsoft.Android.Runtime;
@@ -28,20 +27,11 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 
 	protected override IEnumerable<string> GetSimpleReferences (Type type)
 	{
-		if (TrimmableTypeMap.Instance.TryGetJniNameForManagedType (type, out var jniName)) {
-			yield return jniName;
-			yield break;
-		}
-
-		foreach (var r in base.GetSimpleReferences (type)) {
-			yield return r;
-		}
-
-		// Walk the base type chain for managed-only subclasses (e.g., JavaProxyThrowable
-		// extends Java.Lang.Error but has no [Register] attribute itself).
-		for (var baseType = type.BaseType; baseType is not null; baseType = baseType.BaseType) {
-			if (TrimmableTypeMap.Instance.TryGetJniNameForManagedType (baseType, out var baseJniName)) {
-				yield return baseJniName;
+		// In the trimmable typemap path, JNI names come from generated proxy metadata only.
+		// Managed-only subclasses can still inherit the JNI name of a mapped base type.
+		for (var currentType = type; currentType is not null; currentType = currentType.BaseType) {
+			if (TrimmableTypeMap.Instance.TryGetJniNameForManagedType (currentType, out var jniName)) {
+				yield return jniName;
 				yield break;
 			}
 		}
