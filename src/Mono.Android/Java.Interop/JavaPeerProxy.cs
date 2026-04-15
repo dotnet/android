@@ -61,6 +61,17 @@ namespace Java.Interop
 		/// </summary>
 		/// <returns>A factory for creating containers of the target type, or null if not supported.</returns>
 		public virtual JavaPeerContainerFactory? GetContainerFactory () => null;
+
+		protected static void ConstructActivatedPeer (IJavaPeerable peer, IntPtr handle)
+		{
+			if (peer == null)
+				throw new ArgumentNullException (nameof (peer));
+
+			peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable | JniManagedPeerStates.Activatable);
+
+			var reference = new JniObjectReference (handle);
+			JniEnvironment.Runtime.ValueManager.ConstructPeer (peer, ref reference, JniObjectReferenceOptions.Copy);
+		}
 	}
 
 	/// <summary>

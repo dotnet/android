@@ -191,6 +191,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 		var memberNames = GetMemberRefNames (reader);
 		Assert.DoesNotContain ("CreateManagedPeer", memberNames);
+		Assert.Contains ("ConstructActivatedPeer", memberNames);
 		Assert.Contains ("GetUninitializedObject", memberNames);
 	}
 
@@ -229,6 +230,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		var reader = pe.GetMetadataReader ();
 		var memberNames = GetMemberRefNames (reader);
 
+		Assert.Contains ("ConstructActivatedPeer", memberNames);
 		Assert.Contains ("get_WithinNewObjectScope", memberNames);
 		Assert.Contains ("GetUninitializedObject", memberNames);
 		Assert.DoesNotContain ("ActivateInstance", memberNames);

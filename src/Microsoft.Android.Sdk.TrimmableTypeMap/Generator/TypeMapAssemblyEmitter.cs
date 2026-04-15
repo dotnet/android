@@ -68,6 +68,7 @@ sealed class TypeMapAssemblyEmitter
 
 	AssemblyReferenceHandle _javaInteropRef;
 
+	TypeReferenceHandle _javaPeerProxyBaseRef;
 	TypeReferenceHandle _javaPeerProxyRef;
 	TypeReferenceHandle _iJavaPeerableRef;
 	TypeReferenceHandle _jniHandleOwnershipRef;
@@ -83,6 +84,7 @@ sealed class TypeMapAssemblyEmitter
 
 	MemberReferenceHandle _getTypeFromHandleRef;
 	MemberReferenceHandle _getUninitializedObjectRef;
+	MemberReferenceHandle _constructActivatedPeerRef;
 	MemberReferenceHandle _notSupportedExceptionCtorRef;
 	MemberReferenceHandle _jniObjectReferenceCtorRef;
 	MemberReferenceHandle _jniEnvDeleteRefRef;
@@ -163,6 +165,8 @@ sealed class TypeMapAssemblyEmitter
 	void EmitTypeReferences ()
 	{
 		var metadata = _pe.Metadata;
+		_javaPeerProxyBaseRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaPeerProxy"));
 		_javaPeerProxyRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaPeerProxy`1"));
 		_iJavaPeerableRef = metadata.AddTypeReference (_javaInteropRef,
@@ -212,6 +216,14 @@ sealed class TypeMapAssemblyEmitter
 			sig => sig.MethodSignature ().Parameters (1,
 				rt => rt.Type ().Object (),
 				p => p.AddParameter ().Type ().Type (_systemTypeRef, false)));
+
+		_constructActivatedPeerRef = _pe.AddMemberRef (_javaPeerProxyBaseRef, "ConstructActivatedPeer",
+			sig => sig.MethodSignature (isInstanceMethod: false).Parameters (2,
+				rt => rt.Void (),
+				p => {
+					p.AddParameter ().Type ().Type (_iJavaPeerableRef, false);
+					p.AddParameter ().Type ().IntPtr ();
+				}));
 
 		_notSupportedExceptionCtorRef = _pe.AddMemberRef (_notSupportedExceptionRef, ".ctor",
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
@@ -499,6 +511,10 @@ sealed class TypeMapAssemblyEmitter
 
 			encoder.OpCode (ILOpCode.Dup);
 			encoder.OpCode (ILOpCode.Ldarg_1);
+			encoder.Call (_constructActivatedPeerRef);
+
+			encoder.OpCode (ILOpCode.Dup);
+			encoder.OpCode (ILOpCode.Ldarg_1);
 			encoder.OpCode (ILOpCode.Ldarg_2);
 			encoder.Call (baseActivationCtorRef);
 
@@ -562,6 +578,10 @@ sealed class TypeMapAssemblyEmitter
 				encoder.Call (_getUninitializedObjectRef);
 				encoder.OpCode (ILOpCode.Castclass);
 				encoder.Token (targetTypeRef);
+
+				encoder.OpCode (ILOpCode.Dup);
+				encoder.OpCode (ILOpCode.Ldarg_1); // handle
+				encoder.Call (_constructActivatedPeerRef);
 
 				// dup obj (one copy for the call, one for the return)
 				encoder.OpCode (ILOpCode.Dup);
@@ -746,6 +766,10 @@ sealed class TypeMapAssemblyEmitter
 						encoder.Call (_getUninitializedObjectRef);
 						encoder.OpCode (ILOpCode.Castclass);
 						encoder.Token (targetTypeRef);
+
+						encoder.OpCode (ILOpCode.Dup);
+						encoder.LoadArgument (1); // self
+						encoder.Call (_constructActivatedPeerRef);
 					}
 
 					encoder.LoadLocalAddress (0);
@@ -795,6 +819,10 @@ sealed class TypeMapAssemblyEmitter
 						encoder.Call (_getUninitializedObjectRef);
 						encoder.OpCode (ILOpCode.Castclass);
 						encoder.Token (targetTypeRef);
+
+						encoder.OpCode (ILOpCode.Dup);
+						encoder.LoadArgument (1); // self
+						encoder.Call (_constructActivatedPeerRef);
 
 						encoder.LoadArgument (1); // self
 						encoder.LoadConstantI4 (0); // JniHandleOwnership.DoNotTransfer
