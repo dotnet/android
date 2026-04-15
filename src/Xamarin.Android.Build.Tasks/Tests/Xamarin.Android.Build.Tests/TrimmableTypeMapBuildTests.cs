@@ -53,7 +53,7 @@ namespace Xamarin.Android.Build.Tests {
 		[Test]
 		public void TrimmableTypeMap_PreserveList_IsPackagedInSdk ()
 		{
-			var path = Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "PreserveLists", "Trimmable.CoreCLR.xml");
+			var path = Path.Combine (TestEnvironment.DotNetPreviewAndroidSdkDirectory, "PreserveLists", "Trimmable.CoreCLR.xml");
 
 			FileAssert.Exists (path, $"{path} should exist in the SDK pack.");
 		}
