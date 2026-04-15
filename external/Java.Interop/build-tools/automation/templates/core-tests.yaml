@@ -5,115 +5,76 @@ parameters:
   nativeAotRid:
 
 steps:
-- task: DotNetCoreCLI@2
-  displayName: 'Tests: generator'
-  inputs:
-    command: test
+- template: run-dotnet-test.yaml
+  parameters:
     testRunTitle: generator (${{ parameters.platformName }})
-    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/generator-Tests.dll
-  continueOnError: true
-  
-- task: DotNetCoreCLI@2
-  displayName: 'Tests: JavaCallableWrappers'
-  inputs:
-    command: test
+    testAssemblyName: generator-Tests
+
+- template: run-dotnet-test.yaml
+  parameters:
     testRunTitle: Java.Interop.Tools.JavaCallableWrappers (${{ parameters.platformName }})
-    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop.Tools.JavaCallableWrappers-Tests.dll
-  continueOnError: true
-   
-- task: DotNetCoreCLI@2
-  displayName: 'Tests: logcat-parse'
-  inputs:
-    command: test
+    testAssemblyName: Java.Interop.Tools.JavaCallableWrappers-Tests
+
+- template: run-dotnet-test.yaml
+  parameters:
     testRunTitle: logcat-parse (${{ parameters.platformName }})
-    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/logcat-parse-Tests.dll
-  continueOnError: true
-  
-- task: DotNetCoreCLI@2
-  displayName: 'Tests: ApiXmlAdjuster'
-  inputs:
-    command: test
+    testAssemblyName: logcat-parse-Tests
+
+- template: run-dotnet-test.yaml
+  parameters:
     testRunTitle: Xamarin.Android.Tools.ApiXmlAdjuster (${{ parameters.platformName }})
-    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll
-  continueOnError: true
-  
-- task: DotNetCoreCLI@2
-  displayName: 'Tests: JavaTypeSystem'
-  inputs:
-    command: test
+    testAssemblyName: Xamarin.Android.Tools.ApiXmlAdjuster-Tests
+
+- template: run-dotnet-test.yaml
+  parameters:
     testRunTitle: Xamarin.Android.Tools.JavaTypeSystem (${{ parameters.platformName }})
-    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop.Tools.JavaTypeSystem-Tests.dll
-  continueOnError: true
-  
-- task: DotNetCoreCLI@2
-  displayName: 'Tests: Bytecode'
-  inputs:
-    command: test
+    testAssemblyName: Java.Interop.Tools.JavaTypeSystem-Tests
+
+- template: run-dotnet-test.yaml
+  parameters:
     testRunTitle: Xamarin.Android.Tools.Bytecode (${{ parameters.platformName }})
-    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Xamarin.Android.Tools.Bytecode-Tests.dll
-  continueOnError: true
+    testAssemblyName: Xamarin.Android.Tools.Bytecode-Tests
 
-- task: DotNetCoreCLI@2
-  displayName: 'Tests: Java.Interop.Tools.Generator'
-  inputs:
-    command: test
+- template: run-dotnet-test.yaml
+  parameters:
     testRunTitle: Java.Interop.Tools.Generator (${{ parameters.platformName }})
-    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop.Tools.Generator-Tests.dll
-  continueOnError: true
+    testAssemblyName: Java.Interop.Tools.Generator-Tests
 
-- task: DotNetCoreCLI@2
-  displayName: 'Tests: Java.Interop.Tools.JavaSource'
-  inputs:
-    command: test
+- template: run-dotnet-test.yaml
+  parameters:
     testRunTitle: Java.Interop.Tools.JavaSource (${{ parameters.platformName }})
-    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop.Tools.JavaSource-Tests.dll
-  continueOnError: true
+    testAssemblyName: Java.Interop.Tools.JavaSource-Tests
 
-- task: DotNetCoreCLI@2
-  displayName: 'Tests: Xamarin.SourceWriter'
-  inputs:
-    command: test
+- template: run-dotnet-test.yaml
+  parameters:
     testRunTitle: Xamarin.SourceWriter (${{ parameters.platformName }})
-    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Xamarin.SourceWriter-Tests.dll
-  continueOnError: true
+    testAssemblyName: Xamarin.SourceWriter-Tests
 
-- task: DotNetCoreCLI@2
-  displayName: 'Tests: Java.Interop.Tools.Maven'
-  inputs:
-    command: test
+- template: run-dotnet-test.yaml
+  parameters:
     testRunTitle: Java.Interop.Tools.Maven (${{ parameters.platformName }})
-    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop.Tools.Maven-Tests.dll
-  continueOnError: true
+    testAssemblyName: Java.Interop.Tools.Maven-Tests
 
-- task: DotNetCoreCLI@2
-  displayName: 'Tests: Java.Interop'
-  condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
-  inputs:
-    command: test
+- template: run-dotnet-test.yaml
+  parameters:
     testRunTitle: Java.Interop ($(DotNetTargetFramework) - ${{ parameters.platformName }})
-    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop-Tests.dll
-  continueOnError: true
-  retryCountOnTaskFailure: 1
+    testAssemblyName: Java.Interop-Tests
+    condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
+    retryCount: 1
 
-- task: DotNetCoreCLI@2
-  displayName: 'Tests: Java.Interop.Dynamic'
-  condition: eq('${{ parameters.runNativeTests }}', 'true')
-  inputs:
-    command: test
+- template: run-dotnet-test.yaml
+  parameters:
     testRunTitle: Java.Interop.Dynamic (${{ parameters.platformName }})
-    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop.Dynamic-Tests.dll
-  continueOnError: true
-  retryCountOnTaskFailure: 1
+    testAssemblyName: Java.Interop.Dynamic-Tests
+    condition: eq('${{ parameters.runNativeTests }}', 'true')
+    retryCount: 1
 
-- task: DotNetCoreCLI@2
-  displayName: 'Tests: Java.Interop.Export'
-  condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
-  inputs:
-    command: test
+- template: run-dotnet-test.yaml
+  parameters:
     testRunTitle: Java.Interop.Export (${{ parameters.platformName }})
-    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop.Export-Tests.dll
-  continueOnError: true
-  retryCountOnTaskFailure: 1
+    testAssemblyName: Java.Interop.Export-Tests
+    condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
+    retryCount: 1
 
 - task: DotNetCoreCLI@2
   displayName: 'jnimarshalmethod-gen Java.Interop.Export-Tests.dll'
@@ -125,35 +86,28 @@ steps:
   continueOnError: true
   retryCountOnTaskFailure: 1
 
-- task: DotNetCoreCLI@2
-  displayName: 'Tests: Java.Interop.Export w/ jnimarshalmethod-gen!'
-  condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
-  inputs:
-    command: test
+- template: run-dotnet-test.yaml
+  parameters:
     testRunTitle: Java.Interop.Export (jnimarshalmethod-gen + ${{ parameters.platformName }})
-    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop.Export-Tests.dll
-  continueOnError: true
-  retryCountOnTaskFailure: 1
+    testAssemblyName: Java.Interop.Export-Tests
+    trxSuffix: -jnimarshalmethod
+    condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
+    retryCount: 1
 
-- task: DotNetCoreCLI@2
-  displayName: 'Tests: Java.Interop-Performance-$(DotNetTargetFramework)'
-  condition: eq('${{ parameters.runNativeTests }}', 'true')
-  inputs:
-    command: test
+- template: run-dotnet-test.yaml
+  parameters:
     testRunTitle: Java.Interop-Performance ($(DotNetTargetFramework) - ${{ parameters.platformName }})
-    arguments: --logger "console;verbosity=detailed" bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop-PerformanceTests.dll
-  continueOnError: true
-  retryCountOnTaskFailure: 1
+    testAssemblyName: Java.Interop-PerformanceTests
+    condition: eq('${{ parameters.runNativeTests }}', 'true')
+    retryCount: 1
+    extraArguments: --logger "console;verbosity=detailed"
 
-- task: DotNetCoreCLI@2
-  displayName: 'Tests: Java.Base'
-  condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
-  inputs:
-    command: test
+- template: run-dotnet-test.yaml
+  parameters:
     testRunTitle: Java.Base ($(DotNetTargetFramework) - ${{ parameters.platformName }})
-    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Base-Tests.dll
-  continueOnError: true
-  retryCountOnTaskFailure: 1
+    testAssemblyName: Java.Base-Tests
+    condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
+    retryCount: 1
 
 - task: DotNetCoreCLI@2
   displayName: 'jnimarshalmethod-gen Java.Base-Tests.dll'
@@ -165,15 +119,13 @@ steps:
   continueOnError: true
   retryCountOnTaskFailure: 1
 
-- task: DotNetCoreCLI@2
-  displayName: 'Tests: Java.Base'
-  condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
-  inputs:
-    command: test
+- template: run-dotnet-test.yaml
+  parameters:
     testRunTitle: Java.Base ($(DotNetTargetFramework) - ${{ parameters.platformName }})
-    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Base-Tests.dll
-  continueOnError: true
-  retryCountOnTaskFailure: 1
+    testAssemblyName: Java.Base-Tests
+    trxSuffix: -jnimarshalmethod
+    condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
+    retryCount: 1
 
 - task: DotNetCoreCLI@2
   displayName: 'Tests: java-source-utils'
