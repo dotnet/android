@@ -70,19 +70,12 @@ namespace Java.Interop
 		{
 			var type = Type.GetTypeFromHandle (typeHandle);
 			var peer = (IJavaPeerable) System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject (type);
-			ConstructActivatedPeer (peer, handle);
-			return peer;
-		}
-
-		protected static void ConstructActivatedPeer (IJavaPeerable peer, IntPtr handle)
-		{
-			if (peer == null)
-				throw new ArgumentNullException (nameof (peer));
 
 			peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable | JniManagedPeerStates.Activatable);
 
 			var reference = new JniObjectReference (handle);
 			JniEnvironment.Runtime.ValueManager.ConstructPeer (peer, ref reference, JniObjectReferenceOptions.Copy);
+			return peer;
 		}
 	}
 
