@@ -18,10 +18,12 @@ namespace Java.Interop
 	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
 	public abstract class JavaPeerProxy : Attribute
 	{
+		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+
 		protected JavaPeerProxy (
 			string jniName,
 			Type targetType,
-			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			[DynamicallyAccessedMembers (Constructors)]
 			Type? invokerType)
 		{
 			JniName = jniName ?? throw new ArgumentNullException (nameof (jniName));
@@ -52,7 +54,7 @@ namespace Java.Interop
 		/// Gets the invoker type for interfaces and abstract classes.
 		/// Returns null for concrete types that can be directly instantiated.
 		/// </summary>
-		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+		[DynamicallyAccessedMembers (Constructors)]
 		public Type? InvokerType { get; }
 
 		/// <summary>
@@ -62,13 +64,13 @@ namespace Java.Interop
 		/// <returns>A factory for creating containers of the target type, or null if not supported.</returns>
 		public virtual JavaPeerContainerFactory? GetContainerFactory () => null;
 		/// <summary>
-		/// Creates an uninitialized managed peer for inherited Java activation paths and
-		/// binds it to the provided JNI handle before the activation constructor runs.
+		/// Creates the managed peer for inherited Java activation paths and binds it
+		/// to the provided JNI handle before the activation constructor runs.
 		/// </summary>
-		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "Generated proxy activation passes the runtime handle for the peer type that must be allocated uninitialized.")]
-		protected static IJavaPeerable CreateActivatedPeer (RuntimeTypeHandle typeHandle, IntPtr handle)
+		protected static IJavaPeerable CreateActivatedPeer (
+			[DynamicallyAccessedMembers (Constructors)] Type type,
+			IntPtr handle)
 		{
-			var type = Type.GetTypeFromHandle (typeHandle);
 			var peer = (IJavaPeerable) System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject (type);
 
 			peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable | JniManagedPeerStates.Activatable);
