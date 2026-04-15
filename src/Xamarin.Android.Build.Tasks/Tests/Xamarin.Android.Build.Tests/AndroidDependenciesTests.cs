@@ -26,6 +26,12 @@ namespace Xamarin.Android.Build.Tests
 				return;
 			}
 
+			// The GoogleV2 manifest from Google doesn't have an ndk-bundle component,
+			// so the NDK dependency can't be resolved for runtimes that require it.
+			if (manifestType == "GoogleV2" && runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("GoogleV2 manifest does not have an ndk-bundle component for NativeAOT");
+			}
+
 			// Set to true when we are marking a new Android API level as stable, but it has not
 			// been added to the Xamarin manifest yet.
 			var xamarin_manifest_needs_updating = false;
