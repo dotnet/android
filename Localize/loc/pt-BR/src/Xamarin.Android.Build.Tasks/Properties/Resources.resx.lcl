@@ -488,10 +488,13 @@
       </Item>
       <Item ItemId=";XA0144" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The Android emulator for AVD '{0}' exited unexpectedly with exit code {1} before becoming available.]]></Val>
+          <Val><![CDATA[The Android emulator for AVD '{0}' failed with error '{1}': {2}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[O Android Emulator para o AVD ''{0}'' foi encerrado inesperadamente com o código de saída {1} antes de ficar disponível.]]></Val>
+            <Val><![CDATA[O emulador Android para AVD '{0}' falhou com o erro '{1}': {2}]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The Android emulator for AVD '{0}' exited unexpectedly with exit code {1} before becoming available.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1385,6 +1388,15 @@
           <Val><![CDATA[Maven artifact specification '{0}' is invalid. The correct format is 'group_id:artifact_id:version'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[A especificação do artefato Maven ''{0}'' é inválida. O formato correto é "group_id:artifact_id:version".]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4250" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Manifest-referenced type '{0}' was not found in any scanned assembly. It may be a framework type.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[O tipo "{0}" referenciado pelo manifesto não foi encontrado em nenhum assembly verificado. Pode ser um tipo de estrutura.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

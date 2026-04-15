@@ -643,7 +643,7 @@ namespace Xamarin.Android.Tasks
 
 		void AddMarshalMethod (LlvmIrModule module, MarshalMethodInfo method, ulong asmId, MarshalMethodsWriteState writeState)
 		{
-			Log.LogDebugMessage ($"MM: generating code for {method.Method.DeclaringType.FullName} {method.Method.NativeCallback.FullName}");
+			Log.LogDebugMessage ($"MM: generating code for {method.Method.DeclaringType.FullName} (native cb: '{method.Method.NativeCallback.FullName}'; native symbol name: '{method.NativeSymbolName}')");
 			MarshalMethodEntryMethodObject nativeCallback = method.Method.NativeCallback;
 			string backingFieldName = $"native_cb_{method.Method.JniMethodName}_{asmId}_{method.ClassCacheIndex}_{nativeCallback.MetadataToken:x}";
 

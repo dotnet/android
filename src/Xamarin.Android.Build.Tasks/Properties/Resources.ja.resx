@@ -1070,6 +1070,11 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>The following are literal names and should not be translated: Maven, group_id, artifact_id
 {0} - A Maven artifact specification</comment>
   </data>
+  <data name="XA4250" xml:space="preserve">
+    <value>Manifest-referenced type '{0}' was not found in any scanned assembly. It may be a framework type.</value>
+    <comment>The following are literal names and should not be translated: Manifest, framework.
+{0} - Java type name from AndroidManifest.xml</comment>
+  </data>
   <data name="XA0142" xml:space="preserve">
     <value>コマンド '{0}' が失敗しました。\n{1}</value>
     <comment>'{0}' is a failed command name (potentially with path) followed by all the arguments passed to it. {1} is the combined output on the standard error and standard output streams.</comment>
@@ -1080,9 +1085,10 @@ In this message, the term "handheld app" means "app for handheld devices."
 {1} - The exception message.</comment>
   </data>
   <data name="XA0144" xml:space="preserve">
-    <value>AVD '{0}' 用 Android Emulator は、使用可能になる前に終了コード {1} で予期せず終了しました。</value>
+    <value>AVD '{0}' の Android エミュレーターがエラー '{1}': {2} で失敗しました</value>
     <comment>{0} - The AVD name.
-{1} - The process exit code.</comment>
+{1} - The error kind (e.g. Unknown).
+{2} - Error details from the emulator runner.</comment>
   </data>
   <data name="XA0145" xml:space="preserve">
     <value>AVD '{0}' 用 Android Emulator は、{1} 秒以内に起動を完了しませんでした。'BootTimeoutSeconds' を増やすか、エミュレーターの構成を確認してください。</value>

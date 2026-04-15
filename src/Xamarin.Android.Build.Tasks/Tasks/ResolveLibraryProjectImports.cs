@@ -297,7 +297,7 @@ namespace Xamarin.Android.Tasks
 											.Replace ("native_library_imports/", "");
 									}, deleteCallback: (fileToDelete) => {
 										return !files.Contains (fileToDelete);
-									});
+									}, log: Log);
 								} catch (PathTooLongException ex) {
 									Log.LogCodedError ("XA4303", Properties.Resources.XA4303, assemblyPath, ex);
 									return;
@@ -324,7 +324,7 @@ namespace Xamarin.Android.Tasks
 										return path;
 									}, deleteCallback: (fileToDelete) => {
 										return !jars.ContainsKey (fileToDelete);
-									});
+									}, log: Log);
 								} catch (PathTooLongException ex) {
 									Log.LogCodedError ("XA4303", Properties.Resources.XA4303, assemblyPath, ex);
 									return;
@@ -465,7 +465,7 @@ namespace Xamarin.Android.Tasks
 							return entryFullName;
 						}, deleteCallback: (fileToDelete) => {
 							return !jars.ContainsKey (fileToDelete);
-						}, skipCallback: Files.ShouldSkipEntryInAar);
+						}, skipCallback: Files.ShouldSkipEntryInAar, log: Log);
 
 						if (Directory.Exists (importsDir) && aarHash != stampHash) {
 							Log.LogDebugMessage ($"Saving hash to {stamp}, changes: {updated}");

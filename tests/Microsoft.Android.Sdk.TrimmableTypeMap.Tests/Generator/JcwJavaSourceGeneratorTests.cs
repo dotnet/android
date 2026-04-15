@@ -37,7 +37,7 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 		[Theory]
 		[InlineData ("android/app/Activity", "android.app.Activity")]
 		[InlineData ("java/lang/Object", "java.lang.Object")]
-		[InlineData ("android/view/View$OnClickListener", "android.view.View$OnClickListener")]
+		[InlineData ("android/view/View$OnClickListener", "android.view.View.OnClickListener")]
 		public void JniNameToJavaName_ConvertsCorrectly (string jniName, string expected)
 		{
 			Assert.Equal (expected, JniSignatureHelper.JniNameToJavaName (jniName));
@@ -113,6 +113,14 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 			Assert.Contains ("public abstract class AbstractBase\n", java);
 		}
 
+		[Fact]
+		public void Generate_ClickableView_UsesDotsForNestedInterfaceName ()
+		{
+			var java = GenerateFixture ("my/app/ClickableView");
+			Assert.Contains ("\t\tandroid.view.View.OnClickListener", java);
+			Assert.DoesNotContain ("View$OnClickListener", java);
+		}
+
 	}
 
 	public class StaticInitializer
@@ -130,16 +138,20 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 		public void Generate_ApplicationType_SkipsRegisterNatives ()
 		{
 			var java = GenerateFixture ("my/app/MyApplication");
-			Assert.DoesNotContain ("registerNatives", java);
 			Assert.DoesNotContain ("static {", java);
+			Assert.DoesNotContain ("if (getClass () == MyApplication.class) nctor_0 ();", java);
+			AssertContainsLine ("private static synchronized void __md_registerNatives ()\n", java);
+			AssertContainsLine ("mono.android.Runtime.registerNatives (MyApplication.class);\n", java);
 		}
 
 		[Fact]
 		public void Generate_InstrumentationType_SkipsRegisterNatives ()
 		{
 			var java = GenerateFixture ("my/app/MyInstrumentation");
-			Assert.DoesNotContain ("registerNatives", java);
 			Assert.DoesNotContain ("static {", java);
+			Assert.DoesNotContain ("if (getClass () == MyInstrumentation.class) nctor_0 ();", java);
+			AssertContainsLine ("private static synchronized void __md_registerNatives ()\n", java);
+			AssertContainsLine ("mono.android.Runtime.registerNatives (MyInstrumentation.class);\n", java);
 		}
 
 	}
@@ -245,8 +257,63 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 			var java = GenerateFixture ("my/app/MainActivity");
 			AssertContainsLine ("@Override\n", java);
 			AssertContainsLine ("public void onCreate (android.os.Bundle p0)\n", java);
-			AssertContainsLine ("n_OnCreate (p0);\n", java);
-			AssertContainsLine ("public native void n_OnCreate (android.os.Bundle p0);\n", java);
+			AssertContainsLine ("n_OnCreate_Landroid_os_Bundle_ (p0);\n", java);
+			AssertContainsLine ("public native void n_OnCreate_Landroid_os_Bundle_ (android.os.Bundle p0);\n", java);
+		}
+
+		[Fact]
+		public void Generate_OverrideAcrossIntermediateMcwBase_HasMethodStub ()
+		{
+			var java = GenerateFixture ("my/app/SelectableList");
+			AssertContainsLine ("@Override\n", java);
+			AssertContainsLine ("public void setSelection (int p0)\n", java);
+			AssertContainsLine ("n_SetSelection_I (p0);\n", java);
+			AssertContainsLine ("public native void n_SetSelection_I (int p0);\n", java);
+		}
+
+		[Fact]
+		public void Generate_OverrideAcrossGenericIntermediateMcwBase_HasMethodStub ()
+		{
+			var java = GenerateFixture ("my/app/GenericSelectableList");
+			AssertContainsLine ("@Override\n", java);
+			AssertContainsLine ("public void setSelection (int p0)\n", java);
+			AssertContainsLine ("n_SetSelection_I (p0);\n", java);
+			AssertContainsLine ("public native void n_SetSelection_I (int p0);\n", java);
+		}
+
+		[Fact]
+		public void Generate_DeferredRegistrationType_LazilyRegistersBeforeNativeCallback ()
+		{
+			var type = new JavaPeerInfo {
+				JavaName = "my/app/DeferredInstrumentation",
+				CompatJniName = "my/app/DeferredInstrumentation",
+				ManagedTypeName = "MyApp.DeferredInstrumentation",
+				ManagedTypeNamespace = "MyApp",
+				ManagedTypeShortName = "DeferredInstrumentation",
+				AssemblyName = "App",
+				BaseJavaName = "android/app/Instrumentation",
+				CannotRegisterInStaticConstructor = true,
+				MarshalMethods = new List<MarshalMethodInfo> {
+					new () {
+						JniName = "onCreate",
+						JniSignature = "(Landroid/os/Bundle;)V",
+						ManagedMethodName = "OnCreate",
+						NativeCallbackName = "n_OnCreate_Landroid_os_Bundle_",
+						Connector = "GetOnCreate_Landroid_os_Bundle_Handler",
+					},
+					new () {
+						JniName = "onStart",
+						JniSignature = "()V",
+						ManagedMethodName = "OnStart",
+						NativeCallbackName = "n_OnStart",
+						Connector = "GetOnStartHandler",
+					},
+				},
+			};
+
+			var java = GenerateToString (type);
+			AssertContainsLine ("__md_registerNatives ();\n\t\tn_OnCreate_Landroid_os_Bundle_ (p0);\n", java);
+			AssertContainsLine ("__md_registerNatives ();\n\t\tn_OnStart ();\n", java);
 		}
 
 	}

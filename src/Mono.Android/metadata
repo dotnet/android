@@ -2006,6 +2006,37 @@
       name="propertyName"
   ></attr>
 
+  <!-- Fix CS0549 errors about adding new `virtual` methods in `sealed` types -->
+  <attr
+      api-since="37"
+      path="/api/package[@name='java.lang']/class[@name='StringBuffer']/method[@name='getChars' and count(parameter)=4 and parameter[1][@type='int'] and parameter[2][@type='int'] and parameter[3][@type='char[]'] and parameter[4][@type='int']]"
+      name="managedOverride"
+  >none</attr>
+  <attr
+      api-since="37"
+      path="/api/package[@name='java.lang']/class[@name='StringBuilder']/method[@name='getChars' and count(parameter)=4 and parameter[1][@type='int'] and parameter[2][@type='int'] and parameter[3][@type='char[]'] and parameter[4][@type='int']]"
+      name="managedOverride"
+  >none</attr>
+
+  <!-- Covariant return type methods need to be emitted as `override` -->
+  <attr
+      api-since="37"
+      path="/api/package[@name='android.view']/class[@name='RoundedRectBlurRegion']/method[@name='copy' and count(parameter)=0]"
+      name="managedOverride"
+  >override</attr>
+
+  <!-- Fix CS0534+CS0549: method *should* be `override`, but is instead emitted as `virtual`, resulting in two errors for one method! -->
+  <attr
+      api-since="37"
+      path="/api/package[@name='android.text']/class[@name='SpannedString']/method[@name='getChars' and count(parameter)=4 and parameter[1][@type='int'] and parameter[2][@type='int'] and parameter[3][@type='char[]'] and parameter[4][@type='int']]"
+      name="managedOverride"
+  >override</attr>
+  <attr
+      api-since="37"
+      path="/api/package[@name='android.text']/class[@name='SpannableString']/method[@name='getChars' and count(parameter)=4 and parameter[1][@type='int'] and parameter[2][@type='int'] and parameter[3][@type='char[]'] and parameter[4][@type='int']]"
+      name="managedOverride"
+  >override</attr>
+
   <!--
     ***********************************************************************
     THE FOLLOWING LINES MUST BE CREATED FOR ANY NEW PLATFORM THAT IS ADDED.
@@ -2037,6 +2068,7 @@
   <attr api-since="36.1" path="/api/package[contains(@merge.SourceFile,'api-CANARY.xml.in')]/interface" name="no-alternatives">true</attr>
   <attr api-since="36.1" path="/api/package[contains(@merge.SourceFile,'api-36.1.xml.in')]/interface" name="no-alternatives">true</attr>
   <attr api-since="37" path="/api/package[contains(@merge.SourceFile,'api-CinnamonBun.xml.in')]/interface" name="no-alternatives">true</attr>
+  <attr api-since="37" path="/api/package[contains(@merge.SourceFile,'api-37.0.xml.in')]/interface" name="no-alternatives">true</attr>
 
   <!-- Set ApiSince based on merge sourcefile. -->
   <attr api-since="22" path="/api//*[contains(@merge.SourceFile,'api-22.xml.in')]" name="api-since">22</attr>
@@ -2064,6 +2096,7 @@
   <attr api-since="36.1" path="/api//*[contains(@merge.SourceFile,'api-CANARY.xml.in')]" name="api-since">36.1</attr>
   <attr api-since="36.1" path="/api//*[contains(@merge.SourceFile,'api-36.1.xml.in')]" name="api-since">36.1</attr>
   <attr api-since="37" path="/api//*[contains(@merge.SourceFile,'api-CinnamonBun.xml.in')]" name="api-since">37</attr>
+  <attr api-since="37" path="/api//*[contains(@merge.SourceFile,'api-37.0.xml.in')]" name="api-since">37</attr>
 
   <!-- Erase some 'api-since' attributes (This has to be done after they are set above) -->
 

@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Reflection;
 
 using Android.Runtime;
+using Microsoft.Android.Runtime;
 
 namespace Java.Interop {
 
@@ -79,6 +80,13 @@ namespace Java.Interop {
 				return converter;
 			if (target.IsArray)
 				return (h, t) => JNIEnv.GetArray (h, t, target.GetElementType ());
+
+			if (RuntimeFeature.TrimmableTypeMap) {
+				var factoryConverter = TryGetFactoryBasedConverter (target);
+				if (factoryConverter != null)
+					return factoryConverter;
+			}
+
 			if (target.IsGenericType && target.GetGenericTypeDefinition() == typeof (IDictionary<,>)) {
 				Type t = MakeGenericType (typeof (JavaDictionary<,>), target.GetGenericArguments ());
 				return GetJniHandleConverterForType (t);
@@ -97,6 +105,52 @@ namespace Java.Interop {
 			}
 			if (typeof (ICollection).IsAssignableFrom (target))
 				return (h, t) => JavaCollection.FromJniHandle (h, t);
+
+			return null;
+		}
+
+		/// <summary>
+		/// AOT-safe converter using <see cref="JavaPeerContainerFactory"/> from the generated proxy.
+		/// Avoids <c>MakeGenericType()</c> by using the pre-typed factory from the proxy attribute.
+		/// </summary>
+		static Func<IntPtr, JniHandleOwnership, object?>? TryGetFactoryBasedConverter (Type target)
+		{
+			if (!target.IsGenericType)
+				return null;
+
+			var genericDef = target.GetGenericTypeDefinition ();
+			var typeArgs = target.GetGenericArguments ();
+
+			if (genericDef == typeof (IList<>) && typeArgs.Length == 1) {
+				var factory = TryGetContainerFactory (typeArgs [0]);
+				if (factory != null)
+					return (h, t) => factory.CreateList (h, t);
+			}
+
+			if (genericDef == typeof (ICollection<>) && typeArgs.Length == 1) {
+				var factory = TryGetContainerFactory (typeArgs [0]);
+				if (factory != null)
+					return (h, t) => factory.CreateCollection (h, t);
+			}
+
+			if (genericDef == typeof (IDictionary<,>) && typeArgs.Length == 2) {
+				var keyFactory = TryGetContainerFactory (typeArgs [0]);
+				var valueFactory = TryGetContainerFactory (typeArgs [1]);
+				if (keyFactory != null && valueFactory != null)
+					return (h, t) => valueFactory.CreateDictionary (keyFactory, h, t);
+			}
+
+			return null;
+		}
+
+		static JavaPeerContainerFactory? TryGetContainerFactory (Type elementType)
+		{
+			if (!typeof (IJavaPeerable).IsAssignableFrom (elementType))
+				return null;
+
+			if (RuntimeFeature.TrimmableTypeMap) {
+				return TrimmableTypeMap.Instance?.GetContainerFactory (elementType);
+			}
 
 			return null;
 		}

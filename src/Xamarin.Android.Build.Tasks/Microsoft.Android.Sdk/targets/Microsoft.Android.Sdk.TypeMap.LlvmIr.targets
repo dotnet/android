@@ -7,7 +7,7 @@
   <UsingTask TaskName="Xamarin.Android.Tasks.GetMonoPlatformJar" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.RemoveRegisterAttribute" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateProguardConfiguration" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.StripEmbeddedLibraries" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.PostTrimmingPipeline" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <PropertyGroup>
     <_RemoveRegisterFlag>$(MonoAndroidIntermediateAssemblyDir)shrunk\shrunk.flag</_RemoveRegisterFlag>
@@ -16,6 +16,13 @@
     <_BeforeCompileJava>$(_BeforeCompileJava);_GetMonoPlatformJarPath</_BeforeCompileJava>
     <_BeforeCompileToDalvik>$(_BeforeCompileToDalvik);_GetMonoPlatformJarPath</_BeforeCompileToDalvik>
   </PropertyGroup>
+
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap"
+        Value="false"
+        Trim="true"
+    />
+  </ItemGroup>
 
   <PropertyGroup>
     <_GenerateJavaStubsDependsOnTargets>
@@ -160,7 +167,7 @@
   <Target Name="_PrepareLinking"
       Condition=" '$(PublishTrimmed)' == 'true' "
       AfterTargets="ComputeResolvedFilesToPublishList"
-      DependsOnTargets="GetReferenceAssemblyPaths;_CreatePropertiesCache">
+      DependsOnTargets="GetReferenceAssemblyPaths;_CreatePropertiesCache;_AddResourceDesignerToPublishFiles">
     <PropertyGroup>
       <TrimmerRemoveSymbols Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' ">true</TrimmerRemoveSymbols>
       <_ExtraTrimmerArgs Condition=" '$(_EnableSerializationDiscovery)' != 'false' ">--enable-serialization-discovery $(_ExtraTrimmerArgs)</_ExtraTrimmerArgs>
@@ -195,33 +202,8 @@
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="MonoDroid.Tuner.PreserveApplications" />
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="Microsoft.Android.Sdk.ILLink.PreserveRegistrations" />
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="Microsoft.Android.Sdk.ILLink.PreserveJavaInterfaces" />
-      <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="MonoDroid.Tuner.FixAbstractMethodsStep" />
       <!-- Custom steps that run after MarkStep -->
-      <_TrimmerCustomSteps
-          Condition=" '$(AndroidAddKeepAlives)' == 'true' "
-          Include="$(_AndroidLinkerCustomStepAssembly)"
-          AfterStep="CleanStep"
-          Type="MonoDroid.Tuner.AddKeepAlivesStep"
-      />
       <!-- Custom steps that run after CleanStep -->
-      <_TrimmerCustomSteps
-          Condition=" '$(AndroidLinkResources)' == 'true' "
-          Include="$(_AndroidLinkerCustomStepAssembly)"
-          AfterStep="CleanStep"
-          Type="MonoDroid.Tuner.RemoveResourceDesignerStep"
-      />
-      <_TrimmerCustomSteps
-          Condition=" '$(AndroidLinkResources)' == 'true' "
-          Include="$(_AndroidLinkerCustomStepAssembly)"
-          AfterStep="CleanStep"
-          Type="MonoDroid.Tuner.GetAssembliesStep"
-      />
-      <_TrimmerCustomSteps
-          Condition=" '$(AndroidUseDesignerAssembly)' == 'true' "
-          Include="$(_AndroidLinkerCustomStepAssembly)"
-          BeforeStep="MarkStep"
-          Type="MonoDroid.Tuner.FixLegacyResourceDesignerStep"
-      />
       <_TrimmerCustomSteps
           Condition=" '$(_AndroidTypeMapImplementation)' == 'managed' "
           Include="$(_AndroidLinkerCustomStepAssembly)"
@@ -251,19 +233,23 @@
   </Target>
 
   <!--
-    Strip embedded Android resources (.jar, native libs, etc.) from trimmed assemblies.
+    Post-trimming assembly modifications: strips embedded Android resources and
+    (optionally) injects GC.KeepAlive() calls, in a single pass over assemblies.
     Runs in the inner build after ILLink but before ReadyToRun/crossgen2 compilation,
-    so R2R images are generated from already-stripped assemblies.
+    so R2R images are generated from the already-modified assemblies.
   -->
-  <Target Name="_StripEmbeddedLibraries"
+  <Target Name="_PostTrimmingPipeline"
       AfterTargets="ILLink"
       Condition=" '$(PublishTrimmed)' == 'true' ">
     <ItemGroup>
-      <_StripEmbeddedLibrariesAssembly Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
+      <_PostTrimmingAssembly Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' and '%(ResolvedFileToPublish.PostprocessAssembly)' == 'true' " />
     </ItemGroup>
-    <StripEmbeddedLibraries
-        Assemblies="@(_StripEmbeddedLibrariesAssembly)"
-        Deterministic="$(Deterministic)" />
+    <PostTrimmingPipeline
+        Assemblies="@(_PostTrimmingAssembly)"
+        AddKeepAlives="$(AndroidAddKeepAlives)"
+        AndroidLinkResources="$(AndroidLinkResources)"
+        Deterministic="$(Deterministic)"
+        UseDesignerAssembly="$(AndroidUseDesignerAssembly)" />
   </Target>
 
   <!-- Inject _TypeMapKind into the property cache -->

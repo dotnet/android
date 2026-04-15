@@ -36,6 +36,7 @@ namespace Android.Runtime
 			public IntPtr          grefGCUserPeerable;
 			public bool            managedMarshalMethodsLookupEnabled;
 			public IntPtr          propagateUncaughtExceptionFn;
+			public IntPtr          registerJniNativesFn;
 		}
 #pragma warning restore 0649
 
@@ -81,7 +82,10 @@ namespace Android.Runtime
 			JniType.GetCachedJniType (ref jniType, className);
 
 			ReadOnlySpan<char> methods = new ReadOnlySpan<char> ((void*) methods_ptr, methods_len);
-			androidRuntime!.TypeManager.RegisterNativeMembers (jniType, type, methods);
+			if (androidRuntime is null) {
+				throw new InvalidOperationException ("androidRuntime has not been initialized");
+			}
+			androidRuntime.TypeManager.RegisterNativeMembers (jniType, type, methods);
 		}
 
 		// This must be called by NativeAOT before InitializeJniRuntime, as early as possible
@@ -106,6 +110,7 @@ namespace Android.Runtime
 		internal static void InitializeJniRuntime (JniRuntime runtime, JnienvInitializeArgs args)
 		{
 			androidRuntime = runtime;
+			JniRuntime.SetCurrent (runtime);
 			SetSynchronizationContext ();
 		}
 
@@ -130,8 +135,11 @@ namespace Android.Runtime
 
 			BoundExceptionType = (BoundExceptionType)args->ioExceptionType;
 			JniRuntime.JniTypeManager typeManager;
-			JniRuntime.JniValueManager valueManager;
-			if (RuntimeFeature.ManagedTypeMap) {
+			JniRuntime.JniValueManager? valueManager = null;
+			if (RuntimeFeature.TrimmableTypeMap) {
+				typeManager     = new TrimmableTypeMapTypeManager ();
+				valueManager    = new JavaMarshalValueManager ();
+			} else if (RuntimeFeature.ManagedTypeMap) {
 				typeManager     = new ManagedTypeManager ();
 			} else {
 				typeManager     = new AndroidTypeManager (args->jniAddNativeMethodRegistrationAttributePresent != 0);
@@ -139,7 +147,8 @@ namespace Android.Runtime
 			if (RuntimeFeature.IsMonoRuntime) {
 				valueManager = new AndroidValueManager ();
 			} else if (RuntimeFeature.IsCoreClrRuntime) {
-				valueManager = ManagedValueManager.GetOrCreateInstance ();
+				// Note: this will be removed once trimmable typemap is the only supported option for CoreCLR runtime
+				valueManager ??= new JavaMarshalValueManager ();
 			} else {
 				throw new NotSupportedException ("Internal error: unknown runtime not supported");
 			}
@@ -151,6 +160,11 @@ namespace Android.Runtime
 					valueManager,
 					args->jniAddNativeMethodRegistrationAttributePresent != 0
 			);
+			JniRuntime.SetCurrent (androidRuntime);
+
+			if (RuntimeFeature.TrimmableTypeMap) {
+				TrimmableTypeMap.Initialize ();
+			}
 
 			grefIGCUserPeer_class = args->grefIGCUserPeer;
 			grefGCUserPeerable_class = args->grefGCUserPeerable;
@@ -165,6 +179,10 @@ namespace Android.Runtime
 			}
 
 			args->propagateUncaughtExceptionFn = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&PropagateUncaughtException;
+
+			if (!RuntimeFeature.TrimmableTypeMap) {
+				args->registerJniNativesFn = (IntPtr)(delegate* unmanaged<IntPtr, int, IntPtr, IntPtr, int, void>)&RegisterJniNatives;
+			}
 			RunStartupHooksIfNeeded ();
 			SetSynchronizationContext ();
 		}

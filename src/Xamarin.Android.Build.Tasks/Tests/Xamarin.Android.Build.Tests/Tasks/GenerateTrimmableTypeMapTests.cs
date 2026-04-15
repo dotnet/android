@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
@@ -24,8 +23,28 @@ namespace Xamarin.Android.Build.Tests {
 			var task = CreateTask ([], outputDir, javaDir);
 
 			Assert.IsTrue (task.Execute (), "Task should succeed with empty assembly list.");
-			Assert.IsNull (task.GeneratedAssemblies);
-			Assert.IsNull (task.GeneratedJavaFiles);
+			Assert.IsEmpty (task.GeneratedAssemblies);
+			Assert.IsEmpty (task.GeneratedJavaFiles);
+		}
+
+		[Test]
+		public void Execute_InvalidTargetFrameworkVersion_Fails ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+
+			var errors = new List<BuildErrorEventArgs> ();
+			var task = new GenerateTrimmableTypeMap {
+				BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+				ResolvedAssemblies = [],
+				OutputDirectory = outputDir,
+				JavaSourceOutputDirectory = javaDir,
+				TargetFrameworkVersion = "not-a-version",
+			};
+
+			Assert.IsFalse (task.Execute (), "Task should fail with invalid TargetFrameworkVersion.");
+			Assert.IsNotEmpty (errors, "Should have logged an error.");
 		}
 
 		[Test]
@@ -59,7 +78,7 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
-		public void Execute_SecondRun_SkipsUpToDateAssemblies ()
+		public void Execute_SecondRun_OutputsAreUpToDate ()
 		{
 			var path = Path.Combine ("temp", TestName);
 			var outputDir = Path.Combine (Root, path, "typemap");
@@ -82,87 +101,13 @@ namespace Xamarin.Android.Build.Tests {
 				.First (p => p.Contains ("_Mono.Android.TypeMap.dll"));
 			var firstWriteTime = File.GetLastWriteTimeUtc (typeMapPath);
 
-			// Wait to ensure timestamp difference is detectable
-			Thread.Sleep (100);
-
-			// Second run: same inputs, outputs should be skipped (not rewritten)
-			var messages = new List<BuildMessageEventArgs> ();
-			var task2 = CreateTask (assemblies, outputDir, javaDir, messages);
+			// Second run: same inputs — outputs should not be rewritten (CopyIfStreamChanged)
+			var task2 = CreateTask (assemblies, outputDir, javaDir);
 			Assert.IsTrue (task2.Execute (), "Second run should succeed.");
 
 			var secondWriteTime = File.GetLastWriteTimeUtc (typeMapPath);
 			Assert.AreEqual (firstWriteTime, secondWriteTime,
-				"Typemap assembly should NOT be rewritten when source hasn't changed.");
-
-			Assert.IsTrue (messages.Any (m => m.Message.Contains ("up to date")),
-				"Should log 'up to date' for skipped assemblies.");
-		}
-
-		[Test]
-		public void Execute_SourceTouched_RegeneratesOnlyChangedAssembly ()
-		{
-			var path = Path.Combine ("temp", TestName);
-			var outputDir = Path.Combine (Root, path, "typemap");
-			var javaDir = Path.Combine (Root, path, "java");
-
-			var monoAndroidItem = FindMonoAndroidDll ();
-			if (monoAndroidItem is null) {
-				Assert.Ignore ("Mono.Android.dll not found; skipping.");
-				return;
-			}
-
-			// Copy Mono.Android.dll to a temp location so we can touch it
-			var tempDir = Path.Combine (Root, path, "assemblies");
-			Directory.CreateDirectory (tempDir);
-			var tempAssemblyPath = Path.Combine (tempDir, "Mono.Android.dll");
-			File.Copy (monoAndroidItem.ItemSpec, tempAssemblyPath, true);
-
-			var tempItem = new TaskItem (tempAssemblyPath);
-			tempItem.SetMetadata ("HasMonoAndroidReference", "True");
-			var assemblies = new [] { tempItem };
-
-			// First run
-			var task1 = CreateTask (assemblies, outputDir, javaDir);
-			Assert.IsTrue (task1.Execute (), "First run should succeed.");
-
-			var typeMapPath = task1.GeneratedAssemblies
-				.Select (i => i.ItemSpec)
-				.First (p => p.Contains ("_Mono.Android.TypeMap.dll"));
-			var firstWriteTime = File.GetLastWriteTimeUtc (typeMapPath);
-
-			// Touch the source assembly to simulate a change
-			Thread.Sleep (100);
-			File.SetLastWriteTimeUtc (tempAssemblyPath, DateTime.UtcNow);
-
-			// Second run: source is newer → should regenerate
-			var tempItem2 = new TaskItem (tempAssemblyPath);
-			tempItem2.SetMetadata ("HasMonoAndroidReference", "True");
-			var task2 = CreateTask (new [] { tempItem2 }, outputDir, javaDir);
-			Assert.IsTrue (task2.Execute (), "Second run should succeed.");
-
-			var secondWriteTime = File.GetLastWriteTimeUtc (typeMapPath);
-			Assert.Greater (secondWriteTime, firstWriteTime,
-				"Typemap assembly should be regenerated when source is touched.");
-		}
-
-		[Test]
-		public void Execute_InvalidTargetFrameworkVersion_Fails ()
-		{
-			var path = Path.Combine ("temp", TestName);
-			var outputDir = Path.Combine (Root, path, "typemap");
-			var javaDir = Path.Combine (Root, path, "java");
-
-			var errors = new List<BuildErrorEventArgs> ();
-			var task = new GenerateTrimmableTypeMap {
-				BuildEngine = new MockBuildEngine (TestContext.Out, errors),
-				ResolvedAssemblies = [],
-				OutputDirectory = outputDir,
-				JavaSourceOutputDirectory = javaDir,
-				TargetFrameworkVersion = "not-a-version",
-			};
-
-			Assert.IsFalse (task.Execute (), "Task should fail with invalid TargetFrameworkVersion.");
-			Assert.IsNotEmpty (errors, "Should have logged an error.");
+				"Typemap assembly should NOT be rewritten when content hasn't changed.");
 		}
 
 		[TestCase ("v11.0")]
@@ -179,35 +124,59 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
-		public void Execute_NoPeersFound_ReturnsEmpty ()
+		public void Execute_ManifestPlaceholdersAreResolvedForRooting ()
 		{
 			var path = Path.Combine ("temp", TestName);
 			var outputDir = Path.Combine (Root, path, "typemap");
 			var javaDir = Path.Combine (Root, path, "java");
+			var manifestTemplate = Path.Combine (Root, path, "AndroidManifest.xml");
+			var mergedManifest = Path.Combine (Root, path, "obj", "android", "AndroidManifest.xml");
+			var applicationRegistration = Path.Combine (Root, path, "src", "net", "dot", "android", "ApplicationRegistration.java");
+			var warnings = new List<BuildWarningEventArgs> ();
 
-			// Use a real assembly that has no [Register] types
-			var testAssemblyDir = Path.GetDirectoryName (GetType ().Assembly.Location)!;
-			var nunitDll = Path.Combine (testAssemblyDir, "nunit.framework.dll");
-			if (!File.Exists (nunitDll)) {
-				Assert.Ignore ("nunit.framework.dll not found; skipping.");
+			var monoAndroidItem = FindMonoAndroidDll ();
+			if (monoAndroidItem is null) {
+				Assert.Ignore ("Mono.Android.dll not found; skipping.");
 				return;
 			}
 
-			var messages = new List<BuildMessageEventArgs> ();
-			var task = CreateTask (new [] { new TaskItem (nunitDll) }, outputDir, javaDir, messages);
+			var manifestDirectory = Path.GetDirectoryName (manifestTemplate);
+			if (manifestDirectory is null) {
+				Assert.Fail ("Could not determine manifest template directory.");
+			}
+			Directory.CreateDirectory (manifestDirectory);
+			File.WriteAllText (manifestTemplate, """
+				<?xml version="1.0" encoding="utf-8"?>
+				<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="${applicationId}">
+				  <application android:name=".Application" />
+				  <instrumentation android:name=".Instrumentation" />
+				</manifest>
+				""");
 
-			Assert.IsTrue (task.Execute (), "Task should succeed with no peer types.");
-			Assert.IsNull (task.GeneratedAssemblies);
-			Assert.IsNull (task.GeneratedJavaFiles);
-			Assert.IsTrue (messages.Any (m => m.Message.Contains ("No Java peer types found")),
-				"Should log that no peers were found.");
+			var task = CreateTask (new [] { monoAndroidItem }, outputDir, javaDir, warnings: warnings);
+			task.ManifestTemplate = manifestTemplate;
+			task.MergedAndroidManifestOutput = mergedManifest;
+			task.ApplicationRegistrationOutputFile = applicationRegistration;
+			task.PackageName = "android.app";
+			task.AndroidApiLevel = "35";
+			task.SupportedOSPlatformVersion = "21";
+			task.RuntimeProviderJavaName = "mono.MonoRuntimeProvider";
+			task.ManifestPlaceholders = "applicationId=android.app";
+
+			Assert.IsTrue (task.Execute (), "Task should succeed.");
+			FileAssert.Exists (applicationRegistration);
+
+			var registrationText = File.ReadAllText (applicationRegistration);
+			StringAssert.Contains ("mono.android.Runtime.registerNatives (android.app.Application.class);", registrationText);
+			StringAssert.Contains ("mono.android.Runtime.registerNatives (android.app.Instrumentation.class);", registrationText);
+			Assert.IsFalse (warnings.Any (w => w.Code == "XA4250"), "Resolved placeholder-based manifest references should not log XA4250.");
 		}
 
 		GenerateTrimmableTypeMap CreateTask (ITaskItem [] assemblies, string outputDir, string javaDir,
-			IList<BuildMessageEventArgs>? messages = null, string tfv = "v11.0")
+			IList<BuildMessageEventArgs>? messages = null, IList<BuildWarningEventArgs>? warnings = null, string tfv = "v11.0")
 		{
 			return new GenerateTrimmableTypeMap {
-				BuildEngine = new MockBuildEngine (TestContext.Out, messages: messages),
+				BuildEngine = new MockBuildEngine (TestContext.Out, warnings: warnings, messages: messages),
 				ResolvedAssemblies = assemblies,
 				OutputDirectory = outputDir,
 				JavaSourceOutputDirectory = javaDir,

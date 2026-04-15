@@ -528,22 +528,8 @@ void Host::Java_mono_android_Runtime_initInternal (
 		internal_timing.start_event (TimingEventKind::NativeToManagedTransition);
 	}
 
-	void *delegate = nullptr;
-	log_debug (LOG_ASSEMBLY, "Creating UCO delegate to {}.RegisterJniNatives"sv, Constants::JNIENVINIT_FULL_TYPE_NAME);
-	delegate = FastTiming::time_call ("create_delegate for RegisterJniNatives"sv, create_delegate, Constants::MONO_ANDROID_ASSEMBLY_NAME, Constants::JNIENVINIT_FULL_TYPE_NAME, "RegisterJniNatives"sv);
-	jnienv_register_jni_natives = reinterpret_cast<jnienv_register_jni_natives_fn> (delegate);
-	abort_unless (
-		jnienv_register_jni_natives != nullptr,
-		[] {
-			return detail::_format_message (
-				"Failed to obtain unmanaged-callers-only pointer to the %s.%s.RegisterJniNatives method.",
-				Constants::MONO_ANDROID_ASSEMBLY_NAME,
-				Constants::JNIENVINIT_FULL_TYPE_NAME
-			);
-		}
-	);
-
 	log_debug (LOG_ASSEMBLY, "Creating UCO delegate to {}.Initialize"sv, Constants::JNIENVINIT_FULL_TYPE_NAME);
+	void *delegate = nullptr;
 	delegate = FastTiming::time_call ("create_delegate for Initialize"sv, create_delegate, Constants::MONO_ANDROID_ASSEMBLY_NAME, Constants::JNIENVINIT_FULL_TYPE_NAME, "Initialize"sv);
 	auto initialize = reinterpret_cast<jnienv_initialize_fn> (delegate);
 	abort_unless (
@@ -560,7 +546,10 @@ void Host::Java_mono_android_Runtime_initInternal (
 	log_debug (LOG_DEFAULT, "Calling into managed runtime init"sv);
 	FastTiming::time_call ("JNIEnv.Initialize UCO"sv, initialize, &init);
 
-	// PropagateUncaughtException is returned from Initialize to avoid an extra create_delegate call
+	// RegisterJniNatives and PropagateUncaughtException are returned from Initialize
+	// to avoid extra create_delegate calls. RegisterJniNatives is null when using the
+	// trimmable typemap path (the method is trimmed; registration is handled in managed code).
+	jnienv_register_jni_natives = init.registerJniNativesFn;
 	jnienv_propagate_uncaught_exception = init.propagateUncaughtExceptionFn;
 	abort_unless (jnienv_propagate_uncaught_exception != nullptr, "Failed to obtain unmanaged-callers-only function pointer to the PropagateUncaughtException method.");
 
@@ -588,7 +577,9 @@ void Host::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType,
 	env->ReleaseStringUTFChars (managedType, mt_ptr);
 
 	// TODO: must attach thread to the runtime here
-	jnienv_register_jni_natives (managedType_ptr, managedType_len, nativeClass, methods_ptr, methods_len);
+	if (jnienv_register_jni_natives != nullptr) {
+		jnienv_register_jni_natives (managedType_ptr, managedType_len, nativeClass, methods_ptr, methods_len);
+	}
 
 	env->ReleaseStringChars (methods, methods_ptr);
 	env->ReleaseStringChars (managedType, managedType_ptr);
@@ -603,6 +594,13 @@ void Host::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType,
 
 		internal_timing.add_more_info (type);
 	}
+}
+
+void Host::Java_mono_android_Runtime_registerNatives ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] jclass nativeClass) noexcept
+{
+	// In the trimmable typemap path, registerNatives is handled entirely in managed code
+	// via a dynamically registered JNI native method. This C++ stub exists only as a
+	// fallback for the legacy code path (which doesn't use registerNatives).
 }
 
 auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) noexcept -> jint

@@ -1069,6 +1069,11 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
     <comment>The following are literal names and should not be translated: Maven, group_id, artifact_id
 {0} - A Maven artifact specification</comment>
   </data>
+  <data name="XA4250" xml:space="preserve">
+    <value>Manifest-referenced type '{0}' was not found in any scanned assembly. It may be a framework type.</value>
+    <comment>The following are literal names and should not be translated: Manifest, framework.
+{0} - Java type name from AndroidManifest.xml</comment>
+  </data>
   <data name="XA0142" xml:space="preserve">
     <value>Befehl „{0}“ fehlgeschlagen.\n{1}</value>
     <comment>'{0}' is a failed command name (potentially with path) followed by all the arguments passed to it. {1} is the combined output on the standard error and standard output streams.</comment>
@@ -1079,9 +1084,10 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
 {1} - The exception message.</comment>
   </data>
   <data name="XA0144" xml:space="preserve">
-    <value>Der Android-Emulator für AVD „{0}“ wurde unerwartet mit Exitcode {1} beendet, bevor er aktiv wurde.</value>
+    <value>Der Android-Emulator für AVD „{0}“ ist mit dem Fehler „{1}“: {2} fehlgeschlagen</value>
     <comment>{0} - The AVD name.
-{1} - The process exit code.</comment>
+{1} - The error kind (e.g. Unknown).
+{2} - Error details from the emulator runner.</comment>
   </data>
   <data name="XA0145" xml:space="preserve">
     <value>Der Android-Emulator für AVD „{0}“ hat den Start nicht innerhalb von {1} Sekunden abgeschlossen. Erhöhen Sie „BootTimeoutSeconds“, oder überprüfen Sie die Emulatorkonfiguration.</value>

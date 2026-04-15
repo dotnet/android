@@ -19,6 +19,8 @@ Flag severity clearly in every comment:
 - ⚠️ **warning** — Should fix. Performance issues, missing validation, inconsistency with patterns.
 - 💡 **suggestion** — Consider changing. Style, readability, optional improvements.
 
+**Every review should produce at least one inline comment.** Even clean PRs have opportunities for improvement — code consolidation, missing edge-case tests, perf micro-optimizations, or documentation gaps. Use 💡 suggestions for these. A review with zero comments appears superficial and misses the chance to share knowledge. Only omit inline comments if the PR is truly trivial (e.g., a 1-line typo fix or dependency bump).
+
 ## Workflow
 
 ### 1. Parse the PR URL
@@ -55,6 +57,7 @@ Review the CI results. **Never post ✅ LGTM if any required CI check is failing
 - Investigate the failure using the **azdo-build-investigator** skill (for Azure DevOps pipeline failures) or GitHub Actions job logs.
 - If the failure is caused by the PR's code changes, flag it as ❌ error.
 - If the failure is a known infrastructure issue or pre-existing flake unrelated to the PR, note it in the summary but still use ⚠️ Needs Changes — the PR isn't mergeable until CI is green.
+- If **all public CI checks pass** but only the internal `Xamarin.Android-PR` check is failing, still use ⚠️ Needs Changes with a note that the internal pipeline may need a re-run. Do not give ✅ LGTM.
 - If the PR description acknowledges the failure and documents a dependency (e.g., "blocked on X"), note it in the summary.
 
 ### 5. Load review rules
@@ -68,6 +71,15 @@ For each changed file, check against the review rules. Record issues as:
 ```json
 { "path": "src/Example.cs", "line": 42, "side": "RIGHT", "body": "..." }
 ```
+
+**What to look for (in priority order):**
+1. **Bugs & correctness** — race conditions, null dereferences, off-by-one, logic errors
+2. **Safety** — thread safety, resource leaks, security vulnerabilities
+3. **Performance** — O(n²) patterns, unnecessary allocations, missing caches
+4. **Missing tests** — untested error paths, edge cases, missing regression tests for bug fixes
+5. **Code duplication** — near-identical methods that should be consolidated
+6. **Consistency** — dedup patterns mixed within the same PR, API return types inconsistent with repo conventions
+7. **Documentation** — misleading comments, undocumented behavioral decisions
 
 Constraints:
 - Only comment on added/modified lines in the diff — the API rejects out-of-range lines.
@@ -96,17 +108,17 @@ Write a temp JSON file:
 }
 ```
 
-If no issues found **and CI is green**, submit with empty `comments` and a positive summary.
+If no issues found **and CI is green**, submit with at most one or two 💡 suggestions and a positive summary. Truly trivial PRs (dependency bumps, 1-line typo fixes) may have empty `comments`.
 
 **Copilot-authored PRs:** If the PR author is `Copilot` (the GitHub Copilot coding agent) and the verdict is ⚠️ Needs Changes or ❌ Reject, prefix the review `body` with `@copilot ` so the comment automatically triggers Copilot to address the feedback. Do NOT add the prefix for ✅ LGTM verdicts.
 
 ### 8. Submit as a single batch
 
 ```powershell
-dotnet run {skill-dir}/scripts/submit_review.cs {owner} {repo} {number} {path-to-json}
+dotnet run {skill-dir}/scripts/submit_review.cs {owner} {repo} {number} {path-to-json} [--dry-run]
 ```
 
-The script validates structure (required fields, 🤖 prefix, positive line numbers) then calls `gh api`. Delete the temp file after success.
+The script validates structure (required fields, 🤖 prefix, positive line numbers) then calls `gh api`. Pass `--dry-run` to validate and print the review JSON without submitting to GitHub. Delete the temp file after success.
 
 ## Comment format
 

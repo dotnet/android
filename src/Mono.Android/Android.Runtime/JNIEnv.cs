@@ -24,12 +24,18 @@ namespace Android.Runtime {
 
 		public static IntPtr Handle => JniEnvironment.EnvironmentPointer;
 
-		static Array ArrayCreateInstance (Type elementType, int length) =>
-			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
-			// IL3050 disabled in source: if someone uses NativeAOT, they will get the warning.
-			#pragma warning disable IL3050
-			Array.CreateInstance (elementType, length);
+		static Array ArrayCreateInstance (Type elementType, int length)
+		{
+			if (RuntimeFeature.TrimmableTypeMap) {
+				var factory = TrimmableTypeMap.Instance?.GetContainerFactory (elementType);
+				if (factory is not null)
+					return factory.CreateArray (length, 1);
+			}
+
+			#pragma warning disable IL3050 // Array.CreateInstance is not AOT-safe, but this is the legacy fallback path
+			return Array.CreateInstance (elementType, length);
 			#pragma warning restore IL3050
+		}
 
 		static Type MakeArrayType (Type type) =>
 			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
@@ -436,6 +442,12 @@ namespace Android.Runtime {
 
 		internal static unsafe string? TypemapManagedToJava (Type type)
 		{
+			if (RuntimeFeature.TrimmableTypeMap) {
+				// The trimmable typemap doesn't use the native typemap tables.
+				// Delegate to the managed TrimmableTypeMap instead.
+				return TrimmableTypeMap.Instance.TryGetJniNameForManagedType (type, out var jniName) ? jniName : null;
+			}
+
 			if (mvid_bytes == null)
 				mvid_bytes = new byte[16];
 

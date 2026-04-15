@@ -19,19 +19,6 @@ public sealed class TypeMapAssemblyGenerator
 	}
 
 	/// <summary>
-	/// Generates a TypeMap PE assembly from the given Java peer info records.
-	/// </summary>
-	/// <param name="peers">Scanned Java peer types.</param>
-	/// <param name="outputPath">Path where the output .dll will be written.</param>
-	/// <param name="assemblyName">Optional explicit assembly name. Derived from outputPath if null.</param>
-	public void Generate (IReadOnlyList<JavaPeerInfo> peers, string outputPath, string? assemblyName = null)
-	{
-		var model = ModelBuilder.Build (peers, outputPath, assemblyName);
-		var emitter = new TypeMapAssemblyEmitter (_systemRuntimeVersion);
-		emitter.Emit (model, outputPath);
-	}
-
-	/// <summary>
 	/// Generates a TypeMap PE assembly from the given Java peer info records and writes it to <paramref name="stream"/>.
 	/// </summary>
 	/// <param name="peers">Scanned Java peer types.</param>

@@ -163,11 +163,14 @@ static class JniSignatureHelper
 
 	/// <summary>
 	/// Converts a JNI type name to a Java source type name.
-	/// e.g., "android/app/Activity" \u2192 "android.app.Activity"
+	/// JNI uses '/' for packages and '$' for inner classes.
+	/// Java source uses '.' for both.
+	/// e.g., "android/app/Activity" → "android.app.Activity"
+	/// e.g., "android/drm/DrmManagerClient$OnEventListener" → "android.drm.DrmManagerClient.OnEventListener"
 	/// </summary>
 	internal static string JniNameToJavaName (string jniName)
 	{
-		return jniName.Replace ('/', '.');
+		return jniName.Replace ('/', '.').Replace ('$', '.');
 	}
 
 	/// <summary>

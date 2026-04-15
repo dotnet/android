@@ -15,7 +15,7 @@ public class OverrideDetectionTests : FixtureTestBase
 		var peer = FindFixtureByJavaName ("my/app/UserActivity");
 		var onCreate = peer.MarshalMethods.First (m => m.JniName == "onCreate");
 		Assert.Equal ("(Landroid/os/Bundle;)V", onCreate.JniSignature);
-		Assert.Equal ("n_OnCreate", onCreate.NativeCallbackName);
+		Assert.Equal ("n_OnCreate_Landroid_os_Bundle_", onCreate.NativeCallbackName);
 		Assert.False (onCreate.IsConstructor);
 		Assert.Equal ("GetOnCreate_Landroid_os_Bundle_Handler", onCreate.Connector);
 		Assert.NotNull (peer.ActivationCtor);
@@ -100,6 +100,24 @@ public class OverrideDetectionTests : FixtureTestBase
 		Assert.Equal ("GetProcess_IHandler", processInt.Connector);
 		// Process() should NOT be detected (not overridden)
 		Assert.DoesNotContain (nonCtorMethods, m => m.JniName == "process" && m.JniSignature == "()V");
+	}
+
+	[Fact]
+	public void OverrideAcrossIntermediateMcwBase_Detected ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/SelectableList");
+		var setSelection = Assert.Single (peer.MarshalMethods, m => m.JniName == "setSelection");
+		Assert.Equal ("(I)V", setSelection.JniSignature);
+		Assert.Equal ("GetSetSelection_IHandler", setSelection.Connector);
+	}
+
+	[Fact]
+	public void OverrideAcrossGenericIntermediateMcwBase_Detected ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/GenericSelectableList");
+		var setSelection = Assert.Single (peer.MarshalMethods, m => m.JniName == "setSelection");
+		Assert.Equal ("(I)V", setSelection.JniSignature);
+		Assert.Equal ("GetSetSelection_IHandler", setSelection.Connector);
 	}
 
 	[Fact]

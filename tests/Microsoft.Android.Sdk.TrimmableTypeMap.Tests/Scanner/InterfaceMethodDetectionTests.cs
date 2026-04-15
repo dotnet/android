@@ -18,6 +18,7 @@ public class InterfaceMethodDetectionTests : FixtureTestBase
 		var onClick = peer.MarshalMethods.First (m => m.JniName == "onClick");
 		Assert.Equal ("(Landroid/view/View;)V", onClick.JniSignature);
 		Assert.Equal ("GetOnClick_Landroid_view_View_Handler:Android.Views.IOnClickListenerInvoker", onClick.Connector);
+		Assert.Equal ("Android.Views.IOnClickListenerInvoker", onClick.DeclaringTypeName);
 	}
 
 	[Fact]
@@ -53,7 +54,9 @@ public class InterfaceMethodDetectionTests : FixtureTestBase
 		var peer = FindFixtureByJavaName ("my/app/ImplicitPropertyImpl");
 		var getName = peer.MarshalMethods.First (m => m.JniName == "getName");
 		Assert.Equal ("()Ljava/lang/String;", getName.JniSignature);
-		Assert.Equal ("GetGetNameHandler:Android.Views.IHasNameInvoker", getName.Connector);
+		Assert.Equal ("GetGetNameHandler:Android.Views.IHasNameInvoker, TestFixtures, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null", getName.Connector);
+		Assert.Equal ("Android.Views.IHasNameInvoker", getName.DeclaringTypeName);
+		Assert.Equal ("TestFixtures", getName.DeclaringAssemblyName);
 	}
 
 	[Fact]

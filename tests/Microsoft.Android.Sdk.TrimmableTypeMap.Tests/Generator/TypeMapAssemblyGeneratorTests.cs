@@ -82,7 +82,34 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 		Assert.Contains (".ctor", methods);
 		Assert.Contains ("CreateInstance", methods);
-		Assert.Contains ("get_TargetType", methods);
+	}
+
+	[Fact]
+	public void Generate_ProxyType_UsesGenericJavaPeerProxyBase ()
+	{
+		var peers = ScanFixtures ();
+		using var stream = GenerateAssembly (peers);
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+		var proxyTypes = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Where (t => reader.GetString (t.Namespace) == "_TypeMap.Proxies")
+			.ToList ();
+
+		Assert.NotEmpty (proxyTypes);
+		Assert.All (proxyTypes, proxyType => {
+			Assert.Equal (HandleKind.TypeSpecification, proxyType.BaseType.Kind);
+
+			var baseTypeSpec = reader.GetTypeSpecification ((TypeSpecificationHandle) proxyType.BaseType);
+			var baseTypeName = baseTypeSpec.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null);
+
+			Assert.StartsWith ("Java.Interop.JavaPeerProxy`1<", baseTypeName, StringComparison.Ordinal);
+		});
+
+		var objectProxy = proxyTypes.First (t => reader.GetString (t.Name) == "Java_Lang_Object_Proxy");
+		var objectProxyBaseType = reader.GetTypeSpecification ((TypeSpecificationHandle) objectProxy.BaseType);
+		Assert.Equal ("Java.Interop.JavaPeerProxy`1<Java.Lang.Object>",
+			objectProxyBaseType.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null));
 	}
 
 	[Fact]
@@ -134,7 +161,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.True (assemblyAttrs.Count () >= 3);
 
 		var typeNames = GetTypeRefNames (reader);
-		Assert.Contains ("TypeMapAssociationAttribute", typeNames);
+		Assert.Contains (typeNames, name => name.StartsWith ("TypeMapAssociationAttribute", StringComparison.Ordinal));
 	}
 
 	[Fact]
@@ -190,6 +217,25 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_InheritedCtor_UcoUsesGuardAndInlinedActivation ()
+	{
+		var peers = ScanFixtures ();
+		var simpleActivity = peers.First (p => p.JavaName == "my/app/SimpleActivity");
+		Assert.NotNull (simpleActivity.ActivationCtor);
+		Assert.NotEqual (simpleActivity.ManagedTypeName, simpleActivity.ActivationCtor.DeclaringTypeName);
+
+		using var stream = GenerateAssembly (new [] { simpleActivity }, "InheritedCtorUcoTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+		var memberNames = GetMemberRefNames (reader);
+
+		Assert.Contains ("get_WithinNewObjectScope", memberNames);
+		Assert.Contains ("GetUninitializedObject", memberNames);
+		Assert.DoesNotContain ("ActivateInstance", memberNames);
+		Assert.DoesNotContain ("ActivatePeerFromJavaConstructor", memberNames);
+	}
+
+	[Fact]
 	public void Generate_GenericType_ThrowsNotSupportedException ()
 	{
 		var peers = ScanFixtures ();
@@ -200,7 +246,13 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 		var typeNames = GetTypeRefNames (reader);
+		var generatedTypeNames = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Select (t => reader.GetString (t.Name))
+			.ToList ();
 		Assert.Contains ("NotSupportedException", typeNames);
+		Assert.Contains ("MyApp_Generic_GenericHolder_1_Proxy", generatedTypeNames);
+		Assert.DoesNotContain (generatedTypeNames, name => name.Contains ('`'));
 	}
 
 	[Fact]
@@ -423,14 +475,26 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 
-		var memberNames = GetMemberRefNames (reader);
-
-		// RegisterNatives is a method definition on the proxy type, not a member reference
-		var methodDefs = reader.MethodDefinitions
+		var proxyType = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Single (t =>
+				reader.GetString (t.Namespace) == "_TypeMap.Proxies" &&
+				reader.GetString (t.Name) == "MyApp_MainActivity_Proxy");
+		var proxyMethodNames = proxyType.GetMethods ()
 			.Select (h => reader.GetMethodDefinition (h))
 			.Select (m => reader.GetString (m.Name))
 			.ToList ();
-		Assert.Contains ("RegisterNatives", methodDefs);
+		Assert.Contains ("RegisterNatives", proxyMethodNames);
+		Assert.Contains (proxyMethodNames, name => name.Contains ("_uco_"));
+
+		var privateImplDetailsType = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Single (t => reader.GetString (t.Name) == "<PrivateImplementationDetails>");
+		var privateImplMethodNames = privateImplDetailsType.GetMethods ()
+			.Select (h => reader.GetMethodDefinition (h))
+			.Select (m => reader.GetString (m.Name))
+			.ToList ();
+		Assert.DoesNotContain ("RegisterNatives", privateImplMethodNames);
 	}
 
 	[Fact]
@@ -503,5 +567,85 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	public void ParseParameterTypes_UnterminatedSignature_ReturnsEmptyList ()
 	{
 		Assert.Empty (JniSignatureHelper.ParseParameterTypes ("("));
+	}
+
+	[Fact]
+	public void Generate_AcwProxy_UsesJniNativeMethodDirectly ()
+	{
+		var peers = ScanFixtures ();
+		var acwPeer = peers.First (p => p.JavaName == "my/app/MainActivity");
+
+		using var stream = GenerateAssembly (new [] { acwPeer }, "DirectRegisterTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var memberNames = GetMemberRefNames (reader);
+		var typeNames = GetTypeRefNames (reader);
+
+		// Should reference JniNativeMethod and RegisterNatives directly
+		Assert.Contains ("JniNativeMethod", typeNames);
+		Assert.Contains ("Types", typeNames); // JniEnvironment.Types nested type
+		Assert.Contains ("RegisterNatives", memberNames);
+		Assert.Contains ("get_PeerReference", memberNames);
+
+		// Should NOT reference the old RegisterMethod helper
+		Assert.DoesNotContain ("RegisterMethod", memberNames);
+	}
+
+	[Fact]
+	public void Generate_AcwProxy_HasPrivateImplementationDetails ()
+	{
+		var peers = ScanFixtures ();
+		var acwPeer = peers.First (p => p.JavaName == "my/app/MainActivity");
+
+		using var stream = GenerateAssembly (new [] { acwPeer }, "PrivImplTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var typeDefNames = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Select (t => reader.GetString (t.Name))
+			.ToList ();
+
+		Assert.Contains ("<PrivateImplementationDetails>", typeDefNames);
+	}
+
+	[Fact]
+	public void Generate_MultipleAcwProxies_DeduplicatesUtf8Strings ()
+	{
+		var peers = ScanFixtures ();
+		// Get all ACW peers — they likely share signatures like "()V"
+		var acwPeers = peers.Where (p => !p.DoNotGenerateAcw && p.MarshalMethods.Count > 0).ToList ();
+		Assert.True (acwPeers.Count >= 2, "Need at least 2 ACW peers to test deduplication");
+
+		using var stream = GenerateAssembly (acwPeers, "DedupTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		// Count fields with HasFieldRVA — these are our UTF-8 RVA fields.
+		// With deduplication, common strings like "()V" should appear only once.
+		var rvaFields = reader.FieldDefinitions
+			.Select (h => reader.GetFieldDefinition (h))
+			.Where (f => (f.Attributes & FieldAttributes.HasFieldRVA) != 0)
+			.ToList ();
+
+		// Collect all JNI method names and signatures from the ACW peers
+		var allStrings = acwPeers
+			.SelectMany (p => p.MarshalMethods)
+			.SelectMany (m => new [] { m.JniName, m.JniSignature })
+			.ToList ();
+		var uniqueStrings = allStrings.Distinct ().Count ();
+
+		// With dedup, RVA field count should equal unique string count, not total string count.
+		// Also include constructor registrations (nctor_*), so use <= for a safe assertion.
+		Assert.True (rvaFields.Count <= uniqueStrings + acwPeers.Count * 2,
+			$"Expected at most {uniqueStrings + acwPeers.Count * 2} RVA fields (unique strings + ctor names/sigs), " +
+			$"but found {rvaFields.Count}. Deduplication may not be working.");
+
+		// The key assertion: fewer RVA fields than total strings means dedup is working
+		if (allStrings.Count > uniqueStrings) {
+			Assert.True (rvaFields.Count < allStrings.Count,
+				$"Expected fewer RVA fields ({rvaFields.Count}) than total strings ({allStrings.Count}) due to deduplication");
+		}
 	}
 }

@@ -726,6 +726,88 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			}
 		}
 
+		/// <summary>
+		/// Verifies that _PostTrimmingPipeline does not include satellite assemblies
+		/// (.resources.dll) in its input. Satellite assemblies are not processed by
+		/// ILLink and retain their original paths in the shared NuGet package cache.
+		/// Including them causes PostTrimmingPipeline to open them with ReadWrite
+		/// access, leading to IOException in parallel multi-RID builds.
+		/// See: https://github.com/dotnet/android/issues/11085
+		/// </summary>
+		[Test]
+		[NonParallelizable] // Commonly fails NuGet restore
+		public void PostTrimmingPipelineExcludesSatelliteAssemblies ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.MonoVM);
+			proj.SetRuntimeIdentifiers (AndroidTargetArch.Arm64);
+			proj.PackageReferences.Add (new Package {
+				Id = "Humanizer.Core",
+				Version = "2.14.1",
+			});
+			proj.PackageReferences.Add (new Package {
+				Id = "Humanizer.Core.es",
+				Version = "2.14.1",
+			});
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("//${USINGS}", @"using Humanizer;
+using System.Globalization;")
+				.Replace ("//${AFTER_ONCREATE}", @"var c = new CultureInfo (""es-ES"");
+Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");");
+			proj.OtherBuildItems.Add (new BuildItem ("Using", "System.Globalization"));
+			proj.OtherBuildItems.Add (new BuildItem ("Using", "Humanizer"));
+
+			// Inject a diagnostic target that logs the _PostTrimmingAssembly items
+			// created by the production _PostTrimmingPipeline target. In MSBuild,
+			// items defined in a target's <ItemGroup> are visible to subsequent targets.
+			proj.Imports.Add (new Import ("PostTrimmingDiag.targets") {
+				TextContent = () => """
+					<Project>
+						<Target Name="_DiagLogPostTrimmingAssemblies"
+								AfterTargets="_PostTrimmingPipeline"
+								Condition=" '$(PublishTrimmed)' == 'true' ">
+							<Message Importance="high" Text="DIAG_PTA: %(_PostTrimmingAssembly.Identity)" />
+							<Message Importance="high" Text="DIAG_RFP: %(ResolvedFileToPublish.Identity)"
+								Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' and '%(Filename)' != '' and $([System.String]::Copy('%(Filename)').EndsWith('.resources')) " />
+						</Target>
+					</Project>
+				""",
+			});
+
+			using var b = CreateApkBuilder ();
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+			// Verify the diagnostic target actually ran and logged assemblies
+			Assert.IsTrue (
+				b.LastBuildOutput.ContainsText ("DIAG_PTA:"),
+				"Diagnostic target should have logged _PostTrimmingAssembly items");
+
+			// Verify satellite assemblies ARE present in ResolvedFileToPublish (positive check)
+			bool hasSatelliteInRfp = false;
+			foreach (var line in b.LastBuildOutput) {
+				if (line.Contains ("DIAG_RFP:") && line.Contains (".resources.dll")) {
+					hasSatelliteInRfp = true;
+					break;
+				}
+			}
+			Assert.IsTrue (hasSatelliteInRfp,
+				"Satellite assemblies should be present in ResolvedFileToPublish to confirm the scenario is exercised");
+
+			// Verify satellite assemblies were NOT included in _PostTrimmingAssembly
+			var satelliteLines = new List<string> ();
+			foreach (var line in b.LastBuildOutput) {
+				if (line.Contains ("DIAG_PTA:") && line.Contains (".resources.dll")) {
+					satelliteLines.Add (line.Trim ());
+				}
+			}
+			Assert.IsEmpty (satelliteLines,
+				"Satellite assemblies (.resources.dll) should not be passed to PostTrimmingPipeline. " +
+				"They retain paths in the shared NuGet cache and cause file locking conflicts in parallel RID builds. Found:\n" +
+				string.Join ("\n", satelliteLines));
+		}
+
 		[Test]
 		public void IgnoreManifestFromJar ([Values] AndroidRuntime runtime)
 		{

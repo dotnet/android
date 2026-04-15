@@ -48,7 +48,7 @@ cause performance regressions, or silently delete files.
 
 | Check | What to look for |
 |-------|-----------------|
-| **`#nullable enable`** | New files should have `#nullable enable` at the top with no preceding blank lines. |
+| **`#nullable enable`** | New files should have `#nullable enable` at the top with no preceding blank lines — **unless** nullable is already enabled at the project level (for example via the `Nullable` MSBuild property in the project or imported props), in which case it is not needed per-file. |
 | **Never use `!` (null-forgiving operator)** | The postfix `!` null-forgiving operator (e.g., `foo!.Bar`) is banned. If the value can be null, add a proper null check. If it can't be null, make the type non-nullable. AI-generated code frequently sprinkles `!` to silence warnings — this turns compile-time safety into runtime `NullReferenceException`s. Note: this rule is about the postfix `!` operator, not the logical negation `!` (e.g., `if (!someBool)` or `if (!string.IsNullOrEmpty (s))`). |
 | **Use `IsNullOrEmpty()` extension** | Use the `NullableExtensions` instance methods (`str.IsNullOrEmpty()`, `str.IsNullOrWhiteSpace()`) instead of the static `string.IsNullOrEmpty(str)` / `string.IsNullOrWhiteSpace(str)` — they integrate with `[NotNullWhen]` for NRT flow analysis. |
 | **`ArgumentNullException.ThrowIfNull`** | Android-targeted code (.NET 10+) should use `ArgumentNullException.ThrowIfNull(param)`. |
@@ -76,7 +76,7 @@ and merge conflicts.
 
 ---
 
-## 5. Async & Cancellation Patterns
+## 5. Async, Cancellation & Thread Safety Patterns
 
 | Check | What to look for |
 |-------|-----------------|
@@ -85,6 +85,8 @@ and merge conflicts.
 | **Honor the token** | If a method accepts `CancellationToken`, it must observe it — register a callback to kill processes, check `IsCancellationRequested` in loops, pass it downstream. Don't accept it just for API completeness. |
 | **Thread safety of shared state** | If a new field or property can be accessed from multiple threads (e.g., static caches, event handlers, `AsyncTask` callbacks), verify thread-safe access: `ConcurrentDictionary`, `Interlocked`, or explicit locks. A `Dictionary<K,V>` read concurrently with a write is undefined behavior. |
 | **Lock ordering** | If code acquires multiple locks, the order must be consistent everywhere. Document the ordering. Inconsistent ordering → deadlock. |
+| **Avoid double-checked locking — use `Lazy<T>` or `LazyInitializer`** | The double-checked locking (DCL) pattern is error-prone and [discouraged by Microsoft](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/volatile). It requires subtle memory model understanding and is easy to get wrong. Prefer `Lazy<T>` or `LazyInitializer.EnsureInitialized()` — they handle thread-safe initialization correctly. If a PR introduces or modifies a DCL pattern, flag it and suggest `Lazy<T>` instead. If DCL is truly necessary (e.g., for performance in a hot path with evidence), verify: (1) all initialization (including post-construction setup like `RegisterNatives()`) completes *before* the field is assigned, (2) there is no window where another thread can observe the singleton before initialization is fully done. |
+| **Singleton initialization completeness** | When a singleton is initialized behind a lock, ensure ALL setup steps (not just construction) complete before publishing the instance. If `Initialize()` does `instance = new Foo(); instance.Setup();`, another thread can see `instance != null` and use it before `Setup()` runs. Either do all setup in the constructor, or don't publish the reference until all setup is done. |
 
 ---
 
