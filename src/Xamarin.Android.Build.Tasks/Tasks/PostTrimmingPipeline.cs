@@ -6,6 +6,7 @@ using Java.Interop.Tools.Cecil;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Mono.Cecil;
+using MonoDroid.Tuner;
 
 namespace Xamarin.Android.Tasks;
 
