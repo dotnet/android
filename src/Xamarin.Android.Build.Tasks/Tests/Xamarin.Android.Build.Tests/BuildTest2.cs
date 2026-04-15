@@ -121,6 +121,22 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void BuildBasicApplication_WithoutNdk ([Values] bool isRelease, [Values] AndroidRuntime runtime)
+		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+
+			using var b = CreateApkBuilder ();
+			Assert.IsTrue (b.Build (proj, parameters: ["AndroidNdkDirectory=\"\""]), "Build should have succeeded without NDK.");
+		}
+
+		[Test]
 		public void BasicApplicationPublishReadyToRun ([Values] bool isComposite, [Values ("android-x64", "android-arm64")] string rid)
 		{
 			var proj = new XamarinAndroidApplicationProject {
