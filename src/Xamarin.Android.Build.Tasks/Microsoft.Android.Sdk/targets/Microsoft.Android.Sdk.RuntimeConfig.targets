@@ -13,6 +13,8 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
   <PropertyGroup>
     <_BinaryRuntimeConfigPath>$(IntermediateOutputPath)$(ProjectRuntimeConfigFileName).bin</_BinaryRuntimeConfigPath>
     <_AndroidUseManagedTypeMap Condition=" '$(_AndroidTypeMapImplementation)' == 'managed' ">true</_AndroidUseManagedTypeMap>
+    <!-- Trim-friendly default: keep counters, but strip object-reference logging support unless explicitly re-enabled -->
+    <AndroidEnableObjectReferenceLogging Condition=" '$(AndroidEnableObjectReferenceLogging)' == '' And '$(PublishTrimmed)' == 'true' ">false</AndroidEnableObjectReferenceLogging>
   </PropertyGroup>
 
   <ItemGroup>
@@ -54,6 +56,11 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
     <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.IsAssignableFromCheck"
         Condition="'$(_AndroidIsAssignableFromCheck)' != ''"
         Value="$(_AndroidIsAssignableFromCheck)"
+        Trim="true"
+     />
+    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.ObjectReferenceLogging"
+        Condition="'$(AndroidEnableObjectReferenceLogging)' != ''"
+        Value="$(AndroidEnableObjectReferenceLogging)"
         Trim="true"
     />
   </ItemGroup>

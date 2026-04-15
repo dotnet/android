@@ -28,6 +28,7 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 	bool disposed;
 
 	static readonly SemaphoreSlim bridgeProcessingSemaphore = new (1, 1);
+	static volatile bool bridgeProcessingActive;
 
 	static JavaMarshalValueManager? s_instance;
 
@@ -58,6 +59,16 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 
 	public override void WaitForGCBridgeProcessing ()
 	{
+		WaitIfBridgeProcessing ();
+	}
+
+	[MethodImpl (MethodImplOptions.AggressiveInlining)]
+	internal static void WaitIfBridgeProcessing ()
+	{
+		// JNI wrappers call this on every transition, so the idle case must avoid synchronization.
+		if (!bridgeProcessingActive)
+			return;
+
 		bridgeProcessingSemaphore.Wait ();
 		bridgeProcessingSemaphore.Release ();
 	}
@@ -65,6 +76,9 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 	public unsafe override void CollectPeers ()
 	{
 		ThrowIfDisposed ();
+
+		if (CollectedContexts.IsEmpty)
+			return;
 
 		while (CollectedContexts.TryDequeue (out IntPtr contextPtr)) {
 			Debug.Assert (contextPtr != IntPtr.Zero, "CollectedContexts should not contain null pointers.");
@@ -444,6 +458,7 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 		}
 
 		HandleContext.EnsureAllContextsAreOurs (mcr);
+		bridgeProcessingActive = true;
 		bridgeProcessingSemaphore.Wait ();
 	}
 
@@ -454,10 +469,13 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 			throw new ArgumentNullException (nameof (mcr), "MarkCrossReferencesArgs should never be null.");
 		}
 
-		ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (mcr);
-		JavaMarshal.FinishCrossReferenceProcessing (mcr, handlesToFree);
-
-		bridgeProcessingSemaphore.Release ();
+		try {
+			ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (mcr);
+			JavaMarshal.FinishCrossReferenceProcessing (mcr, handlesToFree);
+		} finally {
+			bridgeProcessingSemaphore.Release ();
+			bridgeProcessingActive = false;
+		}
 	}
 
 	static unsafe ReadOnlySpan<GCHandle> ProcessCollectedContexts (MarkCrossReferencesArgs* mcr)

@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -443,6 +444,92 @@ namespace Java.InteropTests
 			type = typeof (JnienvTest);
 			m = JNIEnv.TypemapManagedToJava (type);
 			Assert.AreEqual (null, m, "`JnienvTest` does *not* subclass Java.Lang.Object, it should *not* be in the typemap!");
+		}
+
+		[Test, Category ("GCBridge"), NonParallelizable]
+		public void WaitForBridgeProcessingUsesFastPathWhenIdle ()
+		{
+			if (!Android.Runtime.RuntimeFeature.IsCoreClrRuntime) {
+				Assert.Ignore ("Requires CoreCLR runtime.");
+			}
+
+			var (bridgeProcessingField, semaphore) = GetJavaMarshalBridgeSynchronization ();
+			bridgeProcessingField.SetValue (null, false);
+
+			using var started = new ManualResetEventSlim ();
+			using var completed = new ManualResetEventSlim ();
+
+			semaphore.Wait ();
+			try {
+				var thread = new Thread (() => {
+					started.Set ();
+					JNIEnv.WaitForBridgeProcessing ();
+					completed.Set ();
+				});
+
+				thread.Start ();
+				Assert.IsTrue (started.Wait (1000), "#1");
+				Assert.IsTrue (completed.Wait (1000), "#2");
+				thread.Join (1000);
+			} finally {
+				bridgeProcessingField.SetValue (null, false);
+				semaphore.Release ();
+			}
+		}
+
+		[Test, Category ("GCBridge"), NonParallelizable]
+		public void WaitForBridgeProcessingBlocksWhileBridgeIsActive ()
+		{
+			if (!Android.Runtime.RuntimeFeature.IsCoreClrRuntime) {
+				Assert.Ignore ("Requires CoreCLR runtime.");
+			}
+
+			var (bridgeProcessingField, semaphore) = GetJavaMarshalBridgeSynchronization ();
+			using var started = new ManualResetEventSlim ();
+			using var completed = new ManualResetEventSlim ();
+
+			bridgeProcessingField.SetValue (null, true);
+			bool releaseSemaphore = true;
+			semaphore.Wait ();
+			try {
+				var thread = new Thread (() => {
+					started.Set ();
+					JNIEnv.WaitForBridgeProcessing ();
+					completed.Set ();
+				});
+
+				thread.Start ();
+				Assert.IsTrue (started.Wait (1000), "#1");
+				Assert.IsFalse (completed.Wait (250), "#2");
+
+				semaphore.Release ();
+				releaseSemaphore = false;
+
+				Assert.IsTrue (completed.Wait (1000), "#3");
+				thread.Join (1000);
+			} finally {
+				bridgeProcessingField.SetValue (null, false);
+				if (releaseSemaphore) {
+					semaphore.Release ();
+				}
+			}
+		}
+
+		static (FieldInfo BridgeProcessingField, SemaphoreSlim Semaphore) GetJavaMarshalBridgeSynchronization ()
+		{
+			Type? managerType = Type.GetType ("Microsoft.Android.Runtime.JavaMarshalValueManager, Mono.Android");
+			Assert.IsNotNull (managerType, "#1");
+
+			FieldInfo? bridgeProcessingField = managerType.GetField ("bridgeProcessingActive", BindingFlags.NonPublic | BindingFlags.Static);
+			Assert.IsNotNull (bridgeProcessingField, "#2");
+
+			FieldInfo? semaphoreField = managerType.GetField ("bridgeProcessingSemaphore", BindingFlags.NonPublic | BindingFlags.Static);
+			Assert.IsNotNull (semaphoreField, "#3");
+
+			var semaphore = semaphoreField.GetValue (null) as SemaphoreSlim;
+			Assert.IsNotNull (semaphore, "#4");
+
+			return (bridgeProcessingField, semaphore);
 		}
 
 		[Test, Category ("GCBridge")]

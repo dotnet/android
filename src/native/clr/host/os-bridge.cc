@@ -76,6 +76,16 @@ auto OSBridge::_monodroid_gref_dec () noexcept -> int
 	return __sync_sub_and_fetch (&gc_gref_count, 1);
 }
 
+auto OSBridge::_monodroid_weak_gref_inc () noexcept -> int
+{
+	return __sync_add_and_fetch (&gc_weak_gref_count, 1);
+}
+
+auto OSBridge::_monodroid_weak_gref_dec () noexcept -> int
+{
+	return __sync_sub_and_fetch (&gc_weak_gref_count, 1);
+}
+
 [[gnu::always_inline]]
 void OSBridge::_write_stack_trace (FILE *to, const char *const from, LogCategories category) noexcept
 {
@@ -188,7 +198,7 @@ void OSBridge::_monodroid_gref_log_delete (jobject handle, char type, const char
 
 void OSBridge::_monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from)
 {
-	++gc_weak_gref_count;
+	_monodroid_weak_gref_inc ();
 	if ((log_categories & LOG_GREF) == 0) [[likely]] {
 		return;
 	}
@@ -229,7 +239,7 @@ OSBridge::_monodroid_lref_log_new (int lrefc, jobject handle, char type, const c
 
 void OSBridge::_monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from)
 {
-	--gc_weak_gref_count;
+	_monodroid_weak_gref_dec ();
 	if ((log_categories & LOG_GREF) == 0) [[likely]] {
 		return;
 	}

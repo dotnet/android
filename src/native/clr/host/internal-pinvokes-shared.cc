@@ -14,6 +14,16 @@ int _monodroid_gref_get () noexcept
 	return OSBridge::get_gc_gref_count ();
 }
 
+int _monodroid_gref_inc () noexcept
+{
+	return OSBridge::_monodroid_gref_inc ();
+}
+
+int _monodroid_gref_dec () noexcept
+{
+	return OSBridge::_monodroid_gref_dec ();
+}
+
 void _monodroid_gref_log (const char *message) noexcept
 {
 	OSBridge::_monodroid_gref_log (message);
@@ -92,6 +102,16 @@ void _monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandl
 int _monodroid_weak_gref_get ()
 {
 	return OSBridge::get_gc_weak_gref_count ();
+}
+
+int _monodroid_weak_gref_inc ()
+{
+	return OSBridge::_monodroid_weak_gref_inc ();
+}
+
+int _monodroid_weak_gref_dec ()
+{
+	return OSBridge::_monodroid_weak_gref_dec ();
 }
 
 int _monodroid_max_gref_get ()

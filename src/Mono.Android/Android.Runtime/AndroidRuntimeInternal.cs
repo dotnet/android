@@ -1,6 +1,7 @@
 #if INSIDE_MONO_ANDROID_RUNTIME
 using System;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Microsoft.Android.Runtime;
 
 namespace Android.Runtime
@@ -38,8 +39,17 @@ namespace Android.Runtime
 			RuntimeNativeMethods.monodroid_debugger_unhandled_exception (ex);
 		}
 
+		[MethodImpl (MethodImplOptions.AggressiveInlining)]
 		public static void WaitForBridgeProcessing ()
 		{
+			if (RuntimeFeature.IsCoreClrRuntime) {
+				JavaMarshalValueManager.WaitIfBridgeProcessing ();
+				return;
+			}
+
+			if (RuntimeFeature.IsMonoRuntime && !BridgeProcessing)
+				return;
+
 			Java.Interop.JniEnvironment.Runtime.ValueManager.WaitForGCBridgeProcessing ();
 		}
 	}
