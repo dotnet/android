@@ -774,7 +774,7 @@ runner class name to use when launching the application via `dotnet run`.
 
 When [`$(EnableMSTestRunner)`](#enablemstestrunner) is `true` and this property
 is not set, the instrumentation runner class name is automatically resolved from
-the project's `AndroidManifest.xml`.
+the generated `AndroidManifest.xml` in the intermediate output.
 
 Introduced in .NET 11.
 
