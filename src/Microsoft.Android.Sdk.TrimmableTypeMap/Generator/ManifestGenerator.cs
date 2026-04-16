@@ -52,6 +52,10 @@ class ManifestGenerator
 		EnsureManifestAttributes (manifest);
 		var app = EnsureApplicationElement (manifest);
 
+		// Rewrite compat JNI names in the template to CRC names BEFORE collecting
+		// existing types, so the duplicate check works correctly.
+		RewriteCompatNames (manifest, allPeers);
+
 		// Apply assembly-level [Application] properties
 		if (assemblyInfo.ApplicationProperties is not null) {
 			AssemblyLevelElementBuilder.ApplyApplicationProperties (app, assemblyInfo.ApplicationProperties, allPeers, Warn);
@@ -128,6 +132,40 @@ class ManifestGenerator
 			new XElement ("manifest",
 				new XAttribute (XNamespace.Xmlns + "android", AndroidNs.NamespaceName),
 				new XAttribute ("package", PackageName)));
+	}
+
+	/// <summary>
+	/// Manifest templates may use compat JNI names (e.g., "android.apptests.App")
+	/// but the trimmable path generates JCWs with CRC-based names (e.g., "crc64.../App").
+	/// This method rewrites any compat name references to the actual JCW name so the
+	/// Android runtime can find the class.
+	/// </summary>
+	void RewriteCompatNames (XElement manifest, IReadOnlyList<JavaPeerInfo> allPeers)
+	{
+		// Build mapping: compat Java name → CRC Java name
+		var compatToCrc = new Dictionary<string, string> (StringComparer.Ordinal);
+		foreach (var peer in allPeers) {
+			string javaName = JniSignatureHelper.JniNameToJavaName (peer.JavaName);
+			string compatName = JniSignatureHelper.JniNameToJavaName (peer.CompatJniName);
+			if (javaName != compatName) {
+				compatToCrc [compatName] = javaName;
+			}
+		}
+
+		if (compatToCrc.Count == 0) {
+			return;
+		}
+
+		// Rewrite android:name attributes throughout the manifest
+		foreach (var element in manifest.DescendantsAndSelf ()) {
+			var nameAttr = element.Attribute (AttName);
+			if (nameAttr is null) {
+				continue;
+			}
+			if (compatToCrc.TryGetValue (nameAttr.Value, out var crcName)) {
+				nameAttr.Value = crcName;
+			}
+		}
 	}
 
 	void EnsureManifestAttributes (XElement manifest)
