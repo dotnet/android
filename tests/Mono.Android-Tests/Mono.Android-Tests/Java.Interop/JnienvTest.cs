@@ -453,10 +453,10 @@ namespace Java.InteropTests
 				Assert.Ignore ("Requires CoreCLR runtime.");
 			}
 
-			var gateField = GetBridgeGateField ();
+			var bridgeGate = GetBridgeGate ();
 
-			// Gate is open (0) — fast path should return immediately
-			gateField.SetValue (null, 0);
+			// Gate is open (signaled) — fast path should return immediately
+			bridgeGate.Set ();
 
 			using var started = new ManualResetEventSlim ();
 			using var completed = new ManualResetEventSlim ();
@@ -480,12 +480,12 @@ namespace Java.InteropTests
 				Assert.Ignore ("Requires CoreCLR runtime.");
 			}
 
-			var gateField = GetBridgeGateField ();
+			var bridgeGate = GetBridgeGate ();
 			using var started = new ManualResetEventSlim ();
 			using var completed = new ManualResetEventSlim ();
 
-			// Close the gate (1) to simulate bridge processing
-			gateField.SetValue (null, 1);
+			// Close the gate to simulate bridge processing
+			bridgeGate.Reset ();
 			try {
 				var thread = new Thread (() => {
 					started.Set ();
@@ -498,12 +498,12 @@ namespace Java.InteropTests
 				Assert.IsFalse (completed.Wait (250), "#2 - should be blocked while gate is closed");
 
 				// Open the gate
-				gateField.SetValue (null, 0);
+				bridgeGate.Set ();
 
 				Assert.IsTrue (completed.Wait (1000), "#3 - should complete after gate opens");
 				thread.Join (1000);
 			} finally {
-				gateField.SetValue (null, 0);
+				bridgeGate.Set ();
 			}
 		}
 
@@ -514,8 +514,8 @@ namespace Java.InteropTests
 				Assert.Ignore ("Requires CoreCLR runtime.");
 			}
 
-			var gateField = GetBridgeGateField ();
-			gateField.SetValue (null, 0);
+			var bridgeGate = GetBridgeGate ();
+			bridgeGate.Set ();
 
 			const int threadCount = 8;
 			const int iterations = 200;
@@ -538,13 +538,16 @@ namespace Java.InteropTests
 
 			allStarted.Wait ();
 
-			// Toggle the gate while threads are hammering WaitIfBridgeProcessing
+			// Toggle the gate while threads are hammering WaitForGCBridgeProcessing.
+			// Reset() and Set() are serialized on this single toggler thread,
+			// matching the real-world pattern where only the GC bridge thread
+			// calls Reset/Set.
 			var toggler = new Thread (() => {
 				go.Wait ();
 				for (int j = 0; j < iterations; j++) {
-					gateField.SetValue (null, 1);
+					bridgeGate.Reset ();
 					Thread.SpinWait (50);
-					gateField.SetValue (null, 0);
+					bridgeGate.Set ();
 				}
 			});
 			toggler.Start ();
@@ -557,18 +560,21 @@ namespace Java.InteropTests
 			Assert.AreEqual (threadCount, completedCount, "All threads should complete");
 
 			// Leave gate open for other tests
-			gateField.SetValue (null, 0);
+			bridgeGate.Set ();
 		}
 
-		static FieldInfo GetBridgeGateField ()
+		static ManualResetEventSlim GetBridgeGate ()
 		{
 			Type? managerType = Type.GetType ("Microsoft.Android.Runtime.JavaMarshalValueManager, Mono.Android");
 			Assert.IsNotNull (managerType, "#gate-1");
 
-			FieldInfo? gateField = managerType.GetField ("bridgeGateState", BindingFlags.NonPublic | BindingFlags.Static);
+			FieldInfo? gateField = managerType.GetField ("bridgeGate", BindingFlags.NonPublic | BindingFlags.Static);
 			Assert.IsNotNull (gateField, "#gate-2");
 
-			return gateField;
+			var gate = gateField.GetValue (null) as ManualResetEventSlim;
+			Assert.IsNotNull (gate, "#gate-3");
+
+			return gate;
 		}
 
 		[Test, Category ("GCBridge")]
