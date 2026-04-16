@@ -1070,7 +1070,7 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
 {0} - A Maven artifact specification</comment>
   </data>
   <data name="XA4250" xml:space="preserve">
-    <value>Manifest-referenced type '{0}' was not found in any scanned assembly. It may be a framework type.</value>
+    <value>Der Typ „{0}“ mit Manifestverweis wurde in keinem gescannten Assembly gefunden. Es handelt sich möglicherweise um einen Frameworktyp.</value>
     <comment>The following are literal names and should not be translated: Manifest, framework.
 {0} - Java type name from AndroidManifest.xml</comment>
   </data>

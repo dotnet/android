@@ -1070,7 +1070,7 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
 {0} - A Maven artifact specification</comment>
   </data>
   <data name="XA4250" xml:space="preserve">
-    <value>Manifest-referenced type '{0}' was not found in any scanned assembly. It may be a framework type.</value>
+    <value>No se encontró el tipo "{0}" al que se hace referencia en el manifiesto en ningún ensamblado examinado. Puede ser un tipo de marco de trabajo.</value>
     <comment>The following are literal names and should not be translated: Manifest, framework.
 {0} - Java type name from AndroidManifest.xml</comment>
   </data>
