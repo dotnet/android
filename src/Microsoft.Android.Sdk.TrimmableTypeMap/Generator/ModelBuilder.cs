@@ -108,12 +108,35 @@ static class ModelBuilder
 	static void EmitPeers (TypeMapAssemblyData model, string jniName,
 		List<JavaPeerInfo> peersForName, string assemblyName, HashSet<string> usedProxyNames)
 	{
-		// First peer is the "primary" — it gets the base JNI name entry.
-		// Remaining peers get indexed alias entries: "jni/name[1]", "jni/name[2]", ...
-		JavaPeerProxyData? primaryProxy = null;
+		bool isAliasGroup = peersForName.Count > 1;
+
+		if (!isAliasGroup) {
+			// Single peer — no aliases needed, emit directly with the base JNI name
+			var peer = peersForName [0];
+			bool hasProxy = peer.ActivationCtor != null || peer.InvokerTypeName != null;
+			bool isAcw = !peer.DoNotGenerateAcw && !peer.IsInterface && peer.MarshalMethods.Count > 0;
+
+			JavaPeerProxyData? proxy = null;
+			if (hasProxy) {
+				proxy = BuildProxyType (peer, jniName, usedProxyNames, isAcw);
+				model.ProxyTypes.Add (proxy);
+			}
+
+			model.Entries.Add (BuildEntry (peer, proxy, assemblyName, jniName));
+			return;
+		}
+
+		// Alias group: generate an alias holder and indexed entries for each peer.
+		// The base JNI name maps to the alias holder; each peer gets "[0]", "[1]", etc.
+		var aliasKeys = new List<string> ();
+		string holderTypeName = jniName.Replace ('/', '_').Replace ('$', '_') + "_Aliases";
+		var holderNamespace = "_TypeMap.Aliases";
+		string holderRef = AssemblyQualify ($"{holderNamespace}.{holderTypeName}", assemblyName);
+
 		for (int i = 0; i < peersForName.Count; i++) {
 			var peer = peersForName [i];
-			string entryJniName = i == 0 ? jniName : $"{jniName}[{i}]";
+			string entryJniName = $"{jniName}[{i}]";
+			aliasKeys.Add (entryJniName);
 
 			bool hasProxy = peer.ActivationCtor != null || peer.InvokerTypeName != null;
 			bool isAcw = !peer.DoNotGenerateAcw && !peer.IsInterface && peer.MarshalMethods.Count > 0;
@@ -124,25 +147,27 @@ static class ModelBuilder
 				model.ProxyTypes.Add (proxy);
 			}
 
-			if (i == 0) {
-				primaryProxy = proxy;
-			}
-
 			model.Entries.Add (BuildEntry (peer, proxy, assemblyName, entryJniName));
 
-			// Emit TypeMapAssociation for all proxy-backed types so managed → proxy
-			// lookup works even when the final JNI name differs from the type's attributes.
-			// Generic definitions are included — their proxy types derive from the
-			// non-generic `JavaPeerProxy` base so the CLR can load them without
-			// resolving an open generic argument.
-			var assocProxy = (i > 0 && primaryProxy != null) ? primaryProxy : proxy;
-			if (assocProxy != null) {
-				model.Associations.Add (new TypeMapAssociationData {
-					SourceTypeReference = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName),
-					AliasProxyTypeReference = AssemblyQualify ($"{assocProxy.Namespace}.{assocProxy.TypeName}", assemblyName),
-				});
-			}
+			// Link each alias type to the alias holder for trimming
+			model.Associations.Add (new TypeMapAssociationData {
+				SourceTypeReference = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName),
+				AliasProxyTypeReference = holderRef,
+			});
 		}
+
+		// Base JNI name entry → alias holder (self-referencing trim target, kept alive by associations)
+		model.Entries.Add (new TypeMapAttributeData {
+			JniName = jniName,
+			ProxyTypeReference = holderRef,
+			TargetTypeReference = holderRef,
+		});
+
+		model.AliasHolders.Add (new AliasHolderData {
+			TypeName = holderTypeName,
+			Namespace = holderNamespace,
+			AliasKeys = aliasKeys,
+		});
 	}
 
 	/// <summary>

@@ -715,4 +715,67 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 				$"Expected fewer RVA fields ({rvaFields.Count}) than total strings ({allStrings.Count}) due to deduplication");
 		}
 	}
+
+	[Fact]
+	public void Generate_AliasGroup_ProducesCorrectIndexedEntries ()
+	{
+		var peers = ScanFixtures ();
+		var aliasPeers = peers.Where (p => p.JavaName == "test/AliasTarget").ToList ();
+		Assert.Equal (3, aliasPeers.Count);
+
+		using var stream = GenerateAssembly (aliasPeers, "AliasRoundTrip");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		// Read all TypeMap attribute blobs
+		var typeMapBlobs = new List<(string? jniName, string? proxyRef, string? targetRef)> ();
+		var asmAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
+		foreach (var attrHandle in asmAttrs) {
+			var attr = reader.GetCustomAttribute (attrHandle);
+			if (attr.Constructor.Kind == HandleKind.MethodDefinition)
+				continue;
+
+			var blobReader = reader.GetBlobReader (attr.Value);
+			ushort prolog = blobReader.ReadUInt16 ();
+			if (prolog != 1)
+				continue;
+
+			string? val1 = blobReader.ReadSerializedString ();
+			string? val2 = blobReader.ReadSerializedString ();
+
+			// TypeMap has a jniName string arg; TypeMapAssociation has two Type args.
+			// We distinguish by checking if val1 looks like a JNI name (contains '/').
+			if (val1 is not null && val1.Contains ('/')) {
+				string? val3 = blobReader.RemainingBytes > 2 ? blobReader.ReadSerializedString () : null;
+				typeMapBlobs.Add ((val1, val2, val3));
+			}
+		}
+
+		// Verify indexed entries: "test/AliasTarget[0]", "test/AliasTarget[1]", "test/AliasTarget[2]", and base "test/AliasTarget"
+		var jniNames = typeMapBlobs.Select (b => b.jniName).ToList ();
+		Assert.Contains ("test/AliasTarget", jniNames);
+		Assert.Contains ("test/AliasTarget[0]", jniNames);
+		Assert.Contains ("test/AliasTarget[1]", jniNames);
+		Assert.Contains ("test/AliasTarget[2]", jniNames);
+
+		// Verify TypeMapAssociationAttribute is referenced (generic version)
+		var typeNames = GetTypeRefNames (reader);
+		Assert.Contains ("TypeMapAssociationAttribute`1", typeNames);
+
+		// Verify 3 proxy types + 1 alias holder were emitted
+		var proxyTypes = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Where (t => reader.GetString (t.Namespace) == "_TypeMap.Proxies")
+			.ToList ();
+		Assert.Equal (3, proxyTypes.Count);
+
+		var aliasHolders = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Where (t => reader.GetString (t.Namespace) == "_TypeMap.Aliases")
+			.ToList ();
+		Assert.Single (aliasHolders);
+
+		// Verify the alias holder implements IJavaPeerAliases
+		Assert.Contains ("IJavaPeerAliases", typeNames);
+	}
 }

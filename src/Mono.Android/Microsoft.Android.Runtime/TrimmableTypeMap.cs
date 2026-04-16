@@ -98,6 +98,28 @@ class TrimmableTypeMap
 	/// closed generic peer still requires a closed <see cref="Type"/> at the call
 	/// site and is tracked separately.
 	/// </remarks>
+	/// <summary>
+	/// Enumerates all proxy types for a JNI name, including alias entries.
+	/// If the base JNI name maps to an alias holder (implementing <see cref="IJavaPeerAliases"/>),
+	/// enumerates the explicit alias keys. Otherwise yields only the primary type.
+	/// </summary>
+	internal IEnumerable<Type> GetAllTypesForJniName (string jniName)
+	{
+		if (!_typeMap.TryGetValue (jniName, out var primaryType)) {
+			yield break;
+		}
+
+		var proxy = primaryType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+		if (proxy is IJavaPeerAliases aliases) {
+			foreach (var key in aliases.Aliases) {
+				if (_typeMap.TryGetValue (key, out var aliasType)) {
+					yield return aliasType;
+				}
+			}
+		} else {
+			yield return primaryType;
+		}
+	}
 	JavaPeerProxy? GetProxyForManagedType (Type managedType)
 	{
 		if (managedType.IsGenericType && !managedType.IsGenericTypeDefinition) {
@@ -105,11 +127,21 @@ class TrimmableTypeMap
 		}
 
 		var proxy = _proxyCache.GetOrAdd (managedType, static (type, self) => {
-			if (self._proxyTypeMap.TryGetValue (type, out var proxyType)) {
-				return proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false) ?? s_noPeerSentinel;
+			if (!self._proxyTypeMap.TryGetValue (type, out var proxyType)) {
+				return s_noPeerSentinel;
 			}
 
-			return s_noPeerSentinel;
+			var proxy = proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+			if (proxy is null) {
+				return s_noPeerSentinel;
+			}
+
+			// If _proxyTypeMap mapped this type to an alias holder, resolve the actual proxy
+			if (proxy is IJavaPeerAliases aliases) {
+				return ResolveAlias (self, aliases, type) ?? s_noPeerSentinel;
+			}
+
+			return proxy;
 		}, this);
 		return ReferenceEquals (proxy, s_noPeerSentinel) ? null : proxy;
 	}
@@ -121,17 +153,27 @@ class TrimmableTypeMap
 				return s_noPeerSentinel;
 			}
 
-			var proxy = mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-			if (proxy is null) {
-				// Alias typemap entries (for example "jni/name[1]") are not implemented yet.
-				// Support for them will be added in a follow-up for https://github.com/dotnet/android/issues/10788.
-				throw new NotImplementedException (
-					$"Trimmable typemap alias handling is not implemented yet for '{name}'.");
-			}
-
-			return proxy;
+			return mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false) ?? s_noPeerSentinel;
 		}, this);
 		return ReferenceEquals (proxy, s_noPeerSentinel) ? null : proxy;
+	}
+
+	/// <summary>
+	/// Resolves a specific managed type from an alias group by iterating
+	/// the explicit alias keys and checking TargetType on each proxy.
+	/// </summary>
+	static JavaPeerProxy? ResolveAlias (TrimmableTypeMap self, IJavaPeerAliases aliases, Type targetType)
+	{
+		foreach (var key in aliases.Aliases) {
+			if (!self._typeMap.TryGetValue (key, out var aliasProxyType)) {
+				continue;
+			}
+			var aliasProxy = aliasProxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+			if (aliasProxy is not null && aliasProxy.TargetType == targetType) {
+				return aliasProxy;
+			}
+		}
+		return null;
 	}
 
 	internal bool TryGetJniNameForManagedType (Type managedType, [NotNullWhen (true)] out string? jniName)

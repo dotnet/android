@@ -81,6 +81,7 @@ sealed class TypeMapAssemblyEmitter
 	TypeReferenceHandle _jniTypeRef;
 	TypeReferenceHandle _notSupportedExceptionRef;
 	TypeReferenceHandle _runtimeHelpersRef;
+	TypeReferenceHandle _iJavaPeerAliasesRef;
 
 	MemberReferenceHandle _getTypeFromHandleRef;
 	MemberReferenceHandle _getUninitializedObjectRef;
@@ -150,6 +151,10 @@ sealed class TypeMapAssemblyEmitter
 			EmitProxyType (proxy, wrapperHandles);
 		}
 
+		foreach (var holder in model.AliasHolders) {
+			EmitAliasHolderType (holder);
+		}
+
 		foreach (var entry in model.Entries) {
 			EmitTypeMapAttribute (entry);
 		}
@@ -190,6 +195,8 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("NotSupportedException"));
 		_runtimeHelpersRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
 			metadata.GetOrAddString ("System.Runtime.CompilerServices"), metadata.GetOrAddString ("RuntimeHelpers"));
+		_iJavaPeerAliasesRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("IJavaPeerAliases"));
 
 		_jniNativeMethodRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniNativeMethod"));
@@ -450,6 +457,88 @@ sealed class TypeMapAssemblyEmitter
 		if (proxy.IsAcw) {
 			EmitRegisterNatives (proxy.NativeRegistrations, wrapperHandles);
 		}
+	}
+
+	void EmitAliasHolderType (AliasHolderData holder)
+	{
+		var metadata = _pe.Metadata;
+
+		// Alias holder base ctor: JavaPeerProxy(string jniName, Type targetType, Type? invokerType)
+		var baseCtorRef = _pe.AddMemberRef (_javaPeerProxyNonGenericRef, ".ctor",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (3,
+				rt => rt.Void (),
+				p => {
+					p.AddParameter ().Type ().String ();
+					p.AddParameter ().Type ().Type (_systemTypeRef, false);
+					p.AddParameter ().Type ().Type (_systemTypeRef, false);
+				}));
+
+		var typeDefHandle = metadata.AddTypeDefinition (
+			TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Class,
+			metadata.GetOrAddString (holder.Namespace),
+			metadata.GetOrAddString (holder.TypeName),
+			_javaPeerProxyNonGenericRef,
+			MetadataTokens.FieldDefinitionHandle (metadata.GetRowCount (TableIndex.Field) + 1),
+			MetadataTokens.MethodDefinitionHandle (metadata.GetRowCount (TableIndex.MethodDef) + 1));
+
+		// Implement IJavaPeerAliases
+		metadata.AddInterfaceImplementation (typeDefHandle, _iJavaPeerAliasesRef);
+
+		// .ctor — call base(jniName: "<aliases>", targetType: typeof(void), invokerType: null)
+		var ctorHandle = _pe.EmitBody (".ctor",
+			MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }),
+			encoder => {
+				encoder.OpCode (ILOpCode.Ldarg_0);
+				encoder.LoadString (metadata.GetOrAddUserString ("<aliases>"));
+				encoder.OpCode (ILOpCode.Ldtoken);
+				var voidTypeRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
+					metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Void"));
+				encoder.Token (voidTypeRef);
+				encoder.Call (_getTypeFromHandleRef);
+				encoder.OpCode (ILOpCode.Ldnull);
+				encoder.Call (baseCtorRef);
+				encoder.OpCode (ILOpCode.Ret);
+			});
+
+		// Self-apply the attribute: [AliasHolder] on the alias holder class itself.
+		var emptyBlob = _pe.BuildAttributeBlob (b => { });
+		metadata.AddCustomAttribute (typeDefHandle, ctorHandle, emptyBlob);
+
+		// CreateInstance → throw new NotSupportedException()
+		EmitCreateInstanceBody (encoder => {
+			encoder.OpCode (ILOpCode.Newobj);
+			encoder.Token (_notSupportedExceptionCtorRef);
+			encoder.OpCode (ILOpCode.Throw);
+		});
+
+		// get_Aliases → return new string[] { "key[0]", "key[1]", ... }
+		EmitAliasesGetter (holder.AliasKeys);
+	}
+
+	void EmitAliasesGetter (List<string> aliasKeys)
+	{
+		var metadata = _pe.Metadata;
+		var stringTypeRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
+			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("String"));
+
+		_pe.EmitBody ("get_Aliases",
+			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.SpecialName | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Final,
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0,
+				rt => rt.Type ().SZArray ().String (),
+				p => { }),
+			encoder => {
+				encoder.LoadConstantI4 (aliasKeys.Count);
+				encoder.OpCode (ILOpCode.Newarr);
+				encoder.Token (stringTypeRef);
+				for (int i = 0; i < aliasKeys.Count; i++) {
+					encoder.OpCode (ILOpCode.Dup);
+					encoder.LoadConstantI4 (i);
+					encoder.LoadString (metadata.GetOrAddUserString (aliasKeys [i]));
+					encoder.OpCode (ILOpCode.Stelem_ref);
+				}
+				encoder.OpCode (ILOpCode.Ret);
+			});
 	}
 
 	void EmitCreateInstance (JavaPeerProxyData proxy)
