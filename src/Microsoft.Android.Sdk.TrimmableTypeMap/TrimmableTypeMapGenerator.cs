@@ -40,6 +40,7 @@ public class TrimmableTypeMapGenerator
 
 		RootManifestReferencedTypes (allPeers, PrepareManifestForRooting (manifestTemplate, manifestConfig));
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
+		PropagateCannotRegisterToDescendants (allPeers);
 
 		var generatedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion);
 		var jcwPeers = allPeers.Where (p =>
@@ -214,8 +215,7 @@ public class TrimmableTypeMapGenerator
 	/// TestInstrumentation_1 must also defer — otherwise the base class <c>&lt;clinit&gt;</c> will call
 	/// <c>registerNatives</c> before the managed runtime is ready.
 	/// </summary>
-	internal static void PropagateDeferredRegistrationToBaseClasses (List<JavaPeerInfo> allPeers)
-	{
+	internal static void PropagateDeferredRegistrationToBaseClasses (List<JavaPeerInfo> allPeers)	{
 		// In practice only 1–2 types need propagation (one Application, maybe one
 		// Instrumentation), each with a short base-class chain.  A linear scan per
 		// ancestor is simpler and cheaper than building a Dictionary<JavaName, List<Peer>>
@@ -240,6 +240,43 @@ public class TrimmableTypeMapGenerator
 				}
 
 				baseJniName = nextBase;
+			}
+		}
+	}
+
+	/// <summary>
+	/// Propagates <see cref="JavaPeerInfo.CannotRegisterInStaticConstructor"/> DOWN
+	/// from Application/Instrumentation types to all their descendants. Any subclass of
+	/// an Instrumentation/Application type can be loaded by Android before the native
+	/// library is ready, so it must also use the lazy __md_registerNatives pattern.
+	/// </summary>
+	internal static void PropagateCannotRegisterToDescendants (List<JavaPeerInfo> allPeers)
+	{
+		// Build a set of JavaNames that have CannotRegisterInStaticConstructor
+		var cannotRegister = new HashSet<string> (StringComparer.Ordinal);
+		foreach (var peer in allPeers) {
+			if (peer.CannotRegisterInStaticConstructor) {
+				cannotRegister.Add (peer.JavaName);
+			}
+		}
+
+		// Also include the framework base types
+		cannotRegister.Add ("android/app/Application");
+		cannotRegister.Add ("android/app/Instrumentation");
+
+		// Propagate to descendants: if your base is in the set, you're in the set too
+		bool changed = true;
+		while (changed) {
+			changed = false;
+			foreach (var peer in allPeers) {
+				if (peer.CannotRegisterInStaticConstructor || peer.BaseJavaName is null) {
+					continue;
+				}
+				if (cannotRegister.Contains (peer.BaseJavaName)) {
+					peer.CannotRegisterInStaticConstructor = true;
+					cannotRegister.Add (peer.JavaName);
+					changed = true;
+				}
 			}
 		}
 	}
