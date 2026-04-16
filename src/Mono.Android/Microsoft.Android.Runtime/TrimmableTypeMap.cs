@@ -341,16 +341,19 @@ class TrimmableTypeMap
 				return;
 			}
 
-			if (!s_instance._typeMap.TryGetValue (className, out var type)) {
+			var proxies = s_instance.GetProxiesForJniName (className);
+			if (proxies.Length == 0) {
 				return;
 			}
 
-			var proxy = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-			if (proxy is IAndroidCallableWrapper acw) {
-				// Use the class reference passed from Java (via C++) — not JniType(className)
-				// which resolves via FindClass and may get a different class from a different ClassLoader.
-				using var jniType = new JniType (ref classRef, JniObjectReferenceOptions.Copy);
-				acw.RegisterNatives (jniType);
+			// Use the class reference passed from Java (via C++) — not JniType(className)
+			// which resolves via FindClass and may get a different class from a different ClassLoader.
+			// Registering natives on that other instance is silently wrong.
+			using var jniType = new JniType (ref classRef, JniObjectReferenceOptions.Copy);
+			foreach (var proxy in proxies) {
+				if (proxy is IAndroidCallableWrapper acw) {
+					acw.RegisterNatives (jniType);
+				}
 			}
 		} catch (Exception ex) {
 			Environment.FailFast ($"TrimmableTypeMap: Failed to register natives for class '{className}'.", ex);
