@@ -775,7 +775,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			.ToList ();
 		Assert.Single (aliasHolders);
 
-		// Verify the alias holder implements IJavaPeerAliases
-		Assert.Contains ("IJavaPeerAliases", typeNames);
+		// Verify the alias holder has JavaPeerAliasesAttribute
+		Assert.Contains ("JavaPeerAliasesAttribute", typeNames);
 	}
 }

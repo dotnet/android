@@ -81,7 +81,8 @@ sealed class TypeMapAssemblyEmitter
 	TypeReferenceHandle _jniTypeRef;
 	TypeReferenceHandle _notSupportedExceptionRef;
 	TypeReferenceHandle _runtimeHelpersRef;
-	TypeReferenceHandle _iJavaPeerAliasesRef;
+	TypeReferenceHandle _javaPeerAliasesAttrRef;
+	MemberReferenceHandle _javaPeerAliasesAttrCtorRef;
 
 	MemberReferenceHandle _getTypeFromHandleRef;
 	MemberReferenceHandle _getUninitializedObjectRef;
@@ -195,8 +196,8 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("NotSupportedException"));
 		_runtimeHelpersRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
 			metadata.GetOrAddString ("System.Runtime.CompilerServices"), metadata.GetOrAddString ("RuntimeHelpers"));
-		_iJavaPeerAliasesRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
-			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("IJavaPeerAliases"));
+		_javaPeerAliasesAttrRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaPeerAliasesAttribute"));
 
 		_jniNativeMethodRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniNativeMethod"));
@@ -296,6 +297,7 @@ sealed class TypeMapAssemblyEmitter
 
 		EmitTypeMapAttributeCtorRef ();
 		EmitTypeMapAssociationAttributeCtorRef ();
+		EmitJavaPeerAliasesAttributeCtorRef ();
 	}
 
 	void EmitTypeMapAttributeCtorRef ()
@@ -463,83 +465,54 @@ sealed class TypeMapAssemblyEmitter
 	{
 		var metadata = _pe.Metadata;
 
-		// Alias holder base ctor: JavaPeerProxy(string jniName, Type targetType, Type? invokerType)
-		var baseCtorRef = _pe.AddMemberRef (_javaPeerProxyNonGenericRef, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (3,
-				rt => rt.Void (),
-				p => {
-					p.AddParameter ().Type ().String ();
-					p.AddParameter ().Type ().Type (_systemTypeRef, false);
-					p.AddParameter ().Type ().Type (_systemTypeRef, false);
-				}));
+		// Alias holders are plain classes (NOT JavaPeerProxy subclasses).
+		// GetCustomAttribute<JavaPeerProxy>() returns null for these — the fast path
+		// stays clean. Aliases are discovered via [JavaPeerAliases] attribute only when needed.
+		var objectRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
+			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Object"));
 
-		var typeDefHandle = metadata.AddTypeDefinition (
+		metadata.AddTypeDefinition (
 			TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Class,
 			metadata.GetOrAddString (holder.Namespace),
 			metadata.GetOrAddString (holder.TypeName),
-			_javaPeerProxyNonGenericRef,
+			objectRef,
 			MetadataTokens.FieldDefinitionHandle (metadata.GetRowCount (TableIndex.Field) + 1),
 			MetadataTokens.MethodDefinitionHandle (metadata.GetRowCount (TableIndex.MethodDef) + 1));
 
-		// Implement IJavaPeerAliases
-		metadata.AddInterfaceImplementation (typeDefHandle, _iJavaPeerAliasesRef);
-
-		// .ctor — call base(jniName: "<aliases>", targetType: typeof(void), invokerType: null)
-		var ctorHandle = _pe.EmitBody (".ctor",
-			MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }),
-			encoder => {
-				encoder.OpCode (ILOpCode.Ldarg_0);
-				encoder.LoadString (metadata.GetOrAddUserString ("<aliases>"));
-				encoder.OpCode (ILOpCode.Ldtoken);
-				var voidTypeRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
-					metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Void"));
-				encoder.Token (voidTypeRef);
-				encoder.Call (_getTypeFromHandleRef);
-				encoder.OpCode (ILOpCode.Ldnull);
-				encoder.Call (baseCtorRef);
-				encoder.OpCode (ILOpCode.Ret);
-			});
-
-		// Self-apply the attribute: [AliasHolder] on the alias holder class itself.
-		var emptyBlob = _pe.BuildAttributeBlob (b => { });
-		metadata.AddCustomAttribute (typeDefHandle, ctorHandle, emptyBlob);
-
-		// CreateInstance → throw new NotSupportedException("...")
-		EmitCreateInstanceBody (encoder => {
-			encoder.LoadString (metadata.GetOrAddUserString ("Alias holders do not support direct activation."));
-			encoder.OpCode (ILOpCode.Newobj);
-			encoder.Token (_notSupportedExceptionCtorRef);
-			encoder.OpCode (ILOpCode.Throw);
-		});
-
-		// get_Aliases → return new string[] { "key[0]", "key[1]", ... }
-		EmitAliasesGetter (holder.AliasKeys);
+		// Apply [JavaPeerAliases("key[0]", "key[1]", ...)] to the type
+		EmitJavaPeerAliasesAttribute (holder.AliasKeys);
 	}
 
-	void EmitAliasesGetter (List<string> aliasKeys)
+	void EmitJavaPeerAliasesAttributeCtorRef ()
 	{
-		var metadata = _pe.Metadata;
-		var stringTypeRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
-			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("String"));
+		// JavaPeerAliasesAttribute(params string[] aliases) — in Mono.Android, Java.Interop namespace
+		_javaPeerAliasesAttrCtorRef = _pe.AddMemberRef (_javaPeerAliasesAttrRef, ".ctor",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
+				rt => rt.Void (),
+				p => p.AddParameter ().Type ().SZArray ().String ()));
+	}
 
-		_pe.EmitBody ("get_Aliases",
-			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.SpecialName | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Final,
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0,
-				rt => rt.Type ().SZArray ().String (),
-				p => { }),
-			encoder => {
-				encoder.LoadConstantI4 (aliasKeys.Count);
-				encoder.OpCode (ILOpCode.Newarr);
-				encoder.Token (stringTypeRef);
-				for (int i = 0; i < aliasKeys.Count; i++) {
-					encoder.OpCode (ILOpCode.Dup);
-					encoder.LoadConstantI4 (i);
-					encoder.LoadString (metadata.GetOrAddUserString (aliasKeys [i]));
-					encoder.OpCode (ILOpCode.Stelem_ref);
-				}
-				encoder.OpCode (ILOpCode.Ret);
-			});
+	void EmitJavaPeerAliasesAttribute (List<string> aliasKeys)
+	{
+		// Encode the attribute blob: prolog (0x0001), then packed string array, then NumNamed (0x0000).
+		// The params string[] is encoded as: element count (uint32), then each string as SerializedString.
+		var blobBuilder = new BlobBuilder ();
+		blobBuilder.WriteUInt16 (1); // prolog
+		blobBuilder.WriteInt32 (aliasKeys.Count); // array length
+		foreach (var key in aliasKeys) {
+			WriteSerializedString (blobBuilder, key);
+		}
+		blobBuilder.WriteUInt16 (0); // NumNamed
+
+		var lastTypeDef = MetadataTokens.TypeDefinitionHandle (_pe.Metadata.GetRowCount (TableIndex.TypeDef));
+		_pe.Metadata.AddCustomAttribute (lastTypeDef, _javaPeerAliasesAttrCtorRef, _pe.Metadata.GetOrAddBlob (blobBuilder));
+	}
+
+	static void WriteSerializedString (BlobBuilder builder, string value)
+	{
+		var bytes = System.Text.Encoding.UTF8.GetBytes (value);
+		builder.WriteCompressedInteger (bytes.Length);
+		builder.WriteBytes (bytes);
 	}
 
 	void EmitCreateInstance (JavaPeerProxyData proxy)
