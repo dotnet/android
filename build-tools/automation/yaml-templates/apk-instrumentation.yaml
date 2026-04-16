@@ -47,7 +47,7 @@ steps:
     configuration: ${{ parameters.buildConfiguration }}
     xaSourcePath: ${{ parameters.xaSourcePath }}
     project: ${{ parameters.project }}
-    arguments: -t:Clean -c ${{ parameters.configuration }} --no-restore
+    arguments: -t:Clean -c ${{ parameters.configuration }} --no-restore ${{ parameters.extraBuildArgs }}
     displayName: Clean ${{ parameters.testName }}
     condition: ${{ parameters.condition }}
     continueOnError: false
