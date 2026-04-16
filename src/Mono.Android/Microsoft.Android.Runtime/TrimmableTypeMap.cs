@@ -39,10 +39,10 @@ class TrimmableTypeMap
 	}
 
 	/// <summary>
-	/// Initializes the singleton instance and registers the bootstrap JNI native method.
-	/// Must be called after the JNI runtime is initialized and before any JCW class is loaded.
+	/// Creates the singleton instance (no JNI needed). Must be called before the JNI
+	/// runtime is created so that ManagedPeer..cctor() can resolve types.
 	/// </summary>
-	internal static void Initialize ()
+	internal static void CreateInstance ()
 	{
 		if (s_instance is not null)
 			return;
@@ -51,10 +51,17 @@ class TrimmableTypeMap
 			if (s_instance is not null)
 				return;
 
-			var instance = new TrimmableTypeMap ();
-			instance.RegisterNatives ();
-			s_instance = instance;
+			s_instance = new TrimmableTypeMap ();
 		}
+	}
+
+	/// <summary>
+	/// Registers the bootstrap JNI native method. Must be called after the JNI runtime
+	/// is initialized and before any JCW class is loaded.
+	/// </summary>
+	internal static void RegisterNativeMethods ()
+	{
+		s_instance?.RegisterNatives ();
 	}
 
 	unsafe void RegisterNatives ()
@@ -209,7 +216,15 @@ class TrimmableTypeMap
 				return;
 			}
 
-			if (!s_instance._typeMap.TryGetValue (className, out var type)) {
+			Type? type;
+			try {
+				if (!s_instance._typeMap.TryGetValue (className, out type)) {
+					return;
+				}
+			} catch (TypeLoadException) {
+				// Open generic definitions (e.g., TestInstrumentation`1) have JCW classes
+				// but can't be loaded as System.Type. Skip registration — they can't be
+				// activated at runtime anyway.
 				return;
 			}
 
