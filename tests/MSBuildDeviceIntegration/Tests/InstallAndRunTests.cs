@@ -2233,9 +2233,11 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 		}
 
 		[Test]
-		public void DotNetNewAndroidTest ()
+		[TestCase ("run")]
+		[TestCase ("test")]
+		public void DotNetNewAndroidTest (string mode)
 		{
-			var templateName = TestName;
+			var templateName = $"DotNetNewAndroidTest_{mode}";
 			var projectDirectory = Path.Combine (Root, "temp", templateName);
 			if (Directory.Exists (projectDirectory))
 				Directory.Delete (projectDirectory, true);
@@ -2248,8 +2250,10 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
 			dotnet.AssertHasNoWarnings ();
 
-			// Run instrumentation via `dotnet run` and capture output
-			using var process = dotnet.StartRun (waitForExit: true);
+			// Run based on mode
+			using var process = mode == "run"
+				? dotnet.StartRun (waitForExit: true)
+				: dotnet.StartTest ();
 
 			var locker = new Lock ();
 			var output = new StringBuilder ();
@@ -2278,21 +2282,30 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			}
 
 			// Write the output to a log file for debugging
-			string logPath = Path.Combine (projectDirectory, "dotnet-run-output.log");
+			string logPath = Path.Combine (projectDirectory, $"dotnet-{mode}-output.log");
 			File.WriteAllText (logPath, output.ToString ());
 			TestContext.AddTestAttachment (logPath);
 
-			Assert.IsTrue (completed, $"`dotnet run` did not complete in time. See {logPath} for details.");
+			Assert.IsTrue (completed, $"`dotnet {mode}` did not complete in time. See {logPath} for details.");
 
-			// Parse INSTRUMENTATION_RESULT lines from output
 			var outputText = output.ToString ();
-			int passed = ParseInstrumentationResult (outputText, "passed");
-			int failed = ParseInstrumentationResult (outputText, "failed");
-			int skipped = ParseInstrumentationResult (outputText, "skipped");
 
-			Assert.AreEqual (1, passed, $"Expected 1 passed test, got {passed}. See {logPath} for details.");
-			Assert.AreEqual (1, failed, $"Expected 1 failed test, got {failed}. See {logPath} for details.");
-			Assert.AreEqual (1, skipped, $"Expected 1 skipped test, got {skipped}. See {logPath} for details.");
+			if (mode == "run") {
+				// Parse INSTRUMENTATION_RESULT lines from output
+				int passed = ParseInstrumentationResult (outputText, "passed");
+				int failed = ParseInstrumentationResult (outputText, "failed");
+				int skipped = ParseInstrumentationResult (outputText, "skipped");
+
+				Assert.AreEqual (1, passed, $"Expected 1 passed test, got {passed}. See {logPath} for details.");
+				Assert.AreEqual (1, failed, $"Expected 1 failed test, got {failed}. See {logPath} for details.");
+				Assert.AreEqual (1, skipped, $"Expected 1 skipped test, got {skipped}. See {logPath} for details.");
+			} else {
+				// dotnet test reports results via MTP protocol
+				// Verify that the output contains test method names
+				StringAssert.Contains ("TestMethod1", outputText, $"Output should mention TestMethod1. See {logPath} for details.");
+				StringAssert.Contains ("TestMethod2", outputText, $"Output should mention TestMethod2. See {logPath} for details.");
+				StringAssert.Contains ("TestMethod3", outputText, $"Output should mention TestMethod3. See {logPath} for details.");
+			}
 		}
 
 		static int ParseInstrumentationResult (string output, string key)
