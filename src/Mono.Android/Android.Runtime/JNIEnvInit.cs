@@ -37,6 +37,7 @@ namespace Android.Runtime
 			public bool            managedMarshalMethodsLookupEnabled;
 			public IntPtr          propagateUncaughtExceptionFn;
 			public IntPtr          registerJniNativesFn;
+			public IntPtr          registerNativesFn;
 		}
 #pragma warning restore 0649
 
@@ -182,6 +183,8 @@ namespace Android.Runtime
 
 			if (!RuntimeFeature.TrimmableTypeMap) {
 				args->registerJniNativesFn = (IntPtr)(delegate* unmanaged<IntPtr, int, IntPtr, IntPtr, int, void>)&RegisterJniNatives;
+			} else {
+				args->registerNativesFn = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&TrimmableTypeMap.OnRegisterNatives;
 			}
 			RunStartupHooksIfNeeded ();
 			SetSynchronizationContext ();

@@ -55,6 +55,7 @@ namespace xamarin::android {
 		static inline std::shared_ptr<Timing> _timing{};
 		static inline bool found_assembly_store = false;
 		static inline jnienv_register_jni_natives_fn jnienv_register_jni_natives = nullptr;
+		static inline jnienv_register_natives_fn jnienv_register_natives = nullptr;
 		static inline jnienv_propagate_uncaught_exception_fn jnienv_propagate_uncaught_exception = nullptr;
 
 		static inline jclass java_TimeZone = nullptr;
