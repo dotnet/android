@@ -766,6 +766,18 @@ installation of the Java SDK when running the `<InstallAndroidDependencies/>` ta
 
 Support for this property was added in .NET 9.
 
+## AndroidInstrumentation
+
+A string property that specifies the Android
+[instrumentation](https://developer.android.com/reference/android/app/Instrumentation)
+runner class name to use when launching the application via `dotnet run`.
+
+When [`$(EnableMSTestRunner)`](#enablemstestrunner) is `true` and this property
+is not set, the instrumentation runner class name is automatically resolved from
+the generated `AndroidManifest.xml` in the intermediate output.
+
+Introduced in .NET 11.
+
 ## AndroidJavadocVerbosity
 
 Specifies how "verbose"
@@ -1668,6 +1680,18 @@ This property is `False` by default.
 
 This property is ignored unless the
 [`$(AotAssemblies)`](#aotassemblies) MSBuild property is `True`.
+
+## EnableMSTestRunner
+
+A boolean property that enables the
+[MSTest runner](https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-running-tests)
+for Android test projects. When set to `true`, `dotnet run` will launch the
+application via `am instrument` instead of `am start`, allowing test results
+to be reported through Android's instrumentation protocol.
+
+This property is `False` by default.
+
+Introduced in .NET 11.
 
 ## EnableProguard
 
