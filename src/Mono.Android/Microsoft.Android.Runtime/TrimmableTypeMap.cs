@@ -76,60 +76,47 @@ class TrimmableTypeMap
 		}
 	}
 
-	internal bool TryGetTargetType (string jniSimpleReference, [NotNullWhen (true)] out Type? type)
-	{
-		type = GetProxyForJavaType (jniSimpleReference)?.TargetType;
-		return type is not null;
-	}
-
 	/// <summary>
-	/// Resolves the <see cref="JavaPeerProxy"/> for a managed type via the CLR
-	/// <c>TypeMapping</c> proxy dictionary.
+	/// Returns all target types mapped to a JNI name. For non-alias entries, returns a
+	/// single-element array. For alias groups, returns the surviving target types from
+	/// each alias key. Returns false when no mapping exists or all aliases were trimmed.
 	/// </summary>
-	/// <remarks>
-	/// The generator emits exactly one <c>TypeMapAssociation</c> per generic peer,
-	/// keyed by the open generic definition (Java erases generics, so one proxy
-	/// fits every closed instantiation). Closed instantiations are normalised to
-	/// their generic type definition before the lookup because the CLR lazy
-	/// dictionary does identity-based key matching
-	/// (see <c>dotnet/runtime</c> <c>TypeMapLazyDictionary.cs</c>).
-	/// <see cref="Type.GetGenericTypeDefinition"/> is safe under full AOT + trim
-	/// (it is not <c>RequiresDynamicCode</c>). Java→managed construction of a
-	/// closed generic peer still requires a closed <see cref="Type"/> at the call
-	/// site and is tracked separately.
-	/// </remarks>
-	/// <summary>
-	/// Enumerates all proxy types for a JNI name, including alias entries.
-	/// If the base JNI name maps to an alias holder (annotated with <see cref="JavaPeerAliasesAttribute"/>),
-	/// enumerates the explicit alias keys. Otherwise yields only the primary type.
-	/// </summary>
-	internal IEnumerable<Type> GetAllTypesForJniName (string jniName)
+	internal bool TryGetTargetTypes (string jniName, [NotNullWhen (true)] out Type[]? types)
 	{
-		if (!_typeMap.TryGetValue (jniName, out var primaryType)) {
-			return [];
+		if (!_typeMap.TryGetValue (jniName, out var mappedType)) {
+			types = null;
+			return false;
 		}
 
-		// Fast path: non-alias entry — most JNI names map directly to a proxy
-		if (primaryType.GetCustomAttribute<JavaPeerProxy> (inherit: false) is not null) {
-			return [primaryType];
+		// Fast path: non-alias entry (the vast majority of JNI names)
+		var proxy = mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+		if (proxy is not null) {
+			types = [proxy.TargetType];
+			return true;
 		}
 
-		// Slow path: alias holder — enumerate the explicit alias keys
-		var aliases = primaryType.GetCustomAttribute<JavaPeerAliasesAttribute> (inherit: false);
+		// Slow path: alias holder — collect surviving target types
+		var aliases = mappedType.GetCustomAttribute<JavaPeerAliasesAttribute> (inherit: false);
 		if (aliases is null) {
-			return [];
+			types = null;
+			return false;
 		}
 
-		return GetAliasedProxyTypes (aliases);
-	}
-
-	IEnumerable<Type> GetAliasedProxyTypes (JavaPeerAliasesAttribute aliases)
-	{
+		var result = new List<Type> ();
 		foreach (var key in aliases.Aliases) {
-			if (_typeMap.TryGetValue (key, out var aliasType)) {
-				yield return aliasType;
+			var aliasProxy = GetProxyForJavaType (key);
+			if (aliasProxy is not null) {
+				result.Add (aliasProxy.TargetType);
 			}
 		}
+
+		if (result.Count == 0) {
+			types = null;
+			return false;
+		}
+
+		types = result.ToArray ();
+		return true;
 	}
 	JavaPeerProxy? GetProxyForManagedType (Type managedType)
 	{
@@ -167,15 +154,14 @@ class TrimmableTypeMap
 			}
 
 			// Alias holders don't have JavaPeerProxy — GetCustomAttribute returns null naturally.
-			// No alias check needed here; callers use GetAliasesForJniName when proxy is null.
 			return mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false) ?? s_noPeerSentinel;
 		}, this);
 		return ReferenceEquals (proxy, s_noPeerSentinel) ? null : proxy;
 	}
 
 	/// <summary>
-	/// Reads the alias holder's explicit key list and returns the proxy whose
-	/// <c>TargetType</c> is assignable from <paramref name="targetType"/>.
+	/// Returns the proxy whose TargetType exactly matches <paramref name="targetType"/>
+	/// from an alias group's explicit key list.
 	/// </summary>
 	static JavaPeerProxy? GetProxyFromAliases (TrimmableTypeMap self, JavaPeerAliasesAttribute aliases, Type targetType)
 	{
@@ -184,7 +170,7 @@ class TrimmableTypeMap
 				continue;
 			}
 			var aliasProxy = aliasProxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-			if (aliasProxy is not null && targetType.IsAssignableFrom (aliasProxy.TargetType)) {
+			if (aliasProxy is not null && aliasProxy.TargetType == targetType) {
 				return aliasProxy;
 			}
 		}
@@ -192,9 +178,23 @@ class TrimmableTypeMap
 	}
 
 	/// <summary>
-	/// Reads the <see cref="JavaPeerAliasesAttribute"/> from the TypeMap entry for the given JNI name.
-	/// Returns null when the entry is not an alias holder.
+	/// Returns the first surviving proxy from an alias group's key list.
+	/// Used when no specific targetType is available.
 	/// </summary>
+	static JavaPeerProxy? GetFirstProxyFromAliases (TrimmableTypeMap self, JavaPeerAliasesAttribute aliases)
+	{
+		foreach (var key in aliases.Aliases) {
+			if (!self._typeMap.TryGetValue (key, out var aliasProxyType)) {
+				continue;
+			}
+			var aliasProxy = aliasProxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+			if (aliasProxy is not null) {
+				return aliasProxy;
+			}
+		}
+		return null;
+	}
+
 	JavaPeerAliasesAttribute? GetAliasesForJniName (string jniName)
 	{
 		if (!_typeMap.TryGetValue (jniName, out var mappedType)) {
@@ -233,11 +233,13 @@ class TrimmableTypeMap
 						}
 
 						// GetProxyForJavaType returns null for alias holders —
-						// resolve from the alias group when a targetType is available.
-						if (proxy is null && targetType is not null) {
+						// resolve from the alias group.
+						if (proxy is null) {
 							var aliases = self.GetAliasesForJniName (className);
 							if (aliases is not null) {
-								var aliasProxy = GetProxyFromAliases (self, aliases, targetType);
+								var aliasProxy = targetType is not null
+									? GetProxyFromAliases (self, aliases, targetType)
+									: GetFirstProxyFromAliases (self, aliases);
 								if (aliasProxy is not null) {
 									return aliasProxy;
 								}
