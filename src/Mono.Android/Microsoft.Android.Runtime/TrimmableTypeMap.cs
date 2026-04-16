@@ -216,15 +216,7 @@ class TrimmableTypeMap
 				return;
 			}
 
-			Type? type;
-			try {
-				if (!s_instance._typeMap.TryGetValue (className, out type)) {
-					return;
-				}
-			} catch (TypeLoadException) {
-				// Open generic definitions (e.g., TestInstrumentation`1) have JCW classes
-				// but can't be loaded as System.Type. Skip registration — they can't be
-				// activated at runtime anyway.
+			if (!s_instance._typeMap.TryGetValue (className, out var type)) {
 				return;
 			}
 

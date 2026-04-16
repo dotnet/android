@@ -69,6 +69,7 @@ sealed class TypeMapAssemblyEmitter
 	AssemblyReferenceHandle _javaInteropRef;
 
 	TypeReferenceHandle _javaPeerProxyRef;
+	TypeReferenceHandle _javaLangObjectRef;
 	TypeReferenceHandle _iJavaPeerableRef;
 	TypeReferenceHandle _jniHandleOwnershipRef;
 	TypeReferenceHandle _jniObjectReferenceRef;
@@ -165,6 +166,8 @@ sealed class TypeMapAssemblyEmitter
 		var metadata = _pe.Metadata;
 		_javaPeerProxyRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaPeerProxy`1"));
+		_javaLangObjectRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Java.Lang"), metadata.GetOrAddString ("Object"));
 		_iJavaPeerableRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("IJavaPeerable"));
 		_jniHandleOwnershipRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
@@ -352,7 +355,13 @@ sealed class TypeMapAssemblyEmitter
 
 		var metadata = _pe.Metadata;
 		var targetTypeRef = _pe.ResolveTypeRef (proxy.TargetType);
-		var proxyBaseType = _pe.MakeGenericTypeSpec (_javaPeerProxyRef, targetTypeRef);
+
+		// For open generic definitions, use Java.Lang.Object as the JavaPeerProxy<T> type parameter.
+		// Loading the proxy type forces the CLR to resolve the base class generic argument, and open
+		// generics from external assemblies can't be resolved by the TypeMapLazyDictionary loader.
+		// The T parameter only affects CreateInstance, which already throws for generic definitions.
+		var proxyTypeArg = proxy.IsGenericDefinition ? _javaLangObjectRef : targetTypeRef;
+		var proxyBaseType = _pe.MakeGenericTypeSpec (_javaPeerProxyRef, proxyTypeArg);
 		var baseCtorRef = _pe.AddMemberRef (proxyBaseType, ".ctor",
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
 				rt => rt.Void (),
