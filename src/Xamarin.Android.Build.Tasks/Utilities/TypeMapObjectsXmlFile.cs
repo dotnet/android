@@ -177,10 +177,16 @@ class TypeMapObjectsXmlFile
 		if (!reader.ReadToFollowing ("api"))
 			throw new InvalidOperationException ($"Invalid XML file '{filename}'");
 
-		var type = reader.GetAttribute ("type") ?? throw new InvalidOperationException ("Missing required attribute 'type'");
+		var type = reader.GetAttribute ("type");
+
+		if (string.IsNullOrWhiteSpace (type))
+			throw new InvalidOperationException ($"Missing required attribute 'type' in '{filename}'");
+
 		var assemblyName = reader.GetAttribute ("assembly-name");
-		var mvid = Guid.TryParse (reader.GetAttribute ("mvid"), out var parsedMvid) ? parsedMvid : Guid.Empty;
-		var foundJniNativeRegistration = bool.TryParse (reader.GetAttribute ("found-jni-native-registration"), out var parsedJni) && parsedJni;
+		var mvidValue = reader.GetAttribute ("mvid");
+		var mvid = string.IsNullOrWhiteSpace (mvidValue) ? Guid.Empty : Guid.Parse (mvidValue);
+		var foundJniValue = reader.GetAttribute ("found-jni-native-registration");
+		var foundJniNativeRegistration = !string.IsNullOrWhiteSpace (foundJniValue) && Convert.ToBoolean (foundJniValue);
 
 		var file = new TypeMapObjectsXmlFile {
 			WasScanned = true,
@@ -218,9 +224,10 @@ class TypeMapObjectsXmlFile
 		if (!reader.ReadToFollowing ("module"))
 			return;
 
+		var mvidValue = reader.GetAttribute ("mvid");
 		file.ModuleReleaseData = new ModuleReleaseData {
 			AssemblyName = reader.GetAttribute ("assembly-name") ?? string.Empty,
-			Mvid = Guid.TryParse (reader.GetAttribute ("mvid"), out var mvid) ? mvid : Guid.Empty,
+			Mvid = string.IsNullOrWhiteSpace (mvidValue) ? Guid.Empty : Guid.Parse (mvidValue),
 			MvidBytes = Convert.FromBase64String (reader.GetAttribute ("mvid-bytes") ?? string.Empty),
 			TypesScratch = new Dictionary<string, TypeMapReleaseEntry> (StringComparer.Ordinal),
 			DuplicateTypes = new List<TypeMapReleaseEntry> (),
@@ -267,9 +274,9 @@ class TypeMapObjectsXmlFile
 		return new TypeMapDebugEntry {
 			JavaName = reader.GetAttribute ("java-name") ?? string.Empty,
 			ManagedName = reader.GetAttribute ("managed-name") ?? string.Empty,
-			ManagedTypeTokenId = uint.TryParse (reader.GetAttribute ("managed-type-token-id"), out var tokenId) ? tokenId : 0u,
-			SkipInJavaToManaged = bool.TryParse (reader.GetAttribute ("skip-in-java-to-managed"), out var skip) && skip,
-			IsInvoker = bool.TryParse (reader.GetAttribute ("is-invoker"), out var invoker) && invoker,
+			ManagedTypeTokenId = GetAttributeOrDefault (reader, "managed-type-token-id", 0u),
+			SkipInJavaToManaged = GetAttributeOrDefault (reader, "skip-in-java-to-managed", false),
+			IsInvoker = GetAttributeOrDefault (reader, "is-invoker", false),
 			IsMonoAndroid = isMonoAndroid,
 			AssemblyName = assemblyName,
 		};
@@ -280,9 +287,19 @@ class TypeMapObjectsXmlFile
 		return new TypeMapReleaseEntry {
 			JavaName = reader.GetAttribute ("java-name") ?? string.Empty,
 			ManagedTypeName = reader.GetAttribute ("managed-type-name") ?? string.Empty,
-			Token = uint.TryParse (reader.GetAttribute ("token"), out var token) ? token : 0u,
-			SkipInJavaToManaged = bool.TryParse (reader.GetAttribute ("skip-in-java-to-managed"), out var skip) && skip,
+			Token = GetAttributeOrDefault (reader, "token", 0u),
+			SkipInJavaToManaged = GetAttributeOrDefault (reader, "skip-in-java-to-managed", false),
 		};
+	}
+
+	static T GetAttributeOrDefault<T> (XmlReader reader, string name, T defaultValue)
+	{
+		var value = reader.GetAttribute (name);
+
+		if (string.IsNullOrWhiteSpace (value))
+			return defaultValue;
+
+		return (T) Convert.ChangeType (value, typeof (T));
 	}
 
 	static void ReadDebugEntries (XmlReader reader, List<TypeMapDebugEntry> entries, string assemblyName, bool isMonoAndroid)
