@@ -249,6 +249,7 @@
       Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidUseDesignerAssembly)' == 'True' "
       Inputs="@(_PreTrimmingAssembly)"
       Outputs="$(_AndroidStampDirectory)_PreTrimmingFixLegacyDesigner.stamp">
+    <MakeDir Directories="$(_AndroidStampDirectory)" />
     <PreTrimmingFixLegacyDesigner
         Assemblies="@(_PreTrimmingAssembly)"
         TargetName="$(TargetName)"

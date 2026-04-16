@@ -7,6 +7,27 @@
     "classes.dex": {
       "Size": 9159624
     },
+    "kotlin/annotation/annotation.kotlin_builtins": {
+      "Size": 928
+    },
+    "kotlin/collections/collections.kotlin_builtins": {
+      "Size": 3685
+    },
+    "kotlin/coroutines/coroutines.kotlin_builtins": {
+      "Size": 200
+    },
+    "kotlin/internal/internal.kotlin_builtins": {
+      "Size": 646
+    },
+    "kotlin/kotlin.kotlin_builtins": {
+      "Size": 18640
+    },
+    "kotlin/ranges/ranges.kotlin_builtins": {
+      "Size": 3399
+    },
+    "kotlin/reflect/reflect.kotlin_builtins": {
+      "Size": 2396
+    },
     "lib/arm64-v8a/lib__Microsoft.Android.Resource.Designer.dll.so": {
       "Size": 19544
     },
@@ -14,7 +35,7 @@
       "Size": 25424
     },
     "lib/arm64-v8a/lib_Java.Interop.dll.so": {
-      "Size": 96696
+      "Size": 96704
     },
     "lib/arm64-v8a/lib_Mono.Android.dll.so": {
       "Size": 541912
@@ -26,22 +47,22 @@
       "Size": 21472
     },
     "lib/arm64-v8a/lib_netstandard.dll.so": {
-      "Size": 23120
+      "Size": 23112
     },
     "lib/arm64-v8a/lib_System.Collections.dll.so": {
-      "Size": 34024
+      "Size": 34016
     },
     "lib/arm64-v8a/lib_System.Collections.NonGeneric.dll.so": {
-      "Size": 25688
+      "Size": 25680
     },
     "lib/arm64-v8a/lib_System.Collections.Specialized.dll.so": {
-      "Size": 23880
+      "Size": 23872
     },
     "lib/arm64-v8a/lib_System.ComponentModel.dll.so": {
       "Size": 19632
     },
     "lib/arm64-v8a/lib_System.ComponentModel.Primitives.dll.so": {
-      "Size": 21368
+      "Size": 21360
     },
     "lib/arm64-v8a/lib_System.ComponentModel.TypeConverter.dll.so": {
       "Size": 43672
@@ -56,46 +77,46 @@
       "Size": 24656
     },
     "lib/arm64-v8a/lib_System.dll.so": {
-      "Size": 19848
+      "Size": 19856
     },
     "lib/arm64-v8a/lib_System.Drawing.dll.so": {
-      "Size": 19472
+      "Size": 19464
     },
     "lib/arm64-v8a/lib_System.Drawing.Primitives.dll.so": {
-      "Size": 30096
+      "Size": 30088
     },
     "lib/arm64-v8a/lib_System.Formats.Asn1.dll.so": {
-      "Size": 51040
+      "Size": 51032
     },
     "lib/arm64-v8a/lib_System.IO.Compression.Brotli.dll.so": {
-      "Size": 29616
+      "Size": 29608
     },
     "lib/arm64-v8a/lib_System.IO.Compression.dll.so": {
-      "Size": 34680
+      "Size": 34672
     },
     "lib/arm64-v8a/lib_System.IO.IsolatedStorage.dll.so": {
-      "Size": 28312
+      "Size": 28304
     },
     "lib/arm64-v8a/lib_System.Linq.dll.so": {
       "Size": 48144
     },
     "lib/arm64-v8a/lib_System.Linq.Expressions.dll.so": {
-      "Size": 186048
+      "Size": 186040
     },
     "lib/arm64-v8a/lib_System.Net.Http.dll.so": {
       "Size": 86752
     },
     "lib/arm64-v8a/lib_System.Net.Primitives.dll.so": {
-      "Size": 42384
+      "Size": 42352
     },
     "lib/arm64-v8a/lib_System.Net.Requests.dll.so": {
-      "Size": 21592
+      "Size": 21584
     },
     "lib/arm64-v8a/lib_System.ObjectModel.dll.so": {
-      "Size": 27048
+      "Size": 27040
     },
     "lib/arm64-v8a/lib_System.Private.CoreLib.dll.so": {
-      "Size": 997176
+      "Size": 1000144
     },
     "lib/arm64-v8a/lib_System.Private.DataContractSerialization.dll.so": {
       "Size": 217968
@@ -104,10 +125,10 @@
       "Size": 62280
     },
     "lib/arm64-v8a/lib_System.Private.Xml.dll.so": {
-      "Size": 237032
+      "Size": 237024
     },
     "lib/arm64-v8a/lib_System.Private.Xml.Linq.dll.so": {
-      "Size": 35544
+      "Size": 35536
     },
     "lib/arm64-v8a/lib_System.Runtime.dll.so": {
       "Size": 20424
@@ -116,7 +137,7 @@
       "Size": 21632
     },
     "lib/arm64-v8a/lib_System.Runtime.Numerics.dll.so": {
-      "Size": 61504
+      "Size": 63320
     },
     "lib/arm64-v8a/lib_System.Runtime.Serialization.dll.so": {
       "Size": 19400
@@ -125,13 +146,13 @@
       "Size": 20368
     },
     "lib/arm64-v8a/lib_System.Runtime.Serialization.Primitives.dll.so": {
-      "Size": 21496
+      "Size": 21488
     },
     "lib/arm64-v8a/lib_System.Security.Cryptography.dll.so": {
-      "Size": 82088
+      "Size": 82080
     },
     "lib/arm64-v8a/lib_System.Text.RegularExpressions.dll.so": {
-      "Size": 194000
+      "Size": 194240
     },
     "lib/arm64-v8a/lib_System.Xml.dll.so": {
       "Size": 19288
@@ -221,7 +242,7 @@
       "Size": 1386328
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 3124368
+      "Size": 3124400
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
       "Size": 71936
@@ -230,7 +251,7 @@
       "Size": 1281696
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 107904
+      "Size": 108424
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
       "Size": 165536
@@ -238,14 +259,206 @@
     "lib/arm64-v8a/libxamarin-app.so": {
       "Size": 350576
     },
+    "META-INF/androidx.activity_activity.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.annotation_annotation-experimental.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.appcompat_appcompat-resources.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.appcompat_appcompat.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.arch.core_core-runtime.version": {
+      "Size": 67
+    },
+    "META-INF/androidx.asynclayoutinflater_asynclayoutinflater.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.browser_browser.version": {
+      "Size": 60
+    },
+    "META-INF/androidx.cardview_cardview.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.coordinatorlayout_coordinatorlayout.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.core_core-ktx.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.core_core.version": {
+      "Size": 7
+    },
+    "META-INF/androidx.cursoradapter_cursoradapter.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.customview_customview.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.documentfile_documentfile.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.drawerlayout_drawerlayout.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.dynamicanimation_dynamicanimation.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.emoji2_emoji2-views-helper.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.emoji2_emoji2.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.fragment_fragment.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.interpolator_interpolator.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.legacy_legacy-support-core-ui.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.legacy_legacy-support-core-utils.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.legacy_legacy-support-v4.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.lifecycle_lifecycle-livedata-core.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.lifecycle_lifecycle-livedata.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.lifecycle_lifecycle-process.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.lifecycle_lifecycle-runtime.version": {
+      "Size": 72
+    },
+    "META-INF/androidx.lifecycle_lifecycle-viewmodel-savedstate.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.lifecycle_lifecycle-viewmodel.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.loader_loader.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.localbroadcastmanager_localbroadcastmanager.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.media_media.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.navigation_navigation-common.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.navigation_navigation-runtime.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.navigation_navigation-ui.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.preference_preference.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.print_print.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.profileinstaller_profileinstaller.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.recyclerview_recyclerview.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.savedstate_savedstate.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.slidingpanelayout_slidingpanelayout.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.startup_startup-runtime.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.swiperefreshlayout_swiperefreshlayout.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.tracing_tracing.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.transition_transition.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.vectordrawable_vectordrawable-animated.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.vectordrawable_vectordrawable.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.versionedparcelable_versionedparcelable.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.viewpager_viewpager.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.viewpager2_viewpager2.version": {
+      "Size": 6
+    },
     "META-INF/BNDLTOOL.RSA": {
       "Size": 1221
     },
     "META-INF/BNDLTOOL.SF": {
-      "Size": 89640
+      "Size": 98319
+    },
+    "META-INF/com.android.tools/proguard/coroutines.pro": {
+      "Size": 1345
+    },
+    "META-INF/com.android.tools/r8-from-1.6.0/coroutines.pro": {
+      "Size": 899
+    },
+    "META-INF/com.android.tools/r8-upto-3.0.0/coroutines.pro": {
+      "Size": 558
+    },
+    "META-INF/com.android.tools/r8/coroutines.pro": {
+      "Size": 1190
+    },
+    "META-INF/com.google.android.material_material.version": {
+      "Size": 6
+    },
+    "META-INF/kotlin-project-structure-metadata.json": {
+      "Size": 552
+    },
+    "META-INF/kotlinx_coroutines_android.version": {
+      "Size": 5
+    },
+    "META-INF/kotlinx_coroutines_core.version": {
+      "Size": 5
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 89513
+      "Size": 98192
+    },
+    "META-INF/maven/com.google.guava/listenablefuture/pom.properties": {
+      "Size": 96
+    },
+    "META-INF/maven/com.google.guava/listenablefuture/pom.xml": {
+      "Size": 2226
+    },
+    "META-INF/proguard/androidx-annotations.pro": {
+      "Size": 433
+    },
+    "META-INF/proguard/coroutines.pro": {
+      "Size": 1363
+    },
+    "META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler": {
+      "Size": 54
+    },
+    "META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory": {
+      "Size": 52
     },
     "res/anim-v21/design_bottom_sheet_slide_in.xml": {
       "Size": 616
@@ -2267,5 +2480,5 @@
       "Size": 812848
     }
   },
-  "PackageSize": 11108763
+  "PackageSize": 11144253
 }

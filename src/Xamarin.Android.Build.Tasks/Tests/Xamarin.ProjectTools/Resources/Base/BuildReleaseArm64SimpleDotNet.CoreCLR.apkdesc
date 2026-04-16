@@ -8,22 +8,22 @@
       "Size": 400044
     },
     "lib/arm64-v8a/libassembly-store.so": {
-      "Size": 3114872
+      "Size": 3107808
     },
     "lib/arm64-v8a/libclrjit.so": {
-      "Size": 3202072
+      "Size": 3207768
     },
     "lib/arm64-v8a/libcoreclr.so": {
-      "Size": 5766640
+      "Size": 5769760
     },
     "lib/arm64-v8a/libmonodroid.so": {
       "Size": 1365360
     },
     "lib/arm64-v8a/libmscordaccore.so": {
-      "Size": 2493552
+      "Size": 2485088
     },
     "lib/arm64-v8a/libmscordbi.so": {
-      "Size": 1902744
+      "Size": 1901544
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
       "Size": 71936
@@ -32,7 +32,7 @@
       "Size": 1281696
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 107904
+      "Size": 108424
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
       "Size": 165536
@@ -74,5 +74,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 9258778
+  "PackageSize": 9254682
 }

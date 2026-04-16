@@ -10,23 +10,44 @@
     "classes2.dex": {
       "Size": 156448
     },
+    "kotlin/annotation/annotation.kotlin_builtins": {
+      "Size": 928
+    },
+    "kotlin/collections/collections.kotlin_builtins": {
+      "Size": 3685
+    },
+    "kotlin/coroutines/coroutines.kotlin_builtins": {
+      "Size": 200
+    },
+    "kotlin/internal/internal.kotlin_builtins": {
+      "Size": 646
+    },
+    "kotlin/kotlin.kotlin_builtins": {
+      "Size": 18640
+    },
+    "kotlin/ranges/ranges.kotlin_builtins": {
+      "Size": 3399
+    },
+    "kotlin/reflect/reflect.kotlin_builtins": {
+      "Size": 2396
+    },
     "lib/arm64-v8a/libassembly-store.so": {
-      "Size": 14078272
+      "Size": 14105312
     },
     "lib/arm64-v8a/libclrjit.so": {
-      "Size": 3202072
+      "Size": 3207768
     },
     "lib/arm64-v8a/libcoreclr.so": {
-      "Size": 5766640
+      "Size": 5769760
     },
     "lib/arm64-v8a/libmonodroid.so": {
       "Size": 1365360
     },
     "lib/arm64-v8a/libmscordaccore.so": {
-      "Size": 2493552
+      "Size": 2485088
     },
     "lib/arm64-v8a/libmscordbi.so": {
-      "Size": 1902744
+      "Size": 1901544
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
       "Size": 71936
@@ -35,7 +56,7 @@
       "Size": 1281696
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 107904
+      "Size": 108424
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
       "Size": 165536
@@ -43,14 +64,206 @@
     "lib/arm64-v8a/libxamarin-app.so": {
       "Size": 147368
     },
+    "META-INF/androidx.activity_activity.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.annotation_annotation-experimental.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.appcompat_appcompat-resources.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.appcompat_appcompat.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.arch.core_core-runtime.version": {
+      "Size": 67
+    },
+    "META-INF/androidx.asynclayoutinflater_asynclayoutinflater.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.browser_browser.version": {
+      "Size": 60
+    },
+    "META-INF/androidx.cardview_cardview.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.coordinatorlayout_coordinatorlayout.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.core_core-ktx.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.core_core.version": {
+      "Size": 7
+    },
+    "META-INF/androidx.cursoradapter_cursoradapter.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.customview_customview.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.documentfile_documentfile.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.drawerlayout_drawerlayout.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.dynamicanimation_dynamicanimation.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.emoji2_emoji2-views-helper.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.emoji2_emoji2.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.fragment_fragment.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.interpolator_interpolator.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.legacy_legacy-support-core-ui.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.legacy_legacy-support-core-utils.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.legacy_legacy-support-v4.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.lifecycle_lifecycle-livedata-core.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.lifecycle_lifecycle-livedata.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.lifecycle_lifecycle-process.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.lifecycle_lifecycle-runtime.version": {
+      "Size": 72
+    },
+    "META-INF/androidx.lifecycle_lifecycle-viewmodel-savedstate.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.lifecycle_lifecycle-viewmodel.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.loader_loader.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.localbroadcastmanager_localbroadcastmanager.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.media_media.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.navigation_navigation-common.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.navigation_navigation-runtime.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.navigation_navigation-ui.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.preference_preference.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.print_print.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.profileinstaller_profileinstaller.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.recyclerview_recyclerview.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.savedstate_savedstate.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.slidingpanelayout_slidingpanelayout.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.startup_startup-runtime.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.swiperefreshlayout_swiperefreshlayout.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.tracing_tracing.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.transition_transition.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.vectordrawable_vectordrawable-animated.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.vectordrawable_vectordrawable.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.versionedparcelable_versionedparcelable.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.viewpager_viewpager.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.viewpager2_viewpager2.version": {
+      "Size": 6
+    },
     "META-INF/BNDLTOOL.RSA": {
       "Size": 1221
     },
     "META-INF/BNDLTOOL.SF": {
-      "Size": 81667
+      "Size": 90346
+    },
+    "META-INF/com.android.tools/proguard/coroutines.pro": {
+      "Size": 1345
+    },
+    "META-INF/com.android.tools/r8-from-1.6.0/coroutines.pro": {
+      "Size": 899
+    },
+    "META-INF/com.android.tools/r8-upto-3.0.0/coroutines.pro": {
+      "Size": 558
+    },
+    "META-INF/com.android.tools/r8/coroutines.pro": {
+      "Size": 1190
+    },
+    "META-INF/com.google.android.material_material.version": {
+      "Size": 6
+    },
+    "META-INF/kotlin-project-structure-metadata.json": {
+      "Size": 552
+    },
+    "META-INF/kotlinx_coroutines_android.version": {
+      "Size": 5
+    },
+    "META-INF/kotlinx_coroutines_core.version": {
+      "Size": 5
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 81540
+      "Size": 90219
+    },
+    "META-INF/maven/com.google.guava/listenablefuture/pom.properties": {
+      "Size": 96
+    },
+    "META-INF/maven/com.google.guava/listenablefuture/pom.xml": {
+      "Size": 2226
+    },
+    "META-INF/proguard/androidx-annotations.pro": {
+      "Size": 433
+    },
+    "META-INF/proguard/coroutines.pro": {
+      "Size": 1363
+    },
+    "META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler": {
+      "Size": 54
+    },
+    "META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory": {
+      "Size": 52
     },
     "res/anim-v21/design_bottom_sheet_slide_in.xml": {
       "Size": 616
@@ -2072,5 +2285,5 @@
       "Size": 812848
     }
   },
-  "PackageSize": 22833433
+  "PackageSize": 22889403
 }
