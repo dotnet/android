@@ -385,8 +385,8 @@ Using BindingStudio:
 
 - Update `CURRENT_API_LEVEL` in MainForm.cs
 - Choose `Tools` -> `Add API Level Constants`
-  - Fill in existing `map.csv`: `xamarin-android/src/Mono.Android/map.csv`
-  - Fill in new `api.xml`: ex: `xamarin-android/src/Mono.Android/obj/Debug/net6.0/android-32/mcw/api.xml`
+  - Fill in existing `map.csv`: `dotnet/android/src/Mono.Android/map.csv`
+  - Fill in new `api.xml`: ex: `dotnet/android/src/Mono.Android/obj/Debug/net6.0/android-32/mcw/api.xml`
 - Choose `File` -> `Save`
 
 This adds all the new possible constants from the API level to `map.csv`.  They will be
@@ -404,7 +404,7 @@ Example:
 Using BindingStudio:
 
 - Choose `File` -> `Open Constant Map`
-- Choose existing `map.csv`: `xamarin-android/src/Mono.Android/map.csv`
+- Choose existing `map.csv`: `dotnet/android/src/Mono.Android/map.csv`
 
 The left tree view will be populated with every type that has possible constants that require
 a decision.  Clicking a tree node will show the grid of all constants in the type.  The ones 
@@ -471,7 +471,7 @@ Example:
 Using BindingStudio:
 
 - Choose `File` -> `Open Constant Map`
-  - Choose existing `map.csv`: `xamarin-android/src/Mono.Android/map.csv`
+  - Choose existing `map.csv`: `dotnet/android/src/Mono.Android/map.csv`
 - Choose `File` -> `Open Method Map`
   - Choose the new `.csv` created in the previous step.
 
@@ -569,7 +569,7 @@ Using BindingStudio:
 - Choose `Tools` -> `Export Final Method Map`
 - Choose a temporary file name
 - Open the temporary file, copy the contents to the bottom of the official:
-  - xamarin-android/src/Mono.Android/methodmap.csv
+  - dotnet/android/src/Mono.Android/methodmap.csv
 
 Congrats! Enumification is complete!
 

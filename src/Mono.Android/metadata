@@ -1976,6 +1976,9 @@
   <attr api-since="36" path="/api/package[@name='android.media.tv.ad']" name="managedName">Android.Media.TV.Ads</attr>
   <attr api-since="36" path="/api/package[@name='android.security.advancedprotection']" name="managedName">Android.Security.AdvancedProtection</attr>
 
+  <ns-replace source="privatecompute"       replacement="PrivateCompute" />
+  <ns-replace source="voiceinteraction"     replacement="VoiceInteractions" />
+
   <!-- Public method cannot override protected base method -->
   <attr api-since="36" path="/api/package[@name='android.media.tv.ad']/class[@name='TvAdView']/method[@name='onLayout' and count(parameter)=5 and parameter[1][@type='boolean'] and parameter[2][@type='int'] and parameter[3][@type='int'] and parameter[4][@type='int'] and parameter[5][@type='int']]" name="visibility">protected</attr>
 
