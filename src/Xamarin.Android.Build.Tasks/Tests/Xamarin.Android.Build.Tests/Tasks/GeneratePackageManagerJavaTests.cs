@@ -47,7 +47,7 @@ namespace Xamarin.Android.Build.Tests
 #pragma warning restore 414
 		[Test]
 		[TestCaseSource (nameof (CheckPackageManagerAssemblyOrderChecks))]
-		public void CheckPackageManagerAssemblyOrder (string [] resolvedUserAssemblies, string [] resolvedAssemblies)
+		public void CheckPackageManagerAssemblyOrder (string[] resolvedUserAssemblies, string[] resolvedAssemblies)
 		{
 			// avoid a PathTooLongException because using the TestName will include ALL the arguments.
 			var testHash = Files.HashString (string.Join ("", resolvedUserAssemblies) + string.Join ("", resolvedAssemblies));
@@ -82,7 +82,7 @@ namespace Xamarin.Android.Build.Tests
 				BuildEngine = new MockBuildEngine (TestContext.Out),
 				ResolvedAssemblies = resolvedAssembliesList.ToArray (),
 				EnvironmentOutputDirectory = Path.Combine (path, "env"),
-				SupportedAbis = new string [] { "x86", "arm64-v8a" },
+				SupportedAbis = new string [] { "x86" , "arm64-v8a" },
 				AndroidPackageName = "com.microsoft.net6.helloandroid",
 				EnablePreloadAssembliesDefault = false,
 				Environments = new ITaskItem [] { new TaskItem (Path.Combine (path, "myenv.txt")) },
@@ -91,7 +91,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (packageManagerTask.Execute (), "GeneratePackageManagerJava task should have executed.");
 			Assert.IsTrue (configTask.Execute (), "GenerateNativeApplicationConfigSources task should have executed.");
 
-			AssertFileContentsMatch (Path.Combine (XABuildPaths.TestAssemblyOutputDirectory, "Expected", "CheckPackageManagerAssemblyOrder.java"), Path.Combine (path, "src", "mono", "MonoPackageManager_Resources.java"));
+			AssertFileContentsMatch (Path.Combine (XABuildPaths.TestAssemblyOutputDirectory, "Expected", "CheckPackageManagerAssemblyOrder.java"), Path.Combine(path, "src", "mono", "MonoPackageManager_Resources.java"));
 			var txt = File.ReadAllText (Path.Combine (path, "env", "environment.arm64-v8a.ll"));
 			StringAssert.Contains ("YYYY", txt, "environment.arm64-v8a.ll should contain 'YYYY'");
 			txt = File.ReadAllText (Path.Combine (path, "env", "environment.x86.ll"));
