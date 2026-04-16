@@ -297,20 +297,25 @@ sealed class ExportMethodDispatchEmitter
 
 	bool TryEmitExportParameterArgument (InstructionEncoder encoder, ExportParameterKindInfo exportKind, int argumentIndex)
 	{
-		encoder.LoadArgument (argumentIndex);
-		encoder.LoadConstantI4 (0);
-
 		switch (exportKind) {
 			case ExportParameterKindInfo.InputStream:
+				encoder.LoadArgument (argumentIndex);
+				encoder.LoadConstantI4 (0);
 				encoder.Call (_context.InputStreamInvokerFromJniHandleRef);
 				return true;
 			case ExportParameterKindInfo.OutputStream:
+				encoder.LoadArgument (argumentIndex);
+				encoder.LoadConstantI4 (0);
 				encoder.Call (_context.OutputStreamInvokerFromJniHandleRef);
 				return true;
 			case ExportParameterKindInfo.XmlPullParser:
+				encoder.LoadArgument (argumentIndex);
+				encoder.LoadConstantI4 (0);
 				encoder.Call (_context.XmlPullParserReaderFromJniHandleRef);
 				return true;
 			case ExportParameterKindInfo.XmlResourceParser:
+				encoder.LoadArgument (argumentIndex);
+				encoder.LoadConstantI4 (0);
 				encoder.Call (_context.XmlResourceParserReaderFromJniHandleRef);
 				return true;
 			default:
