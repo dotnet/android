@@ -2,10 +2,9 @@
 ***********************************************************************************************
 Xamarin.Android.Tooling.targets
 
-This file contains any calls to the <ResolveSdks/> or
-<ResolveJdkJvmPath/> MSBuild tasks. It is imported and used by
-"legacy" Xamarin.Android projects, binding projects, and .NET 5
-projects.
+This file contains any calls to the <ResolveSdks/> MSBuild task. It is
+imported and used by "legacy" Xamarin.Android projects, binding
+projects, and .NET 5 projects.
 
 ***********************************************************************************************
 -->
@@ -14,7 +13,6 @@ projects.
 
   <UsingTask TaskName="Xamarin.Android.Tasks.GetJavaPlatformJar" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ResolveSdks" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.ResolveJdkJvmPath" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
   <PropertyGroup>
     <_SetLatestTargetFrameworkVersionDependsOnTargets>
@@ -75,13 +73,6 @@ projects.
       <Output TaskParameter="MonoAndroidLibPath"        PropertyName="MonoAndroidLibDirectory" />
       <Output TaskParameter="AndroidBinUtilsPath"       PropertyName="AndroidBinUtilsDirectory" Condition=" '$(AndroidBinUtilsDirectory)' == '' " />
     </ResolveSdks>
-    <ResolveJdkJvmPath
-        JavaSdkPath="$(_JavaSdkDirectory)"
-        MinimumSupportedJavaVersion="$(MinimumSupportedJavaVersion)"
-        LatestSupportedJavaVersion="$(LatestSupportedJavaVersion)"
-        Condition=" '$(DesignTimeBuild)' != 'True' And '$(AndroidGenerateJniMarshalMethods)' == 'True' And '$(JdkJvmPath)' == '' ">
-      <Output TaskParameter="JdkJvmPath"                PropertyName="JdkJvmPath" />
-    </ResolveJdkJvmPath>
   </Target>
 
   <Target Name="_GetJavaPlatformJar">

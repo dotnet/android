@@ -581,46 +581,11 @@ Android `Android.App.Fragment` type.
 
 ## AndroidGenerateJniMarshalMethods
 
-A bool property that
-enables generating of JNI marshal methods as part of the build
-process. This greatly reduces the `System.Reflection` usage in the
-binding helper code.
-
-The default value is `False`.  If developers wish to use
-the new JNI marshal methods feature, they can set
-
-```xml
-<AndroidGenerateJniMarshalMethods>True</AndroidGenerateJniMarshalMethods>
-```
-
-in their `.csproj`. Alternatively provide the property on the command
-line via
-
-```shell
--p:AndroidGenerateJniMarshalMethods=True
-```
-
-**Experimental**.  The default value is `False`.
+This experimental feature was removed in .NET 11. Setting the property has no effect.
 
 ## AndroidGenerateJniMarshalMethodsAdditionalArguments
 
-A string property that can be used to add parameters to
-the `jnimarshalmethod-gen.exe` invocation, and is useful for
-debugging, so that options such as `-v`, `-d`, or `--keeptemp` can
-be used.
-
-Default value is empty string. It can be set in the `.csproj` file or
-on the command line. For example:
-
-```xml
-<AndroidGenerateJniMarshalMethodsAdditionalArguments>-v -d --keeptemp</AndroidGenerateJniMarshalMethodsAdditionalArguments>
-```
-
-or:
-
-```shell
--p:AndroidGenerateJniMarshalMethodsAdditionalArguments="-v -d --keeptemp"
-```
+This experimental feature was removed in .NET 11. Setting the property has no effect.
 
 ## AndroidGenerateLayoutBindings
 

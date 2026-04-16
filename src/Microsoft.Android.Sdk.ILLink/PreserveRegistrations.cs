@@ -23,14 +23,6 @@ namespace Microsoft.Android.Sdk.ILLink
 			return assembly.Name.Name == "Mono.Android" || assembly.MainModule.HasTypeReference ("Android.Runtime.RegisterAttribute");
 		}
 
-		bool PreserveJniMarshalMethods ()
-		{
-			if (Context.TryGetCustomData ("XAPreserveJniMarshalMethods", out var boolValue))
-				return bool.Parse (boolValue);
-
-			return false;
-		}
-
 		protected int PreserveNamedMethod (TypeDefinition type, string method_name, MethodDefinition key)
 		{
 			if (!type.HasMethods)
@@ -71,24 +63,7 @@ namespace Microsoft.Android.Sdk.ILLink
 			if (!IsActiveFor (method.Module.Assembly))
 				return;
 
-			bool preserveJniMarshalMethodOnly = false;
-			if (!method.TryGetRegisterMember (out var member, out var nativeMethod, out var signature)) {
-				if (PreserveJniMarshalMethods () &&
-						method.DeclaringType.GetMarshalMethodsType () != null &&
-						method.TryGetBaseOrInterfaceRegisterMember (cache, out member, out nativeMethod, out signature)) {
-					preserveJniMarshalMethodOnly = true;
-				} else {
-					return;
-				}
-			}
-
-			if (PreserveJniMarshalMethods () && method.TryGetMarshalMethod (nativeMethod, signature, out var marshalMethod)) {
-				AddPreservedMethod (method, marshalMethod);
-				// TODO: collect marshalTypes and process after MarkStep
-				// marshalTypes.Add (marshalMethod.DeclaringType);
-			}
-
-			if (preserveJniMarshalMethodOnly)
+			if (!method.TryGetRegisterMember (out var member, out var nativeMethod, out var signature))
 				return;
 
 			PreserveRegisteredMethod (method.DeclaringType, member, method);

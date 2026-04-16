@@ -271,8 +271,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidSequencePointsMode Condition=" '$(_AndroidSequencePointsMode)' == ''">None</_AndroidSequencePointsMode>
 	<_AndroidBuildPropertiesCache>$(IntermediateOutputPath)build.props</_AndroidBuildPropertiesCache>
 	<_AdbPropertiesCache>$(IntermediateOutputPath)adb.props</_AdbPropertiesCache>
-	<AndroidGenerateJniMarshalMethods Condition=" '$(AndroidGenerateJniMarshalMethods)' == '' ">False</AndroidGenerateJniMarshalMethods>
-	<AndroidMakeBundleKeepTemporaryFiles Condition=" '$(AndroidMakeBundleKeepTemporaryFiles)' == '' ">False</AndroidMakeBundleKeepTemporaryFiles>
+	<AndroidMakeBundleKeepTemporaryFilesCondition=" '$(AndroidMakeBundleKeepTemporaryFiles)' == '' ">False</AndroidMakeBundleKeepTemporaryFiles>
 
 	<!-- If true it will cause all the assemblies in the apk to be preloaded on startup time -->
 	<_AndroidEnablePreloadAssembliesDefault>False</_AndroidEnablePreloadAssembliesDefault>
@@ -973,7 +972,6 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="AndroidUseLatestPlatformSdk=$(AndroidUseLatestPlatformSdk)" />
 		<_PropertyCacheItems Include="TargetFrameworkVersion=$(TargetFrameworkVersion)" />
 		<_PropertyCacheItems Include="AndroidCreatePackagePerAbi=$(AndroidCreatePackagePerAbi)" />
-		<_PropertyCacheItems Include="AndroidGenerateJniMarshalMethods=$(AndroidGenerateJniMarshalMethods)" />
 		<_PropertyCacheItems Include="OS=$(OS)" />
 		<_PropertyCacheItems Include="AndroidIncludeDebugSymbols=$(AndroidIncludeDebugSymbols)" />
 		<_PropertyCacheItems Include="AndroidPackageNamingPolicy=$(AndroidPackageNamingPolicy)" />
@@ -1409,14 +1407,6 @@ because xbuild doesn't support framework reference assemblies.
     <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)machine.config" />
     <FileWrites Include="$(_AndroidStaticResourcesFlag)" />
   </ItemGroup>
-</Target>
-
-<Target Name="_GenerateJniMarshalMethods"
-    Condition="'$(AndroidGenerateJniMarshalMethods)' == 'True' And '$(AndroidLinkMode)' != 'None' And '$(OS)' != 'Windows_NT'"
-    DependsOnTargets="_GetReferenceAssemblyPaths;_SetLatestTargetFrameworkVersion"
-    Inputs="$(_AndroidBuildPropertiesCache);@(ResolvedUserAssemblies)"
-    Outputs="$(_AndroidStampDirectory)_GenerateJniMarshalMethods.stamp">
-  <Error Text="%24(AndroidGenerateJniMarshalMethods)=True is not supported at this time." />
 </Target>
 
 <Target Name="_LinkAssembliesNoShrinkInputs">
@@ -2881,7 +2871,7 @@ because xbuild doesn't support framework reference assemblies.
   </Target>
 
   <Target Name="_LinkAssemblies"
-      DependsOnTargets="_ResolveAssemblies;_CreatePackageWorkspace;$(_BeforeLinkAssemblies);_GenerateJniMarshalMethods;_LinkAssembliesNoShrink"
+      DependsOnTargets="_ResolveAssemblies;_CreatePackageWorkspace;$(_BeforeLinkAssemblies);_LinkAssembliesNoShrink"
   />
 
 <!-- TypeMap imports must be last so their target overrides (e.g. _RemoveRegisterAttribute) take precedence -->
