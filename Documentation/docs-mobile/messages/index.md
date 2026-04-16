@@ -338,7 +338,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `RAT` - `ResolveAndroidTooling`
 * `RDF` - `RemoveDirFixed`
 * `RIL` - `ReadImportedLibrariesCache`
-* `RJJ` - `ResolveJdkJvmPath`
 * `RLC` - `ReadLibraryProjectImportsCache`
 * `RLP` - `ResolveLibraryProjectImports`
 * `RRA` - `RemoveRegisterAttribute`
