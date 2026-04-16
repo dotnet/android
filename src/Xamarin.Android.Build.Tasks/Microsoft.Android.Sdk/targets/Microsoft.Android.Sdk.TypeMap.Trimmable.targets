@@ -11,7 +11,11 @@
 
   <PropertyGroup>
     <_TypeMapAssemblyName>_Microsoft.Android.TypeMaps</_TypeMapAssemblyName>
-    <_TypeMapBaseOutputDir>$(IntermediateOutputPath)</_TypeMapBaseOutputDir>
+    <!-- Use the outer IntermediateOutputPath when available (inner per-RID builds set
+         _OuterIntermediateOutputPath) so that generated manifests/JCWs are written
+         where the packaging phase expects them. -->
+    <_TypeMapBaseOutputDir Condition=" '$(_OuterIntermediateOutputPath)' != '' ">$(_OuterIntermediateOutputPath)</_TypeMapBaseOutputDir>
+    <_TypeMapBaseOutputDir Condition=" '$(_TypeMapBaseOutputDir)' == '' ">$(IntermediateOutputPath)</_TypeMapBaseOutputDir>
     <_TypeMapBaseOutputDir>$(_TypeMapBaseOutputDir.Replace('\','/'))</_TypeMapBaseOutputDir>
     <_TypeMapOutputDirectory>$(_TypeMapBaseOutputDir)typemap/</_TypeMapOutputDirectory>
     <_TypeMapJavaOutputDirectory>$(_TypeMapBaseOutputDir)typemap/java</_TypeMapJavaOutputDirectory>
