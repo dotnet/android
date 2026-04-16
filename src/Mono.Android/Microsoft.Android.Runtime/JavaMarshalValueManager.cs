@@ -61,12 +61,6 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 
 	public override void WaitForGCBridgeProcessing ()
 	{
-		WaitIfBridgeProcessing ();
-	}
-
-	[MethodImpl (MethodImplOptions.AggressiveInlining)]
-	internal static void WaitIfBridgeProcessing ()
-	{
 		// JNI wrappers call this on every transition, so the idle case must be very cheap.
 		// A single volatile read is the cheapest possible fast path. When the gate is open
 		// (bridgeGateState == 0), the while loop body is never entered.
@@ -78,9 +72,6 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 	public unsafe override void CollectPeers ()
 	{
 		ThrowIfDisposed ();
-
-		if (CollectedContexts.IsEmpty)
-			return;
 
 		while (CollectedContexts.TryDequeue (out IntPtr contextPtr)) {
 			Debug.Assert (contextPtr != IntPtr.Zero, "CollectedContexts should not contain null pointers.");

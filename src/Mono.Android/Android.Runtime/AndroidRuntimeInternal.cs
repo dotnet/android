@@ -1,7 +1,7 @@
 #if INSIDE_MONO_ANDROID_RUNTIME
 using System;
 using System.Reflection;
-using System.Runtime.CompilerServices;
+using Microsoft.Android.Runtime;
 
 namespace Android.Runtime
 {
@@ -15,9 +15,9 @@ namespace Android.Runtime
 
 		static AndroidRuntimeInternal ()
 		{
-			if (Microsoft.Android.Runtime.RuntimeFeature.IsMonoRuntime) {
+			if (RuntimeFeature.IsMonoRuntime) {
 				mono_unhandled_exception = MonoUnhandledException;
-			} else if (Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime) {
+			} else if (RuntimeFeature.IsCoreClrRuntime) {
 				mono_unhandled_exception = CoreClrUnhandledException;
 			} else {
 				throw new NotSupportedException ("Internal error: unknown runtime not supported");
@@ -36,6 +36,11 @@ namespace Android.Runtime
 		static void MonoUnhandledException (Exception ex)
 		{
 			RuntimeNativeMethods.monodroid_debugger_unhandled_exception (ex);
+		}
+
+		public static void WaitForBridgeProcessing ()
+		{
+			Java.Interop.JniEnvironment.Runtime.ValueManager.WaitForGCBridgeProcessing ();
 		}
 	}
 }
