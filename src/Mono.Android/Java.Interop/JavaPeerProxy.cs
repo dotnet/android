@@ -18,6 +18,22 @@ namespace Java.Interop
 	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
 	public abstract class JavaPeerProxy : Attribute
 	{
+		protected JavaPeerProxy (
+			string jniName,
+			Type targetType,
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			Type? invokerType)
+		{
+			JniName = jniName ?? throw new ArgumentNullException (nameof (jniName));
+			TargetType = targetType ?? throw new ArgumentNullException (nameof (targetType));
+			InvokerType = invokerType;
+		}
+
+		/// <summary>
+		/// Gets the final JNI type name of the Java class this proxy represents.
+		/// </summary>
+		public string JniName { get; }
+
 		/// <summary>
 		/// Creates an instance of the target type using the JNI handle and ownership semantics.
 		/// This replaces the reflection-based constructor invocation used in the legacy path.
@@ -30,14 +46,14 @@ namespace Java.Interop
 		/// <summary>
 		/// Gets the target .NET type that this proxy represents.
 		/// </summary>
-		public abstract Type TargetType { get; }
+		public Type TargetType { get; }
 
 		/// <summary>
 		/// Gets the invoker type for interfaces and abstract classes.
 		/// Returns null for concrete types that can be directly instantiated.
 		/// </summary>
 		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-		public virtual Type? InvokerType => null;
+		public Type? InvokerType { get; }
 
 		/// <summary>
 		/// Gets a factory for creating containers (arrays, collections) of the target type.
@@ -59,7 +75,12 @@ namespace Java.Interop
 		T
 	> : JavaPeerProxy where T : class, IJavaPeerable
 	{
-		public override Type TargetType => typeof (T);
+		protected JavaPeerProxy (
+			string jniName,
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			Type? invokerType) : base (jniName, typeof (T), invokerType)
+		{
+		}
 
 		public override JavaPeerContainerFactory GetContainerFactory ()
 			=> JavaPeerContainerFactory<T>.Instance;

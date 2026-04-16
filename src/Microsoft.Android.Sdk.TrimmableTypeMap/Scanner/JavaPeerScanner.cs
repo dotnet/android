@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
-
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
 /// <summary>
@@ -732,7 +731,7 @@ public sealed class JavaPeerScanner : IDisposable
 	(RegisterInfo Info, string DeclaringTypeName, string DeclaringAssemblyName)? FindBaseRegisteredMethodInfo (
 		TypeDefinition typeDef, AssemblyIndex index, string methodName, MethodDefinition derivedMethod)
 	{
-		if (!TryResolveBaseType (typeDef, index, out var baseTypeDef, out var baseHandle, out var baseIndex, out var baseTypeName, out var baseAssemblyName)) {
+		if (!TryResolveBaseType (typeDef, index, out var baseTypeDef, out _, out var baseIndex, out var baseTypeName, out var baseAssemblyName)) {
 			return null;
 		}
 
@@ -760,10 +759,8 @@ public sealed class JavaPeerScanner : IDisposable
 			}
 		}
 
-		// Recurse up the hierarchy (stop at DoNotGenerateAcw boundary)
-		if (baseIndex.RegisterInfoByType.TryGetValue (baseHandle, out var baseRegInfo) && baseRegInfo.DoNotGenerateAcw) {
-			return null;
-		}
+		// Keep walking the full base hierarchy so overrides can inherit [Register]
+		// metadata declared above an intermediate MCW base type.
 		return FindBaseRegisteredMethodInfo (baseTypeDef, baseIndex, methodName, derivedMethod);
 	}
 
@@ -796,7 +793,7 @@ public sealed class JavaPeerScanner : IDisposable
 	MarshalMethodInfo? FindBaseRegisteredProperty (TypeDefinition typeDef, AssemblyIndex index,
 		string getterName, MethodDefinition derivedGetter)
 	{
-		if (!TryResolveBaseType (typeDef, index, out var baseTypeDef, out var baseHandle, out var baseIndex, out var baseTypeName, out var baseAssemblyName)) {
+		if (!TryResolveBaseType (typeDef, index, out var baseTypeDef, out _, out var baseIndex, out var baseTypeName, out var baseAssemblyName)) {
 			return null;
 		}
 
@@ -835,10 +832,8 @@ public sealed class JavaPeerScanner : IDisposable
 			}
 		}
 
-		// Recurse up (stop at DoNotGenerateAcw boundary)
-		if (baseIndex.RegisterInfoByType.TryGetValue (baseHandle, out var baseRegInfo) && baseRegInfo.DoNotGenerateAcw) {
-			return null;
-		}
+		// Keep walking the full base hierarchy so property overrides can inherit
+		// [Register] metadata declared above an intermediate MCW base type.
 		return FindBaseRegisteredProperty (baseTypeDef, baseIndex, getterName, derivedGetter);
 	}
 

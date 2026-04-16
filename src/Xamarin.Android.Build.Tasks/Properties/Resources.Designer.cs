@@ -1428,6 +1428,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Manifest-referenced type &apos;{0}&apos; was not found in any scanned assembly. It may be a framework type..
+        /// </summary>
+        public static string XA4250 {
+            get {
+                return ResourceManager.GetString("XA4250", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Native library &apos;{0}&apos; will not be bundled because it has an unsupported ABI. Move this file to a directory with a valid Android ABI name such as &apos;libs/armeabi-v7a/&apos;..
         /// </summary>
         public static string XA4300 {
