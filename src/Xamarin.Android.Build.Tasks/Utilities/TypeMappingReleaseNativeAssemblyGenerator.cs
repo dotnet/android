@@ -409,19 +409,12 @@ namespace Xamarin.Android.Tasks
 		{
 			// We generate both 32-bit and 64-bit hashes at the construction time.  Which set will be used depends on the target.
 			// Java map list will also be sorted when the target is known
-			var hashes32 = new HashSet<uint> ();
-			var hashes64 = new HashSet<ulong> ();
-
-			// Generate Java type name hashes...
 			for (int i = 0; i < cs.JavaMap.Count; i++) {
 				TypeMapJava entry = cs.JavaMap[i].Instance;
 
 				// The cast is safe, xxHash will return a 32-bit value which (for convenience) was upcast to 64-bit
 				entry.JavaNameHash32 = (uint)TypeMapHelper.HashJavaName (entry.JavaName, is64Bit: false);
-				hashes32.Add (entry.JavaNameHash32);
-
 				entry.JavaNameHash64 = TypeMapHelper.HashJavaName (entry.JavaName, is64Bit: true);
-				hashes64.Add (entry.JavaNameHash64);
 			}
 		}
 	}
