@@ -198,7 +198,7 @@ namespace Xamarin.ProjectTools
 				arguments.AddRange (parameters);
 			}
 
-			return ExecuteProcess (arguments.ToArray ());
+			return ExecuteProcess (arguments.ToArray (), workingDirectory: ProjectDirectory);
 		}
 
 		/// <summary>
