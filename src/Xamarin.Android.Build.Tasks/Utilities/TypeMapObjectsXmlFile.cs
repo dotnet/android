@@ -179,14 +179,13 @@ class TypeMapObjectsXmlFile
 
 		var type = reader.GetAttribute ("type");
 
-		if (string.IsNullOrWhiteSpace (type))
+		if (type.IsNullOrWhiteSpace ())
 			throw new InvalidOperationException ($"Missing required attribute 'type' in '{filename}'");
 
 		var assemblyName = reader.GetAttribute ("assembly-name");
 		var mvidValue = reader.GetAttribute ("mvid");
-		var mvid = string.IsNullOrWhiteSpace (mvidValue) ? Guid.Empty : Guid.Parse (mvidValue);
-		var foundJniValue = reader.GetAttribute ("found-jni-native-registration");
-		var foundJniNativeRegistration = !string.IsNullOrWhiteSpace (foundJniValue) && Convert.ToBoolean (foundJniValue);
+		var mvid = mvidValue.IsNullOrWhiteSpace () ? Guid.Empty : Guid.Parse (mvidValue);
+		var foundJniNativeRegistration = GetAttributeOrDefault (reader, "found-jni-native-registration", false);
 
 		var file = new TypeMapObjectsXmlFile {
 			WasScanned = true,
@@ -227,7 +226,7 @@ class TypeMapObjectsXmlFile
 		var mvidValue = reader.GetAttribute ("mvid");
 		file.ModuleReleaseData = new ModuleReleaseData {
 			AssemblyName = reader.GetAttribute ("assembly-name") ?? string.Empty,
-			Mvid = string.IsNullOrWhiteSpace (mvidValue) ? Guid.Empty : Guid.Parse (mvidValue),
+			Mvid = mvidValue.IsNullOrWhiteSpace () ? Guid.Empty : Guid.Parse (mvidValue),
 			MvidBytes = Convert.FromBase64String (GetAttributeOrDefault (reader, "mvid-bytes", string.Empty)),
 			TypesScratch = new Dictionary<string, TypeMapReleaseEntry> (StringComparer.Ordinal),
 			DuplicateTypes = new List<TypeMapReleaseEntry> (),
@@ -296,10 +295,10 @@ class TypeMapObjectsXmlFile
 	{
 		var value = reader.GetAttribute (name);
 
-		if (string.IsNullOrWhiteSpace (value))
+		if (value.IsNullOrWhiteSpace ())
 			return defaultValue;
 
-		return (T) Convert.ChangeType (value, typeof (T));
+		return (T) Convert.ChangeType (value, typeof (T), CultureInfo.InvariantCulture);
 	}
 
 	static void ReadDebugEntries (XmlReader reader, List<TypeMapDebugEntry> entries, string assemblyName, bool isMonoAndroid)
