@@ -228,7 +228,7 @@ class TypeMapObjectsXmlFile
 		file.ModuleReleaseData = new ModuleReleaseData {
 			AssemblyName = reader.GetAttribute ("assembly-name") ?? string.Empty,
 			Mvid = string.IsNullOrWhiteSpace (mvidValue) ? Guid.Empty : Guid.Parse (mvidValue),
-			MvidBytes = Convert.FromBase64String (reader.GetAttribute ("mvid-bytes") ?? string.Empty),
+			MvidBytes = Convert.FromBase64String (GetAttributeOrDefault (reader, "mvid-bytes", string.Empty)),
 			TypesScratch = new Dictionary<string, TypeMapReleaseEntry> (StringComparer.Ordinal),
 			DuplicateTypes = new List<TypeMapReleaseEntry> (),
 		};
@@ -347,7 +347,7 @@ class TypeMapObjectsXmlFile
 
 			if (reader.NodeType == XmlNodeType.Element && reader.Name == "entry") {
 				var key = reader.GetAttribute ("key") ?? string.Empty;
-				entries[key] = FromReleaseEntryXml (reader);
+				entries.Add (key, FromReleaseEntryXml (reader));
 			}
 		}
 	}
