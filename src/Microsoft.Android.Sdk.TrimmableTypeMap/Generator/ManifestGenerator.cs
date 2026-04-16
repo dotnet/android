@@ -73,7 +73,7 @@ class ManifestGenerator
 			}
 
 			if (peer.ComponentAttribute.Kind == ComponentKind.Instrumentation) {
-				ComponentElementBuilder.AddInstrumentation (manifest, peer);
+				ComponentElementBuilder.AddInstrumentation (manifest, peer, PackageName);
 				continue;
 			}
 
