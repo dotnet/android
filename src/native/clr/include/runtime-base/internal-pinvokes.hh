@@ -13,7 +13,7 @@ extern "C" {
 	int _monodroid_gref_inc () noexcept;
 	int _monodroid_gref_dec () noexcept;
 	void _monodroid_gref_log (const char *message) noexcept;
-	int _monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable) noexcept;
+	void _monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable) noexcept;
 	void _monodroid_gref_log_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable) noexcept;
 	const char* clr_typemap_managed_to_java (const char *typeName, const uint8_t *mvid) noexcept;
 	bool clr_typemap_java_to_managed (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept;

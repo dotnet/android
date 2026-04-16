@@ -29,9 +29,9 @@ void _monodroid_gref_log (const char *message) noexcept
 	OSBridge::_monodroid_gref_log (message);
 }
 
-int _monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, [[maybe_unused]] int from_writable) noexcept
+void _monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, [[maybe_unused]] int from_writable) noexcept
 {
-	return OSBridge::_monodroid_gref_log_new (curHandle, curType, newHandle, newType, threadName, threadId, from);
+	OSBridge::_monodroid_gref_log_new (curHandle, curType, newHandle, newType, threadName, threadId, from);
 }
 
 void _monodroid_gref_log_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, [[maybe_unused]] int from_writable) noexcept

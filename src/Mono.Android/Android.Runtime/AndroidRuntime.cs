@@ -142,14 +142,14 @@ namespace Android.Runtime {
 		}
 
 		[MethodImpl (MethodImplOptions.NoInlining)]
-		static int LogGlobalReferenceCreated (JniObjectReference value, JniObjectReference globalReference)
+		static void LogGlobalReferenceCreated (JniObjectReference value, JniObjectReference globalReference)
 		{
 			var ctype = GetObjectRefType (value.Type);
 			var ntype = GetObjectRefType (globalReference.Type);
 			var tname = Thread.CurrentThread.Name;
 			var tid   = Thread.CurrentThread.ManagedThreadId;
 			var from  = GetReferenceLogStackTrace ();
-			return RuntimeNativeMethods._monodroid_gref_log_new (value.Handle, ctype, globalReference.Handle, ntype, tname, tid, from, 1);
+			RuntimeNativeMethods._monodroid_gref_log_new (value.Handle, ctype, globalReference.Handle, ntype, tname, tid, from, 1);
 		}
 
 		[MethodImpl (MethodImplOptions.NoInlining)]
@@ -254,11 +254,9 @@ namespace Android.Runtime {
 		{
 			var r     = base.CreateGlobalReference (value);
 
-			int gc;
+			int gc = RuntimeNativeMethods._monodroid_gref_inc ();
 			if (RuntimeFeature.ObjectReferenceLogging && Logger.LogGlobalRef) {
-				gc = LogGlobalReferenceCreated (value, r);
-			} else {
-				gc = RuntimeNativeMethods._monodroid_gref_inc ();
+				LogGlobalReferenceCreated (value, r);
 			}
 
 			if (gc >= JNIEnvInit.gref_gc_threshold) {
@@ -283,10 +281,9 @@ namespace Android.Runtime {
 
 		public override void DeleteGlobalReference (ref JniObjectReference value)
 		{
+			RuntimeNativeMethods._monodroid_gref_dec ();
 			if (RuntimeFeature.ObjectReferenceLogging && Logger.LogGlobalRef) {
 				LogGlobalReferenceDeleted (value);
-			} else {
-				RuntimeNativeMethods._monodroid_gref_dec ();
 			}
 
 			base.DeleteGlobalReference (ref value);
@@ -296,10 +293,9 @@ namespace Android.Runtime {
 		{
 			var r = base.CreateWeakGlobalReference (value);
 
+			RuntimeNativeMethods._monodroid_weak_gref_inc ();
 			if (RuntimeFeature.ObjectReferenceLogging && Logger.LogGlobalRef) {
 				LogWeakGlobalReferenceCreated (value, r);
-			} else {
-				RuntimeNativeMethods._monodroid_weak_gref_inc ();
 			}
 
 			return r;
@@ -307,10 +303,9 @@ namespace Android.Runtime {
 
 		public override void DeleteWeakGlobalReference (ref JniObjectReference value)
 		{
+			RuntimeNativeMethods._monodroid_weak_gref_dec ();
 			if (RuntimeFeature.ObjectReferenceLogging && Logger.LogGlobalRef) {
 				LogWeakGlobalReferenceDeleted (value);
-			} else {
-				RuntimeNativeMethods._monodroid_weak_gref_dec ();
 			}
 
 			base.DeleteWeakGlobalReference (ref value);

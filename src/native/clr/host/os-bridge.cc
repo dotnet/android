@@ -153,16 +153,15 @@ void OSBridge::log_it (LogCategories category, std::string const& line, FILE *to
 	fflush (to);
 }
 
-auto OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from) noexcept -> int
+auto OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from) noexcept -> void
 {
-	int c = _monodroid_gref_inc ();
 	if ((log_categories & LOG_GREF) == 0) [[likely]] {
-		return c;
+		return;
 	}
 
 	const std::string log_line = std::format (
 		"+g+ grefc {} gwrefc {} obj-handle {:p}/{} -> new-handle {:p}/{} from thread '{}'({})"sv,
-		c,
+		gc_gref_count,
 		gc_weak_gref_count,
 		reinterpret_cast<void*>(curHandle),
 		curType,
@@ -173,19 +172,17 @@ auto OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject
 	);
 
 	log_it (LOG_GREF, log_line, Logger::gref_log (), from, Logger::gref_to_logcat ());
-	return c;
 }
 
 void OSBridge::_monodroid_gref_log_delete (jobject handle, char type, const char *threadName, int threadId, const char *from) noexcept
 {
-	int c = _monodroid_gref_dec ();
 	if ((log_categories & LOG_GREF) == 0) [[likely]] {
 		return;
 	}
 
 	const std::string log_line = std::format (
 		"-g- grefc {} gwrefc {} handle {:p}/{} from thread '{}'({})"sv,
-		c,
+		gc_gref_count,
 		gc_weak_gref_count,
 		reinterpret_cast<void*>(handle),
 		type,
@@ -198,7 +195,6 @@ void OSBridge::_monodroid_gref_log_delete (jobject handle, char type, const char
 
 void OSBridge::_monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from)
 {
-	_monodroid_weak_gref_inc ();
 	if ((log_categories & LOG_GREF) == 0) [[likely]] {
 		return;
 	}
@@ -239,7 +235,6 @@ OSBridge::_monodroid_lref_log_new (int lrefc, jobject handle, char type, const c
 
 void OSBridge::_monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from)
 {
-	_monodroid_weak_gref_dec ();
 	if ((log_categories & LOG_GREF) == 0) [[likely]] {
 		return;
 	}

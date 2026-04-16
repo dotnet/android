@@ -31,7 +31,7 @@ namespace xamarin::android {
 		static auto _monodroid_weak_gref_dec () noexcept -> int;
 
 		static void _monodroid_gref_log (const char *message) noexcept;
-		static auto _monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from) noexcept -> int;
+		static auto _monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from) noexcept -> void;
 		static void _monodroid_gref_log_delete (jobject handle, char type, const char *threadName, int threadId, const char *from) noexcept;
 		static void _monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from);
 		static void _monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from);
