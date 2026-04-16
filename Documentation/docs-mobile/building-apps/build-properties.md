@@ -770,11 +770,11 @@ Support for this property was added in .NET 9.
 
 A string property that specifies the Android
 [instrumentation](https://developer.android.com/reference/android/app/Instrumentation)
-class name to use when launching the application via `dotnet run`.
+runner class name to use when launching the application via `dotnet run`.
 
 When [`$(EnableMSTestRunner)`](#enablemstestrunner) is `true` and this property
-is not set, the instrumentation name is automatically resolved from the
-project's `AndroidManifest.xml`.
+is not set, the instrumentation runner class name is automatically resolved from
+the project's `AndroidManifest.xml`.
 
 Introduced in .NET 11.
 
