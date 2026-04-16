@@ -152,12 +152,6 @@ namespace Android.Runtime
 			} else {
 				throw new NotSupportedException ("Internal error: unknown runtime not supported");
 			}
-			// Phase 1: Create TrimmableTypeMap instance BEFORE the JNI runtime,
-			// because JniRuntime..ctor() → ManagedPeer..cctor() needs type resolution.
-			if (RuntimeFeature.TrimmableTypeMap) {
-				TrimmableTypeMap.CreateInstance ();
-			}
-
 			androidRuntime = new AndroidRuntime (
 					args->env,
 					args->javaVm,
@@ -168,9 +162,8 @@ namespace Android.Runtime
 			);
 			JniRuntime.SetCurrent (androidRuntime);
 
-			// Phase 2: Register JNI natives AFTER the runtime is created.
 			if (RuntimeFeature.TrimmableTypeMap) {
-				TrimmableTypeMap.RegisterNativeMethods ();
+				TrimmableTypeMap.Initialize ();
 			}
 
 			grefIGCUserPeer_class = args->grefIGCUserPeer;

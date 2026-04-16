@@ -39,10 +39,10 @@ class TrimmableTypeMap
 	}
 
 	/// <summary>
-	/// Creates the singleton instance (no JNI needed). Must be called before the JNI
-	/// runtime is created so that ManagedPeer..cctor() can resolve types.
+	/// Initializes the singleton instance and registers the bootstrap JNI native method.
+	/// Must be called after the JNI runtime is initialized and before any JCW class is loaded.
 	/// </summary>
-	internal static void CreateInstance ()
+	internal static void Initialize ()
 	{
 		if (s_instance is not null)
 			return;
@@ -51,17 +51,10 @@ class TrimmableTypeMap
 			if (s_instance is not null)
 				return;
 
-			s_instance = new TrimmableTypeMap ();
+			var instance = new TrimmableTypeMap ();
+			instance.RegisterNatives ();
+			s_instance = instance;
 		}
-	}
-
-	/// <summary>
-	/// Registers the bootstrap JNI native method. Must be called after the JNI runtime
-	/// is initialized and before any JCW class is loaded.
-	/// </summary>
-	internal static void RegisterNativeMethods ()
-	{
-		s_instance?.RegisterNatives ();
 	}
 
 	unsafe void RegisterNatives ()
