@@ -85,6 +85,34 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_ProxyType_UsesGenericJavaPeerProxyBase ()
+	{
+		var peers = ScanFixtures ();
+		using var stream = GenerateAssembly (peers);
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+		var proxyTypes = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Where (t => reader.GetString (t.Namespace) == "_TypeMap.Proxies")
+			.ToList ();
+
+		Assert.NotEmpty (proxyTypes);
+		Assert.All (proxyTypes, proxyType => {
+			Assert.Equal (HandleKind.TypeSpecification, proxyType.BaseType.Kind);
+
+			var baseTypeSpec = reader.GetTypeSpecification ((TypeSpecificationHandle) proxyType.BaseType);
+			var baseTypeName = baseTypeSpec.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null);
+
+			Assert.StartsWith ("Java.Interop.JavaPeerProxy`1<", baseTypeName, StringComparison.Ordinal);
+		});
+
+		var objectProxy = proxyTypes.First (t => reader.GetString (t.Name) == "Java_Lang_Object_Proxy");
+		var objectProxyBaseType = reader.GetTypeSpecification ((TypeSpecificationHandle) objectProxy.BaseType);
+		Assert.Equal ("Java.Interop.JavaPeerProxy`1<Java.Lang.Object>",
+			objectProxyBaseType.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null));
+	}
+
+	[Fact]
 	public void Generate_HasIgnoresAccessChecksToAttribute ()
 	{
 		var peers = ScanFixtures ();
@@ -133,7 +161,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.True (assemblyAttrs.Count () >= 3);
 
 		var typeNames = GetTypeRefNames (reader);
-		Assert.Contains ("TypeMapAssociationAttribute", typeNames);
+		Assert.Contains (typeNames, name => name.StartsWith ("TypeMapAssociationAttribute", StringComparison.Ordinal));
 	}
 
 	[Fact]
@@ -189,6 +217,25 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_InheritedCtor_UcoUsesGuardAndInlinedActivation ()
+	{
+		var peers = ScanFixtures ();
+		var simpleActivity = peers.First (p => p.JavaName == "my/app/SimpleActivity");
+		Assert.NotNull (simpleActivity.ActivationCtor);
+		Assert.NotEqual (simpleActivity.ManagedTypeName, simpleActivity.ActivationCtor.DeclaringTypeName);
+
+		using var stream = GenerateAssembly (new [] { simpleActivity }, "InheritedCtorUcoTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+		var memberNames = GetMemberRefNames (reader);
+
+		Assert.Contains ("get_WithinNewObjectScope", memberNames);
+		Assert.Contains ("GetUninitializedObject", memberNames);
+		Assert.DoesNotContain ("ActivateInstance", memberNames);
+		Assert.DoesNotContain ("ActivatePeerFromJavaConstructor", memberNames);
+	}
+
+	[Fact]
 	public void Generate_GenericType_ThrowsNotSupportedException ()
 	{
 		var peers = ScanFixtures ();
@@ -199,7 +246,13 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 		var typeNames = GetTypeRefNames (reader);
+		var generatedTypeNames = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Select (t => reader.GetString (t.Name))
+			.ToList ();
 		Assert.Contains ("NotSupportedException", typeNames);
+		Assert.Contains ("MyApp_Generic_GenericHolder_1_Proxy", generatedTypeNames);
+		Assert.DoesNotContain (generatedTypeNames, name => name.Contains ('`'));
 	}
 
 	[Fact]
@@ -422,14 +475,26 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 
-		var memberNames = GetMemberRefNames (reader);
-
-		// RegisterNatives is a method definition on the proxy type, not a member reference
-		var methodDefs = reader.MethodDefinitions
+		var proxyType = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Single (t =>
+				reader.GetString (t.Namespace) == "_TypeMap.Proxies" &&
+				reader.GetString (t.Name) == "MyApp_MainActivity_Proxy");
+		var proxyMethodNames = proxyType.GetMethods ()
 			.Select (h => reader.GetMethodDefinition (h))
 			.Select (m => reader.GetString (m.Name))
 			.ToList ();
-		Assert.Contains ("RegisterNatives", methodDefs);
+		Assert.Contains ("RegisterNatives", proxyMethodNames);
+		Assert.Contains (proxyMethodNames, name => name.Contains ("_uco_"));
+
+		var privateImplDetailsType = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Single (t => reader.GetString (t.Name) == "<PrivateImplementationDetails>");
+		var privateImplMethodNames = privateImplDetailsType.GetMethods ()
+			.Select (h => reader.GetMethodDefinition (h))
+			.Select (m => reader.GetString (m.Name))
+			.ToList ();
+		Assert.DoesNotContain ("RegisterNatives", privateImplMethodNames);
 	}
 
 	[Fact]

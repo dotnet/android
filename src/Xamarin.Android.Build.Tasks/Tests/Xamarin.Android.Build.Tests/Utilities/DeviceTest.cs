@@ -174,7 +174,16 @@ namespace Xamarin.Android.Build.Tests
 			// shell out to msbuild and start the emulator again
 			var dotnet = new DotNetCLI (Path.Combine (XABuildPaths.TopDirectory, "src", "Xamarin.Android.Build.Tasks", "Tests", "Xamarin.Android.Build.Tests", "Emulator.csproj"));
 			dotnet.ProjectDirectory = XABuildPaths.TestAssemblyOutputDirectory;
-			Assert.IsTrue (dotnet.Build ("AcquireAndroidTarget", parameters: new string[] { "TestAvdForceCreation=false", $"Configuration={XABuildPaths.Configuration}" }), "Failed to acquire emulator.");
+			if (!dotnet.Build ("AcquireAndroidTarget", parameters: new string[] { "TestAvdForceCreation=false", $"Configuration={XABuildPaths.Configuration}" })) {
+				bool isTransient = dotnet.LastBuildOutput.Any (line =>
+					line.Contains ("did not finish launching", StringComparison.OrdinalIgnoreCase) ||
+					line.Contains ("Emulator failed to start", StringComparison.OrdinalIgnoreCase) ||
+					line.Contains ("failed to exit within the timeout", StringComparison.OrdinalIgnoreCase));
+				if (isTransient) {
+					Assert.Inconclusive ("Failed to acquire emulator due to transient infrastructure issue.");
+				}
+				Assert.Fail ("Failed to acquire emulator.");
+			}
 			WaitFor ((int)TimeSpan.FromSeconds (5).TotalMilliseconds);
 		}
 

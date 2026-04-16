@@ -40,7 +40,6 @@ namespace Xamarin.Android.Build.Tests {
 				ResolvedAssemblies = [],
 				OutputDirectory = outputDir,
 				JavaSourceOutputDirectory = javaDir,
-				AcwMapDirectory = Path.Combine (Root, path, "acw-maps"),
 				TargetFrameworkVersion = "not-a-version",
 			};
 
@@ -124,15 +123,63 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (task.Execute (), $"Task should succeed with TargetFrameworkVersion='{tfv}'.");
 		}
 
+		[Test]
+		public void Execute_ManifestPlaceholdersAreResolvedForRooting ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+			var manifestTemplate = Path.Combine (Root, path, "AndroidManifest.xml");
+			var mergedManifest = Path.Combine (Root, path, "obj", "android", "AndroidManifest.xml");
+			var applicationRegistration = Path.Combine (Root, path, "src", "net", "dot", "android", "ApplicationRegistration.java");
+			var warnings = new List<BuildWarningEventArgs> ();
+
+			var monoAndroidItem = FindMonoAndroidDll ();
+			if (monoAndroidItem is null) {
+				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				return;
+			}
+
+			var manifestDirectory = Path.GetDirectoryName (manifestTemplate);
+			if (manifestDirectory is null) {
+				Assert.Fail ("Could not determine manifest template directory.");
+			}
+			Directory.CreateDirectory (manifestDirectory);
+			File.WriteAllText (manifestTemplate, """
+				<?xml version="1.0" encoding="utf-8"?>
+				<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="${applicationId}">
+				  <application android:name=".Application" />
+				  <instrumentation android:name=".Instrumentation" />
+				</manifest>
+				""");
+
+			var task = CreateTask (new [] { monoAndroidItem }, outputDir, javaDir, warnings: warnings);
+			task.ManifestTemplate = manifestTemplate;
+			task.MergedAndroidManifestOutput = mergedManifest;
+			task.ApplicationRegistrationOutputFile = applicationRegistration;
+			task.PackageName = "android.app";
+			task.AndroidApiLevel = "35";
+			task.SupportedOSPlatformVersion = "21";
+			task.RuntimeProviderJavaName = "mono.MonoRuntimeProvider";
+			task.ManifestPlaceholders = "applicationId=android.app";
+
+			Assert.IsTrue (task.Execute (), "Task should succeed.");
+			FileAssert.Exists (applicationRegistration);
+
+			var registrationText = File.ReadAllText (applicationRegistration);
+			StringAssert.Contains ("mono.android.Runtime.registerNatives (android.app.Application.class);", registrationText);
+			StringAssert.Contains ("mono.android.Runtime.registerNatives (android.app.Instrumentation.class);", registrationText);
+			Assert.IsFalse (warnings.Any (w => w.Code == "XA4250"), "Resolved placeholder-based manifest references should not log XA4250.");
+		}
+
 		GenerateTrimmableTypeMap CreateTask (ITaskItem [] assemblies, string outputDir, string javaDir,
-			IList<BuildMessageEventArgs>? messages = null, string tfv = "v11.0")
+			IList<BuildMessageEventArgs>? messages = null, IList<BuildWarningEventArgs>? warnings = null, string tfv = "v11.0")
 		{
 			return new GenerateTrimmableTypeMap {
-				BuildEngine = new MockBuildEngine (TestContext.Out, messages: messages),
+				BuildEngine = new MockBuildEngine (TestContext.Out, warnings: warnings, messages: messages),
 				ResolvedAssemblies = assemblies,
 				OutputDirectory = outputDir,
 				JavaSourceOutputDirectory = javaDir,
-				AcwMapDirectory = Path.Combine (outputDir, "..", "acw-maps"),
 				TargetFrameworkVersion = tfv,
 			};
 		}

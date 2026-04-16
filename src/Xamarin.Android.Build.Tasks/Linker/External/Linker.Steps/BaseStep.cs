@@ -89,11 +89,7 @@ namespace Mono.Linker.Steps {
 
 		public virtual void LogError (int code, string message)
 		{
-#if ILLINK
-			Context.LogMessage (MessageContainer.CreateCustomErrorMessage (message, code, origin: new MessageOrigin ()));
-#else   // !ILLINK
 			Context.LogError ($"XA{code}", message);
-#endif  // !ILLINK
 		}
 	}
 }

@@ -35,8 +35,36 @@ _ResolveAssemblies MSBuild target.
     <_RunAotMaybe Condition=" '$(_AndroidUseMarshalMethods)' != 'True' ">_AndroidAot</_RunAotMaybe>
   </PropertyGroup>
 
+  <!-- Some NuGet packages add assemblies as @(Reference) items with CopyToOutputDirectory
+       metadata, or as @(None) items with CopyToOutputDirectory. Both paths flow into
+       @(_SourceItemsToCopyToPublishDirectory) which gets blanket-removed from
+       @(ResolvedFileToPublish) in _ComputeFilesToPublishForRuntimeIdentifiers.
+       Fix by promoting @(None) assemblies to @(Reference) and stripping CopyToOutputDirectory
+       from all @(Reference) items so everything flows through normal reference resolution.
+       See: https://github.com/microsoft/testfx/blob/35cc3cd6/src/Adapter/MSTest.TestAdapter/buildTransitive/net9.0/MSTest.TestAdapter.targets -->
+  <Target Name="_PatchNuGetReferenceMetadata"
+      Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' ">
+    <ItemGroup>
+      <!-- Some NuGet packages (e.g. MSTest.TestAdapter) add assemblies only as @(None) items
+           with CopyToOutputDirectory (e.g. MSTestAdapter.PlatformServices.dll when
+           EnableMSTestRunner=true). These flow exclusively through
+           @(_SourceItemsToCopyToPublishDirectory) and get stripped by
+           _ComputeFilesToPublishForRuntimeIdentifiers. Promote them to @(Reference) so
+           they flow through reference resolution instead.
+           Exclude items with a subdirectory in %(Link) — these are platform-specific native
+           DLLs (e.g. amd64\KernelTraceControl.dll) that cannot be used on Android. -->
+      <_NoneAssembliesToPromote Include="@(None)" Condition=" '%(None.Extension)' == '.dll' and ('%(None.CopyToOutputDirectory)' == 'Always' or '%(None.CopyToOutputDirectory)' == 'PreserveNewest') and $([System.IO.Path]::GetFileName('%(None.Link)').Equals('%(None.Link)')) " />
+      <None Remove="@(_NoneAssembliesToPromote)" />
+      <Reference Include="@(_NoneAssembliesToPromote)" />
+      <!-- Strip CopyToOutputDirectory from all @(Reference) items (including newly promoted
+           ones) so they only flow through reference resolution, not _SourceItemsToCopyToPublishDirectory.
+           See: https://github.com/microsoft/testfx/blob/35cc3cd6/src/TestFramework/TestFramework.Extensions/buildTransitive/net8.0AndLater/MSTest.TestFramework.targets#L15-L21 -->
+      <Reference Update="@(Reference)" CopyToOutputDirectory="" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="_ComputeFilesToPublishForRuntimeIdentifiers"
-      DependsOnTargets="BuildOnlySettings;_FixupIntermediateAssembly;ResolveReferences;ComputeFilesToPublish;$(_RunAotMaybe)"
+      DependsOnTargets="BuildOnlySettings;_FixupIntermediateAssembly;_PatchNuGetReferenceMetadata;ResolveReferences;ComputeFilesToPublish;$(_RunAotMaybe)"
       Returns="@(ResolvedFileToPublish)">
       <ItemGroup>
         <ResolvedFileToPublish Remove="@(_SourceItemsToCopyToPublishDirectory)" />

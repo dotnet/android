@@ -69,16 +69,22 @@ public sealed record JavaPeerInfo
 	/// Types with component attributes ([Activity], [Service], etc.),
 	/// custom views from layout XML, or manifest-declared components
 	/// are unconditionally preserved (not trimmable).
+	/// May be set to <c>true</c> after scanning when the manifest references a type
+	/// that the scanner did not mark as unconditional. Should only ever be set
+	/// to <c>true</c>, never back to <c>false</c>.
 	/// </summary>
-	public bool IsUnconditional { get; init; }
+	public bool IsUnconditional { get; set; }
 
 	/// <summary>
 	/// True for Application and Instrumentation types. These types cannot call
 	/// <c>registerNatives</c> in their static initializer because the native library
 	/// (<c>libmonodroid.so</c>) is not loaded until after the Application class is instantiated.
 	/// Registration is deferred to <c>ApplicationRegistration.registerApplications()</c>.
+	/// This may also be set after scanning when a type is only discovered from
+	/// manifest <c>android:name</c> usage on <c>&lt;application&gt;</c> or
+	/// <c>&lt;instrumentation&gt;</c>.
 	/// </summary>
-	public bool CannotRegisterInStaticConstructor { get; init; }
+	public bool CannotRegisterInStaticConstructor { get; set; }
 
 	/// <summary>
 	/// Marshal methods: methods with [Register(name, sig, connector)], [Export], or

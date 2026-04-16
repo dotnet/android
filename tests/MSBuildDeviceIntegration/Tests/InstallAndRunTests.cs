@@ -1420,10 +1420,9 @@ namespace UnnamedProject
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName, app.ProjectName))) {
 				b.BuildLogFile = "build1.log";
 				b.ThrowOnBuildFailure = false;
-				// TODO: fix for NativeAOT
-				if (!addResource && runtime != AndroidRuntime.NativeAOT) {
+				if (!addResource) {
 					Assert.IsFalse (b.Build (app, doNotCleanupOnUpdate: true), $"Build of {app.ProjectName} should have failed.");
-					Assert.IsTrue (b.LastBuildOutput.ContainsText (isRelease ? "IL8000" : "XA8000"));
+					Assert.IsTrue (b.LastBuildOutput.ContainsText ("XA8000"));
 					Assert.IsTrue (b.LastBuildOutput.ContainsText ("@styleable/SKCanvasView"), "Expected '@styleable/SKCanvasView' in build output.");
 					Assert.IsTrue (b.LastBuildOutput.ContainsText ("@styleable/SKCanvasView_ignorePixelScaling"), "Expected '@styleable/SKCanvasView_ignorePixelScaling' in build output.");
 					return;
@@ -2231,6 +2230,84 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 
 			StringAssertEx.ContainsRegex (@"am start.*--user 0", builder.LastBuildOutput,
 				"The 'am start' command should contain '--user 0' when AndroidDeviceUserId is set.");
+		}
+
+		[Test]
+		public void DotNetNewAndroidTest ()
+		{
+			var templateName = TestName;
+			var projectDirectory = Path.Combine (Root, "temp", templateName);
+			if (Directory.Exists (projectDirectory))
+				Directory.Delete (projectDirectory, true);
+
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = projectDirectory;
+			var dotnet = new DotNetCLI (Path.Combine (projectDirectory, $"{templateName}.csproj"));
+			Assert.IsTrue (dotnet.New ("androidtest"), "`dotnet new androidtest` should succeed");
+
+			// Build and assert 0 warnings
+			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+			dotnet.AssertHasNoWarnings ();
+
+			// Run instrumentation via `dotnet run` and capture output
+			using var process = dotnet.StartRun (waitForExit: true);
+
+			var locker = new Lock ();
+			var output = new StringBuilder ();
+
+			process.OutputDataReceived += (sender, e) => {
+				if (e.Data != null)
+					lock (locker)
+						output.AppendLine (e.Data);
+			};
+			process.ErrorDataReceived += (sender, e) => {
+				if (e.Data != null)
+					lock (locker)
+						output.AppendLine ($"STDERR: {e.Data}");
+			};
+
+			process.BeginOutputReadLine ();
+			process.BeginErrorReadLine ();
+
+			// Wait for the process to complete (instrumentation should finish on its own)
+			bool completed = process.WaitForExit ((int) TimeSpan.FromMinutes (5).TotalMilliseconds);
+			if (!completed) {
+				try { process.Kill (entireProcessTree: true); } catch { }
+			} else {
+				// Ensure async output events are fully drained
+				process.WaitForExit ();
+			}
+
+			// Write the output to a log file for debugging
+			string logPath = Path.Combine (projectDirectory, "dotnet-run-output.log");
+			File.WriteAllText (logPath, output.ToString ());
+			TestContext.AddTestAttachment (logPath);
+
+			Assert.IsTrue (completed, $"`dotnet run` did not complete in time. See {logPath} for details.");
+
+			// Parse INSTRUMENTATION_RESULT lines from output
+			var outputText = output.ToString ();
+			int passed = ParseInstrumentationResult (outputText, "passed");
+			int failed = ParseInstrumentationResult (outputText, "failed");
+			int skipped = ParseInstrumentationResult (outputText, "skipped");
+
+			Assert.AreEqual (1, passed, $"Expected 1 passed test, got {passed}. See {logPath} for details.");
+			Assert.AreEqual (1, failed, $"Expected 1 failed test, got {failed}. See {logPath} for details.");
+			Assert.AreEqual (1, skipped, $"Expected 1 skipped test, got {skipped}. See {logPath} for details.");
+		}
+
+		static int ParseInstrumentationResult (string output, string key)
+		{
+			// Parses lines like: INSTRUMENTATION_RESULT: passed=1
+			var prefix = $"INSTRUMENTATION_RESULT: {key}=";
+			foreach (var rawLine in output.Split ('\n')) {
+				var line = rawLine.Trim ();
+				if (line.StartsWith (prefix, StringComparison.Ordinal)) {
+					var valueStr = line.Substring (prefix.Length).Trim ();
+					if (int.TryParse (valueStr, out int value))
+						return value;
+				}
+			}
+			return -1;
 		}
 
 		static string GetAppHelperSource (string appHelperBody, string hotReloadMessage) => $$"""

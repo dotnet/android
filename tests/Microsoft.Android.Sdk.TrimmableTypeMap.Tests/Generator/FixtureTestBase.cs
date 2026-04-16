@@ -11,7 +11,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 
 public abstract class FixtureTestBase
 {
-	static string TestFixtureAssemblyPath {
+	private protected static string TestFixtureAssemblyPath {
 		get {
 			var testAssemblyDir = Path.GetDirectoryName (typeof (FixtureTestBase).Assembly.Location)
 				?? throw new InvalidOperationException ("Cannot determine test assembly directory");
