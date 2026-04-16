@@ -254,6 +254,26 @@ public class ManifestGeneratorTests
 	}
 
 	[Fact]
+	public void Instrumentation_DefaultsTargetPackage ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var peer = CreatePeer ("com/example/app/MyInstrumentation", new ComponentInfo {
+			Kind = ComponentKind.Instrumentation,
+			Properties = new Dictionary<string, object?> {
+				["Label"] = "My Test",
+			},
+		});
+
+		var doc = GenerateAndLoad (gen, [peer]);
+
+		var instrumentation = doc.Root?.Element ("instrumentation");
+		Assert.NotNull (instrumentation);
+
+		// targetPackage should default to the app's PackageName
+		Assert.Equal ("com.example.app", (string?)instrumentation?.Attribute (AndroidNs + "targetPackage"));
+	}
+
+	[Fact]
 	public void RuntimeProvider_Added ()
 	{
 		var gen = CreateDefaultGenerator ();
