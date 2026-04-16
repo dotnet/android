@@ -46,20 +46,20 @@ public sealed class JavaPeerScanner : IDisposable
 
 		var scope = typeRef.ResolutionScope;
 		switch (scope.Kind) {
-			case HandleKind.AssemblyReference: {
-					var asmRef = index.Reader.GetAssemblyReference ((AssemblyReferenceHandle) scope);
-					var fullName = MetadataTypeNameResolver.JoinNamespaceAndName (ns, name);
-					return (fullName, index.Reader.GetString (asmRef.Name));
-				}
-			case HandleKind.TypeReference: {
-					// Nested type: recurse to get the declaring type's full name and assembly
-					var (parentFullName, assemblyName) = ResolveTypeReference ((TypeReferenceHandle) scope, index);
-					return (MetadataTypeNameResolver.JoinNestedTypeName (parentFullName, name), assemblyName);
-				}
-			default: {
-					var fullName = MetadataTypeNameResolver.JoinNamespaceAndName (ns, name);
-					return (fullName, index.AssemblyName);
-				}
+		case HandleKind.AssemblyReference: {
+			var asmRef = index.Reader.GetAssemblyReference ((AssemblyReferenceHandle)scope);
+			var fullName = MetadataTypeNameResolver.JoinNamespaceAndName (ns, name);
+			return (fullName, index.Reader.GetString (asmRef.Name));
+		}
+		case HandleKind.TypeReference: {
+			// Nested type: recurse to get the declaring type's full name and assembly
+			var (parentFullName, assemblyName) = ResolveTypeReference ((TypeReferenceHandle)scope, index);
+			return (MetadataTypeNameResolver.JoinNestedTypeName (parentFullName, name), assemblyName);
+		}
+		default: {
+			var fullName = MetadataTypeNameResolver.JoinNamespaceAndName (ns, name);
+			return (fullName, index.AssemblyName);
+		}
 		}
 	}
 
@@ -992,7 +992,7 @@ public sealed class JavaPeerScanner : IDisposable
 			// Single arg = JNI signature; name is always ".ctor", connector is empty.
 			if (attrName == "JniConstructorSignatureAttribute") {
 				var value = index.DecodeAttribute (ca);
-				var jniSignature = value.FixedArguments.Length > 0 ? (string?) value.FixedArguments [0].Value : null;
+				var jniSignature = value.FixedArguments.Length > 0 ? (string?)value.FixedArguments [0].Value : null;
 				if (jniSignature is not null) {
 					registerInfo = new RegisterInfo { JniName = ".ctor", Signature = jniSignature, Connector = "", DoNotGenerateAcw = false };
 					return true;
@@ -1023,7 +1023,7 @@ public sealed class JavaPeerScanner : IDisposable
 		// [Export("name")] or [Export] (uses method name)
 		string? exportName = null;
 		if (value.FixedArguments.Length > 0) {
-			exportName = (string?) value.FixedArguments [0].Value;
+			exportName = (string?)value.FixedArguments [0].Value;
 		}
 
 		List<string>? thrownNames = null;
@@ -1313,15 +1313,15 @@ public sealed class JavaPeerScanner : IDisposable
 		var row = codedToken >> 2;
 
 		switch (tag) {
-			case 0: { // TypeDef
-					var handle = MetadataTokens.TypeDefinitionHandle (row);
-					var baseDef = index.Reader.GetTypeDefinition (handle);
-					return (MetadataTypeNameResolver.GetFullName (baseDef, index.Reader), index.AssemblyName);
-				}
-			case 1: // TypeRef
-				return ResolveTypeReference (MetadataTokens.TypeReferenceHandle (row), index);
-			default:
-				return null;
+		case 0: { // TypeDef
+			var handle = MetadataTokens.TypeDefinitionHandle (row);
+			var baseDef = index.Reader.GetTypeDefinition (handle);
+			return (MetadataTypeNameResolver.GetFullName (baseDef, index.Reader), index.AssemblyName);
+		}
+		case 1: // TypeRef
+			return ResolveTypeReference (MetadataTokens.TypeReferenceHandle (row), index);
+		default:
+			return null;
 		}
 	}
 
@@ -1332,16 +1332,16 @@ public sealed class JavaPeerScanner : IDisposable
 	(string typeName, string assemblyName)? ResolveEntityHandle (EntityHandle handle, AssemblyIndex index)
 	{
 		switch (handle.Kind) {
-			case HandleKind.TypeDefinition: {
-					var td = index.Reader.GetTypeDefinition ((TypeDefinitionHandle) handle);
-					return (MetadataTypeNameResolver.GetFullName (td, index.Reader), index.AssemblyName);
-				}
-			case HandleKind.TypeReference:
-				return ResolveTypeReference ((TypeReferenceHandle) handle, index);
-			case HandleKind.TypeSpecification:
-				return ResolveTypeSpecification ((TypeSpecificationHandle) handle, index);
-			default:
-				return null;
+		case HandleKind.TypeDefinition: {
+			var td = index.Reader.GetTypeDefinition ((TypeDefinitionHandle)handle);
+			return (MetadataTypeNameResolver.GetFullName (td, index.Reader), index.AssemblyName);
+		}
+		case HandleKind.TypeReference:
+			return ResolveTypeReference ((TypeReferenceHandle)handle, index);
+		case HandleKind.TypeSpecification:
+			return ResolveTypeSpecification ((TypeSpecificationHandle)handle, index);
+		default:
+			return null;
 		}
 	}
 
@@ -1633,7 +1633,7 @@ public sealed class JavaPeerScanner : IDisposable
 				continue;
 			}
 
-			var fieldName = (string?) value.FixedArguments [0].Value;
+			var fieldName = (string?)value.FixedArguments [0].Value;
 			if (fieldName is null) {
 				continue;
 			}
@@ -1669,7 +1669,7 @@ public sealed class JavaPeerScanner : IDisposable
 			"ContentProviderAttribute" => ComponentKind.ContentProvider,
 			"ApplicationAttribute" => ComponentKind.Application,
 			"InstrumentationAttribute" => ComponentKind.Instrumentation,
-			_ => (ComponentKind?) null,
+			_ => (ComponentKind?)null,
 		};
 
 		if (kind is null) {

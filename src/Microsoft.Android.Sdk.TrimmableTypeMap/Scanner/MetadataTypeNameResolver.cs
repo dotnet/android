@@ -48,7 +48,7 @@ static class MetadataTypeNameResolver
 		var typeRef = reader.GetTypeReference (handle);
 		var name = reader.GetString (typeRef.Name);
 		if (typeRef.ResolutionScope.Kind == HandleKind.TypeReference) {
-			var parent = GetTypeFromReference (reader, (TypeReferenceHandle) typeRef.ResolutionScope, rawTypeKind);
+			var parent = GetTypeFromReference (reader, (TypeReferenceHandle)typeRef.ResolutionScope, rawTypeKind);
 			return JoinNestedTypeName (parent, name);
 		}
 		var ns = reader.GetString (typeRef.Namespace);

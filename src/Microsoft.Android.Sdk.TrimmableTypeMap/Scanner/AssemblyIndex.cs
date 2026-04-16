@@ -178,18 +178,18 @@ sealed class AssemblyIndex : IDisposable
 		if (ca.Constructor.Kind != HandleKind.MethodDefinition) {
 			return false;
 		}
-		var methodDef = Reader.GetMethodDefinition ((MethodDefinitionHandle) ca.Constructor);
+		var methodDef = Reader.GetMethodDefinition ((MethodDefinitionHandle)ca.Constructor);
 		var typeDef = Reader.GetTypeDefinition (methodDef.GetDeclaringType ());
 		foreach (var implHandle in typeDef.GetInterfaceImplementations ()) {
 			var impl = Reader.GetInterfaceImplementation (implHandle);
 			if (impl.Interface.Kind == HandleKind.TypeReference) {
-				var typeRef = Reader.GetTypeReference ((TypeReferenceHandle) impl.Interface);
+				var typeRef = Reader.GetTypeReference ((TypeReferenceHandle)impl.Interface);
 				if (Reader.GetString (typeRef.Name) == "IJniNameProviderAttribute" &&
 				    Reader.GetString (typeRef.Namespace) == "Java.Interop") {
 					return true;
 				}
 			} else if (impl.Interface.Kind == HandleKind.TypeDefinition) {
-				var ifaceDef = Reader.GetTypeDefinition ((TypeDefinitionHandle) impl.Interface);
+				var ifaceDef = Reader.GetTypeDefinition ((TypeDefinitionHandle)impl.Interface);
 				if (Reader.GetString (ifaceDef.Name) == "IJniNameProviderAttribute" &&
 				    Reader.GetString (ifaceDef.Namespace) == "Java.Interop") {
 					return true;
@@ -202,13 +202,13 @@ sealed class AssemblyIndex : IDisposable
 	internal static string? GetCustomAttributeName (CustomAttribute ca, MetadataReader reader)
 	{
 		if (ca.Constructor.Kind == HandleKind.MemberReference) {
-			var memberRef = reader.GetMemberReference ((MemberReferenceHandle) ca.Constructor);
+			var memberRef = reader.GetMemberReference ((MemberReferenceHandle)ca.Constructor);
 			if (memberRef.Parent.Kind == HandleKind.TypeReference) {
-				var typeRef = reader.GetTypeReference ((TypeReferenceHandle) memberRef.Parent);
+				var typeRef = reader.GetTypeReference ((TypeReferenceHandle)memberRef.Parent);
 				return reader.GetString (typeRef.Name);
 			}
 		} else if (ca.Constructor.Kind == HandleKind.MethodDefinition) {
-			var methodDef = reader.GetMethodDefinition ((MethodDefinitionHandle) ca.Constructor);
+			var methodDef = reader.GetMethodDefinition ((MethodDefinitionHandle)ca.Constructor);
 			var declaringType = reader.GetTypeDefinition (methodDef.GetDeclaringType ());
 			return reader.GetString (declaringType.Name);
 		}
@@ -256,13 +256,13 @@ sealed class AssemblyIndex : IDisposable
 		bool doNotGenerateAcw = false;
 
 		if (value.FixedArguments.Length > 0) {
-			jniName = (string?) value.FixedArguments [0].Value ?? "";
+			jniName = (string?)value.FixedArguments [0].Value ?? "";
 		}
 		if (value.FixedArguments.Length > 1) {
-			signature = (string?) value.FixedArguments [1].Value;
+			signature = (string?)value.FixedArguments [1].Value;
 		}
 		if (value.FixedArguments.Length > 2) {
-			connector = (string?) value.FixedArguments [2].Value;
+			connector = (string?)value.FixedArguments [2].Value;
 		}
 
 		if (TryGetNamedArgument<bool> (value, "DoNotGenerateAcw", out var doNotGenerateAcwValue)) {
@@ -394,44 +394,44 @@ sealed class AssemblyIndex : IDisposable
 			var (name, props) = ParseNameAndProperties (ca);
 
 			switch (attrName) {
-				case "PermissionAttribute":
-					info.Permissions.Add (new PermissionInfo { Name = name, Properties = props });
-					break;
-				case "PermissionGroupAttribute":
-					info.PermissionGroups.Add (new PermissionGroupInfo { Name = name, Properties = props });
-					break;
-				case "PermissionTreeAttribute":
-					info.PermissionTrees.Add (new PermissionTreeInfo { Name = name, Properties = props });
-					break;
-				case "UsesPermissionAttribute":
-					info.UsesPermissions.Add (CreateUsesPermissionInfo (name, props));
-					break;
-				case "UsesFeatureAttribute":
-					info.UsesFeatures.Add (CreateUsesFeatureInfo (name, props));
-					break;
-				case "UsesLibraryAttribute":
-					info.UsesLibraries.Add (CreateUsesLibraryInfo (name, props));
-					break;
-				case "UsesConfigurationAttribute":
-					info.UsesConfigurations.Add (CreateUsesConfigurationInfo (props));
-					break;
-				case "MetaDataAttribute":
-					info.MetaData.Add (CreateMetaDataInfo (name, props));
-					break;
-				case "PropertyAttribute":
-					info.Properties.Add (CreatePropertyInfo (name, props));
-					break;
-				case "SupportsGLTextureAttribute":
-					if (name.Length > 0) {
-						info.SupportsGLTextures.Add (new SupportsGLTextureInfo { Name = name });
-					}
-					break;
-				case "ApplicationAttribute":
-					info.ApplicationProperties ??= new Dictionary<string, object?> (StringComparer.Ordinal);
-					foreach (var kvp in props) {
-						info.ApplicationProperties [kvp.Key] = kvp.Value;
-					}
-					break;
+			case "PermissionAttribute":
+				info.Permissions.Add (new PermissionInfo { Name = name, Properties = props });
+				break;
+			case "PermissionGroupAttribute":
+				info.PermissionGroups.Add (new PermissionGroupInfo { Name = name, Properties = props });
+				break;
+			case "PermissionTreeAttribute":
+				info.PermissionTrees.Add (new PermissionTreeInfo { Name = name, Properties = props });
+				break;
+			case "UsesPermissionAttribute":
+				info.UsesPermissions.Add (CreateUsesPermissionInfo (name, props));
+				break;
+			case "UsesFeatureAttribute":
+				info.UsesFeatures.Add (CreateUsesFeatureInfo (name, props));
+				break;
+			case "UsesLibraryAttribute":
+				info.UsesLibraries.Add (CreateUsesLibraryInfo (name, props));
+				break;
+			case "UsesConfigurationAttribute":
+				info.UsesConfigurations.Add (CreateUsesConfigurationInfo (props));
+				break;
+			case "MetaDataAttribute":
+				info.MetaData.Add (CreateMetaDataInfo (name, props));
+				break;
+			case "PropertyAttribute":
+				info.Properties.Add (CreatePropertyInfo (name, props));
+				break;
+			case "SupportsGLTextureAttribute":
+				if (name.Length > 0) {
+					info.SupportsGLTextures.Add (new SupportsGLTextureInfo { Name = name });
+				}
+				break;
+			case "ApplicationAttribute":
+				info.ApplicationProperties ??= new Dictionary<string, object?> (StringComparer.Ordinal);
+				foreach (var kvp in props) {
+					info.ApplicationProperties [kvp.Key] = kvp.Value;
+				}
+				break;
 			}
 		}
 	}

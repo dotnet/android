@@ -492,7 +492,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			"JI-style activation must emit a DeleteRef member reference for JNI handle cleanup");
 
 		// Verify it's on the JNIEnv type
-		var parentTypeRef = reader.GetTypeReference ((TypeReferenceHandle) deleteRefRef.Parent);
+		var parentTypeRef = reader.GetTypeReference ((TypeReferenceHandle)deleteRefRef.Parent);
 		Assert.Equal ("JNIEnv", reader.GetString (parentTypeRef.Name));
 		Assert.Equal ("Android.Runtime", reader.GetString (parentTypeRef.Namespace));
 	}

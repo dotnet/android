@@ -14,7 +14,7 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	using PackageNamingPolicyEnum = PackageNamingPolicy;
+	using PackageNamingPolicyEnum   = PackageNamingPolicy;
 
 	/// <summary>
 	/// Creates the native assembly containing the application config.
@@ -24,7 +24,7 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "GCA";
 
 		[Required]
-		public ITaskItem [] ResolvedAssemblies { get; set; } = [];
+		public ITaskItem[] ResolvedAssemblies { get; set; } = [];
 
 		public ITaskItem []? AdditionalResolvedAssemblies { get; set; }
 
@@ -32,9 +32,9 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem []? NativeLibrariesNoJniPreload { get; set; }
 		public ITaskItem []? NativeLibrariesAlwaysJniPreload { get; set; }
 
-		public ITaskItem []? MonoComponents { get; set; }
+		public ITaskItem[]? MonoComponents { get; set; }
 
-		public ITaskItem []? SatelliteAssemblies { get; set; }
+		public ITaskItem[]? SatelliteAssemblies { get; set; }
 
 		public bool UseAssemblyStore { get; set; }
 
@@ -64,7 +64,7 @@ namespace Xamarin.Android.Tasks
 
 		public string? PackageNamingPolicy { get; set; }
 		public string? Debug { get; set; }
-		public ITaskItem []? Environments { get; set; }
+		public ITaskItem[]? Environments { get; set; }
 		public string? AndroidAotMode { get; set; }
 		public bool AndroidAotEnableLazyLoad { get; set; }
 		public bool EnableLLVM { get; set; }
@@ -302,7 +302,7 @@ namespace Xamarin.Android.Tasks
 					HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
 					NumberOfAssembliesInApk = assemblyCount,
 					BundledAssemblyNameWidth = assemblyNameWidth,
-					MonoComponents = (MonoComponent) monoComponents,
+					MonoComponents = (MonoComponent)monoComponents,
 					NativeLibraries = uniqueNativeLibraries,
 					NativeLibrariesNoJniPreload = NativeLibrariesNoJniPreload,
 					NativeLibrariesAlwaysJniPreload = NativeLibrariesAlwaysJniPreload,
@@ -322,7 +322,7 @@ namespace Xamarin.Android.Tasks
 			foreach (string abi in SupportedAbis) {
 				string targetAbi = abi.ToLowerInvariant ();
 				string environmentBaseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"environment.{targetAbi}");
-				string environmentLlFilePath = $"{environmentBaseAsmFilePath}.ll";
+				string environmentLlFilePath  = $"{environmentBaseAsmFilePath}.ll";
 				AndroidTargetArch targetArch = GetAndroidTargetArchForAbi (abi);
 
 				using var appConfigWriter = MemoryStreamPool.Shared.CreateStreamWriter ();
