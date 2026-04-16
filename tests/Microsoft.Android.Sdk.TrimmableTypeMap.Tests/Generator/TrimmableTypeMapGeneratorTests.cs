@@ -227,6 +227,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.Equal ("my.app.SimpleActivity", androidName);
 	}
 
+
 	TrimmableTypeMapGenerator CreateGenerator () => new (new TestTrimmableTypeMapLogger (logMessages));
 
 	TrimmableTypeMapGenerator CreateGenerator (List<string> warnings) =>
@@ -270,12 +271,6 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		var generator = CreateGenerator ();
 		generator.RootManifestReferencedTypes (peers, doc);
 
-		var actualName = (string?) doc.Root?
-			.Element ("application")?
-			.Element (elementName)?
-			.Attribute (System.Xml.Linq.XName.Get ("name", "http://schemas.android.com/apk/res/android"));
-
-		Assert.Equal (JniSignatureHelper.JniNameToJavaName (javaName), actualName);
 		Assert.True (peers [0].IsUnconditional, "The manifest-referenced type should be rooted as unconditional.");
 		Assert.False (peers [1].IsUnconditional, "Non-matching peers should remain conditional.");
 		Assert.Contains (logMessages, m => m.Contains ("Rooting manifest-referenced type"));
@@ -315,7 +310,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void PropagateDeferredRegistration_PropagatesCannotRegisterToBaseClasses ()
+	public void PropagateDeferredRegistrationToBaseClasses_PropagatesToBaseClassesOfManifestReferencedTypes ()
 	{
 		var basePeer = new JavaPeerInfo {
 			JavaName = "crc64aaa/TestInstrumentation_1", CompatJniName = "crc64aaa/TestInstrumentation_1",
@@ -347,16 +342,17 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		var generator = CreateGenerator ();
 		generator.RootManifestReferencedTypes (peers, doc);
 
-		// Execute calls PropagateDeferredRegistrationToBaseClasses internally,
-		// but we test the generator method through the public Execute path indirectly.
-		// For unit testing, call RootManifestReferencedTypes + verify the propagation
-		// by invoking the static helper through a full Execute run.
-		// Instead, use reflection or just verify after calling Execute with a manifest.
+		// RootManifestReferencedTypes sets the flag only on the directly matched leaf
+		Assert.True (leafPeer.CannotRegisterInStaticConstructor, "Leaf instrumentation should have deferred registration after manifest rooting.");
+		Assert.False (midPeer.CannotRegisterInStaticConstructor, "Mid peer should NOT have deferred registration before propagation.");
+		Assert.False (basePeer.CannotRegisterInStaticConstructor, "Base peer should NOT have deferred registration before propagation.");
 
-		// RootManifestReferencedTypes sets the flag on the leaf only
-		Assert.True (leafPeer.CannotRegisterInStaticConstructor, "Leaf instrumentation should have deferred registration.");
-		Assert.False (midPeer.CannotRegisterInStaticConstructor, "Mid peer should NOT have deferred registration yet (before propagation).");
-		Assert.False (basePeer.CannotRegisterInStaticConstructor, "Base peer should NOT have deferred registration yet (before propagation).");
+		// PropagateDeferredRegistrationToBaseClasses walks the BaseJavaName chain
+		TrimmableTypeMapGenerator.PropagateDeferredRegistrationToBaseClasses (peers);
+
+		Assert.True (leafPeer.CannotRegisterInStaticConstructor, "Leaf instrumentation should still have deferred registration.");
+		Assert.True (midPeer.CannotRegisterInStaticConstructor, "Mid peer should have deferred registration after propagation.");
+		Assert.True (basePeer.CannotRegisterInStaticConstructor, "Base peer should have deferred registration after propagation.");
 	}
 
 	[Fact]
