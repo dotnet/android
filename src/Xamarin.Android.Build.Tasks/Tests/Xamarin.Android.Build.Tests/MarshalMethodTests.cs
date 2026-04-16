@@ -1,6 +1,8 @@
 #nullable enable
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -75,8 +77,12 @@ public class MarshalMethodTests : BaseTest
 		var outputDebugDll = Path.Combine (intermediateDebugOutputPath, $"{proj.ProjectName}.dll");
 
 		var log = new TaskLoggingHelper (new MockBuildEngine (TestContext.Out, [], [], []), nameof (MarshalMethodsCollectionScanning));
-		var xaResolver = new XAAssemblyResolver (Tools.AndroidTargetArch.Arm64, log, false);
-		xaResolver.SearchDirectories.Add (Path.GetDirectoryName (outputDebugDll)!);
+
+		// Register all assemblies with the resolver for type resolution, but only
+		// pass the app assembly to FromAssemblies for scanning.
+		var assemblies = Directory.GetFiles (intermediateDebugOutputPath, "*.dll")
+			.ToDictionary (dll => Path.GetFileNameWithoutExtension (dll), dll => CreateItem (dll, "arm64-v8a"));
+		var xaResolver = MonoAndroidHelper.MakeResolver (log, useMarshalMethods: false, Tools.AndroidTargetArch.Arm64, assemblies, loadDebugSymbols: false);
 
 		var collection = MarshalMethodsCollection.FromAssemblies (Tools.AndroidTargetArch.Arm64, [CreateItem (outputDebugDll, "arm64-v8a")], xaResolver, log);
 
@@ -141,12 +147,28 @@ public class MarshalMethodTests : BaseTest
 		Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
 		builder.AssertHasNoWarnings ();
 
-		// Rescan for modified marshal methods
-		var intermediateReleaseOutputPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android-arm64", "linked");
-		var outputReleaseDll = Path.Combine (intermediateReleaseOutputPath, $"{proj.ProjectName}.dll");
+		// Rescan for modified marshal methods.
+		// Build the resolver the same way the real pipeline does: start with the
+		// linked assemblies and replace items that were rewritten with their
+		// rewritten copies (see _RewriteMarshalMethodsInner in the targets).
+		// Only scan the app assembly, but register all assemblies for resolution.
+		var linkedDir = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android-arm64", "linked");
+		var rewrittenDir = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android-arm64", "rewritten-marshal-methods");
 
-		xaResolver = new XAAssemblyResolver (Tools.AndroidTargetArch.Arm64, log, false);
-		xaResolver.SearchDirectories.Add (Path.GetDirectoryName (outputReleaseDll)!);
+		assemblies = new Dictionary<string, ITaskItem> ();
+		string? outputReleaseDll = null;
+		foreach (var dll in Directory.GetFiles (linkedDir, "*.dll")) {
+			string name = Path.GetFileNameWithoutExtension (dll);
+			string rewrittenPath = Path.Combine (rewrittenDir, Path.GetFileName (dll));
+			string effectivePath = File.Exists (rewrittenPath) ? rewrittenPath : dll;
+			assemblies [name] = CreateItem (effectivePath, "arm64-v8a");
+			if (name == proj.ProjectName) {
+				outputReleaseDll = effectivePath;
+			}
+		}
+
+		Assert.IsNotNull (outputReleaseDll, $"Could not find {proj.ProjectName}.dll in linked or rewritten output");
+		xaResolver = MonoAndroidHelper.MakeResolver (log, useMarshalMethods: false, Tools.AndroidTargetArch.Arm64, assemblies, loadDebugSymbols: false);
 
 		var releaseCollection = MarshalMethodsCollection.FromAssemblies (Tools.AndroidTargetArch.Arm64, [CreateItem (outputReleaseDll, "arm64-v8a")], xaResolver, log);
 
