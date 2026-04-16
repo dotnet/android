@@ -3,8 +3,7 @@
 Xamarin.Android.Tooling.targets
 
 This file contains any calls to the <ResolveSdks/> MSBuild task. It is
-imported and used by "legacy" Xamarin.Android projects, binding
-projects, and .NET 5 projects.
+used by all .NET Android projects.
 
 ***********************************************************************************************
 -->
