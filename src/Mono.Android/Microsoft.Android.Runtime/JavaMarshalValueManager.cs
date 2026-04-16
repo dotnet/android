@@ -27,13 +27,6 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 
 	bool disposed;
 
-	// Gate that blocks JNI wrapper threads during GC bridge processing.
-	// Reset() and Set() are only ever called from the GC bridge thread (serialized),
-	// so the documented Reset()/Set() race in ManualResetEventSlim cannot occur.
-	// IsSet provides a cheap volatile-read fast path; Wait() spins briefly then
-	// falls back to Monitor.Wait for efficient blocking.
-	static readonly ManualResetEventSlim bridgeGate = new (initialState: true);
-
 	static JavaMarshalValueManager? s_instance;
 
 	public static JavaMarshalValueManager Instance =>
@@ -63,10 +56,12 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 
 	public override void WaitForGCBridgeProcessing ()
 	{
-		// JNI wrappers call this on every transition, so the idle case must be very cheap.
-		// IsSet is a single volatile read. Wait() spins briefly then uses Monitor.Wait.
-		if (!bridgeGate.IsSet)
-			bridgeGate.Wait ();
+		// Intentionally empty. The Mono runtime's own implementation acknowledges this
+		// pattern is fundamentally flawed (see FIXME in sgen-bridge.c): a thread that
+		// passes the check can still race with bridge processing that starts immediately
+		// after. The wait cannot prevent the race, only reduce its window. On CoreCLR,
+		// JNI wrapper threads hold their own handle copies via JniObjectReference, so
+		// they are not affected by the bridge swapping control_block handles.
 	}
 
 	public unsafe override void CollectPeers ()
@@ -451,7 +446,6 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 		}
 
 		HandleContext.EnsureAllContextsAreOurs (mcr);
-		bridgeGate.Reset ();
 	}
 
 	[UnmanagedCallersOnly]
@@ -461,12 +455,8 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 			throw new ArgumentNullException (nameof (mcr), "MarkCrossReferencesArgs should never be null.");
 		}
 
-		try {
-			ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (mcr);
-			JavaMarshal.FinishCrossReferenceProcessing (mcr, handlesToFree);
-		} finally {
-			bridgeGate.Set ();
-		}
+		ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (mcr);
+		JavaMarshal.FinishCrossReferenceProcessing (mcr, handlesToFree);
 	}
 
 	static unsafe ReadOnlySpan<GCHandle> ProcessCollectedContexts (MarkCrossReferencesArgs* mcr)
