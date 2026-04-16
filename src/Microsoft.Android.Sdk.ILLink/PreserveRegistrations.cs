@@ -63,7 +63,7 @@ namespace Microsoft.Android.Sdk.ILLink
 			if (!IsActiveFor (method.Module.Assembly))
 				return;
 
-			if (!method.TryGetRegisterMember (out var member, out var nativeMethod, out var signature))
+			if (!method.TryGetRegisterMember (out var member))
 				return;
 
 			PreserveRegisteredMethod (method.DeclaringType, member, method);
