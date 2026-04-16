@@ -321,7 +321,7 @@ namespace Android.RuntimeTests {
 			}
 		}
 
-		[Test, Category ("TrimmableIgnore")]
+		[Test]
 		public void NewArray_UseJcwTypeWhenRenamed ()
 		{
 			IntPtr lref = JNIEnv.NewArray<CreateInstance_OverrideAbsListView_Adapter>(new CreateInstance_OverrideAbsListView_Adapter[0]);

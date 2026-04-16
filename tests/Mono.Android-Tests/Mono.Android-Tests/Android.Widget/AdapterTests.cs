@@ -13,7 +13,7 @@ namespace Android.WidgetTests {
 	[TestFixture]
 	public class AdapterTests {
 
-		[Test, Category ("TrimmableIgnore")]
+		[Test]
 		public void InvokeOverriddenAbsListView_AdapterProperty ()
 		{
 			IntPtr grefAbsListView_class  = JNIEnv.FindClass ("android/widget/AbsListView");
@@ -57,12 +57,7 @@ namespace Android.WidgetTests {
 		}
 	}
 
-	#if TRIMMABLE_TYPEMAP
-	[Register (CanOverrideAbsListView_Adapter.JcwType, DoNotGenerateAcw = true)]
-	#endif
 	public class CanOverrideAbsListView_Adapter : AbsListView {
-
-		internal const string JcwType = "crc647ca01befd1981339/CanOverrideAbsListView_Adapter";
 
 		public CanOverrideAbsListView_Adapter (Context context)
 			: base (context)

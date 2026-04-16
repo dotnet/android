@@ -12,11 +12,11 @@ using NUnit.Framework;
 
 namespace Java.InteropTests {
 
-[TestFixture]
-public class JavaObjectExtensionsTests {
+	[TestFixture]
+	public class JavaObjectExtensionsTests {
 
-	[Test, Category ("TrimmableIgnore")]
-	public void JavaCast_BaseToGenericWrapper ()
+		[Test]
+		public void JavaCast_BaseToGenericWrapper ()
 		{
 			using (var list = new JavaList (new[]{ 1, 2, 3 }))
 			using (var generic = JavaObjectExtensions.JavaCast<JavaList<int>> (list)) {

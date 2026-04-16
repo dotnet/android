@@ -66,13 +66,14 @@ namespace Java.LangTests
 					MakeGenericMethod (FromJavaObject_T, typeof (int)));
 		}
 
-		[Test, Category ("TrimmableIgnore")]
+		[Test]
 		public void JnienvCreateInstance_RegistersMultipleInstances ()
 		{
 			using (var adapter = new CreateInstance_OverrideAbsListView_Adapter (Application.Context)) {
 
 				var intermediate  = CreateInstance_OverrideAbsListView_Adapter.Intermediate;
 				var registered    = Java.Lang.Object.GetObject<CreateInstance_OverrideAbsListView_Adapter>(adapter.Handle, JniHandleOwnership.DoNotTransfer);
+
 				Assert.AreNotSame (adapter, intermediate);
 				Assert.AreSame (adapter, registered);
 			}
@@ -109,11 +110,7 @@ namespace Java.LangTests
 	 *
 	 * Alas, this is the pre-4.10 behavior!
 	 */
-	#if TRIMMABLE_TYPEMAP
-	[Register (CreateInstance_OverrideAbsListView_Adapter.JcwType, DoNotGenerateAcw = true)]
-	#else
 	[Register (CreateInstance_OverrideAbsListView_Adapter.JcwType)]
-	#endif
 	public class CreateInstance_OverrideAbsListView_Adapter : AbsListView {
 
 		/* (IntPtr, JniHandleOwnership) ctor is reqiured because AbsListView

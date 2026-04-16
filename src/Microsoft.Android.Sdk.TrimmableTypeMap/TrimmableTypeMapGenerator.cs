@@ -331,28 +331,32 @@ public class TrimmableTypeMapGenerator
 	/// TestInstrumentation_1 must also defer — otherwise the base class <c>&lt;clinit&gt;</c> will call
 	/// <c>registerNatives</c> before the managed runtime is ready.
 	/// </summary>
-	static void PropagateDeferredRegistrationToBaseClasses (List<JavaPeerInfo> allPeers)
+	internal static void PropagateDeferredRegistrationToBaseClasses (List<JavaPeerInfo> allPeers)
 	{
-		var peersByJniName = new Dictionary<string, JavaPeerInfo> (StringComparer.Ordinal);
+		// In practice only 1–2 types need propagation (one Application, maybe one
+		// Instrumentation), each with a short base-class chain.  A linear scan per
+		// ancestor is simpler and cheaper than building a Dictionary<JavaName, List<Peer>>
+		// lookup over all peers up front.
 		foreach (var peer in allPeers) {
-			if (!peersByJniName.ContainsKey (peer.JavaName)) {
-				peersByJniName [peer.JavaName] = peer;
+			if (peer.CannotRegisterInStaticConstructor) {
+				PropagateToAncestors (peer.BaseJavaName, allPeers);
 			}
 		}
 
-		foreach (var peer in allPeers) {
-			if (!peer.CannotRegisterInStaticConstructor) {
-				continue;
-			}
+		static void PropagateToAncestors (string? baseJniName, List<JavaPeerInfo> allPeers)
+		{
+			while (baseJniName is not null) {
+				string? nextBase = null;
+				foreach (var basePeer in allPeers) {
+					if (!string.Equals (basePeer.JavaName, baseJniName, StringComparison.Ordinal) || basePeer.DoNotGenerateAcw) {
+						continue;
+					}
 
-			var current = peer;
-			while (current.BaseJavaName is { } baseJniName && peersByJniName.TryGetValue (baseJniName, out var basePeer)) {
-				if (basePeer.DoNotGenerateAcw) {
-					break;
+					basePeer.CannotRegisterInStaticConstructor = true;
+					nextBase = basePeer.BaseJavaName;
 				}
 
-				basePeer.CannotRegisterInStaticConstructor = true;
-				current = basePeer;
+				baseJniName = nextBase;
 			}
 		}
 	}
