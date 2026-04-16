@@ -53,8 +53,11 @@ class AndroidTestAdapter(
 		var bundleResults = await RunInstrumentationOnDeviceAsync (context.CancellationToken);
 
 		if (bundleResults.Error != null) {
-			Console.Error.WriteLine ($"Error from instrumentation: {bundleResults.Error}");
-			return;
+			var message = $"Error from instrumentation: {bundleResults.Error}";
+			if (bundleResults.InstrumentationCode.HasValue)
+				message += $" (code: {bundleResults.InstrumentationCode.Value})";
+			Console.Error.WriteLine (message);
+			throw new InvalidOperationException (message);
 		}
 
 		if (verbose) {
@@ -98,6 +101,16 @@ class AndroidTestAdapter(
 		if (verbose) {
 			Console.WriteLine ($"[AndroidTestAdapter] Exit code: {exitCode}");
 			Console.WriteLine (output);
+		}
+
+		if (exitCode != 0) {
+			var failureMessage = !string.IsNullOrWhiteSpace (error) ? error : output;
+			if (string.IsNullOrWhiteSpace (failureMessage))
+				failureMessage = $"adb shell am instrument failed with exit code {exitCode}.";
+			Console.Error.WriteLine ($"[AndroidTestAdapter] {failureMessage}");
+			return new InstrumentationBundleResult {
+				Error = failureMessage,
+			};
 		}
 
 		return ParseInstrumentationBundle (output, error);
@@ -175,6 +188,10 @@ class AndroidTestAdapter(
 		if (bundleValues.TryGetValue ("error", out var bundleError))
 			result.Error = bundleError;
 
+		// Surface adb stderr if no results were parsed
+		if (!string.IsNullOrWhiteSpace (error) && result.ResultsPath == null && result.Error == null)
+			result.Error = error;
+
 		return result;
 	}
 
@@ -184,68 +201,63 @@ class AndroidTestAdapter(
 	static List<TrxTestResult> ParseTrxFile (string trxPath)
 	{
 		var results = new List<TrxTestResult> ();
+		var doc = XDocument.Load (trxPath);
+		var ns = doc.Root?.Name.Namespace ?? XNamespace.None;
 
-		try {
-			var doc = XDocument.Load (trxPath);
-			var ns = doc.Root?.Name.Namespace ?? XNamespace.None;
+		// Build a map from testId -> test definition for the fully qualified name
+		var testDefinitions = new Dictionary<string, (string ClassName, string TestName)> ();
+		var testDefinitionsElement = doc.Root?.Element (ns + "TestDefinitions");
+		if (testDefinitionsElement != null) {
+			foreach (var unitTest in testDefinitionsElement.Elements (ns + "UnitTest")) {
+				var id = unitTest.Attribute ("id")?.Value;
+				var name = unitTest.Attribute ("name")?.Value;
+				var testMethod = unitTest.Element (ns + "TestMethod");
+				var className = testMethod?.Attribute ("className")?.Value;
 
-			// Build a map from testId -> test definition for the fully qualified name
-			var testDefinitions = new Dictionary<string, (string ClassName, string TestName)> ();
-			var testDefinitionsElement = doc.Root?.Element (ns + "TestDefinitions");
-			if (testDefinitionsElement != null) {
-				foreach (var unitTest in testDefinitionsElement.Elements (ns + "UnitTest")) {
-					var id = unitTest.Attribute ("id")?.Value;
-					var name = unitTest.Attribute ("name")?.Value;
-					var testMethod = unitTest.Element (ns + "TestMethod");
-					var className = testMethod?.Attribute ("className")?.Value;
-
-					if (id != null && name != null)
-						testDefinitions [id] = (className ?? "", name);
-				}
+				if (id != null && name != null)
+					testDefinitions [id] = (className ?? "", name);
 			}
+		}
 
-			// Parse the Results section
-			var resultsElement = doc.Root?.Element (ns + "Results");
-			if (resultsElement != null) {
-				foreach (var unitTestResult in resultsElement.Elements (ns + "UnitTestResult")) {
-					var testId = unitTestResult.Attribute ("testId")?.Value;
-					var testName = unitTestResult.Attribute ("testName")?.Value ?? "Unknown";
-					var outcome = unitTestResult.Attribute ("outcome")?.Value ?? "Passed";
+		// Parse the Results section
+		var resultsElement = doc.Root?.Element (ns + "Results");
+		if (resultsElement != null) {
+			foreach (var unitTestResult in resultsElement.Elements (ns + "UnitTestResult")) {
+				var testId = unitTestResult.Attribute ("testId")?.Value;
+				var testName = unitTestResult.Attribute ("testName")?.Value ?? "Unknown";
+				var outcome = unitTestResult.Attribute ("outcome")?.Value ?? "Passed";
 
-					string? className = null;
-					if (testId != null && testDefinitions.TryGetValue (testId, out var def))
-						className = def.ClassName;
+				string? className = null;
+				if (testId != null && testDefinitions.TryGetValue (testId, out var def))
+					className = def.ClassName;
 
-					var fullyQualifiedName = !string.IsNullOrEmpty (className)
-						? $"{className}.{testName}"
-						: testName;
+				var fullyQualifiedName = !string.IsNullOrEmpty (className)
+					? $"{className}.{testName}"
+					: testName;
 
-					// Extract error message if present
-					string? errorMessage = null;
-					var outputElement = unitTestResult.Element (ns + "Output");
-					var errorInfo = outputElement?.Element (ns + "ErrorInfo");
-					if (errorInfo != null) {
-						var message = errorInfo.Element (ns + "Message")?.Value;
-						var stackTrace = errorInfo.Element (ns + "StackTrace")?.Value;
-						errorMessage = message;
-						if (!string.IsNullOrEmpty (stackTrace))
-							errorMessage = string.IsNullOrEmpty (errorMessage)
-								? stackTrace
-								: $"{errorMessage}\n{stackTrace}";
-					}
-
-					var trxOutcome = outcome switch {
-						"Passed" => TrxOutcome.Passed,
-						"Failed" => TrxOutcome.Failed,
-						"NotExecuted" => TrxOutcome.NotExecuted,
-						_ => TrxOutcome.Passed,
-					};
-
-					results.Add (new TrxTestResult (fullyQualifiedName, testName, trxOutcome, errorMessage));
+				// Extract error message if present
+				string? errorMessage = null;
+				var outputElement = unitTestResult.Element (ns + "Output");
+				var errorInfo = outputElement?.Element (ns + "ErrorInfo");
+				if (errorInfo != null) {
+					var message = errorInfo.Element (ns + "Message")?.Value;
+					var stackTrace = errorInfo.Element (ns + "StackTrace")?.Value;
+					errorMessage = message;
+					if (!string.IsNullOrEmpty (stackTrace))
+						errorMessage = string.IsNullOrEmpty (errorMessage)
+							? stackTrace
+							: $"{errorMessage}\n{stackTrace}";
 				}
+
+				var trxOutcome = outcome switch {
+					"Passed" => TrxOutcome.Passed,
+					"Failed" => TrxOutcome.Failed,
+					"NotExecuted" => TrxOutcome.NotExecuted,
+					_ => TrxOutcome.Passed,
+				};
+
+				results.Add (new TrxTestResult (fullyQualifiedName, testName, trxOutcome, errorMessage));
 			}
-		} catch (Exception ex) {
-			Console.Error.WriteLine ($"[AndroidTestAdapter] Error parsing TRX file: {ex.Message}");
 		}
 
 		return results;

@@ -286,20 +286,42 @@ async Task<int> RunDotnetTestAsync (List<string> mtpArgs)
 	if (verbose)
 		Console.WriteLine ("Running in dotnet test mode...");
 
-	Debug.Assert (adbPath != null, "adbPath should be non-null after validation");
-	Debug.Assert (instrumentation != null, "Instrumentation must be specified in dotnet test mode.");
+	if (string.IsNullOrEmpty (adbPath)) {
+		Console.Error.WriteLine ("Error: adb path must be specified in dotnet test mode.");
+		return 1;
+	}
+
+	if (string.IsNullOrEmpty (instrumentation)) {
+		Console.Error.WriteLine ("Error: Instrumentation must be specified in dotnet test mode.");
+		return 1;
+	}
+
+	if (string.IsNullOrEmpty (dotnetTestPipe)) {
+		Console.Error.WriteLine ("Error: --dotnet-test-pipe must be specified when using --server dotnettestcli.");
+		return 1;
+	}
+
+	if (string.IsNullOrEmpty (package)) {
+		Console.Error.WriteLine ("Error: Package must be specified in dotnet test mode.");
+		return 1;
+	}
+
+	var validatedAdbPath = adbPath;
+	var validatedInstrumentation = instrumentation;
+	var validatedDotnetTestPipe = dotnetTestPipe;
+	var validatedPackage = package;
 
 	// Re-add the MTP protocol args that Mono.Options consumed,
 	// since MTP needs them to set up the test communication channel.
-	mtpArgs.AddRange (["--server", "dotnettestcli", "--dotnet-test-pipe", dotnetTestPipe!]);
+	mtpArgs.AddRange (["--server", "dotnettestcli", "--dotnet-test-pipe", validatedDotnetTestPipe]);
 
 	var testApplicationBuilder = await Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync (mtpArgs.ToArray ());
 
 	var adapter = new AndroidTestAdapter (
-		adbPath,
+		validatedAdbPath,
 		adbTarget,
-		package!,
-		instrumentation,
+		validatedPackage,
+		validatedInstrumentation,
 		verbose);
 
 	testApplicationBuilder.RegisterTestFramework (
