@@ -213,31 +213,6 @@ class TypeMapObjectsXmlFile
 		}
 	}
 
-	static void ReadDebugEntries (XmlReader reader, List<TypeMapDebugEntry> entries, string assemblyName, bool isMonoAndroid)
-	{
-		if (reader.IsEmptyElement)
-			return;
-
-		int depth = reader.Depth;
-
-		while (reader.Read ()) {
-			if (reader.NodeType == XmlNodeType.EndElement && reader.Depth == depth)
-				return;
-
-			if (reader.NodeType == XmlNodeType.Element && reader.Name == "entry") {
-				entries.Add (new TypeMapDebugEntry {
-					JavaName = reader.GetAttribute ("java-name") ?? string.Empty,
-					ManagedName = reader.GetAttribute ("managed-name") ?? string.Empty,
-					ManagedTypeTokenId = uint.TryParse (reader.GetAttribute ("managed-type-token-id"), out var tokenId) ? tokenId : 0u,
-					SkipInJavaToManaged = bool.TryParse (reader.GetAttribute ("skip-in-java-to-managed"), out var skip) && skip,
-					IsInvoker = bool.TryParse (reader.GetAttribute ("is-invoker"), out var invoker) && invoker,
-					IsMonoAndroid = isMonoAndroid,
-					AssemblyName = assemblyName,
-				});
-			}
-		}
-	}
-
 	static void ImportReleaseData (XmlReader reader, TypeMapObjectsXmlFile file)
 	{
 		if (!reader.ReadToFollowing ("module"))
@@ -279,6 +254,53 @@ class TypeMapObjectsXmlFile
 		}
 	}
 
+	public static void WriteEmptyFile (string destination, TaskLoggingHelper log)
+	{
+		log.LogDebugMessage ($"Writing empty file '{destination}'");
+
+		// We write a zero byte file to indicate the file couldn't have JLO types and wasn't scanned
+		File.Create (destination).Dispose ();
+	}
+
+	static TypeMapDebugEntry FromDebugEntryXml (XmlReader reader, string assemblyName, bool isMonoAndroid)
+	{
+		return new TypeMapDebugEntry {
+			JavaName = reader.GetAttribute ("java-name") ?? string.Empty,
+			ManagedName = reader.GetAttribute ("managed-name") ?? string.Empty,
+			ManagedTypeTokenId = uint.TryParse (reader.GetAttribute ("managed-type-token-id"), out var tokenId) ? tokenId : 0u,
+			SkipInJavaToManaged = bool.TryParse (reader.GetAttribute ("skip-in-java-to-managed"), out var skip) && skip,
+			IsInvoker = bool.TryParse (reader.GetAttribute ("is-invoker"), out var invoker) && invoker,
+			IsMonoAndroid = isMonoAndroid,
+			AssemblyName = assemblyName,
+		};
+	}
+
+	static TypeMapReleaseEntry FromReleaseEntryXml (XmlReader reader)
+	{
+		return new TypeMapReleaseEntry {
+			JavaName = reader.GetAttribute ("java-name") ?? string.Empty,
+			ManagedTypeName = reader.GetAttribute ("managed-type-name") ?? string.Empty,
+			Token = uint.TryParse (reader.GetAttribute ("token"), out var token) ? token : 0u,
+			SkipInJavaToManaged = bool.TryParse (reader.GetAttribute ("skip-in-java-to-managed"), out var skip) && skip,
+		};
+	}
+
+	static void ReadDebugEntries (XmlReader reader, List<TypeMapDebugEntry> entries, string assemblyName, bool isMonoAndroid)
+	{
+		if (reader.IsEmptyElement)
+			return;
+
+		int depth = reader.Depth;
+
+		while (reader.Read ()) {
+			if (reader.NodeType == XmlNodeType.EndElement && reader.Depth == depth)
+				return;
+
+			if (reader.NodeType == XmlNodeType.Element && reader.Name == "entry")
+				entries.Add (FromDebugEntryXml (reader, assemblyName, isMonoAndroid));
+		}
+	}
+
 	static void ReadReleaseEntries (XmlReader reader, List<TypeMapReleaseEntry> entries)
 	{
 		if (reader.IsEmptyElement)
@@ -291,7 +313,7 @@ class TypeMapObjectsXmlFile
 				return;
 
 			if (reader.NodeType == XmlNodeType.Element && reader.Name == "entry")
-				entries.Add (ReadReleaseEntry (reader));
+				entries.Add (FromReleaseEntryXml (reader));
 		}
 	}
 
@@ -308,24 +330,8 @@ class TypeMapObjectsXmlFile
 
 			if (reader.NodeType == XmlNodeType.Element && reader.Name == "entry") {
 				var key = reader.GetAttribute ("key") ?? string.Empty;
-				entries[key] = ReadReleaseEntry (reader);
+				entries[key] = FromReleaseEntryXml (reader);
 			}
 		}
 	}
-
-	static TypeMapReleaseEntry ReadReleaseEntry (XmlReader reader) => new TypeMapReleaseEntry {
-		JavaName = reader.GetAttribute ("java-name") ?? string.Empty,
-		ManagedTypeName = reader.GetAttribute ("managed-type-name") ?? string.Empty,
-		Token = uint.TryParse (reader.GetAttribute ("token"), out var token) ? token : 0u,
-		SkipInJavaToManaged = bool.TryParse (reader.GetAttribute ("skip-in-java-to-managed"), out var skip) && skip,
-	};
-
-	public static void WriteEmptyFile (string destination, TaskLoggingHelper log)
-	{
-		log.LogDebugMessage ($"Writing empty file '{destination}'");
-
-		// We write a zero byte file to indicate the file couldn't have JLO types and wasn't scanned
-		File.Create (destination).Dispose ();
-	}
-
 }
