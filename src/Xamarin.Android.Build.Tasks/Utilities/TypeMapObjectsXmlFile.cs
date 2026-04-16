@@ -2,12 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Xml;
-using System.Xml.Linq;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
-using NuGet.Packaging;
 
 using ModuleReleaseData = Xamarin.Android.Tasks.TypeMapGenerator.ModuleReleaseData;
 using TypeMapDebugEntry = Xamarin.Android.Tasks.TypeMapGenerator.TypeMapDebugEntry;
@@ -175,13 +172,15 @@ class TypeMapObjectsXmlFile
 		if (fi.Length == 0)
 			return unscanned;
 
-		var xml = XDocument.Load (filename);
-		var root = xml.Root ?? throw new InvalidOperationException ($"Invalid XML file '{filename}'");
+		using var reader = XmlReader.Create (filename);
 
-		var type = root.GetRequiredAttribute ("type");
-		var assemblyName = root.GetAttributeOrDefault ("assembly-name", (string?)null);
-		var mvid = Guid.Parse (root.GetAttributeOrDefault ("mvid", Guid.Empty.ToString ()));
-		var foundJniNativeRegistration = root.GetAttributeOrDefault ("found-jni-native-registration", false);
+		if (!reader.ReadToFollowing ("api"))
+			throw new InvalidOperationException ($"Invalid XML file '{filename}'");
+
+		var type = reader.GetAttribute ("type") ?? throw new InvalidOperationException ("Missing required attribute 'type'");
+		var assemblyName = reader.GetAttribute ("assembly-name");
+		var mvid = Guid.TryParse (reader.GetAttribute ("mvid"), out var parsedMvid) ? parsedMvid : Guid.Empty;
+		var foundJniNativeRegistration = bool.TryParse (reader.GetAttribute ("found-jni-native-registration"), out var parsedJni) && parsedJni;
 
 		var file = new TypeMapObjectsXmlFile {
 			WasScanned = true,
@@ -191,60 +190,135 @@ class TypeMapObjectsXmlFile
 		};
 
 		if (type == "debug")
-			ImportDebugData (root, file);
+			ImportDebugData (reader, file);
 		else if (type == "release")
-			ImportReleaseData (root, file);
+			ImportReleaseData (reader, file);
 
 		return file;
 	}
 
-	static void ImportDebugData (XElement root, TypeMapObjectsXmlFile file)
+	static void ImportDebugData (XmlReader reader, TypeMapObjectsXmlFile file)
 	{
-		var assemblyName = root.GetAttributeOrDefault ("assembly-name", string.Empty);
+		var assemblyName = file.AssemblyName ?? string.Empty;
 		var isMonoAndroid = assemblyName == "Mono.Android";
-		var javaToManaged = root.Element ("java-to-managed");
 
-		if (javaToManaged is not null) {
-			foreach (var entry in javaToManaged.Elements ("entry"))
-				file.JavaToManagedDebugEntries.Add (FromDebugEntryXml (entry, assemblyName, isMonoAndroid));
-		}
+		while (reader.Read ()) {
+			if (reader.NodeType != XmlNodeType.Element)
+				continue;
 
-		var managedToJava = root.Element ("managed-to-java");
-
-		if (managedToJava is not null) {
-			foreach (var entry in managedToJava.Elements ("entry"))
-				file.ManagedToJavaDebugEntries.Add (FromDebugEntryXml (entry, assemblyName, isMonoAndroid));
+			if (reader.Name == "java-to-managed")
+				ReadDebugEntries (reader, file.JavaToManagedDebugEntries, assemblyName, isMonoAndroid);
+			else if (reader.Name == "managed-to-java")
+				ReadDebugEntries (reader, file.ManagedToJavaDebugEntries, assemblyName, isMonoAndroid);
 		}
 	}
 
-	static void ImportReleaseData (XElement root, TypeMapObjectsXmlFile file)
+	static void ReadDebugEntries (XmlReader reader, List<TypeMapDebugEntry> entries, string assemblyName, bool isMonoAndroid)
 	{
-		var module = root.Element ("module");
+		if (reader.IsEmptyElement)
+			return;
 
-		if (module is null)
+		int depth = reader.Depth;
+
+		while (reader.Read ()) {
+			if (reader.NodeType == XmlNodeType.EndElement && reader.Depth == depth)
+				return;
+
+			if (reader.NodeType == XmlNodeType.Element && reader.Name == "entry") {
+				entries.Add (new TypeMapDebugEntry {
+					JavaName = reader.GetAttribute ("java-name") ?? string.Empty,
+					ManagedName = reader.GetAttribute ("managed-name") ?? string.Empty,
+					ManagedTypeTokenId = uint.TryParse (reader.GetAttribute ("managed-type-token-id"), out var tokenId) ? tokenId : 0u,
+					SkipInJavaToManaged = bool.TryParse (reader.GetAttribute ("skip-in-java-to-managed"), out var skip) && skip,
+					IsInvoker = bool.TryParse (reader.GetAttribute ("is-invoker"), out var invoker) && invoker,
+					IsMonoAndroid = isMonoAndroid,
+					AssemblyName = assemblyName,
+				});
+			}
+		}
+	}
+
+	static void ImportReleaseData (XmlReader reader, TypeMapObjectsXmlFile file)
+	{
+		if (!reader.ReadToFollowing ("module"))
 			return;
 
 		file.ModuleReleaseData = new ModuleReleaseData {
-			AssemblyName = module.GetAttributeOrDefault ("assembly-name", string.Empty),
-			Mvid = Guid.Parse (module.GetAttributeOrDefault ("mvid", Guid.Empty.ToString ())),
-			MvidBytes = Convert.FromBase64String (module.GetAttributeOrDefault ("mvid-bytes", string.Empty)),
+			AssemblyName = reader.GetAttribute ("assembly-name") ?? string.Empty,
+			Mvid = Guid.TryParse (reader.GetAttribute ("mvid"), out var mvid) ? mvid : Guid.Empty,
+			MvidBytes = Convert.FromBase64String (reader.GetAttribute ("mvid-bytes") ?? string.Empty),
 			TypesScratch = new Dictionary<string, TypeMapReleaseEntry> (StringComparer.Ordinal),
 			DuplicateTypes = new List<TypeMapReleaseEntry> (),
 		};
 
-		if (module.Element ("types") is XElement types)
-			file.ModuleReleaseData.Types = types.Elements ("entry")
-				.Select (FromReleaseEntryXml)
-				.ToArray ();
+		if (reader.IsEmptyElement)
+			return;
 
-		if (module.Element ("duplicates") is XElement duplicates)
-			file.ModuleReleaseData.DuplicateTypes.AddRange (duplicates.Elements ("entry")
-				.Select (FromReleaseEntryXml));
+		int depth = reader.Depth;
 
-		if (module.Element ("types-scratch") is XElement typesScratch)
-			file.ModuleReleaseData.TypesScratch.AddRange (typesScratch.Elements ("entry")
-				.Select (elem => new KeyValuePair<string, TypeMapReleaseEntry> (elem.GetAttributeOrDefault ("key", string.Empty), FromReleaseEntryXml (elem))));
+		while (reader.Read ()) {
+			if (reader.NodeType == XmlNodeType.EndElement && reader.Depth == depth)
+				return;
+
+			if (reader.NodeType != XmlNodeType.Element)
+				continue;
+
+			switch (reader.Name) {
+				case "types":
+					var types = new List<TypeMapReleaseEntry> ();
+					ReadReleaseEntries (reader, types);
+					file.ModuleReleaseData.Types = types.ToArray ();
+					break;
+				case "duplicates":
+					ReadReleaseEntries (reader, file.ModuleReleaseData.DuplicateTypes);
+					break;
+				case "types-scratch":
+					ReadReleaseScratchEntries (reader, file.ModuleReleaseData.TypesScratch);
+					break;
+			}
+		}
 	}
+
+	static void ReadReleaseEntries (XmlReader reader, List<TypeMapReleaseEntry> entries)
+	{
+		if (reader.IsEmptyElement)
+			return;
+
+		int depth = reader.Depth;
+
+		while (reader.Read ()) {
+			if (reader.NodeType == XmlNodeType.EndElement && reader.Depth == depth)
+				return;
+
+			if (reader.NodeType == XmlNodeType.Element && reader.Name == "entry")
+				entries.Add (ReadReleaseEntry (reader));
+		}
+	}
+
+	static void ReadReleaseScratchEntries (XmlReader reader, Dictionary<string, TypeMapReleaseEntry> entries)
+	{
+		if (reader.IsEmptyElement)
+			return;
+
+		int depth = reader.Depth;
+
+		while (reader.Read ()) {
+			if (reader.NodeType == XmlNodeType.EndElement && reader.Depth == depth)
+				return;
+
+			if (reader.NodeType == XmlNodeType.Element && reader.Name == "entry") {
+				var key = reader.GetAttribute ("key") ?? string.Empty;
+				entries[key] = ReadReleaseEntry (reader);
+			}
+		}
+	}
+
+	static TypeMapReleaseEntry ReadReleaseEntry (XmlReader reader) => new TypeMapReleaseEntry {
+		JavaName = reader.GetAttribute ("java-name") ?? string.Empty,
+		ManagedTypeName = reader.GetAttribute ("managed-type-name") ?? string.Empty,
+		Token = uint.TryParse (reader.GetAttribute ("token"), out var token) ? token : 0u,
+		SkipInJavaToManaged = bool.TryParse (reader.GetAttribute ("skip-in-java-to-managed"), out var skip) && skip,
+	};
 
 	public static void WriteEmptyFile (string destination, TaskLoggingHelper log)
 	{
@@ -254,37 +328,4 @@ class TypeMapObjectsXmlFile
 		File.Create (destination).Dispose ();
 	}
 
-	static TypeMapDebugEntry FromDebugEntryXml (XElement entry, string assemblyName, bool isMonoAndroid)
-	{
-		var javaName = entry.GetAttributeOrDefault ("java-name", string.Empty);
-		var managedName = entry.GetAttributeOrDefault ("managed-name", string.Empty);
-		var skipInJavaToManaged = entry.GetAttributeOrDefault ("skip-in-java-to-managed", false);
-		var isInvoker = entry.GetAttributeOrDefault ("is-invoker", false);
-		var managedTokenId = entry.GetAttributeOrDefault ("managed-type-token-id", (uint)0);
-
-		return new TypeMapDebugEntry {
-			JavaName = javaName,
-			ManagedName = managedName,
-			ManagedTypeTokenId = managedTokenId,
-			SkipInJavaToManaged = skipInJavaToManaged,
-			IsInvoker = isInvoker,
-			IsMonoAndroid = isMonoAndroid,
-			AssemblyName = assemblyName,
-		};
-	}
-
-	static TypeMapReleaseEntry FromReleaseEntryXml (XElement entry)
-	{
-		var javaName = entry.GetAttributeOrDefault ("java-name", string.Empty);
-		var managedTypeName = entry.GetAttributeOrDefault ("managed-type-name", string.Empty);
-		var token = entry.GetAttributeOrDefault ("token", 0u);
-		var skipInJavaToManaged = entry.GetAttributeOrDefault ("skip-in-java-to-managed", false);
-
-		return new TypeMapReleaseEntry {
-			JavaName = javaName,
-			ManagedTypeName = managedTypeName,
-			Token = token,
-			SkipInJavaToManaged = skipInJavaToManaged,
-		};
-	}
 }
