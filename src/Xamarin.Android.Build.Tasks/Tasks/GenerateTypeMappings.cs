@@ -50,6 +50,7 @@ public class GenerateTypeMappings : AndroidTask
 	public string TypemapOutputDirectory { get; set; } = "";
 
 	AndroidRuntime androidRuntime;
+	readonly List<ITaskItem> generatedBinaryTypeMaps = new List<ITaskItem> ();
 
 	public override bool RunTask ()
 	{
@@ -71,6 +72,7 @@ public class GenerateTypeMappings : AndroidTask
 		if (RunCheckedBuild || useMarshalMethods)
 			GenerateAllTypeMappingsFromNativeState (useMarshalMethods);
 
+		GeneratedBinaryTypeMaps = generatedBinaryTypeMaps.ToArray ();
 		return !Log.HasLoggedErrors;
 	}
 
@@ -164,6 +166,6 @@ public class GenerateTypeMappings : AndroidTask
 			items.Add (item);
 		}
 
-		GeneratedBinaryTypeMaps = GeneratedBinaryTypeMaps.Concat (items).ToArray ();
+		generatedBinaryTypeMaps.AddRange (items);
 	}
 }
