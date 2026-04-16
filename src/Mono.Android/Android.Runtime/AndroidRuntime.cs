@@ -117,71 +117,6 @@ namespace Android.Runtime {
 	}
 
 	internal class AndroidObjectReferenceManager : JniRuntime.JniObjectReferenceManager {
-		[MethodImpl (MethodImplOptions.NoInlining)]
-		static string GetReferenceLogStackTrace ()
-		{
-			return new StackTrace (true).ToString ();
-		}
-
-		[MethodImpl (MethodImplOptions.NoInlining)]
-		static void LogLocalReferenceCreated (int localReferenceCount, IntPtr handle)
-		{
-			var tname = Thread.CurrentThread.Name;
-			var tid   = Thread.CurrentThread.ManagedThreadId;
-			var from  = GetReferenceLogStackTrace ();
-			RuntimeNativeMethods._monodroid_lref_log_new (localReferenceCount, handle, (byte) 'L', tname, tid, from, 1);
-		}
-
-		[MethodImpl (MethodImplOptions.NoInlining)]
-		static void LogLocalReferenceDeleted (int localReferenceCount, IntPtr handle)
-		{
-			var tname = Thread.CurrentThread.Name;
-			var tid   = Thread.CurrentThread.ManagedThreadId;
-			var from  = GetReferenceLogStackTrace ();
-			RuntimeNativeMethods._monodroid_lref_log_delete (localReferenceCount - 1, handle, (byte) 'L', tname, tid, from, 1);
-		}
-
-		[MethodImpl (MethodImplOptions.NoInlining)]
-		static void LogGlobalReferenceCreated (JniObjectReference value, JniObjectReference globalReference)
-		{
-			var ctype = GetObjectRefType (value.Type);
-			var ntype = GetObjectRefType (globalReference.Type);
-			var tname = Thread.CurrentThread.Name;
-			var tid   = Thread.CurrentThread.ManagedThreadId;
-			var from  = GetReferenceLogStackTrace ();
-			RuntimeNativeMethods._monodroid_gref_log_new (value.Handle, ctype, globalReference.Handle, ntype, tname, tid, from, 1);
-		}
-
-		[MethodImpl (MethodImplOptions.NoInlining)]
-		static void LogGlobalReferenceDeleted (JniObjectReference value)
-		{
-			var ctype = GetObjectRefType (value.Type);
-			var tname = Thread.CurrentThread.Name;
-			var tid   = Thread.CurrentThread.ManagedThreadId;
-			var from  = GetReferenceLogStackTrace ();
-			RuntimeNativeMethods._monodroid_gref_log_delete (value.Handle, ctype, tname, tid, from, 1);
-		}
-
-		[MethodImpl (MethodImplOptions.NoInlining)]
-		static void LogWeakGlobalReferenceCreated (JniObjectReference value, JniObjectReference weakReference)
-		{
-			var ctype = GetObjectRefType (value.Type);
-			var ntype = GetObjectRefType (weakReference.Type);
-			var tname = Thread.CurrentThread.Name;
-			var tid   = Thread.CurrentThread.ManagedThreadId;
-			var from  = GetReferenceLogStackTrace ();
-			RuntimeNativeMethods._monodroid_weak_gref_new (value.Handle, ctype, weakReference.Handle, ntype, tname, tid, from, 1);
-		}
-
-		[MethodImpl (MethodImplOptions.NoInlining)]
-		static void LogWeakGlobalReferenceDeleted (JniObjectReference value)
-		{
-			var ctype = GetObjectRefType (value.Type);
-			var tname = Thread.CurrentThread.Name;
-			var tid   = Thread.CurrentThread.ManagedThreadId;
-			var from  = GetReferenceLogStackTrace ();
-			RuntimeNativeMethods._monodroid_weak_gref_delete (value.Handle, ctype, tname, tid, from, 1);
-		}
 
 		public override int GlobalReferenceCount {
 			get {return RuntimeNativeMethods._monodroid_gref_get ();}
@@ -195,8 +130,13 @@ namespace Android.Runtime {
 		{
 			var r = base.CreateLocalReference (value, ref localReferenceCount);
 
-			if (RuntimeFeature.ObjectReferenceLogging && Logger.LogLocalRef) {
-				LogLocalReferenceCreated (localReferenceCount, r.Handle);
+			if (RuntimeFeature.ObjectReferenceLogging) {
+				if (Logger.LogLocalRef) {
+					var tname = Thread.CurrentThread.Name;
+					var tid   = Thread.CurrentThread.ManagedThreadId;
+					var from  = new StackTrace (true).ToString ();
+					RuntimeNativeMethods._monodroid_lref_log_new (localReferenceCount, r.Handle, (byte) 'L', tname, tid, from, 1);
+				}
 			}
 
 			return r;
@@ -204,8 +144,13 @@ namespace Android.Runtime {
 
 		public override void DeleteLocalReference (ref JniObjectReference value, ref int localReferenceCount)
 		{
-			if (RuntimeFeature.ObjectReferenceLogging && Logger.LogLocalRef) {
-				LogLocalReferenceDeleted (localReferenceCount, value.Handle);
+			if (RuntimeFeature.ObjectReferenceLogging) {
+				if (Logger.LogLocalRef) {
+					var tname = Thread.CurrentThread.Name;
+					var tid   = Thread.CurrentThread.ManagedThreadId;
+					var from  = new StackTrace (true).ToString ();
+					RuntimeNativeMethods._monodroid_lref_log_delete (localReferenceCount - 1, value.Handle, (byte) 'L', tname, tid, from, 1);
+				}
 			}
 			base.DeleteLocalReference (ref value, ref localReferenceCount);
 		}
@@ -213,16 +158,26 @@ namespace Android.Runtime {
 		public override void CreatedLocalReference (JniObjectReference value, ref int localReferenceCount)
 		{
 			base.CreatedLocalReference (value, ref localReferenceCount);
-			if (RuntimeFeature.ObjectReferenceLogging && Logger.LogLocalRef) {
-				LogLocalReferenceCreated (localReferenceCount, value.Handle);
+			if (RuntimeFeature.ObjectReferenceLogging) {
+				if (Logger.LogLocalRef) {
+					var tname = Thread.CurrentThread.Name;
+					var tid   = Thread.CurrentThread.ManagedThreadId;
+					var from  = new StackTrace (true).ToString ();
+					RuntimeNativeMethods._monodroid_lref_log_new (localReferenceCount, value.Handle, (byte) 'L', tname, tid, from, 1);
+				}
 			}
 		}
 
 		public override IntPtr ReleaseLocalReference (ref JniObjectReference value, ref int localReferenceCount)
 		{
 			var r = base.ReleaseLocalReference (ref value, ref localReferenceCount);
-			if (RuntimeFeature.ObjectReferenceLogging && Logger.LogLocalRef) {
-				LogLocalReferenceDeleted (localReferenceCount, value.Handle);
+			if (RuntimeFeature.ObjectReferenceLogging) {
+				if (Logger.LogLocalRef) {
+					var tname = Thread.CurrentThread.Name;
+					var tid   = Thread.CurrentThread.ManagedThreadId;
+					var from  = new StackTrace (true).ToString ();
+					RuntimeNativeMethods._monodroid_lref_log_delete (localReferenceCount, value.Handle, (byte) 'L', tname, tid, from, 1);
+				}
 			}
 			return r;
 		}
@@ -252,11 +207,18 @@ namespace Android.Runtime {
 
 		public override JniObjectReference CreateGlobalReference (JniObjectReference value)
 		{
-			var r     = base.CreateGlobalReference (value);
+			var r = base.CreateGlobalReference (value);
 
 			int gc = RuntimeNativeMethods._monodroid_gref_inc ();
-			if (RuntimeFeature.ObjectReferenceLogging && Logger.LogGlobalRef) {
-				LogGlobalReferenceCreated (value, r);
+			if (RuntimeFeature.ObjectReferenceLogging) {
+				if (Logger.LogGlobalRef) {
+					var ctype = GetObjectRefType (value.Type);
+					var ntype = GetObjectRefType (r.Type);
+					var tname = Thread.CurrentThread.Name;
+					var tid   = Thread.CurrentThread.ManagedThreadId;
+					var from  = new StackTrace (true).ToString ();
+					RuntimeNativeMethods._monodroid_gref_log_new (value.Handle, ctype, r.Handle, ntype, tname, tid, from, 1);
+				}
 			}
 
 			if (gc >= JNIEnvInit.gref_gc_threshold) {
@@ -282,8 +244,14 @@ namespace Android.Runtime {
 		public override void DeleteGlobalReference (ref JniObjectReference value)
 		{
 			RuntimeNativeMethods._monodroid_gref_dec ();
-			if (RuntimeFeature.ObjectReferenceLogging && Logger.LogGlobalRef) {
-				LogGlobalReferenceDeleted (value);
+			if (RuntimeFeature.ObjectReferenceLogging) {
+				if (Logger.LogGlobalRef) {
+					var ctype = GetObjectRefType (value.Type);
+					var tname = Thread.CurrentThread.Name;
+					var tid   = Thread.CurrentThread.ManagedThreadId;
+					var from  = new StackTrace (true).ToString ();
+					RuntimeNativeMethods._monodroid_gref_log_delete (value.Handle, ctype, tname, tid, from, 1);
+				}
 			}
 
 			base.DeleteGlobalReference (ref value);
@@ -294,8 +262,15 @@ namespace Android.Runtime {
 			var r = base.CreateWeakGlobalReference (value);
 
 			RuntimeNativeMethods._monodroid_weak_gref_inc ();
-			if (RuntimeFeature.ObjectReferenceLogging && Logger.LogGlobalRef) {
-				LogWeakGlobalReferenceCreated (value, r);
+			if (RuntimeFeature.ObjectReferenceLogging) {
+				if (Logger.LogGlobalRef) {
+					var ctype = GetObjectRefType (value.Type);
+					var ntype = GetObjectRefType (r.Type);
+					var tname = Thread.CurrentThread.Name;
+					var tid   = Thread.CurrentThread.ManagedThreadId;
+					var from  = new StackTrace (true).ToString ();
+					RuntimeNativeMethods._monodroid_weak_gref_new (value.Handle, ctype, r.Handle, ntype, tname, tid, from, 1);
+				}
 			}
 
 			return r;
@@ -304,8 +279,14 @@ namespace Android.Runtime {
 		public override void DeleteWeakGlobalReference (ref JniObjectReference value)
 		{
 			RuntimeNativeMethods._monodroid_weak_gref_dec ();
-			if (RuntimeFeature.ObjectReferenceLogging && Logger.LogGlobalRef) {
-				LogWeakGlobalReferenceDeleted (value);
+			if (RuntimeFeature.ObjectReferenceLogging) {
+				if (Logger.LogGlobalRef) {
+					var ctype = GetObjectRefType (value.Type);
+					var tname = Thread.CurrentThread.Name;
+					var tid   = Thread.CurrentThread.ManagedThreadId;
+					var from  = new StackTrace (true).ToString ();
+					RuntimeNativeMethods._monodroid_weak_gref_delete (value.Handle, ctype, tname, tid, from, 1);
+				}
 			}
 
 			base.DeleteWeakGlobalReference (ref value);

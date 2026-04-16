@@ -1,7 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Microsoft.Android.Runtime;
 
 namespace Android.Runtime {
 	internal static partial class Logger {
@@ -22,11 +21,11 @@ namespace Android.Runtime {
 		}
 
 		internal static bool LogGlobalRef {
-			get {return RuntimeFeature.ObjectReferenceLogging && (Categories & LogCategories.GlobalRef) != 0;}
+			get {return (Categories & LogCategories.GlobalRef) != 0;}
 		}
 
 		internal static bool LogLocalRef {
-			get {return RuntimeFeature.ObjectReferenceLogging && (Categories & LogCategories.LocalRef) != 0;}
+			get {return (Categories & LogCategories.LocalRef) != 0;}
 		}
 
 		internal static bool LogTiming {

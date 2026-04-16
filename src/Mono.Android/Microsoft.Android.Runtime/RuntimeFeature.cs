@@ -11,7 +11,7 @@ static class RuntimeFeature
 	const bool IsAssignableFromCheckEnabledByDefault = true;
 	const bool StartupHookSupportEnabledByDefault = true;
 	const bool TrimmableTypeMapEnabledByDefault = false;
-	const bool ObjectReferenceLoggingEnabledByDefault = true;
+	const bool ObjectReferenceLoggingEnabledByDefault = false;
 
 	const string FeatureSwitchPrefix = "Microsoft.Android.Runtime.RuntimeFeature.";
 	const string StartupHookProviderSwitch = "System.StartupHookProvider.IsSupported";

@@ -2,8 +2,6 @@
 using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using JavaMarshalValueManager = Microsoft.Android.Runtime.JavaMarshalValueManager;
-using RuntimeFeature = Microsoft.Android.Runtime.RuntimeFeature;
 
 namespace Android.Runtime
 {
@@ -17,9 +15,9 @@ namespace Android.Runtime
 
 		static AndroidRuntimeInternal ()
 		{
-			if (RuntimeFeature.IsMonoRuntime) {
+			if (Microsoft.Android.Runtime.RuntimeFeature.IsMonoRuntime) {
 				mono_unhandled_exception = MonoUnhandledException;
-			} else if (RuntimeFeature.IsCoreClrRuntime) {
+			} else if (Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime) {
 				mono_unhandled_exception = CoreClrUnhandledException;
 			} else {
 				throw new NotSupportedException ("Internal error: unknown runtime not supported");
@@ -38,20 +36,6 @@ namespace Android.Runtime
 		static void MonoUnhandledException (Exception ex)
 		{
 			RuntimeNativeMethods.monodroid_debugger_unhandled_exception (ex);
-		}
-
-		[MethodImpl (MethodImplOptions.AggressiveInlining)]
-		public static void WaitForBridgeProcessing ()
-		{
-			if (RuntimeFeature.IsCoreClrRuntime) {
-				JavaMarshalValueManager.WaitIfBridgeProcessing ();
-				return;
-			}
-
-			if (RuntimeFeature.IsMonoRuntime && !BridgeProcessing)
-				return;
-
-			Java.Interop.JniEnvironment.Runtime.ValueManager.WaitForGCBridgeProcessing ();
 		}
 	}
 }

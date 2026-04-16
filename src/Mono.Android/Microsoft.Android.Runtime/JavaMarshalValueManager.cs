@@ -68,18 +68,10 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 	internal static void WaitIfBridgeProcessing ()
 	{
 		// JNI wrappers call this on every transition, so the idle case must be very cheap.
-		// A single volatile read is the cheapest possible fast path.
-		if (bridgeGateState == 0)
-			return;
-
-		WaitForBridgeProcessingSlow ();
-	}
-
-	[MethodImpl (MethodImplOptions.NoInlining)]
-	static void WaitForBridgeProcessingSlow ()
-	{
+		// A single volatile read is the cheapest possible fast path. When the gate is open
+		// (bridgeGateState == 0), the while loop body is never entered.
 		SpinWait sw = default;
-		while (Volatile.Read (ref bridgeGateState) != 0)
+		while (bridgeGateState != 0)
 			sw.SpinOnce ();
 	}
 

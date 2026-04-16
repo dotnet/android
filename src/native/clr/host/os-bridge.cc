@@ -153,7 +153,7 @@ void OSBridge::log_it (LogCategories category, std::string const& line, FILE *to
 	fflush (to);
 }
 
-auto OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from) noexcept -> void
+void OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from) noexcept
 {
 	if ((log_categories & LOG_GREF) == 0) [[likely]] {
 		return;
