@@ -505,8 +505,9 @@ sealed class TypeMapAssemblyEmitter
 		var emptyBlob = _pe.BuildAttributeBlob (b => { });
 		metadata.AddCustomAttribute (typeDefHandle, ctorHandle, emptyBlob);
 
-		// CreateInstance → throw new NotSupportedException()
+		// CreateInstance → throw new NotSupportedException("...")
 		EmitCreateInstanceBody (encoder => {
+			encoder.LoadString (metadata.GetOrAddUserString ("Alias holders do not support direct activation."));
 			encoder.OpCode (ILOpCode.Newobj);
 			encoder.Token (_notSupportedExceptionCtorRef);
 			encoder.OpCode (ILOpCode.Throw);
