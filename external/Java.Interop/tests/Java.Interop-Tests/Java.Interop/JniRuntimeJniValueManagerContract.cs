@@ -129,6 +129,46 @@ namespace Java.InteropTests {
 			JniObjectReference.Dispose (ref localRef);
 		}
 
+		// https://github.com/dotnet/android/issues/11101
+		[Test]
+		public void ConstructPeer_CalledMultipleTimes_ShouldNotLeakGlobalRefs ()
+		{
+			// Simulate what TypeManager.Activate does in dotnet/android:
+			// 1. Create an uninitialized JavaObject
+			// 2. Set a peer reference (storing the raw handle)
+			// 3. The constructor chain then calls ConstructPeer multiple times
+			//
+			// This should not leak JNI global references.
+
+			using (var original = new MyDisposableObject ()) {
+				// Get the jobject handle, simulating the IntPtr jobject param in Activate
+				var handle = original.PeerReference;
+
+				// Create an uninitialized peer and set its reference (simulating Activate)
+				var peer = (IJavaPeerable) RuntimeHelpers.GetUninitializedObject (typeof (MyDisposableObject));
+				peer.SetPeerReference (new JniObjectReference (handle.Handle));
+
+				try {
+					// Now simulate the constructor chain calling ConstructPeer multiple times
+					var ref1 = new JniObjectReference (handle.Handle);
+					valueManager.ConstructPeer (peer, ref ref1, JniObjectReferenceOptions.Copy);
+
+					int grefAfterFirst = JniEnvironment.Runtime.GlobalReferenceCount;
+
+					var ref2 = new JniObjectReference (handle.Handle);
+					valueManager.ConstructPeer (peer, ref ref2, JniObjectReferenceOptions.Copy);
+
+					int grefAfterSecond = JniEnvironment.Runtime.GlobalReferenceCount;
+
+					// The second ConstructPeer should NOT create an additional global ref
+					Assert.AreEqual (grefAfterFirst, grefAfterSecond,
+						"Second ConstructPeer call should not create an additional global ref");
+				} finally {
+					peer.Dispose ();
+				}
+			}
+		}
+
 
 		[Test]
 		public void CollectPeers ()

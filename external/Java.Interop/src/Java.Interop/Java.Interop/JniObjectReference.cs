@@ -197,6 +197,8 @@ namespace Java.Interop
 			case JniObjectReferenceType.WeakGlobal:
 				JniEnvironment.Runtime.ObjectReferenceManager.DeleteWeakGlobalReference (ref reference);
 				break;
+			case JniObjectReferenceType.Invalid:
+				break;
 			default:
 				throw new NotImplementedException ("Do not know how to dispose: " + reference.Type.ToString () + ".");
 			}

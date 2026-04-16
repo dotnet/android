@@ -104,8 +104,9 @@ namespace Java.Interop
 					if (peer.JniManagedPeerState.HasFlag (JniManagedPeerStates.Activatable)) {
 						return;
 					}
-					JniObjectReference.Dispose (ref reference, options);
-					newRef   = newRef.NewGlobalRef ();
+					var orig = newRef;
+					newRef   = orig.NewGlobalRef ();
+					JniObjectReference.Dispose (ref orig);
 				} else if (options == JniObjectReferenceOptions.None) {
 					// `reference` is likely *InvalidJniObjectReference, and can't be touched
 					return;
