@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.IO.Hashing;
 using System.Text;
 
@@ -17,7 +18,7 @@ static class TypeMapHelper
 
 		// Native code (EmbeddedAssemblies::typemap_java_to_managed in embedded-assemblies.cc) will operate on wchar_t cast to a byte array, we need to do
 		// the same
-		return HashBytes (Encoding.Unicode.GetBytes (name), is64Bit);
+		return HashString (name, Encoding.Unicode, is64Bit);
 	}
 
 	/// <summary>
@@ -29,10 +30,23 @@ static class TypeMapHelper
 			return UInt64.MaxValue;
 		}
 
-		return HashBytes (Encoding.UTF8.GetBytes (name), is64Bit);
+		return HashString (name, Encoding.UTF8, is64Bit);
 	}
 
-	static ulong HashBytes (byte[] bytes, bool is64Bit)
+	static ulong HashString (string name, Encoding encoding, bool is64Bit)
+	{
+		int byteCount = encoding.GetByteCount (name);
+		byte[] buffer = ArrayPool<byte>.Shared.Rent (byteCount);
+		try {
+			encoding.GetBytes (name, 0, name.Length, buffer, 0);
+			// Rent may return a larger array, so only hash the actual bytes
+			return HashBytes (new ReadOnlySpan<byte> (buffer, 0, byteCount), is64Bit);
+		} finally {
+			ArrayPool<byte>.Shared.Return (buffer);
+		}
+	}
+
+	static ulong HashBytes (ReadOnlySpan<byte> bytes, bool is64Bit)
 	{
 		if (is64Bit) {
 			return XxHash3.HashToUInt64 (bytes);
