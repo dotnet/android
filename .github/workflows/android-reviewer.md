@@ -6,6 +6,9 @@ on:
 permissions:
   contents: read
   pull-requests: read
+engine:
+  id: copilot
+  model: claude-opus-4.6
 tools:
   github:
     toolsets: [pull_requests, repos]
