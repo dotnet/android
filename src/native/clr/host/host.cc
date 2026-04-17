@@ -550,8 +550,20 @@ void Host::Java_mono_android_Runtime_initInternal (
 	// to avoid extra create_delegate calls. RegisterJniNatives is null when using the
 	// trimmable typemap path (the method is trimmed; registration is handled in managed code).
 	jnienv_register_jni_natives = init.registerJniNativesFn;
+	jnienv_register_natives = init.registerNativesFn;
 	jnienv_propagate_uncaught_exception = init.propagateUncaughtExceptionFn;
 	abort_unless (jnienv_propagate_uncaught_exception != nullptr, "Failed to obtain unmanaged-callers-only function pointer to the PropagateUncaughtException method.");
+
+	// Replay any classes that called registerNatives before the managed runtime was ready.
+	if (jnienv_register_natives != nullptr && pending_count > 0) {
+		JNIEnv *env = init.env;
+		for (size_t i = 0; i < pending_count; i++) {
+			jnienv_register_natives (env, nullptr, static_cast<jclass>(pending_classes[i]));
+			env->DeleteGlobalRef (pending_classes[i]);
+			pending_classes[i] = nullptr;
+		}
+		pending_count = 0;
+	}
 
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.end_event (); // native to managed
@@ -598,9 +610,15 @@ void Host::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType,
 
 void Host::Java_mono_android_Runtime_registerNatives ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] jclass nativeClass) noexcept
 {
-	// In the trimmable typemap path, registerNatives is handled entirely in managed code
-	// via a dynamically registered JNI native method. This C++ stub exists only as a
-	// fallback for the legacy code path (which doesn't use registerNatives).
+	if (jnienv_register_natives != nullptr) {
+		jnienv_register_natives (env, nullptr, nativeClass);
+		return;
+	}
+
+	// Managed runtime not ready yet — queue the class for deferred registration.
+	if (pending_count < MAX_PENDING) {
+		pending_classes[pending_count++] = env->NewGlobalRef (nativeClass);
+	}
 }
 
 auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) noexcept -> jint
