@@ -82,14 +82,35 @@ class TrimmableTypeMap
 		return type is not null;
 	}
 
+	/// <summary>
+	/// Resolves the <see cref="JavaPeerProxy"/> for a managed type via the CLR
+	/// <c>TypeMapping</c> proxy dictionary.
+	/// </summary>
+	/// <remarks>
+	/// Closed generic instantiations (e.g. <c>Holder&lt;int&gt;</c>) fall back to
+	/// their generic type definition (<c>Holder&lt;&gt;</c>) because the generator
+	/// emits exactly one <c>TypeMapAssociation</c> per generic peer, keyed by the
+	/// open definition (Java erases generics, so one proxy fits every closed
+	/// instantiation). The CLR lazy dictionary does identity-based lookups
+	/// (see <c>dotnet/runtime</c> <c>TypeMapLazyDictionary.cs</c>), so the
+	/// fallback must happen here. <see cref="Type.GetGenericTypeDefinition"/> is
+	/// safe under full AOT + trim (it is not <c>RequiresDynamicCode</c>).
+	/// Java→managed construction of a closed generic peer still requires a
+	/// closed <see cref="Type"/> at the call site and is tracked separately.
+	/// </remarks>
 	JavaPeerProxy? GetProxyForManagedType (Type managedType)
 	{
 		var proxy = _proxyCache.GetOrAdd (managedType, static (type, self) => {
-			if (!self._proxyTypeMap.TryGetValue (type, out var proxyType)) {
-				return s_noPeerSentinel;
+			if (self._proxyTypeMap.TryGetValue (type, out var proxyType)) {
+				return proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false) ?? s_noPeerSentinel;
 			}
 
-			return proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false) ?? s_noPeerSentinel;
+			if (type.IsGenericType && !type.IsGenericTypeDefinition &&
+					self._proxyTypeMap.TryGetValue (type.GetGenericTypeDefinition (), out proxyType)) {
+				return proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false) ?? s_noPeerSentinel;
+			}
+
+			return s_noPeerSentinel;
 		}, this);
 		return ReferenceEquals (proxy, s_noPeerSentinel) ? null : proxy;
 	}
@@ -139,7 +160,7 @@ class TrimmableTypeMap
 					var className = JniEnvironment.Types.GetJniTypeNameFromClass (jniClass);
 					if (className != null) {
 						var proxy = self.GetProxyForJavaType (className);
-						if (proxy != null && (targetType is null || targetType.IsAssignableFrom (proxy.TargetType))) {
+						if (proxy != null && (targetType is null || TargetTypeMatches (targetType, proxy.TargetType))) {
 							return proxy;
 						}
 					}
@@ -153,6 +174,32 @@ class TrimmableTypeMap
 			}
 
 			return null;
+		}
+
+		// Match the proxy's stored target type against a hint from the caller.
+		// The proxy's target type is the open generic definition for generic peers
+		// (Java erases generics, so one proxy fits every closed instantiation),
+		// so a plain IsAssignableFrom check misses when the hint is a closed
+		// instantiation. Walk the hint's base chain to find a generic type whose
+		// definition equals the proxy's open target type.
+		static bool TargetTypeMatches (Type targetType, Type proxyTargetType)
+		{
+			if (targetType.IsAssignableFrom (proxyTargetType)) {
+				return true;
+			}
+
+			if (!proxyTargetType.IsGenericTypeDefinition) {
+				return false;
+			}
+
+			for (Type? t = targetType; t is not null; t = t.BaseType) {
+				if (t.IsGenericType && !t.IsGenericTypeDefinition &&
+						t.GetGenericTypeDefinition () == proxyTargetType) {
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		static JavaPeerProxy? TryGetProxyFromTargetType (TrimmableTypeMap self, IntPtr handle, Type? targetType)

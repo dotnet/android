@@ -1,3 +1,5 @@
+using System;
+using Android.Runtime;
 using Java.Interop;
 using Microsoft.Android.Runtime;
 using NUnit.Framework;
@@ -45,6 +47,31 @@ namespace Java.InteropTests
 			Assert.AreEqual (2, fallbacks!.Count);
 			Assert.AreEqual ("com/example/package/DesugarMyInterface$_CC", fallbacks [0]);
 			Assert.AreEqual ("com/example/package/MyInterface$-CC", fallbacks [1]);
+		}
+
+		// Verifies the generic-type-definition fallback in GetProxyForManagedType:
+		// the generator emits one TypeMapAssociation per open generic peer, so a
+		// closed instantiation like JavaList<string> must resolve through its GTD.
+		[Test]
+		public void TryGetJniNameForManagedType_ClosedGeneric_ResolvesViaGenericTypeDefinition ()
+		{
+			if (!RuntimeFeature.TrimmableTypeMap) {
+				Assert.Ignore ("TrimmableTypeMap feature switch is off; test only relevant for the trimmable typemap path.");
+			}
+
+			var instance = TrimmableTypeMap.Instance;
+
+			Assert.IsTrue (instance.TryGetJniNameForManagedType (typeof (JavaList<>), out var openJniName),
+				"Open generic definition should resolve directly.");
+			Assert.IsTrue (instance.TryGetJniNameForManagedType (typeof (JavaList<string>), out var closedStringJniName),
+				"Closed instantiation should resolve via GTD fallback.");
+			Assert.IsTrue (instance.TryGetJniNameForManagedType (typeof (JavaList<int>), out var closedIntJniName),
+				"A second closed instantiation should also resolve via GTD fallback.");
+
+			Assert.AreEqual (openJniName, closedStringJniName,
+				"Closed instantiation must share the open GTD's JNI name (Java erases generics).");
+			Assert.AreEqual (openJniName, closedIntJniName,
+				"Different closed instantiations must map to the same JNI name.");
 		}
 	}
 }
