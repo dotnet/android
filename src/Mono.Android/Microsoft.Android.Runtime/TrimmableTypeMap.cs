@@ -213,10 +213,10 @@ class TrimmableTypeMap
 	/// so a plain <see cref="Type.IsAssignableFrom"/> check misses when the hint
 	/// is a closed instantiation. Walk the hint's base chain and implemented
 	/// interfaces to find a generic type whose definition equals the proxy's
-	/// open target type — this covers both closed subclasses and hints that are
-	/// closed generic interfaces (e.g. <c>IList&lt;string&gt;</c> should match a
-	/// proxy whose target is <c>JavaList&lt;&gt;</c>, which implements
-	/// <c>IList&lt;T&gt;</c>).
+	/// open target type — this covers closed subclasses of an open generic
+	/// class peer, and closed classes implementing an open generic interface
+	/// peer (i.e. the proxy's target is an open generic interface and the hint
+	/// is a class that implements a closed instantiation of it).
 	/// </summary>
 	[UnconditionalSuppressMessage ("Trimming", "IL2070",
 		Justification = "targetType comes from live JNI marshalling call sites; its base chain and interfaces are rooted because the caller's generic signature keeps them alive.")]
