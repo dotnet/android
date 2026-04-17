@@ -12,6 +12,9 @@ engine:
 tools:
   github:
     toolsets: [pull_requests, repos]
+    # Allow reading PR content from external/first-time contributors.
+    # The /review command is gated to maintainers, so only trusted users can trigger it.
+    min-integrity: none
 safe-outputs:
   create-pull-request-review-comment:
     max: 50
