@@ -219,8 +219,14 @@ class TrimmableTypeMap
 
 			var proxy = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
 			if (proxy is IAndroidCallableWrapper acw) {
-				using var jniType = new JniType (className);
-				acw.RegisterNatives (jniType);
+				// Use the class reference passed from Java (via C++) — not JniType(className)
+				// which resolves via FindClass and may get a different class from a different ClassLoader.
+				var jniType = new JniType (ref classRef, JniObjectReferenceOptions.Copy);
+				try {
+					acw.RegisterNatives (jniType);
+				} finally {
+					jniType.Dispose ();
+				}
 			}
 		} catch (Exception ex) {
 			Environment.FailFast ($"TrimmableTypeMap: Failed to register natives for class '{className}'.", ex);
