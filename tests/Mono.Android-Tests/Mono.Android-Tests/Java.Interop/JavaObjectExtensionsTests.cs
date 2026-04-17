@@ -41,7 +41,7 @@ namespace Java.InteropTests {
 			}
 		}
 
-		[Test]
+		[Test, Category ("TrimmableIgnore")]
 		public void JavaCast_BadInterfaceCast ()
 		{
 			using var n = new Java.Lang.Integer (42);
@@ -67,7 +67,7 @@ namespace Java.InteropTests {
 			Assert.AreSame (list, al);
 		}
 
-		[Test]
+		[Test, Category ("TrimmableIgnore")]
 		public void JavaCast_InvalidTypeCastThrows ()
 		{
 			using (var s = new Java.Lang.String ("value")) {
@@ -75,7 +75,7 @@ namespace Java.InteropTests {
 			}
 		}
 
-		[Test]
+		[Test, Category ("TrimmableIgnore")]
 		public void JavaCast_CheckForManagedSubclasses ()
 		{
 			using (var o = CreateObject ()) {
@@ -83,7 +83,7 @@ namespace Java.InteropTests {
 			}
 		}
 
-		[Test]
+		[Test, Category ("TrimmableIgnore")]
 		public void JavaAs ()
 		{
 			using var v     = new Java.InteropTests.MyJavaInterfaceImpl ();

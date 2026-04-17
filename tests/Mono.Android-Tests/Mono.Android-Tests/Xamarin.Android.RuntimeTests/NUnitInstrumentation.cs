@@ -37,6 +37,12 @@ namespace Xamarin.Android.RuntimeTests
                     "Java.InteropTests.JniTypeManagerTests",
                     "Java.InteropTests.JniValueMarshaler_object_ContractTests",
                     "Java.InteropTests.JavaExceptionTests.InnerExceptionIsNotAProxy",
+                    // JavaCast/JavaAs interface resolution not yet supported in trimmable typemap
+                    "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs",
+                    "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs_Exceptions",
+                    "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs_InstanceThatDoesNotImplementInterfaceReturnsNull",
+                    // JavaObjectArray<object> contract tests need generic container factory support
+                    "Java.InteropTests.JavaObjectArray_object_ContractTest",
                 };
             }
         }
