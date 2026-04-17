@@ -2250,6 +2250,11 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
 			dotnet.AssertHasNoWarnings ();
 
+			// `dotnet test` doesn't go through the MSBuild Run target, so Install
+			// must be invoked explicitly to deploy the APK to the device.
+			if (mode == "test")
+				Assert.IsTrue (dotnet.Build (target: "Install"), "`dotnet build -t:Install` should succeed");
+
 			// Run based on mode
 			using var process = mode == "run"
 				? dotnet.StartRun (waitForExit: true)
