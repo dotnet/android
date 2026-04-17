@@ -211,18 +211,19 @@ When diagnosing runtime, build, or test failures, follow these practices. They e
       -p:_AndroidTypeMapImplementation=<legacy|trimmable> \
       -p:UseMonoRuntime=<true|false>
   ```
+  On Windows, use `build.cmd` and `dotnet-local.cmd` instead of `make`/`dotnet-local.sh`.
   Results land in `TestResult-Mono.Android.NET_Tests-*.xml` at the repo root.
 
-- **When the build gets into a weird state, nuke `bin/` and `obj/` and rebuild from scratch.** Stale incremental output causes phantom errors that no amount of code fixing will resolve. A clean `make clean && make prepare && make all CONFIGURATION=Release` is cheap compared to hours chasing ghosts.
+- **When the build gets into a weird state, nuke `bin/` and `obj/` and rebuild from scratch.** Stale incremental output causes phantom errors. See **Troubleshooting → Build** below.
 
-- **Verify code paths with logging before reasoning about them.** Loose coupling between .NET, Java, C++, and generated LLVM IR makes "this must be called from X" assumptions unreliable. Add `log_warn (LOG_DEFAULT, "..."sv, ...)` in C++ or `Logger.Log`/`AndroidLog.Print` in C#, rebuild, re-run, and grep `adb logcat -d`. **Absence of log output is itself evidence** — if your log never fires, your mental model of the call graph is wrong.
+- **Verify code paths with logging, not reasoning.** Add `log_warn (LOG_DEFAULT, "..."sv, ...)` in C++ or `Logger.Log`/`AndroidLog.Print` in C#, rebuild, re-run, and check `adb logcat -d`. If your log never fires, your call-graph assumption is wrong.
 
-- **When generated code behaves incorrectly, decompile the produced `.dll` before blaming runtime.** Use `ilspycmd` or `ildasm` to inspect the actual generated IL/metadata (attributes, custom attribute rows, type layout). A single missing attribute or misnamed type in generator output can cascade into opaque runtime failures. Do not trust the generator source to tell you what it emitted.
+- **Decompile the produced `.dll` before blaming runtime.** Use `ilspycmd` or `ildasm` to inspect the actual generated IL/metadata. A missing attribute or misnamed type in generator output cascades into opaque runtime failures.
 
-- **`am instrument` going silent means it crashed, not hung.** If the test runner's output stops mid-run, assume the instrumentation process died. Check `adb logcat -d | grep -E 'FATAL|tombstone|signal'` and look for a native crash dump. Do not wait for a 30-minute CI timeout to "confirm" a hang that was really an instant crash.
+- **`am instrument` going silent means it crashed, not hung.** Check `adb logcat -d | grep -E 'FATAL|tombstone|signal'` for a native crash dump. Do not wait for a CI timeout to "confirm" a hang that was really an instant crash.
 
 ## Troubleshooting
-- **Build:** Clean `bin/`+`obj/`, check Android SDK/NDK, `make clean`
+- **Build:** Clean `bin/`+`obj/`, check Android SDK/NDK, `make clean && make prepare && make all`
 - **MSBuild:** Test in isolation, validate inputs
 - **Device:** Use update directories for rapid Debug iteration
 - **Performance:** See `../Documentation/guides/profiling.md` and `../Documentation/guides/tracing.md`
