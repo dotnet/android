@@ -167,19 +167,24 @@ namespace Java.InteropTests
 		[Test]
 		public void TargetTypeMatches_ClosedGenericInterfaceHint_OpenGenericProxy_ReturnsTrue ()
 		{
-			// Hint is the closed generic interface itself (e.g. IList<string>); the
-			// proxy's target is an open generic class that implements the open form
-			// of that interface. GetInterfaces() on IList<string> returns its super
-			// interfaces (ICollection<string>, IEnumerable<string>) — we must also
-			// check `targetType` itself, which we handle by including it as the
-			// first element of the base-chain walk (Type.GetInterfaces on an
-			// interface returns super-interfaces). The assertion here is that a
-			// hint that IS-A generic interface whose definition equals the proxy's
-			// open target is matched through the interface walk.
+			// The proxy's target is an open generic interface peer (IOpenIface<>).
+			// The hint is a closed class that implements a closed instantiation of it.
+			// Type.GetInterfaces() on a class enumerates every interface the class
+			// implements (including those inherited from base classes), so the closed
+			// interface is discovered and its GTD matches the open proxy target.
 			Assert.IsTrue (TrimmableTypeMap.TargetTypeMatches (typeof (ImplementsOpenIface<int>), typeof (IOpenIface<>)),
-				"closed class hint implementing an open generic interface should match a proxy whose target is that interface's open definition");
+				"closed class implementing an open generic interface should match a proxy whose target is that interface's open definition");
 			Assert.IsTrue (TrimmableTypeMap.TargetTypeMatches (typeof (ClosedImplementsOpenIface), typeof (IOpenIface<>)),
 				"closed subclass inheriting implementation of the open generic interface should match via interface walk");
+		}
+
+		[Test]
+		public void TargetTypeMatches_OpenGenericInterfaceProxy_UnrelatedHint_ReturnsFalse ()
+		{
+			// Negative: hint's interface set does not contain any closed form of
+			// the open generic interface that the proxy targets.
+			Assert.IsFalse (TrimmableTypeMap.TargetTypeMatches (typeof (ImplementsOpenIface<int>), typeof (System.Collections.Generic.IList<>)));
+			Assert.IsFalse (TrimmableTypeMap.TargetTypeMatches (typeof (string), typeof (IOpenIface<>)));
 		}
 
 		[Test]
