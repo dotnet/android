@@ -276,7 +276,9 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     This target runs after LinkNative and produces the shared library that Android needs.
   -->
   <Target Name="_AndroidLinkNativeAotSharedLibrary"
-      AfterTargets="LinkNative">
+      AfterTargets="LinkNative"
+      Inputs="$(NativeObject);@(NativeLibrary)"
+      Outputs="$(NativeOutputPath)$(NativeBinaryPrefix)$(TargetName).so">
     <PropertyGroup>
       <_AndroidNativeAotSharedLibrary>$(NativeOutputPath)$(NativeBinaryPrefix)$(TargetName).so</_AndroidNativeAotSharedLibrary>
     </PropertyGroup>
@@ -310,6 +312,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
         <RelativePath>$(NativeBinaryPrefix)$(TargetName).so</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       </ResolvedFileToPublish>
+      <FileWrites Include="$(_AndroidNativeAotSharedLibrary)" />
+      <FileWrites Include="$(NativeIntermediateOutputPath)sections.ld" />
     </ItemGroup>
   </Target>
 
