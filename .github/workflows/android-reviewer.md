@@ -12,6 +12,7 @@ engine:
 tools:
   github:
     toolsets: [pull_requests, repos]
+    min-integrity: none
 safe-outputs:
   create-pull-request-review-comment:
     max: 50
