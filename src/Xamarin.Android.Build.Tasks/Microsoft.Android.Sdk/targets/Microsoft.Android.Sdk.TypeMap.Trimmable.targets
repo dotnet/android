@@ -90,7 +90,7 @@
   <!--
     _GenerateJavaStubs: overrides the legacy target from BuildOrder.targets.
     In the trimmable path, TypeMap generation already happened in _GenerateTrimmableTypeMap,
-    so this target only handles JCW file copying, manifest, assembly store setup, and native config.
+    so this target only handles manifest placement, assembly store setup, native config, and stamp creation.
     We keep the name _GenerateJavaStubs because BuildOrder.targets references it.
   -->
   <Target Name="_GenerateJavaStubs"
