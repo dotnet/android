@@ -5,6 +5,25 @@
     <_TrimmableRuntimeProviderJavaName Condition=" '$(_TrimmableRuntimeProviderJavaName)' == '' ">mono.MonoRuntimeProvider</_TrimmableRuntimeProviderJavaName>
   </PropertyGroup>
 
+  <!--
+    Android apps have no managed Main() entry point, so upstream Microsoft.NET.ILLink.targets'
+    default of adding @(IntermediateAssembly) to @(TrimmerRootAssembly) with RootMode="EntryPoint"
+    causes ILLink to fail with IL1034 ("Entry point was not found in assembly ...").
+
+    The trimmable typemap path intentionally does not root the app assembly at all: reachability
+    is driven by (1) TypeMapAttribute<T> entries on the generated _*.TypeMap.dll assemblies
+    (understood natively by ILLink), (2) types referenced by the AndroidManifest.xml (rooted by
+    the manifest-rooting machinery), and (3) explicit [DynamicDependency] / preserve-list
+    descriptors. That lets us trim as much of the app assembly as possible.
+
+    Remove the app assembly from @(TrimmerRootAssembly) after PrepareForILLink has populated it.
+  -->
+  <Target Name="_RemoveAppAssemblyFromTrimmerRoots" AfterTargets="PrepareForILLink">
+    <ItemGroup>
+      <TrimmerRootAssembly Remove="@(IntermediateAssembly->'%(Filename)')" />
+    </ItemGroup>
+  </Target>
+
   <!-- Add TypeMap DLLs to ILLink input. ILLink natively understands TypeMapAttribute<T>. -->
   <Target Name="_AddTrimmableTypeMapToLinker"
       BeforeTargets="PrepareForILLink;_RunILLink"
