@@ -1,5 +1,4 @@
 using System;
-using System.Buffers;
 using System.IO.Hashing;
 using System.Text;
 
@@ -7,7 +6,6 @@ namespace Xamarin.Android.Tasks;
 
 static class TypeMapHelper
 {
-	const int MaxStackallocBytes = 512;
 	/// <summary>
 	/// Hash the given Java type name for use in java-to-managed typemap array (MonoVM version)
 	/// </summary>
@@ -41,21 +39,14 @@ static class TypeMapHelper
 	static unsafe ulong HashString (string name, Encoding encoding, bool is64Bit)
 	{
 		int byteCount = encoding.GetByteCount (name);
-		byte[]? rented = null;
-		Span<byte> buffer = byteCount <= MaxStackallocBytes
+		Span<byte> buffer = byteCount <= 256
 			? stackalloc byte [byteCount]
-			: (rented = ArrayPool<byte>.Shared.Rent (byteCount)).AsSpan (0, byteCount);
-		try {
-			fixed (char* pChars = name)
-			fixed (byte* pBuffer = buffer) {
-				encoding.GetBytes (pChars, name.Length, pBuffer, byteCount);
-			}
-			return HashBytes (buffer, is64Bit);
-		} finally {
-			if (rented != null) {
-				ArrayPool<byte>.Shared.Return (rented);
-			}
+			: new byte [byteCount];
+		fixed (char* pChars = name)
+		fixed (byte* pBuffer = buffer) {
+			encoding.GetBytes (pChars, name.Length, pBuffer, byteCount);
 		}
+		return HashBytes (buffer, is64Bit);
 	}
 
 	static ulong HashBytes (ReadOnlySpan<byte> bytes, bool is64Bit)
