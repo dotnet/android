@@ -142,7 +142,7 @@ class ManifestGenerator
 	/// </summary>
 	void RewriteCompatNames (XElement manifest, IReadOnlyList<JavaPeerInfo> allPeers)
 	{
-		// Build mapping: compat Java name → CRC Java name
+		// Build mapping: fully-qualified compat Java name → CRC Java name
 		var compatToCrc = new Dictionary<string, string> (StringComparer.Ordinal);
 		foreach (var peer in allPeers) {
 			string javaName = JniSignatureHelper.JniNameToJavaName (peer.JavaName);
@@ -156,13 +156,20 @@ class ManifestGenerator
 			return;
 		}
 
-		// Rewrite android:name attributes throughout the manifest
+		// Rewrite android:name attributes throughout the manifest. Android allows
+		// android:name to be specified as:
+		//   - fully qualified ("com.example.app.MainActivity")
+		//   - relative to the manifest package, starting with '.' (".MainActivity")
+		//   - bare, with no '.' at all ("MainActivity"), also relative to the package
+		// Resolve to the fully-qualified form before the lookup, then write the CRC
+		// name back so duplicate detection later in the pipeline works correctly.
 		foreach (var element in manifest.DescendantsAndSelf ()) {
 			var nameAttr = element.Attribute (AttName);
 			if (nameAttr is null) {
 				continue;
 			}
-			if (compatToCrc.TryGetValue (nameAttr.Value, out var crcName)) {
+			var resolved = ManifestNameResolver.Resolve (nameAttr.Value, PackageName);
+			if (compatToCrc.TryGetValue (resolved, out var crcName)) {
 				nameAttr.Value = crcName;
 			}
 		}

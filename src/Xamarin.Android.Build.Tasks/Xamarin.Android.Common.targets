@@ -979,6 +979,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="AndroidManifestPlaceholders=$(AndroidManifestPlaceholders)" />
 		<_PropertyCacheItems Include="ProjectFullPath=$(MSBuildProjectFullPath)" />
 		<_PropertyCacheItems Include="AndroidUseDesignerAssembly=$(AndroidUseDesignerAssembly)" />
+		<_PropertyCacheItems Include="_AndroidTypeMapImplementation=$(_AndroidTypeMapImplementation)" />
 	</ItemGroup>
 	<WriteLinesToFile
 			File="$(_AndroidBuildPropertiesCache)"
