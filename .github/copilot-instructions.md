@@ -199,6 +199,28 @@ This pattern ensures proper encoding, timestamps, and file attributes are handle
 3. For deep .binlog analysis, use the `azdo-build-investigator` skill.
 4. Only after the skill confirms no Azure DevOps failures should you report CI as passing.
 
+## Investigation & Debugging Practices
+
+When diagnosing runtime, build, or test failures, follow these practices. They exist because the .NET ↔ JNI ↔ C++ ↔ generated-native stack is loosely coupled and static reasoning alone is unreliable.
+
+- **Reproduce CI failures locally — do not iterate through CI.** A clean local test cycle is minutes; a CI iteration is hours. Run device tests the same way CI does:
+  ```bash
+  make prepare && make all CONFIGURATION=Release
+  ./dotnet-local.sh build tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj \
+      -t:RunTestApp -c Release \
+      -p:_AndroidTypeMapImplementation=<legacy|trimmable> \
+      -p:UseMonoRuntime=<true|false>
+  ```
+  Results land in `TestResult-Mono.Android.NET_Tests-*.xml` at the repo root.
+
+- **When the build gets into a weird state, nuke `bin/` and `obj/` and rebuild from scratch.** Stale incremental output causes phantom errors that no amount of code fixing will resolve. A clean `make clean && make prepare && make all CONFIGURATION=Release` is cheap compared to hours chasing ghosts.
+
+- **Verify code paths with logging before reasoning about them.** Loose coupling between .NET, Java, C++, and generated LLVM IR makes "this must be called from X" assumptions unreliable. Add `log_warn (LOG_DEFAULT, "..."sv, ...)` in C++ or `Logger.Log`/`AndroidLog.Print` in C#, rebuild, re-run, and grep `adb logcat -d`. **Absence of log output is itself evidence** — if your log never fires, your mental model of the call graph is wrong.
+
+- **When generated code behaves incorrectly, decompile the produced `.dll` before blaming runtime.** Use `ilspycmd` or `ildasm` to inspect the actual generated IL/metadata (attributes, custom attribute rows, type layout). A single missing attribute or misnamed type in generator output can cascade into opaque runtime failures. Do not trust the generator source to tell you what it emitted.
+
+- **`am instrument` going silent means it crashed, not hung.** If the test runner's output stops mid-run, assume the instrumentation process died. Check `adb logcat -d | grep -E 'FATAL|tombstone|signal'` and look for a native crash dump. Do not wait for a 30-minute CI timeout to "confirm" a hang that was really an instant crash.
+
 ## Troubleshooting
 - **Build:** Clean `bin/`+`obj/`, check Android SDK/NDK, `make clean`
 - **MSBuild:** Test in isolation, validate inputs
