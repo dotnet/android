@@ -22,6 +22,9 @@ namespace Xamarin.Android.Build.Tests
 			[Values] bool isRelease,
 			[Values] AndroidRuntime runtime)
 		{
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT does not support Mono.Android.Export");
+			}
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
@@ -34,9 +37,6 @@ namespace Xamarin.Android.Build.Tests
 				},
 			};
 			proj.SetRuntime (runtime);
-			if (runtime == AndroidRuntime.CoreCLR || runtime == AndroidRuntime.NativeAOT) {
-				proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
-			}
 			proj.Sources.Add (new BuildItem.Source ("ContainsExportedMethods.cs") {
 				TextContent = () => @"using System;
 using Java.Interop;
@@ -112,6 +112,9 @@ namespace UnnamedProject
 			[Values] bool isRelease,
 			[Values] AndroidRuntime runtime)
 		{
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT does not support Mono.Android.Export");
+			}
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
@@ -124,9 +127,6 @@ namespace UnnamedProject
 				},
 			};
 			proj.SetRuntime (runtime);
-			if (runtime == AndroidRuntime.CoreCLR || runtime == AndroidRuntime.NativeAOT) {
-				proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
-			}
 			proj.Sources.Add (new BuildItem.Source ("ContainsExportedMethods.cs") {
 				TextContent = () => @"using System;
 using Java.Interop;
@@ -157,13 +157,14 @@ namespace UnnamedProject
 
 			var foo = new ContainsExportedMethods ();
 
-			// Force GC to verify the registered callback does not rely on transient state.
+			// Force GC to collect any unrooted delegates
 			for (int i = 0; i < 10; i++) {
 				GC.Collect ();
 				GC.WaitForPendingFinalizers ();
 			}
 
-			// Invoke the [Export] method through JNI to validate the generated callback path.
+			// Invoke the [Export] method through JNI (Java -> native delegate -> C#)
+			// This path crashes with SIGABRT if the delegate was garbage collected
 			IntPtr klass = JNIEnv.GetObjectClass (foo.Handle);
 			IntPtr methodId = JNIEnv.GetMethodID (klass, ""Exported"", ""()V"");
 			JNIEnv.CallVoidMethod (foo.Handle, methodId);
