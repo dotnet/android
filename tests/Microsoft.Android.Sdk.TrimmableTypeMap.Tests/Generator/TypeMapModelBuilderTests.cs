@@ -450,6 +450,21 @@ public class ModelBuilderTests : FixtureTestBase
 			var entry = FindEntry (model, "my/app/GenericHolder");
 			Assert.NotNull (entry);
 		}
+
+		[Fact]
+		public void Fixture_GenericHolder_HasAssociation ()
+		{
+			// Generic definitions must still get a TypeMapAssociation entry so managed→proxy
+			// lookup works for the open generic definition. Their proxy derives from the
+			// non-generic `JavaPeerProxy` base, so the CLR can load the proxy without
+			// resolving an open generic argument.
+			var peer = FindFixtureByJavaName ("my/app/GenericHolder");
+			Assert.True (peer.IsGenericDefinition);
+
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			Assert.Contains (model.Associations,
+				a => a.SourceTypeReference.StartsWith ("MyApp.Generic.GenericHolder`1", StringComparison.Ordinal));
+		}
 	}
 
 	public class FixtureAcwTypeHasProxy

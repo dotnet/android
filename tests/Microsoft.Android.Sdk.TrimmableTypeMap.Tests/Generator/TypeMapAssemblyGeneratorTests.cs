@@ -98,12 +98,23 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 		Assert.NotEmpty (proxyTypes);
 		Assert.All (proxyTypes, proxyType => {
-			Assert.Equal (HandleKind.TypeSpecification, proxyType.BaseType.Kind);
-
-			var baseTypeSpec = reader.GetTypeSpecification ((TypeSpecificationHandle) proxyType.BaseType);
-			var baseTypeName = baseTypeSpec.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null);
-
-			Assert.StartsWith ("Java.Interop.JavaPeerProxy`1<", baseTypeName, StringComparison.Ordinal);
+			switch (proxyType.BaseType.Kind) {
+			case HandleKind.TypeSpecification:
+				// Non-generic target types derive from the closed `JavaPeerProxy<T>`.
+				var baseTypeSpec = reader.GetTypeSpecification ((TypeSpecificationHandle) proxyType.BaseType);
+				var baseTypeName = baseTypeSpec.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null);
+				Assert.StartsWith ("Java.Interop.JavaPeerProxy`1<", baseTypeName, StringComparison.Ordinal);
+				break;
+			case HandleKind.TypeReference:
+				// Open generic target types derive from the non-generic `JavaPeerProxy`.
+				var baseTypeRef = reader.GetTypeReference ((TypeReferenceHandle) proxyType.BaseType);
+				Assert.Equal ("Java.Interop", reader.GetString (baseTypeRef.Namespace));
+				Assert.Equal ("JavaPeerProxy", reader.GetString (baseTypeRef.Name));
+				break;
+			default:
+				Assert.Fail ($"Unexpected BaseType handle kind: {proxyType.BaseType.Kind}");
+				break;
+			}
 		});
 
 		var objectProxy = proxyTypes.First (t => reader.GetString (t.Name) == "Java_Lang_Object_Proxy");
@@ -113,8 +124,9 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	// Regression test: every generated proxy type must carry a custom attribute whose
-	// constructor MemberRef points at the proxy's own TypeDefinitionHandle. This is
-	// how JavaPeerProxy instances are resolved at runtime via
+	// constructor points at the proxy's own TypeDefinitionHandle (either as a MemberRef
+	// parented on the TypeDef, or as a MethodDefinition on the TypeDef). This is how
+	// JavaPeerProxy instances are resolved at runtime via
 	// type.GetCustomAttribute<JavaPeerProxy>() — losing the self-application means the
 	// runtime can't construct the proxy. This has regressed twice; keep it covered.
 	[Fact]
@@ -138,17 +150,24 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			bool selfApplied = false;
 			foreach (var caHandle in proxy.GetCustomAttributes ()) {
 				var ca = reader.GetCustomAttribute (caHandle);
-				if (ca.Constructor.Kind != HandleKind.MemberReference) {
-					continue;
+
+				switch (ca.Constructor.Kind) {
+				case HandleKind.MemberReference:
+					var ctorRef = reader.GetMemberReference ((MemberReferenceHandle) ca.Constructor);
+					if (ctorRef.Parent.Kind == HandleKind.TypeDefinition &&
+						(TypeDefinitionHandle) ctorRef.Parent == proxyHandle) {
+						selfApplied = true;
+					}
+					break;
+				case HandleKind.MethodDefinition:
+					var ctorDef = reader.GetMethodDefinition ((MethodDefinitionHandle) ca.Constructor);
+					if (ctorDef.GetDeclaringType () == proxyHandle) {
+						selfApplied = true;
+					}
+					break;
 				}
 
-				var ctorRef = reader.GetMemberReference ((MemberReferenceHandle) ca.Constructor);
-				if (ctorRef.Parent.Kind != HandleKind.TypeDefinition) {
-					continue;
-				}
-
-				if ((TypeDefinitionHandle) ctorRef.Parent == proxyHandle) {
-					selfApplied = true;
+				if (selfApplied) {
 					break;
 				}
 			}
