@@ -112,6 +112,54 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			objectProxyBaseType.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null));
 	}
 
+	// Regression test: every generated proxy type must carry a custom attribute whose
+	// constructor MemberRef points at the proxy's own TypeDefinitionHandle. This is
+	// how JavaPeerProxy instances are resolved at runtime via
+	// type.GetCustomAttribute<JavaPeerProxy>() — losing the self-application means the
+	// runtime can't construct the proxy. This has regressed twice; keep it covered.
+	[Fact]
+	public void Generate_ProxyType_IsSelfAppliedAsCustomAttribute ()
+	{
+		var peers = ScanFixtures ();
+		using var stream = GenerateAssembly (peers);
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var proxyTypeHandles = reader.TypeDefinitions
+			.Where (h => reader.GetString (reader.GetTypeDefinition (h).Namespace) == "_TypeMap.Proxies")
+			.ToList ();
+
+		Assert.NotEmpty (proxyTypeHandles);
+
+		foreach (var proxyHandle in proxyTypeHandles) {
+			var proxy = reader.GetTypeDefinition (proxyHandle);
+			var proxyName = reader.GetString (proxy.Name);
+
+			bool selfApplied = false;
+			foreach (var caHandle in proxy.GetCustomAttributes ()) {
+				var ca = reader.GetCustomAttribute (caHandle);
+				if (ca.Constructor.Kind != HandleKind.MemberReference) {
+					continue;
+				}
+
+				var ctorRef = reader.GetMemberReference ((MemberReferenceHandle) ca.Constructor);
+				if (ctorRef.Parent.Kind != HandleKind.TypeDefinition) {
+					continue;
+				}
+
+				if ((TypeDefinitionHandle) ctorRef.Parent == proxyHandle) {
+					selfApplied = true;
+					break;
+				}
+			}
+
+			Assert.True (selfApplied,
+				$"Proxy type '{proxyName}' is missing its self-applied custom attribute. " +
+				"Every proxy must carry itself as a [JavaPeerProxy] attribute so the runtime " +
+				"can instantiate it via Type.GetCustomAttribute<JavaPeerProxy> ().");
+		}
+	}
+
 	[Fact]
 	public void Generate_HasIgnoresAccessChecksToAttribute ()
 	{

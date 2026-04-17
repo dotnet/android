@@ -175,8 +175,18 @@
   <!-- Override _RemoveRegisterAttribute: trimmable types need [Register] attributes
        at runtime for type resolution (TryGetJniNameForType uses IJniNameProviderAttribute).
        The legacy target strips them to reduce assembly size, but the trimmable path
-       requires them. _ShrunkAssemblies is already set to _ResolvedAssemblies by
-       AssemblyResolution.targets, so no copy is needed. -->
-  <Target Name="_RemoveRegisterAttribute" />
+       requires them. We also clear _ShrunkAssemblies and re-populate it from
+       _ResolvedAssemblies, because ProcessAssemblies points the shrunk items to
+       R2R/shrunk/ which is only created by the (now no-op) _RemoveRegisterAttribute. -->
+  <Target Name="_RemoveRegisterAttribute">
+    <ItemGroup>
+      <_ShrunkAssemblies Remove="@(_ShrunkAssemblies)" />
+      <_ShrunkAssemblies Include="@(_ResolvedAssemblies)" />
+      <_ShrunkFrameworkAssemblies Remove="@(_ShrunkFrameworkAssemblies)" />
+      <_ShrunkFrameworkAssemblies Include="@(_ResolvedFrameworkAssemblies)" />
+      <_ShrunkUserAssemblies Remove="@(_ShrunkUserAssemblies)" />
+      <_ShrunkUserAssemblies Include="@(_ResolvedUserAssemblies)" />
+    </ItemGroup>
+  </Target>
 
 </Project>

@@ -59,7 +59,11 @@ class TrimmableTypeMap
 
 	unsafe void RegisterNatives ()
 	{
-		using var runtimeClass = new JniType ("mono/android/Runtime"u8);
+		// Use the string overload of JniType which resolves via Class.forName with the
+		// runtime's ClassLoader. The UTF-8 span overload uses raw JNI FindClass which
+		// resolves via the system ClassLoader — a different class instance than the one
+		// JCWs reference via the app ClassLoader.
+		using var runtimeClass = new JniType ("mono/android/Runtime");
 		fixed (byte* name = "registerNatives"u8, sig = "(Ljava/lang/Class;)V"u8) {
 			var onRegisterNatives = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&OnRegisterNatives;
 			var method = new JniNativeMethod (name, sig, onRegisterNatives);
@@ -195,7 +199,7 @@ class TrimmableTypeMap
 	}
 
 	[UnmanagedCallersOnly]
-	static void OnRegisterNatives (IntPtr jnienv, IntPtr klass, IntPtr nativeClassHandle)
+	internal static void OnRegisterNatives (IntPtr jnienv, IntPtr klass, IntPtr nativeClassHandle)
 	{
 		string? className = null;
 		try {
@@ -215,7 +219,9 @@ class TrimmableTypeMap
 
 			var proxy = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
 			if (proxy is IAndroidCallableWrapper acw) {
-				using var jniType = new JniType (className);
+				// Use the class reference passed from Java (via C++) — not JniType(className)
+				// which resolves via FindClass and may get a different class from a different ClassLoader.
+				using var jniType = new JniType (ref classRef, JniObjectReferenceOptions.Copy);
 				acw.RegisterNatives (jniType);
 			}
 		} catch (Exception ex) {
