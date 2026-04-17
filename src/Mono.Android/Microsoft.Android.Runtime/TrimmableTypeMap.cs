@@ -59,10 +59,15 @@ class TrimmableTypeMap
 
 	unsafe void RegisterNatives ()
 	{
-		// Use the string overload of JniType which resolves via Class.forName with the
-		// runtime's ClassLoader. The UTF-8 span overload uses raw JNI FindClass which
-		// resolves via the system ClassLoader — a different class instance than the one
-		// JCWs reference via the app ClassLoader.
+		// Use the `string` overload of `JniType` deliberately. Its underlying
+		// `JniEnvironment.Types.TryFindClass(string, bool)` tries raw JNI `FindClass`
+		// first and, if that fails, falls back to `Class.forName(name, true, info.Runtime.ClassLoader)`,
+		// which resolves via the runtime's app ClassLoader — the same one that loads
+		// `mono.android.Runtime` from the APK.
+		// The `ReadOnlySpan<byte>` overload (see external/Java.Interop/src/Java.Interop/Java.Interop/JniEnvironment.Types.cs)
+		// only calls raw JNI `FindClass`, which resolves via the system ClassLoader on
+		// Android and returns a different `Class` instance from the one JCWs reference.
+		// Registering natives on that other instance is silently wrong.
 		using var runtimeClass = new JniType ("mono/android/Runtime");
 		fixed (byte* name = "registerNatives"u8, sig = "(Ljava/lang/Class;)V"u8) {
 			var onRegisterNatives = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&OnRegisterNatives;
@@ -199,7 +204,7 @@ class TrimmableTypeMap
 	}
 
 	[UnmanagedCallersOnly]
-	internal static void OnRegisterNatives (IntPtr jnienv, IntPtr klass, IntPtr nativeClassHandle)
+	static void OnRegisterNatives (IntPtr jnienv, IntPtr klass, IntPtr nativeClassHandle)
 	{
 		string? className = null;
 		try {
