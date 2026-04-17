@@ -210,15 +210,22 @@ class TrimmableTypeMap
 	/// The proxy's target type is the open generic definition for generic peers
 	/// (Java erases generics, so one proxy fits every closed instantiation),
 	/// so a plain <see cref="Type.IsAssignableFrom"/> check misses when the hint
-	/// is a closed instantiation. Walk the hint's base chain and implemented
-	/// interfaces to find a generic type whose definition equals the proxy's
-	/// open target type — this covers closed subclasses of an open generic
-	/// class peer, and closed classes implementing an open generic interface
-	/// peer (i.e. the proxy's target is an open generic interface and the hint
-	/// is a class that implements a closed instantiation of it).
+	/// is a closed instantiation. Walk the hint's base chain to find a generic
+	/// type whose definition equals the proxy's open target type. This covers
+	/// closed subclasses of an open generic class peer.
 	/// </summary>
-	[UnconditionalSuppressMessage ("Trimming", "IL2070",
-		Justification = "targetType comes from live JNI marshalling call sites; its base chain and interfaces are rooted because the caller's generic signature keeps them alive.")]
+	/// <remarks>
+	/// Implementers of an open generic <em>interface</em> peer are intentionally
+	/// not matched here: <see cref="TryGetProxyFromHierarchy"/> walks only the
+	/// JNI class chain (<c>getSuperclass</c>), never JNI interfaces, so the
+	/// proxy returned from that walk is always a class peer. Matching on
+	/// <c>Type.GetInterfaces()</c> would also force a trimmer
+	/// <c>DynamicallyAccessedMembers(Interfaces)</c> annotation up the chain
+	/// (ultimately into Java.Interop's <c>CreatePeer</c> API). If we ever need
+	/// to discover interface peers, the generator should emit an explicit
+	/// implementer→interface map so runtime can avoid reflection over
+	/// interface lists.
+	/// </remarks>
 	internal static bool TargetTypeMatches (Type targetType, Type proxyTargetType)
 	{
 		if (targetType.IsAssignableFrom (proxyTargetType)) {
@@ -232,13 +239,6 @@ class TrimmableTypeMap
 		for (Type? t = targetType; t is not null; t = t.BaseType) {
 			if (t.IsGenericType && !t.IsGenericTypeDefinition &&
 					t.GetGenericTypeDefinition () == proxyTargetType) {
-				return true;
-			}
-		}
-
-		foreach (var iface in targetType.GetInterfaces ()) {
-			if (iface.IsGenericType && !iface.IsGenericTypeDefinition &&
-					iface.GetGenericTypeDefinition () == proxyTargetType) {
 				return true;
 			}
 		}

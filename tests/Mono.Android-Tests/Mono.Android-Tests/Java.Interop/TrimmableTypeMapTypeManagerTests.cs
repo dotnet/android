@@ -124,9 +124,6 @@ namespace Java.InteropTests
 		class OpenT2<T1, T2> { }
 		class ClosedOfIntOpenT : OpenT<int> { }
 		class DeepClosedOfOpenT : ClosedOfIntOpenT { }
-		interface IOpenIface<T> { }
-		class ImplementsOpenIface<T> : IOpenIface<T> { }
-		class ClosedImplementsOpenIface : ImplementsOpenIface<int> { }
 
 		[Test]
 		public void TargetTypeMatches_DirectAssignable_ReturnsTrue ()
@@ -162,29 +159,6 @@ namespace Java.InteropTests
 			// Different open generic definitions must NOT be treated as matching.
 			Assert.IsFalse (TrimmableTypeMap.TargetTypeMatches (typeof (OpenT<int>), typeof (OpenT2<,>)));
 			Assert.IsFalse (TrimmableTypeMap.TargetTypeMatches (typeof (string), typeof (OpenT<>)));
-		}
-
-		[Test]
-		public void TargetTypeMatches_ClosedGenericInterfaceHint_OpenGenericProxy_ReturnsTrue ()
-		{
-			// The proxy's target is an open generic interface peer (IOpenIface<>).
-			// The hint is a closed class that implements a closed instantiation of it.
-			// Type.GetInterfaces() on a class enumerates every interface the class
-			// implements (including those inherited from base classes), so the closed
-			// interface is discovered and its GTD matches the open proxy target.
-			Assert.IsTrue (TrimmableTypeMap.TargetTypeMatches (typeof (ImplementsOpenIface<int>), typeof (IOpenIface<>)),
-				"closed class implementing an open generic interface should match a proxy whose target is that interface's open definition");
-			Assert.IsTrue (TrimmableTypeMap.TargetTypeMatches (typeof (ClosedImplementsOpenIface), typeof (IOpenIface<>)),
-				"closed subclass inheriting implementation of the open generic interface should match via interface walk");
-		}
-
-		[Test]
-		public void TargetTypeMatches_OpenGenericInterfaceProxy_UnrelatedHint_ReturnsFalse ()
-		{
-			// Negative: hint's interface set does not contain any closed form of
-			// the open generic interface that the proxy targets.
-			Assert.IsFalse (TrimmableTypeMap.TargetTypeMatches (typeof (ImplementsOpenIface<int>), typeof (System.Collections.Generic.IList<>)));
-			Assert.IsFalse (TrimmableTypeMap.TargetTypeMatches (typeof (string), typeof (IOpenIface<>)));
 		}
 
 		[Test]
