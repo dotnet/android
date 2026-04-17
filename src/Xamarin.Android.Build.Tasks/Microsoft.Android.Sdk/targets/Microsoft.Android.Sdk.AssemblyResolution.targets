@@ -182,6 +182,7 @@ _ResolveAssemblies MSBuild target.
         InputJavaLibraries="@(_ResolvedJavaLibraries->Distinct())"
         ResolvedSymbols="@(_ResolvedSymbolFiles)"
         AndroidIncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
+        AndroidTypeMapImplementation="$(_AndroidTypeMapImplementation)"
         PublishTrimmed="$(PublishTrimmed)">
       <Output TaskParameter="OutputAssemblies" ItemName="_ProcessedAssemblies" />
       <Output TaskParameter="OutputJavaLibraries" ItemName="AndroidJavaLibrary" />

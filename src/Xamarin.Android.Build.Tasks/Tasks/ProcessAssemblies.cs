@@ -33,6 +33,8 @@ namespace Xamarin.Android.Tasks
 
 		public bool PublishTrimmed { get; set; }
 
+		public string AndroidTypeMapImplementation { get; set; } = "";
+
 		public ITaskItem [] InputAssemblies { get; set; } = [];
 
 		public ITaskItem [] InputJavaLibraries { get; set; } = [];
@@ -68,9 +70,13 @@ namespace Xamarin.Android.Tasks
 			ResolvedSymbols = symbols.Values.ToArray ();
 
 			// Set ShrunkAssemblies for _RemoveRegisterAttribute and <BuildApk/>
-			// This should match the Condition on the _RemoveRegisterAttribute target
+			// This should match the Condition on the _RemoveRegisterAttribute target.
+			// The trimmable typemap path does NOT run _RemoveRegisterAttribute
+			// (which is responsible for populating the <dir>/shrunk/ directory),
+			// so for that path ShrunkAssemblies is just OutputAssemblies.
 			if (PublishTrimmed) {
-				if (!AndroidIncludeDebugSymbols) {
+				bool useTrimmableTypeMap = string.Equals (AndroidTypeMapImplementation, "trimmable", StringComparison.OrdinalIgnoreCase);
+				if (!AndroidIncludeDebugSymbols && !useTrimmableTypeMap) {
 					var shrunkAssemblies = new List<ITaskItem> (OutputAssemblies.Length);
 					foreach (var assembly in OutputAssemblies) {
 						var dir = Path.GetDirectoryName (assembly.ItemSpec);
