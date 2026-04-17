@@ -6,7 +6,6 @@ using Java.Interop.Tools.Cecil;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Mono.Cecil;
-using Mono.Linker;
 using MonoDroid.Tuner;
 
 namespace Xamarin.Android.Tasks;
@@ -17,7 +16,7 @@ namespace Xamarin.Android.Tasks;
 /// This opens each assembly once (via DirectoryAssemblyResolver with ReadWrite) and
 /// runs all registered steps on it, then writes modified assemblies in-place. Currently
 /// runs CheckForObsoletePreserveAttributeStep, StripEmbeddedLibrariesStep and
-/// (optionally) AddKeepAlivesStep and FixLegacyResourceDesignerStep.
+/// (optionally) AddKeepAlivesStep.
 ///
 /// Runs in the inner build after ILLink but before ReadyToRun/crossgen2 compilation,
 /// so that R2R images are generated from the already-modified assemblies.
@@ -34,8 +33,6 @@ public class PostTrimmingPipeline : AndroidTask
 	public bool AndroidLinkResources { get; set; }
 
 	public bool Deterministic { get; set; }
-
-	public bool UseDesignerAssembly { get; set; }
 
 	public override bool RunTask ()
 	{
@@ -103,15 +100,6 @@ public class PostTrimmingPipeline : AndroidTask
 				},
 				(msg) => Log.LogDebugMessage (msg)));
 		}
-		if (UseDesignerAssembly) {
-			// Create an MSBuildLinkContext so FixLegacyResourceDesignerStep can resolve assemblies
-			// and log messages. The resolver is owned by the outer 'using' block, so we intentionally
-			// do not dispose this context (LinkContext.Dispose would double-dispose the resolver).
-			var linkContext = new MSBuildLinkContext (resolver, Log);
-			var fixLegacyStep = new FixLegacyResourceDesignerStep ();
-			fixLegacyStep.Initialize (linkContext);
-			steps.Add (new PostTrimmingFixLegacyResourceDesignerStep (fixLegacyStep));
-		}
 
 		foreach (var (item, assembly) in loadedAssemblies) {
 			var context = new StepContext (item, item);
@@ -128,26 +116,5 @@ public class PostTrimmingPipeline : AndroidTask
 		}
 
 		return !Log.HasLoggedErrors;
-	}
-}
-
-/// <summary>
-/// Thin wrapper around <see cref="FixLegacyResourceDesignerStep"/> for the post-trimming pipeline.
-/// Calls <see cref="FixLegacyResourceDesignerStep.ProcessAssemblyDesigner"/> directly, matching the
-/// behavior of the former ILLink path which processed all assemblies without StepContext flag filtering.
-/// Assemblies without a resource designer are skipped internally by ProcessAssemblyDesigner.
-/// </summary>
-class PostTrimmingFixLegacyResourceDesignerStep : IAssemblyModifierPipelineStep
-{
-	readonly FixLegacyResourceDesignerStep _inner;
-
-	public PostTrimmingFixLegacyResourceDesignerStep (FixLegacyResourceDesignerStep inner)
-	{
-		_inner = inner;
-	}
-
-	public void ProcessAssembly (AssemblyDefinition assembly, StepContext context)
-	{
-		context.IsAssemblyModified |= _inner.ProcessAssemblyDesigner (assembly);
 	}
 }
