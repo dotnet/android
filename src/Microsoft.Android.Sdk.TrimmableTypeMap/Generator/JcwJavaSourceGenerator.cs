@@ -125,9 +125,15 @@ public sealed class JcwJavaSourceGenerator
 		string className = JniSignatureHelper.GetJavaSimpleName (type.JavaName);
 
 		// Application and Instrumentation types cannot call registerNatives in their
-		// static initializer — the runtime isn't ready yet at that point. Emit a
-		// lazy one-time helper instead so the first managed callback can register
-		// the class just before invoking its native method.
+		// static initializer — the runtime isn't ready yet at that point. Instead we
+		// rely on ApplicationRegistration.registerApplications() (invoked from
+		// MonoPackageManager.LoadApplication, which runs from MonoRuntimeProvider.attachInfo)
+		// to register natives for these classes. However, Application.attachBaseContext
+		// fires *before* ContentProvider.attachInfo, so an override of attachBaseContext
+		// on a user Application subclass can invoke a native callback before
+		// registerApplications() has run. To cover that early-callback window we also
+		// emit a lazy one-time __md_registerNatives() helper and call it at the top of
+		// each generated native-method wrapper.
 		if (type.CannotRegisterInStaticConstructor) {
 			writer.Write ($$"""
 	private static boolean __md_natives_registered;
