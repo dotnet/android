@@ -503,7 +503,7 @@ namespace "+ libName + @" {
 
 			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-			StringAssertEx.Contains ("warning XA1042", b.LastBuildOutput, "Build output should contain warning XA1042");
+			StringAssertEx.Contains ("warning XA1044", b.LastBuildOutput, "Build output should contain warning XA1044");
 			StringAssertEx.Contains ("RunAOTCompilation", b.LastBuildOutput, "Build output should mention RunAOTCompilation");
 			StringAssertEx.Contains ("CoreCLR", b.LastBuildOutput, "Build output should mention CoreCLR");
 		}
@@ -519,7 +519,7 @@ namespace "+ libName + @" {
 
 			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-			StringAssertEx.Contains ("warning XA1042", b.LastBuildOutput, "Build output should contain warning XA1042");
+			StringAssertEx.Contains ("warning XA1044", b.LastBuildOutput, "Build output should contain warning XA1044");
 			StringAssertEx.Contains ("EnableLLVM", b.LastBuildOutput, "Build output should mention EnableLLVM");
 			StringAssertEx.Contains ("CoreCLR", b.LastBuildOutput, "Build output should mention CoreCLR");
 		}

@@ -1009,7 +1009,7 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
 {1} - The current value of the property
 </comment>
   </data>
-  <data name="XA1042" xml:space="preserve">
+  <data name="XA1044" xml:space="preserve">
     <value>The MSBuild property '{0}' is not compatible with the {1} runtime and will be ignored. Either remove the property or guard it with a condition: Condition="'$(UseMonoRuntime)' == 'true'"</value>
     <comment>The following are literal names and should not be translated: MSBuild, UseMonoRuntime.
 {0} - The MSBuild property name (e.g. RunAOTCompilation, EnableLLVM).
