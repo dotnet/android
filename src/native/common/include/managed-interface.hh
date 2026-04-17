@@ -16,7 +16,6 @@ namespace xamarin::android {
 
 	using jnienv_propagate_uncaught_exception_fn = void (*)(JNIEnv *env, jobject javaThread, jthrowable javaException);
 	using jnienv_register_jni_natives_fn = void (*)(const jchar *typeName_ptr, int32_t typeName_len, jclass jniClass, const jchar *methods_ptr, int32_t methods_len);
-	using jnienv_register_natives_fn = void (*)(JNIEnv *env, jclass klass, jclass nativeClass);
 
 	// NOTE: Keep this in sync with managed side in src/Mono.Android/Android.Runtime/JNIEnvInit.cs
 	struct JnienvInitializeArgs {
@@ -39,7 +38,6 @@ namespace xamarin::android {
 		bool            managedMarshalMethodsLookupEnabled;
 		jnienv_propagate_uncaught_exception_fn propagateUncaughtExceptionFn;
 		jnienv_register_jni_natives_fn registerJniNativesFn;
-		jnienv_register_natives_fn registerNativesFn;
 	};
 
 	// Keep the enum values in sync with those in src/Mono.Android/AndroidRuntime/BoundExceptionType.cs

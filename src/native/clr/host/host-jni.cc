@@ -57,9 +57,3 @@ JNICALL Java_mono_android_Runtime_notifyTimeZoneChanged ([[maybe_unused]] JNIEnv
 {
 	// TODO: implement or remove
 }
-
-JNIEXPORT void
-JNICALL Java_mono_android_Runtime_registerNatives (JNIEnv *env, jclass klass, jclass nativeClass)
-{
-	Host::Java_mono_android_Runtime_registerNatives (env, nativeClass);
-}
