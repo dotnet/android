@@ -211,9 +211,15 @@ class TrimmableTypeMap
 	/// The proxy's target type is the open generic definition for generic peers
 	/// (Java erases generics, so one proxy fits every closed instantiation),
 	/// so a plain <see cref="Type.IsAssignableFrom"/> check misses when the hint
-	/// is a closed instantiation. Walk the hint's base chain to find a generic
-	/// type whose definition equals the proxy's open target type.
+	/// is a closed instantiation. Walk the hint's base chain and implemented
+	/// interfaces to find a generic type whose definition equals the proxy's
+	/// open target type — this covers both closed subclasses and hints that are
+	/// closed generic interfaces (e.g. <c>IList&lt;string&gt;</c> should match a
+	/// proxy whose target is <c>JavaList&lt;&gt;</c>, which implements
+	/// <c>IList&lt;T&gt;</c>).
 	/// </summary>
+	[UnconditionalSuppressMessage ("Trimming", "IL2070",
+		Justification = "targetType comes from live JNI marshalling call sites; its base chain and interfaces are rooted because the caller's generic signature keeps them alive.")]
 	internal static bool TargetTypeMatches (Type targetType, Type proxyTargetType)
 	{
 		if (targetType.IsAssignableFrom (proxyTargetType)) {
@@ -227,6 +233,13 @@ class TrimmableTypeMap
 		for (Type? t = targetType; t is not null; t = t.BaseType) {
 			if (t.IsGenericType && !t.IsGenericTypeDefinition &&
 					t.GetGenericTypeDefinition () == proxyTargetType) {
+				return true;
+			}
+		}
+
+		foreach (var iface in targetType.GetInterfaces ()) {
+			if (iface.IsGenericType && !iface.IsGenericTypeDefinition &&
+					iface.GetGenericTypeDefinition () == proxyTargetType) {
 				return true;
 			}
 		}

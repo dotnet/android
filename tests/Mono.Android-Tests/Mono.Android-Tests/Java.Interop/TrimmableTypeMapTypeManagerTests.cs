@@ -124,6 +124,9 @@ namespace Java.InteropTests
 		class OpenT2<T1, T2> { }
 		class ClosedOfIntOpenT : OpenT<int> { }
 		class DeepClosedOfOpenT : ClosedOfIntOpenT { }
+		interface IOpenIface<T> { }
+		class ImplementsOpenIface<T> : IOpenIface<T> { }
+		class ClosedImplementsOpenIface : ImplementsOpenIface<int> { }
 
 		[Test]
 		public void TargetTypeMatches_DirectAssignable_ReturnsTrue ()
@@ -159,6 +162,24 @@ namespace Java.InteropTests
 			// Different open generic definitions must NOT be treated as matching.
 			Assert.IsFalse (TrimmableTypeMap.TargetTypeMatches (typeof (OpenT<int>), typeof (OpenT2<,>)));
 			Assert.IsFalse (TrimmableTypeMap.TargetTypeMatches (typeof (string), typeof (OpenT<>)));
+		}
+
+		[Test]
+		public void TargetTypeMatches_ClosedGenericInterfaceHint_OpenGenericProxy_ReturnsTrue ()
+		{
+			// Hint is the closed generic interface itself (e.g. IList<string>); the
+			// proxy's target is an open generic class that implements the open form
+			// of that interface. GetInterfaces() on IList<string> returns its super
+			// interfaces (ICollection<string>, IEnumerable<string>) — we must also
+			// check `targetType` itself, which we handle by including it as the
+			// first element of the base-chain walk (Type.GetInterfaces on an
+			// interface returns super-interfaces). The assertion here is that a
+			// hint that IS-A generic interface whose definition equals the proxy's
+			// open target is matched through the interface walk.
+			Assert.IsTrue (TrimmableTypeMap.TargetTypeMatches (typeof (ImplementsOpenIface<int>), typeof (IOpenIface<>)),
+				"closed class hint implementing an open generic interface should match a proxy whose target is that interface's open definition");
+			Assert.IsTrue (TrimmableTypeMap.TargetTypeMatches (typeof (ClosedImplementsOpenIface), typeof (IOpenIface<>)),
+				"closed subclass inheriting implementation of the open generic interface should match via interface walk");
 		}
 
 		[Test]
