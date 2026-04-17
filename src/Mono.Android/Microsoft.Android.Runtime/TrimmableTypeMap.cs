@@ -87,26 +87,25 @@ class TrimmableTypeMap
 	/// <c>TypeMapping</c> proxy dictionary.
 	/// </summary>
 	/// <remarks>
-	/// Closed generic instantiations (e.g. <c>Holder&lt;int&gt;</c>) fall back to
-	/// their generic type definition (<c>Holder&lt;&gt;</c>) because the generator
-	/// emits exactly one <c>TypeMapAssociation</c> per generic peer, keyed by the
-	/// open definition (Java erases generics, so one proxy fits every closed
-	/// instantiation). The CLR lazy dictionary does identity-based lookups
-	/// (see <c>dotnet/runtime</c> <c>TypeMapLazyDictionary.cs</c>), so the
-	/// fallback must happen here. <see cref="Type.GetGenericTypeDefinition"/> is
-	/// safe under full AOT + trim (it is not <c>RequiresDynamicCode</c>).
-	/// Java→managed construction of a closed generic peer still requires a
-	/// closed <see cref="Type"/> at the call site and is tracked separately.
+	/// The generator emits exactly one <c>TypeMapAssociation</c> per generic peer,
+	/// keyed by the open generic definition (Java erases generics, so one proxy
+	/// fits every closed instantiation). Closed instantiations are normalised to
+	/// their generic type definition before the lookup because the CLR lazy
+	/// dictionary does identity-based key matching
+	/// (see <c>dotnet/runtime</c> <c>TypeMapLazyDictionary.cs</c>).
+	/// <see cref="Type.GetGenericTypeDefinition"/> is safe under full AOT + trim
+	/// (it is not <c>RequiresDynamicCode</c>). Java→managed construction of a
+	/// closed generic peer still requires a closed <see cref="Type"/> at the call
+	/// site and is tracked separately.
 	/// </remarks>
 	JavaPeerProxy? GetProxyForManagedType (Type managedType)
 	{
 		var proxy = _proxyCache.GetOrAdd (managedType, static (type, self) => {
-			if (self._proxyTypeMap.TryGetValue (type, out var proxyType)) {
-				return proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false) ?? s_noPeerSentinel;
+			if (type.IsGenericType && !type.IsGenericTypeDefinition) {
+				type = type.GetGenericTypeDefinition ();
 			}
 
-			if (type.IsGenericType && !type.IsGenericTypeDefinition &&
-					self._proxyTypeMap.TryGetValue (type.GetGenericTypeDefinition (), out proxyType)) {
+			if (self._proxyTypeMap.TryGetValue (type, out var proxyType)) {
 				return proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false) ?? s_noPeerSentinel;
 			}
 
