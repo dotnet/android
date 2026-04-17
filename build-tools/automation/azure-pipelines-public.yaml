@@ -1,17 +1,10 @@
 # .NET for Android Pipeline - Public Build
-# This pipeline runs on the public dnceng instance for:
-# - PRs from forks (contributors)
-# - Main or release branch CI builds
+# This pipeline runs on the public dnceng instance for PRs from forks (contributors).
 # Internal branches use the DevDiv pipeline (azure-pipelines.yaml)
 
 name: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
 
-trigger:
-  branches:
-    include:
-    - main
-    - release/*
-    - feature/*
+trigger: none
 
 pr:
   branches:
@@ -74,6 +67,7 @@ stages:
 # macOS Build Stage
 - stage: mac_build
   displayName: Mac
+  condition: eq(variables['System.PullRequest.IsFork'], 'True')
   jobs:
   - job: mac_build_create_installers
     displayName: macOS > Build
@@ -109,6 +103,7 @@ stages:
 - stage: win_build_test
   displayName: Windows
   dependsOn: []
+  condition: eq(variables['System.PullRequest.IsFork'], 'True')
   jobs:
   - job: win_build_test
     displayName: Windows > Build & Smoke Test
@@ -130,6 +125,7 @@ stages:
 - stage: linux_build
   displayName: Linux
   dependsOn: []
+  condition: eq(variables['System.PullRequest.IsFork'], 'True')
   jobs:
   - job: linux_build_create_sdk_pack
     displayName: Linux > Build
@@ -177,7 +173,7 @@ stages:
   dependsOn: 
   - mac_build
   - linux_build
-  condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'))
+  condition: and(succeeded(), eq(variables['System.PullRequest.IsFork'], 'True'), ne(variables['SkipTestStages'], 'true'))
   jobs:
   - job: linux_tests_smoke_1
     displayName: Linux > Tests > MSBuild 1
@@ -273,7 +269,7 @@ stages:
 - stage: msbuild_dotnet
   displayName: MSBuild Tests
   dependsOn: mac_build
-  condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'))
+  condition: and(succeeded(), eq(variables['System.PullRequest.IsFork'], 'True'), ne(variables['SkipTestStages'], 'true'))
   jobs:
   - job: mac_msbuild_tests
     strategy:
@@ -364,7 +360,7 @@ stages:
 - stage: msbuilddevice_tests
   displayName: MSBuild Emulator Tests
   dependsOn: mac_build
-  condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'))
+  condition: and(succeeded(), eq(variables['System.PullRequest.IsFork'], 'True'), ne(variables['SkipTestStages'], 'true'))
   jobs:
   - job: mac_dotnetdevice_tests
     strategy:
