@@ -73,5 +73,98 @@ namespace Java.InteropTests
 			Assert.AreEqual (openJniName, closedIntJniName,
 				"Different closed instantiations must map to the same JNI name.");
 		}
+
+		[Test]
+		public void TryGetJniNameForManagedType_NonGenericType_ResolvesDirectly ()
+		{
+			if (!RuntimeFeature.TrimmableTypeMap) {
+				Assert.Ignore ("TrimmableTypeMap feature switch is off; test only relevant for the trimmable typemap path.");
+			}
+
+			// Regression: the GTD fallback must not disturb the non-generic hot path.
+			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetJniNameForManagedType (typeof (JavaList), out var jniName));
+			Assert.IsFalse (string.IsNullOrEmpty (jniName));
+		}
+
+		[Test]
+		public void TryGetJniNameForManagedType_UnknownClosedGeneric_ReturnsFalse ()
+		{
+			if (!RuntimeFeature.TrimmableTypeMap) {
+				Assert.Ignore ("TrimmableTypeMap feature switch is off; test only relevant for the trimmable typemap path.");
+			}
+
+			// System.Collections.Generic.List<T> has no TypeMapAssociation — both the
+			// direct lookup AND the GTD fallback must miss, and the API must return false.
+			Assert.IsFalse (TrimmableTypeMap.Instance.TryGetJniNameForManagedType (
+				typeof (System.Collections.Generic.List<int>), out var jniName));
+			Assert.IsNull (jniName);
+		}
+
+		[Test]
+		public void TryGetJniNameForManagedType_RepeatedClosedGenericLookup_IsCached ()
+		{
+			if (!RuntimeFeature.TrimmableTypeMap) {
+				Assert.Ignore ("TrimmableTypeMap feature switch is off; test only relevant for the trimmable typemap path.");
+			}
+
+			// The cache is keyed by the original closed type, so a second identical
+			// lookup returns the same proxy instance without walking the GTD again.
+			var instance = TrimmableTypeMap.Instance;
+
+			Assert.IsTrue (instance.TryGetJniNameForManagedType (typeof (JavaList<Guid>), out var first));
+			Assert.IsTrue (instance.TryGetJniNameForManagedType (typeof (JavaList<Guid>), out var second));
+			Assert.AreEqual (first, second);
+		}
+
+		// Pure-function tests for the TargetTypeMatches helper used by
+		// TryGetProxyFromHierarchy when the hierarchy lookup finds a proxy whose
+		// stored TargetType is an open generic definition.
+
+		class OpenT<T> { }
+		class OpenT2<T1, T2> { }
+		class ClosedOfIntOpenT : OpenT<int> { }
+		class DeepClosedOfOpenT : ClosedOfIntOpenT { }
+
+		[Test]
+		public void TargetTypeMatches_DirectAssignable_ReturnsTrue ()
+		{
+			// Non-generic direct match: proxy target IS-A hint.
+			Assert.IsTrue (TrimmableTypeMap.TargetTypeMatches (typeof (object), typeof (string)));
+			Assert.IsTrue (TrimmableTypeMap.TargetTypeMatches (typeof (string), typeof (string)));
+		}
+
+		[Test]
+		public void TargetTypeMatches_ClosedHint_OpenGenericProxy_SelfMatch_ReturnsTrue ()
+		{
+			// Hint is OpenT<int>; proxy's target is the open GTD OpenT<>.
+			// IsAssignableFrom(OpenT<>) against OpenT<int> is false, so this exercises
+			// the new GTD base-walk branch (self match on first iteration).
+			Assert.IsTrue (TrimmableTypeMap.TargetTypeMatches (typeof (OpenT<int>), typeof (OpenT<>)));
+			Assert.IsTrue (TrimmableTypeMap.TargetTypeMatches (typeof (OpenT<string>), typeof (OpenT<>)));
+			Assert.IsTrue (TrimmableTypeMap.TargetTypeMatches (typeof (OpenT2<int, string>), typeof (OpenT2<,>)));
+		}
+
+		[Test]
+		public void TargetTypeMatches_ClosedSubclassHint_OpenGenericProxy_ReturnsTrue ()
+		{
+			// Hint is a closed subclass of the open generic; the base-walk finds
+			// the generic base type whose definition equals the proxy's open target.
+			Assert.IsTrue (TrimmableTypeMap.TargetTypeMatches (typeof (ClosedOfIntOpenT), typeof (OpenT<>)));
+			Assert.IsTrue (TrimmableTypeMap.TargetTypeMatches (typeof (DeepClosedOfOpenT), typeof (OpenT<>)));
+		}
+
+		[Test]
+		public void TargetTypeMatches_MismatchedOpenGeneric_ReturnsFalse ()
+		{
+			// Different open generic definitions must NOT be treated as matching.
+			Assert.IsFalse (TrimmableTypeMap.TargetTypeMatches (typeof (OpenT<int>), typeof (OpenT2<,>)));
+			Assert.IsFalse (TrimmableTypeMap.TargetTypeMatches (typeof (string), typeof (OpenT<>)));
+		}
+
+		[Test]
+		public void TargetTypeMatches_UnrelatedNonGeneric_ReturnsFalse ()
+		{
+			Assert.IsFalse (TrimmableTypeMap.TargetTypeMatches (typeof (string), typeof (int)));
+		}
 	}
 }

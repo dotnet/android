@@ -176,32 +176,6 @@ class TrimmableTypeMap
 			return null;
 		}
 
-		// Match the proxy's stored target type against a hint from the caller.
-		// The proxy's target type is the open generic definition for generic peers
-		// (Java erases generics, so one proxy fits every closed instantiation),
-		// so a plain IsAssignableFrom check misses when the hint is a closed
-		// instantiation. Walk the hint's base chain to find a generic type whose
-		// definition equals the proxy's open target type.
-		static bool TargetTypeMatches (Type targetType, Type proxyTargetType)
-		{
-			if (targetType.IsAssignableFrom (proxyTargetType)) {
-				return true;
-			}
-
-			if (!proxyTargetType.IsGenericTypeDefinition) {
-				return false;
-			}
-
-			for (Type? t = targetType; t is not null; t = t.BaseType) {
-				if (t.IsGenericType && !t.IsGenericTypeDefinition &&
-						t.GetGenericTypeDefinition () == proxyTargetType) {
-					return true;
-				}
-			}
-
-			return false;
-		}
-
 		static JavaPeerProxy? TryGetProxyFromTargetType (TrimmableTypeMap self, IntPtr handle, Type? targetType)
 		{
 			if (targetType is null) {
@@ -231,6 +205,34 @@ class TrimmableTypeMap
 	}
 
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+
+	/// <summary>
+	/// Match the proxy's stored target type against a hint from the caller.
+	/// The proxy's target type is the open generic definition for generic peers
+	/// (Java erases generics, so one proxy fits every closed instantiation),
+	/// so a plain <see cref="Type.IsAssignableFrom"/> check misses when the hint
+	/// is a closed instantiation. Walk the hint's base chain to find a generic
+	/// type whose definition equals the proxy's open target type.
+	/// </summary>
+	internal static bool TargetTypeMatches (Type targetType, Type proxyTargetType)
+	{
+		if (targetType.IsAssignableFrom (proxyTargetType)) {
+			return true;
+		}
+
+		if (!proxyTargetType.IsGenericTypeDefinition) {
+			return false;
+		}
+
+		for (Type? t = targetType; t is not null; t = t.BaseType) {
+			if (t.IsGenericType && !t.IsGenericTypeDefinition &&
+					t.GetGenericTypeDefinition () == proxyTargetType) {
+				return true;
+			}
+		}
+
+		return false;
+	}
 
 	/// <summary>
 	/// Gets the invoker type for an interface or abstract class from the proxy attribute.
