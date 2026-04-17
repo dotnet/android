@@ -3,8 +3,9 @@
 using System;
 using System.Diagnostics;
 using System.Collections.Generic;
-using System.Text;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace Java.Interop
 {
@@ -56,43 +57,17 @@ namespace Java.Interop
 					return r;
 				}
 				RawExceptionClear (info.EnvironmentPointer);
-
-				var findClassThrown     = new JniObjectReference (thrown, JniObjectReferenceType.Local);
-				LogCreateLocalRef (findClassThrown);
-				var pendingException    = info.Runtime.GetExceptionForThrowable (ref findClassThrown, JniObjectReferenceOptions.CopyAndDispose);
-
-				if (Class_forName.IsValid) {
-					var java    = info.ToJavaName (classname);
-					var __args  = stackalloc JniArgumentValue [3];
-					__args [0]  = new JniArgumentValue (java);
-					__args [1]  = new JniArgumentValue (true);  // initialize the class
-					__args [2]  = new JniArgumentValue (info.Runtime.ClassLoader);
-
-					c = RawCallStaticObjectMethodA (info.EnvironmentPointer, out thrown, Class_reference.Handle, Class_forName.ID, (IntPtr) __args);
+				var java = info.ToJavaName (classname);
+				try {
+					if (TryLoadClassWithFallback (info, thrown, java, throwOnError, out var result))
+						return result;
+				} finally {
 					JniObjectReference.Dispose (ref java);
-					if (thrown == IntPtr.Zero) {
-						(pendingException as IJavaPeerable)?.Dispose ();
-						var r = new JniObjectReference (c, JniObjectReferenceType.Local);
-						JniEnvironment.LogCreateLocalRef (r);
-						return r;
-					}
-					RawExceptionClear (info.EnvironmentPointer);
-
-					if (pendingException != null) {
-						JniEnvironment.References.RawDeleteLocalRef (info.EnvironmentPointer, thrown);
-					}
-					else {
-						var loadClassThrown = new JniObjectReference (thrown, JniObjectReferenceType.Local);
-						LogCreateLocalRef (loadClassThrown);
-						pendingException    = info.Runtime.GetExceptionForThrowable (ref loadClassThrown, JniObjectReferenceOptions.CopyAndDispose);
-					}
 				}
-
-				if (!throwOnError) {
-					(pendingException as IJavaPeerable)?.Dispose ();
+				if (!throwOnError)
 					return default;
-				}
-				throw pendingException!;
+
+				throw new InvalidOperationException ($"Could not find Java class '{classname}'.");
 #endif  // !(FEATURE_JNIENVIRONMENT_JI_PINVOKES || FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS)
 #if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 				var c       = info.Invoker.FindClass (info.EnvironmentPointer, classname);
@@ -134,6 +109,78 @@ namespace Java.Interop
 				throw pendingException!;
 #endif  // !FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 			}
+
+			static unsafe bool TryLoadClassWithFallback (JniEnvironmentInfo info, IntPtr thrown, JniObjectReference classNameJavaString, bool throwOnError, out JniObjectReference result)
+			{
+				result = default;
+
+				var findClassThrown     = new JniObjectReference (thrown, JniObjectReferenceType.Local);
+				LogCreateLocalRef (findClassThrown);
+				Exception? pendingException = info.Runtime.GetExceptionForThrowable (ref findClassThrown, JniObjectReferenceOptions.CopyAndDispose);
+
+				if (Class_forName.IsValid) {
+					var __args  = stackalloc JniArgumentValue [3];
+					__args [0]  = new JniArgumentValue (classNameJavaString);
+					__args [1]  = new JniArgumentValue (true);  // initialize the class
+					__args [2]  = new JniArgumentValue (info.Runtime.ClassLoader);
+
+					var c = RawCallStaticObjectMethodA (info.EnvironmentPointer, out thrown, Class_reference.Handle, Class_forName.ID, (IntPtr) __args);
+					if (thrown == IntPtr.Zero) {
+						(pendingException as IJavaPeerable)?.Dispose ();
+						result = new JniObjectReference (c, JniObjectReferenceType.Local);
+						JniEnvironment.LogCreateLocalRef (result);
+						return true;
+					}
+					RawExceptionClear (info.EnvironmentPointer);
+
+					if (pendingException != null) {
+						JniEnvironment.References.RawDeleteLocalRef (info.EnvironmentPointer, thrown);
+					} else {
+						var loadClassThrown = new JniObjectReference (thrown, JniObjectReferenceType.Local);
+						LogCreateLocalRef (loadClassThrown);
+						pendingException = info.Runtime.GetExceptionForThrowable (ref loadClassThrown, JniObjectReferenceOptions.CopyAndDispose);
+					}
+				}
+
+				if (!throwOnError) {
+					(pendingException as IJavaPeerable)?.Dispose ();
+					return false;
+				}
+				if (pendingException != null)
+					throw pendingException;
+
+				return false;
+			}
+
+#if FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
+			static unsafe JniObjectReference NewJavaNameFromUtf8 (IntPtr env, ReadOnlySpan<byte> classname)
+			{
+				var terminator = classname.IndexOf ((byte) 0);
+				if (terminator >= 0)
+					classname = classname.Slice (0, terminator);
+
+				// Class names here are binary/JNI names, so `NewStringUTF()` lets the fallback
+				// avoid a managed UTF-16 allocation while still calling `Class.forName()`.
+				Span<byte> javaName = classname.Length + 1 <= 256
+					? stackalloc byte [classname.Length + 1]
+					: new byte [classname.Length + 1];
+
+				for (int i = 0; i < classname.Length; ++i)
+					javaName [i] = classname [i] == (byte) '/' ? (byte) '.' : classname [i];
+				javaName [classname.Length] = 0;
+
+				fixed (byte* pJavaName = javaName) {
+					var s = (*((JNIEnv**) env))->NewStringUTF (env, (IntPtr) pJavaName);
+					var e = JniEnvironment.GetExceptionForLastThrowable ();
+					if (e != null)
+						ExceptionDispatchInfo.Capture (e).Throw ();
+
+					var r = new JniObjectReference (s, JniObjectReferenceType.Local);
+					JniEnvironment.LogCreateLocalRef (r);
+					return r;
+				}
+			}
+#endif
 
 			static bool TryRawFindClass (IntPtr env, string classname, out IntPtr klass, out IntPtr thrown)
 			{
@@ -331,6 +378,9 @@ namespace Java.Interop
 
 			static unsafe JniObjectReference TryFindClass (ReadOnlySpan<byte> classname, bool throwOnError)
 			{
+				if (classname.Length == 0)
+					throw new ArgumentException ("'classname' cannot be a zero-length string.", nameof (classname));
+
 				var info = JniEnvironment.CurrentInfo;
 				fixed (byte* _classname_ptr = classname) {
 					var c      = JniNativeMethods.FindClass (info.EnvironmentPointer, (IntPtr) _classname_ptr);
@@ -342,20 +392,24 @@ namespace Java.Interop
 					}
 
 					RawExceptionClear (info.EnvironmentPointer);
-
-					var findClassThrown  = new JniObjectReference (thrown, JniObjectReferenceType.Local);
-					LogCreateLocalRef (findClassThrown);
-					var pendingException = info.Runtime.GetExceptionForThrowable (ref findClassThrown, JniObjectReferenceOptions.CopyAndDispose);
-
-					if (!throwOnError) {
-						(pendingException as IJavaPeerable)?.Dispose ();
-						return default;
+					var javaName = NewJavaNameFromUtf8 (info.EnvironmentPointer, classname);
+					try {
+						if (TryLoadClassWithFallback (info, thrown, javaName, throwOnError, out var result))
+							return result;
+					} finally {
+						JniObjectReference.Dispose (ref javaName);
 					}
-					throw pendingException!;
+					if (!throwOnError)
+						return default;
+
+					var terminator = classname.IndexOf ((byte) 0);
+					var errorClassName = terminator >= 0
+						? Encoding.UTF8.GetString (classname.Slice (0, terminator))
+						: Encoding.UTF8.GetString (classname);
+					throw new InvalidOperationException ($"Could not find Java class '{errorClassName}'.");
 				}
 			}
 #endif  // FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 		}
 	}
 }
-

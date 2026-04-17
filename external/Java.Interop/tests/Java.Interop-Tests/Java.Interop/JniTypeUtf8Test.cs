@@ -44,6 +44,29 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void FindClass_Utf8_UsesSameFallbackAsStringOverload ()
+		{
+			var fromString = JniEnvironment.Types.FindClass ("java.lang.Object");
+			var fromUtf8   = JniEnvironment.Types.FindClass ("java.lang.Object"u8);
+			try {
+				Assert.IsTrue (JniEnvironment.Types.IsSameObject (fromString, fromUtf8));
+			} finally {
+				JniObjectReference.Dispose (ref fromString);
+				JniObjectReference.Dispose (ref fromUtf8);
+			}
+		}
+
+		[Test]
+		public void Ctor_Utf8_UsesSameFallbackAsStringOverload ()
+		{
+			using (var fromString = new JniType ("java.lang.Object"))
+			using (var fromUtf8 = new JniType ("java.lang.Object"u8)) {
+				Assert.IsTrue (JniEnvironment.Types.IsSameObject (fromString.PeerReference, fromUtf8.PeerReference));
+				Assert.AreEqual ("java/lang/Object", fromUtf8.Name);
+			}
+		}
+
+		[Test]
 		public void FindClass_Utf8_ThrowsOnNotFound ()
 		{
 #if __ANDROID__
