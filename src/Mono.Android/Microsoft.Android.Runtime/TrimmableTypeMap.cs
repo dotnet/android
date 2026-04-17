@@ -199,7 +199,7 @@ class TrimmableTypeMap
 	}
 
 	[UnmanagedCallersOnly]
-	static void OnRegisterNatives (IntPtr jnienv, IntPtr klass, IntPtr nativeClassHandle)
+	internal static void OnRegisterNatives (IntPtr jnienv, IntPtr klass, IntPtr nativeClassHandle)
 	{
 		string? className = null;
 		try {

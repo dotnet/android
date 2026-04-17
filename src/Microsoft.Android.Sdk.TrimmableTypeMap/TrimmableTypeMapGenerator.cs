@@ -51,7 +51,7 @@ public class TrimmableTypeMapGenerator
 
 		// Collect Application/Instrumentation types that need deferred registerNatives
 		var appRegTypes = allPeers
-			.Where (p => p.CannotRegisterInStaticConstructor && !p.IsAbstract && !p.DoNotGenerateAcw)
+			.Where (p => p.CannotRegisterInStaticConstructor && !p.DoNotGenerateAcw)
 			.Select (p => JniSignatureHelper.JniNameToJavaName (p.JavaName))
 			.ToList ();
 		if (appRegTypes.Count > 0) {
