@@ -382,6 +382,14 @@ sealed class TypeMapAssemblyEmitter
 			metadata.AddInterfaceImplementation (typeDefHandle, _iAndroidCallableWrapperRef);
 		}
 
+		// Self-apply: the proxy type is its own [JavaPeerProxy] attribute.
+		// This enables type.GetCustomAttribute<JavaPeerProxy>() to instantiate the proxy
+		// at runtime for AOT-safe type resolution.
+		var selfAttrCtorRef = _pe.AddMemberRef (typeDefHandle, ".ctor",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }));
+		var selfAttrBlob = _pe.BuildAttributeBlob (b => { });
+		metadata.AddCustomAttribute (typeDefHandle, selfAttrCtorRef, selfAttrBlob);
+
 		// .ctor — pass the resolved JNI name and optional invoker type to the generic base proxy
 		_pe.EmitBody (".ctor",
 			MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
