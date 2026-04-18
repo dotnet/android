@@ -172,7 +172,4 @@
     </ItemGroup>
   </Target>
 
-  <!-- Keep the base _RemoveRegisterAttribute target so PublishTrimmed still
-       populates @(_ShrunkAssemblies) for downstream BuildApk packaging. -->
-
 </Project>
