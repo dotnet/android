@@ -51,7 +51,10 @@ public class TrimmableTypeMapGenerator
 
 		// Collect Application/Instrumentation types that need deferred registerNatives
 		var appRegTypes = allPeers
-			.Where (p => p.CannotRegisterInStaticConstructor && !p.DoNotGenerateAcw)
+			// Include all deferred-registration peers here: framework MCWs still need
+			// ApplicationRegistration.java even without generated ACWs, and abstract
+			// base types can own the native methods that derived types invoke.
+			.Where (p => p.CannotRegisterInStaticConstructor)
 			.Select (p => JniSignatureHelper.JniNameToJavaName (p.JavaName))
 			.ToList ();
 		if (appRegTypes.Count > 0) {
@@ -166,7 +169,7 @@ public class TrimmableTypeMapGenerator
 			case "provider":
 				var name = (string?) element.Attribute (attName);
 				if (name is not null) {
-					var resolvedName = ResolveManifestClassName (name, packageName);
+					var resolvedName = ManifestNameResolver.Resolve (name, packageName);
 					componentNames.Add (resolvedName);
 
 					if (element.Name.LocalName is "application" or "instrumentation") {
@@ -346,17 +349,4 @@ public class TrimmableTypeMapGenerator
 		}
 	}
 
-	/// <summary>
-	/// Resolves an android:name value to a fully-qualified class name.
-	/// Names starting with '.' are relative to the package. Names with no '.' at all
-	/// are also treated as relative (Android tooling convention).
-	/// </summary>
-	static string ResolveManifestClassName (string name, string packageName)
-	{
-		return name switch {
-			_ when name.StartsWith (".", StringComparison.Ordinal) => packageName + name,
-			_ when name.IndexOf ('.') < 0 && !packageName.IsNullOrEmpty () => packageName + "." + name,
-			_ => name,
-		};
-	}
 }

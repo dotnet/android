@@ -132,9 +132,9 @@ static class ModelBuilder
 
 			// Emit TypeMapAssociation for all proxy-backed types so managed → proxy
 			// lookup works even when the final JNI name differs from the type's attributes.
-			// Skip generic definitions — their open generic type can't be loaded by the runtime.
+			// Generic definitions are supported via the non-generic `JavaPeerProxy` base.
 			var assocProxy = (i > 0 && primaryProxy != null) ? primaryProxy : proxy;
-			if (assocProxy != null && !peer.IsGenericDefinition) {
+			if (assocProxy != null) {
 				model.Associations.Add (new TypeMapAssociationData {
 					SourceTypeReference = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName),
 					AliasProxyTypeReference = AssemblyQualify ($"{assocProxy.Namespace}.{assocProxy.TypeName}", assemblyName),
