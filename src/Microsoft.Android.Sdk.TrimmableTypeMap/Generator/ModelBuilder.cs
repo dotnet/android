@@ -123,6 +123,12 @@ static class ModelBuilder
 			}
 
 			model.Entries.Add (BuildEntry (peer, proxy, assemblyName, jniName));
+			if (proxy != null && peer.IsGenericDefinition) {
+				model.Associations.Add (new TypeMapAssociationData {
+					SourceTypeReference = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName),
+					AliasProxyTypeReference = AssemblyQualify ($"{proxy.Namespace}.{proxy.TypeName}", assemblyName),
+				});
+			}
 			return;
 		}
 
