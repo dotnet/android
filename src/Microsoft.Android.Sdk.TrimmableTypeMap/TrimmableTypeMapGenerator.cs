@@ -165,7 +165,7 @@ public class TrimmableTypeMapGenerator
 			case "provider":
 				var name = (string?) element.Attribute (attName);
 				if (name is not null) {
-					var resolvedName = ResolveManifestClassName (name, packageName);
+					var resolvedName = ManifestNameResolver.Resolve (name, packageName);
 					componentNames.Add (resolvedName);
 
 					if (element.Name.LocalName is "application" or "instrumentation") {
@@ -309,17 +309,4 @@ public class TrimmableTypeMapGenerator
 		}
 	}
 
-	/// <summary>
-	/// Resolves an android:name value to a fully-qualified class name.
-	/// Names starting with '.' are relative to the package. Names with no '.' at all
-	/// are also treated as relative (Android tooling convention).
-	/// </summary>
-	static string ResolveManifestClassName (string name, string packageName)
-	{
-		return name switch {
-			_ when name.StartsWith (".", StringComparison.Ordinal) => packageName + name,
-			_ when name.IndexOf ('.') < 0 && !packageName.IsNullOrEmpty () => packageName + "." + name,
-			_ => name,
-		};
-	}
 }
