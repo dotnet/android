@@ -73,16 +73,19 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Execute_CollectsDeferredRegistrationTypes_ForConcreteApplicationAndInstrumentation ()
+	public void Execute_CollectsDeferredRegistrationTypes_ForAllApplicationAndInstrumentationSubtypes ()
 	{
 		using var peReader = CreateTestFixturePEReader ();
 		var result = CreateGenerator ().Execute (new List<(string, PEReader)> { ("TestFixtures", peReader) }, new Version (11, 0), new HashSet<string> ());
 
+		// Abstract Instrumentation/Application subtypes are included too: their native
+		// methods (e.g. n_OnCreate, n_OnStart) are declared on the abstract base class
+		// and must be registered via ApplicationRegistration.registerApplications ().
 		Assert.Contains ("my.app.MyApplication", result.ApplicationRegistrationTypes);
 		Assert.Contains ("my.app.MyInstrumentation", result.ApplicationRegistrationTypes);
-		Assert.DoesNotContain ("my.app.BaseApplication", result.ApplicationRegistrationTypes);
-		Assert.DoesNotContain ("my.app.BaseInstrumentation", result.ApplicationRegistrationTypes);
-		Assert.DoesNotContain ("my.app.IntermediateInstrumentation", result.ApplicationRegistrationTypes);
+		Assert.Contains ("my.app.BaseApplication", result.ApplicationRegistrationTypes);
+		Assert.Contains ("my.app.BaseInstrumentation", result.ApplicationRegistrationTypes);
+		Assert.Contains ("my.app.IntermediateInstrumentation", result.ApplicationRegistrationTypes);
 	}
 
 	[Fact]

@@ -59,7 +59,16 @@ class TrimmableTypeMap
 
 	unsafe void RegisterNatives ()
 	{
-		using var runtimeClass = new JniType ("mono/android/Runtime"u8);
+		// Use the `string` overload of `JniType` deliberately. Its underlying
+		// `JniEnvironment.Types.TryFindClass(string, bool)` tries raw JNI `FindClass`
+		// first and, if that fails, falls back to `Class.forName(name, true, info.Runtime.ClassLoader)`,
+		// which resolves via the runtime's app ClassLoader — the same one that loads
+		// `mono.android.Runtime` from the APK.
+		// The `ReadOnlySpan<byte>` overload (see external/Java.Interop/src/Java.Interop/Java.Interop/JniEnvironment.Types.cs)
+		// only calls raw JNI `FindClass`, which resolves via the system ClassLoader on
+		// Android and returns a different `Class` instance from the one JCWs reference.
+		// Registering natives on that other instance is silently wrong.
+		using var runtimeClass = new JniType ("mono/android/Runtime");
 		fixed (byte* name = "registerNatives"u8, sig = "(Ljava/lang/Class;)V"u8) {
 			var onRegisterNatives = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&OnRegisterNatives;
 			var method = new JniNativeMethod (name, sig, onRegisterNatives);
@@ -73,14 +82,34 @@ class TrimmableTypeMap
 		return type is not null;
 	}
 
+	/// <summary>
+	/// Resolves the <see cref="JavaPeerProxy"/> for a managed type via the CLR
+	/// <c>TypeMapping</c> proxy dictionary.
+	/// </summary>
+	/// <remarks>
+	/// The generator emits exactly one <c>TypeMapAssociation</c> per generic peer,
+	/// keyed by the open generic definition (Java erases generics, so one proxy
+	/// fits every closed instantiation). Closed instantiations are normalised to
+	/// their generic type definition before the lookup because the CLR lazy
+	/// dictionary does identity-based key matching
+	/// (see <c>dotnet/runtime</c> <c>TypeMapLazyDictionary.cs</c>).
+	/// <see cref="Type.GetGenericTypeDefinition"/> is safe under full AOT + trim
+	/// (it is not <c>RequiresDynamicCode</c>). Java→managed construction of a
+	/// closed generic peer still requires a closed <see cref="Type"/> at the call
+	/// site and is tracked separately.
+	/// </remarks>
 	JavaPeerProxy? GetProxyForManagedType (Type managedType)
 	{
+		if (managedType.IsGenericType && !managedType.IsGenericTypeDefinition) {
+			managedType = managedType.GetGenericTypeDefinition ();
+		}
+
 		var proxy = _proxyCache.GetOrAdd (managedType, static (type, self) => {
-			if (!self._proxyTypeMap.TryGetValue (type, out var proxyType)) {
-				return s_noPeerSentinel;
+			if (self._proxyTypeMap.TryGetValue (type, out var proxyType)) {
+				return proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false) ?? s_noPeerSentinel;
 			}
 
-			return proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false) ?? s_noPeerSentinel;
+			return s_noPeerSentinel;
 		}, this);
 		return ReferenceEquals (proxy, s_noPeerSentinel) ? null : proxy;
 	}
@@ -130,7 +159,7 @@ class TrimmableTypeMap
 					var className = JniEnvironment.Types.GetJniTypeNameFromClass (jniClass);
 					if (className != null) {
 						var proxy = self.GetProxyForJavaType (className);
-						if (proxy != null && (targetType is null || targetType.IsAssignableFrom (proxy.TargetType))) {
+						if (proxy != null && (targetType is null || TargetTypeMatches (targetType, proxy.TargetType))) {
 							return proxy;
 						}
 					}
@@ -177,6 +206,47 @@ class TrimmableTypeMap
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
 	/// <summary>
+	/// Match the proxy's stored target type against a hint from the caller.
+	/// The proxy's target type is the open generic definition for generic peers
+	/// (Java erases generics, so one proxy fits every closed instantiation),
+	/// so a plain <see cref="Type.IsAssignableFrom"/> check misses when the hint
+	/// is a closed instantiation. Walk the hint's base chain to find a generic
+	/// type whose definition equals the proxy's open target type. This covers
+	/// closed subclasses of an open generic class peer.
+	/// </summary>
+	/// <remarks>
+	/// Implementers of an open generic <em>interface</em> peer are intentionally
+	/// not matched here: <see cref="TryGetProxyFromHierarchy"/> walks only the
+	/// JNI class chain (<c>getSuperclass</c>), never JNI interfaces, so the
+	/// proxy returned from that walk is always a class peer. Matching on
+	/// <c>Type.GetInterfaces()</c> would also force a trimmer
+	/// <c>DynamicallyAccessedMembers(Interfaces)</c> annotation up the chain
+	/// (ultimately into Java.Interop's <c>CreatePeer</c> API). If we ever need
+	/// to discover interface peers, the generator should emit an explicit
+	/// implementer→interface map so runtime can avoid reflection over
+	/// interface lists.
+	/// </remarks>
+	internal static bool TargetTypeMatches (Type targetType, Type proxyTargetType)
+	{
+		if (targetType.IsAssignableFrom (proxyTargetType)) {
+			return true;
+		}
+
+		if (!proxyTargetType.IsGenericTypeDefinition) {
+			return false;
+		}
+
+		for (Type? t = targetType; t is not null; t = t.BaseType) {
+			if (t.IsGenericType && !t.IsGenericTypeDefinition &&
+					t.GetGenericTypeDefinition () == proxyTargetType) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/// <summary>
 	/// Gets the invoker type for an interface or abstract class from the proxy attribute.
 	/// </summary>
 	[return: DynamicallyAccessedMembers (Constructors)]
@@ -215,7 +285,9 @@ class TrimmableTypeMap
 
 			var proxy = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
 			if (proxy is IAndroidCallableWrapper acw) {
-				using var jniType = new JniType (className);
+				// Use the class reference passed from Java (via C++) — not JniType(className)
+				// which resolves via FindClass and may get a different class from a different ClassLoader.
+				using var jniType = new JniType (ref classRef, JniObjectReferenceOptions.Copy);
 				acw.RegisterNatives (jniType);
 			}
 		} catch (Exception ex) {

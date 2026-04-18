@@ -50,7 +50,10 @@ public class TrimmableTypeMapGenerator
 
 		// Collect Application/Instrumentation types that need deferred registerNatives
 		var appRegTypes = allPeers
-			.Where (p => p.CannotRegisterInStaticConstructor && !p.IsAbstract)
+			// Include all deferred-registration peers here: framework MCWs still need
+			// ApplicationRegistration.java even without generated ACWs, and abstract
+			// base types can own the native methods that derived types invoke.
+			.Where (p => p.CannotRegisterInStaticConstructor)
 			.Select (p => JniSignatureHelper.JniNameToJavaName (p.JavaName))
 			.ToList ();
 		if (appRegTypes.Count > 0) {

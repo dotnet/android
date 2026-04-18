@@ -132,6 +132,9 @@ static class ModelBuilder
 
 			// Emit TypeMapAssociation for all proxy-backed types so managed → proxy
 			// lookup works even when the final JNI name differs from the type's attributes.
+			// Generic definitions are included — their proxy types derive from the
+			// non-generic `JavaPeerProxy` base so the CLR can load them without
+			// resolving an open generic argument.
 			var assocProxy = (i > 0 && primaryProxy != null) ? primaryProxy : proxy;
 			if (assocProxy != null) {
 				model.Associations.Add (new TypeMapAssociationData {
