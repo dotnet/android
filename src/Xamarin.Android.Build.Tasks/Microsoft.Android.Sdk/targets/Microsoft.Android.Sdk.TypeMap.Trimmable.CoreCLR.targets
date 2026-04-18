@@ -5,6 +5,39 @@
     <_TrimmableRuntimeProviderJavaName Condition=" '$(_TrimmableRuntimeProviderJavaName)' == '' ">mono.MonoRuntimeProvider</_TrimmableRuntimeProviderJavaName>
   </PropertyGroup>
 
+  <!--
+    WORKAROUND (temporary): Upstream Microsoft.NET.ILLink.targets' _PrepareTrimConfiguration
+    target historically added @(IntermediateAssembly) to @(TrimmerRootAssembly) with
+    RootMode="EntryPoint" unconditionally. Android apps have no managed Main() (we force
+    OutputType=Library in Microsoft.Android.Sdk.DefaultProperties.targets), so ILLink fails
+    with IL1034 ("Entry point was not found in assembly ...") whenever the trimmable typemap
+    path is exercised.
+
+    The trimmable typemap path intentionally does not root the app assembly at all: reachability
+    is driven by (1) TypeMapAttribute<T> entries on the generated _*.TypeMap.dll assemblies
+    (understood natively by ILLink), (2) types referenced by the AndroidManifest.xml (rooted by
+    the manifest-rooting machinery), and (3) explicit [DynamicDependency] / preserve-list
+    descriptors. That lets us trim as much of the app assembly as possible.
+
+    Fixed upstream in https://github.com/dotnet/runtime/pull/125673 (merged 2026-04-15), which
+    gates the Include on '$(OutputType)' != 'Library'. Once that flows into the .NET SDK we
+    consume, the app assembly is no longer added to @(TrimmerRootAssembly) for Android projects
+    and this target becomes a no-op.
+
+    We only remove items whose RootMode is "EntryPoint" - the exact shape of the entry the
+    upstream target creates - to avoid clobbering a root the user or another target deliberately
+    added with a different RootMode.
+
+    TODO: Delete this target once the consumed .NET SDK contains dotnet/runtime#125673.
+    Tracked by https://github.com/dotnet/android/issues/11146.
+  -->
+  <Target Name="_RemoveAppAssemblyFromTrimmerRoots" AfterTargets="PrepareForILLink">
+    <ItemGroup>
+      <TrimmerRootAssembly Remove="@(IntermediateAssembly->'%(Filename)')"
+                           Condition=" '%(TrimmerRootAssembly.RootMode)' == 'EntryPoint' " />
+    </ItemGroup>
+  </Target>
+
   <!-- Add TypeMap DLLs to ILLink input. ILLink natively understands TypeMapAttribute<T>. -->
   <Target Name="_AddTrimmableTypeMapToLinker"
       BeforeTargets="PrepareForILLink;_RunILLink"

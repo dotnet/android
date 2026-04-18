@@ -8,6 +8,7 @@
   <UsingTask TaskName="Xamarin.Android.Tasks.RemoveRegisterAttribute" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateProguardConfiguration" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.PostTrimmingPipeline" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.PreTrimmingFixLegacyDesigner" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <PropertyGroup>
     <_RemoveRegisterFlag>$(MonoAndroidIntermediateAssemblyDir)shrunk\shrunk.flag</_RemoveRegisterFlag>
@@ -223,6 +224,62 @@
     </ItemGroup>
   </Target>
 
+  <!--
+    Fix legacy resource designer references *before* ILLink runs. This rewrites
+    library assemblies so their resource field accesses (ldsfld) become calls to the
+    designer assembly's property getters, and clears the per-library designer classes.
+    Because the rewritten IL no longer references the old designer fields, ILLink can
+    freely trim unused designer types without needing a root descriptor.
+
+    Modified assemblies are written to an intermediate directory (not in-place) to
+    avoid mutating files in the shared NuGet cache or shared intermediate output paths.
+  -->
+  <Target Name="_CollectPreTrimmingAssemblies"
+      AfterTargets="ComputeResolvedFilesToPublishList"
+      DependsOnTargets="_ComputeAssembliesToPostprocessOnPublish"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidUseDesignerAssembly)' == 'True' ">
+    <ItemGroup>
+      <_PreTrimmingAssembly Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' and '%(ResolvedFileToPublish.PostprocessAssembly)' == 'true' " />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_PreTrimmingFixLegacyDesigner"
+      AfterTargets="ComputeResolvedFilesToPublishList"
+      DependsOnTargets="_CollectPreTrimmingAssemblies"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidUseDesignerAssembly)' == 'True' "
+      Inputs="@(_PreTrimmingAssembly)"
+      Outputs="$(_AndroidStampDirectory)_PreTrimmingFixLegacyDesigner.stamp">
+    <MakeDir Directories="$(_AndroidStampDirectory)" />
+    <PreTrimmingFixLegacyDesigner
+        Assemblies="@(_PreTrimmingAssembly)"
+        TargetName="$(TargetName)"
+        OutputDirectory="$(IntermediateOutputPath)prelink"
+        Deterministic="$(Deterministic)">
+      <Output TaskParameter="ModifiedAssemblies" ItemName="_PreTrimmingModifiedAssembly" />
+    </PreTrimmingFixLegacyDesigner>
+    <Touch Files="$(_AndroidStampDirectory)_PreTrimmingFixLegacyDesigner.stamp" AlwaysCreate="true" />
+    <ItemGroup>
+      <FileWrites Include="@(_PreTrimmingModifiedAssembly)" />
+    </ItemGroup>
+  </Target>
+
+  <!--
+    Replace ResolvedFileToPublish entries with the prelink copies so ILLink picks them up.
+    This must run even when _PreTrimmingFixLegacyDesigner is skipped (up-to-date) because
+    ResolvedFileToPublish is populated fresh each build.
+  -->
+  <Target Name="_PreTrimmingFixLegacyDesignerUpdateItems"
+      AfterTargets="ComputeResolvedFilesToPublishList"
+      DependsOnTargets="_PreTrimmingFixLegacyDesigner"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidUseDesignerAssembly)' == 'True' ">
+    <ItemGroup>
+      <_PreTrimmingSwappableItem Include="@(ResolvedFileToPublish)"
+          Condition=" '%(Extension)' == '.dll' and Exists('$(IntermediateOutputPath)prelink/%(Filename)%(Extension)') " />
+      <ResolvedFileToPublish Remove="@(_PreTrimmingSwappableItem)" />
+      <ResolvedFileToPublish Include="@(_PreTrimmingSwappableItem->'$(IntermediateOutputPath)prelink/%(Filename)%(Extension)')" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="_TouchAndroidLinkFlag"
       AfterTargets="ILLink"
       Condition=" '$(PublishTrimmed)' == 'true' and '$(RunILLink)' != 'false' and Exists('$(_LinkSemaphore)') "
@@ -248,8 +305,7 @@
         Assemblies="@(_PostTrimmingAssembly)"
         AddKeepAlives="$(AndroidAddKeepAlives)"
         AndroidLinkResources="$(AndroidLinkResources)"
-        Deterministic="$(Deterministic)"
-        UseDesignerAssembly="$(AndroidUseDesignerAssembly)" />
+        Deterministic="$(Deterministic)" />
   </Target>
 
   <!-- Inject _TypeMapKind into the property cache -->
