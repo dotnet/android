@@ -226,7 +226,7 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <AndroidEnableObjectReferenceLogging>false</AndroidEnableObjectReferenceLogging>
+    <_AndroidEnableObjectReferenceLogging>false</_AndroidEnableObjectReferenceLogging>
   </PropertyGroup>
 
   <!-- Used by AppContextTests.cs -->

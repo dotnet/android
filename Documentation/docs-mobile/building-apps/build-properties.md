@@ -380,21 +380,6 @@ Store checks: XA1004, XA1005 and XA1006. Disabling these checks is useful for
 developers who are not targeting the Google Play Store and do
 not wish to run those checks.
 
-## AndroidEnableObjectReferenceLogging
-
-A boolean property that controls whether object reference logging is enabled in
-the .NET for Android runtime.
-
-This logging can be useful when diagnosing JNI global reference and weak global
-reference issues, but it adds measurable startup overhead and is intended only
-for troubleshooting.
-
-When [`$(PublishTrimmed)`](#publishtrimmed) is `true`, this property defaults to
-`False` so the logging code can be removed from the app. On non-trimmed builds,
-logging remains disabled unless you explicitly set this property to `True`.
-
-Added in .NET 11.
-
 ## AndroidEnableMarshalMethods
 
 A bool property, that determines whether or not LLVM marshal methods are enabled.
