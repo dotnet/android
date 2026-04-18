@@ -15,6 +15,14 @@ class ManifestGenerator
 	static readonly XNamespace AndroidNs = ManifestConstants.AndroidNs;
 	static readonly XName AttName = ManifestConstants.AttName;
 	static readonly char [] PlaceholderSeparators = [';'];
+	static readonly HashSet<string> ComponentElementNames = new (StringComparer.Ordinal) {
+		"application",
+		"activity",
+		"instrumentation",
+		"service",
+		"receiver",
+		"provider",
+	};
 
 	int appInitOrder = 2000000000;
 
@@ -62,7 +70,11 @@ class ManifestGenerator
 		}
 
 		var existingTypes = new HashSet<string> (
-			app.Descendants ().Select (a => (string?)a.Attribute (AttName)).OfType<string> ());
+			app.Descendants ()
+				.Where (IsComponentElement)
+				.Select (a => (string?) a.Attribute (AttName))
+				.OfType<string> (),
+			StringComparer.Ordinal);
 
 		// Add components from scanned types
 		foreach (var peer in allPeers) {
@@ -143,7 +155,7 @@ class ManifestGenerator
 	void RewriteCompatNames (XElement manifest, IReadOnlyList<JavaPeerInfo> allPeers)
 	{
 		// Build mapping: fully-qualified compat Java name → CRC Java name
-		var compatToCrc = new Dictionary<string, string> (StringComparer.Ordinal);
+		var compatToCrc = new Dictionary<string, string> (allPeers.Count, StringComparer.Ordinal);
 		foreach (var peer in allPeers) {
 			string javaName = JniSignatureHelper.JniNameToJavaName (peer.JavaName);
 			string compatName = JniSignatureHelper.JniNameToJavaName (peer.CompatJniName);
@@ -163,16 +175,27 @@ class ManifestGenerator
 		//   - bare, with no '.' at all ("MainActivity"), also relative to the package
 		// Resolve to the fully-qualified form before the lookup, then write the CRC
 		// name back so duplicate detection later in the pipeline works correctly.
+		var packageName = (string?) manifest.Attribute ("package") ?? "";
+
 		foreach (var element in manifest.DescendantsAndSelf ()) {
+			if (!IsComponentElement (element)) {
+				continue;
+			}
+
 			var nameAttr = element.Attribute (AttName);
 			if (nameAttr is null) {
 				continue;
 			}
-			var resolved = ManifestNameResolver.Resolve (nameAttr.Value, PackageName);
+			var resolved = ManifestNameResolver.Resolve (nameAttr.Value, packageName);
 			if (compatToCrc.TryGetValue (resolved, out var crcName)) {
 				nameAttr.Value = crcName;
 			}
 		}
+	}
+
+	static bool IsComponentElement (XElement element)
+	{
+		return element.Name.NamespaceName.Length == 0 && ComponentElementNames.Contains (element.Name.LocalName);
 	}
 
 	void EnsureManifestAttributes (XElement manifest)
