@@ -176,12 +176,6 @@ static class ComponentElementBuilder
 			return;
 		}
 		PropertyMapper.ApplyMappings (element, component.Properties, PropertyMapper.InstrumentationMappings);
-		if (element.Attribute (AndroidNs + "targetPackage") is null) {
-			var manifestPackage = (string?) manifest.Attribute ("package");
-			if (!manifestPackage.IsNullOrEmpty ()) {
-				element.SetAttributeValue (AndroidNs + "targetPackage", manifestPackage);
-			}
-		}
 
 		// Default targetPackage to the app package name, matching legacy ManifestDocument behavior
 		if (element.Attribute (AndroidNs + "targetPackage") is null) {
