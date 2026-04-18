@@ -38,20 +38,6 @@
   </Target>
 
   <!--
-    Detect builds that switch from a non-trimmable path to trimmable in the same
-    intermediate directory (e.g. sequential CI test runs).  If the sentinel file
-    doesn't exist, the typemap DLL is stale (left over from a non-trimmable build
-    or a Clean that didn't know about trimmable targets) and must be deleted so
-    _GenerateTrimmableTypeMap re-runs and produces a consistent manifest + JCWs.
-  -->
-  <Target Name="_CleanStaleNonTrimmableState"
-      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and Exists('$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll') and !Exists('$(_TypeMapOutputDirectory).trimmable') "
-      AfterTargets="CoreCompile"
-      BeforeTargets="_GenerateTrimmableTypeMap">
-    <Delete Files="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll" />
-  </Target>
-
-  <!--
     Generate TypeMap assemblies and JCW files.
     AfterTargets="CoreCompile" so it runs after compilation.
     Uses @(ReferencePath) as the primary input (available after compilation).
@@ -59,7 +45,6 @@
   <Target Name="_GenerateTrimmableTypeMap"
       Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '@(ReferencePath->Count())' != '0' "
       AfterTargets="CoreCompile"
-      DependsOnTargets="_CleanStaleNonTrimmableState"
       Inputs="@(ReferencePath);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs)"
       Outputs="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll">
 
@@ -104,11 +89,6 @@
       <FileWrites Include="$(_TypeMapBaseOutputDir)AndroidManifest.xml" />
       <FileWrites Include="$(IntermediateOutputPath)acw-map.txt" />
       <FileWrites Include="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java" />
-    </ItemGroup>
-
-    <Touch Files="$(_TypeMapOutputDirectory).trimmable" AlwaysCreate="true" />
-    <ItemGroup>
-      <FileWrites Include="$(_TypeMapOutputDirectory).trimmable" />
     </ItemGroup>
   </Target>
 
@@ -195,22 +175,4 @@
       <FileWrites Include="@(_TypeMapAssemblySource)" />
     </ItemGroup>
   </Target>
-
-  <!-- Override _RemoveRegisterAttribute: trimmable types need [Register] attributes
-       at runtime for type resolution (TryGetJniNameForType uses IJniNameProviderAttribute).
-       The legacy target strips them to reduce assembly size, but the trimmable path
-       requires them. We also clear _ShrunkAssemblies and re-populate it from
-       _ResolvedAssemblies, because ProcessAssemblies points the shrunk items to
-       R2R/shrunk/ which is only created by the (now no-op) _RemoveRegisterAttribute. -->
-  <Target Name="_RemoveRegisterAttribute">
-    <ItemGroup>
-      <_ShrunkAssemblies Remove="@(_ShrunkAssemblies)" />
-      <_ShrunkAssemblies Include="@(_ResolvedAssemblies)" />
-      <_ShrunkFrameworkAssemblies Remove="@(_ShrunkFrameworkAssemblies)" />
-      <_ShrunkFrameworkAssemblies Include="@(_ResolvedFrameworkAssemblies)" />
-      <_ShrunkUserAssemblies Remove="@(_ShrunkUserAssemblies)" />
-      <_ShrunkUserAssemblies Include="@(_ResolvedUserAssemblies)" />
-    </ItemGroup>
-  </Target>
-
 </Project>
