@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Concurrent;
+using System.Reflection;
 using Android.Runtime;
 using Java.Interop;
 using Microsoft.Android.Runtime;
@@ -107,13 +109,51 @@ namespace Java.InteropTests
 				Assert.Ignore ("TrimmableTypeMap feature switch is off; test only relevant for the trimmable typemap path.");
 			}
 
-			// The cache is keyed by the original closed type, so a second identical
-			// lookup returns the same proxy instance without walking the GTD again.
+			// Closed generic peers normalize to their open generic definition, so
+			// repeated lookups reuse the same cached proxy.
 			var instance = TrimmableTypeMap.Instance;
 
 			Assert.IsTrue (instance.TryGetJniNameForManagedType (typeof (JavaList<Guid>), out var first));
 			Assert.IsTrue (instance.TryGetJniNameForManagedType (typeof (JavaList<Guid>), out var second));
 			Assert.AreEqual (first, second);
+		}
+
+		[Test]
+		public void TryGetJniNameForManagedType_DifferentClosedGenerics_UseGenericDefinitionCacheKey ()
+		{
+			if (!RuntimeFeature.TrimmableTypeMap) {
+				Assert.Ignore ("TrimmableTypeMap feature switch is off; test only relevant for the trimmable typemap path.");
+			}
+
+			var instance = TrimmableTypeMap.Instance;
+			var cache = GetProxyCache (instance);
+
+			cache.TryRemove (typeof (JavaList<>), out _);
+			cache.TryRemove (typeof (JavaList<long>), out _);
+			cache.TryRemove (typeof (JavaList<DateTimeOffset>), out _);
+
+			Assert.IsTrue (instance.TryGetJniNameForManagedType (typeof (JavaList<long>), out _));
+			Assert.IsTrue (instance.TryGetJniNameForManagedType (typeof (JavaList<DateTimeOffset>), out _));
+
+			Assert.IsTrue (cache.ContainsKey (typeof (JavaList<>)));
+			Assert.IsFalse (cache.ContainsKey (typeof (JavaList<long>)));
+			Assert.IsFalse (cache.ContainsKey (typeof (JavaList<DateTimeOffset>)));
+		}
+
+		static ConcurrentDictionary<Type, JavaPeerProxy> GetProxyCache (TrimmableTypeMap instance)
+		{
+			var field = typeof (TrimmableTypeMap).GetField ("_proxyCache", BindingFlags.Instance | BindingFlags.NonPublic);
+			Assert.IsNotNull (field);
+
+			var value = field.GetValue (instance);
+			Assert.IsNotNull (value);
+
+			if (value is ConcurrentDictionary<Type, JavaPeerProxy> cache) {
+				return cache;
+			}
+
+			Assert.Fail ("Unable to access TrimmableTypeMap proxy cache.");
+			throw new InvalidOperationException ("Unable to access TrimmableTypeMap proxy cache.");
 		}
 
 		// Pure-function tests for the TargetTypeMatches helper used by

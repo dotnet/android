@@ -100,11 +100,11 @@ class TrimmableTypeMap
 	/// </remarks>
 	JavaPeerProxy? GetProxyForManagedType (Type managedType)
 	{
-		var proxy = _proxyCache.GetOrAdd (managedType, static (type, self) => {
-			if (type.IsGenericType && !type.IsGenericTypeDefinition) {
-				type = type.GetGenericTypeDefinition ();
-			}
+		if (managedType.IsGenericType && !managedType.IsGenericTypeDefinition) {
+			managedType = managedType.GetGenericTypeDefinition ();
+		}
 
+		var proxy = _proxyCache.GetOrAdd (managedType, static (type, self) => {
 			if (self._proxyTypeMap.TryGetValue (type, out var proxyType)) {
 				return proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false) ?? s_noPeerSentinel;
 			}
