@@ -172,12 +172,7 @@
     </ItemGroup>
   </Target>
 
-  <!-- Override _RemoveRegisterAttribute: trimmable types need [Register] attributes
-       at runtime for type resolution (TryGetJniNameForType uses IJniNameProviderAttribute).
-       The base target copies @(_ResolvedAssemblies) to @(_ShrunkAssemblies) (which
-       points at <dir>/shrunk/<file>) to support the legacy [Register] attribute
-       stripping path. The trimmable typemap path skips that entirely — ProcessAssemblies
-       already sets @(_ShrunkAssemblies) == @(_ResolvedAssemblies), so no copy is needed. -->
-  <Target Name="_RemoveRegisterAttribute" />
+  <!-- Keep the base _RemoveRegisterAttribute target so PublishTrimmed still
+       populates @(_ShrunkAssemblies) for downstream BuildApk packaging. -->
 
 </Project>
