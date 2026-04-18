@@ -89,6 +89,52 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void CollectApplicationRegistrationTypes_ExcludesLegacyFrameworkDescendants ()
+	{
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "android/app/Application", CompatJniName = "android.app.Application",
+				ManagedTypeName = "Android.App.Application", ManagedTypeNamespace = "Android.App", ManagedTypeShortName = "Application",
+				AssemblyName = "Mono.Android", DoNotGenerateAcw = true, CannotRegisterInStaticConstructor = true,
+			},
+			new JavaPeerInfo {
+				JavaName = "android/app/Instrumentation", CompatJniName = "android.app.Instrumentation",
+				ManagedTypeName = "Android.App.Instrumentation", ManagedTypeNamespace = "Android.App", ManagedTypeShortName = "Instrumentation",
+				AssemblyName = "Mono.Android", DoNotGenerateAcw = true, CannotRegisterInStaticConstructor = true,
+			},
+			new JavaPeerInfo {
+				JavaName = "android/test/InstrumentationTestRunner", CompatJniName = "android.test.InstrumentationTestRunner",
+				ManagedTypeName = "Android.Test.InstrumentationTestRunner", ManagedTypeNamespace = "Android.Test", ManagedTypeShortName = "InstrumentationTestRunner",
+				AssemblyName = "Mono.Android", BaseJavaName = "android/app/Instrumentation", DoNotGenerateAcw = true, CannotRegisterInStaticConstructor = true,
+			},
+			new JavaPeerInfo {
+				JavaName = "android/test/mock/MockApplication", CompatJniName = "android.test.mock.MockApplication",
+				ManagedTypeName = "Android.Test.Mock.MockApplication", ManagedTypeNamespace = "Android.Test.Mock", ManagedTypeShortName = "MockApplication",
+				AssemblyName = "Mono.Android", BaseJavaName = "android/app/Application", DoNotGenerateAcw = true, CannotRegisterInStaticConstructor = true,
+			},
+			new JavaPeerInfo {
+				JavaName = "my/app/BaseInstrumentation", CompatJniName = "my.app.BaseInstrumentation",
+				ManagedTypeName = "My.App.BaseInstrumentation", ManagedTypeNamespace = "My.App", ManagedTypeShortName = "BaseInstrumentation",
+				AssemblyName = "MyApp", IsAbstract = true, CannotRegisterInStaticConstructor = true,
+			},
+			new JavaPeerInfo {
+				JavaName = "my/app/MyInstrumentation", CompatJniName = "my.app.MyInstrumentation",
+				ManagedTypeName = "My.App.MyInstrumentation", ManagedTypeNamespace = "My.App", ManagedTypeShortName = "MyInstrumentation",
+				AssemblyName = "MyApp", BaseJavaName = "my/app/BaseInstrumentation", CannotRegisterInStaticConstructor = true,
+			},
+		};
+
+		var types = TrimmableTypeMapGenerator.CollectApplicationRegistrationTypes (peers);
+
+		Assert.Contains ("android.app.Application", types);
+		Assert.Contains ("android.app.Instrumentation", types);
+		Assert.Contains ("my.app.BaseInstrumentation", types);
+		Assert.Contains ("my.app.MyInstrumentation", types);
+		Assert.DoesNotContain ("android.test.InstrumentationTestRunner", types);
+		Assert.DoesNotContain ("android.test.mock.MockApplication", types);
+	}
+
+	[Fact]
 	public void Execute_NullAssemblyList_Throws ()
 	{
 		IReadOnlyList<(string Name, PEReader Reader)>? n = null;

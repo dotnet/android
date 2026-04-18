@@ -27,6 +27,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public ITaskItem[] ResolvedAssemblies { get; set; } = [];
 
+		public ITaskItem[]? AdditionalResolvedAssemblies { get; set; }
+
 		public ITaskItem[]? NativeLibraries { get; set; }
 		public ITaskItem[]? NativeLibrariesNoJniPreload { get; set; }
 		public ITaskItem[]? NativeLibrariesAlwaysJniPreload { get; set; }
@@ -200,6 +202,13 @@ namespace Xamarin.Android.Tasks
 				}
 
 				GetRequiredTokens (assembly.ItemSpec, out android_runtime_jnienv_class_token, out jnienv_initialize_method_token, out jnienv_registerjninatives_method_token);
+			}
+
+			if (AdditionalResolvedAssemblies != null) {
+				foreach (ITaskItem assembly in AdditionalResolvedAssemblies) {
+					updateNameWidth (assembly);
+					updateAssemblyCount (assembly);
+				}
 			}
 
 			if (!UseAssemblyStore) {

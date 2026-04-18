@@ -1727,6 +1727,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <GenerateNativeApplicationConfigSources
       ResolvedAssemblies="@(_ResolvedAssemblies)"
+      AdditionalResolvedAssemblies="@(_AdditionalNativeConfigResolvedAssemblies)"
       SatelliteAssemblies="@(_AndroidResolvedSatellitePaths)"
       NativeLibraries="@(_AllNativeLibraries)"
       NativeLibrariesNoJniPreload="@(_AndroidNativeLibraryNeverJniPreload);@(AndroidNativeLibraryNoJniPreload)"

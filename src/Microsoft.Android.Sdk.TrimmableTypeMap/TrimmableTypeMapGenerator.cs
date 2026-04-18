@@ -11,6 +11,11 @@ public class TrimmableTypeMapGenerator
 {
 	readonly ITrimmableTypeMapLogger logger;
 
+	static readonly HashSet<string> RequiredFrameworkDeferredRegistrationTypes = new (StringComparer.Ordinal) {
+		"android/app/Application",
+		"android/app/Instrumentation",
+	};
+
 	public TrimmableTypeMapGenerator (ITrimmableTypeMapLogger logger)
 	{
 		this.logger = logger ?? throw new ArgumentNullException (nameof (logger));
@@ -49,14 +54,7 @@ public class TrimmableTypeMapGenerator
 		logger.LogGeneratingJcwFilesInfo (jcwPeers.Count, allPeers.Count);
 		var generatedJavaSources = GenerateJcwJavaSources (jcwPeers);
 
-		// Collect Application/Instrumentation types that need deferred registerNatives
-		var appRegTypes = allPeers
-			// Include all deferred-registration peers here: framework MCWs still need
-			// ApplicationRegistration.java even without generated ACWs, and abstract
-			// base types can own the native methods that derived types invoke.
-			.Where (p => p.CannotRegisterInStaticConstructor)
-			.Select (p => JniSignatureHelper.JniNameToJavaName (p.JavaName))
-			.ToList ();
+		var appRegTypes = CollectApplicationRegistrationTypes (allPeers);
 		if (appRegTypes.Count > 0) {
 			logger.LogDeferredRegistrationTypesInfo (appRegTypes.Count);
 		}
@@ -66,6 +64,33 @@ public class TrimmableTypeMapGenerator
 			: null;
 
 		return new TrimmableTypeMapResult (generatedAssemblies, generatedJavaSources, allPeers, manifest, appRegTypes);
+	}
+
+	internal static List<string> CollectApplicationRegistrationTypes (List<JavaPeerInfo> allPeers)
+	{
+		var appRegTypes = new List<string> ();
+		var seen = new HashSet<string> (StringComparer.Ordinal);
+
+		foreach (var peer in allPeers) {
+			if (!peer.CannotRegisterInStaticConstructor) {
+				continue;
+			}
+
+			// ApplicationRegistration.java is compiled against the app's target Android API
+			// surface. Legacy framework descendants such as android.test.* may not exist there,
+			// so keep only the two framework roots plus app/runtime types that participate in
+			// the deferred-registration flow.
+			if (peer.DoNotGenerateAcw && !RequiredFrameworkDeferredRegistrationTypes.Contains (peer.JavaName)) {
+				continue;
+			}
+
+			var javaName = JniSignatureHelper.JniNameToJavaName (peer.JavaName);
+			if (seen.Add (javaName)) {
+				appRegTypes.Add (javaName);
+			}
+		}
+
+		return appRegTypes;
 	}
 
 	GeneratedManifest GenerateManifest (List<JavaPeerInfo> allPeers, AssemblyManifestInfo assemblyManifestInfo,
