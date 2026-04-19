@@ -85,7 +85,10 @@ public class MavenDownloadTests
 		await task.RunTaskAsync ();
 
 		Assert.AreEqual (1, engine.Errors.Count);
-		Assert.AreEqual ($"Cannot download Maven artifact 'com.example:dummy'.{Environment.NewLine}- dummy-1.0.0.jar: Response status code does not indicate success: 404 (Not Found).{Environment.NewLine}- dummy-1.0.0.aar: Response status code does not indicate success: 404 (Not Found).", engine.Errors [0].Message?.ReplaceLineEndings ());
+		AssertMavenDownloadErrorOrIgnoreTransientNetworkFailure (
+			engine.Errors [0].Message,
+			$"Cannot download Maven artifact 'com.example:dummy'.{Environment.NewLine}- dummy-1.0.0.jar: Response status code does not indicate success: 404 (Not Found).{Environment.NewLine}- dummy-1.0.0.aar: Response status code does not indicate success: 404 (Not Found)."
+		);
 	}
 
 	[Test]
@@ -110,10 +113,39 @@ public class MavenDownloadTests
 			await task.RunTaskAsync ();
 
 			Assert.AreEqual (1, engine.Errors.Count);
-			Assert.AreEqual ($"Cannot download POM file for Maven artifact 'com.example:dummy:1.0.0'.{Environment.NewLine}- Response status code does not indicate success: 404 (Not Found).", engine.Errors [0].Message?.ReplaceLineEndings ());
+			AssertMavenDownloadErrorOrIgnoreTransientNetworkFailure (
+				engine.Errors [0].Message,
+				$"Cannot download POM file for Maven artifact 'com.example:dummy:1.0.0'.{Environment.NewLine}- Response status code does not indicate success: 404 (Not Found)."
+			);
 		} finally {
 			DeleteTempDirectory (temp_cache_dir);
 		}
+	}
+
+	static void AssertMavenDownloadErrorOrIgnoreTransientNetworkFailure (string? actualMessage, string expectedMessage)
+	{
+		Assert.IsNotNull (actualMessage);
+
+		var message = actualMessage.ReplaceLineEndings ();
+		if (message.Contains ("404 (Not Found).", StringComparison.Ordinal)) {
+			Assert.AreEqual (expectedMessage, message);
+			return;
+		}
+
+		if (IsTransientNetworkError (message)) {
+			Assert.Inconclusive ($"Test skipped due to transient network error: {message}");
+		}
+
+		Assert.AreEqual (expectedMessage, message);
+	}
+
+	static bool IsTransientNetworkError (string message)
+	{
+		return message.Contains ("nodename nor servname provided", StringComparison.OrdinalIgnoreCase) ||
+			message.Contains ("Name or service not known", StringComparison.OrdinalIgnoreCase) ||
+			message.Contains ("No such host is known", StringComparison.OrdinalIgnoreCase) ||
+			message.Contains ("temporary failure in name resolution", StringComparison.OrdinalIgnoreCase) ||
+			message.Contains ("unexpected EOF", StringComparison.OrdinalIgnoreCase);
 	}
 
 	[Test]
