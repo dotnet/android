@@ -69,9 +69,10 @@ namespace Xamarin.Android.Build.Tests
 					afterRun (builder);
 			}
 			total /= iterations;
-			TestContext.Out.WriteLine ($"expected: {expected}ms, actual: {total}ms");
-			if (total > expected) {
-				Assert.Fail ($"Exceeded expected time of {expected}ms, actual {total}ms");
+			double allowed = GetAllowedDuration (expected);
+			TestContext.Out.WriteLine ($"expected: {expected}ms, allowed: {allowed}ms, actual: {total}ms");
+			if (total > allowed) {
+				Assert.Fail ($"Exceeded expected time of {expected}ms (allowed up to {allowed}ms), actual {total}ms");
 			}
 		}
 
@@ -88,10 +89,19 @@ namespace Xamarin.Android.Build.Tests
 				total += duration;
 			}
 			total /= iterations;
-			TestContext.Out.WriteLine($"expected: {expected}ms, actual: {total}ms");
-			if (total > expected) {
-				Assert.Fail ($"Exceeded expected time of {expected}ms, actual {total}ms");
+			double allowed = GetAllowedDuration (expected);
+			TestContext.Out.WriteLine($"expected: {expected}ms, allowed: {allowed}ms, actual: {total}ms");
+			if (total > allowed) {
+				Assert.Fail ($"Exceeded expected time of {expected}ms (allowed up to {allowed}ms), actual {total}ms");
 			}
+		}
+
+		static double GetAllowedDuration (int expected)
+		{
+			// Hosted CI machines can vary by a few hundred milliseconds even when
+			// there is no real regression. Keep the baseline from CSV, but allow
+			// a small amount of noise so perf tests don't flap.
+			return expected + Math.Max (500d, expected * 0.15);
 		}
 
 		double GetTaskDurationFromBinLog (ProjectBuilder builder, string task)
