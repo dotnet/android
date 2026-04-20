@@ -241,7 +241,14 @@ namespace Xamarin.Android.NetTests
 			};
 
 			var client = new HttpClient (handler);
-			var result = await client.GetAsync ("https://httpbin.org/redirect-to?url=https://www.microsoft.com/");
+			HttpResponseMessage result;
+			try {
+				result = await client.GetAsync ("https://httpbin.org/redirect-to?url=https://www.microsoft.com/");
+			} catch (AggregateException ex) {
+				if (IgnoreIfConnectionFailed (ex, out _))
+					return;
+				throw;
+			}
 
 			// Our dated NUnit test runner doesn't handle Assert.Ignore in an async context, so just exit
 			if (ShouldIgnoreSuccessStatusCode (result.StatusCode)) {
@@ -262,7 +269,14 @@ namespace Xamarin.Android.NetTests
 			var handler = new AndroidMessageHandler ();
 
 			var client = new HttpClient (handler);
-			var result = await client.GetAsync ("https://httpbin.org/redirect-to?url=https://www.microsoft.com/&status_code=308");
+			HttpResponseMessage result;
+			try {
+				result = await client.GetAsync ("https://httpbin.org/redirect-to?url=https://www.microsoft.com/&status_code=308");
+			} catch (AggregateException ex) {
+				if (IgnoreIfConnectionFailed (ex, out _))
+					return;
+				throw;
+			}
 
 			// Our dated NUnit test runner doesn't handle Assert.Ignore in an async context, so just exit
 			if (ShouldIgnoreSuccessStatusCode (result.StatusCode)) {
