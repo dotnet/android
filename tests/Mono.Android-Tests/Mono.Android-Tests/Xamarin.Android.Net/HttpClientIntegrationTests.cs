@@ -36,7 +36,6 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Linq;
 using System.IO;
-using Android.Runtime;
 
 namespace Xamarin.Android.NetTests {
 	[Category ("InetAccess")]

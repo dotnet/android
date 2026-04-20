@@ -19,8 +19,6 @@ namespace Xamarin.Android.UnitTests
 			public const string Suite = "suite";
 			public const string Include = "include";
 			public const string Exclude = "exclude";
-			public const string DryRun = "dryrun";
-			public const string NoExclusions = "noexclusions";
 		}
 
 		const string ResultExecutedTests = "run";
@@ -42,8 +40,6 @@ namespace Xamarin.Android.UnitTests
 		protected LogWriter Logger { get; } = new LogWriter ();
 		protected Dictionary<string, string> StringExtrasInBundle { get; set; } = new Dictionary<string, string> ();
 		protected string TestSuiteToRun { get; set; }
-		protected bool DryRunRequested { get; set; }
-		protected bool NoExclusionsRequested { get; set; }
 
 		protected TestInstrumentation ()
 		{}
@@ -107,20 +103,6 @@ namespace Xamarin.Android.UnitTests
 
 			if (StringExtrasInBundle.ContainsKey (KnownArguments.Suite)) {
 				TestSuiteToRun = StringExtrasInBundle [KnownArguments.Suite]?.Trim ();
-			}
-
-			if (StringExtrasInBundle.TryGetValue (KnownArguments.DryRun, out string dryRunValue)) {
-				DryRunRequested =
-					String.Equals (dryRunValue?.Trim (), "true", StringComparison.OrdinalIgnoreCase) ||
-					String.Equals (dryRunValue?.Trim (), "1", StringComparison.OrdinalIgnoreCase) ||
-					String.Equals (dryRunValue?.Trim (), "yes", StringComparison.OrdinalIgnoreCase);
-			}
-
-			if (StringExtrasInBundle.TryGetValue (KnownArguments.NoExclusions, out string noExclusionsValue)) {
-				NoExclusionsRequested =
-					String.Equals (noExclusionsValue?.Trim (), "true", StringComparison.OrdinalIgnoreCase) ||
-					String.Equals (noExclusionsValue?.Trim (), "1", StringComparison.OrdinalIgnoreCase) ||
-					String.Equals (noExclusionsValue?.Trim (), "yes", StringComparison.OrdinalIgnoreCase);
 			}
 		}
 
@@ -277,12 +259,7 @@ namespace Xamarin.Android.UnitTests
 
 			TRunner runner = CreateRunner (Logger, arguments);
 			runner.LogTag = LogTag;
-			runner.DryRun = DryRunRequested;
 			ConfigureFilters (runner);
-
-			if (runner.DryRun) {
-				Log.Info (LogTag, "Dry-run discovery mode enabled; tests will be enumerated but not executed.");
-			}
 
 			Log.Info (LogTag, "Starting unit tests");
 			runner.Run (assemblies);

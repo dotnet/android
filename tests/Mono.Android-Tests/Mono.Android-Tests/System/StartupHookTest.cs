@@ -1,6 +1,5 @@
 using System;
 using System.Reflection;
-using Android.Runtime;
 using NUnit.Framework;
 
 namespace SystemTests

@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using NUnit.Framework;
-using Android.Runtime;
 using JavaStreamTest = global::Net.Dot.Android.Test.StreamTest;
 
 namespace System.IOTests;

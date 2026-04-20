@@ -17,8 +17,6 @@ namespace Xamarin.Android.UnitTests.NUnit
 		protected IEnumerable<string> IncludedCategories { get; set; }
 		protected IEnumerable<string> ExcludedCategories { get; set; }
 		protected IEnumerable<string> ExcludedTestNames { get; set; }
-		protected IDictionary<string, string> ExcludedCategoryReasons { get; set; }
-		protected IDictionary<string, string> ExcludedTestReasons { get; set; }
 		protected string TestsDirectory { get; set; }
 
 		protected NUnitTestInstrumentation ()
@@ -69,22 +67,14 @@ namespace Xamarin.Android.UnitTests.NUnit
 			Log.Info (LogTag, "Configuring test categories to include from extras:");
 			ChainCategoryFilter (GetFilterValuesFromExtras (KnownArguments.Include), false, ref filter);
 
-			if (NoExclusionsRequested) {
-				Log.Info (LogTag, "Skipping built-in test exclusions due to noexclusions=true.");
-			} else {
-				Log.Info (LogTag, "Configuring test categories to exclude:");
-				RegisterExcludedCategories (runner, ExcludedCategories);
-			}
+			Log.Info (LogTag, "Configuring test categories to exclude:");
+			ChainCategoryFilter (ExcludedCategories, true, ref filter);
 
 			Log.Info(LogTag, "Configuring test categories to exclude from extras:");
-			RegisterExcludedCategories (runner, GetFilterValuesFromExtras (KnownArguments.Exclude));
+			ChainCategoryFilter (GetFilterValuesFromExtras (KnownArguments.Exclude), true, ref filter);
 
-			if (NoExclusionsRequested) {
-				Log.Info (LogTag, "Skipping built-in test-name exclusions due to noexclusions=true.");
-			} else {
-				Log.Info (LogTag, "Configuring tests to exclude (by name):");
-				RegisterExcludedTestNames (runner, ExcludedTestNames?.ToArray ());
-			}
+			Log.Info (LogTag, "Configuring tests to exclude (by name):");
+			ChainTestNameFilter (ExcludedTestNames?.ToArray (), ref filter);
 
 			if (filter.IsEmpty)
 				return;
@@ -114,31 +104,7 @@ namespace Xamarin.Android.UnitTests.NUnit
 				Log.Info (LogTag, "  none");
 		}
 
-		void RegisterExcludedCategories (NUnitTestRunner runner, IEnumerable<string> categories)
-		{
-			bool gotCategories = false;
-			if (categories != null) {
-				foreach (string c in categories) {
-					Log.Info (LogTag, $"  {c}");
-					runner.AddExcludedCategory (c, GetExcludedCategoryReason (c));
-					gotCategories = true;
-				}
-			}
-
-			if (!gotCategories)
-				Log.Info (LogTag, "  none");
-		}
-
-		string GetExcludedCategoryReason (string category)
-		{
-			if (ExcludedCategoryReasons != null && !String.IsNullOrEmpty (category) && ExcludedCategoryReasons.TryGetValue (category, out string reason)) {
-				return reason;
-			}
-
-			return $"Excluded category '{category}'.";
-		}
-
-		void RegisterExcludedTestNames (NUnitTestRunner runner, string[] testNames)
+		void ChainTestNameFilter (string[] testNames, ref ITestFilter filter)
 		{
 			if (testNames == null || testNames.Length == 0) {
 				Log.Info (LogTag, "  none");
@@ -149,17 +115,10 @@ namespace Xamarin.Android.UnitTests.NUnit
 				if (String.IsNullOrEmpty (name))
 					continue;
 				Log.Info (LogTag, $"  {name}");
-				runner.AddExcludedTestName (name, GetExcludedTestReason (name));
-			}
-		}
-
-		string GetExcludedTestReason (string testName)
-		{
-			if (ExcludedTestReasons != null && !String.IsNullOrEmpty (testName) && ExcludedTestReasons.TryGetValue (testName, out string reason)) {
-				return reason;
 			}
 
-			return $"Excluded test '{testName}'.";
+			var excludeTestNamesFilter  = new SimpleNameFilter (testNames);
+			filter = new AndFilter (filter, new NotFilter (excludeTestNamesFilter));
 		}
 	}
 }

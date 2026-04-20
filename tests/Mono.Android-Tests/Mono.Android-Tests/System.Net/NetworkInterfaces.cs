@@ -6,7 +6,6 @@ using System.Net.NetworkInformation;
 using Java.Net;
 
 using NUnit.Framework;
-using Android.Runtime;
 
 using MNetworkInterface = System.Net.NetworkInformation.NetworkInterface;
 using JNetworkInterface = Java.Net.NetworkInterface;

@@ -3,7 +3,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 
 using NUnit.Framework;
-using Android.Runtime;
 
 namespace System.Text.JsonTests {
 

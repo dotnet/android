@@ -3,7 +3,6 @@ using System.IO;
 using System.IO.Compression;
 
 using NUnit.Framework;
-using Android.Runtime;
 
 namespace System.IO.CompressionTests
 {
@@ -45,3 +44,4 @@ namespace System.IO.CompressionTests
 		}
 	}
 }
+
