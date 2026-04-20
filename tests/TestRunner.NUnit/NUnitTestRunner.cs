@@ -210,9 +210,9 @@ namespace Xamarin.Android.UnitTests.NUnit
 			if (fullName == excludedName ||
 				fullName.StartsWith (excludedName + ".", StringComparison.Ordinal) ||
 				fullName.StartsWith (excludedName + "+", StringComparison.Ordinal) ||
-				fullName.Contains (", " + excludedName, StringComparison.Ordinal) ||
-				fullName.Contains (excludedName + ".", StringComparison.Ordinal) ||
-				fullName.Contains (excludedName + "+", StringComparison.Ordinal)) {
+				fullName.Contains ("." + excludedName + ".", StringComparison.Ordinal) ||
+				fullName.Contains ("." + excludedName + "+", StringComparison.Ordinal) ||
+				fullName.Contains (", " + excludedName, StringComparison.Ordinal)) {
 				return true;
 			}
 
@@ -257,10 +257,8 @@ namespace Xamarin.Android.UnitTests.NUnit
 				Action<string, string> log = Logger.OnInfo;
 				StringBuilder failedMessage = null;
 
-				ExecutedTests++;
 				if (result.ResultState.Status == TestStatus.Passed) {
 					Logger.OnInfo (LogTag, $"\t{result.ResultState.ToString ()}");
-					PassedTests++;
 				} else if (result.ResultState.Status == TestStatus.Failed) {
 					Logger.OnError (LogTag, "\t[FAIL]");
 					log = Logger.OnError;
@@ -269,24 +267,12 @@ namespace Xamarin.Android.UnitTests.NUnit
 					if (result.Test.FixtureType != null)
 						failedMessage.Append ($" ({result.Test.FixtureType.Assembly.GetName ().Name})");
 					failedMessage.AppendLine ();
-					FailedTests++;
 				} else {
-					string status;
-					switch (result.ResultState.Status) {
-						case TestStatus.Skipped:
-							SkippedTests++;
-							status = "SKIPPED";
-							break;
-
-						case TestStatus.Inconclusive:
-							InconclusiveTests++;
-							status = "INCONCLUSIVE";
-							break;
-
-						default:
-							status = "UNKNOWN";
-							break;
-					}
+					string status = result.ResultState.Status switch {
+						TestStatus.Skipped => "SKIPPED",
+						TestStatus.Inconclusive => "INCONCLUSIVE",
+						_ => "UNKNOWN",
+					};
 					Logger.OnInfo (LogTag, $"\t[{status}]");
 				}
 

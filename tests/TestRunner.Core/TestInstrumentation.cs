@@ -110,18 +110,20 @@ namespace Xamarin.Android.UnitTests
 			}
 
 			if (StringExtrasInBundle.TryGetValue (KnownArguments.DryRun, out string dryRunValue)) {
-				DryRunRequested =
-					String.Equals (dryRunValue?.Trim (), "true", StringComparison.OrdinalIgnoreCase) ||
-					String.Equals (dryRunValue?.Trim (), "1", StringComparison.OrdinalIgnoreCase) ||
-					String.Equals (dryRunValue?.Trim (), "yes", StringComparison.OrdinalIgnoreCase);
+				DryRunRequested = ParseBool (dryRunValue);
 			}
 
 			if (StringExtrasInBundle.TryGetValue (KnownArguments.NoExclusions, out string noExclusionsValue)) {
-				NoExclusionsRequested =
-					String.Equals (noExclusionsValue?.Trim (), "true", StringComparison.OrdinalIgnoreCase) ||
-					String.Equals (noExclusionsValue?.Trim (), "1", StringComparison.OrdinalIgnoreCase) ||
-					String.Equals (noExclusionsValue?.Trim (), "yes", StringComparison.OrdinalIgnoreCase);
+				NoExclusionsRequested = ParseBool (noExclusionsValue);
 			}
+		}
+
+		static bool ParseBool (string value)
+		{
+			string trimmed = value?.Trim ();
+			return String.Equals (trimmed, "true", StringComparison.OrdinalIgnoreCase) ||
+				String.Equals (trimmed, "1", StringComparison.OrdinalIgnoreCase) ||
+				String.Equals (trimmed, "yes", StringComparison.OrdinalIgnoreCase);
 		}
 
 		public override void OnStart ()
