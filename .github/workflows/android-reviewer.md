@@ -9,6 +9,10 @@ permissions:
 engine:
   id: copilot
   model: claude-opus-4.6
+network:
+  allowed:
+    - defaults
+    - "dev.azure.com"
 tools:
   github:
     toolsets: [pull_requests, repos]
