@@ -43,12 +43,15 @@ namespace Xamarin.Android.RuntimeTests
                     "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs_InstanceThatDoesNotImplementInterfaceReturnsNull",
 
                     // These certificate-callback tests were narrowed down from the old broad SSL
-                    // bucket. In Release+CoreCLR+trimmable runs they reproduce a native SIGSEGV
-                    // before NUnit can record a result. The tombstone shows ART/CheckJNI with
-                    // libnet-android.release.so calling into JNIEnv::CallVoidMethod.
+                    // bucket. In Release+CoreCLR+trimmable runs they crash or fail because
+                    // IX509TrustManager cannot be found in ITrustManager arrays (likely a
+                    // trimmable typemap bug). The tombstone for some variants shows
+                    // ART/CheckJNI with libnet-android.release.so calling into
+                    // JNIEnv::CallVoidMethod.
                     "Xamarin.Android.NetTests.AndroidMessageHandlerTests.ServerCertificateCustomValidationCallback_ApproveRequest",
                     "Xamarin.Android.NetTests.AndroidMessageHandlerTests.ServerCertificateCustomValidationCallback_ApprovesRequestWithInvalidCertificate",
                     "Xamarin.Android.NetTests.AndroidMessageHandlerTests.ServerCertificateCustomValidationCallback_IgnoresCertificateHostnameMismatch",
+                    "Xamarin.Android.NetTests.AndroidMessageHandlerTests.ServerCertificateCustomValidationCallback_RejectRequest",
                     "Xamarin.Android.NetTests.AndroidMessageHandlerTests.ServerCertificateCustomValidationCallback_Redirects",
 
                     // JavaObjectArray<object> contract tests still need generic container factory support.

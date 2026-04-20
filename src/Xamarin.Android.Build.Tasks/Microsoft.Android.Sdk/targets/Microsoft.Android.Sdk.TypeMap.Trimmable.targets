@@ -93,20 +93,38 @@
   </Target>
 
   <!--
+    Populates @(_AdditionalNativeConfigResolvedAssemblies) with the trimmable TypeMap DLLs
+    so that GenerateNativeApplicationConfigSources (in _GeneratePackageManagerJava) accounts
+    for them.  This must NOT live inside _GenerateJavaStubs because that target can be
+    skipped on incremental builds, which would leave the item group empty.
+  -->
+  <Target Name="_PrepareTrimmableNativeConfigAssemblies"
+      BeforeTargets="_GeneratePackageManagerJava">
+    <ItemGroup>
+      <_AdditionalNativeConfigResolvedAssemblies Remove="@(_AdditionalNativeConfigResolvedAssemblies)" />
+      <_AdditionalNativeConfigResolvedAssemblies Include="$(_TypeMapOutputDirectory)*.dll" />
+    </ItemGroup>
+  </Target>
+
+  <!--
     _GenerateJavaStubs: overrides the legacy target from BuildOrder.targets.
     In the trimmable path, TypeMap generation already happened in _GenerateTrimmableTypeMap,
     so this target only handles JCW file copying, manifest, assembly store setup, and native config.
     We keep the name _GenerateJavaStubs because BuildOrder.targets references it.
+
+    Inputs uses the TypeMap DLL as a focused sentinel — _GenerateTrimmableTypeMap regenerates
+    the DLL whenever any of its own inputs (assemblies, manifest, etc.) change, so the DLL
+    timestamp is a reliable proxy for "something changed that requires re-copying".
+    We keep _GetGenerateJavaStubsInputs in DependsOnTargets so that downstream targets
+    (_GetGeneratePackageManagerJavaInputs) can still read @(_GenerateJavaStubsInputs).
   -->
   <Target Name="_GenerateJavaStubs"
       DependsOnTargets="_SetLatestTargetFrameworkVersion;_CleanIntermediateIfNeeded;_PrepareAssemblies;_GetGenerateJavaStubsInputs;_DefineBuildTargetAbis;_PrepareNativeAssemblySources"
-      Inputs="@(_GenerateJavaStubsInputs)"
+      Inputs="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll"
       Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
 
     <ItemGroup>
       <_TypeMapJavaFiles Include="$(_TypeMapJavaOutputDirectory)/**/*.java" />
-      <_AdditionalNativeConfigResolvedAssemblies Remove="@(_AdditionalNativeConfigResolvedAssemblies)" />
-      <_AdditionalNativeConfigResolvedAssemblies Include="$(_TypeMapOutputDirectory)*.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(_TypeMapJavaFiles)" DestinationFolder="$(IntermediateOutputPath)android/src/%(RecursiveDir)" />
 
