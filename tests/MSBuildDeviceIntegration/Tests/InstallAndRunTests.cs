@@ -2308,9 +2308,9 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				// dotnet test reports results via MTP protocol
 				// Verify non-zero exit code (there is a failing test) and stable summary counts
 				Assert.AreNotEqual (0, process.ExitCode, $"`dotnet {mode}` should fail when one test fails. See {logPath} for details.");
-				StringAssert.Contains ("Passed: 1", outputText, $"Output should report 1 passed test. See {logPath} for details.");
-				StringAssert.Contains ("Failed: 1", outputText, $"Output should report 1 failed test. See {logPath} for details.");
-				StringAssert.Contains ("Skipped: 1", outputText, $"Output should report 1 skipped test. See {logPath} for details.");
+				StringAssert.Contains ("succeeded: 1", outputText, $"Output should report 1 passed test. See {logPath} for details.");
+				StringAssert.Contains ("failed: 1", outputText, $"Output should report 1 failed test. See {logPath} for details.");
+				StringAssert.Contains ("skipped: 1", outputText, $"Output should report 1 skipped test. See {logPath} for details.");
 			}
 		}
 
