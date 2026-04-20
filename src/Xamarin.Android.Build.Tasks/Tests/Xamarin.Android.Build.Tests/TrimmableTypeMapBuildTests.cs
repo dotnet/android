@@ -13,17 +13,15 @@ namespace Xamarin.Android.Build.Tests {
 		[Test]
 		public void Build_WithTrimmableTypeMap_Succeeds ()
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
 
-			// Full Build will fail downstream (manifest generation not yet implemented for trimmable path),
-			// but _GenerateJavaStubs runs and completes before the failure point.
 			using var builder = CreateApkBuilder ();
-			builder.ThrowOnBuildFailure = false;
-			builder.Build (proj);
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 
-			// Verify _GenerateJavaStubs ran by checking typemap outputs exist
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
 			DirectoryAssert.Exists (intermediateDir);
 		}
@@ -31,22 +29,19 @@ namespace Xamarin.Android.Build.Tests {
 		[Test]
 		public void Build_WithTrimmableTypeMap_IncrementalBuild ()
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
 
-			// Full Build will fail downstream (manifest generation not yet implemented for trimmable path),
-			// but _GenerateJavaStubs runs and completes before the failure point.
 			using var builder = CreateApkBuilder ();
-			builder.ThrowOnBuildFailure = false;
-			builder.Build (proj);
+			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
 
-			// Verify _GenerateJavaStubs ran on the first build
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
 			DirectoryAssert.Exists (intermediateDir);
 
-			// Second build with no changes — _GenerateJavaStubs should be skipped
-			builder.Build (proj);
+			Assert.IsTrue (builder.Build (proj), "Second build should have succeeded.");
 			Assert.IsTrue (
 				builder.Output.IsTargetSkipped ("_GenerateJavaStubs"),
 				"_GenerateJavaStubs should be skipped on incremental build.");
@@ -62,8 +57,7 @@ namespace Xamarin.Android.Build.Tests {
 			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
-			builder.ThrowOnBuildFailure = false;
-			builder.Build (proj);
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 
 			Assert.IsFalse (
 				StringAssertEx.ContainsText (builder.LastBuildOutput, "source and destination count mismatch"),
@@ -83,8 +77,7 @@ namespace Xamarin.Android.Build.Tests {
 			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
-			builder.ThrowOnBuildFailure = false;
-			builder.Build (proj);
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 
 			var environmentFiles = Directory.GetFiles (builder.Output.GetIntermediaryPath ("android"), "environment.*.ll");
 			Assert.IsNotEmpty (environmentFiles, "Expected generated environment.<abi>.ll files.");
