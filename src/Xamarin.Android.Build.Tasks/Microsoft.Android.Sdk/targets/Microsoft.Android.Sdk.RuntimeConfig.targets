@@ -57,7 +57,7 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
         Condition="'$(_AndroidIsAssignableFromCheck)' != ''"
         Value="$(_AndroidIsAssignableFromCheck)"
         Trim="true"
-     />
+    />
     <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.ObjectReferenceLogging"
         Condition="'$(_AndroidEnableObjectReferenceLogging)' != ''"
         Value="$(_AndroidEnableObjectReferenceLogging)"
