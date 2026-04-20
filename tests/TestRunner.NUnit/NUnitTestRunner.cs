@@ -72,9 +72,23 @@ namespace Xamarin.Android.UnitTests.NUnit
 				if (testResult == null)
 					throw new InvalidOperationException ($"Unexpected test result type '{result.GetType ()}'");
 				results.AddResult (testResult);
+				UpdateSummaryCounts ();
 			}
 
 			LogFailureSummary ();
+		}
+
+		void UpdateSummaryCounts ()
+		{
+			if (results == null) {
+				return;
+			}
+
+			PassedTests = results.PassCount;
+			FailedTests = results.FailCount;
+			SkippedTests = results.SkipCount;
+			InconclusiveTests = results.InconclusiveCount;
+			ExecutedTests = PassedTests + FailedTests + SkippedTests + InconclusiveTests;
 		}
 
 		public bool Pass (ITest test)
