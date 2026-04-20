@@ -66,12 +66,6 @@ namespace Xamarin.Android.RuntimeTests
                     "Java.InteropTests.JavaObjectExtensionsTests.JavaAs",
                 };
 
-                ExcludedCategories = new [] {
-                    // Native typemap lookup APIs are not applicable when _AndroidTypeMapImplementation=trimmable.
-                    "NativeTypeMap",
-                    // Remaining known gaps that still share the trimmable typemap failure family.
-                    "TrimmableIgnore",
-                };
             }
         }
 

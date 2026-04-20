@@ -121,7 +121,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test, Category ("TrimmableIgnore")]
+		[Test]
 		public void NewOpenGenericTypeThrows ()
 		{
 			try {
@@ -301,7 +301,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test, Category ("TrimmableIgnore")]
+		[Test]
 		public void ActivatedDirectThrowableSubclassesShouldBeRegistered ()
 		{
 			if (Build.VERSION.SdkInt <= BuildVersionCodes.GingerbreadMr1)
