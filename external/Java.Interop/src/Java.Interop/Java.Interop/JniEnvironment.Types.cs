@@ -51,7 +51,10 @@ namespace Java.Interop
 
 				var info    = JniEnvironment.CurrentInfo;
 #if FEATURE_JNIENVIRONMENT_JI_PINVOKES || FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
-				if (TryRawFindClass (info.EnvironmentPointer, classname, out var c, out var thrown)) {
+				// Convert dot-separated names (e.g. "java.lang.Object") to JNI form ("java/lang/Object")
+				// before calling FindClass, because ART's CheckJNI aborts the process on dot-separated names.
+				var jniClassName = classname.Contains ('.') ? classname.Replace ('.', '/') : classname;
+				if (TryRawFindClass (info.EnvironmentPointer, jniClassName, out var c, out var thrown)) {
 					var r   = new JniObjectReference (c, JniObjectReferenceType.Local);
 					JniEnvironment.LogCreateLocalRef (r);
 					return r;
@@ -382,32 +385,55 @@ namespace Java.Interop
 					throw new ArgumentException ("'classname' cannot be a zero-length string.", nameof (classname));
 
 				var info = JniEnvironment.CurrentInfo;
-				fixed (byte* _classname_ptr = classname) {
-					var c      = JniNativeMethods.FindClass (info.EnvironmentPointer, (IntPtr) _classname_ptr);
-					var thrown  = JniNativeMethods.ExceptionOccurred (info.EnvironmentPointer);
-					if (thrown == IntPtr.Zero) {
-						var r = new JniObjectReference (c, JniObjectReferenceType.Local);
-						JniEnvironment.LogCreateLocalRef (r);
-						return r;
-					}
 
-					RawExceptionClear (info.EnvironmentPointer);
-					var javaName = NewJavaNameFromUtf8 (info.EnvironmentPointer, classname);
-					try {
-						if (TryLoadClassWithFallback (info, thrown, javaName, throwOnError, out var result))
-							return result;
-					} finally {
-						JniObjectReference.Dispose (ref javaName);
-					}
-					if (!throwOnError)
-						return default;
+				var terminator = classname.IndexOf ((byte) 0);
+				var nameLength = terminator >= 0 ? terminator : classname.Length;
 
-					var terminator = classname.IndexOf ((byte) 0);
-					var errorClassName = terminator >= 0
-						? Encoding.UTF8.GetString (classname.Slice (0, terminator))
-						: Encoding.UTF8.GetString (classname);
-					throw new InvalidOperationException ($"Could not find Java class '{errorClassName}'.");
+				// Convert dot-separated names (e.g. "java.lang.Object"u8) to JNI form ("java/lang/Object")
+				// before calling FindClass, because ART's CheckJNI aborts the process on dot-separated names.
+				bool hasDots = classname.Slice (0, nameLength).IndexOf ((byte) '.') >= 0;
+				if (!hasDots) {
+					return TryFindClassFromPtr (info, classname, classname, terminator, throwOnError);
 				}
+
+				Span<byte> jniClassName = nameLength + 1 <= 256
+					? stackalloc byte [nameLength + 1]
+					: new byte [nameLength + 1];
+				for (int i = 0; i < nameLength; ++i)
+					jniClassName [i] = classname [i] == (byte) '.' ? (byte) '/' : classname [i];
+				jniClassName [nameLength] = 0;
+
+				return TryFindClassFromPtr (info, classname, jniClassName, terminator, throwOnError);
+			}
+
+			static unsafe JniObjectReference TryFindClassFromPtr (JniEnvironmentInfo info, ReadOnlySpan<byte> classname, ReadOnlySpan<byte> findClassSpan, int terminator, bool throwOnError)
+			{
+				IntPtr c;
+				fixed (byte* _classname_ptr = findClassSpan) {
+					c = JniNativeMethods.FindClass (info.EnvironmentPointer, (IntPtr) _classname_ptr);
+				}
+				var thrown  = JniNativeMethods.ExceptionOccurred (info.EnvironmentPointer);
+				if (thrown == IntPtr.Zero) {
+					var r = new JniObjectReference (c, JniObjectReferenceType.Local);
+					JniEnvironment.LogCreateLocalRef (r);
+					return r;
+				}
+
+				RawExceptionClear (info.EnvironmentPointer);
+				var javaName = NewJavaNameFromUtf8 (info.EnvironmentPointer, classname);
+				try {
+					if (TryLoadClassWithFallback (info, thrown, javaName, throwOnError, out var result))
+						return result;
+				} finally {
+					JniObjectReference.Dispose (ref javaName);
+				}
+				if (!throwOnError)
+					return default;
+
+				var errorClassName = terminator >= 0
+					? Encoding.UTF8.GetString (classname.Slice (0, terminator))
+					: Encoding.UTF8.GetString (classname);
+				throw new InvalidOperationException ($"Could not find Java class '{errorClassName}'.");
 			}
 #endif  // FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 		}
