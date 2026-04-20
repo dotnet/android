@@ -126,7 +126,7 @@ namespace Xamarin.Android.NetTests {
 			return IgnoreIfSocketException (aex, out connectionFailed);
 		}
 
-		bool IgnoreIfConnectionFailed (HttpRequestException hrex, out bool connectionFailed)
+		protected bool IgnoreIfConnectionFailed (HttpRequestException hrex, out bool connectionFailed)
 		{
 			connectionFailed = false;
 			if (hrex == null)
