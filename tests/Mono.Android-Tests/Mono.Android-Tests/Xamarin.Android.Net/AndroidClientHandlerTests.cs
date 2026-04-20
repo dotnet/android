@@ -96,10 +96,10 @@ namespace Xamarin.Android.NetTests {
 			connectionFailed = false;
 			try {
 				return connector ();
-			} catch (AggregateException ex) {
-				if (IgnoreIfConnectionFailed (ex, out connectionFailed))
-					return null;
-				throw;
+			} catch (Exception ex) when (IsConnectionFailure (ex)) {
+				connectionFailed = true;
+				Assert.Ignore ($"Ignoring transient connection failure: {ex.GetType ()}: {ex.Message}");
+				return null;
 			}
 		}
 
@@ -108,22 +108,10 @@ namespace Xamarin.Android.NetTests {
 			connectionFailed = false;
 			try {
 				runner ();
-			} catch (AggregateException ex) {
-				if (IgnoreIfConnectionFailed (ex, out connectionFailed))
-					return;
-				throw;
+			} catch (Exception ex) when (IsConnectionFailure (ex)) {
+				connectionFailed = true;
+				Assert.Ignore ($"Ignoring transient connection failure: {ex.GetType ()}: {ex.Message}");
 			}
-		}
-
-		protected bool IgnoreIfConnectionFailed (AggregateException aex, out bool connectionFailed)
-		{
-			if (IgnoreIfConnectionFailed (aex.InnerException as HttpRequestException, out connectionFailed))
-				return true;
-
-			if (IgnoreIfConnectionFailed (aex.InnerException as WebException, out connectionFailed))
-				return true;
-
-			return IgnoreIfSocketException (aex, out connectionFailed);
 		}
 
 		protected bool IsConnectionFailure (Exception ex)
@@ -155,68 +143,6 @@ namespace Xamarin.Android.NetTests {
 				current = current.InnerException;
 			}
 
-			return false;
-		}
-
-		bool IgnoreIfConnectionFailed (HttpRequestException hrex, out bool connectionFailed)
-		{
-			connectionFailed = false;
-			if (hrex == null)
-				return false;
-
-			if (IgnoreIfConnectionFailed (hrex.InnerException as WebException, out connectionFailed))
-				return true;
-
-			if (hrex.InnerException is System.IO.IOException ioEx) {
-				connectionFailed = true;
-				Assert.Ignore ($"Ignoring transient IO error: {ioEx}");
-				return true;
-			}
-
-			if (hrex.InnerException is Java.Net.ConnectException connectEx) {
-				connectionFailed = true;
-				Assert.Ignore ($"Ignoring transient connection error: {connectEx}");
-				return true;
-			}
-
-			return false;
-		}
-
-		bool IgnoreIfConnectionFailed (WebException wex, out bool connectionFailed)
-		{
-			connectionFailed = false;
-			if (wex == null)
-				return false;
-
-			switch (wex.Status) {
-				case WebExceptionStatus.ConnectFailure:
-				case WebExceptionStatus.NameResolutionFailure:
-				case WebExceptionStatus.Timeout:
-					connectionFailed = true;
-					Assert.Ignore ($"Ignoring network failure: {wex}");
-					return true;
-			}
-
-			return false;
-		}
-
-		bool IgnoreIfSocketException (Exception ex, out bool connectionFailed)
-		{
-			connectionFailed = false;
-			// Check the exception and all inner exceptions for transient socket errors
-			var current = ex;
-			while (current != null) {
-				if (current is Java.Net.SocketException socketEx) {
-					var message = socketEx.Message ?? "";
-					if (message.Contains ("Broken pipe", StringComparison.OrdinalIgnoreCase) ||
-							message.Contains ("Connection reset", StringComparison.OrdinalIgnoreCase)) {
-						connectionFailed = true;
-						Assert.Ignore ($"Ignoring transient socket error: {socketEx}");
-						return true;
-					}
-				}
-				current = current.InnerException;
-			}
 			return false;
 		}
 
