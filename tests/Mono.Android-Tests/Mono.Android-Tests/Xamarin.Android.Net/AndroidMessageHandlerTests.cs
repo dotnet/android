@@ -241,17 +241,13 @@ namespace Xamarin.Android.NetTests
 			};
 
 			var client = new HttpClient (handler);
-			HttpResponseMessage result;
 			try {
-				result = await client.GetAsync ("https://httpbin.org/redirect-to?url=https://www.microsoft.com/");
+				var result = await client.GetAsync ("https://httpbin.org/redirect-to?url=https://www.microsoft.com/");
+				EnsureSuccessStatusCode (result);
+				Assert.AreEqual (2, callbackCounter);
 			} catch (Exception ex) when (IsConnectionFailure (ex)) {
 				Assert.Ignore ($"Ignoring transient connection failure: {ex.GetType ()}: {ex.Message}");
-				return;
 			}
-
-			EnsureSuccessStatusCode (result);
-
-			Assert.AreEqual (2, callbackCounter);
 		}
 
 		[Test]
@@ -262,17 +258,13 @@ namespace Xamarin.Android.NetTests
 			var handler = new AndroidMessageHandler ();
 
 			var client = new HttpClient (handler);
-			HttpResponseMessage result;
 			try {
-				result = await client.GetAsync ("https://httpbin.org/redirect-to?url=https://www.microsoft.com/&status_code=308");
+				var result = await client.GetAsync ("https://httpbin.org/redirect-to?url=https://www.microsoft.com/&status_code=308");
+				EnsureSuccessStatusCode (result);
+				Assert.AreEqual ("https://www.microsoft.com/", result.RequestMessage.RequestUri.ToString ());
 			} catch (Exception ex) when (IsConnectionFailure (ex)) {
 				Assert.Ignore ($"Ignoring transient connection failure: {ex.GetType ()}: {ex.Message}");
-				return;
 			}
-
-			EnsureSuccessStatusCode (result);
-
-			Assert.AreEqual ("https://www.microsoft.com/", result.RequestMessage.RequestUri.ToString ());
 		}
 
 		[Test]
