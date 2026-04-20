@@ -153,7 +153,7 @@ void OSBridge::log_it (LogCategories category, std::string const& line, FILE *to
 	fflush (to);
 }
 
-void OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from) noexcept
+void OSBridge::_monodroid_gref_log_new (int grefc, int gwrefc, jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from) noexcept
 {
 	if ((log_categories & LOG_GREF) == 0) [[likely]] {
 		return;
@@ -161,8 +161,8 @@ void OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject
 
 	const std::string log_line = std::format (
 		"+g+ grefc {} gwrefc {} obj-handle {:p}/{} -> new-handle {:p}/{} from thread '{}'({})"sv,
-		gc_gref_count,
-		gc_weak_gref_count,
+		grefc,
+		gwrefc,
 		reinterpret_cast<void*>(curHandle),
 		curType,
 		reinterpret_cast<void*>(newHandle),
@@ -174,7 +174,7 @@ void OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject
 	log_it (LOG_GREF, log_line, Logger::gref_log (), from, Logger::gref_to_logcat ());
 }
 
-void OSBridge::_monodroid_gref_log_delete (jobject handle, char type, const char *threadName, int threadId, const char *from) noexcept
+void OSBridge::_monodroid_gref_log_delete (int grefc, int gwrefc, jobject handle, char type, const char *threadName, int threadId, const char *from) noexcept
 {
 	if ((log_categories & LOG_GREF) == 0) [[likely]] {
 		return;
@@ -182,8 +182,8 @@ void OSBridge::_monodroid_gref_log_delete (jobject handle, char type, const char
 
 	const std::string log_line = std::format (
 		"-g- grefc {} gwrefc {} handle {:p}/{} from thread '{}'({})"sv,
-		gc_gref_count,
-		gc_weak_gref_count,
+		grefc,
+		gwrefc,
 		reinterpret_cast<void*>(handle),
 		type,
 		optional_string (threadName),
@@ -193,7 +193,7 @@ void OSBridge::_monodroid_gref_log_delete (jobject handle, char type, const char
 	log_it (LOG_GREF, log_line, Logger::gref_log (), from, Logger::gref_to_logcat ());
 }
 
-void OSBridge::_monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from)
+void OSBridge::_monodroid_weak_gref_new (int grefc, int gwrefc, jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from)
 {
 	if ((log_categories & LOG_GREF) == 0) [[likely]] {
 		return;
@@ -201,8 +201,8 @@ void OSBridge::_monodroid_weak_gref_new (jobject curHandle, char curType, jobjec
 
 	const std::string log_line = std::format (
 		"+w+ grefc {} gwrefc {} obj-handle {:p}/{} -> new-handle {:p}/{} from thread '{}'({})"sv,
-		gc_gref_count,
-		gc_weak_gref_count,
+		grefc,
+		gwrefc,
 		reinterpret_cast<void*>(curHandle),
 		curType,
 		reinterpret_cast<void*>(newHandle),
@@ -233,7 +233,7 @@ OSBridge::_monodroid_lref_log_new (int lrefc, jobject handle, char type, const c
 	log_it (LOG_LREF, log_line, Logger::lref_log (), from, Logger::lref_to_logcat ());
 }
 
-void OSBridge::_monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from)
+void OSBridge::_monodroid_weak_gref_delete (int grefc, int gwrefc, jobject handle, char type, const char *threadName, int threadId, const char *from)
 {
 	if ((log_categories & LOG_GREF) == 0) [[likely]] {
 		return;
@@ -241,8 +241,8 @@ void OSBridge::_monodroid_weak_gref_delete (jobject handle, char type, const cha
 
 	const std::string log_line = std::format (
 		"-w- grefc {} gwrefc {} handle {:p}/{} from thread '{}'({})"sv,
-		gc_gref_count,
-		gc_weak_gref_count,
+		grefc,
+		gwrefc,
 		reinterpret_cast<void*>(handle),
 		type,
 		optional_string (threadName),

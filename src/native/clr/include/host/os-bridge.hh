@@ -31,10 +31,10 @@ namespace xamarin::android {
 		static auto _monodroid_weak_gref_dec () noexcept -> int;
 
 		static void _monodroid_gref_log (const char *message) noexcept;
-		static void _monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from) noexcept;
-		static void _monodroid_gref_log_delete (jobject handle, char type, const char *threadName, int threadId, const char *from) noexcept;
-		static void _monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from);
-		static void _monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from);
+		static void _monodroid_gref_log_new (int grefc, int gwrefc, jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from) noexcept;
+		static void _monodroid_gref_log_delete (int grefc, int gwrefc, jobject handle, char type, const char *threadName, int threadId, const char *from) noexcept;
+		static void _monodroid_weak_gref_new (int grefc, int gwrefc, jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from);
+		static void _monodroid_weak_gref_delete (int grefc, int gwrefc, jobject handle, char type, const char *threadName, int threadId, const char *from);
 
 		static void _monodroid_lref_log_new (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from);
 		static void _monodroid_lref_log_delete (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from);
