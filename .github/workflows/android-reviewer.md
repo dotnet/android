@@ -12,7 +12,16 @@ engine:
 network:
   allowed:
     - defaults
+    - "aka.ms"
     - "dev.azure.com"
+    - "github.com"
+    - "google.com"
+    - "gradle.org"
+    - "gstatic.com"
+    - "httpbin.org"
+    - "microsoft.com"
+    - "nuget.org"
+    - "vsassets.io"
 tools:
   github:
     toolsets: [pull_requests, repos]
