@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using NUnit.Framework;
+using Android.Runtime;
 
 namespace System.NetTests {
 	// TODO: https://github.com/dotnet/android/issues/10069

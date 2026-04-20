@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xamarin.Android.Net;
 using NUnit.Framework;
+using Android.Runtime;
 
 namespace Xamarin.Android.NetTests {
 	// Important: We expect the Negotiate authentication feature to be enabled in all of these tests because we set $(AndroidUseNegotiateAuthentication)=true

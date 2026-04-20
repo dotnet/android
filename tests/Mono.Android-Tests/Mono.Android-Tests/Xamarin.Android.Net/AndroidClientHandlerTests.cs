@@ -42,6 +42,7 @@ using System.Web;
 using NUnit.Framework;
 
 using Android.OS;
+using Android.Runtime;
 using Xamarin.Android.Net;
 
 namespace Xamarin.Android.NetTests {
