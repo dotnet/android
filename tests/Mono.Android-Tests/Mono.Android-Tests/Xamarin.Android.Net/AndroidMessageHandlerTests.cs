@@ -245,13 +245,7 @@ namespace Xamarin.Android.NetTests
 			try {
 				result = await client.GetAsync ("https://httpbin.org/redirect-to?url=https://www.microsoft.com/");
 			} catch (Exception ex) when (IsConnectionFailure (ex)) {
-				Console.WriteLine ($"Ignoring transient connection failure: {ex.GetType ()}: {ex.Message}");
-				return;
-			}
-
-			// Our dated NUnit test runner doesn't handle Assert.Ignore in an async context, so just exit
-			if (ShouldIgnoreSuccessStatusCode (result.StatusCode)) {
-				Console.WriteLine ($"Ignoring {result.StatusCode} status code");
+				Assert.Ignore ($"Ignoring transient connection failure: {ex.GetType ()}: {ex.Message}");
 				return;
 			}
 
@@ -272,13 +266,7 @@ namespace Xamarin.Android.NetTests
 			try {
 				result = await client.GetAsync ("https://httpbin.org/redirect-to?url=https://www.microsoft.com/&status_code=308");
 			} catch (Exception ex) when (IsConnectionFailure (ex)) {
-				Console.WriteLine ($"Ignoring transient connection failure: {ex.GetType ()}: {ex.Message}");
-				return;
-			}
-
-			// Our dated NUnit test runner doesn't handle Assert.Ignore in an async context, so just exit
-			if (ShouldIgnoreSuccessStatusCode (result.StatusCode)) {
-				Console.WriteLine ($"Ignoring {result.StatusCode} status code");
+				Assert.Ignore ($"Ignoring transient connection failure: {ex.GetType ()}: {ex.Message}");
 				return;
 			}
 
@@ -409,8 +397,7 @@ namespace Xamarin.Android.NetTests
 				await client.SendAsync (request, tcs.Token).ConfigureAwait (false);
 				// If we get here without exception, that's also OK for this test
 			} catch (Exception ex) when (IsConnectionFailure (ex)) {
-				Console.WriteLine ($"Ignoring transient connection failure: {ex.GetType ()}: {ex.Message}");
-				return;
+				Assert.Ignore ($"Ignoring transient connection failure: {ex.GetType ()}: {ex.Message}");
 			} catch (Exception ex) {
 				// Expected - cancellation or connection error
 				// We catch all exceptions to ensure the test doesn't fail due to unhandled exceptions
