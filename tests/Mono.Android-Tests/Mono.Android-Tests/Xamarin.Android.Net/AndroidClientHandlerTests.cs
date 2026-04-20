@@ -126,7 +126,39 @@ namespace Xamarin.Android.NetTests {
 			return IgnoreIfSocketException (aex, out connectionFailed);
 		}
 
-		protected bool IgnoreIfConnectionFailed (HttpRequestException hrex, out bool connectionFailed)
+		protected bool IsConnectionFailure (Exception ex)
+		{
+			var current = ex;
+			while (current != null) {
+				if (current is WebException wex) {
+					switch (wex.Status) {
+						case WebExceptionStatus.ConnectFailure:
+						case WebExceptionStatus.NameResolutionFailure:
+						case WebExceptionStatus.Timeout:
+							return true;
+					}
+				}
+
+				if (current is System.IO.IOException)
+					return true;
+
+				if (current is Java.Net.ConnectException)
+					return true;
+
+				if (current is Java.Net.SocketException socketEx) {
+					var message = socketEx.Message ?? "";
+					if (message.Contains ("Broken pipe", StringComparison.OrdinalIgnoreCase) ||
+							message.Contains ("Connection reset", StringComparison.OrdinalIgnoreCase))
+						return true;
+				}
+
+				current = current.InnerException;
+			}
+
+			return false;
+		}
+
+		bool IgnoreIfConnectionFailed (HttpRequestException hrex, out bool connectionFailed)
 		{
 			connectionFailed = false;
 			if (hrex == null)

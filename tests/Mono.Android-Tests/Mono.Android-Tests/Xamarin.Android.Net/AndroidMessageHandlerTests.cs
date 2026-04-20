@@ -244,14 +244,9 @@ namespace Xamarin.Android.NetTests
 			HttpResponseMessage result;
 			try {
 				result = await client.GetAsync ("https://httpbin.org/redirect-to?url=https://www.microsoft.com/");
-			} catch (AggregateException ex) {
-				if (IgnoreIfConnectionFailed (ex, out _))
-					return;
-				throw;
-			} catch (HttpRequestException ex) {
-				if (IgnoreIfConnectionFailed (ex, out _))
-					return;
-				throw;
+			} catch (Exception ex) when (IsConnectionFailure (ex)) {
+				Console.WriteLine ($"Ignoring transient connection failure: {ex.GetType ()}: {ex.Message}");
+				return;
 			}
 
 			// Our dated NUnit test runner doesn't handle Assert.Ignore in an async context, so just exit
@@ -276,14 +271,9 @@ namespace Xamarin.Android.NetTests
 			HttpResponseMessage result;
 			try {
 				result = await client.GetAsync ("https://httpbin.org/redirect-to?url=https://www.microsoft.com/&status_code=308");
-			} catch (AggregateException ex) {
-				if (IgnoreIfConnectionFailed (ex, out _))
-					return;
-				throw;
-			} catch (HttpRequestException ex) {
-				if (IgnoreIfConnectionFailed (ex, out _))
-					return;
-				throw;
+			} catch (Exception ex) when (IsConnectionFailure (ex)) {
+				Console.WriteLine ($"Ignoring transient connection failure: {ex.GetType ()}: {ex.Message}");
+				return;
 			}
 
 			// Our dated NUnit test runner doesn't handle Assert.Ignore in an async context, so just exit
