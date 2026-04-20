@@ -29,6 +29,10 @@ namespace Xamarin.Android.RuntimeTests
                 // Java.Interop-Tests fixtures that use JavaObject types (not Java.Lang.Object)
                 // still need JCW Java classes or Java-side support that the trimmable typemap
                 // path does not emit yet.
+                // NOTE: Tests in this project that are trimmable-incompatible use
+                // [Category("TrimmableIgnore")] so they can be excluded via ExcludeCategories in
+                // the .csproj instead. Only tests from the external Java.Interop-Tests assembly
+                // (which we don't control) need to be listed here by name.
                 ExcludedTestNames = new [] {
                     "Java.InteropTests.JavaObjectTest",
                     "Java.InteropTests.InvokeVirtualFromConstructorTests",
@@ -42,31 +46,8 @@ namespace Xamarin.Android.RuntimeTests
                     "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs_Exceptions",
                     "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs_InstanceThatDoesNotImplementInterfaceReturnsNull",
 
-                    // These certificate-callback tests were narrowed down from the old broad SSL
-                    // bucket. In Release+CoreCLR+trimmable runs they crash or fail because
-                    // IX509TrustManager cannot be found in ITrustManager arrays (likely a
-                    // trimmable typemap bug). The tombstone for some variants shows
-                    // ART/CheckJNI with libnet-android.release.so calling into
-                    // JNIEnv::CallVoidMethod.
-                    "Xamarin.Android.NetTests.AndroidMessageHandlerTests.ServerCertificateCustomValidationCallback_ApproveRequest",
-                    "Xamarin.Android.NetTests.AndroidMessageHandlerTests.ServerCertificateCustomValidationCallback_ApprovesRequestWithInvalidCertificate",
-                    "Xamarin.Android.NetTests.AndroidMessageHandlerTests.ServerCertificateCustomValidationCallback_IgnoresCertificateHostnameMismatch",
-                    "Xamarin.Android.NetTests.AndroidMessageHandlerTests.ServerCertificateCustomValidationCallback_RejectRequest",
-                    "Xamarin.Android.NetTests.AndroidMessageHandlerTests.ServerCertificateCustomValidationCallback_Redirects",
-
                     // JavaObjectArray<object> contract tests still need generic container factory support.
                     "Java.InteropTests.JavaObjectArray_object_ContractTest",
-
-                    // Native typemap lookup and activation behavior still has a few trimmable-only gaps.
-                    "Java.InteropTests.JnienvTest.NewOpenGenericTypeThrows",
-                    "Java.InteropTests.JnienvTest.ActivatedDirectThrowableSubclassesShouldBeRegistered",
-                    "Java.InteropTests.JnienvTest.JavaToManagedTypeMapping",
-                    "Java.InteropTests.JnienvTest.ManagedToJavaTypeMapping",
-                    "Java.InteropTests.JavaObjectExtensionsTests.JavaCast_BaseToGenericWrapper",
-                    "Java.InteropTests.JavaObjectExtensionsTests.JavaCast_BadInterfaceCast",
-                    "Java.InteropTests.JavaObjectExtensionsTests.JavaCast_InvalidTypeCastThrows",
-                    "Java.InteropTests.JavaObjectExtensionsTests.JavaCast_CheckForManagedSubclasses",
-                    "Java.InteropTests.JavaObjectExtensionsTests.JavaAs",
                 };
 
             }
