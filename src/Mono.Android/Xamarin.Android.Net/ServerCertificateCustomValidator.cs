@@ -20,6 +20,7 @@ namespace Xamarin.Android.Net
 
 		public Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> Callback { get; set; }
 
+		[DynamicDependency("GetVerify_Ljava_lang_String_Ljavax_net_ssl_SSLSession_Handler", typeof(IHostnameVerifierInvoker))]
 		public ServerCertificateCustomValidator (Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool> callback)
 		{
 			Callback = callback;
@@ -172,6 +173,7 @@ namespace Xamarin.Android.Net
 
 		[DynamicDependency(nameof(IX509TrustManager.CheckServerTrusted), typeof(IX509TrustManagerInvoker))]
 		[DynamicDependency(nameof(IX509TrustManager.CheckServerTrusted), typeof(X509ExtendedTrustManagerInvoker))]
+		[DynamicDependency(DynamicallyAccessedMemberTypes.PublicConstructors, typeof(X509ExtendedTrustManagerInvoker))]
 		private static IX509TrustManager FindX509TrustManager(ITrustManager[] trustManagers, out int index)
 		{
 			for (int i = 0; i < trustManagers.Length; i++) {

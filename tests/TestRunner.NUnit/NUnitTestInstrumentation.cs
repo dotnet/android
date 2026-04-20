@@ -73,6 +73,9 @@ namespace Xamarin.Android.UnitTests.NUnit
 			Log.Info(LogTag, "Configuring test categories to exclude from extras:");
 			ChainCategoryFilter (GetFilterValuesFromExtras (KnownArguments.Exclude), true, ref filter);
 
+			Log.Info (LogTag, "Configuring tests to include (by name):");
+			ChainIncludeTestNameFilter (GetFilterValuesFromExtras ("include-name")?.ToArray (), ref filter);
+
 			Log.Info (LogTag, "Configuring tests to exclude (by name):");
 			ChainTestNameFilter (ExcludedTestNames?.ToArray (), ref filter);
 
@@ -119,6 +122,41 @@ namespace Xamarin.Android.UnitTests.NUnit
 
 			var excludeTestNamesFilter  = new SimpleNameFilter (testNames);
 			filter = new AndFilter (filter, new NotFilter (excludeTestNamesFilter));
+		}
+
+		void ChainIncludeTestNameFilter (string[] testNames, ref ITestFilter filter)
+		{
+			if (testNames == null || testNames.Length == 0) {
+				Log.Info (LogTag, "  none");
+				return;
+			};
+
+			foreach (string name in testNames) {
+				if (String.IsNullOrEmpty (name))
+					continue;
+				Log.Info (LogTag, $"  {name}");
+			}
+
+			filter = new AndFilter (filter, new ContainsNameFilter (testNames));
+		}
+
+		sealed class ContainsNameFilter : TestFilter
+		{
+			readonly string[] _names;
+
+			public ContainsNameFilter (string[] names)
+			{
+				_names = names;
+			}
+
+			public override bool Match (ITest test)
+			{
+				foreach (var name in _names) {
+					if (test.FullName.Contains (name))
+						return true;
+				}
+				return false;
+			}
 		}
 	}
 }
