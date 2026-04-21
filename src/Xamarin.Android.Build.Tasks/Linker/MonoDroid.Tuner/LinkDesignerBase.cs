@@ -4,16 +4,12 @@ using Mono.Cecil;
 using Mono.Linker;
 using Mono.Linker.Steps;
 using System;
-using System.Linq;
 using Xamarin.Android.Tasks;
 using System.Collections.Generic;
 using System.Globalization;
 using Mono.Cecil.Cil;
 using System.Text.RegularExpressions;
 using Mono.Collections.Generic;
-#if ILLINK
-using Microsoft.Android.Sdk.ILLink;
-#endif
 
 
 namespace MonoDroid.Tuner  {
@@ -21,26 +17,14 @@ namespace MonoDroid.Tuner  {
 	{
 		protected IMetadataResolver Cache => Context;
 
-		public
-#if !ILLINK
-		override
-#endif
-		void LogMessage (string message)
+		public override void LogMessage (string message)
 		{
 			Context.LogMessage (message);
 		}
 
-		public
-#if !ILLINK
-		override
-#endif
-		void LogError (int code, string error)
+		public override void LogError (int code, string error)
 		{
-#if ILLINK
-			Context.LogMessage (MessageContainer.CreateCustomErrorMessage (error, code, origin: new MessageOrigin ()));
-#else   // !ILLINK
 			Context.LogError ($"XA{code}", error);
-#endif  // !ILLINK
 		}
 
 		public virtual AssemblyDefinition Resolve (AssemblyNameReference name)

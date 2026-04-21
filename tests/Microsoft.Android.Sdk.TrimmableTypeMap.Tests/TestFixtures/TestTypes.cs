@@ -49,6 +49,20 @@ namespace Android.App
 	{
 		protected Service (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 	}
+
+	[Register ("android/app/Application", DoNotGenerateAcw = true)]
+	public class Application : Java.Lang.Object
+	{
+		public Application () { }
+		protected Application (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+	}
+
+	[Register ("android/app/Instrumentation", DoNotGenerateAcw = true)]
+	public class Instrumentation : Java.Lang.Object
+	{
+		public Instrumentation () { }
+		protected Instrumentation (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+	}
 }
 
 namespace Android.App.Backup
@@ -317,8 +331,11 @@ namespace MyApp
 		protected void ProtectedMethod () { }
 	}
 
+	[Register ("my/app/BaseApplication")]
+	public abstract class BaseApplication : Android.App.Application { }
+
 	[Application (Name = "my.app.MyApplication", BackupAgent = typeof (MyBackupAgent), ManageSpaceActivity = typeof (MyManageSpaceActivity))]
-	public class MyApplication : Java.Lang.Object { }
+	public class MyApplication : BaseApplication { }
 
 	/// <summary>
 	/// Has [ExportField] methods that should produce Java field declarations.
@@ -335,8 +352,14 @@ namespace MyApp
 		public string GetValue () => "";
 	}
 
+	[Register ("my/app/BaseInstrumentation")]
+	public abstract class BaseInstrumentation : Android.App.Instrumentation { }
+
+	[Register ("my/app/IntermediateInstrumentation")]
+	public abstract class IntermediateInstrumentation : BaseInstrumentation { }
+
 	[Instrumentation (Name = "my.app.MyInstrumentation")]
-	public class MyInstrumentation : Java.Lang.Object { }
+	public class MyInstrumentation : IntermediateInstrumentation { }
 
 	[Register ("my/app/MyBackupAgent")]
 	public class MyBackupAgent : Android.App.Backup.BackupAgent
@@ -752,6 +775,72 @@ namespace MyApp
 	}
 
 	/// <summary>
+	/// Declares a registered abstract method above an intermediate MCW base type.
+	/// Mirrors AdapterView.SetSelection(int) for AbsListView-derived test fixtures.
+	/// </summary>
+	[Register ("my/app/SelectionHost", DoNotGenerateAcw = true)]
+	public abstract class SelectionHost : Java.Lang.Object
+	{
+		protected SelectionHost (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Register ("setSelection", "(I)V", "GetSetSelection_IHandler")]
+		public abstract void SetSelection (int position);
+	}
+
+	/// <summary>
+	/// Intermediate MCW base that inherits the registered method without redeclaring it.
+	/// </summary>
+	[Register ("my/app/SelectionContainer", DoNotGenerateAcw = true)]
+	public abstract class SelectionContainer : SelectionHost
+	{
+		protected SelectionContainer (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+	}
+
+	/// <summary>
+	/// Generic base used to verify override discovery through a generic-instantiated base type.
+	/// Mirrors AdapterView&lt;T&gt; in the real Mono.Android hierarchy.
+	/// </summary>
+	[Register ("my/app/GenericSelectionHost", DoNotGenerateAcw = true)]
+	public abstract class GenericSelectionHost<T> : Java.Lang.Object where T : class
+	{
+		protected GenericSelectionHost (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Register ("setSelection", "(I)V", "GetSetSelection_IHandler")]
+		public abstract void SetSelection (int position);
+	}
+
+	/// <summary>
+	/// Intermediate MCW base that closes the generic base.
+	/// </summary>
+	[Register ("my/app/GenericSelectionContainer", DoNotGenerateAcw = true)]
+	public abstract class GenericSelectionContainer : GenericSelectionHost<string>
+	{
+		protected GenericSelectionContainer (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+	}
+
+	/// <summary>
+	/// Overrides a registered method declared above the first MCW base in the hierarchy.
+	/// </summary>
+	[Register ("my/app/SelectableList")]
+	public class SelectableList : SelectionContainer
+	{
+		protected SelectableList (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public override void SetSelection (int position) { }
+	}
+
+	/// <summary>
+	/// Overrides a registered method declared above a generic-instantiated MCW base.
+	/// </summary>
+	[Register ("my/app/GenericSelectableList")]
+	public class GenericSelectableList : GenericSelectionContainer
+	{
+		protected GenericSelectableList (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public override void SetSelection (int position) { }
+	}
+
+	/// <summary>
 	/// Has a ctor with unsigned primitive params to test JNI mapping.
 	/// </summary>
 	[Register ("my/app/UnsignedParamActivity")]
@@ -824,4 +913,38 @@ public class GlobalUnregisteredType : Java.Lang.Object { }
 public class DotFormatActivity : Android.App.Activity
 {
 	protected DotFormatActivity (IntPtr handle, Android.Runtime.JniHandleOwnership transfer) : base (handle, transfer) { }
+}
+
+// --- Alias test types ---
+// Multiple .NET types mapping to the same JNI name (e.g., generic + non-generic collection wrappers).
+
+namespace MyApp.Aliases
+{
+	/// <summary>
+	/// Non-generic type registered as "test/AliasTarget" — forms the primary entry.
+	/// </summary>
+	[Register ("test/AliasTarget", DoNotGenerateAcw = true)]
+	public class AliasTarget : Java.Lang.Object
+	{
+		protected AliasTarget (IntPtr handle, Android.Runtime.JniHandleOwnership transfer) : base (handle, transfer) { }
+	}
+
+	/// <summary>
+	/// Generic type also registered as "test/AliasTarget" — forms an alias entry.
+	/// Mirrors the real-world pattern of JavaCollection/JavaCollection&lt;T&gt;.
+	/// </summary>
+	[Register ("test/AliasTarget", DoNotGenerateAcw = true)]
+	public class AliasTargetGeneric<T> : Java.Lang.Object
+	{
+		protected AliasTargetGeneric (IntPtr handle, Android.Runtime.JniHandleOwnership transfer) : base (handle, transfer) { }
+	}
+
+	/// <summary>
+	/// Third type also registered as "test/AliasTarget" — tests 3-way alias groups.
+	/// </summary>
+	[Register ("test/AliasTarget", DoNotGenerateAcw = true)]
+	public class AliasTargetExtended : Java.Lang.Object
+	{
+		protected AliasTargetExtended (IntPtr handle, Android.Runtime.JniHandleOwnership transfer) : base (handle, transfer) { }
+	}
 }

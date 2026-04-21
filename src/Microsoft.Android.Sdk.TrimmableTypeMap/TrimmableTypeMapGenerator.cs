@@ -9,11 +9,11 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
 public class TrimmableTypeMapGenerator
 {
-	readonly Action<string> log;
+	readonly ITrimmableTypeMapLogger logger;
 
-	public TrimmableTypeMapGenerator (Action<string> log)
+	public TrimmableTypeMapGenerator (ITrimmableTypeMapLogger logger)
 	{
-		this.log = log ?? throw new ArgumentNullException (nameof (log));
+		this.logger = logger ?? throw new ArgumentNullException (nameof (logger));
 	}
 
 	/// <summary>
@@ -34,24 +34,30 @@ public class TrimmableTypeMapGenerator
 
 		var (allPeers, assemblyManifestInfo) = ScanAssemblies (assemblies);
 		if (allPeers.Count == 0) {
-			log ("No Java peer types found, skipping typemap generation.");
+			logger.LogNoJavaPeerTypesFound ();
 			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
+
+		RootManifestReferencedTypes (allPeers, PrepareManifestForRooting (manifestTemplate, manifestConfig));
+		PropagateDeferredRegistrationToBaseClasses (allPeers);
 
 		var generatedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion);
 		var jcwPeers = allPeers.Where (p =>
 			!frameworkAssemblyNames.Contains (p.AssemblyName)
 			|| p.JavaName.StartsWith ("mono/", StringComparison.Ordinal)).ToList ();
-		log ($"Generating JCW files for {jcwPeers.Count} types (filtered from {allPeers.Count} total).");
+		logger.LogGeneratingJcwFilesInfo (jcwPeers.Count, allPeers.Count);
 		var generatedJavaSources = GenerateJcwJavaSources (jcwPeers);
 
 		// Collect Application/Instrumentation types that need deferred registerNatives
 		var appRegTypes = allPeers
-			.Where (p => p.CannotRegisterInStaticConstructor && !p.IsAbstract)
+			// Include all deferred-registration peers here: framework MCWs still need
+			// ApplicationRegistration.java even without generated ACWs, and abstract
+			// base types can own the native methods that derived types invoke.
+			.Where (p => p.CannotRegisterInStaticConstructor)
 			.Select (p => JniSignatureHelper.JniNameToJavaName (p.JavaName))
 			.ToList ();
 		if (appRegTypes.Count > 0) {
-			log ($"Found {appRegTypes.Count} Application/Instrumentation types for deferred registration.");
+			logger.LogDeferredRegistrationTypesInfo (appRegTypes.Count);
 		}
 
 		var manifest = manifestConfig is not null
@@ -102,7 +108,7 @@ public class TrimmableTypeMapGenerator
 		using var scanner = new JavaPeerScanner ();
 		var peers = scanner.Scan (assemblies);
 		var manifestInfo = scanner.ScanAssemblyManifestInfo ();
-		log ($"Scanned {assemblies.Count} assemblies, found {peers.Count} Java peer types.");
+		logger.LogJavaPeerScanInfo (assemblies.Count, peers.Count);
 		return (peers, manifestInfo);
 	}
 
@@ -120,15 +126,15 @@ public class TrimmableTypeMapGenerator
 			generator.Generate (peers, stream, assemblyName);
 			stream.Position = 0;
 			generatedAssemblies.Add (new GeneratedAssembly (assemblyName, stream));
-			log ($"  {assemblyName}: {peers.Count} types");
+			logger.LogGeneratedTypeMapAssemblyInfo (assemblyName, peers.Count);
 		}
 		var rootStream = new MemoryStream ();
 		var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
 		rootGenerator.Generate (perAssemblyNames, rootStream);
 		rootStream.Position = 0;
 		generatedAssemblies.Add (new GeneratedAssembly ("_Microsoft.Android.TypeMaps", rootStream));
-		log ($"  Root: {perAssemblyNames.Count} per-assembly refs");
-		log ($"Generated {generatedAssemblies.Count} typemap assemblies.");
+		logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);
+		logger.LogGeneratedTypeMapAssembliesInfo (generatedAssemblies.Count);
 		return generatedAssemblies;
 	}
 
@@ -136,7 +142,174 @@ public class TrimmableTypeMapGenerator
 	{
 		var jcwGenerator = new JcwJavaSourceGenerator ();
 		var sources = jcwGenerator.GenerateContent (allPeers);
-		log ($"Generated {sources.Count} JCW Java source files.");
+		logger.LogGeneratedJcwFilesInfo (sources.Count);
 		return sources.ToList ();
 	}
+
+	internal void RootManifestReferencedTypes (List<JavaPeerInfo> allPeers, XDocument? doc)
+	{
+		if (doc?.Root is not { } root) {
+			return;
+		}
+
+		XNamespace androidNs = "http://schemas.android.com/apk/res/android";
+		XName attName = androidNs + "name";
+		var packageName = (string?) root.Attribute ("package") ?? "";
+
+		var componentNames = new HashSet<string> (StringComparer.Ordinal);
+		var deferredRegistrationNames = new HashSet<string> (StringComparer.Ordinal);
+		foreach (var element in root.Descendants ()) {
+			switch (element.Name.LocalName) {
+			case "application":
+			case "activity":
+			case "instrumentation":
+			case "service":
+			case "receiver":
+			case "provider":
+				var name = (string?) element.Attribute (attName);
+				if (name is not null) {
+					var resolvedName = ManifestNameResolver.Resolve (name, packageName);
+					componentNames.Add (resolvedName);
+
+					if (element.Name.LocalName is "application" or "instrumentation") {
+						deferredRegistrationNames.Add (resolvedName);
+					}
+				}
+				break;
+			}
+		}
+
+		if (componentNames.Count == 0) {
+			return;
+		}
+
+		// Build lookup by both Java and compat dot-names. Keep '$' for nested types,
+		// because manifests commonly use '$', but also include the Java source form.
+		var peersByDotName = new Dictionary<string, List<JavaPeerInfo>> (StringComparer.Ordinal);
+		foreach (var peer in allPeers) {
+			AddJniLookupNames (peersByDotName, peer.JavaName, peer);
+			if (peer.CompatJniName != peer.JavaName) {
+				AddJniLookupNames (peersByDotName, peer.CompatJniName, peer);
+			}
+		}
+
+		foreach (var name in componentNames) {
+			if (peersByDotName.TryGetValue (name, out var peers)) {
+				foreach (var peer in peers) {
+					if (deferredRegistrationNames.Contains (name)) {
+						peer.CannotRegisterInStaticConstructor = true;
+					}
+
+					if (!peer.IsUnconditional) {
+						peer.IsUnconditional = true;
+						logger.LogRootingManifestReferencedTypeInfo (name, peer.ManagedTypeName);
+					}
+				}
+			} else {
+				logger.LogManifestReferencedTypeNotFoundWarning (name);
+			}
+		}
+	}
+
+	/// <summary>
+	/// Propagates <see cref="JavaPeerInfo.CannotRegisterInStaticConstructor"/> up the base class chain.
+	/// When a type like NUnitInstrumentation has deferred registration, its base class
+	/// TestInstrumentation_1 must also defer — otherwise the base class <c>&lt;clinit&gt;</c> will call
+	/// <c>registerNatives</c> before the managed runtime is ready.
+	/// </summary>
+	internal static void PropagateDeferredRegistrationToBaseClasses (List<JavaPeerInfo> allPeers)
+	{
+		// In practice only 1–2 types need propagation (one Application, maybe one
+		// Instrumentation), each with a short base-class chain.  A linear scan per
+		// ancestor is simpler and cheaper than building a Dictionary<JavaName, List<Peer>>
+		// lookup over all peers up front.
+		foreach (var peer in allPeers) {
+			if (peer.CannotRegisterInStaticConstructor) {
+				PropagateToAncestors (peer.BaseJavaName, allPeers);
+			}
+		}
+
+		static void PropagateToAncestors (string? baseJniName, List<JavaPeerInfo> allPeers)
+		{
+			while (baseJniName is not null) {
+				string? nextBase = null;
+				foreach (var basePeer in allPeers) {
+					if (!string.Equals (basePeer.JavaName, baseJniName, StringComparison.Ordinal) || basePeer.DoNotGenerateAcw) {
+						continue;
+					}
+
+					basePeer.CannotRegisterInStaticConstructor = true;
+					nextBase = basePeer.BaseJavaName;
+				}
+
+				baseJniName = nextBase;
+			}
+		}
+	}
+
+	static void AddPeerByDotName (Dictionary<string, List<JavaPeerInfo>> peersByDotName, string dotName, JavaPeerInfo peer)
+	{
+		if (!peersByDotName.TryGetValue (dotName, out var list)) {
+			list = [];
+			peersByDotName [dotName] = list;
+		}
+
+		list.Add (peer);
+	}
+
+	static XDocument? PrepareManifestForRooting (XDocument? manifestTemplate, ManifestConfig? manifestConfig)
+	{
+		if (manifestTemplate is null && manifestConfig is null) {
+			return null;
+		}
+
+		var doc = manifestTemplate is not null
+			? new XDocument (manifestTemplate)
+			: new XDocument (
+				new XElement (
+					"manifest",
+					new XAttribute (XNamespace.Xmlns + "android", ManifestConstants.AndroidNs.NamespaceName)));
+
+		if (doc.Root is not { } root) {
+			return doc;
+		}
+
+		if (manifestConfig is null) {
+			return doc;
+		}
+
+		if (((string?) root.Attribute ("package")).IsNullOrEmpty () && !manifestConfig.PackageName.IsNullOrEmpty ()) {
+			root.SetAttributeValue ("package", manifestConfig.PackageName);
+		}
+
+		ManifestGenerator.ApplyPlaceholders (doc, manifestConfig.ManifestPlaceholders);
+
+		if (!manifestConfig.ApplicationJavaClass.IsNullOrEmpty ()) {
+			var app = root.Element ("application");
+			if (app is null) {
+				app = new XElement ("application");
+				root.Add (app);
+			}
+
+			if (app.Attribute (ManifestConstants.AttName) is null) {
+				app.SetAttributeValue (ManifestConstants.AttName, manifestConfig.ApplicationJavaClass);
+			}
+		}
+
+		return doc;
+	}
+
+	static void AddJniLookupNames (Dictionary<string, List<JavaPeerInfo>> peersByDotName, string jniName, JavaPeerInfo peer)
+	{
+		var simpleName = JniSignatureHelper.GetJavaSimpleName (jniName);
+		var packageName = JniSignatureHelper.GetJavaPackageName (jniName);
+		var manifestName = packageName.IsNullOrEmpty () ? simpleName : packageName + "." + simpleName;
+		AddPeerByDotName (peersByDotName, manifestName, peer);
+
+		var javaSourceName = JniSignatureHelper.JniNameToJavaName (jniName);
+		if (javaSourceName != manifestName) {
+			AddPeerByDotName (peersByDotName, javaSourceName, peer);
+		}
+	}
+
 }

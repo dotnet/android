@@ -254,6 +254,308 @@ public class ManifestGeneratorTests
 	}
 
 	[Fact]
+	public void Instrumentation_DefaultsTargetPackage ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var peer = CreatePeer ("com/example/app/MyInstrumentation", new ComponentInfo {
+			Kind = ComponentKind.Instrumentation,
+			Properties = new Dictionary<string, object?> {
+				["Label"] = "My Test",
+			},
+		});
+
+		var doc = GenerateAndLoad (gen, [peer]);
+
+		var instrumentation = doc.Root?.Element ("instrumentation");
+		Assert.NotNull (instrumentation);
+
+		// targetPackage should default to the app's PackageName
+		Assert.Equal ("com.example.app", (string?)instrumentation?.Attribute (AndroidNs + "targetPackage"));
+	}
+
+	[Fact]
+	public void CompatNames_RewrittenToCrc ()
+	{
+		var gen = CreateDefaultGenerator ();
+
+		// Template uses compat names
+		var template = ParseTemplate ("""
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.app">
+				<application android:name="com.example.app.MyApp">
+					<activity android:name="com.example.app.MainActivity" />
+				</application>
+			</manifest>
+			""");
+
+		// Peer has CRC JavaName but compat CompatJniName
+		var appPeer = new JavaPeerInfo {
+			JavaName = "crc64abc123/MyApp",
+			CompatJniName = "com/example/app/MyApp",
+			ManagedTypeName = "Com.Example.App.MyApp",
+			ManagedTypeNamespace = "Com.Example.App",
+			ManagedTypeShortName = "MyApp",
+			AssemblyName = "TestApp",
+			ComponentAttribute = new ComponentInfo {
+				Kind = ComponentKind.Application,
+				Properties = new Dictionary<string, object?> (),
+			},
+		};
+		var activityPeer = new JavaPeerInfo {
+			JavaName = "crc64def456/MainActivity",
+			CompatJniName = "com/example/app/MainActivity",
+			ManagedTypeName = "Com.Example.App.MainActivity",
+			ManagedTypeNamespace = "Com.Example.App",
+			ManagedTypeShortName = "MainActivity",
+			AssemblyName = "TestApp",
+			ComponentAttribute = new ComponentInfo {
+				Kind = ComponentKind.Activity,
+				Properties = new Dictionary<string, object?> (),
+			},
+		};
+
+		var doc = GenerateAndLoad (gen, [appPeer, activityPeer], template: template);
+
+		var app = doc.Root?.Element ("application");
+		Assert.NotNull (app);
+		Assert.Equal ("crc64abc123.MyApp", (string?)app?.Attribute (AttName));
+
+		var activity = app?.Element ("activity");
+		Assert.NotNull (activity);
+		Assert.Equal ("crc64def456.MainActivity", (string?)activity?.Attribute (AttName));
+	}
+
+	[Fact]
+	public void CompatNames_RewrittenToCrc_RelativeDotForm ()
+	{
+		var gen = CreateDefaultGenerator ();
+
+		// Template uses the ".Type" relative form that Android resolves against the
+		// manifest package. RewriteCompatNames must resolve it before the compat lookup.
+		var template = ParseTemplate ("""
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.app">
+				<application android:name=".MyApp">
+					<activity android:name=".MainActivity" />
+				</application>
+			</manifest>
+			""");
+
+		var appPeer = new JavaPeerInfo {
+			JavaName = "crc64abc123/MyApp",
+			CompatJniName = "com/example/app/MyApp",
+			ManagedTypeName = "Com.Example.App.MyApp",
+			ManagedTypeNamespace = "Com.Example.App",
+			ManagedTypeShortName = "MyApp",
+			AssemblyName = "TestApp",
+			ComponentAttribute = new ComponentInfo {
+				Kind = ComponentKind.Application,
+				Properties = new Dictionary<string, object?> (),
+			},
+		};
+		var activityPeer = new JavaPeerInfo {
+			JavaName = "crc64def456/MainActivity",
+			CompatJniName = "com/example/app/MainActivity",
+			ManagedTypeName = "Com.Example.App.MainActivity",
+			ManagedTypeNamespace = "Com.Example.App",
+			ManagedTypeShortName = "MainActivity",
+			AssemblyName = "TestApp",
+			ComponentAttribute = new ComponentInfo {
+				Kind = ComponentKind.Activity,
+				Properties = new Dictionary<string, object?> (),
+			},
+		};
+
+		var doc = GenerateAndLoad (gen, [appPeer, activityPeer], template: template);
+
+		var app = doc.Root?.Element ("application");
+		Assert.NotNull (app);
+		Assert.Equal ("crc64abc123.MyApp", (string?)app?.Attribute (AttName));
+
+		var activity = app?.Element ("activity");
+		Assert.NotNull (activity);
+		Assert.Equal ("crc64def456.MainActivity", (string?)activity?.Attribute (AttName));
+	}
+
+	[Fact]
+	public void CompatNames_RewrittenToCrc_UsesManifestPackageAttribute ()
+	{
+		var gen = CreateDefaultGenerator ();
+		gen.PackageName = "com.other.app";
+
+		var template = ParseTemplate ("""
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.app">
+				<application android:name=".MyApp">
+					<activity android:name=".MainActivity" />
+				</application>
+			</manifest>
+			""");
+
+		var appPeer = new JavaPeerInfo {
+			JavaName = "crc64abc123/MyApp",
+			CompatJniName = "com/example/app/MyApp",
+			ManagedTypeName = "Com.Example.App.MyApp",
+			ManagedTypeNamespace = "Com.Example.App",
+			ManagedTypeShortName = "MyApp",
+			AssemblyName = "TestApp",
+			ComponentAttribute = new ComponentInfo {
+				Kind = ComponentKind.Application,
+				Properties = new Dictionary<string, object?> (),
+			},
+		};
+		var activityPeer = new JavaPeerInfo {
+			JavaName = "crc64def456/MainActivity",
+			CompatJniName = "com/example/app/MainActivity",
+			ManagedTypeName = "Com.Example.App.MainActivity",
+			ManagedTypeNamespace = "Com.Example.App",
+			ManagedTypeShortName = "MainActivity",
+			AssemblyName = "TestApp",
+			ComponentAttribute = new ComponentInfo {
+				Kind = ComponentKind.Activity,
+				Properties = new Dictionary<string, object?> (),
+			},
+		};
+
+		var doc = GenerateAndLoad (gen, [appPeer, activityPeer], template: template);
+
+		var app = doc.Root?.Element ("application");
+		Assert.NotNull (app);
+		Assert.Equal ("crc64abc123.MyApp", (string?)app?.Attribute (AttName));
+
+		var activity = app?.Element ("activity");
+		Assert.NotNull (activity);
+		Assert.Equal ("crc64def456.MainActivity", (string?)activity?.Attribute (AttName));
+	}
+
+	[Fact]
+	public void CompatNames_RewrittenToCrc_UnqualifiedForm ()
+	{
+		var gen = CreateDefaultGenerator ();
+
+		// Template uses the bare "Type" form (no dot) that Android also resolves
+		// against the manifest package.
+		var template = ParseTemplate ("""
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.app">
+				<application android:name="MyApp">
+					<activity android:name="MainActivity" />
+				</application>
+			</manifest>
+			""");
+
+		var appPeer = new JavaPeerInfo {
+			JavaName = "crc64abc123/MyApp",
+			CompatJniName = "com/example/app/MyApp",
+			ManagedTypeName = "Com.Example.App.MyApp",
+			ManagedTypeNamespace = "Com.Example.App",
+			ManagedTypeShortName = "MyApp",
+			AssemblyName = "TestApp",
+			ComponentAttribute = new ComponentInfo {
+				Kind = ComponentKind.Application,
+				Properties = new Dictionary<string, object?> (),
+			},
+		};
+		var activityPeer = new JavaPeerInfo {
+			JavaName = "crc64def456/MainActivity",
+			CompatJniName = "com/example/app/MainActivity",
+			ManagedTypeName = "Com.Example.App.MainActivity",
+			ManagedTypeNamespace = "Com.Example.App",
+			ManagedTypeShortName = "MainActivity",
+			AssemblyName = "TestApp",
+			ComponentAttribute = new ComponentInfo {
+				Kind = ComponentKind.Activity,
+				Properties = new Dictionary<string, object?> (),
+			},
+		};
+
+		var doc = GenerateAndLoad (gen, [appPeer, activityPeer], template: template);
+
+		var app = doc.Root?.Element ("application");
+		Assert.NotNull (app);
+		Assert.Equal ("crc64abc123.MyApp", (string?)app?.Attribute (AttName));
+
+		var activity = app?.Element ("activity");
+		Assert.NotNull (activity);
+		Assert.Equal ("crc64def456.MainActivity", (string?)activity?.Attribute (AttName));
+	}
+
+	[Fact]
+	public void CompatNames_RelativeForm_NotDuplicated ()
+	{
+		// Regression: when a template uses a relative name (".MainActivity"), the
+		// rewrite must resolve it to the fully-qualified compat name before looking
+		// up the CRC mapping. If the relative name slipped through unchanged, the
+		// duplicate-detection in ManifestGenerator would miss it and emit a second
+		// CRC-named <activity> alongside the existing relative-named entry.
+		var gen = CreateDefaultGenerator ();
+		var template = ParseTemplate ("""
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.app">
+				<application>
+					<activity android:name=".MainActivity" android:label="Existing" />
+				</application>
+			</manifest>
+			""");
+
+		var peer = new JavaPeerInfo {
+			JavaName = "crc64def456/MainActivity",
+			CompatJniName = "com/example/app/MainActivity",
+			ManagedTypeName = "Com.Example.App.MainActivity",
+			ManagedTypeNamespace = "Com.Example.App",
+			ManagedTypeShortName = "MainActivity",
+			AssemblyName = "TestApp",
+			ComponentAttribute = new ComponentInfo {
+				Kind = ComponentKind.Activity,
+				Properties = new Dictionary<string, object?> { ["Label"] = "New Label" },
+			},
+		};
+
+		var doc = GenerateAndLoad (gen, [peer], template: template);
+		var activities = doc.Root?.Element ("application")?.Elements ("activity").ToList ();
+
+		Assert.NotNull (activities);
+		Assert.Single (activities!);
+		Assert.Equal ("crc64def456.MainActivity", (string?)activities [0].Attribute (AttName));
+		// Existing android:label from the template is preserved (duplicate detection worked).
+		Assert.Equal ("Existing", (string?)activities [0].Attribute (AndroidNs + "label"));
+	}
+
+	[Fact]
+	public void CompatNames_MetadataName_NotRewritten_AndDoesNotSuppressActivity ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var template = ParseTemplate ("""
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.app">
+				<application>
+					<meta-data android:name=".MainActivity" android:value="keep-me" />
+				</application>
+			</manifest>
+			""");
+
+		var peer = new JavaPeerInfo {
+			JavaName = "crc64def456/MainActivity",
+			CompatJniName = "com/example/app/MainActivity",
+			ManagedTypeName = "Com.Example.App.MainActivity",
+			ManagedTypeNamespace = "Com.Example.App",
+			ManagedTypeShortName = "MainActivity",
+			AssemblyName = "TestApp",
+			ComponentAttribute = new ComponentInfo {
+				Kind = ComponentKind.Activity,
+				Properties = new Dictionary<string, object?> (),
+			},
+		};
+
+		var doc = GenerateAndLoad (gen, [peer], template: template);
+		var app = doc.Root?.Element ("application");
+		Assert.NotNull (app);
+
+		var metadata = app?.Element ("meta-data");
+		Assert.NotNull (metadata);
+		Assert.Equal (".MainActivity", (string?)metadata?.Attribute (AttName));
+
+		var activities = app?.Elements ("activity").ToList ();
+		Assert.NotNull (activities);
+		Assert.Single (activities!);
+		Assert.Equal ("crc64def456.MainActivity", (string?)activities [0].Attribute (AttName));
+	}
+
+	[Fact]
 	public void RuntimeProvider_Added ()
 	{
 		var gen = CreateDefaultGenerator ();

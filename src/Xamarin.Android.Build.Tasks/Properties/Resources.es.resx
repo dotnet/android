@@ -1009,6 +1009,13 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
 {1} - The current value of the property
 </comment>
   </data>
+  <data name="XA1044" xml:space="preserve">
+    <value>The MSBuild property '{0}' is not compatible with the {1} runtime and will be ignored. Either remove the property or guard it with a condition: Condition="'$(UseMonoRuntime)' == 'true'"</value>
+    <comment>The following are literal names and should not be translated: MSBuild, UseMonoRuntime.
+{0} - The MSBuild property name (e.g. RunAOTCompilation, EnableLLVM).
+{1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
+</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>No se cumple la dependencia de Java "{0}".</value>
     <comment>The following are literal names and should not be translated: Java.
@@ -1068,6 +1075,11 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
     <value>La especificación de artefacto de Maven '{0}' no es válida. El formato correcto es "group_id:artifact_id:version".</value>
     <comment>The following are literal names and should not be translated: Maven, group_id, artifact_id
 {0} - A Maven artifact specification</comment>
+  </data>
+  <data name="XA4250" xml:space="preserve">
+    <value>No se encontró el tipo "{0}" al que se hace referencia en el manifiesto en ningún ensamblado examinado. Puede ser un tipo de marco de trabajo.</value>
+    <comment>The following are literal names and should not be translated: Manifest, framework.
+{0} - Java type name from AndroidManifest.xml</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>Error del comando '{0}'.\n{1}</value>

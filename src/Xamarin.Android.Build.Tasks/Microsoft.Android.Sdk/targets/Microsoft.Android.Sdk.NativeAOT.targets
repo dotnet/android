@@ -258,6 +258,17 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       DependsOnTargets="_GenerateNativeAotAndroidAppAssemblerSources">
   </Target>
 
+  <!--
+    dotnet/runtime#125629 moved the NativeAOT entry point from ComputeLinkedFilesToPublish
+    (AfterTargets="ComputeResolvedFilesToPublishList") to NativeCompile (an SDK Publish hook).
+    Android uses `dotnet build` not `dotnet publish`, so NativeCompile never fires.
+    Restore the old scheduling so NativeCompile runs after ComputeResolvedFilesToPublishList
+    in the inner per-RID build.
+  -->
+  <Target Name="_AndroidRunNativeCompile"
+      AfterTargets="ComputeResolvedFilesToPublishList"
+      DependsOnTargets="_PreTrimmingFixLegacyDesignerUpdateItems;NativeCompile" />
+
   <Target Name="_AndroidFixNativeLibraryFileName" AfterTargets="ComputeFilesToPublish">
     <ItemGroup>
       <!-- Fix paths to contain lib-prefix -->

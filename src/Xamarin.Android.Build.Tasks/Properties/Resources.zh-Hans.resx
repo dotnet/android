@@ -1009,6 +1009,13 @@ In this message, the term "handheld app" means "app for handheld devices."
 {1} - The current value of the property
 </comment>
   </data>
+  <data name="XA1044" xml:space="preserve">
+    <value>The MSBuild property '{0}' is not compatible with the {1} runtime and will be ignored. Either remove the property or guard it with a condition: Condition="'$(UseMonoRuntime)' == 'true'"</value>
+    <comment>The following are literal names and should not be translated: MSBuild, UseMonoRuntime.
+{0} - The MSBuild property name (e.g. RunAOTCompilation, EnableLLVM).
+{1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
+</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>不满足 Java 依赖项“{0}”。</value>
     <comment>The following are literal names and should not be translated: Java.
@@ -1068,6 +1075,11 @@ In this message, the term "handheld app" means "app for handheld devices."
     <value>Maven 项目规范“{0}”无效。正确的格式为 "group_id:artifact_id:version"。</value>
     <comment>The following are literal names and should not be translated: Maven, group_id, artifact_id
 {0} - A Maven artifact specification</comment>
+  </data>
+  <data name="XA4250" xml:space="preserve">
+    <value>清单引用的类型“{0}”未在任何扫描的程序集中找到。它可能是框架类型。</value>
+    <comment>The following are literal names and should not be translated: Manifest, framework.
+{0} - Java type name from AndroidManifest.xml</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>命令 '{0}' 失败。\n{1}</value>

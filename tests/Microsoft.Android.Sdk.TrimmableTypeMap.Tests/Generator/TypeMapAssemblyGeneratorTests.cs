@@ -85,6 +85,101 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_ProxyType_UsesGenericJavaPeerProxyBase ()
+	{
+		var peers = ScanFixtures ();
+		using var stream = GenerateAssembly (peers);
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+		var proxyTypes = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Where (t => reader.GetString (t.Namespace) == "_TypeMap.Proxies")
+			.ToList ();
+
+		Assert.NotEmpty (proxyTypes);
+		Assert.All (proxyTypes, proxyType => {
+			switch (proxyType.BaseType.Kind) {
+			case HandleKind.TypeSpecification:
+				// Non-generic target types derive from the closed `JavaPeerProxy<T>`.
+				var baseTypeSpec = reader.GetTypeSpecification ((TypeSpecificationHandle) proxyType.BaseType);
+				var baseTypeName = baseTypeSpec.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null);
+				Assert.StartsWith ("Java.Interop.JavaPeerProxy`1<", baseTypeName, StringComparison.Ordinal);
+				break;
+			case HandleKind.TypeReference:
+				// Open generic target types derive from the non-generic `JavaPeerProxy`.
+				var baseTypeRef = reader.GetTypeReference ((TypeReferenceHandle) proxyType.BaseType);
+				Assert.Equal ("Java.Interop", reader.GetString (baseTypeRef.Namespace));
+				Assert.Equal ("JavaPeerProxy", reader.GetString (baseTypeRef.Name));
+				break;
+			default:
+				Assert.Fail ($"Unexpected BaseType handle kind: {proxyType.BaseType.Kind}");
+				break;
+			}
+		});
+
+		var objectProxy = proxyTypes.First (t => reader.GetString (t.Name) == "Java_Lang_Object_Proxy");
+		var objectProxyBaseType = reader.GetTypeSpecification ((TypeSpecificationHandle) objectProxy.BaseType);
+		Assert.Equal ("Java.Interop.JavaPeerProxy`1<Java.Lang.Object>",
+			objectProxyBaseType.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null));
+	}
+
+	// Regression test: every generated proxy type must carry a custom attribute whose
+	// constructor points at the proxy's own TypeDefinitionHandle (either as a MemberRef
+	// parented on the TypeDef, or as a MethodDefinition on the TypeDef). This is how
+	// JavaPeerProxy instances are resolved at runtime via
+	// type.GetCustomAttribute<JavaPeerProxy>() — losing the self-application means the
+	// runtime can't construct the proxy. This has regressed twice; keep it covered.
+	[Fact]
+	public void Generate_ProxyType_IsSelfAppliedAsCustomAttribute ()
+	{
+		var peers = ScanFixtures ();
+		using var stream = GenerateAssembly (peers);
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var proxyTypeHandles = reader.TypeDefinitions
+			.Where (h => reader.GetString (reader.GetTypeDefinition (h).Namespace) == "_TypeMap.Proxies")
+			.ToList ();
+
+		Assert.NotEmpty (proxyTypeHandles);
+
+		foreach (var proxyHandle in proxyTypeHandles) {
+			var proxy = reader.GetTypeDefinition (proxyHandle);
+			var proxyName = reader.GetString (proxy.Name);
+
+			bool selfApplied = false;
+			foreach (var caHandle in proxy.GetCustomAttributes ()) {
+				var ca = reader.GetCustomAttribute (caHandle);
+
+				switch (ca.Constructor.Kind) {
+				case HandleKind.MemberReference:
+					var ctorRef = reader.GetMemberReference ((MemberReferenceHandle) ca.Constructor);
+					if (ctorRef.Parent.Kind == HandleKind.TypeDefinition &&
+						(TypeDefinitionHandle) ctorRef.Parent == proxyHandle) {
+						selfApplied = true;
+					}
+					break;
+				case HandleKind.MethodDefinition:
+					var ctorDef = reader.GetMethodDefinition ((MethodDefinitionHandle) ca.Constructor);
+					if (ctorDef.GetDeclaringType () == proxyHandle) {
+						selfApplied = true;
+					}
+					break;
+				}
+
+				if (selfApplied) {
+					break;
+				}
+			}
+
+			Assert.True (selfApplied,
+				$"Proxy type '{proxyName}' is missing its self-applied custom attribute. " +
+				"Every proxy must carry itself as a [JavaPeerProxy] attribute so the runtime " +
+				"can instantiate it via Type.GetCustomAttribute<JavaPeerProxy> ().");
+		}
+	}
+
+	[Fact]
 	public void Generate_HasIgnoresAccessChecksToAttribute ()
 	{
 		var peers = ScanFixtures ();
@@ -133,7 +228,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.True (assemblyAttrs.Count () >= 3);
 
 		var typeNames = GetTypeRefNames (reader);
-		Assert.Contains ("TypeMapAssociationAttribute", typeNames);
+		Assert.Contains (typeNames, name => name.StartsWith ("TypeMapAssociationAttribute", StringComparison.Ordinal));
 	}
 
 	[Fact]
@@ -189,6 +284,25 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_InheritedCtor_UcoUsesGuardAndInlinedActivation ()
+	{
+		var peers = ScanFixtures ();
+		var simpleActivity = peers.First (p => p.JavaName == "my/app/SimpleActivity");
+		Assert.NotNull (simpleActivity.ActivationCtor);
+		Assert.NotEqual (simpleActivity.ManagedTypeName, simpleActivity.ActivationCtor.DeclaringTypeName);
+
+		using var stream = GenerateAssembly (new [] { simpleActivity }, "InheritedCtorUcoTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+		var memberNames = GetMemberRefNames (reader);
+
+		Assert.Contains ("get_WithinNewObjectScope", memberNames);
+		Assert.Contains ("GetUninitializedObject", memberNames);
+		Assert.DoesNotContain ("ActivateInstance", memberNames);
+		Assert.DoesNotContain ("ActivatePeerFromJavaConstructor", memberNames);
+	}
+
+	[Fact]
 	public void Generate_GenericType_ThrowsNotSupportedException ()
 	{
 		var peers = ScanFixtures ();
@@ -199,7 +313,13 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 		var typeNames = GetTypeRefNames (reader);
+		var generatedTypeNames = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Select (t => reader.GetString (t.Name))
+			.ToList ();
 		Assert.Contains ("NotSupportedException", typeNames);
+		Assert.Contains ("MyApp_Generic_GenericHolder_1_Proxy", generatedTypeNames);
+		Assert.DoesNotContain (generatedTypeNames, name => name.Contains ('`'));
 	}
 
 	[Fact]
@@ -422,14 +542,26 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 
-		var memberNames = GetMemberRefNames (reader);
-
-		// RegisterNatives is a method definition on the proxy type, not a member reference
-		var methodDefs = reader.MethodDefinitions
+		var proxyType = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Single (t =>
+				reader.GetString (t.Namespace) == "_TypeMap.Proxies" &&
+				reader.GetString (t.Name) == "MyApp_MainActivity_Proxy");
+		var proxyMethodNames = proxyType.GetMethods ()
 			.Select (h => reader.GetMethodDefinition (h))
 			.Select (m => reader.GetString (m.Name))
 			.ToList ();
-		Assert.Contains ("RegisterNatives", methodDefs);
+		Assert.Contains ("RegisterNatives", proxyMethodNames);
+		Assert.Contains (proxyMethodNames, name => name.Contains ("_uco_"));
+
+		var privateImplDetailsType = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Single (t => reader.GetString (t.Name) == "<PrivateImplementationDetails>");
+		var privateImplMethodNames = privateImplDetailsType.GetMethods ()
+			.Select (h => reader.GetMethodDefinition (h))
+			.Select (m => reader.GetString (m.Name))
+			.ToList ();
+		Assert.DoesNotContain ("RegisterNatives", privateImplMethodNames);
 	}
 
 	[Fact]
@@ -451,6 +583,154 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			.Select (m => reader.GetString (m.Name))
 			.ToList ();
 		Assert.Contains (methodDefs, name => name.Contains ("_uco_"));
+	}
+
+	[Theory]
+	[InlineData (1, 0x05)]  // Boolean → byte (unsigned) for JNI ABI
+	[InlineData (2, 0x04)]  // Byte → sbyte
+	[InlineData (3, 0x03)]  // Char → char
+	[InlineData (4, 0x06)]  // Short → int16
+	[InlineData (5, 0x08)]  // Int → int32
+	[InlineData (6, 0x0A)]  // Long → int64
+	[InlineData (7, 0x0C)]  // Float → float32
+	[InlineData (8, 0x0D)]  // Double → float64
+	[InlineData (9, 0x18)]  // Object → IntPtr
+	public void EncodeClrType_ProducesCorrectPrimitiveTypeCode (int kindValue, byte expectedCode)
+	{
+		var kind = (JniParamKind) kindValue;
+		var blob = new BlobBuilder ();
+		JniSignatureHelper.EncodeClrType (new SignatureTypeEncoder (blob), kind);
+		Assert.Equal (expectedCode, blob.ToArray () [0]);
+	}
+
+	[Theory]
+	[InlineData (1, 0x04)]  // Boolean → sbyte — matches MCW n_* callbacks
+	[InlineData (2, 0x04)]  // Byte → sbyte
+	[InlineData (3, 0x03)]  // Char → char
+	[InlineData (4, 0x06)]  // Short → int16
+	[InlineData (5, 0x08)]  // Int → int32
+	[InlineData (6, 0x0A)]  // Long → int64
+	[InlineData (7, 0x0C)]  // Float → float32
+	[InlineData (8, 0x0D)]  // Double → float64
+	[InlineData (9, 0x18)]  // Object → IntPtr
+	public void EncodeClrTypeForCallback_ProducesCorrectPrimitiveTypeCode (int kindValue, byte expectedCode)
+	{
+		var kind = (JniParamKind) kindValue;
+		var blob = new BlobBuilder ();
+		JniSignatureHelper.EncodeClrTypeForCallback (new SignatureTypeEncoder (blob), kind);
+		Assert.Equal (expectedCode, blob.ToArray () [0]);
+	}
+
+	[Fact]
+	public void EncodeClrType_Boolean_DiffersFromCallback ()
+	{
+		var ucoBlob = new BlobBuilder ();
+		JniSignatureHelper.EncodeClrType (new SignatureTypeEncoder (ucoBlob), JniParamKind.Boolean);
+
+		var cbBlob = new BlobBuilder ();
+		JniSignatureHelper.EncodeClrTypeForCallback (new SignatureTypeEncoder (cbBlob), JniParamKind.Boolean);
+
+		var ucoBytes = ucoBlob.ToArray ();
+		var cbBytes = cbBlob.ToArray ();
+		Assert.NotEqual (ucoBytes, cbBytes);
+		Assert.Equal (0x05, ucoBytes [0]);  // byte (unsigned)
+		Assert.Equal (0x04, cbBytes [0]);    // sbyte (signed)
+	}
+
+	[Fact]
+	public void EncodeClrType_Void_Throws ()
+	{
+		var blob = new BlobBuilder ();
+		Assert.ThrowsAny<ArgumentException> (() =>
+			JniSignatureHelper.EncodeClrType (new SignatureTypeEncoder (blob), JniParamKind.Void));
+	}
+
+	[Fact]
+	public void EncodeClrTypeForCallback_Void_Throws ()
+	{
+		var blob = new BlobBuilder ();
+		Assert.ThrowsAny<ArgumentException> (() =>
+			JniSignatureHelper.EncodeClrTypeForCallback (new SignatureTypeEncoder (blob), JniParamKind.Void));
+	}
+
+	[Theory]
+	[InlineData (2)]  // Byte
+	[InlineData (3)]  // Char
+	[InlineData (4)]  // Short
+	[InlineData (5)]  // Int
+	[InlineData (6)]  // Long
+	[InlineData (7)]  // Float
+	[InlineData (8)]  // Double
+	[InlineData (9)]  // Object
+	public void EncodeClrType_NonBooleanTypes_IdenticalToCallback (int kindValue)
+	{
+		var kind = (JniParamKind) kindValue;
+		var ucoBlob = new BlobBuilder ();
+		JniSignatureHelper.EncodeClrType (new SignatureTypeEncoder (ucoBlob), kind);
+
+		var cbBlob = new BlobBuilder ();
+		JniSignatureHelper.EncodeClrTypeForCallback (new SignatureTypeEncoder (cbBlob), kind);
+
+		Assert.Equal (ucoBlob.ToArray (), cbBlob.ToArray ());
+	}
+
+	[Fact]
+	public void Generate_UcoMethod_BooleanReturn_WrapperUsesByte_CallbackUsesSByte ()
+	{
+		// Regression test: the UCO wrapper must use byte (unsigned, JNI ABI) for boolean,
+		// but the callback MemberRef must use sbyte (signed, MCW convention).
+		// A mismatch caused ILLink to fail resolving the member reference and trim n_* methods.
+		var peer = FindFixtureByJavaName ("my/app/TouchHandler");
+		using var stream = GenerateAssembly (new [] { peer }, "BoolReturnTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		// Find the UCO wrapper method for onTouch (returns Z → boolean)
+		var ucoMethod = reader.MethodDefinitions
+			.Select (h => reader.GetMethodDefinition (h))
+			.First (m => reader.GetString (m.Name).Contains ("onTouch") &&
+			             reader.GetString (m.Name).Contains ("_uco_"));
+		var ucoSig = ucoMethod.DecodeSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.Byte", ucoSig.ReturnType);
+
+		// Find the callback MemberRef that the UCO wrapper calls (n_OnTouch on the TouchHandler type)
+		var callbackRef = FindCallbackMemberRef (reader, "n_OnTouch");
+		var callbackSig = callbackRef.DecodeMethodSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.SByte", callbackSig.ReturnType);
+	}
+
+	[Fact]
+	public void Generate_UcoMethod_BooleanParam_WrapperUsesByte_CallbackUsesSByte ()
+	{
+		// Regression test: boolean parameters must also use the correct encoding.
+		var peer = FindFixtureByJavaName ("my/app/TouchHandler");
+		using var stream = GenerateAssembly (new [] { peer }, "BoolParamTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		// Find the UCO wrapper for onFocusChange (takes Z as 3rd param → boolean parameter)
+		var ucoMethod = reader.MethodDefinitions
+			.Select (h => reader.GetMethodDefinition (h))
+			.First (m => reader.GetString (m.Name).Contains ("onFocusChange") &&
+			             reader.GetString (m.Name).Contains ("_uco_"));
+		var ucoSig = ucoMethod.DecodeSignature (SignatureTypeProvider.Instance, null);
+		// Params: IntPtr (jnienv), IntPtr (self), IntPtr (View object), byte (boolean)
+		Assert.Equal ("System.Byte", ucoSig.ParameterTypes.Last ());
+
+		// Find the callback MemberRef
+		var callbackRef = FindCallbackMemberRef (reader, "n_OnFocusChange");
+		var callbackSig = callbackRef.DecodeMethodSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.SByte", callbackSig.ParameterTypes.Last ());
+	}
+
+	static MemberReference FindCallbackMemberRef (MetadataReader reader, string methodName)
+	{
+		var refs = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
+			.Select (i => reader.GetMemberReference (MetadataTokens.MemberReferenceHandle (i)))
+			.Where (m => reader.GetString (m.Name) == methodName)
+			.ToList ();
+		Assert.Single (refs);
+		return refs [0];
 	}
 
 	[Theory]
@@ -582,5 +862,162 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			Assert.True (rvaFields.Count < allStrings.Count,
 				$"Expected fewer RVA fields ({rvaFields.Count}) than total strings ({allStrings.Count}) due to deduplication");
 		}
+	}
+
+	[Fact]
+	public void Generate_AliasGroup_ProducesCorrectIndexedEntries ()
+	{
+		var peers = ScanFixtures ();
+		var aliasPeers = peers.Where (p => p.JavaName == "test/AliasTarget").ToList ();
+		Assert.Equal (3, aliasPeers.Count);
+
+		using var stream = GenerateAssembly (aliasPeers, "AliasRoundTrip");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		// Read all TypeMap attribute blobs
+		var typeMapBlobs = new List<(string? jniName, string? proxyRef, string? targetRef)> ();
+		var asmAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
+		foreach (var attrHandle in asmAttrs) {
+			var attr = reader.GetCustomAttribute (attrHandle);
+			if (attr.Constructor.Kind == HandleKind.MethodDefinition)
+				continue;
+
+			var blobReader = reader.GetBlobReader (attr.Value);
+			ushort prolog = blobReader.ReadUInt16 ();
+			if (prolog != 1)
+				continue;
+
+			string? val1 = blobReader.ReadSerializedString ();
+			string? val2 = blobReader.ReadSerializedString ();
+
+			// TypeMap has a jniName string arg; TypeMapAssociation has two Type args.
+			// We distinguish by checking if val1 looks like a JNI name (contains '/').
+			if (val1 is not null && val1.Contains ('/')) {
+				string? val3 = blobReader.RemainingBytes > 2 ? blobReader.ReadSerializedString () : null;
+				typeMapBlobs.Add ((val1, val2, val3));
+			}
+		}
+
+		// Verify indexed entries: "test/AliasTarget[0]", "test/AliasTarget[1]", "test/AliasTarget[2]", and base "test/AliasTarget"
+		var jniNames = typeMapBlobs.Select (b => b.jniName).ToList ();
+		Assert.Contains ("test/AliasTarget", jniNames);
+		Assert.Contains ("test/AliasTarget[0]", jniNames);
+		Assert.Contains ("test/AliasTarget[1]", jniNames);
+		Assert.Contains ("test/AliasTarget[2]", jniNames);
+
+		// Verify TypeMapAssociationAttribute is referenced (generic version)
+		var typeNames = GetTypeRefNames (reader);
+		Assert.Contains ("TypeMapAssociationAttribute`1", typeNames);
+
+		// Verify 3 proxy types + 1 alias holder were emitted
+		var proxyTypes = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Where (t => reader.GetString (t.Namespace) == "_TypeMap.Proxies")
+			.ToList ();
+		Assert.Equal (3, proxyTypes.Count);
+
+		var aliasHolders = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Where (t => reader.GetString (t.Namespace) == "_TypeMap.Aliases")
+			.ToList ();
+		Assert.Single (aliasHolders);
+
+		// Verify the alias holder has JavaPeerAliasesAttribute
+		Assert.Contains ("JavaPeerAliasesAttribute", typeNames);
+	}
+
+	[Fact]
+	public void Generate_AliasHolder_ExtendsObjectNotJavaPeerProxy ()
+	{
+		var peers = ScanFixtures ();
+		var aliasPeers = peers.Where (p => p.JavaName == "test/AliasTarget").ToList ();
+
+		using var stream = GenerateAssembly (aliasPeers, "AliasBaseType");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var aliasHolder = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.First (t => reader.GetString (t.Namespace) == "_TypeMap.Aliases");
+
+		var baseTypeHandle = aliasHolder.BaseType;
+		Assert.Equal (HandleKind.TypeReference, baseTypeHandle.Kind);
+		var baseType = reader.GetTypeReference ((TypeReferenceHandle) baseTypeHandle);
+		Assert.Equal ("Object", reader.GetString (baseType.Name));
+		Assert.Equal ("System", reader.GetString (baseType.Namespace));
+	}
+
+	[Fact]
+	public void Generate_AliasHolder_HasDeserializableAliasKeys ()
+	{
+		var peers = ScanFixtures ();
+		var aliasPeers = peers.Where (p => p.JavaName == "test/AliasTarget").ToList ();
+
+		using var stream = GenerateAssembly (aliasPeers, "AliasAttrBlob");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var aliasHolder = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.First (t => reader.GetString (t.Namespace) == "_TypeMap.Aliases");
+
+		var aliasHolderHandle = reader.TypeDefinitions
+			.First (h => reader.GetString (reader.GetTypeDefinition (h).Namespace) == "_TypeMap.Aliases");
+
+		// Read the JavaPeerAliasesAttribute blob from the alias holder's custom attributes
+		var attrs = reader.GetCustomAttributes (aliasHolderHandle);
+		Assert.NotEmpty (attrs);
+
+		// Find the attribute blob and parse it
+		foreach (var attrHandle in attrs) {
+			var attr = reader.GetCustomAttribute (attrHandle);
+			var blobReader = reader.GetBlobReader (attr.Value);
+			ushort prolog = blobReader.ReadUInt16 ();
+			Assert.Equal (1, prolog);
+
+			// Read the params string[] — encoded as int32 count + serialized strings
+			int count = blobReader.ReadInt32 ();
+			Assert.Equal (3, count);
+
+			var keys = new List<string> ();
+			for (int i = 0; i < count; i++) {
+				keys.Add (blobReader.ReadSerializedString ()!);
+			}
+
+			Assert.Contains ("test/AliasTarget[0]", keys);
+			Assert.Contains ("test/AliasTarget[1]", keys);
+			Assert.Contains ("test/AliasTarget[2]", keys);
+		}
+	}
+
+	[Fact]
+	public void Generate_ProxyTypes_HaveSelfAppliedAttribute ()
+	{
+		var peers = ScanFixtures ();
+		var activityPeer = peers.First (p => p.JavaName == "android/app/Activity");
+
+		using var stream = GenerateAssembly (new [] { activityPeer }, "SelfApply");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var proxyTypeDef = reader.TypeDefinitions
+			.First (h => reader.GetString (reader.GetTypeDefinition (h).Namespace) == "_TypeMap.Proxies");
+
+		// The proxy type should have a custom attribute applied to itself (self-application)
+		var attrs = reader.GetCustomAttributes (proxyTypeDef);
+		Assert.NotEmpty (attrs);
+
+		// Verify the attribute's constructor is a MethodDef (i.e., defined in this assembly,
+		// meaning it's the proxy's own .ctor — self-application)
+		bool hasSelfApplied = false;
+		foreach (var attrHandle in attrs) {
+			var attr = reader.GetCustomAttribute (attrHandle);
+			if (attr.Constructor.Kind == HandleKind.MethodDefinition) {
+				hasSelfApplied = true;
+				break;
+			}
+		}
+		Assert.True (hasSelfApplied, "Proxy type should have a self-applied attribute (ctor is MethodDefinition)");
 	}
 }

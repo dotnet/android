@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Xunit;
 
@@ -86,5 +85,14 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 		Assert.Equal ("com/example/dotformat/MainActivity", peer.CompatJniName);
 		Assert.False (peer.DoNotGenerateAcw);
 		Assert.True (peer.IsUnconditional, "Should be unconditional due to [Activity]");
+	}
+
+	[Theory]
+	[InlineData ("MyApp.PlainActivitySubclass", "crc64eb3df85c64aa1af6/PlainActivitySubclass")]
+	[InlineData ("MyApp.UnregisteredClickListener", "crc64eb3df85c64aa1af6/UnregisteredClickListener")]
+	[InlineData ("MyApp.UnregisteredExporter", "crc64eb3df85c64aa1af6/UnregisteredExporter")]
+	public void Scan_UnregisteredType_UsesCrc64PackageName (string managedName, string expectedJavaName)
+	{
+		Assert.Equal (expectedJavaName, FindFixtureByManagedName (managedName).JavaName);
 	}
 }

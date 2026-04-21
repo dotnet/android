@@ -122,15 +122,34 @@ public sealed class JcwJavaSourceGenerator
 
 	static void WriteStaticInitializer (JavaPeerInfo type, TextWriter writer)
 	{
+		string className = JniSignatureHelper.GetJavaSimpleName (type.JavaName);
+
 		// Application and Instrumentation types cannot call registerNatives in their
-		// static initializer — the native library isn't loaded yet at that point.
-		// Their registerNatives call is emitted in the generated
-		// ApplicationRegistration.registerApplications() method instead.
+		// static initializer — the runtime isn't ready yet at that point. Instead we
+		// rely on ApplicationRegistration.registerApplications() (invoked from
+		// MonoPackageManager.LoadApplication, which runs from MonoRuntimeProvider.attachInfo)
+		// to register natives for these classes. However, Application.attachBaseContext
+		// fires *before* ContentProvider.attachInfo, so an override of attachBaseContext
+		// on a user Application subclass can invoke a native callback before
+		// registerApplications() has run. To cover that early-callback window we also
+		// emit a lazy one-time __md_registerNatives() helper and call it at the top of
+		// each generated native-method wrapper.
 		if (type.CannotRegisterInStaticConstructor) {
+			writer.Write ($$"""
+	private static boolean __md_natives_registered;
+	private static synchronized void __md_registerNatives ()
+	{
+		if (!__md_natives_registered) {
+			mono.android.Runtime.registerNatives ({{className}}.class);
+			__md_natives_registered = true;
+		}
+	}
+
+
+""");
 			return;
 		}
 
-		string className = JniSignatureHelper.GetJavaSimpleName (type.JavaName);
 		writer.Write ($$"""
 	static {
 		mono.android.Runtime.registerNatives ({{className}}.class);
@@ -154,7 +173,17 @@ public sealed class JcwJavaSourceGenerator
 	public {{simpleClassName}} ({{parameters}})
 	{
 		super ({{superArgs}});
+
+""");
+
+			if (!type.CannotRegisterInStaticConstructor) {
+				writer.Write ($$"""
 		if (getClass () == {{simpleClassName}}.class) nctor_{{ctor.ConstructorIndex}} ({{args}});
+
+""");
+			}
+
+			writer.Write ($$"""
 	}
 
 
@@ -197,6 +226,10 @@ public sealed class JcwJavaSourceGenerator
 
 	static void WriteMethods (JavaPeerInfo type, TextWriter writer)
 	{
+		string registerNativesLine = type.CannotRegisterInStaticConstructor
+			? "\t\t__md_registerNatives ();\n"
+			: "";
+
 		foreach (var method in type.MarshalMethods) {
 			if (method.IsConstructor) {
 				continue;
@@ -222,7 +255,7 @@ public sealed class JcwJavaSourceGenerator
 	@Override
 	public {{javaReturnType}} {{method.JniName}} ({{parameters}}){{throwsClause}}
 	{
-		{{returnPrefix}}{{method.NativeCallbackName}} ({{args}});
+{{registerNativesLine}}		{{returnPrefix}}{{method.NativeCallbackName}} ({{args}});
 	}
 	public native {{javaReturnType}} {{method.NativeCallbackName}} ({{parameters}});
 
@@ -233,7 +266,7 @@ public sealed class JcwJavaSourceGenerator
 
 	{{access}} {{javaReturnType}} {{method.JniName}} ({{parameters}}){{throwsClause}}
 	{
-		{{returnPrefix}}{{method.NativeCallbackName}} ({{args}});
+{{registerNativesLine}}		{{returnPrefix}}{{method.NativeCallbackName}} ({{args}});
 	}
 	{{access}} native {{javaReturnType}} {{method.NativeCallbackName}} ({{parameters}});
 

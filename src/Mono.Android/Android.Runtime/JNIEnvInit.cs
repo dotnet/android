@@ -110,6 +110,7 @@ namespace Android.Runtime
 		internal static void InitializeJniRuntime (JniRuntime runtime, JnienvInitializeArgs args)
 		{
 			androidRuntime = runtime;
+			JniRuntime.SetCurrent (runtime);
 			SetSynchronizationContext ();
 		}
 
@@ -159,6 +160,7 @@ namespace Android.Runtime
 					valueManager,
 					args->jniAddNativeMethodRegistrationAttributePresent != 0
 			);
+			JniRuntime.SetCurrent (androidRuntime);
 
 			if (RuntimeFeature.TrimmableTypeMap) {
 				TrimmableTypeMap.Initialize ();

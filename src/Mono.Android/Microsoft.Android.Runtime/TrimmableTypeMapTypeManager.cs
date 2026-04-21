@@ -21,26 +21,28 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			yield return t;
 		}
 
-		if (TrimmableTypeMap.Instance.TryGetType (jniSimpleReference, out var type)) {
-			yield return type;
+		if (TrimmableTypeMap.Instance.TryGetTargetTypes (jniSimpleReference, out var types)) {
+			foreach (var type in types) {
+				yield return type;
+			}
 		}
 	}
 
 	protected override IEnumerable<string> GetSimpleReferences (Type type)
 	{
-		foreach (var r in base.GetSimpleReferences (type)) {
-			yield return r;
-		}
-
-		if (TrimmableTypeMap.TryGetJniNameForType (type, out var jniName)) {
+		if (TrimmableTypeMap.Instance.TryGetJniNameForManagedType (type, out var jniName)) {
 			yield return jniName;
 			yield break;
+		}
+
+		foreach (var r in base.GetSimpleReferences (type)) {
+			yield return r;
 		}
 
 		// Walk the base type chain for managed-only subclasses (e.g., JavaProxyThrowable
 		// extends Java.Lang.Error but has no [Register] attribute itself).
 		for (var baseType = type.BaseType; baseType is not null; baseType = baseType.BaseType) {
-			if (TrimmableTypeMap.TryGetJniNameForType (baseType, out var baseJniName)) {
+			if (TrimmableTypeMap.Instance.TryGetJniNameForManagedType (baseType, out var baseJniName)) {
 				yield return baseJniName;
 				yield break;
 			}
@@ -58,6 +60,18 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 		}
 
 		return base.GetInvokerTypeCore (type);
+	}
+
+	protected override IReadOnlyList<string>? GetStaticMethodFallbackTypesCore (string jniSimpleReference)
+	{
+		int slash = jniSimpleReference.LastIndexOf ('/');
+		var desugarType = slash > 0
+			? $"{jniSimpleReference.Substring (0, slash + 1)}Desugar{jniSimpleReference.Substring (slash + 1)}"
+			: $"Desugar{jniSimpleReference}";
+		return new[] {
+			$"{desugarType}$_CC",
+			$"{jniSimpleReference}$-CC",
+		};
 	}
 
 	public override void RegisterNativeMembers (

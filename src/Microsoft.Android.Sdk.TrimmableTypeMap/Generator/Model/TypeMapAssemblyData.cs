@@ -31,9 +31,14 @@ sealed class TypeMapAssemblyData
 	public List<JavaPeerProxyData> ProxyTypes { get; } = new ();
 
 	/// <summary>
-	/// TypeMapAssociation entries for alias groups (multiple managed types → same JNI name).
+	/// TypeMapAssociation entries for managed types backed by generated proxies.
 	/// </summary>
 	public List<TypeMapAssociationData> Associations { get; } = new ();
+
+	/// <summary>
+	/// Alias holder types to emit — one per alias group (≥2 types sharing a JNI name).
+	/// </summary>
+	public List<AliasHolderData> AliasHolders { get; } = new ();
 
 	/// <summary>
 	/// Assembly names that need [IgnoresAccessChecksTo] for cross-assembly n_* calls.
@@ -83,6 +88,12 @@ sealed class JavaPeerProxyData
 	/// Simple type name, e.g., "Java_Lang_Object_Proxy".
 	/// </summary>
 	public required string TypeName { get; init; }
+
+	/// <summary>
+	/// JNI type name, e.g., "android/app/Activity" or "crc64abc.../MyButton".
+	/// Used for managed → Java reverse lookups at runtime.
+	/// </summary>
+	public required string JniName { get; init; }
 
 	/// <summary>
 	/// Namespace for all proxy types.
@@ -182,7 +193,7 @@ sealed record UcoMethodData
 /// An [UnmanagedCallersOnly] static wrapper for a constructor callback.
 /// Signature must match the full JNI native method signature (jnienv + self + ctor params)
 /// so the ABI is correct when JNI dispatches the call.
-/// Body: TrimmableNativeRegistration.ActivateInstance(self, typeof(TargetType)).
+/// Body: directly activates the target type using its generated activation ctor.
 /// </summary>
 sealed record UcoConstructorData
 {
@@ -192,7 +203,7 @@ sealed record UcoConstructorData
 	public required string WrapperName { get; init; }
 
 	/// <summary>
-	/// Target type to pass to ActivateInstance.
+	/// Target type to activate in the generated wrapper.
 	/// </summary>
 	public required TypeRefData TargetType { get; init; }
 
@@ -246,7 +257,7 @@ sealed record ActivationCtorData
 
 /// <summary>
 /// One [assembly: TypeMapAssociation(typeof(Source), typeof(AliasProxy))] entry.
-/// Links a managed type to the proxy that holds its alias TypeMap entry.
+/// Links a managed type to the alias holder that owns the alias group.
 /// </summary>
 sealed record TypeMapAssociationData
 {
@@ -256,7 +267,30 @@ sealed record TypeMapAssociationData
 	public required string SourceTypeReference { get; init; }
 
 	/// <summary>
-	/// Assembly-qualified proxy type reference (the alias holder proxy).
+	/// Assembly-qualified proxy type reference (the alias holder).
 	/// </summary>
 	public required string AliasProxyTypeReference { get; init; }
+}
+
+/// <summary>
+/// An alias holder class to generate in the TypeMap assembly.
+/// Extends JavaPeerProxy and implements IJavaPeerAliases.
+/// Emitted when multiple .NET types map to the same JNI name.
+/// </summary>
+sealed class AliasHolderData
+{
+	/// <summary>
+	/// Simple type name, e.g., "Test_AliasTarget_Aliases".
+	/// </summary>
+	public required string TypeName { get; init; }
+
+	/// <summary>
+	/// Namespace for alias holder types.
+	/// </summary>
+	public string Namespace { get; init; } = "_TypeMap.Aliases";
+
+	/// <summary>
+	/// Indexed TypeMap keys, e.g., ["test/AliasTarget[0]", "test/AliasTarget[1]"].
+	/// </summary>
+	public required List<string> AliasKeys { get; init; }
 }

@@ -506,18 +506,35 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 			[DynamicallyAccessedMembers (Constructors)]
 			Type? targetType)
 	{
+		ThrowIfDisposed ();
+
+		if (!reference.IsValid) {
+			return null;
+		}
+
 		if (RuntimeFeature.TrimmableTypeMap) {
-			var typeMap = TrimmableTypeMap.Instance;
-			if (typeMap is not null && targetType is not null) {
-				var proxy = typeMap.GetProxyForManagedType (targetType);
-				if (proxy is not null) {
-					var peer = proxy.CreateInstance (reference.Handle, JniHandleOwnership.DoNotTransfer);
-					if (peer is not null) {
-						peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable);
-						JniObjectReference.Dispose (ref reference, transfer);
-						return peer;
+			try {
+				var typeMap = TrimmableTypeMap.Instance;
+				var proxy = typeMap.GetProxyForJavaObject (reference.Handle, targetType);
+				var peer = proxy?.CreateInstance (reference.Handle, JniHandleOwnership.DoNotTransfer);
+				if (peer is not null) {
+					var peerState = peer.JniManagedPeerState | JniManagedPeerStates.Replaceable;
+					if (global::Java.Interop.Runtime.IsGCUserPeer (peer.PeerReference.Handle)) {
+						peerState |= JniManagedPeerStates.Activatable;
 					}
+					peer.SetJniManagedPeerState (peerState);
+					return peer;
 				}
+
+				var targetName = targetType?.AssemblyQualifiedName ?? "<null>";
+				var javaType = JniEnvironment.Types.GetJniTypeNameFromInstance (reference);
+
+				throw new NotSupportedException (
+					$"No generated {nameof (JavaPeerProxy)} was found for Java type '{javaType}' " +
+					$"with targetType '{targetName}' while {nameof (RuntimeFeature.TrimmableTypeMap)} is enabled. " +
+					$"This indicates a missing trimmable typemap proxy or association and should be fixed in the generator.");
+			} finally {
+				JniObjectReference.Dispose (ref reference, transfer);
 			}
 		}
 
