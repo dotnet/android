@@ -108,10 +108,35 @@ static class JniSignatureHelper
 	/// <summary>
 	/// Encodes the CLR type for a JNI parameter kind into a signature type encoder.
 	/// </summary>
+	/// <summary>
+	/// Encodes a JNI type as its CLR equivalent for [UnmanagedCallersOnly] UCO wrapper signatures.
+	/// JNI boolean (Z) maps to <c>byte</c> (unsigned, blittable for the JNI ABI).
+	/// </summary>
 	public static void EncodeClrType (SignatureTypeEncoder encoder, JniParamKind kind)
 	{
 		switch (kind) {
-		case JniParamKind.Boolean: encoder.Byte (); break;   // JNI jboolean is unsigned byte; must be blittable for UCO
+		case JniParamKind.Boolean: encoder.Byte (); break;   // JNI jboolean is unsigned byte; blittable for UCO
+		case JniParamKind.Byte:    encoder.SByte (); break;
+		case JniParamKind.Char:    encoder.Char (); break;
+		case JniParamKind.Short:   encoder.Int16 (); break;
+		case JniParamKind.Int:     encoder.Int32 (); break;
+		case JniParamKind.Long:    encoder.Int64 (); break;
+		case JniParamKind.Float:   encoder.Single (); break;
+		case JniParamKind.Double:  encoder.Double (); break;
+		case JniParamKind.Object:  encoder.IntPtr (); break;
+		default: throw new ArgumentException ($"Cannot encode JNI param kind {kind} as CLR type");
+		}
+	}
+
+	/// <summary>
+	/// Encodes a JNI type as its CLR equivalent matching the MCW-generated <c>n_*</c> callback
+	/// signatures. JNI boolean (Z) maps to <c>sbyte</c> (matching <c>_JniMarshal_*_B</c> delegates).
+	/// Use this when constructing member references to <c>n_*</c> methods.
+	/// </summary>
+	public static void EncodeClrTypeForCallback (SignatureTypeEncoder encoder, JniParamKind kind)
+	{
+		switch (kind) {
+		case JniParamKind.Boolean: encoder.SByte (); break;  // MCW n_* callbacks use sbyte for JNI boolean
 		case JniParamKind.Byte:    encoder.SByte (); break;
 		case JniParamKind.Char:    encoder.Char (); break;
 		case JniParamKind.Short:   encoder.Int16 (); break;
