@@ -28,12 +28,12 @@ extern "C" {
 	xamarin::android::managed_timing_sequence* monodroid_timing_start (const char *message);
 	void monodroid_timing_stop (xamarin::android::managed_timing_sequence *sequence, const char *message);
 
-	void _monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable);
-	int _monodroid_weak_gref_get ();
-	int _monodroid_weak_gref_inc ();
-	int _monodroid_weak_gref_dec ();
-	int _monodroid_max_gref_get ();
-	void _monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable);
+	void _monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable) noexcept;
+	int _monodroid_weak_gref_get () noexcept;
+	int _monodroid_weak_gref_inc () noexcept;
+	int _monodroid_weak_gref_dec () noexcept;
+	int _monodroid_max_gref_get () noexcept;
+	void _monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable) noexcept;
 
 	void _monodroid_lref_log_new (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable);
 	void _monodroid_lref_log_delete (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char  *from, int from_writable);

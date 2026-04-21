@@ -227,6 +227,8 @@ namespace Android.Runtime {
 					gc = RuntimeNativeMethods._monodroid_gref_inc ();
 				}
 			} else {
+				// Duplicated intentionally: the trimmer removes the outer `if` block entirely when
+				// ObjectReferenceLogging is disabled, so the counter increment must appear in both branches.
 				gc = RuntimeNativeMethods._monodroid_gref_inc ();
 			}
 
