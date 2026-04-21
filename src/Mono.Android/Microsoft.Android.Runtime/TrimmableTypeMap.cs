@@ -30,7 +30,7 @@ class TrimmableTypeMap
 	readonly IReadOnlyDictionary<string, Type> _typeMap;
 	readonly IReadOnlyDictionary<Type, Type> _proxyTypeMap;
 	readonly ConcurrentDictionary<Type, JavaPeerProxy> _proxyCache = new ();
-	readonly ConcurrentDictionary<string, JavaPeerProxy> _peerProxyCache = new (StringComparer.Ordinal);
+	readonly ConcurrentDictionary<string, JavaPeerProxy[]> _jniProxyCache = new (StringComparer.Ordinal);
 
 	TrimmableTypeMap ()
 	{
@@ -76,28 +76,84 @@ class TrimmableTypeMap
 		}
 	}
 
-	internal bool TryGetTargetType (string jniSimpleReference, [NotNullWhen (true)] out Type? type)
+	/// <summary>
+	/// Returns all target types mapped to a JNI name. For non-alias entries, returns a
+	/// single-element array. For alias groups, returns the surviving target types from
+	/// each alias key. Returns false when no mapping exists or all aliases were trimmed.
+	/// </summary>
+	internal bool TryGetTargetTypes (string jniName, [NotNullWhen (true)] out Type[]? types)
 	{
-		type = GetProxyForJavaType (jniSimpleReference)?.TargetType;
-		return type is not null;
+		var proxies = GetProxiesForJniName (jniName);
+		if (proxies.Length == 0) {
+			types = null;
+			return false;
+		}
+
+		types = new Type [proxies.Length];
+		for (int i = 0; i < proxies.Length; i++) {
+			types [i] = proxies [i].TargetType;
+		}
+		return true;
 	}
 
 	/// <summary>
-	/// Resolves the <see cref="JavaPeerProxy"/> for a managed type via the CLR
-	/// <c>TypeMapping</c> proxy dictionary.
+	/// Resolves and caches all proxies for a JNI name. For non-alias entries, returns a
+	/// single-element array. For alias groups, resolves each alias key and returns the
+	/// surviving proxies. Returns an empty array when no mapping exists or all aliases were trimmed.
 	/// </summary>
-	/// <remarks>
-	/// The generator emits exactly one <c>TypeMapAssociation</c> per generic peer,
-	/// keyed by the open generic definition (Java erases generics, so one proxy
-	/// fits every closed instantiation). Closed instantiations are normalised to
-	/// their generic type definition before the lookup because the CLR lazy
-	/// dictionary does identity-based key matching
-	/// (see <c>dotnet/runtime</c> <c>TypeMapLazyDictionary.cs</c>).
-	/// <see cref="Type.GetGenericTypeDefinition"/> is safe under full AOT + trim
-	/// (it is not <c>RequiresDynamicCode</c>). Java→managed construction of a
-	/// closed generic peer still requires a closed <see cref="Type"/> at the call
-	/// site and is tracked separately.
-	/// </remarks>
+	JavaPeerProxy[] GetProxiesForJniName (string jniName)
+	{
+		return _jniProxyCache.GetOrAdd (jniName, static (name, self) => {
+			if (!self._typeMap.TryGetValue (name, out var mappedType)) {
+				return [];
+			}
+
+			// Fast path: non-alias entry
+			var proxy = mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+			if (proxy is not null) {
+				return [proxy];
+			}
+
+			// Slow path: alias holder — resolve each alias key
+			var aliases = mappedType.GetCustomAttribute<JavaPeerAliasesAttribute> (inherit: false);
+			if (aliases is null) {
+				return [];
+			}
+
+			var result = new List<JavaPeerProxy> ();
+			foreach (var key in aliases.Aliases) {
+				if (self._typeMap.TryGetValue (key, out var aliasEntryType)) {
+					var aliasProxy = aliasEntryType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+					if (aliasProxy is not null) {
+						result.Add (aliasProxy);
+					}
+				}
+			}
+			return result.Count > 0 ? result.ToArray () : [];
+		}, this);
+	}
+
+	/// <summary>
+	/// Resolves the best proxy for a JNI class name, handling both direct entries and alias groups.
+	/// When targetType is available, finds the proxy whose TargetType matches.
+	/// When targetType is null, returns the first available proxy.
+	/// </summary>
+	JavaPeerProxy? GetProxyForJniClass (string className, Type? targetType)
+	{
+		var proxies = GetProxiesForJniName (className);
+		if (proxies.Length == 0) {
+			return null;
+		}
+		if (proxies.Length == 1 || targetType is null) {
+			return proxies [0];
+		}
+		foreach (var proxy in proxies) {
+			if (TargetTypeMatches (targetType, proxy.TargetType)) {
+				return proxy;
+			}
+		}
+		return null;
+	}
 	JavaPeerProxy? GetProxyForManagedType (Type managedType)
 	{
 		if (managedType.IsGenericType && !managedType.IsGenericTypeDefinition) {
@@ -105,8 +161,20 @@ class TrimmableTypeMap
 		}
 
 		var proxy = _proxyCache.GetOrAdd (managedType, static (type, self) => {
-			if (self._proxyTypeMap.TryGetValue (type, out var proxyType)) {
-				return proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false) ?? s_noPeerSentinel;
+			if (!self._proxyTypeMap.TryGetValue (type, out var proxyType)) {
+				return s_noPeerSentinel;
+			}
+
+			// Fast path: direct proxy lookup (non-alias types)
+			var proxy = proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+			if (proxy is not null) {
+				return proxy;
+			}
+
+			// Slow path: _proxyTypeMap mapped this type to an alias holder — resolve from aliases
+			var aliases = proxyType.GetCustomAttribute<JavaPeerAliasesAttribute> (inherit: false);
+			if (aliases is not null) {
+				return GetProxyFromAliases (self, aliases, type) ?? s_noPeerSentinel;
 			}
 
 			return s_noPeerSentinel;
@@ -114,24 +182,18 @@ class TrimmableTypeMap
 		return ReferenceEquals (proxy, s_noPeerSentinel) ? null : proxy;
 	}
 
-	JavaPeerProxy? GetProxyForJavaType (string className)
+	static JavaPeerProxy? GetProxyFromAliases (TrimmableTypeMap self, JavaPeerAliasesAttribute aliases, Type targetType)
 	{
-		var proxy = _peerProxyCache.GetOrAdd (className, static (name, self) => {
-			if (!self._typeMap.TryGetValue (name, out var mappedType)) {
-				return s_noPeerSentinel;
+		foreach (var key in aliases.Aliases) {
+			if (!self._typeMap.TryGetValue (key, out var aliasProxyType)) {
+				continue;
 			}
-
-			var proxy = mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-			if (proxy is null) {
-				// Alias typemap entries (for example "jni/name[1]") are not implemented yet.
-				// Support for them will be added in a follow-up for https://github.com/dotnet/android/issues/10788.
-				throw new NotImplementedException (
-					$"Trimmable typemap alias handling is not implemented yet for '{name}'.");
+			var aliasProxy = aliasProxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+			if (aliasProxy is not null && TargetTypeMatches (targetType, aliasProxy.TargetType)) {
+				return aliasProxy;
 			}
-
-			return proxy;
-		}, this);
-		return ReferenceEquals (proxy, s_noPeerSentinel) ? null : proxy;
+		}
+		return null;
 	}
 
 	internal bool TryGetJniNameForManagedType (Type managedType, [NotNullWhen (true)] out string? jniName)
@@ -158,7 +220,7 @@ class TrimmableTypeMap
 				while (jniClass.IsValid) {
 					var className = JniEnvironment.Types.GetJniTypeNameFromClass (jniClass);
 					if (className != null) {
-						var proxy = self.GetProxyForJavaType (className);
+						var proxy = self.GetProxyForJniClass (className, targetType);
 						if (proxy != null && (targetType is null || TargetTypeMatches (targetType, proxy.TargetType))) {
 							return proxy;
 						}
@@ -279,16 +341,19 @@ class TrimmableTypeMap
 				return;
 			}
 
-			if (!s_instance._typeMap.TryGetValue (className, out var type)) {
+			var proxies = s_instance.GetProxiesForJniName (className);
+			if (proxies.Length == 0) {
 				return;
 			}
 
-			var proxy = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-			if (proxy is IAndroidCallableWrapper acw) {
-				// Use the class reference passed from Java (via C++) — not JniType(className)
-				// which resolves via FindClass and may get a different class from a different ClassLoader.
-				using var jniType = new JniType (ref classRef, JniObjectReferenceOptions.Copy);
-				acw.RegisterNatives (jniType);
+			// Use the class reference passed from Java (via C++) — not JniType(className)
+			// which resolves via FindClass and may get a different class from a different ClassLoader.
+			// Registering natives on that other instance is silently wrong.
+			using var jniType = new JniType (ref classRef, JniObjectReferenceOptions.Copy);
+			foreach (var proxy in proxies) {
+				if (proxy is IAndroidCallableWrapper acw) {
+					acw.RegisterNatives (jniType);
+				}
 			}
 		} catch (Exception ex) {
 			Environment.FailFast ($"TrimmableTypeMap: Failed to register natives for class '{className}'.", ex);
