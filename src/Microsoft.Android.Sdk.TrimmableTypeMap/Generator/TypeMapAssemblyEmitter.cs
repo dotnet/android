@@ -81,6 +81,8 @@ sealed class TypeMapAssemblyEmitter
 	TypeReferenceHandle _jniTypeRef;
 	TypeReferenceHandle _notSupportedExceptionRef;
 	TypeReferenceHandle _runtimeHelpersRef;
+	TypeReferenceHandle _javaPeerAliasesAttrRef;
+	MemberReferenceHandle _javaPeerAliasesAttrCtorRef;
 
 	MemberReferenceHandle _getTypeFromHandleRef;
 	MemberReferenceHandle _getUninitializedObjectRef;
@@ -150,6 +152,10 @@ sealed class TypeMapAssemblyEmitter
 			EmitProxyType (proxy, wrapperHandles);
 		}
 
+		foreach (var holder in model.AliasHolders) {
+			EmitAliasHolderType (holder);
+		}
+
 		foreach (var entry in model.Entries) {
 			EmitTypeMapAttribute (entry);
 		}
@@ -190,6 +196,8 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("NotSupportedException"));
 		_runtimeHelpersRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
 			metadata.GetOrAddString ("System.Runtime.CompilerServices"), metadata.GetOrAddString ("RuntimeHelpers"));
+		_javaPeerAliasesAttrRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaPeerAliasesAttribute"));
 
 		_jniNativeMethodRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniNativeMethod"));
@@ -289,6 +297,7 @@ sealed class TypeMapAssemblyEmitter
 
 		EmitTypeMapAttributeCtorRef ();
 		EmitTypeMapAssociationAttributeCtorRef ();
+		EmitJavaPeerAliasesAttributeCtorRef ();
 	}
 
 	void EmitTypeMapAttributeCtorRef ()
@@ -398,17 +407,9 @@ sealed class TypeMapAssemblyEmitter
 			metadata.AddInterfaceImplementation (typeDefHandle, _iAndroidCallableWrapperRef);
 		}
 
-		// Self-apply: the proxy type is its own [JavaPeerProxy] attribute.
-		// This enables type.GetCustomAttribute<JavaPeerProxy>() to instantiate the proxy
-		// at runtime for AOT-safe type resolution.
-		var selfAttrCtorRef = _pe.AddMemberRef (typeDefHandle, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }));
-		var selfAttrBlob = _pe.BuildAttributeBlob (b => { });
-		metadata.AddCustomAttribute (typeDefHandle, selfAttrCtorRef, selfAttrBlob);
-
 		// .ctor — pass the resolved JNI name, (for generic-definition base) target type, and
 		// optional invoker type to the base proxy constructor.
-		_pe.EmitBody (".ctor",
+		var selfAttrCtorDef = _pe.EmitBody (".ctor",
 			MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }),
 			encoder => {
@@ -432,6 +433,12 @@ sealed class TypeMapAssemblyEmitter
 				encoder.OpCode (ILOpCode.Ret);
 			});
 
+		// Self-apply: the proxy type is its own [JavaPeerProxy] attribute.
+		// This enables type.GetCustomAttribute<JavaPeerProxy>() to instantiate the proxy
+		// at runtime for AOT-safe type resolution.
+		var selfAttrBlob = _pe.BuildAttributeBlob (b => { });
+		metadata.AddCustomAttribute (typeDefHandle, selfAttrCtorDef, selfAttrBlob);
+
 		// CreateInstance
 		EmitCreateInstance (proxy);
 
@@ -450,6 +457,59 @@ sealed class TypeMapAssemblyEmitter
 		if (proxy.IsAcw) {
 			EmitRegisterNatives (proxy.NativeRegistrations, wrapperHandles);
 		}
+	}
+
+	void EmitAliasHolderType (AliasHolderData holder)
+	{
+		var metadata = _pe.Metadata;
+
+		// Alias holders are plain classes (NOT JavaPeerProxy subclasses).
+		// GetCustomAttribute<JavaPeerProxy>() returns null for these — the fast path
+		// stays clean. Aliases are discovered via [JavaPeerAliases] attribute only when needed.
+		var objectRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
+			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Object"));
+
+		var typeDefHandle = metadata.AddTypeDefinition (
+			TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Class,
+			metadata.GetOrAddString (holder.Namespace),
+			metadata.GetOrAddString (holder.TypeName),
+			objectRef,
+			MetadataTokens.FieldDefinitionHandle (metadata.GetRowCount (TableIndex.Field) + 1),
+			MetadataTokens.MethodDefinitionHandle (metadata.GetRowCount (TableIndex.MethodDef) + 1));
+
+		// Apply [JavaPeerAliases("key[0]", "key[1]", ...)] to the type
+		EmitJavaPeerAliasesAttribute (typeDefHandle, holder.AliasKeys);
+	}
+
+	void EmitJavaPeerAliasesAttributeCtorRef ()
+	{
+		// JavaPeerAliasesAttribute(params string[] aliases) — in Mono.Android, Java.Interop namespace
+		_javaPeerAliasesAttrCtorRef = _pe.AddMemberRef (_javaPeerAliasesAttrRef, ".ctor",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
+				rt => rt.Void (),
+				p => p.AddParameter ().Type ().SZArray ().String ()));
+	}
+
+	void EmitJavaPeerAliasesAttribute (TypeDefinitionHandle typeDefHandle, List<string> aliasKeys)
+	{
+		// Encode the attribute blob: prolog (0x0001), then packed string array, then NumNamed (0x0000).
+		// The params string[] is encoded as: element count (uint32), then each string as SerializedString.
+		var blobBuilder = new BlobBuilder ();
+		blobBuilder.WriteUInt16 (1); // prolog
+		blobBuilder.WriteInt32 (aliasKeys.Count); // array length
+		foreach (var key in aliasKeys) {
+			WriteSerializedString (blobBuilder, key);
+		}
+		blobBuilder.WriteUInt16 (0); // NumNamed
+
+		_pe.Metadata.AddCustomAttribute (typeDefHandle, _javaPeerAliasesAttrCtorRef, _pe.Metadata.GetOrAddBlob (blobBuilder));
+	}
+
+	static void WriteSerializedString (BlobBuilder builder, string value)
+	{
+		var bytes = System.Text.Encoding.UTF8.GetBytes (value);
+		builder.WriteCompressedInteger (bytes.Length);
+		builder.WriteBytes (bytes);
 	}
 
 	void EmitCreateInstance (JavaPeerProxyData proxy)

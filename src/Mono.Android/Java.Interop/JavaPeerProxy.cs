@@ -7,6 +7,30 @@ using Android.Runtime;
 namespace Java.Interop
 {
 	/// <summary>
+	/// Attribute applied to generated alias holder types. When multiple .NET types
+	/// map to the same JNI name (e.g., <c>JavaCollection</c> and <c>JavaCollection&lt;T&gt;</c>
+	/// both map to <c>"java/util/Collection"</c>), the base JNI name entry points to
+	/// a plain holder class annotated with this attribute, which lists the indexed
+	/// TypeMap keys for each alias type.
+	/// </summary>
+	/// <remarks>
+	/// The alias holder is NOT a <see cref="JavaPeerProxy"/> subclass — this ensures
+	/// <c>GetCustomAttribute&lt;JavaPeerProxy&gt;()</c> returns null for alias entries,
+	/// keeping the fast path (non-alias types) free of alias checks.
+	/// </remarks>
+	[AttributeUsage (AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+	public sealed class JavaPeerAliasesAttribute : Attribute
+	{
+		/// <summary>
+		/// Gets the indexed TypeMap keys for this alias group (e.g., <c>"java/util/Collection[0]"</c>,
+		/// <c>"java/util/Collection[1]"</c>).
+		/// </summary>
+		public string[] Aliases { get; }
+
+		public JavaPeerAliasesAttribute (params string[] aliases) => Aliases = aliases;
+	}
+
+	/// <summary>
 	/// Base attribute class for generated proxy types that enable AOT-safe type mapping
 	/// between Java and .NET types.
 	/// </summary>
