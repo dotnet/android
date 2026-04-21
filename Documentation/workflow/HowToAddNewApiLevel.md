@@ -446,6 +446,16 @@ BindingStudio crashes.
 
 The left tree view can be updated by saving and reopening the `map.csv` file.
 
+Once `map.csv` has been updated, run the following command:
+
+```sh
+git grep '\.[A-Z][a-z]\.' src/Mono.Android/map.csv
+```
+
+This checks for any namespace-parts which are two letters long, the first letter is
+upper-case, and the second letter is lower-case, e.g. `.Pm.`. These should be all
+upper-case, e.g. `.PM.`.
+
 ### Extract methods that possibly need enums
 
 Using BindingStudio:
@@ -518,7 +528,13 @@ There are 3 possible options for a method parameter/return type:
       - If desired enum is found, clicking it will populate dropdown
     - Click **Save**
 
-Use `File` -> `Save` to save your work often!
+Use `File` -> `Save` to save your work often!  Note that this only updates the file designated by
+the `csv` variable within `MainForm.FindAPILevelMethodsToolStripMenuItem_Click`.
+
+Once this process is complete, use `Tools` -> `Export Final Method Map`, and create a *new*
+`.csv` file, e.g. `new-methodmap.csv`.
+
+Copy the contents of `new-methodmap.csv` and *append* to `src/Mono.Android/methodmap.csv`.
 
 ### Turning `int` into `Color`
 
@@ -558,6 +574,12 @@ To map parameter types:
   * `//attr/@name` the XML attribute to update.  For return types, this is `type`.
   * The value of the `<attr/>` is `Android.Graphics.Color`.
 
+For API-37+, we're trying a "pattern-based" approach, wherein:
+
+  * method names which return `int` and end in `Color`
+  * method parameter names which start with `color` or end in `Color`
+
+are automatically converted into `Android.Graphics.Color`.
 
 ### Finishing the method map
 
