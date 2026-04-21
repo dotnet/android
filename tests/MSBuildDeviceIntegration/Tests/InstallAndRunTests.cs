@@ -2260,7 +2260,8 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			dotnet.AssertHasNoWarnings ();
 
 			// Run instrumentation via `dotnet run` and capture output
-			using var process = dotnet.StartRun (waitForExit: true, parameters: buildParameters.ToArray ());
+			var runParameters = buildParameters.Select (p => $"/p:{p}").ToArray ();
+			using var process = dotnet.StartRun (waitForExit: true, parameters: runParameters);
 
 			var locker = new Lock ();
 			var output = new StringBuilder ();
