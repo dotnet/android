@@ -186,6 +186,9 @@ namespace Android.Runtime {
 
 		public override void WriteLocalReferenceLine (string format, params object?[] args)
 		{
+			if (!RuntimeFeature.ObjectReferenceLogging) {
+				return;
+			}
 			if (!Logger.LogLocalRef) {
 				return;
 			}
@@ -196,6 +199,9 @@ namespace Android.Runtime {
 
 		public override void WriteGlobalReferenceLine (string format, params object?[] args)
 		{
+			if (!RuntimeFeature.ObjectReferenceLogging) {
+				return;
+			}
 			if (!Logger.LogGlobalRef) {
 				return;
 			}
