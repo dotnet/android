@@ -1009,6 +1009,13 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
 {1} - The current value of the property
 </comment>
   </data>
+  <data name="XA1044" xml:space="preserve">
+    <value>The MSBuild property '{0}' is not compatible with the {1} runtime and will be ignored. Either remove the property or guard it with a condition: Condition="'$(UseMonoRuntime)' == 'true'"</value>
+    <comment>The following are literal names and should not be translated: MSBuild, UseMonoRuntime.
+{0} - The MSBuild property name (e.g. RunAOTCompilation, EnableLLVM).
+{1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
+</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>La dépendance Java « {0} » n’est pas satisfaite.</value>
     <comment>The following are literal names and should not be translated: Java.
