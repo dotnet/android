@@ -83,7 +83,7 @@ namespace Java.InteropTests {
 			}
 		}
 
-		[Test, Category ("TrimmableIgnore")]
+		[Test]
 		public void JavaAs ()
 		{
 			using var v     = new Java.InteropTests.MyJavaInterfaceImpl ();
