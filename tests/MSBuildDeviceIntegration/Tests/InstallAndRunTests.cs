@@ -2250,9 +2250,9 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			var buildParameters = new List<string> {
 				$"UseMonoRuntime={useMonoRuntime}",
 			};
+
 			if (runtime == AndroidRuntime.CoreCLR) {
-				// TODO: MSTest requires Assembly.Location, which returns empty with fast-deploy on CoreCLR. Remove when fast-deploy is fixed.
-				buildParameters.Add ("EmbedAssembliesIntoApk=true");
+				Assert.Ignore ("https://github.com/dotnet/android/issues/11174");
 			}
 
 			// Build and assert 0 warnings
