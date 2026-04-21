@@ -148,7 +148,7 @@ class TrimmableTypeMap
 			return proxies [0];
 		}
 		foreach (var proxy in proxies) {
-			if (proxy.TargetType == targetType) {
+			if (TargetTypeMatches (targetType, proxy.TargetType)) {
 				return proxy;
 			}
 		}
@@ -189,7 +189,7 @@ class TrimmableTypeMap
 				continue;
 			}
 			var aliasProxy = aliasProxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-			if (aliasProxy is not null && aliasProxy.TargetType == targetType) {
+			if (aliasProxy is not null && TargetTypeMatches (targetType, aliasProxy.TargetType)) {
 				return aliasProxy;
 			}
 		}

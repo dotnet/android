@@ -469,7 +469,7 @@ sealed class TypeMapAssemblyEmitter
 		var objectRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Object"));
 
-		metadata.AddTypeDefinition (
+		var typeDefHandle = metadata.AddTypeDefinition (
 			TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Class,
 			metadata.GetOrAddString (holder.Namespace),
 			metadata.GetOrAddString (holder.TypeName),
@@ -478,7 +478,7 @@ sealed class TypeMapAssemblyEmitter
 			MetadataTokens.MethodDefinitionHandle (metadata.GetRowCount (TableIndex.MethodDef) + 1));
 
 		// Apply [JavaPeerAliases("key[0]", "key[1]", ...)] to the type
-		EmitJavaPeerAliasesAttribute (holder.AliasKeys);
+		EmitJavaPeerAliasesAttribute (typeDefHandle, holder.AliasKeys);
 	}
 
 	void EmitJavaPeerAliasesAttributeCtorRef ()
@@ -490,7 +490,7 @@ sealed class TypeMapAssemblyEmitter
 				p => p.AddParameter ().Type ().SZArray ().String ()));
 	}
 
-	void EmitJavaPeerAliasesAttribute (List<string> aliasKeys)
+	void EmitJavaPeerAliasesAttribute (TypeDefinitionHandle typeDefHandle, List<string> aliasKeys)
 	{
 		// Encode the attribute blob: prolog (0x0001), then packed string array, then NumNamed (0x0000).
 		// The params string[] is encoded as: element count (uint32), then each string as SerializedString.
@@ -502,8 +502,7 @@ sealed class TypeMapAssemblyEmitter
 		}
 		blobBuilder.WriteUInt16 (0); // NumNamed
 
-		var lastTypeDef = MetadataTokens.TypeDefinitionHandle (_pe.Metadata.GetRowCount (TableIndex.TypeDef));
-		_pe.Metadata.AddCustomAttribute (lastTypeDef, _javaPeerAliasesAttrCtorRef, _pe.Metadata.GetOrAddBlob (blobBuilder));
+		_pe.Metadata.AddCustomAttribute (typeDefHandle, _javaPeerAliasesAttrCtorRef, _pe.Metadata.GetOrAddBlob (blobBuilder));
 	}
 
 	static void WriteSerializedString (BlobBuilder builder, string value)
