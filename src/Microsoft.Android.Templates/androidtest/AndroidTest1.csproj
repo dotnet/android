@@ -7,8 +7,6 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <EnableMSTestRunner>true</EnableMSTestRunner>
-    <!-- MSTest requires Assembly.Location to return a valid path, which only works when assemblies are embedded in the APK. -->
-    <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
     <ApplicationId>com.companyname.AndroidTest1</ApplicationId>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
