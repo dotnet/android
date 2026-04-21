@@ -39,7 +39,7 @@ void _monodroid_gref_log_delete (jobject handle, char type, const char *threadNa
 	OSBridge::_monodroid_gref_log_delete (handle, type, threadName, threadId, from);
 }
 
-void _monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, [[maybe_unused]] int from_writable)
+void _monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, [[maybe_unused]] int from_writable) noexcept
 {
 	OSBridge::_monodroid_weak_gref_delete (handle, type, threadName, threadId, from);
 }
