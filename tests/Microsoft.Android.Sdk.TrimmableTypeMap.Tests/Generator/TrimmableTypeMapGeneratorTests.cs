@@ -398,6 +398,88 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.False (peers [0].IsUnconditional);
 	}
 
+	[Fact]
+	public void MergeCrossAssemblyAliases_RegisterTakesPrecedenceOverJniTypeSignature ()
+	{
+		// Java.Interop has JavaObject with [JniTypeSignature("java/lang/Object")]
+		var javaInteropPeer = new JavaPeerInfo {
+			JavaName = "java/lang/Object", CompatJniName = "java/lang/Object",
+			ManagedTypeName = "Java.Interop.JavaObject", ManagedTypeNamespace = "Java.Interop", ManagedTypeShortName = "JavaObject",
+			AssemblyName = "Java.Interop", IsFromJniTypeSignature = true, DoNotGenerateAcw = true,
+		};
+
+		// Mono.Android has Java.Lang.Object with [Register("java/lang/Object")]
+		var monoAndroidPeer = new JavaPeerInfo {
+			JavaName = "java/lang/Object", CompatJniName = "java/lang/Object",
+			ManagedTypeName = "Java.Lang.Object", ManagedTypeNamespace = "Java.Lang", ManagedTypeShortName = "Object",
+			AssemblyName = "Mono.Android", IsFromJniTypeSignature = false, DoNotGenerateAcw = true,
+		};
+
+		// Another unique peer in Java.Interop that shouldn't be moved
+		var otherPeer = new JavaPeerInfo {
+			JavaName = "java/interop/SomeHelper", CompatJniName = "java/interop/SomeHelper",
+			ManagedTypeName = "Java.Interop.SomeHelper", ManagedTypeNamespace = "Java.Interop", ManagedTypeShortName = "SomeHelper",
+			AssemblyName = "Java.Interop", IsFromJniTypeSignature = true,
+		};
+
+		var allPeers = new List<JavaPeerInfo> { javaInteropPeer, monoAndroidPeer, otherPeer };
+		var result = TrimmableTypeMapGenerator.MergeCrossAssemblyAliases (allPeers);
+
+		// Both java/lang/Object peers should be in the Mono.Android group ([Register] wins)
+		var monoAndroidGroup = result.Single (g => g.AssemblyName == "Mono.Android");
+		Assert.Equal (2, monoAndroidGroup.Peers.Count);
+		Assert.Contains (monoAndroidGroup.Peers, p => p.ManagedTypeName == "Java.Lang.Object");
+		Assert.Contains (monoAndroidGroup.Peers, p => p.ManagedTypeName == "Java.Interop.JavaObject");
+
+		// Java.Interop should only have the unique peer
+		var javaInteropGroup = result.Single (g => g.AssemblyName == "Java.Interop");
+		Assert.Single (javaInteropGroup.Peers);
+		Assert.Equal ("Java.Interop.SomeHelper", javaInteropGroup.Peers [0].ManagedTypeName);
+	}
+
+	[Fact]
+	public void MergeCrossAssemblyAliases_NoDuplicates_NothingMoved ()
+	{
+		var peer1 = new JavaPeerInfo {
+			JavaName = "com/example/Foo", CompatJniName = "com/example/Foo",
+			ManagedTypeName = "MyApp.Foo", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "Foo",
+			AssemblyName = "MyApp",
+		};
+		var peer2 = new JavaPeerInfo {
+			JavaName = "com/example/Bar", CompatJniName = "com/example/Bar",
+			ManagedTypeName = "MyLib.Bar", ManagedTypeNamespace = "MyLib", ManagedTypeShortName = "Bar",
+			AssemblyName = "MyLib",
+		};
+
+		var result = TrimmableTypeMapGenerator.MergeCrossAssemblyAliases (new List<JavaPeerInfo> { peer1, peer2 });
+
+		Assert.Equal (2, result.Count);
+		Assert.Single (result.Single (g => g.AssemblyName == "MyApp").Peers);
+		Assert.Single (result.Single (g => g.AssemblyName == "MyLib").Peers);
+	}
+
+	[Fact]
+	public void MergeCrossAssemblyAliases_SameAssemblyAliases_NotMoved ()
+	{
+		// Two peers in the same assembly with the same JNI name — this is a within-assembly alias
+		// and should NOT be moved; ModelBuilder handles it.
+		var peer1 = new JavaPeerInfo {
+			JavaName = "java/lang/Object", CompatJniName = "java/lang/Object",
+			ManagedTypeName = "Java.Lang.Object", ManagedTypeNamespace = "Java.Lang", ManagedTypeShortName = "Object",
+			AssemblyName = "Mono.Android",
+		};
+		var peer2 = new JavaPeerInfo {
+			JavaName = "java/lang/Object", CompatJniName = "java/lang/Object",
+			ManagedTypeName = "Java.Lang.IDisposable", ManagedTypeNamespace = "Java.Lang", ManagedTypeShortName = "IDisposable",
+			AssemblyName = "Mono.Android",
+		};
+
+		var result = TrimmableTypeMapGenerator.MergeCrossAssemblyAliases (new List<JavaPeerInfo> { peer1, peer2 });
+
+		Assert.Single (result);
+		Assert.Equal (2, result [0].Peers.Count);
+	}
+
 	static PEReader CreateTestFixturePEReader ()
 	{
 		var dir = Path.GetDirectoryName (typeof (FixtureTestBase).Assembly.Location)

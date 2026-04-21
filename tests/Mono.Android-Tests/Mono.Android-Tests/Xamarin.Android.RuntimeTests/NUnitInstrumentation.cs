@@ -36,18 +36,21 @@ namespace Xamarin.Android.RuntimeTests
                 ExcludedTestNames = new [] {
                     "Java.InteropTests.JavaObjectTest",
                     "Java.InteropTests.InvokeVirtualFromConstructorTests",
+                    "Java.InteropTests.JavaExceptionTests.InnerExceptionIsNotAProxy",
                     "Java.InteropTests.JniPeerMembersTests",
                     "Java.InteropTests.JniTypeManagerTests",
                     "Java.InteropTests.JniValueMarshaler_object_ContractTests",
-                    "Java.InteropTests.JavaExceptionTests.InnerExceptionIsNotAProxy",
-
-                    // JavaCast/JavaAs interface resolution still differs under trimmable typemap.
+ 
                     "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs",
                     "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs_Exceptions",
                     "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs_InstanceThatDoesNotImplementInterfaceReturnsNull",
-
-                    // JavaObjectArray<object> contract tests still need generic container factory support.
+ 
                     "Java.InteropTests.JavaObjectArray_object_ContractTest",
+
+                    // JnienvTest contains multiple tests that SIGSEGV the test process
+                    // (threading tests, JNI ref manipulation, generic type creation).
+                    // See https://github.com/dotnet/android/issues/11170
+                    "Java.InteropTests.JnienvTest",
                 };
 
             }
