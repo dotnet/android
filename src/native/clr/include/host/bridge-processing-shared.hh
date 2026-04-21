@@ -53,12 +53,12 @@ private:
 
 	void log_missing_add_references_method (jclass java_class) noexcept;
 	void log_missing_clear_references_method (jclass java_class) noexcept;
-	void inc_gref_and_log (jobject weak, jobject handle) noexcept;
+	void log_weak_to_gref (jobject weak, jobject handle) noexcept;
 	void log_weak_ref_collected (jobject weak) noexcept;
 	void log_take_weak_global_ref (jobject handle) noexcept;
-	void inc_weak_gref_and_log (jobject handle, jobject weak) noexcept;
-	void dec_gref_and_log (jobject handle) noexcept;
-	void dec_weak_gref_and_log (jobject weak) noexcept;
+	void log_weak_gref_new (jobject handle, jobject weak) noexcept;
+	void log_gref_delete (jobject handle) noexcept;
+	void log_weak_ref_delete (jobject weak) noexcept;
 	void log_gc_summary () noexcept;
 
 	// These methods must be implemented by every host individually
