@@ -257,8 +257,7 @@ class TrimmableTypeMap
 			try {
 				objClass = JniEnvironment.Types.GetObjectClass (selfRef);
 				targetClass = JniEnvironment.Types.FindClass (targetJniName);
-				var isAssignable = JniEnvironment.Types.IsAssignableFrom (objClass, targetClass);
-				return isAssignable ? proxy : null;
+				return JniEnvironment.Types.IsAssignableFrom (objClass, targetClass) ? proxy : null;
 			} finally {
 				JniObjectReference.Dispose (ref objClass);
 				JniObjectReference.Dispose (ref targetClass);

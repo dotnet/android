@@ -948,25 +948,3 @@ namespace MyApp.Aliases
 		protected AliasTargetExtended (IntPtr handle, Android.Runtime.JniHandleOwnership transfer) : base (handle, transfer) { }
 	}
 }
-
-// [JniTypeSignature] types — Java.Interop's JavaObject hierarchy
-namespace Java.Interop.TestTypes
-{
-	[Java.Interop.JniTypeSignature ("java/lang/Object", GenerateJavaPeer = false)]
-	public class JavaObject
-	{
-		public JavaObject () { }
-	}
-
-	[Java.Interop.JniTypeSignature ("net/dot/jni/test/JavaDisposedObject")]
-	public class JavaDisposedObject : JavaObject
-	{
-		public JavaDisposedObject () { }
-	}
-
-	[Java.Interop.JniTypeSignature ("net/dot/jni/test/MyJavaObject", GenerateJavaPeer = false)]
-	public class NonGeneratedJavaObject : JavaObject
-	{
-		public NonGeneratedJavaObject () { }
-	}
-}

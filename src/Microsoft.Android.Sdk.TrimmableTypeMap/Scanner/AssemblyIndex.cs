@@ -95,8 +95,6 @@ sealed class AssemblyIndex : IDisposable
 			if (attrName == "RegisterAttribute") {
 				registerInfo = ParseRegisterAttribute (ca);
 				registerInfo = registerInfo with { JniName = registerInfo.JniName.Replace ('.', '/') };
-			} else if (attrName == "JniTypeSignatureAttribute") {
-				registerInfo = ParseJniTypeSignatureAttribute (ca);
 			} else if (attrName == "ExportAttribute") {
 				// [Export] is a method-level attribute; it is parsed at scan time by JavaPeerScanner
 			} else if (IsKnownComponentAttribute (attrName)) {
@@ -218,28 +216,6 @@ sealed class AssemblyIndex : IDisposable
 	internal RegisterInfo ParseRegisterAttribute (CustomAttribute ca)
 	{
 		return ParseRegisterInfo (DecodeAttribute (ca));
-	}
-
-	internal RegisterInfo ParseJniTypeSignatureAttribute (CustomAttribute ca)
-	{
-		var value = DecodeAttribute (ca);
-
-		string jniName = "";
-		bool doNotGenerateAcw = false;
-
-		if (value.FixedArguments.Length > 0) {
-			jniName = (string?)value.FixedArguments [0].Value ?? "";
-		}
-
-		if (TryGetNamedArgument<bool> (value, "GenerateJavaPeer", out var generateJavaPeer)) {
-			doNotGenerateAcw = !generateJavaPeer;
-		}
-
-		return new RegisterInfo {
-			JniName = jniName.Replace ('.', '/'),
-			DoNotGenerateAcw = doNotGenerateAcw,
-			IsFromJniTypeSignature = true,
-		};
 	}
 
 	internal CustomAttributeValue<string> DecodeAttribute (CustomAttribute ca)
@@ -528,7 +504,6 @@ sealed record RegisterInfo
 	public string? Signature { get; init; }
 	public string? Connector { get; init; }
 	public bool DoNotGenerateAcw { get; init; }
-	public bool IsFromJniTypeSignature { get; init; }
 }
 
 /// <summary>

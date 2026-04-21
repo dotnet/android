@@ -140,25 +140,19 @@ public class TrimmableTypeMapGenerator
 
 	List<GeneratedAssembly> GenerateTypeMapAssemblies (List<JavaPeerInfo> allPeers, Version systemRuntimeVersion)
 	{
-		// Move cross-assembly aliases into the first assembly that claims each JNI name.
-		// The ModelBuilder handles alias groups (multiple peers with the same JNI name)
-		// but only within a single assembly's peer list.  When the same JNI name appears
-		// in different assemblies (e.g. Java.Lang.Object in Mono.Android and JavaObject in
-		// Java.Interop both map to java/lang/Object), we must merge them so the runtime
-		// doesn't crash on duplicate keys.
-		var peersByAssembly = MergeCrossAssemblyAliases (allPeers);
-
+		var peersByAssembly = allPeers.GroupBy (p => p.AssemblyName, StringComparer.Ordinal).OrderBy (g => g.Key, StringComparer.Ordinal);
 		var generatedAssemblies = new List<GeneratedAssembly> ();
 		var perAssemblyNames = new List<string> ();
 		var generator = new TypeMapAssemblyGenerator (systemRuntimeVersion);
-		foreach (var (assemblyName, peers) in peersByAssembly) {
-			string typeMapAssemblyName = $"_{assemblyName}.TypeMap";
-			perAssemblyNames.Add (typeMapAssemblyName);
+		foreach (var group in peersByAssembly) {
+			string assemblyName = $"_{group.Key}.TypeMap";
+			perAssemblyNames.Add (assemblyName);
+			var peers = group.ToList ();
 			var stream = new MemoryStream ();
-			generator.Generate (peers, stream, typeMapAssemblyName);
+			generator.Generate (peers, stream, assemblyName);
 			stream.Position = 0;
-			generatedAssemblies.Add (new GeneratedAssembly (typeMapAssemblyName, stream));
-			logger.LogGeneratedTypeMapAssemblyInfo (typeMapAssemblyName, peers.Count);
+			generatedAssemblies.Add (new GeneratedAssembly (assemblyName, stream));
+			logger.LogGeneratedTypeMapAssemblyInfo (assemblyName, peers.Count);
 		}
 		var rootStream = new MemoryStream ();
 		var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
@@ -168,74 +162,6 @@ public class TrimmableTypeMapGenerator
 		logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);
 		logger.LogGeneratedTypeMapAssembliesInfo (generatedAssemblies.Count);
 		return generatedAssemblies;
-	}
-
-	/// <summary>
-	/// Groups peers by assembly, merging cross-assembly aliases into a single group.
-	/// When the same JNI name appears in multiple assemblies (e.g. <c>Java.Lang.Object</c>
-	/// in <c>Mono.Android</c> and <c>JavaObject</c> in <c>Java.Interop</c> both mapping
-	/// to <c>java/lang/Object</c>), peers from later assemblies are moved into the owner
-	/// assembly's group so the <see cref="ModelBuilder"/> can handle them as an alias group.
-	/// </summary>
-	/// <remarks>
-	/// Ownership is determined by <c>[Register]</c> over <c>[JniTypeSignature]</c> — the
-	/// canonical MCW binding type takes precedence. Among peers with the same attribute
-	/// kind, the first assembly in sorted order wins.
-	/// </remarks>
-	internal static List<(string AssemblyName, List<JavaPeerInfo> Peers)> MergeCrossAssemblyAliases (List<JavaPeerInfo> allPeers)
-	{
-		var groups = new SortedDictionary<string, List<JavaPeerInfo>> (StringComparer.Ordinal);
-
-		// Group by assembly (sorted order)
-		foreach (var peer in allPeers) {
-			if (!groups.TryGetValue (peer.AssemblyName, out var list)) {
-				list = [];
-				groups [peer.AssemblyName] = list;
-			}
-			list.Add (peer);
-		}
-
-		// Build JNI name → owner assembly map.
-		// [Register] types take precedence over [JniTypeSignature] types.
-		// Among peers of the same kind, the first assembly (sorted order) wins.
-		var jniNameOwner = new Dictionary<string, (string AssemblyName, bool IsFromJniTypeSignature)> (StringComparer.Ordinal);
-		foreach (var kvp in groups) {
-			string assemblyName = kvp.Key;
-			foreach (var peer in kvp.Value) {
-				if (!jniNameOwner.TryGetValue (peer.JavaName, out var current)) {
-					jniNameOwner [peer.JavaName] = (assemblyName, peer.IsFromJniTypeSignature);
-				} else if (current.IsFromJniTypeSignature && !peer.IsFromJniTypeSignature) {
-					// [Register] type takes ownership from [JniTypeSignature] type
-					jniNameOwner [peer.JavaName] = (assemblyName, false);
-				}
-			}
-		}
-
-		// Move colliding peers to the owner assembly
-		var movedPeers = new List<(JavaPeerInfo Peer, string TargetAssembly)> ();
-		foreach (var kvp in groups) {
-			string assemblyName = kvp.Key;
-			foreach (var peer in kvp.Value) {
-				var owner = jniNameOwner [peer.JavaName];
-				if (!string.Equals (owner.AssemblyName, assemblyName, StringComparison.Ordinal)) {
-					movedPeers.Add ((peer, owner.AssemblyName));
-				}
-			}
-		}
-
-		foreach (var moved in movedPeers) {
-			groups [moved.Peer.AssemblyName].Remove (moved.Peer);
-			groups [moved.TargetAssembly].Add (moved.Peer);
-		}
-
-		// Return non-empty groups
-		var result = new List<(string, List<JavaPeerInfo>)> ();
-		foreach (var kvp in groups) {
-			if (kvp.Value.Count > 0) {
-				result.Add ((kvp.Key, kvp.Value));
-			}
-		}
-		return result;
 	}
 
 	List<GeneratedJavaSource> GenerateJcwJavaSources (List<JavaPeerInfo> allPeers)

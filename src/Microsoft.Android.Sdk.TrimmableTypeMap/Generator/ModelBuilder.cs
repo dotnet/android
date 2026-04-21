@@ -16,13 +16,6 @@ static class ModelBuilder
 {
 	const string ProxyTypeSuffix = "_Proxy";
 
-	// Workaround for https://github.com/dotnet/runtime/issues/127004
-	// When true, all TypeMap entries are emitted as 2-arg (unconditional) to avoid the
-	// trimmer bug that strips TypeMapAssociation attributes when a TypeMap attribute
-	// references the same type. Set to false once the runtime bug is fixed to re-enable
-	// 3-arg conditional entries that allow unused framework bindings to be trimmed away.
-	const bool ForceUnconditionalEntries = true;
-
 	static readonly HashSet<string> EssentialRuntimeTypes = new (StringComparer.Ordinal) {
 		"java/lang/Object",
 		"java/lang/Class",
@@ -129,15 +122,8 @@ static class ModelBuilder
 				model.ProxyTypes.Add (proxy);
 			}
 
-			var entry = BuildEntry (peer, proxy, assemblyName, jniName);
-			model.Entries.Add (entry);
-
-			// Emit a TypeMapAssociation for every entry that has a proxy.
-			// The runtime's _proxyTypeMap (GetOrCreateProxyTypeMapping) is populated from
-			// TypeMapAssociationAttribute — NOT from TypeMapAttribute's 3rd arg.
-			// Without this, the proxy type map is empty and CreatePeer fails for
-			// interface types like IIterator where targetType-based lookup is needed.
-			if (proxy != null) {
+			model.Entries.Add (BuildEntry (peer, proxy, assemblyName, jniName));
+			if (proxy != null && peer.IsGenericDefinition) {
 				model.Associations.Add (new TypeMapAssociationData {
 					SourceTypeReference = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName),
 					AliasProxyTypeReference = AssemblyQualify ($"{proxy.Namespace}.{proxy.TypeName}", assemblyName),
@@ -367,9 +353,7 @@ static class ModelBuilder
 			proxyRef = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName);
 		}
 
-		// When ForceUnconditionalEntries is true, always emit 2-arg (unconditional) TypeMap
-		// attributes to work around https://github.com/dotnet/runtime/issues/127004.
-		bool isUnconditional = ForceUnconditionalEntries || IsUnconditionalEntry (peer);
+		bool isUnconditional = IsUnconditionalEntry (peer);
 		string? targetRef = null;
 		if (!isUnconditional) {
 			targetRef = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName);

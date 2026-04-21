@@ -66,13 +66,6 @@ public sealed record JavaPeerInfo
 	public bool DoNotGenerateAcw { get; init; }
 
 	/// <summary>
-	/// True when the type was discovered via <c>[JniTypeSignatureAttribute]</c>
-	/// rather than <c>[RegisterAttribute]</c>.  Used to resolve cross-assembly
-	/// alias ownership: <c>[Register]</c> types take precedence.
-	/// </summary>
-	public bool IsFromJniTypeSignature { get; init; }
-
-	/// <summary>
 	/// Types with component attributes ([Activity], [Service], etc.),
 	/// custom views from layout XML, or manifest-declared components
 	/// are unconditionally preserved (not trimmable).
