@@ -12,6 +12,7 @@
         "Microsoft.Android.Runtime.Mono.36.1.android-arm64",
         "Microsoft.Android.Runtime.Mono.36.1.android-x86",
         "Microsoft.Android.Runtime.Mono.36.1.android-x64",
+        "Microsoft.Android.Runtime.CoreCLR.36.1.android-arm",
         "Microsoft.Android.Runtime.CoreCLR.36.1.android-arm64",
         "Microsoft.Android.Runtime.CoreCLR.36.1.android-x64",
         "Microsoft.Android.Runtime.NativeAOT.36.1.android-arm64",
@@ -83,6 +84,10 @@
       "version": "@WORKLOAD_VERSION@"
     },
     "Microsoft.Android.Runtime.Mono.36.1.android-x64": {
+      "kind": "framework",
+      "version": "@WORKLOAD_VERSION@"
+    },
+    "Microsoft.Android.Runtime.CoreCLR.36.1.android-arm": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },

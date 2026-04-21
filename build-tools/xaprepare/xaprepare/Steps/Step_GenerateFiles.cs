@@ -257,6 +257,7 @@ namespace Xamarin.Android.Prepare
 				{ "@NDK_X86_64_API@",            BuildAndroidPlatforms.NdkMinimumAPI.ToString ()  },
 				{ "@NDK_X86_64_API_NET@",        BuildAndroidPlatforms.NdkMinimumAPI.ToString ()  },
 				{ "@NDK_ARM64_V8A_API_NON_MONO@",     BuildAndroidPlatforms.NdkMinimumNonMonoAPI },
+				{ "@NDK_ARMEABI_V7_API_NON_MONO@",    BuildAndroidPlatforms.NdkMinimumNonMonoAPI },
 				{ "@NDK_X86_64_API_NON_MONO@",        BuildAndroidPlatforms.NdkMinimumNonMonoAPI  },
 			};
 
