@@ -136,7 +136,7 @@ namespace Xamarin.Android.NetTests
 			listener.Close ();
 		}
 
-		[Test, Category ("TrimmableIgnore")]
+		[Test]
 		public async Task ServerCertificateCustomValidationCallback_ApproveRequest ()
 		{
 			bool callbackHasBeenCalled = false;
@@ -162,7 +162,7 @@ namespace Xamarin.Android.NetTests
 			Assert.IsTrue (callbackHasBeenCalled, "custom validation callback hasn't been called");
 		}
 
-		[Test, Category ("TrimmableIgnore")]
+		[Test]
 		public async Task ServerCertificateCustomValidationCallback_RejectRequest ()
 		{
 			bool callbackHasBeenCalled = false;
@@ -180,7 +180,7 @@ namespace Xamarin.Android.NetTests
 			Assert.IsTrue (callbackHasBeenCalled, "custom validation callback hasn't been called");
 		}
 
-		[Test, Category ("TrimmableIgnore")]
+		[Test]
 		public async Task ServerCertificateCustomValidationCallback_ApprovesRequestWithInvalidCertificate ()
 		{
 			bool callbackHasBeenCalled = false;
@@ -207,7 +207,7 @@ namespace Xamarin.Android.NetTests
 			await AssertRejectsRemoteCertificate (() => client.GetStringAsync ("https://wrong.host.badssl.com/"));
 		}
 
-		[Test, Category ("TrimmableIgnore")]
+		[Test]
 		public async Task ServerCertificateCustomValidationCallback_IgnoresCertificateHostnameMismatch ()
 		{
 			bool callbackHasBeenCalled = false;
@@ -228,7 +228,7 @@ namespace Xamarin.Android.NetTests
 			Assert.AreEqual (SslPolicyErrors.RemoteCertificateNameMismatch, reportedErrors & SslPolicyErrors.RemoteCertificateNameMismatch);
 		}
 
-		[Test, Category ("TrimmableIgnore")]
+		[Test]
 		public async Task ServerCertificateCustomValidationCallback_Redirects ()
 		{
 			int callbackCounter = 0;
