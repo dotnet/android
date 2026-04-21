@@ -98,7 +98,6 @@ namespace Xamarin.Android.NetTests {
 				return connector ();
 			} catch (Exception ex) when (IsConnectionFailure (ex)) {
 				connectionFailed = true;
-				Assert.Ignore ($"Ignoring transient connection failure: {ex.GetType ()}: {ex.Message}");
 				return null;
 			}
 		}
@@ -110,12 +109,19 @@ namespace Xamarin.Android.NetTests {
 				runner ();
 			} catch (Exception ex) when (IsConnectionFailure (ex)) {
 				connectionFailed = true;
-				Assert.Ignore ($"Ignoring transient connection failure: {ex.GetType ()}: {ex.Message}");
 			}
 		}
 
 		protected bool IsConnectionFailure (Exception ex)
 		{
+			if (ex is AggregateException aex) {
+				foreach (var inner in aex.Flatten ().InnerExceptions) {
+					if (IsConnectionFailure (inner))
+						return true;
+				}
+				return false;
+			}
+
 			var current = ex;
 			while (current != null) {
 				if (current is WebException wex) {
@@ -127,9 +133,6 @@ namespace Xamarin.Android.NetTests {
 					}
 				}
 
-				if (current is System.IO.IOException)
-					return true;
-
 				if (current is Java.Net.ConnectException)
 					return true;
 
@@ -139,6 +142,9 @@ namespace Xamarin.Android.NetTests {
 							message.Contains ("Connection reset", StringComparison.OrdinalIgnoreCase))
 						return true;
 				}
+
+				if (current is System.Net.Sockets.SocketException)
+					return true;
 
 				current = current.InnerException;
 			}
