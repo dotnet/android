@@ -91,6 +91,26 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void TryFindClass_Utf8_DoesNotLeakGlobalRefs ()
+		{
+			int grefsBefore = JniEnvironment.Runtime.GlobalReferenceCount;
+			JniEnvironment.Types.TryFindClass ("does/not/Exist"u8, out _);
+			int grefsAfter = JniEnvironment.Runtime.GlobalReferenceCount;
+			Assert.AreEqual (grefsBefore, grefsAfter,
+				"TryFindClass for non-existent classes should not leak global references");
+		}
+
+		[Test]
+		public void TryFindClass_String_DoesNotLeakGlobalRefs ()
+		{
+			int grefsBefore = JniEnvironment.Runtime.GlobalReferenceCount;
+			JniEnvironment.Types.TryFindClass ("does/not/Exist", out _);
+			int grefsAfter = JniEnvironment.Runtime.GlobalReferenceCount;
+			Assert.AreEqual (grefsBefore, grefsAfter,
+				"TryFindClass for non-existent classes should not leak global references");
+		}
+
+		[Test]
 		public void GetMethodID_Utf8_MatchesStringOverload ()
 		{
 			using (var Object_class = new JniType ("java/lang/Object"u8)) {

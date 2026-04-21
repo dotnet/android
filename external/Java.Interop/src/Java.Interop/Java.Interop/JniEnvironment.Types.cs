@@ -117,38 +117,33 @@ namespace Java.Interop
 			{
 				result = default;
 
-				var findClassThrown     = new JniObjectReference (thrown, JniObjectReferenceType.Local);
-				LogCreateLocalRef (findClassThrown);
-				Exception? pendingException = info.Runtime.GetExceptionForThrowable (ref findClassThrown, JniObjectReferenceOptions.CopyAndDispose);
-
 				if (Class_forName.IsValid) {
 					var __args  = stackalloc JniArgumentValue [3];
 					__args [0]  = new JniArgumentValue (classNameJavaString);
 					__args [1]  = new JniArgumentValue (true);  // initialize the class
 					__args [2]  = new JniArgumentValue (info.Runtime.ClassLoader);
 
-					var c = RawCallStaticObjectMethodA (info.EnvironmentPointer, out thrown, Class_reference.Handle, Class_forName.ID, (IntPtr) __args);
-					if (thrown == IntPtr.Zero) {
-						(pendingException as IJavaPeerable)?.Dispose ();
+					var c = RawCallStaticObjectMethodA (info.EnvironmentPointer, out var forNameThrown, Class_reference.Handle, Class_forName.ID, (IntPtr) __args);
+					if (forNameThrown == IntPtr.Zero) {
+						// Class.forName() succeeded; discard the FindClass throwable.
+						JniEnvironment.References.RawDeleteLocalRef (info.EnvironmentPointer, thrown);
 						result = new JniObjectReference (c, JniObjectReferenceType.Local);
 						JniEnvironment.LogCreateLocalRef (result);
 						return true;
 					}
 					RawExceptionClear (info.EnvironmentPointer);
-
-					if (pendingException != null) {
-						JniEnvironment.References.RawDeleteLocalRef (info.EnvironmentPointer, thrown);
-					} else {
-						var loadClassThrown = new JniObjectReference (thrown, JniObjectReferenceType.Local);
-						LogCreateLocalRef (loadClassThrown);
-						pendingException = info.Runtime.GetExceptionForThrowable (ref loadClassThrown, JniObjectReferenceOptions.CopyAndDispose);
-					}
+					JniEnvironment.References.RawDeleteLocalRef (info.EnvironmentPointer, forNameThrown);
 				}
 
 				if (!throwOnError) {
-					(pendingException as IJavaPeerable)?.Dispose ();
+					JniEnvironment.References.RawDeleteLocalRef (info.EnvironmentPointer, thrown);
 					return false;
 				}
+
+				// Both FindClass and Class.forName() failed; materialize a managed exception to throw.
+				var findClassThrown     = new JniObjectReference (thrown, JniObjectReferenceType.Local);
+				LogCreateLocalRef (findClassThrown);
+				Exception? pendingException = info.Runtime.GetExceptionForThrowable (ref findClassThrown, JniObjectReferenceOptions.CopyAndDispose);
 				if (pendingException != null)
 					throw pendingException;
 
