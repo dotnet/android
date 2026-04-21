@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 using Java.Interop;
@@ -84,7 +85,9 @@ namespace Java.InteropTests
 					r         = new WeakReference (v);
 			});
 			JniEnvironment.Runtime.ValueManager.CollectPeers ();
-			await WaitForGC ();
+			await WaitForGC (
+					() => !r.IsAlive && JniRuntime.CurrentRuntime.ValueManager.PeekValue (oldHandle) == null,
+					"Expected the unreferenced instance to be collected.");
 			Assert.IsFalse (r.IsAlive);
 			Assert.IsNull (r.Target);
 			Assert.IsNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (oldHandle));
@@ -107,30 +110,37 @@ namespace Java.InteropTests
 		[Test]
 		public async Task Dispose_Finalized ()
 		{
-			var d = false;
-			var f = false;
+			var disposed  = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			var finalized = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
 			FinalizerHelpers.PerformNoPinAction (() => {
 				FinalizerHelpers.PerformNoPinAction (() => {
-					var v     = new JavaDisposedObject (() => d = true, () => f = true);
+					var v     = new JavaDisposedObject (
+							() => disposed.TrySetResult (true),
+							() => finalized.TrySetResult (true));
 					GC.KeepAlive (v);
 				});
 				JniEnvironment.Runtime.ValueManager.CollectPeers ();
 			});
 			JniEnvironment.Runtime.ValueManager.CollectPeers ();
-			await WaitForGC ();
-			Assert.IsFalse (d);
-			Assert.IsTrue (f);
+			await WaitForGC (
+					() => disposed.Task.IsCompleted || finalized.Task.IsCompleted,
+					"Expected JavaDisposedObject.Dispose(disposing: false) to run.");
+			Assert.IsFalse (disposed.Task.IsCompleted);
+			Assert.IsTrue (finalized.Task.IsCompleted);
 		}
 #endif  // !NO_GC_BRIDGE_SUPPORT
 
-		static async Task WaitForGC ()
+		static async Task WaitForGC (Func<bool> predicate, string message, int timeoutMilliseconds = 2000)
 		{
-			for (int i = 0; i < 3; i++) {
+			var timeout   = TimeSpan.FromMilliseconds (timeoutMilliseconds);
+			var stopwatch = Stopwatch.StartNew ();
+			while (!predicate () && stopwatch.Elapsed < timeout) {
 				GC.Collect (generation: 2, mode: GCCollectionMode.Forced, blocking: true);
 				GC.WaitForPendingFinalizers ();
+				JniEnvironment.Runtime.ValueManager.CollectPeers ();
 				await Task.Yield ();
-				JniEnvironment.Runtime.ValueManager.WaitForGCBridgeProcessing ();
 			}
+			Assert.IsTrue (predicate (), message);
 		}
 
 		[Test]
@@ -268,4 +278,3 @@ namespace Java.InteropTests
 		}
 	}
 }
-
