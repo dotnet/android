@@ -34,23 +34,45 @@ namespace Xamarin.Android.RuntimeTests
                 // the .csproj instead. Only tests from the external Java.Interop-Tests assembly
                 // (which we don't control) need to be listed here by name.
                 ExcludedTestNames = new [] {
+                    // SIGABRT crash in Dispose_Finalized (finalizer thread)
                     "Java.InteropTests.JavaObjectTest",
+
+                    // JCW Java class not in APK (0/3 pass)
                     "Java.InteropTests.InvokeVirtualFromConstructorTests",
-                    "Java.InteropTests.JavaExceptionTests.InnerExceptionIsNotAProxy",
-                    "Java.InteropTests.JniPeerMembersTests",
-                    "Java.InteropTests.JniTypeManagerTests",
-                    "Java.InteropTests.JniValueMarshaler_object_ContractTests",
- 
-                    "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs",
-                    "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs_Exceptions",
-                    "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs_InstanceThatDoesNotImplementInterfaceReturnsNull",
- 
+
+                    // JCW Java class not in APK (fixture setup fails, 0/16 pass)
                     "Java.InteropTests.JavaObjectArray_object_ContractTest",
 
-                    // JnienvTest contains multiple tests that SIGSEGV the test process
-                    // (threading tests, JNI ref manipulation, generic type creation).
-                    // See https://github.com/dotnet/android/issues/11170
-                    "Java.InteropTests.JnienvTest",
+                    // JCW Java class not in APK: JavaProxyObject
+                    "Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateArgumentState",
+                    "Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateGenericArgumentState",
+                    "Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateGenericObjectReferenceArgumentState",
+                    "Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateGenericValue",
+                    "Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateObjectReferenceArgumentState",
+                    "Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateValue",
+                    "Java.InteropTests.JniValueMarshaler_object_ContractTests.SpecificTypesAreUsed",
+
+                    // JCW Java class not in APK: JavaProxyThrowable
+                    "Java.InteropTests.JavaExceptionTests.InnerExceptionIsNotAProxy",
+
+                    // MissingMethodException: IJavaInterfaceInvoker ctor trimmed
+                    "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs",
+                    // Wrong exception type (ClassNotFoundException vs ArgumentException)
+                    "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs_Exceptions",
+                    // No generated JavaPeerProxy for IAndroidInterface
+                    "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs_InstanceThatDoesNotImplementInterfaceReturnsNull",
+
+                    // JNI method remapping not supported in trimmable typemap
+                    "Java.InteropTests.JniPeerMembersTests.ReplaceInstanceMethodName",
+                    "Java.InteropTests.JniPeerMembersTests.ReplaceInstanceMethodWithStaticMethod",
+                    "Java.InteropTests.JniPeerMembersTests.ReplacementTypeUsedForMethodLookup",
+                    "Java.InteropTests.JniPeerMembersTests.ReplaceStaticMethodName",
+
+                    // Java class GenericHolder not in DEX
+                    "Java.InteropTests.JniTypeManagerTests.CanCreateGenericHolder",
+                    "Java.InteropTests.JniTypeManagerTests.CannotCreateGenericHolderFromJava",
+                    // JniPrimitiveArrayInfo lookup fails
+                    "Java.InteropTests.JniTypeManagerTests.GetType",
                 };
 
             }
