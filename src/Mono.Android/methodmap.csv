@@ -161,7 +161,6 @@
 12, android.hardware.usb,UsbDevice,getDeviceSubclass,return,Android.Hardware.Usb.UsbClass
 12, android.hardware.usb,UsbEndpoint,getAddress,return,Android.Hardware.Usb.UsbAddressing
 12, android.hardware.usb,UsbEndpoint,getDirection,return,Android.Hardware.Usb.UsbAddressing
-12, android.hardware.usb,UsbEndpoint,getDirection,return,Android.Hardware.Usb.UsbAddressing
 12, android.hardware.usb,UsbEndpoint,getType,return,Android.Hardware.Usb.UsbAddressing
 12, android.hardware.usb,UsbInterface,getInterfaceClass,return,Android.Hardware.Usb.UsbClass
 12, android.hardware.usb,UsbInterface,getInterfaceSubclass,return,Android.Hardware.Usb.UsbClass
@@ -595,16 +594,6 @@
 0, org.xmlpull.v1, [Interface]XmlPullParser, nextTag, return, Org.XmlPull.V1.XmlPullParserNode
 0, org.xmlpull.v1, [Interface]XmlPullParser, nextToken, return, Org.XmlPull.V1.XmlPullParserNode
 
-
-
-
-
-
-
-
-
-
-
 // I'm making these changes so far only in this extra mappings.
 // Things will change significantly so it had better be done all at once...
 
@@ -849,7 +838,6 @@
 0, android.widget, GridLayout, getOrientation, return, Android.Widget.GridOrientation
 0, android.widget, GridLayout, setOrientation, orientation, Android.Widget.GridOrientation
 
-
 // additional mappings
 
 // android.accessibilityservice
@@ -1014,7 +1002,6 @@
 0, android.provider, Contacts.Phones, getDisplayLabel, type, Android.Provider.ContactPhoneColumn
 
 0, android.provider, Contacts.ContactMethods, getDisplayLabel, kind, Android.Provider.ContactKind
-0, android.provider, ContactsContract.StatusUpdates, getPresenceIconResourceId, status, Android.Provider.StatusPresence
 0, android.provider, ContactsContract.StatusUpdates, getPresenceIconResourceId, status, Android.Provider.StatusPresence
 0, android.provider, ContactsContract.StatusUpdates, getPresencePrecedence, status, Android.Provider.StatusPresence
 
@@ -1465,7 +1452,6 @@
 19, android.app, AppOpsManager, noteOpNoThrow, return, Android.App.AppOpsManagerMode
 19, android.app, AppOpsManager, startOp, return, Android.App.AppOpsManagerMode
 19, android.app, AppOpsManager, startOpNoThrow, return, Android.App.AppOpsManagerMode
-19, android.app, AppOpsManager, startOpNoThrow, return, Android.App.AppOpsManagerMode
 19, android.hardware.display, DisplayManager, createVirtualDisplay, flags, Android.Hardware.Display.VirtualDisplayFlags
 19, android.media.audiofx, Visualizer, getMeasurementMode, return, Android.Media.Audiofx.VisualizerMeasurementMode
 19, android.media.audiofx, Visualizer, setMeasurementMode, mode, Android.Media.Audiofx.VisualizerMeasurementMode
@@ -1724,7 +1710,6 @@
 22, android.view, View, dispatchNestedPrePerformAccessibilityAction, action, Android.Views.Accessibility.Action
 22, android.view, ViewGroup, onNestedPrePerformAccessibilityAction, action, Android.Views.Accessibility.Action
 22, android.view, Window, getDefaultFeatures, return, Android.Views.WindowFeatures
-
 
 // API Level 23
 
@@ -2127,7 +2112,6 @@
 25, android.content.pm, LauncherApps.ShortcutQuery, setQueryFlags, queryFlags, Android.Content.PM.LauncherAppsShortcutQueryFlags
 25, android.telecom, Connection, getConnectionProperties, return, Android.Telecom.ConnectionProperties
 25, android.telecom, Connection, setConnectionProperties, connectionProperties, Android.Telecom.ConnectionProperties
-25, android.telecom, Connection, setConnectionProperties, connectionProperties, Android.Telecom.ConnectionProperties
 25, android.telecom, Conference, getConnectionProperties, return, Android.Telecom.ConnectionProperties
 25, android.telecom, Conference, setConnectionProperties, connectionProperties, Android.Telecom.ConnectionProperties
 // Use of this enum involves some FAKE. The corresponding constants doesn't exist in API Level 24.
@@ -2147,7 +2131,6 @@
 26, java.lang.invoke, [Interface]MethodHandleInfo, toString, kind, Java.Lang.Invoke.ReferenceKind
 26, java.lang.invoke, MethodHandles.Lookup, lookupModes, return, Java.Lang.Invoke.MethodLookupModes
 
-26, android.accessibilityservice, FingerprintGestureController.FingerprintGestureCallback, onGestureDetected, gesture, Android.AccessibilityServices.FingerptintGestureTypes
 26, android.accessibilityservice, FingerprintGestureController.FingerprintGestureCallback, onGestureDetected, gesture, Android.AccessibilityServices.FingerptintGestureTypes
 26, android.accounts, AccountManager, getAccountVisibility, return, Android.Accounts.AccountVisibility
 // We have problem binding getAccountVisibilityForPackage() and getPackagesAndVisibilityForAccount(). They should be Map<Account,AccountVisibility> and Map<String,AccountVisibility> instead of Map<Account,int> and Map<String,int> respectively, but they require run-time mapping too...
@@ -2201,7 +2184,6 @@
 26, android.content.pm, ActivityInfo, colorMode, , Android.Content.PM.ActivityColorMode
 26, android.content.pm, ApplicationInfo, category, , Android.Content.PM.ApplicationCategories
 26, android.content.pm, LauncherApps.PinItemRequest, getRequestType, return, Android.Content.PM.PinItemRequestType
-26, android.content.pm, PackageInstaller.SessionInfo, getInstallReason, return, Android.Content.PM.PackageInstallReason
 26, android.content.pm, PackageInstaller.SessionInfo, getInstallReason, return, Android.Content.PM.PackageInstallReason
 26, android.content.pm, PackageInstaller.SessionParams, setInstallReason, installReason, Android.Content.PM.PackageInstallReason
 26, android.content.pm, SharedLibraryInfo, getType, return, Android.Content.PM.SharedLibraryType
@@ -2269,7 +2251,6 @@
 26, android.icu.util, UniversalTimeScale, from, timeScale, Android.Icu.Util.UniversalTimeScaleType
 26, android.icu.util, UniversalTimeScale, getTimeScaleValue, scale, Android.Icu.Util.UniversalTimeScaleType
 26, android.icu.util, UniversalTimeScale, toBigDecimal, timeScale, Android.Icu.Util.UniversalTimeScaleType
-26, android.icu.util, UniversalTimeScale, toBigDecimal, timeScale, Android.Icu.Util.UniversalTimeScaleType
 26, android.icu.util, UniversalTimeScale, toLong, timeScale, Android.Icu.Util.UniversalTimeScaleType
 26, android.icu.util, UniversalTimeScale, getTimeScaleValue, value, Android.Icu.Util.UniversalTimeScaleValue
 
@@ -2309,7 +2290,6 @@
 26, android.content.pm, ApplicationInfo, getCategoryTitle, category, Android.Content.PM.ApplicationCategories
 26, android.content.pm, LauncherApps, getApplicationInfo, flags, Android.Content.PM.PackageInfoFlags
 
-26, android.media, AudioAttributes, getVolumeControlStream, return, Android.Media.Stream
 26, android.media, AudioAttributes, getVolumeControlStream, return, Android.Media.Stream
 26, android.media, AudioFocusRequest, getFocusGain, return, Android.Media.AudioFocus
 26, android.media, AudioFocusRequest.Builder, ctor, focusGain, Android.Media.AudioFocus
@@ -2633,7 +2613,6 @@
 // Cannot change this at this state.
 // 23, android.view, View, setScrollIndicators, indicators, Android.Views.ScrollIndicatorPosition
 // 23, android.view, View, setScrollIndicators, mask, Android.Views.ScrollIndicatorPosition
-// 23, android.view, View, setScrollIndicators, mask, Android.Views.ScrollIndicatorPosition
 29, android.view, View, setTransitionVisibility, visibility, Android.Views.ViewStates
 29, android.webkit, WebSettings, getForceDark, return, Android.Webkit.ForceDarkMode
 29, android.webkit, WebSettings, setForceDark, forceDark, Android.Webkit.ForceDarkMode
@@ -2740,8 +2719,6 @@
 30,android/os,VibrationAttributes,getUsageClass,return,Android.OS.VibrationAttributesUsageClass
 30,android/os,VibrationAttributes,isFlagSet,flag,Android.OS.VibrationAttributes.VibrationAttributeFlags
 30,android/os,VibrationAttributes,writeToParcel,flags,Android.OS.ParcelableWriteFlags
-30,android/os,VibrationEffect$Composition,addPrimitive,primitiveId,Android.OS.VibrationEffectCompositionPrimitive
-30,android/os,VibrationEffect$Composition,addPrimitive,primitiveId,Android.OS.VibrationEffectCompositionPrimitive
 30,android/os,VibrationEffect$Composition,addPrimitive,primitiveId,Android.OS.VibrationEffectCompositionPrimitive
 30,android/os,Vibrator,areAllEffectsSupported,return,Android.OS.Vibrator.VibrationEffectSupport
 30,android/provider,MediaStore$Images$Thumbnails,getKindSize,kind,Android.Provider.ThumbnailKind
@@ -3240,7 +3217,6 @@
 33,android/app/admin,WifiSsidPolicy,getPolicyType,return,Android.App.Admin.WifiSsidPolicyType
 33,android/app/admin,WifiSsidPolicy,writeToParcel,flags,Android.OS.ParcelableWriteFlags
 33,android/app,GameState,ctor,mode,Android.App.GameStateMode
-33,android/app,GameState,ctor,mode,Android.App.GameStateMode
 33,android/app,GameState,getMode,return,Android.App.GameStateMode
 33,android/app,GameState,writeToParcel,flags,Android.OS.ParcelableWriteFlags
 33,android/app/job,JobInfo,getPriority,return,Android.App.Job.JobPriority
@@ -3370,8 +3346,6 @@
 33,android/media/tv,CommandResponse,ctor,responseResult,Android.Media.TV.BroadcastInfoResponseResult
 33,android/media/tv,DsmccRequest,ctor,option,Android.Media.TV.BroadcastInfoRequestOption
 33,android/media/tv,DsmccResponse,ctor,responseResult,Android.Media.TV.BroadcastInfoResponseResult
-33,android/media/tv,DsmccResponse,ctor,responseResult,Android.Media.TV.BroadcastInfoResponseResult
-33,android/media/tv,DsmccResponse,ctor,responseResult,Android.Media.TV.BroadcastInfoResponseResult
 33,android/media/tv/interactive,AppLinkInfo,writeToParcel,flags,Android.OS.ParcelableWriteFlags
 33,android/media/tv/interactive,TvInteractiveAppManager$TvInteractiveAppCallback,onTvInteractiveAppServiceStateChanged,err,Android.Media.TV.Interactive.AppManagerError
 33,android/media/tv/interactive,TvInteractiveAppManager$TvInteractiveAppCallback,onTvInteractiveAppServiceStateChanged,state,Android.Media.TV.Interactive.ServiceState
@@ -3440,7 +3414,6 @@
 33,android/net/wifi/aware,WifiAwareDataPathSecurityConfig$Builder,ctor,cipherSuite,Android.Net.Wifi.Aware.WifiAwareCipherSuite
 33,android/net/wifi,MloLink,getState,return,Android.Net.Wifi.MloLinkState
 33,android/net/wifi,MloLink,writeToParcel,flags,Android.OS.ParcelableWriteFlags
-33,android/net/wifi/p2p,WifiP2pManager,setConnectionRequestResult,result,Android.Net.Wifi.P2p.ConnectionRequestType
 33,android/net/wifi/p2p,WifiP2pManager,setConnectionRequestResult,result,Android.Net.Wifi.P2p.ConnectionRequestType
 33,android/net/wifi/p2p,I:WifiP2pManager$ExternalApproverRequestListener,onConnectionRequested,p0,I:android.Net.Wifi.P2p.ExternalApproverRequestType
 33,android/net/wifi/p2p,I:WifiP2pManager$ExternalApproverRequestListener,onDetached,p1,I:android.Net.Wifi.P2p.ApproverDetachReason
@@ -3539,7 +3512,6 @@
 34,android.adservices.measurement,WebTriggerRegistrationRequest,writeToParcel,flags,Android.OS.ParcelableWriteFlags
 34,android.app,Activity,clearOverrideActivityTransition,overrideType,Android.App.OverrideTransition
 34,android.app,Activity,overrideActivityTransition,overrideType,Android.App.OverrideTransition
-34,android.app,Activity,overrideActivityTransition,overrideType,Android.App.OverrideTransition
 34,android.app,Activity,requestFullscreenMode,request,Android.App.FullscreenModeRequest
 34,android.app,ActivityOptions,getPendingIntentBackgroundActivityStartMode,return,Android.App.BackgroundActivityStartMode
 34,android.app,ActivityOptions,getPendingIntentCreatorBackgroundActivityStartMode,return,Android.App.BackgroundActivityStartMode
@@ -3552,7 +3524,6 @@
 34,android.app.admin,ManagedSubscriptionsPolicy,ctor,policyType,Android.App.Admin.ManagedSubscriptionsType
 34,android.app.admin,ManagedSubscriptionsPolicy,getPolicyType,return,Android.App.Admin.ManagedSubscriptionsType
 34,android.app.admin,ManagedSubscriptionsPolicy,writeToParcel,flags,Android.OS.ParcelableWriteFlags
-34,android.app.admin,PackagePolicy,ctor,policyType,Android.App.Admin.PackagePolicyMode
 34,android.app.admin,PackagePolicy,ctor,policyType,Android.App.Admin.PackagePolicyMode
 34,android.app.admin,PackagePolicy,getPolicyType,return,Android.App.Admin.PackagePolicyMode
 34,android.app.admin,PackagePolicy,writeToParcel,flags,Android.OS.ParcelableWriteFlags
@@ -3581,8 +3552,6 @@
 34,android.app.sdksandbox,LoadSdkException,getLoadSdkErrorCode,return,Android.App.SdkSandbox.LoadSdkErrorCode
 34,android.app.sdksandbox,LoadSdkException,writeToParcel,flags,Android.OS.ParcelableWriteFlags
 34,android.app.sdksandbox,RequestSurfacePackageException,ctor,requestSurfacePackageErrorCode,Android.App.SdkSandbox.RequestSurfacePackageErrorCode
-34,android.app.sdksandbox,RequestSurfacePackageException,ctor,requestSurfacePackageErrorCode,Android.App.SdkSandbox.RequestSurfacePackageErrorCode
-34,android.app.sdksandbox,RequestSurfacePackageException,ctor,requestSurfacePackageErrorCode,Android.App.SdkSandbox.RequestSurfacePackageErrorCode
 34,android.app.sdksandbox,RequestSurfacePackageException,getRequestSurfacePackageErrorCode,return,Android.App.SdkSandbox.RequestSurfacePackageErrorCode
 34,android.app.sdksandbox,SandboxedSdk,writeToParcel,flags,Android.OS.ParcelableWriteFlags
 34,android.app,StartForegroundCalledOnStoppedServiceException,writeToParcel,flags,Android.OS.ParcelableWriteFlags
@@ -3591,7 +3560,6 @@
 34,android.app,WallpaperManager,getWallpaperInfo,which,Android.App.WallpaperManagerFlags
 34,android.app,WallpaperManager,peekDrawable,which,Android.App.WallpaperManagerFlags
 34,android.app,WallpaperManager,peekFastDrawable,which,Android.App.WallpaperManagerFlags
-34,android.bluetooth,BluetoothSocketException,ctor,code,Android.Bluetooth.BluetoothSocketExceptionReason
 34,android.bluetooth,BluetoothSocketException,ctor,code,Android.Bluetooth.BluetoothSocketExceptionReason
 34,android.bluetooth,BluetoothSocketException,getErrorCode,return,Android.Bluetooth.BluetoothSocketExceptionReason
 34,android.companion,AssociatedDevice,writeToParcel,flags,Android.OS.ParcelableWriteFlags
@@ -3622,7 +3590,6 @@
 34,android.graphics,HardwareBufferRenderer.RenderRequest,setBufferTransform,bufferTransform,Android.Views.BufferTransform
 34,android.graphics,HardwareBufferRenderer.RenderResult,getStatus,return,Android.Graphics.HardwareBufferRenderResult
 34,android.graphics,Mesh,ctor,mode,Android.Graphics.MeshType
-34,android.graphics,Mesh,ctor,mode,Android.Graphics.MeshType
 34,android.graphics,MeshSpecification,make,alphaType,Android.Graphics.MeshAlphaType
 34,android.graphics,MeshSpecification.Attribute,ctor,type,Android.Graphics.MeshSpecificationType
 34,android.graphics,MeshSpecification.Attribute,getType,return,Android.Graphics.MeshSpecificationType
@@ -3637,7 +3604,6 @@
 34,android.hardware.camera2.params,ColorSpaceProfiles,getSupportedColorSpaces,imageFormat,Android.Graphics.ImageFormatType
 34,android.hardware.camera2.params,ColorSpaceProfiles,getSupportedColorSpacesForDynamicRange,imageFormat,Android.Graphics.ImageFormatType
 34,android.hardware.camera2.params,ColorSpaceProfiles,getSupportedDynamicRangeProfiles,imageFormat,Android.Graphics.ImageFormatType
-34,android.hardware.display,HdrConversionMode,ctor,conversionMode,Android.Hardware.Display.HdrConversionModeSupport
 34,android.hardware.display,HdrConversionMode,ctor,conversionMode,Android.Hardware.Display.HdrConversionModeSupport
 34,android.hardware.display,HdrConversionMode,ctor,preferredHdrOutputType,Android.Views.HdrType
 34,android.hardware.display,HdrConversionMode,getConversionMode,return,Android.Hardware.Display.HdrConversionModeSupport
@@ -3860,7 +3826,6 @@
 34,android.telecom,CallException,getCode,return,Android.Telecom.CallExceptionErrorCode
 34,android.telecom,CallException,writeToParcel,flags,Android.OS.ParcelableWriteFlags
 34,android.telecom,QueryLocationException,ctor,code,Android.Telecom.QueryLocationErrorReason
-34,android.telecom,QueryLocationException,ctor,code,Android.Telecom.QueryLocationErrorReason
 34,android.telecom,QueryLocationException,getCode,return,Android.Telecom.QueryLocationErrorReason
 34,android.telecom,QueryLocationException,writeToParcel,flags,Android.OS.ParcelableWriteFlags
 34,android.telephony.ims,SipDetails,getMethod,return,Android.Telephony.Ims.SipDetailsMethod
@@ -3899,7 +3864,6 @@
 34,android.view.inputmethod,TextBoundsInfo,getCharacterFlags,return,Android.Views.InputMethods.TextBoundsInfoFlags
 34,android.view.inputmethod,TextBoundsInfo,writeToParcel,flags,Android.OS.ParcelableWriteFlags
 34,android.view.inputmethod,TextBoundsInfoResult,ctor,resultCode,Android.Views.InputMethods.TextBoundsInfoResultCode
-34,android.view.inputmethod,TextBoundsInfoResult,ctor,resultCode,Android.Views.InputMethods.TextBoundsInfoResultCode
 34,android.view.inputmethod,TextBoundsInfoResult,getResultCode,return,Android.Views.InputMethods.TextBoundsInfoResultCode
 34,android.view,MotionEvent,obtain,action,Android.Views.MotionEventActions
 34,android.view,MotionEvent,obtain,buttonState,Android.Views.MotionEventButtonState
@@ -3911,7 +3875,6 @@
 34,android.view,MotionPredictor,isPredictionAvailable,source,Android.Views.InputSourceType
 34,android.view,PixelCopy.Result,getStatus,return,Android.Views.PixelCopyResult
 34,android.view,SurfaceView,setSurfaceLifecycle,lifecycleStrategy,Android.Views.SurfaceViewLifecycle
-34,android.view,VelocityTracker,getAxisVelocity,axis,Android.Views.Axis
 34,android.view,VelocityTracker,getAxisVelocity,axis,Android.Views.Axis
 34,android.view,VelocityTracker,isAxisSupported,axis,Android.Views.Axis
 34,android.view,View,setAccessibilityDataSensitive,accessibilityDataSensitive,Android.Views.AccessibilityDataSensitive
@@ -4030,7 +3993,6 @@
 35,android.graphics.pdf,RenderParams$Builder,ctor,renderMode,Android.Graphics.Pdf.RenderParamsRenderMode
 35,android.graphics.pdf,RenderParams$Builder,setRenderFlags,mask,Android.Graphics.Pdf.RenderParamsRenderFlag
 35,android.graphics.pdf,RenderParams$Builder,setRenderFlags,renderFlags,Android.Graphics.Pdf.RenderParamsRenderFlag
-35,android.graphics.pdf,RenderParams$Builder,setRenderFlags,renderFlags,Android.Graphics.Pdf.RenderParamsRenderFlag
 35,android.graphics.text,LineBreakConfig,getHyphenation,return,Android.Graphics.Text.LineBreakHyphenation
 35,android.graphics.text,LineBreakConfig,writeToParcel,flags,Android.OS.ParcelableWriteFlags
 35,android.graphics.text,LineBreakConfig$Builder,setHyphenation,hyphenation,Android.Graphics.Text.LineBreakHyphenation
@@ -4044,14 +4006,10 @@
 35,android.hardware.camera2,CameraExtensionCharacteristics,getKeys,extension,Android.Hardware.Camera2.CameraExtensionTypes
 35,android.hardware.camera2.params,OutputConfiguration,createInstancesForMultiResolutionOutput,format,Android.Graphics.ImageFormatType
 35,android.hardware.camera2.params,OutputConfiguration,ctor,format,Android.Graphics.ImageFormatType
-35,android.hardware.camera2.params,OutputConfiguration,ctor,format,Android.Graphics.ImageFormatType
-35,android.hardware.camera2.params,OutputConfiguration,ctor,format,Android.Graphics.ImageFormatType
-35,android.hardware.camera2.params,OutputConfiguration,ctor,format,Android.Graphics.ImageFormatType
 35,android.hardware,OverlayProperties,isCombinationSupported,dataspace,Android.Hardware.DataSpaceType
 35,android.hardware,OverlayProperties,isCombinationSupported,format,Android.Hardware.HardwareBufferFormat
 35,android.hardware,OverlayProperties,writeToParcel,flags,Android.OS.ParcelableWriteFlags
 35,android.health.connect.datatypes,PlannedExerciseSessionRecord,getExerciseType,return,Android.Health.Connect.DataTypes.ExerciseSessionTypeEnum
-35,android.health.connect.datatypes,PlannedExerciseSessionRecord$Builder,ctor,exerciseType,Android.Health.Connect.DataTypes.ExerciseSessionTypeEnum
 35,android.health.connect.datatypes,PlannedExerciseSessionRecord$Builder,ctor,exerciseType,Android.Health.Connect.DataTypes.ExerciseSessionTypeEnum
 35,android.health.connect.datatypes,PlannedExerciseSessionRecord$Builder,setExerciseType,exerciseType,Android.Health.Connect.DataTypes.ExerciseSessionTypeEnum
 35,android.health.connect.datatypes,PlannedExerciseStep,getExerciseCategory,return,Android.Health.Connect.DataTypes.PlannedExerciseStepExerciseCategory
@@ -4138,7 +4096,6 @@
 36,android.app.admin,DevicePolicyManager,setAppFunctionsPolicy,policy,Android.App.Admin.DevicePolicyManagerAppFunctionsStatus
 36,android.app.admin,DevicePolicyManager,setAutoTimePolicy,policy,Android.App.Admin.DevicePolicyManagerAutoTimeStatus
 36,android.app.admin,DevicePolicyManager,setAutoTimeZonePolicy,policy,Android.App.Admin.DevicePolicyManagerAutoTimeZoneStatus
-36,android.app.appfunctions,AppFunctionException,ctor,errorCode,Android.App.AppFunctions.AppFunctionError
 36,android.app.appfunctions,AppFunctionException,ctor,errorCode,Android.App.AppFunctions.AppFunctionError
 36,android.app.appfunctions,AppFunctionException,getErrorCategory,return,Android.App.AppFunctions.AppFunctionErrorCategory
 36,android.app.appfunctions,AppFunctionException,getErrorCode,return,Android.App.AppFunctions.AppFunctionError
@@ -4267,7 +4224,6 @@
 36,android.net.nsd,AdvertisingRequest,writeToParcel,flags,Android.OS.ParcelableWriteFlags
 36,android.net.nsd,AdvertisingRequest$Builder,setProtocolType,protocolType,Android.Net.Nsd.NsdProtocol
 36,android.net,TetheringInterface,ctor,type,Android.Net.TetheringManagerTetheringType
-36,android.net,TetheringInterface,ctor,type,Android.Net.TetheringManagerTetheringType
 36,android.net,TetheringInterface,getType,return,Android.Net.TetheringManagerTetheringType
 36,android.net,TetheringInterface,writeToParcel,flags,Android.OS.ParcelableWriteFlags
 36,android.net,I:TetheringManager$StartTetheringCallback,onTetheringFailed,error,Android.Net.TetheringManagerTetherError
@@ -4303,8 +4259,6 @@
 36,android.nfc.cardemulation,I:CardEmulation$NfcEventCallback,onInternalErrorReported,errorType,Android.Nfc.CardEmulators.NfcInternalErrorType
 36,android.os,CpuHeadroomParams,getCalculationType,return,Android.OS.CpuHeadroomCalculationType
 36,android.os,CpuHeadroomParams$Builder,setCalculationType,calculationType,Android.OS.CpuHeadroomCalculationType
-36,android.os.flagging,AconfigStorageReadException,ctor,errorCode,Android.OS.Flagging.AconfigStorageReadErrorType
-36,android.os.flagging,AconfigStorageReadException,ctor,errorCode,Android.OS.Flagging.AconfigStorageReadErrorType
 36,android.os.flagging,AconfigStorageReadException,ctor,errorCode,Android.OS.Flagging.AconfigStorageReadErrorType
 36,android.os.flagging,AconfigStorageReadException,getErrorCode,return,Android.OS.Flagging.AconfigStorageReadErrorType
 36,android.os,GpuHeadroomParams,getCalculationType,return,Android.OSGpuHeadroomCalculationType
@@ -4407,9 +4361,6 @@
 36,android.view,SurfaceControl$JankData,getJankType,return,Android.Views.SurfaceJankType
 36,android.widget.photopicker,EmbeddedPhotoPickerFeatureInfo,writeToParcel,flags,Android.OS.ParcelableWriteFlags
 36,android.window,BackEvent,ctor,swipeEdge,Android.Window.BackEventEdge
-36.1,android/adservices/ondevicepersonalization,OnDevicePersonalizationException,ctor,errorCode,Android.AdServices.OnDevicePersonalization.OnDevicePersonalizationError
-36.1,android/adservices/ondevicepersonalization,OnDevicePersonalizationException,ctor,errorCode,Android.AdServices.OnDevicePersonalization.OnDevicePersonalizationError
-36.1,android/adservices/ondevicepersonalization,OnDevicePersonalizationException,ctor,errorCode,Android.AdServices.OnDevicePersonalization.OnDevicePersonalizationError
 36.1,android/adservices/ondevicepersonalization,OnDevicePersonalizationException,ctor,errorCode,Android.AdServices.OnDevicePersonalization.OnDevicePersonalizationError
 36.1,android/app/appsearch,SearchResult$EmbeddingMatchInfo,ctor,embeddingSearchMetricType,Android.App.AppSearch.EmbeddingSearchMetricType
 36.1,android/app/appsearch,SearchResult$EmbeddingMatchInfo,getEmbeddingSearchMetricType,return,Android.App.AppSearch.EmbeddingSearchMetricType
@@ -4521,8 +4472,6 @@
 37,android/app,Notification$Metric$TimeDifference,forPausedStopwatch,format,Android.App.TimeDifferenceFormat
 37,android/app,Notification$Metric$TimeDifference,forPausedTimer,format,Android.App.TimeDifferenceFormat
 37,android/app,Notification$Metric$TimeDifference,forStopwatch,format,Android.App.TimeDifferenceFormat
-37,android/app,Notification$Metric$TimeDifference,forStopwatch,format,Android.App.TimeDifferenceFormat
-37,android/app,Notification$Metric$TimeDifference,forTimer,format,Android.App.TimeDifferenceFormat
 37,android/app,Notification$Metric$TimeDifference,forTimer,format,Android.App.TimeDifferenceFormat
 37,android/app,Notification$Metric$TimeDifference,getFormat,return,Android.App.TimeDifferenceFormat
 37,android/app,Notification$ProgressStyle$Point,getSemanticStyle,return,Android.App.NotificationSemanticStyle
@@ -4576,16 +4525,12 @@
 37,android/health/connect/datatypes,AlcoholConsumptionRecord,getBeverageType,return,Android.Health.Connect.Datatypes.AlcoholConsumptionBeverageType
 37,android/health/connect/datatypes,AlcoholConsumptionRecord,getTemporalType,return,Android.Health.Connect.Datatypes.AlcoholConsumptionTemporalType
 37,android/health/connect/datatypes,AlcoholConsumptionRecord$Builder,ctor,beverageType,Android.Health.Connect.Datatypes.AlcoholConsumptionBeverageType
-37,android/health/connect/datatypes,AlcoholConsumptionRecord$Builder,ctor,beverageType,Android.Health.Connect.Datatypes.AlcoholConsumptionBeverageType
-37,android/health/connect/datatypes,AlcoholConsumptionRecord$Builder,ctor,beverageType,Android.Health.Connect.Datatypes.AlcoholConsumptionBeverageType
 37,android/health/connect/datatypes,AlcoholConsumptionRecord$Builder,setBeverageType,beverageType,Android.Health.Connect.Datatypes.AlcoholConsumptionBeverageType
 37,android/health/connect/datatypes,MenstrualCyclePhaseRecord,getPhase,return,Android.Health.Connect.Datatypes.MenstrualCyclePhase
 37,android/health/connect/datatypes,MenstrualCyclePhaseRecord$Builder,ctor,phase,Android.Health.Connect.Datatypes.MenstrualCyclePhase
 37,android/health/connect/datatypes,SymptomRecord,getSeverity,return,Android.Health.Connect.Datatypes.SymptomSeverity
 37,android/health/connect/datatypes,SymptomRecord,getSymptomType,return,Android.Health.Connect.Datatypes.SymptomType
 37,android/health/connect/datatypes,SymptomRecord,getTemporalType,return,Android.Health.Connect.Datatypes.SymptomRecordTemporalType
-37,android/health/connect/datatypes,SymptomRecord$Builder,ctor,symptomType,Android.Health.Connect.Datatypes.SymptomType
-37,android/health/connect/datatypes,SymptomRecord$Builder,ctor,symptomType,Android.Health.Connect.Datatypes.SymptomType
 37,android/health/connect/datatypes,SymptomRecord$Builder,ctor,symptomType,Android.Health.Connect.Datatypes.SymptomType
 37,android/health/connect/datatypes,SymptomRecord$Builder,setSeverity,severity,Android.Health.Connect.Datatypes.SymptomSeverity
 37,android/health/connect,DeviceDataSource,writeToParcel,flags,Android.OS.ParcelableWriteFlags
@@ -4653,7 +4598,7 @@
 37,android/ranging/uwb,DlTdoaRangingParams$Builder,setSlotDuration,slotDuration,Android.Ranging.Uwb.UwbRangingParamsDuration
 37,android/ranging/uwb,UwbSpecificData,getNonLineOfSight,return,Android.Ranging.Uwb.LineOfSight
 37,android/ranging/uwb,UwbSpecificData,writeToParcel,flags,Android.OS.ParcelableWriteFlags
-37,android/ranging/wifi/pd,WifiPdRangingCapabilities,getMaxChannelWidth,return,Android.Net.Wifi.Preamble
+37,android/ranging/wifi/pd,WifiPdRangingCapabilities,getMaxChannelWidth,return,Android.Net.Wifi.WifiChannelWidth
 37,android/ranging/wifi/pd,WifiPdRangingCapabilities,getMaxPreamble,return,Android.Net.Wifi.Preamble
 37,android/ranging/wifi/pd,WifiPdRangingCapabilities,getTechnology,return,Android.Ranging.RangingManagerType
 37,android/ranging/wifi/pd,WifiPdRangingCapabilities,writeToParcel,flags,Android.OS.ParcelableWriteFlags

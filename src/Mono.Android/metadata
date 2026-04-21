@@ -2144,7 +2144,7 @@
   <attr api-since="37" path="/api/package[@api-since >= 37.0]
       /*[(local-name()='class' or local-name()='interface')]
       /method[starts-with(@name, 'set')]
-      /parameter[@type='int' and (starts-with(@name, 'tint') or substring(@tint, string-length(@name) - string-length('Tint') + 1)='Tint')]"
+      /parameter[@type='int' and (starts-with(@name, 'tint') or substring(@name, string-length(@name) - string-length('Tint') + 1)='Tint')]"
     name="type">Android.Graphics.Color</attr>
 
   <!-- fields with name `color` or ending with `Color` in types added in API 37+ -->
@@ -2172,7 +2172,7 @@
   <attr api-since="37" path="/api/package
       /*[(local-name()='class' or local-name()='interface') and @api-since >= 37.0]
       /method[starts-with(@name, 'set')]
-      /parameter[@type='int' and (starts-with(@name, 'tint') or substring(@tint, string-length(@name) - string-length('Tint') + 1)='Tint')]"
+      /parameter[@type='int' and (starts-with(@name, 'tint') or substring(@name, string-length(@name) - string-length('Tint') + 1)='Tint')]"
     name="type">Android.Graphics.Color</attr>
 
   <!-- fields added in API-37+ with name `color` or ending with `Color` -->

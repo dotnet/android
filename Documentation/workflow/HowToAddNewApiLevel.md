@@ -536,6 +536,14 @@ Once this process is complete, use `Tools` -> `Export Final Method Map`, and cre
 
 Copy the contents of `new-methodmap.csv` and *append* to `src/Mono.Android/methodmap.csv`.
 
+There may be redundant duplicate entries within `methodmap.csv`.  Use the **uniq**(1)
+Unix app to remove duplicate entries.
+
+```sh
+uniq < src/Mono.Android/methodmap.csv > m
+\mv m src/Mono.Android/methodmap.csv
+```
+
 ### Turning `int` into `Color`
 
 As part of the above **Mapping methods** process, some methods may appear which should
