@@ -138,15 +138,6 @@ public sealed record JavaPeerInfo
 	public ComponentInfo? ComponentAttribute { get; init; }
 }
 
-public enum ExportParameterKindInfo
-{
-	Unspecified = 0,
-	InputStream = 1,
-	OutputStream = 2,
-	XmlPullParser = 3,
-	XmlResourceParser = 4,
-}
-
 /// <summary>
 /// Describes a marshal method (a method with [Register] or [Export]) on a Java peer type.
 /// Contains all data needed to generate a UCO wrapper, a JCW native declaration,

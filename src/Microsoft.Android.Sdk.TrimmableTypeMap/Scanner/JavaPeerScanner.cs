@@ -874,9 +874,14 @@ public sealed class JavaPeerScanner : IDisposable
 		bool isExport = exportInfo is not null;
 		string managedName = index.Reader.GetString (methodDef.Name);
 		var managedSig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
-		var managedTypeSig = methodDef.DecodeSignature (TypeRefSignatureTypeProvider.Instance, index);
 		string jniSignature = registerInfo.Signature ?? "()V";
-		var parameterKinds = exportInfo?.ParameterKinds ?? CreateDefaultExportKinds (managedTypeSig.ParameterTypes.Length);
+
+		// Only decode TypeRefData signatures for [Export] methods — they need precise
+		// managed type + assembly metadata for direct dispatch IL generation.
+		var managedTypeSig = isExport
+			? methodDef.DecodeSignature (TypeRefSignatureTypeProvider.Instance, index)
+			: default;
+		var parameterKinds = exportInfo?.ParameterKinds ?? CreateDefaultExportKinds (managedSig.ParameterTypes.Length);
 
 		string declaringTypeName = "";
 		string declaringAssemblyName = "";
@@ -891,10 +896,13 @@ public sealed class JavaPeerScanner : IDisposable
 			DeclaringAssemblyName = declaringAssemblyName,
 			NativeCallbackName = GetNativeCallbackName (registerInfo.Connector, managedName, isConstructor),
 			ManagedParameterTypeNames = new List<string> (managedSig.ParameterTypes),
-			ManagedParameterTypes = new List<TypeRefData> (managedTypeSig.ParameterTypes),
+			ManagedParameterTypes = isExport ? new List<TypeRefData> (managedTypeSig.ParameterTypes) : [],
 			ManagedParameterExportKinds = parameterKinds,
 			ManagedReturnTypeName = managedSig.ReturnType,
-			ManagedReturnType = managedTypeSig.ReturnType,
+			ManagedReturnType = isExport ? managedTypeSig.ReturnType : new TypeRefData {
+				ManagedTypeName = managedSig.ReturnType,
+				AssemblyName = "System.Runtime",
+			},
 			ManagedReturnExportKind = exportInfo?.ReturnKind ?? ExportParameterKindInfo.Unspecified,
 			IsStatic = (methodDef.Attributes & MethodAttributes.Static) == MethodAttributes.Static,
 			IsConstructor = isConstructor,
