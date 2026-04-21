@@ -705,6 +705,7 @@ sealed class TypeMapAssemblyEmitter
 		int paramCount = 2 + jniParams.Count;
 		bool isVoid = returnKind == JniParamKind.Void;
 
+		// UCO wrapper signature: uses JNI ABI types (byte for boolean)
 		Action<BlobEncoder> encodeSig = sig => sig.MethodSignature ().Parameters (paramCount,
 			rt => { if (isVoid) rt.Void (); else JniSignatureHelper.EncodeClrType (rt.Type (), returnKind); },
 			p => {
@@ -714,8 +715,18 @@ sealed class TypeMapAssemblyEmitter
 					JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniParams [j]);
 			});
 
+		// Callback member reference: uses MCW n_* types (sbyte for boolean)
+		Action<BlobEncoder> encodeCallbackSig = sig => sig.MethodSignature ().Parameters (paramCount,
+			rt => { if (isVoid) rt.Void (); else JniSignatureHelper.EncodeClrTypeForCallback (rt.Type (), returnKind); },
+			p => {
+				p.AddParameter ().Type ().IntPtr ();
+				p.AddParameter ().Type ().IntPtr ();
+				for (int j = 0; j < jniParams.Count; j++)
+					JniSignatureHelper.EncodeClrTypeForCallback (p.AddParameter ().Type (), jniParams [j]);
+			});
+
 		var callbackTypeHandle = _pe.ResolveTypeRef (uco.CallbackType);
-		var callbackRef = _pe.AddMemberRef (callbackTypeHandle, uco.CallbackMethodName, encodeSig);
+		var callbackRef = _pe.AddMemberRef (callbackTypeHandle, uco.CallbackMethodName, encodeCallbackSig);
 
 		var handle = _pe.EmitBody (uco.WrapperName,
 			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
