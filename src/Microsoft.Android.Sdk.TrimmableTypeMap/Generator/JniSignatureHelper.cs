@@ -106,12 +106,11 @@ static class JniSignatureHelper
 	}
 
 	/// <summary>
-	/// Encodes the CLR type for a JNI parameter kind into a signature type encoder.
-	/// </summary>
-	/// <summary>
 	/// Encodes a JNI type as its CLR equivalent for [UnmanagedCallersOnly] UCO wrapper signatures.
-	/// JNI boolean (Z) maps to <c>byte</c> (unsigned, blittable for the JNI ABI).
 	/// </summary>
+	/// <remarks>
+	/// JNI boolean (Z) maps to <c>byte</c> (unsigned, blittable for the JNI ABI).
+	/// </remarks>
 	public static void EncodeClrType (SignatureTypeEncoder encoder, JniParamKind kind)
 	{
 		switch (kind) {
