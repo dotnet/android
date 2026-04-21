@@ -77,6 +77,7 @@ core workload SDK packs imported by WorkloadManifest.targets.
       <FilesToPackage Include="@(VersionFiles)" TargetPath="tools" />
       <FilesToPackage Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\Sdk\**" TargetPath="Sdk" />
       <FilesToPackage Include="$(XamarinAndroidSourcePath)src\Microsoft.Android.Sdk.ILLink\PreserveLists\**" TargetPath="PreserveLists" />
+      <FilesToPackage Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\PreserveLists\**" TargetPath="PreserveLists" />
       <FilesToPackage Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\**" TargetPath="targets" />
       <FilesToPackage Include="$(XamarinAndroidSourcePath)src\profiled-aot\dotnet.aotprofile" TargetPath="targets" />
       <FilesToPackage Include="$(IntermediateOutputPath)UnixFilePermissions.xml" TargetPath="data" Condition=" '$(HostOS)' != 'Windows' " />

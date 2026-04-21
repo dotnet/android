@@ -9,6 +9,19 @@ permissions:
 engine:
   id: copilot
   model: claude-opus-4.6
+network:
+  allowed:
+    - defaults
+    - chrome
+    - dotnet
+    - github
+    - java
+    - "aka.ms"
+    - "dev.azure.com"
+    - "gstatic.com"
+    - "httpbin.org"
+    - "microsoft.com"
+    - "vsassets.io"
 tools:
   github:
     toolsets: [pull_requests, repos]
