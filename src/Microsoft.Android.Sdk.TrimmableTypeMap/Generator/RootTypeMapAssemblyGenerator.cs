@@ -30,12 +30,12 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// {
 ///     internal static void Initialize ()
 ///     {
-///         // Option A: Shared universe (Release):
+///         // Merged (single universe):
 ///         TrimmableTypeMap.Initialize(
-///             new[] { TypeMapping.GetOrCreateExternalTypeMapping&lt;Java.Lang.Object&gt;() },
-///             new[] { TypeMapping.GetOrCreateProxyTypeMapping&lt;Java.Lang.Object&gt;() });
+///             TypeMapping.GetOrCreateExternalTypeMapping&lt;__TypeMapAnchor&gt;(),
+///             TypeMapping.GetOrCreateProxyTypeMapping&lt;__TypeMapAnchor&gt;());
 ///
-///         // Option B: Per-assembly universes, aggregated (Debug):
+///         // Per-assembly (aggregate universes):
 ///         var typeMaps = new IReadOnlyDictionary&lt;string, Type&gt;[] {
 ///             TypeMapping.GetOrCreateExternalTypeMapping&lt;_Mono_Android_TypeMap.__TypeMapAnchor&gt;(),
 ///             TypeMapping.GetOrCreateExternalTypeMapping&lt;_MyApp_TypeMap.__TypeMapAnchor&gt;(),
@@ -177,43 +177,61 @@ public sealed class RootTypeMapAssemblyGenerator
 			MetadataTokens.FieldDefinitionHandle (metadata.GetRowCount (TableIndex.Field) + 1),
 			MetadataTokens.MethodDefinitionHandle (metadata.GetRowCount (TableIndex.MethodDef) + 1));
 
-		// TrimmableTypeMap.Initialize(IReadOnlyDictionary<string, Type>[], IReadOnlyDictionary<Type, Type>[])
-		// Both modes use the same overload — shared universe passes 1-element arrays.
-		var initializeRef = AddInitializeRef (pe, trimmableTypeMapRef, iReadOnlyDictOpenRef, systemTypeRef);
-		var externalDictTypeSpec = MakeIReadOnlyDictTypeSpec (pe, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: true);
-		var proxyDictTypeSpec = MakeIReadOnlyDictTypeSpec (pe, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: false);
-
-		// Resolve anchor type(s) to method specs
-		EntityHandle[] getExternalSpecs;
-		EntityHandle[] getProxySpecs;
 		if (useSharedTypemapUniverse) {
-			// Single shared universe — 1-element arrays using the shared anchor (Java.Lang.Object)
-			getExternalSpecs = new EntityHandle[] { MakeGenericMethodSpec (pe, getExternalMemberRef, anchorTypeHandle) };
-			getProxySpecs = new EntityHandle[] { MakeGenericMethodSpec (pe, getProxyMemberRef, anchorTypeHandle) };
+			// TrimmableTypeMap.Initialize(IReadOnlyDictionary<string, Type>, IReadOnlyDictionary<Type, Type>)
+			var initializeRef = AddInitializeSingleRef (pe, trimmableTypeMapRef, iReadOnlyDictOpenRef, systemTypeRef);
+			EmitInitializeWithSingleTypeMap (pe, anchorTypeHandle, getExternalMemberRef, getProxyMemberRef, initializeRef);
 		} else {
-			// Per-assembly universes — one element per assembly, each with its own __TypeMapAnchor
-			var count = perAssemblyTypeMapNames.Count;
-			getExternalSpecs = new EntityHandle [count];
-			getProxySpecs = new EntityHandle [count];
-			for (int i = 0; i < count; i++) {
-				var asmRef = pe.FindOrAddAssemblyRef (perAssemblyTypeMapNames [i]);
-				var perAsmAnchorRef = pe.Metadata.AddTypeReference (asmRef,
-					default, pe.Metadata.GetOrAddString ("__TypeMapAnchor"));
-				getExternalSpecs [i] = MakeGenericMethodSpec (pe, getExternalMemberRef, perAsmAnchorRef);
-				getProxySpecs [i] = MakeGenericMethodSpec (pe, getProxyMemberRef, perAsmAnchorRef);
-			}
+			// TrimmableTypeMap.Initialize(IReadOnlyDictionary<string, Type>[], IReadOnlyDictionary<Type, Type>[])
+			var initializeRef = AddInitializeAggregateRef (pe, trimmableTypeMapRef, iReadOnlyDictOpenRef, systemTypeRef);
+			var externalDictTypeSpec = MakeIReadOnlyDictTypeSpec (pe, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: true);
+			var proxyDictTypeSpec = MakeIReadOnlyDictTypeSpec (pe, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: false);
+			EmitInitializeWithAggregateTypeMap (pe, perAssemblyTypeMapNames, getExternalMemberRef, getProxyMemberRef, initializeRef, externalDictTypeSpec, proxyDictTypeSpec, iReadOnlyDictOpenRef, systemTypeRef);
 		}
-
-		EmitInitializeBody (pe, getExternalSpecs, getProxySpecs, initializeRef, externalDictTypeSpec, proxyDictTypeSpec, iReadOnlyDictOpenRef, systemTypeRef);
 	}
 
-	static void EmitInitializeBody (PEAssemblyBuilder pe,
-		EntityHandle[] getExternalSpecs, EntityHandle[] getProxySpecs,
+	static void EmitInitializeWithSingleTypeMap (PEAssemblyBuilder pe, EntityHandle anchorTypeHandle,
+		MemberReferenceHandle getExternalMemberRef, MemberReferenceHandle getProxyMemberRef,
+		MemberReferenceHandle initializeRef)
+	{
+		var getExternalSpec = MakeGenericMethodSpec (pe, getExternalMemberRef, anchorTypeHandle);
+		var getProxySpec = MakeGenericMethodSpec (pe, getProxyMemberRef, anchorTypeHandle);
+
+		pe.EmitBody ("Initialize",
+			MethodAttributes.Assembly | MethodAttributes.Static | MethodAttributes.HideBySig,
+			sig => sig.MethodSignature ().Parameters (0, rt => rt.Void (), p => { }),
+			encoder => {
+				// TypeMapping.GetOrCreateExternalTypeMapping<__TypeMapAnchor>()
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (getExternalSpec);
+				// TypeMapping.GetOrCreateProxyTypeMapping<__TypeMapAnchor>()
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (getProxySpec);
+				// TrimmableTypeMap.Initialize(typeMap, proxyMap)
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (initializeRef);
+				encoder.OpCode (ILOpCode.Ret);
+			});
+	}
+
+	static void EmitInitializeWithAggregateTypeMap (PEAssemblyBuilder pe,
+		IReadOnlyList<string> perAssemblyTypeMapNames,
+		MemberReferenceHandle getExternalMemberRef, MemberReferenceHandle getProxyMemberRef,
 		MemberReferenceHandle initializeRef,
 		TypeSpecificationHandle externalDictTypeSpec, TypeSpecificationHandle proxyDictTypeSpec,
 		TypeReferenceHandle iReadOnlyDictOpenRef, TypeReferenceHandle systemTypeRef)
 	{
-		var count = getExternalSpecs.Length;
+		var count = perAssemblyTypeMapNames.Count;
+
+		var getExternalSpecs = new EntityHandle [count];
+		var getProxySpecs = new EntityHandle [count];
+		for (int i = 0; i < count; i++) {
+			var asmRef = pe.FindOrAddAssemblyRef (perAssemblyTypeMapNames [i]);
+			var perAsmAnchorRef = pe.Metadata.AddTypeReference (asmRef,
+				default, pe.Metadata.GetOrAddString ("__TypeMapAnchor"));
+			getExternalSpecs [i] = MakeGenericMethodSpec (pe, getExternalMemberRef, perAsmAnchorRef);
+			getProxySpecs [i] = MakeGenericMethodSpec (pe, getProxyMemberRef, perAsmAnchorRef);
+		}
 
 		pe.EmitBody ("Initialize",
 			MethodAttributes.Assembly | MethodAttributes.Static | MethodAttributes.HideBySig,
@@ -299,9 +317,25 @@ public sealed class RootTypeMapAssemblyGenerator
 	}
 
 	/// <summary>
+	/// Creates a MemberRef for TrimmableTypeMap.Initialize(IReadOnlyDictionary&lt;string, Type&gt;, IReadOnlyDictionary&lt;Type, Type&gt;).
+	/// </summary>
+	static MemberReferenceHandle AddInitializeSingleRef (PEAssemblyBuilder pe, TypeReferenceHandle trimmableTypeMapRef,
+		TypeReferenceHandle iReadOnlyDictOpenRef, TypeReferenceHandle systemTypeRef)
+	{
+		var blob = new BlobBuilder (64);
+		blob.WriteByte (0x00); // DEFAULT (static)
+		blob.WriteCompressedInteger (2); // parameter count
+		blob.WriteByte (0x01); // return type: void
+		EncodeIReadOnlyDictType (blob, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: true);
+		EncodeIReadOnlyDictType (blob, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: false);
+		return pe.Metadata.AddMemberReference (trimmableTypeMapRef,
+			pe.Metadata.GetOrAddString ("Initialize"), pe.Metadata.GetOrAddBlob (blob));
+	}
+
+	/// <summary>
 	/// Creates a MemberRef for TrimmableTypeMap.Initialize(IReadOnlyDictionary&lt;string, Type&gt;[], IReadOnlyDictionary&lt;Type, Type&gt;[]).
 	/// </summary>
-	static MemberReferenceHandle AddInitializeRef (PEAssemblyBuilder pe, TypeReferenceHandle trimmableTypeMapRef,
+	static MemberReferenceHandle AddInitializeAggregateRef (PEAssemblyBuilder pe, TypeReferenceHandle trimmableTypeMapRef,
 		TypeReferenceHandle iReadOnlyDictOpenRef, TypeReferenceHandle systemTypeRef)
 	{
 		var blob = new BlobBuilder (64);
