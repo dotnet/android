@@ -14,10 +14,12 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// <remarks>
 /// <para>The generated assembly looks like this (pseudo-C#):</para>
 /// <code>
-/// // Assembly-level TypeMap attributes — one per Java peer type:
-/// [assembly: TypeMap&lt;Java.Lang.Object&gt;("android/app/Activity", typeof(Activity_Proxy))]                              // unconditional (ACW)
-/// [assembly: TypeMap&lt;Java.Lang.Object&gt;("android/widget/TextView", typeof(TextView_Proxy), typeof(TextView))]          // trimmable (MCW)
-/// [assembly: TypeMapAssociation&lt;Java.Lang.Object&gt;(typeof(MyTextView), typeof(Android_Widget_TextView_Proxy))]          // managed → proxy
+/// // Assembly-level TypeMap attributes — one per Java peer type.
+/// // The anchor type T is Java.Lang.Object in merged mode (Release) or
+/// // a per-assembly __TypeMapAnchor in per-assembly mode (Debug):
+/// [assembly: TypeMap&lt;T&gt;("android/app/Activity", typeof(Activity_Proxy))]                              // unconditional (ACW)
+/// [assembly: TypeMap&lt;T&gt;("android/widget/TextView", typeof(TextView_Proxy), typeof(TextView))]          // trimmable (MCW)
+/// [assembly: TypeMapAssociation&lt;T&gt;(typeof(MyTextView), typeof(Android_Widget_TextView_Proxy))]          // managed → proxy
 ///
 /// // One proxy type per Java peer that needs activation or UCO wrappers:
 /// public sealed class Activity_Proxy : JavaPeerProxy&lt;Activity&gt;, IAndroidCallableWrapper   // IAndroidCallableWrapper for ACWs only
@@ -114,6 +116,8 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _jniEnvTypesRegisterNativesRef;
 	MemberReferenceHandle _readOnlySpanOfJniNativeMethodCtorRef;
 
+	EntityHandle _anchorTypeHandle;
+
 	/// <summary>
 	/// Creates a new emitter.
 	/// </summary>
@@ -130,7 +134,11 @@ sealed class TypeMapAssemblyEmitter
 	/// <summary>
 	/// Emits a PE assembly from the given model and writes it to <paramref name="stream"/>.
 	/// </summary>
-	public void Emit (TypeMapAssemblyData model, Stream stream)
+	/// <param name="useSharedTypemapUniverse">
+	/// When true, uses <c>Java.Lang.Object</c> as the shared anchor type so all assemblies
+	/// share a single typemap universe. When false, emits a per-assembly <c>__TypeMapAnchor</c>.
+	/// </param>
+	public void Emit (TypeMapAssemblyData model, Stream stream, bool useSharedTypemapUniverse = false)
 	{
 		if (model is null) {
 			throw new ArgumentNullException (nameof (model));
@@ -139,17 +147,26 @@ sealed class TypeMapAssemblyEmitter
 			throw new ArgumentNullException (nameof (stream));
 		}
 
-		EmitCore (model);
+		EmitCore (model, useSharedTypemapUniverse);
 		_pe.WritePE (stream);
 	}
 
-	void EmitCore (TypeMapAssemblyData model)
+	void EmitCore (TypeMapAssemblyData model, bool useSharedTypemapUniverse)
 	{
 		_pe.EmitPreamble (model.AssemblyName, model.ModuleName, MetadataHelper.ComputeContentFingerprint (model));
 
 		_javaInteropRef = _pe.AddAssemblyRef ("Java.Interop", new Version (0, 0, 0, 0));
 
 		EmitTypeReferences ();
+		if (useSharedTypemapUniverse) {
+			// Use Java.Lang.Object as the shared anchor so all assemblies share a single
+			// typemap universe that can be merged at startup.
+			_anchorTypeHandle = _pe.Metadata.AddTypeReference (_pe.MonoAndroidRef,
+				_pe.Metadata.GetOrAddString ("Java.Lang"),
+				_pe.Metadata.GetOrAddString ("Object"));
+		} else {
+			EmitAnchorType ();
+		}
 		EmitMemberReferences ();
 
 		// Track wrapper method names → handles for RegisterNatives
@@ -223,6 +240,26 @@ sealed class TypeMapAssemblyEmitter
 		_readOnlySpanOpenRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("ReadOnlySpan`1"));
 		_readOnlySpanOfJniNativeMethodSpec = MakeGenericTypeSpec_ValueType (_readOnlySpanOpenRef, _jniNativeMethodRef);
+	}
+
+	/// <summary>
+	/// Emits an internal <c>__TypeMapAnchor</c> class used as the group type parameter
+	/// for <c>TypeMap&lt;T&gt;</c> and <c>TypeMapAssociation&lt;T&gt;</c>. Each per-assembly
+	/// typemap DLL gets its own anchor, creating an isolated typemap universe.
+	/// </summary>
+	void EmitAnchorType ()
+	{
+		var metadata = _pe.Metadata;
+		var objectRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
+			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Object"));
+
+		_anchorTypeHandle = metadata.AddTypeDefinition (
+			TypeAttributes.NotPublic | TypeAttributes.Sealed | TypeAttributes.Class,
+			default,
+			metadata.GetOrAddString ("__TypeMapAnchor"),
+			objectRef,
+			MetadataTokens.FieldDefinitionHandle (metadata.GetRowCount (TableIndex.Field) + 1),
+			MetadataTokens.MethodDefinitionHandle (metadata.GetRowCount (TableIndex.MethodDef) + 1));
 	}
 
 	void EmitMemberReferences ()
@@ -344,10 +381,8 @@ sealed class TypeMapAssemblyEmitter
 		var typeMapAttrOpenRef = metadata.AddTypeReference (_pe.SystemRuntimeInteropServicesRef,
 			metadata.GetOrAddString ("System.Runtime.InteropServices"),
 			metadata.GetOrAddString ("TypeMapAttribute`1"));
-		var javaLangObjectRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
-			metadata.GetOrAddString ("Java.Lang"), metadata.GetOrAddString ("Object"));
 
-		var closedAttrTypeSpec = _pe.MakeGenericTypeSpec (typeMapAttrOpenRef, javaLangObjectRef);
+		var closedAttrTypeSpec = _pe.MakeGenericTypeSpec (typeMapAttrOpenRef, _anchorTypeHandle);
 
 		// 2-arg: TypeMap(string jniName, Type proxyType) — unconditional
 		_typeMapAttrCtorRef2Arg = _pe.AddMemberRef (closedAttrTypeSpec, ".ctor",
@@ -375,9 +410,7 @@ sealed class TypeMapAssemblyEmitter
 		var typeMapAssociationAttrOpenRef = metadata.AddTypeReference (_pe.SystemRuntimeInteropServicesRef,
 			metadata.GetOrAddString ("System.Runtime.InteropServices"),
 			metadata.GetOrAddString ("TypeMapAssociationAttribute`1"));
-		var javaLangObjectRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
-			metadata.GetOrAddString ("Java.Lang"), metadata.GetOrAddString ("Object"));
-		var closedAttrTypeSpec = _pe.MakeGenericTypeSpec (typeMapAssociationAttrOpenRef, javaLangObjectRef);
+		var closedAttrTypeSpec = _pe.MakeGenericTypeSpec (typeMapAssociationAttrOpenRef, _anchorTypeHandle);
 
 		_typeMapAssociationAttrCtorRef = _pe.AddMemberRef (closedAttrTypeSpec, ".ctor",
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,

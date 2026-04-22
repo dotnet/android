@@ -136,6 +136,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			new List<(string, PEReader)> { ("TestFixtures", peReader) },
 			new Version (11, 0),
 			new HashSet<string> (),
+			useSharedTypemapUniverse: false,
 			new ManifestConfig (
 				PackageName: "my.app",
 				AndroidApiLevel: "35",

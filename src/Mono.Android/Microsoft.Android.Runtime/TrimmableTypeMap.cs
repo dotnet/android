@@ -13,7 +13,7 @@ using Java.Interop;
 namespace Microsoft.Android.Runtime;
 
 /// <summary>
-/// Central type map for the trimmable typemap path. Owns the TypeMapping dictionary
+/// Central type map for the trimmable typemap path. Owns the ITypeMapWithAliasing
 /// and provides peer creation, invoker resolution, container factories, and native
 /// method registration. All proxy attribute access is encapsulated here.
 /// </summary>
@@ -27,31 +27,57 @@ class TrimmableTypeMap
 		s_instance ?? throw new InvalidOperationException (
 			"TrimmableTypeMap has not been initialized. Ensure RuntimeFeature.TrimmableTypeMap is enabled and the JNI runtime is initialized.");
 
-	readonly IReadOnlyDictionary<string, Type> _typeMap;
-	readonly IReadOnlyDictionary<Type, Type> _proxyTypeMap;
+	readonly ITypeMapWithAliasing _typeMap;
 	readonly ConcurrentDictionary<Type, JavaPeerProxy> _proxyCache = new ();
 	readonly ConcurrentDictionary<string, JavaPeerProxy[]> _jniProxyCache = new (StringComparer.Ordinal);
 
-	TrimmableTypeMap ()
+	TrimmableTypeMap (ITypeMapWithAliasing typeMap)
 	{
-		_typeMap = TypeMapping.GetOrCreateExternalTypeMapping<Java.Lang.Object> ();
-		_proxyTypeMap = TypeMapping.GetOrCreateProxyTypeMapping<Java.Lang.Object> ();
+		_typeMap = typeMap;
 	}
 
 	/// <summary>
-	/// Initializes the singleton instance and registers the bootstrap JNI native method.
-	/// Must be called after the JNI runtime is initialized and before any JCW class is loaded.
+	/// Initializes the singleton with a single merged typemap universe.
+	/// Called from the startup hook in the generated root assembly (_Microsoft.Android.TypeMaps)
+	/// when assembly typemaps are merged (Release builds).
 	/// </summary>
-	internal static void Initialize ()
+	internal static void Initialize (IReadOnlyDictionary<string, Type> typeMap, IReadOnlyDictionary<Type, Type> proxyMap)
 	{
-		if (s_instance is not null)
-			return;
+		ArgumentNullException.ThrowIfNull (typeMap);
+		ArgumentNullException.ThrowIfNull (proxyMap);
+		InitializeCore (new SingleUniverseTypeMap (typeMap, proxyMap));
+	}
 
+	/// <summary>
+	/// Initializes the singleton with multiple per-assembly typemap universes.
+	/// Called from the startup hook in the generated root assembly (_Microsoft.Android.TypeMaps)
+	/// when each assembly has its own typemap universe (Debug builds).
+	/// </summary>
+	internal static void Initialize (IReadOnlyDictionary<string, Type>[] typeMaps, IReadOnlyDictionary<Type, Type>[] proxyMaps)
+	{
+		ArgumentNullException.ThrowIfNull (typeMaps);
+		ArgumentNullException.ThrowIfNull (proxyMaps);
+		if (typeMaps.Length == 0) {
+			throw new ArgumentException ("At least one typemap universe must be provided.", nameof (typeMaps));
+		}
+		if (typeMaps.Length != proxyMaps.Length) {
+			throw new ArgumentException ($"typeMaps.Length ({typeMaps.Length}) must equal proxyMaps.Length ({proxyMaps.Length}).");
+		}
+		var universes = new SingleUniverseTypeMap [typeMaps.Length];
+		for (int i = 0; i < typeMaps.Length; i++) {
+			universes [i] = new SingleUniverseTypeMap (typeMaps [i], proxyMaps [i]);
+		}
+		InitializeCore (new AggregateTypeMap (universes));
+	}
+
+	static void InitializeCore (ITypeMapWithAliasing typeMap)
+	{
 		lock (s_initLock) {
-			if (s_instance is not null)
-				return;
+			if (s_instance is not null) {
+				throw new InvalidOperationException ("TrimmableTypeMap has already been initialized.");
+			}
 
-			var instance = new TrimmableTypeMap ();
+			var instance = new TrimmableTypeMap (typeMap);
 			instance.RegisterNatives ();
 			s_instance = instance;
 		}
@@ -104,29 +130,11 @@ class TrimmableTypeMap
 	JavaPeerProxy[] GetProxiesForJniName (string jniName)
 	{
 		return _jniProxyCache.GetOrAdd (jniName, static (name, self) => {
-			if (!self._typeMap.TryGetValue (name, out var mappedType)) {
-				return [];
-			}
-
-			// Fast path: non-alias entry
-			var proxy = mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-			if (proxy is not null) {
-				return [proxy];
-			}
-
-			// Slow path: alias holder — resolve each alias key
-			var aliases = mappedType.GetCustomAttribute<JavaPeerAliasesAttribute> (inherit: false);
-			if (aliases is null) {
-				return [];
-			}
-
 			var result = new List<JavaPeerProxy> ();
-			foreach (var key in aliases.Aliases) {
-				if (self._typeMap.TryGetValue (key, out var aliasEntryType)) {
-					var aliasProxy = aliasEntryType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-					if (aliasProxy is not null) {
-						result.Add (aliasProxy);
-					}
+			foreach (var type in self._typeMap.GetTypes (name)) {
+				var proxy = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+				if (proxy is not null) {
+					result.Add (proxy);
 				}
 			}
 			return result.Count > 0 ? result.ToArray () : [];
@@ -161,39 +169,13 @@ class TrimmableTypeMap
 		}
 
 		var proxy = _proxyCache.GetOrAdd (managedType, static (type, self) => {
-			if (!self._proxyTypeMap.TryGetValue (type, out var proxyType)) {
+			if (!self._typeMap.TryGetProxyType (type, out var proxyType)) {
 				return s_noPeerSentinel;
 			}
 
-			// Fast path: direct proxy lookup (non-alias types)
-			var proxy = proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-			if (proxy is not null) {
-				return proxy;
-			}
-
-			// Slow path: _proxyTypeMap mapped this type to an alias holder — resolve from aliases
-			var aliases = proxyType.GetCustomAttribute<JavaPeerAliasesAttribute> (inherit: false);
-			if (aliases is not null) {
-				return GetProxyFromAliases (self, aliases, type) ?? s_noPeerSentinel;
-			}
-
-			return s_noPeerSentinel;
+			return proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false) ?? s_noPeerSentinel;
 		}, this);
 		return ReferenceEquals (proxy, s_noPeerSentinel) ? null : proxy;
-	}
-
-	static JavaPeerProxy? GetProxyFromAliases (TrimmableTypeMap self, JavaPeerAliasesAttribute aliases, Type targetType)
-	{
-		foreach (var key in aliases.Aliases) {
-			if (!self._typeMap.TryGetValue (key, out var aliasProxyType)) {
-				continue;
-			}
-			var aliasProxy = aliasProxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-			if (aliasProxy is not null && TargetTypeMatches (targetType, aliasProxy.TargetType)) {
-				return aliasProxy;
-			}
-		}
-		return null;
 	}
 
 	internal bool TryGetJniNameForManagedType (Type managedType, [NotNullWhen (true)] out string? jniName)
