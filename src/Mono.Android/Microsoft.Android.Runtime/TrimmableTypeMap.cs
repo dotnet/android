@@ -72,10 +72,6 @@ class TrimmableTypeMap
 
 	static void InitializeCore (ITypeMapWithAliasing typeMap)
 	{
-		if (s_instance is not null) {
-			throw new InvalidOperationException ("TrimmableTypeMap has already been initialized.");
-		}
-
 		lock (s_initLock) {
 			if (s_instance is not null) {
 				throw new InvalidOperationException ("TrimmableTypeMap has already been initialized.");
