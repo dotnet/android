@@ -223,7 +223,7 @@ namespace Java.Interop
 			static IntPtr RawCallStaticObjectMethodA (IntPtr env, out IntPtr thrown, IntPtr clazz, IntPtr jmethodID, IntPtr args)
 			{
 #if FEATURE_JNIENVIRONMENT_JI_PINVOKES
-				return NativeMethods.java_interop_jnienv_call_static_object_method_a (env, out thrown, clazz, instance, jmethodID, args);
+				return NativeMethods.java_interop_jnienv_call_static_object_method_a (env, out thrown, clazz, jmethodID, args);
 #elif FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 				var r   = JniNativeMethods.CallStaticObjectMethodA (env, clazz, jmethodID, args);
 				thrown  = JniNativeMethods.ExceptionOccurred (env);
