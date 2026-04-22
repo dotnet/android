@@ -37,29 +37,27 @@ class TrimmableTypeMap
 	}
 
 	/// <summary>
-	/// Initializes the singleton with a single merged typemap universe.
-	/// Called from the startup hook in the generated root assembly (_Microsoft.Android.TypeMaps)
-	/// when assembly typemaps are merged (Release builds).
-	/// </summary>
-	internal static void Initialize (IReadOnlyDictionary<string, Type> typeMap, IReadOnlyDictionary<Type, Type> proxyMap)
-	{
-		ArgumentNullException.ThrowIfNull (typeMap);
-		ArgumentNullException.ThrowIfNull (proxyMap);
-		InitializeCore (new SingleUniverseTypeMap (typeMap, proxyMap));
-	}
-
-	/// <summary>
-	/// Initializes the singleton with multiple per-assembly typemap universes.
-	/// Called from the startup hook in the generated root assembly (_Microsoft.Android.TypeMaps)
-	/// when each assembly has its own typemap universe (Debug builds).
+	/// Initializes the singleton with one or more typemap universes.
+	/// Called from the startup hook in the generated root assembly (_Microsoft.Android.TypeMaps).
+	/// When a single universe is provided (Release), uses <see cref="SingleUniverseTypeMap"/> directly.
+	/// When multiple universes are provided (Debug), wraps them in <see cref="AggregateTypeMap"/>.
 	/// </summary>
 	internal static void Initialize (IReadOnlyDictionary<string, Type>[] typeMaps, IReadOnlyDictionary<Type, Type>[] proxyMaps)
 	{
 		ArgumentNullException.ThrowIfNull (typeMaps);
 		ArgumentNullException.ThrowIfNull (proxyMaps);
+		if (typeMaps.Length == 0) {
+			throw new ArgumentException ("At least one typemap universe must be provided.", nameof (typeMaps));
+		}
 		if (typeMaps.Length != proxyMaps.Length) {
 			throw new ArgumentException ($"typeMaps.Length ({typeMaps.Length}) must equal proxyMaps.Length ({proxyMaps.Length}).");
 		}
+
+		if (typeMaps.Length == 1) {
+			InitializeCore (new SingleUniverseTypeMap (typeMaps [0], proxyMaps [0]));
+			return;
+		}
+
 		var universes = new SingleUniverseTypeMap [typeMaps.Length];
 		for (int i = 0; i < typeMaps.Length; i++) {
 			universes [i] = new SingleUniverseTypeMap (typeMaps [i], proxyMaps [i]);
