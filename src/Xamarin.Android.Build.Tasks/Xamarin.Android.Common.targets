@@ -1998,7 +1998,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_GenerateCompressedAssembliesNativeSourceFiles"
         Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
-        Inputs="@(_ResolvedUserAssemblies);@(_ResolvedFrameworkAssemblies)"
+        Inputs="@(_ResolvedUserAssemblies);@(_ResolvedFrameworkAssemblies);$(_AndroidBuildPropertiesCache)"
         Outputs="@(_CompressedAssembliesAssemblySource)">
   <GenerateCompressedAssembliesNativeSourceFiles
       ResolvedAssemblies="@(_ResolvedUserAssemblies);@(_ResolvedFrameworkAssemblies)"
