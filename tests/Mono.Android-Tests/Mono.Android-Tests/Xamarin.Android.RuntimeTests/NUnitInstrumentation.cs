@@ -34,9 +34,6 @@ namespace Xamarin.Android.RuntimeTests
                 // the .csproj instead. Only tests from the external Java.Interop-Tests assembly
                 // (which we don't control) need to be listed here by name.
                 ExcludedTestNames = new [] {
-                    // SIGABRT crash in Dispose_Finalized (finalizer thread)
-                    "Java.InteropTests.JavaObjectTest",
-
                     // JCW Java class not in APK (0/3 pass)
                     "Java.InteropTests.InvokeVirtualFromConstructorTests",
 
