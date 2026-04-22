@@ -1014,12 +1014,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.Contains ("Exception", typeNames);
 
 		// Find the nctor_*_uco method.
-		var nctorMethodHandle = reader.MethodDefinitions
-			.FirstOrDefault (h => {
-				var name = reader.GetString (reader.GetMethodDefinition (h).Name);
-				return name.StartsWith ("nctor_", StringComparison.Ordinal) &&
-				       name.EndsWith ("_uco", StringComparison.Ordinal);
-			});
+		var nctorMethodHandle = FindNctorUcoMethod (reader);
 		Assert.False (nctorMethodHandle.IsNil, "Expected a nctor_*_uco method in the generated assembly");
 
 		// The method body must have exception regions: at least one Catch and one Finally.
@@ -1031,6 +1026,27 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			$"UCO constructor should have at least 2 exception regions (catch + finally), found {regions.Length}");
 		Assert.Contains (regions, r => r.Kind == ExceptionRegionKind.Catch);
 		Assert.Contains (regions, r => r.Kind == ExceptionRegionKind.Finally);
+
+		// Verify the method body IL actually calls the marshal-method APIs (not just that the refs exist in the assembly).
+		var il = pe.GetSectionData (nctorMethod.RelativeVirtualAddress);
+		var ilBytes = body.GetILBytes ();
+		Assert.NotNull (ilBytes);
+		var ilContent = System.Text.Encoding.ASCII.GetString (ilBytes);
+		// Cross-check: the member refs we found must be referenced from within this method body.
+		// We verify by checking that the IL contains Call/Callvirt opcodes (0x28/0x6F) with tokens
+		// pointing to the expected member refs.
+		var memberRefHandles = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
+			.Select (i => MetadataTokens.MemberReferenceHandle (i))
+			.ToList ();
+		var beginHandle = memberRefHandles.First (h => reader.GetString (reader.GetMemberReference (h).Name) == "BeginMarshalMethod");
+		var endHandle = memberRefHandles.First (h => reader.GetString (reader.GetMemberReference (h).Name) == "EndMarshalMethod");
+		var exHandle = memberRefHandles.First (h => reader.GetString (reader.GetMemberReference (h).Name) == "OnUserUnhandledException");
+		int beginToken = MetadataTokens.GetToken (beginHandle);
+		int endToken = MetadataTokens.GetToken (endHandle);
+		int exToken = MetadataTokens.GetToken (exHandle);
+		Assert.True (ILContainsCallToken (ilBytes, beginToken), "nctor_*_uco IL should call BeginMarshalMethod");
+		Assert.True (ILContainsCallToken (ilBytes, endToken), "nctor_*_uco IL should call EndMarshalMethod");
+		Assert.True (ILContainsCallToken (ilBytes, exToken), "nctor_*_uco IL should call OnUserUnhandledException");
 	}
 
 	[Fact]
@@ -1048,12 +1064,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 
-		var nctorMethodHandle = reader.MethodDefinitions
-			.FirstOrDefault (h => {
-				var name = reader.GetString (reader.GetMethodDefinition (h).Name);
-				return name.StartsWith ("nctor_", StringComparison.Ordinal) &&
-				       name.EndsWith ("_uco", StringComparison.Ordinal);
-			});
+		var nctorMethodHandle = FindNctorUcoMethod (reader);
 		Assert.False (nctorMethodHandle.IsNil, "Expected a nctor_*_uco method in the generated assembly");
 
 		var nctorMethod = reader.GetMethodDefinition (nctorMethodHandle);
@@ -1079,12 +1090,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 
-		var nctorMethodHandle = reader.MethodDefinitions
-			.FirstOrDefault (h => {
-				var name = reader.GetString (reader.GetMethodDefinition (h).Name);
-				return name.StartsWith ("nctor_", StringComparison.Ordinal) &&
-				       name.EndsWith ("_uco", StringComparison.Ordinal);
-			});
+		var nctorMethodHandle = FindNctorUcoMethod (reader);
 
 		if (!nctorMethodHandle.IsNil) {
 			// If a nctor_*_uco method exists for the generic type, it must be a no-op (no exception regions).
@@ -1093,7 +1099,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			Assert.NotNull (body);
 			Assert.Empty (body.ExceptionRegions);
 		}
-		// If no nctor_*_uco method exists, the test trivially passes — no UCO ctors for generics.
+		// Open-generic types do not get a nctor_*_uco wrapper — no UCO ctors for generics.
 	}
 
 	[Fact]
@@ -1111,12 +1117,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 
-		var nctorMethodHandle = reader.MethodDefinitions
-			.FirstOrDefault (h => {
-				var name = reader.GetString (reader.GetMethodDefinition (h).Name);
-				return name.StartsWith ("nctor_", StringComparison.Ordinal) &&
-				       name.EndsWith ("_uco", StringComparison.Ordinal);
-			});
+		var nctorMethodHandle = FindNctorUcoMethod (reader);
 		Assert.False (nctorMethodHandle.IsNil, "SimpleActivity (ACW) should have a nctor_*_uco method");
 
 		var nctorMethod = reader.GetMethodDefinition (nctorMethodHandle);
