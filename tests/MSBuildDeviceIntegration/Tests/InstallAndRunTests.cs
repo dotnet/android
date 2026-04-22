@@ -2233,7 +2233,9 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 		}
 
 		[Test]
-		public void DotNetNewAndroidTest ()
+		[TestCase (AndroidRuntime.MonoVM)]
+		[TestCase (AndroidRuntime.CoreCLR)]
+		public void DotNetNewAndroidTest (AndroidRuntime runtime)
 		{
 			var templateName = TestName;
 			var projectDirectory = Path.Combine (Root, "temp", templateName);
@@ -2244,12 +2246,22 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			var dotnet = new DotNetCLI (Path.Combine (projectDirectory, $"{templateName}.csproj"));
 			Assert.IsTrue (dotnet.New ("androidtest"), "`dotnet new androidtest` should succeed");
 
+			bool useMonoRuntime = runtime == AndroidRuntime.MonoVM;
+			var buildParameters = new List<string> {
+				$"UseMonoRuntime={useMonoRuntime}",
+			};
+
+			if (runtime == AndroidRuntime.CoreCLR) {
+				Assert.Ignore ("https://github.com/dotnet/android/issues/11174");
+			}
+
 			// Build and assert 0 warnings
-			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+			Assert.IsTrue (dotnet.Build (parameters: buildParameters.ToArray ()), "`dotnet build` should succeed");
 			dotnet.AssertHasNoWarnings ();
 
 			// Run instrumentation via `dotnet run` and capture output
-			using var process = dotnet.StartRun (waitForExit: true);
+			var runParameters = buildParameters.Select (p => $"/p:{p}").ToArray ();
+			using var process = dotnet.StartRun (waitForExit: true, parameters: runParameters);
 
 			var locker = new Lock ();
 			var output = new StringBuilder ();
