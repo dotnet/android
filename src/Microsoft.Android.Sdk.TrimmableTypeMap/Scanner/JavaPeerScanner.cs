@@ -895,10 +895,8 @@ public sealed class JavaPeerScanner : IDisposable
 			DeclaringTypeName = declaringTypeName,
 			DeclaringAssemblyName = declaringAssemblyName,
 			NativeCallbackName = GetNativeCallbackName (registerInfo.Connector, managedName, isConstructor),
-			ManagedParameterTypeNames = new List<string> (managedSig.ParameterTypes),
 			ManagedParameterTypes = isExport ? new List<TypeRefData> (managedTypeSig.ParameterTypes) : [],
 			ManagedParameterExportKinds = parameterKinds,
-			ManagedReturnTypeName = managedSig.ReturnType,
 			ManagedReturnType = isExport ? managedTypeSig.ReturnType : new TypeRefData {
 				ManagedTypeName = managedSig.ReturnType,
 				AssemblyName = "System.Runtime",
