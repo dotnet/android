@@ -1040,11 +1040,9 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 					NativeCallbackName = "n_convert",
 					JniSignature = "(Lthird/party/Widget;)Lthird/party/Result;",
 					ManagedMethodName = "Convert",
-					ManagedParameterTypeNames = new [] { "ThirdParty.Widget" },
 					ManagedParameterTypes = new [] {
 						new TypeRefData { ManagedTypeName = "ThirdParty.Widget", AssemblyName = "ThirdParty.Library" },
 					},
-					ManagedReturnTypeName = "ThirdParty.Result",
 					ManagedReturnType = new TypeRefData { ManagedTypeName = "ThirdParty.Result", AssemblyName = "ThirdParty.Library" },
 					IsExport = true,
 				},
@@ -1083,11 +1081,9 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 					NativeCallbackName = "n_badExport",
 					JniSignature = jniSignature,
 					ManagedMethodName = "BadExport",
-					ManagedParameterTypeNames = new [] { parameterType },
 					ManagedParameterTypes = new [] {
 						new TypeRefData { ManagedTypeName = parameterType, AssemblyName = "System.Runtime" },
 					},
-					ManagedReturnTypeName = returnType,
 					ManagedReturnType = new TypeRefData {
 						ManagedTypeName = returnType,
 						AssemblyName = returnType.StartsWith ("System.Collections.Generic.", StringComparison.Ordinal)
@@ -1186,7 +1182,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.Contains ("test/AliasTarget[1]", jniNames);
 		Assert.Contains ("test/AliasTarget[2]", jniNames);
 
-		// Verify TypeMapAssociationAttribute is referenced (generic version)
+		// Verify TypeMapAssociationAttribute is referenced
 		var typeNames = GetTypeRefNames (reader);
 		Assert.Contains ("TypeMapAssociationAttribute", typeNames);
 

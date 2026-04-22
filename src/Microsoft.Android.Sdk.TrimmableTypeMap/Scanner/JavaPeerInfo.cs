@@ -195,12 +195,6 @@ public sealed record MarshalMethodInfo
 	public required string NativeCallbackName { get; init; }
 
 	/// <summary>
-	/// Managed parameter type names decoded from the method signature.
-	/// Used for static [Export] callback generation in the trimmable path.
-	/// </summary>
-	public IReadOnlyList<string> ManagedParameterTypeNames { get; init; } = [];
-
-	/// <summary>
 	/// Managed parameter types decoded from the method signature, including the
 	/// defining assembly for each type.
 	/// </summary>
@@ -210,12 +204,6 @@ public sealed record MarshalMethodInfo
 	/// Per-parameter [ExportParameter] kinds for legacy callback marshalling.
 	/// </summary>
 	public IReadOnlyList<ExportParameterKindInfo> ManagedParameterExportKinds { get; init; } = [];
-
-	/// <summary>
-	/// Managed return type name decoded from the method signature.
-	/// Used for static [Export] callback generation in the trimmable path.
-	/// </summary>
-	public string ManagedReturnTypeName { get; init; } = "System.Void";
 
 	/// <summary>
 	/// Managed return type, including the defining assembly.
