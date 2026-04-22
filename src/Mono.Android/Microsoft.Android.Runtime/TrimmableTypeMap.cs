@@ -57,6 +57,9 @@ class TrimmableTypeMap
 	{
 		ArgumentNullException.ThrowIfNull (typeMaps);
 		ArgumentNullException.ThrowIfNull (proxyMaps);
+		if (typeMaps.Length == 0) {
+			throw new ArgumentException ("At least one typemap universe must be provided.", nameof (typeMaps));
+		}
 		if (typeMaps.Length != proxyMaps.Length) {
 			throw new ArgumentException ($"typeMaps.Length ({typeMaps.Length}) must equal proxyMaps.Length ({proxyMaps.Length}).");
 		}

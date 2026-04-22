@@ -30,12 +30,12 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// {
 ///     internal static void Initialize ()
 ///     {
-///         // Merged (single universe):
+///         // Option A: Shared universe
 ///         TrimmableTypeMap.Initialize(
-///             TypeMapping.GetOrCreateExternalTypeMapping&lt;__TypeMapAnchor&gt;(),
-///             TypeMapping.GetOrCreateProxyTypeMapping&lt;__TypeMapAnchor&gt;());
+///             TypeMapping.GetOrCreateExternalTypeMapping&lt;Java.Lang.Object&gt;(),
+///             TypeMapping.GetOrCreateProxyTypeMapping&lt;Java.Lang.Object&gt;());
 ///
-///         // Per-assembly (aggregate universes):
+///         // Option B: Per-assembly universes (aggregated)
 ///         var typeMaps = new IReadOnlyDictionary&lt;string, Type&gt;[] {
 ///             TypeMapping.GetOrCreateExternalTypeMapping&lt;_Mono_Android_TypeMap.__TypeMapAnchor&gt;(),
 ///             TypeMapping.GetOrCreateExternalTypeMapping&lt;_MyApp_TypeMap.__TypeMapAnchor&gt;(),
