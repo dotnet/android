@@ -1009,6 +1009,13 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
 {1} - The current value of the property
 </comment>
   </data>
+  <data name="XA1044" xml:space="preserve">
+    <value>Właściwość MSBuild „{0}” nie jest zgodna ze środowiskiem uruchomieniowym {1} i zostanie zignorowana. Usuń właściwość lub zapewnij ochronę za pomocą warunku: Condition="$(UseMonoRuntime)" == "true""</value>
+    <comment>The following are literal names and should not be translated: MSBuild, UseMonoRuntime.
+{0} - The MSBuild property name (e.g. RunAOTCompilation, EnableLLVM).
+{1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
+</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>Zależność Java „{0}” nie jest spełniona.</value>
     <comment>The following are literal names and should not be translated: Java.

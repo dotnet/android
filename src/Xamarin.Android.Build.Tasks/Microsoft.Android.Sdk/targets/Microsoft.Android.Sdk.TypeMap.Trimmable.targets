@@ -11,7 +11,11 @@
 
   <PropertyGroup>
     <_TypeMapAssemblyName>_Microsoft.Android.TypeMaps</_TypeMapAssemblyName>
-    <_TypeMapBaseOutputDir>$(IntermediateOutputPath)</_TypeMapBaseOutputDir>
+    <!-- Use the outer IntermediateOutputPath when available (inner per-RID builds set
+         _OuterIntermediateOutputPath) so that generated manifests/JCWs are written
+         where the packaging phase expects them. -->
+    <_TypeMapBaseOutputDir Condition=" '$(_OuterIntermediateOutputPath)' != '' ">$(_OuterIntermediateOutputPath)</_TypeMapBaseOutputDir>
+    <_TypeMapBaseOutputDir Condition=" '$(_TypeMapBaseOutputDir)' == '' ">$(IntermediateOutputPath)</_TypeMapBaseOutputDir>
     <_TypeMapBaseOutputDir>$(_TypeMapBaseOutputDir.Replace('\','/'))</_TypeMapBaseOutputDir>
     <_TypeMapOutputDirectory>$(_TypeMapBaseOutputDir)typemap/</_TypeMapOutputDirectory>
     <_TypeMapJavaOutputDirectory>$(_TypeMapBaseOutputDir)typemap/java</_TypeMapJavaOutputDirectory>
@@ -171,12 +175,5 @@
       <FileWrites Include="@(_TypeMapAssemblySource)" />
     </ItemGroup>
   </Target>
-
-  <!-- Override _RemoveRegisterAttribute: trimmable types need [Register] attributes
-       at runtime for type resolution (TryGetJniNameForType uses IJniNameProviderAttribute).
-       The legacy target strips them to reduce assembly size, but the trimmable path
-       requires them. _ShrunkAssemblies is already set to _ResolvedAssemblies by
-       AssemblyResolution.targets, so no copy is needed. -->
-  <Target Name="_RemoveRegisterAttribute" />
 
 </Project>

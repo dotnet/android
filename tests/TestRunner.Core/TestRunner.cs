@@ -19,6 +19,7 @@ namespace Xamarin.Android.UnitTests
 		public long ExecutedTests { get; protected set; } = 0;
 		public long TotalTests { get; protected set; } = 0;
 		public long FilteredTests { get; protected set; } = 0;
+		public bool DryRun { get; set; } = false;
 		public bool RunInParallel { get; set; } = false;
 		public string TestsRootDirectory { get; set; }
 		public Context Context { get; }

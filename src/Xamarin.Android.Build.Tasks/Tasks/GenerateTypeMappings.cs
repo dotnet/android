@@ -50,6 +50,7 @@ public class GenerateTypeMappings : AndroidTask
 	public string TypemapOutputDirectory { get; set; } = "";
 
 	AndroidRuntime androidRuntime;
+	readonly List<ITaskItem> generatedBinaryTypeMaps = new List<ITaskItem> ();
 
 	public override bool RunTask ()
 	{
@@ -70,6 +71,7 @@ public class GenerateTypeMappings : AndroidTask
 		if (RunCheckedBuild)
 			GenerateAllTypeMappingsFromNativeState ();
 
+		GeneratedBinaryTypeMaps = generatedBinaryTypeMaps.ToArray ();
 		return !Log.HasLoggedErrors;
 	}
 
@@ -142,7 +144,6 @@ public class GenerateTypeMappings : AndroidTask
 	void AddOutputTypeMaps (TypeMapGenerator tmg, AndroidTargetArch arch)
 	{
 		string abi = MonoAndroidHelper.ArchToAbi (arch);
-		var items = new List<ITaskItem> ();
 
 		foreach (string file in tmg.GeneratedBinaryTypeMaps) {
 			var item = new TaskItem (file);
@@ -150,9 +151,7 @@ public class GenerateTypeMappings : AndroidTask
 			item.SetMetadata ("DestinationSubPath", $"{abi}/{fileName}");
 			item.SetMetadata ("DestinationSubDirectory", $"{abi}/");
 			item.SetMetadata ("Abi", abi);
-			items.Add (item);
+			generatedBinaryTypeMaps.Add (item);
 		}
-
-		GeneratedBinaryTypeMaps = GeneratedBinaryTypeMaps.Concat (items).ToArray ();
 	}
 }

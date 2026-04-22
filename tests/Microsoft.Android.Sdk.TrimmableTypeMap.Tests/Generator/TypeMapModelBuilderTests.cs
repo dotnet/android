@@ -63,15 +63,71 @@ public class ModelBuilderTests : FixtureTestBase
 			};
 
 			var model = BuildModel (peers);
-			// Two entries: primary "test/Dup" and alias "test/Dup[1]"
-			Assert.Equal (2, model.Entries.Count);
-			Assert.Equal ("test/Dup", model.Entries [0].JniName);
+			// Three entries: "test/Dup[0]", "test/Dup[1]", and the base "test/Dup" → alias holder
+			Assert.Equal (3, model.Entries.Count);
+			Assert.Equal ("test/Dup[0]", model.Entries [0].JniName);
 			Assert.Contains ("Test.First", model.Entries [0].ProxyTypeReference);
 			Assert.Equal ("test/Dup[1]", model.Entries [1].JniName);
 			Assert.Contains ("Test.Second", model.Entries [1].ProxyTypeReference);
+			Assert.Equal ("test/Dup", model.Entries [2].JniName);
 
-			// No associations when neither peer has a proxy (no activation ctor or invoker)
-			Assert.Empty (model.Associations);
+			// Both peers get associations to the alias holder
+			Assert.Equal (2, model.Associations.Count);
+
+			// One alias holder
+			Assert.Single (model.AliasHolders);
+			Assert.Equal (2, model.AliasHolders [0].AliasKeys.Count);
+		}
+
+		[Fact]
+		public void Build_ThreeWayAlias_CreatesCorrectIndexedEntries ()
+		{
+			var peers = new List<JavaPeerInfo> {
+				MakePeerWithActivation ("test/Triple", "Test.Alpha", "A"),
+				MakePeerWithActivation ("test/Triple", "Test.Beta", "A"),
+				MakePeerWithActivation ("test/Triple", "Test.Gamma", "A"),
+			};
+
+			var model = BuildModel (peers, "TripleAlias");
+			// 3 indexed entries + 1 base entry → alias holder = 4
+			Assert.Equal (4, model.Entries.Count);
+			Assert.Equal ("test/Triple[0]", model.Entries [0].JniName);
+			Assert.Equal ("test/Triple[1]", model.Entries [1].JniName);
+			Assert.Equal ("test/Triple[2]", model.Entries [2].JniName);
+			Assert.Equal ("test/Triple", model.Entries [3].JniName);
+
+			// All three peers get associations to the alias holder
+			Assert.Equal (3, model.Associations.Count);
+
+			// Three distinct proxy types
+			Assert.Equal (3, model.ProxyTypes.Count);
+
+			// One alias holder with 3 keys
+			Assert.Single (model.AliasHolders);
+			Assert.Equal (3, model.AliasHolders [0].AliasKeys.Count);
+		}
+
+		[Fact]
+		public void Build_AliasWithMixedActivation_PrimaryNoActivation_AliasHasActivation ()
+		{
+			var peers = new List<JavaPeerInfo> {
+				MakeMcwPeer ("test/Mixed", "Test.NoAct", "A"),
+				MakePeerWithActivation ("test/Mixed", "Test.WithAct", "A"),
+			};
+
+			var model = BuildModel (peers, "MixedAlias");
+			// 2 indexed entries + 1 base entry → alias holder = 3
+			Assert.Equal (3, model.Entries.Count);
+			Assert.Equal ("test/Mixed[0]", model.Entries [0].JniName);
+			Assert.Equal ("test/Mixed[1]", model.Entries [1].JniName);
+			Assert.Equal ("test/Mixed", model.Entries [2].JniName);
+
+			// Only the alias peer with activation gets a proxy
+			Assert.Single (model.ProxyTypes);
+			Assert.Equal ("Test_WithAct_Proxy", model.ProxyTypes [0].TypeName);
+
+			// Both peers get associations to alias holder
+			Assert.Equal (2, model.Associations.Count);
 		}
 	}
 
@@ -183,14 +239,13 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
-		public void Build_PeerWithActivation_CreatesAssociation ()
+		public void Build_SinglePeer_NoAssociation ()
 		{
+			// Single peers don't need associations — only alias groups do
 			var peer = MakePeerWithActivation ("my/app/MainActivity", "MyApp.MainActivity", "App");
 			var model = BuildModel (new [] { peer }, "MyTypeMap");
 
-			var assoc = Assert.Single (model.Associations);
-			Assert.Equal ("MyApp.MainActivity, App", assoc.SourceTypeReference);
-			Assert.Equal ("_TypeMap.Proxies.MyApp_MainActivity_Proxy, MyTypeMap", assoc.AliasProxyTypeReference);
+			Assert.Empty (model.Associations);
 		}
 
 		[Fact]
@@ -438,6 +493,79 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 	}
 
+	public class FixtureAliases
+	{
+		[Fact]
+		public void Fixture_AliasTarget_ThreeTypesShareJniName ()
+		{
+			var peers = ScanFixtures ();
+			var aliasPeers = peers.Where (p => p.JavaName == "test/AliasTarget").ToList ();
+			Assert.Equal (3, aliasPeers.Count);
+		}
+
+		[Fact]
+		public void Fixture_AliasTarget_ProducesIndexedEntries ()
+		{
+			var peers = ScanFixtures ();
+			var aliasPeers = peers.Where (p => p.JavaName == "test/AliasTarget").ToList ();
+
+			var model = BuildModel (aliasPeers, "AliasFixture");
+
+			// 3 indexed entries + 1 base entry → alias holder = 4
+			Assert.Equal (4, model.Entries.Count);
+			Assert.Equal ("test/AliasTarget[0]", model.Entries [0].JniName);
+			Assert.Equal ("test/AliasTarget[1]", model.Entries [1].JniName);
+			Assert.Equal ("test/AliasTarget[2]", model.Entries [2].JniName);
+			Assert.Equal ("test/AliasTarget", model.Entries [3].JniName);
+		}
+
+		[Fact]
+		public void Fixture_AliasTarget_EachPeerGetsDistinctProxy ()
+		{
+			var peers = ScanFixtures ();
+			var aliasPeers = peers.Where (p => p.JavaName == "test/AliasTarget").ToList ();
+
+			var model = BuildModel (aliasPeers, "AliasFixture");
+			Assert.Equal (3, model.ProxyTypes.Count);
+
+			var proxyNames = model.ProxyTypes.Select (p => p.TypeName).ToList ();
+			Assert.Equal (proxyNames.Distinct ().Count (), proxyNames.Count);
+		}
+
+		[Fact]
+		public void Fixture_AliasTarget_AssociationsLinkToAliasHolder ()
+		{
+			var peers = ScanFixtures ();
+			var aliasPeers = peers.Where (p => p.JavaName == "test/AliasTarget").ToList ();
+
+			var model = BuildModel (aliasPeers, "AliasFixture");
+			// All 3 peers get associations to the alias holder
+			Assert.Equal (3, model.Associations.Count);
+
+			// All associations point to the same alias holder
+			var holderRef = model.Associations [0].AliasProxyTypeReference;
+			Assert.All (model.Associations, a => Assert.Equal (holderRef, a.AliasProxyTypeReference));
+			Assert.Contains ("_Aliases", holderRef);
+		}
+
+		[Fact]
+		public void Fixture_AliasTarget_GeneratesAliasHolder ()
+		{
+			var peers = ScanFixtures ();
+			var aliasPeers = peers.Where (p => p.JavaName == "test/AliasTarget").ToList ();
+
+			var model = BuildModel (aliasPeers, "AliasFixture");
+			Assert.Single (model.AliasHolders);
+
+			var holder = model.AliasHolders [0];
+			Assert.Equal ("_TypeMap.Aliases", holder.Namespace);
+			Assert.Equal (3, holder.AliasKeys.Count);
+			Assert.Equal ("test/AliasTarget[0]", holder.AliasKeys [0]);
+			Assert.Equal ("test/AliasTarget[1]", holder.AliasKeys [1]);
+			Assert.Equal ("test/AliasTarget[2]", holder.AliasKeys [2]);
+		}
+	}
+
 	public class FixtureGenericHolder
 	{
 		[Fact]
@@ -449,6 +577,21 @@ public class ModelBuilderTests : FixtureTestBase
 			var model = BuildModel (new [] { peer }, "TypeMap");
 			var entry = FindEntry (model, "my/app/GenericHolder");
 			Assert.NotNull (entry);
+		}
+
+		[Fact]
+		public void Fixture_GenericHolder_HasAssociation ()
+		{
+			// Generic definitions must still get a TypeMapAssociation entry so managed→proxy
+			// lookup works for the open generic definition. Their proxy derives from the
+			// non-generic `JavaPeerProxy` base, so the CLR can load the proxy without
+			// resolving an open generic argument.
+			var peer = FindFixtureByJavaName ("my/app/GenericHolder");
+			Assert.True (peer.IsGenericDefinition);
+
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			Assert.Contains (model.Associations,
+				a => a.SourceTypeReference.StartsWith ("MyApp.Generic.GenericHolder`1", StringComparison.Ordinal));
 		}
 	}
 

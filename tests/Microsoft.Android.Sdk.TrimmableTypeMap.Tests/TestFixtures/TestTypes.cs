@@ -914,3 +914,37 @@ public class DotFormatActivity : Android.App.Activity
 {
 	protected DotFormatActivity (IntPtr handle, Android.Runtime.JniHandleOwnership transfer) : base (handle, transfer) { }
 }
+
+// --- Alias test types ---
+// Multiple .NET types mapping to the same JNI name (e.g., generic + non-generic collection wrappers).
+
+namespace MyApp.Aliases
+{
+	/// <summary>
+	/// Non-generic type registered as "test/AliasTarget" — forms the primary entry.
+	/// </summary>
+	[Register ("test/AliasTarget", DoNotGenerateAcw = true)]
+	public class AliasTarget : Java.Lang.Object
+	{
+		protected AliasTarget (IntPtr handle, Android.Runtime.JniHandleOwnership transfer) : base (handle, transfer) { }
+	}
+
+	/// <summary>
+	/// Generic type also registered as "test/AliasTarget" — forms an alias entry.
+	/// Mirrors the real-world pattern of JavaCollection/JavaCollection&lt;T&gt;.
+	/// </summary>
+	[Register ("test/AliasTarget", DoNotGenerateAcw = true)]
+	public class AliasTargetGeneric<T> : Java.Lang.Object
+	{
+		protected AliasTargetGeneric (IntPtr handle, Android.Runtime.JniHandleOwnership transfer) : base (handle, transfer) { }
+	}
+
+	/// <summary>
+	/// Third type also registered as "test/AliasTarget" — tests 3-way alias groups.
+	/// </summary>
+	[Register ("test/AliasTarget", DoNotGenerateAcw = true)]
+	public class AliasTargetExtended : Java.Lang.Object
+	{
+		protected AliasTargetExtended (IntPtr handle, Android.Runtime.JniHandleOwnership transfer) : base (handle, transfer) { }
+	}
+}
