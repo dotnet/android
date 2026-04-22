@@ -162,10 +162,6 @@ namespace Android.Runtime
 			);
 			JniRuntime.SetCurrent (androidRuntime);
 
-			if (RuntimeFeature.TrimmableTypeMap) {
-				TrimmableTypeMap.Initialize ();
-			}
-
 			grefIGCUserPeer_class = args->grefIGCUserPeer;
 			grefGCUserPeerable_class = args->grefGCUserPeerable;
 

@@ -129,6 +129,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				assemblies,
 				systemRuntimeVersion,
 				frameworkAssemblyNames,
+				isRelease: !Debug,
 				manifestConfig,
 				manifestTemplate);
 

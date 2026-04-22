@@ -43,10 +43,19 @@ See: https://github.com/dotnet/sdk/pull/52581
     <!--
       Update DOTNET_STARTUP_HOOKS in @(RuntimeEnvironmentVariable) to use just the assembly name.
       The full path doesn't work on Android since the DLL is deployed alongside the app.
+      Preserve any existing DOTNET_STARTUP_HOOKS values (e.g., from trimmable typemap) by composing
+      with Path.PathSeparator.
     -->
     <ItemGroup Condition=" '$(_AndroidHotReloadAgentAssemblyName)' != '' ">
+      <_ExistingStartupHooks Include="@(RuntimeEnvironmentVariable)" Condition=" '%(Identity)' == 'DOTNET_STARTUP_HOOKS' and '%(Value)' != '$(_AndroidHotReloadAgentAssemblyPath)' " />
       <RuntimeEnvironmentVariable Remove="DOTNET_STARTUP_HOOKS" />
-      <RuntimeEnvironmentVariable Include="DOTNET_STARTUP_HOOKS" Value="$(_AndroidHotReloadAgentAssemblyName)" />
+      <RuntimeEnvironmentVariable Include="DOTNET_STARTUP_HOOKS"
+          Value="$(_AndroidHotReloadAgentAssemblyName)$([System.IO.Path]::PathSeparator)@(_ExistingStartupHooks->'%(Value)', '$([System.IO.Path]::PathSeparator)')"
+          Condition=" '@(_ExistingStartupHooks)' != '' " />
+      <RuntimeEnvironmentVariable Include="DOTNET_STARTUP_HOOKS"
+          Value="$(_AndroidHotReloadAgentAssemblyName)"
+          Condition=" '@(_ExistingStartupHooks)' == '' " />
+      <_ExistingStartupHooks Remove="@(_ExistingStartupHooks)" />
       <!-- Set STARTUP_HOOKS via RuntimeHostConfigurationOption for MonoVM (read by Mono runtime) -->
       <RuntimeHostConfigurationOption Include="STARTUP_HOOKS" Value="$(_AndroidHotReloadAgentAssemblyName)" Condition=" '$(UseMonoRuntime)' == 'true' " />
     </ItemGroup>

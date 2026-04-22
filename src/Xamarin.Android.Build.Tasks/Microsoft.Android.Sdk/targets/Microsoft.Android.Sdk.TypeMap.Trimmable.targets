@@ -11,6 +11,9 @@
 
   <PropertyGroup>
     <_TypeMapAssemblyName>_Microsoft.Android.TypeMaps</_TypeMapAssemblyName>
+    <!-- Enable startup hooks for trimmable typemap — the root assembly acts as a startup hook
+         that constructs the ITypeMapWithAliasing and calls TrimmableTypeMap.Initialize(). -->
+    <StartupHookSupport Condition=" '$(StartupHookSupport)' == '' or '$(StartupHookSupport)' == 'false' ">true</StartupHookSupport>
     <!-- Use the outer IntermediateOutputPath when available (inner per-RID builds set
          _OuterIntermediateOutputPath) so that generated manifests/JCWs are written
          where the packaging phase expects them. -->
@@ -26,6 +29,9 @@
         Value="true" Trim="true" />
     <RuntimeHostConfigurationOption Include="System.Runtime.InteropServices.TypeMappingEntryAssembly"
         Value="$(_TypeMapAssemblyName)" />
+    <!-- Configure the root typemap assembly as a startup hook -->
+    <RuntimeEnvironmentVariable Include="DOTNET_STARTUP_HOOKS" Value="$(_TypeMapAssemblyName)" />
+    <RuntimeHostConfigurationOption Include="STARTUP_HOOKS" Value="$(_TypeMapAssemblyName)" Condition=" '$(UseMonoRuntime)' == 'true' " />
     <!-- Preserve the native→managed entry point (called via create_delegate from host.cc) -->
     <TrimmerRootDescriptor Include="$(MSBuildThisFileDirectory)../PreserveLists/Trimmable.CoreCLR.xml"
         Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
