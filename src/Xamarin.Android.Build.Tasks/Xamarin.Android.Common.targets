@@ -2008,6 +2008,7 @@ because xbuild doesn't support framework reference assemblies.
       EnableCompression="$(AndroidEnableAssemblyCompression)"
       ProjectFullPath="$(MSBuildProjectFullPath)"
   />
+  <Touch Files="@(_CompressedAssembliesAssemblySource)" />
   <ItemGroup>
     <FileWrites Include="@(_CompressedAssembliesAssemblySource)" />
   </ItemGroup>
