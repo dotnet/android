@@ -8,7 +8,7 @@
       "Size": 25400
     },
     "lib/arm64-v8a/libUnnamedProject.so": {
-      "Size": 5072296
+      "Size": 4601760
     },
     "META-INF/BNDLTOOL.RSA": {
       "Size": 1221
@@ -44,5 +44,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 2126818
+  "PackageSize": 1962978
 }
