@@ -141,7 +141,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   </Target>
 
   <Target Name="_AndroidComputeIlcCompileInputs">
-    <PropertyGroup>
+    <PropertyGroup Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' ">
       <!-- Turn trimmer warnings back to original value -->
       <SuppressTrimAnalysisWarnings>$(_OriginalSuppressTrimAnalysisWarnings)</SuppressTrimAnalysisWarnings>
     </PropertyGroup>
