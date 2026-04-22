@@ -1587,7 +1587,42 @@ because xbuild doesn't support framework reference assemblies.
   </PrepareAbiItems>
 </Target>
 
-<Target Name="_GenerateEnvironmentFiles" DependsOnTargets="_AndroidConfigureHotReloadEnvironment">
+<Target Name="_ComposeDotNetStartupHooks"
+		DependsOnTargets="_AndroidConfigureHotReloadEnvironment">
+  <ItemGroup>
+    <_AndroidStartupHooksFromRuntimeEnvironmentVariable Include="@(RuntimeEnvironmentVariable->WithMetadataValue('Identity', 'DOTNET_STARTUP_HOOKS'))" />
+    <_AndroidStartupHooksFromRuntimeEnvironmentVariable Remove="@(_AndroidStartupHooksFromRuntimeEnvironmentVariable)"
+        Condition=" '$(_AndroidHotReloadAgentAssemblyPath)' != '' And '%(_AndroidStartupHooksFromRuntimeEnvironmentVariable.Value)' == '$(_AndroidHotReloadAgentAssemblyPath)' " />
+    <_AndroidDotnetStartupHooks Include="@(_AndroidStartupHooksFromRuntimeEnvironmentVariable->'%(Value)')" />
+    <_AndroidEnvironmentStartupHookFiles Include="@(AndroidEnvironment);@(LibraryEnvironments)" />
+  </ItemGroup>
+
+  <ReadLinesFromFile File="%(_AndroidEnvironmentStartupHookFiles.Identity)">
+    <Output TaskParameter="Lines" ItemName="_AndroidEnvironmentStartupHookLines" />
+  </ReadLinesFromFile>
+
+  <ItemGroup>
+    <_AndroidEnvironmentStartupHookLinesFiltered Include="@(_AndroidEnvironmentStartupHookLines)"
+        Condition="$([System.String]::Copy('%(_AndroidEnvironmentStartupHookLines.Identity)').StartsWith('DOTNET_STARTUP_HOOKS='))" />
+    <_AndroidDotnetStartupHooks Include="$([System.String]::Copy('%(_AndroidEnvironmentStartupHookLinesFiltered.Identity)').Substring(21))" />
+  </ItemGroup>
+
+  <RemoveDuplicates Inputs="@(_AndroidDotnetStartupHooks)">
+    <Output TaskParameter="Filtered" ItemName="_AndroidDotnetStartupHooksDistinct" />
+  </RemoveDuplicates>
+
+  <CreateProperty Value="@(_AndroidDotnetStartupHooksDistinct,':')">
+    <Output TaskParameter="Value" PropertyName="_AndroidDotnetStartupHooksValue" />
+  </CreateProperty>
+
+  <ItemGroup>
+    <RuntimeEnvironmentVariable Remove="DOTNET_STARTUP_HOOKS" />
+    <RuntimeEnvironmentVariable Include="DOTNET_STARTUP_HOOKS" Value="$(_AndroidDotnetStartupHooksValue)"
+        Condition=" '$(_AndroidDotnetStartupHooksValue)' != '' " />
+  </ItemGroup>
+</Target>
+
+<Target Name="_GenerateEnvironmentFiles" DependsOnTargets="_ComposeDotNetStartupHooks">
   <ItemGroup>
     <_GeneratedAndroidEnvironment Include="mono.enable_assembly_preload=0" Condition=" '$(AndroidEnablePreloadAssemblies)' != 'True' " />
     <_GeneratedAndroidEnvironment Include="DOTNET_MODIFIABLE_ASSEMBLIES=Debug" Condition=" '$(AndroidIncludeDebugSymbols)' == 'true' and '$(AndroidUseInterpreter)' == 'true' " />

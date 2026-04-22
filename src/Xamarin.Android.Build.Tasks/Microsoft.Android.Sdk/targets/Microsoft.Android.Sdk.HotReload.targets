@@ -23,8 +23,7 @@ See: https://github.com/dotnet/sdk/pull/52581
   <!--
     _AndroidConfigureHotReloadEnvironment:
     Configures Hot Reload when dotnet-watch passes environment variables via @(RuntimeEnvironmentVariable).
-    - Adds the Hot Reload agent DLL as a reference so it gets deployed
-    - Updates DOTNET_STARTUP_HOOKS to use just the assembly name (not the full path)
+    - Adds the Hot Reload startup hook assembly name to @(_AndroidDotnetStartupHooks)
     - Sets up STARTUP_HOOKS via RuntimeHostConfigurationOption for MonoVM
   -->
   <Target Name="_AndroidConfigureHotReloadEnvironment"
@@ -40,13 +39,9 @@ See: https://github.com/dotnet/sdk/pull/52581
       <_AndroidHotReloadAgentAssemblyName>$([System.IO.Path]::GetFileNameWithoutExtension('$(_AndroidHotReloadAgentAssemblyPath)'))</_AndroidHotReloadAgentAssemblyName>
     </PropertyGroup>
 
-    <!--
-      Update DOTNET_STARTUP_HOOKS in @(RuntimeEnvironmentVariable) to use just the assembly name.
-      The full path doesn't work on Android since the DLL is deployed alongside the app.
-    -->
+    <!-- The full path doesn't work on Android since the DLL is deployed alongside the app. -->
     <ItemGroup Condition=" '$(_AndroidHotReloadAgentAssemblyName)' != '' ">
-      <RuntimeEnvironmentVariable Remove="DOTNET_STARTUP_HOOKS" />
-      <RuntimeEnvironmentVariable Include="DOTNET_STARTUP_HOOKS" Value="$(_AndroidHotReloadAgentAssemblyName)" />
+      <_AndroidDotnetStartupHooks Include="$(_AndroidHotReloadAgentAssemblyName)" />
       <!-- Set STARTUP_HOOKS via RuntimeHostConfigurationOption for MonoVM (read by Mono runtime) -->
       <RuntimeHostConfigurationOption Include="STARTUP_HOOKS" Value="$(_AndroidHotReloadAgentAssemblyName)" Condition=" '$(UseMonoRuntime)' == 'true' " />
     </ItemGroup>

@@ -14,6 +14,15 @@ namespace Xamarin.Android.Build.Tests
 	[Parallelizable (ParallelScope.Children)]
 	public class EnvironmentContentTests : BaseTest
 	{
+		class StartupHookEnvironmentProject : XamarinAndroidApplicationProject
+		{
+			protected override string ExtraDirectoryBuildTargetsContent => """
+				<ItemGroup>
+					<RuntimeEnvironmentVariable Include="DOTNET_STARTUP_HOOKS" Value="$(MSBuildProjectDirectory)/hotreload/Microsoft.Extensions.DotNetDeltaApplier.dll" />
+				</ItemGroup>
+			""";
+		}
+
 		[Test]
 		[NonParallelizable]
 		public void BuildApplicationWithMonoEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode, [Values] AndroidRuntime runtime)
@@ -158,6 +167,41 @@ namespace Xamarin.Android.Build.Tests
 				envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles, AndroidRuntime.MonoVM);
 				Assert.IsTrue (envvars.ContainsKey (gcVarName), $"Environment should contain '{gcVarName}'.");
 				Assert.AreEqual (expectedUpdatedValue, envvars[gcVarName], $"'{gcVarName}' should have been '{expectedUpdatedValue}' when concurrent GC is enabled.");
+			}
+		}
+
+		[Test]
+		public void DotNetStartupHooksAreMergedFromRuntimeEnvironmentVariableAndAndroidEnvironment ()
+		{
+			const string supportedAbis = "armeabi-v7a;x86";
+
+			var proj = new StartupHookEnvironmentProject {
+				IsRelease = false,
+				OtherBuildItems = {
+					new BuildItem.NoActionResource ("hotreload/Microsoft.Extensions.DotNetDeltaApplier.dll") {
+						BinaryContent = () => [],
+					},
+					new AndroidItem.AndroidEnvironment ("startup.env") {
+						TextContent = () => "DOTNET_STARTUP_HOOKS=MyStartupHook.dll",
+					},
+				},
+			};
+			proj.SetRuntime (AndroidRuntime.MonoVM);
+			proj.SetAndroidSupportedAbis (supportedAbis);
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				string intermediateOutputDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true, AndroidRuntime.MonoVM);
+				Dictionary<string, string> envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles, AndroidRuntime.MonoVM);
+
+				Assert.IsTrue (envvars.TryGetValue ("DOTNET_STARTUP_HOOKS", out string startupHooks), "Environment should contain DOTNET_STARTUP_HOOKS");
+				CollectionAssert.AreEquivalent (
+					new [] { "Microsoft.Extensions.DotNetDeltaApplier", "MyStartupHook.dll" },
+					startupHooks.Split (':'),
+					"DOTNET_STARTUP_HOOKS should merge values from RuntimeEnvironmentVariable and AndroidEnvironment."
+				);
 			}
 		}
 
