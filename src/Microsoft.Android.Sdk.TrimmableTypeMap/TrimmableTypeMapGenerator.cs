@@ -124,7 +124,7 @@ public class TrimmableTypeMapGenerator
 			perAssemblyNames.Add (assemblyName);
 			var peers = group.ToList ();
 			var stream = new MemoryStream ();
-			generator.Generate (peers, stream, assemblyName);
+			generator.Generate (peers, stream, assemblyName, mergeAssemblyTypeMaps);
 			stream.Position = 0;
 			generatedAssemblies.Add (new GeneratedAssembly (assemblyName, stream));
 			logger.LogGeneratedTypeMapAssemblyInfo (assemblyName, peers.Count);

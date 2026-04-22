@@ -24,10 +24,13 @@ public sealed class TypeMapAssemblyGenerator
 	/// <param name="peers">Scanned Java peer types.</param>
 	/// <param name="stream">Stream to write the output PE assembly to.</param>
 	/// <param name="assemblyName">Assembly name for the generated assembly.</param>
-	public void Generate (IReadOnlyList<JavaPeerInfo> peers, Stream stream, string assemblyName)
+	/// <param name="mergeAssemblyTypeMaps">
+	/// When true, uses <c>Java.Lang.Object</c> as the shared anchor type. When false, emits a per-assembly anchor.
+	/// </param>
+	public void Generate (IReadOnlyList<JavaPeerInfo> peers, Stream stream, string assemblyName, bool mergeAssemblyTypeMaps = false)
 	{
 		var model = ModelBuilder.Build (peers, assemblyName + ".dll", assemblyName);
 		var emitter = new TypeMapAssemblyEmitter (_systemRuntimeVersion);
-		emitter.Emit (model, stream);
+		emitter.Emit (model, stream, mergeAssemblyTypeMaps);
 	}
 }

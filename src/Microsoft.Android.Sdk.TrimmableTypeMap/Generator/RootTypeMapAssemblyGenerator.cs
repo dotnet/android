@@ -84,17 +84,26 @@ public sealed class RootTypeMapAssemblyGenerator
 		var pe = new PEAssemblyBuilder (_systemRuntimeVersion);
 		pe.EmitPreamble (assemblyName, moduleName);
 
-		// Emit __TypeMapAnchor type definition (used as group type for root assembly)
-		var objectRef = pe.Metadata.AddTypeReference (pe.SystemRuntimeRef,
-			pe.Metadata.GetOrAddString ("System"), pe.Metadata.GetOrAddString ("Object"));
-
-		var anchorTypeHandle = pe.Metadata.AddTypeDefinition (
-			TypeAttributes.NotPublic | TypeAttributes.Sealed | TypeAttributes.Class,
-			default,
-			pe.Metadata.GetOrAddString ("__TypeMapAnchor"),
-			objectRef,
-			MetadataTokens.FieldDefinitionHandle (pe.Metadata.GetRowCount (TableIndex.Field) + 1),
-			MetadataTokens.MethodDefinitionHandle (pe.Metadata.GetRowCount (TableIndex.MethodDef) + 1));
+		EntityHandle anchorTypeHandle;
+		if (mergeAssemblyTypeMaps) {
+			// In merged mode, all per-assembly typemaps use Java.Lang.Object as the shared
+			// anchor type, so the root assembly must also use Java.Lang.Object.
+			anchorTypeHandle = pe.Metadata.AddTypeReference (pe.MonoAndroidRef,
+				pe.Metadata.GetOrAddString ("Java.Lang"),
+				pe.Metadata.GetOrAddString ("Object"));
+		} else {
+			// In aggregate mode, each per-assembly typemap has its own __TypeMapAnchor.
+			// The root also defines its own for TypeMapAssemblyTargetAttribute grouping.
+			var objectRef = pe.Metadata.AddTypeReference (pe.SystemRuntimeRef,
+				pe.Metadata.GetOrAddString ("System"), pe.Metadata.GetOrAddString ("Object"));
+			anchorTypeHandle = pe.Metadata.AddTypeDefinition (
+				TypeAttributes.NotPublic | TypeAttributes.Sealed | TypeAttributes.Class,
+				default,
+				pe.Metadata.GetOrAddString ("__TypeMapAnchor"),
+				objectRef,
+				MetadataTokens.FieldDefinitionHandle (pe.Metadata.GetRowCount (TableIndex.Field) + 1),
+				MetadataTokens.MethodDefinitionHandle (pe.Metadata.GetRowCount (TableIndex.MethodDef) + 1));
+		}
 
 		// Emit [assembly: TypeMapAssemblyTargetAttribute<__TypeMapAnchor>("name")] for each per-assembly typemap
 		EmitAssemblyTargetAttributes (pe, anchorTypeHandle, perAssemblyTypeMapNames);
@@ -114,7 +123,7 @@ public sealed class RootTypeMapAssemblyGenerator
 		pe.WritePE (stream);
 	}
 
-	static void EmitAssemblyTargetAttributes (PEAssemblyBuilder pe, TypeDefinitionHandle anchorTypeHandle, IReadOnlyList<string> perAssemblyTypeMapNames)
+	static void EmitAssemblyTargetAttributes (PEAssemblyBuilder pe, EntityHandle anchorTypeHandle, IReadOnlyList<string> perAssemblyTypeMapNames)
 	{
 		var openAttrRef = pe.Metadata.AddTypeReference (pe.SystemRuntimeInteropServicesRef,
 			pe.Metadata.GetOrAddString ("System.Runtime.InteropServices"),
@@ -133,7 +142,7 @@ public sealed class RootTypeMapAssemblyGenerator
 		}
 	}
 
-	static void EmitStartupHook (PEAssemblyBuilder pe, TypeDefinitionHandle anchorTypeHandle, IReadOnlyList<string> perAssemblyTypeMapNames, bool mergeAssemblyTypeMaps)
+	static void EmitStartupHook (PEAssemblyBuilder pe, EntityHandle anchorTypeHandle, IReadOnlyList<string> perAssemblyTypeMapNames, bool mergeAssemblyTypeMaps)
 	{
 		var metadata = pe.Metadata;
 
@@ -181,7 +190,7 @@ public sealed class RootTypeMapAssemblyGenerator
 		}
 	}
 
-	static void EmitInitializeWithSingleTypeMap (PEAssemblyBuilder pe, TypeDefinitionHandle anchorTypeHandle,
+	static void EmitInitializeWithSingleTypeMap (PEAssemblyBuilder pe, EntityHandle anchorTypeHandle,
 		MemberReferenceHandle getExternalMemberRef, MemberReferenceHandle getProxyMemberRef,
 		MemberReferenceHandle initializeRef)
 	{

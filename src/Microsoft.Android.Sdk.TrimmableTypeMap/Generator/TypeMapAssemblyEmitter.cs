@@ -14,10 +14,12 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// <remarks>
 /// <para>The generated assembly looks like this (pseudo-C#):</para>
 /// <code>
-/// // Assembly-level TypeMap attributes — one per Java peer type:
-/// [assembly: TypeMap&lt;Java.Lang.Object&gt;("android/app/Activity", typeof(Activity_Proxy))]                              // unconditional (ACW)
-/// [assembly: TypeMap&lt;Java.Lang.Object&gt;("android/widget/TextView", typeof(TextView_Proxy), typeof(TextView))]          // trimmable (MCW)
-/// [assembly: TypeMapAssociation&lt;Java.Lang.Object&gt;(typeof(MyTextView), typeof(Android_Widget_TextView_Proxy))]          // managed → proxy
+/// // Assembly-level TypeMap attributes — one per Java peer type.
+/// // The anchor type T is Java.Lang.Object in merged mode (Release) or
+/// // a per-assembly __TypeMapAnchor in per-assembly mode (Debug):
+/// [assembly: TypeMap&lt;T&gt;("android/app/Activity", typeof(Activity_Proxy))]                              // unconditional (ACW)
+/// [assembly: TypeMap&lt;T&gt;("android/widget/TextView", typeof(TextView_Proxy), typeof(TextView))]          // trimmable (MCW)
+/// [assembly: TypeMapAssociation&lt;T&gt;(typeof(MyTextView), typeof(Android_Widget_TextView_Proxy))]          // managed → proxy
 ///
 /// // One proxy type per Java peer that needs activation or UCO wrappers:
 /// public sealed class Activity_Proxy : JavaPeerProxy&lt;Activity&gt;, IAndroidCallableWrapper   // IAndroidCallableWrapper for ACWs only
@@ -107,7 +109,7 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _jniEnvTypesRegisterNativesRef;
 	MemberReferenceHandle _readOnlySpanOfJniNativeMethodCtorRef;
 
-	TypeDefinitionHandle _anchorTypeHandle;
+	EntityHandle _anchorTypeHandle;
 
 	/// <summary>
 	/// Creates a new emitter.
@@ -125,7 +127,11 @@ sealed class TypeMapAssemblyEmitter
 	/// <summary>
 	/// Emits a PE assembly from the given model and writes it to <paramref name="stream"/>.
 	/// </summary>
-	public void Emit (TypeMapAssemblyData model, Stream stream)
+	/// <param name="mergeAssemblyTypeMaps">
+	/// When true, uses <c>Java.Lang.Object</c> as the shared anchor type so all assemblies
+	/// share a single typemap universe. When false, emits a per-assembly <c>__TypeMapAnchor</c>.
+	/// </param>
+	public void Emit (TypeMapAssemblyData model, Stream stream, bool mergeAssemblyTypeMaps = false)
 	{
 		if (model is null) {
 			throw new ArgumentNullException (nameof (model));
@@ -134,18 +140,26 @@ sealed class TypeMapAssemblyEmitter
 			throw new ArgumentNullException (nameof (stream));
 		}
 
-		EmitCore (model);
+		EmitCore (model, mergeAssemblyTypeMaps);
 		_pe.WritePE (stream);
 	}
 
-	void EmitCore (TypeMapAssemblyData model)
+	void EmitCore (TypeMapAssemblyData model, bool mergeAssemblyTypeMaps)
 	{
 		_pe.EmitPreamble (model.AssemblyName, model.ModuleName, MetadataHelper.ComputeContentFingerprint (model));
 
 		_javaInteropRef = _pe.AddAssemblyRef ("Java.Interop", new Version (0, 0, 0, 0));
 
 		EmitTypeReferences ();
-		EmitAnchorType ();
+		if (mergeAssemblyTypeMaps) {
+			// Use Java.Lang.Object as the shared anchor so all assemblies share a single
+			// typemap universe that can be merged at startup.
+			_anchorTypeHandle = _pe.Metadata.AddTypeReference (_pe.MonoAndroidRef,
+				_pe.Metadata.GetOrAddString ("Java.Lang"),
+				_pe.Metadata.GetOrAddString ("Object"));
+		} else {
+			EmitAnchorType ();
+		}
 		EmitMemberReferences ();
 
 		// Track wrapper method names → handles for RegisterNatives
