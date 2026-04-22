@@ -198,7 +198,7 @@ public sealed class RootTypeMapAssemblyGenerator
 		var getProxySpec = MakeGenericMethodSpec (pe, getProxyMemberRef, anchorTypeHandle);
 
 		pe.EmitBody ("Initialize",
-			MethodAttributes.Assembly | MethodAttributes.Static | MethodAttributes.HideBySig,
+			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 			sig => sig.MethodSignature ().Parameters (0, rt => rt.Void (), p => { }),
 			encoder => {
 				// TypeMapping.GetOrCreateExternalTypeMapping<__TypeMapAnchor>()
@@ -234,7 +234,7 @@ public sealed class RootTypeMapAssemblyGenerator
 		}
 
 		pe.EmitBody ("Initialize",
-			MethodAttributes.Assembly | MethodAttributes.Static | MethodAttributes.HideBySig,
+			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 			sig => sig.MethodSignature ().Parameters (0, rt => rt.Void (), p => { }),
 			encoder => {
 				// var typeMaps = new IReadOnlyDictionary<string, Type>[N];
