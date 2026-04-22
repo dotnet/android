@@ -69,6 +69,7 @@ sealed class TypeMapAssemblyEmitter
 	AssemblyReferenceHandle _javaInteropRef;
 
 	TypeReferenceHandle _javaPeerProxyRef;
+	TypeReferenceHandle _javaPeerProxyNonGenericRef;
 	TypeReferenceHandle _iJavaPeerableRef;
 	TypeReferenceHandle _jniHandleOwnershipRef;
 	TypeReferenceHandle _jniObjectReferenceRef;
@@ -80,6 +81,8 @@ sealed class TypeMapAssemblyEmitter
 	TypeReferenceHandle _jniTypeRef;
 	TypeReferenceHandle _notSupportedExceptionRef;
 	TypeReferenceHandle _runtimeHelpersRef;
+	TypeReferenceHandle _javaPeerAliasesAttrRef;
+	MemberReferenceHandle _javaPeerAliasesAttrCtorRef;
 
 	MemberReferenceHandle _getTypeFromHandleRef;
 	MemberReferenceHandle _getUninitializedObjectRef;
@@ -149,6 +152,10 @@ sealed class TypeMapAssemblyEmitter
 			EmitProxyType (proxy, wrapperHandles);
 		}
 
+		foreach (var holder in model.AliasHolders) {
+			EmitAliasHolderType (holder);
+		}
+
 		foreach (var entry in model.Entries) {
 			EmitTypeMapAttribute (entry);
 		}
@@ -165,6 +172,8 @@ sealed class TypeMapAssemblyEmitter
 		var metadata = _pe.Metadata;
 		_javaPeerProxyRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaPeerProxy`1"));
+		_javaPeerProxyNonGenericRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaPeerProxy"));
 		_iJavaPeerableRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("IJavaPeerable"));
 		_jniHandleOwnershipRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
@@ -187,6 +196,8 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("NotSupportedException"));
 		_runtimeHelpersRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
 			metadata.GetOrAddString ("System.Runtime.CompilerServices"), metadata.GetOrAddString ("RuntimeHelpers"));
+		_javaPeerAliasesAttrRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaPeerAliasesAttribute"));
 
 		_jniNativeMethodRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniNativeMethod"));
@@ -286,6 +297,7 @@ sealed class TypeMapAssemblyEmitter
 
 		EmitTypeMapAttributeCtorRef ();
 		EmitTypeMapAssociationAttributeCtorRef ();
+		EmitJavaPeerAliasesAttributeCtorRef ();
 	}
 
 	void EmitTypeMapAttributeCtorRef ()
@@ -352,14 +364,36 @@ sealed class TypeMapAssemblyEmitter
 
 		var metadata = _pe.Metadata;
 		var targetTypeRef = _pe.ResolveTypeRef (proxy.TargetType);
-		var proxyBaseType = _pe.MakeGenericTypeSpec (_javaPeerProxyRef, targetTypeRef);
-		var baseCtorRef = _pe.AddMemberRef (proxyBaseType, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
-				rt => rt.Void (),
-				p => {
-					p.AddParameter ().Type ().String ();
-					p.AddParameter ().Type ().Type (_systemTypeRef, false);
-				}));
+
+		// Open generic definitions derive from the non-generic `JavaPeerProxy` abstract base.
+		// Using `JavaPeerProxy<T>` with an open T would force the CLR to resolve a generic
+		// argument that isn't available via the TypeMapLazyDictionary loader, and using a
+		// placeholder like `Java.Lang.Object` leaks an incorrect TargetType into the typemap.
+		// The non-generic base takes `targetType` as a ctor parameter, so we can pass the real
+		// open-generic type token (a TypeRef, not a closed TypeSpec) and keep TargetType correct.
+		EntityHandle proxyBaseType;
+		MemberReferenceHandle baseCtorRef;
+		if (proxy.IsGenericDefinition) {
+			proxyBaseType = _javaPeerProxyNonGenericRef;
+			baseCtorRef = _pe.AddMemberRef (_javaPeerProxyNonGenericRef, ".ctor",
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (3,
+					rt => rt.Void (),
+					p => {
+						p.AddParameter ().Type ().String ();
+						p.AddParameter ().Type ().Type (_systemTypeRef, false);
+						p.AddParameter ().Type ().Type (_systemTypeRef, false);
+					}));
+		} else {
+			var genericProxyBase = _pe.MakeGenericTypeSpec (_javaPeerProxyRef, targetTypeRef);
+			proxyBaseType = genericProxyBase;
+			baseCtorRef = _pe.AddMemberRef (genericProxyBase, ".ctor",
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+					rt => rt.Void (),
+					p => {
+						p.AddParameter ().Type ().String ();
+						p.AddParameter ().Type ().Type (_systemTypeRef, false);
+					}));
+		}
 
 		var typeDefHandle = metadata.AddTypeDefinition (
 			TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Class,
@@ -373,13 +407,21 @@ sealed class TypeMapAssemblyEmitter
 			metadata.AddInterfaceImplementation (typeDefHandle, _iAndroidCallableWrapperRef);
 		}
 
-		// .ctor — pass the resolved JNI name and optional invoker type to the generic base proxy
-		_pe.EmitBody (".ctor",
+		// .ctor — pass the resolved JNI name, (for generic-definition base) target type, and
+		// optional invoker type to the base proxy constructor.
+		var selfAttrCtorDef = _pe.EmitBody (".ctor",
 			MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }),
 			encoder => {
 				encoder.OpCode (ILOpCode.Ldarg_0);
 				encoder.LoadString (metadata.GetOrAddUserString (proxy.JniName));
+				if (proxy.IsGenericDefinition) {
+					// Non-generic base ctor signature: (string, Type, Type?). Push the open-generic
+					// target type as the second argument.
+					encoder.OpCode (ILOpCode.Ldtoken);
+					encoder.Token (targetTypeRef);
+					encoder.Call (_getTypeFromHandleRef);
+				}
 				if (proxy.InvokerType != null) {
 					encoder.OpCode (ILOpCode.Ldtoken);
 					encoder.Token (_pe.ResolveTypeRef (proxy.InvokerType));
@@ -390,6 +432,12 @@ sealed class TypeMapAssemblyEmitter
 				encoder.Call (baseCtorRef);
 				encoder.OpCode (ILOpCode.Ret);
 			});
+
+		// Self-apply: the proxy type is its own [JavaPeerProxy] attribute.
+		// This enables type.GetCustomAttribute<JavaPeerProxy>() to instantiate the proxy
+		// at runtime for AOT-safe type resolution.
+		var selfAttrBlob = _pe.BuildAttributeBlob (b => { });
+		metadata.AddCustomAttribute (typeDefHandle, selfAttrCtorDef, selfAttrBlob);
 
 		// CreateInstance
 		EmitCreateInstance (proxy);
@@ -409,6 +457,59 @@ sealed class TypeMapAssemblyEmitter
 		if (proxy.IsAcw) {
 			EmitRegisterNatives (proxy.NativeRegistrations, wrapperHandles);
 		}
+	}
+
+	void EmitAliasHolderType (AliasHolderData holder)
+	{
+		var metadata = _pe.Metadata;
+
+		// Alias holders are plain classes (NOT JavaPeerProxy subclasses).
+		// GetCustomAttribute<JavaPeerProxy>() returns null for these — the fast path
+		// stays clean. Aliases are discovered via [JavaPeerAliases] attribute only when needed.
+		var objectRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
+			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Object"));
+
+		var typeDefHandle = metadata.AddTypeDefinition (
+			TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Class,
+			metadata.GetOrAddString (holder.Namespace),
+			metadata.GetOrAddString (holder.TypeName),
+			objectRef,
+			MetadataTokens.FieldDefinitionHandle (metadata.GetRowCount (TableIndex.Field) + 1),
+			MetadataTokens.MethodDefinitionHandle (metadata.GetRowCount (TableIndex.MethodDef) + 1));
+
+		// Apply [JavaPeerAliases("key[0]", "key[1]", ...)] to the type
+		EmitJavaPeerAliasesAttribute (typeDefHandle, holder.AliasKeys);
+	}
+
+	void EmitJavaPeerAliasesAttributeCtorRef ()
+	{
+		// JavaPeerAliasesAttribute(params string[] aliases) — in Mono.Android, Java.Interop namespace
+		_javaPeerAliasesAttrCtorRef = _pe.AddMemberRef (_javaPeerAliasesAttrRef, ".ctor",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
+				rt => rt.Void (),
+				p => p.AddParameter ().Type ().SZArray ().String ()));
+	}
+
+	void EmitJavaPeerAliasesAttribute (TypeDefinitionHandle typeDefHandle, List<string> aliasKeys)
+	{
+		// Encode the attribute blob: prolog (0x0001), then packed string array, then NumNamed (0x0000).
+		// The params string[] is encoded as: element count (uint32), then each string as SerializedString.
+		var blobBuilder = new BlobBuilder ();
+		blobBuilder.WriteUInt16 (1); // prolog
+		blobBuilder.WriteInt32 (aliasKeys.Count); // array length
+		foreach (var key in aliasKeys) {
+			WriteSerializedString (blobBuilder, key);
+		}
+		blobBuilder.WriteUInt16 (0); // NumNamed
+
+		_pe.Metadata.AddCustomAttribute (typeDefHandle, _javaPeerAliasesAttrCtorRef, _pe.Metadata.GetOrAddBlob (blobBuilder));
+	}
+
+	static void WriteSerializedString (BlobBuilder builder, string value)
+	{
+		var bytes = System.Text.Encoding.UTF8.GetBytes (value);
+		builder.WriteCompressedInteger (bytes.Length);
+		builder.WriteBytes (bytes);
 	}
 
 	void EmitCreateInstance (JavaPeerProxyData proxy)
@@ -664,6 +765,7 @@ sealed class TypeMapAssemblyEmitter
 		int paramCount = 2 + jniParams.Count;
 		bool isVoid = returnKind == JniParamKind.Void;
 
+		// UCO wrapper signature: uses JNI ABI types (byte for boolean)
 		Action<BlobEncoder> encodeSig = sig => sig.MethodSignature ().Parameters (paramCount,
 			rt => { if (isVoid) rt.Void (); else JniSignatureHelper.EncodeClrType (rt.Type (), returnKind); },
 			p => {
@@ -673,8 +775,18 @@ sealed class TypeMapAssemblyEmitter
 					JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniParams [j]);
 			});
 
+		// Callback member reference: uses MCW n_* types (sbyte for boolean)
+		Action<BlobEncoder> encodeCallbackSig = sig => sig.MethodSignature ().Parameters (paramCount,
+			rt => { if (isVoid) rt.Void (); else JniSignatureHelper.EncodeClrTypeForCallback (rt.Type (), returnKind); },
+			p => {
+				p.AddParameter ().Type ().IntPtr ();
+				p.AddParameter ().Type ().IntPtr ();
+				for (int j = 0; j < jniParams.Count; j++)
+					JniSignatureHelper.EncodeClrTypeForCallback (p.AddParameter ().Type (), jniParams [j]);
+			});
+
 		var callbackTypeHandle = _pe.ResolveTypeRef (uco.CallbackType);
-		var callbackRef = _pe.AddMemberRef (callbackTypeHandle, uco.CallbackMethodName, encodeSig);
+		var callbackRef = _pe.AddMemberRef (callbackTypeHandle, uco.CallbackMethodName, encodeCallbackSig);
 
 		var handle = _pe.EmitBody (uco.WrapperName,
 			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,

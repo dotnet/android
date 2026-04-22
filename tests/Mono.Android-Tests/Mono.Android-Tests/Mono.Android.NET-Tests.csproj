@@ -226,6 +226,10 @@
     <AndroidNativeLibrary Include="..\libs\x86_64\libreuse-threads.so" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <_AndroidEnableObjectReferenceLogging>false</_AndroidEnableObjectReferenceLogging>
+  </PropertyGroup>
+
   <!-- Used by AppContextTests.cs -->
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="test_bool"    Value="true" />

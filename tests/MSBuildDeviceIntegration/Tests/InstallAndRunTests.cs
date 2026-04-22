@@ -2233,11 +2233,13 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 		}
 
 		[Test]
-		[TestCase ("run")]
-		[TestCase ("test")]
-		public void DotNetNewAndroidTest (string mode)
+		[TestCase ("run", AndroidRuntime.MonoVM)]
+		[TestCase ("run", AndroidRuntime.CoreCLR)]
+		[TestCase ("test", AndroidRuntime.MonoVM)]
+		[TestCase ("test", AndroidRuntime.CoreCLR)]
+		public void DotNetNewAndroidTest (string mode, AndroidRuntime runtime)
 		{
-			var templateName = $"DotNetNewAndroidTest_{mode}";
+			var templateName = $"DotNetNewAndroidTest_{mode}_{runtime}";
 			var projectDirectory = Path.Combine (Root, "temp", templateName);
 			if (Directory.Exists (projectDirectory))
 				Directory.Delete (projectDirectory, true);
@@ -2246,19 +2248,29 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			var dotnet = new DotNetCLI (Path.Combine (projectDirectory, $"{templateName}.csproj"));
 			Assert.IsTrue (dotnet.New ("androidtest"), "`dotnet new androidtest` should succeed");
 
+			bool useMonoRuntime = runtime == AndroidRuntime.MonoVM;
+			var buildParameters = new List<string> {
+				$"UseMonoRuntime={useMonoRuntime}",
+			};
+
+			if (runtime == AndroidRuntime.CoreCLR) {
+				Assert.Ignore ("https://github.com/dotnet/android/issues/11174");
+			}
+
 			// Build and assert 0 warnings
-			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+			Assert.IsTrue (dotnet.Build (parameters: buildParameters.ToArray ()), "`dotnet build` should succeed");
 			dotnet.AssertHasNoWarnings ();
 
 			// `dotnet test` doesn't go through the MSBuild Run target, so Install
 			// must be invoked explicitly to deploy the APK to the device.
 			if (mode == "test")
-				Assert.IsTrue (dotnet.Build (target: "Install"), "`dotnet build -t:Install` should succeed");
+				Assert.IsTrue (dotnet.Build (target: "Install", parameters: buildParameters.ToArray ()), "`dotnet build -t:Install` should succeed");
 
 			// Run based on mode
+			var runParameters = buildParameters.Select (p => $"/p:{p}").ToArray ();
 			using var process = mode == "run"
-				? dotnet.StartRun (waitForExit: true)
-				: dotnet.StartTest ();
+				? dotnet.StartRun (waitForExit: true, parameters: runParameters)
+				: dotnet.StartTest (parameters: runParameters);
 
 			var locker = new Lock ();
 			var output = new StringBuilder ();

@@ -35,3 +35,5 @@ Makefile	eol=lf
 *.wixproj	eol=crlf
 *.wxs	eol=crlf
 *.rtf	eol=crlf
+
+.github/workflows/*.lock.yml linguist-generated=true merge=ours

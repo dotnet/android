@@ -68,7 +68,7 @@ namespace Xamarin.Android.Tasks
 			ResolvedSymbols = symbols.Values.ToArray ();
 
 			// Set ShrunkAssemblies for _RemoveRegisterAttribute and <BuildApk/>
-			// This should match the Condition on the _RemoveRegisterAttribute target
+			// This should match the Condition on the _RemoveRegisterAttribute target.
 			if (PublishTrimmed) {
 				if (!AndroidIncludeDebugSymbols) {
 					var shrunkAssemblies = new List<ITaskItem> (OutputAssemblies.Length);

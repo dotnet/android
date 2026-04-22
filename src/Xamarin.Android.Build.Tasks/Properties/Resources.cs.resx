@@ -1009,6 +1009,13 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
 {1} - The current value of the property
 </comment>
   </data>
+  <data name="XA1044" xml:space="preserve">
+    <value>Vlastnost MSBuild {0} není kompatibilní s modulem runtime {1} a bude ignorována. Odeberte vlastnost nebo ji ošetřete podmínkou: Condition="'$(UseMonoRuntime)' == 'true'"</value>
+    <comment>The following are literal names and should not be translated: MSBuild, UseMonoRuntime.
+{0} - The MSBuild property name (e.g. RunAOTCompilation, EnableLLVM).
+{1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
+</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>Závislosti Java {0} není vyhověno.</value>
     <comment>The following are literal names and should not be translated: Java.

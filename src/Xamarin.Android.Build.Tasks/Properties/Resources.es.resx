@@ -1009,6 +1009,13 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
 {1} - The current value of the property
 </comment>
   </data>
+  <data name="XA1044" xml:space="preserve">
+    <value>La propiedad de MSBuild '{0}' no es compatible con el tiempo de ejecución de {1} y se omitirá. Quite la propiedad o resguarde con una condición: Condition="'$(UseMonoRuntime)' == 'true'"</value>
+    <comment>The following are literal names and should not be translated: MSBuild, UseMonoRuntime.
+{0} - The MSBuild property name (e.g. RunAOTCompilation, EnableLLVM).
+{1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
+</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>No se cumple la dependencia de Java "{0}".</value>
     <comment>The following are literal names and should not be translated: Java.

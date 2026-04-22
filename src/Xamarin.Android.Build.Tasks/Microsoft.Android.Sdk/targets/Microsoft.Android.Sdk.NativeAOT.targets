@@ -267,7 +267,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   -->
   <Target Name="_AndroidRunNativeCompile"
       AfterTargets="ComputeResolvedFilesToPublishList"
-      DependsOnTargets="NativeCompile" />
+      DependsOnTargets="_PreTrimmingFixLegacyDesignerUpdateItems;NativeCompile" />
 
   <Target Name="_AndroidFixNativeLibraryFileName" AfterTargets="ComputeFilesToPublish">
     <ItemGroup>

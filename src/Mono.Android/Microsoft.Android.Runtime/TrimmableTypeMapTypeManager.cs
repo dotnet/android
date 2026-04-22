@@ -21,8 +21,10 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			yield return t;
 		}
 
-		if (TrimmableTypeMap.Instance.TryGetTargetType (jniSimpleReference, out var type)) {
-			yield return type;
+		if (TrimmableTypeMap.Instance.TryGetTargetTypes (jniSimpleReference, out var types)) {
+			foreach (var type in types) {
+				yield return type;
+			}
 		}
 	}
 

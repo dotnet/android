@@ -26,6 +26,12 @@ namespace Xamarin.Android.Build.Tests
 				return;
 			}
 
+			// The GoogleV2 manifest from Google doesn't have an ndk-bundle component,
+			// so the NDK dependency can't be resolved for runtimes that require it.
+			if (manifestType == "GoogleV2" && runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("GoogleV2 manifest does not have an ndk-bundle component for NativeAOT");
+			}
+
 			// Set to true when we are marking a new Android API level as stable, but it has not
 			// been added to the Xamarin manifest yet.
 			var xamarin_manifest_needs_updating = false;
@@ -166,6 +172,11 @@ namespace Xamarin.Android.Build.Tests
 				Assert.Ignore ("NativeAOT doesn't support profiled AOT");
 			}
 
+			// NativeAOT always requires the NDK (PublishAot=true), so ndkRequired=false cases don't apply
+			if (runtime == AndroidRuntime.NativeAOT && !ndkRequired) {
+				Assert.Ignore ("NativeAOT always requires NDK via PublishAot=true");
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
@@ -185,6 +196,26 @@ namespace Xamarin.Android.Build.Tests
 					StringAssertEx.Contains ("ndk-bundle", taskOutput, "ndk-bundle should be a dependency.");
 				else
 					StringAssertEx.DoesNotContain ("ndk-bundle", taskOutput, "ndk-bundle should not be a dependency.");
+			}
+		}
+
+		[Test]
+		public void NativeAotRequiresNdk ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+			using (var builder = CreateApkBuilder ()) {
+				builder.Verbosity = LoggerVerbosity.Detailed;
+				builder.Target = "GetAndroidDependencies";
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+				IEnumerable<string> taskOutput = builder.LastBuildOutput
+					.Select (x => x.Trim ())
+					.SkipWhile (x => !x.StartsWith ("Task \"CalculateProjectDependencies\"", StringComparison.Ordinal))
+					.SkipWhile (x => !x.StartsWith ("Output Item(s):", StringComparison.Ordinal))
+					.TakeWhile (x => !x.StartsWith ("Done executing task \"CalculateProjectDependencies\"", StringComparison.Ordinal));
+				StringAssertEx.Contains ("ndk-bundle", taskOutput, "ndk-bundle should be a dependency for NativeAOT.");
 			}
 		}
 

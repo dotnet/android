@@ -21,9 +21,6 @@
     <_AndroidFastDeploymentSupported Condition=" Exists ('$(MSBuildThisFileDirectory)../tools/Xamarin.Android.Common.Debugging.targets') ">true</_AndroidFastDeploymentSupported>
     <_AndroidFastDeploymentSupported Condition=" '$(_AndroidFastDeploymentSupported)' == '' ">False</_AndroidFastDeploymentSupported>
 
-    <!-- TODO: remove when we have debugger support for CoreCLR -->
-    <UseMonoRuntime Condition=" '$(UseMonoRuntime)' == '' and '$(Configuration)' == 'Debug' ">true</UseMonoRuntime>
-
     <!--
       Disable @(Content) from referenced projects
       See: https://github.com/dotnet/sdk/blob/955c0fc7b06e2fa34bacd076ed39f61e4fb61716/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Publish.targets#L16
@@ -119,6 +116,11 @@
     <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' and '$(AotAssemblies)' == '' and '$(Configuration)' == 'Release' and '$(_AndroidRuntime)' == 'MonoVM' ">true</RunAOTCompilation>
     <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' and '$(AotAssemblies)' == 'true' ">true</RunAOTCompilation>
     <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' ">false</RunAOTCompilation>
+    <!-- Warn and reset Mono-specific properties when the runtime is not MonoVM -->
+    <_AndroidXA1044_RunAOTCompilation Condition=" '$(RunAOTCompilation)' == 'true' and '$(_AndroidRuntime)' != 'MonoVM' ">true</_AndroidXA1044_RunAOTCompilation>
+    <_AndroidXA1044_EnableLLVM Condition=" '$(EnableLLVM)' == 'true' and '$(_AndroidRuntime)' != 'MonoVM' ">true</_AndroidXA1044_EnableLLVM>
+    <RunAOTCompilation Condition=" '$(_AndroidXA1044_RunAOTCompilation)' == 'true' ">false</RunAOTCompilation>
+    <EnableLLVM Condition=" '$(_AndroidXA1044_EnableLLVM)' == 'true' ">false</EnableLLVM>
     <_AndroidXA1029 Condition=" '$(AotAssemblies)' != '' ">true</_AndroidXA1029>
     <_AndroidXA1030 Condition=" '$(RunAOTCompilation)' == 'true' and '$(PublishTrimmed)' == 'false' ">true</_AndroidXA1030>
     <AotAssemblies>$(RunAOTCompilation)</AotAssemblies>
