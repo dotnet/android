@@ -1604,6 +1604,7 @@ because xbuild doesn't support framework reference assemblies.
   <ItemGroup>
     <_AndroidEnvironmentStartupHookLinesFiltered Include="@(_AndroidEnvironmentStartupHookLines)"
         Condition="$([System.String]::Copy('%(_AndroidEnvironmentStartupHookLines.Identity)').StartsWith('DOTNET_STARTUP_HOOKS='))" />
+    <!-- "DOTNET_STARTUP_HOOKS=" is 21 characters -->
     <_AndroidDotnetStartupHooks Include="$([System.String]::Copy('%(_AndroidEnvironmentStartupHookLinesFiltered.Identity)').Substring(21))" />
   </ItemGroup>
 
