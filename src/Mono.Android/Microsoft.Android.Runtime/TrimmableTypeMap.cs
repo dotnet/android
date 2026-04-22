@@ -37,19 +37,46 @@ class TrimmableTypeMap
 	}
 
 	/// <summary>
-	/// Initializes the singleton instance and registers the bootstrap JNI native method.
-	/// Called from the startup hook in the generated root assembly (_Microsoft.Android.TypeMaps).
+	/// Initializes the singleton with a single merged typemap universe.
+	/// Called from the startup hook in the generated root assembly (_Microsoft.Android.TypeMaps)
+	/// when assembly typemaps are merged (Release builds).
 	/// </summary>
-	internal static void Initialize (ITypeMapWithAliasing typeMap)
+	internal static void Initialize (IReadOnlyDictionary<string, Type> typeMap, IReadOnlyDictionary<Type, Type> proxyMap)
 	{
 		ArgumentNullException.ThrowIfNull (typeMap);
+		ArgumentNullException.ThrowIfNull (proxyMap);
+		InitializeCore (new SingleUniverseTypeMap (typeMap, proxyMap));
+	}
 
-		if (s_instance is not null)
-			return;
+	/// <summary>
+	/// Initializes the singleton with multiple per-assembly typemap universes.
+	/// Called from the startup hook in the generated root assembly (_Microsoft.Android.TypeMaps)
+	/// when each assembly has its own typemap universe (Debug builds).
+	/// </summary>
+	internal static void Initialize (IReadOnlyDictionary<string, Type>[] typeMaps, IReadOnlyDictionary<Type, Type>[] proxyMaps)
+	{
+		ArgumentNullException.ThrowIfNull (typeMaps);
+		ArgumentNullException.ThrowIfNull (proxyMaps);
+		if (typeMaps.Length != proxyMaps.Length) {
+			throw new ArgumentException ($"typeMaps.Length ({typeMaps.Length}) must equal proxyMaps.Length ({proxyMaps.Length}).");
+		}
+		var universes = new SingleUniverseTypeMap [typeMaps.Length];
+		for (int i = 0; i < typeMaps.Length; i++) {
+			universes [i] = new SingleUniverseTypeMap (typeMaps [i], proxyMaps [i]);
+		}
+		InitializeCore (new AggregateTypeMap (universes));
+	}
+
+	static void InitializeCore (ITypeMapWithAliasing typeMap)
+	{
+		if (s_instance is not null) {
+			throw new InvalidOperationException ("TrimmableTypeMap has already been initialized.");
+		}
 
 		lock (s_initLock) {
-			if (s_instance is not null)
-				return;
+			if (s_instance is not null) {
+				throw new InvalidOperationException ("TrimmableTypeMap has already been initialized.");
+			}
 
 			var instance = new TrimmableTypeMap (typeMap);
 			instance.RegisterNatives ();

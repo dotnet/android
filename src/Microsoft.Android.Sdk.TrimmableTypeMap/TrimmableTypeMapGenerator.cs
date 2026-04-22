@@ -25,7 +25,7 @@ public class TrimmableTypeMapGenerator
 		IReadOnlyList<(string Name, PEReader Reader)> assemblies,
 		Version systemRuntimeVersion,
 		HashSet<string> frameworkAssemblyNames,
-		bool isRelease = false,
+		bool mergeAssemblyTypeMaps = false,
 		ManifestConfig? manifestConfig = null,
 		XDocument? manifestTemplate = null)
 	{
@@ -42,7 +42,7 @@ public class TrimmableTypeMapGenerator
 		RootManifestReferencedTypes (allPeers, PrepareManifestForRooting (manifestTemplate, manifestConfig));
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
 
-		var generatedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, isRelease);
+		var generatedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, mergeAssemblyTypeMaps);
 		var jcwPeers = allPeers.Where (p =>
 			!frameworkAssemblyNames.Contains (p.AssemblyName)
 			|| p.JavaName.StartsWith ("mono/", StringComparison.Ordinal)).ToList ();
@@ -113,7 +113,7 @@ public class TrimmableTypeMapGenerator
 		return (peers, manifestInfo);
 	}
 
-	List<GeneratedAssembly> GenerateTypeMapAssemblies (List<JavaPeerInfo> allPeers, Version systemRuntimeVersion, bool isRelease)
+	List<GeneratedAssembly> GenerateTypeMapAssemblies (List<JavaPeerInfo> allPeers, Version systemRuntimeVersion, bool mergeAssemblyTypeMaps)
 	{
 		var peersByAssembly = allPeers.GroupBy (p => p.AssemblyName, StringComparer.Ordinal).OrderBy (g => g.Key, StringComparer.Ordinal);
 		var generatedAssemblies = new List<GeneratedAssembly> ();
@@ -131,7 +131,7 @@ public class TrimmableTypeMapGenerator
 		}
 		var rootStream = new MemoryStream ();
 		var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
-		rootGenerator.Generate (perAssemblyNames, isRelease, rootStream);
+		rootGenerator.Generate (perAssemblyNames, mergeAssemblyTypeMaps, rootStream);
 		rootStream.Position = 0;
 		generatedAssemblies.Add (new GeneratedAssembly ("_Microsoft.Android.TypeMaps", rootStream));
 		logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);
