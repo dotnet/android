@@ -41,6 +41,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (
 					b.Output.IsTargetSkipped ("_Sign"),
 					"the _Sign target should not run");
+				b.Output.AssertTargetIsSkipped ("_GenerateCompressedAssembliesNativeSourceFiles");
 				var item = proj.AndroidResources.First (x => x.Include () == "Resources\\values\\Strings.xml");
 				item.TextContent = () => proj.StringsXml.Replace ("${PROJECT_NAME}", "Foo");
 				item.Timestamp = null;
