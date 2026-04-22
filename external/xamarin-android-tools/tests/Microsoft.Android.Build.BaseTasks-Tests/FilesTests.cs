@@ -647,19 +647,19 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		{
 			using (var zip = ZipArchive.Create (stream)) {
 				zip.AddEntry ("good.txt", "good", encoding);
-				zip.AddEntry ("evil.txt", "evil", encoding);
+				zip.AddEntry ("relative.txt", "relative", encoding);
 			}
 
 			var destinationDir = Path.Combine (tempDir, "dest");
 			stream.Position = 0;
 			using (var zip = ZipArchive.Open (stream)) {
-				// Only evil.txt gets a traversal prefix
+				// Only relative.txt gets a traversal prefix
 				bool changes = Files.ExtractAll (zip, destinationDir, modifyCallback: e =>
-					e == "evil.txt" ? "../" + e : e);
+					e == "relative.txt" ? "../" + e : e);
 				Assert.IsTrue (changes, "ExtractAll should report changes for the valid entry.");
 			}
 			AssertFile (Path.Combine ("dest", "good.txt"), "good");
-			FileAssert.DoesNotExist (Path.Combine (tempDir, "evil.txt"));
+			FileAssert.DoesNotExist (Path.Combine (tempDir, "relative.txt"));
 		}
 
 		[TestCase ("../../")]

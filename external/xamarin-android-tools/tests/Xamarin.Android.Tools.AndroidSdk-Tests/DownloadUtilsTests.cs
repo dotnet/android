@@ -172,7 +172,7 @@ namespace Xamarin.Android.Tools.Tests
 
 			using (var archive = ZipFile.Open (zipPath, ZipArchiveMode.Create)) {
 				// Create an entry with a path traversal
-				var entry = archive.CreateEntry ("../evil.txt");
+				var entry = archive.CreateEntry ("../relative.txt");
 				using var writer = new StreamWriter (entry.Open ());
 				writer.Write ("malicious");
 			}
