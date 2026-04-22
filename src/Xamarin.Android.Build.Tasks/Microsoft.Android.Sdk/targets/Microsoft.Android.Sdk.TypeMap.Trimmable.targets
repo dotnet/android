@@ -29,8 +29,16 @@
         Value="true" Trim="true" />
     <RuntimeHostConfigurationOption Include="System.Runtime.InteropServices.TypeMappingEntryAssembly"
         Value="$(_TypeMapAssemblyName)" />
-    <!-- Configure the root typemap assembly as a startup hook -->
-    <RuntimeEnvironmentVariable Include="DOTNET_STARTUP_HOOKS" Value="$(_TypeMapAssemblyName)" />
+    <!-- Configure the root typemap assembly as a startup hook, composing with any existing hooks -->
+    <_ExistingStartupHooks Include="@(RuntimeEnvironmentVariable)" Condition=" '%(Identity)' == 'DOTNET_STARTUP_HOOKS' " />
+    <RuntimeEnvironmentVariable Remove="DOTNET_STARTUP_HOOKS" />
+    <RuntimeEnvironmentVariable Include="DOTNET_STARTUP_HOOKS"
+        Value="$(_TypeMapAssemblyName):@(_ExistingStartupHooks->'%(Value)', ':')"
+        Condition=" '@(_ExistingStartupHooks)' != '' " />
+    <RuntimeEnvironmentVariable Include="DOTNET_STARTUP_HOOKS"
+        Value="$(_TypeMapAssemblyName)"
+        Condition=" '@(_ExistingStartupHooks)' == '' " />
+    <_ExistingStartupHooks Remove="@(_ExistingStartupHooks)" />
     <!-- Preserve the native→managed entry point (called via create_delegate from host.cc) -->
     <TrimmerRootDescriptor Include="$(MSBuildThisFileDirectory)../PreserveLists/Trimmable.CoreCLR.xml"
         Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
