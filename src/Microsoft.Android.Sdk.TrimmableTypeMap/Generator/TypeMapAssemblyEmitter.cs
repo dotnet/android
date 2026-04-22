@@ -127,11 +127,11 @@ sealed class TypeMapAssemblyEmitter
 	/// <summary>
 	/// Emits a PE assembly from the given model and writes it to <paramref name="stream"/>.
 	/// </summary>
-	/// <param name="mergeAssemblyTypeMaps">
+	/// <param name="useSharedTypemapUniverse">
 	/// When true, uses <c>Java.Lang.Object</c> as the shared anchor type so all assemblies
 	/// share a single typemap universe. When false, emits a per-assembly <c>__TypeMapAnchor</c>.
 	/// </param>
-	public void Emit (TypeMapAssemblyData model, Stream stream, bool mergeAssemblyTypeMaps = false)
+	public void Emit (TypeMapAssemblyData model, Stream stream, bool useSharedTypemapUniverse = false)
 	{
 		if (model is null) {
 			throw new ArgumentNullException (nameof (model));
@@ -140,18 +140,18 @@ sealed class TypeMapAssemblyEmitter
 			throw new ArgumentNullException (nameof (stream));
 		}
 
-		EmitCore (model, mergeAssemblyTypeMaps);
+		EmitCore (model, useSharedTypemapUniverse);
 		_pe.WritePE (stream);
 	}
 
-	void EmitCore (TypeMapAssemblyData model, bool mergeAssemblyTypeMaps)
+	void EmitCore (TypeMapAssemblyData model, bool useSharedTypemapUniverse)
 	{
 		_pe.EmitPreamble (model.AssemblyName, model.ModuleName, MetadataHelper.ComputeContentFingerprint (model));
 
 		_javaInteropRef = _pe.AddAssemblyRef ("Java.Interop", new Version (0, 0, 0, 0));
 
 		EmitTypeReferences ();
-		if (mergeAssemblyTypeMaps) {
+		if (useSharedTypemapUniverse) {
 			// Use Java.Lang.Object as the shared anchor so all assemblies share a single
 			// typemap universe that can be merged at startup.
 			_anchorTypeHandle = _pe.Metadata.AddTypeReference (_pe.MonoAndroidRef,

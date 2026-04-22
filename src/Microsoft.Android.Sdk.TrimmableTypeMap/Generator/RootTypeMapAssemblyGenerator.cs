@@ -65,11 +65,11 @@ public sealed class RootTypeMapAssemblyGenerator
 	/// Generates the root typemap assembly and writes it to the given stream.
 	/// </summary>
 	/// <param name="perAssemblyTypeMapNames">Names of per-assembly typemap assemblies to reference.</param>
-	/// <param name="mergeAssemblyTypeMaps">True to merge all assemblies into a single typemap universe, false for per-assembly universes.</param>
+	/// <param name="useSharedTypemapUniverse">True to merge all assemblies into a single typemap universe, false for per-assembly universes.</param>
 	/// <param name="stream">Stream to write the output PE to.</param>
 	/// <param name="assemblyName">Optional assembly name (defaults to _Microsoft.Android.TypeMaps).</param>
 	/// <param name="moduleName">Optional module name for the PE metadata.</param>
-	public void Generate (IReadOnlyList<string> perAssemblyTypeMapNames, bool mergeAssemblyTypeMaps, Stream stream, string? assemblyName = null, string? moduleName = null)
+	public void Generate (IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse, Stream stream, string? assemblyName = null, string? moduleName = null)
 	{
 		if (perAssemblyTypeMapNames is null) {
 			throw new ArgumentNullException (nameof (perAssemblyTypeMapNames));
@@ -85,7 +85,7 @@ public sealed class RootTypeMapAssemblyGenerator
 		pe.EmitPreamble (assemblyName, moduleName);
 
 		EntityHandle anchorTypeHandle;
-		if (mergeAssemblyTypeMaps) {
+		if (useSharedTypemapUniverse) {
 			// In merged mode, all per-assembly typemaps use Java.Lang.Object as the shared
 			// anchor type, so the root assembly must also use Java.Lang.Object.
 			anchorTypeHandle = pe.Metadata.AddTypeReference (pe.MonoAndroidRef,
@@ -112,13 +112,13 @@ public sealed class RootTypeMapAssemblyGenerator
 		// internal types (SingleUniverseTypeMap, AggregateTypeMap, TrimmableTypeMap in Mono.Android,
 		// and __TypeMapAnchor in each per-assembly typemap DLL).
 		var accessTargets = new List<string> { "Mono.Android" };
-		if (!mergeAssemblyTypeMaps) {
+		if (!useSharedTypemapUniverse) {
 			accessTargets.AddRange (perAssemblyTypeMapNames);
 		}
 		pe.EmitIgnoresAccessChecksToAttribute (accessTargets);
 
 		// Emit StartupHook class with Initialize() method
-		EmitStartupHook (pe, anchorTypeHandle, perAssemblyTypeMapNames, mergeAssemblyTypeMaps);
+		EmitStartupHook (pe, anchorTypeHandle, perAssemblyTypeMapNames, useSharedTypemapUniverse);
 
 		pe.WritePE (stream);
 	}
@@ -142,7 +142,7 @@ public sealed class RootTypeMapAssemblyGenerator
 		}
 	}
 
-	static void EmitStartupHook (PEAssemblyBuilder pe, EntityHandle anchorTypeHandle, IReadOnlyList<string> perAssemblyTypeMapNames, bool mergeAssemblyTypeMaps)
+	static void EmitStartupHook (PEAssemblyBuilder pe, EntityHandle anchorTypeHandle, IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse)
 	{
 		var metadata = pe.Metadata;
 
@@ -177,7 +177,7 @@ public sealed class RootTypeMapAssemblyGenerator
 			MetadataTokens.FieldDefinitionHandle (metadata.GetRowCount (TableIndex.Field) + 1),
 			MetadataTokens.MethodDefinitionHandle (metadata.GetRowCount (TableIndex.MethodDef) + 1));
 
-		if (mergeAssemblyTypeMaps) {
+		if (useSharedTypemapUniverse) {
 			// TrimmableTypeMap.Initialize(IReadOnlyDictionary<string, Type>, IReadOnlyDictionary<Type, Type>)
 			var initializeRef = AddInitializeSingleRef (pe, trimmableTypeMapRef, iReadOnlyDictOpenRef, systemTypeRef);
 			EmitInitializeWithSingleTypeMap (pe, anchorTypeHandle, getExternalMemberRef, getProxyMemberRef, initializeRef);

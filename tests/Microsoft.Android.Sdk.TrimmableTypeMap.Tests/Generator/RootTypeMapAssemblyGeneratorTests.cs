@@ -11,11 +11,11 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 {
 
-	static MemoryStream GenerateRootAssembly (IReadOnlyList<string> perAssemblyNames, bool mergeAssemblyTypeMaps = false, string? assemblyName = null)
+	static MemoryStream GenerateRootAssembly (IReadOnlyList<string> perAssemblyNames, bool useSharedTypemapUniverse = false, string? assemblyName = null)
 	{
 		var stream = new MemoryStream ();
 		var generator = new RootTypeMapAssemblyGenerator (new Version (11, 0, 0, 0));
-		generator.Generate (perAssemblyNames, mergeAssemblyTypeMaps, stream, assemblyName);
+		generator.Generate (perAssemblyNames, useSharedTypemapUniverse, stream, assemblyName);
 		stream.Position = 0;
 		return stream;
 	}
@@ -131,9 +131,9 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 	[Theory]
 	[InlineData (true)]
 	[InlineData (false)]
-	public void Generate_BothMergeModes_ProduceValidPEAssembly (bool mergeAssemblyTypeMaps)
+	public void Generate_BothMergeModes_ProduceValidPEAssembly (bool useSharedTypemapUniverse)
 	{
-		using var stream = GenerateRootAssembly (["_App.TypeMap", "_Mono.Android.TypeMap"], mergeAssemblyTypeMaps);
+		using var stream = GenerateRootAssembly (["_App.TypeMap", "_Mono.Android.TypeMap"], useSharedTypemapUniverse);
 		using var pe = new PEReader (stream);
 		Assert.True (pe.HasMetadata);
 
@@ -153,7 +153,7 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 	[Fact]
 	public void Generate_MergedMode_ReferencesRootAnchorOnly ()
 	{
-		using var stream = GenerateRootAssembly (["_App.TypeMap", "_Mono.Android.TypeMap"], mergeAssemblyTypeMaps: true);
+		using var stream = GenerateRootAssembly (["_App.TypeMap", "_Mono.Android.TypeMap"], useSharedTypemapUniverse: true);
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 
@@ -169,7 +169,7 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 	[Fact]
 	public void Generate_AggregateMode_ReferencesPerAssemblyAnchors ()
 	{
-		using var stream = GenerateRootAssembly (["_App.TypeMap", "_Mono.Android.TypeMap"], mergeAssemblyTypeMaps: false);
+		using var stream = GenerateRootAssembly (["_App.TypeMap", "_Mono.Android.TypeMap"], useSharedTypemapUniverse: false);
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 
@@ -184,7 +184,7 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 	[Fact]
 	public void Generate_MergedMode_HasIgnoresAccessChecksToMonoAndroidOnly ()
 	{
-		using var stream = GenerateRootAssembly (["_App.TypeMap"], mergeAssemblyTypeMaps: true);
+		using var stream = GenerateRootAssembly (["_App.TypeMap"], useSharedTypemapUniverse: true);
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 
@@ -196,7 +196,7 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 	[Fact]
 	public void Generate_AggregateMode_HasIgnoresAccessChecksToAllAssemblies ()
 	{
-		using var stream = GenerateRootAssembly (["_App.TypeMap", "_Mono.Android.TypeMap"], mergeAssemblyTypeMaps: false);
+		using var stream = GenerateRootAssembly (["_App.TypeMap", "_Mono.Android.TypeMap"], useSharedTypemapUniverse: false);
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 
