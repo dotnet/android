@@ -42,7 +42,23 @@ namespace Android.Runtime
 
 		[LibraryImport (RuntimeConstants.InternalDllName)]
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		internal static partial int _monodroid_gref_inc ();
+
+		[LibraryImport (RuntimeConstants.InternalDllName)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		internal static partial int _monodroid_gref_dec ();
+
+		[LibraryImport (RuntimeConstants.InternalDllName)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial int _monodroid_weak_gref_get ();
+
+		[LibraryImport (RuntimeConstants.InternalDllName)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		internal static partial int _monodroid_weak_gref_inc ();
+
+		[LibraryImport (RuntimeConstants.InternalDllName)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		internal static partial int _monodroid_weak_gref_dec ();
 
 		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
