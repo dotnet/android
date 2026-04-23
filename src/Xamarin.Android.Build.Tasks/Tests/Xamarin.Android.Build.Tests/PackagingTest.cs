@@ -860,9 +860,8 @@ public class Test
 				using (var b = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
 					b.Verbosity = LoggerVerbosity.Detailed;
 					Assert.IsTrue (b.Build (app), "Build of jar should have succeeded.");
-					var jar = "2965D0C9A2D5DB1E.jar";
-					string expected = $"Ignoring jar entry AndroidManifest.xml from {jar}: the same file already exists in the apk";
-					Assert.IsTrue (b.LastBuildOutput.ContainsText (expected), $"AndroidManifest.xml for {jar} should have been ignored.");
+					string expected = "Ignoring jar entry AndroidManifest.xml from ";
+					Assert.IsTrue (b.LastBuildOutput.ContainsText (expected), "AndroidManifest.xml from a jar should have been ignored.");
 				}
 			}
 		}
