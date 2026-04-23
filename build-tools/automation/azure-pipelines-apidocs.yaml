@@ -101,8 +101,6 @@ extends:
           submodules: recursive
 
         - template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml@self
-          parameters:
-            useAgentJdkPath: false
 
         # Set MSBuild property overrides if parameters are set
         - ${{ if ne(parameters.apiLevel, 'default') }}:
