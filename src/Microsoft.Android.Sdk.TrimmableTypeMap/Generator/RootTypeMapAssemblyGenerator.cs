@@ -112,7 +112,7 @@ public sealed class RootTypeMapAssemblyGenerator
 		EmitAssemblyTargetAttributes (pe, anchorTypeHandle, perAssemblyTypeMapNames);
 
 		// Emit [assembly: IgnoresAccessChecksTo("...")] so TypeMapLoader.Initialize() can access
-		// internal types (SingleUniverseTypeMap, AggregateTypeMap in Mono.Android,
+		// internal types (TrimmableTypeMap, SingleUniverseTypeMap, AggregateTypeMap in Mono.Android,
 		// and __TypeMapAnchor in each per-assembly typemap DLL).
 		var accessTargets = new List<string> { "Mono.Android" };
 		if (!useSharedTypemapUniverse) {

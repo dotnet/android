@@ -139,11 +139,13 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 
 		var reader = pe.GetMetadataReader ();
 
-		// Both modes should have TypeMapLoader type with Initialize method
+		// Both modes should have TypeMapLoader type in the correct namespace, with public visibility and Initialize method
 		var typeDefs = reader.TypeDefinitions
 			.Select (h => reader.GetTypeDefinition (h))
 			.ToList ();
-		Assert.Contains (typeDefs, t => reader.GetString (t.Name) == "TypeMapLoader");
+		var typeMapLoader = typeDefs.Single (t => reader.GetString (t.Name) == "TypeMapLoader");
+		Assert.Equal ("Microsoft.Android.Runtime", reader.GetString (typeMapLoader.Namespace));
+		Assert.True (typeMapLoader.Attributes.HasFlag (System.Reflection.TypeAttributes.Public));
 
 		// Both modes should have assembly target attributes
 		var targetAttrs = GetTypeMapAssemblyTargetAttributes (reader);

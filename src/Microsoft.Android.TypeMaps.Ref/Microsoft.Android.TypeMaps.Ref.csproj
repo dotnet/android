@@ -6,6 +6,8 @@
     <AssemblyName>_Microsoft.Android.TypeMaps</AssemblyName>
     <RootNamespace>Microsoft.Android.Runtime</RootNamespace>
     <Nullable>enable</Nullable>
+    <!-- ProduceOnlyReferenceAssembly (not ProduceReferenceAssembly) — we only need the ref assembly.
+         The real implementation is generated at app build time by the typemap generator. -->
     <ProduceOnlyReferenceAssembly>true</ProduceOnlyReferenceAssembly>
     <!-- Do NOT sign — the generated implementation assembly (emitted by PEAssemblyBuilder)
          is unsigned, so the ref assembly must match to avoid identity mismatch. -->
