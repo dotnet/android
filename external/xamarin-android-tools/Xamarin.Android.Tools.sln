@@ -14,6 +14,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{19FE1B44
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ls-jdks", "tools\ls-jdks\ls-jdks.csproj", "{3D2ADF77-62C7-4E0E-AB29-BDD266B7D56D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools.Benchmarks", "tests\Xamarin.Android.Tools.Benchmarks\Xamarin.Android.Tools.Benchmarks.csproj", "{F1A2B3C4-D5E6-4F7A-8B9C-0D1E2F3A4B5C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -40,6 +42,10 @@ Global
 		{3D2ADF77-62C7-4E0E-AB29-BDD266B7D56D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3D2ADF77-62C7-4E0E-AB29-BDD266B7D56D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3D2ADF77-62C7-4E0E-AB29-BDD266B7D56D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F1A2B3C4-D5E6-4F7A-8B9C-0D1E2F3A4B5C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F1A2B3C4-D5E6-4F7A-8B9C-0D1E2F3A4B5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F1A2B3C4-D5E6-4F7A-8B9C-0D1E2F3A4B5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F1A2B3C4-D5E6-4F7A-8B9C-0D1E2F3A4B5C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

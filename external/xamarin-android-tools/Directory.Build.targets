@@ -27,6 +27,7 @@
     <PackageReference Update="Microsoft.VisualStudioEng.MicroBuild.Core"    Version="1.0.0" />
     <PackageReference Update="nunit"                                        Version="3.13.2" />
     <PackageReference Update="NUnit3TestAdapter"                            Version="4.0.0" />
+    <PackageReference Update="BenchmarkDotNet"                              Version="0.14.0" />
   </ItemGroup>
 
 </Project>
