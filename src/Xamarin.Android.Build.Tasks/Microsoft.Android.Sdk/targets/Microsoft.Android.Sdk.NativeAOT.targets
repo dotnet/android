@@ -68,6 +68,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       _AndroidComputeIlcCompileInputs;
       $(IlcCompileDependsOn)
     </IlcCompileDependsOn>
+    <_AndroidBeforeIlcCompileDependsOn>_CreatePropertiesCache</_AndroidBeforeIlcCompileDependsOn>
   </PropertyGroup>
 
   <Target Name="_AndroidBeforeIlcCompile"
