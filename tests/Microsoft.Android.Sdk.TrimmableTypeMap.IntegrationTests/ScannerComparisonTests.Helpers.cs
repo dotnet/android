@@ -72,12 +72,12 @@ public partial class ScannerComparisonTests
 		}
 	}
 
-	static string NormalizeCrc64 (string javaName)
+	static string NormalizeHashedPackageName (string javaName)
 	{
-		if (javaName.StartsWith ("crc64", StringComparison.Ordinal)) {
+		if (javaName.StartsWith ("crc64", StringComparison.Ordinal) || javaName.StartsWith ("xx64", StringComparison.Ordinal)) {
 			int slash = javaName.IndexOf ('/');
 			if (slash > 0) {
-				return "crc64.../" + javaName.Substring (slash + 1);
+				return "hash.../" + javaName.Substring (slash + 1);
 			}
 		}
 		return javaName;

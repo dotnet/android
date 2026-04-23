@@ -22,7 +22,7 @@ public partial class JavaPeerScannerTests
 		Assert.Equal ("android/app/Activity", baseType.BaseJavaName);
 
 		var derived = FindFixtureByManagedName ("MyApp.DerivedFromComponentBase");
-		Assert.StartsWith ("crc64", derived.JavaName);
+		Assert.StartsWith ("xx64", derived.JavaName);
 	}
 
 	[Theory]
@@ -56,7 +56,7 @@ public partial class JavaPeerScannerTests
 	[InlineData ("MyApp.UnregisteredExporter")]
 	public void Scan_UnregisteredType_DiscoveredWithHashedName (string managedName)
 	{
-		Assert.StartsWith ("crc64", FindFixtureByManagedName (managedName).JavaName);
+		Assert.StartsWith ("xx64", FindFixtureByManagedName (managedName).JavaName);
 	}
 
 	[Fact]

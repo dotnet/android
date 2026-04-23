@@ -114,7 +114,7 @@ public partial class JavaPeerScannerTests
 	public void Scan_CompatJniName_UnregisteredType_UsesRawNamespace ()
 	{
 		var unregistered = FindFixtureByManagedName ("MyApp.UnregisteredHelper");
-		Assert.StartsWith ("crc64", unregistered.JavaName);
+		Assert.StartsWith ("xx64", unregistered.JavaName);
 		Assert.Equal ("myapp/UnregisteredHelper", unregistered.CompatJniName);
 	}
 

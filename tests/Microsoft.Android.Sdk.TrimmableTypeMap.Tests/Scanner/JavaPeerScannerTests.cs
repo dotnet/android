@@ -88,9 +88,9 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 	}
 
 	[Theory]
-	[InlineData ("MyApp.PlainActivitySubclass", "crc6403e39dfcc696a727/PlainActivitySubclass")]
-	[InlineData ("MyApp.UnregisteredClickListener", "crc6403e39dfcc696a727/UnregisteredClickListener")]
-	[InlineData ("MyApp.UnregisteredExporter", "crc6403e39dfcc696a727/UnregisteredExporter")]
+	[InlineData ("MyApp.PlainActivitySubclass", "xx6403e39dfcc696a727/PlainActivitySubclass")]
+	[InlineData ("MyApp.UnregisteredClickListener", "xx6403e39dfcc696a727/UnregisteredClickListener")]
+	[InlineData ("MyApp.UnregisteredExporter", "xx6403e39dfcc696a727/UnregisteredExporter")]
 	public void Scan_UnregisteredType_UsesHashedPackageName (string managedName, string expectedJavaName)
 	{
 		Assert.Equal (expectedJavaName, FindFixtureByManagedName (managedName).JavaName);

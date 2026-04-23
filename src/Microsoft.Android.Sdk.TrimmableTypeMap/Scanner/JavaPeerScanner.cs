@@ -1474,8 +1474,7 @@ public sealed class JavaPeerScanner : IDisposable
 
 		var data = System.Text.Encoding.UTF8.GetBytes ($"{ns}:{assemblyName}");
 		var hash = System.IO.Hashing.XxHash64.Hash (data);
-		// Keep the historical package prefix for compatibility.
-		return $"crc64{BitConverter.ToString (hash).Replace ("-", "").ToLowerInvariant ()}";
+		return $"xx64{BitConverter.ToString (hash).Replace ("-", "").ToLowerInvariant ()}";
 	}
 
 	static string ExtractNamespace (string fullName)

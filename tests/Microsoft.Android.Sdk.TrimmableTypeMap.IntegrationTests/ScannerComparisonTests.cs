@@ -115,8 +115,8 @@ Assert.NotNull (paths);
 var fixturePath = paths! [0];
 var (legacy, _) = ScannerRunner.RunLegacy (fixturePath);
 var (newEntries, _) = ScannerRunner.RunNew (paths);
-var legacyNormalized = legacy.Select (e => e with { JavaName = NormalizeCrc64 (e.JavaName) }).ToList ();
-var newNormalized = newEntries.Select (e => e with { JavaName = NormalizeCrc64 (e.JavaName) }).ToList ();
+var legacyNormalized = legacy.Select (e => e with { JavaName = NormalizeHashedPackageName (e.JavaName) }).ToList ();
+var newNormalized = newEntries.Select (e => e with { JavaName = NormalizeHashedPackageName (e.JavaName) }).ToList ();
 
 AssertTypeMapMatch (legacyNormalized, newNormalized);
 }
@@ -132,9 +132,9 @@ var (_, legacyMethods) = ScannerRunner.RunLegacy (fixturePath);
 var (_, newMethods) = ScannerRunner.RunNew (paths);
 
 var legacyNormalized = legacyMethods
-.ToDictionary (kvp => NormalizeCrc64 (kvp.Key), kvp => kvp.Value);
+.ToDictionary (kvp => NormalizeHashedPackageName (kvp.Key), kvp => kvp.Value);
 var newNormalized = newMethods
-.ToDictionary (kvp => NormalizeCrc64 (kvp.Key), kvp => kvp.Value);
+.ToDictionary (kvp => NormalizeHashedPackageName (kvp.Key), kvp => kvp.Value);
 
 var result = MarshalMethodDiffHelper.CompareUserTypeMarshalMethods (legacyNormalized, newNormalized);
 AssertNoDiffs ("MISSING from new scanner", result.Missing);
