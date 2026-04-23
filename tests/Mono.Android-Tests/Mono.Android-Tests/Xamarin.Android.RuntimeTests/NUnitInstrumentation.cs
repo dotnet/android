@@ -26,21 +26,21 @@ namespace Xamarin.Android.RuntimeTests
             : base(handle, transfer)
         {
             if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
-                // Java.Interop-Tests fixtures that use JavaObject types (not Java.Lang.Object)
-                // still need JCW Java classes or Java-side support that the trimmable typemap
-                // path does not emit yet.
-                // NOTE: Tests in this project that are trimmable-incompatible use
-                // [Category("TrimmableIgnore")] so they can be excluded via ExcludeCategories in
-                // the .csproj instead. Only tests from the external Java.Interop-Tests assembly
-                // (which we don't control) need to be listed here by name.
+                // TODO: https://github.com/dotnet/android/issues/11170
+                // Tests from the external Java.Interop-Tests assembly that fail under the
+                // trimmable typemap. These cannot use [Category("TrimmableIgnore")] because
+                // we don't control that assembly — they must be excluded by name here.
                 ExcludedTestNames = new [] {
-                    // JCW Java class not in APK (0/3 pass)
+                    // net.dot.jni.test.GetThis Java class not in APK — cannot register native members
+                    "Java.InteropTests.JavaObjectTest.DisposeAccessesThis",
+
+                    // net.dot.jni.test.CallVirtualFromConstructorDerived Java class not in APK
                     "Java.InteropTests.InvokeVirtualFromConstructorTests",
 
-                    // JCW Java class not in APK (fixture setup fails, 0/16 pass)
+                    // net.dot.jni.internal.JavaProxyObject Java class not in APK — fixture setup fails (16 tests)
                     "Java.InteropTests.JavaObjectArray_object_ContractTest",
 
-                    // JCW Java class not in APK: JavaProxyObject
+                    // net.dot.jni.internal.JavaProxyObject Java class not in APK
                     "Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateArgumentState",
                     "Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateGenericArgumentState",
                     "Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateGenericObjectReferenceArgumentState",
@@ -49,14 +49,16 @@ namespace Xamarin.Android.RuntimeTests
                     "Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateValue",
                     "Java.InteropTests.JniValueMarshaler_object_ContractTests.SpecificTypesAreUsed",
 
-                    // JCW Java class not in APK: JavaProxyThrowable
+                    // No generated JavaPeerProxy for java/lang/Object with IJavaPeerable target type
+                    "Java.InteropTests.JniValueMarshaler_IJavaPeerable_ContractTests.JniValueMarshalerContractTests`1.CreateGenericValue",
+                    "Java.InteropTests.JniValueMarshaler_IJavaPeerable_ContractTests.JniValueMarshalerContractTests`1.CreateValue",
+
+                    // net.dot.jni.internal.JavaProxyThrowable — proxy throwable creation fails
                     "Java.InteropTests.JavaExceptionTests.InnerExceptionIsNotAProxy",
 
-                    // MissingMethodException: IJavaInterfaceInvoker ctor trimmed
+                    // IJavaInterfaceInvoker ctor trimmed / missing JavaPeerProxy for test types
                     "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs",
-                    // Wrong exception type (ClassNotFoundException vs ArgumentException)
                     "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs_Exceptions",
-                    // No generated JavaPeerProxy for IAndroidInterface
                     "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs_InstanceThatDoesNotImplementInterfaceReturnsNull",
 
                     // JNI method remapping not supported in trimmable typemap
@@ -65,13 +67,13 @@ namespace Xamarin.Android.RuntimeTests
                     "Java.InteropTests.JniPeerMembersTests.ReplacementTypeUsedForMethodLookup",
                     "Java.InteropTests.JniPeerMembersTests.ReplaceStaticMethodName",
 
-                    // Java class GenericHolder not in DEX
+                    // net.dot.jni.test.GenericHolder Java class not in APK
                     "Java.InteropTests.JniTypeManagerTests.CanCreateGenericHolder",
                     "Java.InteropTests.JniTypeManagerTests.CannotCreateGenericHolderFromJava",
+
                     // JniPrimitiveArrayInfo lookup fails
                     "Java.InteropTests.JniTypeManagerTests.GetType",
                 };
-
             }
         }
 

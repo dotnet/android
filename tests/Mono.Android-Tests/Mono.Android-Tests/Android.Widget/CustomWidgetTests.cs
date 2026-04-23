@@ -48,7 +48,6 @@ namespace Xamarin.Android.RuntimeTests
 
 		// https://github.com/dotnet/android/issues/11101
 		[Test]
-		[Category ("TrimmableIgnore")]
 		public void InflateCustomView_ShouldNotLeakGlobalRefs ()
 		{
 			var inflater = (LayoutInflater) Application.Context.GetSystemService (Context.LayoutInflaterService);
