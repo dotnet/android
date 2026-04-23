@@ -113,6 +113,9 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <CppCompilerAndLinker>$(_NdkAbi)-linux-android$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppCompilerAndLinker>
       <CppLinker>$(_NdkAbi)-linux-android$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppLinker>
       <ObjCopyName>llvm-objcopy</ObjCopyName>
+      <!-- Use the NDK's llvm-ar instead of the host 'ar' so that ELF objects are handled
+           correctly when cross-compiling. -->
+      <CppLibCreator>llvm-ar</CppLibCreator>
 
       <!-- We must ensure this is `false`, as it would interfere with statically linking libc++ -->
       <LinkStandardCPlusPlusLibrary>false</LinkStandardCPlusPlusLibrary>
