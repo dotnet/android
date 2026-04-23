@@ -36,6 +36,18 @@ public abstract class FixtureTestBase
 
 	private protected static List<JavaPeerInfo> ScanFixtures () => _cachedScanResult.Value.peers;
 
+	private protected static List<JavaPeerInfo> ScanFixtures (string packageNamingPolicy)
+	{
+		using var scanner = new JavaPeerScanner (packageNamingPolicy);
+		var peReader = new PEReader (File.OpenRead (TestFixtureAssemblyPath));
+		var mdReader = peReader.GetMetadataReader ();
+		var assemblyName = mdReader.GetString (mdReader.GetAssemblyDefinition ().Name);
+		var assemblies = new [] { (assemblyName, peReader) };
+		var peers = scanner.Scan (assemblies);
+		peReader.Dispose ();
+		return peers;
+	}
+
 	private protected static AssemblyManifestInfo ScanAssemblyManifestInfo () => _cachedScanResult.Value.manifestInfo;
 
 	private protected static JavaPeerInfo FindFixtureByJavaName (string javaName)
@@ -49,6 +61,14 @@ public abstract class FixtureTestBase
 	private protected static JavaPeerInfo FindFixtureByManagedName (string managedName)
 	{
 		var peers = ScanFixtures ();
+		var peer = peers.FirstOrDefault (p => p.ManagedTypeName == managedName);
+		Assert.NotNull (peer);
+		return peer;
+	}
+
+	private protected static JavaPeerInfo FindFixtureByManagedName (string managedName, string packageNamingPolicy)
+	{
+		var peers = ScanFixtures (packageNamingPolicy);
 		var peer = peers.FirstOrDefault (p => p.ManagedTypeName == managedName);
 		Assert.NotNull (peer);
 		return peer;
