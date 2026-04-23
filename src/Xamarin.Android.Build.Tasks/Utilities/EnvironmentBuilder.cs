@@ -7,6 +7,8 @@ namespace Xamarin.Android.Tasks;
 
 class EnvironmentBuilder
 {
+	const string DotNetStartupHooks = "DOTNET_STARTUP_HOOKS";
+
 	static readonly string[] defaultLogLevel = {"MONO_LOG_LEVEL", "info"};
 	static readonly string[] defaultMonoDebug = {"MONO_DEBUG", "gen-compact-seq-points"};
 	static readonly string defaultHttpMessageHandler = "System.Net.Http.HttpClientHandler, System.Net.Http";
@@ -50,10 +52,17 @@ class EnvironmentBuilder
 
 	public void AddEnvironmentVariable (string name, string value)
 	{
+		string escapedName = ValidAssemblerString (name);
+		string escapedValue = ValidAssemblerString (value);
+
 		if (Char.IsUpper(name [0]) || !Char.IsLetter(name [0])) {
-			environmentVariables [ValidAssemblerString (name)] = ValidAssemblerString (value);
+			if (name == DotNetStartupHooks && environmentVariables.TryGetValue (escapedName, out string? existingStartupHooks)) {
+				environmentVariables [escapedName] = MergeDotNetStartupHooks (existingStartupHooks, escapedValue);
+			} else {
+				environmentVariables [escapedName] = escapedValue;
+			}
 		} else {
-			systemProperties [ValidAssemblerString (name)] = ValidAssemblerString (value);
+			systemProperties [escapedName] = escapedValue;
 		}
 	}
 
@@ -106,6 +115,26 @@ class EnvironmentBuilder
 		}
 
 		AddEnvironmentVariable ("MONO_GC_PARAMS", enableSgenConcurrent ? "major=marksweep-conc" : "major=marksweep");
+	}
+
+	static string MergeDotNetStartupHooks (string first, string second)
+	{
+		var mergedHooks = new List<string> ();
+		var seenHooks = new HashSet<string> (StringComparer.Ordinal);
+
+		foreach (string hook in first.Split (new char [] { ':' }, StringSplitOptions.RemoveEmptyEntries)) {
+			if (seenHooks.Add (hook)) {
+				mergedHooks.Add (hook);
+			}
+		}
+
+		foreach (string hook in second.Split (new char [] { ':' }, StringSplitOptions.RemoveEmptyEntries)) {
+			if (seenHooks.Add (hook)) {
+				mergedHooks.Add (hook);
+			}
+		}
+
+		return String.Join (":", mergedHooks);
 	}
 
 	static string ValidAssemblerString (string s) => s.Replace ("\\", "\\\\").Replace ("\"", "\\\"");
