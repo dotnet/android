@@ -1345,7 +1345,7 @@ public sealed class JavaPeerScanner : IDisposable
 			return (name, name);
 		}
 
-		var packageName = GetXxHash64PackageName (ns, index.AssemblyName);
+		var packageName = GetHashedPackageName (ns, index.AssemblyName);
 		var jniName = $"{packageName}/{typeName}";
 
 		string compatName = ns.Length == 0
@@ -1465,7 +1465,7 @@ public sealed class JavaPeerScanner : IDisposable
 		declaringAssemblyName = nextComma >= 0 ? rest.Substring (0, nextComma).Trim () : rest.Trim ();
 	}
 
-	static string GetXxHash64PackageName (string ns, string assemblyName)
+	static string GetHashedPackageName (string ns, string assemblyName)
 	{
 		// Only Mono.Android preserves the namespace directly
 		if (assemblyName == "Mono.Android") {
@@ -1474,6 +1474,7 @@ public sealed class JavaPeerScanner : IDisposable
 
 		var data = System.Text.Encoding.UTF8.GetBytes ($"{ns}:{assemblyName}");
 		var hash = System.IO.Hashing.XxHash64.Hash (data);
+		// Keep the historical package prefix for compatibility.
 		return $"crc64{BitConverter.ToString (hash).Replace ("-", "").ToLowerInvariant ()}";
 	}
 
