@@ -21,7 +21,7 @@
 		<AndroidVersionCodePattern Condition=" '$(AndroidUseLegacyVersionCode)' != 'True' And '$(AndroidVersionCodePattern)' == '' ">{abi}{versionCode:D5}</AndroidVersionCodePattern>
 		<AndroidResourceGeneratorTargetName>UpdateGeneratedFiles</AndroidResourceGeneratorTargetName>
 		<AndroidUseApkSigner Condition=" '$(AndroidUseApkSigner)' == '' ">True</AndroidUseApkSigner>
-		<AndroidPackageNamingPolicy Condition=" '$(AndroidPackageNamingPolicy)' == '' ">LowercaseCrc64</AndroidPackageNamingPolicy>
+		<AndroidPackageNamingPolicy Condition=" '$(AndroidPackageNamingPolicy)' == '' ">XxHash64</AndroidPackageNamingPolicy>
 		<AndroidUseManagedDesignTimeResourceGenerator Condition=" '$(AndroidUseManagedDesignTimeResourceGenerator)' == '' And '$(OS)' != 'Windows_NT' ">False</AndroidUseManagedDesignTimeResourceGenerator>
 		<BundleToolVersion Condition="'$(BundleToolVersion)' == ''">@BUNDLETOOL_VERSION@</BundleToolVersion>
 		<_XamarinAndroidMSBuildDirectory>$(MSBuildThisFileDirectory)</_XamarinAndroidMSBuildDirectory>

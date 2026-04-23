@@ -68,6 +68,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public bool Debug { get; set; }
 	public bool NeedsInternet { get; set; }
 	public bool EmbedAssemblies { get; set; }
+	public string? PackageNamingPolicy { get; set; }
 	public string? ManifestPlaceholders { get; set; }
 	public string? CheckedBuild { get; set; }
 	public string? ApplicationJavaClass { get; set; }
@@ -131,7 +132,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				frameworkAssemblyNames,
 				useSharedTypemapUniverse: !Debug,
 				manifestConfig,
-				manifestTemplate);
+				manifestTemplate,
+				PackageNamingPolicy);
 
 			GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyPaths);
 			GeneratedJavaFiles = WriteJavaSourcesToDisk (result.GeneratedJavaSources);
