@@ -179,6 +179,9 @@ namespace Android.Runtime
 			if (!RuntimeFeature.TrimmableTypeMap) {
 				args->registerJniNativesFn = (IntPtr)(delegate* unmanaged<IntPtr, int, IntPtr, IntPtr, int, void>)&RegisterJniNatives;
 			}
+			if (RuntimeFeature.TrimmableTypeMap) {
+				TypeMapLoader.Initialize ();
+			}
 			RunStartupHooksIfNeeded ();
 			SetSynchronizationContext ();
 		}

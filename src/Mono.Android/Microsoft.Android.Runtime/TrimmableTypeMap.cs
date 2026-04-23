@@ -38,10 +38,10 @@ class TrimmableTypeMap
 
 	/// <summary>
 	/// Initializes the singleton with a single merged typemap universe.
-	/// Called from the startup hook in the generated root assembly (_Microsoft.Android.TypeMaps)
-	/// when assembly typemaps are merged (Release builds).
+	/// Called from <see cref="TypeMapLoader.Initialize"/> in the generated root assembly
+	/// (_Microsoft.Android.TypeMaps) when assembly typemaps are merged (Release builds).
 	/// </summary>
-	internal static void Initialize (IReadOnlyDictionary<string, Type> typeMap, IReadOnlyDictionary<Type, Type> proxyMap)
+	public static void Initialize (IReadOnlyDictionary<string, Type> typeMap, IReadOnlyDictionary<Type, Type> proxyMap)
 	{
 		ArgumentNullException.ThrowIfNull (typeMap);
 		ArgumentNullException.ThrowIfNull (proxyMap);
@@ -50,10 +50,10 @@ class TrimmableTypeMap
 
 	/// <summary>
 	/// Initializes the singleton with multiple per-assembly typemap universes.
-	/// Called from the startup hook in the generated root assembly (_Microsoft.Android.TypeMaps)
-	/// when each assembly has its own typemap universe (Debug builds).
+	/// Called from <see cref="TypeMapLoader.Initialize"/> in the generated root assembly
+	/// (_Microsoft.Android.TypeMaps) when each assembly has its own typemap universe (Debug builds).
 	/// </summary>
-	internal static void Initialize (IReadOnlyDictionary<string, Type>[] typeMaps, IReadOnlyDictionary<Type, Type>[] proxyMaps)
+	public static void Initialize (IReadOnlyDictionary<string, Type>[] typeMaps, IReadOnlyDictionary<Type, Type>[] proxyMaps)
 	{
 		ArgumentNullException.ThrowIfNull (typeMaps);
 		ArgumentNullException.ThrowIfNull (proxyMaps);

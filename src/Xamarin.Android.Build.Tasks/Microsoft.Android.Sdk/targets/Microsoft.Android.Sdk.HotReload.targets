@@ -43,7 +43,7 @@ See: https://github.com/dotnet/sdk/pull/52581
     <!--
       Update DOTNET_STARTUP_HOOKS in @(RuntimeEnvironmentVariable) to use just the assembly name.
       The full path doesn't work on Android since the DLL is deployed alongside the app.
-      Preserve any existing DOTNET_STARTUP_HOOKS values (e.g., from trimmable typemap) by composing
+      Preserve any existing DOTNET_STARTUP_HOOKS values by composing
       with ':' (the path separator on Android/Linux).
     -->
     <ItemGroup Condition=" '$(_AndroidHotReloadAgentAssemblyName)' != '' ">

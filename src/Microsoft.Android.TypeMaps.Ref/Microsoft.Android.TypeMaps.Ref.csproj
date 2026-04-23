@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\Configuration.props" />
+
+  <PropertyGroup>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
+    <AssemblyName>_Microsoft.Android.TypeMaps</AssemblyName>
+    <RootNamespace>Microsoft.Android.Runtime</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ProduceOnlyReferenceAssembly>true</ProduceOnlyReferenceAssembly>
+    <!-- Do NOT sign — the generated implementation assembly (emitted by PEAssemblyBuilder)
+         is unsigned, so the ref assembly must match to avoid identity mismatch. -->
+  </PropertyGroup>
+
+</Project>
