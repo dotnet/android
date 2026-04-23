@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Hashing;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -24,6 +25,8 @@ namespace Microsoft.Android.Build.Tasks
 		const int DEFAULT_FILE_WRITE_RETRY_ATTEMPTS = 10;
 
 		const int DEFAULT_FILE_WRITE_RETRY_DELAY_MS = 1000;
+
+		const int XXHASH64_SIZE_IN_BYTES = 8;
 
 		static int fileWriteRetry = -1;
 		static int fileWriteRetryDelay = -1;
@@ -531,22 +534,25 @@ namespace Microsoft.Android.Build.Tasks
 
 		public static string HashBytes (byte [] bytes)
 		{
-			using (HashAlgorithm hashAlg = new Crc64 ()) {
-				byte [] hash = hashAlg.ComputeHash (bytes);
-				return ToHexString (hash);
-			}
+			Span<byte> hash = stackalloc byte[XXHASH64_SIZE_IN_BYTES];
+			XxHash64.Hash (bytes, hash);
+			return ToHexString (hash);
 		}
 
 		public static string HashFile (string filename)
 		{
-			using (HashAlgorithm hashAlg = new Crc64 ()) {
-				return HashFile (filename, hashAlg);
+			var hasher = new XxHash64 ();
+			using (var file = File.OpenRead (filename)) {
+				hasher.Append (file);
 			}
+			Span<byte> hash = stackalloc byte[XXHASH64_SIZE_IN_BYTES];
+			hasher.GetCurrentHash (hash);
+			return ToHexString (hash);
 		}
 
 		public static string HashFile (string filename, HashAlgorithm hashAlg)
 		{
-			using (Stream file = new FileStream (filename, FileMode.Open, FileAccess.Read, FileShare.Read)) {
+			using (var file = File.OpenRead (filename)) {
 				byte[] hash = hashAlg.ComputeHash (file);
 				return ToHexString (hash);
 			}
@@ -555,22 +561,33 @@ namespace Microsoft.Android.Build.Tasks
 		public static string HashStream (Stream stream)
 		{
 			stream.Position = 0;
-
-			using (HashAlgorithm hashAlg = new Crc64 ()) {
-				byte[] hash = hashAlg.ComputeHash (stream);
-				return ToHexString (hash);
-			}
+			var hasher = new XxHash64 ();
+			hasher.Append (stream);
+			Span<byte> hash = stackalloc byte[XXHASH64_SIZE_IN_BYTES];
+			hasher.GetCurrentHash (hash);
+			return ToHexString (hash);
 		}
 
 		public static string ToHexString (byte[] hash)
 		{
-			char [] array = new char [hash.Length * 2];
+			if (hash == null)
+				throw new ArgumentNullException (nameof (hash));
+			return ToHexString ((ReadOnlySpan<byte>) hash);
+		}
+
+		public static string ToHexString (ReadOnlySpan<byte> hash)
+		{
+			const int MaxStackCharLength = 128;
+			int charLength = hash.Length * 2;
+			Span<char> chars = charLength <= MaxStackCharLength
+				? stackalloc char[charLength]
+				: new char[charLength];
 			for (int i = 0, j = 0; i < hash.Length; i += 1, j += 2) {
 				byte b = hash [i];
-				array [j] = GetHexValue (b / 16);
-				array [j + 1] = GetHexValue (b % 16);
+				chars [j] = GetHexValue (b / 16);
+				chars [j + 1] = GetHexValue (b % 16);
 			}
-			return new string (array);
+			return ((ReadOnlySpan<char>) chars).ToString ();
 		}
 
 		static char GetHexValue (int i) => (char) (i < 10 ? i + 48 : i - 10 + 65);

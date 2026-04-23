@@ -43,89 +43,104 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		[Test]
 		public void CopyIfStringChanged ()
 		{
+			Directory.CreateDirectory (tempDir);
+			var tempFile = Path.Combine (tempDir, "foo.txt");
+
 			var foo = "bar";
-			Assert.IsTrue (Files.CopyIfStringChanged (foo, tempDir), "Should write on new file.");
-			FileAssert.Exists (tempDir);
-			Assert.IsFalse (Files.CopyIfStringChanged (foo, tempDir), "Should *not* write unless changed.");
+			Assert.IsTrue (Files.CopyIfStringChanged (foo, tempFile), "Should write on new file.");
+			FileAssert.Exists (tempFile);
+			Assert.IsFalse (Files.CopyIfStringChanged (foo, tempFile), "Should *not* write unless changed.");
 			foo += "\n";
-			Assert.IsTrue (Files.CopyIfStringChanged (foo, tempDir), "Should write when changed.");
+			Assert.IsTrue (Files.CopyIfStringChanged (foo, tempFile), "Should write when changed.");
 		}
 
 		[Test]
 		public void CopyIfBytesChanged ()
 		{
+			Directory.CreateDirectory (tempDir);
+			var tempFile = Path.Combine (tempDir, "foo.bin");
+
 			var foo = new byte [32];
-			Assert.IsTrue (Files.CopyIfBytesChanged (foo, tempDir), "Should write on new file.");
-			FileAssert.Exists (tempDir);
-			Assert.IsFalse (Files.CopyIfBytesChanged (foo, tempDir), "Should *not* write unless changed.");
+			Assert.IsTrue (Files.CopyIfBytesChanged (foo, tempFile), "Should write on new file.");
+			FileAssert.Exists (tempFile);
+			Assert.IsFalse (Files.CopyIfBytesChanged (foo, tempFile), "Should *not* write unless changed.");
 			foo [0] = 0xFF;
-			Assert.IsTrue (Files.CopyIfBytesChanged (foo, tempDir), "Should write when changed.");
+			Assert.IsTrue (Files.CopyIfBytesChanged (foo, tempFile), "Should write when changed.");
 		}
 
 		[Test]
 		public void CopyIfStreamChanged ()
 		{
+			Directory.CreateDirectory (tempDir);
+			var tempFile = Path.Combine (tempDir, "foo.txt");
+
 			using (var foo = new MemoryStream ())
 			using (var writer = new StreamWriter (foo)) {
 				writer.WriteLine ("bar");
 				writer.Flush ();
 
-				Assert.IsTrue (Files.CopyIfStreamChanged (foo, tempDir), "Should write on new file.");
-				FileAssert.Exists (tempDir);
-				Assert.IsFalse (Files.CopyIfStreamChanged (foo, tempDir), "Should *not* write unless changed.");
+				Assert.IsTrue (Files.CopyIfStreamChanged (foo, tempFile), "Should write on new file.");
+				FileAssert.Exists (tempFile);
+				Assert.IsFalse (Files.CopyIfStreamChanged (foo, tempFile), "Should *not* write unless changed.");
 				writer.WriteLine ();
 				writer.Flush ();
-				Assert.IsTrue (Files.CopyIfStreamChanged (foo, tempDir), "Should write when changed.");
+				Assert.IsTrue (Files.CopyIfStreamChanged (foo, tempFile), "Should write when changed.");
 			}
 		}
 
 		[Test]
 		public void CopyIfStringChanged_NewDirectory ()
 		{
-			tempDir = Path.Combine (tempDir, "foo.txt");
+			Directory.CreateDirectory (tempDir);
+			var tempFile = Path.Combine (tempDir, "foo.txt");
 
 			var foo = "bar";
-			Assert.IsTrue (Files.CopyIfStringChanged (foo, tempDir), "Should write on new file.");
-			FileAssert.Exists (tempDir);
+			Assert.IsTrue (Files.CopyIfStringChanged (foo, tempFile), "Should write on new file.");
+			FileAssert.Exists (tempFile);
 		}
 
 		[Test]
 		public void CopyIfBytesChanged_NewDirectory ()
 		{
-			tempDir = Path.Combine (tempDir, "foo.bin");
+			Directory.CreateDirectory (tempDir);
+			var tempFile = Path.Combine (tempDir, "foo.bin");
 
 			var foo = new byte [32];
-			Assert.IsTrue (Files.CopyIfBytesChanged (foo, tempDir), "Should write on new file.");
-			FileAssert.Exists (tempDir);
+			Assert.IsTrue (Files.CopyIfBytesChanged (foo, tempFile), "Should write on new file.");
+			FileAssert.Exists (tempFile);
 		}
 
 		[Test]
 		public void CopyIfStreamChanged_NewDirectory ()
 		{
-			tempDir = Path.Combine (tempDir, "foo.txt");
+			Directory.CreateDirectory (tempDir);
+			var tempFile = Path.Combine (tempDir, "foo.txt");
 
 			using (var foo = new MemoryStream ())
 			using (var writer = new StreamWriter (foo)) {
 				writer.WriteLine ("bar");
 				writer.Flush ();
 
-				Assert.IsTrue (Files.CopyIfStreamChanged (foo, tempDir), "Should write on new file.");
-				FileAssert.Exists (tempDir);
+				Assert.IsTrue (Files.CopyIfStreamChanged (foo, tempFile), "Should write on new file.");
+				FileAssert.Exists (tempFile);
 			}
 		}
 
 		[Test]
 		public void CopyIfBytesChanged_Readonly ()
 		{
-			if (File.Exists (tempDir)) {
-				File.SetAttributes (tempDir, FileAttributes.Normal);
+			Directory.CreateDirectory (tempDir);
+			var tempFile = Path.Combine (tempDir, "foo.bin");
+
+			if (File.Exists (tempFile)) {
+				File.SetAttributes (tempFile, FileAttributes.Normal);
 			}
-			File.WriteAllText (tempDir, "");
-			File.SetAttributes (tempDir, FileAttributes.ReadOnly);
+			File.WriteAllText (tempFile, "");
+			File.SetAttributes (tempFile, FileAttributes.ReadOnly);
 
 			var foo = new byte [32];
-			Assert.IsTrue (Files.CopyIfBytesChanged (foo, tempDir), "Should write on new file.");
-			FileAssert.Exists (tempDir);
+			Assert.IsTrue (Files.CopyIfBytesChanged (foo, tempFile), "Should write on new file.");
+			FileAssert.Exists (tempFile);
 		}
 
 		[Test]
@@ -133,18 +148,18 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		{
 			var encoding = Encoding.UTF8;
 			Directory.CreateDirectory (tempDir);
-			tempDir = Path.Combine (tempDir, "foo.txt");
-			if (File.Exists (tempDir)) {
-				File.SetAttributes (tempDir, FileAttributes.Normal);
+			var tempFile = Path.Combine (tempDir, "foo.txt");
+			if (File.Exists (tempFile)) {
+				File.SetAttributes (tempFile, FileAttributes.Normal);
 			}
-			using (var stream = File.Create (tempDir))
+			using (var stream = File.Create (tempFile))
 			using (var writer = new StreamWriter (stream, encoding)) {
 				writer.Write ("This will have a BOM");
 			}
-			File.SetAttributes (tempDir, FileAttributes.ReadOnly);
-			var before = File.ReadAllBytes (tempDir);
-			Files.CleanBOM (tempDir);
-			var after = File.ReadAllBytes (tempDir);
+			File.SetAttributes (tempFile, FileAttributes.ReadOnly);
+			var before = File.ReadAllBytes (tempFile);
+			Files.CleanBOM (tempFile);
+			var after = File.ReadAllBytes (tempFile);
 			var preamble = encoding.GetPreamble ();
 			Assert.AreEqual (before.Length, after.Length + preamble.Length, "BOM should be removed!");
 		}
@@ -152,6 +167,9 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		[Test]
 		public void CopyIfStreamChanged_MemoryStreamPool_StreamWriter ()
 		{
+			Directory.CreateDirectory (tempDir);
+			var tempFile = Path.Combine (tempDir, "foo.txt");
+
 			var pool = new MemoryStreamPool ();
 			var expected = pool.Rent ();
 			pool.Return (expected);
@@ -160,8 +178,8 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 				writer.WriteLine ("bar");
 				writer.Flush ();
 
-				Assert.IsTrue (Files.CopyIfStreamChanged (writer.BaseStream, tempDir), "Should write on new file.");
-				FileAssert.Exists (tempDir);
+				Assert.IsTrue (Files.CopyIfStreamChanged (writer.BaseStream, tempFile), "Should write on new file.");
+				FileAssert.Exists (tempFile);
 			}
 
 			var actual = pool.Rent ();
@@ -172,6 +190,9 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		[Test]
 		public void CopyIfStreamChanged_MemoryStreamPool_BinaryWriter ()
 		{
+			Directory.CreateDirectory (tempDir);
+			var tempFile = Path.Combine (tempDir, "foo.bin");
+
 			var pool = new MemoryStreamPool ();
 			var expected = pool.Rent ();
 			pool.Return (expected);
@@ -180,8 +201,8 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 				writer.Write (42);
 				writer.Flush ();
 
-				Assert.IsTrue (Files.CopyIfStreamChanged (writer.BaseStream, tempDir), "Should write on new file.");
-				FileAssert.Exists (tempDir);
+				Assert.IsTrue (Files.CopyIfStreamChanged (writer.BaseStream, tempFile), "Should write on new file.");
+				FileAssert.Exists (tempFile);
 			}
 
 			var actual = pool.Rent ();
@@ -192,14 +213,17 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		[Test]
 		public void SetWriteable ()
 		{
-			File.WriteAllText (tempDir, contents: "foo");
-			File.SetAttributes (tempDir, FileAttributes.ReadOnly);
+			Directory.CreateDirectory (tempDir);
+			var tempFile = Path.Combine (tempDir, "foo.txt");
 
-			Files.SetWriteable (tempDir);
+			File.WriteAllText (tempFile, contents: "foo");
+			File.SetAttributes (tempFile, FileAttributes.ReadOnly);
 
-			var attributes = File.GetAttributes (tempDir);
+			Files.SetWriteable (tempFile);
+
+			var attributes = File.GetAttributes (tempFile);
 			Assert.AreEqual (FileAttributes.Normal, attributes);
-			File.WriteAllText (tempDir, contents: "bar");
+			File.WriteAllText (tempFile, contents: "bar");
 		}
 
 		[Test]
