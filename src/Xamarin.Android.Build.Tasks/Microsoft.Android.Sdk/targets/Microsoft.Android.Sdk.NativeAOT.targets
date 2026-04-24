@@ -162,12 +162,14 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <_IlcManagedInputAssemblies Remove="@(_IlcManagedInputAssemblies)" />
     </ItemGroup>
 
-    <!-- When ILLink runs, it may trim or remove PrivateSdkAssemblies from IlcReference.
-         ILC needs them untrimmed (they contain NativeAOT runtime infrastructure like
-         LibraryInitializer). Replace with the originals from the SDK pack. -->
+    <!-- ILLink path: ILLink already applied Android-specific trimming via custom steps.
+         Root everything for ILC so it doesn't trim further. Replace PrivateSdkAssemblies
+         with untrimmed originals since ILLink may have removed them. -->
     <ItemGroup Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' ">
       <IlcReference Remove="@(PrivateSdkAssemblies->'$(IntermediateLinkDir)%(Filename)%(Extension)')" />
       <IlcReference Include="@(PrivateSdkAssemblies)" />
+      <_AndroidILLinkAssemblies Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')" Condition="Exists('$(IntermediateLinkDir)%(Filename)%(Extension)')" />
+      <TrimmerRootAssembly Include="@(_AndroidILLinkAssemblies->'%(Filename)')" Exclude="System.Private.CoreLib" TrimMode="All" />
     </ItemGroup>
 
     <ItemGroup>
