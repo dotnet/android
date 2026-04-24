@@ -346,8 +346,14 @@
   </Target>
 
   <!-- TypeManager.java generation and prebuilt mono.android.jar copy -->
+  <PropertyGroup>
+    <_AddTypeManagerResourcesOutput Condition=" '$(_AndroidUseMarshalMethods)' == 'True' ">$(_AndroidIntermediateJavaSourceDirectory)mono\TypeManager.java</_AddTypeManagerResourcesOutput>
+    <_AddTypeManagerResourcesOutput Condition=" '$(_AndroidUseMarshalMethods)' != 'True' ">$(IntermediateOutputPath)android\bin\mono.android.jar</_AddTypeManagerResourcesOutput>
+  </PropertyGroup>
   <Target Name="_AddTypeManagerResources"
-      AfterTargets="_AddStaticResources">
+      AfterTargets="_AddStaticResources"
+      Inputs="$(MonoPlatformJarPath);$(_AndroidBuildPropertiesCache)"
+      Outputs="$(_AddTypeManagerResourcesOutput)">
     <CreateTypeManagerJava
         Condition=" '$(_AndroidUseMarshalMethods)' == 'True' "
         ResourceName="JavaInteropTypeManager.java"
