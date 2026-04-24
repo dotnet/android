@@ -3,12 +3,15 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Reflection.PortableExecutable;
 using Java.Interop.Tools.Cecil;
 using Mono.Cecil;
 using Mono.Linker;
 using Mono.Linker.Steps;
 using Mono.Tuner;
+using Xamarin.Android.Tools;
 using Xamarin.Android.Tasks;
 using Resources = Xamarin.Android.Tasks.Properties.Resources;
 
@@ -46,6 +49,9 @@ namespace MonoDroid.Tuner
 			if (context.IsMainAssembly || !context.IsAndroidUserAssembly)
 				return;
 
+			if (IsReadyToRunAssembly (assembly))
+				return;
+
 			context.IsAssemblyModified |= FixAbstractMethods (assembly);
 		}
 
@@ -60,6 +66,7 @@ namespace MonoDroid.Tuner
 		}
 
 		readonly HashSet<string> warnedAssemblies = new (StringComparer.Ordinal);
+		readonly HashSet<string> warnedReadyToRunAssemblies = new (StringComparer.Ordinal);
 
 		internal void CheckAppDomainUsage (AssemblyDefinition assembly, Action<string> warn)
 		{
@@ -73,6 +80,37 @@ namespace MonoDroid.Tuner
 					warn (string.Format (CultureInfo.CurrentCulture, Resources.XA2000, assembly));
 					break;
 				}
+			}
+		}
+
+		bool IsReadyToRunAssembly (AssemblyDefinition assembly)
+		{
+			if (assembly?.MainModule == null)
+				return false;
+
+			string fileName = assembly.MainModule.FileName;
+			if (fileName.IsNullOrEmpty () || !File.Exists (fileName))
+				return false;
+
+			try {
+				using (var stream = File.OpenRead (fileName))
+				using (var pe = new PEReader (stream)) {
+					bool isReadyToRun = pe.PEHeaders.CorHeader?.ManagedNativeHeaderDirectory.Size > 0;
+					if (!isReadyToRun)
+						return false;
+
+					if (warnedReadyToRunAssemblies.Add (assembly.Name.Name)) {
+						LogMessage ($"Skipping FixAbstractMethodsStep for ReadyToRun assembly '{assembly.Name.Name}'.");
+					}
+
+					return true;
+				}
+			} catch (IOException) {
+				return false;
+			} catch (UnauthorizedAccessException) {
+				return false;
+			} catch (BadImageFormatException) {
+				return false;
 			}
 		}
 
