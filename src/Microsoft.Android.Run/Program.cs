@@ -16,6 +16,8 @@ int? logcatPid = null;
 Process? logcatProcess = null;
 CancellationTokenSource cts = new ();
 string? logcatArgs = null;
+bool isDotnetTestMode = false;
+string? dotnetTestPipe = null;
 
 try {
 	return await RunAsync (args);
@@ -57,6 +59,12 @@ async Task<int> RunAsync (string[] args)
 			"The instrumentation {RUNNER} class name (e.g., com.example.myapp.TestInstrumentation). " +
 			"When specified, runs 'am instrument' instead of 'am start'.",
 			v => instrumentation = v },
+		{ "server=",
+			"The test {SERVER} protocol to use (e.g., 'dotnettestcli'). Used by 'dotnet test'.",
+			v => { if (v == "dotnettestcli") isDotnetTestMode = true; } },
+		{ "dotnet-test-pipe=",
+			"The {PIPE} name for dotnet test communication. Used by 'dotnet test'.",
+			v => dotnetTestPipe = v },
 		{ "v|verbose",
 			"Enable verbose output for debugging.",
 			v => verbose = v != null },
@@ -71,15 +79,17 @@ async Task<int> RunAsync (string[] args)
 			v => showHelp = v != null },
 	};
 
+	List<string> remaining;
 	try {
-		var remaining = options.Parse (args);
-		if (remaining.Count > 0) {
-			Console.Error.WriteLine ($"Error: Unexpected argument(s): {string.Join (" ", remaining)}");
-			Console.Error.WriteLine ($"Try '{Name} --help' for more information.");
-			return 1;
-		}
+		remaining = options.Parse (args);
 	} catch (OptionException e) {
 		Console.Error.WriteLine ($"Error: {e.Message}");
+		Console.Error.WriteLine ($"Try '{Name} --help' for more information.");
+		return 1;
+	}
+
+	if (remaining.Count > 0 && !isDotnetTestMode) {
+		Console.Error.WriteLine ($"Error: Unexpected argument(s): {string.Join (" ", remaining)}");
 		Console.Error.WriteLine ($"Try '{Name} --help' for more information.");
 		return 1;
 	}
@@ -116,8 +126,14 @@ async Task<int> RunAsync (string[] args)
 
 	bool isInstrumentMode = !string.IsNullOrEmpty (instrumentation);
 
-	if (!isInstrumentMode && string.IsNullOrEmpty (activity)) {
+	if (!isInstrumentMode && string.IsNullOrEmpty (activity) && !isDotnetTestMode) {
 		Console.Error.WriteLine ("Error: --activity or --instrument is required.");
+		Console.Error.WriteLine ($"Try '{Name} --help' for more information.");
+		return 1;
+	}
+
+	if (isDotnetTestMode && !isInstrumentMode) {
+		Console.Error.WriteLine ("Error: --instrument is required when using dotnet test mode.");
 		Console.Error.WriteLine ($"Try '{Name} --help' for more information.");
 		return 1;
 	}
@@ -153,12 +169,17 @@ async Task<int> RunAsync (string[] args)
 			Console.WriteLine ($"Activity: {activity}");
 		if (isInstrumentMode)
 			Console.WriteLine ($"Instrumentation runner: {instrumentation}");
+		if (isDotnetTestMode)
+			Console.WriteLine ($"dotnet test mode (pipe: {dotnetTestPipe})");
 	}
 
 	// Set up Ctrl+C handler
 	Console.CancelKeyPress += OnCancelKeyPress;
 
 	try {
+		if (isDotnetTestMode)
+			return await RunDotnetTestAsync (remaining);
+
 		if (isInstrumentMode)
 			return await RunInstrumentationAsync ();
 
@@ -258,6 +279,57 @@ async Task<int> RunInstrumentationAsync ()
 	}
 
 	return 0;
+}
+
+async Task<int> RunDotnetTestAsync (List<string> mtpArgs)
+{
+	if (verbose)
+		Console.WriteLine ("Running in dotnet test mode...");
+
+	if (string.IsNullOrEmpty (adbPath)) {
+		Console.Error.WriteLine ("Error: adb path must be specified in dotnet test mode.");
+		return 1;
+	}
+
+	if (string.IsNullOrEmpty (instrumentation)) {
+		Console.Error.WriteLine ("Error: Instrumentation must be specified in dotnet test mode.");
+		return 1;
+	}
+
+	if (string.IsNullOrEmpty (dotnetTestPipe)) {
+		Console.Error.WriteLine ("Error: --dotnet-test-pipe must be specified when using --server dotnettestcli.");
+		return 1;
+	}
+
+	if (string.IsNullOrEmpty (package)) {
+		Console.Error.WriteLine ("Error: Package must be specified in dotnet test mode.");
+		return 1;
+	}
+
+	var validatedAdbPath = adbPath;
+	var validatedInstrumentation = instrumentation;
+	var validatedDotnetTestPipe = dotnetTestPipe;
+	var validatedPackage = package;
+
+	// Re-add the MTP protocol args that Mono.Options consumed,
+	// since MTP needs them to set up the test communication channel.
+	mtpArgs.AddRange (["--server", "dotnettestcli", "--dotnet-test-pipe", validatedDotnetTestPipe]);
+
+	var testApplicationBuilder = await Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync (mtpArgs.ToArray ());
+
+	var adapter = new AndroidTestAdapter (
+		validatedAdbPath,
+		adbTarget,
+		validatedPackage,
+		validatedInstrumentation,
+		verbose);
+
+	testApplicationBuilder.RegisterTestFramework (
+		_ => new AndroidTestCapabilities (),
+		(_, _) => adapter);
+
+	using var testApplication = await testApplicationBuilder.BuildAsync ();
+	return await testApplication.RunAsync ();
 }
 
 async Task<int> RunAppAsync ()

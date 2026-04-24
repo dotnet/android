@@ -181,6 +181,27 @@ namespace Xamarin.ProjectTools
 		}
 
 		/// <summary>
+		/// Starts `dotnet test` and returns a running Process that can be monitored and killed.
+		/// </summary>
+		/// <param name="parameters">Additional arguments to pass to `dotnet test`.</param>
+		/// <returns>A running Process instance. Caller is responsible for disposing.</returns>
+		public Process StartTest (string [] parameters = null)
+		{
+			string binlog = Path.Combine (Path.GetDirectoryName (projectOrSolution), "test.binlog");
+			var arguments = new List<string> {
+				"test",
+				$"\"{projectOrSolution}\"",
+				"--no-build",
+				$"/bl:\"{binlog}\"",
+			};
+			if (parameters != null) {
+				arguments.AddRange (parameters);
+			}
+
+			return ExecuteProcess (arguments.ToArray (), workingDirectory: ProjectDirectory);
+		}
+
+		/// <summary>
 		/// Starts `dotnet watch` and returns a running Process that can be monitored and killed.
 		/// This is used for hot reload testing where dotnet-watch builds, deploys, and watches for file changes.
 		/// </summary>
