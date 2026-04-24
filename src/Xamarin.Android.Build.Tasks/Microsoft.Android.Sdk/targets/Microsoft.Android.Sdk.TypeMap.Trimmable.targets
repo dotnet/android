@@ -12,6 +12,11 @@
 
   <PropertyGroup>
     <_TypeMapAssemblyName>_Microsoft.Android.TypeMaps</_TypeMapAssemblyName>
+    <_TrimmableTypeMapPackageNamingPolicy Condition=" '$(_AndroidPackageNamingPolicySetByUser)' == 'true' ">$(AndroidPackageNamingPolicy)</_TrimmableTypeMapPackageNamingPolicy>
+    <_TrimmableTypeMapPackageNamingPolicy Condition=" '$(_TrimmableTypeMapPackageNamingPolicy)' == '' ">XxHash64</_TrimmableTypeMapPackageNamingPolicy>
+    <!-- Enable startup hooks for trimmable typemap — the root assembly acts as a startup hook
+         that constructs the type mapping dictionaries and calls TrimmableTypeMap.Initialize(). -->
+    <StartupHookSupport>true</StartupHookSupport>
     <!-- Use the outer IntermediateOutputPath when available (inner per-RID builds set
          _OuterIntermediateOutputPath) so that generated manifests/JCWs are written
          where the packaging phase expects them. -->
@@ -77,7 +82,7 @@
         Debug="$(AndroidIncludeDebugSymbols)"
         NeedsInternet="$(AndroidNeedsInternetPermission)"
         EmbedAssemblies="$(EmbedAssembliesIntoApk)"
-        PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
+        PackageNamingPolicy="$(_TrimmableTypeMapPackageNamingPolicy)"
         ManifestPlaceholders="$(AndroidManifestPlaceholders)"
         CheckedBuild="$(_AndroidCheckedBuild)"
         ApplicationJavaClass="$(AndroidApplicationJavaClass)"
