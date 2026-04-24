@@ -11,7 +11,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// Generates the root <c>_Microsoft.Android.TypeMaps.dll</c> assembly that:
 /// <list type="bullet">
 /// <item>References all per-assembly typemap assemblies via <c>[assembly: TypeMapAssemblyTargetAttribute&lt;__TypeMapAnchor&gt;("name")]</c>.</item>
-/// <item>Emits a <c>StartupHook</c> class whose <c>Initialize()</c> method calls
+/// <item>Emits a <c>TypeMapLoader</c> class whose <c>Initialize()</c> method calls
 /// <see cref="Microsoft.Android.Runtime.TrimmableTypeMap.Initialize"/> with the appropriate
 /// type mapping dictionaries.</item>
 /// </list>
@@ -25,26 +25,29 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// [assembly: TypeMapAssemblyTarget&lt;__TypeMapAnchor&gt;("_Mono.Android.TypeMap")]
 /// [assembly: TypeMapAssemblyTarget&lt;__TypeMapAnchor&gt;("_MyApp.TypeMap")]
 ///
-/// // Startup hook — called by DOTNET_STARTUP_HOOKS:
-/// internal static class StartupHook
+/// namespace Microsoft.Android.Runtime
 /// {
-///     internal static void Initialize ()
+///     // Called directly from JNIEnvInit.Initialize():
+///     public static class TypeMapLoader
 ///     {
-///         // Option A: Shared universe
-///         TrimmableTypeMap.Initialize(
-///             TypeMapping.GetOrCreateExternalTypeMapping&lt;Java.Lang.Object&gt;(),
-///             TypeMapping.GetOrCreateProxyTypeMapping&lt;Java.Lang.Object&gt;());
+///         public static void Initialize ()
+///         {
+///             // Option A: Shared universe
+///             TrimmableTypeMap.Initialize(
+///                 TypeMapping.GetOrCreateExternalTypeMapping&lt;Java.Lang.Object&gt;(),
+///                 TypeMapping.GetOrCreateProxyTypeMapping&lt;Java.Lang.Object&gt;());
 ///
-///         // Option B: Per-assembly universes (aggregated)
-///         var typeMaps = new IReadOnlyDictionary&lt;string, Type&gt;[] {
-///             TypeMapping.GetOrCreateExternalTypeMapping&lt;_Mono_Android_TypeMap.__TypeMapAnchor&gt;(),
-///             TypeMapping.GetOrCreateExternalTypeMapping&lt;_MyApp_TypeMap.__TypeMapAnchor&gt;(),
-///         };
-///         var proxyMaps = new IReadOnlyDictionary&lt;Type, Type&gt;[] {
-///             TypeMapping.GetOrCreateProxyTypeMapping&lt;_Mono_Android_TypeMap.__TypeMapAnchor&gt;(),
-///             TypeMapping.GetOrCreateProxyTypeMapping&lt;_MyApp_TypeMap.__TypeMapAnchor&gt;(),
-///         };
-///         TrimmableTypeMap.Initialize(typeMaps, proxyMaps);
+///             // Option B: Per-assembly universes (aggregated)
+///             var typeMaps = new IReadOnlyDictionary&lt;string, Type&gt;[] {
+///                 TypeMapping.GetOrCreateExternalTypeMapping&lt;_Mono_Android_TypeMap.__TypeMapAnchor&gt;(),
+///                 TypeMapping.GetOrCreateExternalTypeMapping&lt;_MyApp_TypeMap.__TypeMapAnchor&gt;(),
+///             };
+///             var proxyMaps = new IReadOnlyDictionary&lt;Type, Type&gt;[] {
+///                 TypeMapping.GetOrCreateProxyTypeMapping&lt;_Mono_Android_TypeMap.__TypeMapAnchor&gt;(),
+///                 TypeMapping.GetOrCreateProxyTypeMapping&lt;_MyApp_TypeMap.__TypeMapAnchor&gt;(),
+///             };
+///             TrimmableTypeMap.Initialize(typeMaps, proxyMaps);
+///         }
 ///     }
 /// }
 /// </code>
@@ -108,8 +111,8 @@ public sealed class RootTypeMapAssemblyGenerator
 		// Emit [assembly: TypeMapAssemblyTargetAttribute<__TypeMapAnchor>("name")] for each per-assembly typemap
 		EmitAssemblyTargetAttributes (pe, anchorTypeHandle, perAssemblyTypeMapNames);
 
-		// Emit [assembly: IgnoresAccessChecksTo("...")] so the startup hook can access
-		// internal types (SingleUniverseTypeMap, AggregateTypeMap, TrimmableTypeMap in Mono.Android,
+		// Emit [assembly: IgnoresAccessChecksTo("...")] so TypeMapLoader.Initialize() can access
+		// internal types (SingleUniverseTypeMap, AggregateTypeMap in Mono.Android,
 		// and __TypeMapAnchor in each per-assembly typemap DLL).
 		var accessTargets = new List<string> { "Mono.Android" };
 		if (!useSharedTypemapUniverse) {
@@ -117,8 +120,8 @@ public sealed class RootTypeMapAssemblyGenerator
 		}
 		pe.EmitIgnoresAccessChecksToAttribute (accessTargets);
 
-		// Emit StartupHook class with Initialize() method
-		EmitStartupHook (pe, anchorTypeHandle, perAssemblyTypeMapNames, useSharedTypemapUniverse);
+		// Emit TypeMapLoader class with Initialize() method
+		EmitTypeMapLoader (pe, anchorTypeHandle, perAssemblyTypeMapNames, useSharedTypemapUniverse);
 
 		pe.WritePE (stream);
 	}
@@ -142,7 +145,7 @@ public sealed class RootTypeMapAssemblyGenerator
 		}
 	}
 
-	static void EmitStartupHook (PEAssemblyBuilder pe, EntityHandle anchorTypeHandle, IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse)
+	static void EmitTypeMapLoader (PEAssemblyBuilder pe, EntityHandle anchorTypeHandle, IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse)
 	{
 		var metadata = pe.Metadata;
 
@@ -167,11 +170,11 @@ public sealed class RootTypeMapAssemblyGenerator
 		var getProxyMemberRef = AddTypeMappingMethodRef (pe, typeMappingRef, "GetOrCreateProxyTypeMapping",
 			iReadOnlyDictOpenRef, systemTypeRef, keyIsString: false);
 
-		// Define the StartupHook type
+		// Define the TypeMapLoader type (public static class in Microsoft.Android.Runtime namespace)
 		metadata.AddTypeDefinition (
-			TypeAttributes.NotPublic | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.Class,
-			default,
-			metadata.GetOrAddString ("StartupHook"),
+			TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.Class,
+			metadata.GetOrAddString ("Microsoft.Android.Runtime"),
+			metadata.GetOrAddString ("TypeMapLoader"),
 			metadata.AddTypeReference (pe.SystemRuntimeRef,
 				metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Object")),
 			MetadataTokens.FieldDefinitionHandle (metadata.GetRowCount (TableIndex.Field) + 1),

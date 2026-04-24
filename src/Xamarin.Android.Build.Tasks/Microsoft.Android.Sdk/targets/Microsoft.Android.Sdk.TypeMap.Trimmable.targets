@@ -11,9 +11,6 @@
 
   <PropertyGroup>
     <_TypeMapAssemblyName>_Microsoft.Android.TypeMaps</_TypeMapAssemblyName>
-    <!-- Enable startup hooks for trimmable typemap — the root assembly acts as a startup hook
-         that constructs the type mapping dictionaries and calls TrimmableTypeMap.Initialize(). -->
-    <StartupHookSupport>true</StartupHookSupport>
     <!-- Use the outer IntermediateOutputPath when available (inner per-RID builds set
          _OuterIntermediateOutputPath) so that generated manifests/JCWs are written
          where the packaging phase expects them. -->
@@ -33,28 +30,6 @@
     <TrimmerRootDescriptor Include="$(MSBuildThisFileDirectory)../PreserveLists/Trimmable.CoreCLR.xml"
         Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
   </ItemGroup>
-
-  <!--
-    Configure the root typemap assembly as a startup hook.
-    This must run inside a Target (not a static ItemGroup) because composing with
-    existing DOTNET_STARTUP_HOOKS entries requires %(Identity) metadata batching,
-    which is only allowed inside Target ItemGroups (MSB4190).
-    Runs before _AndroidConfigureHotReloadEnvironment so HotReload can compose on top.
-  -->
-  <Target Name="_ConfigureTrimmableTypeMapStartupHook"
-      BeforeTargets="_AndroidConfigureHotReloadEnvironment;_GenerateEnvironmentFiles">
-    <ItemGroup>
-      <_ExistingStartupHooks Include="@(RuntimeEnvironmentVariable)" Condition=" '%(Identity)' == 'DOTNET_STARTUP_HOOKS' " />
-      <RuntimeEnvironmentVariable Remove="DOTNET_STARTUP_HOOKS" />
-      <RuntimeEnvironmentVariable Include="DOTNET_STARTUP_HOOKS"
-          Value="$(_TypeMapAssemblyName):@(_ExistingStartupHooks->'%(Value)', ':')"
-          Condition=" '@(_ExistingStartupHooks)' != '' " />
-      <RuntimeEnvironmentVariable Include="DOTNET_STARTUP_HOOKS"
-          Value="$(_TypeMapAssemblyName)"
-          Condition=" '@(_ExistingStartupHooks)' == '' " />
-      <_ExistingStartupHooks Remove="@(_ExistingStartupHooks)" />
-    </ItemGroup>
-  </Target>
 
   <Target Name="_ValidateTrimmableTypeMapRuntime"
       Condition=" '$(_AndroidRuntime)' != 'CoreCLR' And '$(_AndroidRuntime)' != 'NativeAOT' "
