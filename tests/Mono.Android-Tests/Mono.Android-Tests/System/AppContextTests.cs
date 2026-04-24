@@ -46,22 +46,12 @@ namespace SystemTests
 				/* expected */     false,
 #endif  // !DEBUG
 			},
-			new object [] {
-				/* className */    "Microsoft.Android.Runtime.RuntimeFeature, Mono.Android",
-				/* propertyName */ "ObjectReferenceLogging",
-#if DEBUG
-				/* expected */     true,
-#else   // !DEBUG
-				/* expected */     false,
-#endif  // !DEBUG
-			},
 		};
 
 		[Test]
 		[Category ("NativeAOTIgnore")] // These switches only exist in Mono & CoreCLR BCL assemblies
 		[DynamicDependency (DynamicallyAccessedMemberTypes.All, "System.LocalAppContextSwitches", "System.Private.CoreLib")]
 		[DynamicDependency (DynamicallyAccessedMemberTypes.All, "System.Diagnostics.Metrics.Meter", "System.Diagnostics.DiagnosticSource")]
-		[DynamicDependency (DynamicallyAccessedMemberTypes.All, "Microsoft.Android.Runtime.RuntimeFeature", "Mono.Android")]
 		[TestCaseSource (nameof (TestPrivateSwitchesSource))]
 		public void TestPrivateSwitches (
 				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.All)]
