@@ -478,33 +478,33 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 				if (runtime == AndroidRuntime.NativeAOT) {
-					int maxExpectedWarnings;
+					int numberOfExpectedWarnings;
 					bool validateWarnings;
 					if (xamarinForms && !multidex && packageFormat == "apk") {
-						// NativeAOT produces ILC warnings for AOT-incompatible patterns in XamarinForms.
-						maxExpectedWarnings = 92;
+						// NativeAOT goes nuts here (Nov 2025) with 120 different ILC warnings, too many to verify them here in a way that makes sense
+						numberOfExpectedWarnings = 120;
 						validateWarnings = false;
 					} else {
 						// NativeAOT currently (Nov 2025) produces 6 `ILC : AOT analysis warning IL3050` warnings for various
 						// bits of code. Even though this test expects no warnings and the above likely make the app not work
 						// correctly at run time, it is still worth running this test under NativeAOT to test for the absence
 						// of other warnings.
-						maxExpectedWarnings = 6;
+						numberOfExpectedWarnings = 6;
 						validateWarnings = true;
 					}
 
-					var warningLine = b.LastBuildOutput.FirstOrDefault (x => x.Contains ("Warning(s)"));
-					Assert.IsNotNull (warningLine, $"{b.BuildLogFile} should contain a 'Warning(s)' summary line.");
-					var match = System.Text.RegularExpressions.Regex.Match (warningLine, @"(\d+)\s+Warning\(s\)");
-					Assert.IsTrue (match.Success, $"Could not parse warning count from: {warningLine}");
-					int actualWarnings = int.Parse (match.Groups [1].Value);
-					Assert.LessOrEqual (actualWarnings, maxExpectedWarnings,
-						$"{b.BuildLogFile} should have at most {maxExpectedWarnings} MSBuild warnings for NativeAOT, but found {actualWarnings}.");
+					Assert.IsTrue (
+						StringAssertEx.ContainsText (
+							b.LastBuildOutput,
+							$" {numberOfExpectedWarnings} Warning(s)"
+						),
+						$"{b.BuildLogFile} should have exactly {numberOfExpectedWarnings} MSBuild warnings for NativeAOT."
+					);
 
 					if (validateWarnings) {
 						const string expectedWarningIL3050 = "ILC : AOT analysis warning IL3050:";
 						var warnings = b.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build succeeded.", StringComparison.Ordinal)).Where (x => x.Contains (expectedWarningIL3050, StringComparison.Ordinal));
-						Assert.LessOrEqual (warnings.Count (), maxExpectedWarnings, $"Expected at most {maxExpectedWarnings} 'IL3050' warnings, found {warnings.Count ()}");
+						Assert.IsTrue (warnings.Count () == numberOfExpectedWarnings, $"Expected {numberOfExpectedWarnings} 'IL3050' warnings, found {warnings.Count ()}");
 					}
 
 				} else {
