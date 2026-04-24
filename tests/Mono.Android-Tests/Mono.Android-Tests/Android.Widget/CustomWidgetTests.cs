@@ -48,6 +48,7 @@ namespace Xamarin.Android.RuntimeTests
 
 		// https://github.com/dotnet/android/issues/11101
 		[Test]
+		[Ignore ("https://github.com/dotnet/android/issues/11201")]
 		public void InflateCustomView_ShouldNotLeakGlobalRefs ()
 		{
 			var inflater = (LayoutInflater) Application.Context.GetSystemService (Context.LayoutInflaterService);
