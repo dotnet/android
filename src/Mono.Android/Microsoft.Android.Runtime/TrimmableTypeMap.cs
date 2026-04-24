@@ -17,7 +17,7 @@ namespace Microsoft.Android.Runtime;
 /// and provides peer creation, invoker resolution, container factories, and native
 /// method registration. All proxy attribute access is encapsulated here.
 /// </summary>
-class TrimmableTypeMap
+public class TrimmableTypeMap
 {
 	static readonly Lock s_initLock = new ();
 	static readonly JavaPeerProxy s_noPeerSentinel = new MissingJavaPeerProxy ();
