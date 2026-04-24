@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Java.Interop.Tools.JavaCallableWrappers;
 using Xunit;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
@@ -105,9 +103,7 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 		var withXxHash64 = FindFixtureByManagedName (managedName).JavaName;
 		var withCrc64 = FindFixtureByManagedName (managedName, "LowercaseCrc64").JavaName;
 
-		var data = Encoding.UTF8.GetBytes ("MyApp:TestFixtures");
-		var expectedHash = string.Concat (Crc64Helper.Compute (data).Select (b => b.ToString ("x2")));
-		Assert.Equal ($"crc64{expectedHash}/PlainActivitySubclass", withCrc64);
+		Assert.Equal ("crc64ec59e927bc71f4d8/PlainActivitySubclass", withCrc64);
 		Assert.StartsWith ("xx64", withXxHash64);
 		Assert.NotEqual (withXxHash64, withCrc64);
 	}
