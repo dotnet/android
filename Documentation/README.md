@@ -2,7 +2,7 @@
 
 # Getting Started
 
-  * [Installing the .NET for Android SDK](https://developer.xamarin.com/guides/android/getting_started/installation/)
+  * [Installing the .NET for Android SDK](https://learn.microsoft.com/dotnet/android/getting-started/installation/)
   * [.NET for Android Documentation](https://learn.microsoft.com/dotnet/android/)
   * [.NET for Android API Documentation](https://learn.microsoft.com/en-us/dotnet/api/?preserve-view=true&view=net-android-34.0)
 
@@ -13,14 +13,14 @@
   * [Directory Structure](project-docs/ExploringSources.md)
   * [Assembly store format](project-docs/AssemblyStores.md)
 
-[bugs]: https://github.com/xamarin/xamarin-android/wiki/Submitting-Bugs,-Feature-Requests,-and-Pull-Requests
+[bugs]: https://github.com/dotnet/android/wiki/Submitting-Bugs,-Feature-Requests,-and-Pull-Requests
 
 
 # Guides
 
   * [One .NET](guides/OneDotNet.md)
-  * [Build Process](guides/building-apps/build-process.md)
-  * [`.axml` CodeBehind Support](guides/LayoutCodeBehind.md)
+  * [Build Process](docs-mobile/building-apps/build-process.md)
+  * [`.axml` CodeBehind Support](docs-mobile/features/layout-code-behind/index.md)
   * [MSBuild Best Practices](guides/MSBuildBestPractices.md)
   * [D8 and R8 Integration](guides/D8andR8.md)
   * [Profiling Startup](guides/profiling.md)
@@ -45,7 +45,7 @@
 
 # Coding Guidelines
 
-  * [Mono Coding Guidelines](http://www.mono-project.com/community/contributing/coding-guidelines/)
+  * [Mono Coding Guidelines](https://www.mono-project.com/community/contributing/coding-guidelines/)
 
 
 # Other Information
