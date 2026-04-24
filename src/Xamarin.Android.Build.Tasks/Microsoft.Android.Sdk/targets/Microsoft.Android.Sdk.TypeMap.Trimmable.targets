@@ -21,7 +21,6 @@
     <_TypeMapBaseOutputDir Condition=" '$(_TypeMapBaseOutputDir)' == '' ">$(IntermediateOutputPath)</_TypeMapBaseOutputDir>
     <_TypeMapBaseOutputDir>$(_TypeMapBaseOutputDir.Replace('\','/'))</_TypeMapBaseOutputDir>
     <_TypeMapOutputDirectory>$(_TypeMapBaseOutputDir)typemap/</_TypeMapOutputDirectory>
-    <_TypeMapJavaOutputDirectory>$(_TypeMapBaseOutputDir)typemap/java</_TypeMapJavaOutputDirectory>
   </PropertyGroup>
 
   <ItemGroup>
@@ -84,7 +83,7 @@
     <GenerateTrimmableTypeMap
         ResolvedAssemblies="@(_TypeMapInputAssemblies)"
         OutputDirectory="$(_TypeMapOutputDirectory)"
-        JavaSourceOutputDirectory="$(_TypeMapJavaOutputDirectory)"
+        JavaSourceOutputDirectory="$(_AndroidIntermediateJavaSourceDirectory)"
         TargetFrameworkVersion="$(TargetFrameworkVersion)"
         ManifestTemplate="$(_AndroidManifestAbs)"
         MergedAndroidManifestOutput="$(_TypeMapBaseOutputDir)AndroidManifest.xml"
@@ -120,22 +119,13 @@
   <!--
     _GenerateJavaStubs: overrides the legacy target from BuildOrder.targets.
     In the trimmable path, TypeMap generation already happened in _GenerateTrimmableTypeMap,
-    so this target only handles JCW file copying, manifest, assembly store setup, and native config.
+    so this target only handles manifest placement, assembly store setup, native config, and stamp creation.
     We keep the name _GenerateJavaStubs because BuildOrder.targets references it.
   -->
   <Target Name="_GenerateJavaStubs"
       DependsOnTargets="_SetLatestTargetFrameworkVersion;_CleanIntermediateIfNeeded;_PrepareAssemblies;_GetGenerateJavaStubsInputs;_DefineBuildTargetAbis;_PrepareNativeAssemblySources"
       Inputs="@(_GenerateJavaStubsInputs)"
       Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
-
-    <ItemGroup>
-      <_TypeMapJavaFiles Include="$(_TypeMapJavaOutputDirectory)/**/*.java" />
-    </ItemGroup>
-    <Copy SourceFiles="@(_TypeMapJavaFiles)" DestinationFolder="$(IntermediateOutputPath)android/src/%(RecursiveDir)" />
-
-    <ItemGroup>
-      <FileWrites Include="@(_TypeMapJavaFiles->'$(IntermediateOutputPath)android/src/%(RecursiveDir)%(Filename)%(Extension)')" />
-    </ItemGroup>
 
     <!-- Set properties for ABI/RID used by CoreCLR _AddTrimmableTypeMapAssembliesToStore fallback -->
     <PropertyGroup>

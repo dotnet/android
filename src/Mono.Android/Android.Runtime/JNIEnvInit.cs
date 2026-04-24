@@ -176,9 +176,7 @@ namespace Android.Runtime
 
 			args->propagateUncaughtExceptionFn = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&PropagateUncaughtException;
 
-			if (!RuntimeFeature.TrimmableTypeMap) {
-				args->registerJniNativesFn = (IntPtr)(delegate* unmanaged<IntPtr, int, IntPtr, IntPtr, int, void>)&RegisterJniNatives;
-			}
+			args->registerJniNativesFn = (IntPtr)(delegate* unmanaged<IntPtr, int, IntPtr, IntPtr, int, void>)&RegisterJniNatives;
 			RunStartupHooksIfNeeded ();
 			SetSynchronizationContext ();
 		}

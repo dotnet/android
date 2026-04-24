@@ -846,6 +846,50 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
+		[NonParallelizable]
+		public void SwitchingTypeMapImplementationTriggersClean ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+
+			using (var b = CreateApkBuilder ()) {
+				b.CleanupAfterSuccessfulBuild = b.CleanupOnDispose = false;
+				b.Verbosity = LoggerVerbosity.Detailed;
+
+				var projectDir = Path.Combine (Root, b.ProjectDirectory);
+				if (Directory.Exists (projectDir))
+					Directory.Delete (projectDir, true);
+
+				// First build with default (llvm-ir) typemap
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
+				string build_props = b.Output.GetIntermediaryPath ("build.props");
+				FileAssert.Exists (build_props, "build.props should exist after first build.");
+				var firstBuildProps = File.ReadAllText (build_props);
+				Assert.IsTrue (firstBuildProps.Contains ("_androidtypemapimplementation="),
+					"build.props should contain _AndroidTypeMapImplementation.");
+
+				// Second build with trimmable typemap — should trigger clean
+				proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+				b.Save (proj, doNotCleanupOnUpdate: true);
+				Assert.IsTrue (b.Build (proj), "second build (trimmable) should have succeeded.");
+				Assert.IsFalse (b.Output.IsTargetSkipped ("_CleanIntermediateIfNeeded"),
+					"Switching _AndroidTypeMapImplementation should trigger _CleanIntermediateIfNeeded.");
+
+				// Third build switching back to llvm-ir — should trigger clean again
+				proj.SetProperty ("_AndroidTypeMapImplementation", "llvm-ir");
+				b.Save (proj, doNotCleanupOnUpdate: true);
+				Assert.IsTrue (b.Build (proj), "third build (llvm-ir) should have succeeded.");
+				Assert.IsFalse (b.Output.IsTargetSkipped ("_CleanIntermediateIfNeeded"),
+					"Switching _AndroidTypeMapImplementation back should trigger _CleanIntermediateIfNeeded.");
+
+				// Fourth build with no changes — should NOT trigger clean
+				Assert.IsTrue (b.Build (proj), "fourth build (no changes) should have succeeded.");
+				Assert.IsTrue (b.Output.IsTargetSkipped ("_CleanIntermediateIfNeeded"),
+					"A build with no implementation change should skip _CleanIntermediateIfNeeded.");
+			}
+		}
+
+		[Test]
 		[Category ("SmokeTests")]
 		public void BuildInDesignTimeMode (
 				[Values (false, true)]
