@@ -49,6 +49,12 @@ namespace Xamarin.Android.Build.Tests {
 				return;
 			}
 
+			// https://github.com/dotnet/android/issues/11210
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT trimmable build does not yet generate JavaInteropRuntime.java");
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
