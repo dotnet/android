@@ -2248,14 +2248,21 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			var dotnet = new DotNetCLI (Path.Combine (projectDirectory, $"{templateName}.csproj"));
 			Assert.IsTrue (dotnet.New ("androidtest"), "`dotnet new androidtest` should succeed");
 
+			// Override the MSTest version from the template with the version used by our build
+			var msTestVersion = GetAssemblyMetadataValue ("MSTestPackageVersion");
+			var csprojPath = Path.Combine (projectDirectory, $"{templateName}.csproj");
+			var doc = XDocument.Load (csprojPath);
+			var ns = doc.Root?.Name.Namespace ?? XNamespace.None;
+			var msTestRef = doc.Descendants (ns + "PackageReference")
+				.FirstOrDefault (e => e.Attribute ("Include")?.Value == "MSTest");
+			Assert.IsNotNull (msTestRef, "MSTest PackageReference should exist in the generated project");
+			msTestRef.SetAttributeValue ("Version", msTestVersion);
+			doc.Save (csprojPath);
+
 			bool useMonoRuntime = runtime == AndroidRuntime.MonoVM;
 			var buildParameters = new List<string> {
 				$"UseMonoRuntime={useMonoRuntime}",
 			};
-
-			if (runtime == AndroidRuntime.CoreCLR) {
-				Assert.Ignore ("https://github.com/dotnet/android/issues/11174");
-			}
 
 			// Build and assert 0 warnings
 			Assert.IsTrue (dotnet.Build (parameters: buildParameters.ToArray ()), "`dotnet build` should succeed");
