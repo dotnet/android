@@ -2262,6 +2262,7 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			bool useMonoRuntime = runtime == AndroidRuntime.MonoVM;
 			var buildParameters = new List<string> {
 				$"UseMonoRuntime={useMonoRuntime}",
+				"RestoreAdditionalProjectSources=https://pkgs.dev.azure.com/dnceng/public/_packaging/test-tools/nuget/v3/index.json",
 			};
 
 			// Build and assert 0 warnings
