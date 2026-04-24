@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
@@ -1485,8 +1486,8 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 
 		return packageNamingPolicy switch {
-			HashedPackageNamingPolicy.LowercaseCrc64 => "crc64" + ToLegacyCrc64 (ns + ":" + assemblyName),
-			_ => "xx64" + ToXxHash64 (ns + ":" + assemblyName),
+			HashedPackageNamingPolicy.LowercaseCrc64 => "crc64" + ToLegacyCrc64 (ns, assemblyName),
+			_ => "xx64" + ToXxHash64 (ns, assemblyName),
 		};
 	}
 
@@ -1499,29 +1500,94 @@ public sealed class JavaPeerScanner : IDisposable
 		return HashedPackageNamingPolicy.XxHash64;
 	}
 
-	static string ToLegacyCrc64 (string value)
+	static string ToLegacyCrc64 (string ns, string assemblyName)
 	{
-		var data = System.Text.Encoding.UTF8.GetBytes (value);
-		var hash = Crc64Helper.Compute (data);
-		var buf = new char [hash.Length * 2];
-		int i = 0;
-		foreach (var b in hash) {
-			buf [i++] = GetHexLowerChar (b >> 4);
-			buf [i++] = GetHexLowerChar (b & 0xF);
+		int byteCount = GetNamespaceAssemblyUtf8ByteCount (ns, assemblyName);
+		byte[] rented = ArrayPool<byte>.Shared.Rent (byteCount);
+		try {
+			int bytesWritten = GetNamespaceAssemblyUtf8Bytes (ns, assemblyName, rented.AsSpan (0, byteCount));
+			ulong crc = ulong.MaxValue;
+			ulong length = 0;
+			Crc64Helper.HashCore (rented, 0, bytesWritten, ref crc, ref length);
+			Span<byte> hash = stackalloc byte [8];
+			WriteUInt64LittleEndian (hash, crc ^ length);
+			return ToHexString (hash, lowercase: true);
+		} finally {
+			ArrayPool<byte>.Shared.Return (rented);
 		}
-		return new string (buf);
 	}
 
-	static string ToXxHash64 (string value)
+	static string ToXxHash64 (string ns, string assemblyName)
 	{
-		var data = System.Text.Encoding.UTF8.GetBytes (value);
-		var hash = System.IO.Hashing.XxHash64.Hash (data);
-		return BitConverter.ToString (hash).Replace ("-", "").ToLowerInvariant ();
+		int byteCount = GetNamespaceAssemblyUtf8ByteCount (ns, assemblyName);
+		byte[] rented = ArrayPool<byte>.Shared.Rent (byteCount);
+		try {
+			int bytesWritten = GetNamespaceAssemblyUtf8Bytes (ns, assemblyName, rented.AsSpan (0, byteCount));
+			Span<byte> hash = stackalloc byte [8];
+			System.IO.Hashing.XxHash64.Hash (rented.AsSpan (0, bytesWritten), hash);
+			return ToHexString (hash, lowercase: true);
+		} finally {
+			ArrayPool<byte>.Shared.Return (rented);
+		}
 	}
 
-	static char GetHexLowerChar (int value)
+	static int GetNamespaceAssemblyUtf8ByteCount (string ns, string assemblyName)
 	{
-		return (char) (value < 10 ? ('0' + value) : ('a' + value - 10));
+		return System.Text.Encoding.UTF8.GetByteCount (ns) + 1 + System.Text.Encoding.UTF8.GetByteCount (assemblyName);
+	}
+
+	static unsafe int GetNamespaceAssemblyUtf8Bytes (string ns, string assemblyName, Span<byte> destination)
+	{
+		int bytesWritten = 0;
+		fixed (char* nsPtr = ns)
+		fixed (byte* destinationPtr = destination) {
+			bytesWritten += System.Text.Encoding.UTF8.GetBytes (nsPtr, ns.Length, destinationPtr, destination.Length);
+		}
+
+		destination [bytesWritten++] = (byte) ':';
+
+		fixed (char* assemblyNamePtr = assemblyName)
+		fixed (byte* destinationPtr = destination) {
+			bytesWritten += System.Text.Encoding.UTF8.GetBytes (assemblyNamePtr, assemblyName.Length, destinationPtr + bytesWritten, destination.Length - bytesWritten);
+		}
+
+		return bytesWritten;
+	}
+
+	static string ToHexString (ReadOnlySpan<byte> hash, bool lowercase)
+	{
+		const int maxStackCharLength = 128;
+		int charLength = hash.Length * 2;
+		Span<char> chars = charLength <= maxStackCharLength
+			? stackalloc char [charLength]
+			: new char [charLength];
+
+		for (int i = 0, j = 0; i < hash.Length; i += 1, j += 2) {
+			byte b = hash [i];
+			chars [j] = GetHexValue (b / 16, lowercase);
+			chars [j + 1] = GetHexValue (b % 16, lowercase);
+		}
+
+		return ((ReadOnlySpan<char>) chars).ToString ();
+	}
+
+	static void WriteUInt64LittleEndian (Span<byte> destination, ulong value)
+	{
+		destination [0] = (byte) value;
+		destination [1] = (byte) (value >> 8);
+		destination [2] = (byte) (value >> 16);
+		destination [3] = (byte) (value >> 24);
+		destination [4] = (byte) (value >> 32);
+		destination [5] = (byte) (value >> 40);
+		destination [6] = (byte) (value >> 48);
+		destination [7] = (byte) (value >> 56);
+	}
+
+	static char GetHexValue (int value, bool lowercase)
+	{
+		return (char) (value < 10
+			? value + '0'
+			: value - 10 + (lowercase ? 'a' : 'A'));
 	}
 
 	static string ExtractNamespace (string fullName)
