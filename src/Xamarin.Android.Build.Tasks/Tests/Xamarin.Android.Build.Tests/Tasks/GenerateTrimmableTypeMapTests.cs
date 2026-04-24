@@ -169,6 +169,8 @@ namespace Xamarin.Android.Build.Tests {
 			var registrationText = File.ReadAllText (applicationRegistration);
 			StringAssert.Contains ("mono.android.Runtime.registerNatives (android.app.Application.class);", registrationText);
 			StringAssert.Contains ("mono.android.Runtime.registerNatives (android.app.Instrumentation.class);", registrationText);
+			StringAssert.DoesNotContain ("android.test.InstrumentationTestRunner.class", registrationText);
+			StringAssert.DoesNotContain ("android.test.mock.MockApplication.class", registrationText);
 			Assert.IsFalse (warnings.Any (w => w.Code == "XA4250"), "Resolved placeholder-based manifest references should not log XA4250.");
 		}
 

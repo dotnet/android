@@ -85,6 +85,24 @@ namespace Java.Interop
 		/// </summary>
 		/// <returns>A factory for creating containers of the target type, or null if not supported.</returns>
 		public virtual JavaPeerContainerFactory? GetContainerFactory () => null;
+
+		/// <summary>
+		/// Returns <see langword="true"/> when the UCO constructor callback should skip
+		/// activation because a managed peer already exists for the given JNI handle
+		/// (e.g., when called from <c>FinishCreateInstance</c> after <c>StartCreateInstance</c>
+		/// already registered the peer).
+		/// </summary>
+		public static bool ShouldSkipActivation (IntPtr jniSelf)
+		{
+			var reference = new JniObjectReference (jniSelf, JniObjectReferenceType.Invalid);
+			var peer = JniEnvironment.Runtime.ValueManager.PeekPeer (reference);
+			if (peer == null) {
+				return false;
+			}
+			var state = peer.JniManagedPeerState;
+			return (state & JniManagedPeerStates.Activatable) != JniManagedPeerStates.Activatable
+				&& (state & JniManagedPeerStates.Replaceable) != JniManagedPeerStates.Replaceable;
+		}
 	}
 
 	/// <summary>
