@@ -467,8 +467,10 @@ namespace Xamarin.Android.Build.Tests
 					DirectoryAssert.Exists (dsStorePath);
 					FileAssert.DoesNotExist (Path.Combine (dsStorePath, ".DS_Store"));
 					DirectoryAssert.DoesNotExist (Path.Combine (dsStorePath, "_MACOSX"));
-					var svgJar = Path.Combine (libraryProjects, assemblyIdentityMap.IndexOf ($"{binding.ProjectName}.aar").ToString (), "jl", "libs", "FD575F2BC294C4A9.jar");
-					FileAssert.Exists (svgJar);
+					var svgJarDir = Path.Combine (libraryProjects, assemblyIdentityMap.IndexOf ($"{binding.ProjectName}.aar").ToString (), "jl", "libs");
+					DirectoryAssert.Exists (svgJarDir);
+					var jarFiles = Directory.GetFiles (svgJarDir, "*.jar");
+					Assert.AreEqual (1, jarFiles.Length, $"Expected 1 .jar file in {svgJarDir}");
 				}
 			}
 		}
