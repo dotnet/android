@@ -49,7 +49,11 @@ namespace SystemTests
 			new object [] {
 				/* className */    "Microsoft.Android.Runtime.RuntimeFeature, Mono.Android",
 				/* propertyName */ "ObjectReferenceLogging",
+#if DEBUG
+				/* expected */     true,
+#else   // !DEBUG
 				/* expected */     false,
+#endif  // !DEBUG
 			},
 		};
 
