@@ -533,6 +533,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       ResourceName="XA0119_Interpreter"
       Condition=" '$(AndroidUseInterpreter)' == 'True' And '$(AotAssemblies)' == 'True' "
   />
+  <AndroidWarning Code="XA0119"
+      ResourceName="XA0119_ReadyToRun"
+      Condition=" '$(EmbedAssembliesIntoApk)' != 'True' And '$(PublishReadyToRun)' == 'True' "
+  />
   <AndroidWarning Code="XA1027"
       ResourceName="XA1027"
       Condition=" $(_AndroidXA1027) == 'true' "
