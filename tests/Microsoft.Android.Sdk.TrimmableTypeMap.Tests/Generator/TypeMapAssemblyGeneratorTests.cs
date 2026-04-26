@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -1316,5 +1317,105 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			}
 		}
 		Assert.True (hasSelfApplied, "Proxy type should have a self-applied attribute (ctor is MethodDefinition)");
+	}
+
+	[Fact]
+	public void Generate_UcoConstructor_Parameterless_InvokesUserVisibleCtorViaSetPeerReference ()
+	{
+		// Regression test for ContainsExportedMethods (JnienvTest.ActivatedDirectObjectSubclassesShouldBeRegistered):
+		// for the parameterless `()V` UCO constructor wrapper, the emitter must mirror
+		// TypeManager.Activate (Mono.Android/Java.Interop/TypeManager.cs):
+		//
+		//   1. RuntimeHelpers.GetUninitializedObject(typeof(T))
+		//   2. ((IJavaPeerable) obj).SetPeerReference(new JniObjectReference(self, Invalid))
+		//   3. obj..ctor()    // user-visible parameterless ctor
+		//
+		// The legacy implementation called the inherited activation ctor `(IntPtr,
+		// JniHandleOwnership)` instead, so user-visible ctor bodies (e.g. `Constructed = true`)
+		// never ran when the peer was created from the Java side.
+		var peer = MakeAcwPeer ("test/UcoCtorPeer", "Test.UcoCtorPeer", "TestAsm");
+		using var stream = GenerateAssembly (new [] { peer }, "UcoCtorParameterlessTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		// SetPeerReference member ref must exist.
+		var memberNames = GetMemberRefNames (reader);
+		Assert.Contains ("SetPeerReference", memberNames);
+		Assert.Contains ("GetUninitializedObject", memberNames);
+
+		var nctorMethodHandle = FindNctorUcoMethod (reader);
+		Assert.False (nctorMethodHandle.IsNil, "Expected a nctor_*_uco method in the generated assembly");
+
+		var nctorMethod = reader.GetMethodDefinition (nctorMethodHandle);
+		var body = pe.GetMethodBody (nctorMethod.RelativeVirtualAddress);
+		Assert.NotNull (body);
+		var ilBytes = body.GetILBytes ();
+		Assert.NotNull (ilBytes);
+
+		var memberRefHandles = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
+			.Select (i => MetadataTokens.MemberReferenceHandle (i))
+			.ToList ();
+
+		// 1. The body must call SetPeerReference (the new behavior).
+		var setPeerHandle = memberRefHandles.First (h => reader.GetString (reader.GetMemberReference (h).Name) == "SetPeerReference");
+		Assert.True (ILContainsCallToken (ilBytes, MetadataTokens.GetToken (setPeerHandle)),
+			"nctor_*_uco IL should call IJavaPeerable.SetPeerReference for parameterless ctor");
+
+		// 2. The body must call GetUninitializedObject (no `newobj` of the activation ctor).
+		var getUninitHandle = memberRefHandles.First (h => reader.GetString (reader.GetMemberReference (h).Name) == "GetUninitializedObject");
+		Assert.True (ILContainsCallToken (ilBytes, MetadataTokens.GetToken (getUninitHandle)),
+			"nctor_*_uco IL should call RuntimeHelpers.GetUninitializedObject for parameterless ctor");
+
+		// 3. The body must call the user-visible parameterless ctor on the target type — and
+		//    NOT the (IntPtr, JniHandleOwnership) activation ctor. We disambiguate by signature.
+		var targetCtorRefs = memberRefHandles
+			.Where (h => {
+				var mref = reader.GetMemberReference (h);
+				if (reader.GetString (mref.Name) != ".ctor")
+					return false;
+				if (mref.Parent.Kind != HandleKind.TypeReference)
+					return false;
+				var typeRef = reader.GetTypeReference ((TypeReferenceHandle) mref.Parent);
+				return reader.GetString (typeRef.Name) == "UcoCtorPeer";
+			})
+			.ToList ();
+		Assert.NotEmpty (targetCtorRefs);
+
+		var ctorSigDecoder = new MethodSignatureDecoder ();
+		MemberReferenceHandle? userCtorHandle = null;
+		MemberReferenceHandle? activationCtorHandle = null;
+		foreach (var h in targetCtorRefs) {
+			var mref = reader.GetMemberReference (h);
+			int paramCount = mref.DecodeMethodSignature (ctorSigDecoder, genericContext: null).RequiredParameterCount;
+			if (paramCount == 0) userCtorHandle = h;
+			else if (paramCount == 2) activationCtorHandle = h;
+		}
+
+		Assert.NotNull (userCtorHandle);
+		Assert.True (ILContainsCallToken (ilBytes, MetadataTokens.GetToken (userCtorHandle!.Value)),
+			"nctor_*_uco IL should call the user-visible parameterless ctor on the target type");
+		if (activationCtorHandle.HasValue) {
+			Assert.False (ILContainsCallToken (ilBytes, MetadataTokens.GetToken (activationCtorHandle.Value)),
+				"nctor_*_uco IL should NOT call the (IntPtr, JniHandleOwnership) activation ctor for parameterless `()V`");
+		}
+	}
+
+	// Minimal SignatureTypeProvider used only to count required parameters of a member ref.
+	sealed class MethodSignatureDecoder : ISignatureTypeProvider<int, object?>
+	{
+		public int GetArrayType (int elementType, ArrayShape shape) => 0;
+		public int GetByReferenceType (int elementType) => 0;
+		public int GetFunctionPointerType (MethodSignature<int> signature) => 0;
+		public int GetGenericInstantiation (int genericType, ImmutableArray<int> typeArguments) => 0;
+		public int GetGenericMethodParameter (object? genericContext, int index) => 0;
+		public int GetGenericTypeParameter (object? genericContext, int index) => 0;
+		public int GetModifiedType (int modifier, int unmodifiedType, bool isRequired) => 0;
+		public int GetPinnedType (int elementType) => 0;
+		public int GetPointerType (int elementType) => 0;
+		public int GetPrimitiveType (PrimitiveTypeCode typeCode) => 0;
+		public int GetSZArrayType (int elementType) => 0;
+		public int GetTypeFromDefinition (MetadataReader reader, TypeDefinitionHandle handle, byte rawTypeKind) => 0;
+		public int GetTypeFromReference (MetadataReader reader, TypeReferenceHandle handle, byte rawTypeKind) => 0;
+		public int GetTypeFromSpecification (MetadataReader reader, object? genericContext, TypeSpecificationHandle handle, byte rawTypeKind) => 0;
 	}
 }
