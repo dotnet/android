@@ -1064,9 +1064,9 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.Contains ("test/AliasTarget[1]", jniNames);
 		Assert.Contains ("test/AliasTarget[2]", jniNames);
 
-		// Verify TypeMapAssociationAttribute is referenced
+		// Verify TypeMapAssociationAttribute is referenced (generic version)
 		var typeNames = GetTypeRefNames (reader);
-		Assert.Contains ("TypeMapAssociationAttribute", typeNames);
+		Assert.Contains ("TypeMapAssociationAttribute`1", typeNames);
 
 		// Verify 3 proxy types + 1 alias holder were emitted
 		var proxyTypes = reader.TypeDefinitions
