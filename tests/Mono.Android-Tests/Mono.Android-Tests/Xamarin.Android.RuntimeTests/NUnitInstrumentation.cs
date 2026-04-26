@@ -87,8 +87,7 @@ namespace Xamarin.Android.RuntimeTests
                     // Open generic type handling differs from non-trimmable
                     "Java.InteropTests.JnienvTest.NewOpenGenericTypeThrows",
 
-                    // Throwable/Object subclass registration not supported in trimmable typemap
-                    "Java.InteropTests.JnienvTest.ActivatedDirectObjectSubclassesShouldBeRegistered",
+                    // Throwable subclass registration not supported in trimmable typemap
                     "Java.InteropTests.JnienvTest.ActivatedDirectThrowableSubclassesShouldBeRegistered",
 
                     // Typemap doesn't resolve most-derived type

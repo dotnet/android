@@ -91,6 +91,7 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _getUninitializedObjectRef;
 	MemberReferenceHandle _notSupportedExceptionCtorRef;
 	MemberReferenceHandle _jniObjectReferenceCtorRef;
+	MemberReferenceHandle _iJavaPeerableSetPeerReferenceRef;
 	MemberReferenceHandle _jniEnvDeleteRefRef;
 	MemberReferenceHandle _shouldSkipActivationRef;
 	MemberReferenceHandle _withinNewObjectScopeRef;
@@ -297,6 +298,16 @@ sealed class TypeMapAssemblyEmitter
 					p.AddParameter ().Type ().IntPtr ();
 					p.AddParameter ().Type ().Type (_jniObjectReferenceTypeRef, true);
 				}));
+
+		// IJavaPeerable.SetPeerReference(JniObjectReference) — instance interface method.
+		// Used by UCO constructor wrappers (parameterless `()V`) to mirror TypeManager.Activate:
+		// after GetUninitializedObject we set the peer reference directly, then invoke the
+		// user-visible parameterless ctor (whose base ctor chain into Java.Lang.Object is a
+		// no-op when the peer is already set).
+		_iJavaPeerableSetPeerReferenceRef = _pe.AddMemberRef (_iJavaPeerableRef, "SetPeerReference",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
+				rt => rt.Void (),
+				p => p.AddParameter ().Type ().Type (_jniObjectReferenceRef, true)));
 
 		// JNIEnv.DeleteRef(IntPtr, JniHandleOwnership) — static, internal
 		// Used by JI-style activation to clean up the original handle after constructing the peer.
@@ -879,6 +890,18 @@ sealed class TypeMapAssemblyEmitter
 				}));
 	}
 
+	// Member ref to the user-visible parameterless instance constructor on the target type.
+	// Used by UCO constructor wrappers for `()V` to mirror TypeManager.Activate, which invokes
+	// the user-visible ctor (e.g. so [Export]-using classes can run their own initialization,
+	// like setting fields, when the peer is created from the Java side).
+	MemberReferenceHandle AddParameterlessCtorRef (EntityHandle declaringTypeRef)
+	{
+		return _pe.AddMemberRef (declaringTypeRef, ".ctor",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0,
+				rt => rt.Void (),
+				p => { }));
+	}
+
 	MethodDefinitionHandle EmitUcoMethod (UcoMethodData uco)
 	{
 		var jniParams = JniSignatureHelper.ParseParameterTypes (uco.JniSignature);
@@ -1100,6 +1123,49 @@ sealed class TypeMapAssemblyEmitter
 				}),
 				EncodeUcoConstructorLocals_JavaInterop);
 		} else {
+			// For the parameterless `()V` Java ctor, we mirror TypeManager.Activate so that the
+			// user-visible managed ctor body runs (required by [Export]-using classes whose
+			// instance initialization — e.g. `Constructed = true` — must execute when the peer
+			// is created from the Java side):
+			//
+			//   var obj = (TargetType) RuntimeHelpers.GetUninitializedObject(typeof(TargetType));
+			//   ((IJavaPeerable) obj).SetPeerReference(new JniObjectReference(self, Invalid));
+			//   obj..ctor();   // user-visible parameterless ctor
+			//
+			// The user-visible ctor's chain into Java.Lang.Object()/IJavaPeerable is a no-op
+			// when the peer reference is already set, so this does not create a second Java peer.
+			//
+			// Parameterized Java ctors (`(Lfoo;Lbar;)V`) still use the legacy activation-ctor
+			// fallback below — the JNI args are not forwarded. TODO: forward args + invoke the
+			// matching user-visible ctor for parameterized cases too.
+			if (uco.JniSignature == "()V") {
+				var userCtorRef = AddParameterlessCtorRef (targetTypeRef);
+				handle = _pe.EmitBody (uco.WrapperName,
+					MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+					encodeSig,
+					(encoder, cfb) => EmitUcoConstructorBodyWithMarshal (encoder, cfb, enc => {
+						enc.OpCode (ILOpCode.Ldtoken);
+						enc.Token (targetTypeRef);
+						enc.Call (_getTypeFromHandleRef);
+						enc.Call (_getUninitializedObjectRef);
+						enc.OpCode (ILOpCode.Castclass);
+						enc.Token (targetTypeRef);
+
+						enc.OpCode (ILOpCode.Dup);
+						enc.LoadArgument (1);    // self IntPtr
+						enc.LoadConstantI4 (0);  // JniObjectReferenceType.Invalid
+						enc.OpCode (ILOpCode.Newobj);
+						enc.Token (_jniObjectReferenceCtorRef);
+						enc.OpCode (ILOpCode.Callvirt);
+						enc.Token (_iJavaPeerableSetPeerReferenceRef);
+
+						enc.Call (userCtorRef);
+					}),
+					EncodeUcoConstructorLocals_Standard);
+				AddUnmanagedCallersOnlyAttribute (handle);
+				return handle;
+			}
+
 			var ctorRef = AddActivationCtorRef (
 				activationCtor.IsOnLeafType ? targetTypeRef : _pe.ResolveTypeRef (activationCtor.DeclaringType));
 
