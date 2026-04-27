@@ -6,7 +6,7 @@ parameters:
   project: ""
   testResultsFiles: ""
   extraBuildArgs: ""
-  testResultsFormat: NUnit
+  testResultsFormat: VSTest
   artifactSource: ""
   artifactFolder: ""
   condition: succeeded()
@@ -17,11 +17,12 @@ steps:
     configuration: ${{ parameters.buildConfiguration }}
     xaSourcePath: ${{ parameters.xaSourcePath }}
     displayName: run ${{ parameters.testName }}
+    command: test
     project: ${{ parameters.project }}
     arguments: >-
-      -t:RunTestApp
+      --no-build
       -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog
-      -v:n -c ${{ parameters.configuration }} ${{ parameters.extraBuildArgs }}
+      -c ${{ parameters.configuration }} ${{ parameters.extraBuildArgs }}
     condition: ${{ parameters.condition }}
     continueOnError: true
 

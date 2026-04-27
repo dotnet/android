@@ -90,9 +90,6 @@
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\RedistList\FrameworkList.xml" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.EnterpriseServices.dll" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.EnterpriseServices.pdb" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Xamarin.Android.NUnitLite.dll" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Xamarin.Android.NUnitLite.pdb" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Xamarin.Android.NUnitLite.xml" />
   </ItemGroup>
   <ItemGroup>
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)android-support-multidex.jar" />
