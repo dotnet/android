@@ -945,126 +945,6 @@ sealed class TypeMapAssemblyEmitter
 		return handle;
 	}
 
-	void EmitRegisterNatives (List<NativeRegistrationData> registrations,
-		Dictionary<string, MethodDefinitionHandle> wrapperHandles)
-	{
-		// Filter to only registrations that have corresponding wrapper methods
-		var validRegs = new List<(NativeRegistrationData Reg, MethodDefinitionHandle Wrapper)> (registrations.Count);
-		foreach (var reg in registrations) {
-			if (wrapperHandles.TryGetValue (reg.WrapperMethodName, out var wrapperHandle)) {
-				validRegs.Add ((reg, wrapperHandle));
-			}
-		}
-
-		if (validRegs.Count == 0) {
-			_pe.EmitBody ("RegisterNatives",
-				MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig |
-				MethodAttributes.NewSlot | MethodAttributes.Final,
-				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
-					rt => rt.Void (),
-					p => p.AddParameter ().Type ().Type (_jniTypeRef, false)),
-				encoder => encoder.OpCode (ILOpCode.Ret));
-			return;
-		}
-
-		// Get or create deduplicated RVA fields for each unique name/signature string.
-		var nameFields = new FieldDefinitionHandle [validRegs.Count];
-		var sigFields = new FieldDefinitionHandle [validRegs.Count];
-		for (int i = 0; i < validRegs.Count; i++) {
-			nameFields [i] = _pe.GetOrAddUtf8Field (validRegs [i].Reg.JniMethodName);
-			sigFields [i] = _pe.GetOrAddUtf8Field (validRegs [i].Reg.JniSignature);
-		}
-
-		int methodCount = validRegs.Count;
-
-		_pe.EmitBody ("RegisterNatives",
-			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig |
-			MethodAttributes.NewSlot | MethodAttributes.Final,
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
-				rt => rt.Void (),
-				p => p.AddParameter ().Type ().Type (_jniTypeRef, false)),
-			encoder => {
-				// stackalloc JniNativeMethod[N]
-				encoder.LoadConstantI4 (methodCount);
-				encoder.OpCode (ILOpCode.Sizeof);
-				encoder.Token (_jniNativeMethodRef);
-				encoder.OpCode (ILOpCode.Mul);
-				encoder.OpCode (ILOpCode.Localloc);
-				encoder.StoreLocal (0);
-
-				for (int i = 0; i < methodCount; i++) {
-					// &methods[i] — destination address for stobj
-					encoder.LoadLocal (0);
-					if (i > 0) {
-						encoder.LoadConstantI4 (i);
-						encoder.OpCode (ILOpCode.Sizeof);
-						encoder.Token (_jniNativeMethodRef);
-						encoder.OpCode (ILOpCode.Mul);
-						encoder.OpCode (ILOpCode.Add);
-					}
-
-					// byte* name — ldsflda of deduplicated field
-					encoder.OpCode (ILOpCode.Ldsflda);
-					encoder.Token (nameFields [i]);
-
-					// byte* signature
-					encoder.OpCode (ILOpCode.Ldsflda);
-					encoder.Token (sigFields [i]);
-
-					// IntPtr functionPointer
-					encoder.OpCode (ILOpCode.Ldftn);
-					encoder.Token (validRegs [i].Wrapper);
-
-					// Construct the struct on the evaluation stack and store it
-					// at the destination address. This matches the Roslyn pattern:
-					//   newobj JniNativeMethod::.ctor(byte*, byte*, IntPtr)
-					//   stobj  JniNativeMethod
-					encoder.OpCode (ILOpCode.Newobj);
-					encoder.Token (_jniNativeMethodCtorRef);
-					encoder.OpCode (ILOpCode.Stobj);
-					encoder.Token (_jniNativeMethodRef);
-				}
-
-				// JniObjectReference peerRef = jniType.PeerReference
-				// JniType is a sealed reference type, so use ldarg + callvirt
-				encoder.LoadArgument (1);
-				encoder.OpCode (ILOpCode.Callvirt);
-				encoder.Token (_jniTypePeerReferenceRef);
-				encoder.StoreLocal (1);
-
-				// new ReadOnlySpan<JniNativeMethod>(methods, count)
-				encoder.LoadLocalAddress (2);
-				encoder.LoadLocal (0);
-				encoder.LoadConstantI4 (methodCount);
-				encoder.Call (_readOnlySpanOfJniNativeMethodCtorRef);
-
-				// JniEnvironment.Types.RegisterNatives(peerRef, span)
-				encoder.LoadLocal (1);
-				encoder.LoadLocal (2);
-				encoder.Call (_jniEnvTypesRegisterNativesRef);
-
-				encoder.OpCode (ILOpCode.Ret);
-			},
-			encodeLocals: localSig => {
-				localSig.WriteByte (0x07); // IMAGE_CEE_CS_CALLCONV_LOCAL_SIG
-				localSig.WriteCompressedInteger (3);
-
-				// local 0: native int (stackalloc pointer)
-				localSig.WriteByte (0x18); // ELEMENT_TYPE_I
-
-				// local 1: JniObjectReference
-				localSig.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
-				localSig.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniObjectReferenceRef));
-
-				// local 2: ReadOnlySpan<JniNativeMethod>
-				EncodeGenericValueTypeInst (localSig, _readOnlySpanOpenRef, _jniNativeMethodRef);
-			});
-	}
-	void AddUnmanagedCallersOnlyAttribute (MethodDefinitionHandle handle)
-	{
-		_pe.Metadata.AddCustomAttribute (handle, _ucoAttrCtorRef, _ucoAttrBlobHandle);
-	}
-
 	MethodDefinitionHandle EmitUcoConstructor (UcoConstructorData uco, JavaPeerProxyData proxy)
 	{
 		var targetTypeRef = _pe.ResolveTypeRef (uco.TargetType);
@@ -1332,6 +1212,127 @@ sealed class TypeMapAssemblyEmitter
 		// local 3: JniObjectReference (valuetype)
 		blob.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniObjectReferenceRef));
+	}
+
+	void EmitRegisterNatives (List<NativeRegistrationData> registrations,
+		Dictionary<string, MethodDefinitionHandle> wrapperHandles)
+	{
+		// Filter to only registrations that have corresponding wrapper methods
+		var validRegs = new List<(NativeRegistrationData Reg, MethodDefinitionHandle Wrapper)> (registrations.Count);
+		foreach (var reg in registrations) {
+			if (wrapperHandles.TryGetValue (reg.WrapperMethodName, out var wrapperHandle)) {
+				validRegs.Add ((reg, wrapperHandle));
+			}
+		}
+
+		if (validRegs.Count == 0) {
+			_pe.EmitBody ("RegisterNatives",
+				MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig |
+				MethodAttributes.NewSlot | MethodAttributes.Final,
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
+					rt => rt.Void (),
+					p => p.AddParameter ().Type ().Type (_jniTypeRef, false)),
+				encoder => encoder.OpCode (ILOpCode.Ret));
+			return;
+		}
+
+		// Get or create deduplicated RVA fields for each unique name/signature string.
+		var nameFields = new FieldDefinitionHandle [validRegs.Count];
+		var sigFields = new FieldDefinitionHandle [validRegs.Count];
+		for (int i = 0; i < validRegs.Count; i++) {
+			nameFields [i] = _pe.GetOrAddUtf8Field (validRegs [i].Reg.JniMethodName);
+			sigFields [i] = _pe.GetOrAddUtf8Field (validRegs [i].Reg.JniSignature);
+		}
+
+		int methodCount = validRegs.Count;
+
+		_pe.EmitBody ("RegisterNatives",
+			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig |
+			MethodAttributes.NewSlot | MethodAttributes.Final,
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
+				rt => rt.Void (),
+				p => p.AddParameter ().Type ().Type (_jniTypeRef, false)),
+			encoder => {
+				// stackalloc JniNativeMethod[N]
+				encoder.LoadConstantI4 (methodCount);
+				encoder.OpCode (ILOpCode.Sizeof);
+				encoder.Token (_jniNativeMethodRef);
+				encoder.OpCode (ILOpCode.Mul);
+				encoder.OpCode (ILOpCode.Localloc);
+				encoder.StoreLocal (0);
+
+				for (int i = 0; i < methodCount; i++) {
+					// &methods[i] — destination address for stobj
+					encoder.LoadLocal (0);
+					if (i > 0) {
+						encoder.LoadConstantI4 (i);
+						encoder.OpCode (ILOpCode.Sizeof);
+						encoder.Token (_jniNativeMethodRef);
+						encoder.OpCode (ILOpCode.Mul);
+						encoder.OpCode (ILOpCode.Add);
+					}
+
+					// byte* name — ldsflda of deduplicated field
+					encoder.OpCode (ILOpCode.Ldsflda);
+					encoder.Token (nameFields [i]);
+
+					// byte* signature
+					encoder.OpCode (ILOpCode.Ldsflda);
+					encoder.Token (sigFields [i]);
+
+					// IntPtr functionPointer
+					encoder.OpCode (ILOpCode.Ldftn);
+					encoder.Token (validRegs [i].Wrapper);
+
+					// Construct the struct on the evaluation stack and store it
+					// at the destination address. This matches the Roslyn pattern:
+					//   newobj JniNativeMethod::.ctor(byte*, byte*, IntPtr)
+					//   stobj  JniNativeMethod
+					encoder.OpCode (ILOpCode.Newobj);
+					encoder.Token (_jniNativeMethodCtorRef);
+					encoder.OpCode (ILOpCode.Stobj);
+					encoder.Token (_jniNativeMethodRef);
+				}
+
+				// JniObjectReference peerRef = jniType.PeerReference
+				// JniType is a sealed reference type, so use ldarg + callvirt
+				encoder.LoadArgument (1);
+				encoder.OpCode (ILOpCode.Callvirt);
+				encoder.Token (_jniTypePeerReferenceRef);
+				encoder.StoreLocal (1);
+
+				// new ReadOnlySpan<JniNativeMethod>(methods, count)
+				encoder.LoadLocalAddress (2);
+				encoder.LoadLocal (0);
+				encoder.LoadConstantI4 (methodCount);
+				encoder.Call (_readOnlySpanOfJniNativeMethodCtorRef);
+
+				// JniEnvironment.Types.RegisterNatives(peerRef, span)
+				encoder.LoadLocal (1);
+				encoder.LoadLocal (2);
+				encoder.Call (_jniEnvTypesRegisterNativesRef);
+
+				encoder.OpCode (ILOpCode.Ret);
+			},
+			encodeLocals: localSig => {
+				localSig.WriteByte (0x07); // IMAGE_CEE_CS_CALLCONV_LOCAL_SIG
+				localSig.WriteCompressedInteger (3);
+
+				// local 0: native int (stackalloc pointer)
+				localSig.WriteByte (0x18); // ELEMENT_TYPE_I
+
+				// local 1: JniObjectReference
+				localSig.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
+				localSig.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniObjectReferenceRef));
+
+				// local 2: ReadOnlySpan<JniNativeMethod>
+				EncodeGenericValueTypeInst (localSig, _readOnlySpanOpenRef, _jniNativeMethodRef);
+			});
+	}
+
+	void AddUnmanagedCallersOnlyAttribute (MethodDefinitionHandle handle)
+	{
+		_pe.Metadata.AddCustomAttribute (handle, _ucoAttrCtorRef, _ucoAttrBlobHandle);
 	}
 
 	void EmitTypeMapAttribute (TypeMapAttributeData entry)
