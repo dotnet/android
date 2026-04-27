@@ -1620,7 +1620,7 @@ public sealed class JavaPeerScanner : IDisposable
 				ConstructorIndex = ctorIndex,
 				SuperArgumentsString = mm.SuperArgumentsString,
 				HasMatchingManagedCtor = managedParams != null,
-				ManagedParameterTypes = managedParams ?? (IReadOnlyList<TypeRefData>) Array.Empty<TypeRefData> (),
+				ManagedParameterTypes = managedParams ?? [],
 			});
 			ctorIndex++;
 		}
@@ -1664,23 +1664,22 @@ public sealed class JavaPeerScanner : IDisposable
 			// be a non-primitive reference type. We don't try to verify the exact
 			// managed type matches the JNI L...; descriptor — the JCW marshal
 			// method is the source of truth for what the Java side will pass.
-			bool allRefs = true;
-			foreach (var pt in sig.ParameterTypes) {
-				if (IsPrimitiveTypeRef (pt)) {
-					allRefs = false;
-					break;
-				}
-			}
-			if (!allRefs) {
+			if (!AllParametersAreReferenceTypes (sig.ParameterTypes)) {
 				continue;
 			}
-			var result = new TypeRefData [sig.ParameterTypes.Length];
-			for (int p = 0; p < result.Length; p++) {
-				result [p] = sig.ParameterTypes [p];
-			}
-			return result;
+			return [.. sig.ParameterTypes];
 		}
 		return null;
+	}
+
+	static bool AllParametersAreReferenceTypes (ImmutableArray<TypeRefData> parameterTypes)
+	{
+		foreach (var pt in parameterTypes) {
+			if (IsPrimitiveTypeRef (pt)) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	static bool IsPrimitiveTypeRef (TypeRefData t)

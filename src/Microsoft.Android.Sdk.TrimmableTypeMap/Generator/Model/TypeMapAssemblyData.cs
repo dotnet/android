@@ -283,7 +283,7 @@ sealed record UcoConstructorData
 	/// this to build the member ref signature and to marshal each JNI argument
 	/// to the corresponding managed type before calling the user ctor.
 	/// </summary>
-	public IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = Array.Empty<TypeRefData> ();
+	public IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = [];
 }
 
 /// <summary>
