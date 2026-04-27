@@ -9,6 +9,8 @@ using Microsoft.Android.Build.Tasks;
 using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
+using Xamarin.Android.Tasks;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -893,6 +895,131 @@ namespace Xamarin.Android.Build.Tests
 				aar.AssertEntryContents (aarPath, "res/raw/foo.txt", contents: "foo");
 				aar.AssertDoesNotContainEntry (aarPath, "res/raw/bar.txt");
 			}
+		}
+
+		/// <summary>
+		/// Regression test for https://github.com/dotnet/android/issues/10858
+		///
+		/// When a solution has the structure:
+		///   App (net10.0-android) → CoreLib (net10.0) → MultiTfmLib (net10.0;net10.0-android)
+		///
+		/// And MultiTfmLib contains Java-interop types (e.g. BroadcastReceiver) that only
+		/// exist in the net10.0-android TFM, the build tasks must load the Android-TFM assembly
+		/// and generate JCWs for those types. Previously, the net10.0 (non-Android) assembly
+		/// could be loaded instead, causing FindJavaObjectsStep to report "Found 0 Java types"
+		/// and producing empty .jlo.xml files.
+		/// </summary>
+		[Test]
+		public void MultiTfmTransitiveReference ([Values] AndroidRuntime runtime)
+		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: false)) {
+				return;
+			}
+
+			var path = Path.Combine ("temp", TestName);
+			var dotnetVersion = XABuildConfig.LatestDotNetTargetFramework;
+
+			// 1. Multi-TFM library (net10.0 + net10.0-android) with a BroadcastReceiver
+			var multiTfmLib = new DotNetStandard {
+				ProjectName = "MultiTfmLib",
+				Sdk = "Microsoft.NET.Sdk",
+				Sources = {
+					new BuildItem.Source ("MyReceiver.cs") {
+						TextContent = () =>
+@"#if ANDROID
+using Android.Content;
+
+namespace MultiTfmLib
+{
+	public class MyReceiver : BroadcastReceiver
+	{
+		public override void OnReceive (Context? context, Intent? intent) { }
+	}
+}
+#endif
+"
+					},
+					new BuildItem.Source ("SharedClass.cs") {
+						TextContent = () =>
+@"namespace MultiTfmLib
+{
+	public class SharedClass
+	{
+		public string Name => ""Hello"";
+	}
+}
+"
+					},
+				},
+			};
+			multiTfmLib.TargetFrameworks = $"{dotnetVersion};{dotnetVersion}-android";
+			multiTfmLib.SetProperty ("Nullable", "enable");
+			multiTfmLib.SetProperty ("AndroidGenerateResourceDesigner", "false");
+			multiTfmLib.SetProperty ("SupportedOSPlatformVersion", "24",
+				"$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'");
+			if (runtime != AndroidRuntime.NativeAOT) {
+				multiTfmLib.SetRuntime (runtime);
+			}
+
+			// 2. Non-Android library (net10.0 only) referencing the multi-TFM library
+			var coreLib = new DotNetStandard {
+				ProjectName = "CoreLib",
+				Sdk = "Microsoft.NET.Sdk",
+				Sources = {
+					new BuildItem.Source ("CoreClass.cs") {
+						TextContent = () =>
+@"namespace CoreLib
+{
+	public class CoreClass
+	{
+		public MultiTfmLib.SharedClass Shared => new ();
+	}
+}
+"
+					},
+				},
+			};
+			coreLib.TargetFramework = dotnetVersion;
+			coreLib.AddReference (multiTfmLib);
+
+			// 3. Android app that references CoreLib (NOT MultiTfmLib directly)
+			var app = new XamarinAndroidApplicationProject {
+				ProjectName = "MyApp",
+				Sources = {
+					new BuildItem.Source ("Usage.cs") {
+						TextContent = () =>
+@"public class Usage
+{
+	public CoreLib.CoreClass Core => new ();
+}
+"
+					},
+				},
+			};
+			app.SetRuntime (runtime);
+			app.AddReference (coreLib);
+
+			using var multiTfmBuilder = CreateDllBuilder (Path.Combine (path, multiTfmLib.ProjectName));
+			Assert.IsTrue (multiTfmBuilder.Build (multiTfmLib), $"{multiTfmLib.ProjectName} should build");
+
+			using var coreBuilder = CreateDllBuilder (Path.Combine (path, coreLib.ProjectName));
+			Assert.IsTrue (coreBuilder.Build (coreLib), $"{coreLib.ProjectName} should build");
+
+			using var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName));
+			Assert.IsTrue (appBuilder.Build (app), $"{app.ProjectName} should build");
+
+			// Verify: MultiTfmLib.jlo.xml should NOT be empty (i.e. the assembly was scanned as an Android assembly)
+			var jloXml = appBuilder.Output.GetIntermediaryPath (
+				Path.Combine ("android", "assets", "arm64-v8a", "MultiTfmLib.jlo.xml"));
+			FileAssert.Exists (jloXml);
+
+			var jloXmlInfo = new FileInfo (jloXml);
+			Assert.IsTrue (jloXmlInfo.Length > 0,
+				"MultiTfmLib.jlo.xml should not be empty — the Android-TFM assembly was not loaded (wrong TFM loaded instead)");
+
+			var jloContent = File.ReadAllText (jloXml);
+			Assert.IsTrue (jloContent.Contains ("MyReceiver"),
+				$"MultiTfmLib.jlo.xml should contain the MyReceiver JCW type, but got: {jloContent}");
 		}
 
 	}

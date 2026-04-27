@@ -102,12 +102,18 @@ public class AssemblyModifierPipeline : AndroidTask
 
 				var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: ReadSymbols, loadReaderParameters: readerParameters);
 
-				// Add SearchDirectories for the current architecture's ResolvedAssemblies
+				// Add SearchDirectories and pre-load ResolvedAssemblies into the resolver cache.
+				// Pre-loading ensures the correct TFM version is cached before any Cecil lazy
+				// reference resolution can find wrong-TFM copies from search directories (e.g.,
+				// a net10.0 copy in a referencing project's output directory).
 				foreach (var kvp in perArchAssemblies [sourceArch]) {
 					ITaskItem assembly = kvp.Value;
 					var path = Path.GetFullPath (Path.GetDirectoryName (assembly.ItemSpec));
 					if (!resolver.SearchDirectories.Contains (path)) {
 						resolver.SearchDirectories.Add (path);
+					}
+					if (resolver.Load (assembly.ItemSpec) == null) {
+						Log.LogDebugMessage ($"Could not pre-load assembly '{assembly.ItemSpec}' into resolver cache.");
 					}
 				}
 
