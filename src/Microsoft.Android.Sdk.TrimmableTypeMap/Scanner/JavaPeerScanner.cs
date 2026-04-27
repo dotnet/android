@@ -666,9 +666,13 @@ public sealed class JavaPeerScanner : IDisposable
 	/// returns null. Mirrors legacy CallbackCode behavior, where enum parameters
 	/// are passed via their underlying integer JNI ABI rather than as objects.
 	/// </summary>
-	string? TryResolveEnumUnderlyingDescriptor (string managedType)
+	/// <param name="assemblyName">Optional assembly hint. When provided and the
+	/// type resolves in that assembly, only that assembly is consulted; otherwise
+	/// every loaded assembly is searched (for resilience when the AssemblyName
+	/// metadata isn't carried through, e.g. nested arrays).</param>
+	string? TryResolveEnumUnderlyingDescriptor (string managedType, string? assemblyName = null)
 	{
-		var typeDef = TryFindEnumTypeDefinition (managedType);
+		var typeDef = TryFindEnumTypeDefinition (managedType, assemblyName);
 		if (typeDef is null) {
 			return null;
 		}
@@ -681,17 +685,32 @@ public sealed class JavaPeerScanner : IDisposable
 	/// its element type, resolves to an enum. The IL emitter uses this to encode
 	/// the type as a valuetype rather than a class in signatures and member refs.
 	/// </summary>
-	bool IsEnumOrEnumArray (string managedType)
+	bool IsEnumOrEnumArray (string managedType, string? assemblyName = null)
 	{
 		while (managedType.EndsWith ("[]", StringComparison.Ordinal)) {
 			managedType = managedType.Substring (0, managedType.Length - 2);
 		}
 
-		return TryFindEnumTypeDefinition (managedType) is not null;
+		return TryFindEnumTypeDefinition (managedType, assemblyName) is not null;
 	}
 
-	(TypeDefinition typeDef, AssemblyIndex index)? TryFindEnumTypeDefinition (string managedType)
+	(TypeDefinition typeDef, AssemblyIndex index)? TryFindEnumTypeDefinition (string managedType, string? assemblyName = null)
 	{
+		// Prefer the typed assembly hint when provided so that two assemblies
+		// containing types with identical FQNs (one enum, one not) resolve
+		// deterministically — assemblyCache enumeration order is non-deterministic.
+		if (!string.IsNullOrEmpty (assemblyName) &&
+		    assemblyCache.TryGetValue (assemblyName!, out var hintedIndex) &&
+		    hintedIndex.TypesByFullName.TryGetValue (managedType, out var hintedHandle)) {
+			var hintedDef = hintedIndex.Reader.GetTypeDefinition (hintedHandle);
+			if (IsEnumType (hintedDef, hintedIndex)) {
+				return (hintedDef, hintedIndex);
+			}
+			// Fall through to scan other assemblies — the named assembly contained
+			// a same-named non-enum, but another loaded assembly may still have
+			// the enum we're looking for.
+		}
+
 		foreach (var index in assemblyCache.Values) {
 			if (!index.TypesByFullName.TryGetValue (managedType, out var handle)) {
 				continue;
@@ -702,7 +721,9 @@ public sealed class JavaPeerScanner : IDisposable
 				return (typeDef, index);
 			}
 
-			return null;
+			// Same-named non-enum in this assembly — keep scanning. (Was a 'return
+			// null' early-out before; that lost legitimate enums in other loaded
+			// assemblies when name collisions occurred.)
 		}
 
 		return null;
@@ -720,7 +741,7 @@ public sealed class JavaPeerScanner : IDisposable
 			return type;
 		}
 
-		return IsEnumOrEnumArray (type.ManagedTypeName) ? type with { IsEnum = true } : type;
+		return IsEnumOrEnumArray (type.ManagedTypeName, type.AssemblyName) ? type with { IsEnum = true } : type;
 	}
 
 	static bool IsEnumType (TypeDefinition typeDef, AssemblyIndex index)
@@ -1316,7 +1337,7 @@ public sealed class JavaPeerScanner : IDisposable
 
 		// Enum parameters use their underlying primitive JNI ABI (matches legacy
 		// CallbackCode behavior).
-		var enumDescriptor = TryResolveEnumUnderlyingDescriptor (managedType.ManagedTypeName);
+		var enumDescriptor = TryResolveEnumUnderlyingDescriptor (managedType.ManagedTypeName, managedType.AssemblyName);
 		if (enumDescriptor is not null) {
 			return enumDescriptor;
 		}
