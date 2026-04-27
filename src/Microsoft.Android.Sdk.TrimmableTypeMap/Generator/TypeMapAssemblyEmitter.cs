@@ -94,7 +94,6 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _iJavaPeerableSetPeerReferenceRef;
 	MemberReferenceHandle _jniEnvDeleteRefRef;
 	MemberReferenceHandle _shouldSkipActivationRef;
-	MemberReferenceHandle _withinNewObjectScopeRef;
 	MemberReferenceHandle _ucoAttrCtorRef;
 	BlobHandle _ucoAttrBlobHandle;
 	MemberReferenceHandle _typeMapAttrCtorRef2Arg;
@@ -323,12 +322,6 @@ sealed class TypeMapAssemblyEmitter
 			sig => sig.MethodSignature ().Parameters (1,
 				rt => rt.Type ().Boolean (),
 				p => { p.AddParameter ().Type ().IntPtr (); }));
-
-		// JniEnvironment.get_WithinNewObjectScope() -> bool (static property)
-		_withinNewObjectScopeRef = _pe.AddMemberRef (_jniEnvironmentRef, "get_WithinNewObjectScope",
-			sig => sig.MethodSignature ().Parameters (0,
-				rt => rt.Type ().Boolean (),
-				p => { }));
 
 		// JniNativeMethod..ctor(byte*, byte*, IntPtr)
 		_jniNativeMethodCtorRef = _pe.AddMemberRef (_jniNativeMethodRef, ".ctor",

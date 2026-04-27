@@ -177,10 +177,18 @@ static class ModelBuilder
 		}
 
 		// Base JNI name entry → alias holder (self-referencing trim target, kept alive by associations)
+		// When ForceUnconditionalEntries is true we MUST emit this as 2-arg (unconditional) just
+		// like BuildEntry does: dotnet/runtime#127004 strips the TypeMapAssociation that keeps the
+		// holder alive when a TypeMap entry references the same type, leaving the dictionary key
+		// missing at runtime and breaking hierarchy lookups for essential types like
+		// java/lang/String and java/lang/Object.
+		bool aliasBaseUnconditional = ForceUnconditionalEntries
+			|| EssentialRuntimeTypes.Contains (jniName)
+			|| peersForName.Any (IsUnconditionalEntry);
 		model.Entries.Add (new TypeMapAttributeData {
 			JniName = jniName,
 			ProxyTypeReference = holderRef,
-			TargetTypeReference = holderRef,
+			TargetTypeReference = aliasBaseUnconditional ? null : holderRef,
 		});
 
 		model.AliasHolders.Add (new AliasHolderData {
