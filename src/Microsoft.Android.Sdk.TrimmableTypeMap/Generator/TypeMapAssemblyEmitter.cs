@@ -173,8 +173,6 @@ sealed class TypeMapAssemblyEmitter
 			EmitAnchorType ();
 		}
 		EmitMemberReferences ();
-		var exportMethodDispatchContext = CreateExportMethodDispatchEmitterContext ();
-		_exportMethodDispatchEmitter = new ExportMethodDispatchEmitter (_pe, exportMethodDispatchContext);
 
 		// Track wrapper method names → handles for RegisterNatives
 		var wrapperHandles = new Dictionary<string, MethodDefinitionHandle> ();
@@ -468,17 +466,14 @@ sealed class TypeMapAssemblyEmitter
 
 	ExportMethodDispatchEmitter GetExportMethodDispatchEmitter ()
 	{
-		if (_exportMethodDispatchEmitter == null) {
-			throw new InvalidOperationException ("ExportMethodDispatchEmitter has not been initialized.");
-		}
-
+		// [Export] is a niche feature; create the emitter lazily so we only pay
+		// for it in assemblies that actually contain export-attributed methods.
+		_exportMethodDispatchEmitter ??= new ExportMethodDispatchEmitter (_pe, CreateExportMethodDispatchEmitterContext ());
 		return _exportMethodDispatchEmitter;
 	}
 
 	void EmitProxyType (JavaPeerProxyData proxy, Dictionary<string, MethodDefinitionHandle> wrapperHandles)
 	{
-		var exportMethodDispatchEmitter = GetExportMethodDispatchEmitter ();
-
 		if (proxy.IsAcw) {
 			// RegisterNatives uses RVA-backed UTF-8 fields under <PrivateImplementationDetails>.
 			// Materialize those helper types before adding the proxy TypeDef, otherwise the
@@ -572,7 +567,7 @@ sealed class TypeMapAssemblyEmitter
 		// UCO wrappers
 		foreach (var uco in proxy.UcoMethods) {
 			var handle = uco.UsesExportMethodDispatch
-				? exportMethodDispatchEmitter.EmitUcoMethod (uco)
+				? GetExportMethodDispatchEmitter ().EmitUcoMethod (uco)
 				: EmitUcoMethod (uco);
 			wrapperHandles [uco.WrapperName] = handle;
 		}
@@ -889,18 +884,6 @@ sealed class TypeMapAssemblyEmitter
 				}));
 	}
 
-	// Member ref to the user-visible parameterless instance constructor on the target type.
-	// Used by UCO constructor wrappers for `()V` to mirror TypeManager.Activate, which invokes
-	// the user-visible ctor (e.g. so [Export]-using classes can run their own initialization,
-	// like setting fields, when the peer is created from the Java side).
-	MemberReferenceHandle AddParameterlessCtorRef (EntityHandle declaringTypeRef)
-	{
-		return _pe.AddMemberRef (declaringTypeRef, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0,
-				rt => rt.Void (),
-				p => { }));
-	}
-
 	MethodDefinitionHandle EmitUcoMethod (UcoMethodData uco)
 	{
 		var jniParams = JniSignatureHelper.ParseParameterTypes (uco.JniSignature);
@@ -1038,7 +1021,10 @@ sealed class TypeMapAssemblyEmitter
 			// fallback below — the JNI args are not forwarded. TODO: forward args + invoke the
 			// matching user-visible ctor for parameterized cases too.
 			if (uco.JniSignature == "()V") {
-				var userCtorRef = AddParameterlessCtorRef (targetTypeRef);
+				var userCtorRef = _pe.AddMemberRef (targetTypeRef, ".ctor",
+					sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0,
+						rt => rt.Void (),
+						p => { }));
 				handle = _pe.EmitBody (uco.WrapperName,
 					MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 					encodeSig,

@@ -309,11 +309,13 @@ public class TrimmableTypeMapGenerator
 					element.SetAttributeValue (attName, actualJavaName);
 				}
 
-				foreach (var peer in peers) {
-					if (deferredRegistration) {
+				if (deferredRegistration) {
+					foreach (var peer in peers) {
 						peer.CannotRegisterInStaticConstructor = true;
 					}
+				}
 
+				foreach (var peer in peers) {
 					if (!peer.IsUnconditional) {
 						peer.IsUnconditional = true;
 						logger.LogRootingManifestReferencedTypeInfo (name, peer.ManagedTypeName);

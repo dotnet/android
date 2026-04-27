@@ -26,8 +26,6 @@ namespace Xamarin.Android.RuntimeTests
             : base(handle, transfer)
         {
             if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
-                ExcludedCategories = ["NativeTypeMap", "TrimmableIgnore"];
-
                 // TODO: https://github.com/dotnet/android/issues/11170
                 // Tests from the external Java.Interop-Tests assembly that fail under the
                 // trimmable typemap. These cannot use [Category("TrimmableIgnore")] because
@@ -74,9 +72,6 @@ namespace Xamarin.Android.RuntimeTests
 
                     // net.dot.jni.test.GetThis — cannot register native members
                     "Java.InteropTests.JavaObjectTest.DisposeAccessesThis",
-
-                    // Finalization race: peer not disposed before GC collects in trimmable typemap
-                    "Java.InteropTests.JavaObjectTest.Dispose_Finalized",
 
                     // NotSupportedException instead of InvalidCastException — no generated JavaPeerProxy
                     "Java.InteropTests.JavaObjectExtensionsTests.JavaCast_BadInterfaceCast",
