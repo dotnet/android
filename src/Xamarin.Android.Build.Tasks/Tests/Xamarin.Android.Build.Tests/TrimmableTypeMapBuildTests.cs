@@ -17,8 +17,9 @@ namespace Xamarin.Android.Build.Tests {
 				return;
 			}
 
-			if (runtime == AndroidRuntime.CoreCLR && isRelease) {
-				Assert.Ignore ("CoreCLR + Release trimmable typemap not yet supported");
+			// https://github.com/dotnet/android/issues/11210
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT trimmable build does not yet generate JavaInteropRuntime.java");
 				return;
 			}
 
@@ -39,11 +40,6 @@ namespace Xamarin.Android.Build.Tests {
 		public void Build_WithTrimmableTypeMap_IncrementalBuild ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			if (runtime == AndroidRuntime.CoreCLR && isRelease) {
-				Assert.Ignore ("CoreCLR + Release trimmable typemap not yet supported");
 				return;
 			}
 
