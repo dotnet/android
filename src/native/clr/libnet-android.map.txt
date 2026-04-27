@@ -6,7 +6,6 @@ LIBNET_ANDROID {
     Java_mono_android_Runtime_notifyTimeZoneChanged;
     Java_mono_android_Runtime_propagateUncaughtException;
     Java_mono_android_Runtime_register;
-    Java_mono_android_Runtime_registerNatives;
 
   local:
     *;
