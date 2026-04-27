@@ -460,7 +460,13 @@ sealed class TypeMapAssemblyEmitter
 			_systemTypeRef,
 			_getTypeFromHandleRef,
 			_ucoAttrCtorRef,
-			_ucoAttrBlobHandle
+			_ucoAttrBlobHandle,
+			_jniTransitionRef,
+			_jniRuntimeRef,
+			_exceptionRef,
+			_beginMarshalMethodRef,
+			_endMarshalMethodRef,
+			_onUserUnhandledExceptionRef
 		);
 	}
 
