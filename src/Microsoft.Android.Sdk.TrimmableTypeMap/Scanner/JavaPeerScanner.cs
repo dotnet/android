@@ -1532,7 +1532,8 @@ public sealed class JavaPeerScanner : IDisposable
 
 		return packageNamingPolicy switch {
 			HashedPackageNamingPolicy.LowercaseCrc64 => "crc64" + ScannerHashingHelper.ToLegacyCrc64 (ns, assemblyName),
-			_ => "crc64" + ScannerHashingHelper.ToCrc64 (ns, assemblyName),
+			HashedPackageNamingPolicy.Crc64 => "crc64" + ScannerHashingHelper.ToCrc64 (ns, assemblyName),
+			_ => throw new InvalidOperationException ($"Unsupported package naming policy: {packageNamingPolicy}"),
 		};
 	}
 

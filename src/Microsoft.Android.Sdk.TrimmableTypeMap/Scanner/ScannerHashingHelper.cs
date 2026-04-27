@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using Java.Interop.Tools.JavaCallableWrappers;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
@@ -8,14 +9,18 @@ internal static class ScannerHashingHelper
 	internal static string ToLegacyCrc64 (string ns, string assemblyName)
 	{
 		int byteCount = GetNamespaceAssemblyUtf8ByteCount (ns, assemblyName);
-		byte[] utf8Buffer = new byte [byteCount];
-		int bytesWritten = GetNamespaceAssemblyUtf8Bytes (ns, assemblyName, utf8Buffer);
-		ulong crc = ulong.MaxValue;
-		ulong length = 0;
-		Crc64Helper.HashCore (utf8Buffer, 0, bytesWritten, ref crc, ref length);
-		Span<byte> hash = stackalloc byte [8];
-		WriteUInt64LittleEndian (hash, crc ^ length);
-		return ToHexString (hash, lowercase: true);
+		byte[] rented = ArrayPool<byte>.Shared.Rent (byteCount);
+		try {
+			int bytesWritten = GetNamespaceAssemblyUtf8Bytes (ns, assemblyName, rented.AsSpan (0, byteCount));
+			ulong crc = ulong.MaxValue;
+			ulong length = 0;
+			Crc64Helper.HashCore (rented, 0, bytesWritten, ref crc, ref length);
+			Span<byte> hash = stackalloc byte [8];
+			WriteUInt64LittleEndian (hash, crc ^ length);
+			return ToHexString (hash, lowercase: true);
+		} finally {
+			ArrayPool<byte>.Shared.Return (rented);
+		}
 	}
 
 	internal static string ToCrc64 (string ns, string assemblyName)
