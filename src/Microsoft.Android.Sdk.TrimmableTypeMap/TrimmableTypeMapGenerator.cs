@@ -25,6 +25,7 @@ public class TrimmableTypeMapGenerator
 		IReadOnlyList<(string Name, PEReader Reader)> assemblies,
 		Version systemRuntimeVersion,
 		HashSet<string> frameworkAssemblyNames,
+		bool useSharedTypemapUniverse = false,
 		ManifestConfig? manifestConfig = null,
 		XDocument? manifestTemplate = null)
 	{
@@ -41,7 +42,7 @@ public class TrimmableTypeMapGenerator
 		RootManifestReferencedTypes (allPeers, PrepareManifestForRooting (manifestTemplate, manifestConfig));
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
 
-		var generatedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion);
+		var generatedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, useSharedTypemapUniverse);
 		var jcwPeers = allPeers.Where (p =>
 			!frameworkAssemblyNames.Contains (p.AssemblyName)
 			|| p.JavaName.StartsWith ("mono/", StringComparison.Ordinal)).ToList ();
@@ -112,7 +113,7 @@ public class TrimmableTypeMapGenerator
 		return (peers, manifestInfo);
 	}
 
-	List<GeneratedAssembly> GenerateTypeMapAssemblies (List<JavaPeerInfo> allPeers, Version systemRuntimeVersion)
+	List<GeneratedAssembly> GenerateTypeMapAssemblies (List<JavaPeerInfo> allPeers, Version systemRuntimeVersion, bool useSharedTypemapUniverse)
 	{
 		var peersByAssembly = allPeers.GroupBy (p => p.AssemblyName, StringComparer.Ordinal).OrderBy (g => g.Key, StringComparer.Ordinal);
 		var generatedAssemblies = new List<GeneratedAssembly> ();
@@ -123,14 +124,14 @@ public class TrimmableTypeMapGenerator
 			perAssemblyNames.Add (assemblyName);
 			var peers = group.ToList ();
 			var stream = new MemoryStream ();
-			generator.Generate (peers, stream, assemblyName);
+			generator.Generate (peers, stream, assemblyName, useSharedTypemapUniverse);
 			stream.Position = 0;
 			generatedAssemblies.Add (new GeneratedAssembly (assemblyName, stream));
 			logger.LogGeneratedTypeMapAssemblyInfo (assemblyName, peers.Count);
 		}
 		var rootStream = new MemoryStream ();
 		var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
-		rootGenerator.Generate (perAssemblyNames, rootStream);
+		rootGenerator.Generate (perAssemblyNames, useSharedTypemapUniverse, rootStream);
 		rootStream.Position = 0;
 		generatedAssemblies.Add (new GeneratedAssembly ("_Microsoft.Android.TypeMaps", rootStream));
 		logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);

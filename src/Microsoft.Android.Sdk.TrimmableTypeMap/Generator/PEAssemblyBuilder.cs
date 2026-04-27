@@ -317,6 +317,51 @@ sealed class PEAssemblyBuilder
 	}
 
 	/// <summary>
+	/// Emits a method body with full support for exception regions (try/catch/finally).
+	/// The callback receives both the <see cref="InstructionEncoder"/> and the
+	/// <see cref="ControlFlowBuilder"/> so it can emit IL and register exception regions
+	/// (e.g. via <c>cfb.AddCatchRegion</c> / <c>cfb.AddFinallyRegion</c>) in one pass.
+	/// A <see cref="ControlFlowBuilder"/> is always created for this overload.
+	/// </summary>
+	public MethodDefinitionHandle EmitBody (string name, MethodAttributes attrs,
+		Action<BlobEncoder> encodeSig,
+		Action<InstructionEncoder, ControlFlowBuilder> emitIL,
+		Action<BlobBuilder>? encodeLocals)
+	{
+		_sigBlob.Clear ();
+		encodeSig (new BlobEncoder (_sigBlob));
+		// Capture the sig blob handle before emitIL, because emitIL callbacks
+		// may call AddMemberRef which clears and repopulates _sigBlob.
+		var sigBlobHandle = Metadata.GetOrAddBlob (_sigBlob);
+
+		StandaloneSignatureHandle localSigHandle = default;
+		if (encodeLocals != null) {
+			var localSigBlob = new BlobBuilder (32);
+			encodeLocals (localSigBlob);
+			localSigHandle = Metadata.AddStandaloneSignature (Metadata.GetOrAddBlob (localSigBlob));
+		}
+
+		_codeBlob.Clear ();
+		var cfb = new ControlFlowBuilder ();
+		var encoder = new InstructionEncoder (_codeBlob, cfb);
+		emitIL (encoder, cfb);
+
+		while (ILBuilder.Count % 4 != 0) {
+			ILBuilder.WriteByte (0);
+		}
+		var bodyEncoder = new MethodBodyStreamEncoder (ILBuilder);
+		int bodyOffset = localSigHandle.IsNil
+			? bodyEncoder.AddMethodBody (encoder)
+			: bodyEncoder.AddMethodBody (encoder, maxStack: 8, localSigHandle, MethodBodyAttributes.InitLocals);
+
+		return Metadata.AddMethodDefinition (
+			attrs, MethodImplAttributes.IL,
+			Metadata.GetOrAddString (name),
+			sigBlobHandle,
+			bodyOffset, default);
+	}
+
+	/// <summary>
 	/// Builds a <c>TypeSpec</c> for a closed generic type with a single type argument.
 	/// For example, <c>MakeGenericTypeSpec(openAttrRef, javaLangObjectRef)</c> produces
 	/// <c>TypeMapAttribute&lt;Java.Lang.Object&gt;</c>.

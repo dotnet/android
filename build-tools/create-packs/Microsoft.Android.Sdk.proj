@@ -74,6 +74,7 @@ core workload SDK packs imported by WorkloadManifest.targets.
       <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Run.dll" TargetPath="tools" />
       <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Run.pdb" TargetPath="..\tools" IsSymbolFile="true" />
       <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Run.runtimeconfig.json" TargetPath="tools" />
+      <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Testing.Platform.dll" TargetPath="tools" />
       <FilesToPackage Include="@(VersionFiles)" TargetPath="tools" />
       <FilesToPackage Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\Sdk\**" TargetPath="Sdk" />
       <FilesToPackage Include="$(XamarinAndroidSourcePath)src\Microsoft.Android.Sdk.ILLink\PreserveLists\**" TargetPath="PreserveLists" />

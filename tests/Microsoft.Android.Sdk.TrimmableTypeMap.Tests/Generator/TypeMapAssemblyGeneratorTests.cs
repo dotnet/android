@@ -992,6 +992,145 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_UcoConstructor_BodyUsesMarshalMethodPattern ()
+	{
+		// Verify that UCO constructor bodies wrap activation in BeginMarshalMethod/EndMarshalMethod
+		// with try/catch/finally so that exceptions cannot cross the JNI boundary (causing SIGABRT).
+		var peer = MakeAcwPeer ("test/UcoCtorExc", "Test.UcoCtorExc", "TestAsm");
+		using var stream = GenerateAssembly (new [] { peer }, "UcoCtorMarshalTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		// Member refs for the marshal-method pattern must be present.
+		var memberNames = GetMemberRefNames (reader);
+		Assert.Contains ("BeginMarshalMethod", memberNames);
+		Assert.Contains ("EndMarshalMethod", memberNames);
+		Assert.Contains ("OnUserUnhandledException", memberNames);
+
+		// Type refs for the marshal-method locals must be present.
+		var typeNames = GetTypeRefNames (reader);
+		Assert.Contains ("JniTransition", typeNames);
+		Assert.Contains ("JniRuntime", typeNames);
+		Assert.Contains ("Exception", typeNames);
+
+		// Find the nctor_*_uco method.
+		var nctorMethodHandle = FindNctorUcoMethod (reader);
+		Assert.False (nctorMethodHandle.IsNil, "Expected a nctor_*_uco method in the generated assembly");
+
+		// The method body must have exception regions: at least one Catch and one Finally.
+		var nctorMethod = reader.GetMethodDefinition (nctorMethodHandle);
+		var body = pe.GetMethodBody (nctorMethod.RelativeVirtualAddress);
+		Assert.NotNull (body);
+		var regions = body.ExceptionRegions;
+		Assert.True (regions.Length >= 2,
+			$"UCO constructor should have at least 2 exception regions (catch + finally), found {regions.Length}");
+		Assert.Contains (regions, r => r.Kind == ExceptionRegionKind.Catch);
+		Assert.Contains (regions, r => r.Kind == ExceptionRegionKind.Finally);
+
+		// Verify the method body IL actually calls the marshal-method APIs (not just that the refs exist in the assembly).
+		var il = pe.GetSectionData (nctorMethod.RelativeVirtualAddress);
+		var ilBytes = body.GetILBytes ();
+		Assert.NotNull (ilBytes);
+		var ilContent = System.Text.Encoding.ASCII.GetString (ilBytes);
+		// Cross-check: the member refs we found must be referenced from within this method body.
+		// We verify by checking that the IL contains Call/Callvirt opcodes (0x28/0x6F) with tokens
+		// pointing to the expected member refs.
+		var memberRefHandles = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
+			.Select (i => MetadataTokens.MemberReferenceHandle (i))
+			.ToList ();
+		var beginHandle = memberRefHandles.First (h => reader.GetString (reader.GetMemberReference (h).Name) == "BeginMarshalMethod");
+		var endHandle = memberRefHandles.First (h => reader.GetString (reader.GetMemberReference (h).Name) == "EndMarshalMethod");
+		var exHandle = memberRefHandles.First (h => reader.GetString (reader.GetMemberReference (h).Name) == "OnUserUnhandledException");
+		int beginToken = MetadataTokens.GetToken (beginHandle);
+		int endToken = MetadataTokens.GetToken (endHandle);
+		int exToken = MetadataTokens.GetToken (exHandle);
+		Assert.True (ILContainsCallToken (ilBytes, beginToken), "nctor_*_uco IL should call BeginMarshalMethod");
+		Assert.True (ILContainsCallToken (ilBytes, endToken), "nctor_*_uco IL should call EndMarshalMethod");
+		Assert.True (ILContainsCallToken (ilBytes, exToken), "nctor_*_uco IL should call OnUserUnhandledException");
+	}
+
+	[Fact]
+	public void Generate_UcoConstructor_JiStyle_HasExceptionRegions ()
+	{
+		// Verify the JavaInterop-style UCO constructor activation path also has exception regions.
+		var peer = MakeAcwPeer ("test/JiUcoCtorExc", "Test.JiUcoCtorExc", "TestAsm") with {
+			ActivationCtor = new ActivationCtorInfo {
+				DeclaringTypeName = "Test.JiUcoCtorExc",
+				DeclaringAssemblyName = "TestAsm",
+				Style = ActivationCtorStyle.JavaInterop,
+			},
+		};
+		using var stream = GenerateAssembly (new [] { peer }, "JiUcoCtorMarshalTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var nctorMethodHandle = FindNctorUcoMethod (reader);
+		Assert.False (nctorMethodHandle.IsNil, "Expected a nctor_*_uco method in the generated assembly");
+
+		var nctorMethod = reader.GetMethodDefinition (nctorMethodHandle);
+		var body = pe.GetMethodBody (nctorMethod.RelativeVirtualAddress);
+		Assert.NotNull (body);
+		var regions = body.ExceptionRegions;
+		Assert.True (regions.Length >= 2,
+			$"JavaInterop UCO constructor should have at least 2 exception regions, found {regions.Length}");
+		Assert.Contains (regions, r => r.Kind == ExceptionRegionKind.Catch);
+		Assert.Contains (regions, r => r.Kind == ExceptionRegionKind.Finally);
+	}
+
+	[Fact]
+	public void Generate_UcoConstructor_GenericDefinition_NoExceptionRegions ()
+	{
+		// Open-generic UCO constructors are no-ops and must NOT have exception regions
+		// (a single 'ret' is emitted with no surrounding try/catch/finally).
+		var peers = ScanFixtures ();
+		var generic = peers.First (p => p.JavaName == "my/app/GenericHolder");
+		Assert.True (generic.IsGenericDefinition);
+
+		using var stream = GenerateAssembly (new [] { generic }, "GenericUcoCtorTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var nctorMethodHandle = FindNctorUcoMethod (reader);
+
+		if (!nctorMethodHandle.IsNil) {
+			// If a nctor_*_uco method exists for the generic type, it must be a no-op (no exception regions).
+			var nctorMethod = reader.GetMethodDefinition (nctorMethodHandle);
+			var body = pe.GetMethodBody (nctorMethod.RelativeVirtualAddress);
+			Assert.NotNull (body);
+			Assert.Empty (body.ExceptionRegions);
+		}
+		// Open-generic types do not get a nctor_*_uco wrapper — no UCO ctors for generics.
+	}
+
+	[Fact]
+	public void Generate_UcoConstructor_InheritedCtor_HasExceptionRegions ()
+	{
+		// Verify the non-leaf (inherited) activation path also gets exception regions.
+		var peers = ScanFixtures ();
+		var simpleActivity = peers.First (p => p.JavaName == "my/app/SimpleActivity");
+		Assert.NotNull (simpleActivity.ActivationCtor);
+		// SimpleActivity does not declare its own (IntPtr, JniHandleOwnership) ctor,
+		// so the activation ctor is inherited from Activity (DeclaringTypeName != ManagedTypeName).
+		Assert.NotEqual (simpleActivity.ActivationCtor.DeclaringTypeName, simpleActivity.ManagedTypeName);
+
+		using var stream = GenerateAssembly (new [] { simpleActivity }, "InheritedUcoCtorExcTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var nctorMethodHandle = FindNctorUcoMethod (reader);
+		Assert.False (nctorMethodHandle.IsNil, "SimpleActivity (ACW) should have a nctor_*_uco method");
+
+		var nctorMethod = reader.GetMethodDefinition (nctorMethodHandle);
+		var body = pe.GetMethodBody (nctorMethod.RelativeVirtualAddress);
+		Assert.NotNull (body);
+		var regions = body.ExceptionRegions;
+		Assert.True (regions.Length >= 2,
+			$"Inherited-ctor UCO constructor should have at least 2 exception regions, found {regions.Length}");
+		Assert.Contains (regions, r => r.Kind == ExceptionRegionKind.Catch);
+		Assert.Contains (regions, r => r.Kind == ExceptionRegionKind.Finally);
+	}
+
+	[Fact]
 	public void Generate_ProxyTypes_HaveSelfAppliedAttribute ()
 	{
 		var peers = ScanFixtures ();

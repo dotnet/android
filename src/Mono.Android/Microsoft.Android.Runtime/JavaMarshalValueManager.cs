@@ -27,8 +27,6 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 
 	bool disposed;
 
-	static readonly SemaphoreSlim bridgeProcessingSemaphore = new (1, 1);
-
 	static JavaMarshalValueManager? s_instance;
 
 	public static JavaMarshalValueManager Instance =>
@@ -58,8 +56,12 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 
 	public override void WaitForGCBridgeProcessing ()
 	{
-		bridgeProcessingSemaphore.Wait ();
-		bridgeProcessingSemaphore.Release ();
+		// Intentionally empty. The Mono runtime's own implementation acknowledges this
+		// pattern is fundamentally flawed (see FIXME in sgen-bridge.c): a thread that
+		// passes the check can still race with bridge processing that starts immediately
+		// after. The wait cannot prevent the race, only reduce its window. On CoreCLR,
+		// JNI wrapper threads hold their own handle copies via JniObjectReference, so
+		// they are not affected by the bridge swapping control_block handles.
 	}
 
 	public unsafe override void CollectPeers ()
@@ -444,7 +446,6 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 		}
 
 		HandleContext.EnsureAllContextsAreOurs (mcr);
-		bridgeProcessingSemaphore.Wait ();
 	}
 
 	[UnmanagedCallersOnly]
@@ -456,8 +457,6 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 
 		ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (mcr);
 		JavaMarshal.FinishCrossReferenceProcessing (mcr, handlesToFree);
-
-		bridgeProcessingSemaphore.Release ();
 	}
 
 	static unsafe ReadOnlySpan<GCHandle> ProcessCollectedContexts (MarkCrossReferencesArgs* mcr)

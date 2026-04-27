@@ -25,6 +25,11 @@ namespace xamarin::android {
 			return gc_weak_gref_count;
 		}
 
+		static auto _monodroid_gref_inc () noexcept -> int;
+		static auto _monodroid_gref_dec () noexcept -> int;
+		static auto _monodroid_weak_gref_inc () noexcept -> int;
+		static auto _monodroid_weak_gref_dec () noexcept -> int;
+
 		static void _monodroid_gref_log (const char *message) noexcept;
 		static auto _monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from) noexcept -> int;
 		static void _monodroid_gref_log_delete (jobject handle, char type, const char *threadName, int threadId, const char *from) noexcept;
@@ -51,8 +56,6 @@ namespace xamarin::android {
 		}
 
 	private:
-		static auto _monodroid_gref_inc () noexcept -> int;
-		static auto _monodroid_gref_dec () noexcept -> int;
 		static void _write_stack_trace (FILE *to, const char *const from, LogCategories = LOG_NONE) noexcept;
 		static void log_it (LogCategories category, std::string const& line, FILE *to, const char *const from, bool logcat_enabled) noexcept;
 

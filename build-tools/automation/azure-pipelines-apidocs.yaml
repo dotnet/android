@@ -12,7 +12,8 @@ resources:
   repositories:
   - repository: 1esPipelines
     type: git
-    name: 1ESPipelineTemplates/MicroBuildTemplate
+    name: 1ESPipelineTemplates/1ESPipelineTemplates
+    ref: refs/tags/release
 
 parameters:
 - name: apiLevel
@@ -100,8 +101,6 @@ extends:
           submodules: recursive
 
         - template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml@self
-          parameters:
-            useAgentJdkPath: false
 
         # Set MSBuild property overrides if parameters are set
         - ${{ if ne(parameters.apiLevel, 'default') }}:

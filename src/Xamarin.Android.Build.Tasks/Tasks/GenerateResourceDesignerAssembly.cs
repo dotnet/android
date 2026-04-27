@@ -152,7 +152,7 @@ namespace Xamarin.Android.Tasks
 			TypeDefinition? constDesigner = null;
 			if (IsApplication) {
 				// The Constant based class
-				TypeAttributes attrib = AssemblyName.IsNullOrEmpty () ? TypeAttributes.Public : TypeAttributes.Public;
+				TypeAttributes attrib = TypeAttributes.Public;
 				constDesigner = new TypeDefinition (
 					FixLegacyResourceDesignerStep.DesignerAssemblyNamespace,
 					"ResourceConstant",
