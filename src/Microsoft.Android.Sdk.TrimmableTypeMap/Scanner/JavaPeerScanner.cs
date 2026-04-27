@@ -245,7 +245,7 @@ public sealed class JavaPeerScanner : IDisposable
 				IsUnconditional = isUnconditional,
 				CannotRegisterInStaticConstructor = cannotRegisterInStaticConstructor,
 				MarshalMethods = marshalMethods,
-				JavaConstructors = BuildJavaConstructors (marshalMethods),
+				JavaConstructors = BuildJavaConstructors (marshalMethods, typeDef, index),
 				JavaFields = exportFields,
 				ActivationCtor = activationCtor,
 				InvokerTypeName = invokerTypeName,
@@ -1602,8 +1602,9 @@ public sealed class JavaPeerScanner : IDisposable
 		return (lastPlus >= 0 ? typePart.Slice (lastPlus + 1) : typePart).ToString ();
 	}
 
-	static List<JavaConstructorInfo> BuildJavaConstructors (List<MarshalMethodInfo> marshalMethods)
+	static List<JavaConstructorInfo> BuildJavaConstructors (List<MarshalMethodInfo> marshalMethods, TypeDefinition typeDef, AssemblyIndex index)
 	{
+		bool hasParameterlessManagedCtor = HasParameterlessManagedCtor (typeDef, index);
 		var ctors = new List<JavaConstructorInfo> ();
 		int ctorIndex = 0;
 		foreach (var mm in marshalMethods) {
@@ -1614,10 +1615,33 @@ public sealed class JavaPeerScanner : IDisposable
 				JniSignature = mm.JniSignature,
 				ConstructorIndex = ctorIndex,
 				SuperArgumentsString = mm.SuperArgumentsString,
+				// Only "()V" is supported by the new "call user-visible ctor" UCO codegen.
+				// Parameterized ctors fall back to the legacy activation-ctor path until
+				// we add JNI-arg marshalling for non-()V signatures.
+				HasMatchingManagedCtor = mm.JniSignature == "()V" && hasParameterlessManagedCtor,
 			});
 			ctorIndex++;
 		}
 		return ctors;
+	}
+
+	static bool HasParameterlessManagedCtor (TypeDefinition typeDef, AssemblyIndex index)
+	{
+		foreach (var methodHandle in typeDef.GetMethods ()) {
+			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
+			if ((methodDef.Attributes & MethodAttributes.Static) != 0) {
+				continue;
+			}
+			var name = index.Reader.GetString (methodDef.Name);
+			if (name != ".ctor") {
+				continue;
+			}
+			var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+			if (sig.ParameterTypes.Length == 0) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/// <summary>

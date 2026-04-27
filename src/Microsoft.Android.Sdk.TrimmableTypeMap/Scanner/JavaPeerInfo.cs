@@ -285,6 +285,15 @@ public sealed record JavaConstructorInfo
 	public required int ConstructorIndex { get; init; }
 
 	/// <summary>
+	/// For "()V" Java ctors: <see langword="true"/> when the managed type defines a
+	/// matching parameterless instance ctor (`..ctor()`). When <see langword="false"/>,
+	/// the UCO ctor codegen falls back to the legacy `(IntPtr, JniHandleOwnership)`
+	/// activation-ctor path so we don't emit a metadata reference to a non-existent
+	/// `..ctor()` (e.g., <c>RunnableImplementor</c>, which only has parameterized ctors).
+	/// </summary>
+	public bool HasMatchingManagedCtor { get; init; }
+
+	/// <summary>
 	/// For [Export] constructors: super constructor arguments string.
 	/// Null for [Register] constructors.
 	/// </summary>

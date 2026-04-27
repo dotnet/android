@@ -333,6 +333,7 @@ static class ModelBuilder
 			proxy.UcoConstructors.Add (new UcoConstructorData {
 				WrapperName = $"nctor_{ctor.ConstructorIndex}_uco",
 				JniSignature = ctor.JniSignature,
+				HasMatchingManagedCtor = ctor.HasMatchingManagedCtor,
 				TargetType = new TypeRefData {
 					ManagedTypeName = peer.ManagedTypeName,
 					AssemblyName = peer.AssemblyName,

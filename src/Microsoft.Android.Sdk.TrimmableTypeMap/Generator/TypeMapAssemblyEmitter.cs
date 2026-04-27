@@ -930,6 +930,7 @@ sealed class TypeMapAssemblyEmitter
 
 	MethodDefinitionHandle EmitUcoConstructor (UcoConstructorData uco, JavaPeerProxyData proxy)
 	{
+
 		var targetTypeRef = _pe.ResolveTypeRef (uco.TargetType);
 		var activationCtor = proxy.ActivationCtor ?? throw new InvalidOperationException (
 			$"UCO constructor wrapper requires an activation ctor for '{uco.TargetType.ManagedTypeName}'");
@@ -1017,10 +1018,16 @@ sealed class TypeMapAssemblyEmitter
 			// the peer reference is already set (guarded by `if (PeerReference.IsValid) return;`),
 			// so this does not create a second Java peer.
 			//
+			// We only take this path when the managed type actually defines `..ctor()` — types
+			// like `Java.Lang.Thread+RunnableImplementor` register a `()V` Java ctor via JCW
+			// codegen but only define parameterized managed ctors, so emitting a member ref to
+			// `..ctor()` would resolve to a non-existent method at runtime. Those types fall
+			// through to the legacy activation-ctor `(IntPtr, JniHandleOwnership)` path below.
+			//
 			// Parameterized Java ctors (`(Lfoo;Lbar;)V`) still use the legacy activation-ctor
 			// fallback below — the JNI args are not forwarded. TODO: forward args + invoke the
 			// matching user-visible ctor for parameterized cases too.
-			if (uco.JniSignature == "()V") {
+			if (uco.JniSignature == "()V" && uco.HasMatchingManagedCtor) {
 				var userCtorRef = _pe.AddMemberRef (targetTypeRef, ".ctor",
 					sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0,
 						rt => rt.Void (),

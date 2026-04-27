@@ -266,6 +266,15 @@ sealed record UcoConstructorData
 	/// JNI constructor signature, e.g., "(Landroid/content/Context;)V". Used for RegisterNatives registration.
 	/// </summary>
 	public required string JniSignature { get; init; }
+
+	/// <summary>
+	/// <see langword="true"/> when the UCO codegen can statically prove the managed
+	/// type defines a matching user-visible ctor with this signature. When
+	/// <see langword="false"/>, the codegen must use the legacy activation-ctor
+	/// `(IntPtr, JniHandleOwnership)` path instead of emitting a member ref to
+	/// a (potentially non-existent) user ctor.
+	/// </summary>
+	public required bool HasMatchingManagedCtor { get; init; }
 }
 
 /// <summary>

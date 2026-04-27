@@ -1400,6 +1400,66 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		}
 	}
 
+	[Fact]
+	public void Generate_UcoConstructor_Parameterless_NoMatchingManagedCtor_FallsBackToActivationCtor ()
+	{
+		// Regression test for Java.Lang.Thread+RunnableImplementor: it registers a `()V` Java
+		// ctor via JCW codegen, but the managed type only defines parameterized ctors. Emitting
+		// a member ref to `..ctor()` would resolve to a non-existent method and crash the test
+		// app at runtime with `MissingMethodException : Method not found: 'Void RunnableImplementor..ctor()'`.
+		// In this case the codegen must fall back to the legacy `(IntPtr, JniHandleOwnership)`
+		// activation-ctor path (i.e. `newobj` of the activation ctor).
+		var peer = MakeAcwPeer ("test/UcoCtorNoParamlessPeer", "Test.UcoCtorNoParamlessPeer", "TestAsm") with {
+			JavaConstructors = new List<JavaConstructorInfo> {
+				new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V", HasMatchingManagedCtor = false },
+			},
+		};
+		using var stream = GenerateAssembly (new [] { peer }, "UcoCtorNoParamlessTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var nctorMethodHandle = FindNctorUcoMethod (reader);
+		Assert.False (nctorMethodHandle.IsNil, "Expected a nctor_*_uco method in the generated assembly");
+		var nctorMethod = reader.GetMethodDefinition (nctorMethodHandle);
+		var body = pe.GetMethodBody (nctorMethod.RelativeVirtualAddress);
+		Assert.NotNull (body);
+		var ilBytes = body.GetILBytes ();
+		Assert.NotNull (ilBytes);
+
+		var memberRefHandles = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
+			.Select (i => MetadataTokens.MemberReferenceHandle (i))
+			.ToList ();
+
+		// 1. The body must NOT call the user-visible parameterless ctor.
+		var ctorSigDecoder = new MethodSignatureDecoder ();
+		MemberReferenceHandle? userCtorHandle = null;
+		MemberReferenceHandle? activationCtorHandle = null;
+		foreach (var h in memberRefHandles) {
+			var mref = reader.GetMemberReference (h);
+			if (reader.GetString (mref.Name) != ".ctor")
+				continue;
+			if (mref.Parent.Kind != HandleKind.TypeReference)
+				continue;
+			var typeRef = reader.GetTypeReference ((TypeReferenceHandle) mref.Parent);
+			if (reader.GetString (typeRef.Name) != "UcoCtorNoParamlessPeer")
+				continue;
+			int paramCount = mref.DecodeMethodSignature (ctorSigDecoder, genericContext: null).RequiredParameterCount;
+			if (paramCount == 0) userCtorHandle = h;
+			else if (paramCount == 2) activationCtorHandle = h;
+		}
+
+		Assert.Null (userCtorHandle); // member ref to `..ctor()` should not exist at all
+
+		// 2. The body MUST reference the (IntPtr, JniHandleOwnership) activation ctor — either
+		//    via `newobj` (IsOnLeafType=true) or `call` (IsOnLeafType=false). The exact opcode
+		//    is an implementation detail of the legacy activation-ctor codegen.
+		Assert.NotNull (activationCtorHandle);
+		int activationToken = MetadataTokens.GetToken (activationCtorHandle!.Value);
+		Assert.True (
+			ILContainsCallToken (ilBytes, activationToken) || ILContainsNewobjToken (ilBytes, activationToken),
+			"nctor_*_uco IL should reference the (IntPtr, JniHandleOwnership) activation ctor when no matching parameterless managed ctor exists");
+	}
+
 	// Minimal SignatureTypeProvider used only to count required parameters of a member ref.
 	sealed class MethodSignatureDecoder : ISignatureTypeProvider<int, object?>
 	{
