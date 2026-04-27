@@ -306,14 +306,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <WriteLinesToFile File="$(NativeIntermediateOutputPath)sections.ld" Lines="OVERWRITE_SECTIONS { __modules : { KEEP(*(__modules)) } }" Overwrite="true" />
 
     <MakeDir Directories="$([System.IO.Path]::GetDirectoryName($(_AndroidNativeAotSharedLibrary)))" />
-    <!-- On Windows, write args to a response file to avoid cmd.exe quoting issues with spaces in paths.
-         This matches what ILC's LinkNative does. -->
-    <Exec Command="&quot;$(CppLinker)&quot; @(_AndroidNativeAotLinkerArgs, ' ')"
-        Condition=" !$([MSBuild]::IsOSPlatform('windows')) " />
-    <WriteLinesToFile File="$(NativeIntermediateOutputPath)android-link.rsp" Lines="@(_AndroidNativeAotLinkerArgs)" Overwrite="true" Encoding="utf-8"
-        Condition=" $([MSBuild]::IsOSPlatform('windows')) " />
-    <Exec Command="&quot;$(CppLinker)&quot; @&quot;$(NativeIntermediateOutputPath)android-link.rsp&quot;"
-        Condition=" $([MSBuild]::IsOSPlatform('windows')) " />
+    <Exec Command="&quot;$(CppLinker)&quot; @(_AndroidNativeAotLinkerArgs, ' ')" />
 
     <ItemGroup>
       <!-- Replace the .a that NativeCompile/ComputeLinkedFilesToPublish would publish with our .so -->
@@ -324,7 +317,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       </ResolvedFileToPublish>
       <FileWrites Include="$(_AndroidNativeAotSharedLibrary)" />
       <FileWrites Include="$(NativeIntermediateOutputPath)sections.ld" />
-      <FileWrites Include="$(NativeIntermediateOutputPath)android-link.rsp" Condition=" $([MSBuild]::IsOSPlatform('windows')) " />
     </ItemGroup>
   </Target>
 
