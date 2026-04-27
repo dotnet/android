@@ -293,4 +293,55 @@ namespace UserApp
 		[Export ("javaSideName")]
 		public void CSharpSideName () { }
 	}
+
+	// === Phase B: edge marshalling ===
+
+	// B.1: [Export] returning Java.Lang.Object explicitly (intentional unwrapped path).
+	public class ExportObjectShapes : Java.Lang.Object
+	{
+		[Export ("any")]
+		public Java.Lang.Object? Any (Java.Lang.Object? v) => v;
+	}
+
+	// B.2: array of user-peer type — exercise [] recursion through the user-peer
+	// JNI resolver fix from a prior commit.
+	public class UserPeerForArray : Java.Lang.Object
+	{
+		protected UserPeerForArray (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+	}
+
+	public class ExportUserPeerArrayShapes : Java.Lang.Object
+	{
+		[Export ("echoArr")]
+		public UserPeerForArray []? EchoArr (UserPeerForArray []? a) => a;
+	}
+
+	// B.3: protected/private [Export] methods — visibility shouldn't gate registration.
+	public class ExportVisibilityShapes : Java.Lang.Object
+	{
+		[Export ("doProtected")]
+		protected void DoProtected () { }
+
+		[Export ("doPrivate")]
+		void DoPrivate () { }
+	}
+
+	// B.4: [ExportField] returning a primitive — focused single-shape assertion.
+	public class ExportFieldPrimitiveShapes : Java.Lang.Object
+	{
+		protected ExportFieldPrimitiveShapes (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[ExportField ("MAX_VALUE")]
+		public static int GetMaxValue () => 42;
+	}
+
+	// B.5: [Export] overloads with same Java name, different signatures — no dedup.
+	public class ExportOverloadShapes : Java.Lang.Object
+	{
+		[Export ("call")]
+		public void Call (int x) { }
+
+		[Export ("call")]
+		public void Call (string s) { }
+	}
 }
