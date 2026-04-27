@@ -131,4 +131,15 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 		var peer = FindFixtureByJavaName ("net/dot/jni/test/JavaDisposedObject");
 		Assert.NotNull (peer);
 	}
+
+	[Fact]
+	public void Scan_JniTypeSignature_IsKeyword_IsExcluded ()
+	{
+		// KeywordPrimitiveArray has [JniTypeSignature("Z", IsKeyword=true)] which represents
+		// a JNI primitive type, not a real Java class. The scanner must skip it to avoid
+		// colliding with built-in primitive type handling in JniRuntime.JniTypeManager.
+		var peers = ScanFixtures ();
+		Assert.DoesNotContain (peers, p => p.ManagedTypeName == "Java.Interop.TestTypes.KeywordPrimitiveArray");
+		Assert.DoesNotContain (peers, p => p.JavaName == "Z");
+	}
 }

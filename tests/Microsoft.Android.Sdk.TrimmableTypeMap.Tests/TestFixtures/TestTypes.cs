@@ -969,4 +969,14 @@ namespace Java.Interop.TestTypes
 	{
 		public NonGeneratedJavaObject () { }
 	}
+
+	/// <summary>
+	/// Mimics Java.Interop.JavaBooleanArray — a primitive array type with IsKeyword=true.
+	/// The scanner must skip these types to avoid colliding with the built-in primitive
+	/// type handling in JniRuntime.JniTypeManager.
+	/// </summary>
+	[Java.Interop.JniTypeSignature ("Z", IsKeyword = true, ArrayRank = 1, GenerateJavaPeer = false)]
+	public sealed class KeywordPrimitiveArray : JavaObject
+	{
+	}
 }
