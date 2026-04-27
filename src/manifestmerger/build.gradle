@@ -19,7 +19,7 @@ repositories {
 
 dependencies {
     // https://mvnrepository.com/artifact/com.android.tools.build/manifest-merger
-    implementation 'com.android.tools.build:manifest-merger:32.1.1'
+    implementation 'com.android.tools.build:manifest-merger:32.2.0'
     // ILogger is needed at compile time for the LenientMerger subclass, but
     // manifest-merger declares common with runtime scope only.
     implementation 'com.android.tools:common:32.1.1'
