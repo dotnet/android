@@ -10,7 +10,7 @@ Intel Core i9-14900KF, 1 CPU, 32 logical and 24 physical cores
 ```
 | Method         | Mean      | Error    | StdDev   | Allocated |
 |--------------- |----------:|---------:|---------:|----------:|
-| HashBytes      |  46.00 μs | 0.401 μs | 0.375 μs |      56 B |
-| HashStream     |  44.98 μs | 0.117 μs | 0.104 μs |     184 B |
-| HashFile       |  75.83 μs | 0.605 μs | 0.566 μs |     424 B |
-| HasFileChanged | 163.23 μs | 0.705 μs | 0.589 μs |     848 B |
+| HashBytes      |  23.34 μs | 0.123 μs | 0.115 μs |      56 B |
+| HashStream     |  23.07 μs | 0.075 μs | 0.070 μs |     120 B |
+| HashFile       |  52.98 μs | 0.766 μs | 0.716 μs |     360 B |
+| HasFileChanged | 118.44 μs | 2.285 μs | 2.138 μs |     720 B |
