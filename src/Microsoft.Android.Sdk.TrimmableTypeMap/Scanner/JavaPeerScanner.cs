@@ -236,6 +236,14 @@ public sealed class JavaPeerScanner : IDisposable
 				invokerTypeName = TryFindInvokerTypeName (fullName, typeHandle, index);
 			}
 
+			// Interface peers have no constructors of their own, so ResolveActivationCtor
+			// returns null. The invoker type holds the activation ctor — resolve it from
+			// there so the generator can pick the correct ctor signature
+			// (XamarinAndroid (IntPtr, JniHandleOwnership) vs JavaInterop (ref JniObjectReference, JniObjectReferenceOptions)).
+			if (activationCtor is null && invokerTypeName is not null) {
+				activationCtor = TryResolveActivationCtorOnInvoker (invokerTypeName);
+			}
+
 			var peer = new JavaPeerInfo {
 				JavaName = jniName,
 				CompatJniName = compatJniName,
@@ -1283,6 +1291,22 @@ public sealed class JavaPeerScanner : IDisposable
 		var invokerName = $"{typeName}Invoker";
 		if (index.TypesByFullName.ContainsKey (invokerName)) {
 			return invokerName;
+		}
+		return null;
+	}
+
+	/// <summary>
+	/// Resolve the activation ctor on a known invoker type (search all loaded assemblies).
+	/// Used for interface peers, whose own type definition has no constructors.
+	/// </summary>
+	ActivationCtorInfo? TryResolveActivationCtorOnInvoker (string invokerTypeName)
+	{
+		foreach (var idx in assemblyCache.Values) {
+			if (!idx.TypesByFullName.TryGetValue (invokerTypeName, out var invokerHandle)) {
+				continue;
+			}
+			var invokerDef = idx.Reader.GetTypeDefinition (invokerHandle);
+			return ResolveActivationCtor (invokerTypeName, invokerDef, idx);
 		}
 		return null;
 	}

@@ -47,16 +47,17 @@ namespace Xamarin.Android.RuntimeTests
                     "Java.InteropTests.JniValueMarshaler_object_ContractTests.SpecificTypesAreUsed",
 
                     // No generated JavaPeerProxy for java/lang/Object with IJavaPeerable target type
+                    // CreateGenericValue still fails because JavaArray<> proxy is selected for "java/lang/Object" lookup
+                    // (alias resolution returns the open-generic JavaArray<> proxy whose CreateInstance throws).
+                    // CreateValue now passes after generator fixes.
                     "Java.InteropTests.JniValueMarshaler_IJavaPeerable_ContractTests.JniValueMarshalerContractTests`1.CreateGenericValue",
-                    "Java.InteropTests.JniValueMarshaler_IJavaPeerable_ContractTests.JniValueMarshalerContractTests`1.CreateValue",
 
-                    // net.dot.jni.internal.JavaProxyThrowable — proxy throwable creation fails
-                    "Java.InteropTests.JavaExceptionTests.InnerExceptionIsNotAProxy",
-
-                    // IJavaInterfaceInvoker ctor trimmed / missing JavaPeerProxy for test types
-                    "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs",
+                    // Trimmable typemap synthesizes peer construction via base activation ctor
+                    // (EmitCreateInstanceInheritedJavaInteropCtor), so MyJavaInterfaceImpl can be cast
+                    // even without its own activation ctor. This is intentionally more permissive than
+                    // the legacy runtime, which throws NotSupportedException in this case.
+                    // The other JavaAs tests pass with the trimmable typemap.
                     "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs_Exceptions",
-                    "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs_InstanceThatDoesNotImplementInterfaceReturnsNull",
 
                     // JNI method remapping not supported in trimmable typemap
                     "Java.InteropTests.JniPeerMembersTests.ReplaceInstanceMethodName",
