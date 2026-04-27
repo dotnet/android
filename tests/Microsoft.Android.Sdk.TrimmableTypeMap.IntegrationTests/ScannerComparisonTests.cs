@@ -132,9 +132,9 @@ var (_, legacyMethods) = ScannerRunner.RunLegacy (fixturePath);
 var (_, newMethods) = ScannerRunner.RunNew (paths);
 
 var legacyNormalized = legacyMethods
-.ToDictionary (kvp => NormalizeCrc64 (kvp.Key), kvp => kvp.Value);
+.ToDictionary (kvp => NormalizeCrc64 (kvp.Key), kvp => NormalizeMethodGroups (kvp.Value));
 var newNormalized = newMethods
-.ToDictionary (kvp => NormalizeCrc64 (kvp.Key), kvp => kvp.Value);
+.ToDictionary (kvp => NormalizeCrc64 (kvp.Key), kvp => NormalizeMethodGroups (kvp.Value));
 
 var result = MarshalMethodDiffHelper.CompareUserTypeMarshalMethods (legacyNormalized, newNormalized);
 AssertNoDiffs ("MISSING from new scanner", result.Missing);

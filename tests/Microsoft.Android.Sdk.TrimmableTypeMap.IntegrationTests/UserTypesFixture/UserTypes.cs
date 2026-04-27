@@ -193,4 +193,47 @@ namespace UserApp
 		[Export ("echoCollection")]
 		public System.Collections.ICollection? EchoCollection (System.Collections.ICollection? value) => value;
 	}
+
+	// [ExportField] generates a Java field whose value is produced by a getter
+	// method. The scanner must surface the method-level registration so the UCO
+	// can dispatch to the getter.
+	public class ExportFieldShapes : Java.Lang.Object
+	{
+		protected ExportFieldShapes (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[ExportField ("STATIC_INSTANCE")]
+		public static ExportFieldShapes? GetInstance () => null;
+
+		[ExportField ("VALUE")]
+		public string GetValue () => "";
+
+		[ExportField ("COUNT")]
+		public int GetCount () => 0;
+	}
+
+	// [ExportParameter] overrides a Stream / XmlReader's Java type without
+	// relying on auto-resolution. Each kind must map to its specific JNI
+	// descriptor (java/io/InputStream, OutputStream, org/xmlpull/v1/XmlPullParser,
+	// android/content/res/XmlResourceParser).
+	public class ExportParameterShapes : Java.Lang.Object
+	{
+		[Export ("openStream")]
+		public int OpenStream ([ExportParameter (ExportParameterKind.InputStream)] System.IO.Stream? stream)
+			=> stream is null ? 0 : 1;
+
+		[return: ExportParameter (ExportParameterKind.OutputStream)]
+		[Export ("wrapStream")]
+		public System.IO.Stream? WrapStream ([ExportParameter (ExportParameterKind.OutputStream)] System.IO.Stream? stream)
+			=> stream;
+
+		[return: ExportParameter (ExportParameterKind.XmlPullParser)]
+		[Export ("readXml")]
+		public System.Xml.XmlReader? ReadXml ([ExportParameter (ExportParameterKind.XmlPullParser)] System.Xml.XmlReader? reader)
+			=> reader;
+
+		[return: ExportParameter (ExportParameterKind.XmlResourceParser)]
+		[Export ("readResourceXml")]
+		public System.Xml.XmlReader? ReadResourceXml ([ExportParameter (ExportParameterKind.XmlResourceParser)] System.Xml.XmlReader? reader)
+			=> reader;
+	}
 }

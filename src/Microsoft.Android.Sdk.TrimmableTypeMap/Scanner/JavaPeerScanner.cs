@@ -652,9 +652,21 @@ public sealed class JavaPeerScanner : IDisposable
 	string? TryResolveJniObjectDescriptor (string managedType)
 	{
 		foreach (var index in assemblyCache.Values) {
-			if (index.TypesByFullName.TryGetValue (managedType, out var handle) &&
-			    index.RegisterInfoByType.TryGetValue (handle, out var registerInfo)) {
-				return $"L{registerInfo.JniName};";
+			if (index.TypesByFullName.TryGetValue (managedType, out var handle)) {
+				if (index.RegisterInfoByType.TryGetValue (handle, out var registerInfo)) {
+					return $"L{registerInfo.JniName};";
+				}
+
+				// User peer types (extend a Java peer but lack [Register])
+				// get a CRC64-based JNI name in ScanAssembly. Mirror that here
+				// so [Export]/[ExportField] signatures referring to such types
+				// emit the correct peer descriptor instead of falling back to
+				// java/lang/Object.
+				var typeDef = index.Reader.GetTypeDefinition (handle);
+				if (ExtendsJavaPeer (typeDef, index)) {
+					var (jniName, _) = ComputeAutoJniNames (typeDef, index);
+					return $"L{jniName};";
+				}
 			}
 		}
 		return null;
