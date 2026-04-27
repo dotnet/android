@@ -109,10 +109,4 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 		Assert.NotEqual (withCrc64, withLowercaseCrc64);
 	}
 
-	[Fact]
-	public void Scan_UnregisteredType_XxHash64Policy_UsesXxHash64Hash ()
-	{
-		var withXxHash64 = FindFixtureByManagedName ("MyApp.PlainActivitySubclass", "XxHash64").JavaName;
-		Assert.Equal ("xx6403e39dfcc696a727/PlainActivitySubclass", withXxHash64);
-	}
 }

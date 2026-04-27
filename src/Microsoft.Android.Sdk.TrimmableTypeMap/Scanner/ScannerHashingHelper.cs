@@ -1,5 +1,4 @@
 using System;
-using System.Buffers;
 using Java.Interop.Tools.JavaCallableWrappers;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
@@ -9,46 +8,28 @@ internal static class ScannerHashingHelper
 	internal static string ToLegacyCrc64 (string ns, string assemblyName)
 	{
 		int byteCount = GetNamespaceAssemblyUtf8ByteCount (ns, assemblyName);
-		byte[] rented = ArrayPool<byte>.Shared.Rent (byteCount);
-		try {
-			int bytesWritten = GetNamespaceAssemblyUtf8Bytes (ns, assemblyName, rented.AsSpan (0, byteCount));
-			ulong crc = ulong.MaxValue;
-			ulong length = 0;
-			Crc64Helper.HashCore (rented, 0, bytesWritten, ref crc, ref length);
-			Span<byte> hash = stackalloc byte [8];
-			WriteUInt64LittleEndian (hash, crc ^ length);
-			return ToHexString (hash, lowercase: true);
-		} finally {
-			ArrayPool<byte>.Shared.Return (rented);
-		}
-	}
-
-	internal static string ToXxHash64 (string ns, string assemblyName)
-	{
-		int byteCount = GetNamespaceAssemblyUtf8ByteCount (ns, assemblyName);
-		byte[] rented = ArrayPool<byte>.Shared.Rent (byteCount);
-		try {
-			int bytesWritten = GetNamespaceAssemblyUtf8Bytes (ns, assemblyName, rented.AsSpan (0, byteCount));
-			Span<byte> hash = stackalloc byte [8];
-			System.IO.Hashing.XxHash64.Hash (rented.AsSpan (0, bytesWritten), hash);
-			return ToHexString (hash, lowercase: true);
-		} finally {
-			ArrayPool<byte>.Shared.Return (rented);
-		}
+		byte[] utf8Buffer = new byte [byteCount];
+		int bytesWritten = GetNamespaceAssemblyUtf8Bytes (ns, assemblyName, utf8Buffer);
+		ulong crc = ulong.MaxValue;
+		ulong length = 0;
+		Crc64Helper.HashCore (utf8Buffer, 0, bytesWritten, ref crc, ref length);
+		Span<byte> hash = stackalloc byte [8];
+		WriteUInt64LittleEndian (hash, crc ^ length);
+		return ToHexString (hash, lowercase: true);
 	}
 
 	internal static string ToCrc64 (string ns, string assemblyName)
 	{
+		const int stackallocThresholdBytes = 256;
 		int byteCount = GetNamespaceAssemblyUtf8ByteCount (ns, assemblyName);
-		byte[] rented = ArrayPool<byte>.Shared.Rent (byteCount);
-		try {
-			int bytesWritten = GetNamespaceAssemblyUtf8Bytes (ns, assemblyName, rented.AsSpan (0, byteCount));
-			Span<byte> hash = stackalloc byte [8];
-			System.IO.Hashing.Crc64.Hash (rented.AsSpan (0, bytesWritten), hash);
-			return ToHexString (hash, lowercase: true);
-		} finally {
-			ArrayPool<byte>.Shared.Return (rented);
-		}
+		Span<byte> utf8Buffer = byteCount <= stackallocThresholdBytes
+			? stackalloc byte [stackallocThresholdBytes]
+			: new byte [byteCount];
+
+		int bytesWritten = GetNamespaceAssemblyUtf8Bytes (ns, assemblyName, utf8Buffer.Slice (0, byteCount));
+		Span<byte> hash = stackalloc byte [8];
+		System.IO.Hashing.Crc64.Hash (utf8Buffer.Slice (0, bytesWritten), hash);
+		return ToHexString (hash, lowercase: true);
 	}
 
 	static int GetNamespaceAssemblyUtf8ByteCount (string ns, string assemblyName)

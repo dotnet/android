@@ -13,15 +13,12 @@ public class ScannerHashingHelperTests
 		Assert.Equal (expected, ScannerHashingHelper.ToLegacyCrc64 (ns, assemblyName));
 	}
 
-	[Fact]
-	public void ToXxHash64_KnownInput_HasStableOutput ()
+	[Theory]
+	[InlineData ("MyApp", "TestFixtures", "eb3df85c64aa1af6")]
+	[InlineData ("System.Collections.Generic", "My.Assembly", "403b37c9b3a5014d")]
+	[InlineData ("Hello", "World", "4f2a517f331e7a2c")]
+	public void ToCrc64_KnownInputs_HaveStableOutput (string ns, string assemblyName, string expected)
 	{
-		Assert.Equal ("03e39dfcc696a727", ScannerHashingHelper.ToXxHash64 ("MyApp", "TestFixtures"));
-	}
-
-	[Fact]
-	public void ToCrc64_KnownInput_HasStableOutput ()
-	{
-		Assert.Equal ("eb3df85c64aa1af6", ScannerHashingHelper.ToCrc64 ("MyApp", "TestFixtures"));
+		Assert.Equal (expected, ScannerHashingHelper.ToCrc64 (ns, assemblyName));
 	}
 }
