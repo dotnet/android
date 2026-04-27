@@ -70,12 +70,6 @@ namespace Xamarin.Android.RuntimeTests
                     // net.dot.jni.test.GetThis — cannot register native members
                     "Java.InteropTests.JavaObjectTest.DisposeAccessesThis",
 
-                    // NotSupportedException instead of InvalidCastException — no generated JavaPeerProxy
-                    "Java.InteropTests.JavaObjectExtensionsTests.JavaCast_BadInterfaceCast",
-                    "Java.InteropTests.JavaObjectExtensionsTests.JavaCast_BaseToGenericWrapper",
-                    "Java.InteropTests.JavaObjectExtensionsTests.JavaCast_CheckForManagedSubclasses",
-                    "Java.InteropTests.JavaObjectExtensionsTests.JavaCast_InvalidTypeCastThrows",
-
                     // Open generic type handling differs from non-trimmable
                     "Java.InteropTests.JnienvTest.NewOpenGenericTypeThrows",
 
