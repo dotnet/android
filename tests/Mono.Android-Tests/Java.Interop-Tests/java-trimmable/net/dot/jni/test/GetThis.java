@@ -20,22 +20,22 @@ import net.dot.jni.GCUserPeerable;
 //     references (see Android.Runtime.JNIEnv.IsGCUserPeer)
 public class GetThis implements GCUserPeerable {
 
-ArrayList<Object> managedReferences = new ArrayList<Object>();
+	ArrayList<Object> managedReferences = new ArrayList<Object>();
 
-public GetThis () {
-}
+	public GetThis () {
+	}
 
-public final GetThis getThis() {
-return this;
-}
+	public final GetThis getThis () {
+		return this;
+	}
 
-public void jiAddManagedReference (java.lang.Object obj)
-{
-managedReferences.add (obj);
-}
+	public void jiAddManagedReference (java.lang.Object obj)
+	{
+		managedReferences.add (obj);
+	}
 
-public void jiClearManagedReferences ()
-{
-managedReferences.clear ();
-}
+	public void jiClearManagedReferences ()
+	{
+		managedReferences.clear ();
+	}
 }
