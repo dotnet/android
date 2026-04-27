@@ -94,6 +94,27 @@ public partial class JavaPeerScannerTests
 		Assert.Equal (expectedSig, method.JniSignature);
 	}
 
+	[Theory]
+	[InlineData ("echoEnum", "(I)I")]
+	[InlineData ("echoByteEnum", "(B)B")]
+	[InlineData ("echoLongEnum", "(J)J")]
+	public void Scan_ExportMethod_EnumParametersUseUnderlyingPrimitiveJniDescriptor (string jniName, string expectedSig)
+	{
+		var method = FindFixtureByJavaName ("my/app/ExportEnumShapes")
+			.MarshalMethods.FirstOrDefault (m => m.JniName == jniName);
+		Assert.NotNull (method);
+		Assert.Equal (expectedSig, method.JniSignature);
+	}
+
+	[Fact]
+	public void Scan_ExportMethod_EnumParametersFlagTypeRefAsEnum ()
+	{
+		var method = FindFixtureByJavaName ("my/app/ExportEnumShapes")
+			.MarshalMethods.First (m => m.JniName == "echoEnum");
+		Assert.True (method.ManagedParameterTypes [0].IsEnum, "enum parameter should be tagged IsEnum=true");
+		Assert.True (method.ManagedReturnType.IsEnum, "enum return type should be tagged IsEnum=true");
+	}
+
 	[Fact]
 	public void Scan_ExportMethod_CapturesPreciseManagedTypeMetadata ()
 	{

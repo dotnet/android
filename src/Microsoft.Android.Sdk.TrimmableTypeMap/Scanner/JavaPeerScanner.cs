@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
@@ -274,7 +275,7 @@ public sealed class JavaPeerScanner : IDisposable
 				continue;
 			}
 
-			AddMarshalMethod (methods, registerInfo, methodDef, index, exportInfo);
+		AddMarshalMethod (methods, registerInfo, methodDef, index, exportInfo);
 			var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
 			registeredMethodKeys.Add ($"{index.Reader.GetString (methodDef.Name)}({string.Join (",", sig.ParameterTypes)})");
 		}
@@ -660,6 +661,100 @@ public sealed class JavaPeerScanner : IDisposable
 	}
 
 	/// <summary>
+	/// If <paramref name="managedType"/> resolves to an enum type, returns the
+	/// JNI descriptor of its underlying primitive ("I", "B", "S", "J"). Otherwise
+	/// returns null. Mirrors legacy CallbackCode behavior, where enum parameters
+	/// are passed via their underlying integer JNI ABI rather than as objects.
+	/// </summary>
+	string? TryResolveEnumUnderlyingDescriptor (string managedType)
+	{
+		var typeDef = TryFindEnumTypeDefinition (managedType);
+		if (typeDef is null) {
+			return null;
+		}
+
+		return GetEnumUnderlyingPrimitiveDescriptor (typeDef.Value.typeDef, typeDef.Value.index);
+	}
+
+	/// <summary>
+	/// Returns true if <paramref name="managedType"/>, or — for array types —
+	/// its element type, resolves to an enum. The IL emitter uses this to encode
+	/// the type as a valuetype rather than a class in signatures and member refs.
+	/// </summary>
+	bool IsEnumOrEnumArray (string managedType)
+	{
+		while (managedType.EndsWith ("[]", StringComparison.Ordinal)) {
+			managedType = managedType.Substring (0, managedType.Length - 2);
+		}
+
+		return TryFindEnumTypeDefinition (managedType) is not null;
+	}
+
+	(TypeDefinition typeDef, AssemblyIndex index)? TryFindEnumTypeDefinition (string managedType)
+	{
+		foreach (var index in assemblyCache.Values) {
+			if (!index.TypesByFullName.TryGetValue (managedType, out var handle)) {
+				continue;
+			}
+
+			var typeDef = index.Reader.GetTypeDefinition (handle);
+			if (IsEnumType (typeDef, index)) {
+				return (typeDef, index);
+			}
+
+			return null;
+		}
+
+		return null;
+	}
+
+	/// <summary>
+	/// Returns <paramref name="type"/> with <see cref="TypeRefData.IsEnum"/> set
+	/// when the managed type — or, for arrays, the element type — resolves to an
+	/// enum. Used to thread enum-ness from the scanner to the emitter so that
+	/// signatures and member refs encode the type as a valuetype.
+	/// </summary>
+	TypeRefData EnrichTypeRefWithEnumInfo (TypeRefData type)
+	{
+		if (type.IsEnum || string.IsNullOrEmpty (type.ManagedTypeName)) {
+			return type;
+		}
+
+		return IsEnumOrEnumArray (type.ManagedTypeName) ? type with { IsEnum = true } : type;
+	}
+
+	static bool IsEnumType (TypeDefinition typeDef, AssemblyIndex index)
+	{
+		var baseType = typeDef.BaseType;
+		if (baseType.IsNil) {
+			return false;
+		}
+
+		var baseFullName = baseType.Kind switch {
+			HandleKind.TypeReference => MetadataTypeNameResolver.GetTypeFromReference (index.Reader, (TypeReferenceHandle) baseType, rawTypeKind: 0),
+			HandleKind.TypeDefinition => MetadataTypeNameResolver.GetTypeFromDefinition (index.Reader, (TypeDefinitionHandle) baseType, rawTypeKind: 0),
+			_ => null,
+		};
+
+		return baseFullName == "System.Enum";
+	}
+
+	static string GetEnumUnderlyingPrimitiveDescriptor (TypeDefinition typeDef, AssemblyIndex index)
+	{
+		foreach (var fieldHandle in typeDef.GetFields ()) {
+			var field = index.Reader.GetFieldDefinition (fieldHandle);
+			if ((field.Attributes & System.Reflection.FieldAttributes.Static) != 0) {
+				continue;
+			}
+
+			var sig = field.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null);
+			return TryGetPrimitiveJniDescriptor (sig) ?? "I";
+		}
+
+		return "I";
+	}
+
+	/// <summary>
 	/// Walks the base type hierarchy collecting constructors that have [Register] attributes.
 	/// Stops after the first base type with DoNotGenerateAcw=true (matching legacy CecilImporter).
 	/// Returns them ordered from nearest base to furthest ancestor.
@@ -863,7 +958,7 @@ public sealed class JavaPeerScanner : IDisposable
 		return true;
 	}
 
-	static void AddMarshalMethod (List<MarshalMethodInfo> methods, RegisterInfo registerInfo, MethodDefinition methodDef, AssemblyIndex index, ExportInfo? exportInfo = null, bool isInterfaceImplementation = false)
+	void AddMarshalMethod (List<MarshalMethodInfo> methods, RegisterInfo registerInfo, MethodDefinition methodDef, AssemblyIndex index, ExportInfo? exportInfo = null, bool isInterfaceImplementation = false)
 	{
 		// Skip methods that are just the JNI name (type-level [Register])
 		if (registerInfo.Signature is null && registerInfo.Connector is null) {
@@ -895,9 +990,9 @@ public sealed class JavaPeerScanner : IDisposable
 			DeclaringTypeName = declaringTypeName,
 			DeclaringAssemblyName = declaringAssemblyName,
 			NativeCallbackName = GetNativeCallbackName (registerInfo.Connector, managedName, isConstructor),
-			ManagedParameterTypes = isExport ? new List<TypeRefData> (managedTypeSig.ParameterTypes) : [],
+			ManagedParameterTypes = isExport ? new List<TypeRefData> (managedTypeSig.ParameterTypes.Select (EnrichTypeRefWithEnumInfo)) : [],
 			ManagedParameterExportKinds = parameterKinds,
-			ManagedReturnType = isExport ? managedTypeSig.ReturnType : new TypeRefData {
+			ManagedReturnType = isExport ? EnrichTypeRefWithEnumInfo (managedTypeSig.ReturnType) : new TypeRefData {
 				ManagedTypeName = managedSig.ReturnType,
 				AssemblyName = "System.Runtime",
 			},
@@ -1201,6 +1296,13 @@ public sealed class JavaPeerScanner : IDisposable
 		var resolved = TryResolveJniObjectDescriptor (managedType.ManagedTypeName);
 		if (resolved is not null) {
 			return resolved;
+		}
+
+		// Enum parameters use their underlying primitive JNI ABI (matches legacy
+		// CallbackCode behavior).
+		var enumDescriptor = TryResolveEnumUnderlyingDescriptor (managedType.ManagedTypeName);
+		if (enumDescriptor is not null) {
+			return enumDescriptor;
 		}
 
 		return "Ljava/lang/Object;";

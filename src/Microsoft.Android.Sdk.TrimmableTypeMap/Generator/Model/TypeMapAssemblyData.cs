@@ -167,6 +167,13 @@ public sealed record TypeRefData
 	/// Assembly containing the type, e.g., "Mono.Android".
 	/// </summary>
 	public required string AssemblyName { get; init; }
+
+	/// <summary>
+	/// True if this type — or, for array types, the element type — is an enum.
+	/// Used by the IL emitter to encode the type as <c>ELEMENT_TYPE_VALUETYPE</c>
+	/// rather than <c>ELEMENT_TYPE_CLASS</c> in member references and signatures.
+	/// </summary>
+	public bool IsEnum { get; init; }
 }
 
 /// <summary>

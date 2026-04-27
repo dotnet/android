@@ -350,6 +350,30 @@ namespace MyApp
 			=> reader;
 	}
 
+	public enum SampleEnum { A, B, C }
+
+	public enum SampleByteEnum : byte { Red, Green, Blue }
+
+	public enum SampleLongEnum : long { Zero = 0L, Big = long.MaxValue }
+
+	/// <summary>
+	/// Has [Export] methods that take and return enum-typed values. Enums must
+	/// marshal via their underlying primitive JNI ABI (matching legacy
+	/// Mono.Android.Export behaviour) — not as object peers.
+	/// </summary>
+	[Register ("my/app/ExportEnumShapes")]
+	public class ExportEnumShapes : Java.Lang.Object
+	{
+		[Java.Interop.Export ("echoEnum")]
+		public SampleEnum EchoEnum (SampleEnum value) => value;
+
+		[Java.Interop.Export ("echoByteEnum")]
+		public SampleByteEnum EchoByteEnum (SampleByteEnum value) => value;
+
+		[Java.Interop.Export ("echoLongEnum")]
+		public SampleLongEnum EchoLongEnum (SampleLongEnum value) => value;
+	}
+
 	/// <summary>
 	/// Has [Export] methods with different access modifiers.
 	/// The JCW should respect the C# visibility for [Export] methods.
