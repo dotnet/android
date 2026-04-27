@@ -1651,6 +1651,17 @@ public sealed class JavaPeerScanner : IDisposable
 			if (sig.ParameterTypes.Length != jniParams.Count) {
 				continue;
 			}
+			// Skip ctors whose managed parameter signatures are not supported by the
+			// trimmable [Export]-style argument marshaller (generic instantiations,
+			// by-ref, pointers). Returning null here makes EmitUcoConstructor fall
+			// back to the legacy `(IntPtr, JniHandleOwnership)` activation ctor,
+			// which matches the legacy LLVM-IR behaviour for these shapes.
+			foreach (var p in sig.ParameterTypes) {
+				var paramTypeName = p.ManagedTypeName;
+				if (paramTypeName.IndexOf ('<') >= 0 || paramTypeName.EndsWith ("&", StringComparison.Ordinal) || paramTypeName.EndsWith ("*", StringComparison.Ordinal)) {
+					return null;
+				}
+			}
 			return [.. sig.ParameterTypes];
 		}
 		return null;
