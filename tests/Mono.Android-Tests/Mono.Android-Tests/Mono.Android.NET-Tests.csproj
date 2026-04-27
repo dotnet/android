@@ -110,6 +110,7 @@
     <Compile Include="Android.Views\LayoutInflaterTest.cs" />
     <Compile Include="Android.Widget\AdapterTests.cs" />
     <Compile Include="Android.Widget\CustomWidgetTests.cs" />
+    <Compile Include="Java.Interop\ExportTests.cs" />
     <Compile Include="Java.Interop\JavaConvertTest.cs" />
     <Compile Include="Java.Interop\JavaListTest.cs" />
     <Compile Include="Java.Interop\JavaObjectExtensionsTests.cs" />
