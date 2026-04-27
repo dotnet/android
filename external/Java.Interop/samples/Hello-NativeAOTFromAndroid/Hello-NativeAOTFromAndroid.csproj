@@ -32,13 +32,8 @@
     <ProjectReference Include="..\..\src\Java.Interop\Java.Interop.csproj" />
     <ProjectReference Include="..\..\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj" />
     <ProjectReference Include="..\..\src\Java.Base\Java.Base.csproj" />
-    <ProjectReference Include="..\..\src\Java.Interop.Export\Java.Interop.Export.csproj" />
     <ProjectReference
         Include="..\..\tools\jcw-gen\jcw-gen.csproj"
-        ReferenceOutputAssembly="false"
-    />
-    <ProjectReference
-        Include="..\..\tools\jnimarshalmethod-gen\Xamarin.Android.Tools.JniMarshalMethodGenerator.csproj"
         ReferenceOutputAssembly="false"
     />
     <ProjectReference

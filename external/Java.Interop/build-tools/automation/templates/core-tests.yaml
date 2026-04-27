@@ -71,31 +71,6 @@ steps:
 
 - template: run-dotnet-test.yaml
   parameters:
-    testRunTitle: Java.Interop.Export (${{ parameters.platformName }})
-    testAssemblyName: Java.Interop.Export-Tests
-    condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
-    retryCount: 1
-
-- task: DotNetCoreCLI@2
-  displayName: 'jnimarshalmethod-gen Java.Interop.Export-Tests.dll'
-  condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
-  inputs:
-    command: custom
-    custom: bin/$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/jnimarshalmethod-gen.dll
-    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop.Export-Tests.dll -v -v --keeptemp -o bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)
-  continueOnError: true
-  retryCountOnTaskFailure: 1
-
-- template: run-dotnet-test.yaml
-  parameters:
-    testRunTitle: Java.Interop.Export (jnimarshalmethod-gen + ${{ parameters.platformName }})
-    testAssemblyName: Java.Interop.Export-Tests
-    trxSuffix: -jnimarshalmethod
-    condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
-    retryCount: 1
-
-- template: run-dotnet-test.yaml
-  parameters:
     testRunTitle: Java.Interop-Performance ($(DotNetTargetFramework) - ${{ parameters.platformName }})
     testAssemblyName: Java.Interop-PerformanceTests
     condition: eq('${{ parameters.runNativeTests }}', 'true')
@@ -106,24 +81,6 @@ steps:
   parameters:
     testRunTitle: Java.Base ($(DotNetTargetFramework) - ${{ parameters.platformName }})
     testAssemblyName: Java.Base-Tests
-    condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
-    retryCount: 1
-
-- task: DotNetCoreCLI@2
-  displayName: 'jnimarshalmethod-gen Java.Base-Tests.dll'
-  condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
-  inputs:
-    command: custom
-    custom: bin/$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/jnimarshalmethod-gen.dll
-    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Base-Tests.dll -v -v --keeptemp
-  continueOnError: true
-  retryCountOnTaskFailure: 1
-
-- template: run-dotnet-test.yaml
-  parameters:
-    testRunTitle: Java.Base ($(DotNetTargetFramework) - ${{ parameters.platformName }})
-    testAssemblyName: Java.Base-Tests
-    trxSuffix: -jnimarshalmethod
     condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
     retryCount: 1
 

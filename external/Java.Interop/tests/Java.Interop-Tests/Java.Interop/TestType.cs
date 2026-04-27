@@ -110,7 +110,7 @@ namespace Java.InteropTests
 		static Delegate GetEqualsThisHandler ()
 		{
 			EqualsThisMarshalMethod h = _EqualsThis;
-			return JniEnvironment.Runtime.MarshalMemberBuilder.CreateMarshalToManagedDelegate (h);
+			return h;
 		}
 
 		delegate bool EqualsThisMarshalMethod (IntPtr jnienv, IntPtr n_self, IntPtr n_value);
@@ -133,7 +133,7 @@ namespace Java.InteropTests
 		static Delegate GetInt32ValueHandler ()
 		{
 			GetInt32ValueMarshalMethod h = _GetInt32Value;
-			return JniEnvironment.Runtime.MarshalMemberBuilder.CreateMarshalToManagedDelegate (h);
+			return h;
 		}
 
 		delegate int GetInt32ValueMarshalMethod (IntPtr jnienv, IntPtr n_self);
@@ -151,7 +151,7 @@ namespace Java.InteropTests
 		static Delegate _GetStringValueHandler ()
 		{
 			GetStringValueMarshalMethod h = GetStringValueHandler;
-			return JniEnvironment.Runtime.MarshalMemberBuilder.CreateMarshalToManagedDelegate (h);
+			return h;
 		}
 
 		delegate IntPtr GetStringValueMarshalMethod (IntPtr jnienv, IntPtr n_self, int value);
@@ -175,7 +175,7 @@ namespace Java.InteropTests
 		static Delegate GetMethodThrowsHandler ()
 		{
 			MethodThrowsMarshalMethod h = MethodThrowsHandler;
-			return JniEnvironment.Runtime.MarshalMemberBuilder.CreateMarshalToManagedDelegate (h);
+			return h;
 		}
 
 		delegate void MethodThrowsMarshalMethod (IntPtr jnienv, IntPtr n_self);

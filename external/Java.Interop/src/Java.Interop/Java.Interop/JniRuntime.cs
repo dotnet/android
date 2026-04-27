@@ -182,7 +182,6 @@ namespace Java.Interop
 			Invoker             = CreateInvoker (InvocationPointer);
 
 			SetValueManager (options);
-			SetMarshalMemberBuilder (options);
 
 			ObjectReferenceManager      = SetRuntime (options.ObjectReferenceManager ?? throw new NotSupportedException ($"Please set {nameof (CreationOptions)}.{nameof (options.ObjectReferenceManager)}!"));
 			TypeManager                 = SetRuntime (options.TypeManager ?? new JniTypeManager ());
@@ -253,7 +252,6 @@ namespace Java.Interop
 		}
 
 		partial void SetValueManager (CreationOptions options);
-		partial void SetMarshalMemberBuilder (CreationOptions options);
 
 		static unsafe JavaVMInterface CreateInvoker (IntPtr handle)
 		{
@@ -315,7 +313,6 @@ namespace Java.Interop
 
 				ClearTrackedReferences ();
 				ValueManager.Dispose ();
-				marshalMemberBuilder?.Dispose ();
 				TypeManager.Dispose ();
 				ObjectReferenceManager.Dispose ();
 

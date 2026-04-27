@@ -113,29 +113,10 @@ namespace Java.InteropTests
 			return new JniRuntime.CreationOptions {
 				DestroyRuntimeOnDispose     = false,
 				InvocationPointer           = proxy.InvocationPointer,
-				MarshalMemberBuilder        = new ProxyMarshalMemberBuilder (),
 				ObjectReferenceManager      = new ProxyObjectReferenceManager (),
 				ValueManager                = new ProxyValueManager (),
 				TypeManager                 = new ProxyTypeManager (),
 			};
-		}
-
-		class ProxyMarshalMemberBuilder : JniMarshalMemberBuilder {
-
-			public override System.Linq.Expressions.LambdaExpression CreateMarshalToManagedExpression (System.Reflection.MethodInfo method)
-			{
-				throw new NotImplementedException ();
-			}
-
-			public override System.Collections.Generic.IEnumerable<JniNativeMethodRegistration> GetExportedMemberRegistrations (Type declaringType)
-			{
-				throw new NotImplementedException ();
-			}
-
-			public override System.Linq.Expressions.Expression<Func<System.Reflection.ConstructorInfo, JniObjectReference, object[], object>> CreateConstructActivationPeerExpression (System.Reflection.ConstructorInfo constructor)
-			{
-				throw new NotImplementedException ();
-			}
 		}
 
 		class ProxyObjectReferenceManager : JniObjectReferenceManager {

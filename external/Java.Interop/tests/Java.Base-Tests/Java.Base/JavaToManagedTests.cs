@@ -63,9 +63,34 @@ namespace Java.BaseTests {
 			this.action = action;
 		}
 
+		[JniMethodSignature ("run", "()V")]
 		public void Run ()
 		{
 			action ();
+		}
+
+		static Delegate GetRunHandler ()
+		{
+			return new _JniMarshal_PPV_V (n_Run);
+		}
+
+		delegate void _JniMarshal_PPV_V (IntPtr jnienv, IntPtr n_self);
+
+		static void n_Run (IntPtr jnienv, IntPtr n_self)
+		{
+			var r_self = new JniObjectReference (n_self);
+			var self = JniEnvironment.Runtime.ValueManager.GetValue<MyRunnable> (ref r_self, JniObjectReferenceOptions.CopyAndDoNotRegister);
+			try {
+				self!.Run ();
+			} finally {
+				self?.DisposeUnlessReferenced ();
+			}
+		}
+
+		[JniAddNativeMethodRegistration]
+		static void RegisterNativeMembers (JniNativeMethodRegistrationArguments args)
+		{
+			args.AddRegistrations (new [] { new JniNativeMethodRegistration ("n_run", "()V", new _JniMarshal_PPV_V (n_Run)) });
 		}
 	}
 
@@ -79,9 +104,34 @@ namespace Java.BaseTests {
 			this.action = action;
 		}
 
+		[JniMethodSignature ("accept", "(I)V")]
 		public void Accept (int value)
 		{
 			action (value);
+		}
+
+		static Delegate GetAcceptHandler ()
+		{
+			return new _JniMarshal_PPIV_V (n_Accept);
+		}
+
+		delegate void _JniMarshal_PPIV_V (IntPtr jnienv, IntPtr n_self, int value);
+
+		static void n_Accept (IntPtr jnienv, IntPtr n_self, int value)
+		{
+			var r_self = new JniObjectReference (n_self);
+			var self = JniEnvironment.Runtime.ValueManager.GetValue<MyIntConsumer> (ref r_self, JniObjectReferenceOptions.CopyAndDoNotRegister);
+			try {
+				self!.Accept (value);
+			} finally {
+				self?.DisposeUnlessReferenced ();
+			}
+		}
+
+		[JniAddNativeMethodRegistration]
+		static void RegisterNativeMembers (JniNativeMethodRegistrationArguments args)
+		{
+			args.AddRegistrations (new [] { new JniNativeMethodRegistration ("n_accept", "(I)V", new _JniMarshal_PPIV_V (n_Accept)) });
 		}
 	}
 }

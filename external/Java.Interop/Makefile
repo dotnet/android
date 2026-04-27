@@ -23,7 +23,6 @@ NET_SUFFIX = -net7.0
 TESTS = \
 	bin/Test$(CONFIGURATION)/Java.Interop-Tests.dll \
 	bin/Test$(CONFIGURATION)/Java.Interop.Dynamic-Tests.dll \
-	bin/Test$(CONFIGURATION)/Java.Interop.Export-Tests.dll \
 	bin/Test$(CONFIGURATION)/Java.Interop.Tools.JavaCallableWrappers-Tests.dll \
 	bin/Test$(CONFIGURATION)/Java.Interop.Tools.JavaSource-Tests.dll \
 	bin/Test$(CONFIGURATION)/logcat-parse-Tests.dll \
@@ -153,31 +152,6 @@ JRE_DLL_CONFIG=bin/$(CONFIGURATION)/Java.Runtime.Environment.dll.config
 
 $(JRE_DLL_CONFIG): src/Java.Runtime.Environment/Java.Runtime.Environment.csproj
 	$(MSBUILD) $(MSBUILD_FLAGS) $<
-
-define run-jnimarshalmethod-gen
-	MONO_TRACE_LISTENER=Console.Out \
-	dotnet bin/$(CONFIGURATION)$(NET_SUFFIX)/jnimarshalmethod-gen.dll $(2) $(1)
-endef
-
-# want: /usr/local/share/dotnet/shared/Microsoft.NETCore.App/7.0.0
-# have: Microsoft.NETCore.App 7.0.0 [/usr/local/share/dotnet/shared/Microsoft.NETCore.App]
-#  use: shell pipeline!
-SYSTEM_NET_ASSEMBLIES_PATH := $(shell dotnet --list-runtimes | grep ^Microsoft.NETCore.App | tail -1 | sed -E 's,^Microsoft.NETCore.App ([^ ]+) \[([^]]+)\]$$,\2/\1,g' )
-
-run-test-jnimarshal: bin/Test$(CONFIGURATION)$(NET_SUFFIX)/Java.Interop.Export-Tests.dll bin/Test$(CONFIGURATION)$(NET_SUFFIX)/$(JAVA_INTEROP_LIB) bin/ilverify
-	mkdir -p test-jni-output
-	# Do we run w/o error?
-	$(call run-jnimarshalmethod-gen,"$<", -v -v -o test-jni-output --keeptemp)
-	(test -f test-jni-output/$(notdir $<) ) || { echo "jnimarshalmethod-gen did not create the expected assemblies in the test-jni-output directory"; exit 1; }
-	# Is output valid?
-	ikdasm test-jni-output/Java.Interop.Export-Tests.dll || { echo "output can not be processed by ikdasm"; exit 1; }
-	bin/ilverify test-jni-output/Java.Interop.Export-Tests.dll \
-	  --tokens --system-module System.Private.CoreLib -r '$(dir $<)/*.dll' \
-	  -r '$(SYSTEM_NET_ASSEMBLIES_PATH)/*.dll' || { echo "ilverify found issues"; exit 1; }
-	# replace "original" assembly
-	$(call run-jnimarshalmethod-gen,"$<")
-	# make sure tests still pass
-	dotnet test $<
 
 bin/Test$(CONFIGURATION)/generator.exe: bin/$(CONFIGURATION)/generator.exe
 	cp $<* `dirname "$@"`

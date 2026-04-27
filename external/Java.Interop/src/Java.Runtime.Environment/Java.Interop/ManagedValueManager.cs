@@ -203,10 +203,6 @@ namespace Java.Interop {
 			var runtime = JniEnvironment.Runtime;
 
 			try {
-				if (runtime.UseMarshalMemberBuilder) {
-					ActivateViaMarshalMemberBuilder (runtime.MarshalMemberBuilder, reference, cinfo, argumentValues);
-					return;
-				}
 				ActivateViaReflection (reference, cinfo, argumentValues);
 			} catch (Exception e) {
 				var m = string.Format ("Could not activate {{ PeerReference={0} IdentityHashCode=0x{1} Java.Type={2} }} for managed type '{3}'.",
@@ -218,12 +214,6 @@ namespace Java.Interop {
 
 				throw new NotSupportedException (m, e);
 			}
-		}
-
-		void ActivateViaMarshalMemberBuilder (JniRuntime.JniMarshalMemberBuilder builder, JniObjectReference reference, ConstructorInfo cinfo, object?[]? argumentValues)
-		{
-			var f = builder.CreateConstructActivationPeerFunc (cinfo);
-			f (cinfo, reference, argumentValues);
 		}
 
 		void ActivateViaReflection (JniObjectReference reference, ConstructorInfo cinfo, object?[]? argumentValues)

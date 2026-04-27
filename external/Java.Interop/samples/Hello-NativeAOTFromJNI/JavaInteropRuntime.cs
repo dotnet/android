@@ -29,7 +29,6 @@ static class JavaInteropRuntime
 			var options = new JreRuntimeOptions {
 				EnvironmentPointer  = jnienv,
 				TypeManager             = new NativeAotTypeManager (),
-				UseMarshalMemberBuilder = false,
 			};
 			runtime = options.CreateJreVM ();
 		}

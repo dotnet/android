@@ -18,7 +18,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Java.Interop\Java.Interop.csproj" />
-    <ProjectReference Include="..\Java.Interop.Export\Java.Interop.Export.csproj" />
     <ProjectReference Include="..\java-interop\java-interop.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 

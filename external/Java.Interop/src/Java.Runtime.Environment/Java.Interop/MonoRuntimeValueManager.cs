@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -257,13 +258,23 @@ namespace Java.Interop {
 			}
 		}
 
+		const string NotUsedInAndroid = "This code path is not used in Android projects.";
+
 		public override void ActivatePeer (IJavaPeerable? self, JniObjectReference reference, ConstructorInfo cinfo, object?[]? argumentValues)
 		{
 			var runtime = JniEnvironment.Runtime;
 
 			try {
-				var f = runtime.MarshalMemberBuilder.CreateConstructActivationPeerFunc (cinfo);
-				f (cinfo, reference, argumentValues);
+				var declType  = cinfo.DeclaringType ?? throw new NotSupportedException ("Do not know the type to create!");
+				var instance  = GetUninitializedObject (declType);
+				instance.SetPeerReference (reference);
+				cinfo.Invoke (instance, argumentValues);
+
+				// FIXME: https://github.com/dotnet/java-interop/issues/1192
+				[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = NotUsedInAndroid)]
+				[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = NotUsedInAndroid)]
+				static IJavaPeerable GetUninitializedObject (Type type) =>
+					(IJavaPeerable) System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject (type);
 			} catch (Exception e) {
 				var m = string.Format ("Could not activate {{ PeerReference={0} IdentityHashCode=0x{1} Java.Type={2} }} for managed type '{3}'.",
 						reference,

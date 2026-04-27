@@ -75,7 +75,6 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage ("Performance", "CA1815:Override equals and operator equals on value types", Justification = "<Pending>", Scope = "type", Target = "~T:Java.Interop.JniNativeMethodRegistrationArguments")]
 [assembly: SuppressMessage ("Performance", "CA1815:Override equals and operator equals on value types", Justification = "<Pending>", Scope = "type", Target = "~T:Java.Interop.JniTransition")]
 
-[assembly: SuppressMessage ("Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "member", Target = "~M:Java.Interop.JniRuntime.JniMarshalMemberBuilder.IsDirectMethod(System.Reflection.ParameterInfo[])~System.Boolean")]
 [assembly: SuppressMessage ("Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "member", Target = "~M:Java.Interop.JniRuntime.JniValueManager.GetJniIdentityHashCode(Java.Interop.JniObjectReference)~System.Int32")]
 [assembly: SuppressMessage ("Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "member", Target = "~P:Java.Interop.JniFieldInfo.Name")]
 [assembly: SuppressMessage ("Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "member", Target = "~P:Java.Interop.JniFieldInfo.Signature")]

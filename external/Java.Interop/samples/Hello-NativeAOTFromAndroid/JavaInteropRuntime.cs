@@ -38,7 +38,6 @@ static class JavaInteropRuntime
 			var options = new JreRuntimeOptions {
 				EnvironmentPointer          = jnienv,
 				TypeManager                 = new NativeAotTypeManager (),
-				UseMarshalMemberBuilder     = false,
 				JniGlobalReferenceLogWriter = new LogcatTextWriter (AndroidLogLevel.Debug, "NativeAot:GREF"),
 				JniLocalReferenceLogWriter  = new LogcatTextWriter (AndroidLogLevel.Debug, "NativeAot:LREF"),
 			};
