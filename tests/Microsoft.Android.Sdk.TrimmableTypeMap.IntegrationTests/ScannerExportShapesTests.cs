@@ -206,4 +206,53 @@ public class ScannerExportShapesTests
 		Assert.Contains (methods, m => m.JniName == "javaSideName" && m.JniSignature == "()V");
 		Assert.DoesNotContain (methods, m => m.JniName == "CSharpSideName");
 	}
+
+	// === Phase B: edge marshalling ===
+
+	[Fact]
+	public void Export_JavaLangObjectExplicitly_KeepsObjectDescriptor ()
+	{
+		var methods = GetMarshalMethods ("ExportObjectShapes");
+		AssertHasExport (methods, "any", "(Ljava/lang/Object;)Ljava/lang/Object;");
+	}
+
+	[Fact]
+	public void Export_ArrayOfUserPeerType_RecursesUserPeerResolver ()
+	{
+		var methods = GetMarshalMethods ("ExportUserPeerArrayShapes");
+		var echoArr = System.Array.Find (methods, m => m.JniName == "echoArr");
+		Assert.NotNull (echoArr);
+		// Both parameter and return are arrays of the user-peer UserPeerForArray.
+		// CRC64 hash is environment-dependent; assert by suffix.
+		Assert.Matches (@"^\(\[Lcrc64[0-9a-f]{16}/UserPeerForArray;\)\[Lcrc64[0-9a-f]{16}/UserPeerForArray;$", echoArr!.JniSignature);
+	}
+
+	[Fact]
+	public void Export_ProtectedAndPrivateVisibility_BothSurface ()
+	{
+		var methods = GetMarshalMethods ("ExportVisibilityShapes");
+		AssertHasExport (methods, "doProtected", "()V");
+		AssertHasExport (methods, "doPrivate", "()V");
+	}
+
+	[Fact]
+	public void ExportField_ReturningPrimitive ()
+	{
+		var methods = GetMarshalMethods ("ExportFieldPrimitiveShapes");
+		// [ExportField] uses the managed method name as the JNI name (not the field name).
+		var getMaxValue = System.Array.Find (methods, m => m.JniName == "GetMaxValue");
+		Assert.NotNull (getMaxValue);
+		Assert.Equal ("()I", getMaxValue!.JniSignature);
+		Assert.Equal ("__export__", getMaxValue.Connector);
+	}
+
+	[Fact]
+	public void Export_OverloadsWithSameJavaName_RegisterDistinctly ()
+	{
+		var methods = GetMarshalMethods ("ExportOverloadShapes");
+		var calls = System.Array.FindAll (methods, m => m.JniName == "call");
+		Assert.Equal (2, calls.Length);
+		Assert.Contains (calls, m => m.JniSignature == "(I)V");
+		Assert.Contains (calls, m => m.JniSignature == "(Ljava/lang/String;)V");
+	}
 }
