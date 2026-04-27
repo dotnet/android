@@ -306,6 +306,10 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <value>Disabilitazione dell'interprete; l'uso dell'interprete e dell'AOT contemporaneamente non è supportato. Usare l'interprete per il supporto del ricaricamento rapido nelle configurazioni di debug e AOT per le configurazioni di versione.</value>
     <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
   </data>
+  <data name="XA0119_ReadyToRun" xml:space="preserve">
+    <value>Using fast deployment and ReadyToRun at the same time is not recommended. Use fast deployment for Debug configurations and ReadyToRun for Release configurations.</value>
+    <comment>The following are literal names and should not be translated: ReadyToRun, Debug, Release.</comment>
+  </data>
   <data name="XA0121" xml:space="preserve">
     <value>L'assembly '{0}' usa '[assembly: {1}]', che non è più supportato. Usare una versione più recente di questo pacchetto NuGet o inviare una notifica all'autore della libreria.</value>
     <comment>The following are literal names and should not be translated: [assembly: {1}], NuGet
