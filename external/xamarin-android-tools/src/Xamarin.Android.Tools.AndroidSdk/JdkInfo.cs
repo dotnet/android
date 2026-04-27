@@ -279,7 +279,9 @@ namespace Xamarin.Android.Tools
 					const string ContinuedValuePrefix   = "        ";
 					const string NewValuePrefix         = "    ";
 					const string NameValueDelim         = " = ";
-					output.AppendLine (e.Data);
+					lock (output) {
+						output.AppendLine (e.Data);
+					}
 					if (string.IsNullOrEmpty (e.Data))
 						return;
 					if (e.Data.StartsWith (PropertySettings, StringComparison.Ordinal)) {
