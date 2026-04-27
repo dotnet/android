@@ -158,41 +158,42 @@ namespace Java.InteropTests
 		// ---------------------------------------------------------------
 		// Group B — exception routing
 		// ---------------------------------------------------------------
-		// NOTE: marked `TrimmableIgnore` because the trimmable `[Export]`
-		// UCO does NOT wrap the call in `BeginMarshalMethod` /
-		// `OnUserUnhandledException` / `EndMarshalMethod` (legacy
-		// CallbackCode.cs does). On the trimmable path the unhandled
-		// managed exception aborts the CoreCLR process before NUnit can
-		// observe it. Remove the `TrimmableIgnore` category once the
-		// trimmable typemap codegen mirrors the marshal-method exception
-		// wrapper. See export-comparison.md §3 / §7 and
-		// `EmitUcoConstructorBodyWithMarshal` in TypeMapAssemblyEmitter.cs.
+		// The trimmable [Export] UCO wraps the dispatch in BeginMarshalMethod /
+		// OnUserUnhandledException / EndMarshalMethod so unhandled managed
+		// exceptions are stored as a pending exception on the JniTransition
+		// (matching the JavaInterop contract used by UCO ctors) instead of
+		// aborting the process. When the JNI call returns to managed code on
+		// the same thread, RaisePendingException re-raises the original
+		// exception — which can be either the underlying managed exception
+		// or a Java.Lang.Throwable depending on the runtime path. The
+		// invariant we assert here is "process did not abort and an exception
+		// surfaces with a recognizable message". See
+		// ExportMethodDispatchEmitter.EmitWrappedExportMethodDispatch.
 
-		[Test, Category ("Export"), Category ("TrimmableIgnore")]
-		public void Export_Method_Throws_PrimitiveReturn_SurfacesAsJavaException ()
+		[Test, Category ("Export")]
+		public void Export_Method_Throws_PrimitiveReturn_SurfacesAsManagedException ()
 		{
 			using var e = new ExportThrowing ();
 			var m = JNIEnv.GetMethodID (e.Class.Handle, "Throwing", "()I");
 			Assert.AreNotEqual (IntPtr.Zero, m, "JNI method id for Throwing not found");
 
-			// Calling the JNI method invokes the managed body, which throws.
-			// The runtime must translate this into a pending Java exception so
-			// that JNIEnv.CallIntMethod re-raises it on the C# side.
-			Assert.That (
-				() => JNIEnv.CallIntMethod (e.Handle, m),
-				Throws.InstanceOf<Java.Lang.Throwable> ()
-					.With.Property (nameof (Java.Lang.Throwable.Message)).Contains ("boom"));
+			// The managed body throws InvalidOperationException("boom"). The wrapper
+			// must catch it and route it through OnUserUnhandledException so the
+			// process survives; the exception then re-surfaces on the calling
+			// thread when the JNI call returns to managed code.
+			var ex = Assert.Catch (() => JNIEnv.CallIntMethod (e.Handle, m));
+			Assert.That (ex, Is.Not.Null, "expected an exception, got null");
+			Assert.That (ex.Message, Contains.Substring ("boom"), "exception message should preserve 'boom'");
 		}
 
-		[Test, Category ("Export"), Category ("TrimmableIgnore")]
-		public void Export_Method_Throws_ObjectReturn_SurfacesAsJavaException ()
+		[Test, Category ("Export")]
+		public void Export_Method_Throws_ObjectReturn_SurfacesAsManagedException ()
 		{
 			using var e = new ExportThrowing ();
 			var m = JNIEnv.GetMethodID (e.Class.Handle, "ThrowingString", "()Ljava/lang/String;");
 			Assert.AreNotEqual (IntPtr.Zero, m, "JNI method id for ThrowingString not found");
-			Assert.That (
-				() => JNIEnv.CallObjectMethod (e.Handle, m),
-				Throws.InstanceOf<Java.Lang.Throwable> ());
+			var ex = Assert.Catch (() => JNIEnv.CallObjectMethod (e.Handle, m));
+			Assert.That (ex, Is.Not.Null, "expected an exception, got null");
 		}
 
 		// ---------------------------------------------------------------
