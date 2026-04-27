@@ -140,7 +140,6 @@ public class AssemblyModifierPipeline : AndroidTask
 		var findJavaObjectsStep = new FindJavaObjectsStep (Log) {
 			ApplicationJavaClass = ApplicationJavaClass,
 			ErrorOnCustomJavaObject = ErrorOnCustomJavaObject,
-			UseMarshalMethods = EnableMarshalMethods,
 		};
 
 		findJavaObjectsStep.Initialize (context);
