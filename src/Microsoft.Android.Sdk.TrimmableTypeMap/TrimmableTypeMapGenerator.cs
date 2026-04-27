@@ -11,6 +11,11 @@ public class TrimmableTypeMapGenerator
 {
 	readonly ITrimmableTypeMapLogger logger;
 
+	static readonly HashSet<string> RequiredFrameworkDeferredRegistrationTypes = new (StringComparer.Ordinal) {
+		"android/app/Application",
+		"android/app/Instrumentation",
+	};
+
 	public TrimmableTypeMapGenerator (ITrimmableTypeMapLogger logger)
 	{
 		this.logger = logger ?? throw new ArgumentNullException (nameof (logger));
@@ -41,6 +46,7 @@ public class TrimmableTypeMapGenerator
 
 		RootManifestReferencedTypes (allPeers, PrepareManifestForRooting (manifestTemplate, manifestConfig));
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
+		PropagateCannotRegisterToDescendants (allPeers);
 
 		var generatedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, useSharedTypemapUniverse);
 		var jcwPeers = allPeers.Where (p =>
@@ -49,14 +55,7 @@ public class TrimmableTypeMapGenerator
 		logger.LogGeneratingJcwFilesInfo (jcwPeers.Count, allPeers.Count);
 		var generatedJavaSources = GenerateJcwJavaSources (jcwPeers);
 
-		// Collect Application/Instrumentation types that need deferred registerNatives
-		var appRegTypes = allPeers
-			// Include all deferred-registration peers here: framework MCWs still need
-			// ApplicationRegistration.java even without generated ACWs, and abstract
-			// base types can own the native methods that derived types invoke.
-			.Where (p => p.CannotRegisterInStaticConstructor)
-			.Select (p => JniSignatureHelper.JniNameToJavaName (p.JavaName))
-			.ToList ();
+		var appRegTypes = CollectApplicationRegistrationTypes (allPeers);
 		if (appRegTypes.Count > 0) {
 			logger.LogDeferredRegistrationTypesInfo (appRegTypes.Count);
 		}
@@ -66,6 +65,33 @@ public class TrimmableTypeMapGenerator
 			: null;
 
 		return new TrimmableTypeMapResult (generatedAssemblies, generatedJavaSources, allPeers, manifest, appRegTypes);
+	}
+
+	internal static List<string> CollectApplicationRegistrationTypes (List<JavaPeerInfo> allPeers)
+	{
+		var appRegTypes = new List<string> ();
+		var seen = new HashSet<string> (StringComparer.Ordinal);
+
+		foreach (var peer in allPeers) {
+			if (!peer.CannotRegisterInStaticConstructor) {
+				continue;
+			}
+
+			// ApplicationRegistration.java is compiled against the app's target Android API
+			// surface. Legacy framework descendants such as android.test.* may not exist there,
+			// so keep only the two framework roots plus app/runtime types that participate in
+			// the deferred-registration flow.
+			if (peer.DoNotGenerateAcw && !RequiredFrameworkDeferredRegistrationTypes.Contains (peer.JavaName)) {
+				continue;
+			}
+
+			var javaName = JniSignatureHelper.JniNameToJavaName (peer.JavaName);
+			if (seen.Add (javaName)) {
+				appRegTypes.Add (javaName);
+			}
+		}
+
+		return appRegTypes;
 	}
 
 	GeneratedManifest GenerateManifest (List<JavaPeerInfo> allPeers, AssemblyManifestInfo assemblyManifestInfo,
@@ -115,19 +141,37 @@ public class TrimmableTypeMapGenerator
 
 	List<GeneratedAssembly> GenerateTypeMapAssemblies (List<JavaPeerInfo> allPeers, Version systemRuntimeVersion, bool useSharedTypemapUniverse)
 	{
-		var peersByAssembly = allPeers.GroupBy (p => p.AssemblyName, StringComparer.Ordinal).OrderBy (g => g.Key, StringComparer.Ordinal);
+		List<(string AssemblyName, List<JavaPeerInfo> Peers)> peersByAssembly;
+
+		if (useSharedTypemapUniverse) {
+			// In Release builds all per-assembly typemaps are merged into a single
+			// shared universe dictionary.  Cross-assembly aliases (e.g. Java.Lang.Object
+			// in Mono.Android and JavaObject in Java.Interop both mapping to
+			// java/lang/Object) must be moved into the owner assembly's group so the
+			// ModelBuilder can handle them as an alias group and the runtime doesn't
+			// crash on duplicate keys.
+			peersByAssembly = MergeCrossAssemblyAliases (allPeers);
+		} else {
+			// In Debug builds each typemap DLL has its own per-assembly universe, so
+			// cross-assembly duplicates don't collide — simple GroupBy is sufficient.
+			peersByAssembly = allPeers
+				.GroupBy (p => p.AssemblyName, StringComparer.Ordinal)
+				.OrderBy (g => g.Key, StringComparer.Ordinal)
+				.Select (g => (g.Key, g.ToList ()))
+				.ToList ();
+		}
+
 		var generatedAssemblies = new List<GeneratedAssembly> ();
 		var perAssemblyNames = new List<string> ();
 		var generator = new TypeMapAssemblyGenerator (systemRuntimeVersion);
-		foreach (var group in peersByAssembly) {
-			string assemblyName = $"_{group.Key}.TypeMap";
-			perAssemblyNames.Add (assemblyName);
-			var peers = group.ToList ();
+		foreach (var (assemblyName, peers) in peersByAssembly) {
+			string typeMapAssemblyName = $"_{assemblyName}.TypeMap";
+			perAssemblyNames.Add (typeMapAssemblyName);
 			var stream = new MemoryStream ();
-			generator.Generate (peers, stream, assemblyName, useSharedTypemapUniverse);
+			generator.Generate (peers, stream, typeMapAssemblyName, useSharedTypemapUniverse);
 			stream.Position = 0;
-			generatedAssemblies.Add (new GeneratedAssembly (assemblyName, stream));
-			logger.LogGeneratedTypeMapAssemblyInfo (assemblyName, peers.Count);
+			generatedAssemblies.Add (new GeneratedAssembly (typeMapAssemblyName, stream));
+			logger.LogGeneratedTypeMapAssemblyInfo (typeMapAssemblyName, peers.Count);
 		}
 		var rootStream = new MemoryStream ();
 		var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
@@ -137,6 +181,74 @@ public class TrimmableTypeMapGenerator
 		logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);
 		logger.LogGeneratedTypeMapAssembliesInfo (generatedAssemblies.Count);
 		return generatedAssemblies;
+	}
+
+	/// <summary>
+	/// Groups peers by assembly, merging cross-assembly aliases into a single group.
+	/// When the same JNI name appears in multiple assemblies (e.g. <c>Java.Lang.Object</c>
+	/// in <c>Mono.Android</c> and <c>JavaObject</c> in <c>Java.Interop</c> both mapping
+	/// to <c>java/lang/Object</c>), peers from later assemblies are moved into the owner
+	/// assembly's group so the <see cref="ModelBuilder"/> can handle them as an alias group.
+	/// </summary>
+	/// <remarks>
+	/// Ownership is determined by <c>[Register]</c> over <c>[JniTypeSignature]</c> — the
+	/// canonical MCW binding type takes precedence. Among peers with the same attribute
+	/// kind, the first assembly in sorted order wins.
+	/// </remarks>
+	internal static List<(string AssemblyName, List<JavaPeerInfo> Peers)> MergeCrossAssemblyAliases (List<JavaPeerInfo> allPeers)
+	{
+		var groups = new SortedDictionary<string, List<JavaPeerInfo>> (StringComparer.Ordinal);
+
+		// Group by assembly (sorted order)
+		foreach (var peer in allPeers) {
+			if (!groups.TryGetValue (peer.AssemblyName, out var list)) {
+				list = [];
+				groups [peer.AssemblyName] = list;
+			}
+			list.Add (peer);
+		}
+
+		// Build JNI name → owner assembly map.
+		// [Register] types take precedence over [JniTypeSignature] types.
+		// Among peers of the same kind, the first assembly (sorted order) wins.
+		var jniNameOwner = new Dictionary<string, (string AssemblyName, bool IsFromJniTypeSignature)> (StringComparer.Ordinal);
+		foreach (var kvp in groups) {
+			string assemblyName = kvp.Key;
+			foreach (var peer in kvp.Value) {
+				if (!jniNameOwner.TryGetValue (peer.JavaName, out var current)) {
+					jniNameOwner [peer.JavaName] = (assemblyName, peer.IsFromJniTypeSignature);
+				} else if (current.IsFromJniTypeSignature && !peer.IsFromJniTypeSignature) {
+					// [Register] type takes ownership from [JniTypeSignature] type
+					jniNameOwner [peer.JavaName] = (assemblyName, false);
+				}
+			}
+		}
+
+		// Move colliding peers to the owner assembly
+		var movedPeers = new List<(JavaPeerInfo Peer, string TargetAssembly)> ();
+		foreach (var kvp in groups) {
+			string assemblyName = kvp.Key;
+			foreach (var peer in kvp.Value) {
+				var owner = jniNameOwner [peer.JavaName];
+				if (!string.Equals (owner.AssemblyName, assemblyName, StringComparison.Ordinal)) {
+					movedPeers.Add ((peer, owner.AssemblyName));
+				}
+			}
+		}
+
+		foreach (var moved in movedPeers) {
+			groups [moved.Peer.AssemblyName].Remove (moved.Peer);
+			groups [moved.TargetAssembly].Add (moved.Peer);
+		}
+
+		// Return non-empty groups
+		var result = new List<(string, List<JavaPeerInfo>)> ();
+		foreach (var kvp in groups) {
+			if (kvp.Value.Count > 0) {
+				result.Add ((kvp.Key, kvp.Value));
+			}
+		}
+		return result;
 	}
 
 	List<GeneratedJavaSource> GenerateJcwJavaSources (List<JavaPeerInfo> allPeers)
@@ -218,8 +330,7 @@ public class TrimmableTypeMapGenerator
 	/// TestInstrumentation_1 must also defer — otherwise the base class <c>&lt;clinit&gt;</c> will call
 	/// <c>registerNatives</c> before the managed runtime is ready.
 	/// </summary>
-	internal static void PropagateDeferredRegistrationToBaseClasses (List<JavaPeerInfo> allPeers)
-	{
+	internal static void PropagateDeferredRegistrationToBaseClasses (List<JavaPeerInfo> allPeers)	{
 		// In practice only 1–2 types need propagation (one Application, maybe one
 		// Instrumentation), each with a short base-class chain.  A linear scan per
 		// ancestor is simpler and cheaper than building a Dictionary<JavaName, List<Peer>>
@@ -244,6 +355,43 @@ public class TrimmableTypeMapGenerator
 				}
 
 				baseJniName = nextBase;
+			}
+		}
+	}
+
+	/// <summary>
+	/// Propagates <see cref="JavaPeerInfo.CannotRegisterInStaticConstructor"/> DOWN
+	/// from Application/Instrumentation types to all their descendants. Any subclass of
+	/// an Instrumentation/Application type can be loaded by Android before the native
+	/// library is ready, so it must also use the lazy __md_registerNatives pattern.
+	/// </summary>
+	internal static void PropagateCannotRegisterToDescendants (List<JavaPeerInfo> allPeers)
+	{
+		// Build a set of JavaNames that have CannotRegisterInStaticConstructor
+		var cannotRegister = new HashSet<string> (StringComparer.Ordinal);
+		foreach (var peer in allPeers) {
+			if (peer.CannotRegisterInStaticConstructor) {
+				cannotRegister.Add (peer.JavaName);
+			}
+		}
+
+		// Also include the framework base types
+		cannotRegister.Add ("android/app/Application");
+		cannotRegister.Add ("android/app/Instrumentation");
+
+		// Propagate to descendants: if your base is in the set, you're in the set too
+		bool changed = true;
+		while (changed) {
+			changed = false;
+			foreach (var peer in allPeers) {
+				if (peer.CannotRegisterInStaticConstructor || peer.BaseJavaName is null) {
+					continue;
+				}
+				if (cannotRegister.Contains (peer.BaseJavaName)) {
+					peer.CannotRegisterInStaticConstructor = true;
+					cannotRegister.Add (peer.JavaName);
+					changed = true;
+				}
 			}
 		}
 	}
