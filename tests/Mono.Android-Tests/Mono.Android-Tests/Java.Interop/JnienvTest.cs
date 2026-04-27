@@ -326,6 +326,93 @@ namespace Java.InteropTests
 			Console.Error.WriteLine ($"# jonp:   END ActivatedDirectThrowableSubclassesShouldBeRegistered!!!");
 		}
 
+		// Locks in the legacy llvm-ir typemap behavior for parameterized ctor activation.
+		// Java instantiation forwards JNI args to the user-visible managed ctor; trimmable
+		// typemap codegen must match this contract for non-()V signatures.
+		[Test]
+		public void ActivatedDirectThrowableSubclasses_StringCtor_ShouldForwardArgs ()
+		{
+			using (var klass = Java.Lang.Class.FromType (typeof (StringActivatedFromJava))) {
+				var ctor = JNIEnv.GetMethodID (klass.Handle, "<init>", "(Ljava/lang/String;)V");
+				IntPtr message = JNIEnv.NewString ("hello-from-java");
+				try {
+					var o = JNIEnv.StartCreateInstance (klass.Handle, ctor, new JValue (message));
+					JNIEnv.FinishCreateInstance (o, klass.Handle, ctor, new JValue (message));
+
+					GC.Collect ();
+					GC.WaitForPendingFinalizers ();
+
+					var v = Java.Lang.Object.GetObject<StringActivatedFromJava> (o, JniHandleOwnership.TransferLocalRef);
+					Assert.IsNotNull (v);
+					Assert.IsTrue (v.Constructed, "user-visible ctor body did not run");
+					Assert.AreEqual ("hello-from-java", v.ReceivedMessage, "ctor arg not forwarded to managed ctor");
+					v.Dispose ();
+				} finally {
+					JNIEnv.DeleteLocalRef (message);
+				}
+			}
+		}
+
+		[Test]
+		public void ActivatedDirectThrowableSubclasses_StringThrowableCtor_ShouldForwardArgs ()
+		{
+			using (var klass = Java.Lang.Class.FromType (typeof (StringThrowableActivatedFromJava)))
+			using (var cause = new Java.Lang.Throwable ("cause")) {
+				var ctor = JNIEnv.GetMethodID (klass.Handle, "<init>", "(Ljava/lang/String;Ljava/lang/Throwable;)V");
+				IntPtr message = JNIEnv.NewString ("hello-with-cause");
+				try {
+					var o = JNIEnv.StartCreateInstance (klass.Handle, ctor, new JValue (message), new JValue (cause.Handle));
+					JNIEnv.FinishCreateInstance (o, klass.Handle, ctor, new JValue (message), new JValue (cause.Handle));
+
+					GC.Collect ();
+					GC.WaitForPendingFinalizers ();
+
+					var v = Java.Lang.Object.GetObject<StringThrowableActivatedFromJava> (o, JniHandleOwnership.TransferLocalRef);
+					Assert.IsNotNull (v);
+					Assert.IsTrue (v.Constructed, "user-visible ctor body did not run");
+					Assert.AreEqual ("hello-with-cause", v.ReceivedMessage, "string arg not forwarded");
+					Assert.IsNotNull (v.ReceivedCause, "throwable arg not forwarded");
+					Assert.AreEqual ("cause", v.ReceivedCause!.Message);
+					v.Dispose ();
+				} finally {
+					JNIEnv.DeleteLocalRef (message);
+				}
+			}
+		}
+
+		[Test]
+		public void ActivatedDirectThrowableSubclasses_MultipleCtors_ShouldDispatchToCorrectCtor ()
+		{
+			using (var klass = Java.Lang.Class.FromType (typeof (MultiCtorActivatedFromJava))) {
+				// Default ctor
+				{
+					var ctor = JNIEnv.GetMethodID (klass.Handle, "<init>", "()V");
+					var o = JNIEnv.StartCreateInstance (klass.Handle, ctor);
+					JNIEnv.FinishCreateInstance (o, klass.Handle, ctor);
+					var v = Java.Lang.Object.GetObject<MultiCtorActivatedFromJava> (o, JniHandleOwnership.TransferLocalRef);
+					Assert.IsNotNull (v);
+					Assert.AreEqual (0, v.CtorIndex, "()V dispatched to wrong ctor");
+					v.Dispose ();
+				}
+				// (String) ctor
+				{
+					var ctor = JNIEnv.GetMethodID (klass.Handle, "<init>", "(Ljava/lang/String;)V");
+					IntPtr message = JNIEnv.NewString ("only-message");
+					try {
+						var o = JNIEnv.StartCreateInstance (klass.Handle, ctor, new JValue (message));
+						JNIEnv.FinishCreateInstance (o, klass.Handle, ctor, new JValue (message));
+						var v = Java.Lang.Object.GetObject<MultiCtorActivatedFromJava> (o, JniHandleOwnership.TransferLocalRef);
+						Assert.IsNotNull (v);
+						Assert.AreEqual (1, v.CtorIndex, "(String) dispatched to wrong ctor");
+						Assert.AreEqual ("only-message", v.ReceivedMessage);
+						v.Dispose ();
+					} finally {
+						JNIEnv.DeleteLocalRef (message);
+					}
+				}
+			}
+		}
+
 		[Test]
 		public void ConversionsAndThreadsAndInstanceMappingsOhMy ()
 		{
@@ -531,6 +618,55 @@ namespace Java.InteropTests
 		public ThrowableActivatedFromJava ()
 		{
 			Constructed = true;
+		}
+	}
+
+	// Throwable subclass with (String) ctor — exercises single-ref-arg ctor activation.
+	class StringActivatedFromJava : Java.Lang.Throwable {
+
+		public bool     Constructed;
+		public string?  ReceivedMessage;
+
+		public StringActivatedFromJava (string message)
+			: base (message)
+		{
+			Constructed    = true;
+			ReceivedMessage = message;
+		}
+	}
+
+	// Throwable subclass with (String, Throwable) ctor — exercises multi-ref-arg ctor activation.
+	class StringThrowableActivatedFromJava : Java.Lang.Throwable {
+
+		public bool                  Constructed;
+		public string?               ReceivedMessage;
+		public Java.Lang.Throwable?  ReceivedCause;
+
+		public StringThrowableActivatedFromJava (string message, Java.Lang.Throwable cause)
+			: base (message, cause)
+		{
+			Constructed     = true;
+			ReceivedMessage = message;
+			ReceivedCause   = cause;
+		}
+	}
+
+	// Throwable subclass with multiple registered ctors — exercises ctor dispatch.
+	class MultiCtorActivatedFromJava : Java.Lang.Throwable {
+
+		public int      CtorIndex = -1;
+		public string?  ReceivedMessage;
+
+		public MultiCtorActivatedFromJava ()
+		{
+			CtorIndex = 0;
+		}
+
+		public MultiCtorActivatedFromJava (string message)
+			: base (message)
+		{
+			CtorIndex       = 1;
+			ReceivedMessage = message;
 		}
 	}
 
