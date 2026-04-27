@@ -68,8 +68,11 @@ public class ScannerExportShapesTests
 			$"Expected [Export] marshal method '{jniName}{jniSignature}' not found. " +
 			$"Discovered: {string.Join (", ", methods.Select (m => m.JniName + m.JniSignature))}");
 		// [Export] methods carry no Connector — legacy uses __export__ at runtime,
-		// trimmable wires registration via UCO fnptr.
-		Assert.Null (match!.Connector);
+		// trimmable wires registration via UCO fnptr. [ExportField] methods do
+		// surface the "__export__" connector by design (matches legacy
+		// CecilImporter behaviour), so accept that case too.
+		Assert.True (match!.Connector is null || match.Connector == "__export__",
+			$"Unexpected connector '{match.Connector}' on {jniName}{jniSignature}.");
 	}
 
 	[Fact]
@@ -100,5 +103,38 @@ public class ScannerExportShapesTests
 		AssertHasExport (methods, "echoList", "(Ljava/util/List;)Ljava/util/List;");
 		AssertHasExport (methods, "echoMap", "(Ljava/util/Map;)Ljava/util/Map;");
 		AssertHasExport (methods, "echoCollection", "(Ljava/util/Collection;)Ljava/util/Collection;");
+	}
+
+	[Fact]
+	public void ExportField_RegistersGetterAsMarshalMethod ()
+	{
+		var methods = GetMarshalMethods ("ExportFieldShapes");
+
+		// [ExportField] uses the managed method name as the JNI method name
+		// (legacy Mono.Android.Export does the same thing). The signatures
+		// below match the underlying CLR method shape.
+		// User-peer return type uses a CRC64-based package name; assert by prefix
+		// so the test isn't tied to the exact CRC64 hash of the assembly.
+		var getInstance = System.Array.Find (methods, m => m.JniName == "GetInstance");
+		Assert.NotNull (getInstance);
+		Assert.EndsWith ("/ExportFieldShapes;", getInstance!.JniSignature);
+		Assert.StartsWith ("()L", getInstance.JniSignature);
+		Assert.DoesNotContain ("Ljava/lang/Object;", getInstance.JniSignature);
+
+		AssertHasExport (methods, "GetValue", "()Ljava/lang/String;");
+		AssertHasExport (methods, "GetCount", "()I");
+	}
+
+	[Fact]
+	public void ExportParameter_OverridesJavaTypeForStreamsAndXml ()
+	{
+		var methods = GetMarshalMethods ("ExportParameterShapes");
+
+		// Stream → InputStream / OutputStream
+		AssertHasExport (methods, "openStream", "(Ljava/io/InputStream;)I");
+		AssertHasExport (methods, "wrapStream", "(Ljava/io/OutputStream;)Ljava/io/OutputStream;");
+		// XmlReader → XmlPullParser / XmlResourceParser
+		AssertHasExport (methods, "readXml", "(Lorg/xmlpull/v1/XmlPullParser;)Lorg/xmlpull/v1/XmlPullParser;");
+		AssertHasExport (methods, "readResourceXml", "(Landroid/content/res/XmlResourceParser;)Landroid/content/res/XmlResourceParser;");
 	}
 }
