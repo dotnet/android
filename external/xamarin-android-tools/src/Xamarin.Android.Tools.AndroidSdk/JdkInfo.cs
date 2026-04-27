@@ -467,34 +467,6 @@ namespace Xamarin.Android.Tools
 			return paths;
 		}
 
-		// Linux; Fedora
-		static IEnumerable<JdkInfo> GetLibJvmJdks (Action<TraceLevel, string> logger)
-		{
-			return GetLibJvmJdkPaths ()
-				.Distinct ()
-				.Select (p => TryGetJdkInfo (p, logger, "`ls /usr/lib/jvm/*`"))
-				.Where (jdk => jdk != null)
-				.Select (jdk => jdk!)
-				.OrderByDescending (jdk => jdk, JdkInfoVersionComparer.Default);
-		}
-
-		static IEnumerable<string> GetLibJvmJdkPaths ()
-		{
-			if (!OS.IsLinux) {
-				yield break;
-			}
-
-			var jvm = "/usr/lib/jvm";
-			if (!Directory.Exists (jvm))
-				yield break;
-
-			foreach (var jdk in Directory.EnumerateDirectories (jvm)) {
-				var release = Path.Combine (jdk, "release");
-				if (File.Exists (release))
-					yield return jdk;
-			}
-		}
-
 		// Last-ditch fallback!
 		static IEnumerable<JdkInfo> GetPathEnvironmentJdks (Action<TraceLevel, string> logger)
 		{
