@@ -50,6 +50,8 @@ namespace SystemTests
 
 		[Test]
 		[Category ("NativeAOTIgnore")] // These switches only exist in Mono & CoreCLR BCL assemblies
+		[DynamicDependency (DynamicallyAccessedMemberTypes.All, "System.LocalAppContextSwitches", "System.Private.CoreLib")]
+		[DynamicDependency (DynamicallyAccessedMemberTypes.All, "System.Diagnostics.Metrics.Meter", "System.Diagnostics.DiagnosticSource")]
 		[TestCaseSource (nameof (TestPrivateSwitchesSource))]
 		public void TestPrivateSwitches (
 				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.All)]

@@ -165,14 +165,15 @@ public class ModelBuilderTests : FixtureTestBase
 		[Fact]
 		public void Build_McwBinding_IsTrimmable ()
 		{
-			// MCW binding types (DoNotGenerateAcw=true) are trimmable unless essential
+			// MCW binding types (DoNotGenerateAcw=true) are trimmable unless essential.
+			// When ForceUnconditionalEntries is enabled (workaround for dotnet/runtime#127004),
+			// all entries become unconditional.
 			var peer = MakeMcwPeer ("android/app/Activity", "Android.App.Activity", "Mono.Android") with { DoNotGenerateAcw = true };
 			var model = BuildModel (new [] { peer });
 
 			Assert.Single (model.Entries);
-			Assert.False (model.Entries [0].IsUnconditional);
-			Assert.NotNull (model.Entries [0].TargetTypeReference);
-			Assert.Contains ("Android.App.Activity, Mono.Android", model.Entries [0].TargetTypeReference!);
+			Assert.True (model.Entries [0].IsUnconditional);
+			Assert.Null (model.Entries [0].TargetTypeReference);
 		}
 
 		[Fact]
@@ -239,13 +240,14 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
-		public void Build_SinglePeer_NoAssociation ()
+		public void Build_SinglePeer_HasAssociation ()
 		{
-			// Single peers don't need associations — only alias groups do
+			// When ForceUnconditionalEntries is enabled, single peers emit associations
+			// so the runtime proxy type map is populated.
 			var peer = MakePeerWithActivation ("my/app/MainActivity", "MyApp.MainActivity", "App");
 			var model = BuildModel (new [] { peer }, "MyTypeMap");
 
-			Assert.Empty (model.Associations);
+			Assert.Single (model.Associations);
 		}
 
 		[Fact]
@@ -330,7 +332,8 @@ public class ModelBuilderTests : FixtureTestBase
 			var peer = FindFixtureByJavaName (javaName);
 			Assert.True (peer.DoNotGenerateAcw);
 			var model = BuildModel (new [] { peer });
-			Assert.False (model.Entries [0].IsUnconditional);
+			// ForceUnconditionalEntries workaround makes all entries unconditional
+			Assert.True (model.Entries [0].IsUnconditional);
 		}
 	}
 
@@ -761,9 +764,8 @@ public class ModelBuilderTests : FixtureTestBase
 		[Fact]
 		public void FullPipeline_Mixed2ArgAnd3Arg_BothSurviveRoundTrip ()
 		{
-			// java/lang/Object → essential → 2-arg unconditional
+			// With ForceUnconditionalEntries, both are emitted as 2-arg unconditional
 			var objectPeer = FindFixtureByJavaName ("java/lang/Object");
-			// android/app/Activity → MCW → 3-arg trimmable
 			var activityPeer = FindFixtureByJavaName ("android/app/Activity");
 
 			var model = BuildModel (new [] { objectPeer, activityPeer }, "MixedBlob");
@@ -773,14 +775,13 @@ public class ModelBuilderTests : FixtureTestBase
 				var attrs = ReadAllTypeMapAttributeBlobs (reader);
 				Assert.Equal (2, attrs.Count);
 
-				var unconditional = attrs.FirstOrDefault (a => a.jniName == "java/lang/Object");
-				Assert.NotNull (unconditional.jniName);
-				Assert.Null (unconditional.targetRef);
+				var objectEntry = attrs.FirstOrDefault (a => a.jniName == "java/lang/Object");
+				Assert.NotNull (objectEntry.jniName);
+				Assert.Null (objectEntry.targetRef);
 
-				var trimmable = attrs.FirstOrDefault (a => a.jniName == "android/app/Activity");
-				Assert.NotNull (trimmable.jniName);
-				Assert.NotNull (trimmable.targetRef);
-				Assert.Contains ("Android.App.Activity", trimmable.targetRef!);
+				var activityEntry = attrs.FirstOrDefault (a => a.jniName == "android/app/Activity");
+				Assert.NotNull (activityEntry.jniName);
+				Assert.Null (activityEntry.targetRef); // unconditional due to ForceUnconditionalEntries
 			});
 		}
 
@@ -805,22 +806,22 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
-		public void FullPipeline_McwBinding_Emits3ArgAttribute ()
+		public void FullPipeline_McwBinding_Emits2ArgAttribute_WithWorkaround ()
 		{
-			// android/app/Activity is MCW → trimmable 3-arg attribute
+			// With ForceUnconditionalEntries workaround for dotnet/runtime#127004,
+			// MCW bindings are emitted as 2-arg unconditional.
 			var peer = FindFixtureByJavaName ("android/app/Activity");
-			var model = BuildModel (new [] { peer }, "Blob3Arg");
+			var model = BuildModel (new [] { peer }, "Blob2ArgWorkaround");
 			Assert.Single (model.Entries);
-			Assert.False (model.Entries [0].IsUnconditional);
+			Assert.True (model.Entries [0].IsUnconditional);
 
-			EmitAndVerify (model, "Blob3Arg", (pe, reader) => {
+			EmitAndVerify (model, "Blob2ArgWorkaround", (pe, reader) => {
 				var (jniName, proxyRef, targetRef) = ReadFirstTypeMapAttributeBlob (reader);
 
 				Assert.Equal ("android/app/Activity", jniName);
 				Assert.NotNull (proxyRef);
 				Assert.Contains ("Android_App_Activity_Proxy", proxyRef!);
-				Assert.NotNull (targetRef);
-				Assert.Contains ("Android.App.Activity", targetRef!);
+				Assert.Null (targetRef); // unconditional due to ForceUnconditionalEntries
 			});
 		}
 	}

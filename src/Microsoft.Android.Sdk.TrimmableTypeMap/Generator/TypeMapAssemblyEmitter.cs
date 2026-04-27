@@ -14,10 +14,12 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// <remarks>
 /// <para>The generated assembly looks like this (pseudo-C#):</para>
 /// <code>
-/// // Assembly-level TypeMap attributes — one per Java peer type:
-/// [assembly: TypeMap&lt;Java.Lang.Object&gt;("android/app/Activity", typeof(Activity_Proxy))]                              // unconditional (ACW)
-/// [assembly: TypeMap&lt;Java.Lang.Object&gt;("android/widget/TextView", typeof(TextView_Proxy), typeof(TextView))]          // trimmable (MCW)
-/// [assembly: TypeMapAssociation&lt;Java.Lang.Object&gt;(typeof(MyTextView), typeof(Android_Widget_TextView_Proxy))]          // managed → proxy
+/// // Assembly-level TypeMap attributes — one per Java peer type.
+/// // The anchor type T is Java.Lang.Object in merged mode (Release) or
+/// // a per-assembly __TypeMapAnchor in per-assembly mode (Debug):
+/// [assembly: TypeMap&lt;T&gt;("android/app/Activity", typeof(Activity_Proxy))]                              // unconditional (ACW)
+/// [assembly: TypeMap&lt;T&gt;("android/widget/TextView", typeof(TextView_Proxy), typeof(TextView))]          // trimmable (MCW)
+/// [assembly: TypeMapAssociation&lt;T&gt;(typeof(MyTextView), typeof(Android_Widget_TextView_Proxy))]          // managed → proxy
 ///
 /// // One proxy type per Java peer that needs activation or UCO wrappers:
 /// public sealed class Activity_Proxy : JavaPeerProxy&lt;Activity&gt;, IAndroidCallableWrapper   // IAndroidCallableWrapper for ACWs only
@@ -73,6 +75,7 @@ sealed class TypeMapAssemblyEmitter
 	TypeReferenceHandle _iJavaPeerableRef;
 	TypeReferenceHandle _jniHandleOwnershipRef;
 	TypeReferenceHandle _jniObjectReferenceRef;
+	TypeReferenceHandle _jniObjectReferenceTypeRef;
 	TypeReferenceHandle _jniObjectReferenceOptionsRef;
 	TypeReferenceHandle _iAndroidCallableWrapperRef;
 	TypeReferenceHandle _jniEnvRef;
@@ -89,7 +92,7 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _notSupportedExceptionCtorRef;
 	MemberReferenceHandle _jniObjectReferenceCtorRef;
 	MemberReferenceHandle _jniEnvDeleteRefRef;
-	MemberReferenceHandle _withinNewObjectScopeRef;
+	MemberReferenceHandle _shouldSkipActivationRef;
 	MemberReferenceHandle _ucoAttrCtorRef;
 	BlobHandle _ucoAttrBlobHandle;
 	MemberReferenceHandle _typeMapAttrCtorRef2Arg;
@@ -100,12 +103,21 @@ sealed class TypeMapAssemblyEmitter
 	TypeReferenceHandle _jniNativeMethodRef;
 	TypeReferenceHandle _jniEnvironmentRef;
 	TypeReferenceHandle _jniEnvironmentTypesRef;
+	TypeReferenceHandle _jniTransitionRef;
+	TypeReferenceHandle _jniRuntimeRef;
+	TypeReferenceHandle _exceptionRef;
+
+	MemberReferenceHandle _beginMarshalMethodRef;
+	MemberReferenceHandle _endMarshalMethodRef;
+	MemberReferenceHandle _onUserUnhandledExceptionRef;
 	TypeReferenceHandle _readOnlySpanOpenRef;
 	TypeSpecificationHandle _readOnlySpanOfJniNativeMethodSpec;
 	MemberReferenceHandle _jniNativeMethodCtorRef;
 	MemberReferenceHandle _jniTypePeerReferenceRef;
 	MemberReferenceHandle _jniEnvTypesRegisterNativesRef;
 	MemberReferenceHandle _readOnlySpanOfJniNativeMethodCtorRef;
+
+	EntityHandle _anchorTypeHandle;
 
 	/// <summary>
 	/// Creates a new emitter.
@@ -123,7 +135,11 @@ sealed class TypeMapAssemblyEmitter
 	/// <summary>
 	/// Emits a PE assembly from the given model and writes it to <paramref name="stream"/>.
 	/// </summary>
-	public void Emit (TypeMapAssemblyData model, Stream stream)
+	/// <param name="useSharedTypemapUniverse">
+	/// When true, uses <c>Java.Lang.Object</c> as the shared anchor type so all assemblies
+	/// share a single typemap universe. When false, emits a per-assembly <c>__TypeMapAnchor</c>.
+	/// </param>
+	public void Emit (TypeMapAssemblyData model, Stream stream, bool useSharedTypemapUniverse = false)
 	{
 		if (model is null) {
 			throw new ArgumentNullException (nameof (model));
@@ -132,17 +148,26 @@ sealed class TypeMapAssemblyEmitter
 			throw new ArgumentNullException (nameof (stream));
 		}
 
-		EmitCore (model);
+		EmitCore (model, useSharedTypemapUniverse);
 		_pe.WritePE (stream);
 	}
 
-	void EmitCore (TypeMapAssemblyData model)
+	void EmitCore (TypeMapAssemblyData model, bool useSharedTypemapUniverse)
 	{
 		_pe.EmitPreamble (model.AssemblyName, model.ModuleName, MetadataHelper.ComputeContentFingerprint (model));
 
 		_javaInteropRef = _pe.AddAssemblyRef ("Java.Interop", new Version (0, 0, 0, 0));
 
 		EmitTypeReferences ();
+		if (useSharedTypemapUniverse) {
+			// Use Java.Lang.Object as the shared anchor so all assemblies share a single
+			// typemap universe that can be merged at startup.
+			_anchorTypeHandle = _pe.Metadata.AddTypeReference (_pe.MonoAndroidRef,
+				_pe.Metadata.GetOrAddString ("Java.Lang"),
+				_pe.Metadata.GetOrAddString ("Object"));
+		} else {
+			EmitAnchorType ();
+		}
 		EmitMemberReferences ();
 
 		// Track wrapper method names → handles for RegisterNatives
@@ -182,6 +207,8 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("JNIEnv"));
 		_jniObjectReferenceRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniObjectReference"));
+		_jniObjectReferenceTypeRef = metadata.AddTypeReference (_javaInteropRef,
+			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniObjectReferenceType"));
 		_jniObjectReferenceOptionsRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniObjectReferenceOptions"));
 		_iAndroidCallableWrapperRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
@@ -205,11 +232,37 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniEnvironment"));
 		_jniEnvironmentTypesRef = metadata.AddTypeReference (_jniEnvironmentRef,
 			default, metadata.GetOrAddString ("Types"));
+		_jniTransitionRef = metadata.AddTypeReference (_javaInteropRef,
+			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniTransition"));
+		_jniRuntimeRef = metadata.AddTypeReference (_javaInteropRef,
+			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniRuntime"));
+		_exceptionRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
+			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Exception"));
 
 		// ReadOnlySpan<JniNativeMethod> — TypeSpec for generic instantiation
 		_readOnlySpanOpenRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("ReadOnlySpan`1"));
 		_readOnlySpanOfJniNativeMethodSpec = MakeGenericTypeSpec_ValueType (_readOnlySpanOpenRef, _jniNativeMethodRef);
+	}
+
+	/// <summary>
+	/// Emits an internal <c>__TypeMapAnchor</c> class used as the group type parameter
+	/// for <c>TypeMap&lt;T&gt;</c> and <c>TypeMapAssociation&lt;T&gt;</c>. Each per-assembly
+	/// typemap DLL gets its own anchor, creating an isolated typemap universe.
+	/// </summary>
+	void EmitAnchorType ()
+	{
+		var metadata = _pe.Metadata;
+		var objectRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
+			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Object"));
+
+		_anchorTypeHandle = metadata.AddTypeDefinition (
+			TypeAttributes.NotPublic | TypeAttributes.Sealed | TypeAttributes.Class,
+			default,
+			metadata.GetOrAddString ("__TypeMapAnchor"),
+			objectRef,
+			MetadataTokens.FieldDefinitionHandle (metadata.GetRowCount (TableIndex.Field) + 1),
+			MetadataTokens.MethodDefinitionHandle (metadata.GetRowCount (TableIndex.MethodDef) + 1));
 	}
 
 	void EmitMemberReferences ()
@@ -229,10 +282,16 @@ sealed class TypeMapAssemblyEmitter
 				rt => rt.Void (),
 				p => p.AddParameter ().Type ().String ()));
 
+		// JniObjectReference..ctor(IntPtr handle, JniObjectReferenceType type)
+		// Note: The C# constructor has a default parameter (type = Invalid), but in IL there is only
+		// the 2-parameter overload. We must emit both parameters explicitly.
 		_jniObjectReferenceCtorRef = _pe.AddMemberRef (_jniObjectReferenceRef, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
 				rt => rt.Void (),
-				p => p.AddParameter ().Type ().IntPtr ()));
+				p => {
+					p.AddParameter ().Type ().IntPtr ();
+					p.AddParameter ().Type ().Type (_jniObjectReferenceTypeRef, true);
+				}));
 
 		// JNIEnv.DeleteRef(IntPtr, JniHandleOwnership) — static, internal
 		// Used by JI-style activation to clean up the original handle after constructing the peer.
@@ -245,11 +304,11 @@ sealed class TypeMapAssemblyEmitter
 					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
 				}));
 
-		// JniEnvironment.get_WithinNewObjectScope() -> bool (static property)
-		_withinNewObjectScopeRef = _pe.AddMemberRef (_jniEnvironmentRef, "get_WithinNewObjectScope",
-			sig => sig.MethodSignature ().Parameters (0,
+		// JavaPeerProxy.ShouldSkipActivation(IntPtr) -> bool (static method)
+		_shouldSkipActivationRef = _pe.AddMemberRef (_javaPeerProxyNonGenericRef, "ShouldSkipActivation",
+			sig => sig.MethodSignature ().Parameters (1,
 				rt => rt.Type ().Boolean (),
-				p => { }));
+				p => { p.AddParameter ().Type ().IntPtr (); }));
 
 		// JniNativeMethod..ctor(byte*, byte*, IntPtr)
 		_jniNativeMethodCtorRef = _pe.AddMemberRef (_jniNativeMethodRef, ".ctor",
@@ -295,6 +354,31 @@ sealed class TypeMapAssemblyEmitter
 		// Pre-compute the UCO attribute blob — it's always the same 4 bytes (prolog + no named args)
 		_ucoAttrBlobHandle = _pe.BuildAttributeBlob (b => { });
 
+		// JniEnvironment.BeginMarshalMethod(nint jnienv, out JniTransition, out JniRuntime?) -> bool
+		_beginMarshalMethodRef = _pe.AddMemberRef (_jniEnvironmentRef, "BeginMarshalMethod",
+			sig => sig.MethodSignature ().Parameters (3,
+				rt => rt.Type ().Boolean (),
+				p => {
+					p.AddParameter ().Type ().IntPtr ();
+					p.AddParameter ().Type (isByRef: true).Type (_jniTransitionRef, true);
+					p.AddParameter ().Type (isByRef: true).Type (_jniRuntimeRef, false);
+				}));
+
+		// JniEnvironment.EndMarshalMethod(ref JniTransition) -> void
+		_endMarshalMethodRef = _pe.AddMemberRef (_jniEnvironmentRef, "EndMarshalMethod",
+			sig => sig.MethodSignature ().Parameters (1,
+				rt => rt.Void (),
+				p => p.AddParameter ().Type (isByRef: true).Type (_jniTransitionRef, true)));
+
+		// JniRuntime.OnUserUnhandledException(ref JniTransition, Exception) -> void
+		_onUserUnhandledExceptionRef = _pe.AddMemberRef (_jniRuntimeRef, "OnUserUnhandledException",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+				rt => rt.Void (),
+				p => {
+					p.AddParameter ().Type (isByRef: true).Type (_jniTransitionRef, true);
+					p.AddParameter ().Type ().Type (_exceptionRef, false);
+				}));
+
 		EmitTypeMapAttributeCtorRef ();
 		EmitTypeMapAssociationAttributeCtorRef ();
 		EmitJavaPeerAliasesAttributeCtorRef ();
@@ -306,10 +390,8 @@ sealed class TypeMapAssemblyEmitter
 		var typeMapAttrOpenRef = metadata.AddTypeReference (_pe.SystemRuntimeInteropServicesRef,
 			metadata.GetOrAddString ("System.Runtime.InteropServices"),
 			metadata.GetOrAddString ("TypeMapAttribute`1"));
-		var javaLangObjectRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
-			metadata.GetOrAddString ("Java.Lang"), metadata.GetOrAddString ("Object"));
 
-		var closedAttrTypeSpec = _pe.MakeGenericTypeSpec (typeMapAttrOpenRef, javaLangObjectRef);
+		var closedAttrTypeSpec = _pe.MakeGenericTypeSpec (typeMapAttrOpenRef, _anchorTypeHandle);
 
 		// 2-arg: TypeMap(string jniName, Type proxyType) — unconditional
 		_typeMapAttrCtorRef2Arg = _pe.AddMemberRef (closedAttrTypeSpec, ".ctor",
@@ -337,9 +419,7 @@ sealed class TypeMapAssemblyEmitter
 		var typeMapAssociationAttrOpenRef = metadata.AddTypeReference (_pe.SystemRuntimeInteropServicesRef,
 			metadata.GetOrAddString ("System.Runtime.InteropServices"),
 			metadata.GetOrAddString ("TypeMapAssociationAttribute`1"));
-		var javaLangObjectRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
-			metadata.GetOrAddString ("Java.Lang"), metadata.GetOrAddString ("Object"));
-		var closedAttrTypeSpec = _pe.MakeGenericTypeSpec (typeMapAssociationAttrOpenRef, javaLangObjectRef);
+		var closedAttrTypeSpec = _pe.MakeGenericTypeSpec (typeMapAssociationAttrOpenRef, _anchorTypeHandle);
 
 		_typeMapAssociationAttrCtorRef = _pe.AddMemberRef (closedAttrTypeSpec, ".ctor",
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
@@ -620,9 +700,10 @@ sealed class TypeMapAssemblyEmitter
 		EmitCreateInstanceBodyWithLocals (
 			EncodeJniObjectReferenceAndObjectLocals,
 			encoder => {
-				// var jniRef = new JniObjectReference(handle);
+				// var jniRef = new JniObjectReference(handle, JniObjectReferenceType.Invalid);
 				encoder.LoadLocalAddress (0);
 				encoder.OpCode (ILOpCode.Ldarg_1); // handle
+				encoder.LoadConstantI4 (0); // JniObjectReferenceType.Invalid
 				encoder.Call (_jniObjectReferenceCtorRef);
 
 				// var result = new TargetType(ref jniRef, JniObjectReferenceOptions.Copy);
@@ -667,9 +748,10 @@ sealed class TypeMapAssemblyEmitter
 				// dup obj (one copy for the call, one for the return)
 				encoder.OpCode (ILOpCode.Dup);
 
-				// var jniRef = new JniObjectReference(handle);
+				// var jniRef = new JniObjectReference(handle, JniObjectReferenceType.Invalid);
 				encoder.LoadLocalAddress (0);
 				encoder.OpCode (ILOpCode.Ldarg_1); // handle
+				encoder.LoadConstantI4 (0); // JniObjectReferenceType.Invalid
 				encoder.Call (_jniObjectReferenceCtorRef);
 
 				// obj.BaseCtor(ref jniRef, JniObjectReferenceOptions.Copy);
@@ -841,86 +923,191 @@ sealed class TypeMapAssemblyEmitter
 			var ctorRef = AddJavaInteropActivationCtorRef (
 				activationCtor.IsOnLeafType ? targetTypeRef : _pe.ResolveTypeRef (activationCtor.DeclaringType));
 
+			// Locals:
+			//   0: JniTransition  (envp)    — out-parameter for BeginMarshalMethod
+			//   1: JniRuntime?    (runtime) — out-parameter for BeginMarshalMethod
+			//   2: Exception      (e)       — catch variable
+			//   3: JniObjectReference (jniRef) — needed for JavaInterop-style activation
 			handle = _pe.EmitBody (uco.WrapperName,
 				MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 				encodeSig,
-				encoder => {
-					// Skip activation if the object is being created from managed code
-					// (e.g., JNIEnv.StartCreateInstance / JNIEnv.NewObject).
-					var skipLabel = encoder.DefineLabel ();
-					encoder.Call (_withinNewObjectScopeRef);
-					encoder.Branch (ILOpCode.Brtrue, skipLabel);
-
+				(encoder, cfb) => EmitUcoConstructorBodyWithMarshal (encoder, cfb, enc => {
 					if (!activationCtor.IsOnLeafType) {
-						encoder.OpCode (ILOpCode.Ldtoken);
-						encoder.Token (targetTypeRef);
-						encoder.Call (_getTypeFromHandleRef);
-						encoder.Call (_getUninitializedObjectRef);
-						encoder.OpCode (ILOpCode.Castclass);
-						encoder.Token (targetTypeRef);
+						enc.OpCode (ILOpCode.Ldtoken);
+						enc.Token (targetTypeRef);
+						enc.Call (_getTypeFromHandleRef);
+						enc.Call (_getUninitializedObjectRef);
+						enc.OpCode (ILOpCode.Castclass);
+						enc.Token (targetTypeRef);
 					}
 
-					encoder.LoadLocalAddress (0);
-					encoder.LoadArgument (1); // self
-					encoder.Call (_jniObjectReferenceCtorRef);
+					enc.LoadLocalAddress (3); // jniRef
+					enc.LoadArgument (1);     // self
+					enc.LoadConstantI4 (0);   // JniObjectReferenceType.Invalid
+					enc.Call (_jniObjectReferenceCtorRef);
 
 					if (activationCtor.IsOnLeafType) {
-						encoder.LoadLocalAddress (0);
-						encoder.LoadConstantI4 (1); // JniObjectReferenceOptions.Copy
-						encoder.OpCode (ILOpCode.Newobj);
-						encoder.Token (ctorRef);
-						encoder.OpCode (ILOpCode.Pop);
+						enc.LoadLocalAddress (3); // ref jniRef
+						enc.LoadConstantI4 (1);   // JniObjectReferenceOptions.Copy
+						enc.OpCode (ILOpCode.Newobj);
+						enc.Token (ctorRef);
+						enc.OpCode (ILOpCode.Pop);
 					} else {
-						encoder.LoadLocalAddress (0);
-						encoder.LoadConstantI4 (1); // JniObjectReferenceOptions.Copy
-						encoder.Call (ctorRef);
+						enc.LoadLocalAddress (3); // ref jniRef
+						enc.LoadConstantI4 (1);   // JniObjectReferenceOptions.Copy
+						enc.Call (ctorRef);
 					}
-
-					encoder.MarkLabel (skipLabel);
-					encoder.OpCode (ILOpCode.Ret);
-				},
-				EncodeJniObjectReferenceLocal,
-				useBranches: true);
+				}),
+				EncodeUcoConstructorLocals_JavaInterop);
 		} else {
 			var ctorRef = AddActivationCtorRef (
 				activationCtor.IsOnLeafType ? targetTypeRef : _pe.ResolveTypeRef (activationCtor.DeclaringType));
 
+			// Locals:
+			//   0: JniTransition  (envp)    — out-parameter for BeginMarshalMethod
+			//   1: JniRuntime?    (runtime) — out-parameter for BeginMarshalMethod
+			//   2: Exception      (e)       — catch variable
 			handle = _pe.EmitBody (uco.WrapperName,
 				MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 				encodeSig,
-				encoder => {
-					// Skip activation if the object is being created from managed code
-					var skipLabel = encoder.DefineLabel ();
-					encoder.Call (_withinNewObjectScopeRef);
-					encoder.Branch (ILOpCode.Brtrue, skipLabel);
-
+				(encoder, cfb) => EmitUcoConstructorBodyWithMarshal (encoder, cfb, enc => {
 					if (activationCtor.IsOnLeafType) {
-						encoder.LoadArgument (1); // self
-						encoder.LoadConstantI4 (0); // JniHandleOwnership.DoNotTransfer
-						encoder.OpCode (ILOpCode.Newobj);
-						encoder.Token (ctorRef);
-						encoder.OpCode (ILOpCode.Pop);
+						enc.LoadArgument (1);    // self
+						enc.LoadConstantI4 (0);  // JniHandleOwnership.DoNotTransfer
+						enc.OpCode (ILOpCode.Newobj);
+						enc.Token (ctorRef);
+						enc.OpCode (ILOpCode.Pop);
 					} else {
-						encoder.OpCode (ILOpCode.Ldtoken);
-						encoder.Token (targetTypeRef);
-						encoder.Call (_getTypeFromHandleRef);
-						encoder.Call (_getUninitializedObjectRef);
-						encoder.OpCode (ILOpCode.Castclass);
-						encoder.Token (targetTypeRef);
+						enc.OpCode (ILOpCode.Ldtoken);
+						enc.Token (targetTypeRef);
+						enc.Call (_getTypeFromHandleRef);
+						enc.Call (_getUninitializedObjectRef);
+						enc.OpCode (ILOpCode.Castclass);
+						enc.Token (targetTypeRef);
 
-						encoder.LoadArgument (1); // self
-						encoder.LoadConstantI4 (0); // JniHandleOwnership.DoNotTransfer
-						encoder.Call (ctorRef);
+						enc.LoadArgument (1);    // self
+						enc.LoadConstantI4 (0);  // JniHandleOwnership.DoNotTransfer
+						enc.Call (ctorRef);
 					}
-
-					encoder.MarkLabel (skipLabel);
-					encoder.OpCode (ILOpCode.Ret);
-				},
-				encodeLocals: null,
-				useBranches: true);
+				}),
+				EncodeUcoConstructorLocals_Standard);
 		}
 		AddUnmanagedCallersOnlyAttribute (handle);
 		return handle;
+	}
+
+	/// <summary>
+	/// Emits the common try/catch/finally marshal-method wrapper pattern used by all
+	/// non-generic UCO constructor bodies:
+	/// <code>
+	/// if (!JniEnvironment.BeginMarshalMethod(jnienv, out envp, out runtime)) return;
+	/// try {
+	///     if (!JavaPeerProxy.ShouldSkipActivation(self)) { [emitActivation] }
+	/// } catch (Exception e) {
+	///     runtime?.OnUserUnhandledException(ref envp, e);
+	/// } finally {
+	///     JniEnvironment.EndMarshalMethod(ref envp);
+	/// }
+	/// </code>
+	/// Locals 0 (JniTransition envp) and 1 (JniRuntime? runtime) must be declared by the caller.
+	/// Local 2 (Exception e) must also be declared. Any activation-specific locals start at index 3.
+	/// </summary>
+	void EmitUcoConstructorBodyWithMarshal (InstructionEncoder encoder, ControlFlowBuilder cfb, Action<InstructionEncoder> emitActivation)
+	{
+		var skipLabel = encoder.DefineLabel ();
+		var tryStart = encoder.DefineLabel ();
+		var catchStart = encoder.DefineLabel ();
+		var finallyStart = encoder.DefineLabel ();
+		var afterAll = encoder.DefineLabel ();
+		var endCatch = encoder.DefineLabel ();
+
+		// Preamble: call BeginMarshalMethod; skip everything if it returns false.
+		encoder.LoadArgument (0);      // jnienv
+		encoder.LoadLocalAddress (0);  // out JniTransition (local 0)
+		encoder.LoadLocalAddress (1);  // out JniRuntime? (local 1)
+		encoder.Call (_beginMarshalMethodRef);
+		encoder.Branch (ILOpCode.Brfalse, afterAll);
+
+		// TRY — check ShouldSkipActivation, then run activation code.
+		encoder.MarkLabel (tryStart);
+		encoder.LoadArgument (1);      // self (IntPtr)
+		encoder.Call (_shouldSkipActivationRef);
+		encoder.Branch (ILOpCode.Brtrue, skipLabel);
+
+		emitActivation (encoder);
+
+		encoder.MarkLabel (skipLabel);
+		encoder.Branch (ILOpCode.Leave, afterAll);
+
+		// CATCH (System.Exception e)
+		encoder.MarkLabel (catchStart);
+		encoder.StoreLocal (2);              // e = exception (local 2)
+		encoder.LoadLocal (1);               // load runtime (__r)
+		encoder.Branch (ILOpCode.Brfalse, endCatch);
+		encoder.LoadLocal (1);               // __r for callvirt
+		encoder.LoadLocalAddress (0);        // ref envp
+		encoder.LoadLocal (2);               // e
+		encoder.OpCode (ILOpCode.Callvirt);
+		encoder.Token (_onUserUnhandledExceptionRef);
+		encoder.MarkLabel (endCatch);
+		encoder.Branch (ILOpCode.Leave, afterAll);
+
+		// FINALLY
+		encoder.MarkLabel (finallyStart);
+		encoder.LoadLocalAddress (0);        // ref envp
+		encoder.Call (_endMarshalMethodRef);
+		encoder.OpCode (ILOpCode.Endfinally);
+
+		// AFTER (both finallyEnd and the early-return target)
+		encoder.MarkLabel (afterAll);
+		encoder.OpCode (ILOpCode.Ret);
+
+		// Register exception regions:
+		// Catch region:   try [tryStart, catchStart),  handler [catchStart, finallyStart)
+		// Finally region: try [tryStart, finallyStart), handler [finallyStart, afterAll)
+		cfb.AddCatchRegion (tryStart, catchStart, catchStart, finallyStart, _exceptionRef);
+		cfb.AddFinallyRegion (tryStart, finallyStart, finallyStart, afterAll);
+	}
+
+	/// <summary>
+	/// LOCAL_SIG for UCO constructors without JavaInterop-style activation.
+	/// Locals: 0=JniTransition, 1=JniRuntime, 2=Exception.
+	/// </summary>
+	void EncodeUcoConstructorLocals_Standard (BlobBuilder blob)
+	{
+		blob.WriteByte (0x07); // LOCAL_SIG
+		blob.WriteCompressedInteger (3);
+		// local 0: JniTransition (valuetype)
+		blob.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
+		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniTransitionRef));
+		// local 1: JniRuntime (class)
+		blob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniRuntimeRef));
+		// local 2: Exception (class)
+		blob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_exceptionRef));
+	}
+
+	/// <summary>
+	/// LOCAL_SIG for UCO constructors with JavaInterop-style activation.
+	/// Locals: 0=JniTransition, 1=JniRuntime, 2=Exception, 3=JniObjectReference.
+	/// </summary>
+	void EncodeUcoConstructorLocals_JavaInterop (BlobBuilder blob)
+	{
+		blob.WriteByte (0x07); // LOCAL_SIG
+		blob.WriteCompressedInteger (4);
+		// local 0: JniTransition (valuetype)
+		blob.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
+		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniTransitionRef));
+		// local 1: JniRuntime (class)
+		blob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniRuntimeRef));
+		// local 2: Exception (class)
+		blob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_exceptionRef));
+		// local 3: JniObjectReference (valuetype)
+		blob.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
+		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniObjectReferenceRef));
 	}
 
 	void EmitRegisterNatives (List<NativeRegistrationData> registrations,

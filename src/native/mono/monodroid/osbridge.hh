@@ -87,6 +87,11 @@ namespace xamarin::android::internal
 			return gc_weak_gref_count;
 		}
 
+		int _monodroid_gref_inc ();
+		int _monodroid_gref_dec ();
+		int _monodroid_weak_gref_inc ();
+		int _monodroid_weak_gref_dec ();
+
 		const MonoJavaGCBridgeType& get_java_gc_bridge_type (uint32_t index)
 		{
 			if (index < NUM_XA_GC_BRIDGE_TYPES)
@@ -149,8 +154,6 @@ namespace xamarin::android::internal
 		MonoJavaGCBridgeInfo* get_gc_bridge_info_for_class (MonoClass *klass);
 		MonoJavaGCBridgeInfo* get_gc_bridge_info_for_object (MonoObject *object);
 		char get_object_ref_type (JNIEnv *env, void *handle);
-		int _monodroid_gref_inc ();
-		int _monodroid_gref_dec ();
 		char* _get_stack_trace_line_end (char *m);
 		void _write_stack_trace (FILE *to, char *from, LogCategories = LOG_NONE);
 		mono_bool take_global_ref_jni (JNIEnv *env, MonoObject *obj);
