@@ -155,4 +155,42 @@ namespace UserApp
 		{
 		}
 	}
+
+	// [Export] shapes that the legacy JCW emitter (CecilImporter.GetJniSignature)
+	// cannot encode but that the trimmable scanner is expected to handle. These
+	// types are excluded from legacy↔new comparison in ScannerComparisonTests
+	// and validated by ScannerExportShapesTests via the new scanner only.
+	public enum ExportSampleEnum { Zero, One, Two }
+	public enum ExportSampleByteEnum : byte { Red, Green, Blue }
+	public enum ExportSampleLongEnum : long { Zero = 0L, Big = long.MaxValue }
+
+	public class ExportEnumShapes : Java.Lang.Object
+	{
+		[Export ("echoEnum")]
+		public ExportSampleEnum EchoEnum (ExportSampleEnum value) => value;
+
+		[Export ("echoByteEnum")]
+		public ExportSampleByteEnum EchoByteEnum (ExportSampleByteEnum value) => value;
+
+		[Export ("echoLongEnum")]
+		public ExportSampleLongEnum EchoLongEnum (ExportSampleLongEnum value) => value;
+	}
+
+	public class ExportCharSequenceShapes : Java.Lang.Object
+	{
+		[Export ("echoCharSequence")]
+		public Java.Lang.ICharSequence? EchoCharSequence (Java.Lang.ICharSequence? value) => value;
+	}
+
+	public class ExportCollectionShapes : Java.Lang.Object
+	{
+		[Export ("echoList")]
+		public System.Collections.IList? EchoList (System.Collections.IList? value) => value;
+
+		[Export ("echoMap")]
+		public System.Collections.IDictionary? EchoMap (System.Collections.IDictionary? value) => value;
+
+		[Export ("echoCollection")]
+		public System.Collections.ICollection? EchoCollection (System.Collections.ICollection? value) => value;
+	}
 }
