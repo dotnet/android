@@ -306,7 +306,7 @@ public sealed record JavaConstructorInfo
 	/// Empty for `()V`. Used by the emitter to build the member ref signature for
 	/// the user ctor call and to marshal each JNI arg into its managed type.
 	/// </summary>
-	public IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = Array.Empty<TypeRefData> ();
+	public IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = [];
 
 	/// <summary>
 	/// For [Export] constructors: super constructor arguments string.
