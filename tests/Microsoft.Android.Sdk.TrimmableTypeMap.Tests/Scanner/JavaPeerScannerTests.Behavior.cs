@@ -115,6 +115,28 @@ public partial class JavaPeerScannerTests
 		Assert.True (method.ManagedReturnType.IsEnum, "enum return type should be tagged IsEnum=true");
 	}
 
+	[Theory]
+	[InlineData ("echoCharSequence", "(Ljava/lang/CharSequence;)Ljava/lang/CharSequence;")]
+	public void Scan_ExportMethod_CharSequenceMapsToCanonicalJavaType (string jniName, string expectedSig)
+	{
+		var method = FindFixtureByJavaName ("my/app/ExportCharSequenceShapes")
+			.MarshalMethods.FirstOrDefault (m => m.JniName == jniName);
+		Assert.NotNull (method);
+		Assert.Equal (expectedSig, method.JniSignature);
+	}
+
+	[Theory]
+	[InlineData ("echoList",       "(Ljava/util/List;)Ljava/util/List;")]
+	[InlineData ("echoMap",        "(Ljava/util/Map;)Ljava/util/Map;")]
+	[InlineData ("echoCollection", "(Ljava/util/Collection;)Ljava/util/Collection;")]
+	public void Scan_ExportMethod_NonGenericCollectionsMapToCanonicalJavaTypes (string jniName, string expectedSig)
+	{
+		var method = FindFixtureByJavaName ("my/app/ExportCollectionShapes")
+			.MarshalMethods.FirstOrDefault (m => m.JniName == jniName);
+		Assert.NotNull (method);
+		Assert.Equal (expectedSig, method.JniSignature);
+	}
+
 	[Fact]
 	public void Scan_ExportMethod_CapturesPreciseManagedTypeMetadata ()
 	{

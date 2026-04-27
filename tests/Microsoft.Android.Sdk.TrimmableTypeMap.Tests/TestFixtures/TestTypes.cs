@@ -28,6 +28,12 @@ namespace Java.Lang
 	{
 		protected Exception (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 	}
+
+	// Mirrors Mono.Android's Java.Lang.ICharSequence: an interface without a
+	// [Register] attribute. The trimmable typemap scanner / emitter must
+	// special-case it to map onto java/lang/CharSequence and dispatch via
+	// Android.Runtime.CharSequence.ToLocalJniHandle.
+	public interface ICharSequence { }
 }
 
 namespace Android.App
@@ -372,6 +378,37 @@ namespace MyApp
 
 		[Java.Interop.Export ("echoLongEnum")]
 		public SampleLongEnum EchoLongEnum (SampleLongEnum value) => value;
+	}
+
+	/// <summary>
+	/// Has [Export] methods that take and return ICharSequence values. Must
+	/// dispatch through Android.Runtime.CharSequence.ToLocalJniHandle (mirrors
+	/// legacy Mono.Android.Export behaviour) — not the generic IJavaObject
+	/// path used for other peers.
+	/// </summary>
+	[Register ("my/app/ExportCharSequenceShapes")]
+	public class ExportCharSequenceShapes : Java.Lang.Object
+	{
+		[Java.Interop.Export ("echoCharSequence")]
+		public Java.Lang.ICharSequence? EchoCharSequence (Java.Lang.ICharSequence? value) => value;
+	}
+
+	/// <summary>
+	/// Has [Export] methods that take and return non-generic collection types
+	/// (IList, IDictionary, ICollection). Each must dispatch through the
+	/// matching JavaList/JavaDictionary/JavaCollection.ToLocalJniHandle helper.
+	/// </summary>
+	[Register ("my/app/ExportCollectionShapes")]
+	public class ExportCollectionShapes : Java.Lang.Object
+	{
+		[Java.Interop.Export ("echoList")]
+		public System.Collections.IList? EchoList (System.Collections.IList? value) => value;
+
+		[Java.Interop.Export ("echoMap")]
+		public System.Collections.IDictionary? EchoMap (System.Collections.IDictionary? value) => value;
+
+		[Java.Interop.Export ("echoCollection")]
+		public System.Collections.ICollection? EchoCollection (System.Collections.ICollection? value) => value;
 	}
 
 	/// <summary>

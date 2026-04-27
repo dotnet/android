@@ -54,6 +54,22 @@ sealed class ExportMethodDispatchEmitterContext
 			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("XmlReaderPullParser"));
 		var xmlReaderResourceParserRef = metadata.AddTypeReference (pe.MonoAndroidRef,
 			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("XmlReaderResourceParser"));
+		var charSequenceRef = metadata.AddTypeReference (pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("CharSequence"));
+		var iCharSequenceRef = metadata.AddTypeReference (pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Java.Lang"), metadata.GetOrAddString ("ICharSequence"));
+		var javaListRef = metadata.AddTypeReference (pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("JavaList"));
+		var javaDictionaryRef = metadata.AddTypeReference (pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("JavaDictionary"));
+		var javaCollectionRef = metadata.AddTypeReference (pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("JavaCollection"));
+		var systemCollectionsIListRef = metadata.AddTypeReference (pe.SystemRuntimeRef,
+			metadata.GetOrAddString ("System.Collections"), metadata.GetOrAddString ("IList"));
+		var systemCollectionsIDictionaryRef = metadata.AddTypeReference (pe.SystemRuntimeRef,
+			metadata.GetOrAddString ("System.Collections"), metadata.GetOrAddString ("IDictionary"));
+		var systemCollectionsICollectionRef = metadata.AddTypeReference (pe.SystemRuntimeRef,
+			metadata.GetOrAddString ("System.Collections"), metadata.GetOrAddString ("ICollection"));
 
 		return new ExportMethodDispatchEmitterContext {
 			IJavaObjectRef = iJavaObjectRef,
@@ -148,6 +164,22 @@ sealed class ExportMethodDispatchEmitterContext
 				sig => sig.MethodSignature ().Parameters (1,
 					rt => rt.Type ().IntPtr (),
 					p => p.AddParameter ().Type ().Type (systemXmlReaderRef, false))),
+			CharSequenceToLocalJniHandleRef = pe.AddMemberRef (charSequenceRef, "ToLocalJniHandle",
+				sig => sig.MethodSignature ().Parameters (1,
+					rt => rt.Type ().IntPtr (),
+					p => p.AddParameter ().Type ().Type (iCharSequenceRef, false))),
+			JavaListToLocalJniHandleRef = pe.AddMemberRef (javaListRef, "ToLocalJniHandle",
+				sig => sig.MethodSignature ().Parameters (1,
+					rt => rt.Type ().IntPtr (),
+					p => p.AddParameter ().Type ().Type (systemCollectionsIListRef, false))),
+			JavaDictionaryToLocalJniHandleRef = pe.AddMemberRef (javaDictionaryRef, "ToLocalJniHandle",
+				sig => sig.MethodSignature ().Parameters (1,
+					rt => rt.Type ().IntPtr (),
+					p => p.AddParameter ().Type ().Type (systemCollectionsIDictionaryRef, false))),
+			JavaCollectionToLocalJniHandleRef = pe.AddMemberRef (javaCollectionRef, "ToLocalJniHandle",
+				sig => sig.MethodSignature ().Parameters (1,
+					rt => rt.Type ().IntPtr (),
+					p => p.AddParameter ().Type ().Type (systemCollectionsICollectionRef, false))),
 			UcoAttrCtorRef = ucoAttrCtorRef,
 			UcoAttrBlobHandle = ucoAttrBlobHandle,
 			JniTransitionRef = jniTransitionRef,
@@ -176,6 +208,10 @@ sealed class ExportMethodDispatchEmitterContext
 	public required MemberReferenceHandle XmlResourceParserReaderFromJniHandleRef { get; init; }
 	public required MemberReferenceHandle XmlReaderPullParserToLocalJniHandleRef { get; init; }
 	public required MemberReferenceHandle XmlReaderResourceParserToLocalJniHandleRef { get; init; }
+	public required MemberReferenceHandle CharSequenceToLocalJniHandleRef { get; init; }
+	public required MemberReferenceHandle JavaListToLocalJniHandleRef { get; init; }
+	public required MemberReferenceHandle JavaDictionaryToLocalJniHandleRef { get; init; }
+	public required MemberReferenceHandle JavaCollectionToLocalJniHandleRef { get; init; }
 	public required MemberReferenceHandle UcoAttrCtorRef { get; init; }
 
 	public required BlobHandle UcoAttrBlobHandle { get; init; }

@@ -1298,6 +1298,22 @@ public sealed class JavaPeerScanner : IDisposable
 			return resolved;
 		}
 
+		// Well-known interface types that legacy CallbackCode mapped explicitly
+		// to their canonical Java type. ICharSequence is in Mono.Android but is
+		// not annotated with [Register]; the non-generic collection interfaces
+		// live in System.Collections (no Java peer at all) and are wrapped at
+		// runtime by JavaList/JavaDictionary/JavaCollection.
+		var wellKnown = managedType.ManagedTypeName switch {
+			"Java.Lang.ICharSequence"          => "Ljava/lang/CharSequence;",
+			"System.Collections.IList"         => "Ljava/util/List;",
+			"System.Collections.IDictionary"   => "Ljava/util/Map;",
+			"System.Collections.ICollection"   => "Ljava/util/Collection;",
+			_ => null,
+		};
+		if (wellKnown is not null) {
+			return wellKnown;
+		}
+
 		// Enum parameters use their underlying primitive JNI ABI (matches legacy
 		// CallbackCode behavior).
 		var enumDescriptor = TryResolveEnumUnderlyingDescriptor (managedType.ManagedTypeName);

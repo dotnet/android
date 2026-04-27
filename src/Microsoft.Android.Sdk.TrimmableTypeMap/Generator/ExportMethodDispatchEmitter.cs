@@ -394,6 +394,29 @@ sealed class ExportMethodDispatchEmitter
 			return;
 		}
 
+		// Reference-type returns that need dedicated marshalling. Mirrors the
+		// SymbolKind dispatch in legacy Mono.Android.Export/CallbackCode.cs:
+		//   - CharSequence.ToLocalJniHandle handles 'string'-as-ICharSequence,
+		//     not just IJavaObject-derived peers.
+		//   - JavaList/JavaDictionary/JavaCollection.ToLocalJniHandle wrap raw
+		//     managed collections without a Java peer.
+		if (managedReturnTypeName == "Java.Lang.ICharSequence") {
+			encoder.Call (_context.CharSequenceToLocalJniHandleRef);
+			return;
+		}
+		if (managedReturnTypeName == "System.Collections.IList") {
+			encoder.Call (_context.JavaListToLocalJniHandleRef);
+			return;
+		}
+		if (managedReturnTypeName == "System.Collections.IDictionary") {
+			encoder.Call (_context.JavaDictionaryToLocalJniHandleRef);
+			return;
+		}
+		if (managedReturnTypeName == "System.Collections.ICollection") {
+			encoder.Call (_context.JavaCollectionToLocalJniHandleRef);
+			return;
+		}
+
 		encoder.OpCode (ILOpCode.Castclass);
 		encoder.Token (_context.IJavaObjectRef);
 		encoder.Call (_context.JniEnvToLocalJniHandleRef);
