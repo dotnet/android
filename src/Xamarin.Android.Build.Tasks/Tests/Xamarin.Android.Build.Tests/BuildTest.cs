@@ -1704,7 +1704,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void XA4313 ([Values ("OpenTK-1.0")] string reference, [Values] AndroidRuntime runtime)
+		public void XA4313 ([Values ("OpenTK-1.0", "Xamarin.Android.NUnitLite")] string reference, [Values] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {

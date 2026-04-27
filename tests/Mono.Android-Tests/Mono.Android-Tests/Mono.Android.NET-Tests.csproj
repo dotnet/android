@@ -146,7 +146,7 @@
     <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerTests.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerNegotiateAuthenticationTests.cs" />
     <Compile Include="Xamarin.Android.Net\HttpClientIntegrationTests.cs" />
-    <Compile Include="Xamarin.Android.RuntimeTests\MainActivity.cs" />
+    <Compile Include="Xamarin.Android.RuntimeTests\MyFragment.cs" />
     <Compile Include="Xamarin.Android.RuntimeTests\MyIntent.cs" />
     <Compile Include="Xamarin.Android.RuntimeTests\NonJavaObject.cs" />
     <Compile Include="Xamarin.Android.RuntimeTests\NUnitInstrumentation.cs" />
@@ -187,9 +187,6 @@
     <AndroidResource Include="Resources\layout\FragmentFixup.axml">
       <Link>Resources\layout\FragmentFixup.axml</Link>
     </AndroidResource>
-    <AndroidBoundLayout Include="Resources\layout\Main.axml">
-      <Link>Resources\layout\Main.axml</Link>
-    </AndroidBoundLayout>
   </ItemGroup>
 
   <ItemGroup>
