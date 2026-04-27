@@ -1604,29 +1604,49 @@ public sealed class JavaPeerScanner : IDisposable
 
 	static List<JavaConstructorInfo> BuildJavaConstructors (List<MarshalMethodInfo> marshalMethods, TypeDefinition typeDef, AssemblyIndex index)
 	{
-		bool hasParameterlessManagedCtor = HasParameterlessManagedCtor (typeDef, index);
 		var ctors = new List<JavaConstructorInfo> ();
 		int ctorIndex = 0;
 		foreach (var mm in marshalMethods) {
 			if (!mm.IsConstructor) {
 				continue;
 			}
+			// Try to find a managed ctor whose signature matches the JNI ctor.
+			// Currently the trimmable user-ctor UCO codegen only supports ctors whose
+			// JNI args are all object references; primitive args fall back to the
+			// legacy activation-ctor `(IntPtr, JniHandleOwnership)` path.
+			var managedParams = TryFindMatchingManagedCtorParams (typeDef, mm.JniSignature, index);
 			ctors.Add (new JavaConstructorInfo {
 				JniSignature = mm.JniSignature,
 				ConstructorIndex = ctorIndex,
 				SuperArgumentsString = mm.SuperArgumentsString,
-				// Only "()V" is supported by the new "call user-visible ctor" UCO codegen.
-				// Parameterized ctors fall back to the legacy activation-ctor path until
-				// we add JNI-arg marshalling for non-()V signatures.
-				HasMatchingManagedCtor = mm.JniSignature == "()V" && hasParameterlessManagedCtor,
+				HasMatchingManagedCtor = managedParams != null,
+				ManagedParameterTypes = managedParams ?? (IReadOnlyList<TypeRefData>) Array.Empty<TypeRefData> (),
 			});
 			ctorIndex++;
 		}
 		return ctors;
 	}
 
-	static bool HasParameterlessManagedCtor (TypeDefinition typeDef, AssemblyIndex index)
+	/// <summary>
+	/// Attempts to find a managed instance constructor on <paramref name="typeDef"/>
+	/// whose parameter list is compatible with the supplied JNI signature, and
+	/// returns its managed parameter types. Returns <see langword="null"/> when
+	/// no compatible ctor exists or when the signature contains JNI param kinds
+	/// that the trimmable user-ctor codegen does not yet support (primitives).
+	/// </summary>
+	static IReadOnlyList<TypeRefData>? TryFindMatchingManagedCtorParams (TypeDefinition typeDef, string jniSignature, AssemblyIndex index)
 	{
+		var jniParams = JniSignatureHelper.ParseParameterTypes (jniSignature);
+		// Only `()V` and signatures with all-Object JNI params are currently
+		// supported by the trimmable user-ctor UCO codegen. Primitive args
+		// (Z/B/C/S/I/J/F/D) require additional marshalling work — fall back to
+		// the legacy activation-ctor path until that's implemented.
+		foreach (var kind in jniParams) {
+			if (kind != JniParamKind.Object) {
+				return null;
+			}
+		}
+
 		foreach (var methodHandle in typeDef.GetMethods ()) {
 			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
 			if ((methodDef.Attributes & MethodAttributes.Static) != 0) {
@@ -1636,12 +1656,42 @@ public sealed class JavaPeerScanner : IDisposable
 			if (name != ".ctor") {
 				continue;
 			}
-			var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
-			if (sig.ParameterTypes.Length == 0) {
-				return true;
+			var sig = methodDef.DecodeSignature (TypeRefSignatureTypeProvider.Instance, genericContext: index);
+			if (sig.ParameterTypes.Length != jniParams.Count) {
+				continue;
 			}
+			// All JNI params here are Object kind; require the managed param to
+			// be a non-primitive reference type. We don't try to verify the exact
+			// managed type matches the JNI L...; descriptor — the JCW marshal
+			// method is the source of truth for what the Java side will pass.
+			bool allRefs = true;
+			foreach (var pt in sig.ParameterTypes) {
+				if (IsPrimitiveTypeRef (pt)) {
+					allRefs = false;
+					break;
+				}
+			}
+			if (!allRefs) {
+				continue;
+			}
+			var result = new TypeRefData [sig.ParameterTypes.Length];
+			for (int p = 0; p < result.Length; p++) {
+				result [p] = sig.ParameterTypes [p];
+			}
+			return result;
 		}
-		return false;
+		return null;
+	}
+
+	static bool IsPrimitiveTypeRef (TypeRefData t)
+	{
+		return t.ManagedTypeName switch {
+			"System.Boolean" or "System.Byte" or "System.SByte" or
+			"System.Char" or "System.Int16" or "System.UInt16" or
+			"System.Int32" or "System.UInt32" or "System.Int64" or "System.UInt64" or
+			"System.Single" or "System.Double" or "System.IntPtr" or "System.UIntPtr" => true,
+			_ => false,
+		};
 	}
 
 	/// <summary>

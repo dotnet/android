@@ -275,6 +275,15 @@ sealed record UcoConstructorData
 	/// a (potentially non-existent) user ctor.
 	/// </summary>
 	public required bool HasMatchingManagedCtor { get; init; }
+
+	/// <summary>
+	/// Managed parameter types of the matching user-visible ctor, in declaration
+	/// order. Empty for `()V`. Non-empty when <see cref="HasMatchingManagedCtor"/>
+	/// is <see langword="true"/> and the ctor takes parameters; the emitter uses
+	/// this to build the member ref signature and to marshal each JNI argument
+	/// to the corresponding managed type before calling the user ctor.
+	/// </summary>
+	public IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = Array.Empty<TypeRefData> ();
 }
 
 /// <summary>

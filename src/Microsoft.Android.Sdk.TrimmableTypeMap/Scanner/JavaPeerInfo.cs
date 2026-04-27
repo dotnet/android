@@ -294,6 +294,14 @@ public sealed record JavaConstructorInfo
 	public bool HasMatchingManagedCtor { get; init; }
 
 	/// <summary>
+	/// Managed parameter types of the matching user-visible ctor, captured by the
+	/// scanner when <see cref="HasMatchingManagedCtor"/> is <see langword="true"/>.
+	/// Empty for `()V`. Used by the emitter to build the member ref signature for
+	/// the user ctor call and to marshal each JNI arg into its managed type.
+	/// </summary>
+	public IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = Array.Empty<TypeRefData> ();
+
+	/// <summary>
 	/// For [Export] constructors: super constructor arguments string.
 	/// Null for [Register] constructors.
 	/// </summary>
