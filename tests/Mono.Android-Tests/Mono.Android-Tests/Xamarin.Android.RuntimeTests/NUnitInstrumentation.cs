@@ -85,9 +85,6 @@ namespace Xamarin.Android.RuntimeTests
                     // Throwable subclass registration
                     "Java.InteropTests.JnienvTest.ActivatedDirectThrowableSubclassesShouldBeRegistered",
 
-                    // Typemap doesn't resolve most-derived type
-                    "Java.LangTests.ObjectTest.GetObject_ReturnsMostDerivedType",
-
                     // Instance identity after JNI round-trip
                     "Java.LangTests.ObjectTest.JnienvCreateInstance_RegistersMultipleInstances",
 
