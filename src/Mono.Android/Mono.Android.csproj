@@ -61,6 +61,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" />
+    <!-- Compile-only reference: the real _Microsoft.Android.TypeMaps.dll is generated at app
+         build time by the trimmable typemap generator and replaces this ref assembly. -->
+    <ProjectReference Include="..\Microsoft.Android.TypeMaps.Ref\Microsoft.Android.TypeMaps.Ref.csproj">
+      <Private>false</Private>
+      <PrivateAssets>all</PrivateAssets>
+    </ProjectReference>
     <EmbeddedResource Include="ILLink/ILLink.LinkAttributes.xml">
       <LogicalName>ILLink.LinkAttributes.xml</LogicalName>
     </EmbeddedResource>

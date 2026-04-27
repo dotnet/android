@@ -217,9 +217,10 @@ namespace Xamarin.Android.Build.Tests
 				aar.AssertContainsEntry (aarPath, "res/layout/mylayout.xml");
 				aar.AssertContainsEntry (aarPath, "res/raw/bar.txt");
 				aar.AssertContainsEntry (aarPath, ".net/__res_name_case_map.txt");
-				aar.AssertContainsEntry (aarPath, ".net/env/190E30B3D205731E.env");
-				aar.AssertContainsEntry (aarPath, ".net/env/2CBDAB7FEEA94B19.env");
-				aar.AssertContainsEntry (aarPath, "libs/A1AFA985571E728E.jar");
+				int envCount = aar.Count (e => e.FullName.StartsWith (".net/env/", StringComparison.Ordinal) && e.FullName.EndsWith (".env", StringComparison.Ordinal));
+				Assert.AreEqual (2, envCount, $"{aarPath} should contain 2 .env files under .net/env/");
+				int jarCount = aar.Count (e => e.FullName.StartsWith ("libs/", StringComparison.Ordinal) && e.FullName.EndsWith (".jar", StringComparison.Ordinal));
+				Assert.AreEqual (2, jarCount, $"{aarPath} should contain 2 .jar files under libs/");
 				aar.AssertContainsEntry (aarPath, $"libs/{projectJarHash}.jar");
 				aar.AssertContainsEntry (aarPath, "jni/arm64-v8a/libfoo.so");
 				aar.AssertContainsEntry (aarPath, "jni/x86_64/libfoo.so");
