@@ -613,8 +613,9 @@ namespace Microsoft.Android.Build.Tasks
 			try {
 				File.Delete (filename);
 			} catch (Exception ex) {
-				var helper = log as TaskLoggingHelper;
-				helper.LogErrorFromException (ex);
+				if (log is TaskLoggingHelper helper) {
+					helper.LogErrorFromException (ex);
+				}
 			}
 		}
 

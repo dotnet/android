@@ -726,5 +726,21 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			var expected = BitConverter.ToString (bytes).Replace ("-", string.Empty);
 			Assert.AreEqual (expected, Files.ToHexString (bytes));
 		}
+
+		[Test]
+		public void DeleteFile_NullLog_DoesNotThrow ()
+		{
+			var path = Path.Combine (tempDir, "directory-instead-of-file");
+			Directory.CreateDirectory (path);
+			Assert.DoesNotThrow (() => Files.DeleteFile (path, null));
+		}
+
+		[Test]
+		public void DeleteFile_NonTaskLoggingHelperLog_DoesNotThrow ()
+		{
+			var path = Path.Combine (tempDir, "directory-instead-of-file-nontasklog");
+			Directory.CreateDirectory (path);
+			Assert.DoesNotThrow (() => Files.DeleteFile (path, "not a TaskLoggingHelper"));
+		}
 	}
 }
