@@ -4,7 +4,6 @@ parameters:
   xaSourcePath: $(System.DefaultWorkingDirectory)
   testName: ""
   project: ""
-  testResultsFiles: ""
   extraBuildArgs: ""
   testResultsFormat: VSTest
   artifactSource: ""
@@ -21,6 +20,8 @@ steps:
     project: ${{ parameters.project }}
     arguments: >-
       --no-build
+      --logger "trx;LogFileName=${{ parameters.testName }}.trx"
+      --results-directory ${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/TestResults
       -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog
       -c ${{ parameters.configuration }} ${{ parameters.extraBuildArgs }}
     condition: ${{ parameters.condition }}
@@ -39,9 +40,9 @@ steps:
   displayName: publish ${{ parameters.testName }} results
   inputs:
     testResultsFormat: ${{ parameters.testResultsFormat }}
-    testResultsFiles: ${{ parameters.testResultsFiles }}
+    testResultsFiles: ${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/TestResults/${{ parameters.testName }}.trx
     testRunTitle: ${{ parameters.testName }}
-  condition: and(${{ parameters.condition }}, ne('${{ parameters.testResultsFiles }}', ''))
+  condition: ${{ parameters.condition }}
 
 - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
   parameters:
