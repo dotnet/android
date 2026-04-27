@@ -267,7 +267,7 @@ public class ModelBuilderTests : FixtureTestBase
 		[InlineData ("MyApp.UnregisteredExporter")]
 		[InlineData ("MyApp.UnregisteredHelper")]
 		[InlineData ("MyApp.DerivedFromComponentBase")]
-		public void Build_Crc64RenamedPeer_StoresFinalJavaNameOnProxy (string managedName)
+		public void Build_HashedRenamedPeer_StoresFinalJavaNameOnProxy (string managedName)
 		{
 			var peer = FindFixtureByManagedName (managedName);
 			Assert.StartsWith ("crc64", peer.JavaName);

@@ -148,23 +148,23 @@ class ManifestGenerator
 
 	/// <summary>
 	/// Manifest templates may use compat JNI names (e.g., "android.apptests.App")
-	/// but the trimmable path generates JCWs with CRC-based names (e.g., "crc64.../App").
+	/// but the trimmable path generates JCWs with hashed package names (e.g., "crc64.../App").
 	/// This method rewrites any compat name references to the actual JCW name so the
 	/// Android runtime can find the class.
 	/// </summary>
 	void RewriteCompatNames (XElement manifest, IReadOnlyList<JavaPeerInfo> allPeers)
 	{
-		// Build mapping: fully-qualified compat Java name → CRC Java name
-		var compatToCrc = new Dictionary<string, string> (allPeers.Count, StringComparer.Ordinal);
+		// Build mapping: fully-qualified compat Java name → hashed Java name
+		var compatToHashed = new Dictionary<string, string> (allPeers.Count, StringComparer.Ordinal);
 		foreach (var peer in allPeers) {
 			string javaName = JniSignatureHelper.JniNameToJavaName (peer.JavaName);
 			string compatName = JniSignatureHelper.JniNameToJavaName (peer.CompatJniName);
 			if (javaName != compatName) {
-				compatToCrc [compatName] = javaName;
+				compatToHashed [compatName] = javaName;
 			}
 		}
 
-		if (compatToCrc.Count == 0) {
+		if (compatToHashed.Count == 0) {
 			return;
 		}
 
@@ -173,7 +173,7 @@ class ManifestGenerator
 		//   - fully qualified ("com.example.app.MainActivity")
 		//   - relative to the manifest package, starting with '.' (".MainActivity")
 		//   - bare, with no '.' at all ("MainActivity"), also relative to the package
-		// Resolve to the fully-qualified form before the lookup, then write the CRC
+		// Resolve to the fully-qualified form before the lookup, then write the hashed
 		// name back so duplicate detection later in the pipeline works correctly.
 		var packageName = (string?) manifest.Attribute ("package") ?? "";
 
@@ -187,8 +187,8 @@ class ManifestGenerator
 				continue;
 			}
 			var resolved = ManifestNameResolver.Resolve (nameAttr.Value, packageName);
-			if (compatToCrc.TryGetValue (resolved, out var crcName)) {
-				nameAttr.Value = crcName;
+			if (compatToHashed.TryGetValue (resolved, out var hashedName)) {
+				nameAttr.Value = hashedName;
 			}
 		}
 	}

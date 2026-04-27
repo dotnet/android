@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
+using Java.Interop.Tools.JavaCallableWrappers;
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
 /// <summary>
@@ -16,8 +17,19 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// </summary>
 public sealed class JavaPeerScanner : IDisposable
 {
+	enum HashedPackageNamingPolicy {
+		Crc64,
+		LowercaseCrc64,
+	}
+
 	readonly Dictionary<string, AssemblyIndex> assemblyCache = new (StringComparer.Ordinal);
 	readonly Dictionary<(string typeName, string assemblyName), ActivationCtorInfo> activationCtorCache = new ();
+	readonly HashedPackageNamingPolicy packageNamingPolicy;
+
+	public JavaPeerScanner (string? packageNamingPolicy = null)
+	{
+		this.packageNamingPolicy = ParsePackageNamingPolicy (packageNamingPolicy);
+	}
 
 	/// <summary>
 	/// Resolves a type name + assembly name to a TypeDefinitionHandle + AssemblyIndex.
@@ -913,7 +925,7 @@ public sealed class JavaPeerScanner : IDisposable
 			return registerJniName;
 		}
 
-		// Fall back to already-scanned results (component-attributed or CRC64-computed peers)
+		// Fall back to already-scanned results (component-attributed or hashed-package peers)
 		if (results.TryGetValue (baseTypeName, out var basePeer)) {
 			return basePeer.JavaName;
 		}
@@ -1331,12 +1343,12 @@ public sealed class JavaPeerScanner : IDisposable
 
 	/// <summary>
 	/// Compute both JNI name and compat JNI name for a type without [Register] or component Name.
-	/// JNI name uses CRC64 hash of "namespace:assemblyName" for the package.
+	/// JNI name uses the selected package naming policy hash for "namespace:assemblyName".
 	/// Compat JNI name uses the raw managed namespace (lowercased).
 	/// If a declaring type has [Register], its JNI name is used as prefix for both.
 	/// Generic backticks are replaced with _.
 	/// </summary>
-	static (string jniName, string compatJniName) ComputeAutoJniNames (TypeDefinition typeDef, AssemblyIndex index)
+	(string jniName, string compatJniName) ComputeAutoJniNames (TypeDefinition typeDef, AssemblyIndex index)
 	{
 		var (typeName, parentJniName, ns) = ComputeTypeNameParts (typeDef, index);
 
@@ -1345,7 +1357,7 @@ public sealed class JavaPeerScanner : IDisposable
 			return (name, name);
 		}
 
-		var packageName = GetCrc64PackageName (ns, index.AssemblyName);
+		var packageName = GetHashedPackageName (ns, index.AssemblyName);
 		var jniName = $"{packageName}/{typeName}";
 
 		string compatName = ns.Length == 0
@@ -1360,7 +1372,7 @@ public sealed class JavaPeerScanner : IDisposable
 	/// registered JNI name or the outermost namespace.
 	/// Matches JavaNativeTypeManager.ToJniName behavior: walks up declaring types
 	/// and if a parent has [Register] or a component attribute JNI name, uses that
-	/// as prefix instead of computing CRC64 from the namespace.
+	/// as prefix instead of computing hashed package names from the namespace.
 	/// </summary>
 	static (string typeName, string? parentJniName, string ns) ComputeTypeNameParts (TypeDefinition typeDef, AssemblyIndex index)
 	{
@@ -1465,16 +1477,26 @@ public sealed class JavaPeerScanner : IDisposable
 		declaringAssemblyName = nextComma >= 0 ? rest.Substring (0, nextComma).Trim () : rest.Trim ();
 	}
 
-	static string GetCrc64PackageName (string ns, string assemblyName)
+	string GetHashedPackageName (string ns, string assemblyName)
 	{
 		// Only Mono.Android preserves the namespace directly
 		if (assemblyName == "Mono.Android") {
 			return ns.ToLowerInvariant ().Replace ('.', '/');
 		}
 
-		var data = System.Text.Encoding.UTF8.GetBytes ($"{ns}:{assemblyName}");
-		var hash = System.IO.Hashing.Crc64.Hash (data);
-		return $"crc64{BitConverter.ToString (hash).Replace ("-", "").ToLowerInvariant ()}";
+		return packageNamingPolicy switch {
+			HashedPackageNamingPolicy.LowercaseCrc64 => "crc64" + ScannerHashingHelper.ToLegacyCrc64 (ns, assemblyName),
+			HashedPackageNamingPolicy.Crc64 => "crc64" + ScannerHashingHelper.ToCrc64 (ns, assemblyName),
+			_ => throw new InvalidOperationException ($"Unsupported package naming policy: {packageNamingPolicy}"),
+		};
+	}
+
+	static HashedPackageNamingPolicy ParsePackageNamingPolicy (string? packageNamingPolicy)
+	{
+		if (string.Equals (packageNamingPolicy, "LowercaseCrc64", StringComparison.OrdinalIgnoreCase)) {
+			return HashedPackageNamingPolicy.LowercaseCrc64;
+		}
+		return HashedPackageNamingPolicy.Crc64;
 	}
 
 	static string ExtractNamespace (string fullName)

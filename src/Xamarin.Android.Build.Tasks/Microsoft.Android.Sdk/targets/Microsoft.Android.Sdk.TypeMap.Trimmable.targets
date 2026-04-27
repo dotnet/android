@@ -11,6 +11,8 @@
 
   <PropertyGroup>
     <_TypeMapAssemblyName>_Microsoft.Android.TypeMaps</_TypeMapAssemblyName>
+    <_TrimmableTypeMapPackageNamingPolicy Condition=" '$(_AndroidPackageNamingPolicySetByUser)' == 'true' ">$(AndroidPackageNamingPolicy)</_TrimmableTypeMapPackageNamingPolicy>
+    <_TrimmableTypeMapPackageNamingPolicy Condition=" '$(_TrimmableTypeMapPackageNamingPolicy)' == '' ">Crc64</_TrimmableTypeMapPackageNamingPolicy>
     <!-- Use the outer IntermediateOutputPath when available (inner per-RID builds set
          _OuterIntermediateOutputPath) so that generated manifests/JCWs are written
          where the packaging phase expects them. -->
@@ -73,6 +75,7 @@
         Debug="$(AndroidIncludeDebugSymbols)"
         NeedsInternet="$(AndroidNeedsInternetPermission)"
         EmbedAssemblies="$(EmbedAssembliesIntoApk)"
+        PackageNamingPolicy="$(_TrimmableTypeMapPackageNamingPolicy)"
         ManifestPlaceholders="$(AndroidManifestPlaceholders)"
         CheckedBuild="$(_AndroidCheckedBuild)"
         ApplicationJavaClass="$(AndroidApplicationJavaClass)"

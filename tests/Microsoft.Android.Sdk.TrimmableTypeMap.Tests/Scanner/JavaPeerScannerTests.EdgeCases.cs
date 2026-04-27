@@ -54,7 +54,7 @@ public partial class JavaPeerScannerTests
 	[InlineData ("MyApp.UnnamedActivity")]
 	[InlineData ("MyApp.UnregisteredClickListener")]
 	[InlineData ("MyApp.UnregisteredExporter")]
-	public void Scan_UnregisteredType_DiscoveredWithCrc64Name (string managedName)
+	public void Scan_UnregisteredType_DiscoveredWithHashedName (string managedName)
 	{
 		Assert.StartsWith ("crc64", FindFixtureByManagedName (managedName).JavaName);
 	}
