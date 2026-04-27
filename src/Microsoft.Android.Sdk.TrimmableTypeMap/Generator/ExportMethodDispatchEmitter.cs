@@ -24,7 +24,7 @@ sealed class ExportMethodDispatchEmitter
 		var returnKind = JniSignatureHelper.ParseReturnType (uco.JniSignature);
 		int paramCount = 2 + jniParams.Count;
 		bool isVoid = returnKind == JniParamKind.Void;
-		var exportMethodDispatchLocals = CreateExportMethodDispatchLocals (exportMethodDispatch, isVoid);
+		var exportMethodDispatchLocals = CreateExportMethodDispatchLocals (exportMethodDispatch, isVoid, returnKind);
 
 		// UCO wrapper signature: uses JNI ABI types (byte for boolean)
 		Action<BlobEncoder> encodeSig = sig => sig.MethodSignature ().Parameters (paramCount,
@@ -51,34 +51,100 @@ sealed class ExportMethodDispatchEmitter
 		var callbackTypeHandle = _pe.ResolveTypeRef (uco.CallbackType);
 		var callbackRef = AddExportMethodDispatchRef (uco, callbackTypeHandle);
 
+		// Wrap the dispatch in the standard BeginMarshalMethod/try/catch/finally pattern so
+		// managed exceptions thrown from the [Export] body are routed through
+		// JniRuntime.OnUserUnhandledException — matching the legacy LLVM-IR contract
+		// (Mono.Android.Export/CallbackCode.cs) and the trimmable UCO ctor wrapper.
 		var handle = _pe.EmitBody (uco.WrapperName,
 			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 			encodeSig,
-			encoder => {
-				EmitExportMethodDispatch (encoder, uco, callbackTypeHandle, callbackRef, jniParams, returnKind, exportMethodDispatchLocals);
-				encoder.OpCode (ILOpCode.Ret);
+			(encoder, cfb) => {
+				EmitWrappedExportMethodDispatch (encoder, cfb, uco, callbackTypeHandle, callbackRef,
+					jniParams, returnKind, exportMethodDispatchLocals);
 			},
-			exportMethodDispatchLocals.EncodeLocals,
-			useBranches: uco.UsesExportMethodDispatch);
+			exportMethodDispatchLocals.EncodeLocals);
 
 		AddUnmanagedCallersOnlyAttribute (handle);
 		return handle;
 	}
 
+	void EmitWrappedExportMethodDispatch (InstructionEncoder encoder, ControlFlowBuilder cfb,
+		UcoMethodData uco, EntityHandle callbackTypeHandle, MemberReferenceHandle callbackRef,
+		List<JniParamKind> jniParams, JniParamKind returnKind, ExportMethodDispatchLocals locals)
+	{
+		bool isVoid = returnKind == JniParamKind.Void;
+		var tryStart = encoder.DefineLabel ();
+		var catchStart = encoder.DefineLabel ();
+		var finallyStart = encoder.DefineLabel ();
+		var afterAll = encoder.DefineLabel ();
+		var endCatch = encoder.DefineLabel ();
+
+		// Preamble: if (!BeginMarshalMethod(jnienv, out envp, out runtime)) goto afterAll;
+		// On the false path, the ABI return local is zero-initialized (InitLocals=true) so
+		// it returns the appropriate default (0 / IntPtr.Zero) for the JNI return kind.
+		encoder.LoadArgument (0);
+		encoder.LoadLocalAddress (0);
+		encoder.LoadLocalAddress (1);
+		encoder.Call (_context.BeginMarshalMethodRef);
+		encoder.Branch (ILOpCode.Brfalse, afterAll);
+
+		// TRY: dispatch + (if non-void) store ABI return value to the survival local.
+		encoder.MarkLabel (tryStart);
+		EmitExportMethodDispatch (encoder, uco, callbackTypeHandle, callbackRef, jniParams, returnKind, locals);
+		if (!isVoid) {
+			encoder.StoreLocal (locals.AbiReturnLocalIndex);
+		}
+		encoder.Branch (ILOpCode.Leave, afterAll);
+
+		// CATCH (System.Exception e): runtime?.OnUserUnhandledException(ref envp, e);
+		encoder.MarkLabel (catchStart);
+		encoder.StoreLocal (2);
+		encoder.LoadLocal (1);
+		encoder.Branch (ILOpCode.Brfalse, endCatch);
+		encoder.LoadLocal (1);
+		encoder.LoadLocalAddress (0);
+		encoder.LoadLocal (2);
+		encoder.OpCode (ILOpCode.Callvirt);
+		encoder.Token (_context.OnUserUnhandledExceptionRef);
+		encoder.MarkLabel (endCatch);
+		encoder.Branch (ILOpCode.Leave, afterAll);
+
+		// FINALLY: EndMarshalMethod(ref envp);
+		encoder.MarkLabel (finallyStart);
+		encoder.LoadLocalAddress (0);
+		encoder.Call (_context.EndMarshalMethodRef);
+		encoder.OpCode (ILOpCode.Endfinally);
+
+		// AFTER: load ABI return (if non-void) and return.
+		encoder.MarkLabel (afterAll);
+		if (!isVoid) {
+			encoder.LoadLocal (locals.AbiReturnLocalIndex);
+		}
+		encoder.OpCode (ILOpCode.Ret);
+
+		cfb.AddCatchRegion (tryStart, catchStart, catchStart, finallyStart, _context.ExceptionRef);
+		cfb.AddFinallyRegion (tryStart, finallyStart, finallyStart, afterAll);
+	}
+
 	sealed class ExportMethodDispatchLocals
 	{
-		public static readonly ExportMethodDispatchLocals Empty = new (new Dictionary<int, int> (), -1, null);
-
-		public ExportMethodDispatchLocals (Dictionary<int, int> arrayParameterLocals, int returnLocalIndex, Action<BlobBuilder>? encodeLocals)
+		public ExportMethodDispatchLocals (Dictionary<int, int> arrayParameterLocals, int returnLocalIndex, int abiReturnLocalIndex, Action<BlobBuilder> encodeLocals)
 		{
 			ArrayParameterLocals = arrayParameterLocals;
 			ReturnLocalIndex = returnLocalIndex;
+			AbiReturnLocalIndex = abiReturnLocalIndex;
 			EncodeLocals = encodeLocals;
 		}
 
 		public Dictionary<int, int> ArrayParameterLocals { get; }
+
+		/// <summary>Local that holds the managed return value across array copy-backs (-1 if not needed).</summary>
 		public int ReturnLocalIndex { get; }
-		public Action<BlobBuilder>? EncodeLocals { get; }
+
+		/// <summary>Local that holds the JNI ABI return value across try/finally so it survives 'leave' (-1 if void).</summary>
+		public int AbiReturnLocalIndex { get; }
+
+		public Action<BlobBuilder> EncodeLocals { get; }
 
 		public bool HasArrayParameters => ArrayParameterLocals.Count > 0;
 	}
@@ -88,38 +154,79 @@ sealed class ExportMethodDispatchEmitter
 		return uco.ExportMethodDispatch ?? throw new InvalidOperationException ($"ExportMethodDispatchEmitter only supports UCO methods with ExportMethodDispatch metadata.");
 	}
 
-	ExportMethodDispatchLocals CreateExportMethodDispatchLocals (ExportMethodDispatchData exportMethodDispatch, bool isVoid)
+	ExportMethodDispatchLocals CreateExportMethodDispatchLocals (ExportMethodDispatchData exportMethodDispatch, bool isVoid, JniParamKind returnKind)
 	{
-		var localTypes = new List<TypeRefData> ();
+		// Local layout (fixed prefix shared with the UCO ctor wrapper):
+		//   0 = JniTransition envp           (valuetype)
+		//   1 = JniRuntime?  runtime         (class)
+		//   2 = Exception    e               (class)
+		// Then:
+		//   3..N = managed array-param copy-back locals (one per array parameter)
+		//   (next) = managed return temp     — only when there are array params and return is non-void
+		//   (next) = ABI     return temp     — only when return is non-void; survives try/finally → afterAll
 		var arrayParameterLocals = new Dictionary<int, int> ();
+		var arrayLocalTypes = new List<TypeRefData> ();
+		int nextLocalIndex = 3;
 
 		for (int i = 0; i < exportMethodDispatch.ParameterTypes.Count; i++) {
 			if (!IsManagedArrayType (exportMethodDispatch.ParameterTypes [i].ManagedTypeName)) {
 				continue;
 			}
 
-			arrayParameterLocals.Add (i, localTypes.Count);
-			localTypes.Add (exportMethodDispatch.ParameterTypes [i]);
+			arrayParameterLocals.Add (i, nextLocalIndex++);
+			arrayLocalTypes.Add (exportMethodDispatch.ParameterTypes [i]);
 		}
 
 		int returnLocalIndex = -1;
+		TypeRefData? managedReturnType = null;
 		if (arrayParameterLocals.Count > 0 && !isVoid) {
-			returnLocalIndex = localTypes.Count;
-			localTypes.Add (exportMethodDispatch.ReturnType);
+			returnLocalIndex = nextLocalIndex++;
+			managedReturnType = exportMethodDispatch.ReturnType;
+		}
+
+		int abiReturnLocalIndex = -1;
+		if (!isVoid) {
+			abiReturnLocalIndex = nextLocalIndex++;
 		}
 
 		return new ExportMethodDispatchLocals (
 			arrayParameterLocals,
 			returnLocalIndex,
-			localTypes.Count > 0 ? blob => EncodeManagedLocals (blob, localTypes) : null);
+			abiReturnLocalIndex,
+			blob => EncodeAllLocals (blob, arrayLocalTypes, managedReturnType, isVoid, returnKind));
 	}
 
-	void EncodeManagedLocals (BlobBuilder blob, IReadOnlyList<TypeRefData> localTypes)
+	void EncodeAllLocals (BlobBuilder blob, IReadOnlyList<TypeRefData> arrayLocalTypes,
+		TypeRefData? managedReturnType, bool isVoid, JniParamKind returnKind)
 	{
-		blob.WriteByte (0x07);
-		blob.WriteCompressedInteger (localTypes.Count);
-		foreach (var localType in localTypes) {
+		int total = 3 + arrayLocalTypes.Count + (managedReturnType is not null ? 1 : 0) + (isVoid ? 0 : 1);
+
+		blob.WriteByte (0x07); // LOCAL_SIG
+		blob.WriteCompressedInteger (total);
+
+		// 0: JniTransition (valuetype)
+		blob.WriteByte (0x11);
+		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_context.JniTransitionRef));
+		// 1: JniRuntime (class)
+		blob.WriteByte (0x12);
+		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_context.JniRuntimeRef));
+		// 2: Exception (class)
+		blob.WriteByte (0x12);
+		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_context.ExceptionRef));
+
+		// 3..N: managed array-parameter copy-back locals
+		foreach (var localType in arrayLocalTypes) {
 			EncodeManagedType (new SignatureTypeEncoder (blob), localType);
+		}
+
+		// Managed return temp (managed type — same encoding as method parameters)
+		if (managedReturnType is not null) {
+			EncodeManagedType (new SignatureTypeEncoder (blob), managedReturnType);
+		}
+
+		// ABI return temp (JNI ABI type — byte for boolean, IntPtr for object handles, etc.)
+		if (!isVoid) {
+			JniSignatureHelper.EncodeClrType (new SignatureTypeEncoder (blob), returnKind);
 		}
 	}
 

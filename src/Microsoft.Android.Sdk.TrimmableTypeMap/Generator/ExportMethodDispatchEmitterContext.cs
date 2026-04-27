@@ -18,7 +18,13 @@ sealed class ExportMethodDispatchEmitterContext
 		TypeReferenceHandle systemTypeRef,
 		MemberReferenceHandle getTypeFromHandleRef,
 		MemberReferenceHandle ucoAttrCtorRef,
-		BlobHandle ucoAttrBlobHandle)
+		BlobHandle ucoAttrBlobHandle,
+		TypeReferenceHandle jniTransitionRef,
+		TypeReferenceHandle jniRuntimeRef,
+		TypeReferenceHandle exceptionRef,
+		MemberReferenceHandle beginMarshalMethodRef,
+		MemberReferenceHandle endMarshalMethodRef,
+		MemberReferenceHandle onUserUnhandledExceptionRef)
 	{
 		var metadata = pe.Metadata;
 		var iJavaObjectRef = metadata.AddTypeReference (pe.MonoAndroidRef,
@@ -144,6 +150,12 @@ sealed class ExportMethodDispatchEmitterContext
 					p => p.AddParameter ().Type ().Type (systemXmlReaderRef, false))),
 			UcoAttrCtorRef = ucoAttrCtorRef,
 			UcoAttrBlobHandle = ucoAttrBlobHandle,
+			JniTransitionRef = jniTransitionRef,
+			JniRuntimeRef = jniRuntimeRef,
+			ExceptionRef = exceptionRef,
+			BeginMarshalMethodRef = beginMarshalMethodRef,
+			EndMarshalMethodRef = endMarshalMethodRef,
+			OnUserUnhandledExceptionRef = onUserUnhandledExceptionRef,
 		};
 	}
 
@@ -167,4 +179,14 @@ sealed class ExportMethodDispatchEmitterContext
 	public required MemberReferenceHandle UcoAttrCtorRef { get; init; }
 
 	public required BlobHandle UcoAttrBlobHandle { get; init; }
+
+	// Marshal-method wrapper plumbing — mirrors the UCO ctor wrapper used by
+	// TypeMapAssemblyEmitter so that managed exceptions thrown from [Export] method
+	// bodies surface as Java exceptions instead of crashing the runtime.
+	public required TypeReferenceHandle JniTransitionRef { get; init; }
+	public required TypeReferenceHandle JniRuntimeRef { get; init; }
+	public required TypeReferenceHandle ExceptionRef { get; init; }
+	public required MemberReferenceHandle BeginMarshalMethodRef { get; init; }
+	public required MemberReferenceHandle EndMarshalMethodRef { get; init; }
+	public required MemberReferenceHandle OnUserUnhandledExceptionRef { get; init; }
 }
