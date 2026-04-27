@@ -20,12 +20,24 @@ steps:
     project: ${{ parameters.project }}
     arguments: >-
       --no-build
-      --logger "trx;LogFileName=${{ parameters.testName }}.trx"
-      --results-directory ${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/TestResults
       -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog
       -c ${{ parameters.configuration }} ${{ parameters.extraBuildArgs }}
     condition: ${{ parameters.condition }}
     continueOnError: true
+
+- script: |
+    RESULTS_DIR="${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/TestResults"
+    mkdir -p "$RESULTS_DIR"
+    TRX_FILE=$(find "$TMPDIR/AndroidTestResults" -name "*.trx" -newer "${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog" 2>/dev/null | head -1)
+    if [ -n "$TRX_FILE" ]; then
+      cp "$TRX_FILE" "$RESULTS_DIR/${{ parameters.testName }}.trx"
+      echo "Copied TRX: $TRX_FILE -> $RESULTS_DIR/${{ parameters.testName }}.trx"
+    else
+      echo "##[warning]No TRX file found in $TMPDIR/AndroidTestResults"
+    fi
+  displayName: copy ${{ parameters.testName }} trx
+  condition: ${{ parameters.condition }}
+  continueOnError: true
 
 - script: >
     DEST="$(Build.StagingDirectory)/Test${{ parameters.configuration }}/${{ parameters.artifactFolder }}/" &&
