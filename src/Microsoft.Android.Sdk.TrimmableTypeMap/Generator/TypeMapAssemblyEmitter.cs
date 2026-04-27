@@ -1021,17 +1021,18 @@ sealed class TypeMapAssemblyEmitter
 				}),
 				EncodeUcoConstructorLocals_JavaInterop);
 		} else {
-			// For the parameterless `()V` Java ctor, we mirror TypeManager.Activate so that the
-			// user-visible managed ctor body runs (required by [Export]-using classes whose
-			// instance initialization — e.g. `Constructed = true` — must execute when the peer
-			// is created from the Java side):
+			// For the parameterless `()V` Java ctor we mirror TypeManager.Activate so that the
+			// user-visible managed ctor body runs when the peer is created from the Java side
+			// (i.e. so user-defined initialization in `MyType()` actually executes — equivalent
+			// to what `cinfo.Invoke (newobj, parms)` does in the reflection-based activator):
 			//
-			//   var obj = (TargetType) RuntimeHelpers.GetUninitializedObject(typeof(TargetType));
-			//   ((IJavaPeerable) obj).SetPeerReference(new JniObjectReference(self, Invalid));
-			//   obj..ctor();   // user-visible parameterless ctor
+			//   var obj = (TargetType) RuntimeHelpers.GetUninitializedObject (typeof (TargetType));
+			//   ((IJavaPeerable) obj).SetPeerReference (new JniObjectReference (self));
+			//   obj..ctor ();   // user-visible parameterless ctor
 			//
-			// The user-visible ctor's chain into Java.Lang.Object()/IJavaPeerable is a no-op
-			// when the peer reference is already set, so this does not create a second Java peer.
+			// The user-visible ctor's chain into Java.Lang.Object/IJavaPeerable is a no-op when
+			// the peer reference is already set (guarded by `if (PeerReference.IsValid) return;`),
+			// so this does not create a second Java peer.
 			//
 			// Parameterized Java ctors (`(Lfoo;Lbar;)V`) still use the legacy activation-ctor
 			// fallback below — the JNI args are not forwarded. TODO: forward args + invoke the
