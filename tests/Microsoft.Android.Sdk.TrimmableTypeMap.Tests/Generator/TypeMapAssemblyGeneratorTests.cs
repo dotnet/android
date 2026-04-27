@@ -1460,6 +1460,328 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			"nctor_*_uco IL should reference the (IntPtr, JniHandleOwnership) activation ctor when no matching parameterless managed ctor exists");
 	}
 
+	[Fact]
+	public void Generate_UcoConstructor_ObjectRefParam_MarshalsViaJavaLangObjectGetObject ()
+	{
+		// (Ljava/lang/Throwable;)V — verifies ref-arg marshalling delegates to
+		// Java.Lang.Object.GetObject (jniHandle, DoNotTransfer, paramType)
+		// and that the user-visible (Throwable) ctor is invoked.
+		var paramType = new TypeRefData { ManagedTypeName = "Java.Lang.Throwable", AssemblyName = "Mono.Android" };
+		var peer = MakeAcwPeer ("test/UcoCtorObjArg", "Test.UcoCtorObjArg", "TestAsm") with {
+			JavaConstructors = new List<JavaConstructorInfo> {
+				new JavaConstructorInfo {
+					ConstructorIndex = 0,
+					JniSignature = "(Ljava/lang/Throwable;)V",
+					HasMatchingManagedCtor = true,
+					ManagedParameterTypes = new [] { paramType },
+				},
+			},
+		};
+		using var stream = GenerateAssembly (new [] { peer }, "UcoCtorObjArg");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		Assert.Contains ("GetObject", GetMemberRefNames (reader));
+
+		var ilBytes = GetNctorUcoIL (pe, reader);
+		var memberRefHandles = AllMemberRefHandles (reader);
+
+		var getObjectHandle = memberRefHandles.First (h => reader.GetString (reader.GetMemberReference (h).Name) == "GetObject");
+		Assert.True (ILContainsCallToken (ilBytes, MetadataTokens.GetToken (getObjectHandle)),
+			"nctor_*_uco IL should call Java.Lang.Object.GetObject for an object-ref ctor arg");
+
+		var userCtor = FindUserCtorRefByFirstParam (reader, "UcoCtorObjArg", paramCount: 1, firstParamTypeName: "Java.Lang.Throwable");
+		Assert.NotNull (userCtor);
+		Assert.True (ILContainsCallToken (ilBytes, MetadataTokens.GetToken (userCtor!.Value)),
+			"nctor_*_uco IL should call the user-visible (Throwable) ctor");
+	}
+
+	[Fact]
+	public void Generate_UcoConstructor_PrimitiveIntParam_LoadsArgDirectly ()
+	{
+		// (I)V — verifies primitive int args are loaded directly without GetObject.
+		var paramType = new TypeRefData { ManagedTypeName = "System.Int32", AssemblyName = "System.Runtime" };
+		var peer = MakeAcwPeer ("test/UcoCtorIntArg", "Test.UcoCtorIntArg", "TestAsm") with {
+			JavaConstructors = new List<JavaConstructorInfo> {
+				new JavaConstructorInfo {
+					ConstructorIndex = 0,
+					JniSignature = "(I)V",
+					HasMatchingManagedCtor = true,
+					ManagedParameterTypes = new [] { paramType },
+				},
+			},
+		};
+		using var stream = GenerateAssembly (new [] { peer }, "UcoCtorIntArg");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var ilBytes = GetNctorUcoIL (pe, reader);
+
+		// The IL must NOT call GetObject — primitive int is loaded directly via Ldarg.
+		var memberRefHandles = AllMemberRefHandles (reader);
+		var getObjectHandle = memberRefHandles.FirstOrDefault (h => reader.GetString (reader.GetMemberReference (h).Name) == "GetObject");
+		if (!getObjectHandle.IsNil) {
+			Assert.False (ILContainsCallToken (ilBytes, MetadataTokens.GetToken (getObjectHandle)),
+				"nctor_*_uco IL should NOT call GetObject for a primitive int ctor arg");
+		}
+
+		var userCtor = FindUserCtorRef (reader, "UcoCtorIntArg", new [] { "System.Int32" });
+		Assert.NotNull (userCtor);
+		Assert.True (ILContainsCallToken (ilBytes, MetadataTokens.GetToken (userCtor!.Value)),
+			"nctor_*_uco IL should call the user-visible (int) ctor");
+	}
+
+	[Fact]
+	public void Generate_UcoConstructor_BooleanParam_EmitsByteToBoolConversion ()
+	{
+		// (Z)V — verifies byte→bool conversion (Ldc.I4.0 + Cgt.Un) is emitted for
+		// System.Boolean params, matching ExportMethodDispatchEmitter's primitive marshalling.
+		var paramType = new TypeRefData { ManagedTypeName = "System.Boolean", AssemblyName = "System.Runtime" };
+		var peer = MakeAcwPeer ("test/UcoCtorBoolArg", "Test.UcoCtorBoolArg", "TestAsm") with {
+			JavaConstructors = new List<JavaConstructorInfo> {
+				new JavaConstructorInfo {
+					ConstructorIndex = 0,
+					JniSignature = "(Z)V",
+					HasMatchingManagedCtor = true,
+					ManagedParameterTypes = new [] { paramType },
+				},
+			},
+		};
+		using var stream = GenerateAssembly (new [] { peer }, "UcoCtorBoolArg");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var ilBytes = GetNctorUcoIL (pe, reader);
+
+		// Look for the bool conversion sequence: Ldc_I4_0 (0x16) ; Cgt_Un (0xFE 0x03)
+		bool foundBoolConv = false;
+		for (int i = 0; i < ilBytes.Length - 2; i++) {
+			if (ilBytes [i] == 0x16 && ilBytes [i + 1] == 0xFE && ilBytes [i + 2] == 0x03) {
+				foundBoolConv = true;
+				break;
+			}
+		}
+		Assert.True (foundBoolConv, "nctor_*_uco IL should emit Ldc.I4.0 + Cgt.Un to convert byte→bool for Boolean ctor arg");
+
+		var userCtor = FindUserCtorRef (reader, "UcoCtorBoolArg", new [] { "System.Boolean" });
+		Assert.NotNull (userCtor);
+		Assert.True (ILContainsCallToken (ilBytes, MetadataTokens.GetToken (userCtor!.Value)),
+			"nctor_*_uco IL should call the user-visible (bool) ctor");
+	}
+
+	[Fact]
+	public void Generate_UcoConstructor_StringParam_MarshalsViaJniEnvGetString ()
+	{
+		// (Ljava/lang/String;)V — verifies String args marshal via JNIEnv.GetString.
+		var paramType = new TypeRefData { ManagedTypeName = "System.String", AssemblyName = "System.Runtime" };
+		var peer = MakeAcwPeer ("test/UcoCtorStrArg", "Test.UcoCtorStrArg", "TestAsm") with {
+			JavaConstructors = new List<JavaConstructorInfo> {
+				new JavaConstructorInfo {
+					ConstructorIndex = 0,
+					JniSignature = "(Ljava/lang/String;)V",
+					HasMatchingManagedCtor = true,
+					ManagedParameterTypes = new [] { paramType },
+				},
+			},
+		};
+		using var stream = GenerateAssembly (new [] { peer }, "UcoCtorStrArg");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var ilBytes = GetNctorUcoIL (pe, reader);
+		var memberRefHandles = AllMemberRefHandles (reader);
+
+		// JNIEnv.GetString member ref must be present and called.
+		var getStringHandles = memberRefHandles.Where (h => {
+			var mref = reader.GetMemberReference (h);
+			if (reader.GetString (mref.Name) != "GetString")
+				return false;
+			if (mref.Parent.Kind != HandleKind.TypeReference)
+				return false;
+			var typeRef = reader.GetTypeReference ((TypeReferenceHandle) mref.Parent);
+			return reader.GetString (typeRef.Name) == "JNIEnv";
+		}).ToList ();
+		Assert.NotEmpty (getStringHandles);
+		Assert.Contains (getStringHandles, h => ILContainsCallToken (ilBytes, MetadataTokens.GetToken (h)));
+
+		var userCtor = FindUserCtorRef (reader, "UcoCtorStrArg", new [] { "System.String" });
+		Assert.NotNull (userCtor);
+		Assert.True (ILContainsCallToken (ilBytes, MetadataTokens.GetToken (userCtor!.Value)),
+			"nctor_*_uco IL should call the user-visible (string) ctor");
+	}
+
+	[Fact]
+	public void Generate_UcoConstructor_MixedSignature_MarshalsBothPrimitiveAndObjectArgs ()
+	{
+		// (ILjava/lang/Throwable;)V — verifies int passes through and Throwable goes via GetObject.
+		var intParam = new TypeRefData { ManagedTypeName = "System.Int32", AssemblyName = "System.Runtime" };
+		var throwableParam = new TypeRefData { ManagedTypeName = "Java.Lang.Throwable", AssemblyName = "Mono.Android" };
+		var peer = MakeAcwPeer ("test/UcoCtorMixed", "Test.UcoCtorMixed", "TestAsm") with {
+			JavaConstructors = new List<JavaConstructorInfo> {
+				new JavaConstructorInfo {
+					ConstructorIndex = 0,
+					JniSignature = "(ILjava/lang/Throwable;)V",
+					HasMatchingManagedCtor = true,
+					ManagedParameterTypes = new [] { intParam, throwableParam },
+				},
+			},
+		};
+		using var stream = GenerateAssembly (new [] { peer }, "UcoCtorMixed");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var memberNames = GetMemberRefNames (reader);
+		Assert.Contains ("GetObject", memberNames);
+
+		var ilBytes = GetNctorUcoIL (pe, reader);
+		var memberRefHandles = AllMemberRefHandles (reader);
+		var getObjectHandle = memberRefHandles.First (h => reader.GetString (reader.GetMemberReference (h).Name) == "GetObject");
+		Assert.True (ILContainsCallToken (ilBytes, MetadataTokens.GetToken (getObjectHandle)),
+			"nctor_*_uco IL should call GetObject for the Throwable arg in the mixed signature");
+
+		// User ctor: (Int32, Java.Lang.Throwable). Need a signature-discriminated lookup
+		// because the activation ctor (IntPtr, JniHandleOwnership) also has 2 params.
+		var userCtor = FindUserCtorRefByFirstParam (reader, "UcoCtorMixed", paramCount: 2, firstParamTypeName: "System.Int32");
+		Assert.NotNull (userCtor);
+		Assert.True (ILContainsCallToken (ilBytes, MetadataTokens.GetToken (userCtor!.Value)),
+			"nctor_*_uco IL should call the user-visible (int, Throwable) ctor");
+	}
+
+	[Fact]
+	public void Generate_UcoConstructor_ParameterizedNoMatch_FallsBackToActivationCtor ()
+	{
+		// HasMatchingManagedCtor=false on a parameterized signature — codegen must fall back
+		// to the legacy (IntPtr, JniHandleOwnership) activation-ctor path, NOT emit a member
+		// ref to a non-existent (Throwable) ctor.
+		var peer = MakeAcwPeer ("test/UcoCtorParamNoMatch", "Test.UcoCtorParamNoMatch", "TestAsm") with {
+			JavaConstructors = new List<JavaConstructorInfo> {
+				new JavaConstructorInfo {
+					ConstructorIndex = 0,
+					JniSignature = "(Ljava/lang/Throwable;)V",
+					HasMatchingManagedCtor = false,
+				},
+			},
+		};
+		using var stream = GenerateAssembly (new [] { peer }, "UcoCtorParamNoMatch");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		// Activation ctor (IntPtr, JniHandleOwnership) on the target type — multiple
+		// equivalent member refs may be added (the metadata builder doesn't dedupe
+		// across emit phases), so verify the IL calls *some* 2-arg ctor on the type.
+		var activationCtorTokens = AllMemberRefHandles (reader)
+			.Where (h => {
+				var mref = reader.GetMemberReference (h);
+				if (reader.GetString (mref.Name) != ".ctor")
+					return false;
+				if (mref.Parent.Kind != HandleKind.TypeReference)
+					return false;
+				var typeRef = reader.GetTypeReference ((TypeReferenceHandle) mref.Parent);
+				if (reader.GetString (typeRef.Name) != "UcoCtorParamNoMatch")
+					return false;
+				return mref.DecodeMethodSignature (new MethodSignatureDecoder (), genericContext: null).RequiredParameterCount == 2;
+			})
+			.Select (h => MetadataTokens.GetToken (h))
+			.ToList ();
+		Assert.NotEmpty (activationCtorTokens);
+
+		var ilBytes = GetNctorUcoIL (pe, reader);
+		Assert.Contains (activationCtorTokens, t => ILContainsCallToken (ilBytes, t) || ILContainsNewobjToken (ilBytes, t));
+	}
+
+	static byte[] GetNctorUcoIL (PEReader pe, MetadataReader reader)
+	{
+		var nctorMethodHandle = FindNctorUcoMethod (reader);
+		Assert.False (nctorMethodHandle.IsNil, "Expected a nctor_*_uco method in the generated assembly");
+		var nctorMethod = reader.GetMethodDefinition (nctorMethodHandle);
+		var body = pe.GetMethodBody (nctorMethod.RelativeVirtualAddress);
+		Assert.NotNull (body);
+		var ilBytes = body.GetILBytes ();
+		Assert.NotNull (ilBytes);
+		return ilBytes!;
+	}
+
+	static List<MemberReferenceHandle> AllMemberRefHandles (MetadataReader reader) =>
+		Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
+			.Select (i => MetadataTokens.MemberReferenceHandle (i))
+			.ToList ();
+
+	static MemberReferenceHandle? FindUserCtorRef (MetadataReader reader, string typeShortName, IReadOnlyList<string> paramTypeNames)
+	{
+		var decoder = new TypeNameSignatureDecoder (reader);
+		foreach (var h in AllMemberRefHandles (reader)) {
+			var mref = reader.GetMemberReference (h);
+			if (reader.GetString (mref.Name) != ".ctor")
+				continue;
+			if (mref.Parent.Kind != HandleKind.TypeReference)
+				continue;
+			var typeRef = reader.GetTypeReference ((TypeReferenceHandle) mref.Parent);
+			if (reader.GetString (typeRef.Name) != typeShortName)
+				continue;
+			var sig = mref.DecodeMethodSignature (decoder, genericContext: null);
+			if (sig.RequiredParameterCount != paramTypeNames.Count)
+				continue;
+			bool match = true;
+			for (int i = 0; i < paramTypeNames.Count; i++) {
+				if (sig.ParameterTypes [i] != paramTypeNames [i]) {
+					match = false;
+					break;
+				}
+			}
+			if (match)
+				return h;
+		}
+		return null;
+	}
+
+	static MemberReferenceHandle? FindUserCtorRefByFirstParam (MetadataReader reader, string typeShortName, int paramCount, string firstParamTypeName)
+	{
+		var decoder = new TypeNameSignatureDecoder (reader);
+		foreach (var h in AllMemberRefHandles (reader)) {
+			var mref = reader.GetMemberReference (h);
+			if (reader.GetString (mref.Name) != ".ctor")
+				continue;
+			if (mref.Parent.Kind != HandleKind.TypeReference)
+				continue;
+			var typeRef = reader.GetTypeReference ((TypeReferenceHandle) mref.Parent);
+			if (reader.GetString (typeRef.Name) != typeShortName)
+				continue;
+			var sig = mref.DecodeMethodSignature (decoder, genericContext: null);
+			if (sig.RequiredParameterCount != paramCount)
+				continue;
+			if (sig.ParameterTypes [0] == firstParamTypeName)
+				return h;
+		}
+		return null;
+	}
+
+	// SignatureTypeProvider returning a stringified type name for primitives and typerefs.
+	sealed class TypeNameSignatureDecoder : ISignatureTypeProvider<string, object?>
+	{
+		readonly MetadataReader _reader;
+		public TypeNameSignatureDecoder (MetadataReader reader) => _reader = reader;
+		public string GetPrimitiveType (PrimitiveTypeCode typeCode) => "System." + typeCode;
+		public string GetTypeFromReference (MetadataReader reader, TypeReferenceHandle handle, byte rawTypeKind)
+		{
+			var tr = reader.GetTypeReference (handle);
+			var name = reader.GetString (tr.Name);
+			var ns = tr.Namespace.IsNil ? "" : reader.GetString (tr.Namespace);
+			return ns.Length == 0 ? name : ns + "." + name;
+		}
+		public string GetTypeFromDefinition (MetadataReader reader, TypeDefinitionHandle handle, byte rawTypeKind) => "<def>";
+		public string GetTypeFromSpecification (MetadataReader reader, object? genericContext, TypeSpecificationHandle handle, byte rawTypeKind) => "<spec>";
+		public string GetSZArrayType (string elementType) => elementType + "[]";
+		public string GetArrayType (string elementType, ArrayShape shape) => elementType + "[*]";
+		public string GetByReferenceType (string elementType) => elementType + "&";
+		public string GetFunctionPointerType (MethodSignature<string> signature) => "<fnptr>";
+		public string GetGenericInstantiation (string genericType, ImmutableArray<string> typeArguments) => genericType;
+		public string GetGenericMethodParameter (object? genericContext, int index) => "<m!" + index + ">";
+		public string GetGenericTypeParameter (object? genericContext, int index) => "<!" + index + ">";
+		public string GetModifiedType (string modifier, string unmodifiedType, bool isRequired) => unmodifiedType;
+		public string GetPinnedType (string elementType) => elementType;
+		public string GetPointerType (string elementType) => elementType + "*";
+	}
+
 	// Minimal SignatureTypeProvider used only to count required parameters of a member ref.
 	sealed class MethodSignatureDecoder : ISignatureTypeProvider<int, object?>
 	{

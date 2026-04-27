@@ -1629,24 +1629,15 @@ public sealed class JavaPeerScanner : IDisposable
 
 	/// <summary>
 	/// Attempts to find a managed instance constructor on <paramref name="typeDef"/>
-	/// whose parameter list is compatible with the supplied JNI signature, and
-	/// returns its managed parameter types. Returns <see langword="null"/> when
-	/// no compatible ctor exists or when the signature contains JNI param kinds
-	/// that the trimmable user-ctor codegen does not yet support (primitives).
+	/// whose arity matches the supplied JNI signature, and returns its managed
+	/// parameter types. Returns <see langword="null"/> when no constructor of the
+	/// requested arity exists. Type compatibility between the JNI param kinds and
+	/// the managed parameter types is not verified — the JCW marshal method is
+	/// the source of truth for what the Java side will pass.
 	/// </summary>
 	static IReadOnlyList<TypeRefData>? TryFindMatchingManagedCtorParams (TypeDefinition typeDef, string jniSignature, AssemblyIndex index)
 	{
 		var jniParams = JniSignatureHelper.ParseParameterTypes (jniSignature);
-		// Only `()V` and signatures with all-Object JNI params are currently
-		// supported by the trimmable user-ctor UCO codegen. Primitive args
-		// (Z/B/C/S/I/J/F/D) require additional marshalling work — fall back to
-		// the legacy activation-ctor path until that's implemented.
-		foreach (var kind in jniParams) {
-			if (kind != JniParamKind.Object) {
-				return null;
-			}
-		}
-
 		foreach (var methodHandle in typeDef.GetMethods ()) {
 			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
 			if ((methodDef.Attributes & MethodAttributes.Static) != 0) {
@@ -1660,37 +1651,9 @@ public sealed class JavaPeerScanner : IDisposable
 			if (sig.ParameterTypes.Length != jniParams.Count) {
 				continue;
 			}
-			// All JNI params here are Object kind; require the managed param to
-			// be a non-primitive reference type. We don't try to verify the exact
-			// managed type matches the JNI L...; descriptor — the JCW marshal
-			// method is the source of truth for what the Java side will pass.
-			if (!AllParametersAreReferenceTypes (sig.ParameterTypes)) {
-				continue;
-			}
 			return [.. sig.ParameterTypes];
 		}
 		return null;
-	}
-
-	static bool AllParametersAreReferenceTypes (ImmutableArray<TypeRefData> parameterTypes)
-	{
-		foreach (var pt in parameterTypes) {
-			if (IsPrimitiveTypeRef (pt)) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	static bool IsPrimitiveTypeRef (TypeRefData t)
-	{
-		return t.ManagedTypeName switch {
-			"System.Boolean" or "System.Byte" or "System.SByte" or
-			"System.Char" or "System.Int16" or "System.UInt16" or
-			"System.Int32" or "System.UInt32" or "System.Int64" or "System.UInt64" or
-			"System.Single" or "System.Double" or "System.IntPtr" or "System.UIntPtr" => true,
-			_ => false,
-		};
 	}
 
 	/// <summary>

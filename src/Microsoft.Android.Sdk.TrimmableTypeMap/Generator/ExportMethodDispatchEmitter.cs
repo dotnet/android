@@ -214,7 +214,15 @@ sealed class ExportMethodDispatchEmitter
 		}
 	}
 
-	void LoadManagedArgument (InstructionEncoder encoder, TypeRefData managedType, ExportParameterKindInfo exportKind, JniParamKind jniKind, int argumentIndex)
+	/// <summary>
+	/// Emits IL that loads JNI argument <paramref name="argumentIndex"/> onto the
+	/// stack and converts it to the managed type expected by the user-visible
+	/// method or constructor parameter. Handles primitives (with <c>byte → bool</c>
+	/// conversion for <c>System.Boolean</c>), strings, arrays, <c>[Export]</c>
+	/// parameter kinds (streams / XML parsers), and object peers via
+	/// <c>Java.Lang.Object.GetObject (IntPtr, JniHandleOwnership, Type)</c>.
+	/// </summary>
+	internal void LoadManagedArgument (InstructionEncoder encoder, TypeRefData managedType, ExportParameterKindInfo exportKind, JniParamKind jniKind, int argumentIndex)
 	{
 		string managedTypeName = managedType.ManagedTypeName;
 
