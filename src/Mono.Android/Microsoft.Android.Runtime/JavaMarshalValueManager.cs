@@ -522,17 +522,13 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 				var typeMap = TrimmableTypeMap.Instance;
 				var proxy = typeMap.GetProxyForJavaObject (reference.Handle, resolvedTargetType);
 
-				// Closed-generic case: the proxy targets an open generic (Java erases
-				// generics, so one proxy serves all closed instantiations) but the
-				// caller asked for a specific closed instantiation (e.g. JavaList<int>).
-				// proxy.CreateInstance for an open generic throws NotSupportedException,
-				// so construct directly from the closed targetType's activation ctor.
+				// Open-generic proxies (e.g. JavaList<>) cannot create closed
+				// instantiations (e.g. JavaList<int>) without reflection, which is
+				// incompatible with trimming. Built-in container types are handled
+				// via JavaPeerContainerFactory through JNIEnv helpers instead.
 				IJavaPeerable? peer;
-				if (proxy is not null && resolvedTargetType is not null &&
-						proxy.TargetType.IsGenericTypeDefinition &&
-						resolvedTargetType.IsGenericType && !resolvedTargetType.IsGenericTypeDefinition &&
-						resolvedTargetType.GetGenericTypeDefinition () == proxy.TargetType) {
-					peer = TryActivateClosedGeneric (resolvedTargetType, reference.Handle);
+				if (proxy is not null && proxy.TargetType.IsGenericTypeDefinition) {
+					peer = null;
 				} else {
 					peer = proxy?.CreateInstance (reference.Handle, JniHandleOwnership.DoNotTransfer);
 				}
@@ -585,23 +581,6 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 			return typeof (JavaException);
 		}
 		return type;
-	}
-
-	/// <summary>
-	/// Activate a closed generic peer type via reflection on its
-	/// <c>(IntPtr, JniHandleOwnership)</c> activation constructor. The proxy's
-	/// IL throws <see cref="NotSupportedException"/> for open generics, so we
-	/// must bypass the proxy when the caller passes a closed instantiation.
-	/// </summary>
-	static IJavaPeerable? TryActivateClosedGeneric (
-			[DynamicallyAccessedMembers (Constructors)] Type closedTargetType,
-			IntPtr handle)
-	{
-		var ctor = closedTargetType.GetConstructor (ActivationConstructorBindingFlags, null, XAConstructorSignature, null);
-		if (ctor is null) {
-			return null;
-		}
-		return (IJavaPeerable) ctor.Invoke (new object [] { handle, JniHandleOwnership.DoNotTransfer });
 	}
 
 	/// <summary>

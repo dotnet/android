@@ -59,6 +59,12 @@ namespace Xamarin.Android.RuntimeTests
                     // CreateValue now passes after generator fixes.
                     "Java.InteropTests.JniValueMarshaler_IJavaPeerable_ContractTests.JniValueMarshalerContractTests`1.CreateGenericValue",
 
+                    // Open-generic proxies (e.g. JavaList<>) cannot create closed
+                    // instantiations (e.g. JavaList<int>) without reflection, which is
+                    // incompatible with trimming. Built-in container types are handled
+                    // via JavaPeerContainerFactory through JNIEnv helpers instead.
+                    "Java.InteropTests.JavaObjectExtensionsTests.JavaCast_BaseToGenericWrapper",
+
                     // Trimmable typemap synthesizes peer construction via base activation ctor
                     // (EmitCreateInstanceInheritedJavaInteropCtor), so MyJavaInterfaceImpl can be cast
                     // even without its own activation ctor. This is intentionally more permissive than
