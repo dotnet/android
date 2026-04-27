@@ -673,6 +673,24 @@ public sealed class JavaPeerScanner : IDisposable
 	}
 
 	/// <summary>
+	/// Resolves a `typeof(X)` argument captured as an assembly-qualified name
+	/// (e.g. <c>"Java.IO.IOException, Mono.Android, ..."</c>) to its JNI internal
+	/// name (<c>java/io/IOException</c>). Returns null when the type cannot be
+	/// found among the loaded assemblies or has no [Register] attribute.
+	/// </summary>
+	string? ResolveTypeOfArgumentToJniName (string assemblyQualifiedName)
+	{
+		var commaIdx = assemblyQualifiedName.IndexOf (',');
+		var typeName = (commaIdx >= 0 ? assemblyQualifiedName.Substring (0, commaIdx) : assemblyQualifiedName).Trim ();
+		var descriptor = TryResolveJniObjectDescriptor (typeName);
+		if (descriptor is null || descriptor.Length < 3) {
+			return null;
+		}
+		// Strip leading 'L' and trailing ';' to get "java/io/IOException".
+		return descriptor.Substring (1, descriptor.Length - 2);
+	}
+
+	/// <summary>
 	/// If <paramref name="managedType"/> resolves to an enum type, returns the
 	/// JNI descriptor of its underlying primitive ("I", "B", "S", "J"). Otherwise
 	/// returns null. Mirrors legacy CallbackCode behavior, where enum parameters
@@ -876,8 +894,11 @@ public sealed class JavaPeerScanner : IDisposable
 				continue;
 			}
 
-			// Found a matching base method — check if it has [Register]
-			if (TryGetMethodRegisterInfo (baseMethodDef, baseIndex, out var registerInfo, out _) && registerInfo is not null) {
+			// Found a matching base method — check if it has [Register].
+			// [Export] / [ExportField] are AttributeUsage(Inherited=false), so a
+			// derived override must NOT inherit a base [Export] registration —
+			// only [Register]-driven entries propagate through inheritance.
+			if (TryGetMethodRegisterInfo (baseMethodDef, baseIndex, out var registerInfo, out var exportInfo) && registerInfo is not null && exportInfo is null) {
 				return (registerInfo, baseTypeName, baseAssemblyName);
 			}
 		}
@@ -1162,6 +1183,21 @@ public sealed class JavaPeerScanner : IDisposable
 				foreach (var item in names) {
 					if (item.Value is string s) {
 						thrownNames.Add (s);
+					}
+				}
+			} else if (named.Name == "Throws" && named.Value is ImmutableArray<CustomAttributeTypedArgument<string>> throwsTypes) {
+				// Throws is `Type[]` in source, but the metadata blob serializes each
+				// `typeof(X)` as a string (assembly-qualified type name) routed through
+				// our CustomAttributeTypeProvider's GetTypeFromSerializedName. Resolve
+				// each to its [Register]-driven JNI internal name so the runtime can
+				// emit `throws` clauses on the generated Java method.
+				thrownNames ??= new List<string> (throwsTypes.Length);
+				foreach (var item in throwsTypes) {
+					if (item.Value is string aqn) {
+						var jni = ResolveTypeOfArgumentToJniName (aqn);
+						if (jni is not null) {
+							thrownNames.Add (jni);
+						}
 					}
 				}
 			} else if (named.Name == "SuperArgumentsString" && named.Value is string superArgs) {
