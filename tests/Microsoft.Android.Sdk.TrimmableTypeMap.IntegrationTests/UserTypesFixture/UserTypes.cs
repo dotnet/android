@@ -236,4 +236,61 @@ namespace UserApp
 		public System.Xml.XmlReader? ReadResourceXml ([ExportParameter (ExportParameterKind.XmlResourceParser)] System.Xml.XmlReader? reader)
 			=> reader;
 	}
+
+	// === Phase A: dispatch & declaration shapes ===
+
+	// A.1: static [Export] method — different dispatch path (no `this`).
+	public class StaticExportShapes : Java.Lang.Object
+	{
+		[Export ("compute")]
+		public static int Compute (int x) => x;
+
+		[Export ("hello")]
+		public static string Hello () => "hi";
+	}
+
+	// A.2: [Export(Throws = ...)] — declared exceptions in JNI signature.
+	public class ExportThrowsShapes : Java.Lang.Object
+	{
+		[Export ("ioCall", Throws = new [] { typeof (Java.IO.IOException) })]
+		public void IoCall () { }
+
+		[Export ("multiThrow", Throws = new [] { typeof (Java.IO.IOException), typeof (Java.Lang.IllegalStateException) })]
+		public int MultiThrow () => 0;
+	}
+
+	// A.3: Mixed [Register] overrides + new [Export] methods on the same type.
+	[Register ("my/app/MixedRegisterAndExport")]
+	public class MixedRegisterAndExport : Activity
+	{
+		protected override void OnCreate (Android.OS.Bundle? savedInstanceState)
+		{
+			base.OnCreate (savedInstanceState);
+		}
+
+		[Export ("doWork")]
+		public void DoWork () { }
+
+		[Export ("compute")]
+		public int Compute (int x) => x;
+	}
+
+	// A.4: [Export] on a virtual method, derived class re-declaring without [Export].
+	public class VirtualExportBase : Java.Lang.Object
+	{
+		[Export ("ping")]
+		public virtual int Ping () => 0;
+	}
+
+	public class VirtualExportDerived : VirtualExportBase
+	{
+		public override int Ping () => 1;
+	}
+
+	// A.5: [Export] with explicit JNI name differing from C# method name.
+	public class ExportRenameShapes : Java.Lang.Object
+	{
+		[Export ("javaSideName")]
+		public void CSharpSideName () { }
+	}
 }

@@ -137,4 +137,73 @@ public class ScannerExportShapesTests
 		AssertHasExport (methods, "readXml", "(Lorg/xmlpull/v1/XmlPullParser;)Lorg/xmlpull/v1/XmlPullParser;");
 		AssertHasExport (methods, "readResourceXml", "(Landroid/content/res/XmlResourceParser;)Landroid/content/res/XmlResourceParser;");
 	}
+
+	// === Phase A: dispatch & declaration shapes ===
+
+	[Fact]
+	public void StaticExport_RegistersStaticDispatch ()
+	{
+		var methods = GetMarshalMethods ("StaticExportShapes");
+		AssertHasExport (methods, "compute", "(I)I");
+		AssertHasExport (methods, "hello", "()Ljava/lang/String;");
+	}
+
+	[Fact]
+	public void Export_WithThrowsClause_SurfacesDeclaredExceptions ()
+	{
+		var methods = GetMarshalMethods ("ExportThrowsShapes");
+
+		var ioCall = System.Array.Find (methods, m => m.JniName == "ioCall");
+		Assert.NotNull (ioCall);
+		Assert.NotNull (ioCall!.ThrownNames);
+		Assert.Contains ("java/io/IOException", ioCall.ThrownNames!);
+
+		var multiThrow = System.Array.Find (methods, m => m.JniName == "multiThrow");
+		Assert.NotNull (multiThrow);
+		Assert.NotNull (multiThrow!.ThrownNames);
+		Assert.Contains ("java/io/IOException", multiThrow.ThrownNames!);
+		Assert.Contains ("java/lang/IllegalStateException", multiThrow.ThrownNames!);
+	}
+
+	[Fact]
+	public void MixedRegisterAndExport_BothPathsSurface ()
+	{
+		var methods = GetMarshalMethods ("MixedRegisterAndExport");
+
+		// [Register]-driven Activity override carries a connector
+		var onCreate = System.Array.Find (methods, m => m.JniName == "onCreate");
+		Assert.NotNull (onCreate);
+		Assert.False (onCreate!.Connector is null or "__export__",
+			$"OnCreate override should have a real Get*Handler connector, got '{onCreate.Connector}'.");
+
+		// [Export]-driven new methods carry no connector (or "__export__")
+		AssertHasExport (methods, "doWork", "()V");
+		AssertHasExport (methods, "compute", "(I)I");
+	}
+
+	[Fact]
+	public void VirtualExport_TopMostDeclarationRegisters ()
+	{
+		var baseMethods = GetMarshalMethods ("VirtualExportBase");
+		AssertHasExport (baseMethods, "ping", "()I");
+
+		var derivedMethods = GetMarshalMethods ("VirtualExportDerived");
+		// Derived class doesn't re-declare [Export]; only the base [Export] applies,
+		// so the derived peer should NOT add a duplicate marshal-method entry of its
+		// own. (Legacy CecilImporter walks up the inheritance chain and registers
+		// the [Export] on the topmost declaring type.)
+		var derivedPing = System.Array.FindAll (derivedMethods, m => m.JniName == "ping");
+		Assert.True (derivedPing.Length <= 1,
+			$"Derived peer should not duplicate base's [Export] entry, found {derivedPing.Length}.");
+	}
+
+	[Fact]
+	public void Export_CustomJniName_NotIdentityMappedFromMethodName ()
+	{
+		var methods = GetMarshalMethods ("ExportRenameShapes");
+
+		// JNI name comes from [Export("javaSideName")], not from "CSharpSideName".
+		Assert.Contains (methods, m => m.JniName == "javaSideName" && m.JniSignature == "()V");
+		Assert.DoesNotContain (methods, m => m.JniName == "CSharpSideName");
+	}
 }
