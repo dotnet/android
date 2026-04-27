@@ -68,9 +68,6 @@ namespace Xamarin.Android.RuntimeTests
                     // net.dot.jni.test.GenericHolder Java class not in APK
                     "Java.InteropTests.JniTypeManagerTests.CannotCreateGenericHolderFromJava",
 
-                    // net.dot.jni.test.GetThis — cannot register native members
-                    "Java.InteropTests.JavaObjectTest.DisposeAccessesThis",
-
                     // Open generic type handling differs from non-trimmable
                     "Java.InteropTests.JnienvTest.NewOpenGenericTypeThrows",
 
