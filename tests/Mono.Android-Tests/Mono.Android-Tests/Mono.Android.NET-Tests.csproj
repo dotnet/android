@@ -41,7 +41,6 @@
     <UseMonoRuntime Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(UseMonoRuntime)' == '' and '$(PublishAot)' != 'true' ">false</UseMonoRuntime>
     <TestsFlavor Condition=" '$(TestsFlavor)' == '' and '$(_AndroidTypeMapImplementation)' == 'trimmable' ">CoreCLRTrimmable</TestsFlavor>
     <ExcludeCategories Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">$(ExcludeCategories):NativeTypeMap:TrimmableIgnore</ExcludeCategories>
-    <DefineConstants Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">$(DefineConstants);TRIMMABLE_TYPEMAP</DefineConstants>
   </PropertyGroup>
 
 
