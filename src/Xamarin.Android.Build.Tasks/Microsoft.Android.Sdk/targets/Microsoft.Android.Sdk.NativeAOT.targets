@@ -308,6 +308,14 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <MakeDir Directories="$([System.IO.Path]::GetDirectoryName($(_AndroidNativeAotSharedLibrary)))" />
     <Exec Command="&quot;$(CppLinker)&quot; @(_AndroidNativeAotLinkerArgs, ' ')" />
 
+    <!-- Strip debug symbols, matching what ILC's LinkNative does -->
+    <Exec Condition="'$(StripSymbols)' == 'true' and '$(NativeDebugSymbols)' == 'true'"
+        Command="&quot;$(ObjCopyName)&quot; --only-keep-debug &quot;$(_AndroidNativeAotSharedLibrary)&quot; &quot;$(_AndroidNativeAotSharedLibrary)$(NativeSymbolExt)&quot;" />
+    <Exec Condition="'$(StripSymbols)' == 'true'"
+        Command="&quot;$(ObjCopyName)&quot; --strip-debug --strip-unneeded &quot;$(_AndroidNativeAotSharedLibrary)&quot;" />
+    <Exec Condition="'$(StripSymbols)' == 'true' and '$(NativeDebugSymbols)' == 'true'"
+        Command="&quot;$(ObjCopyName)&quot; --add-gnu-debuglink=&quot;$(_AndroidNativeAotSharedLibrary)$(NativeSymbolExt)&quot; &quot;$(_AndroidNativeAotSharedLibrary)&quot;" />
+
     <ItemGroup>
       <!-- Replace the .a that NativeCompile/ComputeLinkedFilesToPublish would publish with our .so -->
       <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition=" '%(Filename)%(Extension)' == '$(TargetName).a' " />
@@ -316,6 +324,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       </ResolvedFileToPublish>
       <FileWrites Include="$(_AndroidNativeAotSharedLibrary)" />
+      <FileWrites Include="$(_AndroidNativeAotSharedLibrary)$(NativeSymbolExt)" Condition="'$(StripSymbols)' == 'true' and '$(NativeDebugSymbols)' == 'true'" />
       <FileWrites Include="$(NativeIntermediateOutputPath)sections.ld" />
     </ItemGroup>
   </Target>
