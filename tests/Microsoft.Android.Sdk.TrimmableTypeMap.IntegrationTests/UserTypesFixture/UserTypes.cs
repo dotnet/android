@@ -344,4 +344,25 @@ namespace UserApp
 		[Export ("call")]
 		public void Call (string s) { }
 	}
+
+	// === Phase C: robustness ===
+	// C.1 (property) is gated by [AttributeUsage(Method|Constructor)] — skip.
+
+	// C.2: generic method with [Export] — scanner shouldn't crash on T.
+	public class ExportGenericShapes : Java.Lang.Object
+	{
+		[Export ("g")]
+		public T Identity<T> (T x) => x;
+	}
+
+	// C.3: override of a [Register]'d base method also marked [Export].
+	// Legacy: [Register]-driven dispatch wins (with connector); [Export] is a no-op.
+	public class ExportOverridingRegisterShape : Activity
+	{
+		[Export ("onCreateExport")]
+		protected override void OnCreate (Android.OS.Bundle? savedInstanceState)
+		{
+			base.OnCreate (savedInstanceState);
+		}
+	}
 }
