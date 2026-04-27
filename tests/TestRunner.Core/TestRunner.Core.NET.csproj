@@ -5,7 +5,14 @@
     <SupportedOSPlatformVersion>$(AndroidMinimumDotNetApiLevel)</SupportedOSPlatformVersion>
     <OutputType>Library</OutputType>
     <RootNamespace>Xamarin.Android.UnitTests</RootNamespace>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NUnit" Version="4.3.2" />
+    <PackageReference Include="NUnit3TestAdapter" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingPlatformVersion)" />
+  </ItemGroup>
 
 </Project>

@@ -37,7 +37,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.NUnitLite\Xamarin.Android.NUnitLite.NET.csproj" />
     <ProjectReference Include="$(JavaInteropSourceDirectory)\src\Java.Interop.GenericMarshaler\Java.Interop.GenericMarshaler.csproj" />
   </ItemGroup>
 

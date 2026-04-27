@@ -65,12 +65,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="NUnit" Version="4.3.2" />
+    <PackageReference Include="NUnit3TestAdapter" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\TestRunner.Core\TestRunner.Core.NET.csproj" />
-    <ProjectReference Include="..\..\TestRunner.NUnit\TestRunner.NUnit.NET.csproj" />
     <ProjectReference Include="..\..\StartupHook\StartupHook.csproj" />
     <ProjectReference Include="..\Java.Interop-Tests\Java.Interop-Tests.NET.csproj" />
     <ProjectReference Include="..\Mono.Android-Test.Library\Mono.Android-Test.Library.NET.csproj" />
-    <ProjectReference Include="..\..\..\src\Xamarin.Android.NUnitLite\Xamarin.Android.NUnitLite.NET.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -241,6 +244,11 @@
     <AndroidNativeLibrary Include="..\libs\x86_64\libreuse-threads.so" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <_AndroidEnableObjectReferenceLogging>false</_AndroidEnableObjectReferenceLogging>
+    <AndroidInstrumentation>xamarin.android.runtimetests.TestInstrumentation</AndroidInstrumentation>
+  </PropertyGroup>
+
   <!-- Used by AppContextTests.cs -->
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="test_bool"    Value="true" />
@@ -249,33 +257,5 @@
     <!-- Set STARTUP_HOOKS via RuntimeHostConfigurationOption for MonoVM (read via AppContext.GetData) -->
     <RuntimeHostConfigurationOption Include="STARTUP_HOOKS" Value="StartupHook" Condition=" '$(UseMonoRuntime)' == 'true' " />
   </ItemGroup>
-
-  <ItemGroup Condition=" '$(AndroidPackageFormat)' != 'aab' ">
-    <TestApk Include="$(OutputPath)$(_MonoAndroidTestPackage)-Signed.apk">
-      <Package>$(_MonoAndroidTestPackage)</Package>
-      <InstrumentationType>xamarin.android.runtimetests.NUnitInstrumentation</InstrumentationType>
-      <ResultsPath>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage).xml</ResultsPath>
-      <TimingDefinitionsFilename>$(XamarinAndroidSourcePath)build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
-      <TimingResultsFilename>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage)-times.csv</TimingResultsFilename>
-      <ApkSizesInputFilename>apk-sizes-$(_MonoAndroidTestPackage)-$(Configuration)$(TestsFlavor).txt</ApkSizesInputFilename>
-      <ApkSizesDefinitionFilename>$(XamarinAndroidSourcePath)build-tools\scripts\ApkSizesDefinitions.txt</ApkSizesDefinitionFilename>
-      <ApkSizesResultsFilename>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage)-values-$(Configuration).csv</ApkSizesResultsFilename>
-    </TestApk>
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(AndroidPackageFormat)' == 'aab' ">
-    <TestAab Include="$(OutputPath)$(_MonoAndroidTestPackage)-Signed.aab">
-      <Package>$(_MonoAndroidTestPackage)</Package>
-      <InstrumentationType>xamarin.android.runtimetests.NUnitInstrumentation</InstrumentationType>
-      <ResultsPath>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage).xml</ResultsPath>
-      <TimingDefinitionsFilename>$(XamarinAndroidSourcePath)build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
-      <TimingResultsFilename>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage)-times.csv</TimingResultsFilename>
-      <ApkSizesInputFilename>apk-sizes-$(_MonoAndroidTestPackage)-$(Configuration)$(TestsFlavor).txt</ApkSizesInputFilename>
-      <ApkSizesDefinitionFilename>$(XamarinAndroidSourcePath)build-tools\scripts\ApkSizesDefinitions.txt</ApkSizesDefinitionFilename>
-      <ApkSizesResultsFilename>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage)-values-$(Configuration).csv</ApkSizesResultsFilename>
-    </TestAab>
-  </ItemGroup>
-
-  <Import Project="$(XamarinAndroidSourcePath)build-tools\scripts\TestApks.targets" />
 
 </Project>
