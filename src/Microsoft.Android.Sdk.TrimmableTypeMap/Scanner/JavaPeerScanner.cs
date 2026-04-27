@@ -275,9 +275,17 @@ public sealed class JavaPeerScanner : IDisposable
 				continue;
 			}
 
-		AddMarshalMethod (methods, registerInfo, methodDef, index, exportInfo);
-			var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
-			registeredMethodKeys.Add ($"{index.Reader.GetString (methodDef.Name)}({string.Join (",", sig.ParameterTypes)})");
+			AddMarshalMethod (methods, registerInfo, methodDef, index, exportInfo);
+			// Only [Register]-direct (and [JniConstructorSignature]) registrations
+			// should preempt Pass 3 base-override detection. [Export]/[ExportField]
+			// are orthogonal to a [Register]-driven override on the same method —
+			// e.g., `[Export("foo")] public override void OnCreate(...)` needs both
+			// the [Register]-driven override entry (Get*Handler connector) AND the
+			// [Export]-driven entry. Skip the dedup key for [Export]/[ExportField].
+			if (exportInfo is null) {
+				var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+				registeredMethodKeys.Add ($"{index.Reader.GetString (methodDef.Name)}({string.Join (",", sig.ParameterTypes)})");
+			}
 		}
 
 		// Pass 2: collect [Register] from properties (attribute is on the property, not the getter)

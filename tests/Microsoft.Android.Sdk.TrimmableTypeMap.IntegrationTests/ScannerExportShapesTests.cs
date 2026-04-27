@@ -255,4 +255,39 @@ public class ScannerExportShapesTests
 		Assert.Contains (calls, m => m.JniSignature == "(I)V");
 		Assert.Contains (calls, m => m.JniSignature == "(Ljava/lang/String;)V");
 	}
+
+	// === Phase C: robustness ===
+
+	[Fact]
+	public void Export_GenericMethod_ScannerDoesNotCrash ()
+	{
+		// Generic methods aren't legal Java targets for [Export], but the
+		// scanner must not crash. Either the method is skipped or it surfaces
+		// with some defined fallback — assert only that we get a non-null
+		// peer back without throwing.
+		var methods = GetMarshalMethods ("ExportGenericShapes");
+		Assert.NotNull (methods);
+	}
+
+	[Fact]
+	public void Export_OnRegisterOverride_RegisterPathWins ()
+	{
+		var methods = GetMarshalMethods ("ExportOverridingRegisterShape");
+
+		// The Activity.OnCreate override carries [Register]-driven dispatch
+		// (real Get*Handler connector). Putting [Export] on top of an override
+		// of a [Register]'d base means BOTH entries are registered: the
+		// [Register]-driven override (so Activity.onCreate dispatch still works)
+		// AND the [Export]-driven new method (so Java callers can call the
+		// renamed method). Matches legacy CecilImporter behaviour.
+		var onCreate = System.Array.Find (methods, m => m.JniName == "onCreate");
+		Assert.NotNull (onCreate);
+		Assert.False (onCreate!.Connector is null or "__export__",
+			$"OnCreate override should keep its [Register]-driven Get*Handler connector, got '{onCreate.Connector}'.");
+
+		var onCreateExport = System.Array.Find (methods, m => m.JniName == "onCreateExport");
+		Assert.NotNull (onCreateExport);
+		Assert.True (onCreateExport!.Connector is null or "__export__",
+			$"[Export]-driven entry should have no real connector, got '{onCreateExport.Connector}'.");
+	}
 }
