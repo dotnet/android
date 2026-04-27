@@ -178,7 +178,19 @@ static class ScannerRunner
 			return ExtractDirectRegisterAttributes (typeDef);
 		}
 
-		var wrapper = CecilImporter.CreateType (typeDef, cache);
+		Java.Interop.Tools.JavaCallableWrappers.CallableWrapperMembers.CallableWrapperType wrapper;
+		try {
+			wrapper = CecilImporter.CreateType (typeDef, cache);
+		} catch (ArgumentNullException) {
+			// Legacy JCW emitter (CecilImporter.GetJniSignature) cannot encode
+			// certain [Export] parameter / return types (enum, ICharSequence,
+			// non-generic collections). The trimmable scanner handles these,
+			// but legacy comparison can't be performed — yield direct
+			// [Register] attributes so the type is still represented in the
+			// legacy snapshot. This is the documented JCW emitter blocker
+			// (covered by ScannerExportShapesTests for the new scanner).
+			return ExtractDirectRegisterAttributes (typeDef);
+		}
 		var methods = new List<MethodEntry> ();
 
 		foreach (var m in wrapper.Methods) {
