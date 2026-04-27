@@ -523,12 +523,14 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 				var proxy = typeMap.GetProxyForJavaObject (reference.Handle, resolvedTargetType);
 
 				// Open-generic proxies (e.g. JavaList<>) cannot create closed
-				// instantiations (e.g. JavaList<int>) without reflection, which is
-				// incompatible with trimming. Built-in container types are handled
-				// via JavaPeerContainerFactory through JNIEnv helpers instead.
+				// instantiations (e.g. JavaList<int>) via CreateInstance because
+				// the generated IL can't newobj an open generic type. For known
+				// container types whose element type is IJavaPeerable, use the
+				// proxy's JavaPeerContainerFactory to create the closed type
+				// without reflection.
 				IJavaPeerable? peer;
 				if (proxy is not null && proxy.TargetType.IsGenericTypeDefinition) {
-					peer = null;
+					peer = TryCreateViaContainerFactory (typeMap, resolvedTargetType, reference.Handle);
 				} else {
 					peer = proxy?.CreateInstance (reference.Handle, JniHandleOwnership.DoNotTransfer);
 				}
@@ -581,6 +583,43 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 			return typeof (JavaException);
 		}
 		return type;
+	}
+
+	/// <summary>
+	/// Creates an instance of a closed generic container type (e.g. <c>JavaList&lt;T&gt;</c>)
+	/// using the <see cref="JavaPeerContainerFactory"/> from the element type's proxy.
+	/// This is the AOT/trim-safe replacement for reflection-based closed-generic activation.
+	/// Only works when the element type is <see cref="IJavaPeerable"/> — value-type
+	/// element types (e.g. <c>JavaList&lt;int&gt;</c>) are not supported.
+	/// </summary>
+	static IJavaPeerable? TryCreateViaContainerFactory (TrimmableTypeMap typeMap, Type? closedType, IntPtr handle)
+	{
+		if (closedType is null || !closedType.IsGenericType) {
+			return null;
+		}
+
+		var genericDef = closedType.GetGenericTypeDefinition ();
+		var typeArgs = closedType.GetGenericArguments ();
+
+		if (genericDef == typeof (Android.Runtime.JavaList<>) && typeArgs.Length == 1) {
+			var factory = typeMap.GetContainerFactory (typeArgs [0]);
+			return factory?.CreateList (handle, JniHandleOwnership.DoNotTransfer) as IJavaPeerable;
+		}
+
+		if (genericDef == typeof (Android.Runtime.JavaCollection<>) && typeArgs.Length == 1) {
+			var factory = typeMap.GetContainerFactory (typeArgs [0]);
+			return factory?.CreateCollection (handle, JniHandleOwnership.DoNotTransfer) as IJavaPeerable;
+		}
+
+		if (genericDef == typeof (Android.Runtime.JavaDictionary<,>) && typeArgs.Length == 2) {
+			var keyFactory = typeMap.GetContainerFactory (typeArgs [0]);
+			var valueFactory = typeMap.GetContainerFactory (typeArgs [1]);
+			if (keyFactory is not null && valueFactory is not null) {
+				return valueFactory.CreateDictionary (keyFactory, handle, JniHandleOwnership.DoNotTransfer) as IJavaPeerable;
+			}
+		}
+
+		return null;
 	}
 
 	/// <summary>
