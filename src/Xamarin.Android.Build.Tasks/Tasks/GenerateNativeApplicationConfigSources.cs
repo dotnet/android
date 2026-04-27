@@ -7,10 +7,11 @@ using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using System.Text;
-using Java.Interop.Tools.TypeNameMappings;
-using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
+
+using Java.Interop.Tools.TypeNameMappings;
 using Xamarin.Android.Tools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -26,11 +27,11 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public ITaskItem[] ResolvedAssemblies { get; set; } = [];
 
-		public ITaskItem []? AdditionalResolvedAssemblies { get; set; }
+		public ITaskItem[]? AdditionalResolvedAssemblies { get; set; }
 
-		public ITaskItem []? NativeLibraries { get; set; }
-		public ITaskItem []? NativeLibrariesNoJniPreload { get; set; }
-		public ITaskItem []? NativeLibrariesAlwaysJniPreload { get; set; }
+		public ITaskItem[]? NativeLibraries { get; set; }
+		public ITaskItem[]? NativeLibrariesNoJniPreload { get; set; }
+		public ITaskItem[]? NativeLibrariesAlwaysJniPreload { get; set; }
 
 		public ITaskItem[]? MonoComponents { get; set; }
 
