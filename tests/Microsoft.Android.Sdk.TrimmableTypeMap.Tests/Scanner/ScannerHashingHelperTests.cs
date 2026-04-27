@@ -18,4 +18,10 @@ public class ScannerHashingHelperTests
 	{
 		Assert.Equal ("03e39dfcc696a727", ScannerHashingHelper.ToXxHash64 ("MyApp", "TestFixtures"));
 	}
+
+	[Fact]
+	public void ToCrc64_KnownInput_HasStableOutput ()
+	{
+		Assert.Equal ("eb3df85c64aa1af6", ScannerHashingHelper.ToCrc64 ("MyApp", "TestFixtures"));
+	}
 }

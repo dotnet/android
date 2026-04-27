@@ -148,7 +148,7 @@ class ManifestGenerator
 
 	/// <summary>
 	/// Manifest templates may use compat JNI names (e.g., "android.apptests.App")
-	/// but the trimmable path generates JCWs with hashed package names (e.g., "xx64.../App").
+	/// but the trimmable path generates JCWs with hashed package names (e.g., "crc64.../App").
 	/// This method rewrites any compat name references to the actual JCW name so the
 	/// Android runtime can find the class.
 	/// </summary>

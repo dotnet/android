@@ -88,23 +88,31 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 	}
 
 	[Theory]
-	[InlineData ("MyApp.PlainActivitySubclass", "xx6403e39dfcc696a727/PlainActivitySubclass")]
-	[InlineData ("MyApp.UnregisteredClickListener", "xx6403e39dfcc696a727/UnregisteredClickListener")]
-	[InlineData ("MyApp.UnregisteredExporter", "xx6403e39dfcc696a727/UnregisteredExporter")]
+	[InlineData ("MyApp.PlainActivitySubclass", "PlainActivitySubclass")]
+	[InlineData ("MyApp.UnregisteredClickListener", "UnregisteredClickListener")]
+	[InlineData ("MyApp.UnregisteredExporter", "UnregisteredExporter")]
 	public void Scan_UnregisteredType_UsesHashedPackageName (string managedName, string expectedJavaName)
 	{
-		Assert.Equal (expectedJavaName, FindFixtureByManagedName (managedName).JavaName);
+		Assert.Equal ($"crc64{ScannerHashingHelper.ToCrc64 ("MyApp", "TestFixtures")}/{expectedJavaName}",
+			FindFixtureByManagedName (managedName).JavaName);
 	}
 
 	[Fact]
-	public void Scan_UnregisteredType_LowercaseCrc64Policy_UsesLegacyCrc64Hash ()
+	public void Scan_UnregisteredType_Crc64Default_DiffersFromLegacyLowercaseCrc64Policy ()
 	{
 		const string managedName = "MyApp.PlainActivitySubclass";
-		var withXxHash64 = FindFixtureByManagedName (managedName).JavaName;
-		var withCrc64 = FindFixtureByManagedName (managedName, "LowercaseCrc64").JavaName;
+		var withCrc64 = FindFixtureByManagedName (managedName).JavaName;
+		var withLowercaseCrc64 = FindFixtureByManagedName (managedName, "LowercaseCrc64").JavaName;
 
-		Assert.Equal ("crc64ec59e927bc71f4d8/PlainActivitySubclass", withCrc64);
-		Assert.StartsWith ("xx64", withXxHash64);
-		Assert.NotEqual (withXxHash64, withCrc64);
+		Assert.Equal ($"crc64{ScannerHashingHelper.ToCrc64 ("MyApp", "TestFixtures")}/PlainActivitySubclass", withCrc64);
+		Assert.Equal ("crc64ec59e927bc71f4d8/PlainActivitySubclass", withLowercaseCrc64);
+		Assert.NotEqual (withCrc64, withLowercaseCrc64);
+	}
+
+	[Fact]
+	public void Scan_UnregisteredType_XxHash64Policy_UsesXxHash64Hash ()
+	{
+		var withXxHash64 = FindFixtureByManagedName ("MyApp.PlainActivitySubclass", "XxHash64").JavaName;
+		Assert.Equal ("xx6403e39dfcc696a727/PlainActivitySubclass", withXxHash64);
 	}
 }

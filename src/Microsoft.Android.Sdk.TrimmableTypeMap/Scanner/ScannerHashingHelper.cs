@@ -37,6 +37,20 @@ internal static class ScannerHashingHelper
 		}
 	}
 
+	internal static string ToCrc64 (string ns, string assemblyName)
+	{
+		int byteCount = GetNamespaceAssemblyUtf8ByteCount (ns, assemblyName);
+		byte[] rented = ArrayPool<byte>.Shared.Rent (byteCount);
+		try {
+			int bytesWritten = GetNamespaceAssemblyUtf8Bytes (ns, assemblyName, rented.AsSpan (0, byteCount));
+			Span<byte> hash = stackalloc byte [8];
+			System.IO.Hashing.Crc64.Hash (rented.AsSpan (0, bytesWritten), hash);
+			return ToHexString (hash, lowercase: true);
+		} finally {
+			ArrayPool<byte>.Shared.Return (rented);
+		}
+	}
+
 	static int GetNamespaceAssemblyUtf8ByteCount (string ns, string assemblyName)
 	{
 		return System.Text.Encoding.UTF8.GetByteCount (ns) + 1 + System.Text.Encoding.UTF8.GetByteCount (assemblyName);

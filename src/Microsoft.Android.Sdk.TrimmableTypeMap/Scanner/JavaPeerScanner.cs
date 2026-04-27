@@ -18,6 +18,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 public sealed class JavaPeerScanner : IDisposable
 {
 	enum HashedPackageNamingPolicy {
+		Crc64,
 		XxHash64,
 		LowercaseCrc64,
 	}
@@ -1486,6 +1487,7 @@ public sealed class JavaPeerScanner : IDisposable
 
 		return packageNamingPolicy switch {
 			HashedPackageNamingPolicy.LowercaseCrc64 => "crc64" + ScannerHashingHelper.ToLegacyCrc64 (ns, assemblyName),
+			HashedPackageNamingPolicy.Crc64 => "crc64" + ScannerHashingHelper.ToCrc64 (ns, assemblyName),
 			_ => "xx64" + ScannerHashingHelper.ToXxHash64 (ns, assemblyName),
 		};
 	}
@@ -1495,8 +1497,11 @@ public sealed class JavaPeerScanner : IDisposable
 		if (string.Equals (packageNamingPolicy, "LowercaseCrc64", StringComparison.OrdinalIgnoreCase)) {
 			return HashedPackageNamingPolicy.LowercaseCrc64;
 		}
+		if (string.Equals (packageNamingPolicy, "XxHash64", StringComparison.OrdinalIgnoreCase)) {
+			return HashedPackageNamingPolicy.XxHash64;
+		}
 
-		return HashedPackageNamingPolicy.XxHash64;
+		return HashedPackageNamingPolicy.Crc64;
 	}
 
 	static string ExtractNamespace (string fullName)
