@@ -517,7 +517,7 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 				// Mirror legacy GetPeerType: callers commonly request universal
 				// interfaces / boxes (IJavaPeerable, object, Exception) — map these
 				// to a concrete peer type so the proxy lookup can succeed.
-				var resolvedTargetType = targetType is null ? null : ResolvePeerType (targetType);
+				var resolvedTargetType = ResolvePeerType (targetType);
 
 				var typeMap = TrimmableTypeMap.Instance;
 				var proxy = typeMap.GetProxyForJavaObject (reference.Handle, resolvedTargetType);
@@ -525,12 +525,12 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 				// Open-generic proxies (e.g. JavaList<>) cannot create closed
 				// instantiations (e.g. JavaList<int>) via CreateInstance because
 				// the generated IL can't newobj an open generic type. For known
-				// container types, use Object.ActivatePeer which calls the
-				// activation ctor via UnsafeAccessor — fully AOT-safe.
+				// container types, use per-type UnsafeAccessor activation —
+				// fully AOT-safe, no reflection.
 				IJavaPeerable? peer;
 				if (proxy is not null && proxy.TargetType.IsGenericTypeDefinition &&
-						resolvedTargetType is not null && IsKnownContainerType (resolvedTargetType)) {
-					peer = global::Java.Lang.Object.ActivatePeer (resolvedTargetType, reference.Handle, JniHandleOwnership.DoNotTransfer);
+						resolvedTargetType is not null) {
+					peer = KnownContainerActivator.TryCreateKnownContainerType (resolvedTargetType, reference.Handle, JniHandleOwnership.DoNotTransfer);
 				} else {
 					peer = proxy?.CreateInstance (reference.Handle, JniHandleOwnership.DoNotTransfer);
 				}
@@ -574,8 +574,11 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 	}
 
 	[return: DynamicallyAccessedMembers (Constructors)]
-	static Type ResolvePeerType ([DynamicallyAccessedMembers (Constructors)] Type type)
+	static Type? ResolvePeerType ([DynamicallyAccessedMembers (Constructors)] Type? type)
 	{
+		if (type is null) {
+			return null;
+		}
 		if (type == typeof (object) || type == typeof (IJavaPeerable)) {
 			return typeof (global::Java.Interop.JavaObject);
 		}
@@ -583,25 +586,6 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 			return typeof (JavaException);
 		}
 		return type;
-	}
-
-	/// <summary>
-	/// Returns true if <paramref name="closedType"/> is a closed instantiation of one of
-	/// the known container generic definitions whose activation constructors are trivial
-	/// <c>base(handle, transfer)</c> chains — safe to activate via <see cref="global::Java.Lang.Object.ActivatePeer"/>.
-	/// </summary>
-	static bool IsKnownContainerType ([DynamicallyAccessedMembers (Constructors)] Type closedType)
-	{
-		if (!closedType.IsGenericType || closedType.IsGenericTypeDefinition) {
-			return false;
-		}
-
-		var genericDef = closedType.GetGenericTypeDefinition ();
-		return genericDef == typeof (global::Android.Runtime.JavaList<>)
-			|| genericDef == typeof (global::Android.Runtime.JavaCollection<>)
-			|| genericDef == typeof (global::Android.Runtime.JavaDictionary<,>)
-			|| genericDef == typeof (global::Android.Runtime.JavaSet<>)
-			|| genericDef == typeof (global::Android.Runtime.JavaArray<>);
 	}
 
 	/// <summary>

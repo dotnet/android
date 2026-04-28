@@ -38,33 +38,6 @@ namespace Java.Lang {
 			SetHandle (handle, transfer);
 		}
 
-		/// <summary>
-		/// Creates an instance of a closed generic container type (e.g. <c>JavaList&lt;int&gt;</c>)
-		/// without reflection. Uses <see cref="System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject"/>
-		/// to allocate the instance and calls the <c>Java.Lang.Object(IntPtr, JniHandleOwnership)</c>
-		/// activation constructor via <see cref="System.Runtime.CompilerServices.UnsafeAccessorAttribute"/>
-		/// to properly initialize the JNI peer.
-		/// </summary>
-		/// <remarks>
-		/// This is only safe for types whose activation constructor is a trivial
-		/// <c>base(handle, transfer)</c> chain up to <c>Java.Lang.Object</c> — verified
-		/// for the known container types (<c>JavaList&lt;T&gt;</c>, <c>JavaCollection&lt;T&gt;</c>,
-		/// <c>JavaDictionary&lt;K,V&gt;</c>, <c>JavaSet&lt;T&gt;</c>, <c>JavaArray&lt;T&gt;</c>).
-		/// </remarks>
-		internal static IJavaPeerable ActivatePeer (
-				[DynamicallyAccessedMembers (Constructors)]
-				Type peerType,
-				IntPtr handle,
-				JniHandleOwnership transfer)
-		{
-			var obj = (Object) System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject (peerType);
-			InvokeActivationCtor (obj, handle, transfer);
-			return obj;
-		}
-
-		[System.Runtime.CompilerServices.UnsafeAccessor (System.Runtime.CompilerServices.UnsafeAccessorKind.Method, Name = ".ctor")]
-		static extern void InvokeActivationCtor (Object obj, IntPtr handle, JniHandleOwnership transfer);
-
 		// Note: must be internal so that e.g. DataContractJsonSerializer will find it
 		[OnDeserialized]
 		internal void SetHandleOnDeserialized (StreamingContext context)
