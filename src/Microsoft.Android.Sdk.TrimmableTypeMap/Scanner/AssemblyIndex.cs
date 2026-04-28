@@ -226,7 +226,7 @@ sealed class AssemblyIndex : IDisposable
 
 		string jniName = "";
 		bool doNotGenerateAcw = false;
-		bool isKeyword = false;
+		int arrayRank = 0;
 
 		if (value.FixedArguments.Length > 0) {
 			jniName = (string?)value.FixedArguments [0].Value ?? "";
@@ -236,15 +236,15 @@ sealed class AssemblyIndex : IDisposable
 			doNotGenerateAcw = !generateJavaPeer;
 		}
 
-		if (TryGetNamedArgument<bool> (value, "IsKeyword", out var kw)) {
-			isKeyword = kw;
+		if (TryGetNamedArgument<int> (value, "ArrayRank", out var rank)) {
+			arrayRank = rank;
 		}
 
 		return new RegisterInfo {
 			JniName = jniName.Replace ('.', '/'),
 			DoNotGenerateAcw = doNotGenerateAcw,
 			IsFromJniTypeSignature = true,
-			IsKeyword = isKeyword,
+			IsArrayType = arrayRank > 0,
 		};
 	}
 
@@ -535,7 +535,7 @@ sealed record RegisterInfo
 	public string? Connector { get; init; }
 	public bool DoNotGenerateAcw { get; init; }
 	public bool IsFromJniTypeSignature { get; init; }
-	public bool IsKeyword { get; init; }
+	public bool IsArrayType { get; init; }
 }
 
 /// <summary>

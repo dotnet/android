@@ -182,11 +182,13 @@ public sealed class JavaPeerScanner : IDisposable
 			index.AttributesByType.TryGetValue (typeHandle, out var attrInfo);
 
 			if (registerInfo is not null && !string.IsNullOrEmpty (registerInfo.JniName)) {
-				// [JniTypeSignature] with IsKeyword=true represents a JNI primitive type
-				// (e.g., "Z" for JavaBooleanArray). These are not real Java classes and
-				// must not be added to the typemap — doing so would collide with the
-				// built-in primitive type handling in JniRuntime.JniTypeManager.
-				if (registerInfo.IsKeyword) {
+				// [JniTypeSignature] with ArrayRank > 0 represents a JNI array wrapper
+				// (e.g., JavaBooleanArray, JavaObjectArray<T>, JavaPrimitiveArray<T>).
+				// These are handled by the built-in tables in JniRuntime.JniTypeManager
+				// and must not be added to the typemap — keyword types (Z, B, etc.)
+				// would collide with GetPrimitiveArrayTypesForSimpleReference, and
+				// non-keyword array types would add unnecessary aliases.
+				if (registerInfo.IsArrayType) {
 					continue;
 				}
 				jniName = registerInfo.JniName;
