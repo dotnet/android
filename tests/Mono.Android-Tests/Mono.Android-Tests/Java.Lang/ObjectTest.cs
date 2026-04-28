@@ -19,6 +19,7 @@ namespace Java.LangTests
 	[TestFixture]
 	public class ObjectTest
 	{
+		// TODO: https://github.com/dotnet/android/issues/11170 — trimmable typemap doesn't resolve most-derived managed type
 		[Test]
 		public void GetObject_ReturnsMostDerivedType ()
 		{

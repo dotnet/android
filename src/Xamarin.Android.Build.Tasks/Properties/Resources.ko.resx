@@ -306,6 +306,10 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <value>인터프리터를 사용하지 않도록 설정하는 중입니다. 인터프리터와 AOT를 동시에 사용하는 것은 지원되지 않습니다. 디버그 구성에서 핫 다시 로드 지원에 인터프리터를 사용하고 릴리스 구성에 AOT를 사용합니다.</value>
     <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
   </data>
+  <data name="XA0119_ReadyToRun" xml:space="preserve">
+    <value>Using fast deployment and ReadyToRun at the same time is not recommended. Use fast deployment for Debug configurations and ReadyToRun for Release configurations.</value>
+    <comment>The following are literal names and should not be translated: ReadyToRun, Debug, Release.</comment>
+  </data>
   <data name="XA0121" xml:space="preserve">
     <value>'{0}' 어셈블리가 더 이상 지원되지 않는 '[assembly: {1}]'을(를) 사용하고 있습니다. 이 NuGet 패키지의 최신 버전을 사용하거나 라이브러리 작성자에게 알리세요.</value>
     <comment>The following are literal names and should not be translated: [assembly: {1}], NuGet
@@ -1010,7 +1014,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 </comment>
   </data>
   <data name="XA1044" xml:space="preserve">
-    <value>The MSBuild property '{0}' is not compatible with the {1} runtime and will be ignored. Either remove the property or guard it with a condition: Condition="'$(UseMonoRuntime)' == 'true'"</value>
+    <value>MSBuild 속성 '{0}'은(는) {1} 런타임과 호환되지 않으므로 무시됩니다. 속성을 제거하거나 Condition="'$(UseMonoRuntime)' == 'true'" 조건으로 보호하세요.</value>
     <comment>The following are literal names and should not be translated: MSBuild, UseMonoRuntime.
 {0} - The MSBuild property name (e.g. RunAOTCompilation, EnableLLVM).
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).

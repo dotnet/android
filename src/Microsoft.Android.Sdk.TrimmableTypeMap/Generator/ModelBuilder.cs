@@ -16,6 +16,13 @@ static class ModelBuilder
 {
 	const string ProxyTypeSuffix = "_Proxy";
 
+	// Workaround for https://github.com/dotnet/runtime/issues/127004
+	// When true, all TypeMap entries are emitted as 2-arg (unconditional) to avoid the
+	// trimmer bug that strips TypeMapAssociation attributes when a TypeMap attribute
+	// references the same type. Set to false once the runtime bug is fixed to re-enable
+	// 3-arg conditional entries that allow unused framework bindings to be trimmed away.
+	const bool ForceUnconditionalEntries = true;
+
 	static readonly HashSet<string> EssentialRuntimeTypes = new (StringComparer.Ordinal) {
 		"java/lang/Object",
 		"java/lang/Class",
@@ -108,12 +115,48 @@ static class ModelBuilder
 	static void EmitPeers (TypeMapAssemblyData model, string jniName,
 		List<JavaPeerInfo> peersForName, string assemblyName, HashSet<string> usedProxyNames)
 	{
-		// First peer is the "primary" — it gets the base JNI name entry.
-		// Remaining peers get indexed alias entries: "jni/name[1]", "jni/name[2]", ...
-		JavaPeerProxyData? primaryProxy = null;
+		bool isAliasGroup = peersForName.Count > 1;
+
+		if (!isAliasGroup) {
+			// Single peer — no aliases needed, emit directly with the base JNI name
+			var peer = peersForName [0];
+			bool hasProxy = peer.ActivationCtor != null || peer.InvokerTypeName != null;
+			bool isAcw = !peer.DoNotGenerateAcw && !peer.IsInterface && peer.MarshalMethods.Count > 0;
+
+			JavaPeerProxyData? proxy = null;
+			if (hasProxy) {
+				proxy = BuildProxyType (peer, jniName, usedProxyNames, isAcw);
+				model.ProxyTypes.Add (proxy);
+			}
+
+			var entry = BuildEntry (peer, proxy, assemblyName, jniName);
+			model.Entries.Add (entry);
+
+			// Emit a TypeMapAssociation for every entry that has a proxy.
+			// The runtime's _proxyTypeMap (GetOrCreateProxyTypeMapping) is populated from
+			// TypeMapAssociationAttribute — NOT from TypeMapAttribute's 3rd arg.
+			// Without this, the proxy type map is empty and CreatePeer fails for
+			// interface types like IIterator where targetType-based lookup is needed.
+			if (proxy != null) {
+				model.Associations.Add (new TypeMapAssociationData {
+					SourceTypeReference = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName),
+					AliasProxyTypeReference = AssemblyQualify ($"{proxy.Namespace}.{proxy.TypeName}", assemblyName),
+				});
+			}
+			return;
+		}
+
+		// Alias group: generate an alias holder and indexed entries for each peer.
+		// The base JNI name maps to the alias holder; each peer gets "[0]", "[1]", etc.
+		var aliasKeys = new List<string> ();
+		string holderTypeName = jniName.Replace ('/', '_').Replace ('$', '_') + "_Aliases";
+		var holderNamespace = "_TypeMap.Aliases";
+		string holderRef = AssemblyQualify ($"{holderNamespace}.{holderTypeName}", assemblyName);
+
 		for (int i = 0; i < peersForName.Count; i++) {
 			var peer = peersForName [i];
-			string entryJniName = i == 0 ? jniName : $"{jniName}[{i}]";
+			string entryJniName = $"{jniName}[{i}]";
+			aliasKeys.Add (entryJniName);
 
 			bool hasProxy = peer.ActivationCtor != null || peer.InvokerTypeName != null;
 			bool isAcw = !peer.DoNotGenerateAcw && !peer.IsInterface && peer.MarshalMethods.Count > 0;
@@ -124,25 +167,35 @@ static class ModelBuilder
 				model.ProxyTypes.Add (proxy);
 			}
 
-			if (i == 0) {
-				primaryProxy = proxy;
-			}
-
 			model.Entries.Add (BuildEntry (peer, proxy, assemblyName, entryJniName));
 
-			// Emit TypeMapAssociation for all proxy-backed types so managed → proxy
-			// lookup works even when the final JNI name differs from the type's attributes.
-			// Generic definitions are included — their proxy types derive from the
-			// non-generic `JavaPeerProxy` base so the CLR can load them without
-			// resolving an open generic argument.
-			var assocProxy = (i > 0 && primaryProxy != null) ? primaryProxy : proxy;
-			if (assocProxy != null) {
-				model.Associations.Add (new TypeMapAssociationData {
-					SourceTypeReference = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName),
-					AliasProxyTypeReference = AssemblyQualify ($"{assocProxy.Namespace}.{assocProxy.TypeName}", assemblyName),
-				});
-			}
+			// Link each alias type to the alias holder for trimming
+			model.Associations.Add (new TypeMapAssociationData {
+				SourceTypeReference = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName),
+				AliasProxyTypeReference = holderRef,
+			});
 		}
+
+		// Base JNI name entry → alias holder (self-referencing trim target, kept alive by associations)
+		// When ForceUnconditionalEntries is true we MUST emit this as 2-arg (unconditional) just
+		// like BuildEntry does: dotnet/runtime#127004 strips the TypeMapAssociation that keeps the
+		// holder alive when a TypeMap entry references the same type, leaving the dictionary key
+		// missing at runtime and breaking hierarchy lookups for essential types like
+		// java/lang/String and java/lang/Object.
+		bool aliasBaseUnconditional = ForceUnconditionalEntries
+			|| EssentialRuntimeTypes.Contains (jniName)
+			|| peersForName.Any (IsUnconditionalEntry);
+		model.Entries.Add (new TypeMapAttributeData {
+			JniName = jniName,
+			ProxyTypeReference = holderRef,
+			TargetTypeReference = aliasBaseUnconditional ? null : holderRef,
+		});
+
+		model.AliasHolders.Add (new AliasHolderData {
+			TypeName = holderTypeName,
+			Namespace = holderNamespace,
+			AliasKeys = aliasKeys,
+		});
 	}
 
 	/// <summary>
@@ -322,7 +375,9 @@ static class ModelBuilder
 			proxyRef = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName);
 		}
 
-		bool isUnconditional = IsUnconditionalEntry (peer);
+		// When ForceUnconditionalEntries is true, always emit 2-arg (unconditional) TypeMap
+		// attributes to work around https://github.com/dotnet/runtime/issues/127004.
+		bool isUnconditional = ForceUnconditionalEntries || IsUnconditionalEntry (peer);
 		string? targetRef = null;
 		if (!isUnconditional) {
 			targetRef = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName);

@@ -448,6 +448,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Using fast deployment and ReadyToRun at the same time is not recommended. Use fast deployment for Debug configurations and ReadyToRun for Release configurations..
+        /// </summary>
+        public static string XA0119_ReadyToRun {
+            get {
+                return ResourceManager.GetString("XA0119_ReadyToRun", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Using fast deployment and the linker at the same time is not recommended. Use fast deployment for Debug configurations and the linker for Release configurations..
         /// </summary>
         public static string XA0119_LinkMode {

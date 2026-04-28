@@ -306,6 +306,10 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <value>Zakázání interpreta; použití interpretu a AOT ve stejnou dobu není podporováno. Použijte interpret pro podporu opětovného načítání za provozu v konfiguracích ladění a AOT pro konfigurace release.</value>
     <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
   </data>
+  <data name="XA0119_ReadyToRun" xml:space="preserve">
+    <value>Using fast deployment and ReadyToRun at the same time is not recommended. Use fast deployment for Debug configurations and ReadyToRun for Release configurations.</value>
+    <comment>The following are literal names and should not be translated: ReadyToRun, Debug, Release.</comment>
+  </data>
   <data name="XA0121" xml:space="preserve">
     <value>Sestavení {0} používá atribut [assembly: {1}], který se už nepodporuje. Použijte novější verzi tohoto balíčku NuGet, nebo to oznamte autorovi knihovny.</value>
     <comment>The following are literal names and should not be translated: [assembly: {1}], NuGet
@@ -1010,7 +1014,7 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
 </comment>
   </data>
   <data name="XA1044" xml:space="preserve">
-    <value>The MSBuild property '{0}' is not compatible with the {1} runtime and will be ignored. Either remove the property or guard it with a condition: Condition="'$(UseMonoRuntime)' == 'true'"</value>
+    <value>Vlastnost MSBuild {0} není kompatibilní s modulem runtime {1} a bude ignorována. Odeberte vlastnost nebo ji ošetřete podmínkou: Condition="'$(UseMonoRuntime)' == 'true'"</value>
     <comment>The following are literal names and should not be translated: MSBuild, UseMonoRuntime.
 {0} - The MSBuild property name (e.g. RunAOTCompilation, EnableLLVM).
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).

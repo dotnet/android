@@ -76,6 +76,16 @@ auto OSBridge::_monodroid_gref_dec () noexcept -> int
 	return __sync_sub_and_fetch (&gc_gref_count, 1);
 }
 
+auto OSBridge::_monodroid_weak_gref_inc () noexcept -> int
+{
+	return __sync_add_and_fetch (&gc_weak_gref_count, 1);
+}
+
+auto OSBridge::_monodroid_weak_gref_dec () noexcept -> int
+{
+	return __sync_sub_and_fetch (&gc_weak_gref_count, 1);
+}
+
 [[gnu::always_inline]]
 void OSBridge::_write_stack_trace (FILE *to, const char *const from, LogCategories category) noexcept
 {
@@ -150,10 +160,11 @@ auto OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject
 		return c;
 	}
 
+	int wc = __atomic_load_n (&gc_weak_gref_count, __ATOMIC_RELAXED);
 	const std::string log_line = std::format (
 		"+g+ grefc {} gwrefc {} obj-handle {:p}/{} -> new-handle {:p}/{} from thread '{}'({})"sv,
 		c,
-		gc_weak_gref_count,
+		wc,
 		reinterpret_cast<void*>(curHandle),
 		curType,
 		reinterpret_cast<void*>(newHandle),
@@ -173,10 +184,11 @@ void OSBridge::_monodroid_gref_log_delete (jobject handle, char type, const char
 		return;
 	}
 
+	int wc = __atomic_load_n (&gc_weak_gref_count, __ATOMIC_RELAXED);
 	const std::string log_line = std::format (
 		"-g- grefc {} gwrefc {} handle {:p}/{} from thread '{}'({})"sv,
 		c,
-		gc_weak_gref_count,
+		wc,
 		reinterpret_cast<void*>(handle),
 		type,
 		optional_string (threadName),
@@ -188,15 +200,16 @@ void OSBridge::_monodroid_gref_log_delete (jobject handle, char type, const char
 
 void OSBridge::_monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from)
 {
-	++gc_weak_gref_count;
+	int c = _monodroid_weak_gref_inc ();
 	if ((log_categories & LOG_GREF) == 0) [[likely]] {
 		return;
 	}
 
+	int gc = __atomic_load_n (&gc_gref_count, __ATOMIC_RELAXED);
 	const std::string log_line = std::format (
 		"+w+ grefc {} gwrefc {} obj-handle {:p}/{} -> new-handle {:p}/{} from thread '{}'({})"sv,
-		gc_gref_count,
-		gc_weak_gref_count,
+		gc,
+		c,
 		reinterpret_cast<void*>(curHandle),
 		curType,
 		reinterpret_cast<void*>(newHandle),
@@ -229,15 +242,16 @@ OSBridge::_monodroid_lref_log_new (int lrefc, jobject handle, char type, const c
 
 void OSBridge::_monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from)
 {
-	--gc_weak_gref_count;
+	int c = _monodroid_weak_gref_dec ();
 	if ((log_categories & LOG_GREF) == 0) [[likely]] {
 		return;
 	}
 
+	int gc = __atomic_load_n (&gc_gref_count, __ATOMIC_RELAXED);
 	const std::string log_line = std::format (
 		"-w- grefc {} gwrefc {} handle {:p}/{} from thread '{}'({})"sv,
-		gc_gref_count,
-		gc_weak_gref_count,
+		gc,
+		c,
 		reinterpret_cast<void*>(handle),
 		type,
 		optional_string (threadName),

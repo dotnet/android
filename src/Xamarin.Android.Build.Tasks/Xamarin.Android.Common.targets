@@ -533,6 +533,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       ResourceName="XA0119_Interpreter"
       Condition=" '$(AndroidUseInterpreter)' == 'True' And '$(AotAssemblies)' == 'True' "
   />
+  <AndroidWarning Code="XA0119"
+      ResourceName="XA0119_ReadyToRun"
+      Condition=" '$(EmbedAssembliesIntoApk)' != 'True' And '$(PublishReadyToRun)' == 'True' "
+  />
   <AndroidWarning Code="XA1027"
       ResourceName="XA1027"
       Condition=" $(_AndroidXA1027) == 'true' "
@@ -990,6 +994,8 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="ProjectFullPath=$(MSBuildProjectFullPath)" />
 		<_PropertyCacheItems Include="AndroidUseDesignerAssembly=$(AndroidUseDesignerAssembly)" />
 		<_PropertyCacheItems Include="_AndroidTypeMapImplementation=$(_AndroidTypeMapImplementation)" />
+		<_PropertyCacheItems Include="_AndroidUseMarshalMethods=$(_AndroidUseMarshalMethods)" />
+		<_PropertyCacheItems Include="_AndroidJcwCodegenTarget=$(_AndroidJcwCodegenTarget)" />
 	</ItemGroup>
 	<WriteLinesToFile
 			File="$(_AndroidBuildPropertiesCache)"
@@ -1727,6 +1733,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <GenerateNativeApplicationConfigSources
       ResolvedAssemblies="@(_ResolvedAssemblies)"
+      AdditionalResolvedAssemblies="@(_AdditionalNativeConfigResolvedAssemblies)"
       SatelliteAssemblies="@(_AndroidResolvedSatellitePaths)"
       NativeLibraries="@(_AllNativeLibraries)"
       NativeLibrariesNoJniPreload="@(_AndroidNativeLibraryNeverJniPreload);@(AndroidNativeLibraryNoJniPreload)"

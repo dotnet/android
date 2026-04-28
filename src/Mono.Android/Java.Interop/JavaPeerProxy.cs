@@ -7,6 +7,30 @@ using Android.Runtime;
 namespace Java.Interop
 {
 	/// <summary>
+	/// Attribute applied to generated alias holder types. When multiple .NET types
+	/// map to the same JNI name (e.g., <c>JavaCollection</c> and <c>JavaCollection&lt;T&gt;</c>
+	/// both map to <c>"java/util/Collection"</c>), the base JNI name entry points to
+	/// a plain holder class annotated with this attribute, which lists the indexed
+	/// TypeMap keys for each alias type.
+	/// </summary>
+	/// <remarks>
+	/// The alias holder is NOT a <see cref="JavaPeerProxy"/> subclass — this ensures
+	/// <c>GetCustomAttribute&lt;JavaPeerProxy&gt;()</c> returns null for alias entries,
+	/// keeping the fast path (non-alias types) free of alias checks.
+	/// </remarks>
+	[AttributeUsage (AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+	public sealed class JavaPeerAliasesAttribute : Attribute
+	{
+		/// <summary>
+		/// Gets the indexed TypeMap keys for this alias group (e.g., <c>"java/util/Collection[0]"</c>,
+		/// <c>"java/util/Collection[1]"</c>).
+		/// </summary>
+		public string[] Aliases { get; }
+
+		public JavaPeerAliasesAttribute (params string[] aliases) => Aliases = aliases;
+	}
+
+	/// <summary>
 	/// Base attribute class for generated proxy types that enable AOT-safe type mapping
 	/// between Java and .NET types.
 	/// </summary>
@@ -61,6 +85,24 @@ namespace Java.Interop
 		/// </summary>
 		/// <returns>A factory for creating containers of the target type, or null if not supported.</returns>
 		public virtual JavaPeerContainerFactory? GetContainerFactory () => null;
+
+		/// <summary>
+		/// Returns <see langword="true"/> when the UCO constructor callback should skip
+		/// activation because a managed peer already exists for the given JNI handle
+		/// (e.g., when called from <c>FinishCreateInstance</c> after <c>StartCreateInstance</c>
+		/// already registered the peer).
+		/// </summary>
+		public static bool ShouldSkipActivation (IntPtr jniSelf)
+		{
+			var reference = new JniObjectReference (jniSelf, JniObjectReferenceType.Invalid);
+			var peer = JniEnvironment.Runtime.ValueManager.PeekPeer (reference);
+			if (peer == null) {
+				return false;
+			}
+			var state = peer.JniManagedPeerState;
+			return (state & JniManagedPeerStates.Activatable) != JniManagedPeerStates.Activatable
+				&& (state & JniManagedPeerStates.Replaceable) != JniManagedPeerStates.Replaceable;
+		}
 	}
 
 	/// <summary>

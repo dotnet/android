@@ -296,7 +296,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		var reader = pe.GetMetadataReader ();
 		var memberNames = GetMemberRefNames (reader);
 
-		Assert.Contains ("get_WithinNewObjectScope", memberNames);
+		Assert.Contains ("ShouldSkipActivation", memberNames);
 		Assert.Contains ("GetUninitializedObject", memberNames);
 		Assert.DoesNotContain ("ActivateInstance", memberNames);
 		Assert.DoesNotContain ("ActivatePeerFromJavaConstructor", memberNames);
@@ -862,5 +862,301 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			Assert.True (rvaFields.Count < allStrings.Count,
 				$"Expected fewer RVA fields ({rvaFields.Count}) than total strings ({allStrings.Count}) due to deduplication");
 		}
+	}
+
+	[Fact]
+	public void Generate_AliasGroup_ProducesCorrectIndexedEntries ()
+	{
+		var peers = ScanFixtures ();
+		var aliasPeers = peers.Where (p => p.JavaName == "test/AliasTarget").ToList ();
+		Assert.Equal (3, aliasPeers.Count);
+
+		using var stream = GenerateAssembly (aliasPeers, "AliasRoundTrip");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		// Read all TypeMap attribute blobs
+		var typeMapBlobs = new List<(string? jniName, string? proxyRef, string? targetRef)> ();
+		var asmAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
+		foreach (var attrHandle in asmAttrs) {
+			var attr = reader.GetCustomAttribute (attrHandle);
+			if (attr.Constructor.Kind == HandleKind.MethodDefinition)
+				continue;
+
+			var blobReader = reader.GetBlobReader (attr.Value);
+			ushort prolog = blobReader.ReadUInt16 ();
+			if (prolog != 1)
+				continue;
+
+			string? val1 = blobReader.ReadSerializedString ();
+			string? val2 = blobReader.ReadSerializedString ();
+
+			// TypeMap has a jniName string arg; TypeMapAssociation has two Type args.
+			// We distinguish by checking if val1 looks like a JNI name (contains '/').
+			if (val1 is not null && val1.Contains ('/')) {
+				string? val3 = blobReader.RemainingBytes > 2 ? blobReader.ReadSerializedString () : null;
+				typeMapBlobs.Add ((val1, val2, val3));
+			}
+		}
+
+		// Verify indexed entries: "test/AliasTarget[0]", "test/AliasTarget[1]", "test/AliasTarget[2]", and base "test/AliasTarget"
+		var jniNames = typeMapBlobs.Select (b => b.jniName).ToList ();
+		Assert.Contains ("test/AliasTarget", jniNames);
+		Assert.Contains ("test/AliasTarget[0]", jniNames);
+		Assert.Contains ("test/AliasTarget[1]", jniNames);
+		Assert.Contains ("test/AliasTarget[2]", jniNames);
+
+		// Verify TypeMapAssociationAttribute is referenced (generic version)
+		var typeNames = GetTypeRefNames (reader);
+		Assert.Contains ("TypeMapAssociationAttribute`1", typeNames);
+
+		// Verify 3 proxy types + 1 alias holder were emitted
+		var proxyTypes = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Where (t => reader.GetString (t.Namespace) == "_TypeMap.Proxies")
+			.ToList ();
+		Assert.Equal (3, proxyTypes.Count);
+
+		var aliasHolders = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Where (t => reader.GetString (t.Namespace) == "_TypeMap.Aliases")
+			.ToList ();
+		Assert.Single (aliasHolders);
+
+		// Verify the alias holder has JavaPeerAliasesAttribute
+		Assert.Contains ("JavaPeerAliasesAttribute", typeNames);
+	}
+
+	[Fact]
+	public void Generate_AliasHolder_ExtendsObjectNotJavaPeerProxy ()
+	{
+		var peers = ScanFixtures ();
+		var aliasPeers = peers.Where (p => p.JavaName == "test/AliasTarget").ToList ();
+
+		using var stream = GenerateAssembly (aliasPeers, "AliasBaseType");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var aliasHolder = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.First (t => reader.GetString (t.Namespace) == "_TypeMap.Aliases");
+
+		var baseTypeHandle = aliasHolder.BaseType;
+		Assert.Equal (HandleKind.TypeReference, baseTypeHandle.Kind);
+		var baseType = reader.GetTypeReference ((TypeReferenceHandle) baseTypeHandle);
+		Assert.Equal ("Object", reader.GetString (baseType.Name));
+		Assert.Equal ("System", reader.GetString (baseType.Namespace));
+	}
+
+	[Fact]
+	public void Generate_AliasHolder_HasDeserializableAliasKeys ()
+	{
+		var peers = ScanFixtures ();
+		var aliasPeers = peers.Where (p => p.JavaName == "test/AliasTarget").ToList ();
+
+		using var stream = GenerateAssembly (aliasPeers, "AliasAttrBlob");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var aliasHolder = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.First (t => reader.GetString (t.Namespace) == "_TypeMap.Aliases");
+
+		var aliasHolderHandle = reader.TypeDefinitions
+			.First (h => reader.GetString (reader.GetTypeDefinition (h).Namespace) == "_TypeMap.Aliases");
+
+		// Read the JavaPeerAliasesAttribute blob from the alias holder's custom attributes
+		var attrs = reader.GetCustomAttributes (aliasHolderHandle);
+		Assert.NotEmpty (attrs);
+
+		// Find the attribute blob and parse it
+		foreach (var attrHandle in attrs) {
+			var attr = reader.GetCustomAttribute (attrHandle);
+			var blobReader = reader.GetBlobReader (attr.Value);
+			ushort prolog = blobReader.ReadUInt16 ();
+			Assert.Equal (1, prolog);
+
+			// Read the params string[] — encoded as int32 count + serialized strings
+			int count = blobReader.ReadInt32 ();
+			Assert.Equal (3, count);
+
+			var keys = new List<string> ();
+			for (int i = 0; i < count; i++) {
+				keys.Add (blobReader.ReadSerializedString ()!);
+			}
+
+			Assert.Contains ("test/AliasTarget[0]", keys);
+			Assert.Contains ("test/AliasTarget[1]", keys);
+			Assert.Contains ("test/AliasTarget[2]", keys);
+		}
+	}
+
+	[Fact]
+	public void Generate_UcoConstructor_BodyUsesMarshalMethodPattern ()
+	{
+		// Verify that UCO constructor bodies wrap activation in BeginMarshalMethod/EndMarshalMethod
+		// with try/catch/finally so that exceptions cannot cross the JNI boundary (causing SIGABRT).
+		var peer = MakeAcwPeer ("test/UcoCtorExc", "Test.UcoCtorExc", "TestAsm");
+		using var stream = GenerateAssembly (new [] { peer }, "UcoCtorMarshalTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		// Member refs for the marshal-method pattern must be present.
+		var memberNames = GetMemberRefNames (reader);
+		Assert.Contains ("BeginMarshalMethod", memberNames);
+		Assert.Contains ("EndMarshalMethod", memberNames);
+		Assert.Contains ("OnUserUnhandledException", memberNames);
+
+		// Type refs for the marshal-method locals must be present.
+		var typeNames = GetTypeRefNames (reader);
+		Assert.Contains ("JniTransition", typeNames);
+		Assert.Contains ("JniRuntime", typeNames);
+		Assert.Contains ("Exception", typeNames);
+
+		// Find the nctor_*_uco method.
+		var nctorMethodHandle = FindNctorUcoMethod (reader);
+		Assert.False (nctorMethodHandle.IsNil, "Expected a nctor_*_uco method in the generated assembly");
+
+		// The method body must have exception regions: at least one Catch and one Finally.
+		var nctorMethod = reader.GetMethodDefinition (nctorMethodHandle);
+		var body = pe.GetMethodBody (nctorMethod.RelativeVirtualAddress);
+		Assert.NotNull (body);
+		var regions = body.ExceptionRegions;
+		Assert.True (regions.Length >= 2,
+			$"UCO constructor should have at least 2 exception regions (catch + finally), found {regions.Length}");
+		Assert.Contains (regions, r => r.Kind == ExceptionRegionKind.Catch);
+		Assert.Contains (regions, r => r.Kind == ExceptionRegionKind.Finally);
+
+		// Verify the method body IL actually calls the marshal-method APIs (not just that the refs exist in the assembly).
+		var il = pe.GetSectionData (nctorMethod.RelativeVirtualAddress);
+		var ilBytes = body.GetILBytes ();
+		Assert.NotNull (ilBytes);
+		var ilContent = System.Text.Encoding.ASCII.GetString (ilBytes);
+		// Cross-check: the member refs we found must be referenced from within this method body.
+		// We verify by checking that the IL contains Call/Callvirt opcodes (0x28/0x6F) with tokens
+		// pointing to the expected member refs.
+		var memberRefHandles = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
+			.Select (i => MetadataTokens.MemberReferenceHandle (i))
+			.ToList ();
+		var beginHandle = memberRefHandles.First (h => reader.GetString (reader.GetMemberReference (h).Name) == "BeginMarshalMethod");
+		var endHandle = memberRefHandles.First (h => reader.GetString (reader.GetMemberReference (h).Name) == "EndMarshalMethod");
+		var exHandle = memberRefHandles.First (h => reader.GetString (reader.GetMemberReference (h).Name) == "OnUserUnhandledException");
+		int beginToken = MetadataTokens.GetToken (beginHandle);
+		int endToken = MetadataTokens.GetToken (endHandle);
+		int exToken = MetadataTokens.GetToken (exHandle);
+		Assert.True (ILContainsCallToken (ilBytes, beginToken), "nctor_*_uco IL should call BeginMarshalMethod");
+		Assert.True (ILContainsCallToken (ilBytes, endToken), "nctor_*_uco IL should call EndMarshalMethod");
+		Assert.True (ILContainsCallToken (ilBytes, exToken), "nctor_*_uco IL should call OnUserUnhandledException");
+	}
+
+	[Fact]
+	public void Generate_UcoConstructor_JiStyle_HasExceptionRegions ()
+	{
+		// Verify the JavaInterop-style UCO constructor activation path also has exception regions.
+		var peer = MakeAcwPeer ("test/JiUcoCtorExc", "Test.JiUcoCtorExc", "TestAsm") with {
+			ActivationCtor = new ActivationCtorInfo {
+				DeclaringTypeName = "Test.JiUcoCtorExc",
+				DeclaringAssemblyName = "TestAsm",
+				Style = ActivationCtorStyle.JavaInterop,
+			},
+		};
+		using var stream = GenerateAssembly (new [] { peer }, "JiUcoCtorMarshalTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var nctorMethodHandle = FindNctorUcoMethod (reader);
+		Assert.False (nctorMethodHandle.IsNil, "Expected a nctor_*_uco method in the generated assembly");
+
+		var nctorMethod = reader.GetMethodDefinition (nctorMethodHandle);
+		var body = pe.GetMethodBody (nctorMethod.RelativeVirtualAddress);
+		Assert.NotNull (body);
+		var regions = body.ExceptionRegions;
+		Assert.True (regions.Length >= 2,
+			$"JavaInterop UCO constructor should have at least 2 exception regions, found {regions.Length}");
+		Assert.Contains (regions, r => r.Kind == ExceptionRegionKind.Catch);
+		Assert.Contains (regions, r => r.Kind == ExceptionRegionKind.Finally);
+	}
+
+	[Fact]
+	public void Generate_UcoConstructor_GenericDefinition_NoExceptionRegions ()
+	{
+		// Open-generic UCO constructors are no-ops and must NOT have exception regions
+		// (a single 'ret' is emitted with no surrounding try/catch/finally).
+		var peers = ScanFixtures ();
+		var generic = peers.First (p => p.JavaName == "my/app/GenericHolder");
+		Assert.True (generic.IsGenericDefinition);
+
+		using var stream = GenerateAssembly (new [] { generic }, "GenericUcoCtorTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var nctorMethodHandle = FindNctorUcoMethod (reader);
+
+		if (!nctorMethodHandle.IsNil) {
+			// If a nctor_*_uco method exists for the generic type, it must be a no-op (no exception regions).
+			var nctorMethod = reader.GetMethodDefinition (nctorMethodHandle);
+			var body = pe.GetMethodBody (nctorMethod.RelativeVirtualAddress);
+			Assert.NotNull (body);
+			Assert.Empty (body.ExceptionRegions);
+		}
+		// Open-generic types do not get a nctor_*_uco wrapper — no UCO ctors for generics.
+	}
+
+	[Fact]
+	public void Generate_UcoConstructor_InheritedCtor_HasExceptionRegions ()
+	{
+		// Verify the non-leaf (inherited) activation path also gets exception regions.
+		var peers = ScanFixtures ();
+		var simpleActivity = peers.First (p => p.JavaName == "my/app/SimpleActivity");
+		Assert.NotNull (simpleActivity.ActivationCtor);
+		// SimpleActivity does not declare its own (IntPtr, JniHandleOwnership) ctor,
+		// so the activation ctor is inherited from Activity (DeclaringTypeName != ManagedTypeName).
+		Assert.NotEqual (simpleActivity.ActivationCtor.DeclaringTypeName, simpleActivity.ManagedTypeName);
+
+		using var stream = GenerateAssembly (new [] { simpleActivity }, "InheritedUcoCtorExcTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var nctorMethodHandle = FindNctorUcoMethod (reader);
+		Assert.False (nctorMethodHandle.IsNil, "SimpleActivity (ACW) should have a nctor_*_uco method");
+
+		var nctorMethod = reader.GetMethodDefinition (nctorMethodHandle);
+		var body = pe.GetMethodBody (nctorMethod.RelativeVirtualAddress);
+		Assert.NotNull (body);
+		var regions = body.ExceptionRegions;
+		Assert.True (regions.Length >= 2,
+			$"Inherited-ctor UCO constructor should have at least 2 exception regions, found {regions.Length}");
+		Assert.Contains (regions, r => r.Kind == ExceptionRegionKind.Catch);
+		Assert.Contains (regions, r => r.Kind == ExceptionRegionKind.Finally);
+	}
+
+	[Fact]
+	public void Generate_ProxyTypes_HaveSelfAppliedAttribute ()
+	{
+		var peers = ScanFixtures ();
+		var activityPeer = peers.First (p => p.JavaName == "android/app/Activity");
+
+		using var stream = GenerateAssembly (new [] { activityPeer }, "SelfApply");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var proxyTypeDef = reader.TypeDefinitions
+			.First (h => reader.GetString (reader.GetTypeDefinition (h).Namespace) == "_TypeMap.Proxies");
+
+		// The proxy type should have a custom attribute applied to itself (self-application)
+		var attrs = reader.GetCustomAttributes (proxyTypeDef);
+		Assert.NotEmpty (attrs);
+
+		// Verify the attribute's constructor is a MethodDef (i.e., defined in this assembly,
+		// meaning it's the proxy's own .ctor — self-application)
+		bool hasSelfApplied = false;
+		foreach (var attrHandle in attrs) {
+			var attr = reader.GetCustomAttribute (attrHandle);
+			if (attr.Constructor.Kind == HandleKind.MethodDefinition) {
+				hasSelfApplied = true;
+				break;
+			}
+		}
+		Assert.True (hasSelfApplied, "Proxy type should have a self-applied attribute (ctor is MethodDefinition)");
 	}
 }

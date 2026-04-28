@@ -306,6 +306,10 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <value>禁用解释器；不支持同时使用解释器和 AOT。使用解释器在调试配置和 AOT for Release 配置中进行热重载支持。</value>
     <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
   </data>
+  <data name="XA0119_ReadyToRun" xml:space="preserve">
+    <value>Using fast deployment and ReadyToRun at the same time is not recommended. Use fast deployment for Debug configurations and ReadyToRun for Release configurations.</value>
+    <comment>The following are literal names and should not be translated: ReadyToRun, Debug, Release.</comment>
+  </data>
   <data name="XA0121" xml:space="preserve">
     <value>程序集“{0}”使用不再受支持的“[assembly: {1}]”。请使用此 NuGet 包的较新版本或通知库作者。</value>
     <comment>The following are literal names and should not be translated: [assembly: {1}], NuGet
@@ -1010,7 +1014,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 </comment>
   </data>
   <data name="XA1044" xml:space="preserve">
-    <value>The MSBuild property '{0}' is not compatible with the {1} runtime and will be ignored. Either remove the property or guard it with a condition: Condition="'$(UseMonoRuntime)' == 'true'"</value>
+    <value>MSBuild 属性“{0}”与 {1} 运行时不兼容，并且将被忽略。移除属性或使用条件保护它: Condition="'$(UseMonoRuntime)' == 'true'"</value>
     <comment>The following are literal names and should not be translated: MSBuild, UseMonoRuntime.
 {0} - The MSBuild property name (e.g. RunAOTCompilation, EnableLLVM).
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).

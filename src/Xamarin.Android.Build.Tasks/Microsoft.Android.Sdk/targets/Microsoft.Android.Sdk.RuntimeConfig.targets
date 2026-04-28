@@ -13,6 +13,10 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
   <PropertyGroup>
     <_BinaryRuntimeConfigPath>$(IntermediateOutputPath)$(ProjectRuntimeConfigFileName).bin</_BinaryRuntimeConfigPath>
     <_AndroidUseManagedTypeMap Condition=" '$(_AndroidTypeMapImplementation)' == 'managed' ">true</_AndroidUseManagedTypeMap>
+    <!-- Internal switch for tests/diagnostics. On trimmed builds, keep it false unless explicitly re-enabled so the logging code can be removed.
+         On non-trimmed (Debug) builds, default to true so that debug.mono.log=gref continues to work as expected. -->
+    <_AndroidEnableObjectReferenceLogging Condition=" '$(_AndroidEnableObjectReferenceLogging)' == '' And '$(PublishTrimmed)' == 'true' ">false</_AndroidEnableObjectReferenceLogging>
+    <_AndroidEnableObjectReferenceLogging Condition=" '$(_AndroidEnableObjectReferenceLogging)' == '' And '$(PublishTrimmed)' != 'true' ">true</_AndroidEnableObjectReferenceLogging>
   </PropertyGroup>
 
   <ItemGroup>
@@ -54,6 +58,11 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
     <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.IsAssignableFromCheck"
         Condition="'$(_AndroidIsAssignableFromCheck)' != ''"
         Value="$(_AndroidIsAssignableFromCheck)"
+        Trim="true"
+    />
+    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.ObjectReferenceLogging"
+        Condition="'$(_AndroidEnableObjectReferenceLogging)' != ''"
+        Value="$(_AndroidEnableObjectReferenceLogging)"
         Trim="true"
     />
   </ItemGroup>

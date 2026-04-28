@@ -2233,9 +2233,13 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 		}
 
 		[Test]
-		public void DotNetNewAndroidTest ()
+		[TestCase ("run", AndroidRuntime.MonoVM)]
+		[TestCase ("run", AndroidRuntime.CoreCLR)]
+		[TestCase ("test", AndroidRuntime.MonoVM)]
+		[TestCase ("test", AndroidRuntime.CoreCLR)]
+		public void DotNetNewAndroidTest (string mode, AndroidRuntime runtime)
 		{
-			var templateName = TestName;
+			var templateName = $"DotNetNewAndroidTest_{mode}_{runtime}";
 			var projectDirectory = Path.Combine (Root, "temp", templateName);
 			if (Directory.Exists (projectDirectory))
 				Directory.Delete (projectDirectory, true);
@@ -2244,12 +2248,37 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			var dotnet = new DotNetCLI (Path.Combine (projectDirectory, $"{templateName}.csproj"));
 			Assert.IsTrue (dotnet.New ("androidtest"), "`dotnet new androidtest` should succeed");
 
+			// Override the MSTest version from the template with the version used by our build
+			var msTestVersion = GetAssemblyMetadataValue ("MSTestPackageVersion");
+			var csprojPath = Path.Combine (projectDirectory, $"{templateName}.csproj");
+			var doc = XDocument.Load (csprojPath);
+			var ns = doc.Root?.Name.Namespace ?? XNamespace.None;
+			var msTestRef = doc.Descendants (ns + "PackageReference")
+				.FirstOrDefault (e => e.Attribute ("Include")?.Value == "MSTest");
+			Assert.IsNotNull (msTestRef, "MSTest PackageReference should exist in the generated project");
+			msTestRef.SetAttributeValue ("Version", msTestVersion);
+			doc.Save (csprojPath);
+
+			bool useMonoRuntime = runtime == AndroidRuntime.MonoVM;
+			var buildParameters = new List<string> {
+				$"UseMonoRuntime={useMonoRuntime}",
+				"RestoreAdditionalProjectSources=https://pkgs.dev.azure.com/dnceng/public/_packaging/test-tools/nuget/v3/index.json",
+			};
+
 			// Build and assert 0 warnings
-			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+			Assert.IsTrue (dotnet.Build (parameters: buildParameters.ToArray ()), "`dotnet build` should succeed");
 			dotnet.AssertHasNoWarnings ();
 
-			// Run instrumentation via `dotnet run` and capture output
-			using var process = dotnet.StartRun (waitForExit: true);
+			// `dotnet test` doesn't go through the MSBuild Run target, so Install
+			// must be invoked explicitly to deploy the APK to the device.
+			if (mode == "test")
+				Assert.IsTrue (dotnet.Build (target: "Install", parameters: buildParameters.ToArray ()), "`dotnet build -t:Install` should succeed");
+
+			// Run based on mode
+			var runParameters = buildParameters.Select (p => $"/p:{p}").ToArray ();
+			using var process = mode == "run"
+				? dotnet.StartRun (waitForExit: true, parameters: runParameters)
+				: dotnet.StartTest (parameters: runParameters);
 
 			var locker = new Lock ();
 			var output = new StringBuilder ();
@@ -2278,21 +2307,31 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			}
 
 			// Write the output to a log file for debugging
-			string logPath = Path.Combine (projectDirectory, "dotnet-run-output.log");
+			string logPath = Path.Combine (projectDirectory, $"dotnet-{mode}-output.log");
 			File.WriteAllText (logPath, output.ToString ());
 			TestContext.AddTestAttachment (logPath);
 
-			Assert.IsTrue (completed, $"`dotnet run` did not complete in time. See {logPath} for details.");
+			Assert.IsTrue (completed, $"`dotnet {mode}` did not complete in time. See {logPath} for details.");
 
-			// Parse INSTRUMENTATION_RESULT lines from output
 			var outputText = output.ToString ();
-			int passed = ParseInstrumentationResult (outputText, "passed");
-			int failed = ParseInstrumentationResult (outputText, "failed");
-			int skipped = ParseInstrumentationResult (outputText, "skipped");
 
-			Assert.AreEqual (1, passed, $"Expected 1 passed test, got {passed}. See {logPath} for details.");
-			Assert.AreEqual (1, failed, $"Expected 1 failed test, got {failed}. See {logPath} for details.");
-			Assert.AreEqual (1, skipped, $"Expected 1 skipped test, got {skipped}. See {logPath} for details.");
+			if (mode == "run") {
+				// Parse INSTRUMENTATION_RESULT lines from output
+				int passed = ParseInstrumentationResult (outputText, "passed");
+				int failed = ParseInstrumentationResult (outputText, "failed");
+				int skipped = ParseInstrumentationResult (outputText, "skipped");
+
+				Assert.AreEqual (1, passed, $"Expected 1 passed test, got {passed}. See {logPath} for details.");
+				Assert.AreEqual (1, failed, $"Expected 1 failed test, got {failed}. See {logPath} for details.");
+				Assert.AreEqual (1, skipped, $"Expected 1 skipped test, got {skipped}. See {logPath} for details.");
+			} else {
+				// dotnet test reports results via MTP protocol
+				// Verify non-zero exit code (there is a failing test) and stable summary counts
+				Assert.AreNotEqual (0, process.ExitCode, $"`dotnet {mode}` should fail when one test fails. See {logPath} for details.");
+				StringAssert.Contains ("succeeded: 1", outputText, $"Output should report 1 passed test. See {logPath} for details.");
+				StringAssert.Contains ("failed: 1", outputText, $"Output should report 1 failed test. See {logPath} for details.");
+				StringAssert.Contains ("skipped: 1", outputText, $"Output should report 1 skipped test. See {logPath} for details.");
+			}
 		}
 
 		static int ParseInstrumentationResult (string output, string key)

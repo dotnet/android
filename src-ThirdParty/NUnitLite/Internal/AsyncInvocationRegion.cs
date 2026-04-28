@@ -109,6 +109,13 @@ at wrapping a non-async method invocation in an async region was done");
                         task.Wait();
                     }
                 }
+                catch (AggregateException e)
+                {
+                    IList<Exception> innerExceptions = e.Flatten().InnerExceptions;
+
+                    PreserveStackTrace(innerExceptions[0]);
+                    throw innerExceptions[0];
+                }
                 catch (TargetInvocationException e)
                 {
                     IList<Exception> innerExceptions = GetAllExceptions(e.InnerException);
