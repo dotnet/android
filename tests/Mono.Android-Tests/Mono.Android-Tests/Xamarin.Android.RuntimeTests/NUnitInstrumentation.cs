@@ -34,10 +34,17 @@ namespace Xamarin.Android.RuntimeTests
                     // net.dot.jni.test.CallVirtualFromConstructorDerived Java class not in APK
                     "Java.InteropTests.InvokeVirtualFromConstructorTests",
 
-                    // net.dot.jni.internal.JavaProxyObject Java class not in APK — fixture setup fails (16 tests)
+                    // net.dot.jni.internal.JavaProxyObject.<clinit> calls
+                    // net.dot.jni.ManagedPeer.registerNativeMembers, which the trimmable
+                    // typemap path rejects (Native methods must be registered by JCW
+                    // static initializer blocks). Fixing this requires a parallel
+                    // Android-trimmable variant of JavaProxyObject.java that registers
+                    // its native equals/hashCode/toString via mono.android.Runtime.register
+                    // — an architectural change tracked separately from the JavaCast / JavaAs
+                    // work in this PR. See https://github.com/dotnet/android/issues/11170.
                     "Java.InteropTests.JavaObjectArray_object_ContractTest",
 
-                    // net.dot.jni.internal.JavaProxyObject Java class not in APK
+                    // Same root cause as above (JavaProxyObject static init).
                     "Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateArgumentState",
                     "Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateGenericArgumentState",
                     "Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateGenericObjectReferenceArgumentState",
@@ -46,17 +53,9 @@ namespace Xamarin.Android.RuntimeTests
                     "Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateValue",
                     "Java.InteropTests.JniValueMarshaler_object_ContractTests.SpecificTypesAreUsed",
 
-                    // No generated JavaPeerProxy for java/lang/Object with IJavaPeerable target type
-                    "Java.InteropTests.JniValueMarshaler_IJavaPeerable_ContractTests.JniValueMarshalerContractTests`1.CreateGenericValue",
-                    "Java.InteropTests.JniValueMarshaler_IJavaPeerable_ContractTests.JniValueMarshalerContractTests`1.CreateValue",
-
-                    // net.dot.jni.internal.JavaProxyThrowable — proxy throwable creation fails
+                    // net.dot.jni.internal.JavaProxyThrowable static init — same JavaProxy*
+                    // root cause as the JavaProxyObject exclusions above.
                     "Java.InteropTests.JavaExceptionTests.InnerExceptionIsNotAProxy",
-
-                    // IJavaInterfaceInvoker ctor trimmed / missing JavaPeerProxy for test types
-                    "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs",
-                    "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs_Exceptions",
-                    "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs_InstanceThatDoesNotImplementInterfaceReturnsNull",
 
                     // JNI method remapping not supported in trimmable typemap
                     "Java.InteropTests.JniPeerMembersTests.ReplaceInstanceMethodName",
@@ -67,17 +66,11 @@ namespace Xamarin.Android.RuntimeTests
                     // net.dot.jni.test.GenericHolder Java class not in APK
                     "Java.InteropTests.JniTypeManagerTests.CannotCreateGenericHolderFromJava",
 
-                    // JniPrimitiveArrayInfo lookup fails for JavaBooleanArray
+                    // JniPrimitiveArrayInfo lookup fails for JavaBooleanArray —
+                    // our typemap returns JavaBooleanArray for "Z" via JavaPrimitiveArray<>
+                    // alias, which collides with the legacy GetPrimitiveArrayTypesForSimpleReference
+                    // that expects only primitive CLR types. Out of scope for this PR.
                     "Java.InteropTests.JniTypeManagerTests.GetType",
-
-                    // net.dot.jni.test.GetThis — cannot register native members
-                    "Java.InteropTests.JavaObjectTest.DisposeAccessesThis",
-
-                    // NotSupportedException instead of InvalidCastException — no generated JavaPeerProxy
-                    "Java.InteropTests.JavaObjectExtensionsTests.JavaCast_BadInterfaceCast",
-                    "Java.InteropTests.JavaObjectExtensionsTests.JavaCast_BaseToGenericWrapper",
-                    "Java.InteropTests.JavaObjectExtensionsTests.JavaCast_CheckForManagedSubclasses",
-                    "Java.InteropTests.JavaObjectExtensionsTests.JavaCast_InvalidTypeCastThrows",
 
                     // Open generic type handling differs from non-trimmable
                     "Java.InteropTests.JnienvTest.NewOpenGenericTypeThrows",
