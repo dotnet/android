@@ -54,6 +54,8 @@
   <PropertyGroup>
     <_PackageName>$(ApplicationId)</_PackageName>
     <AndroidInstrumentation>xamarin.android.jcwgentests.TestInstrumentation</AndroidInstrumentation>
+    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

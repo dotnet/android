@@ -11,19 +11,28 @@ parameters:
   condition: succeeded()
 
 steps:
-- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
-  parameters:
-    configuration: ${{ parameters.buildConfiguration }}
-    xaSourcePath: ${{ parameters.xaSourcePath }}
-    displayName: run ${{ parameters.testName }}
-    command: test
-    project: ${{ parameters.project }}
-    arguments: >-
-      --no-build
-      -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog
-      -c ${{ parameters.configuration }} ${{ parameters.extraBuildArgs }}
-    condition: ${{ parameters.condition }}
-    continueOnError: true
+  # Run dotnet test from the project directory so it finds the project-local
+  # global.json with "test": { "runner": "Microsoft.Testing.Platform" }.
+  # This enables MTP mode, which uses RunCommand/RunArguments to invoke
+  # Microsoft.Android.Run for on-device test execution.
+- powershell: |
+    $projectDir = Split-Path -Parent "${{ parameters.project }}"
+    $projectFile = Split-Path -Leaf "${{ parameters.project }}"
+    Push-Location $projectDir
+    if ([Environment]::OSVersion.Platform -eq "Unix") {
+        $DOTNET_ROOT = "${{ parameters.xaSourcePath }}/bin/${{ parameters.buildConfiguration }}/dotnet"
+        $env:PATH = "${DOTNET_ROOT}:$env:PATH"
+        $dotnetPath = "${DOTNET_ROOT}/dotnet"
+    } else {
+        $DOTNET_ROOT = "${{ parameters.xaSourcePath }}\bin\${{ parameters.buildConfiguration }}\dotnet"
+        $env:PATH = "${DOTNET_ROOT};$env:PATH"
+        $dotnetPath = "${DOTNET_ROOT}\dotnet.exe"
+    }
+    & $dotnetPath test $projectFile --no-build -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog -c ${{ parameters.configuration }} ${{ parameters.extraBuildArgs }}
+    Pop-Location
+  displayName: run ${{ parameters.testName }}
+  condition: ${{ parameters.condition }}
+  continueOnError: true
 
 - script: |
     RESULTS_DIR="${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/TestResults"

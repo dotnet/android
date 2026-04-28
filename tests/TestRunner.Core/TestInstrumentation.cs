@@ -1,7 +1,9 @@
 using System.Reflection;
+using System.Text;
 using Android.App;
 using Android.OS;
 using Android.Runtime;
+using Android.Util;
 using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
@@ -17,11 +19,28 @@ namespace Xamarin.Android.UnitTests;
 /// </summary>
 public abstract class TestInstrumentation : Instrumentation
 {
+	const string LogTag = "TestInstrumentation";
+
 	protected TestInstrumentation (IntPtr handle, JniHandleOwnership ownership)
 		: base (handle, ownership) { }
 
+	/// <summary>
+	/// Override to return categories that should be excluded from test runs.
+	/// </summary>
+	protected virtual IEnumerable<string>? ExcludedCategories => null;
+
+	/// <summary>
+	/// Override to return fully-qualified test names that should be excluded.
+	/// Useful for skipping tests from submodules (e.g. Java.Interop) where
+	/// adding attributes is not practical.
+	/// </summary>
+	protected virtual IEnumerable<string>? ExcludedTestNames => null;
+
+	Bundle? instrumentationArguments;
+
 	public override void OnCreate (Bundle? arguments)
 	{
+		instrumentationArguments = arguments;
 		base.OnCreate (arguments);
 		Start ();
 	}
@@ -37,10 +56,19 @@ public abstract class TestInstrumentation : Instrumentation
 			try {
 				var writeablePath = Application.Context.GetExternalFilesDir (null)?.AbsolutePath ?? Path.GetTempPath ();
 				var resultsPath = Path.Combine (writeablePath, "TestResults");
-				var builder = await TestApplication.CreateBuilderAsync ([
+				var args = new List<string> {
 					"--results-directory", resultsPath,
 					"--report-trx"
-				]);
+				};
+
+				var filter = BuildNUnitFilter ();
+				if (filter is not null) {
+					args.Add ("--treenode-filter");
+					args.Add (filter);
+					Log.Info (LogTag, $"Using filter: {filter}");
+				}
+
+				var builder = await TestApplication.CreateBuilderAsync (args.ToArray ());
 				builder.AddNUnit (() => GetTestAssemblies ());
 				builder.AddTrxReportProvider ();
 				builder.TestHost.AddDataConsumer (_ => consumer);
@@ -64,6 +92,80 @@ public abstract class TestInstrumentation : Instrumentation
 	/// Override to return the assemblies containing NUnit tests to run.
 	/// </summary>
 	protected abstract IEnumerable<Assembly> GetTestAssemblies ();
+
+	/// <summary>
+	/// Builds an NUnit filter expression from excluded categories, excluded test names,
+	/// and instrumentation extras (include/exclude).
+	/// </summary>
+	string? BuildNUnitFilter ()
+	{
+		bool noExclusions = GetBoolExtra ("noexclusions");
+		var parts = new List<string> ();
+
+		// Include categories from extras: am instrument -e include "Cat1,Cat2"
+		var includeExtras = GetListExtra ("include");
+		foreach (var cat in includeExtras) {
+			parts.Add ($"cat == {cat}");
+			Log.Info (LogTag, $"Including category: {cat}");
+		}
+
+		if (!noExclusions) {
+			// Excluded categories from subclass
+			if (ExcludedCategories is not null) {
+				foreach (var cat in ExcludedCategories) {
+					parts.Add ($"cat != {cat}");
+					Log.Info (LogTag, $"Excluding category: {cat}");
+				}
+			}
+
+			// Excluded test names from subclass
+			if (ExcludedTestNames is not null) {
+				foreach (var name in ExcludedTestNames) {
+					parts.Add ($"name !~ {name}");
+					Log.Info (LogTag, $"Excluding test: {name}");
+				}
+			}
+		} else {
+			Log.Info (LogTag, "Skipping built-in exclusions due to noexclusions=true");
+		}
+
+		// Exclude categories from extras: am instrument -e exclude "Cat1,Cat2"
+		var excludeExtras = GetListExtra ("exclude");
+		foreach (var cat in excludeExtras) {
+			parts.Add ($"cat != {cat}");
+			Log.Info (LogTag, $"Excluding category (from extras): {cat}");
+		}
+
+		if (parts.Count == 0)
+			return null;
+
+		// NUnit filter: combine with " and "
+		return string.Join (" and ", parts);
+	}
+
+	string? GetStringExtra (string key)
+	{
+		if (instrumentationArguments is null)
+			return null;
+		return instrumentationArguments.GetString (key);
+	}
+
+	bool GetBoolExtra (string key)
+	{
+		var value = GetStringExtra (key);
+		if (value is null)
+			return false;
+		return string.Equals (value.Trim (), "true", StringComparison.OrdinalIgnoreCase);
+	}
+
+	List<string> GetListExtra (string key)
+	{
+		var value = GetStringExtra (key);
+		if (value is null)
+			return [];
+		return value.Split ([';', ','], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+			.ToList ();
+	}
 
 	class ResultConsumer (Instrumentation instrumentation) : IDataConsumer
 	{

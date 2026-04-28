@@ -77,9 +77,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="Visible" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
-    <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="Visible" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
-    <TrimmerRootAssembly Include="StartupHook" RootMode="All" Condition=" '$(StartupHookSupport)' == 'true' " />
+    <!-- CoreCLRTrimmable intentionally runs a trimmed Release app.
+         Root the test assemblies so the unit tests themselves stay discoverable,
+         and keep any runtime-specific trim exceptions in TrimmerRoots.xml. -->
+    <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="All" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
+    <TrimmerRootAssembly Include="Mono.Android-Test.Library.NET" RootMode="All" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
+    <TrimmerRootAssembly Include="TestRunner.Core.NET" RootMode="All" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
+    <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" />
+    <TrimmerRootAssembly Include="StartupHook" RootMode="All" />
     <TrimmerRootDescriptor Include="TrimmerRoots.xml" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
     <_AndroidRemapMembers Include="Remaps.xml" />
     <_AndroidRemapMembers Include="IsAssignableFromRemaps.xml" Condition=" '$(_AndroidIsAssignableFromCheck)' == 'false' " />
@@ -142,7 +147,7 @@
     <Compile Include="Xamarin.Android.RuntimeTests\MyFragment.cs" />
     <Compile Include="Xamarin.Android.RuntimeTests\MyIntent.cs" />
     <Compile Include="Xamarin.Android.RuntimeTests\NonJavaObject.cs" />
-    <Compile Include="Xamarin.Android.RuntimeTests\NUnitInstrumentation.cs" />
+    <Compile Include="Xamarin.Android.RuntimeTests\TestInstrumentation.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -237,6 +242,8 @@
   <PropertyGroup>
     <_AndroidEnableObjectReferenceLogging>false</_AndroidEnableObjectReferenceLogging>
     <AndroidInstrumentation>xamarin.android.runtimetests.TestInstrumentation</AndroidInstrumentation>
+    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
   </PropertyGroup>
 
   <!-- Used by AppContextTests.cs -->
