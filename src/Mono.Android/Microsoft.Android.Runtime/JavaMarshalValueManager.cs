@@ -597,11 +597,11 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 		}
 
 		var genericDef = closedType.GetGenericTypeDefinition ();
-		return genericDef == typeof (Android.Runtime.JavaList<>)
-			|| genericDef == typeof (Android.Runtime.JavaCollection<>)
-			|| genericDef == typeof (Android.Runtime.JavaDictionary<,>)
-			|| genericDef == typeof (Android.Runtime.JavaSet<>)
-			|| genericDef == typeof (Android.Runtime.JavaArray<>);
+		return genericDef == typeof (global::Android.Runtime.JavaList<>)
+			|| genericDef == typeof (global::Android.Runtime.JavaCollection<>)
+			|| genericDef == typeof (global::Android.Runtime.JavaDictionary<,>)
+			|| genericDef == typeof (global::Android.Runtime.JavaSet<>)
+			|| genericDef == typeof (global::Android.Runtime.JavaArray<>);
 	}
 
 	/// <summary>
