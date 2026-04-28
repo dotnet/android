@@ -10,6 +10,8 @@
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <AssemblyName>$(VendorPrefix)Microsoft.Android.Build.BaseTasks$(VendorSuffix)</AssemblyName>
     <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <WarningsAsErrors>nullable</WarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>

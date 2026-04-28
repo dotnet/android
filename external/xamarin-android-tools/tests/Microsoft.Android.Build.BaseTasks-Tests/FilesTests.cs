@@ -728,6 +728,64 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		}
 
 		[Test]
+		public void CopyIfZipChanged_Stream ()
+		{
+			Directory.CreateDirectory (tempDir);
+			var destination = Path.Combine (tempDir, "dest.zip");
+
+			using (var zip = ZipArchive.Create (stream)) {
+				zip.AddEntry ("a.txt", "a", encoding);
+			}
+			stream.Position = 0;
+
+			Assert.IsTrue (Files.CopyIfZipChanged (stream, destination), "Should copy on new file.");
+			FileAssert.Exists (destination);
+			Assert.IsFalse (Files.CopyIfZipChanged (stream, destination), "Should *not* copy when unchanged.");
+		}
+
+		[Test]
+		public void CopyIfZipChanged_String ()
+		{
+			Directory.CreateDirectory (tempDir);
+			var source = Path.Combine (tempDir, "source.zip");
+			var destination = Path.Combine (tempDir, "dest.zip");
+
+			using (var zip = ZipArchive.Create (stream)) {
+				zip.AddEntry ("a.txt", "a", encoding);
+			}
+			stream.Position = 0;
+			using (var f = File.Create (source)) {
+				stream.CopyTo (f);
+			}
+
+			Assert.IsTrue (Files.CopyIfZipChanged (source, destination), "Should copy on new file.");
+			FileAssert.Exists (destination);
+			Assert.IsFalse (Files.CopyIfZipChanged (source, destination), "Should *not* copy when unchanged.");
+		}
+
+		[Test]
+		public void CopyIfZipChanged_BareFileName ()
+		{
+			// Regression test: Path.GetDirectoryName("file.zip") returns "",
+			// which previously caused Directory.CreateDirectory("") to throw.
+			var cwd = Directory.GetCurrentDirectory ();
+			try {
+				Directory.CreateDirectory (tempDir);
+				Directory.SetCurrentDirectory (tempDir);
+
+				using (var zip = ZipArchive.Create (stream)) {
+					zip.AddEntry ("a.txt", "a", encoding);
+				}
+				stream.Position = 0;
+
+				Assert.IsTrue (Files.CopyIfZipChanged (stream, "bare.zip"), "Should copy bare filename.");
+				FileAssert.Exists (Path.Combine (tempDir, "bare.zip"));
+			} finally {
+				Directory.SetCurrentDirectory (cwd);
+			}
+		}
+
+		[Test]
 		public void DeleteFile_NullLog_DoesNotThrow ()
 		{
 			var path = Path.Combine (tempDir, "directory-instead-of-file");

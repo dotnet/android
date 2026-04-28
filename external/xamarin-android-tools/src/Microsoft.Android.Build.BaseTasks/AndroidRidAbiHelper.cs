@@ -16,7 +16,7 @@ namespace Microsoft.Android.Build.Tasks
 			"x86_64",
 		};
 
-		public static string GetNativeLibraryAbi (string lib)
+		public static string? GetNativeLibraryAbi (string lib)
 		{
 			if (string.IsNullOrEmpty (lib))
 				return null;
@@ -47,7 +47,7 @@ namespace Microsoft.Android.Build.Tasks
 			return null;
 		}
 
-		public static string GetNativeLibraryAbi (ITaskItem lib)
+		public static string? GetNativeLibraryAbi (ITaskItem lib)
 		{
 			// If Abi is explicitly specified, simply return it.
 			var lib_abi = lib.GetMetadata ("Abi");

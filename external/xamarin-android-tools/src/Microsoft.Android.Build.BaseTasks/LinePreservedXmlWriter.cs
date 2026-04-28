@@ -33,13 +33,13 @@ namespace Microsoft.Android.Build.Tasks
 			this.tw = w;
 		}
 		
-		XPathNavigator nav;
+		XPathNavigator? nav;
 		
 		public override void WriteNode (XPathNavigator navigator, bool defattr)
 		{
-			XPathNavigator bak = nav;
+			XPathNavigator? bak = nav;
 			this.nav = navigator;
-			IXmlLineInfo li = navigator as IXmlLineInfo;
+			IXmlLineInfo? li = navigator as IXmlLineInfo;
 			if (li != null)
 				tw.ProceedTo (li.LineNumber, li.LinePosition);
 			base.WriteNode (navigator, defattr);
@@ -60,7 +60,7 @@ namespace Microsoft.Android.Build.Tasks
 			base.WriteStartElement (prefix, localName, namespaceUri);
 		}
 		
-		void Proceed (IXmlLineInfo li)
+		void Proceed (IXmlLineInfo? li)
 		{
 			if (li == null || !li.HasLineInfo ())
 				return;

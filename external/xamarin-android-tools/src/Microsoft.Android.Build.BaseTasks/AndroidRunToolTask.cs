@@ -27,7 +27,7 @@ namespace Microsoft.Android.Build.Tasks
 		}
 
 		/* This gets pre-pended to any filenames that we get from error strings */
-		protected string BaseDirectory { get; set; }
+		protected string? BaseDirectory { get; set; }
 
 		// Aapt errors looks like this:
 		//   res\layout\main.axml:7: error: No resource identifier found for attribute 'id2' in package 'android' (TaskId:22)
@@ -37,7 +37,7 @@ namespace Microsoft.Android.Build.Tasks
 		// Warnings can be like this
 		//   aapt2 W 09-17 18:15:27 98796 12879433 ApkAssets.cpp:138] resources.arsc in APK 'android.jar' is compressed.
 		// Look for them and convert them to MSBuild compatible errors.
-		static Regex androidErrorRegex;
+		static Regex? androidErrorRegex;
 		public static Regex AndroidErrorRegex {
 			get {
 				if (androidErrorRegex == null)

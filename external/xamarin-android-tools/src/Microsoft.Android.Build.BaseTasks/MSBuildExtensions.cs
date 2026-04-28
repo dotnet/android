@@ -302,7 +302,7 @@ namespace Microsoft.Android.Build.Tasks
 		/// Or you can use the `ProjectSpecificTaskObjectKey` method of the `AndroidTask` to generate
 		/// a project specific key if needed.
 		/// </summary>
-		public static T GetRegisteredTaskObjectAssemblyLocal<T> (this IBuildEngine4 engine, object key, RegisteredTaskObjectLifetime lifetime)
+		public static T? GetRegisteredTaskObjectAssemblyLocal<T> (this IBuildEngine4 engine, object key, RegisteredTaskObjectLifetime lifetime)
 			where T : class =>
 			engine.GetRegisteredTaskObject ((AssemblyLocation, key), lifetime) as T;
 
@@ -324,7 +324,7 @@ namespace Microsoft.Android.Build.Tasks
 		/// Or you can use the `ProjectSpecificTaskObjectKey` method of the `AndroidTask` to generate
 		/// a project specific key if needed.
 		/// </summary>
-		public static T UnregisterTaskObjectAssemblyLocal<T> (this IBuildEngine4 engine, object key, RegisteredTaskObjectLifetime lifetime)
+		public static T? UnregisterTaskObjectAssemblyLocal<T> (this IBuildEngine4 engine, object key, RegisteredTaskObjectLifetime lifetime)
 			where T : class =>
 			engine.UnregisterTaskObject ((AssemblyLocation, key), lifetime) as T;
 	}

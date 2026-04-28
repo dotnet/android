@@ -105,7 +105,7 @@ namespace Microsoft.Android.Build.Tasks
 				LogDebugMessage ("	{0}", item.ItemSpec);
 		}
 
-		public void LogTelemetry (string eventName, IDictionary<string, string> properties)
+		public void LogTelemetry (string eventName, IDictionary<string, string?> properties)
 		{
 			if (uiThreadId == Thread.CurrentThread.ManagedThreadId) {
 #pragma warning disable 618
@@ -157,16 +157,16 @@ namespace Microsoft.Android.Build.Tasks
 		public void LogError (string message, params object [] messageArgs)
 			=> LogCodedError (code: null, message: string.Format (message, messageArgs));
 
-		public void LogCodedError (string code, string message)
+		public void LogCodedError (string? code, string message)
 			=> LogCodedError (code: code, message: message, file: null, lineNumber: 0);
 
-		public void LogCodedError (string code, string message, params object [] messageArgs)
+		public void LogCodedError (string? code, string message, params object [] messageArgs)
 			=> LogCodedError (code: code, message: string.Format (message, messageArgs), file: null, lineNumber: 0);
 
-		public void LogCodedError (string code, string file, int lineNumber, string message, params object [] messageArgs)
+		public void LogCodedError (string? code, string? file, int lineNumber, string message, params object [] messageArgs)
 			=> LogCodedError (code: code, message: string.Format (message, messageArgs), file: file, lineNumber: lineNumber);
 
-		public void LogCodedError (string code, string message, string file, int lineNumber)
+		public void LogCodedError (string? code, string message, string? file, int lineNumber)
 		{
 			if (uiThreadId == Thread.CurrentThread.ManagedThreadId) {
 #pragma warning disable 618
@@ -206,16 +206,16 @@ namespace Microsoft.Android.Build.Tasks
 		public void LogWarning (string message, params object [] messageArgs)
 			=> LogCodedWarning (code: null, message: string.Format (message, messageArgs));
 
-		public void LogCodedWarning (string code, string message)
+		public void LogCodedWarning (string? code, string message)
 			=> LogCodedWarning (code: code, message: message, file: null, lineNumber: 0);
 
-		public void LogCodedWarning (string code, string message, params object [] messageArgs)
+		public void LogCodedWarning (string? code, string message, params object [] messageArgs)
 			=> LogCodedWarning (code: code, message: string.Format (message, messageArgs), file: null, lineNumber: 0);
 
-		public void LogCodedWarning (string code, string file, int lineNumber, string message, params object [] messageArgs)
+		public void LogCodedWarning (string? code, string? file, int lineNumber, string message, params object [] messageArgs)
 			=> LogCodedWarning (code: code, message: string.Format (message, messageArgs), file: file, lineNumber: lineNumber);
 
-		public void LogCodedWarning (string code, string message, string file, int lineNumber)
+		public void LogCodedWarning (string? code, string message, string? file, int lineNumber)
 		{
 			if (uiThreadId == Thread.CurrentThread.ManagedThreadId) {
 #pragma warning disable 618
