@@ -235,10 +235,13 @@ sealed class AssemblyIndex : IDisposable
 			doNotGenerateAcw = !generateJavaPeer;
 		}
 
+		var isArrayType = TryGetNamedArgument<int> (value, "ArrayRank", out var rank) && rank > 0;
+
 		return new RegisterInfo {
 			JniName = jniName.Replace ('.', '/'),
 			DoNotGenerateAcw = doNotGenerateAcw,
 			IsFromJniTypeSignature = true,
+			IsArrayType = isArrayType,
 		};
 	}
 
@@ -529,6 +532,7 @@ sealed record RegisterInfo
 	public string? Connector { get; init; }
 	public bool DoNotGenerateAcw { get; init; }
 	public bool IsFromJniTypeSignature { get; init; }
+	public bool IsArrayType { get; init; }
 }
 
 /// <summary>

@@ -131,4 +131,20 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 		var peer = FindFixtureByJavaName ("net/dot/jni/test/JavaDisposedObject");
 		Assert.NotNull (peer);
 	}
+
+	[Fact]
+	public void Scan_JniTypeSignature_ArrayRank_IsExcluded ()
+	{
+		// Types with [JniTypeSignature(ArrayRank > 0)] represent JNI array wrappers
+		// (e.g., JavaBooleanArray with IsKeyword=true, or JavaObjectArray<T> without).
+		// The scanner must skip all of them — they are handled by the built-in tables
+		// in JniRuntime.JniTypeManager, not the typemap.
+		var peers = ScanFixtures ();
+
+		// Keyword primitive array (e.g., JavaBooleanArray with "Z")
+		Assert.DoesNotContain (peers, p => p.ManagedTypeName == "Java.Interop.TestTypes.KeywordPrimitiveArray");
+
+		// Non-keyword array (e.g., JavaObjectArray<T> with "java/lang/Object", ArrayRank=1)
+		Assert.DoesNotContain (peers, p => p.ManagedTypeName == "Java.Interop.TestTypes.NonKeywordArrayType");
+	}
 }
