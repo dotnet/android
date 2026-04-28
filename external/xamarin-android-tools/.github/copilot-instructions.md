@@ -24,14 +24,6 @@ dotnet test tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Buil
 
 Output: `bin\$(Configuration)\` (redistributables), `bin\Test$(Configuration)\` (tests). `$(DotNetTargetFrameworkVersion)` = `10.0` in `Directory.Build.props`. Versioning: `nuget.version` has `major.minor`; patch = git commit count since file changed.
 
-## Running Scripts
-
-This repo uses `dotnet run file.cs` (.NET 10+ feature) to execute standalone C# scripts with top-level statements — no `.csproj` needed. Example:
-
-```sh
-dotnet run .github/skills/android-tools-reviewer/scripts/submit_review.cs -- arg1 arg2
-```
-
 ## Android Environment Variables
 
 Per the [official Android docs](https://developer.android.com/tools/variables#envar):

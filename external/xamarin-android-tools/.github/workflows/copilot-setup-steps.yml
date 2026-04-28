@@ -13,7 +13,11 @@ jobs:
   copilot-setup-steps:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+      - name: Install gh-aw extension
+        uses: github/gh-aw-actions/setup-cli@ba90f2186d7ad780ec640f364005fa24e797b360 # v0.68.3
+        with:
+          version: v0.68.3
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "10.0.x"
