@@ -53,12 +53,6 @@ namespace Xamarin.Android.RuntimeTests
                     "Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateValue",
                     "Java.InteropTests.JniValueMarshaler_object_ContractTests.SpecificTypesAreUsed",
 
-                    // No generated JavaPeerProxy for java/lang/Object with IJavaPeerable target type
-                    // CreateGenericValue still fails because JavaArray<> proxy is selected for "java/lang/Object" lookup
-                    // (alias resolution returns the open-generic JavaArray<> proxy whose CreateInstance throws).
-                    // CreateValue now passes after generator fixes.
-                    "Java.InteropTests.JniValueMarshaler_IJavaPeerable_ContractTests.JniValueMarshalerContractTests`1.CreateGenericValue",
-
                     // Trimmable typemap synthesizes peer construction via base activation ctor
                     // (EmitCreateInstanceInheritedJavaInteropCtor), so MyJavaInterfaceImpl can be cast
                     // even without its own activation ctor. This is intentionally more permissive than
