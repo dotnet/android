@@ -25,7 +25,6 @@ See: https://github.com/dotnet/sdk/pull/52581
     Configures Hot Reload when dotnet-watch passes environment variables via @(RuntimeEnvironmentVariable).
     - Adds the Hot Reload agent DLL as a reference so it gets deployed
     - Updates DOTNET_STARTUP_HOOKS to use just the assembly name (not the full path)
-    - Sets up STARTUP_HOOKS via RuntimeHostConfigurationOption for MonoVM
   -->
   <Target Name="_AndroidConfigureHotReloadEnvironment"
           Condition=" '@(RuntimeEnvironmentVariable)' != '' ">
@@ -35,7 +34,7 @@ See: https://github.com/dotnet/sdk/pull/52581
       <_AndroidHotReloadAgentAssemblyPath>@(RuntimeEnvironmentVariable->WithMetadataValue('Identity', 'DOTNET_STARTUP_HOOKS')->'%(Value)'->Exists())</_AndroidHotReloadAgentAssemblyPath>
     </PropertyGroup>
 
-    <!-- Extract just the assembly name for STARTUP_HOOKS config -->
+    <!-- Extract just the assembly name for DOTNET_STARTUP_HOOKS -->
     <PropertyGroup Condition=" '$(_AndroidHotReloadAgentAssemblyPath)' != '' ">
       <_AndroidHotReloadAgentAssemblyName>$([System.IO.Path]::GetFileNameWithoutExtension('$(_AndroidHotReloadAgentAssemblyPath)'))</_AndroidHotReloadAgentAssemblyName>
     </PropertyGroup>
