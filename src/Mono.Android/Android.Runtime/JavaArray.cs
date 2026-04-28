@@ -11,6 +11,8 @@ namespace Android.Runtime {
 			T
 	> : Java.Lang.Object, IList<T> {
 
+		// WARNING: Object.ActivatePeer depends on this ctor being a trivial base() chain.
+		// Do not add initialization logic here — it will be bypassed for closed generic instantiations.
 		public JavaArray (IntPtr handle, JniHandleOwnership transfer)
 			: base (handle, transfer)
 		{

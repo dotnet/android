@@ -226,7 +226,6 @@ sealed class AssemblyIndex : IDisposable
 
 		string jniName = "";
 		bool doNotGenerateAcw = false;
-		int arrayRank = 0;
 
 		if (value.FixedArguments.Length > 0) {
 			jniName = (string?)value.FixedArguments [0].Value ?? "";
@@ -236,15 +235,13 @@ sealed class AssemblyIndex : IDisposable
 			doNotGenerateAcw = !generateJavaPeer;
 		}
 
-		if (TryGetNamedArgument<int> (value, "ArrayRank", out var rank)) {
-			arrayRank = rank;
-		}
+		var isArrayType = TryGetNamedArgument<int> (value, "ArrayRank", out var rank) && rank > 0;
 
 		return new RegisterInfo {
 			JniName = jniName.Replace ('.', '/'),
 			DoNotGenerateAcw = doNotGenerateAcw,
 			IsFromJniTypeSignature = true,
-			IsArrayType = arrayRank > 0,
+			IsArrayType = isArrayType,
 		};
 	}
 
