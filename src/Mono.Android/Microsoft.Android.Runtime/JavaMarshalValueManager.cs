@@ -525,12 +525,12 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 				// Open-generic proxies (e.g. JavaList<>) cannot create closed
 				// instantiations (e.g. JavaList<int>) via CreateInstance because
 				// the generated IL can't newobj an open generic type. For known
-				// container types whose element type is IJavaPeerable, use the
-				// proxy's JavaPeerContainerFactory to create the closed type
-				// without reflection.
+				// container types, use Object.ActivatePeer which calls the
+				// activation ctor via UnsafeAccessor — fully AOT-safe.
 				IJavaPeerable? peer;
-				if (proxy is not null && proxy.TargetType.IsGenericTypeDefinition) {
-					peer = TryCreateViaContainerFactory (typeMap, resolvedTargetType, reference.Handle);
+				if (proxy is not null && proxy.TargetType.IsGenericTypeDefinition &&
+						resolvedTargetType is not null && IsKnownContainerType (resolvedTargetType)) {
+					peer = global::Java.Lang.Object.ActivatePeer (resolvedTargetType, reference.Handle, JniHandleOwnership.DoNotTransfer);
 				} else {
 					peer = proxy?.CreateInstance (reference.Handle, JniHandleOwnership.DoNotTransfer);
 				}
@@ -586,40 +586,22 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 	}
 
 	/// <summary>
-	/// Creates an instance of a closed generic container type (e.g. <c>JavaList&lt;T&gt;</c>)
-	/// using the <see cref="JavaPeerContainerFactory"/> from the element type's proxy.
-	/// This is the AOT/trim-safe replacement for reflection-based closed-generic activation.
-	/// Only works when the element type is <see cref="IJavaPeerable"/> — value-type
-	/// element types (e.g. <c>JavaList&lt;int&gt;</c>) are not supported.
+	/// Returns true if <paramref name="closedType"/> is a closed instantiation of one of
+	/// the known container generic definitions whose activation constructors are trivial
+	/// <c>base(handle, transfer)</c> chains — safe to activate via <see cref="global::Java.Lang.Object.ActivatePeer"/>.
 	/// </summary>
-	static IJavaPeerable? TryCreateViaContainerFactory (TrimmableTypeMap typeMap, Type? closedType, IntPtr handle)
+	static bool IsKnownContainerType ([DynamicallyAccessedMembers (Constructors)] Type closedType)
 	{
-		if (closedType is null || !closedType.IsGenericType) {
-			return null;
+		if (!closedType.IsGenericType || closedType.IsGenericTypeDefinition) {
+			return false;
 		}
 
 		var genericDef = closedType.GetGenericTypeDefinition ();
-		var typeArgs = closedType.GetGenericArguments ();
-
-		if (genericDef == typeof (Android.Runtime.JavaList<>) && typeArgs.Length == 1) {
-			var factory = typeMap.GetContainerFactory (typeArgs [0]);
-			return factory?.CreateList (handle, JniHandleOwnership.DoNotTransfer) as IJavaPeerable;
-		}
-
-		if (genericDef == typeof (Android.Runtime.JavaCollection<>) && typeArgs.Length == 1) {
-			var factory = typeMap.GetContainerFactory (typeArgs [0]);
-			return factory?.CreateCollection (handle, JniHandleOwnership.DoNotTransfer) as IJavaPeerable;
-		}
-
-		if (genericDef == typeof (Android.Runtime.JavaDictionary<,>) && typeArgs.Length == 2) {
-			var keyFactory = typeMap.GetContainerFactory (typeArgs [0]);
-			var valueFactory = typeMap.GetContainerFactory (typeArgs [1]);
-			if (keyFactory is not null && valueFactory is not null) {
-				return valueFactory.CreateDictionary (keyFactory, handle, JniHandleOwnership.DoNotTransfer) as IJavaPeerable;
-			}
-		}
-
-		return null;
+		return genericDef == typeof (Android.Runtime.JavaList<>)
+			|| genericDef == typeof (Android.Runtime.JavaCollection<>)
+			|| genericDef == typeof (Android.Runtime.JavaDictionary<,>)
+			|| genericDef == typeof (Android.Runtime.JavaSet<>)
+			|| genericDef == typeof (Android.Runtime.JavaArray<>);
 	}
 
 	/// <summary>

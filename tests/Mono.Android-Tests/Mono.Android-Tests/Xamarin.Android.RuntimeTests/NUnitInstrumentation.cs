@@ -59,11 +59,6 @@ namespace Xamarin.Android.RuntimeTests
                     // CreateValue now passes after generator fixes.
                     "Java.InteropTests.JniValueMarshaler_IJavaPeerable_ContractTests.JniValueMarshalerContractTests`1.CreateGenericValue",
 
-                    // JavaCast to closed generic with non-peer element type (int)
-                    // is not supported — JavaPeerContainerFactory requires T : IJavaPeerable.
-                    // Closed generics with peer element types work via the container factory.
-                    "Java.InteropTests.JavaObjectExtensionsTests.JavaCast_BaseToGenericWrapper",
-
                     // Trimmable typemap synthesizes peer construction via base activation ctor
                     // (EmitCreateInstanceInheritedJavaInteropCtor), so MyJavaInterfaceImpl can be cast
                     // even without its own activation ctor. This is intentionally more permissive than
