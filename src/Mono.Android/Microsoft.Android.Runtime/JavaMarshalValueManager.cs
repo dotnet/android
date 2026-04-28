@@ -524,13 +524,15 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 
 				// Open-generic proxies (e.g. JavaList<>) cannot create closed
 				// instantiations (e.g. JavaList<int>) via CreateInstance because
-				// the generated IL can't newobj an open generic type. For known
-				// container types, use per-type UnsafeAccessor activation —
-				// fully AOT-safe, no reflection.
+				// the generated IL can't newobj an open generic type. Activate the
+				// closed targetType directly via its (IntPtr, JniHandleOwnership)
+				// ctor — [DAM(Constructors)] on targetType guarantees the trimmer
+				// preserves the ctor metadata.
 				IJavaPeerable? peer;
 				if (proxy is not null && proxy.TargetType.IsGenericTypeDefinition &&
-						resolvedTargetType is not null) {
-					peer = KnownContainerActivator.TryCreateKnownContainerType (resolvedTargetType, reference.Handle, JniHandleOwnership.DoNotTransfer);
+						resolvedTargetType is not null &&
+						resolvedTargetType.IsGenericType && !resolvedTargetType.IsGenericTypeDefinition) {
+					peer = ActivateUsingReflection (resolvedTargetType, reference.Handle, JniHandleOwnership.DoNotTransfer);
 				} else {
 					peer = proxy?.CreateInstance (reference.Handle, JniHandleOwnership.DoNotTransfer);
 				}
@@ -571,6 +573,20 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 		}
 
 		return base.CreatePeer (ref reference, transfer, targetType);
+	}
+
+	static IJavaPeerable? ActivateUsingReflection (
+			[DynamicallyAccessedMembers (Constructors)]
+			Type closedType,
+			IntPtr handle,
+			JniHandleOwnership transfer)
+	{
+		var ctor = closedType.GetConstructor (ActivationConstructorBindingFlags, null, XAConstructorSignature, null);
+		if (ctor is null) {
+			return null;
+		}
+
+		return (IJavaPeerable) ctor.Invoke ([handle, transfer]);
 	}
 
 	[return: DynamicallyAccessedMembers (Constructors)]
