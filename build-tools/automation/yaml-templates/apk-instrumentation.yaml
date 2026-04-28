@@ -11,6 +11,21 @@ parameters:
   condition: succeeded()
 
 steps:
+  # Build and install the APK to the device first, so that ComputeRunArguments
+  # can resolve the package name from AndroidManifest.xml.
+- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+  parameters:
+    configuration: ${{ parameters.buildConfiguration }}
+    xaSourcePath: ${{ parameters.xaSourcePath }}
+    displayName: build ${{ parameters.testName }}
+    project: ${{ parameters.project }}
+    arguments: >-
+      -t:Install
+      -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/build-${{ parameters.testName }}.binlog
+      -c ${{ parameters.configuration }} ${{ parameters.extraBuildArgs }}
+    condition: ${{ parameters.condition }}
+    continueOnError: true
+
   # Run dotnet test from the project directory so it finds the project-local
   # global.json with "test": { "runner": "Microsoft.Testing.Platform" }.
   # This enables MTP mode, which uses RunCommand/RunArguments to invoke
