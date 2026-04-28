@@ -392,7 +392,7 @@ namespace Android.Runtime {
 		public void Remove (object? item)
 		{
 			int i = IndexOf (item);
-			if (i < 0 && i >= Count)
+			if (i < 0 || i >= Count)
 				return;
 			RemoveAt (i);
 		}
