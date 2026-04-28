@@ -627,7 +627,7 @@ namespace Android.Runtime {
 		public virtual bool Remove (Java.Lang.Object? item)
 		{
 			int i = IndexOf (item);
-			if (i < 0 && i >= Count)
+			if (i < 0 || i >= Count)
 				return false;
 			RemoveAt (i);
 			return true;
@@ -964,7 +964,7 @@ namespace Android.Runtime {
 		public bool Remove (T item)
 		{
 			int i = IndexOf (item);
-			if (i < 0 && i >= Count)
+			if (i < 0 || i >= Count)
 				return false;
 			RemoveAt (i);
 			return true;
