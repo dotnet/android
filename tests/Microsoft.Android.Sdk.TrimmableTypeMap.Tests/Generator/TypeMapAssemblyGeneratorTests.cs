@@ -296,7 +296,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		var reader = pe.GetMetadataReader ();
 		var memberNames = GetMemberRefNames (reader);
 
-		Assert.Contains ("get_WithinNewObjectScope", memberNames);
+		Assert.Contains ("ShouldSkipActivation", memberNames);
 		Assert.Contains ("GetUninitializedObject", memberNames);
 		Assert.DoesNotContain ("ActivateInstance", memberNames);
 		Assert.DoesNotContain ("ActivatePeerFromJavaConstructor", memberNames);

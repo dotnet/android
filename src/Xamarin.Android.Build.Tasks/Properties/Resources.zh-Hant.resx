@@ -306,6 +306,10 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <value>正在停用解譯器; 不支援同時使用解譯器與 AOT。使用直譯器以在 Debug 設定中取得熱重新載入支援，使用 AOT 取得 Release 設定。</value>
     <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
   </data>
+  <data name="XA0119_ReadyToRun" xml:space="preserve">
+    <value>不建議同時使用快速部署和 ReadyToRun。將快速部署用於偵錯組態並將 ReadyToRun 用於發行組態。</value>
+    <comment>The following are literal names and should not be translated: ReadyToRun, Debug, Release.</comment>
+  </data>
   <data name="XA0121" xml:space="preserve">
     <value>組件 '{0}' 正在使用不再受到支援的 '[assembly: {1}]'。請使用此 NuGet 套件的較新版本，或通知程式庫作者。</value>
     <comment>The following are literal names and should not be translated: [assembly: {1}], NuGet
