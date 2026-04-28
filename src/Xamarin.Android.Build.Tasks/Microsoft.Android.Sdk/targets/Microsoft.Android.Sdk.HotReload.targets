@@ -25,7 +25,11 @@ See: https://github.com/dotnet/sdk/pull/52581
     Configures Hot Reload when dotnet-watch passes environment variables via @(RuntimeEnvironmentVariable).
     - Adds the Hot Reload agent DLL as a reference so it gets deployed
     - Updates DOTNET_STARTUP_HOOKS to use just the assembly name (not the full path)
-    - Sets up STARTUP_HOOKS via RuntimeHostConfigurationOption for MonoVM
+    - Sets up STARTUP_HOOKS via RuntimeHostConfigurationOption so the runtime picks
+      up the agent from runtimeconfig.json (works for both MonoVM and CoreCLR on
+      Android, where DOTNET_STARTUP_HOOKS env var injection is not available)
+    - On CoreCLR, also enables modifiable assemblies via runtimeconfig so metadata
+      updates are accepted (Mono picks this up from __environment__.txt instead)
   -->
   <Target Name="_AndroidConfigureHotReloadEnvironment"
           Condition=" '@(RuntimeEnvironmentVariable)' != '' ">
@@ -56,8 +60,26 @@ See: https://github.com/dotnet/sdk/pull/52581
           Value="$(_AndroidHotReloadAgentAssemblyName)"
           Condition=" '@(_ExistingStartupHooks)' == '' " />
       <_ExistingStartupHooks Remove="@(_ExistingStartupHooks)" />
-      <!-- Set STARTUP_HOOKS via RuntimeHostConfigurationOption for MonoVM (read by Mono runtime) -->
-      <RuntimeHostConfigurationOption Include="STARTUP_HOOKS" Value="$(_AndroidHotReloadAgentAssemblyName)" Condition=" '$(UseMonoRuntime)' == 'true' " />
+      <!--
+        Set STARTUP_HOOKS via RuntimeHostConfigurationOption.
+        Both MonoVM and CoreCLR read this from runtimeconfig.json at host init,
+        which is required on Android where the DOTNET_STARTUP_HOOKS env var written
+        to __environment__.txt is only consumed by Mono via libmonodroid.so;
+        CoreCLR's PAL snapshots the OS environment at startup and never reads it.
+      -->
+      <RuntimeHostConfigurationOption Include="STARTUP_HOOKS" Value="$(_AndroidHotReloadAgentAssemblyName)" />
+    </ItemGroup>
+
+    <!--
+      On CoreCLR, also enable modifiable assemblies via runtimeconfig so the
+      runtime accepts metadata updates from the Hot Reload agent. Mono picks
+      this up from DOTNET_MODIFIABLE_ASSEMBLIES in __environment__.txt
+      (see Xamarin.Android.Common.targets _GenerateEnvironmentFiles), which
+      CoreCLR does not consume.
+    -->
+    <ItemGroup Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(AndroidIncludeDebugSymbols)' == 'true' ">
+      <RuntimeHostConfigurationOption Include="System.Reflection.Metadata.MetadataUpdater.IsSupported" Value="true" />
+      <RuntimeHostConfigurationOption Include="ModifiableAssemblies" Value="debug" />
     </ItemGroup>
 
   </Target>
