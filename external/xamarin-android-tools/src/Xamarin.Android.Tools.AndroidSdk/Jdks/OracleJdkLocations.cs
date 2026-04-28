@@ -28,7 +28,6 @@ namespace Xamarin.Android.Tools {
 			string subkey = @"SOFTWARE\JavaSoft\Java Development Kit";
 
 			foreach (var wow64 in new[] { RegistryEx.Wow64.Key32, RegistryEx.Wow64.Key64 }) {
-				string key_name = string.Format (@"{0}\{1}\{2}", "HKLM", subkey, "CurrentVersion");
 				var currentVersion = RegistryEx.GetValueString (RegistryEx.LocalMachine, subkey, "CurrentVersion", wow64);
 
 				if (!string.IsNullOrEmpty (currentVersion)) {

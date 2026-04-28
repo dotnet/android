@@ -179,8 +179,6 @@ namespace Xamarin.Android.Tools
 		internal static bool CheckRegistryKeyForExecutable (UIntPtr key, string subkey, string valueName, RegistryEx.Wow64 wow64, string subdir, string exe)
 		{
 			try {
-				string key_name = string.Format (@"{0}\{1}\{2}", key == RegistryEx.CurrentUser ? "HKCU" : "HKLM", subkey, valueName);
-
 				var path = AndroidSdkBase.NullIfEmpty (RegistryEx.GetValueString (key, subkey, valueName, wow64));
 
 				if (path == null) {
