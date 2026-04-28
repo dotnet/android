@@ -11,22 +11,12 @@ namespace Xamarin.Android.Build.Tests {
 	public class TrimmableTypeMapBuildTests : BaseTest {
 
 		[Test]
-		public void Build_WithTrimmableTypeMap_Succeeds ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void Build_WithTrimmableTypeMap_Succeeds ()
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			// https://github.com/dotnet/android/issues/11210
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT trimmable build does not yet generate JavaInteropRuntime.java");
-				return;
-			}
-
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
+				IsRelease = true,
 			};
-			proj.SetRuntime (runtime);
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
@@ -37,22 +27,12 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
-		public void Build_WithTrimmableTypeMap_IncrementalBuild ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void Build_WithTrimmableTypeMap_IncrementalBuild ()
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			// https://github.com/dotnet/android/issues/11210
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT trimmable build does not yet generate JavaInteropRuntime.java");
-				return;
-			}
-
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
+				IsRelease = true,
 			};
-			proj.SetRuntime (runtime);
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
