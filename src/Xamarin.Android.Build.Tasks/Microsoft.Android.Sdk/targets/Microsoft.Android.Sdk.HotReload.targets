@@ -56,8 +56,6 @@ See: https://github.com/dotnet/sdk/pull/52581
           Value="$(_AndroidHotReloadAgentAssemblyName)"
           Condition=" '@(_ExistingStartupHooks)' == '' " />
       <_ExistingStartupHooks Remove="@(_ExistingStartupHooks)" />
-      <!-- Set STARTUP_HOOKS via RuntimeHostConfigurationOption for MonoVM (read by Mono runtime) -->
-      <RuntimeHostConfigurationOption Include="STARTUP_HOOKS" Value="$(_AndroidHotReloadAgentAssemblyName)" Condition=" '$(UseMonoRuntime)' == 'true' " />
     </ItemGroup>
 
   </Target>
