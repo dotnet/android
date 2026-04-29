@@ -389,7 +389,7 @@ namespace Xamarin.Android.Tasks
 						try {
 							ProcessStyleable (reader.ReadSubtree (), resources);
 						} catch (Exception ex) {
-							Log?.LogErrorFromException (ex);
+							Log.LogErrorFromException (ex);
 						}
 						continue;
 					}

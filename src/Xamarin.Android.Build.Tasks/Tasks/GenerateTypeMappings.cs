@@ -111,6 +111,9 @@ public class GenerateTypeMappings : AndroidTask
 			RegisteredTaskObjectLifetime.Build
 		);
 
+		if (nativeCodeGenStates is null)
+			throw new InvalidOperationException ($"Internal error: {nameof (NativeCodeGenState)} not found");
+
 		NativeCodeGenState? templateCodeGenState = null;
 
 		foreach (var kvp in nativeCodeGenStates) {

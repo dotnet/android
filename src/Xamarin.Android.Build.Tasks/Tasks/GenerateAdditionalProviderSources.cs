@@ -51,6 +51,9 @@ public class GenerateAdditionalProviderSources : AndroidTask
 			RegisteredTaskObjectLifetime.Build
 		);
 
+		if (nativeCodeGenStates is null)
+			throw new InvalidOperationException ($"Internal error: {nameof (NativeCodeGenStateCollection)} not found");
+
 		// We only need the first architecture, since this task is architecture-agnostic
 		var templateCodeGenState = nativeCodeGenStates.States.First ().Value;
 

@@ -79,11 +79,11 @@ namespace Xamarin.Android.Tasks
 								var failedToParseMinSdk = !int.TryParse (min_sdk.Value, out int minSdkVersion);
 
 								if (failedToParseMinSdk || minSdkVersion < XABuildConfig.AndroidMinimumDotNetApiLevel.Major) {
-									Log.LogCodedError ("XA4216", Properties.Resources.XA4216_MinSdkVersion, min_sdk?.Value, XABuildConfig.AndroidMinimumDotNetApiLevel);
+									Log.LogCodedError ("XA4216", Properties.Resources.XA4216_MinSdkVersion, min_sdk.Value, XABuildConfig.AndroidMinimumDotNetApiLevel);
 								}
 
 								if (failedToParseMinSdk || minSdkVersion != supportedOsPlatformVersionAsInt) {
-									Log.LogCodedError ("XA1036", Properties.Resources.XA1036, min_sdk?.Value, SupportedOSPlatformVersion);
+									Log.LogCodedError ("XA1036", Properties.Resources.XA1036, min_sdk.Value, SupportedOSPlatformVersion ?? "");
 								}
 							}
 							if (target_sdk != null && (!int.TryParse (target_sdk.Value, out int targetSdkVersion) || targetSdkVersion < XABuildConfig.AndroidMinimumDotNetApiLevel.Major)) {
@@ -127,8 +127,8 @@ namespace Xamarin.Android.Tasks
 				// AndroidApiLevel is likely a *preview* API level; use it.
 				Log.LogWarningForXmlNode (
 						code:             "XA4211",
-						file:             AndroidManifest,
-						node:             target_sdk,
+						file:             AndroidManifest ?? "",
+						node:             (object?) target_sdk ?? "",
 						message:          Properties.Resources.XA4211,
 						messageArgs:      new [] {
 							targetSdkVersion,
@@ -142,8 +142,8 @@ namespace Xamarin.Android.Tasks
 					targetSdk.Major < frameworkSdk.Major) {
 				Log.LogWarningForXmlNode (
 						code:             "XA4211",
-						file:             AndroidManifest,
-						node:             target_sdk,
+						file:             AndroidManifest ?? "",
+						node:             (object?) target_sdk ?? "",
 						message:          Properties.Resources.XA4211,
 						messageArgs:      new [] {
 							targetSdkVersion,

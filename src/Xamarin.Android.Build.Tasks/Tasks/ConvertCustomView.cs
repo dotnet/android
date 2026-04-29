@@ -56,10 +56,10 @@ namespace Xamarin.Android.Tasks {
 								ITaskItem? resdir = ResourceDirectories?.FirstOrDefault (x => file.StartsWith (x.ItemSpec, StringComparison.OrdinalIgnoreCase));
 								switch (level) {
 								case TraceLevel.Error:
-									Log.FixupResourceFilenameAndLogCodedError ("XA1002", message, file, resdir?.ItemSpec, resource_name_case_map);
+									Log.FixupResourceFilenameAndLogCodedError ("XA1002", message, file, resdir?.ItemSpec ?? "", resource_name_case_map);
 									break;
 								case TraceLevel.Warning:
-									Log.FixupResourceFilenameAndLogCodedError ("XA1001", message, file, resdir?.ItemSpec, resource_name_case_map);
+									Log.FixupResourceFilenameAndLogCodedError ("XA1001", message, file, resdir?.ItemSpec ?? "", resource_name_case_map);
 									break;
 								default:
 									Log.LogDebugMessage (message);

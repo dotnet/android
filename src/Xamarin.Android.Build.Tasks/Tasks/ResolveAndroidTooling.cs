@@ -137,7 +137,7 @@ namespace Xamarin.Android.Tasks
 
 			if (AndroidSdkBuildToolsPath.IsNullOrEmpty ()) {
 				Log.LogCodedError ("XA5205", Properties.Resources.XA5205,
-						Aapt2, AndroidSdkPath, Path.DirectorySeparatorChar, Android);
+						Aapt2, AndroidSdkPath ?? "", Path.DirectorySeparatorChar, Android);
 				return false;
 			}
 
@@ -160,7 +160,7 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 			if (Aapt2ToolPath.IsNullOrEmpty () || !File.Exists (Path.Combine (Aapt2ToolPath, aapt2Exe))) {
-				Log.LogCodedError ("XA0112", Properties.Resources.XA0112, Aapt2ToolPath);
+				Log.LogCodedError ("XA0112", Properties.Resources.XA0112, Aapt2ToolPath ?? "");
 			} else if (!GetAapt2Version (aapt2Exe)) {
 				Log.LogCodedError ("XA0111", Properties.Resources.XA0111, Aapt2ToolPath);
 			}
@@ -176,7 +176,7 @@ namespace Xamarin.Android.Tasks
 			}
 			if (ZipAlignPath.IsNullOrEmpty ()) {
 				Log.LogCodedError ("XA5205", Properties.Resources.XA5205,
-						ZipAlign, AndroidSdkPath, Path.DirectorySeparatorChar, Android);
+						ZipAlign, AndroidSdkPath ?? "", Path.DirectorySeparatorChar, Android);
 				return false;
 			}
 
@@ -185,7 +185,7 @@ namespace Xamarin.Android.Tasks
 
 			SequencePointsMode mode;
 			if (!Aot.TryGetSequencePointsMode (SequencePointsMode ?? "None", out mode))
-				Log.LogCodedError ("XA0104", Properties.Resources.XA0104, SequencePointsMode);
+				Log.LogCodedError ("XA0104", Properties.Resources.XA0104, SequencePointsMode ?? "");
 			AndroidSequencePointsMode = mode.ToString ();
 
 			AndroidApiLevelName = MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (AndroidApiLevel);

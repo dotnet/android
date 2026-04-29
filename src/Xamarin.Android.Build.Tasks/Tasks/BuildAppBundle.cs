@@ -107,7 +107,7 @@ namespace Xamarin.Android.Tasks
 				var mergedJson = json.Merge (jsonAdditionDoc);
 				var output = mergedJson?.ToJsonString (new JsonSerializerOptions { WriteIndented = true });
 
-				Log.LogDebugMessage ("BundleConfig.json: {0}", output);
+				Log.LogDebugMessage ($"BundleConfig.json: {output}");
 				File.WriteAllText (temp, output);
 
 				//NOTE: bundletool will not overwrite
