@@ -4,26 +4,64 @@ parameters:
   xaSourcePath: $(System.DefaultWorkingDirectory)
   testName: ""
   project: ""
-  testResultsFiles: ""
   extraBuildArgs: ""
-  testResultsFormat: NUnit
+  testResultsFormat: VSTest
   artifactSource: ""
   artifactFolder: ""
   condition: succeeded()
 
 steps:
+  # Build and install the APK to the device first, so that ComputeRunArguments
+  # can resolve the package name from AndroidManifest.xml.
 - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
   parameters:
     configuration: ${{ parameters.buildConfiguration }}
     xaSourcePath: ${{ parameters.xaSourcePath }}
-    displayName: run ${{ parameters.testName }}
+    displayName: build ${{ parameters.testName }}
     project: ${{ parameters.project }}
     arguments: >-
-      -t:RunTestApp
-      -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog
-      -v:n -c ${{ parameters.configuration }} ${{ parameters.extraBuildArgs }}
+      -t:Install
+      -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/build-${{ parameters.testName }}.binlog
+      -c ${{ parameters.configuration }} ${{ parameters.extraBuildArgs }}
     condition: ${{ parameters.condition }}
     continueOnError: true
+
+  # Run dotnet test from the project directory so it finds the project-local
+  # global.json with "test": { "runner": "Microsoft.Testing.Platform" }.
+  # This enables MTP mode, which uses RunCommand/RunArguments to invoke
+  # Microsoft.Android.Run for on-device test execution.
+- powershell: |
+    $projectDir = Split-Path -Parent "${{ parameters.project }}"
+    $projectFile = Split-Path -Leaf "${{ parameters.project }}"
+    Push-Location $projectDir
+    if ([Environment]::OSVersion.Platform -eq "Unix") {
+        $DOTNET_ROOT = "${{ parameters.xaSourcePath }}/bin/${{ parameters.buildConfiguration }}/dotnet"
+        $env:PATH = "${DOTNET_ROOT}:$env:PATH"
+        $dotnetPath = "${DOTNET_ROOT}/dotnet"
+    } else {
+        $DOTNET_ROOT = "${{ parameters.xaSourcePath }}\bin\${{ parameters.buildConfiguration }}\dotnet"
+        $env:PATH = "${DOTNET_ROOT};$env:PATH"
+        $dotnetPath = "${DOTNET_ROOT}\dotnet.exe"
+    }
+    & $dotnetPath test $projectFile --no-build -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog -c ${{ parameters.configuration }} ${{ parameters.extraBuildArgs }}
+    Pop-Location
+  displayName: run ${{ parameters.testName }}
+  condition: ${{ parameters.condition }}
+  continueOnError: true
+
+- script: |
+    RESULTS_DIR="${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/TestResults"
+    mkdir -p "$RESULTS_DIR"
+    TRX_FILE=$(find "$TMPDIR/AndroidTestResults" -name "*.trx" -newer "${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog" 2>/dev/null | head -1)
+    if [ -n "$TRX_FILE" ]; then
+      cp "$TRX_FILE" "$RESULTS_DIR/${{ parameters.testName }}.trx"
+      echo "Copied TRX: $TRX_FILE -> $RESULTS_DIR/${{ parameters.testName }}.trx"
+    else
+      echo "##[warning]No TRX file found in $TMPDIR/AndroidTestResults"
+    fi
+  displayName: copy ${{ parameters.testName }} trx
+  condition: ${{ parameters.condition }}
+  continueOnError: true
 
 - script: >
     DEST="$(Build.StagingDirectory)/Test${{ parameters.configuration }}/${{ parameters.artifactFolder }}/" &&
@@ -38,9 +76,9 @@ steps:
   displayName: publish ${{ parameters.testName }} results
   inputs:
     testResultsFormat: ${{ parameters.testResultsFormat }}
-    testResultsFiles: ${{ parameters.testResultsFiles }}
+    testResultsFiles: ${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/TestResults/${{ parameters.testName }}.trx
     testRunTitle: ${{ parameters.testName }}
-  condition: and(${{ parameters.condition }}, ne('${{ parameters.testResultsFiles }}', ''))
+  condition: ${{ parameters.condition }}
 
 - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
   parameters:
