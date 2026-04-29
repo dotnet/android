@@ -349,55 +349,33 @@ public class TrimmableTypeMap
 	/// <summary>AOT-safe lookup of the closed managed array type for the given element type.</summary>
 	internal bool TryGetArrayType (Type elementType, [NotNullWhen (true)] out Type? arrayType)
 	{
-		if (elementType is null) {
-			arrayType = null;
-			return false;
-		}
+		arrayType = null;
 
-		// Walk array nesting to the leaf; total rank = element depth + 1 (the outer rank we're constructing).
-		// Reject multi-dim arrays (byte[,]) — JNI only supports single-dim zero-based arrays.
+		// Walk array nesting to the leaf; rankIndex = depth = (rank - 1).
+		// Reject multi-dim arrays (byte[,]) — JNI only supports szarrays.
 		var leaf = elementType;
-		int elementDepth = 0;
+		int rankIndex = 0;
 		while (leaf.IsArray) {
 			if (!leaf.IsSZArray) {
-				arrayType = null;
 				return false;
 			}
 			var next = leaf.GetElementType ();
 			if (next is null) {
-				arrayType = null;
 				return false;
 			}
 			leaf = next;
-			elementDepth++;
+			rankIndex++;
 		}
 
-		string leafJniName;
-		if (leaf.IsPrimitive) {
-			if (!TryGetPrimitiveJniName (leaf, out var primitive)) {
-				arrayType = null;
-				return false;
-			}
-			leafJniName = primitive;
-		} else if (!TryGetJniNameForManagedType (leaf, out var jni)) {
-			arrayType = null;
+		if ((uint)rankIndex >= (uint)_arrayMapsByRank.Length || _arrayMapsByRank [rankIndex] is not { } dict) {
 			return false;
-		} else {
-			leafJniName = jni;
 		}
 
-		int rank = elementDepth + 1;
-		int index = rank - 1;
-		if ((uint)index >= (uint)_arrayMapsByRank.Length) {
-			arrayType = null;
-			return false;
-		}
-		var dict = _arrayMapsByRank [index];
-		if (dict is null) {
-			arrayType = null;
-			return false;
-		}
-		return dict.TryGetValue (leafJniName, out arrayType);
+		string? leafJniName = leaf.IsPrimitive
+			? TryGetPrimitiveJniName (leaf, out var p) ? p : null
+			: TryGetJniNameForManagedType (leaf, out var jni) ? jni : null;
+
+		return leafJniName is not null && dict.TryGetValue (leafJniName, out arrayType);
 	}
 
 	/// <summary>JNI single-letter encoding for primitive element types.</summary>
