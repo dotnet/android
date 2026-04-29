@@ -270,6 +270,7 @@ static class ModelBuilder
 			},
 			IsAcw = isAcw,
 			IsGenericDefinition = peer.IsGenericDefinition,
+			CannotRegisterInStaticConstructor = peer.CannotRegisterInStaticConstructor,
 		};
 
 		if (peer.InvokerTypeName != null) {
@@ -317,6 +318,14 @@ static class ModelBuilder
 					AssemblyName = !string.IsNullOrEmpty (mm.DeclaringAssemblyName) ? mm.DeclaringAssemblyName : peer.AssemblyName,
 				},
 				JniSignature = mm.JniSignature,
+				ExportMethodDispatch = mm.IsExport ? new ExportMethodDispatchData {
+					ManagedMethodName = mm.ManagedMethodName,
+					ParameterTypes = mm.ManagedParameterTypes,
+					ParameterKinds = mm.ManagedParameterExportKinds,
+					ReturnType = mm.ManagedReturnType,
+					ReturnKind = mm.ManagedReturnExportKind,
+					IsStatic = mm.IsStatic,
+				} : null,
 			});
 			ucoIndex++;
 		}
@@ -332,6 +341,8 @@ static class ModelBuilder
 			proxy.UcoConstructors.Add (new UcoConstructorData {
 				WrapperName = $"nctor_{ctor.ConstructorIndex}_uco",
 				JniSignature = ctor.JniSignature,
+				HasMatchingManagedCtor = ctor.HasMatchingManagedCtor,
+				ManagedParameterTypes = ctor.ManagedParameterTypes,
 				TargetType = new TypeRefData {
 					ManagedTypeName = peer.ManagedTypeName,
 					AssemblyName = peer.AssemblyName,

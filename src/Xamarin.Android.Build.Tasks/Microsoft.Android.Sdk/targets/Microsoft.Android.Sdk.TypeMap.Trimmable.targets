@@ -26,6 +26,11 @@
         Value="true" Trim="true" />
     <RuntimeHostConfigurationOption Include="System.Runtime.InteropServices.TypeMappingEntryAssembly"
         Value="$(_TypeMapAssemblyName)" />
+    <!-- [Export] metadata is still needed at compile time, but the legacy runtime helper
+         assembly must stay out of the packaged app on the trimmable path. -->
+    <AndroidCustomMetaDataForReferences Include="Mono.Android.Export">
+      <AndroidSkipAddToPackage>true</AndroidSkipAddToPackage>
+    </AndroidCustomMetaDataForReferences>
     <!-- Preserve the native→managed entry point (called via create_delegate from host.cc) -->
     <TrimmerRootDescriptor Include="$(MSBuildThisFileDirectory)../PreserveLists/Trimmable.CoreCLR.xml"
         Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
@@ -40,6 +45,8 @@
   <!--
     Generate TypeMap assemblies and JCW files.
     AfterTargets="CoreCompile" so it runs after compilation.
+    BeforeTargets="_GenerateJavaStubs" so the generated manifest + Java sources
+    are available when _GenerateJavaStubs copies typemap sources into android/src.
     Uses @(ReferencePath) as the primary input (available after compilation).
     Skipped in inner per-RID builds (_OuterIntermediateOutputPath is set) because
     those builds lack the manifest template and full assembly set needed for correct
@@ -48,6 +55,7 @@
   <Target Name="_GenerateTrimmableTypeMap"
       Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '@(ReferencePath->Count())' != '0' and '$(_OuterIntermediateOutputPath)' == '' "
       AfterTargets="CoreCompile"
+      BeforeTargets="_GenerateJavaStubs"
       Inputs="@(ReferencePath);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs)"
       Outputs="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll">
 

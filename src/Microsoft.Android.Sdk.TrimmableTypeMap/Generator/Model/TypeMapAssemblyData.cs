@@ -126,6 +126,13 @@ sealed class JavaPeerProxyData
 	public bool IsGenericDefinition { get; init; }
 
 	/// <summary>
+	/// True when the Java stub must not call RegisterNatives from a static initializer because
+	/// the type can be instantiated before the runtime is fully ready (for example Application
+	/// or Instrumentation subclasses).
+	/// </summary>
+	public bool CannotRegisterInStaticConstructor { get; init; }
+
+	/// <summary>
 	/// Whether this proxy needs ACW support (RegisterNatives + UCO wrappers + IAndroidCallableWrapper).
 	/// </summary>
 	public bool IsAcw { get; init; }
@@ -149,7 +156,7 @@ sealed class JavaPeerProxyData
 /// <summary>
 /// A cross-assembly type reference (assembly name + full managed type name).
 /// </summary>
-sealed record TypeRefData
+public sealed record TypeRefData
 {
 	/// <summary>
 	/// Full managed type name, e.g., "Android.App.Activity" or "MyApp.Outer+Inner".
@@ -160,11 +167,19 @@ sealed record TypeRefData
 	/// Assembly containing the type, e.g., "Mono.Android".
 	/// </summary>
 	public required string AssemblyName { get; init; }
+
+	/// <summary>
+	/// True if this type — or, for array types, the element type — is an enum.
+	/// Used by the IL emitter to encode the type as <c>ELEMENT_TYPE_VALUETYPE</c>
+	/// rather than <c>ELEMENT_TYPE_CLASS</c> in member references and signatures.
+	/// </summary>
+	public bool IsEnum { get; init; }
 }
 
 /// <summary>
 /// An [UnmanagedCallersOnly] static wrapper for a marshal method.
-/// Body: load all args → call n_* callback → ret.
+/// Body: either forward to an existing n_* callback or dispatch directly to the
+/// managed export target when the trimmable path can avoid dynamic callback generation.
 /// </summary>
 sealed record UcoMethodData
 {
@@ -174,7 +189,7 @@ sealed record UcoMethodData
 	public required string WrapperName { get; init; }
 
 	/// <summary>
-	/// Name of the n_* callback to call, e.g., "n_OnCreate".
+	/// Java/JNI-visible native method name, e.g., "n_OnCreate".
 	/// </summary>
 	public required string CallbackMethodName { get; init; }
 
@@ -187,6 +202,53 @@ sealed record UcoMethodData
 	/// JNI method signature, e.g., "(Landroid/os/Bundle;)V". Used to determine CLR parameter types.
 	/// </summary>
 	public required string JniSignature { get; init; }
+
+	/// <summary>
+	/// Optional [Export]-only metadata for wrappers that dispatch directly to the
+	/// managed export target instead of forwarding to a generated n_* callback.
+	/// </summary>
+	public ExportMethodDispatchData? ExportMethodDispatch { get; init; }
+
+	/// <summary>
+	/// True when this wrapper performs the static [Export] direct-dispatch path.
+	/// </summary>
+	public bool UsesExportMethodDispatch => ExportMethodDispatch != null;
+}
+
+sealed record ExportMethodDispatchData
+{
+	/// <summary>
+	/// Managed method name on the callback type that should be invoked for [Export].
+	/// </summary>
+	public required string ManagedMethodName { get; init; }
+
+	/// <summary>
+	/// Managed parameter types for the target method, including the defining assembly.
+	/// </summary>
+	public IReadOnlyList<TypeRefData> ParameterTypes { get; init; } = [];
+
+	/// <summary>
+	/// Per-parameter [ExportParameter] kinds for legacy callback marshalling.
+	/// </summary>
+	public IReadOnlyList<ExportParameterKindInfo> ParameterKinds { get; init; } = [];
+
+	/// <summary>
+	/// Managed return type for the target method, including the defining assembly.
+	/// </summary>
+	public TypeRefData ReturnType { get; init; } = new () {
+		ManagedTypeName = "System.Void",
+		AssemblyName = "System.Runtime",
+	};
+
+	/// <summary>
+	/// [ExportParameter] kind applied to the return value, if any.
+	/// </summary>
+	public ExportParameterKindInfo ReturnKind { get; init; }
+
+	/// <summary>
+	/// Whether the managed target method is static.
+	/// </summary>
+	public bool IsStatic { get; init; }
 }
 
 /// <summary>
@@ -211,6 +273,24 @@ sealed record UcoConstructorData
 	/// JNI constructor signature, e.g., "(Landroid/content/Context;)V". Used for RegisterNatives registration.
 	/// </summary>
 	public required string JniSignature { get; init; }
+
+	/// <summary>
+	/// <see langword="true"/> when the UCO codegen can statically prove the managed
+	/// type defines a matching user-visible ctor with this signature. When
+	/// <see langword="false"/>, the codegen must use the legacy activation-ctor
+	/// `(IntPtr, JniHandleOwnership)` path instead of emitting a member ref to
+	/// a (potentially non-existent) user ctor.
+	/// </summary>
+	public required bool HasMatchingManagedCtor { get; init; }
+
+	/// <summary>
+	/// Managed parameter types of the matching user-visible ctor, in declaration
+	/// order. Empty for `()V`. Non-empty when <see cref="HasMatchingManagedCtor"/>
+	/// is <see langword="true"/> and the ctor takes parameters; the emitter uses
+	/// this to build the member ref signature and to marshal each JNI argument
+	/// to the corresponding managed type before calling the user ctor.
+	/// </summary>
+	public IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = [];
 }
 
 /// <summary>

@@ -538,6 +538,8 @@ sealed record ExportInfo
 {
 	public IReadOnlyList<string>? ThrownNames { get; init; }
 	public string? SuperArgumentsString { get; init; }
+	public IReadOnlyList<ExportParameterKindInfo> ParameterKinds { get; init; } = [];
+	public ExportParameterKindInfo ReturnKind { get; init; }
 }
 
 class TypeAttributeInfo (string attributeName)

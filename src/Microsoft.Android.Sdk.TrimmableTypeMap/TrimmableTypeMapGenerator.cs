@@ -44,7 +44,8 @@ public class TrimmableTypeMapGenerator
 			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
 
-		RootManifestReferencedTypes (allPeers, PrepareManifestForRooting (manifestTemplate, manifestConfig));
+		var preparedManifest = PrepareManifestForRooting (manifestTemplate, manifestConfig);
+		RootManifestReferencedTypes (allPeers, preparedManifest);
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
 		PropagateCannotRegisterToDescendants (allPeers);
 
@@ -61,7 +62,7 @@ public class TrimmableTypeMapGenerator
 		}
 
 		var manifest = manifestConfig is not null
-			? GenerateManifest (allPeers, assemblyManifestInfo, manifestConfig, manifestTemplate)
+			? GenerateManifest (allPeers, assemblyManifestInfo, manifestConfig, preparedManifest)
 			: null;
 
 		return new TrimmableTypeMapResult (generatedAssemblies, generatedJavaSources, allPeers, manifest, appRegTypes);
@@ -269,8 +270,7 @@ public class TrimmableTypeMapGenerator
 		XName attName = androidNs + "name";
 		var packageName = (string?) root.Attribute ("package") ?? "";
 
-		var componentNames = new HashSet<string> (StringComparer.Ordinal);
-		var deferredRegistrationNames = new HashSet<string> (StringComparer.Ordinal);
+		var componentEntries = new List<(string Name, bool DeferredRegistration, XElement Element)> ();
 		foreach (var element in root.Descendants ()) {
 			switch (element.Name.LocalName) {
 			case "application":
@@ -282,17 +282,13 @@ public class TrimmableTypeMapGenerator
 				var name = (string?) element.Attribute (attName);
 				if (name is not null) {
 					var resolvedName = ManifestNameResolver.Resolve (name, packageName);
-					componentNames.Add (resolvedName);
-
-					if (element.Name.LocalName is "application" or "instrumentation") {
-						deferredRegistrationNames.Add (resolvedName);
-					}
+					componentEntries.Add ((resolvedName, element.Name.LocalName is "application" or "instrumentation", element));
 				}
 				break;
 			}
 		}
 
-		if (componentNames.Count == 0) {
+		if (componentEntries.Count == 0) {
 			return;
 		}
 
@@ -306,13 +302,20 @@ public class TrimmableTypeMapGenerator
 			}
 		}
 
-		foreach (var name in componentNames) {
+		foreach (var (name, deferredRegistration, element) in componentEntries) {
 			if (peersByDotName.TryGetValue (name, out var peers)) {
-				foreach (var peer in peers) {
-					if (deferredRegistrationNames.Contains (name)) {
+				string actualJavaName = JniSignatureHelper.JniNameToJavaName (peers [0].JavaName);
+				if (!string.Equals ((string?) element.Attribute (attName), actualJavaName, StringComparison.Ordinal)) {
+					element.SetAttributeValue (attName, actualJavaName);
+				}
+
+				if (deferredRegistration) {
+					foreach (var peer in peers) {
 						peer.CannotRegisterInStaticConstructor = true;
 					}
+				}
 
+				foreach (var peer in peers) {
 					if (!peer.IsUnconditional) {
 						peer.IsUnconditional = true;
 						logger.LogRootingManifestReferencedTypeInfo (name, peer.ManagedTypeName);

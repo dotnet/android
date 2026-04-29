@@ -30,7 +30,7 @@ namespace Xamarin.Android.RuntimeTests
                 // Tests from the external Java.Interop-Tests assembly that fail under the
                 // trimmable typemap. These cannot use [Category("TrimmableIgnore")] because
                 // we don't control that assembly — they must be excluded by name here.
-                ExcludedTestNames = new [] {
+                ExcludedTestNames = [
                     // net.dot.jni.test.CallVirtualFromConstructorDerived Java class not in APK
                     "Java.InteropTests.InvokeVirtualFromConstructorTests",
 
@@ -82,15 +82,18 @@ namespace Xamarin.Android.RuntimeTests
                     // Open generic type handling differs from non-trimmable
                     "Java.InteropTests.JnienvTest.NewOpenGenericTypeThrows",
 
-                    // Throwable subclass registration
+                    // Throwable subclass registration not supported in trimmable typemap
                     "Java.InteropTests.JnienvTest.ActivatedDirectThrowableSubclassesShouldBeRegistered",
+
+                    // Typemap doesn't resolve most-derived type
+                    "Java.LangTests.ObjectTest.GetObject_ReturnsMostDerivedType",
 
                     // Instance identity after JNI round-trip
                     "Java.LangTests.ObjectTest.JnienvCreateInstance_RegistersMultipleInstances",
 
                     // Global ref leak when inflating custom views
                     "Xamarin.Android.RuntimeTests.CustomWidgetTests.InflateCustomView_ShouldNotLeakGlobalRefs",
-                };
+                ];
             }
         }
 

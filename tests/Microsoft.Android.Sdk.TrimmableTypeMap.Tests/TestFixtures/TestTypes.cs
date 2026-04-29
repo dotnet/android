@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using System.Xml;
 using Android.App;
 using Android.Content;
 using Android.Runtime;
@@ -26,6 +28,12 @@ namespace Java.Lang
 	{
 		protected Exception (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 	}
+
+	// Mirrors Mono.Android's Java.Lang.ICharSequence: an interface without a
+	// [Register] attribute. The trimmable typemap scanner / emitter must
+	// special-case it to map onto java/lang/CharSequence and dispatch via
+	// Android.Runtime.CharSequence.ToLocalJniHandle.
+	public interface ICharSequence { }
 }
 
 namespace Android.App
@@ -298,6 +306,13 @@ namespace MyApp
 		public void MyExportedMethod () { }
 	}
 
+	[Register ("my/app/StaticExportExample")]
+	public class StaticExportExample : Java.Lang.Object
+	{
+		[Java.Interop.Export ("computeLabel")]
+		public static string ComputeLabel (int value) => value.ToString ();
+	}
+
 	/// <summary>
 	/// Has [Export] methods with non-primitive Java-bound parameter types.
 	/// The JCW should resolve parameter types via [Register] instead of falling back to Object.
@@ -313,6 +328,87 @@ namespace MyApp
 
 		[Java.Interop.Export ("getViewName")]
 		public string GetViewName (Android.Views.View view) { return ""; }
+	}
+
+	[Register ("my/app/ExportMarshallingShapes")]
+	public class ExportMarshallingShapes : Java.Lang.Object
+	{
+		[Java.Interop.Export ("roundTripNames")]
+		public string[]? RoundTripNames (string[]? names) => names;
+
+		[Java.Interop.Export ("openStream")]
+		public int OpenStream ([Java.Interop.ExportParameter (Java.Interop.ExportParameterKind.InputStream)] Stream? stream)
+			=> stream is null ? 0 : 1;
+
+		[return: Java.Interop.ExportParameter (Java.Interop.ExportParameterKind.OutputStream)]
+		[Java.Interop.Export ("wrapStream")]
+		public Stream? WrapStream ([Java.Interop.ExportParameter (Java.Interop.ExportParameterKind.OutputStream)] Stream? stream)
+			=> stream;
+
+		[return: Java.Interop.ExportParameter (Java.Interop.ExportParameterKind.XmlPullParser)]
+		[Java.Interop.Export ("readXml")]
+		public XmlReader? ReadXml ([Java.Interop.ExportParameter (Java.Interop.ExportParameterKind.XmlPullParser)] XmlReader? reader)
+			=> reader;
+
+		[return: Java.Interop.ExportParameter (Java.Interop.ExportParameterKind.XmlResourceParser)]
+		[Java.Interop.Export ("readResourceXml")]
+		public XmlReader? ReadResourceXml ([Java.Interop.ExportParameter (Java.Interop.ExportParameterKind.XmlResourceParser)] XmlReader? reader)
+			=> reader;
+	}
+
+	public enum SampleEnum { A, B, C }
+
+	public enum SampleByteEnum : byte { Red, Green, Blue }
+
+	public enum SampleLongEnum : long { Zero = 0L, Big = long.MaxValue }
+
+	/// <summary>
+	/// Has [Export] methods that take and return enum-typed values. Enums must
+	/// marshal via their underlying primitive JNI ABI (matching legacy
+	/// Mono.Android.Export behaviour) — not as object peers.
+	/// </summary>
+	[Register ("my/app/ExportEnumShapes")]
+	public class ExportEnumShapes : Java.Lang.Object
+	{
+		[Java.Interop.Export ("echoEnum")]
+		public SampleEnum EchoEnum (SampleEnum value) => value;
+
+		[Java.Interop.Export ("echoByteEnum")]
+		public SampleByteEnum EchoByteEnum (SampleByteEnum value) => value;
+
+		[Java.Interop.Export ("echoLongEnum")]
+		public SampleLongEnum EchoLongEnum (SampleLongEnum value) => value;
+	}
+
+	/// <summary>
+	/// Has [Export] methods that take and return ICharSequence values. Must
+	/// dispatch through Android.Runtime.CharSequence.ToLocalJniHandle (mirrors
+	/// legacy Mono.Android.Export behaviour) — not the generic IJavaObject
+	/// path used for other peers.
+	/// </summary>
+	[Register ("my/app/ExportCharSequenceShapes")]
+	public class ExportCharSequenceShapes : Java.Lang.Object
+	{
+		[Java.Interop.Export ("echoCharSequence")]
+		public Java.Lang.ICharSequence? EchoCharSequence (Java.Lang.ICharSequence? value) => value;
+	}
+
+	/// <summary>
+	/// Has [Export] methods that take and return non-generic collection types
+	/// (IList, IDictionary, ICollection). Each must dispatch through the
+	/// matching JavaList/JavaDictionary/JavaCollection.ToLocalJniHandle helper.
+	/// </summary>
+	[Register ("my/app/ExportCollectionShapes")]
+	public class ExportCollectionShapes : Java.Lang.Object
+	{
+		[Java.Interop.Export ("echoList")]
+		public System.Collections.IList? EchoList (System.Collections.IList? value) => value;
+
+		[Java.Interop.Export ("echoMap")]
+		public System.Collections.IDictionary? EchoMap (System.Collections.IDictionary? value) => value;
+
+		[Java.Interop.Export ("echoCollection")]
+		public System.Collections.ICollection? EchoCollection (System.Collections.ICollection? value) => value;
 	}
 
 	/// <summary>

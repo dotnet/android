@@ -183,9 +183,38 @@ public sealed record MarshalMethodInfo
 
 	/// <summary>
 	/// The native callback method name, e.g., "n_onCreate".
-	/// This is the actual method the UCO wrapper delegates to.
+	/// This is the Java/JNI-visible native method name that the generated JCW calls.
 	/// </summary>
 	public required string NativeCallbackName { get; init; }
+
+	/// <summary>
+	/// Managed parameter types decoded from the method signature, including the
+	/// defining assembly for each type.
+	/// </summary>
+	public IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = [];
+
+	/// <summary>
+	/// Per-parameter [ExportParameter] kinds for legacy callback marshalling.
+	/// </summary>
+	public IReadOnlyList<ExportParameterKindInfo> ManagedParameterExportKinds { get; init; } = [];
+
+	/// <summary>
+	/// Managed return type, including the defining assembly.
+	/// </summary>
+	public TypeRefData ManagedReturnType { get; init; } = new () {
+		ManagedTypeName = "System.Void",
+		AssemblyName = "System.Runtime",
+	};
+
+	/// <summary>
+	/// [ExportParameter] kind applied to the return value, if any.
+	/// </summary>
+	public ExportParameterKindInfo ManagedReturnExportKind { get; init; }
+
+	/// <summary>
+	/// Whether the managed target method is static.
+	/// </summary>
+	public bool IsStatic { get; init; }
 
 	/// <summary>
 	/// True if this is a constructor registration.
@@ -254,6 +283,23 @@ public sealed record JavaConstructorInfo
 	/// Ordinal index for the native constructor method (nctor_0, nctor_1, ...).
 	/// </summary>
 	public required int ConstructorIndex { get; init; }
+
+	/// <summary>
+	/// For "()V" Java ctors: <see langword="true"/> when the managed type defines a
+	/// matching parameterless instance ctor (`..ctor()`). When <see langword="false"/>,
+	/// the UCO ctor codegen falls back to the legacy `(IntPtr, JniHandleOwnership)`
+	/// activation-ctor path so we don't emit a metadata reference to a non-existent
+	/// `..ctor()` (e.g., <c>RunnableImplementor</c>, which only has parameterized ctors).
+	/// </summary>
+	public bool HasMatchingManagedCtor { get; init; }
+
+	/// <summary>
+	/// Managed parameter types of the matching user-visible ctor, captured by the
+	/// scanner when <see cref="HasMatchingManagedCtor"/> is <see langword="true"/>.
+	/// Empty for `()V`. Used by the emitter to build the member ref signature for
+	/// the user ctor call and to marshal each JNI arg into its managed type.
+	/// </summary>
+	public IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = [];
 
 	/// <summary>
 	/// For [Export] constructors: super constructor arguments string.

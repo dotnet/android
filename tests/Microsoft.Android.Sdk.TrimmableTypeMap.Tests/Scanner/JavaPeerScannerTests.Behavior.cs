@@ -15,6 +15,7 @@ public partial class JavaPeerScannerTests
 	[InlineData ("my/app/TouchHandler", "OnFocusChange", "onFocusChange", "(Landroid/view/View;Z)V")]
 	[InlineData ("my/app/TouchHandler", "OnScroll", "onScroll", "(IFJD)V")]
 	[InlineData ("my/app/TouchHandler", "SetItems", "setItems", "([Ljava/lang/String;)V")]
+	[InlineData ("my/app/StaticExportExample", "ComputeLabel", "computeLabel", "(I)Ljava/lang/String;")]
 	public void Scan_MarshalMethod_HasCorrectSignature (string javaName, string managedName, string jniName, string jniSig)
 	{
 		var method = FindFixtureByJavaName (javaName)
@@ -57,13 +58,103 @@ public partial class JavaPeerScannerTests
 	[InlineData ("processView", "(Landroid/view/View;)V")]
 	[InlineData ("handleClick", "(Landroid/view/View;I)Z")]
 	[InlineData ("getViewName", "(Landroid/view/View;)Ljava/lang/String;")]
+	[InlineData ("computeLabel", "(I)Ljava/lang/String;")]
 	public void Scan_ExportMethod_ResolvesJavaBoundParameterTypes (string jniName, string expectedSig)
 	{
-		var method = FindFixtureByJavaName ("my/app/ExportWithJavaBoundParams")
+		var peer = jniName == "computeLabel"
+			? FindFixtureByJavaName ("my/app/StaticExportExample")
+			: FindFixtureByJavaName ("my/app/ExportWithJavaBoundParams");
+		var method = peer
 			.MarshalMethods.FirstOrDefault (m => m.JniName == jniName);
 		Assert.NotNull (method);
 		Assert.Equal (expectedSig, method.JniSignature);
 		Assert.Null (method.Connector);
+	}
+
+	[Fact]
+	public void Scan_ExportMethod_CapturesStaticDispatchShape ()
+	{
+		var method = FindFixtureByJavaName ("my/app/StaticExportExample")
+			.MarshalMethods.Single (m => m.JniName == "computeLabel");
+		Assert.True (method.IsStatic);
+		Assert.Equal ("ComputeLabel", method.ManagedMethodName);
+	}
+
+	[Theory]
+	[InlineData ("roundTripNames", "([Ljava/lang/String;)[Ljava/lang/String;")]
+	[InlineData ("openStream", "(Ljava/io/InputStream;)I")]
+	[InlineData ("wrapStream", "(Ljava/io/OutputStream;)Ljava/io/OutputStream;")]
+	[InlineData ("readXml", "(Lorg/xmlpull/v1/XmlPullParser;)Lorg/xmlpull/v1/XmlPullParser;")]
+	[InlineData ("readResourceXml", "(Landroid/content/res/XmlResourceParser;)Landroid/content/res/XmlResourceParser;")]
+	public void Scan_ExportMethod_SupportsLegacyMarshallerShapes (string jniName, string expectedSig)
+	{
+		var method = FindFixtureByJavaName ("my/app/ExportMarshallingShapes")
+			.MarshalMethods.FirstOrDefault (m => m.JniName == jniName);
+		Assert.NotNull (method);
+		Assert.Equal (expectedSig, method.JniSignature);
+	}
+
+	[Theory]
+	[InlineData ("echoEnum", "(I)I")]
+	[InlineData ("echoByteEnum", "(B)B")]
+	[InlineData ("echoLongEnum", "(J)J")]
+	public void Scan_ExportMethod_EnumParametersUseUnderlyingPrimitiveJniDescriptor (string jniName, string expectedSig)
+	{
+		var method = FindFixtureByJavaName ("my/app/ExportEnumShapes")
+			.MarshalMethods.FirstOrDefault (m => m.JniName == jniName);
+		Assert.NotNull (method);
+		Assert.Equal (expectedSig, method.JniSignature);
+	}
+
+	[Fact]
+	public void Scan_ExportMethod_EnumParametersFlagTypeRefAsEnum ()
+	{
+		var method = FindFixtureByJavaName ("my/app/ExportEnumShapes")
+			.MarshalMethods.First (m => m.JniName == "echoEnum");
+		Assert.True (method.ManagedParameterTypes [0].IsEnum, "enum parameter should be tagged IsEnum=true");
+		Assert.True (method.ManagedReturnType.IsEnum, "enum return type should be tagged IsEnum=true");
+	}
+
+	[Theory]
+	[InlineData ("echoCharSequence", "(Ljava/lang/CharSequence;)Ljava/lang/CharSequence;")]
+	public void Scan_ExportMethod_CharSequenceMapsToCanonicalJavaType (string jniName, string expectedSig)
+	{
+		var method = FindFixtureByJavaName ("my/app/ExportCharSequenceShapes")
+			.MarshalMethods.FirstOrDefault (m => m.JniName == jniName);
+		Assert.NotNull (method);
+		Assert.Equal (expectedSig, method.JniSignature);
+	}
+
+	[Theory]
+	[InlineData ("echoList",       "(Ljava/util/List;)Ljava/util/List;")]
+	[InlineData ("echoMap",        "(Ljava/util/Map;)Ljava/util/Map;")]
+	[InlineData ("echoCollection", "(Ljava/util/Collection;)Ljava/util/Collection;")]
+	public void Scan_ExportMethod_NonGenericCollectionsMapToCanonicalJavaTypes (string jniName, string expectedSig)
+	{
+		var method = FindFixtureByJavaName ("my/app/ExportCollectionShapes")
+			.MarshalMethods.FirstOrDefault (m => m.JniName == jniName);
+		Assert.NotNull (method);
+		Assert.Equal (expectedSig, method.JniSignature);
+	}
+
+	[Fact]
+	public void Scan_ExportMethod_CapturesPreciseManagedTypeMetadata ()
+	{
+		var arrayMethod = FindFixtureByJavaName ("my/app/ExportMarshallingShapes")
+			.MarshalMethods.First (m => m.JniName == "roundTripNames");
+		Assert.Equal ("System.String[]", arrayMethod.ManagedParameterTypes [0].ManagedTypeName);
+		Assert.Equal ("System.Runtime", arrayMethod.ManagedParameterTypes [0].AssemblyName);
+
+		var xmlMethod = FindFixtureByJavaName ("my/app/ExportMarshallingShapes")
+			.MarshalMethods.First (m => m.JniName == "readXml");
+		Assert.Equal (ExportParameterKindInfo.XmlPullParser, xmlMethod.ManagedParameterExportKinds [0]);
+		Assert.Equal (ExportParameterKindInfo.XmlPullParser, xmlMethod.ManagedReturnExportKind);
+		Assert.Equal ("System.Xml.ReaderWriter", xmlMethod.ManagedReturnType.AssemblyName);
+
+		var resourceXmlMethod = FindFixtureByJavaName ("my/app/ExportMarshallingShapes")
+			.MarshalMethods.First (m => m.JniName == "readResourceXml");
+		Assert.Equal (ExportParameterKindInfo.XmlResourceParser, resourceXmlMethod.ManagedParameterExportKinds [0]);
+		Assert.Equal (ExportParameterKindInfo.XmlResourceParser, resourceXmlMethod.ManagedReturnExportKind);
 	}
 
 	[Theory]

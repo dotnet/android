@@ -91,7 +91,7 @@ public abstract class FixtureTestBase
 		return MakePeerWithActivation (jniName, managedName, asmName) with {
 			DoNotGenerateAcw = false,
 			JavaConstructors = new List<JavaConstructorInfo> {
-				new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V" },
+				new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V", HasMatchingManagedCtor = true },
 			},
 			MarshalMethods = new List<MarshalMethodInfo> {
 				new MarshalMethodInfo {
@@ -155,6 +155,21 @@ public abstract class FixtureTestBase
 		byte t3 = (byte)((token >> 24) & 0xFF);
 		for (int i = 0; i < ilBytes.Length - 4; i++) {
 			if ((ilBytes[i] == 0x28 || ilBytes[i] == 0x6F) &&
+			    ilBytes[i + 1] == t0 && ilBytes[i + 2] == t1 &&
+			    ilBytes[i + 3] == t2 && ilBytes[i + 4] == t3)
+				return true;
+		}
+		return false;
+	}
+
+	private protected static bool ILContainsNewobjToken (byte[] ilBytes, int token)
+	{
+		byte t0 = (byte)(token & 0xFF);
+		byte t1 = (byte)((token >> 8) & 0xFF);
+		byte t2 = (byte)((token >> 16) & 0xFF);
+		byte t3 = (byte)((token >> 24) & 0xFF);
+		for (int i = 0; i < ilBytes.Length - 4; i++) {
+			if (ilBytes[i] == 0x73 &&
 			    ilBytes[i + 1] == t0 && ilBytes[i + 2] == t1 &&
 			    ilBytes[i + 3] == t2 && ilBytes[i + 4] == t3)
 				return true;

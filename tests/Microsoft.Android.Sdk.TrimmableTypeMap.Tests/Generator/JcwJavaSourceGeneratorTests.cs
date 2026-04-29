@@ -375,6 +375,19 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 
 	}
 
+	public class StaticExportMethods
+	{
+
+		[Fact]
+		public void Generate_StaticExport_HasStaticKeyword ()
+		{
+			var java = GenerateFixture ("my/app/StaticExportExample");
+			AssertContainsLine ("public static java.lang.String computeLabel (int p0)", java);
+			AssertContainsLine ("public static native java.lang.String", java);
+		}
+
+	}
+
 	public class MethodReturnTypesAndParams
 	{
 

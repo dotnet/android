@@ -1,15 +1,15 @@
 #nullable disable
 
-using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Xamarin.Android.Tasks;
+using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Microsoft.Android.Build.Tasks;
+using NUnit.Framework;
+using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -103,6 +103,41 @@ namespace Xamarin.Android.Build.Tests
 			StringAssert.Contains ("XXXX", txt, "environment.arm64-v8a.ll should contain 'XXXX'");
 			txt = File.ReadAllText (Path.Combine (path, "env", "environment.x86.ll"));
 			StringAssert.Contains ("XXXX", txt, "environment.x86.ll should contain 'XXXX'");
+		}
+
+		[Test]
+		public void GenerateNativeApplicationConfigSkipsAssembliesExcludedFromPackage ()
+		{
+			var path = Path.Combine (Root, "temp", nameof (GenerateNativeApplicationConfigSkipsAssembliesExcludedFromPackage));
+			Directory.CreateDirectory (path);
+
+			File.WriteAllText (Path.Combine (path, "myenv.txt"), @"MYENV=ZZZZ");
+
+			var metadata = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
+				{ "Abi", "arm64-v8a" },
+			};
+			var skipped = new Dictionary<string, string> (metadata, StringComparer.OrdinalIgnoreCase) {
+				{ "AndroidSkipAddToPackage", "true" },
+			};
+
+			var configTask = new GenerateNativeApplicationConfigSources {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				ResolvedAssemblies = [
+					new TaskItem ("linked/HelloAndroid.dll", metadata),
+					new TaskItem ("linked/Mono.Android.Export.dll", skipped),
+				],
+				EnvironmentOutputDirectory = Path.Combine (path, "env"),
+				SupportedAbis = ["arm64-v8a"],
+				AndroidPackageName = "com.microsoft.net6.helloandroid",
+				EnablePreloadAssembliesDefault = false,
+				Environments = [new TaskItem (Path.Combine (path, "myenv.txt"))],
+			};
+
+			Assert.IsTrue (configTask.Execute (), "GenerateNativeApplicationConfigSources task should have executed.");
+
+			var txt = File.ReadAllText (Path.Combine (path, "env", "environment.arm64-v8a.ll"));
+			StringAssert.Contains ("ZZZZ", txt, "environment.arm64-v8a.ll should contain the custom environment value.");
+			StringAssert.DoesNotContain ("Mono.Android.Export.dll", txt, "environment.arm64-v8a.ll should not list assemblies excluded from packaging.");
 		}
 	}
 }

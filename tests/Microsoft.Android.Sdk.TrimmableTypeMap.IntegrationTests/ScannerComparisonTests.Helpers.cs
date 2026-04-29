@@ -74,13 +74,28 @@ public partial class ScannerComparisonTests
 
 	static string NormalizeCrc64 (string javaName)
 	{
-		if (javaName.StartsWith ("crc64", StringComparison.Ordinal)) {
-			int slash = javaName.IndexOf ('/');
-			if (slash > 0) {
-				return "crc64.../" + javaName.Substring (slash + 1);
-			}
-		}
-		return javaName;
+		// Normalize crc64 hashes anywhere in the string — both the outer type
+		// name (JavaName) and any embedded type references inside JNI method
+		// signatures. Legacy and new scanners hash with different inputs (legacy
+		// hashes assembly+namespace, new scanner hashes namespace:assembly), so
+		// the absolute hash differs but should be deterministic per side.
+		return System.Text.RegularExpressions.Regex.Replace (javaName, @"crc64[0-9a-f]{16}", "crc64...");
+	}
+
+	static List<TypeMethodGroup> NormalizeMethodGroups (List<TypeMethodGroup> groups)
+	{
+		return groups
+			.Select (g => new TypeMethodGroup (
+				g.ManagedName,
+				g.Methods
+					.Select (m => new MethodEntry (
+						NormalizeCrc64 (m.JniName),
+						NormalizeCrc64 (m.JniSignature),
+						m.Connector is null ? null : NormalizeCrc64 (m.Connector)
+					))
+					.ToList ()
+			))
+			.ToList ();
 	}
 
 	void AssertTypeMapMatch (List<TypeMapEntry> legacy, List<TypeMapEntry> newEntries)
