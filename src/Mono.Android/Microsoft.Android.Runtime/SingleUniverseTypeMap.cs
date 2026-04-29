@@ -19,9 +19,10 @@ sealed class SingleUniverseTypeMap : ITypeMapWithAliasing
 	readonly IReadOnlyDictionary<string, Type> _typeMap;
 	readonly IReadOnlyDictionary<Type, Type> _proxyTypeMap;
 
-	// Per-rank array dictionaries, 0-indexed by (rank - 1). Empty/null when no array
-	// entries were emitted (CoreCLR builds). Only consulted under NativeAOT.
-	readonly IReadOnlyDictionary<string, Type>?[] _arrayMapsByRank;
+	// Jagged: [rank-1][source]. Empty/null inner array → no entries for that rank.
+	// Aggregate path uses inner-length 1 (one source per universe per rank); shared+arrays
+	// path uses inner-length N (N per-asm dicts merged via first-hit walk).
+	readonly IReadOnlyDictionary<string, Type>?[]?[] _arrayMapsByRank;
 
 	public SingleUniverseTypeMap (IReadOnlyDictionary<string, Type> typeMap, IReadOnlyDictionary<Type, Type> proxyTypeMap)
 		: this (typeMap, proxyTypeMap, arrayMapsByRank: null)
@@ -31,13 +32,13 @@ sealed class SingleUniverseTypeMap : ITypeMapWithAliasing
 	public SingleUniverseTypeMap (
 		IReadOnlyDictionary<string, Type> typeMap,
 		IReadOnlyDictionary<Type, Type> proxyTypeMap,
-		IReadOnlyDictionary<string, Type>?[]? arrayMapsByRank)
+		IReadOnlyDictionary<string, Type>?[]?[]? arrayMapsByRank)
 	{
 		ArgumentNullException.ThrowIfNull (typeMap);
 		ArgumentNullException.ThrowIfNull (proxyTypeMap);
 		_typeMap = typeMap;
 		_proxyTypeMap = proxyTypeMap;
-		_arrayMapsByRank = arrayMapsByRank ?? Array.Empty<IReadOnlyDictionary<string, Type>?> ();
+		_arrayMapsByRank = arrayMapsByRank ?? Array.Empty<IReadOnlyDictionary<string, Type>?[]?> ();
 	}
 
 	public IEnumerable<Type> GetTypes (string jniName)
@@ -101,9 +102,13 @@ sealed class SingleUniverseTypeMap : ITypeMapWithAliasing
 	{
 		int index = rank - 1;
 		if ((uint)index < (uint)_arrayMapsByRank.Length) {
-			var dict = _arrayMapsByRank [index];
-			if (dict is not null && dict.TryGetValue (jniElementTypeName, out arrayType)) {
-				return true;
+			var sources = _arrayMapsByRank [index];
+			if (sources is not null) {
+				foreach (var dict in sources) {
+					if (dict is not null && dict.TryGetValue (jniElementTypeName, out arrayType)) {
+						return true;
+					}
+				}
 			}
 		}
 		arrayType = null;

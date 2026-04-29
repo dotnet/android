@@ -250,20 +250,6 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_MergedMode_WithArrays_ReferencesCompositeDictionary ()
-	{
-		using var stream = GenerateRootAssembly (["_App.TypeMap", "_Mono.Android.TypeMap"],
-			useSharedTypemapUniverse: true, maxArrayRank: 3);
-		using var pe = new PEReader (stream);
-		var reader = pe.GetMetadataReader ();
-
-		var typeRefNames = reader.TypeReferences
-			.Select (h => reader.GetString (reader.GetTypeReference (h).Name))
-			.ToList ();
-		Assert.Contains ("CompositeStringTypeReadOnlyDictionary", typeRefNames);
-	}
-
-	[Fact]
 	public void Generate_MergedMode_WithArrays_ReferencesPerAsmRankSentinels ()
 	{
 		using var stream = GenerateRootAssembly (["_App.TypeMap", "_Mono.Android.TypeMap"],

@@ -46,11 +46,14 @@ public class TrimmableTypeMap
 	/// Initializes the singleton with a single merged typemap universe plus per-rank
 	/// array dictionaries (consulted by <c>JNIEnv.ArrayCreateInstance</c> under NativeAOT).
 	/// </summary>
-	/// <param name="arrayMapsByRank">0-indexed by (rank - 1); null when no array entries were emitted.</param>
+	/// <param name="arrayMapsByRank">
+	/// Jagged: <c>[rank - 1][source]</c>. <c>TryGetArrayType</c> walks the inner sources first-hit.
+	/// Null when no array entries were emitted.
+	/// </param>
 	public static void Initialize (
 		IReadOnlyDictionary<string, Type> typeMap,
 		IReadOnlyDictionary<Type, Type> proxyMap,
-		IReadOnlyDictionary<string, Type>?[]? arrayMapsByRank)
+		IReadOnlyDictionary<string, Type>?[]?[]? arrayMapsByRank)
 	{
 		ArgumentNullException.ThrowIfNull (typeMap);
 		ArgumentNullException.ThrowIfNull (proxyMap);
@@ -87,10 +90,18 @@ public class TrimmableTypeMap
 
 		var universes = new SingleUniverseTypeMap [typeMaps.Length];
 		for (int i = 0; i < typeMaps.Length; i++) {
-			universes [i] = new SingleUniverseTypeMap (
-				typeMaps [i],
-				proxyMaps [i],
-				perUniverseArrayMaps?[i]);
+			IReadOnlyDictionary<string, Type>?[]?[]? perRank = null;
+			var perUniverseRanks = perUniverseArrayMaps?[i];
+			if (perUniverseRanks is not null) {
+				// Wrap each rank's single-source dict into a 1-element source array so
+				// SingleUniverseTypeMap's jagged storage shape is uniform across paths.
+				perRank = new IReadOnlyDictionary<string, Type>?[]? [perUniverseRanks.Length];
+				for (int r = 0; r < perUniverseRanks.Length; r++) {
+					var dict = perUniverseRanks [r];
+					perRank [r] = dict is null ? null : new [] { dict };
+				}
+			}
+			universes [i] = new SingleUniverseTypeMap (typeMaps [i], proxyMaps [i], perRank);
 		}
 		InitializeCore (new AggregateTypeMap (universes));
 	}
