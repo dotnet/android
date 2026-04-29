@@ -9,6 +9,12 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
 public class TrimmableTypeMapGenerator
 {
+	/// <summary>
+	/// Runtime-supported maximum array rank — must match the number of
+	/// <c>__ArrayMapRank{N}</c> types pre-defined in <c>Mono.Android</c>.
+	/// </summary>
+	public const int MaxSupportedArrayRank = 8;
+
 	readonly ITrimmableTypeMapLogger logger;
 
 	static readonly HashSet<string> RequiredFrameworkDeferredRegistrationTypes = new (StringComparer.Ordinal) {
@@ -32,11 +38,20 @@ public class TrimmableTypeMapGenerator
 		HashSet<string> frameworkAssemblyNames,
 		bool useSharedTypemapUniverse = false,
 		ManifestConfig? manifestConfig = null,
-		XDocument? manifestTemplate = null)
+		XDocument? manifestTemplate = null,
+		int maxArrayRank = 0)
 	{
 		_ = assemblies ?? throw new ArgumentNullException (nameof (assemblies));
 		_ = systemRuntimeVersion ?? throw new ArgumentNullException (nameof (systemRuntimeVersion));
 		_ = frameworkAssemblyNames ?? throw new ArgumentNullException (nameof (frameworkAssemblyNames));
+		if (maxArrayRank < 0) {
+			throw new ArgumentOutOfRangeException (nameof (maxArrayRank), maxArrayRank, "Must be >= 0.");
+		}
+		if (maxArrayRank > MaxSupportedArrayRank) {
+			throw new ArgumentOutOfRangeException (nameof (maxArrayRank), maxArrayRank,
+				$"_AndroidTrimmableTypeMapMaxArrayRank={maxArrayRank} exceeds the runtime's supported maximum ({MaxSupportedArrayRank}). " +
+				$"To raise the limit, add additional __ArrayMapRank{{N}} types to Mono.Android.");
+		}
 
 		var (allPeers, assemblyManifestInfo) = ScanAssemblies (assemblies);
 		if (allPeers.Count == 0) {
@@ -48,7 +63,7 @@ public class TrimmableTypeMapGenerator
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
 		PropagateCannotRegisterToDescendants (allPeers);
 
-		var generatedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, useSharedTypemapUniverse);
+		var generatedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, useSharedTypemapUniverse, maxArrayRank);
 		var jcwPeers = allPeers.Where (p =>
 			!frameworkAssemblyNames.Contains (p.AssemblyName)
 			|| p.JavaName.StartsWith ("mono/", StringComparison.Ordinal)).ToList ();
@@ -139,7 +154,7 @@ public class TrimmableTypeMapGenerator
 		return (peers, manifestInfo);
 	}
 
-	List<GeneratedAssembly> GenerateTypeMapAssemblies (List<JavaPeerInfo> allPeers, Version systemRuntimeVersion, bool useSharedTypemapUniverse)
+	List<GeneratedAssembly> GenerateTypeMapAssemblies (List<JavaPeerInfo> allPeers, Version systemRuntimeVersion, bool useSharedTypemapUniverse, int maxArrayRank)
 	{
 		List<(string AssemblyName, List<JavaPeerInfo> Peers)> peersByAssembly;
 
@@ -168,14 +183,14 @@ public class TrimmableTypeMapGenerator
 			string typeMapAssemblyName = $"_{assemblyName}.TypeMap";
 			perAssemblyNames.Add (typeMapAssemblyName);
 			var stream = new MemoryStream ();
-			generator.Generate (peers, stream, typeMapAssemblyName, useSharedTypemapUniverse);
+			generator.Generate (peers, stream, typeMapAssemblyName, useSharedTypemapUniverse, maxArrayRank);
 			stream.Position = 0;
 			generatedAssemblies.Add (new GeneratedAssembly (typeMapAssemblyName, stream));
 			logger.LogGeneratedTypeMapAssemblyInfo (typeMapAssemblyName, peers.Count);
 		}
 		var rootStream = new MemoryStream ();
 		var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
-		rootGenerator.Generate (perAssemblyNames, useSharedTypemapUniverse, rootStream);
+		rootGenerator.Generate (perAssemblyNames, useSharedTypemapUniverse, rootStream, maxArrayRank: maxArrayRank);
 		rootStream.Position = 0;
 		generatedAssemblies.Add (new GeneratedAssembly ("_Microsoft.Android.TypeMaps", rootStream));
 		logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);
