@@ -19,12 +19,8 @@ sealed class SingleUniverseTypeMap : ITypeMapWithAliasing
 	readonly IReadOnlyDictionary<string, Type> _typeMap;
 	readonly IReadOnlyDictionary<Type, Type> _proxyTypeMap;
 
-	// Per-rank array dictionaries indexed 0-based by (rank - 1):
-	//   [0] is the rank-1 dictionary, [1] rank-2, etc.
-	// Length is whatever the generator emitted (defaults to 3, configurable via
-	// the _AndroidTrimmableTypeMapMaxArrayRank MSBuild property). Empty / null when
-	// the typemap universe was generated without array entries (e.g. CoreCLR builds
-	// with $(PublishAot) == false). Only consulted under NativeAOT via TryGetArrayType.
+	// Per-rank array dictionaries, 0-indexed by (rank - 1). Empty/null when no array
+	// entries were emitted (CoreCLR builds). Only consulted under NativeAOT.
 	readonly IReadOnlyDictionary<string, Type>?[] _arrayMapsByRank;
 
 	public SingleUniverseTypeMap (IReadOnlyDictionary<string, Type> typeMap, IReadOnlyDictionary<Type, Type> proxyTypeMap)
@@ -103,10 +99,6 @@ sealed class SingleUniverseTypeMap : ITypeMapWithAliasing
 
 	public bool TryGetArrayType (string jniElementTypeName, int rank, [NotNullWhen (true)] out Type? arrayType)
 	{
-		// The dictionary array is 0-based, so rank N lives at index N - 1.
-		// rank < 1 is invalid; rank > _arrayMapsByRank.Length means we don't have
-		// per-rank entries that high (either generator emitted up to a smaller
-		// MaxArrayRank, or the universe has no array entries at all).
 		int index = rank - 1;
 		if ((uint)index < (uint)_arrayMapsByRank.Length) {
 			var dict = _arrayMapsByRank [index];

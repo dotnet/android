@@ -10,17 +10,9 @@ using Android.Runtime;
 namespace Java.Interop
 {
 	/// <summary>
-	/// AOT-safe factory for creating typed containers (lists, collections, dictionaries)
-	/// without using <c>MakeGenericType()</c>.
+	/// AOT-safe factory for creating typed containers (lists, collections, dictionaries).
+	/// Array creation lives in <c>JNIEnv.ArrayCreateInstance</c>.
 	/// </summary>
-	/// <remarks>
-	/// Array creation has moved out of this factory:
-	/// <see cref="Android.Runtime.JNIEnv.ArrayCreateInstance"/> now branches on
-	/// <see cref="System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported"/>
-	/// and uses either <see cref="Array.CreateInstance(Type, int)"/> (CoreCLR / Mono) or
-	/// the per-rank trimmable typemap +
-	/// <see cref="Array.CreateInstanceFromArrayType(Type, int)"/> (NativeAOT).
-	/// </remarks>
 	public abstract class JavaPeerContainerFactory
 	{
 		/// <summary>
