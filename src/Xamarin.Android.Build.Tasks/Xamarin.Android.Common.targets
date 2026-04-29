@@ -1766,15 +1766,10 @@ because xbuild doesn't support framework reference assemblies.
   </GenerateNativeApplicationConfigSources>
 
   <GenerateNativeMarshalMethodSources
-      AndroidRuntime="$(_AndroidRuntime)"
-      EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
-      EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
       EnableNativeRuntimeLinking="$(_AndroidEnableNativeRuntimeLinking)"
       MonoComponents="@(_MonoComponent)"
       EnvironmentOutputDirectory="$(IntermediateOutputPath)android"
       IntermediateOutputDirectory="$(IntermediateOutputPath)"
-      ResolvedAssemblies="@(_ResolvedAssemblies)"
-      SatelliteAssemblies="@(_AndroidResolvedSatellitePaths)"
       SupportedAbis="@(_BuildTargetAbis)">
   </GenerateNativeMarshalMethodSources>
 
@@ -2898,5 +2893,77 @@ because xbuild doesn't support framework reference assemblies.
     Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
 <Import Project="$(MSBuildThisFileDirectory)..\targets\Microsoft.Android.Sdk.TypeMap.LlvmIr.targets"
     Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' " />
+
+<!--
+  Inner-build marshal method handling.  Always runs (for every RID) to generate
+  the marshal_methods.<abi>.ll LLVM IR file.
+
+  When marshal methods are enabled (Release + MonoVM), the task also classifies
+  marshal methods, rewrites assemblies (adds [UnmanagedCallersOnly] wrappers,
+  removes connectors), and generates a full .ll with marshal method native
+  functions.  Rewritten assemblies are always written to a separate per-RID
+  output directory (never in-place), so parallel inner builds don't conflict
+  even when the input assemblies point to a shared location (e.g. the NuGet
+  runtime pack when PublishTrimmed is false).
+
+  When marshal methods are disabled (Debug, or Release without marshal methods),
+  the task generates an empty/minimal .ll containing only the structural
+  scaffolding the native runtime always links against.
+
+  For the llvm-ir typemap path, runs AfterTargets="_PostTrimmingPipeline"
+  (which is AfterTargets="ILLink"), so trimmed assemblies are available for
+  rewriting and R2R images are generated from the rewritten assemblies.
+
+  For the trimmable typemap path (no ILLink), runs
+  AfterTargets="ComputeResolvedFilesToPublishList" so the assemblies are
+  resolved before the task runs.
+
+  The .ll file is written to $(_OuterIntermediateOutputPath)android/ so the
+  outer build's _CompileNativeAssemblySources can compile it.
+
+  Skipped for NativeAOT because it does not use .ll-based marshal methods
+  or native assembly sources (those targets are also NativeAOT-excluded).
+-->
+<PropertyGroup>
+  <_RewriteMarshalMethodsInnerAfterTargets Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' ">_PostTrimmingPipeline</_RewriteMarshalMethodsInnerAfterTargets>
+  <_RewriteMarshalMethodsInnerAfterTargets Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">ComputeResolvedFilesToPublishList</_RewriteMarshalMethodsInnerAfterTargets>
+</PropertyGroup>
+<Target Name="_RewriteMarshalMethodsInner"
+    AfterTargets="$(_RewriteMarshalMethodsInnerAfterTargets)"
+    Condition=" '$(_AndroidRuntime)' != 'NativeAOT' ">
+  <ItemGroup>
+    <_MarshalMethodsAssembly Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
+  </ItemGroup>
+  <RewriteMarshalMethods
+      Assemblies="@(_MarshalMethodsAssembly)"
+      CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
+      EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
+      EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
+      Environments="@(_EnvironmentFiles)"
+      MarshalMethodsOutputDirectory="$(_OuterIntermediateOutputPath)android"
+      RewrittenAssembliesOutputDirectory="$(IntermediateOutputPath)rewritten-marshal-methods"
+      ApplicationRegistrationOutputDirectory="$(IntermediateOutputPath)application-registration"
+      AndroidRuntime="$(_AndroidRuntime)"
+      RuntimeIdentifier="$(RuntimeIdentifier)">
+    <Output TaskParameter="RewrittenAssemblies" ItemName="_RewrittenMarshalMethodFile" />
+    <Output TaskParameter="ApplicationRegistrationJavaFile" PropertyName="_InnerBuildApplicationRegistrationJavaFile" />
+  </RewriteMarshalMethods>
+  <!-- Replace original DLL items in @(ResolvedFileToPublish) with the rewritten copies.
+       PDB files are written alongside the rewritten DLLs and are discovered by
+       ProcessAssemblies in the outer build via filesystem fallback.
+       The updated items flow back to the outer build via
+       _ComputeFilesToPublishForRuntimeIdentifiers' Returns attribute. -->
+  <ItemGroup Condition=" '@(_RewrittenMarshalMethodFile)' != '' ">
+    <ResolvedFileToPublish Remove="@(_RewrittenMarshalMethodFile->'%(OriginalItemSpec)')" />
+    <ResolvedFileToPublish Include="@(_RewrittenMarshalMethodFile)" />
+  </ItemGroup>
+  <!-- Copy ApplicationRegistration.java into the shared Java source tree so javac can find it.
+       All RIDs produce identical content; whichever inner build runs last wins (safe). -->
+  <Copy
+      Condition=" '$(_InnerBuildApplicationRegistrationJavaFile)' != '' "
+      SourceFiles="$(_InnerBuildApplicationRegistrationJavaFile)"
+      DestinationFiles="$(_OuterIntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java"
+      SkipUnchangedFiles="true" />
+</Target>
 
 </Project>

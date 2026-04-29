@@ -39,8 +39,8 @@ namespace Xamarin.Android.Tasks
 			this.managedMarshalMethodsLookupInfo = managedMarshalMethodsLookupInfo;
 		}
 
-		// TODO: do away with broken exception transitions, there's no point in supporting them
-		public void Rewrite (bool brokenExceptionTransitions)
+	// TODO: do away with broken exception transitions, there's no point in supporting them
+	public HashSet<string> Rewrite (bool brokenExceptionTransitions, string outputDirectory)
 		{
 			AssemblyDefinition? monoAndroidRuntime = resolver.Resolve ("Mono.Android.Runtime");
 			if (monoAndroidRuntime == null) {
@@ -141,78 +141,34 @@ namespace Xamarin.Android.Tasks
 				managedMarshalMethodLookupGenerator.Generate (classifier.MarshalMethods.Values);
 			}
 
-			foreach (AssemblyDefinition asm in classifier.AssembliesWithMarshalMethods) {
-				string? path = asm.MainModule.FileName;
-				if (String.IsNullOrEmpty (path)) {
-					throw new InvalidOperationException ($"[{targetArch}] Internal error: assembly '{asm}' does not specify path to its file");
-				}
+		var rewrittenOriginalPaths = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+		Directory.CreateDirectory (outputDirectory);
 
-				string pathPdb = Path.ChangeExtension (path, ".pdb");
-				bool havePdb = File.Exists (pathPdb);
-
-				var writerParams = new WriterParameters {
-					WriteSymbols = havePdb,
-				};
-
-				string directory = Path.Combine (Path.GetDirectoryName (path), "new");
-				Directory.CreateDirectory (directory);
-				string output = Path.Combine (directory, Path.GetFileName (path));
-				log.LogDebugMessage ($"[{targetArch}] Writing new version of '{path}' assembly: {output}");
-
-				// TODO: this should be used eventually, but it requires that all the types are reloaded from the assemblies before typemaps are generated
-				// since Cecil doesn't update the MVID in the already loaded types
-				//asm.MainModule.Mvid = Guid.NewGuid ();
-				asm.Write (output, writerParams);
-
-				CopyFile (output, path);
-				RemoveFile (output);
-
-				if (havePdb) {
-					string outputPdb = Path.ChangeExtension (output, ".pdb");
-					if (File.Exists (outputPdb)) {
-						CopyFile (outputPdb, pathPdb);
-					}
-					RemoveFile (outputPdb);
-				}
+		foreach (AssemblyDefinition asm in classifier.AssembliesWithMarshalMethods) {
+			string? path = asm.MainModule.FileName;
+			if (String.IsNullOrEmpty (path)) {
+				throw new InvalidOperationException ($"[{targetArch}] Internal error: assembly '{asm}' does not specify path to its file");
 			}
 
-			void CopyFile (string source, string target)
-			{
-				log.LogDebugMessage ($"[{targetArch}] Copying rewritten assembly: {source} -> {target}");
+			string pathPdb = Path.ChangeExtension (path, ".pdb");
+			bool havePdb = File.Exists (pathPdb);
 
-				string targetBackup = $"{target}.bak";
-				if (File.Exists (target)) {
-					// Try to avoid sharing violations by first renaming the target
-					File.Move (target, targetBackup);
-				}
+			var writerParams = new WriterParameters {
+				WriteSymbols = havePdb,
+			};
 
-				File.Copy (source, target, true);
+			string output = Path.Combine (outputDirectory, Path.GetFileName (path));
+			log.LogDebugMessage ($"[{targetArch}] Writing rewritten assembly: {path} -> {output}");
 
-				if (File.Exists (targetBackup)) {
-					try {
-						File.Delete (targetBackup);
-					} catch (Exception ex) {
-						// On Windows the deletion may fail, depending on lock state of the original `target` file before the move.
-						log.LogDebugMessage ($"[{targetArch}] While trying to delete '{targetBackup}', exception was thrown: {ex}");
-						log.LogDebugMessage ($"[{targetArch}] Failed to delete backup file '{targetBackup}', ignoring.");
-					}
-				}
-			}
+			// TODO: this should be used eventually, but it requires that all the types are reloaded from the assemblies before typemaps are generated
+			// since Cecil doesn't update the MVID in the already loaded types
+			//asm.MainModule.Mvid = Guid.NewGuid ();
+			asm.Write (output, writerParams);
 
-			void RemoveFile (string? path)
-			{
-				if (String.IsNullOrEmpty (path) || !File.Exists (path)) {
-					return;
-				}
+			rewrittenOriginalPaths.Add (path);
+		}
 
-				try {
-					log.LogDebugMessage ($"[{targetArch}] Deleting: {path}");
-					File.Delete (path);
-				} catch (Exception ex) {
-					log.LogWarning ($"[{targetArch}] Unable to delete source file '{path}'");
-					log.LogDebugMessage ($"[{targetArch}] {ex.ToString ()}");
-				}
-			}
+		return rewrittenOriginalPaths;
 
 			static bool HasUnmanagedCallersOnlyAttribute (MethodDefinition method)
 			{

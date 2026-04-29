@@ -209,29 +209,11 @@ namespace Xamarin.Android.Tasks
 #pragma warning disable CS0414 // Field is assigned but its value is never used - might be used for debugging or future functionality
 		readonly LlvmIrCallMarker defaultCallMarker;
 #pragma warning restore CS0414
-		readonly bool generateEmptyCode;
 		readonly bool managedMarshalMethodsLookupEnabled;
-		readonly AndroidTargetArch targetArch;
 		readonly NativeCodeGenStateObject? codeGenState;
 
-		protected bool GenerateEmptyCode => generateEmptyCode;
 		protected List<MarshalMethodInfo> Methods => methods;
 
-		/// <summary>
-		/// Constructor to be used ONLY when marshal methods are DISABLED
-		/// </summary>
-		protected MarshalMethodsNativeAssemblyGenerator (TaskLoggingHelper log, AndroidTargetArch targetArch, ICollection<string> uniqueAssemblyNames)
-			: base (log)
-		{
-			this.targetArch = targetArch;
-			this.uniqueAssemblyNames = uniqueAssemblyNames ?? throw new ArgumentNullException (nameof (uniqueAssemblyNames));
-			generateEmptyCode = true;
-			defaultCallMarker = LlvmIrCallMarker.Tail;
-		}
-
-		/// <summary>
-		/// Constructor to be used ONLY when marshal methods are ENABLED
-		/// </summary>
 		protected MarshalMethodsNativeAssemblyGenerator (TaskLoggingHelper log, ICollection<string> uniqueAssemblyNames, NativeCodeGenStateObject codeGenState, bool managedMarshalMethodsLookupEnabled)
 			: base (log)
 		{
@@ -239,13 +221,12 @@ namespace Xamarin.Android.Tasks
 			this.codeGenState = codeGenState ?? throw new ArgumentNullException (nameof (codeGenState));
 			this.managedMarshalMethodsLookupEnabled = managedMarshalMethodsLookupEnabled;
 
-			generateEmptyCode = false;
 			defaultCallMarker = LlvmIrCallMarker.Tail;
 		}
 
 		void Init ()
 		{
-			if (generateEmptyCode || codeGenState.MarshalMethods.Count == 0) {
+			if (codeGenState.MarshalMethods.Count == 0) {
 				return;
 			}
 
@@ -607,7 +588,7 @@ namespace Xamarin.Android.Tasks
 
 		void AddMarshalMethods (LlvmIrModule module, AssemblyCacheState acs, LlvmIrVariable getFunctionPtrVariable, LlvmIrFunction getFunctionPtrFunction)
 		{
-			if (generateEmptyCode || methods == null || methods.Count == 0) {
+			if (methods == null || methods.Count == 0) {
 				return;
 			}
 

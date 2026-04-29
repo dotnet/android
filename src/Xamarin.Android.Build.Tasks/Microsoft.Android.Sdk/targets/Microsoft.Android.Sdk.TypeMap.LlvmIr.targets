@@ -86,13 +86,6 @@
         EnableNativeRuntimeLinking="$(_AndroidEnableNativeRuntimeLinking)">
     </GenerateJavaStubs>
 
-    <RewriteMarshalMethods
-        Condition=" '$(_AndroidUseMarshalMethods)' == 'true' And '$(AndroidIncludeDebugSymbols)' == 'false' "
-        EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
-        Environments="@(_EnvironmentFiles)"
-        IntermediateOutputDirectory="$(IntermediateOutputPath)">
-    </RewriteMarshalMethods>
-
     <GenerateTypeMappings
         AndroidRuntime="$(_AndroidRuntime)"
         Debug="$(AndroidIncludeDebugSymbols)"
@@ -145,6 +138,7 @@
     <GenerateAdditionalProviderSources
         AdditionalProviderSources="@(_AdditionalProviderSources)"
         AndroidRuntime="$(_AndroidRuntime)"
+        EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
         Environments="@(_EnvironmentFiles)"
         HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
         EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)"
