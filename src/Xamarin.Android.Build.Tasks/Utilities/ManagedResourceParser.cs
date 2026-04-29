@@ -12,6 +12,7 @@ using System.Xml.XPath;
 using System.Text.RegularExpressions;
 using System.Text;
 using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Utilities;
 
 
 namespace Xamarin.Android.Tasks
