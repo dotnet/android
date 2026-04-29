@@ -441,8 +441,17 @@ static class ModelBuilder
 		1 => "[]",
 		2 => "[][]",
 		3 => "[][][]",
-		_ => string.Concat (Enumerable.Repeat ("[]", rank)),
+		_ => BuildBrackets (rank),
 	};
+
+	static string BuildBrackets (int rank)
+	{
+		var sb = new StringBuilder (rank * 2);
+		for (int i = 0; i < rank; i++) {
+			sb.Append ("[]");
+		}
+		return sb.ToString ();
+	}
 
 	static bool IsJniPrimitiveKeyword (char c)
 		=> c == 'Z' || c == 'B' || c == 'C' || c == 'S' || c == 'I'
