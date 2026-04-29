@@ -119,18 +119,14 @@ sealed class TypeMapAssemblyEmitter
 
 	EntityHandle _anchorTypeHandle;
 
-	// Per-rank array sentinel TypeDefs indexed 0-based by (rank - 1). Length equals
-	// model.RankSentinels.Count when array entries are emitted, empty otherwise.
-	// Each rank-anchored TypeMap entry uses one of these as its TGroup token.
+	// Per-rank array sentinel TypeDefs, 0-indexed by (rank - 1). Empty when array entries
+	// aren't emitted.
 	EntityHandle [] _rankAnchorHandles = Array.Empty<EntityHandle> ();
 
-	// Per-anchor 3-arg TypeMap<TGroup>(string, Type, Type) ctor refs, keyed by anchor
-	// EntityHandle. Built lazily by GetOrAddTypeMapAttr3ArgCtorRef. The default-anchor
-	// 3-arg ctor (= _typeMapAttrCtorRef3Arg) is also stored here so all callers go
-	// through the same cache.
+	// Per-anchor TypeMap<TGroup>(string, Type, Type) ctor refs, lazily built.
 	readonly Dictionary<EntityHandle, MemberReferenceHandle> _typeMapAttr3ArgCtorRefByAnchor = new ();
 
-	// Cached open TypeMapAttribute`1 ref so per-anchor closed TypeSpecs share metadata.
+	// Cached open TypeMapAttribute`1 ref shared across closed TypeSpecs.
 	TypeReferenceHandle _typeMapAttrOpenRef;
 
 	/// <summary>
@@ -281,13 +277,8 @@ sealed class TypeMapAssemblyEmitter
 	}
 
 	/// <summary>
-	/// Emits internal <c>__ArrayMapRank{N}</c> classes used as the group type
-	/// parameters for speculative array-shape <c>TypeMap&lt;T&gt;</c> entries — one per
-	/// name in <see cref="TypeMapAssemblyData.RankSentinels"/>. Each per-assembly
-	/// typemap DLL emits its own set so the runtime <c>TypeMapLoader</c> can collect
-	/// per-assembly per-rank dictionaries via
-	/// <c>TypeMapping.GetOrCreateExternalTypeMapping&lt;__ArrayMapRank{N}&gt;()</c>.
-	/// No-op when <see cref="TypeMapAssemblyData.RankSentinels"/> is null.
+	/// Emits one internal sealed <c>__ArrayMapRank{N}</c> TypeDef per name in
+	/// <see cref="TypeMapAssemblyData.RankSentinels"/>. No-op when null.
 	/// </summary>
 	void EmitRankSentinels (TypeMapAssemblyData model)
 	{
@@ -462,10 +453,7 @@ sealed class TypeMapAssemblyEmitter
 		_typeMapAttr3ArgCtorRefByAnchor [_anchorTypeHandle] = _typeMapAttrCtorRef3Arg;
 	}
 
-	/// <summary>
-	/// Returns the cached 3-arg <c>TypeMap&lt;TGroup&gt;</c> ctor ref for the given
-	/// anchor (group) type, building and caching it if not yet present.
-	/// </summary>
+	/// <summary>Cached 3-arg <c>TypeMap&lt;TGroup&gt;</c> ctor ref for the given anchor, built on first use.</summary>
 	MemberReferenceHandle GetOrAddTypeMapAttr3ArgCtorRef (EntityHandle anchor)
 	{
 		if (_typeMapAttr3ArgCtorRefByAnchor.TryGetValue (anchor, out var cached)) {

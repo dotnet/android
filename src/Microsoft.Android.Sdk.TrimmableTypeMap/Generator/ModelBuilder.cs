@@ -41,17 +41,8 @@ static class ModelBuilder
 	/// <param name="outputPath">Output .dll path — used to derive assembly/module names if not specified.</param>
 	/// <param name="assemblyName">Explicit assembly name. If null, derived from <paramref name="outputPath"/>.</param>
 	/// <param name="maxArrayRank">
-	/// Maximum array rank for which to emit speculative <c>[L&lt;jni&gt;;</c>-shaped
-	/// <see cref="TypeMapAttributeData"/> entries (and the matching
-	/// <c>__ArrayMapRank{N}</c> sentinel <c>TGroup</c> types). 0 disables array entry
-	/// emission entirely. The runtime <c>TrimmableTypeMap</c> uses these to satisfy
-	/// <c>JNIEnv.ArrayCreateInstance</c> under NativeAOT (where dynamic
-	/// <c>Array.CreateInstance</c> isn't available). Should be gated on
-	/// <c>$(PublishAot) == true</c> by the MSBuild task — under CoreCLR the runtime
-	/// falls through to <c>Array.CreateInstance</c> directly and these entries are
-	/// never queried, so emitting them just adds dead-weight attribute metadata.
-	/// Configurable via the <c>$(_AndroidTrimmableTypeMapMaxArrayRank)</c> MSBuild
-	/// property; defaults to 3.
+	/// Emit per-rank array <c>TypeMap</c> entries + <c>__ArrayMapRank{N}</c> sentinels
+	/// for ranks 1..<paramref name="maxArrayRank"/>. 0 disables array entry emission.
 	/// </param>
 	public static TypeMapAssemblyData Build (IReadOnlyList<JavaPeerInfo> peers, string outputPath, string? assemblyName = null, int maxArrayRank = 0)
 	{
@@ -417,26 +408,10 @@ static class ModelBuilder
 		=> $"{typeName}, {assemblyName}";
 
 	/// <summary>
-	/// Emits speculative per-rank <c>[L&lt;jni&gt;;</c>-shaped <see cref="TypeMapAttributeData"/>
-	/// entries (ranks 1..<paramref name="maxArrayRank"/>) for one peer group, keyed by
-	/// the <em>element</em> JNI name and anchored to the <c>__ArrayMapRank{N}</c>
-	/// sentinel emitted into the same typemap assembly. Each entry has the closed
-	/// managed array type as both proxy and trim target, so ILC's per-shape conditional
-	/// drops the entry when the array shape is never constructed.
+	/// Emits per-rank <c>[L&lt;jni&gt;;</c>-shaped TypeMap entries for one peer, anchored to
+	/// the per-assembly <c>__ArrayMapRank{N}</c> sentinels. Skips open generics, primitive
+	/// JNI keyword keys (handled by the legacy primitive-array path), and alias groups.
 	/// </summary>
-	/// <remarks>
-	/// Skips:
-	///   <list type="bullet">
-	///     <item>Open-generic peers — <c>typeof(T&lt;&gt;[])</c> is not a valid IL token.</item>
-	///     <item>JNI primitive-keyword keys (<c>Z</c>, <c>B</c>, <c>C</c>, <c>S</c>,
-	///       <c>I</c>, <c>J</c>, <c>F</c>, <c>D</c>) — primitive arrays are handled by the
-	///       legacy <c>JniRuntime.JniTypeManager.GetPrimitiveArrayTypesForSimpleReference</c>
-	///       path; emitting array entries here would shadow that built-in handling.</item>
-	///     <item>Alias groups (multiple peers sharing one JNI name) — would produce
-	///       duplicate keys in the per-rank dictionary; deferred until a real-world need
-	///       motivates an alias-aware design.</item>
-	///   </list>
-	/// </remarks>
 	static void EmitArrayEntries (TypeMapAssemblyData model, string jniName, List<JavaPeerInfo> peersForName, int maxArrayRank)
 	{
 		if (jniName.Length == 1 && IsJniPrimitiveKeyword (jniName [0])) {

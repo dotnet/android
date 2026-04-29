@@ -41,21 +41,9 @@ sealed class TypeMapAssemblyData
 	public List<AliasHolderData> AliasHolders { get; } = new ();
 
 	/// <summary>
-	/// When non-null, the emitter will produce a series of internal
-	/// <c>__ArrayMapRank{N}</c> sealed type definitions (one per name in the list)
-	/// to serve as the <c>TGroup</c> arguments for per-rank array
-	/// <see cref="TypeMapAttributeData"/> entries. Each <see cref="TypeMapAttributeData"/>
-	/// in <see cref="Entries"/> whose <see cref="TypeMapAttributeData.AnchorRank"/> is
-	/// non-null will reference one of these generated TypeDefs via its rank index.
+	/// Names of the per-rank <c>__ArrayMapRank{N}</c> sentinel TypeDefs to emit.
+	/// Null disables array-shape emission.
 	/// </summary>
-	/// <remarks>
-	/// Mirrors the existing <c>__TypeMapAnchor</c> emission pattern in
-	/// <see cref="TypeMapAssemblyEmitter"/>: in per-assembly mode (Debug) each typemap
-	/// dll owns its own rank sentinels; in shared-universe mode (Release) the single
-	/// merged dll owns one set. The runtime <c>TypeMapLoader</c> queries each per-assembly
-	/// sentinel via <c>TypeMapping.GetOrCreateExternalTypeMapping&lt;__ArrayMapRank{N}&gt;()</c>
-	/// to build the per-rank dictionaries passed to <c>TrimmableTypeMap.Initialize</c>.
-	/// </remarks>
 	public RankSentinelNames? RankSentinels { get; set; }
 
 	/// <summary>
@@ -65,11 +53,7 @@ sealed class TypeMapAssemblyData
 }
 
 /// <summary>
-/// Names of the per-typemap-assembly array-rank sentinel types that the emitter generates.
-/// All sentinels live in the typemap assembly's root namespace. <see cref="Names"/> is
-/// indexed 0-based by (rank - 1), so <c>Names[0]</c> is the rank-1 sentinel,
-/// <c>Names[1]</c> is rank-2, etc. Length is whatever the generator was configured to
-/// emit (defaults to 3).
+/// Names of the array-rank sentinel TypeDefs to emit, indexed 0-based by (rank - 1).
 /// </summary>
 sealed class RankSentinelNames
 {
@@ -88,14 +72,10 @@ sealed class RankSentinelNames
 
 	public int Count => Names.Count;
 
-	/// <summary>
-	/// Returns the sentinel name for the given 1-based array rank, or null if rank is out of range.
-	/// </summary>
+	/// <summary>Returns the sentinel name for the given 1-based array rank, or null if out of range.</summary>
 	public string? GetForRank (int rank) => rank >= 1 && rank <= Names.Count ? Names [rank - 1] : null;
 
-	/// <summary>
-	/// Builds the default <c>__ArrayMapRank1</c>..<c>__ArrayMapRank{maxRank}</c> name set.
-	/// </summary>
+	/// <summary>Builds <c>__ArrayMapRank1</c>..<c>__ArrayMapRank{maxRank}</c>.</summary>
 	public static RankSentinelNames CreateDefault (int maxRank)
 	{
 		if (maxRank < 1) {
@@ -142,17 +122,9 @@ sealed record TypeMapAttributeData
 	public bool IsUnconditional => TargetTypeReference == null;
 
 	/// <summary>
-	/// When non-null, this entry uses the array-rank sentinel <c>__ArrayMapRank{value}</c>
-	/// from the same typemap assembly as its <c>TGroup</c> argument instead of the default
-	/// model-level anchor (<c>__TypeMapAnchor</c> / <c>Java.Lang.Object</c>).
+	/// 1-based array rank when this entry should use a <c>__ArrayMapRank{value}</c>
+	/// sentinel as its <c>TGroup</c> instead of the default model anchor.
 	/// </summary>
-	/// <remarks>
-	/// Used by speculative array entries:
-	/// <c>[assembly: TypeMap&lt;__ArrayMapRank2&gt;("java/lang/String", typeof(string[][]), typeof(string[][]))]</c>.
-	/// The emitter resolves the rank to one of the names declared in
-	/// <see cref="TypeMapAssemblyData.RankSentinels"/> and emits a per-rank closed
-	/// <c>TypeMapAttribute&lt;TGroup&gt;</c> ctor reference.
-	/// </remarks>
 	public int? AnchorRank { get; init; }
 }
 

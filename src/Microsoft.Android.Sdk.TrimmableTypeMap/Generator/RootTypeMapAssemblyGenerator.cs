@@ -73,13 +73,9 @@ public sealed class RootTypeMapAssemblyGenerator
 	/// <param name="assemblyName">Optional assembly name (defaults to _Microsoft.Android.TypeMaps).</param>
 	/// <param name="moduleName">Optional module name for the PE metadata.</param>
 	/// <param name="maxArrayRank">
-	/// Maximum array rank for which the per-assembly typemaps emitted
-	/// <c>__ArrayMapRank{N}</c> sentinels. The generated <c>TypeMapLoader.Initialize</c>
-	/// will collect ranks 1..<paramref name="maxArrayRank"/> from each per-assembly
-	/// typemap and pass the resulting jagged array to the 3-arg
-	/// <c>TrimmableTypeMap.Initialize</c> overload. 0 disables array-dict plumbing
-	/// (the generated loader calls the existing 2-arg <c>Initialize</c>).
-	/// Should match the value passed to the per-assembly typemap generators.
+	/// Maximum array rank for which per-assembly typemaps emitted <c>__ArrayMapRank{N}</c>
+	/// sentinels. Must match the value passed to the per-assembly generators. 0 means
+	/// no array sentinels were emitted; the loader uses the 2-arg <c>Initialize</c>.
 	/// </param>
 	public void Generate (IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse, Stream stream, string? assemblyName = null, string? moduleName = null, int maxArrayRank = 0)
 	{
@@ -217,15 +213,9 @@ public sealed class RootTypeMapAssemblyGenerator
 	}
 
 	/// <summary>
-	/// Emits IL for the per-assembly + array-entries case. Builds three locals:
-	///   <list type="bullet">
-	///     <item><c>typeMaps</c>: <c>IReadOnlyDictionary&lt;string, Type&gt;[N]</c></item>
-	///     <item><c>proxyMaps</c>: <c>IReadOnlyDictionary&lt;Type, Type&gt;[N]</c></item>
-	///     <item><c>perUniverseArrayMaps</c>: <c>IReadOnlyDictionary&lt;string, Type&gt;?[N][]</c>
-	///       — a jagged array of N arrays, each of length <paramref name="maxArrayRank"/>,
-	///       indexed 0-based by (rank - 1).</item>
-	///   </list>
-	/// then passes them to the 3-arg aggregate <c>TrimmableTypeMap.Initialize</c>.
+	/// Per-assembly + array-entries IL emission. Builds three locals: <c>typeMaps[N]</c>,
+	/// <c>proxyMaps[N]</c>, and a jagged <c>perUniverseArrayMaps[N][maxArrayRank]</c>;
+	/// passes them to the 3-arg aggregate <c>TrimmableTypeMap.Initialize</c>.
 	/// </summary>
 	static void EmitInitializeWithAggregateTypeMapAndArrays (PEAssemblyBuilder pe,
 		IReadOnlyList<string> perAssemblyTypeMapNames,
@@ -332,10 +322,7 @@ public sealed class RootTypeMapAssemblyGenerator
 		}
 	}
 
-	/// <summary>
-	/// Creates a TypeSpec for <c>IReadOnlyDictionary&lt;string, Type&gt;?[]</c> — used as
-	/// the element type of the per-universe outer array.
-	/// </summary>
+	/// <summary>TypeSpec for <c>IReadOnlyDictionary&lt;string, Type&gt;?[]</c>, used as the per-universe inner array type.</summary>
 	static TypeSpecificationHandle MakeArrayOfIReadOnlyDictTypeSpec (PEAssemblyBuilder pe,
 		TypeReferenceHandle iReadOnlyDictOpenRef, TypeReferenceHandle systemTypeRef)
 	{
@@ -345,10 +332,7 @@ public sealed class RootTypeMapAssemblyGenerator
 		return pe.Metadata.AddTypeSpecification (pe.Metadata.GetOrAddBlob (blob));
 	}
 
-	/// <summary>
-	/// Creates a MemberRef for the 3-arg aggregate TrimmableTypeMap.Initialize
-	/// (typeMaps[], proxyMaps[], perUniverseArrayMaps[][]).
-	/// </summary>
+	/// <summary>MemberRef for <c>TrimmableTypeMap.Initialize(typeMaps[], proxyMaps[], perUniverseArrayMaps[][])</c>.</summary>
 	static MemberReferenceHandle AddInitializeAggregateWithArraysRef (PEAssemblyBuilder pe, TypeReferenceHandle trimmableTypeMapRef,
 		TypeReferenceHandle iReadOnlyDictOpenRef, TypeReferenceHandle systemTypeRef)
 	{

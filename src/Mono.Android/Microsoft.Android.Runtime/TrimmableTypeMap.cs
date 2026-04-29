@@ -38,24 +38,15 @@ public class TrimmableTypeMap
 
 	/// <summary>
 	/// Initializes the singleton with a single merged typemap universe.
-	/// Called from <see cref="TypeMapLoader.Initialize"/> in the generated root assembly
-	/// (_Microsoft.Android.TypeMaps) when assembly typemaps are merged (Release builds).
 	/// </summary>
 	public static void Initialize (IReadOnlyDictionary<string, Type> typeMap, IReadOnlyDictionary<Type, Type> proxyMap)
 		=> Initialize (typeMap, proxyMap, arrayMapsByRank: null);
 
 	/// <summary>
 	/// Initializes the singleton with a single merged typemap universe plus per-rank
-	/// array dictionaries (used by <c>JNIEnv.ArrayCreateInstance</c> under NativeAOT).
+	/// array dictionaries (consulted by <c>JNIEnv.ArrayCreateInstance</c> under NativeAOT).
 	/// </summary>
-	/// <param name="arrayMapsByRank">
-	/// 0-based per-rank array of dictionaries — <c>arrayMapsByRank[0]</c> is the rank-1
-	/// dictionary (JNI element name &#8594; <c>typeof(T[])</c>), <c>[1]</c> is rank-2, etc.
-	/// Length is whatever the generator emitted (defaults to 3, configurable via
-	/// <c>$(_AndroidTrimmableTypeMapMaxArrayRank)</c>). Null when the typemap was
-	/// generated without array entries (CoreCLR builds with <c>$(PublishAot) == false</c>).
-	/// Individual elements may be null when a particular rank has no entries.
-	/// </param>
+	/// <param name="arrayMapsByRank">0-indexed by (rank - 1); null when no array entries were emitted.</param>
 	public static void Initialize (
 		IReadOnlyDictionary<string, Type> typeMap,
 		IReadOnlyDictionary<Type, Type> proxyMap,
@@ -68,8 +59,6 @@ public class TrimmableTypeMap
 
 	/// <summary>
 	/// Initializes the singleton with multiple per-assembly typemap universes.
-	/// Called from <see cref="TypeMapLoader.Initialize"/> in the generated root assembly
-	/// (_Microsoft.Android.TypeMaps) when each assembly has its own typemap universe (Debug builds).
 	/// </summary>
 	public static void Initialize (IReadOnlyDictionary<string, Type>[] typeMaps, IReadOnlyDictionary<Type, Type>[] proxyMaps)
 		=> Initialize (typeMaps, proxyMaps, perUniverseArrayMaps: null);
@@ -78,12 +67,7 @@ public class TrimmableTypeMap
 	/// Initializes the singleton with multiple per-assembly typemap universes plus
 	/// per-universe per-rank array dictionaries.
 	/// </summary>
-	/// <param name="perUniverseArrayMaps">
-	/// Jagged array indexed first by universe, then 0-based by (rank - 1) within that
-	/// universe. <c>perUniverseArrayMaps[i][r]</c> is universe <c>i</c>'s rank-(r+1)
-	/// dictionary. Null when no typemap assembly emitted array entries (CoreCLR builds);
-	/// individual outer elements may be null for universes that didn't emit array entries.
-	/// </param>
+	/// <param name="perUniverseArrayMaps">Jagged: <c>[universe][rank - 1]</c>.</param>
 	public static void Initialize (
 		IReadOnlyDictionary<string, Type>[] typeMaps,
 		IReadOnlyDictionary<Type, Type>[] proxyMaps,
@@ -359,21 +343,7 @@ public class TrimmableTypeMap
 		return GetProxyForManagedType (type)?.GetContainerFactory ();
 	}
 
-	/// <summary>
-	/// AOT-safe lookup of the closed managed array type for the given element type.
-	/// Used by <c>JNIEnv.ArrayCreateInstance</c> under NativeAOT (where dynamic
-	/// <c>Array.CreateInstance</c> is not available for arbitrary element types).
-	/// Walks the element-type's array nesting (so <c>byte[][]</c> gets treated as a
-	/// rank-2 lookup of <c>byte</c>), resolves the leaf JNI element name (primitive
-	/// or peer reference), and queries the per-rank dictionary supplied at
-	/// <see cref="Initialize(IReadOnlyDictionary{string, Type}, IReadOnlyDictionary{Type, Type}, IReadOnlyDictionary{string, Type}?, IReadOnlyDictionary{string, Type}?, IReadOnlyDictionary{string, Type}?)"/>.
-	/// </summary>
-	/// <returns>
-	/// True with the closed array <see cref="Type"/> on success. False on any miss
-	/// (unknown leaf, no per-rank dict supplied, no entry, rank &gt; 3). The caller
-	/// in <c>JNIEnv.ArrayCreateInstance</c> throws a diagnostic
-	/// <see cref="NotSupportedException"/> in that case.
-	/// </returns>
+	/// <summary>AOT-safe lookup of the closed managed array type for the given element type.</summary>
 	internal bool TryGetArrayType (Type elementType, [NotNullWhen (true)] out Type? arrayType)
 	{
 		if (elementType is null) {
@@ -381,9 +351,7 @@ public class TrimmableTypeMap
 			return false;
 		}
 
-		// Walk to the leaf element type, counting the array depth that is part of the
-		// element. The total rank we look up is depth+1 — the +1 accounts for the new
-		// outer rank that ArrayCreateInstance is constructing.
+		// Walk array nesting to the leaf; total rank = element depth + 1 (the outer rank we're constructing).
 		var leaf = elementType;
 		int elementDepth = 0;
 		while (leaf.IsArray) {
@@ -414,10 +382,7 @@ public class TrimmableTypeMap
 		return _typeMap.TryGetArrayType (leafJniName, rank, out arrayType);
 	}
 
-	/// <summary>
-	/// JNI single-letter encodings for primitive element types. Reference:
-	/// <see href="https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/types.html"/>.
-	/// </summary>
+	/// <summary>JNI single-letter encoding for primitive element types.</summary>
 	static bool TryGetPrimitiveJniName (Type primitive, [NotNullWhen (true)] out string? jni)
 	{
 		if (primitive == typeof (bool))   { jni = "Z"; return true; }

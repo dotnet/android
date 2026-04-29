@@ -70,13 +70,9 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public bool EmbedAssemblies { get; set; }
 
 	/// <summary>
-	/// Maximum array rank for which the generator emits per-rank <c>TypeMap</c> entries
-	/// plus the matching <c>__ArrayMapRank{N}</c> sentinel TypeDefs. 0 (default)
-	/// disables array entry emission entirely. Should normally be set to
-	/// <c>$(_AndroidTrimmableTypeMapMaxArrayRank)</c> when <c>$(PublishAot) == true</c>
-	/// — under CoreCLR the runtime falls through to <c>Array.CreateInstance</c>
-	/// directly and these entries are never queried, so emitting them just adds
-	/// dead-weight attribute metadata.
+	/// Maximum array rank for which the generator emits per-rank <c>__ArrayMapRank{N}</c>
+	/// sentinels and <c>TypeMap</c> entries. 0 disables. Set via
+	/// <c>$(_AndroidTrimmableTypeMapMaxArrayRank)</c>.
 	/// </summary>
 	public int MaxArrayRank { get; set; }
 	public string? ManifestPlaceholders { get; set; }

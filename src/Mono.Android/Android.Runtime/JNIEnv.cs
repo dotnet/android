@@ -28,17 +28,13 @@ namespace Android.Runtime {
 		{
 			if (RuntimeFeature.TrimmableTypeMap) {
 				if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
-					// CoreCLR — runtime type loader can construct any T[] dynamically.
-					// No typemap roundtrip; supports unlimited array rank.
-					// IsDynamicCodeSupported acts as a [FeatureGuard], so the trimmer
-					// dead-codes this branch under PublishAot and no IL3050 suppression
-					// is needed.
+					// CoreCLR runtime type loader can construct any T[] dynamically.
+					// IsDynamicCodeSupported is a [FeatureGuard] so this branch is
+					// dead-coded under PublishAot.
 					return Array.CreateInstance (elementType, length);
 				}
 
-				// NativeAOT — resolve the closed array type via the per-rank typemap
-				// (filled in at startup from generated __ArrayMapRank{N} sentinels) and
-				// construct via AOT-safe Array.CreateInstanceFromArrayType.
+				// NativeAOT: resolve via per-rank typemap + Array.CreateInstanceFromArrayType.
 				if (TrimmableTypeMap.Instance.TryGetArrayType (elementType, out var arrayType)) {
 					return Array.CreateInstanceFromArrayType (arrayType, length);
 				}
@@ -48,7 +44,7 @@ namespace Android.Runtime {
 					$"Add an [assembly: TypeMap] entry for the closed array type or report an issue.");
 			}
 
-			#pragma warning disable IL3050 // Array.CreateInstance is not AOT-safe, but this is the legacy fallback path
+			#pragma warning disable IL3050 // legacy fallback path
 			return Array.CreateInstance (elementType, length);
 			#pragma warning restore IL3050
 		}
