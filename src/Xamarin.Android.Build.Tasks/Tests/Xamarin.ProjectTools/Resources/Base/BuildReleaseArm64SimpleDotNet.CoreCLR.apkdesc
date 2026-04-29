@@ -19,12 +19,6 @@
     "lib/arm64-v8a/libmonodroid.so": {
       "Size": 1366648
     },
-    "lib/arm64-v8a/libmscordaccore.so": {
-      "Size": 2463848
-    },
-    "lib/arm64-v8a/libmscordbi.so": {
-      "Size": 1899720
-    },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
       "Size": 72344
     },
@@ -74,5 +68,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 9238298
+  "PackageSize": 4874730
 }
