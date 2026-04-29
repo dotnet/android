@@ -95,6 +95,7 @@ public class ProcessRuntimePackLibraryDirectories : AndroidTask
 		}
 
 		return NuGetPackageId.StartsWith ("Microsoft.Android.Runtime.CoreCLR.", StringComparison.OrdinalIgnoreCase) ||
-		       NuGetPackageId.StartsWith ("Microsoft.Android.Runtime.Mono.", StringComparison.OrdinalIgnoreCase);
+		       NuGetPackageId.StartsWith ("Microsoft.Android.Runtime.Mono.", StringComparison.OrdinalIgnoreCase) ||
+		       NuGetPackageId.StartsWith ("Microsoft.Android.Runtime.NativeAOT.", StringComparison.OrdinalIgnoreCase);
 	}
 }
