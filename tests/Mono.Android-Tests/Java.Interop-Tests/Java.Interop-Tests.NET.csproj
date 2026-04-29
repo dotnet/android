@@ -19,7 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="Mono.Linq.Expressions" Version="2.0.0" />
-    <PackageReference Include="NUnit" Version="3.13.3" />
+    <PackageReference Include="NUnit" Version="$(NUnitVersion)" />
   </ItemGroup>
 
   <ItemGroup>
