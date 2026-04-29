@@ -102,18 +102,12 @@ public class AssemblyModifierPipeline : AndroidTask
 
 				var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: ReadSymbols, loadReaderParameters: readerParameters);
 
-				// Add SearchDirectories and pre-load ResolvedAssemblies into the resolver cache.
-				// Pre-loading ensures the correct TFM version is cached before any Cecil lazy
-				// reference resolution can find wrong-TFM copies from search directories (e.g.,
-				// a net11.0 copy in a referencing project's output directory).
+				// Add SearchDirectories for the current architecture's ResolvedAssemblies
 				foreach (var kvp in perArchAssemblies [sourceArch]) {
 					ITaskItem assembly = kvp.Value;
 					var path = Path.GetFullPath (Path.GetDirectoryName (assembly.ItemSpec));
 					if (!resolver.SearchDirectories.Contains (path)) {
 						resolver.SearchDirectories.Add (path);
-					}
-					if (resolver.Load (assembly.ItemSpec) == null) {
-						Log.LogDebugMessage ($"Could not pre-load assembly '{assembly.ItemSpec}' into resolver cache.");
 					}
 				}
 
@@ -166,7 +160,11 @@ public class AssemblyModifierPipeline : AndroidTask
 
 	void RunPipeline (AssemblyPipeline pipeline, ITaskItem source, ITaskItem destination)
 	{
-		var assembly = pipeline.Resolver.GetAssembly (source.ItemSpec);
+		// Use Load with the exact ItemSpec path to ensure the correct TFM version
+		// is loaded, rather than GetAssembly which strips the path and resolves by
+		// name through search directories (which may find wrong-TFM copies).
+		var assembly = pipeline.Resolver.Load (source.ItemSpec)
+			?? throw new FileNotFoundException ($"Could not load assembly '{source.ItemSpec}'.", source.ItemSpec);
 
 		var context = new StepContext (source, destination) {
 			CodeGenerationTarget = codeGenerationTarget,
