@@ -64,7 +64,7 @@ static class ModelBuilder
 			ModuleName = moduleName,
 		};
 		if (maxArrayRank > 0) {
-			model.RankSentinels = RankSentinelNames.CreateDefault (maxArrayRank);
+			model.MaxArrayRank = maxArrayRank;
 		}
 
 		// Invoker types are NOT emitted as separate proxies or TypeMap entries —

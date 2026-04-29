@@ -859,21 +859,17 @@ public class ModelBuilderTests : FixtureTestBase
 			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
 			var model = BuildModel (new [] { peer });
 
-			Assert.Null (model.RankSentinels);
+			Assert.Equal (0, model.MaxArrayRank);
 			Assert.DoesNotContain (model.Entries, e => e.AnchorRank is not null);
 		}
 
 		[Fact]
-		public void Build_EmitArrayEntries_SetsDefaultRankSentinels ()
+		public void Build_EmitArrayEntries_SetsMaxArrayRank ()
 		{
 			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
 			var model = BuildModelWithArrays (new [] { peer });
 
-			Assert.NotNull (model.RankSentinels);
-			Assert.Equal (3, model.RankSentinels!.Count);
-			Assert.Equal ("__ArrayMapRank1", model.RankSentinels.Names [0]);
-			Assert.Equal ("__ArrayMapRank2", model.RankSentinels.Names [1]);
-			Assert.Equal ("__ArrayMapRank3", model.RankSentinels.Names [2]);
+			Assert.Equal (3, model.MaxArrayRank);
 		}
 
 		[Fact]
@@ -884,14 +880,13 @@ public class ModelBuilderTests : FixtureTestBase
 			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
 
 			var model5 = BuildModelWithArrays (new [] { peer }, maxArrayRank: 5);
-			Assert.Equal (5, model5.RankSentinels!.Count);
-			Assert.Equal ("__ArrayMapRank5", model5.RankSentinels.Names [4]);
+			Assert.Equal (5, model5.MaxArrayRank);
 			var rank5Entries = model5.Entries.Where (e => e.AnchorRank is not null).ToList ();
 			Assert.Equal (5, rank5Entries.Count);
 			Assert.Equal ("Foo.Bar[][][][][], App", rank5Entries.Single (e => e.AnchorRank == 5).TargetTypeReference);
 
 			var model1 = BuildModelWithArrays (new [] { peer }, maxArrayRank: 1);
-			Assert.Equal (1, model1.RankSentinels!.Count);
+			Assert.Equal (1, model1.MaxArrayRank);
 			Assert.Single (model1.Entries.Where (e => e.AnchorRank is not null));
 		}
 
@@ -1026,7 +1021,7 @@ public class ModelBuilderTests : FixtureTestBase
 			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
 			var outputPath = Path.Combine (Path.GetTempPath (), "ArrSentinels.dll");
 			var model = ModelBuilder.Build (new [] { peer }, outputPath, "ArrSentinels", maxArrayRank: 3);
-			Assert.NotNull (model.RankSentinels);
+			Assert.Equal (3, model.MaxArrayRank);
 
 			EmitAndVerify (model, "ArrSentinels", (pe, reader) => {
 				var typeNames = reader.TypeDefinitions
@@ -1045,7 +1040,7 @@ public class ModelBuilderTests : FixtureTestBase
 			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
 			var outputPath = Path.Combine (Path.GetTempPath (), "NoArrSentinels.dll");
 			var model = ModelBuilder.Build (new [] { peer }, outputPath, "NoArrSentinels");
-			Assert.Null (model.RankSentinels);
+			Assert.Equal (0, model.MaxArrayRank);
 
 			EmitAndVerify (model, "NoArrSentinels", (pe, reader) => {
 				var typeNames = reader.TypeDefinitions

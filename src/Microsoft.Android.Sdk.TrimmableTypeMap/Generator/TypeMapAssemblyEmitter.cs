@@ -277,19 +277,18 @@ sealed class TypeMapAssemblyEmitter
 	}
 
 	/// <summary>
-	/// Emits one internal sealed <c>__ArrayMapRank{N}</c> TypeDef per name in
-	/// <see cref="TypeMapAssemblyData.RankSentinels"/>. No-op when null.
+	/// Emits one internal sealed <c>__ArrayMapRank{N}</c> TypeDef for ranks
+	/// 1..<see cref="TypeMapAssemblyData.MaxArrayRank"/>. No-op when 0.
 	/// </summary>
 	void EmitRankSentinels (TypeMapAssemblyData model)
 	{
-		if (model.RankSentinels is null) {
+		if (model.MaxArrayRank <= 0) {
 			return;
 		}
 
-		var sentinels = model.RankSentinels;
-		_rankAnchorHandles = new EntityHandle [sentinels.Count];
-		for (int i = 0; i < sentinels.Count; i++) {
-			_rankAnchorHandles [i] = EmitRankSentinel (sentinels.Names [i]);
+		_rankAnchorHandles = new EntityHandle [model.MaxArrayRank];
+		for (int i = 0; i < model.MaxArrayRank; i++) {
+			_rankAnchorHandles [i] = EmitRankSentinel ($"__ArrayMapRank{i + 1}");
 		}
 	}
 
@@ -1311,7 +1310,7 @@ sealed class TypeMapAssemblyEmitter
 			if ((uint)anchorIndex >= (uint)_rankAnchorHandles.Length || _rankAnchorHandles [anchorIndex] == default) {
 				throw new InvalidOperationException (
 					$"No rank-{rank} anchor TypeDef was emitted for entry '{entry.JniName}'. " +
-					$"Ensure TypeMapAssemblyData.RankSentinels was set (with sufficient Count) before emit.");
+					$"Ensure TypeMapAssemblyData.MaxArrayRank was >= {rank} before emit.");
 			}
 			ctorRef = GetOrAddTypeMapAttr3ArgCtorRef (_rankAnchorHandles [anchorIndex]);
 		} else {

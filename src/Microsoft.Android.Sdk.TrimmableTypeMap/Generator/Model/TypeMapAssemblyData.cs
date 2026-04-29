@@ -41,52 +41,15 @@ sealed class TypeMapAssemblyData
 	public List<AliasHolderData> AliasHolders { get; } = new ();
 
 	/// <summary>
-	/// Names of the per-rank <c>__ArrayMapRank{N}</c> sentinel TypeDefs to emit.
-	/// Null disables array-shape emission.
+	/// Maximum array rank for which the generator emits per-rank <c>__ArrayMapRank{N}</c>
+	/// sentinel TypeDefs and <c>TypeMap</c> entries. 0 disables.
 	/// </summary>
-	public RankSentinelNames? RankSentinels { get; set; }
+	public int MaxArrayRank { get; set; }
 
 	/// <summary>
 	/// Assembly names that need [IgnoresAccessChecksTo] for cross-assembly n_* calls.
 	/// </summary>
 	public List<string> IgnoresAccessChecksTo { get; } = new ();
-}
-
-/// <summary>
-/// Names of the array-rank sentinel TypeDefs to emit, indexed 0-based by (rank - 1).
-/// </summary>
-sealed class RankSentinelNames
-{
-	public RankSentinelNames (IReadOnlyList<string> names)
-	{
-		if (names is null) {
-			throw new ArgumentNullException (nameof (names));
-		}
-		if (names.Count == 0) {
-			throw new ArgumentException ("At least one rank sentinel name must be provided.", nameof (names));
-		}
-		Names = names;
-	}
-
-	public IReadOnlyList<string> Names { get; }
-
-	public int Count => Names.Count;
-
-	/// <summary>Returns the sentinel name for the given 1-based array rank, or null if out of range.</summary>
-	public string? GetForRank (int rank) => rank >= 1 && rank <= Names.Count ? Names [rank - 1] : null;
-
-	/// <summary>Builds <c>__ArrayMapRank1</c>..<c>__ArrayMapRank{maxRank}</c>.</summary>
-	public static RankSentinelNames CreateDefault (int maxRank)
-	{
-		if (maxRank < 1) {
-			throw new ArgumentOutOfRangeException (nameof (maxRank), maxRank, "Must be >= 1.");
-		}
-		var names = new string [maxRank];
-		for (int i = 0; i < maxRank; i++) {
-			names [i] = $"__ArrayMapRank{i + 1}";
-		}
-		return new RankSentinelNames (names);
-	}
 }
 
 /// <summary>
