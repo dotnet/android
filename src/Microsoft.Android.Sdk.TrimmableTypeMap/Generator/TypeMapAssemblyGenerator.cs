@@ -27,9 +27,14 @@ public sealed class TypeMapAssemblyGenerator
 	/// <param name="useSharedTypemapUniverse">
 	/// When true, uses <c>Java.Lang.Object</c> as the shared anchor type. When false, emits a per-assembly anchor.
 	/// </param>
-	public void Generate (IReadOnlyList<JavaPeerInfo> peers, Stream stream, string assemblyName, bool useSharedTypemapUniverse = false)
+	/// <param name="emitArrayEntries">
+	/// When true, additionally emit per-rank array <c>TypeMap</c> entries (ranks 1–3) plus the
+	/// matching <c>__ArrayMapRank{N}</c> sentinel TypeDefs. Should be gated on
+	/// <c>$(PublishAot) == true</c> by the caller.
+	/// </param>
+	public void Generate (IReadOnlyList<JavaPeerInfo> peers, Stream stream, string assemblyName, bool useSharedTypemapUniverse = false, bool emitArrayEntries = false)
 	{
-		var model = ModelBuilder.Build (peers, assemblyName + ".dll", assemblyName);
+		var model = ModelBuilder.Build (peers, assemblyName + ".dll", assemblyName, emitArrayEntries);
 		var emitter = new TypeMapAssemblyEmitter (_systemRuntimeVersion);
 		emitter.Emit (model, stream, useSharedTypemapUniverse);
 	}

@@ -68,6 +68,15 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public bool Debug { get; set; }
 	public bool NeedsInternet { get; set; }
 	public bool EmbedAssemblies { get; set; }
+
+	/// <summary>
+	/// When true, the generator emits per-rank array <c>TypeMap</c> entries plus the matching
+	/// <c>__ArrayMapRank{1,2,3}</c> sentinel TypeDefs. Should be set to <c>$(PublishAot)</c>
+	/// by the caller — under CoreCLR/Mono the runtime falls through to <c>Array.CreateInstance</c>
+	/// directly and these entries are never queried, so emitting them just adds dead-weight
+	/// attribute metadata.
+	/// </summary>
+	public bool EmitArrayEntries { get; set; }
 	public string? ManifestPlaceholders { get; set; }
 	public string? CheckedBuild { get; set; }
 	public string? ApplicationJavaClass { get; set; }
@@ -131,7 +140,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				frameworkAssemblyNames,
 				useSharedTypemapUniverse: !Debug,
 				manifestConfig,
-				manifestTemplate);
+				manifestTemplate,
+				emitArrayEntries: EmitArrayEntries);
 
 			GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyPaths);
 			GeneratedJavaFiles = WriteJavaSourcesToDisk (result.GeneratedJavaSources);
