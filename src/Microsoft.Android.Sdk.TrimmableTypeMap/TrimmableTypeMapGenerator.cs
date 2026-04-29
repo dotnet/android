@@ -9,6 +9,12 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
 public class TrimmableTypeMapGenerator
 {
+	/// <summary>
+	/// Runtime-supported maximum array rank — must match the number of
+	/// <c>__ArrayMapRank{N}</c> types pre-defined in <c>Mono.Android</c>.
+	/// </summary>
+	public const int MaxSupportedArrayRank = 8;
+
 	readonly ITrimmableTypeMapLogger logger;
 
 	static readonly HashSet<string> RequiredFrameworkDeferredRegistrationTypes = new (StringComparer.Ordinal) {
@@ -38,6 +44,14 @@ public class TrimmableTypeMapGenerator
 		_ = assemblies ?? throw new ArgumentNullException (nameof (assemblies));
 		_ = systemRuntimeVersion ?? throw new ArgumentNullException (nameof (systemRuntimeVersion));
 		_ = frameworkAssemblyNames ?? throw new ArgumentNullException (nameof (frameworkAssemblyNames));
+		if (maxArrayRank < 0) {
+			throw new ArgumentOutOfRangeException (nameof (maxArrayRank), maxArrayRank, "Must be >= 0.");
+		}
+		if (maxArrayRank > MaxSupportedArrayRank) {
+			throw new ArgumentOutOfRangeException (nameof (maxArrayRank), maxArrayRank,
+				$"_AndroidTrimmableTypeMapMaxArrayRank={maxArrayRank} exceeds the runtime's supported maximum ({MaxSupportedArrayRank}). " +
+				$"To raise the limit, add additional __ArrayMapRank{{N}} types to Mono.Android.");
+		}
 
 		var (allPeers, assemblyManifestInfo) = ScanAssemblies (assemblies);
 		if (allPeers.Count == 0) {

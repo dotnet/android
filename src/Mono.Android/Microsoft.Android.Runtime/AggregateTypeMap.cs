@@ -41,16 +41,4 @@ sealed class AggregateTypeMap : ITypeMapWithAliasing
 		proxyType = null;
 		return false;
 	}
-
-	public bool TryGetArrayType (string jniElementTypeName, int rank, [NotNullWhen (true)] out Type? arrayType)
-	{
-		// First-wins: each (peer, rank) lives in exactly one assembly's typemap.
-		foreach (var universe in _universes) {
-			if (universe.TryGetArrayType (jniElementTypeName, rank, out arrayType)) {
-				return true;
-			}
-		}
-		arrayType = null;
-		return false;
-	}
 }
