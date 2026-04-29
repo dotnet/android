@@ -68,9 +68,6 @@ namespace Xamarin.Android.Tasks
 		static readonly char[] CommaChar = new char [] { ',' };
 		static readonly Regex ValidChars = new Regex (@"([^a-f0-9x, \{\}])+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-		TaskLoggingHelper? log;
-		Dictionary<string, string>? map;
-
 		public static readonly HashSet<string> knownTypes = new HashSet<string> () {
 			"anim",
 			"animator",
@@ -98,32 +95,27 @@ namespace Xamarin.Android.Tasks
 
 		public IEnumerable<R> Parse (string file, TaskLoggingHelper logger, Dictionary<string, string> mapping)
 		{
-			log = logger;
-			map = mapping;
 			var result = new List<R> (DefaultCapacity);
 			if (File.Exists (file))
-				ProcessRtxtFile (file, result);
+				ProcessRtxtFile (file, result, logger, mapping);
 			return result;
 		}
 
-		void ProcessRtxtFile (string file, List<R> result)
+		void ProcessRtxtFile (string file, List<R> result, TaskLoggingHelper log, Dictionary<string, string> map)
 		{
 			int lineNumber = 0;
 			foreach (var line in File.ReadLines (file) ) {
 				lineNumber++;
 				var items = line.Split (EmptyChar, 4);
 				if (items.Length < 4) {
-					log?.LogDebugMessage ($"'{file}:{lineNumber}' ignoring contents '{line}', it does not have the correct number of elements.");
+					log.LogDebugMessage ($"'{file}:{lineNumber}' ignoring contents '{line}', it does not have the correct number of elements.");
 					continue;
 				}
 				if (ValidChars.IsMatch (items [3])) {
-					log?.LogDebugMessage ($"'{file}:{lineNumber}' ignoring contents '{line}', it contains invalid characters.");
+					log.LogDebugMessage ($"'{file}:{lineNumber}' ignoring contents '{line}', it contains invalid characters.");
 					continue;
 				}
 				int value = items [1] != "styleable" ? Convert.ToInt32 (items [3].Trim (), 16) : -1;
-				if (map == null || log == null) {
-					throw new InvalidOperationException("Parser not initialized with logger and mapping");
-				}
 				string itemName = ResourceIdentifier.GetResourceName(ResourceParser.GetNestedTypeName (items [1]), items [2], map, log);
 				if (knownTypes.Contains (items [1])) {
 					if (items [1] != "styleable") {
