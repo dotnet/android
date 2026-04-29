@@ -116,7 +116,7 @@
     <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' and '$(AotAssemblies)' == '' and '$(Configuration)' == 'Release' and '$(_AndroidRuntime)' == 'MonoVM' ">true</RunAOTCompilation>
     <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' and '$(AotAssemblies)' == 'true' ">true</RunAOTCompilation>
     <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' ">false</RunAOTCompilation>
-    <!-- Warn and reset Mono-specific properties when the runtime is not MonoVM -->
+    <!-- Error and reset Mono-specific properties when the runtime is not MonoVM -->
     <_AndroidXA1044_RunAOTCompilation Condition=" '$(RunAOTCompilation)' == 'true' and '$(_AndroidRuntime)' != 'MonoVM' ">true</_AndroidXA1044_RunAOTCompilation>
     <_AndroidXA1044_EnableLLVM Condition=" '$(EnableLLVM)' == 'true' and '$(_AndroidRuntime)' != 'MonoVM' ">true</_AndroidXA1044_EnableLLVM>
     <RunAOTCompilation Condition=" '$(_AndroidXA1044_RunAOTCompilation)' == 'true' ">false</RunAOTCompilation>
