@@ -297,20 +297,23 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[TestCase (AndroidRuntime.MonoVM)]
+		[TestCase (AndroidRuntime.CoreCLR)]
 		[NonParallelizable]
 		[Category ("XamarinBuildDownload")]
-		public void BuildAMassiveApp ()
+		public void BuildAMassiveApp (AndroidRuntime runtime)
 		{
-			var testPath = Path.Combine ("temp", "BuildAMassiveApp");
+			var testPath = Path.Combine ("temp", "BuildAMassiveApp", runtime.ToString ());
 			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = Path.Combine (Root, testPath);
 			var sb = new SolutionBuilder ("BuildAMassiveApp.sln") {
 				SolutionPath = Path.Combine (Root, testPath),
 			};
 			var app1 = new XamarinFormsMapsApplicationProject {
 				ProjectName = "App1",
-				AotAssemblies = true,
+				AotAssemblies = runtime == AndroidRuntime.MonoVM,
 				IsRelease = true,
 			};
+			app1.SetRuntime (runtime);
 			//NOTE: BuildingInsideVisualStudio prevents the projects from being built as dependencies
 			sb.BuildingInsideVisualStudio = false;
 			app1.Imports.Add (new Import ("foo.targets") {
