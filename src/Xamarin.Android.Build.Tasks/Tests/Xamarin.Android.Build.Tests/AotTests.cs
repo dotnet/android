@@ -493,7 +493,7 @@ namespace "+ libName + @" {
 		}
 
 		[Test]
-		public void RunAOTCompilationWithCoreClrErrors ()
+		public void RunAOTCompilationWithCoreClrFailsBuild ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
