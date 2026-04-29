@@ -15,8 +15,6 @@ namespace Xamarin.Android.Tasks
 {
 	class TypeMapGenerator
 	{
-		public bool RunCheckedBuild { get; set; }
-
 		internal sealed class ModuleUUIDArrayComparer : IComparer<ModuleReleaseData>
 		{
 			int Compare (byte[] left, byte[] right)
@@ -215,25 +213,12 @@ namespace Xamarin.Android.Tasks
 					throw;
 				} finally {
 					sw.Flush ();
-
-					if (RunCheckedBuild) {
-						if (Files.HasStreamChanged (sw.BaseStream, outputFile)) {
-							Files.CopyIfStreamChanged (sw.BaseStream, outputFile + "2");
-							log.LogError ("Output file changed");
-						} else {
-							log.LogMessage ($"RunCheckedBuild: Output file '{outputFile}' unchanged");
-						}
-					} else {
-						Files.CopyIfStreamChanged (sw.BaseStream, outputFile);
-					}
+					Files.CopyIfStreamChanged (sw.BaseStream, outputFile);
 				}
 			}
 		}
 	}
 
-	// This abstraction is temporary to facilitate the transition from the old
-	// typemap generator to the new one.  It will be removed once the transition
-	// is complete.
 	interface ITypeMapGeneratorAdapter
 	{
 		AndroidTargetArch TargetArch { get; }

@@ -63,7 +63,6 @@
 
     <GenerateACWMap
         AcwMapFile="$(_AcwMapFile)"
-        IntermediateOutputDirectory="$(IntermediateOutputPath)"
         ResolvedAssemblies="@(_ResolvedAssemblies)"
         SupportedAbis="@(_BuildTargetAbis)">
     </GenerateACWMap>
@@ -72,8 +71,6 @@
         CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
         ResolvedAssemblies="@(_ResolvedAssemblies)"
         ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
-        RunCheckedBuild="$(_AndroidJLOCheckedBuild)"
-        GeneratedJavaFiles="@(_GeneratedJavaFiles)"
         ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
         Debug="$(AndroidIncludeDebugSymbols)"
         OutputDirectory="$(IntermediateOutputPath)android"
@@ -99,21 +96,11 @@
         EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
         IntermediateOutputDirectory="$(IntermediateOutputPath)"
         ResolvedAssemblies="@(_ResolvedAssemblies)"
-        RunCheckedBuild="$(_AndroidJLOCheckedBuild)"
         SkipJniAddNativeMethodRegistrationAttributeScan="$(_SkipJniAddNativeMethodRegistrationAttributeScan)"
         SupportedAbis="@(_BuildTargetAbis)"
         TypemapImplementation="$(_AndroidTypeMapImplementation)"
         TypemapOutputDirectory="$(_NativeAssemblySourceDir)">
     </GenerateTypeMappings>
-
-    <GenerateACWMap
-        Condition=" '$(_AndroidJLOCheckedBuild)' == 'true' "
-        AcwMapFile="$(_AcwMapFile)"
-        RunCheckedBuild="true"
-        IntermediateOutputDirectory="$(IntermediateOutputPath)"
-        ResolvedAssemblies="@(_ResolvedAssemblies)"
-        SupportedAbis="@(_BuildTargetAbis)">
-    </GenerateACWMap>
 
     <GenerateMainAndroidManifest
         AndroidRuntime="$(_AndroidRuntime)"

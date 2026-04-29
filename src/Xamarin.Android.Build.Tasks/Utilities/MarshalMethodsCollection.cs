@@ -116,7 +116,7 @@ class MarshalMethodsCollection : JavaCallableMethodClassifier
 		var scanner = new XAJavaTypeScanner (arch, log, cache);
 
 		// Get all Java-callable types from the assemblies
-		var javaTypes = scanner.GetJavaTypes (assemblies, resolver, []);
+		var javaTypes = scanner.GetJavaTypes (assemblies, resolver);
 
 		// Scan each type for marshal method candidates
 		foreach (var type in javaTypes) {
