@@ -58,11 +58,11 @@ class EnvironmentBuilder
 
 		var values = new List<string> (startupHooks.Length);
 		foreach (ITaskItem hook in startupHooks) {
-			string value = hook.ItemSpec.Trim ();
-			if (value.IsNullOrWhiteSpace ()) {
+			if (hook.ItemSpec.IsNullOrWhiteSpace ()) {
 				continue;
 			}
 
+			string value = hook.ItemSpec.Trim ();
 			values.Add (value);
 		}
 

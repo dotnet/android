@@ -1600,16 +1600,14 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="Filtered" ItemName="_AndroidDotnetStartupHooksDistinct" />
   </RemoveDuplicates>
 
-  <ItemGroup>
-    <RuntimeEnvironmentVariable Remove="DOTNET_STARTUP_HOOKS" />
-  </ItemGroup>
 </Target>
 
 <Target Name="_GenerateEnvironmentFiles" DependsOnTargets="_ComposeDotNetStartupHooks">
-  <CreateProperty Value="@(_AndroidDotnetStartupHooksDistinct,':')">
-    <Output TaskParameter="Value" PropertyName="_AndroidDotnetStartupHooksValue" />
-  </CreateProperty>
+  <PropertyGroup>
+    <_AndroidDotnetStartupHooksValue>@(_AndroidDotnetStartupHooksDistinct,':')</_AndroidDotnetStartupHooksValue>
+  </PropertyGroup>
   <ItemGroup>
+    <RuntimeEnvironmentVariable Remove="DOTNET_STARTUP_HOOKS" />
     <_GeneratedAndroidEnvironment Include="mono.enable_assembly_preload=0" Condition=" '$(AndroidEnablePreloadAssemblies)' != 'True' " />
     <_GeneratedAndroidEnvironment Include="DOTNET_MODIFIABLE_ASSEMBLIES=Debug" Condition=" '$(AndroidIncludeDebugSymbols)' == 'true' and '$(AndroidUseInterpreter)' == 'true' " />
     <_GeneratedAndroidEnvironment Include="DOTNET_DiagnosticPorts=$(DiagnosticConfiguration)" Condition=" '$(DiagnosticConfiguration)' != '' " />
