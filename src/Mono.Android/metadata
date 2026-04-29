@@ -2199,7 +2199,7 @@
   <!-- `set*` methods added in API-37+ with parameters with name `tint` or ending with `Tint` -->
   <attr api-since="37" path="/api/package
       /*[(local-name()='class' or local-name()='interface')]
-      /method[starts-with(@name, 'set')]
+      /method[@api-since >= 37.0 and starts-with(@name, 'set')]
       /parameter[@type='int' and (starts-with(@name, 'tint') or substring(@name, string-length(@name) - string-length('Tint') + 1)='Tint')]"
     name="type">Android.Graphics.Color</attr>
 
