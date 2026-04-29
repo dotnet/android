@@ -234,6 +234,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 
     <GenerateNativeAotEnvironmentAssemblerSources
         Environments="@(AndroidEnvironment);@(LibraryEnvironments)"
+        DotNetStartupHooks="@(_AndroidDotnetStartupHooksDistinct)"
         HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
         OutputSources="@(_PrivateEnvironmentAssemblySource)"
         RID="$(RuntimeIdentifier)" />

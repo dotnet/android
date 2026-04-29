@@ -146,6 +146,7 @@
         AdditionalProviderSources="@(_AdditionalProviderSources)"
         AndroidRuntime="$(_AndroidRuntime)"
         Environments="@(_EnvironmentFiles)"
+        DotNetStartupHooks="@(_AndroidDotnetStartupHooksDistinct)"
         HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
         EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)"
         CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"

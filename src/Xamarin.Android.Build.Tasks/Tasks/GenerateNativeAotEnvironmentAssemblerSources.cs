@@ -14,12 +14,14 @@ public class GenerateNativeAotEnvironmentAssemblerSources : AndroidTask
 	[Required]
 	public string RID { get; set; } = "";
 	public ITaskItem[]? Environments { get; set; }
+	public ITaskItem[]? DotNetStartupHooks { get; set; }
 	public string? HttpClientHandlerType { get; set; }
 
 	public override bool RunTask ()
 	{
 		var envBuilder = new EnvironmentBuilder (Log);
 		envBuilder.Read (Environments);
+		envBuilder.AddDotNetStartupHooks (DotNetStartupHooks);
 
 		// Environment variables are set by Java (code generated in the GenerateAdditionalProviderSources task)
 		// We still want to set system properties, if any

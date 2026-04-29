@@ -31,6 +31,7 @@ public class GenerateAdditionalProviderSources : AndroidTask
 	public string TargetName { get; set; } = "";
 
 	public ITaskItem[]? Environments { get; set; }
+	public ITaskItem[]? DotNetStartupHooks { get; set; }
 
 	// We need to pass these two to the environment builder, otherwise not used
 	// by this task. See also GenerateNativeApplicationSources.cs
@@ -92,6 +93,7 @@ public class GenerateAdditionalProviderSources : AndroidTask
 			// We care only about environment variables here
 			var envBuilder = new EnvironmentBuilder (Log);
 			envBuilder.Read (Environments);
+			envBuilder.AddDotNetStartupHooks (DotNetStartupHooks);
 			GenerateNativeApplicationConfigSources.AddDefaultEnvironmentVariables (envBuilder, HttpClientHandlerType, EnableSGenConcurrent);
 
 			var envVarNames = new StringBuilder ();

@@ -50,6 +50,29 @@ class EnvironmentBuilder
 		}
 	}
 
+	public void AddDotNetStartupHooks (ITaskItem[]? startupHooks)
+	{
+		if (startupHooks == null || startupHooks.Length == 0) {
+			return;
+		}
+
+		var values = new List<string> (startupHooks.Length);
+		foreach (ITaskItem hook in startupHooks) {
+			string value = hook.ItemSpec.Trim ();
+			if (value.IsNullOrWhiteSpace ()) {
+				continue;
+			}
+
+			values.Add (value);
+		}
+
+		if (values.Count == 0) {
+			return;
+		}
+
+		AddEnvironmentVariable (DotNetStartupHooks, String.Join (":", values));
+	}
+
 	public void AddEnvironmentVariable (string name, string value)
 	{
 		string escapedName = ValidAssemblerString (name);
