@@ -33,7 +33,7 @@ namespace Xamarin.Android.Tasks
 			var resource_fixup = MonoAndroidHelper.LoadMapFile (BuildEngine4, Path.GetFullPath (CaseMapFile), StringComparer.OrdinalIgnoreCase);
 
 			var javaPlatformDirectory = JavaPlatformJarPath.IsNullOrEmpty () ? "" : Path.GetDirectoryName (JavaPlatformJarPath);
-			var parser = new FileResourceParser () { Log = Log, JavaPlatformDirectory = javaPlatformDirectory, ResourceFlagFile = ResourceFlagFile};
+			var parser = new FileResourceParser (Log) { JavaPlatformDirectory = javaPlatformDirectory, ResourceFlagFile = ResourceFlagFile};
 			var resources = parser.Parse (ResourceDirectory, AdditionalResourceDirectories ?? [], AarLibraries ?? [], resource_fixup);
 
 			// only update if it changed.

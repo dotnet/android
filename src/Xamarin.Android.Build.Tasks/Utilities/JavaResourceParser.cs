@@ -12,13 +12,12 @@ namespace Xamarin.Android.Tasks
 {
 	class JavaResourceParser : ResourceParser
 	{
+		public JavaResourceParser (TaskLoggingHelper log) : base (log) { }
+
 		public CodeTypeDeclaration Parse (string file, bool isApp, Dictionary<string, string> resourceMap)
 		{
 			if (!File.Exists (file))
 				throw new InvalidOperationException ("Specified Java resource file was not found: " + file);
-
-			if (Log == null)
-				throw new InvalidOperationException ("Log property must be set before calling Parse");
 
 			CodeTypeDeclaration? resources = null;
 

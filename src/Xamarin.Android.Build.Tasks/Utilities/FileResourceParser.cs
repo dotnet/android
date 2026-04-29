@@ -20,6 +20,8 @@ namespace Xamarin.Android.Tasks
 {
 	class FileResourceParser : ResourceParser
 	{
+		public FileResourceParser (TaskLoggingHelper log) : base (log) { }
+
 		public string? JavaPlatformDirectory { get; set; }
 
 		public string? ResourceFlagFile { get; set; }

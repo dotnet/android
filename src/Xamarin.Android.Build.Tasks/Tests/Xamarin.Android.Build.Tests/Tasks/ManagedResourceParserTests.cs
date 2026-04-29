@@ -654,8 +654,7 @@ int xml myxml 0x7f140000
 			long totalMS = 0;
 			int i;
 			for (i = 0; i < 100; i++) {
-				var parser = new ManagedResourceParser () {
-					Log = loggingHelper,
+				var parser = new ManagedResourceParser (loggingHelper) {
 					JavaPlatformDirectory = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{platform.Major}"),
 					ResourceFlagFile =  flagFile,
 				};
