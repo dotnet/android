@@ -1020,6 +1020,12 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
 </comment>
   </data>
+  <data name="XA1045" xml:space="preserve">
+    <value>MonoAOT is not compatible with the {0} runtime. Remove the 'RunAOTCompilation' MSBuild property from your project configuration.</value>
+    <comment>The following are literal names and should not be translated: MonoAOT, RunAOTCompilation.
+{0} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
+</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>Java dependency '{0}' is not satisfied.</value>
     <comment>The following are literal names and should not be translated: Java.

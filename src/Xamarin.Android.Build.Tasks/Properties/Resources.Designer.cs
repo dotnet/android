@@ -975,6 +975,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to MonoAOT is not compatible with the {0} runtime. Remove the &apos;RunAOTCompilation&apos; MSBuild property from your project configuration..
+        /// </summary>
+        public static string XA1045 {
+            get {
+                return ResourceManager.GetString("XA1045", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in .NET for Android once .NET 6 is released..
         /// </summary>
         public static string XA2000 {

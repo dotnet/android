@@ -493,7 +493,7 @@ namespace "+ libName + @" {
 		}
 
 		[Test]
-		public void RunAOTCompilationWithCoreClrWarnsAndSkipsMonoAot ()
+		public void RunAOTCompilationWithCoreClrErrors ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
@@ -502,10 +502,11 @@ namespace "+ libName + @" {
 			proj.SetProperty ("RunAOTCompilation", "true");
 
 			using var b = CreateApkBuilder ();
-			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-			StringAssertEx.Contains ("warning XA1044", b.LastBuildOutput, "Build output should contain warning XA1044");
+			b.ThrowOnBuildFailure = false;
+			Assert.IsFalse (b.Build (proj), "Build should have failed.");
+			StringAssertEx.Contains ("error XA1045", b.LastBuildOutput, "Build output should contain error XA1045");
+			StringAssertEx.Contains ("MonoAOT is not compatible with the CoreCLR runtime", b.LastBuildOutput, "Build output should mention MonoAOT is not compatible with CoreCLR");
 			StringAssertEx.Contains ("RunAOTCompilation", b.LastBuildOutput, "Build output should mention RunAOTCompilation");
-			StringAssertEx.Contains ("CoreCLR", b.LastBuildOutput, "Build output should mention CoreCLR");
 		}
 
 		[Test]
