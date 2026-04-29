@@ -28,14 +28,12 @@ namespace Android.Runtime {
 		{
 			if (RuntimeFeature.TrimmableTypeMap) {
 				if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
-					// CoreCLR / Mono — runtime type loader can construct any T[] dynamically.
-					// No typemap roundtrip; supports unlimited array rank. The IL3050 analyzer
-					// warns this isn't AOT-safe; the surrounding `if (IsDynamicCodeSupported)`
-					// IS the live feature switch the trimmer uses to dead-code this branch under
-					// PublishAot=true.
-					#pragma warning disable IL3050
+					// CoreCLR — runtime type loader can construct any T[] dynamically.
+					// No typemap roundtrip; supports unlimited array rank.
+					// IsDynamicCodeSupported acts as a [FeatureGuard], so the trimmer
+					// dead-codes this branch under PublishAot and no IL3050 suppression
+					// is needed.
 					return Array.CreateInstance (elementType, length);
-					#pragma warning restore IL3050
 				}
 
 				// NativeAOT — resolve the closed array type via the per-rank typemap

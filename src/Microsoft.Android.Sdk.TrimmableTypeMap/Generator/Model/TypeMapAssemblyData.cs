@@ -41,12 +41,12 @@ sealed class TypeMapAssemblyData
 	public List<AliasHolderData> AliasHolders { get; } = new ();
 
 	/// <summary>
-	/// When non-null, the emitter will produce three additional internal
-	/// <c>__ArrayMapRank{N}</c> sealed type definitions to serve as the <c>TGroup</c>
-	/// arguments for per-rank array <see cref="TypeMapAttributeData"/> entries.
-	/// Each <see cref="TypeMapAttributeData"/> in <see cref="Entries"/> whose
-	/// <see cref="TypeMapAttributeData.AnchorRank"/> is non-null will reference one of
-	/// these generated TypeDefs via its rank index.
+	/// When non-null, the emitter will produce a series of internal
+	/// <c>__ArrayMapRank{N}</c> sealed type definitions (one per name in the list)
+	/// to serve as the <c>TGroup</c> arguments for per-rank array
+	/// <see cref="TypeMapAttributeData"/> entries. Each <see cref="TypeMapAttributeData"/>
+	/// in <see cref="Entries"/> whose <see cref="TypeMapAttributeData.AnchorRank"/> is
+	/// non-null will reference one of these generated TypeDefs via its rank index.
 	/// </summary>
 	/// <remarks>
 	/// Mirrors the existing <c>__TypeMapAnchor</c> emission pattern in
@@ -66,24 +66,47 @@ sealed class TypeMapAssemblyData
 
 /// <summary>
 /// Names of the per-typemap-assembly array-rank sentinel types that the emitter generates.
-/// All three live in the typemap assembly's root namespace.
+/// All sentinels live in the typemap assembly's root namespace. <see cref="Names"/> is
+/// indexed 0-based by (rank - 1), so <c>Names[0]</c> is the rank-1 sentinel,
+/// <c>Names[1]</c> is rank-2, etc. Length is whatever the generator was configured to
+/// emit (defaults to 3).
 /// </summary>
-sealed record RankSentinelNames (string Rank1, string Rank2, string Rank3)
+sealed class RankSentinelNames
 {
-	/// <summary>
-	/// Default sentinel names used by <see cref="ModelBuilder"/>.
-	/// </summary>
-	public static readonly RankSentinelNames Default = new ("__ArrayMapRank1", "__ArrayMapRank2", "__ArrayMapRank3");
+	public RankSentinelNames (IReadOnlyList<string> names)
+	{
+		if (names is null) {
+			throw new ArgumentNullException (nameof (names));
+		}
+		if (names.Count == 0) {
+			throw new ArgumentException ("At least one rank sentinel name must be provided.", nameof (names));
+		}
+		Names = names;
+	}
+
+	public IReadOnlyList<string> Names { get; }
+
+	public int Count => Names.Count;
 
 	/// <summary>
 	/// Returns the sentinel name for the given 1-based array rank, or null if rank is out of range.
 	/// </summary>
-	public string? GetForRank (int rank) => rank switch {
-		1 => Rank1,
-		2 => Rank2,
-		3 => Rank3,
-		_ => null,
-	};
+	public string? GetForRank (int rank) => rank >= 1 && rank <= Names.Count ? Names [rank - 1] : null;
+
+	/// <summary>
+	/// Builds the default <c>__ArrayMapRank1</c>..<c>__ArrayMapRank{maxRank}</c> name set.
+	/// </summary>
+	public static RankSentinelNames CreateDefault (int maxRank)
+	{
+		if (maxRank < 1) {
+			throw new ArgumentOutOfRangeException (nameof (maxRank), maxRank, "Must be >= 1.");
+		}
+		var names = new string [maxRank];
+		for (int i = 0; i < maxRank; i++) {
+			names [i] = $"__ArrayMapRank{i + 1}";
+		}
+		return new RankSentinelNames (names);
+	}
 }
 
 /// <summary>
