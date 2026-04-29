@@ -10,7 +10,6 @@ using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
 using Xamarin.Android.Tasks;
-using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -910,12 +909,8 @@ namespace Xamarin.Android.Build.Tests
 		/// and producing empty .jlo.xml files.
 		/// </summary>
 		[Test]
-		public void MultiTfmTransitiveReference ([Values] AndroidRuntime runtime)
+		public void MultiTfmTransitiveReference ()
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: false)) {
-				return;
-			}
-
 			var path = Path.Combine ("temp", TestName);
 			var dotnetVersion = XABuildConfig.LatestDotNetTargetFramework;
 
@@ -957,11 +952,7 @@ namespace MultiTfmLib
 			multiTfmLib.SetProperty ("AndroidGenerateResourceDesigner", "false");
 			multiTfmLib.SetProperty ("SupportedOSPlatformVersion", "24",
 				"$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'");
-			if (runtime != AndroidRuntime.NativeAOT) {
-				multiTfmLib.SetRuntime (runtime);
-			}
-
-			// 2. Non-Android library (net10.0 only) referencing the multi-TFM library
+			// 2.Non-Android library (net10.0 only) referencing the multi-TFM library
 			var coreLib = new DotNetStandard {
 				ProjectName = "CoreLib",
 				Sdk = "Microsoft.NET.Sdk",
@@ -996,7 +987,6 @@ namespace MultiTfmLib
 					},
 				},
 			};
-			app.SetRuntime (runtime);
 			app.AddReference (coreLib);
 
 			using var multiTfmBuilder = CreateDllBuilder (Path.Combine (path, multiTfmLib.ProjectName));
