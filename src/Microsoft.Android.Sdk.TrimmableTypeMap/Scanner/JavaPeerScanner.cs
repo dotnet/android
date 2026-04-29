@@ -217,6 +217,7 @@ public sealed class JavaPeerScanner : IDisposable
 			var isUnconditional = attrInfo is not null;
 			var cannotRegisterInStaticConstructor = attrInfo is ApplicationAttributeInfo or InstrumentationAttributeInfo;
 			string? invokerTypeName = null;
+			ActivationCtorStyle? invokerActivationCtorStyle = null;
 
 			// Resolve base Java type name
 			var baseJavaName = ResolveBaseJavaName (typeDef, index, results);
@@ -238,12 +239,11 @@ public sealed class JavaPeerScanner : IDisposable
 				invokerTypeName = TryFindInvokerTypeName (fullName, typeHandle, index);
 			}
 
-			// Interface peers have no constructors of their own, so ResolveActivationCtor
-			// returns null. The invoker type holds the activation ctor — resolve it from
-			// there so the generator can pick the correct ctor signature
-			// (XamarinAndroid (IntPtr, JniHandleOwnership) vs JavaInterop (ref JniObjectReference, JniObjectReferenceOptions)).
-			if (activationCtor is null && invokerTypeName is not null) {
-				activationCtor = TryResolveActivationCtorOnInvoker (invokerTypeName);
+			// Interface/abstract peers create their invoker, not the target type.
+			// Keep ActivationCtor scoped to the target/base hierarchy for legacy parity,
+			// and store the invoker ctor style separately for CreateInstance emission.
+			if (invokerTypeName is not null) {
+				invokerActivationCtorStyle = TryResolveActivationCtorOnInvoker (invokerTypeName)?.Style;
 			}
 
 			var peer = new JavaPeerInfo {
@@ -266,6 +266,7 @@ public sealed class JavaPeerScanner : IDisposable
 				JavaFields = exportFields,
 				ActivationCtor = activationCtor,
 				InvokerTypeName = invokerTypeName,
+				InvokerActivationCtorStyle = invokerActivationCtorStyle,
 				IsGenericDefinition = isGenericDefinition,
 				ComponentAttribute = ToComponentInfo (attrInfo),
 			};
