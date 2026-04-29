@@ -42,14 +42,8 @@ public class TrimmableTypeMap
 	}
 
 	/// <summary>
-	/// Initializes the singleton with a single merged typemap universe.
-	/// </summary>
-	public static void Initialize (IReadOnlyDictionary<string, Type> typeMap, IReadOnlyDictionary<Type, Type> proxyMap)
-		=> Initialize (typeMap, proxyMap, arrayMapsByRank: null);
-
-	/// <summary>
-	/// Initializes the singleton with a single merged typemap universe plus per-rank
-	/// array dictionaries (consulted by <c>JNIEnv.ArrayCreateInstance</c> under NativeAOT).
+	/// Initializes the singleton with a single merged typemap universe and optional
+	/// per-rank array dictionaries (consulted by <c>JNIEnv.ArrayCreateInstance</c> under NativeAOT).
 	/// </summary>
 	/// <param name="arrayMapsByRank">0-indexed by (rank - 1); null when no array entries were emitted.</param>
 	public static void Initialize (
@@ -63,13 +57,7 @@ public class TrimmableTypeMap
 	}
 
 	/// <summary>
-	/// Initializes the singleton with multiple per-assembly typemap universes.
-	/// </summary>
-	public static void Initialize (IReadOnlyDictionary<string, Type>[] typeMaps, IReadOnlyDictionary<Type, Type>[] proxyMaps)
-		=> Initialize (typeMaps, proxyMaps, arrayMapsByRank: null);
-
-	/// <summary>
-	/// Initializes the singleton with multiple per-assembly typemap universes plus
+	/// Initializes the singleton with multiple per-assembly typemap universes and optional
 	/// merged per-rank array dictionaries.
 	/// </summary>
 	/// <param name="arrayMapsByRank">
