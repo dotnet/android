@@ -119,6 +119,20 @@ sealed class TypeMapAssemblyEmitter
 
 	EntityHandle _anchorTypeHandle;
 
+	// Per-rank array sentinel TypeDefs (1-indexed; index 0 unused). Populated when
+	// model.RankSentinels is non-null. Each rank-anchored TypeMap entry uses one of
+	// these as its TGroup token (e.g. typeof(__ArrayMapRank2)).
+	readonly EntityHandle[] _rankAnchorHandles = new EntityHandle [4];
+
+	// Per-anchor 3-arg TypeMap<TGroup>(string, Type, Type) ctor refs, keyed by anchor
+	// EntityHandle. Built lazily by GetOrAddTypeMapAttr3ArgCtorRef. The default-anchor
+	// 3-arg ctor (= _typeMapAttrCtorRef3Arg) is also stored here so all callers go
+	// through the same cache.
+	readonly Dictionary<EntityHandle, MemberReferenceHandle> _typeMapAttr3ArgCtorRefByAnchor = new ();
+
+	// Cached open TypeMapAttribute`1 ref so per-anchor closed TypeSpecs share metadata.
+	TypeReferenceHandle _typeMapAttrOpenRef;
+
 	/// <summary>
 	/// Creates a new emitter.
 	/// </summary>
@@ -168,6 +182,7 @@ sealed class TypeMapAssemblyEmitter
 		} else {
 			EmitAnchorType ();
 		}
+		EmitRankSentinels (model);
 		EmitMemberReferences ();
 
 		// Track wrapper method names → handles for RegisterNatives
@@ -260,6 +275,40 @@ sealed class TypeMapAssemblyEmitter
 			TypeAttributes.NotPublic | TypeAttributes.Sealed | TypeAttributes.Class,
 			default,
 			metadata.GetOrAddString ("__TypeMapAnchor"),
+			objectRef,
+			MetadataTokens.FieldDefinitionHandle (metadata.GetRowCount (TableIndex.Field) + 1),
+			MetadataTokens.MethodDefinitionHandle (metadata.GetRowCount (TableIndex.MethodDef) + 1));
+	}
+
+	/// <summary>
+	/// Emits up to three internal <c>__ArrayMapRank{1,2,3}</c> classes used as the group
+	/// type parameters for speculative array-shape <c>TypeMap&lt;T&gt;</c> entries. Each
+	/// per-assembly typemap DLL emits its own set so the runtime <c>TypeMapLoader</c>
+	/// can collect per-assembly per-rank dictionaries via
+	/// <c>TypeMapping.GetOrCreateExternalTypeMapping&lt;__ArrayMapRank{N}&gt;()</c>.
+	/// No-op when <see cref="TypeMapAssemblyData.RankSentinels"/> is null.
+	/// </summary>
+	void EmitRankSentinels (TypeMapAssemblyData model)
+	{
+		if (model.RankSentinels is null) {
+			return;
+		}
+
+		_rankAnchorHandles [1] = EmitRankSentinel (model.RankSentinels.Rank1);
+		_rankAnchorHandles [2] = EmitRankSentinel (model.RankSentinels.Rank2);
+		_rankAnchorHandles [3] = EmitRankSentinel (model.RankSentinels.Rank3);
+	}
+
+	EntityHandle EmitRankSentinel (string typeName)
+	{
+		var metadata = _pe.Metadata;
+		var objectRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
+			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Object"));
+
+		return metadata.AddTypeDefinition (
+			TypeAttributes.NotPublic | TypeAttributes.Sealed | TypeAttributes.Class,
+			default,
+			metadata.GetOrAddString (typeName),
 			objectRef,
 			MetadataTokens.FieldDefinitionHandle (metadata.GetRowCount (TableIndex.Field) + 1),
 			MetadataTokens.MethodDefinitionHandle (metadata.GetRowCount (TableIndex.MethodDef) + 1));
@@ -387,13 +436,15 @@ sealed class TypeMapAssemblyEmitter
 	void EmitTypeMapAttributeCtorRef ()
 	{
 		var metadata = _pe.Metadata;
-		var typeMapAttrOpenRef = metadata.AddTypeReference (_pe.SystemRuntimeInteropServicesRef,
+		_typeMapAttrOpenRef = metadata.AddTypeReference (_pe.SystemRuntimeInteropServicesRef,
 			metadata.GetOrAddString ("System.Runtime.InteropServices"),
 			metadata.GetOrAddString ("TypeMapAttribute`1"));
 
-		var closedAttrTypeSpec = _pe.MakeGenericTypeSpec (typeMapAttrOpenRef, _anchorTypeHandle);
+		var closedAttrTypeSpec = _pe.MakeGenericTypeSpec (_typeMapAttrOpenRef, _anchorTypeHandle);
 
-		// 2-arg: TypeMap(string jniName, Type proxyType) — unconditional
+		// 2-arg: TypeMap(string jniName, Type proxyType) — unconditional. Default anchor only;
+		// rank-anchored entries are always conditional (3-arg) so no per-rank 2-arg ctor is
+		// needed today.
 		_typeMapAttrCtorRef2Arg = _pe.AddMemberRef (closedAttrTypeSpec, ".ctor",
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
 				rt => rt.Void (),
@@ -402,8 +453,30 @@ sealed class TypeMapAssemblyEmitter
 					p.AddParameter ().Type ().Type (_systemTypeRef, false);
 				}));
 
-		// 3-arg: TypeMap(string jniName, Type proxyType, Type targetType) — trimmable
-		_typeMapAttrCtorRef3Arg = _pe.AddMemberRef (closedAttrTypeSpec, ".ctor",
+		// 3-arg: TypeMap(string jniName, Type proxyType, Type targetType) — trimmable.
+		// Cache by anchor so rank-anchored entries can build their own closed ctor on demand.
+		_typeMapAttrCtorRef3Arg = AddTypeMapAttr3ArgCtorRef (_anchorTypeHandle);
+		_typeMapAttr3ArgCtorRefByAnchor [_anchorTypeHandle] = _typeMapAttrCtorRef3Arg;
+	}
+
+	/// <summary>
+	/// Returns the cached 3-arg <c>TypeMap&lt;TGroup&gt;</c> ctor ref for the given
+	/// anchor (group) type, building and caching it if not yet present.
+	/// </summary>
+	MemberReferenceHandle GetOrAddTypeMapAttr3ArgCtorRef (EntityHandle anchor)
+	{
+		if (_typeMapAttr3ArgCtorRefByAnchor.TryGetValue (anchor, out var cached)) {
+			return cached;
+		}
+		var ctorRef = AddTypeMapAttr3ArgCtorRef (anchor);
+		_typeMapAttr3ArgCtorRefByAnchor [anchor] = ctorRef;
+		return ctorRef;
+	}
+
+	MemberReferenceHandle AddTypeMapAttr3ArgCtorRef (EntityHandle anchor)
+	{
+		var closedAttrTypeSpec = _pe.MakeGenericTypeSpec (_typeMapAttrOpenRef, anchor);
+		return _pe.AddMemberRef (closedAttrTypeSpec, ".ctor",
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (3,
 				rt => rt.Void (),
 				p => {
@@ -1237,7 +1310,22 @@ sealed class TypeMapAssemblyEmitter
 
 	void EmitTypeMapAttribute (TypeMapAttributeData entry)
 	{
-		var ctorRef = entry.IsUnconditional ? _typeMapAttrCtorRef2Arg : _typeMapAttrCtorRef3Arg;
+		MemberReferenceHandle ctorRef;
+		if (entry.AnchorRank is int rank) {
+			if (entry.IsUnconditional) {
+				throw new InvalidOperationException (
+					$"Rank-anchored TypeMap entries must be conditional (3-arg). Entry '{entry.JniName}' rank={rank}.");
+			}
+			if (rank < 1 || rank > 3 || _rankAnchorHandles [rank] == default) {
+				throw new InvalidOperationException (
+					$"No rank-{rank} anchor TypeDef was emitted for entry '{entry.JniName}'. " +
+					$"Ensure TypeMapAssemblyData.RankSentinels was set before emit.");
+			}
+			ctorRef = GetOrAddTypeMapAttr3ArgCtorRef (_rankAnchorHandles [rank]);
+		} else {
+			ctorRef = entry.IsUnconditional ? _typeMapAttrCtorRef2Arg : _typeMapAttrCtorRef3Arg;
+		}
+
 		var blob = _pe.BuildAttributeBlob (b => {
 			b.WriteSerializedString (entry.JniName);
 			b.WriteSerializedString (entry.ProxyTypeReference);

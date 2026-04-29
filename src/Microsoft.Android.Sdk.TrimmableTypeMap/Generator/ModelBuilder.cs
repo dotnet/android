@@ -40,7 +40,17 @@ static class ModelBuilder
 	/// <param name="peers">Scanned Java peer types (typically from a single input assembly).</param>
 	/// <param name="outputPath">Output .dll path — used to derive assembly/module names if not specified.</param>
 	/// <param name="assemblyName">Explicit assembly name. If null, derived from <paramref name="outputPath"/>.</param>
-	public static TypeMapAssemblyData Build (IReadOnlyList<JavaPeerInfo> peers, string outputPath, string? assemblyName = null)
+	/// <param name="emitArrayEntries">
+	/// When true, additionally emit speculative <c>[L&lt;jni&gt;;</c>-shaped TypeMap entries
+	/// for ranks 1–3 keyed by the element JNI name, with per-rank <c>__ArrayMapRank{N}</c>
+	/// sentinel <c>TGroup</c> types generated into the same assembly. The runtime
+	/// <c>TrimmableTypeMap</c> uses these to satisfy <c>JNIEnv.ArrayCreateInstance</c> under
+	/// NativeAOT (where dynamic <c>Array.CreateInstance</c> isn't available). Should be
+	/// gated on <c>$(PublishAot) == true</c> by the MSBuild task — under CoreCLR/Mono the
+	/// runtime falls through to <c>Array.CreateInstance</c> directly and these entries are
+	/// never queried, so emitting them just adds dead-weight attribute metadata.
+	/// </param>
+	public static TypeMapAssemblyData Build (IReadOnlyList<JavaPeerInfo> peers, string outputPath, string? assemblyName = null, bool emitArrayEntries = false)
 	{
 		if (peers is null) {
 			throw new ArgumentNullException (nameof (peers));
@@ -56,6 +66,9 @@ static class ModelBuilder
 			AssemblyName = assemblyName,
 			ModuleName = moduleName,
 		};
+		if (emitArrayEntries) {
+			model.RankSentinels = RankSentinelNames.Default;
+		}
 
 		// Invoker types are NOT emitted as separate proxies or TypeMap entries —
 		// they only appear as a TypeRef in the interface proxy's get_InvokerType property.
@@ -89,6 +102,10 @@ static class ModelBuilder
 			}
 
 			EmitPeers (model, jniName, peersForName, assemblyName, usedProxyNames);
+
+			if (emitArrayEntries) {
+				EmitArrayEntries (model, jniName, peersForName);
+			}
 		}
 
 		// Compute IgnoresAccessChecksTo from cross-assembly references
@@ -392,4 +409,63 @@ static class ModelBuilder
 
 	static string AssemblyQualify (string typeName, string assemblyName)
 		=> $"{typeName}, {assemblyName}";
+
+	const int MaxArrayRank = 3;
+
+	/// <summary>
+	/// Emits speculative per-rank <c>[L&lt;jni&gt;;</c>-shaped <see cref="TypeMapAttributeData"/>
+	/// entries (ranks 1–3) for one peer group, keyed by the <em>element</em> JNI name and
+	/// anchored to the <c>__ArrayMapRank{N}</c> sentinel emitted into the same typemap
+	/// assembly. Each entry has the closed managed array type as both proxy and trim target,
+	/// so ILC's per-shape conditional drops the entry when the array shape is never
+	/// constructed.
+	/// </summary>
+	/// <remarks>
+	/// Skips:
+	///   <list type="bullet">
+	///     <item>Open-generic peers — <c>typeof(T&lt;&gt;[])</c> is not a valid IL token.</item>
+	///     <item>JNI primitive-keyword keys (<c>Z</c>, <c>B</c>, <c>C</c>, <c>S</c>,
+	///       <c>I</c>, <c>J</c>, <c>F</c>, <c>D</c>) — primitive arrays are handled by the
+	///       legacy <c>JniRuntime.JniTypeManager.GetPrimitiveArrayTypesForSimpleReference</c>
+	///       path; emitting array entries here would shadow that built-in handling.</item>
+	///     <item>Alias groups (multiple peers sharing one JNI name) — would produce
+	///       duplicate keys in the per-rank dictionary; deferred until a real-world need
+	///       motivates an alias-aware design.</item>
+	///   </list>
+	/// </remarks>
+	static void EmitArrayEntries (TypeMapAssemblyData model, string jniName, List<JavaPeerInfo> peersForName)
+	{
+		if (jniName.Length == 1 && IsJniPrimitiveKeyword (jniName [0])) {
+			return;
+		}
+		if (peersForName.Count != 1) {
+			return;
+		}
+
+		var peer = peersForName [0];
+		if (peer.IsGenericDefinition) {
+			return;
+		}
+
+		for (int rank = 1; rank <= MaxArrayRank; rank++) {
+			string arrayTypeRef = AssemblyQualify (peer.ManagedTypeName + Brackets (rank), peer.AssemblyName);
+			model.Entries.Add (new TypeMapAttributeData {
+				JniName = jniName,
+				ProxyTypeReference = arrayTypeRef,
+				TargetTypeReference = arrayTypeRef,
+				AnchorRank = rank,
+			});
+		}
+	}
+
+	static string Brackets (int rank) => rank switch {
+		1 => "[]",
+		2 => "[][]",
+		3 => "[][][]",
+		_ => string.Concat (Enumerable.Repeat ("[]", rank)),
+	};
+
+	static bool IsJniPrimitiveKeyword (char c)
+		=> c == 'Z' || c == 'B' || c == 'C' || c == 'S' || c == 'I'
+			|| c == 'J' || c == 'F' || c == 'D' || c == 'V';
 }
