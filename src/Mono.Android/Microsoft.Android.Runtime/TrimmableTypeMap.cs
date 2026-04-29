@@ -42,26 +42,28 @@ public class TrimmableTypeMap
 	/// (_Microsoft.Android.TypeMaps) when assembly typemaps are merged (Release builds).
 	/// </summary>
 	public static void Initialize (IReadOnlyDictionary<string, Type> typeMap, IReadOnlyDictionary<Type, Type> proxyMap)
-		=> Initialize (typeMap, proxyMap, null, null, null);
+		=> Initialize (typeMap, proxyMap, arrayMapsByRank: null);
 
 	/// <summary>
 	/// Initializes the singleton with a single merged typemap universe plus per-rank
 	/// array dictionaries (used by <c>JNIEnv.ArrayCreateInstance</c> under NativeAOT).
 	/// </summary>
-	/// <param name="arrayMapRank1">
-	/// JNI element name &#8594; <c>typeof(T[])</c> map. Null when the typemap was generated
-	/// without array entries (CoreCLR builds with <c>$(PublishAot) == false</c>).
+	/// <param name="arrayMapsByRank">
+	/// 0-based per-rank array of dictionaries — <c>arrayMapsByRank[0]</c> is the rank-1
+	/// dictionary (JNI element name &#8594; <c>typeof(T[])</c>), <c>[1]</c> is rank-2, etc.
+	/// Length is whatever the generator emitted (defaults to 3, configurable via
+	/// <c>$(_AndroidTrimmableTypeMapMaxArrayRank)</c>). Null when the typemap was
+	/// generated without array entries (CoreCLR builds with <c>$(PublishAot) == false</c>).
+	/// Individual elements may be null when a particular rank has no entries.
 	/// </param>
 	public static void Initialize (
 		IReadOnlyDictionary<string, Type> typeMap,
 		IReadOnlyDictionary<Type, Type> proxyMap,
-		IReadOnlyDictionary<string, Type>? arrayMapRank1,
-		IReadOnlyDictionary<string, Type>? arrayMapRank2,
-		IReadOnlyDictionary<string, Type>? arrayMapRank3)
+		IReadOnlyDictionary<string, Type>?[]? arrayMapsByRank)
 	{
 		ArgumentNullException.ThrowIfNull (typeMap);
 		ArgumentNullException.ThrowIfNull (proxyMap);
-		InitializeCore (new SingleUniverseTypeMap (typeMap, proxyMap, arrayMapRank1, arrayMapRank2, arrayMapRank3));
+		InitializeCore (new SingleUniverseTypeMap (typeMap, proxyMap, arrayMapsByRank));
 	}
 
 	/// <summary>
@@ -70,24 +72,22 @@ public class TrimmableTypeMap
 	/// (_Microsoft.Android.TypeMaps) when each assembly has its own typemap universe (Debug builds).
 	/// </summary>
 	public static void Initialize (IReadOnlyDictionary<string, Type>[] typeMaps, IReadOnlyDictionary<Type, Type>[] proxyMaps)
-		=> Initialize (typeMaps, proxyMaps, null, null, null);
+		=> Initialize (typeMaps, proxyMaps, perUniverseArrayMaps: null);
 
 	/// <summary>
 	/// Initializes the singleton with multiple per-assembly typemap universes plus
-	/// per-assembly per-rank array dictionaries.
+	/// per-universe per-rank array dictionaries.
 	/// </summary>
-	/// <remarks>
-	/// All four / five arrays must have the same length. The per-rank arrays may be null
-	/// (when no typemap assembly emitted array entries, i.e. CoreCLR builds), in which
-	/// case all per-universe rank dicts are treated as null. When non-null, individual
-	/// elements may still be null for universes that didn't emit array entries.
-	/// </remarks>
+	/// <param name="perUniverseArrayMaps">
+	/// Jagged array indexed first by universe, then 0-based by (rank - 1) within that
+	/// universe. <c>perUniverseArrayMaps[i][r]</c> is universe <c>i</c>'s rank-(r+1)
+	/// dictionary. Null when no typemap assembly emitted array entries (CoreCLR builds);
+	/// individual outer elements may be null for universes that didn't emit array entries.
+	/// </param>
 	public static void Initialize (
 		IReadOnlyDictionary<string, Type>[] typeMaps,
 		IReadOnlyDictionary<Type, Type>[] proxyMaps,
-		IReadOnlyDictionary<string, Type>?[]? arrayMapsRank1,
-		IReadOnlyDictionary<string, Type>?[]? arrayMapsRank2,
-		IReadOnlyDictionary<string, Type>?[]? arrayMapsRank3)
+		IReadOnlyDictionary<string, Type>?[]?[]? perUniverseArrayMaps)
 	{
 		ArgumentNullException.ThrowIfNull (typeMaps);
 		ArgumentNullException.ThrowIfNull (proxyMaps);
@@ -97,30 +97,18 @@ public class TrimmableTypeMap
 		if (typeMaps.Length != proxyMaps.Length) {
 			throw new ArgumentException ($"typeMaps.Length ({typeMaps.Length}) must equal proxyMaps.Length ({proxyMaps.Length}).", nameof (proxyMaps));
 		}
-		ValidateRankArrayLength (arrayMapsRank1, typeMaps.Length, nameof (arrayMapsRank1));
-		ValidateRankArrayLength (arrayMapsRank2, typeMaps.Length, nameof (arrayMapsRank2));
-		ValidateRankArrayLength (arrayMapsRank3, typeMaps.Length, nameof (arrayMapsRank3));
+		if (perUniverseArrayMaps is not null && perUniverseArrayMaps.Length != typeMaps.Length) {
+			throw new ArgumentException ($"perUniverseArrayMaps.Length ({perUniverseArrayMaps.Length}) must equal typeMaps.Length ({typeMaps.Length}).", nameof (perUniverseArrayMaps));
+		}
 
 		var universes = new SingleUniverseTypeMap [typeMaps.Length];
 		for (int i = 0; i < typeMaps.Length; i++) {
 			universes [i] = new SingleUniverseTypeMap (
 				typeMaps [i],
 				proxyMaps [i],
-				arrayMapsRank1?[i],
-				arrayMapsRank2?[i],
-				arrayMapsRank3?[i]);
+				perUniverseArrayMaps?[i]);
 		}
 		InitializeCore (new AggregateTypeMap (universes));
-	}
-
-	static void ValidateRankArrayLength (IReadOnlyDictionary<string, Type>?[]? array, int expected, string paramName)
-	{
-		if (array is null) {
-			return;
-		}
-		if (array.Length != expected) {
-			throw new ArgumentException ($"{paramName}.Length ({array.Length}) must equal typeMaps.Length ({expected}).", paramName);
-		}
 	}
 
 	static void InitializeCore (ITypeMapWithAliasing typeMap)

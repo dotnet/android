@@ -119,10 +119,10 @@ sealed class TypeMapAssemblyEmitter
 
 	EntityHandle _anchorTypeHandle;
 
-	// Per-rank array sentinel TypeDefs (1-indexed; index 0 unused). Populated when
-	// model.RankSentinels is non-null. Each rank-anchored TypeMap entry uses one of
-	// these as its TGroup token (e.g. typeof(__ArrayMapRank2)).
-	readonly EntityHandle[] _rankAnchorHandles = new EntityHandle [4];
+	// Per-rank array sentinel TypeDefs indexed 0-based by (rank - 1). Length equals
+	// model.RankSentinels.Count when array entries are emitted, empty otherwise.
+	// Each rank-anchored TypeMap entry uses one of these as its TGroup token.
+	EntityHandle [] _rankAnchorHandles = Array.Empty<EntityHandle> ();
 
 	// Per-anchor 3-arg TypeMap<TGroup>(string, Type, Type) ctor refs, keyed by anchor
 	// EntityHandle. Built lazily by GetOrAddTypeMapAttr3ArgCtorRef. The default-anchor
@@ -281,10 +281,11 @@ sealed class TypeMapAssemblyEmitter
 	}
 
 	/// <summary>
-	/// Emits up to three internal <c>__ArrayMapRank{1,2,3}</c> classes used as the group
-	/// type parameters for speculative array-shape <c>TypeMap&lt;T&gt;</c> entries. Each
-	/// per-assembly typemap DLL emits its own set so the runtime <c>TypeMapLoader</c>
-	/// can collect per-assembly per-rank dictionaries via
+	/// Emits internal <c>__ArrayMapRank{N}</c> classes used as the group type
+	/// parameters for speculative array-shape <c>TypeMap&lt;T&gt;</c> entries — one per
+	/// name in <see cref="TypeMapAssemblyData.RankSentinels"/>. Each per-assembly
+	/// typemap DLL emits its own set so the runtime <c>TypeMapLoader</c> can collect
+	/// per-assembly per-rank dictionaries via
 	/// <c>TypeMapping.GetOrCreateExternalTypeMapping&lt;__ArrayMapRank{N}&gt;()</c>.
 	/// No-op when <see cref="TypeMapAssemblyData.RankSentinels"/> is null.
 	/// </summary>
@@ -294,9 +295,11 @@ sealed class TypeMapAssemblyEmitter
 			return;
 		}
 
-		_rankAnchorHandles [1] = EmitRankSentinel (model.RankSentinels.Rank1);
-		_rankAnchorHandles [2] = EmitRankSentinel (model.RankSentinels.Rank2);
-		_rankAnchorHandles [3] = EmitRankSentinel (model.RankSentinels.Rank3);
+		var sentinels = model.RankSentinels;
+		_rankAnchorHandles = new EntityHandle [sentinels.Count];
+		for (int i = 0; i < sentinels.Count; i++) {
+			_rankAnchorHandles [i] = EmitRankSentinel (sentinels.Names [i]);
+		}
 	}
 
 	EntityHandle EmitRankSentinel (string typeName)
@@ -1316,12 +1319,13 @@ sealed class TypeMapAssemblyEmitter
 				throw new InvalidOperationException (
 					$"Rank-anchored TypeMap entries must be conditional (3-arg). Entry '{entry.JniName}' rank={rank}.");
 			}
-			if (rank < 1 || rank > 3 || _rankAnchorHandles [rank] == default) {
+			int anchorIndex = rank - 1;
+			if ((uint)anchorIndex >= (uint)_rankAnchorHandles.Length || _rankAnchorHandles [anchorIndex] == default) {
 				throw new InvalidOperationException (
 					$"No rank-{rank} anchor TypeDef was emitted for entry '{entry.JniName}'. " +
-					$"Ensure TypeMapAssemblyData.RankSentinels was set before emit.");
+					$"Ensure TypeMapAssemblyData.RankSentinels was set (with sufficient Count) before emit.");
 			}
-			ctorRef = GetOrAddTypeMapAttr3ArgCtorRef (_rankAnchorHandles [rank]);
+			ctorRef = GetOrAddTypeMapAttr3ArgCtorRef (_rankAnchorHandles [anchorIndex]);
 		} else {
 			ctorRef = entry.IsUnconditional ? _typeMapAttrCtorRef2Arg : _typeMapAttrCtorRef3Arg;
 		}

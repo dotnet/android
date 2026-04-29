@@ -19,6 +19,17 @@
     <_TypeMapBaseOutputDir>$(_TypeMapBaseOutputDir.Replace('\','/'))</_TypeMapBaseOutputDir>
     <_TypeMapOutputDirectory>$(_TypeMapBaseOutputDir)typemap/</_TypeMapOutputDirectory>
     <_TypeMapJavaOutputDirectory>$(_TypeMapBaseOutputDir)typemap/java</_TypeMapJavaOutputDirectory>
+
+    <!--
+      Maximum array rank for which the trimmable typemap generator emits per-rank
+      __ArrayMapRank{N} sentinel TypeDefs and corresponding TypeMap entries. Only
+      consulted under NativeAOT, where the runtime can't construct arbitrary T[]
+      dynamically. CoreCLR's runtime type loader covers any rank, so we default to
+      0 (no array entries) on CoreCLR-only builds. Users can override by setting
+      this property explicitly.
+    -->
+    <_AndroidTrimmableTypeMapMaxArrayRank Condition=" '$(_AndroidTrimmableTypeMapMaxArrayRank)' == '' and '$(PublishAot)' == 'true' ">3</_AndroidTrimmableTypeMapMaxArrayRank>
+    <_AndroidTrimmableTypeMapMaxArrayRank Condition=" '$(_AndroidTrimmableTypeMapMaxArrayRank)' == '' ">0</_AndroidTrimmableTypeMapMaxArrayRank>
   </PropertyGroup>
 
   <ItemGroup>
@@ -76,7 +87,7 @@
         Debug="$(AndroidIncludeDebugSymbols)"
         NeedsInternet="$(AndroidNeedsInternetPermission)"
         EmbedAssemblies="$(EmbedAssembliesIntoApk)"
-        EmitArrayEntries="$(PublishAot)"
+        MaxArrayRank="$(_AndroidTrimmableTypeMapMaxArrayRank)"
         ManifestPlaceholders="$(AndroidManifestPlaceholders)"
         CheckedBuild="$(_AndroidCheckedBuild)"
         ApplicationJavaClass="$(AndroidApplicationJavaClass)"

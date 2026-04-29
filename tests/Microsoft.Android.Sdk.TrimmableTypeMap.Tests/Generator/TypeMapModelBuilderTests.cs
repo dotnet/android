@@ -16,10 +16,10 @@ public class ModelBuilderTests : FixtureTestBase
 		return ModelBuilder.Build (peers, outputPath, assemblyName);
 	}
 
-	static TypeMapAssemblyData BuildModelWithArrays (IReadOnlyList<JavaPeerInfo> peers, string? assemblyName = null)
+	static TypeMapAssemblyData BuildModelWithArrays (IReadOnlyList<JavaPeerInfo> peers, string? assemblyName = null, int maxArrayRank = 3)
 	{
 		var outputPath = Path.Combine (Path.GetTempPath (), (assemblyName ?? "TestTypeMap") + ".dll");
-		return ModelBuilder.Build (peers, outputPath, assemblyName, emitArrayEntries: true);
+		return ModelBuilder.Build (peers, outputPath, assemblyName, maxArrayRank);
 	}
 
 	public class BasicStructure
@@ -870,9 +870,29 @@ public class ModelBuilderTests : FixtureTestBase
 			var model = BuildModelWithArrays (new [] { peer });
 
 			Assert.NotNull (model.RankSentinels);
-			Assert.Equal ("__ArrayMapRank1", model.RankSentinels!.Rank1);
-			Assert.Equal ("__ArrayMapRank2", model.RankSentinels.Rank2);
-			Assert.Equal ("__ArrayMapRank3", model.RankSentinels.Rank3);
+			Assert.Equal (3, model.RankSentinels!.Count);
+			Assert.Equal ("__ArrayMapRank1", model.RankSentinels.Names [0]);
+			Assert.Equal ("__ArrayMapRank2", model.RankSentinels.Names [1]);
+			Assert.Equal ("__ArrayMapRank3", model.RankSentinels.Names [2]);
+		}
+
+		[Fact]
+		public void Build_EmitArrayEntries_HonoursMaxArrayRank ()
+		{
+			// Caller can ask for fewer or more ranks than the default. Verifies the
+			// $(_AndroidTrimmableTypeMapMaxArrayRank) MSBuild property's effect.
+			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
+
+			var model5 = BuildModelWithArrays (new [] { peer }, maxArrayRank: 5);
+			Assert.Equal (5, model5.RankSentinels!.Count);
+			Assert.Equal ("__ArrayMapRank5", model5.RankSentinels.Names [4]);
+			var rank5Entries = model5.Entries.Where (e => e.AnchorRank is not null).ToList ();
+			Assert.Equal (5, rank5Entries.Count);
+			Assert.Equal ("Foo.Bar[][][][][], App", rank5Entries.Single (e => e.AnchorRank == 5).TargetTypeReference);
+
+			var model1 = BuildModelWithArrays (new [] { peer }, maxArrayRank: 1);
+			Assert.Equal (1, model1.RankSentinels!.Count);
+			Assert.Single (model1.Entries.Where (e => e.AnchorRank is not null));
 		}
 
 		[Fact]
@@ -1005,7 +1025,7 @@ public class ModelBuilderTests : FixtureTestBase
 		{
 			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
 			var outputPath = Path.Combine (Path.GetTempPath (), "ArrSentinels.dll");
-			var model = ModelBuilder.Build (new [] { peer }, outputPath, "ArrSentinels", emitArrayEntries: true);
+			var model = ModelBuilder.Build (new [] { peer }, outputPath, "ArrSentinels", maxArrayRank: 3);
 			Assert.NotNull (model.RankSentinels);
 
 			EmitAndVerify (model, "ArrSentinels", (pe, reader) => {
@@ -1043,7 +1063,7 @@ public class ModelBuilderTests : FixtureTestBase
 		{
 			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
 			var outputPath = Path.Combine (Path.GetTempPath (), "ArrBlobs.dll");
-			var model = ModelBuilder.Build (new [] { peer }, outputPath, "ArrBlobs", emitArrayEntries: true);
+			var model = ModelBuilder.Build (new [] { peer }, outputPath, "ArrBlobs", maxArrayRank: 3);
 
 			EmitAndVerify (model, "ArrBlobs", (pe, reader) => {
 				var attrs = ReadAllTypeMapAttributeBlobs (reader);

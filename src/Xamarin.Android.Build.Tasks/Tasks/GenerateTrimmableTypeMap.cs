@@ -70,13 +70,15 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public bool EmbedAssemblies { get; set; }
 
 	/// <summary>
-	/// When true, the generator emits per-rank array <c>TypeMap</c> entries plus the matching
-	/// <c>__ArrayMapRank{1,2,3}</c> sentinel TypeDefs. Should be set to <c>$(PublishAot)</c>
-	/// by the caller — under CoreCLR/Mono the runtime falls through to <c>Array.CreateInstance</c>
-	/// directly and these entries are never queried, so emitting them just adds dead-weight
-	/// attribute metadata.
+	/// Maximum array rank for which the generator emits per-rank <c>TypeMap</c> entries
+	/// plus the matching <c>__ArrayMapRank{N}</c> sentinel TypeDefs. 0 (default)
+	/// disables array entry emission entirely. Should normally be set to
+	/// <c>$(_AndroidTrimmableTypeMapMaxArrayRank)</c> when <c>$(PublishAot) == true</c>
+	/// — under CoreCLR the runtime falls through to <c>Array.CreateInstance</c>
+	/// directly and these entries are never queried, so emitting them just adds
+	/// dead-weight attribute metadata.
 	/// </summary>
-	public bool EmitArrayEntries { get; set; }
+	public int MaxArrayRank { get; set; }
 	public string? ManifestPlaceholders { get; set; }
 	public string? CheckedBuild { get; set; }
 	public string? ApplicationJavaClass { get; set; }
@@ -141,7 +143,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				useSharedTypemapUniverse: !Debug,
 				manifestConfig,
 				manifestTemplate,
-				emitArrayEntries: EmitArrayEntries);
+				maxArrayRank: MaxArrayRank);
 
 			GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyPaths);
 			GeneratedJavaFiles = WriteJavaSourcesToDisk (result.GeneratedJavaSources);

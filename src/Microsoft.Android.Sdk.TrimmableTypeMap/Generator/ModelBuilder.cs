@@ -40,23 +40,29 @@ static class ModelBuilder
 	/// <param name="peers">Scanned Java peer types (typically from a single input assembly).</param>
 	/// <param name="outputPath">Output .dll path — used to derive assembly/module names if not specified.</param>
 	/// <param name="assemblyName">Explicit assembly name. If null, derived from <paramref name="outputPath"/>.</param>
-	/// <param name="emitArrayEntries">
-	/// When true, additionally emit speculative <c>[L&lt;jni&gt;;</c>-shaped TypeMap entries
-	/// for ranks 1–3 keyed by the element JNI name, with per-rank <c>__ArrayMapRank{N}</c>
-	/// sentinel <c>TGroup</c> types generated into the same assembly. The runtime
-	/// <c>TrimmableTypeMap</c> uses these to satisfy <c>JNIEnv.ArrayCreateInstance</c> under
-	/// NativeAOT (where dynamic <c>Array.CreateInstance</c> isn't available). Should be
-	/// gated on <c>$(PublishAot) == true</c> by the MSBuild task — under CoreCLR/Mono the
-	/// runtime falls through to <c>Array.CreateInstance</c> directly and these entries are
+	/// <param name="maxArrayRank">
+	/// Maximum array rank for which to emit speculative <c>[L&lt;jni&gt;;</c>-shaped
+	/// <see cref="TypeMapAttributeData"/> entries (and the matching
+	/// <c>__ArrayMapRank{N}</c> sentinel <c>TGroup</c> types). 0 disables array entry
+	/// emission entirely. The runtime <c>TrimmableTypeMap</c> uses these to satisfy
+	/// <c>JNIEnv.ArrayCreateInstance</c> under NativeAOT (where dynamic
+	/// <c>Array.CreateInstance</c> isn't available). Should be gated on
+	/// <c>$(PublishAot) == true</c> by the MSBuild task — under CoreCLR the runtime
+	/// falls through to <c>Array.CreateInstance</c> directly and these entries are
 	/// never queried, so emitting them just adds dead-weight attribute metadata.
+	/// Configurable via the <c>$(_AndroidTrimmableTypeMapMaxArrayRank)</c> MSBuild
+	/// property; defaults to 3.
 	/// </param>
-	public static TypeMapAssemblyData Build (IReadOnlyList<JavaPeerInfo> peers, string outputPath, string? assemblyName = null, bool emitArrayEntries = false)
+	public static TypeMapAssemblyData Build (IReadOnlyList<JavaPeerInfo> peers, string outputPath, string? assemblyName = null, int maxArrayRank = 0)
 	{
 		if (peers is null) {
 			throw new ArgumentNullException (nameof (peers));
 		}
 		if (outputPath is null) {
 			throw new ArgumentNullException (nameof (outputPath));
+		}
+		if (maxArrayRank < 0) {
+			throw new ArgumentOutOfRangeException (nameof (maxArrayRank), maxArrayRank, "Must be >= 0.");
 		}
 
 		assemblyName ??= Path.GetFileNameWithoutExtension (outputPath);
@@ -66,8 +72,8 @@ static class ModelBuilder
 			AssemblyName = assemblyName,
 			ModuleName = moduleName,
 		};
-		if (emitArrayEntries) {
-			model.RankSentinels = RankSentinelNames.Default;
+		if (maxArrayRank > 0) {
+			model.RankSentinels = RankSentinelNames.CreateDefault (maxArrayRank);
 		}
 
 		// Invoker types are NOT emitted as separate proxies or TypeMap entries —
@@ -103,8 +109,8 @@ static class ModelBuilder
 
 			EmitPeers (model, jniName, peersForName, assemblyName, usedProxyNames);
 
-			if (emitArrayEntries) {
-				EmitArrayEntries (model, jniName, peersForName);
+			if (maxArrayRank > 0) {
+				EmitArrayEntries (model, jniName, peersForName, maxArrayRank);
 			}
 		}
 
@@ -410,15 +416,13 @@ static class ModelBuilder
 	static string AssemblyQualify (string typeName, string assemblyName)
 		=> $"{typeName}, {assemblyName}";
 
-	const int MaxArrayRank = 3;
-
 	/// <summary>
 	/// Emits speculative per-rank <c>[L&lt;jni&gt;;</c>-shaped <see cref="TypeMapAttributeData"/>
-	/// entries (ranks 1–3) for one peer group, keyed by the <em>element</em> JNI name and
-	/// anchored to the <c>__ArrayMapRank{N}</c> sentinel emitted into the same typemap
-	/// assembly. Each entry has the closed managed array type as both proxy and trim target,
-	/// so ILC's per-shape conditional drops the entry when the array shape is never
-	/// constructed.
+	/// entries (ranks 1..<paramref name="maxArrayRank"/>) for one peer group, keyed by
+	/// the <em>element</em> JNI name and anchored to the <c>__ArrayMapRank{N}</c>
+	/// sentinel emitted into the same typemap assembly. Each entry has the closed
+	/// managed array type as both proxy and trim target, so ILC's per-shape conditional
+	/// drops the entry when the array shape is never constructed.
 	/// </summary>
 	/// <remarks>
 	/// Skips:
@@ -433,7 +437,7 @@ static class ModelBuilder
 	///       motivates an alias-aware design.</item>
 	///   </list>
 	/// </remarks>
-	static void EmitArrayEntries (TypeMapAssemblyData model, string jniName, List<JavaPeerInfo> peersForName)
+	static void EmitArrayEntries (TypeMapAssemblyData model, string jniName, List<JavaPeerInfo> peersForName, int maxArrayRank)
 	{
 		if (jniName.Length == 1 && IsJniPrimitiveKeyword (jniName [0])) {
 			return;
@@ -447,7 +451,7 @@ static class ModelBuilder
 			return;
 		}
 
-		for (int rank = 1; rank <= MaxArrayRank; rank++) {
+		for (int rank = 1; rank <= maxArrayRank; rank++) {
 			string arrayTypeRef = AssemblyQualify (peer.ManagedTypeName + Brackets (rank), peer.AssemblyName);
 			model.Entries.Add (new TypeMapAttributeData {
 				JniName = jniName,
