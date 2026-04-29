@@ -13,8 +13,8 @@ This file contains the CoreCLR-specific MSBuild logic for .NET for Android.
   </PropertyGroup>
   <!-- Properties for $(OutputType)=Exe (Android Applications) -->
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' ">
-    <!-- Default to R2R Composite for CoreCLR Release mode -->
-    <PublishReadyToRun Condition=" '$(PublishReadyToRun)' == '' and '$(Configuration)' == 'Release' ">true</PublishReadyToRun>
+    <!-- Default to R2R Composite for CoreCLR Release mode or when publishing -->
+    <PublishReadyToRun Condition=" '$(PublishReadyToRun)' == '' and ('$(Configuration)' == 'Release' or '$(_IsPublishing)' == 'true') ">true</PublishReadyToRun>
     <PublishReadyToRunComposite Condition=" '$(PublishReadyToRunComposite)' == '' and '$(PublishReadyToRun)' == 'true' ">true</PublishReadyToRunComposite>
     <_IsPublishing Condition=" '$(_IsPublishing)' == '' and '$(PublishReadyToRun)' == 'true' ">true</_IsPublishing>
     <AllowReadyToRunWithoutRuntimeIdentifier Condition=" '$(PublishReadyToRun)' == 'true' and '$(RuntimeIdentifiers)' != '' ">true</AllowReadyToRunWithoutRuntimeIdentifier>
