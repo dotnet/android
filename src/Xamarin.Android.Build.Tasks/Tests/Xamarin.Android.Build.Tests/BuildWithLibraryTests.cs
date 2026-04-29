@@ -9,7 +9,7 @@ using Microsoft.Android.Build.Tasks;
 using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
-using Xamarin.Android.Tasks;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Build.Tests
 {
