@@ -1297,9 +1297,9 @@ sealed class TypeMapAssemblyEmitter
 					$"Rank-anchored TypeMap entries must be conditional (3-arg). Entry '{entry.JniName}' rank={rank}.");
 			}
 			int anchorIndex = rank - 1;
-			if ((uint)anchorIndex >= (uint)_rankAnchorHandles.Length || _rankAnchorHandles [anchorIndex] == default) {
+			if ((uint)anchorIndex >= (uint)_rankAnchorHandles.Length) {
 				throw new InvalidOperationException (
-					$"No rank-{rank} anchor TypeDef was emitted for entry '{entry.JniName}'. " +
+					$"No rank-{rank} anchor available for entry '{entry.JniName}'. " +
 					$"Ensure TypeMapAssemblyData.MaxArrayRank was >= {rank} before emit.");
 			}
 			ctorRef = GetOrAddTypeMapAttr3ArgCtorRef (_rankAnchorHandles [anchorIndex]);
