@@ -8,64 +8,64 @@
       "Size": 22388
     },
     "lib/arm64-v8a/lib__Microsoft.Android.Resource.Designer.dll.so": {
-      "Size": 18696
+      "Size": 18296
     },
     "lib/arm64-v8a/lib_Java.Interop.dll.so": {
-      "Size": 88048
+      "Size": 88240
     },
     "lib/arm64-v8a/lib_Mono.Android.dll.so": {
-      "Size": 117928
+      "Size": 117736
     },
     "lib/arm64-v8a/lib_Mono.Android.Runtime.dll.so": {
-      "Size": 26464
+      "Size": 26752
     },
     "lib/arm64-v8a/lib_System.Console.dll.so": {
-      "Size": 24432
+      "Size": 24424
     },
     "lib/arm64-v8a/lib_System.Linq.dll.so": {
-      "Size": 25512
+      "Size": 25504
     },
     "lib/arm64-v8a/lib_System.Private.CoreLib.dll.so": {
-      "Size": 635608
+      "Size": 638088
     },
     "lib/arm64-v8a/lib_System.Runtime.dll.so": {
-      "Size": 20296
+      "Size": 20288
     },
     "lib/arm64-v8a/lib_System.Runtime.InteropServices.dll.so": {
-      "Size": 21632
+      "Size": 19824
     },
     "lib/arm64-v8a/lib_UnnamedProject.dll.so": {
-      "Size": 20144
+      "Size": 20032
     },
     "lib/arm64-v8a/libarc.bin.so": {
-      "Size": 19176
+      "Size": 19240
     },
     "lib/arm64-v8a/libmono-component-marshal-ilgen.so": {
-      "Size": 36616
+      "Size": 36416
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 1386072
+      "Size": 1387712
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 3124368
+      "Size": 3111840
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
-      "Size": 71936
+      "Size": 72344
     },
     "lib/arm64-v8a/libSystem.IO.Compression.Native.so": {
-      "Size": 1281696
+      "Size": 1280336
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 107904
+      "Size": 100552
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
-      "Size": 165536
+      "Size": 162000
     },
     "lib/arm64-v8a/libxamarin-app.so": {
       "Size": 19792
     },
     "META-INF/BNDLTOOL.RSA": {
-      "Size": 1221
+      "Size": 1223
     },
     "META-INF/BNDLTOOL.SF": {
       "Size": 3266
@@ -98,5 +98,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 3267093
+  "PackageSize": 3258901
 }

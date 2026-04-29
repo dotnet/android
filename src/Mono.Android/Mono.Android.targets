@@ -240,7 +240,7 @@
 
   <PropertyGroup>
     <!-- Override these properties to generate docs against a specific API level -->
-    <DocsApiLevel Condition=" '$(DocsApiLevel)' == '' ">36</DocsApiLevel>
+    <DocsApiLevel Condition=" '$(DocsApiLevel)' == '' ">$(AndroidApiLevel)</DocsApiLevel>
     <DocsPlatformId Condition=" '$(DocsPlatformId)' == '' ">$(DocsApiLevel)</DocsPlatformId>
     <DocsFxMoniker Condition=" '$(DocsFxMoniker)' == '' ">net-android-$(DocsApiLevel).0</DocsFxMoniker>
     <DocsExportOutput Condition=" '$(DocsExportOutput)' == '' ">$(_MonoAndroidNETDefaultOutDir)Mono.Android.xml</DocsExportOutput>

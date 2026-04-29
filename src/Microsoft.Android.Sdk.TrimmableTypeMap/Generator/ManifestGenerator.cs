@@ -15,6 +15,14 @@ class ManifestGenerator
 	static readonly XNamespace AndroidNs = ManifestConstants.AndroidNs;
 	static readonly XName AttName = ManifestConstants.AttName;
 	static readonly char [] PlaceholderSeparators = [';'];
+	static readonly HashSet<string> ComponentElementNames = new (StringComparer.Ordinal) {
+		"application",
+		"activity",
+		"instrumentation",
+		"service",
+		"receiver",
+		"provider",
+	};
 
 	int appInitOrder = 2000000000;
 
@@ -52,13 +60,21 @@ class ManifestGenerator
 		EnsureManifestAttributes (manifest);
 		var app = EnsureApplicationElement (manifest);
 
+		// Rewrite compat JNI names in the template to CRC names BEFORE collecting
+		// existing types, so the duplicate check works correctly.
+		RewriteCompatNames (manifest, allPeers);
+
 		// Apply assembly-level [Application] properties
 		if (assemblyInfo.ApplicationProperties is not null) {
 			AssemblyLevelElementBuilder.ApplyApplicationProperties (app, assemblyInfo.ApplicationProperties, allPeers, Warn);
 		}
 
 		var existingTypes = new HashSet<string> (
-			app.Descendants ().Select (a => (string?)a.Attribute (AttName)).OfType<string> ());
+			app.Descendants ()
+				.Where (IsComponentElement)
+				.Select (a => (string?) a.Attribute (AttName))
+				.OfType<string> (),
+			StringComparer.Ordinal);
 
 		// Add components from scanned types
 		foreach (var peer in allPeers) {
@@ -73,7 +89,7 @@ class ManifestGenerator
 			}
 
 			if (peer.ComponentAttribute.Kind == ComponentKind.Instrumentation) {
-				ComponentElementBuilder.AddInstrumentation (manifest, peer);
+				ComponentElementBuilder.AddInstrumentation (manifest, peer, PackageName);
 				continue;
 			}
 
@@ -128,6 +144,58 @@ class ManifestGenerator
 			new XElement ("manifest",
 				new XAttribute (XNamespace.Xmlns + "android", AndroidNs.NamespaceName),
 				new XAttribute ("package", PackageName)));
+	}
+
+	/// <summary>
+	/// Manifest templates may use compat JNI names (e.g., "android.apptests.App")
+	/// but the trimmable path generates JCWs with CRC-based names (e.g., "crc64.../App").
+	/// This method rewrites any compat name references to the actual JCW name so the
+	/// Android runtime can find the class.
+	/// </summary>
+	void RewriteCompatNames (XElement manifest, IReadOnlyList<JavaPeerInfo> allPeers)
+	{
+		// Build mapping: fully-qualified compat Java name → CRC Java name
+		var compatToCrc = new Dictionary<string, string> (allPeers.Count, StringComparer.Ordinal);
+		foreach (var peer in allPeers) {
+			string javaName = JniSignatureHelper.JniNameToJavaName (peer.JavaName);
+			string compatName = JniSignatureHelper.JniNameToJavaName (peer.CompatJniName);
+			if (javaName != compatName) {
+				compatToCrc [compatName] = javaName;
+			}
+		}
+
+		if (compatToCrc.Count == 0) {
+			return;
+		}
+
+		// Rewrite android:name attributes throughout the manifest. Android allows
+		// android:name to be specified as:
+		//   - fully qualified ("com.example.app.MainActivity")
+		//   - relative to the manifest package, starting with '.' (".MainActivity")
+		//   - bare, with no '.' at all ("MainActivity"), also relative to the package
+		// Resolve to the fully-qualified form before the lookup, then write the CRC
+		// name back so duplicate detection later in the pipeline works correctly.
+		var packageName = (string?) manifest.Attribute ("package") ?? "";
+
+		foreach (var element in manifest.DescendantsAndSelf ()) {
+			if (!IsComponentElement (element)) {
+				continue;
+			}
+
+			var nameAttr = element.Attribute (AttName);
+			if (nameAttr is null) {
+				continue;
+			}
+			var resolved = ManifestNameResolver.Resolve (nameAttr.Value, packageName);
+			if (compatToCrc.TryGetValue (resolved, out var crcName)) {
+				nameAttr.Value = crcName;
+			}
+		}
+	}
+
+	static bool IsComponentElement (XElement element)
+	{
+		return element.Name.NamespaceName.Length == 0 && ComponentElementNames.Contains (element.Name.LocalName);
 	}
 
 	void EnsureManifestAttributes (XElement manifest)

@@ -145,10 +145,7 @@ namespace Xamarin.Android.Tasks
 			public string ManagedTypeName;
 
 			[NativeAssembler (Ignore = true)]
-			public uint JavaNameHash32;
-
-			[NativeAssembler (Ignore = true)]
-			public ulong JavaNameHash64;
+			public ulong JavaNameHash;
 
 			public uint module_index;
 
@@ -174,19 +171,11 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		sealed class JavaNameHash32Comparer : IComparer<StructureInstance<TypeMapJava>>
+		sealed class JavaNameHashComparer : IComparer<StructureInstance<TypeMapJava>>
 		{
 			public int Compare (StructureInstance<TypeMapJava> a, StructureInstance<TypeMapJava> b)
 			{
-				return a.Instance.JavaNameHash32.CompareTo (b.Instance.JavaNameHash32);
-			}
-		}
-
-		sealed class JavaNameHash64Comparer : IComparer<StructureInstance<TypeMapJava>>
-		{
-			public int Compare (StructureInstance<TypeMapJava> a, StructureInstance<TypeMapJava> b)
-			{
-				return a.Instance.JavaNameHash64.CompareTo (b.Instance.JavaNameHash64);
+				return a.Instance.JavaNameHash.CompareTo (b.Instance.JavaNameHash);
 			}
 		}
 
@@ -207,8 +196,7 @@ namespace Xamarin.Android.Tasks
 		StructureInfo typeMapJavaStructureInfo;
 		StructureInfo typeMapModuleStructureInfo;
 		StructureInfo typeMapModuleEntryStructureInfo;
-		JavaNameHash32Comparer javaNameHash32Comparer;
-		JavaNameHash64Comparer javaNameHash64Comparer;
+		JavaNameHashComparer javaNameHashComparer;
 
 #pragma warning disable CS0414 // Field is assigned but its value is never used - might be used for debugging or future functionality
 		ulong moduleCounter = 0;
@@ -218,8 +206,7 @@ namespace Xamarin.Android.Tasks
 			: base (log)
 		{
 			this.mappingData = mappingData ?? throw new ArgumentNullException (nameof (mappingData));
-			javaNameHash32Comparer = new JavaNameHash32Comparer ();
-			javaNameHash64Comparer = new JavaNameHash64Comparer ();
+			javaNameHashComparer = new JavaNameHashComparer ();
 
 			// Unfortunate, but we have to fix this up before proceeding
 			foreach (TypeMapGenerator.ModuleReleaseData module in mappingData.Modules) {
@@ -245,7 +232,6 @@ namespace Xamarin.Android.Tasks
 			cs.JavaTypesByName = new Dictionary<string, TypeMapJava> (StringComparer.Ordinal);
 			InitJavaMap (cs);
 			InitMapModules (cs);
-			HashJavaNames (cs);
 			PrepareModules (cs);
 
 			module.AddGlobalVariable ("managed_to_java_map_module_count", mappingData.MapModuleCount);
@@ -301,7 +287,6 @@ namespace Xamarin.Android.Tasks
 		{
 			ConstructionState cs = EnsureConstructionState (callerState);
 			LlvmIrGlobalVariable gv = EnsureGlobalVariable (variable);
-			IComparer<StructureInstance<TypeMapJava>> hashComparer = target.Is64Bit ? javaNameHash64Comparer : javaNameHash32Comparer;
 
 			var array = (LlvmIrSectionedArray<StructureInstance<TypeMapModuleEntry>>)variable.Value;
 			foreach (LlvmIrArraySection<StructureInstance<TypeMapModuleEntry>> section in array.Sections) {
@@ -323,7 +308,7 @@ namespace Xamarin.Android.Tasks
 			uint GetJavaEntryIndex (TypeMapJava javaEntry)
 			{
 				var key = new StructureInstance<TypeMapJava> (typeMapJavaStructureInfo, javaEntry);
-				int idx = cs.JavaMap.BinarySearch (key, hashComparer);
+				int idx = cs.JavaMap.BinarySearch (key, javaNameHashComparer);
 				if (idx < 0) {
 					throw new InvalidOperationException ($"Could not map entry '{javaEntry.JavaName}' to array index");
 				}
@@ -346,24 +331,28 @@ namespace Xamarin.Android.Tasks
 		{
 			ConstructionState cs = EnsureConstructionState (callerState);
 			LlvmIrGlobalVariable gv = EnsureGlobalVariable (variable);
+
+			for (int i = 0; i < cs.JavaMap.Count; i++) {
+				TypeMapJava entry = cs.JavaMap[i].Instance;
+				entry.JavaNameHash = TypeMapHelper.HashJavaNameForCLR (entry.JavaName, target.Is64Bit);
+			}
+
+			cs.JavaMap.Sort ((StructureInstance<TypeMapJava> a, StructureInstance<TypeMapJava> b) => a.Instance.JavaNameHash.CompareTo (b.Instance.JavaNameHash));
+
 			Type listType;
 			IList hashes;
 			if (target.Is64Bit) {
 				listType = typeof(List<ulong>);
-				cs.JavaMap.Sort ((StructureInstance<TypeMapJava> a, StructureInstance<TypeMapJava> b) => a.Instance.JavaNameHash64.CompareTo (b.Instance.JavaNameHash64));
-
 				var list = new List<ulong> ();
 				foreach (StructureInstance<TypeMapJava> si in cs.JavaMap) {
-					list.Add (si.Instance.JavaNameHash64);
+					list.Add (si.Instance.JavaNameHash);
 				}
 				hashes = list;
 			} else {
 				listType = typeof(List<uint>);
-				cs.JavaMap.Sort ((StructureInstance<TypeMapJava> a, StructureInstance<TypeMapJava> b) => a.Instance.JavaNameHash32.CompareTo (b.Instance.JavaNameHash32));
-
 				var list = new List<uint> ();
 				foreach (StructureInstance<TypeMapJava> si in cs.JavaMap) {
-					list.Add (si.Instance.JavaNameHash32);
+					list.Add ((uint)si.Instance.JavaNameHash);
 				}
 				hashes = list;
 			}
@@ -508,24 +497,5 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		void HashJavaNames (ConstructionState cs)
-		{
-			// We generate both 32-bit and 64-bit hashes at the construction time.  Which set will be used depends on the target.
-			// Java map list will also be sorted when the target is known
-			var hashes32 = new HashSet<uint> ();
-			var hashes64 = new HashSet<ulong> ();
-
-			// Generate Java type name hashes...
-			for (int i = 0; i < cs.JavaMap.Count; i++) {
-				TypeMapJava entry = cs.JavaMap[i].Instance;
-
-				// The cast is safe, xxHash will return a 32-bit value which (for convenience) was upcast to 64-bit
-				entry.JavaNameHash32 = (uint)TypeMapHelper.HashJavaNameForCLR (entry.JavaName, is64Bit: false);
-				hashes32.Add (entry.JavaNameHash32);
-
-				entry.JavaNameHash64 = TypeMapHelper.HashJavaNameForCLR (entry.JavaName, is64Bit: true);
-				hashes64.Add (entry.JavaNameHash64);
-			}
-		}
 	}
 }

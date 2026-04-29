@@ -29,7 +29,7 @@
       "Size": 2396
     },
     "lib/arm64-v8a/libUnnamedProject.so": {
-      "Size": 22749272
+      "Size": 21522936
     },
     "META-INF/androidx.activity_activity.version": {
       "Size": 6
@@ -2252,5 +2252,5 @@
       "Size": 812848
     }
   },
-  "PackageSize": 12808265
+  "PackageSize": 12505161
 }

@@ -21,7 +21,7 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
     when $(MonoAOTCompilerTasksAssemblyPath) is blank:
     https://github.com/dotnet/runtime/blob/69711860262e44458bbe276393ea3eb9f7a2192a/src/mono/nuget/Microsoft.NET.Workload.Mono.Toolchain.Manifest/WorkloadManifest.targets.in#L20-L25
   -->
-  <ImportGroup Condition=" '$(MonoAOTCompilerTasksAssemblyPath)' == '' and '$(AotAssemblies)' == 'true' ">
+  <ImportGroup Condition=" '$(MonoAOTCompilerTasksAssemblyPath)' == '' and '$(AotAssemblies)' == 'true' and '$(_AndroidRuntime)' == 'MonoVM' ">
     <Import Project="Sdk.props" Sdk="Microsoft.NET.Runtime.MonoAOTCompiler.Task" />
     <Import Project="Sdk.props" Sdk="Microsoft.NETCore.App.Runtime.AOT.Cross.android-x86" />
     <Import Project="Sdk.props" Sdk="Microsoft.NETCore.App.Runtime.AOT.Cross.android-x64" />
@@ -39,7 +39,7 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
   </Target>
 
   <Target Name="_AndroidAot"
-      Condition=" '$(AotAssemblies)' == 'true' and '$(RuntimeIdentifier)' != '' "
+      Condition=" '$(AotAssemblies)' == 'true' and '$(RuntimeIdentifier)' != '' and '$(_AndroidRuntime)' == 'MonoVM' "
       DependsOnTargets="_CreatePropertiesCache;_AndroidAotInputs;_AndroidAotCompilation">
     <ReadLinesFromFile File="$(_AndroidStampDirectory)_AndroidAot.stamp">
       <Output TaskParameter="Lines" ItemName="_AotCompiledAssemblies" />

@@ -185,7 +185,7 @@ public class JavaSourceTest {
 			aarEntry.Extract (aarStream);
 			aarStream.Seek (0, SeekOrigin.Begin);
 
-			// Look for libs/29CAF121D5FD8E3D.jar, libs/A1AFA985571E728E.jar
+			// Look for 2 .jar files under libs/
 			using var aar = ZipArchive.Open (aarStream);
 			int count = aar.Count (e =>
 				e.FullName.StartsWith ("libs/", StringComparison.OrdinalIgnoreCase) &&

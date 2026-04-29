@@ -581,46 +581,11 @@ Android `Android.App.Fragment` type.
 
 ## AndroidGenerateJniMarshalMethods
 
-A bool property that
-enables generating of JNI marshal methods as part of the build
-process. This greatly reduces the `System.Reflection` usage in the
-binding helper code.
-
-The default value is `False`.  If developers wish to use
-the new JNI marshal methods feature, they can set
-
-```xml
-<AndroidGenerateJniMarshalMethods>True</AndroidGenerateJniMarshalMethods>
-```
-
-in their `.csproj`. Alternatively provide the property on the command
-line via
-
-```shell
--p:AndroidGenerateJniMarshalMethods=True
-```
-
-**Experimental**.  The default value is `False`.
+This experimental feature was removed in .NET 11. Setting the property has no effect.
 
 ## AndroidGenerateJniMarshalMethodsAdditionalArguments
 
-A string property that can be used to add parameters to
-the `jnimarshalmethod-gen.exe` invocation, and is useful for
-debugging, so that options such as `-v`, `-d`, or `--keeptemp` can
-be used.
-
-Default value is empty string. It can be set in the `.csproj` file or
-on the command line. For example:
-
-```xml
-<AndroidGenerateJniMarshalMethodsAdditionalArguments>-v -d --keeptemp</AndroidGenerateJniMarshalMethodsAdditionalArguments>
-```
-
-or:
-
-```shell
--p:AndroidGenerateJniMarshalMethodsAdditionalArguments="-v -d --keeptemp"
-```
+This experimental feature was removed in .NET 11. Setting the property has no effect.
 
 ## AndroidGenerateLayoutBindings
 
@@ -765,6 +730,18 @@ The default value is `true` for command line builds. When set to `true`, enables
 installation of the Java SDK when running the `<InstallAndroidDependencies/>` target.
 
 Support for this property was added in .NET 9.
+
+## AndroidInstrumentation
+
+A string property that specifies the Android
+[instrumentation](https://developer.android.com/reference/android/app/Instrumentation)
+runner class name to use when launching the application via `dotnet run`.
+
+When [`$(EnableMSTestRunner)`](#enablemstestrunner) is `true` and this property
+is not set, the instrumentation runner class name is automatically resolved from
+the generated `AndroidManifest.xml` in the intermediate output.
+
+Introduced in .NET 11.
 
 ## AndroidJavadocVerbosity
 
@@ -1668,6 +1645,18 @@ This property is `False` by default.
 
 This property is ignored unless the
 [`$(AotAssemblies)`](#aotassemblies) MSBuild property is `True`.
+
+## EnableMSTestRunner
+
+A boolean property that enables the
+[MSTest runner](https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-running-tests)
+for Android test projects. When set to `true`, `dotnet run` will launch the
+application via `am instrument` instead of `am start`, allowing test results
+to be reported through Android's instrumentation protocol.
+
+This property is `False` by default.
+
+Introduced in .NET 11.
 
 ## EnableProguard
 

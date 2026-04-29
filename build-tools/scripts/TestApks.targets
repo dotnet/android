@@ -274,6 +274,8 @@
     <PropertyGroup>
       <_IncludeCategories Condition=" '$(IncludeCategories)' != '' ">include=$(IncludeCategories)</_IncludeCategories>
       <_ExcludeCategories Condition=" '$(ExcludeCategories)' != '' ">exclude=$(ExcludeCategories)</_ExcludeCategories>
+      <_DryRunTests Condition=" '$(DryRunTests)' == 'true' ">dryrun=true</_DryRunTests>
+      <_NoTestExclusions Condition=" '$(NoTestExclusions)' == 'true' ">noexclusions=true</_NoTestExclusions>
       <PlotDataLabelSuffix Condition=" '$(PlotDataLabelSuffix)' == '' ">$(TestsFlavor)</PlotDataLabelSuffix>
     </PropertyGroup>
     <RunInstrumentationTests
@@ -287,7 +289,7 @@
         Component="%(TestApkInstrumentation.Package)/%(TestApkInstrumentation.Identity)"
         NUnit2TestResultsFile="%(TestApkInstrumentation.ResultsPath)"
         LogcatFilename="$(_LogcatFilenameBase)-%(TestApkInstrumentation.Package)%(TestApkInstrumentation.LogcatFilenameDistincion).txt"
-        InstrumentationArguments="$(_IncludeCategories);$(_ExcludeCategories)"
+        InstrumentationArguments="$(_IncludeCategories);$(_ExcludeCategories);$(_DryRunTests);$(_NoTestExclusions)"
         TestFixture="$(TestFixture)"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"

@@ -73,6 +73,18 @@ _monodroid_gref_get ()
 	return osBridge.get_gc_gref_count ();
 }
 
+int
+_monodroid_gref_inc ()
+{
+	return osBridge._monodroid_gref_inc ();
+}
+
+int
+_monodroid_gref_dec ()
+{
+	return osBridge._monodroid_gref_dec ();
+}
+
 
 void
 _monodroid_gref_log (const char *message)
@@ -96,6 +108,18 @@ int
 _monodroid_weak_gref_get ()
 {
 	return osBridge.get_gc_weak_gref_count ();
+}
+
+int
+_monodroid_weak_gref_inc ()
+{
+	return osBridge._monodroid_weak_gref_inc ();
+}
+
+int
+_monodroid_weak_gref_dec ()
+{
+	return osBridge._monodroid_weak_gref_dec ();
 }
 
 void
@@ -264,5 +288,4 @@ _monodroid_lookup_replacement_method_info (const char *jniSourceType, const char
 {
 	return JniRemapping::lookup_replacement_method_info (jniSourceType, jniMethodName, jniMethodSignature);
 }
-
 

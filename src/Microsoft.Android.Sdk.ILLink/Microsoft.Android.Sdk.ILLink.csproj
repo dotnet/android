@@ -38,6 +38,10 @@
       <Link>..\PreserveLists\%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="$(MSBuildThisFileDirectory)..\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\PreserveLists\*.xml">
+      <Link>..\PreserveLists\%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>

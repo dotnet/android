@@ -11,6 +11,7 @@ static class RuntimeFeature
 	const bool IsAssignableFromCheckEnabledByDefault = true;
 	const bool StartupHookSupportEnabledByDefault = true;
 	const bool TrimmableTypeMapEnabledByDefault = false;
+	const bool ObjectReferenceLoggingEnabledByDefault = false;
 
 	const string FeatureSwitchPrefix = "Microsoft.Android.Runtime.RuntimeFeature.";
 	const string StartupHookProviderSwitch = "System.StartupHookProvider.IsSupported";
@@ -39,4 +40,8 @@ static class RuntimeFeature
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (TrimmableTypeMap)}")]
 	internal static bool TrimmableTypeMap { get; } =
 		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (TrimmableTypeMap)}", out bool isEnabled) ? isEnabled : TrimmableTypeMapEnabledByDefault;
+
+	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (ObjectReferenceLogging)}")]
+	internal static bool ObjectReferenceLogging { get; } =
+		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (ObjectReferenceLogging)}", out bool isEnabled) ? isEnabled : ObjectReferenceLoggingEnabledByDefault;
 }

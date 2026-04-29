@@ -306,6 +306,10 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <value>Yorumlayıcı devre dışı bırakılıyor. Yorumlayıcıyı ve AOT'yi aynı anda kullanma desteklenmemektdir. Yorumlayıcıyı Hata Ayıklama yapılandırmalarında ve Yayınlama için AOT yapılandırmalarında yeniden yükleme desteği için kullanın.</value>
     <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
   </data>
+  <data name="XA0119_ReadyToRun" xml:space="preserve">
+    <value>Hızlı dağıtım ile ReadyToRun'ın aynı anda kullanılması önerilmez. Hızlı dağıtımı Hata ayıklama yapılandırmaları için ve ReadyToRun'ı da Yayın yapılandırmaları için kullanın.</value>
+    <comment>The following are literal names and should not be translated: ReadyToRun, Debug, Release.</comment>
+  </data>
   <data name="XA0121" xml:space="preserve">
     <value>'{0}' bütünleştirilmiş kodu artık desteklenmeyen '[assembly: {1}]' kullanıyor. Bu NuGet paketinin daha yeni bir sürümünü kullanın veya bu durumu kitaplık yazarına bildirin.</value>
     <comment>The following are literal names and should not be translated: [assembly: {1}], NuGet
@@ -1007,6 +1011,13 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
     <comment>The following are literal names and should not be translated: .NET.
 {0} - The MSBuild property that has the incorrect value.
 {1} - The current value of the property
+</comment>
+  </data>
+  <data name="XA1044" xml:space="preserve">
+    <value>'{0}' MSBuild özelliği {1} çalışma zamanıyla uyumlu değil ve yoksayılacak. Özelliği kaldırın veya şu koşulla koruyun: Condition="'$(UseMonoRuntime)' == 'true'"</value>
+    <comment>The following are literal names and should not be translated: MSBuild, UseMonoRuntime.
+{0} - The MSBuild property name (e.g. RunAOTCompilation, EnableLLVM).
+{1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
 </comment>
   </data>
   <data name="XA4241" xml:space="preserve">

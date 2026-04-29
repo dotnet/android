@@ -20,8 +20,12 @@ namespace Xamarin.Android.UnitTests.NUnit
 {
 	public class NUnitTestRunner : TestRunner, ITestListener
 	{
+		const string DryRunSkipReason = "Dry run: discovery only.";
+
 		Dictionary<string, object> builderSettings;
 		TestSuiteResult results;
+		readonly Dictionary<string, string> excludedCategories = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase);
+		readonly Dictionary<string, string> excludedTestNames = new Dictionary<string, string> (StringComparer.Ordinal);
 
 		public ITestFilter Filter { get; set; } = TestFilter.Empty;
 		public bool GCAfterEachFixture { get; set; }
@@ -31,6 +35,24 @@ namespace Xamarin.Android.UnitTests.NUnit
 		public NUnitTestRunner (Context context, LogWriter logger, Bundle bundle) : base (context, logger, bundle)
 		{
 			builderSettings = new Dictionary<string, object> (StringComparer.OrdinalIgnoreCase);
+		}
+
+		public void AddExcludedCategory (string category, string reason)
+		{
+			if (String.IsNullOrEmpty (category)) {
+				return;
+			}
+
+			excludedCategories [category] = reason;
+		}
+
+		public void AddExcludedTestName (string testName, string reason)
+		{
+			if (String.IsNullOrEmpty (testName)) {
+				return;
+			}
+
+			excludedTestNames [testName] = reason;
 		}
 
 		public override void Run (IList<TestAssemblyInfo> testAssemblies)
@@ -51,8 +73,14 @@ namespace Xamarin.Android.UnitTests.NUnit
 					OnWarning ($"Failed to load tests from assembly '{assemblyInfo.Assembly}");
 					continue;
 				}
-				if (runner.LoadedTest is NUnitTest tests)
+				if (runner.LoadedTest is NUnitTest tests) {
 					testSuite.Add (tests);
+					ApplyIgnoredExclusions (tests);
+					UpdateDiscoveredTestCounts (tests);
+					if (DryRun) {
+						ApplyDryRunToMatchingTests (tests);
+					}
+				}
 				
 				// Messy API. .Run returns ITestResult which is, in reality, an instance of TestResult since that's
 				// what WorkItem returns and we need an instance of TestResult to add it to TestSuiteResult. So, cast
@@ -72,9 +100,137 @@ namespace Xamarin.Android.UnitTests.NUnit
 				if (testResult == null)
 					throw new InvalidOperationException ($"Unexpected test result type '{result.GetType ()}'");
 				results.AddResult (testResult);
+				UpdateSummaryCounts ();
 			}
 
 			LogFailureSummary ();
+		}
+
+		void UpdateSummaryCounts ()
+		{
+			if (results == null) {
+				return;
+			}
+
+			PassedTests = results.PassCount;
+			FailedTests = results.FailCount;
+			SkippedTests = results.SkipCount;
+			InconclusiveTests = results.InconclusiveCount;
+			ExecutedTests = PassedTests + FailedTests + SkippedTests + InconclusiveTests;
+		}
+
+		void ApplyIgnoredExclusions (NUnitTest test)
+		{
+			if (test.RunState != RunState.Runnable && test.RunState != RunState.Explicit) {
+				return;
+			}
+
+			if (!TryGetSkipReason (test, out string reason)) {
+				if (test is TestSuite suite) {
+					foreach (NUnitTest child in suite.Tests) {
+						ApplyIgnoredExclusions (child);
+					}
+				}
+				return;
+			}
+
+			test.RunState = RunState.Ignored;
+			test.Properties.Set (PropertyNames.SkipReason, reason);
+		}
+
+		void UpdateDiscoveredTestCounts (NUnitTest test)
+		{
+			if (test is TestSuite suite) {
+				foreach (NUnitTest child in suite.Tests) {
+					UpdateDiscoveredTestCounts (child);
+				}
+				return;
+			}
+
+			TotalTests++;
+			if (Filter == null || Filter.IsEmpty || Filter.Pass (test)) {
+				FilteredTests++;
+			}
+		}
+
+		void ApplyDryRunToMatchingTests (NUnitTest test)
+		{
+			if (test is TestSuite suite) {
+				foreach (NUnitTest child in suite.Tests) {
+					ApplyDryRunToMatchingTests (child);
+				}
+				return;
+			}
+
+			if (Filter != null && !Filter.IsEmpty && !Filter.Pass (test)) {
+				return;
+			}
+
+			if (test.RunState == RunState.Runnable || test.RunState == RunState.Explicit) {
+				test.RunState = RunState.Ignored;
+				test.Properties.Set (PropertyNames.SkipReason, DryRunSkipReason);
+			}
+
+			string reason = test.Properties.Get (PropertyNames.SkipReason) as string;
+			if (String.IsNullOrEmpty (reason)) {
+				Logger.OnInfo (LogTag, $"[DRY-RUN] {test.FullName}");
+			} else {
+				Logger.OnInfo (LogTag, $"[DRY-RUN] {test.FullName} [{reason}]");
+			}
+		}
+
+		bool TryGetSkipReason (NUnitTest test, out string reason)
+		{
+			if (TryGetNamedSkipReason (test, out reason)) {
+				return true;
+			}
+
+			return TryGetCategorySkipReason (test, out reason);
+		}
+
+		bool TryGetNamedSkipReason (NUnitTest test, out string reason)
+		{
+			foreach (var kvp in excludedTestNames) {
+				if (TestNameMatches (test.FullName, kvp.Key)) {
+					reason = kvp.Value;
+					return true;
+				}
+			}
+
+			reason = String.Empty;
+			return false;
+		}
+
+		static bool TestNameMatches (string fullName, string excludedName)
+		{
+			if (String.IsNullOrEmpty (fullName) || String.IsNullOrEmpty (excludedName)) {
+				return false;
+			}
+
+			if (fullName == excludedName ||
+				fullName.StartsWith (excludedName + ".", StringComparison.Ordinal) ||
+				fullName.StartsWith (excludedName + "+", StringComparison.Ordinal) ||
+				fullName.Contains ("." + excludedName + ".", StringComparison.Ordinal) ||
+				fullName.Contains ("." + excludedName + "+", StringComparison.Ordinal) ||
+				fullName.Contains (", " + excludedName, StringComparison.Ordinal)) {
+				return true;
+			}
+
+			return false;
+		}
+
+		bool TryGetCategorySkipReason (NUnitTest test, out string reason)
+		{
+			if (test.Properties [PropertyNames.Category] is IList categories) {
+				foreach (object value in categories) {
+					if (value is string category && excludedCategories.TryGetValue (category, out reason)) {
+						return true;
+					}
+				}
+			}
+
+			reason = String.Empty;
+			return false;
 		}
 
 		public bool Pass (ITest test)
@@ -101,10 +257,8 @@ namespace Xamarin.Android.UnitTests.NUnit
 				Action<string, string> log = Logger.OnInfo;
 				StringBuilder failedMessage = null;
 
-				ExecutedTests++;
 				if (result.ResultState.Status == TestStatus.Passed) {
 					Logger.OnInfo (LogTag, $"\t{result.ResultState.ToString ()}");
-					PassedTests++;
 				} else if (result.ResultState.Status == TestStatus.Failed) {
 					Logger.OnError (LogTag, "\t[FAIL]");
 					log = Logger.OnError;
@@ -113,24 +267,12 @@ namespace Xamarin.Android.UnitTests.NUnit
 					if (result.Test.FixtureType != null)
 						failedMessage.Append ($" ({result.Test.FixtureType.Assembly.GetName ().Name})");
 					failedMessage.AppendLine ();
-					FailedTests++;
 				} else {
-					string status;
-					switch (result.ResultState.Status) {
-						case TestStatus.Skipped:
-							SkippedTests++;
-							status = "SKIPPED";
-							break;
-
-						case TestStatus.Inconclusive:
-							InconclusiveTests++;
-							status = "INCONCLUSIVE";
-							break;
-
-						default:
-							status = "UNKNOWN";
-							break;
-					}
+					string status = result.ResultState.Status switch {
+						TestStatus.Skipped => "SKIPPED",
+						TestStatus.Inconclusive => "INCONCLUSIVE",
+						_ => "UNKNOWN",
+					};
 					Logger.OnInfo (LogTag, $"\t[{status}]");
 				}
 

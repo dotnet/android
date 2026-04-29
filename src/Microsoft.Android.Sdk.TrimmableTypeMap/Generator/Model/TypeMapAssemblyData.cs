@@ -36,6 +36,11 @@ sealed class TypeMapAssemblyData
 	public List<TypeMapAssociationData> Associations { get; } = new ();
 
 	/// <summary>
+	/// Alias holder types to emit — one per alias group (≥2 types sharing a JNI name).
+	/// </summary>
+	public List<AliasHolderData> AliasHolders { get; } = new ();
+
+	/// <summary>
 	/// Assembly names that need [IgnoresAccessChecksTo] for cross-assembly n_* calls.
 	/// </summary>
 	public List<string> IgnoresAccessChecksTo { get; } = new ();
@@ -252,7 +257,7 @@ sealed record ActivationCtorData
 
 /// <summary>
 /// One [assembly: TypeMapAssociation(typeof(Source), typeof(AliasProxy))] entry.
-/// Links a managed type to the proxy that holds its alias TypeMap entry.
+/// Links a managed type to the alias holder that owns the alias group.
 /// </summary>
 sealed record TypeMapAssociationData
 {
@@ -262,7 +267,30 @@ sealed record TypeMapAssociationData
 	public required string SourceTypeReference { get; init; }
 
 	/// <summary>
-	/// Assembly-qualified proxy type reference (the alias holder proxy).
+	/// Assembly-qualified proxy type reference (the alias holder).
 	/// </summary>
 	public required string AliasProxyTypeReference { get; init; }
+}
+
+/// <summary>
+/// An alias holder class to generate in the TypeMap assembly.
+/// Extends JavaPeerProxy and implements IJavaPeerAliases.
+/// Emitted when multiple .NET types map to the same JNI name.
+/// </summary>
+sealed class AliasHolderData
+{
+	/// <summary>
+	/// Simple type name, e.g., "Test_AliasTarget_Aliases".
+	/// </summary>
+	public required string TypeName { get; init; }
+
+	/// <summary>
+	/// Namespace for alias holder types.
+	/// </summary>
+	public string Namespace { get; init; } = "_TypeMap.Aliases";
+
+	/// <summary>
+	/// Indexed TypeMap keys, e.g., ["test/AliasTarget[0]", "test/AliasTarget[1]"].
+	/// </summary>
+	public required List<string> AliasKeys { get; init; }
 }

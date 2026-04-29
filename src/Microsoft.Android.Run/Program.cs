@@ -10,14 +10,17 @@ string? adbTarget = null;
 string? package = null;
 string? activity = null;
 string? deviceUserId = null;
+string? instrumentation = null;
 bool verbose = false;
 int? logcatPid = null;
 Process? logcatProcess = null;
 CancellationTokenSource cts = new ();
 string? logcatArgs = null;
+bool isDotnetTestMode = false;
+string? dotnetTestPipe = null;
 
 try {
-	return Run (args);
+	return await RunAsync (args);
 } catch (Exception ex) {
 	Console.Error.WriteLine ($"Error: {ex.Message}");
 	if (verbose)
@@ -25,7 +28,7 @@ try {
 	return 1;
 }
 
-int Run (string[] args)
+async Task<int> RunAsync (string[] args)
 {
 	bool showHelp = false;
 	bool showVersion = false;
@@ -47,11 +50,21 @@ int Run (string[] args)
 			"The Android application {PACKAGE} name (e.g., com.example.myapp). Required.",
 			v => package = v },
 		{ "c|activity=",
-			"The {ACTIVITY} class name to launch. Required.",
+			"The {ACTIVITY} class name to launch. Required unless --instrument is used.",
 			v => activity = v },
 		{ "user=",
 			"The Android device {USER_ID} to launch the activity under (e.g., 10 for a work profile).",
 			v => deviceUserId = v },
+		{ "i|instrument=",
+			"The instrumentation {RUNNER} class name (e.g., com.example.myapp.TestInstrumentation). " +
+			"When specified, runs 'am instrument' instead of 'am start'.",
+			v => instrumentation = v },
+		{ "server=",
+			"The test {SERVER} protocol to use (e.g., 'dotnettestcli'). Used by 'dotnet test'.",
+			v => { if (v == "dotnettestcli") isDotnetTestMode = true; } },
+		{ "dotnet-test-pipe=",
+			"The {PIPE} name for dotnet test communication. Used by 'dotnet test'.",
+			v => dotnetTestPipe = v },
 		{ "v|verbose",
 			"Enable verbose output for debugging.",
 			v => verbose = v != null },
@@ -66,15 +79,17 @@ int Run (string[] args)
 			v => showHelp = v != null },
 	};
 
+	List<string> remaining;
 	try {
-		var remaining = options.Parse (args);
-		if (remaining.Count > 0) {
-			Console.Error.WriteLine ($"Error: Unexpected argument(s): {string.Join (" ", remaining)}");
-			Console.Error.WriteLine ($"Try '{Name} --help' for more information.");
-			return 1;
-		}
+		remaining = options.Parse (args);
 	} catch (OptionException e) {
 		Console.Error.WriteLine ($"Error: {e.Message}");
+		Console.Error.WriteLine ($"Try '{Name} --help' for more information.");
+		return 1;
+	}
+
+	if (remaining.Count > 0 && !isDotnetTestMode) {
+		Console.Error.WriteLine ($"Error: Unexpected argument(s): {string.Join (" ", remaining)}");
 		Console.Error.WriteLine ($"Try '{Name} --help' for more information.");
 		return 1;
 	}
@@ -95,9 +110,9 @@ int Run (string[] args)
 		options.WriteOptionDescriptions (Console.Out);
 		Console.WriteLine ();
 		Console.WriteLine ("Examples:");
-		Console.WriteLine ($"  {Name} -p com.example.myapp");
 		Console.WriteLine ($"  {Name} -p com.example.myapp -c com.example.myapp.MainActivity");
-		Console.WriteLine ($"  {Name} --adb /path/to/adb -p com.example.myapp");
+		Console.WriteLine ($"  {Name} -p com.example.myapp -i com.example.myapp.TestInstrumentation");
+		Console.WriteLine ($"  {Name} --adb /path/to/adb -p com.example.myapp -c com.example.myapp.MainActivity");
 		Console.WriteLine ();
 		Console.WriteLine ("Press Ctrl+C while running to stop the Android application and exit.");
 		return 0;
@@ -109,8 +124,22 @@ int Run (string[] args)
 		return 1;
 	}
 
-	if (string.IsNullOrEmpty (activity)) {
-		Console.Error.WriteLine ("Error: --activity is required.");
+	bool isInstrumentMode = !string.IsNullOrEmpty (instrumentation);
+
+	if (!isInstrumentMode && string.IsNullOrEmpty (activity) && !isDotnetTestMode) {
+		Console.Error.WriteLine ("Error: --activity or --instrument is required.");
+		Console.Error.WriteLine ($"Try '{Name} --help' for more information.");
+		return 1;
+	}
+
+	if (isDotnetTestMode && !isInstrumentMode) {
+		Console.Error.WriteLine ("Error: --instrument is required when using dotnet test mode.");
+		Console.Error.WriteLine ($"Try '{Name} --help' for more information.");
+		return 1;
+	}
+
+	if (isInstrumentMode && !string.IsNullOrEmpty (activity)) {
+		Console.Error.WriteLine ("Error: --activity and --instrument cannot be used together.");
 		Console.Error.WriteLine ($"Try '{Name} --help' for more information.");
 		return 1;
 	}
@@ -129,6 +158,8 @@ int Run (string[] args)
 		return 1;
 	}
 
+	Debug.Assert (adbPath != null, "adbPath should be non-null after validation");
+
 	if (verbose) {
 		Console.WriteLine ($"Using adb: {adbPath}");
 		if (!string.IsNullOrEmpty (adbTarget))
@@ -136,13 +167,23 @@ int Run (string[] args)
 		Console.WriteLine ($"Package: {package}");
 		if (!string.IsNullOrEmpty (activity))
 			Console.WriteLine ($"Activity: {activity}");
+		if (isInstrumentMode)
+			Console.WriteLine ($"Instrumentation runner: {instrumentation}");
+		if (isDotnetTestMode)
+			Console.WriteLine ($"dotnet test mode (pipe: {dotnetTestPipe})");
 	}
 
 	// Set up Ctrl+C handler
 	Console.CancelKeyPress += OnCancelKeyPress;
 
 	try {
-		return RunApp ();
+		if (isDotnetTestMode)
+			return await RunDotnetTestAsync (remaining);
+
+		if (isInstrumentMode)
+			return await RunInstrumentationAsync ();
+
+		return await RunAppAsync ();
 	} finally {
 		Console.CancelKeyPress -= OnCancelKeyPress;
 		cts.Dispose ();
@@ -157,8 +198,8 @@ void OnCancelKeyPress (object? sender, ConsoleCancelEventArgs e)
 
 	cts.Cancel ();
 
-	// Force-stop the app
-	StopApp ();
+	// Force-stop the app (fire-and-forget in cancel handler)
+	_ = StopAppAsync ();
 
 	// Kill logcat process if running
 	try {
@@ -171,14 +212,134 @@ void OnCancelKeyPress (object? sender, ConsoleCancelEventArgs e)
 	}
 }
 
-int RunApp ()
+async Task<int> RunInstrumentationAsync ()
+{
+	// Build the am instrument command
+	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
+	var cmdArgs = $"shell am instrument -w{userArg} {package}/{instrumentation}";
+
+	if (verbose)
+		Console.WriteLine ($"Running instrumentation: adb {cmdArgs}");
+
+	// Run instrumentation with streaming output
+	var psi = AdbHelper.CreateStartInfo (adbPath, adbTarget, cmdArgs);
+	using var instrumentProcess = new Process { StartInfo = psi };
+
+	var locker = new Lock ();
+
+	instrumentProcess.OutputDataReceived += (s, e) => {
+		if (e.Data != null)
+			lock (locker)
+				Console.WriteLine (e.Data);
+	};
+
+	instrumentProcess.ErrorDataReceived += (s, e) => {
+		if (e.Data != null)
+			lock (locker)
+				Console.Error.WriteLine (e.Data);
+	};
+
+	instrumentProcess.Start ();
+	instrumentProcess.BeginOutputReadLine ();
+	instrumentProcess.BeginErrorReadLine ();
+
+	// Also start logcat in the background for additional debug output
+	logcatPid = await GetAppPidAsync ();
+	if (logcatPid != null)
+		StartLogcat ();
+
+	// Wait for instrumentation to complete or Ctrl+C
+	try {
+		try {
+			await instrumentProcess.WaitForExitAsync (cts.Token);
+		} catch (OperationCanceledException) {
+			try { instrumentProcess.Kill (); } catch (Exception ex) {
+				if (verbose)
+					Console.Error.WriteLine ($"Cleanup: {ex.Message}");
+			}
+			return 1;
+		}
+	} finally {
+		// Clean up logcat
+		try {
+			if (logcatProcess != null && !logcatProcess.HasExited) {
+				logcatProcess.Kill ();
+				logcatProcess.WaitForExit (1000);
+			}
+		} catch (Exception ex) {
+			if (verbose)
+				Console.Error.WriteLine ($"Logcat cleanup: {ex.Message}");
+		}
+	}
+
+	// Check exit status
+	if (instrumentProcess.ExitCode != 0) {
+		Console.Error.WriteLine ($"Error: adb instrument exited with code {instrumentProcess.ExitCode}");
+		return 1;
+	}
+
+	return 0;
+}
+
+async Task<int> RunDotnetTestAsync (List<string> mtpArgs)
+{
+	if (verbose)
+		Console.WriteLine ("Running in dotnet test mode...");
+
+	if (string.IsNullOrEmpty (adbPath)) {
+		Console.Error.WriteLine ("Error: adb path must be specified in dotnet test mode.");
+		return 1;
+	}
+
+	if (string.IsNullOrEmpty (instrumentation)) {
+		Console.Error.WriteLine ("Error: Instrumentation must be specified in dotnet test mode.");
+		return 1;
+	}
+
+	if (string.IsNullOrEmpty (dotnetTestPipe)) {
+		Console.Error.WriteLine ("Error: --dotnet-test-pipe must be specified when using --server dotnettestcli.");
+		return 1;
+	}
+
+	if (string.IsNullOrEmpty (package)) {
+		Console.Error.WriteLine ("Error: Package must be specified in dotnet test mode.");
+		return 1;
+	}
+
+	var validatedAdbPath = adbPath;
+	var validatedInstrumentation = instrumentation;
+	var validatedDotnetTestPipe = dotnetTestPipe;
+	var validatedPackage = package;
+
+	// Re-add the MTP protocol args that Mono.Options consumed,
+	// since MTP needs them to set up the test communication channel.
+	mtpArgs.AddRange (["--server", "dotnettestcli", "--dotnet-test-pipe", validatedDotnetTestPipe]);
+
+	var testApplicationBuilder = await Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync (mtpArgs.ToArray ());
+
+	var adapter = new AndroidTestAdapter (
+		validatedAdbPath,
+		adbTarget,
+		validatedPackage,
+		validatedInstrumentation,
+		verbose);
+
+	testApplicationBuilder.RegisterTestFramework (
+		_ => new AndroidTestCapabilities (),
+		(_, _) => adapter);
+
+	using var testApplication = await testApplicationBuilder.BuildAsync ();
+	return await testApplication.RunAsync ();
+}
+
+async Task<int> RunAppAsync ()
 {
 	// 1. Start the app
-	if (!StartApp ())
+	if (!await StartAppAsync ())
 		return 1;
 
 	// 2. Get the PID
-	logcatPid = GetAppPid ();
+	logcatPid = await GetAppPidAsync ();
 	if (logcatPid == null) {
 		Console.Error.WriteLine ("Error: App started but could not retrieve PID. The app may have crashed.");
 		return 1;
@@ -191,16 +352,16 @@ int RunApp ()
 	StartLogcat ();
 
 	// 4. Wait for app to exit or Ctrl+C
-	WaitForAppExit ();
+	await WaitForAppExitAsync ();
 
 	return 0;
 }
 
-bool StartApp ()
+async Task<bool> StartAppAsync ()
 {
 	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
 	var cmdArgs = $"shell am start -S -W{userArg} -n \"{package}/{activity}\"";
-	var (exitCode, output, error) = RunAdb (cmdArgs);
+	var (exitCode, output, error) = await AdbHelper.RunAsync (adbPath, adbTarget, cmdArgs, cts.Token, verbose);
 	if (exitCode != 0) {
 		Console.Error.WriteLine ($"Error: Failed to start app: {error}");
 		return false;
@@ -212,10 +373,10 @@ bool StartApp ()
 	return true;
 }
 
-int? GetAppPid ()
+async Task<int?> GetAppPidAsync ()
 {
 	var cmdArgs = $"shell pidof {package}";
-	var (exitCode, output, error) = RunAdb (cmdArgs);
+	var (exitCode, output, error) = await AdbHelper.RunAsync (adbPath, adbTarget, cmdArgs, cts.Token, verbose);
 	if (exitCode != 0 || string.IsNullOrWhiteSpace (output))
 		return null;
 
@@ -235,20 +396,12 @@ void StartLogcat ()
 	if (!string.IsNullOrEmpty (logcatArgs))
 		logcatArguments += $" {logcatArgs}";
 
-	var fullArguments = string.IsNullOrEmpty (adbTarget) ? logcatArguments : $"{adbTarget} {logcatArguments}";
+	var psi = AdbHelper.CreateStartInfo (adbPath, adbTarget, logcatArguments);
 
 	if (verbose)
-		Console.WriteLine ($"Running: adb {fullArguments}");
+		Console.WriteLine ($"Running: adb {psi.Arguments}");
 
 	var locker = new Lock();
-	var psi = new ProcessStartInfo {
-		FileName = adbPath,
-		Arguments = fullArguments,
-		UseShellExecute = false,
-		RedirectStandardOutput = true,
-		RedirectStandardError = true,
-		CreateNoWindow = true,
-	};
 
 	logcatProcess = new Process { StartInfo = psi };
 
@@ -269,11 +422,11 @@ void StartLogcat ()
 	logcatProcess.BeginErrorReadLine ();
 }
 
-void WaitForAppExit ()
+async Task WaitForAppExitAsync ()
 {
 	while (!cts!.Token.IsCancellationRequested) {
 		// Check if app is still running
-		var pid = GetAppPid ();
+		var pid = await GetAppPidAsync ();
 		if (pid == null || pid != logcatPid) {
 			if (verbose)
 				Console.WriteLine ("App has exited.");
@@ -287,7 +440,7 @@ void WaitForAppExit ()
 			break;
 		}
 
-		Thread.Sleep (1000);
+		await Task.Delay (1000, cts.Token).ConfigureAwait (ConfigureAwaitOptions.SuppressThrowing);
 	}
 
 	// Clean up logcat process
@@ -302,13 +455,13 @@ void WaitForAppExit ()
 	}
 }
 
-void StopApp ()
+async Task StopAppAsync ()
 {
 	if (string.IsNullOrEmpty (package) || string.IsNullOrEmpty (adbPath))
 		return;
 
 	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
-	RunAdb ($"shell am force-stop{userArg} {package}");
+	await AdbHelper.RunAsync (adbPath, adbTarget, $"shell am force-stop{userArg} {package}", CancellationToken.None, verbose);
 }
 
 string? FindAdbPath ()
@@ -330,35 +483,6 @@ string? FindAdbPath ()
 	}
 
 	return null;
-}
-
-(int ExitCode, string Output, string Error) RunAdb (string arguments)
-{
-	var fullArguments = string.IsNullOrEmpty (adbTarget) ? arguments : $"{adbTarget} {arguments}";
-
-	if (verbose)
-		Console.WriteLine ($"Running: adb {fullArguments}");
-
-	var psi = new ProcessStartInfo {
-		FileName = adbPath,
-		Arguments = fullArguments,
-		UseShellExecute = false,
-		RedirectStandardOutput = true,
-		RedirectStandardError = true,
-		CreateNoWindow = true,
-	};
-
-	using var process = Process.Start (psi);
-	if (process == null)
-		return (-1, "", "Failed to start process");
-
-	// Read both streams asynchronously to avoid potential deadlock
-	var outputTask = process.StandardOutput.ReadToEndAsync ();
-	var errorTask = process.StandardError.ReadToEndAsync ();
-
-	process.WaitForExit ();
-
-	return (process.ExitCode, outputTask.Result, errorTask.Result);
 }
 
 (string? Version, string? Commit) GetVersionInfo ()
