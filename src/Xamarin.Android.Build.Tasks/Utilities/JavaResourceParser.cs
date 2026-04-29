@@ -12,6 +12,42 @@ namespace Xamarin.Android.Tasks
 {
 	class JavaResourceParser : ResourceParser
 	{
+		public CodeTypeDeclaration Parse (string file, bool isApp, Dictionary<string, string> resourceMap)
+		{
+			if (!File.Exists (file))
+				throw new InvalidOperationException ("Specified Java resource file was not found: " + file);
+
+			CodeTypeDeclaration? resources = null;
+
+			using (var reader = File.OpenText (file)) {
+				string line;
+
+				while ((line = reader.ReadLine ()) != null) {
+					var info = Parser.Select (p => new { Match = p.Key.Match (line), Handler = p.Value }).FirstOrDefault (x => x.Match.Success);
+
+					if (info == null)
+						continue;
+
+					resources = info.Handler (info.Match, isApp, resources, resourceMap);
+				}
+			}
+
+			return resources ?? new CodeTypeDeclaration ("Resource") { IsPartial = true };
+		}
+
+		static KeyValuePair<Regex, Func<Match, bool, CodeTypeDeclaration?, Dictionary<string, string>, CodeTypeDeclaration>> Parse (string regex, Func<Match, bool, CodeTypeDeclaration?, Dictionary<string, string>, CodeTypeDeclaration> f)
+		{
+			return new KeyValuePair<Regex, Func<Match, bool, CodeTypeDeclaration?, Dictionary<string, string>, CodeTypeDeclaration>> (new Regex (regex), f);
+		}
+
+		// public finall class R {
+		//	 public static fnal class string|anim|styleable|etc. {
+		//     public static final int field = 0xZZ;
+		//     public static final int [] array = {
+		//       0xXX, 0xYY, 0xZZ
+		//     }
+		//   }
+		// }
 		List<KeyValuePair<Regex, Func<Match, bool, CodeTypeDeclaration?, Dictionary<string, string>, CodeTypeDeclaration>>> Parser;
 
 		public JavaResourceParser (TaskLoggingHelper log) : base (log)
@@ -87,34 +123,6 @@ namespace Xamarin.Android.Tasks
 						return g;
 					}),
 		};
-		}
-
-		public CodeTypeDeclaration Parse (string file, bool isApp, Dictionary<string, string> resourceMap)
-		{
-			if (!File.Exists (file))
-				throw new InvalidOperationException ("Specified Java resource file was not found: " + file);
-
-			CodeTypeDeclaration? resources = null;
-
-			using (var reader = File.OpenText (file)) {
-				string line;
-
-				while ((line = reader.ReadLine ()) != null) {
-					var info = Parser.Select (p => new { Match = p.Key.Match (line), Handler = p.Value }).FirstOrDefault (x => x.Match.Success);
-
-					if (info == null)
-						continue;
-
-					resources = info.Handler (info.Match, isApp, resources, resourceMap);
-				}
-			}
-
-			return resources ?? new CodeTypeDeclaration ("Resource") { IsPartial = true };
-		}
-
-		static KeyValuePair<Regex, Func<Match, bool, CodeTypeDeclaration?, Dictionary<string, string>, CodeTypeDeclaration>> Parse (string regex, Func<Match, bool, CodeTypeDeclaration?, Dictionary<string, string>, CodeTypeDeclaration> f)
-		{
-			return new KeyValuePair<Regex, Func<Match, bool, CodeTypeDeclaration?, Dictionary<string, string>, CodeTypeDeclaration>> (new Regex (regex), f);
 		}
 	}
 }
