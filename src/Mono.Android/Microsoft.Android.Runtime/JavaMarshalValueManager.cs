@@ -514,9 +514,19 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 
 		if (RuntimeFeature.TrimmableTypeMap) {
 			try {
+				// Map universal request types to concrete peers before proxy lookup.
+				var resolvedTargetType = ResolvePeerType (targetType);
+
 				var typeMap = TrimmableTypeMap.Instance;
-				var proxy = typeMap.GetProxyForJavaObject (reference.Handle, targetType);
-				var peer = proxy?.CreateInstance (reference.Handle, JniHandleOwnership.DoNotTransfer);
+				var proxy = typeMap.GetProxyForJavaObject (reference.Handle, resolvedTargetType);
+
+				// Open-generic proxies cannot instantiate closed targets.
+				IJavaPeerable? peer;
+				if (ShouldActivateClosedGenericTarget (proxy, resolvedTargetType)) {
+					peer = ActivateUsingReflection (resolvedTargetType, reference.Handle, JniHandleOwnership.DoNotTransfer);
+				} else {
+					peer = proxy?.CreateInstance (reference.Handle, JniHandleOwnership.DoNotTransfer);
+				}
 				if (peer is not null) {
 					var peerState = peer.JniManagedPeerState | JniManagedPeerStates.Replaceable;
 					if (global::Java.Interop.Runtime.IsGCUserPeer (peer.PeerReference.Handle)) {
@@ -526,7 +536,13 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 					return peer;
 				}
 
-				var targetName = targetType?.AssemblyQualifiedName ?? "<null>";
+				// Preserve CreatePeer's bad-cast vs missing-mapping behavior.
+				if (resolvedTargetType is not null &&
+						IsIncompatibleCast (typeMap, ref reference, resolvedTargetType)) {
+					return null;
+				}
+
+				var targetName = resolvedTargetType?.AssemblyQualifiedName ?? "<null>";
 				var javaType = JniEnvironment.Types.GetJniTypeNameFromInstance (reference);
 
 				throw new NotSupportedException (
@@ -539,6 +555,85 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 		}
 
 		return base.CreatePeer (ref reference, transfer, targetType);
+	}
+
+	[return: DynamicallyAccessedMembers (Constructors)]
+	static Type? ResolvePeerType ([DynamicallyAccessedMembers (Constructors)] Type? type)
+	{
+		if (type is null) {
+			return null;
+		}
+		if (type == typeof (object) || type == typeof (IJavaPeerable)) {
+			return typeof (global::Java.Interop.JavaObject);
+		}
+		if (type == typeof (Exception)) {
+			return typeof (JavaException);
+		}
+		return type;
+	}
+
+	static bool ShouldActivateClosedGenericTarget (
+			[NotNullWhen (true)] JavaPeerProxy? proxy,
+			[NotNullWhen (true)] Type? resolvedTargetType)
+	{
+		return proxy is not null &&
+			proxy.TargetType.IsGenericTypeDefinition &&
+			resolvedTargetType is not null &&
+			resolvedTargetType.IsGenericType &&
+			!resolvedTargetType.IsGenericTypeDefinition;
+	}
+
+	static IJavaPeerable? ActivateUsingReflection (
+			[DynamicallyAccessedMembers (Constructors)]
+			Type closedType,
+			IntPtr handle,
+			JniHandleOwnership transfer)
+	{
+		var ctor = closedType.GetConstructor (ActivationConstructorBindingFlags, null, XAConstructorSignature, null);
+		if (ctor is null) {
+			return null;
+		}
+
+		return (IJavaPeerable) ctor.Invoke ([handle, transfer]);
+	}
+
+	/// <summary>
+	/// Returns true when <paramref name="targetType"/>'s Java class is not assignable from
+	/// <paramref name="reference"/>. Throws when <paramref name="targetType"/> has no usable mapping.
+	/// </summary>
+	static bool IsIncompatibleCast (
+			TrimmableTypeMap typeMap,
+			ref JniObjectReference reference,
+			Type targetType)
+	{
+		if (!typeMap.TryGetJniNameForManagedType (targetType, out var targetJniName)) {
+			throw new ArgumentException (
+				$"Could not determine Java type corresponding to '{targetType.AssemblyQualifiedName}'.",
+				nameof (targetType));
+		}
+
+		var instanceClass = JniEnvironment.Types.GetObjectClass (reference);
+		JniObjectReference targetClass = default;
+		try {
+			try {
+				targetClass = JniEnvironment.Types.FindClass (targetJniName);
+			} catch (Java.Lang.ClassNotFoundException e) {
+				throw new ArgumentException (
+					$"Could not find Java class '{targetJniName}'.",
+					nameof (targetType), e);
+			}
+
+			if (!JniEnvironment.Types.IsAssignableFrom (instanceClass, targetClass)) {
+				// Bad cast: callers translate null to the expected result.
+				return true;
+			}
+		} finally {
+			JniObjectReference.Dispose (ref instanceClass);
+			JniObjectReference.Dispose (ref targetClass);
+		}
+
+		// Compatible classes mean a proxy/activation gap.
+		return false;
 	}
 
 	protected override bool TryConstructPeer (

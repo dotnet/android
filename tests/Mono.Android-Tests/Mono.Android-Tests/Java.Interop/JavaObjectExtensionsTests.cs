@@ -15,7 +15,6 @@ namespace Java.InteropTests {
 	[TestFixture]
 	public class JavaObjectExtensionsTests {
 
-		// TODO: https://github.com/dotnet/android/issues/11170 — cannot create instance of open generic type under trimmable typemap
 		[Test]
 		public void JavaCast_BaseToGenericWrapper ()
 		{
@@ -42,7 +41,6 @@ namespace Java.InteropTests {
 			}
 		}
 
-		// TODO: https://github.com/dotnet/android/issues/11170 — throws NotSupportedException instead of InvalidCastException under trimmable typemap
 		[Test]
 		public void JavaCast_BadInterfaceCast ()
 		{
@@ -69,7 +67,6 @@ namespace Java.InteropTests {
 			Assert.AreSame (list, al);
 		}
 
-		// TODO: https://github.com/dotnet/android/issues/11170 — throws NotSupportedException instead of InvalidCastException under trimmable typemap
 		[Test]
 		public void JavaCast_InvalidTypeCastThrows ()
 		{
@@ -78,7 +75,6 @@ namespace Java.InteropTests {
 			}
 		}
 
-		// TODO: https://github.com/dotnet/android/issues/11170 — throws NotSupportedException instead of InvalidCastException under trimmable typemap
 		[Test]
 		public void JavaCast_CheckForManagedSubclasses ()
 		{

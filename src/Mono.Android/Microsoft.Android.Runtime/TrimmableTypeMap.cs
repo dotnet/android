@@ -238,7 +238,16 @@ public class TrimmableTypeMap
 			var targetClass = default (JniObjectReference);
 			try {
 				objClass = JniEnvironment.Types.GetObjectClass (selfRef);
-				targetClass = JniEnvironment.Types.FindClass (targetJniName);
+				try {
+					targetClass = JniEnvironment.Types.FindClass (targetJniName);
+				} catch (Java.Lang.ClassNotFoundException) {
+					// FindClass throws for managed types whose Java peer class is
+					// not present in the APK (e.g. test types annotated with
+					// [JniTypeSignature("__missing__")]). Treat as "no match" so
+					// JavaMarshalValueManager.CreatePeer can surface the correct
+					// ArgumentException instead of leaking ClassNotFoundException.
+					return null;
+				}
 				var isAssignable = JniEnvironment.Types.IsAssignableFrom (objClass, targetClass);
 				return isAssignable ? proxy : null;
 			} finally {
@@ -273,22 +282,26 @@ public class TrimmableTypeMap
 	/// </remarks>
 	internal static bool TargetTypeMatches (Type targetType, Type proxyTargetType)
 	{
-		if (targetType.IsAssignableFrom (proxyTargetType)) {
+		if (targetType == proxyTargetType) {
 			return true;
 		}
 
-		if (!proxyTargetType.IsGenericTypeDefinition) {
+		// Open generic proxy: match only when targetType is a closed instantiation
+		// of this generic (e.g. JavaList<int> matches the JavaList<> proxy).
+		// IsAssignableFrom alone would incorrectly match unrelated open generics
+		// that are technically subclasses (e.g. JavaArray<> is assignable to
+		// JavaObject), and proxy.CreateInstance for an open generic always throws.
+		if (proxyTargetType.IsGenericTypeDefinition) {
+			for (Type? t = targetType; t is not null; t = t.BaseType) {
+				if (t.IsGenericType && !t.IsGenericTypeDefinition &&
+						t.GetGenericTypeDefinition () == proxyTargetType) {
+					return true;
+				}
+			}
 			return false;
 		}
 
-		for (Type? t = targetType; t is not null; t = t.BaseType) {
-			if (t.IsGenericType && !t.IsGenericTypeDefinition &&
-					t.GetGenericTypeDefinition () == proxyTargetType) {
-				return true;
-			}
-		}
-
-		return false;
+		return targetType.IsAssignableFrom (proxyTargetType);
 	}
 
 	/// <summary>

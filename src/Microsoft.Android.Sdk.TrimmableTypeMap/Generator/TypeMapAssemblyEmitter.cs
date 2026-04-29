@@ -615,7 +615,9 @@ sealed class TypeMapAssemblyEmitter
 				if (jiCtor.IsOnLeafType) {
 					EmitCreateInstanceViaJavaInteropNewobj (targetRef);
 				} else {
-					EmitCreateInstanceInheritedJavaInteropCtor (targetRef, jiCtor);
+					// Legacy GetConstructor() doesn't find inherited ctors —
+					// match that behavior by returning null.
+					EmitCreateInstanceNoActivation ();
 				}
 			}
 			return;
@@ -633,7 +635,9 @@ sealed class TypeMapAssemblyEmitter
 		if (activationCtor.IsOnLeafType) {
 			EmitCreateInstanceViaNewobj (targetTypeRef);
 		} else {
-			EmitCreateInstanceInheritedCtor (targetTypeRef, activationCtor);
+			// Legacy GetConstructor() doesn't find inherited ctors —
+			// match that behavior by returning null.
+			EmitCreateInstanceNoActivation ();
 		}
 	}
 
