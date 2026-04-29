@@ -352,9 +352,14 @@ public class TrimmableTypeMap
 		}
 
 		// Walk array nesting to the leaf; total rank = element depth + 1 (the outer rank we're constructing).
+		// Reject multi-dim arrays (byte[,]) — JNI only supports single-dim zero-based arrays.
 		var leaf = elementType;
 		int elementDepth = 0;
 		while (leaf.IsArray) {
+			if (!leaf.IsSZArray) {
+				arrayType = null;
+				return false;
+			}
 			var next = leaf.GetElementType ();
 			if (next is null) {
 				arrayType = null;
