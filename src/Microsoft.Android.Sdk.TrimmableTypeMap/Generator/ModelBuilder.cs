@@ -16,6 +16,13 @@ static class ModelBuilder
 {
 	const string ProxyTypeSuffix = "_Proxy";
 
+	// Workaround for https://github.com/dotnet/runtime/issues/127004
+	// When true, all TypeMap entries are emitted as 2-arg (unconditional) to avoid the
+	// trimmer bug that strips TypeMapAssociation attributes when a TypeMap attribute
+	// references the same type. Set to false once the runtime bug is fixed to re-enable
+	// 3-arg conditional entries that allow unused framework bindings to be trimmed away.
+	const bool ForceUnconditionalEntries = true;
+
 	static readonly HashSet<string> EssentialRuntimeTypes = new (StringComparer.Ordinal) {
 		"java/lang/Object",
 		"java/lang/Class",
@@ -122,8 +129,15 @@ static class ModelBuilder
 				model.ProxyTypes.Add (proxy);
 			}
 
-			model.Entries.Add (BuildEntry (peer, proxy, assemblyName, jniName));
-			if (proxy != null && peer.IsGenericDefinition) {
+			var entry = BuildEntry (peer, proxy, assemblyName, jniName);
+			model.Entries.Add (entry);
+
+			// Emit a TypeMapAssociation for every entry that has a proxy.
+			// The runtime's _proxyTypeMap (GetOrCreateProxyTypeMapping) is populated from
+			// TypeMapAssociationAttribute — NOT from TypeMapAttribute's 3rd arg.
+			// Without this, the proxy type map is empty and CreatePeer fails for
+			// interface types like IIterator where targetType-based lookup is needed.
+			if (proxy != null) {
 				model.Associations.Add (new TypeMapAssociationData {
 					SourceTypeReference = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName),
 					AliasProxyTypeReference = AssemblyQualify ($"{proxy.Namespace}.{proxy.TypeName}", assemblyName),
@@ -163,10 +177,18 @@ static class ModelBuilder
 		}
 
 		// Base JNI name entry → alias holder (self-referencing trim target, kept alive by associations)
+		// When ForceUnconditionalEntries is true we MUST emit this as 2-arg (unconditional) just
+		// like BuildEntry does: dotnet/runtime#127004 strips the TypeMapAssociation that keeps the
+		// holder alive when a TypeMap entry references the same type, leaving the dictionary key
+		// missing at runtime and breaking hierarchy lookups for essential types like
+		// java/lang/String and java/lang/Object.
+		bool aliasBaseUnconditional = ForceUnconditionalEntries
+			|| EssentialRuntimeTypes.Contains (jniName)
+			|| peersForName.Any (IsUnconditionalEntry);
 		model.Entries.Add (new TypeMapAttributeData {
 			JniName = jniName,
 			ProxyTypeReference = holderRef,
-			TargetTypeReference = holderRef,
+			TargetTypeReference = aliasBaseUnconditional ? null : holderRef,
 		});
 
 		model.AliasHolders.Add (new AliasHolderData {
@@ -353,7 +375,9 @@ static class ModelBuilder
 			proxyRef = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName);
 		}
 
-		bool isUnconditional = IsUnconditionalEntry (peer);
+		// When ForceUnconditionalEntries is true, always emit 2-arg (unconditional) TypeMap
+		// attributes to work around https://github.com/dotnet/runtime/issues/127004.
+		bool isUnconditional = ForceUnconditionalEntries || IsUnconditionalEntry (peer);
 		string? targetRef = null;
 		if (!isUnconditional) {
 			targetRef = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName);

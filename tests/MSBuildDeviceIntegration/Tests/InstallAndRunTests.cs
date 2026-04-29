@@ -254,14 +254,13 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-
-		public void DotNetWatchHotReload ()
+		public void DotNetWatchHotReload ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			const string initialMessage = "DOTNET_WATCH_INITIAL_12345";
 			const string hotReloadMessage = "DOTNET_WATCH_HOT_RELOAD_APPLIED";
 
 			var proj = new XamarinAndroidApplicationProject ();
-			proj.SetRuntime (AndroidRuntime.MonoVM); // MonoVM only for now, until we get: https://github.com/dotnet/sdk/pull/53501
+			proj.SetRuntime (runtime);
 
 			// Enable hot reload log messages from the delta client
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidEnvironment", "env.txt") {

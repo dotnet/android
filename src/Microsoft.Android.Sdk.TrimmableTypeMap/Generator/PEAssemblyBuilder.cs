@@ -313,7 +313,7 @@ sealed class PEAssemblyBuilder
 			attrs, MethodImplAttributes.IL,
 			Metadata.GetOrAddString (name),
 			sigBlobHandle,
-			bodyOffset, default);
+			bodyOffset, MetadataTokens.ParameterHandle (Metadata.GetRowCount (TableIndex.Param) + 1));
 	}
 
 	/// <summary>
@@ -358,7 +358,7 @@ sealed class PEAssemblyBuilder
 			attrs, MethodImplAttributes.IL,
 			Metadata.GetOrAddString (name),
 			sigBlobHandle,
-			bodyOffset, default);
+			bodyOffset, MetadataTokens.ParameterHandle (Metadata.GetRowCount (TableIndex.Param) + 1));
 	}
 
 	/// <summary>

@@ -8,37 +8,37 @@
       "Size": 400044
     },
     "lib/arm64-v8a/libassembly-store.so": {
-      "Size": 3107808
+      "Size": 3099384
     },
     "lib/arm64-v8a/libclrjit.so": {
-      "Size": 3207768
+      "Size": 3223752
     },
     "lib/arm64-v8a/libcoreclr.so": {
-      "Size": 5769760
+      "Size": 5771784
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 1365360
+      "Size": 1366648
     },
     "lib/arm64-v8a/libmscordaccore.so": {
-      "Size": 2485088
+      "Size": 2463848
     },
     "lib/arm64-v8a/libmscordbi.so": {
-      "Size": 1901544
+      "Size": 1899720
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
-      "Size": 71936
+      "Size": 72344
     },
     "lib/arm64-v8a/libSystem.IO.Compression.Native.so": {
-      "Size": 1281696
+      "Size": 1280336
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 108424
+      "Size": 100552
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
-      "Size": 165536
+      "Size": 162000
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 20520
+      "Size": 20744
     },
     "META-INF/BNDLTOOL.RSA": {
       "Size": 1221
@@ -74,5 +74,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 9254682
+  "PackageSize": 9238298
 }

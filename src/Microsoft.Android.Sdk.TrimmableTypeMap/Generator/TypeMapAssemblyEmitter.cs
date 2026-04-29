@@ -75,6 +75,7 @@ sealed class TypeMapAssemblyEmitter
 	TypeReferenceHandle _iJavaPeerableRef;
 	TypeReferenceHandle _jniHandleOwnershipRef;
 	TypeReferenceHandle _jniObjectReferenceRef;
+	TypeReferenceHandle _jniObjectReferenceTypeRef;
 	TypeReferenceHandle _jniObjectReferenceOptionsRef;
 	TypeReferenceHandle _iAndroidCallableWrapperRef;
 	TypeReferenceHandle _jniEnvRef;
@@ -91,7 +92,7 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _notSupportedExceptionCtorRef;
 	MemberReferenceHandle _jniObjectReferenceCtorRef;
 	MemberReferenceHandle _jniEnvDeleteRefRef;
-	MemberReferenceHandle _withinNewObjectScopeRef;
+	MemberReferenceHandle _shouldSkipActivationRef;
 	MemberReferenceHandle _ucoAttrCtorRef;
 	BlobHandle _ucoAttrBlobHandle;
 	MemberReferenceHandle _typeMapAttrCtorRef2Arg;
@@ -206,6 +207,8 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("JNIEnv"));
 		_jniObjectReferenceRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniObjectReference"));
+		_jniObjectReferenceTypeRef = metadata.AddTypeReference (_javaInteropRef,
+			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniObjectReferenceType"));
 		_jniObjectReferenceOptionsRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniObjectReferenceOptions"));
 		_iAndroidCallableWrapperRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
@@ -279,10 +282,16 @@ sealed class TypeMapAssemblyEmitter
 				rt => rt.Void (),
 				p => p.AddParameter ().Type ().String ()));
 
+		// JniObjectReference..ctor(IntPtr handle, JniObjectReferenceType type)
+		// Note: The C# constructor has a default parameter (type = Invalid), but in IL there is only
+		// the 2-parameter overload. We must emit both parameters explicitly.
 		_jniObjectReferenceCtorRef = _pe.AddMemberRef (_jniObjectReferenceRef, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
 				rt => rt.Void (),
-				p => p.AddParameter ().Type ().IntPtr ()));
+				p => {
+					p.AddParameter ().Type ().IntPtr ();
+					p.AddParameter ().Type ().Type (_jniObjectReferenceTypeRef, true);
+				}));
 
 		// JNIEnv.DeleteRef(IntPtr, JniHandleOwnership) — static, internal
 		// Used by JI-style activation to clean up the original handle after constructing the peer.
@@ -295,11 +304,11 @@ sealed class TypeMapAssemblyEmitter
 					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
 				}));
 
-		// JniEnvironment.get_WithinNewObjectScope() -> bool (static property)
-		_withinNewObjectScopeRef = _pe.AddMemberRef (_jniEnvironmentRef, "get_WithinNewObjectScope",
-			sig => sig.MethodSignature ().Parameters (0,
+		// JavaPeerProxy.ShouldSkipActivation(IntPtr) -> bool (static method)
+		_shouldSkipActivationRef = _pe.AddMemberRef (_javaPeerProxyNonGenericRef, "ShouldSkipActivation",
+			sig => sig.MethodSignature ().Parameters (1,
 				rt => rt.Type ().Boolean (),
-				p => { }));
+				p => { p.AddParameter ().Type ().IntPtr (); }));
 
 		// JniNativeMethod..ctor(byte*, byte*, IntPtr)
 		_jniNativeMethodCtorRef = _pe.AddMemberRef (_jniNativeMethodRef, ".ctor",
@@ -691,9 +700,10 @@ sealed class TypeMapAssemblyEmitter
 		EmitCreateInstanceBodyWithLocals (
 			EncodeJniObjectReferenceAndObjectLocals,
 			encoder => {
-				// var jniRef = new JniObjectReference(handle);
+				// var jniRef = new JniObjectReference(handle, JniObjectReferenceType.Invalid);
 				encoder.LoadLocalAddress (0);
 				encoder.OpCode (ILOpCode.Ldarg_1); // handle
+				encoder.LoadConstantI4 (0); // JniObjectReferenceType.Invalid
 				encoder.Call (_jniObjectReferenceCtorRef);
 
 				// var result = new TargetType(ref jniRef, JniObjectReferenceOptions.Copy);
@@ -738,9 +748,10 @@ sealed class TypeMapAssemblyEmitter
 				// dup obj (one copy for the call, one for the return)
 				encoder.OpCode (ILOpCode.Dup);
 
-				// var jniRef = new JniObjectReference(handle);
+				// var jniRef = new JniObjectReference(handle, JniObjectReferenceType.Invalid);
 				encoder.LoadLocalAddress (0);
 				encoder.OpCode (ILOpCode.Ldarg_1); // handle
+				encoder.LoadConstantI4 (0); // JniObjectReferenceType.Invalid
 				encoder.Call (_jniObjectReferenceCtorRef);
 
 				// obj.BaseCtor(ref jniRef, JniObjectReferenceOptions.Copy);
@@ -932,6 +943,7 @@ sealed class TypeMapAssemblyEmitter
 
 					enc.LoadLocalAddress (3); // jniRef
 					enc.LoadArgument (1);     // self
+					enc.LoadConstantI4 (0);   // JniObjectReferenceType.Invalid
 					enc.Call (_jniObjectReferenceCtorRef);
 
 					if (activationCtor.IsOnLeafType) {
@@ -990,7 +1002,7 @@ sealed class TypeMapAssemblyEmitter
 	/// <code>
 	/// if (!JniEnvironment.BeginMarshalMethod(jnienv, out envp, out runtime)) return;
 	/// try {
-	///     if (!JniEnvironment.WithinNewObjectScope) { [emitActivation] }
+	///     if (!JavaPeerProxy.ShouldSkipActivation(self)) { [emitActivation] }
 	/// } catch (Exception e) {
 	///     runtime?.OnUserUnhandledException(ref envp, e);
 	/// } finally {
@@ -1016,9 +1028,10 @@ sealed class TypeMapAssemblyEmitter
 		encoder.Call (_beginMarshalMethodRef);
 		encoder.Branch (ILOpCode.Brfalse, afterAll);
 
-		// TRY — check WithinNewObjectScope, then run activation code.
+		// TRY — check ShouldSkipActivation, then run activation code.
 		encoder.MarkLabel (tryStart);
-		encoder.Call (_withinNewObjectScopeRef);
+		encoder.LoadArgument (1);      // self (IntPtr)
+		encoder.Call (_shouldSkipActivationRef);
 		encoder.Branch (ILOpCode.Brtrue, skipLabel);
 
 		emitActivation (encoder);

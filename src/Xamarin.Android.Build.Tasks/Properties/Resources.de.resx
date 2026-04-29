@@ -307,7 +307,7 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
   </data>
   <data name="XA0119_ReadyToRun" xml:space="preserve">
-    <value>Using fast deployment and ReadyToRun at the same time is not recommended. Use fast deployment for Debug configurations and ReadyToRun for Release configurations.</value>
+    <value>Von der gleichzeitigen Verwendung der schnellen Bereitstellung und ReadyToRun wird abgeraten. Verwenden Sie die schnelle Bereitstellung für Debugkonfigurationen und ReadyToRun für Releasekonfigurationen.</value>
     <comment>The following are literal names and should not be translated: ReadyToRun, Debug, Release.</comment>
   </data>
   <data name="XA0121" xml:space="preserve">

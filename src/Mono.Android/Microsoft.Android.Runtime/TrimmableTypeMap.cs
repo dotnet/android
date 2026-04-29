@@ -61,7 +61,7 @@ public class TrimmableTypeMap
 			throw new ArgumentException ("At least one typemap universe must be provided.", nameof (typeMaps));
 		}
 		if (typeMaps.Length != proxyMaps.Length) {
-			throw new ArgumentException ($"typeMaps.Length ({typeMaps.Length}) must equal proxyMaps.Length ({proxyMaps.Length}).");
+			throw new ArgumentException ($"typeMaps.Length ({typeMaps.Length}) must equal proxyMaps.Length ({proxyMaps.Length}).", nameof (proxyMaps));
 		}
 		var universes = new SingleUniverseTypeMap [typeMaps.Length];
 		for (int i = 0; i < typeMaps.Length; i++) {
@@ -239,7 +239,8 @@ public class TrimmableTypeMap
 			try {
 				objClass = JniEnvironment.Types.GetObjectClass (selfRef);
 				targetClass = JniEnvironment.Types.FindClass (targetJniName);
-				return JniEnvironment.Types.IsAssignableFrom (objClass, targetClass) ? proxy : null;
+				var isAssignable = JniEnvironment.Types.IsAssignableFrom (objClass, targetClass);
+				return isAssignable ? proxy : null;
 			} finally {
 				JniObjectReference.Dispose (ref objClass);
 				JniObjectReference.Dispose (ref targetClass);
