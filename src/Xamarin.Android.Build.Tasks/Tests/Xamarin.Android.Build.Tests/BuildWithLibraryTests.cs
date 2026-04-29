@@ -9,7 +9,6 @@ using Microsoft.Android.Build.Tasks;
 using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
-using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -912,7 +911,7 @@ namespace Xamarin.Android.Build.Tests
 		public void MultiTfmTransitiveReference ()
 		{
 			var path = Path.Combine ("temp", TestName);
-			var dotnetVersion = XABuildConfig.LatestDotNetTargetFramework;
+			var dotnetVersion = "net10.0";
 
 			// 1. Multi-TFM library (net10.0 + net10.0-android) with a BroadcastReceiver
 			var multiTfmLib = new DotNetStandard {
