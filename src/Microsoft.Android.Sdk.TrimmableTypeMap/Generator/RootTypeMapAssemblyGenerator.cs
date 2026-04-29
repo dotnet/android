@@ -375,9 +375,9 @@ public sealed class RootTypeMapAssemblyGenerator
 	}
 
 	/// <summary>
-	/// Shared-universe + arrays IL emission. Builds a single merged main typemap (anchored on
-	/// <c>Java.Lang.Object</c>) plus a <c>maxArrayRank</c>-wide jagged composite of per-asm
-	/// rank dicts; calls the single-universe-with-arrays <c>Initialize</c> overload.
+	/// Shared-universe + arrays IL emit. Single merged main map (anchored on
+	/// <c>Java.Lang.Object</c>) plus a per-rank array of <c>CompositeStringTypeReadOnlyDictionary</c>
+	/// over per-asm sources; calls the single-universe-with-arrays <c>Initialize</c> overload.
 	/// </summary>
 	static void EmitInitializeWithSingleTypeMapAndArrays (PEAssemblyBuilder pe,
 		EntityHandle anchorTypeHandle,
@@ -403,7 +403,6 @@ public sealed class RootTypeMapAssemblyGenerator
 		var getExternalSharedSpec = MakeGenericMethodSpec (pe, getExternalMemberRef, anchorTypeHandle);
 		var getProxySharedSpec = MakeGenericMethodSpec (pe, getProxyMemberRef, anchorTypeHandle);
 
-		// Composite dict ctor: CompositeStringTypeReadOnlyDictionary..ctor(IReadOnlyDictionary<string,Type>?[])
 		var compositeTypeRef = pe.Metadata.AddTypeReference (pe.MonoAndroidRef,
 			pe.Metadata.GetOrAddString ("Microsoft.Android.Runtime"),
 			pe.Metadata.GetOrAddString ("CompositeStringTypeReadOnlyDictionary"));
@@ -415,19 +414,17 @@ public sealed class RootTypeMapAssemblyGenerator
 			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 			sig => sig.MethodSignature ().Parameters (0, rt => rt.Void (), p => { }),
 			encoder => {
-				// loc 0: arrayMapsByRank = new IReadOnlyDictionary<string, Type>?[maxArrayRank]
+				// loc 0 = new IReadOnlyDictionary<string, Type>?[maxArrayRank]
 				encoder.LoadConstantI4 (maxArrayRank);
 				encoder.OpCode (ILOpCode.Newarr);
 				encoder.Token (externalDictTypeSpec);
 				encoder.StoreLocal (0);
 
-				// For each rank r: arrayMapsByRank[r] = new CompositeStringTypeReadOnlyDictionary(sources)
-				// where sources is a fresh IReadOnlyDictionary<string,Type>?[count] populated from each asm.
+				// arrayMapsByRank[r] = new CompositeStringTypeReadOnlyDictionary(<per-asm rank-r dicts>)
 				for (int r = 0; r < maxArrayRank; r++) {
 					encoder.LoadLocal (0);
 					encoder.LoadConstantI4 (r);
 
-					// new IReadOnlyDictionary<string, Type>?[count]
 					encoder.LoadConstantI4 (count);
 					encoder.OpCode (ILOpCode.Newarr);
 					encoder.Token (externalDictTypeSpec);
@@ -439,11 +436,9 @@ public sealed class RootTypeMapAssemblyGenerator
 						encoder.OpCode (ILOpCode.Stelem_ref);
 					}
 
-					// new CompositeStringTypeReadOnlyDictionary(sources)
 					encoder.OpCode (ILOpCode.Newobj);
 					encoder.Token (compositeCtorRef);
 
-					// arrayMapsByRank[r] = composite
 					encoder.OpCode (ILOpCode.Stelem_ref);
 				}
 
