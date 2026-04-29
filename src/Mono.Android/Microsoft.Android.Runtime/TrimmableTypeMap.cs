@@ -42,10 +42,26 @@ public class TrimmableTypeMap
 	/// (_Microsoft.Android.TypeMaps) when assembly typemaps are merged (Release builds).
 	/// </summary>
 	public static void Initialize (IReadOnlyDictionary<string, Type> typeMap, IReadOnlyDictionary<Type, Type> proxyMap)
+		=> Initialize (typeMap, proxyMap, null, null, null);
+
+	/// <summary>
+	/// Initializes the singleton with a single merged typemap universe plus per-rank
+	/// array dictionaries (used by <c>JNIEnv.ArrayCreateInstance</c> under NativeAOT).
+	/// </summary>
+	/// <param name="arrayMapRank1">
+	/// JNI element name &#8594; <c>typeof(T[])</c> map. Null when the typemap was generated
+	/// without array entries (CoreCLR builds with <c>$(PublishAot) == false</c>).
+	/// </param>
+	public static void Initialize (
+		IReadOnlyDictionary<string, Type> typeMap,
+		IReadOnlyDictionary<Type, Type> proxyMap,
+		IReadOnlyDictionary<string, Type>? arrayMapRank1,
+		IReadOnlyDictionary<string, Type>? arrayMapRank2,
+		IReadOnlyDictionary<string, Type>? arrayMapRank3)
 	{
 		ArgumentNullException.ThrowIfNull (typeMap);
 		ArgumentNullException.ThrowIfNull (proxyMap);
-		InitializeCore (new SingleUniverseTypeMap (typeMap, proxyMap));
+		InitializeCore (new SingleUniverseTypeMap (typeMap, proxyMap, arrayMapRank1, arrayMapRank2, arrayMapRank3));
 	}
 
 	/// <summary>
@@ -54,6 +70,24 @@ public class TrimmableTypeMap
 	/// (_Microsoft.Android.TypeMaps) when each assembly has its own typemap universe (Debug builds).
 	/// </summary>
 	public static void Initialize (IReadOnlyDictionary<string, Type>[] typeMaps, IReadOnlyDictionary<Type, Type>[] proxyMaps)
+		=> Initialize (typeMaps, proxyMaps, null, null, null);
+
+	/// <summary>
+	/// Initializes the singleton with multiple per-assembly typemap universes plus
+	/// per-assembly per-rank array dictionaries.
+	/// </summary>
+	/// <remarks>
+	/// All four / five arrays must have the same length. The per-rank arrays may be null
+	/// (when no typemap assembly emitted array entries, i.e. CoreCLR builds), in which
+	/// case all per-universe rank dicts are treated as null. When non-null, individual
+	/// elements may still be null for universes that didn't emit array entries.
+	/// </remarks>
+	public static void Initialize (
+		IReadOnlyDictionary<string, Type>[] typeMaps,
+		IReadOnlyDictionary<Type, Type>[] proxyMaps,
+		IReadOnlyDictionary<string, Type>?[]? arrayMapsRank1,
+		IReadOnlyDictionary<string, Type>?[]? arrayMapsRank2,
+		IReadOnlyDictionary<string, Type>?[]? arrayMapsRank3)
 	{
 		ArgumentNullException.ThrowIfNull (typeMaps);
 		ArgumentNullException.ThrowIfNull (proxyMaps);
@@ -63,11 +97,30 @@ public class TrimmableTypeMap
 		if (typeMaps.Length != proxyMaps.Length) {
 			throw new ArgumentException ($"typeMaps.Length ({typeMaps.Length}) must equal proxyMaps.Length ({proxyMaps.Length}).", nameof (proxyMaps));
 		}
+		ValidateRankArrayLength (arrayMapsRank1, typeMaps.Length, nameof (arrayMapsRank1));
+		ValidateRankArrayLength (arrayMapsRank2, typeMaps.Length, nameof (arrayMapsRank2));
+		ValidateRankArrayLength (arrayMapsRank3, typeMaps.Length, nameof (arrayMapsRank3));
+
 		var universes = new SingleUniverseTypeMap [typeMaps.Length];
 		for (int i = 0; i < typeMaps.Length; i++) {
-			universes [i] = new SingleUniverseTypeMap (typeMaps [i], proxyMaps [i]);
+			universes [i] = new SingleUniverseTypeMap (
+				typeMaps [i],
+				proxyMaps [i],
+				arrayMapsRank1?[i],
+				arrayMapsRank2?[i],
+				arrayMapsRank3?[i]);
 		}
 		InitializeCore (new AggregateTypeMap (universes));
+	}
+
+	static void ValidateRankArrayLength (IReadOnlyDictionary<string, Type>?[]? array, int expected, string paramName)
+	{
+		if (array is null) {
+			return;
+		}
+		if (array.Length != expected) {
+			throw new ArgumentException ($"{paramName}.Length ({array.Length}) must equal typeMaps.Length ({expected}).", paramName);
+		}
 	}
 
 	static void InitializeCore (ITypeMapWithAliasing typeMap)
@@ -316,6 +369,79 @@ public class TrimmableTypeMap
 	internal JavaPeerContainerFactory? GetContainerFactory (Type type)
 	{
 		return GetProxyForManagedType (type)?.GetContainerFactory ();
+	}
+
+	/// <summary>
+	/// AOT-safe lookup of the closed managed array type for the given element type.
+	/// Used by <c>JNIEnv.ArrayCreateInstance</c> under NativeAOT (where dynamic
+	/// <c>Array.CreateInstance</c> is not available for arbitrary element types).
+	/// Walks the element-type's array nesting (so <c>byte[][]</c> gets treated as a
+	/// rank-2 lookup of <c>byte</c>), resolves the leaf JNI element name (primitive
+	/// or peer reference), and queries the per-rank dictionary supplied at
+	/// <see cref="Initialize(IReadOnlyDictionary{string, Type}, IReadOnlyDictionary{Type, Type}, IReadOnlyDictionary{string, Type}?, IReadOnlyDictionary{string, Type}?, IReadOnlyDictionary{string, Type}?)"/>.
+	/// </summary>
+	/// <returns>
+	/// True with the closed array <see cref="Type"/> on success. False on any miss
+	/// (unknown leaf, no per-rank dict supplied, no entry, rank &gt; 3). The caller
+	/// in <c>JNIEnv.ArrayCreateInstance</c> throws a diagnostic
+	/// <see cref="NotSupportedException"/> in that case.
+	/// </returns>
+	internal bool TryGetArrayType (Type elementType, [NotNullWhen (true)] out Type? arrayType)
+	{
+		if (elementType is null) {
+			arrayType = null;
+			return false;
+		}
+
+		// Walk to the leaf element type, counting the array depth that is part of the
+		// element. The total rank we look up is depth+1 — the +1 accounts for the new
+		// outer rank that ArrayCreateInstance is constructing.
+		var leaf = elementType;
+		int elementDepth = 0;
+		while (leaf.IsArray) {
+			var next = leaf.GetElementType ();
+			if (next is null) {
+				arrayType = null;
+				return false;
+			}
+			leaf = next;
+			elementDepth++;
+		}
+
+		string leafJniName;
+		if (leaf.IsPrimitive) {
+			if (!TryGetPrimitiveJniName (leaf, out var primitive)) {
+				arrayType = null;
+				return false;
+			}
+			leafJniName = primitive;
+		} else if (!TryGetJniNameForManagedType (leaf, out var jni)) {
+			arrayType = null;
+			return false;
+		} else {
+			leafJniName = jni;
+		}
+
+		int rank = elementDepth + 1;
+		return _typeMap.TryGetArrayType (leafJniName, rank, out arrayType);
+	}
+
+	/// <summary>
+	/// JNI single-letter encodings for primitive element types. Reference:
+	/// <see href="https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/types.html"/>.
+	/// </summary>
+	static bool TryGetPrimitiveJniName (Type primitive, [NotNullWhen (true)] out string? jni)
+	{
+		if (primitive == typeof (bool))   { jni = "Z"; return true; }
+		if (primitive == typeof (byte))   { jni = "B"; return true; }
+		if (primitive == typeof (char))   { jni = "C"; return true; }
+		if (primitive == typeof (short))  { jni = "S"; return true; }
+		if (primitive == typeof (int))    { jni = "I"; return true; }
+		if (primitive == typeof (long))   { jni = "J"; return true; }
+		if (primitive == typeof (float))  { jni = "F"; return true; }
+		if (primitive == typeof (double)) { jni = "D"; return true; }
+		jni = null;
+		return false;
 	}
 
 	[UnmanagedCallersOnly]

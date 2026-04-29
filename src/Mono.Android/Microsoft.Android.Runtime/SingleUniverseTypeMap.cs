@@ -19,12 +19,30 @@ sealed class SingleUniverseTypeMap : ITypeMapWithAliasing
 	readonly IReadOnlyDictionary<string, Type> _typeMap;
 	readonly IReadOnlyDictionary<Type, Type> _proxyTypeMap;
 
+	// Per-rank array dictionaries (1-indexed; index 0 unused). Null when the typemap
+	// universe was generated without array entries (e.g. CoreCLR builds with
+	// $(PublishAot)==false). Only consulted under NativeAOT via TryGetArrayType.
+	readonly IReadOnlyDictionary<string, Type>?[] _arrayMaps = new IReadOnlyDictionary<string, Type>? [4];
+
 	public SingleUniverseTypeMap (IReadOnlyDictionary<string, Type> typeMap, IReadOnlyDictionary<Type, Type> proxyTypeMap)
+		: this (typeMap, proxyTypeMap, null, null, null)
+	{
+	}
+
+	public SingleUniverseTypeMap (
+		IReadOnlyDictionary<string, Type> typeMap,
+		IReadOnlyDictionary<Type, Type> proxyTypeMap,
+		IReadOnlyDictionary<string, Type>? arrayMapRank1,
+		IReadOnlyDictionary<string, Type>? arrayMapRank2,
+		IReadOnlyDictionary<string, Type>? arrayMapRank3)
 	{
 		ArgumentNullException.ThrowIfNull (typeMap);
 		ArgumentNullException.ThrowIfNull (proxyTypeMap);
 		_typeMap = typeMap;
 		_proxyTypeMap = proxyTypeMap;
+		_arrayMaps [1] = arrayMapRank1;
+		_arrayMaps [2] = arrayMapRank2;
+		_arrayMaps [3] = arrayMapRank3;
 	}
 
 	public IEnumerable<Type> GetTypes (string jniName)
@@ -81,6 +99,18 @@ sealed class SingleUniverseTypeMap : ITypeMapWithAliasing
 		}
 
 		proxyType = null;
+		return false;
+	}
+
+	public bool TryGetArrayType (string jniElementTypeName, int rank, [NotNullWhen (true)] out Type? arrayType)
+	{
+		if (rank >= 1 && rank <= 3) {
+			var dict = _arrayMaps [rank];
+			if (dict is not null && dict.TryGetValue (jniElementTypeName, out arrayType)) {
+				return true;
+			}
+		}
+		arrayType = null;
 		return false;
 	}
 }
