@@ -146,7 +146,7 @@ auto TypeMapper::managed_to_java_debug (const char *typeName, const uint8_t *mvi
 	dynamic_local_path_string full_type_name;
 	full_type_name.append (typeName);
 
-	hash_t mvid_hash = xxhash::hash (mvid, 16z); // we must hope managed land called us with valid data
+	hash_t mvid_hash = xxhash::hash (reinterpret_cast<const char*>(mvid), 16z); // we must hope managed land called us with valid data
 
 	auto equal = [](TypeMapAssembly const& entry, hash_t key) -> bool { return entry.mvid_hash == key; };
 	auto less_than = [](TypeMapAssembly const& entry, hash_t key) -> bool { return entry.mvid_hash < key; };

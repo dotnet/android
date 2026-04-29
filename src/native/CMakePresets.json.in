@@ -98,6 +98,17 @@
         },
 
         {
+            "name": "nonmono-common-armeabi-v7a",
+            "hidden": true,
+            "cacheVariables": {
+                "ANDROID_ABI": "armeabi-v7a",
+                "ANDROID_NATIVE_API_LEVEL": "@NDK_ARMEABI_V7_NONMONO_API_NET@",
+                "ANDROID_PLATFORM": "android-@NDK_ARMEABI_V7_NONMONO_API_NET@",
+                "ANDROID_RID": "android-arm"
+            }
+        },
+
+        {
             "name": "common-arm64-v8a",
             "hidden": true,
             "cacheVariables": {
@@ -174,8 +185,18 @@
         },
 
         {
+            "name": "coreclr-default-debug-armeabi-v7a",
+            "inherits": ["default-common", "common-debug", "nonmono-common-armeabi-v7a"]
+        },
+
+        {
             "name": "default-release-armeabi-v7a",
             "inherits": ["default-common", "common-release", "common-armeabi-v7a"]
+        },
+
+        {
+            "name": "coreclr-default-release-armeabi-v7a",
+            "inherits": ["default-common", "common-release", "nonmono-common-armeabi-v7a"]
         },
 
         {

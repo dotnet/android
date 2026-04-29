@@ -11,6 +11,7 @@
     <AndroidNdkApiLevel_X86 Condition=" '$(AndroidNdkApiLevel_X86)' == '' ">@NDK_X86_API_NET@</AndroidNdkApiLevel_X86>
     <AndroidNdkApiLevel_X86_64 Condition=" '$(AndroidNdkApiLevel_X86_64)' == '' ">@NDK_X86_64_API@</AndroidNdkApiLevel_X86_64>
     <AndroidNdkApiLevel_X64 Condition=" '$(AndroidNdkApiLevel_X64)' == '' ">@NDK_X86_64_API_NET@</AndroidNdkApiLevel_X64>
+    <AndroidNdkApiLevelNonMono_Arm Condition=" '$(AndroidNdkApiLevelNonMono_Arm)' == '' ">@NDK_ARMEABI_V7_API_NON_MONO@</AndroidNdkApiLevelNonMono_Arm>
     <AndroidNdkApiLevelNonMono_Arm64 Condition=" '$(AndroidNdkApiLevelNonMono_Arm64)' == '' ">@NDK_ARM64_V8A_API_NON_MONO@</AndroidNdkApiLevelNonMono_Arm64>
     <AndroidNdkApiLevelNonMono_X64 Condition=" '$(AndroidNdkApiLevelNonMono_X64)' == '' ">@NDK_X86_64_API_NON_MONO@</AndroidNdkApiLevelNonMono_X64>
   </PropertyGroup>
@@ -21,9 +22,10 @@
         Condition=" $(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':armeabi-v7a:')) ">
       <ApiLevel>$(AndroidNdkApiLevel_ArmV7a)</ApiLevel>
       <ApiLevelNET>$(AndroidNdkApiLevel_Arm)</ApiLevelNET>
+      <ApiLevelNonMono>$(AndroidNdkApiLevelNonMono_Arm)</ApiLevelNonMono>
       <AndroidRID>android-arm</AndroidRID>
       <SupportMonoVM>True</SupportMonoVM>
-      <SupportCoreCLR>False</SupportCoreCLR>
+      <SupportCoreCLR>True</SupportCoreCLR>
       <SupportNativeAOT>False</SupportNativeAOT>
     </AndroidSupportedTargetJitAbi>
 
