@@ -49,7 +49,7 @@ namespace Xamarin.Android.Tasks
 
 		public IList<R> Parse (string resourceDirectory, IEnumerable<string> additionalResourceDirectories, IEnumerable<string> aarLibraries, Dictionary<string, string> resourceMap)
 		{
-			Log.LogDebugMessage ($"Parsing Directory {resourceDirectory}");
+			Log?.LogDebugMessage ($"Parsing Directory {resourceDirectory}");
 			publicXml = LoadPublicXml ();
 			var result = new List<R> ();
 			Dictionary<string, ICollection<R>> resources = new Dictionary<string, ICollection<R>> ();
@@ -212,7 +212,7 @@ namespace Xamarin.Android.Tasks
 
 		void ProcessResourceFile (string file, Dictionary<string, ICollection<R>> resources, bool processXml = true)
 		{
-			Log.LogDebugMessage ($"{nameof(ProcessResourceFile)} {file}");
+			Log?.LogDebugMessage ($"{nameof(ProcessResourceFile)} {file}");
 			var fileName = Path.GetFileNameWithoutExtension (file);
 			if (fileName.IsNullOrEmpty ())
 				return;
@@ -265,7 +265,7 @@ namespace Xamarin.Android.Tasks
 				Id = -1,
 			};
 			if (!resources.ContainsKey (item)) {
-				Log.LogDebugMessage ($"Ignoring path:{item}");
+				Log?.LogDebugMessage ($"Ignoring path:{item}");
 				return;
 			}
 			resources[item].Add (r);
@@ -273,7 +273,7 @@ namespace Xamarin.Android.Tasks
 
 		void ProcessStyleable (XmlReader reader, Dictionary<string, ICollection<R>> resources)
 		{
-			Log.LogDebugMessage ($"{nameof(ProcessStyleable)}");
+			Log?.LogDebugMessage ($"{nameof(ProcessStyleable)}");
 			string? topName = null;
 			List<R> fields = new List<R> ();
 			List<string> attribs = new List<string> ();
@@ -374,7 +374,7 @@ namespace Xamarin.Android.Tasks
 
 		void ProcessXmlFile (XmlReader reader, Dictionary<string, ICollection<R>> resources)
 		{
-			Log.LogDebugMessage ($"{nameof(ProcessXmlFile)}");
+			Log?.LogDebugMessage ($"{nameof(ProcessXmlFile)}");
 			while (reader.Read ()) {
 				if (reader.NodeType == XmlNodeType.Whitespace || reader.NodeType == XmlNodeType.Comment)
 					continue;
@@ -422,7 +422,7 @@ namespace Xamarin.Android.Tasks
 									Identifier = inflateId,
 									Id = -1,
 								};
-								Log.LogDebugMessage ($"Adding 1 {r}");
+								Log?.LogDebugMessage ($"Adding 1 {r}");
 								resources[r.ResourceTypeName].Add (r);
 							}
 						}

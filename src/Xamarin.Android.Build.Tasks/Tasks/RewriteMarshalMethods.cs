@@ -84,6 +84,9 @@ public class RewriteMarshalMethods : AndroidTask
 			RegisteredTaskObjectLifetime.Build
 		);
 
+		if (nativeCodeGenStates is null)
+			throw new InvalidOperationException ($"Internal error: {nameof (NativeCodeGenState)} not found");
+
 		// Parse environment files to determine configuration settings
 		// We need to parse the environment files supplied by the user to see if they want to use broken exception transitions. This information is needed
 		// in order to properly generate wrapper methods in the marshal methods assembly rewriter.

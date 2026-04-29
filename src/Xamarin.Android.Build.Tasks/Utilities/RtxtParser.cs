@@ -113,11 +113,11 @@ namespace Xamarin.Android.Tasks
 				lineNumber++;
 				var items = line.Split (EmptyChar, 4);
 				if (items.Length < 4) {
-					log.LogDebugMessage ($"'{file}:{lineNumber}' ignoring contents '{line}', it does not have the correct number of elements.");
+					log?.LogDebugMessage ($"'{file}:{lineNumber}' ignoring contents '{line}', it does not have the correct number of elements.");
 					continue;
 				}
 				if (ValidChars.IsMatch (items [3])) {
-					log.LogDebugMessage ($"'{file}:{lineNumber}' ignoring contents '{line}', it contains invalid characters.");
+					log?.LogDebugMessage ($"'{file}:{lineNumber}' ignoring contents '{line}', it contains invalid characters.");
 					continue;
 				}
 				int value = items [1] != "styleable" ? Convert.ToInt32 (items [3].Trim (), 16) : -1;
