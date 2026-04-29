@@ -217,10 +217,17 @@
     </ItemGroup>
   </Target>
 
+  <!--
+    Android apps set OutputType=Library (no managed Main()), so the upstream
+    _PrepareTrimConfiguration target does not root the entry assembly (see
+    dotnet/runtime#125673). Explicitly add the app assembly with RootMode=All
+    to ensure ILLink includes it in linked output.
+  -->
   <Target Name="_FixRootAssembly"
       AfterTargets="PrepareForILLink">
     <ItemGroup>
-      <TrimmerRootAssembly Update="@(TrimmerRootAssembly)" Condition=" '%(TrimmerRootAssembly.RootMode)' == 'EntryPoint' " RootMode="All" />
+      <TrimmerRootAssembly Remove="@(IntermediateAssembly->'%(Filename)')" />
+      <TrimmerRootAssembly Include="@(IntermediateAssembly->'%(Filename)')" RootMode="All" />
     </ItemGroup>
   </Target>
 
