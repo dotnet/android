@@ -57,15 +57,12 @@ static class ModelBuilder
 		}
 
 		assemblyName ??= Path.GetFileNameWithoutExtension (outputPath);
-		string moduleName = Path.GetFileName (outputPath);
 
 		var model = new TypeMapAssemblyData {
 			AssemblyName = assemblyName,
-			ModuleName = moduleName,
+			ModuleName = Path.GetFileName (outputPath),
+			MaxArrayRank = maxArrayRank,
 		};
-		if (maxArrayRank > 0) {
-			model.MaxArrayRank = maxArrayRank;
-		}
 
 		// Invoker types are NOT emitted as separate proxies or TypeMap entries —
 		// they only appear as a TypeRef in the interface proxy's get_InvokerType property.
