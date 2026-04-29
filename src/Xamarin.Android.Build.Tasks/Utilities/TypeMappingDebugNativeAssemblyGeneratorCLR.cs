@@ -73,10 +73,6 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		{
 			var entry = EnsureType<TypeMapAssembly> (data);
 
-			if (MonoAndroidHelper.StringEquals ("mvid_hash", fieldName)) {
-				return $" MVID: {entry.MVID}";
-			}
-
 			if (MonoAndroidHelper.StringEquals ("name_offset", fieldName)) {
 				return $" {entry.Name}";
 			}
@@ -171,11 +167,6 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		[NativeAssembler (Ignore = true)]
 		public string Name = String.Empty;
 
-		[NativeAssembler (Ignore = true)]
-		public Guid MVID;
-
-		[NativeAssembler (UsesDataProvider = true, NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
-		public ulong mvid_hash;
 		public ulong name_length;
 
 		[NativeAssembler (UsesDataProvider = true)]
@@ -274,21 +265,26 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 			Log.LogMessage ("Managed-to-java typemaps will use string-based matching.");
 		}
 
+		// Sort assemblies by name before building the blob so that both the blob offsets
+		// and the uniqueAssemblies array are in a deterministic order that is stable across
+		// incremental builds (assembly names don't change, unlike MVIDs).
+		data.UniqueAssemblies.Sort ((a, b) => StringComparer.Ordinal.Compare (a.Name, b.Name));
+
 		var assemblyNamesBlob = new LlvmIrStringBlob ();
 		foreach (TypeMapGenerator.TypeMapDebugAssembly asm in data.UniqueAssemblies) {
 			(int assemblyNameOffset, int assemblyNameLength) = assemblyNamesBlob.Add (asm.Name);
 
 			var entry = new TypeMapAssembly {
 				Name = asm.Name,
-				MVID = asm.MVID,
 
-				mvid_hash = MonoAndroidHelper.GetXxHash (asm.MVIDBytes, is64Bit: true),
 				name_length = (ulong)assemblyNameLength, // without the trailing NUL
 				name_offset = (ulong)assemblyNameOffset,
 			};
 			uniqueAssemblies.Add (new StructureInstance<TypeMapAssembly> (typeMapAssemblyStructureInfo, entry));
 		}
 
+		// Sort by assembly name for deterministic output. This ensures the .ll content
+		// is stable across incremental builds when only MVIDs change.
 		uniqueAssemblies.Sort ((StructureInstance<TypeMapAssembly> a, StructureInstance<TypeMapAssembly> b) => {
 			if (a.Instance == null) {
 				return b.Instance == null ? 0 : -1;
@@ -298,7 +294,7 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 				return 1;
 			}
 
-			return a.Instance.mvid_hash.CompareTo (b.Instance.mvid_hash);
+			return StringComparer.Ordinal.Compare (a.Instance.Name, b.Instance.Name);
 		});
 
 		var managedTypeInfos = new List<StructureInstance<TypeMapManagedTypeInfo>> ();

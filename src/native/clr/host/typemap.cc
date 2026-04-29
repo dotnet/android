@@ -141,30 +141,33 @@ auto TypeMapper::index_to_name (ssize_t idx, const char* typeName, const TypeMap
 }
 
 [[gnu::always_inline, gnu::flatten]]
-auto TypeMapper::managed_to_java_debug (const char *typeName, const uint8_t *mvid) noexcept -> const char*
+auto TypeMapper::managed_to_java_debug (const char *typeName, [[maybe_unused]] const uint8_t *mvid) noexcept -> const char*
 {
+	// type_map_unique_assemblies is sorted by assembly name for stable build output (no
+	// build-specific data like MVIDs). We iterate through assemblies to find which one
+	// contains this type by trying each "TypeName, AssemblyName" candidate against the
+	// managed-to-java map. The array is small (~80-100 entries), so this is negligible.
+	for (size_t i = 0; i < type_map.unique_assemblies_count; i++) {
+		TypeMapAssembly const& assm = type_map_unique_assemblies[i];
+
+		dynamic_local_path_string full_type_name;
+		full_type_name.append (typeName);
+		full_type_name.append (", "sv);
+		full_type_name.append (&type_map_assembly_names[assm.name_offset], assm.name_length);
+
+		ssize_t idx = find_index_by_hash (full_type_name.get (), type_map.managed_to_java, type_map_managed_type_names, MANAGED, JAVA);
+		if (idx >= 0) {
+			return index_to_name (idx, full_type_name.get (), type_map.managed_to_java, type_map_java_type_names, MANAGED, JAVA);
+		}
+	}
+
+	// Fallback: try without assembly name
 	dynamic_local_path_string full_type_name;
 	full_type_name.append (typeName);
 
-	hash_t mvid_hash = xxhash::hash (mvid, 16z); // we must hope managed land called us with valid data
+	log_warn (LOG_ASSEMBLY, "typemap: unable to look up assembly name for type '{}', trying without it."sv, typeName);
 
-	auto equal = [](TypeMapAssembly const& entry, hash_t key) -> bool { return entry.mvid_hash == key; };
-	auto less_than = [](TypeMapAssembly const& entry, hash_t key) -> bool { return entry.mvid_hash < key; };
-	ssize_t idx = Search::binary_search<TypeMapAssembly, hash_t, equal, less_than> (mvid_hash, type_map_unique_assemblies, type_map.unique_assemblies_count);
-
-	if (idx >= 0) [[likely]] {
-		TypeMapAssembly const& assm = type_map_unique_assemblies[idx];
-		full_type_name.append (", "sv);
-
-		// We explicitly trust the build process here, with regards to validity of offsets
-		full_type_name.append (&type_map_assembly_names[assm.name_offset], assm.name_length);
-	} else {
-		log_warn (LOG_ASSEMBLY, "typemap: unable to look up assembly name for type '{}', trying without it."sv, typeName);
-	}
-
-	// If hashes are used for matching, the type names array is not used. If, however, string-based matching is in
-	// effect, the managed type name is looked up and then...
-	idx = find_index_by_hash (full_type_name.get (), type_map.managed_to_java, type_map_managed_type_names, MANAGED, JAVA);
+	ssize_t idx = find_index_by_hash (full_type_name.get (), type_map.managed_to_java, type_map_managed_type_names, MANAGED, JAVA);
 
 	// ...either method gives us index into the Java type names array
 	return index_to_name (idx, full_type_name.get (), type_map.managed_to_java, type_map_java_type_names, MANAGED, JAVA);
