@@ -282,6 +282,10 @@ public class TrimmableTypeMap
 	/// </remarks>
 	internal static bool TargetTypeMatches (Type targetType, Type proxyTargetType)
 	{
+		if (targetType == proxyTargetType) {
+			return true;
+		}
+
 		// Open generic proxy: match only when targetType is a closed instantiation
 		// of this generic (e.g. JavaList<int> matches the JavaList<> proxy).
 		// IsAssignableFrom alone would incorrectly match unrelated open generics
