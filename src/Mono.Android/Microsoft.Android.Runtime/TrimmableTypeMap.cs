@@ -28,12 +28,17 @@ public class TrimmableTypeMap
 			"TrimmableTypeMap has not been initialized. Ensure RuntimeFeature.TrimmableTypeMap is enabled and the JNI runtime is initialized.");
 
 	readonly ITypeMapWithAliasing _typeMap;
+	// Per-rank array dictionaries, 0-indexed by (rank - 1). Sourced from the shared
+	// __ArrayMapRank{N} TypeMap groups, so each rank is one merged dict spanning every
+	// per-asm typemap DLL. Empty when no array entries were emitted (CoreCLR builds).
+	readonly IReadOnlyDictionary<string, Type>?[] _arrayMapsByRank;
 	readonly ConcurrentDictionary<Type, JavaPeerProxy> _proxyCache = new ();
 	readonly ConcurrentDictionary<string, JavaPeerProxy[]> _jniProxyCache = new (StringComparer.Ordinal);
 
-	TrimmableTypeMap (ITypeMapWithAliasing typeMap)
+	TrimmableTypeMap (ITypeMapWithAliasing typeMap, IReadOnlyDictionary<string, Type>?[]? arrayMapsByRank)
 	{
 		_typeMap = typeMap;
+		_arrayMapsByRank = arrayMapsByRank ?? Array.Empty<IReadOnlyDictionary<string, Type>?> ();
 	}
 
 	/// <summary>
@@ -46,35 +51,36 @@ public class TrimmableTypeMap
 	/// Initializes the singleton with a single merged typemap universe plus per-rank
 	/// array dictionaries (consulted by <c>JNIEnv.ArrayCreateInstance</c> under NativeAOT).
 	/// </summary>
-	/// <param name="arrayMapsByRank">
-	/// Jagged: <c>[rank - 1][source]</c>. <c>TryGetArrayType</c> walks the inner sources first-hit.
-	/// Null when no array entries were emitted.
-	/// </param>
+	/// <param name="arrayMapsByRank">0-indexed by (rank - 1); null when no array entries were emitted.</param>
 	public static void Initialize (
 		IReadOnlyDictionary<string, Type> typeMap,
 		IReadOnlyDictionary<Type, Type> proxyMap,
-		IReadOnlyDictionary<string, Type>?[]?[]? arrayMapsByRank)
+		IReadOnlyDictionary<string, Type>?[]? arrayMapsByRank)
 	{
 		ArgumentNullException.ThrowIfNull (typeMap);
 		ArgumentNullException.ThrowIfNull (proxyMap);
-		InitializeCore (new SingleUniverseTypeMap (typeMap, proxyMap, arrayMapsByRank));
+		InitializeCore (new SingleUniverseTypeMap (typeMap, proxyMap), arrayMapsByRank);
 	}
 
 	/// <summary>
 	/// Initializes the singleton with multiple per-assembly typemap universes.
 	/// </summary>
 	public static void Initialize (IReadOnlyDictionary<string, Type>[] typeMaps, IReadOnlyDictionary<Type, Type>[] proxyMaps)
-		=> Initialize (typeMaps, proxyMaps, perUniverseArrayMaps: null);
+		=> Initialize (typeMaps, proxyMaps, arrayMapsByRank: null);
 
 	/// <summary>
 	/// Initializes the singleton with multiple per-assembly typemap universes plus
-	/// per-universe per-rank array dictionaries.
+	/// merged per-rank array dictionaries.
 	/// </summary>
-	/// <param name="perUniverseArrayMaps">Jagged: <c>[universe][rank - 1]</c>.</param>
+	/// <param name="arrayMapsByRank">
+	/// 0-indexed by (rank - 1); null when no array entries were emitted. Same shape as
+	/// the single-universe overload — array entries live in the shared
+	/// <c>__ArrayMapRank{N}</c> TypeMap groups regardless of merge mode.
+	/// </param>
 	public static void Initialize (
 		IReadOnlyDictionary<string, Type>[] typeMaps,
 		IReadOnlyDictionary<Type, Type>[] proxyMaps,
-		IReadOnlyDictionary<string, Type>?[]?[]? perUniverseArrayMaps)
+		IReadOnlyDictionary<string, Type>?[]? arrayMapsByRank)
 	{
 		ArgumentNullException.ThrowIfNull (typeMaps);
 		ArgumentNullException.ThrowIfNull (proxyMaps);
@@ -84,36 +90,22 @@ public class TrimmableTypeMap
 		if (typeMaps.Length != proxyMaps.Length) {
 			throw new ArgumentException ($"typeMaps.Length ({typeMaps.Length}) must equal proxyMaps.Length ({proxyMaps.Length}).", nameof (proxyMaps));
 		}
-		if (perUniverseArrayMaps is not null && perUniverseArrayMaps.Length != typeMaps.Length) {
-			throw new ArgumentException ($"perUniverseArrayMaps.Length ({perUniverseArrayMaps.Length}) must equal typeMaps.Length ({typeMaps.Length}).", nameof (perUniverseArrayMaps));
-		}
 
 		var universes = new SingleUniverseTypeMap [typeMaps.Length];
 		for (int i = 0; i < typeMaps.Length; i++) {
-			IReadOnlyDictionary<string, Type>?[]?[]? perRank = null;
-			var perUniverseRanks = perUniverseArrayMaps?[i];
-			if (perUniverseRanks is not null) {
-				// Wrap each rank's single-source dict into a 1-element source array so
-				// SingleUniverseTypeMap's jagged storage shape is uniform across paths.
-				perRank = new IReadOnlyDictionary<string, Type>?[]? [perUniverseRanks.Length];
-				for (int r = 0; r < perUniverseRanks.Length; r++) {
-					var dict = perUniverseRanks [r];
-					perRank [r] = dict is null ? null : new [] { dict };
-				}
-			}
-			universes [i] = new SingleUniverseTypeMap (typeMaps [i], proxyMaps [i], perRank);
+			universes [i] = new SingleUniverseTypeMap (typeMaps [i], proxyMaps [i]);
 		}
-		InitializeCore (new AggregateTypeMap (universes));
+		InitializeCore (new AggregateTypeMap (universes), arrayMapsByRank);
 	}
 
-	static void InitializeCore (ITypeMapWithAliasing typeMap)
+	static void InitializeCore (ITypeMapWithAliasing typeMap, IReadOnlyDictionary<string, Type>?[]? arrayMapsByRank)
 	{
 		lock (s_initLock) {
 			if (s_instance is not null) {
 				throw new InvalidOperationException ("TrimmableTypeMap has already been initialized.");
 			}
 
-			var instance = new TrimmableTypeMap (typeMap);
+			var instance = new TrimmableTypeMap (typeMap, arrayMapsByRank);
 			instance.RegisterNatives ();
 			s_instance = instance;
 		}
@@ -395,7 +387,17 @@ public class TrimmableTypeMap
 		}
 
 		int rank = elementDepth + 1;
-		return _typeMap.TryGetArrayType (leafJniName, rank, out arrayType);
+		int index = rank - 1;
+		if ((uint)index >= (uint)_arrayMapsByRank.Length) {
+			arrayType = null;
+			return false;
+		}
+		var dict = _arrayMapsByRank [index];
+		if (dict is null) {
+			arrayType = null;
+			return false;
+		}
+		return dict.TryGetValue (leafJniName, out arrayType);
 	}
 
 	/// <summary>JNI single-letter encoding for primitive element types.</summary>

@@ -266,7 +266,7 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_MergedMode_WithArrays_HasIgnoresAccessChecksToPerAsm ()
+	public void Generate_MergedMode_WithArrays_NoPerAsmAccessNeeded ()
 	{
 		using var stream = GenerateRootAssembly (["_App.TypeMap", "_Mono.Android.TypeMap"],
 			useSharedTypemapUniverse: true, maxArrayRank: 3);
@@ -275,7 +275,7 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 
 		var accessAttrs = GetIgnoresAccessChecksToValues (reader);
 		Assert.Contains ("Mono.Android", accessAttrs);
-		Assert.Contains ("_App.TypeMap", accessAttrs);
-		Assert.Contains ("_Mono.Android.TypeMap", accessAttrs);
+		// Shared-mode root never needs per-asm internal access — rank anchors live in Mono.Android.
+		Assert.DoesNotContain ("_App.TypeMap", accessAttrs);
 	}
 }

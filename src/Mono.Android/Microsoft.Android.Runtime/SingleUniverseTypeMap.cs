@@ -19,26 +19,12 @@ sealed class SingleUniverseTypeMap : ITypeMapWithAliasing
 	readonly IReadOnlyDictionary<string, Type> _typeMap;
 	readonly IReadOnlyDictionary<Type, Type> _proxyTypeMap;
 
-	// Jagged: [rank-1][source]. Empty/null inner array → no entries for that rank.
-	// Aggregate path uses inner-length 1 (one source per universe per rank); shared+arrays
-	// path uses inner-length N (N per-asm dicts merged via first-hit walk).
-	readonly IReadOnlyDictionary<string, Type>?[]?[] _arrayMapsByRank;
-
 	public SingleUniverseTypeMap (IReadOnlyDictionary<string, Type> typeMap, IReadOnlyDictionary<Type, Type> proxyTypeMap)
-		: this (typeMap, proxyTypeMap, arrayMapsByRank: null)
-	{
-	}
-
-	public SingleUniverseTypeMap (
-		IReadOnlyDictionary<string, Type> typeMap,
-		IReadOnlyDictionary<Type, Type> proxyTypeMap,
-		IReadOnlyDictionary<string, Type>?[]?[]? arrayMapsByRank)
 	{
 		ArgumentNullException.ThrowIfNull (typeMap);
 		ArgumentNullException.ThrowIfNull (proxyTypeMap);
 		_typeMap = typeMap;
 		_proxyTypeMap = proxyTypeMap;
-		_arrayMapsByRank = arrayMapsByRank ?? Array.Empty<IReadOnlyDictionary<string, Type>?[]?> ();
 	}
 
 	public IEnumerable<Type> GetTypes (string jniName)
@@ -95,23 +81,6 @@ sealed class SingleUniverseTypeMap : ITypeMapWithAliasing
 		}
 
 		proxyType = null;
-		return false;
-	}
-
-	public bool TryGetArrayType (string jniElementTypeName, int rank, [NotNullWhen (true)] out Type? arrayType)
-	{
-		int index = rank - 1;
-		if ((uint)index < (uint)_arrayMapsByRank.Length) {
-			var sources = _arrayMapsByRank [index];
-			if (sources is not null) {
-				foreach (var dict in sources) {
-					if (dict is not null && dict.TryGetValue (jniElementTypeName, out arrayType)) {
-						return true;
-					}
-				}
-			}
-		}
-		arrayType = null;
 		return false;
 	}
 }

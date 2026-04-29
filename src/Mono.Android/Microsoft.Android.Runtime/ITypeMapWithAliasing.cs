@@ -26,9 +26,4 @@ interface ITypeMapWithAliasing
 	/// carries the <see cref="JavaPeerProxy"/> attribute).
 	/// </summary>
 	bool TryGetProxyType (Type managedType, [NotNullWhen (true)] out Type? proxyType);
-
-	/// <summary>
-	/// Looks up the closed managed array type for the given element JNI name and 1-based rank.
-	/// </summary>
-	bool TryGetArrayType (string jniElementTypeName, int rank, [NotNullWhen (true)] out Type? arrayType);
 }

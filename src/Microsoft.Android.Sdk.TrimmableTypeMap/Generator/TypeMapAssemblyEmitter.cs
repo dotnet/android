@@ -277,8 +277,10 @@ sealed class TypeMapAssemblyEmitter
 	}
 
 	/// <summary>
-	/// Emits one internal sealed <c>__ArrayMapRank{N}</c> TypeDef for ranks
-	/// 1..<see cref="TypeMapAssemblyData.MaxArrayRank"/>. No-op when 0.
+	/// Populates <c>_rankAnchorHandles</c> with TypeRefs to the shared
+	/// <c>Microsoft.Android.Runtime.__ArrayMapRank{N}</c> types in Mono.Android. All per-asm
+	/// typemap DLLs reference the same anchors so each rank's entries merge into one dict
+	/// at runtime via <c>TypeMapping.GetOrCreateExternalTypeMapping&lt;__ArrayMapRank{N}&gt;()</c>.
 	/// </summary>
 	void EmitRankSentinels (TypeMapAssemblyData model)
 	{
@@ -287,24 +289,12 @@ sealed class TypeMapAssemblyEmitter
 		}
 
 		_rankAnchorHandles = new EntityHandle [model.MaxArrayRank];
+		var ns = _pe.Metadata.GetOrAddString ("Microsoft.Android.Runtime");
 		for (int i = 0; i < model.MaxArrayRank; i++) {
-			_rankAnchorHandles [i] = EmitRankSentinel ($"__ArrayMapRank{i + 1}");
+			_rankAnchorHandles [i] = _pe.Metadata.AddTypeReference (
+				_pe.MonoAndroidRef, ns,
+				_pe.Metadata.GetOrAddString ($"__ArrayMapRank{i + 1}"));
 		}
-	}
-
-	EntityHandle EmitRankSentinel (string typeName)
-	{
-		var metadata = _pe.Metadata;
-		var objectRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
-			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Object"));
-
-		return metadata.AddTypeDefinition (
-			TypeAttributes.NotPublic | TypeAttributes.Sealed | TypeAttributes.Class,
-			default,
-			metadata.GetOrAddString (typeName),
-			objectRef,
-			MetadataTokens.FieldDefinitionHandle (metadata.GetRowCount (TableIndex.Field) + 1),
-			MetadataTokens.MethodDefinitionHandle (metadata.GetRowCount (TableIndex.MethodDef) + 1));
 	}
 
 	void EmitMemberReferences ()
