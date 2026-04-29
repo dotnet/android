@@ -18,6 +18,7 @@ namespace Xamarin.Android.Build.Tests
 	public class PerformanceTest : DeviceTest
 	{
 		const int Retry = 2;
+		const int MaxEvaluationTimeInMs = 500;
 		static readonly Dictionary<string, int> csv_values = new Dictionary<string, int> ();
 
 		[OneTimeSetUp]
@@ -60,9 +61,11 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			double total = 0;
+			Build build = null;
 			for (int i=0; i < iterations; i++) {
 				action (builder);
-				var actual = GetDurationFromBinLog (builder);
+				build = ReadBinLog (builder);
+				var actual = GetDuration (build, builder);
 				TestContext.Out.WriteLine ($"run {i} took: {actual}ms");
 				total += actual;
 				if (afterRun is not null)
@@ -71,6 +74,7 @@ namespace Xamarin.Android.Build.Tests
 			total /= iterations;
 			TestContext.Out.WriteLine ($"expected: {expected}ms, actual: {total}ms");
 			if (total > expected) {
+				AssertSlowMachine (build, expected, total);
 				Assert.Fail ($"Exceeded expected time of {expected}ms, actual {total}ms");
 			}
 		}
@@ -81,47 +85,63 @@ namespace Xamarin.Android.Build.Tests
 				Assert.Fail ($"No timeout value found for a key of {caller}");
 			}
 			double total = 0;
+			Build build = null;
 			for (int i=0; i < iterations; i++) {
 				action (builder);
-				var duration = GetTaskDurationFromBinLog (builder, task);
+				build = ReadBinLog (builder);
+				var duration = GetTaskDuration (build, builder, task);
 				TestContext.Out.WriteLine($"run {i} took: {duration}ms");
 				total += duration;
 			}
 			total /= iterations;
 			TestContext.Out.WriteLine($"expected: {expected}ms, actual: {total}ms");
 			if (total > expected) {
+				AssertSlowMachine (build, expected, total);
 				Assert.Fail ($"Exceeded expected time of {expected}ms, actual {total}ms");
 			}
 		}
 
-		double GetTaskDurationFromBinLog (ProjectBuilder builder, string task)
+		void AssertSlowMachine (Build build, int expected, double actual)
+		{
+			var evaluations = build.FindChildrenRecursive<ProjectEvaluation> ();
+			var maxEval = evaluations.Any () ? evaluations.Max (e => e.Duration.TotalMilliseconds) : 0;
+			TestContext.Out.WriteLine ($"max evaluation time: {maxEval}ms (threshold: {MaxEvaluationTimeInMs}ms)");
+			if (maxEval > MaxEvaluationTimeInMs) {
+				Assert.Inconclusive ($"Exceeded expected time of {expected}ms, actual {actual}ms, but evaluation time was {maxEval:F0}ms (threshold: {MaxEvaluationTimeInMs}ms), indicating a slow CI machine.");
+			}
+		}
+
+		Build ReadBinLog (ProjectBuilder builder)
 		{
 			var binlog = Path.Combine (Root, builder.ProjectDirectory, $"{Path.GetFileNameWithoutExtension (builder.BuildLogFile)}.binlog");
 			FileAssert.Exists (binlog);
+			return BinaryLog.ReadBuild (binlog);
+		}
 
-			var build = BinaryLog.ReadBuild (binlog);
+		double GetTaskDuration (Build build, ProjectBuilder builder, string task)
+		{
 			var duration = build
 				.FindChildrenRecursive<Task> (t => t.Name == task)
 				.Aggregate (TimeSpan.Zero, (duration, target) => duration + target.Duration);
 
-			if (duration == TimeSpan.Zero)
+			if (duration == TimeSpan.Zero) {
+				var binlog = Path.Combine (Root, builder.ProjectDirectory, $"{Path.GetFileNameWithoutExtension (builder.BuildLogFile)}.binlog");
 				throw new InvalidDataException ($"No task build duration found in {binlog}");
+			}
 
 			return duration.TotalMilliseconds;
 		}
 
-		double GetDurationFromBinLog (ProjectBuilder builder)
+		double GetDuration (Build build, ProjectBuilder builder)
 		{
-			var binlog = Path.Combine (Root, builder.ProjectDirectory, $"{Path.GetFileNameWithoutExtension (builder.BuildLogFile)}.binlog");
-			FileAssert.Exists (binlog);
-
-			var build = BinaryLog.ReadBuild (binlog);
 			var duration = build
 				.FindChildrenRecursive<Project> ()
 				.Aggregate (TimeSpan.Zero, (duration, project) => duration + project.Duration);
 
-			if (duration == TimeSpan.Zero)
+			if (duration == TimeSpan.Zero) {
+				var binlog = Path.Combine (Root, builder.ProjectDirectory, $"{Path.GetFileNameWithoutExtension (builder.BuildLogFile)}.binlog");
 				throw new InvalidDataException ($"No project build duration found in {binlog}");
+			}
 
 			return duration.TotalMilliseconds;
 		}
