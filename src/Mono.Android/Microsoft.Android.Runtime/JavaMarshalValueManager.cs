@@ -514,24 +514,15 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 
 		if (RuntimeFeature.TrimmableTypeMap) {
 			try {
-				// Mirror legacy GetPeerType: callers commonly request universal
-				// interfaces / boxes (IJavaPeerable, object, Exception) — map these
-				// to a concrete peer type so the proxy lookup can succeed.
+				// Map universal request types to concrete peers before proxy lookup.
 				var resolvedTargetType = ResolvePeerType (targetType);
 
 				var typeMap = TrimmableTypeMap.Instance;
 				var proxy = typeMap.GetProxyForJavaObject (reference.Handle, resolvedTargetType);
 
-				// Open-generic proxies (e.g. JavaList<>) cannot create closed
-				// instantiations (e.g. JavaList<int>) via CreateInstance because
-				// the generated IL can't newobj an open generic type. Activate the
-				// closed targetType directly via its (IntPtr, JniHandleOwnership)
-				// ctor — [DAM(Constructors)] on targetType guarantees the trimmer
-				// preserves the ctor metadata.
+				// Open-generic proxies cannot instantiate closed targets.
 				IJavaPeerable? peer;
-				if (proxy is not null && proxy.TargetType.IsGenericTypeDefinition &&
-						resolvedTargetType is not null &&
-						resolvedTargetType.IsGenericType && !resolvedTargetType.IsGenericTypeDefinition) {
+				if (ShouldActivateClosedGenericTarget (proxy, resolvedTargetType)) {
 					peer = ActivateUsingReflection (resolvedTargetType, reference.Handle, JniHandleOwnership.DoNotTransfer);
 				} else {
 					peer = proxy?.CreateInstance (reference.Handle, JniHandleOwnership.DoNotTransfer);
@@ -545,16 +536,7 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 					return peer;
 				}
 
-				// Disambiguate the failure — match the contract of the base
-				// JniRuntime.JniValueManager.CreatePeer so JavaCast / JavaAs
-				// surface the right exception (or null) to callers:
-				//
-				//  (a) target type has no Java mapping at all → ArgumentException
-				//  (b) Java instance is not assignable to the target's Java class
-				//      → return null (JavaAs returns null; JavaCast wraps to
-				//      InvalidCastException via its `??` clause)
-				//  (c) classes are compatible but no proxy / activation failed
-				//      → NotSupportedException (genuine generator gap)
+				// Preserve CreatePeer's bad-cast vs missing-mapping behavior.
 				if (resolvedTargetType is not null &&
 						IsIncompatibleCast (typeMap, ref reference, resolvedTargetType)) {
 					return null;
@@ -590,6 +572,17 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 		return type;
 	}
 
+	static bool ShouldActivateClosedGenericTarget (
+			[NotNullWhen (true)] JavaPeerProxy? proxy,
+			[NotNullWhen (true)] Type? resolvedTargetType)
+	{
+		return proxy is not null &&
+			proxy.TargetType.IsGenericTypeDefinition &&
+			resolvedTargetType is not null &&
+			resolvedTargetType.IsGenericType &&
+			!resolvedTargetType.IsGenericTypeDefinition;
+	}
+
 	static IJavaPeerable? ActivateUsingReflection (
 			[DynamicallyAccessedMembers (Constructors)]
 			Type closedType,
@@ -605,13 +598,8 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 	}
 
 	/// <summary>
-	/// When the trimmable typemap proxy lookup yields no peer for a non-null
-	/// <paramref name="targetType"/>, decide whether the caller's request is a
-	/// genuine bad cast (return true → caller returns null) or a missing typemap
-	/// entry (throw <see cref="ArgumentException"/>).
-	/// Returns false when the target's Java class IS compatible with the
-	/// instance — letting the caller fall through to its NotSupportedException
-	/// branch.
+	/// Returns true when <paramref name="targetType"/>'s Java class is not assignable from
+	/// <paramref name="reference"/>. Throws when <paramref name="targetType"/> has no usable mapping.
 	/// </summary>
 	static bool IsIncompatibleCast (
 			TrimmableTypeMap typeMap,
@@ -629,14 +617,14 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 		try {
 			try {
 				targetClass = JniEnvironment.Types.FindClass (targetJniName);
-			} catch (Exception e) {
+			} catch (Java.Lang.ClassNotFoundException e) {
 				throw new ArgumentException (
 					$"Could not find Java class '{targetJniName}'.",
 					nameof (targetType), e);
 			}
 
 			if (!JniEnvironment.Types.IsAssignableFrom (instanceClass, targetClass)) {
-				// Genuine bad cast — return null, callers translate this.
+				// Bad cast: callers translate null to the expected result.
 				return true;
 			}
 		} finally {
@@ -644,8 +632,7 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 			JniObjectReference.Dispose (ref targetClass);
 		}
 
-		// Classes are compatible — caller should throw NotSupportedException
-		// (real proxy/activation gap).
+		// Compatible classes mean a proxy/activation gap.
 		return false;
 	}
 
