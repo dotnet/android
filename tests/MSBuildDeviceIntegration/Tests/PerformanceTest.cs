@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Logging.StructuredLogger;
+using StructuredBuild = Microsoft.Build.Logging.StructuredLogger.Build;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
@@ -61,7 +62,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			double total = 0;
-			Build build = null;
+			StructuredBuild build = null;
 			for (int i=0; i < iterations; i++) {
 				action (builder);
 				build = ReadBinLog (builder);
@@ -85,7 +86,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.Fail ($"No timeout value found for a key of {caller}");
 			}
 			double total = 0;
-			Build build = null;
+			StructuredBuild build = null;
 			for (int i=0; i < iterations; i++) {
 				action (builder);
 				build = ReadBinLog (builder);
@@ -101,7 +102,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		void AssertSlowMachine (Build build, int expected, double actual)
+		void AssertSlowMachine (StructuredBuild build, int expected, double actual)
 		{
 			var evaluations = build.FindChildrenRecursive<ProjectEvaluation> ();
 			var maxEval = evaluations.Any () ? evaluations.Max (e => e.Duration.TotalMilliseconds) : 0;
@@ -111,14 +112,14 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		Build ReadBinLog (ProjectBuilder builder)
+		StructuredBuild ReadBinLog (ProjectBuilder builder)
 		{
 			var binlog = Path.Combine (Root, builder.ProjectDirectory, $"{Path.GetFileNameWithoutExtension (builder.BuildLogFile)}.binlog");
 			FileAssert.Exists (binlog);
 			return BinaryLog.ReadBuild (binlog);
 		}
 
-		double GetTaskDuration (Build build, ProjectBuilder builder, string task)
+		double GetTaskDuration (StructuredBuild build, ProjectBuilder builder, string task)
 		{
 			var duration = build
 				.FindChildrenRecursive<Task> (t => t.Name == task)
@@ -132,7 +133,7 @@ namespace Xamarin.Android.Build.Tests
 			return duration.TotalMilliseconds;
 		}
 
-		double GetDuration (Build build, ProjectBuilder builder)
+		double GetDuration (StructuredBuild build, ProjectBuilder builder)
 		{
 			var duration = build
 				.FindChildrenRecursive<Project> ()
