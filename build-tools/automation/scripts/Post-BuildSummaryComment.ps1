@@ -7,7 +7,9 @@ param (
     [string] $AzureDevOpsCollectionUri = $env:SYSTEM_COLLECTIONURI,
     [string] $AzureDevOpsProject = $env:SYSTEM_TEAMPROJECT,
     [string] $BuildId = $env:BUILD_BUILDID,
+    [string] $BuildDefinitionId = $env:BUILD_DEFINITIONID,
     [string] $BuildNumber = $env:BUILD_BUILDNUMBER,
+    [string] $BuildSourceBranch = $env:BUILD_SOURCEBRANCH,
     [string] $BuildSourceVersion = $env:BUILD_SOURCEVERSION,
     [string] $PullRequestNumber = $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER,
     [string] $SummaryMarkdownPath,
@@ -18,6 +20,7 @@ param (
     [string] $CopilotAuthorLogins = "copilot,copilot-swe-agent,github-copilot[bot]",
     [string] $DisableCopilotMentions = $env:COPILOT_BUILD_SUMMARY_DISABLE_MENTIONS,
     [string] $SkipCanceledBuilds = "true",
+    [string] $SkipIfNotLatestBuild = "true",
     [switch] $SkipAzureDevOpsSummary,
     [switch] $DryRun,
     [int] $MaxJobsToShow = 20,
@@ -136,6 +139,16 @@ function Get-Build {
 
     $escapedBuildId = [Uri]::EscapeDataString($BuildId)
     return Invoke-AzureDevOpsApi "/_apis/build/builds/$escapedBuildId`?api-version=7.1"
+}
+
+function Get-LatestBuildForBranch {
+    if ([string]::IsNullOrWhiteSpace($BuildDefinitionId) -or [string]::IsNullOrWhiteSpace($BuildSourceBranch)) {
+        return $null
+    }
+
+    $escapedDefinitionId = [Uri]::EscapeDataString($BuildDefinitionId)
+    $escapedBranch = [Uri]::EscapeDataString($BuildSourceBranch)
+    return Invoke-AzureDevOpsApi "/_apis/build/builds?definitions=$escapedDefinitionId&branchName=$escapedBranch&queryOrder=queueTimeDescending&`$top=1&api-version=7.1"
 }
 
 function Get-ResultIcon {
@@ -510,6 +523,38 @@ function Add-BuildMarkerIfNeeded {
     return "$marker`n$Markdown"
 }
 
+function Test-CurrentBuildIsLatest {
+    if (-not (Test-Truthy $SkipIfNotLatestBuild)) {
+        return $true
+    }
+
+    $latestBuildList = Get-LatestBuildForBranch
+    if ($null -eq $latestBuildList) {
+        Write-Host "Skipping latest-build check because BuildDefinitionId or BuildSourceBranch is unavailable."
+        return $true
+    }
+
+    $latestBuildValue = Get-PropertyValue $latestBuildList "value"
+    if ($null -eq $latestBuildValue) {
+        Write-Host "Skipping latest-build check because no builds were returned for definition $BuildDefinitionId and branch $BuildSourceBranch."
+        return $true
+    }
+
+    $latestBuilds = @($latestBuildValue)
+    if ($latestBuilds.Count -eq 0) {
+        Write-Host "Skipping latest-build check because no builds were returned for definition $BuildDefinitionId and branch $BuildSourceBranch."
+        return $true
+    }
+
+    $latestBuildId = Get-PropertyValue $latestBuilds[0] "id"
+    if ("$latestBuildId" -ne "$BuildId") {
+        Write-Host "Skipping GitHub PR build summary comment for build $BuildId because newer build $latestBuildId exists for $BuildSourceBranch."
+        return $false
+    }
+
+    return $true
+}
+
 function Publish-GitHubComment {
     param (
         [string] $PrNumber,
@@ -538,6 +583,9 @@ $build = Get-Build
 $buildResult = Get-PropertyValue $build "result"
 if ((Test-Truthy $SkipCanceledBuilds) -and $buildResult -in @("canceled", "abandoned")) {
     Write-Host "Skipping GitHub PR build summary comment for $buildResult build $BuildId."
+    exit 0
+}
+if (-not (Test-CurrentBuildIsLatest)) {
     exit 0
 }
 
