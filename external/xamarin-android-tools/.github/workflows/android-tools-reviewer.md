@@ -50,6 +50,7 @@ A maintainer commented `/review` on this pull request. Perform a thorough code r
 
 ## Constraints
 
+- **Always post at least one inline review comment**, even for clean PRs — add a brief 💡 observation on a key implementation line. The review framework requires at least one inline comment to submit the review.
 - Only comment on added/modified lines visible in the diff.
 - One issue per inline comment.
 - If the same issue appears many times, flag it once listing all affected files.

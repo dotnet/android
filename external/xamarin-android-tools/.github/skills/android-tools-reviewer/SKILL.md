@@ -85,7 +85,7 @@ Post your findings directly:
 - **Inline comments** on specific lines of the diff with the severity, category, and explanation.
 - **Review summary** with the overall verdict (✅ LGTM, ⚠️ Needs Changes, or ❌ Reject), issue counts by severity, and positive callouts.
 
-If no issues found **and CI is green**, submit with at most one or two 💡 suggestions and a positive summary.
+If no issues found **and CI is green**, submit with one or two 💡 suggestions on key implementation lines and a positive summary. **Always post at least one inline comment** — the review submission framework requires it.
 
 **Copilot-authored PRs:** If the PR author is `Copilot` (the GitHub Copilot coding agent) and the verdict is ⚠️ Needs Changes or ❌ Reject, prefix the review summary with `@copilot ` so the comment automatically triggers Copilot to address the feedback. Do NOT add the prefix for ✅ LGTM verdicts.
 
