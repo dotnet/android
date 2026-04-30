@@ -84,6 +84,12 @@ public class AcwMapWriterTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void BuildSummarySmokeTest_IntentionallyFails ()
+	{
+		Assert.Fail ("Intentional failure to verify Azure DevOps build summary PR comment posting.");
+	}
+
+	[Fact]
 	public void Write_MatchesExpectedAcwMapFormat ()
 	{
 		// Verify the format matches what LoadMapFile expects:

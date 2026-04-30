@@ -471,3 +471,39 @@ extends:
         condition: failed()
         jobs:
         - template: build-summary/v1.yml@yaml-templates
+
+      - stage: PostBuildSummaryComment
+        displayName: Post Build Summary Comment
+        dependsOn:
+        - mac_build
+        - win_build_test
+        - linux_build
+        - smoke_tests
+        - linux_tests
+        - msbuild_dotnet
+        - msbuilddevice_tests
+        - maui_tests
+        condition: and(always(), eq(variables['Build.Reason'], 'PullRequest'), ne(variables['System.PullRequest.PullRequestNumber'], ''), ne(variables['System.PullRequest.IsFork'], 'True'))
+        jobs:
+        - job: post_build_summary_comment
+          displayName: Post build summary to GitHub PR
+          pool:
+            name: AzurePipelines-EO
+            image: $(LinuxPoolImage1ESPT)
+            os: linux
+          steps:
+          - checkout: self
+            clean: true
+            fetchDepth: 1
+
+          - pwsh: >
+              $(Build.SourcesDirectory)/build-tools/automation/scripts/Post-BuildSummaryComment.ps1
+              -GitHubOwner dotnet
+              -GitHubRepo android
+            displayName: Post Azure DevOps build summary to GitHub PR
+            continueOnError: true
+            env:
+              GITHUB_TOKEN: $(GitHub.Token)
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+              COPILOT_BUILD_SUMMARY_OPT_IN_LOGINS: $(Copilot.BuildSummary.OptInLogins)
+              COPILOT_BUILD_SUMMARY_DISABLE_MENTIONS: $(Copilot.BuildSummary.DisableMentions)
