@@ -591,6 +591,39 @@ function Test-CurrentBuildIsLatest {
     return $true
 }
 
+function Update-BuildMetadataFromBuild {
+    param ([object] $Build)
+
+    if ([string]::IsNullOrWhiteSpace($BuildDefinitionId)) {
+        $definition = Get-PropertyValue $Build "definition"
+        $definitionId = Get-PropertyValue $definition "id"
+        if (-not [string]::IsNullOrWhiteSpace("$definitionId")) {
+            $script:BuildDefinitionId = "$definitionId"
+        }
+    }
+
+    if ([string]::IsNullOrWhiteSpace($BuildSourceBranch)) {
+        $sourceBranch = Get-PropertyValue $Build "sourceBranch"
+        if (-not [string]::IsNullOrWhiteSpace($sourceBranch)) {
+            $script:BuildSourceBranch = $sourceBranch
+        }
+    }
+
+    if ([string]::IsNullOrWhiteSpace($BuildSourceVersion)) {
+        $sourceVersion = Get-PropertyValue $Build "sourceVersion"
+        if (-not [string]::IsNullOrWhiteSpace($sourceVersion)) {
+            $script:BuildSourceVersion = $sourceVersion
+        }
+    }
+
+    if ([string]::IsNullOrWhiteSpace($BuildNumber)) {
+        $buildNumber = Get-PropertyValue $Build "buildNumber"
+        if (-not [string]::IsNullOrWhiteSpace($buildNumber)) {
+            $script:BuildNumber = $buildNumber
+        }
+    }
+}
+
 function Publish-GitHubComment {
     param (
         [string] $PrNumber,
@@ -627,6 +660,7 @@ function Publish-GitHubComment {
 
 $prNumber = Get-PullRequestNumber
 $build = Get-Build
+Update-BuildMetadataFromBuild $build
 $buildResult = Get-PropertyValue $build "result"
 if ((Test-Truthy $SkipCanceledBuilds) -and $buildResult -in @("canceled", "abandoned")) {
     Write-Host "Skipping GitHub PR build summary comment for $buildResult build $BuildId."
