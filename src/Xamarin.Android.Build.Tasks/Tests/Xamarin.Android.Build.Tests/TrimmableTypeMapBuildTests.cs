@@ -11,12 +11,16 @@ namespace Xamarin.Android.Build.Tests {
 	public class TrimmableTypeMapBuildTests : BaseTest {
 
 		[Test]
-		public void Build_WithTrimmableTypeMap_Succeeds ()
+		public void Build_WithTrimmableTypeMap_Succeeds ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();

@@ -3,6 +3,7 @@
 
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateTrimmableTypeMap" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateEmptyTypemapStub" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotBootstrapSources" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.TypeMap.Trimmable.CoreCLR.targets"
       Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
@@ -135,6 +136,15 @@
     <ItemGroup>
       <FileWrites Include="@(_TypeMapJavaFiles->'$(IntermediateOutputPath)android/src/%(RecursiveDir)%(Filename)%(Extension)')" />
     </ItemGroup>
+
+    <!-- Generate NativeAOT bootstrap Java sources (JavaInteropRuntime.java, NativeAotEnvironmentVars.java) -->
+    <GenerateNativeAotBootstrapSources
+        Condition=" '$(_AndroidRuntime)' == 'NativeAOT' "
+        OutputDirectory="$(IntermediateOutputPath)android"
+        TargetName="$(TargetName)"
+        Environments="@(_EnvironmentFiles)"
+        HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
+        EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)" />
 
     <!-- Set properties for ABI/RID used by CoreCLR _AddTrimmableTypeMapAssembliesToStore fallback -->
     <PropertyGroup>

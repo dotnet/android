@@ -25,7 +25,8 @@ public class GenerateAdditionalProviderSources : AndroidTask
 	[Required]
 	public string IntermediateOutputDirectory { get; set; } = "";
 
-	public string? OutputDirectory { get; set; }
+	[Required]
+	public string OutputDirectory { get; set; } = "";
 
 	[Required]
 	public string TargetName { get; set; } = "";
@@ -82,35 +83,7 @@ public class GenerateAdditionalProviderSources : AndroidTask
 
 		// For NativeAOT, generate JavaInteropRuntime.java and NativeAotEnvironmentVars.java
 		if (androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.NativeAOT) {
-			GenerateJavaSource (
-				"JavaInteropRuntime.java",
-				new Dictionary<string, string> (StringComparer.Ordinal) {
-					{ "@MAIN_ASSEMBLY_NAME@", TargetName },
-				}
-			);
-
-			// We care only about environment variables here
-			var envBuilder = new EnvironmentBuilder (Log);
-			envBuilder.Read (Environments);
-			GenerateNativeApplicationConfigSources.AddDefaultEnvironmentVariables (envBuilder, HttpClientHandlerType, EnableSGenConcurrent);
-
-			var envVarNames = new StringBuilder ();
-			var envVarValues = new StringBuilder ();
-			foreach (var kvp in envBuilder.EnvironmentVariables) {
-				// All the strings already have double-quotes properly quoted, EnvironmentBuilder took care of that
-				AppendEnvVarEntry (envVarNames, kvp.Key);
-				AppendEnvVarEntry (envVarValues, kvp.Value);
-			}
-
-			var envVars = new Dictionary<string, string> (StringComparer.Ordinal) {
-				{ "@ENVIRONMENT_VAR_NAMES@", envVarNames.ToString () },
-				{ "@ENVIRONMENT_VAR_VALUES@", envVarValues.ToString () },
-			};
-
-			GenerateJavaSource (
-				"NativeAotEnvironmentVars.java",
-				envVars
-			);
+			GenerateNativeAotBootstrapFiles (Log, OutputDirectory, TargetName, Environments, HttpClientHandlerType, EnableSGenConcurrent);
 		}
 
 		// Create additional application java sources.
@@ -171,5 +144,73 @@ public class GenerateAdditionalProviderSources : AndroidTask
 		string template = GetResource (resource);
 		template = applyTemplate (template);
 		Files.CopyIfStringChanged (template, Path.Combine (destDir, filename));
+	}
+
+	/// <summary>
+	/// Generates JavaInteropRuntime.java and NativeAotEnvironmentVars.java for NativeAOT apps.
+	/// Shared between the legacy (ILLink) and trimmable build paths.
+	/// </summary>
+	public static void GenerateNativeAotBootstrapFiles (
+		Microsoft.Build.Utilities.TaskLoggingHelper log,
+		string outputDirectory,
+		string targetName,
+		ITaskItem []? environments,
+		string? httpClientHandlerType,
+		bool enableSGenConcurrent)
+	{
+		GenerateJavaSource (
+			"JavaInteropRuntime.java",
+			new Dictionary<string, string> (StringComparer.Ordinal) {
+				{ "@MAIN_ASSEMBLY_NAME@", targetName },
+			}
+		);
+
+		// We care only about environment variables here
+		var envBuilder = new EnvironmentBuilder (log);
+		envBuilder.Read (environments);
+		GenerateNativeApplicationConfigSources.AddDefaultEnvironmentVariables (envBuilder, httpClientHandlerType, enableSGenConcurrent);
+
+		var envVarNames = new StringBuilder ();
+		var envVarValues = new StringBuilder ();
+		foreach (var kvp in envBuilder.EnvironmentVariables) {
+			// All the strings already have double-quotes properly quoted, EnvironmentBuilder took care of that
+			AppendEnvVarEntry (envVarNames, kvp.Key);
+			AppendEnvVarEntry (envVarValues, kvp.Value);
+		}
+
+		var envVars = new Dictionary<string, string> (StringComparer.Ordinal) {
+			{ "@ENVIRONMENT_VAR_NAMES@", envVarNames.ToString () },
+			{ "@ENVIRONMENT_VAR_VALUES@", envVarValues.ToString () },
+		};
+
+		GenerateJavaSource (
+			"NativeAotEnvironmentVars.java",
+			envVars
+		);
+
+		void AppendEnvVarEntry (StringBuilder sb, string value)
+		{
+			sb.Append ("\t\t\"");
+			sb.Append (value);
+			sb.Append ("\",\n");
+		}
+
+		void GenerateJavaSource (string fileName, Dictionary<string, string> replacements)
+		{
+			var assembly = typeof (GenerateAdditionalProviderSources).Assembly;
+			using var stream = assembly.GetManifestResourceStream (fileName);
+			using var reader = new StreamReader (stream);
+			var template = new StringBuilder (reader.ReadToEnd ());
+
+			foreach (var kvp in replacements) {
+				template.Replace (kvp.Key, kvp.Value);
+			}
+
+			var outputDir = Path.Combine (outputDirectory, "src", "net", "dot", "jni", "nativeaot");
+			Directory.CreateDirectory (outputDir);
+			var path = Path.Combine (outputDir, fileName);
+			log.LogDebugMessage ($"Writing: {path}");
+			Files.CopyIfStringChanged (template.ToString (), path);
+		}
 	}
 }
