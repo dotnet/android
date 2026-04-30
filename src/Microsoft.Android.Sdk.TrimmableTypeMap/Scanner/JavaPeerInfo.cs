@@ -126,6 +126,13 @@ public sealed record JavaPeerInfo
 	public string? InvokerTypeName { get; init; }
 
 	/// <summary>
+	/// Activation constructor style declared by <see cref="InvokerTypeName"/>.
+	/// Kept separate from <see cref="ActivationCtor"/>, which describes the
+	/// target type or its base types.
+	/// </summary>
+	public ActivationCtorStyle? InvokerActivationCtorStyle { get; init; }
+
+	/// <summary>
 	/// True if this is an open generic type definition.
 	/// Generic types get TypeMap entries but CreateInstance throws NotSupportedException.
 	/// </summary>

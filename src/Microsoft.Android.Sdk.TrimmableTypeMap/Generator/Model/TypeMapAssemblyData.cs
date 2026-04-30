@@ -111,6 +111,11 @@ sealed class JavaPeerProxyData
 	public TypeRefData? InvokerType { get; set; }
 
 	/// <summary>
+	/// Activation constructor style to use when creating <see cref="InvokerType"/>.
+	/// </summary>
+	public ActivationCtorStyle? InvokerActivationCtorStyle { get; set; }
+
+	/// <summary>
 	/// Whether this proxy has a CreateInstance that can actually create instances.
 	/// </summary>
 	public bool HasActivation => ActivationCtor != null || InvokerType != null;

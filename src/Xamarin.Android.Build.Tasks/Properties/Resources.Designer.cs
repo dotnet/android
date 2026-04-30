@@ -966,7 +966,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The MSBuild property &apos;{0}&apos; is not compatible with the {1} runtime and will be ignored. Either remove the property or guard it with a condition: Condition=&quot;&apos;$(UseMonoRuntime)&apos; == &apos;true&apos;&quot;.
+        ///   Looks up a localized string similar to The MSBuild property &apos;{0}&apos; is not compatible with the {1} runtime. The build cannot continue while this property is enabled. Either remove the property or guard it with a condition: Condition=&quot;&apos;$(UseMonoRuntime)&apos; == &apos;true&apos;&quot;.
         /// </summary>
         public static string XA1044 {
             get {
