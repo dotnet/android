@@ -349,7 +349,7 @@ function New-SummaryMarkdown {
 
     $records = @($Timeline.records)
     $currentStageName = Get-OptionalEnvironmentVariable "SYSTEM_STAGENAME"
-    $summaryStageNames = @($currentStageName, "StartBuildSummaryComment", "PostBuildSummaryComment")
+    $summaryStageNames = @($currentStageName, "StartBuildSummaryComment", "PostBuildSummaryComment", "BuildSummary")
     $stages = @($records | Where-Object {
         $_.type -eq "Stage" -and ($summaryStageNames -notcontains $_.identifier) -and ($summaryStageNames -notcontains $_.name)
     } | Sort-Object order)
@@ -360,6 +360,9 @@ function New-SummaryMarkdown {
             (Get-Count $_.errorCount) -gt 0 -or
             (Get-Count $_.warningCount) -gt 0
         )
+    } | Sort-Object order | Select-Object -First $MaxJobsToShow)
+    $tasksNeedingAttention = @($records | Where-Object {
+        $_.type -eq "Task" -and $_.result -in @("failed", "canceled", "succeededWithIssues", "abandoned")
     } | Sort-Object order | Select-Object -First $MaxJobsToShow)
 
     $failedStages = @($stages | Where-Object { $_.result -in @("failed", "canceled", "abandoned") })
@@ -456,8 +459,28 @@ function New-SummaryMarkdown {
             }
         }
         $lines.Add("")
-    } else {
-        $lines.Add("No failed or warning jobs were found in the Azure DevOps timeline records available to this step.")
+    }
+
+    if ($tasksNeedingAttention.Count -gt 0) {
+        $lines.Add("### Tasks needing attention")
+        $lines.Add("")
+        foreach ($task in $tasksNeedingAttention) {
+            $result = Get-DisplayResult $task
+            $taskName = Get-RecordName $task
+            $lines.Add("- $(Get-ResultIcon $result) **$taskName** - $result, $(Get-Count $task.errorCount) error(s), $(Get-Count $task.warningCount) warning(s)")
+            $issues = @(Get-Issues $task | Select-Object -First $MaxIssuesPerJob)
+            foreach ($issue in $issues) {
+                $message = Format-IssueMessage $issue.message
+                if (-not [string]::IsNullOrWhiteSpace($message)) {
+                    $lines.Add("  - ``$($issue.type)`` $message")
+                }
+            }
+        }
+        $lines.Add("")
+    }
+
+    if ($jobsNeedingAttention.Count -eq 0 -and $tasksNeedingAttention.Count -eq 0) {
+        $lines.Add("No failed or warning jobs or tasks were found in the Azure DevOps timeline records available to this step.")
         $lines.Add("")
     }
 
