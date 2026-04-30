@@ -29,6 +29,7 @@ public class TrimmableTypeMap
 
 	readonly ITypeMapWithAliasing _typeMap;
 	readonly ConcurrentDictionary<Type, JavaPeerProxy> _proxyCache = new ();
+	readonly ConcurrentDictionary<string, Type[]> _jniTargetTypeCache = new (StringComparer.Ordinal);
 	readonly ConcurrentDictionary<string, JavaPeerProxy[]> _jniProxyCache = new (StringComparer.Ordinal);
 	bool _nativeMethodsRegistered;
 
@@ -120,17 +121,24 @@ public class TrimmableTypeMap
 	/// </summary>
 	internal bool TryGetTargetTypes (string jniName, [NotNullWhen (true)] out Type[]? types)
 	{
-		var proxies = GetProxiesForJniName (jniName);
-		if (proxies.Length == 0) {
+		types = GetTargetTypesForJniName (jniName);
+		if (types.Length == 0) {
 			types = null;
 			return false;
 		}
 
-		types = new Type [proxies.Length];
-		for (int i = 0; i < proxies.Length; i++) {
-			types [i] = proxies [i].TargetType;
-		}
 		return true;
+	}
+
+	Type[] GetTargetTypesForJniName (string jniName)
+	{
+		return _jniTargetTypeCache.GetOrAdd (jniName, static (name, self) => {
+			var result = new List<Type> ();
+			foreach (var type in self._typeMap.GetTargetTypes (name)) {
+				result.Add (type);
+			}
+			return result.Count > 0 ? result.ToArray () : [];
+		}, this);
 	}
 
 	/// <summary>
@@ -142,7 +150,7 @@ public class TrimmableTypeMap
 	{
 		return _jniProxyCache.GetOrAdd (jniName, static (name, self) => {
 			var result = new List<JavaPeerProxy> ();
-			foreach (var type in self._typeMap.GetTypes (name)) {
+			foreach (var type in self._typeMap.GetProxyTypes (name)) {
 				var proxy = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
 				if (proxy is not null) {
 					result.Add (proxy);

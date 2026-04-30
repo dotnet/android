@@ -21,10 +21,19 @@ sealed class AggregateTypeMap : ITypeMapWithAliasing
 		_universes = universes;
 	}
 
-	public IEnumerable<Type> GetTypes (string jniName)
+	public IEnumerable<Type> GetTargetTypes (string jniName)
 	{
 		foreach (var universe in _universes) {
-			foreach (var type in universe.GetTypes (jniName)) {
+			foreach (var type in universe.GetTargetTypes (jniName)) {
+				yield return type;
+			}
+		}
+	}
+
+	public IEnumerable<Type> GetProxyTypes (string jniName)
+	{
+		foreach (var universe in _universes) {
+			foreach (var type in universe.GetProxyTypes (jniName)) {
 				yield return type;
 			}
 		}

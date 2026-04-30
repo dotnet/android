@@ -27,27 +27,37 @@ sealed class SingleUniverseTypeMap : ITypeMapWithAliasing
 		_proxyTypeMap = proxyTypeMap;
 	}
 
-	public IEnumerable<Type> GetTypes (string jniName)
+	public IEnumerable<Type> GetTargetTypes (string jniName)
+	{
+		foreach (var type in GetEntryTypes (jniName)) {
+			var proxy = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+			yield return proxy?.TargetType ?? type;
+		}
+	}
+
+	public IEnumerable<Type> GetProxyTypes (string jniName)
+	{
+		foreach (var type in GetEntryTypes (jniName)) {
+			if (type.GetCustomAttribute<JavaPeerProxy> (inherit: false) is not null) {
+				yield return type;
+			}
+		}
+	}
+
+	IEnumerable<Type> GetEntryTypes (string jniName)
 	{
 		if (!_typeMap.TryGetValue (jniName, out var mappedType)) {
 			yield break;
 		}
 
-		// Fast path: non-alias entry
-		if (mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false) is not null) {
+		var aliases = mappedType.GetCustomAttribute<JavaPeerAliasesAttribute> (inherit: false);
+		if (aliases is null) {
 			yield return mappedType;
 			yield break;
 		}
 
-		// Slow path: alias holder — follow each alias key
-		var aliases = mappedType.GetCustomAttribute<JavaPeerAliasesAttribute> (inherit: false);
-		if (aliases is null) {
-			yield break;
-		}
-
 		foreach (var key in aliases.Aliases) {
-			if (_typeMap.TryGetValue (key, out var aliasEntryType) &&
-				aliasEntryType.GetCustomAttribute<JavaPeerProxy> (inherit: false) is not null) {
+			if (_typeMap.TryGetValue (key, out var aliasEntryType)) {
 				yield return aliasEntryType;
 			}
 		}

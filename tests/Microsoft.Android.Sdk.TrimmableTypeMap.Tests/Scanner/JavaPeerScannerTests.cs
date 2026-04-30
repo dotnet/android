@@ -112,6 +112,19 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Scan_JniTypeSignature_DoNotGenerateAcw_DoesNotInheritActivationCtor ()
+	{
+		var nonGenerated = FindFixtureByJavaName ("net/dot/jni/test/MyJavaObject");
+		Assert.True (nonGenerated.DoNotGenerateAcw, "NonGeneratedJavaObject has GenerateJavaPeer=false");
+		Assert.True (nonGenerated.IsFromJniTypeSignature);
+		Assert.Null (nonGenerated.ActivationCtor);
+
+		var generated = FindFixtureByJavaName ("net/dot/jni/test/JavaDisposedObject");
+		Assert.False (generated.DoNotGenerateAcw, "JavaDisposedObject has the default GenerateJavaPeer=true");
+		Assert.NotNull (generated.ActivationCtor);
+	}
+
+	[Fact]
 	public void Scan_JniTypeSignature_DuplicateJniName_BothPresent ()
 	{
 		// Java.Interop.TestTypes.JavaObject has [JniTypeSignature("java/lang/Object", GenerateJavaPeer=false)]

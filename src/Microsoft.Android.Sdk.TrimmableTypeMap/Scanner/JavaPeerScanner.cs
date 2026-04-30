@@ -222,7 +222,7 @@ public sealed class JavaPeerScanner : IDisposable
 			var (marshalMethods, exportFields) = CollectMarshalMethods (typeDef, index, detectBaseOverrides: !doNotGenerateAcw && !isInterface);
 
 			// Resolve activation constructor
-			var activationCtor = ResolveActivationCtor (fullName, typeDef, index);
+			var activationCtor = ResolveActivationCtor (fullName, typeDef, index, registerInfo);
 
 			// For interfaces/abstract types, try to find invoker type name
 			if (isInterface || isAbstract) {
@@ -1129,7 +1129,7 @@ public sealed class JavaPeerScanner : IDisposable
 		};
 	}
 
-	ActivationCtorInfo? ResolveActivationCtor (string typeName, TypeDefinition typeDef, AssemblyIndex index)
+	ActivationCtorInfo? ResolveActivationCtor (string typeName, TypeDefinition typeDef, AssemblyIndex index, RegisterInfo? registerInfo)
 	{
 		var cacheKey = (typeName, index.AssemblyName);
 		if (activationCtorCache.TryGetValue (cacheKey, out var cached)) {
@@ -1144,13 +1144,18 @@ public sealed class JavaPeerScanner : IDisposable
 			return info;
 		}
 
+		if (ShouldSuppressInheritedActivationCtor (registerInfo)) {
+			return null;
+		}
+
 		// Walk base type hierarchy
 		var baseInfo = GetBaseTypeInfo (typeDef, index);
 		if (baseInfo is not null) {
 			var (baseTypeName, baseAssemblyName) = baseInfo.Value;
 			if (TryResolveType (baseTypeName, baseAssemblyName, out var baseHandle, out var baseIndex)) {
 				var baseTypeDef = baseIndex.Reader.GetTypeDefinition (baseHandle);
-				var result = ResolveActivationCtor (baseTypeName, baseTypeDef, baseIndex);
+				baseIndex.RegisterInfoByType.TryGetValue (baseHandle, out var baseRegisterInfo);
+				var result = ResolveActivationCtor (baseTypeName, baseTypeDef, baseIndex, baseRegisterInfo);
 				if (result is not null) {
 					activationCtorCache [cacheKey] = result;
 				}
@@ -1159,6 +1164,11 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 
 		return null;
+	}
+
+	static bool ShouldSuppressInheritedActivationCtor (RegisterInfo? registerInfo)
+	{
+		return registerInfo is { IsFromJniTypeSignature: true, DoNotGenerateAcw: true };
 	}
 
 	static ActivationCtorStyle? FindActivationCtorOnType (TypeDefinition typeDef, AssemblyIndex index)

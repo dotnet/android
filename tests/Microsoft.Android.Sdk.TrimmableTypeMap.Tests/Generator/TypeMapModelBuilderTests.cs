@@ -216,6 +216,22 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.Single (model.Entries);
 			Assert.Contains ("Java.Lang.Object, Mono.Android", model.Entries [0].ProxyTypeReference);
 		}
+
+		[Fact]
+		public void Build_JniTypeSignatureDoNotGenerateAcwWithoutActivation_NoProxy ()
+		{
+			var peer = FindFixtureByJavaName ("net/dot/jni/test/MyJavaObject");
+			Assert.True (peer.IsFromJniTypeSignature);
+			Assert.True (peer.DoNotGenerateAcw);
+			Assert.Null (peer.ActivationCtor);
+
+			var model = BuildModel (new [] { peer }, "TypeMap");
+
+			Assert.Empty (model.ProxyTypes);
+			Assert.Empty (model.Associations);
+			Assert.Single (model.Entries);
+			Assert.Contains ("Java.Interop.TestTypes.NonGeneratedJavaObject, TestFixtures", model.Entries [0].ProxyTypeReference);
+		}
 	}
 
 	public class ProxyTypes

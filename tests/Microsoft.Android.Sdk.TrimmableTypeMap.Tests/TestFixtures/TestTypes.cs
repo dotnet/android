@@ -956,6 +956,7 @@ namespace Java.Interop.TestTypes
 	public class JavaObject
 	{
 		public JavaObject () { }
+		public JavaObject (ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
 	}
 
 	[Java.Interop.JniTypeSignature ("net/dot/jni/test/JavaDisposedObject")]
