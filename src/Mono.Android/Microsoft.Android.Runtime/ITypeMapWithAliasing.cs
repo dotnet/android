@@ -15,16 +15,9 @@ namespace Microsoft.Android.Runtime;
 interface ITypeMapWithAliasing
 {
 	/// <summary>
-	/// Returns all managed target types mapped to a JNI name, resolving alias holders.
-	/// Entries backed by generated proxy types return the proxy's target type.
+	/// Returns all proxy types mapped to a JNI name, resolving alias holders.
 	/// </summary>
-	IEnumerable<Type> GetTargetTypes (string jniName);
-
-	/// <summary>
-	/// Returns generated proxy types mapped to a JNI name, resolving alias holders.
-	/// Entries without generated proxies are ignored.
-	/// </summary>
-	IEnumerable<Type> GetProxyTypes (string jniName);
+	IEnumerable<Type> GetTypes (string jniName);
 
 	/// <summary>
 	/// Resolves a managed type to its proxy type (the generated type that

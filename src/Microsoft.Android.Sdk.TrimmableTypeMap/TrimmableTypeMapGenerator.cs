@@ -145,11 +145,9 @@ public class TrimmableTypeMapGenerator
 
 		if (useSharedTypemapUniverse) {
 			// In Release builds all per-assembly typemaps are merged into a single
-			// shared universe dictionary.  Cross-assembly aliases (e.g. Java.Lang.Object
-			// in Mono.Android and JavaObject in Java.Interop both mapping to
-			// java/lang/Object) must be moved into the owner assembly's group so the
-			// ModelBuilder can handle them as an alias group and the runtime doesn't
-			// crash on duplicate keys.
+			// shared universe dictionary. Cross-assembly aliases must be moved into
+			// the owner assembly's group so the ModelBuilder can handle them as an
+			// alias group and the runtime doesn't crash on duplicate keys.
 			peersByAssembly = MergeCrossAssemblyAliases (allPeers);
 		} else {
 			// In Debug builds each typemap DLL has its own per-assembly universe, so
@@ -191,9 +189,7 @@ public class TrimmableTypeMapGenerator
 	/// assembly's group so the <see cref="ModelBuilder"/> can handle them as an alias group.
 	/// </summary>
 	/// <remarks>
-	/// Ownership is determined by <c>[Register]</c> over <c>[JniTypeSignature]</c> — the
-	/// canonical MCW binding type takes precedence. Among peers with the same attribute
-	/// kind, the first assembly in sorted order wins.
+	/// Ownership is determined by sorted assembly order.
 	/// </remarks>
 	internal static List<(string AssemblyName, List<JavaPeerInfo> Peers)> MergeCrossAssemblyAliases (List<JavaPeerInfo> allPeers)
 	{
@@ -208,18 +204,13 @@ public class TrimmableTypeMapGenerator
 			list.Add (peer);
 		}
 
-		// Build JNI name → owner assembly map.
-		// [Register] types take precedence over [JniTypeSignature] types.
-		// Among peers of the same kind, the first assembly (sorted order) wins.
-		var jniNameOwner = new Dictionary<string, (string AssemblyName, bool IsFromJniTypeSignature)> (StringComparer.Ordinal);
+		// Build JNI name → owner assembly map. First assembly in sorted order wins.
+		var jniNameOwner = new Dictionary<string, string> (StringComparer.Ordinal);
 		foreach (var kvp in groups) {
 			string assemblyName = kvp.Key;
 			foreach (var peer in kvp.Value) {
-				if (!jniNameOwner.TryGetValue (peer.JavaName, out var current)) {
-					jniNameOwner [peer.JavaName] = (assemblyName, peer.IsFromJniTypeSignature);
-				} else if (current.IsFromJniTypeSignature && !peer.IsFromJniTypeSignature) {
-					// [Register] type takes ownership from [JniTypeSignature] type
-					jniNameOwner [peer.JavaName] = (assemblyName, false);
+				if (!jniNameOwner.ContainsKey (peer.JavaName)) {
+					jniNameOwner [peer.JavaName] = assemblyName;
 				}
 			}
 		}
@@ -230,8 +221,8 @@ public class TrimmableTypeMapGenerator
 			string assemblyName = kvp.Key;
 			foreach (var peer in kvp.Value) {
 				var owner = jniNameOwner [peer.JavaName];
-				if (!string.Equals (owner.AssemblyName, assemblyName, StringComparison.Ordinal)) {
-					movedPeers.Add ((peer, owner.AssemblyName));
+				if (!string.Equals (owner, assemblyName, StringComparison.Ordinal)) {
+					movedPeers.Add ((peer, owner));
 				}
 			}
 		}

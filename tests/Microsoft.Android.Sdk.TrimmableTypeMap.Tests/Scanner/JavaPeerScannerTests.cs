@@ -97,51 +97,12 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Scan_JniTypeSignature_IsDiscovered ()
+	public void Scan_JniTypeSignature_IsIgnored ()
 	{
-		var peer = FindFixtureByJavaName ("net/dot/jni/test/JavaDisposedObject");
-		Assert.Equal ("Java.Interop.TestTypes.JavaDisposedObject", peer.ManagedTypeName);
-		Assert.False (peer.DoNotGenerateAcw, "GenerateJavaPeer=true should map to DoNotGenerateAcw=false");
-	}
-
-	[Fact]
-	public void Scan_JniTypeSignature_DoNotGenerateAcw ()
-	{
-		var nonGenerated = FindFixtureByJavaName ("net/dot/jni/test/MyJavaObject");
-		Assert.True (nonGenerated.DoNotGenerateAcw, "NonGeneratedJavaObject has GenerateJavaPeer=false");
-	}
-
-	[Fact]
-	public void Scan_JniTypeSignature_DoNotGenerateAcw_DoesNotInheritActivationCtor ()
-	{
-		var nonGenerated = FindFixtureByJavaName ("net/dot/jni/test/MyJavaObject");
-		Assert.True (nonGenerated.DoNotGenerateAcw, "NonGeneratedJavaObject has GenerateJavaPeer=false");
-		Assert.True (nonGenerated.IsFromJniTypeSignature);
-		Assert.Null (nonGenerated.ActivationCtor);
-
-		var generated = FindFixtureByJavaName ("net/dot/jni/test/JavaDisposedObject");
-		Assert.False (generated.DoNotGenerateAcw, "JavaDisposedObject has the default GenerateJavaPeer=true");
-		Assert.NotNull (generated.ActivationCtor);
-	}
-
-	[Fact]
-	public void Scan_JniTypeSignature_DuplicateJniName_BothPresent ()
-	{
-		// Java.Interop.TestTypes.JavaObject has [JniTypeSignature("java/lang/Object", GenerateJavaPeer=false)]
-		// and Java.Lang.Object has [Register("java/lang/Object", DoNotGenerateAcw=true)].
-		// Both should be present in the scan results — alias support (PR #11122) handles
-		// the runtime deduplication.
 		var peers = ScanFixtures ();
-		var javaObjectPeers = peers.Where (p => p.JavaName == "java/lang/Object").ToList ();
-		Assert.Equal (2, javaObjectPeers.Count);
-	}
 
-	[Fact]
-	public void Scan_JniTypeSignature_SubclassExtendsJavaPeer ()
-	{
-		// JavaDisposedObject extends JavaObject which has [JniTypeSignature(GenerateJavaPeer=false)]
-		// The scanner should still detect JavaDisposedObject as extending a Java peer
-		var peer = FindFixtureByJavaName ("net/dot/jni/test/JavaDisposedObject");
-		Assert.NotNull (peer);
+		Assert.DoesNotContain (peers, p => p.ManagedTypeName.StartsWith ("Java.Interop.TestTypes.", StringComparison.Ordinal));
+		Assert.DoesNotContain (peers, p => p.JavaName.StartsWith ("net/dot/jni/test/", StringComparison.Ordinal));
+		Assert.Single (peers, p => p.JavaName == "java/lang/Object");
 	}
 }
