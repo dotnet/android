@@ -25,6 +25,19 @@
     </PropertyGroup>
   </Target>
 
+  <!--
+    Android apps do not have a managed Main(), so the upstream
+    _PrepareTrimConfiguration target's EntryPoint root is invalid. Root the app
+    assembly with RootMode=All instead so ILLink includes it in linked output.
+  -->
+  <Target Name="_FixTrimmableTypeMapRootAssembly"
+      AfterTargets="PrepareForILLink">
+    <ItemGroup>
+      <TrimmerRootAssembly Remove="@(IntermediateAssembly->'%(Filename)')" />
+      <TrimmerRootAssembly Include="@(IntermediateAssembly->'%(Filename)')" RootMode="All" />
+    </ItemGroup>
+  </Target>
+
   <!-- Add TypeMap DLLs to assembly store with per-ABI metadata.
        TypeMap DLLs are ABI-agnostic (pure IL), so the same DLLs are added for every ABI.
        This target batches over @(_BuildTargetAbis) to add items per-ABI. -->
