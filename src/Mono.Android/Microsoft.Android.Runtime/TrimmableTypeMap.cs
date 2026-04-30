@@ -30,6 +30,7 @@ public class TrimmableTypeMap
 	readonly ITypeMapWithAliasing _typeMap;
 	readonly ConcurrentDictionary<Type, JavaPeerProxy> _proxyCache = new ();
 	readonly ConcurrentDictionary<string, JavaPeerProxy[]> _jniProxyCache = new (StringComparer.Ordinal);
+	bool _nativeMethodsRegistered;
 
 	TrimmableTypeMap (ITypeMapWithAliasing typeMap)
 	{
@@ -77,14 +78,23 @@ public class TrimmableTypeMap
 				throw new InvalidOperationException ("TrimmableTypeMap has already been initialized.");
 			}
 
-			var instance = new TrimmableTypeMap (typeMap);
-			instance.RegisterNatives ();
-			s_instance = instance;
+			s_instance = new TrimmableTypeMap (typeMap);
 		}
 	}
 
-	unsafe void RegisterNatives ()
+	internal static void RegisterNativeMethods ()
 	{
+		lock (s_initLock) {
+			Instance.RegisterNativeMethodsCore ();
+		}
+	}
+
+	unsafe void RegisterNativeMethodsCore ()
+	{
+		if (_nativeMethodsRegistered) {
+			throw new InvalidOperationException ("TrimmableTypeMap native methods have already been registered.");
+		}
+
 		// Use the `string` overload of `JniType` deliberately. Its underlying
 		// `JniEnvironment.Types.TryFindClass(string, bool)` tries raw JNI `FindClass`
 		// first and, if that fails, falls back to `Class.forName(name, true, info.Runtime.ClassLoader)`,
@@ -100,6 +110,7 @@ public class TrimmableTypeMap
 			var method = new JniNativeMethod (name, sig, onRegisterNatives);
 			JniEnvironment.Types.RegisterNatives (runtimeClass.PeerReference, [method]);
 		}
+		_nativeMethodsRegistered = true;
 	}
 
 	/// <summary>
