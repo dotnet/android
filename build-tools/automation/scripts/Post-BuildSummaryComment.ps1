@@ -575,4 +575,9 @@ if (-not $SkipAzureDevOpsSummary) {
 }
 
 $comment = Publish-GitHubComment -PrNumber $prNumber -Body $markdown
-Write-Host "Posted GitHub PR comment: $($comment.html_url)"
+$commentUrl = Get-PropertyValue $comment "html_url"
+if (-not [string]::IsNullOrWhiteSpace($commentUrl)) {
+    Write-Host "Posted GitHub PR comment: $commentUrl"
+} else {
+    Write-Host "Posted or updated GitHub PR build summary comment."
+}
