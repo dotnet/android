@@ -108,8 +108,9 @@ public sealed class RootTypeMapAssemblyGenerator
 				MetadataTokens.MethodDefinitionHandle (pe.Metadata.GetRowCount (TableIndex.MethodDef) + 1));
 		}
 
-		// Emit [assembly: TypeMapAssemblyTargetAttribute<__TypeMapAnchor>("name")] for each per-assembly typemap
-		EmitAssemblyTargetAttributes (pe, anchorTypeHandle, perAssemblyTypeMapNames);
+		// Emit [assembly: TypeMapAssemblyTargetAttribute<T>("name")] for each per-assembly typemap.
+		// T must match the group type later passed to TypeMapping.GetOrCreate*TypeMapping<T>().
+		EmitAssemblyTargetAttributes (pe, anchorTypeHandle, perAssemblyTypeMapNames, useSharedTypemapUniverse);
 
 		// Emit [assembly: IgnoresAccessChecksTo("...")] so TypeMapLoader.Initialize() can access
 		// internal types (SingleUniverseTypeMap, AggregateTypeMap in Mono.Android,
@@ -126,20 +127,31 @@ public sealed class RootTypeMapAssemblyGenerator
 		pe.WritePE (stream);
 	}
 
-	static void EmitAssemblyTargetAttributes (PEAssemblyBuilder pe, EntityHandle anchorTypeHandle, IReadOnlyList<string> perAssemblyTypeMapNames)
+	static void EmitAssemblyTargetAttributes (PEAssemblyBuilder pe, EntityHandle anchorTypeHandle, IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse)
 	{
 		var openAttrRef = pe.Metadata.AddTypeReference (pe.SystemRuntimeInteropServicesRef,
 			pe.Metadata.GetOrAddString ("System.Runtime.InteropServices"),
 			pe.Metadata.GetOrAddString ("TypeMapAssemblyTargetAttribute`1"));
 
-		var closedAttrTypeSpec = pe.MakeGenericTypeSpec (openAttrRef, anchorTypeHandle);
+		MemberReferenceHandle GetCtorRef (EntityHandle targetAnchorType)
+		{
+			var closedAttrTypeSpec = pe.MakeGenericTypeSpec (openAttrRef, targetAnchorType);
+			return pe.AddMemberRef (closedAttrTypeSpec, ".ctor",
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
+					rt => rt.Void (),
+					p => p.AddParameter ().Type ().String ()));
+		}
 
-		var ctorRef = pe.AddMemberRef (closedAttrTypeSpec, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
-				rt => rt.Void (),
-				p => p.AddParameter ().Type ().String ()));
+		var sharedCtorRef = useSharedTypemapUniverse ? GetCtorRef (anchorTypeHandle) : default;
 
 		foreach (var name in perAssemblyTypeMapNames) {
+			var ctorRef = sharedCtorRef;
+			if (!useSharedTypemapUniverse) {
+				var asmRef = pe.FindOrAddAssemblyRef (name);
+				var perAssemblyAnchorRef = pe.Metadata.AddTypeReference (asmRef,
+					default, pe.Metadata.GetOrAddString ("__TypeMapAnchor"));
+				ctorRef = GetCtorRef (perAssemblyAnchorRef);
+			}
 			var blobHandle = pe.BuildAttributeBlob (blob => blob.WriteSerializedString (name));
 			pe.Metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorRef, blobHandle);
 		}
