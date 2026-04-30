@@ -10,6 +10,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   <UsingTask TaskName="Xamarin.Android.Tasks.SetNdkPathForIlc" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotLibraryLoadAssemblerSources" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotEnvironmentAssemblerSources" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.LinkNativeAotSharedLibrary" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <!-- Default property values for NativeAOT -->
   <PropertyGroup>
@@ -275,46 +276,76 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 
   <!--
     With NativeLib=static, ILC's LinkNative target produces a .a archive via `ar`.
-    We need to link the ILC .o output + all LinkerArg items into a .so ourselves.
-    This target runs after LinkNative and produces the shared library that Android needs.
+    We need to link the ILC .o output + all NativeLibrary/system libs into a .so ourselves.
+    This target runs after LinkNative and uses ld.lld directly via LinkNativeAotSharedLibrary task.
   -->
   <Target Name="_AndroidLinkNativeAotSharedLibrary"
       AfterTargets="LinkNative"
+      DependsOnTargets="_PrepareNativeAotAndroidAppInputs"
       Inputs="$(NativeObject);@(NativeLibrary)"
       Outputs="$(NativeOutputPath)$(NativeBinaryPrefix)$(TargetName).so">
     <PropertyGroup>
       <_AndroidNativeAotSharedLibrary>$(NativeOutputPath)$(NativeBinaryPrefix)$(TargetName).so</_AndroidNativeAotSharedLibrary>
+      <!-- NDK paths for CRT objects and compiler-rt -->
+      <_NdkApiSysrootDir>$(_NdkSysrootDir)$(_NDKApiLevel)/</_NdkApiSysrootDir>
+      <_NdkClangResourceDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/lib/clang</_NdkClangResourceDir>
     </PropertyGroup>
+
     <ItemGroup>
-      <_AndroidNativeAotLinkerArgs Include="&quot;$(NativeObject)&quot;" />
-      <_AndroidNativeAotLinkerArgs Include="-shared" />
-      <_AndroidNativeAotLinkerArgs Include="-fuse-ld=lld" />
-      <_AndroidNativeAotLinkerArgs Include="-o &quot;$(_AndroidNativeAotSharedLibrary)&quot;" />
-      <!-- These flags are in the ILC targets' LinkNative/LinkerArg but conditioned on NativeLib=Shared
-           or LinkerFlavor=lld, so they're missing when NativeLib=static. Add them back. -->
-      <_AndroidNativeAotLinkerArgs Include="-Wl,-e,0x0" />
-      <_AndroidNativeAotLinkerArgs Include="-Wl,-z,max-page-size=16384" />
-      <_AndroidNativeAotLinkerArgs Include="-Wl,--version-script=&quot;$(ExportsFile)&quot;" Condition="'$(ExportsFile)' != ''" />
-      <_AndroidNativeAotLinkerArgs Include="-Wl,--export-dynamic" Condition="'$(ExportsFile)' != ''" />
-      <_AndroidNativeAotLinkerArgs Include="-Wl,--discard-all" />
-      <_AndroidNativeAotLinkerArgs Include="-Wl,--gc-sections" />
-      <_AndroidNativeAotLinkerArgs Include="-Wl,-T,&quot;$(NativeIntermediateOutputPath)sections.ld&quot;" />
-      <_AndroidNativeAotLinkerArgs Include="@(LinkerArg)" />
+      <!-- CRT start file -->
+      <_NativeAotCrtStartFiles Include="$(_NdkApiSysrootDir)crtbegin_so.o">
+        <Abi>@(_PrivateBuildTargetAbi)</Abi>
+      </_NativeAotCrtStartFiles>
+
+      <!-- CRT end file -->
+      <_NativeAotCrtEndFiles Include="$(_NdkApiSysrootDir)crtend_so.o">
+        <Abi>@(_PrivateBuildTargetAbi)</Abi>
+      </_NativeAotCrtEndFiles>
+
+      <!-- Library search paths (matching what clang provides) -->
+      <_NativeAotLibSearchPaths Include="$(_NdkApiSysrootDir)" />
+      <_NativeAotLibSearchPaths Include="$(_NdkSysrootDir)" />
+
+      <!-- ILC runtime .a files are already in @(NativeLibrary) from SetupOSSpecificProps -->
+      <!-- Android-added libraries from _AndroidComputeIlcCompileInputs are in @(_NdkLibs) -->
+      <_NativeAotLinkLibraries Include="@(NativeLibrary)" />
+      <_NativeAotLinkLibraries Include="@(_NdkLibs)" />
+
+      <!-- Additional .o files (jni_init, environment) -->
+      <_NativeAotAdditionalObjects Include="@(_PrivateJniInitFuncsNativeObjectFile)" />
+      <_NativeAotAdditionalObjects Include="@(_PrivateEnvironmentNativeObjectFile)" />
+
+      <!-- System libraries (resolved via -L search paths) -->
+      <_NativeAotSystemLibraries Include="dl" />
+      <_NativeAotSystemLibraries Include="z" />
+      <_NativeAotSystemLibraries Include="log" />
+      <_NativeAotSystemLibraries Include="m" />
+      <_NativeAotSystemLibraries Include="c" />
+
+      <!-- Compiler-rt builtins and unwinder (explicit paths from NDK) -->
+      <_NativeAotCompilerRtLibs Include="$(_NdkClangResourceDir)/**/libclang_rt.builtins-$(_NdkAbi)-android.a" />
+      <_NativeAotCompilerRtLibs Include="$(_NdkClangResourceDir)/**/$(_NdkAbi)/libunwind.a" />
     </ItemGroup>
 
-    <!-- Linker script to retain the __modules section (required by NativeAOT runtime) -->
-    <WriteLinesToFile File="$(NativeIntermediateOutputPath)sections.ld" Lines="OVERWRITE_SECTIONS { __modules : { KEEP(*(__modules)) } }" Overwrite="true" />
-
-    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName($(_AndroidNativeAotSharedLibrary)))" />
-    <Exec Command="&quot;$(CppLinker)&quot; @(_AndroidNativeAotLinkerArgs, ' ')" />
-
-    <!-- Strip debug symbols, matching what ILC's LinkNative does -->
-    <Exec Condition="'$(StripSymbols)' == 'true' and '$(NativeDebugSymbols)' == 'true'"
-        Command="&quot;$(ObjCopyName)&quot; --only-keep-debug &quot;$(_AndroidNativeAotSharedLibrary)&quot; &quot;$(_AndroidNativeAotSharedLibrary)$(NativeSymbolExt)&quot;" />
-    <Exec Condition="'$(StripSymbols)' == 'true'"
-        Command="&quot;$(ObjCopyName)&quot; --strip-debug --strip-unneeded &quot;$(_AndroidNativeAotSharedLibrary)&quot;" />
-    <Exec Condition="'$(StripSymbols)' == 'true' and '$(NativeDebugSymbols)' == 'true'"
-        Command="&quot;$(ObjCopyName)&quot; --add-gnu-debuglink=&quot;$(_AndroidNativeAotSharedLibrary)$(NativeSymbolExt)&quot; &quot;$(_AndroidNativeAotSharedLibrary)&quot;" />
+    <LinkNativeAotSharedLibrary
+        AndroidBinUtilsDirectory="$(_NdkBinDir)"
+        IntermediateOutputPath="$(NativeIntermediateOutputPath)"
+        RuntimePackLibraryDirectories="@(RuntimePackLibraryDirectories)"
+        NativeObject="$(NativeObject)"
+        OutputSharedLibrary="$(_AndroidNativeAotSharedLibrary)"
+        NativeLibraries="@(_NativeAotLinkLibraries)"
+        AdditionalObjectFiles="@(_NativeAotAdditionalObjects)"
+        CrtStartFiles="@(_NativeAotCrtStartFiles)"
+        CrtEndFiles="@(_NativeAotCrtEndFiles)"
+        CompilerRuntimeLibraries="@(_NativeAotCompilerRtLibs)"
+        SystemLibraries="@(_NativeAotSystemLibraries)"
+        LibrarySearchPaths="@(_NativeAotLibSearchPaths)"
+        ExportsFile="$(ExportsFile)"
+        LinkerScript="$(NativeIntermediateOutputPath)sections.ld"
+        LinkerScriptContent="OVERWRITE_SECTIONS { __modules : { KEEP(*(__modules)) } }"
+        SupportedAbis="@(_PrivateBuildTargetAbi)"
+        DebugBuild="$(AndroidIncludeDebugSymbols)"
+    />
 
     <ItemGroup>
       <!-- Replace the .a that NativeCompile/ComputeLinkedFilesToPublish would publish with our .so -->
@@ -324,7 +355,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       </ResolvedFileToPublish>
       <FileWrites Include="$(_AndroidNativeAotSharedLibrary)" />
-      <FileWrites Include="$(_AndroidNativeAotSharedLibrary)$(NativeSymbolExt)" Condition="'$(StripSymbols)' == 'true' and '$(NativeDebugSymbols)' == 'true'" />
       <FileWrites Include="$(NativeIntermediateOutputPath)sections.ld" />
     </ItemGroup>
   </Target>

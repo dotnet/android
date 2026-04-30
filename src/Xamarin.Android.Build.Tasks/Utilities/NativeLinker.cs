@@ -76,7 +76,7 @@ class NativeLinker
 		ld = Path.Combine (binutilsDir, MonoAndroidHelper.GetExecutablePath (binutilsDir, "ld"));
 		objcopy = Path.Combine (binutilsDir, MonoAndroidHelper.GetExecutablePath (binutilsDir, "llvm-objcopy"));
 
-		extraArgs.Add ($"-soname {soname}");
+		extraArgs.Add ($"-soname {MonoAndroidHelper.QuoteFileNameArgument (soname)}");
 
 		string? elfArch = null;
 		uint maxPageSize;
@@ -116,7 +116,9 @@ class NativeLinker
 		extraArgs.Add ($"-z max-page-size={maxPageSize}");
 
 		string? nativeLibsDir = MonoAndroidHelper.GetRuntimePackNativeLibDir (MonoAndroidHelper.AbiToTargetArch (abi), runtimePackLibDirs);
-		extraArgs.Add ($"-L {MonoAndroidHelper.QuoteFileNameArgument (nativeLibsDir)}");
+		if (!nativeLibsDir.IsNullOrEmpty ()) {
+			extraArgs.Add ($"-L {MonoAndroidHelper.QuoteFileNameArgument (nativeLibsDir)}");
+		}
 	}
 
 	/// <summary>

@@ -60,9 +60,14 @@ public class LinkNativeAotSharedLibrary : AndroidTask
 	public ITaskItem []? CrtEndFiles { get; set; }
 
 	/// <summary>
-	/// Compiler-rt and unwinder libraries to link after user libraries
+	/// Compiler-rt and unwinder libraries to link after user libraries (explicit file paths)
 	/// </summary>
 	public ITaskItem []? CompilerRuntimeLibraries { get; set; }
+
+	/// <summary>
+	/// System libraries to link with -l (e.g., "dl", "c", "m", "z", "log")
+	/// </summary>
+	public ITaskItem []? SystemLibraries { get; set; }
 
 	/// <summary>
 	/// Additional library search paths (e.g., NDK sysroot paths)
@@ -147,9 +152,10 @@ public class LinkNativeAotSharedLibrary : AndroidTask
 
 		// Build the link items in order:
 		// 1. ILC object file
-		// 2. Native libraries (.a archives)
-		// 3. Additional object files (jni_init, environment, etc.)
-		// 4. Compiler-rt and unwinder libraries
+		// 2. Native libraries (.a archives from ILC runtime pack)
+		// 3. System libraries (-ldl, -lz, -llog, -lm, -lc)
+		// 4. Additional object files (jni_init, environment, etc.)
+		// 5. Compiler-rt and unwinder libraries
 		var linkItems = new List<ITaskItem> ();
 
 		var nativeObj = new TaskItem (NativeObject.ItemSpec);
@@ -160,6 +166,12 @@ public class LinkNativeAotSharedLibrary : AndroidTask
 			var item = new TaskItem (lib.ItemSpec);
 			item.SetMetadata (KnownMetadata.Abi, abi);
 			linkItems.Add (item);
+		}
+
+		if (SystemLibraries != null) {
+			foreach (var lib in SystemLibraries) {
+				linkItems.Add (NativeLinker.MakeLibraryItem (lib.ItemSpec, abi));
+			}
 		}
 
 		if (AdditionalObjectFiles != null) {
