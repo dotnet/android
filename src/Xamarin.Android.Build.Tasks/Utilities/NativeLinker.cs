@@ -22,10 +22,8 @@ class NativeLinker
 		"--gc-sections",
 		// "--icf=safe",
 		// "--lto=full|thin",
-		"--export-dynamic",
 		"-z relro",
 		"-z noexecstack",
-		"-z max-page-size=16384",
 		"-z now", // we need it for security reasons (without it PLT can be overwritten)
 		"--enable-new-dtags",
 		"--build-id=sha1",
@@ -52,6 +50,19 @@ class NativeLinker
 	public string? NdkRootPath { get; set; }
 	public string? NdkApiLevel { get; set; }
 	public int ZipAlignmentPages { get; set; } = AndroidZipAlign.DefaultZipAlignment64Bit;
+
+	// NativeAOT-specific options
+	public bool ExportDynamic { get; set; } = true;
+	public bool UseEhFrameHdr { get; set; } = false;
+	public bool DiscardAll { get; set; } = false;
+	public bool AsNeeded { get; set; } = false;
+	public bool HashStyleBoth { get; set; } = false;
+	public bool LittleEndian { get; set; } = false;
+	public string? VersionScript { get; set; }
+	public string? LinkerScript { get; set; }
+	public string? EntryPoint { get; set; }
+	public string? CompressDebugSections { get; set; }
+	public List<string>? AdditionalSearchPaths { get; set; }
 
 	public NativeLinker (TaskLoggingHelper log, string abi, string soname, string binutilsDir, string intermediateDir,
 	                     IEnumerable<ITaskItem> runtimePackLibDirs, CancellationToken? cancellationToken = null, Action? cancelTask = null)
@@ -149,18 +160,60 @@ class NativeLinker
 			sw.WriteLine (arg);
 		}
 
+		if (ExportDynamic) {
+			sw.WriteLine ("--export-dynamic");
+		}
+
 		if (AllowUndefinedSymbols) {
 			sw.WriteLine ("--allow-shlib-undefined");
 		} else {
 			sw.WriteLine ("--no-undefined");
 		}
 
-		if (TargetsCLR) {
-			sw.WriteLine ("--eh-frame-hdr"); // CoreCLR needs it for its exception stack unwinding
+		if (TargetsCLR || UseEhFrameHdr) {
+			sw.WriteLine ("--eh-frame-hdr");
 		}
 
 		if (UseSymbolic) {
 			sw.WriteLine ("-Bsymbolic");
+		}
+
+		if (LittleEndian) {
+			sw.WriteLine ("-EL");
+		}
+
+		if (HashStyleBoth) {
+			sw.WriteLine ("--hash-style=both");
+		}
+
+		if (DiscardAll) {
+			sw.WriteLine ("--discard-all");
+		}
+
+		if (AsNeeded) {
+			sw.WriteLine ("--as-needed");
+		}
+
+		if (!EntryPoint.IsNullOrEmpty ()) {
+			sw.WriteLine ($"-e {EntryPoint}");
+		}
+
+		if (!VersionScript.IsNullOrEmpty ()) {
+			sw.WriteLine ($"--version-script={MonoAndroidHelper.QuoteFileNameArgument (VersionScript)}");
+		}
+
+		if (!LinkerScript.IsNullOrEmpty ()) {
+			sw.WriteLine ($"-T {MonoAndroidHelper.QuoteFileNameArgument (LinkerScript)}");
+		}
+
+		if (!CompressDebugSections.IsNullOrEmpty ()) {
+			sw.WriteLine ($"--compress-debug-sections={CompressDebugSections}");
+		}
+
+		if (AdditionalSearchPaths != null) {
+			foreach (string path in AdditionalSearchPaths) {
+				sw.WriteLine ($"-L {MonoAndroidHelper.QuoteFileNameArgument (path)}");
+			}
 		}
 
 		// This MUST go before extra args, since the NDK library path must take precedence over the path in extra args set in the ctor
