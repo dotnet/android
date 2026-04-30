@@ -107,6 +107,14 @@ extends:
               $(Build.SourcesDirectory)/build-tools/automation/scripts/Post-BuildSummaryComment.ps1
               -GitHubOwner dotnet
               -GitHubRepo android
+              -AzureDevOpsCollectionUri "$(System.CollectionUri)"
+              -AzureDevOpsProject "$(System.TeamProject)"
+              -BuildId "$(Build.BuildId)"
+              -BuildDefinitionId "$(Build.DefinitionId)"
+              -BuildNumber "$(Build.BuildNumber)"
+              -BuildSourceBranch "$(Build.SourceBranch)"
+              -BuildSourceVersion "$(Build.SourceVersion)"
+              -PullRequestNumber "$(System.PullRequest.PullRequestNumber)"
               -SkipAzureDevOpsSummary
             displayName: Mark GitHub PR build summary as running
             continueOnError: true
@@ -530,6 +538,14 @@ extends:
               $(Build.SourcesDirectory)/build-tools/automation/scripts/Post-BuildSummaryComment.ps1
               -GitHubOwner dotnet
               -GitHubRepo android
+              -AzureDevOpsCollectionUri "$(System.CollectionUri)"
+              -AzureDevOpsProject "$(System.TeamProject)"
+              -BuildId "$(Build.BuildId)"
+              -BuildDefinitionId "$(Build.DefinitionId)"
+              -BuildNumber "$(Build.BuildNumber)"
+              -BuildSourceBranch "$(Build.SourceBranch)"
+              -BuildSourceVersion "$(Build.SourceVersion)"
+              -PullRequestNumber "$(System.PullRequest.PullRequestNumber)"
             displayName: Post Azure DevOps build summary to GitHub PR
             continueOnError: true
             env:
