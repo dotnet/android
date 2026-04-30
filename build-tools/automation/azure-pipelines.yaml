@@ -86,6 +86,36 @@ extends:
     settings:
       skipBuildTagsForGitHubPullRequests: true
     stages:
+    - ${{ if eq(variables['Build.DefinitionName'], 'Xamarin.Android-PR') }}:
+      - stage: StartBuildSummaryComment
+        displayName: Start Build Summary Comment
+        dependsOn: []
+        condition: and(eq(variables['Build.Reason'], 'PullRequest'), ne(variables['System.PullRequest.PullRequestNumber'], ''), ne(variables['System.PullRequest.IsFork'], 'True'))
+        jobs:
+        - job: start_build_summary_comment
+          displayName: Mark build summary comment as running
+          pool:
+            name: AzurePipelines-EO
+            image: $(LinuxPoolImage1ESPT)
+            os: linux
+          steps:
+          - checkout: self
+            clean: true
+            fetchDepth: 1
+
+          - pwsh: >
+              $(Build.SourcesDirectory)/build-tools/automation/scripts/Post-BuildSummaryComment.ps1
+              -GitHubOwner dotnet
+              -GitHubRepo android
+              -SkipAzureDevOpsSummary
+            displayName: Mark GitHub PR build summary as running
+            continueOnError: true
+            env:
+              GITHUB_TOKEN: $(GitHub.Token)
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+              COPILOT_BUILD_SUMMARY_OPT_IN_LOGINS: $(Copilot.BuildSummary.OptInLogins)
+              COPILOT_BUILD_SUMMARY_DISABLE_MENTIONS: $(Copilot.BuildSummary.DisableMentions)
+
     - template: /build-tools/automation/yaml-templates/build-macos.yaml@self
 
     - template: /build-tools/automation/yaml-templates/build-windows.yaml@self

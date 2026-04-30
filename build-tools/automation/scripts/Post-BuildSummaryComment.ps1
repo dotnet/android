@@ -11,11 +11,14 @@ param (
     [string] $BuildSourceVersion = $env:BUILD_SOURCEVERSION,
     [string] $PullRequestNumber = $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER,
     [string] $SummaryMarkdownPath,
+    [string] $BuildJsonPath,
     [string] $TimelineJsonPath,
     [string] $PullRequestJsonPath,
     [string] $CopilotOptInLogins = $env:COPILOT_BUILD_SUMMARY_OPT_IN_LOGINS,
     [string] $CopilotAuthorLogins = "copilot,copilot-swe-agent,github-copilot[bot]",
     [string] $DisableCopilotMentions = $env:COPILOT_BUILD_SUMMARY_DISABLE_MENTIONS,
+    [string] $SkipCanceledBuilds = "true",
+    [switch] $SkipAzureDevOpsSummary,
     [switch] $DryRun,
     [int] $MaxJobsToShow = 20,
     [int] $MaxIssuesPerJob = 3
@@ -119,6 +122,22 @@ function Get-Timeline {
     return Invoke-AzureDevOpsApi "/_apis/build/builds/$escapedBuildId/timeline?api-version=7.1"
 }
 
+function Get-Build {
+    if (-not [string]::IsNullOrWhiteSpace($BuildJsonPath)) {
+        if (-not (Test-Path -LiteralPath $BuildJsonPath)) {
+            throw "BuildJsonPath '$BuildJsonPath' does not exist."
+        }
+        return Get-Content -LiteralPath $BuildJsonPath -Raw | ConvertFrom-Json
+    }
+
+    if ([string]::IsNullOrWhiteSpace($BuildId)) {
+        throw "BuildId is required."
+    }
+
+    $escapedBuildId = [Uri]::EscapeDataString($BuildId)
+    return Invoke-AzureDevOpsApi "/_apis/build/builds/$escapedBuildId`?api-version=7.1"
+}
+
 function Get-ResultIcon {
     param ([string] $Result)
 
@@ -176,6 +195,24 @@ function Get-Count {
         return 0
     }
     return [int] $Value
+}
+
+function Get-PropertyValue {
+    param (
+        [object] $Object,
+        [string] $Name
+    )
+
+    if ($null -eq $Object) {
+        return $null
+    }
+
+    $property = $Object.PSObject.Properties[$Name]
+    if ($null -eq $property) {
+        return $null
+    }
+
+    return $property.Value
 }
 
 function Get-Issues {
@@ -291,6 +328,7 @@ function Get-RecordName {
 
 function New-SummaryMarkdown {
     param (
+        [object] $Build,
         [object] $Timeline,
         [object] $PullRequest,
         [string] $PrNumber
@@ -298,8 +336,9 @@ function New-SummaryMarkdown {
 
     $records = @($Timeline.records)
     $currentStageName = Get-OptionalEnvironmentVariable "SYSTEM_STAGENAME"
+    $summaryStageNames = @($currentStageName, "StartBuildSummaryComment", "PostBuildSummaryComment")
     $stages = @($records | Where-Object {
-        $_.type -eq "Stage" -and ($_.identifier -ne $currentStageName) -and ($_.name -ne $currentStageName)
+        $_.type -eq "Stage" -and ($summaryStageNames -notcontains $_.identifier) -and ($summaryStageNames -notcontains $_.name)
     } | Sort-Object order)
 
     $jobsNeedingAttention = @($records | Where-Object {
@@ -314,8 +353,22 @@ function New-SummaryMarkdown {
     $warningStages = @($stages | Where-Object { $_.result -eq "succeededWithIssues" -or (Get-Count $_.warningCount) -gt 0 })
     $incompleteStages = @($stages | Where-Object { $_.state -ne "completed" -and [string]::IsNullOrWhiteSpace($_.result) })
 
+    $buildStatus = Get-PropertyValue $Build "status"
+    $buildResult = Get-PropertyValue $Build "result"
+
     $overall = "Succeeded"
-    if ($failedStages.Count -gt 0) {
+    if (-not [string]::IsNullOrWhiteSpace($buildStatus) -and $buildStatus -ne "completed") {
+        $overall = "In progress"
+    } elseif (-not [string]::IsNullOrWhiteSpace($buildResult)) {
+        switch ($buildResult) {
+            "succeeded" { $overall = "Succeeded" }
+            "succeededWithIssues" { $overall = "Succeeded with issues" }
+            "failed" { $overall = "Failed" }
+            "canceled" { $overall = "Canceled" }
+            "abandoned" { $overall = "Abandoned" }
+            default { $overall = $buildResult }
+        }
+    } elseif ($failedStages.Count -gt 0) {
         $overall = "Failed"
     } elseif ($warningStages.Count -gt 0) {
         $overall = "Succeeded with issues"
@@ -324,20 +377,33 @@ function New-SummaryMarkdown {
     }
 
     $buildUrl = Get-BuildUrl
-    $commit = $BuildSourceVersion
+    $effectiveBuildNumber = Get-PropertyValue $Build "buildNumber"
+    if ([string]::IsNullOrWhiteSpace($effectiveBuildNumber)) {
+        $effectiveBuildNumber = $BuildNumber
+    }
+
+    $commit = Get-PropertyValue $Build "sourceVersion"
+    if ([string]::IsNullOrWhiteSpace($commit)) {
+        $commit = $BuildSourceVersion
+    }
     if (-not [string]::IsNullOrWhiteSpace($commit) -and $commit.Length -gt 12) {
         $commit = $commit.Substring(0, 12)
     }
 
     $lines = [System.Collections.Generic.List[string]]::new()
-    $lines.Add("<!-- dotnet-android-azdo-build-summary build-id=$BuildId -->")
+    $lines.Add("<!-- dotnet-android-azdo-build-summary -->")
     $lines.Add("## Azure DevOps build summary")
     $lines.Add("")
     $lines.Add("**Result:** $overall")
+    if ($overall -eq "In progress") {
+        $lines.Add("")
+        $lines.Add("> This build is still running. This comment is the latest status and will be updated when the final build-summary stage runs.")
+    }
     $lines.Add("")
     $lines.Add("| Item | Value |")
     $lines.Add("| --- | --- |")
-    $lines.Add("| Build | [$BuildNumber]($buildUrl) |")
+    $lines.Add("| Build | [$effectiveBuildNumber]($buildUrl) |")
+    $lines.Add("| Build ID | ``$BuildId`` |")
     $lines.Add("| Pull request | #$PrNumber |")
     if (-not [string]::IsNullOrWhiteSpace($commit)) {
         $lines.Add("| Commit | ``$commit`` |")
@@ -418,10 +484,10 @@ function Add-CopilotPromptIfNeeded {
     return "$prompt`n`n$Markdown"
 }
 
-function Get-ExistingCommentForBuild {
+function Get-ExistingSummaryComment {
     param ([string] $PrNumber)
 
-    $marker = "<!-- dotnet-android-azdo-build-summary build-id=$BuildId -->"
+    $marker = "<!-- dotnet-android-azdo-build-summary"
     $comments = Invoke-GitHubApi -Method Get -Path "/repos/$GitHubOwner/$GitHubRepo/issues/$PrNumber/comments?per_page=100"
     foreach ($comment in @($comments)) {
         if ($comment.body -like "*$marker*") {
@@ -435,8 +501,8 @@ function Get-ExistingCommentForBuild {
 function Add-BuildMarkerIfNeeded {
     param ([string] $Markdown)
 
-    $marker = "<!-- dotnet-android-azdo-build-summary build-id=$BuildId -->"
-    if ($Markdown -like "*$marker*") {
+    $marker = "<!-- dotnet-android-azdo-build-summary -->"
+    if ($Markdown -like "*<!-- dotnet-android-azdo-build-summary*") {
         return $Markdown
     }
 
@@ -449,17 +515,24 @@ function Publish-GitHubComment {
         [string] $Body
     )
 
-    $existing = Get-ExistingCommentForBuild $PrNumber
+    $existing = Get-ExistingSummaryComment $PrNumber
     if ($null -ne $existing) {
-        Write-Host "Updating existing GitHub PR comment $($existing.id) for build $BuildId."
+        Write-Host "Updating existing GitHub PR build summary comment $($existing.id) for build $BuildId."
         return Invoke-GitHubApi -Method Patch -Path "/repos/$GitHubOwner/$GitHubRepo/issues/comments/$($existing.id)" -Body @{ body = $Body }
     }
 
-    Write-Host "Creating GitHub PR comment for build $BuildId."
+    Write-Host "Creating GitHub PR build summary comment for build $BuildId."
     return Invoke-GitHubApi -Method Post -Path "/repos/$GitHubOwner/$GitHubRepo/issues/$PrNumber/comments" -Body @{ body = $Body }
 }
 
 $prNumber = Get-PullRequestNumber
+$build = Get-Build
+$buildResult = Get-PropertyValue $build "result"
+if ((Test-Truthy $SkipCanceledBuilds) -and $buildResult -in @("canceled", "abandoned")) {
+    Write-Host "Skipping GitHub PR build summary comment for $buildResult build $BuildId."
+    exit 0
+}
+
 $timeline = Get-Timeline
 if (-not [string]::IsNullOrWhiteSpace($PullRequestJsonPath)) {
     if (-not (Test-Path -LiteralPath $PullRequestJsonPath)) {
@@ -473,7 +546,7 @@ if (-not [string]::IsNullOrWhiteSpace($PullRequestJsonPath)) {
 if (-not [string]::IsNullOrWhiteSpace($SummaryMarkdownPath) -and (Test-Path -LiteralPath $SummaryMarkdownPath)) {
     $markdown = Get-Content -LiteralPath $SummaryMarkdownPath -Raw
 } else {
-    $markdown = New-SummaryMarkdown -Timeline $timeline -PullRequest $pullRequest -PrNumber $prNumber
+    $markdown = New-SummaryMarkdown -Build $build -Timeline $timeline -PullRequest $pullRequest -PrNumber $prNumber
 }
 
 $markdown = Add-BuildMarkerIfNeeded -Markdown $markdown
@@ -487,9 +560,11 @@ if ($DryRun) {
     exit 0
 }
 
-$summaryPath = Join-Path ([System.IO.Path]::GetTempPath()) "dotnet-android-build-summary-$BuildId.md"
-Set-Content -LiteralPath $summaryPath -Value $markdown -Encoding UTF8
-Write-Host "##vso[task.uploadsummary]$summaryPath"
+if (-not $SkipAzureDevOpsSummary) {
+    $summaryPath = Join-Path ([System.IO.Path]::GetTempPath()) "dotnet-android-build-summary-$BuildId.md"
+    Set-Content -LiteralPath $summaryPath -Value $markdown -Encoding UTF8
+    Write-Host "##vso[task.uploadsummary]$summaryPath"
+}
 
 $comment = Publish-GitHubComment -PrNumber $prNumber -Body $markdown
 Write-Host "Posted GitHub PR comment: $($comment.html_url)"
