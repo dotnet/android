@@ -32,7 +32,8 @@ namespace Xamarin.Android.Tasks
 		{
 			Log.LogCodedWarning (
 				Code,
-				Properties.Resources.ResourceManager.GetString (ResourceName, Properties.Resources.Culture) ?? "",
+				Properties.Resources.ResourceManager.GetString (ResourceName, Properties.Resources.Culture)
+					?? $"(Missing resource: {ResourceName})",
 				FormatArguments ?? []
 			);
 			return true;
