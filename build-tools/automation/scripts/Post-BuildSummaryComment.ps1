@@ -523,6 +523,42 @@ function Add-BuildMarkerIfNeeded {
     return "$marker`n$Markdown"
 }
 
+function ConvertTo-BuildIdNumber {
+    param ([string] $Value)
+
+    if ([string]::IsNullOrWhiteSpace($Value)) {
+        return $null
+    }
+
+    [long] $number = 0
+    if ([long]::TryParse($Value, [ref] $number)) {
+        return $number
+    }
+
+    return $null
+}
+
+function Get-CommentBuildId {
+    param ([object] $Comment)
+
+    $body = Get-PropertyValue $Comment "body"
+    if ([string]::IsNullOrWhiteSpace($body)) {
+        return $null
+    }
+
+    $tableMatch = [regex]::Match($body, "\|\s*Build ID\s*\|\s*``?(\d+)``?\s*\|")
+    if ($tableMatch.Success) {
+        return ConvertTo-BuildIdNumber $tableMatch.Groups[1].Value
+    }
+
+    $markerMatch = [regex]::Match($body, "dotnet-android-azdo-build-summary\s+build-id=(\d+)")
+    if ($markerMatch.Success) {
+        return ConvertTo-BuildIdNumber $markerMatch.Groups[1].Value
+    }
+
+    return $null
+}
+
 function Test-CurrentBuildIsLatest {
     if (-not (Test-Truthy $SkipIfNotLatestBuild)) {
         return $true
@@ -563,6 +599,17 @@ function Publish-GitHubComment {
 
     $existingComments = @(Get-SummaryComments $PrNumber)
     if ($existingComments.Count -gt 0) {
+        $currentBuildId = ConvertTo-BuildIdNumber $BuildId
+        if ((Test-Truthy $SkipIfNotLatestBuild) -and $null -ne $currentBuildId) {
+            foreach ($comment in $existingComments) {
+                $commentBuildId = Get-CommentBuildId $comment
+                if ($null -ne $commentBuildId -and $commentBuildId -gt $currentBuildId) {
+                    Write-Host "Skipping GitHub PR build summary comment for build $BuildId because existing comment $($comment.id) already points to newer build $commentBuildId."
+                    return $comment
+                }
+            }
+        }
+
         $primaryComment = $existingComments[0]
         Write-Host "Updating existing GitHub PR build summary comment $($primaryComment.id) for build $BuildId."
         $updatedComment = Invoke-GitHubApi -Method Patch -Path "/repos/$GitHubOwner/$GitHubRepo/issues/comments/$($primaryComment.id)" -Body @{ body = $Body }
