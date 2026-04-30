@@ -86,12 +86,15 @@ public sealed class JavaPeerScanner : IDisposable
 			assemblyCache [index.AssemblyName] = index;
 		}
 
-		var resultsByManagedName = new Dictionary<string, JavaPeerInfo> (StringComparer.Ordinal);
+		// Key by (managedTypeName, assemblyName) to avoid collisions when two assemblies
+		// define a type with the same managed name (e.g. Java.Lang.Throwable in both
+		// Java.Interop and Mono.Android).
+		var resultsByQualifiedName = new Dictionary<(string ManagedName, string AssemblyName), JavaPeerInfo> ();
 		foreach (var index in assemblyCache.Values) {
-			ScanAssembly (index, resultsByManagedName);
+			ScanAssembly (index, resultsByQualifiedName);
 		}
-		ForceUnconditionalCrossReferences (resultsByManagedName, assemblyCache);
-		return new List<JavaPeerInfo> (resultsByManagedName.Values);
+		ForceUnconditionalCrossReferences (resultsByQualifiedName, assemblyCache);
+		return new List<JavaPeerInfo> (resultsByQualifiedName.Values);
 	}
 
 	/// <summary>
@@ -112,19 +115,19 @@ public sealed class JavaPeerScanner : IDisposable
 	/// [Application(ManageSpaceActivity = typeof(X))] must be unconditional,
 	/// because the manifest will reference them even if nothing else does.
 	/// </summary>
-	static void ForceUnconditionalCrossReferences (Dictionary<string, JavaPeerInfo> resultsByManagedName, Dictionary<string, AssemblyIndex> assemblyCache)
+	static void ForceUnconditionalCrossReferences (Dictionary<(string ManagedName, string AssemblyName), JavaPeerInfo> results, Dictionary<string, AssemblyIndex> assemblyCache)
 	{
 		foreach (var index in assemblyCache.Values) {
 			foreach (var attrInfo in index.AttributesByType.Values) {
 				if (attrInfo is ApplicationAttributeInfo applicationAttributeInfo) {
-					ForceUnconditionalIfPresent (resultsByManagedName, applicationAttributeInfo.BackupAgent);
-					ForceUnconditionalIfPresent (resultsByManagedName, applicationAttributeInfo.ManageSpaceActivity);
+					ForceUnconditionalIfPresent (results, applicationAttributeInfo.BackupAgent);
+					ForceUnconditionalIfPresent (results, applicationAttributeInfo.ManageSpaceActivity);
 				}
 			}
 		}
 	}
 
-	static void ForceUnconditionalIfPresent (Dictionary<string, JavaPeerInfo> resultsByManagedName, string? managedTypeName)
+	static void ForceUnconditionalIfPresent (Dictionary<(string ManagedName, string AssemblyName), JavaPeerInfo> results, string? managedTypeName)
 	{
 		if (managedTypeName is null) {
 			return;
@@ -135,26 +138,27 @@ public sealed class JavaPeerScanner : IDisposable
 			return;
 		}
 
-		// Try exact match first (handles both plain and assembly-qualified names)
-		if (resultsByManagedName.TryGetValue (managedTypeName, out var peer)) {
-			resultsByManagedName [managedTypeName] = peer with { IsUnconditional = true };
-			return;
-		}
-
 		// TryGetTypeProperty may return assembly-qualified names like "Ns.Type, Assembly, ..."
 		// Strip to just the type name for lookup
 		var commaIndex = managedTypeName.IndexOf (',');
-		if (commaIndex <= 0) {
+		if (commaIndex > 0) {
+			managedTypeName = managedTypeName.Substring (0, commaIndex).Trim ();
+		}
+
+		if (managedTypeName.Length == 0) {
 			return;
 		}
 
-		var typeName = managedTypeName.Substring (0, commaIndex).Trim ();
-		if (typeName.Length > 0 && resultsByManagedName.TryGetValue (typeName, out peer)) {
-			resultsByManagedName [typeName] = peer with { IsUnconditional = true };
+		// Search by managed type name across all assemblies (BackupAgent/ManageSpaceActivity
+		// attribute values are not assembly-qualified).
+		foreach (var key in results.Keys) {
+			if (string.Equals (key.ManagedName, managedTypeName, StringComparison.Ordinal)) {
+				results [key] = results [key] with { IsUnconditional = true };
+			}
 		}
 	}
 
-	void ScanAssembly (AssemblyIndex index, Dictionary<string, JavaPeerInfo> results)
+	void ScanAssembly (AssemblyIndex index, Dictionary<(string ManagedName, string AssemblyName), JavaPeerInfo> results)
 	{
 		foreach (var typeHandle in index.Reader.TypeDefinitions) {
 			var typeDef = index.Reader.GetTypeDefinition (typeHandle);
@@ -178,6 +182,15 @@ public sealed class JavaPeerScanner : IDisposable
 			index.AttributesByType.TryGetValue (typeHandle, out var attrInfo);
 
 			if (registerInfo is not null && !string.IsNullOrEmpty (registerInfo.JniName)) {
+				// [JniTypeSignature] with ArrayRank > 0 represents a JNI array wrapper
+				// (e.g., JavaBooleanArray, JavaObjectArray<T>, JavaPrimitiveArray<T>).
+				// These are handled by the built-in tables in JniRuntime.JniTypeManager
+				// and must not be added to the typemap — keyword types (Z, B, etc.)
+				// would collide with GetPrimitiveArrayTypesForSimpleReference, and
+				// non-keyword array types would add unnecessary aliases.
+				if (registerInfo.IsArrayType) {
+					continue;
+				}
 				jniName = registerInfo.JniName;
 				compatJniName = jniName;
 				doNotGenerateAcw = registerInfo.DoNotGenerateAcw;
@@ -204,6 +217,7 @@ public sealed class JavaPeerScanner : IDisposable
 			var isUnconditional = attrInfo is not null;
 			var cannotRegisterInStaticConstructor = attrInfo is ApplicationAttributeInfo or InstrumentationAttributeInfo;
 			string? invokerTypeName = null;
+			ActivationCtorStyle? invokerActivationCtorStyle = null;
 
 			// Resolve base Java type name
 			var baseJavaName = ResolveBaseJavaName (typeDef, index, results);
@@ -225,6 +239,13 @@ public sealed class JavaPeerScanner : IDisposable
 				invokerTypeName = TryFindInvokerTypeName (fullName, typeHandle, index);
 			}
 
+			// Interface/abstract peers create their invoker, not the target type.
+			// Keep ActivationCtor scoped to the target/base hierarchy for legacy parity,
+			// and store the invoker ctor style separately for CreateInstance emission.
+			if (invokerTypeName is not null) {
+				invokerActivationCtorStyle = TryResolveActivationCtorOnInvoker (invokerTypeName)?.Style;
+			}
+
 			var peer = new JavaPeerInfo {
 				JavaName = jniName,
 				CompatJniName = compatJniName,
@@ -237,6 +258,7 @@ public sealed class JavaPeerScanner : IDisposable
 				IsInterface = isInterface,
 				IsAbstract = isAbstract,
 				DoNotGenerateAcw = doNotGenerateAcw,
+				IsFromJniTypeSignature = registerInfo?.IsFromJniTypeSignature ?? false,
 				IsUnconditional = isUnconditional,
 				CannotRegisterInStaticConstructor = cannotRegisterInStaticConstructor,
 				MarshalMethods = marshalMethods,
@@ -244,11 +266,12 @@ public sealed class JavaPeerScanner : IDisposable
 				JavaFields = exportFields,
 				ActivationCtor = activationCtor,
 				InvokerTypeName = invokerTypeName,
+				InvokerActivationCtorStyle = invokerActivationCtorStyle,
 				IsGenericDefinition = isGenericDefinition,
 				ComponentAttribute = ToComponentInfo (attrInfo),
 			};
 
-			results [fullName] = peer;
+			results [(fullName, index.AssemblyName)] = peer;
 		}
 	}
 
@@ -901,7 +924,7 @@ public sealed class JavaPeerScanner : IDisposable
 		};
 	}
 
-	string? ResolveBaseJavaName (TypeDefinition typeDef, AssemblyIndex index, Dictionary<string, JavaPeerInfo> results)
+	string? ResolveBaseJavaName (TypeDefinition typeDef, AssemblyIndex index, Dictionary<(string ManagedName, string AssemblyName), JavaPeerInfo> results)
 	{
 		if (!TryResolveBaseType (typeDef, index, out var baseTypeDef, out _, out var baseIndex, out var baseTypeName, out _)) {
 			return null;
@@ -914,7 +937,7 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 
 		// Fall back to already-scanned results (component-attributed or CRC64-computed peers)
-		if (results.TryGetValue (baseTypeName, out var basePeer)) {
+		if (results.TryGetValue ((baseTypeName, baseIndex.AssemblyName), out var basePeer)) {
 			return basePeer.JavaName;
 		}
 
@@ -1271,6 +1294,24 @@ public sealed class JavaPeerScanner : IDisposable
 		var invokerName = $"{typeName}Invoker";
 		if (index.TypesByFullName.ContainsKey (invokerName)) {
 			return invokerName;
+		}
+		return null;
+	}
+
+	/// <summary>
+	/// Resolve the activation ctor on a known invoker type (search all loaded assemblies).
+	/// Used for interface peers, whose own type definition has no constructors.
+	/// The assemblyCache typically contains 10–30 entries (app + framework assemblies),
+	/// and each lookup is an O(1) dictionary probe, so the linear scan is cheap.
+	/// </summary>
+	ActivationCtorInfo? TryResolveActivationCtorOnInvoker (string invokerTypeName)
+	{
+		foreach (var assembly in assemblyCache.Values) {
+			if (!assembly.TypesByFullName.TryGetValue (invokerTypeName, out var invokerHandle)) {
+				continue;
+			}
+			var invokerDef = assembly.Reader.GetTypeDefinition (invokerHandle);
+			return ResolveActivationCtor (invokerTypeName, invokerDef, assembly);
 		}
 		return null;
 	}

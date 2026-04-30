@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Xml.Linq;
@@ -26,6 +27,21 @@ namespace Xamarin.Android.Build.Tests
 		protected bool IsWindows => TestEnvironment.IsWindows;
 
 		public string Root => Path.GetFullPath (XABuildPaths.TestOutputDirectory);
+
+		/// <summary>
+		/// Retrieves the value of an <see cref="AssemblyMetadataAttribute"/> embedded in the test assembly.
+		/// </summary>
+		protected string GetAssemblyMetadataValue (string key)
+		{
+			var assembly = GetType ().Assembly;
+			var value = assembly
+				.GetCustomAttributes<AssemblyMetadataAttribute> ()
+				.FirstOrDefault (a => a.Key == key)?.Value;
+			if (value == null) {
+				throw new InvalidOperationException ($"AssemblyMetadata '{key}' not found in {assembly.GetName ().Name}");
+			}
+			return value;
+		}
 
 		/// <summary>
 		/// Checks if a commercial .NET for Android is available

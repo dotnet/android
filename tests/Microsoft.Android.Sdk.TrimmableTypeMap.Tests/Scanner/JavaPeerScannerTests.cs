@@ -95,4 +95,56 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 	{
 		Assert.Equal (expectedJavaName, FindFixtureByManagedName (managedName).JavaName);
 	}
+
+	[Fact]
+	public void Scan_JniTypeSignature_IsDiscovered ()
+	{
+		var peer = FindFixtureByJavaName ("net/dot/jni/test/JavaDisposedObject");
+		Assert.Equal ("Java.Interop.TestTypes.JavaDisposedObject", peer.ManagedTypeName);
+		Assert.False (peer.DoNotGenerateAcw, "GenerateJavaPeer=true should map to DoNotGenerateAcw=false");
+	}
+
+	[Fact]
+	public void Scan_JniTypeSignature_DoNotGenerateAcw ()
+	{
+		var nonGenerated = FindFixtureByJavaName ("net/dot/jni/test/MyJavaObject");
+		Assert.True (nonGenerated.DoNotGenerateAcw, "NonGeneratedJavaObject has GenerateJavaPeer=false");
+	}
+
+	[Fact]
+	public void Scan_JniTypeSignature_DuplicateJniName_BothPresent ()
+	{
+		// Java.Interop.TestTypes.JavaObject has [JniTypeSignature("java/lang/Object", GenerateJavaPeer=false)]
+		// and Java.Lang.Object has [Register("java/lang/Object", DoNotGenerateAcw=true)].
+		// Both should be present in the scan results — alias support (PR #11122) handles
+		// the runtime deduplication.
+		var peers = ScanFixtures ();
+		var javaObjectPeers = peers.Where (p => p.JavaName == "java/lang/Object").ToList ();
+		Assert.Equal (2, javaObjectPeers.Count);
+	}
+
+	[Fact]
+	public void Scan_JniTypeSignature_SubclassExtendsJavaPeer ()
+	{
+		// JavaDisposedObject extends JavaObject which has [JniTypeSignature(GenerateJavaPeer=false)]
+		// The scanner should still detect JavaDisposedObject as extending a Java peer
+		var peer = FindFixtureByJavaName ("net/dot/jni/test/JavaDisposedObject");
+		Assert.NotNull (peer);
+	}
+
+	[Fact]
+	public void Scan_JniTypeSignature_ArrayRank_IsExcluded ()
+	{
+		// Types with [JniTypeSignature(ArrayRank > 0)] represent JNI array wrappers
+		// (e.g., JavaBooleanArray with IsKeyword=true, or JavaObjectArray<T> without).
+		// The scanner must skip all of them — they are handled by the built-in tables
+		// in JniRuntime.JniTypeManager, not the typemap.
+		var peers = ScanFixtures ();
+
+		// Keyword primitive array (e.g., JavaBooleanArray with "Z")
+		Assert.DoesNotContain (peers, p => p.ManagedTypeName == "Java.Interop.TestTypes.KeywordPrimitiveArray");
+
+		// Non-keyword array (e.g., JavaObjectArray<T> with "java/lang/Object", ArrayRank=1)
+		Assert.DoesNotContain (peers, p => p.ManagedTypeName == "Java.Interop.TestTypes.NonKeywordArrayType");
+	}
 }

@@ -1,5 +1,4 @@
 #nullable enable
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -17,41 +16,13 @@ public class GenerateACWMap : AndroidTask
 	public string AcwMapFile { get; set; } = "";
 
 	[Required]
-	public string IntermediateOutputDirectory { get; set; } = "";
-
-	[Required]
 	public ITaskItem [] ResolvedAssemblies { get; set; } = [];
-
-	// This property is temporary and is used to ensure that the new "linker step"
-	// JLO scanning produces the same results as the old process. It will be removed
-	// once the process is complete.
-	public bool RunCheckedBuild { get; set; }
 
 	[Required]
 	public string [] SupportedAbis { get; set; } = [];
 
 	public override bool RunTask ()
 	{
-		// Temporarily used to ensure we still generate the same as the old code
-		if (RunCheckedBuild) {
-			// Retrieve the stored NativeCodeGenState
-			var nativeCodeGenStates = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ConcurrentDictionary<AndroidTargetArch, NativeCodeGenState>> (
-				MonoAndroidHelper.GetProjectBuildSpecificTaskObjectKey (GenerateJavaStubs.NativeCodeGenStateRegisterTaskKey, WorkingDirectory, IntermediateOutputDirectory),
-				RegisteredTaskObjectLifetime.Build
-			);
-
-			// We only need the first architecture, since this task is architecture-agnostic
-			var templateCodeGenState = nativeCodeGenStates.First ().Value;
-
-			var acwMapGen = new ACWMapGenerator (Log);
-
-			if (!acwMapGen.Generate (templateCodeGenState, AcwMapFile)) {
-				Log.LogDebugMessage ("ACW map generation failed");
-			}
-
-			return !Log.HasLoggedErrors;
-		}
-
 		GenerateMap ();
 
 		return !Log.HasLoggedErrors;

@@ -45,6 +45,8 @@ namespace Xamarin.Android.Tasks
 							var fileName = Path.GetFileName (entryFullName);
 							if (string.Equals (fileName, "annotations.zip", StringComparison.OrdinalIgnoreCase)) {
 								var path = Path.GetFullPath (Path.Combine (annotationOutputDirectory, entryFullName));
+								if (!IsUnderDirectory (path, annotationOutputDirectory, entryFullName, library))
+									continue;
 								Extract (entry, memoryStream, path);
 								annotations.Add (path);
 							} else if (!entryFullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)) {
@@ -53,6 +55,8 @@ namespace Xamarin.Android.Tasks
 								continue;
 							} else {
 								var path = Path.GetFullPath (Path.Combine (jarOutputDirectory, entryFullName));
+								if (!IsUnderDirectory (path, jarOutputDirectory, entryFullName, library))
+									continue;
 								Extract (entry, memoryStream, path);
 								jars.Add (path);
 							}
@@ -66,6 +70,15 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return !Log.HasLoggedErrors;
+		}
+
+		bool IsUnderDirectory (string resolvedPath, string targetDirectory, string entryName, string archivePath)
+		{
+			var normalizedDir = Path.GetFullPath (targetDirectory) + Path.DirectorySeparatorChar;
+			if (resolvedPath.StartsWith (normalizedDir, StringComparison.OrdinalIgnoreCase))
+				return true;
+			Log.LogDebugMessage ($"Skipping archive entry '{entryName}' in '{archivePath}': resolves outside target directory.");
+			return false;
 		}
 
 		static void Extract (ZipEntry entry, MemoryStream stream, string destination)

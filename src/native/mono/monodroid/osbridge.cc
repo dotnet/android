@@ -178,6 +178,18 @@ OSBridge::_monodroid_gref_dec ()
 	return __sync_sub_and_fetch (&gc_gref_count, 1);
 }
 
+int
+OSBridge::_monodroid_weak_gref_inc ()
+{
+	return __sync_add_and_fetch (&gc_weak_gref_count, 1);
+}
+
+int
+OSBridge::_monodroid_weak_gref_dec ()
+{
+	return __sync_sub_and_fetch (&gc_weak_gref_count, 1);
+}
+
 char*
 OSBridge::_get_stack_trace_line_end (char *m)
 {
@@ -311,13 +323,13 @@ OSBridge::_monodroid_gref_log_delete (jobject handle, char type, const char *thr
 void
 OSBridge::_monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable)
 {
-	++gc_weak_gref_count;
+	int c = _monodroid_weak_gref_inc ();
 	if ((log_categories & LOG_GREF) == 0)
 		return;
 	log_info (LOG_GREF,
 		"+w+ grefc {} gwrefc {} obj-handle {:p}/{} -> new-handle {:p}/{} from thread '{}'({})",
 		gc_gref_count,
-		gc_weak_gref_count,
+		c,
 		reinterpret_cast<void*>(curHandle),
 		curType,
 		reinterpret_cast<void*>(newHandle),
@@ -336,7 +348,7 @@ OSBridge::_monodroid_weak_gref_new (jobject curHandle, char curType, jobject new
 		return;
 	fprintf (gref_log, "+w+ grefc %i gwrefc %i obj-handle %p/%c -> new-handle %p/%c from thread '%s'(%i)\n",
 	         gc_gref_count,
-	         gc_weak_gref_count,
+	         c,
 	         curHandle,
 	         curType,
 	         newHandle,
@@ -354,13 +366,13 @@ OSBridge::_monodroid_weak_gref_new (jobject curHandle, char curType, jobject new
 void
 OSBridge::_monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
 {
-	--gc_weak_gref_count;
+	int c = _monodroid_weak_gref_dec ();
 	if ((log_categories & LOG_GREF) == 0)
 		return;
 	log_info (LOG_GREF,
 		"-w- grefc {} gwrefc {} handle {:p}/{} from thread '{}'({})",
 		gc_gref_count,
-		gc_weak_gref_count,
+		c,
 		reinterpret_cast<void*>(handle),
 		type,
 		optional_string (threadName),
@@ -377,7 +389,7 @@ OSBridge::_monodroid_weak_gref_delete (jobject handle, char type, const char *th
 		return;
 	fprintf (gref_log, "-w- grefc %i gwrefc %i handle %p/%c from thread '%s'(%i)\n",
 	         gc_gref_count,
-	         gc_weak_gref_count,
+	         c,
 	         handle,
 	         type,
 	         optional_string (threadName),
@@ -485,10 +497,14 @@ OSBridge::take_global_ref_jni (JNIEnv *env, MonoObject *obj)
 		fflush (gref_log);
 	}
 	if (handle) {
-		_monodroid_gref_log_new (weak, get_object_ref_type (env, weak),
-				handle, get_object_ref_type (env, handle),
-				"finalizer", gettid (),
-				"   at [[gc:take_global_ref_jni]]", 0);
+		if ((log_categories & LOG_GREF) != 0) {
+			_monodroid_gref_log_new (weak, get_object_ref_type (env, weak),
+					handle, get_object_ref_type (env, handle),
+					"finalizer", gettid (),
+					"   at [[gc:take_global_ref_jni]]", 0);
+		} else {
+			_monodroid_gref_inc ();
+		}
 	} else if (Logger::gc_spew_enabled ()) [[unlikely]] {
 		void   *key_handle  = nullptr;
 		if (control_block->weak_handle != nullptr) {
@@ -509,8 +525,12 @@ OSBridge::take_global_ref_jni (JNIEnv *env, MonoObject *obj)
 	control_block->handle = handle;
 	control_block->handle_type = type;
 
-	_monodroid_weak_gref_delete (weak, get_object_ref_type (env, weak),
-			"finalizer", gettid (), "   at [[gc:take_global_ref_jni]]", 0);
+	if ((log_categories & LOG_GREF) != 0) {
+		_monodroid_weak_gref_delete (weak, get_object_ref_type (env, weak),
+				"finalizer", gettid (), "   at [[gc:take_global_ref_jni]]", 0);
+	} else {
+		_monodroid_weak_gref_dec ();
+	}
 	env->DeleteWeakGlobalRef (weak);
 
 	return handle != nullptr;
@@ -533,15 +553,23 @@ OSBridge::take_weak_global_ref_jni (JNIEnv *env, MonoObject *obj)
 	}
 
 	jobject weak = env->NewWeakGlobalRef (handle);
-	_monodroid_weak_gref_new (handle, get_object_ref_type (env, handle),
-			weak, get_object_ref_type (env, weak),
-			"finalizer", gettid (), "   at [[gc:take_weak_global_ref_jni]]", 0);
+	if ((log_categories & LOG_GREF) != 0) {
+		_monodroid_weak_gref_new (handle, get_object_ref_type (env, handle),
+				weak, get_object_ref_type (env, weak),
+				"finalizer", gettid (), "   at [[gc:take_weak_global_ref_jni]]", 0);
+	} else {
+		_monodroid_weak_gref_inc ();
+	}
 
 	control_block->handle = weak;
 	control_block->handle_type = type;
 
-	_monodroid_gref_log_delete (handle, get_object_ref_type (env, handle),
-			"finalizer", gettid (), "   at [[gc:take_weak_global_ref_jni]]", 0);
+	if ((log_categories & LOG_GREF) != 0) {
+		_monodroid_gref_log_delete (handle, get_object_ref_type (env, handle),
+				"finalizer", gettid (), "   at [[gc:take_weak_global_ref_jni]]", 0);
+	} else {
+		_monodroid_gref_dec ();
+	}
 	env->DeleteGlobalRef (handle);
 	return 1;
 }

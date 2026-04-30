@@ -448,6 +448,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Using fast deployment and ReadyToRun at the same time is not recommended. Use fast deployment for Debug configurations and ReadyToRun for Release configurations..
+        /// </summary>
+        public static string XA0119_ReadyToRun {
+            get {
+                return ResourceManager.GetString("XA0119_ReadyToRun", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Using fast deployment and the linker at the same time is not recommended. Use fast deployment for Debug configurations and the linker for Release configurations..
         /// </summary>
         public static string XA0119_LinkMode {
@@ -957,7 +966,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The MSBuild property &apos;{0}&apos; is not compatible with the {1} runtime and will be ignored. Either remove the property or guard it with a condition: Condition=&quot;&apos;$(UseMonoRuntime)&apos; == &apos;true&apos;&quot;.
+        ///   Looks up a localized string similar to The MSBuild property &apos;{0}&apos; is not compatible with the {1} runtime. The build cannot continue while this property is enabled. Either remove the property or guard it with a condition: Condition=&quot;&apos;$(UseMonoRuntime)&apos; == &apos;true&apos;&quot;.
         /// </summary>
         public static string XA1044 {
             get {

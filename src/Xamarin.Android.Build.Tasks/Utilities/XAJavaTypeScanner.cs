@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -35,7 +34,7 @@ class XAJavaTypeScanner
 		this.cache = cache;
 	}
 
-	public List<TypeDefinition> GetJavaTypes (ICollection<ITaskItem> inputAssemblies, XAAssemblyResolver resolver, ConcurrentDictionary<string, ITaskItem> scannedAssemblies)
+	public List<TypeDefinition> GetJavaTypes (ICollection<ITaskItem> inputAssemblies, XAAssemblyResolver resolver)
 	{
 		var types = new List<TypeDefinition> ();
 		var inputItems  = inputAssemblies
@@ -65,8 +64,6 @@ class XAJavaTypeScanner
 					AddJavaType (td, types);
 				}
 			}
-
-			scannedAssemblies.TryAdd (asmItem.ItemSpec, asmItem);
 		}
 
 		return types;

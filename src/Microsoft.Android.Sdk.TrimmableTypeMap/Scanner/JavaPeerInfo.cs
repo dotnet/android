@@ -66,6 +66,13 @@ public sealed record JavaPeerInfo
 	public bool DoNotGenerateAcw { get; init; }
 
 	/// <summary>
+	/// True when the type was discovered via <c>[JniTypeSignatureAttribute]</c>
+	/// rather than <c>[RegisterAttribute]</c>.  Used to resolve cross-assembly
+	/// alias ownership: <c>[Register]</c> types take precedence.
+	/// </summary>
+	public bool IsFromJniTypeSignature { get; init; }
+
+	/// <summary>
 	/// Types with component attributes ([Activity], [Service], etc.),
 	/// custom views from layout XML, or manifest-declared components
 	/// are unconditionally preserved (not trimmable).
@@ -117,6 +124,13 @@ public sealed record JavaPeerInfo
 	/// used to instantiate instances from Java.
 	/// </summary>
 	public string? InvokerTypeName { get; init; }
+
+	/// <summary>
+	/// Activation constructor style declared by <see cref="InvokerTypeName"/>.
+	/// Kept separate from <see cref="ActivationCtor"/>, which describes the
+	/// target type or its base types.
+	/// </summary>
+	public ActivationCtorStyle? InvokerActivationCtorStyle { get; init; }
 
 	/// <summary>
 	/// True if this is an open generic type definition.

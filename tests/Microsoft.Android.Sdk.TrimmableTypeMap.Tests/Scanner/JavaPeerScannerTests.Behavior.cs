@@ -44,13 +44,14 @@ public partial class JavaPeerScannerTests
 		Assert.NotNull (onStart);
 		Assert.Equal ("", onStart.Connector);
 
-		var onClick = FindFixtureByManagedName ("Android.Views.IOnClickListener")
-			.MarshalMethods.FirstOrDefault (m => m.JniName == "onClick");
+		var listener = FindFixtureByManagedName ("Android.Views.IOnClickListener");
+		var onClick = listener.MarshalMethods.FirstOrDefault (m => m.JniName == "onClick");
 		Assert.NotNull (onClick);
 		Assert.Equal ("(Landroid/view/View;)V", onClick.JniSignature);
 
-		Assert.Equal ("Android.Views.IOnClickListenerInvoker",
-			FindFixtureByManagedName ("Android.Views.IOnClickListener").InvokerTypeName);
+		Assert.Equal ("Android.Views.IOnClickListenerInvoker", listener.InvokerTypeName);
+		Assert.Null (listener.ActivationCtor);
+		Assert.Equal (ActivationCtorStyle.XamarinAndroid, listener.InvokerActivationCtorStyle);
 	}
 
 	[Theory]

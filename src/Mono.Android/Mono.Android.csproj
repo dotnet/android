@@ -61,6 +61,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" />
+    <!-- Compile-only reference: the real _Microsoft.Android.TypeMaps.dll is generated at app
+         build time by the trimmable typemap generator and replaces this ref assembly. -->
+    <ProjectReference Include="..\Microsoft.Android.TypeMaps.Ref\Microsoft.Android.TypeMaps.Ref.csproj">
+      <Private>false</Private>
+      <PrivateAssets>all</PrivateAssets>
+    </ProjectReference>
     <EmbeddedResource Include="ILLink/ILLink.LinkAttributes.xml">
       <LogicalName>ILLink.LinkAttributes.xml</LogicalName>
     </EmbeddedResource>
@@ -354,11 +360,14 @@
     <Compile Include="Java.Util.Concurrent.Atomic\AtomicInteger.cs" />
     <Compile Include="Java.Util.Concurrent.Atomic\AtomicLong.cs" />
     <Compile Include="Javax.Microedition.Khronos.Egl\EGLContext.cs" />
+    <Compile Include="Microsoft.Android.Runtime\AggregateTypeMap.cs" />
+    <Compile Include="Microsoft.Android.Runtime\ITypeMapWithAliasing.cs" />
     <Compile Include="Microsoft.Android.Runtime\ManagedTypeManager.cs" />
     <Compile Include="Microsoft.Android.Runtime\ManagedTypeMapping.cs" />
     <Compile Include="Microsoft.Android.Runtime\JavaMarshalValueManager.cs" />
     <Compile Include="Microsoft.Android.Runtime\RuntimeFeature.cs" />
     <Compile Include="Microsoft.Android.Runtime\SimpleValueManager.cs" />
+    <Compile Include="Microsoft.Android.Runtime\SingleUniverseTypeMap.cs" />
     <Compile Include="Microsoft.Android.Runtime\TrimmableTypeMap.cs" />
     <Compile Include="Microsoft.Android.Runtime\TrimmableTypeMapTypeManager.cs" />
     <Compile Include="Org.Apache.Http.Impl.Conn\DefaultClientConnection.cs" />

@@ -1,0 +1,22 @@
+<linker>
+  <!-- Preserve types that the test suite reaches via reflection or converter lookup in the trimmable lane. -->
+  <assembly fullname="Mono.Android">
+    <type fullname="Android.Runtime.JavaProxyThrowable" preserve="all" />
+    <type fullname="Android.Runtime.AndroidEnvironment" preserve="all" />
+    <type fullname="Xamarin.Android.Net.AndroidClientHandler" preserve="all" />
+    <type fullname="Xamarin.Android.Net.AndroidMessageHandler" preserve="all" />
+  </assembly>
+  <assembly fullname="System.Private.CoreLib">
+    <type fullname="System.LocalAppContextSwitches" preserve="all" />
+  </assembly>
+  <assembly fullname="System.Diagnostics.DiagnosticSource">
+    <type fullname="System.Diagnostics.Metrics.Meter" preserve="all" />
+  </assembly>
+  <assembly fullname="System.ComponentModel.TypeConverter">
+    <type fullname="System.Drawing.ColorConverter" preserve="all" />
+    <type fullname="System.Drawing.RectangleConverter" preserve="all" />
+    <type fullname="System.Drawing.PointConverter" preserve="all" />
+    <type fullname="System.Drawing.SizeConverter" preserve="all" />
+    <type fullname="System.Drawing.SizeFConverter" preserve="all" />
+  </assembly>
+</linker>

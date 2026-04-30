@@ -63,7 +63,6 @@
 
     <GenerateACWMap
         AcwMapFile="$(_AcwMapFile)"
-        IntermediateOutputDirectory="$(IntermediateOutputPath)"
         ResolvedAssemblies="@(_ResolvedAssemblies)"
         SupportedAbis="@(_BuildTargetAbis)">
     </GenerateACWMap>
@@ -72,8 +71,6 @@
         CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
         ResolvedAssemblies="@(_ResolvedAssemblies)"
         ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
-        RunCheckedBuild="$(_AndroidJLOCheckedBuild)"
-        GeneratedJavaFiles="@(_GeneratedJavaFiles)"
         ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
         Debug="$(AndroidIncludeDebugSymbols)"
         OutputDirectory="$(IntermediateOutputPath)android"
@@ -99,21 +96,11 @@
         EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
         IntermediateOutputDirectory="$(IntermediateOutputPath)"
         ResolvedAssemblies="@(_ResolvedAssemblies)"
-        RunCheckedBuild="$(_AndroidJLOCheckedBuild)"
         SkipJniAddNativeMethodRegistrationAttributeScan="$(_SkipJniAddNativeMethodRegistrationAttributeScan)"
         SupportedAbis="@(_BuildTargetAbis)"
         TypemapImplementation="$(_AndroidTypeMapImplementation)"
         TypemapOutputDirectory="$(_NativeAssemblySourceDir)">
     </GenerateTypeMappings>
-
-    <GenerateACWMap
-        Condition=" '$(_AndroidJLOCheckedBuild)' == 'true' "
-        AcwMapFile="$(_AcwMapFile)"
-        RunCheckedBuild="true"
-        IntermediateOutputDirectory="$(IntermediateOutputPath)"
-        ResolvedAssemblies="@(_ResolvedAssemblies)"
-        SupportedAbis="@(_BuildTargetAbis)">
-    </GenerateACWMap>
 
     <GenerateMainAndroidManifest
         AndroidRuntime="$(_AndroidRuntime)"
@@ -217,10 +204,17 @@
     </ItemGroup>
   </Target>
 
+  <!--
+    Android apps set OutputType=Library (no managed Main()), so the upstream
+    _PrepareTrimConfiguration target does not root the entry assembly (see
+    dotnet/runtime#125673). Explicitly add the app assembly with RootMode=All
+    to ensure ILLink includes it in linked output.
+  -->
   <Target Name="_FixRootAssembly"
       AfterTargets="PrepareForILLink">
     <ItemGroup>
-      <TrimmerRootAssembly Update="@(TrimmerRootAssembly)" Condition=" '%(TrimmerRootAssembly.RootMode)' == 'EntryPoint' " RootMode="All" />
+      <TrimmerRootAssembly Remove="@(IntermediateAssembly->'%(Filename)')" />
+      <TrimmerRootAssembly Include="@(IntermediateAssembly->'%(Filename)')" RootMode="All" />
     </ItemGroup>
   </Target>
 
@@ -346,8 +340,14 @@
   </Target>
 
   <!-- TypeManager.java generation and prebuilt mono.android.jar copy -->
+  <PropertyGroup>
+    <_AddTypeManagerResourcesOutput Condition=" '$(_AndroidUseMarshalMethods)' == 'True' ">$(_AndroidIntermediateJavaSourceDirectory)mono\TypeManager.java</_AddTypeManagerResourcesOutput>
+    <_AddTypeManagerResourcesOutput Condition=" '$(_AndroidUseMarshalMethods)' != 'True' ">$(IntermediateOutputPath)android\bin\mono.android.jar</_AddTypeManagerResourcesOutput>
+  </PropertyGroup>
   <Target Name="_AddTypeManagerResources"
-      AfterTargets="_AddStaticResources">
+      AfterTargets="_AddStaticResources"
+      Inputs="$(MonoPlatformJarPath);$(_AndroidBuildPropertiesCache)"
+      Outputs="$(_AddTypeManagerResourcesOutput)">
     <CreateTypeManagerJava
         Condition=" '$(_AndroidUseMarshalMethods)' == 'True' "
         ResourceName="JavaInteropTypeManager.java"

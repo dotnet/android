@@ -14,6 +14,16 @@ int _monodroid_gref_get () noexcept
 	return OSBridge::get_gc_gref_count ();
 }
 
+int _monodroid_gref_inc () noexcept
+{
+	return OSBridge::_monodroid_gref_inc ();
+}
+
+int _monodroid_gref_dec () noexcept
+{
+	return OSBridge::_monodroid_gref_dec ();
+}
+
 void _monodroid_gref_log (const char *message) noexcept
 {
 	OSBridge::_monodroid_gref_log (message);
@@ -29,7 +39,7 @@ void _monodroid_gref_log_delete (jobject handle, char type, const char *threadNa
 	OSBridge::_monodroid_gref_log_delete (handle, type, threadName, threadId, from);
 }
 
-void _monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, [[maybe_unused]] int from_writable)
+void _monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, [[maybe_unused]] int from_writable) noexcept
 {
 	OSBridge::_monodroid_weak_gref_delete (handle, type, threadName, threadId, from);
 }
@@ -84,17 +94,27 @@ void monodroid_free (void *ptr) noexcept
 	free (ptr);
 }
 
-void _monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, [[maybe_unused]] int from_writable)
+void _monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, [[maybe_unused]] int from_writable) noexcept
 {
 	OSBridge::_monodroid_weak_gref_new (curHandle, curType, newHandle, newType, threadName, threadId, from);
 }
 
-int _monodroid_weak_gref_get ()
+int _monodroid_weak_gref_get () noexcept
 {
 	return OSBridge::get_gc_weak_gref_count ();
 }
 
-int _monodroid_max_gref_get ()
+int _monodroid_weak_gref_inc () noexcept
+{
+	return OSBridge::_monodroid_weak_gref_inc ();
+}
+
+int _monodroid_weak_gref_dec () noexcept
+{
+	return OSBridge::_monodroid_weak_gref_dec ();
+}
+
+int _monodroid_max_gref_get () noexcept
 {
 	return static_cast<int>(AndroidSystem::get_max_gref_count ());
 }

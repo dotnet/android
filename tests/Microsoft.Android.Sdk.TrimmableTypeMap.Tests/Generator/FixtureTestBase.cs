@@ -124,6 +124,13 @@ public abstract class FixtureTestBase
 		};
 	}
 
+	private protected static MethodDefinitionHandle FindNctorUcoMethod (MetadataReader reader) =>
+		reader.MethodDefinitions.FirstOrDefault (h => {
+			var name = reader.GetString (reader.GetMethodDefinition (h).Name);
+			return name.StartsWith ("nctor_", StringComparison.Ordinal) &&
+			       name.EndsWith ("_uco", StringComparison.Ordinal);
+		});
+
 	private protected static List<string> GetTypeRefNames (MetadataReader reader) =>
 		reader.TypeReferences
 			.Select (h => reader.GetTypeReference (h))
@@ -135,4 +142,23 @@ public abstract class FixtureTestBase
 			.Select (i => reader.GetMemberReference (MetadataTokens.MemberReferenceHandle (i)))
 			.Select (m => reader.GetString (m.Name))
 			.ToList ();
+
+	/// <summary>
+	/// Returns true if the IL byte stream contains a Call (0x28) or Callvirt (0x6F) instruction
+	/// whose metadata token matches <paramref name="token"/>.
+	/// </summary>
+	private protected static bool ILContainsCallToken (byte[] ilBytes, int token)
+	{
+		byte t0 = (byte)(token & 0xFF);
+		byte t1 = (byte)((token >> 8) & 0xFF);
+		byte t2 = (byte)((token >> 16) & 0xFF);
+		byte t3 = (byte)((token >> 24) & 0xFF);
+		for (int i = 0; i < ilBytes.Length - 4; i++) {
+			if ((ilBytes[i] == 0x28 || ilBytes[i] == 0x6F) &&
+			    ilBytes[i + 1] == t0 && ilBytes[i + 2] == t1 &&
+			    ilBytes[i + 3] == t2 && ilBytes[i + 4] == t3)
+				return true;
+		}
+		return false;
+	}
 }
