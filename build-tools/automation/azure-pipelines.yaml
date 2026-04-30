@@ -95,7 +95,7 @@ extends:
         - job: start_build_summary_comment
           displayName: Mark build summary comment as running
           pool:
-            name: AzurePipelines-EO
+            name: MAUI-1ESPT
             image: $(LinuxPoolImage1ESPT)
             os: linux
           steps:
@@ -518,7 +518,7 @@ extends:
         - job: post_build_summary_comment
           displayName: Post build summary to GitHub PR
           pool:
-            name: AzurePipelines-EO
+            name: MAUI-1ESPT
             image: $(LinuxPoolImage1ESPT)
             os: linux
           steps:
