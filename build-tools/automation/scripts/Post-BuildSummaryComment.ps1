@@ -24,7 +24,8 @@ param (
     [switch] $SkipAzureDevOpsSummary,
     [switch] $DryRun,
     [int] $MaxJobsToShow = 20,
-    [int] $MaxIssuesPerJob = 3
+    [int] $MaxIssuesPerJob = 3,
+    [int] $MaxFailedTestsToShow = 10
 )
 
 Set-StrictMode -Version 2.0
@@ -339,6 +340,97 @@ function Get-RecordName {
     return $Record.id
 }
 
+function Get-LogLines {
+    param ([object] $Log)
+
+    $logId = Get-PropertyValue $Log "id"
+    if ([string]::IsNullOrWhiteSpace("$logId")) {
+        return @()
+    }
+
+    if ([string]::IsNullOrWhiteSpace((Get-OptionalEnvironmentVariable $AzureDevOpsTokenEnvVar))) {
+        Write-Host "Skipping failed test log scan for log $logId because $AzureDevOpsTokenEnvVar is unavailable."
+        return @()
+    }
+
+    $escapedBuildId = [Uri]::EscapeDataString($BuildId)
+    $escapedLogId = [Uri]::EscapeDataString("$logId")
+    $logContent = Invoke-AzureDevOpsApi "/_apis/build/builds/$escapedBuildId/logs/$escapedLogId"
+
+    if ($null -eq $logContent) {
+        return @()
+    }
+    if ($logContent -is [string]) {
+        return @($logContent -split "`r?`n")
+    }
+    if ($logContent -is [System.Array]) {
+        return @($logContent)
+    }
+
+    $value = Get-PropertyValue $logContent "value"
+    if ($null -ne $value) {
+        return @($value)
+    }
+
+    return @($logContent | Out-String -Stream)
+}
+
+function Remove-LogTimestamp {
+    param ([string] $Line)
+
+    if ($null -eq $Line) {
+        return ""
+    }
+
+    return ($Line -replace "^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z\s*", "")
+}
+
+function Get-FailedTestSummaries {
+    param ([object[]] $Records)
+
+    $failedTests = [System.Collections.Generic.List[object]]::new()
+    $seenTests = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+
+    foreach ($record in $Records) {
+        $log = Get-PropertyValue $record "log"
+        $lines = @(Get-LogLines $log)
+        $currentTest = ""
+
+        for ($i = 0; $i -lt $lines.Count; $i++) {
+            $line = Remove-LogTimestamp ([string] $lines[$i])
+            if ($line -match "\]\s+(.+?)\s+\[FAIL\]") {
+                $currentTest = $Matches[1].Trim()
+            } elseif ($line -match "^\s*Failed\s+(.+?)\s+\[\d") {
+                $currentTest = $Matches[1].Trim()
+            }
+
+            if ($line -match "^\s*Error Message:\s*$" -and -not [string]::IsNullOrWhiteSpace($currentTest)) {
+                $message = ""
+                for ($j = $i + 1; $j -lt [Math]::Min($i + 6, $lines.Count); $j++) {
+                    $candidate = (Remove-LogTimestamp ([string] $lines[$j])).Trim()
+                    if ([string]::IsNullOrWhiteSpace($candidate)) {
+                        continue
+                    }
+                    if ($candidate -eq "Stack Trace:") {
+                        break
+                    }
+                    $message = $candidate
+                    break
+                }
+
+                if ($seenTests.Add($currentTest)) {
+                    $failedTests.Add([PSCustomObject] @{
+                        TestName = $currentTest
+                        Message = $message
+                    })
+                }
+            }
+        }
+    }
+
+    return @($failedTests)
+}
+
 function New-SummaryMarkdown {
     param (
         [object] $Build,
@@ -364,6 +456,7 @@ function New-SummaryMarkdown {
     $tasksNeedingAttention = @($records | Where-Object {
         $_.type -eq "Task" -and $_.result -in @("failed", "canceled", "succeededWithIssues", "abandoned")
     } | Sort-Object order | Select-Object -First $MaxJobsToShow)
+    $failedTests = @(Get-FailedTestSummaries $tasksNeedingAttention | Select-Object -First $MaxFailedTestsToShow)
 
     $failedStages = @($stages | Where-Object { $_.result -in @("failed", "canceled", "abandoned") })
     $warningStages = @($stages | Where-Object { $_.result -eq "succeededWithIssues" -or (Get-Count $_.warningCount) -gt 0 })
@@ -479,7 +572,18 @@ function New-SummaryMarkdown {
         $lines.Add("")
     }
 
-    if ($jobsNeedingAttention.Count -eq 0 -and $tasksNeedingAttention.Count -eq 0) {
+    if ($failedTests.Count -gt 0) {
+        $lines.Add("### Failed tests")
+        $lines.Add("")
+        foreach ($failedTest in $failedTests) {
+            $testName = Escape-MarkdownTableCell $failedTest.TestName
+            $message = Escape-MarkdownTableCell (Format-IssueMessage $failedTest.Message)
+            $lines.Add("- **$testName** - $message")
+        }
+        $lines.Add("")
+    }
+
+    if ($jobsNeedingAttention.Count -eq 0 -and $tasksNeedingAttention.Count -eq 0 -and $failedTests.Count -eq 0) {
         $lines.Add("No failed or warning jobs or tasks were found in the Azure DevOps timeline records available to this step.")
         $lines.Add("")
     }
