@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using Android.Runtime;
 using Java.Interop;
 using Microsoft.Android.Runtime;
@@ -140,6 +142,80 @@ namespace Java.InteropTests
 			Assert.IsFalse (cache.ContainsKey (typeof (JavaList<DateTimeOffset>)));
 		}
 
+		[Test]
+		public void RegisteredPeer_Dispose_InvokesDisposing ()
+		{
+			if (!RuntimeFeature.TrimmableTypeMap) {
+				Assert.Ignore ("TrimmableTypeMap feature switch is off; test only relevant for the trimmable typemap path.");
+			}
+
+			bool disposed = false;
+			bool finalized = false;
+			var value = new TrimmableRegisteredDisposedObject {
+				OnDisposed = () => disposed = true,
+				OnFinalized = () => finalized = true,
+			};
+
+			value.Dispose ();
+
+			Assert.IsTrue (disposed);
+			Assert.IsFalse (finalized);
+		}
+
+		[Test]
+		public async Task RegisteredPeer_Dispose_Finalized ()
+		{
+			if (!RuntimeFeature.TrimmableTypeMap) {
+				Assert.Ignore ("TrimmableTypeMap feature switch is off; test only relevant for the trimmable typemap path.");
+			}
+
+			var disposed = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			var finalized = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+
+			PerformNoPinAction (() => {
+				PerformNoPinAction (() => {
+					var value = new TrimmableRegisteredDisposedObject {
+						OnDisposed = () => disposed.TrySetResult (true),
+						OnFinalized = () => finalized.TrySetResult (true),
+					};
+					GC.KeepAlive (value);
+				});
+				JniEnvironment.Runtime.ValueManager.CollectPeers ();
+			});
+			JniEnvironment.Runtime.ValueManager.CollectPeers ();
+
+			await WaitForGC (() => disposed.Task.IsCompleted || finalized.Task.IsCompleted,
+				"Expected TrimmableRegisteredDisposedObject.Dispose(disposing: false) to run.");
+
+			Assert.IsFalse (disposed.Task.IsCompleted);
+			Assert.IsTrue (finalized.Task.IsCompleted);
+		}
+
+		[Test]
+		public void RegisteredPeer_NestedDisposeInvocations ()
+		{
+			if (!RuntimeFeature.TrimmableTypeMap) {
+				Assert.Ignore ("TrimmableTypeMap feature switch is off; test only relevant for the trimmable typemap path.");
+			}
+
+			var value = new TrimmableRegisteredNestedDisposableObject ();
+			value.Dispose ();
+			value.Dispose ();
+		}
+
+		[Test]
+		public void RegisteredPeer_CanCreateGenericHolder ()
+		{
+			if (!RuntimeFeature.TrimmableTypeMap) {
+				Assert.Ignore ("TrimmableTypeMap feature switch is off; test only relevant for the trimmable typemap path.");
+			}
+
+			using var holder = new TrimmableRegisteredGenericHolder<int> ();
+			holder.Value = 42;
+
+			Assert.AreEqual (42, holder.Value);
+		}
+
 		static ConcurrentDictionary<Type, JavaPeerProxy> GetProxyCache (TrimmableTypeMap instance)
 		{
 			var field = typeof (TrimmableTypeMap).GetField ("_proxyCache", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -154,6 +230,41 @@ namespace Java.InteropTests
 
 			Assert.Fail ("Unable to access TrimmableTypeMap proxy cache.");
 			throw new InvalidOperationException ("Unable to access TrimmableTypeMap proxy cache.");
+		}
+
+		static async Task WaitForGC (Func<bool> predicate, string message, int timeoutMilliseconds = 2000)
+		{
+			var timeout = TimeSpan.FromMilliseconds (timeoutMilliseconds);
+			var start = DateTime.UtcNow;
+			while (!predicate () && DateTime.UtcNow - start < timeout) {
+				GC.Collect (generation: 2, mode: GCCollectionMode.Forced, blocking: true);
+				GC.WaitForPendingFinalizers ();
+				JniEnvironment.Runtime.ValueManager.CollectPeers ();
+				await Task.Yield ();
+			}
+			Assert.IsTrue (predicate (), message);
+		}
+
+		static IntPtr noPinActionPointer;
+
+		static unsafe void NoPinActionHelper (int depth, Action action)
+		{
+			int* values = stackalloc int [20];
+			noPinActionPointer = new IntPtr (values);
+
+			if (depth <= 0) {
+				new object ();
+				action ();
+			} else {
+				NoPinActionHelper (depth - 1, action);
+			}
+		}
+
+		static void PerformNoPinAction (Action action)
+		{
+			var thread = new Thread (() => NoPinActionHelper (128, action));
+			thread.Start ();
+			thread.Join ();
 		}
 
 		// Pure-function tests for the TargetTypeMatches helper used by
@@ -206,5 +317,54 @@ namespace Java.InteropTests
 		{
 			Assert.IsFalse (TrimmableTypeMap.TargetTypeMatches (typeof (string), typeof (int)));
 		}
+	}
+
+	[Register ("net/dot/android/test/TrimmableRegisteredDisposedObject")]
+	class TrimmableRegisteredDisposedObject : Java.Lang.Object
+	{
+		public Action OnDisposed = delegate { };
+		public Action OnFinalized = delegate { };
+
+		public TrimmableRegisteredDisposedObject ()
+		{
+		}
+
+		protected override void Dispose (bool disposing)
+		{
+			if (disposing) {
+				OnDisposed ();
+			} else {
+				OnFinalized ();
+			}
+			base.Dispose (disposing);
+		}
+	}
+
+	[Register ("net/dot/android/test/TrimmableRegisteredNestedDisposableObject")]
+	class TrimmableRegisteredNestedDisposableObject : Java.Lang.Object
+	{
+		bool isDisposed;
+
+		public TrimmableRegisteredNestedDisposableObject ()
+		{
+		}
+
+		protected override void Dispose (bool disposing)
+		{
+			if (isDisposed) {
+				return;
+			}
+			isDisposed = true;
+			if (Handle != IntPtr.Zero) {
+				Dispose ();
+			}
+			base.Dispose (disposing);
+		}
+	}
+
+	[Register ("net/dot/android/test/TrimmableRegisteredGenericHolder")]
+	class TrimmableRegisteredGenericHolder<T> : Java.Lang.Object
+	{
+		public T Value { get; set; }
 	}
 }

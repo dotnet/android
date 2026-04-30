@@ -73,6 +73,12 @@ namespace Xamarin.Android.RuntimeTests
                     // net.dot.jni.test.GetThis — cannot register native members
                     "Java.InteropTests.JavaObjectTest.DisposeAccessesThis",
 
+                    // JniTypeSignature-based ManagedPeer tests are not supported by trimmable typemap
+                    "Java.InteropTests.JavaObjectTest.Dispose",
+                    "Java.InteropTests.JavaObjectTest.Dispose_Finalized",
+                    "Java.InteropTests.JavaObjectTest.NestedDisposeInvocations",
+                    "Java.InteropTests.JniTypeManagerTests.CanCreateGenericHolder",
+
                     // NotSupportedException instead of InvalidCastException — no generated JavaPeerProxy
                     "Java.InteropTests.JavaObjectExtensionsTests.JavaCast_BadInterfaceCast",
                     "Java.InteropTests.JavaObjectExtensionsTests.JavaCast_BaseToGenericWrapper",
