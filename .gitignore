@@ -1,3 +1,4 @@
+*.lscache
 *.userprefs
 *.user
 bin
@@ -13,7 +14,6 @@ TestResult-*.xml
 TestResult-*.csv
 .vs/
 .vscode/
-.lscache
 .gradle/
 Resource.designer.cs
 logcat-*.txt
