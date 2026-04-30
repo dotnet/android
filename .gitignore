@@ -13,7 +13,7 @@ TestResult-*.xml
 TestResult-*.csv
 .vs/
 .vscode/
-.lscache/
+.lscache
 .gradle/
 Resource.designer.cs
 logcat-*.txt
