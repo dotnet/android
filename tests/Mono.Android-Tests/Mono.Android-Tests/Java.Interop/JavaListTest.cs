@@ -131,6 +131,14 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void RemoveNonExistentItemDoesNotThrow ()
+		{
+			list.Add ("foo");
+			Assert.DoesNotThrow (() => list.Remove ("bar"));
+			Assert.AreEqual (1, list.Count);
+		}
+
+		[Test]
 		public void Set ()
 		{
 			list.Add ("foo");

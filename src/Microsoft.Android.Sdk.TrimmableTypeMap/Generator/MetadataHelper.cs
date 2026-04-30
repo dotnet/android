@@ -41,6 +41,7 @@ static class MetadataHelper
 			writer.Write (proxy.TargetType.ManagedTypeName);
 			writer.Write (proxy.TargetType.AssemblyName);
 			writer.Write ((byte)(proxy.ActivationCtor?.Style ?? 0));
+			writer.Write ((byte)(proxy.InvokerActivationCtorStyle ?? 0));
 		}
 		foreach (var assoc in data.Associations) {
 			writer.Write (assoc.SourceTypeReference);

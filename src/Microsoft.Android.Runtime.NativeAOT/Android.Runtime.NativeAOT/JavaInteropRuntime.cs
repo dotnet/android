@@ -68,7 +68,6 @@ static partial class JavaInteropRuntime
 				ClassLoader                 = new JniObjectReference (classLoader, JniObjectReferenceType.Global),
 				TypeManager                 = typeManager,
 				ValueManager                = new JavaMarshalValueManager (),
-				UseMarshalMemberBuilder     = false,
 				JniGlobalReferenceLogWriter = settings.GrefLog,
 				JniLocalReferenceLogWriter  = settings.LrefLog,
 			};
