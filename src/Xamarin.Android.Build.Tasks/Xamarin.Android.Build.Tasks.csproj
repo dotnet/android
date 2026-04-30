@@ -236,6 +236,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Xamarin.Android.Tools.Aidl\Xamarin.Android.Tools.Aidl.csproj" />
     <ProjectReference Include="..\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
+    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" />
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Diagnostics\Java.Interop.Tools.Diagnostics.csproj" />
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj" />
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers.csproj" />

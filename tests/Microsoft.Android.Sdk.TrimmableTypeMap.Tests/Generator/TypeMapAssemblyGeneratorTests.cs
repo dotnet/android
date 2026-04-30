@@ -472,6 +472,36 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_JiStyleInvoker_FirstParamIsByRef ()
+	{
+		var peer = MakeInterfacePeer ("test/IJiInvoker", "Test.IJiInvoker", "TestAsm", "Test.IJiInvokerInvoker") with {
+			InvokerActivationCtorStyle = ActivationCtorStyle.JavaInterop,
+		};
+
+		using var stream = GenerateAssembly (new [] { peer }, "JiInvokerByRefTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var ctorRefs = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
+			.Select (i => reader.GetMemberReference (MetadataTokens.MemberReferenceHandle (i)))
+			.Where (m => reader.GetString (m.Name) == ".ctor")
+			.ToList ();
+
+		bool foundByRefCtor = false;
+		foreach (var ctor in ctorRefs) {
+			var sig = ctor.DecodeMethodSignature (SignatureTypeProvider.Instance, null);
+			if (sig.ParameterTypes.Length == 2 &&
+				sig.ParameterTypes [0].Contains ("JniObjectReference")) {
+				Assert.True (sig.ParameterTypes [0].EndsWith ("&"),
+					$"JI-style invoker .ctor first param must be byref, got: {sig.ParameterTypes [0]}");
+				foundByRefCtor = true;
+			}
+		}
+
+		Assert.True (foundByRefCtor, "Expected to find a JI-style invoker .ctor with byref JniObjectReference parameter");
+	}
+
+	[Fact]
 	public void Generate_JiStyleCtor_EmitsDeleteRefCall ()
 	{
 		var peers = ScanFixtures ();

@@ -294,6 +294,8 @@ _ResolveAssemblies MSBuild target.
       <_ExcludedNativeLibraries Condition=" '$(_AndroidRuntime)' == 'MonoVM' Or '$(_AndroidRuntime)' == '' " Include="libnet-android.release" />
       <_ExcludedNativeLibraries Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " Include="libmono-android.debug" />
       <_ExcludedNativeLibraries Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " Include="libmono-android.release" />
+      <_ExcludedNativeLibraries Condition=" '$(_AndroidRuntime)' == 'CoreCLR' And '$(AndroidIncludeDebugSymbols)' != 'true' " Include="libmscordaccore" />
+      <_ExcludedNativeLibraries Condition=" '$(_AndroidRuntime)' == 'CoreCLR' And '$(AndroidIncludeDebugSymbols)' != 'true' " Include="libmscordbi" />
     </ItemGroup>
 
     <!-- Let's keep the item group close to the task that uses them, the list is irrelevant for

@@ -297,20 +297,23 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[TestCase (AndroidRuntime.MonoVM)]
+		[TestCase (AndroidRuntime.CoreCLR)]
 		[NonParallelizable]
 		[Category ("XamarinBuildDownload")]
-		public void BuildAMassiveApp ()
+		public void BuildAMassiveApp (AndroidRuntime runtime)
 		{
-			var testPath = Path.Combine ("temp", "BuildAMassiveApp");
+			var testPath = Path.Combine ("temp", "BuildAMassiveApp", runtime.ToString ());
 			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = Path.Combine (Root, testPath);
 			var sb = new SolutionBuilder ("BuildAMassiveApp.sln") {
 				SolutionPath = Path.Combine (Root, testPath),
 			};
 			var app1 = new XamarinFormsMapsApplicationProject {
 				ProjectName = "App1",
-				AotAssemblies = true,
+				AotAssemblies = runtime == AndroidRuntime.MonoVM,
 				IsRelease = true,
 			};
+			app1.SetRuntime (runtime);
 			//NOTE: BuildingInsideVisualStudio prevents the projects from being built as dependencies
 			sb.BuildingInsideVisualStudio = false;
 			app1.Imports.Add (new Import ("foo.targets") {
@@ -493,7 +496,7 @@ namespace "+ libName + @" {
 		}
 
 		[Test]
-		public void RunAOTCompilationWithCoreClrWarnsAndSkipsMonoAot ()
+		public void RunAOTCompilationWithCoreClrFailsBuild ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
@@ -502,14 +505,15 @@ namespace "+ libName + @" {
 			proj.SetProperty ("RunAOTCompilation", "true");
 
 			using var b = CreateApkBuilder ();
-			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-			StringAssertEx.Contains ("warning XA1044", b.LastBuildOutput, "Build output should contain warning XA1044");
+			b.ThrowOnBuildFailure = false;
+			Assert.IsFalse (b.Build (proj), "Build should have failed.");
+			StringAssertEx.Contains ("error XA1044", b.LastBuildOutput, "Build output should contain error XA1044");
 			StringAssertEx.Contains ("RunAOTCompilation", b.LastBuildOutput, "Build output should mention RunAOTCompilation");
 			StringAssertEx.Contains ("CoreCLR", b.LastBuildOutput, "Build output should mention CoreCLR");
 		}
 
 		[Test]
-		public void EnableLLVMWithCoreClrWarnsAndIsIgnored ()
+		public void EnableLLVMWithCoreClrFailsBuild ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
@@ -518,8 +522,9 @@ namespace "+ libName + @" {
 			proj.SetProperty ("EnableLLVM", "true");
 
 			using var b = CreateApkBuilder ();
-			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-			StringAssertEx.Contains ("warning XA1044", b.LastBuildOutput, "Build output should contain warning XA1044");
+			b.ThrowOnBuildFailure = false;
+			Assert.IsFalse (b.Build (proj), "Build should have failed.");
+			StringAssertEx.Contains ("error XA1044", b.LastBuildOutput, "Build output should contain error XA1044");
 			StringAssertEx.Contains ("EnableLLVM", b.LastBuildOutput, "Build output should mention EnableLLVM");
 			StringAssertEx.Contains ("CoreCLR", b.LastBuildOutput, "Build output should mention CoreCLR");
 		}
