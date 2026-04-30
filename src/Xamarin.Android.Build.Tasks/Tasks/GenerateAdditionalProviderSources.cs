@@ -111,25 +111,6 @@ public class GenerateAdditionalProviderSources : AndroidTask
 			template => template.Replace ("// REGISTER_APPLICATION_AND_INSTRUMENTATION_CLASSES_HERE", regCallsWriter.ToString ())
 		);
 
-		void AppendEnvVarEntry (StringBuilder sb, string value)
-		{
-			sb.Append ("\t\t\"");
-			sb.Append (value);
-			sb.Append ("\",\n");
-		}
-
-		void GenerateJavaSource (string fileName, Dictionary<string, string> replacements)
-		{
-			var template = new StringBuilder (GetResource (fileName));
-
-			foreach (var kvp in replacements) {
-				template.Replace (kvp.Key, kvp.Value);
-			}
-
-			var path = Path.Combine (OutputDirectory, "src", "net", "dot", "jni", "nativeaot", fileName);
-			Log.LogDebugMessage ($"Writing: {path}");
-			Files.CopyIfStringChanged (template.ToString (), path);
-		}
 	}
 
 	string GetResource (string resource)
