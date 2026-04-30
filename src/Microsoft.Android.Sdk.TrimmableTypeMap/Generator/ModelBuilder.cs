@@ -120,10 +120,11 @@ static class ModelBuilder
 		if (!isAliasGroup) {
 			// Single peer — no aliases needed, emit directly with the base JNI name
 			var peer = peersForName [0];
+			bool hasProxy = peer.ActivationCtor != null || peer.InvokerTypeName != null;
 			bool isAcw = !peer.DoNotGenerateAcw && !peer.IsInterface && peer.MarshalMethods.Count > 0;
 
 			JavaPeerProxyData? proxy = null;
-			if (NeedsProxy (peer)) {
+			if (hasProxy) {
 				proxy = BuildProxyType (peer, jniName, usedProxyNames, isAcw);
 				model.ProxyTypes.Add (proxy);
 			}
@@ -157,10 +158,11 @@ static class ModelBuilder
 			string entryJniName = $"{jniName}[{i}]";
 			aliasKeys.Add (entryJniName);
 
+			bool hasProxy = peer.ActivationCtor != null || peer.InvokerTypeName != null;
 			bool isAcw = !peer.DoNotGenerateAcw && !peer.IsInterface && peer.MarshalMethods.Count > 0;
 
 			JavaPeerProxyData? proxy = null;
-			if (NeedsProxy (peer)) {
+			if (hasProxy) {
 				proxy = BuildProxyType (peer, jniName, usedProxyNames, isAcw);
 				model.ProxyTypes.Add (proxy);
 			}
@@ -219,11 +221,6 @@ static class ModelBuilder
 		}
 
 		return false;
-	}
-
-	static bool NeedsProxy (JavaPeerInfo peer)
-	{
-		return peer.ActivationCtor != null || peer.InvokerTypeName != null;
 	}
 
 	static void AddIfCrossAssembly (SortedSet<string> set, string? asmName, string outputAssemblyName)
