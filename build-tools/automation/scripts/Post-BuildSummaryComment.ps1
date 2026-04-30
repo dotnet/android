@@ -484,18 +484,19 @@ function Add-CopilotPromptIfNeeded {
     return "$prompt`n`n$Markdown"
 }
 
-function Get-ExistingSummaryComment {
+function Get-SummaryComments {
     param ([string] $PrNumber)
 
     $marker = "<!-- dotnet-android-azdo-build-summary"
+    $matchingComments = @()
     $comments = Invoke-GitHubApi -Method Get -Path "/repos/$GitHubOwner/$GitHubRepo/issues/$PrNumber/comments?per_page=100"
     foreach ($comment in @($comments)) {
         if ($comment.body -like "*$marker*") {
-            return $comment
+            $matchingComments += $comment
         }
     }
 
-    return $null
+    return $matchingComments
 }
 
 function Add-BuildMarkerIfNeeded {
@@ -515,10 +516,14 @@ function Publish-GitHubComment {
         [string] $Body
     )
 
-    $existing = Get-ExistingSummaryComment $PrNumber
-    if ($null -ne $existing) {
-        Write-Host "Updating existing GitHub PR build summary comment $($existing.id) for build $BuildId."
-        return Invoke-GitHubApi -Method Patch -Path "/repos/$GitHubOwner/$GitHubRepo/issues/comments/$($existing.id)" -Body @{ body = $Body }
+    $existingComments = @(Get-SummaryComments $PrNumber)
+    if ($existingComments.Count -gt 0) {
+        $updatedComment = $null
+        foreach ($comment in $existingComments) {
+            Write-Host "Updating existing GitHub PR build summary comment $($comment.id) for build $BuildId."
+            $updatedComment = Invoke-GitHubApi -Method Patch -Path "/repos/$GitHubOwner/$GitHubRepo/issues/comments/$($comment.id)" -Body @{ body = $Body }
+        }
+        return $updatedComment
     }
 
     Write-Host "Creating GitHub PR build summary comment for build $BuildId."
