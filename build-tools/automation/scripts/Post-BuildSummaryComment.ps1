@@ -518,10 +518,13 @@ function Publish-GitHubComment {
 
     $existingComments = @(Get-SummaryComments $PrNumber)
     if ($existingComments.Count -gt 0) {
-        $updatedComment = $null
-        foreach ($comment in $existingComments) {
-            Write-Host "Updating existing GitHub PR build summary comment $($comment.id) for build $BuildId."
-            $updatedComment = Invoke-GitHubApi -Method Patch -Path "/repos/$GitHubOwner/$GitHubRepo/issues/comments/$($comment.id)" -Body @{ body = $Body }
+        $primaryComment = $existingComments[0]
+        Write-Host "Updating existing GitHub PR build summary comment $($primaryComment.id) for build $BuildId."
+        $updatedComment = Invoke-GitHubApi -Method Patch -Path "/repos/$GitHubOwner/$GitHubRepo/issues/comments/$($primaryComment.id)" -Body @{ body = $Body }
+
+        foreach ($comment in @($existingComments | Select-Object -Skip 1)) {
+            Write-Host "Deleting duplicate GitHub PR build summary comment $($comment.id)."
+            Invoke-GitHubApi -Method Delete -Path "/repos/$GitHubOwner/$GitHubRepo/issues/comments/$($comment.id)"
         }
         return $updatedComment
     }
