@@ -331,8 +331,8 @@ static class ModelBuilder
 				WrapperName = $"n_{mm.JniName}_uco_{ucoIndex}",
 				CallbackMethodName = mm.NativeCallbackName,
 				CallbackType = new TypeRefData {
-					ManagedTypeName = !string.IsNullOrEmpty (mm.DeclaringTypeName) ? mm.DeclaringTypeName : peer.ManagedTypeName,
-					AssemblyName = !string.IsNullOrEmpty (mm.DeclaringAssemblyName) ? mm.DeclaringAssemblyName : peer.AssemblyName,
+					ManagedTypeName = !mm.DeclaringTypeName.IsNullOrEmpty () ? mm.DeclaringTypeName : peer.ManagedTypeName,
+					AssemblyName = !mm.DeclaringAssemblyName.IsNullOrEmpty () ? mm.DeclaringAssemblyName : peer.AssemblyName,
 				},
 				JniSignature = mm.JniSignature,
 			});
