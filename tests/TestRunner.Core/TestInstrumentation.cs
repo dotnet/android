@@ -1,5 +1,4 @@
 using System.Reflection;
-using System.Xml;
 using System.Xml.Linq;
 using Android.App;
 using Android.OS;
@@ -155,10 +154,7 @@ public abstract class TestInstrumentation : Instrumentation
 
 		var xmlStr = filterXml.ToString ();
 		Log.Info (LogTag, $"NUnit filter XML: {xmlStr}");
-
-		var doc = new XmlDocument ();
-		doc.LoadXml (xmlStr);
-		return TestFilter.FromXml (doc.DocumentElement!);
+		return TestFilter.FromXml (xmlStr);
 	}
 
 	string? GetStringExtra (string key)
