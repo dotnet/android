@@ -951,7 +951,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			var AndroidSdkDirectory = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "36.0.0", [new ApiInfo { Id = "36" }]);
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
-				TargetFramework = $"{XABuildConfig.LatestDotNetTargetFramework}-android36.1",
+				TargetFramework = $"{XABuildConfig.PreviousDotNetTargetFramework}-android36.1",
 				ExtraNuGetConfigSources = {
 					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
 				},
