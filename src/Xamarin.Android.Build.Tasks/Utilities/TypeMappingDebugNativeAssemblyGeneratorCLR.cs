@@ -305,12 +305,12 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		// Java-to-managed maps don't use hashes since many mappings have multiple instances
 		foreach (TypeMapGenerator.TypeMapDebugEntry entry in data.JavaToManagedMap) {
 			TypeMapGenerator.TypeMapDebugEntry managedEntry = entry.DuplicateForJavaToManaged != null ? entry.DuplicateForJavaToManaged : entry;
-			(int managedTypeNameOffset, int _) = managedTypeNames.Add (entry.ManagedName);
+			(int managedTypeNameOffset, int _) = managedTypeNames.Add (managedEntry.ManagedName);
 			(int javaTypeNameOffset, int _) = javaTypeNames.Add (entry.JavaName);
 
 			var j2m = new TypeMapEntry {
 				From = entry.JavaName,
-				To = managedEntry.SkipInJavaToManaged ? String.Empty : entry.ManagedName,
+				To = managedEntry.SkipInJavaToManaged ? String.Empty : managedEntry.ManagedName,
 
 				from = (uint)javaTypeNameOffset,
 				from_hash = 0,
@@ -318,17 +318,17 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 			};
 			javaToManagedMap.Add (new StructureInstance<TypeMapEntry> (typeMapEntryStructureInfo, j2m));
 
-			int assemblyNameOffset = assemblyNamesBlob.GetIndexOf (entry.AssemblyName);
+			int assemblyNameOffset = assemblyNamesBlob.GetIndexOf (managedEntry.AssemblyName);
 			if (assemblyNameOffset < 0) {
-				throw new InvalidOperationException ($"Internal error: assembly name '{entry.AssemblyName}' not found in the assembly names blob.");
+				throw new InvalidOperationException ($"Internal error: assembly name '{managedEntry.AssemblyName}' not found in the assembly names blob.");
 			}
 
 			var typeInfo = new TypeMapManagedTypeInfo {
-				AssemblyName = entry.AssemblyName,
-				ManagedTypeName = entry.ManagedName,
+				AssemblyName = managedEntry.AssemblyName,
+				ManagedTypeName = managedEntry.ManagedName,
 
 				assembly_name_index = (uint)assemblyNameOffset,
-				managed_type_token_id = entry.ManagedTypeTokenId,
+				managed_type_token_id = managedEntry.ManagedTypeTokenId,
 			};
 			managedTypeInfos.Add (new StructureInstance<TypeMapManagedTypeInfo> (typeMapManagedTypeInfoStructureInfo, typeInfo));
 		}
