@@ -85,9 +85,7 @@ namespace Xamarin.ProjectTools
 				Modules = {
 					new AndroidGradleModule (Path.Combine (projectDir, "TestModule")) {
 						IsApplication = isApplication,
-						CompileSdkValue = compileSdk.HasValue
-							? AndroidGradleModule.GetCompileSdkGradleLine (compileSdk.Value)
-							: AndroidGradleModule.GetDefaultCompileSdkLine (),
+						CompileSdk = compileSdk ?? XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major,
 					},
 				},
 			};

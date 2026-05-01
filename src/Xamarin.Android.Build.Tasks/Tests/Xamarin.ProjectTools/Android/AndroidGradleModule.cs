@@ -15,45 +15,9 @@ namespace Xamarin.ProjectTools
 
 		public string ModuleDirectory { get; private set; } = string.Empty;
 
-		public string CompileSdkValue { get; set; } = GetDefaultCompileSdkLine ();
+		public int CompileSdk { get; set; } = XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major;
 
 		public int MinSdk { get; set; } = XABuildConfig.AndroidMinimumDotNetApiLevel.Major;
-
-		/// <summary>
-		/// Returns the compileSdk Gradle DSL line for the default API level.
-		/// Starting with API 37, Google ships platforms as "android-37.0" instead of "android-37",
-		/// so Gradle needs compileSdkPreview = "android-37.0" instead of compileSdk = 37.
-		/// </summary>
-		public static string GetDefaultCompileSdkLine ()
-		{
-			return GetCompileSdkGradleLine (XABuildConfig.AndroidDefaultTargetDotnetApiLevel);
-		}
-
-		/// <summary>
-		/// Returns the compileSdk Gradle DSL line for a given API level Version.
-		/// Uses compileSdkPreview when the Version has a non-zero minor (e.g. 36.1)
-		/// or when Major >= 37 (Google ships android-37.0 not android-37).
-		/// </summary>
-		public static string GetCompileSdkGradleLine (Version apiLevel)
-		{
-			// Non-zero minor versions always need the string form (e.g. "android-36.1")
-			if (apiLevel.Minor != 0) {
-				return $@"compileSdkPreview = ""android-{apiLevel}""";
-			}
-			// API 37+ ship as android-37.0, android-38.0 etc. — Gradle needs the string form
-			if (apiLevel.Major >= 37) {
-				return $@"compileSdkPreview = ""android-{apiLevel}""";
-			}
-			return $"compileSdk = {apiLevel.Major}";
-		}
-
-		/// <summary>
-		/// Returns the compileSdk Gradle DSL line for a given integer API level.
-		/// </summary>
-		public static string GetCompileSdkGradleLine (int apiLevel)
-		{
-			return GetCompileSdkGradleLine (new Version (apiLevel, 0));
-		}
 
 		public bool IsApplication { get; set; } = false;
 
@@ -99,7 +63,7 @@ plugins {{
 }}
 android {{
     namespace = ""com.example.{Name}""
-    {CompileSdkValue}
+    compileSdk = {CompileSdk}
     defaultConfig {{
         minSdk = {MinSdk}
     }}

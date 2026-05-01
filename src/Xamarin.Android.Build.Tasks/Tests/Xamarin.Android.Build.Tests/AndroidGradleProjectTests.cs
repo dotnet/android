@@ -503,7 +503,7 @@ plugins {{
 }}
 android {{
     namespace = ""{gradleModule.PackageName}""
-    {AndroidGradleModule.GetDefaultCompileSdkLine ()}
+    compileSdk = {XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major}
     defaultConfig {{
         minSdk = 21
     }}
