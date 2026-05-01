@@ -25,6 +25,12 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <!-- ResolvedFileToPublish is not populated until _AndroidComputeIlcCompileInputs, so
          proguard generation must run after that target instead of after ILLink. -->
     <_GenerateProguardAfterTargets>_AndroidComputeIlcCompileInputs</_GenerateProguardAfterTargets>
+    <!-- Ask ILC to produce a static library (.a) instead of a shared library (.so).
+         This gives Android full control over the native linker invocation. -->
+    <NativeLib>static</NativeLib>
+    <!-- ILC only sets this for NativeLib=Shared, but we need [UnmanagedCallersOnly] methods
+         exported as native symbols so JNI can find them via dlsym. -->
+    <IlcExportUnmanagedEntrypoints>true</IlcExportUnmanagedEntrypoints>
   </PropertyGroup>
 
   <!-- Default property values for NativeAOT Debug configuration -->
@@ -107,9 +113,18 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <CppCompilerAndLinker>$(_NdkAbi)-linux-android$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppCompilerAndLinker>
       <CppLinker>$(_NdkAbi)-linux-android$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppLinker>
       <ObjCopyName>llvm-objcopy</ObjCopyName>
+      <!-- Use the NDK's llvm-ar instead of the host 'ar' so that ELF objects are handled
+           correctly when cross-compiling. -->
+      <CppLibCreator>llvm-ar</CppLibCreator>
 
       <!-- We must ensure this is `false`, as it would interfere with statically linking libc++ -->
       <LinkStandardCPlusPlusLibrary>false</LinkStandardCPlusPlusLibrary>
+
+      <!-- Clear LinkerFlavor: the ILC targets set it to 'lld' for android/bionic, but with NativeLib=static
+           the _LinkerVersion detection is skipped, causing a numeric comparison error in LinkNative.
+           Since we handle native linking ourselves, LinkerFlavor is not needed.
+           Context: https://github.com/dotnet/runtime/issues/126978 -->
+      <LinkerFlavor />
 
       <!-- Example settings from: https://github.com/xamarin/xamarin-macios/blob/c43d4ea40bc777969e3b158cf46446df292d8449/dotnet/targets/Xamarin.Shared.Sdk.targets#L541-L550 -->
       <RunILLink>true</RunILLink>
@@ -133,7 +148,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     </PropertyGroup>
     <ItemGroup>
       <!-- Android needs a proper soname property or it will refuse to load the library -->
-      <LinkerArg Include="&quot;-Wl,-soname,lib$(TargetName)$(NativeBinaryExt)&quot;" />
+      <LinkerArg Include="&quot;-Wl,-soname,lib$(TargetName).so&quot;" />
       <LinkerArg Include="-Wl,--error-unresolved-symbols" />
       <LinkerArg Include="-Wl,--no-undefined" />
 
@@ -259,6 +274,62 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   </Target>
 
   <!--
+    With NativeLib=static, ILC's LinkNative target produces a .a archive via `ar`.
+    We need to link the ILC .o output + all LinkerArg items into a .so ourselves.
+    This target runs after LinkNative and produces the shared library that Android needs.
+  -->
+  <Target Name="_AndroidLinkNativeAotSharedLibrary"
+      AfterTargets="LinkNative"
+      Inputs="$(NativeObject);@(NativeLibrary)"
+      Outputs="$(NativeOutputPath)$(NativeBinaryPrefix)$(TargetName).so">
+    <PropertyGroup>
+      <_AndroidNativeAotSharedLibrary>$(NativeOutputPath)$(NativeBinaryPrefix)$(TargetName).so</_AndroidNativeAotSharedLibrary>
+    </PropertyGroup>
+    <ItemGroup>
+      <_AndroidNativeAotLinkerArgs Include="&quot;$(NativeObject)&quot;" />
+      <_AndroidNativeAotLinkerArgs Include="-shared" />
+      <_AndroidNativeAotLinkerArgs Include="-fuse-ld=lld" />
+      <_AndroidNativeAotLinkerArgs Include="-o &quot;$(_AndroidNativeAotSharedLibrary)&quot;" />
+      <!-- These flags are in the ILC targets' LinkNative/LinkerArg but conditioned on NativeLib=Shared
+           or LinkerFlavor=lld, so they're missing when NativeLib=static. Add them back. -->
+      <_AndroidNativeAotLinkerArgs Include="-Wl,-e,0x0" />
+      <_AndroidNativeAotLinkerArgs Include="-Wl,-z,max-page-size=16384" />
+      <_AndroidNativeAotLinkerArgs Include="-Wl,--version-script=&quot;$(ExportsFile)&quot;" Condition="'$(ExportsFile)' != ''" />
+      <_AndroidNativeAotLinkerArgs Include="-Wl,--export-dynamic" Condition="'$(ExportsFile)' != ''" />
+      <_AndroidNativeAotLinkerArgs Include="-Wl,--discard-all" />
+      <_AndroidNativeAotLinkerArgs Include="-Wl,--gc-sections" />
+      <_AndroidNativeAotLinkerArgs Include="-Wl,-T,&quot;$(NativeIntermediateOutputPath)sections.ld&quot;" />
+      <_AndroidNativeAotLinkerArgs Include="@(LinkerArg)" />
+    </ItemGroup>
+
+    <!-- Linker script to retain the __modules section (required by NativeAOT runtime) -->
+    <WriteLinesToFile File="$(NativeIntermediateOutputPath)sections.ld" Lines="OVERWRITE_SECTIONS { __modules : { KEEP(*(__modules)) } }" Overwrite="true" />
+
+    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName($(_AndroidNativeAotSharedLibrary)))" />
+    <Exec Command="&quot;$(CppLinker)&quot; @(_AndroidNativeAotLinkerArgs, ' ')" />
+
+    <!-- Strip debug symbols, matching what ILC's LinkNative does -->
+    <Exec Condition="'$(StripSymbols)' == 'true' and '$(NativeDebugSymbols)' == 'true'"
+        Command="&quot;$(ObjCopyName)&quot; --only-keep-debug &quot;$(_AndroidNativeAotSharedLibrary)&quot; &quot;$(_AndroidNativeAotSharedLibrary)$(NativeSymbolExt)&quot;" />
+    <Exec Condition="'$(StripSymbols)' == 'true'"
+        Command="&quot;$(ObjCopyName)&quot; --strip-debug --strip-unneeded &quot;$(_AndroidNativeAotSharedLibrary)&quot;" />
+    <Exec Condition="'$(StripSymbols)' == 'true' and '$(NativeDebugSymbols)' == 'true'"
+        Command="&quot;$(ObjCopyName)&quot; --add-gnu-debuglink=&quot;$(_AndroidNativeAotSharedLibrary)$(NativeSymbolExt)&quot; &quot;$(_AndroidNativeAotSharedLibrary)&quot;" />
+
+    <ItemGroup>
+      <!-- Replace the .a that NativeCompile/ComputeLinkedFilesToPublish would publish with our .so -->
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition=" '%(Filename)%(Extension)' == '$(TargetName).a' " />
+      <ResolvedFileToPublish Include="$(_AndroidNativeAotSharedLibrary)">
+        <RelativePath>$(NativeBinaryPrefix)$(TargetName).so</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+      <FileWrites Include="$(_AndroidNativeAotSharedLibrary)" />
+      <FileWrites Include="$(_AndroidNativeAotSharedLibrary)$(NativeSymbolExt)" Condition="'$(StripSymbols)' == 'true' and '$(NativeDebugSymbols)' == 'true'" />
+      <FileWrites Include="$(NativeIntermediateOutputPath)sections.ld" />
+    </ItemGroup>
+  </Target>
+
+  <!--
     dotnet/runtime#125629 moved the NativeAOT entry point from ComputeLinkedFilesToPublish
     (AfterTargets="ComputeResolvedFilesToPublishList") to NativeCompile (an SDK Publish hook).
     Android uses `dotnet build` not `dotnet publish`, so NativeCompile never fires.
@@ -272,7 +343,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   <Target Name="_AndroidFixNativeLibraryFileName" AfterTargets="ComputeFilesToPublish">
     <ItemGroup>
       <!-- Fix paths to contain lib-prefix -->
-      <ResolvedFileToPublish Update="@(ResolvedFileToPublish)" ArchiveFileName="lib%(FileName)%(Extension)" Condition=" '%(Filename)%(Extension)' == '$(TargetName)$(NativeBinaryExt)' " />
+      <ResolvedFileToPublish Update="@(ResolvedFileToPublish)" ArchiveFileName="lib%(FileName)%(Extension)" Condition=" '%(Filename)%(Extension)' == '$(TargetName).so' " />
     </ItemGroup>
   </Target>
 

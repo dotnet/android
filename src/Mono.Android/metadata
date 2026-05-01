@@ -359,10 +359,10 @@
   <attr api-since="8" path="/api/package[@name='android.util']/class[@name='Log']/method[@name='wtf' and count(parameter) = 3 and parameter[3][@type='java.lang.Throwable']]" name="visibility">private</attr>
 
 	<!-- Color properties should be of type Color; https://bugzilla.xamarin.com/show_bug.cgi?id=374 ; will need to wait for when we can break API :-(
-	<attr path="/api/package/*[local-name()='class' or local-name()='interface']/field[@final='false' and @type='int' and (@name='color' or substring(@name, string-length(@name) - 5 + 1)='Color')]" name="type">Android.Graphics.Color</attr>
+	<attr path="/api/package/*[local-name()='class' or local-name()='interface']/field[@final='false' and @type='int' and (@name='color' or substring(@name, string-length(@name) - string-length('Color') + 1)='Color')]" name="type">Android.Graphics.Color</attr>
 
 	  ~~ get*Color(), hsvToColor(), parseColor() etc. ~~
-	<attr path="/api/package/*[local-name()='class' or local-name()='interface']/method[@return='int' and substring(@name, string-length(@name) - 5 + 1)='Color']" name="return">Android.Graphics.Color</attr>
+	<attr path="/api/package/*[local-name()='class' or local-name()='interface']/method[@return='int' and substring(@name, string-length(@name) - string-length('Color') + 1)='Color']" name="return">Android.Graphics.Color</attr>
 
 	  ~~ remaining Color methods, manually enumified ~~
 	<attr path="/api/package[@name='android.content.res']/class[@name='ColorStateList']/method[@name='getColorForState']" name="return">Android.Graphics.Color</attr>
@@ -1976,6 +1976,10 @@
   <attr api-since="36" path="/api/package[@name='android.media.tv.ad']" name="managedName">Android.Media.TV.Ads</attr>
   <attr api-since="36" path="/api/package[@name='android.security.advancedprotection']" name="managedName">Android.Security.AdvancedProtection</attr>
 
+  <ns-replace source="privatecompute"       replacement="PrivateCompute" />
+  <ns-replace source="voiceinteraction"     replacement="VoiceInteractions" />
+  <ns-replace source="permissionui"         replacement="PermissionUI" />
+
   <!-- Public method cannot override protected base method -->
   <attr api-since="36" path="/api/package[@name='android.media.tv.ad']/class[@name='TvAdView']/method[@name='onLayout' and count(parameter)=5 and parameter[1][@type='boolean'] and parameter[2][@type='int'] and parameter[3][@type='int'] and parameter[4][@type='int'] and parameter[5][@type='int']]" name="visibility">protected</attr>
 
@@ -2095,8 +2099,9 @@
   <attr api-since="36" path="/api//*[contains(@merge.SourceFile,'api-Baklava.xml.in')]" name="api-since">36</attr>
   <attr api-since="36.1" path="/api//*[contains(@merge.SourceFile,'api-CANARY.xml.in')]" name="api-since">36.1</attr>
   <attr api-since="36.1" path="/api//*[contains(@merge.SourceFile,'api-36.1.xml.in')]" name="api-since">36.1</attr>
-  <attr api-since="37" path="/api//*[contains(@merge.SourceFile,'api-CinnamonBun.xml.in')]" name="api-since">37</attr>
-  <attr api-since="37" path="/api//*[contains(@merge.SourceFile,'api-37.0.xml.in')]" name="api-since">37</attr>
+  <attr api-since="37" path="/api//*[contains(@merge.SourceFile,'api-CinnamonBun.xml.in')]" name="api-since">37.0</attr>
+  <attr api-since="37" path="/api//*[contains(@merge.SourceFile,'api-37.xml.in')]" name="api-since">37.0</attr>
+  <attr api-since="37" path="/api//*[contains(@merge.SourceFile,'api-37.0.xml.in')]" name="api-since">37.0</attr>
 
   <!-- Erase some 'api-since' attributes (This has to be done after they are set above) -->
 
@@ -2106,5 +2111,96 @@
   <attr api-since="29" path="/api/package[@name='android.text']/class[@name='SpannableString']/method[@name='getChars' and count(parameter)=4 and parameter[1][@type='int'] and parameter[2][@type='int'] and parameter[3][@type='char[]'] and parameter[4][@type='int']]" name="api-since"></attr>
   <attr api-since="29" path="/api/package[@name='android.text']/class[@name='SpannableString']/method[@name='length' and count(parameter)=0]" name="api-since"></attr>
   <attr api-since="29" path="/api/package[@name='android.text']/class[@name='SpannableString']/method[@name='toString' and count(parameter)=0]" name="api-since"></attr>
+
+
+  <!--
+    remember "Color properties should be of type Color", above? We're never going to have an ABI break, so try it for API-37+?
+
+    Note: these MUST follow the above <attr name="api-since" /> declarations, so that @api-since exists.
+    -->
+
+  <!-- fields with name starting with `color` or ending with `Color` in packages added in API 37+ -->
+  <attr api-since="37" path="/api/package[@api-since >= 37.0]
+      /*[(local-name()='class' or local-name()='interface')]
+      /field[@type='int' and (starts-with(@name, 'color') or substring(@name, string-length(@name) - string-length('Color') + 1)='Color')]"
+    name="type">Android.Graphics.Color</attr>
+  <!-- methods with name ending with `Color` in packages added in API 37+ -->
+  <attr api-since="37" path="/api/package[@api-since >= 37.0]
+      /*[(local-name()='class' or local-name()='interface')]
+      /method[@return='int' and substring(@name, string-length(@name) - string-length('Color') + 1)='Color']"
+    name="return">Android.Graphics.Color</attr>
+  <!-- `set*` method parameters with name starting with `color` or ending with `Color` in packages added in API 37+ -->
+  <attr api-since="37" path="/api/package[@api-since >= 37.0]
+      /*[(local-name()='class' or local-name()='interface')]
+      /method[starts-with(@name, 'set')]
+      /parameter[@type='int' and (starts-with(@name, 'color') or substring(@name, string-length(@name) - string-length('Color') + 1)='Color')]"
+    name="type">Android.Graphics.Color</attr>
+  <!-- methods with name ending with `Tint` in packages added in API 37+ -->
+  <attr api-since="37" path="/api/package[@api-since >= 37.0]
+      /*[(local-name()='class' or local-name()='interface')]
+      /method[@return='int' and substring(@name, string-length(@name) - string-length('Tint') + 1)='Tint']"
+    name="return">Android.Graphics.Color</attr>
+  <!-- `set*` methods parameters starting with name `tint` or ending with `Tint` in packages added in API 37+ -->
+  <attr api-since="37" path="/api/package[@api-since >= 37.0]
+      /*[(local-name()='class' or local-name()='interface')]
+      /method[starts-with(@name, 'set')]
+      /parameter[@type='int' and (starts-with(@name, 'tint') or substring(@name, string-length(@name) - string-length('Tint') + 1)='Tint')]"
+    name="type">Android.Graphics.Color</attr>
+
+  <!-- fields with name `color` or ending with `Color` in types added in API 37+ -->
+  <attr api-since="37" path="/api/package
+      /*[@api-since >= 37.0 and (local-name()='class' or local-name()='interface')]
+      /field[@type='int' and (starts-with(@name, 'color') or substring(@name, string-length(@name) - string-length('Color') + 1)='Color')]"
+    name="type">Android.Graphics.Color</attr>
+  <!-- methods with name ending with `Color` in types added in API 37+ -->
+  <attr api-since="37" path="/api/package
+      /*[@api-since >= 37.0 and (local-name()='class' or local-name()='interface')]
+      /method[@return='int' and substring(@name, string-length(@name) - string-length('Color') + 1)='Color']"
+    name="return">Android.Graphics.Color</attr>
+  <!-- `set*` method parameters with name `color` or ending with `Color` in types added in API 37+ -->
+  <attr api-since="37" path="/api/package
+      /*[@api-since >= 37.0 and (local-name()='class' or local-name()='interface')]
+      /method[starts-with(@name, 'set')]
+      /parameter[@type='int' and (starts-with(@name, 'color') or substring(@name, string-length(@name) - string-length('Color') + 1)='Color')]"
+    name="type">Android.Graphics.Color</attr>
+  <!-- methods with name ending with `Tint` in types added in API 37+ -->
+  <attr api-since="37" path="/api/package
+      /*[@api-since >= 37.0 and (local-name()='class' or local-name()='interface')]
+      /method[@return='int' and substring(@name, string-length(@name) - string-length('Tint') + 1)='Tint']"
+    name="return">Android.Graphics.Color</attr>
+  <!-- `set*` method parameters with name `tint` or ending with `Tint` in types added in API 37+ -->
+  <attr api-since="37" path="/api/package
+      /*[(local-name()='class' or local-name()='interface') and @api-since >= 37.0]
+      /method[starts-with(@name, 'set')]
+      /parameter[@type='int' and (starts-with(@name, 'tint') or substring(@name, string-length(@name) - string-length('Tint') + 1)='Tint')]"
+    name="type">Android.Graphics.Color</attr>
+
+  <!-- fields added in API-37+ with name `color` or ending with `Color` -->
+  <attr api-since="37" path="/api/package
+      /*[(local-name()='class' or local-name()='interface')]
+      /field[@api-since >= 37.0 and @type='int' and (starts-with(@name, 'color') or substring(@name, string-length(@name) - string-length('Color') + 1)='Color')]"
+    name="type">Android.Graphics.Color</attr>
+  <!-- methods added in API-37+ with name ending with `Color` -->
+  <attr api-since="37" path="/api/package
+      /*[(local-name()='class' or local-name()='interface')]
+      /method[@api-since >= 37.0 and @return='int' and substring(@name, string-length(@name) - string-length('Color') + 1)='Color']"
+    name="return">Android.Graphics.Color</attr>
+  <!-- `set*` methods added in API-37+ with parameters with name `color` or ending with `Color` -->
+  <attr api-since="37" path="/api/package
+      /*[(local-name()='class' or local-name()='interface')]
+      /method[@api-since >= 37.0 and starts-with(@name, 'set')]
+      /parameter[@type='int' and (starts-with(@name, 'color') or substring(@name, string-length(@name) - string-length('Color') + 1)='Color')]"
+    name="type">Android.Graphics.Color</attr>
+  <!-- methods added in API-37+ with name ending with `Tint` -->
+  <attr api-since="37" path="/api/package
+      /*[(local-name()='class' or local-name()='interface')]
+      /method[@api-since >= 37.0 and @return='int' and substring(@name, string-length(@name) - string-length('Tint') + 1)='Tint']"
+    name="return">Android.Graphics.Color</attr>
+  <!-- `set*` methods added in API-37+ with parameters with name `tint` or ending with `Tint` -->
+  <attr api-since="37" path="/api/package
+      /*[(local-name()='class' or local-name()='interface')]
+      /method[@api-since >= 37.0 and starts-with(@name, 'set')]
+      /parameter[@type='int' and (starts-with(@name, 'tint') or substring(@name, string-length(@name) - string-length('Tint') + 1)='Tint')]"
+    name="type">Android.Graphics.Color</attr>
 
 </metadata>

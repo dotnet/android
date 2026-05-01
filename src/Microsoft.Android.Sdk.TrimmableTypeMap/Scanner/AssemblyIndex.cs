@@ -222,6 +222,31 @@ sealed class AssemblyIndex : IDisposable
 		return ParseRegisterInfo (DecodeAttribute (ca));
 	}
 
+	internal RegisterInfo ParseJniTypeSignatureAttribute (CustomAttribute ca)
+	{
+		var value = DecodeAttribute (ca);
+
+		string jniName = "";
+		bool doNotGenerateAcw = false;
+
+		if (value.FixedArguments.Length > 0) {
+			jniName = (string?)value.FixedArguments [0].Value ?? "";
+		}
+
+		if (TryGetNamedArgument<bool> (value, "GenerateJavaPeer", out var generateJavaPeer)) {
+			doNotGenerateAcw = !generateJavaPeer;
+		}
+
+		var isArrayType = TryGetNamedArgument<int> (value, "ArrayRank", out var rank) && rank > 0;
+
+		return new RegisterInfo {
+			JniName = jniName.Replace ('.', '/'),
+			DoNotGenerateAcw = doNotGenerateAcw,
+			IsFromJniTypeSignature = true,
+			IsArrayType = isArrayType,
+		};
+	}
+
 	internal CustomAttributeValue<string> DecodeAttribute (CustomAttribute ca)
 	{
 		return ca.DecodeValue (customAttributeTypeProvider);
@@ -544,6 +569,8 @@ sealed record RegisterInfo
 	public string? Signature { get; init; }
 	public string? Connector { get; init; }
 	public bool DoNotGenerateAcw { get; init; }
+	public bool IsFromJniTypeSignature { get; init; }
+	public bool IsArrayType { get; init; }
 }
 
 /// <summary>

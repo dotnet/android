@@ -460,7 +460,7 @@ namespace ${ROOT_NAMESPACE} {
 		}
 
 		// MonoVM-only test for the moment.
-		[Test, Category ("Debugger"), Category ("WearOS")]
+		[Test, Category ("Debugger")]
 		[TestCaseSource (nameof(Get_ApplicationRunsWithDebuggerAndBreaks_Data))]
 		[Retry (5)]
 		public void ApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string username, string packageFormat, bool useLatestSdk, AndroidRuntime runtime)

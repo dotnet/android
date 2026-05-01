@@ -294,6 +294,7 @@ static class ModelBuilder
 				ManagedTypeName = peer.InvokerTypeName,
 				AssemblyName = peer.AssemblyName,
 			};
+			proxy.InvokerActivationCtorStyle = peer.InvokerActivationCtorStyle ?? ActivationCtorStyle.XamarinAndroid;
 		}
 
 		if (peer.ActivationCtor != null) {

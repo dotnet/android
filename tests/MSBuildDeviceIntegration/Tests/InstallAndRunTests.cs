@@ -1544,7 +1544,6 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		[Category ("WearOS")]
 		public void DotNetInstallAndRunPreviousSdk (
 				[Values] bool isRelease,
 				[Values] AndroidRuntime runtime)
