@@ -2066,7 +2066,7 @@ namespace App1
 				};
 				proj.OtherBuildItems.Add (config);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				StringAssertEx.Contains ("XA1024", b.LastBuildOutput, "Output should contain XA1024 warnings");
+				StringAssertEx.DoesNotContain ("XA1024", b.LastBuildOutput, "Output should not contain XA1024 warnings");
 			}
 		}
 
