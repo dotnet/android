@@ -15,36 +15,44 @@ namespace Xamarin.ProjectTools
 
 		public string ModuleDirectory { get; private set; } = string.Empty;
 
-		public string CompileSdkValue { get; set; } = GetDefaultCompileSdk ();
+		public string CompileSdkValue { get; set; } = GetDefaultCompileSdkLine ();
 
 		public int MinSdk { get; set; } = XABuildConfig.AndroidMinimumDotNetApiLevel.Major;
 
-		public static string GetDefaultCompileSdk ()
+		/// <summary>
+		/// Returns the compileSdk Gradle DSL line for the default API level.
+		/// Starting with API 37, Google ships platforms as "android-37.0" instead of "android-37",
+		/// so Gradle needs compileSdkPreview = "android-37.0" instead of compileSdk = 37.
+		/// </summary>
+		public static string GetDefaultCompileSdkLine ()
 		{
-			var version = XABuildConfig.AndroidDefaultTargetDotnetApiLevel;
-			return version.Major.ToString ();
+			return GetCompileSdkGradleLine (XABuildConfig.AndroidDefaultTargetDotnetApiLevel);
 		}
 
 		/// <summary>
-		/// Returns the compileSdk line for a Gradle build file.
-		/// For platforms like android-37.0 (where the directory has a minor version),
-		/// uses compileSdkPreview instead of compileSdk.
+		/// Returns the compileSdk Gradle DSL line for a given API level Version.
+		/// Uses compileSdkPreview when the Version has a non-zero minor (e.g. 36.1)
+		/// or when Major >= 37 (Google ships android-37.0 not android-37).
 		/// </summary>
-		public static string GetCompileSdkGradleLine (string compileSdkValue)
+		public static string GetCompileSdkGradleLine (Version apiLevel)
 		{
-			// If the value is a plain integer, use compileSdk = N
-			if (int.TryParse (compileSdkValue, out _)) {
-				string sdkPath = AndroidSdkResolver.GetAndroidSdkPath ();
-				string platformsPath = Path.Combine (sdkPath, "platforms");
-				// Check if the platform directory uses the ".0" suffix (e.g. android-37.0 without android-37)
-				if (!Directory.Exists (Path.Combine (platformsPath, $"android-{compileSdkValue}")) &&
-				    Directory.Exists (Path.Combine (platformsPath, $"android-{compileSdkValue}.0"))) {
-					return $@"compileSdkPreview = ""android-{compileSdkValue}.0""";
-				}
-				return $"compileSdk = {compileSdkValue}";
+			// Non-zero minor versions always need the string form (e.g. "android-36.1")
+			if (apiLevel.Minor != 0) {
+				return $@"compileSdkPreview = ""android-{apiLevel}""";
 			}
-			// Already a string value
-			return $@"compileSdkPreview = ""{compileSdkValue}""";
+			// API 37+ ship as android-37.0, android-38.0 etc. — Gradle needs the string form
+			if (apiLevel.Major >= 37) {
+				return $@"compileSdkPreview = ""android-{apiLevel}""";
+			}
+			return $"compileSdk = {apiLevel.Major}";
+		}
+
+		/// <summary>
+		/// Returns the compileSdk Gradle DSL line for a given integer API level.
+		/// </summary>
+		public static string GetCompileSdkGradleLine (int apiLevel)
+		{
+			return GetCompileSdkGradleLine (new Version (apiLevel, 0));
 		}
 
 		public bool IsApplication { get; set; } = false;
@@ -91,7 +99,7 @@ plugins {{
 }}
 android {{
     namespace = ""com.example.{Name}""
-    {GetCompileSdkGradleLine (CompileSdkValue)}
+    {CompileSdkValue}
     defaultConfig {{
         minSdk = {MinSdk}
     }}
