@@ -5,10 +5,8 @@
 namespace NUnit.Framework
 {
 	[System.AttributeUsage (System.AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
-	[System.Obsolete ("Use OneTimeSetUpAttribute instead")]
 	public class TestFixtureSetUpAttribute : OneTimeSetUpAttribute { }
 
 	[System.AttributeUsage (System.AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
-	[System.Obsolete ("Use OneTimeTearDownAttribute instead")]
 	public class TestFixtureTearDownAttribute : OneTimeTearDownAttribute { }
 }

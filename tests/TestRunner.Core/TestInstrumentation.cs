@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Xml;
 using System.Xml.Linq;
 using Android.App;
 using Android.OS;
@@ -7,7 +8,6 @@ using Android.Util;
 using NUnit.Framework.Api;
 using NUnit.Framework.Interfaces;
 using NUnit.Framework.Internal;
-using NUnit.Framework.Internal.Filters;
 
 namespace Xamarin.Android.UnitTests;
 
@@ -100,29 +100,30 @@ public abstract class TestInstrumentation : Instrumentation
 	TestFilter BuildNUnitFilter ()
 	{
 		bool noExclusions = GetBoolExtra ("noexclusions");
-		var filters = new List<TestFilter> ();
+		var filterElements = new List<XElement> ();
 
 		// Include categories from extras: am instrument -e include "Cat1,Cat2"
 		var includeExtras = GetListExtra ("include");
 		if (includeExtras.Count > 0) {
-			var catFilters = includeExtras.Select (cat => {
+			var orElement = new XElement ("or");
+			foreach (var cat in includeExtras) {
+				orElement.Add (new XElement ("cat", cat));
 				Log.Info (LogTag, $"Including category: {cat}");
-				return new CategoryFilter (cat);
-			}).ToArray ();
-			filters.Add (catFilters.Length == 1 ? catFilters [0] : new OrFilter (catFilters));
+			}
+			filterElements.Add (includeExtras.Count == 1 ? orElement.Elements ().First () : orElement);
 		}
 
 		if (!noExclusions) {
 			if (ExcludedCategories is not null) {
 				foreach (var cat in ExcludedCategories) {
-					filters.Add (new NotFilter (new CategoryFilter (cat)));
+					filterElements.Add (new XElement ("not", new XElement ("cat", cat)));
 					Log.Info (LogTag, $"Excluding category: {cat}");
 				}
 			}
 
 			if (ExcludedTestNames is not null) {
 				foreach (var name in ExcludedTestNames) {
-					filters.Add (new NotFilter (new FullNameFilter (name)));
+					filterElements.Add (new XElement ("not", new XElement ("test", name)));
 					Log.Info (LogTag, $"Excluding test: {name}");
 				}
 			}
@@ -133,14 +134,31 @@ public abstract class TestInstrumentation : Instrumentation
 		// Exclude categories from extras: am instrument -e exclude "Cat1,Cat2"
 		var excludeExtras = GetListExtra ("exclude");
 		foreach (var cat in excludeExtras) {
-			filters.Add (new NotFilter (new CategoryFilter (cat)));
+			filterElements.Add (new XElement ("not", new XElement ("cat", cat)));
 			Log.Info (LogTag, $"Excluding category (from extras): {cat}");
 		}
 
-		if (filters.Count == 0)
+		if (filterElements.Count == 0)
 			return TestFilter.Empty;
 
-		return filters.Count == 1 ? filters [0] : new AndFilter (filters.ToArray ());
+		// Wrap in <filter><and>...</and></filter> for multiple conditions
+		XElement filterXml;
+		if (filterElements.Count == 1) {
+			filterXml = new XElement ("filter", filterElements [0]);
+		} else {
+			var andElement = new XElement ("and");
+			foreach (var el in filterElements) {
+				andElement.Add (el);
+			}
+			filterXml = new XElement ("filter", andElement);
+		}
+
+		var xmlStr = filterXml.ToString ();
+		Log.Info (LogTag, $"NUnit filter XML: {xmlStr}");
+
+		var doc = new XmlDocument ();
+		doc.LoadXml (xmlStr);
+		return TestFilter.FromXml (doc.DocumentElement!);
 	}
 
 	string? GetStringExtra (string key)
