@@ -75,7 +75,6 @@ namespace Xamarin.Android.Prepare
 					return false;
 				}
 				WritePackageXmls (sdkRoot);
-				CreatePlatformMajorVersionLinks (sdkRoot);
 				return GatherNDKInfo (context);
 			}
 
@@ -121,7 +120,6 @@ namespace Xamarin.Android.Prepare
 			}
 
 			WritePackageXmls (sdkRoot);
-			CreatePlatformMajorVersionLinks (sdkRoot);
 
 			return GatherNDKInfo (context);
 		}
@@ -179,43 +177,6 @@ namespace Xamarin.Android.Prepare
 
 			// Always install the NDK, as NativeAOT-based tests require it
 			return context.BuildInfo.GatherNDKInfo (context);
-		}
-
-		/// <summary>
-		/// Starting with API 37, Google ships platform directories as "android-37.0" instead of
-		/// "android-37". Gradle and other tools may look for the integer-only form, so we create
-		/// a directory junction (Windows) or symlink (Unix) from "android-37" to "android-37.0".
-		/// </summary>
-		void CreatePlatformMajorVersionLinks (string sdkRoot)
-		{
-			string platformsDir = Path.Combine (sdkRoot, "platforms");
-			if (!Directory.Exists (platformsDir))
-				return;
-
-			foreach (string dir in Directory.EnumerateDirectories (platformsDir, "android-*")) {
-				string dirName = Path.GetFileName (dir);
-				// Look for directories like "android-37.0" (with a ".0" suffix)
-				int dotIndex = dirName.IndexOf ('.', "android-".Length);
-				if (dotIndex < 0)
-					continue;
-
-				string suffix = dirName.Substring (dotIndex + 1);
-				if (suffix != "0")
-					continue;
-
-				// "android-37.0" → create "android-37" link
-				string majorDir = dirName.Substring (0, dotIndex);
-				string majorPath = Path.Combine (platformsDir, majorDir);
-				if (Directory.Exists (majorPath))
-					continue;
-
-				try {
-					Directory.CreateSymbolicLink (majorPath, dir);
-					Log.StatusLine ($"  Created symlink: {majorDir} -> {dirName}", ConsoleColor.Cyan);
-				} catch (Exception ex) {
-					Log.WarningLine ($"  Failed to create symlink {majorDir} -> {dirName}: {ex.Message}");
-				}
-			}
 		}
 
 		bool CopyRedistributableFiles (Context context)
