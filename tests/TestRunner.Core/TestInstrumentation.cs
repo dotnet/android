@@ -1,21 +1,20 @@
 using System.Reflection;
-using System.Text;
+using System.Xml.Linq;
 using Android.App;
 using Android.OS;
 using Android.Runtime;
 using Android.Util;
-using Microsoft.Testing.Extensions;
-using Microsoft.Testing.Platform.Builder;
-using Microsoft.Testing.Platform.Extensions;
-using Microsoft.Testing.Platform.Extensions.Messages;
-using NUnit.VisualStudio.TestAdapter.TestingPlatformAdapter;
+using NUnit.Framework.Api;
+using NUnit.Framework.Interfaces;
+using NUnit.Framework.Internal;
+using NUnit.Framework.Internal.Filters;
 
 namespace Xamarin.Android.UnitTests;
 
 /// <summary>
-/// Base instrumentation class that runs NUnit tests on device via
-/// Microsoft Testing Platform (MTP), following the same pattern as the
-/// androidtest template.
+/// Base instrumentation class that runs NUnit tests on device using
+/// NUnit's NUnitTestAssemblyRunner API and generates TRX results for
+/// Microsoft.Android.Run to pull and report through MTP.
 /// </summary>
 public abstract class TestInstrumentation : Instrumentation
 {
@@ -49,39 +48,40 @@ public abstract class TestInstrumentation : Instrumentation
 	{
 		base.OnStart ();
 
-		Task.Run (async () =>
-		{
-			var consumer = new ResultConsumer (this);
+		Task.Run (() => {
 			var bundle = new Bundle ();
 			try {
 				var writeablePath = Application.Context.GetExternalFilesDir (null)?.AbsolutePath ?? Path.GetTempPath ();
-				var resultsPath = Path.Combine (writeablePath, "TestResults");
-				var args = new List<string> {
-					"--results-directory", resultsPath,
-					"--report-trx"
-				};
+				var resultsDir = Path.Combine (writeablePath, "TestResults");
+				Directory.CreateDirectory (resultsDir);
 
 				var filter = BuildNUnitFilter ();
-				if (filter is not null) {
-					args.Add ("--treenode-filter");
-					args.Add (filter);
-					Log.Info (LogTag, $"Using filter: {filter}");
+				int passed = 0, failed = 0, skipped = 0;
+				var allResults = new List<ITestResult> ();
+				var listener = new TestListener (this);
+
+				foreach (var assembly in GetTestAssemblies ()) {
+					Log.Info (LogTag, $"Loading tests from: {assembly.GetName ().Name}");
+					var runner = new NUnitTestAssemblyRunner (new DefaultTestAssemblyBuilder ());
+					runner.Load (assembly, new Dictionary<string, object> ());
+
+					var result = runner.Run (listener, filter);
+					CountResults (result, ref passed, ref failed, ref skipped);
+					allResults.Add (result);
 				}
 
-				var builder = await TestApplication.CreateBuilderAsync (args.ToArray ());
-				builder.AddNUnit (() => GetTestAssemblies ());
-				builder.AddTrxReportProvider ();
-				builder.TestHost.AddDataConsumer (_ => consumer);
+				var trxPath = Path.Combine (resultsDir, "TestResults.trx");
+				WriteTrxFile (trxPath, allResults);
+				Log.Info (LogTag, $"TRX written to: {trxPath}");
+				Log.Info (LogTag, $"Results: passed={passed}, failed={failed}, skipped={skipped}");
 
-				using ITestApplication app = await builder.BuildAsync ();
-				await app.RunAsync ();
-
-				bundle.PutInt ("passed", consumer.Passed);
-				bundle.PutInt ("failed", consumer.Failed);
-				bundle.PutInt ("skipped", consumer.Skipped);
-				bundle.PutString ("resultsPath", consumer.TrxReportPath);
+				bundle.PutInt ("passed", passed);
+				bundle.PutInt ("failed", failed);
+				bundle.PutInt ("skipped", skipped);
+				bundle.PutString ("resultsPath", trxPath);
 				Finish (Result.Ok, bundle);
 			} catch (Exception ex) {
+				Log.Error (LogTag, $"Test run failed: {ex}");
 				bundle.PutString ("error", ex.ToString ());
 				Finish (Result.Canceled, bundle);
 			}
@@ -94,34 +94,35 @@ public abstract class TestInstrumentation : Instrumentation
 	protected abstract IEnumerable<Assembly> GetTestAssemblies ();
 
 	/// <summary>
-	/// Builds an NUnit filter expression from excluded categories, excluded test names,
+	/// Builds an NUnit TestFilter from excluded categories, excluded test names,
 	/// and instrumentation extras (include/exclude).
 	/// </summary>
-	string? BuildNUnitFilter ()
+	TestFilter BuildNUnitFilter ()
 	{
 		bool noExclusions = GetBoolExtra ("noexclusions");
-		var parts = new List<string> ();
+		var filters = new List<TestFilter> ();
 
 		// Include categories from extras: am instrument -e include "Cat1,Cat2"
 		var includeExtras = GetListExtra ("include");
-		foreach (var cat in includeExtras) {
-			parts.Add ($"cat == {cat}");
-			Log.Info (LogTag, $"Including category: {cat}");
+		if (includeExtras.Count > 0) {
+			var catFilters = includeExtras.Select (cat => {
+				Log.Info (LogTag, $"Including category: {cat}");
+				return new CategoryFilter (cat);
+			}).ToArray ();
+			filters.Add (catFilters.Length == 1 ? catFilters [0] : new OrFilter (catFilters));
 		}
 
 		if (!noExclusions) {
-			// Excluded categories from subclass
 			if (ExcludedCategories is not null) {
 				foreach (var cat in ExcludedCategories) {
-					parts.Add ($"cat != {cat}");
+					filters.Add (new NotFilter (new CategoryFilter (cat)));
 					Log.Info (LogTag, $"Excluding category: {cat}");
 				}
 			}
 
-			// Excluded test names from subclass
 			if (ExcludedTestNames is not null) {
 				foreach (var name in ExcludedTestNames) {
-					parts.Add ($"name !~ {name}");
+					filters.Add (new NotFilter (new FullNameFilter (name)));
 					Log.Info (LogTag, $"Excluding test: {name}");
 				}
 			}
@@ -132,15 +133,14 @@ public abstract class TestInstrumentation : Instrumentation
 		// Exclude categories from extras: am instrument -e exclude "Cat1,Cat2"
 		var excludeExtras = GetListExtra ("exclude");
 		foreach (var cat in excludeExtras) {
-			parts.Add ($"cat != {cat}");
+			filters.Add (new NotFilter (new CategoryFilter (cat)));
 			Log.Info (LogTag, $"Excluding category (from extras): {cat}");
 		}
 
-		if (parts.Count == 0)
-			return null;
+		if (filters.Count == 0)
+			return TestFilter.Empty;
 
-		// NUnit filter: combine with " and "
-		return string.Join (" and ", parts);
+		return filters.Count == 1 ? filters [0] : new AndFilter (filters.ToArray ());
 	}
 
 	string? GetStringExtra (string key)
@@ -167,47 +167,129 @@ public abstract class TestInstrumentation : Instrumentation
 			.ToList ();
 	}
 
-	class ResultConsumer (Instrumentation instrumentation) : IDataConsumer
+	static void CountResults (ITestResult result, ref int passed, ref int failed, ref int skipped)
 	{
-		int _passed, _failed, _skipped;
-		public int Passed => _passed;
-		public int Failed => _failed;
-		public int Skipped => _skipped;
-		public string? TrxReportPath;
-
-		public string Uid => nameof (ResultConsumer);
-		public string DisplayName => nameof (ResultConsumer);
-		public string Description => "";
-		public string Version => "1.0";
-		public Task<bool> IsEnabledAsync () => Task.FromResult (true);
-
-		public Type[] DataTypesConsumed => [typeof (TestNodeUpdateMessage), typeof (SessionFileArtifact)];
-
-		public Task ConsumeAsync (IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
-		{
-			if (value is SessionFileArtifact artifact) {
-				TrxReportPath = artifact.FileInfo.FullName;
-			} else if (value is TestNodeUpdateMessage { TestNode: var node }) {
-				var state = node.Properties.SingleOrDefault<TestNodeStateProperty> ();
-				string? outcome = state switch {
-					PassedTestNodeStateProperty => "passed",
-					FailedTestNodeStateProperty or ErrorTestNodeStateProperty
-						or TimeoutTestNodeStateProperty => "failed",
-					SkippedTestNodeStateProperty => "skipped",
-					_ => null
-				};
-				if (outcome is null)
-					return Task.CompletedTask;
-
-				_ = outcome switch { "passed" => Interlocked.Increment (ref _passed), "failed" => Interlocked.Increment (ref _failed), _ => Interlocked.Increment (ref _skipped) };
-
-				var id = node.Properties.SingleOrDefault<TestMethodIdentifierProperty> ();
-				var b = new Bundle ();
-				b.PutString ("test", id is not null ? $"{id.Namespace}.{id.TypeName}.{id.MethodName}" : node.DisplayName);
-				b.PutString ("outcome", outcome);
-				instrumentation.SendStatus (0, b);
+		if (result.Test.IsSuite) {
+			foreach (var child in result.Children) {
+				CountResults (child, ref passed, ref failed, ref skipped);
 			}
-			return Task.CompletedTask;
+		} else {
+			switch (result.ResultState.Status) {
+			case TestStatus.Passed:
+				passed++;
+				break;
+			case TestStatus.Failed:
+				failed++;
+				break;
+			default:
+				skipped++;
+				break;
+			}
 		}
+	}
+
+	/// <summary>
+	/// Collects individual (non-suite) test results from the result tree.
+	/// </summary>
+	static void CollectTestResults (ITestResult result, List<ITestResult> results)
+	{
+		if (result.Test.IsSuite) {
+			foreach (var child in result.Children) {
+				CollectTestResults (child, results);
+			}
+		} else {
+			results.Add (result);
+		}
+	}
+
+	/// <summary>
+	/// Writes test results in TRX format that AndroidTestAdapter can parse.
+	/// </summary>
+	static void WriteTrxFile (string path, List<ITestResult> assemblyResults)
+	{
+		var ns = XNamespace.Get ("http://microsoft.com/schemas/VisualStudio/TeamTest/2010");
+		var allTests = new List<ITestResult> ();
+		foreach (var ar in assemblyResults) {
+			CollectTestResults (ar, allTests);
+		}
+
+		var runId = Guid.NewGuid ().ToString ();
+		var testDefinitions = new XElement (ns + "TestDefinitions");
+		var results = new XElement (ns + "Results");
+
+		foreach (var test in allTests) {
+			var testId = Guid.NewGuid ().ToString ();
+			var className = test.Test.ClassName ?? "";
+			var testName = test.Test.Name;
+			var outcome = test.ResultState.Status switch {
+				TestStatus.Passed => "Passed",
+				TestStatus.Failed => "Failed",
+				_ => "NotExecuted",
+			};
+
+			testDefinitions.Add (new XElement (ns + "UnitTest",
+				new XAttribute ("id", testId),
+				new XAttribute ("name", testName),
+				new XElement (ns + "TestMethod",
+					new XAttribute ("className", className),
+					new XAttribute ("name", testName))));
+
+			var unitTestResult = new XElement (ns + "UnitTestResult",
+				new XAttribute ("testId", testId),
+				new XAttribute ("testName", testName),
+				new XAttribute ("outcome", outcome));
+
+			if (test.ResultState.Status == TestStatus.Failed && test.Message is not null) {
+				unitTestResult.Add (new XElement (ns + "Output",
+					new XElement (ns + "ErrorInfo",
+						new XElement (ns + "Message", test.Message),
+						new XElement (ns + "StackTrace", test.StackTrace ?? ""))));
+			}
+
+			results.Add (unitTestResult);
+		}
+
+		var doc = new XDocument (
+			new XElement (ns + "TestRun",
+				new XAttribute ("id", runId),
+				results,
+				testDefinitions));
+
+		doc.Save (path);
+	}
+
+	/// <summary>
+	/// Sends test status updates through the instrumentation protocol.
+	/// </summary>
+	class TestListener (Instrumentation instrumentation) : ITestListener
+	{
+		public void TestStarted (ITest test)
+		{
+			if (test.IsSuite)
+				return;
+			Log.Info (LogTag, $"[START] {test.FullName}");
+		}
+
+		public void TestFinished (ITestResult result)
+		{
+			if (result.Test.IsSuite)
+				return;
+
+			var outcome = result.ResultState.Status switch {
+				TestStatus.Passed => "passed",
+				TestStatus.Failed => "failed",
+				_ => "skipped",
+			};
+
+			Log.Info (LogTag, $"[{outcome.ToUpperInvariant ()}] {result.FullName}");
+
+			var b = new Bundle ();
+			b.PutString ("test", result.FullName);
+			b.PutString ("outcome", outcome);
+			instrumentation.SendStatus (0, b);
+		}
+
+		public void TestOutput (TestOutput output) { }
+		public void SendMessage (TestMessage message) { }
 	}
 }
