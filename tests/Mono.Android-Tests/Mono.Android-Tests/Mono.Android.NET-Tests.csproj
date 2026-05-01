@@ -67,6 +67,11 @@
   <ItemGroup>
     <PackageReference Include="NUnit" Version="$(NUnitVersion)" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\TestRunner.Core\TestRunner.Core.NET.csproj" />
+    <ProjectReference Include="..\..\StartupHook\StartupHook.csproj" />
+    <ProjectReference Include="..\Java.Interop-Tests\Java.Interop-Tests.NET.csproj" />
     <ProjectReference Include="..\Mono.Android-Test.Library\Mono.Android-Test.Library.NET.csproj" />
   </ItemGroup>
 
