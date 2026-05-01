@@ -24,7 +24,10 @@ namespace Android.Runtime {
 
 		public static IntPtr Handle => JniEnvironment.EnvironmentPointer;
 
-		static Array ArrayCreateInstance (Type elementType, int length)
+		static Array ArrayCreateInstance (
+				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+				Type elementType,
+				int length)
 		{
 			if (RuntimeFeature.TrimmableTypeMap) {
 				var factory = TrimmableTypeMap.Instance?.GetContainerFactory (elementType);
@@ -597,8 +600,10 @@ namespace Android.Runtime {
 				dest [i] = GetString (GetObjectArrayElement (src, i), JniHandleOwnership.TransferLocalRef)!;
 		}
 
-		static Dictionary<Type, Func<Type?, IntPtr, int, object?>>? nativeArrayElementToManaged;
-		static Dictionary<Type, Func<Type?, IntPtr, int, object?>> NativeArrayElementToManaged {
+		delegate object? NativeArrayElementConverter ([DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type? type, IntPtr source, int index);
+
+		static Dictionary<Type, NativeArrayElementConverter>? nativeArrayElementToManaged;
+		static Dictionary<Type, NativeArrayElementConverter> NativeArrayElementToManaged {
 			get {
 				if (nativeArrayElementToManaged != null)
 					return nativeArrayElementToManaged;
@@ -609,9 +614,9 @@ namespace Android.Runtime {
 			}
 		}
 
-		static Dictionary<Type, Func<Type?, IntPtr, int, object?>> CreateNativeArrayElementToManaged ()
+		static Dictionary<Type, NativeArrayElementConverter> CreateNativeArrayElementToManaged ()
 		{
-			return new Dictionary<Type, Func<Type?, IntPtr, int, object?>> () {
+			return new Dictionary<Type, NativeArrayElementConverter> () {
 				{ typeof (bool), (type, source, index) => {
 					var r = new bool [1];
 					_GetBooleanArrayRegion (source, index, 1, r);
@@ -662,17 +667,11 @@ namespace Android.Runtime {
 					AssertIsJavaObject (type);
 
 					IntPtr elem = GetObjectArrayElement (source, index);
-					return GetObject (elem, type);
-
-					// FIXME: Since a Dictionary<Type, Func> is used here, the trimmer will not be able to properly analyze `Type t`
-					// error IL2111: Method 'lambda expression' with parameters or return value with `DynamicallyAccessedMembersAttribute` is accessed via reflection. Trimmer can't guarantee availability of the requirements of the method.
-					[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "FIXME: https://github.com/xamarin/xamarin-android/issues/8724")]
-					static object? GetObject (IntPtr e, Type t) =>
-						Java.Lang.Object.GetObject (e, JniHandleOwnership.TransferLocalRef, t);
+					return Java.Lang.Object.GetObject (elem, JniHandleOwnership.TransferLocalRef);
 				} },
 				{ typeof (Array), (type, source, index) => {
 					IntPtr  elem      = GetObjectArrayElement (source, index);
-					return GetArray (elem, JniHandleOwnership.TransferLocalRef, type);
+					return GetArray (elem, JniHandleOwnership.TransferLocalRef);
 				} },
 			};
 		}
@@ -768,7 +767,11 @@ namespace Android.Runtime {
 		}
 
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-		public static void CopyArray (IntPtr src, Array dest, Type? elementType = null)
+		public static void CopyArray (
+				IntPtr src,
+				Array dest,
+				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+				Type? elementType = null)
 #pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 		{
 			if (dest == null)
@@ -783,9 +786,9 @@ namespace Android.Runtime {
 					try {
 						var d = (Array?) dest.GetValue (i);
 						if (d == null)
-							dest.SetValue (GetArray (a, JniHandleOwnership.DoNotTransfer, elementType.GetElementType ()), i);
+							dest.SetValue (GetArray (a, JniHandleOwnership.DoNotTransfer), i);
 						else
-							CopyArray (a, d, elementType.GetElementType ());
+							CopyArray (a, d);
 					} finally {
 						DeleteLocalRef (a);
 					}
@@ -805,7 +808,10 @@ namespace Android.Runtime {
 				throw new NotSupportedException ("Don't know how to convert type '" + targetType.FullName + "' to an Android.Runtime.IJavaObject.");
 		}
 
-		public static void CopyArray<T> (IntPtr src, T[] dest)
+		public static void CopyArray<
+				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+				T
+		> (IntPtr src, T[] dest)
 		{
 			if (dest == null)
 				throw new ArgumentNullException ("dest");
@@ -933,7 +939,11 @@ namespace Android.Runtime {
 			CopyArray (src, typeof (T), dest);
 		}
 
-		public static Array? GetArray (IntPtr array_ptr, JniHandleOwnership transfer, Type? element_type = null)
+		public static Array? GetArray (
+				IntPtr array_ptr,
+				JniHandleOwnership transfer,
+				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+				Type? element_type = null)
 		{
 			try {
 				return _GetArray (array_ptr, element_type);
@@ -943,8 +953,10 @@ namespace Android.Runtime {
 			}
 		}
 
-		static Dictionary<Type, Func<Type?, IntPtr, int, Array>>? nativeArrayToManaged;
-		static Dictionary<Type, Func<Type?, IntPtr, int, Array>> NativeArrayToManaged {
+		delegate Array NativeArrayConverter ([DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type? type, IntPtr source, int len);
+
+		static Dictionary<Type, NativeArrayConverter>? nativeArrayToManaged;
+		static Dictionary<Type, NativeArrayConverter> NativeArrayToManaged {
 			get {
 				if (nativeArrayToManaged != null)
 					return nativeArrayToManaged;
@@ -955,9 +967,9 @@ namespace Android.Runtime {
 			}
 		}
 
-		static Dictionary<Type, Func<Type?, IntPtr, int, Array>> CreateNativeArrayToManaged ()
+		static Dictionary<Type, NativeArrayConverter> CreateNativeArrayToManaged ()
 		{
-			return new Dictionary<Type, Func<Type?, IntPtr, int, Array>> () {
+			return new Dictionary<Type, NativeArrayConverter> () {
 				{ typeof (bool), (type, source, len) => {
 					var r = new bool [len];
 					CopyArray (source, r);
@@ -1025,19 +1037,22 @@ namespace Android.Runtime {
 					}
 				} },
 				{ typeof (IJavaObject), (type, source, len) => {
-					var r = ArrayCreateInstance (type!, len);
-					CopyArray (source, r, type);
+					var r = new Java.Lang.Object [len];
+					CopyArray (source, r);
 					return r;
 				} },
 				{ typeof (Array), (type, source, len) => {
-					var r = ArrayCreateInstance (type!, len);
-					CopyArray (source, r, type);
+					var r = new Array [len];
+					CopyArray (source, r);
 					return r;
 				} },
 			};
 		}
 
-		static Array? _GetArray (IntPtr array_ptr, Type? element_type)
+		static Array? _GetArray (
+				IntPtr array_ptr,
+				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+				Type? element_type)
 		{
 			if (array_ptr == IntPtr.Zero)
 				return null;
@@ -1072,10 +1087,8 @@ namespace Android.Runtime {
 
 			for (int i = 0; i < cnt; i++) {
 				Type? targetType	= (element_types != null && i < element_types.Length) ? element_types [i] : null;
-				object? value    = converter ((targetType == null || targetType.IsValueType) ? null : targetType,
-						array_ptr, i);
+				object? value    = converter (null, array_ptr, i);
 
-				ret [i] = value;
 				ret [i] = targetType == null || targetType.IsInstanceOfType (value)
 					? value
 					: Convert.ChangeType (value, targetType, CultureInfo.InvariantCulture);
@@ -1084,7 +1097,10 @@ namespace Android.Runtime {
 			return ret;
 		}
 
-		public static T[]? GetArray<T> (IntPtr array_ptr)
+		public static T[]? GetArray<
+				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+				T
+		> (IntPtr array_ptr)
 		{
 			if (array_ptr == IntPtr.Zero)
 				return null;
@@ -1111,7 +1127,10 @@ namespace Android.Runtime {
 			return ret;
 		}
 
-		public static T GetArrayItem<T> (IntPtr array_ptr, int index)
+		public static T GetArrayItem<
+				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+				T
+		> (IntPtr array_ptr, int index)
 		{
 			if (array_ptr == IntPtr.Zero)
 				throw new ArgumentException ("array_ptr");

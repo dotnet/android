@@ -269,11 +269,6 @@ namespace Android.Runtime {
 
 		public void CopyTo (Array array, int array_index)
 		{
-			[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "JavaList<T> constructors are preserved by the MarkJavaObjects trimmer step.")]
-			[return: DynamicallyAccessedMembers (Constructors)]
-			static Type GetElementType (Array array) =>
-				array.GetType ().GetElementType ();
-
 			if (array == null)
 				throw new ArgumentNullException ("array");
 			if (array_index < 0)
@@ -281,10 +276,9 @@ namespace Android.Runtime {
 			if (array.Length < array_index + Count)
 				throw new ArgumentException ("array");
 
-			var targetType = GetElementType (array);
 			int c = Count;
 			for (int i = 0; i < c; i++)
-				array.SetValue (InternalGet (i, targetType), array_index + i);
+				array.SetValue (InternalGet (i), array_index + i);
 		}
 
 		public IEnumerator GetEnumerator ()

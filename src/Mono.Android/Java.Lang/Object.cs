@@ -141,20 +141,29 @@ namespace Java.Lang {
 			return (T?)PeekObject (handle, typeof (T));
 		}
 
-		public static T? GetObject<T> (IntPtr jnienv, IntPtr handle, JniHandleOwnership transfer)
+		public static T? GetObject<
+				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+				T
+		> (IntPtr jnienv, IntPtr handle, JniHandleOwnership transfer)
 			where T : class, IJavaObject
 		{
 			JNIEnv.CheckHandle (jnienv);
 			return GetObject<T> (handle, transfer);
 		}
 
-		public static T? GetObject<T> (IntPtr handle, JniHandleOwnership transfer)
+		public static T? GetObject<
+				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+				T
+		> (IntPtr handle, JniHandleOwnership transfer)
 			where T : class, IJavaObject
 		{
 			return _GetObject<T>(handle, transfer);
 		}
 
-		internal static T? _GetObject<T> (IntPtr handle, JniHandleOwnership transfer)
+		internal static T? _GetObject<
+				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+				T
+		> (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return default (T);
@@ -165,6 +174,7 @@ namespace Java.Lang {
 		internal static IJavaPeerable? GetObject (
 				IntPtr handle,
 				JniHandleOwnership transfer,
+				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 				Type? type = null)
 		{
 			if (handle == IntPtr.Zero)
@@ -174,14 +184,18 @@ namespace Java.Lang {
 			JNIEnv.DeleteRef (handle, transfer);
 			return r;
 
-			// FIXME: should use [DynamicallyAccessedMembers (Constructors)] in the future
-			[UnconditionalSuppressMessage ("Trimming", "IL2067:'targetType' argument does not satisfy 'DynamicallyAccessedMemberTypes.PublicConstructors', 'DynamicallyAccessedMemberTypes.NonPublicConstructors' in call to 'Java.Interop.JniRuntime.JniValueManager.GetPeer(JniObjectReference, Type)'.", Justification = "The MarkJavaObjects step preserves ctors on Java.Lang.Object subclasses.")]
-			static IJavaPeerable? GetPeer (IntPtr handle, Type? type) =>
+			static IJavaPeerable? GetPeer (
+					IntPtr handle,
+					[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+					Type? type) =>
 				JniEnvironment.Runtime.ValueManager.GetPeer (new JniObjectReference (handle), type);
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
-		public T[]? ToArray<T>()
+		public T[]? ToArray<
+				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+				T
+		>()
 		{
 			return JNIEnv.GetArray<T>(Handle);
 		}
