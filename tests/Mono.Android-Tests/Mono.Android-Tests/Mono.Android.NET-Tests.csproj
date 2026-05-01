@@ -17,7 +17,6 @@
     <EnableDefaultAndroidResourceItems>false</EnableDefaultAndroidResourceItems>
     <EnableDefaultAndroidAssetItems>false</EnableDefaultAndroidAssetItems>
     <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
-    <DisableTransitiveProjectReferences>true</DisableTransitiveProjectReferences>
     <_MonoAndroidTestPackage>Mono.Android.NET_Tests</_MonoAndroidTestPackage>
     <PlotDataLabelSuffix>-$(TestsFlavor)NET6</PlotDataLabelSuffix>
     <WarningsAsErrors>IL2037</WarningsAsErrors>
@@ -73,6 +72,21 @@
     <ProjectReference Include="..\Mono.Android-Test.Library\Mono.Android-Test.Library.NET.csproj" />
     <ProjectReference Include="..\..\..\src\Xamarin.Android.NUnitLite\Xamarin.Android.NUnitLite.NET.csproj" />
   </ItemGroup>
+
+  <Target Name="_RemoveStandaloneJavaInteropProjectReference" AfterTargets="ResolveProjectReferences" BeforeTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <_StandaloneJavaInteropReference Include="@(_ResolvedProjectReferencePaths)" Condition=" '%(_ResolvedProjectReferencePaths.Filename)' == 'Java.Interop' and $([System.String]::Copy('%(_ResolvedProjectReferencePaths.Identity)').Replace('\', '/').Contains('/external/Java.Interop/bin/')) " />
+      <_ResolvedProjectReferencePaths Remove="@(_StandaloneJavaInteropReference)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_RemoveStandaloneJavaInteropReference" AfterTargets="ResolveReferences" BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <_StandaloneJavaInteropReference Include="@(ReferencePath)" Condition=" '%(ReferencePath.Filename)' == 'Java.Interop' and $([System.String]::Copy('%(ReferencePath.Identity)').Replace('\', '/').Contains('/external/Java.Interop/bin/')) " />
+      <ReferencePath Remove="@(_StandaloneJavaInteropReference)" />
+      <ReferenceCopyLocalPaths Remove="@(_StandaloneJavaInteropReference)" />
+    </ItemGroup>
+  </Target>
 
   <ItemGroup>
     <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="Visible" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
