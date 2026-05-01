@@ -901,7 +901,7 @@ sealed class TypeMapAssemblyEmitter
 		var handle = _pe.EmitBody (uco.WrapperName,
 			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 			encodeSig,
-			(encoder, cfb) => EmitUcoForwarderBodyLikeLegacyMarshalMethod (encoder, cfb, returnKind, enc => {
+			(encoder, cfb) => EmitUcoForwarderBody (encoder, cfb, returnKind, enc => {
 				for (int p = 0; p < paramCount; p++)
 					enc.LoadArgument (p);
 				enc.Call (callbackRef);
@@ -912,7 +912,7 @@ sealed class TypeMapAssemblyEmitter
 		return handle;
 	}
 
-	void EmitUcoForwarderBodyLikeLegacyMarshalMethod (InstructionEncoder encoder, ControlFlowBuilder cfb, JniParamKind returnKind, Action<InstructionEncoder> emitCallback)
+	void EmitUcoForwarderBody (InstructionEncoder encoder, ControlFlowBuilder cfb, JniParamKind returnKind, Action<InstructionEncoder> emitCallback)
 	{
 		bool isVoid = returnKind == JniParamKind.Void;
 		var tryStart = encoder.DefineLabel ();

@@ -5,9 +5,9 @@
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateEmptyTypemapStub" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.TypeMap.Trimmable.CoreCLR.targets"
-      Condition=" '$(_AndroidRuntime)' == 'CoreCLR' Or ( '$(UseMonoRuntime)' == 'false' And '$(PublishAot)' != 'true' ) " />
+      Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.TypeMap.Trimmable.NativeAOT.targets"
-      Condition=" '$(_AndroidRuntime)' == 'NativeAOT' Or '$(PublishAot)' == 'true' " />
+      Condition=" '$(_AndroidRuntime)' == 'NativeAOT' " />
 
   <PropertyGroup>
     <_TypeMapAssemblyName>_Microsoft.Android.TypeMaps</_TypeMapAssemblyName>

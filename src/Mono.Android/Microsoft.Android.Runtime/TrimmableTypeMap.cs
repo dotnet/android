@@ -22,6 +22,7 @@ public class TrimmableTypeMap
 	static readonly Lock s_initLock = new ();
 	static readonly JavaPeerProxy s_noPeerSentinel = new MissingJavaPeerProxy ();
 	static TrimmableTypeMap? s_instance;
+	static bool s_nativeMethodsRegistered;
 
 	internal static TrimmableTypeMap Instance =>
 		s_instance ?? throw new InvalidOperationException (
@@ -30,7 +31,6 @@ public class TrimmableTypeMap
 	readonly ITypeMapWithAliasing _typeMap;
 	readonly ConcurrentDictionary<Type, JavaPeerProxy> _proxyCache = new ();
 	readonly ConcurrentDictionary<string, JavaPeerProxy[]> _jniProxyCache = new (StringComparer.Ordinal);
-	bool _nativeMethodsRegistered;
 
 	TrimmableTypeMap (ITypeMapWithAliasing typeMap)
 	{
@@ -82,35 +82,35 @@ public class TrimmableTypeMap
 		}
 	}
 
-	internal static void RegisterNativeMethods ()
+	internal static unsafe void RegisterNativeMethods ()
 	{
 		lock (s_initLock) {
-			Instance.RegisterNativeMethodsCore ();
-		}
-	}
+			if (s_nativeMethodsRegistered) {
+				throw new InvalidOperationException ("TrimmableTypeMap native methods have already been registered.");
+			}
 
-	unsafe void RegisterNativeMethodsCore ()
-	{
-		if (_nativeMethodsRegistered) {
-			throw new InvalidOperationException ("TrimmableTypeMap native methods have already been registered.");
-		}
+			if (s_instance is null) {
+				throw new InvalidOperationException (
+					"TrimmableTypeMap has not been initialized. Ensure RuntimeFeature.TrimmableTypeMap is enabled and the JNI runtime is initialized.");
+			}
 
-		// Use the `string` overload of `JniType` deliberately. Its underlying
-		// `JniEnvironment.Types.TryFindClass(string, bool)` tries raw JNI `FindClass`
-		// first and, if that fails, falls back to `Class.forName(name, true, info.Runtime.ClassLoader)`,
-		// which resolves via the runtime's app ClassLoader — the same one that loads
-		// `mono.android.Runtime` from the APK.
-		// The `ReadOnlySpan<byte>` overload (see external/Java.Interop/src/Java.Interop/Java.Interop/JniEnvironment.Types.cs)
-		// only calls raw JNI `FindClass`, which resolves via the system ClassLoader on
-		// Android and returns a different `Class` instance from the one JCWs reference.
-		// Registering natives on that other instance is silently wrong.
-		using var runtimeClass = new JniType ("mono/android/Runtime");
-		fixed (byte* name = "registerNatives"u8, sig = "(Ljava/lang/Class;)V"u8) {
-			var onRegisterNatives = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&OnRegisterNatives;
-			var method = new JniNativeMethod (name, sig, onRegisterNatives);
-			JniEnvironment.Types.RegisterNatives (runtimeClass.PeerReference, [method]);
+			// Use the `string` overload of `JniType` deliberately. Its underlying
+			// `JniEnvironment.Types.TryFindClass(string, bool)` tries raw JNI `FindClass`
+			// first and, if that fails, falls back to `Class.forName(name, true, info.Runtime.ClassLoader)`,
+			// which resolves via the runtime's app ClassLoader — the same one that loads
+			// `mono.android.Runtime` from the APK.
+			// The `ReadOnlySpan<byte>` overload (see external/Java.Interop/src/Java.Interop/Java.Interop/JniEnvironment.Types.cs)
+			// only calls raw JNI `FindClass`, which resolves via the system ClassLoader on
+			// Android and returns a different `Class` instance from the one JCWs reference.
+			// Registering natives on that other instance is silently wrong.
+			using var runtimeClass = new JniType ("mono/android/Runtime");
+			fixed (byte* name = "registerNatives"u8, sig = "(Ljava/lang/Class;)V"u8) {
+				var onRegisterNatives = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&OnRegisterNatives;
+				var method = new JniNativeMethod (name, sig, onRegisterNatives);
+				JniEnvironment.Types.RegisterNatives (runtimeClass.PeerReference, [method]);
+			}
+			s_nativeMethodsRegistered = true;
 		}
-		_nativeMethodsRegistered = true;
 	}
 
 	/// <summary>

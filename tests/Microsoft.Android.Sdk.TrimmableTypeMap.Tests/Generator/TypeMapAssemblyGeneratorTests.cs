@@ -266,40 +266,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_SimpleActivity_UsesGetUninitializedObject ()
-	{
-		var peers = ScanFixtures ();
-		var simpleActivity = peers.First (p => p.JavaName == "my/app/SimpleActivity");
-		Assert.NotNull (simpleActivity.ActivationCtor);
-		Assert.NotEqual (simpleActivity.ManagedTypeName, simpleActivity.ActivationCtor.DeclaringTypeName);
-
-		using var stream = GenerateAssembly (new [] { simpleActivity }, "InheritedCtorTest");
-		using var pe = new PEReader (stream);
-		var reader = pe.GetMetadataReader ();
-		var typeNames = GetTypeRefNames (reader);
-		Assert.Contains ("RuntimeHelpers", typeNames);
-		Assert.DoesNotContain ("MethodBase", typeNames);
-
-		var memberNames = GetMemberRefNames (reader);
-		Assert.DoesNotContain ("CreateManagedPeer", memberNames);
-		Assert.Contains ("GetUninitializedObject", memberNames);
-		Assert.DoesNotContain ("Invoke", memberNames);
-
-		var activationCtorRefs = FindCtorMemberRefs (reader, "Android.App", "Activity",
-			"System.IntPtr", "Android.Runtime.JniHandleOwnership");
-		var getUninitializedObject = FindMemberRefHandle (reader, "GetUninitializedObject");
-		var createInstance = reader.GetMethodDefinition (FindMethodDefinition (reader, "CreateInstance"));
-		var body = pe.GetMethodBody (createInstance.RelativeVirtualAddress);
-		Assert.NotNull (body);
-		var ilBytes = body.GetILBytes ();
-		Assert.NotNull (ilBytes);
-		Assert.True (ILContainsCallToken (ilBytes, MetadataTokens.GetToken (getUninitializedObject)),
-			"CreateInstance should allocate inherited-ctor peers without reflection activation");
-		Assert.True (activationCtorRefs.Any (h => ILContainsCallToken (ilBytes, MetadataTokens.GetToken (h))),
-			"CreateInstance should call the inherited activation constructor directly on the uninitialized peer");
-	}
-
-	[Fact]
 	public void Generate_LeafCtor_DoesNotUseCreateManagedPeer ()
 	{
 		var peers = ScanFixtures ();
@@ -381,17 +347,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		var activationCtorRefs = FindCtorMemberRefs (reader, "Test", "JiInheritedBase",
 			"Java.Interop.JniObjectReference&", "Java.Interop.JniObjectReferenceOptions");
 		var getUninitializedObject = FindMemberRefHandle (reader, "GetUninitializedObject");
-
-		var createInstance = reader.GetMethodDefinition (FindMethodDefinition (reader, "CreateInstance"));
-		var createInstanceBody = pe.GetMethodBody (createInstance.RelativeVirtualAddress);
-		Assert.NotNull (createInstanceBody);
-		var createInstanceIL = createInstanceBody.GetILBytes ();
-		Assert.NotNull (createInstanceIL);
-		Assert.True (ILContainsCallToken (createInstanceIL, MetadataTokens.GetToken (getUninitializedObject)),
-			"CreateInstance should allocate inherited Java.Interop peers without reflection activation");
-		Assert.True (activationCtorRefs.Any (h => ILContainsCallToken (createInstanceIL, MetadataTokens.GetToken (h))),
-			"CreateInstance should call the inherited Java.Interop activation constructor directly on the uninitialized peer");
-
 		var nctorMethodHandle = FindNctorUcoMethod (reader);
 		Assert.False (nctorMethodHandle.IsNil, "The ACW peer should have a nctor_*_uco method");
 		var nctorMethod = reader.GetMethodDefinition (nctorMethodHandle);

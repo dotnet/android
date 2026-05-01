@@ -90,6 +90,44 @@
     <ProguardConfiguration Include="proguard.cfg" />
   </ItemGroup>
 
+  <ItemGroup Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
+    <!-- CoreCLRTrimmable roots test assemblies so tests remain discoverable; keep the
+         framework facades those rooted assemblies need during typemap startup. -->
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Collections" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Collections.Concurrent" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Collections.Specialized" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.ComponentModel.TypeConverter" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Console" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Diagnostics.StackTrace" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Drawing.Primitives" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.IO.Compression" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.IO.FileSystem.DriveInfo" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Linq" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Linq.Expressions" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Memory" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Net.Http" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Net.HttpListener" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Net.NetworkInformation" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Net.Primitives" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Net.Requests" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Net.Security" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Net.Sockets" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Net.WebClient" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Net.WebProxy" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Net.WebSockets" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Net.WebSockets.Client" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.ObjectModel" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Runtime" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Runtime.InteropServices" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Security.Cryptography" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Text.Json" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Threading" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Threading.Thread" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Xml.ReaderWriter" />
+    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Xml.XmlSerializer" />
+    <TrimmerRootAssembly Include="@(_CoreCLRTrimmableFrameworkRootAssembly)" RootMode="All" />
+  </ItemGroup>
+
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Android.App\ApplicationTest.cs" />

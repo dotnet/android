@@ -66,11 +66,12 @@ namespace Xamarin.Android.RuntimeTests
                     // net.dot.jni.test.GenericHolder Java class not in APK
                     "Java.InteropTests.JniTypeManagerTests.CannotCreateGenericHolderFromJava",
 
-                    // JniPrimitiveArrayInfo lookup fails for JavaBooleanArray —
-                    // our typemap returns JavaBooleanArray for "Z" via JavaPrimitiveArray<>
-                    // alias, which collides with the legacy GetPrimitiveArrayTypesForSimpleReference
-                    // that expects only primitive CLR types. Out of scope for this PR.
-                    "Java.InteropTests.JniTypeManagerTests.GetType",
+                    // JniTypeSignature-based ManagedPeer tests are replaced by [Register]-based
+                    // trimmable typemap coverage where applicable.
+                    "Java.InteropTests.JavaObjectTest.Dispose",
+                    "Java.InteropTests.JavaObjectTest.Dispose_Finalized",
+                    "Java.InteropTests.JavaObjectTest.NestedDisposeInvocations",
+                    "Java.InteropTests.JniTypeManagerTests.CanCreateGenericHolder",
 
                     // Open generic type handling differs from non-trimmable
                     "Java.InteropTests.JnienvTest.NewOpenGenericTypeThrows",
