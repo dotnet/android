@@ -125,7 +125,7 @@
   -->
   <Target Name="_GenerateJavaStubs"
       DependsOnTargets="_SetLatestTargetFrameworkVersion;_CleanIntermediateIfNeeded;_PrepareAssemblies;_GetGenerateJavaStubsInputs;_DefineBuildTargetAbis;_PrepareNativeAssemblySources"
-      Inputs="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll"
+      Inputs="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll;@(_EnvironmentFiles)"
       Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
 
     <ItemGroup>
@@ -137,7 +137,7 @@
       <FileWrites Include="@(_TypeMapJavaFiles->'$(IntermediateOutputPath)android/src/%(RecursiveDir)%(Filename)%(Extension)')" />
     </ItemGroup>
 
-    <!-- Generate NativeAOT bootstrap Java sources (JavaInteropRuntime.java, NativeAotEnvironmentVars.java) -->
+    <!-- NativeAOT bootstrap Java sources depend on environment files, so include them as inputs -->
     <GenerateNativeAotBootstrapSources
         Condition=" '$(_AndroidRuntime)' == 'NativeAOT' "
         OutputDirectory="$(IntermediateOutputPath)android"
