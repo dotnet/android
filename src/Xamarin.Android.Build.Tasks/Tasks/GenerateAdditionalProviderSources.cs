@@ -131,7 +131,7 @@ public sealed class GenerateAdditionalProviderSources : AndroidTask
 	/// Generates JavaInteropRuntime.java and NativeAotEnvironmentVars.java for NativeAOT apps.
 	/// Shared between the legacy (ILLink) and trimmable build paths.
 	/// </summary>
-	public static void GenerateNativeAotBootstrapFiles (
+	internal static void GenerateNativeAotBootstrapFiles (
 		Microsoft.Build.Utilities.TaskLoggingHelper log,
 		string outputDirectory,
 		string targetName,

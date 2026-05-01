@@ -15,7 +15,7 @@ namespace Xamarin.Android.Tasks;
 /// Delegates to <see cref="GenerateAdditionalProviderSources.GenerateNativeAotBootstrapFiles"/>
 /// for the actual generation logic.
 /// </summary>
-public class GenerateNativeAotBootstrapSources : AndroidTask
+public sealed class GenerateNativeAotBootstrapSources : AndroidTask
 {
 	public override string TaskPrefix => "GNABS";
 

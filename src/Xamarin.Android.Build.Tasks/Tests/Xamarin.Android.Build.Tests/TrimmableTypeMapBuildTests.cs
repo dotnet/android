@@ -1,7 +1,6 @@
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Microsoft.Build.Framework;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
@@ -50,14 +49,7 @@ namespace Xamarin.Android.Build.Tests {
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
 			DirectoryAssert.Exists (intermediateDir);
 
-			// Run second build with diagnostic verbosity to see why CoreCompile re-runs
-			builder.Verbosity = LoggerVerbosity.Diagnostic;
 			Assert.IsTrue (builder.Build (proj), "Second build should have succeeded.");
-			builder.Verbosity = LoggerVerbosity.Normal;
-
-			// Check if CoreCompile ran
-			bool coreCompileSkipped = builder.Output.IsTargetSkipped ("CoreCompile");
-			TestContext.Out.WriteLine ($"  CoreCompile skipped: {coreCompileSkipped}");
 
 			Assert.IsTrue (
 				builder.Output.IsTargetSkipped ("_GenerateJavaStubs"),
