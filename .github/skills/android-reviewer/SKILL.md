@@ -73,7 +73,7 @@ Based on the file types identified in step 2, read the appropriate rule files fr
 - `references/msbuild-rules.md` — When `.targets`, `.props`, `.projitems`, or `.csproj` files changed, or when MSBuild task C# files changed (e.g., files under `src/Xamarin.Android.Build.Tasks/`).
 - `references/native-rules.md` — When `.c`, `.cpp`, `.h`, or `.hpp` files changed. Covers memory management, C++ best practices, symbol visibility, and platform-specific code.
 - `references/interop-rules.md` — When both C# and native files changed, or when P/Invoke or JNI boundary files changed (e.g., files under `src/Mono.Android/` that contain `DllImport` or files under `src/native/` that reference managed types).
-- `references/testing-rules.md` — When files under `tests/` changed.
+- `references/testing-rules.md` — When test files changed (e.g., files under `tests/`, `**/Tests/`, or test project directories).
 - `references/security-rules.md` — When any code files changed (C#, C/C++, or MSBuild).
 
 ### 6. Analyze the diff
