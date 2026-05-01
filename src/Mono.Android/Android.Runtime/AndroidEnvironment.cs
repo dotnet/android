@@ -254,18 +254,14 @@ namespace Android.Runtime {
 		// System.Net.Http.dll!System.Net.Http.HttpClient.cctor
 		// DO NOT REMOVE
 		[DynamicDependency (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, typeof (Xamarin.Android.Net.AndroidMessageHandler))]
+		[RequiresUnreferencedCode ("The HTTP handler type can be provided by an environment variable and cannot be statically traced.")]
 		static HttpMessageHandler GetHttpMessageHandler ()
 		{
-			[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Preserved by the MarkJavaObjects trimmer step.")]
-			[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
-			static Type? TypeGetType (string typeName) =>
-				Type.GetType (typeName, throwOnError: false);
-
 			if (httpMessageHandlerType is null) {
 				var handlerTypeName = Environment.GetEnvironmentVariable ("XA_HTTP_CLIENT_HANDLER_TYPE")?.Trim ();
 				Type? handlerType = null;
 				if (!String.IsNullOrEmpty (handlerTypeName))
-					handlerType = TypeGetType (handlerTypeName);
+					handlerType = Type.GetType (handlerTypeName, throwOnError: false);
 
 				if (handlerType is null || !IsAcceptableHttpMessageHandlerType (handlerType)) {
 					handlerType = GetFallbackHttpMessageHandlerType ();

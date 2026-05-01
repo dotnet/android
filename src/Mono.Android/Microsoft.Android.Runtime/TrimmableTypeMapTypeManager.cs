@@ -76,7 +76,7 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 
 	public override void RegisterNativeMembers (
 			JniType nativeClass,
-			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes)]
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.AllMethods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes)]
 			Type type,
 			ReadOnlySpan<char> methods)
 	{

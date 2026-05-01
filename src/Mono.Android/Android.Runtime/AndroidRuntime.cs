@@ -461,15 +461,10 @@ namespace Android.Runtime {
 		static MethodInfo? dynamic_callback_gen;
 
 		// See ExportAttribute.cs
-		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Mono.Android.Export.dll is preserved when [Export] is used via [DynamicDependency].")]
-		[UnconditionalSuppressMessage ("Trimming", "IL2075", Justification = "Mono.Android.Export.dll is preserved when [Export] is used via [DynamicDependency].")]
 		static Delegate CreateDynamicCallback (MethodInfo method)
 		{
 			if (dynamic_callback_gen == null) {
-				var assembly = Assembly.Load ("Mono.Android.Export");
-				if (assembly == null)
-					throw new InvalidOperationException ("To use methods marked with ExportAttribute, Mono.Android.Export.dll needs to be referenced in the application");
-				var type = assembly.GetType ("Java.Interop.DynamicCallbackCodeGenerator");
+				var type = Type.GetType ("Java.Interop.DynamicCallbackCodeGenerator, Mono.Android.Export", throwOnError: false);
 				if (type == null)
 					throw new InvalidOperationException ("The referenced Mono.Android.Export.dll does not match the expected version. The required type was not found.");
 				dynamic_callback_gen = type.GetMethod ("Create");
@@ -559,17 +554,14 @@ namespace Android.Runtime {
 		[Obsolete ("Use RegisterNativeMembers(JniType, Type, ReadOnlySpan<char>) instead.")]
 		public override void RegisterNativeMembers (
 				JniType nativeClass,
-				[DynamicallyAccessedMembers (MethodsAndPrivateNested)]
+				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.AllMethods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes)]
 				Type type,
 				string? methods) =>
 			RegisterNativeMembers (nativeClass, type, methods.AsSpan ());
 
-		[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type.GetType() can never statically know the string value parsed from parameter 'methods'.")]
-		[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
-		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
 		public override void RegisterNativeMembers (
 				JniType nativeClass,
-				[DynamicallyAccessedMembers (MethodsAndPrivateNested)] Type type,
+				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.AllMethods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes)] Type type,
 				ReadOnlySpan<char> methods)
 		{
 			try {
@@ -626,16 +618,11 @@ namespace Android.Runtime {
 							}
 							needToRegisterNatives = true;
 						} else {
-							Type callbackDeclaringType = type;
 							if (!callbackDeclaringTypeString.IsEmpty) {
-								callbackDeclaringType = Type.GetType (callbackDeclaringTypeString.ToString (), throwOnError: true)!;
-							}
-							while (callbackDeclaringType.ContainsGenericParameters) {
-								callbackDeclaringType = callbackDeclaringType.BaseType!;
+								throw new NotSupportedException ("Callback declaring type names are not supported in trim-compatible native registration.");
 							}
 
-							GetCallbackHandler connector = (GetCallbackHandler) Delegate.CreateDelegate (typeof (GetCallbackHandler),
-							                                                                             callbackDeclaringType, callbackString.ToString ());
+							GetCallbackHandler connector = CreateCallbackHandler (type, callbackString.ToString ());
 							callback = connector ();
 						}
 
@@ -663,6 +650,17 @@ namespace Android.Runtime {
 
 				return String.Compare (callbackName, callbackString, StringComparison.Ordinal) == 0;
 			}
+
+		}
+
+		static GetCallbackHandler CreateCallbackHandler (
+				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.AllMethods)]
+				Type callbackDeclaringType,
+				string callbackString)
+		{
+			var method = callbackDeclaringType.GetMethod (callbackString, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
+				?? throw new MissingMethodException (callbackDeclaringType.FullName, callbackString);
+			return (GetCallbackHandler) Delegate.CreateDelegate (typeof (GetCallbackHandler), method);
 		}
 
 		static int CountMethods (ReadOnlySpan<char> methodsSpan)
@@ -908,7 +906,7 @@ namespace Android.Runtime {
 			return null;
 		}
 
-		public override void ActivatePeer (IJavaPeerable? self, JniObjectReference reference, ConstructorInfo cinfo, object? []? argumentValues)
+		public override void ActivatePeer (IJavaPeerable? self, JniObjectReference reference, [DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type declaringType, ConstructorInfo cinfo, object? []? argumentValues)
 		{
 			Java.Interop.TypeManager.Activate (reference.Handle, cinfo, argumentValues);
 		}

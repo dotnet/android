@@ -65,7 +65,7 @@ class ManagedTypeManager : JniRuntime.JniTypeManager {
 	[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
 	public override void RegisterNativeMembers (
 			JniType nativeClass,
-			[DynamicallyAccessedMembers (MethodsAndPrivateNested)]
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.AllMethods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes)]
 			Type type,
 			ReadOnlySpan<char> methods)
 	{

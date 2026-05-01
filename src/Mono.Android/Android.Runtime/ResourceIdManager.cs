@@ -7,6 +7,7 @@ namespace Android.Runtime
 	public static class ResourceIdManager
 	{
 		static bool id_initialized;
+		[RequiresUnreferencedCode ("Resource designer lookup uses a type name from ResourceDesignerAttribute that cannot be statically traced.")]
 		public static void UpdateIdValues ()
 		{
 			if (id_initialized)
@@ -31,13 +32,10 @@ namespace Android.Runtime
 			}
 		}
 
+		[RequiresUnreferencedCode ("Resource designer lookup uses a type name from ResourceDesignerAttribute that cannot be statically traced.")]
 		[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
 		static Type? GetResourceTypeFromAssembly (Assembly assembly)
 		{
-			const string rootAssembly = "Resources.UpdateIdValues() methods are trimmed away by the LinkResourceDesigner trimmer step. This codepath is not called unless $(AndroidUseDesignerAssembly) is disabled.";
-
-			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = rootAssembly)]
-			[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = rootAssembly)]
 			[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
 			static Type AssemblyGetType (Assembly a, string name) => a.GetType (name);
 
@@ -52,4 +50,3 @@ namespace Android.Runtime
 		}
 	}
 }
-
