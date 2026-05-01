@@ -19,7 +19,4 @@
     <type fullname="System.Drawing.SizeConverter" preserve="all" />
     <type fullname="System.Drawing.SizeFConverter" preserve="all" />
   </assembly>
-  <assembly fullname="StartupHook">
-    <type fullname="StartupHook" preserve="all" />
-  </assembly>
 </linker>

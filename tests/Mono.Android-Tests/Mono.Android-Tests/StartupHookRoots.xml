@@ -1,0 +1,5 @@
+<linker>
+  <assembly fullname="StartupHook">
+    <type fullname="StartupHook" preserve="all" />
+  </assembly>
+</linker>

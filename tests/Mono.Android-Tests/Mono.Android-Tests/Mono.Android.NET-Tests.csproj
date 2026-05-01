@@ -90,6 +90,7 @@
     <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" Condition=" '$(RootAssembliesForTrimmableTestDiscovery)' == 'true' " />
     <TrimmerRootAssembly Include="StartupHook" RootMode="All" Condition=" '$(RootAssembliesForTrimmableTestDiscovery)' == 'true' " />
     <TrimmerRootDescriptor Include="TrimmerRoots.xml" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
+    <TrimmerRootDescriptor Include="StartupHookRoots.xml" />
     <_AndroidRemapMembers Include="Remaps.xml" />
     <_AndroidRemapMembers Include="IsAssignableFromRemaps.xml" Condition=" '$(_AndroidIsAssignableFromCheck)' == 'false' " />
     <ProguardConfiguration Include="proguard.cfg" />
