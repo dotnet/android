@@ -503,7 +503,7 @@ plugins {{
 }}
 android {{
     namespace = ""{gradleModule.PackageName}""
-    compileSdk = {XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major}
+    {AndroidGradleModule.GetCompileSdkGradleLine (AndroidGradleModule.GetDefaultCompileSdk ())}
     defaultConfig {{
         minSdk = 21
     }}
@@ -598,7 +598,21 @@ public class Foo {{
 		[TestCaseSource (nameof (GetAgpGradleVersionTestData))]
 		public void BindLibraryWithMultipleGradleVersions (string agpVersion, string gradleVersion, int compileSdk)
 		{
-			var gradleProject = AndroidGradleProject.CreateDefault (GradleTestProjectDir, agpVersion, gradleVersion, compileSdk: compileSdk);
+			// For compileSdk matching the default API level, use the same string form
+			// that handles android-37.0 style platform directories
+			string compileSdkValue = compileSdk == XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major
+				? AndroidGradleModule.GetDefaultCompileSdk ()
+				: compileSdk.ToString ();
+			var gradleProject = new AndroidGradleProject (GradleTestProjectDir) {
+				AgpVersion = agpVersion,
+				GradleVersion = gradleVersion,
+				Modules = {
+					new AndroidGradleModule (Path.Combine (GradleTestProjectDir, "TestModule")) {
+						CompileSdkValue = compileSdkValue,
+					},
+				},
+			};
+			gradleProject.Create ();
 			var gradleModule = gradleProject.Modules.First ();
 			var moduleName = gradleModule.Name;
 

@@ -15,9 +15,37 @@ namespace Xamarin.ProjectTools
 
 		public string ModuleDirectory { get; private set; } = string.Empty;
 
-		public int CompileSdk { get; set; } = XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major;
+		public string CompileSdkValue { get; set; } = GetDefaultCompileSdk ();
 
 		public int MinSdk { get; set; } = XABuildConfig.AndroidMinimumDotNetApiLevel.Major;
+
+		public static string GetDefaultCompileSdk ()
+		{
+			var version = XABuildConfig.AndroidDefaultTargetDotnetApiLevel;
+			return version.Major.ToString ();
+		}
+
+		/// <summary>
+		/// Returns the compileSdk line for a Gradle build file.
+		/// For platforms like android-37.0 (where the directory has a minor version),
+		/// uses compileSdkPreview instead of compileSdk.
+		/// </summary>
+		public static string GetCompileSdkGradleLine (string compileSdkValue)
+		{
+			// If the value is a plain integer, use compileSdk = N
+			if (int.TryParse (compileSdkValue, out _)) {
+				string sdkPath = AndroidSdkResolver.GetAndroidSdkPath ();
+				string platformsPath = Path.Combine (sdkPath, "platforms");
+				// Check if the platform directory uses the ".0" suffix (e.g. android-37.0 without android-37)
+				if (!Directory.Exists (Path.Combine (platformsPath, $"android-{compileSdkValue}")) &&
+				    Directory.Exists (Path.Combine (platformsPath, $"android-{compileSdkValue}.0"))) {
+					return $@"compileSdkPreview = ""android-{compileSdkValue}.0""";
+				}
+				return $"compileSdk = {compileSdkValue}";
+			}
+			// Already a string value
+			return $@"compileSdkPreview = ""{compileSdkValue}""";
+		}
 
 		public bool IsApplication { get; set; } = false;
 
@@ -63,7 +91,7 @@ plugins {{
 }}
 android {{
     namespace = ""com.example.{Name}""
-    compileSdk = {CompileSdk}
+    {GetCompileSdkGradleLine (CompileSdkValue)}
     defaultConfig {{
         minSdk = {MinSdk}
     }}
