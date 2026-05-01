@@ -42,7 +42,6 @@
     <UseMonoRuntime Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(UseMonoRuntime)' == '' and '$(PublishAot)' != 'true' ">false</UseMonoRuntime>
     <TestsFlavor Condition=" '$(TestsFlavor)' == '' and '$(_AndroidTypeMapImplementation)' == 'trimmable' ">CoreCLRTrimmable</TestsFlavor>
     <ExcludeCategories Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">$(ExcludeCategories):NativeTypeMap:Export</ExcludeCategories>
-    <RootAssembliesForTrimmableTestDiscovery Condition=" '$(RootAssembliesForTrimmableTestDiscovery)' == '' ">false</RootAssembliesForTrimmableTestDiscovery>
   </PropertyGroup>
 
   <ItemGroup>
@@ -76,70 +75,22 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!--
-      Keep this opt-in only: broad RootMode=All roots make the test app easier
-      to discover, but they also mask trim-safety issues in the code under test.
-    -->
-    <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="Visible" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(RootAssembliesForTrimmableTestDiscovery)' != 'true' " />
-    <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="Visible" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(RootAssembliesForTrimmableTestDiscovery)' != 'true' " />
-    <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="All" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(RootAssembliesForTrimmableTestDiscovery)' == 'true' " />
-    <TrimmerRootAssembly Include="Mono.Android-Test.Library.NET" RootMode="All" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(RootAssembliesForTrimmableTestDiscovery)' == 'true' " />
-    <TrimmerRootAssembly Include="TestRunner.Core.NET" RootMode="All" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(RootAssembliesForTrimmableTestDiscovery)' == 'true' " />
-    <TrimmerRootAssembly Include="TestRunner.NUnit.NET" RootMode="All" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(RootAssembliesForTrimmableTestDiscovery)' == 'true' " />
-    <TrimmerRootAssembly Include="Xamarin.Android.NUnitLite.NET" RootMode="All" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(RootAssembliesForTrimmableTestDiscovery)' == 'true' " />
-    <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" Condition=" '$(RootAssembliesForTrimmableTestDiscovery)' == 'true' " />
-    <TrimmerRootAssembly Include="StartupHook" RootMode="All" Condition=" '$(RootAssembliesForTrimmableTestDiscovery)' == 'true' " />
+    <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="Visible" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
+    <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="Visible" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
     <TrimmerRootDescriptor Include="TrimmerRoots.xml" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
-    <TrimmerRootDescriptor Include="StartupHookRoots.xml" />
+    <TrimmerRootDescriptor Include="StartupHookRoots.xml" Condition=" '$(StartupHookSupport)' == 'true' " />
     <_AndroidRemapMembers Include="Remaps.xml" />
     <_AndroidRemapMembers Include="IsAssignableFromRemaps.xml" Condition=" '$(_AndroidIsAssignableFromCheck)' == 'false' " />
     <ProguardConfiguration Include="proguard.cfg" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(RootAssembliesForTrimmableTestDiscovery)' == 'true' ">
-    <!-- Legacy opt-in roots used only to compare behavior while narrowing test discovery roots. -->
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Collections" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Collections.Concurrent" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Collections.Specialized" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.ComponentModel.TypeConverter" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Console" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Diagnostics.StackTrace" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Drawing.Primitives" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.IO.Compression" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.IO.FileSystem.DriveInfo" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Linq" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Linq.Expressions" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Memory" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Net.Http" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Net.HttpListener" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Net.NetworkInformation" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Net.Primitives" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Net.Requests" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Net.Security" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Net.Sockets" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Net.WebClient" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Net.WebProxy" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Net.WebSockets" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Net.WebSockets.Client" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.ObjectModel" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Runtime" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Runtime.InteropServices" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Security.Cryptography" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Text.Json" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Threading" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Threading.Thread" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Xml.ReaderWriter" />
-    <_CoreCLRTrimmableFrameworkRootAssembly Include="System.Xml.XmlSerializer" />
-    <TrimmerRootAssembly Include="@(_CoreCLRTrimmableFrameworkRootAssembly)" RootMode="All" />
-  </ItemGroup>
-
   <Target Name="_ValidateTrimmableTestRoots" BeforeTargets="CoreCompile"
-          Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(RootAssembliesForTrimmableTestDiscovery)' != 'true' ">
+          Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
     <ItemGroup>
       <_BroadTrimmableTestRoot Include="@(TrimmerRootAssembly)" Condition=" '%(TrimmerRootAssembly.RootMode)' == 'All' " />
     </ItemGroup>
     <Error Condition=" '@(_BroadTrimmableTestRoot)' != '' "
-           Text="CoreCLRTrimmable tests must not use broad TrimmerRootAssembly RootMode=All roots by default: @(_BroadTrimmableTestRoot). Set RootAssembliesForTrimmableTestDiscovery=true only for legacy comparison builds." />
+           Text="CoreCLRTrimmable tests must not use broad TrimmerRootAssembly RootMode=All roots: @(_BroadTrimmableTestRoot)." />
   </Target>
 
   <ItemGroup>
