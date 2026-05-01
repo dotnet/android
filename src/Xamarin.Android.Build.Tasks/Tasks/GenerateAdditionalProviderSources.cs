@@ -10,7 +10,7 @@ using Microsoft.Build.Framework;
 
 namespace Xamarin.Android.Tasks;
 
-public class GenerateAdditionalProviderSources : AndroidTask
+public sealed class GenerateAdditionalProviderSources : AndroidTask
 {
 	public override string TaskPrefix => "GPS";
 
@@ -113,9 +113,9 @@ public class GenerateAdditionalProviderSources : AndroidTask
 
 	}
 
-	string GetResource (string resource)
+	static string GetResource (string resource)
 	{
-		using (var stream = GetType ().Assembly.GetManifestResourceStream (resource))
+		using (var stream = typeof (GenerateAdditionalProviderSources).Assembly.GetManifestResourceStream (resource))
 		using (var reader = new StreamReader (stream))
 			return reader.ReadToEnd ();
 	}
@@ -178,10 +178,7 @@ public class GenerateAdditionalProviderSources : AndroidTask
 
 		void GenerateJavaSource (string fileName, Dictionary<string, string> replacements)
 		{
-			var assembly = typeof (GenerateAdditionalProviderSources).Assembly;
-			using var stream = assembly.GetManifestResourceStream (fileName);
-			using var reader = new StreamReader (stream);
-			var template = new StringBuilder (reader.ReadToEnd ());
+			var template = new StringBuilder (GetResource (fileName));
 
 			foreach (var kvp in replacements) {
 				template.Replace (kvp.Key, kvp.Value);
