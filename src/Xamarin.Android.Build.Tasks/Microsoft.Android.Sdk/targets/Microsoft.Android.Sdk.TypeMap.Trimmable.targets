@@ -5,9 +5,9 @@
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateEmptyTypemapStub" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.TypeMap.Trimmable.CoreCLR.targets"
-      Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
+      Condition=" '$(_AndroidRuntime)' == 'CoreCLR' Or ( '$(UseMonoRuntime)' == 'false' And '$(PublishAot)' != 'true' ) " />
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.TypeMap.Trimmable.NativeAOT.targets"
-      Condition=" '$(_AndroidRuntime)' == 'NativeAOT' " />
+      Condition=" '$(_AndroidRuntime)' == 'NativeAOT' Or '$(PublishAot)' == 'true' " />
 
   <PropertyGroup>
     <_TypeMapAssemblyName>_Microsoft.Android.TypeMaps</_TypeMapAssemblyName>
@@ -111,32 +111,15 @@
   </Target>
 
   <!--
-    _GenerateJavaStubs: overrides the legacy target from BuildOrder.targets.
-    In the trimmable path, TypeMap generation already happened in _GenerateTrimmableTypeMap,
-    so this target only handles JCW file copying, manifest, assembly store setup, and native config.
-    We keep the name _GenerateJavaStubs because BuildOrder.targets references it.
-
-    Inputs uses the TypeMap DLL as a focused sentinel — _GenerateTrimmableTypeMap regenerates
-    the DLL whenever any of its own inputs (assemblies, manifest, etc.) change, so the DLL
-    timestamp is a reliable proxy for "something changed that requires re-copying".
-    We keep _GetGenerateJavaStubsInputs in DependsOnTargets so that downstream targets
-    (_GetGeneratePackageManagerJavaInputs) can still read @(_GenerateJavaStubsInputs).
+    Populate the TypeMap assembly items used by packaging and native config from
+    the generated files on disk.  This must NOT live inside _GenerateJavaStubs
+    because that target can be skipped on incremental builds, which would leave
+    the item groups empty for targets such as Install.
   -->
-  <Target Name="_GenerateJavaStubs"
-      DependsOnTargets="_SetLatestTargetFrameworkVersion;_CleanIntermediateIfNeeded;_PrepareAssemblies;_GetGenerateJavaStubsInputs;_DefineBuildTargetAbis;_PrepareNativeAssemblySources"
-      Inputs="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll"
-      Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
-
-    <ItemGroup>
-      <_TypeMapJavaFiles Include="$(_TypeMapJavaOutputDirectory)/**/*.java" />
-    </ItemGroup>
-    <Copy SourceFiles="@(_TypeMapJavaFiles)" DestinationFolder="$(IntermediateOutputPath)android/src/%(RecursiveDir)" />
-
-    <ItemGroup>
-      <FileWrites Include="@(_TypeMapJavaFiles->'$(IntermediateOutputPath)android/src/%(RecursiveDir)%(Filename)%(Extension)')" />
-    </ItemGroup>
-
-    <!-- Set properties for ABI/RID used by CoreCLR _AddTrimmableTypeMapAssembliesToStore fallback -->
+  <Target Name="_PrepareTrimmableTypeMapAssemblies"
+      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' "
+      BeforeTargets="_CollectAssembliesToCompress;_GeneratePackageManagerJava;_RemoveRegisterAttribute"
+      DependsOnTargets="_GenerateTrimmableTypeMap;_DefineBuildTargetAbis">
     <PropertyGroup>
       <_TypeMapFirstAbi Condition=" '$(AndroidSupportedAbis)' != '' ">$([System.String]::Copy('$(AndroidSupportedAbis)').Split(';')[0])</_TypeMapFirstAbi>
       <_TypeMapFirstAbi Condition=" '$(_TypeMapFirstAbi)' == '' ">arm64-v8a</_TypeMapFirstAbi>
@@ -163,6 +146,33 @@
         <DestinationSubPath>$(_TypeMapFirstAbi)/%(Filename)%(Extension)</DestinationSubPath>
         <DestinationSubDirectory>$(_TypeMapFirstAbi)/</DestinationSubDirectory>
       </_ShrunkAssemblies>
+    </ItemGroup>
+  </Target>
+
+  <!--
+    _GenerateJavaStubs: overrides the legacy target from BuildOrder.targets.
+    In the trimmable path, TypeMap generation already happened in _GenerateTrimmableTypeMap,
+    so this target only handles JCW file copying, manifest, assembly store setup, and native config.
+    We keep the name _GenerateJavaStubs because BuildOrder.targets references it.
+
+    Inputs uses the TypeMap DLL as a focused sentinel — _GenerateTrimmableTypeMap regenerates
+    the DLL whenever any of its own inputs (assemblies, manifest, etc.) change, so the DLL
+    timestamp is a reliable proxy for "something changed that requires re-copying".
+    We keep _GetGenerateJavaStubsInputs in DependsOnTargets so that downstream targets
+    (_GetGeneratePackageManagerJavaInputs) can still read @(_GenerateJavaStubsInputs).
+  -->
+  <Target Name="_GenerateJavaStubs"
+      DependsOnTargets="_SetLatestTargetFrameworkVersion;_CleanIntermediateIfNeeded;_PrepareAssemblies;_GetGenerateJavaStubsInputs;_DefineBuildTargetAbis;_PrepareNativeAssemblySources"
+      Inputs="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll"
+      Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
+
+    <ItemGroup>
+      <_TypeMapJavaFiles Include="$(_TypeMapJavaOutputDirectory)/**/*.java" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_TypeMapJavaFiles)" DestinationFolder="$(IntermediateOutputPath)android/src/%(RecursiveDir)" />
+
+    <ItemGroup>
+      <FileWrites Include="@(_TypeMapJavaFiles->'$(IntermediateOutputPath)android/src/%(RecursiveDir)%(Filename)%(Extension)')" />
     </ItemGroup>
 
     <!-- Copy generated manifest to expected location -->

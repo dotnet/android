@@ -43,8 +43,7 @@
        This target batches over @(_BuildTargetAbis) to add items per-ABI. -->
   <Target Name="_AddTrimmableTypeMapAssembliesToStore"
       BeforeTargets="_BuildApkEmbed"
-      DependsOnTargets="_GenerateJavaStubs;_DefineBuildTargetAbis"
-      Outputs="%(_BuildTargetAbis.Identity)">
+      DependsOnTargets="_PrepareTrimmableTypeMapAssemblies;_DefineBuildTargetAbis">
     <PropertyGroup>
       <_CurrentAbi>%(_BuildTargetAbis.Identity)</_CurrentAbi>
       <_CurrentRid Condition=" '$(_CurrentAbi)' == 'arm64-v8a' ">android-arm64</_CurrentRid>
