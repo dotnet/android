@@ -14,6 +14,7 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\..\product.snk</AssemblyOriginatorKeyFile>
     <DefineConstants>$(DefineConstants);NO_MARSHAL_MEMBER_BUILDER_SUPPORT</DefineConstants>
+    <DisableTransitiveProjectReferences>true</DisableTransitiveProjectReferences>
     <JavaInteropTestDirectory>$(JavaInteropSourceDirectory)\tests\Java.Interop-Tests\</JavaInteropTestDirectory>
   </PropertyGroup>
 

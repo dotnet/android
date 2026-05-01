@@ -234,15 +234,12 @@ public sealed class RootTypeMapAssemblyGenerator
 			sig => sig.MethodSignature ().Parameters (0, rt => rt.Void (), p => { }),
 			encoder => {
 				// TypeMapping.GetOrCreateExternalTypeMapping<__TypeMapAnchor>()
-				encoder.OpCode (ILOpCode.Call);
-				encoder.Token (getExternalSpec);
+				encoder.Call (getExternalSpec, parameterCount: 0, returnsValue: true);
 				// TypeMapping.GetOrCreateProxyTypeMapping<__TypeMapAnchor>()
-				encoder.OpCode (ILOpCode.Call);
-				encoder.Token (getProxySpec);
+				encoder.Call (getProxySpec, parameterCount: 0, returnsValue: true);
 				// TrimmableTypeMap.Initialize(typeMap, proxyMap)
-				encoder.OpCode (ILOpCode.Call);
-				encoder.Token (initializeRef);
-				encoder.OpCode (ILOpCode.Ret);
+				encoder.Call (initializeRef, parameterCount: 2);
+				encoder.Return ();
 			});
 	}
 
@@ -271,38 +268,33 @@ public sealed class RootTypeMapAssemblyGenerator
 			encoder => {
 				// var typeMaps = new IReadOnlyDictionary<string, Type>[N];
 				encoder.LoadConstantI4 (count);
-				encoder.OpCode (ILOpCode.Newarr);
-				encoder.Token (externalDictTypeSpec);
+				encoder.NewArray (externalDictTypeSpec);
 				encoder.OpCode (ILOpCode.Stloc_0);
 
 				for (int i = 0; i < count; i++) {
 					encoder.OpCode (ILOpCode.Ldloc_0);
 					encoder.LoadConstantI4 (i);
-					encoder.OpCode (ILOpCode.Call);
-					encoder.Token (getExternalSpecs [i]);
+					encoder.Call (getExternalSpecs [i], parameterCount: 0, returnsValue: true);
 					encoder.OpCode (ILOpCode.Stelem_ref);
 				}
 
 				// var proxyMaps = new IReadOnlyDictionary<Type, Type>[N];
 				encoder.LoadConstantI4 (count);
-				encoder.OpCode (ILOpCode.Newarr);
-				encoder.Token (proxyDictTypeSpec);
+				encoder.NewArray (proxyDictTypeSpec);
 				encoder.OpCode (ILOpCode.Stloc_1);
 
 				for (int i = 0; i < count; i++) {
 					encoder.OpCode (ILOpCode.Ldloc_1);
 					encoder.LoadConstantI4 (i);
-					encoder.OpCode (ILOpCode.Call);
-					encoder.Token (getProxySpecs [i]);
+					encoder.Call (getProxySpecs [i], parameterCount: 0, returnsValue: true);
 					encoder.OpCode (ILOpCode.Stelem_ref);
 				}
 
 				// TrimmableTypeMap.Initialize(typeMaps, proxyMaps)
 				encoder.OpCode (ILOpCode.Ldloc_0);
 				encoder.OpCode (ILOpCode.Ldloc_1);
-				encoder.OpCode (ILOpCode.Call);
-				encoder.Token (initializeRef);
-				encoder.OpCode (ILOpCode.Ret);
+				encoder.Call (initializeRef, parameterCount: 2);
+				encoder.Return ();
 			},
 			encodeLocals: localsSig => {
 				// LOCAL_SIG header + 2 locals
