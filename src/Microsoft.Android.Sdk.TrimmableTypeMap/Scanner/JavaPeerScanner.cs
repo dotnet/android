@@ -1264,10 +1264,10 @@ public sealed class JavaPeerScanner : IDisposable
 			// We want just the type name (before the first comma, if any)
 			var commaIndex = connector.IndexOf (',');
 			if (commaIndex > 0) {
-				return connector.Substring (0, commaIndex).Trim ();
+				return NormalizeConnectorManagedTypeName (connector.Substring (0, commaIndex));
 			}
 			if (connector.Length > 0) {
-				return connector;
+				return NormalizeConnectorManagedTypeName (connector);
 			}
 		}
 
@@ -1277,6 +1277,11 @@ public sealed class JavaPeerScanner : IDisposable
 			return invokerName;
 		}
 		return null;
+	}
+
+	static string NormalizeConnectorManagedTypeName (string managedTypeName)
+	{
+		return managedTypeName.Trim ().Replace ('/', '+');
 	}
 
 	public void Dispose ()
@@ -1459,11 +1464,11 @@ public sealed class JavaPeerScanner : IDisposable
 
 		if (commaIndex < 0) {
 			// No assembly information; treat the whole segment as the type name
-			declaringTypeName = typeQualified.Trim ().Replace ('/', '+');
+			declaringTypeName = NormalizeConnectorManagedTypeName (typeQualified);
 			return;
 		}
 
-		declaringTypeName = typeQualified.Substring (0, commaIndex).Trim ().Replace ('/', '+');
+		declaringTypeName = NormalizeConnectorManagedTypeName (typeQualified.Substring (0, commaIndex));
 		string rest = typeQualified.Substring (commaIndex + 1).Trim ();
 		int nextComma = rest.IndexOf (',');
 		declaringAssemblyName = nextComma >= 0 ? rest.Substring (0, nextComma).Trim () : rest.Trim ();

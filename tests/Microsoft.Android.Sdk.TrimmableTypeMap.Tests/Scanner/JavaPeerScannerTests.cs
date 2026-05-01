@@ -55,6 +55,17 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Scan_ContentProvider_CapturesAuthorities ()
+	{
+		var provider = FindFixtureByJavaName ("my/app/MyProvider");
+		var component = provider.ComponentAttribute;
+		Assert.NotNull (component);
+		Assert.Equal (ComponentKind.ContentProvider, component.Kind);
+		Assert.True (component.Properties.TryGetValue ("Authorities", out var authorities));
+		Assert.Equal ("my.app.provider", authorities);
+	}
+
+	[Fact]
 	public void Scan_InvokerAndInterface_ShareJavaName ()
 	{
 		var peers = ScanFixtures ();

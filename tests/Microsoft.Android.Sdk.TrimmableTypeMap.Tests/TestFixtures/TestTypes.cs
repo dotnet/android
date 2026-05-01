@@ -55,6 +55,20 @@ namespace Android.App
 	{
 		public Application () { }
 		protected Application (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Register ("android/app/Application$ActivityLifecycleCallbacks", "", "Android.App.Application/IActivityLifecycleCallbacksInvoker")]
+		public interface IActivityLifecycleCallbacks
+		{
+			[Register ("onActivityCreated", "(Landroid/app/Activity;)V", "GetOnActivityCreated_Landroid_app_Activity_Handler:Android.App.Application/IActivityLifecycleCallbacksInvoker")]
+			void OnActivityCreated (Activity activity);
+		}
+
+		[Register ("android/app/Application$ActivityLifecycleCallbacks", DoNotGenerateAcw = true)]
+		internal sealed class IActivityLifecycleCallbacksInvoker : Java.Lang.Object, IActivityLifecycleCallbacks
+		{
+			public IActivityLifecycleCallbacksInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+			public void OnActivityCreated (Activity activity) { }
+		}
 	}
 
 	[Register ("android/app/Instrumentation", DoNotGenerateAcw = true)]
