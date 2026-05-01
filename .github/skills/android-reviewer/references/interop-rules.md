@@ -2,7 +2,8 @@
 
 Rules for the boundary between C# and C/C++ code — P/Invoke declarations, JNI
 bindings, and shared structs. Load when both managed and native files change, or
-when interop-specific files are touched.
+when the diff contains interop markers (`DllImport`, `[Register]`, `JNIEnv`,
+`[MarshalAs]`, `[StructLayout]`).
 
 ---
 
