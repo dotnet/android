@@ -11,6 +11,7 @@ static class RuntimeFeature
 	const bool IsAssignableFromCheckEnabledByDefault = true;
 	const bool StartupHookSupportEnabledByDefault = true;
 	const bool TrimmableTypeMapEnabledByDefault = false;
+	const bool LegacyNonTrimmableInteropEnabledByDefault = !TrimmableTypeMapEnabledByDefault;
 	const bool ObjectReferenceLoggingEnabledByDefault = false;
 
 	const string FeatureSwitchPrefix = "Microsoft.Android.Runtime.RuntimeFeature.";
@@ -40,6 +41,12 @@ static class RuntimeFeature
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (TrimmableTypeMap)}")]
 	internal static bool TrimmableTypeMap { get; } =
 		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (TrimmableTypeMap)}", out bool isEnabled) ? isEnabled : TrimmableTypeMapEnabledByDefault;
+
+	[FeatureGuard (typeof (RequiresDynamicCodeAttribute))]
+	[FeatureGuard (typeof (RequiresUnreferencedCodeAttribute))]
+	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (LegacyNonTrimmableInterop)}")]
+	internal static bool LegacyNonTrimmableInterop { get; } =
+		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (LegacyNonTrimmableInterop)}", out bool isEnabled) ? isEnabled : LegacyNonTrimmableInteropEnabledByDefault;
 
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (ObjectReferenceLogging)}")]
 	internal static bool ObjectReferenceLogging { get; } =

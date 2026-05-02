@@ -28,6 +28,35 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 		}
 	}
 
+	[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+	public override Type? GetType (JniTypeSignature typeSignature)
+	{
+		var type = base.GetType (typeSignature);
+		if (type != null || !typeSignature.IsValid || typeSignature.SimpleReference == null || typeSignature.ArrayRank != 0) {
+			return type;
+		}
+
+		return TrimmableTypeMap.Instance.GetTargetType (typeSignature.SimpleReference);
+	}
+
+	[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+	public override Type? GetTypeAssignableTo (
+			JniTypeSignature typeSignature,
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			Type targetType)
+	{
+		var type = base.GetTypeAssignableTo (typeSignature, targetType);
+		if (type != null || !typeSignature.IsValid || typeSignature.SimpleReference == null || typeSignature.ArrayRank != 0) {
+			return type;
+		}
+
+		type = TrimmableTypeMap.Instance.GetTargetTypeAssignableTo (typeSignature.SimpleReference, targetType);
+		if (type != null) {
+			return type;
+		}
+			return null;
+	}
+
 	protected override IEnumerable<string> GetSimpleReferences (Type type)
 	{
 		if (TrimmableTypeMap.Instance.TryGetJniNameForManagedType (type, out var jniName)) {
@@ -50,6 +79,8 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 	}
 
 	[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+	[RequiresDynamicCode ("Generic invoker type construction may require runtime generic code generation.")]
+	[RequiresUnreferencedCode ("Generic invoker type construction may require unreferenced generic parameter annotations.")]
 	protected override Type? GetInvokerTypeCore (
 			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 			Type type)

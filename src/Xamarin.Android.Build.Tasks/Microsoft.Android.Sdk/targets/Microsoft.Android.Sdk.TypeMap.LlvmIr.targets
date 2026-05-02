@@ -23,6 +23,10 @@
         Value="false"
         Trim="true"
     />
+    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.LegacyNonTrimmableInterop"
+        Value="true"
+        Trim="true"
+    />
   </ItemGroup>
 
   <PropertyGroup>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<linker>
+  <assembly fullname="Mono.Android">
+    <!-- Rewritten by Microsoft.Android.Sdk.ILLink.TypeMappingStep. -->
+    <type fullname="Microsoft.Android.Runtime.ManagedTypeMapping">
+      <method name="get_JniNameHashes" />
+      <method name="get_TypeNameHashes" />
+      <method name="GetTypeByJniNameHashIndex" />
+      <method name="GetJniNameByJniNameHashIndex" />
+      <method name="GetJniNameByTypeNameHashIndex" />
+      <method name="GetTypeNameByTypeNameHashIndex" />
+    </type>
+  </assembly>
+</linker>

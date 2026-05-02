@@ -72,12 +72,40 @@ namespace Java.Interop {
 					return factoryConverter;
 			}
 
+			if (RuntimeFeature.LegacyNonTrimmableInterop) {
+				var dynamicConverter = TryGetDynamicGenericConverter (target);
+				if (dynamicConverter != null)
+					return dynamicConverter;
+			}
+
 			if (typeof (IDictionary).IsAssignableFrom (target))
 				return (h, t) => JavaDictionary.FromJniHandle (h, t);
 			if (typeof (IList).IsAssignableFrom (target))
 				return (h, t) => JavaList.FromJniHandle (h, t);
 			if (typeof (ICollection).IsAssignableFrom (target))
 				return (h, t) => JavaCollection.FromJniHandle (h, t);
+
+			return null;
+		}
+
+		[RequiresDynamicCode ("Non-trimmable generic Java collection conversion constructs JavaList<T>, JavaCollection<T>, or JavaDictionary<K,V> at runtime.")]
+		[RequiresUnreferencedCode ("Non-trimmable generic Java collection conversion reflects over the generated generic collection wrapper type.")]
+		static Func<IntPtr, JniHandleOwnership, object?>? TryGetDynamicGenericConverter (Type target)
+		{
+			if (!target.IsGenericType)
+				return null;
+
+			var genericDef = target.GetGenericTypeDefinition ();
+			var typeArgs = target.GetGenericArguments ();
+
+			if (genericDef == typeof (IList<>) && typeArgs.Length == 1)
+				return GetJniHandleConverterForType (typeof (JavaList<>).MakeGenericType (typeArgs));
+
+			if (genericDef == typeof (ICollection<>) && typeArgs.Length == 1)
+				return GetJniHandleConverterForType (typeof (JavaCollection<>).MakeGenericType (typeArgs));
+
+			if (genericDef == typeof (IDictionary<,>) && typeArgs.Length == 2)
+				return GetJniHandleConverterForType (typeof (JavaDictionary<,>).MakeGenericType (typeArgs));
 
 			return null;
 		}
@@ -217,6 +245,46 @@ namespace Java.Interop {
 			// hail mary pass; perhaps there's a MCW which participates in normal
 			// .NET type conversion?
 			return Convert.ChangeType (v, targetType!, CultureInfo.InvariantCulture);
+		}
+
+		internal static object? FromJniHandleForArrayElement (IntPtr handle, JniHandleOwnership transfer, Type? targetType)
+		{
+			if (targetType == typeof (bool))
+				return FromJniHandle<bool> (handle, transfer);
+			if (targetType == typeof (byte))
+				return FromJniHandle<byte> (handle, transfer);
+			if (targetType == typeof (sbyte))
+				return FromJniHandle<sbyte> (handle, transfer);
+			if (targetType == typeof (char))
+				return FromJniHandle<char> (handle, transfer);
+			if (targetType == typeof (short))
+				return FromJniHandle<short> (handle, transfer);
+			if (targetType == typeof (ushort))
+				return FromJniHandle<ushort> (handle, transfer);
+			if (targetType == typeof (int))
+				return FromJniHandle<int> (handle, transfer);
+			if (targetType == typeof (uint))
+				return FromJniHandle<uint> (handle, transfer);
+			if (targetType == typeof (long))
+				return FromJniHandle<long> (handle, transfer);
+			if (targetType == typeof (ulong))
+				return FromJniHandle<ulong> (handle, transfer);
+			if (targetType == typeof (float))
+				return FromJniHandle<float> (handle, transfer);
+			if (targetType == typeof (double))
+				return FromJniHandle<double> (handle, transfer);
+			if (targetType == typeof (string))
+				return FromJniHandle<string> (handle, transfer);
+			if (targetType != null && typeof (IJavaObject).IsAssignableFrom (targetType) && RuntimeFeature.LegacyNonTrimmableInterop)
+				return FromJniHandleForJavaObjectArrayElement (handle, transfer, targetType);
+
+			return FromJniHandle (handle, transfer);
+		}
+
+		[RequiresUnreferencedCode ("Non-trimmable JNI array conversion uses a runtime target Type to activate the requested Java peer type.")]
+		static object? FromJniHandleForJavaObjectArrayElement (IntPtr handle, JniHandleOwnership transfer, Type targetType)
+		{
+			return FromJniHandle (handle, transfer, targetType);
 		}
 
 		static Dictionary<string, Type> TypeMappings = new Dictionary<string, Type> (9, StringComparer.Ordinal) {

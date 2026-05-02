@@ -110,6 +110,7 @@ namespace Android.Runtime
 		}
 
 		[UnmanagedCallersOnly]
+		[RequiresUnreferencedCode ("Legacy native registration callback declaring type names are parsed from generated registration strings.")]
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
 		{
 			// Should not be allowed

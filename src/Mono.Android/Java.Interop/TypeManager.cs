@@ -40,6 +40,9 @@ namespace Java.Interop {
 	}
 
 	public static partial class TypeManager {
+		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+		const DynamicallyAccessedMemberTypes MethodsConstructors = DynamicallyAccessedMemberTypes.AllMethods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes | Constructors;
+
 		internal static string GetClassName (IntPtr class_ptr)
 		{
 			IntPtr ptr = RuntimeNativeMethods.monodroid_TypeManager_get_java_class_name (class_ptr);
@@ -223,14 +226,18 @@ namespace Java.Interop {
 		}
 
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
+		[return: DynamicallyAccessedMembers (MethodsConstructors)]
 		static extern Type monodroid_typemap_java_to_managed (string java_type_name);
 
+		[return: DynamicallyAccessedMembers (MethodsConstructors)]
 		static Type monovm_typemap_java_to_managed (string java_type_name)
 		{
 			return monodroid_typemap_java_to_managed (java_type_name);
 		}
 
 		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Value of java_type_name isn't statically known.")]
+		[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "Legacy native typemap entries preserve Java peer constructors.")]
+		[return: DynamicallyAccessedMembers (MethodsConstructors)]
 		static Type? clr_typemap_java_to_managed (string java_type_name)
 		{
 			bool result = RuntimeNativeMethods.clr_typemap_java_to_managed (java_type_name, out IntPtr managedAssemblyNamePointer, out uint managedTypeTokenId);
@@ -255,6 +262,7 @@ namespace Java.Interop {
 			return ret;
 		}
 
+		[return: DynamicallyAccessedMembers (Constructors)]
 		internal static Type? GetJavaToManagedType (string class_name)
 		{
 			lock (TypeManagerMapDictionaries.AccessLock) {
@@ -262,6 +270,15 @@ namespace Java.Interop {
 			}
 		}
 
+		[return: DynamicallyAccessedMembers (MethodsConstructors)]
+		internal static Type? GetJavaToManagedTypeForNativeRegistration (string class_name)
+		{
+			lock (TypeManagerMapDictionaries.AccessLock) {
+				return GetJavaToManagedTypeCore (class_name);
+			}
+		}
+
+		[return: DynamicallyAccessedMembers (MethodsConstructors)]
 		static Type? GetJavaToManagedTypeCore (string class_name)
 		{
 			if (TypeManagerMapDictionaries.JniToManaged.TryGetValue (class_name, out Type? type)) {

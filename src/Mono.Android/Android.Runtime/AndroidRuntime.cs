@@ -312,6 +312,7 @@ namespace Android.Runtime {
 		}
 	}
 
+	[RequiresUnreferencedCode ("Legacy native registration callback declaring type names are parsed from generated registration strings.")]
 	class AndroidTypeManager : JniRuntime.JniTypeManager {
 		struct JniRemappingReplacementMethod
 		{
@@ -339,6 +340,49 @@ namespace Android.Runtime {
 			var t = Java.Interop.TypeManager.GetJavaToManagedType (jniSimpleReference);
 			if (t != null)
 				yield return t;
+		}
+
+		[return: DynamicallyAccessedMembers (Constructors)]
+		public override Type? GetType (JniTypeSignature typeSignature)
+		{
+			var type = base.GetType (typeSignature);
+			if (type != null || !typeSignature.IsValid || typeSignature.SimpleReference == null || typeSignature.ArrayRank != 0) {
+				return type;
+			}
+
+			return GetNonGenericContainerType (Java.Interop.TypeManager.GetJavaToManagedType (typeSignature.SimpleReference));
+		}
+
+		[return: DynamicallyAccessedMembers (Constructors)]
+		public override Type? GetTypeAssignableTo (
+				JniTypeSignature typeSignature,
+				[DynamicallyAccessedMembers (Constructors)]
+				Type targetType)
+		{
+			var type = base.GetTypeAssignableTo (typeSignature, targetType);
+			if (type != null || !typeSignature.IsValid || typeSignature.SimpleReference == null || typeSignature.ArrayRank != 0) {
+				return type;
+			}
+
+			type = GetNonGenericContainerType (Java.Interop.TypeManager.GetJavaToManagedType (typeSignature.SimpleReference));
+			if (type != null && targetType.IsAssignableFrom (type)) {
+				return type;
+			}
+			return null;
+		}
+
+		[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+		static Type? GetNonGenericContainerType (
+				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+				Type? type)
+		{
+			if (type == typeof (JavaList<>))
+				return typeof (JavaList);
+			if (type == typeof (JavaCollection<>))
+				return typeof (JavaCollection);
+			if (type == typeof (JavaDictionary<,>))
+				return typeof (JavaDictionary);
+			return type;
 		}
 
 		protected override string? GetSimpleReference (Type type)
@@ -444,6 +488,8 @@ namespace Android.Runtime {
 		}
 
 		[return: DynamicallyAccessedMembers (Constructors)]
+		[RequiresDynamicCode ("Generic invoker type construction may require runtime generic code generation.")]
+		[RequiresUnreferencedCode ("Generic invoker type construction may require unreferenced generic parameter annotations.")]
 		protected override Type? GetInvokerTypeCore (
 			[DynamicallyAccessedMembers (Constructors)]
 			Type type)
@@ -454,6 +500,17 @@ namespace Android.Runtime {
 			}
 
 			return null;
+		}
+
+		[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.AllMethods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes)]
+		public override Type? GetTypeForNativeRegistration (JniTypeSignature typeSignature)
+		{
+			var type = base.GetTypeForNativeRegistration (typeSignature);
+			if (type != null || !typeSignature.IsValid || typeSignature.SimpleReference == null || typeSignature.ArrayRank != 0) {
+				return type;
+			}
+
+			return Java.Interop.TypeManager.GetJavaToManagedTypeForNativeRegistration (typeSignature.SimpleReference);
 		}
 
 		delegate Delegate GetCallbackHandler ();
@@ -618,11 +675,18 @@ namespace Android.Runtime {
 							}
 							needToRegisterNatives = true;
 						} else {
+							Type callbackDeclaringType = type;
 							if (!callbackDeclaringTypeString.IsEmpty) {
-								throw new NotSupportedException ("Callback declaring type names are not supported in trim-compatible native registration.");
+								if (RuntimeFeature.TrimmableTypeMap) {
+									throw new NotSupportedException ("Callback declaring type names are not supported in trim-compatible native registration.");
+								}
+								callbackDeclaringType = Type.GetType (callbackDeclaringTypeString.ToString (), throwOnError: true)!;
+							}
+							while (callbackDeclaringType.ContainsGenericParameters) {
+								callbackDeclaringType = callbackDeclaringType.BaseType!;
 							}
 
-							GetCallbackHandler connector = CreateCallbackHandler (type, callbackString.ToString ());
+							GetCallbackHandler connector = CreateCallbackHandler (callbackDeclaringType, callbackString.ToString ());
 							callback = connector ();
 						}
 
@@ -658,8 +722,12 @@ namespace Android.Runtime {
 				Type callbackDeclaringType,
 				string callbackString)
 		{
-			var method = callbackDeclaringType.GetMethod (callbackString, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
-				?? throw new MissingMethodException (callbackDeclaringType.FullName, callbackString);
+			MethodInfo? method = null;
+			for (Type? type = callbackDeclaringType; type != null && method == null; type = type.BaseType) {
+				method = type.GetMethod (callbackString, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly);
+			}
+			if (method == null)
+				throw new MissingMethodException (callbackDeclaringType.FullName, callbackString);
 			return (GetCallbackHandler) Delegate.CreateDelegate (typeof (GetCallbackHandler), method);
 		}
 

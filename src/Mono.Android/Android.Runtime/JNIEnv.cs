@@ -25,7 +25,6 @@ namespace Android.Runtime {
 		public static IntPtr Handle => JniEnvironment.EnvironmentPointer;
 
 		static Array ArrayCreateInstance (
-				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 				Type elementType,
 				int length)
 		{
@@ -786,7 +785,7 @@ namespace Android.Runtime {
 					try {
 						var d = (Array?) dest.GetValue (i);
 						if (d == null)
-							dest.SetValue (GetArray (a, JniHandleOwnership.DoNotTransfer), i);
+							dest.SetValue (GetNestedArray (a, elementType), i);
 						else
 							CopyArray (a, d);
 					} finally {
@@ -800,6 +799,36 @@ namespace Android.Runtime {
 
 			for (int i = 0; i < dest.Length; i++)
 				dest.SetValue (converter (elementType, src, i), i);
+		}
+
+		static Array? GetNestedArray (IntPtr array, Type elementType)
+		{
+			if (elementType == typeof (bool []))
+				return GetArray<bool> (array);
+			if (elementType == typeof (byte []))
+				return GetArray<byte> (array);
+			if (elementType == typeof (char []))
+				return GetArray<char> (array);
+			if (elementType == typeof (short []))
+				return GetArray<short> (array);
+			if (elementType == typeof (ushort []))
+				return GetArray<ushort> (array);
+			if (elementType == typeof (int []))
+				return GetArray<int> (array);
+			if (elementType == typeof (uint []))
+				return GetArray<uint> (array);
+			if (elementType == typeof (long []))
+				return GetArray<long> (array);
+			if (elementType == typeof (ulong []))
+				return GetArray<ulong> (array);
+			if (elementType == typeof (float []))
+				return GetArray<float> (array);
+			if (elementType == typeof (double []))
+				return GetArray<double> (array);
+			if (elementType == typeof (string []))
+				return GetArray<string> (array);
+
+			return GetArray (array, JniHandleOwnership.DoNotTransfer);
 		}
 
 		static void AssertIsJavaObject (Type? targetType)
@@ -821,6 +850,14 @@ namespace Android.Runtime {
 
 			if (typeof (T).IsArray) {
 				CopyArray (src, dest, typeof (T));
+				return;
+			}
+
+			if (typeof (IJavaObject).IsAssignableFrom (typeof (T))) {
+				for (int i = 0; i < dest.Length; i++) {
+					IntPtr elem = GetObjectArrayElement (src, i);
+					dest [i] = (T) Java.Lang.Object.GetObject (elem, JniHandleOwnership.TransferLocalRef, typeof (T))!;
+				}
 				return;
 			}
 
@@ -1037,9 +1074,15 @@ namespace Android.Runtime {
 					}
 				} },
 				{ typeof (IJavaObject), (type, source, len) => {
-					var r = new Java.Lang.Object [len];
-					CopyArray (source, r);
-					return r;
+					if (type == null) {
+						var r = new Java.Lang.Object [len];
+						CopyArray (source, r);
+						return r;
+					}
+
+					var array = ArrayCreateInstance (type, len);
+					CopyArray (source, array);
+					return array;
 				} },
 				{ typeof (Array), (type, source, len) => {
 					var r = new Array [len];
@@ -1061,6 +1104,12 @@ namespace Android.Runtime {
 				AssertCompatibleArrayTypes (array_ptr, MakeArrayType (element_type));
 
 			int cnt = _GetArrayLength (array_ptr);
+
+			if (element_type != null && element_type.IsArray) {
+				var array = ArrayCreateInstance (element_type, cnt);
+				CopyArray (array_ptr, array, element_type);
+				return array;
+			}
 
 			var converter = GetConverter (NativeArrayToManaged, element_type, array_ptr);
 
@@ -1087,7 +1136,13 @@ namespace Android.Runtime {
 
 			for (int i = 0; i < cnt; i++) {
 				Type? targetType	= (element_types != null && i < element_types.Length) ? element_types [i] : null;
-				object? value    = converter (null, array_ptr, i);
+				object? value;
+				if (targetType != null) {
+					IntPtr elem = GetObjectArrayElement (array_ptr, i);
+					value = JavaConvert.FromJniHandleForArrayElement (elem, JniHandleOwnership.TransferLocalRef, targetType);
+				} else {
+					value = converter (null, array_ptr, i);
+				}
 
 				ret [i] = targetType == null || targetType.IsInstanceOfType (value)
 					? value

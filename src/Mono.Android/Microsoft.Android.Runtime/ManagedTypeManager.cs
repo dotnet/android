@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using Android.Runtime;
 using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
 
@@ -10,53 +12,56 @@ namespace Microsoft.Android.Runtime;
 class ManagedTypeManager : JniRuntime.JniTypeManager {
 
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
-	internal const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
+	internal const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.AllMethods;
 	internal const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
+	const DynamicallyAccessedMemberTypes MethodsConstructors = MethodsAndPrivateNested | Constructors;
+
+	struct JniRemappingReplacementMethod
+	{
+		public string target_type;
+		public string target_name;
+		public bool is_static;
+	}
 
 	public ManagedTypeManager ()
 	{
 	}
 
 	[return: DynamicallyAccessedMembers (Constructors)]
+	[RequiresDynamicCode ("Generic invoker type construction may require runtime generic code generation.")]
+	[RequiresUnreferencedCode ("Generic invoker type construction may require unreferenced generic parameter annotations.")]
 	protected override Type? GetInvokerTypeCore (
 			[DynamicallyAccessedMembers (Constructors)]
 			Type type)
 	{
 		const string suffix = "Invoker";
 
-		// https://github.com/xamarin/xamarin-android/blob/5472eec991cc075e4b0c09cd98a2331fb93aa0f3/src/Microsoft.Android.Sdk.ILLink/MarkJavaObjects.cs#L176-L186
-		const string assemblyGetTypeMessage = "'Invoker' types are preserved by the MarkJavaObjects trimmer step.";
-		const string makeGenericTypeMessage = "Generic 'Invoker' types are preserved by the MarkJavaObjects trimmer step.";
-
-		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = assemblyGetTypeMessage)]
-		[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = assemblyGetTypeMessage)]
-		[return: DynamicallyAccessedMembers (Constructors)]
-		static Type? AssemblyGetType (Assembly assembly, string typeName) =>
-			assembly.GetType (typeName);
-
-		[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = makeGenericTypeMessage)]
-		[return: DynamicallyAccessedMembers (Constructors)]
-		static Type MakeGenericType (
-				[DynamicallyAccessedMembers (Constructors)]
-				Type type,
-				Type [] arguments) =>
-			// FIXME: https://github.com/dotnet/java-interop/issues/1192
-			#pragma warning disable IL3050
-			type.MakeGenericType (arguments);
-			#pragma warning restore IL3050
-
 		Type[] arguments = type.GetGenericArguments ();
 		if (arguments.Length == 0)
-			return AssemblyGetType (type.Assembly, type + suffix) ?? base.GetInvokerTypeCore (type);
+			return type.Assembly.GetType (type + suffix) ?? base.GetInvokerTypeCore (type);
 		Type definition = type.GetGenericTypeDefinition ();
 		int bt = definition.FullName!.IndexOf ("`", StringComparison.Ordinal);
 		if (bt == -1)
 			throw new NotSupportedException ("Generic type doesn't follow generic type naming convention! " + type.FullName);
-		Type? suffixDefinition = AssemblyGetType (definition.Assembly,
+		Type? suffixDefinition = definition.Assembly.GetType (
 				definition.FullName.Substring (0, bt) + suffix + definition.FullName.Substring (bt));
 		if (suffixDefinition == null)
 			return base.GetInvokerTypeCore (type);
-		return MakeGenericType (suffixDefinition, arguments);
+		return suffixDefinition.MakeGenericType (arguments);
+	}
+
+	[return: DynamicallyAccessedMembers (MethodsConstructors)]
+	public override Type? GetTypeForNativeRegistration (JniTypeSignature typeSignature)
+	{
+		var type = base.GetTypeForNativeRegistration (typeSignature);
+		if (type != null || !typeSignature.IsValid || typeSignature.SimpleReference == null || typeSignature.ArrayRank != 0) {
+			return type;
+		}
+
+		if (ManagedTypeMapping.TryGetTypeForNativeRegistration (typeSignature.SimpleReference, out var target)) {
+			return target;
+		}
+		return null;
 	}
 
 	// NOTE: suppressions below also in `src/Mono.Android/Android.Runtime/AndroidRuntime.cs`
@@ -141,6 +146,54 @@ class ManagedTypeManager : JniRuntime.JniTypeManager {
 		}
 	}
 
+	[return: DynamicallyAccessedMembers (Constructors)]
+	public override Type? GetType (JniTypeSignature typeSignature)
+	{
+		var type = base.GetType (typeSignature);
+		if (type != null || !typeSignature.IsValid || typeSignature.SimpleReference == null || typeSignature.ArrayRank != 0) {
+			return type;
+		}
+
+		if (ManagedTypeMapping.TryGetType (typeSignature.SimpleReference, out var target)) {
+			return GetNonGenericContainerType (target);
+		}
+		return null;
+	}
+
+	[return: DynamicallyAccessedMembers (Constructors)]
+	public override Type? GetTypeAssignableTo (
+			JniTypeSignature typeSignature,
+			[DynamicallyAccessedMembers (Constructors)]
+			Type targetType)
+	{
+		var type = base.GetTypeAssignableTo (typeSignature, targetType);
+		if (type != null || !typeSignature.IsValid || typeSignature.SimpleReference == null || typeSignature.ArrayRank != 0) {
+			return type;
+		}
+
+		if (ManagedTypeMapping.TryGetType (typeSignature.SimpleReference, out var mappedType)) {
+			mappedType = GetNonGenericContainerType (mappedType);
+		}
+		if (mappedType != null && targetType.IsAssignableFrom (mappedType)) {
+			return mappedType;
+		}
+		return null;
+	}
+
+	[return: DynamicallyAccessedMembers (Constructors)]
+	static Type? GetNonGenericContainerType (
+			[DynamicallyAccessedMembers (Constructors)]
+			Type? type)
+	{
+		if (type == typeof (global::Android.Runtime.JavaList<>))
+			return typeof (global::Android.Runtime.JavaList);
+		if (type == typeof (global::Android.Runtime.JavaCollection<>))
+			return typeof (global::Android.Runtime.JavaCollection);
+		if (type == typeof (global::Android.Runtime.JavaDictionary<,>))
+			return typeof (global::Android.Runtime.JavaDictionary);
+		return type;
+	}
+
 	protected override IEnumerable<string> GetSimpleReferences (Type type)
 	{
 		foreach (var r in base.GetSimpleReferences (type)) {
@@ -158,10 +211,58 @@ class ManagedTypeManager : JniRuntime.JniTypeManager {
 		var desugarType = slash > 0
 			? $"{jniSimpleReference.Substring (0, slash + 1)}Desugar{jniSimpleReference.Substring (slash + 1)}"
 			: $"Desugar{jniSimpleReference}";
+		var typeWithPrefix = $"{desugarType}$_CC";
+		var typeWithSuffix = $"{jniSimpleReference}$-CC";
 
 		return new[] {
-			$"{desugarType}$_CC",
-			$"{jniSimpleReference}$-CC",
+			GetReplacementTypeCore (typeWithPrefix) ?? typeWithPrefix,
+			GetReplacementTypeCore (typeWithSuffix) ?? typeWithSuffix,
+		};
+	}
+
+	protected override string? GetReplacementTypeCore (string jniSimpleReference)
+	{
+		if (!JNIEnvInit.jniRemappingInUse) {
+			return null;
+		}
+
+		IntPtr ret = RuntimeNativeMethods._monodroid_lookup_replacement_type (jniSimpleReference);
+		if (ret == IntPtr.Zero) {
+			return null;
+		}
+
+		return Marshal.PtrToStringAnsi (ret);
+	}
+
+	protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, string jniMethodName, string jniMethodSignature)
+	{
+		if (!JNIEnvInit.jniRemappingInUse) {
+			return null;
+		}
+
+		IntPtr retInfo = RuntimeNativeMethods._monodroid_lookup_replacement_method_info (jniSourceType, jniMethodName, jniMethodSignature);
+		if (retInfo == IntPtr.Zero) {
+			return null;
+		}
+
+		var method = Marshal.PtrToStructure<JniRemappingReplacementMethod> (retInfo);
+		var newSignature = jniMethodSignature;
+
+		int? paramCount = null;
+		if (method.is_static) {
+			paramCount = JniMemberSignature.GetParameterCountFromMethodSignature (jniMethodSignature) + 1;
+			newSignature = $"(L{jniSourceType};" + jniMethodSignature.Substring ("(".Length);
+		}
+
+		return new JniRuntime.ReplacementMethodInfo {
+			SourceJniType = jniSourceType,
+			SourceJniMethodName = jniMethodName,
+			SourceJniMethodSignature = jniMethodSignature,
+			TargetJniType = method.target_type,
+			TargetJniMethodName = method.target_name,
+			TargetJniMethodSignature = newSignature,
+			TargetJniMethodParameterCount = paramCount,
+			TargetJniMethodInstanceToStatic = method.is_static,
 		};
 	}
 

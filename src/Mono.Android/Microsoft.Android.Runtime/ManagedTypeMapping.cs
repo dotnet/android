@@ -11,7 +11,20 @@ namespace Microsoft.Android.Runtime;
 
 internal static class ManagedTypeMapping
 {
-	internal static bool TryGetType (string jniName, [NotNullWhen (true)] out Type? type)
+	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+	const DynamicallyAccessedMemberTypes MethodsConstructors = DynamicallyAccessedMemberTypes.AllMethods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes | Constructors;
+
+	internal static bool TryGetType (string jniName, [NotNullWhen (true)] [DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)] out Type? type)
+	{
+		return TryGetTypeCore (jniName, out type);
+	}
+
+	internal static bool TryGetTypeForNativeRegistration (string jniName, [NotNullWhen (true)] [DynamicallyAccessedMembers (MethodsConstructors)] out Type? type)
+	{
+		return TryGetTypeCore (jniName, out type);
+	}
+
+	static bool TryGetTypeCore (string jniName, [NotNullWhen (true)] [DynamicallyAccessedMembers (MethodsConstructors)] out Type? type)
 	{
 		type = null;
 
@@ -97,6 +110,7 @@ internal static class ManagedTypeMapping
 
 	// Replaced by src/Microsoft.Android.Sdk.ILLink/TypeMappingStep.cs
 	private static ReadOnlySpan<ulong> TypeNameHashes => throw new NotImplementedException ();
+	[return: DynamicallyAccessedMembers (MethodsConstructors)]
 	private static Type? GetTypeByJniNameHashIndex (int jniNameHashIndex) => throw new NotImplementedException ();
 	private static string? GetJniNameByJniNameHashIndex (int jniNameHashIndex) => throw new NotImplementedException ();
 

@@ -122,6 +122,27 @@ public class TrimmableTypeMap
 		return true;
 	}
 
+	[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+	internal Type? GetTargetType (string jniName)
+	{
+		var proxies = GetProxiesForJniName (jniName);
+		return proxies.Length == 0 ? null : proxies [0].TargetType;
+	}
+
+	[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+	internal Type? GetTargetTypeAssignableTo (
+			string jniName,
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			Type targetType)
+	{
+		foreach (var proxy in GetProxiesForJniName (jniName)) {
+			if (targetType.IsAssignableFrom (proxy.TargetType)) {
+				return proxy.TargetType;
+			}
+		}
+		return null;
+	}
+
 	/// <summary>
 	/// Resolves and caches all proxies for a JNI name. For non-alias entries, returns a
 	/// single-element array. For alias groups, resolves each alias key and returns the

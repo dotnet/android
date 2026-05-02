@@ -44,6 +44,7 @@ namespace Java.Interop
 	{
 		protected JavaPeerProxy (
 			string jniName,
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 			Type targetType,
 			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 			Type? invokerType)
@@ -70,6 +71,7 @@ namespace Java.Interop
 		/// <summary>
 		/// Gets the target .NET type that this proxy represents.
 		/// </summary>
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 		public Type TargetType { get; }
 
 		/// <summary>
