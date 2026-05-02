@@ -53,7 +53,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   </ItemGroup>
 
   <!-- Make IlcCompile depend on the trimmer -->
-  <PropertyGroup>
+  <PropertyGroup Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' ">
     <IlcCompileDependsOn>
       _AndroidBeforeIlcCompile;
       SetupOSSpecificProps;
@@ -63,10 +63,22 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       _AndroidComputeIlcCompileInputs;
       $(IlcCompileDependsOn)
     </IlcCompileDependsOn>
+    <_AndroidBeforeIlcCompileDependsOn>_PrepareLinking</_AndroidBeforeIlcCompileDependsOn>
+  </PropertyGroup>
+  <!-- Trimmable typemap: skip ILLink, ILC handles trimming directly -->
+  <PropertyGroup Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
+    <IlcCompileDependsOn>
+      _AndroidBeforeIlcCompile;
+      SetupOSSpecificProps;
+      ComputeIlcCompileInputs;
+      _AndroidComputeIlcCompileInputs;
+      $(IlcCompileDependsOn)
+    </IlcCompileDependsOn>
+    <_AndroidBeforeIlcCompileDependsOn>_CreatePropertiesCache</_AndroidBeforeIlcCompileDependsOn>
   </PropertyGroup>
 
   <Target Name="_AndroidBeforeIlcCompile"
-      DependsOnTargets="_PrepareLinking"
+      DependsOnTargets="$(_AndroidBeforeIlcCompileDependsOn)"
       BeforeTargets="SetupProperties">
     <!-- Example settings from: https://github.com/jonathanpeppers/Android-NativeAOT/blob/ea69d122cdc7de67aa6a5db14b7e560763c63cdd/DotNet/libdotnet.targets -->
     <PropertyGroup>
@@ -125,7 +137,10 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
            Since we handle native linking ourselves, LinkerFlavor is not needed.
            Context: https://github.com/dotnet/runtime/issues/126978 -->
       <LinkerFlavor />
+    </PropertyGroup>
 
+    <!-- ILLink-specific settings: only when ILLink runs before ILC (non-trimmable path) -->
+    <PropertyGroup Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' ">
       <!-- Example settings from: https://github.com/xamarin/xamarin-macios/blob/c43d4ea40bc777969e3b158cf46446df292d8449/dotnet/targets/Xamarin.Shared.Sdk.targets#L541-L550 -->
       <RunILLink>true</RunILLink>
       <!--
@@ -142,7 +157,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   </Target>
 
   <Target Name="_AndroidComputeIlcCompileInputs">
-    <PropertyGroup>
+    <PropertyGroup Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' ">
       <!-- Turn trimmer warnings back to original value -->
       <SuppressTrimAnalysisWarnings>$(_OriginalSuppressTrimAnalysisWarnings)</SuppressTrimAnalysisWarnings>
     </PropertyGroup>
@@ -152,26 +167,32 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <LinkerArg Include="-Wl,--error-unresolved-symbols" />
       <LinkerArg Include="-Wl,--no-undefined" />
 
-      <!-- Prevent ComputeLinkedFilesToPublish from removing trimmed assemblies from
-           ResolvedFileToPublish. We run ILLink before ILC (to support custom trimmer
-           steps), so the assemblies are already trimmed and must remain in
-           ResolvedFileToPublish for the outer build's _ResolveAssemblies target.
-           Context: https://github.com/dotnet/runtime/pull/124801 -->
-      <_IlcManagedInputAssemblies Remove="@(_IlcManagedInputAssemblies)" />
-
       <!-- Required for [UnmanagedCallersOnly] to work inside this assembly -->
       <UnmanagedEntryPointsAssembly Include="Microsoft.Android.Runtime.NativeAOT" />
-      <!-- Give ILLink's output to ILC -->
+
+      <!-- The SDK's NativeCompile target uses _IlcManagedInputAssemblies to remove managed
+           assemblies from ResolvedFileToPublish after native compilation. Clear it so the
+           managed assemblies remain — the outer build needs them for _GenerateJavaStubs
+           and typemap generation. -->
+      <_IlcManagedInputAssemblies Remove="@(_IlcManagedInputAssemblies)" />
+    </ItemGroup>
+
+    <!-- ILLink path: The SDK's ComputeIlcCompileInputs sets IlcCompileInput from
+         @(IntermediateAssembly), but Android runs ILLink before ILC and the trimmed/rewritten
+         assemblies are in $(IntermediateLinkDir). Override IlcCompileInput to use ILLink output.
+         Replace PrivateSdkAssemblies with untrimmed originals (ILLink removes them).
+         Root everything for ILC so it doesn't trim further.
+         Workaround for: https://github.com/dotnet/runtime/issues/127577 -->
+    <ItemGroup Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' ">
       <IlcCompileInput Remove="@(IlcCompileInput)" />
       <IlcCompileInput Include="$(IntermediateLinkDir)$(TargetName)$(TargetExt)" />
-      <_AndroidILLinkAssemblies Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')" Condition="Exists('$(IntermediateLinkDir)%(Filename)%(Extension)')" />
-      <IlcReference Remove="@(IlcReference)" />
+      <IlcReference Remove="@(PrivateSdkAssemblies->'$(IntermediateLinkDir)%(Filename)%(Extension)')" />
       <IlcReference Include="@(PrivateSdkAssemblies)" />
-      <IlcReference Include="@(_AndroidILLinkAssemblies)" />
-      <!-- Root *everything* for ILC, as it's already trimmed -->
+      <_AndroidILLinkAssemblies Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')" Condition="Exists('$(IntermediateLinkDir)%(Filename)%(Extension)')" />
       <TrimmerRootAssembly Include="@(_AndroidILLinkAssemblies->'%(Filename)')" Exclude="System.Private.CoreLib" TrimMode="All" />
-      <!-- Passes linked assemblies to outer MSBuild tasks/targets -->
-      <ResolvedFileToPublish Include="@(IlcCompileInput);@(_AndroidILLinkAssemblies)" RuntimeIdentifier="$(RuntimeIdentifier)" />
+    </ItemGroup>
+
+    <ItemGroup>
 
       <!-- Satellite assemblies -->
       <IlcSatelliteAssembly Include="$(_OuterIntermediateSatelliteAssembliesWithTargetPath)" />
@@ -336,9 +357,13 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     Restore the old scheduling so NativeCompile runs after ComputeResolvedFilesToPublishList
     in the inner per-RID build.
   -->
+  <PropertyGroup>
+    <_AndroidRunNativeCompileDependsOn Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' ">_PreTrimmingFixLegacyDesignerUpdateItems;NativeCompile</_AndroidRunNativeCompileDependsOn>
+    <_AndroidRunNativeCompileDependsOn Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">NativeCompile</_AndroidRunNativeCompileDependsOn>
+  </PropertyGroup>
   <Target Name="_AndroidRunNativeCompile"
       AfterTargets="ComputeResolvedFilesToPublishList"
-      DependsOnTargets="_PreTrimmingFixLegacyDesignerUpdateItems;NativeCompile" />
+      DependsOnTargets="$(_AndroidRunNativeCompileDependsOn)" />
 
   <Target Name="_AndroidFixNativeLibraryFileName" AfterTargets="ComputeFilesToPublish">
     <ItemGroup>

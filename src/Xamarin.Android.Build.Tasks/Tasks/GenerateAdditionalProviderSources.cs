@@ -10,7 +10,7 @@ using Microsoft.Build.Framework;
 
 namespace Xamarin.Android.Tasks;
 
-public class GenerateAdditionalProviderSources : AndroidTask
+public sealed class GenerateAdditionalProviderSources : AndroidTask
 {
 	public override string TaskPrefix => "GPS";
 
@@ -25,7 +25,8 @@ public class GenerateAdditionalProviderSources : AndroidTask
 	[Required]
 	public string IntermediateOutputDirectory { get; set; } = "";
 
-	public string? OutputDirectory { get; set; }
+	[Required]
+	public string OutputDirectory { get; set; } = "";
 
 	[Required]
 	public string TargetName { get; set; } = "";
@@ -82,35 +83,7 @@ public class GenerateAdditionalProviderSources : AndroidTask
 
 		// For NativeAOT, generate JavaInteropRuntime.java and NativeAotEnvironmentVars.java
 		if (androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.NativeAOT) {
-			GenerateJavaSource (
-				"JavaInteropRuntime.java",
-				new Dictionary<string, string> (StringComparer.Ordinal) {
-					{ "@MAIN_ASSEMBLY_NAME@", TargetName },
-				}
-			);
-
-			// We care only about environment variables here
-			var envBuilder = new EnvironmentBuilder (Log);
-			envBuilder.Read (Environments);
-			GenerateNativeApplicationConfigSources.AddDefaultEnvironmentVariables (envBuilder, HttpClientHandlerType, EnableSGenConcurrent);
-
-			var envVarNames = new StringBuilder ();
-			var envVarValues = new StringBuilder ();
-			foreach (var kvp in envBuilder.EnvironmentVariables) {
-				// All the strings already have double-quotes properly quoted, EnvironmentBuilder took care of that
-				AppendEnvVarEntry (envVarNames, kvp.Key);
-				AppendEnvVarEntry (envVarValues, kvp.Value);
-			}
-
-			var envVars = new Dictionary<string, string> (StringComparer.Ordinal) {
-				{ "@ENVIRONMENT_VAR_NAMES@", envVarNames.ToString () },
-				{ "@ENVIRONMENT_VAR_VALUES@", envVarValues.ToString () },
-			};
-
-			GenerateJavaSource (
-				"NativeAotEnvironmentVars.java",
-				envVars
-			);
+			GenerateNativeAotBootstrapFiles (Log, OutputDirectory, TargetName, Environments, HttpClientHandlerType, EnableSGenConcurrent);
 		}
 
 		// Create additional application java sources.
@@ -138,6 +111,64 @@ public class GenerateAdditionalProviderSources : AndroidTask
 			template => template.Replace ("// REGISTER_APPLICATION_AND_INSTRUMENTATION_CLASSES_HERE", regCallsWriter.ToString ())
 		);
 
+	}
+
+	static string GetResource (string resource)
+	{
+		using (var stream = typeof (GenerateAdditionalProviderSources).Assembly.GetManifestResourceStream (resource))
+		using (var reader = new StreamReader (stream))
+			return reader.ReadToEnd ();
+	}
+
+	void SaveResource (string resource, string filename, string destDir, Func<string, string> applyTemplate)
+	{
+		string template = GetResource (resource);
+		template = applyTemplate (template);
+		Files.CopyIfStringChanged (template, Path.Combine (destDir, filename));
+	}
+
+	/// <summary>
+	/// Generates JavaInteropRuntime.java and NativeAotEnvironmentVars.java for NativeAOT apps.
+	/// Shared between the legacy (ILLink) and trimmable build paths.
+	/// </summary>
+	internal static void GenerateNativeAotBootstrapFiles (
+		Microsoft.Build.Utilities.TaskLoggingHelper log,
+		string outputDirectory,
+		string targetName,
+		ITaskItem []? environments,
+		string? httpClientHandlerType,
+		bool enableSGenConcurrent)
+	{
+		GenerateJavaSource (
+			"JavaInteropRuntime.java",
+			new Dictionary<string, string> (StringComparer.Ordinal) {
+				{ "@MAIN_ASSEMBLY_NAME@", targetName },
+			}
+		);
+
+		// We care only about environment variables here
+		var envBuilder = new EnvironmentBuilder (log);
+		envBuilder.Read (environments);
+		GenerateNativeApplicationConfigSources.AddDefaultEnvironmentVariables (envBuilder, httpClientHandlerType, enableSGenConcurrent);
+
+		var envVarNames = new StringBuilder ();
+		var envVarValues = new StringBuilder ();
+		foreach (var kvp in envBuilder.EnvironmentVariables) {
+			// All the strings already have double-quotes properly quoted, EnvironmentBuilder took care of that
+			AppendEnvVarEntry (envVarNames, kvp.Key);
+			AppendEnvVarEntry (envVarValues, kvp.Value);
+		}
+
+		var envVars = new Dictionary<string, string> (StringComparer.Ordinal) {
+			{ "@ENVIRONMENT_VAR_NAMES@", envVarNames.ToString () },
+			{ "@ENVIRONMENT_VAR_VALUES@", envVarValues.ToString () },
+		};
+
+		GenerateJavaSource (
+			"NativeAotEnvironmentVars.java",
+			envVars
+		);
+
 		void AppendEnvVarEntry (StringBuilder sb, string value)
 		{
 			sb.Append ("\t\t\"");
@@ -153,23 +184,11 @@ public class GenerateAdditionalProviderSources : AndroidTask
 				template.Replace (kvp.Key, kvp.Value);
 			}
 
-			var path = Path.Combine (OutputDirectory, "src", "net", "dot", "jni", "nativeaot", fileName);
-			Log.LogDebugMessage ($"Writing: {path}");
+			var outputDir = Path.Combine (outputDirectory, "src", "net", "dot", "jni", "nativeaot");
+			Directory.CreateDirectory (outputDir);
+			var path = Path.Combine (outputDir, fileName);
+			log.LogDebugMessage ($"Writing: {path}");
 			Files.CopyIfStringChanged (template.ToString (), path);
 		}
-	}
-
-	string GetResource (string resource)
-	{
-		using (var stream = GetType ().Assembly.GetManifestResourceStream (resource))
-		using (var reader = new StreamReader (stream))
-			return reader.ReadToEnd ();
-	}
-
-	void SaveResource (string resource, string filename, string destDir, Func<string, string> applyTemplate)
-	{
-		string template = GetResource (resource);
-		template = applyTemplate (template);
-		Files.CopyIfStringChanged (template, Path.Combine (destDir, filename));
 	}
 }
