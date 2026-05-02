@@ -16,6 +16,7 @@
     <NoStdLib>true</NoStdLib>
     <Nullable>enable</Nullable>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+    <IsAotCompatible>true</IsAotCompatible>
     <SignAssembly>true</SignAssembly>
 
     <!-- Ignore "unused member" warnings from code that originates from Mono.CodeGeneration -->

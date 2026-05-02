@@ -14,6 +14,7 @@
     <OutputPath>$(_MonoAndroidNETDefaultOutDir)</OutputPath>
     <RootNamespace>Microsoft.Android.Runtime</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
 
   <ItemGroup>
