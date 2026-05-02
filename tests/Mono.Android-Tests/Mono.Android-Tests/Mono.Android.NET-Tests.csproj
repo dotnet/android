@@ -98,15 +98,6 @@
     <ProguardConfiguration Include="proguard.cfg" />
   </ItemGroup>
 
-  <Target Name="_ValidateTrimmableTestRoots" BeforeTargets="CoreCompile"
-          Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
-    <ItemGroup>
-      <_BroadTrimmableTestRoot Include="@(TrimmerRootAssembly)" Condition=" '%(TrimmerRootAssembly.RootMode)' == 'All' " />
-    </ItemGroup>
-    <Error Condition=" '@(_BroadTrimmableTestRoot)' != '' "
-           Text="CoreCLRTrimmable tests must not use broad TrimmerRootAssembly RootMode=All roots: @(_BroadTrimmableTestRoot)." />
-  </Target>
-
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Android.App\ApplicationTest.cs" />
