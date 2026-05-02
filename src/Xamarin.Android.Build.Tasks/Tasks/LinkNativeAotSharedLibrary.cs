@@ -115,7 +115,7 @@ public class LinkNativeAotSharedLibrary : AndroidTask
 			RuntimePackLibraryDirectories
 		) {
 			StripDebugSymbols = !DebugBuild,
-			SaveDebugSymbols = true,
+			SaveDebugSymbols = !DebugBuild,
 			AllowUndefinedSymbols = false,
 
 			// NativeAOT-specific options
