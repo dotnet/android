@@ -30,13 +30,13 @@ public class LinkNativeAotSharedLibrary : AndroidTask
 	/// The ILC-compiled object file (e.g., TestApp.o)
 	/// </summary>
 	[Required]
-	public ITaskItem NativeObject { get; set; } = null!;
+	public ITaskItem NativeObject { get; set; } = null!; // NRT - guarded by [Required]
 
 	/// <summary>
 	/// The output shared library path (e.g., libTestApp.so)
 	/// </summary>
 	[Required]
-	public ITaskItem OutputSharedLibrary { get; set; } = null!;
+	public ITaskItem OutputSharedLibrary { get; set; } = null!; // NRT - guarded by [Required]
 
 	/// <summary>
 	/// Runtime and BCL static archives to link (e.g., libSystem.Native.a, libRuntime.WorkstationGC.a)
