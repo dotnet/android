@@ -61,12 +61,6 @@ namespace Xamarin.Android.RuntimeTests
                     // root cause as the JavaProxyObject exclusions above.
                     "Java.InteropTests.JavaExceptionTests.InnerExceptionIsNotAProxy",
 
-                    // JNI method remapping not supported in trimmable typemap
-                    "Java.InteropTests.JniPeerMembersTests.ReplaceInstanceMethodName",
-                    "Java.InteropTests.JniPeerMembersTests.ReplaceInstanceMethodWithStaticMethod",
-                    "Java.InteropTests.JniPeerMembersTests.ReplacementTypeUsedForMethodLookup",
-                    "Java.InteropTests.JniPeerMembersTests.ReplaceStaticMethodName",
-
                     // net.dot.jni.test.GenericHolder Java class not in APK
                     "Java.InteropTests.JniTypeManagerTests.CannotCreateGenericHolderFromJava",
 
