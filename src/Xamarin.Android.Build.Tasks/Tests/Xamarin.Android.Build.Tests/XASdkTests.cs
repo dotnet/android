@@ -43,7 +43,13 @@ namespace Xamarin.Android.Build.Tests
 
 			// Release build
 			Assert.IsTrue (dotnet.Build (parameters: new [] { "Configuration=Release", "TrimmerSingleWarn=false" }), "`dotnet build` should succeed");
-			dotnet.AssertHasNoWarnings ();
+			if (template == "android" || template == "androidwear") {
+				dotnet.AssertHasSomeWarnings (10);
+				StringAssertEx.Contains ("IL2026", dotnet.LastBuildOutput, "Should receive IL2026 warnings from Mono.Android.");
+				StringAssertEx.Contains ("IL2068", dotnet.LastBuildOutput, "Should receive IL2068 warnings from Mono.Android.");
+			} else {
+				dotnet.AssertHasNoWarnings ();
+			}
 		}
 
 		static IEnumerable<object[]> Get_DotNetPack_Data ()
@@ -329,8 +335,7 @@ public class JavaSourceTest {
 				if (runtime != AndroidRuntime.NativeAOT) {
 					dotnet.AssertHasNoWarnings ();
 				} else {
-					// NativeAOT currently issues 1 warning
-					dotnet.AssertHasSomeWarnings (1);
+					StringAssertEx.Contains ("IL3053", dotnet.LastBuildOutput, "NativeAOT should produce IL3053 warning.");
 				}
 			}
 

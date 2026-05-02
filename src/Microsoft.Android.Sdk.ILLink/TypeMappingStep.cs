@@ -87,7 +87,7 @@ public class TypeMappingStep : BaseStep
 				var hash = jniNameHashes [i];
 				Context.LogMessage ($"\t0x{hash.ToString ("x", System.Globalization.CultureInfo.InvariantCulture), -16} // {i,4}: {java}");
 			}
-			Context.LogMessage ($"Generated method {type.FullName}.GetTypeByJniNameHashIndex contains {types.Length} mappings:");
+			Context.LogMessage ($"Generated methods {type.FullName}.GetTypeByJniNameHashIndex and {type.FullName}.GetTypeForNativeRegistrationByJniNameHashIndex contain {types.Length} mappings:");
 			var maxAqtnLength = types.Max (t => TypeDefinitionRocks.GetAssemblyQualifiedName (t, Context).Length)+2;
 			for (int i = 0; i < types.Length; ++i ) {
 				var aqtn = TypeDefinitionRocks.GetAssemblyQualifiedName (types [i], Context);
@@ -109,7 +109,8 @@ public class TypeMappingStep : BaseStep
 			}
 
 			GenerateHashes (jniNameHashes, methodName: "get_JniNameHashes");
-			GenerateGetTypeByJniNameHashIndex (types);
+			GenerateGetTypeByJniNameHashIndex (types, "GetTypeByJniNameHashIndex");
+			GenerateGetTypeByJniNameHashIndex (types, "GetTypeForNativeRegistrationByJniNameHashIndex");
 			GenerateStringSwitchMethod (type, "GetJniNameByJniNameHashIndex", jniNames);
 		}
 
@@ -161,11 +162,11 @@ public class TypeMappingStep : BaseStep
 			GenerateStringSwitchMethod (type, "GetTypeNameByTypeNameHashIndex", typeNames);
 		}
 
-		void GenerateGetTypeByJniNameHashIndex (IEnumerable<TypeDefinition> types)
+		void GenerateGetTypeByJniNameHashIndex (IEnumerable<TypeDefinition> types, string methodName)
 		{
-			var method = type.Methods.FirstOrDefault (m => m.Name == "GetTypeByJniNameHashIndex");
+			var method = type.Methods.FirstOrDefault (m => m.Name == methodName);
 			if (method is null) {
-				throw new InvalidOperationException ($"Unable to find {TypeName}.GetTypeByJniNameHashIndex() method");
+				throw new InvalidOperationException ($"Unable to find {TypeName}.{methodName}() method");
 			}
 
 			var getTypeFromHandle = module.ImportReference (typeof (Type).GetMethod ("GetTypeFromHandle"));

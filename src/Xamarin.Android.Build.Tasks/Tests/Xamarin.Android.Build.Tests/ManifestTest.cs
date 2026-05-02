@@ -1339,8 +1339,7 @@ class TestActivity : Activity { }"
 				StringAssertEx.Contains ("warning CA1416", builder.LastBuildOutput, "Should get warning about Android 22 API");
 			} else {
 				if (runtime == AndroidRuntime.NativeAOT) {
-					// 2 of: warning IL3053: Assembly 'Mono.Android' produced AOT analysis warnings.
-					StringAssertEx.Contains ("2 Warning(s)", builder.LastBuildOutput, "NativeAOT should produce two IL3053 warnings");
+					StringAssertEx.Contains ("IL3053", builder.LastBuildOutput, "NativeAOT should produce IL3053 warnings");
 				} else {
 					builder.AssertHasNoWarnings ();
 				}

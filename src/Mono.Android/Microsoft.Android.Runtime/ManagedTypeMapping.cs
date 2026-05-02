@@ -21,16 +21,39 @@ internal static class ManagedTypeMapping
 
 	internal static bool TryGetTypeForNativeRegistration (string jniName, [NotNullWhen (true)] [DynamicallyAccessedMembers (MethodsConstructors)] out Type? type)
 	{
-		return TryGetTypeCore (jniName, out type);
+		type = null;
+		if (!TryGetJniNameHashIndex (jniName, out var jniNameHash, out var jniNameHashIndex)) {
+			return false;
+		}
+
+		type = GetTypeForNativeRegistrationByJniNameHashIndex (jniNameHashIndex);
+		if (type is null) {
+			throw new InvalidOperationException ($"Type for {jniName} (hash: {jniNameHash}, index: {jniNameHashIndex}) not found.");
+		}
+
+		return true;
 	}
 
-	static bool TryGetTypeCore (string jniName, [NotNullWhen (true)] [DynamicallyAccessedMembers (MethodsConstructors)] out Type? type)
+	static bool TryGetTypeCore (string jniName, [NotNullWhen (true)] [DynamicallyAccessedMembers (Constructors)] out Type? type)
 	{
 		type = null;
+		if (!TryGetJniNameHashIndex (jniName, out var jniNameHash, out var jniNameHashIndex)) {
+			return false;
+		}
 
+		type = GetTypeByJniNameHashIndex (jniNameHashIndex);
+		if (type is null) {
+			throw new InvalidOperationException ($"Type for {jniName} (hash: {jniNameHash}, index: {jniNameHashIndex}) not found.");
+		}
+
+		return true;
+	}
+
+	static bool TryGetJniNameHashIndex (string jniName, out ulong jniNameHash, out int jniNameHashIndex)
+	{
 		// the hashes array is sorted and all the hashes are unique
-		ulong jniNameHash = Hash (jniName);
-		int jniNameHashIndex = MemoryExtensions.BinarySearch (JniNameHashes, jniNameHash);
+		jniNameHash = Hash (jniName);
+		jniNameHashIndex = MemoryExtensions.BinarySearch (JniNameHashes, jniNameHash);
 		if (jniNameHashIndex < 0) {
 			return false;
 		}
@@ -38,11 +61,6 @@ internal static class ManagedTypeMapping
 		// we need to make sure if this is the right match or if it is a hash collision
 		if (jniName != GetJniNameByJniNameHashIndex (jniNameHashIndex)) {
 			return false;
-		}
-
-		type = GetTypeByJniNameHashIndex (jniNameHashIndex);
-		if (type is null) {
-			throw new InvalidOperationException ($"Type for {jniName} (hash: {jniNameHash}, index: {jniNameHashIndex}) not found.");
 		}
 
 		return true;
@@ -99,19 +117,21 @@ internal static class ManagedTypeMapping
 	//
 	// For example: "System.Int32, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e"
 	//     becomes: "System.Int32, System.Private.CoreLib"
-	private static ReadOnlySpan<char> GetSimplifiedAssemblyQualifiedTypeName(string assemblyQualifiedName)
+	private static ReadOnlySpan<char> GetSimplifiedAssemblyQualifiedTypeName (string assemblyQualifiedName)
 	{
-		var commaIndex = assemblyQualifiedName.IndexOf(',');
-		var secondCommaIndex = assemblyQualifiedName.IndexOf(',', startIndex: commaIndex + 1);
+		var commaIndex = assemblyQualifiedName.IndexOf (',');
+		var secondCommaIndex = assemblyQualifiedName.IndexOf (',', startIndex: commaIndex + 1);
 		return secondCommaIndex < 0
 			? assemblyQualifiedName
-			: assemblyQualifiedName.AsSpan(0, secondCommaIndex);
+			: assemblyQualifiedName.AsSpan (0, secondCommaIndex);
 	}
 
 	// Replaced by src/Microsoft.Android.Sdk.ILLink/TypeMappingStep.cs
 	private static ReadOnlySpan<ulong> TypeNameHashes => throw new NotImplementedException ();
-	[return: DynamicallyAccessedMembers (MethodsConstructors)]
+	[return: DynamicallyAccessedMembers (Constructors)]
 	private static Type? GetTypeByJniNameHashIndex (int jniNameHashIndex) => throw new NotImplementedException ();
+	[return: DynamicallyAccessedMembers (MethodsConstructors)]
+	private static Type? GetTypeForNativeRegistrationByJniNameHashIndex (int jniNameHashIndex) => throw new NotImplementedException ();
 	private static string? GetJniNameByJniNameHashIndex (int jniNameHashIndex) => throw new NotImplementedException ();
 
 	private static ReadOnlySpan<ulong> JniNameHashes => throw new NotImplementedException ();

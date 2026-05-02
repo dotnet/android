@@ -316,6 +316,8 @@ namespace Java.Interop {
 
 		[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "TypeManager.CreateProxy() does not statically know the value of the 'type' local variable.")]
 		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "TypeManager.CreateProxy() does not statically know the value of the 'type' local variable.")]
+		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Convention-based invoker lookup is used by the non-trimmable TypeManager path.")]
+		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "Convention-based invoker lookup is used by the non-trimmable TypeManager path.")]
 		internal static IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer, Type? targetType)
 		{
 			Type? type = null;

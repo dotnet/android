@@ -478,35 +478,20 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 				if (runtime == AndroidRuntime.NativeAOT) {
-					int numberOfExpectedWarnings;
-					bool validateWarnings;
 					if (xamarinForms && !multidex && packageFormat == "apk") {
-						// NativeAOT goes nuts here (Nov 2025) with 120 different ILC warnings, too many to verify them here in a way that makes sense
-						numberOfExpectedWarnings = 120;
-						validateWarnings = false;
+						// NativeAOT produces many ILC warnings here, too many to verify in a way that makes sense.
+						AssertNativeAotWarningsContainOnlyExpectedCodes (b, "IL2026", "IL2055", "IL2057", "IL2067", "IL2070", "IL2072", "IL2075", "IL2111", "IL2122", "IL3050");
 					} else {
-						// NativeAOT currently (Nov 2025) produces 6 `ILC : AOT analysis warning IL3050` warnings for various
-						// bits of code. Even though this test expects no warnings and the above likely make the app not work
+						// NativeAOT currently produces ILC warnings for various bits of code. Even though this test
+						// expects no warnings and the above likely make the app not work
 						// correctly at run time, it is still worth running this test under NativeAOT to test for the absence
 						// of other warnings.
-						numberOfExpectedWarnings = 6;
-						validateWarnings = true;
+						AssertNativeAotWarningsContainOnlyExpectedCodes (b, "IL2026", "IL2111", "IL3050");
 					}
-
-					Assert.IsTrue (
-						StringAssertEx.ContainsText (
-							b.LastBuildOutput,
-							$" {numberOfExpectedWarnings} Warning(s)"
-						),
-						$"{b.BuildLogFile} should have exactly {numberOfExpectedWarnings} MSBuild warnings for NativeAOT."
-					);
-
-					if (validateWarnings) {
-						const string expectedWarningIL3050 = "ILC : AOT analysis warning IL3050:";
-						var warnings = b.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build succeeded.", StringComparison.Ordinal)).Where (x => x.Contains (expectedWarningIL3050, StringComparison.Ordinal));
-						Assert.IsTrue (warnings.Count () == numberOfExpectedWarnings, $"Expected {numberOfExpectedWarnings} 'IL3050' warnings, found {warnings.Count ()}");
-					}
-
+				} else if (!xamarinForms && isRelease) {
+					b.AssertHasSomeWarnings (10);
+					StringAssertEx.Contains ("IL2026", b.LastBuildOutput, "Should receive IL2026 warnings from Mono.Android.");
+					StringAssertEx.Contains ("IL2068", b.LastBuildOutput, "Should receive IL2068 warnings from Mono.Android.");
 				} else {
 					b.AssertHasNoWarnings ();
 				}
@@ -529,15 +514,15 @@ namespace Xamarin.Android.Build.Tests
 				} else {
 					AddTestData (runtime, "", new string [0], true);
 				}
-				AddTestData (runtime, "SuppressTrimAnalysisWarnings=false", new string [] { "IL2055" }, true, 2);
+				AddTestData (runtime, "SuppressTrimAnalysisWarnings=false", new string [] { "IL2026", "IL2055", "IL2068" }, true, 7);
 				AddTestData (runtime, "TrimMode=full", new string [] { "IL2055" }, false, 1);
-				AddTestData (runtime, "TrimMode=full", new string [] { "IL2055" }, true, 2);
+				AddTestData (runtime, "TrimMode=full", new string [] { "IL2026", "IL2055", "IL2068" }, true, 7);
 				AddTestData (runtime, "IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, false);
 
 				if (runtime == AndroidRuntime.NativeAOT) {
 					AddTestData (runtime, "IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, true, 2);
 				} else {
-					AddTestData (runtime, "IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, true, 3);
+					AddTestData (runtime, "IsAotCompatible=true", new string [] { "IL2026", "IL2055", "IL2068", "IL3050" }, true, 8);
 				}
 			}
 
@@ -2093,10 +2078,28 @@ namespace App1
 				using (var b = CreateApkBuilder ()) {
 					b.Target = "Build";
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-					b.AssertHasNoWarnings ();
+					if (runtime == AndroidRuntime.NativeAOT) {
+						AssertNativeAotWarningsContainOnlyExpectedCodes (b, "IL2026", "IL2104");
+					} else {
+						b.AssertHasNoWarnings ();
+					}
 				}
 			} finally {
 				Environment.SetEnvironmentVariable ("JAVA_TOOL_OPTIONS", oldEnvVar);
+			}
+		}
+
+		static void AssertNativeAotWarningsContainOnlyExpectedCodes (ProjectBuilder builder, params string [] expectedWarningCodes)
+		{
+			var warnings = builder.LastBuildOutput
+				.SkipWhile (line => !line.StartsWith ("Build succeeded.", StringComparison.Ordinal))
+				.Where (line => line.Contains ("warning IL", StringComparison.Ordinal))
+				.ToArray ();
+			Assert.IsNotEmpty (warnings, $"{builder.BuildLogFile} should have NativeAOT warnings.");
+			foreach (var warning in warnings) {
+				Assert.IsTrue (
+					expectedWarningCodes.Any (code => warning.Contains (code, StringComparison.Ordinal)),
+					$"{builder.BuildLogFile} contains an unexpected NativeAOT warning: {warning}");
 			}
 		}
 

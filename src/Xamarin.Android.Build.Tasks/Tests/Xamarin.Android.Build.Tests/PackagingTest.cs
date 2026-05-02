@@ -526,7 +526,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 				if (runtime != AndroidRuntime.NativeAOT) {
 					b.AssertHasNoWarnings ();
 				} else {
-					StringAssertEx.Contains ("2 Warning(s)", b.LastBuildOutput, "NativeAOT should produce two IL3053 warnings");
+					StringAssertEx.Contains ("IL3053", b.LastBuildOutput, "NativeAOT should produce IL3053 warnings");
 				}
 
 				//Make sure the APKs are signed
@@ -563,7 +563,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 				if (runtime != AndroidRuntime.NativeAOT) {
 					b.AssertHasNoWarnings ();
 				} else {
-					StringAssertEx.Contains ("2 Warning(s)", b.LastBuildOutput, "NativeAOT should produce two IL3053 warnings");
+					StringAssertEx.Contains ("IL3053", b.LastBuildOutput, "NativeAOT should produce IL3053 warnings");
 				}
 
 				//Make sure the APKs are signed

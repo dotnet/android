@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using Android.Runtime;
 
 namespace Java.Interop {
@@ -108,17 +107,24 @@ namespace Java.Interop {
 		// typeof(Foo) -> FooInvoker
 		// typeof(Foo<>) -> FooInvoker`1
 		[return: DynamicallyAccessedMembers (Constructors)]
+		[RequiresDynamicCode ("Generic invoker type construction may require runtime generic code generation.")]
+		[RequiresUnreferencedCode ("Invoker type lookup uses convention-based type names and generic type construction.")]
 		internal static Type? GetInvokerType (Type type)
 		{
-			var signature = type.GetCustomAttribute<JniTypeSignatureAttribute> ();
-			if (signature?.InvokerType == null)
-				return null;
+			const string suffix = "Invoker";
 
 			Type[] arguments = type.GetGenericArguments ();
 			if (arguments.Length == 0)
-				return signature.InvokerType;
-
-			return null;
+				return type.Assembly.GetType (type + suffix);
+			Type definition = type.GetGenericTypeDefinition ();
+			int bt = definition.FullName!.IndexOf ("`", StringComparison.Ordinal);
+			if (bt == -1)
+				throw new NotSupportedException ("Generic type doesn't follow generic type naming convention! " + type.FullName);
+			Type? suffixDefinition = definition.Assembly.GetType (
+					definition.FullName.Substring (0, bt) + suffix + definition.FullName.Substring (bt));
+			if (suffixDefinition == null)
+				return null;
+			return suffixDefinition.MakeGenericType (arguments);
 		}
 	}
 }

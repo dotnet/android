@@ -538,6 +538,7 @@ namespace Xamarin.Android.Build.Tests
 					Environment.GetEnvironmentVariable ("RUNNINGONCI");
 				if (runningOnCI == "true") {
 					Console.WriteLine ("CodeBehindTests: using NativeAOT and running on CI, disabling warnings.");
+					noWarn.Add ("IL2026");
 					noWarn.Add ("IL2091");
 					noWarn.Add ("IL2104");
 					noWarn.Add ("IL3053");

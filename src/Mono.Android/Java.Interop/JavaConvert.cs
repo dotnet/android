@@ -56,6 +56,8 @@ namespace Java.Interop {
 			} },
 		};
 
+		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "The dynamic generic converter is only used by the non-trimmable fallback path; trimmable typemap uses generated container factories.")]
+		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "The dynamic generic converter is only used by the non-trimmable fallback path; trimmable typemap uses generated container factories.")]
 		static Func<IntPtr, JniHandleOwnership, object?>? GetJniHandleConverter (Type? target)
 		{
 			if (target == null)
@@ -70,9 +72,7 @@ namespace Java.Interop {
 				var factoryConverter = TryGetFactoryBasedConverter (target);
 				if (factoryConverter != null)
 					return factoryConverter;
-			}
-
-			if (RuntimeFeature.LegacyNonTrimmableInterop) {
+			} else {
 				var dynamicConverter = TryGetDynamicGenericConverter (target);
 				if (dynamicConverter != null)
 					return dynamicConverter;
@@ -247,6 +247,7 @@ namespace Java.Interop {
 			return Convert.ChangeType (v, targetType!, CultureInfo.InvariantCulture);
 		}
 
+		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Runtime target Type activation is only used by the non-trimmable fallback path; trimmable typemap avoids this overload.")]
 		internal static object? FromJniHandleForArrayElement (IntPtr handle, JniHandleOwnership transfer, Type? targetType)
 		{
 			if (targetType == typeof (bool))
@@ -275,8 +276,11 @@ namespace Java.Interop {
 				return FromJniHandle<double> (handle, transfer);
 			if (targetType == typeof (string))
 				return FromJniHandle<string> (handle, transfer);
-			if (targetType != null && typeof (IJavaObject).IsAssignableFrom (targetType) && RuntimeFeature.LegacyNonTrimmableInterop)
+			if (targetType != null && typeof (IJavaObject).IsAssignableFrom (targetType)) {
+				if (RuntimeFeature.TrimmableTypeMap)
+					return FromJniHandle (handle, transfer);
 				return FromJniHandleForJavaObjectArrayElement (handle, transfer, targetType);
+			}
 
 			return FromJniHandle (handle, transfer);
 		}
