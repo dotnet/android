@@ -282,7 +282,7 @@ namespace Android.Runtime {
 				if (!((e is Java.Lang.NoClassDefFoundError) || (e is Java.Lang.ClassNotFoundException)))
 					throw;
 				RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"JNIEnv.FindClass(Type) caught unexpected exception: {e}");
-				var jni = Java.Interop.TypeManager.GetJniTypeName (type);
+				var jni = TypeManagerInteropHelpers.GetJniTypeName (type);
 				if (jni != null) {
 					e.Dispose ();
 					return FindClass (JavaNativeTypeManager.ToJniName (jni, rank));

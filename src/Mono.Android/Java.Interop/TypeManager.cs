@@ -39,10 +39,8 @@ namespace Java.Interop {
 		}
 	}
 
-	public static partial class TypeManager {
-		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
-		const DynamicallyAccessedMemberTypes MethodsConstructors = DynamicallyAccessedMemberTypes.AllMethods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes | Constructors;
-
+	static class TypeManagerInteropHelpers
+	{
 		internal static string GetClassName (IntPtr class_ptr)
 		{
 			IntPtr ptr = RuntimeNativeMethods.monodroid_TypeManager_get_java_class_name (class_ptr);
@@ -59,6 +57,23 @@ namespace Java.Interop {
 					return jni;
 			}
 			return null;
+		}
+	}
+
+	[RequiresDynamicCode ("Legacy TypeManager uses runtime type lookup, uninitialized object creation, and convention-based invoker type construction.")]
+	[RequiresUnreferencedCode ("Legacy TypeManager uses runtime type lookup and native typemap entries that cannot be statically analyzed.")]
+	public static partial class TypeManager {
+		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+		const DynamicallyAccessedMemberTypes MethodsConstructors = DynamicallyAccessedMemberTypes.AllMethods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes | Constructors;
+
+		internal static string GetClassName (IntPtr class_ptr)
+		{
+			return TypeManagerInteropHelpers.GetClassName (class_ptr);
+		}
+
+		internal static string? GetJniTypeName (Type type)
+		{
+			return TypeManagerInteropHelpers.GetJniTypeName (type);
 		}
 
 		class TypeNameComparer : IComparer<string> {
@@ -119,7 +134,6 @@ namespace Java.Interop {
 		}
 #endif	// !JAVA_INTEROP
 
-		[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type.GetType() can never statically know the string value from parameter 'signature'.")]
 		static Type[] GetParameterTypes (string? signature)
 		{
 			if (String.IsNullOrEmpty (signature))
@@ -132,7 +146,6 @@ namespace Java.Interop {
 		}
 
 		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
-		[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type.GetType() can never statically know the string value from parameter 'typename_ptr'.")]
 		static void n_Activate (IntPtr jnienv, IntPtr jclass, IntPtr typename_ptr, IntPtr signature_ptr, IntPtr jobject, IntPtr parameters_ptr)
 		{
 			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
@@ -180,7 +193,6 @@ namespace Java.Interop {
 			}
 		}
 
-		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "RuntimeHelpers.GetUninitializedObject() does not statically know the return value from ConstructorInfo.DeclaringType.")]
 		internal static void Activate (IntPtr jobject, ConstructorInfo cinfo, object? []? parms)
 		{
 			try {
@@ -233,7 +245,6 @@ namespace Java.Interop {
 			return monodroid_typemap_java_to_managed (java_type_name);
 		}
 
-		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Value of java_type_name isn't statically known.")]
 		static Type? clr_typemap_java_to_managed (string java_type_name)
 		{
 			bool result = RuntimeNativeMethods.clr_typemap_java_to_managed (java_type_name, out IntPtr managedAssemblyNamePointer, out uint managedTypeTokenId);
@@ -274,8 +285,6 @@ namespace Java.Interop {
 			}
 		}
 
-		[UnconditionalSuppressMessage ("Trimming", "IL2068", Justification = "Legacy typemap entries are produced and preserved outside static analysis.")]
-		[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "Legacy typemap entries are produced and preserved outside static analysis.")]
 		[return: DynamicallyAccessedMembers (MethodsConstructors)]
 		static Type? GetJavaToManagedTypeCore (string class_name)
 		{
@@ -312,10 +321,6 @@ namespace Java.Interop {
 			return CreateInstance (handle, transfer, null);
 		}
 
-		[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "TypeManager.CreateProxy() does not statically know the value of the 'type' local variable.")]
-		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "TypeManager.CreateProxy() does not statically know the value of the 'type' local variable.")]
-		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Convention-based invoker lookup is used by the non-trimmable TypeManager path.")]
-		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "Convention-based invoker lookup is used by the non-trimmable TypeManager path.")]
 		internal static IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer, Type? targetType)
 		{
 			Type? type = null;
@@ -514,6 +519,8 @@ namespace Java.Interop {
 		}
 
 		[Register ("mono/android/TypeManager", DoNotGenerateAcw = true)]
+		[RequiresDynamicCode ("Legacy TypeManager activation uses runtime type lookup and uninitialized object creation.")]
+		[RequiresUnreferencedCode ("Legacy TypeManager activation uses runtime type lookup that cannot be statically analyzed.")]
 		internal class JavaTypeManager : Java.Lang.Object
 		{
 			[Register ("activate", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;[Ljava/lang/Object;)V", "")]

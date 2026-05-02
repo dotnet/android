@@ -313,6 +313,7 @@ namespace Android.Runtime {
 	}
 
 	[RequiresUnreferencedCode ("Legacy native registration callback declaring type names are parsed from generated registration strings.")]
+	[RequiresDynamicCode ("Legacy AndroidTypeManager uses TypeManager runtime type lookup and proxy activation.")]
 	class AndroidTypeManager : JniRuntime.JniTypeManager {
 		struct JniRemappingReplacementMethod
 		{
@@ -765,6 +766,8 @@ namespace Android.Runtime {
 		}
 	}
 
+	[RequiresDynamicCode ("Legacy AndroidValueManager uses TypeManager proxy activation.")]
+	[RequiresUnreferencedCode ("Legacy AndroidValueManager uses TypeManager proxy activation that cannot be statically analyzed.")]
 	class AndroidValueManager : JniRuntime.JniValueManager {
 
 		Dictionary<IntPtr, IdentityHashTargets>         instances       = new Dictionary<IntPtr, IdentityHashTargets> ();

@@ -58,6 +58,7 @@ namespace Android.Runtime
 		}
 
 		[UnmanagedCallersOnly]
+		[RequiresDynamicCode ("JNI native registration may register legacy TypeManager entries.")]
 		[RequiresUnreferencedCode ("JNI native registration receives a managed type name from native code that cannot be statically traced.")]
 		static unsafe void RegisterJniNatives (IntPtr typeName_ptr, int typeName_len, IntPtr jniClass, IntPtr methods_ptr, int methods_len)
 		{
@@ -66,11 +67,11 @@ namespace Android.Runtime
 			if (type == null) {
 				RuntimeNativeMethods.monodroid_log (LogLevel.Error,
 				               LogCategories.Default,
-				               $"Could not load type '{typeName}'. Skipping JNI registration of type '{Java.Interop.TypeManager.GetClassName (jniClass)}'.");
+				               $"Could not load type '{typeName}'. Skipping JNI registration of type '{TypeManagerInteropHelpers.GetClassName (jniClass)}'.");
 				return;
 			}
 
-			var className = Java.Interop.TypeManager.GetClassName (jniClass);
+			var className = TypeManagerInteropHelpers.GetClassName (jniClass);
 			Java.Interop.TypeManager.RegisterType (className, type);
 
 			JniType? jniType = null;
@@ -110,6 +111,7 @@ namespace Android.Runtime
 		}
 
 		[UnmanagedCallersOnly]
+		[RequiresDynamicCode ("Runtime initialization may create the legacy AndroidTypeManager.")]
 		[RequiresUnreferencedCode ("Legacy native registration callback declaring type names are parsed from generated registration strings.")]
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
 		{
