@@ -24,6 +24,7 @@ namespace Android.Runtime {
 
 		public static IntPtr Handle => JniEnvironment.EnvironmentPointer;
 
+		[RequiresDynamicCode ("Array.CreateInstance may require runtime code generation for the requested element type.")]
 		static Array ArrayCreateInstance (
 				Type elementType,
 				int length)
@@ -34,17 +35,8 @@ namespace Android.Runtime {
 					return factory.CreateArray (length, 1);
 			}
 
-			#pragma warning disable IL3050 // Array.CreateInstance is not AOT-safe, but this is the legacy fallback path
 			return Array.CreateInstance (elementType, length);
-			#pragma warning restore IL3050
 		}
-
-		static Type MakeArrayType (Type type) =>
-			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
-			// IL3050 disabled in source: if someone uses NativeAOT, they will get the warning.
-			#pragma warning disable IL3050
-			type.MakeArrayType ();
-			#pragma warning restore IL3050
 
 		internal static IntPtr IdentityHash (IntPtr v)
 		{
@@ -765,19 +757,22 @@ namespace Android.Runtime {
 				JniEnvironment.Arrays.GetDoubleArrayRegion (new JniObjectReference (array), start, length, p);
 		}
 
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+		public static void CopyArray (IntPtr src, Array dest)
+		{
+			CopyArray (src, dest, null);
+		}
+
 		public static void CopyArray (
 				IntPtr src,
 				Array dest,
 				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-				Type? elementType = null)
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+				Type? elementType)
 		{
 			if (dest == null)
 				throw new ArgumentNullException ("dest");
 
 			if (elementType != null && elementType.IsValueType)
-				AssertCompatibleArrayTypes (src, MakeArrayType (elementType));
+				AssertCompatibleArrayTypes (src, dest.GetType ());
 
 			if (elementType != null && elementType.IsArray) {
 				for (int i = 0; i < dest.Length; ++i) {
@@ -961,7 +956,7 @@ namespace Android.Runtime {
 				throw new ArgumentNullException ("elementType");
 
 			if (elementType.IsValueType)
-				AssertCompatibleArrayTypes (MakeArrayType (elementType), dest);
+				AssertCompatibleArrayTypes (source.GetType (), dest);
 
 			Action<Array, IntPtr> converter = GetConverter (CopyManagedToNativeArray, elementType, dest);
 
@@ -978,12 +973,25 @@ namespace Android.Runtime {
 
 		public static Array? GetArray (
 				IntPtr array_ptr,
-				JniHandleOwnership transfer,
-				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-				Type? element_type = null)
+				JniHandleOwnership transfer)
 		{
 			try {
-				return _GetArray (array_ptr, element_type);
+				return _GetArray (array_ptr);
+			}
+			finally {
+				DeleteRef (array_ptr, transfer);
+			}
+		}
+
+		[RequiresDynamicCode ("Creating arrays with runtime element types may require dynamic array type construction.")]
+		public static Array? GetArray (
+				IntPtr array_ptr,
+				JniHandleOwnership transfer,
+				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+				Type? element_type)
+		{
+			try {
+				return element_type == null ? _GetArray (array_ptr) : _GetArray (array_ptr, element_type);
 			}
 			finally {
 				DeleteRef (array_ptr, transfer);
@@ -1073,17 +1081,7 @@ namespace Android.Runtime {
 						return r;
 					}
 				} },
-				{ typeof (IJavaObject), (type, source, len) => {
-					if (type == null) {
-						var r = new Java.Lang.Object [len];
-						CopyArray (source, r);
-						return r;
-					}
-
-					var array = ArrayCreateInstance (type, len);
-					CopyArray (source, array);
-					return array;
-				} },
+				{ typeof (IJavaObject), CreateJavaLangObjectArray },
 				{ typeof (Array), (type, source, len) => {
 					var r = new Array [len];
 					CopyArray (source, r);
@@ -1092,16 +1090,27 @@ namespace Android.Runtime {
 			};
 		}
 
+		static Array? _GetArray (IntPtr array_ptr)
+		{
+			if (array_ptr == IntPtr.Zero)
+				return null;
+
+			int cnt = _GetArrayLength (array_ptr);
+			var converter = GetConverter (NativeArrayToManaged, null, array_ptr);
+			return converter (null, array_ptr, cnt);
+		}
+
+		[RequiresDynamicCode ("Creating arrays with runtime element types may require dynamic array type construction.")]
 		static Array? _GetArray (
 				IntPtr array_ptr,
 				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-				Type? element_type)
+				Type element_type)
 		{
 			if (array_ptr == IntPtr.Zero)
 				return null;
 
 			if (element_type != null && element_type.IsValueType)
-				AssertCompatibleArrayTypes (array_ptr, MakeArrayType (element_type));
+				AssertCompatibleValueArrayTypes (array_ptr, element_type);
 
 			int cnt = _GetArrayLength (array_ptr);
 
@@ -1111,9 +1120,61 @@ namespace Android.Runtime {
 				return array;
 			}
 
+			if (typeof (IJavaObject).IsAssignableFrom (element_type))
+				return CreateIJavaObjectArray (element_type, array_ptr, cnt);
+
 			var converter = GetConverter (NativeArrayToManaged, element_type, array_ptr);
 
 			return converter (element_type, array_ptr, cnt);
+		}
+
+		static void AssertCompatibleValueArrayTypes (IntPtr sourceArray, Type elementType)
+		{
+			if (elementType.IsEnum) {
+				AssertCompatibleValueArrayTypes (sourceArray, Enum.GetUnderlyingType (elementType));
+				return;
+			}
+
+			Type arrayType = Type.GetTypeCode (elementType) switch {
+				TypeCode.Boolean => typeof (bool []),
+				TypeCode.Byte    => typeof (byte []),
+				TypeCode.Char    => typeof (char []),
+				TypeCode.Int16   => typeof (short []),
+				TypeCode.UInt16  => typeof (ushort []),
+				TypeCode.Int32   => typeof (int []),
+				TypeCode.UInt32  => typeof (uint []),
+				TypeCode.Int64   => typeof (long []),
+				TypeCode.UInt64  => typeof (ulong []),
+				TypeCode.Single  => typeof (float []),
+				TypeCode.Double  => typeof (double []),
+				_                => throw new NotSupportedException ("Don't know how to convert type '" + elementType.FullName + "' to a managed array."),
+			};
+			AssertCompatibleArrayTypes (sourceArray, arrayType);
+		}
+
+		static Array CreateJavaLangObjectArray (
+				Type? type,
+				IntPtr source,
+				int len)
+		{
+			var r = new Java.Lang.Object [len];
+			CopyArray (source, r);
+			return r;
+		}
+
+		[RequiresDynamicCode ("Creating arrays with runtime element types may require dynamic array type construction.")]
+		static Array CreateIJavaObjectArray (
+				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+				Type type,
+				IntPtr source,
+				int len)
+		{
+			var array = ArrayCreateInstance (type, len);
+			for (int i = 0; i < len; i++) {
+				IntPtr elem = GetObjectArrayElement (source, i);
+				array.SetValue (Java.Lang.Object.GetObject (elem, JniHandleOwnership.TransferLocalRef, type), i);
+			}
+			return array;
 		}
 
 		static int _GetArrayLength (IntPtr array_ptr)
@@ -1150,6 +1211,19 @@ namespace Android.Runtime {
 			}
 
 			return ret;
+		}
+
+		public static T[]? GetArray<
+				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+				T
+		> (IntPtr array_ptr, JniHandleOwnership transfer)
+		{
+			try {
+				return GetArray<T> (array_ptr);
+			}
+			finally {
+				DeleteRef (array_ptr, transfer);
+			}
 		}
 
 		public static T[]? GetArray<
