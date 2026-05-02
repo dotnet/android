@@ -226,18 +226,14 @@ namespace Java.Interop {
 		}
 
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
-		[return: DynamicallyAccessedMembers (MethodsConstructors)]
 		static extern Type monodroid_typemap_java_to_managed (string java_type_name);
 
-		[return: DynamicallyAccessedMembers (MethodsConstructors)]
 		static Type monovm_typemap_java_to_managed (string java_type_name)
 		{
 			return monodroid_typemap_java_to_managed (java_type_name);
 		}
 
 		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Value of java_type_name isn't statically known.")]
-		[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "Legacy native typemap entries preserve Java peer constructors.")]
-		[return: DynamicallyAccessedMembers (MethodsConstructors)]
 		static Type? clr_typemap_java_to_managed (string java_type_name)
 		{
 			bool result = RuntimeNativeMethods.clr_typemap_java_to_managed (java_type_name, out IntPtr managedAssemblyNamePointer, out uint managedTypeTokenId);
@@ -278,6 +274,8 @@ namespace Java.Interop {
 			}
 		}
 
+		[UnconditionalSuppressMessage ("Trimming", "IL2068", Justification = "Legacy typemap entries are produced and preserved outside static analysis.")]
+		[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "Legacy typemap entries are produced and preserved outside static analysis.")]
 		[return: DynamicallyAccessedMembers (MethodsConstructors)]
 		static Type? GetJavaToManagedTypeCore (string class_name)
 		{
