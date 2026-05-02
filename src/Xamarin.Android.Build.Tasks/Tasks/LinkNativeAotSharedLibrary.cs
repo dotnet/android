@@ -158,14 +158,10 @@ public class LinkNativeAotSharedLibrary : AndroidTask
 		// 5. Compiler-rt and unwinder libraries
 		var linkItems = new List<ITaskItem> ();
 
-		var nativeObj = new TaskItem (NativeObject.ItemSpec);
-		nativeObj.SetMetadata (KnownMetadata.Abi, abi);
-		linkItems.Add (nativeObj);
+		linkItems.Add (CopyItemWithAbi (NativeObject, abi));
 
 		foreach (var lib in NativeLibraries) {
-			var item = new TaskItem (lib.ItemSpec);
-			item.SetMetadata (KnownMetadata.Abi, abi);
-			linkItems.Add (item);
+			linkItems.Add (CopyItemWithAbi (lib, abi));
 		}
 
 		if (SystemLibraries != null) {
@@ -176,17 +172,13 @@ public class LinkNativeAotSharedLibrary : AndroidTask
 
 		if (AdditionalObjectFiles != null) {
 			foreach (var obj in AdditionalObjectFiles) {
-				var item = new TaskItem (obj.ItemSpec);
-				item.SetMetadata (KnownMetadata.Abi, abi);
-				linkItems.Add (item);
+				linkItems.Add (CopyItemWithAbi (obj, abi));
 			}
 		}
 
 		if (CompilerRuntimeLibraries != null) {
 			foreach (var lib in CompilerRuntimeLibraries) {
-				var item = new TaskItem (lib.ItemSpec);
-				item.SetMetadata (KnownMetadata.Abi, abi);
-				linkItems.Add (item);
+				linkItems.Add (CopyItemWithAbi (lib, abi));
 			}
 		}
 
@@ -195,9 +187,7 @@ public class LinkNativeAotSharedLibrary : AndroidTask
 		if (CrtStartFiles != null && CrtStartFiles.Length > 0) {
 			startFiles = new List<ITaskItem> ();
 			foreach (var crt in CrtStartFiles) {
-				var item = new TaskItem (crt.ItemSpec);
-				item.SetMetadata (KnownMetadata.Abi, abi);
-				startFiles.Add (item);
+				startFiles.Add (CopyItemWithAbi (crt, abi));
 			}
 		}
 
@@ -205,15 +195,22 @@ public class LinkNativeAotSharedLibrary : AndroidTask
 		if (CrtEndFiles != null && CrtEndFiles.Length > 0) {
 			endFiles = new List<ITaskItem> ();
 			foreach (var crt in CrtEndFiles) {
-				var item = new TaskItem (crt.ItemSpec);
-				item.SetMetadata (KnownMetadata.Abi, abi);
-				endFiles.Add (item);
+				endFiles.Add (CopyItemWithAbi (crt, abi));
 			}
 		}
 
-		var output = new TaskItem (OutputSharedLibrary.ItemSpec);
-		output.SetMetadata (KnownMetadata.Abi, abi);
+		var output = CopyItemWithAbi (OutputSharedLibrary, abi);
 
 		return linker.Link (output, linkItems, startFiles, endFiles);
+	}
+
+	/// <summary>
+	/// Copy a task item preserving all metadata, then set or override the Abi metadata.
+	/// </summary>
+	static ITaskItem CopyItemWithAbi (ITaskItem source, string abi)
+	{
+		var item = new TaskItem (source);
+		item.SetMetadata (KnownMetadata.Abi, abi);
+		return item;
 	}
 }
