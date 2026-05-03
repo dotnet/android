@@ -31,9 +31,6 @@ namespace Xamarin.Android.RuntimeTests
                 // trimmable typemap. These cannot use [Category("TrimmableIgnore")] because
                 // we don't control that assembly — they must be excluded by name here.
                 ExcludedTestNames = new [] {
-                    // net.dot.jni.test.CallVirtualFromConstructorDerived Java class not in APK
-                    "Java.InteropTests.InvokeVirtualFromConstructorTests",
-
                     // JNI method remapping not supported in trimmable typemap
                     "Java.InteropTests.JniPeerMembersTests.ReplaceInstanceMethodName",
                     "Java.InteropTests.JniPeerMembersTests.ReplaceInstanceMethodWithStaticMethod",

@@ -213,6 +213,7 @@ public sealed class JavaPeerScanner : IDisposable
 			var isInterface = (typeDef.Attributes & TypeAttributes.Interface) != 0;
 			var isAbstract = (typeDef.Attributes & TypeAttributes.Abstract) != 0;
 			var isGenericDefinition = typeDef.GetGenericParameters ().Count > 0;
+			var hasJniAddNativeMethodRegistrationAttribute = HasJniAddNativeMethodRegistrationAttribute (typeDef, index);
 
 			var isUnconditional = attrInfo is not null;
 			var cannotRegisterInStaticConstructor = attrInfo is ApplicationAttributeInfo or InstrumentationAttributeInfo;
@@ -258,6 +259,7 @@ public sealed class JavaPeerScanner : IDisposable
 				IsInterface = isInterface,
 				IsAbstract = isAbstract,
 				DoNotGenerateAcw = doNotGenerateAcw,
+				HasJniAddNativeMethodRegistrationAttribute = hasJniAddNativeMethodRegistrationAttribute,
 				IsFromJniTypeSignature = registerInfo?.IsFromJniTypeSignature ?? false,
 				IsUnconditional = isUnconditional,
 				CannotRegisterInStaticConstructor = cannotRegisterInStaticConstructor,
@@ -336,6 +338,20 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 
 		return (methods, fields);
+	}
+
+	static bool HasJniAddNativeMethodRegistrationAttribute (TypeDefinition typeDef, AssemblyIndex index)
+	{
+		foreach (var methodHandle in typeDef.GetMethods ()) {
+			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
+			foreach (var attrHandle in methodDef.GetCustomAttributes ()) {
+				var attr = index.Reader.GetCustomAttribute (attrHandle);
+				if (AssemblyIndex.GetCustomAttributeName (attr, index.Reader) == "JniAddNativeMethodRegistrationAttribute") {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	/// <summary>

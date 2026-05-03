@@ -25,6 +25,8 @@
     <Compile Include="$(JavaInteropTestDirectory)**\*.cs" Exclude="$(JavaInteropTestDirectory)obj\**;$(JavaInteropTestDirectory)bin\**" />
     <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JavaVMFixture.cs" />
     <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JniReferenceSafeHandleTest.cs" />
+    <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\CallVirtualFromConstructorDerived.cs" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
+    <Compile Remove="Java.Interop-trimmable\CallVirtualFromConstructorDerived.cs" Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' " />
     <Compile Remove="$(JavaInteropTestDirectory)obj\Release\net7.0-android/designtime/Resource.designer.cs" />
   </ItemGroup>
 
