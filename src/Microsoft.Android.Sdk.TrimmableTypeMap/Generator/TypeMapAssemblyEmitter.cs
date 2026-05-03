@@ -976,16 +976,20 @@ sealed class TypeMapAssemblyEmitter
 					JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniParams [j]);
 			});
 
-		// Open generic types can't be activated — emit a no-op UCO.
+		// Open generic types can't be activated because Java construction cannot provide the type arguments.
 		if (proxy.IsGenericDefinition) {
-			var noopHandle = _pe.EmitBody (uco.WrapperName,
+			var openGenericHandle = _pe.EmitBody (uco.WrapperName,
 				MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 				encodeSig,
-				encoder => {
-					encoder.OpCode (ILOpCode.Ret);
-				});
-			AddUnmanagedCallersOnlyAttribute (noopHandle);
-			return noopHandle;
+				(encoder, cfb) => EmitUcoConstructorBodyWithMarshal (encoder, cfb, enc => {
+					enc.LoadString (_pe.Metadata.GetOrAddUserString ("Constructing instances of generic types from Java is not supported, as the type parameters cannot be determined."));
+					enc.OpCode (ILOpCode.Newobj);
+					enc.Token (_notSupportedExceptionCtorRef);
+					enc.OpCode (ILOpCode.Throw);
+				}),
+				EncodeUcoConstructorLocals_Standard);
+			AddUnmanagedCallersOnlyAttribute (openGenericHandle);
+			return openGenericHandle;
 		}
 
 		MethodDefinitionHandle handle;
