@@ -35,7 +35,8 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 ///             // Option A: Shared universe
 ///             TrimmableTypeMap.Initialize(
 ///                 TypeMapping.GetOrCreateExternalTypeMapping&lt;Java.Lang.Object&gt;(),
-///                 TypeMapping.GetOrCreateProxyTypeMapping&lt;Java.Lang.Object&gt;());
+///                 TypeMapping.GetOrCreateProxyTypeMapping&lt;Java.Lang.Object&gt;(),
+///                 arrayMapsByRank);
 ///
 ///             // Option B: Per-assembly universes (aggregated)
 ///             var typeMaps = new IReadOnlyDictionary&lt;string, Type&gt;[] {
@@ -46,7 +47,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 ///                 TypeMapping.GetOrCreateProxyTypeMapping&lt;_Mono_Android_TypeMap.__TypeMapAnchor&gt;(),
 ///                 TypeMapping.GetOrCreateProxyTypeMapping&lt;_MyApp_TypeMap.__TypeMapAnchor&gt;(),
 ///             };
-///             TrimmableTypeMap.Initialize(typeMaps, proxyMaps);
+///             TrimmableTypeMap.Initialize(typeMaps, proxyMaps, arrayMapsByRank);
 ///         }
 ///     }
 /// }
@@ -75,7 +76,7 @@ public sealed class RootTypeMapAssemblyGenerator
 	/// <param name="maxArrayRank">
 	/// Maximum array rank for which per-assembly typemaps emitted <c>__ArrayMapRank{N}</c>
 	/// sentinels. Must match the value passed to the per-assembly generators. 0 means
-	/// no array sentinels were emitted; the loader uses the 2-arg <c>Initialize</c>.
+	/// no array sentinels were emitted; the loader passes <c>null</c> for <c>arrayMapsByRank</c>.
 	/// </param>
 	public void Generate (IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse, Stream stream, string? assemblyName = null, string? moduleName = null, int maxArrayRank = 0)
 	{

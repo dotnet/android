@@ -7,7 +7,7 @@ namespace Microsoft.Android.Runtime;
 // dictionary at runtime via TypeMapping.GetOrCreateExternalTypeMapping<__ArrayMapRankN>().
 //
 // To support a higher MaxArrayRank, add additional types here and bump
-// TrimmableTypeMap.MaxSupportedArrayRank.
+// TrimmableTypeMapGenerator.MaxSupportedArrayRank.
 
 internal sealed class __ArrayMapRank1 { }
 internal sealed class __ArrayMapRank2 { }

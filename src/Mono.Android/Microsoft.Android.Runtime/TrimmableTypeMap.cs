@@ -39,7 +39,18 @@ public class TrimmableTypeMap
 	TrimmableTypeMap (ITypeMapWithAliasing typeMap, IReadOnlyDictionary<string, Type>?[]? arrayMapsByRank)
 	{
 		_typeMap = typeMap;
-		_arrayMapsByRank = arrayMapsByRank ?? Array.Empty<IReadOnlyDictionary<string, Type>?> ();
+		_arrayMapsByRank = arrayMapsByRank ?? [];
+	}
+
+	/// <summary>
+	/// Initializes the singleton with a single merged typemap universe and optional
+	/// per-rank array dictionaries (consulted by <c>JNIEnv.ArrayCreateInstance</c> under NativeAOT).
+	/// </summary>
+	public static void Initialize (
+		IReadOnlyDictionary<string, Type> typeMap,
+		IReadOnlyDictionary<Type, Type> proxyMap)
+	{
+		Initialize (typeMap, proxyMap, arrayMapsByRank: null);
 	}
 
 	/// <summary>
@@ -55,6 +66,17 @@ public class TrimmableTypeMap
 		ArgumentNullException.ThrowIfNull (typeMap);
 		ArgumentNullException.ThrowIfNull (proxyMap);
 		InitializeCore (new SingleUniverseTypeMap (typeMap, proxyMap), arrayMapsByRank);
+	}
+
+	/// <summary>
+	/// Initializes the singleton with multiple per-assembly typemap universes and optional
+	/// merged per-rank array dictionaries.
+	/// </summary>
+	public static void Initialize (
+		IReadOnlyDictionary<string, Type>[] typeMaps,
+		IReadOnlyDictionary<Type, Type>[] proxyMaps)
+	{
+		Initialize (typeMaps, proxyMaps, arrayMapsByRank: null);
 	}
 
 	/// <summary>
@@ -361,15 +383,31 @@ public class TrimmableTypeMap
 			rankIndex++;
 		}
 
-		if ((uint)rankIndex >= (uint)_arrayMapsByRank.Length || _arrayMapsByRank [rankIndex] is not { } dict) {
-			return false;
-		}
-
-		string? leafJniName = leaf.IsPrimitive
+		bool isPrimitiveLeaf = leaf.IsPrimitive;
+		string? leafJniName = isPrimitiveLeaf
 			? TryGetPrimitiveJniName (leaf, out var p) ? p : null
 			: TryGetJniNameForManagedType (leaf, out var jni) ? jni : null;
 
-		return leafJniName is not null && dict.TryGetValue (leafJniName, out arrayType);
+		if (leafJniName is not null &&
+				(uint)rankIndex < (uint)_arrayMapsByRank.Length &&
+				_arrayMapsByRank [rankIndex] is { } dict &&
+				dict.TryGetValue (leafJniName, out arrayType)) {
+			return true;
+		}
+
+		if (isPrimitiveLeaf) {
+			arrayType = MakePrimitiveArrayType (elementType);
+			return true;
+		}
+
+		return false;
+	}
+
+	static Type MakePrimitiveArrayType (Type elementType)
+	{
+#pragma warning disable IL3050 // Primitive array types are runtime intrinsic; no generated generic code is needed.
+		return elementType.MakeArrayType ();
+#pragma warning restore IL3050
 	}
 
 	/// <summary>JNI single-letter encoding for primitive element types.</summary>

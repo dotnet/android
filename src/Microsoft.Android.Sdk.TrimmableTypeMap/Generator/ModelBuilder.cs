@@ -423,9 +423,10 @@ static class ModelBuilder
 		=> $"{typeName}, {assemblyName}";
 
 	/// <summary>
-	/// Emits per-rank <c>[L&lt;jni&gt;;</c>-shaped TypeMap entries for one peer, anchored to
-	/// the per-assembly <c>__ArrayMapRank{N}</c> sentinels. Skips open generics, primitive
-	/// JNI keyword keys (handled by the legacy primitive-array path), and alias groups.
+	/// Emits per-rank array TypeMap entries for one peer, anchored to the per-assembly
+	/// <c>__ArrayMapRank{N}</c> sentinels. Keys are bare element JNI names (rank is encoded
+	/// by the sentinel anchor, not by JNI array prefixes). Skips open generics, primitive JNI
+	/// keyword keys (handled by the legacy primitive-array path), and alias groups.
 	/// </summary>
 	static void EmitArrayEntries (TypeMapAssemblyData model, string jniName, List<JavaPeerInfo> peersForName, int maxArrayRank)
 	{

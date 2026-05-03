@@ -41,12 +41,27 @@ namespace Android.Runtime {
 
 				throw new NotSupportedException (
 					$"No TrimmableTypeMap array entry for element type '{elementType}'. " +
-					$"Add an [assembly: TypeMap] entry for the closed array type or report an issue.");
+					$"Array lookups use the element type within the per-rank __ArrayMapRank{GetArrayRank (elementType)} typemap group; " +
+					$"ensure the mapping is emitted for that rank (for example by increasing _AndroidTrimmableTypeMapMaxArrayRank) or report an issue.");
 			}
 
 			#pragma warning disable IL3050 // legacy fallback path
 			return Array.CreateInstance (elementType, length);
 			#pragma warning restore IL3050
+		}
+
+		static int GetArrayRank (Type elementType)
+		{
+			int rank = 1;
+			while (elementType.IsSZArray) {
+				rank++;
+				var nestedElementType = elementType.GetElementType ();
+				if (nestedElementType is null) {
+					break;
+				}
+				elementType = nestedElementType;
+			}
+			return rank;
 		}
 
 		static Type MakeArrayType (Type type) =>

@@ -131,7 +131,7 @@ sealed class TypeMapAssemblyEmitter
 
 	// Per-rank array sentinel TypeDefs, 0-indexed by (rank - 1). Empty when array entries
 	// aren't emitted.
-	EntityHandle [] _rankAnchorHandles = Array.Empty<EntityHandle> ();
+	EntityHandle [] _rankAnchorHandles = [];
 
 	// Per-anchor TypeMap<TGroup>(string, Type, Type) ctor refs, lazily built.
 	readonly Dictionary<EntityHandle, MemberReferenceHandle> _typeMapAttr3ArgCtorRefByAnchor = new ();
