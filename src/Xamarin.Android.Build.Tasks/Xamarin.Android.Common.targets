@@ -1392,12 +1392,20 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CollectRuntimeJarFilenames">
-  <PropertyGroup Condition=" '$(_AndroidRuntime)' != 'CoreCLR' ">
+  <PropertyGroup Condition=" '$(_AndroidRuntime)' != 'CoreCLR' and '$(_AndroidTypeMapImplementation)' != 'trimmable' ">
     <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime_net6.jar</_RuntimeJar>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(_AndroidRuntime)' == 'CoreCLR' ">
+  <PropertyGroup Condition=" '$(_AndroidRuntime)' != 'CoreCLR' and '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
+    <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime_trimmable_net6.jar</_RuntimeJar>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(_AndroidTypeMapImplementation)' != 'trimmable' ">
     <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime_clr.jar</_RuntimeJar>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
+    <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime_trimmable_clr.jar</_RuntimeJar>
   </PropertyGroup>
 </Target>
 

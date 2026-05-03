@@ -24,6 +24,14 @@
     <IntermediateRuntimeClassesTxt>$(IntermediateOutputPath)release-net6.txt</IntermediateRuntimeClassesTxt>
     <RemoveItems>..\..\src-ThirdParty\bazel\java\mono\android\debug\MultiDexLoader.java;java\mono\android\debug-net6\BuildConfig.java;java\mono\android\debug\BuildConfig.java;java\mono\android\release\BuildConfig.java;java\mono\android\clr\MonoPackageManager.java</RemoveItems>
   </_RuntimeOutput>
+  <_RuntimeOutput Include="$(OutputPath)java_runtime_trimmable_net6.jar">
+    <OutputJar>$(OutputPath)java_runtime_trimmable_net6.jar</OutputJar>
+    <OutputDex>$(OutputPath)java_runtime_trimmable_net6.dex</OutputDex>
+    <IntermediateRuntimeOutputPath>$(IntermediateOutputPath)release-trimmable-net6</IntermediateRuntimeOutputPath>
+    <IntermediateRuntimeClassesTxt>$(IntermediateOutputPath)release-trimmable-net6.txt</IntermediateRuntimeClassesTxt>
+    <RemoveItems>..\..\src-ThirdParty\bazel\java\mono\android\debug\MultiDexLoader.java;java\mono\android\debug-net6\BuildConfig.java;java\mono\android\debug\BuildConfig.java;java\mono\android\release\BuildConfig.java;java\mono\android\clr\MonoPackageManager.java;$(JavaInteropSourceDirectory)\src\Java.Interop\java\net\dot\jni\internal\JavaProxyObject.java;$(JavaInteropSourceDirectory)\src\Java.Interop\java\net\dot\jni\internal\JavaProxyThrowable.java</RemoveItems>
+    <AddItems>java-trimmable\net\dot\jni\internal\JavaProxyObject.java;java-trimmable\net\dot\jni\internal\JavaProxyThrowable.java</AddItems>
+  </_RuntimeOutput>
   <_RuntimeOutput Include="$(OutputPath)java_runtime_fastdev_net6.jar">
     <OutputJar>$(OutputPath)java_runtime_fastdev_net6.jar</OutputJar>
     <OutputDex>$(OutputPath)java_runtime_fastdev_net6.dex</OutputDex>
@@ -39,6 +47,14 @@
     <IntermediateRuntimeClassesTxt>$(IntermediateOutputPath)release-clr.txt</IntermediateRuntimeClassesTxt>
     <RemoveItems>..\..\src-ThirdParty\bazel\java\mono\android\debug\MultiDexLoader.java;java\mono\android\debug-net6\BuildConfig.java;java\mono\android\debug\BuildConfig.java;java\mono\android\release\BuildConfig.java;java\mono\android\MonoPackageManager.java</RemoveItems>
   </_RuntimeOutput>
+  <_RuntimeOutput Include="$(OutputPath)java_runtime_trimmable_clr.jar">
+    <OutputJar>$(OutputPath)java_runtime_trimmable_clr.jar</OutputJar>
+    <OutputDex>$(OutputPath)java_runtime_trimmable_clr.dex</OutputDex>
+    <IntermediateRuntimeOutputPath>$(IntermediateOutputPath)release-trimmable-clr</IntermediateRuntimeOutputPath>
+    <IntermediateRuntimeClassesTxt>$(IntermediateOutputPath)release-trimmable-clr.txt</IntermediateRuntimeClassesTxt>
+    <RemoveItems>..\..\src-ThirdParty\bazel\java\mono\android\debug\MultiDexLoader.java;java\mono\android\debug-net6\BuildConfig.java;java\mono\android\debug\BuildConfig.java;java\mono\android\release\BuildConfig.java;java\mono\android\MonoPackageManager.java;$(JavaInteropSourceDirectory)\src\Java.Interop\java\net\dot\jni\internal\JavaProxyObject.java;$(JavaInteropSourceDirectory)\src\Java.Interop\java\net\dot\jni\internal\JavaProxyThrowable.java</RemoveItems>
+    <AddItems>java-trimmable\net\dot\jni\internal\JavaProxyObject.java;java-trimmable\net\dot\jni\internal\JavaProxyThrowable.java</AddItems>
+  </_RuntimeOutput>
   <_RuntimeOutput Include="$(OutputPath)java_runtime_fastdev_clr.jar">
     <OutputJar>$(OutputPath)java_runtime_fastdev_clr.jar</OutputJar>
     <OutputDex>$(OutputPath)java_runtime_fastdev_clr.dex</OutputDex>
@@ -50,14 +66,16 @@
 
 <Target Name="_BuildJavaRuntimeJar"
       BeforeTargets="Build"
-      Inputs="@(AllRuntimeSource)"
+      Inputs="@(AllRuntimeSource);%(_RuntimeOutput.AddItems)"
       Outputs="%(_RuntimeOutput.OutputJar)"
 >
   <MakeDir Directories="%(_RuntimeOutput.IntermediateRuntimeOutputPath)" />
   <MakeDir Directories="$(OutputPath)" />
+  <Delete Files="%(_RuntimeOutput.IntermediateRuntimeOutputPath)\classes.dex" />
   <ItemGroup>
     <_RuntimeSource Include="@(AllRuntimeSource)" />
     <_RuntimeSource Remove="%(_RuntimeOutput.RemoveItems)" />
+    <_RuntimeSource Include="%(_RuntimeOutput.AddItems)" Condition=" '%(_RuntimeOutput.AddItems)' != '' " />
   </ItemGroup>
   <WriteLinesToFile
       File="%(_RuntimeOutput.IntermediateRuntimeClassesTxt)"
