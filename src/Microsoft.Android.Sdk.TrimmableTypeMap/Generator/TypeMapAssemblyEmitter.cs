@@ -99,9 +99,9 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _getUninitializedObjectRef;
 	MemberReferenceHandle _notSupportedExceptionCtorRef;
 	MemberReferenceHandle _jniObjectReferenceCtorRef;
+	MemberReferenceHandle _setPeerReferenceRef;
 	MemberReferenceHandle _jniEnvDeleteRefRef;
 	MemberReferenceHandle _shouldSkipActivationRef;
-	MemberReferenceHandle _activateDefaultConstructorRef;
 	MemberReferenceHandle _markActivationPeerReplaceableRef;
 	MemberReferenceHandle _waitForBridgeProcessingRef;
 	MemberReferenceHandle _androidEnvironmentUnhandledExceptionRef;
@@ -348,6 +348,11 @@ sealed class TypeMapAssemblyEmitter
 					p.AddParameter ().Type ().Type (_jniObjectReferenceTypeRef, true);
 				}));
 
+		_setPeerReferenceRef = _pe.AddMemberRef (_iJavaPeerableRef, "SetPeerReference",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
+				rt => rt.Void (),
+				p => p.AddParameter ().Type ().Type (_jniObjectReferenceRef, true)));
+
 		// JNIEnv.DeleteRef(IntPtr, JniHandleOwnership) — static, internal
 		// Used by JI-style activation to clean up the original handle after constructing the peer.
 		// Matches the legacy TypeManager.CreateProxy behavior.
@@ -364,14 +369,6 @@ sealed class TypeMapAssemblyEmitter
 			sig => sig.MethodSignature ().Parameters (1,
 				rt => rt.Type ().Boolean (),
 				p => { p.AddParameter ().Type ().IntPtr (); }));
-
-		_activateDefaultConstructorRef = _pe.AddMemberRef (_javaPeerProxyNonGenericRef, "ActivateDefaultConstructor",
-			sig => sig.MethodSignature ().Parameters (2,
-				rt => rt.Void (),
-				p => {
-					p.AddParameter ().Type ().IntPtr ();
-					p.AddParameter ().Type ().Type (_systemTypeRef, false);
-				}));
 
 		_markActivationPeerReplaceableRef = _pe.AddMemberRef (_javaPeerProxyNonGenericRef, "MarkActivationPeerReplaceable",
 			sig => sig.MethodSignature ().Parameters (1,
@@ -933,6 +930,14 @@ sealed class TypeMapAssemblyEmitter
 				}));
 	}
 
+	MemberReferenceHandle AddDefaultCtorRef (EntityHandle declaringTypeRef)
+	{
+		return _pe.AddMemberRef (declaringTypeRef, ".ctor",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0,
+				rt => rt.Void (),
+				p => { }));
+	}
+
 	MethodDefinitionHandle EmitUcoMethod (UcoMethodData uco, JavaPeerProxyData proxy)
 	{
 		var jniParams = JniSignatureHelper.ParseParameterTypes (uco.JniSignature);
@@ -1057,17 +1062,36 @@ sealed class TypeMapAssemblyEmitter
 		}
 
 		if (jniParams.Count == 0) {
+			var defaultCtorRef = AddDefaultCtorRef (targetTypeRef);
 			var defaultCtorHandle = _pe.EmitBody (uco.WrapperName,
 				MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 				encodeSig,
 				(encoder, cfb) => EmitUcoConstructorBodyWithMarshal (encoder, cfb, enc => {
-					enc.LoadArgument (1); // self
 					enc.OpCode (ILOpCode.Ldtoken);
 					enc.Token (targetTypeRef);
 					enc.Call (_getTypeFromHandleRef);
-					enc.Call (_activateDefaultConstructorRef);
+					enc.Call (_getUninitializedObjectRef);
+					enc.OpCode (ILOpCode.Castclass);
+					enc.Token (targetTypeRef);
+					enc.StoreLocal (4);
+
+					enc.LoadLocalAddress (3); // jniRef
+					enc.LoadArgument (1);     // self
+					enc.LoadConstantI4 (0);   // JniObjectReferenceType.Invalid
+					enc.Call (_jniObjectReferenceCtorRef);
+
+					enc.LoadLocal (4);
+					enc.LoadLocal (3);
+					enc.OpCode (ILOpCode.Callvirt);
+					enc.Token (_setPeerReferenceRef);
+
+					enc.LoadLocal (4);
+					enc.Call (defaultCtorRef);
+
+					enc.LoadArgument (1); // self
+					enc.Call (_markActivationPeerReplaceableRef);
 				}),
-				EncodeUcoConstructorLocals_Standard);
+				blob => EncodeUcoConstructorLocals_DefaultConstructor (blob, targetTypeRef));
 			AddUnmanagedCallersOnlyAttribute (defaultCtorHandle);
 			return defaultCtorHandle;
 		}
@@ -1259,6 +1283,31 @@ sealed class TypeMapAssemblyEmitter
 		// local 3: JniObjectReference (valuetype)
 		blob.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniObjectReferenceRef));
+	}
+
+	/// <summary>
+	/// LOCAL_SIG for UCO constructors that invoke a no-arg managed constructor.
+	/// Locals: 0=JniTransition, 1=JniRuntime, 2=Exception, 3=JniObjectReference, 4=target type.
+	/// </summary>
+	void EncodeUcoConstructorLocals_DefaultConstructor (BlobBuilder blob, EntityHandle targetTypeRef)
+	{
+		blob.WriteByte (0x07); // LOCAL_SIG
+		blob.WriteCompressedInteger (5);
+		// local 0: JniTransition (valuetype)
+		blob.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
+		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniTransitionRef));
+		// local 1: JniRuntime (class)
+		blob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniRuntimeRef));
+		// local 2: Exception (class)
+		blob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_exceptionRef));
+		// local 3: JniObjectReference (valuetype)
+		blob.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
+		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniObjectReferenceRef));
+		// local 4: target type (class)
+		blob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (targetTypeRef));
 	}
 
 	void EmitRegisterNatives (JavaPeerProxyData proxy,
