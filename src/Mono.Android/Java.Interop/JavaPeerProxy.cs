@@ -2,6 +2,7 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using Android.Runtime;
 
 namespace Java.Interop
@@ -102,6 +103,31 @@ namespace Java.Interop
 			var state = peer.JniManagedPeerState;
 			return (state & JniManagedPeerStates.Activatable) != JniManagedPeerStates.Activatable
 				&& (state & JniManagedPeerStates.Replaceable) != JniManagedPeerStates.Replaceable;
+		}
+
+		public static void ActivateDefaultConstructor (
+			IntPtr jniSelf,
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			Type targetType)
+		{
+			var cinfo = targetType.GetConstructor (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, binder: null, Type.EmptyTypes, modifiers: null);
+			if (cinfo == null) {
+				throw new NotSupportedException ($"Unable to find a default constructor for type `{targetType.FullName}`.");
+			}
+
+			JniEnvironment.Runtime.ValueManager.ActivatePeer (null, new JniObjectReference (jniSelf), cinfo, null);
+			MarkActivationPeerReplaceable (jniSelf);
+		}
+
+		public static void MarkActivationPeerReplaceable (IntPtr jniSelf)
+		{
+			var reference = new JniObjectReference (jniSelf, JniObjectReferenceType.Invalid);
+			var peer = JniEnvironment.Runtime.ValueManager.PeekPeer (reference);
+			if (peer == null) {
+				return;
+			}
+
+			peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable);
 		}
 	}
 

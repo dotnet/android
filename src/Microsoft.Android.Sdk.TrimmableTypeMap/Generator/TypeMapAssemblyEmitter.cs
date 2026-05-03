@@ -101,6 +101,8 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _jniObjectReferenceCtorRef;
 	MemberReferenceHandle _jniEnvDeleteRefRef;
 	MemberReferenceHandle _shouldSkipActivationRef;
+	MemberReferenceHandle _activateDefaultConstructorRef;
+	MemberReferenceHandle _markActivationPeerReplaceableRef;
 	MemberReferenceHandle _waitForBridgeProcessingRef;
 	MemberReferenceHandle _androidEnvironmentUnhandledExceptionRef;
 	MemberReferenceHandle _ucoAttrCtorRef;
@@ -362,6 +364,19 @@ sealed class TypeMapAssemblyEmitter
 			sig => sig.MethodSignature ().Parameters (1,
 				rt => rt.Type ().Boolean (),
 				p => { p.AddParameter ().Type ().IntPtr (); }));
+
+		_activateDefaultConstructorRef = _pe.AddMemberRef (_javaPeerProxyNonGenericRef, "ActivateDefaultConstructor",
+			sig => sig.MethodSignature ().Parameters (2,
+				rt => rt.Void (),
+				p => {
+					p.AddParameter ().Type ().IntPtr ();
+					p.AddParameter ().Type ().Type (_systemTypeRef, false);
+				}));
+
+		_markActivationPeerReplaceableRef = _pe.AddMemberRef (_javaPeerProxyNonGenericRef, "MarkActivationPeerReplaceable",
+			sig => sig.MethodSignature ().Parameters (1,
+				rt => rt.Void (),
+				p => p.AddParameter ().Type ().IntPtr ()));
 
 		_waitForBridgeProcessingRef = _pe.AddMemberRef (_androidRuntimeInternalRef, "WaitForBridgeProcessing",
 			sig => sig.MethodSignature ().Parameters (0, rt => rt.Void (), p => { }));
@@ -1041,6 +1056,22 @@ sealed class TypeMapAssemblyEmitter
 			return openGenericHandle;
 		}
 
+		if (jniParams.Count == 0) {
+			var defaultCtorHandle = _pe.EmitBody (uco.WrapperName,
+				MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+				encodeSig,
+				(encoder, cfb) => EmitUcoConstructorBodyWithMarshal (encoder, cfb, enc => {
+					enc.LoadArgument (1); // self
+					enc.OpCode (ILOpCode.Ldtoken);
+					enc.Token (targetTypeRef);
+					enc.Call (_getTypeFromHandleRef);
+					enc.Call (_activateDefaultConstructorRef);
+				}),
+				EncodeUcoConstructorLocals_Standard);
+			AddUnmanagedCallersOnlyAttribute (defaultCtorHandle);
+			return defaultCtorHandle;
+		}
+
 		MethodDefinitionHandle handle;
 		if (activationCtor.Style == ActivationCtorStyle.JavaInterop) {
 			var ctorRef = AddJavaInteropActivationCtorRef (
@@ -1077,6 +1108,8 @@ sealed class TypeMapAssemblyEmitter
 						enc.LoadConstantI4 (1);   // JniObjectReferenceOptions.Copy
 						enc.Call (ctorRef, parameterCount: 2, isInstance: true);
 					}
+					enc.LoadArgument (1); // self
+					enc.Call (_markActivationPeerReplaceableRef);
 				}),
 				EncodeUcoConstructorLocals_JavaInterop);
 		} else {
@@ -1106,6 +1139,8 @@ sealed class TypeMapAssemblyEmitter
 						enc.LoadConstantI4 (0);  // JniHandleOwnership.DoNotTransfer
 						enc.Call (ctorRef, parameterCount: 2, isInstance: true);
 					}
+					enc.LoadArgument (1); // self
+					enc.Call (_markActivationPeerReplaceableRef);
 				}),
 				EncodeUcoConstructorLocals_Standard);
 		}
