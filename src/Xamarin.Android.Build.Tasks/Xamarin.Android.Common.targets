@@ -1391,6 +1391,8 @@ because xbuild doesn't support framework reference assemblies.
   <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)" Condition=" !Exists ('$(MonoAndroidIntermediateAssemblyDir)') " />
 </Target>
 
+<!-- Runtime jar selection: 2×2 matrix of runtime (MonoVM|CoreCLR) × typemap (default|trimmable).
+     Trimmable jars replace JavaProxyObject/JavaProxyThrowable with non-native implementations. -->
 <Target Name="_CollectRuntimeJarFilenames">
   <PropertyGroup Condition=" '$(_AndroidRuntime)' != 'CoreCLR' and '$(_AndroidTypeMapImplementation)' != 'trimmable' ">
     <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime_net6.jar</_RuntimeJar>

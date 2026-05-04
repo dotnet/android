@@ -71,6 +71,7 @@
 >
   <MakeDir Directories="%(_RuntimeOutput.IntermediateRuntimeOutputPath)" />
   <MakeDir Directories="$(OutputPath)" />
+  <!-- Remove stale D8 output so 'jar uf' doesn't bundle DEX into the runtime jar. -->
   <Delete Files="%(_RuntimeOutput.IntermediateRuntimeOutputPath)\classes.dex" />
   <ItemGroup>
     <_RuntimeSource Include="@(AllRuntimeSource)" />

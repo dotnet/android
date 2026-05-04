@@ -13,6 +13,8 @@ import net.dot.jni.GCUserPeerable;
 	// This trimmable runtime copy cannot use Java.Interop's native object methods:
 	// those are registered through ManagedPeer.registerNativeMembers, which is not
 	// supported in the trimmable typemap path.
+	// Trimmable proxies use Java identity semantics: equals/hashCode/toString
+	// do not delegate to the wrapped .NET object.
 	@Override
 	public boolean equals(Object obj)
 	{
