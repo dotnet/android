@@ -51,7 +51,7 @@ class NativeLinker
 	public string? NdkApiLevel { get; set; }
 	public int ZipAlignmentPages { get; set; } = AndroidZipAlign.DefaultZipAlignment64Bit;
 
-	// NativeAOT-specific options
+	// Additional linker options (opt-in, defaults preserve existing behavior)
 	public bool ExportDynamic { get; set; } = true;
 	public bool UseEhFrameHdr { get; set; } = false;
 	public bool DiscardAll { get; set; } = false;
