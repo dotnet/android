@@ -467,20 +467,22 @@ sealed class PEAssemblyBuilder
 
 		public void Branch (ILOpCode code, LabelHandle label)
 		{
-			Encoder.Branch (code, label);
 			switch (code) {
 			case ILOpCode.Brfalse:
 			case ILOpCode.Brfalse_s:
 			case ILOpCode.Brtrue:
 			case ILOpCode.Brtrue_s:
+				Encoder.Branch (code, label);
 				Pop (1);
 				break;
 			case ILOpCode.Leave:
 			case ILOpCode.Leave_s:
-			case ILOpCode.Br:
-			case ILOpCode.Br_s:
+				Encoder.Branch (code, label);
 				SetStack (0);
 				break;
+			case ILOpCode.Br:
+			case ILOpCode.Br_s:
+				throw new NotSupportedException ($"Branch opcode '{code}' preserves the evaluation stack and is not supported by the maxstack tracker.");
 			default:
 				throw new NotSupportedException ($"Branch opcode '{code}' is not supported by the maxstack tracker.");
 			}

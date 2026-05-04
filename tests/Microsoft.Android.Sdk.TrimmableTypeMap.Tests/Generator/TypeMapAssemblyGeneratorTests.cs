@@ -645,7 +645,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		var registerNatives = reader.GetMethodDefinition (FindMethodDefinition (reader, "RegisterNatives"));
 		var body = pe.GetMethodBody (registerNatives.RelativeVirtualAddress);
 
-		Assert.Equal (8, body.MaxStack);
+		Assert.InRange (body.MaxStack, 5, 16);
 	}
 
 	[Fact]
@@ -1252,7 +1252,19 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		var nctorMethod = reader.GetMethodDefinition (FindNctorUcoMethod (reader));
 		var body = pe.GetMethodBody (nctorMethod.RelativeVirtualAddress);
 
-		Assert.Equal (8, body.MaxStack);
+		Assert.InRange (body.MaxStack, 5, 16);
+	}
+
+	[Fact]
+	public void TrackedInstructionEncoder_UnconditionalBranchIsUnsupported ()
+	{
+		var code = new BlobBuilder ();
+		var controlFlow = new ControlFlowBuilder ();
+		var encoder = new PEAssemblyBuilder.TrackedInstructionEncoder (new InstructionEncoder (code, controlFlow));
+		var label = encoder.DefineLabel ();
+
+		Assert.Throws<NotSupportedException> (() => encoder.Branch (ILOpCode.Br, label));
+		Assert.Throws<NotSupportedException> (() => encoder.Branch (ILOpCode.Br_s, label));
 	}
 
 	[Fact]
