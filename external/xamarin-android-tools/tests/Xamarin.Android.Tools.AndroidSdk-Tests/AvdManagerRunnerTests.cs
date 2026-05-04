@@ -293,4 +293,61 @@ public class AvdManagerRunnerTests
 			Directory.Delete (tempDir, true);
 		}
 	}
+
+	[Test]
+	public void ParseCompactDeviceListOutput_MultipleProfiles ()
+	{
+		var output =
+			"automotive_1024p_landscape\n" +
+			"pixel_7\n" +
+			"Nexus 5X\n" +
+			"Galaxy Nexus\n";
+
+		var profiles = AvdManagerRunner.ParseCompactDeviceListOutput (output);
+
+		Assert.AreEqual (4, profiles.Count);
+		Assert.AreEqual ("automotive_1024p_landscape", profiles [0].Id);
+		Assert.AreEqual ("pixel_7", profiles [1].Id);
+		Assert.AreEqual ("Nexus 5X", profiles [2].Id);
+		Assert.AreEqual ("Galaxy Nexus", profiles [3].Id);
+	}
+
+	[Test]
+	public void ParseCompactDeviceListOutput_EmptyOutput ()
+	{
+		var profiles = AvdManagerRunner.ParseCompactDeviceListOutput ("");
+		Assert.AreEqual (0, profiles.Count);
+	}
+
+	[Test]
+	public void ParseCompactDeviceListOutput_WindowsNewlines ()
+	{
+		var output =
+			"pixel_fold\r\n" +
+			"pixel_9_pro\r\n";
+
+		var profiles = AvdManagerRunner.ParseCompactDeviceListOutput (output);
+
+		Assert.AreEqual (2, profiles.Count);
+		Assert.AreEqual ("pixel_fold", profiles [0].Id);
+		Assert.AreEqual ("pixel_9_pro", profiles [1].Id);
+	}
+
+	[Test]
+	public void ParseCompactDeviceListOutput_SkipsBlankLines ()
+	{
+		var output = "\n\npixel_7\n\n";
+
+		var profiles = AvdManagerRunner.ParseCompactDeviceListOutput (output);
+
+		Assert.AreEqual (1, profiles.Count);
+		Assert.AreEqual ("pixel_7", profiles [0].Id);
+	}
+
+	[Test]
+	public void ParseCompactDeviceListOutput_ReturnsIReadOnlyList ()
+	{
+		var profiles = AvdManagerRunner.ParseCompactDeviceListOutput ("");
+		Assert.IsInstanceOf<IReadOnlyList<AvdDeviceProfile>> (profiles);
+	}
 }

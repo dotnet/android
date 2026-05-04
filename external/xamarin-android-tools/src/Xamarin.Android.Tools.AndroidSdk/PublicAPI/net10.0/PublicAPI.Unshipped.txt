@@ -199,3 +199,8 @@ virtual Xamarin.Android.Tools.AdbRunner.ListReversePortsAsync(string! serial, Sy
 virtual Xamarin.Android.Tools.AdbRunner.RemoveAllReversePortsAsync(string! serial, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 virtual Xamarin.Android.Tools.AdbRunner.RemoveReversePortAsync(string! serial, Xamarin.Android.Tools.AdbPortSpec! remote, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 virtual Xamarin.Android.Tools.AdbRunner.ReversePortAsync(string! serial, Xamarin.Android.Tools.AdbPortSpec! remote, Xamarin.Android.Tools.AdbPortSpec! local, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Xamarin.Android.Tools.AvdManagerRunner.ListDeviceProfilesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.AvdDeviceProfile!>!>!
+Xamarin.Android.Tools.AvdDeviceProfile
+Xamarin.Android.Tools.AvdDeviceProfile.AvdDeviceProfile(string! Id) -> void
+Xamarin.Android.Tools.AvdDeviceProfile.Id.get -> string!
+Xamarin.Android.Tools.AvdDeviceProfile.Id.init -> void

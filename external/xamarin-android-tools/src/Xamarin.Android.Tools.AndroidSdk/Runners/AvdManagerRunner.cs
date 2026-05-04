@@ -122,6 +122,35 @@ public class AvdManagerRunner
 		ProcessUtils.ThrowIfFailed (exitCode, $"avdmanager delete avd --name {name}", stderr);
 	}
 
+	/// <summary>
+	/// Lists available device profiles (hardware definitions) using <c>avdmanager list device --compact</c>.
+	/// </summary>
+	public async Task<IReadOnlyList<AvdDeviceProfile>> ListDeviceProfilesAsync (CancellationToken cancellationToken = default)
+	{
+		using var stdout = new StringWriter ();
+		using var stderr = new StringWriter ();
+		var psi = ProcessUtils.CreateProcessStartInfo (avdManagerPath, "list", "device", "--compact");
+		logger.Invoke (TraceLevel.Verbose, "Running: avdmanager list device --compact");
+		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
+
+		ProcessUtils.ThrowIfFailed (exitCode, "avdmanager list device --compact", stderr, stdout);
+
+		return ParseCompactDeviceListOutput (stdout.ToString ());
+	}
+
+	internal static IReadOnlyList<AvdDeviceProfile> ParseCompactDeviceListOutput (string output)
+	{
+		var profiles = new List<AvdDeviceProfile> ();
+
+		foreach (var line in output.Split ('\n')) {
+			var trimmed = line.Trim ();
+			if (trimmed.Length > 0)
+				profiles.Add (new AvdDeviceProfile (trimmed));
+		}
+
+		return profiles;
+	}
+
 	internal static IReadOnlyList<AvdInfo> ParseAvdListOutput (string output)
 	{
 		var avds = new List<AvdInfo> ();
