@@ -103,6 +103,7 @@ namespace Xamarin.ProjectTools
 		/// True if NuGet restore occurs automatically (default)
 		/// </summary>
 		public bool AutomaticNuGetRestore { get; set; } = true;
+		public bool SkipNdkDirectory { get; set; } = false;
 
 		/// <summary>
 		/// Checks whether cross-compilers are available for the specified Android ABIs.
@@ -276,7 +277,7 @@ namespace Xamarin.ProjectTools
 					sw.WriteLine ("/p:AndroidSdkDirectory=\"{0}\"", sdkPath);
 				}
 				string ndkPath = AndroidSdkResolver.GetAndroidNdkPath ();
-				if (Directory.Exists (ndkPath)) {
+				if (!SkipNdkDirectory && Directory.Exists (ndkPath)) {
 					sw.WriteLine ("/p:AndroidNdkDirectory=\"{0}\"", ndkPath);
 				}
 				string jdkPath = AndroidSdkResolver.GetJavaSdkPath ();
