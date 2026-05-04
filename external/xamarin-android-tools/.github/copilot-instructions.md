@@ -49,6 +49,7 @@ When setting environment variables for SDK tools (e.g. `sdkmanager`, `avdmanager
 - **Use `FileUtil`**: file operations like extraction, downloads, checksum verification, and path checks belong in `FileUtil.cs`. Don't duplicate file helpers in domain classes.
 - **Concise XML docs**: omit `<summary>` tags for self-explanatory methods. Only add doc comments when the behavior is non-obvious. Avoid restating the method name.
 - **`netstandard2.0` awareness**: many modern .NET APIs are unavailable or have fewer overloads on `netstandard2.0`. When unsure about API availability, search mslearn to check documentation for the target framework.
+- **Reuse buffers**: use `ArrayPool<byte>.Shared.Rent()`/`Return()` with `try/finally` for temporary buffers (see `DownloadUtils.cs`). For fixed-size repeated reads, prefer a reusable `readonly byte[]` field.
 - **Format your code**: always match the existing file indentation (tabs, not spaces — see `.editorconfig`). Only format code you add or modify; never reformat existing lines.
 - **No whitespace-only diffs**: before committing, run `git diff --stat` and verify only files with intentional code changes appear. If a file shows as fully rewritten (all lines removed and re-added) you have introduced line-ending or trailing-whitespace changes — revert that file with `git checkout -- <file>` and re-apply only your code change. Never commit whitespace-only or line-ending-only changes.
 - **File-scoped namespaces**: all new files should use file-scoped namespaces (`namespace Foo;` instead of `namespace Foo { ... }`).
@@ -56,6 +57,7 @@ When setting environment variables for SDK tools (e.g. `sdkmanager`, `avdmanager
 - [Mono Coding Guidelines](http://www.mono-project.com/community/contributing/coding-guidelines/): tabs, K&R braces, `PascalCase` public members.
 - **No null-forgiving operator (`!`)**: do not use the null-forgiving operator after null checks. Instead, use C# property patterns (e.g. `if (value is { Length: > 0 } v)`) which give the compiler proper non-null flow analysis on all target frameworks including `netstandard2.0`.
 - **Prefer switch expressions**: use C# switch expressions over switch statements for simple value mappings (e.g. `return state switch { "x" => A, _ => B };`). Use switch statements only when the body has side effects or complex logic.
+- **Document thread-safety**: when a class reuses mutable state (buffers, caches) assuming single-caller semantics, add `<remarks>This class is not thread-safe.</remarks>`.
 - Nullable enabled in `AndroidSdk`. `NullableAttributes.cs` excluded on `net10.0+`.
 - Strong-named via `product.snk`. In the AndroidSdk project, tests use `InternalsVisibleTo` with full public key (`Properties/AssemblyInfo.cs`).
 - Assembly names support `$(VendorPrefix)`/`$(VendorSuffix)` for branding forks.

@@ -63,6 +63,8 @@ When a library multi-targets (e.g., `netstandard2.0` + a modern TFM), every API 
 
 | Check | What to look for |
 |-------|-----------------|
+| **Reuse hot-path buffers** | Pool repeated `byte[]` allocations with `ArrayPool<byte>.Shared` (see `DownloadUtils.cs`). For fixed-size repeated reads, use a `readonly byte[]` instance field. Document non-thread-safety in `<remarks>`. |
+| **Reuse loop helpers** | If a loop creates resettable helpers (e.g., `TcpClient`), reuse one instance via `Reconnect()`/`Reset()` instead of `new` per iteration. |
 | **XmlReader over LINQ XML** | For forward-only XML parsing (manifests, config files), use `XmlReader` — it's streaming and allocation-free. `XElement`/`XDocument` builds a full DOM tree. |
 | **p/invoke over process spawn** | For single syscalls like `chmod`, use `[DllImport("libc")]` instead of spawning a child process. Process creation is orders of magnitude more expensive. |
 | **Avoid intermediate collections** | Don't create two lists and `AddRange()` one to the other. Build a single list, or use LINQ to chain. |
@@ -85,6 +87,7 @@ When a library multi-targets (e.g., `netstandard2.0` + a modern TFM), every API 
 |-------|-----------------|
 | **File-scoped namespaces** | New files should use `namespace Foo;` (not `namespace Foo { ... }`). Don't reformat existing files. |
 | **Use `record` for data types** | Immutable data-carrier types (progress, version info, license info) should be `record` types. They get value equality, `ToString()`, and deconstruction for free. |
+| **Document thread-safety invariants** | When a class reuses buffers, caches, or mutable state assuming single-caller semantics, add `<remarks>This class is not thread-safe.</remarks>` to the type. Callers need to know if external synchronization is required. |
 | **Remove unused code** | Dead methods, speculative helpers, and code "for later" should be removed. Ship only what's needed. |
 | **No commented-out code** | Commented-out code should be deleted — Git has history. |
 | **Reduce indentation with early returns** | Invert conditions with `continue` or early `return` to reduce nesting. `foreach (var x in items ?? Array.Empty<T>())` eliminates null-check nesting. |

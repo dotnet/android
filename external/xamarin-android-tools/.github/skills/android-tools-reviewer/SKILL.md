@@ -37,6 +37,8 @@ gh pr view {number} --repo {owner}/{repo} --json files
 
 For each changed file, read the **full source file** (not just the diff) to understand surrounding invariants, call patterns, and data flow. If the change modifies a public/internal API or utility, search for callers. Check whether sibling types need the same fix.
 
+**Prefer existing repo patterns.** Before suggesting new infrastructure, grep for established patterns (`ArrayPool`, `ObjectPool`, `MemoryStreamPool`, `ProcessUtils`) and follow those.
+
 **Form an independent assessment** of what the change does and what problems it has *before* reading the PR description.
 
 ### 3. Incorporate PR narrative and reconcile
