@@ -60,7 +60,17 @@ Review the CI results. **Never post ✅ LGTM if any required CI check is failing
 
 ### 5. Load review rules
 
-Read `references/review-rules.md` from this skill's directory.
+Based on the changed files from step 2, load the appropriate rule files from `references/`:
+
+**Always load:**
+- `references/repo-conventions.md` — repo-specific patterns and conventions
+- `references/ai-pitfalls.md` — common AI code generation mistakes
+- `references/security-rules.md` — security review checklist
+
+**Conditionally load:**
+- `references/csharp-rules.md` — if any `.cs` files changed
+- `references/msbuild-rules.md` — if any `.targets`, `.props`, or `.projitems` files changed, or if changed `.cs` files are under `src/Microsoft.Android.Build.BaseTasks/`
+- `references/testing-rules.md` — if any files under `tests/` changed or files with `Test` in the path changed
 
 ### 6. Analyze the diff
 
