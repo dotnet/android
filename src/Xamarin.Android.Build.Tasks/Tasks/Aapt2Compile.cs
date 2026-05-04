@@ -43,7 +43,7 @@ namespace Xamarin.Android.Tasks {
 
 		public async override System.Threading.Tasks.Task RunTaskAsync ()
 		{
-			await this.WhenAllWithLock (ResourcesToCompile ?? ResourceDirectories, ProcessDirectory);
+			await this.WhenAllWithLock (ResourcesToCompile ?? ResourceDirectories ?? [], ProcessDirectory);
 
 			ProcessOutput ();
 

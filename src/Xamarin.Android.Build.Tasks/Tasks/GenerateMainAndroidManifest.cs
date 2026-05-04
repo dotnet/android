@@ -56,6 +56,9 @@ public class GenerateMainAndroidManifest : AndroidTask
 			RegisteredTaskObjectLifetime.Build
 		);
 
+		if (nativeCodeGenStates is null)
+			throw new InvalidOperationException ($"Internal error: {nameof (NativeCodeGenState)} not found");
+
 		// We only need the first architecture, since this task is architecture-agnostic
 		var templateCodeGenState = nativeCodeGenStates.First ().Value;
 
@@ -72,6 +75,9 @@ public class GenerateMainAndroidManifest : AndroidTask
 		// it to a new object that doesn't require holding open Cecil AssemblyDefinitions.
 		var nativeCodeGenStateObject = MarshalMethodCecilAdapter.GetNativeCodeGenStateCollection (Log, nativeCodeGenStates);
 
+		if (nativeCodeGenStateObject is null)
+			throw new InvalidOperationException ($"Internal error: {nameof (NativeCodeGenStateCollection)} not created");
+
 		Log.LogDebugMessage ($"Saving {nameof (NativeCodeGenStateObject)} to {nameof (GenerateJavaStubs.NativeCodeGenStateObjectRegisterTaskKey)}");
 		BuildEngine4.RegisterTaskObjectAssemblyLocal (MonoAndroidHelper.GetProjectBuildSpecificTaskObjectKey (GenerateJavaStubs.NativeCodeGenStateObjectRegisterTaskKey, WorkingDirectory, IntermediateOutputDirectory), nativeCodeGenStateObject, RegisteredTaskObjectLifetime.Build);
 
@@ -82,7 +88,7 @@ public class GenerateMainAndroidManifest : AndroidTask
 			state.Resolver.Dispose ();
 		}
 
-		if (Log.HasLoggedErrors) {
+		if (Log.HasLoggedErrors && MergedAndroidManifestOutput != null) {
 			// Ensure that on a rebuild, we don't *skip* the `_GenerateJavaStubs` target,
 			// by ensuring that the target outputs have been deleted.
 			Files.DeleteFile (MergedAndroidManifestOutput, Log);

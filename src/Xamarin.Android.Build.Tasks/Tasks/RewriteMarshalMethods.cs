@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using Microsoft.Android.Build.Tasks;
@@ -83,6 +84,9 @@ public class RewriteMarshalMethods : AndroidTask
 			MonoAndroidHelper.GetProjectBuildSpecificTaskObjectKey (GenerateJavaStubs.NativeCodeGenStateRegisterTaskKey, WorkingDirectory, IntermediateOutputDirectory),
 			RegisteredTaskObjectLifetime.Build
 		);
+
+		if (nativeCodeGenStates is null)
+			throw new InvalidOperationException ($"Internal error: {nameof (NativeCodeGenState)} not found");
 
 		// Parse environment files to determine configuration settings
 		// We need to parse the environment files supplied by the user to see if they want to use broken exception transitions. This information is needed

@@ -13,7 +13,12 @@ namespace Xamarin.Android.Tasks
 {
 	class ResourceParser
 	{
-		public TaskLoggingHelper? Log { get; set; }
+		public TaskLoggingHelper Log { get; }
+
+		public ResourceParser (TaskLoggingHelper log)
+		{
+			Log = log;
+		}
 
 		internal int ToInt32 (string value, int @base)
 		{

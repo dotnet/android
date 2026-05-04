@@ -537,7 +537,7 @@ namespace Xamarin.Android.Tasks
 		string RegisterGroupWidgets (ICollection<LayoutWidget> widgets)
 		{
 			string key = Guid.NewGuid ().ToString ();
-			LogDebugMessage ($"Registering {widgets?.Count} widgets for key {key}");
+			LogDebugMessage ($"Registering {widgets.Count} widgets for key {key}");
 			BuildEngine4.RegisterTaskObjectAssemblyLocal (ProjectSpecificTaskObjectKey (key), widgets, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: false);
 			return key;
 		}
