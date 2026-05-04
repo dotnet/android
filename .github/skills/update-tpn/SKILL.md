@@ -56,10 +56,10 @@ Read `.gitmodules` for all submodules. Current submodules and their license file
 | Submodule | URL | License File |
 |-----------|-----|-------------|
 | Java.Interop | https://github.com/dotnet/java-interop | `external/Java.Interop/LICENSE` |
-| lz4 | https://github.com/lz4/lz4 | `external/lz4/lib/LICENSE` |
+| lz4 | https://github.com/dotnet/lz4 (fork of https://github.com/lz4/lz4) | `external/lz4/lib/LICENSE` |
 | xxHash | https://github.com/Cyan4973/xxHash | `external/xxHash/LICENSE` |
 | constexpr-xxh3 | https://github.com/chys87/constexpr-xxh3 | `external/constexpr-xxh3/LICENSE` |
-| robin-map | https://github.com/Tessil/robin-map | `external/robin-map/LICENSE` |
+| robin-map | https://github.com/xamarin/robin-map (fork of https://github.com/Tessil/robin-map) | `external/robin-map/LICENSE` |
 | libunwind | https://github.com/libunwind/libunwind | `external/libunwind/LICENSE` |
 | xamarin-android-tools | https://github.com/dotnet/android-tools | (not a third-party dep) |
 | android-api-docs | https://github.com/dotnet/android-api-docs | (not a third-party dep) |
