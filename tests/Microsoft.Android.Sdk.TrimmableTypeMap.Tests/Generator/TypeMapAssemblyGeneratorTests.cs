@@ -1207,12 +1207,24 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		var memberRefHandles = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
 			.Select (i => MetadataTokens.MemberReferenceHandle (i))
 			.ToList ();
+		var notSupportedExceptionCtorHandle = memberRefHandles.First (h => {
+			var member = reader.GetMemberReference (h);
+			if (reader.GetString (member.Name) != ".ctor" || member.Parent.Kind != HandleKind.TypeReference) {
+				return false;
+			}
+
+			var parent = reader.GetTypeReference ((TypeReferenceHandle) member.Parent);
+			return reader.GetString (parent.Name) == "NotSupportedException";
+		});
 		var beginHandle = memberRefHandles.First (h => reader.GetString (reader.GetMemberReference (h).Name) == "BeginMarshalMethod");
 		var endHandle = memberRefHandles.First (h => reader.GetString (reader.GetMemberReference (h).Name) == "EndMarshalMethod");
 		var exHandle = memberRefHandles.First (h => reader.GetString (reader.GetMemberReference (h).Name) == "OnUserUnhandledException");
+		int notSupportedExceptionCtorToken = MetadataTokens.GetToken (notSupportedExceptionCtorHandle);
 		int beginToken = MetadataTokens.GetToken (beginHandle);
 		int endToken = MetadataTokens.GetToken (endHandle);
 		int exToken = MetadataTokens.GetToken (exHandle);
+		Assert.True (ILContainsNewobjToken (ilBytes, notSupportedExceptionCtorToken), "open-generic nctor_*_uco IL should construct NotSupportedException");
+		Assert.True (ilBytes.Contains ((byte) ILOpCode.Throw), "open-generic nctor_*_uco IL should throw");
 		Assert.True (ILContainsCallToken (ilBytes, beginToken), "open-generic nctor_*_uco IL should call BeginMarshalMethod");
 		Assert.True (ILContainsCallToken (ilBytes, endToken), "open-generic nctor_*_uco IL should call EndMarshalMethod");
 		Assert.True (ILContainsCallToken (ilBytes, exToken), "open-generic nctor_*_uco IL should call OnUserUnhandledException");
