@@ -62,7 +62,14 @@ public abstract class TestInstrumentation : Instrumentation
 				foreach (var assembly in GetTestAssemblies ()) {
 					Log.Info (LogTag, $"Loading tests from: {assembly.GetName ().Name}");
 					var runner = new NUnitTestAssemblyRunner (new DefaultTestAssemblyBuilder ());
-					runner.Load (assembly, new Dictionary<string, object> ());
+
+					// Use the string-based Load overload with the assembly's full name.
+					// The Assembly overload calls AssemblyHelper.GetAssemblyPath() which
+					// accesses Assembly.CodeBase — this throws NotSupportedException on
+					// .NET Android where assemblies are in a single-file bundle.
+					// The string overload calls AssemblyHelper.Load(name) which resolves
+					// the already-loaded assembly via Assembly.Load(new AssemblyName(name)).
+					runner.Load (assembly.FullName!, new Dictionary<string, object> ());
 
 					var result = runner.Run (listener, filter);
 					CountResults (result, ref passed, ref failed, ref skipped);
