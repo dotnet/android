@@ -133,7 +133,7 @@ public class TrimmableTypeMap
 	{
 		return _jniProxyCache.GetOrAdd (jniName, static (name, self) => {
 			var result = new List<JavaPeerProxy> ();
-			foreach (var type in self._typeMap.GetTypes (name)) {
+			foreach (var type in self._typeMap.GetProxyTypes (name)) {
 				var proxy = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
 				if (proxy is not null) {
 					result.Add (proxy);

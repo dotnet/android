@@ -17,7 +17,7 @@ interface ITypeMapWithAliasing
 	/// <summary>
 	/// Returns all proxy types mapped to a JNI name, resolving alias holders.
 	/// </summary>
-	IEnumerable<Type> GetTypes (string jniName);
+	IEnumerable<Type> GetProxyTypes (string jniName);
 
 	/// <summary>
 	/// Resolves a managed type to its proxy type (the generated type that
