@@ -160,7 +160,11 @@ public class AssemblyModifierPipeline : AndroidTask
 
 	void RunPipeline (AssemblyPipeline pipeline, ITaskItem source, ITaskItem destination)
 	{
-		var assembly = pipeline.Resolver.GetAssembly (source.ItemSpec);
+		// Use Load with the exact ItemSpec path to ensure the correct TFM version
+		// is loaded, rather than GetAssembly which strips the path and resolves by
+		// name through search directories (which may find wrong-TFM copies).
+		var assembly = pipeline.Resolver.Load (source.ItemSpec)
+			?? throw new FileNotFoundException ($"Could not load assembly '{source.ItemSpec}'.", source.ItemSpec);
 
 		var context = new StepContext (source, destination) {
 			CodeGenerationTarget = codeGenerationTarget,
