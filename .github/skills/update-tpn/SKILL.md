@@ -138,4 +138,4 @@ For each change:
 
 ### Step 4 — Verify
 
-Run `Select-String "^\d+\." THIRD-PARTY-NOTICES.TXT` to confirm the entry count and ordering.
+Run `grep -cP "^\d+\." THIRD-PARTY-NOTICES.TXT` (or `Select-String "^\d+\." THIRD-PARTY-NOTICES.TXT` on Windows) to confirm the entry count and ordering.
