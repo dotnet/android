@@ -20,6 +20,8 @@ namespace Xamarin.Android.Tasks
 {
 	class FileResourceParser : ResourceParser
 	{
+		public FileResourceParser (TaskLoggingHelper log) : base (log) { }
+
 		public string? JavaPlatformDirectory { get; set; }
 
 		public string? ResourceFlagFile { get; set; }
@@ -389,7 +391,7 @@ namespace Xamarin.Android.Tasks
 						try {
 							ProcessStyleable (reader.ReadSubtree (), resources);
 						} catch (Exception ex) {
-							Log?.LogErrorFromException (ex);
+							Log.LogErrorFromException (ex);
 						}
 						continue;
 					}

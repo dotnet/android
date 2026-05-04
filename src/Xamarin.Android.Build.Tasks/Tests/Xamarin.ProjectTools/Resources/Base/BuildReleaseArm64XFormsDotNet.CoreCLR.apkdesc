@@ -32,7 +32,7 @@
       "Size": 2396
     },
     "lib/arm64-v8a/libassembly-store.so": {
-      "Size": 14078456
+      "Size": 14076232
     },
     "lib/arm64-v8a/libclrjit.so": {
       "Size": 3223752
@@ -42,12 +42,6 @@
     },
     "lib/arm64-v8a/libmonodroid.so": {
       "Size": 1366648
-    },
-    "lib/arm64-v8a/libmscordaccore.so": {
-      "Size": 2463848
-    },
-    "lib/arm64-v8a/libmscordbi.so": {
-      "Size": 1899720
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
       "Size": 72344
@@ -62,7 +56,7 @@
       "Size": 162000
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 147584
+      "Size": 147264
     },
     "META-INF/androidx.activity_activity.version": {
       "Size": 6
@@ -218,7 +212,7 @@
       "Size": 1221
     },
     "META-INF/BNDLTOOL.SF": {
-      "Size": 90346
+      "Size": 90142
     },
     "META-INF/com.android.tools/proguard/coroutines.pro": {
       "Size": 1345
@@ -245,7 +239,7 @@
       "Size": 5
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 90219
+      "Size": 90015
     },
     "META-INF/maven/com.google.guava/listenablefuture/pom.properties": {
       "Size": 96
@@ -2285,5 +2279,5 @@
       "Size": 812848
     }
   },
-  "PackageSize": 22873019
+  "PackageSize": 21263139
 }

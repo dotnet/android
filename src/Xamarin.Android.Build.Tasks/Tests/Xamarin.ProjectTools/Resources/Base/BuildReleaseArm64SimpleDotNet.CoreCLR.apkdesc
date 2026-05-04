@@ -8,7 +8,7 @@
       "Size": 400044
     },
     "lib/arm64-v8a/libassembly-store.so": {
-      "Size": 3099384
+      "Size": 3098192
     },
     "lib/arm64-v8a/libclrjit.so": {
       "Size": 3223752
@@ -18,12 +18,6 @@
     },
     "lib/arm64-v8a/libmonodroid.so": {
       "Size": 1366648
-    },
-    "lib/arm64-v8a/libmscordaccore.so": {
-      "Size": 2463848
-    },
-    "lib/arm64-v8a/libmscordbi.so": {
-      "Size": 1899720
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
       "Size": 72344
@@ -38,16 +32,16 @@
       "Size": 162000
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 20744
+      "Size": 20424
     },
     "META-INF/BNDLTOOL.RSA": {
-      "Size": 1221
+      "Size": 1223
     },
     "META-INF/BNDLTOOL.SF": {
-      "Size": 2295
+      "Size": 2091
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 2168
+      "Size": 1964
     },
     "res/drawable-hdpi-v4/icon.png": {
       "Size": 2178
@@ -74,5 +68,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 9238298
+  "PackageSize": 7632514
 }

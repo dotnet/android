@@ -205,8 +205,8 @@ namespace Xamarin.Android.Tasks
 			if (!GetRequiredMetadata (item, CalculateLayoutCodeBehind.WidgetCollectionKeyMetadata, out collectionKey))
 				return;
 
-			ICollection<LayoutWidget> widgets = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ICollection<LayoutWidget>> (ProjectSpecificTaskObjectKey (collectionKey), RegisteredTaskObjectLifetime.Build);
-			if ((widgets?.Count ?? 0) == 0) {
+			ICollection<LayoutWidget>? widgets = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ICollection<LayoutWidget>> (ProjectSpecificTaskObjectKey (collectionKey), RegisteredTaskObjectLifetime.Build);
+			if (widgets is null || widgets.Count == 0) {
 				string inputPaths = String.Join ("; ", resourceItems.Select (i => i.ItemSpec));
 				LogCodedWarning ("XA4222", Properties.Resources.XA4222, inputPaths);
 				return;
@@ -330,7 +330,7 @@ namespace Xamarin.Android.Tasks
 							throw new InvalidOperationException ($"Widget {widget.Name} is of unknown type {widget.WidgetType}");
 					}
 					widget.Type = decayedType;
-					LogCodedWarning ("XA4225", Properties.Resources.XA4225, widget.Name, className, decayedType);
+					LogCodedWarning ("XA4225", Properties.Resources.XA4225, widget.Name ?? "", className, decayedType ?? "");
 				}
 
 				if (widget.Type.IsNullOrWhiteSpace ())

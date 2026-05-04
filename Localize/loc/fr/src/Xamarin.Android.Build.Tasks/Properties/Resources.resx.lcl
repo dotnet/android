@@ -884,10 +884,13 @@
       </Item>
       <Item ItemId=";XA1044" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The MSBuild property '{0}' is not compatible with the {1} runtime and will be ignored. Either remove the property or guard it with a condition: Condition="'$(UseMonoRuntime)' == 'true'"]]></Val>
+          <Val><![CDATA[The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled. Either remove the property or guard it with a condition: Condition="'$(UseMonoRuntime)' == 'true'"]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[La propriété MSBuild « {0} » n’est pas compatible avec le runtime {1} et sera ignorée. Supprimez la propriété ou protégez-la avec une condition : Condition="'$(UseMonoRuntime)' == 'true'"]]></Val>
+            <Val><![CDATA[La propriété MSBuild « {0} » n’est pas compatible avec le runtime {1}. La compilation ne peut pas continuer tant que cette propriété est activée. Supprimez la propriété ou protégez-la avec une condition : Condition="'$(UseMonoRuntime)' == 'true'"]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The MSBuild property '{0}' is not compatible with the {1} runtime and will be ignored. Either remove the property or guard it with a condition: Condition="'$(UseMonoRuntime)' == 'true'"]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>

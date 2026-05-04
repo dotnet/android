@@ -1014,7 +1014,7 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
 </comment>
   </data>
   <data name="XA1044" xml:space="preserve">
-    <value>Die MSBuild-Eigenschaft „{0}“ ist nicht mit der {1} Laufzeit kompatibel und wird ignoriert. Entfernen Sie entweder die Eigenschaft, oder schützen Sie sie mit einer Bedingung: Condition="$(UseMonoRuntime)" == "true""</value>
+    <value>The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled. Either remove the property or guard it with a condition: Condition="'$(UseMonoRuntime)' == 'true'"</value>
     <comment>The following are literal names and should not be translated: MSBuild, UseMonoRuntime.
 {0} - The MSBuild property name (e.g. RunAOTCompilation, EnableLLVM).
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).

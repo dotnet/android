@@ -62,7 +62,19 @@ Review the CI results. **Never post ✅ LGTM if any required CI check is failing
 
 ### 5. Load review rules
 
-Read `references/review-rules.md` from this skill's directory.
+Based on the file types identified in step 2, read the appropriate rule files from this skill's `references/` directory.
+
+**Always load:**
+- `references/repo-conventions.md` — Formatting, style, and patterns specific to this repository.
+- `references/ai-pitfalls.md` — Common AI-generated code mistakes.
+
+**Conditionally load based on changed file types:**
+- `references/csharp-rules.md` — When any `.cs` files changed. Covers nullable, async, error handling, performance, and code organization.
+- `references/msbuild-rules.md` — When `.targets`, `.props`, `.projitems`, or `.csproj` files changed, or when MSBuild task C# files changed (e.g., files under `src/Xamarin.Android.Build.Tasks/`).
+- `references/native-rules.md` — When `.c`, `.cpp`, `.h`, or `.hpp` files changed. Covers memory management, C++ best practices, symbol visibility, and platform-specific code.
+- `references/interop-rules.md` — When both C# and native files changed, or when the diff contains P/Invoke or JNI interop code (e.g., `DllImport`, `[Register]` attribute changes, `JNIEnv` calls, `[MarshalAs]`, `[StructLayout]`, or marshal-related changes in files under `src/Mono.Android/` or `src/native/`).
+- `references/testing-rules.md` — When test files changed (e.g., files under `tests/`, `**/Tests/`, or test project directories).
+- `references/security-rules.md` — When any code files changed (C#, C/C++, or MSBuild).
 
 ### 6. Analyze the diff
 

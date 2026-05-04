@@ -3,6 +3,7 @@
 
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateTrimmableTypeMap" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateEmptyTypemapStub" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotBootstrapSources" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.TypeMap.Trimmable.CoreCLR.targets"
       Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
@@ -124,7 +125,7 @@
   -->
   <Target Name="_GenerateJavaStubs"
       DependsOnTargets="_SetLatestTargetFrameworkVersion;_CleanIntermediateIfNeeded;_PrepareAssemblies;_GetGenerateJavaStubsInputs;_DefineBuildTargetAbis;_PrepareNativeAssemblySources"
-      Inputs="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll"
+      Inputs="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll;@(_EnvironmentFiles)"
       Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
 
     <ItemGroup>
@@ -135,6 +136,15 @@
     <ItemGroup>
       <FileWrites Include="@(_TypeMapJavaFiles->'$(IntermediateOutputPath)android/src/%(RecursiveDir)%(Filename)%(Extension)')" />
     </ItemGroup>
+
+    <!-- NativeAOT bootstrap Java sources depend on environment files, so include them as inputs -->
+    <GenerateNativeAotBootstrapSources
+        Condition=" '$(_AndroidRuntime)' == 'NativeAOT' "
+        OutputDirectory="$(IntermediateOutputPath)android"
+        TargetName="$(TargetName)"
+        Environments="@(_EnvironmentFiles)"
+        HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
+        EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)" />
 
     <!-- Set properties for ABI/RID used by CoreCLR _AddTrimmableTypeMapAssembliesToStore fallback -->
     <PropertyGroup>
