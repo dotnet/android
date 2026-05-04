@@ -893,7 +893,7 @@ public class ModelBuilderTests : FixtureTestBase
 
 			var model1 = BuildModelWithArrays (new [] { peer }, maxArrayRank: 1);
 			Assert.Equal (1, model1.MaxArrayRank);
-			Assert.Single (model1.Entries.Where (e => e.AnchorRank is not null));
+			Assert.Single (model1.Entries, e => e.AnchorRank is not null);
 		}
 
 		[Fact]
