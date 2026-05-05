@@ -16,13 +16,6 @@ static class ModelBuilder
 {
 	const string ProxyTypeSuffix = "_Proxy";
 
-	// Workaround for https://github.com/dotnet/runtime/issues/127004
-	// When true, all TypeMap entries are emitted as 2-arg (unconditional) to avoid the
-	// trimmer bug that strips TypeMapAssociation attributes when a TypeMap attribute
-	// references the same type. Set to false once the runtime bug is fixed to re-enable
-	// 3-arg conditional entries that allow unused framework bindings to be trimmed away.
-	const bool ForceUnconditionalEntries = true;
-
 	static readonly HashSet<string> EssentialRuntimeTypes = new (StringComparer.Ordinal) {
 		"java/lang/Object",
 		"java/lang/Class",
@@ -44,7 +37,7 @@ static class ModelBuilder
 	/// Emit per-rank array <c>TypeMap</c> entries + <c>__ArrayMapRank{N}</c> sentinels
 	/// for ranks 1..<paramref name="maxArrayRank"/>. 0 disables array entry emission.
 	/// </param>
-	public static TypeMapAssemblyData Build (IReadOnlyList<JavaPeerInfo> peers, string outputPath, string? assemblyName = null, int maxArrayRank = 0)
+	public static TypeMapAssemblyData Build (IReadOnlyList<JavaPeerInfo> peers, string outputPath, string? assemblyName = null, int maxArrayRank = 0, bool forceUnconditionalEntries = true)
 	{
 		if (peers is null) {
 			throw new ArgumentNullException (nameof (peers));
@@ -101,6 +94,11 @@ static class ModelBuilder
 			if (maxArrayRank > 0) {
 				EmitArrayEntries (model, jniName, peersForName, maxArrayRank);
 			}
+			EmitPeers (model, jniName, peersForName, assemblyName, usedProxyNames, forceUnconditionalEntries);
+
+			if (maxArrayRank > 0) {
+				EmitArrayEntries (model, jniName, peersForName, maxArrayRank);
+			}
 		}
 
 		// Compute IgnoresAccessChecksTo from cross-assembly references
@@ -125,7 +123,7 @@ static class ModelBuilder
 	}
 
 	static void EmitPeers (TypeMapAssemblyData model, string jniName,
-		List<JavaPeerInfo> peersForName, string assemblyName, HashSet<string> usedProxyNames)
+		List<JavaPeerInfo> peersForName, string assemblyName, HashSet<string> usedProxyNames, bool forceUnconditionalEntries)
 	{
 		bool isAliasGroup = peersForName.Count > 1;
 
@@ -141,7 +139,7 @@ static class ModelBuilder
 				model.ProxyTypes.Add (proxy);
 			}
 
-			var entry = BuildEntry (peer, proxy, assemblyName, jniName);
+			var entry = BuildEntry (peer, proxy, assemblyName, jniName, forceUnconditionalEntries);
 			model.Entries.Add (entry);
 
 			// Emit a TypeMapAssociation for every entry that has a proxy.
@@ -176,7 +174,7 @@ static class ModelBuilder
 				model.ProxyTypes.Add (proxy);
 			}
 
-			model.Entries.Add (BuildEntry (peer, proxy, assemblyName, entryJniName));
+			model.Entries.Add (BuildEntry (peer, proxy, assemblyName, entryJniName, forceUnconditionalEntries));
 
 			// Link each alias type to the alias holder for trimming
 			model.Associations.Add (new TypeMapAssociationData {
@@ -189,12 +187,12 @@ static class ModelBuilder
 		}
 
 		// Base JNI name entry → alias holder (self-referencing trim target, kept alive by associations)
-		// When ForceUnconditionalEntries is true we MUST emit this as 2-arg (unconditional) just
+		// When forceUnconditionalEntries is true we MUST emit this as 2-arg (unconditional) just
 		// like BuildEntry does: dotnet/runtime#127004 strips the TypeMapAssociation that keeps the
 		// holder alive when a TypeMap entry references the same type, leaving the dictionary key
 		// missing at runtime and breaking hierarchy lookups for essential types like
 		// java/lang/String and java/lang/Object.
-		bool aliasBaseUnconditional = ForceUnconditionalEntries
+		bool aliasBaseUnconditional = forceUnconditionalEntries
 			|| EssentialRuntimeTypes.Contains (jniName)
 			|| peersForName.Any (IsUnconditionalEntry);
 		model.Entries.Add (new TypeMapAttributeData {
@@ -397,7 +395,7 @@ static class ModelBuilder
 	}
 
 	static TypeMapAttributeData BuildEntry (JavaPeerInfo peer, JavaPeerProxyData? proxy,
-		string outputAssemblyName, string jniName)
+		string outputAssemblyName, string jniName, bool forceUnconditionalEntries)
 	{
 		string proxyRef;
 		if (proxy != null) {
@@ -406,9 +404,9 @@ static class ModelBuilder
 			proxyRef = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName);
 		}
 
-		// When ForceUnconditionalEntries is true, always emit 2-arg (unconditional) TypeMap
+		// When forceUnconditionalEntries is true, always emit 2-arg (unconditional) TypeMap
 		// attributes to work around https://github.com/dotnet/runtime/issues/127004.
-		bool isUnconditional = ForceUnconditionalEntries || IsUnconditionalEntry (peer);
+		bool isUnconditional = forceUnconditionalEntries || IsUnconditionalEntry (peer);
 		string? targetRef = null;
 		if (!isUnconditional) {
 			targetRef = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName);

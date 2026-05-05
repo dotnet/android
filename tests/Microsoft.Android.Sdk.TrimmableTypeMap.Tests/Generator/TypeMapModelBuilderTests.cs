@@ -10,10 +10,10 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 
 public class ModelBuilderTests : FixtureTestBase
 {
-	static TypeMapAssemblyData BuildModel (IReadOnlyList<JavaPeerInfo> peers, string? assemblyName = null)
+	static TypeMapAssemblyData BuildModel (IReadOnlyList<JavaPeerInfo> peers, string? assemblyName = null, bool forceUnconditionalEntries = true)
 	{
 		var outputPath = Path.Combine (Path.GetTempPath (), (assemblyName ?? "TestTypeMap") + ".dll");
-		return ModelBuilder.Build (peers, outputPath, assemblyName);
+		return ModelBuilder.Build (peers, outputPath, assemblyName, forceUnconditionalEntries);
 	}
 
 	static TypeMapAssemblyData BuildModelWithArrays (IReadOnlyList<JavaPeerInfo> peers, string? assemblyName = null, int maxArrayRank = 3)
@@ -180,6 +180,17 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.Single (model.Entries);
 			Assert.True (model.Entries [0].IsUnconditional);
 			Assert.Null (model.Entries [0].TargetTypeReference);
+		}
+
+		[Fact]
+		public void Build_McwBinding_IsConditional_WhenForceUnconditionalEntriesDisabled ()
+		{
+			var peer = MakeMcwPeer ("android/app/Activity", "Android.App.Activity", "Mono.Android") with { DoNotGenerateAcw = true };
+			var model = BuildModel (new [] { peer }, forceUnconditionalEntries: false);
+
+			Assert.Single (model.Entries);
+			Assert.False (model.Entries [0].IsUnconditional);
+			Assert.Equal ("Android.App.Activity, Mono.Android", model.Entries [0].TargetTypeReference);
 		}
 
 		[Fact]

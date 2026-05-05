@@ -4,6 +4,7 @@
 
   <PropertyGroup>
     <_TrimmableRuntimeProviderJavaName Condition=" '$(_TrimmableRuntimeProviderJavaName)' == '' ">net.dot.jni.nativeaot.NativeAotRuntimeProvider</_TrimmableRuntimeProviderJavaName>
+    <_TrimmableTypeMapForceUnconditionalEntries Condition=" '$(_TrimmableTypeMapForceUnconditionalEntries)' == '' ">false</_TrimmableTypeMapForceUnconditionalEntries>
   </PropertyGroup>
 
   <!-- Before ILC input computation, add generated assemblies to ILC inputs.

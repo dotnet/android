@@ -34,7 +34,8 @@ public class TrimmableTypeMapGenerator
 		ManifestConfig? manifestConfig = null,
 		XDocument? manifestTemplate = null,
 		string? packageNamingPolicy = null,
-		int maxArrayRank = 0)
+		int maxArrayRank = 0,
+		bool forceUnconditionalEntries = true)
 	{
 		_ = assemblies ?? throw new ArgumentNullException (nameof (assemblies));
 		_ = systemRuntimeVersion ?? throw new ArgumentNullException (nameof (systemRuntimeVersion));
@@ -53,7 +54,7 @@ public class TrimmableTypeMapGenerator
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
 		PropagateCannotRegisterToDescendants (allPeers);
 
-		var generatedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, useSharedTypemapUniverse, maxArrayRank);
+		var generatedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, useSharedTypemapUniverse, maxArrayRank, forceUnconditionalEntries);
 		var jcwPeers = allPeers.Where (p =>
 			!frameworkAssemblyNames.Contains (p.AssemblyName)
 			|| p.JavaName.StartsWith ("mono/", StringComparison.Ordinal)).ToList ();
@@ -144,7 +145,7 @@ public class TrimmableTypeMapGenerator
 		return (peers, manifestInfo);
 	}
 
-	List<GeneratedAssembly> GenerateTypeMapAssemblies (List<JavaPeerInfo> allPeers, Version systemRuntimeVersion, bool useSharedTypemapUniverse, int maxArrayRank)
+	List<GeneratedAssembly> GenerateTypeMapAssemblies (List<JavaPeerInfo> allPeers, Version systemRuntimeVersion, bool useSharedTypemapUniverse, int maxArrayRank, bool forceUnconditionalEntries)
 	{
 		List<(string AssemblyName, List<JavaPeerInfo> Peers)> peersByAssembly;
 
@@ -173,7 +174,7 @@ public class TrimmableTypeMapGenerator
 			string typeMapAssemblyName = $"_{assemblyName}.TypeMap";
 			perAssemblyNames.Add (typeMapAssemblyName);
 			var stream = new MemoryStream ();
-			generator.Generate (peers, stream, typeMapAssemblyName, useSharedTypemapUniverse, maxArrayRank);
+			generator.Generate (peers, stream, typeMapAssemblyName, useSharedTypemapUniverse, maxArrayRank, forceUnconditionalEntries);
 			stream.Position = 0;
 			generatedAssemblies.Add (new GeneratedAssembly (typeMapAssemblyName, stream));
 			logger.LogGeneratedTypeMapAssemblyInfo (typeMapAssemblyName, peers.Count);

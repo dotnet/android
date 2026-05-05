@@ -76,6 +76,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	/// <c>$(_AndroidTrimmableTypeMapMaxArrayRank)</c>.
 	/// </summary>
 	public int MaxArrayRank { get; set; }
+
+	public bool ForceUnconditionalEntries { get; set; } = true;
 	public string? ManifestPlaceholders { get; set; }
 	public string? CheckedBuild { get; set; }
 	public string? ApplicationJavaClass { get; set; }
@@ -141,7 +143,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				manifestConfig: manifestConfig,
 				manifestTemplate: manifestTemplate,
 				packageNamingPolicy: PackageNamingPolicy,
-				maxArrayRank: MaxArrayRank);
+				maxArrayRank: MaxArrayRank,
+				forceUnconditionalEntries: ForceUnconditionalEntries);
 
 			GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyPaths);
 			GeneratedJavaFiles = WriteJavaSourcesToDisk (result.GeneratedJavaSources);
