@@ -61,15 +61,8 @@ public abstract class TestInstrumentation : Instrumentation
 
 				foreach (var assembly in GetTestAssemblies ()) {
 					Log.Info (LogTag, $"Loading tests from: {assembly.GetName ().Name}");
-					var runner = new NUnitTestAssemblyRunner (new DefaultTestAssemblyBuilder ());
-
-					// Use the string-based Load overload with the assembly's full name.
-					// The Assembly overload calls AssemblyHelper.GetAssemblyPath() which
-					// accesses Assembly.CodeBase — this throws NotSupportedException on
-					// .NET Android where assemblies are in a single-file bundle.
-					// The string overload calls AssemblyHelper.Load(name) which resolves
-					// the already-loaded assembly via Assembly.Load(new AssemblyName(name)).
-					runner.Load (assembly.FullName!, new Dictionary<string, object> ());
+					var runner = new NUnitTestAssemblyRunner (new AndroidTestAssemblyBuilder ());
+					runner.Load (assembly, new Dictionary<string, object> ());
 
 					var result = runner.Run (listener, filter);
 					CountResults (result, ref passed, ref failed, ref skipped);
@@ -312,5 +305,24 @@ public abstract class TestInstrumentation : Instrumentation
 
 		public void TestOutput (TestOutput output) { }
 		public void SendMessage (TestMessage message) { }
+	}
+
+	/// <summary>
+	/// Custom ITestAssemblyBuilder that avoids calling Assembly.CodeBase.
+	/// NUnit 3.13.3's DefaultTestAssemblyBuilder.Build(Assembly, ...) calls
+	/// AssemblyHelper.GetAssemblyPath() which accesses Assembly.CodeBase —
+	/// this throws NotSupportedException on .NET Android single-file bundles.
+	/// This builder redirects through the string overload using the assembly's
+	/// simple name, which NUnit resolves via Assembly.Load(AssemblyName).
+	/// </summary>
+	class AndroidTestAssemblyBuilder : ITestAssemblyBuilder
+	{
+		readonly DefaultTestAssemblyBuilder inner = new ();
+
+		public ITest Build (Assembly assembly, IDictionary<string, object> options)
+			=> inner.Build (assembly.GetName ().Name!, options);
+
+		public ITest Build (string assemblyNameOrPath, IDictionary<string, object> options)
+			=> inner.Build (assemblyNameOrPath, options);
 	}
 }
