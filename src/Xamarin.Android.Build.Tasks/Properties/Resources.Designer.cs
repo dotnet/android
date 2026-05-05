@@ -783,16 +783,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Ignoring configuration file &apos;{0}&apos;. .NET configuration files are not supported in .NET for Android projects that target .NET 6 or higher..
-        /// </summary>
-        public static string XA1024 {
-            get {
-                return ResourceManager.GetString("XA1024", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The experimental &apos;Hybrid&apos; value for the &apos;AndroidAotMode&apos; MSBuild property is not currently compatible with the armeabi-v7a target ABI. To continue using the experimental &apos;Hybrid&apos; value for &apos;AndroidAotMode&apos;, deselect the armeabi-v7a target ABI in the Visual Studio project property pages or edit the project file in a text editor and remove &apos;armeabi-v7a&apos; from the &apos;AndroidSupportedAbis&apos; MSBuild property..
+        ///   Looks up a localized string similar to The experimental &apos;Hybrid&apos; value for the &apos;AndroidAotMode&apos; MSBuild propertyis not currently compatible with the armeabi-v7a target ABI. To continue using the experimental &apos;Hybrid&apos; value for &apos;AndroidAotMode&apos;, deselect the armeabi-v7a target ABI in the Visual Studio project property pages or edit the project file in a text editor and remove &apos;armeabi-v7a&apos; from the &apos;AndroidSupportedAbis&apos; MSBuild property..
         /// </summary>
         public static string XA1025 {
             get {
