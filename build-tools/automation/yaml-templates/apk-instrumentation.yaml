@@ -33,6 +33,7 @@ steps:
 - powershell: |
     $projectDir = Split-Path -Parent "${{ parameters.project }}"
     $projectFile = Split-Path -Leaf "${{ parameters.project }}"
+    $resultsDir = "${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/TestResults"
     Push-Location $projectDir
     if ([Environment]::OSVersion.Platform -eq "Unix") {
         $DOTNET_ROOT = "${{ parameters.xaSourcePath }}/bin/${{ parameters.buildConfiguration }}/dotnet"
@@ -43,23 +44,9 @@ steps:
         $env:PATH = "${DOTNET_ROOT};$env:PATH"
         $dotnetPath = "${DOTNET_ROOT}\dotnet.exe"
     }
-    & $dotnetPath test $projectFile --no-build -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog -c ${{ parameters.configuration }} ${{ parameters.extraBuildArgs }}
+    & $dotnetPath test $projectFile --no-build -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog -c ${{ parameters.configuration }} --results-directory $resultsDir --report-trx --report-trx-filename ${{ parameters.testName }}.trx ${{ parameters.extraBuildArgs }}
     Pop-Location
   displayName: run ${{ parameters.testName }}
-  condition: ${{ parameters.condition }}
-  continueOnError: true
-
-- script: |
-    RESULTS_DIR="${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/TestResults"
-    mkdir -p "$RESULTS_DIR"
-    TRX_FILE=$(find "$TMPDIR/AndroidTestResults" -name "*.trx" -newer "${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog" 2>/dev/null | head -1)
-    if [ -n "$TRX_FILE" ]; then
-      cp "$TRX_FILE" "$RESULTS_DIR/${{ parameters.testName }}.trx"
-      echo "Copied TRX: $TRX_FILE -> $RESULTS_DIR/${{ parameters.testName }}.trx"
-    else
-      echo "##[warning]No TRX file found in $TMPDIR/AndroidTestResults"
-    fi
-  displayName: copy ${{ parameters.testName }} trx
   condition: ${{ parameters.condition }}
   continueOnError: true
 
