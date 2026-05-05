@@ -135,7 +135,10 @@ public class LinkNativeAotSharedLibrary : AndroidTask
 
 		// Write linker script if content is provided
 		if (!LinkerScriptContent.IsNullOrEmpty () && !LinkerScript.IsNullOrEmpty ()) {
-			Directory.CreateDirectory (Path.GetDirectoryName (LinkerScript)!);
+			string? dir = Path.GetDirectoryName (LinkerScript);
+			if (!dir.IsNullOrEmpty ()) {
+				Directory.CreateDirectory (dir);
+			}
 			File.WriteAllText (LinkerScript, LinkerScriptContent);
 		}
 
