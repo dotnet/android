@@ -57,6 +57,7 @@ static partial class JavaInteropRuntime
 			// This needs to be called first, since it sets up locations, environment variables, logging etc
 			XA_Host_NativeAOT_OnInit (language, filesDir, cacheDir, ref initArgs);
 			JNIEnvInit.InitializeJniRuntimeEarly (initArgs);
+			JNIEnvInit.InitializeNativeAotTrimmableTypeMapData ();
 
 			var settings    = new DiagnosticSettings ();
 			settings.AddDebugDotnetLog ();
@@ -75,6 +76,7 @@ static partial class JavaInteropRuntime
 
 			// Entry point into Mono.Android.dll. Log categories are initialized in JNI_OnLoad.
 			JNIEnvInit.InitializeJniRuntime (runtime, initArgs);
+			JNIEnvInit.RegisterNativeAotTrimmableTypeMapNativeMethods ();
 
 			transition  = new JniTransition (jnienv);
 

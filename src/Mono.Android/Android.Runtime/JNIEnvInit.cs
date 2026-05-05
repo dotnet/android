@@ -105,13 +105,43 @@ namespace Android.Runtime
 			Logger.SetLogCategories ((LogCategories)args.logCategories);
 		}
 
+		internal static void InitializeNativeAotTrimmableTypeMapData ()
+		{
+			if (RuntimeFeature.TrimmableTypeMap) {
+				InitializeTrimmableTypeMapData ();
+			}
+		}
+
 		// NOTE: should have different name than `Initialize` to avoid:
 		// * Assertion at /__w/1/s/src/mono/mono/metadata/icall.c:6258, condition `!only_unmanaged_callers_only' not met
 		internal static void InitializeJniRuntime (JniRuntime runtime, JnienvInitializeArgs args)
 		{
+			gref_gc_threshold = args.grefGcThreshold;
+
+			jniRemappingInUse = args.jniRemappingInUse;
+			MarshalMethodsEnabled = args.marshalMethodsEnabled;
+			java_class_loader = args.grefLoader;
+
+			BoundExceptionType = (BoundExceptionType)args.ioExceptionType;
+
 			androidRuntime = runtime;
 			JniRuntime.SetCurrent (runtime);
+
+			grefIGCUserPeer_class = args.grefIGCUserPeer;
+			grefGCUserPeerable_class = args.grefGCUserPeerable;
+
+			PropagateExceptions = args.brokenExceptionTransitions == 0;
+
+			JavaNativeTypeManager.PackageNamingPolicy = (PackageNamingPolicy)args.packageNamingPolicy;
+
 			SetSynchronizationContext ();
+		}
+
+		internal static void RegisterNativeAotTrimmableTypeMapNativeMethods ()
+		{
+			if (RuntimeFeature.TrimmableTypeMap) {
+				TrimmableTypeMap.RegisterNativeMethods ();
+			}
 		}
 
 		[UnmanagedCallersOnly]
