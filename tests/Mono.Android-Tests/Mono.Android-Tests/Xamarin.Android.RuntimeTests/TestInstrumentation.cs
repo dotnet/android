@@ -15,6 +15,26 @@ namespace Xamarin.Android.RuntimeTests
 		{
 		}
 
+		protected override IEnumerable<string>? ExcludedCategories {
+			get {
+				var categories = new List<string> ();
+
+				if (!Microsoft.Android.Runtime.RuntimeFeature.IsMonoRuntime) {
+					// CoreCLR-specific exclusions
+					// TODO: https://github.com/dotnet/android/issues/10069
+					categories.Add ("CoreCLRIgnore");
+					categories.Add ("NTLM");
+				}
+
+				if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
+					categories.Add ("NativeTypeMap");
+					categories.Add ("Export");
+				}
+
+				return categories.Count > 0 ? categories : null;
+			}
+		}
+
 		protected override IEnumerable<string>? ExcludedTestNames {
 			get {
 				if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap)
