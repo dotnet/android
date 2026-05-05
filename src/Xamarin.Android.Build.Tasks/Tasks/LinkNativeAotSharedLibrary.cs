@@ -89,6 +89,11 @@ public class LinkNativeAotSharedLibrary : AndroidTask
 	/// </summary>
 	public string? LinkerScriptContent { get; set; }
 
+	/// <summary>
+	/// Extra arguments to pass directly to the linker, separated by semicolons.
+	/// </summary>
+	public string? ExtraLinkerArgs { get; set; }
+
 	[Required]
 	public string SupportedAbis { get; set; } = "";
 
@@ -131,6 +136,13 @@ public class LinkNativeAotSharedLibrary : AndroidTask
 
 		if (!ExportsFile.IsNullOrEmpty ()) {
 			linker.VersionScript = ExportsFile;
+		}
+
+		if (!ExtraLinkerArgs.IsNullOrEmpty ()) {
+			linker.ExtraArgs = new List<string> ();
+			foreach (var arg in ExtraLinkerArgs.Split (new [] { ';' }, StringSplitOptions.RemoveEmptyEntries)) {
+				linker.ExtraArgs.Add (arg.Trim ());
+			}
 		}
 
 		// Write linker script if content is provided

@@ -343,6 +343,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
         ExportsFile="$(ExportsFile)"
         LinkerScript="$(NativeIntermediateOutputPath)sections.ld"
         LinkerScriptContent="OVERWRITE_SECTIONS { __modules : { KEEP(*(__modules)) } }"
+        ExtraLinkerArgs="$(_AndroidNativeAotExtraLinkerArgs)"
         SupportedAbis="@(_PrivateBuildTargetAbi)"
         DebugBuild="$(AndroidIncludeDebugSymbols)"
     />

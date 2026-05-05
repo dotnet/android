@@ -63,6 +63,7 @@ class NativeLinker
 	public string? EntryPoint { get; set; }
 	public string? CompressDebugSections { get; set; }
 	public List<string>? AdditionalSearchPaths { get; set; }
+	public List<string>? ExtraArgs { get; set; }
 
 	public NativeLinker (TaskLoggingHelper log, string abi, string soname, string binutilsDir, string intermediateDir,
 	                     IEnumerable<ITaskItem> runtimePackLibDirs, CancellationToken? cancellationToken = null, Action? cancelTask = null)
@@ -229,6 +230,12 @@ class NativeLinker
 
 		if (StripDebugSymbols && !SaveDebugSymbols) {
 			sw.WriteLine ("-s");
+		}
+
+		if (ExtraArgs != null) {
+			foreach (string arg in ExtraArgs) {
+				sw.WriteLine (arg);
+			}
 		}
 
 		var excludeExportsLibs = new List<string> ();
