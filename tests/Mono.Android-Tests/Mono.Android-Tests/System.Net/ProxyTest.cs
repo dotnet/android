@@ -32,7 +32,7 @@ namespace System.NetTests {
 				ex.Status == WebExceptionStatus.ConnectFailure ||
 				ex.Status == WebExceptionStatus.NameResolutionFailure ||
 				ex.Status == WebExceptionStatus.Timeout) {
-				Assert.Inconclusive ($"Network failure: {ex.Message}");
+				Assert.Ignore ($"Ignoring network failure: {ex.Message}");
 			}
 		}
 	}
