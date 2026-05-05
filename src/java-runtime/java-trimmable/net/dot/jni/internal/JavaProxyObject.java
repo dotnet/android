@@ -8,7 +8,7 @@ import net.dot.jni.GCUserPeerable;
 		extends java.lang.Object
 		implements GCUserPeerable
 {
-	ArrayList<Object>       managedReferences     = new ArrayList<Object>();
+	ArrayList<Object>       managedReferences     = new ArrayList<Object> ();
 
 	// This trimmable runtime copy cannot use Java.Interop's native object methods:
 	// those are registered through ManagedPeer.registerNativeMembers, which is not
@@ -16,19 +16,19 @@ import net.dot.jni.GCUserPeerable;
 	// Trimmable proxies use Java identity semantics: equals/hashCode/toString
 	// do not delegate to the wrapped .NET object.
 	@Override
-	public boolean equals(Object obj)
+	public boolean equals (Object obj)
 	{
 		return this == obj;
 	}
 
 	@Override
-	public int hashCode()
+	public int hashCode ()
 	{
 		return System.identityHashCode (this);
 	}
 
 	@Override
-	public String toString()
+	public String toString ()
 	{
 		return super.toString ();
 	}

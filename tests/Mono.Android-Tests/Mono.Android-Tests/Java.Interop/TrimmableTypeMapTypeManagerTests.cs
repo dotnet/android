@@ -218,23 +218,38 @@ namespace Java.InteropTests
 			var otherState = marshaler.CreateObjectReferenceArgumentState (other);
 
 			try {
-				IntPtr proxyClass = JNIEnv.GetObjectClass (state.ReferenceValue.Handle);
-				try {
-					IntPtr equals = JNIEnv.GetMethodID (proxyClass, "equals", "(Ljava/lang/Object;)Z");
-					IntPtr hashCode = JNIEnv.GetMethodID (proxyClass, "hashCode", "()I");
-					IntPtr toString = JNIEnv.GetMethodID (proxyClass, "toString", "()Ljava/lang/String;");
+				var localProxy = state.ReferenceValue.NewLocalRef ();
+				var localOtherProxy = otherState.ReferenceValue.NewLocalRef ();
 
-					Assert.IsTrue (JNIEnv.CallBooleanMethod (state.ReferenceValue.Handle, equals, new JValue (state.ReferenceValue.Handle)));
-					Assert.IsFalse (JNIEnv.CallBooleanMethod (state.ReferenceValue.Handle, equals, new JValue (otherState.ReferenceValue.Handle)));
-					Assert.AreEqual (
-						JNIEnv.CallIntMethod (state.ReferenceValue.Handle, hashCode),
-						JNIEnv.CallIntMethod (state.ReferenceValue.Handle, hashCode));
-					var proxyString = JNIEnv.GetString (JNIEnv.CallObjectMethod (state.ReferenceValue.Handle, toString), JniHandleOwnership.TransferLocalRef);
-					Assert.IsTrue (
-						proxyString.StartsWith ("net.dot.jni.internal.JavaProxyObject@", StringComparison.Ordinal),
-						proxyString);
+				try {
+					IntPtr proxyClass = JNIEnv.GetObjectClass (localProxy.Handle);
+					try {
+						IntPtr equals = JNIEnv.GetMethodID (proxyClass, "equals", "(Ljava/lang/Object;)Z");
+						IntPtr hashCode = JNIEnv.GetMethodID (proxyClass, "hashCode", "()I");
+						IntPtr toString = JNIEnv.GetMethodID (proxyClass, "toString", "()Ljava/lang/String;");
+						var systemClass = JniEnvironment.Types.FindClass ("java/lang/System");
+
+						try {
+							IntPtr identityHashCode = JNIEnv.GetStaticMethodID (systemClass.Handle, "identityHashCode", "(Ljava/lang/Object;)I");
+
+							Assert.IsTrue (JNIEnv.CallBooleanMethod (localProxy.Handle, equals, new JValue (localProxy.Handle)));
+							Assert.IsFalse (JNIEnv.CallBooleanMethod (localProxy.Handle, equals, new JValue (localOtherProxy.Handle)));
+							Assert.AreEqual (
+								JNIEnv.CallStaticIntMethod (systemClass.Handle, identityHashCode, new JValue (localProxy.Handle)),
+								JNIEnv.CallIntMethod (localProxy.Handle, hashCode));
+							var proxyString = JNIEnv.GetString (JNIEnv.CallObjectMethod (localProxy.Handle, toString), JniHandleOwnership.TransferLocalRef);
+							Assert.IsTrue (
+								proxyString.StartsWith ("net.dot.jni.internal.JavaProxyObject@", StringComparison.Ordinal),
+								proxyString);
+						} finally {
+							JniObjectReference.Dispose (ref systemClass);
+						}
+					} finally {
+						JNIEnv.DeleteLocalRef (proxyClass);
+					}
 				} finally {
-					JNIEnv.DeleteLocalRef (proxyClass);
+					JniObjectReference.Dispose (ref localProxy);
+					JniObjectReference.Dispose (ref localOtherProxy);
 				}
 			} finally {
 				marshaler.DestroyArgumentState (other, ref otherState);
