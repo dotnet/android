@@ -95,7 +95,7 @@ projects that use the Microsoft.Android.Runtimes framework in .NET 6+.
       <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libunwind_xamarin-release.a" />
     </ItemGroup>
 
-    <ItemGroup>
+    <ItemGroup Condition=" '$(AndroidRuntime)' != 'NativeAOT' ">
       <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libc.so" />
       <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libdl.so" />
       <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\liblog.so" />
@@ -109,9 +109,15 @@ projects that use the Microsoft.Android.Runtimes framework in .NET 6+.
       <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnaot-android.release-static-release.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnaot-android.release-static-release.a" />
       <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestStableApiLevel)\Microsoft.Android.Runtime.NativeAOT.dll" />
 
-      <!-- CRT objects and toolchain libraries needed for NDK-free linking -->
-      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\crtbegin_so.o" />
-      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\crtend_so.o" />
+      <!-- NativeAOT uses a separate redist directory with system lib stubs and CRT objects
+           at the higher API level required by dotnet/runtime's native libraries (API 24). -->
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)redist-nativeaot\$(AndroidRID)\crtbegin_so.o" />
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)redist-nativeaot\$(AndroidRID)\crtend_so.o" />
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)redist-nativeaot\$(AndroidRID)\libc.so" />
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)redist-nativeaot\$(AndroidRID)\libdl.so" />
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)redist-nativeaot\$(AndroidRID)\liblog.so" />
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)redist-nativeaot\$(AndroidRID)\libm.so" />
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)redist-nativeaot\$(AndroidRID)\libz.so" />
     </ItemGroup>
 
     <ItemGroup>
