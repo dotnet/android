@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
@@ -75,6 +77,38 @@ namespace Xamarin.Android.Build.Tests {
 			foreach (var assembly in task.GeneratedAssemblies) {
 				FileAssert.Exists (assembly.ItemSpec);
 			}
+		}
+
+		[Test]
+		public void Execute_DuplicateFrameworkAssemblyItem_MakesFrameworkAcwConditional ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+
+			var monoAndroidItem = FindMonoAndroidDll ();
+			if (monoAndroidItem is null) {
+				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				return;
+			}
+
+			var frameworkMonoAndroidItem = new TaskItem (monoAndroidItem.ItemSpec);
+			frameworkMonoAndroidItem.SetMetadata ("FrameworkAssembly", "True");
+
+			var task = CreateTask (new [] { monoAndroidItem, frameworkMonoAndroidItem }, outputDir, javaDir);
+			task.ForceUnconditionalEntries = false;
+
+			Assert.IsTrue (task.Execute (), "Task should succeed.");
+
+			var typeMapPath = task.GeneratedAssemblies
+				.Select (i => i.ItemSpec)
+				.First (p => p.Contains ("_Mono.Android.TypeMap.dll"));
+			var entry = ReadTypeMapAttribute (
+				typeMapPath,
+				"mono/android/media/tv/TvView_OnUnhandledInputEventListenerImplementor");
+
+			Assert.AreEqual (3, entry.ParameterCount);
+			Assert.AreEqual ("Android.Media.TV.TvView+IOnUnhandledInputEventListenerImplementor, Mono.Android", entry.TrimTarget);
 		}
 
 		[Test]
@@ -199,6 +233,42 @@ namespace Xamarin.Android.Build.Tests {
 			var item = new TaskItem (path);
 			item.SetMetadata ("HasMonoAndroidReference", "True");
 			return item;
+		}
+
+		static (int ParameterCount, string? TrimTarget) ReadTypeMapAttribute (string assemblyPath, string javaName)
+		{
+			using var peReader = new PEReader (File.OpenRead (assemblyPath));
+			var mdReader = peReader.GetMetadataReader ();
+			foreach (var customAttributeHandle in mdReader.GetAssemblyDefinition ().GetCustomAttributes ()) {
+				var customAttribute = mdReader.GetCustomAttribute (customAttributeHandle);
+				var parameterCount = GetConstructorParameterCount (mdReader, customAttribute.Constructor);
+				var blobReader = mdReader.GetBlobReader (customAttribute.Value);
+				if (blobReader.ReadUInt16 () != 1) {
+					continue;
+				}
+				var attributeJavaName = blobReader.ReadSerializedString ();
+				blobReader.ReadSerializedString ();
+				var trimTarget = parameterCount >= 3 ? blobReader.ReadSerializedString () : null;
+				if (attributeJavaName == javaName) {
+					return (parameterCount, trimTarget);
+				}
+			}
+			Assert.Fail ($"TypeMapAttribute for '{javaName}' was not found in '{assemblyPath}'.");
+			return default;
+		}
+
+		static int GetConstructorParameterCount (MetadataReader mdReader, EntityHandle constructor)
+		{
+			BlobReader signatureReader;
+			if (constructor.Kind == HandleKind.MemberReference) {
+				var memberReference = mdReader.GetMemberReference ((MemberReferenceHandle) constructor);
+				signatureReader = mdReader.GetBlobReader (memberReference.Signature);
+			} else {
+				var methodDefinition = mdReader.GetMethodDefinition ((MethodDefinitionHandle) constructor);
+				signatureReader = mdReader.GetBlobReader (methodDefinition.Signature);
+			}
+			signatureReader.ReadSignatureHeader ();
+			return signatureReader.ReadCompressedInteger ();
 		}
 	}
 }

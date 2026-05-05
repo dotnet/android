@@ -80,6 +80,22 @@ sealed record TypeMapAttributeData
 	public string? TargetTypeReference { get; init; }
 
 	/// <summary>
+	/// Human-readable explanation for why this entry is unconditional or conditional.
+	/// </summary>
+	public required string InclusionReason { get; init; }
+
+	/// <summary>
+	/// Managed type that caused this entry to be emitted, when the entry maps directly to a peer.
+	/// Alias-holder entries and synthetic entries may leave this unset.
+	/// </summary>
+	public string? SourceManagedTypeName { get; init; }
+
+	/// <summary>
+	/// Assembly containing <see cref="SourceManagedTypeName"/>, when known.
+	/// </summary>
+	public string? SourceAssemblyName { get; init; }
+
+	/// <summary>
 	/// True for 2-arg unconditional entries (ACW types, essential runtime types).
 	/// </summary>
 	public bool IsUnconditional => TargetTypeReference == null;

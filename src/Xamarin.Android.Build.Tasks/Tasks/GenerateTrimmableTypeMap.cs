@@ -27,6 +27,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			log.LogMessage (MessageImportance.Low, $"Found {typeCount} Application/Instrumentation types for deferred registration.");
 		public void LogGeneratedTypeMapAssemblyInfo (string assemblyName, int typeCount) =>
 			log.LogMessage (MessageImportance.Low, $"  {assemblyName}: {typeCount} types");
+		public void LogGeneratedTypeMapAssemblySummary (string assemblyName, int entryCount, int unconditionalEntryCount, int conditionalEntryCount, int proxyTypeCount, int associationCount, int aliasHolderCount) =>
+			log.LogMessage (MessageImportance.Low, $"  {assemblyName}: TypeMap entries={entryCount} unconditional={unconditionalEntryCount} conditional={conditionalEntryCount} proxies={proxyTypeCount} associations={associationCount} alias-holders={aliasHolderCount}");
 		public void LogGeneratedRootTypeMapInfo (int assemblyReferenceCount) =>
 			log.LogMessage (MessageImportance.Low, $"  Root: {assemblyReferenceCount} per-assembly refs");
 		public void LogGeneratedTypeMapAssembliesInfo (int assemblyCount) =>
@@ -43,6 +45,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 	[Required]
 	public ITaskItem [] ResolvedAssemblies { get; set; } = [];
+	public ITaskItem [] ResolvedFrameworkAssemblies { get; set; } = [];
 	[Required]
 	public string OutputDirectory { get; set; } = "";
 	[Required]
@@ -92,8 +95,15 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public override bool RunTask ()
 	{
 		var systemRuntimeVersion = ParseTargetFrameworkVersion (TargetFrameworkVersion);
-		var assemblyPaths = ResolvedAssemblies.Select (i => i.ItemSpec).Distinct ().ToList ();
-		// TODO(#10792): populate with framework assembly names to skip JCW generation for pre-compiled framework types
+		var frameworkAssemblyPaths = new HashSet<string> (
+			ResolvedFrameworkAssemblies.Select (i => Path.GetFullPath (i.ItemSpec)),
+			StringComparer.OrdinalIgnoreCase);
+		var assemblyInputs = ResolvedAssemblies
+			.GroupBy (i => Path.GetFullPath (i.ItemSpec), StringComparer.OrdinalIgnoreCase)
+			.Select (g => (
+				Path: g.Key,
+				IsFrameworkAssembly: frameworkAssemblyPaths.Contains (g.Key) || g.Any (IsFrameworkAssemblyItem)))
+			.ToList ();
 		var frameworkAssemblyNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
 		Directory.CreateDirectory (OutputDirectory);
@@ -103,11 +113,15 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		var assemblies = new List<(string Name, PEReader Reader)> ();
 		TrimmableTypeMapResult? result = null;
 		try {
-			foreach (var path in assemblyPaths) {
+			foreach (var (path, isFrameworkAssembly) in assemblyInputs) {
 				var peReader = new PEReader (File.OpenRead (path));
 				peReaders.Add (peReader);
 				var mdReader = peReader.GetMetadataReader ();
-				assemblies.Add ((mdReader.GetString (mdReader.GetAssemblyDefinition ().Name), peReader));
+				var assemblyName = mdReader.GetString (mdReader.GetAssemblyDefinition ().Name);
+				assemblies.Add ((assemblyName, peReader));
+				if (isFrameworkAssembly) {
+					frameworkAssemblyNames.Add (assemblyName);
+				}
 			}
 
 			ManifestConfig? manifestConfig = null;
@@ -146,7 +160,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				maxArrayRank: MaxArrayRank,
 				forceUnconditionalEntries: ForceUnconditionalEntries);
 
-			GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyPaths);
+			GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyInputs.Select (i => i.Path).ToList ());
 			GeneratedJavaFiles = WriteJavaSourcesToDisk (result.GeneratedJavaSources);
 
 			// Write manifest to disk if generated
@@ -200,6 +214,10 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 		return !Log.HasLoggedErrors;
 	}
+
+	static bool IsFrameworkAssemblyItem (ITaskItem item) =>
+		string.Equals (item.GetMetadata ("FrameworkAssembly"), bool.TrueString, StringComparison.OrdinalIgnoreCase) ||
+		MonoAndroidHelper.IsFrameworkAssembly (item);
 
 	ITaskItem [] WriteAssembliesToDisk (IReadOnlyList<GeneratedAssembly> assemblies, IReadOnlyList<string> assemblyPaths)
 	{

@@ -59,7 +59,8 @@ public class TrimmableTypeMapGenerator
 			systemRuntimeVersion,
 			useSharedTypemapUniverse,
 			maxArrayRank,
-			forceUnconditionalEntries);
+			forceUnconditionalEntries,
+			frameworkAssemblyNames);
 		var jcwPeers = allPeers.Where (p =>
 			!frameworkAssemblyNames.Contains (p.AssemblyName)
 			|| p.JavaName.StartsWith ("mono/", StringComparison.Ordinal)).ToList ();
@@ -155,7 +156,8 @@ public class TrimmableTypeMapGenerator
 		Version systemRuntimeVersion,
 		bool useSharedTypemapUniverse,
 		int maxArrayRank,
-		bool forceUnconditionalEntries)
+		bool forceUnconditionalEntries,
+		HashSet<string> frameworkAssemblyNames)
 	{
 		List<(string AssemblyName, List<JavaPeerInfo> Peers)> peersByAssembly;
 
@@ -179,12 +181,21 @@ public class TrimmableTypeMapGenerator
 
 		var generatedAssemblies = new List<GeneratedAssembly> ();
 		var perAssemblyNames = new List<string> ();
-		var generator = new TypeMapAssemblyGenerator (systemRuntimeVersion);
 		foreach (var (assemblyName, peers) in peersByAssembly) {
 			string typeMapAssemblyName = $"_{assemblyName}.TypeMap";
 			perAssemblyNames.Add (typeMapAssemblyName);
+			var model = ModelBuilder.Build (
+				peers,
+				typeMapAssemblyName + ".dll",
+				typeMapAssemblyName,
+				maxArrayRank: maxArrayRank,
+				forceUnconditionalEntries: forceUnconditionalEntries,
+				frameworkAssemblyNames: frameworkAssemblyNames);
+			LogTypeMapAssemblyDetails (typeMapAssemblyName, model);
+
 			var stream = new MemoryStream ();
-			generator.Generate (peers, stream, typeMapAssemblyName, useSharedTypemapUniverse, maxArrayRank, forceUnconditionalEntries);
+			var emitter = new TypeMapAssemblyEmitter (systemRuntimeVersion);
+			emitter.Emit (model, stream, useSharedTypemapUniverse);
 			stream.Position = 0;
 			generatedAssemblies.Add (new GeneratedAssembly (typeMapAssemblyName, stream));
 			logger.LogGeneratedTypeMapAssemblyInfo (typeMapAssemblyName, peers.Count);
@@ -197,6 +208,20 @@ public class TrimmableTypeMapGenerator
 		logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);
 		logger.LogGeneratedTypeMapAssembliesInfo (generatedAssemblies.Count);
 		return generatedAssemblies;
+	}
+
+	void LogTypeMapAssemblyDetails (string typeMapAssemblyName, TypeMapAssemblyData model)
+	{
+		int unconditionalCount = model.Entries.Count (e => e.IsUnconditional);
+		int conditionalCount = model.Entries.Count - unconditionalCount;
+		logger.LogGeneratedTypeMapAssemblySummary (
+			typeMapAssemblyName,
+			model.Entries.Count,
+			unconditionalCount,
+			conditionalCount,
+			model.ProxyTypes.Count,
+			model.Associations.Count,
+			model.AliasHolders.Count);
 	}
 
 	/// <summary>

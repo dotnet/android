@@ -13,7 +13,13 @@ public class ModelBuilderTests : FixtureTestBase
 	static TypeMapAssemblyData BuildModel (IReadOnlyList<JavaPeerInfo> peers, string? assemblyName = null, bool forceUnconditionalEntries = true)
 	{
 		var outputPath = Path.Combine (Path.GetTempPath (), (assemblyName ?? "TestTypeMap") + ".dll");
-		return ModelBuilder.Build (peers, outputPath, assemblyName, forceUnconditionalEntries);
+		return ModelBuilder.Build (peers, outputPath, assemblyName, forceUnconditionalEntries: forceUnconditionalEntries);
+	}
+
+	static TypeMapAssemblyData BuildModel (IReadOnlyList<JavaPeerInfo> peers, ISet<string> frameworkAssemblyNames, string? assemblyName = null, bool forceUnconditionalEntries = true)
+	{
+		var outputPath = Path.Combine (Path.GetTempPath (), (assemblyName ?? "TestTypeMap") + ".dll");
+		return ModelBuilder.Build (peers, outputPath, assemblyName, forceUnconditionalEntries: forceUnconditionalEntries, frameworkAssemblyNames: frameworkAssemblyNames);
 	}
 
 	static TypeMapAssemblyData BuildModelWithArrays (IReadOnlyList<JavaPeerInfo> peers, string? assemblyName = null, int maxArrayRank = 3)
@@ -166,6 +172,19 @@ public class ModelBuilderTests : FixtureTestBase
 			var mainEntry = model.Entries.First (e => e.JniName == "my/app/Main");
 			Assert.True (mainEntry.IsUnconditional);
 			Assert.Null (mainEntry.TargetTypeReference);
+		}
+
+		[Fact]
+		public void Build_FrameworkAcwType_IsConditional_WhenForceUnconditionalEntriesDisabled ()
+		{
+			var peer = MakeAcwPeer ("mono/android/media/tv/TvView_OnUnhandledInputEventListenerImplementor",
+				"Android.Media.TV.TvView+IOnUnhandledInputEventListenerImplementor", "Mono.Android");
+			var model = BuildModel (new [] { peer }, new HashSet<string> (StringComparer.OrdinalIgnoreCase) { "Mono.Android" }, forceUnconditionalEntries: false);
+
+			var entry = Assert.Single (model.Entries);
+			Assert.False (entry.IsUnconditional);
+			Assert.Equal ("Android.Media.TV.TvView+IOnUnhandledInputEventListenerImplementor, Mono.Android", entry.TargetTypeReference);
+			Assert.Equal ("conditional framework ACW candidate", entry.InclusionReason);
 		}
 
 		[Fact]
