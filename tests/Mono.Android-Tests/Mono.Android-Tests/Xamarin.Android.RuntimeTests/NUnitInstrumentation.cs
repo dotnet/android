@@ -67,9 +67,6 @@ namespace Xamarin.Android.RuntimeTests
                     "Java.InteropTests.JniPeerMembersTests.ReplacementTypeUsedForMethodLookup",
                     "Java.InteropTests.JniPeerMembersTests.ReplaceStaticMethodName",
 
-                    // net.dot.jni.test.GenericHolder Java class not in APK
-                    "Java.InteropTests.JniTypeManagerTests.CannotCreateGenericHolderFromJava",
-
                     // Throwable subclass registration
                     "Java.InteropTests.JnienvTest.ActivatedDirectThrowableSubclassesShouldBeRegistered",
 
