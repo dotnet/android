@@ -942,6 +942,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
+		[Ignore ("This test requires a minor API level (e.g. 37.1) as the stable target. Re-enable when a minor API level is added.")]
 		public void MinorApiLevelFallbackThrowsXA5207 ()
 		{
 			// Verifies that when targeting a minor API level (like 36.1), we don't fall back to the major version (36)
