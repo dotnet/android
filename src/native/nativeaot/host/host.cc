@@ -69,8 +69,18 @@ void Host::OnInit (jstring language, jstring filesDir, jstring cacheDir, JnienvI
 	// We expect the struct to be initialized by the managed land the way it sees fit, we set only the
 	// fields we support.
 	jclass lrefIGCUserPeer = env->FindClass ("mono/android/IGCUserPeer");
+	if (lrefIGCUserPeer == nullptr) [[unlikely]] {
+		env->ExceptionDescribe ();
+		env->ExceptionClear ();
+		abort_unless (false, "Failed to load mono/android/IGCUserPeer class");
+	}
+
 	jclass lrefGCUserPeerable = env->FindClass ("net/dot/jni/GCUserPeerable");
-	abort_unless (lrefIGCUserPeer != nullptr && lrefGCUserPeerable != nullptr, "Failed to load GC user peer classes");
+	if (lrefGCUserPeerable == nullptr) [[unlikely]] {
+		env->ExceptionDescribe ();
+		env->ExceptionClear ();
+		abort_unless (false, "Failed to load net/dot/jni/GCUserPeerable class");
+	}
 
 	initArgs->logCategories = log_categories;
 	initArgs->grefGcThreshold = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());
