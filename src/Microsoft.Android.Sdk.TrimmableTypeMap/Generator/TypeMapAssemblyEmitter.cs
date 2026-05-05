@@ -654,25 +654,26 @@ sealed class TypeMapAssemblyEmitter
 			return;
 		}
 
-		// JavaInterop-style activation ctors (ref JniObjectReference, JniObjectReferenceOptions)
-		// require parameter conversion from (IntPtr, JniHandleOwnership).
-		if (proxy.ActivationCtor?.Style == ActivationCtorStyle.JavaInterop) {
-			if (proxy.InvokerType != null) {
-				EmitCreateInstanceViaJavaInteropNewobj (_pe.ResolveTypeRef (proxy.InvokerType));
+		if (proxy.InvokerType != null) {
+			var invokerTypeRef = _pe.ResolveTypeRef (proxy.InvokerType);
+			if (proxy.InvokerActivationCtorStyle == ActivationCtorStyle.JavaInterop) {
+				EmitCreateInstanceViaJavaInteropNewobj (invokerTypeRef);
 			} else {
-				var targetRef = _pe.ResolveTypeRef (proxy.TargetType);
-				var jiCtor = proxy.ActivationCtor ?? throw new InvalidOperationException ("ActivationCtor should not be null");
-				if (jiCtor.IsOnLeafType) {
-					EmitCreateInstanceViaJavaInteropNewobj (targetRef);
-				} else {
-					EmitCreateInstanceInheritedJavaInteropCtor (targetRef, jiCtor);
-				}
+				EmitCreateInstanceViaNewobj (invokerTypeRef);
 			}
 			return;
 		}
 
-		if (proxy.InvokerType != null) {
-			EmitCreateInstanceViaNewobj (_pe.ResolveTypeRef (proxy.InvokerType));
+		// JavaInterop-style activation ctors (ref JniObjectReference, JniObjectReferenceOptions)
+		// require parameter conversion from (IntPtr, JniHandleOwnership).
+		if (proxy.ActivationCtor?.Style == ActivationCtorStyle.JavaInterop) {
+			var targetRef = _pe.ResolveTypeRef (proxy.TargetType);
+			var jiCtor = proxy.ActivationCtor ?? throw new InvalidOperationException ("ActivationCtor should not be null");
+			if (jiCtor.IsOnLeafType) {
+				EmitCreateInstanceViaJavaInteropNewobj (targetRef);
+			} else {
+				EmitCreateInstanceInheritedJavaInteropCtor (targetRef, jiCtor);
+			}
 			return;
 		}
 

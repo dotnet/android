@@ -793,9 +793,9 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_UcoMethod_HasCatchRegionWithoutFinally ()
+	public void Generate_ExportUcoMethod_HasCatchAndFinallyRegions ()
 	{
-		var peer = FindFixtureByJavaName ("my/app/TouchHandler");
+		var peer = FindFixtureByJavaName ("my/app/ExportExample");
 		using var stream = GenerateAssembly (new [] { peer }, "UcoLegacyWrapperShape");
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
@@ -804,13 +804,13 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			.First (h => {
 				var method = reader.GetMethodDefinition (h);
 				var name = reader.GetString (method.Name);
-				return name.Contains ("onTouch") && name.Contains ("_uco_");
+				return name.Contains ("myExportedMethod") && name.Contains ("_uco_");
 			});
 		var ucoMethod = reader.GetMethodDefinition (ucoMethodHandle);
 		var body = pe.GetMethodBody (ucoMethod.RelativeVirtualAddress);
 		Assert.NotNull (body);
 		Assert.Contains (body.ExceptionRegions, r => r.Kind == ExceptionRegionKind.Catch);
-		Assert.DoesNotContain (body.ExceptionRegions, r => r.Kind == ExceptionRegionKind.Finally);
+		Assert.Contains (body.ExceptionRegions, r => r.Kind == ExceptionRegionKind.Finally);
 	}
 
 	[Fact]
