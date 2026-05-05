@@ -28,7 +28,14 @@ public sealed class TypeMapAssemblyGenerator
 	/// When true, uses <c>Java.Lang.Object</c> as the shared anchor type. When false, emits a per-assembly anchor.
 	/// </param>
 	/// <param name="maxArrayRank">Max rank for per-rank array <c>TypeMap</c> entries. 0 disables.</param>
-	public void Generate (IReadOnlyList<JavaPeerInfo> peers, Stream stream, string assemblyName, bool useSharedTypemapUniverse = false, int maxArrayRank = 0, bool forceUnconditionalEntries = true)
+	/// <param name="forceUnconditionalEntries">True to emit all TypeMap entries as unconditional 2-arg attributes.</param>
+	public void Generate (
+		IReadOnlyList<JavaPeerInfo> peers,
+		Stream stream,
+		string assemblyName,
+		bool useSharedTypemapUniverse = false,
+		int maxArrayRank = 0,
+		bool forceUnconditionalEntries = true)
 	{
 		var model = ModelBuilder.Build (peers, assemblyName + ".dll", assemblyName, maxArrayRank, forceUnconditionalEntries);
 		var emitter = new TypeMapAssemblyEmitter (_systemRuntimeVersion);

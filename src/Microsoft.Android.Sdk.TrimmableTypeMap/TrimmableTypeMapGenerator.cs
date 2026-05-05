@@ -54,7 +54,12 @@ public class TrimmableTypeMapGenerator
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
 		PropagateCannotRegisterToDescendants (allPeers);
 
-		var generatedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, useSharedTypemapUniverse, maxArrayRank, forceUnconditionalEntries);
+		var generatedAssemblies = GenerateTypeMapAssemblies (
+			allPeers,
+			systemRuntimeVersion,
+			useSharedTypemapUniverse,
+			maxArrayRank,
+			forceUnconditionalEntries);
 		var jcwPeers = allPeers.Where (p =>
 			!frameworkAssemblyNames.Contains (p.AssemblyName)
 			|| p.JavaName.StartsWith ("mono/", StringComparison.Ordinal)).ToList ();
@@ -145,7 +150,12 @@ public class TrimmableTypeMapGenerator
 		return (peers, manifestInfo);
 	}
 
-	List<GeneratedAssembly> GenerateTypeMapAssemblies (List<JavaPeerInfo> allPeers, Version systemRuntimeVersion, bool useSharedTypemapUniverse, int maxArrayRank, bool forceUnconditionalEntries)
+	List<GeneratedAssembly> GenerateTypeMapAssemblies (
+		List<JavaPeerInfo> allPeers,
+		Version systemRuntimeVersion,
+		bool useSharedTypemapUniverse,
+		int maxArrayRank,
+		bool forceUnconditionalEntries)
 	{
 		List<(string AssemblyName, List<JavaPeerInfo> Peers)> peersByAssembly;
 

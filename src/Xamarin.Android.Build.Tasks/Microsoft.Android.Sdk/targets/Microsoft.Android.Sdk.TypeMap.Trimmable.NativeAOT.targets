@@ -18,8 +18,10 @@
     </PropertyGroup>
     <ItemGroup>
       <_TrimmableTypeMapIlcAssemblies Include="$(_TypeMapOutputDirectory)*.dll" />
-      <_TrimmableTypeMapUnmanagedEntryPointAssemblies Include="@(_TrimmableTypeMapIlcAssemblies)"
-          Exclude="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll;$(_TypeMapOutputDirectory)_Java.Interop.TypeMap.dll;$(_TypeMapOutputDirectory)_Mono.Android.TypeMap.dll" />
+      <_TrimmableTypeMapUnmanagedEntryPointAssemblies Include="@(_TrimmableTypeMapIlcAssemblies)" />
+      <_TrimmableTypeMapUnmanagedEntryPointAssemblies Remove="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll" />
+      <_TrimmableTypeMapUnmanagedEntryPointAssemblies Remove="$(_TypeMapOutputDirectory)_Java.Interop.TypeMap.dll" />
+      <_TrimmableTypeMapUnmanagedEntryPointAssemblies Remove="$(_TypeMapOutputDirectory)_Mono.Android.TypeMap.dll" />
       <IlcReference Include="@(_TrimmableTypeMapIlcAssemblies)" />
       <UnmanagedEntryPointsAssembly Include="@(_TrimmableTypeMapUnmanagedEntryPointAssemblies->'%(Filename)')" />
     </ItemGroup>

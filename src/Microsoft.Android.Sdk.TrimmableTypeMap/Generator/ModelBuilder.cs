@@ -37,7 +37,13 @@ static class ModelBuilder
 	/// Emit per-rank array <c>TypeMap</c> entries + <c>__ArrayMapRank{N}</c> sentinels
 	/// for ranks 1..<paramref name="maxArrayRank"/>. 0 disables array entry emission.
 	/// </param>
-	public static TypeMapAssemblyData Build (IReadOnlyList<JavaPeerInfo> peers, string outputPath, string? assemblyName = null, int maxArrayRank = 0, bool forceUnconditionalEntries = true)
+	/// <param name="forceUnconditionalEntries">True to emit all TypeMap entries as unconditional 2-arg attributes.</param>
+	public static TypeMapAssemblyData Build (
+		IReadOnlyList<JavaPeerInfo> peers,
+		string outputPath,
+		string? assemblyName = null,
+		int maxArrayRank = 0,
+		bool forceUnconditionalEntries = true)
 	{
 		if (peers is null) {
 			throw new ArgumentNullException (nameof (peers));
@@ -89,11 +95,6 @@ static class ModelBuilder
 				peersForName.Sort ((a, b) => StringComparer.Ordinal.Compare (a.ManagedTypeName, b.ManagedTypeName));
 			}
 
-			EmitPeers (model, jniName, peersForName, assemblyName, usedProxyNames);
-
-			if (maxArrayRank > 0) {
-				EmitArrayEntries (model, jniName, peersForName, maxArrayRank);
-			}
 			EmitPeers (model, jniName, peersForName, assemblyName, usedProxyNames, forceUnconditionalEntries);
 
 			if (maxArrayRank > 0) {
@@ -407,10 +408,7 @@ static class ModelBuilder
 		// When forceUnconditionalEntries is true, always emit 2-arg (unconditional) TypeMap
 		// attributes to work around https://github.com/dotnet/runtime/issues/127004.
 		bool isUnconditional = forceUnconditionalEntries || IsUnconditionalEntry (peer);
-		string? targetRef = null;
-		if (!isUnconditional) {
-			targetRef = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName);
-		}
+		string? targetRef = isUnconditional ? null : AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName);
 
 		return new TypeMapAttributeData {
 			JniName = jniName,
