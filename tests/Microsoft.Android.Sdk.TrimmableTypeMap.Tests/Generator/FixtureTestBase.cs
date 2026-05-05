@@ -149,7 +149,7 @@ public abstract class FixtureTestBase
 	/// </summary>
 	private protected static bool ILContainsCallToken (byte[] ilBytes, int token)
 	{
-		return ILContainsOpcodeToken (ilBytes, token, 0x28, 0x6F);
+		return ILContainsOpcodeToken (ilBytes, token, (byte) ILOpCode.Call, (byte) ILOpCode.Callvirt);
 	}
 
 	private protected static bool ILContainsNewobjToken (byte[] ilBytes, int token)
@@ -165,8 +165,8 @@ public abstract class FixtureTestBase
 		byte t3 = (byte)((token >> 24) & 0xFF);
 		for (int i = 0; i < ilBytes.Length - 4; i++) {
 			if (opcodes.Contains (ilBytes [i]) &&
-			    ilBytes[i + 1] == t0 && ilBytes[i + 2] == t1 &&
-			    ilBytes[i + 3] == t2 && ilBytes[i + 4] == t3)
+			    ilBytes [i + 1] == t0 && ilBytes [i + 2] == t1 &&
+			    ilBytes [i + 3] == t2 && ilBytes [i + 4] == t3)
 				return true;
 		}
 		return false;
