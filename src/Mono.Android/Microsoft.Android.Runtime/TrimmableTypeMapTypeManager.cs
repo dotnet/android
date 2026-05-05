@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -15,6 +16,9 @@ namespace Microsoft.Android.Runtime;
 /// </summary>
 class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 {
+	const string NoSimpleReference = "\0";
+	readonly ConcurrentDictionary<Type, string> _simpleReferenceCache = new ();
+
 	protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
 	{
 		foreach (var t in base.GetTypesForSimpleReference (jniSimpleReference)) {
@@ -26,6 +30,33 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 				yield return type;
 			}
 		}
+	}
+
+	protected override string? GetSimpleReference (Type type)
+	{
+		var simpleReference = _simpleReferenceCache.GetOrAdd (type, GetSimpleReferenceUncached);
+		return simpleReference == NoSimpleReference ? null : simpleReference;
+	}
+
+	string GetSimpleReferenceUncached (Type type)
+	{
+		if (TrimmableTypeMap.Instance.TryGetJniNameForManagedType (type, out var jniName)) {
+			return jniName;
+		}
+
+		foreach (var r in base.GetSimpleReferences (type)) {
+			return r;
+		}
+
+		// Walk the base type chain for managed-only subclasses (e.g., JavaProxyThrowable
+		// extends Java.Lang.Error but has no [Register] attribute itself).
+		for (var baseType = type.BaseType; baseType is not null; baseType = baseType.BaseType) {
+			if (TrimmableTypeMap.Instance.TryGetJniNameForManagedType (baseType, out var baseJniName)) {
+				return baseJniName;
+			}
+		}
+
+		return NoSimpleReference;
 	}
 
 	protected override IEnumerable<string> GetSimpleReferences (Type type)

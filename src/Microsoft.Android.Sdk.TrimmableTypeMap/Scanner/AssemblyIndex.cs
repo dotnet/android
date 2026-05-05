@@ -103,10 +103,14 @@ sealed class AssemblyIndex : IDisposable
 				attrInfo ??= CreateTypeAttributeInfo (attrName);
 				var value = DecodeAttribute (ca);
 
+				if (attrName == "ContentProviderAttribute") {
+					AddContentProviderAuthorities (value, attrInfo.Properties);
+				}
+
 				// Capture all named properties
 				foreach (var named in value.NamedArguments) {
 					if (named.Name is not null) {
-						attrInfo.Properties [named.Name] = named.Value;
+						attrInfo.Properties [named.Name] = GetComponentPropertyValue (named.Name, named.Value);
 					}
 				}
 
@@ -353,6 +357,42 @@ sealed class AssemblyIndex : IDisposable
 			Categories = categories,
 			Properties = properties,
 		};
+	}
+
+	static void AddContentProviderAuthorities (CustomAttributeValue<string> value, Dictionary<string, object?> properties)
+	{
+		if (value.FixedArguments.Length == 0) {
+			return;
+		}
+
+		if (TryGetStringArray (value.FixedArguments [0].Value, out var authorities)) {
+			properties ["Authorities"] = string.Join (";", authorities);
+		}
+	}
+
+	static object? GetComponentPropertyValue (string name, object? value)
+	{
+		if (name == "Authorities" && TryGetStringArray (value, out var authorities)) {
+			return string.Join (";", authorities);
+		}
+
+		return value;
+	}
+
+	static bool TryGetStringArray (object? value, [NotNullWhen (true)] out List<string>? strings)
+	{
+		if (value is IReadOnlyCollection<CustomAttributeTypedArgument<string>> args) {
+			strings = new List<string> (args.Count);
+			foreach (var arg in args) {
+				if (arg.Value is string s) {
+					strings.Add (s);
+				}
+			}
+			return true;
+		}
+
+		strings = null;
+		return false;
 	}
 
 	static bool TryGetNamedArgument<T> (CustomAttributeValue<string> value, string argumentName, [MaybeNullWhen (false)] out T argumentValue) where T : notnull

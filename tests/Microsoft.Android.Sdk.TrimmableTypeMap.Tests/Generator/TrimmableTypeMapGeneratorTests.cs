@@ -400,42 +400,37 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void MergeCrossAssemblyAliases_RegisterTakesPrecedenceOverJniTypeSignature ()
+	public void MergeCrossAssemblyAliases_CrossAssemblyDuplicate_FirstAssemblyOwns ()
 	{
-		// Java.Interop has JavaObject with [JniTypeSignature("java/lang/Object")]
-		var javaInteropPeer = new JavaPeerInfo {
-			JavaName = "java/lang/Object", CompatJniName = "java/lang/Object",
-			ManagedTypeName = "Java.Interop.JavaObject", ManagedTypeNamespace = "Java.Interop", ManagedTypeShortName = "JavaObject",
-			AssemblyName = "Java.Interop", IsFromJniTypeSignature = true, DoNotGenerateAcw = true,
+		var firstPeer = new JavaPeerInfo {
+			JavaName = "com/example/Duplicate", CompatJniName = "com/example/Duplicate",
+			ManagedTypeName = "First.Duplicate", ManagedTypeNamespace = "First", ManagedTypeShortName = "Duplicate",
+			AssemblyName = "A.Binding",
 		};
 
-		// Mono.Android has Java.Lang.Object with [Register("java/lang/Object")]
-		var monoAndroidPeer = new JavaPeerInfo {
-			JavaName = "java/lang/Object", CompatJniName = "java/lang/Object",
-			ManagedTypeName = "Java.Lang.Object", ManagedTypeNamespace = "Java.Lang", ManagedTypeShortName = "Object",
-			AssemblyName = "Mono.Android", IsFromJniTypeSignature = false, DoNotGenerateAcw = true,
+		var secondPeer = new JavaPeerInfo {
+			JavaName = "com/example/Duplicate", CompatJniName = "com/example/Duplicate",
+			ManagedTypeName = "Second.Duplicate", ManagedTypeNamespace = "Second", ManagedTypeShortName = "Duplicate",
+			AssemblyName = "B.Binding",
 		};
 
-		// Another unique peer in Java.Interop that shouldn't be moved
-		var otherPeer = new JavaPeerInfo {
-			JavaName = "java/interop/SomeHelper", CompatJniName = "java/interop/SomeHelper",
-			ManagedTypeName = "Java.Interop.SomeHelper", ManagedTypeNamespace = "Java.Interop", ManagedTypeShortName = "SomeHelper",
-			AssemblyName = "Java.Interop", IsFromJniTypeSignature = true,
+		var uniquePeer = new JavaPeerInfo {
+			JavaName = "com/example/Unique", CompatJniName = "com/example/Unique",
+			ManagedTypeName = "Second.Unique", ManagedTypeNamespace = "Second", ManagedTypeShortName = "Unique",
+			AssemblyName = "B.Binding",
 		};
 
-		var allPeers = new List<JavaPeerInfo> { javaInteropPeer, monoAndroidPeer, otherPeer };
+		var allPeers = new List<JavaPeerInfo> { firstPeer, secondPeer, uniquePeer };
 		var result = TrimmableTypeMapGenerator.MergeCrossAssemblyAliases (allPeers);
 
-		// Both java/lang/Object peers should be in the Mono.Android group ([Register] wins)
-		var monoAndroidGroup = result.Single (g => g.AssemblyName == "Mono.Android");
-		Assert.Equal (2, monoAndroidGroup.Peers.Count);
-		Assert.Contains (monoAndroidGroup.Peers, p => p.ManagedTypeName == "Java.Lang.Object");
-		Assert.Contains (monoAndroidGroup.Peers, p => p.ManagedTypeName == "Java.Interop.JavaObject");
+		var firstGroup = result.Single (g => g.AssemblyName == "A.Binding");
+		Assert.Equal (2, firstGroup.Peers.Count);
+		Assert.Contains (firstGroup.Peers, p => p.ManagedTypeName == "First.Duplicate");
+		Assert.Contains (firstGroup.Peers, p => p.ManagedTypeName == "Second.Duplicate");
 
-		// Java.Interop should only have the unique peer
-		var javaInteropGroup = result.Single (g => g.AssemblyName == "Java.Interop");
-		Assert.Single (javaInteropGroup.Peers);
-		Assert.Equal ("Java.Interop.SomeHelper", javaInteropGroup.Peers [0].ManagedTypeName);
+		var secondGroup = result.Single (g => g.AssemblyName == "B.Binding");
+		Assert.Single (secondGroup.Peers);
+		Assert.Equal ("Second.Unique", secondGroup.Peers [0].ManagedTypeName);
 	}
 
 	[Fact]
@@ -479,103 +474,6 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 
 		Assert.Single (result);
 		Assert.Equal (2, result [0].Peers.Count);
-	}
-
-	[Fact]
-	public void MergeCrossAssemblyAliases_SameManagedName_DifferentAssemblies_MergedCorrectly ()
-	{
-		// Reproduces the java/lang/Throwable crash: two assemblies define Java.Lang.Throwable
-		// with the same JNI name, plus Java.Interop.JavaException also maps to the same JNI name.
-		// All three should be merged into the [Register]-owning assembly's group.
-		var javaInteropThrowable = new JavaPeerInfo {
-			JavaName = "java/lang/Throwable", CompatJniName = "java/lang/Throwable",
-			ManagedTypeName = "Java.Lang.Throwable", ManagedTypeNamespace = "Java.Lang", ManagedTypeShortName = "Throwable",
-			AssemblyName = "Java.Interop", IsFromJniTypeSignature = true, DoNotGenerateAcw = true,
-		};
-
-		var monoAndroidThrowable = new JavaPeerInfo {
-			JavaName = "java/lang/Throwable", CompatJniName = "java/lang/Throwable",
-			ManagedTypeName = "Java.Lang.Throwable", ManagedTypeNamespace = "Java.Lang", ManagedTypeShortName = "Throwable",
-			AssemblyName = "Mono.Android", IsFromJniTypeSignature = false, DoNotGenerateAcw = true,
-		};
-
-		var javaException = new JavaPeerInfo {
-			JavaName = "java/lang/Throwable", CompatJniName = "java/lang/Throwable",
-			ManagedTypeName = "Java.Interop.JavaException", ManagedTypeNamespace = "Java.Interop", ManagedTypeShortName = "JavaException",
-			AssemblyName = "Java.Interop", IsFromJniTypeSignature = true, DoNotGenerateAcw = true,
-		};
-
-		var allPeers = new List<JavaPeerInfo> { javaInteropThrowable, monoAndroidThrowable, javaException };
-		var result = TrimmableTypeMapGenerator.MergeCrossAssemblyAliases (allPeers);
-
-		// All java/lang/Throwable peers should be in the Mono.Android group ([Register] wins)
-		var monoAndroidGroup = result.Single (g => g.AssemblyName == "Mono.Android");
-		Assert.Equal (3, monoAndroidGroup.Peers.Count);
-		Assert.Contains (monoAndroidGroup.Peers, p => p.ManagedTypeName == "Java.Lang.Throwable" && p.AssemblyName == "Mono.Android");
-		Assert.Contains (monoAndroidGroup.Peers, p => p.ManagedTypeName == "Java.Lang.Throwable" && p.AssemblyName == "Java.Interop");
-		Assert.Contains (monoAndroidGroup.Peers, p => p.ManagedTypeName == "Java.Interop.JavaException");
-
-		// Java.Interop group should be empty (all peers moved to Mono.Android)
-		Assert.DoesNotContain (result, g => g.AssemblyName == "Java.Interop");
-	}
-
-	[Fact]
-	public void MergeCrossAssemblyAliases_SameManagedName_ProducesCorrectAliasGroup ()
-	{
-		// End-to-end: after merging, ModelBuilder must produce a 3-way alias group
-		// for java/lang/Throwable with indexed entries and a single base entry,
-		// ensuring the runtime dictionary only sees java/lang/Throwable once.
-		var javaInteropThrowable = new JavaPeerInfo {
-			JavaName = "java/lang/Throwable", CompatJniName = "java/lang/Throwable",
-			ManagedTypeName = "Java.Lang.Throwable", ManagedTypeNamespace = "Java.Lang", ManagedTypeShortName = "Throwable",
-			AssemblyName = "Java.Interop", IsFromJniTypeSignature = true, DoNotGenerateAcw = true,
-		};
-
-		var monoAndroidThrowable = new JavaPeerInfo {
-			JavaName = "java/lang/Throwable", CompatJniName = "java/lang/Throwable",
-			ManagedTypeName = "Java.Lang.Throwable", ManagedTypeNamespace = "Java.Lang", ManagedTypeShortName = "Throwable",
-			AssemblyName = "Mono.Android", IsFromJniTypeSignature = false, DoNotGenerateAcw = true,
-		};
-
-		var javaException = new JavaPeerInfo {
-			JavaName = "java/lang/Throwable", CompatJniName = "java/lang/Throwable",
-			ManagedTypeName = "Java.Interop.JavaException", ManagedTypeNamespace = "Java.Interop", ManagedTypeShortName = "JavaException",
-			AssemblyName = "Java.Interop", IsFromJniTypeSignature = true, DoNotGenerateAcw = true,
-		};
-
-		var allPeers = new List<JavaPeerInfo> { javaInteropThrowable, monoAndroidThrowable, javaException };
-		var merged = TrimmableTypeMapGenerator.MergeCrossAssemblyAliases (allPeers);
-
-		// All peers should be in the Mono.Android group
-		Assert.Single (merged);
-		var group = merged [0];
-		Assert.Equal ("Mono.Android", group.AssemblyName);
-		Assert.Equal (3, group.Peers.Count);
-
-		// Build the model — should produce a 3-way alias group
-		string typeMapAssemblyName = $"_{group.AssemblyName}.TypeMap";
-		var model = ModelBuilder.Build (group.Peers, typeMapAssemblyName + ".dll", typeMapAssemblyName);
-
-		// 3 indexed entries + 1 base entry = 4
-		Assert.Equal (4, model.Entries.Count);
-		Assert.Equal ("java/lang/Throwable[0]", model.Entries [0].JniName);
-		Assert.Equal ("java/lang/Throwable[1]", model.Entries [1].JniName);
-		Assert.Equal ("java/lang/Throwable[2]", model.Entries [2].JniName);
-		Assert.Equal ("java/lang/Throwable", model.Entries [3].JniName);
-
-		// Exactly 1 alias holder
-		Assert.Single (model.AliasHolders);
-		Assert.Equal (3, model.AliasHolders [0].AliasKeys.Count);
-
-		// The base "java/lang/Throwable" entry points to the alias holder, not a type directly
-		var baseEntry = model.Entries [3];
-		Assert.Contains ("_Aliases", baseEntry.ProxyTypeReference);
-
-		// 3 associations (one per peer → alias holder)
-		Assert.Equal (3, model.Associations.Count);
-
-		// The bare "java/lang/Throwable" key appears exactly once — no duplicates
-		Assert.Single (model.Entries, e => e.JniName == "java/lang/Throwable");
 	}
 
 	static PEReader CreateTestFixturePEReader ()

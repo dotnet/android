@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
+using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using Xunit;
 
@@ -93,23 +94,45 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 
-		var targetAttrs = GetTypeMapAssemblyTargetAttributes (reader);
-
-		var attrValues = new List<string> ();
-		foreach (var attr in targetAttrs) {
-			var blob = reader.GetBlobReader (attr.Value);
-
-			// Custom attribute blob: prolog (2 bytes) + SerString value
-			var prolog = blob.ReadUInt16 ();
-			Assert.Equal (1, prolog); // ECMA-335 prolog
-			var value = blob.ReadSerializedString ();
-			Assert.NotNull (value);
-			attrValues.Add (value!);
-		}
+		var attrValues = GetTypeMapAssemblyTargetAttributeTargets (reader)
+			.Select (target => target.TargetName)
+			.ToList ();
 
 		Assert.Equal (2, attrValues.Count);
 		Assert.Contains ("_App.TypeMap", attrValues);
 		Assert.Contains ("_Mono.Android.TypeMap", attrValues);
+	}
+
+	[Fact]
+	public void Generate_AggregateMode_TargetAttributesUsePerAssemblyAnchors ()
+	{
+		var targets = new [] { "_App.TypeMap", "_Mono.Android.TypeMap" };
+		using var stream = GenerateRootAssembly (targets, useSharedTypemapUniverse: false);
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var targetAttributes = GetTypeMapAssemblyTargetAttributeTargets (reader);
+
+		Assert.Equal (new [] {
+			("_App.TypeMap", "_App.TypeMap"),
+			("_Mono.Android.TypeMap", "_Mono.Android.TypeMap"),
+		}, targetAttributes);
+	}
+
+	[Fact]
+	public void Generate_MergedMode_TargetAttributesUseSharedAnchor ()
+	{
+		var targets = new [] { "_App.TypeMap", "_Mono.Android.TypeMap" };
+		using var stream = GenerateRootAssembly (targets, useSharedTypemapUniverse: true);
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var targetAttributes = GetTypeMapAssemblyTargetAttributeTargets (reader);
+
+		Assert.Equal (new [] {
+			("_App.TypeMap", "Mono.Android"),
+			("_Mono.Android.TypeMap", "Mono.Android"),
+		}, targetAttributes);
 	}
 
 	static List<CustomAttribute> GetTypeMapAssemblyTargetAttributes (MetadataReader reader)
@@ -126,6 +149,66 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 			}
 		}
 		return result;
+	}
+
+	static List<(string TargetName, string GenericArgumentScope)> GetTypeMapAssemblyTargetAttributeTargets (MetadataReader reader)
+	{
+		var result = new List<(string TargetName, string GenericArgumentScope)> ();
+		foreach (var attr in GetTypeMapAssemblyTargetAttributes (reader)) {
+			var targetName = GetTypeMapAssemblyTargetName (reader, attr);
+			var memberRef = reader.GetMemberReference ((MemberReferenceHandle)attr.Constructor);
+			var typeSpec = reader.GetTypeSpecification ((TypeSpecificationHandle)memberRef.Parent);
+			var blob = reader.GetBlobReader (typeSpec.Signature);
+			Assert.Equal (0x15, blob.ReadByte ()); // ELEMENT_TYPE_GENERICINST
+			Assert.Equal (0x12, blob.ReadByte ()); // ELEMENT_TYPE_CLASS
+			blob.ReadCompressedInteger (); // TypeMapAssemblyTargetAttribute`1 type
+			Assert.Equal (1, blob.ReadCompressedInteger ());
+			Assert.Equal (0x12, blob.ReadByte ()); // ELEMENT_TYPE_CLASS
+			var targetType = DecodeTypeDefOrRefOrSpec (blob.ReadCompressedInteger ());
+			result.Add ((targetName, GetResolutionScopeName (reader, targetType)));
+		}
+		return result;
+	}
+
+	static string GetTypeMapAssemblyTargetName (MetadataReader reader, CustomAttribute attr)
+	{
+		var blob = reader.GetBlobReader (attr.Value);
+		var prolog = blob.ReadUInt16 ();
+		Assert.Equal (1, prolog); // ECMA-335 custom attribute prolog
+		var value = blob.ReadSerializedString ();
+		if (value is null) {
+			throw new InvalidOperationException ("TypeMapAssemblyTargetAttribute value must not be null.");
+		}
+		return value;
+	}
+
+	static EntityHandle DecodeTypeDefOrRefOrSpec (int codedIndex)
+	{
+		var row = codedIndex >> 2;
+		return (codedIndex & 0x3) switch {
+			0 => MetadataTokens.TypeDefinitionHandle (row),
+			1 => MetadataTokens.TypeReferenceHandle (row),
+			2 => MetadataTokens.TypeSpecificationHandle (row),
+			_ => throw new InvalidOperationException ($"Invalid TypeDefOrRefOrSpec coded index: {codedIndex}"),
+		};
+	}
+
+	static string GetResolutionScopeName (MetadataReader reader, EntityHandle handle)
+	{
+		if (handle.Kind == HandleKind.TypeDefinition) {
+			return reader.GetString (reader.GetAssemblyDefinition ().Name);
+		}
+		if (handle.Kind != HandleKind.TypeReference) {
+			throw new InvalidOperationException ($"Unexpected type handle kind: {handle.Kind}");
+		}
+		var typeReference = reader.GetTypeReference ((TypeReferenceHandle)handle);
+		var scope = typeReference.ResolutionScope;
+		return scope.Kind switch {
+			HandleKind.AssemblyReference => reader.GetString (reader.GetAssemblyReference ((AssemblyReferenceHandle)scope).Name),
+			HandleKind.ModuleDefinition => reader.GetString (reader.GetAssemblyDefinition ().Name),
+			HandleKind.TypeReference => GetResolutionScopeName (reader, (TypeReferenceHandle)scope),
+			_ => throw new InvalidOperationException ($"Unexpected resolution scope kind: {scope.Kind}"),
+		};
 	}
 
 	[Theory]

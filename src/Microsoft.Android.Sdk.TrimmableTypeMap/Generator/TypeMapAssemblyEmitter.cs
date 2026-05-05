@@ -38,9 +38,15 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 ///     // JniName / TargetType / InvokerType are supplied by the base JavaPeerProxy constructor.
 ///
 ///     // UCO wrappers — [UnmanagedCallersOnly] entry points for JNI native methods (ACWs only):
-///     [UnmanagedCallersOnly]
 ///     public static void n_OnCreate_uco_0(IntPtr jnienv, IntPtr self, IntPtr p0)
-///         =&gt; Activity.n_OnCreate(jnienv, self, p0);
+///     {
+///         AndroidRuntimeInternal.WaitForBridgeProcessing();
+///         try {
+///             Activity.n_OnCreate(jnienv, self, p0);
+///         } catch (Exception e) {
+///             AndroidEnvironmentInternal.UnhandledException(e);
+///         }
+///     }
 ///
 ///     [UnmanagedCallersOnly]
 ///     public static void nctor_0_uco(IntPtr jnienv, IntPtr self)
@@ -93,6 +99,8 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _jniObjectReferenceCtorRef;
 	MemberReferenceHandle _jniEnvDeleteRefRef;
 	MemberReferenceHandle _shouldSkipActivationRef;
+	MemberReferenceHandle _waitForBridgeProcessingRef;
+	MemberReferenceHandle _androidEnvironmentUnhandledExceptionRef;
 	MemberReferenceHandle _ucoAttrCtorRef;
 	BlobHandle _ucoAttrBlobHandle;
 	MemberReferenceHandle _typeMapAttrCtorRef2Arg;
@@ -106,6 +114,8 @@ sealed class TypeMapAssemblyEmitter
 	TypeReferenceHandle _jniTransitionRef;
 	TypeReferenceHandle _jniRuntimeRef;
 	TypeReferenceHandle _exceptionRef;
+	TypeReferenceHandle _androidRuntimeInternalRef;
+	TypeReferenceHandle _androidEnvironmentInternalRef;
 
 	MemberReferenceHandle _beginMarshalMethodRef;
 	MemberReferenceHandle _endMarshalMethodRef;
@@ -238,6 +248,11 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniRuntime"));
 		_exceptionRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Exception"));
+		var monoAndroidRuntimeRef = _pe.AddAssemblyRef ("Mono.Android.Runtime", new Version (0, 0, 0, 0));
+		_androidRuntimeInternalRef = metadata.AddTypeReference (monoAndroidRuntimeRef,
+			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("AndroidRuntimeInternal"));
+		_androidEnvironmentInternalRef = metadata.AddTypeReference (monoAndroidRuntimeRef,
+			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("AndroidEnvironmentInternal"));
 
 		// ReadOnlySpan<JniNativeMethod> — TypeSpec for generic instantiation
 		_readOnlySpanOpenRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
@@ -310,6 +325,14 @@ sealed class TypeMapAssemblyEmitter
 				rt => rt.Type ().Boolean (),
 				p => { p.AddParameter ().Type ().IntPtr (); }));
 
+		_waitForBridgeProcessingRef = _pe.AddMemberRef (_androidRuntimeInternalRef, "WaitForBridgeProcessing",
+			sig => sig.MethodSignature ().Parameters (0, rt => rt.Void (), p => { }));
+
+		_androidEnvironmentUnhandledExceptionRef = _pe.AddMemberRef (_androidEnvironmentInternalRef, "UnhandledException",
+			sig => sig.MethodSignature ().Parameters (1,
+				rt => rt.Void (),
+				p => p.AddParameter ().Type ().Type (_exceptionRef, false)));
+
 		// JniNativeMethod..ctor(byte*, byte*, IntPtr)
 		_jniNativeMethodCtorRef = _pe.AddMemberRef (_jniNativeMethodRef, ".ctor",
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (3,
@@ -351,7 +374,7 @@ sealed class TypeMapAssemblyEmitter
 		_ucoAttrCtorRef = _pe.AddMemberRef (ucoAttrTypeRef, ".ctor",
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }));
 
-		// Pre-compute the UCO attribute blob — it's always the same 4 bytes (prolog + no named args)
+		// Legacy marshal-method UCO wrappers use the default unmanaged calling convention.
 		_ucoAttrBlobHandle = _pe.BuildAttributeBlob (b => { });
 
 		// JniEnvironment.BeginMarshalMethod(nint jnienv, out JniTransition, out JniRuntime?) -> bool
@@ -524,7 +547,7 @@ sealed class TypeMapAssemblyEmitter
 
 		// UCO wrappers
 		foreach (var uco in proxy.UcoMethods) {
-			var handle = EmitUcoMethod (uco);
+			var handle = EmitUcoMethod (uco, proxy);
 			wrapperHandles [uco.WrapperName] = handle;
 		}
 
@@ -535,7 +558,7 @@ sealed class TypeMapAssemblyEmitter
 
 		// RegisterNatives
 		if (proxy.IsAcw) {
-			EmitRegisterNatives (proxy.NativeRegistrations, wrapperHandles);
+			EmitRegisterNatives (proxy, wrapperHandles);
 		}
 	}
 
@@ -845,7 +868,7 @@ sealed class TypeMapAssemblyEmitter
 				}));
 	}
 
-	MethodDefinitionHandle EmitUcoMethod (UcoMethodData uco)
+	MethodDefinitionHandle EmitUcoMethod (UcoMethodData uco, JavaPeerProxyData proxy)
 	{
 		var jniParams = JniSignatureHelper.ParseParameterTypes (uco.JniSignature);
 		var returnKind = JniSignatureHelper.ParseReturnType (uco.JniSignature);
@@ -878,15 +901,57 @@ sealed class TypeMapAssemblyEmitter
 		var handle = _pe.EmitBody (uco.WrapperName,
 			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 			encodeSig,
-			encoder => {
+			(encoder, cfb) => EmitUcoForwarderBody (encoder, cfb, returnKind, enc => {
 				for (int p = 0; p < paramCount; p++)
-					encoder.LoadArgument (p);
-				encoder.Call (callbackRef);
-				encoder.OpCode (ILOpCode.Ret);
-			});
+					enc.LoadArgument (p);
+				enc.Call (callbackRef);
+			}),
+			blob => EncodeUcoForwarderLegacyLocals (blob, returnKind));
 
 		AddUnmanagedCallersOnlyAttribute (handle);
 		return handle;
+	}
+
+	void EmitUcoForwarderBody (InstructionEncoder encoder, ControlFlowBuilder cfb, JniParamKind returnKind, Action<InstructionEncoder> emitCallback)
+	{
+		bool isVoid = returnKind == JniParamKind.Void;
+		var tryStart = encoder.DefineLabel ();
+		var catchStart = encoder.DefineLabel ();
+		var afterAll = encoder.DefineLabel ();
+
+		encoder.Call (_waitForBridgeProcessingRef);
+		encoder.MarkLabel (tryStart);
+		emitCallback (encoder);
+		if (!isVoid) {
+			encoder.StoreLocal (0);
+		}
+		encoder.Branch (ILOpCode.Leave, afterAll);
+
+		encoder.MarkLabel (catchStart);
+		encoder.StoreLocal (isVoid ? 0 : 1);
+		encoder.LoadLocal (isVoid ? 0 : 1);
+		encoder.Call (_androidEnvironmentUnhandledExceptionRef);
+		encoder.Branch (ILOpCode.Leave, afterAll);
+
+		encoder.MarkLabel (afterAll);
+		if (!isVoid) {
+			encoder.LoadLocal (0);
+		}
+		encoder.OpCode (ILOpCode.Ret);
+
+		cfb.AddCatchRegion (tryStart, catchStart, catchStart, afterAll, _exceptionRef);
+	}
+
+	void EncodeUcoForwarderLegacyLocals (BlobBuilder blob, JniParamKind returnKind)
+	{
+		bool isVoid = returnKind == JniParamKind.Void;
+		blob.WriteByte (0x07); // LOCAL_SIG
+		blob.WriteCompressedInteger (isVoid ? 1 : 2);
+		if (!isVoid) {
+			JniSignatureHelper.EncodeClrType (new SignatureTypeEncoder (blob), returnKind);
+		}
+		blob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_exceptionRef));
 	}
 
 	MethodDefinitionHandle EmitUcoConstructor (UcoConstructorData uco, JavaPeerProxyData proxy)
@@ -1115,10 +1180,11 @@ sealed class TypeMapAssemblyEmitter
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniObjectReferenceRef));
 	}
 
-	void EmitRegisterNatives (List<NativeRegistrationData> registrations,
+	void EmitRegisterNatives (JavaPeerProxyData proxy,
 		Dictionary<string, MethodDefinitionHandle> wrapperHandles)
 	{
 		// Filter to only registrations that have corresponding wrapper methods
+		var registrations = proxy.NativeRegistrations;
 		var validRegs = new List<(NativeRegistrationData Reg, MethodDefinitionHandle Wrapper)> (registrations.Count);
 		foreach (var reg in registrations) {
 			if (wrapperHandles.TryGetValue (reg.WrapperMethodName, out var wrapperHandle)) {

@@ -112,6 +112,45 @@
   </Target>
 
   <!--
+    Populate the TypeMap assembly items used by packaging and native config from
+    the generated files on disk.  This must NOT live inside _GenerateJavaStubs
+    because that target can be skipped on incremental builds, which would leave
+    the item groups empty for targets such as Install.
+  -->
+  <Target Name="_PrepareTrimmableTypeMapAssemblies"
+      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' "
+      BeforeTargets="_CollectAssembliesToCompress;_GeneratePackageManagerJava;_RemoveRegisterAttribute"
+      DependsOnTargets="_GenerateTrimmableTypeMap;_DefineBuildTargetAbis">
+    <PropertyGroup>
+      <_TypeMapFirstAbi Condition=" '$(AndroidSupportedAbis)' != '' ">$([System.String]::Copy('$(AndroidSupportedAbis)').Split(';')[0])</_TypeMapFirstAbi>
+      <_TypeMapFirstAbi Condition=" '$(_TypeMapFirstAbi)' == '' ">arm64-v8a</_TypeMapFirstAbi>
+      <_TypeMapFirstRid Condition=" '$(_TypeMapFirstAbi)' == 'arm64-v8a' ">android-arm64</_TypeMapFirstRid>
+      <_TypeMapFirstRid Condition=" '$(_TypeMapFirstAbi)' == 'armeabi-v7a' ">android-arm</_TypeMapFirstRid>
+      <_TypeMapFirstRid Condition=" '$(_TypeMapFirstAbi)' == 'x86_64' ">android-x64</_TypeMapFirstRid>
+      <_TypeMapFirstRid Condition=" '$(_TypeMapFirstAbi)' == 'x86' ">android-x86</_TypeMapFirstRid>
+    </PropertyGroup>
+
+    <!-- Add TypeMap DLLs to _ResolvedAssemblies and _ShrunkAssemblies so they are counted by
+         GenerateNativeApplicationConfigSources (in _GeneratePackageManagerJava),
+         included in the assembly store hash table, and keep _RemoveRegisterAttribute
+         source/destination counts in sync. -->
+    <ItemGroup>
+      <_ResolvedAssemblies Include="$(_TypeMapOutputDirectory)*.dll">
+        <Abi>$(_TypeMapFirstAbi)</Abi>
+        <RuntimeIdentifier>$(_TypeMapFirstRid)</RuntimeIdentifier>
+        <DestinationSubPath>$(_TypeMapFirstAbi)/%(Filename)%(Extension)</DestinationSubPath>
+        <DestinationSubDirectory>$(_TypeMapFirstAbi)/</DestinationSubDirectory>
+      </_ResolvedAssemblies>
+      <_ShrunkAssemblies Include="$(_TypeMapOutputDirectory)*.dll">
+        <Abi>$(_TypeMapFirstAbi)</Abi>
+        <RuntimeIdentifier>$(_TypeMapFirstRid)</RuntimeIdentifier>
+        <DestinationSubPath>$(_TypeMapFirstAbi)/%(Filename)%(Extension)</DestinationSubPath>
+        <DestinationSubDirectory>$(_TypeMapFirstAbi)/</DestinationSubDirectory>
+      </_ShrunkAssemblies>
+    </ItemGroup>
+  </Target>
+
+  <!--
     _GenerateJavaStubs: overrides the legacy target from BuildOrder.targets.
     In the trimmable path, TypeMap generation already happened in _GenerateTrimmableTypeMap,
     so this target only handles JCW file copying, manifest, assembly store setup, and native config.
@@ -145,35 +184,6 @@
         Environments="@(_EnvironmentFiles)"
         HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
         EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)" />
-
-    <!-- Set properties for ABI/RID used by CoreCLR _AddTrimmableTypeMapAssembliesToStore fallback -->
-    <PropertyGroup>
-      <_TypeMapFirstAbi Condition=" '$(AndroidSupportedAbis)' != '' ">$([System.String]::Copy('$(AndroidSupportedAbis)').Split(';')[0])</_TypeMapFirstAbi>
-      <_TypeMapFirstAbi Condition=" '$(_TypeMapFirstAbi)' == '' ">arm64-v8a</_TypeMapFirstAbi>
-      <_TypeMapFirstRid Condition=" '$(_TypeMapFirstAbi)' == 'arm64-v8a' ">android-arm64</_TypeMapFirstRid>
-      <_TypeMapFirstRid Condition=" '$(_TypeMapFirstAbi)' == 'armeabi-v7a' ">android-arm</_TypeMapFirstRid>
-      <_TypeMapFirstRid Condition=" '$(_TypeMapFirstAbi)' == 'x86_64' ">android-x64</_TypeMapFirstRid>
-      <_TypeMapFirstRid Condition=" '$(_TypeMapFirstAbi)' == 'x86' ">android-x86</_TypeMapFirstRid>
-    </PropertyGroup>
-
-    <!-- Add TypeMap DLLs to _ResolvedAssemblies and _ShrunkAssemblies so they are counted by
-         GenerateNativeApplicationConfigSources (in _GeneratePackageManagerJava),
-         included in the assembly store hash table, and keep _RemoveRegisterAttribute
-         source/destination counts in sync. -->
-    <ItemGroup>
-      <_ResolvedAssemblies Include="$(_TypeMapOutputDirectory)*.dll">
-        <Abi>$(_TypeMapFirstAbi)</Abi>
-        <RuntimeIdentifier>$(_TypeMapFirstRid)</RuntimeIdentifier>
-        <DestinationSubPath>$(_TypeMapFirstAbi)/%(Filename)%(Extension)</DestinationSubPath>
-        <DestinationSubDirectory>$(_TypeMapFirstAbi)/</DestinationSubDirectory>
-      </_ResolvedAssemblies>
-      <_ShrunkAssemblies Include="$(_TypeMapOutputDirectory)*.dll">
-        <Abi>$(_TypeMapFirstAbi)</Abi>
-        <RuntimeIdentifier>$(_TypeMapFirstRid)</RuntimeIdentifier>
-        <DestinationSubPath>$(_TypeMapFirstAbi)/%(Filename)%(Extension)</DestinationSubPath>
-        <DestinationSubDirectory>$(_TypeMapFirstAbi)/</DestinationSubDirectory>
-      </_ShrunkAssemblies>
-    </ItemGroup>
 
     <!-- Copy generated manifest to expected location -->
     <Copy SourceFiles="$(_TypeMapBaseOutputDir)AndroidManifest.xml"

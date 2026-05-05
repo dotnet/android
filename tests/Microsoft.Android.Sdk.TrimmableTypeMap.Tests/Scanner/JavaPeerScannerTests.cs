@@ -55,6 +55,17 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Scan_ContentProvider_CapturesAuthorities ()
+	{
+		var provider = FindFixtureByJavaName ("my/app/MyProvider");
+		var component = provider.ComponentAttribute;
+		Assert.NotNull (component);
+		Assert.Equal (ComponentKind.ContentProvider, component.Kind);
+		Assert.True (component.Properties.TryGetValue ("Authorities", out var authorities));
+		Assert.Equal ("my.app.provider", authorities);
+	}
+
+	[Fact]
 	public void Scan_InvokerAndInterface_ShareJavaName ()
 	{
 		var peers = ScanFixtures ();
@@ -116,8 +127,7 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 	{
 		// Java.Interop.TestTypes.JavaObject has [JniTypeSignature("java/lang/Object", GenerateJavaPeer=false)]
 		// and Java.Lang.Object has [Register("java/lang/Object", DoNotGenerateAcw=true)].
-		// Both should be present in the scan results — alias support (PR #11122) handles
-		// the runtime deduplication.
+		// Both should be present in the scan results — alias support handles the runtime deduplication.
 		var peers = ScanFixtures ();
 		var javaObjectPeers = peers.Where (p => p.JavaName == "java/lang/Object").ToList ();
 		Assert.Equal (2, javaObjectPeers.Count);
@@ -126,8 +136,7 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 	[Fact]
 	public void Scan_JniTypeSignature_SubclassExtendsJavaPeer ()
 	{
-		// JavaDisposedObject extends JavaObject which has [JniTypeSignature(GenerateJavaPeer=false)]
-		// The scanner should still detect JavaDisposedObject as extending a Java peer
+		// JavaDisposedObject extends JavaObject which has [JniTypeSignature(GenerateJavaPeer=false)].
 		var peer = FindFixtureByJavaName ("net/dot/jni/test/JavaDisposedObject");
 		Assert.NotNull (peer);
 	}

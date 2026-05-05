@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using Android.Runtime;
 using Java.Interop;
 using Microsoft.Android.Runtime;
@@ -18,37 +21,17 @@ namespace Java.InteropTests
 		{
 		}
 
-		[Test]
-		public void GetStaticMethodFallbackTypes_WithPackageName_ReturnsDesugarFallbacks ()
+		[TestCase ("android/app/Activity", "android/app/DesugarActivity$_CC", "android/app/Activity$-CC")]
+		[TestCase ("Activity", "DesugarActivity$_CC", "Activity$-CC")]
+		[TestCase ("com/example/package/MyInterface", "com/example/package/DesugarMyInterface$_CC", "com/example/package/MyInterface$-CC")]
+		public void GetStaticMethodFallbackTypes_ReturnsDesugarFallbacks (string jniSimpleReference, string expectedDesugar, string expectedFallback)
 		{
 			using var manager = new TestableTrimmableTypeMapTypeManager ();
-			var fallbacks = manager.GetStaticMethodFallbackTypes ("android/app/Activity");
-			Assert.IsNotNull (fallbacks);
-			Assert.AreEqual (2, fallbacks!.Count);
-			Assert.AreEqual ("android/app/DesugarActivity$_CC", fallbacks [0]);
-			Assert.AreEqual ("android/app/Activity$-CC", fallbacks [1]);
-		}
+			var fallbacks = GetStaticMethodFallbackTypes (manager, jniSimpleReference);
 
-		[Test]
-		public void GetStaticMethodFallbackTypes_WithoutPackageName_ReturnsDesugarFallbacks ()
-		{
-			using var manager = new TestableTrimmableTypeMapTypeManager ();
-			var fallbacks = manager.GetStaticMethodFallbackTypes ("Activity");
-			Assert.IsNotNull (fallbacks);
-			Assert.AreEqual (2, fallbacks!.Count);
-			Assert.AreEqual ("DesugarActivity$_CC", fallbacks [0]);
-			Assert.AreEqual ("Activity$-CC", fallbacks [1]);
-		}
-
-		[Test]
-		public void GetStaticMethodFallbackTypes_WithDeepPackageName_ReturnsDesugarFallbacks ()
-		{
-			using var manager = new TestableTrimmableTypeMapTypeManager ();
-			var fallbacks = manager.GetStaticMethodFallbackTypes ("com/example/package/MyInterface");
-			Assert.IsNotNull (fallbacks);
-			Assert.AreEqual (2, fallbacks!.Count);
-			Assert.AreEqual ("com/example/package/DesugarMyInterface$_CC", fallbacks [0]);
-			Assert.AreEqual ("com/example/package/MyInterface$-CC", fallbacks [1]);
+			Assert.AreEqual (2, fallbacks.Count);
+			Assert.AreEqual (expectedDesugar, fallbacks [0]);
+			Assert.AreEqual (expectedFallback, fallbacks [1]);
 		}
 
 		// Verifies the generic-type-definition fallback in GetProxyForManagedType:
@@ -57,9 +40,7 @@ namespace Java.InteropTests
 		[Test]
 		public void TryGetJniNameForManagedType_ClosedGeneric_ResolvesViaGenericTypeDefinition ()
 		{
-			if (!RuntimeFeature.TrimmableTypeMap) {
-				Assert.Ignore ("TrimmableTypeMap feature switch is off; test only relevant for the trimmable typemap path.");
-			}
+			AssumeTrimmableTypeMapEnabled ();
 
 			var instance = TrimmableTypeMap.Instance;
 
@@ -79,9 +60,7 @@ namespace Java.InteropTests
 		[Test]
 		public void TryGetJniNameForManagedType_NonGenericType_ResolvesDirectly ()
 		{
-			if (!RuntimeFeature.TrimmableTypeMap) {
-				Assert.Ignore ("TrimmableTypeMap feature switch is off; test only relevant for the trimmable typemap path.");
-			}
+			AssumeTrimmableTypeMapEnabled ();
 
 			// Regression: the GTD fallback must not disturb the non-generic hot path.
 			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetJniNameForManagedType (typeof (JavaList), out var jniName));
@@ -91,9 +70,7 @@ namespace Java.InteropTests
 		[Test]
 		public void TryGetJniNameForManagedType_UnknownClosedGeneric_ReturnsFalse ()
 		{
-			if (!RuntimeFeature.TrimmableTypeMap) {
-				Assert.Ignore ("TrimmableTypeMap feature switch is off; test only relevant for the trimmable typemap path.");
-			}
+			AssumeTrimmableTypeMapEnabled ();
 
 			// System.Collections.Generic.List<T> has no TypeMapAssociation — both the
 			// direct lookup AND the GTD fallback must miss, and the API must return false.
@@ -105,9 +82,7 @@ namespace Java.InteropTests
 		[Test]
 		public void TryGetJniNameForManagedType_RepeatedClosedGenericLookup_IsCached ()
 		{
-			if (!RuntimeFeature.TrimmableTypeMap) {
-				Assert.Ignore ("TrimmableTypeMap feature switch is off; test only relevant for the trimmable typemap path.");
-			}
+			AssumeTrimmableTypeMapEnabled ();
 
 			// Closed generic peers normalize to their open generic definition, so
 			// repeated lookups reuse the same cached proxy.
@@ -121,9 +96,7 @@ namespace Java.InteropTests
 		[Test]
 		public void TryGetJniNameForManagedType_DifferentClosedGenerics_UseGenericDefinitionCacheKey ()
 		{
-			if (!RuntimeFeature.TrimmableTypeMap) {
-				Assert.Ignore ("TrimmableTypeMap feature switch is off; test only relevant for the trimmable typemap path.");
-			}
+			AssumeTrimmableTypeMapEnabled ();
 
 			var instance = TrimmableTypeMap.Instance;
 			var cache = GetProxyCache (instance);
@@ -140,6 +113,72 @@ namespace Java.InteropTests
 			Assert.IsFalse (cache.ContainsKey (typeof (JavaList<DateTimeOffset>)));
 		}
 
+		[Test]
+		public void RegisteredPeer_Dispose_InvokesDisposing ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			bool disposed = false;
+			bool finalized = false;
+			var value = new TrimmableRegisteredDisposedObject {
+				OnDisposed = () => disposed = true,
+				OnFinalized = () => finalized = true,
+			};
+
+			value.Dispose ();
+
+			Assert.IsTrue (disposed);
+			Assert.IsFalse (finalized);
+		}
+
+		[Test]
+		public async Task RegisteredPeer_Dispose_Finalized ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			var disposed = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			var finalized = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+
+			PerformNoPinAction (() => {
+				PerformNoPinAction (() => {
+					var value = new TrimmableRegisteredDisposedObject {
+						OnDisposed = () => disposed.TrySetResult (true),
+						OnFinalized = () => finalized.TrySetResult (true),
+					};
+					GC.KeepAlive (value);
+				});
+				JniEnvironment.Runtime.ValueManager.CollectPeers ();
+			});
+			JniEnvironment.Runtime.ValueManager.CollectPeers ();
+
+			await WaitForGC (() => disposed.Task.IsCompleted || finalized.Task.IsCompleted,
+				"Expected TrimmableRegisteredDisposedObject.Dispose(disposing: false) to run.");
+
+			Assert.IsFalse (disposed.Task.IsCompleted);
+			Assert.IsTrue (finalized.Task.IsCompleted);
+		}
+
+		[Test]
+		public void RegisteredPeer_NestedDisposeInvocations ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			var value = new TrimmableRegisteredNestedDisposableObject ();
+			value.Dispose ();
+			value.Dispose ();
+		}
+
+		[Test]
+		public void RegisteredPeer_CanCreateGenericHolder ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			using var holder = new TrimmableRegisteredGenericHolder<int> ();
+			holder.Value = 42;
+
+			Assert.AreEqual (42, holder.Value);
+		}
+
 		static ConcurrentDictionary<Type, JavaPeerProxy> GetProxyCache (TrimmableTypeMap instance)
 		{
 			var field = typeof (TrimmableTypeMap).GetField ("_proxyCache", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -154,6 +193,55 @@ namespace Java.InteropTests
 
 			Assert.Fail ("Unable to access TrimmableTypeMap proxy cache.");
 			throw new InvalidOperationException ("Unable to access TrimmableTypeMap proxy cache.");
+		}
+
+		static IReadOnlyList<string> GetStaticMethodFallbackTypes (TestableTrimmableTypeMapTypeManager manager, string jniSimpleReference)
+		{
+			var fallbacks = manager.GetStaticMethodFallbackTypes (jniSimpleReference);
+			Assert.IsNotNull (fallbacks);
+			return fallbacks ?? throw new InvalidOperationException ("Expected fallback types.");
+		}
+
+		static void AssumeTrimmableTypeMapEnabled ()
+		{
+			if (!RuntimeFeature.TrimmableTypeMap) {
+				Assert.Ignore ("TrimmableTypeMap feature switch is off; test only relevant for the trimmable typemap path.");
+			}
+		}
+
+		static async Task WaitForGC (Func<bool> predicate, string message, int timeoutMilliseconds = 2000)
+		{
+			var timeout = TimeSpan.FromMilliseconds (timeoutMilliseconds);
+			var start = DateTime.UtcNow;
+			while (!predicate () && DateTime.UtcNow - start < timeout) {
+				GC.Collect (generation: 2, mode: GCCollectionMode.Forced, blocking: true);
+				GC.WaitForPendingFinalizers ();
+				JniEnvironment.Runtime.ValueManager.CollectPeers ();
+				await Task.Yield ();
+			}
+			Assert.IsTrue (predicate (), message);
+		}
+
+		static IntPtr noPinActionPointer;
+
+		static unsafe void NoPinActionHelper (int depth, Action action)
+		{
+			int* values = stackalloc int [20];
+			noPinActionPointer = new IntPtr (values);
+
+			if (depth <= 0) {
+				new object ();
+				action ();
+			} else {
+				NoPinActionHelper (depth - 1, action);
+			}
+		}
+
+		static void PerformNoPinAction (Action action)
+		{
+			var thread = new Thread (() => NoPinActionHelper (128, action));
+			thread.Start ();
+			thread.Join ();
 		}
 
 		// Pure-function tests for the TargetTypeMatches helper used by
@@ -206,5 +294,54 @@ namespace Java.InteropTests
 		{
 			Assert.IsFalse (TrimmableTypeMap.TargetTypeMatches (typeof (string), typeof (int)));
 		}
+	}
+
+	[Register ("net/dot/android/test/TrimmableRegisteredDisposedObject")]
+	class TrimmableRegisteredDisposedObject : Java.Lang.Object
+	{
+		public Action OnDisposed = delegate { };
+		public Action OnFinalized = delegate { };
+
+		public TrimmableRegisteredDisposedObject ()
+		{
+		}
+
+		protected override void Dispose (bool disposing)
+		{
+			if (disposing) {
+				OnDisposed ();
+			} else {
+				OnFinalized ();
+			}
+			base.Dispose (disposing);
+		}
+	}
+
+	[Register ("net/dot/android/test/TrimmableRegisteredNestedDisposableObject")]
+	class TrimmableRegisteredNestedDisposableObject : Java.Lang.Object
+	{
+		bool isDisposed;
+
+		public TrimmableRegisteredNestedDisposableObject ()
+		{
+		}
+
+		protected override void Dispose (bool disposing)
+		{
+			if (isDisposed) {
+				return;
+			}
+			isDisposed = true;
+			if (Handle != IntPtr.Zero) {
+				Dispose ();
+			}
+			base.Dispose (disposing);
+		}
+	}
+
+	[Register ("net/dot/android/test/TrimmableRegisteredGenericHolder")]
+	class TrimmableRegisteredGenericHolder<T> : Java.Lang.Object
+	{
+		public T Value { get; set; }
 	}
 }

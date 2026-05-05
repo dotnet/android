@@ -458,16 +458,17 @@ public class ModelBuilderTests : FixtureTestBase
 
 			var model = BuildModel (clickPeers, "TypeMap");
 
-			// Invoker is excluded entirely — no TypeMap entry, no proxy.
-			// Only the interface gets a TypeMap entry and a proxy.
+			// Invoker is excluded from TypeMap entries/proxies. It still gets a
+			// managed→proxy association so its JniPeerMembers can resolve the JNI name.
 			Assert.Single (model.Entries);
 			Assert.Equal ("android/view/View$OnClickListener", model.Entries [0].JniName);
 
-			// Only the interface proxy exists; the invoker type is referenced
-			// only as a TypeRef in the interface proxy's InvokerType property.
+			// Only the interface proxy exists; the invoker type is also referenced
+			// as a TypeRef in the interface proxy's InvokerType property.
 			Assert.Single (model.ProxyTypes);
 			Assert.NotNull (model.ProxyTypes [0].InvokerType);
 			Assert.Equal ("Android.Views.IOnClickListenerInvoker", model.ProxyTypes [0].InvokerType!.ManagedTypeName);
+			Assert.Contains (model.Associations, a => a.SourceTypeReference == "Android.Views.IOnClickListenerInvoker, TestFixtures");
 		}
 
 		[Fact]
@@ -493,6 +494,10 @@ public class ModelBuilderTests : FixtureTestBase
 
 			// Interface proxy has activation because it will create the invoker
 			Assert.True (proxy.HasActivation);
+
+			Assert.Equal (2, model.Associations.Count);
+			Assert.Contains (model.Associations, a => a.SourceTypeReference == "MyApp.IFoo, App");
+			Assert.Contains (model.Associations, a => a.SourceTypeReference == "MyApp.FooInvoker, App");
 		}
 	}
 
@@ -659,6 +664,7 @@ public class ModelBuilderTests : FixtureTestBase
 			// Only the interface gets entries/proxies, the invoker is excluded
 			Assert.Single (model2.Entries);
 			Assert.Equal ("MyApp.IMyInterface", model2.ProxyTypes [0].TargetType.ManagedTypeName);
+			Assert.Contains (model2.Associations, a => a.SourceTypeReference == "MyApp.MyInvoker, App");
 		}
 	}
 

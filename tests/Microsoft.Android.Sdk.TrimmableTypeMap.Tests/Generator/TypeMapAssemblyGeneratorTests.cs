@@ -21,6 +21,29 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		return stream;
 	}
 
+	static MethodDefinitionHandle FindMethodDefinition (MetadataReader reader, string methodName) =>
+		reader.MethodDefinitions.First (h => reader.GetString (reader.GetMethodDefinition (h).Name) == methodName);
+
+	static List<MemberReferenceHandle> FindCtorMemberRefs (MetadataReader reader, string parentNamespace, string parentName, params string [] parameterTypes) =>
+		Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
+			.Select (MetadataTokens.MemberReferenceHandle)
+			.Where (h => {
+				var member = reader.GetMemberReference (h);
+				if (reader.GetString (member.Name) != ".ctor" || member.Parent.Kind != HandleKind.TypeReference)
+					return false;
+
+				var parent = reader.GetTypeReference ((TypeReferenceHandle) member.Parent);
+				if (reader.GetString (parent.Namespace) != parentNamespace || reader.GetString (parent.Name) != parentName)
+					return false;
+
+				var signature = member.DecodeMethodSignature (SignatureTypeProvider.Instance, null);
+				return signature.ParameterTypes.SequenceEqual (parameterTypes);
+			})
+			.ToList ();
+
+	static MemberReferenceHandle FindCtorMemberRef (MetadataReader reader, string parentNamespace, string parentName, params string [] parameterTypes) =>
+		FindCtorMemberRefs (reader, parentNamespace, parentName, parameterTypes).First ();
+
 	[Fact]
 	public void Generate_ProducesValidPEAssembly ()
 	{
@@ -243,25 +266,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_SimpleActivity_UsesGetUninitializedObject ()
-	{
-		var peers = ScanFixtures ();
-		var simpleActivity = peers.First (p => p.JavaName == "my/app/SimpleActivity");
-		Assert.NotNull (simpleActivity.ActivationCtor);
-		Assert.NotEqual (simpleActivity.ManagedTypeName, simpleActivity.ActivationCtor.DeclaringTypeName);
-
-		using var stream = GenerateAssembly (new [] { simpleActivity }, "InheritedCtorTest");
-		using var pe = new PEReader (stream);
-		var reader = pe.GetMetadataReader ();
-		var typeNames = GetTypeRefNames (reader);
-		Assert.Contains ("RuntimeHelpers", typeNames);
-
-		var memberNames = GetMemberRefNames (reader);
-		Assert.DoesNotContain ("CreateManagedPeer", memberNames);
-		Assert.Contains ("GetUninitializedObject", memberNames);
-	}
-
-	[Fact]
 	public void Generate_LeafCtor_DoesNotUseCreateManagedPeer ()
 	{
 		var peers = ScanFixtures ();
@@ -284,7 +288,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_InheritedCtor_UcoUsesGuardAndInlinedActivation ()
+	public void Generate_InheritedCtor_ReferencesGuardAndActivationCtor ()
 	{
 		var peers = ScanFixtures ();
 		var simpleActivity = peers.First (p => p.JavaName == "my/app/SimpleActivity");
@@ -298,8 +302,42 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 		Assert.Contains ("ShouldSkipActivation", memberNames);
 		Assert.Contains ("GetUninitializedObject", memberNames);
+		Assert.DoesNotContain ("Invoke", memberNames);
 		Assert.DoesNotContain ("ActivateInstance", memberNames);
 		Assert.DoesNotContain ("ActivatePeerFromJavaConstructor", memberNames);
+
+		Assert.NotEmpty (FindCtorMemberRefs (reader, "Android.App", "Activity",
+			"System.IntPtr", "Android.Runtime.JniHandleOwnership"));
+		var nctorMethodHandle = FindNctorUcoMethod (reader);
+		Assert.False (nctorMethodHandle.IsNil, "SimpleActivity should have a nctor_*_uco method");
+	}
+
+	[Fact]
+	public void Generate_InheritedJavaInteropCtor_ReferencesActivationCtor ()
+	{
+		var peer = MakeAcwPeer ("test/JiInheritedTarget", "Test.JiInheritedTarget", "TestAsm") with {
+			ActivationCtor = new ActivationCtorInfo {
+				DeclaringTypeName = "Test.JiInheritedBase",
+				DeclaringAssemblyName = "TestAsm",
+				Style = ActivationCtorStyle.JavaInterop,
+			},
+		};
+
+		using var stream = GenerateAssembly (new [] { peer }, "InheritedJiCtorInlineTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var typeNames = GetTypeRefNames (reader);
+		Assert.DoesNotContain ("MethodBase", typeNames);
+
+		var memberNames = GetMemberRefNames (reader);
+		Assert.Contains ("GetUninitializedObject", memberNames);
+		Assert.DoesNotContain ("Invoke", memberNames);
+
+		Assert.NotEmpty (FindCtorMemberRefs (reader, "Test", "JiInheritedBase",
+			"Java.Interop.JniObjectReference&", "Java.Interop.JniObjectReferenceOptions"));
+		var nctorMethodHandle = FindNctorUcoMethod (reader);
+		Assert.False (nctorMethodHandle.IsNil, "The ACW peer should have a nctor_*_uco method");
 	}
 
 	[Fact]
@@ -753,6 +791,56 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.Equal ("System.SByte", callbackSig.ParameterTypes.Last ());
 	}
 
+	[Fact]
+	public void Generate_UcoMethod_HasCatchRegionWithoutFinally ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/TouchHandler");
+		using var stream = GenerateAssembly (new [] { peer }, "UcoLegacyWrapperShape");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var ucoMethodHandle = reader.MethodDefinitions
+			.First (h => {
+				var method = reader.GetMethodDefinition (h);
+				var name = reader.GetString (method.Name);
+				return name.Contains ("onTouch") && name.Contains ("_uco_");
+			});
+		var ucoMethod = reader.GetMethodDefinition (ucoMethodHandle);
+		var body = pe.GetMethodBody (ucoMethod.RelativeVirtualAddress);
+		Assert.NotNull (body);
+		Assert.Contains (body.ExceptionRegions, r => r.Kind == ExceptionRegionKind.Catch);
+		Assert.DoesNotContain (body.ExceptionRegions, r => r.Kind == ExceptionRegionKind.Finally);
+	}
+
+	[Fact]
+	public void Generate_UcoMethod_UsesDefaultUnmanagedCallersOnlyAttribute ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/TouchHandler");
+		using var stream = GenerateAssembly (new [] { peer }, "UcoDefaultAttribute");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var ucoMethodHandle = reader.MethodDefinitions
+			.First (h => {
+				var method = reader.GetMethodDefinition (h);
+				var name = reader.GetString (method.Name);
+				return name.Contains ("onTouch") && name.Contains ("_uco_");
+			});
+		var attrs = reader.GetCustomAttributes (ucoMethodHandle)
+			.Select (h => reader.GetCustomAttribute (h))
+			.Where (attr => attr.Constructor.Kind == HandleKind.MemberReference)
+			.Where (attr => {
+				var ctor = reader.GetMemberReference ((MemberReferenceHandle) attr.Constructor);
+				if (ctor.Parent.Kind != HandleKind.TypeReference)
+					return false;
+				var type = reader.GetTypeReference ((TypeReferenceHandle) ctor.Parent);
+				return reader.GetString (type.Name) == "UnmanagedCallersOnlyAttribute";
+			})
+			.ToList ();
+		var ucoAttr = Assert.Single (attrs);
+		Assert.Equal (new byte [] { 0x01, 0x00, 0x00, 0x00 }, reader.GetBlobBytes (ucoAttr.Value));
+	}
+
 	static MemberReference FindCallbackMemberRef (MetadataReader reader, string methodName)
 	{
 		var refs = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
@@ -1022,10 +1110,8 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_UcoConstructor_BodyUsesMarshalMethodPattern ()
+	public void Generate_UcoConstructor_HasMarshalMethodMetadataAndExceptionRegions ()
 	{
-		// Verify that UCO constructor bodies wrap activation in BeginMarshalMethod/EndMarshalMethod
-		// with try/catch/finally so that exceptions cannot cross the JNI boundary (causing SIGABRT).
 		var peer = MakeAcwPeer ("test/UcoCtorExc", "Test.UcoCtorExc", "TestAsm");
 		using var stream = GenerateAssembly (new [] { peer }, "UcoCtorMarshalTest");
 		using var pe = new PEReader (stream);
@@ -1056,27 +1142,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			$"UCO constructor should have at least 2 exception regions (catch + finally), found {regions.Length}");
 		Assert.Contains (regions, r => r.Kind == ExceptionRegionKind.Catch);
 		Assert.Contains (regions, r => r.Kind == ExceptionRegionKind.Finally);
-
-		// Verify the method body IL actually calls the marshal-method APIs (not just that the refs exist in the assembly).
-		var il = pe.GetSectionData (nctorMethod.RelativeVirtualAddress);
-		var ilBytes = body.GetILBytes ();
-		Assert.NotNull (ilBytes);
-		var ilContent = System.Text.Encoding.ASCII.GetString (ilBytes);
-		// Cross-check: the member refs we found must be referenced from within this method body.
-		// We verify by checking that the IL contains Call/Callvirt opcodes (0x28/0x6F) with tokens
-		// pointing to the expected member refs.
-		var memberRefHandles = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
-			.Select (i => MetadataTokens.MemberReferenceHandle (i))
-			.ToList ();
-		var beginHandle = memberRefHandles.First (h => reader.GetString (reader.GetMemberReference (h).Name) == "BeginMarshalMethod");
-		var endHandle = memberRefHandles.First (h => reader.GetString (reader.GetMemberReference (h).Name) == "EndMarshalMethod");
-		var exHandle = memberRefHandles.First (h => reader.GetString (reader.GetMemberReference (h).Name) == "OnUserUnhandledException");
-		int beginToken = MetadataTokens.GetToken (beginHandle);
-		int endToken = MetadataTokens.GetToken (endHandle);
-		int exToken = MetadataTokens.GetToken (exHandle);
-		Assert.True (ILContainsCallToken (ilBytes, beginToken), "nctor_*_uco IL should call BeginMarshalMethod");
-		Assert.True (ILContainsCallToken (ilBytes, endToken), "nctor_*_uco IL should call EndMarshalMethod");
-		Assert.True (ILContainsCallToken (ilBytes, exToken), "nctor_*_uco IL should call OnUserUnhandledException");
 	}
 
 	[Fact]

@@ -27,7 +27,7 @@ sealed class SingleUniverseTypeMap : ITypeMapWithAliasing
 		_proxyTypeMap = proxyTypeMap;
 	}
 
-	public IEnumerable<Type> GetTypes (string jniName)
+	public IEnumerable<Type> GetProxyTypes (string jniName)
 	{
 		if (!_typeMap.TryGetValue (jniName, out var mappedType)) {
 			yield break;

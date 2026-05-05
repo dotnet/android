@@ -53,6 +53,10 @@ namespace Xamarin.Android.RuntimeTests
                     "Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateValue",
                     "Java.InteropTests.JniValueMarshaler_object_ContractTests.SpecificTypesAreUsed",
 
+                    // net.dot.jni.test.GetThis static init — same JavaProxy*
+                    // root cause as the JavaProxyObject exclusions above.
+                    "Java.InteropTests.JavaObjectTest.DisposeAccessesThis",
+
                     // net.dot.jni.internal.JavaProxyThrowable static init — same JavaProxy*
                     // root cause as the JavaProxyObject exclusions above.
                     "Java.InteropTests.JavaExceptionTests.InnerExceptionIsNotAProxy",
@@ -65,12 +69,6 @@ namespace Xamarin.Android.RuntimeTests
 
                     // net.dot.jni.test.GenericHolder Java class not in APK
                     "Java.InteropTests.JniTypeManagerTests.CannotCreateGenericHolderFromJava",
-
-                    // JniPrimitiveArrayInfo lookup fails for JavaBooleanArray —
-                    // our typemap returns JavaBooleanArray for "Z" via JavaPrimitiveArray<>
-                    // alias, which collides with the legacy GetPrimitiveArrayTypesForSimpleReference
-                    // that expects only primitive CLR types. Out of scope for this PR.
-                    "Java.InteropTests.JniTypeManagerTests.GetType",
 
                     // Open generic type handling differs from non-trimmable
                     "Java.InteropTests.JnienvTest.NewOpenGenericTypeThrows",

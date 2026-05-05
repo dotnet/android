@@ -212,11 +212,24 @@ class TypeMapCecilAdapter
 			// Managed types, however, must point back to the original Java type instead
 			// File/assembly generator use the `DuplicateForJavaToManaged` field to know to which managed type the
 			// duplicate Java type must be mapped.
-			TypeMapDebugEntry template = duplicates [0];
-			for (int i = 1; i < duplicates.Count; i++) {
-				duplicates [i].DuplicateForJavaToManaged = template;
+			TypeMapDebugEntry template = GetDebugDuplicateTemplate (duplicates);
+			foreach (TypeMapDebugEntry duplicate in duplicates) {
+				if (duplicate == template) {
+					continue;
+				}
+				duplicate.DuplicateForJavaToManaged = template;
 			}
 		}
+	}
+
+	static TypeMapDebugEntry GetDebugDuplicateTemplate (List<TypeMapDebugEntry> duplicates)
+	{
+		foreach (TypeMapDebugEntry duplicate in duplicates) {
+			if (duplicate.AssemblyName == "Mono.Android") {
+				return duplicate;
+			}
+		}
+		return duplicates [0];
 	}
 
 	static void UpdateApplicationConfig (NativeCodeGenState state, TypeDefinition javaType)

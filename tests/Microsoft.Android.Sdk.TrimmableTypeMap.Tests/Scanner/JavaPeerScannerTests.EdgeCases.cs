@@ -42,6 +42,14 @@ public partial class JavaPeerScannerTests
 	}
 
 	[Fact]
+	public void Scan_RegisterConnectorNestedInvoker_UsesMetadataNestedTypeName ()
+	{
+		var peer = FindFixtureByManagedName ("Android.App.Application+IActivityLifecycleCallbacks");
+
+		Assert.Equal ("Android.App.Application+IActivityLifecycleCallbacksInvoker", peer.InvokerTypeName);
+	}
+
+	[Fact]
 	public void Scan_EmptyNamespace_Handled ()
 	{
 		Assert.Equal ("GlobalType", FindFixtureByJavaName ("my/app/GlobalType").ManagedTypeName);

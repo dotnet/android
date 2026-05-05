@@ -134,6 +134,10 @@ namespace Android.Runtime
 			java_class_loader = args->grefLoader;
 
 			BoundExceptionType = (BoundExceptionType)args->ioExceptionType;
+			if (RuntimeFeature.TrimmableTypeMap) {
+				InitializeTrimmableTypeMapData ();
+			}
+
 			JniRuntime.JniTypeManager typeManager;
 			JniRuntime.JniValueManager? valueManager = null;
 			if (RuntimeFeature.TrimmableTypeMap) {
@@ -161,6 +165,11 @@ namespace Android.Runtime
 					args->jniAddNativeMethodRegistrationAttributePresent != 0
 			);
 			JniRuntime.SetCurrent (androidRuntime);
+			if (RuntimeFeature.TrimmableTypeMap) {
+				// TypeMapLoader.Initialize() only loads managed typemap data. Registering
+				// mono.android.Runtime natives requires JniRuntime.Current and its ClassLoader.
+				TrimmableTypeMap.RegisterNativeMethods ();
+			}
 
 			grefIGCUserPeer_class = args->grefIGCUserPeer;
 			grefGCUserPeerable_class = args->grefGCUserPeerable;
@@ -179,9 +188,6 @@ namespace Android.Runtime
 			if (!RuntimeFeature.TrimmableTypeMap) {
 				args->registerJniNativesFn = (IntPtr)(delegate* unmanaged<IntPtr, int, IntPtr, IntPtr, int, void>)&RegisterJniNatives;
 			}
-			if (RuntimeFeature.TrimmableTypeMap) {
-				InitializeTrimmableTypeMap ();
-			}
 			RunStartupHooksIfNeeded ();
 			SetSynchronizationContext ();
 		}
@@ -193,7 +199,7 @@ namespace Android.Runtime
 		// Separate method so the JIT doesn't try to resolve TypeMapLoader (from _Microsoft.Android.TypeMaps.dll)
 		// when compiling JNIEnvInit.Initialize() in non-trimmable builds where that assembly isn't present.
 		[MethodImpl (MethodImplOptions.NoInlining)]
-		static void InitializeTrimmableTypeMap ()
+		static void InitializeTrimmableTypeMapData ()
 		{
 			TypeMapLoader.Initialize ();
 		}

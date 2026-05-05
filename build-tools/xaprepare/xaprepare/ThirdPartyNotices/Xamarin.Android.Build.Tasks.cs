@@ -39,22 +39,11 @@ namespace Xamarin.Android.Prepare
 		protected override bool ShouldInclude (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps;
 
 		public override List<ThirdPartyNotice> Notices => new List <ThirdPartyNotice> {
-			new XamarinAndroidBuildTasks_fsharp_fsharp_TPN (),
 			new XamarinAndroidBuildTasks_IronyProject_Irony_TPN (),
 			new XamarinAndroidBuildTasks_JamesNK_NewtonsoftJson_TPN (),
 			new XamarinAndroidBuildTasks_NuGet_NuGetClient_TPN (),
 			new XamarinAndroidBuildTasks_gnu_binutils_TPN (),
 		};
-	}
-
-	class XamarinAndroidBuildTasks_fsharp_fsharp_TPN : ThirdPartyNotice
-	{
-		static readonly Uri    url         = new Uri ("https://github.com/fsharp/fsharp/");
-
-		public override string LicenseText => String.Empty;
-		public override string LicenseFile => CommonLicenses.Apache20Path;
-		public override string Name        => "fsharp/fsharp";
-		public override Uri    SourceUrl   => url;
 	}
 
 	class XamarinAndroidBuildTasks_IronyProject_Irony_TPN : ThirdPartyNotice
