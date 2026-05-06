@@ -56,27 +56,23 @@ static partial class JavaInteropRuntime
 
 			// This needs to be called first, since it sets up locations, environment variables, logging etc
 			XA_Host_NativeAOT_OnInit (language, filesDir, cacheDir, ref initArgs);
-			JNIEnvInit.InitializeJniRuntimeEarly (initArgs);
-			JNIEnvInit.InitializeNativeAotTrimmableTypeMapData ();
+			JNIEnvInit.InitializeLogCategories (initArgs);
 
 			var settings    = new DiagnosticSettings ();
 			settings.AddDebugDotnetLog ();
 
-			var typeManager = CreateTypeManager ();
-
 			var options = new NativeAotRuntimeOptions {
 				EnvironmentPointer          = jnienv,
 				ClassLoader                 = new JniObjectReference (classLoader, JniObjectReferenceType.Global),
-				TypeManager                 = typeManager,
-				ValueManager                = new JavaMarshalValueManager (),
+				TypeManager                 = JNIEnvInit.CreateTypeManager (initArgs),
+				ValueManager                = JNIEnvInit.CreateValueManager (),
 				JniGlobalReferenceLogWriter = settings.GrefLog,
 				JniLocalReferenceLogWriter  = settings.LrefLog,
 			};
 			runtime = options.CreateJreVM ();
 
-			// Entry point into Mono.Android.dll. Log categories are initialized in JNI_OnLoad.
-			JNIEnvInit.InitializeJniRuntime (runtime, initArgs);
-			JNIEnvInit.RegisterNativeAotTrimmableTypeMapNativeMethods ();
+			// Entry point into Mono.Android.dll for NativeAOT-specific JNI runtime initialization.
+			JNIEnvInit.InitializeNativeAotRuntime (runtime, initArgs);
 
 			transition  = new JniTransition (jnienv);
 
@@ -88,14 +84,5 @@ static partial class JavaInteropRuntime
 			transition.SetPendingException (e);
 		}
 		transition.Dispose ();
-	}
-
-	static JniRuntime.JniTypeManager CreateTypeManager ()
-	{
-		if (RuntimeFeature.TrimmableTypeMap) {
-			return new TrimmableTypeMapTypeManager ();
-		}
-
-		return new ManagedTypeManager ();
 	}
 }
