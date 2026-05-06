@@ -19,6 +19,11 @@ public sealed class TypeMapAssemblyGenerator
 	}
 
 	/// <summary>
+	/// True to emit all TypeMap entries as unconditional 2-arg attributes.
+	/// </summary>
+	public bool ForceUnconditionalEntries { get; init; } = true;
+
+	/// <summary>
 	/// Generates a TypeMap PE assembly from the given Java peer info records and writes it to <paramref name="stream"/>.
 	/// </summary>
 	/// <param name="peers">Scanned Java peer types.</param>
@@ -28,16 +33,14 @@ public sealed class TypeMapAssemblyGenerator
 	/// When true, uses <c>Java.Lang.Object</c> as the shared anchor type. When false, emits a per-assembly anchor.
 	/// </param>
 	/// <param name="maxArrayRank">Max rank for per-rank array <c>TypeMap</c> entries. 0 disables.</param>
-	/// <param name="forceUnconditionalEntries">True to emit all TypeMap entries as unconditional 2-arg attributes.</param>
 	public void Generate (
 		IReadOnlyList<JavaPeerInfo> peers,
 		Stream stream,
 		string assemblyName,
 		bool useSharedTypemapUniverse = false,
-		int maxArrayRank = 0,
-		bool forceUnconditionalEntries = true)
+		int maxArrayRank = 0)
 	{
-		var model = ModelBuilder.Build (peers, assemblyName + ".dll", assemblyName, maxArrayRank, forceUnconditionalEntries);
+		var model = ModelBuilder.Build (peers, assemblyName + ".dll", assemblyName, maxArrayRank, ForceUnconditionalEntries);
 		var emitter = new TypeMapAssemblyEmitter (_systemRuntimeVersion);
 		emitter.Emit (model, stream, useSharedTypemapUniverse);
 	}

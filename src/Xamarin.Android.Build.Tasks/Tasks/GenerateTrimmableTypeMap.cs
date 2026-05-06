@@ -142,7 +142,9 @@ public class GenerateTrimmableTypeMap : AndroidTask
 					ApplicationJavaClass: ApplicationJavaClass);
 			}
 
-			var generator = new TrimmableTypeMapGenerator (new MSBuildTrimmableTypeMapLogger (Log));
+			var generator = new TrimmableTypeMapGenerator (new MSBuildTrimmableTypeMapLogger (Log)) {
+				ForceUnconditionalEntries = ForceUnconditionalEntries,
+			};
 
 			XDocument? manifestTemplate = null;
 			if (!ManifestTemplate.IsNullOrEmpty () && File.Exists (ManifestTemplate)) {
@@ -157,8 +159,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				manifestConfig: manifestConfig,
 				manifestTemplate: manifestTemplate,
 				packageNamingPolicy: PackageNamingPolicy,
-				maxArrayRank: MaxArrayRank,
-				forceUnconditionalEntries: ForceUnconditionalEntries);
+				maxArrayRank: MaxArrayRank);
 
 			GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyInputs.Select (i => i.Path).ToList ());
 			GeneratedJavaFiles = WriteJavaSourcesToDisk (result.GeneratedJavaSources);

@@ -22,6 +22,15 @@ public class TrimmableTypeMapGenerator
 	}
 
 	/// <summary>
+	/// Workaround for https://github.com/dotnet/runtime/issues/127004.
+	/// When true, all TypeMap entries are emitted as 2-arg (unconditional) to avoid the
+	/// trimmer bug that strips TypeMapAssociation attributes when a TypeMap attribute
+	/// references the same type. Set to false once the runtime bug is fixed to re-enable
+	/// 3-arg conditional entries that allow unused framework bindings to be trimmed away.
+	/// </summary>
+	public bool ForceUnconditionalEntries { get; init; } = true;
+
+	/// <summary>
 	/// Runs the full generation pipeline: scan assemblies, generate typemap
 	/// assemblies, generate JCW Java sources, and optionally generate a merged manifest.
 	/// No file IO is performed — all results are returned in memory.
@@ -34,8 +43,7 @@ public class TrimmableTypeMapGenerator
 		ManifestConfig? manifestConfig = null,
 		XDocument? manifestTemplate = null,
 		string? packageNamingPolicy = null,
-		int maxArrayRank = 0,
-		bool forceUnconditionalEntries = true)
+		int maxArrayRank = 0)
 	{
 		_ = assemblies ?? throw new ArgumentNullException (nameof (assemblies));
 		_ = systemRuntimeVersion ?? throw new ArgumentNullException (nameof (systemRuntimeVersion));
@@ -59,7 +67,6 @@ public class TrimmableTypeMapGenerator
 			systemRuntimeVersion,
 			useSharedTypemapUniverse,
 			maxArrayRank,
-			forceUnconditionalEntries,
 			frameworkAssemblyNames);
 		var jcwPeers = allPeers.Where (p =>
 			!frameworkAssemblyNames.Contains (p.AssemblyName)
@@ -156,7 +163,6 @@ public class TrimmableTypeMapGenerator
 		Version systemRuntimeVersion,
 		bool useSharedTypemapUniverse,
 		int maxArrayRank,
-		bool forceUnconditionalEntries,
 		HashSet<string> frameworkAssemblyNames)
 	{
 		List<(string AssemblyName, List<JavaPeerInfo> Peers)> peersByAssembly;
@@ -189,7 +195,7 @@ public class TrimmableTypeMapGenerator
 				typeMapAssemblyName + ".dll",
 				typeMapAssemblyName,
 				maxArrayRank: maxArrayRank,
-				forceUnconditionalEntries: forceUnconditionalEntries,
+				forceUnconditionalEntries: ForceUnconditionalEntries,
 				frameworkAssemblyNames: frameworkAssemblyNames);
 			LogTypeMapAssemblyDetails (typeMapAssemblyName, model);
 
