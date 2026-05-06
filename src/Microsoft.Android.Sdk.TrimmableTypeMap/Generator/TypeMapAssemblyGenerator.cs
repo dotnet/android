@@ -24,6 +24,12 @@ public sealed class TypeMapAssemblyGenerator
 	public bool ForceUnconditionalEntries { get; init; } = true;
 
 	/// <summary>
+	/// Assembly names that should be treated as framework assemblies when deciding whether
+	/// ACW entries are unconditional.
+	/// </summary>
+	public ISet<string>? FrameworkAssemblyNames { get; init; }
+
+	/// <summary>
 	/// Generates a TypeMap PE assembly from the given Java peer info records and writes it to <paramref name="stream"/>.
 	/// </summary>
 	/// <param name="peers">Scanned Java peer types.</param>
@@ -40,7 +46,7 @@ public sealed class TypeMapAssemblyGenerator
 		bool useSharedTypemapUniverse = false,
 		int maxArrayRank = 0)
 	{
-		var model = ModelBuilder.Build (peers, assemblyName + ".dll", assemblyName, maxArrayRank, ForceUnconditionalEntries);
+		var model = ModelBuilder.Build (peers, assemblyName + ".dll", assemblyName, maxArrayRank, ForceUnconditionalEntries, FrameworkAssemblyNames);
 		var emitter = new TypeMapAssemblyEmitter (_systemRuntimeVersion);
 		emitter.Emit (model, stream, useSharedTypemapUniverse);
 	}
