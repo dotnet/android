@@ -152,6 +152,7 @@ namespace Xamarin.ProjectTools
 			}
 			return maxInstalled ?? new Version (0, 0);
 		}
+
 		/// <summary>
 		/// Returns the platform directory name (e.g. "android-37.0") for the given platform version.
 		/// Starting with API 37, Google ships platforms as "android-37.0" instead of "android-37",

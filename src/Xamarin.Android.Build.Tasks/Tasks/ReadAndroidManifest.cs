@@ -62,15 +62,16 @@ namespace Xamarin.Android.Tasks
 				}
 
 				var libraries = new List<ITaskItem> ();
+				var platformPath = MonoAndroidHelper.AndroidSdk.TryGetPlatformDirectoryFromApiLevel (AndroidApiLevel, MonoAndroidHelper.SupportedVersions);
+				if (platformPath == null) {
+					Log.LogDebugMessage ($"Could not find platform directory for API level '{AndroidApiLevel}'");
+				}
 				foreach (var uses_library in app.Elements ("uses-library")) {
 					var attribute = uses_library.Attribute (androidNs + "name");
 					if (attribute != null && !attribute.Value.IsNullOrEmpty ()) {
-						var required = uses_library.Attribute (androidNs + "required")?.Value;
-						var platformPath = MonoAndroidHelper.AndroidSdk.TryGetPlatformDirectoryFromApiLevel (AndroidApiLevel, MonoAndroidHelper.SupportedVersions);
-						if (platformPath == null) {
-							Log.LogDebugMessage ($"Could not find platform directory for API level '{AndroidApiLevel}'");
+						if (platformPath == null)
 							continue;
-						}
+						var required = uses_library.Attribute (androidNs + "required")?.Value;
 						var path = Path.Combine (platformPath, "optional", $"{attribute.Value}.jar");
 						if (File.Exists (path)) {
 							libraries.Add (new TaskItem (path));
