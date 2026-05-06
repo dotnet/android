@@ -121,6 +121,7 @@ public sealed class RootTypeMapAssemblyGenerator
 		} else {
 			EmitPerAssemblyUniverseAssemblyTargetAttributes (pe, perAssemblyTypeMapNames);
 		}
+		EmitArrayAssemblyTargetAttributes (pe, perAssemblyTypeMapNames, maxArrayRank);
 
 		// Emit [assembly: IgnoresAccessChecksTo("...")] so TypeMapLoader.Initialize() can access
 		// internal types (TrimmableTypeMap and friends in Mono.Android, and private anchors
@@ -155,6 +156,24 @@ public sealed class RootTypeMapAssemblyGenerator
 				default, pe.Metadata.GetOrAddString ("__TypeMapAnchor"));
 			var ctorRef = GetTypeMapAssemblyTargetAttributeCtorRef (pe, openAttrRef, perAssemblyAnchorRef);
 			EmitAssemblyTargetAttribute (pe, ctorRef, name);
+		}
+	}
+
+	static void EmitArrayAssemblyTargetAttributes (PEAssemblyBuilder pe, IReadOnlyList<string> perAssemblyTypeMapNames, int maxArrayRank)
+	{
+		if (maxArrayRank == 0) {
+			return;
+		}
+
+		var openAttrRef = GetTypeMapAssemblyTargetAttributeRef (pe);
+		foreach (var name in perAssemblyTypeMapNames) {
+			var asmRef = pe.FindOrAddAssemblyRef (name);
+			for (int rank = 1; rank <= maxArrayRank; rank++) {
+				var rankAnchorRef = pe.Metadata.AddTypeReference (asmRef,
+					default, pe.Metadata.GetOrAddString ($"__ArrayMapRank{rank}"));
+				var ctorRef = GetTypeMapAssemblyTargetAttributeCtorRef (pe, openAttrRef, rankAnchorRef);
+				EmitAssemblyTargetAttribute (pe, ctorRef, name);
+			}
 		}
 	}
 
