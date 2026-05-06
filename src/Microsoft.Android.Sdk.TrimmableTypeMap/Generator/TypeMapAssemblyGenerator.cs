@@ -46,7 +46,13 @@ public sealed class TypeMapAssemblyGenerator
 		bool useSharedTypemapUniverse = false,
 		int maxArrayRank = 0)
 	{
-		var model = ModelBuilder.Build (peers, assemblyName + ".dll", assemblyName, maxArrayRank, ForceUnconditionalEntries, FrameworkAssemblyNames);
+		var model = ModelBuilder.Build (
+			peers,
+			assemblyName + ".dll",
+			assemblyName,
+			maxArrayRank: maxArrayRank,
+			forceUnconditionalEntries: ForceUnconditionalEntries,
+			frameworkAssemblyNames: FrameworkAssemblyNames);
 		var emitter = new TypeMapAssemblyEmitter (_systemRuntimeVersion);
 		emitter.Emit (model, stream, useSharedTypemapUniverse);
 	}

@@ -187,14 +187,14 @@ public class TrimmableTypeMapGenerator
 
 		var generatedAssemblies = new List<GeneratedAssembly> ();
 		var perAssemblyNames = new List<string> ();
+		var generator = new TypeMapAssemblyGenerator (systemRuntimeVersion) {
+			ForceUnconditionalEntries = ForceUnconditionalEntries,
+			FrameworkAssemblyNames = frameworkAssemblyNames,
+		};
 		foreach (var (assemblyName, peers) in peersByAssembly) {
 			string typeMapAssemblyName = $"_{assemblyName}.TypeMap";
 			perAssemblyNames.Add (typeMapAssemblyName);
 			var stream = new MemoryStream ();
-			var generator = new TypeMapAssemblyGenerator (systemRuntimeVersion) {
-				ForceUnconditionalEntries = ForceUnconditionalEntries,
-				FrameworkAssemblyNames = frameworkAssemblyNames,
-			};
 			generator.Generate (peers, stream, typeMapAssemblyName, useSharedTypemapUniverse, maxArrayRank);
 			stream.Position = 0;
 			generatedAssemblies.Add (new GeneratedAssembly (typeMapAssemblyName, stream));
