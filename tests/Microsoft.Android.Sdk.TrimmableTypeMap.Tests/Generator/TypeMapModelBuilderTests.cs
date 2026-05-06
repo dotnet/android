@@ -184,7 +184,6 @@ public class ModelBuilderTests : FixtureTestBase
 			var entry = Assert.Single (model.Entries);
 			Assert.False (entry.IsUnconditional);
 			Assert.Equal ("Android.Media.TV.TvView+IOnUnhandledInputEventListenerImplementor, Mono.Android", entry.TargetTypeReference);
-			Assert.Equal ("conditional framework ACW candidate", entry.InclusionReason);
 		}
 
 		[Fact]

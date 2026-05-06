@@ -16,8 +16,6 @@ static class ModelBuilder
 {
 	const string ProxyTypeSuffix = "_Proxy";
 
-	readonly record struct InclusionDecision (bool IsUnconditional, string Reason);
-
 	static readonly HashSet<string> EssentialRuntimeTypes = new (StringComparer.Ordinal) {
 		"java/lang/Object",
 		"java/lang/Class",
@@ -199,15 +197,11 @@ static class ModelBuilder
 		// java/lang/String and java/lang/Object.
 		bool aliasBaseUnconditional = forceUnconditionalEntries
 			|| EssentialRuntimeTypes.Contains (jniName)
-			|| peersForName.Any (p => IsUnconditionalEntry (p, frameworkAssemblyNames));
-		string aliasBaseReason = GetAliasBaseInclusionReason (jniName, peersForName, forceUnconditionalEntries, frameworkAssemblyNames);
+			|| peersForName.Any (p => IsUnconditionalEntry (p, forceUnconditionalEntries: false, frameworkAssemblyNames));
 		model.Entries.Add (new TypeMapAttributeData {
 			JniName = jniName,
 			ProxyTypeReference = holderRef,
 			TargetTypeReference = aliasBaseUnconditional ? null : holderRef,
-			InclusionReason = aliasBaseReason,
-			SourceManagedTypeName = $"{holderNamespace}.{holderTypeName}",
-			SourceAssemblyName = assemblyName,
 		});
 
 		model.AliasHolders.Add (new AliasHolderData {
@@ -237,51 +231,25 @@ static class ModelBuilder
 	/// Determines whether a type should use the unconditional (2-arg) TypeMap attribute.
 	/// Unconditional types are always preserved by the trimmer.
 	/// </summary>
-	static bool IsUnconditionalEntry (JavaPeerInfo peer, ISet<string>? frameworkAssemblyNames)
-	{
-		return GetInclusionDecision (peer, forceUnconditionalEntries: false, frameworkAssemblyNames).IsUnconditional;
-	}
-
-	static InclusionDecision GetInclusionDecision (JavaPeerInfo peer, bool forceUnconditionalEntries, ISet<string>? frameworkAssemblyNames)
+	static bool IsUnconditionalEntry (JavaPeerInfo peer, bool forceUnconditionalEntries, ISet<string>? frameworkAssemblyNames)
 	{
 		if (forceUnconditionalEntries) {
-			return new InclusionDecision (true, "force-unconditional entries are enabled");
+			return true;
 		}
 
 		if (EssentialRuntimeTypes.Contains (peer.JavaName)) {
-			return new InclusionDecision (true, "essential Java interop runtime type");
+			return true;
 		}
 
 		if (!peer.DoNotGenerateAcw && !peer.IsInterface && !IsFrameworkAssembly (peer, frameworkAssemblyNames)) {
-			return new InclusionDecision (true, "user ACW type can be instantiated from Java");
+			return true;
 		}
 
 		if (peer.IsUnconditional) {
-			return new InclusionDecision (true, "scanner marked the peer unconditional");
+			return true;
 		}
 
-		if (!peer.DoNotGenerateAcw && !peer.IsInterface) {
-			return new InclusionDecision (false, "conditional framework ACW candidate");
-		}
-
-		return new InclusionDecision (false, "conditional trim-target entry");
-	}
-
-	static string GetAliasBaseInclusionReason (string jniName, List<JavaPeerInfo> peersForName, bool forceUnconditionalEntries, ISet<string>? frameworkAssemblyNames)
-	{
-		if (forceUnconditionalEntries) {
-			return "alias holder is unconditional because force-unconditional entries are enabled";
-		}
-		if (EssentialRuntimeTypes.Contains (jniName)) {
-			return "alias holder is unconditional because the JNI name is an essential Java interop runtime type";
-		}
-		foreach (var peer in peersForName) {
-			var decision = GetInclusionDecision (peer, forceUnconditionalEntries: false, frameworkAssemblyNames);
-			if (decision.IsUnconditional) {
-				return $"alias holder is unconditional because {peer.ManagedTypeName} is unconditional: {decision.Reason}";
-			}
-		}
-		return "alias holder is conditional on the holder type";
+		return false;
 	}
 
 	static bool IsFrameworkAssembly (JavaPeerInfo peer, ISet<string>? frameworkAssemblyNames)
@@ -445,17 +413,13 @@ static class ModelBuilder
 			proxyRef = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName);
 		}
 
-		var inclusion = GetInclusionDecision (peer, forceUnconditionalEntries, frameworkAssemblyNames);
-		bool isUnconditional = inclusion.IsUnconditional;
+		bool isUnconditional = IsUnconditionalEntry (peer, forceUnconditionalEntries, frameworkAssemblyNames);
 		string? targetRef = isUnconditional ? null : AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName);
 
 		return new TypeMapAttributeData {
 			JniName = jniName,
 			ProxyTypeReference = proxyRef,
 			TargetTypeReference = targetRef,
-			InclusionReason = inclusion.Reason,
-			SourceManagedTypeName = peer.ManagedTypeName,
-			SourceAssemblyName = peer.AssemblyName,
 		};
 	}
 
@@ -488,9 +452,6 @@ static class ModelBuilder
 				JniName = jniName,
 				ProxyTypeReference = arrayTypeRef,
 				TargetTypeReference = arrayTypeRef,
-				InclusionReason = $"conditional array rank {rank} trim-target entry",
-				SourceManagedTypeName = peer.ManagedTypeName,
-				SourceAssemblyName = peer.AssemblyName,
 				AnchorRank = rank,
 			});
 		}
