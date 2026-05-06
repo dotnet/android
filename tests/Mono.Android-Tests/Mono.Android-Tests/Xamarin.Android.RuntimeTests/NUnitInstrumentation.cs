@@ -46,11 +46,8 @@ namespace Xamarin.Android.RuntimeTests
                     "Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateValue",
                     "Java.InteropTests.JniValueMarshaler_object_ContractTests.SpecificTypesAreUsed",
 
-                    // No generated JavaPeerProxy for java/lang/Object with IJavaPeerable target type
-                    "Java.InteropTests.JniValueMarshaler_IJavaPeerable_ContractTests.JniValueMarshalerContractTests`1.CreateGenericValue",
-                    "Java.InteropTests.JniValueMarshaler_IJavaPeerable_ContractTests.JniValueMarshalerContractTests`1.CreateValue",
-
-                    // net.dot.jni.internal.JavaProxyThrowable — proxy throwable creation fails
+                    // net.dot.jni.internal.JavaProxyThrowable static init — same JavaProxy*
+                    // root cause as the JavaProxyObject exclusions above.
                     "Java.InteropTests.JavaExceptionTests.InnerExceptionIsNotAProxy",
 
                     // IJavaInterfaceInvoker ctor trimmed / missing JavaPeerProxy for test types
@@ -64,25 +61,7 @@ namespace Xamarin.Android.RuntimeTests
                     "Java.InteropTests.JniPeerMembersTests.ReplacementTypeUsedForMethodLookup",
                     "Java.InteropTests.JniPeerMembersTests.ReplaceStaticMethodName",
 
-                    // net.dot.jni.test.GenericHolder Java class not in APK
-                    "Java.InteropTests.JniTypeManagerTests.CannotCreateGenericHolderFromJava",
-
-                    // JniPrimitiveArrayInfo lookup fails for JavaBooleanArray
-                    "Java.InteropTests.JniTypeManagerTests.GetType",
-
-                    // net.dot.jni.test.GetThis — cannot register native members
-                    "Java.InteropTests.JavaObjectTest.DisposeAccessesThis",
-
-                    // NotSupportedException instead of InvalidCastException — no generated JavaPeerProxy
-                    "Java.InteropTests.JavaObjectExtensionsTests.JavaCast_BadInterfaceCast",
-                    "Java.InteropTests.JavaObjectExtensionsTests.JavaCast_BaseToGenericWrapper",
-                    "Java.InteropTests.JavaObjectExtensionsTests.JavaCast_CheckForManagedSubclasses",
-                    "Java.InteropTests.JavaObjectExtensionsTests.JavaCast_InvalidTypeCastThrows",
-
-                    // Open generic type handling differs from non-trimmable
-                    "Java.InteropTests.JnienvTest.NewOpenGenericTypeThrows",
-
-                    // Throwable subclass registration not supported in trimmable typemap
+                    // Throwable subclass registration
                     "Java.InteropTests.JnienvTest.ActivatedDirectThrowableSubclassesShouldBeRegistered",
 
                     // Typemap doesn't resolve most-derived type

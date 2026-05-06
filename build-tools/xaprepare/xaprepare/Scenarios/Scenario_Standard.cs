@@ -30,7 +30,6 @@ namespace Xamarin.Android.Prepare
 
 		protected override void AddEndSteps (Context context)
 		{
-			Steps.Add (new Step_ThirdPartyNotices ());
 			Steps.Add (new Step_GenerateFiles (atBuildStart: false));
 		}
 

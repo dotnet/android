@@ -12,11 +12,11 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 {
 
-	static MemoryStream GenerateRootAssembly (IReadOnlyList<string> perAssemblyNames, bool useSharedTypemapUniverse = false, string? assemblyName = null)
+	static MemoryStream GenerateRootAssembly (IReadOnlyList<string> perAssemblyNames, bool useSharedTypemapUniverse = false, string? assemblyName = null, int maxArrayRank = 0)
 	{
 		var stream = new MemoryStream ();
 		var generator = new RootTypeMapAssemblyGenerator (new Version (11, 0, 0, 0));
-		generator.Generate (perAssemblyNames, useSharedTypemapUniverse, stream, assemblyName);
+		generator.Generate (perAssemblyNames, useSharedTypemapUniverse, stream, assemblyName, maxArrayRank: maxArrayRank);
 		stream.Position = 0;
 		return stream;
 	}
@@ -321,5 +321,44 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 			}
 		}
 		return result;
+	}
+
+	[Fact]
+	public void Generate_MergedMode_WithArrays_ProducesValidPEAssembly ()
+	{
+		using var stream = GenerateRootAssembly (["_App.TypeMap", "_Mono.Android.TypeMap"],
+			useSharedTypemapUniverse: true, maxArrayRank: 3);
+		using var pe = new PEReader (stream);
+		Assert.True (pe.HasMetadata);
+	}
+
+	[Fact]
+	public void Generate_MergedMode_WithArrays_ReferencesPerAsmRankSentinels ()
+	{
+		using var stream = GenerateRootAssembly (["_App.TypeMap", "_Mono.Android.TypeMap"],
+			useSharedTypemapUniverse: true, maxArrayRank: 2);
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var typeRefNames = reader.TypeReferences
+			.Select (h => reader.GetString (reader.GetTypeReference (h).Name))
+			.ToList ();
+		Assert.Contains ("__ArrayMapRank1", typeRefNames);
+		Assert.Contains ("__ArrayMapRank2", typeRefNames);
+		Assert.DoesNotContain ("__ArrayMapRank3", typeRefNames);
+	}
+
+	[Fact]
+	public void Generate_MergedMode_WithArrays_NoPerAsmAccessNeeded ()
+	{
+		using var stream = GenerateRootAssembly (["_App.TypeMap", "_Mono.Android.TypeMap"],
+			useSharedTypemapUniverse: true, maxArrayRank: 3);
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var accessAttrs = GetIgnoresAccessChecksToValues (reader);
+		Assert.Contains ("Mono.Android", accessAttrs);
+		// Shared-mode root never needs per-asm internal access — rank anchors live in Mono.Android.
+		Assert.DoesNotContain ("_App.TypeMap", accessAttrs);
 	}
 }

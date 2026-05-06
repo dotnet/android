@@ -121,7 +121,6 @@ namespace Java.InteropTests
 			}
 		}
 
-		// TODO: https://github.com/dotnet/android/issues/11170 — open generic creation should throw but succeeds under trimmable typemap
 		[Test]
 		public void NewOpenGenericTypeThrows ()
 		{

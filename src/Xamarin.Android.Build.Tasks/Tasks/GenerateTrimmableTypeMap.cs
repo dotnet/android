@@ -68,6 +68,13 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public bool Debug { get; set; }
 	public bool NeedsInternet { get; set; }
 	public bool EmbedAssemblies { get; set; }
+
+	/// <summary>
+	/// Maximum array rank for which the generator emits per-rank <c>__ArrayMapRank{N}</c>
+	/// sentinels and <c>TypeMap</c> entries. 0 disables. Set via
+	/// <c>$(_AndroidTrimmableTypeMapMaxArrayRank)</c>.
+	/// </summary>
+	public int MaxArrayRank { get; set; }
 	public string? ManifestPlaceholders { get; set; }
 	public string? CheckedBuild { get; set; }
 	public string? ApplicationJavaClass { get; set; }
@@ -131,7 +138,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				frameworkAssemblyNames,
 				useSharedTypemapUniverse: !Debug,
 				manifestConfig,
-				manifestTemplate);
+				manifestTemplate,
+				maxArrayRank: MaxArrayRank);
 
 			GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyPaths);
 			GeneratedJavaFiles = WriteJavaSourcesToDisk (result.GeneratedJavaSources);
