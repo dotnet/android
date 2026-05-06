@@ -1173,28 +1173,61 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_UcoConstructor_GenericDefinition_NoExceptionRegions ()
+	public void Generate_UcoConstructor_GenericDefinition_ThrowsWithMarshalMethodPattern ()
 	{
-		// Open-generic UCO constructors are no-ops and must NOT have exception regions
-		// (a single 'ret' is emitted with no surrounding try/catch/finally).
-		var peers = ScanFixtures ();
-		var generic = peers.First (p => p.JavaName == "my/app/GenericHolder");
-		Assert.True (generic.IsGenericDefinition);
+		// Open-generic UCO constructors throw inside the same marshal-method wrapper used
+		// by normal UCO constructors, so the exception is surfaced through
+		// JniRuntime.OnUserUnhandledException instead of crossing the JNI boundary.
+		var generic = MakeAcwPeer ("test/GenericHolder", "Test.GenericHolder`1", "TestAsm") with {
+			IsGenericDefinition = true,
+		};
 
 		using var stream = GenerateAssembly (new [] { generic }, "GenericUcoCtorTest");
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 
 		var nctorMethodHandle = FindNctorUcoMethod (reader);
+		Assert.False (nctorMethodHandle.IsNil, "Open-generic ACWs should emit a throwing nctor_*_uco method");
 
-		if (!nctorMethodHandle.IsNil) {
-			// If a nctor_*_uco method exists for the generic type, it must be a no-op (no exception regions).
-			var nctorMethod = reader.GetMethodDefinition (nctorMethodHandle);
-			var body = pe.GetMethodBody (nctorMethod.RelativeVirtualAddress);
-			Assert.NotNull (body);
-			Assert.Empty (body.ExceptionRegions);
-		}
-		// Open-generic types do not get a nctor_*_uco wrapper — no UCO ctors for generics.
+		var nctorMethod = reader.GetMethodDefinition (nctorMethodHandle);
+		var body = pe.GetMethodBody (nctorMethod.RelativeVirtualAddress);
+		Assert.NotNull (body);
+
+		var regions = body.ExceptionRegions;
+		Assert.True (regions.Length >= 2,
+			$"Open-generic UCO constructor should have at least 2 exception regions, found {regions.Length}");
+		Assert.Contains (regions, r => r.Kind == ExceptionRegionKind.Catch);
+		Assert.Contains (regions, r => r.Kind == ExceptionRegionKind.Finally);
+
+		var typeNames = GetTypeRefNames (reader);
+		Assert.Contains ("NotSupportedException", typeNames);
+
+		var ilBytes = body.GetILBytes ();
+		Assert.NotNull (ilBytes);
+		var memberRefHandles = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
+			.Select (i => MetadataTokens.MemberReferenceHandle (i))
+			.ToList ();
+		var notSupportedExceptionCtorHandle = memberRefHandles.First (h => {
+			var member = reader.GetMemberReference (h);
+			if (reader.GetString (member.Name) != ".ctor" || member.Parent.Kind != HandleKind.TypeReference) {
+				return false;
+			}
+
+			var parent = reader.GetTypeReference ((TypeReferenceHandle) member.Parent);
+			return reader.GetString (parent.Name) == "NotSupportedException";
+		});
+		var beginHandle = memberRefHandles.First (h => reader.GetString (reader.GetMemberReference (h).Name) == "BeginMarshalMethod");
+		var endHandle = memberRefHandles.First (h => reader.GetString (reader.GetMemberReference (h).Name) == "EndMarshalMethod");
+		var exHandle = memberRefHandles.First (h => reader.GetString (reader.GetMemberReference (h).Name) == "OnUserUnhandledException");
+		int notSupportedExceptionCtorToken = MetadataTokens.GetToken (notSupportedExceptionCtorHandle);
+		int beginToken = MetadataTokens.GetToken (beginHandle);
+		int endToken = MetadataTokens.GetToken (endHandle);
+		int exToken = MetadataTokens.GetToken (exHandle);
+		Assert.True (ILContainsNewobjToken (ilBytes, notSupportedExceptionCtorToken), "open-generic nctor_*_uco IL should construct NotSupportedException");
+		Assert.True (ilBytes.Contains ((byte) ILOpCode.Throw), "open-generic nctor_*_uco IL should throw");
+		Assert.True (ILContainsCallToken (ilBytes, beginToken), "open-generic nctor_*_uco IL should call BeginMarshalMethod");
+		Assert.True (ILContainsCallToken (ilBytes, endToken), "open-generic nctor_*_uco IL should call EndMarshalMethod");
+		Assert.True (ILContainsCallToken (ilBytes, exToken), "open-generic nctor_*_uco IL should call OnUserUnhandledException");
 	}
 
 	[Fact]

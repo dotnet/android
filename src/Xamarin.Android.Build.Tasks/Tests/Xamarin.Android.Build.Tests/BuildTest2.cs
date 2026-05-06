@@ -2066,7 +2066,10 @@ namespace App1
 				};
 				proj.OtherBuildItems.Add (config);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				StringAssertEx.Contains ("XA1024", b.LastBuildOutput, "Output should contain XA1024 warnings");
+				// TODO: NativeAOT has trimmer warnings: https://github.com/dotnet/android/issues/9784
+				if (runtime != AndroidRuntime.NativeAOT) {
+					b.AssertHasNoWarnings ();
+				}
 			}
 		}
 
