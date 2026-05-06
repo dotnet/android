@@ -42,6 +42,21 @@ static class MetadataHelper
 			writer.Write (proxy.TargetType.AssemblyName);
 			writer.Write ((byte)(proxy.ActivationCtor?.Style ?? 0));
 			writer.Write ((byte)(proxy.InvokerActivationCtorStyle ?? 0));
+			foreach (var ctor in proxy.UcoConstructors) {
+				writer.Write (ctor.WrapperName);
+				writer.Write (ctor.JniSignature);
+				writer.Write (ctor.ConstructorDeclaringType?.ManagedTypeName ?? "");
+				writer.Write (ctor.ConstructorDeclaringType?.AssemblyName ?? "");
+				if (ctor.ManagedParameterTypes is null) {
+					writer.Write (0);
+				} else {
+					writer.Write (ctor.ManagedParameterTypes.Count);
+					foreach (var parameter in ctor.ManagedParameterTypes) {
+						writer.Write (parameter.ManagedTypeName);
+						writer.Write (parameter.AssemblyName);
+					}
+				}
+			}
 		}
 		foreach (var assoc in data.Associations) {
 			writer.Write (assoc.SourceTypeReference);

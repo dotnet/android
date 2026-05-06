@@ -225,6 +225,12 @@ public sealed record MarshalMethodInfo
 	public string? SuperArgumentsString { get; init; }
 
 	/// <summary>
+	/// Managed constructor parameter types, when this marshal entry represents a
+	/// concrete managed constructor. Null for inherited seed constructors.
+	/// </summary>
+	public IReadOnlyList<ManagedParameterInfo>? ManagedParameterTypes { get; init; }
+
+	/// <summary>
 	/// True if this method was collected from an implemented interface
 	/// (Pass 4: CollectInterfaceMethodImplementations), not from the type itself.
 	/// </summary>
@@ -267,6 +273,44 @@ public sealed record JavaConstructorInfo
 	/// Null for [Register] constructors.
 	/// </summary>
 	public string? SuperArgumentsString { get; init; }
+
+	/// <summary>
+	/// Managed constructor parameter types, when this Java constructor corresponds to
+	/// a concrete managed constructor. Null for inherited seed constructors that do
+	/// not identify a constructor on the target type.
+	/// </summary>
+	public IReadOnlyList<ManagedParameterInfo>? ManagedParameterTypes { get; init; }
+
+	/// <summary>
+	/// Managed type that declares the concrete constructor to call.
+	/// Null when <see cref="ManagedParameterTypes"/> is null.
+	/// </summary>
+	public string? ConstructorDeclaringTypeName { get; init; }
+
+	/// <summary>
+	/// Assembly containing <see cref="ConstructorDeclaringTypeName"/>.
+	/// Null when <see cref="ManagedParameterTypes"/> is null.
+	/// </summary>
+	public string? ConstructorDeclaringAssemblyName { get; init; }
+}
+
+/// <summary>
+/// Describes a managed parameter type for generated direct constructor calls.
+/// </summary>
+public sealed record ManagedParameterInfo
+{
+	/// <summary>
+	/// Full managed type name, e.g. "System.String" or "Android.Content.Context".
+	/// Array types use C#-style "[]" suffixes.
+	/// </summary>
+	public required string ManagedTypeName { get; init; }
+
+	/// <summary>
+	/// Assembly containing the parameter type, when a TypeRef is needed.
+	/// Primitive types and System.String leave this empty because they are encoded
+	/// directly in metadata signatures.
+	/// </summary>
+	public string AssemblyName { get; init; } = "";
 }
 
 /// <summary>

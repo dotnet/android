@@ -365,6 +365,11 @@ static class ModelBuilder
 					ManagedTypeName = peer.ManagedTypeName,
 					AssemblyName = peer.AssemblyName,
 				},
+				ManagedParameterTypes = ctor.ManagedParameterTypes,
+				ConstructorDeclaringType = ctor.ManagedParameterTypes is null ? null : new TypeRefData {
+					ManagedTypeName = !ctor.ConstructorDeclaringTypeName.IsNullOrEmpty () ? ctor.ConstructorDeclaringTypeName : peer.ManagedTypeName,
+					AssemblyName = !ctor.ConstructorDeclaringAssemblyName.IsNullOrEmpty () ? ctor.ConstructorDeclaringAssemblyName : peer.AssemblyName,
+				},
 			});
 		}
 	}

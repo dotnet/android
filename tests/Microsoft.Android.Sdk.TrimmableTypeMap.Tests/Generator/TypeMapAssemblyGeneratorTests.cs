@@ -1110,6 +1110,60 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_UcoConstructor_WithManagedParameters_CallsMatchingConstructor ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/ActivityWithCustomCtor");
+		Assert.Contains (peer.JavaConstructors, c => c.JniSignature == "(Ljava/lang/String;)V");
+
+		using var stream = GenerateAssembly (new [] { peer }, "UcoCtorManagedString");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var stringCtor = FindCtorMemberRef (reader, "MyApp", "ActivityWithCustomCtor", "System.String");
+		var activationCtors = FindCtorMemberRefs (reader, "MyApp", "ActivityWithCustomCtor",
+			"System.IntPtr", "Android.Runtime.JniHandleOwnership");
+
+		var nctorMethod = reader.GetMethodDefinition (FindMethodDefinition (reader, "nctor_1_uco"));
+		var body = pe.GetMethodBody (nctorMethod.RelativeVirtualAddress);
+		var ilBytes = body.GetILBytes ();
+		Assert.NotNull (ilBytes);
+		Assert.True (ILContainsCallToken (ilBytes, MetadataTokens.GetToken (stringCtor)),
+			"nctor_1_uco should call ActivityWithCustomCtor(string), not the activation constructor.");
+		foreach (var activationCtor in activationCtors) {
+			Assert.False (ILContainsCallToken (ilBytes, MetadataTokens.GetToken (activationCtor)),
+				"nctor_1_uco should not call the activation constructor.");
+		}
+	}
+
+	[Fact]
+	public void Generate_UcoConstructor_ObjectParameter_ConvertsJniHandleBeforeConstructorCall ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/CustomView");
+		Assert.Contains (peer.JavaConstructors, c => c.JniSignature == "(Landroid/content/Context;)V");
+
+		using var stream = GenerateAssembly (new [] { peer }, "UcoCtorManagedObject");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var contextCtor = FindCtorMemberRef (reader, "MyApp", "CustomView", "Android.Content.Context");
+		var javaConvertFromJniHandle = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
+			.Select (i => MetadataTokens.MemberReferenceHandle (i))
+			.Single (h => reader.GetString (reader.GetMemberReference (h).Name) == "FromJniHandle");
+		var javaConvertFromJniHandleSpec = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MethodSpec))
+			.Select (i => MetadataTokens.MethodSpecificationHandle (i))
+			.Single (h => reader.GetMethodSpecification (h).Method == javaConvertFromJniHandle);
+		var nctorMethod = reader.GetMethodDefinition (FindMethodDefinition (reader, "nctor_1_uco"));
+		var body = pe.GetMethodBody (nctorMethod.RelativeVirtualAddress);
+		var ilBytes = body.GetILBytes ();
+		Assert.NotNull (ilBytes);
+
+		Assert.True (ILContainsCallToken (ilBytes, MetadataTokens.GetToken (javaConvertFromJniHandleSpec)),
+			"nctor_1_uco should convert the JNI Context handle to the managed Context parameter.");
+		Assert.True (ILContainsCallToken (ilBytes, MetadataTokens.GetToken (contextCtor)),
+			"nctor_1_uco should call CustomView(Context), not the activation constructor.");
+	}
+
+	[Fact]
 	public void Generate_UcoConstructor_HasMarshalMethodMetadataAndExceptionRegions ()
 	{
 		var peer = MakeAcwPeer ("test/UcoCtorExc", "Test.UcoCtorExc", "TestAsm");

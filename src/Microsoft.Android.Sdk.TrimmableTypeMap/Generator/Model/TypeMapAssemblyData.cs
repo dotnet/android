@@ -228,6 +228,18 @@ sealed record UcoConstructorData
 	/// JNI constructor signature, e.g., "(Landroid/content/Context;)V". Used for RegisterNatives registration.
 	/// </summary>
 	public required string JniSignature { get; init; }
+
+	/// <summary>
+	/// Managed constructor parameter types. Null when this UCO constructor should
+	/// fall back to activation-only behavior because no concrete managed constructor
+	/// was identified by the scanner.
+	/// </summary>
+	public IReadOnlyList<ManagedParameterInfo>? ManagedParameterTypes { get; init; }
+
+	/// <summary>
+	/// Managed type that declares the constructor to call.
+	/// </summary>
+	public TypeRefData? ConstructorDeclaringType { get; init; }
 }
 
 /// <summary>

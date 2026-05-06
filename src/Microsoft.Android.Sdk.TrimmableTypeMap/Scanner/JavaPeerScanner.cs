@@ -610,11 +610,12 @@ public sealed class JavaPeerScanner : IDisposable
 						JniName = ".ctor",
 						JniSignature = jniSignature,
 						Connector = "",
-						ManagedMethodName = ".ctor",
-						NativeCallbackName = "n_ctor",
-						IsConstructor = true,
-						SuperArgumentsString = "",
-					});
+					ManagedMethodName = ".ctor",
+					NativeCallbackName = "n_ctor",
+					IsConstructor = true,
+					SuperArgumentsString = "",
+					ManagedParameterTypes = ToManagedParameterInfos (sig.ParameterTypes, index.AssemblyName),
+				});
 					alreadyRegisteredSignatures.Add (jniSignature);
 				}
 			}
@@ -896,6 +897,7 @@ public sealed class JavaPeerScanner : IDisposable
 		string declaringTypeName = "";
 		string declaringAssemblyName = "";
 		ParseConnectorDeclaringType (registerInfo.Connector, out declaringTypeName, out declaringAssemblyName);
+		var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
 
 		methods.Add (new MarshalMethodInfo {
 			JniName = registerInfo.JniName,
@@ -911,7 +913,29 @@ public sealed class JavaPeerScanner : IDisposable
 			JavaAccess = isExport ? GetJavaAccess (methodDef.Attributes & MethodAttributes.MemberAccessMask) : null,
 			ThrownNames = exportInfo?.ThrownNames,
 			SuperArgumentsString = exportInfo?.SuperArgumentsString,
+			ManagedParameterTypes = isConstructor ? ToManagedParameterInfos (sig.ParameterTypes, index.AssemblyName) : null,
 		});
+	}
+
+	static ManagedParameterInfo [] ToManagedParameterInfos (IReadOnlyList<string> parameterTypes, string defaultAssemblyName)
+	{
+		var result = new ManagedParameterInfo [parameterTypes.Count];
+		for (int i = 0; i < parameterTypes.Count; i++) {
+			string parameterType = parameterTypes [i];
+			result [i] = new ManagedParameterInfo {
+				ManagedTypeName = parameterType,
+				AssemblyName = NeedsTypeReference (parameterType) ? defaultAssemblyName : "",
+			};
+		}
+		return result;
+	}
+
+	static bool NeedsTypeReference (string managedType)
+	{
+		while (managedType.EndsWith ("[]", StringComparison.Ordinal)) {
+			managedType = managedType.Substring (0, managedType.Length - 2);
+		}
+		return TryGetPrimitiveJniDescriptor (managedType) is null;
 	}
 
 	static string GetJavaAccess (MethodAttributes access)
@@ -1553,6 +1577,9 @@ public sealed class JavaPeerScanner : IDisposable
 				JniSignature = mm.JniSignature,
 				ConstructorIndex = ctorIndex,
 				SuperArgumentsString = mm.SuperArgumentsString,
+				ManagedParameterTypes = mm.ManagedParameterTypes,
+				ConstructorDeclaringTypeName = mm.ManagedParameterTypes is null ? null : mm.DeclaringTypeName,
+				ConstructorDeclaringAssemblyName = mm.ManagedParameterTypes is null ? null : mm.DeclaringAssemblyName,
 			});
 			ctorIndex++;
 		}

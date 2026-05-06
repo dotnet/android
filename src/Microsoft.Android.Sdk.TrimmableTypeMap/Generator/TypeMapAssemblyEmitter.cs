@@ -78,6 +78,7 @@ sealed class TypeMapAssemblyEmitter
 
 	TypeReferenceHandle _javaPeerProxyRef;
 	TypeReferenceHandle _javaPeerProxyNonGenericRef;
+	TypeReferenceHandle _javaConvertRef;
 	TypeReferenceHandle _iJavaPeerableRef;
 	TypeReferenceHandle _jniHandleOwnershipRef;
 	TypeReferenceHandle _jniObjectReferenceRef;
@@ -97,6 +98,8 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _getUninitializedObjectRef;
 	MemberReferenceHandle _notSupportedExceptionCtorRef;
 	MemberReferenceHandle _jniObjectReferenceCtorRef;
+	MemberReferenceHandle _iJavaPeerableSetPeerReferenceRef;
+	MemberReferenceHandle _javaConvertFromJniHandleRef;
 	MemberReferenceHandle _jniEnvDeleteRefRef;
 	MemberReferenceHandle _shouldSkipActivationRef;
 	MemberReferenceHandle _waitForBridgeProcessingRef;
@@ -220,6 +223,8 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaPeerProxy`1"));
 		_javaPeerProxyNonGenericRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaPeerProxy"));
+		_javaConvertRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaConvert"));
 		_iJavaPeerableRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("IJavaPeerable"));
 		_jniHandleOwnershipRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
@@ -338,6 +343,19 @@ sealed class TypeMapAssemblyEmitter
 				p => {
 					p.AddParameter ().Type ().IntPtr ();
 					p.AddParameter ().Type ().Type (_jniObjectReferenceTypeRef, true);
+				}));
+
+		_iJavaPeerableSetPeerReferenceRef = _pe.AddMemberRef (_iJavaPeerableRef, "SetPeerReference",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
+				rt => rt.Void (),
+				p => p.AddParameter ().Type ().Type (_jniObjectReferenceRef, true)));
+
+		_javaConvertFromJniHandleRef = _pe.AddMemberRef (_javaConvertRef, "FromJniHandle",
+			sig => sig.MethodSignature (genericParameterCount: 1).Parameters (2,
+				rt => rt.Type ().GenericMethodTypeParameter (0),
+				p => {
+					p.AddParameter ().Type ().IntPtr ();
+					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
 				}));
 
 		// JNIEnv.DeleteRef(IntPtr, JniHandleOwnership) — static, internal
@@ -921,6 +939,18 @@ sealed class TypeMapAssemblyEmitter
 				}));
 	}
 
+	MemberReferenceHandle AddManagedConstructorRef (EntityHandle declaringTypeRef, IReadOnlyList<ManagedParameterInfo> parameterTypes)
+	{
+		return _pe.AddMemberRef (declaringTypeRef, ".ctor",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (parameterTypes.Count,
+				rt => rt.Void (),
+				p => {
+					foreach (var parameterType in parameterTypes) {
+						EncodeManagedType (p.AddParameter ().Type (), parameterType);
+					}
+				}));
+	}
+
 	MethodDefinitionHandle EmitUcoMethod (UcoMethodData uco, JavaPeerProxyData proxy)
 	{
 		var jniParams = JniSignatureHelper.ParseParameterTypes (uco.JniSignature);
@@ -1045,6 +1075,20 @@ sealed class TypeMapAssemblyEmitter
 			return openGenericHandle;
 		}
 
+		if (uco.ManagedParameterTypes is not null && uco.ConstructorDeclaringType is not null) {
+			var ctorDeclaringTypeRef = _pe.ResolveTypeRef (uco.ConstructorDeclaringType);
+			var ctorRef = AddManagedConstructorRef (ctorDeclaringTypeRef, uco.ManagedParameterTypes);
+			var directHandle = _pe.EmitBody (uco.WrapperName,
+				MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+				encodeSig,
+				(encoder, cfb) => EmitUcoConstructorBodyWithMarshal (encoder, cfb, enc => {
+					EmitManagedConstructorActivation (enc, targetTypeRef, ctorRef, uco.ManagedParameterTypes, jniParams);
+				}),
+				EncodeUcoConstructorLocals_Standard);
+			AddUnmanagedCallersOnlyAttribute (directHandle);
+			return directHandle;
+		}
+
 		MethodDefinitionHandle handle;
 		if (activationCtor.Style == ActivationCtorStyle.JavaInterop) {
 			var ctorRef = AddJavaInteropActivationCtorRef (
@@ -1121,6 +1165,37 @@ sealed class TypeMapAssemblyEmitter
 		}
 		AddUnmanagedCallersOnlyAttribute (handle);
 		return handle;
+	}
+
+	void EmitManagedConstructorActivation (InstructionEncoder encoder, EntityHandle targetTypeRef,
+		MemberReferenceHandle ctorRef, IReadOnlyList<ManagedParameterInfo> managedParameterTypes,
+		IReadOnlyList<JniParamKind> jniParameterTypes)
+	{
+		encoder.OpCode (ILOpCode.Ldtoken);
+		encoder.Token (targetTypeRef);
+		encoder.Call (_getTypeFromHandleRef);
+		encoder.Call (_getUninitializedObjectRef);
+		encoder.OpCode (ILOpCode.Castclass);
+		encoder.Token (targetTypeRef);
+		encoder.OpCode (ILOpCode.Dup);
+
+		encoder.LoadArgument (1);    // self
+		encoder.LoadConstantI4 (0);  // JniObjectReferenceType.Invalid
+		encoder.OpCode (ILOpCode.Newobj);
+		encoder.Token (_jniObjectReferenceCtorRef);
+		encoder.OpCode (ILOpCode.Callvirt);
+		encoder.Token (_iJavaPeerableSetPeerReferenceRef);
+
+		for (int i = 0; i < managedParameterTypes.Count; i++) {
+			encoder.LoadArgument (i + 2);
+			if (jniParameterTypes [i] == JniParamKind.Object) {
+				encoder.LoadConstantI4 (0); // JniHandleOwnership.DoNotTransfer
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (MakeJavaConvertFromJniHandleSpec (managedParameterTypes [i]));
+			}
+		}
+
+		encoder.Call (ctorRef);
 	}
 
 	/// <summary>
@@ -1423,6 +1498,70 @@ sealed class TypeMapAssemblyEmitter
 		var sigBlob = new BlobBuilder (32);
 		EncodeGenericValueTypeInst (sigBlob, openType, valueTypeArg);
 		return _pe.Metadata.AddTypeSpecification (_pe.Metadata.GetOrAddBlob (sigBlob));
+	}
+
+	MethodSpecificationHandle MakeJavaConvertFromJniHandleSpec (ManagedParameterInfo type)
+	{
+		var blob = new BlobBuilder (32);
+		blob.WriteByte (0x0A); // GENMETHOD_INST
+		blob.WriteCompressedInteger (1);
+		EncodeManagedType (blob, type);
+		return _pe.Metadata.AddMethodSpecification (_javaConvertFromJniHandleRef, _pe.Metadata.GetOrAddBlob (blob));
+	}
+
+	void EncodeManagedType (SignatureTypeEncoder encoder, ManagedParameterInfo type)
+	{
+		EncodeManagedType (encoder.Builder, type);
+	}
+
+	void EncodeManagedType (BlobBuilder builder, ManagedParameterInfo type)
+	{
+		string managedType = type.ManagedTypeName;
+		if (managedType.EndsWith ("[]", StringComparison.Ordinal)) {
+			builder.WriteByte (0x1D); // ELEMENT_TYPE_SZARRAY
+			EncodeManagedType (builder, new ManagedParameterInfo {
+				ManagedTypeName = managedType.Substring (0, managedType.Length - 2),
+				AssemblyName = type.AssemblyName,
+			});
+			return;
+		}
+
+		if (TryEncodePrimitiveManagedType (builder, managedType)) {
+			return;
+		}
+
+		var typeRef = _pe.ResolveTypeRef (new TypeRefData {
+			ManagedTypeName = managedType,
+			AssemblyName = type.AssemblyName,
+		});
+		builder.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+		builder.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (typeRef));
+	}
+
+	static bool TryEncodePrimitiveManagedType (BlobBuilder builder, string managedType)
+	{
+		byte typeCode = managedType switch {
+			"System.Boolean" => 0x02,
+			"System.Char" => 0x03,
+			"System.SByte" => 0x04,
+			"System.Byte" => 0x05,
+			"System.Int16" => 0x06,
+			"System.UInt16" => 0x07,
+			"System.Int32" => 0x08,
+			"System.UInt32" => 0x09,
+			"System.Int64" => 0x0A,
+			"System.UInt64" => 0x0B,
+			"System.Single" => 0x0C,
+			"System.Double" => 0x0D,
+			"System.String" => 0x0E,
+			"System.IntPtr" => 0x18,
+			_ => 0,
+		};
+		if (typeCode == 0) {
+			return false;
+		}
+		builder.WriteByte (typeCode);
+		return true;
 	}
 
 	/// <summary>
