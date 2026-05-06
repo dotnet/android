@@ -332,24 +332,32 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.True (pe.HasMetadata);
 	}
 
-	[Fact]
-	public void Generate_MergedMode_WithArrays_ReferencesPerAsmRankSentinels ()
+	[Theory]
+	[InlineData (true)]
+	[InlineData (false)]
+	public void Generate_WithArrays_ReferencesPerAsmRankSentinels (bool useSharedTypemapUniverse)
 	{
 		using var stream = GenerateRootAssembly (["_App.TypeMap", "_Mono.Android.TypeMap"],
-			useSharedTypemapUniverse: true, maxArrayRank: 2);
+			useSharedTypemapUniverse: useSharedTypemapUniverse, maxArrayRank: 2);
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 
-		var typeRefNames = reader.TypeReferences
-			.Select (h => reader.GetString (reader.GetTypeReference (h).Name))
+		var rankRefsByAssembly = reader.TypeReferences
+			.Select (h => reader.GetTypeReference (h))
+			.Where (t => reader.GetString (t.Name).StartsWith ("__ArrayMapRank", StringComparison.Ordinal))
+			.Select (t => (
+				Name: reader.GetString (t.Name),
+				Assembly: reader.GetString (reader.GetAssemblyReference ((AssemblyReferenceHandle) t.ResolutionScope).Name)))
 			.ToList ();
-		Assert.Contains ("__ArrayMapRank1", typeRefNames);
-		Assert.Contains ("__ArrayMapRank2", typeRefNames);
-		Assert.DoesNotContain ("__ArrayMapRank3", typeRefNames);
+		Assert.Contains (("__ArrayMapRank1", "_App.TypeMap"), rankRefsByAssembly);
+		Assert.Contains (("__ArrayMapRank2", "_App.TypeMap"), rankRefsByAssembly);
+		Assert.Contains (("__ArrayMapRank1", "_Mono.Android.TypeMap"), rankRefsByAssembly);
+		Assert.Contains (("__ArrayMapRank2", "_Mono.Android.TypeMap"), rankRefsByAssembly);
+		Assert.DoesNotContain (rankRefsByAssembly, r => r.Name == "__ArrayMapRank3");
 	}
 
 	[Fact]
-	public void Generate_MergedMode_WithArrays_NoPerAsmAccessNeeded ()
+	public void Generate_MergedMode_WithArrays_HasIgnoresAccessChecksToArrayAssemblies ()
 	{
 		using var stream = GenerateRootAssembly (["_App.TypeMap", "_Mono.Android.TypeMap"],
 			useSharedTypemapUniverse: true, maxArrayRank: 3);
@@ -358,7 +366,7 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 
 		var accessAttrs = GetIgnoresAccessChecksToValues (reader);
 		Assert.Contains ("Mono.Android", accessAttrs);
-		// Shared-mode root never needs per-asm internal access — rank anchors live in Mono.Android.
-		Assert.DoesNotContain ("_App.TypeMap", accessAttrs);
+		Assert.Contains ("_App.TypeMap", accessAttrs);
+		Assert.Contains ("_Mono.Android.TypeMap", accessAttrs);
 	}
 }
