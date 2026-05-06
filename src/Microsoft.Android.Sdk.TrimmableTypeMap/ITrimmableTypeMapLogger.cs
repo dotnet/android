@@ -7,7 +7,6 @@ public interface ITrimmableTypeMapLogger
 	void LogGeneratingJcwFilesInfo (int jcwPeerCount, int totalPeerCount);
 	void LogDeferredRegistrationTypesInfo (int typeCount);
 	void LogGeneratedTypeMapAssemblyInfo (string assemblyName, int typeCount);
-	void LogGeneratedTypeMapAssemblySummary (string assemblyName, int entryCount, int unconditionalEntryCount, int conditionalEntryCount, int proxyTypeCount, int associationCount, int aliasHolderCount);
 	void LogGeneratedRootTypeMapInfo (int assemblyReferenceCount);
 	void LogGeneratedTypeMapAssembliesInfo (int assemblyCount);
 	void LogGeneratedJcwFilesInfo (int sourceCount);

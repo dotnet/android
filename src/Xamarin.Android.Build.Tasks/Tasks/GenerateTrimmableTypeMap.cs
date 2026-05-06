@@ -27,8 +27,6 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			log.LogMessage (MessageImportance.Low, $"Found {typeCount} Application/Instrumentation types for deferred registration.");
 		public void LogGeneratedTypeMapAssemblyInfo (string assemblyName, int typeCount) =>
 			log.LogMessage (MessageImportance.Low, $"  {assemblyName}: {typeCount} types");
-		public void LogGeneratedTypeMapAssemblySummary (string assemblyName, int entryCount, int unconditionalEntryCount, int conditionalEntryCount, int proxyTypeCount, int associationCount, int aliasHolderCount) =>
-			log.LogMessage (MessageImportance.Low, $"  {assemblyName}: TypeMap entries={entryCount} unconditional={unconditionalEntryCount} conditional={conditionalEntryCount} proxies={proxyTypeCount} associations={associationCount} alias-holders={aliasHolderCount}");
 		public void LogGeneratedRootTypeMapInfo (int assemblyReferenceCount) =>
 			log.LogMessage (MessageImportance.Low, $"  Root: {assemblyReferenceCount} per-assembly refs");
 		public void LogGeneratedTypeMapAssembliesInfo (int assemblyCount) =>

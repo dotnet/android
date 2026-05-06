@@ -197,7 +197,6 @@ public class TrimmableTypeMapGenerator
 				maxArrayRank: maxArrayRank,
 				forceUnconditionalEntries: ForceUnconditionalEntries,
 				frameworkAssemblyNames: frameworkAssemblyNames);
-			LogTypeMapAssemblyDetails (typeMapAssemblyName, model);
 
 			var stream = new MemoryStream ();
 			var emitter = new TypeMapAssemblyEmitter (systemRuntimeVersion);
@@ -214,20 +213,6 @@ public class TrimmableTypeMapGenerator
 		logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);
 		logger.LogGeneratedTypeMapAssembliesInfo (generatedAssemblies.Count);
 		return generatedAssemblies;
-	}
-
-	void LogTypeMapAssemblyDetails (string typeMapAssemblyName, TypeMapAssemblyData model)
-	{
-		int unconditionalCount = model.Entries.Count (e => e.IsUnconditional);
-		int conditionalCount = model.Entries.Count - unconditionalCount;
-		logger.LogGeneratedTypeMapAssemblySummary (
-			typeMapAssemblyName,
-			model.Entries.Count,
-			unconditionalCount,
-			conditionalCount,
-			model.ProxyTypes.Count,
-			model.Associations.Count,
-			model.AliasHolders.Count);
 	}
 
 	/// <summary>

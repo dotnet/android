@@ -24,8 +24,6 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			logMessages.Add ($"Found {typeCount} Application/Instrumentation types for deferred registration.");
 		public void LogGeneratedTypeMapAssemblyInfo (string assemblyName, int typeCount) =>
 			logMessages.Add ($"  {assemblyName}: {typeCount} types");
-		public void LogGeneratedTypeMapAssemblySummary (string assemblyName, int entryCount, int unconditionalEntryCount, int conditionalEntryCount, int proxyTypeCount, int associationCount, int aliasHolderCount) =>
-			logMessages.Add ($"  {assemblyName}: TypeMap entries={entryCount} unconditional={unconditionalEntryCount} conditional={conditionalEntryCount} proxies={proxyTypeCount} associations={associationCount} alias-holders={aliasHolderCount}");
 		public void LogGeneratedRootTypeMapInfo (int assemblyReferenceCount) =>
 			logMessages.Add ($"  Root: {assemblyReferenceCount} per-assembly refs");
 		public void LogGeneratedTypeMapAssembliesInfo (int assemblyCount) =>
@@ -72,15 +70,6 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.NotEmpty (result.GeneratedJavaSources);
 		Assert.Contains (result.GeneratedAssemblies, a => a.Name == "_Microsoft.Android.TypeMaps");
 		Assert.Contains (result.GeneratedAssemblies, a => a.Name == "_TestFixtures.TypeMap");
-	}
-
-	[Fact]
-	public void Execute_LogsTypeMapEntrySummary ()
-	{
-		using var peReader = CreateTestFixturePEReader ();
-		CreateGenerator ().Execute (new List<(string, PEReader)> { ("TestFixtures", peReader) }, new Version (11, 0), new HashSet<string> ());
-
-		Assert.Contains (logMessages, m => m.Contains ("_TestFixtures.TypeMap: TypeMap entries=", StringComparison.Ordinal));
 	}
 
 	[Fact]
