@@ -1,6 +1,7 @@
 name: Copilot Setup Steps CI
 
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - '.github/workflows/copilot-setup-steps.yml'
