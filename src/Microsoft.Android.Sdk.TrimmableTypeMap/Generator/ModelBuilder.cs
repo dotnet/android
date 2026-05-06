@@ -40,7 +40,11 @@ static class ModelBuilder
 	/// <param name="peers">Scanned Java peer types (typically from a single input assembly).</param>
 	/// <param name="outputPath">Output .dll path — used to derive assembly/module names if not specified.</param>
 	/// <param name="assemblyName">Explicit assembly name. If null, derived from <paramref name="outputPath"/>.</param>
-	public static TypeMapAssemblyData Build (IReadOnlyList<JavaPeerInfo> peers, string outputPath, string? assemblyName = null)
+	/// <param name="maxArrayRank">
+	/// Emit per-rank array <c>TypeMap</c> entries + <c>__ArrayMapRank{N}</c> sentinels
+	/// for ranks 1..<paramref name="maxArrayRank"/>. 0 disables array entry emission.
+	/// </param>
+	public static TypeMapAssemblyData Build (IReadOnlyList<JavaPeerInfo> peers, string outputPath, string? assemblyName = null, int maxArrayRank = 0)
 	{
 		if (peers is null) {
 			throw new ArgumentNullException (nameof (peers));
@@ -48,13 +52,16 @@ static class ModelBuilder
 		if (outputPath is null) {
 			throw new ArgumentNullException (nameof (outputPath));
 		}
+		if (maxArrayRank < 0) {
+			throw new ArgumentOutOfRangeException (nameof (maxArrayRank), maxArrayRank, "Must be >= 0.");
+		}
 
 		assemblyName ??= Path.GetFileNameWithoutExtension (outputPath);
-		string moduleName = Path.GetFileName (outputPath);
 
 		var model = new TypeMapAssemblyData {
 			AssemblyName = assemblyName,
-			ModuleName = moduleName,
+			ModuleName = Path.GetFileName (outputPath),
+			MaxArrayRank = maxArrayRank,
 		};
 
 		// Invoker types are NOT emitted as separate proxies or TypeMap entries.
@@ -90,6 +97,10 @@ static class ModelBuilder
 			}
 
 			EmitPeers (model, jniName, peersForName, assemblyName, usedProxyNames);
+
+			if (maxArrayRank > 0) {
+				EmitArrayEntries (model, jniName, peersForName, maxArrayRank);
+			}
 		}
 
 		// Compute IgnoresAccessChecksTo from cross-assembly references
@@ -410,4 +421,55 @@ static class ModelBuilder
 
 	static string AssemblyQualify (string typeName, string assemblyName)
 		=> $"{typeName}, {assemblyName}";
+
+	/// <summary>
+	/// Emits per-rank array TypeMap entries for one peer, anchored to the per-assembly
+	/// <c>__ArrayMapRank{N}</c> sentinels. Keys are bare element JNI names (rank is encoded
+	/// by the sentinel anchor, not by JNI array prefixes). Skips open generics, primitive JNI
+	/// keyword keys (handled by the legacy primitive-array path), and alias groups.
+	/// </summary>
+	static void EmitArrayEntries (TypeMapAssemblyData model, string jniName, List<JavaPeerInfo> peersForName, int maxArrayRank)
+	{
+		if (jniName.Length == 1 && IsJniPrimitiveKeyword (jniName [0])) {
+			return;
+		}
+		if (peersForName.Count != 1) {
+			return;
+		}
+
+		var peer = peersForName [0];
+		if (peer.IsGenericDefinition) {
+			return;
+		}
+
+		for (int rank = 1; rank <= maxArrayRank; rank++) {
+			string arrayTypeRef = AssemblyQualify (peer.ManagedTypeName + Brackets (rank), peer.AssemblyName);
+			model.Entries.Add (new TypeMapAttributeData {
+				JniName = jniName,
+				ProxyTypeReference = arrayTypeRef,
+				TargetTypeReference = arrayTypeRef,
+				AnchorRank = rank,
+			});
+		}
+	}
+
+	static string Brackets (int rank) => rank switch {
+		1 => "[]",
+		2 => "[][]",
+		3 => "[][][]",
+		_ => BuildBrackets (rank),
+	};
+
+	static string BuildBrackets (int rank)
+	{
+		var sb = new StringBuilder (rank * 2);
+		for (int i = 0; i < rank; i++) {
+			sb.Append ("[]");
+		}
+		return sb.ToString ();
+	}
+
+	static bool IsJniPrimitiveKeyword (char c)
+		=> c == 'Z' || c == 'B' || c == 'C' || c == 'S' || c == 'I'
+			|| c == 'J' || c == 'F' || c == 'D' || c == 'V';
 }
