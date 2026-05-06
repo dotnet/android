@@ -58,8 +58,19 @@ namespace Xamarin.Android.Prepare
 
 	sealed class GitSubmoduleInfo
 	{
+		public string Name {
+			get {
+				const string github = "github.com/";
+				int i = RepositoryUrl.IndexOf (github, StringComparison.OrdinalIgnoreCase);
+				if (i >= 0)
+					return RepositoryUrl.Substring (i + github.Length);
+				return RepositoryUrl;
+			}
+		}
+
 		public string RepositoryUrl { get; private set; } = String.Empty;
 		public string CommitHash { get; private set; } = String.Empty;
+		public string LocalPath { get; private set; } = String.Empty;
 
 		GitSubmoduleInfo ()
 		{
@@ -131,6 +142,7 @@ namespace Xamarin.Android.Prepare
 			}
 
 			return new GitSubmoduleInfo {
+				LocalPath     = path,
 				RepositoryUrl = url,
 				CommitHash    = commitHash,
 			};
