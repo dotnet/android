@@ -1,0 +1,87 @@
+{
+    "$schema": "https://json.schemastore.org/component-detection-manifest.json",
+    "version": 1,
+    "registrations": [
+        {
+            "component": {
+                "type": "git",
+                "git": {
+                    "repositoryUrl": "https://github.com/dotnet/android-api-docs",
+                    "commitHash": "d382c5bd406432083901e51a4e87cd677b8759d8"
+                }
+            }
+        },
+        {
+            "component": {
+                "type": "git",
+                "git": {
+                    "repositoryUrl": "https://github.com/chys87/constexpr-xxh3",
+                    "commitHash": "aebcee75c8b6c2458fa8ae151754a8ba833bd697"
+                }
+            }
+        },
+        {
+            "component": {
+                "type": "git",
+                "git": {
+                    "repositoryUrl": "https://github.com/Cyan4973/xxHash",
+                    "commitHash": "bbb27a5efb85b92a0486cf361a8635715a53f6ba"
+                }
+            }
+        },
+        {
+            "component": {
+                "type": "git",
+                "git": {
+                    "repositoryUrl": "https://github.com/dotnet/android-tools",
+                    "commitHash": "2b9c8c2f03e18d481da8586586783cd1a92a6a3e"
+                }
+            }
+        },
+        {
+            "component": {
+                "type": "git",
+                "git": {
+                    "repositoryUrl": "https://github.com/dotnet/java-interop",
+                    "commitHash": "4abc52e338643b747d59cf3880669917989d1b5e"
+                }
+            }
+        },
+        {
+            "component": {
+                "type": "git",
+                "git": {
+                    "repositoryUrl": "https://github.com/dotnet/lz4",
+                    "commitHash": "ebb370ca83af193212df4dcbadcc5d87bc0de2f0"
+                }
+            }
+        },
+        {
+            "component": {
+                "type": "git",
+                "git": {
+                    "repositoryUrl": "https://github.com/libunwind/libunwind",
+                    "commitHash": "e97c9ef82f8b48d0c7f713be4fa7b15e634d76b8"
+                }
+            }
+        },
+        {
+            "component": {
+                "type": "git",
+                "git": {
+                    "repositoryUrl": "https://github.com/mono/debugger-libs",
+                    "commitHash": "e7fbb713d156d11193ed404783ad6fe9c4042a6d"
+                }
+            }
+        },
+        {
+            "component": {
+                "type": "git",
+                "git": {
+                    "repositoryUrl": "https://github.com/xamarin/robin-map",
+                    "commitHash": "d37a41003bfbc7e12e34601f93c18ca2ff6d7c07"
+                }
+            }
+        }
+    ]
+}
