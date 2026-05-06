@@ -882,7 +882,7 @@ public sealed class JavaPeerScanner : IDisposable
 		return true;
 	}
 
-	static void AddMarshalMethod (List<MarshalMethodInfo> methods, RegisterInfo registerInfo, MethodDefinition methodDef, AssemblyIndex index, ExportInfo? exportInfo = null, bool isInterfaceImplementation = false)
+	void AddMarshalMethod (List<MarshalMethodInfo> methods, RegisterInfo registerInfo, MethodDefinition methodDef, AssemblyIndex index, ExportInfo? exportInfo = null, bool isInterfaceImplementation = false)
 	{
 		// Skip methods that are just the JNI name (type-level [Register])
 		if (registerInfo.Signature is null && registerInfo.Connector is null) {
@@ -917,25 +917,33 @@ public sealed class JavaPeerScanner : IDisposable
 		});
 	}
 
-	static ManagedParameterInfo [] ToManagedParameterInfos (IReadOnlyList<string> parameterTypes, string defaultAssemblyName)
+	ManagedParameterInfo [] ToManagedParameterInfos (IReadOnlyList<string> parameterTypes, string defaultAssemblyName)
 	{
 		var result = new ManagedParameterInfo [parameterTypes.Count];
 		for (int i = 0; i < parameterTypes.Count; i++) {
 			string parameterType = parameterTypes [i];
 			result [i] = new ManagedParameterInfo {
 				ManagedTypeName = parameterType,
-				AssemblyName = NeedsTypeReference (parameterType) ? defaultAssemblyName : "",
+				AssemblyName = ResolveManagedParameterAssembly (parameterType, defaultAssemblyName),
 			};
 		}
 		return result;
 	}
 
-	static bool NeedsTypeReference (string managedType)
+	string ResolveManagedParameterAssembly (string managedType, string defaultAssemblyName)
 	{
 		while (managedType.EndsWith ("[]", StringComparison.Ordinal)) {
 			managedType = managedType.Substring (0, managedType.Length - 2);
 		}
-		return TryGetPrimitiveJniDescriptor (managedType) is null;
+		if (TryGetPrimitiveJniDescriptor (managedType) is not null) {
+			return "";
+		}
+		foreach (var assembly in assemblyCache.Values) {
+			if (assembly.TypesByFullName.ContainsKey (managedType)) {
+				return assembly.AssemblyName;
+			}
+		}
+		return defaultAssemblyName;
 	}
 
 	static string GetJavaAccess (MethodAttributes access)

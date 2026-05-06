@@ -1518,12 +1518,10 @@ sealed class TypeMapAssemblyEmitter
 	{
 		string managedType = type.ManagedTypeName;
 		if (managedType.EndsWith ("[]", StringComparison.Ordinal)) {
-			builder.WriteByte (0x1D); // ELEMENT_TYPE_SZARRAY
-			EncodeManagedType (builder, new ManagedParameterInfo {
-				ManagedTypeName = managedType.Substring (0, managedType.Length - 2),
-				AssemblyName = type.AssemblyName,
-			});
-			return;
+			do {
+				builder.WriteByte (0x1D); // ELEMENT_TYPE_SZARRAY
+				managedType = managedType.Substring (0, managedType.Length - 2);
+			} while (managedType.EndsWith ("[]", StringComparison.Ordinal));
 		}
 
 		if (TryEncodePrimitiveManagedType (builder, managedType)) {
