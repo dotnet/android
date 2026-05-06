@@ -74,3 +74,7 @@ variables:
   value: true
 - name: DOTNET_SYSTEM_NET_SECURITY_NOREVOCATIONCHECKBYDEFAULT
   value: true
+- name: DOTNET_CLI_TELEMETRY_OPTOUT
+  value: true
+- name: DOTNET_SKIP_FIRST_TIME_EXPERIENCE
+  value: true
