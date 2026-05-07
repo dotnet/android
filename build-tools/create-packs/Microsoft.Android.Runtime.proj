@@ -95,7 +95,7 @@ projects that use the Microsoft.Android.Runtimes framework in .NET 6+.
       <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libunwind_xamarin-release.a" />
     </ItemGroup>
 
-    <ItemGroup Condition=" '$(AndroidRuntime)' != 'NativeAOT' ">
+    <ItemGroup>
       <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libc.so" />
       <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libdl.so" />
       <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\liblog.so" />

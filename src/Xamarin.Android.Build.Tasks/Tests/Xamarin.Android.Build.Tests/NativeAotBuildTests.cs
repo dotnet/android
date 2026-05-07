@@ -27,8 +27,27 @@ namespace Xamarin.Android.Build.Tests
 			// Currently NativeAOT linking requires NDK tools, so the build should fail.
 			// When the workload pack ships its own linker, flip this to Assert.IsTrue.
 			Assert.IsFalse (
-				builder.Build (proj, parameters: new [] { "/p:AndroidNdkDirectory=\"\"" }),
+				builder.Build (proj, parameters: new [] { "AndroidNdkDirectory=\"\"" }),
 				"Build should have failed without NDK."
+			);
+		}
+
+		[Test]
+		public void BuildNativeAot_WithWorkloadLinker_WithoutNdk ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+
+			using var builder = CreateApkBuilder ();
+			// Use workload-provided linker and sysroot instead of NDK
+			Assert.IsTrue (
+				builder.Build (proj, parameters: new [] {
+					"AndroidNdkDirectory=\"\"",
+					"_AndroidUseWorkloadNativeLinker=true",
+				}),
+				"Build should succeed with workload linker and no NDK."
 			);
 		}
 	}
