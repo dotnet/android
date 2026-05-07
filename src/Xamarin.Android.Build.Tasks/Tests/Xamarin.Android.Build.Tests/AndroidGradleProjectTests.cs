@@ -585,8 +585,9 @@ public class Foo {{
 			// AGP 8.5.0 only supports up to compileSdk 34
 			yield return new object[] { "8.5.0", "8.7", 34 };
 			// AGP 9.0.0 with Gradle 9.1.0 - tests the Gradle 9.x stricter Kotlin type checking fix
+			// AGP 9.0.0 only supports up to compileSdk 36
 			// Note: Full version "9.1.0" is required for the download URL to work correctly
-			yield return new object[] { "9.0.0", "9.1.0", XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major };
+			yield return new object[] { "9.0.0", "9.1.0", 36 };
 		}
 
 		/// <summary>
