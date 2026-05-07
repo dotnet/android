@@ -1,6 +1,0 @@
-<Project>
-  <PropertyGroup>
-    <AndroidTargetFrameworkVersionSdkDefault>37.0</AndroidTargetFrameworkVersionSdkDefault>
-    <AndroidTargetFrameworkVersion>37.0</AndroidTargetFrameworkVersion>
-  </PropertyGroup>
-</Project>

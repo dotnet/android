@@ -164,12 +164,10 @@ extends:
             -androidVersion $(ANDROID_PACK_VERSION)
           displayName: Update MAUI's Android dependency
 
-        - task: CopyFiles@2
-          displayName: Override MAUI Android target framework version
-          inputs:
-            SourceFolder: $(Build.SourcesDirectory)/android/build-tools/automation/maui
-            Contents: Directory.Build.Override.props
-            TargetFolder: $(Build.SourcesDirectory)/maui
+        - script: >-
+            git -C "$(Build.SourcesDirectory)/maui"
+            apply "$(Build.SourcesDirectory)/android/build-tools/automation/maui/android37-target-framework.diff"
+          displayName: Update MAUI Android target framework version
 
         - task: DotNetCoreCLI@2
           displayName: Update Android SDK band in Workloads.csproj
