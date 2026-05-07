@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using System.Reflection;
+using System.Reflection.PortableExecutable;
 using System.Text;
 using NUnit.Framework;
 using Xamarin.Android.Tools;
@@ -277,6 +278,37 @@ public class JavaSourceTest {
 			builder.Save (proj);
 			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
 			Assert.IsTrue (dotnet.Publish (), "`dotnet publish` should succeed");
+		}
+
+		[Test]
+		public void DotNetPublishReadyToRunCustomConfiguration ()
+		{
+			const string runtimeIdentifier = "android-arm64";
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifier);
+			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
+
+			var builder = CreateDllBuilder ();
+			builder.Save (proj);
+			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
+			Assert.IsTrue (dotnet.Publish (parameters: new [] { "Configuration=CustomRelease" }), "`dotnet publish -c CustomRelease` should succeed");
+
+			var assemblyName = proj.ProjectName;
+			// Configuration=CustomRelease produces output under bin/CustomRelease/
+			var publishDirectory = Path.Combine (Root, builder.ProjectDirectory, "bin", "CustomRelease", runtimeIdentifier, "publish");
+			var apkSigned = Path.Combine (publishDirectory, $"{proj.PackageName}-Signed.apk");
+			FileAssert.Exists (apkSigned);
+
+			var helper = new ArchiveAssemblyHelper (apkSigned, true);
+			var abi = MonoAndroidHelper.RidToAbi (runtimeIdentifier);
+			Assert.IsTrue (helper.Exists ($"assemblies/{abi}/{assemblyName}.dll"), $"{assemblyName}.dll should exist in apk!");
+
+			using var stream = helper.ReadEntry ($"assemblies/{assemblyName}.dll");
+			stream.Position = 0;
+			using var peReader = new PEReader (stream);
+			Assert.IsTrue (peReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size > 0,
+				$"ReadyToRun image not found in {assemblyName}.dll! ManagedNativeHeaderDirectory should not be empty!");
 		}
 
 		[Test]
