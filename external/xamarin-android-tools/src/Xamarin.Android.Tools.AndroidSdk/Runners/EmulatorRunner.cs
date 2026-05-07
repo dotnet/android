@@ -85,7 +85,10 @@ public class EmulatorRunner
 				logger.Invoke (TraceLevel.Warning, $"[emulator] {e.Data}");
 		};
 
-		process.Start ();
+		if (!process.Start ()) {
+			process.Dispose ();
+			throw new InvalidOperationException ($"Failed to start emulator process '{emulatorPath}'.");
+		}
 
 		// Drain redirected streams asynchronously to prevent pipe buffer deadlocks
 		process.BeginOutputReadLine ();
@@ -209,51 +212,59 @@ public class EmulatorRunner
 		// code 0 immediately. The real emulator continues as a separate process and
 		// will eventually appear in 'adb devices'. We only treat non-zero exit codes
 		// as immediate failures; exit code 0 means we continue polling.
-		try {
-			string? newSerial = null;
-			bool processExitedWithZero = false;
-			while (newSerial == null) {
-				timeoutCts.Token.ThrowIfCancellationRequested ();
+		//
+		// Dispose the Process handle when done — the emulator process keeps running.
+		using (emulatorProcess) {
+			try {
+				string? newSerial = null;
+				bool processExitedWithZero = false;
+				while (newSerial == null) {
+					timeoutCts.Token.ThrowIfCancellationRequested ();
 
-				// Detect early process exit for fast failure
-				if (emulatorProcess.HasExited && !processExitedWithZero) {
-					if (emulatorProcess.ExitCode != 0) {
-						emulatorProcess.Dispose ();
+					// Detect early process exit for fast failure.
+					// Guard against InvalidOperationException in case no OS process
+					// is associated with the object (e.g. broken emulator binary).
+					try {
+						if (emulatorProcess.HasExited && !processExitedWithZero) {
+							if (emulatorProcess.ExitCode != 0) {
+								return new EmulatorBootResult {
+									Success = false,
+									ErrorKind = EmulatorBootErrorKind.LaunchFailed,
+									ErrorMessage = $"Emulator process for '{deviceOrAvdName}' exited with code {emulatorProcess.ExitCode} before becoming available.",
+								};
+							}
+							// Exit code 0: emulator likely forked (common on macOS).
+							// The real emulator runs as a separate process — keep polling.
+							logger.Invoke (TraceLevel.Verbose, $"Emulator launcher process exited with code 0 (likely forked). Continuing to poll adb devices.");
+							processExitedWithZero = true;
+						}
+					} catch (InvalidOperationException ex) {
 						return new EmulatorBootResult {
 							Success = false,
 							ErrorKind = EmulatorBootErrorKind.LaunchFailed,
-							ErrorMessage = $"Emulator process for '{deviceOrAvdName}' exited with code {emulatorProcess.ExitCode} before becoming available.",
+							ErrorMessage = $"Emulator process for '{deviceOrAvdName}' is no longer available: {ex.Message}",
 						};
 					}
-					// Exit code 0: emulator likely forked (common on macOS).
-					// The real emulator runs as a separate process — keep polling.
-					logger.Invoke (TraceLevel.Verbose, $"Emulator launcher process exited with code 0 (likely forked). Continuing to poll adb devices.");
-					processExitedWithZero = true;
+
+					await Task.Delay (options.PollInterval, timeoutCts.Token).ConfigureAwait (false);
+
+					devices = await adbRunner.ListDevicesAsync (timeoutCts.Token).ConfigureAwait (false);
+					newSerial = FindRunningAvdSerial (devices, deviceOrAvdName);
 				}
 
-				await Task.Delay (options.PollInterval, timeoutCts.Token).ConfigureAwait (false);
-
-				devices = await adbRunner.ListDevicesAsync (timeoutCts.Token).ConfigureAwait (false);
-				newSerial = FindRunningAvdSerial (devices, deviceOrAvdName);
+				logger.Invoke (TraceLevel.Info, $"Emulator appeared as '{newSerial}', waiting for full boot...");
+				return await WaitForFullBootAsync (adbRunner, newSerial, options, timeoutCts.Token).ConfigureAwait (false);
+			} catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) {
+				TryKillProcess (emulatorProcess);
+				return new EmulatorBootResult {
+					Success = false,
+					ErrorKind = EmulatorBootErrorKind.Timeout,
+					ErrorMessage = $"Timed out waiting for emulator '{deviceOrAvdName}' to boot within {options.BootTimeout.TotalSeconds}s.",
+				};
+			} catch {
+				TryKillProcess (emulatorProcess);
+				throw;
 			}
-
-			logger.Invoke (TraceLevel.Info, $"Emulator appeared as '{newSerial}', waiting for full boot...");
-			var result = await WaitForFullBootAsync (adbRunner, newSerial, options, timeoutCts.Token).ConfigureAwait (false);
-
-			// Release the Process handle — the emulator process itself keeps running.
-			// We no longer need stdout/stderr forwarding since boot is complete.
-			emulatorProcess.Dispose ();
-			return result;
-		} catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) {
-			TryKillProcess (emulatorProcess);
-			return new EmulatorBootResult {
-				Success = false,
-				ErrorKind = EmulatorBootErrorKind.Timeout,
-				ErrorMessage = $"Timed out waiting for emulator '{deviceOrAvdName}' to boot within {options.BootTimeout.TotalSeconds}s.",
-			};
-		} catch {
-			TryKillProcess (emulatorProcess);
-			throw;
 		}
 	}
 
@@ -276,8 +287,6 @@ public class EmulatorRunner
 		} catch (Exception ex) {
 			// Best-effort: process may have already exited
 			logger.Invoke (TraceLevel.Verbose, $"Failed to stop emulator process: {ex.Message}");
-		} finally {
-			process.Dispose ();
 		}
 	}
 
