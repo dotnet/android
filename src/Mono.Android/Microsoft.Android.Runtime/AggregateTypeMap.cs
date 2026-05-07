@@ -11,7 +11,7 @@ namespace Microsoft.Android.Runtime;
 /// results across all universes. Debug-only — each assembly has its own
 /// universe with an isolated <c>TypeMapLazyDictionary</c>.
 /// </summary>
-sealed class AggregateTypeMap : ITypeMapWithAliasing
+sealed class AggregateTypeMap : ITypeMap
 {
 	readonly SingleUniverseTypeMap[] _universes;
 
@@ -21,10 +21,10 @@ sealed class AggregateTypeMap : ITypeMapWithAliasing
 		_universes = universes;
 	}
 
-	public IEnumerable<Type> GetTypes (string jniName)
+	public IEnumerable<Type> GetProxyTypes (string jniName)
 	{
 		foreach (var universe in _universes) {
-			foreach (var type in universe.GetTypes (jniName)) {
+			foreach (var type in universe.GetProxyTypes (jniName)) {
 				yield return type;
 			}
 		}
@@ -39,6 +39,18 @@ sealed class AggregateTypeMap : ITypeMapWithAliasing
 			}
 		}
 		proxyType = null;
+		return false;
+	}
+
+	public bool TryGetArrayType (string jniName, int rankIndex, [NotNullWhen (true)] out Type? arrayType)
+	{
+		foreach (var universe in _universes) {
+			if (universe.TryGetArrayType (jniName, rankIndex, out arrayType)) {
+				return true;
+			}
+		}
+
+		arrayType = null;
 		return false;
 	}
 }

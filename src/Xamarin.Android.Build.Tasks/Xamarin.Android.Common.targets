@@ -553,12 +553,12 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       ResourceName="XA1030"
       Condition=" $(_AndroidXA1030) == 'true' "
   />
-  <AndroidWarning Code="XA1044"
+  <AndroidError Code="XA1044"
       ResourceName="XA1044"
       FormatArguments="RunAOTCompilation;$(_AndroidRuntime)"
       Condition=" '$(_AndroidXA1044_RunAOTCompilation)' == 'true' "
   />
-  <AndroidWarning Code="XA1044"
+  <AndroidError Code="XA1044"
       ResourceName="XA1044"
       FormatArguments="EnableLLVM;$(_AndroidRuntime)"
       Condition=" '$(_AndroidXA1044_EnableLLVM)' == 'true' "
@@ -1464,7 +1464,7 @@ because xbuild doesn't support framework reference assemblies.
 <!-- Runs additional steps after ILLink runs (_LinkAssemblies) -->
 <Target Name="_AfterILLinkAdditionalSteps"
     DependsOnTargets="_LinkAssembliesNoShrinkInputs"
-    Condition="'$(PublishTrimmed)' == 'true'"
+    Condition="'$(PublishTrimmed)' == 'true' and '$(_AndroidTypeMapImplementation)' != 'trimmable'"
     Inputs="$(_AndroidLinkFlag)"
     Outputs="$(_AdditionalPostLinkerStepsFlag)">
   <AssemblyModifierPipeline

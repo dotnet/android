@@ -55,6 +55,20 @@ namespace Android.App
 	{
 		public Application () { }
 		protected Application (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Register ("android/app/Application$ActivityLifecycleCallbacks", "", "Android.App.Application/IActivityLifecycleCallbacksInvoker")]
+		public interface IActivityLifecycleCallbacks
+		{
+			[Register ("onActivityCreated", "(Landroid/app/Activity;)V", "GetOnActivityCreated_Landroid_app_Activity_Handler:Android.App.Application/IActivityLifecycleCallbacksInvoker")]
+			void OnActivityCreated (Activity activity);
+		}
+
+		[Register ("android/app/Application$ActivityLifecycleCallbacks", DoNotGenerateAcw = true)]
+		internal sealed class IActivityLifecycleCallbacksInvoker : Java.Lang.Object, IActivityLifecycleCallbacks
+		{
+			public IActivityLifecycleCallbacksInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+			public void OnActivityCreated (Activity activity) { }
+		}
 	}
 
 	[Register ("android/app/Instrumentation", DoNotGenerateAcw = true)]
@@ -968,5 +982,24 @@ namespace Java.Interop.TestTypes
 	public class NonGeneratedJavaObject : JavaObject
 	{
 		public NonGeneratedJavaObject () { }
+	}
+
+	/// <summary>
+	/// Mimics Java.Interop.JavaBooleanArray — a primitive array type with IsKeyword=true.
+	/// The scanner must skip all ArrayRank > 0 types because they are handled by the
+	/// built-in tables in JniRuntime.JniTypeManager.
+	/// </summary>
+	[Java.Interop.JniTypeSignature ("Z", IsKeyword = true, ArrayRank = 1, GenerateJavaPeer = false)]
+	public sealed class KeywordPrimitiveArray : JavaObject
+	{
+	}
+
+	/// <summary>
+	/// Mimics Java.Interop.JavaObjectArray — a non-keyword array type with ArrayRank=1.
+	/// The scanner must also skip these to avoid adding unnecessary aliases.
+	/// </summary>
+	[Java.Interop.JniTypeSignature ("java/lang/Object", ArrayRank = 1, GenerateJavaPeer = false)]
+	public class NonKeywordArrayType : JavaObject
+	{
 	}
 }

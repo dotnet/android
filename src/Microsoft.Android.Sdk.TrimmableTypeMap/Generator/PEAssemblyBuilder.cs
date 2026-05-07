@@ -16,6 +16,8 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// </summary>
 sealed class PEAssemblyBuilder
 {
+	const int DefaultMaxStack = 32;
+
 	// Mono.Android strong name public key token (84e04ff9cfb79065)
 	static readonly byte [] MonoAndroidPublicKeyToken = { 0x84, 0xe0, 0x4f, 0xf9, 0xcf, 0xb7, 0x90, 0x65 };
 
@@ -307,7 +309,7 @@ sealed class PEAssemblyBuilder
 		var bodyEncoder = new MethodBodyStreamEncoder (ILBuilder);
 		int bodyOffset = localSigHandle.IsNil
 			? bodyEncoder.AddMethodBody (encoder)
-			: bodyEncoder.AddMethodBody (encoder, maxStack: 8, localSigHandle, MethodBodyAttributes.InitLocals);
+			: bodyEncoder.AddMethodBody (encoder, maxStack: DefaultMaxStack, localSigHandle, MethodBodyAttributes.InitLocals);
 
 		return Metadata.AddMethodDefinition (
 			attrs, MethodImplAttributes.IL,
@@ -352,7 +354,7 @@ sealed class PEAssemblyBuilder
 		var bodyEncoder = new MethodBodyStreamEncoder (ILBuilder);
 		int bodyOffset = localSigHandle.IsNil
 			? bodyEncoder.AddMethodBody (encoder)
-			: bodyEncoder.AddMethodBody (encoder, maxStack: 8, localSigHandle, MethodBodyAttributes.InitLocals);
+			: bodyEncoder.AddMethodBody (encoder, maxStack: DefaultMaxStack, localSigHandle, MethodBodyAttributes.InitLocals);
 
 		return Metadata.AddMethodDefinition (
 			attrs, MethodImplAttributes.IL,

@@ -38,9 +38,15 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 ///     // JniName / TargetType / InvokerType are supplied by the base JavaPeerProxy constructor.
 ///
 ///     // UCO wrappers — [UnmanagedCallersOnly] entry points for JNI native methods (ACWs only):
-///     [UnmanagedCallersOnly]
 ///     public static void n_OnCreate_uco_0(IntPtr jnienv, IntPtr self, IntPtr p0)
-///         =&gt; Activity.n_OnCreate(jnienv, self, p0);
+///     {
+///         AndroidRuntimeInternal.WaitForBridgeProcessing();
+///         try {
+///             Activity.n_OnCreate(jnienv, self, p0);
+///         } catch (Exception e) {
+///             AndroidEnvironmentInternal.UnhandledException(e);
+///         }
+///     }
 ///
 ///     [UnmanagedCallersOnly]
 ///     public static void nctor_0_uco(IntPtr jnienv, IntPtr self)
@@ -93,6 +99,8 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _jniObjectReferenceCtorRef;
 	MemberReferenceHandle _jniEnvDeleteRefRef;
 	MemberReferenceHandle _shouldSkipActivationRef;
+	MemberReferenceHandle _waitForBridgeProcessingRef;
+	MemberReferenceHandle _androidEnvironmentUnhandledExceptionRef;
 	MemberReferenceHandle _ucoAttrCtorRef;
 	BlobHandle _ucoAttrBlobHandle;
 	MemberReferenceHandle _typeMapAttrCtorRef2Arg;
@@ -106,6 +114,8 @@ sealed class TypeMapAssemblyEmitter
 	TypeReferenceHandle _jniTransitionRef;
 	TypeReferenceHandle _jniRuntimeRef;
 	TypeReferenceHandle _exceptionRef;
+	TypeReferenceHandle _androidRuntimeInternalRef;
+	TypeReferenceHandle _androidEnvironmentInternalRef;
 
 	MemberReferenceHandle _beginMarshalMethodRef;
 	MemberReferenceHandle _endMarshalMethodRef;
@@ -118,6 +128,16 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _readOnlySpanOfJniNativeMethodCtorRef;
 
 	EntityHandle _anchorTypeHandle;
+
+	// Per-rank array sentinel TypeDefs, 0-indexed by (rank - 1). Empty when array entries
+	// aren't emitted.
+	EntityHandle [] _rankAnchorHandles = [];
+
+	// Per-anchor TypeMap<TGroup>(string, Type, Type) ctor refs, lazily built.
+	readonly Dictionary<EntityHandle, MemberReferenceHandle> _typeMapAttr3ArgCtorRefByAnchor = new ();
+
+	// Cached open TypeMapAttribute`1 ref shared across closed TypeSpecs.
+	TypeReferenceHandle _typeMapAttrOpenRef;
 
 	/// <summary>
 	/// Creates a new emitter.
@@ -168,6 +188,7 @@ sealed class TypeMapAssemblyEmitter
 		} else {
 			EmitAnchorType ();
 		}
+		EmitRankSentinels (model);
 		EmitMemberReferences ();
 
 		// Track wrapper method names → handles for RegisterNatives
@@ -238,6 +259,11 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniRuntime"));
 		_exceptionRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Exception"));
+		var monoAndroidRuntimeRef = _pe.AddAssemblyRef ("Mono.Android.Runtime", new Version (0, 0, 0, 0));
+		_androidRuntimeInternalRef = metadata.AddTypeReference (monoAndroidRuntimeRef,
+			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("AndroidRuntimeInternal"));
+		_androidEnvironmentInternalRef = metadata.AddTypeReference (monoAndroidRuntimeRef,
+			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("AndroidEnvironmentInternal"));
 
 		// ReadOnlySpan<JniNativeMethod> — TypeSpec for generic instantiation
 		_readOnlySpanOpenRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
@@ -263,6 +289,31 @@ sealed class TypeMapAssemblyEmitter
 			objectRef,
 			MetadataTokens.FieldDefinitionHandle (metadata.GetRowCount (TableIndex.Field) + 1),
 			MetadataTokens.MethodDefinitionHandle (metadata.GetRowCount (TableIndex.MethodDef) + 1));
+	}
+
+	/// <summary>
+	/// Emits private <c>__ArrayMapRank{N}</c> classes used as group type parameters
+	/// for array <c>TypeMap&lt;T&gt;</c> entries. Each per-assembly typemap owns its
+	/// rank anchors so array maps stay scoped to the generated assembly.
+	/// </summary>
+	void EmitRankSentinels (TypeMapAssemblyData model)
+	{
+		if (model.MaxArrayRank <= 0) {
+			return;
+		}
+
+		_rankAnchorHandles = new EntityHandle [model.MaxArrayRank];
+		var objectRef = _pe.Metadata.AddTypeReference (_pe.SystemRuntimeRef,
+			_pe.Metadata.GetOrAddString ("System"), _pe.Metadata.GetOrAddString ("Object"));
+		for (int i = 0; i < model.MaxArrayRank; i++) {
+			_rankAnchorHandles [i] = _pe.Metadata.AddTypeDefinition (
+				TypeAttributes.NotPublic | TypeAttributes.Sealed | TypeAttributes.Class,
+				default,
+				_pe.Metadata.GetOrAddString ($"__ArrayMapRank{i + 1}"),
+				objectRef,
+				MetadataTokens.FieldDefinitionHandle (_pe.Metadata.GetRowCount (TableIndex.Field) + 1),
+				MetadataTokens.MethodDefinitionHandle (_pe.Metadata.GetRowCount (TableIndex.MethodDef) + 1));
+		}
 	}
 
 	void EmitMemberReferences ()
@@ -310,6 +361,14 @@ sealed class TypeMapAssemblyEmitter
 				rt => rt.Type ().Boolean (),
 				p => { p.AddParameter ().Type ().IntPtr (); }));
 
+		_waitForBridgeProcessingRef = _pe.AddMemberRef (_androidRuntimeInternalRef, "WaitForBridgeProcessing",
+			sig => sig.MethodSignature ().Parameters (0, rt => rt.Void (), p => { }));
+
+		_androidEnvironmentUnhandledExceptionRef = _pe.AddMemberRef (_androidEnvironmentInternalRef, "UnhandledException",
+			sig => sig.MethodSignature ().Parameters (1,
+				rt => rt.Void (),
+				p => p.AddParameter ().Type ().Type (_exceptionRef, false)));
+
 		// JniNativeMethod..ctor(byte*, byte*, IntPtr)
 		_jniNativeMethodCtorRef = _pe.AddMemberRef (_jniNativeMethodRef, ".ctor",
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (3,
@@ -351,7 +410,7 @@ sealed class TypeMapAssemblyEmitter
 		_ucoAttrCtorRef = _pe.AddMemberRef (ucoAttrTypeRef, ".ctor",
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }));
 
-		// Pre-compute the UCO attribute blob — it's always the same 4 bytes (prolog + no named args)
+		// Legacy marshal-method UCO wrappers use the default unmanaged calling convention.
 		_ucoAttrBlobHandle = _pe.BuildAttributeBlob (b => { });
 
 		// JniEnvironment.BeginMarshalMethod(nint jnienv, out JniTransition, out JniRuntime?) -> bool
@@ -387,13 +446,15 @@ sealed class TypeMapAssemblyEmitter
 	void EmitTypeMapAttributeCtorRef ()
 	{
 		var metadata = _pe.Metadata;
-		var typeMapAttrOpenRef = metadata.AddTypeReference (_pe.SystemRuntimeInteropServicesRef,
+		_typeMapAttrOpenRef = metadata.AddTypeReference (_pe.SystemRuntimeInteropServicesRef,
 			metadata.GetOrAddString ("System.Runtime.InteropServices"),
 			metadata.GetOrAddString ("TypeMapAttribute`1"));
 
-		var closedAttrTypeSpec = _pe.MakeGenericTypeSpec (typeMapAttrOpenRef, _anchorTypeHandle);
+		var closedAttrTypeSpec = _pe.MakeGenericTypeSpec (_typeMapAttrOpenRef, _anchorTypeHandle);
 
-		// 2-arg: TypeMap(string jniName, Type proxyType) — unconditional
+		// 2-arg: TypeMap(string jniName, Type proxyType) — unconditional. Default anchor only;
+		// rank-anchored entries are always conditional (3-arg) so no per-rank 2-arg ctor is
+		// needed today.
 		_typeMapAttrCtorRef2Arg = _pe.AddMemberRef (closedAttrTypeSpec, ".ctor",
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
 				rt => rt.Void (),
@@ -402,8 +463,27 @@ sealed class TypeMapAssemblyEmitter
 					p.AddParameter ().Type ().Type (_systemTypeRef, false);
 				}));
 
-		// 3-arg: TypeMap(string jniName, Type proxyType, Type targetType) — trimmable
-		_typeMapAttrCtorRef3Arg = _pe.AddMemberRef (closedAttrTypeSpec, ".ctor",
+		// 3-arg: TypeMap(string jniName, Type proxyType, Type targetType) — trimmable.
+		// Cache by anchor so rank-anchored entries can build their own closed ctor on demand.
+		_typeMapAttrCtorRef3Arg = AddTypeMapAttr3ArgCtorRef (_anchorTypeHandle);
+		_typeMapAttr3ArgCtorRefByAnchor [_anchorTypeHandle] = _typeMapAttrCtorRef3Arg;
+	}
+
+	/// <summary>Cached 3-arg <c>TypeMap&lt;TGroup&gt;</c> ctor ref for the given anchor, built on first use.</summary>
+	MemberReferenceHandle GetOrAddTypeMapAttr3ArgCtorRef (EntityHandle anchor)
+	{
+		if (_typeMapAttr3ArgCtorRefByAnchor.TryGetValue (anchor, out var cached)) {
+			return cached;
+		}
+		var ctorRef = AddTypeMapAttr3ArgCtorRef (anchor);
+		_typeMapAttr3ArgCtorRefByAnchor [anchor] = ctorRef;
+		return ctorRef;
+	}
+
+	MemberReferenceHandle AddTypeMapAttr3ArgCtorRef (EntityHandle anchor)
+	{
+		var closedAttrTypeSpec = _pe.MakeGenericTypeSpec (_typeMapAttrOpenRef, anchor);
+		return _pe.AddMemberRef (closedAttrTypeSpec, ".ctor",
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (3,
 				rt => rt.Void (),
 				p => {
@@ -524,7 +604,7 @@ sealed class TypeMapAssemblyEmitter
 
 		// UCO wrappers
 		foreach (var uco in proxy.UcoMethods) {
-			var handle = EmitUcoMethod (uco);
+			var handle = EmitUcoMethod (uco, proxy);
 			wrapperHandles [uco.WrapperName] = handle;
 		}
 
@@ -535,7 +615,7 @@ sealed class TypeMapAssemblyEmitter
 
 		// RegisterNatives
 		if (proxy.IsAcw) {
-			EmitRegisterNatives (proxy.NativeRegistrations, wrapperHandles);
+			EmitRegisterNatives (proxy, wrapperHandles);
 		}
 	}
 
@@ -604,25 +684,28 @@ sealed class TypeMapAssemblyEmitter
 			return;
 		}
 
-		// JavaInterop-style activation ctors (ref JniObjectReference, JniObjectReferenceOptions)
-		// require parameter conversion from (IntPtr, JniHandleOwnership).
-		if (proxy.ActivationCtor?.Style == ActivationCtorStyle.JavaInterop) {
-			if (proxy.InvokerType != null) {
-				EmitCreateInstanceViaJavaInteropNewobj (_pe.ResolveTypeRef (proxy.InvokerType));
+		if (proxy.InvokerType != null) {
+			var invokerType = _pe.ResolveTypeRef (proxy.InvokerType);
+			if (proxy.InvokerActivationCtorStyle == ActivationCtorStyle.JavaInterop) {
+				EmitCreateInstanceViaJavaInteropNewobj (invokerType);
 			} else {
-				var targetRef = _pe.ResolveTypeRef (proxy.TargetType);
-				var jiCtor = proxy.ActivationCtor ?? throw new InvalidOperationException ("ActivationCtor should not be null");
-				if (jiCtor.IsOnLeafType) {
-					EmitCreateInstanceViaJavaInteropNewobj (targetRef);
-				} else {
-					EmitCreateInstanceInheritedJavaInteropCtor (targetRef, jiCtor);
-				}
+				EmitCreateInstanceViaNewobj (invokerType);
 			}
 			return;
 		}
 
-		if (proxy.InvokerType != null) {
-			EmitCreateInstanceViaNewobj (_pe.ResolveTypeRef (proxy.InvokerType));
+		// JavaInterop-style activation ctors (ref JniObjectReference, JniObjectReferenceOptions)
+		// require parameter conversion from (IntPtr, JniHandleOwnership).
+		if (proxy.ActivationCtor?.Style == ActivationCtorStyle.JavaInterop) {
+			var targetRef = _pe.ResolveTypeRef (proxy.TargetType);
+			var jiCtor = proxy.ActivationCtor ?? throw new InvalidOperationException ("ActivationCtor should not be null");
+			if (jiCtor.IsOnLeafType) {
+				EmitCreateInstanceViaJavaInteropNewobj (targetRef);
+			} else {
+				// Legacy GetConstructor() doesn't find inherited ctors —
+				// match that behavior by returning null.
+				EmitCreateInstanceNoActivation ();
+			}
 			return;
 		}
 
@@ -633,7 +716,9 @@ sealed class TypeMapAssemblyEmitter
 		if (activationCtor.IsOnLeafType) {
 			EmitCreateInstanceViaNewobj (targetTypeRef);
 		} else {
-			EmitCreateInstanceInheritedCtor (targetTypeRef, activationCtor);
+			// Legacy GetConstructor() doesn't find inherited ctors —
+			// match that behavior by returning null.
+			EmitCreateInstanceNoActivation ();
 		}
 	}
 
@@ -840,7 +925,7 @@ sealed class TypeMapAssemblyEmitter
 				}));
 	}
 
-	MethodDefinitionHandle EmitUcoMethod (UcoMethodData uco)
+	MethodDefinitionHandle EmitUcoMethod (UcoMethodData uco, JavaPeerProxyData proxy)
 	{
 		var jniParams = JniSignatureHelper.ParseParameterTypes (uco.JniSignature);
 		var returnKind = JniSignatureHelper.ParseReturnType (uco.JniSignature);
@@ -873,15 +958,57 @@ sealed class TypeMapAssemblyEmitter
 		var handle = _pe.EmitBody (uco.WrapperName,
 			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 			encodeSig,
-			encoder => {
+			(encoder, cfb) => EmitUcoForwarderBody (encoder, cfb, returnKind, enc => {
 				for (int p = 0; p < paramCount; p++)
-					encoder.LoadArgument (p);
-				encoder.Call (callbackRef);
-				encoder.OpCode (ILOpCode.Ret);
-			});
+					enc.LoadArgument (p);
+				enc.Call (callbackRef);
+			}),
+			blob => EncodeUcoForwarderLegacyLocals (blob, returnKind));
 
 		AddUnmanagedCallersOnlyAttribute (handle);
 		return handle;
+	}
+
+	void EmitUcoForwarderBody (InstructionEncoder encoder, ControlFlowBuilder cfb, JniParamKind returnKind, Action<InstructionEncoder> emitCallback)
+	{
+		bool isVoid = returnKind == JniParamKind.Void;
+		var tryStart = encoder.DefineLabel ();
+		var catchStart = encoder.DefineLabel ();
+		var afterAll = encoder.DefineLabel ();
+
+		encoder.Call (_waitForBridgeProcessingRef);
+		encoder.MarkLabel (tryStart);
+		emitCallback (encoder);
+		if (!isVoid) {
+			encoder.StoreLocal (0);
+		}
+		encoder.Branch (ILOpCode.Leave, afterAll);
+
+		encoder.MarkLabel (catchStart);
+		encoder.StoreLocal (isVoid ? 0 : 1);
+		encoder.LoadLocal (isVoid ? 0 : 1);
+		encoder.Call (_androidEnvironmentUnhandledExceptionRef);
+		encoder.Branch (ILOpCode.Leave, afterAll);
+
+		encoder.MarkLabel (afterAll);
+		if (!isVoid) {
+			encoder.LoadLocal (0);
+		}
+		encoder.OpCode (ILOpCode.Ret);
+
+		cfb.AddCatchRegion (tryStart, catchStart, catchStart, afterAll, _exceptionRef);
+	}
+
+	void EncodeUcoForwarderLegacyLocals (BlobBuilder blob, JniParamKind returnKind)
+	{
+		bool isVoid = returnKind == JniParamKind.Void;
+		blob.WriteByte (0x07); // LOCAL_SIG
+		blob.WriteCompressedInteger (isVoid ? 1 : 2);
+		if (!isVoid) {
+			JniSignatureHelper.EncodeClrType (new SignatureTypeEncoder (blob), returnKind);
+		}
+		blob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_exceptionRef));
 	}
 
 	MethodDefinitionHandle EmitUcoConstructor (UcoConstructorData uco, JavaPeerProxyData proxy)
@@ -906,16 +1033,20 @@ sealed class TypeMapAssemblyEmitter
 					JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniParams [j]);
 			});
 
-		// Open generic types can't be activated — emit a no-op UCO.
+		// Open generic types can't be activated because Java construction cannot provide the type arguments.
 		if (proxy.IsGenericDefinition) {
-			var noopHandle = _pe.EmitBody (uco.WrapperName,
+			var openGenericHandle = _pe.EmitBody (uco.WrapperName,
 				MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 				encodeSig,
-				encoder => {
-					encoder.OpCode (ILOpCode.Ret);
-				});
-			AddUnmanagedCallersOnlyAttribute (noopHandle);
-			return noopHandle;
+				(encoder, cfb) => EmitUcoConstructorBodyWithMarshal (encoder, cfb, enc => {
+					enc.LoadString (_pe.Metadata.GetOrAddUserString ("Constructing instances of generic types from Java is not supported, as the type parameters cannot be determined."));
+					enc.OpCode (ILOpCode.Newobj);
+					enc.Token (_notSupportedExceptionCtorRef);
+					enc.OpCode (ILOpCode.Throw);
+				}),
+				EncodeUcoConstructorLocals_Standard);
+			AddUnmanagedCallersOnlyAttribute (openGenericHandle);
+			return openGenericHandle;
 		}
 
 		MethodDefinitionHandle handle;
@@ -1110,10 +1241,11 @@ sealed class TypeMapAssemblyEmitter
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniObjectReferenceRef));
 	}
 
-	void EmitRegisterNatives (List<NativeRegistrationData> registrations,
+	void EmitRegisterNatives (JavaPeerProxyData proxy,
 		Dictionary<string, MethodDefinitionHandle> wrapperHandles)
 	{
 		// Filter to only registrations that have corresponding wrapper methods
+		var registrations = proxy.NativeRegistrations;
 		var validRegs = new List<(NativeRegistrationData Reg, MethodDefinitionHandle Wrapper)> (registrations.Count);
 		foreach (var reg in registrations) {
 			if (wrapperHandles.TryGetValue (reg.WrapperMethodName, out var wrapperHandle)) {
@@ -1233,7 +1365,23 @@ sealed class TypeMapAssemblyEmitter
 
 	void EmitTypeMapAttribute (TypeMapAttributeData entry)
 	{
-		var ctorRef = entry.IsUnconditional ? _typeMapAttrCtorRef2Arg : _typeMapAttrCtorRef3Arg;
+		MemberReferenceHandle ctorRef;
+		if (entry.AnchorRank is int rank) {
+			if (entry.IsUnconditional) {
+				throw new InvalidOperationException (
+					$"Rank-anchored TypeMap entries must be conditional (3-arg). Entry '{entry.JniName}' rank={rank}.");
+			}
+			int anchorIndex = rank - 1;
+			if ((uint)anchorIndex >= (uint)_rankAnchorHandles.Length) {
+				throw new InvalidOperationException (
+					$"No rank-{rank} anchor available for entry '{entry.JniName}'. " +
+					$"Ensure TypeMapAssemblyData.MaxArrayRank was >= {rank} before emit.");
+			}
+			ctorRef = GetOrAddTypeMapAttr3ArgCtorRef (_rankAnchorHandles [anchorIndex]);
+		} else {
+			ctorRef = entry.IsUnconditional ? _typeMapAttrCtorRef2Arg : _typeMapAttrCtorRef3Arg;
+		}
+
 		var blob = _pe.BuildAttributeBlob (b => {
 			b.WriteSerializedString (entry.JniName);
 			b.WriteSerializedString (entry.ProxyTypeReference);

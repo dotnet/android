@@ -5,8 +5,6 @@ using System.Collections.Generic;
 using System.IO;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
-using System;
-using System.Globalization;
 
 namespace Xamarin.Android.Tasks
 {
@@ -64,21 +62,17 @@ namespace Xamarin.Android.Tasks
 				}
 
 				var libraries = new List<ITaskItem> ();
+				var platformPath = MonoAndroidHelper.AndroidSdk.TryGetPlatformDirectoryFromApiLevel (AndroidApiLevel, MonoAndroidHelper.SupportedVersions);
+				if (platformPath == null) {
+					Log.LogDebugMessage ($"Could not find platform directory for API level '{AndroidApiLevel}'");
+				}
 				foreach (var uses_library in app.Elements ("uses-library")) {
 					var attribute = uses_library.Attribute (androidNs + "name");
 					if (attribute != null && !attribute.Value.IsNullOrEmpty ()) {
+						if (platformPath == null)
+							continue;
 						var required = uses_library.Attribute (androidNs + "required")?.Value;
-						string apiLevel;
-						if (MonoAndroidHelper.TryParseApiLevel (AndroidApiLevel, out Version version)) {
-							if (version.Minor == 0) {
-								apiLevel = version.Major.ToString (CultureInfo.InvariantCulture);
-							} else {
-								apiLevel = version.ToString ();
-							}
-						} else {
-							apiLevel = AndroidApiLevel;
-						}
-						var path = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{apiLevel}", "optional", $"{attribute.Value}.jar");
+						var path = Path.Combine (platformPath, "optional", $"{attribute.Value}.jar");
 						if (File.Exists (path)) {
 							libraries.Add (new TaskItem (path));
 						} else {

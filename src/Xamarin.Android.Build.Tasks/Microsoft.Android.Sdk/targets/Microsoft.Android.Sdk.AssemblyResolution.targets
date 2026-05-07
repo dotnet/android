@@ -84,12 +84,6 @@ _ResolveAssemblies MSBuild target.
         <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" />
         <ResolvedFileToPublish Include="@(_DeduplicatedResolvedFileToPublish)" />
       </ItemGroup>
-      <AndroidWarning
-          Code="XA1024"
-          ResourceName="XA1024"
-          FormatArguments="%(_SourceItemsToCopyToPublishDirectory.Identity)"
-          Condition=" '%(Extension)' == '.config' "
-      />
   </Target>
 
   <Target Name="_FixupIntermediateAssembly" Condition=" '$(_OuterIntermediateAssembly)' != '' ">
@@ -294,6 +288,8 @@ _ResolveAssemblies MSBuild target.
       <_ExcludedNativeLibraries Condition=" '$(_AndroidRuntime)' == 'MonoVM' Or '$(_AndroidRuntime)' == '' " Include="libnet-android.release" />
       <_ExcludedNativeLibraries Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " Include="libmono-android.debug" />
       <_ExcludedNativeLibraries Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " Include="libmono-android.release" />
+      <_ExcludedNativeLibraries Condition=" '$(_AndroidRuntime)' == 'CoreCLR' And '$(AndroidIncludeDebugSymbols)' != 'true' " Include="libmscordaccore" />
+      <_ExcludedNativeLibraries Condition=" '$(_AndroidRuntime)' == 'CoreCLR' And '$(AndroidIncludeDebugSymbols)' != 'true' " Include="libmscordbi" />
     </ItemGroup>
 
     <!-- Let's keep the item group close to the task that uses them, the list is irrelevant for

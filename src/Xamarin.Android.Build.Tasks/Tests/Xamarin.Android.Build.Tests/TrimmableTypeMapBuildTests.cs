@@ -11,12 +11,16 @@ namespace Xamarin.Android.Build.Tests {
 	public class TrimmableTypeMapBuildTests : BaseTest {
 
 		[Test]
-		public void Build_WithTrimmableTypeMap_Succeeds ()
+		public void Build_WithTrimmableTypeMap_Succeeds ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
@@ -27,12 +31,16 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
-		public void Build_WithTrimmableTypeMap_IncrementalBuild ()
+		public void Build_WithTrimmableTypeMap_IncrementalBuild ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
@@ -42,18 +50,19 @@ namespace Xamarin.Android.Build.Tests {
 			DirectoryAssert.Exists (intermediateDir);
 
 			Assert.IsTrue (builder.Build (proj), "Second build should have succeeded.");
+
 			Assert.IsTrue (
 				builder.Output.IsTargetSkipped ("_GenerateJavaStubs"),
 				"_GenerateJavaStubs should be skipped on incremental build.");
 		}
 
 		[Test]
-		public void Build_WithTrimmableTypeMap_DoesNotHitCopyIfChangedMismatch ()
+		public void Build_WithTrimmableTypeMap_DoesNotHitCopyIfChangedMismatch ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 			};
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();

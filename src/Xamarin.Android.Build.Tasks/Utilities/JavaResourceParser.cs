@@ -17,9 +17,6 @@ namespace Xamarin.Android.Tasks
 			if (!File.Exists (file))
 				throw new InvalidOperationException ("Specified Java resource file was not found: " + file);
 
-			if (Log == null)
-				throw new InvalidOperationException ("Log property must be set before calling Parse");
-
 			CodeTypeDeclaration? resources = null;
 
 			using (var reader = File.OpenText (file)) {
@@ -53,7 +50,7 @@ namespace Xamarin.Android.Tasks
 		// }
 		List<KeyValuePair<Regex, Func<Match, bool, CodeTypeDeclaration?, Dictionary<string, string>, CodeTypeDeclaration>>> Parser;
 
-		public JavaResourceParser ()
+		public JavaResourceParser (TaskLoggingHelper log) : base (log)
 		{
 			Parser = new List<KeyValuePair<Regex, Func<Match, bool, CodeTypeDeclaration?, Dictionary<string, string>, CodeTypeDeclaration>>> () {
 			Parse ("^public final class R {",
@@ -90,7 +87,7 @@ namespace Xamarin.Android.Tasks
 					(m, app, g, map) => {
 						g ??= new CodeTypeDeclaration ("Resource") { IsPartial = true };
 						var name = ((CodeTypeDeclaration) g.Members [g.Members.Count-1]).Name;
-						var f = new CodeMemberField (typeof (int), ResourceIdentifier.GetResourceName (name, m.Groups[1].Value, map, Log!)) {
+						var f = new CodeMemberField (typeof (int), ResourceIdentifier.GetResourceName (name, m.Groups[1].Value, map, Log)) {
 								Attributes      = app ? MemberAttributes.Const | MemberAttributes.Public : MemberAttributes.Static | MemberAttributes.Public,
 								InitExpression  = new CodePrimitiveExpression (ToInt32 (m.Groups [2].Value, m.Groups [2].Value.IndexOf ("0x", StringComparison.Ordinal) == 0 ? 16 : 10)),
 								Comments = {
@@ -104,7 +101,7 @@ namespace Xamarin.Android.Tasks
 					(m, app, g, map) => {
 						g ??= new CodeTypeDeclaration ("Resource") { IsPartial = true };
 						var name = ((CodeTypeDeclaration) g.Members [g.Members.Count-1]).Name;
-						var f = new CodeMemberField (typeof (int[]), ResourceIdentifier.GetResourceName (name, m.Groups[1].Value, map, Log!)) {
+						var f = new CodeMemberField (typeof (int[]), ResourceIdentifier.GetResourceName (name, m.Groups[1].Value, map, Log)) {
 								// pity I can't make the member readonly...
 								Attributes      = MemberAttributes.Public | MemberAttributes.Static,
 						};

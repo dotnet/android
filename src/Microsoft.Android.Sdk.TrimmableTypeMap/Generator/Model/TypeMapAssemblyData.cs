@@ -41,6 +41,12 @@ sealed class TypeMapAssemblyData
 	public List<AliasHolderData> AliasHolders { get; } = new ();
 
 	/// <summary>
+	/// Maximum array rank for which the generator emits per-rank <c>__ArrayMapRank{N}</c>
+	/// sentinel TypeDefs and <c>TypeMap</c> entries. 0 disables.
+	/// </summary>
+	public int MaxArrayRank { get; set; }
+
+	/// <summary>
 	/// Assembly names that need [IgnoresAccessChecksTo] for cross-assembly n_* calls.
 	/// </summary>
 	public List<string> IgnoresAccessChecksTo { get; } = new ();
@@ -77,6 +83,12 @@ sealed record TypeMapAttributeData
 	/// True for 2-arg unconditional entries (ACW types, essential runtime types).
 	/// </summary>
 	public bool IsUnconditional => TargetTypeReference == null;
+
+	/// <summary>
+	/// 1-based array rank when this entry should use a <c>__ArrayMapRank{value}</c>
+	/// sentinel as its <c>TGroup</c> instead of the default model anchor.
+	/// </summary>
+	public int? AnchorRank { get; init; }
 }
 
 /// <summary>
@@ -109,6 +121,11 @@ sealed class JavaPeerProxyData
 	/// Reference to the invoker type (for interfaces/abstract types). Null if not applicable.
 	/// </summary>
 	public TypeRefData? InvokerType { get; set; }
+
+	/// <summary>
+	/// Activation constructor style to use when creating <see cref="InvokerType"/>.
+	/// </summary>
+	public ActivationCtorStyle? InvokerActivationCtorStyle { get; set; }
 
 	/// <summary>
 	/// Whether this proxy has a CreateInstance that can actually create instances.

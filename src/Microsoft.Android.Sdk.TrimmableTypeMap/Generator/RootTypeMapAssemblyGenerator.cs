@@ -10,7 +10,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// <summary>
 /// Generates the root <c>_Microsoft.Android.TypeMaps.dll</c> assembly that:
 /// <list type="bullet">
-/// <item>References all per-assembly typemap assemblies via <c>[assembly: TypeMapAssemblyTargetAttribute&lt;__TypeMapAnchor&gt;("name")]</c>.</item>
+/// <item>References all per-assembly typemap assemblies via <c>[assembly: TypeMapAssemblyTargetAttribute&lt;T&gt;("name")]</c>.</item>
 /// <item>Emits a <c>TypeMapLoader</c> class whose <c>Initialize()</c> method calls
 /// <see cref="Microsoft.Android.Runtime.TrimmableTypeMap.Initialize"/> with the appropriate
 /// type mapping dictionaries.</item>
@@ -35,7 +35,8 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 ///             // Option A: Shared universe
 ///             TrimmableTypeMap.Initialize(
 ///                 TypeMapping.GetOrCreateExternalTypeMapping&lt;Java.Lang.Object&gt;(),
-///                 TypeMapping.GetOrCreateProxyTypeMapping&lt;Java.Lang.Object&gt;());
+///                 TypeMapping.GetOrCreateProxyTypeMapping&lt;Java.Lang.Object&gt;(),
+///                 arrayMapsByAssemblyAndRank);
 ///
 ///             // Option B: Per-assembly universes (aggregated)
 ///             var typeMaps = new IReadOnlyDictionary&lt;string, Type&gt;[] {
@@ -46,7 +47,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 ///                 TypeMapping.GetOrCreateProxyTypeMapping&lt;_Mono_Android_TypeMap.__TypeMapAnchor&gt;(),
 ///                 TypeMapping.GetOrCreateProxyTypeMapping&lt;_MyApp_TypeMap.__TypeMapAnchor&gt;(),
 ///             };
-///             TrimmableTypeMap.Initialize(typeMaps, proxyMaps);
+///             TrimmableTypeMap.Initialize(typeMaps, proxyMaps, arrayMapsByAssemblyAndRank);
 ///         }
 ///     }
 /// }
@@ -72,7 +73,12 @@ public sealed class RootTypeMapAssemblyGenerator
 	/// <param name="stream">Stream to write the output PE to.</param>
 	/// <param name="assemblyName">Optional assembly name (defaults to _Microsoft.Android.TypeMaps).</param>
 	/// <param name="moduleName">Optional module name for the PE metadata.</param>
-	public void Generate (IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse, Stream stream, string? assemblyName = null, string? moduleName = null)
+	/// <param name="maxArrayRank">
+	/// Maximum array rank for which per-assembly typemaps emitted <c>__ArrayMapRank{N}</c>
+	/// sentinels. Must match the value passed to the per-assembly generators. 0 means
+	/// no array sentinels were emitted; the loader passes <c>null</c> for array maps.
+	/// </param>
+	public void Generate (IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse, Stream stream, string? assemblyName = null, string? moduleName = null, int maxArrayRank = 0)
 	{
 		if (perAssemblyTypeMapNames is null) {
 			throw new ArgumentNullException (nameof (perAssemblyTypeMapNames));
@@ -108,44 +114,92 @@ public sealed class RootTypeMapAssemblyGenerator
 				MetadataTokens.MethodDefinitionHandle (pe.Metadata.GetRowCount (TableIndex.MethodDef) + 1));
 		}
 
-		// Emit [assembly: TypeMapAssemblyTargetAttribute<__TypeMapAnchor>("name")] for each per-assembly typemap
-		EmitAssemblyTargetAttributes (pe, anchorTypeHandle, perAssemblyTypeMapNames);
+		// Emit [assembly: TypeMapAssemblyTargetAttribute<T>("name")] for each per-assembly typemap.
+		// T must match the group type later passed to TypeMapping.GetOrCreate*TypeMapping<T>().
+		if (useSharedTypemapUniverse) {
+			EmitSharedUniverseAssemblyTargetAttributes (pe, anchorTypeHandle, perAssemblyTypeMapNames);
+		} else {
+			EmitPerAssemblyUniverseAssemblyTargetAttributes (pe, perAssemblyTypeMapNames);
+		}
+		EmitArrayAssemblyTargetAttributes (pe, perAssemblyTypeMapNames, maxArrayRank);
 
 		// Emit [assembly: IgnoresAccessChecksTo("...")] so TypeMapLoader.Initialize() can access
-		// internal types (SingleUniverseTypeMap, AggregateTypeMap in Mono.Android,
-		// and __TypeMapAnchor in each per-assembly typemap DLL).
+		// internal types (TrimmableTypeMap and friends in Mono.Android, and private anchors
+		// in each per-assembly typemap DLL when aggregate universes or array maps are used).
 		var accessTargets = new List<string> { "Mono.Android" };
-		if (!useSharedTypemapUniverse) {
+		if (!useSharedTypemapUniverse || maxArrayRank > 0) {
 			accessTargets.AddRange (perAssemblyTypeMapNames);
 		}
 		pe.EmitIgnoresAccessChecksToAttribute (accessTargets);
 
 		// Emit TypeMapLoader class with Initialize() method
-		EmitTypeMapLoader (pe, anchorTypeHandle, perAssemblyTypeMapNames, useSharedTypemapUniverse);
+		EmitTypeMapLoader (pe, anchorTypeHandle, perAssemblyTypeMapNames, useSharedTypemapUniverse, maxArrayRank);
 
 		pe.WritePE (stream);
 	}
 
-	static void EmitAssemblyTargetAttributes (PEAssemblyBuilder pe, EntityHandle anchorTypeHandle, IReadOnlyList<string> perAssemblyTypeMapNames)
+	static void EmitSharedUniverseAssemblyTargetAttributes (PEAssemblyBuilder pe, EntityHandle anchorTypeHandle, IReadOnlyList<string> perAssemblyTypeMapNames)
 	{
-		var openAttrRef = pe.Metadata.AddTypeReference (pe.SystemRuntimeInteropServicesRef,
-			pe.Metadata.GetOrAddString ("System.Runtime.InteropServices"),
-			pe.Metadata.GetOrAddString ("TypeMapAssemblyTargetAttribute`1"));
-
-		var closedAttrTypeSpec = pe.MakeGenericTypeSpec (openAttrRef, anchorTypeHandle);
-
-		var ctorRef = pe.AddMemberRef (closedAttrTypeSpec, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
-				rt => rt.Void (),
-				p => p.AddParameter ().Type ().String ()));
-
+		var openAttrRef = GetTypeMapAssemblyTargetAttributeRef (pe);
+		var ctorRef = GetTypeMapAssemblyTargetAttributeCtorRef (pe, openAttrRef, anchorTypeHandle);
 		foreach (var name in perAssemblyTypeMapNames) {
-			var blobHandle = pe.BuildAttributeBlob (blob => blob.WriteSerializedString (name));
-			pe.Metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorRef, blobHandle);
+			EmitAssemblyTargetAttribute (pe, ctorRef, name);
 		}
 	}
 
-	static void EmitTypeMapLoader (PEAssemblyBuilder pe, EntityHandle anchorTypeHandle, IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse)
+	static void EmitPerAssemblyUniverseAssemblyTargetAttributes (PEAssemblyBuilder pe, IReadOnlyList<string> perAssemblyTypeMapNames)
+	{
+		var openAttrRef = GetTypeMapAssemblyTargetAttributeRef (pe);
+		foreach (var name in perAssemblyTypeMapNames) {
+			var asmRef = pe.FindOrAddAssemblyRef (name);
+			var perAssemblyAnchorRef = pe.Metadata.AddTypeReference (asmRef,
+				default, pe.Metadata.GetOrAddString ("__TypeMapAnchor"));
+			var ctorRef = GetTypeMapAssemblyTargetAttributeCtorRef (pe, openAttrRef, perAssemblyAnchorRef);
+			EmitAssemblyTargetAttribute (pe, ctorRef, name);
+		}
+	}
+
+	static void EmitArrayAssemblyTargetAttributes (PEAssemblyBuilder pe, IReadOnlyList<string> perAssemblyTypeMapNames, int maxArrayRank)
+	{
+		if (maxArrayRank == 0) {
+			return;
+		}
+
+		var openAttrRef = GetTypeMapAssemblyTargetAttributeRef (pe);
+		foreach (var name in perAssemblyTypeMapNames) {
+			var asmRef = pe.FindOrAddAssemblyRef (name);
+			for (int rank = 1; rank <= maxArrayRank; rank++) {
+				var rankAnchorRef = pe.Metadata.AddTypeReference (asmRef,
+					default, pe.Metadata.GetOrAddString ($"__ArrayMapRank{rank}"));
+				var ctorRef = GetTypeMapAssemblyTargetAttributeCtorRef (pe, openAttrRef, rankAnchorRef);
+				EmitAssemblyTargetAttribute (pe, ctorRef, name);
+			}
+		}
+	}
+
+	static TypeReferenceHandle GetTypeMapAssemblyTargetAttributeRef (PEAssemblyBuilder pe)
+	{
+		return pe.Metadata.AddTypeReference (pe.SystemRuntimeInteropServicesRef,
+			pe.Metadata.GetOrAddString ("System.Runtime.InteropServices"),
+			pe.Metadata.GetOrAddString ("TypeMapAssemblyTargetAttribute`1"));
+	}
+
+	static MemberReferenceHandle GetTypeMapAssemblyTargetAttributeCtorRef (PEAssemblyBuilder pe, EntityHandle openAttrRef, EntityHandle anchorTypeHandle)
+	{
+		var closedAttrTypeSpec = pe.MakeGenericTypeSpec (openAttrRef, anchorTypeHandle);
+		return pe.AddMemberRef (closedAttrTypeSpec, ".ctor",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
+				rt => rt.Void (),
+				p => p.AddParameter ().Type ().String ()));
+	}
+
+	static void EmitAssemblyTargetAttribute (PEAssemblyBuilder pe, MemberReferenceHandle ctorRef, string name)
+	{
+		var blobHandle = pe.BuildAttributeBlob (blob => blob.WriteSerializedString (name));
+		pe.Metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorRef, blobHandle);
+	}
+
+	static void EmitTypeMapLoader (PEAssemblyBuilder pe, EntityHandle anchorTypeHandle, IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse, int maxArrayRank)
 	{
 		var metadata = pe.Metadata;
 
@@ -180,49 +234,34 @@ public sealed class RootTypeMapAssemblyGenerator
 			MetadataTokens.FieldDefinitionHandle (metadata.GetRowCount (TableIndex.Field) + 1),
 			MetadataTokens.MethodDefinitionHandle (metadata.GetRowCount (TableIndex.MethodDef) + 1));
 
+		var externalDictTypeSpec = MakeIReadOnlyDictTypeSpec (pe, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: true);
+		var externalDictArrayTypeSpec = MakeIReadOnlyDictArrayTypeSpec (pe, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: true);
+
 		if (useSharedTypemapUniverse) {
-			// TrimmableTypeMap.Initialize(IReadOnlyDictionary<string, Type>, IReadOnlyDictionary<Type, Type>)
-			var initializeRef = AddInitializeSingleRef (pe, trimmableTypeMapRef, iReadOnlyDictOpenRef, systemTypeRef);
-			EmitInitializeWithSingleTypeMap (pe, anchorTypeHandle, getExternalMemberRef, getProxyMemberRef, initializeRef);
+			var initializeRef = AddInitializeSingleWithArraysRef (pe, trimmableTypeMapRef, iReadOnlyDictOpenRef, systemTypeRef);
+			EmitInitializeWithSingleTypeMap (pe, anchorTypeHandle, getExternalMemberRef, getProxyMemberRef,
+				initializeRef, externalDictTypeSpec, externalDictArrayTypeSpec, perAssemblyTypeMapNames, maxArrayRank);
 		} else {
-			// TrimmableTypeMap.Initialize(IReadOnlyDictionary<string, Type>[], IReadOnlyDictionary<Type, Type>[])
-			var initializeRef = AddInitializeAggregateRef (pe, trimmableTypeMapRef, iReadOnlyDictOpenRef, systemTypeRef);
-			var externalDictTypeSpec = MakeIReadOnlyDictTypeSpec (pe, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: true);
+			var initializeRef = AddInitializeAggregateWithArraysRef (pe, trimmableTypeMapRef, iReadOnlyDictOpenRef, systemTypeRef);
 			var proxyDictTypeSpec = MakeIReadOnlyDictTypeSpec (pe, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: false);
-			EmitInitializeWithAggregateTypeMap (pe, perAssemblyTypeMapNames, getExternalMemberRef, getProxyMemberRef, initializeRef, externalDictTypeSpec, proxyDictTypeSpec, iReadOnlyDictOpenRef, systemTypeRef);
+			EmitInitializeWithAggregateTypeMap (pe, perAssemblyTypeMapNames, getExternalMemberRef, getProxyMemberRef,
+				initializeRef, externalDictTypeSpec, proxyDictTypeSpec, externalDictArrayTypeSpec, iReadOnlyDictOpenRef, systemTypeRef, maxArrayRank);
 		}
 	}
 
-	static void EmitInitializeWithSingleTypeMap (PEAssemblyBuilder pe, EntityHandle anchorTypeHandle,
-		MemberReferenceHandle getExternalMemberRef, MemberReferenceHandle getProxyMemberRef,
-		MemberReferenceHandle initializeRef)
-	{
-		var getExternalSpec = MakeGenericMethodSpec (pe, getExternalMemberRef, anchorTypeHandle);
-		var getProxySpec = MakeGenericMethodSpec (pe, getProxyMemberRef, anchorTypeHandle);
-
-		pe.EmitBody ("Initialize",
-			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-			sig => sig.MethodSignature ().Parameters (0, rt => rt.Void (), p => { }),
-			encoder => {
-				// TypeMapping.GetOrCreateExternalTypeMapping<__TypeMapAnchor>()
-				encoder.OpCode (ILOpCode.Call);
-				encoder.Token (getExternalSpec);
-				// TypeMapping.GetOrCreateProxyTypeMapping<__TypeMapAnchor>()
-				encoder.OpCode (ILOpCode.Call);
-				encoder.Token (getProxySpec);
-				// TrimmableTypeMap.Initialize(typeMap, proxyMap)
-				encoder.OpCode (ILOpCode.Call);
-				encoder.Token (initializeRef);
-				encoder.OpCode (ILOpCode.Ret);
-			});
-	}
-
+	/// <summary>
+	/// Aggregate IL emit. Builds <c>typeMaps[N]</c>, <c>proxyMaps[N]</c>, and either
+	/// <c>arrayMapsByAssemblyAndRank[N][maxArrayRank]</c> from per-assembly
+	/// <c>__ArrayMapRank{N}</c> anchors or <c>null</c> when <paramref name="maxArrayRank"/> is 0.
+	/// </summary>
 	static void EmitInitializeWithAggregateTypeMap (PEAssemblyBuilder pe,
 		IReadOnlyList<string> perAssemblyTypeMapNames,
 		MemberReferenceHandle getExternalMemberRef, MemberReferenceHandle getProxyMemberRef,
 		MemberReferenceHandle initializeRef,
 		TypeSpecificationHandle externalDictTypeSpec, TypeSpecificationHandle proxyDictTypeSpec,
-		TypeReferenceHandle iReadOnlyDictOpenRef, TypeReferenceHandle systemTypeRef)
+		TypeSpecificationHandle externalDictArrayTypeSpec,
+		TypeReferenceHandle iReadOnlyDictOpenRef, TypeReferenceHandle systemTypeRef,
+		int maxArrayRank)
 	{
 		var count = perAssemblyTypeMapNames.Count;
 
@@ -240,52 +279,168 @@ public sealed class RootTypeMapAssemblyGenerator
 			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 			sig => sig.MethodSignature ().Parameters (0, rt => rt.Void (), p => { }),
 			encoder => {
-				// var typeMaps = new IReadOnlyDictionary<string, Type>[N];
-				encoder.LoadConstantI4 (count);
-				encoder.OpCode (ILOpCode.Newarr);
-				encoder.Token (externalDictTypeSpec);
-				encoder.OpCode (ILOpCode.Stloc_0);
+				// var typeMaps = new IReadOnlyDictionary<string, Type>[N];   (loc 0)
+				EmitNewArrayLocal (encoder, count, externalDictTypeSpec, slot: 0);
+				EmitFillArrayLocal (encoder, count, getExternalSpecs, slot: 0);
 
-				for (int i = 0; i < count; i++) {
-					encoder.OpCode (ILOpCode.Ldloc_0);
-					encoder.LoadConstantI4 (i);
-					encoder.OpCode (ILOpCode.Call);
-					encoder.Token (getExternalSpecs [i]);
-					encoder.OpCode (ILOpCode.Stelem_ref);
-				}
+				// var proxyMaps = new IReadOnlyDictionary<Type, Type>[N];    (loc 1)
+				EmitNewArrayLocal (encoder, count, proxyDictTypeSpec, slot: 1);
+				EmitFillArrayLocal (encoder, count, getProxySpecs, slot: 1);
 
-				// var proxyMaps = new IReadOnlyDictionary<Type, Type>[N];
-				encoder.LoadConstantI4 (count);
-				encoder.OpCode (ILOpCode.Newarr);
-				encoder.Token (proxyDictTypeSpec);
-				encoder.OpCode (ILOpCode.Stloc_1);
-
-				for (int i = 0; i < count; i++) {
-					encoder.OpCode (ILOpCode.Ldloc_1);
-					encoder.LoadConstantI4 (i);
-					encoder.OpCode (ILOpCode.Call);
-					encoder.Token (getProxySpecs [i]);
-					encoder.OpCode (ILOpCode.Stelem_ref);
-				}
-
-				// TrimmableTypeMap.Initialize(typeMaps, proxyMaps)
-				encoder.OpCode (ILOpCode.Ldloc_0);
-				encoder.OpCode (ILOpCode.Ldloc_1);
+				// TrimmableTypeMap.Initialize(typeMaps, proxyMaps, arrayMapsByAssemblyAndRank-or-null)
+				encoder.LoadLocal (0);
+				encoder.LoadLocal (1);
+				EmitArrayMapsByAssemblyAndRankOrNull (pe, encoder, perAssemblyTypeMapNames, getExternalMemberRef, externalDictTypeSpec, externalDictArrayTypeSpec, maxArrayRank);
 				encoder.OpCode (ILOpCode.Call);
 				encoder.Token (initializeRef);
 				encoder.OpCode (ILOpCode.Ret);
 			},
 			encodeLocals: localsSig => {
-				// LOCAL_SIG header + 2 locals
 				localsSig.WriteByte (0x07); // LOCAL_SIG
 				localsSig.WriteCompressedInteger (2); // count
-				// local 0: IReadOnlyDictionary<string, Type>[]
-				localsSig.WriteByte (0x1D); // SZARRAY
+				// loc 0: IReadOnlyDictionary<string, Type>[]
+				localsSig.WriteByte (0x1D);
 				EncodeIReadOnlyDictType (localsSig, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: true);
-				// local 1: IReadOnlyDictionary<Type, Type>[]
-				localsSig.WriteByte (0x1D); // SZARRAY
+				// loc 1: IReadOnlyDictionary<Type, Type>[]
+				localsSig.WriteByte (0x1D);
 				EncodeIReadOnlyDictType (localsSig, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: false);
 			});
+	}
+
+	static void EmitNewArrayLocal (InstructionEncoder encoder, int count, TypeSpecificationHandle elemSpec, int slot)
+	{
+		encoder.LoadConstantI4 (count);
+		encoder.OpCode (ILOpCode.Newarr);
+		encoder.Token (elemSpec);
+		encoder.StoreLocal (slot);
+	}
+
+	static void EmitFillArrayLocal (InstructionEncoder encoder, int count, EntityHandle[] specs, int slot)
+	{
+		for (int i = 0; i < count; i++) {
+			encoder.LoadLocal (slot);
+			encoder.LoadConstantI4 (i);
+			encoder.OpCode (ILOpCode.Call);
+			encoder.Token (specs [i]);
+			encoder.OpCode (ILOpCode.Stelem_ref);
+		}
+	}
+
+	/// <summary>MemberRef for <c>TrimmableTypeMap.Initialize(typeMaps[], proxyMaps[], arrayMapsByAssemblyAndRank[][])</c>.</summary>
+	static MemberReferenceHandle AddInitializeAggregateWithArraysRef (PEAssemblyBuilder pe, TypeReferenceHandle trimmableTypeMapRef,
+		TypeReferenceHandle iReadOnlyDictOpenRef, TypeReferenceHandle systemTypeRef)
+	{
+		var blob = new BlobBuilder (96);
+		blob.WriteByte (0x00); // DEFAULT (static)
+		blob.WriteCompressedInteger (3); // parameter count
+		blob.WriteByte (0x01); // return type: void
+		// Param 1: IReadOnlyDictionary<string, Type>[]
+		blob.WriteByte (0x1D);
+		EncodeIReadOnlyDictType (blob, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: true);
+		// Param 2: IReadOnlyDictionary<Type, Type>[]
+		blob.WriteByte (0x1D);
+		EncodeIReadOnlyDictType (blob, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: false);
+		// Param 3: IReadOnlyDictionary<string, Type>?[][]
+		blob.WriteByte (0x1D);
+		blob.WriteByte (0x1D);
+		EncodeIReadOnlyDictType (blob, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: true);
+		return pe.Metadata.AddMemberReference (trimmableTypeMapRef,
+			pe.Metadata.GetOrAddString ("Initialize"), pe.Metadata.GetOrAddBlob (blob));
+	}
+
+	/// <summary>
+	/// Shared-universe IL emit. Single merged main map (anchored on <c>Java.Lang.Object</c>)
+	/// plus either <c>arrayMapsByAssemblyAndRank[N][maxArrayRank]</c> from per-assembly
+	/// <c>__ArrayMapRank{N}</c> anchors or <c>null</c> when <paramref name="maxArrayRank"/> is 0.
+	/// </summary>
+	static void EmitInitializeWithSingleTypeMap (PEAssemblyBuilder pe, EntityHandle anchorTypeHandle,
+		MemberReferenceHandle getExternalMemberRef, MemberReferenceHandle getProxyMemberRef,
+		MemberReferenceHandle initializeRef,
+		TypeSpecificationHandle externalDictTypeSpec, TypeSpecificationHandle externalDictArrayTypeSpec,
+		IReadOnlyList<string> perAssemblyTypeMapNames,
+		int maxArrayRank)
+	{
+		var getExternalSpec = MakeGenericMethodSpec (pe, getExternalMemberRef, anchorTypeHandle);
+		var getProxySpec = MakeGenericMethodSpec (pe, getProxyMemberRef, anchorTypeHandle);
+
+		pe.EmitBody ("Initialize",
+			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+			sig => sig.MethodSignature ().Parameters (0, rt => rt.Void (), p => { }),
+			encoder => {
+				// TrimmableTypeMap.Initialize(GetExternal<JL.Object>(), GetProxy<JL.Object>(), arrayMapsByAssemblyAndRank-or-null)
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (getExternalSpec);
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (getProxySpec);
+				EmitArrayMapsByAssemblyAndRankOrNull (pe, encoder, perAssemblyTypeMapNames, getExternalMemberRef, externalDictTypeSpec, externalDictArrayTypeSpec, maxArrayRank);
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (initializeRef);
+				encoder.OpCode (ILOpCode.Ret);
+			});
+	}
+
+	/// <summary>MemberRef for <c>TrimmableTypeMap.Initialize(typeMap, proxyMap, arrayMapsByAssemblyAndRank[][])</c>.</summary>
+	static MemberReferenceHandle AddInitializeSingleWithArraysRef (PEAssemblyBuilder pe, TypeReferenceHandle trimmableTypeMapRef,
+		TypeReferenceHandle iReadOnlyDictOpenRef, TypeReferenceHandle systemTypeRef)
+	{
+		var blob = new BlobBuilder (96);
+		blob.WriteByte (0x00); // DEFAULT (static)
+		blob.WriteCompressedInteger (3); // parameter count
+		blob.WriteByte (0x01); // return type: void
+		EncodeIReadOnlyDictType (blob, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: true);
+		EncodeIReadOnlyDictType (blob, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: false);
+		blob.WriteByte (0x1D);
+		blob.WriteByte (0x1D);
+		EncodeIReadOnlyDictType (blob, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: true);
+		return pe.Metadata.AddMemberReference (trimmableTypeMapRef,
+			pe.Metadata.GetOrAddString ("Initialize"), pe.Metadata.GetOrAddBlob (blob));
+	}
+
+	/// <summary>
+	/// Emits IL that pushes either a fresh
+	/// <c>IReadOnlyDictionary&lt;string, Type&gt;?[assemblyCount][maxArrayRank]</c>
+	/// (when <paramref name="maxArrayRank"/> &gt; 0) or <c>ldnull</c>.
+	/// </summary>
+	static void EmitArrayMapsByAssemblyAndRankOrNull (PEAssemblyBuilder pe, InstructionEncoder encoder,
+		IReadOnlyList<string> perAssemblyTypeMapNames,
+		MemberReferenceHandle getExternalMemberRef,
+		TypeSpecificationHandle externalDictTypeSpec, TypeSpecificationHandle externalDictArrayTypeSpec,
+		int maxArrayRank)
+	{
+		if (maxArrayRank == 0) {
+			encoder.OpCode (ILOpCode.Ldnull);
+			return;
+		}
+
+		encoder.LoadConstantI4 (perAssemblyTypeMapNames.Count);
+		encoder.OpCode (ILOpCode.Newarr);
+		encoder.Token (externalDictArrayTypeSpec);
+		for (int i = 0; i < perAssemblyTypeMapNames.Count; i++) {
+			var asmRef = pe.FindOrAddAssemblyRef (perAssemblyTypeMapNames [i]);
+			encoder.OpCode (ILOpCode.Dup);
+			encoder.LoadConstantI4 (i);
+			EmitArrayMapsByRank (pe, encoder, asmRef, getExternalMemberRef, externalDictTypeSpec, maxArrayRank);
+			encoder.OpCode (ILOpCode.Stelem_ref);
+		}
+	}
+
+	static void EmitArrayMapsByRank (PEAssemblyBuilder pe, InstructionEncoder encoder,
+		AssemblyReferenceHandle assemblyRef,
+		MemberReferenceHandle getExternalMemberRef, TypeSpecificationHandle externalDictTypeSpec, int maxArrayRank)
+	{
+		encoder.LoadConstantI4 (maxArrayRank);
+		encoder.OpCode (ILOpCode.Newarr);
+		encoder.Token (externalDictTypeSpec);
+		for (int r = 0; r < maxArrayRank; r++) {
+			var rankRef = pe.Metadata.AddTypeReference (assemblyRef, default,
+				pe.Metadata.GetOrAddString ($"__ArrayMapRank{r + 1}"));
+			var rankSpec = MakeGenericMethodSpec (pe, getExternalMemberRef, rankRef);
+			encoder.OpCode (ILOpCode.Dup);
+			encoder.LoadConstantI4 (r);
+			encoder.OpCode (ILOpCode.Call);
+			encoder.Token (rankSpec);
+			encoder.OpCode (ILOpCode.Stelem_ref);
+		}
 	}
 
 	/// <summary>
@@ -320,48 +475,24 @@ public sealed class RootTypeMapAssemblyGenerator
 	}
 
 	/// <summary>
-	/// Creates a MemberRef for TrimmableTypeMap.Initialize(IReadOnlyDictionary&lt;string, Type&gt;, IReadOnlyDictionary&lt;Type, Type&gt;).
-	/// </summary>
-	static MemberReferenceHandle AddInitializeSingleRef (PEAssemblyBuilder pe, TypeReferenceHandle trimmableTypeMapRef,
-		TypeReferenceHandle iReadOnlyDictOpenRef, TypeReferenceHandle systemTypeRef)
-	{
-		var blob = new BlobBuilder (64);
-		blob.WriteByte (0x00); // DEFAULT (static)
-		blob.WriteCompressedInteger (2); // parameter count
-		blob.WriteByte (0x01); // return type: void
-		EncodeIReadOnlyDictType (blob, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: true);
-		EncodeIReadOnlyDictType (blob, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: false);
-		return pe.Metadata.AddMemberReference (trimmableTypeMapRef,
-			pe.Metadata.GetOrAddString ("Initialize"), pe.Metadata.GetOrAddBlob (blob));
-	}
-
-	/// <summary>
-	/// Creates a MemberRef for TrimmableTypeMap.Initialize(IReadOnlyDictionary&lt;string, Type&gt;[], IReadOnlyDictionary&lt;Type, Type&gt;[]).
-	/// </summary>
-	static MemberReferenceHandle AddInitializeAggregateRef (PEAssemblyBuilder pe, TypeReferenceHandle trimmableTypeMapRef,
-		TypeReferenceHandle iReadOnlyDictOpenRef, TypeReferenceHandle systemTypeRef)
-	{
-		var blob = new BlobBuilder (64);
-		blob.WriteByte (0x00); // DEFAULT (static)
-		blob.WriteCompressedInteger (2); // parameter count
-		blob.WriteByte (0x01); // return type: void
-		// Param 1: IReadOnlyDictionary<string, Type>[]
-		blob.WriteByte (0x1D); // SZARRAY
-		EncodeIReadOnlyDictType (blob, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: true);
-		// Param 2: IReadOnlyDictionary<Type, Type>[]
-		blob.WriteByte (0x1D); // SZARRAY
-		EncodeIReadOnlyDictType (blob, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: false);
-		return pe.Metadata.AddMemberReference (trimmableTypeMapRef,
-			pe.Metadata.GetOrAddString ("Initialize"), pe.Metadata.GetOrAddBlob (blob));
-	}
-
-	/// <summary>
 	/// Creates a TypeSpec for a closed IReadOnlyDictionary&lt;K, V&gt; generic type (for newarr).
 	/// </summary>
 	static TypeSpecificationHandle MakeIReadOnlyDictTypeSpec (PEAssemblyBuilder pe,
 		TypeReferenceHandle iReadOnlyDictOpenRef, TypeReferenceHandle systemTypeRef, bool keyIsString)
 	{
 		var blob = new BlobBuilder (32);
+		EncodeIReadOnlyDictType (blob, iReadOnlyDictOpenRef, systemTypeRef, keyIsString);
+		return pe.Metadata.AddTypeSpecification (pe.Metadata.GetOrAddBlob (blob));
+	}
+
+	/// <summary>
+	/// Creates a TypeSpec for <c>IReadOnlyDictionary&lt;K, V&gt;[]</c> (for jagged-array <c>newarr</c>).
+	/// </summary>
+	static TypeSpecificationHandle MakeIReadOnlyDictArrayTypeSpec (PEAssemblyBuilder pe,
+		TypeReferenceHandle iReadOnlyDictOpenRef, TypeReferenceHandle systemTypeRef, bool keyIsString)
+	{
+		var blob = new BlobBuilder (32);
+		blob.WriteByte (0x1D);
 		EncodeIReadOnlyDictType (blob, iReadOnlyDictOpenRef, systemTypeRef, keyIsString);
 		return pe.Metadata.AddTypeSpecification (pe.Metadata.GetOrAddBlob (blob));
 	}

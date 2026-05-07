@@ -13,7 +13,7 @@ using Java.Interop;
 namespace Microsoft.Android.Runtime;
 
 /// <summary>
-/// Central type map for the trimmable typemap path. Owns the ITypeMapWithAliasing
+/// Central type map for the trimmable typemap path. Owns the ITypeMap
 /// and provides peer creation, invoker resolution, container factories, and native
 /// method registration. All proxy attribute access is encapsulated here.
 /// </summary>
@@ -22,38 +22,80 @@ public class TrimmableTypeMap
 	static readonly Lock s_initLock = new ();
 	static readonly JavaPeerProxy s_noPeerSentinel = new MissingJavaPeerProxy ();
 	static TrimmableTypeMap? s_instance;
+	static bool s_nativeMethodsRegistered;
 
 	internal static TrimmableTypeMap Instance =>
 		s_instance ?? throw new InvalidOperationException (
 			"TrimmableTypeMap has not been initialized. Ensure RuntimeFeature.TrimmableTypeMap is enabled and the JNI runtime is initialized.");
 
-	readonly ITypeMapWithAliasing _typeMap;
+	readonly ITypeMap _typeMap;
 	readonly ConcurrentDictionary<Type, JavaPeerProxy> _proxyCache = new ();
 	readonly ConcurrentDictionary<string, JavaPeerProxy[]> _jniProxyCache = new (StringComparer.Ordinal);
 
-	TrimmableTypeMap (ITypeMapWithAliasing typeMap)
+	TrimmableTypeMap (ITypeMap typeMap)
 	{
 		_typeMap = typeMap;
 	}
 
 	/// <summary>
-	/// Initializes the singleton with a single merged typemap universe.
-	/// Called from <see cref="TypeMapLoader.Initialize"/> in the generated root assembly
-	/// (_Microsoft.Android.TypeMaps) when assembly typemaps are merged (Release builds).
+	/// Initializes the singleton with a single merged typemap universe and optional
+	/// per-rank array dictionaries (consulted by <c>JNIEnv.ArrayCreateInstance</c> under NativeAOT).
 	/// </summary>
-	public static void Initialize (IReadOnlyDictionary<string, Type> typeMap, IReadOnlyDictionary<Type, Type> proxyMap)
+	public static void Initialize (
+		IReadOnlyDictionary<string, Type> typeMap,
+		IReadOnlyDictionary<Type, Type> proxyMap)
 	{
-		ArgumentNullException.ThrowIfNull (typeMap);
-		ArgumentNullException.ThrowIfNull (proxyMap);
-		InitializeCore (new SingleUniverseTypeMap (typeMap, proxyMap));
+		Initialize (typeMap, proxyMap, arrayMapsByRank: null);
 	}
 
 	/// <summary>
-	/// Initializes the singleton with multiple per-assembly typemap universes.
-	/// Called from <see cref="TypeMapLoader.Initialize"/> in the generated root assembly
-	/// (_Microsoft.Android.TypeMaps) when each assembly has its own typemap universe (Debug builds).
+	/// Initializes the singleton with a single merged typemap universe and optional
+	/// per-rank array dictionaries (consulted by <c>JNIEnv.ArrayCreateInstance</c> under NativeAOT).
 	/// </summary>
-	public static void Initialize (IReadOnlyDictionary<string, Type>[] typeMaps, IReadOnlyDictionary<Type, Type>[] proxyMaps)
+	/// <param name="arrayMapsByRank">0-indexed by (rank - 1); null when no array entries were emitted.</param>
+	public static void Initialize (
+		IReadOnlyDictionary<string, Type> typeMap,
+		IReadOnlyDictionary<Type, Type> proxyMap,
+		IReadOnlyDictionary<string, Type>?[]? arrayMapsByRank)
+	{
+		ArgumentNullException.ThrowIfNull (typeMap);
+		ArgumentNullException.ThrowIfNull (proxyMap);
+		InitializeCore (new SingleUniverseTypeMap (typeMap, proxyMap, arrayMapsByRank));
+	}
+
+	/// <summary>
+	/// Initializes the singleton with a single merged typemap universe and per-assembly array maps.
+	/// </summary>
+	public static void Initialize (
+		IReadOnlyDictionary<string, Type> typeMap,
+		IReadOnlyDictionary<Type, Type> proxyMap,
+		IReadOnlyDictionary<string, Type>?[][]? arrayMapsByUniverseAndRank)
+	{
+		ArgumentNullException.ThrowIfNull (typeMap);
+		ArgumentNullException.ThrowIfNull (proxyMap);
+		InitializeCore (new SingleUniverseTypeMap (typeMap, proxyMap, arrayMapsByUniverseAndRank));
+	}
+
+	/// <summary>
+	/// Initializes the singleton with multiple per-assembly typemap universes and optional
+	/// per-universe array dictionaries.
+	/// </summary>
+	public static void Initialize (
+		IReadOnlyDictionary<string, Type>[] typeMaps,
+		IReadOnlyDictionary<Type, Type>[] proxyMaps)
+	{
+		Initialize (typeMaps, proxyMaps, arrayMapsByUniverseAndRank: null);
+	}
+
+	/// <summary>
+	/// Initializes the singleton with multiple per-assembly typemap universes and optional
+	/// per-universe array dictionaries.
+	/// </summary>
+	/// <param name="arrayMapsByUniverseAndRank">Array maps indexed by universe, then by 0-based rank.</param>
+	public static void Initialize (
+		IReadOnlyDictionary<string, Type>[] typeMaps,
+		IReadOnlyDictionary<Type, Type>[] proxyMaps,
+		IReadOnlyDictionary<string, Type>?[][]? arrayMapsByUniverseAndRank)
 	{
 		ArgumentNullException.ThrowIfNull (typeMaps);
 		ArgumentNullException.ThrowIfNull (proxyMaps);
@@ -63,42 +105,47 @@ public class TrimmableTypeMap
 		if (typeMaps.Length != proxyMaps.Length) {
 			throw new ArgumentException ($"typeMaps.Length ({typeMaps.Length}) must equal proxyMaps.Length ({proxyMaps.Length}).", nameof (proxyMaps));
 		}
+		if (arrayMapsByUniverseAndRank is not null && arrayMapsByUniverseAndRank.Length != typeMaps.Length) {
+			throw new ArgumentException ($"arrayMapsByUniverseAndRank.Length ({arrayMapsByUniverseAndRank.Length}) must equal typeMaps.Length ({typeMaps.Length}).", nameof (arrayMapsByUniverseAndRank));
+		}
+
 		var universes = new SingleUniverseTypeMap [typeMaps.Length];
 		for (int i = 0; i < typeMaps.Length; i++) {
-			universes [i] = new SingleUniverseTypeMap (typeMaps [i], proxyMaps [i]);
+			universes [i] = new SingleUniverseTypeMap (typeMaps [i], proxyMaps [i], arrayMapsByUniverseAndRank? [i]);
 		}
 		InitializeCore (new AggregateTypeMap (universes));
 	}
 
-	static void InitializeCore (ITypeMapWithAliasing typeMap)
+	static void InitializeCore (ITypeMap typeMap)
 	{
 		lock (s_initLock) {
 			if (s_instance is not null) {
 				throw new InvalidOperationException ("TrimmableTypeMap has already been initialized.");
 			}
 
-			var instance = new TrimmableTypeMap (typeMap);
-			instance.RegisterNatives ();
-			s_instance = instance;
+			s_instance = new TrimmableTypeMap (typeMap);
 		}
 	}
 
-	unsafe void RegisterNatives ()
+	internal static unsafe void RegisterNativeMethods ()
 	{
-		// Use the `string` overload of `JniType` deliberately. Its underlying
-		// `JniEnvironment.Types.TryFindClass(string, bool)` tries raw JNI `FindClass`
-		// first and, if that fails, falls back to `Class.forName(name, true, info.Runtime.ClassLoader)`,
-		// which resolves via the runtime's app ClassLoader — the same one that loads
-		// `mono.android.Runtime` from the APK.
-		// The `ReadOnlySpan<byte>` overload (see external/Java.Interop/src/Java.Interop/Java.Interop/JniEnvironment.Types.cs)
-		// only calls raw JNI `FindClass`, which resolves via the system ClassLoader on
-		// Android and returns a different `Class` instance from the one JCWs reference.
-		// Registering natives on that other instance is silently wrong.
-		using var runtimeClass = new JniType ("mono/android/Runtime");
-		fixed (byte* name = "registerNatives"u8, sig = "(Ljava/lang/Class;)V"u8) {
-			var onRegisterNatives = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&OnRegisterNatives;
-			var method = new JniNativeMethod (name, sig, onRegisterNatives);
-			JniEnvironment.Types.RegisterNatives (runtimeClass.PeerReference, [method]);
+		lock (s_initLock) {
+			if (s_nativeMethodsRegistered) {
+				throw new InvalidOperationException ("TrimmableTypeMap native methods have already been registered.");
+			}
+
+			if (s_instance is null) {
+				throw new InvalidOperationException (
+					"TrimmableTypeMap has not been initialized. Ensure RuntimeFeature.TrimmableTypeMap is enabled and the JNI runtime is initialized.");
+			}
+
+			using var runtimeClass = new JniType ("mono/android/Runtime"u8);
+			fixed (byte* name = "registerNatives"u8, sig = "(Ljava/lang/Class;)V"u8) {
+				var onRegisterNatives = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&OnRegisterNatives;
+				var method = new JniNativeMethod (name, sig, onRegisterNatives);
+				JniEnvironment.Types.RegisterNatives (runtimeClass.PeerReference, [method]);
+			}
+			s_nativeMethodsRegistered = true;
 		}
 	}
 
@@ -131,7 +178,7 @@ public class TrimmableTypeMap
 	{
 		return _jniProxyCache.GetOrAdd (jniName, static (name, self) => {
 			var result = new List<JavaPeerProxy> ();
-			foreach (var type in self._typeMap.GetTypes (name)) {
+			foreach (var type in self._typeMap.GetProxyTypes (name)) {
 				var proxy = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
 				if (proxy is not null) {
 					result.Add (proxy);
@@ -238,7 +285,16 @@ public class TrimmableTypeMap
 			var targetClass = default (JniObjectReference);
 			try {
 				objClass = JniEnvironment.Types.GetObjectClass (selfRef);
-				targetClass = JniEnvironment.Types.FindClass (targetJniName);
+				try {
+					targetClass = JniEnvironment.Types.FindClass (targetJniName);
+				} catch (Java.Lang.ClassNotFoundException) {
+					// FindClass throws for managed types whose Java peer class is
+					// not present in the APK (e.g. test types annotated with
+					// [JniTypeSignature("__missing__")]). Treat as "no match" so
+					// JavaMarshalValueManager.CreatePeer can surface the correct
+					// ArgumentException instead of leaking ClassNotFoundException.
+					return null;
+				}
 				var isAssignable = JniEnvironment.Types.IsAssignableFrom (objClass, targetClass);
 				return isAssignable ? proxy : null;
 			} finally {
@@ -273,22 +329,26 @@ public class TrimmableTypeMap
 	/// </remarks>
 	internal static bool TargetTypeMatches (Type targetType, Type proxyTargetType)
 	{
-		if (targetType.IsAssignableFrom (proxyTargetType)) {
+		if (targetType == proxyTargetType) {
 			return true;
 		}
 
-		if (!proxyTargetType.IsGenericTypeDefinition) {
+		// Open generic proxy: match only when targetType is a closed instantiation
+		// of this generic (e.g. JavaList<int> matches the JavaList<> proxy).
+		// IsAssignableFrom alone would incorrectly match unrelated open generics
+		// that are technically subclasses (e.g. JavaArray<> is assignable to
+		// JavaObject), and proxy.CreateInstance for an open generic always throws.
+		if (proxyTargetType.IsGenericTypeDefinition) {
+			for (Type? t = targetType; t is not null; t = t.BaseType) {
+				if (t.IsGenericType && !t.IsGenericTypeDefinition &&
+						t.GetGenericTypeDefinition () == proxyTargetType) {
+					return true;
+				}
+			}
 			return false;
 		}
 
-		for (Type? t = targetType; t is not null; t = t.BaseType) {
-			if (t.IsGenericType && !t.IsGenericTypeDefinition &&
-					t.GetGenericTypeDefinition () == proxyTargetType) {
-				return true;
-			}
-		}
-
-		return false;
+		return targetType.IsAssignableFrom (proxyTargetType);
 	}
 
 	/// <summary>
@@ -307,6 +367,66 @@ public class TrimmableTypeMap
 	internal JavaPeerContainerFactory? GetContainerFactory (Type type)
 	{
 		return GetProxyForManagedType (type)?.GetContainerFactory ();
+	}
+
+	/// <summary>AOT-safe lookup of the closed managed array type for the given element type.</summary>
+	internal bool TryGetArrayType (Type elementType, [NotNullWhen (true)] out Type? arrayType)
+	{
+		arrayType = null;
+
+		// Walk array nesting to the leaf; rankIndex = depth = (rank - 1).
+		// Reject multi-dim arrays (byte[,]) — JNI only supports szarrays.
+		var leaf = elementType;
+		int rankIndex = 0;
+		while (leaf.IsArray) {
+			if (!leaf.IsSZArray) {
+				return false;
+			}
+			var next = leaf.GetElementType ();
+			if (next is null) {
+				return false;
+			}
+			leaf = next;
+			rankIndex++;
+		}
+
+		bool isPrimitiveLeaf = leaf.IsPrimitive;
+		string? leafJniName = isPrimitiveLeaf
+			? TryGetPrimitiveJniName (leaf, out var p) ? p : null
+			: TryGetJniNameForManagedType (leaf, out var jni) ? jni : null;
+
+		if (leafJniName is not null && _typeMap.TryGetArrayType (leafJniName, rankIndex, out arrayType)) {
+			return true;
+		}
+
+		if (isPrimitiveLeaf) {
+			arrayType = MakePrimitiveArrayType (elementType);
+			return true;
+		}
+
+		return false;
+	}
+
+	static Type MakePrimitiveArrayType (Type elementType)
+	{
+#pragma warning disable IL3050 // Primitive array types are runtime intrinsic; no generated generic code is needed.
+		return elementType.MakeArrayType ();
+#pragma warning restore IL3050
+	}
+
+	/// <summary>JNI single-letter encoding for primitive element types.</summary>
+	static bool TryGetPrimitiveJniName (Type primitive, [NotNullWhen (true)] out string? jni)
+	{
+		if (primitive == typeof (bool))   { jni = "Z"; return true; }
+		if (primitive == typeof (byte))   { jni = "B"; return true; }
+		if (primitive == typeof (char))   { jni = "C"; return true; }
+		if (primitive == typeof (short))  { jni = "S"; return true; }
+		if (primitive == typeof (int))    { jni = "I"; return true; }
+		if (primitive == typeof (long))   { jni = "J"; return true; }
+		if (primitive == typeof (float))  { jni = "F"; return true; }
+		if (primitive == typeof (double)) { jni = "D"; return true; }
+		jni = null;
+		return false;
 	}
 
 	[UnmanagedCallersOnly]

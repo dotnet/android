@@ -10,6 +10,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   <UsingTask TaskName="Xamarin.Android.Tasks.SetNdkPathForIlc" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotLibraryLoadAssemblerSources" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotEnvironmentAssemblerSources" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.LinkNativeAotSharedLibrary" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <!-- Default property values for NativeAOT -->
   <PropertyGroup>
@@ -25,6 +26,12 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <!-- ResolvedFileToPublish is not populated until _AndroidComputeIlcCompileInputs, so
          proguard generation must run after that target instead of after ILLink. -->
     <_GenerateProguardAfterTargets>_AndroidComputeIlcCompileInputs</_GenerateProguardAfterTargets>
+    <!-- Ask ILC to produce a static library (.a) instead of a shared library (.so).
+         This gives Android full control over the native linker invocation. -->
+    <NativeLib>static</NativeLib>
+    <!-- ILC only sets this for NativeLib=Shared, but we need [UnmanagedCallersOnly] methods
+         exported as native symbols so JNI can find them via dlsym. -->
+    <IlcExportUnmanagedEntrypoints>true</IlcExportUnmanagedEntrypoints>
   </PropertyGroup>
 
   <!-- Default property values for NativeAOT Debug configuration -->
@@ -47,7 +54,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   </ItemGroup>
 
   <!-- Make IlcCompile depend on the trimmer -->
-  <PropertyGroup>
+  <PropertyGroup Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' ">
     <IlcCompileDependsOn>
       _AndroidBeforeIlcCompile;
       SetupOSSpecificProps;
@@ -57,10 +64,22 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       _AndroidComputeIlcCompileInputs;
       $(IlcCompileDependsOn)
     </IlcCompileDependsOn>
+    <_AndroidBeforeIlcCompileDependsOn>_PrepareLinking</_AndroidBeforeIlcCompileDependsOn>
+  </PropertyGroup>
+  <!-- Trimmable typemap: skip ILLink, ILC handles trimming directly -->
+  <PropertyGroup Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
+    <IlcCompileDependsOn>
+      _AndroidBeforeIlcCompile;
+      SetupOSSpecificProps;
+      ComputeIlcCompileInputs;
+      _AndroidComputeIlcCompileInputs;
+      $(IlcCompileDependsOn)
+    </IlcCompileDependsOn>
+    <_AndroidBeforeIlcCompileDependsOn>_CreatePropertiesCache</_AndroidBeforeIlcCompileDependsOn>
   </PropertyGroup>
 
   <Target Name="_AndroidBeforeIlcCompile"
-      DependsOnTargets="_PrepareLinking"
+      DependsOnTargets="$(_AndroidBeforeIlcCompileDependsOn)"
       BeforeTargets="SetupProperties">
     <!-- Example settings from: https://github.com/jonathanpeppers/Android-NativeAOT/blob/ea69d122cdc7de67aa6a5db14b7e560763c63cdd/DotNet/libdotnet.targets -->
     <PropertyGroup>
@@ -107,10 +126,22 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <CppCompilerAndLinker>$(_NdkAbi)-linux-android$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppCompilerAndLinker>
       <CppLinker>$(_NdkAbi)-linux-android$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppLinker>
       <ObjCopyName>llvm-objcopy</ObjCopyName>
+      <!-- Use the NDK's llvm-ar instead of the host 'ar' so that ELF objects are handled
+           correctly when cross-compiling. -->
+      <CppLibCreator>llvm-ar</CppLibCreator>
 
       <!-- We must ensure this is `false`, as it would interfere with statically linking libc++ -->
       <LinkStandardCPlusPlusLibrary>false</LinkStandardCPlusPlusLibrary>
 
+      <!-- Clear LinkerFlavor: the ILC targets set it to 'lld' for android/bionic, but with NativeLib=static
+           the _LinkerVersion detection is skipped, causing a numeric comparison error in LinkNative.
+           Since we handle native linking ourselves, LinkerFlavor is not needed.
+           Context: https://github.com/dotnet/runtime/issues/126978 -->
+      <LinkerFlavor />
+    </PropertyGroup>
+
+    <!-- ILLink-specific settings: only when ILLink runs before ILC (non-trimmable path) -->
+    <PropertyGroup Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' ">
       <!-- Example settings from: https://github.com/xamarin/xamarin-macios/blob/c43d4ea40bc777969e3b158cf46446df292d8449/dotnet/targets/Xamarin.Shared.Sdk.targets#L541-L550 -->
       <RunILLink>true</RunILLink>
       <!--
@@ -127,36 +158,42 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   </Target>
 
   <Target Name="_AndroidComputeIlcCompileInputs">
-    <PropertyGroup>
+    <PropertyGroup Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' ">
       <!-- Turn trimmer warnings back to original value -->
       <SuppressTrimAnalysisWarnings>$(_OriginalSuppressTrimAnalysisWarnings)</SuppressTrimAnalysisWarnings>
     </PropertyGroup>
     <ItemGroup>
       <!-- Android needs a proper soname property or it will refuse to load the library -->
-      <LinkerArg Include="&quot;-Wl,-soname,lib$(TargetName)$(NativeBinaryExt)&quot;" />
+      <LinkerArg Include="&quot;-Wl,-soname,lib$(TargetName).so&quot;" />
       <LinkerArg Include="-Wl,--error-unresolved-symbols" />
       <LinkerArg Include="-Wl,--no-undefined" />
 
-      <!-- Prevent ComputeLinkedFilesToPublish from removing trimmed assemblies from
-           ResolvedFileToPublish. We run ILLink before ILC (to support custom trimmer
-           steps), so the assemblies are already trimmed and must remain in
-           ResolvedFileToPublish for the outer build's _ResolveAssemblies target.
-           Context: https://github.com/dotnet/runtime/pull/124801 -->
-      <_IlcManagedInputAssemblies Remove="@(_IlcManagedInputAssemblies)" />
-
       <!-- Required for [UnmanagedCallersOnly] to work inside this assembly -->
       <UnmanagedEntryPointsAssembly Include="Microsoft.Android.Runtime.NativeAOT" />
-      <!-- Give ILLink's output to ILC -->
+
+      <!-- The SDK's NativeCompile target uses _IlcManagedInputAssemblies to remove managed
+           assemblies from ResolvedFileToPublish after native compilation. Clear it so the
+           managed assemblies remain — the outer build needs them for _GenerateJavaStubs
+           and typemap generation. -->
+      <_IlcManagedInputAssemblies Remove="@(_IlcManagedInputAssemblies)" />
+    </ItemGroup>
+
+    <!-- ILLink path: The SDK's ComputeIlcCompileInputs sets IlcCompileInput from
+         @(IntermediateAssembly), but Android runs ILLink before ILC and the trimmed/rewritten
+         assemblies are in $(IntermediateLinkDir). Override IlcCompileInput to use ILLink output.
+         Replace PrivateSdkAssemblies with untrimmed originals (ILLink removes them).
+         Root everything for ILC so it doesn't trim further.
+         Workaround for: https://github.com/dotnet/runtime/issues/127577 -->
+    <ItemGroup Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' ">
       <IlcCompileInput Remove="@(IlcCompileInput)" />
       <IlcCompileInput Include="$(IntermediateLinkDir)$(TargetName)$(TargetExt)" />
-      <_AndroidILLinkAssemblies Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')" Condition="Exists('$(IntermediateLinkDir)%(Filename)%(Extension)')" />
-      <IlcReference Remove="@(IlcReference)" />
+      <IlcReference Remove="@(PrivateSdkAssemblies->'$(IntermediateLinkDir)%(Filename)%(Extension)')" />
       <IlcReference Include="@(PrivateSdkAssemblies)" />
-      <IlcReference Include="@(_AndroidILLinkAssemblies)" />
-      <!-- Root *everything* for ILC, as it's already trimmed -->
+      <_AndroidILLinkAssemblies Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')" Condition="Exists('$(IntermediateLinkDir)%(Filename)%(Extension)')" />
       <TrimmerRootAssembly Include="@(_AndroidILLinkAssemblies->'%(Filename)')" Exclude="System.Private.CoreLib" TrimMode="All" />
-      <!-- Passes linked assemblies to outer MSBuild tasks/targets -->
-      <ResolvedFileToPublish Include="@(IlcCompileInput);@(_AndroidILLinkAssemblies)" RuntimeIdentifier="$(RuntimeIdentifier)" />
+    </ItemGroup>
+
+    <ItemGroup>
 
       <!-- Satellite assemblies -->
       <IlcSatelliteAssembly Include="$(_OuterIntermediateSatelliteAssembliesWithTargetPath)" />
@@ -259,20 +296,111 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   </Target>
 
   <!--
+    With NativeLib=static, ILC's LinkNative target produces a .a archive via `ar`.
+    We need to link the ILC .o output + all NativeLibrary/system libs into a .so ourselves.
+    This target runs after LinkNative and uses ld.lld directly via LinkNativeAotSharedLibrary task.
+  -->
+  <Target Name="_AndroidLinkNativeAotSharedLibrary"
+      AfterTargets="LinkNative"
+      DependsOnTargets="_PrepareNativeAotAndroidAppInputs"
+      Inputs="$(NativeObject);@(NativeLibrary)"
+      Outputs="$(NativeOutputPath)$(NativeBinaryPrefix)$(TargetName).so">
+    <PropertyGroup>
+      <_AndroidNativeAotSharedLibrary>$(NativeOutputPath)$(NativeBinaryPrefix)$(TargetName).so</_AndroidNativeAotSharedLibrary>
+      <!-- NDK paths for CRT objects and compiler-rt -->
+      <_NdkApiSysrootDir>$(_NdkSysrootDir)$(_NDKApiLevel)/</_NdkApiSysrootDir>
+      <_NdkClangResourceDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/lib/clang</_NdkClangResourceDir>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <!-- CRT start file -->
+      <_NativeAotCrtStartFiles Include="$(_NdkApiSysrootDir)crtbegin_so.o">
+        <Abi>@(_PrivateBuildTargetAbi)</Abi>
+      </_NativeAotCrtStartFiles>
+
+      <!-- CRT end file -->
+      <_NativeAotCrtEndFiles Include="$(_NdkApiSysrootDir)crtend_so.o">
+        <Abi>@(_PrivateBuildTargetAbi)</Abi>
+      </_NativeAotCrtEndFiles>
+
+      <!-- Library search paths (matching what clang provides) -->
+      <_NativeAotLibSearchPaths Include="$(_NdkApiSysrootDir)" />
+      <_NativeAotLibSearchPaths Include="$(_NdkSysrootDir)" />
+
+      <!-- ILC runtime .a files are already in @(NativeLibrary) from SetupOSSpecificProps -->
+      <!-- Android-added libraries from _AndroidComputeIlcCompileInputs are in @(_NdkLibs) -->
+      <_NativeAotLinkLibraries Include="@(NativeLibrary)" />
+      <_NativeAotLinkLibraries Include="@(_NdkLibs)" />
+
+      <!-- Additional .o files (jni_init, environment) -->
+      <_NativeAotAdditionalObjects Include="@(_PrivateJniInitFuncsNativeObjectFile)" />
+      <_NativeAotAdditionalObjects Include="@(_PrivateEnvironmentNativeObjectFile)" />
+
+      <!-- System libraries (resolved via -L search paths) -->
+      <_NativeAotSystemLibraries Include="dl" />
+      <_NativeAotSystemLibraries Include="z" />
+      <_NativeAotSystemLibraries Include="log" />
+      <_NativeAotSystemLibraries Include="m" />
+      <_NativeAotSystemLibraries Include="c" />
+
+      <!-- Compiler-rt builtins and unwinder (explicit paths from NDK) -->
+      <_NativeAotCompilerRtLibs Include="$(_NdkClangResourceDir)/**/libclang_rt.builtins-$(_NdkAbi)-android.a" />
+      <_NativeAotCompilerRtLibs Include="$(_NdkClangResourceDir)/**/$(_NdkAbi)/libunwind.a" />
+    </ItemGroup>
+
+    <LinkNativeAotSharedLibrary
+        AndroidBinUtilsDirectory="$(_NdkBinDir)"
+        IntermediateOutputPath="$(NativeIntermediateOutputPath)"
+        RuntimePackLibraryDirectories="@(RuntimePackLibraryDirectories)"
+        NativeObject="$(NativeObject)"
+        OutputSharedLibrary="$(_AndroidNativeAotSharedLibrary)"
+        NativeLibraries="@(_NativeAotLinkLibraries)"
+        AdditionalObjectFiles="@(_NativeAotAdditionalObjects)"
+        CrtStartFiles="@(_NativeAotCrtStartFiles)"
+        CrtEndFiles="@(_NativeAotCrtEndFiles)"
+        CompilerRuntimeLibraries="@(_NativeAotCompilerRtLibs)"
+        SystemLibraries="@(_NativeAotSystemLibraries)"
+        LibrarySearchPaths="@(_NativeAotLibSearchPaths)"
+        ExportsFile="$(ExportsFile)"
+        LinkerScript="$(NativeIntermediateOutputPath)sections.ld"
+        LinkerScriptContent="OVERWRITE_SECTIONS { __modules : { KEEP(*(__modules)) } }"
+        ExtraLinkerArgs="$(_AndroidNativeAotExtraLinkerArgs)"
+        SupportedAbis="@(_PrivateBuildTargetAbi)"
+        DebugBuild="$(AndroidIncludeDebugSymbols)"
+    />
+
+    <ItemGroup>
+      <!-- Replace the .a that NativeCompile/ComputeLinkedFilesToPublish would publish with our .so -->
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition=" '%(Filename)%(Extension)' == '$(TargetName).a' " />
+      <ResolvedFileToPublish Include="$(_AndroidNativeAotSharedLibrary)">
+        <RelativePath>$(NativeBinaryPrefix)$(TargetName).so</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+      <FileWrites Include="$(_AndroidNativeAotSharedLibrary)" />
+      <FileWrites Include="$(_AndroidNativeAotSharedLibrary)$(NativeSymbolExt)" Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' " />
+      <FileWrites Include="$(NativeIntermediateOutputPath)sections.ld" />
+    </ItemGroup>
+  </Target>
+
+  <!--
     dotnet/runtime#125629 moved the NativeAOT entry point from ComputeLinkedFilesToPublish
     (AfterTargets="ComputeResolvedFilesToPublishList") to NativeCompile (an SDK Publish hook).
     Android uses `dotnet build` not `dotnet publish`, so NativeCompile never fires.
     Restore the old scheduling so NativeCompile runs after ComputeResolvedFilesToPublishList
     in the inner per-RID build.
   -->
+  <PropertyGroup>
+    <_AndroidRunNativeCompileDependsOn Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' ">_PreTrimmingFixLegacyDesignerUpdateItems;NativeCompile</_AndroidRunNativeCompileDependsOn>
+    <_AndroidRunNativeCompileDependsOn Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">NativeCompile</_AndroidRunNativeCompileDependsOn>
+  </PropertyGroup>
   <Target Name="_AndroidRunNativeCompile"
       AfterTargets="ComputeResolvedFilesToPublishList"
-      DependsOnTargets="_PreTrimmingFixLegacyDesignerUpdateItems;NativeCompile" />
+      DependsOnTargets="$(_AndroidRunNativeCompileDependsOn)" />
 
   <Target Name="_AndroidFixNativeLibraryFileName" AfterTargets="ComputeFilesToPublish">
     <ItemGroup>
       <!-- Fix paths to contain lib-prefix -->
-      <ResolvedFileToPublish Update="@(ResolvedFileToPublish)" ArchiveFileName="lib%(FileName)%(Extension)" Condition=" '%(Filename)%(Extension)' == '$(TargetName)$(NativeBinaryExt)' " />
+      <ResolvedFileToPublish Update="@(ResolvedFileToPublish)" ArchiveFileName="lib%(FileName)%(Extension)" Condition=" '%(Filename)%(Extension)' == '$(TargetName).so' " />
     </ItemGroup>
   </Target>
 

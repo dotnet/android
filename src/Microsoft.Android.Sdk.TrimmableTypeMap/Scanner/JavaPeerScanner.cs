@@ -182,6 +182,15 @@ public sealed class JavaPeerScanner : IDisposable
 			index.AttributesByType.TryGetValue (typeHandle, out var attrInfo);
 
 			if (registerInfo is not null && !string.IsNullOrEmpty (registerInfo.JniName)) {
+				// [JniTypeSignature] with ArrayRank > 0 represents a JNI array wrapper
+				// (e.g., JavaBooleanArray, JavaObjectArray<T>, JavaPrimitiveArray<T>).
+				// These are handled by the built-in tables in JniRuntime.JniTypeManager
+				// and must not be added to the typemap — keyword types (Z, B, etc.)
+				// would collide with GetPrimitiveArrayTypesForSimpleReference, and
+				// non-keyword array types would add unnecessary aliases.
+				if (registerInfo.IsArrayType) {
+					continue;
+				}
 				jniName = registerInfo.JniName;
 				compatJniName = jniName;
 				doNotGenerateAcw = registerInfo.DoNotGenerateAcw;
@@ -208,6 +217,7 @@ public sealed class JavaPeerScanner : IDisposable
 			var isUnconditional = attrInfo is not null;
 			var cannotRegisterInStaticConstructor = attrInfo is ApplicationAttributeInfo or InstrumentationAttributeInfo;
 			string? invokerTypeName = null;
+			ActivationCtorStyle? invokerActivationCtorStyle = null;
 
 			// Resolve base Java type name
 			var baseJavaName = ResolveBaseJavaName (typeDef, index, results);
@@ -227,6 +237,13 @@ public sealed class JavaPeerScanner : IDisposable
 			// For interfaces/abstract types, try to find invoker type name
 			if (isInterface || isAbstract) {
 				invokerTypeName = TryFindInvokerTypeName (fullName, typeHandle, index);
+			}
+
+			// Interface/abstract peers create their invoker, not the target type.
+			// Keep ActivationCtor scoped to the target/base hierarchy for legacy parity,
+			// and store the invoker ctor style separately for CreateInstance emission.
+			if (invokerTypeName is not null) {
+				invokerActivationCtorStyle = TryResolveActivationCtorOnInvoker (invokerTypeName)?.Style;
 			}
 
 			var peer = new JavaPeerInfo {
@@ -249,6 +266,7 @@ public sealed class JavaPeerScanner : IDisposable
 				JavaFields = exportFields,
 				ActivationCtor = activationCtor,
 				InvokerTypeName = invokerTypeName,
+				InvokerActivationCtorStyle = invokerActivationCtorStyle,
 				IsGenericDefinition = isGenericDefinition,
 				ComponentAttribute = ToComponentInfo (attrInfo),
 			};
@@ -1265,10 +1283,10 @@ public sealed class JavaPeerScanner : IDisposable
 			// We want just the type name (before the first comma, if any)
 			var commaIndex = connector.IndexOf (',');
 			if (commaIndex > 0) {
-				return connector.Substring (0, commaIndex).Trim ();
+				return NormalizeConnectorManagedTypeName (connector.Substring (0, commaIndex));
 			}
 			if (connector.Length > 0) {
-				return connector;
+				return NormalizeConnectorManagedTypeName (connector);
 			}
 		}
 
@@ -1276,6 +1294,29 @@ public sealed class JavaPeerScanner : IDisposable
 		var invokerName = $"{typeName}Invoker";
 		if (index.TypesByFullName.ContainsKey (invokerName)) {
 			return invokerName;
+		}
+		return null;
+	}
+
+	static string NormalizeConnectorManagedTypeName (string managedTypeName)
+	{
+		return managedTypeName.Trim ().Replace ('/', '+');
+	}
+
+	/// <summary>
+	/// Resolve the activation ctor on a known invoker type (search all loaded assemblies).
+	/// Used for interface peers, whose own type definition has no constructors.
+	/// The assemblyCache typically contains 10–30 entries (app + framework assemblies),
+	/// and each lookup is an O(1) dictionary probe, so the linear scan is cheap.
+	/// </summary>
+	ActivationCtorInfo? TryResolveActivationCtorOnInvoker (string invokerTypeName)
+	{
+		foreach (var assembly in assemblyCache.Values) {
+			if (!assembly.TypesByFullName.TryGetValue (invokerTypeName, out var invokerHandle)) {
+				continue;
+			}
+			var invokerDef = assembly.Reader.GetTypeDefinition (invokerHandle);
+			return ResolveActivationCtor (invokerTypeName, invokerDef, assembly);
 		}
 		return null;
 	}
@@ -1460,11 +1501,11 @@ public sealed class JavaPeerScanner : IDisposable
 
 		if (commaIndex < 0) {
 			// No assembly information; treat the whole segment as the type name
-			declaringTypeName = typeQualified.Trim ().Replace ('/', '+');
+			declaringTypeName = NormalizeConnectorManagedTypeName (typeQualified);
 			return;
 		}
 
-		declaringTypeName = typeQualified.Substring (0, commaIndex).Trim ().Replace ('/', '+');
+		declaringTypeName = NormalizeConnectorManagedTypeName (typeQualified.Substring (0, commaIndex));
 		string rest = typeQualified.Substring (commaIndex + 1).Trim ();
 		int nextComma = rest.IndexOf (',');
 		declaringAssemblyName = nextComma >= 0 ? rest.Substring (0, nextComma).Trim () : rest.Trim ();

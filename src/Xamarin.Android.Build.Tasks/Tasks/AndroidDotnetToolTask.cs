@@ -107,7 +107,7 @@ namespace Xamarin.Android.Tasks
 
 		string FindMono ()
 		{
-			string mono = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<string> (MonoKey, Lifetime);
+			string? mono = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<string> (MonoKey, Lifetime);
 			if (!mono.IsNullOrEmpty ()) {
 				Log.LogDebugMessage ($"Found cached mono via {nameof (BuildEngine4.RegisterTaskObject)}");
 				return mono;
