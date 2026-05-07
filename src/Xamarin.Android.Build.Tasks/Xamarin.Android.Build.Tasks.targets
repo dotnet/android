@@ -159,7 +159,7 @@
       <_XACommonPropsReplacement Include="@PACKAGE_VERSION@=$(ProductVersion)" />
       <_XACommonPropsReplacement Include="@SDK_BUILD_TOOLS_VERSION@=$(XABuildToolsFolder)" />
       <_XACommonPropsReplacement Include="@SDK_PLATFORM_TOOLS_VERSION@=$(XAPlatformToolsVersion)" />
-      <_XACommonPropsReplacement Include="@SDK_PLATFORM_VERSION@=android-$(AndroidLatestStableApiLevel)" />
+      <_XACommonPropsReplacement Include="@SDK_PLATFORM_VERSION@=android-$(AndroidLatestStablePlatformId)" />
     </ItemGroup>
     <ReplaceFileContents
         SourceFile="Xamarin.Android.Common.props.in"
