@@ -57,12 +57,6 @@ namespace Xamarin.Android.RuntimeTests
                     // root cause as the JavaProxyObject exclusions above.
                     "Java.InteropTests.JavaExceptionTests.InnerExceptionIsNotAProxy",
 
-                    // net.dot.jni.test.GenericHolder Java class not in APK
-                    "Java.InteropTests.JniTypeManagerTests.CannotCreateGenericHolderFromJava",
-
-                    // Open generic type handling differs from non-trimmable
-                    "Java.InteropTests.JnienvTest.NewOpenGenericTypeThrows",
-
                     // Throwable subclass registration
                     "Java.InteropTests.JnienvTest.ActivatedDirectThrowableSubclassesShouldBeRegistered",
 
