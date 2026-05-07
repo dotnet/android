@@ -326,7 +326,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <_NdkApiSysrootDir>$(_NdkSysrootDir)$(_NDKApiLevel)/</_NdkApiSysrootDir>
       <_NdkClangResourceDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/lib/clang</_NdkClangResourceDir>
       <_NativeAotLinkerBinDir>$(_NdkBinDir)</_NativeAotLinkerBinDir>
-      <_NativeAotCompressDebugSections>zlib</_NativeAotCompressDebugSections>
     </PropertyGroup>
 
     <!-- CRT and toolchain items from workload runtime pack -->
@@ -396,7 +395,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
         LinkerScript="$(NativeIntermediateOutputPath)sections.ld"
         LinkerScriptContent="OVERWRITE_SECTIONS { __modules : { KEEP(*(__modules)) } }"
         ExtraLinkerArgs="$(_AndroidNativeAotExtraLinkerArgs)"
-        CompressDebugSections="$(_NativeAotCompressDebugSections)"
         SupportedAbis="@(_PrivateBuildTargetAbi)"
         DebugBuild="$(AndroidIncludeDebugSymbols)"
     />

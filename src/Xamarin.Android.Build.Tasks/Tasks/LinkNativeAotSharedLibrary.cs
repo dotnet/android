@@ -94,10 +94,6 @@ public class LinkNativeAotSharedLibrary : AndroidTask
 	/// </summary>
 	public string? ExtraLinkerArgs { get; set; }
 
-	/// <summary>
-	/// Compression format for debug sections (e.g., "zlib"). Leave empty to skip.
-	/// </summary>
-	public string? CompressDebugSections { get; set; }
 	[Required]
 	public string SupportedAbis { get; set; } = "";
 
@@ -135,7 +131,6 @@ public class LinkNativeAotSharedLibrary : AndroidTask
 			HashStyleBoth = true,
 			LittleEndian = true,
 			EntryPoint = "0x0",
-			CompressDebugSections = CompressDebugSections,
 		};
 
 		if (!ExportsFile.IsNullOrEmpty ()) {
