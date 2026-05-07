@@ -6,16 +6,16 @@
       "packs": [
         "Microsoft.Android.Sdk.net11",
         "Microsoft.Android.Sdk.net10",
-        "Microsoft.Android.Ref.36.1",
-        "Microsoft.Android.Runtime.36.1.android",
-        "Microsoft.Android.Runtime.Mono.36.1.android-arm",
-        "Microsoft.Android.Runtime.Mono.36.1.android-arm64",
-        "Microsoft.Android.Runtime.Mono.36.1.android-x86",
-        "Microsoft.Android.Runtime.Mono.36.1.android-x64",
-        "Microsoft.Android.Runtime.CoreCLR.36.1.android-arm64",
-        "Microsoft.Android.Runtime.CoreCLR.36.1.android-x64",
-        "Microsoft.Android.Runtime.NativeAOT.36.1.android-arm64",
-        "Microsoft.Android.Runtime.NativeAOT.36.1.android-x64",
+        "Microsoft.Android.Ref.37",
+        "Microsoft.Android.Runtime.37.android",
+        "Microsoft.Android.Runtime.Mono.37.android-arm",
+        "Microsoft.Android.Runtime.Mono.37.android-arm64",
+        "Microsoft.Android.Runtime.Mono.37.android-x86",
+        "Microsoft.Android.Runtime.Mono.37.android-x64",
+        "Microsoft.Android.Runtime.CoreCLR.37.android-arm64",
+        "Microsoft.Android.Runtime.CoreCLR.37.android-x64",
+        "Microsoft.Android.Runtime.NativeAOT.37.android-arm64",
+        "Microsoft.Android.Runtime.NativeAOT.37.android-x64",
         "Microsoft.Android.Templates"
       ],
       "platforms": [ "win-x64", "win-arm64", "linux-x64", "linux-arm64", "osx-x64", "osx-arm64" ],
@@ -62,43 +62,35 @@
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
-    "Microsoft.Android.Ref.36.1": {
+    "Microsoft.Android.Runtime.Mono.37.android-arm": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
-    "Microsoft.Android.Runtime.36.1.android": {
+    "Microsoft.Android.Runtime.Mono.37.android-arm64": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
-    "Microsoft.Android.Runtime.Mono.36.1.android-arm": {
+    "Microsoft.Android.Runtime.Mono.37.android-x86": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
-    "Microsoft.Android.Runtime.Mono.36.1.android-arm64": {
+    "Microsoft.Android.Runtime.Mono.37.android-x64": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
-    "Microsoft.Android.Runtime.Mono.36.1.android-x86": {
+    "Microsoft.Android.Runtime.CoreCLR.37.android-arm64": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
-    "Microsoft.Android.Runtime.Mono.36.1.android-x64": {
+    "Microsoft.Android.Runtime.CoreCLR.37.android-x64": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
-    "Microsoft.Android.Runtime.CoreCLR.36.1.android-arm64": {
+    "Microsoft.Android.Runtime.NativeAOT.37.android-arm64": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
-    "Microsoft.Android.Runtime.CoreCLR.36.1.android-x64": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
-    "Microsoft.Android.Runtime.NativeAOT.36.1.android-arm64": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
-    "Microsoft.Android.Runtime.NativeAOT.36.1.android-x64": {
+    "Microsoft.Android.Runtime.NativeAOT.37.android-x64": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
