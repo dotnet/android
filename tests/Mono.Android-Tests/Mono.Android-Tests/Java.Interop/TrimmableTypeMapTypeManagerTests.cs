@@ -179,6 +179,18 @@ namespace Java.InteropTests
 			Assert.AreEqual (42, holder.Value);
 		}
 
+		[Test]
+		public void TryGetArrayType_PrimitiveLeaf_DoesNotRequireRankMapEntry ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetArrayType (typeof (byte), out var byteArrayType));
+			Assert.AreEqual (typeof (byte[]), byteArrayType);
+
+			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetArrayType (typeof (byte[]), out var jaggedByteArrayType));
+			Assert.AreEqual (typeof (byte[][]), jaggedByteArrayType);
+		}
+
 		static ConcurrentDictionary<Type, JavaPeerProxy> GetProxyCache (TrimmableTypeMap instance)
 		{
 			var field = typeof (TrimmableTypeMap).GetField ("_proxyCache", BindingFlags.Instance | BindingFlags.NonPublic);

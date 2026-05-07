@@ -20,6 +20,12 @@
     <_TypeMapBaseOutputDir>$(_TypeMapBaseOutputDir.Replace('\','/'))</_TypeMapBaseOutputDir>
     <_TypeMapOutputDirectory>$(_TypeMapBaseOutputDir)typemap/</_TypeMapOutputDirectory>
     <_TypeMapJavaOutputDirectory>$(_TypeMapBaseOutputDir)typemap/java</_TypeMapJavaOutputDirectory>
+
+    <!-- Max array rank for __ArrayMapRank{N} sentinel emission. Defaults to 3 for NativeAOT
+         (PublishAot=true, dynamic code is unavailable, so array creation uses the typemap path);
+         defaults to 0 otherwise, where dynamic code can use Array.CreateInstance directly. -->
+    <_AndroidTrimmableTypeMapMaxArrayRank Condition=" '$(_AndroidTrimmableTypeMapMaxArrayRank)' == '' and '$(PublishAot)' == 'true' ">3</_AndroidTrimmableTypeMapMaxArrayRank>
+    <_AndroidTrimmableTypeMapMaxArrayRank Condition=" '$(_AndroidTrimmableTypeMapMaxArrayRank)' == '' ">0</_AndroidTrimmableTypeMapMaxArrayRank>
   </PropertyGroup>
 
   <ItemGroup>
@@ -77,6 +83,7 @@
         Debug="$(AndroidIncludeDebugSymbols)"
         NeedsInternet="$(AndroidNeedsInternetPermission)"
         EmbedAssemblies="$(EmbedAssembliesIntoApk)"
+        MaxArrayRank="$(_AndroidTrimmableTypeMapMaxArrayRank)"
         ManifestPlaceholders="$(AndroidManifestPlaceholders)"
         CheckedBuild="$(_AndroidCheckedBuild)"
         ApplicationJavaClass="$(AndroidApplicationJavaClass)"

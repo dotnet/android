@@ -55,9 +55,9 @@ namespace Xamarin.Android.Prepare
 			for (int attempt = 1; attempt <= maxAttempts; attempt++) {
 				var logPath = $"{logPathBase}-attempt{attempt}.binlog";
 				var runner = new ProcessRunner (Configurables.Paths.DotNetPreviewTool, "restore",
-					ProcessRunner.QuoteArgument (packageDownloadProj),
+					packageDownloadProj,
 					"--configfile", Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "NuGet.config"),
-					ProcessRunner.QuoteArgument ($"-bl:{logPath}"),
+					$"-bl:{logPath}",
 					"--verbosity", "normal"
 				) {
 					EchoStandardOutput = true,
