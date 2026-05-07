@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Microsoft.Testing.Extensions;
 using Mono.Options;
 using Xamarin.Android.Tools;
 
@@ -327,6 +328,8 @@ async Task<int> RunDotnetTestAsync (List<string> mtpArgs)
 	testApplicationBuilder.RegisterTestFramework (
 		_ => new AndroidTestCapabilities (),
 		(_, _) => adapter);
+
+	testApplicationBuilder.AddTrxReportProvider ();
 
 	using var testApplication = await testApplicationBuilder.BuildAsync ();
 	return await testApplication.RunAsync ();
