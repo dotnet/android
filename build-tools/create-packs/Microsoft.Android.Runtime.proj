@@ -118,6 +118,12 @@ projects that use the Microsoft.Android.Runtimes framework in .NET 6+.
       <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)redist-nativeaot\$(AndroidRID)\liblog.so" />
       <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)redist-nativeaot\$(AndroidRID)\libm.so" />
       <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)redist-nativeaot\$(AndroidRID)\libz.so" />
+
+      <!-- Toolchain libraries (API-level-agnostic, from common redist) -->
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libc++_static.a" />
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libc++abi.a" />
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libclang_rt.builtins-$(_ClangArch)-android.a" />
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libunwind.a" />
     </ItemGroup>
 
     <ItemGroup>
