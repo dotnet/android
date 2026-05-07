@@ -16,6 +16,12 @@ public class ModelBuilderTests : FixtureTestBase
 		return ModelBuilder.Build (peers, outputPath, assemblyName);
 	}
 
+	static TypeMapAssemblyData BuildModelWithArrays (IReadOnlyList<JavaPeerInfo> peers, string? assemblyName = null, int maxArrayRank = 3)
+	{
+		var outputPath = Path.Combine (Path.GetTempPath (), (assemblyName ?? "TestTypeMap") + ".dll");
+		return ModelBuilder.Build (peers, outputPath, assemblyName, maxArrayRank);
+	}
+
 	public class BasicStructure
 	{
 		[Fact]
@@ -848,6 +854,233 @@ public class ModelBuilderTests : FixtureTestBase
 				Assert.Equal (model1.Entries [i].ProxyTypeReference, model2.Entries [i].ProxyTypeReference);
 				Assert.Equal (model1.Entries [i].TargetTypeReference, model2.Entries [i].TargetTypeReference);
 			}
+		}
+	}
+
+	public class ArrayEntries
+	{
+		[Fact]
+		public void Build_DefaultEmitArrayEntriesFalse_NoArrayEntries ()
+		{
+			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
+			var model = BuildModel (new [] { peer });
+
+			Assert.Equal (0, model.MaxArrayRank);
+			Assert.DoesNotContain (model.Entries, e => e.AnchorRank is not null);
+		}
+
+		[Fact]
+		public void Build_EmitArrayEntries_SetsMaxArrayRank ()
+		{
+			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
+			var model = BuildModelWithArrays (new [] { peer });
+
+			Assert.Equal (3, model.MaxArrayRank);
+		}
+
+		[Fact]
+		public void Build_EmitArrayEntries_HonoursMaxArrayRank ()
+		{
+			// Caller can ask for fewer or more ranks than the default. Verifies the
+			// $(_AndroidTrimmableTypeMapMaxArrayRank) MSBuild property's effect.
+			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
+
+			var model5 = BuildModelWithArrays (new [] { peer }, maxArrayRank: 5);
+			Assert.Equal (5, model5.MaxArrayRank);
+			var rank5Entries = model5.Entries.Where (e => e.AnchorRank is not null).ToList ();
+			Assert.Equal (5, rank5Entries.Count);
+			Assert.Equal ("Foo.Bar[][][][][], App", rank5Entries.Single (e => e.AnchorRank == 5).TargetTypeReference);
+
+			var model1 = BuildModelWithArrays (new [] { peer }, maxArrayRank: 1);
+			Assert.Equal (1, model1.MaxArrayRank);
+			Assert.Single (model1.Entries, e => e.AnchorRank is not null);
+		}
+
+		[Fact]
+		public void Build_EmitArrayEntries_EmitsRanks1Through3 ()
+		{
+			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
+			var model = BuildModelWithArrays (new [] { peer });
+
+			var arrayEntries = model.Entries.Where (e => e.AnchorRank is not null).ToList ();
+			Assert.Equal (3, arrayEntries.Count);
+			Assert.Equal (new int? [] { 1, 2, 3 }, arrayEntries.Select (e => e.AnchorRank).ToArray ());
+			Assert.All (arrayEntries, e => Assert.Equal ("foo/Bar", e.JniName));
+		}
+
+		[Fact]
+		public void Build_EmitArrayEntries_KeyIsElementJniName ()
+		{
+			// No "[L...;" prefix at runtime — the key is the bare element JNI name and rank
+			// is encoded by which sentinel anchor (TGroup) the entry uses.
+			var peer = MakeMcwPeer ("java/lang/String", "System.String", "System.Runtime");
+			var model = BuildModelWithArrays (new [] { peer });
+
+			var arrayEntries = model.Entries.Where (e => e.AnchorRank is not null).ToList ();
+			Assert.All (arrayEntries, e => Assert.Equal ("java/lang/String", e.JniName));
+			Assert.All (arrayEntries, e => Assert.False (e.JniName.StartsWith ("[", StringComparison.Ordinal)));
+		}
+
+		[Fact]
+		public void Build_EmitArrayEntries_TrimTargetIsClosedArrayType ()
+		{
+			// 3rd ctor arg = the closed array type itself, so ILC's per-shape conditional
+			// drops the entry when the array shape is never constructed.
+			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
+			var model = BuildModelWithArrays (new [] { peer });
+
+			var rank1 = model.Entries.Single (e => e.AnchorRank == 1);
+			Assert.Equal ("Foo.Bar[], App",     rank1.ProxyTypeReference);
+			Assert.Equal ("Foo.Bar[], App",     rank1.TargetTypeReference);
+			var rank2 = model.Entries.Single (e => e.AnchorRank == 2);
+			Assert.Equal ("Foo.Bar[][], App",   rank2.ProxyTypeReference);
+			Assert.Equal ("Foo.Bar[][], App",   rank2.TargetTypeReference);
+			var rank3 = model.Entries.Single (e => e.AnchorRank == 3);
+			Assert.Equal ("Foo.Bar[][][], App", rank3.ProxyTypeReference);
+			Assert.Equal ("Foo.Bar[][][], App", rank3.TargetTypeReference);
+		}
+
+		[Fact]
+		public void Build_EmitArrayEntries_AllConditional ()
+		{
+			// 2-arg unconditional makes no sense for arrays — the trim conditioning on the
+			// array shape is the whole point.
+			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
+			var model = BuildModelWithArrays (new [] { peer });
+
+			foreach (var entry in model.Entries.Where (e => e.AnchorRank is not null)) {
+				Assert.False (entry.IsUnconditional);
+				Assert.NotNull (entry.TargetTypeReference);
+			}
+		}
+
+		[Fact]
+		public void Build_EmitArrayEntries_OpenGenericPeer_Skipped ()
+		{
+			// typeof(JavaList<>[]) is not a valid IL token.
+			var openGeneric = MakeMcwPeer ("java/util/ArrayList", "Android.Runtime.JavaList`1", "Mono.Android")
+				with { IsGenericDefinition = true };
+			var model = BuildModelWithArrays (new [] { openGeneric });
+
+			Assert.DoesNotContain (model.Entries, e => e.AnchorRank is not null);
+		}
+
+		[Fact]
+		public void Build_EmitArrayEntries_AliasGroup_Skipped ()
+		{
+			// Alias groups (multiple peers sharing one JNI name) would produce duplicate
+			// JNI array keys; deferred pending an alias-aware design.
+			var peers = new List<JavaPeerInfo> {
+				MakeMcwPeer ("test/Dup", "Test.First", "App"),
+				MakeMcwPeer ("test/Dup", "Test.Second", "App"),
+			};
+			var model = BuildModelWithArrays (peers);
+
+			Assert.DoesNotContain (model.Entries, e => e.AnchorRank is not null);
+		}
+
+		[Theory]
+		[InlineData ("Z")]
+		[InlineData ("B")]
+		[InlineData ("C")]
+		[InlineData ("S")]
+		[InlineData ("I")]
+		[InlineData ("J")]
+		[InlineData ("F")]
+		[InlineData ("D")]
+		public void Build_EmitArrayEntries_PrimitiveJniKeyword_Skipped (string jniKeyword)
+		{
+			// Primitive JNI keyword keys are handled by the legacy
+			// JniRuntime.JniTypeManager.GetPrimitiveArrayTypesForSimpleReference path.
+			// Emitting array entries here would shadow that built-in handling.
+			var peer = MakeMcwPeer (jniKeyword, "FakePrimitive.Wrapper", "App");
+			var model = BuildModelWithArrays (new [] { peer });
+
+			Assert.DoesNotContain (model.Entries, e => e.AnchorRank is not null);
+		}
+
+		[Fact]
+		public void Build_EmitArrayEntries_MultiplePeers_GetIndependentTrios ()
+		{
+			var peers = new List<JavaPeerInfo> {
+				MakeMcwPeer ("foo/A", "Foo.A", "App"),
+				MakeMcwPeer ("foo/B", "Foo.B", "App"),
+			};
+			var model = BuildModelWithArrays (peers);
+
+			var arrayEntries = model.Entries.Where (e => e.AnchorRank is not null).ToList ();
+			Assert.Equal (6, arrayEntries.Count);   // 2 peers × 3 ranks
+
+			foreach (var jni in new [] { "foo/A", "foo/B" }) {
+				var perPeer = arrayEntries.Where (e => e.JniName == jni).OrderBy (e => e.AnchorRank).ToList ();
+				Assert.Equal (3, perPeer.Count);
+				Assert.Equal (new int? [] { 1, 2, 3 }, perPeer.Select (e => e.AnchorRank).ToArray ());
+			}
+		}
+	}
+
+	public class ArrayEntriesPeBlob
+	{
+		[Fact]
+		public void FullPipeline_ArrayEntries_ReferencesSharedRankAnchors ()
+		{
+			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
+			var outputPath = Path.Combine (Path.GetTempPath (), "ArrSentinels.dll");
+			var model = ModelBuilder.Build (new [] { peer }, outputPath, "ArrSentinels", maxArrayRank: 3);
+			Assert.Equal (3, model.MaxArrayRank);
+
+			EmitAndVerify (model, "ArrSentinels", (pe, reader) => {
+				// Per-asm DLLs no longer define their own __ArrayMapRank{N}; they reference
+				// the shared anchors in Mono.Android.
+				var typeDefNames = reader.TypeDefinitions
+					.Select (h => reader.GetString (reader.GetTypeDefinition (h).Name))
+					.ToHashSet (StringComparer.Ordinal);
+				Assert.DoesNotContain ("__ArrayMapRank1", typeDefNames);
+
+				var rankRefsToMonoAndroid = reader.TypeReferences
+					.Select (h => reader.GetTypeReference (h))
+					.Where (t => reader.GetString (t.Name).StartsWith ("__ArrayMapRank", StringComparison.Ordinal))
+					.Select (t => reader.GetString (t.Name))
+					.ToHashSet (StringComparer.Ordinal);
+				Assert.Contains ("__ArrayMapRank1", rankRefsToMonoAndroid);
+				Assert.Contains ("__ArrayMapRank2", rankRefsToMonoAndroid);
+				Assert.Contains ("__ArrayMapRank3", rankRefsToMonoAndroid);
+			});
+		}
+
+		[Fact]
+		public void FullPipeline_NoArrayEntries_DoesNotReferenceRankAnchors ()
+		{
+			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
+			var outputPath = Path.Combine (Path.GetTempPath (), "NoArrSentinels.dll");
+			var model = ModelBuilder.Build (new [] { peer }, outputPath, "NoArrSentinels");
+			Assert.Equal (0, model.MaxArrayRank);
+
+			EmitAndVerify (model, "NoArrSentinels", (pe, reader) => {
+				var typeRefNames = reader.TypeReferences
+					.Select (h => reader.GetString (reader.GetTypeReference (h).Name))
+					.ToHashSet (StringComparer.Ordinal);
+				Assert.DoesNotContain ("__ArrayMapRank1", typeRefNames);
+				Assert.DoesNotContain ("__ArrayMapRank2", typeRefNames);
+				Assert.DoesNotContain ("__ArrayMapRank3", typeRefNames);
+			});
+		}
+
+		[Fact]
+		public void FullPipeline_ArrayEntries_AttributeBlobsRoundTrip ()
+		{
+			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
+			var outputPath = Path.Combine (Path.GetTempPath (), "ArrBlobs.dll");
+			var model = ModelBuilder.Build (new [] { peer }, outputPath, "ArrBlobs", maxArrayRank: 3);
+
+			EmitAndVerify (model, "ArrBlobs", (pe, reader) => {
+				var attrs = ReadAllTypeMapAttributeBlobs (reader);
+
+				// Three array entries should round-trip with the same JNI key + array trim targets.
+				Assert.Contains (attrs, a => a.jniName == "foo/Bar" && a.targetRef == "Foo.Bar[], App");
+				Assert.Contains (attrs, a => a.jniName == "foo/Bar" && a.targetRef == "Foo.Bar[][], App");
+				Assert.Contains (attrs, a => a.jniName == "foo/Bar" && a.targetRef == "Foo.Bar[][][], App");
+			});
 		}
 	}
 

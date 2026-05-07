@@ -37,12 +37,6 @@ namespace Xamarin.Android.Build.Tests {
 				return;
 			}
 
-			// NativeAOT incremental builds re-run CoreCompile due to AssemblyModifierPipeline
-			// touching assembly timestamps in-place. See https://github.com/dotnet/android/issues/11265
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT incremental builds affected by timestamp issue.");
-			}
-
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
@@ -63,12 +57,12 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
-		public void Build_WithTrimmableTypeMap_DoesNotHitCopyIfChangedMismatch ()
+		public void Build_WithTrimmableTypeMap_DoesNotHitCopyIfChangedMismatch ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 			};
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();

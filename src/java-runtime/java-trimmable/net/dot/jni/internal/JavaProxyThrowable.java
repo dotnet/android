@@ -8,12 +8,14 @@ import net.dot.jni.GCUserPeerable;
 		extends java.lang.Error
 		implements GCUserPeerable
 {
-	ArrayList<Object>       managedReferences     = new ArrayList<Object>();
+	ArrayList<Object>       managedReferences     = new ArrayList<Object> ();
 
-	public JavaProxyThrowable () {
+	public JavaProxyThrowable ()
+	{
 	}
 
-	public JavaProxyThrowable (String message) {
+	public JavaProxyThrowable (String message)
+	{
 		super (message);
 	}
 

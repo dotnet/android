@@ -27,14 +27,41 @@ namespace Android.Runtime {
 		static Array ArrayCreateInstance (Type elementType, int length)
 		{
 			if (RuntimeFeature.TrimmableTypeMap) {
-				var factory = TrimmableTypeMap.Instance?.GetContainerFactory (elementType);
-				if (factory is not null)
-					return factory.CreateArray (length, 1);
+				if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
+					// CoreCLR runtime type loader can construct any T[] dynamically.
+					// IsDynamicCodeSupported is a [FeatureGuard] so this branch is
+					// dead-coded under PublishAot.
+					return Array.CreateInstance (elementType, length);
+				}
+
+				// NativeAOT: resolve via per-rank typemap + Array.CreateInstanceFromArrayType.
+				if (TrimmableTypeMap.Instance.TryGetArrayType (elementType, out var arrayType)) {
+					return Array.CreateInstanceFromArrayType (arrayType, length);
+				}
+
+				throw new NotSupportedException (
+					$"No TrimmableTypeMap array entry for element type '{elementType}'. " +
+					$"Array lookups use the element type within the per-rank __ArrayMapRank{GetArrayRank (elementType)} typemap group; " +
+					$"ensure the mapping is emitted for that rank (for example by increasing _AndroidTrimmableTypeMapMaxArrayRank) or report an issue.");
 			}
 
-			#pragma warning disable IL3050 // Array.CreateInstance is not AOT-safe, but this is the legacy fallback path
+			#pragma warning disable IL3050 // legacy fallback path
 			return Array.CreateInstance (elementType, length);
 			#pragma warning restore IL3050
+		}
+
+		static int GetArrayRank (Type elementType)
+		{
+			int rank = 1;
+			while (elementType.IsSZArray) {
+				rank++;
+				var nestedElementType = elementType.GetElementType ();
+				if (nestedElementType is null) {
+					break;
+				}
+				elementType = nestedElementType;
+			}
+			return rank;
 		}
 
 		static Type MakeArrayType (Type type) =>

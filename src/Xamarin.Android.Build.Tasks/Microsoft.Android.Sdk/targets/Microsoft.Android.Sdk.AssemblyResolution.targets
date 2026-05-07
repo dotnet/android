@@ -84,12 +84,6 @@ _ResolveAssemblies MSBuild target.
         <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" />
         <ResolvedFileToPublish Include="@(_DeduplicatedResolvedFileToPublish)" />
       </ItemGroup>
-      <AndroidWarning
-          Code="XA1024"
-          ResourceName="XA1024"
-          FormatArguments="%(_SourceItemsToCopyToPublishDirectory.Identity)"
-          Condition=" '%(Extension)' == '.config' "
-      />
   </Target>
 
   <Target Name="_FixupIntermediateAssembly" Condition=" '$(_OuterIntermediateAssembly)' != '' ">
