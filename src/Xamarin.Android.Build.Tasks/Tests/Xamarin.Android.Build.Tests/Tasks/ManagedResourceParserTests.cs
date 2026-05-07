@@ -399,7 +399,7 @@ int xml myxml 0x7f140000
 			task.CaseMapFile = Path.Combine (Root, path, "case_map.txt");
 			task.IsApplication = true;
 			var platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
-			task.JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{platform.Major}", "android.jar");
+			task.JavaPlatformJarPath = AndroidSdkResolver.GetAndroidJarPath (platform);
 			return task;
 		}
 
@@ -505,7 +505,7 @@ int xml myxml 0x7f140000
 			File.WriteAllText (task.ResourceFlagFile, string.Empty);
 			task.IsApplication = true;
 			var platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
-			task.JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{platform.Major}", "android.jar");
+			task.JavaPlatformJarPath = AndroidSdkResolver.GetAndroidJarPath (platform);
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 			Assert.IsTrue (File.Exists (task.NetResgenOutputFile), $"{task.NetResgenOutputFile} should have been created.");
 			var expected = Path.Combine (ExpectedOutputDir, "GenerateDesignerFileExpected.cs");
@@ -540,7 +540,7 @@ int xml myxml 0x7f140000
 				RTxtFile = rTxt,
 				ResourceDirectory = resPath,
 				CaseMapFile = Path.Combine (Root, path, "case_map.txt"),
-				JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{platform.Major}", "android.jar"),
+				JavaPlatformJarPath = AndroidSdkResolver.GetAndroidJarPath (platform),
 				ResourceFlagFile = Path.Combine (Root, path, "res.flag"),
 				AdditionalResourceDirectories = new string[] {
 					Path.Combine (Root, path, "lp", "res"),
@@ -592,7 +592,7 @@ int xml myxml 0x7f140000
 				CompiledResourceFlatArchive = new TaskItem (Path.Combine (Root, path, "compiled.flata")),
 				OutputFile = Path.Combine (Root, path, "foo.apk"),
 				AssemblyIdentityMapFile = Path.Combine (Root, path, "foo.map"),
-				JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{platform.Major}", "android.jar"),
+				JavaPlatformJarPath = AndroidSdkResolver.GetAndroidJarPath (platform),
 				JavaDesignerOutputDirectory = Path.Combine (Root, path, "java"),
 				ResourceSymbolsTextFile = rTxt,
 
@@ -655,7 +655,7 @@ int xml myxml 0x7f140000
 			int i;
 			for (i = 0; i < 100; i++) {
 				var parser = new ManagedResourceParser (loggingHelper) {
-					JavaPlatformDirectory = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{platform.Major}"),
+					JavaPlatformDirectory = Path.Combine (AndroidSdkDirectory, "platforms", AndroidSdkResolver.GetPlatformDirectoryName (platform)),
 					ResourceFlagFile =  flagFile,
 				};
 				sw.Start ();
@@ -733,7 +733,7 @@ int styleable ElevenAttributes_attr10 10";
 			task.Resources = new TaskItem [] {};
 			task.IsApplication = true;
 			var platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
-			task.JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{platform}", "android.jar");
+			task.JavaPlatformJarPath = AndroidSdkResolver.GetAndroidJarPath (platform);
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 			Assert.IsTrue (File.Exists (task.NetResgenOutputFile), $"{task.NetResgenOutputFile} should have been created.");
 			var expected = Path.Combine (ExpectedOutputDir, "GenerateDesignerFileWithElevenStyleableAttributesExpected.cs");
