@@ -53,10 +53,6 @@ namespace Xamarin.Android.RuntimeTests
                     "Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateValue",
                     "Java.InteropTests.JniValueMarshaler_object_ContractTests.SpecificTypesAreUsed",
 
-                    // net.dot.jni.test.GetThis static init — same JavaProxy*
-                    // root cause as the JavaProxyObject exclusions above.
-                    "Java.InteropTests.JavaObjectTest.DisposeAccessesThis",
-
                     // net.dot.jni.internal.JavaProxyThrowable static init — same JavaProxy*
                     // root cause as the JavaProxyObject exclusions above.
                     "Java.InteropTests.JavaExceptionTests.InnerExceptionIsNotAProxy",

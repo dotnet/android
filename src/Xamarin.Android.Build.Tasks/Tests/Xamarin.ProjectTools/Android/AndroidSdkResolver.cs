@@ -152,5 +152,37 @@ namespace Xamarin.ProjectTools
 			}
 			return maxInstalled ?? new Version (0, 0);
 		}
+
+		/// <summary>
+		/// Returns the platform directory name (e.g. "android-37.0") for the given platform version.
+		/// Starting with API 37, Google ships platforms as "android-37.0" instead of "android-37",
+		/// so we check for both and return whichever exists. Falls back to "{Major}" if neither exists.
+		/// </summary>
+		public static string GetPlatformDirectoryName (Version platform)
+		{
+			string sdkPath = GetAndroidSdkPath ();
+			string platformsPath = Path.Combine (sdkPath, "platforms");
+
+			// Try "{Major}.{Minor}" first (e.g. "android-37.0")
+			string fullDir = Path.Combine (platformsPath, $"android-{platform}");
+			if (Directory.Exists (fullDir))
+				return $"android-{platform}";
+
+			// Try "{Major}" (e.g. "android-37")
+			string majorDir = Path.Combine (platformsPath, $"android-{platform.Major}");
+			if (Directory.Exists (majorDir))
+				return $"android-{platform.Major}";
+
+			// Default to full version string
+			return $"android-{platform}";
+		}
+
+		/// <summary>
+		/// Returns the full path to android.jar for the given platform version.
+		/// </summary>
+		public static string GetAndroidJarPath (Version platform)
+		{
+			return Path.Combine (GetAndroidSdkPath (), "platforms", GetPlatformDirectoryName (platform), "android.jar");
+		}
 	}
 }

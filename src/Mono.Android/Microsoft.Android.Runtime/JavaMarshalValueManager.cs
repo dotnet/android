@@ -514,7 +514,9 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 
 		if (RuntimeFeature.TrimmableTypeMap) {
 			try {
-				// Map universal request types to concrete peers before proxy lookup.
+				// Mirror legacy GetPeerType: callers commonly request universal
+				// interfaces / boxes (IJavaPeerable, object, Exception) — map these
+				// to a concrete peer type so the proxy lookup can succeed.
 				var resolvedTargetType = ResolvePeerType (targetType);
 
 				var typeMap = TrimmableTypeMap.Instance;
@@ -536,7 +538,16 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 					return peer;
 				}
 
-				// Preserve CreatePeer's bad-cast vs missing-mapping behavior.
+				// Disambiguate the failure — match the contract of the base
+				// JniRuntime.JniValueManager.CreatePeer so JavaCast / JavaAs
+				// surface the right exception (or null) to callers:
+				//
+				//  (a) target type has no Java mapping at all → ArgumentException
+				//  (b) Java instance is not assignable to the target's Java class
+				//      → return null (JavaAs returns null; JavaCast wraps to
+				//      InvalidCastException via its `??` clause)
+				//  (c) classes are compatible but no proxy / activation failed
+				//      → NotSupportedException (genuine generator gap)
 				if (resolvedTargetType is not null &&
 						IsIncompatibleCast (typeMap, ref reference, resolvedTargetType)) {
 					return null;
