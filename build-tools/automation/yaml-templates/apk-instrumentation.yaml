@@ -34,6 +34,12 @@ steps:
     $projectDir = Split-Path -Parent "${{ parameters.project }}"
     $projectFile = Split-Path -Leaf "${{ parameters.project }}"
     $resultsDir = "${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/TestResults"
+    $tmpDir = [System.IO.Path]::GetTempPath()
+    $androidTestResults = Join-Path $tmpDir "AndroidTestResults"
+    # Clean previous test results so we only pick up results from this run
+    if (Test-Path $androidTestResults) {
+        Remove-Item $androidTestResults -Recurse -Force
+    }
     Push-Location $projectDir
     if ([Environment]::OSVersion.Platform -eq "Unix") {
         $DOTNET_ROOT = "${{ parameters.xaSourcePath }}/bin/${{ parameters.buildConfiguration }}/dotnet"
@@ -44,8 +50,17 @@ steps:
         $env:PATH = "${DOTNET_ROOT};$env:PATH"
         $dotnetPath = "${DOTNET_ROOT}\dotnet.exe"
     }
-    & $dotnetPath test $projectFile --no-build -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog -c ${{ parameters.configuration }} --results-directory $resultsDir --report-trx --report-trx-filename ${{ parameters.testName }}.trx ${{ parameters.extraBuildArgs }}
+    & $dotnetPath test $projectFile --no-build -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog -c ${{ parameters.configuration }} ${{ parameters.extraBuildArgs }}
     Pop-Location
+    # Copy TRX pulled from device by AndroidTestAdapter to the results directory
+    $trxFiles = Get-ChildItem $androidTestResults -Filter "*.trx" -Recurse -ErrorAction SilentlyContinue
+    if ($trxFiles) {
+        New-Item -ItemType Directory -Path $resultsDir -Force | Out-Null
+        Copy-Item $trxFiles[0].FullName (Join-Path $resultsDir "${{ parameters.testName }}.trx") -Force
+        Write-Host "Copied TRX to: $(Join-Path $resultsDir "${{ parameters.testName }}.trx")"
+    } else {
+        Write-Host "Warning: No TRX files found in $androidTestResults"
+    }
   displayName: run ${{ parameters.testName }}
   condition: ${{ parameters.condition }}
   continueOnError: true
