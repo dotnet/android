@@ -13,7 +13,7 @@ using Java.Interop;
 namespace Microsoft.Android.Runtime;
 
 /// <summary>
-/// Central type map for the trimmable typemap path. Owns the ITypeMapWithAliasing
+/// Central type map for the trimmable typemap path. Owns the ITypeMap
 /// and provides peer creation, invoker resolution, container factories, and native
 /// method registration. All proxy attribute access is encapsulated here.
 /// </summary>
@@ -28,33 +28,74 @@ public class TrimmableTypeMap
 		s_instance ?? throw new InvalidOperationException (
 			"TrimmableTypeMap has not been initialized. Ensure RuntimeFeature.TrimmableTypeMap is enabled and the JNI runtime is initialized.");
 
-	readonly ITypeMapWithAliasing _typeMap;
+	readonly ITypeMap _typeMap;
 	readonly ConcurrentDictionary<Type, JavaPeerProxy> _proxyCache = new ();
 	readonly ConcurrentDictionary<string, JavaPeerProxy[]> _jniProxyCache = new (StringComparer.Ordinal);
 
-	TrimmableTypeMap (ITypeMapWithAliasing typeMap)
+	TrimmableTypeMap (ITypeMap typeMap)
 	{
 		_typeMap = typeMap;
 	}
 
 	/// <summary>
-	/// Initializes the singleton with a single merged typemap universe.
-	/// Called from <see cref="TypeMapLoader.Initialize"/> in the generated root assembly
-	/// (_Microsoft.Android.TypeMaps) when assembly typemaps are merged (Release builds).
+	/// Initializes the singleton with a single merged typemap universe and optional
+	/// per-rank array dictionaries (consulted by <c>JNIEnv.ArrayCreateInstance</c> under NativeAOT).
 	/// </summary>
-	public static void Initialize (IReadOnlyDictionary<string, Type> typeMap, IReadOnlyDictionary<Type, Type> proxyMap)
+	public static void Initialize (
+		IReadOnlyDictionary<string, Type> typeMap,
+		IReadOnlyDictionary<Type, Type> proxyMap)
 	{
-		ArgumentNullException.ThrowIfNull (typeMap);
-		ArgumentNullException.ThrowIfNull (proxyMap);
-		InitializeCore (new SingleUniverseTypeMap (typeMap, proxyMap));
+		Initialize (typeMap, proxyMap, arrayMapsByRank: null);
 	}
 
 	/// <summary>
-	/// Initializes the singleton with multiple per-assembly typemap universes.
-	/// Called from <see cref="TypeMapLoader.Initialize"/> in the generated root assembly
-	/// (_Microsoft.Android.TypeMaps) when each assembly has its own typemap universe (Debug builds).
+	/// Initializes the singleton with a single merged typemap universe and optional
+	/// per-rank array dictionaries (consulted by <c>JNIEnv.ArrayCreateInstance</c> under NativeAOT).
 	/// </summary>
-	public static void Initialize (IReadOnlyDictionary<string, Type>[] typeMaps, IReadOnlyDictionary<Type, Type>[] proxyMaps)
+	/// <param name="arrayMapsByRank">0-indexed by (rank - 1); null when no array entries were emitted.</param>
+	public static void Initialize (
+		IReadOnlyDictionary<string, Type> typeMap,
+		IReadOnlyDictionary<Type, Type> proxyMap,
+		IReadOnlyDictionary<string, Type>?[]? arrayMapsByRank)
+	{
+		ArgumentNullException.ThrowIfNull (typeMap);
+		ArgumentNullException.ThrowIfNull (proxyMap);
+		InitializeCore (new SingleUniverseTypeMap (typeMap, proxyMap, arrayMapsByRank));
+	}
+
+	/// <summary>
+	/// Initializes the singleton with a single merged typemap universe and per-assembly array maps.
+	/// </summary>
+	public static void Initialize (
+		IReadOnlyDictionary<string, Type> typeMap,
+		IReadOnlyDictionary<Type, Type> proxyMap,
+		IReadOnlyDictionary<string, Type>?[][]? arrayMapsByUniverseAndRank)
+	{
+		ArgumentNullException.ThrowIfNull (typeMap);
+		ArgumentNullException.ThrowIfNull (proxyMap);
+		InitializeCore (new SingleUniverseTypeMap (typeMap, proxyMap, arrayMapsByUniverseAndRank));
+	}
+
+	/// <summary>
+	/// Initializes the singleton with multiple per-assembly typemap universes and optional
+	/// per-universe array dictionaries.
+	/// </summary>
+	public static void Initialize (
+		IReadOnlyDictionary<string, Type>[] typeMaps,
+		IReadOnlyDictionary<Type, Type>[] proxyMaps)
+	{
+		Initialize (typeMaps, proxyMaps, arrayMapsByUniverseAndRank: null);
+	}
+
+	/// <summary>
+	/// Initializes the singleton with multiple per-assembly typemap universes and optional
+	/// per-universe array dictionaries.
+	/// </summary>
+	/// <param name="arrayMapsByUniverseAndRank">Array maps indexed by universe, then by 0-based rank.</param>
+	public static void Initialize (
+		IReadOnlyDictionary<string, Type>[] typeMaps,
+		IReadOnlyDictionary<Type, Type>[] proxyMaps,
+		IReadOnlyDictionary<string, Type>?[][]? arrayMapsByUniverseAndRank)
 	{
 		ArgumentNullException.ThrowIfNull (typeMaps);
 		ArgumentNullException.ThrowIfNull (proxyMaps);
@@ -64,14 +105,18 @@ public class TrimmableTypeMap
 		if (typeMaps.Length != proxyMaps.Length) {
 			throw new ArgumentException ($"typeMaps.Length ({typeMaps.Length}) must equal proxyMaps.Length ({proxyMaps.Length}).", nameof (proxyMaps));
 		}
+		if (arrayMapsByUniverseAndRank is not null && arrayMapsByUniverseAndRank.Length != typeMaps.Length) {
+			throw new ArgumentException ($"arrayMapsByUniverseAndRank.Length ({arrayMapsByUniverseAndRank.Length}) must equal typeMaps.Length ({typeMaps.Length}).", nameof (arrayMapsByUniverseAndRank));
+		}
+
 		var universes = new SingleUniverseTypeMap [typeMaps.Length];
 		for (int i = 0; i < typeMaps.Length; i++) {
-			universes [i] = new SingleUniverseTypeMap (typeMaps [i], proxyMaps [i]);
+			universes [i] = new SingleUniverseTypeMap (typeMaps [i], proxyMaps [i], arrayMapsByUniverseAndRank? [i]);
 		}
 		InitializeCore (new AggregateTypeMap (universes));
 	}
 
-	static void InitializeCore (ITypeMapWithAliasing typeMap)
+	static void InitializeCore (ITypeMap typeMap)
 	{
 		lock (s_initLock) {
 			if (s_instance is not null) {
@@ -322,6 +367,66 @@ public class TrimmableTypeMap
 	internal JavaPeerContainerFactory? GetContainerFactory (Type type)
 	{
 		return GetProxyForManagedType (type)?.GetContainerFactory ();
+	}
+
+	/// <summary>AOT-safe lookup of the closed managed array type for the given element type.</summary>
+	internal bool TryGetArrayType (Type elementType, [NotNullWhen (true)] out Type? arrayType)
+	{
+		arrayType = null;
+
+		// Walk array nesting to the leaf; rankIndex = depth = (rank - 1).
+		// Reject multi-dim arrays (byte[,]) — JNI only supports szarrays.
+		var leaf = elementType;
+		int rankIndex = 0;
+		while (leaf.IsArray) {
+			if (!leaf.IsSZArray) {
+				return false;
+			}
+			var next = leaf.GetElementType ();
+			if (next is null) {
+				return false;
+			}
+			leaf = next;
+			rankIndex++;
+		}
+
+		bool isPrimitiveLeaf = leaf.IsPrimitive;
+		string? leafJniName = isPrimitiveLeaf
+			? TryGetPrimitiveJniName (leaf, out var p) ? p : null
+			: TryGetJniNameForManagedType (leaf, out var jni) ? jni : null;
+
+		if (leafJniName is not null && _typeMap.TryGetArrayType (leafJniName, rankIndex, out arrayType)) {
+			return true;
+		}
+
+		if (isPrimitiveLeaf) {
+			arrayType = MakePrimitiveArrayType (elementType);
+			return true;
+		}
+
+		return false;
+	}
+
+	static Type MakePrimitiveArrayType (Type elementType)
+	{
+#pragma warning disable IL3050 // Primitive array types are runtime intrinsic; no generated generic code is needed.
+		return elementType.MakeArrayType ();
+#pragma warning restore IL3050
+	}
+
+	/// <summary>JNI single-letter encoding for primitive element types.</summary>
+	static bool TryGetPrimitiveJniName (Type primitive, [NotNullWhen (true)] out string? jni)
+	{
+		if (primitive == typeof (bool))   { jni = "Z"; return true; }
+		if (primitive == typeof (byte))   { jni = "B"; return true; }
+		if (primitive == typeof (char))   { jni = "C"; return true; }
+		if (primitive == typeof (short))  { jni = "S"; return true; }
+		if (primitive == typeof (int))    { jni = "I"; return true; }
+		if (primitive == typeof (long))   { jni = "J"; return true; }
+		if (primitive == typeof (float))  { jni = "F"; return true; }
+		if (primitive == typeof (double)) { jni = "D"; return true; }
+		jni = null;
+		return false;
 	}
 
 	[UnmanagedCallersOnly]

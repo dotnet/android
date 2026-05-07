@@ -12,11 +12,11 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 {
 
-	static MemoryStream GenerateRootAssembly (IReadOnlyList<string> perAssemblyNames, bool useSharedTypemapUniverse = false, string? assemblyName = null)
+	static MemoryStream GenerateRootAssembly (IReadOnlyList<string> perAssemblyNames, bool useSharedTypemapUniverse = false, string? assemblyName = null, int maxArrayRank = 0)
 	{
 		var stream = new MemoryStream ();
 		var generator = new RootTypeMapAssemblyGenerator (new Version (11, 0, 0, 0));
-		generator.Generate (perAssemblyNames, useSharedTypemapUniverse, stream, assemblyName);
+		generator.Generate (perAssemblyNames, useSharedTypemapUniverse, stream, assemblyName, maxArrayRank: maxArrayRank);
 		stream.Position = 0;
 		return stream;
 	}
@@ -135,6 +135,25 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 		}, targetAttributes);
 	}
 
+	[Theory]
+	[InlineData (true)]
+	[InlineData (false)]
+	public void Generate_WithArrays_TargetAttributesUsePerAssemblyRankAnchors (bool useSharedTypemapUniverse)
+	{
+		var targets = new [] { "_App.TypeMap", "_Mono.Android.TypeMap" };
+		using var stream = GenerateRootAssembly (targets, useSharedTypemapUniverse, maxArrayRank: 2);
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var targetAttributes = GetTypeMapAssemblyTargetAttributeTargetTypes (reader);
+
+		Assert.Contains (("_App.TypeMap", "_App.TypeMap", "__ArrayMapRank1"), targetAttributes);
+		Assert.Contains (("_App.TypeMap", "_App.TypeMap", "__ArrayMapRank2"), targetAttributes);
+		Assert.Contains (("_Mono.Android.TypeMap", "_Mono.Android.TypeMap", "__ArrayMapRank1"), targetAttributes);
+		Assert.Contains (("_Mono.Android.TypeMap", "_Mono.Android.TypeMap", "__ArrayMapRank2"), targetAttributes);
+		Assert.DoesNotContain (targetAttributes, t => t.GenericArgumentTypeName == "__ArrayMapRank3");
+	}
+
 	static List<CustomAttribute> GetTypeMapAssemblyTargetAttributes (MetadataReader reader)
 	{
 		var result = new List<CustomAttribute> ();
@@ -166,6 +185,25 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 			Assert.Equal (0x12, blob.ReadByte ()); // ELEMENT_TYPE_CLASS
 			var targetType = DecodeTypeDefOrRefOrSpec (blob.ReadCompressedInteger ());
 			result.Add ((targetName, GetResolutionScopeName (reader, targetType)));
+		}
+		return result;
+	}
+
+	static List<(string TargetName, string GenericArgumentScope, string GenericArgumentTypeName)> GetTypeMapAssemblyTargetAttributeTargetTypes (MetadataReader reader)
+	{
+		var result = new List<(string TargetName, string GenericArgumentScope, string GenericArgumentTypeName)> ();
+		foreach (var attr in GetTypeMapAssemblyTargetAttributes (reader)) {
+			var targetName = GetTypeMapAssemblyTargetName (reader, attr);
+			var memberRef = reader.GetMemberReference ((MemberReferenceHandle)attr.Constructor);
+			var typeSpec = reader.GetTypeSpecification ((TypeSpecificationHandle)memberRef.Parent);
+			var blob = reader.GetBlobReader (typeSpec.Signature);
+			Assert.Equal (0x15, blob.ReadByte ()); // ELEMENT_TYPE_GENERICINST
+			Assert.Equal (0x12, blob.ReadByte ()); // ELEMENT_TYPE_CLASS
+			blob.ReadCompressedInteger (); // TypeMapAssemblyTargetAttribute`1 type
+			Assert.Equal (1, blob.ReadCompressedInteger ());
+			Assert.Equal (0x12, blob.ReadByte ()); // ELEMENT_TYPE_CLASS
+			var targetType = DecodeTypeDefOrRefOrSpec (blob.ReadCompressedInteger ());
+			result.Add ((targetName, GetResolutionScopeName (reader, targetType), GetTypeName (reader, targetType)));
 		}
 		return result;
 	}
@@ -209,6 +247,17 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 			HandleKind.TypeReference => GetResolutionScopeName (reader, (TypeReferenceHandle)scope),
 			_ => throw new InvalidOperationException ($"Unexpected resolution scope kind: {scope.Kind}"),
 		};
+	}
+
+	static string GetTypeName (MetadataReader reader, EntityHandle handle)
+	{
+		if (handle.Kind == HandleKind.TypeDefinition) {
+			return reader.GetString (reader.GetTypeDefinition ((TypeDefinitionHandle)handle).Name);
+		}
+		if (handle.Kind != HandleKind.TypeReference) {
+			throw new InvalidOperationException ($"Unexpected type handle kind: {handle.Kind}");
+		}
+		return reader.GetString (reader.GetTypeReference ((TypeReferenceHandle)handle).Name);
 	}
 
 	[Theory]
@@ -321,5 +370,52 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 			}
 		}
 		return result;
+	}
+
+	[Fact]
+	public void Generate_MergedMode_WithArrays_ProducesValidPEAssembly ()
+	{
+		using var stream = GenerateRootAssembly (["_App.TypeMap", "_Mono.Android.TypeMap"],
+			useSharedTypemapUniverse: true, maxArrayRank: 3);
+		using var pe = new PEReader (stream);
+		Assert.True (pe.HasMetadata);
+	}
+
+	[Theory]
+	[InlineData (true)]
+	[InlineData (false)]
+	public void Generate_WithArrays_ReferencesPerAsmRankSentinels (bool useSharedTypemapUniverse)
+	{
+		using var stream = GenerateRootAssembly (["_App.TypeMap", "_Mono.Android.TypeMap"],
+			useSharedTypemapUniverse: useSharedTypemapUniverse, maxArrayRank: 2);
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var rankRefsByAssembly = reader.TypeReferences
+			.Select (h => reader.GetTypeReference (h))
+			.Where (t => reader.GetString (t.Name).StartsWith ("__ArrayMapRank", StringComparison.Ordinal))
+			.Select (t => (
+				Name: reader.GetString (t.Name),
+				Assembly: reader.GetString (reader.GetAssemblyReference ((AssemblyReferenceHandle) t.ResolutionScope).Name)))
+			.ToList ();
+		Assert.Contains (("__ArrayMapRank1", "_App.TypeMap"), rankRefsByAssembly);
+		Assert.Contains (("__ArrayMapRank2", "_App.TypeMap"), rankRefsByAssembly);
+		Assert.Contains (("__ArrayMapRank1", "_Mono.Android.TypeMap"), rankRefsByAssembly);
+		Assert.Contains (("__ArrayMapRank2", "_Mono.Android.TypeMap"), rankRefsByAssembly);
+		Assert.DoesNotContain (rankRefsByAssembly, r => r.Name == "__ArrayMapRank3");
+	}
+
+	[Fact]
+	public void Generate_MergedMode_WithArrays_HasIgnoresAccessChecksToArrayAssemblies ()
+	{
+		using var stream = GenerateRootAssembly (["_App.TypeMap", "_Mono.Android.TypeMap"],
+			useSharedTypemapUniverse: true, maxArrayRank: 3);
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var accessAttrs = GetIgnoresAccessChecksToValues (reader);
+		Assert.Contains ("Mono.Android", accessAttrs);
+		Assert.Contains ("_App.TypeMap", accessAttrs);
+		Assert.Contains ("_Mono.Android.TypeMap", accessAttrs);
 	}
 }

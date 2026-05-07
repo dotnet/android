@@ -25,7 +25,7 @@
     </PropertyGroup>
     <ItemGroup>
       <_PackageFiles Include="$(IntermediateOutputPath)$(PackageLicenseFile)" PackagePath="\" Condition=" '$(PlatformPackageType)' == '' "/>
-      <_PackageFiles Include="$(XAInstallPrefix)THIRD-PARTY-NOTICES.TXT" PackagePath="\" />
+      <_PackageFiles Include="$(XamarinAndroidSourcePath)THIRD-PARTY-NOTICES.TXT" PackagePath="\" />
       <_PackageFiles Include="$(MSBuildThisFileDirectory)Icon.png" PackagePath="\" />
     </ItemGroup>
   </Target>

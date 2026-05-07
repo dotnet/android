@@ -76,8 +76,8 @@
   <ItemGroup>
     <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="Visible" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
     <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="Visible" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
+    <TrimmerRootAssembly Include="StartupHook" RootMode="All" Condition=" '$(StartupHookSupport)' == 'true' " />
     <TrimmerRootDescriptor Include="TrimmerRoots.xml" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
-    <TrimmerRootDescriptor Include="StartupHookRoots.xml" Condition=" '$(StartupHookSupport)' == 'true' " />
     <_AndroidRemapMembers Include="Remaps.xml" />
     <_AndroidRemapMembers Include="IsAssignableFromRemaps.xml" Condition=" '$(_AndroidIsAssignableFromCheck)' == 'false' " />
     <ProguardConfiguration Include="proguard.cfg" />

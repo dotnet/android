@@ -34,6 +34,8 @@ internal static class ScannerHashingHelper
 		int bytesWritten = GetNamespaceAssemblyUtf8Bytes (ns, assemblyName, utf8Buffer.Slice (0, byteCount));
 		Span<byte> hash = stackalloc byte [8];
 		System.IO.Hashing.Crc64.Hash (utf8Buffer.Slice (0, bytesWritten), hash);
+		ulong hashValue = ReadUInt64LittleEndian (hash);
+		WriteUInt64LittleEndian (hash, hashValue ^ (ulong) bytesWritten);
 		return ToHexString (hash, lowercase: true);
 	}
 
@@ -87,6 +89,18 @@ internal static class ScannerHashingHelper
 		destination [5] = (byte) (value >> 40);
 		destination [6] = (byte) (value >> 48);
 		destination [7] = (byte) (value >> 56);
+	}
+
+	static ulong ReadUInt64LittleEndian (ReadOnlySpan<byte> source)
+	{
+		return (ulong) source [0]
+			| ((ulong) source [1] << 8)
+			| ((ulong) source [2] << 16)
+			| ((ulong) source [3] << 24)
+			| ((ulong) source [4] << 32)
+			| ((ulong) source [5] << 40)
+			| ((ulong) source [6] << 48)
+			| ((ulong) source [7] << 56);
 	}
 
 	static char GetHexValue (int value, bool lowercase)

@@ -144,6 +144,38 @@
       ],
       "justification": "Reference to ffs(3) find first set bit function.",
       "createdDate": "2025-02-05 11:48:04Z"
+    },
+    "cccebaacfe4f8c7eae2d4d00c4d534d1f85ae79b11d53bf858c6243061ef7d69": {
+      "signature": "cccebaacfe4f8c7eae2d4d00c4d534d1f85ae79b11d53bf858c6243061ef7d69",
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Verbatim GPLv3 license text in THIRD-PARTY-NOTICES.TXT (gnu/binutils).",
+      "createdDate": "2026-05-05 00:00:00Z"
+    },
+    "5c055f17206f60132ca8011955bd4ddcfe42a332341015b221e45d5a15d4e0af": {
+      "signature": "5c055f17206f60132ca8011955bd4ddcfe42a332341015b221e45d5a15d4e0af",
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Verbatim GPLv3 license text in THIRD-PARTY-NOTICES.TXT (gnu/binutils).",
+      "createdDate": "2026-05-05 00:00:00Z"
+    },
+    "ed6b5cb1fe11577308dd5b137e106a12fed8e039c410a57d8580fb72b07a28a2": {
+      "signature": "ed6b5cb1fe11577308dd5b137e106a12fed8e039c410a57d8580fb72b07a28a2",
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Verbatim GPLv3 license text in THIRD-PARTY-NOTICES.TXT (gnu/binutils).",
+      "createdDate": "2026-05-05 00:00:00Z"
+    },
+    "e281b9747a4a2f75cb24b67a65521526fc407ecd1cc2f2963a586ce507de3096": {
+      "signature": "e281b9747a4a2f75cb24b67a65521526fc407ecd1cc2f2963a586ce507de3096",
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Verbatim GPLv3 license text in THIRD-PARTY-NOTICES.TXT (gnu/binutils).",
+      "createdDate": "2026-05-05 00:00:00Z"
     }
   }
 }

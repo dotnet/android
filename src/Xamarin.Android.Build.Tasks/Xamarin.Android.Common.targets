@@ -1464,7 +1464,7 @@ because xbuild doesn't support framework reference assemblies.
 <!-- Runs additional steps after ILLink runs (_LinkAssemblies) -->
 <Target Name="_AfterILLinkAdditionalSteps"
     DependsOnTargets="_LinkAssembliesNoShrinkInputs"
-    Condition="'$(PublishTrimmed)' == 'true'"
+    Condition="'$(PublishTrimmed)' == 'true' and '$(_AndroidTypeMapImplementation)' != 'trimmable'"
     Inputs="$(_AndroidLinkFlag)"
     Outputs="$(_AdditionalPostLinkerStepsFlag)">
   <AssemblyModifierPipeline
