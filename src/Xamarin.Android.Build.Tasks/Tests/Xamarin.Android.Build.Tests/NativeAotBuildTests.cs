@@ -23,9 +23,8 @@ namespace Xamarin.Android.Build.Tests
 			builder.ThrowOnBuildFailure = false;
 			// Clear AndroidNdkDirectory to simulate a machine without NDK installed.
 			// This overrides the rsp-injected value (MSBuild last-value-wins).
-			//
-			// Currently NativeAOT linking requires NDK tools, so the build should fail.
-			// When the workload pack ships its own linker, flip this to Assert.IsTrue.
+			// The default path (without _AndroidUseWorkloadNativeLinker) still requires
+			// the NDK, so the build should fail.
 			Assert.IsFalse (
 				builder.Build (proj, parameters: new [] { "AndroidNdkDirectory=\"\"" }),
 				"Build should have failed without NDK."

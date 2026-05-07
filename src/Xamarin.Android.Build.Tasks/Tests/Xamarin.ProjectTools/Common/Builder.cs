@@ -103,6 +103,10 @@ namespace Xamarin.ProjectTools
 		/// True if NuGet restore occurs automatically (default)
 		/// </summary>
 		public bool AutomaticNuGetRestore { get; set; } = true;
+
+		/// <summary>
+		/// When true, skip emitting AndroidNdkDirectory into the test response file.
+		/// </summary>
 		public bool SkipNdkDirectory { get; set; } = false;
 
 		/// <summary>
