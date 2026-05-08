@@ -406,6 +406,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
         <RelativePath>$(NativeBinaryPrefix)$(TargetName).so</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       </ResolvedFileToPublish>
+
       <FileWrites Include="$(_AndroidNativeAotSharedLibrary)" />
       <FileWrites Include="$(_AndroidNativeAotSharedLibrary)$(NativeSymbolExt)" Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' " />
       <FileWrites Include="$(NativeIntermediateOutputPath)sections.ld" />
