@@ -88,11 +88,9 @@ class AndroidTestAdapter(
 
 			// Add TRX report properties required by ITrxReportCapability
 			if (!string.IsNullOrEmpty (result.ClassName))
-				properties.Add (new KeyValuePairStringProperty ("trxreport.classname", result.ClassName));
-			if (result.Outcome == TrxOutcome.Failed && !string.IsNullOrEmpty (result.ErrorMessage))
-				properties.Add (new KeyValuePairStringProperty ("trxreport.exceptionmessage", result.ErrorMessage));
-			if (result.Outcome == TrxOutcome.Failed && !string.IsNullOrEmpty (result.StackTrace))
-				properties.Add (new KeyValuePairStringProperty ("trxreport.exceptionstacktrace", result.StackTrace));
+				properties.Add (new TrxFullyQualifiedTypeNameProperty (result.ClassName));
+			if (result.Outcome == TrxOutcome.Failed)
+				properties.Add (new TrxExceptionProperty (result.ErrorMessage, result.StackTrace));
 
 			var testNode = new TestNode {
 				Uid = new TestNodeUid (result.FullyQualifiedName),
