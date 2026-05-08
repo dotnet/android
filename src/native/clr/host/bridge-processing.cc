@@ -1,3 +1,6 @@
+#include <cstdio>
+#include <cstdlib>
+
 #include <host/bridge-processing.hh>
 #include <host/host.hh>
 #include <host/runtime-util.hh>
@@ -17,9 +20,10 @@ void BridgeProcessingShared::initialize_on_runtime_init (JNIEnv *env, jclass run
 	abort_unless (GCUserPeer_class != nullptr && GCUserPeer_ctor != nullptr, "Failed to load mono.android.GCUserPeer!");
 }
 
-BridgeProcessingShared::BridgeProcessingShared (MarkCrossReferencesArgs *args) noexcept
+BridgeProcessingShared::BridgeProcessingShared (MarkCrossReferencesArgs *args, const BridgeProcessingCallbacks *host_callbacks) noexcept
 	: env{ OSBridge::ensure_jnienv () },
-	  cross_refs{ args }
+	  cross_refs{ args },
+	  callbacks{ host_callbacks != nullptr ? *host_callbacks : BridgeProcessingCallbacks {} }
 {
 	if (args == nullptr) [[unlikely]] {
 		Helpers::abort_application (LOG_GC, "Cross references argument is a NULL pointer"sv);
@@ -32,6 +36,16 @@ BridgeProcessingShared::BridgeProcessingShared (MarkCrossReferencesArgs *args) n
 	if (args->CrossReferenceCount > 0 && args->CrossReferences == nullptr) [[unlikely]] {
 		Helpers::abort_application (LOG_GC, "CrossReferences member of the cross references arguments structure is NULL"sv);
 	}
+
+	if (args->ComponentCount > 0) {
+		temporary_peers = static_cast<jobject*>(calloc (args->ComponentCount, sizeof (jobject)));
+		abort_unless (temporary_peers != nullptr, "Failed to allocate GC bridge temporary peer array");
+	}
+}
+
+BridgeProcessingShared::~BridgeProcessingShared () noexcept
+{
+	free (temporary_peers);
 }
 
 void BridgeProcessingShared::process () noexcept
@@ -59,8 +73,11 @@ void BridgeProcessingShared::prepare_for_java_collection () noexcept
 	}
 
 	// With cross references processed, the temporary peer list can be released
-	for (const auto& [scc, temporary_peer] : temporary_peers) {
-		env->DeleteLocalRef (temporary_peer);
+	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
+		if (temporary_peers[i] != nullptr) {
+			env->DeleteLocalRef (temporary_peers[i]);
+			temporary_peers[i] = nullptr;
+		}
 	}
 
 	// Switch global to weak references
@@ -79,7 +96,8 @@ void BridgeProcessingShared::prepare_scc_for_java_collection (size_t scc_index, 
 {
 	// Count == 0 case: Some SCCs might have no IGCUserPeers associated with them, so we must create one
 	if (scc.Count == 0) {
-		temporary_peers [scc_index] = env->NewObject (GCUserPeer_class, GCUserPeer_ctor);
+		abort_unless (temporary_peers != nullptr, "Temporary peer array must be allocated");
+		temporary_peers[scc_index] = env->NewObject (GCUserPeer_class, GCUserPeer_ctor);
 		return;
 	}
 
@@ -98,9 +116,9 @@ CrossReferenceTarget BridgeProcessingShared::select_cross_reference_target (size
 	const StronglyConnectedComponent &scc = cross_refs->Components [scc_index];
 
 	if (scc.Count == 0) {
-		const auto temporary_peer = temporary_peers.find (scc_index);
-		abort_unless (temporary_peer != temporary_peers.end(), "Temporary peer must be found in the map");
-		return { .is_temporary_peer = true, .temporary_peer = temporary_peer->second };
+		abort_unless (temporary_peers != nullptr, "Temporary peer array must be allocated");
+		abort_unless (temporary_peers[scc_index] != nullptr, "Temporary peer must be found in the array");
+		return { .is_temporary_peer = true, .temporary_peer = temporary_peers[scc_index] };
 	}
 
 	abort_unless (scc.Contexts [0] != nullptr, "SCC must have at least one context");
@@ -219,6 +237,24 @@ void BridgeProcessingShared::clear_references (jobject handle) noexcept
 	env->CallVoidMethod (handle, clear_method_id);
 }
 
+bool BridgeProcessingShared::maybe_call_gc_user_peerable_add_managed_reference (JNIEnv *jni_env, jobject from, jobject to) noexcept
+{
+	if (callbacks.maybe_call_gc_user_peerable_add_managed_reference == nullptr) {
+		return false;
+	}
+
+	return callbacks.maybe_call_gc_user_peerable_add_managed_reference (callbacks.context, jni_env, from, to);
+}
+
+bool BridgeProcessingShared::maybe_call_gc_user_peerable_clear_managed_references (JNIEnv *jni_env, jobject handle) noexcept
+{
+	if (callbacks.maybe_call_gc_user_peerable_clear_managed_references == nullptr) {
+		return false;
+	}
+
+	return callbacks.maybe_call_gc_user_peerable_clear_managed_references (callbacks.context, jni_env, handle);
+}
+
 void BridgeProcessingShared::take_global_ref (HandleContext &context) noexcept
 {
 	abort_unless (context.control_block != nullptr, "Control block must not be null");
@@ -317,7 +353,7 @@ void CrossReferenceTarget::mark_refs_added_if_needed () noexcept
 [[gnu::always_inline]]
 void BridgeProcessingShared::log_missing_add_references_method ([[maybe_unused]] jclass java_class) noexcept
 {
-	log_error (LOG_DEFAULT, "Failed to find monodroidAddReferences method");
+	log_write (LOG_DEFAULT, LogLevel::Error, "Failed to find monodroidAddReferences method");
 #if DEBUG
 	abort_if_invalid_pointer_argument (java_class, "java_class");
 	if (!Logger::gc_spew_enabled ()) [[likely]] {
@@ -325,7 +361,9 @@ void BridgeProcessingShared::log_missing_add_references_method ([[maybe_unused]]
 	}
 
 	char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
-	log_error (LOG_GC, "Missing monodroidAddReferences method for object of class {}", optional_string (class_name));
+	char message[256];
+	snprintf (message, sizeof (message), "Missing monodroidAddReferences method for object of class %s", optional_string (class_name));
+	log_write (LOG_GC, LogLevel::Error, message);
 	free (class_name);
 #endif
 }
@@ -333,7 +371,7 @@ void BridgeProcessingShared::log_missing_add_references_method ([[maybe_unused]]
 [[gnu::always_inline]]
 void BridgeProcessingShared::log_missing_clear_references_method ([[maybe_unused]] jclass java_class) noexcept
 {
-	log_error (LOG_DEFAULT, "Failed to find monodroidClearReferences method");
+	log_write (LOG_DEFAULT, LogLevel::Error, "Failed to find monodroidClearReferences method");
 #if DEBUG
 	abort_if_invalid_pointer_argument (java_class, "java_class");
 	if (!Logger::gc_spew_enabled ()) [[likely]] {
@@ -341,7 +379,9 @@ void BridgeProcessingShared::log_missing_clear_references_method ([[maybe_unused
 	}
 
 	char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
-	log_error (LOG_GC, "Missing monodroidClearReferences method for object of class {}", optional_string (class_name));
+	char message[256];
+	snprintf (message, sizeof (message), "Missing monodroidClearReferences method for object of class %s", optional_string (class_name));
+	log_write (LOG_GC, LogLevel::Error, message);
 	free (class_name);
 #endif
 }
@@ -364,10 +404,9 @@ void BridgeProcessingShared::log_weak_to_gref (jobject weak, jobject handle) noe
 		return;
 	}
 
-	OSBridge::_monodroid_gref_log (
-		std::format ("take_global_ref wref={:#x} -> handle={:#x}\n"sv,
-			reinterpret_cast<intptr_t> (weak),
-			reinterpret_cast<intptr_t> (handle)).data ());
+	char message[128];
+	snprintf (message, sizeof (message), "take_global_ref wref=%p -> handle=%p\n", reinterpret_cast<void*>(weak), reinterpret_cast<void*>(handle));
+	OSBridge::_monodroid_gref_log (message);
 }
 
 [[gnu::always_inline]]
@@ -377,8 +416,9 @@ void BridgeProcessingShared::log_weak_ref_collected (jobject weak) noexcept
 		return;
 	}
 
-	OSBridge::_monodroid_gref_log (
-		std::format ("handle {:#x}/W; was collected by a Java GC"sv, reinterpret_cast<intptr_t> (weak)).data ());
+	char message[128];
+	snprintf (message, sizeof (message), "handle %p/W; was collected by a Java GC", reinterpret_cast<void*>(weak));
+	OSBridge::_monodroid_gref_log (message);
 }
 
 [[gnu::always_inline]]
@@ -388,7 +428,9 @@ void BridgeProcessingShared::log_take_weak_global_ref (jobject handle) noexcept
 		return;
 	}
 
-	OSBridge::_monodroid_gref_log (std::format ("take_weak_global_ref handle={:#x}\n"sv, reinterpret_cast<intptr_t> (handle)).data ());
+	char message[128];
+	snprintf (message, sizeof (message), "take_weak_global_ref handle=%p\n", reinterpret_cast<void*>(handle));
+	OSBridge::_monodroid_gref_log (message);
 }
 
 [[gnu::always_inline]]
@@ -449,5 +491,7 @@ void BridgeProcessingShared::log_gc_summary () noexcept
 		}
 	}
 
-	log_info (LOG_GC, "GC cleanup summary: {} objects tested - resurrecting {}.", total, alive);
+	char message[128];
+	snprintf (message, sizeof (message), "GC cleanup summary: %zu objects tested - resurrecting %zu.", total, alive);
+	log_write (LOG_GC, LogLevel::Info, message);
 }

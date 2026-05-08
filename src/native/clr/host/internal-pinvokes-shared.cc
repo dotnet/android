@@ -56,30 +56,36 @@ void monodroid_log (LogLevel level, LogCategories category, const char *message)
 	switch (level) {
 		case LogLevel::Verbose:
 		case LogLevel::Debug:
-			log_debug_nocheck (category, std::string_view { message });
+			if ((log_categories & category) != 0) {
+				log_write (category, LogLevel::Debug, message);
+			}
 			break;
 
 		case LogLevel::Info:
-			log_info_nocheck (category, std::string_view { message });
+			if ((log_categories & category) != 0) {
+				log_write (category, LogLevel::Info, message);
+			}
 			break;
 
 		case LogLevel::Warn:
 		case LogLevel::Silent: // warn is always printed
-			log_warn (category, std::string_view { message });
+			log_write (category, LogLevel::Warn, message);
 			break;
 
 		case LogLevel::Error:
-			log_error (category, std::string_view { message });
+			log_write (category, LogLevel::Error, message);
 			break;
 
 		case LogLevel::Fatal:
-			log_fatal (category, std::string_view { message });
+			log_write (category, LogLevel::Fatal, message);
 			break;
 
 		default:
 		case LogLevel::Unknown:
 		case LogLevel::Default:
-			log_info_nocheck (category, std::string_view { message });
+			if ((log_categories & category) != 0) {
+				log_write (category, LogLevel::Info, message);
+			}
 			break;
 	}
 }
