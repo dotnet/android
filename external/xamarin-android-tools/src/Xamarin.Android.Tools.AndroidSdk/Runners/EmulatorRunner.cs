@@ -291,9 +291,7 @@ public class EmulatorRunner
 		// cancellationToken (a linked CTS with CancelAfter). This method simply
 		// polls until boot completes or the token is cancelled.
 		while (!cancellationToken.IsCancellationRequested) {
-			cancellationToken.ThrowIfCancellationRequested ();
-
-			var bootCompleted = await adbRunner.GetShellPropertyAsync (serial, "sys.boot_completed", cancellationToken).ConfigureAwait (false);
+			var bootCompleted= await adbRunner.GetShellPropertyAsync (serial, "sys.boot_completed", cancellationToken).ConfigureAwait (false);
 			if (string.Equals (bootCompleted, "1", StringComparison.Ordinal)) {
 				var pmResult = await adbRunner.RunShellCommandAsync (serial, "pm path android", cancellationToken).ConfigureAwait (false);
 				if (pmResult != null && pmResult.StartsWith ("package:", StringComparison.Ordinal)) {
