@@ -76,5 +76,7 @@ variables:
   value: true
 - name: DOTNET_CLI_TELEMETRY_OPTOUT
   value: true
-- name: DOTNET_SKIP_FIRST_TIME_EXPERIENCE
+- name: DOTNET_NOLOGO
   value: true
+- name: DOTNET_GENERATE_ASPNET_CERTIFICATE
+  value: false
