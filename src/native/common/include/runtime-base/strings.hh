@@ -12,6 +12,7 @@
 #include <unistd.h>
 
 #include <shared/helpers.hh>
+#include <shared/log_types.hh>
 
 #if defined(XA_HOST_MONOVM)
 #include <runtime-base/shared-constants.hh>

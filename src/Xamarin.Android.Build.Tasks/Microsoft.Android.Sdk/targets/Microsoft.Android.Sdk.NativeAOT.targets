@@ -16,6 +16,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <_AndroidRuntimePackRuntime>NativeAOT</_AndroidRuntimePackRuntime>
     <_AndroidJcwCodegenTarget Condition=" '$(_AndroidJcwCodegenTarget)' == '' ">JavaInterop1</_AndroidJcwCodegenTarget>
     <_AndroidTypeMapImplementation Condition=" '$(_AndroidTypeMapImplementation)' == '' ">managed</_AndroidTypeMapImplementation>
+    <_AndroidEnableObjectReferenceLogging Condition=" '$(_AndroidEnableObjectReferenceLogging)' == '' ">false</_AndroidEnableObjectReferenceLogging>
     <!-- .NET SDK gives: error NETSDK1191: A runtime identifier for the property 'PublishAot' couldn't be inferred. Specify a rid explicitly. -->
     <AllowPublishAotWithoutRuntimeIdentifier Condition=" '$(AllowPublishAotWithoutRuntimeIdentifier)' == '' ">true</AllowPublishAotWithoutRuntimeIdentifier>
     <!-- NativeAOT's targets currently gives an error about cross-compilation -->
@@ -200,6 +201,11 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <IlcReference Include="@(PrivateSdkAssemblies)" />
       <_AndroidILLinkAssemblies Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')" Condition="Exists('$(IntermediateLinkDir)%(Filename)%(Extension)')" />
       <TrimmerRootAssembly Include="@(_AndroidILLinkAssemblies->'%(Filename)')" Exclude="System.Private.CoreLib" TrimMode="All" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <!-- Required for [UnmanagedCallersOnly] methods in the app assembly, such as JCW native callbacks. -->
+      <UnmanagedEntryPointsAssembly Include="@(IlcCompileInput->'%(Filename)')" />
     </ItemGroup>
 
     <ItemGroup>

@@ -21,9 +21,14 @@ struct CrossReferenceTarget
 
 struct BridgeProcessingCallbacks
 {
-	void *context;
-	bool (*maybe_call_gc_user_peerable_add_managed_reference) (void *context, JNIEnv *env, jobject from, jobject to) noexcept;
-	bool (*maybe_call_gc_user_peerable_clear_managed_references) (void *context, JNIEnv *env, jobject handle) noexcept;
+	bool (*maybe_call_gc_user_peerable_add_managed_reference) (JNIEnv *env, jobject from, jobject to) noexcept;
+	bool (*maybe_call_gc_user_peerable_clear_managed_references) (JNIEnv *env, jobject handle) noexcept;
+};
+
+struct TemporaryPeer
+{
+	size_t scc_index;
+	jobject peer;
 };
 
 class BridgeProcessingShared
@@ -37,7 +42,8 @@ public:
 private:
 	JNIEnv* env;
 	MarkCrossReferencesArgs *cross_refs;
-	jobject *temporary_peers = nullptr;
+	TemporaryPeer *temporary_peers = nullptr;
+	size_t temporary_peer_count = 0;
 	BridgeProcessingCallbacks callbacks;
 
 	static inline jclass GCUserPeer_class = nullptr;
@@ -50,6 +56,8 @@ private:
 	void add_circular_references (const StronglyConnectedComponent &scc) noexcept;
 	void add_cross_reference (size_t source_index, size_t dest_index) noexcept;
 	CrossReferenceTarget select_cross_reference_target (size_t scc_index) noexcept;
+	void add_temporary_peer (size_t scc_index, jobject peer) noexcept;
+	jobject find_temporary_peer (size_t scc_index) noexcept;
 	bool add_reference (jobject from, jobject to) noexcept;
 
 	void cleanup_after_java_collection () noexcept;

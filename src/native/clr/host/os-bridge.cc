@@ -12,28 +12,6 @@ using namespace xamarin::android;
 
 namespace {
 	constexpr size_t LOG_LINE_BUFFER_SIZE = 512;
-
-	void write_logcat_line (LogCategories category, const char *line, size_t line_len) noexcept
-	{
-		char local_buffer[LOG_LINE_BUFFER_SIZE];
-		char *buffer = local_buffer;
-
-		if (line_len >= sizeof (local_buffer)) {
-			buffer = static_cast<char*>(malloc (line_len + 1));
-			if (buffer == nullptr) {
-				log_write (category, LogLevel::Debug, "<out of memory>");
-				return;
-			}
-		}
-
-		memcpy (buffer, line, line_len);
-		buffer[line_len] = '\0';
-		log_write (category, LogLevel::Debug, buffer);
-
-		if (buffer != local_buffer) {
-			free (buffer);
-		}
-	}
 }
 
 void OSBridge::initialize_on_onload (JavaVM *vm, JNIEnv *env) noexcept
@@ -134,7 +112,25 @@ void OSBridge::_write_stack_trace (FILE *to, const char *const from, LogCategori
 
 		if ((category == LOG_GREF && Logger::gref_to_logcat ()) ||
 			(category == LOG_LREF && Logger::lref_to_logcat ())) {
-			write_logcat_line (category, line, line_len);
+			char local_buffer[LOG_LINE_BUFFER_SIZE];
+			char *message = local_buffer;
+
+			if (line_len >= sizeof (local_buffer)) {
+				message = static_cast<char*>(malloc (line_len + 1));
+				if (message == nullptr) {
+					log_write (category, LogLevel::Debug, "<out of memory>");
+				}
+			}
+
+			if (message != nullptr) {
+				memcpy (message, line, line_len);
+				message [line_len] = '\0';
+				log_write (category, LogLevel::Debug, message);
+			}
+
+			if (message != nullptr && message != local_buffer) {
+				free (message);
+			}
 		}
 
 		if (to != nullptr) {

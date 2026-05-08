@@ -38,7 +38,7 @@ BridgeProcessingShared::BridgeProcessingShared (MarkCrossReferencesArgs *args, c
 	}
 
 	if (args->ComponentCount > 0) {
-		temporary_peers = static_cast<jobject*>(calloc (args->ComponentCount, sizeof (jobject)));
+		temporary_peers = static_cast<TemporaryPeer*>(calloc (args->ComponentCount, sizeof (TemporaryPeer)));
 		abort_unless (temporary_peers != nullptr, "Failed to allocate GC bridge temporary peer array");
 	}
 }
@@ -73,12 +73,11 @@ void BridgeProcessingShared::prepare_for_java_collection () noexcept
 	}
 
 	// With cross references processed, the temporary peer list can be released
-	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
-		if (temporary_peers[i] != nullptr) {
-			env->DeleteLocalRef (temporary_peers[i]);
-			temporary_peers[i] = nullptr;
-		}
+	for (size_t i = 0; i < temporary_peer_count; i++) {
+		env->DeleteLocalRef (temporary_peers [i].peer);
+		temporary_peers [i].peer = nullptr;
 	}
+	temporary_peer_count = 0;
 
 	// Switch global to weak references
 	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
@@ -96,8 +95,7 @@ void BridgeProcessingShared::prepare_scc_for_java_collection (size_t scc_index, 
 {
 	// Count == 0 case: Some SCCs might have no IGCUserPeers associated with them, so we must create one
 	if (scc.Count == 0) {
-		abort_unless (temporary_peers != nullptr, "Temporary peer array must be allocated");
-		temporary_peers[scc_index] = env->NewObject (GCUserPeer_class, GCUserPeer_ctor);
+		add_temporary_peer (scc_index, env->NewObject (GCUserPeer_class, GCUserPeer_ctor));
 		return;
 	}
 
@@ -113,16 +111,40 @@ void BridgeProcessingShared::prepare_scc_for_java_collection (size_t scc_index, 
 
 CrossReferenceTarget BridgeProcessingShared::select_cross_reference_target (size_t scc_index) noexcept
 {
+	abort_unless (scc_index < cross_refs->ComponentCount, "SCC index must be within the component array");
 	const StronglyConnectedComponent &scc = cross_refs->Components [scc_index];
 
 	if (scc.Count == 0) {
-		abort_unless (temporary_peers != nullptr, "Temporary peer array must be allocated");
-		abort_unless (temporary_peers[scc_index] != nullptr, "Temporary peer must be found in the array");
-		return { .is_temporary_peer = true, .temporary_peer = temporary_peers[scc_index] };
+		jobject temporary_peer = find_temporary_peer (scc_index);
+		abort_unless (temporary_peer != nullptr, "Temporary peer must be found for the SCC");
+		return { .is_temporary_peer = true, .temporary_peer = temporary_peer };
 	}
 
 	abort_unless (scc.Contexts [0] != nullptr, "SCC must have at least one context");
 	return { .is_temporary_peer = false, .context = scc.Contexts [0] };
+}
+
+void BridgeProcessingShared::add_temporary_peer (size_t scc_index, jobject peer) noexcept
+{
+	abort_unless (temporary_peers != nullptr, "Temporary peer array must be allocated");
+	abort_unless (temporary_peer_count < cross_refs->ComponentCount, "Temporary peer array must have capacity");
+	abort_unless (peer != nullptr, "Temporary peer must not be null");
+
+	temporary_peers [temporary_peer_count++] = {
+		.scc_index = scc_index,
+		.peer = peer,
+	};
+}
+
+jobject BridgeProcessingShared::find_temporary_peer (size_t scc_index) noexcept
+{
+	for (size_t i = 0; i < temporary_peer_count; i++) {
+		if (temporary_peers [i].scc_index == scc_index) {
+			return temporary_peers [i].peer;
+		}
+	}
+
+	return nullptr;
 }
 
 // caller must ensure that scc.Count > 1
@@ -243,7 +265,7 @@ bool BridgeProcessingShared::maybe_call_gc_user_peerable_add_managed_reference (
 		return false;
 	}
 
-	return callbacks.maybe_call_gc_user_peerable_add_managed_reference (callbacks.context, jni_env, from, to);
+	return callbacks.maybe_call_gc_user_peerable_add_managed_reference (jni_env, from, to);
 }
 
 bool BridgeProcessingShared::maybe_call_gc_user_peerable_clear_managed_references (JNIEnv *jni_env, jobject handle) noexcept
@@ -252,7 +274,7 @@ bool BridgeProcessingShared::maybe_call_gc_user_peerable_clear_managed_reference
 		return false;
 	}
 
-	return callbacks.maybe_call_gc_user_peerable_clear_managed_references (callbacks.context, jni_env, handle);
+	return callbacks.maybe_call_gc_user_peerable_clear_managed_references (jni_env, handle);
 }
 
 void BridgeProcessingShared::take_global_ref (HandleContext &context) noexcept

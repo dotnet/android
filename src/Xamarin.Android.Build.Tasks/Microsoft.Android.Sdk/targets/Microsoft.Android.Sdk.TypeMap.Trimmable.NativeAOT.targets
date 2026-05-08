@@ -6,15 +6,21 @@
     <_TrimmableRuntimeProviderJavaName Condition=" '$(_TrimmableRuntimeProviderJavaName)' == '' ">net.dot.jni.nativeaot.NativeAotRuntimeProvider</_TrimmableRuntimeProviderJavaName>
   </PropertyGroup>
 
-  <!-- After typemap generation, add generated assemblies to ILC inputs.
+  <!-- Add generated typemap assemblies to ILC inputs.
        NOT as TrimmerRootAssembly — ILC must process TypeMapAttributes and trim entries
        whose trimTarget types were removed. -->
   <Target Name="_AddTrimmableTypeMapAssembliesToIlc"
-      AfterTargets="_GenerateJavaStubs"
-      Condition=" '@(_GeneratedTypeMapAssemblies->Count())' != '0' ">
+      AfterTargets="_AndroidComputeIlcCompileInputs"
+      BeforeTargets="WriteIlcRspFileForCompilation"
+      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
+    <PropertyGroup>
+      <TypeMapEntryAssembly Condition=" '$(TypeMapEntryAssembly)' == '' ">_$(AssemblyName).TypeMap</TypeMapEntryAssembly>
+    </PropertyGroup>
     <ItemGroup>
-      <IlcReference Include="@(_GeneratedTypeMapAssemblies)" />
-      <UnmanagedEntryPointsAssembly Include="@(_GeneratedTypeMapAssemblies)" />
+      <_TrimmableTypeMapAssembliesForIlc Include="$(_TypeMapOutputDirectory)*.dll" />
+      <IlcCompileInput Include="@(_TrimmableTypeMapAssembliesForIlc->'%(FullPath)')" />
+      <IlcReference Include="@(_TrimmableTypeMapAssembliesForIlc->'%(FullPath)')" />
+      <UnmanagedEntryPointsAssembly Include="@(_TrimmableTypeMapAssembliesForIlc->'%(Filename)')" />
     </ItemGroup>
   </Target>
 

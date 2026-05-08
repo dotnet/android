@@ -3,6 +3,7 @@
 #include <array>
 #include <cstdio>
 #include <limits>
+#include <span>
 #include <string>
 #include <string_view>
 #include <unordered_map>
