@@ -1,10 +1,11 @@
 #pragma once
 
-#include <array>
 #include <cstring>
 #include <cerrno>
 #include <expected>
 #include <limits>
+#include <cstdlib>
+#include <cstdio>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -205,7 +206,9 @@ namespace xamarin::android {
 			}
 
 			if (!can_access (start_index)) {
-				log_error (LOG_DEFAULT, "Cannot convert string to integer, index {} is out of range", start_index);
+				char message[128];
+				snprintf (message, sizeof (message), "Cannot convert string to integer, index %zu is out of range", start_index);
+				log_write (LOG_DEFAULT, LogLevel::Error, message);
 				return false;
 			}
 
@@ -229,17 +232,23 @@ namespace xamarin::android {
 			}
 
 			if (out_of_range || errno == ERANGE) {
-				log_error (LOG_DEFAULT, "Value {} is out of range of this type ({}..{})", reinterpret_cast<char*>(s), static_cast<int64_t>(min), static_cast<uint64_t>(max));
+				char message[256];
+				snprintf (message, sizeof (message), "Value %s is out of range of this type (%lld..%llu)", reinterpret_cast<char*>(s), static_cast<long long>(min), static_cast<unsigned long long>(max));
+				log_write (LOG_DEFAULT, LogLevel::Error, message);
 				return false;
 			}
 
 			if (endp == s) {
-				log_error (LOG_DEFAULT, "Value {} does not represent a base {} integer", reinterpret_cast<char*>(s), base);
+				char message[256];
+				snprintf (message, sizeof (message), "Value %s does not represent a base %d integer", reinterpret_cast<char*>(s), base);
+				log_write (LOG_DEFAULT, LogLevel::Error, message);
 				return false;
 			}
 
 			if (*endp != '\0') {
-				log_error (LOG_DEFAULT, "Value {} has non-numeric characters at the end", reinterpret_cast<char*>(s));
+				char message[256];
+				snprintf (message, sizeof (message), "Value %s has non-numeric characters at the end", reinterpret_cast<char*>(s));
+				log_write (LOG_DEFAULT, LogLevel::Error, message);
 				return false;
 			}
 
@@ -274,9 +283,6 @@ namespace xamarin::android {
 	template<size_t MaxStackSize, bool HasResize, typename T = char>
 	class local_storage
 	{
-		protected:
-		using LocalStoreArray = std::array<T, MaxStackSize>;
-
 	public:
 		static constexpr bool has_resize = HasResize;
 
@@ -287,19 +293,19 @@ namespace xamarin::android {
 			init_store (size < MaxStackSize ? MaxStackSize : size);
 		}
 
-		virtual ~local_storage ()
+		~local_storage ()
 		{
 			free_store ();
 		}
 
 		auto get () noexcept -> T*
 		{
-			return allocated_store == nullptr ? local_store.data () : allocated_store;
+			return allocated_store == nullptr ? local_store : allocated_store;
 		}
 
 		auto get () const noexcept -> const T*
 		{
-			return allocated_store == nullptr ? local_store.data () : allocated_store;
+			return allocated_store == nullptr ? local_store : allocated_store;
 		}
 
 		auto size () const noexcept -> size_t
@@ -312,7 +318,8 @@ namespace xamarin::android {
 		void init_store (size_t new_size) noexcept
 		{
 			if (new_size > MaxStackSize) {
-				allocated_store = new T[new_size];
+				allocated_store = static_cast<T*> (std::malloc (new_size * sizeof (T)));
+				abort_unless (allocated_store != nullptr, "Failed to allocate local string storage");
 			} else {
 				allocated_store = nullptr;
 			}
@@ -326,11 +333,12 @@ namespace xamarin::android {
 				return;
 			}
 
-			delete[] allocated_store;
+			std::free (allocated_store);
+			allocated_store = nullptr;
 		}
 
 		[[gnu::always_inline]]
-		auto get_local_store () noexcept -> LocalStoreArray&
+		auto get_local_store () noexcept -> T*
 		{
 			return local_store;
 		}
@@ -343,7 +351,7 @@ namespace xamarin::android {
 
 	private:
 		size_t store_size;
-		LocalStoreArray local_store;
+		T local_store[MaxStackSize];
 		T* allocated_store;
 	};
 
@@ -416,11 +424,11 @@ namespace xamarin::android {
 			T* new_allocated_store = base::get_allocated_store ();
 			if (old_allocated_store != nullptr) {
 				std::memcpy (new_allocated_store, old_allocated_store, old_size);
-				delete[] old_allocated_store;
+				std::free (old_allocated_store);
 				return;
 			}
 
-			std::memcpy (new_allocated_store, base::get_local_store ().data (), MaxStackSize);
+			std::memcpy (new_allocated_store, base::get_local_store (), MaxStackSize);
 		}
 	};
 

@@ -6,6 +6,7 @@
 #include <unistd.h>
 
 #include <cerrno>
+#include <cstring>
 #include <concepts>
 #include <cstdio>
 #include <optional>
@@ -139,7 +140,9 @@ namespace xamarin::android {
 		{
 			struct stat sbuf;
 			if (fstatat (dirfd, file_name, &sbuf, 0) == -1) {
-				log_warn (LOG_ASSEMBLY, "Failed to stat file '{}': {}", file_name, std::strerror (errno));
+				char message[512];
+				snprintf (message, sizeof (message), "Failed to stat file '%s': %s", file_name, std::strerror (errno));
+				log_write (LOG_ASSEMBLY, LogLevel::Warn, message);
 				return std::nullopt;
 			}
 
@@ -154,9 +157,15 @@ namespace xamarin::android {
 		[[gnu::flatten, gnu::always_inline]]
 		static void set_environment_variable (const char *name, const char *value) noexcept
 		{
-			log_debug (LOG_DEFAULT, "Setting environment variable {} = '{}'", optional_string (name), optional_string (value));
+			if (should_log (LOG_DEFAULT)) {
+				char message[512];
+				snprintf (message, sizeof (message), "Setting environment variable %s = '%s'", optional_string (name), optional_string (value));
+				log_write (LOG_DEFAULT, LogLevel::Debug, message);
+			}
 			if (::setenv (name, value, 1) < 0) {
-				log_warn (LOG_DEFAULT, "Failed to set environment variable '{}': {}", name, ::strerror (errno));
+				char message[512];
+				snprintf (message, sizeof (message), "Failed to set environment variable '%s': %s", optional_string (name), ::strerror (errno));
+				log_write (LOG_DEFAULT, LogLevel::Warn, message);
 			}
 		}
 
@@ -178,7 +187,9 @@ namespace xamarin::android {
 			if (createDirectory) {
 				int rv = create_directory (value.get_cstr (), mode);
 				if (rv < 0 && errno != EEXIST) {
-					log_warn (LOG_DEFAULT, "Failed to create directory '{}' for environment variable '{}'. {}", value.get_string_view (), name, strerror (errno));
+					char message[512];
+					snprintf (message, sizeof (message), "Failed to create directory '%s' for environment variable '%s'. %s", optional_string (value.get_cstr ()), name.data (), strerror (errno));
+					log_write (LOG_DEFAULT, LogLevel::Warn, message);
 				}
 			}
 			set_environment_variable (name, value);
@@ -208,33 +219,32 @@ namespace xamarin::android {
 			mmap_info.area		  = mmap (nullptr, offsetSize, PROT_READ, MAP_PRIVATE, fd, static_cast<off_t>(offsetPage));
 
 			if (mmap_info.area == MAP_FAILED) {
-				Helpers::abort_application (
-					LOG_ASSEMBLY,
-					std::format (
-						"Could not mmap APK fd {}: {}; File={}",
-						fd,
-						strerror (errno),
-						filename
-					)
-				);
+				char message[512];
+				snprintf (message, sizeof (message), "Could not mmap APK fd %d: %s; File=%s", fd, strerror (errno), filename.data ());
+				Helpers::abort_application (LOG_ASSEMBLY, message);
 			}
 
 			mmap_info.size = offsetSize;
 			file_info.area = pointer_add (mmap_info.area, offsetFromPage);
 			file_info.size = size;
 
-			log_info (
-				LOG_ASSEMBLY,
-				"  mmap_start: {:<8p}; mmap_end: {:<8p}	 mmap_len: {:<12}  file_start: {:<8p}  file_end: {:<8p}	 file_len: {:<12}	  apk descriptor: {}  file: {}",
-				mmap_info.area,
-				pointer_add (mmap_info.area, mmap_info.size),
-				mmap_info.size,
-				file_info.area,
-				pointer_add (file_info.area, file_info.size),
-				file_info.size,
-				fd,
-				filename
-			);
+			if (should_log (LOG_ASSEMBLY)) {
+				char message[512];
+				snprintf (
+					message,
+					sizeof (message),
+					"  mmap_start: %-8p; mmap_end: %-8p	 mmap_len: %-12zu  file_start: %-8p  file_end: %-8p	 file_len: %-12zu	  apk descriptor: %d  file: %s",
+					mmap_info.area,
+					pointer_add (mmap_info.area, mmap_info.size),
+					mmap_info.size,
+					file_info.area,
+					pointer_add (file_info.area, file_info.size),
+					file_info.size,
+					fd,
+					filename.data ()
+				);
+				log_write (LOG_ASSEMBLY, LogLevel::Info, message);
+			}
 
 			return file_info;
 		}
@@ -256,7 +266,11 @@ namespace xamarin::android {
 					elf_header->e_ident[EI_MAG1] != ELFMAG1 ||
 					elf_header->e_ident[EI_MAG2] != ELFMAG2 ||
 					elf_header->e_ident[EI_MAG3] != ELFMAG3) {
-						log_debug (LOG_ASSEMBLY, "Not an ELF image: {}", file_name);
+						if (should_log (LOG_ASSEMBLY)) {
+							char message[512];
+							snprintf (message, sizeof (message), "Not an ELF image: %s", file_name.data ());
+							log_write (LOG_ASSEMBLY, LogLevel::Debug, message);
+						}
 						// Not an ELF image, just return what we mmapped before
 						return { map_info.area, map_info.size };
 				}

@@ -57,7 +57,7 @@ namespace xamarin::android {
 
 	private:
 		static void _write_stack_trace (FILE *to, const char *const from, LogCategories = LOG_NONE) noexcept;
-		static void log_it (LogCategories category, std::string const& line, FILE *to, const char *const from, bool logcat_enabled) noexcept;
+		static void log_it (LogCategories category, const char *line, FILE *to, const char *const from, bool logcat_enabled) noexcept;
 
 	private:
 		static inline JavaVM *jvm = nullptr;

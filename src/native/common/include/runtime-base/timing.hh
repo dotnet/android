@@ -3,6 +3,7 @@
 #include <sys/time.h>
 
 #include <chrono>
+#include <cstdio>
 #include <mutex>
 #include <vector>
 #include <string_view>
@@ -83,17 +84,22 @@ namespace xamarin::android
 				return;
 			}
 
-			using namespace std::literals;
 			auto interval = seq->end - seq->start; // nanoseconds
-			auto text = std::format (
-				"{}; elapsed: {}:{}::{}"sv,
-				message == nullptr ? ""sv : message,
-				static_cast<uint64_t>((std::chrono::duration_cast<std::chrono::seconds>(interval).count ())),
-				static_cast<uint64_t>((std::chrono::duration_cast<std::chrono::milliseconds>(interval)).count ()),
-				static_cast<uint64_t>((interval % 1ms).count ())
+			auto seconds = static_cast<uint64_t>((std::chrono::duration_cast<std::chrono::seconds>(interval).count ()));
+			auto milliseconds = static_cast<uint64_t>((std::chrono::duration_cast<std::chrono::milliseconds>(interval)).count ());
+			auto nanoseconds = static_cast<uint64_t>((interval % std::chrono::milliseconds (1)).count ());
+			char text[256];
+			snprintf (
+				text,
+				sizeof (text),
+				"%s; elapsed: %llu:%llu::%llu",
+				message == nullptr ? "" : message,
+				static_cast<unsigned long long>(seconds),
+				static_cast<unsigned long long>(milliseconds),
+				static_cast<unsigned long long>(nanoseconds)
 			);
 
-			log_write (LOG_TIMING, level, text.c_str ());
+			log_write (LOG_TIMING, level, text);
 		}
 
 	private:

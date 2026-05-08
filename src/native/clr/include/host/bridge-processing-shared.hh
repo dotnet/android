@@ -1,7 +1,6 @@
 #pragma once
 
 #include <jni.h>
-#include <unordered_map>
 
 #include <host/gc-bridge.hh>
 #include <host/os-bridge.hh>
@@ -20,16 +19,26 @@ struct CrossReferenceTarget
 	void mark_refs_added_if_needed () noexcept;
 };
 
+struct BridgeProcessingCallbacks
+{
+	void *context;
+	bool (*maybe_call_gc_user_peerable_add_managed_reference) (void *context, JNIEnv *env, jobject from, jobject to) noexcept;
+	bool (*maybe_call_gc_user_peerable_clear_managed_references) (void *context, JNIEnv *env, jobject handle) noexcept;
+};
+
 class BridgeProcessingShared
 {
 public:
-	explicit BridgeProcessingShared (MarkCrossReferencesArgs *args) noexcept;
+	explicit BridgeProcessingShared (MarkCrossReferencesArgs *args, const BridgeProcessingCallbacks *callbacks = nullptr) noexcept;
+	~BridgeProcessingShared () noexcept;
+
 	static void initialize_on_runtime_init (JNIEnv *jniEnv, jclass runtimeClass) noexcept;
 	void process () noexcept;
 private:
 	JNIEnv* env;
 	MarkCrossReferencesArgs *cross_refs;
-	std::unordered_map<size_t, jobject> temporary_peers;
+	jobject *temporary_peers = nullptr;
+	BridgeProcessingCallbacks callbacks;
 
 	static inline jclass GCUserPeer_class = nullptr;
 	static inline jmethodID GCUserPeer_ctor = nullptr;
@@ -50,6 +59,8 @@ private:
 
 	void clear_references_if_needed (const HandleContext &context) noexcept;
 	void clear_references (jobject handle) noexcept;
+	bool maybe_call_gc_user_peerable_add_managed_reference (JNIEnv *env, jobject from, jobject to) noexcept;
+	bool maybe_call_gc_user_peerable_clear_managed_references (JNIEnv *env, jobject handle) noexcept;
 
 	void log_missing_add_references_method (jclass java_class) noexcept;
 	void log_missing_clear_references_method (jclass java_class) noexcept;
@@ -60,9 +71,4 @@ private:
 	void log_gref_delete (jobject handle) noexcept;
 	void log_weak_ref_delete (jobject weak) noexcept;
 	void log_gc_summary () noexcept;
-
-	// These methods must be implemented by every host individually
-	// Both methods below return `true` if they processed the call
-	virtual auto maybe_call_gc_user_peerable_add_managed_reference (JNIEnv *env, jobject from, jobject to) noexcept -> bool = 0;
-	virtual auto maybe_call_gc_user_peerable_clear_managed_references (JNIEnv *env, jobject handle) noexcept -> bool = 0;
 };

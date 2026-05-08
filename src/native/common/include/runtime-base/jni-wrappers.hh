@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdlib>
+#include <new>
 
 #include <jni.h>
 
@@ -162,7 +163,11 @@ namespace xamarin::android
 			if (_arr != nullptr) {
 				len = static_cast<size_t>(_env->GetArrayLength (_arr));
 				if (len > sizeof (static_wrappers) / sizeof (jstring_wrapper)) {
-					wrappers = new jstring_wrapper [len];
+					wrappers = static_cast<jstring_wrapper*> (std::malloc (len * sizeof (jstring_wrapper)));
+					abort_unless (wrappers != nullptr, "Failed to allocate jstring array wrappers");
+					for (size_t i = 0; i < len; i++) {
+						::new (static_cast<void*>(&wrappers [i])) jstring_wrapper ();
+					}
 				} else {
 					wrappers = static_wrappers;
 				}
@@ -175,7 +180,10 @@ namespace xamarin::android
 		~jstring_array_wrapper () noexcept
 		{
 			if (wrappers != nullptr && wrappers != static_wrappers) {
-				delete[] wrappers;
+				for (size_t i = 0; i < len; i++) {
+					wrappers [i].~jstring_wrapper ();
+				}
+				std::free (wrappers);
 			}
 		}
 
