@@ -62,6 +62,7 @@ namespace Xamarin.Android.Prepare
 				) {
 					EchoStandardOutput = true,
 					EchoStandardError = true,
+					ProcessTimeout = TimeSpan.FromMinutes (30),
 				};
 				if (runner.Run ()) {
 					restoreSucceeded = true;
