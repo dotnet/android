@@ -124,5 +124,39 @@ namespace Xamarin.Android.Build.Tests {
 
 			FileAssert.Exists (path, $"{path} should exist in the SDK pack.");
 		}
+
+		[Test]
+		public void TrimmableTypeMap_RuntimeArtifacts_ArePackagedInSdk ()
+		{
+			var toolsDir = TestEnvironment.AndroidMSBuildDirectory;
+
+			foreach (var file in new [] {
+				"java_runtime.jar",
+				"java_runtime.dex",
+				"java_runtime_fastdev.jar",
+				"java_runtime_fastdev.dex",
+				"java_runtime_trimmable.jar",
+				"java_runtime_trimmable.dex",
+				"java_runtime_clr.jar",
+				"java_runtime_clr.dex",
+				"java_runtime_fastdev_clr.jar",
+				"java_runtime_fastdev_clr.dex",
+			}) {
+				FileAssert.Exists (Path.Combine (toolsDir, file), $"{file} should exist in the SDK pack.");
+			}
+
+			foreach (var file in new [] {
+				"java_runtime_net6.jar",
+				"java_runtime_net6.dex",
+				"java_runtime_fastdev_net6.jar",
+				"java_runtime_fastdev_net6.dex",
+				"java_runtime_trimmable_net6.jar",
+				"java_runtime_trimmable_net6.dex",
+				"java_runtime_trimmable_clr.jar",
+				"java_runtime_trimmable_clr.dex",
+			}) {
+				FileAssert.DoesNotExist (Path.Combine (toolsDir, file), $"{file} should not be packaged in the SDK pack.");
+			}
+		}
 	}
 }
