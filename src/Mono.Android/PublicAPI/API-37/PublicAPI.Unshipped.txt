@@ -1,1 +1,3 @@
 #nullable enable
+Android.App.ApplicationAttribute.EnableOnBackInvokedCallback.get -> bool
+Android.App.ApplicationAttribute.EnableOnBackInvokedCallback.set -> void

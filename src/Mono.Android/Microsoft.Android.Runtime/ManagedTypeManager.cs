@@ -154,15 +154,7 @@ class ManagedTypeManager : JniRuntime.JniTypeManager {
 
 	protected override IReadOnlyList<string>? GetStaticMethodFallbackTypesCore (string jniSimpleReference)
 	{
-		int slash = jniSimpleReference.LastIndexOf ('/');
-		var desugarType = slash > 0
-			? $"{jniSimpleReference.Substring (0, slash + 1)}Desugar{jniSimpleReference.Substring (slash + 1)}"
-			: $"Desugar{jniSimpleReference}";
-
-		return new[] {
-			$"{desugarType}$_CC",
-			$"{jniSimpleReference}$-CC",
-		};
+		return JniRemappingLookup.GetStaticMethodFallbackTypes (jniSimpleReference, useReplacementTypes: false);
 	}
 
 	static int CountMethods (ReadOnlySpan<char> methodsSpan)

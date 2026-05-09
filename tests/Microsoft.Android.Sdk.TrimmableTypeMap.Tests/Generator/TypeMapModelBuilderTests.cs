@@ -1022,7 +1022,7 @@ public class ModelBuilderTests : FixtureTestBase
 	public class ArrayEntriesPeBlob
 	{
 		[Fact]
-		public void FullPipeline_ArrayEntries_ReferencesSharedRankAnchors ()
+		public void FullPipeline_ArrayEntries_DefinesPrivateRankAnchors ()
 		{
 			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
 			var outputPath = Path.Combine (Path.GetTempPath (), "ArrSentinels.dll");
@@ -1030,21 +1030,19 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.Equal (3, model.MaxArrayRank);
 
 			EmitAndVerify (model, "ArrSentinels", (pe, reader) => {
-				// Per-asm DLLs no longer define their own __ArrayMapRank{N}; they reference
-				// the shared anchors in Mono.Android.
 				var typeDefNames = reader.TypeDefinitions
 					.Select (h => reader.GetString (reader.GetTypeDefinition (h).Name))
 					.ToHashSet (StringComparer.Ordinal);
-				Assert.DoesNotContain ("__ArrayMapRank1", typeDefNames);
+				Assert.Contains ("__ArrayMapRank1", typeDefNames);
+				Assert.Contains ("__ArrayMapRank2", typeDefNames);
+				Assert.Contains ("__ArrayMapRank3", typeDefNames);
 
-				var rankRefsToMonoAndroid = reader.TypeReferences
+				var rankTypeRefs = reader.TypeReferences
 					.Select (h => reader.GetTypeReference (h))
 					.Where (t => reader.GetString (t.Name).StartsWith ("__ArrayMapRank", StringComparison.Ordinal))
 					.Select (t => reader.GetString (t.Name))
 					.ToHashSet (StringComparer.Ordinal);
-				Assert.Contains ("__ArrayMapRank1", rankRefsToMonoAndroid);
-				Assert.Contains ("__ArrayMapRank2", rankRefsToMonoAndroid);
-				Assert.Contains ("__ArrayMapRank3", rankRefsToMonoAndroid);
+				Assert.Empty (rankTypeRefs);
 			});
 		}
 
@@ -1057,6 +1055,13 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.Equal (0, model.MaxArrayRank);
 
 			EmitAndVerify (model, "NoArrSentinels", (pe, reader) => {
+				var typeDefNames = reader.TypeDefinitions
+					.Select (h => reader.GetString (reader.GetTypeDefinition (h).Name))
+					.ToHashSet (StringComparer.Ordinal);
+				Assert.DoesNotContain ("__ArrayMapRank1", typeDefNames);
+				Assert.DoesNotContain ("__ArrayMapRank2", typeDefNames);
+				Assert.DoesNotContain ("__ArrayMapRank3", typeDefNames);
+
 				var typeRefNames = reader.TypeReferences
 					.Select (h => reader.GetString (reader.GetTypeReference (h).Name))
 					.ToHashSet (StringComparer.Ordinal);

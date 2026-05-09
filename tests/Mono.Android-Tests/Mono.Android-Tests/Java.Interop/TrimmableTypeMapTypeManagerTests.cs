@@ -180,6 +180,84 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void JavaProxyObject_ValueMarshalerUsesProxyType ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			var value = new object ();
+			var marshaler = JniEnvironment.Runtime.ValueManager.GetValueMarshaler (typeof (object));
+			var state = marshaler.CreateObjectReferenceArgumentState (value);
+
+			try {
+				Assert.AreEqual ("net/dot/jni/internal/JavaProxyObject", JNIEnv.GetClassNameFromInstance (state.ReferenceValue.Handle));
+			} finally {
+				marshaler.DestroyArgumentState (value, ref state);
+			}
+		}
+
+		[Test]
+		public void JavaProxyObject_CanBeUsedInObjectArray ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			using var values = new JavaObjectArray<object> (1);
+			values [0] = new object ();
+
+			Assert.AreEqual ("[Ljava/lang/Object;", values.GetJniTypeName ());
+		}
+
+		[Test]
+		public void JavaProxyObject_ObjectMethodsUseJavaIdentitySemantics ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			var value = new object ();
+			var other = new object ();
+			var marshaler = JniEnvironment.Runtime.ValueManager.GetValueMarshaler (typeof (object));
+			var state = marshaler.CreateObjectReferenceArgumentState (value);
+			var otherState = marshaler.CreateObjectReferenceArgumentState (other);
+
+			try {
+				var localProxy = state.ReferenceValue.NewLocalRef ();
+				var localOtherProxy = otherState.ReferenceValue.NewLocalRef ();
+
+				try {
+					IntPtr proxyClass = JNIEnv.GetObjectClass (localProxy.Handle);
+					try {
+						IntPtr equals = JNIEnv.GetMethodID (proxyClass, "equals", "(Ljava/lang/Object;)Z");
+						IntPtr hashCode = JNIEnv.GetMethodID (proxyClass, "hashCode", "()I");
+						IntPtr toString = JNIEnv.GetMethodID (proxyClass, "toString", "()Ljava/lang/String;");
+						var systemClass = JniEnvironment.Types.FindClass ("java/lang/System");
+
+						try {
+							IntPtr identityHashCode = JNIEnv.GetStaticMethodID (systemClass.Handle, "identityHashCode", "(Ljava/lang/Object;)I");
+
+							Assert.IsTrue (JNIEnv.CallBooleanMethod (localProxy.Handle, equals, new JValue (localProxy.Handle)));
+							Assert.IsFalse (JNIEnv.CallBooleanMethod (localProxy.Handle, equals, new JValue (localOtherProxy.Handle)));
+							Assert.AreEqual (
+								JNIEnv.CallStaticIntMethod (systemClass.Handle, identityHashCode, new JValue (localProxy.Handle)),
+								JNIEnv.CallIntMethod (localProxy.Handle, hashCode));
+							var proxyString = JNIEnv.GetString (JNIEnv.CallObjectMethod (localProxy.Handle, toString), JniHandleOwnership.TransferLocalRef);
+							Assert.IsTrue (
+								proxyString.StartsWith ("net.dot.jni.internal.JavaProxyObject@", StringComparison.Ordinal),
+								proxyString);
+						} finally {
+							JniObjectReference.Dispose (ref systemClass);
+						}
+					} finally {
+						JNIEnv.DeleteLocalRef (proxyClass);
+					}
+				} finally {
+					JniObjectReference.Dispose (ref localProxy);
+					JniObjectReference.Dispose (ref localOtherProxy);
+				}
+			} finally {
+				marshaler.DestroyArgumentState (other, ref otherState);
+				marshaler.DestroyArgumentState (value, ref state);
+			}
+		}
+
+		[Test]
 		public void TryGetArrayType_PrimitiveLeaf_DoesNotRequireRankMapEntry ()
 		{
 			AssumeTrimmableTypeMapEnabled ();

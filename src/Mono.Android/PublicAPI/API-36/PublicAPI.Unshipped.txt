@@ -4375,3 +4375,5 @@ virtual Java.Util.Concurrent.FutureTask.ResultNow() -> Java.Lang.Object?
 virtual Java.Util.Concurrent.FutureTask.State() -> Java.Util.Concurrent.IFuture.State?
 virtual Java.Util.IdentityHashMap.Remove(Java.Lang.Object? key, Java.Lang.Object? value) -> bool
 virtual Java.Util.IdentityHashMap.Replace(Java.Lang.Object? key, Java.Lang.Object? oldValue, Java.Lang.Object? newValue) -> bool
+Android.App.ApplicationAttribute.EnableOnBackInvokedCallback.get -> bool
+Android.App.ApplicationAttribute.EnableOnBackInvokedCallback.set -> void

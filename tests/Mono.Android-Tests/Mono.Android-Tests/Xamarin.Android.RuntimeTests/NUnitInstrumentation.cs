@@ -30,49 +30,19 @@ namespace Xamarin.Android.RuntimeTests
                 // Tests from the external Java.Interop-Tests assembly that fail under the
                 // trimmable typemap. These cannot use [Category("TrimmableIgnore")] because
                 // we don't control that assembly — they must be excluded by name here.
-                ExcludedTestNames = [
+                ExcludedTestNames = new [] {
                     // net.dot.jni.test.CallVirtualFromConstructorDerived Java class not in APK
                     "Java.InteropTests.InvokeVirtualFromConstructorTests",
 
-                    // net.dot.jni.internal.JavaProxyObject Java class not in APK — fixture setup fails (16 tests)
-                    "Java.InteropTests.JavaObjectArray_object_ContractTest",
-
-                    // net.dot.jni.internal.JavaProxyObject Java class not in APK
-                    "Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateArgumentState",
-                    "Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateGenericArgumentState",
-                    "Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateGenericObjectReferenceArgumentState",
-                    "Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateGenericValue",
-                    "Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateObjectReferenceArgumentState",
-                    "Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateValue",
-                    "Java.InteropTests.JniValueMarshaler_object_ContractTests.SpecificTypesAreUsed",
-
-                    // net.dot.jni.internal.JavaProxyThrowable static init — same JavaProxy*
-                    // root cause as the JavaProxyObject exclusions above.
-                    "Java.InteropTests.JavaExceptionTests.InnerExceptionIsNotAProxy",
-
-                    // IJavaInterfaceInvoker ctor trimmed / missing JavaPeerProxy for test types
-                    "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs",
-                    "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs_Exceptions",
-                    "Java.InteropTests.JavaPeerableExtensionsTests.JavaAs_InstanceThatDoesNotImplementInterfaceReturnsNull",
-
-                    // JNI method remapping not supported in trimmable typemap
-                    "Java.InteropTests.JniPeerMembersTests.ReplaceInstanceMethodName",
-                    "Java.InteropTests.JniPeerMembersTests.ReplaceInstanceMethodWithStaticMethod",
-                    "Java.InteropTests.JniPeerMembersTests.ReplacementTypeUsedForMethodLookup",
-                    "Java.InteropTests.JniPeerMembersTests.ReplaceStaticMethodName",
-
                     // Throwable subclass registration
                     "Java.InteropTests.JnienvTest.ActivatedDirectThrowableSubclassesShouldBeRegistered",
-
-                    // Typemap doesn't resolve most-derived type
-                    "Java.LangTests.ObjectTest.GetObject_ReturnsMostDerivedType",
 
                     // Instance identity after JNI round-trip
                     "Java.LangTests.ObjectTest.JnienvCreateInstance_RegistersMultipleInstances",
 
                     // Global ref leak when inflating custom views
                     "Xamarin.Android.RuntimeTests.CustomWidgetTests.InflateCustomView_ShouldNotLeakGlobalRefs",
-                ];
+                };
             }
         }
 
