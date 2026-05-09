@@ -2366,7 +2366,7 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 
 			var runParameters = buildParameters
 				.Select (p => $"/p:{p}")
-				.Concat (["--", "--job", "Dry", "--filter", "*StringBenchmarks*"])
+				.Concat (["--", "--job", "Dry", "--filter", "*StringBenchmarks*", "--toolchain", "noemit"])
 				.ToArray ();
 			using var process = dotnet.StartRun (waitForExit: true, parameters: runParameters);
 

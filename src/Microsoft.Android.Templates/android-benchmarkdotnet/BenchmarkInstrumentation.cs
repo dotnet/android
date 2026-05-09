@@ -8,6 +8,7 @@ using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Loggers;
 using BenchmarkDotNet.Reports;
 using BenchmarkDotNet.Running;
+using BenchmarkDotNet.Toolchains.InProcess.Emit;
 using BenchmarkDotNet.Toolchains.InProcess.NoEmit;
 
 namespace AndroidBenchmark1;
@@ -69,15 +70,22 @@ public class BenchmarkInstrumentation : Instrumentation
 			return decodedArgs.Length == 0 ? [] : decodedArgs.Split ('\0');
 		} catch (FormatException ex) {
 			throw new InvalidOperationException ($"Invalid run argument payload in '{DotNetRunArgumentsKey}'.", ex);
-	}
+		}
 	}
 
 	static Summary [] RunBenchmarks (string [] benchmarkArgs, string artifactsPath)
 	{
 		var logger = ConsoleLogger.Default;
 		var options = ParseBenchmarkArguments (benchmarkArgs);
+		// BenchmarkDotNet's default toolchains build and launch a separate executable
+		// with the dotnet SDK. Android devices do not provide that SDK-side environment,
+		// so instrumentation-hosted benchmarks must run in the already-launched process.
+		// Use --toolchain emit|noemit to choose between BenchmarkDotNet's in-process toolchains.
+		var job = options.Toolchain == BenchmarkToolchain.InProcessEmit
+			? options.Job.WithToolchain (InProcessEmitToolchain.Instance)
+			: options.Job.WithToolchain (InProcessNoEmitToolchain.Instance);
 		var config = DefaultConfig.Instance
-			.AddJob (options.Job.WithToolchain (InProcessNoEmitToolchain.Instance))
+			.AddJob (job)
 			.WithArtifactsPath (artifactsPath);
 		if (options.Filters.Count > 0)
 			config = config.AddFilter (new GlobFilter (options.Filters.ToArray ()));
@@ -103,8 +111,12 @@ public class BenchmarkInstrumentation : Instrumentation
 				options.Job = GetJob (GetRequiredArgumentValue (benchmarkArgs, ref i, argument));
 			} else if (argument.StartsWith ("--job=", StringComparison.Ordinal)) {
 				options.Job = GetJob (argument.Substring ("--job=".Length));
+			} else if (argument == "--toolchain") {
+				options.Toolchain = GetToolchain (GetRequiredArgumentValue (benchmarkArgs, ref i, argument));
+			} else if (argument.StartsWith ("--toolchain=", StringComparison.Ordinal)) {
+				options.Toolchain = GetToolchain (argument.Substring ("--toolchain=".Length));
 			} else {
-				throw new NotSupportedException ($"Unsupported BenchmarkDotNet argument '{argument}'. The Android BenchmarkDotNet template currently supports --filter/-f and --job/-j.");
+				throw new NotSupportedException ($"Unsupported BenchmarkDotNet argument '{argument}'. The Android BenchmarkDotNet template currently supports --filter/-f, --job/-j, and --toolchain.");
 			}
 		}
 
@@ -128,9 +140,23 @@ public class BenchmarkInstrumentation : Instrumentation
 			_ => throw new ArgumentException ($"Unsupported BenchmarkDotNet job '{value}'. Supported jobs are Default, Dry, Short, Medium, and Long."),
 		};
 
+	static BenchmarkToolchain GetToolchain (string value) =>
+		value.ToLowerInvariant () switch {
+			"emit" => BenchmarkToolchain.InProcessEmit,
+			"noemit" => BenchmarkToolchain.InProcessNoEmit,
+			_ => throw new ArgumentException ($"Unsupported BenchmarkDotNet toolchain '{value}'. Supported toolchains are Emit and NoEmit."),
+		};
+
+	enum BenchmarkToolchain
+	{
+		InProcessNoEmit,
+		InProcessEmit,
+	}
+
 	sealed class BenchmarkOptions
 	{
 		public Job Job { get; set; } = Job.Default;
+		public BenchmarkToolchain Toolchain { get; set; }
 		public List<string> Filters { get; } = [];
 	}
 }
