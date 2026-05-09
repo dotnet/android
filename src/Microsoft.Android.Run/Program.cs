@@ -319,6 +319,9 @@ static string? EncodeRunArguments (List<string> arguments)
 	if (arguments.Count == 0)
 		return null;
 
+	// These are the app arguments forwarded after `dotnet run --`.
+	// `am instrument -e` accepts a single string value, so preserve argv boundaries
+	// with NUL separators and base64-encode the payload for adb shell transport.
 	var joinedArguments = string.Join ('\0', arguments);
 	return Convert.ToBase64String (Encoding.UTF8.GetBytes (joinedArguments));
 }
