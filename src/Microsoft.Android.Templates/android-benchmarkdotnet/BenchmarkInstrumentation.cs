@@ -15,7 +15,7 @@ namespace AndroidBenchmark1;
 [Instrumentation (Name = "com.companyname.AndroidBenchmark1.BenchmarkInstrumentation")]
 public class BenchmarkInstrumentation : Instrumentation
 {
-	const string BenchmarkArgsKey = "benchmarkArgsBase64";
+	const string DotNetRunArgumentsKey = "dotnetRunArgumentsBase64";
 
 	Bundle? arguments;
 
@@ -42,8 +42,8 @@ public class BenchmarkInstrumentation : Instrumentation
 				var artifactsPath = Path.Combine (writablePath, "BenchmarkDotNet.Artifacts");
 				Directory.CreateDirectory (artifactsPath);
 
-				var benchmarkArgs = DecodeBenchmarkArguments (arguments);
-				var summaries = RunBenchmarks (benchmarkArgs, artifactsPath);
+				var runArguments = DecodeRunArguments (arguments);
+				var summaries = RunBenchmarks (runArguments, artifactsPath);
 				var benchmarkCount = summaries.Sum (summary => summary.Reports.Length);
 				var failed = summaries.Length == 0 || summaries.Any (summary => summary.HasCriticalValidationErrors || summary.Reports.Any (report => !report.Success));
 
@@ -58,9 +58,9 @@ public class BenchmarkInstrumentation : Instrumentation
 		});
 	}
 
-	static string [] DecodeBenchmarkArguments (Bundle? arguments)
+	static string [] DecodeRunArguments (Bundle? arguments)
 	{
-		var encodedArgs = arguments?.GetString (BenchmarkArgsKey);
+		var encodedArgs = arguments?.GetString (DotNetRunArgumentsKey);
 		if (string.IsNullOrEmpty (encodedArgs))
 			return [];
 
@@ -68,8 +68,8 @@ public class BenchmarkInstrumentation : Instrumentation
 			var decodedArgs = Encoding.UTF8.GetString (Convert.FromBase64String (encodedArgs));
 			return decodedArgs.Length == 0 ? [] : decodedArgs.Split ('\0');
 		} catch (FormatException ex) {
-			throw new InvalidOperationException ($"Invalid BenchmarkDotNet argument payload in '{BenchmarkArgsKey}'.", ex);
-		}
+			throw new InvalidOperationException ($"Invalid run argument payload in '{DotNetRunArgumentsKey}'.", ex);
+	}
 	}
 
 	static Summary [] RunBenchmarks (string [] benchmarkArgs, string artifactsPath)

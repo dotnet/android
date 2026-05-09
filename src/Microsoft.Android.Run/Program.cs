@@ -5,7 +5,7 @@ using Xamarin.Android.Tools;
 
 const string Name = "Microsoft.Android.Run";
 const string VersionsFileName = "Microsoft.Android.versions.txt";
-const string BenchmarkArgsKey = "benchmarkArgsBase64";
+const string DotNetRunArgumentsKey = "dotnetRunArgumentsBase64";
 
 string? adbPath = null;
 string? adbTarget = null;
@@ -220,9 +220,9 @@ async Task<int> RunInstrumentationAsync (List<string> instrumentationArguments)
 {
 	// Build the am instrument command
 	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
-	var benchmarkArgs = EncodeBenchmarkArguments (instrumentationArguments);
-	var benchmarkArg = benchmarkArgs == null ? "" : $" -e {BenchmarkArgsKey} {benchmarkArgs}";
-	var cmdArgs = $"shell am instrument -w{userArg}{benchmarkArg} {package}/{instrumentation}";
+	var encodedArguments = EncodeRunArguments (instrumentationArguments);
+	var argumentsArg = encodedArguments == null ? "" : $" -e {DotNetRunArgumentsKey} {encodedArguments}";
+	var cmdArgs = $"shell am instrument -w{userArg}{argumentsArg} {package}/{instrumentation}";
 
 	if (verbose)
 		Console.WriteLine ($"Running instrumentation: adb {cmdArgs}");
@@ -298,7 +298,7 @@ async Task<int> RunInstrumentationAsync (List<string> instrumentationArguments)
 	if (!string.IsNullOrEmpty (result.ArtifactsPath)) {
 		var localArtifactsPath = await PullArtifactsAsync (result.ArtifactsPath);
 		if (!string.IsNullOrEmpty (localArtifactsPath))
-			Console.WriteLine ($"BenchmarkDotNet artifacts: {localArtifactsPath}");
+			Console.WriteLine ($"Artifacts: {localArtifactsPath}");
 	}
 
 	if (!result.Succeeded) {
@@ -314,7 +314,7 @@ async Task<int> RunInstrumentationAsync (List<string> instrumentationArguments)
 	return 0;
 }
 
-static string? EncodeBenchmarkArguments (List<string> arguments)
+static string? EncodeRunArguments (List<string> arguments)
 {
 	if (arguments.Count == 0)
 		return null;
@@ -366,7 +366,7 @@ async Task<string?> PullArtifactsAsync (string deviceArtifactsPath)
 	var localArtifactsPath = Path.Combine (Environment.CurrentDirectory, Path.GetFileName (deviceArtifactsPath.TrimEnd ('/')));
 
 	if (verbose)
-		Console.WriteLine ($"Pulling BenchmarkDotNet artifacts: {deviceArtifactsPath} -> {localArtifactsPath}");
+		Console.WriteLine ($"Pulling artifacts: {deviceArtifactsPath} -> {localArtifactsPath}");
 
 	var (exitCode, output, error) = await AdbHelper.RunAsync (
 		adbPath,
@@ -375,7 +375,7 @@ async Task<string?> PullArtifactsAsync (string deviceArtifactsPath)
 		cts.Token,
 		verbose);
 	if (exitCode != 0) {
-		Console.Error.WriteLine ($"Error: Failed to pull BenchmarkDotNet artifacts: {error}");
+		Console.Error.WriteLine ($"Error: Failed to pull artifacts: {error}");
 		if (verbose && !string.IsNullOrWhiteSpace (output))
 			Console.Error.WriteLine (output);
 		return null;

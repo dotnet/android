@@ -2403,7 +2403,7 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 
 			var outputText = output.ToString ();
 			StringAssert.Contains ("BenchmarkDotNet completed", outputText, $"Output should include the BenchmarkDotNet summary. See {logPath} for details.");
-			StringAssert.Contains ("BenchmarkDotNet artifacts:", outputText, $"Output should include the local artifacts path. See {logPath} for details.");
+			StringAssert.Contains ("Artifacts:", outputText, $"Output should include the local artifacts path. See {logPath} for details.");
 
 			var artifactsPath = Path.Combine (projectDirectory, "BenchmarkDotNet.Artifacts");
 			Assert.IsTrue (Directory.Exists (artifactsPath), $"Expected artifacts directory '{artifactsPath}' to exist. See {logPath} for details.");
