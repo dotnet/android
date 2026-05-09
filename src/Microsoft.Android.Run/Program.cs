@@ -1,9 +1,11 @@
 ﻿using System.Diagnostics;
+using System.Text;
 using Mono.Options;
 using Xamarin.Android.Tools;
 
 const string Name = "Microsoft.Android.Run";
 const string VersionsFileName = "Microsoft.Android.versions.txt";
+const string BenchmarkArgsKey = "benchmarkArgsBase64";
 
 string? adbPath = null;
 string? adbTarget = null;
@@ -32,6 +34,7 @@ async Task<int> RunAsync (string[] args)
 {
 	bool showHelp = false;
 	bool showVersion = false;
+	var remaining = new List<string> ();
 
 	var options = new OptionSet {
 		$"Usage: {Name} [OPTIONS]",
@@ -77,18 +80,21 @@ async Task<int> RunAsync (string[] args)
 		{ "h|help|?",
 			"Show this help message and exit.",
 			v => showHelp = v != null },
+		{ "<>",
+			v => remaining.Add (v) },
 	};
 
-	List<string> remaining;
 	try {
-		remaining = options.Parse (args);
+		options.Parse (args);
 	} catch (OptionException e) {
 		Console.Error.WriteLine ($"Error: {e.Message}");
 		Console.Error.WriteLine ($"Try '{Name} --help' for more information.");
 		return 1;
 	}
 
-	if (remaining.Count > 0 && !isDotnetTestMode) {
+	bool isInstrumentMode = !string.IsNullOrEmpty (instrumentation);
+
+	if (remaining.Count > 0 && !isDotnetTestMode && !isInstrumentMode) {
 		Console.Error.WriteLine ($"Error: Unexpected argument(s): {string.Join (" ", remaining)}");
 		Console.Error.WriteLine ($"Try '{Name} --help' for more information.");
 		return 1;
@@ -123,8 +129,6 @@ async Task<int> RunAsync (string[] args)
 		Console.Error.WriteLine ($"Try '{Name} --help' for more information.");
 		return 1;
 	}
-
-	bool isInstrumentMode = !string.IsNullOrEmpty (instrumentation);
 
 	if (!isInstrumentMode && string.IsNullOrEmpty (activity) && !isDotnetTestMode) {
 		Console.Error.WriteLine ("Error: --activity or --instrument is required.");
@@ -181,7 +185,7 @@ async Task<int> RunAsync (string[] args)
 			return await RunDotnetTestAsync (remaining);
 
 		if (isInstrumentMode)
-			return await RunInstrumentationAsync ();
+			return await RunInstrumentationAsync (remaining);
 
 		return await RunAppAsync ();
 	} finally {
@@ -212,11 +216,13 @@ void OnCancelKeyPress (object? sender, ConsoleCancelEventArgs e)
 	}
 }
 
-async Task<int> RunInstrumentationAsync ()
+async Task<int> RunInstrumentationAsync (List<string> instrumentationArguments)
 {
 	// Build the am instrument command
 	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
-	var cmdArgs = $"shell am instrument -w{userArg} {package}/{instrumentation}";
+	var benchmarkArgs = EncodeBenchmarkArguments (instrumentationArguments);
+	var benchmarkArg = benchmarkArgs == null ? "" : $" -e {BenchmarkArgsKey} {benchmarkArgs}";
+	var cmdArgs = $"shell am instrument -w{userArg}{benchmarkArg} {package}/{instrumentation}";
 
 	if (verbose)
 		Console.WriteLine ($"Running instrumentation: adb {cmdArgs}");
@@ -226,17 +232,25 @@ async Task<int> RunInstrumentationAsync ()
 	using var instrumentProcess = new Process { StartInfo = psi };
 
 	var locker = new Lock ();
+	var output = new StringBuilder ();
+	var error = new StringBuilder ();
 
 	instrumentProcess.OutputDataReceived += (s, e) => {
-		if (e.Data != null)
-			lock (locker)
+		if (e.Data != null) {
+			lock (locker) {
+				output.AppendLine (e.Data);
 				Console.WriteLine (e.Data);
+			}
+		}
 	};
 
 	instrumentProcess.ErrorDataReceived += (s, e) => {
-		if (e.Data != null)
-			lock (locker)
+		if (e.Data != null) {
+			lock (locker) {
+				error.AppendLine (e.Data);
 				Console.Error.WriteLine (e.Data);
+			}
+		}
 	};
 
 	instrumentProcess.Start ();
@@ -278,7 +292,96 @@ async Task<int> RunInstrumentationAsync ()
 		return 1;
 	}
 
+	var result = ParseInstrumentationRunOutput (output.ToString (), error.ToString ());
+	if (!string.IsNullOrEmpty (result.Summary))
+		Console.WriteLine (result.Summary);
+	if (!string.IsNullOrEmpty (result.ArtifactsPath)) {
+		var localArtifactsPath = await PullArtifactsAsync (result.ArtifactsPath);
+		if (!string.IsNullOrEmpty (localArtifactsPath))
+			Console.WriteLine ($"BenchmarkDotNet artifacts: {localArtifactsPath}");
+	}
+
+	if (!result.Succeeded) {
+		if (!string.IsNullOrEmpty (result.Error))
+			Console.Error.WriteLine (result.Error);
+		else if (result.InstrumentationCode.HasValue)
+			Console.Error.WriteLine ($"Instrumentation failed with code {result.InstrumentationCode.Value}.");
+		else
+			Console.Error.WriteLine ("Instrumentation failed.");
+		return 1;
+	}
+
 	return 0;
+}
+
+static string? EncodeBenchmarkArguments (List<string> arguments)
+{
+	if (arguments.Count == 0)
+		return null;
+
+	var joinedArguments = string.Join ('\0', arguments);
+	return Convert.ToBase64String (Encoding.UTF8.GetBytes (joinedArguments));
+}
+
+InstrumentationRunResult ParseInstrumentationRunOutput (string output, string error)
+{
+	var result = new InstrumentationRunResult ();
+	foreach (var rawLine in (output + "\n" + error).Split ('\n')) {
+		var line = rawLine.TrimEnd ('\r');
+		if (line.StartsWith ("INSTRUMENTATION_RESULT: ", StringComparison.Ordinal)) {
+			var value = line.Substring ("INSTRUMENTATION_RESULT: ".Length);
+			var separator = value.IndexOf ('=');
+			if (separator <= 0)
+				continue;
+
+			var key = value.Substring (0, separator).Trim ();
+			var keyValue = value.Substring (separator + 1).Trim ();
+			switch (key) {
+			case "artifactsPath":
+				result.ArtifactsPath = keyValue;
+				break;
+			case "summary":
+				result.Summary = keyValue;
+				break;
+			case "error":
+				result.Error = keyValue;
+				break;
+			}
+		} else if (line.StartsWith ("INSTRUMENTATION_CODE: ", StringComparison.Ordinal)) {
+			var code = line.Substring ("INSTRUMENTATION_CODE: ".Length).Trim ();
+			if (int.TryParse (code, out int instrumentationCode))
+				result.InstrumentationCode = instrumentationCode;
+		} else if (line.StartsWith ("INSTRUMENTATION_FAILED", StringComparison.Ordinal)) {
+			result.InstrumentationFailed = true;
+			if (string.IsNullOrEmpty (result.Error))
+				result.Error = line;
+		}
+	}
+
+	return result;
+}
+
+async Task<string?> PullArtifactsAsync (string deviceArtifactsPath)
+{
+	var localArtifactsPath = Path.Combine (Environment.CurrentDirectory, Path.GetFileName (deviceArtifactsPath.TrimEnd ('/')));
+
+	if (verbose)
+		Console.WriteLine ($"Pulling BenchmarkDotNet artifacts: {deviceArtifactsPath} -> {localArtifactsPath}");
+
+	var (exitCode, output, error) = await AdbHelper.RunAsync (
+		adbPath,
+		adbTarget,
+		$"pull \"{deviceArtifactsPath}\" \"{Environment.CurrentDirectory}\"",
+		cts.Token,
+		verbose);
+	if (exitCode != 0) {
+		Console.Error.WriteLine ($"Error: Failed to pull BenchmarkDotNet artifacts: {error}");
+		if (verbose && !string.IsNullOrWhiteSpace (output))
+			Console.Error.WriteLine (output);
+		return null;
+	}
+
+	return localArtifactsPath;
 }
 
 async Task<int> RunDotnetTestAsync (List<string> mtpArgs)
@@ -519,4 +622,18 @@ string? FindAdbPath ()
 			Console.Error.WriteLine ($"Error reading version info: {ex.Message}");
 		return (null, null);
 	}
+}
+
+class InstrumentationRunResult
+{
+	public string? ArtifactsPath { get; set; }
+	public string? Summary { get; set; }
+	public string? Error { get; set; }
+	public int? InstrumentationCode { get; set; }
+	public bool InstrumentationFailed { get; set; }
+
+	public bool Succeeded =>
+		!InstrumentationFailed &&
+		string.IsNullOrEmpty (Error) &&
+		(!InstrumentationCode.HasValue || InstrumentationCode.Value == -1);
 }

@@ -2332,6 +2332,85 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			}
 		}
 
+		[Test]
+		public void DotNetNewAndroidBenchmarkDotNet ()
+		{
+			const string templateName = "DotNetNewAndroidBenchmarkDotNet";
+			var projectDirectory = Path.Combine (Root, "temp", templateName);
+			if (Directory.Exists (projectDirectory))
+				Directory.Delete (projectDirectory, true);
+
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = projectDirectory;
+			var dotnet = new DotNetCLI (Path.Combine (projectDirectory, $"{templateName}.csproj"));
+			var templateHive = Path.Combine (projectDirectory, ".template-hive");
+			var templateSource = Path.Combine (XABuildPaths.TopDirectory, "src", "Microsoft.Android.Templates");
+			Assert.IsTrue (dotnet.NewInstall (templateSource, templateHive), $"`dotnet new install {templateSource}` should succeed");
+			Assert.IsTrue (dotnet.New ("android-benchmarkdotnet", customHive: templateHive), "`dotnet new android-benchmarkdotnet` should succeed");
+
+			var benchmarkDotNetVersion = GetAssemblyMetadataValue ("BenchmarkDotNetPackageVersion");
+			var csprojPath = Path.Combine (projectDirectory, $"{templateName}.csproj");
+			var doc = XDocument.Load (csprojPath);
+			var ns = doc.Root?.Name.Namespace ?? XNamespace.None;
+			var benchmarkDotNetRef = doc.Descendants (ns + "PackageReference")
+				.FirstOrDefault (e => e.Attribute ("Include")?.Value == "BenchmarkDotNet");
+			Assert.IsNotNull (benchmarkDotNetRef, "BenchmarkDotNet PackageReference should exist in the generated project");
+			benchmarkDotNetRef.SetAttributeValue ("Version", benchmarkDotNetVersion);
+			doc.Save (csprojPath);
+
+			var buildParameters = new List<string> {
+				"Configuration=Release",
+				"UseMonoRuntime=false",
+				"RestoreAdditionalProjectSources=https://api.nuget.org/v3/index.json",
+			};
+			Assert.IsTrue (dotnet.Build (parameters: buildParameters.ToArray ()), "`dotnet build -c Release` should succeed");
+
+			var runParameters = buildParameters
+				.Select (p => $"/p:{p}")
+				.Concat (["--", "--job", "Dry", "--filter", "*StringBenchmarks*"])
+				.ToArray ();
+			using var process = dotnet.StartRun (waitForExit: true, parameters: runParameters);
+
+			var locker = new Lock ();
+			var output = new StringBuilder ();
+
+			process.OutputDataReceived += (sender, e) => {
+				if (e.Data != null)
+					lock (locker)
+						output.AppendLine (e.Data);
+			};
+			process.ErrorDataReceived += (sender, e) => {
+				if (e.Data != null)
+					lock (locker)
+						output.AppendLine ($"STDERR: {e.Data}");
+			};
+
+			process.BeginOutputReadLine ();
+			process.BeginErrorReadLine ();
+
+			bool completed = process.WaitForExit ((int) TimeSpan.FromMinutes (15).TotalMilliseconds);
+			if (!completed) {
+				process.Kill (entireProcessTree: true);
+			} else {
+				process.WaitForExit ();
+			}
+
+			string logPath = Path.Combine (projectDirectory, "dotnet-run-output.log");
+			File.WriteAllText (logPath, output.ToString ());
+			TestContext.AddTestAttachment (logPath);
+
+			Assert.IsTrue (completed, $"`dotnet run -c Release` did not complete in time. See {logPath} for details.");
+			Assert.AreEqual (0, process.ExitCode, $"`dotnet run -c Release` should succeed. See {logPath} for details.");
+
+			var outputText = output.ToString ();
+			StringAssert.Contains ("BenchmarkDotNet completed", outputText, $"Output should include the BenchmarkDotNet summary. See {logPath} for details.");
+			StringAssert.Contains ("BenchmarkDotNet artifacts:", outputText, $"Output should include the local artifacts path. See {logPath} for details.");
+
+			var artifactsPath = Path.Combine (projectDirectory, "BenchmarkDotNet.Artifacts");
+			Assert.IsTrue (Directory.Exists (artifactsPath), $"Expected artifacts directory '{artifactsPath}' to exist. See {logPath} for details.");
+			Assert.IsTrue (Directory.EnumerateFiles (artifactsPath, "*", SearchOption.AllDirectories).Any (),
+				$"Expected pulled BenchmarkDotNet artifacts under '{artifactsPath}'. See {logPath} for details.");
+		}
+
 		static int ParseInstrumentationResult (string output, string key)
 		{
 			// Parses lines like: INSTRUMENTATION_RESULT: passed=1

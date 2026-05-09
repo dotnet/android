@@ -127,8 +127,9 @@ This file contains targets specific for Android application projects.
       <_AndroidRunUserArg Condition=" '$(AndroidDeviceUserId)' != '' ">--user &quot;$(AndroidDeviceUserId)&quot;</_AndroidRunUserArg>
       <_AndroidRunInstrumentArg Condition=" '$(AndroidInstrumentation)' != '' ">--instrument &quot;$(AndroidInstrumentation)&quot;</_AndroidRunInstrumentArg>
       <_AndroidRunActivityArg Condition=" '$(AndroidInstrumentation)' == '' ">--activity &quot;$(AndroidLaunchActivity)&quot;</_AndroidRunActivityArg>
+      <_AndroidRunStartArguments Condition=" '$(AndroidInstrumentation)' != '' and '$(StartArguments)' != '' ">$(StartArguments)</_AndroidRunStartArguments>
       <RunCommand>dotnet</RunCommand>
-      <RunArguments>exec &quot;$(_AndroidRunPath)&quot; --adb &quot;$(_AdbToolPath)&quot; $(_AndroidRunAdbTargetArg) --package &quot;$(_AndroidPackage)&quot; $(_AndroidRunActivityArg) $(_AndroidRunInstrumentArg) --logcat-args &quot;$(_AndroidRunLogcatArgs)&quot; $(_AndroidRunUserArg) $(_AndroidRunExtraArgs)</RunArguments>
+      <RunArguments>exec &quot;$(_AndroidRunPath)&quot; --adb &quot;$(_AdbToolPath)&quot; $(_AndroidRunAdbTargetArg) --package &quot;$(_AndroidPackage)&quot; $(_AndroidRunActivityArg) $(_AndroidRunInstrumentArg) --logcat-args &quot;$(_AndroidRunLogcatArgs)&quot; $(_AndroidRunUserArg) $(_AndroidRunExtraArgs) $(_AndroidRunStartArguments)</RunArguments>
     </PropertyGroup>
     <!-- When WaitForExit is false, use direct adb command (no logcat streaming) -->
     <PropertyGroup Condition=" '$(WaitForExit)' == 'false' ">

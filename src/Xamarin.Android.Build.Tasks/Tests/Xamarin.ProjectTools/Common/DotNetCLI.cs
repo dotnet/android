@@ -105,13 +105,31 @@ namespace Xamarin.ProjectTools
 			return succeeded;
 		}
 
-		public bool New (string template, string output = null)
+		public bool New (string template, string output = null, string customHive = null)
 		{
 			var arguments = new List<string> {
 				"new",
 				template,
 				"--output", $"\"{output ?? ProjectDirectory}\"",
 			};
+			if (!string.IsNullOrEmpty (customHive)) {
+				arguments.Add ("--debug:custom-hive");
+				arguments.Add ($"\"{customHive}\"");
+			}
+			return Execute (arguments.ToArray ());
+		}
+
+		public bool NewInstall (string templateSource, string customHive = null)
+		{
+			var arguments = new List<string> {
+				"new",
+				"install",
+				$"\"{templateSource}\"",
+			};
+			if (!string.IsNullOrEmpty (customHive)) {
+				arguments.Add ("--debug:custom-hive");
+				arguments.Add ($"\"{customHive}\"");
+			}
 			return Execute (arguments.ToArray ());
 		}
 
