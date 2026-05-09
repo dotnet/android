@@ -7,36 +7,21 @@
     <OutputDex>$(OutputPath)java_runtime.dex</OutputDex>
     <IntermediateRuntimeOutputPath>$(IntermediateOutputPath)release</IntermediateRuntimeOutputPath>
     <IntermediateRuntimeClassesTxt>$(IntermediateOutputPath)release.txt</IntermediateRuntimeClassesTxt>
-    <RemoveItems>..\..\src-ThirdParty\bazel\java\mono\android\debug\MultiDexLoader.java;java\mono\android\debug\BuildConfig.java;java\mono\android\debug-net6\BuildConfig.java;java\mono\android\release-net6\BuildConfig.java;java\mono\android\clr\MonoPackageManager.java</RemoveItems>
+    <RemoveItems>..\..\src-ThirdParty\bazel\java\mono\android\debug\MultiDexLoader.java;java\mono\android\debug-net6\BuildConfig.java;java\mono\android\debug\BuildConfig.java;java\mono\android\release\BuildConfig.java;java\mono\android\clr\MonoPackageManager.java</RemoveItems>
+  </_RuntimeOutput>
+  <_RuntimeOutput Include="$(OutputPath)java_runtime_trimmable.jar">
+    <OutputJar>$(OutputPath)java_runtime_trimmable.jar</OutputJar>
+    <OutputDex>$(OutputPath)java_runtime_trimmable.dex</OutputDex>
+    <IntermediateRuntimeOutputPath>$(IntermediateOutputPath)release-trimmable</IntermediateRuntimeOutputPath>
+    <IntermediateRuntimeClassesTxt>$(IntermediateOutputPath)release-trimmable.txt</IntermediateRuntimeClassesTxt>
+    <RemoveItems>..\..\src-ThirdParty\bazel\java\mono\android\debug\MultiDexLoader.java;java\mono\android\debug-net6\BuildConfig.java;java\mono\android\debug\BuildConfig.java;java\mono\android\release\BuildConfig.java;java\mono\android\MonoPackageManager.java;$(JavaInteropSourceDirectory)\src\Java.Interop\java\net\dot\jni\internal\JavaProxyObject.java;$(JavaInteropSourceDirectory)\src\Java.Interop\java\net\dot\jni\internal\JavaProxyThrowable.java</RemoveItems>
+    <AddItems>java-trimmable\net\dot\jni\internal\JavaProxyObject.java;java-trimmable\net\dot\jni\internal\JavaProxyThrowable.java</AddItems>
   </_RuntimeOutput>
   <_RuntimeOutput Include="$(OutputPath)java_runtime_fastdev.jar">
     <OutputJar>$(OutputPath)java_runtime_fastdev.jar</OutputJar>
     <OutputDex>$(OutputPath)java_runtime_fastdev.dex</OutputDex>
     <IntermediateRuntimeOutputPath>$(IntermediateOutputPath)fastdev</IntermediateRuntimeOutputPath>
     <IntermediateRuntimeClassesTxt>$(IntermediateOutputPath)fastdev.txt</IntermediateRuntimeClassesTxt>
-    <RemoveItems>..\..\src-ThirdParty\bazel\java\mono\android\release\MultiDexLoader.java;java\mono\android\release\BuildConfig.java;java\mono\android\release-net6\BuildConfig.java;java\mono\android\debug-net6\BuildConfig.java;java\mono\android\clr\MonoPackageManager.java</RemoveItems>
-  </_RuntimeOutput>
-
-  <_RuntimeOutput Include="$(OutputPath)java_runtime_net6.jar">
-    <OutputJar>$(OutputPath)java_runtime_net6.jar</OutputJar>
-    <OutputDex>$(OutputPath)java_runtime_net6.dex</OutputDex>
-    <IntermediateRuntimeOutputPath>$(IntermediateOutputPath)release-net6</IntermediateRuntimeOutputPath>
-    <IntermediateRuntimeClassesTxt>$(IntermediateOutputPath)release-net6.txt</IntermediateRuntimeClassesTxt>
-    <RemoveItems>..\..\src-ThirdParty\bazel\java\mono\android\debug\MultiDexLoader.java;java\mono\android\debug-net6\BuildConfig.java;java\mono\android\debug\BuildConfig.java;java\mono\android\release\BuildConfig.java;java\mono\android\clr\MonoPackageManager.java</RemoveItems>
-  </_RuntimeOutput>
-  <_RuntimeOutput Include="$(OutputPath)java_runtime_trimmable_net6.jar">
-    <OutputJar>$(OutputPath)java_runtime_trimmable_net6.jar</OutputJar>
-    <OutputDex>$(OutputPath)java_runtime_trimmable_net6.dex</OutputDex>
-    <IntermediateRuntimeOutputPath>$(IntermediateOutputPath)release-trimmable-net6</IntermediateRuntimeOutputPath>
-    <IntermediateRuntimeClassesTxt>$(IntermediateOutputPath)release-trimmable-net6.txt</IntermediateRuntimeClassesTxt>
-    <RemoveItems>..\..\src-ThirdParty\bazel\java\mono\android\debug\MultiDexLoader.java;java\mono\android\debug-net6\BuildConfig.java;java\mono\android\debug\BuildConfig.java;java\mono\android\release\BuildConfig.java;java\mono\android\clr\MonoPackageManager.java;$(JavaInteropSourceDirectory)\src\Java.Interop\java\net\dot\jni\internal\JavaProxyObject.java;$(JavaInteropSourceDirectory)\src\Java.Interop\java\net\dot\jni\internal\JavaProxyThrowable.java</RemoveItems>
-    <AddItems>java-trimmable\net\dot\jni\internal\JavaProxyObject.java;java-trimmable\net\dot\jni\internal\JavaProxyThrowable.java</AddItems>
-  </_RuntimeOutput>
-  <_RuntimeOutput Include="$(OutputPath)java_runtime_fastdev_net6.jar">
-    <OutputJar>$(OutputPath)java_runtime_fastdev_net6.jar</OutputJar>
-    <OutputDex>$(OutputPath)java_runtime_fastdev_net6.dex</OutputDex>
-    <IntermediateRuntimeOutputPath>$(IntermediateOutputPath)fastdev-net6</IntermediateRuntimeOutputPath>
-    <IntermediateRuntimeClassesTxt>$(IntermediateOutputPath)fastdev-net6.txt</IntermediateRuntimeClassesTxt>
     <RemoveItems>..\..\src-ThirdParty\bazel\java\mono\android\release\MultiDexLoader.java;java\mono\android\release-net6\BuildConfig.java;java\mono\android\release\BuildConfig.java;java\mono\android\debug\BuildConfig.java;java\mono\android\clr\MonoPackageManager.java</RemoveItems>
   </_RuntimeOutput>
 
@@ -47,14 +32,6 @@
     <IntermediateRuntimeClassesTxt>$(IntermediateOutputPath)release-clr.txt</IntermediateRuntimeClassesTxt>
     <RemoveItems>..\..\src-ThirdParty\bazel\java\mono\android\debug\MultiDexLoader.java;java\mono\android\debug-net6\BuildConfig.java;java\mono\android\debug\BuildConfig.java;java\mono\android\release\BuildConfig.java;java\mono\android\MonoPackageManager.java</RemoveItems>
   </_RuntimeOutput>
-  <_RuntimeOutput Include="$(OutputPath)java_runtime_trimmable_clr.jar">
-    <OutputJar>$(OutputPath)java_runtime_trimmable_clr.jar</OutputJar>
-    <OutputDex>$(OutputPath)java_runtime_trimmable_clr.dex</OutputDex>
-    <IntermediateRuntimeOutputPath>$(IntermediateOutputPath)release-trimmable-clr</IntermediateRuntimeOutputPath>
-    <IntermediateRuntimeClassesTxt>$(IntermediateOutputPath)release-trimmable-clr.txt</IntermediateRuntimeClassesTxt>
-    <RemoveItems>..\..\src-ThirdParty\bazel\java\mono\android\debug\MultiDexLoader.java;java\mono\android\debug-net6\BuildConfig.java;java\mono\android\debug\BuildConfig.java;java\mono\android\release\BuildConfig.java;java\mono\android\MonoPackageManager.java;$(JavaInteropSourceDirectory)\src\Java.Interop\java\net\dot\jni\internal\JavaProxyObject.java;$(JavaInteropSourceDirectory)\src\Java.Interop\java\net\dot\jni\internal\JavaProxyThrowable.java</RemoveItems>
-    <AddItems>java-trimmable\net\dot\jni\internal\JavaProxyObject.java;java-trimmable\net\dot\jni\internal\JavaProxyThrowable.java</AddItems>
-  </_RuntimeOutput>
   <_RuntimeOutput Include="$(OutputPath)java_runtime_fastdev_clr.jar">
     <OutputJar>$(OutputPath)java_runtime_fastdev_clr.jar</OutputJar>
     <OutputDex>$(OutputPath)java_runtime_fastdev_clr.dex</OutputDex>
@@ -62,7 +39,19 @@
     <IntermediateRuntimeClassesTxt>$(IntermediateOutputPath)fastdev-clr.txt</IntermediateRuntimeClassesTxt>
     <RemoveItems>..\..\src-ThirdParty\bazel\java\mono\android\release\MultiDexLoader.java;java\mono\android\release-net6\BuildConfig.java;java\mono\android\release\BuildConfig.java;java\mono\android\debug\BuildConfig.java;java\mono\android\MonoPackageManager.java</RemoveItems>
   </_RuntimeOutput>
+  <_ObsoleteRuntimeOutput Include="$(OutputPath)java_runtime_net6.jar" />
+  <_ObsoleteRuntimeOutput Include="$(OutputPath)java_runtime_net6.dex" />
+  <_ObsoleteRuntimeOutput Include="$(OutputPath)java_runtime_fastdev_net6.jar" />
+  <_ObsoleteRuntimeOutput Include="$(OutputPath)java_runtime_fastdev_net6.dex" />
+  <_ObsoleteRuntimeOutput Include="$(OutputPath)java_runtime_trimmable_net6.jar" />
+  <_ObsoleteRuntimeOutput Include="$(OutputPath)java_runtime_trimmable_net6.dex" />
+  <_ObsoleteRuntimeOutput Include="$(OutputPath)java_runtime_trimmable_clr.jar" />
+  <_ObsoleteRuntimeOutput Include="$(OutputPath)java_runtime_trimmable_clr.dex" />
 </ItemGroup>
+
+<Target Name="_DeleteObsoleteJavaRuntimeArtifacts" BeforeTargets="_BuildJavaRuntimeJar">
+  <Delete Files="@(_ObsoleteRuntimeOutput)" />
+</Target>
 
 <Target Name="_BuildJavaRuntimeJar"
       BeforeTargets="Build"
@@ -123,6 +112,7 @@
 
 <Target Name="_CleanJavaRuntimeJar" BeforeTargets="Clean">
   <Delete Files="%(_RuntimeOutput.OutputJar)" />
+  <Delete Files="@(_ObsoleteRuntimeOutput)" />
 </Target>
 
 </Project>

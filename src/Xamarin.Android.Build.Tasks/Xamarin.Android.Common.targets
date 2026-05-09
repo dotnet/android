@@ -1391,23 +1391,19 @@ because xbuild doesn't support framework reference assemblies.
   <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)" Condition=" !Exists ('$(MonoAndroidIntermediateAssemblyDir)') " />
 </Target>
 
-<!-- Runtime jar selection: 2×2 matrix of runtime (MonoVM|CoreCLR) × typemap (default|trimmable).
+<!-- Runtime jar selection.
      Trimmable jars replace JavaProxyObject/JavaProxyThrowable with non-native implementations. -->
 <Target Name="_CollectRuntimeJarFilenames">
   <PropertyGroup Condition=" '$(_AndroidRuntime)' != 'CoreCLR' and '$(_AndroidTypeMapImplementation)' != 'trimmable' ">
-    <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime_net6.jar</_RuntimeJar>
+    <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime.jar</_RuntimeJar>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(_AndroidRuntime)' != 'CoreCLR' and '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
-    <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime_trimmable_net6.jar</_RuntimeJar>
+  <PropertyGroup Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
+    <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime_trimmable.jar</_RuntimeJar>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(_AndroidTypeMapImplementation)' != 'trimmable' ">
     <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime_clr.jar</_RuntimeJar>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
-    <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime_trimmable_clr.jar</_RuntimeJar>
   </PropertyGroup>
 </Target>
 
