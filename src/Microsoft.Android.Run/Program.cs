@@ -80,6 +80,9 @@ async Task<int> RunAsync (string[] args)
 		{ "h|help|?",
 			"Show this help message and exit.",
 			v => showHelp = v != null },
+		// Mono.Options uses "<>" as the default handler for non-option arguments.
+		// `dotnet run --` consumes the `--` delimiter before this tool is launched,
+		// so this captures only the forwarded app arguments that follow it.
 		{ "<>",
 			v => remaining.Add (v) },
 	};
