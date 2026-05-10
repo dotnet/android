@@ -39,19 +39,7 @@
     <IntermediateRuntimeClassesTxt>$(IntermediateOutputPath)fastdev-clr.txt</IntermediateRuntimeClassesTxt>
     <RemoveItems>..\..\src-ThirdParty\bazel\java\mono\android\release\MultiDexLoader.java;java\mono\android\release-net6\BuildConfig.java;java\mono\android\release\BuildConfig.java;java\mono\android\debug\BuildConfig.java;java\mono\android\MonoPackageManager.java</RemoveItems>
   </_RuntimeOutput>
-  <_ObsoleteRuntimeOutput Include="$(OutputPath)java_runtime_net6.jar" />
-  <_ObsoleteRuntimeOutput Include="$(OutputPath)java_runtime_net6.dex" />
-  <_ObsoleteRuntimeOutput Include="$(OutputPath)java_runtime_fastdev_net6.jar" />
-  <_ObsoleteRuntimeOutput Include="$(OutputPath)java_runtime_fastdev_net6.dex" />
-  <_ObsoleteRuntimeOutput Include="$(OutputPath)java_runtime_trimmable_net6.jar" />
-  <_ObsoleteRuntimeOutput Include="$(OutputPath)java_runtime_trimmable_net6.dex" />
-  <_ObsoleteRuntimeOutput Include="$(OutputPath)java_runtime_trimmable_clr.jar" />
-  <_ObsoleteRuntimeOutput Include="$(OutputPath)java_runtime_trimmable_clr.dex" />
 </ItemGroup>
-
-<Target Name="_DeleteObsoleteJavaRuntimeArtifacts" BeforeTargets="_BuildJavaRuntimeJar">
-  <Delete Files="@(_ObsoleteRuntimeOutput)" />
-</Target>
 
 <Target Name="_BuildJavaRuntimeJar"
       BeforeTargets="Build"
@@ -112,7 +100,6 @@
 
 <Target Name="_CleanJavaRuntimeJar" BeforeTargets="Clean">
   <Delete Files="%(_RuntimeOutput.OutputJar)" />
-  <Delete Files="@(_ObsoleteRuntimeOutput)" />
 </Target>
 
 </Project>
