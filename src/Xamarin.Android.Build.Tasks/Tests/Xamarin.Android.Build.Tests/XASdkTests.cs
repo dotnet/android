@@ -46,6 +46,20 @@ namespace Xamarin.Android.Build.Tests
 			dotnet.AssertHasNoWarnings ();
 		}
 
+		[Test]
+		public void ComputeRunArgumentsForwardsInstrumentationStartArguments ()
+		{
+			var targetsPath = Path.Combine (XABuildPaths.TopDirectory, "src", "Xamarin.Android.Build.Tasks", "Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.Application.targets");
+			var targets = XDocument.Load (targetsPath);
+			var runStartArguments = targets.Descendants ("_AndroidRunStartArguments").Single ();
+			var runArguments = targets.Descendants ("RunArguments")
+				.Single (e => e.Value.Contains ("$(_AndroidRunPath)", StringComparison.Ordinal));
+
+			Assert.AreEqual (" '$(AndroidInstrumentation)' != '' and '$(StartArguments)' != '' ", runStartArguments.Attribute ("Condition")?.Value);
+			StringAssert.Contains ("$(_AndroidRunStartArguments)", runArguments.Value);
+			StringAssert.Contains ("$(_AndroidRunInstrumentArg)", runArguments.Value);
+		}
+
 		static IEnumerable<object[]> Get_DotNetPack_Data ()
 		{
 			var ret = new List<object[]> ();

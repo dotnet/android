@@ -266,8 +266,14 @@ async Task<int> RunInstrumentationAsync (List<string> instrumentationArguments)
 	try {
 		try {
 			await instrumentProcess.WaitForExitAsync (cts.Token);
+			instrumentProcess.WaitForExit ();
 		} catch (OperationCanceledException) {
-			try { instrumentProcess.Kill (); } catch (Exception ex) {
+			try {
+				if (!instrumentProcess.HasExited) {
+					instrumentProcess.Kill ();
+					instrumentProcess.WaitForExit (1000);
+				}
+			} catch (Exception ex) {
 				if (verbose)
 					Console.Error.WriteLine ($"Cleanup: {ex.Message}");
 			}
@@ -297,8 +303,9 @@ async Task<int> RunInstrumentationAsync (List<string> instrumentationArguments)
 		Console.WriteLine (result.Summary);
 	if (!string.IsNullOrEmpty (result.ArtifactsPath)) {
 		var localArtifactsPath = await PullArtifactsAsync (result.ArtifactsPath);
-		if (!string.IsNullOrEmpty (localArtifactsPath))
-			Console.WriteLine ($"Artifacts: {localArtifactsPath}");
+		if (string.IsNullOrEmpty (localArtifactsPath))
+			return 1;
+		Console.WriteLine ($"Artifacts: {localArtifactsPath}");
 	}
 
 	if (!result.Succeeded) {
@@ -366,7 +373,12 @@ InstrumentationRunResult ParseInstrumentationRunOutput (string output, string er
 
 async Task<string?> PullArtifactsAsync (string deviceArtifactsPath)
 {
-	var localArtifactsPath = Path.Combine (Environment.CurrentDirectory, Path.GetFileName (deviceArtifactsPath.TrimEnd ('/')));
+	if (!TryGetArtifactsDirectoryName (deviceArtifactsPath, out var artifactsDirectoryName)) {
+		Console.Error.WriteLine ($"Error: Invalid artifacts path reported by instrumentation: '{deviceArtifactsPath}'.");
+		return null;
+	}
+
+	var localArtifactsPath = Path.Combine (Environment.CurrentDirectory, artifactsDirectoryName);
 
 	if (verbose)
 		Console.WriteLine ($"Pulling artifacts: {deviceArtifactsPath} -> {localArtifactsPath}");
@@ -385,6 +397,36 @@ async Task<string?> PullArtifactsAsync (string deviceArtifactsPath)
 	}
 
 	return localArtifactsPath;
+}
+
+static bool TryGetArtifactsDirectoryName (string deviceArtifactsPath, out string artifactsDirectoryName)
+{
+	artifactsDirectoryName = "";
+	if (string.IsNullOrEmpty (deviceArtifactsPath) || deviceArtifactsPath [0] != '/')
+		return false;
+
+	foreach (var ch in deviceArtifactsPath) {
+		if (char.IsControl (ch) || char.IsWhiteSpace (ch)) {
+			return false;
+		}
+		switch (ch) {
+		case '"':
+		case '\'':
+		case ';':
+		case '&':
+		case '|':
+		case '`':
+		case '$':
+		case '<':
+		case '>':
+		case '\\':
+			return false;
+		}
+	}
+
+	var trimmedPath = deviceArtifactsPath.TrimEnd ('/');
+	artifactsDirectoryName = Path.GetFileName (trimmedPath);
+	return artifactsDirectoryName != "" && artifactsDirectoryName != "." && artifactsDirectoryName != "..";
 }
 
 async Task<int> RunDotnetTestAsync (List<string> mtpArgs)
