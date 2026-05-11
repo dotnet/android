@@ -154,7 +154,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --notrimwarn</_ExtraTrimmerArgs>
     </PropertyGroup>
 
-    <SetNdkPathForIlc NdkBinDirectory="$(_NdkBinDir)" />
+    <SetNdkPathForIlc NdkBinDirectory="$(_NdkBinDir)" Condition=" '$(_AndroidUseWorkloadNativeLinker)' != 'true' " />
+    <SetNdkPathForIlc NdkBinDirectory="$(AndroidBinUtilsDirectory)" Condition=" '$(_AndroidUseWorkloadNativeLinker)' == 'true' " />
   </Target>
 
   <Target Name="_AndroidComputeIlcCompileInputs">
