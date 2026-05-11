@@ -897,7 +897,11 @@ public sealed class JavaPeerScanner : IDisposable
 		string declaringTypeName = "";
 		string declaringAssemblyName = "";
 		ParseConnectorDeclaringType (registerInfo.Connector, out declaringTypeName, out declaringAssemblyName);
-		var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+		IReadOnlyList<ManagedParameterInfo>? managedParameterTypes = null;
+		if (isConstructor) {
+			var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+			managedParameterTypes = ToManagedParameterInfos (sig.ParameterTypes, index.AssemblyName);
+		}
 
 		methods.Add (new MarshalMethodInfo {
 			JniName = registerInfo.JniName,
@@ -913,7 +917,7 @@ public sealed class JavaPeerScanner : IDisposable
 			JavaAccess = isExport ? GetJavaAccess (methodDef.Attributes & MethodAttributes.MemberAccessMask) : null,
 			ThrownNames = exportInfo?.ThrownNames,
 			SuperArgumentsString = exportInfo?.SuperArgumentsString,
-			ManagedParameterTypes = isConstructor ? ToManagedParameterInfos (sig.ParameterTypes, index.AssemblyName) : null,
+			ManagedParameterTypes = managedParameterTypes,
 		});
 	}
 

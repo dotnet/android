@@ -48,7 +48,7 @@ static class MetadataHelper
 				writer.Write (ctor.ConstructorDeclaringType?.ManagedTypeName ?? "");
 				writer.Write (ctor.ConstructorDeclaringType?.AssemblyName ?? "");
 				if (ctor.ManagedParameterTypes is null) {
-					writer.Write (0);
+					writer.Write (-1);
 				} else {
 					writer.Write (ctor.ManagedParameterTypes.Count);
 					foreach (var parameter in ctor.ManagedParameterTypes) {
