@@ -237,11 +237,24 @@ namespace UnnamedProject {
 			var allJavaFiles = Directory.GetFiles (javaDir, "*.java", SearchOption.AllDirectories);
 			Assert.IsNotEmpty (allJavaFiles, "At least one JCW Java source file should be generated.");
 
-			string? exportShapesJava = allJavaFiles
-				.FirstOrDefault (p => Path.GetFileName (p) == "ExportShapes.java");
-			Assert.IsNotNull (exportShapesJava, $"ExportShapes.java should be generated under {javaDir}.");
+			// The JCW Java file for ExportShapes lives under a crc64<hash>/ECDH directory
+			// matching the CRC64 hash of the type. Search by content (one of the method
+			// names that must appear in the generated source) rather than by filename
+			// to avoid coupling to the hash.
+			string? exportShapesJava = null;
+			string? exportShapesText = null;
+			foreach (var f in allJavaFiles) {
+				var text = File.ReadAllText (f);
+				if (text.Contains ("EchoString") && text.Contains ("InitialFoo")) {
+					exportShapesJava = f;
+					exportShapesText = text;
+					break;
+				}
+			}
+			Assert.IsNotNull (exportShapesJava,
+				$"Could not find a generated JCW Java file referencing both EchoString and InitialFoo under {javaDir}.");
 
-			var javaText = File.ReadAllText (exportShapesJava);
+			var javaText = exportShapesText!;
 
 			// [Export] EchoString — Java side must declare a `native` method matching
 			// the C# signature (String -> String). The trimmable emitter generates
