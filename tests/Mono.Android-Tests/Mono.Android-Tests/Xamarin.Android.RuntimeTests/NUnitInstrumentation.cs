@@ -34,12 +34,6 @@ namespace Xamarin.Android.RuntimeTests
                     // net.dot.jni.test.CallVirtualFromConstructorDerived Java class not in APK
                     "Java.InteropTests.InvokeVirtualFromConstructorTests",
 
-                    // JNI method remapping not supported in trimmable typemap
-                    "Java.InteropTests.JniPeerMembersTests.ReplaceInstanceMethodName",
-                    "Java.InteropTests.JniPeerMembersTests.ReplaceInstanceMethodWithStaticMethod",
-                    "Java.InteropTests.JniPeerMembersTests.ReplacementTypeUsedForMethodLookup",
-                    "Java.InteropTests.JniPeerMembersTests.ReplaceStaticMethodName",
-
                     // Throwable subclass registration
                     "Java.InteropTests.JnienvTest.ActivatedDirectThrowableSubclassesShouldBeRegistered",
 
