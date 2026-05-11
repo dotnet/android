@@ -3,7 +3,6 @@
 Building .NET for Android requires:
 
   * [Homebrew](#homebrew)
-  * [Latest Mono](#mono-sdk)
   * [The Java Development Kit (JDK)](#jdk)
   * [Autotools (`autoconf`, `automake`, etc.)](#autotools)
   * [The Android SDK and NDK](#ndk)

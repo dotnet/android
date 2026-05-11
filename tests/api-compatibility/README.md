@@ -19,9 +19,9 @@ current version of an assembly.  We could also called it the V2 assembly.
 ## Update Contract Assembly
 
 The `UpdateMonoAndroidContract` MSBuild target has been removed. To update the
-contract assembly, manually copy the new reference assembly to
-`tests/api-compatibility/reference/Mono.Android.dll`, generate the API source
-with GenAPI, and compress both into `Mono.Android.zip`.
+contract assembly, copy the reference assembly from the `ref` directory to
+`tests/api-compatibility/reference/Mono.Android.dll` and compress it into
+`Mono.Android.dll.zip`.
 
 Note: using the assembly in the `ref` directory means it has already had IL stripped
 and is just API.
@@ -108,19 +108,10 @@ binding.  In order to be able to do that we need to commit the `Mono.Android.dll
 assembly to our repository.
 
 We don't want to commit the "naked" assembly because it is quite large (around 30MB),
-so we should first strip IL code from the assembly by using `cil-strip.exe`, for
-example on macOS:
+so we should use a reference assembly that already has IL stripped (from the `ref`
+directory of the build output).
 
-
-```
-$ mono bin/Debug/lib/xamarin.android/xbuild/Xamarin/Android/cil-strip.exe Mono.Android.dll Mono.Android-out.dll
-Mono CIL Stripper
-
-26747392  Mono.Android.dll
-19300864  Mono.Android-out.dll
-```
-
-Rename `Mono.Android-out.dll` to `Mono.Android.dll`, then compress into a `.zip` file:
+Compress into a `.zip` file:
 
 ```
 zip Mono.Android.dll.zip Mono.Android.dll
