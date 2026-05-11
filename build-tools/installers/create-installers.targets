@@ -127,10 +127,12 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)startup-xf.aotprofile" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)r8.jar" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)bundletool.jar" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_net6.jar" ExcludeFromLegacy="true" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_fastdev_net6.jar" ExcludeFromLegacy="true" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_net6.dex" ExcludeFromLegacy="true" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_fastdev_net6.dex" ExcludeFromLegacy="true" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime.jar" ExcludeFromLegacy="true" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_fastdev.jar" ExcludeFromLegacy="true" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_trimmable.jar" ExcludeFromLegacy="true" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime.dex" ExcludeFromLegacy="true" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_fastdev.dex" ExcludeFromLegacy="true" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_trimmable.dex" ExcludeFromLegacy="true" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_clr.jar" ExcludeFromLegacy="true" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_fastdev_clr.jar" ExcludeFromLegacy="true" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_clr.dex" ExcludeFromLegacy="true" />
