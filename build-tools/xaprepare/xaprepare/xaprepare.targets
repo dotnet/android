@@ -75,15 +75,12 @@
       <Replacement Include="@EmulatorVersion@=$(EmulatorVersion)" />
       <Replacement Include="@EmulatorPkgRevision@=$(EmulatorPkgRevision)" />
       <Replacement Include="@HostOS@=$(HostOS)" />
-
       <Replacement Include="@JavaInteropFullPath@=$(JavaInteropFullPath)" />
       <Replacement Include="@JavaSdkDirectory@=$(JavaSdkDirectory)" />
       <Replacement Include="@JdkIncludePath@=$(JavaIncludePath)" />
       <Replacement Include="@LibZipSourceFullPath@=$(LibZipSourceFullPath)" />
-
       <Replacement Include="@MicrosoftAndroidSdkOutDir@=$(MicrosoftAndroidSdkOutDir)" />
       <Replacement Include="@MonoCecilVersion@=$(MonoCecilVersion)" />
-
       <Replacement Include="@MonoSourceFullPath@=$(MonoSourceFullPath)" />
       <Replacement Include="@NativeRuntimeOutputRootDir@=$(NativeRuntimeOutputRootDir)" />
       <Replacement Include="@NinjaPath@=$(NinjaPath)" />

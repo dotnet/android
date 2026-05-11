@@ -36,14 +36,12 @@ namespace Xamarin.Android.Prepare
 		public const string EmulatorVersion                     = "EmulatorVersion";
 		public const string EmulatorPkgRevision                 = "EmulatorPkgRevision";
 		public const string HostOS                              = "HostOS";
-
 		public const string JavaInteropFullPath                 = "JavaInteropFullPath";
 		public const string JavaSdkDirectory                    = "JavaSdkDirectory";
 		public const string JdkIncludePath                      = "JdkIncludePath";
 		public const string LibZipSourceFullPath                = "LibZipSourceFullPath";
 		public const string MicrosoftAndroidSdkOutDir           = "MicrosoftAndroidSdkOutDir";
 		public const string MonoCecilVersion                    = "MonoCecilVersion";
-
 		public const string MonoRuntimeFlavorDirName            = "_MonoRuntimeFlavorDirName";
 		public const string MonoSourceFullPath                  = "MonoSourceFullPath";
 		public const string NativeRuntimeOutputRootDir          = "NativeRuntimeOutputRootDir";
