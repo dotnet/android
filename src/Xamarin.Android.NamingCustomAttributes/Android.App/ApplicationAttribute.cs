@@ -48,6 +48,8 @@ public sealed partial class ApplicationAttribute : Attribute, Java.Interop.IJniN
 
 	public bool Enabled { get; set; }
 
+	public bool EnableOnBackInvokedCallback { get; set; }
+
 	public bool ExtractNativeLibs { get; set; }
 
 	public bool FullBackupContent { get; set; }
@@ -194,6 +196,12 @@ public sealed partial class ApplicationAttribute : Attribute, Java.Interop.IJniN
 			attributeName: "enabled",
 			getter: self => self.Enabled,
 			setter: (self, value) => self.Enabled = (bool) value
+		);
+		mapping.Add (
+			member: "EnableOnBackInvokedCallback",
+			attributeName: "enableOnBackInvokedCallback",
+			getter: self => self.EnableOnBackInvokedCallback,
+			setter: (self, value) => self.EnableOnBackInvokedCallback = (bool) value
 		);
 		mapping.Add (
 			member: "ExtractNativeLibs",
