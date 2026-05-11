@@ -21,13 +21,8 @@ namespace Xamarin.Android.Build.Tests
 
 			using var builder = CreateApkBuilder ();
 			builder.ThrowOnBuildFailure = false;
-			// Override _AndroidNdkDirectory (the internal resolved path) to simulate no NDK.
-			// Setting AndroidNdkDirectory alone is not sufficient because ResolveSdks has a
-			// fallback chain that discovers NDK from the SDK directory, environment variables,
-			// and other standard locations.  /p: has highest MSBuild precedence and cannot be
-			// overridden by task outputs.
 			Assert.IsFalse (
-				builder.Build (proj, parameters: new [] { "_AndroidNdkDirectory=" }),
+				builder.Build (proj, parameters: new [] { "_SkipNdkResolution=true" }),
 				"Build should have failed without NDK."
 			);
 		}
@@ -41,10 +36,9 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntime (AndroidRuntime.NativeAOT);
 
 			using var builder = CreateApkBuilder ();
-			// Use workload-provided linker and sysroot instead of NDK
 			Assert.IsTrue (
 				builder.Build (proj, parameters: new [] {
-					"_AndroidNdkDirectory=",
+					"_SkipNdkResolution=true",
 					"_AndroidUseWorkloadNativeLinker=true",
 				}),
 				"Build should succeed with workload linker and no NDK."
