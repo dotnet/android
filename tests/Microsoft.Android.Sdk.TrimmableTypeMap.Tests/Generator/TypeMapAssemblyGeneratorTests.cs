@@ -601,8 +601,8 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	[Fact]
 	public void Generate_UcoConstructor_ParameterlessDirectCtorChangesMvid ()
 	{
-		var activationOnly = MakeAcwPeer ("test/CtorFingerprint", "Test.CtorFingerprint", "TestAsm");
-		var directParameterless = MakeAcwPeer ("test/CtorFingerprint", "Test.CtorFingerprint", "TestAsm") with {
+		var activationOnlyPeer = MakeAcwPeer ("test/CtorFingerprint", "Test.CtorFingerprint", "TestAsm");
+		var directParameterlessPeer = MakeAcwPeer ("test/CtorFingerprint", "Test.CtorFingerprint", "TestAsm") with {
 			JavaConstructors = new List<JavaConstructorInfo> {
 				new JavaConstructorInfo {
 					ConstructorIndex = 0,
@@ -614,8 +614,8 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			},
 		};
 
-		using var stream1 = GenerateAssembly (new [] { activationOnly }, "CtorFingerprint");
-		using var stream2 = GenerateAssembly (new [] { directParameterless }, "CtorFingerprint");
+		using var stream1 = GenerateAssembly (new [] { activationOnlyPeer }, "CtorFingerprint");
+		using var stream2 = GenerateAssembly (new [] { directParameterlessPeer }, "CtorFingerprint");
 
 		using var pe1 = new PEReader (stream1);
 		using var pe2 = new PEReader (stream2);
