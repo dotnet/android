@@ -1539,7 +1539,7 @@ public sealed class JavaPeerScanner : IDisposable
 
 	static HashedPackageNamingPolicy ParsePackageNamingPolicy (string? packageNamingPolicy)
 	{
-		if (string.IsNullOrEmpty (packageNamingPolicy)) {
+		if (packageNamingPolicy.IsNullOrEmpty ()) {
 			return HashedPackageNamingPolicy.Crc64;
 		}
 		if (string.Equals (packageNamingPolicy, "Crc64", StringComparison.OrdinalIgnoreCase)) {

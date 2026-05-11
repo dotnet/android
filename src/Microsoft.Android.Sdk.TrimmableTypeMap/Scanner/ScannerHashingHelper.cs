@@ -1,5 +1,6 @@
 using System;
 using System.Buffers;
+using System.Buffers.Binary;
 using Java.Interop.Tools.JavaCallableWrappers;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
@@ -16,7 +17,7 @@ internal static class ScannerHashingHelper
 			ulong length = 0;
 			Crc64Helper.HashCore (rented, 0, bytesWritten, ref crc, ref length);
 			Span<byte> hash = stackalloc byte [8];
-			WriteUInt64LittleEndian (hash, crc ^ length);
+			BinaryPrimitives.WriteUInt64LittleEndian (hash, crc ^ length);
 			return ToHexString (hash, lowercase: true);
 		} finally {
 			ArrayPool<byte>.Shared.Return (rented);
@@ -34,8 +35,8 @@ internal static class ScannerHashingHelper
 		int bytesWritten = GetNamespaceAssemblyUtf8Bytes (ns, assemblyName, utf8Buffer.Slice (0, byteCount));
 		Span<byte> hash = stackalloc byte [8];
 		System.IO.Hashing.Crc64.Hash (utf8Buffer.Slice (0, bytesWritten), hash);
-		ulong hashValue = ReadUInt64LittleEndian (hash);
-		WriteUInt64LittleEndian (hash, hashValue ^ (ulong) bytesWritten);
+		ulong hashValue = BinaryPrimitives.ReadUInt64LittleEndian (hash);
+		BinaryPrimitives.WriteUInt64LittleEndian (hash, hashValue ^ (ulong) bytesWritten);
 		return ToHexString (hash, lowercase: true);
 	}
 
@@ -77,30 +78,6 @@ internal static class ScannerHashingHelper
 		}
 
 		return ((ReadOnlySpan<char>) chars).ToString ();
-	}
-
-	static void WriteUInt64LittleEndian (Span<byte> destination, ulong value)
-	{
-		destination [0] = (byte) value;
-		destination [1] = (byte) (value >> 8);
-		destination [2] = (byte) (value >> 16);
-		destination [3] = (byte) (value >> 24);
-		destination [4] = (byte) (value >> 32);
-		destination [5] = (byte) (value >> 40);
-		destination [6] = (byte) (value >> 48);
-		destination [7] = (byte) (value >> 56);
-	}
-
-	static ulong ReadUInt64LittleEndian (ReadOnlySpan<byte> source)
-	{
-		return (ulong) source [0]
-			| ((ulong) source [1] << 8)
-			| ((ulong) source [2] << 16)
-			| ((ulong) source [3] << 24)
-			| ((ulong) source [4] << 32)
-			| ((ulong) source [5] << 40)
-			| ((ulong) source [6] << 48)
-			| ((ulong) source [7] << 56);
 	}
 
 	static char GetHexValue (int value, bool lowercase)
