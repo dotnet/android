@@ -204,6 +204,17 @@ namespace MyApp
 		}
 	}
 
+	// Non-peer type carrying the attribute (no [Register], no Java peer base).
+	// The scanner must still emit XA4251 even though this type wouldn't otherwise
+	// have been added to the typemap.
+	public class NonPeerNativeRegistration
+	{
+		[Java.Interop.JniAddNativeMethodRegistration]
+		static void RegisterNativeMembers ()
+		{
+		}
+	}
+
 	[Service (Name = "my.app.MyService")]
 	public class MyService : Android.App.Service
 	{

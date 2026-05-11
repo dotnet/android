@@ -60,6 +60,7 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 		_ = scanner.Scan (new List<(string, PEReader)> { (assemblyName, peReader) });
 
 		Assert.Contains (errors, e => e.Contains ("HandWrittenNativeRegistrationPeer"));
+		Assert.Contains (errors, e => e.Contains ("NonPeerNativeRegistration"));
 		Assert.DoesNotContain (errors, e => e.Contains ("MyHelper"));
 	}
 

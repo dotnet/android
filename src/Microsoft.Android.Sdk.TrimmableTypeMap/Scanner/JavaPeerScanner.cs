@@ -174,6 +174,14 @@ public sealed class JavaPeerScanner : IDisposable
 				continue;
 			}
 
+			// [JniAddNativeMethodRegistrationAttribute] is not supported by the trimmable typemap
+			// by design (see XA4251). Detect the attribute *before* any per-type filters below
+			// (array type, no JNI name, etc.) so the diagnostic fires uniformly regardless of
+			// whether the type would otherwise have ended up in the typemap.
+			if (HasJniAddNativeMethodRegistrationAttribute (typeDef, index)) {
+				logger?.LogJniAddNativeMethodRegistrationAttributeError (MetadataTypeNameResolver.GetFullName (typeDef, index.Reader));
+			}
+
 			// Determine the JNI name and whether this is a known Java peer.
 			// Priority:
 			//   1. [Register] attribute → use JNI name from attribute
@@ -215,13 +223,6 @@ public sealed class JavaPeerScanner : IDisposable
 			}
 
 			var fullName = MetadataTypeNameResolver.GetFullName (typeDef, index.Reader);
-
-			// [JniAddNativeMethodRegistrationAttribute] is not supported by the trimmable typemap
-			// by design (see XA4251). Report and continue so the build fails via HasLoggedErrors
-			// without aborting other scanner-driven diagnostics.
-			if (HasJniAddNativeMethodRegistrationAttribute (typeDef, index)) {
-				logger?.LogJniAddNativeMethodRegistrationAttributeError (fullName);
-			}
 
 			var isInterface = (typeDef.Attributes & TypeAttributes.Interface) != 0;
 			var isAbstract = (typeDef.Attributes & TypeAttributes.Abstract) != 0;
