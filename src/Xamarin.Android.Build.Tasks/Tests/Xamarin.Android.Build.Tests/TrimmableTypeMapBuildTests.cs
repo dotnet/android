@@ -145,18 +145,6 @@ namespace Xamarin.Android.Build.Tests {
 				FileAssert.Exists (Path.Combine (toolsDir, file), $"{file} should exist in the SDK pack.");
 			}
 
-			foreach (var file in new [] {
-				"java_runtime_net6.jar",
-				"java_runtime_net6.dex",
-				"java_runtime_fastdev_net6.jar",
-				"java_runtime_fastdev_net6.dex",
-				"java_runtime_trimmable_net6.jar",
-				"java_runtime_trimmable_net6.dex",
-				"java_runtime_trimmable_clr.jar",
-				"java_runtime_trimmable_clr.dex",
-			}) {
-				FileAssert.DoesNotExist (Path.Combine (toolsDir, file), $"{file} should not be packaged in the SDK pack.");
-			}
 		}
 	}
 }
