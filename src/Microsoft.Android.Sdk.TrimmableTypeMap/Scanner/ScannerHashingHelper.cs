@@ -18,7 +18,7 @@ internal static class ScannerHashingHelper
 			Crc64Helper.HashCore (rented, 0, bytesWritten, ref crc, ref length);
 			Span<byte> hash = stackalloc byte [8];
 			BinaryPrimitives.WriteUInt64LittleEndian (hash, crc ^ length);
-			return ToHexString (hash, lowercase: true);
+			return ToHexString (hash);
 		} finally {
 			ArrayPool<byte>.Shared.Return (rented);
 		}
@@ -37,7 +37,7 @@ internal static class ScannerHashingHelper
 		System.IO.Hashing.Crc64.Hash (utf8Buffer.Slice (0, bytesWritten), hash);
 		ulong hashValue = BinaryPrimitives.ReadUInt64LittleEndian (hash);
 		BinaryPrimitives.WriteUInt64LittleEndian (hash, hashValue ^ (ulong) bytesWritten);
-		return ToHexString (hash, lowercase: true);
+		return ToHexString (hash);
 	}
 
 	static int GetNamespaceAssemblyUtf8ByteCount (string ns, string assemblyName)
@@ -63,7 +63,7 @@ internal static class ScannerHashingHelper
 		return bytesWritten;
 	}
 
-	static string ToHexString (ReadOnlySpan<byte> hash, bool lowercase)
+	static string ToHexString (ReadOnlySpan<byte> hash)
 	{
 		const int maxStackCharLength = 128;
 		int charLength = hash.Length * 2;
@@ -73,17 +73,12 @@ internal static class ScannerHashingHelper
 
 		for (int i = 0, j = 0; i < hash.Length; i += 1, j += 2) {
 			byte b = hash [i];
-			chars [j] = GetHexValue (b / 16, lowercase);
-			chars [j + 1] = GetHexValue (b % 16, lowercase);
+			chars [j] = GetHexValue (b / 16);
+			chars [j + 1] = GetHexValue (b % 16);
 		}
 
 		return ((ReadOnlySpan<char>) chars).ToString ();
 	}
 
-	static char GetHexValue (int value, bool lowercase)
-	{
-		return (char) (value < 10
-			? value + '0'
-			: value - 10 + (lowercase ? 'a' : 'A'));
-	}
+	static char GetHexValue (int value) => (char) (value < 10 ? value + '0' : value - 10 + 'a');
 }

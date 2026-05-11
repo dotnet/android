@@ -99,9 +99,9 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 	}
 
 	[Theory]
-	[InlineData ("MyApp.PlainActivitySubclass", "crc64f93df85c64aa1af6/PlainActivitySubclass")]
-	[InlineData ("MyApp.UnregisteredClickListener", "crc64f93df85c64aa1af6/UnregisteredClickListener")]
-	[InlineData ("MyApp.UnregisteredExporter", "crc64f93df85c64aa1af6/UnregisteredExporter")]
+	[InlineData ("MyApp.PlainActivitySubclass", "scrc64f93df85c64aa1af6/PlainActivitySubclass")]
+	[InlineData ("MyApp.UnregisteredClickListener", "scrc64f93df85c64aa1af6/UnregisteredClickListener")]
+	[InlineData ("MyApp.UnregisteredExporter", "scrc64f93df85c64aa1af6/UnregisteredExporter")]
 	public void Scan_UnregisteredType_UsesHashedPackageName (string managedName, string expectedHashedJavaName)
 	{
 		Assert.Equal (expectedHashedJavaName, FindFixtureByManagedName (managedName).JavaName);
@@ -164,7 +164,7 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 		var withCrc64 = FindFixtureByManagedName (managedName).JavaName;
 		var withLowercaseCrc64 = FindFixtureByManagedName (managedName, "LowercaseCrc64").JavaName;
 
-		Assert.Equal ("crc64f93df85c64aa1af6/PlainActivitySubclass", withCrc64);
+		Assert.Equal ("scrc64f93df85c64aa1af6/PlainActivitySubclass", withCrc64);
 		Assert.Equal ("crc64ec59e927bc71f4d8/PlainActivitySubclass", withLowercaseCrc64);
 		Assert.NotEqual (withCrc64, withLowercaseCrc64);
 	}
