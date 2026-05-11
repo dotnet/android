@@ -1840,13 +1840,14 @@ public sealed class JavaPeerScanner : IDisposable
 			// Currently the trimmable user-ctor UCO codegen only supports ctors whose
 			// JNI args are all object references; primitive args fall back to the
 			// legacy activation-ctor `(IntPtr, JniHandleOwnership)` path.
-			var managedParams = TryFindMatchingManagedCtorParams (typeDef, mm.JniSignature, index);
+			var managedParams = TryFindMatchingManagedCtorParams (typeDef, mm.JniSignature, index, out var fallbackReason);
 			ctors.Add (new JavaConstructorInfo {
 				JniSignature = mm.JniSignature,
 				ConstructorIndex = ctorIndex,
 				SuperArgumentsString = mm.SuperArgumentsString,
 				HasMatchingManagedCtor = managedParams != null,
 				ManagedParameterTypes = managedParams ?? [],
+				CtorFallbackReason = fallbackReason,
 			});
 			ctorIndex++;
 		}
@@ -1861,9 +1862,16 @@ public sealed class JavaPeerScanner : IDisposable
 	/// the managed parameter types is not verified — the JCW marshal method is
 	/// the source of truth for what the Java side will pass.
 	/// </summary>
-	static IReadOnlyList<TypeRefData>? TryFindMatchingManagedCtorParams (TypeDefinition typeDef, string jniSignature, AssemblyIndex index)
+	/// <param name="fallbackReason">
+	/// When the return value is <see langword="null"/>, indicates the specific
+	/// reason the match was declined so callers (the consuming build task) can
+	/// surface a diagnostic about the silent fallback to the activation-ctor path.
+	/// </param>
+	static IReadOnlyList<TypeRefData>? TryFindMatchingManagedCtorParams (TypeDefinition typeDef, string jniSignature, AssemblyIndex index, out CtorFallbackReason fallbackReason)
 	{
+		fallbackReason = CtorFallbackReason.None;
 		var jniParams = JniSignatureHelper.ParseParameterTypes (jniSignature);
+		bool sawSameAritySkippedDueToUnsupportedType = false;
 		foreach (var methodHandle in typeDef.GetMethods ()) {
 			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
 			if ((methodDef.Attributes & MethodAttributes.Static) != 0) {
@@ -1882,14 +1890,25 @@ public sealed class JavaPeerScanner : IDisposable
 			// by-ref, pointers). Returning null here makes EmitUcoConstructor fall
 			// back to the legacy `(IntPtr, JniHandleOwnership)` activation ctor,
 			// which matches the legacy LLVM-IR behaviour for these shapes.
+			bool unsupportedParam = false;
 			foreach (var p in sig.ParameterTypes) {
 				var paramTypeName = p.ManagedTypeName;
 				if (paramTypeName.IndexOf ('<') >= 0 || paramTypeName.EndsWith ("&", StringComparison.Ordinal) || paramTypeName.EndsWith ("*", StringComparison.Ordinal)) {
-					return null;
+					unsupportedParam = true;
+					break;
 				}
+			}
+			if (unsupportedParam) {
+				// Remember the reason but keep looking — another overload at the same
+				// arity might still match (rare but possible).
+				sawSameAritySkippedDueToUnsupportedType = true;
+				continue;
 			}
 			return [.. sig.ParameterTypes];
 		}
+		fallbackReason = sawSameAritySkippedDueToUnsupportedType
+			? CtorFallbackReason.UnsupportedParameterType
+			: CtorFallbackReason.NoMatchingArity;
 		return null;
 	}
 

@@ -37,6 +37,19 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			log.LogMessage (MessageImportance.Low, $"Rooting manifest-referenced type '{javaTypeName}' ({managedTypeName}) as unconditional.");
 		public void LogManifestReferencedTypeNotFoundWarning (string javaTypeName) =>
 			log.LogCodedWarning ("XA4250", Properties.Resources.XA4250, javaTypeName);
+		public void LogUserCtorFallbackInfo (string managedTypeName, string jniSignature, CtorFallbackReason reason)
+		{
+			string explanation = reason switch {
+				CtorFallbackReason.NoMatchingArity =>
+					"no user-visible managed constructor with matching arity",
+				CtorFallbackReason.UnsupportedParameterType =>
+					"a managed constructor of the right arity exists but uses generic, by-ref, or pointer parameter types that the trimmable [Export] argument marshaller does not support",
+				_ => $"reason {reason}",
+			};
+			log.LogDebugMessage (
+				$"Trimmable typemap: Java ctor {jniSignature} on {managedTypeName} falls back to (IntPtr, JniHandleOwnership) activation — {explanation}. " +
+				$"This matches legacy LLVM-IR behaviour, but any user-defined ctor body for that signature will not run.");
+		}
 	}
 
 	public override string TaskPrefix => "GTT";
