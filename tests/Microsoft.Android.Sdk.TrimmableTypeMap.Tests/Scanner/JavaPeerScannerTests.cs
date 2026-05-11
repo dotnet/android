@@ -42,6 +42,15 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 		Assert.Equal (expected, FindFixtureByJavaName (javaName).IsUnconditional);
 	}
 
+	[Theory]
+	[InlineData ("my/app/HandWrittenNativeRegistrationPeer", true)]
+	[InlineData ("my/app/MyHelper", false)]
+	[InlineData ("android/app/Activity", false)]
+	public void Scan_HasJniAddNativeMethodRegistrationAttribute (string javaName, bool expected)
+	{
+		Assert.Equal (expected, FindFixtureByJavaName (javaName).HasJniAddNativeMethodRegistrationAttribute);
+	}
+
 	[Fact]
 	public void Scan_TypeMetadata_IsCorrect ()
 	{

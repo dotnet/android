@@ -193,6 +193,17 @@ namespace MyApp
 		public virtual void DoSomething () { }
 	}
 
+	// Fixture for the trimmable typemap's [JniAddNativeMethodRegistrationAttribute] detection.
+	// The trimmable typemap deliberately does not support this attribute (XA4251).
+	[Register ("my/app/HandWrittenNativeRegistrationPeer", DoNotGenerateAcw = true)]
+	public class HandWrittenNativeRegistrationPeer : Java.Lang.Object
+	{
+		[Java.Interop.JniAddNativeMethodRegistration]
+		static void RegisterNativeMembers ()
+		{
+		}
+	}
+
 	[Service (Name = "my.app.MyService")]
 	public class MyService : Android.App.Service
 	{

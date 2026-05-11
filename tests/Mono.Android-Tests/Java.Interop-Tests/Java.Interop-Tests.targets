@@ -14,8 +14,8 @@
       java-trimmable/net/dot/jni/test/GetThis.java is added explicitly via
       TestJarEntry below when building for the trimmable typemap; it must be
       removed from the implicit AndroidJavaSource glob so the .NET SDK does
-      not also try to compile these files as regular AndroidJavaSource items
-      (which would collide with the desktop Java files in the test JAR).
+      not also try to compile it as a regular AndroidJavaSource (which would
+      collide with the desktop GetThis.java in the test JAR).
     -->
     <AndroidJavaSource Remove="java-trimmable\**\*.java" />
   </ItemGroup>
@@ -38,15 +38,11 @@
       MSBuild's up-to-date check doesn't track the conditional swap automatically.
     -->
     <TestJarEntry Include="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\**\*.java"
-                  Exclude="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\net\dot\jni\test\GetThis.java;$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\net\dot\jni\test\CallVirtualFromConstructorBase.java;$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\net\dot\jni\test\CallVirtualFromConstructorDerived.java"
+                  Exclude="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\net\dot\jni\test\GetThis.java"
                   Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
     <TestJarEntry Include="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\**\*.java"
                   Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' " />
     <TestJarEntry Include="$(MSBuildThisFileDirectory)java-trimmable\net\dot\jni\test\GetThis.java"
-                  Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
-    <TestJarEntry Include="$(MSBuildThisFileDirectory)java-trimmable\net\dot\jni\test\CallVirtualFromConstructorBase.java"
-                  Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
-    <TestJarEntry Include="$(MSBuildThisFileDirectory)java-trimmable\net\dot\jni\test\CallVirtualFromConstructorDerived.java"
                   Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
   </ItemGroup>
   <Target Name="_CopyTestJarFiles">

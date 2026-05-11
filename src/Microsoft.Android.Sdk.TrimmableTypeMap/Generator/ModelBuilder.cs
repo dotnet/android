@@ -132,9 +132,8 @@ static class ModelBuilder
 		if (!isAliasGroup) {
 			// Single peer — no aliases needed, emit directly with the base JNI name
 			var peer = peersForName [0];
+			bool hasProxy = peer.ActivationCtor != null || peer.InvokerTypeName != null;
 			bool isAcw = !peer.DoNotGenerateAcw && !peer.IsInterface && peer.MarshalMethods.Count > 0;
-			isAcw |= peer.DoNotGenerateAcw && peer.HasJniAddNativeMethodRegistrationAttribute && !peer.IsInterface && peer.MarshalMethods.Count > 0;
-			bool hasProxy = peer.ActivationCtor != null || peer.InvokerTypeName != null || isAcw;
 
 			JavaPeerProxyData? proxy = null;
 			if (hasProxy) {
@@ -168,9 +167,8 @@ static class ModelBuilder
 			string entryJniName = $"{jniName}[{i}]";
 			aliasKeys.Add (entryJniName);
 
+			bool hasProxy = peer.ActivationCtor != null || peer.InvokerTypeName != null;
 			bool isAcw = !peer.DoNotGenerateAcw && !peer.IsInterface && peer.MarshalMethods.Count > 0;
-			isAcw |= peer.DoNotGenerateAcw && peer.HasJniAddNativeMethodRegistrationAttribute && !peer.IsInterface && peer.MarshalMethods.Count > 0;
-			bool hasProxy = peer.ActivationCtor != null || peer.InvokerTypeName != null || isAcw;
 
 			JavaPeerProxyData? proxy = null;
 			if (hasProxy) {

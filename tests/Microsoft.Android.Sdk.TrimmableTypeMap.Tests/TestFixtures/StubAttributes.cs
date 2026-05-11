@@ -219,6 +219,14 @@ namespace Java.Interop
 	}
 }
 
+namespace Java.Interop
+{
+	[AttributeUsage (AttributeTargets.Method, AllowMultiple = false)]
+	public sealed class JniAddNativeMethodRegistrationAttribute : Attribute
+	{
+	}
+}
+
 namespace MyApp
 {
 	[AttributeUsage (AttributeTargets.Class)]
