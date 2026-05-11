@@ -40,19 +40,14 @@ namespace Xamarin.Android.Prepare
 			properties.Add (KnownProperties.EmulatorVersion,                     StripQuotes ("@EmulatorVersion@"));
 			properties.Add (KnownProperties.EmulatorPkgRevision,                 StripQuotes ("@EmulatorPkgRevision@"));
 			properties.Add (KnownProperties.HostOS,                              StripQuotes ("@HostOS@"));
-			properties.Add (KnownProperties.IgnoreMaxMonoVersion,                StripQuotes ("@IgnoreMaxMonoVersion@"));
-			properties.Add (KnownProperties.IgnoreMinMonoVersion,                StripQuotes ("@IgnoreMinMonoVersion@"));
+
 			properties.Add (KnownProperties.JavaInteropFullPath,                 StripQuotes (@"@JavaInteropFullPath@"));
 			properties.Add (KnownProperties.JavaSdkDirectory,                    StripQuotes (@"@JavaSdkDirectory@"));
 			properties.Add (KnownProperties.JdkIncludePath,                      StripQuotes (@"@JdkIncludePath@"));
 			properties.Add (KnownProperties.LibZipSourceFullPath,                StripQuotes (@"@LibZipSourceFullPath@"));
-			properties.Add (KnownProperties.ManagedRuntime,                      StripQuotes (@"@ManagedRuntime@"));
 			properties.Add (KnownProperties.MicrosoftAndroidSdkOutDir,           StripQuotes (@"@MicrosoftAndroidSdkOutDir@"));
 			properties.Add (KnownProperties.MonoCecilVersion,                    StripQuotes ("@MonoCecilVersion@"));
-			properties.Add (KnownProperties.MonoDarwinPackageUrl,                StripQuotes ("@MonoDarwinPackageUrl@"));
 			properties.Add (KnownProperties.MonoRuntimeFlavorDirName,            StripQuotes ("@_MonoRuntimeFlavorDirName@"));
-			properties.Add (KnownProperties.MonoRequiredMinimumVersion,          StripQuotes ("@MonoRequiredMinimumVersion@"));
-			properties.Add (KnownProperties.MonoRequiredMaximumVersion,          StripQuotes ("@MonoRequiredMaximumVersion@"));
 			properties.Add (KnownProperties.MonoSourceFullPath,                  StripQuotes (@"@MonoSourceFullPath@"));
 			properties.Add (KnownProperties.NativeRuntimeOutputRootDir,          StripQuotes (@"@NativeRuntimeOutputRootDir@"));
 			properties.Add (KnownProperties.NinjaPath,                           StripQuotes (@"@NinjaPath@"));

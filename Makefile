@@ -3,7 +3,6 @@
 V             ?= 0
 prefix         = /usr/local
 CONFIGURATION ?= Debug
-RUNTIME       := $(shell which mono64 2> /dev/null && echo mono64 || echo mono) --debug=casts
 SOLUTION       = Xamarin.Android.sln
 TEST_TARGETS   = build-tools/scripts/RunTests.targets
 API_LEVEL     ?=
@@ -93,8 +92,6 @@ include build-tools/scripts/BuildEverything.mk
 include build-tools/scripts/Packaging.mk
 
 run-all-tests:
-	@echo "PRINTING MONO VERSION"
-	mono --version
 	_r=0 ; \
 	$(call MSBUILD_BINLOG,run-all-tests,,Test) $(TEST_TARGETS) /t:RunAllTests || _r=$$? ; \
 	exit $$_r
@@ -134,29 +131,6 @@ prepare:
 .PHONY: prepare-help
 prepare-help:
 	$(call SYSTEM_DOTNET_BINLOG,prepare-help,run) --project "$(PREPARE_PROJECT)" --framework $(PREPARE_NET_FX) -- -h
-
-.PHONY: shutdown-compiler-server
-shutdown-compiler-server:
-	# Ensure the VBCSCompiler.exe process isn't running during the mono update
-	pgrep -lfi VBCSCompiler.exe 2>/dev/null || true
-	@pid=`pgrep -lfi VBCSCompiler.exe 2>/dev/null | awk '{ print $$1 }'` ; \
-	echo "VBCSCompiler process ID (if running): $$pid" ;\
-	if [[ -n "$$pid" ]]; then \
-		echo "Terminating the VBCSCompiler '$$pid' server process prior to updating mono" ; \
-		exitCode=0 ;\
-		kill -HUP $$pid 2>/dev/null || exitCode=$$? ;\
-		if [[ $$exitCode -eq 0 ]]; then \
-			sleep 2 ;\
-			pgrep -lfi VBCSCompiler.exe 2>/dev/null&&echo "ERROR: VBCSCompiler server still exists" || echo "Verified that the VBCSCompiler server process no longer exists" ;\
-		else \
-			echo "ERROR: Kill command failed with exit code $$exitCode" ;\
-		fi \
-	fi
-
-.PHONY: prepare-update-mono
-prepare-update-mono: shutdown-compiler-server
-	$(call SYSTEM_DOTNET_BINLOG,prepare-update-mono,run) --project "$(PREPARE_PROJECT)" --framework $(PREPARE_NET_FX) \
-		-- -s:UpdateMono $(_PREPARE_ARGS)
 
 prepare-external-git-dependencies:
 	$(call SYSTEM_DOTNET_BINLOG,prepare-external-git-dependencies,run) --project "$(PREPARE_PROJECT)" --framework $(PREPARE_NET_FX) \

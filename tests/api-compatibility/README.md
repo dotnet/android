@@ -18,11 +18,10 @@ current version of an assembly.  We could also called it the V2 assembly.
 
 ## Update Contract Assembly
 
-To update the contract assembly, run the `UpdateMonoAndroidContract` target
-and provide the `$(ContractAssembly)` MSBuild property.  `$(ContractAssembly)`
-should be the path to the new contract assembly to use:
-
-    dotnet msbuild Xamarin.Android.sln -t:UpdateMonoAndroidContract "-p:ContractAssembly=C:/code/xamarin-android-backport/bin/Debug/lib/packs/Microsoft.Android.Ref.34/34.99.0/ref/net9.0/Mono.Android.dll"
+The `UpdateMonoAndroidContract` MSBuild target has been removed. To update the
+contract assembly, manually copy the new reference assembly to
+`tests/api-compatibility/reference/Mono.Android.dll`, generate the API source
+with GenAPI, and compress both into `Mono.Android.zip`.
 
 Note: using the assembly in the `ref` directory means it has already had IL stripped
 and is just API.
