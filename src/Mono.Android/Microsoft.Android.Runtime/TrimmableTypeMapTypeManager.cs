@@ -95,14 +95,17 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 
 	protected override IReadOnlyList<string>? GetStaticMethodFallbackTypesCore (string jniSimpleReference)
 	{
-		int slash = jniSimpleReference.LastIndexOf ('/');
-		var desugarType = slash > 0
-			? $"{jniSimpleReference.Substring (0, slash + 1)}Desugar{jniSimpleReference.Substring (slash + 1)}"
-			: $"Desugar{jniSimpleReference}";
-		return new[] {
-			$"{desugarType}$_CC",
-			$"{jniSimpleReference}$-CC",
-		};
+		return JniRemappingLookup.GetStaticMethodFallbackTypes (jniSimpleReference, useReplacementTypes: true);
+	}
+
+	protected override string? GetReplacementTypeCore (string jniSimpleReference)
+	{
+		return JniRemappingLookup.GetReplacementType (jniSimpleReference);
+	}
+
+	protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, string jniMethodName, string jniMethodSignature)
+	{
+		return JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
 	}
 
 	public override void RegisterNativeMembers (

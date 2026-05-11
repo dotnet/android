@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
-using System.Text;
 using System.Threading;
 using System.Reflection;
 
@@ -313,13 +311,6 @@ namespace Android.Runtime {
 	}
 
 	class AndroidTypeManager : JniRuntime.JniTypeManager {
-		struct JniRemappingReplacementMethod
-		{
-			public string target_type;
-			public string target_name;
-			public bool     is_static;
-		};
-
 		bool jniAddNativeMethodRegistrationAttributePresent;
 
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
@@ -363,84 +354,17 @@ namespace Android.Runtime {
 
 		protected override IReadOnlyList<string>? GetStaticMethodFallbackTypesCore (string jniSimpleReference)
 		{
-			ReadOnlySpan<char>  name    = jniSimpleReference;
-			int slash                   = name.LastIndexOf ('/');
-			var desugarType             = new StringBuilder (jniSimpleReference.Length + "Desugar".Length);
-			if (slash > 0) {
-				desugarType.Append (name.Slice (0, slash+1))
-					.Append ("Desugar")
-					.Append (name.Slice (slash+1));
-			} else {
-				desugarType.Append ("Desugar").Append (name);
-			}
-
-			var typeWithPrefix  = desugarType.ToString ();
-			var typeWithSuffix  = $"{jniSimpleReference}$-CC";
-
-			var replacements    = new[]{
-				GetReplacementTypeCore (typeWithPrefix) ?? typeWithPrefix,
-				GetReplacementTypeCore (typeWithSuffix) ?? typeWithSuffix,
-			};
-
-			if (Logger.LogAssembly) {
-				var message = $"Remapping type `{jniSimpleReference}` to one one of {{ `{replacements[0]}`, `{replacements[1]}` }}";
-				Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
-			}
-			return replacements;
+			return JniRemappingLookup.GetStaticMethodFallbackTypes (jniSimpleReference, useReplacementTypes: true);
 		}
 
 		protected override string? GetReplacementTypeCore (string jniSimpleReference)
 		{
-			if (!JNIEnvInit.jniRemappingInUse) {
-				return null;
-			}
-
-			IntPtr ret = RuntimeNativeMethods._monodroid_lookup_replacement_type (jniSimpleReference);
-			if (ret == IntPtr.Zero) {
-				return null;
-			}
-
-			return Marshal.PtrToStringAnsi (ret);
+			return JniRemappingLookup.GetReplacementType (jniSimpleReference);
 		}
 
 		protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, string jniMethodName, string jniMethodSignature)
 		{
-			if (!JNIEnvInit.jniRemappingInUse) {
-				return null;
-			}
-
-			IntPtr retInfo = RuntimeNativeMethods._monodroid_lookup_replacement_method_info (jniSourceType, jniMethodName, jniMethodSignature);
-			if (retInfo == IntPtr.Zero) {
-				return null;
-			}
-
-			var method = new JniRemappingReplacementMethod ();
-			method = Marshal.PtrToStructure<JniRemappingReplacementMethod>(retInfo);
-			var newSignature = jniMethodSignature;
-
-			int? paramCount = null;
-			if (method.is_static) {
-				paramCount = JniMemberSignature.GetParameterCountFromMethodSignature (jniMethodSignature) + 1;
-				newSignature = $"(L{jniSourceType};" + jniMethodSignature.Substring ("(".Length);
-			}
-
-			if (Logger.LogAssembly) {
-				var message = $"Remapping method `{jniSourceType}.{jniMethodName}{jniMethodSignature}` to " +
-					$"`{method.target_type}.{method.target_name}{newSignature}`; " +
-					$"param-count: {paramCount}; instance-to-static? {method.is_static}";
-				Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
-			}
-
-			return new JniRuntime.ReplacementMethodInfo {
-					SourceJniType                   = jniSourceType,
-					SourceJniMethodName             = jniMethodName,
-					SourceJniMethodSignature        = jniMethodSignature,
-					TargetJniType                   = method.target_type,
-					TargetJniMethodName             = method.target_name,
-					TargetJniMethodSignature        = newSignature,
-					TargetJniMethodParameterCount   = paramCount,
-					TargetJniMethodInstanceToStatic = method.is_static,
-			};
+			return JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
 		}
 
 		[return: DynamicallyAccessedMembers (Constructors)]
