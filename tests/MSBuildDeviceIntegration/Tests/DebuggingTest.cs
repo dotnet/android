@@ -470,6 +470,19 @@ namespace ${ROOT_NAMESPACE} {
 				return;
 			}
 
+			// Fast Deployment (EmbedAssembliesIntoApk=False) is not supported when targeting a
+			// secondary Android user: `pm install --user N` does not create the per-user data
+			// directory until the app is first launched, so the `run-as` queries performed by
+			// the FastDeploy task fail with XA0137 (see
+			// https://github.com/dotnet/android/issues/7821). The recommended workaround
+			// documented for XA0137 is to set EmbedAssembliesIntoApk=True, which is exactly
+			// what the (embedAssemblies=True, username=guest) parametrizations of this test
+			// already exercise. Skip the unsupported combination explicitly rather than
+			// letting it flake CI.
+			if (!embedAssemblies && !string.IsNullOrEmpty (username)) {
+				Assert.Ignore ("Fast Deployment is not supported on secondary Android users; see https://github.com/dotnet/android/issues/7821.");
+			}
+
 			AssertCommercialBuild ();
 			SwitchUser ();
 			WaitFor (5000);
@@ -644,6 +657,10 @@ namespace ${ROOT_NAMESPACE} {
 					ClearAdbLogcat ();
 					ClearBlockingDialogs ();
 					Assert.True (ClickButton (app.PackageName, "myXFButton", "CLICK ME"), "Button should have been clicked!");
+					// Reset the timeout budget for the post-click wait — the previous loop
+					// decremented `timeout`, leaving little or no time for the button-click
+					// breakpoint on slow machines.
+					timeout = TimeSpan.FromSeconds (60);
 					while (session.IsConnected && breakcountHitCount < 1 && timeout >= TimeSpan.Zero) {
 						Thread.Sleep (10);
 						timeout = timeout.Subtract (TimeSpan.FromMilliseconds (10));
