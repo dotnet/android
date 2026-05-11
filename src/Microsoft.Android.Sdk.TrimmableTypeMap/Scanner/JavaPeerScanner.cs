@@ -18,6 +18,12 @@ public sealed class JavaPeerScanner : IDisposable
 {
 	readonly Dictionary<string, AssemblyIndex> assemblyCache = new (StringComparer.Ordinal);
 	readonly Dictionary<(string typeName, string assemblyName), ActivationCtorInfo> activationCtorCache = new ();
+	readonly ITrimmableTypeMapLogger? logger;
+
+	public JavaPeerScanner (ITrimmableTypeMapLogger? logger = null)
+	{
+		this.logger = logger;
+	}
 
 	/// <summary>
 	/// Resolves a type name + assembly name to a TypeDefinitionHandle + AssemblyIndex.
@@ -210,10 +216,16 @@ public sealed class JavaPeerScanner : IDisposable
 
 			var fullName = MetadataTypeNameResolver.GetFullName (typeDef, index.Reader);
 
+			// [JniAddNativeMethodRegistrationAttribute] is not supported by the trimmable typemap
+			// by design (see XA4251). Report and continue so the build fails via HasLoggedErrors
+			// without aborting other scanner-driven diagnostics.
+			if (HasJniAddNativeMethodRegistrationAttribute (typeDef, index)) {
+				logger?.LogJniAddNativeMethodRegistrationAttributeError (fullName);
+			}
+
 			var isInterface = (typeDef.Attributes & TypeAttributes.Interface) != 0;
 			var isAbstract = (typeDef.Attributes & TypeAttributes.Abstract) != 0;
 			var isGenericDefinition = typeDef.GetGenericParameters ().Count > 0;
-			var hasJniAddNativeMethodRegistrationAttribute = HasJniAddNativeMethodRegistrationAttribute (typeDef, index);
 
 			var isUnconditional = attrInfo is not null;
 			var cannotRegisterInStaticConstructor = attrInfo is ApplicationAttributeInfo or InstrumentationAttributeInfo;
@@ -259,7 +271,6 @@ public sealed class JavaPeerScanner : IDisposable
 				IsInterface = isInterface,
 				IsAbstract = isAbstract,
 				DoNotGenerateAcw = doNotGenerateAcw,
-				HasJniAddNativeMethodRegistrationAttribute = hasJniAddNativeMethodRegistrationAttribute,
 				IsFromJniTypeSignature = registerInfo?.IsFromJniTypeSignature ?? false,
 				IsUnconditional = isUnconditional,
 				CannotRegisterInStaticConstructor = cannotRegisterInStaticConstructor,

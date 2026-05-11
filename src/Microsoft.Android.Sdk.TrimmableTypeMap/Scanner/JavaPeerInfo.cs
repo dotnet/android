@@ -66,12 +66,6 @@ public sealed record JavaPeerInfo
 	public bool DoNotGenerateAcw { get; init; }
 
 	/// <summary>
-	/// True when the managed type uses <c>JniAddNativeMethodRegistrationAttribute</c>
-	/// to provide native methods for a hand-written Java peer.
-	/// </summary>
-	public bool HasJniAddNativeMethodRegistrationAttribute { get; init; }
-
-	/// <summary>
 	/// True when the type was discovered via <c>[JniTypeSignatureAttribute]</c>
 	/// rather than <c>[RegisterAttribute]</c>.  Used to resolve cross-assembly
 	/// alias ownership: <c>[Register]</c> types take precedence.

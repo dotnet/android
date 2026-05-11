@@ -47,16 +47,6 @@ public class TrimmableTypeMapGenerator
 			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
 
-		// [JniAddNativeMethodRegistrationAttribute] is not supported by design under the
-		// trimmable typemap; emit XA4251 for every offending type so the MSBuild task fails
-		// the build via HasLoggedErrors. We continue past this so callers still get
-		// meaningful diagnostics for unrelated issues in the same build.
-		foreach (var peer in allPeers) {
-			if (peer.HasJniAddNativeMethodRegistrationAttribute) {
-				logger.LogJniAddNativeMethodRegistrationAttributeError (peer.ManagedTypeName);
-			}
-		}
-
 		RootManifestReferencedTypes (allPeers, PrepareManifestForRooting (manifestTemplate, manifestConfig));
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
 		PropagateCannotRegisterToDescendants (allPeers);
@@ -145,7 +135,7 @@ public class TrimmableTypeMapGenerator
 
 	(List<JavaPeerInfo> peers, AssemblyManifestInfo manifestInfo) ScanAssemblies (IReadOnlyList<(string Name, PEReader Reader)> assemblies)
 	{
-		using var scanner = new JavaPeerScanner ();
+		using var scanner = new JavaPeerScanner (logger);
 		var peers = scanner.Scan (assemblies);
 		var manifestInfo = scanner.ScanAssemblyManifestInfo ();
 		logger.LogJavaPeerScanInfo (assemblies.Count, peers.Count);
