@@ -49,6 +49,12 @@
     <Error Text="Trimmable typemap is not supported for runtime '$(_AndroidRuntime)'." />
   </Target>
 
+  <Target Name="_ValidateTrimmableTypeMapPackageNamingPolicy"
+      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(_AndroidPackageNamingPolicySetByUser)' == 'true' and '$(AndroidPackageNamingPolicy)' != 'Crc64' and '$(AndroidPackageNamingPolicy)' != 'LowercaseCrc64' "
+      BeforeTargets="_GenerateTrimmableTypeMap;Build">
+    <Error Text="AndroidPackageNamingPolicy value '$(AndroidPackageNamingPolicy)' is not supported with the trimmable typemap. Supported values are 'Crc64' (default) and 'LowercaseCrc64'." />
+  </Target>
+
   <!--
     Generate TypeMap assemblies and JCW files.
     AfterTargets="CoreCompile" so it runs after compilation.

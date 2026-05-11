@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
-using Java.Interop.Tools.JavaCallableWrappers;
+
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
 /// <summary>
@@ -1539,10 +1539,16 @@ public sealed class JavaPeerScanner : IDisposable
 
 	static HashedPackageNamingPolicy ParsePackageNamingPolicy (string? packageNamingPolicy)
 	{
+		if (string.IsNullOrEmpty (packageNamingPolicy)) {
+			return HashedPackageNamingPolicy.Crc64;
+		}
+		if (string.Equals (packageNamingPolicy, "Crc64", StringComparison.OrdinalIgnoreCase)) {
+			return HashedPackageNamingPolicy.Crc64;
+		}
 		if (string.Equals (packageNamingPolicy, "LowercaseCrc64", StringComparison.OrdinalIgnoreCase)) {
 			return HashedPackageNamingPolicy.LowercaseCrc64;
 		}
-		return HashedPackageNamingPolicy.Crc64;
+		throw new ArgumentException ($"Unsupported AndroidPackageNamingPolicy value '{packageNamingPolicy}' for trimmable typemap. Supported values are 'Crc64' and 'LowercaseCrc64'.", nameof (packageNamingPolicy));
 	}
 
 	static string ExtractNamespace (string fullName)

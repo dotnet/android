@@ -170,4 +170,27 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 		Assert.NotEqual (withCrc64, withLowercaseCrc64);
 	}
 
+	[Theory]
+	[InlineData ("Lowercase")]
+	[InlineData ("crc46")]
+	[InlineData ("XxHash64")]
+	[InlineData ("not-a-policy")]
+	public void Constructor_UnsupportedPackageNamingPolicy_Throws (string policy)
+	{
+		var ex = Assert.Throws<ArgumentException> (() => new JavaPeerScanner (policy));
+		Assert.Contains (policy, ex.Message);
+	}
+
+	[Theory]
+	[InlineData (null)]
+	[InlineData ("")]
+	[InlineData ("Crc64")]
+	[InlineData ("crc64")]
+	[InlineData ("LowercaseCrc64")]
+	[InlineData ("lowercasecrc64")]
+	public void Constructor_SupportedPackageNamingPolicy_DoesNotThrow (string? policy)
+	{
+		using var scanner = new JavaPeerScanner (policy);
+	}
+
 }

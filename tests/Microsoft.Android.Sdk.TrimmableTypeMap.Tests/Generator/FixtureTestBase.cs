@@ -39,13 +39,11 @@ public abstract class FixtureTestBase
 	private protected static List<JavaPeerInfo> ScanFixtures (string packageNamingPolicy)
 	{
 		using var scanner = new JavaPeerScanner (packageNamingPolicy);
-		var peReader = new PEReader (File.OpenRead (TestFixtureAssemblyPath));
+		using var peReader = new PEReader (File.OpenRead (TestFixtureAssemblyPath));
 		var mdReader = peReader.GetMetadataReader ();
 		var assemblyName = mdReader.GetString (mdReader.GetAssemblyDefinition ().Name);
 		var assemblies = new [] { (assemblyName, peReader) };
-		var peers = scanner.Scan (assemblies);
-		peReader.Dispose ();
-		return peers;
+		return scanner.Scan (assemblies);
 	}
 
 	private protected static AssemblyManifestInfo ScanAssemblyManifestInfo () => _cachedScanResult.Value.manifestInfo;
