@@ -7,7 +7,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 -->
 <Project>
 
-  <UsingTask TaskName="Xamarin.Android.Tasks.SetNdkPathForIlc" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.SetIlcToolchainPath" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotLibraryLoadAssemblerSources" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotEnvironmentAssemblerSources" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.LinkNativeAotSharedLibrary" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
@@ -154,8 +154,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --notrimwarn</_ExtraTrimmerArgs>
     </PropertyGroup>
 
-    <SetNdkPathForIlc NdkBinDirectory="$(_NdkBinDir)" Condition=" '$(_AndroidUseWorkloadNativeLinker)' != 'true' " />
-    <SetNdkPathForIlc NdkBinDirectory="$(AndroidBinUtilsDirectory)" Condition=" '$(_AndroidUseWorkloadNativeLinker)' == 'true' " />
+    <SetIlcToolchainPath ToolchainBinDirectory="$(_NdkBinDir)" Condition=" '$(_AndroidUseWorkloadNativeLinker)' != 'true' " />
+    <SetIlcToolchainPath ToolchainBinDirectory="$(AndroidBinUtilsDirectory)" Condition=" '$(_AndroidUseWorkloadNativeLinker)' == 'true' " />
   </Target>
 
   <Target Name="_AndroidComputeIlcCompileInputs">
