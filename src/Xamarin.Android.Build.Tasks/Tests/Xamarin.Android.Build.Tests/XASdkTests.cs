@@ -284,7 +284,9 @@ public class JavaSourceTest {
 		public void DotNetPublishReadyToRunCustomConfiguration ()
 		{
 			const string runtimeIdentifier = "android-arm64";
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = new XamarinAndroidApplicationProject (releaseConfigurationName: "CustomRelease") {
+				IsRelease = true,
+			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifier);
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
