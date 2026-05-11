@@ -176,6 +176,105 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void DotNetRunCtrlC ()
+		{
+			AssertCommercialBuild (); //FIXME: https://github.com/dotnet/android/issues/10832
+
+			const string logcatMessage = "DOTNET_RUN_CTRLC_TEST_99999";
+			var proj = new XamarinAndroidApplicationProject ();
+
+			// Enable verbose output from Microsoft.Android.Run for debugging
+			proj.SetProperty ("_AndroidRunExtraArgs", "--verbose");
+
+			// Add a Console.WriteLine that will appear in logcat
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"//${AFTER_ONCREATE}",
+				$"Console.WriteLine (\"{logcatMessage}\");");
+
+			using var builder = CreateApkBuilder ();
+			builder.Save (proj);
+
+			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
+			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+
+			// Start dotnet run with WaitForExit=true, which uses Microsoft.Android.Run
+			using var process = dotnet.StartRun ();
+
+			var locker = new Lock ();
+			var output = new StringBuilder ();
+			var appLaunched = new ManualResetEventSlim (false);
+
+			process.OutputDataReceived += (sender, e) => {
+				if (e.Data != null) {
+					lock (locker) {
+						output.AppendLine (e.Data);
+						if (e.Data.Contains (logcatMessage)) {
+							appLaunched.Set ();
+						}
+					}
+				}
+			};
+			process.ErrorDataReceived += (sender, e) => {
+				if (e.Data != null) {
+					lock (locker) {
+						output.AppendLine ($"STDERR: {e.Data}");
+					}
+				}
+			};
+
+			process.BeginOutputReadLine ();
+			process.BeginErrorReadLine ();
+
+			// Wait for the app to start and produce logcat output
+			bool launched = appLaunched.Wait (TimeSpan.FromSeconds (ActivityStartTimeoutInSeconds));
+
+			string logPath = Path.Combine (Root, builder.ProjectDirectory, "dotnet-run-ctrlc-output.log");
+			try {
+				Assert.IsTrue (launched, $"Expected message '{logcatMessage}' was not found in output within {ActivityStartTimeoutInSeconds}s.");
+
+				// Verify the app is running on the device
+				var pidOutput = RunAdbCommand ($"shell pidof {proj.PackageName}").Trim ();
+				Assert.IsTrue (!string.IsNullOrEmpty (pidOutput) && int.TryParse (pidOutput.Split (' ') [0], out _),
+					$"App should be running on the device. pidof output: '{pidOutput}'");
+
+				// Send Ctrl+C to the dotnet run process
+				process.SendCtrlC ();
+
+				// Wait for the process to exit gracefully
+				bool exited = process.WaitForExit (30_000);
+				Assert.IsTrue (exited, "dotnet run process should have exited after SIGINT");
+
+				// Verify the output contains the "Stopping application..." message from Microsoft.Android.Run
+				string outputText = output.ToString ();
+				Assert.IsTrue (outputText.Contains ("Stopping application..."),
+					$"Output should contain 'Stopping application...' from Microsoft.Android.Run's Ctrl+C handler");
+
+				// Verify the app is no longer running on the device.
+				// Poll with retries since StopAppAsync is fire-and-forget in the Ctrl+C handler.
+				bool appStopped = false;
+				for (int i = 0; i < 10; i++) {
+					pidOutput = RunAdbCommand ($"shell pidof {proj.PackageName}").Trim ();
+					if (string.IsNullOrEmpty (pidOutput)) {
+						appStopped = true;
+						break;
+					}
+					Thread.Sleep (1000);
+				}
+				Assert.IsTrue (appStopped,
+					$"App should not be running on the device after Ctrl+C. pidof output: '{pidOutput}'");
+			} finally {
+				// Ensure the process is killed if it's still running
+				if (!process.HasExited) {
+					process.Kill (entireProcessTree: true);
+					process.WaitForExit ();
+				}
+
+				File.WriteAllText (logPath, output.ToString ());
+				TestContext.AddTestAttachment (logPath);
+			}
+		}
+
+		[Test]
 		public void DotNetRunWithDeviceParameter ()
 		{
 			AssertCommercialBuild (); //FIXME: https://github.com/dotnet/android/issues/10832
