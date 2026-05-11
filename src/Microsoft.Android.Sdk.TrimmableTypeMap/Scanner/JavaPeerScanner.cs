@@ -178,7 +178,12 @@ public sealed class JavaPeerScanner : IDisposable
 			// by design (see XA4251). Detect the attribute *before* any per-type filters below
 			// (array type, no JNI name, etc.) so the diagnostic fires uniformly regardless of
 			// whether the type would otherwise have ended up in the typemap.
-			if (HasJniAddNativeMethodRegistrationAttribute (typeDef, index)) {
+			//
+			// Skip the per-method walk entirely for the overwhelmingly common case where
+			// the assembly doesn't even reference the attribute type — the per-assembly
+			// flag was computed cheaply in AssemblyIndex.Build.
+			if (index.MayUseJniAddNativeMethodRegistrationAttribute &&
+			    HasJniAddNativeMethodRegistrationAttribute (typeDef, index)) {
 				logger?.LogJniAddNativeMethodRegistrationAttributeError (MetadataTypeNameResolver.GetFullName (typeDef, index.Reader));
 			}
 

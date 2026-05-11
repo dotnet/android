@@ -33,6 +33,15 @@ sealed class AssemblyIndex : IDisposable
 	/// </summary>
 	public Dictionary<TypeDefinitionHandle, TypeAttributeInfo> AttributesByType { get; } = new ();
 
+	/// <summary>
+	/// True iff the assembly's metadata mentions a type named
+	/// <c>JniAddNativeMethodRegistrationAttribute</c> (as a TypeReference or
+	/// TypeDefinition). The trimmable typemap forbids that attribute (XA4251);
+	/// this flag lets the scanner short-circuit the per-method attribute walk
+	/// for the overwhelmingly common case of assemblies that don't use it.
+	/// </summary>
+	public bool MayUseJniAddNativeMethodRegistrationAttribute { get; private set; }
+
 	AssemblyIndex (PEReader peReader, MetadataReader reader, string assemblyName)
 	{
 		this.peReader = peReader;
@@ -51,8 +60,26 @@ sealed class AssemblyIndex : IDisposable
 
 	void Build ()
 	{
+		const string JniAddNativeMethodRegistrationAttribute = "JniAddNativeMethodRegistrationAttribute";
+
+		// Cheap first pass over TypeReferences / TypeDefinitions to decide whether
+		// the assembly is even capable of carrying [JniAddNativeMethodRegistration].
+		// The per-method attribute walk in the scanner can then skip entirely for
+		// the common case where the attribute is neither imported nor declared here.
+		foreach (var trHandle in Reader.TypeReferences) {
+			if (Reader.GetString (Reader.GetTypeReference (trHandle).Name) == JniAddNativeMethodRegistrationAttribute) {
+				MayUseJniAddNativeMethodRegistrationAttribute = true;
+				break;
+			}
+		}
+
 		foreach (var typeHandle in Reader.TypeDefinitions) {
 			var typeDef = Reader.GetTypeDefinition (typeHandle);
+
+			if (!MayUseJniAddNativeMethodRegistrationAttribute &&
+			    Reader.GetString (typeDef.Name) == JniAddNativeMethodRegistrationAttribute) {
+				MayUseJniAddNativeMethodRegistrationAttribute = true;
+			}
 
 			var fullName = MetadataTypeNameResolver.GetFullName (typeDef, Reader);
 			if (fullName.Length == 0) {
