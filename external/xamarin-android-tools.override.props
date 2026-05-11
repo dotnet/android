@@ -9,6 +9,7 @@
     <PackageOutputPath>$(MSBuildThisFileDirectory)..\bin\Build$(Configuration)\nuget-unsigned\</PackageOutputPath>
     <RestoreAdditionalProjectSources>
       https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-c2c9c8ba/nuget/v3/index.json;
+      https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-98618ede/nuget/v3/index.json;
     </RestoreAdditionalProjectSources>
   </PropertyGroup>
   <Target Name="_GetXAVersionInfo"
