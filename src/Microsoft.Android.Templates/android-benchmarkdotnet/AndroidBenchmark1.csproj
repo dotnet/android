@@ -14,11 +14,18 @@
     <RuntimeIdentifiers>android-arm64;android-x64</RuntimeIdentifiers>
     <AndroidPackageFormats>apk</AndroidPackageFormats>
     <AndroidInstrumentation>com.companyname.AndroidBenchmark1.BenchmarkInstrumentation</AndroidInstrumentation>
-    <PublishTrimmed>false</PublishTrimmed>
-    <PublishReadyToRun>false</PublishReadyToRun>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- BenchmarkDotNet discovers [Benchmark] methods via reflection, and
+         BenchmarkRunner emits per-benchmark wrapper code that references
+         many BenchmarkDotNet internals. Root both assemblies so trimming
+         keeps the metadata BenchmarkDotNet needs at runtime. -->
+    <TrimmerRootAssembly Include="AndroidBenchmark1" />
+    <TrimmerRootAssembly Include="BenchmarkDotNet" />
   </ItemGroup>
 </Project>
