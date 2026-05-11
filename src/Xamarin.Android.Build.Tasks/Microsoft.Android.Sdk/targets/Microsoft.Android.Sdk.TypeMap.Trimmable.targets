@@ -50,7 +50,7 @@
   </Target>
 
   <Target Name="_ValidateTrimmableTypeMapPackageNamingPolicy"
-      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(_AndroidPackageNamingPolicySetByUser)' == 'true' and '$(AndroidPackageNamingPolicy)' != 'Crc64' and '$(AndroidPackageNamingPolicy)' != 'LowercaseCrc64' "
+      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(_AndroidPackageNamingPolicySetByUser)' == 'true' and '$(AndroidPackageNamingPolicy.ToLowerInvariant())' != 'crc64' and '$(AndroidPackageNamingPolicy.ToLowerInvariant())' != 'lowercasecrc64' "
       BeforeTargets="_GenerateTrimmableTypeMap;Build">
     <Error Text="AndroidPackageNamingPolicy value '$(AndroidPackageNamingPolicy)' is not supported with the trimmable typemap. Supported values are 'Crc64' (default) and 'LowercaseCrc64'." />
   </Target>
