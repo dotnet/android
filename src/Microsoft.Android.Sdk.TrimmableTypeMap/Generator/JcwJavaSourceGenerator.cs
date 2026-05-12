@@ -249,7 +249,7 @@ public sealed class JcwJavaSourceGenerator
 				throwsClause = $"\n\t\tthrows {string.Join (", ", method.ThrownNames)}";
 			}
 
-			if (method.Connector != null) {
+			if (method.Connector != null && !method.IsExport) {
 				writer.Write ($$"""
 
 	@Override
