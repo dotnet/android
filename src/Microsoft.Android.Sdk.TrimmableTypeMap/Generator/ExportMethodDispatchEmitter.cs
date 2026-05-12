@@ -4,6 +4,8 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 
+using TrackedInstructionEncoder = Microsoft.Android.Sdk.TrimmableTypeMap.PEAssemblyBuilder.TrackedInstructionEncoder;
+
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
 sealed class ExportMethodDispatchEmitter
@@ -68,7 +70,7 @@ sealed class ExportMethodDispatchEmitter
 		return handle;
 	}
 
-	void EmitWrappedExportMethodDispatch (InstructionEncoder encoder, ControlFlowBuilder cfb,
+	void EmitWrappedExportMethodDispatch (TrackedInstructionEncoder encoder, ControlFlowBuilder cfb,
 		UcoMethodData uco, EntityHandle callbackTypeHandle, MemberReferenceHandle callbackRef,
 		List<JniParamKind> jniParams, JniParamKind returnKind, ExportMethodDispatchLocals locals)
 	{
@@ -85,7 +87,7 @@ sealed class ExportMethodDispatchEmitter
 		encoder.LoadArgument (0);
 		encoder.LoadLocalAddress (0);
 		encoder.LoadLocalAddress (1);
-		encoder.Call (_context.BeginMarshalMethodRef);
+		encoder.Call (_context.BeginMarshalMethodRef, parameterCount: 3, returnsValue: true);
 		encoder.Branch (ILOpCode.Brfalse, afterAll);
 
 		// TRY: dispatch + (if non-void) store ABI return value to the survival local.
@@ -97,22 +99,21 @@ sealed class ExportMethodDispatchEmitter
 		encoder.Branch (ILOpCode.Leave, afterAll);
 
 		// CATCH (System.Exception e): runtime?.OnUserUnhandledException(ref envp, e);
-		encoder.MarkLabel (catchStart);
+		encoder.MarkLabel (catchStart, stackDepth: 1);
 		encoder.StoreLocal (2);
 		encoder.LoadLocal (1);
 		encoder.Branch (ILOpCode.Brfalse, endCatch);
 		encoder.LoadLocal (1);
 		encoder.LoadLocalAddress (0);
 		encoder.LoadLocal (2);
-		encoder.OpCode (ILOpCode.Callvirt);
-		encoder.Token (_context.OnUserUnhandledExceptionRef);
+		encoder.Callvirt (_context.OnUserUnhandledExceptionRef, parameterCount: 2);
 		encoder.MarkLabel (endCatch);
 		encoder.Branch (ILOpCode.Leave, afterAll);
 
 		// FINALLY: EndMarshalMethod(ref envp);
 		encoder.MarkLabel (finallyStart);
 		encoder.LoadLocalAddress (0);
-		encoder.Call (_context.EndMarshalMethodRef);
+		encoder.Call (_context.EndMarshalMethodRef, parameterCount: 1);
 		encoder.OpCode (ILOpCode.Endfinally);
 
 		// AFTER: load ABI return (if non-void) and return.
@@ -120,7 +121,7 @@ sealed class ExportMethodDispatchEmitter
 		if (!isVoid) {
 			encoder.LoadLocal (locals.AbiReturnLocalIndex);
 		}
-		encoder.OpCode (ILOpCode.Ret);
+		encoder.Return (returnsValue: !isVoid);
 
 		cfb.AddCatchRegion (tryStart, catchStart, catchStart, finallyStart, _context.ExceptionRef);
 		cfb.AddFinallyRegion (tryStart, finallyStart, finallyStart, afterAll);
@@ -253,22 +254,23 @@ sealed class ExportMethodDispatchEmitter
 				}));
 	}
 
-	void EmitExportMethodDispatch (InstructionEncoder encoder, UcoMethodData uco, EntityHandle callbackTypeHandle,
+	void EmitExportMethodDispatch (TrackedInstructionEncoder encoder, UcoMethodData uco, EntityHandle callbackTypeHandle,
 		MemberReferenceHandle callbackRef, List<JniParamKind> jniParams, JniParamKind returnKind,
 		ExportMethodDispatchLocals exportMethodDispatchLocals)
 	{
 		var exportMethodDispatch = GetRequiredExportMethodDispatch (uco);
+		int managedParameterCount = exportMethodDispatch.ParameterTypes.Count;
+		bool returnsManagedValue = exportMethodDispatch.ReturnType.ManagedTypeName != "System.Void";
 
 		if (!exportMethodDispatch.IsStatic) {
 			encoder.LoadArgument (1);
 			encoder.LoadConstantI4 (0);
 			EmitManagedTypeToken (encoder, callbackTypeHandle);
-			encoder.Call (_context.JavaLangObjectGetObjectRef);
-			encoder.OpCode (ILOpCode.Castclass);
-			encoder.Token (callbackTypeHandle);
+			encoder.Call (_context.JavaLangObjectGetObjectRef, parameterCount: 3, returnsValue: true);
+			encoder.CastClass (callbackTypeHandle);
 		}
 
-		for (int i = 0; i < exportMethodDispatch.ParameterTypes.Count; i++) {
+		for (int i = 0; i < managedParameterCount; i++) {
 			LoadManagedArgument (encoder,
 				exportMethodDispatch.ParameterTypes [i],
 				GetExportMethodDispatchParameterKind (exportMethodDispatch, i),
@@ -282,10 +284,9 @@ sealed class ExportMethodDispatchEmitter
 		}
 
 		if (exportMethodDispatch.IsStatic) {
-			encoder.Call (callbackRef);
+			encoder.Call (callbackRef, managedParameterCount, returnsManagedValue);
 		} else {
-			encoder.OpCode (ILOpCode.Callvirt);
-			encoder.Token (callbackRef);
+			encoder.Callvirt (callbackRef, managedParameterCount, returnsManagedValue);
 		}
 
 		EmitManagedArrayCopyBacks (encoder, exportMethodDispatch, returnKind, exportMethodDispatchLocals);
@@ -295,7 +296,7 @@ sealed class ExportMethodDispatchEmitter
 	static ExportParameterKindInfo GetExportMethodDispatchParameterKind (ExportMethodDispatchData exportMethodDispatch, int index)
 		=> index < exportMethodDispatch.ParameterKinds.Count ? exportMethodDispatch.ParameterKinds [index] : ExportParameterKindInfo.Unspecified;
 
-	void EmitManagedArrayCopyBacks (InstructionEncoder encoder, ExportMethodDispatchData exportMethodDispatch, JniParamKind returnKind, ExportMethodDispatchLocals exportMethodDispatchLocals)
+	void EmitManagedArrayCopyBacks (TrackedInstructionEncoder encoder, ExportMethodDispatchData exportMethodDispatch, JniParamKind returnKind, ExportMethodDispatchLocals exportMethodDispatchLocals)
 	{
 		if (!exportMethodDispatchLocals.HasArrayParameters) {
 			return;
@@ -312,7 +313,7 @@ sealed class ExportMethodDispatchEmitter
 			encoder.LoadLocal (kvp.Value);
 			EmitManagedArrayElementTypeToken (encoder, exportMethodDispatch.ParameterTypes [kvp.Key]);
 			encoder.LoadArgument (2 + kvp.Key);
-			encoder.Call (_context.JniEnvCopyArrayRef);
+			encoder.Call (_context.JniEnvCopyArrayRef, parameterCount: 3);
 			encoder.MarkLabel (skipCopy);
 		}
 
@@ -329,7 +330,7 @@ sealed class ExportMethodDispatchEmitter
 	/// parameter kinds (streams / XML parsers), and object peers via
 	/// <c>Java.Lang.Object.GetObject (IntPtr, JniHandleOwnership, Type)</c>.
 	/// </summary>
-	internal void LoadManagedArgument (InstructionEncoder encoder, TypeRefData managedType, ExportParameterKindInfo exportKind, JniParamKind jniKind, int argumentIndex)
+	internal void LoadManagedArgument (TrackedInstructionEncoder encoder, TypeRefData managedType, ExportParameterKindInfo exportKind, JniParamKind jniKind, int argumentIndex)
 	{
 		string managedTypeName = managedType.ManagedTypeName;
 
@@ -352,16 +353,15 @@ sealed class ExportMethodDispatchEmitter
 			encoder.LoadArgument (argumentIndex);
 			encoder.LoadConstantI4 (0);
 			EmitManagedArrayElementTypeToken (encoder, managedType);
-			encoder.Call (_context.JniEnvGetArrayRef);
-			encoder.OpCode (ILOpCode.Castclass);
-			encoder.Token (ResolveManagedTypeHandle (managedType));
+			encoder.Call (_context.JniEnvGetArrayRef, parameterCount: 3, returnsValue: true);
+			encoder.CastClass (ResolveManagedTypeHandle (managedType));
 			return;
 		}
 
 		EmitManagedObjectArgument (encoder, managedType, argumentIndex);
 	}
 
-	void ConvertManagedReturnValue (InstructionEncoder encoder, TypeRefData managedReturnType, ExportParameterKindInfo exportKind, JniParamKind returnKind)
+	void ConvertManagedReturnValue (TrackedInstructionEncoder encoder, TypeRefData managedReturnType, ExportParameterKindInfo exportKind, JniParamKind returnKind)
 	{
 		string managedReturnTypeName = managedReturnType.ManagedTypeName;
 
@@ -377,7 +377,7 @@ sealed class ExportMethodDispatchEmitter
 		}
 
 		if (managedReturnTypeName == "System.String") {
-			encoder.Call (_context.JniEnvNewStringRef);
+			encoder.Call (_context.JniEnvNewStringRef, parameterCount: 1, returnsValue: true);
 			return;
 		}
 
@@ -401,25 +401,24 @@ sealed class ExportMethodDispatchEmitter
 		//   - JavaList/JavaDictionary/JavaCollection.ToLocalJniHandle wrap raw
 		//     managed collections without a Java peer.
 		if (managedReturnTypeName == "Java.Lang.ICharSequence") {
-			encoder.Call (_context.CharSequenceToLocalJniHandleRef);
+			encoder.Call (_context.CharSequenceToLocalJniHandleRef, parameterCount: 1, returnsValue: true);
 			return;
 		}
 		if (managedReturnTypeName == "System.Collections.IList") {
-			encoder.Call (_context.JavaListToLocalJniHandleRef);
+			encoder.Call (_context.JavaListToLocalJniHandleRef, parameterCount: 1, returnsValue: true);
 			return;
 		}
 		if (managedReturnTypeName == "System.Collections.IDictionary") {
-			encoder.Call (_context.JavaDictionaryToLocalJniHandleRef);
+			encoder.Call (_context.JavaDictionaryToLocalJniHandleRef, parameterCount: 1, returnsValue: true);
 			return;
 		}
 		if (managedReturnTypeName == "System.Collections.ICollection") {
-			encoder.Call (_context.JavaCollectionToLocalJniHandleRef);
+			encoder.Call (_context.JavaCollectionToLocalJniHandleRef, parameterCount: 1, returnsValue: true);
 			return;
 		}
 
-		encoder.OpCode (ILOpCode.Castclass);
-		encoder.Token (_context.IJavaObjectRef);
-		encoder.Call (_context.JniEnvToLocalJniHandleRef);
+		encoder.CastClass (_context.IJavaObjectRef);
+		encoder.Call (_context.JniEnvToLocalJniHandleRef, parameterCount: 1, returnsValue: true);
 	}
 
 	void ThrowIfUnsupportedManagedType (string managedTypeName)
@@ -433,35 +432,35 @@ sealed class ExportMethodDispatchEmitter
 		}
 	}
 
-	bool TryEmitExportParameterArgument (InstructionEncoder encoder, ExportParameterKindInfo exportKind, int argumentIndex)
+	bool TryEmitExportParameterArgument (TrackedInstructionEncoder encoder, ExportParameterKindInfo exportKind, int argumentIndex)
 	{
 		switch (exportKind) {
 			case ExportParameterKindInfo.InputStream:
 				encoder.LoadArgument (argumentIndex);
 				encoder.LoadConstantI4 (0);
-				encoder.Call (_context.InputStreamInvokerFromJniHandleRef);
+				encoder.Call (_context.InputStreamInvokerFromJniHandleRef, parameterCount: 2, returnsValue: true);
 				return true;
 			case ExportParameterKindInfo.OutputStream:
 				encoder.LoadArgument (argumentIndex);
 				encoder.LoadConstantI4 (0);
-				encoder.Call (_context.OutputStreamInvokerFromJniHandleRef);
+				encoder.Call (_context.OutputStreamInvokerFromJniHandleRef, parameterCount: 2, returnsValue: true);
 				return true;
 			case ExportParameterKindInfo.XmlPullParser:
 				encoder.LoadArgument (argumentIndex);
 				encoder.LoadConstantI4 (0);
-				encoder.Call (_context.XmlPullParserReaderFromJniHandleRef);
+				encoder.Call (_context.XmlPullParserReaderFromJniHandleRef, parameterCount: 2, returnsValue: true);
 				return true;
 			case ExportParameterKindInfo.XmlResourceParser:
 				encoder.LoadArgument (argumentIndex);
 				encoder.LoadConstantI4 (0);
-				encoder.Call (_context.XmlResourceParserReaderFromJniHandleRef);
+				encoder.Call (_context.XmlResourceParserReaderFromJniHandleRef, parameterCount: 2, returnsValue: true);
 				return true;
 			default:
 				return false;
 		}
 	}
 
-	bool TryEmitPrimitiveManagedArgument (InstructionEncoder encoder, string managedTypeName, int argumentIndex)
+	bool TryEmitPrimitiveManagedArgument (TrackedInstructionEncoder encoder, string managedTypeName, int argumentIndex)
 	{
 		switch (managedTypeName) {
 			case "System.Boolean":
@@ -486,14 +485,14 @@ sealed class ExportMethodDispatchEmitter
 			case "System.String":
 				encoder.LoadArgument (argumentIndex);
 				encoder.LoadConstantI4 (0);
-				encoder.Call (_context.JniEnvGetStringRef);
+				encoder.Call (_context.JniEnvGetStringRef, parameterCount: 2, returnsValue: true);
 				return true;
 			default:
 				return false;
 		}
 	}
 
-	void EmitManagedObjectArgument (InstructionEncoder encoder, TypeRefData managedType, int argumentIndex)
+	void EmitManagedObjectArgument (TrackedInstructionEncoder encoder, TypeRefData managedType, int argumentIndex)
 	{
 		encoder.LoadArgument (argumentIndex);
 		encoder.LoadConstantI4 (0);
@@ -502,16 +501,15 @@ sealed class ExportMethodDispatchEmitter
 		} else {
 			EmitManagedTypeToken (encoder, ResolveManagedTypeHandle (managedType));
 		}
-		encoder.Call (_context.JavaLangObjectGetObjectRef);
+		encoder.Call (_context.JavaLangObjectGetObjectRef, parameterCount: 3, returnsValue: true);
 
 		if (managedType.ManagedTypeName != "System.Object") {
 			var managedTypeHandle = ResolveManagedTypeHandle (managedType);
-			encoder.OpCode (ILOpCode.Castclass);
-			encoder.Token (managedTypeHandle);
+			encoder.CastClass (managedTypeHandle);
 		}
 	}
 
-	void EmitManagedArrayReturn (InstructionEncoder encoder, TypeRefData managedReturnType)
+	void EmitManagedArrayReturn (TrackedInstructionEncoder encoder, TypeRefData managedReturnType)
 	{
 		var nonNullArray = encoder.DefineLabel ();
 		var done = encoder.DefineLabel ();
@@ -520,41 +518,42 @@ sealed class ExportMethodDispatchEmitter
 		encoder.Branch (ILOpCode.Brtrue_s, nonNullArray);
 		encoder.OpCode (ILOpCode.Pop);
 		encoder.LoadConstantI4 (0);
-		encoder.Branch (ILOpCode.Br_s, done);
+		// Both branches preserve one IntPtr on the evaluation stack; the tracked branch
+		// helper intentionally rejects unconditional branches because most joins are harder.
+		encoder.Encoder.Branch (ILOpCode.Br_s, done);
 		encoder.MarkLabel (nonNullArray);
 		EmitManagedArrayElementTypeToken (encoder, managedReturnType);
-		encoder.Call (_context.JniEnvNewArrayRef);
+		encoder.Call (_context.JniEnvNewArrayRef, parameterCount: 2, returnsValue: true);
 		encoder.MarkLabel (done);
 	}
 
-	bool TryEmitExportParameterReturn (InstructionEncoder encoder, ExportParameterKindInfo exportKind)
+	bool TryEmitExportParameterReturn (TrackedInstructionEncoder encoder, ExportParameterKindInfo exportKind)
 	{
 		switch (exportKind) {
 			case ExportParameterKindInfo.InputStream:
-				encoder.Call (_context.InputStreamAdapterToLocalJniHandleRef);
+				encoder.Call (_context.InputStreamAdapterToLocalJniHandleRef, parameterCount: 1, returnsValue: true);
 				return true;
 			case ExportParameterKindInfo.OutputStream:
-				encoder.Call (_context.OutputStreamAdapterToLocalJniHandleRef);
+				encoder.Call (_context.OutputStreamAdapterToLocalJniHandleRef, parameterCount: 1, returnsValue: true);
 				return true;
 			case ExportParameterKindInfo.XmlPullParser:
-				encoder.Call (_context.XmlReaderPullParserToLocalJniHandleRef);
+				encoder.Call (_context.XmlReaderPullParserToLocalJniHandleRef, parameterCount: 1, returnsValue: true);
 				return true;
 			case ExportParameterKindInfo.XmlResourceParser:
-				encoder.Call (_context.XmlReaderResourceParserToLocalJniHandleRef);
+				encoder.Call (_context.XmlReaderResourceParserToLocalJniHandleRef, parameterCount: 1, returnsValue: true);
 				return true;
 			default:
 				return false;
 		}
 	}
 
-	void EmitManagedTypeToken (InstructionEncoder encoder, EntityHandle typeHandle)
+	void EmitManagedTypeToken (TrackedInstructionEncoder encoder, EntityHandle typeHandle)
 	{
-		encoder.OpCode (ILOpCode.Ldtoken);
-		encoder.Token (typeHandle);
-		encoder.Call (_context.GetTypeFromHandleRef);
+		encoder.LoadToken (typeHandle);
+		encoder.Call (_context.GetTypeFromHandleRef, parameterCount: 1, returnsValue: true);
 	}
 
-	void EmitManagedArrayElementTypeToken (InstructionEncoder encoder, TypeRefData arrayType)
+	void EmitManagedArrayElementTypeToken (TrackedInstructionEncoder encoder, TypeRefData arrayType)
 	{
 		var elementType = arrayType with {
 			ManagedTypeName = arrayType.ManagedTypeName.Substring (0, arrayType.ManagedTypeName.Length - 2),
