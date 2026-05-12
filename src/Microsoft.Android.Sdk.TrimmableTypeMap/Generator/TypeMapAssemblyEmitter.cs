@@ -1117,6 +1117,49 @@ sealed class TypeMapAssemblyEmitter
 			return openGenericHandle;
 		}
 
+		if (proxy.InvokerType != null) {
+			var invokerTypeRef = _pe.ResolveTypeRef (proxy.InvokerType);
+			MethodDefinitionHandle invokerHandle;
+			if (proxy.InvokerActivationCtorStyle == ActivationCtorStyle.JavaInterop) {
+				var ctorRef = AddJavaInteropActivationCtorRef (invokerTypeRef);
+				invokerHandle = _pe.EmitBody (uco.WrapperName,
+					MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+					encodeSig,
+					(encoder, cfb) => EmitUcoConstructorBodyWithMarshal (encoder, cfb, enc => {
+						enc.LoadLocalAddress (3); // jniRef
+						enc.LoadArgument (1);     // self
+						enc.LoadConstantI4 (0);   // JniObjectReferenceType.Invalid
+						enc.Call (_jniObjectReferenceCtorRef, parameterCount: 2, isInstance: true);
+
+						enc.LoadLocalAddress (3); // ref jniRef
+						enc.LoadConstantI4 (1);   // JniObjectReferenceOptions.Copy
+						enc.NewObject (ctorRef, parameterCount: 2);
+						enc.OpCode (ILOpCode.Pop);
+
+						enc.LoadArgument (1); // self
+						enc.Call (_markActivationPeerReplaceableRef, parameterCount: 1);
+					}),
+					EncodeUcoConstructorLocals_JavaInterop);
+			} else {
+				var ctorRef = AddActivationCtorRef (invokerTypeRef);
+				invokerHandle = _pe.EmitBody (uco.WrapperName,
+					MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+					encodeSig,
+					(encoder, cfb) => EmitUcoConstructorBodyWithMarshal (encoder, cfb, enc => {
+						enc.LoadArgument (1);    // self
+						enc.LoadConstantI4 (0);  // JniHandleOwnership.DoNotTransfer
+						enc.NewObject (ctorRef, parameterCount: 2);
+						enc.OpCode (ILOpCode.Pop);
+
+						enc.LoadArgument (1); // self
+						enc.Call (_markActivationPeerReplaceableRef, parameterCount: 1);
+					}),
+					EncodeUcoConstructorLocals_Standard);
+			}
+			AddUnmanagedCallersOnlyAttribute (invokerHandle);
+			return invokerHandle;
+		}
+
 		if (jniParams.Count == 0 && uco.HasPublicParameterlessConstructor) {
 			var defaultCtorRef = AddDefaultCtorRef (targetTypeRef);
 			var defaultCtorHandle = _pe.EmitBody (uco.WrapperName,

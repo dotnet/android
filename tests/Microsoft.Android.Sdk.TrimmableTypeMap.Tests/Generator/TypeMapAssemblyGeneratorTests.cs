@@ -553,6 +553,43 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_UcoConstructor_InvokerUsesXamarinAndroidActivationCtor ()
+	{
+		var peer = MakeAcwPeer ("test/AbstractCtorTarget", "Test.AbstractCtorTarget", "TestAsm") with {
+			InvokerTypeName = "Test.AbstractCtorInvoker",
+			HasPublicParameterlessConstructor = false,
+		};
+
+		using var stream = GenerateAssembly (new [] { peer }, "InvokerCtorUcoTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		Assert.NotEmpty (FindCtorMemberRefs (reader, "Test", "AbstractCtorInvoker",
+			"System.IntPtr", "Android.Runtime.JniHandleOwnership"));
+		Assert.Empty (FindCtorMemberRefs (reader, "Test", "AbstractCtorTarget",
+			"System.IntPtr", "Android.Runtime.JniHandleOwnership"));
+	}
+
+	[Fact]
+	public void Generate_UcoConstructor_InvokerUsesJavaInteropActivationCtor ()
+	{
+		var peer = MakeAcwPeer ("test/AbstractJiCtorTarget", "Test.AbstractJiCtorTarget", "TestAsm") with {
+			InvokerTypeName = "Test.AbstractJiCtorInvoker",
+			InvokerActivationCtorStyle = ActivationCtorStyle.JavaInterop,
+			HasPublicParameterlessConstructor = false,
+		};
+
+		using var stream = GenerateAssembly (new [] { peer }, "JiInvokerCtorUcoTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		Assert.NotEmpty (FindCtorMemberRefs (reader, "Test", "AbstractJiCtorInvoker",
+			"Java.Interop.JniObjectReference&", "Java.Interop.JniObjectReferenceOptions"));
+		Assert.Empty (FindCtorMemberRefs (reader, "Test", "AbstractJiCtorTarget",
+			"Java.Interop.JniObjectReference&", "Java.Interop.JniObjectReferenceOptions"));
+	}
+
+	[Fact]
 	public void Generate_JiStyleCtor_EmitsDeleteRefCall ()
 	{
 		var peers = ScanFixtures ();
