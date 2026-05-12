@@ -102,13 +102,6 @@ Overridable MSBuild properties include:
     check when building Mono.Android if set to `True`. The check is performed
     by default.
 
-  * `$(IgnoreMaxMonoVersion)`: Skip the enforcement of the `$(MonoRequiredMaximumVersion)`
-    property. This is so that developers can run against the latest
-    and greatest. But the build system can enforce the min and max
-    versions. The default is `true`, however on CI we use:
-
-         /p:IgnoreMaxMonoVersion=False
-
   * `$(JavaInteropSourceDirectory)`: The Java.Interop source directory to
     build and reference projects from. By default, this is
     `external/Java.Interop` directory, maintained by `git submodule update`.
@@ -123,16 +116,6 @@ Overridable MSBuild properties include:
   * `$(MakeConcurrency)`: **make**(1) parameters to use intended to influence
     the number of CPU cores used when **make**(1) executes. By default this uses
     `-jCOUNT`, where `COUNT` is obtained from `sysctl hw.ncpu`.
-
-  * `$(MonoRequiredMinimumVersion)`: The minimum *system* mono version that is
-    supported in order to allow a build to continue. Policy is to require a
-    system mono which corresponds vaguely to the [`external/mono`](external)
-    version. This is not strictly required; older mono versions *may* work, they
-    just are not tested, and thus not guaranteed or supported.
-
-  * `$(MonoRequiredMaximumVersion)`: The max *system* mono version that is
-    required. This is so that we can ensure a stable build environment by
-    making sure we dont install unstable versions.
 
   * `$(MonoSgenBridgeVersion)`: The Mono SGEN Bridge version to support.
     Valid values include:
