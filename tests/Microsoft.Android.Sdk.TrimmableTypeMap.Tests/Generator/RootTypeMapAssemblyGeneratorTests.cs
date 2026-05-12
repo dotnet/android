@@ -21,12 +21,32 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 		return stream;
 	}
 
+	static MethodDefinitionHandle FindMethodDefinition (MetadataReader reader, string methodName) =>
+		reader.MethodDefinitions.First (h => reader.GetString (reader.GetMethodDefinition (h).Name) == methodName);
+
 	[Fact]
 	public void Generate_ProducesValidPEAssembly ()
 	{
 		using var stream = GenerateRootAssembly (new [] { "_App.TypeMap", "_Mono.Android.TypeMap" });
 		using var pe = new PEReader (stream);
 		Assert.True (pe.HasMetadata);
+	}
+
+	[Theory]
+	[InlineData (false)]
+	[InlineData (true)]
+	public void Generate_InitializeUsesComputedMaxStack (bool useSharedTypemapUniverse)
+	{
+		using var stream = GenerateRootAssembly (
+			new [] { "_App.TypeMap", "_Mono.Android.TypeMap" },
+			useSharedTypemapUniverse);
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var initialize = reader.GetMethodDefinition (FindMethodDefinition (reader, "Initialize"));
+		var body = pe.GetMethodBody (initialize.RelativeVirtualAddress);
+
+		Assert.InRange (body.MaxStack, 5, 16);
 	}
 
 	[Theory]

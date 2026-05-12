@@ -455,7 +455,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 				// This AddMemberRef call clears and repopulates _sigBlob
 				pe.AddMemberRef (objectRef, ".ctor",
 					s => s.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }));
-				encoder.OpCode (ILOpCode.Ret);
+				encoder.Return ();
 			});
 
 		// If the sig blob was corrupted, the PE metadata will have a wrong signature.
@@ -630,6 +630,22 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			.Select (m => reader.GetString (m.Name))
 			.ToList ();
 		Assert.DoesNotContain ("RegisterNatives", privateImplMethodNames);
+	}
+
+	[Fact]
+	public void Generate_AcwProxy_RegisterNativesUsesComputedMaxStack ()
+	{
+		var peers = ScanFixtures ();
+		var acwPeer = peers.First (p => p.JavaName == "my/app/MainActivity");
+
+		using var stream = GenerateAssembly (new [] { acwPeer }, "RegisterNativesMaxStack");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var registerNatives = reader.GetMethodDefinition (FindMethodDefinition (reader, "RegisterNatives"));
+		var body = pe.GetMethodBody (registerNatives.RelativeVirtualAddress);
+
+		Assert.InRange (body.MaxStack, 5, 16);
 	}
 
 	[Fact]
@@ -1256,6 +1272,32 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			$"Inherited-ctor UCO constructor should have at least 2 exception regions, found {regions.Length}");
 		Assert.Contains (regions, r => r.Kind == ExceptionRegionKind.Catch);
 		Assert.Contains (regions, r => r.Kind == ExceptionRegionKind.Finally);
+	}
+
+	[Fact]
+	public void Generate_UcoConstructor_UsesComputedMaxStack ()
+	{
+		var peer = MakeAcwPeer ("test/UcoCtorMaxStack", "Test.UcoCtorMaxStack", "TestAsm");
+		using var stream = GenerateAssembly (new [] { peer }, "UcoCtorMaxStackTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var nctorMethod = reader.GetMethodDefinition (FindNctorUcoMethod (reader));
+		var body = pe.GetMethodBody (nctorMethod.RelativeVirtualAddress);
+
+		Assert.InRange (body.MaxStack, 5, 16);
+	}
+
+	[Fact]
+	public void TrackedInstructionEncoder_UnconditionalBranchIsUnsupported ()
+	{
+		var code = new BlobBuilder ();
+		var controlFlow = new ControlFlowBuilder ();
+		var encoder = new PEAssemblyBuilder.TrackedInstructionEncoder (new InstructionEncoder (code, controlFlow));
+		var label = encoder.DefineLabel ();
+
+		Assert.Throws<NotSupportedException> (() => encoder.Branch (ILOpCode.Br, label));
+		Assert.Throws<NotSupportedException> (() => encoder.Branch (ILOpCode.Br_s, label));
 	}
 
 	[Fact]
