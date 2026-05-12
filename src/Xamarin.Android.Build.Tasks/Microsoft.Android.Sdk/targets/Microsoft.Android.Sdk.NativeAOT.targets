@@ -125,10 +125,10 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       -->
       <CppCompilerAndLinker>$(_NdkAbi)-linux-android$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppCompilerAndLinker>
       <CppLinker>$(_NdkAbi)-linux-android$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppLinker>
-      <ObjCopyName>llvm-objcopy</ObjCopyName>
+      <ObjCopyName>$(_NdkBinDir)llvm-objcopy</ObjCopyName>
       <!-- Use the NDK's llvm-ar instead of the host 'ar' so that ELF objects are handled
            correctly when cross-compiling. -->
-      <CppLibCreator>llvm-ar</CppLibCreator>
+      <CppLibCreator>$(_NdkBinDir)llvm-ar</CppLibCreator>
 
       <!-- We must ensure this is `false`, as it would interfere with statically linking libc++ -->
       <LinkStandardCPlusPlusLibrary>false</LinkStandardCPlusPlusLibrary>
@@ -138,6 +138,13 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
            Since we handle native linking ourselves, LinkerFlavor is not needed.
            Context: https://github.com/dotnet/runtime/issues/126978 -->
       <LinkerFlavor />
+    </PropertyGroup>
+
+    <!-- When using the workload linker, resolve tools from AndroidBinUtilsDirectory
+         instead of the NDK bin directory. -->
+    <PropertyGroup Condition=" '$(_AndroidUseWorkloadNativeLinker)' == 'true' ">
+      <ObjCopyName>$(AndroidBinUtilsDirectory)llvm-objcopy</ObjCopyName>
+      <CppLibCreator>$(AndroidBinUtilsDirectory)llvm-ar</CppLibCreator>
     </PropertyGroup>
 
     <!-- ILLink-specific settings: only when ILLink runs before ILC (non-trimmable path) -->
