@@ -145,7 +145,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			if (jmodFile == null)
 				throw new ArgumentNullException (nameof (jmodFile));
 			try {
-				var f = File.OpenRead (jmodFile);
+				using var f = File.OpenRead (jmodFile);
 				var h = new byte[4];
 				if (f.Read (h, 0, h.Length) != 4) {
 					return false;
