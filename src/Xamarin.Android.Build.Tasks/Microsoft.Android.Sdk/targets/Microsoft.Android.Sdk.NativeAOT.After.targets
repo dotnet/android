@@ -16,6 +16,7 @@ Imported from Microsoft.Android.Sdk.After.targets.
     be imported after the ILC NuGet package targets because the last target definition wins
     in MSBuild.
   -->
-  <Target Name="LinkNative" Condition=" '$(_AndroidRuntime)' == 'NativeAOT' " />
+  <Target Name="LinkNative" Condition=" '$(_AndroidRuntime)' == 'NativeAOT' "
+      DependsOnTargets="$(LinkNativeDependsOn)" />
 
 </Project>
