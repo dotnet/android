@@ -306,9 +306,11 @@ sealed class TypeMapAssemblyEmitter
 	}
 
 	/// <summary>
-	/// Emits private <c>__ArrayMapRank{N}</c> classes used as group type parameters
+	/// Emits public <c>__ArrayMapRank{N}</c> classes used as group type parameters
 	/// for array <c>TypeMap&lt;T&gt;</c> entries. Each per-assembly typemap owns its
-	/// rank anchors so array maps stay scoped to the generated assembly.
+	/// rank anchors so array maps stay scoped to the generated assembly. The root
+	/// typemap assembly references these anchors, so NativeAOT requires them to be
+	/// visible across assembly boundaries.
 	/// </summary>
 	void EmitRankSentinels (TypeMapAssemblyData model)
 	{
@@ -321,7 +323,7 @@ sealed class TypeMapAssemblyEmitter
 			_pe.Metadata.GetOrAddString ("System"), _pe.Metadata.GetOrAddString ("Object"));
 		for (int i = 0; i < model.MaxArrayRank; i++) {
 			_rankAnchorHandles [i] = _pe.Metadata.AddTypeDefinition (
-				TypeAttributes.NotPublic | TypeAttributes.Sealed | TypeAttributes.Class,
+				TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Class,
 				default,
 				_pe.Metadata.GetOrAddString ($"__ArrayMapRank{i + 1}"),
 				objectRef,
