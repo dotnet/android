@@ -125,16 +125,10 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       -->
       <CppCompilerAndLinker>$(_NdkAbi)-linux-android$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppCompilerAndLinker>
       <CppLinker>$(_NdkAbi)-linux-android$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppLinker>
-      <ObjCopyName>$(_NdkBinDir)llvm-objcopy</ObjCopyName>
+      <ObjCopyName>llvm-objcopy</ObjCopyName>
 
       <!-- We must ensure this is `false`, as it would interfere with statically linking libc++ -->
       <LinkStandardCPlusPlusLibrary>false</LinkStandardCPlusPlusLibrary>
-    </PropertyGroup>
-
-    <!-- When using the workload linker, resolve tools from AndroidBinUtilsDirectory
-         instead of the NDK bin directory. -->
-    <PropertyGroup Condition=" '$(_AndroidUseWorkloadNativeLinker)' == 'true' ">
-      <ObjCopyName>$(AndroidBinUtilsDirectory)llvm-objcopy</ObjCopyName>
     </PropertyGroup>
 
     <!-- ILLink-specific settings: only when ILLink runs before ILC (non-trimmable path) -->

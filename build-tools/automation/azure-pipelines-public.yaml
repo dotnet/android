@@ -379,7 +379,6 @@ stages:
       parameters:
         installTestSlicer: true
         installApkDiff: false
-        updateMono: true
         xaprepareScenario: EmulatorTestDependencies
         use1ESTemplate: false
 

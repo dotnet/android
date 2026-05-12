@@ -8,7 +8,6 @@ parameters:
   dotnetQuality: $(DotNetSdkQuality)
   installTestSlicer: false
   installApkDiff: true
-  updateMono: false
   androidSdkPlatforms: $(DefaultTestSdkPlatforms)
   repositoryAlias: 'self'
   commit: ''
@@ -41,7 +40,6 @@ steps:
     dotnetQuality: ${{ parameters.dotnetQuality }}
     installTestSlicer: ${{ parameters.installTestSlicer }}
     installApkDiff: ${{ parameters.installApkDiff }}
-    updateMono: ${{ parameters.updateMono }}
     androidSdkPlatforms: ${{ parameters.androidSdkPlatforms }}
     xaprepareScenario: ${{ parameters.xaprepareScenario }}
     use1ESTemplate: ${{ parameters.use1ESTemplate }}

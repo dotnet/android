@@ -3,7 +3,6 @@
 Building .NET for Android requires:
 
   * [Homebrew](#homebrew)
-  * [Latest Mono](#mono-sdk)
   * [The Java Development Kit (JDK)](#jdk)
   * [Autotools (`autoconf`, `automake`, etc.)](#autotools)
   * [The Android SDK and NDK](#ndk)
@@ -46,15 +45,9 @@ allow Homebrew to be installed:
 
 ## Mono MDK
 
-Latest Mono is required to build on [macOS][osx-mono] and Linux.
-The build will tell you if your version is outdated.
-
-[osx-mono]: http://www.mono-project.com/download/#download-mac
-[xmlpeek]: https://msdn.microsoft.com/en-us/library/ff598684.aspx
-
-The minimum Mono version which is checked for can be overridden by the
-`$(MonoRequiredMinimumVersion)` MSBuild property, but things may not build.
-(This is your warning.)
+Mono may be needed by the [API documentation pipeline](../../../build-tools/automation/azure-pipelines-apidocs.yaml)
+for running `mdoc`, but it is provisioned independently by that pipeline via `boots`.
+It is no longer required for local builds.
 
 
 <a name="jdk" />

@@ -33,13 +33,5 @@ This file is imported *after* the Microsoft.NET.Sdk/Sdk.targets.
   <Import Project="Microsoft.Android.Sdk.RuntimeConfig.targets" />
   <Import Project="Microsoft.Android.Sdk.Tooling.targets" />
   <Import Project="Microsoft.Android.Sdk.HotReload.targets" Condition=" '$(AndroidApplication)' == 'true' " />
-
-  <!--
-    Override ILC's LinkNative with a no-op.  With NativeLib=static, LinkNative only runs
-    llvm-ar to create a .a archive from the ILC-compiled .o file.  We never consume that
-    .a — _AndroidLinkNativeAotSharedLibrary links the .o directly into a .so.  This must
-    be defined here (in After.targets) because the ILC NuGet package targets are imported
-    after the workload SDK targets, and the last target definition wins in MSBuild.
-  -->
-  <Target Name="LinkNative" Condition=" '$(_AndroidRuntime)' == 'NativeAOT' " />
+  <Import Project="Microsoft.Android.Sdk.NativeAOT.After.targets" Condition=" '$(_AndroidRuntime)' == 'NativeAOT' " />
 </Project>
