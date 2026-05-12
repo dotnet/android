@@ -1088,6 +1088,8 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	[InlineData ("System.Int32&", "System.Void", "(I)V", "by-ref or pointer")]
 	[InlineData ("System.Int32*", "System.Void", "(I)V", "by-ref or pointer")]
 	[InlineData ("System.Int32", "System.Collections.Generic.List<System.String>", "(I)Ljava/lang/Object;", "generic")]
+	[InlineData ("!!0", "System.Void", "(Ljava/lang/Object;)V", "generic")]
+	[InlineData ("!0[]", "System.Void", "([Ljava/lang/Object;)V", "generic")]
 	public void Generate_ExportProxy_UnsupportedManagedShapesThrow (string parameterType, string returnType, string jniSignature, string expectedMessage)
 	{
 		var peer = MakePeerWithActivation ("my/app/UnsupportedExport", "MyApp.UnsupportedExport", "App") with {

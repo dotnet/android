@@ -427,7 +427,12 @@ sealed class ExportMethodDispatchEmitter
 			throw new NotSupportedException ($"[Export] methods with by-ref or pointer signature types are not supported: '{managedTypeName}'.");
 		}
 
-		if (managedTypeName.IndexOf ('<') >= 0) {
+		var nonArrayTypeName = managedTypeName;
+		while (nonArrayTypeName.EndsWith ("[]", StringComparison.Ordinal)) {
+			nonArrayTypeName = nonArrayTypeName.Substring (0, nonArrayTypeName.Length - 2);
+		}
+
+		if (nonArrayTypeName.StartsWith ("!", StringComparison.Ordinal) || nonArrayTypeName.IndexOf ('<') >= 0) {
 			throw new NotSupportedException ($"[Export] methods with generic signature types are not supported: '{managedTypeName}'.");
 		}
 	}
