@@ -1022,7 +1022,7 @@ public class ModelBuilderTests : FixtureTestBase
 	public class ArrayEntriesPeBlob
 	{
 		[Fact]
-		public void FullPipeline_ArrayEntries_DefinesPrivateRankAnchors ()
+		public void FullPipeline_ArrayEntries_DefinesPublicRankAnchors ()
 		{
 			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
 			var outputPath = Path.Combine (Path.GetTempPath (), "ArrSentinels.dll");
@@ -1036,6 +1036,14 @@ public class ModelBuilderTests : FixtureTestBase
 				Assert.Contains ("__ArrayMapRank1", typeDefNames);
 				Assert.Contains ("__ArrayMapRank2", typeDefNames);
 				Assert.Contains ("__ArrayMapRank3", typeDefNames);
+
+				var rankTypeDefs = reader.TypeDefinitions
+					.Select (h => reader.GetTypeDefinition (h))
+					.Where (t => reader.GetString (t.Name).StartsWith ("__ArrayMapRank", StringComparison.Ordinal))
+					.ToList ();
+				Assert.All (rankTypeDefs, t => Assert.Equal (
+					System.Reflection.TypeAttributes.Public,
+					t.Attributes & System.Reflection.TypeAttributes.VisibilityMask));
 
 				var rankTypeRefs = reader.TypeReferences
 					.Select (h => reader.GetTypeReference (h))
