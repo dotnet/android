@@ -34,6 +34,8 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			logMessages.Add ($"Rooting manifest-referenced type '{javaTypeName}' ({managedTypeName}) as unconditional.");
 		public void LogManifestReferencedTypeNotFoundWarning (string javaTypeName) =>
 			warnings?.Add ($"Manifest-referenced type '{javaTypeName}' was not found in any scanned assembly. It may be a framework type.");
+		public void LogUserCtorFallbackInfo (string managedTypeName, string jniSignature, CtorFallbackReason reason) =>
+			logMessages.Add ($"User-ctor fallback: {managedTypeName} {jniSignature} reason={reason}.");
 	}
 
 	[Fact]

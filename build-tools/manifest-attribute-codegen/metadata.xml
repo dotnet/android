@@ -210,7 +210,7 @@
   <element path="application.classLoader" visible="false" />
   <element path="application.crossProfile" visible="false" />
   <element path="application.defaultToDeviceProtectedStorage" visible="false" />
-  <element path="application.enableOnBackInvokedCallback" visible="false" />
+  <element path="application.enableOnBackInvokedCallback" type="bool" />
   <element path="application.forceQueryable" visible="false" />
   <element path="application.intentMatchingFlags" visible="false" />
   <element path="application.knownActivityEmbeddingCerts" visible="false" />

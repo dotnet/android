@@ -196,6 +196,52 @@ namespace Java.InteropTests
 			Assert.That (ex, Is.Not.Null, "expected an exception, got null");
 		}
 
+		// Nested / re-entrant exception routing. The [Export] UCO wrapper sets a
+		// pending exception on the JniTransition and relies on RaisePendingException
+		// to re-raise it on the managed caller's return. If the per-thread JniTransition
+		// state isn't restored cleanly across nested invocations, a *second* exception
+		// would either swallow the first or surface stale state.
+
+		[Test, Category ("Export")]
+		public void Export_Method_Throws_FollowedBySecondCall_DoesNotLeakPendingException ()
+		{
+			using var e = new ExportThrowing ();
+			var throwing = JNIEnv.GetMethodID (e.Class.Handle, "Throwing", "()I");
+			Assert.AreNotEqual (IntPtr.Zero, throwing, "JNI method id for Throwing not found");
+
+			// First call: must throw and the exception must surface to managed.
+			Assert.Catch (() => JNIEnv.CallIntMethod (e.Handle, throwing));
+
+			// Second call on a *different* peer goes through a separate [Export]
+			// method that does NOT throw. If the previous pending exception had
+			// leaked across the JniTransition boundary, this call would either
+			// throw the stale exception or return a corrupted value.
+			using var p = new ExportPrimitives ();
+			var echo = JNIEnv.GetMethodID (p.Class.Handle, "EchoInt", "(I)I");
+			Assert.AreNotEqual (IntPtr.Zero, echo, "JNI method id for EchoInt not found");
+			int result = JNIEnv.CallIntMethod (p.Handle, echo, new JValue (10));
+			Assert.AreEqual (21, result, "After a throwing [Export], a subsequent non-throwing [Export] must return its real value.");
+		}
+
+		[Test, Category ("Export")]
+		public void Export_Method_NestedJniCall_PreservesExceptionFromInnerExport ()
+		{
+			// Outer [Export] method (ReentrantOuter) invokes Java reflection to call
+			// an inner [Export] method on the same peer (ReentrantInner) that throws.
+			// The inner throw is caught by the *inner* wrapper, set as a pending
+			// exception, then re-raised across the JNI boundary back into the outer
+			// wrapper's catch — which in turn marks the pending exception on its own
+			// JniTransition. The managed caller (this test) must observe the original
+			// "reentrant-boom" message.
+			using var e = new ExportReentrant ();
+			var outer = JNIEnv.GetMethodID (e.Class.Handle, "ReentrantOuter", "()I");
+			Assert.AreNotEqual (IntPtr.Zero, outer, "JNI method id for ReentrantOuter not found");
+			var ex = Assert.Catch (() => JNIEnv.CallIntMethod (e.Handle, outer));
+			Assert.That (ex, Is.Not.Null, "expected an exception from the nested call, got null");
+			Assert.That (ex.Message, Contains.Substring ("reentrant-boom"),
+				"the original inner-export exception message must propagate through both [Export] wrappers");
+		}
+
 		// ---------------------------------------------------------------
 		// Group D — [ExportField] runtime visibility from Java
 		// ---------------------------------------------------------------
@@ -258,5 +304,24 @@ namespace Java.InteropTests
 
 		[Export]
 		public string ThrowingString () => throw new InvalidOperationException ("boom-string");
+	}
+
+	// Re-entrancy fixture: the outer [Export] invokes the inner [Export] on `this`
+	// via JNI reflection. The inner method throws; the test asserts the exception
+	// crosses both wrapper layers without losing its original message.
+	class ExportReentrant : Java.Lang.Object
+	{
+		[Export]
+		public int ReentrantInner () => throw new InvalidOperationException ("reentrant-boom");
+
+		[Export]
+		public int ReentrantOuter ()
+		{
+			var m = JNIEnv.GetMethodID (Class.Handle, "ReentrantInner", "()I");
+			if (m == IntPtr.Zero) {
+				throw new InvalidOperationException ("could not resolve ReentrantInner on the peer");
+			}
+			return JNIEnv.CallIntMethod (Handle, m);
+		}
 	}
 }

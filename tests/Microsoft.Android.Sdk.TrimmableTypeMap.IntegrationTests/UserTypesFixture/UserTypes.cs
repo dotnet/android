@@ -365,4 +365,29 @@ namespace UserApp
 			base.OnCreate (savedInstanceState);
 		}
 	}
+
+	// === Phase D: [Export] on a method that implements a [Register]'d interface ===
+
+	// D.1: [Export] on an interface implementation. The interface method is
+	// [Register]'d on the *interface declaration* (and its Invoker handles
+	// dispatch in legacy bindings), but the user puts [Export] on their
+	// implementation. The trimmable scanner must produce a UCO marshal-method
+	// entry on the implementor (not silently rely on the Invoker), matching
+	// the JNI name/signature declared by the interface.
+	public class ExportInterfaceImplShape : Java.Lang.Object, Android.Views.View.IOnClickListener
+	{
+		[Export ("onClick")]
+		public void OnClick (Android.Views.View? v) { }
+	}
+
+	// D.2: [Export] with a non-matching JNI name on a method that *also*
+	// implements a [Register]'d interface method. This asserts that the
+	// scanner registers the [Export]-named entry (the user explicitly opted
+	// in) without silently dropping it because the interface contract uses a
+	// different name.
+	public class ExportInterfaceRenameShape : Java.Lang.Object, Android.Views.View.IOnClickListener
+	{
+		[Export ("onClickRenamed")]
+		public void OnClick (Android.Views.View? v) { }
+	}
 }

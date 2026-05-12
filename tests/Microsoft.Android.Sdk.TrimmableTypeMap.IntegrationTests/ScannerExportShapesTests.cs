@@ -290,4 +290,32 @@ public class ScannerExportShapesTests
 		Assert.True (onCreateExport!.Connector is null or "__export__",
 			$"[Export]-driven entry should have no real connector, got '{onCreateExport.Connector}'.");
 	}
+
+	// === Phase D: [Export] on a [Register]'d-interface implementation ===
+
+	[Fact]
+	public void Export_OnInterfaceImpl_RegistersOnImplementor ()
+	{
+		// IOnClickListener.OnClick is declared with [Register("onClick", "(Landroid/view/View;)V", "...")]
+		// on the interface itself. The implementor adds [Export("onClick")] to its
+		// OnClick override. The trimmable scanner must surface a UCO marshal-method
+		// entry on the implementor type so the [UnmanagedCallersOnly] wrapper gets
+		// generated alongside the interface-invoker path. Without this entry, the
+		// trimmable build silently relies on the legacy Invoker for dispatch, which
+		// defeats the user's explicit [Export] opt-in.
+		var methods = GetMarshalMethods ("ExportInterfaceImplShape");
+		AssertHasExport (methods, "onClick", "(Landroid/view/View;)V");
+	}
+
+	[Fact]
+	public void Export_OnInterfaceImpl_WithRenamedJniName_RegistersExportName ()
+	{
+		// User implements IOnClickListener.OnClick but with [Export("onClickRenamed")].
+		// The [Export] attribute opts the method into JCW/UCO dispatch under a
+		// different JNI name from the interface contract. Assert that the renamed
+		// entry is present — the scanner must NOT collapse it into the interface's
+		// "onClick" name nor drop it because of the contract mismatch.
+		var methods = GetMarshalMethods ("ExportInterfaceRenameShape");
+		Assert.Contains (methods, m => m.JniName == "onClickRenamed" && m.JniSignature == "(Landroid/view/View;)V");
+	}
 }
