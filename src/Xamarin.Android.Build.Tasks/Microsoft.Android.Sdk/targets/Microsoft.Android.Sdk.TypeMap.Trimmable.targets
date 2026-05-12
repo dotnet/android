@@ -37,7 +37,7 @@
     <TrimmerRootDescriptor Include="$(MSBuildThisFileDirectory)../PreserveLists/Trimmable.CoreCLR.xml"
         Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
     <TrimmerRootDescriptor Include="$(MSBuildThisFileDirectory)../PreserveLists/System.Private.CoreLib.xml"
-        Condition=" '$(_AndroidRuntime)' == 'CoreCLR' Or '$(_AndroidRuntime)' == 'NativeAOT' " />
+        Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
   </ItemGroup>
 
   <Target Name="_ValidateTrimmableTypeMapRuntime"
