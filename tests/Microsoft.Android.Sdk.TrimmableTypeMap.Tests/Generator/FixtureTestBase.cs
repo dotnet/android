@@ -91,7 +91,7 @@ public abstract class FixtureTestBase
 		return MakePeerWithActivation (jniName, managedName, asmName) with {
 			DoNotGenerateAcw = false,
 			JavaConstructors = new List<JavaConstructorInfo> {
-				new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V" },
+				new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V", HasManagedConstructor = true },
 			},
 			MarshalMethods = new List<MarshalMethodInfo> {
 				new MarshalMethodInfo {
@@ -100,9 +100,9 @@ public abstract class FixtureTestBase
 					JniSignature = "()V",
 					ManagedMethodName = ".ctor",
 					IsConstructor = true,
+					HasManagedConstructor = true,
 				},
 			},
-			HasPublicParameterlessConstructor = true,
 		};
 	}
 

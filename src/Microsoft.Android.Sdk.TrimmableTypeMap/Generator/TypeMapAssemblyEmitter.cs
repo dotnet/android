@@ -974,14 +974,6 @@ sealed class TypeMapAssemblyEmitter
 				}));
 	}
 
-	MemberReferenceHandle AddDefaultCtorRef (EntityHandle declaringTypeRef)
-	{
-		return _pe.AddMemberRef (declaringTypeRef, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0,
-				rt => rt.Void (),
-				p => { }));
-	}
-
 	MemberReferenceHandle AddManagedCtorRef (EntityHandle declaringTypeRef, IReadOnlyList<string> parameterTypes, string defaultAssemblyName)
 	{
 		var blob = new BlobBuilder (32);
@@ -1087,9 +1079,8 @@ sealed class TypeMapAssemblyEmitter
 			$"UCO constructor wrapper requires an activation ctor for '{uco.TargetType.ManagedTypeName}'");
 
 		// UCO constructor wrappers must match the JNI native method signature exactly.
-		// Only jnienv (arg 0) and self (arg 1) are used — the constructor parameters
-		// are not forwarded because we create the managed peer using the
-		// activation ctor (IntPtr, JniHandleOwnership), not the user-visible constructor.
+		// jnienv and self are followed by the Java constructor parameters, which are
+		// forwarded when scanner metadata can identify the matching managed constructor.
 		var jniParams = JniSignatureHelper.ParseParameterTypes (uco.JniSignature);
 		int paramCount = 2 + jniParams.Count;
 
@@ -1104,14 +1095,12 @@ sealed class TypeMapAssemblyEmitter
 
 		// Open generic types can't be activated because Java construction cannot provide the type arguments.
 		if (proxy.IsGenericDefinition) {
-			var openGenericHandle = _pe.EmitBody (uco.WrapperName,
-				MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-				encodeSig,
-				(encoder, cfb) => EmitUcoConstructorBodyWithMarshal (encoder, cfb, enc => {
+			var openGenericHandle = EmitUcoConstructorBody (uco.WrapperName, encodeSig,
+				enc => {
 					enc.LoadString (_pe.Metadata.GetOrAddUserString ("Constructing instances of generic types from Java is not supported, as the type parameters cannot be determined."));
 					enc.NewObject (_notSupportedExceptionCtorRef, parameterCount: 1);
 					enc.Throw ();
-				}),
+				},
 				EncodeUcoConstructorLocals_Standard);
 			AddUnmanagedCallersOnlyAttribute (openGenericHandle);
 			return openGenericHandle;
@@ -1122,10 +1111,8 @@ sealed class TypeMapAssemblyEmitter
 			MethodDefinitionHandle invokerHandle;
 			if (proxy.InvokerActivationCtorStyle == ActivationCtorStyle.JavaInterop) {
 				var ctorRef = AddJavaInteropActivationCtorRef (invokerTypeRef);
-				invokerHandle = _pe.EmitBody (uco.WrapperName,
-					MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-					encodeSig,
-					(encoder, cfb) => EmitUcoConstructorBodyWithMarshal (encoder, cfb, enc => {
+				invokerHandle = EmitUcoConstructorBody (uco.WrapperName, encodeSig,
+					enc => {
 						enc.LoadLocalAddress (3); // jniRef
 						enc.LoadArgument (1);     // self
 						enc.LoadConstantI4 (0);   // JniObjectReferenceType.Invalid
@@ -1134,106 +1121,34 @@ sealed class TypeMapAssemblyEmitter
 						enc.LoadLocalAddress (3); // ref jniRef
 						enc.LoadConstantI4 (1);   // JniObjectReferenceOptions.Copy
 						enc.NewObject (ctorRef, parameterCount: 2);
-						enc.OpCode (ILOpCode.Pop);
+						enc.PopValue ();
 
 						enc.LoadArgument (1); // self
 						enc.Call (_markActivationPeerReplaceableRef, parameterCount: 1);
-					}),
+					},
 					EncodeUcoConstructorLocals_JavaInterop);
 			} else {
 				var ctorRef = AddActivationCtorRef (invokerTypeRef);
-				invokerHandle = _pe.EmitBody (uco.WrapperName,
-					MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-					encodeSig,
-					(encoder, cfb) => EmitUcoConstructorBodyWithMarshal (encoder, cfb, enc => {
+				invokerHandle = EmitUcoConstructorBody (uco.WrapperName, encodeSig,
+					enc => {
 						enc.LoadArgument (1);    // self
 						enc.LoadConstantI4 (0);  // JniHandleOwnership.DoNotTransfer
 						enc.NewObject (ctorRef, parameterCount: 2);
-						enc.OpCode (ILOpCode.Pop);
+						enc.PopValue ();
 
 						enc.LoadArgument (1); // self
 						enc.Call (_markActivationPeerReplaceableRef, parameterCount: 1);
-					}),
+					},
 					EncodeUcoConstructorLocals_Standard);
 			}
 			AddUnmanagedCallersOnlyAttribute (invokerHandle);
 			return invokerHandle;
 		}
 
-		if (jniParams.Count == 0 && uco.HasPublicParameterlessConstructor) {
-			var defaultCtorRef = AddDefaultCtorRef (targetTypeRef);
-			var defaultCtorHandle = _pe.EmitBody (uco.WrapperName,
-				MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-				encodeSig,
-				(encoder, cfb) => EmitUcoConstructorBodyWithMarshal (encoder, cfb, enc => {
-					var havePeer = enc.DefineLabel ();
-
-					enc.LoadArgument (1);
-					enc.Call (_getActivationPeerRef, parameterCount: 1, returnsValue: true);
-					enc.CastClass (targetTypeRef);
-					enc.StoreLocal (4);
-
-					enc.LoadLocal (4);
-					enc.Branch (ILOpCode.Brtrue, havePeer);
-
-					enc.LoadToken (targetTypeRef);
-					enc.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
-					enc.Call (_getUninitializedObjectRef, parameterCount: 1, returnsValue: true);
-					enc.CastClass (targetTypeRef);
-					enc.StoreLocal (4);
-
-					enc.LoadLocal (4);
-					enc.LoadArgument (1); // self
-					enc.Call (_setActivationPeerReferenceRef, parameterCount: 2);
-
-					enc.MarkLabel (havePeer);
-					enc.LoadLocal (4);
-					enc.Call (defaultCtorRef, parameterCount: 0, isInstance: true);
-
-					enc.LoadArgument (1); // self
-					enc.Call (_markActivationPeerReplaceableRef, parameterCount: 1);
-				}),
-				blob => EncodeUcoConstructorLocals_DefaultConstructor (blob, targetTypeRef));
-			AddUnmanagedCallersOnlyAttribute (defaultCtorHandle);
-			return defaultCtorHandle;
-		}
-
-		if (jniParams.Count > 0 && uco.ManagedParameterTypes.Count == jniParams.Count) {
+		if (uco.HasManagedConstructor && uco.ManagedParameterTypes.Count == jniParams.Count) {
 			var ctorRef = AddManagedCtorRef (targetTypeRef, uco.ManagedParameterTypes, uco.TargetType.AssemblyName);
-			var managedCtorHandle = _pe.EmitBody (uco.WrapperName,
-				MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-				encodeSig,
-				(encoder, cfb) => EmitUcoConstructorBodyWithMarshal (encoder, cfb, enc => {
-					var havePeer = enc.DefineLabel ();
-
-					enc.LoadArgument (1);
-					enc.Call (_getActivationPeerRef, parameterCount: 1, returnsValue: true);
-					enc.CastClass (targetTypeRef);
-					enc.StoreLocal (4);
-
-					enc.LoadLocal (4);
-					enc.Branch (ILOpCode.Brtrue, havePeer);
-
-					enc.LoadToken (targetTypeRef);
-					enc.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
-					enc.Call (_getUninitializedObjectRef, parameterCount: 1, returnsValue: true);
-					enc.CastClass (targetTypeRef);
-					enc.StoreLocal (4);
-
-					enc.LoadLocal (4);
-					enc.LoadArgument (1); // self
-					enc.Call (_setActivationPeerReferenceRef, parameterCount: 2);
-
-					enc.MarkLabel (havePeer);
-					enc.LoadLocal (4);
-					for (int i = 0; i < uco.ManagedParameterTypes.Count; i++) {
-						EmitManagedConstructorArgument (enc, uco.ManagedParameterTypes [i], jniParams [i], i + 2, uco.TargetType.AssemblyName);
-					}
-					enc.Call (ctorRef, uco.ManagedParameterTypes.Count, isInstance: true);
-
-					enc.LoadArgument (1); // self
-					enc.Call (_markActivationPeerReplaceableRef, parameterCount: 1);
-				}),
+			var managedCtorHandle = EmitUcoConstructorBody (uco.WrapperName, encodeSig,
+				enc => EmitManagedConstructorActivation (enc, targetTypeRef, ctorRef, uco.ManagedParameterTypes, jniParams, uco.TargetType.AssemblyName),
 				blob => EncodeUcoConstructorLocals_DefaultConstructor (blob, targetTypeRef));
 			AddUnmanagedCallersOnlyAttribute (managedCtorHandle);
 			return managedCtorHandle;
@@ -1249,10 +1164,8 @@ sealed class TypeMapAssemblyEmitter
 			//   1: JniRuntime?    (runtime) — out-parameter for BeginMarshalMethod
 			//   2: Exception      (e)       — catch variable
 			//   3: JniObjectReference (jniRef) — needed for JavaInterop-style activation
-			handle = _pe.EmitBody (uco.WrapperName,
-				MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-				encodeSig,
-				(encoder, cfb) => EmitUcoConstructorBodyWithMarshal (encoder, cfb, enc => {
+			handle = EmitUcoConstructorBody (uco.WrapperName, encodeSig,
+				enc => {
 					if (!activationCtor.IsOnLeafType) {
 						enc.LoadToken (targetTypeRef);
 						enc.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
@@ -1269,7 +1182,7 @@ sealed class TypeMapAssemblyEmitter
 						enc.LoadLocalAddress (3); // ref jniRef
 						enc.LoadConstantI4 (1);   // JniObjectReferenceOptions.Copy
 						enc.NewObject (ctorRef, parameterCount: 2);
-						enc.OpCode (ILOpCode.Pop);
+						enc.PopValue ();
 					} else {
 						enc.LoadLocalAddress (3); // ref jniRef
 						enc.LoadConstantI4 (1);   // JniObjectReferenceOptions.Copy
@@ -1277,7 +1190,7 @@ sealed class TypeMapAssemblyEmitter
 					}
 					enc.LoadArgument (1); // self
 					enc.Call (_markActivationPeerReplaceableRef, parameterCount: 1);
-				}),
+				},
 				EncodeUcoConstructorLocals_JavaInterop);
 		} else {
 			var ctorRef = AddActivationCtorRef (
@@ -1287,15 +1200,13 @@ sealed class TypeMapAssemblyEmitter
 			//   0: JniTransition  (envp)    — out-parameter for BeginMarshalMethod
 			//   1: JniRuntime?    (runtime) — out-parameter for BeginMarshalMethod
 			//   2: Exception      (e)       — catch variable
-			handle = _pe.EmitBody (uco.WrapperName,
-				MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-				encodeSig,
-				(encoder, cfb) => EmitUcoConstructorBodyWithMarshal (encoder, cfb, enc => {
+			handle = EmitUcoConstructorBody (uco.WrapperName, encodeSig,
+				enc => {
 					if (activationCtor.IsOnLeafType) {
 						enc.LoadArgument (1);    // self
 						enc.LoadConstantI4 (0);  // JniHandleOwnership.DoNotTransfer
 						enc.NewObject (ctorRef, parameterCount: 2);
-						enc.OpCode (ILOpCode.Pop);
+						enc.PopValue ();
 					} else {
 						enc.LoadToken (targetTypeRef);
 						enc.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
@@ -1308,11 +1219,63 @@ sealed class TypeMapAssemblyEmitter
 					}
 					enc.LoadArgument (1); // self
 					enc.Call (_markActivationPeerReplaceableRef, parameterCount: 1);
-				}),
+				},
 				EncodeUcoConstructorLocals_Standard);
 		}
 		AddUnmanagedCallersOnlyAttribute (handle);
 		return handle;
+	}
+
+	MethodDefinitionHandle EmitUcoConstructorBody (
+		string wrapperName,
+		Action<BlobEncoder> encodeSig,
+		Action<TrackedInstructionEncoder> emitActivation,
+		Action<BlobBuilder> encodeLocals)
+	{
+		return _pe.EmitBody (wrapperName,
+			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+			encodeSig,
+			(encoder, cfb) => EmitUcoConstructorBodyWithMarshal (encoder, cfb, emitActivation),
+			encodeLocals);
+	}
+
+	void EmitManagedConstructorActivation (
+		TrackedInstructionEncoder enc,
+		EntityHandle targetTypeRef,
+		MemberReferenceHandle ctorRef,
+		IReadOnlyList<string> managedParameterTypes,
+		IReadOnlyList<JniParamKind> jniParams,
+		string defaultAssemblyName)
+	{
+		var havePeer = enc.DefineLabel ();
+
+		enc.LoadArgument (1);
+		enc.Call (_getActivationPeerRef, parameterCount: 1, returnsValue: true);
+		enc.CastClass (targetTypeRef);
+		enc.StoreLocal (4);
+
+		enc.LoadLocal (4);
+		enc.Branch (ILOpCode.Brtrue, havePeer);
+
+		enc.LoadToken (targetTypeRef);
+		enc.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
+		enc.Call (_getUninitializedObjectRef, parameterCount: 1, returnsValue: true);
+		enc.CastClass (targetTypeRef);
+		enc.StoreLocal (4);
+
+		enc.LoadLocal (4);
+		enc.LoadArgument (1); // self
+		enc.Call (_setActivationPeerReferenceRef, parameterCount: 2);
+
+		enc.MarkLabel (havePeer);
+		enc.LoadLocal (4);
+		for (int i = 0; i < managedParameterTypes.Count; i++) {
+			EmitManagedConstructorArgument (enc, managedParameterTypes [i], jniParams [i], i + 2, defaultAssemblyName);
+		}
+		enc.Call (ctorRef, managedParameterTypes.Count, isInstance: true);
+
+		enc.LoadArgument (1); // self
+		enc.Call (_markActivationPeerReplaceableRef, parameterCount: 1);
 	}
 
 	/// <summary>

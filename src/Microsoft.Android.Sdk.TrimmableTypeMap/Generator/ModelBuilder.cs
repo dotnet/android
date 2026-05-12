@@ -365,8 +365,8 @@ static class ModelBuilder
 					ManagedTypeName = peer.ManagedTypeName,
 					AssemblyName = peer.AssemblyName,
 				},
-				HasPublicParameterlessConstructor = peer.HasPublicParameterlessConstructor,
 				ManagedParameterTypes = ctor.ManagedParameterTypes,
+				HasManagedConstructor = ctor.HasManagedConstructor,
 			});
 		}
 	}

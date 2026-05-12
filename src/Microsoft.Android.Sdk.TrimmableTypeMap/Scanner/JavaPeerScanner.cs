@@ -268,7 +268,6 @@ public sealed class JavaPeerScanner : IDisposable
 				InvokerTypeName = invokerTypeName,
 				InvokerActivationCtorStyle = invokerActivationCtorStyle,
 				IsGenericDefinition = isGenericDefinition,
-				HasPublicParameterlessConstructor = !isAbstract && !isGenericDefinition && HasPublicParameterlessConstructor (typeDef, index),
 				ComponentAttribute = ToComponentInfo (attrInfo),
 			};
 
@@ -557,6 +556,7 @@ public sealed class JavaPeerScanner : IDisposable
 				continue;
 			}
 			if (!alreadyRegisteredSignatures.Contains (signature)) {
+				var managedParameterTypes = TryGetMatchingPublicConstructorParameterTypes (typeDef, index, baseCtor.Method);
 				methods.Add (new MarshalMethodInfo {
 					JniName = baseCtor.RegisterInfo.JniName,
 					JniSignature = signature,
@@ -564,7 +564,8 @@ public sealed class JavaPeerScanner : IDisposable
 					ManagedMethodName = ".ctor",
 					NativeCallbackName = "n_ctor",
 					IsConstructor = true,
-					ManagedParameterTypes = [],
+					ManagedParameterTypes = managedParameterTypes ?? [],
+					HasManagedConstructor = managedParameterTypes != null,
 				});
 				alreadyRegisteredSignatures.Add (signature);
 			}
@@ -617,11 +618,33 @@ public sealed class JavaPeerScanner : IDisposable
 						IsConstructor = true,
 						SuperArgumentsString = "",
 						ManagedParameterTypes = sig.ParameterTypes,
+						HasManagedConstructor = true,
 					});
 					alreadyRegisteredSignatures.Add (jniSignature);
 				}
 			}
 		}
+	}
+
+	IReadOnlyList<string>? TryGetMatchingPublicConstructorParameterTypes (TypeDefinition typeDef, AssemblyIndex index, MethodDefinition baseCtor)
+	{
+		foreach (var methodHandle in typeDef.GetMethods ()) {
+			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
+			if (index.Reader.GetString (methodDef.Name) != ".ctor") {
+				continue;
+			}
+			if ((methodDef.Attributes & MethodAttributes.MemberAccessMask) != MethodAttributes.Public) {
+				continue;
+			}
+			if (!HaveIdenticalParameterTypes (methodDef, baseCtor)) {
+				continue;
+			}
+
+			var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+			return sig.ParameterTypes;
+		}
+
+		return null;
 	}
 
 	string? BuildJniCtorSignature (MethodSignature<string> sig)
@@ -916,6 +939,7 @@ public sealed class JavaPeerScanner : IDisposable
 			ThrownNames = exportInfo?.ThrownNames,
 			SuperArgumentsString = exportInfo?.SuperArgumentsString,
 			ManagedParameterTypes = sig.ParameterTypes,
+			HasManagedConstructor = isConstructor,
 		});
 	}
 
@@ -1182,25 +1206,6 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 
 		return null;
-	}
-
-	static bool HasPublicParameterlessConstructor (TypeDefinition typeDef, AssemblyIndex index)
-	{
-		foreach (var methodHandle in typeDef.GetMethods ()) {
-			var method = index.Reader.GetMethodDefinition (methodHandle);
-			if (index.Reader.GetString (method.Name) != ".ctor") {
-				continue;
-			}
-			if ((method.Attributes & MethodAttributes.MemberAccessMask) != MethodAttributes.Public) {
-				continue;
-			}
-			var sig = method.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
-			if (sig.ParameterTypes.Length == 0) {
-				return true;
-			}
-		}
-
-		return false;
 	}
 
 	static ActivationCtorStyle? FindActivationCtorOnType (TypeDefinition typeDef, AssemblyIndex index)
@@ -1578,6 +1583,7 @@ public sealed class JavaPeerScanner : IDisposable
 				ConstructorIndex = ctorIndex,
 				SuperArgumentsString = mm.SuperArgumentsString,
 				ManagedParameterTypes = mm.ManagedParameterTypes,
+				HasManagedConstructor = mm.HasManagedConstructor,
 			});
 			ctorIndex++;
 		}

@@ -231,14 +231,14 @@ sealed record UcoConstructorData
 	public required string JniSignature { get; init; }
 
 	/// <summary>
-	/// True if the target type declares a public parameterless managed constructor.
-	/// </summary>
-	public bool HasPublicParameterlessConstructor { get; init; }
-
-	/// <summary>
 	/// Managed constructor parameter type names, in declaration order.
 	/// </summary>
 	public IReadOnlyList<string> ManagedParameterTypes { get; init; } = [];
+
+	/// <summary>
+	/// True when this Java constructor has a matching managed constructor on the target type.
+	/// </summary>
+	public bool HasManagedConstructor { get; init; }
 }
 
 /// <summary>

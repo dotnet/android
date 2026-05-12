@@ -557,7 +557,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	{
 		var peer = MakeAcwPeer ("test/AbstractCtorTarget", "Test.AbstractCtorTarget", "TestAsm") with {
 			InvokerTypeName = "Test.AbstractCtorInvoker",
-			HasPublicParameterlessConstructor = false,
 		};
 
 		using var stream = GenerateAssembly (new [] { peer }, "InvokerCtorUcoTest");
@@ -576,7 +575,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		var peer = MakeAcwPeer ("test/AbstractJiCtorTarget", "Test.AbstractJiCtorTarget", "TestAsm") with {
 			InvokerTypeName = "Test.AbstractJiCtorInvoker",
 			InvokerActivationCtorStyle = ActivationCtorStyle.JavaInterop,
-			HasPublicParameterlessConstructor = false,
 		};
 
 		using var stream = GenerateAssembly (new [] { peer }, "JiInvokerCtorUcoTest");
@@ -1229,6 +1227,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 					ConstructorIndex = 0,
 					JniSignature = jniSignature,
 					ManagedParameterTypes = managedTypes,
+					HasManagedConstructor = true,
 				},
 			},
 			MarshalMethods = new List<MarshalMethodInfo> {
@@ -1272,6 +1271,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 					ConstructorIndex = 0,
 					JniSignature = jniSignature,
 					ManagedParameterTypes = managedTypes,
+					HasManagedConstructor = true,
 				},
 			},
 			MarshalMethods = new List<MarshalMethodInfo> {

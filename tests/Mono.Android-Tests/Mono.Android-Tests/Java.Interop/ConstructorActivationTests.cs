@@ -75,6 +75,17 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void JavaSideThrowingConstructorPropagatesException ()
+		{
+			ConstructorActivationThrowing.Reset ();
+
+			var exception = Assert.Catch<Exception> (() => CreateFromJavaExpectingConstructorException<ConstructorActivationThrowing> ("()V"));
+			Assert.IsNotNull (exception);
+			Assert.AreEqual (1, ConstructorActivationThrowing.ConstructorInvocations);
+			Assert.IsTrue (exception.ToString ().Contains (ConstructorActivationThrowing.ExceptionMessage));
+		}
+
+		[Test]
 		public void JavaSideContextConstructorForwardsArgument ()
 		{
 			ConstructorActivationContextView.Reset ();
@@ -223,6 +234,23 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void JavaSidePrimitiveMixedConstructorForwardsValues ()
+		{
+			ConstructorActivationMarshalObject.Reset ();
+
+			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> (
+					"(IZJ)V",
+					new JValue (12345),
+					new JValue (true),
+					new JValue (9876543210L))) {
+				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+				Assert.AreEqual (12345, instance.MultiIntValue);
+				Assert.AreEqual (true, instance.MultiBooleanValue);
+				Assert.AreEqual (9876543210L, instance.MultiLongValue);
+			}
+		}
+
+		[Test]
 		public void JavaSideStringConstructorForwardsValue ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -283,6 +311,23 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void JavaSideStringIntConstructorForwardsValues ()
+		{
+			ConstructorActivationMarshalObject.Reset ();
+			AssumeTrimmableConstructorParameterMarshalling ();
+
+			using (var text = new Java.Lang.String ("string-int"))
+			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> (
+					"(Ljava/lang/String;I)V",
+					new JValue (text),
+					new JValue (17))) {
+				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+				Assert.AreEqual ("string-int", instance.StringIntStringValue);
+				Assert.AreEqual (17, instance.StringIntValue);
+			}
+		}
+
+		[Test]
 		public void JavaSideIntArrayConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -320,6 +365,30 @@ namespace Java.InteropTests
 			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("([I)V", JValue.Zero)) {
 				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
 				Assert.IsNull (instance.IntArrayValue);
+			}
+		}
+
+		[Test]
+		public void JavaSideStringIntArrayConstructorForwardsValues ()
+		{
+			ConstructorActivationMarshalObject.Reset ();
+			AssumeTrimmableConstructorParameterMarshalling ();
+
+			using (var label = new Java.Lang.String ("string-array"))
+			{
+				IntPtr array = JNIEnv.NewArray (new [] { 8, 13, 21 });
+				try {
+					using (var instance = CreateFromJava<ConstructorActivationMarshalObject> (
+							"(Ljava/lang/String;[I)V",
+							new JValue (label),
+							new JValue (array))) {
+						Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+						Assert.AreEqual ("string-array", instance.StringArrayLabel);
+						Assert.AreEqual (new [] { 8, 13, 21 }, instance.StringArrayValues);
+					}
+				} finally {
+					JNIEnv.DeleteLocalRef (array);
+				}
 			}
 		}
 
@@ -467,6 +536,20 @@ namespace Java.InteropTests
 			}
 		}
 
+		static void CreateFromJavaExpectingConstructorException<T> (string constructorSignature, params JValue [] arguments)
+			where T : Java.Lang.Object
+		{
+			IntPtr instance = IntPtr.Zero;
+			try {
+				instance = JNIEnv.StartCreateInstance (typeof (T), constructorSignature, arguments);
+				JNIEnv.FinishCreateInstance (instance, constructorSignature, arguments);
+			} finally {
+				if (instance != IntPtr.Zero) {
+					JNIEnv.DeleteLocalRef (instance);
+				}
+			}
+		}
+
 		static void AssertRegisteredSame<T> (T instance)
 			where T : Java.Lang.Object
 		{
@@ -480,6 +563,25 @@ namespace Java.InteropTests
 				if (registered != null && !object.ReferenceEquals (instance, registered))
 					registered.Dispose ();
 			}
+		}
+	}
+
+	[Register ("net/dot/android/test/ConstructorActivationThrowing")]
+	public class ConstructorActivationThrowing : Java.Lang.Object
+	{
+		public const string ExceptionMessage = "constructor activation throw";
+
+		public static int ConstructorInvocations;
+
+		public ConstructorActivationThrowing ()
+		{
+			ConstructorInvocations++;
+			throw new InvalidOperationException (ExceptionMessage);
+		}
+
+		public static void Reset ()
+		{
+			ConstructorInvocations = 0;
 		}
 	}
 
@@ -522,6 +624,10 @@ namespace Java.InteropTests
 		{
 		}
 
+		public ConstructorActivationBase (int number, bool flag, long longValue)
+		{
+		}
+
 		public ConstructorActivationBase (string value)
 		{
 		}
@@ -530,7 +636,15 @@ namespace Java.InteropTests
 		{
 		}
 
+		public ConstructorActivationBase (string text, int number)
+		{
+		}
+
 		public ConstructorActivationBase (int[] value)
+		{
+		}
+
+		public ConstructorActivationBase (string label, int[] value)
 		{
 		}
 
@@ -591,10 +705,17 @@ namespace Java.InteropTests
 		public long LongValue;
 		public float FloatValue;
 		public double DoubleValue;
+		public int MultiIntValue;
+		public bool MultiBooleanValue;
+		public long MultiLongValue;
 		public string StringValue;
 		public string FirstStringValue;
 		public string SecondStringValue;
+		public string StringIntStringValue;
+		public int StringIntValue;
 		public int[] IntArrayValue;
+		public string StringArrayLabel;
+		public int[] StringArrayValues;
 		public bool[] BooleanArrayValue;
 		public byte[] ByteArrayValue;
 		public string[] StringArrayValue;
@@ -665,6 +786,16 @@ namespace Java.InteropTests
 			DoubleValue = value;
 		}
 
+		[Register (".ctor", "(IZJ)V", "")]
+		public ConstructorActivationMarshalObject (int number, bool flag, long longValue)
+			: base (number, flag, longValue)
+		{
+			ConstructorInvocations++;
+			MultiIntValue = number;
+			MultiBooleanValue = flag;
+			MultiLongValue = longValue;
+		}
+
 		[Register (".ctor", "(Ljava/lang/String;)V", "")]
 		public ConstructorActivationMarshalObject (string value)
 			: base (value)
@@ -682,12 +813,30 @@ namespace Java.InteropTests
 			SecondStringValue = second;
 		}
 
+		[Register (".ctor", "(Ljava/lang/String;I)V", "")]
+		public ConstructorActivationMarshalObject (string text, int number)
+			: base (text, number)
+		{
+			ConstructorInvocations++;
+			StringIntStringValue = text;
+			StringIntValue = number;
+		}
+
 		[Register (".ctor", "([I)V", "")]
 		public ConstructorActivationMarshalObject (int[] value)
 			: base (value)
 		{
 			ConstructorInvocations++;
 			IntArrayValue = value;
+		}
+
+		[Register (".ctor", "(Ljava/lang/String;[I)V", "")]
+		public ConstructorActivationMarshalObject (string label, int[] value)
+			: base (label, value)
+		{
+			ConstructorInvocations++;
+			StringArrayLabel = label;
+			StringArrayValues = value;
 		}
 
 		[Register (".ctor", "([Z)V", "")]
