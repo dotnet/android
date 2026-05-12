@@ -43,7 +43,7 @@ public class AvdManagerRunner
 		logger.Invoke (TraceLevel.Verbose, "Running: avdmanager list avd");
 		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
 
-		ProcessUtils.ThrowIfFailed (exitCode, "avdmanager list avd", stderr);
+		ProcessUtils.ThrowIfFailed (exitCode, "avdmanager list avd", stderr, stdout);
 
 		return ParseAvdListOutput (stdout.ToString ());
 	}

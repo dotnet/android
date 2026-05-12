@@ -58,7 +58,7 @@ public class AdbRunner
 		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, "devices", "-l");
 		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
 
-		ProcessUtils.ThrowIfFailed (exitCode, "adb devices -l", stderr);
+		ProcessUtils.ThrowIfFailed (exitCode, "adb devices -l", stderr, stdout);
 
 		var devices = ParseAdbDevicesOutput (stdout.ToString ().Split ('\n'));
 
