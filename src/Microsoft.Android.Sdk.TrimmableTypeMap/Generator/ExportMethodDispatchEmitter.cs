@@ -518,9 +518,7 @@ sealed class ExportMethodDispatchEmitter
 		encoder.Branch (ILOpCode.Brtrue_s, nonNullArray);
 		encoder.OpCode (ILOpCode.Pop);
 		encoder.LoadConstantI4 (0);
-		// Both branches preserve one IntPtr on the evaluation stack; the tracked branch
-		// helper intentionally rejects unconditional branches because most joins are harder.
-		encoder.Encoder.Branch (ILOpCode.Br_s, done);
+		encoder.BranchPreservingStack (ILOpCode.Br_s, done);
 		encoder.MarkLabel (nonNullArray);
 		EmitManagedArrayElementTypeToken (encoder, managedReturnType);
 		encoder.Call (_context.JniEnvNewArrayRef, parameterCount: 2, returnsValue: true);

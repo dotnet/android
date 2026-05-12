@@ -488,6 +488,18 @@ sealed class PEAssemblyBuilder
 			}
 		}
 
+		public void BranchPreservingStack (ILOpCode code, LabelHandle label)
+		{
+			switch (code) {
+			case ILOpCode.Br:
+			case ILOpCode.Br_s:
+				Encoder.Branch (code, label);
+				break;
+			default:
+				throw new NotSupportedException ($"Branch opcode '{code}' does not preserve the evaluation stack.");
+			}
+		}
+
 		public void LoadArgument (int argumentIndex)
 		{
 			Encoder.LoadArgument (argumentIndex);

@@ -1217,7 +1217,10 @@ sealed class TypeMapAssemblyEmitter
 		// arrays, and object peers via Java.Lang.Object.GetObject. The emitter is
 		// only resolved when there are parameters to marshal so the parameterless
 		// `()V` path doesn't pull in the export-marshalling member refs.
-		var argLoader = managedParamTypes.Count > 0 ? GetExportMethodDispatchEmitter () : null;
+		ExportMethodDispatchEmitter? argLoader = null;
+		if (managedParamTypes.Count > 0) {
+			argLoader = GetExportMethodDispatchEmitter ();
+		}
 		return _pe.EmitBody (uco.WrapperName,
 			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 			encodeSig,
@@ -1235,9 +1238,10 @@ sealed class TypeMapAssemblyEmitter
 				enc.NewObject (_jniObjectReferenceCtorRef, parameterCount: 2);
 				enc.Callvirt (_iJavaPeerableSetPeerReferenceRef, parameterCount: 1);
 
-				for (int i = 0; i < managedParamTypes.Count; i++) {
-					var requiredArgLoader = argLoader ?? throw new InvalidOperationException ("Export method dispatch emitter is required to marshal constructor parameters.");
-					requiredArgLoader.LoadManagedArgument (enc, managedParamTypes [i], ExportParameterKindInfo.Unspecified, jniParams [i], 2 + i);
+				if (argLoader != null) {
+					for (int i = 0; i < managedParamTypes.Count; i++) {
+						argLoader.LoadManagedArgument (enc, managedParamTypes [i], ExportParameterKindInfo.Unspecified, jniParams [i], 2 + i);
+					}
 				}
 
 				enc.Call (userCtorRef, managedParamTypes.Count, isInstance: true);
