@@ -40,12 +40,6 @@ namespace Xamarin.Android.RuntimeTests
                     // switch off the trimmable typemap. See https://github.com/dotnet/android/issues/11170.
                     "Java.InteropTests.InvokeVirtualFromConstructorTests",
 
-                    // JNI method remapping not supported in trimmable typemap
-                    "Java.InteropTests.JniPeerMembersTests.ReplaceInstanceMethodName",
-                    "Java.InteropTests.JniPeerMembersTests.ReplaceInstanceMethodWithStaticMethod",
-                    "Java.InteropTests.JniPeerMembersTests.ReplacementTypeUsedForMethodLookup",
-                    "Java.InteropTests.JniPeerMembersTests.ReplaceStaticMethodName",
-
                     // Throwable subclass registration
                     "Java.InteropTests.JnienvTest.ActivatedDirectThrowableSubclassesShouldBeRegistered",
 

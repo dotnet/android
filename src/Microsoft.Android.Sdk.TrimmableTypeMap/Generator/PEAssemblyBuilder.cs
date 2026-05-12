@@ -16,7 +16,8 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// </summary>
 sealed class PEAssemblyBuilder
 {
-	const int DefaultMaxStack = 32;
+	const int MinimumMaxStack = 8;
+	const int MaxStackSafetyPadding = 4;
 
 	// Mono.Android strong name public key token (84e04ff9cfb79065)
 	static readonly byte [] MonoAndroidPublicKeyToken = { 0x84, 0xe0, 0x4f, 0xf9, 0xcf, 0xb7, 0x90, 0x65 };
@@ -260,7 +261,7 @@ sealed class PEAssemblyBuilder
 	/// Emits a method body and definition in one call.
 	/// </summary>
 	public MethodDefinitionHandle EmitBody (string name, MethodAttributes attrs,
-		Action<BlobEncoder> encodeSig, Action<InstructionEncoder> emitIL)
+		Action<BlobEncoder> encodeSig, Action<TrackedInstructionEncoder> emitIL)
 		=> EmitBody (name, attrs, encodeSig, emitIL, encodeLocals: null, useBranches: false);
 
 	/// <summary>
@@ -277,12 +278,12 @@ sealed class PEAssemblyBuilder
 	/// and <see cref="InstructionEncoder.MarkLabel"/>.
 	/// </param>
 	public MethodDefinitionHandle EmitBody (string name, MethodAttributes attrs,
-		Action<BlobEncoder> encodeSig, Action<InstructionEncoder> emitIL,
+		Action<BlobEncoder> encodeSig, Action<TrackedInstructionEncoder> emitIL,
 		Action<BlobBuilder>? encodeLocals)
 		=> EmitBody (name, attrs, encodeSig, emitIL, encodeLocals, useBranches: false);
 
 	public MethodDefinitionHandle EmitBody (string name, MethodAttributes attrs,
-		Action<BlobEncoder> encodeSig, Action<InstructionEncoder> emitIL,
+		Action<BlobEncoder> encodeSig, Action<TrackedInstructionEncoder> emitIL,
 		Action<BlobBuilder>? encodeLocals, bool useBranches)
 	{
 		_sigBlob.Clear ();
@@ -300,16 +301,16 @@ sealed class PEAssemblyBuilder
 
 		_codeBlob.Clear ();
 		ControlFlowBuilder? cfb = useBranches ? new ControlFlowBuilder () : null;
-		var encoder = new InstructionEncoder (_codeBlob, cfb);
+		var encoder = new TrackedInstructionEncoder (new InstructionEncoder (_codeBlob, cfb));
 		emitIL (encoder);
 
 		while (ILBuilder.Count % 4 != 0) {
 			ILBuilder.WriteByte (0);
 		}
 		var bodyEncoder = new MethodBodyStreamEncoder (ILBuilder);
-		int bodyOffset = localSigHandle.IsNil
-			? bodyEncoder.AddMethodBody (encoder)
-			: bodyEncoder.AddMethodBody (encoder, maxStack: DefaultMaxStack, localSigHandle, MethodBodyAttributes.InitLocals);
+		int bodyOffset = bodyEncoder.AddMethodBody (encoder.Encoder, encoder.MaxStackWithPadding, localSigHandle,
+			localSigHandle.IsNil ? default : MethodBodyAttributes.InitLocals,
+			encoder.HasDynamicStackAllocation);
 
 		return Metadata.AddMethodDefinition (
 			attrs, MethodImplAttributes.IL,
@@ -327,7 +328,7 @@ sealed class PEAssemblyBuilder
 	/// </summary>
 	public MethodDefinitionHandle EmitBody (string name, MethodAttributes attrs,
 		Action<BlobEncoder> encodeSig,
-		Action<InstructionEncoder, ControlFlowBuilder> emitIL,
+		Action<TrackedInstructionEncoder, ControlFlowBuilder> emitIL,
 		Action<BlobBuilder>? encodeLocals)
 	{
 		_sigBlob.Clear ();
@@ -345,16 +346,16 @@ sealed class PEAssemblyBuilder
 
 		_codeBlob.Clear ();
 		var cfb = new ControlFlowBuilder ();
-		var encoder = new InstructionEncoder (_codeBlob, cfb);
+		var encoder = new TrackedInstructionEncoder (new InstructionEncoder (_codeBlob, cfb));
 		emitIL (encoder, cfb);
 
 		while (ILBuilder.Count % 4 != 0) {
 			ILBuilder.WriteByte (0);
 		}
 		var bodyEncoder = new MethodBodyStreamEncoder (ILBuilder);
-		int bodyOffset = localSigHandle.IsNil
-			? bodyEncoder.AddMethodBody (encoder)
-			: bodyEncoder.AddMethodBody (encoder, maxStack: DefaultMaxStack, localSigHandle, MethodBodyAttributes.InitLocals);
+		int bodyOffset = bodyEncoder.AddMethodBody (encoder.Encoder, encoder.MaxStackWithPadding, localSigHandle,
+			localSigHandle.IsNil ? default : MethodBodyAttributes.InitLocals,
+			encoder.HasDynamicStackAllocation);
 
 		return Metadata.AddMethodDefinition (
 			attrs, MethodImplAttributes.IL,
@@ -415,8 +416,8 @@ sealed class PEAssemblyBuilder
 				p => p.AddParameter ().Type ().String ()),
 			encoder => {
 				encoder.LoadArgument (0);
-				encoder.Call (baseAttrCtorRef);
-				encoder.OpCode (ILOpCode.Ret);
+				encoder.Call (baseAttrCtorRef, parameterCount: 0, isInstance: true);
+				encoder.Return ();
 			});
 
 		Metadata.AddTypeDefinition (
@@ -430,6 +431,259 @@ sealed class PEAssemblyBuilder
 		foreach (var asmName in assemblyNames) {
 			var blob = BuildAttributeBlob (b => b.WriteSerializedString (asmName));
 			Metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorDef, blob);
+		}
+	}
+
+	public sealed class TrackedInstructionEncoder
+	{
+		int currentStack;
+		int maxStack;
+
+		public InstructionEncoder Encoder { get; }
+		public bool HasDynamicStackAllocation { get; private set; }
+
+		public int MaxStackWithPadding {
+			get {
+				long padded = (long) maxStack + MaxStackSafetyPadding;
+				padded = Math.Max (MinimumMaxStack, padded);
+				return padded > ushort.MaxValue ? ushort.MaxValue : (int) padded;
+			}
+		}
+
+		public TrackedInstructionEncoder (InstructionEncoder encoder)
+		{
+			Encoder = encoder;
+		}
+
+		public LabelHandle DefineLabel () => Encoder.DefineLabel ();
+
+		public void MarkLabel (LabelHandle label, int stackDepth = -1)
+		{
+			Encoder.MarkLabel (label);
+			if (stackDepth >= 0) {
+				SetStack (stackDepth);
+			}
+		}
+
+		public void Branch (ILOpCode code, LabelHandle label)
+		{
+			switch (code) {
+			case ILOpCode.Brfalse:
+			case ILOpCode.Brfalse_s:
+			case ILOpCode.Brtrue:
+			case ILOpCode.Brtrue_s:
+				Encoder.Branch (code, label);
+				Pop (1);
+				break;
+			case ILOpCode.Leave:
+			case ILOpCode.Leave_s:
+				Encoder.Branch (code, label);
+				SetStack (0);
+				break;
+			case ILOpCode.Br:
+			case ILOpCode.Br_s:
+				throw new NotSupportedException ($"Branch opcode '{code}' preserves the evaluation stack and is not supported by the maxstack tracker.");
+			default:
+				throw new NotSupportedException ($"Branch opcode '{code}' is not supported by the maxstack tracker.");
+			}
+		}
+
+		public void LoadArgument (int argumentIndex)
+		{
+			Encoder.LoadArgument (argumentIndex);
+			Push (1);
+		}
+
+		public void LoadLocal (int slotIndex)
+		{
+			Encoder.LoadLocal (slotIndex);
+			Push (1);
+		}
+
+		public void LoadLocalAddress (int slotIndex)
+		{
+			Encoder.LoadLocalAddress (slotIndex);
+			Push (1);
+		}
+
+		public void StoreLocal (int slotIndex)
+		{
+			Encoder.StoreLocal (slotIndex);
+			Pop (1);
+		}
+
+		public void LoadConstantI4 (int value)
+		{
+			Encoder.LoadConstantI4 (value);
+			Push (1);
+		}
+
+		public void LoadString (UserStringHandle handle)
+		{
+			Encoder.LoadString (handle);
+			Push (1);
+		}
+
+		public void LoadToken (EntityHandle handle)
+		{
+			Encoder.OpCode (ILOpCode.Ldtoken);
+			Encoder.Token (handle);
+			Push (1);
+		}
+
+		public void LoadStaticFieldAddress (FieldDefinitionHandle handle)
+		{
+			Encoder.OpCode (ILOpCode.Ldsflda);
+			Encoder.Token (handle);
+			Push (1);
+		}
+
+		public void LoadFunction (MethodDefinitionHandle handle)
+		{
+			Encoder.OpCode (ILOpCode.Ldftn);
+			Encoder.Token (handle);
+			Push (1);
+		}
+
+		public void SizeOf (EntityHandle type)
+		{
+			Encoder.OpCode (ILOpCode.Sizeof);
+			Encoder.Token (type);
+			Push (1);
+		}
+
+		public void CastClass (EntityHandle type)
+		{
+			Encoder.OpCode (ILOpCode.Castclass);
+			Encoder.Token (type);
+		}
+
+		public void NewArray (EntityHandle type)
+		{
+			Encoder.OpCode (ILOpCode.Newarr);
+			Encoder.Token (type);
+			Pop (1);
+			Push (1);
+		}
+
+		public void StoreObject (EntityHandle type)
+		{
+			Encoder.OpCode (ILOpCode.Stobj);
+			Encoder.Token (type);
+			Pop (2);
+		}
+
+		public void Call (EntityHandle method, int parameterCount, bool returnsValue = false, bool isInstance = false)
+		{
+			Encoder.OpCode (ILOpCode.Call);
+			Encoder.Token (method);
+			ApplyCallStackDelta (parameterCount, returnsValue, isInstance);
+		}
+
+		public void Callvirt (EntityHandle method, int parameterCount, bool returnsValue = false)
+		{
+			Encoder.OpCode (ILOpCode.Callvirt);
+			Encoder.Token (method);
+			ApplyCallStackDelta (parameterCount, returnsValue, isInstance: true);
+		}
+
+		public void NewObject (EntityHandle constructor, int parameterCount)
+		{
+			Encoder.OpCode (ILOpCode.Newobj);
+			Encoder.Token (constructor);
+			Pop (parameterCount);
+			Push (1);
+		}
+
+		public void Return (bool returnsValue = false)
+		{
+			Encoder.OpCode (ILOpCode.Ret);
+			if (returnsValue) {
+				Pop (1);
+			}
+			SetStack (0);
+		}
+
+		public void Throw ()
+		{
+			Encoder.OpCode (ILOpCode.Throw);
+			Pop (1);
+			SetStack (0);
+		}
+
+		public void OpCode (ILOpCode code)
+		{
+			Encoder.OpCode (code);
+			switch (code) {
+			case ILOpCode.Add:
+			case ILOpCode.Mul:
+				Pop (1);
+				break;
+			case ILOpCode.Dup:
+				Push (1);
+				break;
+			case ILOpCode.Endfinally:
+				SetStack (0);
+				break;
+			case ILOpCode.Ldarg_0:
+			case ILOpCode.Ldarg_1:
+			case ILOpCode.Ldarg_2:
+			case ILOpCode.Ldloc_0:
+			case ILOpCode.Ldloc_1:
+			case ILOpCode.Ldnull:
+				Push (1);
+				break;
+			case ILOpCode.Localloc:
+				HasDynamicStackAllocation = true;
+				Pop (1);
+				Push (1);
+				break;
+			case ILOpCode.Pop:
+			case ILOpCode.Stloc_0:
+			case ILOpCode.Stloc_1:
+				Pop (1);
+				break;
+			case ILOpCode.Stelem_ref:
+				Pop (3);
+				break;
+			default:
+				throw new NotSupportedException ($"Opcode '{code}' is not supported by the maxstack tracker. Use an explicit tracked helper.");
+			}
+		}
+
+		void ApplyCallStackDelta (int parameterCount, bool returnsValue, bool isInstance)
+		{
+			Pop (parameterCount + (isInstance ? 1 : 0));
+			if (returnsValue) {
+				Push (1);
+			}
+		}
+
+		void Push (int count)
+		{
+			if (count <= 0) {
+				return;
+			}
+			SetStack (currentStack + count);
+		}
+
+		void Pop (int count)
+		{
+			if (count <= 0) {
+				return;
+			}
+			if (currentStack < count) {
+				throw new InvalidOperationException ($"IL evaluation stack underflow while computing maxstack. Current depth is {currentStack}, pop count is {count}.");
+			}
+			SetStack (currentStack - count);
+		}
+
+		void SetStack (int depth)
+		{
+			currentStack = depth;
+			if (currentStack > maxStack) {
+				maxStack = currentStack;
+			}
 		}
 	}
 }
