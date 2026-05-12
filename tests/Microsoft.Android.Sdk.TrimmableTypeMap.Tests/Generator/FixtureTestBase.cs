@@ -102,6 +102,7 @@ public abstract class FixtureTestBase
 					IsConstructor = true,
 				},
 			},
+			HasPublicParameterlessConstructor = true,
 		};
 	}
 

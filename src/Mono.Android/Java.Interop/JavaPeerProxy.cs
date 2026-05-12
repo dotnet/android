@@ -96,12 +96,24 @@ namespace Java.Interop
 		{
 			var reference = new JniObjectReference (jniSelf, JniObjectReferenceType.Invalid);
 			var peer = JniEnvironment.Runtime.ValueManager.PeekPeer (reference);
-			if (peer == null) {
-				return false;
+			if (peer != null && !IsActivationPeer (peer)) {
+				return true;
 			}
-			var state = peer.JniManagedPeerState;
-			return (state & JniManagedPeerStates.Activatable) != JniManagedPeerStates.Activatable
-				&& (state & JniManagedPeerStates.Replaceable) != JniManagedPeerStates.Replaceable;
+			return JniEnvironment.WithinNewObjectScope;
+		}
+
+		public static IJavaPeerable? GetActivationPeer (IntPtr jniSelf)
+		{
+			var reference = new JniObjectReference (jniSelf, JniObjectReferenceType.Invalid);
+			var peer = JniEnvironment.Runtime.ValueManager.PeekPeer (reference);
+			return peer != null && IsActivationPeer (peer) ? peer : null;
+		}
+
+		public static void SetActivationPeerReference (IJavaPeerable peer, IntPtr jniSelf)
+		{
+			var reference = new JniObjectReference (jniSelf, JniObjectReferenceType.Invalid);
+			peer.SetPeerReference (reference);
+			peer.SetJniIdentityHashCode (JniEnvironment.References.GetIdentityHashCode (reference));
 		}
 
 		public static void MarkActivationPeerReplaceable (IntPtr jniSelf)
@@ -113,6 +125,13 @@ namespace Java.Interop
 			}
 
 			peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable);
+		}
+
+		static bool IsActivationPeer (IJavaPeerable peer)
+		{
+			var state = peer.JniManagedPeerState;
+			return (state & JniManagedPeerStates.Activatable) == JniManagedPeerStates.Activatable
+				|| (state & JniManagedPeerStates.Replaceable) == JniManagedPeerStates.Replaceable;
 		}
 	}
 

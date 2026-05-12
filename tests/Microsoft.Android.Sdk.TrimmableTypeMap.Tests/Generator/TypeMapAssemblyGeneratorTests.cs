@@ -302,7 +302,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 		Assert.Contains ("ShouldSkipActivation", memberNames);
 		Assert.Contains ("GetUninitializedObject", memberNames);
-		Assert.Contains ("SetPeerReference", memberNames);
+		Assert.Contains ("SetActivationPeerReference", memberNames);
 		Assert.Contains ("MarkActivationPeerReplaceable", memberNames);
 		Assert.DoesNotContain ("Invoke", memberNames);
 		Assert.DoesNotContain ("ActivateInstance", memberNames);
@@ -338,7 +338,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 		var memberNames = GetMemberRefNames (reader);
 		Assert.Contains ("GetUninitializedObject", memberNames);
-		Assert.Contains ("SetPeerReference", memberNames);
+		Assert.Contains ("SetActivationPeerReference", memberNames);
 		Assert.Contains ("MarkActivationPeerReplaceable", memberNames);
 		Assert.DoesNotContain ("Invoke", memberNames);
 
@@ -685,7 +685,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	[Theory]
 	[InlineData (1, 0x05)]  // Boolean → byte (unsigned) for JNI ABI
 	[InlineData (2, 0x04)]  // Byte → sbyte
-	[InlineData (3, 0x03)]  // Char → char
+	[InlineData (3, 0x07)]  // Char → uint16 (blittable JNI jchar)
 	[InlineData (4, 0x06)]  // Short → int16
 	[InlineData (5, 0x08)]  // Int → int32
 	[InlineData (6, 0x0A)]  // Long → int64
@@ -752,7 +752,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 	[Theory]
 	[InlineData (2)]  // Byte
-	[InlineData (3)]  // Char
 	[InlineData (4)]  // Short
 	[InlineData (5)]  // Int
 	[InlineData (6)]  // Long
@@ -1171,6 +1170,96 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			$"UCO constructor should have at least 2 exception regions (catch + finally), found {regions.Length}");
 		Assert.Contains (regions, r => r.Kind == ExceptionRegionKind.Catch);
 		Assert.Contains (regions, r => r.Kind == ExceptionRegionKind.Finally);
+	}
+
+	[Fact]
+	public void Generate_UcoConstructor_ParameterizedPrimitiveCtorCallsManagedConstructor ()
+	{
+		string jniSignature = "(ZBCSIJFD)V";
+		var managedTypes = new [] {
+			"System.Boolean",
+			"System.SByte",
+			"System.Char",
+			"System.Int16",
+			"System.Int32",
+			"System.Int64",
+			"System.Single",
+			"System.Double",
+		};
+		var peer = MakeAcwPeer ("test/PrimitiveCtorArgs", "Test.PrimitiveCtorArgs", "TestAsm") with {
+			JavaConstructors = new List<JavaConstructorInfo> {
+				new JavaConstructorInfo {
+					ConstructorIndex = 0,
+					JniSignature = jniSignature,
+					ManagedParameterTypes = managedTypes,
+				},
+			},
+			MarshalMethods = new List<MarshalMethodInfo> {
+				new MarshalMethodInfo {
+					JniName = "<init>",
+					NativeCallbackName = "n_ctor",
+					JniSignature = jniSignature,
+					ManagedMethodName = ".ctor",
+					IsConstructor = true,
+					ManagedParameterTypes = managedTypes,
+				},
+			},
+		};
+
+		using var stream = GenerateAssembly (new [] { peer }, "ParameterizedPrimitiveCtorTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		Assert.NotEmpty (FindCtorMemberRefs (reader, "Test", "PrimitiveCtorArgs", managedTypes));
+
+		var nctorMethod = reader.GetMethodDefinition (FindNctorUcoMethod (reader));
+		var nctorSignature = nctorMethod.DecodeSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal (
+			new [] { "System.IntPtr", "System.IntPtr", "System.Byte", "System.SByte", "System.UInt16", "System.Int16", "System.Int32", "System.Int64", "System.Single", "System.Double" },
+			nctorSignature.ParameterTypes);
+	}
+
+	[Fact]
+	public void Generate_UcoConstructor_ParameterizedObjectCtorUsesExplicitMarshalHelpers ()
+	{
+		string jniSignature = "(Ljava/lang/String;[I[Ljava/lang/String;Landroid/content/Context;)V";
+		var managedTypes = new [] {
+			"System.String",
+			"System.Int32[]",
+			"System.String[]",
+			"Android.Content.Context",
+		};
+		var peer = MakeAcwPeer ("test/ObjectCtorArgs", "Test.ObjectCtorArgs", "TestAsm") with {
+			JavaConstructors = new List<JavaConstructorInfo> {
+				new JavaConstructorInfo {
+					ConstructorIndex = 0,
+					JniSignature = jniSignature,
+					ManagedParameterTypes = managedTypes,
+				},
+			},
+			MarshalMethods = new List<MarshalMethodInfo> {
+				new MarshalMethodInfo {
+					JniName = "<init>",
+					NativeCallbackName = "n_ctor",
+					JniSignature = jniSignature,
+					ManagedMethodName = ".ctor",
+					IsConstructor = true,
+					ManagedParameterTypes = managedTypes,
+				},
+			},
+		};
+
+		using var stream = GenerateAssembly (new [] { peer }, "ParameterizedObjectCtorTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		Assert.NotEmpty (FindCtorMemberRefs (reader, "Test", "ObjectCtorArgs", managedTypes));
+
+		var memberNames = GetMemberRefNames (reader);
+		Assert.Contains ("GetString", memberNames);
+		Assert.Contains ("GetArray", memberNames);
+		Assert.Contains ("GetObject", memberNames);
+		Assert.DoesNotContain ("FromJniHandle", memberNames);
 	}
 
 	[Fact]

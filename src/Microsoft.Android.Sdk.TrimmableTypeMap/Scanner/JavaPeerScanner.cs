@@ -268,6 +268,7 @@ public sealed class JavaPeerScanner : IDisposable
 				InvokerTypeName = invokerTypeName,
 				InvokerActivationCtorStyle = invokerActivationCtorStyle,
 				IsGenericDefinition = isGenericDefinition,
+				HasPublicParameterlessConstructor = !isAbstract && !isGenericDefinition && HasPublicParameterlessConstructor (typeDef, index),
 				ComponentAttribute = ToComponentInfo (attrInfo),
 			};
 
@@ -563,6 +564,7 @@ public sealed class JavaPeerScanner : IDisposable
 					ManagedMethodName = ".ctor",
 					NativeCallbackName = "n_ctor",
 					IsConstructor = true,
+					ManagedParameterTypes = [],
 				});
 				alreadyRegisteredSignatures.Add (signature);
 			}
@@ -614,6 +616,7 @@ public sealed class JavaPeerScanner : IDisposable
 						NativeCallbackName = "n_ctor",
 						IsConstructor = true,
 						SuperArgumentsString = "",
+						ManagedParameterTypes = sig.ParameterTypes,
 					});
 					alreadyRegisteredSignatures.Add (jniSignature);
 				}
@@ -892,6 +895,7 @@ public sealed class JavaPeerScanner : IDisposable
 		bool isExport = exportInfo is not null;
 		string managedName = index.Reader.GetString (methodDef.Name);
 		string jniSignature = registerInfo.Signature ?? "()V";
+		var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
 
 		string declaringTypeName = "";
 		string declaringAssemblyName = "";
@@ -911,6 +915,7 @@ public sealed class JavaPeerScanner : IDisposable
 			JavaAccess = isExport ? GetJavaAccess (methodDef.Attributes & MethodAttributes.MemberAccessMask) : null,
 			ThrownNames = exportInfo?.ThrownNames,
 			SuperArgumentsString = exportInfo?.SuperArgumentsString,
+			ManagedParameterTypes = sig.ParameterTypes,
 		});
 	}
 
@@ -1177,6 +1182,25 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 
 		return null;
+	}
+
+	static bool HasPublicParameterlessConstructor (TypeDefinition typeDef, AssemblyIndex index)
+	{
+		foreach (var methodHandle in typeDef.GetMethods ()) {
+			var method = index.Reader.GetMethodDefinition (methodHandle);
+			if (index.Reader.GetString (method.Name) != ".ctor") {
+				continue;
+			}
+			if ((method.Attributes & MethodAttributes.MemberAccessMask) != MethodAttributes.Public) {
+				continue;
+			}
+			var sig = method.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+			if (sig.ParameterTypes.Length == 0) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	static ActivationCtorStyle? FindActivationCtorOnType (TypeDefinition typeDef, AssemblyIndex index)
@@ -1553,6 +1577,7 @@ public sealed class JavaPeerScanner : IDisposable
 				JniSignature = mm.JniSignature,
 				ConstructorIndex = ctorIndex,
 				SuperArgumentsString = mm.SuperArgumentsString,
+				ManagedParameterTypes = mm.ManagedParameterTypes,
 			});
 			ctorIndex++;
 		}

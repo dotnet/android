@@ -139,6 +139,11 @@ public sealed record JavaPeerInfo
 	public bool IsGenericDefinition { get; init; }
 
 	/// <summary>
+	/// True if this non-abstract type declares a public parameterless managed constructor.
+	/// </summary>
+	public bool HasPublicParameterlessConstructor { get; init; }
+
+	/// <summary>
 	/// Android component attribute data ([Activity], [Service], [BroadcastReceiver], [ContentProvider],
 	/// [Application], [Instrumentation]) if present on this type. Used for manifest generation.
 	/// </summary>
@@ -225,6 +230,11 @@ public sealed record MarshalMethodInfo
 	public string? SuperArgumentsString { get; init; }
 
 	/// <summary>
+	/// Managed method parameter type names, in declaration order.
+	/// </summary>
+	public IReadOnlyList<string> ManagedParameterTypes { get; init; } = [];
+
+	/// <summary>
 	/// True if this method was collected from an implemented interface
 	/// (Pass 4: CollectInterfaceMethodImplementations), not from the type itself.
 	/// </summary>
@@ -267,6 +277,11 @@ public sealed record JavaConstructorInfo
 	/// Null for [Register] constructors.
 	/// </summary>
 	public string? SuperArgumentsString { get; init; }
+
+	/// <summary>
+	/// Managed constructor parameter type names, in declaration order.
+	/// </summary>
+	public IReadOnlyList<string> ManagedParameterTypes { get; init; } = [];
 }
 
 /// <summary>
