@@ -34,21 +34,21 @@
 		<!-- Enable nuget package conflict resolution -->
 		<ResolveAssemblyConflicts>true</ResolveAssemblyConflicts>
 
-        <AndroidNdkApiLevel_Arm64>@NDK_ARM64_V8A_API@</AndroidNdkApiLevel_Arm64>
-        <AndroidNdkApiLevel_X64>@NDK_X86_64_API@</AndroidNdkApiLevel_X64>
+		<AndroidNdkApiLevel_Arm64>@NDK_ARM64_V8A_API@</AndroidNdkApiLevel_Arm64>
+		<AndroidNdkApiLevel_X64>@NDK_X86_64_API@</AndroidNdkApiLevel_X64>
 	</PropertyGroup>
-        <ItemGroup>
-          <AndroidMinimumSupportedApiLevel Include="armeabi-v7a">
-            <ApiLevel>@NDK_ARMEABI_V7_API@</ApiLevel>
-          </AndroidMinimumSupportedApiLevel>
-          <AndroidMinimumSupportedApiLevel Include="arm64-v8a">
-            <ApiLevel>@NDK_ARM64_V8A_API@</ApiLevel>
-          </AndroidMinimumSupportedApiLevel>
-          <AndroidMinimumSupportedApiLevel Include="x86">
-            <ApiLevel>@NDK_X86_API@</ApiLevel>
-          </AndroidMinimumSupportedApiLevel>
-          <AndroidMinimumSupportedApiLevel Include="x86_64">
-            <ApiLevel>@NDK_X86_64_API@</ApiLevel>
-          </AndroidMinimumSupportedApiLevel>
-        </ItemGroup>
+	<ItemGroup>
+		<AndroidMinimumSupportedApiLevel Include="armeabi-v7a">
+			<ApiLevel>@NDK_ARMEABI_V7_API@</ApiLevel>
+		</AndroidMinimumSupportedApiLevel>
+		<AndroidMinimumSupportedApiLevel Include="arm64-v8a">
+			<ApiLevel>@NDK_ARM64_V8A_API@</ApiLevel>
+		</AndroidMinimumSupportedApiLevel>
+		<AndroidMinimumSupportedApiLevel Include="x86">
+			<ApiLevel>@NDK_X86_API@</ApiLevel>
+		</AndroidMinimumSupportedApiLevel>
+		<AndroidMinimumSupportedApiLevel Include="x86_64">
+			<ApiLevel>@NDK_X86_64_API@</ApiLevel>
+		</AndroidMinimumSupportedApiLevel>
+	</ItemGroup>
 </Project>
