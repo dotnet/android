@@ -19,11 +19,11 @@ and [Architecture][architecture] pages.
 [jni]: http://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/jniTOC.html
 [motivation]: /Documentation/Motivation.md
 [architecture]: /Documentation/Architecture.md
-[android]: https://github.com/xamarin/xamarin-android
+[android]: https://github.com/dotnet/android
 
 ## Building
 
-- The `main` branch is configured to build with .NET 7, available [here][net-7].
+- The `main` branch is configured to build with .NET 10, available [here][net-10].
 - The [`release/6.0.3xx`][net-6] branch is configured to build with .NET 6.
 
 `Java.Interop.sln` must first run some "preparatory" tasks before it can be built:
@@ -38,7 +38,7 @@ Once `Java.Interop.sln` has been prepared, it can be built in Visual Studio 2022
 dotnet build
 ```
 
-[net-7]: https://dotnet.microsoft.com/en-us/download/dotnet/7.0
+[net-10]: https://dotnet.microsoft.com/en-us/download/dotnet/10.0
 [net-6]: https://github.com/dotnet/java-interop/tree/release/6.0.3xx
 
 Additional build options are documented [here][build-configuration].
@@ -49,7 +49,7 @@ Additional build options are documented [here][build-configuration].
 
 This project welcomes issues and PRs.
 
-  - File an issue in [GitHub Issues](https://github.com/xamarin/xamarin-android/issues/new/choose).
+  - File an issue in [GitHub Issues](https://github.com/dotnet/android/issues/new/choose).
   - Discuss development and design on [Discord](https://aka.ms/dotnet-discord). [![Discord](https://img.shields.io/badge/chat-on%20discord-brightgreen)](https://aka.ms/dotnet-discord)
   - Coding style is outlined in [Coding Guidelines](http://www.mono-project.com/community/contributing/coding-guidelines/).
 
