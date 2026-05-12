@@ -230,12 +230,10 @@ namespace Xamarin.Android.Prepare
 					CopyFile (abi, clangArchLibPath, file);
 				}
 
-				// NativeAOT only supports 64-bit ABIs and links against dotnet/runtime's
-				// libSystem.Native.a which was compiled targeting a higher API level. Copy a
-				// second set of CRT/system lib stubs from the higher API level sysroot for the
-				// NativeAOT runtime pack.
-				bool is64BitAbi = abi == "arm64-v8a" || abi == "x86_64";
-				if (is64BitAbi) {
+				// NativeAOT links against dotnet/runtime's libSystem.Native.a which was
+				// compiled targeting a higher API level. Copy a second set of CRT/system
+				// lib stubs from the higher API level sysroot for the NativeAOT runtime pack.
+				if (Configurables.Defaults.NativeAotSupportedAbis.Contains (abi)) {
 					string nativeAotCrtFilesPath = Path.Combine (abiDir, BuildAndroidPlatforms.NdkMinimumNonMonoAPI);
 					foreach (string file in CRTFiles) {
 						CopyFile (abi, nativeAotCrtFilesPath, file, redistDirName: "redist-nativeaot");
