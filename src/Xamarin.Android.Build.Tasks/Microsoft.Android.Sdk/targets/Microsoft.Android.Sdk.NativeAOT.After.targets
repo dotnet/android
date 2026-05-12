@@ -1,0 +1,21 @@
+<!--
+***********************************************************************************************
+Microsoft.Android.Sdk.NativeAOT.After.targets
+
+NativeAOT-specific targets that must be imported *after* the ILC NuGet package targets.
+Imported from Microsoft.Android.Sdk.After.targets.
+
+***********************************************************************************************
+-->
+<Project>
+
+  <!--
+    Override ILC's LinkNative with a no-op.  With NativeLib=static, LinkNative only runs
+    llvm-ar to create a .a archive from the ILC-compiled .o file.  We never consume that
+    .a — _AndroidLinkNativeAotSharedLibrary links the .o directly into a .so.  This must
+    be imported after the ILC NuGet package targets because the last target definition wins
+    in MSBuild.
+  -->
+  <Target Name="LinkNative" Condition=" '$(_AndroidRuntime)' == 'NativeAOT' " />
+
+</Project>
