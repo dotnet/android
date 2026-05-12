@@ -18,10 +18,12 @@
     </PropertyGroup>
     <ItemGroup>
       <_TrimmableTypeMapIlcAssemblies Include="$(_TypeMapOutputDirectory)*.dll" />
+      <!-- The root assembly (_Microsoft.Android.TypeMaps) only contains TypeMapLoader.Initialize()
+           and assembly-level attributes — no types that need vtable generation.
+           All per-assembly typemap DLLs (including framework ones like _Java.Interop.TypeMap and
+           _Mono.Android.TypeMap) contain __ArrayMapRank{N} types whose vtables ILC must emit. -->
       <_TrimmableTypeMapUnmanagedEntryPointAssemblies Include="@(_TrimmableTypeMapIlcAssemblies)" />
       <_TrimmableTypeMapUnmanagedEntryPointAssemblies Remove="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll" />
-      <_TrimmableTypeMapUnmanagedEntryPointAssemblies Remove="$(_TypeMapOutputDirectory)_Java.Interop.TypeMap.dll" />
-      <_TrimmableTypeMapUnmanagedEntryPointAssemblies Remove="$(_TypeMapOutputDirectory)_Mono.Android.TypeMap.dll" />
       <IlcReference Include="@(_TrimmableTypeMapIlcAssemblies)" />
       <UnmanagedEntryPointsAssembly Include="@(_TrimmableTypeMapUnmanagedEntryPointAssemblies->'%(Filename)')" />
     </ItemGroup>
