@@ -10,12 +10,15 @@ Imported from Microsoft.Android.Sdk.After.targets.
 <Project>
 
   <!--
-    Override ILC's LinkNative with a no-op.  With NativeLib=static, LinkNative only runs
-    llvm-ar to create a .a archive from the ILC-compiled .o file.  We never consume that
-    .a — _AndroidLinkNativeAotSharedLibrary links the .o directly into a .so.  This must
-    be imported after the ILC NuGet package targets because the last target definition wins
-    in MSBuild.
+    Override ILC's LinkNative with a no-op for archive creation, while still preserving
+    the dependency that produces the ILC-compiled .o file. With NativeLib=static,
+    LinkNative normally runs llvm-ar to create a .a archive from the ILC-compiled .o
+    file. We never consume that .a — _AndroidLinkNativeAotSharedLibrary links the .o
+    directly into a .so. This must be imported after the ILC NuGet package targets
+    because the last target definition wins in MSBuild.
   -->
-  <Target Name="LinkNative" Condition=" '$(_AndroidRuntime)' == 'NativeAOT' " />
+  <Target Name="LinkNative"
+      Condition=" '$(_AndroidRuntime)' == 'NativeAOT' "
+      DependsOnTargets="IlcCompile" />
 
 </Project>
