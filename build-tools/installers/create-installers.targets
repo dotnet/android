@@ -196,7 +196,6 @@
     <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\as.exe" />
     <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\ld.exe" />
     <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\llc.exe" />
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\llvm-ar.exe" />
     <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\llvm-mc.exe" />
     <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\llvm-objcopy.exe" />
     <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\llvm-strip.exe" />

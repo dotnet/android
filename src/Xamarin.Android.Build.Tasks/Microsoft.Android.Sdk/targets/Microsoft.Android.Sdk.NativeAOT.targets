@@ -126,25 +126,15 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <CppCompilerAndLinker>$(_NdkAbi)-linux-android$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppCompilerAndLinker>
       <CppLinker>$(_NdkAbi)-linux-android$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppLinker>
       <ObjCopyName>$(_NdkBinDir)llvm-objcopy</ObjCopyName>
-      <!-- Use the NDK's llvm-ar instead of the host 'ar' so that ELF objects are handled
-           correctly when cross-compiling. -->
-      <CppLibCreator>$(_NdkBinDir)llvm-ar</CppLibCreator>
 
       <!-- We must ensure this is `false`, as it would interfere with statically linking libc++ -->
       <LinkStandardCPlusPlusLibrary>false</LinkStandardCPlusPlusLibrary>
-
-      <!-- Clear LinkerFlavor: the ILC targets set it to 'lld' for android/bionic, but with NativeLib=static
-           the _LinkerVersion detection is skipped, causing a numeric comparison error in LinkNative.
-           Since we handle native linking ourselves, LinkerFlavor is not needed.
-           Context: https://github.com/dotnet/runtime/issues/126978 -->
-      <LinkerFlavor />
     </PropertyGroup>
 
     <!-- When using the workload linker, resolve tools from AndroidBinUtilsDirectory
          instead of the NDK bin directory. -->
     <PropertyGroup Condition=" '$(_AndroidUseWorkloadNativeLinker)' == 'true' ">
       <ObjCopyName>$(AndroidBinUtilsDirectory)llvm-objcopy</ObjCopyName>
-      <CppLibCreator>$(AndroidBinUtilsDirectory)llvm-ar</CppLibCreator>
     </PropertyGroup>
 
     <!-- ILLink-specific settings: only when ILLink runs before ILC (non-trimmable path) -->
@@ -304,9 +294,9 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   </Target>
 
   <!--
-    With NativeLib=static, ILC's LinkNative target produces a .a archive via `ar`.
-    We need to link the ILC .o output + all NativeLibrary/system libs into a .so ourselves.
-    This target runs after LinkNative and uses ld.lld directly via LinkNativeAotSharedLibrary task.
+    _AndroidLinkNativeAotSharedLibrary links the ILC .o output + all NativeLibrary/system
+    libs into a .so.  LinkNative is overridden as a no-op in Microsoft.Android.Sdk.After.targets
+    (which is imported after the ILC NuGet targets).
   -->
   <Target Name="_AndroidLinkNativeAotSharedLibrary"
       AfterTargets="LinkNative"

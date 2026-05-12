@@ -18,7 +18,6 @@
     <_BinUtilsFilesUnixSignAndHarden Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\bin\i686-linux-android-strip" />
     <_BinUtilsFilesUnixSignAndHarden Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\bin\ld" />
     <_BinUtilsFilesUnixSignAndHarden Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\bin\llc" />
-    <_BinUtilsFilesUnixSignAndHarden Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\bin\llvm-ar" />
     <_BinUtilsFilesUnixSignAndHarden Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\bin\llvm-mc" />
     <_BinUtilsFilesUnixSignAndHarden Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\bin\llvm-objcopy" />
     <_BinUtilsFilesUnixSignAndHarden Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\bin\llvm-strip" />
