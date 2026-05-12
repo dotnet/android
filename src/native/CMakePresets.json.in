@@ -111,12 +111,7 @@
         {
             "name": "nonmono-common-arm64-v8a",
             "hidden": true,
-            "cacheVariables": {
-                "ANDROID_ABI": "arm64-v8a",
-                "ANDROID_NATIVE_API_LEVEL": "@NDK_ARM64_V8A_NONMONO_API_NET@",
-                "ANDROID_PLATFORM": "android-@NDK_ARM64_V8A_NONMONO_API_NET@",
-                "ANDROID_RID": "android-arm64"
-            }
+            "inherits": ["common-arm64-v8a"]
         },
 
         {
@@ -144,12 +139,7 @@
         {
             "name": "nonmono-common-x86_64",
             "hidden": true,
-            "cacheVariables": {
-                "ANDROID_ABI": "x86_64",
-                "ANDROID_NATIVE_API_LEVEL": "@NDK_X86_64_NONMONO_API_NET@",
-                "ANDROID_PLATFORM": "android-@NDK_X86_64_NONMONO_API_NET@",
-                "ANDROID_RID": "android-x64"
-            }
+            "inherits": ["common-x86_64"]
         },
 
         {
