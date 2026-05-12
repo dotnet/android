@@ -1067,29 +1067,26 @@ sealed class TypeMapAssemblyEmitter
 				MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 				encodeSig,
 				(encoder, cfb) => EmitUcoConstructorBodyWithMarshal (encoder, cfb, enc => {
-					enc.OpCode (ILOpCode.Ldtoken);
-					enc.Token (targetTypeRef);
-					enc.Call (_getTypeFromHandleRef);
-					enc.Call (_getUninitializedObjectRef);
-					enc.OpCode (ILOpCode.Castclass);
-					enc.Token (targetTypeRef);
+					enc.LoadToken (targetTypeRef);
+					enc.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
+					enc.Call (_getUninitializedObjectRef, parameterCount: 1, returnsValue: true);
+					enc.CastClass (targetTypeRef);
 					enc.StoreLocal (4);
 
 					enc.LoadLocalAddress (3); // jniRef
 					enc.LoadArgument (1);     // self
 					enc.LoadConstantI4 (0);   // JniObjectReferenceType.Invalid
-					enc.Call (_jniObjectReferenceCtorRef);
+					enc.Call (_jniObjectReferenceCtorRef, parameterCount: 2, isInstance: true);
 
 					enc.LoadLocal (4);
 					enc.LoadLocal (3);
-					enc.OpCode (ILOpCode.Callvirt);
-					enc.Token (_setPeerReferenceRef);
+					enc.Callvirt (_setPeerReferenceRef, parameterCount: 1);
 
 					enc.LoadLocal (4);
-					enc.Call (defaultCtorRef);
+					enc.Call (defaultCtorRef, parameterCount: 0, isInstance: true);
 
 					enc.LoadArgument (1); // self
-					enc.Call (_markActivationPeerReplaceableRef);
+					enc.Call (_markActivationPeerReplaceableRef, parameterCount: 1);
 				}),
 				blob => EncodeUcoConstructorLocals_DefaultConstructor (blob, targetTypeRef));
 			AddUnmanagedCallersOnlyAttribute (defaultCtorHandle);
@@ -1133,7 +1130,7 @@ sealed class TypeMapAssemblyEmitter
 						enc.Call (ctorRef, parameterCount: 2, isInstance: true);
 					}
 					enc.LoadArgument (1); // self
-					enc.Call (_markActivationPeerReplaceableRef);
+					enc.Call (_markActivationPeerReplaceableRef, parameterCount: 1);
 				}),
 				EncodeUcoConstructorLocals_JavaInterop);
 		} else {
@@ -1164,7 +1161,7 @@ sealed class TypeMapAssemblyEmitter
 						enc.Call (ctorRef, parameterCount: 2, isInstance: true);
 					}
 					enc.LoadArgument (1); // self
-					enc.Call (_markActivationPeerReplaceableRef);
+					enc.Call (_markActivationPeerReplaceableRef, parameterCount: 1);
 				}),
 				EncodeUcoConstructorLocals_Standard);
 		}

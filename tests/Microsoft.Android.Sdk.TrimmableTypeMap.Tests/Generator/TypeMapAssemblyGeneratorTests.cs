@@ -288,7 +288,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_InheritedCtor_ReferencesGuardAndActivationCtor ()
+	public void Generate_InheritedCtor_NctorUcoCallsDefaultConstructor ()
 	{
 		var peers = ScanFixtures ();
 		var simpleActivity = peers.First (p => p.JavaName == "my/app/SimpleActivity");
@@ -302,18 +302,24 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 		Assert.Contains ("ShouldSkipActivation", memberNames);
 		Assert.Contains ("GetUninitializedObject", memberNames);
+		Assert.Contains ("SetPeerReference", memberNames);
+		Assert.Contains ("MarkActivationPeerReplaceable", memberNames);
 		Assert.DoesNotContain ("Invoke", memberNames);
 		Assert.DoesNotContain ("ActivateInstance", memberNames);
 		Assert.DoesNotContain ("ActivatePeerFromJavaConstructor", memberNames);
 
-		Assert.NotEmpty (FindCtorMemberRefs (reader, "Android.App", "Activity",
+		// The new no-arg nctor codegen calls the target type's parameterless .ctor()
+		// directly, not the legacy (IntPtr, JniHandleOwnership) activation ctor on the base.
+		Assert.NotEmpty (FindCtorMemberRefs (reader, "MyApp", "SimpleActivity"));
+		Assert.Empty (FindCtorMemberRefs (reader, "Android.App", "Activity",
 			"System.IntPtr", "Android.Runtime.JniHandleOwnership"));
+
 		var nctorMethodHandle = FindNctorUcoMethod (reader);
 		Assert.False (nctorMethodHandle.IsNil, "SimpleActivity should have a nctor_*_uco method");
 	}
 
 	[Fact]
-	public void Generate_InheritedJavaInteropCtor_ReferencesActivationCtor ()
+	public void Generate_InheritedJavaInteropCtor_NctorUcoCallsDefaultConstructor ()
 	{
 		var peer = MakeAcwPeer ("test/JiInheritedTarget", "Test.JiInheritedTarget", "TestAsm") with {
 			ActivationCtor = new ActivationCtorInfo {
@@ -332,10 +338,17 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 		var memberNames = GetMemberRefNames (reader);
 		Assert.Contains ("GetUninitializedObject", memberNames);
+		Assert.Contains ("SetPeerReference", memberNames);
+		Assert.Contains ("MarkActivationPeerReplaceable", memberNames);
 		Assert.DoesNotContain ("Invoke", memberNames);
 
-		Assert.NotEmpty (FindCtorMemberRefs (reader, "Test", "JiInheritedBase",
+		// The new no-arg nctor codegen calls the target type's parameterless .ctor()
+		// directly, not the JI-style (JniObjectReference&, JniObjectReferenceOptions)
+		// activation ctor on the inherited base.
+		Assert.NotEmpty (FindCtorMemberRefs (reader, "Test", "JiInheritedTarget"));
+		Assert.Empty (FindCtorMemberRefs (reader, "Test", "JiInheritedBase",
 			"Java.Interop.JniObjectReference&", "Java.Interop.JniObjectReferenceOptions"));
+
 		var nctorMethodHandle = FindNctorUcoMethod (reader);
 		Assert.False (nctorMethodHandle.IsNil, "The ACW peer should have a nctor_*_uco method");
 	}
