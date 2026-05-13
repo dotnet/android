@@ -30,6 +30,8 @@ tools:
     # The /review command is gated to maintainers, so only trusted users can trigger it.
     min-integrity: none
 safe-outputs:
+  add-comment:
+    max: 1
   create-pull-request-review-comment:
     max: 50
   submit-pull-request-review:
@@ -43,7 +45,7 @@ A maintainer commented `/review` on this pull request. Perform a thorough code r
 
 ## Instructions
 
-1. Read the review methodology from `.github/skills/android-reviewer/SKILL.md` — this defines the review workflow, mindset, severity levels, comment format, and which rule files to load based on changed file types.
+1. Read the review methodology from `.github/skills/android-reviewer/SKILL.md` — this defines the offline review workflow, mindset, severity levels, comment format, and which rule files to load based on changed file types. The skill prepares findings only; this agentic workflow is responsible for publishing them.
 2. Follow the skill's workflow to analyze the pull request:
    - Gather context: read the diff and changed files
    - For each changed file, read the **full source file** to understand surrounding context
@@ -51,7 +53,10 @@ A maintainer commented `/review` on this pull request. Perform a thorough code r
    - Read the PR title and description — treat claims as things to verify
    - Check CI status
    - Analyze the diff against the review rules
-3. Post your findings as inline review comments and a review summary.
+3. Publish the prepared findings through safe-output tools:
+   - Use `add_comment` once to post a PR conversation comment stating that the `/review` run completed and summarizing the verdict.
+   - Use `create_pull_request_review_comment` for each inline finding.
+   - Use `submit_pull_request_review` once with the overall review summary. Use `COMMENT` for clean or informational reviews and `REQUEST_CHANGES` when blocking issues are found.
 
 ## Constraints
 
@@ -62,3 +67,4 @@ A maintainer commented `/review` on this pull request. Perform a thorough code r
 - Avoid false positives — verify concerns given the full file context.
 - **Never submit an APPROVE event.** Use COMMENT for clean PRs and REQUEST_CHANGES when issues are found.
 - Prioritize: bugs > safety > performance > missing tests > duplication > consistency > documentation.
+- Do not use direct GitHub write APIs or write-capable MCP tools. Publish only through the configured safe-output tools.
