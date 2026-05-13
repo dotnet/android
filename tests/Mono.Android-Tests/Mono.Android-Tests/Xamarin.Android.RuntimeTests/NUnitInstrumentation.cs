@@ -40,12 +40,6 @@ namespace Xamarin.Android.RuntimeTests
                     // switch off the trimmable typemap. See https://github.com/dotnet/android/issues/11170.
                     "Java.InteropTests.InvokeVirtualFromConstructorTests",
 
-                    // Throwable subclass registration
-                    "Java.InteropTests.JnienvTest.ActivatedDirectThrowableSubclassesShouldBeRegistered",
-
-                    // Instance identity after JNI round-trip
-                    "Java.LangTests.ObjectTest.JnienvCreateInstance_RegistersMultipleInstances",
-
                     // Global ref leak when inflating custom views
                     "Xamarin.Android.RuntimeTests.CustomWidgetTests.InflateCustomView_ShouldNotLeakGlobalRefs",
                 };

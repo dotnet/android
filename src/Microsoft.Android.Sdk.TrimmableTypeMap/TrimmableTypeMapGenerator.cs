@@ -33,6 +33,7 @@ public class TrimmableTypeMapGenerator
 		bool useSharedTypemapUniverse = false,
 		ManifestConfig? manifestConfig = null,
 		XDocument? manifestTemplate = null,
+		string? packageNamingPolicy = null,
 		int maxArrayRank = 0)
 	{
 		_ = assemblies ?? throw new ArgumentNullException (nameof (assemblies));
@@ -41,7 +42,8 @@ public class TrimmableTypeMapGenerator
 		if (maxArrayRank < 0) {
 			throw new ArgumentOutOfRangeException (nameof (maxArrayRank), maxArrayRank, "Must be >= 0.");
 		}
-		var (allPeers, assemblyManifestInfo) = ScanAssemblies (assemblies);
+
+		var (allPeers, assemblyManifestInfo) = ScanAssemblies (assemblies, packageNamingPolicy);
 		if (allPeers.Count == 0) {
 			logger.LogNoJavaPeerTypesFound ();
 			return new TrimmableTypeMapResult ([], [], allPeers);
@@ -133,9 +135,9 @@ public class TrimmableTypeMapGenerator
 		return new GeneratedManifest (doc, providerNames.Count > 0 ? providerNames.ToArray () : []);
 	}
 
-	(List<JavaPeerInfo> peers, AssemblyManifestInfo manifestInfo) ScanAssemblies (IReadOnlyList<(string Name, PEReader Reader)> assemblies)
+	(List<JavaPeerInfo> peers, AssemblyManifestInfo manifestInfo) ScanAssemblies (IReadOnlyList<(string Name, PEReader Reader)> assemblies, string? packageNamingPolicy)
 	{
-		using var scanner = new JavaPeerScanner (logger);
+		using var scanner = new JavaPeerScanner (packageNamingPolicy, logger);
 		var peers = scanner.Scan (assemblies);
 		var manifestInfo = scanner.ScanAssemblyManifestInfo ();
 		logger.LogJavaPeerScanInfo (assemblies.Count, peers.Count);
