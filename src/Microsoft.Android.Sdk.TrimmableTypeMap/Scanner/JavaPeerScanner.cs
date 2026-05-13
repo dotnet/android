@@ -556,6 +556,7 @@ public sealed class JavaPeerScanner : IDisposable
 				continue;
 			}
 			if (!alreadyRegisteredSignatures.Contains (signature)) {
+				var managedParameterTypes = TryGetMatchingPublicConstructorParameterTypes (typeDef, index, baseCtor.Method);
 				methods.Add (new MarshalMethodInfo {
 					JniName = baseCtor.RegisterInfo.JniName,
 					JniSignature = signature,
@@ -563,6 +564,8 @@ public sealed class JavaPeerScanner : IDisposable
 					ManagedMethodName = ".ctor",
 					NativeCallbackName = "n_ctor",
 					IsConstructor = true,
+					ManagedParameterTypes = managedParameterTypes ?? [],
+					HasManagedConstructor = managedParameterTypes != null,
 				});
 				alreadyRegisteredSignatures.Add (signature);
 			}
@@ -614,11 +617,34 @@ public sealed class JavaPeerScanner : IDisposable
 						NativeCallbackName = "n_ctor",
 						IsConstructor = true,
 						SuperArgumentsString = "",
+						ManagedParameterTypes = sig.ParameterTypes,
+						HasManagedConstructor = true,
 					});
 					alreadyRegisteredSignatures.Add (jniSignature);
 				}
 			}
 		}
+	}
+
+	IReadOnlyList<string>? TryGetMatchingPublicConstructorParameterTypes (TypeDefinition typeDef, AssemblyIndex index, MethodDefinition baseCtor)
+	{
+		foreach (var methodHandle in typeDef.GetMethods ()) {
+			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
+			if (index.Reader.GetString (methodDef.Name) != ".ctor") {
+				continue;
+			}
+			if ((methodDef.Attributes & MethodAttributes.MemberAccessMask) != MethodAttributes.Public) {
+				continue;
+			}
+			if (!HaveIdenticalParameterTypes (methodDef, baseCtor)) {
+				continue;
+			}
+
+			var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+			return sig.ParameterTypes;
+		}
+
+		return null;
 	}
 
 	string? BuildJniCtorSignature (MethodSignature<string> sig)
@@ -892,6 +918,7 @@ public sealed class JavaPeerScanner : IDisposable
 		bool isExport = exportInfo is not null;
 		string managedName = index.Reader.GetString (methodDef.Name);
 		string jniSignature = registerInfo.Signature ?? "()V";
+		var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
 
 		string declaringTypeName = "";
 		string declaringAssemblyName = "";
@@ -911,6 +938,8 @@ public sealed class JavaPeerScanner : IDisposable
 			JavaAccess = isExport ? GetJavaAccess (methodDef.Attributes & MethodAttributes.MemberAccessMask) : null,
 			ThrownNames = exportInfo?.ThrownNames,
 			SuperArgumentsString = exportInfo?.SuperArgumentsString,
+			ManagedParameterTypes = sig.ParameterTypes,
+			HasManagedConstructor = isConstructor,
 		});
 	}
 
@@ -1553,6 +1582,8 @@ public sealed class JavaPeerScanner : IDisposable
 				JniSignature = mm.JniSignature,
 				ConstructorIndex = ctorIndex,
 				SuperArgumentsString = mm.SuperArgumentsString,
+				ManagedParameterTypes = mm.ManagedParameterTypes,
+				HasManagedConstructor = mm.HasManagedConstructor,
 			});
 			ctorIndex++;
 		}
