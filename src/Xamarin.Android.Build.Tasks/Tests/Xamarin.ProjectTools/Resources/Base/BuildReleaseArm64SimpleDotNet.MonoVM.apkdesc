@@ -11,22 +11,25 @@
       "Size": 18296
     },
     "lib/arm64-v8a/lib_Java.Interop.dll.so": {
-      "Size": 88240
+      "Size": 87784
     },
     "lib/arm64-v8a/lib_Mono.Android.dll.so": {
-      "Size": 117736
+      "Size": 120784
     },
     "lib/arm64-v8a/lib_Mono.Android.Runtime.dll.so": {
-      "Size": 26752
+      "Size": 26904
     },
     "lib/arm64-v8a/lib_System.Console.dll.so": {
       "Size": 24424
+    },
+    "lib/arm64-v8a/lib_System.IO.Hashing.dll.so": {
+      "Size": 24344
     },
     "lib/arm64-v8a/lib_System.Linq.dll.so": {
       "Size": 25504
     },
     "lib/arm64-v8a/lib_System.Private.CoreLib.dll.so": {
-      "Size": 638088
+      "Size": 638864
     },
     "lib/arm64-v8a/lib_System.Runtime.dll.so": {
       "Size": 20288
@@ -35,7 +38,7 @@
       "Size": 19824
     },
     "lib/arm64-v8a/lib_UnnamedProject.dll.so": {
-      "Size": 20032
+      "Size": 20024
     },
     "lib/arm64-v8a/libarc.bin.so": {
       "Size": 19240
@@ -62,16 +65,16 @@
       "Size": 162000
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 19792
+      "Size": 19976
     },
     "META-INF/BNDLTOOL.RSA": {
       "Size": 1223
     },
     "META-INF/BNDLTOOL.SF": {
-      "Size": 3266
+      "Size": 3380
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 3139
+      "Size": 3253
     },
     "res/drawable-hdpi-v4/icon.png": {
       "Size": 2178
@@ -98,5 +101,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 3258901
+  "PackageSize": 3267181
 }
