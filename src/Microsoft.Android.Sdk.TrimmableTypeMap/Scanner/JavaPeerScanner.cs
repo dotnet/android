@@ -939,6 +939,9 @@ public sealed class JavaPeerScanner : IDisposable
 			ThrownNames = exportInfo?.ThrownNames,
 			SuperArgumentsString = exportInfo?.SuperArgumentsString,
 			ManagedParameterTypes = sig.ParameterTypes,
+			// Directly registered constructors come from this MethodDefinition, so their
+			// managed parameters are known. Inherited seed constructors are marked only
+			// when CollectBaseConstructorChain can match them to a leaf constructor.
 			HasManagedConstructor = isConstructor,
 		});
 	}

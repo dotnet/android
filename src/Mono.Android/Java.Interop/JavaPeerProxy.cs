@@ -102,6 +102,12 @@ namespace Java.Interop
 			return JniEnvironment.WithinNewObjectScope;
 		}
 
+		/// <summary>
+		/// Gets the activatable peer currently associated with the specified JNI handle,
+		/// or <see langword="null"/> if the handle has no activation peer.
+		/// </summary>
+		/// <param name="jniSelf">The JNI object reference handle.</param>
+		/// <returns>The existing activation peer, or <see langword="null"/> if none exists.</returns>
 		public static IJavaPeerable? GetActivationPeer (IntPtr jniSelf)
 		{
 			var reference = new JniObjectReference (jniSelf, JniObjectReferenceType.Invalid);
@@ -109,6 +115,11 @@ namespace Java.Interop
 			return peer != null && IsActivationPeer (peer) ? peer : null;
 		}
 
+		/// <summary>
+		/// Associates an activation peer with the specified JNI handle and records its JNI identity hash code.
+		/// </summary>
+		/// <param name="peer">The activation peer to associate with the JNI handle.</param>
+		/// <param name="jniSelf">The JNI object reference handle.</param>
 		public static void SetActivationPeerReference (IJavaPeerable peer, IntPtr jniSelf)
 		{
 			var reference = new JniObjectReference (jniSelf, JniObjectReferenceType.Invalid);
@@ -116,6 +127,10 @@ namespace Java.Interop
 			peer.SetJniIdentityHashCode (JniEnvironment.References.GetIdentityHashCode (reference));
 		}
 
+		/// <summary>
+		/// Marks the peer associated with the specified JNI handle as replaceable after Java-side activation completes.
+		/// </summary>
+		/// <param name="jniSelf">The JNI object reference handle.</param>
 		public static void MarkActivationPeerReplaceable (IntPtr jniSelf)
 		{
 			var reference = new JniObjectReference (jniSelf, JniObjectReferenceType.Invalid);

@@ -1149,7 +1149,7 @@ sealed class TypeMapAssemblyEmitter
 			var ctorRef = AddManagedCtorRef (targetTypeRef, uco.ManagedParameterTypes, uco.TargetType.AssemblyName);
 			var managedCtorHandle = EmitUcoConstructorBody (uco.WrapperName, encodeSig,
 				enc => EmitManagedConstructorActivation (enc, targetTypeRef, ctorRef, uco.ManagedParameterTypes, jniParams, uco.TargetType.AssemblyName),
-				blob => EncodeUcoConstructorLocals_DefaultConstructor (blob, targetTypeRef));
+				blob => EncodeUcoConstructorLocals_ManagedConstructor (blob, targetTypeRef));
 			AddUnmanagedCallersOnlyAttribute (managedCtorHandle);
 			return managedCtorHandle;
 		}
@@ -1252,23 +1252,23 @@ sealed class TypeMapAssemblyEmitter
 		enc.LoadArgument (1);
 		enc.Call (_getActivationPeerRef, parameterCount: 1, returnsValue: true);
 		enc.CastClass (targetTypeRef);
-		enc.StoreLocal (4);
+		enc.StoreLocal (3);
 
-		enc.LoadLocal (4);
+		enc.LoadLocal (3);
 		enc.Branch (ILOpCode.Brtrue, havePeer);
 
 		enc.LoadToken (targetTypeRef);
 		enc.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
 		enc.Call (_getUninitializedObjectRef, parameterCount: 1, returnsValue: true);
 		enc.CastClass (targetTypeRef);
-		enc.StoreLocal (4);
+		enc.StoreLocal (3);
 
-		enc.LoadLocal (4);
+		enc.LoadLocal (3);
 		enc.LoadArgument (1); // self
 		enc.Call (_setActivationPeerReferenceRef, parameterCount: 2);
 
 		enc.MarkLabel (havePeer);
-		enc.LoadLocal (4);
+		enc.LoadLocal (3);
 		for (int i = 0; i < managedParameterTypes.Count; i++) {
 			EmitManagedConstructorArgument (enc, managedParameterTypes [i], jniParams [i], i + 2, defaultAssemblyName);
 		}
@@ -1448,8 +1448,10 @@ sealed class TypeMapAssemblyEmitter
 			return "System.Runtime";
 		}
 		if (managedType.StartsWith ("Android.", StringComparison.Ordinal) ||
+		    managedType.StartsWith ("Dalvik.", StringComparison.Ordinal) ||
 		    managedType.StartsWith ("Java.", StringComparison.Ordinal) ||
-		    managedType.StartsWith ("Javax.", StringComparison.Ordinal)) {
+		    managedType.StartsWith ("Javax.", StringComparison.Ordinal) ||
+		    managedType.StartsWith ("Org.", StringComparison.Ordinal)) {
 			return "Mono.Android";
 		}
 		return defaultAssemblyName;
@@ -1497,13 +1499,13 @@ sealed class TypeMapAssemblyEmitter
 	}
 
 	/// <summary>
-	/// LOCAL_SIG for UCO constructors that invoke a no-arg managed constructor.
-	/// Locals: 0=JniTransition, 1=JniRuntime, 2=Exception, 3=JniObjectReference, 4=target type.
+	/// LOCAL_SIG for UCO constructors that invoke a managed constructor directly.
+	/// Locals: 0=JniTransition, 1=JniRuntime, 2=Exception, 3=target type.
 	/// </summary>
-	void EncodeUcoConstructorLocals_DefaultConstructor (BlobBuilder blob, EntityHandle targetTypeRef)
+	void EncodeUcoConstructorLocals_ManagedConstructor (BlobBuilder blob, EntityHandle targetTypeRef)
 	{
 		blob.WriteByte (0x07); // LOCAL_SIG
-		blob.WriteCompressedInteger (5);
+		blob.WriteCompressedInteger (4);
 		// local 0: JniTransition (valuetype)
 		blob.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniTransitionRef));
@@ -1513,10 +1515,7 @@ sealed class TypeMapAssemblyEmitter
 		// local 2: Exception (class)
 		blob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_exceptionRef));
-		// local 3: JniObjectReference (valuetype)
-		blob.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
-		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniObjectReferenceRef));
-		// local 4: target type (class)
+		// local 3: target type (class)
 		blob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (targetTypeRef));
 	}
