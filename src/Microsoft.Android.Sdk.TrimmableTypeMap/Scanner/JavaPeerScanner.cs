@@ -630,6 +630,27 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 	}
 
+	IReadOnlyList<string>? TryGetMatchingPublicConstructorParameterTypes (TypeDefinition typeDef, AssemblyIndex index, MethodDefinition baseCtor)
+	{
+		foreach (var methodHandle in typeDef.GetMethods ()) {
+			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
+			if (index.Reader.GetString (methodDef.Name) != ".ctor") {
+				continue;
+			}
+			if ((methodDef.Attributes & MethodAttributes.MemberAccessMask) != MethodAttributes.Public) {
+				continue;
+			}
+			if (!HaveIdenticalParameterTypes (methodDef, baseCtor)) {
+				continue;
+			}
+
+			var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+			return sig.ParameterTypes;
+		}
+
+		return null;
+	}
+
 	string? BuildJniCtorSignature (MethodSignature<string> sig)
 	{
 		var sb = new System.Text.StringBuilder ();
@@ -1040,6 +1061,7 @@ public sealed class JavaPeerScanner : IDisposable
 		string managedName = index.Reader.GetString (methodDef.Name);
 		var managedSig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
 		string jniSignature = registerInfo.Signature ?? "()V";
+		var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
 
 		// Only decode TypeRefData signatures for [Export] methods — they need precise
 		// managed type + assembly metadata for direct dispatch IL generation.

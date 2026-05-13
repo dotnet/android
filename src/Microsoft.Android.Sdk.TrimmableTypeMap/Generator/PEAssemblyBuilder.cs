@@ -623,6 +623,12 @@ sealed class PEAssemblyBuilder
 			SetStack (0);
 		}
 
+		public void PopValue ()
+		{
+			Encoder.OpCode (ILOpCode.Pop);
+			Pop (1);
+		}
+
 		public void OpCode (ILOpCode code)
 		{
 			Encoder.OpCode (code);
