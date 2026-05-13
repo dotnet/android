@@ -327,10 +327,16 @@ namespace UnnamedProject {
 			// Match IL2xxx and IL3xxx (trim + AOT analysis) warning codes, then
 			// keep only those whose message text references either the generated
 			// trimmable typemap assembly or the [Export] source file.
+			// Exclude IL2026 about ExportAttribute/ExportFieldAttribute constructors
+			// themselves — those are expected (the attributes carry [RequiresUnreferencedCode]).
 			var ilWarningRegex = new Regex (@"\b(IL[23]\d{3})\b", RegexOptions.Compiled);
 			var offending = new List<string> ();
 			foreach (var line in builder.LastBuildOutput) {
 				if (!ilWarningRegex.IsMatch (line)) {
+					continue;
+				}
+				if (line.Contains ("ExportAttribute", StringComparison.Ordinal)
+						&& line.Contains ("RequiresUnreferencedCode", StringComparison.Ordinal)) {
 					continue;
 				}
 				bool mentionsTypeMap = line.Contains (".TypeMap.dll", StringComparison.OrdinalIgnoreCase)
