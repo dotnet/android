@@ -776,6 +776,65 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		}
 
 		[Test]
+		public void NativeCrashProducesManagedStackTrace ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		{
+			// This test verifies that when a native crash (SIGSEGV) occurs, the .NET runtime
+			// logs a managed stack trace in logcat BEFORE Android's signal handler takes over.
+			// This is enabled by the System.Runtime.CrashReportBeforeSignalChaining config option.
+			// See: https://github.com/dotnet/android/pull/11291
+			// See: https://github.com/dotnet/runtime/pull/123735
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AllowUnsafeBlocks", "true");
+			proj.SetAndroidSupportedAbis (DeviceAbi);
+
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("//${USINGS}", "using System.Runtime.InteropServices;")
+				.Replace ("//${AFTER_ONCREATE}", """
+						// Force a native crash (SIGSEGV) via P/Invoke to libc memset with a null pointer.
+						// The .NET runtime's crash reporting should log the managed stack trace before
+						// Android's signal handler aborts the process.
+						CrashHelper.ForceNativeSegfault ();
+				""")
+				.Replace ("//${AFTER_MAINACTIVITY}", """
+					static class CrashHelper
+					{
+						[DllImport ("libc", EntryPoint = "memset")]
+						static extern unsafe void MemSet (void* ptr, int value, nuint count);
+
+						public static unsafe void ForceNativeSegfault ()
+						{
+							MemSet (null, 0, (nuint)1);
+						}
+					}
+				""");
+
+			builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+			ClearAdbLogcat ();
+			AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+
+			// CoreCLR logs the managed stack trace via the DOTNET logcat tag when crash reporting
+			// runs before signal chaining. The stack trace JSON includes method names like
+			// "ForceNativeSegfault" from the managed frames leading up to the crash.
+			string logcatFile = Path.Combine (Root, builder.ProjectDirectory, "crash-logcat.log");
+			Assert.IsTrue (
+				MonitorAdbLogcat (
+					(line) => line.Contains ("DOTNET") && line.Contains ("ForceNativeSegfault"),
+					logcatFilePath: logcatFile,
+					timeout: 30),
+				"Crash reporting should have logged a managed stack trace containing 'ForceNativeSegfault' via the DOTNET logcat tag. " +
+				"Verify the System.Runtime.CrashReportBeforeSignalChaining config option is set and the runtime supports it.");
+		}
+
+		[Test]
 		[Category ("UsesDevice")]
 		[TestCaseSource (nameof (Get_SmokeTestBuildAndRunWithSpecialCharacters_Data))]
 		public void SmokeTestBuildAndRunWithSpecialCharacters (string testName, AndroidRuntime runtime)
