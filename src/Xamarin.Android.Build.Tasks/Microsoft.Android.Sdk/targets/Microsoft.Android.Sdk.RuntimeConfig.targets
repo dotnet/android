@@ -19,7 +19,7 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
     <_AndroidEnableObjectReferenceLogging Condition=" '$(_AndroidEnableObjectReferenceLogging)' == '' And '$(PublishTrimmed)' != 'true' ">true</_AndroidEnableObjectReferenceLogging>
     <!-- Enable .NET runtime crash reporting before Android's signal chaining takes place.
          See: https://github.com/dotnet/runtime/pull/123735 -->
-    <AndroidEnableDiagnosticCrashReporting Condition=" '$(AndroidEnableDiagnosticCrashReporting)' == '' ">true</AndroidEnableDiagnosticCrashReporting>
+    <_AndroidEnableDiagnosticCrashReporting Condition=" '$(_AndroidEnableDiagnosticCrashReporting)' == '' ">true</_AndroidEnableDiagnosticCrashReporting>
   </PropertyGroup>
 
   <ItemGroup>
@@ -70,7 +70,7 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
     />
     <!-- https://github.com/dotnet/runtime/pull/123735 -->
     <RuntimeHostConfigurationOption Include="System.Runtime.CrashReportBeforeSignalChaining"
-        Value="$(AndroidEnableDiagnosticCrashReporting)"
+        Value="$(_AndroidEnableDiagnosticCrashReporting)"
         Trim="true"
     />
   </ItemGroup>

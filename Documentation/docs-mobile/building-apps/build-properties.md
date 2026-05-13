@@ -372,21 +372,6 @@ called `desugar`, on the output of the `javac` compiler. The default value is
 `False` if using `$(AndroidDexTool)=dx` and `True` if
 using [`$(AndroidDexTool)`](#androiddextool)=`d8`.
 
-## AndroidEnableDiagnosticCrashReporting
-
-A boolean property that controls whether the .NET runtime registers
-its crash reporting signal handlers before Android's signal chaining
-takes place.
-
-When `True`, the .NET runtime's crash reporting logic runs first
-when a signal such as `SIGSEGV` or `SIGABRT` is received, allowing
-managed callstacks to be logged and a crash report JSON file to be
-written to disk before Android's signal handlers terminate the process.
-
-This property is `True` by default.
-
-Added in .NET 11.
-
 ## AndroidEnableGooglePlayStoreChecks
 
 A bool property
