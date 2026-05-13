@@ -538,6 +538,7 @@ namespace Java.Interop
 	[RequiresUnreferencedCode (MonoAndroidExport.DynamicFeatures)]
 	class DynamicCallbackCodeGenerator : CallbackCodeGenerator<Type>
 	{
+		[DynamicDependency ("GetObject", "Java.Lang.Object", "Mono.Android")]
 		public static Delegate Create (MethodInfo method)
 		{
 			return new DynamicCallbackCodeGenerator (method).GetCallback ();
