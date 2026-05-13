@@ -3,7 +3,7 @@
     <_BinutilsArchiveUrl>https://github.com/dotnet/android-native-tools/releases/download/$(XABinutilsVersion)/xamarin-android-toolchain-$(XABinutilsVersion).7z</_BinutilsArchiveUrl>
     <_BinutilsArchive>$(AndroidToolchainCacheDirectory)\xamarin-android-toolchain-$(XABinutilsVersion).7z</_BinutilsArchive>
     <_BinutilsExtractDir>$(AndroidToolchainCacheDirectory)\binutils-$(XABinutilsVersion)</_BinutilsExtractDir>
-    <_BinutilsHostOS>$(HostOS.ToLowerInvariant ())</_BinutilsHostOS>
+    <_BinutilsHostOS>$(HostOS.ToLowerInvariant())</_BinutilsHostOS>
     <_HostBinutilsInstallDir>$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils</_HostBinutilsInstallDir>
     <_WindowsBinutilsInstallDir>$(MicrosoftAndroidSdkOutDir)binutils</_WindowsBinutilsInstallDir>
     <_7zaPath Condition=" '$(HostOS)' == 'Windows' ">$(Pkg7-Zip_CommandLine)\tools\x64\7za.exe</_7zaPath>
