@@ -74,12 +74,11 @@ public partial class ScannerComparisonTests
 
 	static string NormalizeCrc64 (string javaName)
 	{
-		// Normalize crc64 hashes anywhere in the string — both the outer type
+		// Normalize crc64/scrc64 hashes anywhere in the string — both the outer type
 		// name (JavaName) and any embedded type references inside JNI method
-		// signatures. Legacy and new scanners hash with different inputs (legacy
-		// hashes assembly+namespace, new scanner hashes namespace:assembly), so
-		// the absolute hash differs but should be deterministic per side.
-		return System.Text.RegularExpressions.Regex.Replace (javaName, @"crc64[0-9a-f]{16}", "crc64...");
+		// signatures. Legacy and new scanners hash with different inputs, so the
+		// absolute hash differs but should be deterministic per side.
+		return System.Text.RegularExpressions.Regex.Replace (javaName, @"s?crc64[0-9a-f]{16}", "crc64...");
 	}
 
 	static List<TypeMethodGroup> NormalizeMethodGroups (List<TypeMethodGroup> groups)

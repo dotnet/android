@@ -745,7 +745,7 @@ namespace UnnamedProject {
 					}
 				}
 			};
-			proj.SetPublishAot (publishAot, AndroidNdkPath);
+			proj.SetPublishAot (publishAot);
 
 			using (var b = CreateApkBuilder ()) {
 				b.Verbosity = LoggerVerbosity.Diagnostic; // Needed for --satellite switch to appear in the log

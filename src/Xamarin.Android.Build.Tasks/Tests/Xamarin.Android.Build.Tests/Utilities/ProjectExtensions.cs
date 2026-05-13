@@ -23,7 +23,7 @@ public static class ProjectExtensions
 			DoSetRuntime (project, runtime);
 			return;
 		}
-		project.SetPublishAot (true, BaseTest.AndroidNdkPath);
+		project.SetPublishAot (true);
 		EnablePreviewFeaturesIfNeeded (project, runtime);
 	}
 

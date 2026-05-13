@@ -161,6 +161,17 @@ namespace Xamarin.Android.Prepare
 				{ "x86_64",      "x86_64" },
 			};
 
+			/// <summary>
+			/// ABIs that support the NativeAOT runtime.  Used to determine which ABIs
+			/// need the higher API-level CRT/sysroot files in the NativeAOT runtime pack.
+			/// When adding a new ABI here, also update <c>SupportNativeAOT</c> in
+			/// <c>build-tools/scripts/Ndk.projitems.in</c>.
+			/// </summary>
+			public static readonly HashSet<string> NativeAotSupportedAbis = new (StringComparer.Ordinal) {
+				"arm64-v8a",
+				"x86_64",
+			};
+
 			public static readonly List <NDKTool> NDKTools = new List<NDKTool> {
 				// Tools prefixed with architecture triple
 				new NDKTool (name: "as", prefixed: true),

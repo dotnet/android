@@ -278,7 +278,7 @@ public class ModelBuilderTests : FixtureTestBase
 		public void Build_Crc64RenamedPeer_StoresFinalJavaNameOnProxy (string managedName)
 		{
 			var peer = FindFixtureByManagedName (managedName);
-			Assert.StartsWith ("crc64", peer.JavaName);
+			Assert.StartsWith ("scrc64", peer.JavaName);
 			Assert.NotEqual (peer.CompatJniName, peer.JavaName);
 
 			var model = BuildModel (new [] { peer }, "MyTypeMap");
