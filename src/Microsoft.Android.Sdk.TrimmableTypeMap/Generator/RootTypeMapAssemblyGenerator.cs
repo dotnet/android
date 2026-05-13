@@ -371,9 +371,8 @@ public sealed class RootTypeMapAssemblyGenerator
 
 				encoder.LoadLocal (0);
 				encoder.LoadLocal (1);
-				encoder.OpCode (ILOpCode.Call);
-				encoder.Token (initializeRef);
-				encoder.OpCode (ILOpCode.Ret);
+				encoder.Call (initializeRef, parameterCount: 2);
+				encoder.Return ();
 			},
 			encodeLocals: localsSig => {
 				localsSig.WriteByte (0x07); // LOCAL_SIG
@@ -466,13 +465,10 @@ public sealed class RootTypeMapAssemblyGenerator
 			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 			sig => sig.MethodSignature ().Parameters (0, rt => rt.Void (), p => { }),
 			encoder => {
-				encoder.OpCode (ILOpCode.Call);
-				encoder.Token (getExternalSpec);
-				encoder.OpCode (ILOpCode.Call);
-				encoder.Token (getProxySpec);
-				encoder.OpCode (ILOpCode.Call);
-				encoder.Token (initializeRef);
-				encoder.OpCode (ILOpCode.Ret);
+				encoder.Call (getExternalSpec, parameterCount: 0, returnsValue: true);
+				encoder.Call (getProxySpec, parameterCount: 0, returnsValue: true);
+				encoder.Call (initializeRef, parameterCount: 2);
+				encoder.Return ();
 			});
 	}
 

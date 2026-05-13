@@ -97,14 +97,15 @@ namespace Android.Runtime
 			}
 		}
 
-		internal static void InitializeLogCategories (JnienvInitializeArgs args)
+		internal static void InitializeBeforeRuntimeCreation (JnienvInitializeArgs args)
 		{
-			Logger.SetLogCategories ((LogCategories)args.logCategories);
+			InitializeCommonState (args);
+			InitializeTrimmableTypeMapDataIfNeeded ();
 		}
 
 		// NOTE: should have different name than `Initialize` to avoid:
 		// * Assertion at /__w/1/s/src/mono/mono/metadata/icall.c:6258, condition `!only_unmanaged_callers_only' not met
-		// Only used for NativeAOT. MonoVM and CoreCLR use Initialize().
+		// Only used for NativeAOT after the runtime has been created. MonoVM and CoreCLR use Initialize().
 		internal static void InitializeNativeAotRuntime (JniRuntime runtime, JnienvInitializeArgs args)
 		{
 			if (!RuntimeFeature.IsNativeAotRuntime) {
@@ -114,8 +115,6 @@ namespace Android.Runtime
 				throw new NotSupportedException ("Internal error: NativeAOT cannot be enabled with MonoVM or CoreCLR.");
 			}
 
-			InitializeCommonState (args);
-			InitializeTrimmableTypeMapDataIfNeeded ();
 			androidRuntime = runtime;
 			JniRuntime.SetCurrent (runtime);
 			RegisterTrimmableTypeMapNativeMethodsIfNeeded ();
@@ -136,8 +135,7 @@ namespace Android.Runtime
 			IntPtr total_timing_sequence = IntPtr.Zero;
 			IntPtr partial_timing_sequence = IntPtr.Zero;
 
-			InitializeCommonState (*args);
-			InitializeTrimmableTypeMapDataIfNeeded ();
+			InitializeBeforeRuntimeCreation (*args);
 
 			JniRuntime.JniTypeManager typeManager = CreateTypeManager (*args);
 			JniRuntime.JniValueManager valueManager = CreateValueManager ();

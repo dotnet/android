@@ -56,7 +56,7 @@ static partial class JavaInteropRuntime
 
 			// This needs to be called first, since it sets up locations, environment variables, logging etc
 			XA_Host_NativeAOT_OnInit (language, filesDir, cacheDir, ref initArgs);
-			JNIEnvInit.InitializeLogCategories (initArgs);
+			JNIEnvInit.InitializeBeforeRuntimeCreation (initArgs);
 
 			var settings    = new DiagnosticSettings ();
 			settings.AddDebugDotnetLog ();
