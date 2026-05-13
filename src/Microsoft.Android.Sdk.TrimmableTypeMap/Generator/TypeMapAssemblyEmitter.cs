@@ -88,9 +88,7 @@ sealed class TypeMapAssemblyEmitter
 	TypeReferenceHandle _jniObjectReferenceOptionsRef;
 	TypeReferenceHandle _iAndroidCallableWrapperRef;
 	TypeReferenceHandle _jniEnvRef;
-	TypeReferenceHandle _javaLangObjectRef;
 	TypeReferenceHandle _systemTypeRef;
-	TypeReferenceHandle _systemArrayRef;
 	TypeReferenceHandle _runtimeTypeHandleRef;
 	TypeReferenceHandle _jniTypeRef;
 	TypeReferenceHandle _notSupportedExceptionRef;
@@ -104,12 +102,7 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _jniObjectReferenceCtorRef;
 	MemberReferenceHandle _iJavaPeerableSetPeerReferenceRef;
 	MemberReferenceHandle _jniEnvDeleteRefRef;
-	MemberReferenceHandle _jniEnvGetStringRef;
-	MemberReferenceHandle _jniEnvGetArrayRef;
-	MemberReferenceHandle _javaLangObjectGetObjectRef;
 	MemberReferenceHandle _shouldSkipActivationRef;
-	MemberReferenceHandle _getActivationPeerRef;
-	MemberReferenceHandle _setActivationPeerReferenceRef;
 	MemberReferenceHandle _markActivationPeerReplaceableRef;
 	MemberReferenceHandle _waitForBridgeProcessingRef;
 	MemberReferenceHandle _androidEnvironmentUnhandledExceptionRef;
@@ -240,8 +233,6 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("JniHandleOwnership"));
 		_jniEnvRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
 			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("JNIEnv"));
-		_javaLangObjectRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
-			metadata.GetOrAddString ("Java.Lang"), metadata.GetOrAddString ("Object"));
 		_jniObjectReferenceRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniObjectReference"));
 		_jniObjectReferenceTypeRef = metadata.AddTypeReference (_javaInteropRef,
@@ -252,8 +243,6 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("IAndroidCallableWrapper"));
 		_systemTypeRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Type"));
-		_systemArrayRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
-			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Array"));
 		_runtimeTypeHandleRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("RuntimeTypeHandle"));
 		_jniTypeRef = metadata.AddTypeReference (_javaInteropRef,
@@ -383,50 +372,11 @@ sealed class TypeMapAssemblyEmitter
 					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
 				}));
 
-		_jniEnvGetStringRef = _pe.AddMemberRef (_jniEnvRef, "GetString",
-			sig => sig.MethodSignature ().Parameters (2,
-				rt => rt.Type ().String (),
-				p => {
-					p.AddParameter ().Type ().IntPtr ();
-					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
-				}));
-
-		_jniEnvGetArrayRef = _pe.AddMemberRef (_jniEnvRef, "GetArray",
-			sig => sig.MethodSignature ().Parameters (3,
-				rt => rt.Type ().Type (_systemArrayRef, false),
-				p => {
-					p.AddParameter ().Type ().IntPtr ();
-					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
-					p.AddParameter ().Type ().Type (_systemTypeRef, false);
-				}));
-
-		_javaLangObjectGetObjectRef = _pe.AddMemberRef (_javaLangObjectRef, "GetObject",
-			sig => sig.MethodSignature ().Parameters (3,
-				rt => rt.Type ().Type (_iJavaPeerableRef, false),
-				p => {
-					p.AddParameter ().Type ().IntPtr ();
-					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
-					p.AddParameter ().Type ().Type (_systemTypeRef, false);
-				}));
-
 		// JavaPeerProxy.ShouldSkipActivation(IntPtr) -> bool (static method)
 		_shouldSkipActivationRef = _pe.AddMemberRef (_javaPeerProxyNonGenericRef, "ShouldSkipActivation",
 			sig => sig.MethodSignature ().Parameters (1,
 				rt => rt.Type ().Boolean (),
 				p => { p.AddParameter ().Type ().IntPtr (); }));
-
-		_getActivationPeerRef = _pe.AddMemberRef (_javaPeerProxyNonGenericRef, "GetActivationPeer",
-			sig => sig.MethodSignature ().Parameters (1,
-				rt => rt.Type ().Type (_iJavaPeerableRef, false),
-				p => { p.AddParameter ().Type ().IntPtr (); }));
-
-		_setActivationPeerReferenceRef = _pe.AddMemberRef (_javaPeerProxyNonGenericRef, "SetActivationPeerReference",
-			sig => sig.MethodSignature ().Parameters (2,
-				rt => rt.Void (),
-				p => {
-					p.AddParameter ().Type ().Type (_iJavaPeerableRef, false);
-					p.AddParameter ().Type ().IntPtr ();
-				}));
 
 		_markActivationPeerReplaceableRef = _pe.AddMemberRef (_javaPeerProxyNonGenericRef, "MarkActivationPeerReplaceable",
 			sig => sig.MethodSignature ().Parameters (1,
@@ -1294,45 +1244,6 @@ sealed class TypeMapAssemblyEmitter
 			encodeLocals);
 	}
 
-	void EmitManagedConstructorActivation (
-		TrackedInstructionEncoder enc,
-		EntityHandle targetTypeRef,
-		MemberReferenceHandle ctorRef,
-		IReadOnlyList<string> managedParameterTypes,
-		IReadOnlyList<JniParamKind> jniParams,
-		string defaultAssemblyName)
-	{
-		var havePeer = enc.DefineLabel ();
-
-		enc.LoadArgument (1);
-		enc.Call (_getActivationPeerRef, parameterCount: 1, returnsValue: true);
-		enc.CastClass (targetTypeRef);
-		enc.StoreLocal (4);
-
-		enc.LoadLocal (4);
-		enc.Branch (ILOpCode.Brtrue, havePeer);
-
-		enc.LoadToken (targetTypeRef);
-		enc.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
-		enc.Call (_getUninitializedObjectRef, parameterCount: 1, returnsValue: true);
-		enc.CastClass (targetTypeRef);
-		enc.StoreLocal (4);
-
-		enc.LoadLocal (4);
-		enc.LoadArgument (1); // self
-		enc.Call (_setActivationPeerReferenceRef, parameterCount: 2);
-
-		enc.MarkLabel (havePeer);
-		enc.LoadLocal (4);
-		for (int i = 0; i < managedParameterTypes.Count; i++) {
-			EmitManagedConstructorArgument (enc, managedParameterTypes [i], jniParams [i], i + 2, defaultAssemblyName);
-		}
-		enc.Call (ctorRef, managedParameterTypes.Count, isInstance: true);
-
-		enc.LoadArgument (1); // self
-		enc.Call (_markActivationPeerReplaceableRef, parameterCount: 1);
-	}
-
 	/// <summary>
 	/// Emits a UCO constructor wrapper that mirrors <see cref="Java.Interop.TypeManager.Activate" />
 	/// by invoking the user-visible managed ctor on a peer materialized via
@@ -1471,111 +1382,6 @@ sealed class TypeMapAssemblyEmitter
 		// Finally region: try [tryStart, finallyStart), handler [finallyStart, afterAll)
 		cfb.AddCatchRegion (tryStart, catchStart, catchStart, finallyStart, _exceptionRef);
 		cfb.AddFinallyRegion (tryStart, finallyStart, finallyStart, afterAll);
-	}
-
-	void EmitManagedConstructorArgument (TrackedInstructionEncoder encoder, string managedType, JniParamKind jniKind, int argumentIndex, string defaultAssemblyName)
-	{
-		if (jniKind != JniParamKind.Object) {
-			encoder.LoadArgument (argumentIndex);
-			return;
-		}
-
-		if (managedType == "System.String") {
-			encoder.LoadArgument (argumentIndex);
-			encoder.LoadConstantI4 (0); // JniHandleOwnership.DoNotTransfer
-			encoder.Call (_jniEnvGetStringRef, parameterCount: 2, returnsValue: true);
-			return;
-		}
-
-		if (TryGetSzArrayElementType (managedType, out var elementType)) {
-			var arrayType = ResolveManagedTypeHandle (managedType, defaultAssemblyName);
-			var elementTypeHandle = ResolveManagedTypeHandle (elementType, defaultAssemblyName);
-
-			encoder.LoadArgument (argumentIndex);
-			encoder.LoadConstantI4 (0); // JniHandleOwnership.DoNotTransfer
-			encoder.LoadToken (elementTypeHandle);
-			encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
-			encoder.Call (_jniEnvGetArrayRef, parameterCount: 3, returnsValue: true);
-			encoder.CastClass (arrayType);
-			return;
-		}
-
-		var managedTypeHandle = ResolveManagedTypeHandle (managedType, defaultAssemblyName);
-		encoder.LoadArgument (argumentIndex);
-		encoder.LoadConstantI4 (0); // JniHandleOwnership.DoNotTransfer
-		encoder.LoadToken (managedTypeHandle);
-		encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
-		encoder.Call (_javaLangObjectGetObjectRef, parameterCount: 3, returnsValue: true);
-		encoder.CastClass (managedTypeHandle);
-	}
-
-	EntityHandle ResolveManagedTypeHandle (string managedType, string defaultAssemblyName)
-	{
-		if (TryGetSzArrayElementType (managedType, out var elementType)) {
-			var blob = new BlobBuilder (32);
-			blob.WriteByte (0x1D); // ELEMENT_TYPE_SZARRAY
-			WriteManagedTypeSignature (blob, elementType, defaultAssemblyName);
-			return _pe.Metadata.AddTypeSpecification (_pe.Metadata.GetOrAddBlob (blob));
-		}
-
-		return _pe.ResolveTypeRef (new TypeRefData {
-			ManagedTypeName = managedType,
-			AssemblyName = GetAssemblyNameForManagedType (managedType, defaultAssemblyName),
-		});
-	}
-
-	static bool TryGetSzArrayElementType (string managedType, out string elementType)
-	{
-		if (managedType.EndsWith ("[]", StringComparison.Ordinal)) {
-			elementType = managedType.Substring (0, managedType.Length - 2);
-			return true;
-		}
-
-		elementType = "";
-		return false;
-	}
-
-	void WriteManagedTypeSignature (BlobBuilder blob, string managedType, string defaultAssemblyName)
-	{
-		if (TryGetSzArrayElementType (managedType, out var elementType)) {
-			blob.WriteByte (0x1D); // ELEMENT_TYPE_SZARRAY
-			WriteManagedTypeSignature (blob, elementType, defaultAssemblyName);
-			return;
-		}
-
-		switch (managedType) {
-		case "System.Boolean": blob.WriteByte (0x02); return;
-		case "System.Char":    blob.WriteByte (0x03); return;
-		case "System.SByte":   blob.WriteByte (0x04); return;
-		case "System.Byte":    blob.WriteByte (0x05); return;
-		case "System.Int16":   blob.WriteByte (0x06); return;
-		case "System.UInt16":  blob.WriteByte (0x07); return;
-		case "System.Int32":   blob.WriteByte (0x08); return;
-		case "System.UInt32":  blob.WriteByte (0x09); return;
-		case "System.Int64":   blob.WriteByte (0x0A); return;
-		case "System.UInt64":  blob.WriteByte (0x0B); return;
-		case "System.Single":  blob.WriteByte (0x0C); return;
-		case "System.Double":  blob.WriteByte (0x0D); return;
-		case "System.String":  blob.WriteByte (0x0E); return;
-		case "System.Object":  blob.WriteByte (0x1C); return;
-		}
-
-		var typeHandle = ResolveManagedTypeHandle (managedType, defaultAssemblyName);
-		blob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
-		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (typeHandle));
-	}
-
-	static string GetAssemblyNameForManagedType (string managedType, string defaultAssemblyName)
-	{
-		if (managedType.StartsWith ("System.", StringComparison.Ordinal)) {
-			return "System.Runtime";
-		}
-		if (managedType.StartsWith ("Android.", StringComparison.Ordinal) ||
-		    managedType.StartsWith ("Java.", StringComparison.Ordinal) ||
-		    managedType.StartsWith ("Javax.", StringComparison.Ordinal)) {
-			return "Mono.Android";
-		}
-		return defaultAssemblyName;
 	}
 
 	/// <summary>
