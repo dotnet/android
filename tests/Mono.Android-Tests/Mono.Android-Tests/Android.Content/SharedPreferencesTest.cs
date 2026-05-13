@@ -17,6 +17,7 @@ public class SharedPreferencesTest
     // NOTE: test case on API 23 can trigger:
     // art/runtime/indirect_reference_table.cc:115] JNI ERROR (app bug): local reference table overflow 
     [Test]
+    [Ignore ("Temporarily disabled while investigating deterministic API 29 x86_64 emulator system_server restart in CI.")]
     public void PutAndGetManyValues ()
     {
         for (int i = 0; i < Count; i++) {
