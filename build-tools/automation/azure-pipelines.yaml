@@ -207,7 +207,6 @@ extends:
             project: $(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj
             arguments: >-
               -f $(DotNetTargetFramework)-android -c Debug
-              -p:SupportedOSPlatformVersion=24
               --configfile $(Build.SourcesDirectory)/maui/NuGet.config
               -bl:$(Build.StagingDirectory)/logs/MauiTestProj-Debug.binlog
             xaSourcePath: $(Build.SourcesDirectory)/android
@@ -218,7 +217,6 @@ extends:
             project: $(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj
             arguments: >-
               -f $(DotNetTargetFramework)-android -c Release
-              -p:SupportedOSPlatformVersion=24
               --configfile $(Build.SourcesDirectory)/maui/NuGet.config
               -bl:$(Build.StagingDirectory)/logs/MauiTestProj-Release.binlog
             xaSourcePath: $(Build.SourcesDirectory)/android
