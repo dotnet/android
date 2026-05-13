@@ -122,6 +122,7 @@
     <XAPlatformToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' "></XAPlatformToolsPackagePrefix>
     <XAPlatformToolsVersion>36.0.0</XAPlatformToolsVersion>
     <XABundleToolVersion Condition="'$(XABundleToolVersion)' == ''">1.18.3</XABundleToolVersion>
+    <XABundleToolHash Condition="'$(XABundleToolHash)' == ''">A099CFA1543F55593BC2ED16A70A7C67FE54B1747BB7301F37FDFD6D91028E29</XABundleToolHash>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(NUGET_PACKAGES)' != ''">$(NUGET_PACKAGES)</XAPackagesDir>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(HostOS)' == 'Windows'">$(userprofile)\.nuget\packages</XAPackagesDir>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(HostOS)' != 'Windows'">$(HOME)/.nuget/packages</XAPackagesDir>

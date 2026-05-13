@@ -1,5 +1,4 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.DownloadUri" TaskFactory="TaskHostFactory" Runtime="NET" />
   <PropertyGroup>
     <_Destination>$(MicrosoftAndroidSdkOutDir)</_Destination>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
@@ -11,9 +10,18 @@
   </PropertyGroup>
 
   <Target Name="_DownloadBundleTool">
-    <DownloadUri
-        SourceUris="https://github.com/google/bundletool/releases/download/$(XABundleToolVersion)/bundletool-all-$(XABundleToolVersion).jar"
-        DestinationFiles="$(_BundleToolDownloadLocation)"
+    <DownloadFile
+        SourceUrl="https://github.com/google/bundletool/releases/download/$(XABundleToolVersion)/bundletool-all-$(XABundleToolVersion).jar"
+        DestinationFolder="$(AndroidToolchainCacheDirectory)"
+        DestinationFileName="bundletool-all-$(XABundleToolVersion).jar"
+        Retries="3"
+    />
+    <GetFileHash Files="$(_BundleToolDownloadLocation)" Algorithm="SHA256">
+      <Output TaskParameter="Hash" PropertyName="_BundleToolActualHash" />
+    </GetFileHash>
+    <Error
+        Condition=" '$(_BundleToolActualHash)' != '$(XABundleToolHash)' "
+        Text="SHA256 mismatch for bundletool-all-$(XABundleToolVersion).jar. Expected: $(XABundleToolHash) Actual: $(_BundleToolActualHash)"
     />
   </Target>
 

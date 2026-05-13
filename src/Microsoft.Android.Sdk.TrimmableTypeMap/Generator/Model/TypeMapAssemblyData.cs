@@ -204,6 +204,7 @@ sealed record UcoMethodData
 	/// JNI method signature, e.g., "(Landroid/os/Bundle;)V". Used to determine CLR parameter types.
 	/// </summary>
 	public required string JniSignature { get; init; }
+
 }
 
 /// <summary>
@@ -228,6 +229,16 @@ sealed record UcoConstructorData
 	/// JNI constructor signature, e.g., "(Landroid/content/Context;)V". Used for RegisterNatives registration.
 	/// </summary>
 	public required string JniSignature { get; init; }
+
+	/// <summary>
+	/// Managed constructor parameter type names, in declaration order.
+	/// </summary>
+	public IReadOnlyList<string> ManagedParameterTypes { get; init; } = [];
+
+	/// <summary>
+	/// True when this Java constructor has a matching managed constructor on the target type.
+	/// </summary>
+	public bool HasManagedConstructor { get; init; }
 }
 
 /// <summary>
