@@ -253,8 +253,9 @@ namespace UnnamedProject {
 			}
 			Assert.IsNotNull (exportShapesJava,
 				$"Could not find a generated JCW Java file referencing both EchoString and InitialFoo under {javaDir}.");
-
-			var javaText = exportShapesText!;
+			Assert.IsNotNull (exportShapesText,
+				$"Could not find a generated JCW Java file referencing both EchoString and InitialFoo under {javaDir}.");
+			var javaText = exportShapesText;
 
 			// [Export] EchoString — Java side must declare a `native` method matching
 			// the C# signature (String -> String). The trimmable emitter generates

@@ -46,6 +46,7 @@ namespace Java.Interop
 
 		static readonly CodeLiteral do_not_transfer_literal = new CodeLiteral (JniHandleOwnership.DoNotTransfer);
 
+		[DynamicDependency ("GetObject", "Java.Lang.Object", "Mono.Android")]
 		static DynamicInvokeTypeInfo ()
 		{
 			CheckReflection (jnienv_newarray, "JNIEnv.NewArray<T>");
