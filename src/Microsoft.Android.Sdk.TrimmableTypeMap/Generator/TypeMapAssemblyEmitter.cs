@@ -42,7 +42,14 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 ///     // UCO wrappers — [UnmanagedCallersOnly] entry points for JNI native methods (ACWs only):
 ///     [UnmanagedCallersOnly]
 ///     public static void n_OnCreate_uco_0(IntPtr jnienv, IntPtr self, IntPtr p0)
-///         =&gt; Activity.n_OnCreate(jnienv, self, p0);
+///     {
+///         AndroidRuntimeInternal.WaitForBridgeProcessing();
+///         try {
+///             Activity.n_OnCreate(jnienv, self, p0);
+///         } catch (Exception e) {
+///             AndroidEnvironmentInternal.UnhandledException(e);
+///         }
+///     }
 ///
 ///     [UnmanagedCallersOnly]
 ///     public static void nctor_0_uco(IntPtr jnienv, IntPtr self)
