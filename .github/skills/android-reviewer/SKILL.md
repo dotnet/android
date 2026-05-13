@@ -112,7 +112,18 @@ Prepare findings for the caller to publish or inspect:
 
 If no issues are found **and CI is green**, include at most one or two 💡 suggestions and a positive summary. Truly trivial PRs (dependency bumps, 1-line typo fixes) may have no inline findings.
 
-Return output in this shape so callers can either display it locally or publish it through their own mechanisms:
+For interactive CLI/chat use, present the review in readable Markdown:
+
+```markdown
+**Verdict:** ⚠️ Needs Changes
+
+Brief summary of the review, including issue counts, positive callouts, and CI status.
+
+**Findings:**
+- `path/to/file.cs:42` — 🤖 ⚠️ **Category** — Explain the issue and what to do instead.
+```
+
+If an agentic workflow or other automation needs machine-readable output, return the same information in this shape so the caller can publish it through its configured mechanisms:
 
 ```json
 {
