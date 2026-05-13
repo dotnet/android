@@ -32,10 +32,6 @@
     <ExcludeCategories Condition=" '$(UseMonoRuntime)' != 'true' and '$(_AndroidTypeMapImplementation)' != 'trimmable' ">$(ExcludeCategories):CoreCLRIgnore:NTLM</ExcludeCategories>
     <!-- TODO: https://github.com/dotnet/android/issues/10079 -->
     <ExcludeCategories Condition=" '$(PublishAot)' == 'true' ">$(ExcludeCategories):NativeAOTIgnore:SSL:NTLM:AndroidClientHandler:Export:NativeTypeMap</ExcludeCategories>
-    <!-- [Export] device tests use the trimmable ExportMethodDispatchEmitter; exclude from
-         non-trimmable legs where the legacy Mono.Android.Export dynamic callback codegen
-         fails with TargetInvocationException for these fixture types. -->
-    <ExcludeCategories Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' ">$(ExcludeCategories):Export</ExcludeCategories>
     <!-- FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190 -->
     <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):LLVMIgnore</ExcludeCategories>
     <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):InetAccess:NetworkInterfaces</ExcludeCategories>
