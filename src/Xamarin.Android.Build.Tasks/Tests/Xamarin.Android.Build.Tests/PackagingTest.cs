@@ -1010,7 +1010,7 @@ public class Test
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 				// This combination produces android:extractNativeLibs="false" by default
-				SupportedOSPlatformVersion = "23",
+				SupportedOSPlatformVersion = "24",
 				ManifestMerger = "manifestmerger.jar",
 			};
 			proj.SetRuntime (runtime);

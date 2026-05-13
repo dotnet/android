@@ -186,7 +186,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			new ManifestConfig (
 				PackageName: "my.app",
 				AndroidApiLevel: "35",
-				SupportedOSPlatformVersion: "21",
+				SupportedOSPlatformVersion: "24",
 				RuntimeProviderJavaName: "mono.MonoRuntimeProvider",
 				ManifestPlaceholders: "applicationId=my.app"),
 			manifestTemplate);

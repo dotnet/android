@@ -618,7 +618,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
-				SupportedOSPlatformVersion = "23",
+				SupportedOSPlatformVersion = "24",
 			};
 			proj.SetRuntime (runtime);
 
@@ -1874,10 +1874,9 @@ namespace UnnamedProject
 			};
 			proj.SetRuntime (runtime);
 
-			// Note: To properly test, Desugaring must be *enabled*, which requires that
-			// `$(SupportedOSPlatformVersion)` be *less than* 23.  21 is currently the default,
-			// but set this explicitly anyway just so that this implicit requirement is explicit.
-			proj.SupportedOSPlatformVersion = "21";
+			// Note: To properly test, static interface default methods (Java 8+) must be compiled correctly.
+			// With $(SupportedOSPlatformVersion) >= 24, D8 handles them natively without desugaring.
+			proj.SupportedOSPlatformVersion = "24";
 
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
 		Console.WriteLine ($""# jonp static interface default method invocation; IStaticMethodsInterface.Value={Example.IStaticMethodsInterface.Value}"");
