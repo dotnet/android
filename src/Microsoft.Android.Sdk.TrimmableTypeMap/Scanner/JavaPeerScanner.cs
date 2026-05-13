@@ -359,11 +359,14 @@ public sealed class JavaPeerScanner : IDisposable
 
 	static bool HasJniAddNativeMethodRegistrationAttribute (TypeDefinition typeDef, AssemblyIndex index)
 	{
+		const string JniAddNativeMethodRegistrationAttribute = "JniAddNativeMethodRegistrationAttribute";
+		const string JavaInteropNamespace = "Java.Interop";
+
 		foreach (var methodHandle in typeDef.GetMethods ()) {
 			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
 			foreach (var attrHandle in methodDef.GetCustomAttributes ()) {
 				var attr = index.Reader.GetCustomAttribute (attrHandle);
-				if (AssemblyIndex.GetCustomAttributeName (attr, index.Reader) == "JniAddNativeMethodRegistrationAttribute") {
+				if (AssemblyIndex.IsCustomAttributeMatch (attr, index.Reader, JavaInteropNamespace, JniAddNativeMethodRegistrationAttribute)) {
 					return true;
 				}
 			}

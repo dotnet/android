@@ -61,6 +61,7 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 
 		Assert.Contains (errors, e => e.Contains ("HandWrittenNativeRegistrationPeer"));
 		Assert.Contains (errors, e => e.Contains ("NonPeerNativeRegistration"));
+		Assert.DoesNotContain (errors, e => e.Contains ("OtherNamespaceNativeRegistration"));
 		Assert.DoesNotContain (errors, e => e.Contains ("MyHelper"));
 	}
 

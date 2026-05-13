@@ -215,6 +215,14 @@ namespace MyApp
 		}
 	}
 
+	public class OtherNamespaceNativeRegistration
+	{
+		[MyApp.JniAddNativeMethodRegistration]
+		static void RegisterNativeMembers ()
+		{
+		}
+	}
+
 	[Service (Name = "my.app.MyService")]
 	public class MyService : Android.App.Service
 	{
