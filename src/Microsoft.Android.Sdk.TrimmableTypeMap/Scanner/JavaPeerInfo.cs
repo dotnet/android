@@ -225,6 +225,17 @@ public sealed record MarshalMethodInfo
 	public string? SuperArgumentsString { get; init; }
 
 	/// <summary>
+	/// Managed method parameter type names, in declaration order.
+	/// </summary>
+	public IReadOnlyList<string> ManagedParameterTypes { get; init; } = [];
+
+	/// <summary>
+	/// True when this constructor registration maps to an actual managed constructor on the target type.
+	/// False for constructors inherited from Java base types that only exist to generate Java source.
+	/// </summary>
+	public bool HasManagedConstructor { get; init; }
+
+	/// <summary>
 	/// True if this method was collected from an implemented interface
 	/// (Pass 4: CollectInterfaceMethodImplementations), not from the type itself.
 	/// </summary>
@@ -267,6 +278,16 @@ public sealed record JavaConstructorInfo
 	/// Null for [Register] constructors.
 	/// </summary>
 	public string? SuperArgumentsString { get; init; }
+
+	/// <summary>
+	/// Managed constructor parameter type names, in declaration order.
+	/// </summary>
+	public IReadOnlyList<string> ManagedParameterTypes { get; init; } = [];
+
+	/// <summary>
+	/// True when this Java constructor has a matching managed constructor on the target type.
+	/// </summary>
+	public bool HasManagedConstructor { get; init; }
 }
 
 /// <summary>

@@ -1,12 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_JavaInteropTestsJarFile>Jars\Mono.Android-Test-classes.jar</_JavaInteropTestsJarFile>
+    <_JavaInteropTestsJarFile Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">Jars\Mono.Android-Test-classes-trimmable.jar</_JavaInteropTestsJarFile>
+  </PropertyGroup>
   <ItemGroup>
-    <AndroidJavaLibrary Include="Jars\Mono.Android-Test-classes.jar" />
+    <AndroidJavaLibrary Include="$(_JavaInteropTestsJarFile)" />
   </ItemGroup>
   <Import Project="..\..\..\build-tools\scripts\Jar.targets" />
   <ItemDefinitionGroup>
     <TestJarEntry>
-      <OutputFile>Jars\Mono.Android-Test-classes.jar</OutputFile>
+      <OutputFile>$(_JavaInteropTestsJarFile)</OutputFile>
     </TestJarEntry>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -34,8 +38,8 @@
     -->
     <!--
       Both branches below are mutually exclusive on $(_AndroidTypeMapImplementation).
-      Switching between trimmable and non-trimmable requires a clean rebuild because
-      MSBuild's up-to-date check doesn't track the conditional swap automatically.
+      The trimmable variant uses a distinct output jar so MSBuild up-to-date
+      checks cannot reuse a non-trimmable jar with the desktop GetThis class.
     -->
     <TestJarEntry Include="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\**\*.java"
                   Exclude="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\net\dot\jni\test\GetThis.java"

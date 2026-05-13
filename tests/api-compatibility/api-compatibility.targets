@@ -3,32 +3,4 @@
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props'))" Condition=" '$(DirectoryBuildPropsImported)' != 'true' " />
   <Import Project="..\..\Configuration.props" Condition=" '$(ConfigurationPropsImported)' != 'true' " />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.Zip" TaskFactory="TaskHostFactory" Runtime="NET" />
-  <Target Name="UpdateMonoAndroidContract">
-    <Error
-        Condition=" '$(ContractAssembly)' == '' "
-        Text="Please set the %24(ContractAssembly) property!"
-    />
-    <PropertyGroup>
-      <_GenAPI>"$(XAPackagesDir)\microsoft.dotnet.genapi\$(MicrosoftDotNetApiCompatPackageVersion)\tools\net472\Microsoft.DotNet.GenAPI.exe"</_GenAPI>
-      <_ContractRefDll>$(MSBuildThisFileDirectory)\reference\Mono.Android.dll</_ContractRefDll>
-      <_ContractRefSrc>$(MSBuildThisFileDirectory)\reference\Mono.Android.dll.cs</_ContractRefSrc>
-    </PropertyGroup>
-    <Copy
-        SourceFiles="$(ContractAssembly)"
-        DestinationFiles="$(_ContractRefDll)"
-    />
-    <Exec
-        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(_GenAPI) &quot;$(_ContractRefDll)&quot; > &quot;$(_ContractRefSrc)&quot;"
-    />
-    <ItemGroup>
-      <_ZipEntry Include="$(_ContractRefDll)" />
-      <_ZipEntry Include="$(_ContractRefSrc)" />
-    </ItemGroup>
-    <Zip
-        File="$(MSBuildThisFileDirectory)\reference\Mono.Android.zip"
-        Entries="@(_ZipEntry)"
-        Prefix="$(MSBuildThisFileDirectory)\reference\"
-        Overwrite="True"
-    />
-  </Target>
 </Project>
