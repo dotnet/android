@@ -240,14 +240,25 @@ public sealed class RootTypeMapAssemblyGenerator
 		var externalDictArrayTypeSpec = MakeIReadOnlyDictArrayTypeSpec (pe, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: true);
 
 		if (useSharedTypemapUniverse) {
-			var initializeRef = AddInitializeSingleWithArraysRef (pe, trimmableTypeMapRef, iReadOnlyDictOpenRef, systemTypeRef);
-			EmitInitializeWithSingleTypeMap (pe, anchorTypeHandle, getExternalMemberRef, getProxyMemberRef,
-				initializeRef, externalDictTypeSpec, externalDictArrayTypeSpec, perAssemblyTypeMapNames, maxArrayRank);
+			if (maxArrayRank > 0) {
+				var initializeRef = AddInitializeSingleWithArraysRef (pe, trimmableTypeMapRef, iReadOnlyDictOpenRef, systemTypeRef);
+				EmitInitializeWithSingleTypeMap (pe, anchorTypeHandle, getExternalMemberRef, getProxyMemberRef,
+					initializeRef, externalDictTypeSpec, externalDictArrayTypeSpec, perAssemblyTypeMapNames, maxArrayRank);
+			} else {
+				var initializeRef = AddInitializeSingleNoArraysRef (pe, trimmableTypeMapRef, iReadOnlyDictOpenRef, systemTypeRef);
+				EmitInitializeWithSingleTypeMapNoArrays (pe, anchorTypeHandle, getExternalMemberRef, getProxyMemberRef, initializeRef);
+			}
 		} else {
-			var initializeRef = AddInitializeAggregateWithArraysRef (pe, trimmableTypeMapRef, iReadOnlyDictOpenRef, systemTypeRef);
 			var proxyDictTypeSpec = MakeIReadOnlyDictTypeSpec (pe, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: false);
-			EmitInitializeWithAggregateTypeMap (pe, perAssemblyTypeMapNames, getExternalMemberRef, getProxyMemberRef,
-				initializeRef, externalDictTypeSpec, proxyDictTypeSpec, externalDictArrayTypeSpec, iReadOnlyDictOpenRef, systemTypeRef, maxArrayRank);
+			if (maxArrayRank > 0) {
+				var initializeRef = AddInitializeAggregateWithArraysRef (pe, trimmableTypeMapRef, iReadOnlyDictOpenRef, systemTypeRef);
+				EmitInitializeWithAggregateTypeMap (pe, perAssemblyTypeMapNames, getExternalMemberRef, getProxyMemberRef,
+					initializeRef, externalDictTypeSpec, proxyDictTypeSpec, externalDictArrayTypeSpec, iReadOnlyDictOpenRef, systemTypeRef, maxArrayRank);
+			} else {
+				var initializeRef = AddInitializeAggregateNoArraysRef (pe, trimmableTypeMapRef, iReadOnlyDictOpenRef, systemTypeRef);
+				EmitInitializeWithAggregateTypeMapNoArrays (pe, perAssemblyTypeMapNames, getExternalMemberRef, getProxyMemberRef,
+					initializeRef, externalDictTypeSpec, proxyDictTypeSpec, iReadOnlyDictOpenRef, systemTypeRef);
+			}
 		}
 	}
 
@@ -325,6 +336,71 @@ public sealed class RootTypeMapAssemblyGenerator
 		}
 	}
 
+	/// <summary>
+	/// Aggregate IL emit without array maps. Calls the 2-arg overload:
+	/// <c>TrimmableTypeMap.Initialize(typeMaps[], proxyMaps[])</c>.
+	/// </summary>
+	static void EmitInitializeWithAggregateTypeMapNoArrays (PEAssemblyBuilder pe,
+		IReadOnlyList<string> perAssemblyTypeMapNames,
+		MemberReferenceHandle getExternalMemberRef, MemberReferenceHandle getProxyMemberRef,
+		MemberReferenceHandle initializeRef,
+		TypeSpecificationHandle externalDictTypeSpec, TypeSpecificationHandle proxyDictTypeSpec,
+		TypeReferenceHandle iReadOnlyDictOpenRef, TypeReferenceHandle systemTypeRef)
+	{
+		var count = perAssemblyTypeMapNames.Count;
+
+		var getExternalSpecs = new EntityHandle [count];
+		var getProxySpecs = new EntityHandle [count];
+		for (int i = 0; i < count; i++) {
+			var asmRef = pe.FindOrAddAssemblyRef (perAssemblyTypeMapNames [i]);
+			var perAsmAnchorRef = pe.Metadata.AddTypeReference (asmRef,
+				default, pe.Metadata.GetOrAddString ("__TypeMapAnchor"));
+			getExternalSpecs [i] = MakeGenericMethodSpec (pe, getExternalMemberRef, perAsmAnchorRef);
+			getProxySpecs [i] = MakeGenericMethodSpec (pe, getProxyMemberRef, perAsmAnchorRef);
+		}
+
+		pe.EmitBody ("Initialize",
+			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+			sig => sig.MethodSignature ().Parameters (0, rt => rt.Void (), p => { }),
+			encoder => {
+				EmitNewArrayLocal (encoder, count, externalDictTypeSpec, slot: 0);
+				EmitFillArrayLocal (encoder, count, getExternalSpecs, slot: 0);
+
+				EmitNewArrayLocal (encoder, count, proxyDictTypeSpec, slot: 1);
+				EmitFillArrayLocal (encoder, count, getProxySpecs, slot: 1);
+
+				encoder.LoadLocal (0);
+				encoder.LoadLocal (1);
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (initializeRef);
+				encoder.OpCode (ILOpCode.Ret);
+			},
+			encodeLocals: localsSig => {
+				localsSig.WriteByte (0x07); // LOCAL_SIG
+				localsSig.WriteCompressedInteger (2);
+				localsSig.WriteByte (0x1D);
+				EncodeIReadOnlyDictType (localsSig, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: true);
+				localsSig.WriteByte (0x1D);
+				EncodeIReadOnlyDictType (localsSig, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: false);
+			});
+	}
+
+	/// <summary>MemberRef for <c>TrimmableTypeMap.Initialize(typeMaps[], proxyMaps[])</c> (2-arg, no array maps).</summary>
+	static MemberReferenceHandle AddInitializeAggregateNoArraysRef (PEAssemblyBuilder pe, TypeReferenceHandle trimmableTypeMapRef,
+		TypeReferenceHandle iReadOnlyDictOpenRef, TypeReferenceHandle systemTypeRef)
+	{
+		var blob = new BlobBuilder (64);
+		blob.WriteByte (0x00); // DEFAULT (static)
+		blob.WriteCompressedInteger (2); // parameter count
+		blob.WriteByte (0x01); // return type: void
+		blob.WriteByte (0x1D);
+		EncodeIReadOnlyDictType (blob, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: true);
+		blob.WriteByte (0x1D);
+		EncodeIReadOnlyDictType (blob, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: false);
+		return pe.Metadata.AddMemberReference (trimmableTypeMapRef,
+			pe.Metadata.GetOrAddString ("Initialize"), pe.Metadata.GetOrAddBlob (blob));
+	}
+
 	/// <summary>MemberRef for <c>TrimmableTypeMap.Initialize(typeMaps[], proxyMaps[], arrayMapsByAssemblyAndRank[][])</c>.</summary>
 	static MemberReferenceHandle AddInitializeAggregateWithArraysRef (PEAssemblyBuilder pe, TypeReferenceHandle trimmableTypeMapRef,
 		TypeReferenceHandle iReadOnlyDictOpenRef, TypeReferenceHandle systemTypeRef)
@@ -373,6 +449,45 @@ public sealed class RootTypeMapAssemblyGenerator
 				encoder.Call (initializeRef, parameterCount: 3);
 				encoder.Return ();
 			});
+	}
+
+	/// <summary>
+	/// Shared-universe IL emit without array maps. Calls the simpler 2-arg overload:
+	/// <c>TrimmableTypeMap.Initialize(typeMap, proxyMap)</c>.
+	/// </summary>
+	static void EmitInitializeWithSingleTypeMapNoArrays (PEAssemblyBuilder pe, EntityHandle anchorTypeHandle,
+		MemberReferenceHandle getExternalMemberRef, MemberReferenceHandle getProxyMemberRef,
+		MemberReferenceHandle initializeRef)
+	{
+		var getExternalSpec = MakeGenericMethodSpec (pe, getExternalMemberRef, anchorTypeHandle);
+		var getProxySpec = MakeGenericMethodSpec (pe, getProxyMemberRef, anchorTypeHandle);
+
+		pe.EmitBody ("Initialize",
+			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+			sig => sig.MethodSignature ().Parameters (0, rt => rt.Void (), p => { }),
+			encoder => {
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (getExternalSpec);
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (getProxySpec);
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (initializeRef);
+				encoder.OpCode (ILOpCode.Ret);
+			});
+	}
+
+	/// <summary>MemberRef for <c>TrimmableTypeMap.Initialize(typeMap, proxyMap)</c> (2-arg, no array maps).</summary>
+	static MemberReferenceHandle AddInitializeSingleNoArraysRef (PEAssemblyBuilder pe, TypeReferenceHandle trimmableTypeMapRef,
+		TypeReferenceHandle iReadOnlyDictOpenRef, TypeReferenceHandle systemTypeRef)
+	{
+		var blob = new BlobBuilder (64);
+		blob.WriteByte (0x00); // DEFAULT (static)
+		blob.WriteCompressedInteger (2); // parameter count
+		blob.WriteByte (0x01); // return type: void
+		EncodeIReadOnlyDictType (blob, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: true);
+		EncodeIReadOnlyDictType (blob, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: false);
+		return pe.Metadata.AddMemberReference (trimmableTypeMapRef,
+			pe.Metadata.GetOrAddString ("Initialize"), pe.Metadata.GetOrAddBlob (blob));
 	}
 
 	/// <summary>MemberRef for <c>TrimmableTypeMap.Initialize(typeMap, proxyMap, arrayMapsByAssemblyAndRank[][])</c>.</summary>
