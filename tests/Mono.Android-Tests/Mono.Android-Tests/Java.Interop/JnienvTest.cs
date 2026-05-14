@@ -40,33 +40,10 @@ namespace Java.InteropTests
 		[DllImport ("reuse-threads")]
 		static extern int rt_invoke_callback_on_new_thread (CB cb);
 
-		static void LoadNativeLibrary (string name)
-		{
-			// Use Runtime.Load with full path instead of System.LoadLibrary.
-			// System.LoadLibrary relies on the calling thread's ClassLoader to
-			// resolve the library path. When tests run on a .NET thread pool
-			// thread (e.g. via Task.Run in TestInstrumentation), there are no
-			// Java frames on the stack, so the ClassLoader is null and app-private
-			// .so files cannot be found.
-			var appInfo = Application.Context.ApplicationInfo;
-			if (appInfo is null) {
-				throw new InvalidOperationException ("ApplicationInfo is null");
-			}
-			var nativeLibDir = appInfo.NativeLibraryDir;
-			if (nativeLibDir is null) {
-				throw new InvalidOperationException ("NativeLibraryDir is null");
-			}
-			var runtime = Java.Lang.Runtime.GetRuntime ();
-			if (runtime is null) {
-				throw new InvalidOperationException ("Java Runtime is null");
-			}
-			runtime.Load (System.IO.Path.Combine (nativeLibDir, $"lib{name}.so"));
-		}
-
 		[Test]
 		public void RegisterTypeOnNewNativeThread ()
 		{
-			LoadNativeLibrary ("reuse-threads");
+			Java.Lang.JavaSystem.LoadLibrary ("reuse-threads");
 			int ret = rt_register_type_on_new_thread ("from.NewNativeThreadOne", Application.Context.ClassLoader.Handle);
 			Assert.AreEqual (0, ret, $"Java type registration on a new thread failed with code {ret}");
 		}
@@ -100,7 +77,7 @@ namespace Java.InteropTests
 		[Test]
 		public void ThreadReuse ()
 		{
-			LoadNativeLibrary ("reuse-threads");
+			Java.Lang.JavaSystem.LoadLibrary ("reuse-threads");
 			CB cb = (env, instance) => {
 				Console.WriteLine ("CrossThreadObjectInteractions: JNIEnv.Handle={0} env={1}, instance={2}",
 						JNIEnv.Handle.ToString ("x"), env.ToString ("x"), instance.ToString ("x"));
