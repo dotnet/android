@@ -476,6 +476,38 @@ namespace Xamarin.Android.Build.Tests
 			return GetPathToLatestBuildTools (exe);
 		}
 
+		/// <summary>
+		/// Verifies that an APK is signed using `apksigner verify`.
+		/// With min SDK 24+, APKs may use v2/v3 signing only (no v1 JAR signatures),
+		/// so checking for META-INF/MANIFEST.MF is not reliable.
+		/// </summary>
+		protected void AssertApkIsSigned (string apkPath)
+		{
+			var ext = IsWindows ? ".bat" : "";
+			var apksignerExe = Path.Combine (GetPathToLatestBuildTools ("apksigner" + ext), "apksigner" + ext);
+			if (!File.Exists (apksignerExe)) {
+				// Fall back to META-INF check if apksigner is not available
+				using (var zip = ZipHelper.OpenZip (apkPath)) {
+					Assert.IsTrue (zip.Any (e => e.FullName == "META-INF/MANIFEST.MF"), $"APK file `{apkPath}` is not signed! It is missing `META-INF/MANIFEST.MF`.");
+				}
+				return;
+			}
+
+			var psi = new ProcessStartInfo {
+				FileName = apksignerExe,
+				Arguments = $"verify \"{apkPath}\"",
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				UseShellExecute = false,
+				CreateNoWindow = true,
+			};
+			using var proc = Process.Start (psi);
+			string stdout = proc!.StandardOutput.ReadToEnd ();
+			string stderr = proc.StandardError.ReadToEnd ();
+			proc.WaitForExit ();
+			Assert.AreEqual (0, proc.ExitCode, $"APK file `{apkPath}` is not signed! apksigner verify failed:\n{stderr}\n{stdout}");
+		}
+
 		protected string GetResourceDesignerPath (ProjectBuilder builder, XamarinAndroidProject project)
 		{
 			string path = Path.Combine (Root, builder.ProjectDirectory, project.IntermediateOutputPath);
