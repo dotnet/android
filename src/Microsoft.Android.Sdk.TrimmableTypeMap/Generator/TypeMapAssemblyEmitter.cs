@@ -1383,12 +1383,22 @@ sealed class TypeMapAssemblyEmitter
 
 	void EmitManagedConstructorArgument (TrackedInstructionEncoder encoder, TypeRefData managedType, JniParamKind jniKind, int argumentIndex)
 	{
-		if (TryEmitPrimitiveManagedConstructorArgument (encoder, managedType.ManagedTypeName, argumentIndex)) {
+		if (managedType.ManagedTypeName == "System.Boolean") {
+			encoder.LoadArgument (argumentIndex);
+			encoder.LoadConstantI4 (0);
+			encoder.OpCode (ILOpCode.Cgt_un);
 			return;
 		}
 
 		if (jniKind != JniParamKind.Object) {
 			encoder.LoadArgument (argumentIndex);
+			return;
+		}
+
+		if (managedType.ManagedTypeName == "System.String") {
+			encoder.LoadArgument (argumentIndex);
+			encoder.LoadConstantI4 (0); // JniHandleOwnership.DoNotTransfer
+			encoder.Call (_jniEnvGetStringRef, parameterCount: 2, returnsValue: true);
 			return;
 		}
 
@@ -1418,38 +1428,6 @@ sealed class TypeMapAssemblyEmitter
 		encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
 		encoder.Call (_javaLangObjectGetObjectRef, parameterCount: 3, returnsValue: true);
 		encoder.CastClass (managedTypeHandle);
-	}
-
-	bool TryEmitPrimitiveManagedConstructorArgument (TrackedInstructionEncoder encoder, string managedTypeName, int argumentIndex)
-	{
-		switch (managedTypeName) {
-		case "System.Boolean":
-			encoder.LoadArgument (argumentIndex);
-			encoder.LoadConstantI4 (0);
-			encoder.OpCode (ILOpCode.Cgt_un);
-			return true;
-		case "System.Byte":
-		case "System.SByte":
-		case "System.Char":
-		case "System.Int16":
-		case "System.UInt16":
-		case "System.Int32":
-		case "System.UInt32":
-		case "System.Int64":
-		case "System.UInt64":
-		case "System.Single":
-		case "System.Double":
-		case "System.IntPtr":
-			encoder.LoadArgument (argumentIndex);
-			return true;
-		case "System.String":
-			encoder.LoadArgument (argumentIndex);
-			encoder.LoadConstantI4 (0); // JniHandleOwnership.DoNotTransfer
-			encoder.Call (_jniEnvGetStringRef, parameterCount: 2, returnsValue: true);
-			return true;
-		default:
-			return false;
-		}
 	}
 
 	EntityHandle ResolveManagedTypeHandle (string managedType, string defaultAssemblyName)
