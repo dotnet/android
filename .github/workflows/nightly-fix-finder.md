@@ -83,9 +83,9 @@ steps:
         find src -name '*.cs' -type f ! -path '*/obj/*' ! -path '*/bin/*' | xargs wc -l 2>/dev/null | sort -rn | head -21 | tail -20
 
         echo ""
-        echo "## Category 4: Missing XML Documentation"
-        echo "### Public declarations (the agent should verify if XML docs exist on preceding lines)"
-        grep -rn "public " --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | grep -v "Designer.cs" | grep -v "AssemblyInfo.cs" | shuf | head -20 || echo "None found"
+        echo "## Category 4: Missing XML Documentation (src/Mono.Android/ only)"
+        echo "### Public declarations in Mono.Android (shipped product) without XML docs"
+        grep -rn "public " --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/Mono.Android/ 2>/dev/null | grep -v "Designer.cs" | grep -v "AssemblyInfo.cs" | shuf | head -20 || echo "None found"
 
         echo ""
         echo "## Category 5: Code Style Issues"
@@ -196,7 +196,8 @@ Using the pre-collected sample data for the selected category, pick **one specif
 - Each new file should have a clear single responsibility
 
 #### Missing XML Documentation (Category 4)
-- Focus on public API surface in `src/Mono.Android/`
+- **ONLY** look at public APIs in `src/Mono.Android/` — this is the shipped product (Mono.Android.dll)
+- Do NOT file issues for XML docs in build tasks, tools, or test code — those are internal
 - The issue should provide example doc comments for the specific APIs
 
 #### Code Style Issues (Category 5)
@@ -260,11 +261,11 @@ Use this structure:
 
 ## Phase 4: Assign to Copilot
 
-After creating the issue, use `assign_to_agent` to assign Copilot to work on it. You **MUST** pass the `issue_number` parameter — use the `temporary_id` from the `create_issue` call (e.g., `"issue_number": "#aw_myid"`). The safe-output is configured with `model: "claude-opus-4.6"` so Copilot will use Claude Opus 4.6 to implement the fix.
+After creating the issue, use `assign_to_agent` to assign Copilot to work on it. You **MUST** pass the `issue_number` parameter — use the `temporary_id` from the `create_issue` call (**without** the `#` prefix). The safe-output is configured with `model: "claude-opus-4.6"` so Copilot will use Claude Opus 4.6 to implement the fix.
 
 Example call sequence:
 1. `create_issue` with `temporary_id: "aw_fix123"`, `title`, `body`
-2. `assign_to_agent` with `issue_number: "#aw_fix123"`
+2. `assign_to_agent` with `issue_number: "aw_fix123"`
 
 ## Rules
 
