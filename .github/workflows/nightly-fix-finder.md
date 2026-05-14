@@ -22,6 +22,7 @@ network:
 tools:
   github:
     toolsets: [repos, issues]
+    min-integrity: none
   bash:
     - "find src -name '*.cs' -type f"
     - "grep:*"
