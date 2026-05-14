@@ -31,7 +31,13 @@ namespace Xamarin.Android.RuntimeTests
                 // trimmable typemap. These cannot use [Category("TrimmableIgnore")] because
                 // we don't control that assembly — they must be excluded by name here.
                 ExcludedTestNames = new [] {
-                    // net.dot.jni.test.CallVirtualFromConstructorDerived Java class not in APK
+                    // [JniAddNativeMethodRegistrationAttribute] is not supported by design under
+                    // the trimmable typemap. This Java.Interop-Tests fixture uses that attribute
+                    // to register native callbacks on a hand-written Java peer (an obsolete code
+                    // path whose primary consumer, jnimarshalmethod-gen, was removed in
+                    // dotnet/java-interop#1405). The trimmable typemap generator emits XA4251
+                    // when it encounters the attribute and instructs users to either avoid it or
+                    // switch off the trimmable typemap. See https://github.com/dotnet/android/issues/11170.
                     "Java.InteropTests.InvokeVirtualFromConstructorTests",
 
                     // Global ref leak when inflating custom views

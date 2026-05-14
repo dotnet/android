@@ -103,8 +103,8 @@ public class MavenDownloadTests
 
 		await task.RunTaskAsync ();
 
-		// Should not have the XA4251 insecure HTTP error; it will fail with a download error instead
-		Assert.IsFalse (engine.Errors.Any (e => e.Code == "XA4251"), "Should not have XA4251 error when AllowInsecureHttp is set");
+		// Should not have the XA4252 insecure HTTP error; it will fail with a download error instead
+		Assert.IsFalse (engine.Errors.Any (e => e.Code == "XA4252"), "Should not have XA4252 error when AllowInsecureHttp is set");
 	}
 
 	[Test]

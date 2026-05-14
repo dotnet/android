@@ -33,6 +33,16 @@ sealed class AssemblyIndex : IDisposable
 	/// </summary>
 	public Dictionary<TypeDefinitionHandle, TypeAttributeInfo> AttributesByType { get; } = new ();
 
+	/// <summary>
+	/// True iff the assembly's metadata mentions
+	/// <c>Java.Interop.JniAddNativeMethodRegistrationAttribute</c> (as a
+	/// TypeReference or TypeDefinition). The trimmable typemap forbids that
+	/// attribute (XA4251); this flag lets the scanner short-circuit the
+	/// per-method attribute walk for the overwhelmingly common case of
+	/// assemblies that don't use it.
+	/// </summary>
+	public bool MayUseJniAddNativeMethodRegistrationAttribute { get; private set; }
+
 	AssemblyIndex (PEReader peReader, MetadataReader reader, string assemblyName)
 	{
 		this.peReader = peReader;
@@ -51,8 +61,27 @@ sealed class AssemblyIndex : IDisposable
 
 	void Build ()
 	{
+		const string JniAddNativeMethodRegistrationAttribute = "JniAddNativeMethodRegistrationAttribute";
+		const string JavaInteropNamespace = "Java.Interop";
+
+		// Cheap first pass over TypeReferences / TypeDefinitions to decide whether
+		// the assembly is even capable of carrying [JniAddNativeMethodRegistration].
+		// The per-method attribute walk in the scanner can then skip entirely for
+		// the common case where the attribute is neither imported nor declared here.
+		foreach (var trHandle in Reader.TypeReferences) {
+			if (IsTypeReferenceMatch (Reader.GetTypeReference (trHandle), Reader, JavaInteropNamespace, JniAddNativeMethodRegistrationAttribute)) {
+				MayUseJniAddNativeMethodRegistrationAttribute = true;
+				break;
+			}
+		}
+
 		foreach (var typeHandle in Reader.TypeDefinitions) {
 			var typeDef = Reader.GetTypeDefinition (typeHandle);
+
+			if (!MayUseJniAddNativeMethodRegistrationAttribute &&
+			    IsTypeDefinitionMatch (typeDef, Reader, JavaInteropNamespace, JniAddNativeMethodRegistrationAttribute)) {
+				MayUseJniAddNativeMethodRegistrationAttribute = true;
+			}
 
 			var fullName = MetadataTypeNameResolver.GetFullName (typeDef, Reader);
 			if (fullName.Length == 0) {
@@ -218,6 +247,32 @@ sealed class AssemblyIndex : IDisposable
 		}
 		return null;
 	}
+
+	internal static bool IsCustomAttributeMatch (CustomAttribute ca, MetadataReader reader, string attributeNamespace, string attributeName)
+	{
+		if (ca.Constructor.Kind == HandleKind.MemberReference) {
+			var memberRef = reader.GetMemberReference ((MemberReferenceHandle)ca.Constructor);
+			if (memberRef.Parent.Kind == HandleKind.TypeReference) {
+				return IsTypeReferenceMatch (reader.GetTypeReference ((TypeReferenceHandle)memberRef.Parent), reader, attributeNamespace, attributeName);
+			}
+			if (memberRef.Parent.Kind == HandleKind.TypeDefinition) {
+				return IsTypeDefinitionMatch (reader.GetTypeDefinition ((TypeDefinitionHandle)memberRef.Parent), reader, attributeNamespace, attributeName);
+			}
+		} else if (ca.Constructor.Kind == HandleKind.MethodDefinition) {
+			var methodDef = reader.GetMethodDefinition ((MethodDefinitionHandle)ca.Constructor);
+			var declaringType = reader.GetTypeDefinition (methodDef.GetDeclaringType ());
+			return IsTypeDefinitionMatch (declaringType, reader, attributeNamespace, attributeName);
+		}
+		return false;
+	}
+
+	static bool IsTypeReferenceMatch (TypeReference typeRef, MetadataReader reader, string typeNamespace, string typeName) =>
+		reader.GetString (typeRef.Name) == typeName &&
+		reader.GetString (typeRef.Namespace) == typeNamespace;
+
+	static bool IsTypeDefinitionMatch (TypeDefinition typeDef, MetadataReader reader, string typeNamespace, string typeName) =>
+		reader.GetString (typeDef.Name) == typeName &&
+		reader.GetString (typeDef.Namespace) == typeNamespace;
 
 	internal RegisterInfo ParseRegisterAttribute (CustomAttribute ca)
 	{
