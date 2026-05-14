@@ -769,7 +769,12 @@ public abstract class MyRunner {
 
 			void Assert64Bit(string rid, bool expected64)
 			{
-				string libDir = Path.Combine (intermediate, rid, "linked");
+				string libDir;
+				if (enableMarshalMethods) {
+					libDir = Path.Combine (intermediate, rid, "rewritten-marshal-methods");
+				} else {
+					libDir = Path.Combine (intermediate, rid, "linked");
+				}
 				if (runtime == AndroidRuntime.MonoVM) {
 					libDir = Path.Combine (libDir, "shrunk");
 				}

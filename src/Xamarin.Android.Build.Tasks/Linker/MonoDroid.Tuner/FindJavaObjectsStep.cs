@@ -22,8 +22,6 @@ public class FindJavaObjectsStep : BaseStep, IAssemblyModifierPipelineStep
 
 	public bool ErrorOnCustomJavaObject { get; set; }
 
-	public bool UseMarshalMethods { get; set; }
-
 	public TaskLoggingHelper Log { get; set; }
 
 	public FindJavaObjectsStep (TaskLoggingHelper log) => Log = log;
@@ -113,11 +111,6 @@ public class FindJavaObjectsStep : BaseStep, IAssemblyModifierPipelineStep
 			DefaultApplicationJavaClass = ApplicationJavaClass,
 			DefaultMonoRuntimeInitialization = "mono.MonoPackageManager.LoadApplication (context);",
 		};
-
-		if (UseMarshalMethods) {
-			var classifier = new MarshalMethodsClassifier (Context, Context.Resolver, Log);
-			reader_options.MethodClassifier = new MarshalMethodsCollection (classifier);
-		}
 
 		foreach (var type in types) {
 			var wrapper = CecilImporter.CreateType (type, Context, reader_options);

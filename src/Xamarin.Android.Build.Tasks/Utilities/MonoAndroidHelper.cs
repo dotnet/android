@@ -41,18 +41,11 @@ namespace Xamarin.Android.Tasks
 			}
 
 			var res = new XAAssemblyResolver (targetArch, log, loadDebugSymbols: loadDebugSymbols, loadReaderParameters: readerParams);
-			var uniqueDirs = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
-			log.LogDebugMessage ($"Adding search directories to new architecture {targetArch} resolver:");
+			log.LogDebugMessage ($"Registering assemblies with new architecture {targetArch} resolver:");
 			foreach (var kvp in assemblies) {
-				string assemblyDir = Path.GetDirectoryName (kvp.Value.ItemSpec);
-				if (uniqueDirs.Contains (assemblyDir)) {
-					continue;
-				}
-
-				uniqueDirs.Add (assemblyDir);
-				res.SearchDirectories.Add (assemblyDir);
-				log.LogDebugMessage ($"  {assemblyDir}");
+				res.RegisterAssembly (kvp.Value.ItemSpec);
+				log.LogDebugMessage ($"  {kvp.Value.ItemSpec}");
 			}
 
 			return res;

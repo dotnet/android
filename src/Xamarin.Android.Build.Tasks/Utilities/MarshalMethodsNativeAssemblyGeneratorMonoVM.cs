@@ -42,15 +42,6 @@ class MarshalMethodsNativeAssemblyGeneratorMonoVM : MarshalMethodsNativeAssembly
 	readonly int numberOfAssembliesInApk;
 	StructureInfo? marshalMethodNameStructureInfo;
 
-	/// <summary>
-	/// Constructor to be used ONLY when marshal methods are DISABLED
-	/// </summary>
-	public MarshalMethodsNativeAssemblyGeneratorMonoVM (TaskLoggingHelper log, AndroidTargetArch targetArch, int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames)
-		: base (log, targetArch, uniqueAssemblyNames)
-	{
-		this.numberOfAssembliesInApk = numberOfAssembliesInApk;
-	}
-
 	public MarshalMethodsNativeAssemblyGeneratorMonoVM (TaskLoggingHelper log, int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames, NativeCodeGenStateObject codeGenState, bool managedMarshalMethodsLookupEnabled)
 		: base (log, uniqueAssemblyNames, codeGenState, managedMarshalMethodsLookupEnabled)
 	{
@@ -61,7 +52,7 @@ class MarshalMethodsNativeAssemblyGeneratorMonoVM : MarshalMethodsNativeAssembly
 	{
 		var uniqueMethods = new Dictionary<ulong, (MarshalMethodInfo mmi, ulong id32, ulong id64)> ();
 
-		if (!GenerateEmptyCode && Methods != null) {
+		if (Methods != null) {
 			foreach (MarshalMethodInfo mmi in Methods) {
 				string asmName = Path.GetFileName (mmi.Method.NativeCallback.DeclaringType.Module.Assembly.MainModuleFileName);
 

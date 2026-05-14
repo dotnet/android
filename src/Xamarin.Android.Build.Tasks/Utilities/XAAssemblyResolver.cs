@@ -13,6 +13,7 @@ class XAAssemblyResolver : IAssemblyResolver
 {
 	readonly List<MemoryMappedViewStream> viewStreams = new List<MemoryMappedViewStream> ();
 	readonly Dictionary<string, AssemblyDefinition> cache;
+	readonly Dictionary<string, string> registeredFiles = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase);
 	bool disposed;
 	TaskLoggingHelper log;
 	bool loadDebugSymbols;
@@ -48,7 +49,22 @@ class XAAssemblyResolver : IAssemblyResolver
 			return assembly;
 		}
 
+		if (registeredFiles.TryGetValue (shortName, out string? registeredPath)) {
+			return Load (registeredPath, parameters);
+		}
+
 		return FindAndLoadFromDirectories (name, parameters);
+	}
+
+	/// <summary>
+	/// Registers an assembly file path so it can be resolved by name without
+	/// relying on directory scanning.  Registered files take priority over
+	/// <see cref="SearchDirectories"/>.
+	/// </summary>
+	public void RegisterAssembly (string filePath)
+	{
+		string name = Path.GetFileNameWithoutExtension (filePath);
+		registeredFiles [name] = filePath;
 	}
 
 	AssemblyDefinition? FindAndLoadFromDirectories (AssemblyNameReference name, ReaderParameters? parameters)
