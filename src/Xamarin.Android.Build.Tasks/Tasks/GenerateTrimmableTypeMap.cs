@@ -15,6 +15,12 @@ namespace Xamarin.Android.Tasks;
 
 public class GenerateTrimmableTypeMap : AndroidTask
 {
+	static readonly string [] DefaultFrameworkAssemblyNames = [
+		"Java.Interop",
+		"Mono.Android",
+		"Mono.Android.Runtime",
+	];
+
 	sealed class MSBuildTrimmableTypeMapLogger (TaskLoggingHelper log) : ITrimmableTypeMapLogger
 	{
 		public void LogNoJavaPeerTypesFound () =>
@@ -46,6 +52,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	[Required]
 	public ITaskItem [] ResolvedAssemblies { get; set; } = [];
 	public ITaskItem [] ResolvedFrameworkAssemblies { get; set; } = [];
+	public string [] FrameworkAssemblyNames { get; set; } = [];
 	[Required]
 	public string OutputDirectory { get; set; } = "";
 	[Required]
@@ -105,7 +112,10 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				Path: g.Key,
 				IsFrameworkAssembly: frameworkAssemblyPaths.Contains (g.Key) || g.Any (IsFrameworkAssemblyItem)))
 			.ToList ();
-		var frameworkAssemblyNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+		var frameworkAssemblyNames = new HashSet<string> (DefaultFrameworkAssemblyNames, StringComparer.OrdinalIgnoreCase);
+		foreach (var assemblyName in FrameworkAssemblyNames) {
+			frameworkAssemblyNames.Add (assemblyName);
+		}
 
 		Directory.CreateDirectory (OutputDirectory);
 		Directory.CreateDirectory (JavaSourceOutputDirectory);
