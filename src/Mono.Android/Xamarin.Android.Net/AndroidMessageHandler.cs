@@ -912,6 +912,10 @@ namespace Xamarin.Android.Net
 					// meant. The fix doesn't belong here, but rather in the Uri class. So we'll throw...
 
 					redirectUrl = new Uri (location!, UriKind.RelativeOrAbsolute);
+					if (redirectUrl.Scheme != baseUrl.Scheme) {
+						disposeRet = false; // let the client decide what to do next
+						return true;
+					}
 					if (!redirectUrl.IsAbsoluteUri)
 						redirectUrl = new Uri (baseUrl, location);
 				}
