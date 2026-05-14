@@ -45,6 +45,7 @@ safe-outputs:
   assign-to-agent:
     model: "claude-opus-4.6"
     target: "*"
+    github-token: ${{ secrets.ANDROID_TEAM_PAT }}
   noop:
 timeout-minutes: 30
 strict: true
