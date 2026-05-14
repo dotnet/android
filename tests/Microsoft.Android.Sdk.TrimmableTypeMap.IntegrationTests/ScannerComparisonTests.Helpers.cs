@@ -90,6 +90,9 @@ public partial class ScannerComparisonTests
 
 	static string NormalizeCrc64InJniValue (string value)
 	{
+		// Marshal-method signatures/connectors can embed generated user-peer JNI names.
+		// Normalize the hash portion there too so legacy/new scanner comparison stays
+		// structural instead of depending on the CRC64 implementation.
 		return System.Text.RegularExpressions.Regex.Replace (value, @"s?crc64[0-9a-f]{16}", "crc64...");
 	}
 

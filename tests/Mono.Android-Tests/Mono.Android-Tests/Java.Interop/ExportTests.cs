@@ -13,7 +13,7 @@ namespace Java.InteropTests
 	// These tests drive the Java side of an [Export]-bearing peer via JNIEnv,
 	// then assert what C# observed (and vice versa). They run under both the
 	// legacy llvm-ir typemap (which is the contract) and the trimmable typemap
-	// (which must match it). See export-comparison.md for the gap analysis.
+	// (which must match it).
 	//
 	// Naming: each test is named Export_<Group>_<Feature>_<Behaviour> so the
 	// runner output is greppable.
@@ -126,7 +126,7 @@ namespace Java.InteropTests
 		// non-bound IList, and certain ICharSequence shapes — the build
 		// fails before the runtime path can be exercised. Those tests
 		// belong with the codegen fix that teaches the JCW emitter to
-		// widen these types (mirrors §2 / §7 of export-comparison.md).
+		// widen these types.
 
 		[Test, Category ("Export")]
 		public void Export_Method_PeerArray_RoundTrip ()

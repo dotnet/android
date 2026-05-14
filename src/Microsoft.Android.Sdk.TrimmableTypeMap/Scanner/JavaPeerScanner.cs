@@ -642,27 +642,6 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 	}
 
-	IReadOnlyList<string>? TryGetMatchingPublicConstructorParameterTypes (TypeDefinition typeDef, AssemblyIndex index, MethodDefinition baseCtor)
-	{
-		foreach (var methodHandle in typeDef.GetMethods ()) {
-			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
-			if (index.Reader.GetString (methodDef.Name) != ".ctor") {
-				continue;
-			}
-			if ((methodDef.Attributes & MethodAttributes.MemberAccessMask) != MethodAttributes.Public) {
-				continue;
-			}
-			if (!HaveIdenticalParameterTypes (methodDef, baseCtor)) {
-				continue;
-			}
-
-			var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
-			return sig.ParameterTypes;
-		}
-
-		return null;
-	}
-
 	string? BuildJniCtorSignature (MethodSignature<string> sig)
 	{
 		var sb = new System.Text.StringBuilder ();
@@ -1878,7 +1857,7 @@ public sealed class JavaPeerScanner : IDisposable
 		return (lastPlus >= 0 ? typePart.Slice (lastPlus + 1) : typePart).ToString ();
 	}
 
-	static List<JavaConstructorInfo> BuildJavaConstructors (List<MarshalMethodInfo> marshalMethods, TypeDefinition typeDef, AssemblyIndex index)
+	List<JavaConstructorInfo> BuildJavaConstructors (List<MarshalMethodInfo> marshalMethods, TypeDefinition typeDef, AssemblyIndex index)
 	{
 		var ctors = new List<JavaConstructorInfo> ();
 		int ctorIndex = 0;
@@ -1904,15 +1883,13 @@ public sealed class JavaPeerScanner : IDisposable
 
 	/// <summary>
 	/// Attempts to find a managed instance constructor on <paramref name="typeDef"/>
-	/// whose arity matches the supplied JNI signature, and returns its managed
-	/// parameter types. Returns <see langword="null"/> when no constructor of the
-	/// requested arity exists. Type compatibility between the JNI param kinds and
-	/// the managed parameter types is not verified — the JCW marshal method is
-	/// the source of truth for what the Java side will pass.
+	/// whose parameters match the supplied JNI signature, and returns its managed
+	/// parameter types. Returns <see langword="null"/> when no compatible
+	/// constructor exists.
 	/// </summary>
-	static IReadOnlyList<TypeRefData>? TryFindMatchingManagedCtorParams (TypeDefinition typeDef, string jniSignature, AssemblyIndex index)
+	IReadOnlyList<TypeRefData>? TryFindMatchingManagedCtorParams (TypeDefinition typeDef, string jniSignature, AssemblyIndex index)
 	{
-		var jniParams = JniSignatureHelper.ParseParameterTypes (jniSignature);
+		var jniParams = JniSignatureHelper.ParseParameters (jniSignature);
 		foreach (var methodHandle in typeDef.GetMethods ()) {
 			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
 			if ((methodDef.Attributes & MethodAttributes.Static) != 0) {
@@ -1942,9 +1919,28 @@ public sealed class JavaPeerScanner : IDisposable
 			if (unsupportedParam) {
 				continue;
 			}
+			if (!ManagedConstructorParametersMatchJniSignature (sig.ParameterTypes, jniParams)) {
+				continue;
+			}
 			return [.. sig.ParameterTypes];
 		}
 		return null;
+	}
+
+	bool ManagedConstructorParametersMatchJniSignature (IReadOnlyList<TypeRefData> managedParams, IReadOnlyList<JniParameterInfo> jniParams)
+	{
+		if (managedParams.Count != jniParams.Count) {
+			return false;
+		}
+
+		for (int i = 0; i < managedParams.Count; i++) {
+			var managedDescriptor = ManagedTypeToJniDescriptor (managedParams [i]);
+			if (!string.Equals (managedDescriptor, jniParams [i].JniType, StringComparison.Ordinal)) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/// <summary>

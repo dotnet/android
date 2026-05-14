@@ -112,6 +112,20 @@ public class ConstructorDetectionTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void HasMatchingManagedCtor_False_WhenSameArityCtorHasDifferentParameterType ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/CustomDialog");
+
+		var contextCtor = Assert.Single (peer.JavaConstructors, c => c.JniSignature == "(Landroid/content/Context;)V");
+		Assert.False (contextCtor.HasMatchingManagedCtor,
+			"CustomDialog has only a string ctor; the inherited Context Java ctor must not match by arity alone.");
+
+		var stringCtor = Assert.Single (peer.JavaConstructors, c => c.JniSignature == "(Ljava/lang/String;)V");
+		Assert.True (stringCtor.HasMatchingManagedCtor,
+			"The parameterless-fallback string Java ctor should match CustomDialog(string).");
+	}
+
+	[Fact]
 	public void ActivityWithMultiParamCtor_FallbackComputesFullSignature ()
 	{
 		// ctor(string, int, bool) should produce "(Ljava/lang/String;IZ)V"

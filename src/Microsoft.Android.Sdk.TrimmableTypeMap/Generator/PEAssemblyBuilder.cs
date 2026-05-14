@@ -493,6 +493,8 @@ sealed class PEAssemblyBuilder
 			switch (code) {
 			case ILOpCode.Br:
 			case ILOpCode.Br_s:
+				// Unconditional branches preserve the current stack; Branch() rejects
+				// them because most callers need stack-depth tracking to change.
 				Encoder.Branch (code, label);
 				break;
 			default:

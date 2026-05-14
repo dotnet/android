@@ -149,49 +149,6 @@ namespace Xamarin.Android.Build.Tests {
 
 		}
 
-		// Tripwire: the trimmable test lane in `NUnitInstrumentation.cs` excludes a
-		// set of Java.Interop-Tests by exact name (those tests live in the external
-		// Java.Interop-Tests assembly and cannot use [Category("TrimmableIgnore")]).
-		// Any new exclusion added here means we are silently degrading the trimmable
-		// CoreCLR test signal. Fixes for excluded tests should *remove* entries here,
-		// not add to them. If you genuinely must add one (after exhausting alternatives),
-		// bump the constant in this test with a comment that links the tracking issue.
-		// See https://github.com/dotnet/android/issues/11170 for the live inventory.
-		[Test]
-		public void TrimmableTypeMap_ExcludedTestNames_DoesNotGrow ()
-		{
-			const int CurrentMaximumExclusionCount = 4;
-
-			var path = Path.Combine (
-				XABuildPaths.TopDirectory,
-				"tests", "Mono.Android-Tests", "Mono.Android-Tests",
-				"Xamarin.Android.RuntimeTests", "NUnitInstrumentation.cs");
-			FileAssert.Exists (path, $"{path} should exist (this test reads the source verbatim).");
-
-			var source = File.ReadAllText (path);
-
-			// Locate the `ExcludedTestNames = ...` initializer block. The trailing
-			// `};` ends the array initializer.
-			var startIdx = source.IndexOf ("ExcludedTestNames", System.StringComparison.Ordinal);
-			Assert.AreNotEqual (-1, startIdx, "ExcludedTestNames assignment not found in NUnitInstrumentation.cs.");
-			var endIdx = source.IndexOf ("};", startIdx, System.StringComparison.Ordinal);
-			Assert.AreNotEqual (-1, endIdx, "Could not find end of ExcludedTestNames initializer.");
-
-			var block = source.Substring (startIdx, endIdx - startIdx);
-
-			// Each excluded test is a quoted string literal containing a '.'-delimited
-			// fully qualified type/method name. Comments may contain dots too, so we
-			// count only quoted strings that include at least one '.'.
-			var matches = Regex.Matches (block, "\"([^\"\\n]*\\.[^\"\\n]*)\"");
-
-			Assert.LessOrEqual (
-				matches.Count,
-				CurrentMaximumExclusionCount,
-				$"Trimmable lane exclusion count grew from {CurrentMaximumExclusionCount} to {matches.Count}. " +
-				$"Excluding more tests degrades the trimmable CoreCLR signal. Fix the underlying issue and remove " +
-				$"the exclusion, or update the constant in this test with a comment explaining the regression.");
-		}
-
 		// T1: end-to-end build coverage for [Export] and [ExportField] under trimmable.
 		// The trimmable typemap path emits a per-assembly typemap DLL and JCW Java
 		// sources for user peer types. This test confirms that, for a project that

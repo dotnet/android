@@ -49,8 +49,8 @@ public class TrimmableTypeMapGenerator
 			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
 
-		var preparedManifest = PrepareManifestForRooting (manifestTemplate, manifestConfig);
-		RootManifestReferencedTypes (allPeers, preparedManifest);
+		var manifestForRooting = PrepareManifestForRooting (manifestTemplate, manifestConfig);
+		RootManifestReferencedTypes (allPeers, manifestForRooting);
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
 		PropagateCannotRegisterToDescendants (allPeers);
 
@@ -67,7 +67,7 @@ public class TrimmableTypeMapGenerator
 		}
 
 		var manifest = manifestConfig is not null
-			? GenerateManifest (allPeers, assemblyManifestInfo, manifestConfig, preparedManifest)
+			? GenerateManifest (allPeers, assemblyManifestInfo, manifestConfig, manifestForRooting)
 			: null;
 
 		return new TrimmableTypeMapResult (generatedAssemblies, generatedJavaSources, allPeers, manifest, appRegTypes);
@@ -314,13 +314,11 @@ public class TrimmableTypeMapGenerator
 					element.SetAttributeValue (attName, actualJavaName);
 				}
 
-				if (deferredRegistration) {
-					foreach (var peer in peers) {
+				foreach (var peer in peers) {
+					if (deferredRegistration) {
 						peer.CannotRegisterInStaticConstructor = true;
 					}
-				}
 
-				foreach (var peer in peers) {
 					if (!peer.IsUnconditional) {
 						peer.IsUnconditional = true;
 						logger.LogRootingManifestReferencedTypeInfo (name, peer.ManagedTypeName);
@@ -338,7 +336,8 @@ public class TrimmableTypeMapGenerator
 	/// TestInstrumentation_1 must also defer — otherwise the base class <c>&lt;clinit&gt;</c> will call
 	/// <c>registerNatives</c> before the managed runtime is ready.
 	/// </summary>
-	internal static void PropagateDeferredRegistrationToBaseClasses (List<JavaPeerInfo> allPeers)	{
+	internal static void PropagateDeferredRegistrationToBaseClasses (List<JavaPeerInfo> allPeers)
+	{
 		// In practice only 1–2 types need propagation (one Application, maybe one
 		// Instrumentation), each with a short base-class chain.  A linear scan per
 		// ancestor is simpler and cheaper than building a Dictionary<JavaName, List<Peer>>

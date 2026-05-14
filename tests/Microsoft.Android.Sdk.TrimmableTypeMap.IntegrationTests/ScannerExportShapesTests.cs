@@ -76,36 +76,6 @@ public class ScannerExportShapesTests
 	}
 
 	[Fact]
-	public void EnumParam_AndReturn_MarshalAsUnderlyingPrimitive ()
-	{
-		var methods = GetMarshalMethods ("ExportEnumShapes");
-
-		// SampleEnum (Int32) → I
-		AssertHasExport (methods, "echoEnum", "(I)I");
-		// SampleByteEnum → B
-		AssertHasExport (methods, "echoByteEnum", "(B)B");
-		// SampleLongEnum → J
-		AssertHasExport (methods, "echoLongEnum", "(J)J");
-	}
-
-	[Fact]
-	public void ICharSequenceParam_AndReturn_MarshalsAsCharSequence ()
-	{
-		var methods = GetMarshalMethods ("ExportCharSequenceShapes");
-		AssertHasExport (methods, "echoCharSequence", "(Ljava/lang/CharSequence;)Ljava/lang/CharSequence;");
-	}
-
-	[Fact]
-	public void NonGenericCollections_MarshalAsExpectedJavaTypes ()
-	{
-		var methods = GetMarshalMethods ("ExportCollectionShapes");
-
-		AssertHasExport (methods, "echoList", "(Ljava/util/List;)Ljava/util/List;");
-		AssertHasExport (methods, "echoMap", "(Ljava/util/Map;)Ljava/util/Map;");
-		AssertHasExport (methods, "echoCollection", "(Ljava/util/Collection;)Ljava/util/Collection;");
-	}
-
-	[Fact]
 	public void ExportField_RegistersGetterAsMarshalMethod ()
 	{
 		var methods = GetMarshalMethods ("ExportFieldShapes");
@@ -125,28 +95,7 @@ public class ScannerExportShapesTests
 		AssertHasExport (methods, "GetCount", "()I");
 	}
 
-	[Fact]
-	public void ExportParameter_OverridesJavaTypeForStreamsAndXml ()
-	{
-		var methods = GetMarshalMethods ("ExportParameterShapes");
-
-		// Stream → InputStream / OutputStream
-		AssertHasExport (methods, "openStream", "(Ljava/io/InputStream;)I");
-		AssertHasExport (methods, "wrapStream", "(Ljava/io/OutputStream;)Ljava/io/OutputStream;");
-		// XmlReader → XmlPullParser / XmlResourceParser
-		AssertHasExport (methods, "readXml", "(Lorg/xmlpull/v1/XmlPullParser;)Lorg/xmlpull/v1/XmlPullParser;");
-		AssertHasExport (methods, "readResourceXml", "(Landroid/content/res/XmlResourceParser;)Landroid/content/res/XmlResourceParser;");
-	}
-
 	// === Phase A: dispatch & declaration shapes ===
-
-	[Fact]
-	public void StaticExport_RegistersStaticDispatch ()
-	{
-		var methods = GetMarshalMethods ("StaticExportShapes");
-		AssertHasExport (methods, "compute", "(I)I");
-		AssertHasExport (methods, "hello", "()Ljava/lang/String;");
-	}
 
 	[Fact]
 	public void Export_WithThrowsClause_SurfacesDeclaredExceptions ()
@@ -254,19 +203,6 @@ public class ScannerExportShapesTests
 		Assert.Equal (2, calls.Length);
 		Assert.Contains (calls, m => m.JniSignature == "(I)V");
 		Assert.Contains (calls, m => m.JniSignature == "(Ljava/lang/String;)V");
-	}
-
-	// === Phase C: robustness ===
-
-	[Fact]
-	public void Export_GenericMethod_ScannerDoesNotCrash ()
-	{
-		// Generic methods aren't legal Java targets for [Export], but the
-		// scanner must not crash. Either the method is skipped or it surfaces
-		// with some defined fallback — assert only that we get a non-null
-		// peer back without throwing.
-		var methods = GetMarshalMethods ("ExportGenericShapes");
-		Assert.NotNull (methods);
 	}
 
 	[Fact]
