@@ -15,6 +15,12 @@ namespace Xamarin.Android.Tasks;
 
 public class GenerateTrimmableTypeMap : AndroidTask
 {
+	static readonly string [] DefaultFrameworkAssemblyNames = [
+		"Java.Interop",
+		"Mono.Android",
+		"Mono.Android.Runtime",
+	];
+
 	sealed class MSBuildTrimmableTypeMapLogger (TaskLoggingHelper log) : ITrimmableTypeMapLogger
 	{
 		public void LogNoJavaPeerTypesFound () =>
@@ -45,6 +51,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 	[Required]
 	public ITaskItem [] ResolvedAssemblies { get; set; } = [];
+	public string [] FrameworkAssemblyNames { get; set; } = [];
 	[Required]
 	public string OutputDirectory { get; set; } = "";
 	[Required]
@@ -93,8 +100,13 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	{
 		var systemRuntimeVersion = ParseTargetFrameworkVersion (TargetFrameworkVersion);
 		var assemblyPaths = ResolvedAssemblies.Select (i => i.ItemSpec).Distinct ().ToList ();
-		// TODO(#10792): populate with framework assembly names to skip JCW generation for pre-compiled framework types
-		var frameworkAssemblyNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+		var frameworkAssemblyPaths = new HashSet<string> (ResolvedAssemblies
+			.Where (i => string.Equals (i.GetMetadata ("FrameworkAssembly"), "true", StringComparison.OrdinalIgnoreCase))
+			.Select (i => i.ItemSpec), StringComparer.OrdinalIgnoreCase);
+		var frameworkAssemblyNames = new HashSet<string> (DefaultFrameworkAssemblyNames, StringComparer.OrdinalIgnoreCase);
+		foreach (var assemblyName in FrameworkAssemblyNames) {
+			frameworkAssemblyNames.Add (assemblyName);
+		}
 
 		Directory.CreateDirectory (OutputDirectory);
 		Directory.CreateDirectory (JavaSourceOutputDirectory);
@@ -107,7 +119,11 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				var peReader = new PEReader (File.OpenRead (path));
 				peReaders.Add (peReader);
 				var mdReader = peReader.GetMetadataReader ();
-				assemblies.Add ((mdReader.GetString (mdReader.GetAssemblyDefinition ().Name), peReader));
+				var assemblyName = mdReader.GetString (mdReader.GetAssemblyDefinition ().Name);
+				assemblies.Add ((assemblyName, peReader));
+				if (frameworkAssemblyPaths.Contains (path)) {
+					frameworkAssemblyNames.Add (assemblyName);
+				}
 			}
 
 			ManifestConfig? manifestConfig = null;

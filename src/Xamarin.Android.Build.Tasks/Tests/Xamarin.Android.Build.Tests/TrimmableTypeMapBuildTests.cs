@@ -207,8 +207,10 @@ namespace Xamarin.Android.Build.Tests {
 			var apkPath = Directory.GetFiles (apkDirectory, "*-Signed.apk", SearchOption.AllDirectories).Single ();
 			var acwMapPath = builder.Output.GetIntermediaryPath ("acw-map.txt");
 			var javaSourceDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android", "src"));
+			var typeMapDirectory = builder.Output.GetIntermediaryPath ("typemap");
+			var linkedAssemblyDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "linked"));
 
-			var profile = ReadApkProfile (typemapImplementation, apkPath, acwMapPath, javaSourceDirectory);
+			var profile = ReadApkProfile (typemapImplementation, apkPath, acwMapPath, javaSourceDirectory, typeMapDirectory, linkedAssemblyDirectory);
 			if (typemapImplementation == "trimmable") {
 				Assert.IsTrue (profile.ManagedAssemblyNames.Contains ("_Microsoft.Android.TypeMaps.dll"), "trimmable build should package the root managed typemap assembly.");
 			} else {
@@ -217,7 +219,7 @@ namespace Xamarin.Android.Build.Tests {
 			return profile;
 		}
 
-		ApkComparisonProfile ReadApkProfile (string name, string apkPath, string acwMapPath, string javaSourceDirectory)
+		ApkComparisonProfile ReadApkProfile (string name, string apkPath, string acwMapPath, string javaSourceDirectory, string typeMapDirectory, string linkedAssemblyDirectory)
 		{
 			var profile = new ApkComparisonProfile {
 				Name = name,
@@ -227,6 +229,8 @@ namespace Xamarin.Android.Build.Tests {
 
 			LoadAcwMap (acwMapPath, profile);
 			ReadGeneratedJavaProfile (javaSourceDirectory, profile);
+			ReadTypeMapAssemblyProfile (profile, "generated", typeMapDirectory);
+			ReadTypeMapAssemblyProfile (profile, "linked", linkedAssemblyDirectory);
 			ReadAssemblyStoreProfile (profile);
 			ReadDexProfile (profile);
 
@@ -328,6 +332,9 @@ namespace Xamarin.Android.Build.Tests {
 				}
 				using (assembly) {
 					profile.ManagedAssemblyCount++;
+					if (item.Name.EndsWith (".TypeMap.dll", StringComparison.Ordinal) || item.Name == "_Microsoft.Android.TypeMaps.dll") {
+						ReadTypeMapAssemblyProfile (profile, "packaged", assembly, item.Name);
+					}
 					foreach (var type in assembly.Modules.SelectMany (m => m.Types).SelectMany (FlattenType)) {
 						if (IsTypemapHelperManagedType (type.FullName)) {
 							continue;
@@ -348,6 +355,66 @@ namespace Xamarin.Android.Build.Tests {
 						}
 					}
 				}
+			}
+		}
+
+		void ReadTypeMapAssemblyProfile (ApkComparisonProfile profile, string stage, string directory)
+		{
+			if (!Directory.Exists (directory)) {
+				return;
+			}
+
+			foreach (var file in Directory.EnumerateFiles (directory, "*.dll", SearchOption.TopDirectoryOnly).Where (IsTypeMapAssemblyPath)) {
+				using var assembly = AssemblyDefinition.ReadAssembly (file);
+				ReadTypeMapAssemblyProfile (profile, stage, assembly, Path.GetFileName (file));
+			}
+		}
+
+		bool IsTypeMapAssemblyPath (string file)
+		{
+			var name = Path.GetFileName (file);
+			return name.EndsWith (".TypeMap.dll", StringComparison.Ordinal) || name == "_Microsoft.Android.TypeMaps.dll";
+		}
+
+		void ReadTypeMapAssemblyProfile (ApkComparisonProfile profile, string stage, AssemblyDefinition assembly, string assemblyName)
+		{
+			var metrics = new TypeMapAssemblyMetrics {
+				Stage = stage,
+				AssemblyName = assemblyName,
+			};
+
+			foreach (var attribute in assembly.CustomAttributes) {
+				var attributeName = attribute.AttributeType.FullName;
+				if (attributeName.StartsWith ("System.Runtime.InteropServices.TypeMapAttribute`1", StringComparison.Ordinal)) {
+					ReadTypeMapAttribute (attribute, metrics);
+				} else if (attributeName.StartsWith ("System.Runtime.InteropServices.TypeMapAssociationAttribute", StringComparison.Ordinal)) {
+					metrics.AssociationAttributeCount++;
+				} else if (attributeName.StartsWith ("System.Runtime.InteropServices.TypeMapAssemblyTargetAttribute`1", StringComparison.Ordinal)) {
+					metrics.AssemblyTargetAttributeCount++;
+				}
+			}
+
+			if (metrics.TypeMapAttributeCount != 0 || metrics.AssociationAttributeCount != 0 || metrics.AssemblyTargetAttributeCount != 0) {
+				profile.TypeMapAssemblies.Add (metrics);
+			}
+		}
+
+		void ReadTypeMapAttribute (CustomAttribute attribute, TypeMapAssemblyMetrics metrics)
+		{
+			metrics.TypeMapAttributeCount++;
+			if (attribute.ConstructorArguments.Count == 2) {
+				metrics.UnconditionalTypeMapAttributeCount++;
+			} else if (attribute.ConstructorArguments.Count == 3) {
+				metrics.ConditionalTypeMapAttributeCount++;
+			}
+
+			var jniName = attribute.ConstructorArguments.Count > 0 ? attribute.ConstructorArguments [0].Value as string : null;
+			var proxyType = attribute.ConstructorArguments.Count > 1 ? attribute.ConstructorArguments [1].Value as string : null;
+			var targetType = attribute.ConstructorArguments.Count > 2 ? attribute.ConstructorArguments [2].Value as string : null;
+			var key = $"{jniName}\t{proxyType}\t{targetType}";
+			metrics.TypeMapAttributeKeys.Add (key);
+			if (jniName != null) {
+				metrics.IncrementPrefixBucket (jniName);
 			}
 		}
 
@@ -546,7 +613,7 @@ namespace Xamarin.Android.Build.Tests {
 			TestContext.Out.WriteLine ($"| APK size | {FormatNumber (llvmIr.ApkSize)} | {FormatNumber (trimmable.ApkSize)} |");
 			TestContext.Out.WriteLine ($"| Assembly-store payload | {FormatNumber (llvmIr.AssemblyStoreSize)} | {FormatNumber (trimmable.AssemblyStoreSize)} |");
 			TestContext.Out.WriteLine ($"| classes*.dex | {FormatNumber (llvmIr.DexSize)} | {FormatNumber (trimmable.DexSize)} |");
-			TestContext.Out.WriteLine ($"| Filtered managed types / methods | {FormatNumber (llvmIr.FilteredManagedTypeCount)} / {FormatNumber (llvmIr.FilteredManagedMethodCount)} | {FormatNumber (trimmable.FilteredManagedTypeCount)} / {FormatNumber (trimmable.FilteredManagedMethodCount)} |");
+			TestContext.Out.WriteLine ($"| Registered managed types / methods | {FormatNumber (llvmIr.FilteredManagedTypeCount)} / {FormatNumber (llvmIr.FilteredManagedMethodCount)} | {FormatNumber (trimmable.FilteredManagedTypeCount)} / {FormatNumber (trimmable.FilteredManagedMethodCount)} |");
 			TestContext.Out.WriteLine ($"| Managed diff | {FormatNumber (managedDiff.LlvmIrOnly.Length)} llvm-ir-only | {FormatNumber (managedDiff.TrimmableOnly.Length)} trimmable-only |");
 			TestContext.Out.WriteLine ($"| Java diff | {FormatNumber (javaDiff.LlvmIrOnly.Length)} llvm-ir-only | {FormatNumber (javaDiff.TrimmableOnly.Length)} trimmable-only |");
 		}
@@ -562,6 +629,9 @@ namespace Xamarin.Android.Build.Tests {
 			TestContext.Out.WriteLine ($"{profile.Name}: generated Java sources={profile.GeneratedJavaSourceCount}, __md_methods files={profile.GeneratedJavaWithMdMethodsCount}, Runtime.register files={profile.GeneratedJavaWithRuntimeRegisterCount}, Runtime.registerNatives files={profile.GeneratedJavaWithRegisterNativesCount}");
 			TestContext.Out.WriteLine ($"{profile.Name}: assembly stores: {String.Join ("; ", profile.AssemblyStores)}");
 			TestContext.Out.WriteLine ($"{profile.Name}: dex files: {String.Join ("; ", profile.DexFiles)}");
+			foreach (var metrics in profile.TypeMapAssemblies) {
+				TestContext.Out.WriteLine ($"{profile.Name}: typemap {metrics.Stage}/{metrics.AssemblyName}: typemap={metrics.TypeMapAttributeCount}, unique={metrics.UniqueTypeMapAttributeCount}, duplicates={metrics.DuplicateTypeMapAttributeCount}, unconditional={metrics.UnconditionalTypeMapAttributeCount}, conditional={metrics.ConditionalTypeMapAttributeCount}, associations={metrics.AssociationAttributeCount}, assembly-targets={metrics.AssemblyTargetAttributeCount}, prefixes={metrics.FormatPrefixBuckets ()}");
+			}
 		}
 
 		void WriteSize (string label, long llvmIr, long trimmable)
@@ -636,6 +706,52 @@ namespace Xamarin.Android.Build.Tests {
 			public readonly HashSet<string> ManagedTypemapEntries = new HashSet<string> (StringComparer.Ordinal);
 			public readonly HashSet<string> JavaTypemapEntries = new HashSet<string> (StringComparer.Ordinal);
 			public readonly HashSet<string> JavaClassNames = new HashSet<string> (StringComparer.Ordinal);
+			public readonly List<TypeMapAssemblyMetrics> TypeMapAssemblies = new List<TypeMapAssemblyMetrics> ();
+		}
+
+		class TypeMapAssemblyMetrics
+		{
+			public string Stage;
+			public string AssemblyName;
+			public int TypeMapAttributeCount;
+			public int UnconditionalTypeMapAttributeCount;
+			public int ConditionalTypeMapAttributeCount;
+			public int AssociationAttributeCount;
+			public int AssemblyTargetAttributeCount;
+			public readonly List<string> TypeMapAttributeKeys = new List<string> ();
+			readonly SortedDictionary<string, int> prefixBuckets = new SortedDictionary<string, int> (StringComparer.Ordinal);
+
+			public int UniqueTypeMapAttributeCount => TypeMapAttributeKeys.Distinct (StringComparer.Ordinal).Count ();
+			public int DuplicateTypeMapAttributeCount => TypeMapAttributeCount - UniqueTypeMapAttributeCount;
+
+			public void IncrementPrefixBucket (string jniName)
+			{
+				var bucket = GetPrefixBucket (jniName);
+				prefixBuckets.TryGetValue (bucket, out int count);
+				prefixBuckets [bucket] = count + 1;
+			}
+
+			public string FormatPrefixBuckets ()
+			{
+				return String.Join (", ", prefixBuckets.Select (p => $"{p.Key}={p.Value}"));
+			}
+
+			static string GetPrefixBucket (string jniName)
+			{
+				if (jniName.StartsWith ("mono/android/", StringComparison.Ordinal)) {
+					return "mono/android";
+				}
+				if (jniName.StartsWith ("android/", StringComparison.Ordinal)) {
+					return "android";
+				}
+				if (jniName.StartsWith ("java/", StringComparison.Ordinal)) {
+					return "java";
+				}
+				if (jniName.StartsWith ("com/xamarin/", StringComparison.Ordinal)) {
+					return "app";
+				}
+				return "other";
+			}
 		}
 
 		class EntryDiff
