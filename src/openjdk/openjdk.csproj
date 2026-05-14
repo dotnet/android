@@ -8,10 +8,6 @@
     <OutputPath Condition="'$(OutputPath)'==''">bin\$(Configuration)</OutputPath>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\openjdk\openjdk.csproj" ReferenceOutputAssembly="False" />
-  </ItemGroup>
-  
   <Import Project="..\..\Configuration.props" />
-  <Import Project="bundletool.targets" />
+  <Import Project="openjdk.targets" />
 </Project>
