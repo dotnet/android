@@ -198,13 +198,12 @@ namespace Xamarin.ProjectTools
 		/// <summary>
 		/// Sets properties required for $(PublishAot)=true
 		/// </summary>
-		public void SetPublishAot (bool value, string androidNdkPath)
+		public void SetPublishAot (bool value)
 		{
 			// Only toggle IsRelease=true when value is true
 			if (value)
 				IsRelease = true;
 			PublishAot = value;
-			SetProperty ("AndroidNdkDirectory", androidNdkPath);
 		}
 
 		public string AndroidManifest { get; set; }

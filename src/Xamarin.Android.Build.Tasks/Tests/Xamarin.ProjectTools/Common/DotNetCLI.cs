@@ -31,6 +31,7 @@ namespace Xamarin.ProjectTools
 		/// Creates and starts a `dotnet` process with the specified arguments.
 		/// </summary>
 		/// <param name="args">command arguments</param>
+		/// <param name="workingDirectory">optional working directory</param>
 		/// <returns>A started Process instance. Caller is responsible for disposing.</returns>
 		protected Process ExecuteProcess (string [] args, string workingDirectory = null)
 		{

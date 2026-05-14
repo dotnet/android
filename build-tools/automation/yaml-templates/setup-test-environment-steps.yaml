@@ -11,7 +11,6 @@ parameters:
   dotnetQuality: $(DotNetSdkQuality)
   installTestSlicer: false
   installApkDiff: true
-  updateMono: false
   androidSdkPlatforms: $(DefaultTestSdkPlatforms)
   xaprepareScenario: AndroidTestDependencies        # Use 'EmulatorTestDependencies' for agents that need the emulator installed
   use1ESTemplate: true
@@ -35,14 +34,6 @@ steps:
     command: custom
     custom: build-server
     arguments: shutdown
-
-- ${{ if eq(parameters.updateMono, true) }}:
-  - template: /build-tools/automation/yaml-templates/run-xaprepare.yaml
-    parameters:
-      displayName: run xaprepare-UpdateMono
-      arguments: --s=UpdateMono --auto-provision=yes --auto-provision-uses-sudo=yes
-      condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
-      xaSourcePath: ${{ parameters.xaSourcePath }}
 
 # Install p7zip on Linux for public agents
 - ${{ if ne(parameters.use1ESTemplate, true) }}:

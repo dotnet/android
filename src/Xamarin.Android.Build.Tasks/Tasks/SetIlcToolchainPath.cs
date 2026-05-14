@@ -8,19 +8,20 @@ using Microsoft.Build.Utilities;
 namespace Xamarin.Android.Tasks;
 
 /// <summary>
-/// NativeAOT's compiler (ILC) expects to find tooling in $PATH
+/// Adds the toolchain bin directory to $PATH so that NativeAOT's compiler (ILC)
+/// can find tools like llvm-objcopy and llvm-ar.
 /// </summary>
-public class SetNdkPathForIlc : AndroidTask
+public class SetIlcToolchainPath : AndroidTask
 {
 	public override string TaskPrefix => "SILC";
 
 	[Required]
-	public string NdkBinDirectory { get; set; } = "";
+	public string ToolchainBinDirectory { get; set; } = "";
 
 	public override bool RunTask ()
 	{
-		var ndkbin = Path.GetFullPath (NdkBinDirectory);
-		var path = $"{ndkbin}{Path.PathSeparator}{Environment.GetEnvironmentVariable ("PATH")}";
+		var binDir = Path.GetFullPath (ToolchainBinDirectory);
+		var path = $"{binDir}{Path.PathSeparator}{Environment.GetEnvironmentVariable ("PATH")}";
 		Log.LogDebugMessage ($"Setting $PATH to: {path}");
 		Environment.SetEnvironmentVariable ("PATH", path);
 		return !Log.HasLoggedErrors;

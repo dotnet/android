@@ -23,6 +23,8 @@ string? dotnetTestPipe = null;
 
 try {
 	return await RunAsync (args);
+} catch (OperationCanceledException) {
+	return 130; // 128 + SIGINT(2), standard Unix convention for Ctrl+C
 } catch (Exception ex) {
 	Console.Error.WriteLine ($"Error: {ex.Message}");
 	if (verbose)

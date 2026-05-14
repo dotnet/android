@@ -118,11 +118,37 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
-		public void TrimmableTypeMap_PreserveList_IsPackagedInSdk ()
+		public void TrimmableTypeMap_PreserveLists_ArePackagedInSdk ()
 		{
-			var path = Path.Combine (TestEnvironment.DotNetPreviewAndroidSdkDirectory, "PreserveLists", "Trimmable.CoreCLR.xml");
+			foreach (var file in new [] {
+				"Trimmable.CoreCLR.xml",
+				"System.Private.CoreLib.xml",
+			}) {
+				var path = Path.Combine (TestEnvironment.DotNetPreviewAndroidSdkDirectory, "PreserveLists", file);
+				FileAssert.Exists (path, $"{path} should exist in the SDK pack.");
+			}
+		}
 
-			FileAssert.Exists (path, $"{path} should exist in the SDK pack.");
+		[Test]
+		public void TrimmableTypeMap_RuntimeArtifacts_ArePackagedInSdk ()
+		{
+			var toolsDir = TestEnvironment.AndroidMSBuildDirectory;
+
+			foreach (var file in new [] {
+				"java_runtime.jar",
+				"java_runtime.dex",
+				"java_runtime_fastdev.jar",
+				"java_runtime_fastdev.dex",
+				"java_runtime_trimmable.jar",
+				"java_runtime_trimmable.dex",
+				"java_runtime_clr.jar",
+				"java_runtime_clr.dex",
+				"java_runtime_fastdev_clr.jar",
+				"java_runtime_fastdev_clr.dex",
+			}) {
+				FileAssert.Exists (Path.Combine (toolsDir, file), $"{file} should exist in the SDK pack.");
+			}
+
 		}
 	}
 }

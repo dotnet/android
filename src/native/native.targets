@@ -382,6 +382,12 @@
                          AndroidRID="%(AndroidSupportedTargetJitAbi.AndroidRID)"
                          AndroidRuntime="$(CMakeRuntimeFlavor)"
                          RuntimePackName="$(_RuntimePackName)" />
+      <!-- NativeAOT uses a separate redist directory with CRT objects and system lib stubs
+           from the higher API level required by dotnet/runtime's native libraries. -->
+      <_RuntimePackFiles Include="$(NativeRuntimeOutputRootDir)redist-nativeaot\%(AndroidSupportedTargetJitAbi.AndroidRID)\*"
+                         AndroidRID="%(AndroidSupportedTargetJitAbi.AndroidRID)"
+                         AndroidRuntime="$(CMakeRuntimeFlavor)"
+                         RuntimePackName="$(_RuntimePackName)" />
     </ItemGroup>
 
     <Copy
