@@ -354,7 +354,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 		Assert.Contains ("ShouldSkipActivation", memberNames);
 		Assert.Contains ("GetUninitializedObject", memberNames);
-		Assert.Contains ("SetPeerReference", memberNames);
+		Assert.Contains ("SetActivationPeerReference", memberNames);
 		Assert.Contains ("MarkActivationPeerReplaceable", memberNames);
 		Assert.DoesNotContain ("Invoke", memberNames);
 		Assert.DoesNotContain ("ActivateInstance", memberNames);
@@ -395,7 +395,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 		var memberNames = GetMemberRefNames (reader);
 		Assert.Contains ("GetUninitializedObject", memberNames);
-		Assert.Contains ("SetPeerReference", memberNames);
+		Assert.Contains ("SetActivationPeerReference", memberNames);
 		Assert.Contains ("MarkActivationPeerReplaceable", memberNames);
 		Assert.DoesNotContain ("Invoke", memberNames);
 
@@ -1699,14 +1699,14 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_UcoConstructor_Parameterless_InvokesUserVisibleCtorViaSetPeerReference ()
+	public void Generate_UcoConstructor_Parameterless_InvokesUserVisibleCtorViaActivationPeerReference ()
 	{
 		// Regression test for ContainsExportedMethods (JnienvTest.ActivatedDirectObjectSubclassesShouldBeRegistered):
 		// for the parameterless `()V` UCO constructor wrapper, the emitter must mirror
 		// TypeManager.Activate (Mono.Android/Java.Interop/TypeManager.cs):
 		//
 		//   1. RuntimeHelpers.GetUninitializedObject(typeof(T))
-		//   2. ((IJavaPeerable) obj).SetPeerReference(new JniObjectReference(self, Invalid))
+		//   2. JavaPeerProxy.SetActivationPeerReference(obj, self)
 		//   3. obj..ctor()    // user-visible parameterless ctor
 		//
 		// The legacy implementation called the inherited activation ctor `(IntPtr,
@@ -1717,9 +1717,9 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 
-		// SetPeerReference member ref must exist.
+		// SetActivationPeerReference member ref must exist.
 		var memberNames = GetMemberRefNames (reader);
-		Assert.Contains ("SetPeerReference", memberNames);
+		Assert.Contains ("SetActivationPeerReference", memberNames);
 		Assert.Contains ("GetUninitializedObject", memberNames);
 
 		var nctorMethodHandle = FindNctorUcoMethod (reader);
@@ -1735,10 +1735,10 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			.Select (i => MetadataTokens.MemberReferenceHandle (i))
 			.ToList ();
 
-		// 1. The body must call SetPeerReference (the new behavior).
-		var setPeerHandle = memberRefHandles.First (h => reader.GetString (reader.GetMemberReference (h).Name) == "SetPeerReference");
+		// 1. The body must call SetActivationPeerReference (the new behavior).
+		var setPeerHandle = memberRefHandles.First (h => reader.GetString (reader.GetMemberReference (h).Name) == "SetActivationPeerReference");
 		Assert.True (ILContainsCallToken (ilBytes, MetadataTokens.GetToken (setPeerHandle)),
-			"nctor_*_uco IL should call IJavaPeerable.SetPeerReference for parameterless ctor");
+			"nctor_*_uco IL should call JavaPeerProxy.SetActivationPeerReference for parameterless ctor");
 
 		// 2. The body must call GetUninitializedObject (no `newobj` of the activation ctor).
 		var getUninitHandle = memberRefHandles.First (h => reader.GetString (reader.GetMemberReference (h).Name) == "GetUninitializedObject");
@@ -1771,7 +1771,8 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		}
 
 		Assert.NotNull (userCtorHandle);
-		Assert.True (ILContainsCallToken (ilBytes, MetadataTokens.GetToken (userCtorHandle!.Value)),
+		var resolvedUserCtorHandle = userCtorHandle.Value;
+		Assert.True (ILContainsCallToken (ilBytes, MetadataTokens.GetToken (resolvedUserCtorHandle)),
 			"nctor_*_uco IL should call the user-visible parameterless ctor on the target type");
 		if (activationCtorHandle.HasValue) {
 			Assert.False (ILContainsCallToken (ilBytes, MetadataTokens.GetToken (activationCtorHandle.Value)),
