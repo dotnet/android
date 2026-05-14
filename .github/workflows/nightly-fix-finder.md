@@ -86,7 +86,8 @@ steps:
         echo ""
         echo "## Category 4: Missing XML Documentation (src/Mono.Android/ only)"
         echo "### Public declarations in Mono.Android (shipped product) without XML docs"
-        grep -rn "public " --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/Mono.Android/ 2>/dev/null | grep -v "Designer.cs" | grep -v "AssemblyInfo.cs" | shuf | head -20 || echo "None found"
+        echo "### NOTE: Excludes Android.Runtime (plumbing), Java.Interop (bridge), and generated code"
+        grep -rn "public " --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/Mono.Android/ 2>/dev/null | grep -v "Designer.cs" | grep -v "AssemblyInfo.cs" | grep -v "Android.Runtime" | grep -v "Java.Interop" | grep -v "/obj/" | shuf | head -20 || echo "None found"
 
         echo ""
         echo "## Category 5: Code Style Issues"
@@ -198,6 +199,9 @@ Using the pre-collected sample data for the selected category, pick **one specif
 
 #### Missing XML Documentation (Category 4)
 - **ONLY** look at public APIs in `src/Mono.Android/` — this is the shipped product (Mono.Android.dll)
+- **EXCLUDE** `Android.Runtime` namespace (plumbing/bridge types like `InputStreamInvoker`, `JNIEnv`)
+- **EXCLUDE** `Java.Interop` namespace (low-level interop, not user-facing)
+- Focus on types developers actually use: `Android.App`, `Android.Widget`, `Android.Views`, etc.
 - Do NOT file issues for XML docs in build tasks, tools, or test code — those are internal
 - The issue should provide example doc comments for the specific APIs
 
