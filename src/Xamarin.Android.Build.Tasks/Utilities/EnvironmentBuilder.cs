@@ -86,19 +86,6 @@ class EnvironmentBuilder
 		AddEnvironmentVariable (defaultMonoDebug[0], defaultMonoDebug[1]);
 	}
 
-	public void AddHttpClientHandlerType (string? handlerType)
-	{
-		if (environmentParser.HaveHttpMessageHandler) {
-			return;
-		}
-
-		if (String.IsNullOrEmpty (handlerType)) {
-			handlerType = defaultHttpMessageHandler;
-		}
-
-		AddEnvironmentVariable ("XA_HTTP_CLIENT_HANDLER_TYPE", handlerType!.Trim ());
-	}
-
 	public void AddMonoGcParams (bool enableSgenConcurrent)
 	{
 		if (environmentParser.HaveMonoGCParams) {

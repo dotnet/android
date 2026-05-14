@@ -10,7 +10,6 @@ Methods:
 	bool Android.OS.Handler:Post (Java.Lang.IRunnable)
 	bool Android.OS.Handler:Post (System.Action)
 	bool Android.Runtime.AndroidEnvironment:Extends (System.Type,string)
-	bool Android.Runtime.AndroidEnvironment:IsAcceptableHttpMessageHandlerType (System.Type)
 	bool Android.Runtime.AndroidObjectReferenceManager:get_LogGlobalReferenceMessages ()
 	bool Android.Runtime.AndroidValueManager:ShouldReplaceMapping (System.WeakReference`1<Java.Interop.IJavaPeerable>,Java.Interop.JniObjectReference,Java.Interop.IJavaPeerable,Java.Interop.IJavaPeerable&)
 	bool Android.Runtime.InputStreamInvoker:get_CanRead ()

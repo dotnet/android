@@ -16,11 +16,10 @@ namespace MonoDroid.Tuner {
 		public override void Initialize (LinkContext context, MarkContext markContext)
 		{
 			base.Initialize (context, markContext);
-			context.TryGetCustomData ("AndroidHttpClientHandlerType", out string androidHttpClientHandlerType);
 			context.TryGetCustomData ("AndroidCustomViewMapFile", out string androidCustomViewMapFile);
 			var customViewMap = MonoAndroidHelper.LoadCustomViewMapFile (androidCustomViewMapFile);
 
-			markContext.RegisterMarkAssemblyAction (assembly => ProcessAssembly (assembly, androidHttpClientHandlerType, customViewMap));
+			markContext.RegisterMarkAssemblyAction (assembly => ProcessAssembly (assembly, customViewMap));
 			markContext.RegisterMarkTypeAction (type => ProcessType (type));
 		}
 
@@ -34,23 +33,12 @@ namespace MonoDroid.Tuner {
 				assembly.MainModule.HasTypeReference ("Android.Util.IAttributeSet");
 		}
 
-		public void ProcessAssembly (AssemblyDefinition assembly, string androidHttpClientHandlerType, Dictionary<string, HashSet<string>> customViewMap)
+		public void ProcessAssembly (AssemblyDefinition assembly, Dictionary<string, HashSet<string>> customViewMap)
 		{
 			if (!IsActiveFor (assembly))
 				return;
 
 			foreach (var type in assembly.MainModule.Types) {
-				// Custom HttpMessageHandler
-				if (!string.IsNullOrEmpty (androidHttpClientHandlerType) &&
-					androidHttpClientHandlerType.StartsWith (type.Name, StringComparison.Ordinal)) {
-					var assemblyQualifiedName = type.GetPartialAssemblyQualifiedName (Context);
-					if (assemblyQualifiedName == androidHttpClientHandlerType) {
-						Annotations.Mark (type);
-						PreservePublicParameterlessConstructors (type);
-						continue;
-					}
-				}
-
 				// Continue if not an IJavaObject
 				if (!type.ImplementsIJavaObject (cache))
 					continue;

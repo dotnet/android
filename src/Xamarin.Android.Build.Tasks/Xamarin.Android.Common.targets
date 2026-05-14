@@ -38,7 +38,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CalculateLayoutCodeBehind" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CalculateProjectDependencies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckForInvalidResourceFileNames" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CheckClientHandlerType" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectAssemblyFilesToCompress" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectDalvikFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectJarContentFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -479,11 +478,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_CheckAndroidHttpClientHandlerType"
-    Condition=" '$(AndroidHttpClientHandlerType)' != '' And '$(AndroidHttpClientHandlerType)' != 'Xamarin.Android.Net.AndroidMessageHandler' And '$(AndroidApplication)' == 'True' ">
-  <CheckClientHandlerType
-    ClientHandlerType="$(AndroidHttpClientHandlerType)"
-    ResolvedAssemblies="$(OutDir)$(TargetFileName);@(ReferencePath);@(ReferenceDependencyPaths)"
-  />
+    Condition=" '$(AndroidHttpClientHandlerType)' != '' ">
+  <Error Text="The AndroidHttpClientHandlerType property is not supported anymore. Please remove it from your project file. Use $(UseNativeHttpHandler) with values 'true' (AndroidMessageHandler) or 'false' (SocketsHttpHandler) instead." />
 </Target>
 
 <Target Name="_CheckUnsupportedPackages" AfterTargets="ResolvePackageAssets">
@@ -1750,7 +1746,6 @@ because xbuild doesn't support framework reference assemblies.
       AndroidAotMode="$(AndroidAotMode)"
       AndroidAotEnableLazyLoad="$(AndroidAotEnableLazyLoad)"
       EnableLLVM="$(EnableLLVM)"
-      HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
       TlsProvider="$(AndroidTlsProvider)"
       Debug="$(AndroidIncludeDebugSymbols)"
       AndroidSequencePointsMode="$(_SequencePointsMode)"
