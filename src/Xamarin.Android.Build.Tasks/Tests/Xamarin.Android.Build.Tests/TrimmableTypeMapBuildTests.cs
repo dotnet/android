@@ -463,6 +463,7 @@ namespace UnnamedProject {
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetProperty ("AndroidSupportedAbis", "arm64-v8a");
 			proj.SetProperty ("AndroidPackageFormat", "apk");
+			proj.SetProperty (KnownProperties.AndroidLinkTool, "r8");
 			proj.SetProperty ("TrimMode", "full");
 			proj.SetProperty ("_AndroidTypeMapImplementation", typemapImplementation);
 
