@@ -82,7 +82,7 @@ steps:
           3)
             echo "## Category 3: Large Files"
             echo "### Largest C# source files in src/ (top 20)"
-            find src -name '*.cs' -type f ! -path '*/obj/*' ! -path '*/bin/*' | xargs wc -l 2>/dev/null | sort -rn | head -21 | tail -20
+            find src -name '*.cs' -type f ! -path '*/obj/*' ! -path '*/bin/*' -print0 | xargs -0 wc -l 2>/dev/null | sort -rn | head -21 | tail -20
             ;;
           4)
             echo "## Category 4: Missing XML Documentation (src/Mono.Android/ only)"
