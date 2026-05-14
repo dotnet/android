@@ -567,8 +567,10 @@ namespace Java.InteropTests
 
 		static void AssertSameJavaObject (Java.Lang.Object expected, Java.Lang.Object actual)
 		{
+			Assert.IsNotNull (expected);
+			Assert.IsNotNull (actual);
 			Assert.IsTrue (
-				JNIEnv.IsSameObject (expected.Handle, actual.Handle),
+				JniEnvironment.Types.IsSameObject (expected.PeerReference, actual.PeerReference),
 				$"Expected Java object identity to match. Expected handle: {expected.Handle}, actual handle: {actual.Handle}.");
 		}
 	}
