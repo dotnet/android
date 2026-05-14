@@ -195,39 +195,6 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.True (peer.IsUnconditional, "Relative manifest names should root correctly after placeholder substitution.");
 	}
 
-	[Fact]
-	public void Execute_ManifestReferencedTypeNames_AreNormalizedInGeneratedManifest ()
-	{
-		using var peReader = CreateTestFixturePEReader ();
-		var manifestTemplate = System.Xml.Linq.XDocument.Parse ("""
-			<?xml version="1.0" encoding="utf-8"?>
-			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="my.app">
-			  <application>
-			    <activity android:name=".SimpleActivity" />
-			  </application>
-			</manifest>
-			""");
-
-		var result = CreateGenerator ().Execute (
-			new List<(string, PEReader)> { ("TestFixtures", peReader) },
-			new Version (11, 0),
-			new HashSet<string> (),
-			manifestConfig: new ManifestConfig (
-				PackageName: "my.app",
-				AndroidApiLevel: "35",
-				SupportedOSPlatformVersion: "21",
-				RuntimeProviderJavaName: "mono.MonoRuntimeProvider"),
-			manifestTemplate: manifestTemplate);
-
-		var androidName = (string?) result.Manifest?.Document.Root?
-			.Element ("application")?
-			.Element ("activity")?
-			.Attribute (System.Xml.Linq.XName.Get ("name", "http://schemas.android.com/apk/res/android"));
-
-		Assert.Equal ("my.app.SimpleActivity", androidName);
-	}
-
-
 	TrimmableTypeMapGenerator CreateGenerator () => new (new TestTrimmableTypeMapLogger (logMessages));
 
 	TrimmableTypeMapGenerator CreateGenerator (List<string> warnings) =>
@@ -353,36 +320,6 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.True (leafPeer.CannotRegisterInStaticConstructor, "Leaf instrumentation should still have deferred registration.");
 		Assert.True (midPeer.CannotRegisterInStaticConstructor, "Mid peer should have deferred registration after propagation.");
 		Assert.True (basePeer.CannotRegisterInStaticConstructor, "Base peer should have deferred registration after propagation.");
-	}
-
-	[Fact]
-	public void RootManifestReferencedTypes_RewritesManifestApplicationToActualJavaName ()
-	{
-		var peers = new List<JavaPeerInfo> {
-			new JavaPeerInfo {
-				JavaName = "crc64123456789abc/App", CompatJniName = "android/apptests/App",
-				ManagedTypeName = "Android.AppTests.App", ManagedTypeNamespace = "Android.AppTests", ManagedTypeShortName = "App",
-				AssemblyName = "Mono.Android.NET-Tests", IsUnconditional = false,
-			},
-		};
-
-		var doc = System.Xml.Linq.XDocument.Parse ("""
-			<?xml version="1.0" encoding="utf-8"?>
-			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="Mono.Android.NET_Tests">
-			  <application android:name="android.apptests.App" />
-			</manifest>
-			""");
-
-		var generator = CreateGenerator ();
-		generator.RootManifestReferencedTypes (peers, doc);
-
-		var actualName = (string?) doc.Root?
-			.Element ("application")?
-			.Attribute (System.Xml.Linq.XName.Get ("name", "http://schemas.android.com/apk/res/android"));
-
-		Assert.Equal ("crc64123456789abc.App", actualName);
-		Assert.True (peers [0].IsUnconditional);
-		Assert.True (peers [0].CannotRegisterInStaticConstructor);
 	}
 
 	[Fact]

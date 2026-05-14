@@ -49,8 +49,7 @@ public class TrimmableTypeMapGenerator
 			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
 
-		manifestTemplate = PrepareManifestForRooting (manifestTemplate, manifestConfig);
-		RootManifestReferencedTypes (allPeers, manifestTemplate);
+		RootManifestReferencedTypes (allPeers, PrepareManifestForRooting (manifestTemplate, manifestConfig));
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
 		PropagateCannotRegisterToDescendants (allPeers);
 
@@ -277,7 +276,6 @@ public class TrimmableTypeMapGenerator
 
 		var componentNames = new HashSet<string> (StringComparer.Ordinal);
 		var deferredRegistrationNames = new HashSet<string> (StringComparer.Ordinal);
-		var componentElements = new Dictionary<string, XElement> (StringComparer.Ordinal);
 		foreach (var element in root.Descendants ()) {
 			switch (element.Name.LocalName) {
 			case "application":
@@ -290,7 +288,6 @@ public class TrimmableTypeMapGenerator
 				if (name is not null) {
 					var resolvedName = ManifestNameResolver.Resolve (name, packageName);
 					componentNames.Add (resolvedName);
-					componentElements [resolvedName] = element;
 
 					if (element.Name.LocalName is "application" or "instrumentation") {
 						deferredRegistrationNames.Add (resolvedName);
@@ -316,12 +313,6 @@ public class TrimmableTypeMapGenerator
 
 		foreach (var name in componentNames) {
 			if (peersByDotName.TryGetValue (name, out var peers)) {
-				string actualJavaName = JniSignatureHelper.JniNameToJavaName (peers [0].JavaName);
-				var element = componentElements [name];
-				if (!string.Equals ((string?) element.Attribute (attName), actualJavaName, StringComparison.Ordinal)) {
-					element.SetAttributeValue (attName, actualJavaName);
-				}
-
 				foreach (var peer in peers) {
 					if (deferredRegistrationNames.Contains (name)) {
 						peer.CannotRegisterInStaticConstructor = true;
