@@ -76,12 +76,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- CoreCLRTrimmable intentionally runs a trimmed Release app.
-         Root the test assemblies so the unit tests themselves stay discoverable,
-         and keep any runtime-specific trim exceptions in TrimmerRoots.xml. -->
     <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="All" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
-    <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" />
-    <TrimmerRootAssembly Include="StartupHook" RootMode="All" />
+    <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
+    <TrimmerRootAssembly Include="StartupHook" RootMode="All" Condition=" '$(StartupHookSupport)' == 'true' " />
     <TrimmerRootDescriptor Include="TrimmerRoots.xml" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
     <_AndroidRemapMembers Include="Remaps.xml" />
     <_AndroidRemapMembers Include="IsAssignableFromRemaps.xml" Condition=" '$(_AndroidIsAssignableFromCheck)' == 'false' " />
@@ -107,8 +104,8 @@
     <Compile Include="Android.Views\LayoutInflaterTest.cs" />
     <Compile Include="Android.Widget\AdapterTests.cs" />
     <Compile Include="Android.Widget\CustomWidgetTests.cs" />
-    <Compile Include="Java.Interop\ExportTests.cs" />
     <Compile Include="Java.Interop\ConstructorActivationTests.cs" />
+    <Compile Include="Java.Interop\ExportTests.cs" />
     <Compile Include="Java.Interop\JavaConvertTest.cs" />
     <Compile Include="Java.Interop\JavaListTest.cs" />
     <Compile Include="Java.Interop\JavaObjectExtensionsTests.cs" />
