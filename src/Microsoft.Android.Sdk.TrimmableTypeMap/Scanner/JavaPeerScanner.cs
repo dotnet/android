@@ -24,11 +24,13 @@ public sealed class JavaPeerScanner : IDisposable
 
 	readonly Dictionary<string, AssemblyIndex> assemblyCache = new (StringComparer.Ordinal);
 	readonly Dictionary<(string typeName, string assemblyName), ActivationCtorInfo> activationCtorCache = new ();
+	readonly ITrimmableTypeMapLogger? logger;
 	readonly HashedPackageNamingPolicy packageNamingPolicy;
 
-	public JavaPeerScanner (string? packageNamingPolicy = null)
+	public JavaPeerScanner (string? packageNamingPolicy = null, ITrimmableTypeMapLogger? logger = null)
 	{
 		this.packageNamingPolicy = ParsePackageNamingPolicy (packageNamingPolicy);
+		this.logger = logger;
 	}
 
 	/// <summary>
@@ -178,6 +180,19 @@ public sealed class JavaPeerScanner : IDisposable
 			// Skip module-level types
 			if (index.Reader.GetString (typeDef.Name) == "<Module>") {
 				continue;
+			}
+
+			// [JniAddNativeMethodRegistrationAttribute] is not supported by the trimmable typemap
+			// by design (see XA4251). Detect the attribute *before* any per-type filters below
+			// (array type, no JNI name, etc.) so the diagnostic fires uniformly regardless of
+			// whether the type would otherwise have ended up in the typemap.
+			//
+			// Skip the per-method walk entirely for the overwhelmingly common case where
+			// the assembly doesn't even reference the attribute type — the per-assembly
+			// flag was computed cheaply in AssemblyIndex.Build.
+			if (index.MayUseJniAddNativeMethodRegistrationAttribute &&
+			    HasJniAddNativeMethodRegistrationAttribute (typeDef, index)) {
+				logger?.LogJniAddNativeMethodRegistrationAttributeError (MetadataTypeNameResolver.GetFullName (typeDef, index.Reader));
 			}
 
 			// Determine the JNI name and whether this is a known Java peer.
@@ -348,6 +363,23 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 
 		return (methods, fields);
+	}
+
+	static bool HasJniAddNativeMethodRegistrationAttribute (TypeDefinition typeDef, AssemblyIndex index)
+	{
+		const string JniAddNativeMethodRegistrationAttribute = "JniAddNativeMethodRegistrationAttribute";
+		const string JavaInteropNamespace = "Java.Interop";
+
+		foreach (var methodHandle in typeDef.GetMethods ()) {
+			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
+			foreach (var attrHandle in methodDef.GetCustomAttributes ()) {
+				var attr = index.Reader.GetCustomAttribute (attrHandle);
+				if (AssemblyIndex.IsCustomAttributeMatch (attr, index.Reader, JavaInteropNamespace, JniAddNativeMethodRegistrationAttribute)) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	/// <summary>
