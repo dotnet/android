@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="7-Zip.CommandLine" Version="18.1.0" GeneratePathProperty="true" ExcludeAssets="all" />
+    <PackageReference Include="7-Zip.CommandLine" Version="25.1.0" GeneratePathProperty="true" ExcludeAssets="all" />
   </ItemGroup>
 
   <Import Project="..\..\Configuration.props" />
