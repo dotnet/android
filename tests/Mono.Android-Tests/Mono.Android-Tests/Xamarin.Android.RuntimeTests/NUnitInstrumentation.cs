@@ -28,8 +28,8 @@ namespace Xamarin.Android.RuntimeTests
             if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
                 // TODO: https://github.com/dotnet/android/issues/11170
                 // Tests from the external Java.Interop-Tests assembly that fail under the
-                // trimmable typemap. These cannot use [Category("TrimmableIgnore")] because
-                // we don't control that assembly — they must be excluded by name here.
+                // trimmable typemap. We don't control that assembly, so they must be
+                // excluded by name here.
                 ExcludedTestNames = new [] {
                     // net.dot.jni.test.CallVirtualFromConstructorDerived Java class not in APK
                     "Java.InteropTests.InvokeVirtualFromConstructorTests",
