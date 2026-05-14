@@ -30,8 +30,6 @@ Copyright (C) 2018 Xamarin. All rights reserved.
       <!--Flag indicating if r8 should have EnableShrinking-->
       <_R8EnableShrinking Condition=" '$(AndroidLinkTool)' == 'r8' ">True</_R8EnableShrinking>
       <_R8EnableShrinking Condition=" '$(_R8EnableShrinking)' == '' ">False</_R8EnableShrinking>
-      <_R8GenerateApplicationProguardConfigurationFromAcwMap Condition=" '$(_R8GenerateApplicationProguardConfigurationFromAcwMap)' == '' ">True</_R8GenerateApplicationProguardConfigurationFromAcwMap>
-      <_R8UseMinimalXamarinProguardConfiguration Condition=" '$(_R8UseMinimalXamarinProguardConfiguration)' == '' ">False</_R8UseMinimalXamarinProguardConfiguration>
     </PropertyGroup>
 
     <Error
@@ -74,8 +72,6 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         ProguardCommonXamarinConfiguration="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg"
         ProguardGeneratedReferenceConfiguration="$(_ProguardProjectConfiguration)"
         ProguardGeneratedApplicationConfiguration="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg"
-        GenerateApplicationProguardConfigurationFromAcwMap="$(_R8GenerateApplicationProguardConfigurationFromAcwMap)"
-        UseMinimalXamarinProguardConfiguration="$(_R8UseMinimalXamarinProguardConfiguration)"
         ProguardMappingFileOutput="$(AndroidProguardMappingFile)"
         ProguardConfigurationFiles="@(_ProguardConfiguration)"
         EnableShrinking="$(_R8EnableShrinking)"

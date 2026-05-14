@@ -7,8 +7,6 @@
 
   <PropertyGroup>
     <_GenerateProguardAfterTargets Condition=" '$(_GenerateProguardAfterTargets)' == '' ">ILLink</_GenerateProguardAfterTargets>
-    <_R8GenerateApplicationProguardConfigurationFromAcwMap>false</_R8GenerateApplicationProguardConfigurationFromAcwMap>
-    <_R8UseMinimalXamarinProguardConfiguration>true</_R8UseMinimalXamarinProguardConfiguration>
   </PropertyGroup>
 
   <!-- Add TypeMap DLLs to ILLink input. ILLink natively understands TypeMapAttribute<T>. -->
@@ -38,20 +36,22 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="_GenerateProguardConfiguration"
-      BeforeTargets="_CompileToDalvik"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
-      Inputs="$(IntermediateOutputPath)*/linked/*.dll"
-      Outputs="$(_ProguardProjectConfiguration)">
+  <Target Name="_PrepareLinkedAssembliesForProguard"
+      AfterTargets="$(_GenerateProguardAfterTargets)"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' ">
     <ItemGroup>
-      <_LinkedAssemblyForProguard Include="$(IntermediateOutputPath)*/linked/*.dll" />
+      <_LinkedAssemblyForProguard Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
     </ItemGroup>
+  </Target>
+
+  <Target Name="_GenerateProguardConfiguration"
+      AfterTargets="_PrepareLinkedAssembliesForProguard"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
+      Inputs="@(_LinkedAssemblyForProguard)"
+      Outputs="$(_ProguardProjectConfiguration)">
     <GenerateProguardConfiguration
         LinkedAssemblies="@(_LinkedAssemblyForProguard)"
         OutputFile="$(_ProguardProjectConfiguration)" />
-    <ItemGroup>
-      <_LinkedAssemblyForProguard Remove="@(_LinkedAssemblyForProguard)" />
-    </ItemGroup>
   </Target>
 
   <!-- Add TypeMap DLLs to assembly store with per-ABI metadata.
