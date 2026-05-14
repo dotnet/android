@@ -1,4 +1,4 @@
-# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"792179d05b32219b4a9d7332001bba9dcef91f1be9d4c6f7680e9494caf1d693","compiler_version":"v0.68.3","strict":true,"agent_id":"copilot","agent_model":"claude-opus-4.6"}
+# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"0b74de2e11907aa4c0940c55ba8b100e7495b6153f2f2d8e2f30b5c68f376f14","compiler_version":"v0.68.3","strict":true,"agent_id":"copilot","agent_model":"claude-opus-4.6"}
 # gh-aw-manifest: {"version":1,"secrets":["ANDROID_TEAM_PAT","COPILOT_GITHUB_TOKEN","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN"],"actions":[{"repo":"actions/checkout","sha":"de0fac2e4500dabe0009e67214ff5f5447ce83dd","version":"v6.0.2"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"373c709c69115d41ff229c7e5df9f8788daa9553","version":"v9"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"ba90f2186d7ad780ec640f364005fa24e797b360","version":"v0.68.3"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.25.20"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.25.20"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.25.20"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.2.19"},{"image":"ghcr.io/github/github-mcp-server:v0.32.0"},{"image":"node:lts-alpine"}]}
 #    ___                   _   _      
 #   / _ \                 | | (_)     
@@ -186,14 +186,14 @@ jobs:
         run: |
           bash "${RUNNER_TEMP}/gh-aw/actions/create_prompt_first.sh"
           {
-          cat << 'GH_AW_PROMPT_d396895ae4ca836e_EOF'
+          cat << 'GH_AW_PROMPT_204ee20489506f1a_EOF'
           <system>
-          GH_AW_PROMPT_d396895ae4ca836e_EOF
+          GH_AW_PROMPT_204ee20489506f1a_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/xpia.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/temp_folder_prompt.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/markdown.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_prompt.md"
-          cat << 'GH_AW_PROMPT_d396895ae4ca836e_EOF'
+          cat << 'GH_AW_PROMPT_204ee20489506f1a_EOF'
           <safe-output-tools>
           Tools: create_issue, assign_to_agent, missing_tool, missing_data, noop
           </safe-output-tools>
@@ -225,12 +225,12 @@ jobs:
           {{/if}}
           </github-context>
           
-          GH_AW_PROMPT_d396895ae4ca836e_EOF
+          GH_AW_PROMPT_204ee20489506f1a_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/github_mcp_tools_with_safeoutputs_prompt.md"
-          cat << 'GH_AW_PROMPT_d396895ae4ca836e_EOF'
+          cat << 'GH_AW_PROMPT_204ee20489506f1a_EOF'
           </system>
           {{#runtime-import .github/workflows/nightly-fix-finder.md}}
-          GH_AW_PROMPT_d396895ae4ca836e_EOF
+          GH_AW_PROMPT_204ee20489506f1a_EOF
           } > "$GH_AW_PROMPT"
       - name: Interpolate variables and render templates
         uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
@@ -352,7 +352,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
       - name: Collect codebase metrics
-        run: "mkdir -p /tmp/gh-aw/agent\n{\n  echo \"## Scan Category Seed\"\n  CATEGORY_INDEX=$(( RANDOM % 10 ))\n  echo \"Selected category index: $CATEGORY_INDEX\"\n\n  echo \"\"\n  echo \"## Category 0: TODO/FIXME/HACK Comments\"\n  echo \"### Sample TODO/FIXME/HACK comments in src/\"\n  grep -rn \"TODO\\|FIXME\\|HACK\\|XXX\" --include=\"*.cs\" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo \"None found\"\n  echo \"### Total count\"\n  grep -rn \"TODO\\|FIXME\\|HACK\\|XXX\" --include=\"*.cs\" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | wc -l || true\n\n  echo \"\"\n  echo \"## Category 1: Files Missing Nullable Enable\"\n  echo \"### C# files in src/ without #nullable enable (sample)\"\n  grep -rL '#nullable enable' --include=\"*.cs\" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo \"None found\"\n  echo \"### Total count\"\n  grep -rL '#nullable enable' --include=\"*.cs\" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | wc -l || true\n\n  echo \"\"\n  echo \"## Category 2: Obsolete API Usage\"\n  echo \"### Files using [Obsolete] or #pragma warning disable CS0618 (sample)\"\n  grep -rn \"\\[Obsolete\\]\\|CS0618\\|CS0612\" --include=\"*.cs\" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo \"None found\"\n\n  echo \"\"\n  echo \"## Category 3: Large Files\"\n  echo \"### Largest C# source files in src/ (top 20)\"\n  find src -name '*.cs' -type f ! -path '*/obj/*' ! -path '*/bin/*' | xargs wc -l 2>/dev/null | sort -rn | head -21 | tail -20\n\n  echo \"\"\n  echo \"## Category 4: Missing XML Documentation (src/Mono.Android/ only)\"\n  echo \"### Public declarations in Mono.Android (shipped product) without XML docs\"\n  echo \"### NOTE: Excludes Android.Runtime (plumbing), Java.Interop (bridge), and generated code\"\n  grep -rn \"public \" --include=\"*.cs\" --exclude-dir=obj --exclude-dir=bin src/Mono.Android/ 2>/dev/null | grep -v \"Designer.cs\" | grep -v \"AssemblyInfo.cs\" | grep -v \"Android.Runtime\" | grep -v \"Java.Interop\" | grep -v \"/obj/\" | shuf | head -20 || echo \"None found\"\n\n  echo \"\"\n  echo \"## Category 5: Code Style Issues\"\n  echo \"### Files with leading spaces instead of tabs (sample)\"\n  grep -rlP \"^    [^ ]\" --include=\"*.cs\" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | grep -v \"Designer.cs\" | shuf | head -20 || echo \"None found\"\n\n  echo \"\"\n  echo \"## Category 6: Test Coverage Gaps\"\n  echo \"### Source files in Xamarin.Android.Build.Tasks without corresponding test\"\n  for f in $(find src/Xamarin.Android.Build.Tasks -name '*.cs' -type f ! -path '*/obj/*' ! -path '*/bin/*' ! -name '*Test*' ! -name 'Resources.Designer.cs' 2>/dev/null | shuf | head -20); do\n    basename=$(basename \"$f\" .cs)\n    if ! find tests -name \"${basename}*Test*.cs\" -o -name \"*Test*${basename}*.cs\" 2>/dev/null | grep -q .; then\n      echo \"  No test found for: $f\"\n    fi\n  done\n\n  echo \"\"\n  echo \"## Category 7: Unused Using Directives\"\n  echo \"### Files with many using directives (potential cleanup, sample)\"\n  for f in $(find src -name '*.cs' -type f ! -path '*/obj/*' ! -path '*/bin/*' ! -name 'Designer.cs' 2>/dev/null | shuf | head -30); do\n    count=$(grep -c \"^using \" \"$f\" 2>/dev/null || true)\n    if [ \"${count:-0}\" -gt 10 ]; then\n      echo \"  $f: $count using directives\"\n    fi\n  done\n\n  echo \"\"\n  echo \"## Category 8: Error Handling\"\n  echo \"### Bare catch blocks that may swallow exceptions (sample)\"\n  grep -rnP \"catch\\s*\\(Exception\\b\" --include=\"*.cs\" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo \"None found\"\n\n  echo \"\"\n  echo \"## Category 9: String Literals in Error Messages\"\n  echo \"### Hardcoded error strings that could be in Resources.resx (sample)\"\n  grep -rn 'Log\\.\\(Error\\|Warning\\)\\|LogError\\|LogWarning\\|LogCodedError\\|LogCodedWarning' --include=\"*.cs\" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | grep '\"' | grep -v \"Properties.Resources\" | shuf | head -20 || echo \"None found\"\n} > /tmp/gh-aw/agent/scan-results.md\necho \"✅ Codebase scan complete → /tmp/gh-aw/agent/scan-results.md\"\n"
+        run: "mkdir -p /tmp/gh-aw/agent\nCATEGORY_INDEX=$(( RANDOM % 10 ))\n{\n  echo \"## Selected Category: $CATEGORY_INDEX\"\n  echo \"\"\n\n  case $CATEGORY_INDEX in\n    0)\n      echo \"## Category 0: TODO/FIXME/HACK Comments\"\n      echo \"### Sample TODO/FIXME/HACK comments in src/\"\n      grep -rn \"TODO\\|FIXME\\|HACK\\|XXX\" --include=\"*.cs\" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo \"None found\"\n      echo \"### Total count\"\n      grep -rn \"TODO\\|FIXME\\|HACK\\|XXX\" --include=\"*.cs\" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | wc -l || true\n      ;;\n    1)\n      echo \"## Category 1: Files Missing Nullable Enable\"\n      echo \"### C# files in src/ without #nullable enable (sample)\"\n      grep -rL '#nullable enable' --include=\"*.cs\" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo \"None found\"\n      echo \"### Total count\"\n      grep -rL '#nullable enable' --include=\"*.cs\" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | wc -l || true\n      ;;\n    2)\n      echo \"## Category 2: Obsolete API Usage\"\n      echo \"### Files using [Obsolete] or #pragma warning disable CS0618 (sample)\"\n      grep -rn \"\\[Obsolete\\]\\|CS0618\\|CS0612\" --include=\"*.cs\" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo \"None found\"\n      ;;\n    3)\n      echo \"## Category 3: Large Files\"\n      echo \"### Largest C# source files in src/ (top 20)\"\n      find src -name '*.cs' -type f ! -path '*/obj/*' ! -path '*/bin/*' | xargs wc -l 2>/dev/null | sort -rn | head -21 | tail -20\n      ;;\n    4)\n      echo \"## Category 4: Missing XML Documentation (src/Mono.Android/ only)\"\n      echo \"### Public declarations in Mono.Android (shipped product) without XML docs\"\n      echo \"### NOTE: Excludes Android.Runtime (plumbing), Java.Interop (bridge), and generated code\"\n      grep -rn \"public \" --include=\"*.cs\" --exclude-dir=obj --exclude-dir=bin src/Mono.Android/ 2>/dev/null | grep -v \"Designer.cs\" | grep -v \"AssemblyInfo.cs\" | grep -v \"Android.Runtime\" | grep -v \"Java.Interop\" | grep -v \"/obj/\" | shuf | head -20 || echo \"None found\"\n      ;;\n    5)\n      echo \"## Category 5: Code Style Issues\"\n      echo \"### Files with leading spaces instead of tabs (sample)\"\n      grep -rlP \"^    [^ ]\" --include=\"*.cs\" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | grep -v \"Designer.cs\" | shuf | head -20 || echo \"None found\"\n      ;;\n    6)\n      echo \"## Category 6: Test Coverage Gaps\"\n      echo \"### Source files in Xamarin.Android.Build.Tasks without corresponding test\"\n      for f in $(find src/Xamarin.Android.Build.Tasks -name '*.cs' -type f ! -path '*/obj/*' ! -path '*/bin/*' ! -name '*Test*' ! -name 'Resources.Designer.cs' 2>/dev/null | shuf | head -20); do\n        basename=$(basename \"$f\" .cs)\n        if ! find tests -name \"${basename}*Test*.cs\" -o -name \"*Test*${basename}*.cs\" 2>/dev/null | grep -q .; then\n          echo \"  No test found for: $f\"\n        fi\n      done\n      ;;\n    7)\n      echo \"## Category 7: Unused Using Directives\"\n      echo \"### Files with many using directives (potential cleanup, sample)\"\n      for f in $(find src -name '*.cs' -type f ! -path '*/obj/*' ! -path '*/bin/*' ! -name 'Designer.cs' 2>/dev/null | shuf | head -30); do\n        count=$(grep -c \"^using \" \"$f\" 2>/dev/null || true)\n        if [ \"${count:-0}\" -gt 10 ]; then\n          echo \"  $f: $count using directives\"\n        fi\n      done\n      ;;\n    8)\n      echo \"## Category 8: Error Handling\"\n      echo \"### Bare catch blocks that may swallow exceptions (sample)\"\n      grep -rnP \"catch\\s*\\(Exception\\b\" --include=\"*.cs\" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo \"None found\"\n      ;;\n    9)\n      echo \"## Category 9: String Literals in Error Messages\"\n      echo \"### Hardcoded error strings that could be in Resources.resx (sample)\"\n      grep -rn 'Log\\.\\(Error\\|Warning\\)\\|LogError\\|LogWarning\\|LogCodedError\\|LogCodedWarning' --include=\"*.cs\" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | grep '\"' | grep -v \"Properties.Resources\" | shuf | head -20 || echo \"None found\"\n      ;;\n  esac\n} > /tmp/gh-aw/agent/scan-results.md\necho \"✅ Category $CATEGORY_INDEX scan complete → /tmp/gh-aw/agent/scan-results.md\"\n"
 
       - name: Configure Git credentials
         env:
@@ -403,9 +403,9 @@ jobs:
           mkdir -p "${RUNNER_TEMP}/gh-aw/safeoutputs"
           mkdir -p /tmp/gh-aw/safeoutputs
           mkdir -p /tmp/gh-aw/mcp-logs/safeoutputs
-          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << GH_AW_SAFE_OUTPUTS_CONFIG_63c52d45730f7de1_EOF
+          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << GH_AW_SAFE_OUTPUTS_CONFIG_e0fdcd6a13f611e4_EOF
           {"assign_to_agent":{"github-token":"${ANDROID_TEAM_PAT}","max":1,"model":"claude-opus-4.6","target":"*"},"create_issue":{"close_older_issues":true,"expires":168,"labels":["automated","code-quality"],"max":1,"title_prefix":"[fix-finder] "},"create_report_incomplete_issue":{},"missing_data":{},"missing_tool":{},"noop":{"max":1,"report-as-issue":"true"},"report_incomplete":{}}
-          GH_AW_SAFE_OUTPUTS_CONFIG_63c52d45730f7de1_EOF
+          GH_AW_SAFE_OUTPUTS_CONFIG_e0fdcd6a13f611e4_EOF
       - name: Write Safe Outputs Tools
         env:
           GH_AW_TOOLS_META_JSON: |
@@ -624,7 +624,7 @@ jobs:
           export MCP_GATEWAY_DOCKER_COMMAND='docker run -i --rm --network host -v /var/run/docker.sock:/var/run/docker.sock -e MCP_GATEWAY_PORT -e MCP_GATEWAY_DOMAIN -e MCP_GATEWAY_API_KEY -e MCP_GATEWAY_PAYLOAD_DIR -e MCP_GATEWAY_PAYLOAD_SIZE_THRESHOLD -e DEBUG -e MCP_GATEWAY_LOG_DIR -e GH_AW_MCP_LOG_DIR -e GH_AW_SAFE_OUTPUTS -e GH_AW_SAFE_OUTPUTS_CONFIG_PATH -e GH_AW_SAFE_OUTPUTS_TOOLS_PATH -e GH_AW_ASSETS_BRANCH -e GH_AW_ASSETS_MAX_SIZE_KB -e GH_AW_ASSETS_ALLOWED_EXTS -e DEFAULT_BRANCH -e GITHUB_MCP_SERVER_TOKEN -e GITHUB_MCP_GUARD_MIN_INTEGRITY -e GITHUB_MCP_GUARD_REPOS -e GITHUB_REPOSITORY -e GITHUB_SERVER_URL -e GITHUB_SHA -e GITHUB_WORKSPACE -e GITHUB_TOKEN -e GITHUB_RUN_ID -e GITHUB_RUN_NUMBER -e GITHUB_RUN_ATTEMPT -e GITHUB_JOB -e GITHUB_ACTION -e GITHUB_EVENT_NAME -e GITHUB_EVENT_PATH -e GITHUB_ACTOR -e GITHUB_ACTOR_ID -e GITHUB_TRIGGERING_ACTOR -e GITHUB_WORKFLOW -e GITHUB_WORKFLOW_REF -e GITHUB_WORKFLOW_SHA -e GITHUB_REF -e GITHUB_REF_NAME -e GITHUB_REF_TYPE -e GITHUB_HEAD_REF -e GITHUB_BASE_REF -e GH_AW_SAFE_OUTPUTS_PORT -e GH_AW_SAFE_OUTPUTS_API_KEY -v /tmp/gh-aw/mcp-payloads:/tmp/gh-aw/mcp-payloads:rw -v /opt:/opt:ro -v /tmp:/tmp:rw -v '"${GITHUB_WORKSPACE}"':'"${GITHUB_WORKSPACE}"':rw ghcr.io/github/gh-aw-mcpg:v0.2.19'
           
           mkdir -p /home/runner/.copilot
-          cat << GH_AW_MCP_CONFIG_4cf376c3d1425e22_EOF | bash "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.sh"
+          cat << GH_AW_MCP_CONFIG_cd5ef2e2a3c1ab40_EOF | bash "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.sh"
           {
             "mcpServers": {
               "github": {
@@ -668,7 +668,7 @@ jobs:
               "payloadDir": "${MCP_GATEWAY_PAYLOAD_DIR}"
             }
           }
-          GH_AW_MCP_CONFIG_4cf376c3d1425e22_EOF
+          GH_AW_MCP_CONFIG_cd5ef2e2a3c1ab40_EOF
       - name: Download activation artifact
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:

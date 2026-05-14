@@ -54,77 +54,80 @@ steps:
   - name: Collect codebase metrics
     run: |
       mkdir -p /tmp/gh-aw/agent
+      CATEGORY_INDEX=$(( RANDOM % 10 ))
       {
-        echo "## Scan Category Seed"
-        CATEGORY_INDEX=$(( RANDOM % 10 ))
-        echo "Selected category index: $CATEGORY_INDEX"
-
+        echo "## Selected Category: $CATEGORY_INDEX"
         echo ""
-        echo "## Category 0: TODO/FIXME/HACK Comments"
-        echo "### Sample TODO/FIXME/HACK comments in src/"
-        grep -rn "TODO\|FIXME\|HACK\|XXX" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo "None found"
-        echo "### Total count"
-        grep -rn "TODO\|FIXME\|HACK\|XXX" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | wc -l || true
 
-        echo ""
-        echo "## Category 1: Files Missing Nullable Enable"
-        echo "### C# files in src/ without #nullable enable (sample)"
-        grep -rL '#nullable enable' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo "None found"
-        echo "### Total count"
-        grep -rL '#nullable enable' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | wc -l || true
-
-        echo ""
-        echo "## Category 2: Obsolete API Usage"
-        echo "### Files using [Obsolete] or #pragma warning disable CS0618 (sample)"
-        grep -rn "\[Obsolete\]\|CS0618\|CS0612" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo "None found"
-
-        echo ""
-        echo "## Category 3: Large Files"
-        echo "### Largest C# source files in src/ (top 20)"
-        find src -name '*.cs' -type f ! -path '*/obj/*' ! -path '*/bin/*' | xargs wc -l 2>/dev/null | sort -rn | head -21 | tail -20
-
-        echo ""
-        echo "## Category 4: Missing XML Documentation (src/Mono.Android/ only)"
-        echo "### Public declarations in Mono.Android (shipped product) without XML docs"
-        echo "### NOTE: Excludes Android.Runtime (plumbing), Java.Interop (bridge), and generated code"
-        grep -rn "public " --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/Mono.Android/ 2>/dev/null | grep -v "Designer.cs" | grep -v "AssemblyInfo.cs" | grep -v "Android.Runtime" | grep -v "Java.Interop" | grep -v "/obj/" | shuf | head -20 || echo "None found"
-
-        echo ""
-        echo "## Category 5: Code Style Issues"
-        echo "### Files with leading spaces instead of tabs (sample)"
-        grep -rlP "^    [^ ]" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | grep -v "Designer.cs" | shuf | head -20 || echo "None found"
-
-        echo ""
-        echo "## Category 6: Test Coverage Gaps"
-        echo "### Source files in Xamarin.Android.Build.Tasks without corresponding test"
-        for f in $(find src/Xamarin.Android.Build.Tasks -name '*.cs' -type f ! -path '*/obj/*' ! -path '*/bin/*' ! -name '*Test*' ! -name 'Resources.Designer.cs' 2>/dev/null | shuf | head -20); do
-          basename=$(basename "$f" .cs)
-          if ! find tests -name "${basename}*Test*.cs" -o -name "*Test*${basename}*.cs" 2>/dev/null | grep -q .; then
-            echo "  No test found for: $f"
-          fi
-        done
-
-        echo ""
-        echo "## Category 7: Unused Using Directives"
-        echo "### Files with many using directives (potential cleanup, sample)"
-        for f in $(find src -name '*.cs' -type f ! -path '*/obj/*' ! -path '*/bin/*' ! -name 'Designer.cs' 2>/dev/null | shuf | head -30); do
-          count=$(grep -c "^using " "$f" 2>/dev/null || true)
-          if [ "${count:-0}" -gt 10 ]; then
-            echo "  $f: $count using directives"
-          fi
-        done
-
-        echo ""
-        echo "## Category 8: Error Handling"
-        echo "### Bare catch blocks that may swallow exceptions (sample)"
-        grep -rnP "catch\s*\(Exception\b" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo "None found"
-
-        echo ""
-        echo "## Category 9: String Literals in Error Messages"
-        echo "### Hardcoded error strings that could be in Resources.resx (sample)"
-        grep -rn 'Log\.\(Error\|Warning\)\|LogError\|LogWarning\|LogCodedError\|LogCodedWarning' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | grep '"' | grep -v "Properties.Resources" | shuf | head -20 || echo "None found"
+        case $CATEGORY_INDEX in
+          0)
+            echo "## Category 0: TODO/FIXME/HACK Comments"
+            echo "### Sample TODO/FIXME/HACK comments in src/"
+            grep -rn "TODO\|FIXME\|HACK\|XXX" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo "None found"
+            echo "### Total count"
+            grep -rn "TODO\|FIXME\|HACK\|XXX" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | wc -l || true
+            ;;
+          1)
+            echo "## Category 1: Files Missing Nullable Enable"
+            echo "### C# files in src/ without #nullable enable (sample)"
+            grep -rL '#nullable enable' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo "None found"
+            echo "### Total count"
+            grep -rL '#nullable enable' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | wc -l || true
+            ;;
+          2)
+            echo "## Category 2: Obsolete API Usage"
+            echo "### Files using [Obsolete] or #pragma warning disable CS0618 (sample)"
+            grep -rn "\[Obsolete\]\|CS0618\|CS0612" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo "None found"
+            ;;
+          3)
+            echo "## Category 3: Large Files"
+            echo "### Largest C# source files in src/ (top 20)"
+            find src -name '*.cs' -type f ! -path '*/obj/*' ! -path '*/bin/*' | xargs wc -l 2>/dev/null | sort -rn | head -21 | tail -20
+            ;;
+          4)
+            echo "## Category 4: Missing XML Documentation (src/Mono.Android/ only)"
+            echo "### Public declarations in Mono.Android (shipped product) without XML docs"
+            echo "### NOTE: Excludes Android.Runtime (plumbing), Java.Interop (bridge), and generated code"
+            grep -rn "public " --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/Mono.Android/ 2>/dev/null | grep -v "Designer.cs" | grep -v "AssemblyInfo.cs" | grep -v "Android.Runtime" | grep -v "Java.Interop" | grep -v "/obj/" | shuf | head -20 || echo "None found"
+            ;;
+          5)
+            echo "## Category 5: Code Style Issues"
+            echo "### Files with leading spaces instead of tabs (sample)"
+            grep -rlP "^    [^ ]" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | grep -v "Designer.cs" | shuf | head -20 || echo "None found"
+            ;;
+          6)
+            echo "## Category 6: Test Coverage Gaps"
+            echo "### Source files in Xamarin.Android.Build.Tasks without corresponding test"
+            for f in $(find src/Xamarin.Android.Build.Tasks -name '*.cs' -type f ! -path '*/obj/*' ! -path '*/bin/*' ! -name '*Test*' ! -name 'Resources.Designer.cs' 2>/dev/null | shuf | head -20); do
+              basename=$(basename "$f" .cs)
+              if ! find tests -name "${basename}*Test*.cs" -o -name "*Test*${basename}*.cs" 2>/dev/null | grep -q .; then
+                echo "  No test found for: $f"
+              fi
+            done
+            ;;
+          7)
+            echo "## Category 7: Unused Using Directives"
+            echo "### Files with many using directives (potential cleanup, sample)"
+            for f in $(find src -name '*.cs' -type f ! -path '*/obj/*' ! -path '*/bin/*' ! -name 'Designer.cs' 2>/dev/null | shuf | head -30); do
+              count=$(grep -c "^using " "$f" 2>/dev/null || true)
+              if [ "${count:-0}" -gt 10 ]; then
+                echo "  $f: $count using directives"
+              fi
+            done
+            ;;
+          8)
+            echo "## Category 8: Error Handling"
+            echo "### Bare catch blocks that may swallow exceptions (sample)"
+            grep -rnP "catch\s*\(Exception\b" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo "None found"
+            ;;
+          9)
+            echo "## Category 9: String Literals in Error Messages"
+            echo "### Hardcoded error strings that could be in Resources.resx (sample)"
+            grep -rn 'Log\.\(Error\|Warning\)\|LogError\|LogWarning\|LogCodedError\|LogCodedWarning' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | grep '"' | grep -v "Properties.Resources" | shuf | head -20 || echo "None found"
+            ;;
+        esac
       } > /tmp/gh-aw/agent/scan-results.md
-      echo "✅ Codebase scan complete → /tmp/gh-aw/agent/scan-results.md"
+      echo "✅ Category $CATEGORY_INDEX scan complete → /tmp/gh-aw/agent/scan-results.md"
 ---
 
 # Nightly Fix Finder
@@ -141,15 +144,15 @@ Each night, select one scan category, analyze the pre-collected data, find one s
 - **Run Date**: Each run picks a random category (0-9) using $RANDOM
 - **Pre-computed scan results**: `/tmp/gh-aw/agent/scan-results.md`
 
-## Phase 1: Load Scan Results and Select Category
+## Phase 1: Load Scan Results
 
 ### 1.1 Read Pre-computed Data
 
-Read `/tmp/gh-aw/agent/scan-results.md` which contains pre-collected metrics for all 10 categories. The category index for today is already computed using the day-of-year as a seed.
+Read `/tmp/gh-aw/agent/scan-results.md` which contains pre-collected metrics for **one randomly selected category**. The file header tells you which category was selected.
 
-### 1.2 Determine Today's Category
+### 1.2 Identify the Category
 
-The scan results include a `Selected category index` value (0-9). Use that to pick today's focus:
+The scan results start with `## Selected Category: N` where N is 0-9. The file ONLY contains data for that one category — you MUST work with whatever category was selected:
 
 | Index | Category | Description |
 |-------|----------|-------------|
@@ -164,7 +167,7 @@ The scan results include a `Selected category index` value (0-9). Use that to pi
 | 8 | Error Handling | Find bare `catch (Exception)` blocks that swallow errors |
 | 9 | String Literals | Find hardcoded error strings that should be in `Properties.Resources` |
 
-If the selected category has no actionable findings in the scan results, move to the next category (wrapping around) until you find one with data.
+If the selected category has no actionable findings in the scan results, call `noop` — do NOT switch to a different category.
 
 ## Phase 2: Deep Analysis
 
