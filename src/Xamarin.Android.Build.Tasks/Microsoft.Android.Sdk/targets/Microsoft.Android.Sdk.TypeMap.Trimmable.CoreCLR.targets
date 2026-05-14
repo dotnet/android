@@ -12,6 +12,7 @@
     <ItemGroup>
       <ManagedAssemblyToLink Include="$(_TypeMapOutputDirectory)*.dll">
         <DestinationSubPath>%(Filename)%(Extension)</DestinationSubPath>
+        <IsTrimmable>true</IsTrimmable>
       </ManagedAssemblyToLink>
     </ItemGroup>
   </Target>
@@ -20,9 +21,15 @@
   <Target Name="_ConfigureTrimmableTypeMapForLinker"
       BeforeTargets="PrepareForILLink;_RunILLink"
       DependsOnTargets="_GenerateTrimmableTypeMap">
+    <ItemGroup>
+      <_TrimmableTypeMapEntryAssemblies Include="$(_TypeMapOutputDirectory)*.dll" />
+    </ItemGroup>
     <PropertyGroup>
-      <_ExtraTrimmerArgs>--typemap-entry-assembly $(_TypeMapAssemblyName) $(_ExtraTrimmerArgs)</_ExtraTrimmerArgs>
+      <_ExtraTrimmerArgs>@(_TrimmableTypeMapEntryAssemblies->'--typemap-entry-assembly %(Filename)', ' ') $(_ExtraTrimmerArgs)</_ExtraTrimmerArgs>
     </PropertyGroup>
+    <ItemGroup>
+      <_TrimmableTypeMapEntryAssemblies Remove="@(_TrimmableTypeMapEntryAssemblies)" />
+    </ItemGroup>
   </Target>
 
   <!-- Add TypeMap DLLs to assembly store with per-ABI metadata.
