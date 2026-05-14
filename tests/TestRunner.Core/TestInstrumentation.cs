@@ -47,44 +47,42 @@ public abstract class TestInstrumentation : Instrumentation
 	{
 		base.OnStart ();
 
-		Task.Run (() => {
-			var bundle = new Bundle ();
-			try {
-				var writeablePath = Application.Context.GetExternalFilesDir (null)?.AbsolutePath ?? Path.GetTempPath ();
-				var resultsDir = Path.Combine (writeablePath, "TestResults");
-				Directory.CreateDirectory (resultsDir);
+		var bundle = new Bundle ();
+		try {
+			var writeablePath = Application.Context.GetExternalFilesDir (null)?.AbsolutePath ?? Path.GetTempPath ();
+			var resultsDir = Path.Combine (writeablePath, "TestResults");
+			Directory.CreateDirectory (resultsDir);
 
-				var filter = BuildNUnitFilter ();
-				int passed = 0, failed = 0, skipped = 0;
-				var allResults = new List<ITestResult> ();
-				var listener = new TestListener (this);
+			var filter = BuildNUnitFilter ();
+			int passed = 0, failed = 0, skipped = 0;
+			var allResults = new List<ITestResult> ();
+			var listener = new TestListener (this);
 
-				foreach (var assembly in GetTestAssemblies ()) {
-					Log.Info (LogTag, $"Loading tests from: {assembly.GetName ().Name}");
-					var runner = new NUnitTestAssemblyRunner (new AndroidTestAssemblyBuilder ());
-					runner.Load (assembly, new Dictionary<string, object> ());
+			foreach (var assembly in GetTestAssemblies ()) {
+				Log.Info (LogTag, $"Loading tests from: {assembly.GetName ().Name}");
+				var runner = new NUnitTestAssemblyRunner (new AndroidTestAssemblyBuilder ());
+				runner.Load (assembly, new Dictionary<string, object> ());
 
-					var result = runner.Run (listener, filter);
-					CountResults (result, ref passed, ref failed, ref skipped);
-					allResults.Add (result);
-				}
-
-				var trxPath = Path.Combine (resultsDir, "TestResults.trx");
-				WriteTrxFile (trxPath, allResults);
-				Log.Info (LogTag, $"TRX written to: {trxPath}");
-				Log.Info (LogTag, $"Results: passed={passed}, failed={failed}, skipped={skipped}");
-
-				bundle.PutInt ("passed", passed);
-				bundle.PutInt ("failed", failed);
-				bundle.PutInt ("skipped", skipped);
-				bundle.PutString ("resultsPath", trxPath);
-				Finish (Result.Ok, bundle);
-			} catch (Exception ex) {
-				Log.Error (LogTag, $"Test run failed: {ex}");
-				bundle.PutString ("error", ex.ToString ());
-				Finish (Result.Canceled, bundle);
+				var result = runner.Run (listener, filter);
+				CountResults (result, ref passed, ref failed, ref skipped);
+				allResults.Add (result);
 			}
-		});
+
+			var trxPath = Path.Combine (resultsDir, "TestResults.trx");
+			WriteTrxFile (trxPath, allResults);
+			Log.Info (LogTag, $"TRX written to: {trxPath}");
+			Log.Info (LogTag, $"Results: passed={passed}, failed={failed}, skipped={skipped}");
+
+			bundle.PutInt ("passed", passed);
+			bundle.PutInt ("failed", failed);
+			bundle.PutInt ("skipped", skipped);
+			bundle.PutString ("resultsPath", trxPath);
+			Finish (Result.Ok, bundle);
+		} catch (Exception ex) {
+			Log.Error (LogTag, $"Test run failed: {ex}");
+			bundle.PutString ("error", ex.ToString ());
+			Finish (Result.Canceled, bundle);
+		}
 	}
 
 	/// <summary>
