@@ -60,21 +60,21 @@ steps:
         echo ""
         echo "## Category 0: TODO/FIXME/HACK Comments"
         echo "### Sample TODO/FIXME/HACK comments in src/"
-        grep -rn "TODO\|FIXME\|HACK\|XXX" --include="*.cs" src/ 2>/dev/null | grep -v "obj/" | grep -v "bin/" | shuf | head -20 || echo "None found"
+        grep -rn "TODO\|FIXME\|HACK\|XXX" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo "None found"
         echo "### Total count"
-        grep -rn "TODO\|FIXME\|HACK\|XXX" --include="*.cs" src/ 2>/dev/null | grep -v "obj/" | grep -v "bin/" | wc -l
+        grep -rn "TODO\|FIXME\|HACK\|XXX" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | wc -l
 
         echo ""
         echo "## Category 1: Files Missing Nullable Enable"
         echo "### C# files in src/ without #nullable enable (sample)"
-        find src -name '*.cs' -type f ! -path '*/obj/*' ! -path '*/bin/*' -exec grep -rL '#nullable enable' {} \; 2>/dev/null | shuf | head -20 || echo "None found"
+        grep -rL '#nullable enable' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo "None found"
         echo "### Total count"
-        find src -name '*.cs' -type f ! -path '*/obj/*' ! -path '*/bin/*' -exec grep -rL '#nullable enable' {} \; 2>/dev/null | wc -l
+        grep -rL '#nullable enable' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | wc -l
 
         echo ""
         echo "## Category 2: Obsolete API Usage"
         echo "### Files using [Obsolete] or #pragma warning disable CS0618 (sample)"
-        grep -rn "\[Obsolete\]\|CS0618\|CS0612" --include="*.cs" src/ 2>/dev/null | grep -v "obj/" | grep -v "bin/" | shuf | head -20 || echo "None found"
+        grep -rn "\[Obsolete\]\|CS0618\|CS0612" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo "None found"
 
         echo ""
         echo "## Category 3: Large Files"
@@ -83,13 +83,13 @@ steps:
 
         echo ""
         echo "## Category 4: Missing XML Documentation"
-        echo "### Public classes/methods without XML doc comments (sample)"
-        grep -rn "public " --include="*.cs" src/ 2>/dev/null | grep -v "obj/" | grep -v "bin/" | grep -v "///" | grep -v "Designer.cs" | grep -v "AssemblyInfo.cs" | shuf | head -20 || echo "None found"
+        echo "### Public declarations (the agent should verify if XML docs exist on preceding lines)"
+        grep -rn "public " --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | grep -v "Designer.cs" | grep -v "AssemblyInfo.cs" | shuf | head -20 || echo "None found"
 
         echo ""
         echo "## Category 5: Code Style Issues"
         echo "### Files with leading spaces instead of tabs (sample)"
-        grep -rlP "^    [^ ]" --include="*.cs" src/ 2>/dev/null | grep -v "obj/" | grep -v "bin/" | grep -v "Designer.cs" | shuf | head -20 || echo "None found"
+        grep -rlP "^    [^ ]" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | grep -v "Designer.cs" | shuf | head -20 || echo "None found"
 
         echo ""
         echo "## Category 6: Test Coverage Gaps"
@@ -114,12 +114,12 @@ steps:
         echo ""
         echo "## Category 8: Error Handling"
         echo "### Bare catch blocks that may swallow exceptions (sample)"
-        grep -rn "catch\s*(Exception\b" --include="*.cs" src/ 2>/dev/null | grep -v "obj/" | grep -v "bin/" | shuf | head -20 || echo "None found"
+        grep -rnP "catch\s*\(Exception\b" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo "None found"
 
         echo ""
         echo "## Category 9: String Literals in Error Messages"
         echo "### Hardcoded error strings that could be in Resources.resx (sample)"
-        grep -rn 'Log\.\(Error\|Warning\)\|LogError\|LogWarning\|LogCodedError\|LogCodedWarning' --include="*.cs" src/ 2>/dev/null | grep '"' | grep -v "Properties.Resources" | grep -v "obj/" | grep -v "bin/" | shuf | head -20 || echo "None found"
+        grep -rn 'Log\.\(Error\|Warning\)\|LogError\|LogWarning\|LogCodedError\|LogCodedWarning' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | grep '"' | grep -v "Properties.Resources" | shuf | head -20 || echo "None found"
       } > /tmp/gh-aw/agent/scan-results.md
       echo "✅ Codebase scan complete → /tmp/gh-aw/agent/scan-results.md"
 ---
@@ -135,7 +135,7 @@ Each night, select one scan category, analyze the pre-collected data, find one s
 ## Current Context
 
 - **Repository**: ${{ github.repository }}
-- **Run Date**: $(date +%Y-%m-%d)
+- **Run Date**: The date seed is in the pre-computed scan results below
 - **Pre-computed scan results**: `/tmp/gh-aw/agent/scan-results.md`
 
 ## Phase 1: Load Scan Results and Select Category
