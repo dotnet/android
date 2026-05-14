@@ -68,6 +68,9 @@ void Host::OnInit (jstring language, jstring filesDir, jstring cacheDir, JnienvI
 
 	// We expect the struct to be initialized by the managed land the way it sees fit, we set only the
 	// fields we support.
+	// NativeAOT initializes Mono.Android's common JNI state before creating the JniRuntime,
+	// so the Java peer marker classes must be provided by the host instead of being looked
+	// up later from mono.android.Runtime static fields like MonoVM/CoreCLR.
 	jclass lrefIGCUserPeer = env->FindClass ("mono/android/IGCUserPeer");
 	if (lrefIGCUserPeer == nullptr) [[unlikely]] {
 		env->ExceptionDescribe ();
