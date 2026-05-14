@@ -3,6 +3,10 @@ description: Nightly scan for random code improvement opportunities, files issue
 on:
   schedule:
     - cron: "daily around 02:00"
+  pull_request:
+    paths:
+      - ".github/workflows/nightly-fix-finder.md"
+      - ".github/workflows/nightly-fix-finder.lock.yml"
   workflow_dispatch:
 permissions:
   contents: read
