@@ -30,7 +30,6 @@
 
   <ItemGroup Condition=" '$(HostOS)' != 'Windows' ">
     <Compile Remove="**/*Windows*" />
-    <Compile Include="Steps/Step_Get_Windows_Binutils.cs" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(HostOS)' == 'Windows' ">

@@ -260,6 +260,9 @@
     <ProjectReference Include="..\bundletool\bundletool.csproj">
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="..\binutils\binutils.csproj">
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
     <ProjectReference Include="..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
     <ProjectReference Include="..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
   </ItemGroup>
