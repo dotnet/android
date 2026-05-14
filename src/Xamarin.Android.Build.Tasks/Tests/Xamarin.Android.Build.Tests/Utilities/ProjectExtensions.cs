@@ -24,6 +24,7 @@ public static class ProjectExtensions
 			return;
 		}
 		project.SetPublishAot (true);
+		project.SetProperty ("_SkipNdkResolution", "true");
 		EnablePreviewFeaturesIfNeeded (project, runtime);
 	}
 

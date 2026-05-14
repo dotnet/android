@@ -299,7 +299,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       Outputs="$(NativeOutputPath)$(NativeBinaryPrefix)$(TargetName).so">
     <PropertyGroup>
       <_AndroidNativeAotSharedLibrary>$(NativeOutputPath)$(NativeBinaryPrefix)$(TargetName).so</_AndroidNativeAotSharedLibrary>
-      <_AndroidUseWorkloadNativeLinker Condition=" '$(_AndroidUseWorkloadNativeLinker)' == '' ">false</_AndroidUseWorkloadNativeLinker>
+      <_AndroidUseWorkloadNativeLinker Condition=" '$(_AndroidUseWorkloadNativeLinker)' == '' ">true</_AndroidUseWorkloadNativeLinker>
     </PropertyGroup>
 
     <!-- Resolve the runtime pack native directory for workload-provided linker dependencies.
