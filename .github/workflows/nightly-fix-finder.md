@@ -259,7 +259,11 @@ Use this structure:
 
 ## Phase 4: Assign to Copilot
 
-After creating the issue, use `assign_to_agent` to assign Copilot to work on it. The safe-output is configured with `model: "claude-opus-4.6"` so Copilot will use Claude Opus 4.6 to implement the fix.
+After creating the issue, use `assign_to_agent` to assign Copilot to work on it. You **MUST** pass the `issue_number` parameter — use the `temporary_id` from the `create_issue` call (e.g., `"issue_number": "#aw_myid"`). The safe-output is configured with `model: "claude-opus-4.6"` so Copilot will use Claude Opus 4.6 to implement the fix.
+
+Example call sequence:
+1. `create_issue` with `temporary_id: "aw_fix123"`, `title`, `body`
+2. `assign_to_agent` with `issue_number: "#aw_fix123"`
 
 ## Rules
 
