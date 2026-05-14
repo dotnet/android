@@ -307,6 +307,39 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_InheritedCtor_CreateInstanceDoesNotActivate ()
+	{
+		var peers = ScanFixtures ();
+		var simpleActivity = peers.First (p => p.JavaName == "my/app/SimpleActivity");
+		Assert.NotNull (simpleActivity.ActivationCtor);
+		Assert.NotEqual (simpleActivity.ManagedTypeName, simpleActivity.ActivationCtor.DeclaringTypeName);
+
+		using var stream = GenerateAssembly (new [] { simpleActivity }, "InheritedCtorCreateInstanceTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		AssertCreateInstanceReturnsNull (pe, reader, "MyApp_SimpleActivity_Proxy");
+	}
+
+	[Fact]
+	public void Generate_InheritedJavaInteropCtor_CreateInstanceDoesNotActivate ()
+	{
+		var peer = MakeAcwPeer ("test/JiInheritedTarget", "Test.JiInheritedTarget", "TestAsm") with {
+			ActivationCtor = new ActivationCtorInfo {
+				DeclaringTypeName = "Test.JiInheritedBase",
+				DeclaringAssemblyName = "TestAsm",
+				Style = ActivationCtorStyle.JavaInterop,
+			},
+		};
+
+		using var stream = GenerateAssembly (new [] { peer }, "InheritedJiCtorCreateInstanceTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		AssertCreateInstanceReturnsNull (pe, reader, "Test_JiInheritedTarget_Proxy");
+	}
+
+	[Fact]
 	public void Generate_InheritedCtor_NctorUcoCallsDefaultConstructor ()
 	{
 		var peers = ScanFixtures ();
@@ -2051,6 +2084,24 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		var ilBytes = body.GetILBytes ();
 		Assert.NotNull (ilBytes);
 		return ilBytes!;
+	}
+
+	static void AssertCreateInstanceReturnsNull (PEReader pe, MetadataReader reader, string proxyTypeName)
+	{
+		var proxyTypeHandle = reader.TypeDefinitions.First (h => {
+			var type = reader.GetTypeDefinition (h);
+			return reader.GetString (type.Namespace) == "_TypeMap.Proxies" &&
+				reader.GetString (type.Name) == proxyTypeName;
+		});
+		var proxyType = reader.GetTypeDefinition (proxyTypeHandle);
+		var createInstanceHandle = proxyType.GetMethods ().First (h =>
+			reader.GetString (reader.GetMethodDefinition (h).Name) == "CreateInstance");
+		var createInstance = reader.GetMethodDefinition (createInstanceHandle);
+		var body = pe.GetMethodBody (createInstance.RelativeVirtualAddress);
+		Assert.NotNull (body);
+		var ilBytes = body.GetILBytes ();
+		Assert.NotNull (ilBytes);
+		Assert.Equal (new [] { (byte) ILOpCode.Ldnull, (byte) ILOpCode.Ret }, ilBytes!);
 	}
 
 	static List<MemberReferenceHandle> AllMemberRefHandles (MetadataReader reader) =>

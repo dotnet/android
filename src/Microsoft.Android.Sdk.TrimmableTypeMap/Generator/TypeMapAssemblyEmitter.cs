@@ -752,7 +752,7 @@ sealed class TypeMapAssemblyEmitter
 			if (jiCtor.IsOnLeafType) {
 				EmitCreateInstanceViaJavaInteropNewobj (targetRef);
 			} else {
-				EmitCreateInstanceInheritedJavaInteropCtor (targetRef, jiCtor);
+				EmitCreateInstanceNoActivation ();
 			}
 			return;
 		}
@@ -764,7 +764,7 @@ sealed class TypeMapAssemblyEmitter
 		if (activationCtor.IsOnLeafType) {
 			EmitCreateInstanceViaNewobj (targetTypeRef);
 		} else {
-			EmitCreateInstanceInheritedCtor (targetTypeRef, activationCtor);
+			EmitCreateInstanceNoActivation ();
 		}
 	}
 
