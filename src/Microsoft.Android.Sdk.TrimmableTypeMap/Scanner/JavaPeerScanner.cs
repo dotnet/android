@@ -1899,6 +1899,9 @@ public sealed class JavaPeerScanner : IDisposable
 			if (name != ".ctor") {
 				continue;
 			}
+			if ((methodDef.Attributes & MethodAttributes.MemberAccessMask) != MethodAttributes.Public) {
+				continue;
+			}
 			var sig = methodDef.DecodeSignature (TypeRefSignatureTypeProvider.Instance, genericContext: index);
 			if (sig.ParameterTypes.Length != jniParams.Count) {
 				continue;

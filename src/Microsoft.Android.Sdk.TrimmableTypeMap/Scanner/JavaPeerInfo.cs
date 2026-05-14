@@ -195,35 +195,6 @@ public sealed record MarshalMethodInfo
 	public required string NativeCallbackName { get; init; }
 
 	/// <summary>
-	/// Managed parameter types decoded from the method signature, including the
-	/// defining assembly for each type.
-	/// </summary>
-	public IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = [];
-
-	/// <summary>
-	/// Per-parameter [ExportParameter] kinds for legacy callback marshalling.
-	/// </summary>
-	public IReadOnlyList<ExportParameterKindInfo> ManagedParameterExportKinds { get; init; } = [];
-
-	/// <summary>
-	/// Managed return type, including the defining assembly.
-	/// </summary>
-	public TypeRefData ManagedReturnType { get; init; } = new () {
-		ManagedTypeName = "System.Void",
-		AssemblyName = "System.Runtime",
-	};
-
-	/// <summary>
-	/// [ExportParameter] kind applied to the return value, if any.
-	/// </summary>
-	public ExportParameterKindInfo ManagedReturnExportKind { get; init; }
-
-	/// <summary>
-	/// Whether the managed target method is static.
-	/// </summary>
-	public bool IsStatic { get; init; }
-
-	/// <summary>
 	/// True if this is a constructor registration.
 	/// </summary>
 	public bool IsConstructor { get; init; }
@@ -252,6 +223,34 @@ public sealed record MarshalMethodInfo
 	/// Null for [Register] methods.
 	/// </summary>
 	public string? SuperArgumentsString { get; init; }
+
+	/// <summary>
+	/// Managed method parameter types, in declaration order.
+	/// </summary>
+	public IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = [];
+
+	/// <summary>
+	/// Per-parameter [ExportParameter] kinds for legacy callback marshalling.
+	/// </summary>
+	public IReadOnlyList<ExportParameterKindInfo> ManagedParameterExportKinds { get; init; } = [];
+
+	/// <summary>
+	/// Managed return type, including the defining assembly.
+	/// </summary>
+	public TypeRefData ManagedReturnType { get; init; } = new () {
+		ManagedTypeName = "System.Void",
+		AssemblyName = "System.Runtime",
+	};
+
+	/// <summary>
+	/// [ExportParameter] kind applied to the return value, if any.
+	/// </summary>
+	public ExportParameterKindInfo ManagedReturnExportKind { get; init; }
+
+	/// <summary>
+	/// Whether the managed target method is static.
+	/// </summary>
+	public bool IsStatic { get; init; }
 
 	/// <summary>
 	/// True if this method was collected from an implemented interface
@@ -292,28 +291,20 @@ public sealed record JavaConstructorInfo
 	public required int ConstructorIndex { get; init; }
 
 	/// <summary>
-	/// For "()V" Java ctors: <see langword="true"/> when the managed type defines a
-	/// matching parameterless instance ctor (`..ctor()`). When <see langword="false"/>,
-	/// [Export] ctor model building fails; non-[Export] registrations use the legacy
-	/// activation-ctor path so we don't emit a metadata reference to a non-existent
-	/// `..ctor()` (e.g., <c>RunnableImplementor</c>, which only has parameterized ctors).
-	/// </summary>
-	public bool HasMatchingManagedCtor { get; init; }
-
-	/// <summary>
-	/// Managed parameter types of the matching user-visible ctor, captured by the
-	/// scanner when <see cref="HasMatchingManagedCtor"/> is <see langword="true"/>.
-	/// Empty for `()V`. Used by the emitter to build the member ref signature for
-	/// the user ctor call and to marshal each JNI arg into its managed type.
-	/// </summary>
-	public IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = [];
-
-	/// <summary>
 	/// For [Export] constructors: super constructor arguments string.
 	/// Null for [Register] constructors.
 	/// </summary>
 	public string? SuperArgumentsString { get; init; }
 
+	/// <summary>
+	/// Managed constructor parameter types, in declaration order.
+	/// </summary>
+	public IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = [];
+
+	/// <summary>
+	/// True when this Java constructor has a matching public managed constructor on the target type.
+	/// </summary>
+	public bool HasMatchingManagedCtor { get; init; }
 }
 
 /// <summary>

@@ -374,12 +374,12 @@ static class ModelBuilder
 			proxy.UcoConstructors.Add (new UcoConstructorData {
 				WrapperName = $"nctor_{ctor.ConstructorIndex}_uco",
 				JniSignature = ctor.JniSignature,
-				HasMatchingManagedCtor = ctor.HasMatchingManagedCtor,
-				ManagedParameterTypes = ctor.ManagedParameterTypes,
 				TargetType = new TypeRefData {
 					ManagedTypeName = peer.ManagedTypeName,
 					AssemblyName = peer.AssemblyName,
 				},
+				ManagedParameterTypes = ctor.ManagedParameterTypes,
+				HasMatchingManagedCtor = ctor.HasMatchingManagedCtor,
 			});
 		}
 	}

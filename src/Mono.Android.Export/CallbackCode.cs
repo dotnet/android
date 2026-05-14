@@ -46,7 +46,6 @@ namespace Java.Interop
 
 		static readonly CodeLiteral do_not_transfer_literal = new CodeLiteral (JniHandleOwnership.DoNotTransfer);
 
-		[DynamicDependency ("GetObject", "Java.Lang.Object", "Mono.Android")]
 		static DynamicInvokeTypeInfo ()
 		{
 			CheckReflection (jnienv_newarray, "JNIEnv.NewArray<T>");
@@ -539,7 +538,6 @@ namespace Java.Interop
 	[RequiresUnreferencedCode (MonoAndroidExport.DynamicFeatures)]
 	class DynamicCallbackCodeGenerator : CallbackCodeGenerator<Type>
 	{
-		[DynamicDependency ("GetObject", "Java.Lang.Object", "Mono.Android")]
 		public static Delegate Create (MethodInfo method)
 		{
 			return new DynamicCallbackCodeGenerator (method).GetCallback ();

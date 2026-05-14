@@ -72,7 +72,7 @@
     <ProjectReference Include="..\Mono.Android-Test.Library\Mono.Android-Test.Library.NET.csproj" />
     <ProjectReference Include="..\..\..\src\Xamarin.Android.NUnitLite\Xamarin.Android.NUnitLite.NET.csproj" />
     <!-- Required for [Export] / [ExportField] runtime support (ExportTests.cs) on the LLVM-IR typemap path -->
-    <Reference Include="Mono.Android.Export" />
+    <Reference Include="Mono.Android.Export" Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' " />
   </ItemGroup>
 
   <ItemGroup>

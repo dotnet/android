@@ -193,6 +193,15 @@ public class ConstructorDetectionTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void HasMatchingManagedCtor_False_WhenOnlyProtectedDefaultCtorExists ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/ProtectedDefaultCtorActivity");
+		var voidCtor = Assert.Single (peer.JavaConstructors, c => c.JniSignature == "()V");
+		Assert.False (voidCtor.HasMatchingManagedCtor,
+			"The scanner must only match public managed constructors for Java-visible constructor wrappers.");
+	}
+
+	[Fact]
 	public void HasMatchingManagedCtor_False_WhenOnlyParameterizedManagedCtorExists ()
 	{
 		// ActivityWithCustomCtor has only an activation ctor + a (string) ctor.

@@ -642,6 +642,12 @@ namespace MyApp
 		protected override void OnCreate (object? savedInstanceState) => base.OnCreate (savedInstanceState);
 	}
 
+	[Register ("my/app/ProtectedDefaultCtorActivity")]
+	public class ProtectedDefaultCtorActivity : Android.App.Activity
+	{
+		protected ProtectedDefaultCtorActivity () { }
+	}
+
 	/// <summary>
 	/// Overrides multiple registered base methods without [Register].
 	/// </summary>
