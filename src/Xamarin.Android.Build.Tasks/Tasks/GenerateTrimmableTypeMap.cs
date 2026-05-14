@@ -78,7 +78,6 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	/// </summary>
 	public int MaxArrayRank { get; set; }
 
-	public bool ForceUnconditionalEntries { get; set; } = true;
 	public string? ManifestPlaceholders { get; set; }
 	public string? CheckedBuild { get; set; }
 	public string? ApplicationJavaClass { get; set; }
@@ -140,9 +139,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 					ApplicationJavaClass: ApplicationJavaClass);
 			}
 
-			var generator = new TrimmableTypeMapGenerator (new MSBuildTrimmableTypeMapLogger (Log)) {
-				ForceUnconditionalEntries = ForceUnconditionalEntries,
-			};
+			var generator = new TrimmableTypeMapGenerator (new MSBuildTrimmableTypeMapLogger (Log));
 
 			XDocument? manifestTemplate = null;
 			if (!ManifestTemplate.IsNullOrEmpty () && File.Exists (ManifestTemplate)) {

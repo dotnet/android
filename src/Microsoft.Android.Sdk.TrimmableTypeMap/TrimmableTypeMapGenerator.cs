@@ -22,15 +22,6 @@ public class TrimmableTypeMapGenerator
 	}
 
 	/// <summary>
-	/// Workaround for https://github.com/dotnet/runtime/issues/127004.
-	/// When true, all TypeMap entries are emitted as 2-arg (unconditional) to avoid the
-	/// trimmer bug that strips TypeMapAssociation attributes when a TypeMap attribute
-	/// references the same type. Set to false once the runtime bug is fixed to re-enable
-	/// 3-arg conditional entries that allow unused framework bindings to be trimmed away.
-	/// </summary>
-	public bool ForceUnconditionalEntries { get; init; } = true;
-
-	/// <summary>
 	/// Runs the full generation pipeline: scan assemblies, generate typemap
 	/// assemblies, generate JCW Java sources, and optionally generate a merged manifest.
 	/// No file IO is performed — all results are returned in memory.
@@ -66,8 +57,7 @@ public class TrimmableTypeMapGenerator
 			allPeers,
 			systemRuntimeVersion,
 			useSharedTypemapUniverse,
-			maxArrayRank,
-			frameworkAssemblyNames);
+			maxArrayRank);
 		var jcwPeers = allPeers.Where (p =>
 			!frameworkAssemblyNames.Contains (p.AssemblyName)
 			|| p.JavaName.StartsWith ("mono/", StringComparison.Ordinal)).ToList ();
@@ -162,8 +152,7 @@ public class TrimmableTypeMapGenerator
 		List<JavaPeerInfo> allPeers,
 		Version systemRuntimeVersion,
 		bool useSharedTypemapUniverse,
-		int maxArrayRank,
-		HashSet<string> frameworkAssemblyNames)
+		int maxArrayRank)
 	{
 		List<(string AssemblyName, List<JavaPeerInfo> Peers)> peersByAssembly;
 
@@ -187,10 +176,7 @@ public class TrimmableTypeMapGenerator
 
 		var generatedAssemblies = new List<GeneratedAssembly> ();
 		var perAssemblyNames = new List<string> ();
-		var generator = new TypeMapAssemblyGenerator (systemRuntimeVersion) {
-			ForceUnconditionalEntries = ForceUnconditionalEntries,
-			FrameworkAssemblyNames = frameworkAssemblyNames,
-		};
+		var generator = new TypeMapAssemblyGenerator (systemRuntimeVersion);
 		foreach (var (assemblyName, peers) in peersByAssembly) {
 			string typeMapAssemblyName = $"_{assemblyName}.TypeMap";
 			perAssemblyNames.Add (typeMapAssemblyName);

@@ -27,7 +27,6 @@
          defaults to 0 otherwise, where dynamic code can use Array.CreateInstance directly. -->
     <_AndroidTrimmableTypeMapMaxArrayRank Condition=" '$(_AndroidTrimmableTypeMapMaxArrayRank)' == '' and '$(PublishAot)' == 'true' ">3</_AndroidTrimmableTypeMapMaxArrayRank>
     <_AndroidTrimmableTypeMapMaxArrayRank Condition=" '$(_AndroidTrimmableTypeMapMaxArrayRank)' == '' ">0</_AndroidTrimmableTypeMapMaxArrayRank>
-    <_TrimmableTypeMapForceUnconditionalEntries Condition=" '$(_TrimmableTypeMapForceUnconditionalEntries)' == '' ">true</_TrimmableTypeMapForceUnconditionalEntries>
   </PropertyGroup>
 
   <ItemGroup>
@@ -96,7 +95,6 @@
         EmbedAssemblies="$(EmbedAssembliesIntoApk)"
         PackageNamingPolicy="$(_TrimmableTypeMapPackageNamingPolicy)"
         MaxArrayRank="$(_AndroidTrimmableTypeMapMaxArrayRank)"
-        ForceUnconditionalEntries="$(_TrimmableTypeMapForceUnconditionalEntries)"
         ManifestPlaceholders="$(AndroidManifestPlaceholders)"
         CheckedBuild="$(_AndroidCheckedBuild)"
         ApplicationJavaClass="$(AndroidApplicationJavaClass)"

@@ -10,16 +10,10 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 
 public class ModelBuilderTests : FixtureTestBase
 {
-	static TypeMapAssemblyData BuildModel (IReadOnlyList<JavaPeerInfo> peers, string? assemblyName = null, bool forceUnconditionalEntries = true)
+	static TypeMapAssemblyData BuildModel (IReadOnlyList<JavaPeerInfo> peers, string? assemblyName = null)
 	{
 		var outputPath = Path.Combine (Path.GetTempPath (), (assemblyName ?? "TestTypeMap") + ".dll");
-		return ModelBuilder.Build (peers, outputPath, assemblyName, forceUnconditionalEntries: forceUnconditionalEntries);
-	}
-
-	static TypeMapAssemblyData BuildModel (IReadOnlyList<JavaPeerInfo> peers, ISet<string> frameworkAssemblyNames, string? assemblyName = null, bool forceUnconditionalEntries = true)
-	{
-		var outputPath = Path.Combine (Path.GetTempPath (), (assemblyName ?? "TestTypeMap") + ".dll");
-		return ModelBuilder.Build (peers, outputPath, assemblyName, forceUnconditionalEntries: forceUnconditionalEntries, frameworkAssemblyNames: frameworkAssemblyNames);
+		return ModelBuilder.Build (peers, outputPath, assemblyName);
 	}
 
 	static TypeMapAssemblyData BuildModelWithArrays (IReadOnlyList<JavaPeerInfo> peers, string? assemblyName = null, int maxArrayRank = 3)
@@ -175,18 +169,6 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
-		public void Build_FrameworkAcwType_IsConditional_WhenForceUnconditionalEntriesDisabled ()
-		{
-			var peer = MakeAcwPeer ("mono/android/media/tv/TvView_OnUnhandledInputEventListenerImplementor",
-				"Android.Media.TV.TvView+IOnUnhandledInputEventListenerImplementor", "Mono.Android");
-			var model = BuildModel (new [] { peer }, new HashSet<string> (StringComparer.OrdinalIgnoreCase) { "Mono.Android" }, forceUnconditionalEntries: false);
-
-			var entry = Assert.Single (model.Entries);
-			Assert.False (entry.IsUnconditional);
-			Assert.Equal ("Android.Media.TV.TvView+IOnUnhandledInputEventListenerImplementor, Mono.Android", entry.TargetTypeReference);
-		}
-
-		[Fact]
 		public void Build_McwBinding_IsTrimmable ()
 		{
 			// MCW binding types (DoNotGenerateAcw=true) are trimmable unless essential.
@@ -198,17 +180,6 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.Single (model.Entries);
 			Assert.True (model.Entries [0].IsUnconditional);
 			Assert.Null (model.Entries [0].TargetTypeReference);
-		}
-
-		[Fact]
-		public void Build_McwBinding_IsConditional_WhenForceUnconditionalEntriesDisabled ()
-		{
-			var peer = MakeMcwPeer ("android/app/Activity", "Android.App.Activity", "Mono.Android") with { DoNotGenerateAcw = true };
-			var model = BuildModel (new [] { peer }, forceUnconditionalEntries: false);
-
-			Assert.Single (model.Entries);
-			Assert.False (model.Entries [0].IsUnconditional);
-			Assert.Equal ("Android.App.Activity, Mono.Android", model.Entries [0].TargetTypeReference);
 		}
 
 		[Fact]
