@@ -68,7 +68,8 @@ class DSOWrapperGenerator
 
 			string stubPath = Path.Combine (packLibDir.ItemSpec, StubFileName);
 			if (!File.Exists (stubPath)) {
-				throw new InvalidOperationException ($"Internal error: archive DSO stub file '{stubPath}' does not exist in runtime pack at {packLibDir}");
+				log.LogDebugMessage ($"Archive DSO stub file '{stubPath}' not found in runtime pack directory, skipping");
+				continue;
 			}
 
 			AndroidTargetArch arch = MonoAndroidHelper.RidToArch (packRID);
