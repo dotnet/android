@@ -37,6 +37,7 @@ tools:
     - "date:*"
     - "xargs:*"
 safe-outputs:
+  report-failure-as-issue: false
   create-issue:
     title-prefix: "[fix-finder] "
     labels: [automated, code-quality]
