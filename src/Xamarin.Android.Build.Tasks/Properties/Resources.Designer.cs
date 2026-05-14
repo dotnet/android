@@ -1462,6 +1462,15 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA4250", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insecure HTTP Maven repository URL &apos;{0}&apos; is not allowed. Use an HTTPS URL, or set AllowInsecureHttp=&quot;true&quot; metadata on the item to override this check..
+        /// </summary>
+        public static string XA4251 {
+            get {
+                return ResourceManager.GetString("XA4251", resourceCulture);
+            }
+        }
 
         /// <summary>
         ///   Looks up a localized string similar to Native library &apos;{0}&apos; will not be bundled because it has an unsupported ABI. Move this file to a directory with a valid Android ABI name such as &apos;libs/armeabi-v7a/&apos;..

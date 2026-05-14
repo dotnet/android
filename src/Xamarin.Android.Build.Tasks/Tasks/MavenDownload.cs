@@ -147,6 +147,12 @@ public class MavenDownload : AsyncTask
 		};
 
 		if (repo is null && type.StartsWith ("http", StringComparison.OrdinalIgnoreCase)) {
+			if (type.StartsWith ("http://", StringComparison.OrdinalIgnoreCase) &&
+				!string.Equals (item.GetMetadataOrDefault ("AllowInsecureHttp", "false"), "true", StringComparison.OrdinalIgnoreCase)) {
+				Log.LogCodedError ("XA4251", Properties.Resources.XA4251, type);
+				return null;
+			}
+
 			using var hasher = SHA256.Create ();
 			var hash = hasher.ComputeHash (Encoding.UTF8.GetBytes (type));
 			var cache_name = Convert.ToBase64String (hash);
