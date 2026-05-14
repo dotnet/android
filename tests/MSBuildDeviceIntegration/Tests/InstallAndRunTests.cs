@@ -783,6 +783,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			// This is enabled by the System.Runtime.CrashReportBeforeSignalChaining config option.
 			// See: https://github.com/dotnet/android/pull/11291
 			// See: https://github.com/dotnet/runtime/pull/123735
+			// See: https://github.com/dotnet/runtime/pull/123824
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -822,15 +823,26 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
 
 			// CoreCLR logs the managed stack trace via the DOTNET logcat tag when crash reporting
-			// runs before signal chaining. The stack trace JSON includes method names like
-			// "ForceNativeSegfault" from the managed frames leading up to the crash.
+			// runs before signal chaining. The output includes:
+			//   E DOTNET  : Got a SIGSEGV while executing native code. ...
+			//   E DOTNET  :    at <namespace>.CrashHelper.ForceNativeSegfault()
 			string logcatFile = Path.Combine (Root, builder.ProjectDirectory, "crash-logcat.log");
+			bool foundSigsegv = false;
+			bool foundManagedFrame = false;
 			Assert.IsTrue (
 				MonitorAdbLogcat (
-					(line) => line.Contains ("DOTNET") && line.Contains ("ForceNativeSegfault"),
+					(line) => {
+						if (line.Contains ("DOTNET") && line.Contains ("SIGSEGV")) {
+							foundSigsegv = true;
+						}
+						if (line.Contains ("DOTNET") && line.Contains ("ForceNativeSegfault")) {
+							foundManagedFrame = true;
+						}
+						return foundSigsegv && foundManagedFrame;
+					},
 					logcatFilePath: logcatFile,
 					timeout: 30),
-				"Crash reporting should have logged a managed stack trace containing 'ForceNativeSegfault' via the DOTNET logcat tag. " +
+				"Crash reporting should have logged 'SIGSEGV' and a managed stack trace containing 'ForceNativeSegfault' via the DOTNET logcat tag. " +
 				"Verify the System.Runtime.CrashReportBeforeSignalChaining config option is set and the runtime supports it.");
 		}
 
