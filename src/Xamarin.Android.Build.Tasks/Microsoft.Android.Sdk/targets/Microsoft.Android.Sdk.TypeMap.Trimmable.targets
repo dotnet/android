@@ -89,6 +89,7 @@
     <GenerateTrimmableTypeMap
         ResolvedAssemblies="@(_TypeMapInputAssemblies)"
         ResolvedFrameworkAssemblies="@(ResolvedFrameworkAssemblies)"
+        FrameworkAssemblyNames="@(ResolvedFrameworkAssemblies->'%(Filename)')"
         OutputDirectory="$(_TypeMapOutputDirectory)"
         JavaSourceOutputDirectory="$(_TypeMapJavaOutputDirectory)"
         TargetFrameworkVersion="$(TargetFrameworkVersion)"
