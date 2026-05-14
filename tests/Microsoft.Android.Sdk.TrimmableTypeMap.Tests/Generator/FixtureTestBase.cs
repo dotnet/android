@@ -36,6 +36,16 @@ public abstract class FixtureTestBase
 
 	private protected static List<JavaPeerInfo> ScanFixtures () => _cachedScanResult.Value.peers;
 
+	private protected static List<JavaPeerInfo> ScanFixtures (string packageNamingPolicy)
+	{
+		using var scanner = new JavaPeerScanner (packageNamingPolicy);
+		using var peReader = new PEReader (File.OpenRead (TestFixtureAssemblyPath));
+		var mdReader = peReader.GetMetadataReader ();
+		var assemblyName = mdReader.GetString (mdReader.GetAssemblyDefinition ().Name);
+		var assemblies = new [] { (assemblyName, peReader) };
+		return scanner.Scan (assemblies);
+	}
+
 	private protected static AssemblyManifestInfo ScanAssemblyManifestInfo () => _cachedScanResult.Value.manifestInfo;
 
 	private protected static JavaPeerInfo FindFixtureByJavaName (string javaName)
@@ -49,6 +59,14 @@ public abstract class FixtureTestBase
 	private protected static JavaPeerInfo FindFixtureByManagedName (string managedName)
 	{
 		var peers = ScanFixtures ();
+		var peer = peers.FirstOrDefault (p => p.ManagedTypeName == managedName);
+		Assert.NotNull (peer);
+		return peer;
+	}
+
+	private protected static JavaPeerInfo FindFixtureByManagedName (string managedName, string packageNamingPolicy)
+	{
+		var peers = ScanFixtures (packageNamingPolicy);
 		var peer = peers.FirstOrDefault (p => p.ManagedTypeName == managedName);
 		Assert.NotNull (peer);
 		return peer;
@@ -91,7 +109,7 @@ public abstract class FixtureTestBase
 		return MakePeerWithActivation (jniName, managedName, asmName) with {
 			DoNotGenerateAcw = false,
 			JavaConstructors = new List<JavaConstructorInfo> {
-				new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V" },
+				new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V", HasManagedConstructor = true },
 			},
 			MarshalMethods = new List<MarshalMethodInfo> {
 				new MarshalMethodInfo {
@@ -100,6 +118,7 @@ public abstract class FixtureTestBase
 					JniSignature = "()V",
 					ManagedMethodName = ".ctor",
 					IsConstructor = true,
+					HasManagedConstructor = true,
 				},
 			},
 		};

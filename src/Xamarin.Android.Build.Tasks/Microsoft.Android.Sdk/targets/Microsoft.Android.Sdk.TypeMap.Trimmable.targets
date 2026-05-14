@@ -12,6 +12,8 @@
 
   <PropertyGroup>
     <_TypeMapAssemblyName>_Microsoft.Android.TypeMaps</_TypeMapAssemblyName>
+    <_TrimmableTypeMapPackageNamingPolicy Condition=" '$(_AndroidPackageNamingPolicySetByUser)' == 'true' ">$(AndroidPackageNamingPolicy)</_TrimmableTypeMapPackageNamingPolicy>
+    <_TrimmableTypeMapPackageNamingPolicy Condition=" '$(_TrimmableTypeMapPackageNamingPolicy)' == '' ">Crc64</_TrimmableTypeMapPackageNamingPolicy>
     <!-- Use the outer IntermediateOutputPath when available (inner per-RID builds set
          _OuterIntermediateOutputPath) so that generated manifests/JCWs are written
          where the packaging phase expects them. -->
@@ -36,12 +38,20 @@
     <!-- Preserve the native→managed entry point (called via create_delegate from host.cc) -->
     <TrimmerRootDescriptor Include="$(MSBuildThisFileDirectory)../PreserveLists/Trimmable.CoreCLR.xml"
         Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
+    <TrimmerRootDescriptor Include="$(MSBuildThisFileDirectory)../PreserveLists/System.Private.CoreLib.xml"
+        Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
   </ItemGroup>
 
   <Target Name="_ValidateTrimmableTypeMapRuntime"
       Condition=" '$(_AndroidRuntime)' != 'CoreCLR' And '$(_AndroidRuntime)' != 'NativeAOT' "
       BeforeTargets="Build">
     <Error Text="Trimmable typemap is not supported for runtime '$(_AndroidRuntime)'." />
+  </Target>
+
+  <Target Name="_ValidateTrimmableTypeMapPackageNamingPolicy"
+      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(_AndroidPackageNamingPolicySetByUser)' == 'true' and '$(AndroidPackageNamingPolicy.ToLowerInvariant())' != 'crc64' and '$(AndroidPackageNamingPolicy.ToLowerInvariant())' != 'lowercasecrc64' "
+      BeforeTargets="_GenerateTrimmableTypeMap;Build">
+    <Error Text="AndroidPackageNamingPolicy value '$(AndroidPackageNamingPolicy)' is not supported with the trimmable typemap. Supported values are 'Crc64' (default) and 'LowercaseCrc64'." />
   </Target>
 
   <!--
@@ -83,6 +93,7 @@
         Debug="$(AndroidIncludeDebugSymbols)"
         NeedsInternet="$(AndroidNeedsInternetPermission)"
         EmbedAssemblies="$(EmbedAssembliesIntoApk)"
+        PackageNamingPolicy="$(_TrimmableTypeMapPackageNamingPolicy)"
         MaxArrayRank="$(_AndroidTrimmableTypeMapMaxArrayRank)"
         ManifestPlaceholders="$(AndroidManifestPlaceholders)"
         CheckedBuild="$(_AndroidCheckedBuild)"

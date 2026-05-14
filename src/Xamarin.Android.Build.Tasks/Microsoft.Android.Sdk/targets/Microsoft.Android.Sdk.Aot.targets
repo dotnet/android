@@ -83,7 +83,6 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
          runs in an inner build and `_RuntimePackLibraryDirectory` items aren't carried over to it.
     -->
     <ProcessRuntimePackLibraryDirectories
-        Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
         ResolvedFilesToPublish="@(ResolvedFileToPublish)">
       <Output TaskParameter="RuntimePackLibraryDirectories" ItemName="_RuntimePackLibraryDirectory" />
       <Output TaskParameter="NativeLibrariesToRemove" ItemName="_NativeLibraryToRemove" />

@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
+
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
 /// <summary>
@@ -16,8 +17,21 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// </summary>
 public sealed class JavaPeerScanner : IDisposable
 {
+	enum HashedPackageNamingPolicy {
+		Crc64,
+		LowercaseCrc64,
+	}
+
 	readonly Dictionary<string, AssemblyIndex> assemblyCache = new (StringComparer.Ordinal);
 	readonly Dictionary<(string typeName, string assemblyName), ActivationCtorInfo> activationCtorCache = new ();
+	readonly ITrimmableTypeMapLogger? logger;
+	readonly HashedPackageNamingPolicy packageNamingPolicy;
+
+	public JavaPeerScanner (string? packageNamingPolicy = null, ITrimmableTypeMapLogger? logger = null)
+	{
+		this.packageNamingPolicy = ParsePackageNamingPolicy (packageNamingPolicy);
+		this.logger = logger;
+	}
 
 	/// <summary>
 	/// Resolves a type name + assembly name to a TypeDefinitionHandle + AssemblyIndex.
@@ -166,6 +180,19 @@ public sealed class JavaPeerScanner : IDisposable
 			// Skip module-level types
 			if (index.Reader.GetString (typeDef.Name) == "<Module>") {
 				continue;
+			}
+
+			// [JniAddNativeMethodRegistrationAttribute] is not supported by the trimmable typemap
+			// by design (see XA4251). Detect the attribute *before* any per-type filters below
+			// (array type, no JNI name, etc.) so the diagnostic fires uniformly regardless of
+			// whether the type would otherwise have ended up in the typemap.
+			//
+			// Skip the per-method walk entirely for the overwhelmingly common case where
+			// the assembly doesn't even reference the attribute type — the per-assembly
+			// flag was computed cheaply in AssemblyIndex.Build.
+			if (index.MayUseJniAddNativeMethodRegistrationAttribute &&
+			    HasJniAddNativeMethodRegistrationAttribute (typeDef, index)) {
+				logger?.LogJniAddNativeMethodRegistrationAttributeError (MetadataTypeNameResolver.GetFullName (typeDef, index.Reader));
 			}
 
 			// Determine the JNI name and whether this is a known Java peer.
@@ -336,6 +363,23 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 
 		return (methods, fields);
+	}
+
+	static bool HasJniAddNativeMethodRegistrationAttribute (TypeDefinition typeDef, AssemblyIndex index)
+	{
+		const string JniAddNativeMethodRegistrationAttribute = "JniAddNativeMethodRegistrationAttribute";
+		const string JavaInteropNamespace = "Java.Interop";
+
+		foreach (var methodHandle in typeDef.GetMethods ()) {
+			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
+			foreach (var attrHandle in methodDef.GetCustomAttributes ()) {
+				var attr = index.Reader.GetCustomAttribute (attrHandle);
+				if (AssemblyIndex.IsCustomAttributeMatch (attr, index.Reader, JavaInteropNamespace, JniAddNativeMethodRegistrationAttribute)) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	/// <summary>
@@ -556,6 +600,7 @@ public sealed class JavaPeerScanner : IDisposable
 				continue;
 			}
 			if (!alreadyRegisteredSignatures.Contains (signature)) {
+				var managedParameterTypes = TryGetMatchingPublicConstructorParameterTypes (typeDef, index, baseCtor.Method);
 				methods.Add (new MarshalMethodInfo {
 					JniName = baseCtor.RegisterInfo.JniName,
 					JniSignature = signature,
@@ -563,6 +608,8 @@ public sealed class JavaPeerScanner : IDisposable
 					ManagedMethodName = ".ctor",
 					NativeCallbackName = "n_ctor",
 					IsConstructor = true,
+					ManagedParameterTypes = managedParameterTypes ?? [],
+					HasManagedConstructor = managedParameterTypes != null,
 				});
 				alreadyRegisteredSignatures.Add (signature);
 			}
@@ -614,11 +661,34 @@ public sealed class JavaPeerScanner : IDisposable
 						NativeCallbackName = "n_ctor",
 						IsConstructor = true,
 						SuperArgumentsString = "",
+						ManagedParameterTypes = sig.ParameterTypes,
+						HasManagedConstructor = true,
 					});
 					alreadyRegisteredSignatures.Add (jniSignature);
 				}
 			}
 		}
+	}
+
+	IReadOnlyList<string>? TryGetMatchingPublicConstructorParameterTypes (TypeDefinition typeDef, AssemblyIndex index, MethodDefinition baseCtor)
+	{
+		foreach (var methodHandle in typeDef.GetMethods ()) {
+			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
+			if (index.Reader.GetString (methodDef.Name) != ".ctor") {
+				continue;
+			}
+			if ((methodDef.Attributes & MethodAttributes.MemberAccessMask) != MethodAttributes.Public) {
+				continue;
+			}
+			if (!HaveIdenticalParameterTypes (methodDef, baseCtor)) {
+				continue;
+			}
+
+			var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+			return sig.ParameterTypes;
+		}
+
+		return null;
 	}
 
 	string? BuildJniCtorSignature (MethodSignature<string> sig)
@@ -892,6 +962,7 @@ public sealed class JavaPeerScanner : IDisposable
 		bool isExport = exportInfo is not null;
 		string managedName = index.Reader.GetString (methodDef.Name);
 		string jniSignature = registerInfo.Signature ?? "()V";
+		var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
 
 		string declaringTypeName = "";
 		string declaringAssemblyName = "";
@@ -911,6 +982,8 @@ public sealed class JavaPeerScanner : IDisposable
 			JavaAccess = isExport ? GetJavaAccess (methodDef.Attributes & MethodAttributes.MemberAccessMask) : null,
 			ThrownNames = exportInfo?.ThrownNames,
 			SuperArgumentsString = exportInfo?.SuperArgumentsString,
+			ManagedParameterTypes = sig.ParameterTypes,
+			HasManagedConstructor = isConstructor,
 		});
 	}
 
@@ -936,7 +1009,7 @@ public sealed class JavaPeerScanner : IDisposable
 			return registerJniName;
 		}
 
-		// Fall back to already-scanned results (component-attributed or CRC64-computed peers)
+		// Fall back to already-scanned results (component-attributed or hashed-package peers)
 		if (results.TryGetValue ((baseTypeName, baseIndex.AssemblyName), out var basePeer)) {
 			return basePeer.JavaName;
 		}
@@ -1377,12 +1450,12 @@ public sealed class JavaPeerScanner : IDisposable
 
 	/// <summary>
 	/// Compute both JNI name and compat JNI name for a type without [Register] or component Name.
-	/// JNI name uses CRC64 hash of "namespace:assemblyName" for the package.
+	/// JNI name uses the selected package naming policy hash for "namespace:assemblyName".
 	/// Compat JNI name uses the raw managed namespace (lowercased).
 	/// If a declaring type has [Register], its JNI name is used as prefix for both.
 	/// Generic backticks are replaced with _.
 	/// </summary>
-	static (string jniName, string compatJniName) ComputeAutoJniNames (TypeDefinition typeDef, AssemblyIndex index)
+	(string jniName, string compatJniName) ComputeAutoJniNames (TypeDefinition typeDef, AssemblyIndex index)
 	{
 		var (typeName, parentJniName, ns) = ComputeTypeNameParts (typeDef, index);
 
@@ -1391,7 +1464,7 @@ public sealed class JavaPeerScanner : IDisposable
 			return (name, name);
 		}
 
-		var packageName = GetCrc64PackageName (ns, index.AssemblyName);
+		var packageName = GetHashedPackageName (ns, index.AssemblyName);
 		var jniName = $"{packageName}/{typeName}";
 
 		string compatName = ns.Length == 0
@@ -1406,7 +1479,7 @@ public sealed class JavaPeerScanner : IDisposable
 	/// registered JNI name or the outermost namespace.
 	/// Matches JavaNativeTypeManager.ToJniName behavior: walks up declaring types
 	/// and if a parent has [Register] or a component attribute JNI name, uses that
-	/// as prefix instead of computing CRC64 from the namespace.
+	/// as prefix instead of computing hashed package names from the namespace.
 	/// </summary>
 	static (string typeName, string? parentJniName, string ns) ComputeTypeNameParts (TypeDefinition typeDef, AssemblyIndex index)
 	{
@@ -1511,16 +1584,32 @@ public sealed class JavaPeerScanner : IDisposable
 		declaringAssemblyName = nextComma >= 0 ? rest.Substring (0, nextComma).Trim () : rest.Trim ();
 	}
 
-	static string GetCrc64PackageName (string ns, string assemblyName)
+	string GetHashedPackageName (string ns, string assemblyName)
 	{
 		// Only Mono.Android preserves the namespace directly
 		if (assemblyName == "Mono.Android") {
 			return ns.ToLowerInvariant ().Replace ('.', '/');
 		}
 
-		var data = System.Text.Encoding.UTF8.GetBytes ($"{ns}:{assemblyName}");
-		var hash = System.IO.Hashing.Crc64.Hash (data);
-		return $"crc64{BitConverter.ToString (hash).Replace ("-", "").ToLowerInvariant ()}";
+		return packageNamingPolicy switch {
+			HashedPackageNamingPolicy.LowercaseCrc64 => "crc64" + ScannerHashingHelper.ToLegacyCrc64 (ns, assemblyName),
+			HashedPackageNamingPolicy.Crc64 => "scrc64" + ScannerHashingHelper.ToCrc64 (ns, assemblyName),
+			_ => throw new InvalidOperationException ($"Unsupported package naming policy: {packageNamingPolicy}"),
+		};
+	}
+
+	static HashedPackageNamingPolicy ParsePackageNamingPolicy (string? packageNamingPolicy)
+	{
+		if (packageNamingPolicy.IsNullOrEmpty ()) {
+			return HashedPackageNamingPolicy.Crc64;
+		}
+		if (string.Equals (packageNamingPolicy, "Crc64", StringComparison.OrdinalIgnoreCase)) {
+			return HashedPackageNamingPolicy.Crc64;
+		}
+		if (string.Equals (packageNamingPolicy, "LowercaseCrc64", StringComparison.OrdinalIgnoreCase)) {
+			return HashedPackageNamingPolicy.LowercaseCrc64;
+		}
+		throw new ArgumentException ($"Unsupported AndroidPackageNamingPolicy value '{packageNamingPolicy}' for trimmable typemap. Supported values are 'Crc64' and 'LowercaseCrc64'.", nameof (packageNamingPolicy));
 	}
 
 	static string ExtractNamespace (string fullName)
@@ -1553,6 +1642,8 @@ public sealed class JavaPeerScanner : IDisposable
 				JniSignature = mm.JniSignature,
 				ConstructorIndex = ctorIndex,
 				SuperArgumentsString = mm.SuperArgumentsString,
+				ManagedParameterTypes = mm.ManagedParameterTypes,
+				HasManagedConstructor = mm.HasManagedConstructor,
 			});
 			ctorIndex++;
 		}
