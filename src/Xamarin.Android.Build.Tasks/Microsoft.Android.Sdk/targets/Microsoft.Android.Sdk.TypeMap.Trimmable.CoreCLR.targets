@@ -5,6 +5,10 @@
     <_TrimmableRuntimeProviderJavaName Condition=" '$(_TrimmableRuntimeProviderJavaName)' == '' ">mono.MonoRuntimeProvider</_TrimmableRuntimeProviderJavaName>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <_GenerateProguardAfterTargets Condition=" '$(_GenerateProguardAfterTargets)' == '' ">ILLink</_GenerateProguardAfterTargets>
+  </PropertyGroup>
+
   <!-- Add TypeMap DLLs to ILLink input. ILLink natively understands TypeMapAttribute<T>. -->
   <Target Name="_AddTrimmableTypeMapToLinker"
       BeforeTargets="PrepareForILLink;_RunILLink"
@@ -30,6 +34,24 @@
     <ItemGroup>
       <_TrimmableTypeMapEntryAssemblies Remove="@(_TrimmableTypeMapEntryAssemblies)" />
     </ItemGroup>
+  </Target>
+
+  <Target Name="_PrepareLinkedAssembliesForProguard"
+      AfterTargets="$(_GenerateProguardAfterTargets)"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' ">
+    <ItemGroup>
+      <_LinkedAssemblyForProguard Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_GenerateProguardConfiguration"
+      AfterTargets="_PrepareLinkedAssembliesForProguard"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
+      Inputs="@(_LinkedAssemblyForProguard)"
+      Outputs="$(_ProguardProjectConfiguration)">
+    <GenerateProguardConfiguration
+        LinkedAssemblies="@(_LinkedAssemblyForProguard)"
+        OutputFile="$(_ProguardProjectConfiguration)" />
   </Target>
 
   <!-- Add TypeMap DLLs to assembly store with per-ABI metadata.
