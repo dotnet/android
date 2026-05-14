@@ -33,6 +33,8 @@ namespace Xamarin.Android.Tasks
 		public string? ProguardGeneratedReferenceConfiguration { get; set; }
 		public string? ProguardGeneratedApplicationConfiguration { get; set; }
 		public string? ProguardCommonXamarinConfiguration { get; set; }
+		public bool GenerateApplicationProguardConfigurationFromAcwMap { get; set; } = true;
+		public bool UseMinimalXamarinProguardConfiguration { get; set; }
 		public string? ProguardMappingFileOutput { get; set; }
 		public string []? ProguardConfigurationFiles { get; set; }
 
@@ -95,7 +97,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (EnableShrinking) {
-				if (!AcwMapFile.IsNullOrEmpty ()) {
+				if (GenerateApplicationProguardConfigurationFromAcwMap && !AcwMapFile.IsNullOrEmpty ()) {
 					var acwMap      = MonoAndroidHelper.LoadMapFile (BuildEngine4, Path.GetFullPath (AcwMapFile), StringComparer.OrdinalIgnoreCase);
 					var javaTypes   = new List<string> (acwMap.Values.Count);
 					foreach (var v in acwMap.Values) {
@@ -107,10 +109,16 @@ namespace Xamarin.Android.Tasks
 							appcfg.WriteLine ($"-keep class {java} {{ *; }}");
 						}
 					}
+				} else if (!ProguardGeneratedApplicationConfiguration.IsNullOrEmpty ()) {
+					File.WriteAllText (ProguardGeneratedApplicationConfiguration, "");
 				}
 				if (!ProguardCommonXamarinConfiguration.IsNullOrWhiteSpace ()) {
 					using (var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration)) {
-						GetType ().Assembly.GetManifestResourceStream ("proguard_xamarin.cfg").CopyTo (xamcfg.BaseStream);
+						if (UseMinimalXamarinProguardConfiguration) {
+							WriteMinimalXamarinProguardConfiguration (xamcfg);
+						} else {
+							GetType ().Assembly.GetManifestResourceStream ("proguard_xamarin.cfg").CopyTo (xamcfg.BaseStream);
+						}
 						if (IgnoreWarnings) {
 							xamcfg.WriteLine ("-ignorewarnings");
 						}
@@ -157,6 +165,28 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return responseFile;
+		}
+
+		static void WriteMinimalXamarinProguardConfiguration (TextWriter writer)
+		{
+			writer.WriteLine ("# Minimal Xamarin configuration for trimmable typemap builds.");
+			writer.WriteLine ("-dontobfuscate");
+			writer.WriteLine ();
+			writer.WriteLine ("-keep class android.support.multidex.MultiDexApplication { <init>(); }");
+			writer.WriteLine ("-keep class mono.MonoRuntimeProvider* { *; <init>(...); }");
+			writer.WriteLine ("-keep class mono.MonoPackageManager { *; <init>(...); }");
+			writer.WriteLine ("-keep class mono.MonoPackageManager_Resources { *; <init>(...); }");
+			writer.WriteLine ("-keep class net.dot.jni.** { *; <init>(); }");
+			writer.WriteLine ("-keep class net.dot.android.crypto.** { *; <init>(...); }");
+			writer.WriteLine ();
+			writer.WriteLine ("-keepclassmembers class * extends android.view.View {");
+			writer.WriteLine ("   *** set*(...);");
+			writer.WriteLine ("}");
+			writer.WriteLine ();
+			writer.WriteLine ("-keepclassmembers class * extends android.view.View {");
+			writer.WriteLine ("   <init>(android.content.Context,android.util.AttributeSet);");
+			writer.WriteLine ("   <init>(android.content.Context,android.util.AttributeSet,int);");
+			writer.WriteLine ("}");
 		}
 
 		// Note: We do not want to call the base.LogEventsFromTextOutput as it will incorrectly identify
