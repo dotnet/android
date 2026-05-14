@@ -16,13 +16,6 @@ static class ModelBuilder
 {
 	const string ProxyTypeSuffix = "_Proxy";
 
-	// Workaround for https://github.com/dotnet/runtime/issues/127004
-	// When true, all TypeMap entries are emitted as 2-arg (unconditional) to avoid the
-	// trimmer bug that strips TypeMapAssociation attributes when a TypeMap attribute
-	// references the same type. Set to false once the runtime bug is fixed to re-enable
-	// 3-arg conditional entries that allow unused framework bindings to be trimmed away.
-	const bool ForceUnconditionalEntries = true;
-
 	static readonly HashSet<string> EssentialRuntimeTypes = new (StringComparer.Ordinal) {
 		"java/lang/Object",
 		"java/lang/Class",
@@ -189,13 +182,7 @@ static class ModelBuilder
 		}
 
 		// Base JNI name entry → alias holder (self-referencing trim target, kept alive by associations)
-		// When ForceUnconditionalEntries is true we MUST emit this as 2-arg (unconditional) just
-		// like BuildEntry does: dotnet/runtime#127004 strips the TypeMapAssociation that keeps the
-		// holder alive when a TypeMap entry references the same type, leaving the dictionary key
-		// missing at runtime and breaking hierarchy lookups for essential types like
-		// java/lang/String and java/lang/Object.
-		bool aliasBaseUnconditional = ForceUnconditionalEntries
-			|| EssentialRuntimeTypes.Contains (jniName)
+		bool aliasBaseUnconditional = EssentialRuntimeTypes.Contains (jniName)
 			|| peersForName.Any (IsUnconditionalEntry);
 		model.Entries.Add (new TypeMapAttributeData {
 			JniName = jniName,
@@ -406,9 +393,7 @@ static class ModelBuilder
 			proxyRef = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName);
 		}
 
-		// When ForceUnconditionalEntries is true, always emit 2-arg (unconditional) TypeMap
-		// attributes to work around https://github.com/dotnet/runtime/issues/127004.
-		bool isUnconditional = ForceUnconditionalEntries || IsUnconditionalEntry (peer);
+		bool isUnconditional = IsUnconditionalEntry (peer);
 		string? targetRef = null;
 		if (!isUnconditional) {
 			targetRef = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName);
