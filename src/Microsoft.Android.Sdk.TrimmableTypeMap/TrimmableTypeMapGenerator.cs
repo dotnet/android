@@ -142,20 +142,7 @@ public class TrimmableTypeMapGenerator
 		var peers = scanner.Scan (assemblies);
 		var manifestInfo = scanner.ScanAssemblyManifestInfo ();
 		logger.LogJavaPeerScanInfo (assemblies.Count, peers.Count);
-		LogUserCtorFallbacks (peers);
 		return (peers, manifestInfo);
-	}
-
-	void LogUserCtorFallbacks (IReadOnlyList<JavaPeerInfo> peers)
-	{
-		foreach (var peer in peers) {
-			foreach (var ctor in peer.JavaConstructors) {
-				if (ctor.CtorFallbackReason == CtorFallbackReason.None) {
-					continue;
-				}
-				logger.LogUserCtorFallbackInfo (peer.ManagedTypeName, ctor.JniSignature, ctor.CtorFallbackReason);
-			}
-		}
 	}
 
 	List<GeneratedAssembly> GenerateTypeMapAssemblies (List<JavaPeerInfo> allPeers, Version systemRuntimeVersion, bool useSharedTypemapUniverse, int maxArrayRank)

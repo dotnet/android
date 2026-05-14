@@ -294,7 +294,7 @@ public sealed record JavaConstructorInfo
 	/// <summary>
 	/// For "()V" Java ctors: <see langword="true"/> when the managed type defines a
 	/// matching parameterless instance ctor (`..ctor()`). When <see langword="false"/>,
-	/// the UCO ctor codegen falls back to the legacy `(IntPtr, JniHandleOwnership)`
+	/// [Export] ctor model building fails; non-[Export] registrations use the legacy
 	/// activation-ctor path so we don't emit a metadata reference to a non-existent
 	/// `..ctor()` (e.g., <c>RunnableImplementor</c>, which only has parameterized ctors).
 	/// </summary>
@@ -314,42 +314,6 @@ public sealed record JavaConstructorInfo
 	/// </summary>
 	public string? SuperArgumentsString { get; init; }
 
-	/// <summary>
-	/// When <see cref="HasMatchingManagedCtor"/> is <see langword="false"/>, indicates
-	/// <em>why</em> the scanner could not match a user-visible managed constructor to the
-	/// Java side, so codegen falls back to the legacy <c>(IntPtr, JniHandleOwnership)</c>
-	/// activation-ctor path. Used by the consuming build task to surface a diagnostic
-	/// (e.g. <c>LogDebugMessage</c>) so the silent fallback is visible in MSBuild
-	/// <c>-bl</c> output.
-	/// </summary>
-	public CtorFallbackReason CtorFallbackReason { get; init; }
-}
-
-/// <summary>
-/// Why <see cref="JavaPeerScanner.TryFindMatchingManagedCtorParams"/> declined to
-/// match a user-visible managed constructor to a registered Java constructor.
-/// </summary>
-public enum CtorFallbackReason
-{
-	/// <summary>
-	/// A user-visible managed constructor matched the Java ctor; no fallback needed.
-	/// </summary>
-	None = 0,
-
-	/// <summary>
-	/// No managed instance constructor with the same arity as the Java ctor exists on
-	/// the type. Example: <c>Java.Lang.Thread+RunnableImplementor</c> exposes a Java
-	/// <c>()V</c> ctor via JCW codegen but the managed type only declares
-	/// parameterized constructors.
-	/// </summary>
-	NoMatchingArity = 1,
-
-	/// <summary>
-	/// A managed ctor with the right arity exists, but at least one parameter type is
-	/// unsupported by the trimmable <c>[Export]</c>-style argument marshaller (generic
-	/// instantiation, by-ref, or pointer).
-	/// </summary>
-	UnsupportedParameterType = 2,
 }
 
 /// <summary>

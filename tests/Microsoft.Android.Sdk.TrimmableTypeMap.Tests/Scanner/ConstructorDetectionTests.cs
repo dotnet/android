@@ -145,7 +145,7 @@ public class ConstructorDetectionTests : FixtureTestBase
 	// These guard the safety net introduced for Java.Lang.Thread+RunnableImplementor:
 	// when a Java ctor (e.g. ()V seeded from a [Register]'d base) has no matching
 	// user-visible managed ctor, HasMatchingManagedCtor must be false so the UCO
-	// codegen falls back to the (IntPtr, JniHandleOwnership) activation path.
+	// model builder can fail instead of emitting an invalid constructor wrapper.
 	// If this flips silently to true, the generator emits a member ref to a
 	// non-existent managed ctor — manifesting at runtime as
 	// `MissingMethodException: Default constructor not found for type ...`.
@@ -175,7 +175,7 @@ public class ConstructorDetectionTests : FixtureTestBase
 		var peer = FindFixtureByJavaName ("my/app/UserActivity");
 		var voidCtor = Assert.Single (peer.JavaConstructors, c => c.JniSignature == "()V");
 		Assert.False (voidCtor.HasMatchingManagedCtor,
-			"UserActivity has only an activation ctor; HasMatchingManagedCtor must be false so codegen falls back.");
+			"UserActivity has only an activation ctor; HasMatchingManagedCtor must be false so model building fails.");
 	}
 
 	[Fact]
@@ -192,27 +192,4 @@ public class ConstructorDetectionTests : FixtureTestBase
 			"Only parameterized managed ctors exist; the inherited ()V seed must not claim a managed match.");
 	}
 
-	[Fact]
-	public void CtorFallbackReason_None_WhenManagedMatchFound ()
-	{
-		// MainActivity declares `public MainActivity ()` — the scanner must record
-		// CtorFallbackReason.None so the build task does not emit a noisy fallback
-		// diagnostic for the happy path.
-		var peer = FindFixtureByJavaName ("my/app/MainActivity");
-		var voidCtor = Assert.Single (peer.JavaConstructors, c => c.JniSignature == "()V");
-		Assert.Equal (CtorFallbackReason.None, voidCtor.CtorFallbackReason);
-	}
-
-	[Fact]
-	public void CtorFallbackReason_NoMatchingArity_WhenNoMatchingManagedCtor ()
-	{
-		// UserActivity has only an activation ctor — no managed ()V exists at all,
-		// so the scanner must record CtorFallbackReason.NoMatchingArity. This is
-		// the reason surfaced by the build-task diagnostic when, e.g.,
-		// Java.Lang.Thread+RunnableImplementor's ()V Java ctor falls back to
-		// activation because the managed type only declares parameterized ctors.
-		var peer = FindFixtureByJavaName ("my/app/UserActivity");
-		var voidCtor = Assert.Single (peer.JavaConstructors, c => c.JniSignature == "()V");
-		Assert.Equal (CtorFallbackReason.NoMatchingArity, voidCtor.CtorFallbackReason);
-	}
 }

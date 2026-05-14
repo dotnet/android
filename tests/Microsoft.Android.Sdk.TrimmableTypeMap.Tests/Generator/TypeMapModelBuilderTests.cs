@@ -1242,8 +1242,15 @@ public class ModelBuilderTests : FixtureTestBase
 		{
 			var peer = MakeAcwPeer ("my/app/Baz", "MyApp.Baz", "App") with {
 				JavaConstructors = new List<JavaConstructorInfo> {
-					new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V" },
-					new JavaConstructorInfo { ConstructorIndex = 1, JniSignature = "(Landroid/content/Context;)V" },
+					new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V", HasMatchingManagedCtor = true },
+					new JavaConstructorInfo {
+						ConstructorIndex = 1,
+						JniSignature = "(Landroid/content/Context;)V",
+						HasMatchingManagedCtor = true,
+						ManagedParameterTypes = [
+							new TypeRefData { ManagedTypeName = "Android.Content.Context", AssemblyName = "Mono.Android" },
+						],
+					},
 				},
 			};
 			var model = BuildModel (new [] { peer });
@@ -1258,6 +1265,19 @@ public class ModelBuilderTests : FixtureTestBase
 			var peer = MakeMcwPeer ("test/NoActivation", "Test.NoActivation", "Asm");
 			var model = BuildModel (new [] { peer });
 			Assert.Empty (model.ProxyTypes);
+		}
+
+		[Fact]
+		public void Build_ExportConstructorWithoutMatchingManagedCtor_Throws ()
+		{
+			var peer = MakeAcwPeer ("my/app/MissingCtor", "MyApp.MissingCtor", "App") with {
+				JavaConstructors = new List<JavaConstructorInfo> {
+					new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V", HasMatchingManagedCtor = false, SuperArgumentsString = "" },
+				},
+			};
+			var ex = Assert.Throws<InvalidOperationException> (() => BuildModel (new [] { peer }));
+			Assert.Contains ("no matching user-visible managed constructor", ex.Message);
+			Assert.Contains ("MyApp.MissingCtor", ex.Message);
 		}
 	}
 
@@ -1279,7 +1299,7 @@ public class ModelBuilderTests : FixtureTestBase
 					},
 				},
 				JavaConstructors = new List<JavaConstructorInfo> {
-					new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V" },
+					new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V", HasMatchingManagedCtor = true },
 				},
 			};
 			var model = BuildModel (new [] { peer });
