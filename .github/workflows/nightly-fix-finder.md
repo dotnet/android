@@ -56,8 +56,7 @@ steps:
       mkdir -p /tmp/gh-aw/agent
       {
         echo "## Scan Category Seed"
-        echo "Date seed: $(date +%j)"
-        CATEGORY_INDEX=$(( $(date +%j) % 10 ))
+        CATEGORY_INDEX=$(( RANDOM % 10 ))
         echo "Selected category index: $CATEGORY_INDEX"
 
         echo ""
@@ -65,14 +64,14 @@ steps:
         echo "### Sample TODO/FIXME/HACK comments in src/"
         grep -rn "TODO\|FIXME\|HACK\|XXX" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo "None found"
         echo "### Total count"
-        grep -rn "TODO\|FIXME\|HACK\|XXX" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | wc -l
+        grep -rn "TODO\|FIXME\|HACK\|XXX" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | wc -l || true
 
         echo ""
         echo "## Category 1: Files Missing Nullable Enable"
         echo "### C# files in src/ without #nullable enable (sample)"
         grep -rL '#nullable enable' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo "None found"
         echo "### Total count"
-        grep -rL '#nullable enable' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | wc -l
+        grep -rL '#nullable enable' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | wc -l || true
 
         echo ""
         echo "## Category 2: Obsolete API Usage"
@@ -109,8 +108,8 @@ steps:
         echo "## Category 7: Unused Using Directives"
         echo "### Files with many using directives (potential cleanup, sample)"
         for f in $(find src -name '*.cs' -type f ! -path '*/obj/*' ! -path '*/bin/*' ! -name 'Designer.cs' 2>/dev/null | shuf | head -30); do
-          count=$(grep -c "^using " "$f" 2>/dev/null || echo 0)
-          if [ "$count" -gt 10 ]; then
+          count=$(grep -c "^using " "$f" 2>/dev/null || true)
+          if [ "${count:-0}" -gt 10 ]; then
             echo "  $f: $count using directives"
           fi
         done
@@ -139,7 +138,7 @@ Each night, select one scan category, analyze the pre-collected data, find one s
 ## Current Context
 
 - **Repository**: ${{ github.repository }}
-- **Run Date**: The date seed is in the pre-computed scan results below
+- **Run Date**: Each run picks a random category (0-9) using $RANDOM
 - **Pre-computed scan results**: `/tmp/gh-aw/agent/scan-results.md`
 
 ## Phase 1: Load Scan Results and Select Category
