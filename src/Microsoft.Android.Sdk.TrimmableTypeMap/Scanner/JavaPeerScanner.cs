@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
@@ -1065,6 +1064,13 @@ public sealed class JavaPeerScanner : IDisposable
 		string declaringAssemblyName = "";
 		ParseConnectorDeclaringType (registerInfo.Connector, out declaringTypeName, out declaringAssemblyName);
 
+		var managedParameterTypes = new List<TypeRefData> ();
+		if (isExport) {
+			foreach (var parameterType in managedTypeSig.ParameterTypes) {
+				managedParameterTypes.Add (EnrichTypeRefWithEnumInfo (parameterType));
+			}
+		}
+
 		methods.Add (new MarshalMethodInfo {
 			JniName = registerInfo.JniName,
 			JniSignature = jniSignature,
@@ -1073,7 +1079,7 @@ public sealed class JavaPeerScanner : IDisposable
 			DeclaringTypeName = declaringTypeName,
 			DeclaringAssemblyName = declaringAssemblyName,
 			NativeCallbackName = GetNativeCallbackName (registerInfo.Connector, managedName, isConstructor),
-			ManagedParameterTypes = isExport ? new List<TypeRefData> (managedTypeSig.ParameterTypes.Select (EnrichTypeRefWithEnumInfo)) : [],
+			ManagedParameterTypes = managedParameterTypes,
 			ManagedParameterExportKinds = parameterKinds,
 			ManagedReturnType = isExport ? EnrichTypeRefWithEnumInfo (managedTypeSig.ReturnType) : new TypeRefData {
 				ManagedTypeName = managedSig.ReturnType,
@@ -1868,7 +1874,7 @@ public sealed class JavaPeerScanner : IDisposable
 			// Try to find a managed ctor whose signature matches the JNI ctor.
 			// Unsupported managed parameter shapes fail in model building for [Export]
 			// constructors; non-[Export] registrations keep the legacy activation fallback.
-			var managedParams = TryFindMatchingManagedCtorParams (typeDef, mm.JniSignature, index);
+			var managedParams = TryGetMatchingPublicConstructorParameterTypes (typeDef, mm.JniSignature, index);
 			ctors.Add (new JavaConstructorInfo {
 				JniSignature = mm.JniSignature,
 				ConstructorIndex = ctorIndex,
@@ -1887,7 +1893,7 @@ public sealed class JavaPeerScanner : IDisposable
 	/// parameter types. Returns <see langword="null"/> when no compatible
 	/// constructor exists.
 	/// </summary>
-	IReadOnlyList<TypeRefData>? TryFindMatchingManagedCtorParams (TypeDefinition typeDef, string jniSignature, AssemblyIndex index)
+	IReadOnlyList<TypeRefData>? TryGetMatchingPublicConstructorParameterTypes (TypeDefinition typeDef, string jniSignature, AssemblyIndex index)
 	{
 		var jniParams = JniSignatureHelper.ParseParameters (jniSignature);
 		foreach (var methodHandle in typeDef.GetMethods ()) {

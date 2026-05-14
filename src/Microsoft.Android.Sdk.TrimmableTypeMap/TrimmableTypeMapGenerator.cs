@@ -49,8 +49,8 @@ public class TrimmableTypeMapGenerator
 			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
 
-		var manifestForRooting = PrepareManifestForRooting (manifestTemplate, manifestConfig);
-		RootManifestReferencedTypes (allPeers, manifestForRooting);
+		manifestTemplate = PrepareManifestForRooting (manifestTemplate, manifestConfig);
+		RootManifestReferencedTypes (allPeers, manifestTemplate);
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
 		PropagateCannotRegisterToDescendants (allPeers);
 
@@ -67,7 +67,7 @@ public class TrimmableTypeMapGenerator
 		}
 
 		var manifest = manifestConfig is not null
-			? GenerateManifest (allPeers, assemblyManifestInfo, manifestConfig, manifestForRooting)
+			? GenerateManifest (allPeers, assemblyManifestInfo, manifestConfig, manifestTemplate)
 			: null;
 
 		return new TrimmableTypeMapResult (generatedAssemblies, generatedJavaSources, allPeers, manifest, appRegTypes);
@@ -275,7 +275,9 @@ public class TrimmableTypeMapGenerator
 		XName attName = androidNs + "name";
 		var packageName = (string?) root.Attribute ("package") ?? "";
 
-		var componentEntries = new List<(string Name, bool DeferredRegistration, XElement Element)> ();
+		var componentNames = new HashSet<string> (StringComparer.Ordinal);
+		var deferredRegistrationNames = new HashSet<string> (StringComparer.Ordinal);
+		var componentElements = new Dictionary<string, XElement> (StringComparer.Ordinal);
 		foreach (var element in root.Descendants ()) {
 			switch (element.Name.LocalName) {
 			case "application":
@@ -287,13 +289,18 @@ public class TrimmableTypeMapGenerator
 				var name = (string?) element.Attribute (attName);
 				if (name is not null) {
 					var resolvedName = ManifestNameResolver.Resolve (name, packageName);
-					componentEntries.Add ((resolvedName, element.Name.LocalName is "application" or "instrumentation", element));
+					componentNames.Add (resolvedName);
+					componentElements [resolvedName] = element;
+
+					if (element.Name.LocalName is "application" or "instrumentation") {
+						deferredRegistrationNames.Add (resolvedName);
+					}
 				}
 				break;
 			}
 		}
 
-		if (componentEntries.Count == 0) {
+		if (componentNames.Count == 0) {
 			return;
 		}
 
@@ -307,15 +314,16 @@ public class TrimmableTypeMapGenerator
 			}
 		}
 
-		foreach (var (name, deferredRegistration, element) in componentEntries) {
+		foreach (var name in componentNames) {
 			if (peersByDotName.TryGetValue (name, out var peers)) {
 				string actualJavaName = JniSignatureHelper.JniNameToJavaName (peers [0].JavaName);
+				var element = componentElements [name];
 				if (!string.Equals ((string?) element.Attribute (attName), actualJavaName, StringComparison.Ordinal)) {
 					element.SetAttributeValue (attName, actualJavaName);
 				}
 
 				foreach (var peer in peers) {
-					if (deferredRegistration) {
+					if (deferredRegistrationNames.Contains (name)) {
 						peer.CannotRegisterInStaticConstructor = true;
 					}
 
@@ -336,8 +344,7 @@ public class TrimmableTypeMapGenerator
 	/// TestInstrumentation_1 must also defer — otherwise the base class <c>&lt;clinit&gt;</c> will call
 	/// <c>registerNatives</c> before the managed runtime is ready.
 	/// </summary>
-	internal static void PropagateDeferredRegistrationToBaseClasses (List<JavaPeerInfo> allPeers)
-	{
+	internal static void PropagateDeferredRegistrationToBaseClasses (List<JavaPeerInfo> allPeers)	{
 		// In practice only 1–2 types need propagation (one Application, maybe one
 		// Instrumentation), each with a short base-class chain.  A linear scan per
 		// ancestor is simpler and cheaper than building a Dictionary<JavaName, List<Peer>>
