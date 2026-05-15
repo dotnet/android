@@ -29,6 +29,19 @@
     <Compile Remove="$(JavaInteropTestDirectory)obj\Release\net7.0-android/designtime/Resource.designer.cs" />
   </ItemGroup>
 
+  <!--
+    [JniAddNativeMethodRegistrationAttribute] is not supported under the trimmable
+    typemap (XA4251). Exclude the upstream Java.Interop fixtures that use it (and
+    their dependents) when building for the trimmable typemap so the assembly can
+    compile through the generator. The matching NUnit test class is excluded by
+    name in tests/Mono.Android-Tests/Mono.Android-Tests/Xamarin.Android.RuntimeTests/NUnitInstrumentation.cs.
+  -->
+  <ItemGroup Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
+    <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\CallVirtualFromConstructorBase.cs" />
+    <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\CallVirtualFromConstructorDerived.cs" />
+    <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\InvokeVirtualFromConstructorTests.cs" />
+  </ItemGroup>
+
   <!-- Some of tests included in the files below fail on CoreCLR. This is PROBABLY caused by managed typemaps, which 
        will be replaced at some point by a different implementation. Until then, these tests can remain disabled. -->
   <!-- TODO: put these back when new typemap implementation is available -->

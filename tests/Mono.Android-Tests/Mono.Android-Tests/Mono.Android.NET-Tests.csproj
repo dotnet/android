@@ -114,6 +114,7 @@
     <Compile Include="Java.Interop\JavaListTest.cs" />
     <Compile Include="Java.Interop\JavaObjectExtensionsTests.cs" />
     <Compile Include="Java.Interop\JnienvTest.cs" />
+    <Compile Include="Java.Interop\TrimmableTypeMapRuntimeCoverageTests.cs" />
     <Compile Include="Java.Interop\TrimmableTypeMapTypeManagerTests.cs" />
     <Compile Include="Java.Lang\ObjectArrayMarshaling.cs" />
     <Compile Include="Java.Lang\ObjectTest.cs" />

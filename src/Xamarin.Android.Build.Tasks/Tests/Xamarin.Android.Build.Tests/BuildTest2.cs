@@ -850,7 +850,7 @@ class MemTest {
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
-			proj.SetPublishAot (true, AndroidNdkPath);
+			proj.SetPublishAot (true);
 
 			var packages = proj.PackageReferences;
 			packages.Add (KnownPackages.AndroidXAppCompat);

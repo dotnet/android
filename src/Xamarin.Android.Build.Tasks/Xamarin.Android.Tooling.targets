@@ -72,6 +72,13 @@ used by all .NET Android projects.
       <Output TaskParameter="MonoAndroidLibPath"        PropertyName="MonoAndroidLibDirectory" />
       <Output TaskParameter="AndroidBinUtilsPath"       PropertyName="AndroidBinUtilsDirectory" Condition=" '$(AndroidBinUtilsDirectory)' == '' " />
     </ResolveSdks>
+    <!-- Allow tests to suppress NDK resolution.  ResolveSdks always discovers
+         NDK through its fallback chain (SDK dir, env vars, PATH), so the only
+         reliable way to simulate "no NDK" is to clear the resolved path after
+         the task runs. -->
+    <PropertyGroup Condition=" '$(_SkipNdkResolution)' == 'true' ">
+      <_AndroidNdkDirectory />
+    </PropertyGroup>
   </Target>
 
   <Target Name="_GetJavaPlatformJar">

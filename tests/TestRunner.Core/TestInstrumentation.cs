@@ -61,7 +61,13 @@ public abstract class TestInstrumentation : Instrumentation
 			foreach (var assembly in GetTestAssemblies ()) {
 				Log.Info (LogTag, $"Loading tests from: {assembly.GetName ().Name}");
 				var runner = new NUnitTestAssemblyRunner (new AndroidTestAssemblyBuilder ());
-				runner.Load (assembly, new Dictionary<string, object> ());
+				var settings = new Dictionary<string, object> {
+					// Force single-threaded execution so tests run on the instrumentation thread.
+					// NUnit defaults to worker threads (which are .NET thread pool threads with no
+					// Java ClassLoader), causing JavaSystem.LoadLibrary() calls to fail.
+					{ "NumberOfTestWorkers", 0 },
+				};
+				runner.Load (assembly, settings);
 
 				var result = runner.Run (listener, filter);
 				CountResults (result, ref passed, ref failed, ref skipped);
