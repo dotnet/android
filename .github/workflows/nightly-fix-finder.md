@@ -91,9 +91,9 @@ steps:
             grep -rn "public " --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/Mono.Android/ 2>/dev/null | grep -v "Designer.cs" | grep -v "AssemblyInfo.cs" | grep -v "Android.Runtime" | grep -v "Java.Interop" | grep -v "/obj/" | shuf | head -20 || echo "None found"
             ;;
           5)
-            echo "## Category 5: Code Style Issues"
-            echo "### Files with leading spaces instead of tabs (sample)"
-            grep -rlP "^    [^ ]" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | grep -v "Designer.cs" | shuf | head -20 || echo "None found"
+            echo "## Category 5: General Mistakes"
+            echo "### Random C# source files in src/ for general review (sample)"
+            find src -name '*.cs' -type f ! -path '*/obj/*' ! -path '*/bin/*' ! -name 'Designer.cs' ! -name 'AssemblyInfo.cs' 2>/dev/null | shuf | head -5
             ;;
           6)
             echo "## Category 6: Unused Using Directives"
@@ -151,7 +151,7 @@ The scan results start with `## Selected Category: N` where N is 0-9. The file O
 | 2 | Obsolete API Usage | Find uses of `[Obsolete]` members that should be updated |
 | 3 | Large Files | Find oversized C# files (>800 lines) that should be split |
 | 4 | Missing XML Documentation | Find public APIs without XML doc comments |
-| 5 | Code Style Issues | Find formatting inconsistencies (spaces vs tabs, Mono style violations) |
+| 5 | General Mistakes | Read random source files and find real bugs, logic errors, or code smells |
 | 6 | Unused Using Directives | Find files with excessive using directives that could be cleaned up |
 | 7 | Error Handling | Find bare `catch (Exception)` blocks that swallow errors |
 | 8 | String Literals | Find hardcoded error strings that should be in `Properties.Resources` |
@@ -197,10 +197,12 @@ Using the pre-collected sample data for the selected category, pick **one specif
 - Do NOT file issues for XML docs in build tasks, tools, or test code — those are internal
 - The issue should provide example doc comments for the specific APIs
 
-#### Code Style Issues (Category 5)
-- Focus on spaces-vs-tabs since the repo uses tabs
-- Reference `.editorconfig` patterns: space before `(` and `[`
-- The issue should list specific files and line ranges
+#### General Mistakes (Category 5)
+- Read the randomly selected source files thoroughly
+- Look for real bugs: logic errors, off-by-one, null dereferences, race conditions, resource leaks
+- Look for code smells: dead code, unreachable branches, copy-paste errors, incorrect exception handling
+- Do NOT file issues about formatting, whitespace, or style — those are not actionable
+- The issue should describe the actual bug or problem with concrete evidence
 
 #### Unused Using Directives (Category 6)
 - Pick files with >10 using directives that likely have unused ones
