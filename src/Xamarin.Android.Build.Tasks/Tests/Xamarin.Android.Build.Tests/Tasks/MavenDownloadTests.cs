@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
@@ -103,8 +102,9 @@ public class MavenDownloadTests
 
 		await task.RunTaskAsync ();
 
-		// Should not have the XA4252 insecure HTTP error; it will fail with a download error instead
-		Assert.IsFalse (engine.Errors.Any (e => e.Code == "XA4252"), "Should not have XA4252 error when AllowInsecureHttp is set");
+		// Should bypass the XA4252 insecure HTTP check and attempt the download, which fails with XA4236
+		Assert.AreEqual (1, engine.Errors.Count);
+		Assert.AreEqual ("XA4236", engine.Errors [0].Code, "Expected a download error (XA4236), not a security error (XA4252)");
 	}
 
 	[Test]
