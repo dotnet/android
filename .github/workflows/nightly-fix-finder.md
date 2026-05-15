@@ -54,7 +54,7 @@ steps:
   - name: Collect codebase metrics
     run: |
       mkdir -p /tmp/gh-aw/agent
-      CATEGORY_INDEX=$(( RANDOM % 10 ))
+      CATEGORY_INDEX=$(( RANDOM % 9 ))
       {
         echo "## Selected Category: $CATEGORY_INDEX"
         echo ""
@@ -96,17 +96,7 @@ steps:
             grep -rlP "^    [^ ]" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | grep -v "Designer.cs" | shuf | head -20 || echo "None found"
             ;;
           6)
-            echo "## Category 6: Test Coverage Gaps"
-            echo "### Source files in Xamarin.Android.Build.Tasks without corresponding test"
-            for f in $(find src/Xamarin.Android.Build.Tasks -name '*.cs' -type f ! -path '*/obj/*' ! -path '*/bin/*' ! -name '*Test*' ! -name 'Resources.Designer.cs' 2>/dev/null | shuf | head -20); do
-              basename=$(basename "$f" .cs)
-              if ! find tests -name "${basename}*Test*.cs" -o -name "*Test*${basename}*.cs" 2>/dev/null | grep -q .; then
-                echo "  No test found for: $f"
-              fi
-            done
-            ;;
-          7)
-            echo "## Category 7: Unused Using Directives"
+            echo "## Category 6: Unused Using Directives"
             echo "### Files with many using directives (potential cleanup, sample)"
             for f in $(find src -name '*.cs' -type f ! -path '*/obj/*' ! -path '*/bin/*' ! -name 'Designer.cs' 2>/dev/null | shuf | head -30); do
               count=$(grep -c "^using " "$f" 2>/dev/null || true)
@@ -115,13 +105,13 @@ steps:
               fi
             done
             ;;
-          8)
-            echo "## Category 8: Error Handling"
+          7)
+            echo "## Category 7: Error Handling"
             echo "### Bare catch blocks that may swallow exceptions (sample)"
             grep -rnP "catch\s*\(Exception\b" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo "None found"
             ;;
-          9)
-            echo "## Category 9: String Literals in Error Messages"
+          8)
+            echo "## Category 8: String Literals in Error Messages"
             echo "### Hardcoded error strings that could be in Resources.resx (sample)"
             grep -rn 'Log\.\(Error\|Warning\)\|LogError\|LogWarning\|LogCodedError\|LogCodedWarning' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | grep '"' | grep -v "Properties.Resources" | shuf | head -20 || echo "None found"
             ;;
@@ -162,10 +152,9 @@ The scan results start with `## Selected Category: N` where N is 0-9. The file O
 | 3 | Large Files | Find oversized C# files (>800 lines) that should be split |
 | 4 | Missing XML Documentation | Find public APIs without XML doc comments |
 | 5 | Code Style Issues | Find formatting inconsistencies (spaces vs tabs, Mono style violations) |
-| 6 | Test Coverage Gaps | Find source files without corresponding test files |
-| 7 | Unused Using Directives | Find files with excessive using directives that could be cleaned up |
-| 8 | Error Handling | Find bare `catch (Exception)` blocks that swallow errors |
-| 9 | String Literals | Find hardcoded error strings that should be in `Properties.Resources` |
+| 6 | Unused Using Directives | Find files with excessive using directives that could be cleaned up |
+| 7 | Error Handling | Find bare `catch (Exception)` blocks that swallow errors |
+| 8 | String Literals | Find hardcoded error strings that should be in `Properties.Resources` |
 
 If the selected category has no actionable findings in the scan results, call `noop` — do NOT switch to a different category.
 
@@ -213,19 +202,15 @@ Using the pre-collected sample data for the selected category, pick **one specif
 - Reference `.editorconfig` patterns: space before `(` and `[`
 - The issue should list specific files and line ranges
 
-#### Test Coverage Gaps (Category 6)
-- Find an MSBuild task or utility class with no test coverage
-- The issue should suggest specific test scenarios
-
-#### Unused Using Directives (Category 7)
+#### Unused Using Directives (Category 6)
 - Pick files with >10 using directives that likely have unused ones
 - The issue should ask to clean up unnecessary usings
 
-#### Error Handling (Category 8)
+#### Error Handling (Category 7)
 - Find `catch (Exception)` blocks that don't log or rethrow
 - The issue should suggest proper error handling patterns
 
-#### String Literals (Category 9)
+#### String Literals (Category 8)
 - Find hardcoded strings in `LogError`/`LogWarning` calls
 - The issue should ask to move them to `Properties.Resources` with proper `XA####` error codes
 - **Important**: When new `XA####` error codes are created, the issue MUST also instruct to:
