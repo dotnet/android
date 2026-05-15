@@ -15,6 +15,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   <!-- Default property values for NativeAOT -->
   <PropertyGroup>
     <_AndroidRuntimePackRuntime>NativeAOT</_AndroidRuntimePackRuntime>
+    <_AndroidUseWorkloadNativeLinker Condition=" '$(_AndroidUseWorkloadNativeLinker)' == '' ">true</_AndroidUseWorkloadNativeLinker>
     <_AndroidJcwCodegenTarget Condition=" '$(_AndroidJcwCodegenTarget)' == '' ">JavaInterop1</_AndroidJcwCodegenTarget>
     <_AndroidTypeMapImplementation Condition=" '$(_AndroidTypeMapImplementation)' == '' ">managed</_AndroidTypeMapImplementation>
     <!-- .NET SDK gives: error NETSDK1191: A runtime identifier for the property 'PublishAot' couldn't be inferred. Specify a rid explicitly. -->
@@ -299,7 +300,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       Outputs="$(NativeOutputPath)$(NativeBinaryPrefix)$(TargetName).so">
     <PropertyGroup>
       <_AndroidNativeAotSharedLibrary>$(NativeOutputPath)$(NativeBinaryPrefix)$(TargetName).so</_AndroidNativeAotSharedLibrary>
-      <_AndroidUseWorkloadNativeLinker Condition=" '$(_AndroidUseWorkloadNativeLinker)' == '' ">false</_AndroidUseWorkloadNativeLinker>
     </PropertyGroup>
 
     <!-- Resolve the runtime pack native directory for workload-provided linker dependencies.
