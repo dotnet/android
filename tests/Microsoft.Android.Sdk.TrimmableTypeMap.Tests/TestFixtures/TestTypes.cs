@@ -193,6 +193,36 @@ namespace MyApp
 		public virtual void DoSomething () { }
 	}
 
+	// Fixture for the trimmable typemap's [JniAddNativeMethodRegistrationAttribute] detection.
+	// The trimmable typemap deliberately does not support this attribute (XA4251).
+	[Register ("my/app/HandWrittenNativeRegistrationPeer", DoNotGenerateAcw = true)]
+	public class HandWrittenNativeRegistrationPeer : Java.Lang.Object
+	{
+		[Java.Interop.JniAddNativeMethodRegistration]
+		static void RegisterNativeMembers ()
+		{
+		}
+	}
+
+	// Non-peer type carrying the attribute (no [Register], no Java peer base).
+	// The scanner must still emit XA4251 even though this type wouldn't otherwise
+	// have been added to the typemap.
+	public class NonPeerNativeRegistration
+	{
+		[Java.Interop.JniAddNativeMethodRegistration]
+		static void RegisterNativeMembers ()
+		{
+		}
+	}
+
+	public class OtherNamespaceNativeRegistration
+	{
+		[MyApp.JniAddNativeMethodRegistration]
+		static void RegisterNativeMembers ()
+		{
+		}
+	}
+
 	[Service (Name = "my.app.MyService")]
 	public class MyService : Android.App.Service
 	{
