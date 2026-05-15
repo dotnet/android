@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -57,7 +58,23 @@ public class EmulatorRunner
 		if (additionalArgs != null)
 			args.AddRange (additionalArgs);
 
-		var psi = ProcessUtils.CreateProcessStartInfo (emulatorPath, args.ToArray ());
+		ProcessStartInfo psi;
+		if (OS.IsWindows) {
+			psi = ProcessUtils.CreateProcessStartInfo (emulatorPath, args.ToArray ());
+		} else {
+			// On Unix, launch through a shell that ignores SIGINT before exec'ing
+			// the emulator. This prevents Ctrl+C in the parent terminal from killing
+			// the emulator process. 'trap "" INT' sets SIGINT to SIG_IGN, which POSIX
+			// guarantees is preserved across exec:
+			// https://pubs.opengroup.org/onlinepubs/9699919799/functions/exec.html
+			var shellCmd = new StringBuilder ("trap '' INT; exec ");
+			shellCmd.Append (ShellQuote (emulatorPath));
+			foreach (var arg in args) {
+				shellCmd.Append (' ');
+				shellCmd.Append (ShellQuote (arg));
+			}
+			psi = ProcessUtils.CreateProcessStartInfo ("/bin/sh", "-c", shellCmd.ToString ());
+		}
 
 		if (environmentVariables != null) {
 			foreach (var kvp in environmentVariables)
@@ -315,5 +332,9 @@ public class EmulatorRunner
 		cancellationToken.ThrowIfCancellationRequested ();
 		return new EmulatorBootResult { Success = false, ErrorKind = EmulatorBootErrorKind.Cancelled, ErrorMessage = "Boot cancelled." };
 	}
+
+	/// Quotes a string for safe use in a POSIX shell command.
+	/// Wraps in single quotes and escapes embedded single quotes.
+	static string ShellQuote (string arg) => "'" + arg.Replace ("'", "'\\''") + "'";
 }
 
