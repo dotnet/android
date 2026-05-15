@@ -170,35 +170,33 @@ namespace Xamarin.Android.Net
 			public bool Verify (string? hostname, ISSLSession? session) => true;
 		}
 
-		[DynamicDependency(nameof(IX509TrustManager.CheckServerTrusted), typeof(IX509TrustManagerInvoker))]
-		[DynamicDependency(nameof(IX509TrustManager.CheckServerTrusted), typeof(X509ExtendedTrustManagerInvoker))]
 		private static IX509TrustManager FindX509TrustManager(ITrustManager[] trustManagers, out int index)
 		{
+			index = -1;
+
+			for (int i = 0; i < trustManagers.Length; i++) {
+				var trustManager = trustManagers [i];
+				Console.WriteLine ($"TrustManager class: {trustManager.GetType().FullName}");
+			}
+
 			for (int i = 0; i < trustManagers.Length; i++) {
 				var trustManager = trustManagers [i];
 				if (trustManager is IX509TrustManager x509TrustManager) {
 					index = i;
 					return x509TrustManager;
 				}
+			}
 
-				// On API 21-23, the default Java trust manager is TrustManagerImpl from Conscrypt. The class implements X509TrustManager
-				// but the .NET pattern matching will fail in this case and we need to cast it explicitly.
-				int apiLevel = (int)Build.VERSION.SdkInt;
-				if (apiLevel <= 23) {
-					if (IsTrustManagerImpl (trustManager)) {
-						index = i;
-						return trustManager.JavaCast<IX509TrustManager> ();
-					}
-				}
+			// HACK - make IX509TrustManagerInvoker visible to the linker so that it doesn't get trimmed out
+			if (trustManagers.Length > 1_000_000) {
+				// this is unreachable, but the linker doesn't know that
+				return new IX509TrustManagerInvoker (IntPtr.Zero, JniHandleOwnership.DoNotTransfer);
+			} else if (trustManagers.Length > 2_000_000) {
+				// this is unreachable, but the linker doesn't know that
+				return new X509ExtendedTrustManagerInvoker (IntPtr.Zero, JniHandleOwnership.DoNotTransfer);
 			}
 
 			throw new InvalidOperationException($"Could not find {nameof(IX509TrustManager)} in {nameof(ITrustManager)} array.");
-
-			static bool IsTrustManagerImpl (ITrustManager trustManager)
-			{
-				var javaClassName = JNIEnv.GetClassNameFromInstance (trustManager.Handle);
-				return javaClassName.Equals ("com/android/org/conscrypt/TrustManagerImpl", StringComparison.Ordinal);
-			}
 		}
 
 		private static ITrustManager[] ModifyTrustManagersArray (ITrustManager[] trustManagers, int originalTrustManagerIndex, IX509TrustManager replacement)
