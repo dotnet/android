@@ -228,6 +228,9 @@ Using the pre-collected sample data for the selected category, pick **one specif
 #### String Literals (Category 9)
 - Find hardcoded strings in `LogError`/`LogWarning` calls
 - The issue should ask to move them to `Properties.Resources` with proper `XA####` error codes
+- **Important**: When new `XA####` error codes are created, the issue MUST also instruct to:
+  1. Create a markdown doc file at `Documentation/docs-mobile/messages/xa####.md` (following the existing format: frontmatter with title/description/date/f1_keywords, then sections for Example messages, Issue explanation, and Solution)
+  2. Add the new code to the table of contents in `Documentation/docs-mobile/messages/index.md`
 
 ## Phase 3: Create Issue
 
