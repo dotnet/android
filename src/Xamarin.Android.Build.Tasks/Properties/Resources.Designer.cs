@@ -1092,6 +1092,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to extract debug info from &apos;{0}&apos;: {1}.
+        /// </summary>
+        public static string XA3008 {
+            get {
+                return ResourceManager.GetString("XA3008", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to generate Java type for class: {0} due to {1}.
         /// </summary>
         public static string XA4209 {

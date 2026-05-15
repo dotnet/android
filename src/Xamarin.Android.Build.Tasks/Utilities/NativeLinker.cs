@@ -402,9 +402,7 @@ class NativeLinker
 		void LogFailure ()
 		{
 			var sb = MonoAndroidHelper.MergeStdoutAndStderrMessages (stdoutLines, stderrLines);
-			// TODO: consider making it a warning
-			// TODO: make it a coded message
-			log.LogError ("Failed to extract debug info", Path.GetFileName (sourceLib), sb.ToString ());
+			log.LogCodedWarning ("XA3008", Properties.Resources.XA3008, Path.GetFileName (sourceLib), sb.ToString ());
 		}
 	}
 
