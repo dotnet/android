@@ -290,7 +290,7 @@ namespace Xamarin.Android.Prepare
 			if (!exited) {
 				Log.ErrorLine ($"Process '{FullCommandLine}' timed out after {ProcessTimeout}");
 				ErrorReason = ErrorReasonCode.ExecutionTimedOut;
-				process.Kill ();
+				process.Kill (entireProcessTree: true);
 			}
 
 			// See: https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.process.waitforexit?view=netframework-4.7.2#System_Diagnostics_Process_WaitForExit)
