@@ -42,7 +42,7 @@ safe-outputs:
     title-prefix: "[fix-finder] "
     labels: [automated, code-quality]
     expires: 7d
-    close-older-issues: true
+    close-older-issues: false
   assign-to-agent:
     model: "claude-opus-4.6"
     target: "*"
