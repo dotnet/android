@@ -150,6 +150,10 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA1039](xa1039.md): The Android Support libraries are not supported in .NET 9 and later, please migrate to AndroidX. See https://aka.ms/xamarin/androidx for more details.
 + [XA1040](xa1040.md): The NativeAOT runtime on Android is an experimental feature and not yet suitable for production use. File issues at: https://github.com/dotnet/android/issues
 + [XA1041](xa1041.md): The MSBuild property 'MonoAndroidAssetPrefix' has an invalid value of 'c:\Foo\Assets'. The value is expected to be a directory path representing the relative location of your Assets or Resources
++ [XA1044](xa1044.md): The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled.
++ [XA1045](xa1045.md): Input file `{0}` does not start with `<replacements/>`.
++ [XA1046](xa1046.md): Attribute '{0}' in element '{1}' has value '{2}' that cannot be parsed as boolean; {3} line {4}.
++ [XA1047](xa1047.md): Required attribute '{0}' missing from element '{1}'; {2} line {3}.
 
 ## XA2xxx: Linker
 

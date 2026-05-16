@@ -1015,6 +1015,18 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
 </comment>
   </data>
+  <data name="XA1045" xml:space="preserve">
+    <value>Input file `{0}` does not start with `&lt;replacements/&gt;`.</value>
+    <comment>{0} - file path</comment>
+  </data>
+  <data name="XA1046" xml:space="preserve">
+    <value>Attribute '{0}' in element '{1}' has value '{2}' that cannot be parsed as boolean; {3} line {4}.</value>
+    <comment>{0} - attribute name; {1} - element name; {2} - attribute value; {3} - file path; {4} - line number</comment>
+  </data>
+  <data name="XA1047" xml:space="preserve">
+    <value>Required attribute '{0}' missing from element '{1}'; {2} line {3}.</value>
+    <comment>{0} - attribute name; {1} - element name; {2} - file path; {3} - line number</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>Java dependency '{0}' is not satisfied.</value>
     <comment>The following are literal names and should not be translated: Java.
