@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
 using System.Net.Security;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
 
 using Android.OS;
@@ -176,27 +177,29 @@ namespace Xamarin.Android.Net
 
 			for (int i = 0; i < trustManagers.Length; i++) {
 				var trustManager = trustManagers [i];
-				Console.WriteLine ($"TrustManager class: {trustManager.GetType().FullName}");
-			}
-
-			for (int i = 0; i < trustManagers.Length; i++) {
-				var trustManager = trustManagers [i];
 				if (trustManager is IX509TrustManager x509TrustManager) {
 					index = i;
 					return x509TrustManager;
 				}
 			}
 
-			// HACK - make IX509TrustManagerInvoker visible to the linker so that it doesn't get trimmed out
-			if (trustManagers.Length > 1_000_000) {
-				// this is unreachable, but the linker doesn't know that
-				return new IX509TrustManagerInvoker (IntPtr.Zero, JniHandleOwnership.DoNotTransfer);
-			} else if (trustManagers.Length > 2_000_000) {
-				// this is unreachable, but the linker doesn't know that
-				return new X509ExtendedTrustManagerInvoker (IntPtr.Zero, JniHandleOwnership.DoNotTransfer);
+			if (trustManagers.Length > 10_000) {
+				HackToPreserveInvokers(trustManagers);
 			}
 
 			throw new InvalidOperationException($"Could not find {nameof(IX509TrustManager)} in {nameof(ITrustManager)} array.");
+		}
+
+		[MethodImpl (MethodImplOptions.NoInlining)]
+		static void HackToPreserveInvokers (ITrustManager[] trustManagers)
+		{
+			// HACK - make IX509TrustManagerInvoker visible to the linker so that it doesn't get trimmed out.
+			// These branches are unreachable, but the linker doesn't know that.
+			if (trustManagers.Length > 1_000_000) {
+				_ = new IX509TrustManagerInvoker (IntPtr.Zero, JniHandleOwnership.DoNotTransfer);
+			} else if (trustManagers.Length > 2_000_000) {
+				_ = new X509ExtendedTrustManagerInvoker (IntPtr.Zero, JniHandleOwnership.DoNotTransfer);
+			}
 		}
 
 		private static ITrustManager[] ModifyTrustManagersArray (ITrustManager[] trustManagers, int originalTrustManagerIndex, IX509TrustManager replacement)
