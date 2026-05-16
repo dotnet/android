@@ -1,7 +1,6 @@
 #nullable enable
 
 using System;
-using System.Globalization;
 using System.IO;
 using System.Collections.Generic;
 using System.Xml;
@@ -37,9 +36,6 @@ namespace Xamarin.Android.Tasks
 
 		[Required]
 		public string [] SupportedAbis { get; set; } = [];
-
-		[Required]
-		public string JniRemappingInfoFilePath { get; set; } = "";
 
 		public bool GenerateEmptyCode { get; set; }
 
@@ -98,51 +94,11 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			int methodIndexEntryCount = jniRemappingComposer.ReplacementMethodIndexEntryCount;
-
 			BuildEngine4.RegisterTaskObjectAssemblyLocal (
 				ProjectSpecificTaskObjectKey (JniRemappingNativeCodeInfoKey),
-				new JniRemappingNativeCodeInfo (typeReplacementsCount, methodIndexEntryCount),
+				new JniRemappingNativeCodeInfo (typeReplacementsCount, jniRemappingComposer.ReplacementMethodIndexEntryCount),
 				RegisteredTaskObjectLifetime.Build
 			);
-
-			WriteInfoFile (typeReplacementsCount, methodIndexEntryCount);
-		}
-
-		void WriteInfoFile (int typeReplacementsCount, int methodIndexEntryCount)
-		{
-			string contents = string.Format (
-				CultureInfo.InvariantCulture,
-				"version=1\nreplacement_type_count={0}\nreplacement_method_index_entry_count={1}\n",
-				typeReplacementsCount,
-				methodIndexEntryCount);
-			Files.CopyIfStringChanged (contents, JniRemappingInfoFilePath);
-		}
-
-		internal static JniRemappingNativeCodeInfo? ReadInfoFile (string path, TaskLoggingHelper log)
-		{
-			if (!File.Exists (path)) {
-				log.LogError ($"JNI remapping info file '{path}' not found. A clean rebuild may be required.");
-				return null;
-			}
-
-			int typeCount = -1;
-			int methodCount = -1;
-
-			foreach (string line in File.ReadLines (path)) {
-				if (line.StartsWith ("replacement_type_count=", StringComparison.Ordinal)) {
-					typeCount = int.Parse (line.Substring ("replacement_type_count=".Length), NumberStyles.None, CultureInfo.InvariantCulture);
-				} else if (line.StartsWith ("replacement_method_index_entry_count=", StringComparison.Ordinal)) {
-					methodCount = int.Parse (line.Substring ("replacement_method_index_entry_count=".Length), NumberStyles.None, CultureInfo.InvariantCulture);
-				}
-			}
-
-			if (typeCount < 0 || methodCount < 0) {
-				log.LogError ($"JNI remapping info file '{path}' is malformed.");
-				return null;
-			}
-
-			return new JniRemappingNativeCodeInfo (typeCount, methodCount);
 		}
 
 		void ReadXml (XmlReader reader, List<JniRemappingTypeReplacement> typeReplacements, List<JniRemappingMethodReplacement> methodReplacements, string remappingXmlFilePath)

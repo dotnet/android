@@ -283,45 +283,4 @@ public partial class BuildTest3 : BaseTest
 
 		return EnvironmentHelper.ReadJniPreloads (envFiles, numberOfDsoCacheEntries, runtime);
 	}
-
-	[Test]
-	public void JniRemappingInfoFileRoundTrip ()
-	{
-		var remapXml = @"<replacements>
-  <replace-type from=""android/app/Activity"" to=""example/RemapActivity"" />
-  <replace-method
-      source-type=""example/RemapActivity""
-      source-method-name=""onCreate""
-      target-type=""example/RemapActivity""
-      target-method-name=""onMyCreate"" target-method-instance-to-static=""false"" />
-</replacements>";
-
-		var proj = new XamarinAndroidApplicationProject {
-			IsRelease = true,
-			OtherBuildItems = {
-				new AndroidItem._AndroidRemapMembers ("Remap.xml") {
-					Encoding = System.Text.Encoding.UTF8,
-					TextContent = () => remapXml,
-				},
-			},
-		};
-		proj.SetRuntime (AndroidRuntime.CoreCLR);
-
-		using var builder = CreateApkBuilder ();
-		Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-
-		// Verify the jni_remapping_info.txt file was written with correct counts
-		var infoFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "jni_remapping_info.txt"));
-		Assert.IsTrue (File.Exists (infoFile), $"jni_remapping_info.txt should exist at {infoFile}");
-
-		var contents = File.ReadAllText (infoFile);
-		StringAssert.Contains ("replacement_type_count=1", contents, "Should have 1 type replacement.");
-		StringAssert.Contains ("replacement_method_index_entry_count=1", contents, "Should have 1 method replacement entry.");
-
-		// Verify environment.ll has the matching non-zero counts
-		var envFiles = EnvironmentHelper.GatherEnvironmentFiles (builder.Output.GetIntermediaryPath (""), "arm64-v8a", required: true, AndroidRuntime.CoreCLR);
-		var appConfig = (EnvironmentHelper.ApplicationConfig_CoreCLR) EnvironmentHelper.ReadApplicationConfig (envFiles, AndroidRuntime.CoreCLR);
-		Assert.AreEqual (1u, appConfig.jni_remapping_replacement_type_count, "jni_remapping_replacement_type_count should be 1.");
-		Assert.AreEqual (1u, appConfig.jni_remapping_replacement_method_index_entry_count, "jni_remapping_replacement_method_index_entry_count should be 1.");
-	}
 }

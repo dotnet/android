@@ -1619,10 +1619,6 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
-<PropertyGroup>
-  <_JniRemappingInfoFilePath>$(IntermediateOutputPath)android\jni_remapping_info.txt</_JniRemappingInfoFilePath>
-</PropertyGroup>
-
 <Target Name="_PrepareAndroidRemapNativeAssemblySources">
   <PrepareAbiItems
       BuildTargetAbis="@(_BuildTargetAbis)"
@@ -1635,14 +1631,11 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_GenerateEmptyAndroidRemapNativeCode"
         DependsOnTargets="_PrepareAndroidRemapNativeAssemblySources"
-        Condition=" '@(_AndroidRemapMembers->Count())' == '0' "
-        Inputs="$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
-        Outputs="@(_AndroidRemapAssemblySource);$(_JniRemappingInfoFilePath)">
+        Condition=" '@(_AndroidRemapMembers->Count())' == '0' ">
   <GenerateJniRemappingNativeCode
       OutputDirectory="$(_NativeAssemblySourceDir)"
       GenerateEmptyCode="True"
       SupportedAbis="@(_BuildTargetAbis)"
-      JniRemappingInfoFilePath="$(_JniRemappingInfoFilePath)"
    />
    <Touch Files="@(_AndroidRemapAssemblySource)" />
 </Target>
@@ -1657,14 +1650,11 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_GenerateAndroidRemapNativeCode"
         DependsOnTargets="$(_GenerateAndroidRemapNativeCodeDependsOn)"
-        Condition=" '@(_AndroidRemapMembers->Count())' != '0' "
-        Inputs="$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects);$(_XARemapMembersFilePath)"
-        Outputs="@(_AndroidRemapAssemblySource);$(_JniRemappingInfoFilePath)">
+        Condition=" '@(_AndroidRemapMembers->Count())' != '0' ">
   <GenerateJniRemappingNativeCode
       OutputDirectory="$(_NativeAssemblySourceDir)"
       RemappingXmlFilePath="$(_XARemapMembersFilePath)"
       SupportedAbis="@(_BuildTargetAbis)"
-      JniRemappingInfoFilePath="$(_JniRemappingInfoFilePath)"
       />
   <Touch Files="@(_AndroidRemapAssemblySource)" />
 </Target>
@@ -1702,7 +1692,6 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_GetGeneratePackageManagerJavaInputs">
   <ItemGroup>
     <_GeneratePackageManagerJavaInputs Include="@(_GenerateJavaStubsInputs)" />
-    <_GeneratePackageManagerJavaInputs Include="$(_JniRemappingInfoFilePath)" Condition=" Exists('$(_JniRemappingInfoFilePath)') " />
   </ItemGroup>
 </Target>
 
@@ -1775,7 +1764,6 @@ because xbuild doesn't support framework reference assemblies.
       TargetsCLR="$(_AndroidUseCLR)"
       AndroidRuntime="$(_AndroidRuntime)"
       ProjectRuntimeConfigFilePath="$(ProjectRuntimeConfigFilePath)"
-      JniRemappingInfoFilePath="$(_JniRemappingInfoFilePath)"
       >
   </GenerateNativeApplicationConfigSources>
 
