@@ -74,6 +74,7 @@ namespace Xamarin.Android.Tasks
 		public string? AndroidSequencePointsMode { get; set; }
 		public bool EnableSGenConcurrent { get; set; }
 		public string? CustomBundleConfigFile { get; set; }
+		public string? JniRemappingInfoFilePath { get; set; }
 
 		bool _Debug {
 			get {
@@ -252,6 +253,13 @@ namespace Xamarin.Android.Tasks
 
 			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
 			var jniRemappingNativeCodeInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfo> (ProjectSpecificTaskObjectKey (GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfoKey), RegisteredTaskObjectLifetime.Build);
+
+			// When the JNI remapping target is skipped (incremental build), the registered task object
+			// will be null. Fall back to reading the persisted info file written by a previous build.
+			if (jniRemappingNativeCodeInfo == null && !JniRemappingInfoFilePath.IsNullOrEmpty ()) {
+				jniRemappingNativeCodeInfo = GenerateJniRemappingNativeCode.ReadInfoFile (JniRemappingInfoFilePath, Log);
+			}
+
 			LLVMIR.LlvmIrComposer appConfigAsmGen;
 
 			if (TargetsCLR) {
