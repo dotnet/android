@@ -402,7 +402,7 @@ class NativeLinker
 		void LogFailure ()
 		{
 			var sb = MonoAndroidHelper.MergeStdoutAndStderrMessages (stdoutLines, stderrLines);
-			log.LogCodedWarning ("XA3008", Properties.Resources.XA3008, Path.GetFileName (sourceLib), sb.ToString ());
+			log.LogCodedError ("XA3008", Properties.Resources.XA3008, Path.GetFileName (sourceLib), sb.ToString ());
 		}
 	}
 
