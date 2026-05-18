@@ -291,24 +291,30 @@ public class TrimmableTypeMap
 				return null;
 			}
 
-			foreach (var iface in interfaces) {
-				if (iface is null) {
-					continue;
-				}
+			try {
+				foreach (var iface in interfaces) {
+					if (iface is null) {
+						continue;
+					}
 
-				var ifaceRef = new JniObjectReference (iface.Handle);
-				var ifaceName = JniEnvironment.Types.GetJniTypeNameFromClass (ifaceRef);
-				if (ifaceName != null) {
-					var proxy = self.GetProxyForJniClass (ifaceName, targetType);
-					if (proxy != null && TargetTypeMatches (targetType, proxy.TargetType)) {
-						return proxy;
+					var ifaceRef = new JniObjectReference (iface.Handle);
+					var ifaceName = JniEnvironment.Types.GetJniTypeNameFromClass (ifaceRef);
+					if (ifaceName != null) {
+						var proxy = self.GetProxyForJniClass (ifaceName, targetType);
+						if (proxy != null && TargetTypeMatches (targetType, proxy.TargetType)) {
+							return proxy;
+						}
+					}
+
+					// Recurse into super-interfaces
+					var result = TryMatchInterfaces (self, ifaceRef, targetType);
+					if (result != null) {
+						return result;
 					}
 				}
-
-				// Recurse into super-interfaces
-				var result = TryMatchInterfaces (self, ifaceRef, targetType);
-				if (result != null) {
-					return result;
+			} finally {
+				foreach (var iface in interfaces) {
+					iface?.Dispose ();
 				}
 			}
 
