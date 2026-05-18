@@ -117,7 +117,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			var path = Path.Combine ("temp", TestName);
-			var proj = new XamarinFormsAndroidApplicationProject () {
+			var proj = new XamarinAndroidApplicationProject () {
 				ProjectName = "App1",
 				IsRelease = isRelease,
 			};
