@@ -79,6 +79,12 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
+			if (AndroidSdkPath.IsNullOrEmpty ()) {
+				Log.LogCodedError ("XA5205", Properties.Resources.XA5205,
+						Aapt2, "", Path.DirectorySeparatorChar, Android);
+				return false;
+			}
+
 			// This should be 31.0, 32.0, etc.
 			if (Version.TryParse (TargetPlatformVersion, out Version v)) {
 				if (v.Minor == 0) {
