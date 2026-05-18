@@ -40,10 +40,36 @@ namespace Java.InteropTests
 		[DllImport ("reuse-threads")]
 		static extern int rt_invoke_callback_on_new_thread (CB cb);
 
+		/// <summary>
+		/// Loads a native library on the main (UI) thread which always has a valid
+		/// Java ClassLoader. NUnit may run tests on worker threads that lack one.
+		/// </summary>
+		static void LoadNativeLibraryOnMainThread (string libraryName)
+		{
+			var mainLooper = Looper.MainLooper;
+			if (mainLooper is null)
+				throw new InvalidOperationException ("Main looper is not available");
+			using var latch = new CountdownEvent (1);
+			Exception? loadError = null;
+			var handler = new Handler (mainLooper);
+			handler.Post (() => {
+				try {
+					Java.Lang.JavaSystem.LoadLibrary (libraryName);
+				} catch (Exception ex) {
+					loadError = ex;
+				} finally {
+					latch.Signal ();
+				}
+			});
+			latch.Wait (TimeSpan.FromSeconds (10));
+			if (loadError is not null)
+				throw loadError;
+		}
+
 		[Test]
 		public void RegisterTypeOnNewNativeThread ()
 		{
-			Java.Lang.JavaSystem.LoadLibrary ("reuse-threads");
+			LoadNativeLibraryOnMainThread ("reuse-threads");
 			int ret = rt_register_type_on_new_thread ("from.NewNativeThreadOne", Application.Context.ClassLoader.Handle);
 			Assert.AreEqual (0, ret, $"Java type registration on a new thread failed with code {ret}");
 		}
@@ -77,7 +103,7 @@ namespace Java.InteropTests
 		[Test]
 		public void ThreadReuse ()
 		{
-			Java.Lang.JavaSystem.LoadLibrary ("reuse-threads");
+			LoadNativeLibraryOnMainThread ("reuse-threads");
 			CB cb = (env, instance) => {
 				Console.WriteLine ("CrossThreadObjectInteractions: JNIEnv.Handle={0} env={1}, instance={2}",
 						JNIEnv.Handle.ToString ("x"), env.ToString ("x"), instance.ToString ("x"));
