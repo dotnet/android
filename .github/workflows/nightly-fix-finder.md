@@ -8,6 +8,22 @@ on:
       - ".github/workflows/nightly-fix-finder.md"
       - ".github/workflows/nightly-fix-finder.lock.yml"
   workflow_dispatch:
+    inputs:
+      category:
+        description: "Category to scan (leave blank for random)"
+        required: false
+        type: choice
+        options:
+          - ""
+          - "0 - TODO/FIXME/HACK Comments"
+          - "1 - Nullable Reference Types"
+          - "2 - Obsolete API Usage"
+          - "3 - Large Files"
+          - "4 - Missing XML Documentation"
+          - "5 - General Mistakes"
+          - "6 - Unused Using Directives"
+          - "7 - Error Handling"
+          - "8 - String Literals in Error Messages"
 permissions:
   contents: read
   issues: read
@@ -52,9 +68,15 @@ timeout-minutes: 30
 strict: true
 steps:
   - name: Collect codebase metrics
+    env:
+      INPUT_CATEGORY: ${{ inputs.category }}
     run: |
       mkdir -p /tmp/gh-aw/agent
-      CATEGORY_INDEX=$(( RANDOM % 9 ))
+      if [ -n "$INPUT_CATEGORY" ]; then
+        CATEGORY_INDEX="${INPUT_CATEGORY%%\ *}"
+      else
+        CATEGORY_INDEX=$(( RANDOM % 9 ))
+      fi
       {
         echo "## Selected Category: $CATEGORY_INDEX"
         echo ""
