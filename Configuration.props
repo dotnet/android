@@ -108,15 +108,6 @@
     <AllSupported32BitTargetAndroidAbis>armeabi-v7a;x86</AllSupported32BitTargetAndroidAbis>
     <AllSupported64BitTargetAndroidAbis>arm64-v8a;x86_64</AllSupported64BitTargetAndroidAbis>
     <AllSupportedTargetAndroidAbis>$(AllSupported32BitTargetAndroidAbis);$(AllSupported64BitTargetAndroidAbis)</AllSupportedTargetAndroidAbis>
-    <!--
-      For some reason, the URL for platform-tools/build-tools 32.0.0 is prefixed with what appears to be a GIT commit hash or some other checksum...
-      Linux packages don't have any prefix, but this forces us to have *some* mechanism to handle this...
-    -->
-    <XABuildToolsPackagePrefixMacOS></XABuildToolsPackagePrefixMacOS>
-    <XABuildToolsPackagePrefixWindows></XABuildToolsPackagePrefixWindows>
-    <XABuildToolsPackagePrefixLinux></XABuildToolsPackagePrefixLinux>
-    <XABuildToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' ">$(XABuildToolsPackagePrefixMacOS)</XABuildToolsPackagePrefix>
-    <XABuildToolsPackagePrefix Condition=" '$(HostOS)' == 'Windows' ">$(XABuildToolsPackagePrefixWindows)</XABuildToolsPackagePrefix>
     <XABuildToolsVersion>36</XABuildToolsVersion>
     <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">36.0.0</XABuildToolsFolder>
     <XAPlatformToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' "></XAPlatformToolsPackagePrefix>
