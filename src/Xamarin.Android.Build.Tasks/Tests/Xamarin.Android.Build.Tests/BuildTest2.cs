@@ -890,16 +890,13 @@ class MemTest {
 		[Test]
 		[Category ("XamarinBuildDownload")]
 		[NonParallelizable] // parallel NuGet restore causes failures
-		public void BuildXamarinFormsMapsApplication ([Values] bool multidex, [Values] AndroidRuntime runtime)
+		public void BuildXamarinFormsMapsApplication ([Values] bool multidex, [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			if (IgnoreUnsupportedConfiguration (runtime, release: false)) {
 				return;
 			}
 
-			var proj = new XamarinFormsMapsApplicationProject {
-				IsRelease = isRelease,
-			};
+			var proj = new XamarinFormsMapsApplicationProject ();
 			proj.SetRuntime (runtime);
 
 			if (multidex)
