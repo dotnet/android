@@ -644,6 +644,7 @@ namespace ${ROOT_NAMESPACE} {
 					ClearAdbLogcat ();
 					ClearBlockingDialogs ();
 					Assert.True (ClickButton (app.PackageName, "myXFButton", "CLICK ME"), "Button should have been clicked!");
+					timeout = TimeSpan.FromSeconds (60);
 					while (session.IsConnected && breakcountHitCount < 1 && timeout >= TimeSpan.Zero) {
 						Thread.Sleep (10);
 						timeout = timeout.Subtract (TimeSpan.FromMilliseconds (10));
