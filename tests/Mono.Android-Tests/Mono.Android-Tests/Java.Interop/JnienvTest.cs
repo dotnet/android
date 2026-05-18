@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -41,35 +42,23 @@ namespace Java.InteropTests
 		static extern int rt_invoke_callback_on_new_thread (CB cb);
 
 		/// <summary>
-		/// Loads a native library on the main (UI) thread which always has a valid
-		/// Java ClassLoader. NUnit may run tests on worker threads that lack one.
+		/// Loads a native library using the full path from ApplicationInfo.NativeLibraryDir.
+		/// This avoids needing a Java ClassLoader (which may not be available on NUnit worker threads).
 		/// </summary>
-		static void LoadNativeLibraryOnMainThread (string libraryName)
+		static void LoadNativeLibraryByPath (string libraryName)
 		{
-			var mainLooper = Looper.MainLooper;
-			if (mainLooper is null)
-				throw new InvalidOperationException ("Main looper is not available");
-			using var latch = new CountdownEvent (1);
-			Exception? loadError = null;
-			var handler = new Handler (mainLooper);
-			handler.Post (() => {
-				try {
-					Java.Lang.JavaSystem.LoadLibrary (libraryName);
-				} catch (Exception ex) {
-					loadError = ex;
-				} finally {
-					latch.Signal ();
-				}
-			});
-			latch.Wait (TimeSpan.FromSeconds (10));
-			if (loadError is not null)
-				throw loadError;
+			var context = Application.Context;
+			var nativeLibDir = context.ApplicationInfo?.NativeLibraryDir;
+			if (nativeLibDir is null)
+				throw new InvalidOperationException ("NativeLibraryDir is not available");
+			var fullPath = Path.Combine (nativeLibDir, $"lib{libraryName}.so");
+			System.Runtime.InteropServices.NativeLibrary.Load (fullPath);
 		}
 
 		[Test]
 		public void RegisterTypeOnNewNativeThread ()
 		{
-			LoadNativeLibraryOnMainThread ("reuse-threads");
+			LoadNativeLibraryByPath ("reuse-threads");
 			int ret = rt_register_type_on_new_thread ("from.NewNativeThreadOne", Application.Context.ClassLoader.Handle);
 			Assert.AreEqual (0, ret, $"Java type registration on a new thread failed with code {ret}");
 		}
@@ -103,7 +92,7 @@ namespace Java.InteropTests
 		[Test]
 		public void ThreadReuse ()
 		{
-			LoadNativeLibraryOnMainThread ("reuse-threads");
+			LoadNativeLibraryByPath ("reuse-threads");
 			CB cb = (env, instance) => {
 				Console.WriteLine ("CrossThreadObjectInteractions: JNIEnv.Handle={0} env={1}, instance={2}",
 						JNIEnv.Handle.ToString ("x"), env.ToString ("x"), instance.ToString ("x"));
