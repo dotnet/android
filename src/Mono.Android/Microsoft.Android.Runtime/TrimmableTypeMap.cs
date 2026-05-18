@@ -244,7 +244,6 @@ public class TrimmableTypeMap
 
 		static JavaPeerProxy? TryGetProxyFromHierarchy (TrimmableTypeMap self, IntPtr handle, Type? targetType)
 		{
-			bool checkInterfaces = targetType is not null && targetType.IsInterface;
 			var selfRef = new JniObjectReference (handle);
 			var jniClass = JniEnvironment.Types.GetObjectClass (selfRef);
 
@@ -259,11 +258,13 @@ public class TrimmableTypeMap
 					}
 
 					// When targetType is an interface, also check the Java interfaces
-					// at each level. This handles the case where an intermediate class
-					// entry (e.g., X509ExtendedTrustManager) was trimmed but the Java
-					// interface entry (e.g., X509TrustManager) survives.
-					if (checkInterfaces) {
-						var result = TryMatchInterfaces (self, jniClass, targetType!);
+					// at each level. getInterfaces() only returns directly declared
+					// interfaces so we must call it at each class in the hierarchy.
+					// This handles the case where an intermediate class entry (e.g.,
+					// X509ExtendedTrustManager) was trimmed but the Java interface
+					// entry (e.g., X509TrustManager) survives.
+					if (targetType is { IsInterface: true }) {
+						var result = TryMatchInterfaces (self, jniClass, targetType);
 						if (result != null) {
 							return result;
 						}
@@ -280,6 +281,8 @@ public class TrimmableTypeMap
 			return null;
 		}
 
+		// getInterfaces() returns only directly declared interfaces (not transitive),
+		// so we recurse into super-interfaces to find the matching TypeMap entry.
 		static JavaPeerProxy? TryMatchInterfaces (TrimmableTypeMap self, JniObjectReference jniClass, Type targetType)
 		{
 			IntPtr interfacesArray = GetJavaInterfaces (jniClass.Handle);
