@@ -173,6 +173,7 @@ hosted in Maven.
 | - | - |
 | Version | Required string. The version of the Java library that should be downloaded from Maven. Defaults to `true`. |
 | Repository | Optional string. Specifies Maven repository to use. Supported values are `Central`, `Google`, or an `https` URL to a Maven repository. Defaults to `Central`. |
+| AllowInsecureHttp | Optional boolean. When `Repository` is an `http://` URL, this must be set to `true` to allow the insecure connection. Defaults to `false`. Using HTTPS is strongly recommended for supply-chain security. |
 | Bind | Optional boolean. Specifies whether the Java library should have a C# binding generated for it. Defaults to `true`. |
 | Pack | Optional boolean. Specifies whether the Java library should be included in the project output. Defaults to `true`. |
 
