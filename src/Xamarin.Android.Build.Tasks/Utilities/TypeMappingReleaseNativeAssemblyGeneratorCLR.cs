@@ -198,10 +198,6 @@ namespace Xamarin.Android.Tasks
 		StructureInfo typeMapModuleEntryStructureInfo;
 		JavaNameHashComparer javaNameHashComparer;
 
-#pragma warning disable CS0414 // Field is assigned but its value is never used - might be used for debugging or future functionality
-		ulong moduleCounter = 0;
-#pragma warning restore CS0414
-
 		public TypeMappingReleaseNativeAssemblyGeneratorCLR (TaskLoggingHelper log, NativeTypeMappingData mappingData)
 			: base (log)
 		{
@@ -242,7 +238,7 @@ namespace Xamarin.Android.Tasks
 			};
 			module.Add (managed_to_java_map);
 
-			// Java hashes are output bafore Java type map **and** managed modules, because they will also sort the Java map for us.
+			// Java hashes are output before Java type map **and** managed modules, because they will also sort the Java map for us.
 			// This is not strictly necessary, as we could do the sorting in the java map BeforeWriteCallback, but this way we save
 			// time sorting only once.
 			var java_to_managed_hashes = new LlvmIrGlobalVariable (typeof(List<ulong>), "java_to_managed_hashes") {
@@ -255,14 +251,6 @@ namespace Xamarin.Android.Tasks
 			};
 			java_to_managed_hashes.WriteOptions &= ~LlvmIrVariableWriteOptions.ArrayWriteIndexComments;
 			module.Add (java_to_managed_hashes);
-
-			// foreach (ModuleMapData mmd in cs.AllModulesData) {
-			// 	var mmdVar = new LlvmIrGlobalVariable (mmd.Entries, mmd.SymbolLabel, LlvmIrVariableOptions.LocalConstant) {
-			// 		BeforeWriteCallback = SortEntriesAndUpdateJavaIndexes,
-			// 		BeforeWriteCallbackCallerState = cs,
-			// 	};
-			// 	module.Add (mmdVar);
-			// }
 
 			var modulesMapData = new LlvmIrGlobalVariable (cs.AllModulesMaps, "modules_map_data", LlvmIrVariableOptions.GlobalConstant) {
 				BeforeWriteCallback = SortEntriesAndUpdateJavaIndexes,
