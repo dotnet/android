@@ -3,29 +3,123 @@
     <Aapt2Version>4.0.0-6051327</Aapt2Version>
     <_Destination>$(MicrosoftAndroidSdkOutDir)</_Destination>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+    <_AndroidManifestPath>$(AndroidToolchainCacheDirectory)\repository2-3.xml</_AndroidManifestPath>
+    <_AndroidRepositoryUrl>https://dl.google.com/android/repository/</_AndroidRepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
     <_BuildTools Include="build-tools_r$(XABuildToolsVersion)_macosx.zip">
       <Platform>osx</Platform>
       <HostOS>Darwin</HostOS>
+      <ManifestHostOs>macosx</ManifestHostOs>
       <FilesToExtract>aapt2</FilesToExtract>
     </_BuildTools>
     <_BuildTools Include="build-tools_r$(XABuildToolsVersion)_linux.zip">
       <Platform>linux</Platform>
       <HostOS>Linux</HostOS>
+      <ManifestHostOs>linux</ManifestHostOs>
       <FilesToExtract>aapt2</FilesToExtract>
     </_BuildTools>
     <_BuildTools Include="build-tools_r$(XABuildToolsVersion)_windows.zip">
       <Platform>windows</Platform>
       <HostOS></HostOS>
+      <ManifestHostOs>windows</ManifestHostOs>
       <FilesToExtract>aapt2.exe</FilesToExtract>
     </_BuildTools>
   </ItemGroup>
 
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" TaskFactory="TaskHostFactory" Runtime="NET" />
 
-  <Target Name="_ExtractAapt2" BeforeTargets="Build">
+  <Target Name="_DownloadBuildTools"
+      Inputs="$(MSBuildThisFileFullPath);$(MSBuildProjectFullPath);..\..\Configuration.props"
+      Outputs="@(_BuildTools->'$(AndroidToolchainCacheDirectory)\%(Identity)')">
+    <!-- Download Google's Android SDK manifest to get checksums -->
+    <DownloadFile
+        SourceUrl="$(_AndroidRepositoryUrl)repository2-3.xml"
+        DestinationFolder="$(AndroidToolchainCacheDirectory)"
+        DestinationFileName="repository2-3.xml"
+        SkipUnchangedFiles="false"
+        Retries="3"
+    />
+    <!-- Extract SHA-1 checksums from manifest for each platform -->
+    <XmlPeek XmlInputPath="$(_AndroidManifestPath)"
+        Query="//remotePackage[@path='build-tools;$(XABuildToolsFolder)']/archives/archive[host-os='macosx']/complete/checksum/text()">
+      <Output TaskParameter="Result" PropertyName="_BuildToolsHashMacOS" />
+    </XmlPeek>
+    <XmlPeek XmlInputPath="$(_AndroidManifestPath)"
+        Query="//remotePackage[@path='build-tools;$(XABuildToolsFolder)']/archives/archive[host-os='windows']/complete/checksum/text()">
+      <Output TaskParameter="Result" PropertyName="_BuildToolsHashWindows" />
+    </XmlPeek>
+    <XmlPeek XmlInputPath="$(_AndroidManifestPath)"
+        Query="//remotePackage[@path='build-tools;$(XABuildToolsFolder)']/archives/archive[host-os='linux']/complete/checksum/text()">
+      <Output TaskParameter="Result" PropertyName="_BuildToolsHashLinux" />
+    </XmlPeek>
+    <Error
+        Condition=" '$(_BuildToolsHashMacOS)' == '' Or '$(_BuildToolsHashWindows)' == '' Or '$(_BuildToolsHashLinux)' == '' "
+        Text="Failed to read build-tools checksums from Android SDK manifest for version $(XABuildToolsFolder)"
+    />
+    <!-- Normalize checksums to uppercase for comparison with GetFileHash output -->
+    <PropertyGroup>
+      <_BuildToolsHashMacOS>$(_BuildToolsHashMacOS.ToUpperInvariant())</_BuildToolsHashMacOS>
+      <_BuildToolsHashWindows>$(_BuildToolsHashWindows.ToUpperInvariant())</_BuildToolsHashWindows>
+      <_BuildToolsHashLinux>$(_BuildToolsHashLinux.ToUpperInvariant())</_BuildToolsHashLinux>
+    </PropertyGroup>
+    <!-- Download build-tools archives -->
+    <DownloadFile
+        SourceUrl="$(_AndroidRepositoryUrl)build-tools_r$(XABuildToolsVersion)_macosx.zip"
+        DestinationFolder="$(AndroidToolchainCacheDirectory)"
+        DestinationFileName="build-tools_r$(XABuildToolsVersion)_macosx.zip"
+        Retries="3"
+    />
+    <DownloadFile
+        SourceUrl="$(_AndroidRepositoryUrl)build-tools_r$(XABuildToolsVersion)_windows.zip"
+        DestinationFolder="$(AndroidToolchainCacheDirectory)"
+        DestinationFileName="build-tools_r$(XABuildToolsVersion)_windows.zip"
+        Retries="3"
+    />
+    <DownloadFile
+        SourceUrl="$(_AndroidRepositoryUrl)build-tools_r$(XABuildToolsVersion)_linux.zip"
+        DestinationFolder="$(AndroidToolchainCacheDirectory)"
+        DestinationFileName="build-tools_r$(XABuildToolsVersion)_linux.zip"
+        Retries="3"
+    />
+    <!-- Validate SHA-1 checksums -->
+    <GetFileHash Files="$(AndroidToolchainCacheDirectory)\build-tools_r$(XABuildToolsVersion)_macosx.zip" Algorithm="SHA1">
+      <Output TaskParameter="Hash" PropertyName="_BuildToolsActualHashMacOS" />
+    </GetFileHash>
+    <Delete
+        Condition=" '$(_BuildToolsActualHashMacOS)' != '$(_BuildToolsHashMacOS)' "
+        Files="$(AndroidToolchainCacheDirectory)\build-tools_r$(XABuildToolsVersion)_macosx.zip"
+    />
+    <Error
+        Condition=" '$(_BuildToolsActualHashMacOS)' != '$(_BuildToolsHashMacOS)' "
+        Text="SHA1 mismatch for build-tools_r$(XABuildToolsVersion)_macosx.zip. Expected: $(_BuildToolsHashMacOS) Actual: $(_BuildToolsActualHashMacOS)"
+    />
+    <GetFileHash Files="$(AndroidToolchainCacheDirectory)\build-tools_r$(XABuildToolsVersion)_windows.zip" Algorithm="SHA1">
+      <Output TaskParameter="Hash" PropertyName="_BuildToolsActualHashWindows" />
+    </GetFileHash>
+    <Delete
+        Condition=" '$(_BuildToolsActualHashWindows)' != '$(_BuildToolsHashWindows)' "
+        Files="$(AndroidToolchainCacheDirectory)\build-tools_r$(XABuildToolsVersion)_windows.zip"
+    />
+    <Error
+        Condition=" '$(_BuildToolsActualHashWindows)' != '$(_BuildToolsHashWindows)' "
+        Text="SHA1 mismatch for build-tools_r$(XABuildToolsVersion)_windows.zip. Expected: $(_BuildToolsHashWindows) Actual: $(_BuildToolsActualHashWindows)"
+    />
+    <GetFileHash Files="$(AndroidToolchainCacheDirectory)\build-tools_r$(XABuildToolsVersion)_linux.zip" Algorithm="SHA1">
+      <Output TaskParameter="Hash" PropertyName="_BuildToolsActualHashLinux" />
+    </GetFileHash>
+    <Delete
+        Condition=" '$(_BuildToolsActualHashLinux)' != '$(_BuildToolsHashLinux)' "
+        Files="$(AndroidToolchainCacheDirectory)\build-tools_r$(XABuildToolsVersion)_linux.zip"
+    />
+    <Error
+        Condition=" '$(_BuildToolsActualHashLinux)' != '$(_BuildToolsHashLinux)' "
+        Text="SHA1 mismatch for build-tools_r$(XABuildToolsVersion)_linux.zip. Expected: $(_BuildToolsHashLinux) Actual: $(_BuildToolsActualHashLinux)"
+    />
+  </Target>
+
+  <Target Name="_ExtractAapt2" BeforeTargets="Build" DependsOnTargets="_DownloadBuildTools">
     <UnzipDirectoryChildren
         NoSubdirectory="False"
         SourceFiles="$(AndroidToolchainCacheDirectory)\%(_BuildTools.Identity)"
