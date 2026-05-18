@@ -588,7 +588,7 @@ namespace Bug12935
 			proj.SetProperty ("GenerateApplicationManifest", "false"); // Disable $(AndroidVersionCode) support
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, seperateApk);
 			if (!string.IsNullOrEmpty (abis))
-				proj.SetAndroidSupportedAbis (abis);
+				proj.SetRuntimeIdentifiers (abis.Split (';'));
 			if (!string.IsNullOrEmpty (versionCodePattern))
 				proj.SetProperty (proj.ReleaseProperties, "AndroidVersionCodePattern", versionCodePattern);
 			else
