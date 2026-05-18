@@ -25,12 +25,13 @@
     <_OpenJDKHashUrl>$(_OpenJDKArchiveUrl).sha256sum.txt</_OpenJDKHashUrl>
     <_OpenJDKArchive>$(AndroidToolchainCacheDirectory)\$(_OpenJDKFileName)</_OpenJDKArchive>
     <_OpenJDKHashFile>$(AndroidToolchainCacheDirectory)\$(_OpenJDKHashFileName)</_OpenJDKHashFile>
-    <_OpenJDKExtractDir>$(AndroidToolchainCacheDirectory)\openjdk-$(MicrosoftOpenJDKVersion)</_OpenJDKExtractDir>
     <_OpenJDKInstallDir>$(AndroidToolchainDirectory)\$(MicrosoftOpenJDKFolder)</_OpenJDKInstallDir>
     <_OpenJDKVersionFile>$(_OpenJDKInstallDir)\xa_jdk_version.txt</_OpenJDKVersionFile>
-    <!-- On macOS, the tar.gz extracts with Contents/Home subdirectory -->
-    <_OpenJDKExtractSubdir Condition=" '$(HostOS)' != 'Darwin' ">$(_OpenJDKExtractDir)\$(MicrosoftOpenJDKRootDirName)</_OpenJDKExtractSubdir>
-    <_OpenJDKExtractSubdir Condition=" '$(HostOS)' == 'Darwin' ">$(_OpenJDKExtractDir)\$(MicrosoftOpenJDKRootDirName)\Contents\Home</_OpenJDKExtractSubdir>
+    <!-- Strip the archive's root folder(s) so files land directly in the install dir.
+         Windows/Linux archives have: jdk-21.0.8+9/bin/java (1 level)
+         macOS archives have: jdk-21.0.8+9/Contents/Home/bin/java (3 levels) -->
+    <_OpenJDKStripComponents Condition=" '$(HostOS)' != 'Darwin' ">1</_OpenJDKStripComponents>
+    <_OpenJDKStripComponents Condition=" '$(HostOS)' == 'Darwin' ">3</_OpenJDKStripComponents>
   </PropertyGroup>
 
   <Target Name="_DownloadOpenJDK"
@@ -66,47 +67,16 @@
     />
   </Target>
 
-  <Target Name="_ExtractOpenJDK"
-      DependsOnTargets="_DownloadOpenJDK"
-      Inputs="$(_OpenJDKArchive)"
-      Outputs="$(_OpenJDKExtractDir)\.extracted">
-    <RemoveDir Directories="$(_OpenJDKExtractDir)" />
-    <MakeDir Directories="$(_OpenJDKExtractDir)" />
-    <!-- Windows: use built-in Unzip task -->
-    <Unzip
-        Condition=" '$(HostOS)' == 'Windows' "
-        SourceFiles="$(_OpenJDKArchive)"
-        DestinationFolder="$(_OpenJDKExtractDir)"
-        OverwriteReadOnlyFiles="true"
-    />
-    <!-- Linux/macOS: use tar -->
-    <Exec
-        Condition=" '$(HostOS)' != 'Windows' "
-        Command="tar xzf &quot;$(_OpenJDKArchive)&quot; -C &quot;$(_OpenJDKExtractDir)&quot;"
-    />
-    <Touch Files="$(_OpenJDKExtractDir)\.extracted" AlwaysCreate="true" />
-  </Target>
-
   <Target Name="_InstallOpenJDK"
       BeforeTargets="Build"
-      DependsOnTargets="_ExtractOpenJDK"
-      Inputs="$(_OpenJDKExtractDir)\.extracted"
+      DependsOnTargets="_DownloadOpenJDK"
+      Inputs="$(_OpenJDKArchive)"
       Outputs="$(_OpenJDKVersionFile)">
-    <ItemGroup>
-      <_OpenJDKFiles Include="$(_OpenJDKExtractSubdir)\**\*" />
-    </ItemGroup>
-    <Error
-        Condition=" '@(_OpenJDKFiles)' == '' "
-        Text="OpenJDK root directory not found after extraction. Expected: $(_OpenJDKExtractSubdir)"
-    />
     <!-- Remove old install to avoid stale files from previous versions -->
     <RemoveDir Directories="$(_OpenJDKInstallDir)" />
     <MakeDir Directories="$(_OpenJDKInstallDir)" />
-    <Copy
-        SourceFiles="@(_OpenJDKFiles)"
-        DestinationFiles="@(_OpenJDKFiles->'$(_OpenJDKInstallDir)\%(RecursiveDir)%(Filename)%(Extension)')"
-        SkipUnchangedFiles="true"
-    />
+    <!-- Extract directly into install directory, stripping archive root folder(s) -->
+    <Exec Command="tar -xf &quot;$(_OpenJDKArchive)&quot; -C &quot;$(_OpenJDKInstallDir)&quot; --strip-components=$(_OpenJDKStripComponents)" />
     <!-- Verify key JDK files exist after installation -->
     <Error
         Condition=" !Exists('$(_OpenJDKInstallDir)\bin\javac') And !Exists('$(_OpenJDKInstallDir)\bin\javac.exe') "
@@ -128,7 +98,7 @@
   </Target>
 
   <Target Name="_CleanOpenJDK" BeforeTargets="Clean">
-    <RemoveDir Directories="$(_OpenJDKExtractDir);$(_OpenJDKInstallDir)" />
+    <RemoveDir Directories="$(_OpenJDKInstallDir)" />
     <Delete Files="$(_OpenJDKArchive);$(_OpenJDKHashFile)" />
   </Target>
 

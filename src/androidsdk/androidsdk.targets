@@ -18,7 +18,7 @@
     <!-- Pipe 'y' responses to accept all licenses -->
     <Exec
         Condition=" '$(HostOS)' == 'Windows' "
-        Command="powershell -NoProfile -Command &quot;'y' * 10 | &amp; '$(_SdkManagerPath)' --licenses&quot;"
+        Command="powershell -NoProfile -Command &quot;1..10 | ForEach-Object { 'y' } | &amp; '$(_SdkManagerPath)' --licenses&quot;"
         EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory)"
         IgnoreExitCode="true"
     />
