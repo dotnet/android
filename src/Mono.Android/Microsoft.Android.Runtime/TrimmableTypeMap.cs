@@ -231,7 +231,6 @@ public class TrimmableTypeMap
 		return jniName is not null;
 	}
 
-
 	internal JavaPeerProxy? GetProxyForJavaObject (IntPtr handle, Type? targetType = null)
 	{
 		if (handle == IntPtr.Zero) {
@@ -282,9 +281,11 @@ public class TrimmableTypeMap
 
 		// getInterfaces() returns only directly declared interfaces (not transitive),
 		// so we recurse into super-interfaces to find the matching TypeMap entry.
+		// We wrap the JNI class handle in Java.Lang.Class to call the existing
+		// GetInterfaces() binding which handles method ID caching and JNI remapping.
 		static JavaPeerProxy? TryMatchInterfaces (TrimmableTypeMap self, JniObjectReference jniClass, Type targetType)
 		{
-			using var cls = new Java.Lang.Class (jniClass.Handle, JniHandleOwnership.DoNotTransfer);
+			using var cls = new Java.Lang.Class (jniClass.Handle, JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister);
 			var interfaces = cls.GetInterfaces ();
 			if (interfaces is null || interfaces.Length == 0) {
 				return null;
