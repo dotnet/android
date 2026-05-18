@@ -435,3 +435,61 @@ namespace Java.InteropTests
 		public T Value { get; set; }
 	}
 }
+
+namespace Xamarin.Android.NetTests
+{
+	using System.Linq;
+	using Java.Security;
+	using Javax.Net.Ssl;
+	using NUnit.Framework;
+	using Log = global::Android.Util.Log;
+
+	[TestFixture]
+	public class TrimmableTypeMapTrustManagerTests
+	{
+		[Test]
+		public void TrustManagerFactory_GetTrustManagers_ReturnsIX509TrustManager ()
+		{
+			var tmf = TrustManagerFactory.GetInstance (TrustManagerFactory.DefaultAlgorithm);
+			tmf.Init ((KeyStore?) null);
+
+			var trustManagers = tmf.GetTrustManagers ();
+			Assert.IsNotNull (trustManagers, "GetTrustManagers returned null");
+			Assert.IsTrue (trustManagers.Length > 0, "GetTrustManagers returned empty array");
+
+			bool foundX509 = false;
+			foreach (var tm in trustManagers) {
+				string javaClass = JNIEnv.GetClassNameFromInstance (tm.Handle);
+				Log.Info ("TypeMapTest", $"--- TrustManager element ---");
+				Log.Info ("TypeMapTest", $"  Managed type: {tm.GetType ().FullName}");
+				Log.Info ("TypeMapTest", $"  Java class:   {javaClass}");
+				Log.Info ("TypeMapTest", $"  is IX509TrustManager: {tm is IX509TrustManager}");
+
+				// Walk the Java class hierarchy to see what the typemap would encounter
+				var selfRef = new Java.Interop.JniObjectReference (tm.Handle);
+				var jniClass = Java.Interop.JniEnvironment.Types.GetObjectClass (selfRef);
+				try {
+					int depth = 0;
+					while (jniClass.IsValid) {
+						var name = Java.Interop.JniEnvironment.Types.GetJniTypeNameFromClass (jniClass);
+						Log.Info ("TypeMapTest", $"  hierarchy[{depth}]: {name}");
+						var super = Java.Interop.JniEnvironment.Types.GetSuperclass (jniClass);
+						Java.Interop.JniObjectReference.Dispose (ref jniClass);
+						jniClass = super;
+						depth++;
+					}
+				} finally {
+					Java.Interop.JniObjectReference.Dispose (ref jniClass);
+				}
+
+				if (tm is IX509TrustManager) {
+					foundX509 = true;
+				}
+			}
+
+			Assert.IsTrue (foundX509,
+				$"No ITrustManager element was marshalled as IX509TrustManager. " +
+				$"Types found: {string.Join (", ", trustManagers.Select (t => t.GetType ().FullName))}");
+		}
+	}
+}

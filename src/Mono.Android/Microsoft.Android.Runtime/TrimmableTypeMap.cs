@@ -238,6 +238,7 @@ public class TrimmableTypeMap
 		}
 
 		return TryGetProxyFromHierarchy (this, handle, targetType) ??
+			TryGetProxyFromInterfaces (this, handle, targetType) ??
 			TryGetProxyFromTargetType (this, handle, targetType);
 
 		static JavaPeerProxy? TryGetProxyFromHierarchy (TrimmableTypeMap self, IntPtr handle, Type? targetType)
@@ -264,6 +265,90 @@ public class TrimmableTypeMap
 			}
 
 			return null;
+		}
+
+		// When the class hierarchy walk fails and the targetType is an interface,
+		// walk the Java interfaces of the object's class. This handles the case
+		// where the intermediate class entry (e.g., X509ExtendedTrustManager) was
+		// trimmed but the Java interface entry (e.g., X509TrustManager) survives.
+		static JavaPeerProxy? TryGetProxyFromInterfaces (TrimmableTypeMap self, IntPtr handle, Type? targetType)
+		{
+			if (targetType is null || !targetType.IsInterface) {
+				return null;
+			}
+
+			var selfRef = new JniObjectReference (handle);
+			var jniClass = JniEnvironment.Types.GetObjectClass (selfRef);
+
+			try {
+				// Walk the class hierarchy and at each level check the interfaces
+				while (jniClass.IsValid) {
+					var result = TryGetProxyFromInterfacesOfClass (self, jniClass, targetType);
+					if (result != null) {
+						return result;
+					}
+
+					var super = JniEnvironment.Types.GetSuperclass (jniClass);
+					JniObjectReference.Dispose (ref jniClass);
+					jniClass = super;
+				}
+			} finally {
+				JniObjectReference.Dispose (ref jniClass);
+			}
+
+			return null;
+		}
+
+		static JavaPeerProxy? TryGetProxyFromInterfacesOfClass (TrimmableTypeMap self, JniObjectReference jniClass, Type targetType)
+		{
+			IntPtr interfacesArray = GetJavaInterfaces (jniClass.Handle);
+			if (interfacesArray == IntPtr.Zero) {
+				return null;
+			}
+
+			try {
+				int length = JNIEnv.GetArrayLength (interfacesArray);
+				for (int i = 0; i < length; i++) {
+					IntPtr ifaceClass = JNIEnv.GetObjectArrayElement (interfacesArray, i);
+					if (ifaceClass == IntPtr.Zero) {
+						continue;
+					}
+
+					try {
+						var ifaceRef = new JniObjectReference (ifaceClass);
+						var ifaceName = JniEnvironment.Types.GetJniTypeNameFromClass (ifaceRef);
+						if (ifaceName != null) {
+							var proxy = self.GetProxyForJniClass (ifaceName, targetType);
+							if (proxy != null && TargetTypeMatches (targetType, proxy.TargetType)) {
+								return proxy;
+							}
+						}
+
+						// Recurse into super-interfaces
+						var result = TryGetProxyFromInterfacesOfClass (self, ifaceRef, targetType);
+						if (result != null) {
+							return result;
+						}
+					} finally {
+						JNIEnv.DeleteLocalRef (ifaceClass);
+					}
+				}
+			} finally {
+				JNIEnv.DeleteLocalRef (interfacesArray);
+			}
+
+			return null;
+		}
+
+		static IntPtr GetJavaInterfaces (IntPtr jniClass)
+		{
+			IntPtr classClass = JNIEnv.GetObjectClass (jniClass);
+			try {
+				IntPtr getInterfacesMethod = JNIEnv.GetMethodID (classClass, "getInterfaces", "()[Ljava/lang/Class;");
+				return JNIEnv.CallObjectMethod (jniClass, getInterfacesMethod);
+			} finally {
+				JNIEnv.DeleteLocalRef (classClass);
+			}
 		}
 
 		static JavaPeerProxy? TryGetProxyFromTargetType (TrimmableTypeMap self, IntPtr handle, Type? targetType)
