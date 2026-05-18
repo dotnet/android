@@ -110,6 +110,11 @@ namespace Xamarin.Android.Tasks
 				return version;
 			}
 
+			if (JavaSdkPath.IsNullOrEmpty ()) {
+				Log.LogDebugMessage ("JavaSdkPath is not set, unable to locate Java tools.");
+				return null;
+			}
+
 			// NOTE: this doesn't need to use GetRegisteredTaskObjectAssemblyLocal()
 			// because the path to java/javac is the key and the value is a System.Version.
 			var javaTool = Path.Combine (JavaSdkPath, "bin", javaExe);
@@ -145,7 +150,7 @@ namespace Xamarin.Android.Tasks
 		bool GetVersionFromFile (string javaExe, out Version version)
 		{
 			var path = Path.Combine (Path.GetDirectoryName (javaExe), "..", "release");
-			if (!File.Exists (path)) {
+			if (!File.Exists (path) && !JavaSdkPath.IsNullOrEmpty ()) {
 				path = Path.Combine (JavaSdkPath, "release");
 			}
 			if (!File.Exists (path)) {

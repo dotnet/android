@@ -200,5 +200,40 @@ SOURCE="".:git:6171c19d2c18""
 			Assert.IsTrue (validateJavaVersion.Execute (), "Execute should succeed!");
 			Assert.IsTrue (messages.Any (m => m.Message.Contains ("did not contain a valid JAVA_VERSION")), "valid JAVA_VERSION should *not* be found");
 		}
+
+		[Test]
+		public void NullJavaSdkPathDoesNotThrow ()
+		{
+			var validateJavaVersion = new Xamarin.Android.Tasks.ValidateJavaVersion {
+				BuildEngine = engine,
+				JavaSdkPath = null,
+				JavaToolExe = "java",
+				JavacToolExe = "javac",
+				LatestSupportedJavaVersion = "17.99.0",
+				MinimumSupportedJavaVersion = "11.0.0",
+				UseJavaExeVersion = true,
+			};
+
+			Assert.IsFalse (validateJavaVersion.Execute (), "Execute should fail when JavaSdkPath is null.");
+			Assert.IsFalse (errors.Any (e => e.Code == "XAVJV7001"), "ValidateJavaVersion should not throw when JavaSdkPath is null.");
+			Assert.IsTrue (messages.Any (m => m.Message.Contains ("JavaSdkPath is not set")), "Should log debug message about missing JavaSdkPath.");
+		}
+
+		[Test]
+		public void NullJavaSdkPathWithReleaseFileDoesNotThrow ()
+		{
+			var validateJavaVersion = new Xamarin.Android.Tasks.ValidateJavaVersion {
+				BuildEngine = engine,
+				JavaSdkPath = null,
+				JavaToolExe = "java",
+				JavacToolExe = "javac",
+				LatestSupportedJavaVersion = "17.99.0",
+				MinimumSupportedJavaVersion = "11.0.0",
+				UseJavaExeVersion = false,
+			};
+
+			Assert.IsFalse (validateJavaVersion.Execute (), "Execute should fail when JavaSdkPath is null.");
+			Assert.IsFalse (errors.Any (e => e.Code == "XAVJV7001"), "ValidateJavaVersion should not throw when JavaSdkPath is null (release file path).");
+		}
 	}
 }
