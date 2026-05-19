@@ -1016,15 +1016,15 @@ Para usar um caminho JDK personalizado para um build de linha de comando, defina
 </comment>
   </data>
   <data name="XA1045" xml:space="preserve">
-    <value>Input file `{0}` does not start with `&lt;replacements/&gt;`.</value>
+    <value>O arquivo de entrada `{0}` não começa com `&lt;replacements/&gt;`.</value>
     <comment>{0} - file path</comment>
   </data>
   <data name="XA1046" xml:space="preserve">
-    <value>Attribute '{0}' in element '{1}' has value '{2}' that cannot be parsed as boolean; {3} line {4}.</value>
+    <value>Atributo '{0}' no elemento '{1}' tem o valor '{2}' que não pode ser analisado como booleano; {3} linha {4}.</value>
     <comment>{0} - attribute name; {1} - element name; {2} - attribute value; {3} - file path; {4} - line number</comment>
   </data>
   <data name="XA1047" xml:space="preserve">
-    <value>Required attribute '{0}' missing from element '{1}'; {2} line {3}.</value>
+    <value>Atributo obrigatório '{0}' faltando do elemento '{1}'; {2} linha {3}.</value>
     <comment>{0} - attribute name; {1} - element name; {2} - file path; {3} - line number</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
@@ -1093,12 +1093,12 @@ Para usar um caminho JDK personalizado para um build de linha de comando, defina
 {0} - Java type name from AndroidManifest.xml</comment>
   </data>
   <data name="XA4251" xml:space="preserve">
-    <value>Type '{0}' uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map. To work around this, do not target the trimmable type map (for example, by switching to the 'llvm-ir' type map implementation), and please report this scenario at https://github.com/dotnet/android/issues so the team can evaluate whether to support it.</value>
+    <value>O tipo '{0}' usa [JniAddNativeMethodRegistrationAttribute], que não é suportado pelo mapa de tipos trimmable. Para contornar isso, não direcione ao mapa de tipo trimmable (por exemplo, mudando para a implementação do mapa de tipo 'llvm-ir') e relate esse cenário em https://github.com/dotnet/android/issues para que a equipe possa avaliar se deve suportá-lo.</value>
     <comment>The following are literal names and should not be translated: JniAddNativeMethodRegistrationAttribute, llvm-ir.
 {0} - Fully-qualified managed type name</comment>
   </data>
   <data name="XA4252" xml:space="preserve">
-    <value>Insecure HTTP Maven repository URL '{0}' is not allowed. Use an HTTPS URL, or set AllowInsecureHttp="true" metadata on the item to override this check.</value>
+    <value>A URL insegura do repositório Maven '{0}' não é permitida. Use uma URL HTTPS ou defina AllowInsecureHttp="true" nos metadados do item para ignorar essa verificação.</value>
     <comment>The following are literal names and should not be translated: HTTP, HTTPS, Maven, AllowInsecureHttp
 {0} - The insecure HTTP URL</comment>
   </data>

@@ -1016,15 +1016,15 @@ In this message, the term "handheld app" means "app for handheld devices."
 </comment>
   </data>
   <data name="XA1045" xml:space="preserve">
-    <value>Input file `{0}` does not start with `&lt;replacements/&gt;`.</value>
+    <value>Входной файл `{0}` не начинается с `&lt;replacements/&gt;`.</value>
     <comment>{0} - file path</comment>
   </data>
   <data name="XA1046" xml:space="preserve">
-    <value>Attribute '{0}' in element '{1}' has value '{2}' that cannot be parsed as boolean; {3} line {4}.</value>
+    <value>Атрибут "{0}" в элементе "{1}" использует значение "{2}", которое невозможно проанализировать как логическое; {3} строка {4}.</value>
     <comment>{0} - attribute name; {1} - element name; {2} - attribute value; {3} - file path; {4} - line number</comment>
   </data>
   <data name="XA1047" xml:space="preserve">
-    <value>Required attribute '{0}' missing from element '{1}'; {2} line {3}.</value>
+    <value>Необходимый атрибут "{0}" отсутствует в элементе "{1}"; {2} строка {3}.</value>
     <comment>{0} - attribute name; {1} - element name; {2} - file path; {3} - line number</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
@@ -1093,12 +1093,12 @@ In this message, the term "handheld app" means "app for handheld devices."
 {0} - Java type name from AndroidManifest.xml</comment>
   </data>
   <data name="XA4251" xml:space="preserve">
-    <value>Type '{0}' uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map. To work around this, do not target the trimmable type map (for example, by switching to the 'llvm-ir' type map implementation), and please report this scenario at https://github.com/dotnet/android/issues so the team can evaluate whether to support it.</value>
+    <value>В типе"{0}" используется атрибут [JniAddNativeMethodRegistrationAttribute], который не поддерживается картой типов с возможностью обрезки. Чтобы обойти эту проблему, не нацеливайтесь на карту типов с возможностью обрезки (например, переключившись на реализацию карты типа "llvm-ir"), и сообщите об этом случае на странице https://github.com/dotnet/android/issues, чтобы команда разработчиков могла решить, стоит ли добавлять поддержку этой функции.</value>
     <comment>The following are literal names and should not be translated: JniAddNativeMethodRegistrationAttribute, llvm-ir.
 {0} - Fully-qualified managed type name</comment>
   </data>
   <data name="XA4252" xml:space="preserve">
-    <value>Insecure HTTP Maven repository URL '{0}' is not allowed. Use an HTTPS URL, or set AllowInsecureHttp="true" metadata on the item to override this check.</value>
+    <value>Небезопасный URL-адрес репозитория Maven HTTP "{0}" не допускается. Используйте URL-адрес HTTPS или задайте для элемента метаданные AllowInsecureHttp="true", чтобы переопределить эту проверку.</value>
     <comment>The following are literal names and should not be translated: HTTP, HTTPS, Maven, AllowInsecureHttp
 {0} - The insecure HTTP URL</comment>
   </data>
