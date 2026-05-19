@@ -19,6 +19,7 @@
         LatestRuntimeFrameworkVersion="@NET_PREVIOUS_VERSION@"
         TargetingPackVersion="@NET_PREVIOUS_VERSION@"
     />
+    <EolWorkload Include="net9.0-android" Url="https://aka.ms/maui-support-policy" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' and $([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '9.0')) ">

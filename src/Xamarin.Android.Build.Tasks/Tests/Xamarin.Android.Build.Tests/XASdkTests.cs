@@ -340,6 +340,12 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 }",
 			});
 
+			// net9.0-android is EOL and emits NETSDK1202
+			bool isEol = targetFramework.StartsWith ("net9.0-", StringComparison.Ordinal);
+			if (isEol) {
+				library.SetProperty ("CheckEolWorkloads", "false");
+			}
+
 			var builder = CreateDllBuilder ();
 			Assert.IsTrue (builder.Build (library), $"{library.ProjectName} should succeed");
 			// NOTE: Preview API levels emit XA4211
