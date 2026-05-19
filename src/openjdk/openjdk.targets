@@ -29,9 +29,9 @@
     <_OpenJDKVersionFile>$(_OpenJDKInstallDir)\xa_jdk_version.txt</_OpenJDKVersionFile>
     <!-- Strip the archive's root folder(s) so files land directly in the install dir.
          Windows/Linux archives have: jdk-21.0.8+9/bin/java (1 level)
-         macOS archives have: jdk-21.0.8+9/Contents/Home/bin/java (3 levels) -->
+         macOS archives have: ./jdk-21.0.8+9/Contents/Home/bin/java (4 levels, ./ counts) -->
     <_OpenJDKStripComponents Condition=" '$(HostOS)' != 'Darwin' ">1</_OpenJDKStripComponents>
-    <_OpenJDKStripComponents Condition=" '$(HostOS)' == 'Darwin' ">3</_OpenJDKStripComponents>
+    <_OpenJDKStripComponents Condition=" '$(HostOS)' == 'Darwin' ">4</_OpenJDKStripComponents>
   </PropertyGroup>
 
   <Target Name="_DownloadOpenJDK"
