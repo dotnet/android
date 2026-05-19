@@ -112,6 +112,7 @@ namespace Xamarin.Android.Tasks
 
 			if (JavaSdkPath.IsNullOrEmpty ()) {
 				Log.LogDebugMessage ("JavaSdkPath is not set, unable to locate Java tools.");
+				Log.LogCodedError ("XA5300", Properties.Resources.XA5300_Java_SDK);
 				return null;
 			}
 
