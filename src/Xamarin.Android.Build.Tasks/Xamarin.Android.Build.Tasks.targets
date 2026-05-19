@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateProfile" TaskFactory="TaskHostFactory" Runtime="NET" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateSupportedPlatforms" TaskFactory="TaskHostFactory" Runtime="NET" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" TaskFactory="TaskHostFactory" Runtime="NET" />
   <UsingTask AssemblyFile="$(PrepTasksAssembly)"      TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" TaskFactory="TaskHostFactory" Runtime="NET" />

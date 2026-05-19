@@ -1015,6 +1015,18 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
 </comment>
   </data>
+  <data name="XA1045" xml:space="preserve">
+    <value>Vstupní soubor `{0}` nezačíná na `&lt;replacements/&gt;`.</value>
+    <comment>{0} - file path</comment>
+  </data>
+  <data name="XA1046" xml:space="preserve">
+    <value>Atribut {0} v elementu {1} má hodnotu {2}, kterou nelze analyzovat jako logickou hodnotu; {3} – řádek {4}.</value>
+    <comment>{0} - attribute name; {1} - element name; {2} - attribute value; {3} - file path; {4} - line number</comment>
+  </data>
+  <data name="XA1047" xml:space="preserve">
+    <value>Požadovaný atribut {0} chybí v elementu {1}; {3} – řádek {2}.</value>
+    <comment>{0} - attribute name; {1} - element name; {2} - file path; {3} - line number</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>Závislosti Java {0} není vyhověno.</value>
     <comment>The following are literal names and should not be translated: Java.
@@ -1081,9 +1093,14 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
 {0} - Java type name from AndroidManifest.xml</comment>
   </data>
   <data name="XA4251" xml:space="preserve">
-    <value>Type '{0}' uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map. To work around this, do not target the trimmable type map (for example, by switching to the 'llvm-ir' type map implementation), and please report this scenario at https://github.com/dotnet/android/issues so the team can evaluate whether to support it.</value>
+    <value>Typ {0} používá atribut [JniAddNativeMethodRegistrationAttribute], což mapování ořezávatelných typů nepodporuje. Tento problém můžete obejít tak, že nepoužijete mapování ořezávatelných typů, například přepnutím na implementaci mapování typů llvm-ir, a nahlásíte tento scénář na https://github.com/dotnet/android/issues, aby tým mohl vyhodnotit, jestli pro něj zavede podporu.</value>
     <comment>The following are literal names and should not be translated: JniAddNativeMethodRegistrationAttribute, llvm-ir.
 {0} - Fully-qualified managed type name</comment>
+  </data>
+  <data name="XA4252" xml:space="preserve">
+    <value>Adresa URL nezabezpečeného úložiště Maven {0} není povolena. Pokud chcete tuto kontrolu přepsat, použijte adresu URL HTTPS nebo nastavte u položky metadata AllowInsecureHttp="true".</value>
+    <comment>The following are literal names and should not be translated: HTTP, HTTPS, Maven, AllowInsecureHttp
+{0} - The insecure HTTP URL</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>Příkaz {0} selhal.\n{1}</value>

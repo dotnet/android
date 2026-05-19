@@ -714,18 +714,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA1024" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Ignoring configuration file '{0}'. .NET configuration files are not supported in .NET for Android projects that target .NET 6 or higher.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Ignorando o arquivo de configuração '{0}'. Não há suporte para arquivos de configuração .NET em projetos .NET para Android direcionados ao .NET 6 ou superior.]]></Val>
-          </Tgt>
-          <Prev Cat="Text">
-            <Val><![CDATA[Ignoring configuration file '{0}'. .NET configuration files are not supported in .NET Android projects that target .NET 6 or higher.]]></Val>
-          </Prev>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA1025" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The experimental 'Hybrid' value for the 'AndroidAotMode' MSBuild property is not currently compatible with the armeabi-v7a target ABI. To continue using the experimental 'Hybrid' value for 'AndroidAotMode', deselect the armeabi-v7a target ABI in the Visual Studio project property pages or edit the project file in a text editor and remove 'armeabi-v7a' from the 'AndroidSupportedAbis' MSBuild property.]]></Val>
@@ -891,6 +879,33 @@
           <Prev Cat="Text">
             <Val><![CDATA[The MSBuild property '{0}' is not compatible with the {1} runtime and will be ignored. Either remove the property or guard it with a condition: Condition="'$(UseMonoRuntime)' == 'true'"]]></Val>
           </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA1045" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Input file `{0}` does not start with `<replacements/>`.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[O arquivo de entrada `{0}` não começa com `<replacements/>`.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA1046" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Attribute '{0}' in element '{1}' has value '{2}' that cannot be parsed as boolean; {3} line {4}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Atributo '{0}' no elemento '{1}' tem o valor '{2}' que não pode ser analisado como booleano; {3} linha {4}.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA1047" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Required attribute '{0}' missing from element '{1}'; {2} line {3}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Atributo obrigatório '{0}' faltando do elemento '{1}'; {2} linha {3}.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1418,6 +1433,24 @@
           <Val><![CDATA[Manifest-referenced type '{0}' was not found in any scanned assembly. It may be a framework type.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[O tipo "{0}" referenciado pelo manifesto não foi encontrado em nenhum assembly verificado. Pode ser um tipo de estrutura.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4251" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Type '{0}' uses [JniAddNativeMethodRegistrationAttribute]5D;, which is not supported by the trimmable type map. To work around this, do not target the trimmable type map (for example, by switching to the 'llvm-ir' type map implementation), and please report this scenario at https://github.com/dotnet/android/issues so the team can evaluate whether to support it.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[O tipo '{0}' usa [JniAddNativeMethodRegistrationAttribute]5D;, que não é suportado pelo mapa de tipos trimmable. Para contornar isso, não direcione ao mapa de tipo trimmable (por exemplo, mudando para a implementação do mapa de tipo 'llvm-ir') e relate esse cenário em https://github.com/dotnet/android/issues para que a equipe possa avaliar se deve suportá-lo.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4252" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Insecure HTTP Maven repository URL '{0}' is not allowed. Use an HTTPS URL, or set AllowInsecureHttp="true" metadata on the item to override this check.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[A URL insegura do repositório Maven '{0}' não é permitida. Use uma URL HTTPS ou defina AllowInsecureHttp="true" nos metadados do item para ignorar essa verificação.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

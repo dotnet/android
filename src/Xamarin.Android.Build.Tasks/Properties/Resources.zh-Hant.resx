@@ -1015,6 +1015,18 @@ In this message, the term "handheld app" means "app for handheld devices."
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
 </comment>
   </data>
+  <data name="XA1045" xml:space="preserve">
+    <value>輸入檔案 `{0}` 不是以 `&lt;replacements/&gt;` 開頭。</value>
+    <comment>{0} - file path</comment>
+  </data>
+  <data name="XA1046" xml:space="preserve">
+    <value>元素 t '{1}' 中的屬性 '{0}' 具有無法剖析為布林值的值 '{2}'; {3} 行 {4}。</value>
+    <comment>{0} - attribute name; {1} - element name; {2} - attribute value; {3} - file path; {4} - line number</comment>
+  </data>
+  <data name="XA1047" xml:space="preserve">
+    <value>元素 '{1}' 缺少必要的屬性 '{0}'; {2} 行 {3}。</value>
+    <comment>{0} - attribute name; {1} - element name; {2} - file path; {3} - line number</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>無法滿足 JAVA 相依性 '{0}'。</value>
     <comment>The following are literal names and should not be translated: Java.
@@ -1081,9 +1093,14 @@ In this message, the term "handheld app" means "app for handheld devices."
 {0} - Java type name from AndroidManifest.xml</comment>
   </data>
   <data name="XA4251" xml:space="preserve">
-    <value>Type '{0}' uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map. To work around this, do not target the trimmable type map (for example, by switching to the 'llvm-ir' type map implementation), and please report this scenario at https://github.com/dotnet/android/issues so the team can evaluate whether to support it.</value>
+    <value>類型 '{0}' 使用 [JniAddNativeMethodRegistrationAttribute]，但可修剪的類型對應不支援此類型。若要處理此情況，請勿以可修剪的類型對應為目標 (例如，切換到 'llvm-ir' 類型對應實作)，請在 https://github.com/dotnet/android/issues 報告此案例，讓小組可以評估是否提供支援。</value>
     <comment>The following are literal names and should not be translated: JniAddNativeMethodRegistrationAttribute, llvm-ir.
 {0} - Fully-qualified managed type name</comment>
+  </data>
+  <data name="XA4252" xml:space="preserve">
+    <value>不允許不安全的 HTTP Maven 存放庫 URL '{0}'。使用 HTTPS URL，或在項目上設定 AllowInsecureHttp="true" 中繼資料以覆寫此檢查。</value>
+    <comment>The following are literal names and should not be translated: HTTP, HTTPS, Maven, AllowInsecureHttp
+{0} - The insecure HTTP URL</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>指令 '{0}' 失敗。\n{1}</value>

@@ -1015,6 +1015,18 @@ In this message, the term "handheld app" means "app for handheld devices."
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
 </comment>
   </data>
+  <data name="XA1045" xml:space="preserve">
+    <value>입력 파일 `{0}`이(가) `&lt;replacements/&gt;`로 시작하지 않습니다.</value>
+    <comment>{0} - file path</comment>
+  </data>
+  <data name="XA1046" xml:space="preserve">
+    <value>요소 '{1}'의 특성 '{0}'에는 부울로 구문 분석할 수 없는 값 '{2}'이 있습니다. {3} 줄 {4}.</value>
+    <comment>{0} - attribute name; {1} - element name; {2} - attribute value; {3} - file path; {4} - line number</comment>
+  </data>
+  <data name="XA1047" xml:space="preserve">
+    <value>필수 특성 '{0}'이(가) 요소 '{1}'에 없습니다. {2} 줄 {3}.</value>
+    <comment>{0} - attribute name; {1} - element name; {2} - file path; {3} - line number</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>Java 종속성 '{0}'이(가) 충족되지 않습니다.</value>
     <comment>The following are literal names and should not be translated: Java.
@@ -1081,9 +1093,14 @@ In this message, the term "handheld app" means "app for handheld devices."
 {0} - Java type name from AndroidManifest.xml</comment>
   </data>
   <data name="XA4251" xml:space="preserve">
-    <value>Type '{0}' uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map. To work around this, do not target the trimmable type map (for example, by switching to the 'llvm-ir' type map implementation), and please report this scenario at https://github.com/dotnet/android/issues so the team can evaluate whether to support it.</value>
+    <value>'{0}' 형식은 트리밍 가능한 형식 맵에서 지원되지 않는 [JniAddNativeMethodRegistrationAttribute]을(를) 사용합니다. 이 문제를 해결하려면 트리밍 가능한 형식 맵을 대상으로 하지 마세요. 예를 들어 'llvm-ir' 형식 맵 구현으로 전환하면 됩니다. 또한 팀에서 지원 여부를 검토할 수 있도록 https://github.com/dotnet/android/issues에 이 시나리오를 보고해 주세요.</value>
     <comment>The following are literal names and should not be translated: JniAddNativeMethodRegistrationAttribute, llvm-ir.
 {0} - Fully-qualified managed type name</comment>
+  </data>
+  <data name="XA4252" xml:space="preserve">
+    <value>안전하지 않은 HTTP Maven 리포지토리 URL '{0}'은(는) 허용되지 않습니다. HTTPS URL을 사용하거나 항목에 AllowInsecureHttp="true" 메타데이터를 설정하여 이 검사를 재정의하세요.</value>
+    <comment>The following are literal names and should not be translated: HTTP, HTTPS, Maven, AllowInsecureHttp
+{0} - The insecure HTTP URL</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>'{0}' 명령이 실패했습니다.\n{1}</value>
