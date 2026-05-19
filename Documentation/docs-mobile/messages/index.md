@@ -172,6 +172,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + XA3005: The detected Android NDK version is incompatible with the targeted LLVM configuration.
 + XA3006: Could not compile native assembly file: {file}
 + XA3007: Could not link native shared library: {library}
++ XA3008: Failed to extract debug info from '{library}'
 
 ## XA4xxx: Code generation
 
