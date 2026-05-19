@@ -2,6 +2,7 @@ using System.Linq;
 using Android.Runtime;
 using Java.Security;
 using Javax.Net.Ssl;
+using Microsoft.Android.Runtime;
 using NUnit.Framework;
 
 namespace Xamarin.Android.NetTests
