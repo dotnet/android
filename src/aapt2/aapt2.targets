@@ -30,8 +30,7 @@
 
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" TaskFactory="TaskHostFactory" Runtime="NET" />
 
-  <Target Name="_DownloadAndroidManifest"
-      Condition="!Exists('$(AndroidToolchainCacheDirectory)\build-tools_r$(XABuildToolsVersion)_macosx.zip') Or !Exists('$(AndroidToolchainCacheDirectory)\build-tools_r$(XABuildToolsVersion)_windows.zip') Or !Exists('$(AndroidToolchainCacheDirectory)\build-tools_r$(XABuildToolsVersion)_linux.zip')">
+  <Target Name="_DownloadAndroidManifest">
     <DownloadFile
         SourceUrl="$(_AndroidRepositoryUrl)repository2-3.xml"
         DestinationFolder="$(AndroidToolchainCacheDirectory)"
