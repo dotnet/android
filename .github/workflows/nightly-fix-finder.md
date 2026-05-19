@@ -18,7 +18,7 @@ on:
           - "0 - TODO/FIXME/HACK Comments"
           - "1 - Nullable Reference Types"
           - "2 - Obsolete API Usage"
-          - "3 - Large Files"
+          - "3 - Performance Anti-patterns"
           - "4 - Missing XML Documentation"
           - "5 - General Mistakes"
           - "6 - Unused Using Directives"
@@ -102,9 +102,18 @@ steps:
             grep -rn "\[Obsolete\]\|CS0618\|CS0612" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo "None found"
             ;;
           3)
-            echo "## Category 3: Large Files"
-            echo "### Largest C# source files in src/ (top 20)"
-            find src -name '*.cs' -type f ! -path '*/obj/*' ! -path '*/bin/*' -print0 | xargs -0 wc -l 2>/dev/null | sort -rn | head -21 | tail -20
+            echo "## Category 3: Performance Anti-patterns"
+            echo "### String concatenation in loops (+=)"
+            grep -rn '+=' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | grep -i 'string\|str\|result\|output\|sb\|builder\|message\|msg\|text\|line\|path\|name\|value' | grep -v '//' | grep -v 'test' | shuf | head -10 || echo "None found"
+            echo ""
+            echo "### Sync-over-async (Task.Result, .Wait(), .GetAwaiter().GetResult())"
+            grep -rn 'Task\.Result\|\.Wait()\|\.GetAwaiter()\.GetResult()' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | grep -v '//\|test\|Test' | shuf | head -10 || echo "None found"
+            echo ""
+            echo "### Unnecessary LINQ allocations (.ToList(), .ToArray() that may not be needed)"
+            grep -rn '\.ToList()\|\.ToArray()' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | grep -v '//\|test\|Test' | shuf | head -10 || echo "None found"
+            echo ""
+            echo "### Repeated string.Format or interpolation in loops"
+            grep -rn 'string\.Format\|string\.Concat\|String\.Join' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | grep -v '//\|test\|Test' | shuf | head -10 || echo "None found"
             ;;
           4)
             echo "## Category 4: Missing XML Documentation (src/Mono.Android/ only)"
@@ -171,7 +180,7 @@ The scan results start with `## Selected Category: N` where N is 0-9. The file O
 | 0 | TODO/FIXME/HACK Comments | Find stale TODO/FIXME/HACK comments that should be resolved |
 | 1 | Nullable Reference Types | Find C# files missing `#nullable enable` that should be opted in |
 | 2 | Obsolete API Usage | Find uses of `[Obsolete]` members that should be updated |
-| 3 | Large Files | Find oversized C# files (>800 lines) that should be split |
+| 3 | Performance Anti-patterns | Find performance issues: sync-over-async, string concat in loops, unnecessary allocations |
 | 4 | Missing XML Documentation | Find public APIs without XML doc comments |
 | 5 | General Mistakes | Read random source files and find real bugs, logic errors, or code smells |
 | 6 | Unused Using Directives | Find files with excessive using directives that could be cleaned up |
@@ -206,10 +215,13 @@ Using the pre-collected sample data for the selected category, pick **one specif
 - Find calls to deprecated APIs and suggest the modern replacement
 - Check if the obsolete message suggests an alternative
 
-#### Large Files (Category 3)
-- Pick a file over 800 lines
-- Suggest specific logical splits based on the file's content
-- Each new file should have a clear single responsibility
+#### Performance Anti-patterns (Category 3)
+- Look for real performance issues, not micro-optimizations
+- **Sync-over-async**: `Task.Result`, `.Wait()`, `.GetAwaiter().GetResult()` in non-test code can cause deadlocks
+- **String concatenation in loops**: `+=` on strings inside loops should use `StringBuilder`
+- **Unnecessary allocations**: `.ToList()` or `.ToArray()` where the collection is only enumerated once
+- **Repeated formatting**: `string.Format` or interpolation inside tight loops
+- Verify the code is actually in a hot path or loop before filing — don't flag one-time startup code
 
 #### Missing XML Documentation (Category 4)
 - **ONLY** look at public APIs in `src/Mono.Android/` — this is the shipped product (Mono.Android.dll)
