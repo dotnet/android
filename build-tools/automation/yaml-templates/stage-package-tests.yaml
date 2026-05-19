@@ -28,6 +28,7 @@ stages:
     - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
       parameters:
         xaprepareScenario: EmulatorTestDependencies
+        useAgentJdkPath: ${{ eq(parameters.use1ESTemplate, true) }}
         use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - task: DownloadPipelineArtifact@2
@@ -133,6 +134,7 @@ stages:
     - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
       parameters:
         xaprepareScenario: EmulatorTestDependencies
+        useAgentJdkPath: ${{ eq(parameters.use1ESTemplate, true) }}
         use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - task: DownloadPipelineArtifact@2
