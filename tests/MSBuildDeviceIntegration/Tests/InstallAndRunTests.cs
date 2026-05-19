@@ -2405,8 +2405,6 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 		[TestCase ("run", AndroidRuntime.CoreCLR)]
 		[TestCase ("test", AndroidRuntime.MonoVM)]
 		[TestCase ("test", AndroidRuntime.CoreCLR)]
-		[TestCase ("test-trx", AndroidRuntime.MonoVM)]
-		[TestCase ("test-trx", AndroidRuntime.CoreCLR)]
 		public void DotNetNewAndroidTest (string mode, AndroidRuntime runtime)
 		{
 			var templateName = $"DotNetNewAndroidTest_{mode}_{runtime}";
@@ -2439,7 +2437,7 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			Assert.IsTrue (dotnet.Build (parameters: buildParameters.ToArray ()), "`dotnet build` should succeed");
 			dotnet.AssertHasNoWarnings ();
 
-			bool isTestMode = mode.StartsWith ("test", StringComparison.Ordinal);
+			bool isTestMode = mode == "test";
 
 			// `dotnet test` doesn't go through the MSBuild Run target, so Install
 			// must be invoked explicitly to deploy the APK to the device.
@@ -2448,7 +2446,7 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 
 			// Run based on mode
 			var runParameters = buildParameters.Select (p => $"/p:{p}").ToList ();
-			if (mode == "test-trx")
+			if (isTestMode)
 				runParameters.Add ("--report-trx");
 
 			using var process = mode == "run"
@@ -2507,18 +2505,16 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				StringAssert.Contains ("failed: 1", outputText, $"Output should report 1 failed test. See {logPath} for details.");
 				StringAssert.Contains ("skipped: 1", outputText, $"Output should report 1 skipped test. See {logPath} for details.");
 
-				if (mode == "test-trx") {
-					// Verify that a TRX file was produced
-					var trxFiles = Directory.GetFiles (projectDirectory, "*.trx", SearchOption.AllDirectories);
-					Assert.IsTrue (trxFiles.Length > 0, $"Expected at least one .trx file in {projectDirectory}. See {logPath} for details.");
+				// Verify that a TRX file was produced by --report-trx
+				var trxFiles = Directory.GetFiles (projectDirectory, "*.trx", SearchOption.AllDirectories);
+				Assert.IsTrue (trxFiles.Length > 0, $"Expected at least one .trx file in {projectDirectory}. See {logPath} for details.");
 
-					var trxDoc = XDocument.Load (trxFiles [0]);
-					var trxNs = trxDoc.Root?.Name.Namespace ?? XNamespace.None;
-					var resultSummary = trxDoc.Root?.Element (trxNs + "ResultSummary");
-					Assert.IsNotNull (resultSummary, $"TRX file should contain a ResultSummary element. File: {trxFiles [0]}");
+				var trxDoc = XDocument.Load (trxFiles [0]);
+				var trxNs = trxDoc.Root?.Name.Namespace ?? XNamespace.None;
+				var resultSummary = trxDoc.Root?.Element (trxNs + "ResultSummary");
+				Assert.IsNotNull (resultSummary, $"TRX file should contain a ResultSummary element. File: {trxFiles [0]}");
 
-					TestContext.AddTestAttachment (trxFiles [0]);
-				}
+				TestContext.AddTestAttachment (trxFiles [0]);
 			}
 		}
 
