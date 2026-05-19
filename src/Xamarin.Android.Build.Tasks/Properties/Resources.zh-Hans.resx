@@ -1093,7 +1093,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 {0} - Java type name from AndroidManifest.xml</comment>
   </data>
   <data name="XA4251" xml:space="preserve">
-    <value>Type '{0}' uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map. To work around this, do not target the trimmable type map (for example, by switching to the 'llvm-ir' type map implementation), and please report this scenario at https://github.com/dotnet/android/issues so the team can evaluate whether to support it.</value>
+    <value>类型“{0}”使用 [JniAddNativeMethodRegistrationAttribute]，此属性不受可修整类型映射的支持。若要解决此问题，请不要以可修整类型映射为目标(例如，切换到 "llvm-ir" 类型映射实现)，并请在 https://github.com/dotnet/android/issues 报告此场景，以便团队评估是否支持它。</value>
     <comment>The following are literal names and should not be translated: JniAddNativeMethodRegistrationAttribute, llvm-ir.
 {0} - Fully-qualified managed type name</comment>
   </data>
