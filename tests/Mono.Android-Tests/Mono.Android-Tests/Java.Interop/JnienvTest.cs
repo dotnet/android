@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -51,7 +50,7 @@ namespace Java.InteropTests
 			var nativeLibDir = context.ApplicationInfo?.NativeLibraryDir;
 			if (nativeLibDir is null)
 				throw new InvalidOperationException ("NativeLibraryDir is not available");
-			var fullPath = Path.Combine (nativeLibDir, $"lib{libraryName}.so");
+			var fullPath = System.IO.Path.Combine (nativeLibDir, $"lib{libraryName}.so");
 			System.Runtime.InteropServices.NativeLibrary.Load (fullPath);
 		}
 
