@@ -479,7 +479,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 <Target Name="_CheckAndroidHttpClientHandlerType"
     Condition=" '$(AndroidHttpClientHandlerType)' != '' ">
-  <Error Text="The AndroidHttpClientHandlerType property is not supported anymore. Please remove it from your project file. Use $(UseNativeHttpHandler) with values 'true' (AndroidMessageHandler) or 'false' (SocketsHttpHandler) instead." />
+  <Error Text="The AndroidHttpClientHandlerType property is not supported anymore. Please remove it from your project file. Use %24(UseNativeHttpHandler) with values 'true' (AndroidMessageHandler) or 'false' (SocketsHttpHandler) instead." />
 </Target>
 
 <Target Name="_CheckUnsupportedPackages" AfterTargets="ResolvePackageAssets">
