@@ -3,78 +3,56 @@
     <Aapt2Version>4.0.0-6051327</Aapt2Version>
     <_Destination>$(MicrosoftAndroidSdkOutDir)</_Destination>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
-    <_AndroidManifestPath>$(AndroidToolchainCacheDirectory)\repository2-3.xml</_AndroidManifestPath>
     <_AndroidRepositoryUrl>https://dl.google.com/android/repository/</_AndroidRepositoryUrl>
   </PropertyGroup>
 
+  <!--
+    Google's SDK manifest (repository2-3.xml) only provides SHA-1 checksums,
+    but MSBuild's GetFileHash task only supports SHA-256 and above.
+    So we hardcode SHA-256 hashes in Configuration.props instead.
+  -->
   <ItemGroup>
     <_BuildTools Include="build-tools_r$(XABuildToolsVersion)_macosx.zip">
       <Platform>osx</Platform>
       <HostOS>Darwin</HostOS>
-      <ManifestHostOs>macosx</ManifestHostOs>
+      <Hash>$(XABuildToolsHashMacOS)</Hash>
       <FilesToExtract>aapt2</FilesToExtract>
     </_BuildTools>
     <_BuildTools Include="build-tools_r$(XABuildToolsVersion)_linux.zip">
       <Platform>linux</Platform>
       <HostOS>Linux</HostOS>
-      <ManifestHostOs>linux</ManifestHostOs>
+      <Hash>$(XABuildToolsHashLinux)</Hash>
       <FilesToExtract>aapt2</FilesToExtract>
     </_BuildTools>
     <_BuildTools Include="build-tools_r$(XABuildToolsVersion)_windows.zip">
       <Platform>windows</Platform>
       <HostOS></HostOS>
-      <ManifestHostOs>windows</ManifestHostOs>
+      <Hash>$(XABuildToolsHashWindows)</Hash>
       <FilesToExtract>aapt2.exe</FilesToExtract>
     </_BuildTools>
   </ItemGroup>
 
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" TaskFactory="TaskHostFactory" Runtime="NET" />
 
-  <Target Name="_DownloadAndroidManifest"
-      Inputs="$(MSBuildThisFileFullPath);..\..\Configuration.props"
-      Outputs="$(_AndroidManifestPath)">
-    <DownloadFile
-        SourceUrl="$(_AndroidRepositoryUrl)repository2-3.xml"
-        DestinationFolder="$(AndroidToolchainCacheDirectory)"
-        DestinationFileName="repository2-3.xml"
-        Retries="3"
-    />
-  </Target>
-
   <Target Name="_DownloadBuildTools"
-      DependsOnTargets="_DownloadAndroidManifest"
       Inputs="$(MSBuildThisFileFullPath);$(MSBuildProjectFullPath);..\..\Configuration.props"
       Outputs="$(AndroidToolchainCacheDirectory)\%(_BuildTools.Identity)">
-    <!-- Get expected SHA-1 checksum from Google's manifest for this platform -->
-    <XmlPeek XmlInputPath="$(_AndroidManifestPath)"
-        Query="//remotePackage[@path='build-tools;$(XABuildToolsFolder)']/archives/archive[host-os='%(_BuildTools.ManifestHostOs)']/complete/checksum/text()">
-      <Output TaskParameter="Result" PropertyName="_ExpectedHash" />
-    </XmlPeek>
-    <PropertyGroup>
-      <_ExpectedHash>$(_ExpectedHash.ToUpperInvariant())</_ExpectedHash>
-    </PropertyGroup>
-    <Error
-        Condition=" '$(_ExpectedHash)' == '' "
-        Text="Failed to read build-tools checksum from Android SDK manifest for %(_BuildTools.Identity)"
-    />
-    <!-- Download -->
     <DownloadFile
         SourceUrl="$(_AndroidRepositoryUrl)%(_BuildTools.Identity)"
         DestinationFolder="$(AndroidToolchainCacheDirectory)"
         DestinationFileName="%(_BuildTools.Identity)"
         Retries="3"
     />
-    <!-- Validate SHA-1 -->
-    <GetFileHash Files="$(AndroidToolchainCacheDirectory)\%(_BuildTools.Identity)" Algorithm="SHA1">
+    <GetFileHash Files="$(AndroidToolchainCacheDirectory)\%(_BuildTools.Identity)" Algorithm="SHA256">
       <Output TaskParameter="Hash" PropertyName="_ActualHash" />
     </GetFileHash>
     <Delete
-        Condition=" '$(_ActualHash)' != '$(_ExpectedHash)' "
+        Condition=" '$(_ActualHash)' != '%(_BuildTools.Hash)' "
         Files="$(AndroidToolchainCacheDirectory)\%(_BuildTools.Identity)"
     />
     <Error
-        Condition=" '$(_ActualHash)' != '$(_ExpectedHash)' "
-        Text="SHA1 mismatch for %(_BuildTools.Identity). Expected: $(_ExpectedHash) Actual: $(_ActualHash)"
+        Condition=" '$(_ActualHash)' != '%(_BuildTools.Hash)' "
+        Text="SHA256 mismatch for %(_BuildTools.Identity). Expected: %(_BuildTools.Hash) Actual: $(_ActualHash)"
     />
   </Target>
 
