@@ -249,7 +249,7 @@
     <!--
       Xamarin.Android.Tools.BootstrapTasks needs to be built first because
       Xamarin.Android.Build.Tasks.targets uses several tasks located in
-      Xamarin.Android.Tools.BootstrapTasks, such as <GenerateProfile/>
+      Xamarin.Android.Tools.BootstrapTasks, such as <GenerateSupportedPlatforms/>
       -->
     <ProjectReference Include="..\r8\r8.csproj">
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
@@ -258,6 +258,9 @@
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\bundletool\bundletool.csproj">
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\binutils\binutils.csproj">
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />

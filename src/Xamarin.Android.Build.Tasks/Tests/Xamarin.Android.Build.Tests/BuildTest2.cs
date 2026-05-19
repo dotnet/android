@@ -335,7 +335,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntime (runtime);
 			proj.IsRelease = isRelease;
 			proj.AotAssemblies = false; // Release defaults to Profiled AOT for .NET 6
-			proj.SetAndroidSupportedAbis ("arm64-v8a");
+			proj.SetRuntimeIdentifiers (new[] { "arm64-v8a" });
 			proj.SetProperty ("LinkerDumpDependencies", "True");
 			proj.SetProperty ("AndroidUseAssemblyStore", "False");
 
@@ -850,7 +850,7 @@ class MemTest {
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
-			proj.SetPublishAot (true, AndroidNdkPath);
+			proj.SetPublishAot (true);
 
 			var packages = proj.PackageReferences;
 			packages.Add (KnownPackages.AndroidXAppCompat);

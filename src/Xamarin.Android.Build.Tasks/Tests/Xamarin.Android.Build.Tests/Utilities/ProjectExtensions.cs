@@ -23,7 +23,8 @@ public static class ProjectExtensions
 			DoSetRuntime (project, runtime);
 			return;
 		}
-		project.SetPublishAot (true, BaseTest.AndroidNdkPath);
+		project.SetPublishAot (true);
+		project.SetProperty ("_SkipNdkResolution", "true");
 		EnablePreviewFeaturesIfNeeded (project, runtime);
 	}
 

@@ -966,6 +966,33 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Input file `{0}` does not start with `&lt;replacements/&gt;`..
+        /// </summary>
+        public static string XA1045 {
+            get {
+                return ResourceManager.GetString("XA1045", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Attribute &apos;{0}&apos; in element &apos;{1}&apos; has value &apos;{2}&apos; that cannot be parsed as boolean; {3} line {4}..
+        /// </summary>
+        public static string XA1046 {
+            get {
+                return ResourceManager.GetString("XA1046", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Required attribute &apos;{0}&apos; missing from element &apos;{1}&apos;; {2} line {3}..
+        /// </summary>
+        public static string XA1047 {
+            get {
+                return ResourceManager.GetString("XA1047", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in .NET for Android once .NET 6 is released..
         /// </summary>
         public static string XA2000 {
@@ -1460,6 +1487,24 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA4250 {
             get {
                 return ResourceManager.GetString("XA4250", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insecure HTTP Maven repository URL &apos;{0}&apos; is not allowed. Use an HTTPS URL, or set AllowInsecureHttp=&quot;true&quot; metadata on the item to override this check..
+        /// </summary>
+        public static string XA4252 {
+            get {
+                return ResourceManager.GetString("XA4252", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Type &apos;{0}&apos; uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map. To work around this, do not target the trimmable type map (for example, by switching to the &apos;llvm-ir&apos; type map implementation), and please report this scenario at https://github.com/dotnet/android/issues so the team can evaluate whether to support it..
+        /// </summary>
+        public static string XA4251 {
+            get {
+                return ResourceManager.GetString("XA4251", resourceCulture);
             }
         }
 

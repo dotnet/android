@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 using Xunit;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
@@ -40,6 +43,42 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 	public void Scan_IsUnconditional (string javaName, bool expected)
 	{
 		Assert.Equal (expected, FindFixtureByJavaName (javaName).IsUnconditional);
+	}
+
+	[Fact]
+	public void Scan_JniAddNativeMethodRegistrationAttribute_LogsError ()
+	{
+		// The trimmable typemap refuses to support [JniAddNativeMethodRegistrationAttribute]
+		// by design (XA4251). The scanner reports each offending type via the logger.
+		var errors = new List<string> ();
+		var logger = new RecordingLogger (errors);
+
+		using var scanner = new JavaPeerScanner (logger: logger);
+		using var peReader = new PEReader (File.OpenRead (TestFixtureAssemblyPath));
+		var reader = peReader.GetMetadataReader ();
+		var assemblyName = reader.GetString (reader.GetAssemblyDefinition ().Name);
+		_ = scanner.Scan (new List<(string, PEReader)> { (assemblyName, peReader) });
+
+		Assert.Contains (errors, e => e.Contains ("HandWrittenNativeRegistrationPeer"));
+		Assert.Contains (errors, e => e.Contains ("NonPeerNativeRegistration"));
+		Assert.DoesNotContain (errors, e => e.Contains ("OtherNamespaceNativeRegistration"));
+		Assert.DoesNotContain (errors, e => e.Contains ("MyHelper"));
+	}
+
+	sealed class RecordingLogger (List<string> errors) : ITrimmableTypeMapLogger
+	{
+		public void LogNoJavaPeerTypesFound () { }
+		public void LogJavaPeerScanInfo (int assemblyCount, int peerCount) { }
+		public void LogGeneratingJcwFilesInfo (int jcwPeerCount, int totalPeerCount) { }
+		public void LogDeferredRegistrationTypesInfo (int typeCount) { }
+		public void LogGeneratedTypeMapAssemblyInfo (string assemblyName, int typeCount) { }
+		public void LogGeneratedRootTypeMapInfo (int assemblyReferenceCount) { }
+		public void LogGeneratedTypeMapAssembliesInfo (int assemblyCount) { }
+		public void LogGeneratedJcwFilesInfo (int sourceCount) { }
+		public void LogRootingManifestReferencedTypeInfo (string javaTypeName, string managedTypeName) { }
+		public void LogManifestReferencedTypeNotFoundWarning (string javaTypeName) { }
+		public void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName) =>
+			errors.Add ($"XA4251: {managedTypeName}");
 	}
 
 	[Fact]
@@ -99,12 +138,12 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 	}
 
 	[Theory]
-	[InlineData ("MyApp.PlainActivitySubclass", "crc64eb3df85c64aa1af6/PlainActivitySubclass")]
-	[InlineData ("MyApp.UnregisteredClickListener", "crc64eb3df85c64aa1af6/UnregisteredClickListener")]
-	[InlineData ("MyApp.UnregisteredExporter", "crc64eb3df85c64aa1af6/UnregisteredExporter")]
-	public void Scan_UnregisteredType_UsesCrc64PackageName (string managedName, string expectedJavaName)
+	[InlineData ("MyApp.PlainActivitySubclass", "scrc64f93df85c64aa1af6/PlainActivitySubclass")]
+	[InlineData ("MyApp.UnregisteredClickListener", "scrc64f93df85c64aa1af6/UnregisteredClickListener")]
+	[InlineData ("MyApp.UnregisteredExporter", "scrc64f93df85c64aa1af6/UnregisteredExporter")]
+	public void Scan_UnregisteredType_UsesHashedPackageName (string managedName, string expectedHashedJavaName)
 	{
-		Assert.Equal (expectedJavaName, FindFixtureByManagedName (managedName).JavaName);
+		Assert.Equal (expectedHashedJavaName, FindFixtureByManagedName (managedName).JavaName);
 	}
 
 	[Fact]
@@ -156,4 +195,40 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 		// Non-keyword array (e.g., JavaObjectArray<T> with "java/lang/Object", ArrayRank=1)
 		Assert.DoesNotContain (peers, p => p.ManagedTypeName == "Java.Interop.TestTypes.NonKeywordArrayType");
 	}
+
+	[Fact]
+	public void Scan_UnregisteredType_Crc64Default_DiffersFromLegacyLowercaseCrc64Policy ()
+	{
+		const string managedName = "MyApp.PlainActivitySubclass";
+		var withCrc64 = FindFixtureByManagedName (managedName).JavaName;
+		var withLowercaseCrc64 = FindFixtureByManagedName (managedName, "LowercaseCrc64").JavaName;
+
+		Assert.Equal ("scrc64f93df85c64aa1af6/PlainActivitySubclass", withCrc64);
+		Assert.Equal ("crc64ec59e927bc71f4d8/PlainActivitySubclass", withLowercaseCrc64);
+		Assert.NotEqual (withCrc64, withLowercaseCrc64);
+	}
+
+	[Theory]
+	[InlineData ("Lowercase")]
+	[InlineData ("crc46")]
+	[InlineData ("XxHash64")]
+	[InlineData ("not-a-policy")]
+	public void Constructor_UnsupportedPackageNamingPolicy_Throws (string policy)
+	{
+		var ex = Assert.Throws<ArgumentException> (() => new JavaPeerScanner (policy));
+		Assert.Contains (policy, ex.Message);
+	}
+
+	[Theory]
+	[InlineData (null)]
+	[InlineData ("")]
+	[InlineData ("Crc64")]
+	[InlineData ("crc64")]
+	[InlineData ("LowercaseCrc64")]
+	[InlineData ("lowercasecrc64")]
+	public void Constructor_SupportedPackageNamingPolicy_DoesNotThrow (string? policy)
+	{
+		using var scanner = new JavaPeerScanner (policy);
+	}
+
 }

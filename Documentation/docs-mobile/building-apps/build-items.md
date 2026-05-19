@@ -296,6 +296,9 @@ The following MSBuild metadata are supported:
 - `%(Version)`: Required version of the Java library referenced by `%(Include)`.
 - `%(Repository)`: Optional Maven repository to use. Supported values are `Central` (default),
    `Google`, or an `https` URL to a Maven repository.
+- `%(AllowInsecureHttp)`: Optional boolean. When `%(Repository)` is an `http://` URL, this must be
+   set to `true` to allow the insecure connection. Defaults to `false`. Using HTTPS is strongly
+   recommended for supply-chain security.
 
 The `<AndroidMavenLibrary>` item is translated to
 [`AndroidLibrary`](#androidlibrary), so any metadata supported by

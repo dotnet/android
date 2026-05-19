@@ -131,7 +131,6 @@ public class LinkNativeAotSharedLibrary : AndroidTask
 			HashStyleBoth = true,
 			LittleEndian = true,
 			EntryPoint = "0x0",
-			CompressDebugSections = "zlib",
 		};
 
 		if (!ExportsFile.IsNullOrEmpty ()) {

@@ -252,7 +252,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 			};
 			proj.SetRuntime (runtime);
 			proj.PackageReferences.Add(KnownPackages.SQLitePCLRaw_Core);
-			proj.SetAndroidSupportedAbis ("x86_64");
+			proj.SetRuntimeIdentifiers (new[] { "x86_64" });
 			proj.SetProperty (proj.ReleaseProperties, "AndroidStoreUncompressedFileExtensions", compressNativeLibraries ? "" : "so");
 			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
@@ -513,7 +513,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, perAbiApk);
 			if (perAbiApk) {
 				if (runtime == AndroidRuntime.MonoVM) {
-					proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "arm64-v8a", "x86_64");
+					proj.SetRuntimeIdentifiers (new[] { "armeabi-v7a", "x86", "arm64-v8a", "x86_64" });
 				} else {
 					proj.SetRuntimeIdentifiers (AndroidTargetArch.Arm64, AndroidTargetArch.X86_64);
 				}
@@ -702,7 +702,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 					}
 				}
 			};
-			proj.SetPublishAot (publishAot, AndroidNdkPath);
+			proj.SetPublishAot (publishAot);
 
 			using (var b = CreateApkBuilder ()) {
 				b.Verbosity = LoggerVerbosity.Diagnostic; // Needed for --satellite switch to appear in the log

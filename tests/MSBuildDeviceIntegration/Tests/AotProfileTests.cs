@@ -33,7 +33,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			// MonoVM-only test
 			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
-			proj.SetAndroidSupportedAbis (DeviceAbi);
+			proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 
 			// TODO: only needed in .NET 6+
 			// See https://github.com/dotnet/runtime/issues/56989

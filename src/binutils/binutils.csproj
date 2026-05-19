@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.Build.NoTargets">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <OutputPath Condition="'$(OutputPath)'==''">bin\$(Configuration)</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="7-Zip.CommandLine" Version="25.1.0" GeneratePathProperty="true" ExcludeAssets="all" />
+  </ItemGroup>
+
+  <Import Project="..\..\Configuration.props" />
+  <Import Project="binutils.targets" />
+</Project>

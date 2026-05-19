@@ -714,18 +714,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA1024" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Ignoring configuration file '{0}'. .NET configuration files are not supported in .NET for Android projects that target .NET 6 or higher.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[正在忽略配置文件“{0}”。面向 .NET 6 或更高版本的 .NET for Android 项目不支持 .NET 配置文件。]]></Val>
-          </Tgt>
-          <Prev Cat="Text">
-            <Val><![CDATA[Ignoring configuration file '{0}'. .NET configuration files are not supported in .NET Android projects that target .NET 6 or higher.]]></Val>
-          </Prev>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA1025" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The experimental 'Hybrid' value for the 'AndroidAotMode' MSBuild property is not currently compatible with the armeabi-v7a target ABI. To continue using the experimental 'Hybrid' value for 'AndroidAotMode', deselect the armeabi-v7a target ABI in the Visual Studio project property pages or edit the project file in a text editor and remove 'armeabi-v7a' from the 'AndroidSupportedAbis' MSBuild property.]]></Val>
@@ -1418,6 +1406,15 @@
           <Val><![CDATA[Manifest-referenced type '{0}' was not found in any scanned assembly. It may be a framework type.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[清单引用的类型“{0}”未在任何扫描的程序集中找到。它可能是框架类型。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4251" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Type '{0}' uses [JniAddNativeMethodRegistrationAttribute]5D;, which is not supported by the trimmable type map. To work around this, do not target the trimmable type map (for example, by switching to the 'llvm-ir' type map implementation), and please report this scenario at https://github.com/dotnet/android/issues so the team can evaluate whether to support it.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[类型“{0}”使用 [JniAddNativeMethodRegistrationAttribute]5D;，此属性不受可修整类型映射的支持。若要解决此问题，请不要以可修整类型映射为目标(例如，切换到 "llvm-ir" 类型映射实现)，并请在 https://github.com/dotnet/android/issues 报告此场景，以便团队评估是否支持它。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

@@ -20,41 +20,38 @@ public class TestInstrumentation : Instrumentation
         Start();
     }
 
-    public override void OnStart()
+    public override async void OnStart()
     {
         base.OnStart();
 
-        Task.Run(async () =>
+        var consumer = new ResultConsumer(this);
+        var bundle = new Bundle();
+        try
         {
-            var consumer = new ResultConsumer(this);
-            var bundle = new Bundle();
-            try
-            {
-                var writeablePath = Application.Context.GetExternalFilesDir(null)?.AbsolutePath ?? Path.GetTempPath();
-                var resultsPath = Path.Combine(writeablePath, "TestResults");
-                var builder = await TestApplication.CreateBuilderAsync([
-                    "--results-directory", resultsPath,
-                    "--report-trx"
-                ]);
-                builder.AddMSTest(() => [GetType().Assembly]);
-                builder.AddTrxReportProvider();
-                builder.TestHost.AddDataConsumer(_ => consumer);
+            var writeablePath = Application.Context.GetExternalFilesDir(null)?.AbsolutePath ?? Path.GetTempPath();
+            var resultsPath = Path.Combine(writeablePath, "TestResults");
+            var builder = await TestApplication.CreateBuilderAsync([
+                "--results-directory", resultsPath,
+                "--report-trx"
+            ]);
+            builder.AddMSTest(() => [GetType().Assembly]);
+            builder.AddTrxReportProvider();
+            builder.TestHost.AddDataConsumer(_ => consumer);
 
-                using ITestApplication app = await builder.BuildAsync();
-                await app.RunAsync();
+            using ITestApplication app = await builder.BuildAsync();
+            await app.RunAsync();
 
-                bundle.PutInt("passed", consumer.Passed);
-                bundle.PutInt("failed", consumer.Failed);
-                bundle.PutInt("skipped", consumer.Skipped);
-                bundle.PutString("resultsPath", consumer.TrxReportPath);
-                Finish(Result.Ok, bundle);
-            }
-            catch (Exception ex)
-            {
-                bundle.PutString("error", ex.ToString());
-                Finish(Result.Canceled, bundle);
-            }
-        });
+            bundle.PutInt("passed", consumer.Passed);
+            bundle.PutInt("failed", consumer.Failed);
+            bundle.PutInt("skipped", consumer.Skipped);
+            bundle.PutString("resultsPath", consumer.TrxReportPath);
+            Finish(Result.Ok, bundle);
+        }
+        catch (Exception ex)
+        {
+            bundle.PutString("error", ex.ToString());
+            Finish(Result.Canceled, bundle);
+        }
     }
 
     class ResultConsumer(Instrumentation instrumentation) : IDataConsumer

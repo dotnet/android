@@ -74,7 +74,12 @@ public partial class ScannerComparisonTests
 
 	static string NormalizeCrc64 (string javaName)
 	{
-		if (javaName.StartsWith ("crc64", StringComparison.Ordinal)) {
+		// The legacy generator always produces "crc64<hash>/..." while the new scanner
+		// produces "scrc64<hash>/..." (System.IO.Hashing CRC64) by default.  Normalize both
+		// to a single sentinel so the type maps can be compared structurally.
+		bool hasCrc64Prefix = javaName.StartsWith ("crc64", StringComparison.Ordinal)
+			|| javaName.StartsWith ("scrc64", StringComparison.Ordinal);
+		if (hasCrc64Prefix) {
 			int slash = javaName.IndexOf ('/');
 			if (slash > 0) {
 				return "crc64.../" + javaName.Substring (slash + 1);

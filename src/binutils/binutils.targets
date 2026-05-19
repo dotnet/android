@@ -1,0 +1,96 @@
+<Project>
+  <PropertyGroup>
+    <_BinutilsArchiveUrl>https://github.com/dotnet/android-native-tools/releases/download/$(XABinutilsVersion)/xamarin-android-toolchain-$(XABinutilsVersion).7z</_BinutilsArchiveUrl>
+    <_BinutilsArchive>$(AndroidToolchainCacheDirectory)\xamarin-android-toolchain-$(XABinutilsVersion).7z</_BinutilsArchive>
+    <_BinutilsExtractDir>$(AndroidToolchainCacheDirectory)\binutils-$(XABinutilsVersion)</_BinutilsExtractDir>
+    <_BinutilsHostOS>$(HostOS.ToLowerInvariant())</_BinutilsHostOS>
+    <_HostBinutilsInstallDir>$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils</_HostBinutilsInstallDir>
+    <_WindowsBinutilsInstallDir>$(MicrosoftAndroidSdkOutDir)binutils</_WindowsBinutilsInstallDir>
+    <_7zaPath Condition=" '$(HostOS)' == 'Windows' ">$(Pkg7-Zip_CommandLine)\tools\x64\7za.exe</_7zaPath>
+    <_7zaPath Condition=" '$(_7zaPath)' == '' ">7za</_7zaPath>
+  </PropertyGroup>
+
+  <Target Name="_DownloadBinutils"
+      Inputs="$(MSBuildThisFileFullPath);$(MSBuildProjectFullPath);..\..\Configuration.props"
+      Outputs="$(_BinutilsArchive)">
+    <DownloadFile
+        SourceUrl="$(_BinutilsArchiveUrl)"
+        DestinationFolder="$(AndroidToolchainCacheDirectory)"
+        DestinationFileName="xamarin-android-toolchain-$(XABinutilsVersion).7z"
+        Retries="3"
+    />
+    <GetFileHash Files="$(_BinutilsArchive)" Algorithm="SHA256">
+      <Output TaskParameter="Hash" PropertyName="_BinutilsActualHash" />
+    </GetFileHash>
+    <Delete
+        Condition=" '$(_BinutilsActualHash)' != '$(XABinutilsHash)' "
+        Files="$(_BinutilsArchive)"
+    />
+    <Error
+        Condition=" '$(_BinutilsActualHash)' != '$(XABinutilsHash)' "
+        Text="SHA256 mismatch for xamarin-android-toolchain-$(XABinutilsVersion).7z. Expected: $(XABinutilsHash) Actual: $(_BinutilsActualHash)"
+    />
+  </Target>
+
+  <Target Name="_ExtractBinutils"
+      DependsOnTargets="_DownloadBinutils"
+      Inputs="$(_BinutilsArchive)"
+      Outputs="$(_BinutilsExtractDir)\.extracted">
+    <RemoveDir Directories="$(_BinutilsExtractDir)" />
+    <MakeDir Directories="$(_BinutilsExtractDir)" />
+    <Exec Command="&quot;$(_7zaPath)&quot; x &quot;$(_BinutilsArchive)&quot; -o&quot;$(_BinutilsExtractDir)&quot; -y" />
+    <Touch Files="$(_BinutilsExtractDir)\.extracted" AlwaysCreate="true" />
+  </Target>
+
+  <Target Name="_InstallBinutils"
+      BeforeTargets="Build"
+      DependsOnTargets="_ExtractBinutils">
+    <ItemGroup>
+      <_HostBinutilsBinFiles Include="$(_BinutilsExtractDir)\$(_BinutilsHostOS)\bin\*" />
+      <_HostBinutilsLibFiles Include="$(_BinutilsExtractDir)\$(_BinutilsHostOS)\lib\*" />
+      <_WindowsBinutilsBinFiles Include="$(_BinutilsExtractDir)\windows\bin\*" Exclude="$(_BinutilsExtractDir)\windows\bin\*.pdb" />
+      <_WindowsBinutilsPdbFiles Include="$(_BinutilsExtractDir)\windows\bin\*.pdb" />
+      <_WindowsBinutilsExeForPdb Include="@(_WindowsBinutilsPdbFiles->'$(_BinutilsExtractDir)\windows\bin\%(Filename).exe')" Condition="Exists('%(RootDir)%(Directory)%(Filename).exe')" />
+    </ItemGroup>
+    <!-- Install host binutils -->
+    <MakeDir Directories="$(_HostBinutilsInstallDir)\bin" />
+    <Copy
+        SourceFiles="@(_HostBinutilsBinFiles)"
+        DestinationFolder="$(_HostBinutilsInstallDir)\bin"
+        SkipUnchangedFiles="true"
+    />
+    <MakeDir Directories="$(_HostBinutilsInstallDir)\lib" Condition=" '@(_HostBinutilsLibFiles)' != '' " />
+    <Copy
+        SourceFiles="@(_HostBinutilsLibFiles)"
+        DestinationFolder="$(_HostBinutilsInstallDir)\lib"
+        SkipUnchangedFiles="true"
+        Condition=" '@(_HostBinutilsLibFiles)' != '' "
+    />
+    <!-- Install Windows binutils -->
+    <MakeDir Directories="$(_WindowsBinutilsInstallDir)\bin" />
+    <Copy
+        SourceFiles="@(_WindowsBinutilsBinFiles)"
+        DestinationFolder="$(_WindowsBinutilsInstallDir)\bin"
+        SkipUnchangedFiles="true"
+    />
+    <!-- Copy PDBs and their corresponding EXEs for symbol archiving -->
+    <MakeDir Directories="$(_WindowsBinutilsInstallDir)\windows-toolchain-pdb" Condition=" '@(_WindowsBinutilsPdbFiles)' != '' " />
+    <Copy
+        SourceFiles="@(_WindowsBinutilsPdbFiles)"
+        DestinationFolder="$(_WindowsBinutilsInstallDir)\windows-toolchain-pdb"
+        SkipUnchangedFiles="true"
+        Condition=" '@(_WindowsBinutilsPdbFiles)' != '' "
+    />
+    <Copy
+        SourceFiles="@(_WindowsBinutilsExeForPdb)"
+        DestinationFolder="$(_WindowsBinutilsInstallDir)\windows-toolchain-pdb"
+        SkipUnchangedFiles="true"
+        Condition=" '@(_WindowsBinutilsExeForPdb)' != '' "
+    />
+  </Target>
+
+  <Target Name="_CleanBinutils" BeforeTargets="Clean">
+    <RemoveDir Directories="$(_BinutilsExtractDir);$(_HostBinutilsInstallDir);$(_WindowsBinutilsInstallDir)" />
+    <Delete Files="$(_BinutilsArchive)" />
+  </Target>
+</Project>

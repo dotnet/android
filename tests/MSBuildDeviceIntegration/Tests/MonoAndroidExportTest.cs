@@ -83,7 +83,7 @@ namespace UnnamedProject
 			}
 		}
 	}";
-			proj.SetAndroidSupportedAbis (DeviceAbi);
+			proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 			proj.SetProperty ("EmbedAssembliesIntoApk", embedAssemblies.ToString ());
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder ()) {
@@ -173,7 +173,7 @@ namespace UnnamedProject
 		}
 	}
 }";
-			proj.SetAndroidSupportedAbis (DeviceAbi);
+			proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder ()) {
 				b.LatestTargetFrameworkVersion (out string apiLevel);
