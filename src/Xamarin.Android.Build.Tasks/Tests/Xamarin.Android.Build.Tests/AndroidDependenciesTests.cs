@@ -34,7 +34,7 @@ namespace Xamarin.Android.Build.Tests
 
 			// Set to true when we are marking a new Android API level as stable, but it has not
 			// been added to the Xamarin manifest yet.
-			var xamarin_manifest_needs_updating = true;
+			var xamarin_manifest_needs_updating = false;
 
 			AssertCommercialBuild ();
 			var oldSdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_SDK_PATH");
@@ -167,14 +167,13 @@ namespace Xamarin.Android.Build.Tests
 				Assert.Ignore ("CoreCLR doesn't support AOT, it doesn't ever require the NDK");
 			}
 
-			// NativeAOT doesn't support profiled AOT
+			// NativeAOT doesn't support profiled AOT or EnableLLVM (Mono concepts)
 			if (runtime == AndroidRuntime.NativeAOT && property == "AndroidEnableProfiledAot") {
 				Assert.Ignore ("NativeAOT doesn't support profiled AOT");
 			}
 
-			// NativeAOT always requires the NDK (PublishAot=true), so ndkRequired=false cases don't apply
-			if (runtime == AndroidRuntime.NativeAOT && !ndkRequired) {
-				Assert.Ignore ("NativeAOT always requires NDK via PublishAot=true");
+			if (runtime == AndroidRuntime.NativeAOT && property == "EnableLLVM") {
+				Assert.Ignore ("EnableLLVM is not applicable to NativeAOT");
 			}
 
 			var proj = new XamarinAndroidApplicationProject {
@@ -200,12 +199,14 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void NativeAotRequiresNdk ()
+		public void NativeAotRequiresNdk_WhenWorkloadLinkerDisabled ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 			};
 			proj.SetRuntime (AndroidRuntime.NativeAOT);
+			proj.SetProperty ("_AndroidUseWorkloadNativeLinker", "false");
+			proj.SetProperty ("_SkipNdkResolution", "false");
 			using (var builder = CreateApkBuilder ()) {
 				builder.Verbosity = LoggerVerbosity.Detailed;
 				builder.Target = "GetAndroidDependencies";
@@ -215,7 +216,7 @@ namespace Xamarin.Android.Build.Tests
 					.SkipWhile (x => !x.StartsWith ("Task \"CalculateProjectDependencies\"", StringComparison.Ordinal))
 					.SkipWhile (x => !x.StartsWith ("Output Item(s):", StringComparison.Ordinal))
 					.TakeWhile (x => !x.StartsWith ("Done executing task \"CalculateProjectDependencies\"", StringComparison.Ordinal));
-				StringAssertEx.Contains ("ndk-bundle", taskOutput, "ndk-bundle should be a dependency for NativeAOT.");
+				StringAssertEx.Contains ("ndk-bundle", taskOutput, "ndk-bundle should be a dependency for NativeAOT without workload linker.");
 			}
 		}
 

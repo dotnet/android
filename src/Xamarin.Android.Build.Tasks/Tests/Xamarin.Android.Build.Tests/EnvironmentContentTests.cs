@@ -57,7 +57,7 @@ namespace Xamarin.Android.Build.Tests
 			string linkSkip = "FormsViewGroup";
 			app.SetProperty ("AndroidLinkSkip", linkSkip);
 			app.SetProperty ("_AndroidSequencePointsMode", sequencePointsMode);
-			app.SetAndroidSupportedAbis (supportedAbis);
+			app.SetRuntimeIdentifiers (supportedAbis.Split (';'));
 			using (var libb = CreateDllBuilder (Path.Combine ("temp", TestName, lib.ProjectName)))
 			using (var appb = CreateApkBuilder (Path.Combine ("temp", TestName, app.ProjectName))) {
 				Assert.IsTrue (libb.Build (lib), "Library build should have succeeded.");
@@ -105,7 +105,7 @@ namespace Xamarin.Android.Build.Tests
 			// Mono-only test
 			proj.SetRuntime (AndroidRuntime.MonoVM);
 			proj.SetProperty ("_AndroidSequencePointsMode", sequencePointsMode);
-			proj.SetAndroidSupportedAbis (supportedAbis);
+			proj.SetRuntimeIdentifiers (supportedAbis.Split (';'));
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
@@ -140,7 +140,7 @@ namespace Xamarin.Android.Build.Tests
 			var supportedAbis = "armeabi-v7a;arm64-v8a";
 			// MonoVM-only test
 			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
-			proj.SetAndroidSupportedAbis (supportedAbis);
+			proj.SetRuntimeIdentifiers (supportedAbis.Split (';'));
 
 			using (var b = CreateApkBuilder ()) {
 				proj.SetProperty ("AndroidEnableSGenConcurrent", "False");

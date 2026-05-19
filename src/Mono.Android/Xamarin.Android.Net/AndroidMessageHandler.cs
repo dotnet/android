@@ -149,10 +149,34 @@ namespace Xamarin.Android.Net
 		bool decompress_here => _acceptEncoding is not null && _acceptEncoding != IDENTITY_ENCODING;
 		string? _acceptEncoding;
 
+		/// <summary>
+		/// Gets a value indicating whether the handler supports automatic response content decompression.
+		/// Always returns <see langword="true"/> for <see cref="AndroidMessageHandler"/>.
+		/// </summary>
 		public bool SupportsAutomaticDecompression => true;
+
+		/// <summary>
+		/// Gets a value indicating whether the handler supports proxy settings.
+		/// Always returns <see langword="true"/> for <see cref="AndroidMessageHandler"/>.
+		/// </summary>
 		public bool SupportsProxy => true;
+
+		/// <summary>
+		/// Gets a value indicating whether the handler supports configuration settings for the
+		/// <see cref="AllowAutoRedirect"/> and <see cref="MaxAutomaticRedirections"/> properties.
+		/// Always returns <see langword="true"/> for <see cref="AndroidMessageHandler"/>.
+		/// </summary>
 		public bool SupportsRedirectConfiguration => true;
 
+		/// <summary>
+		/// Gets or sets the type of decompression method used by the handler for automatic
+		/// decompression of the HTTP content response.
+		/// </summary>
+		/// <remarks>
+		/// Supported methods are <see cref="DecompressionMethods.GZip"/>,
+		/// <see cref="DecompressionMethods.Deflate"/>, and <see cref="DecompressionMethods.Brotli"/>.
+		/// Set to <see cref="DecompressionMethods.None"/> to disable automatic decompression.
+		/// </remarks>
 		public DecompressionMethods AutomaticDecompression
 		{
 			get => _decompressionMethods;
@@ -181,6 +205,10 @@ namespace Xamarin.Android.Net
 			}
 		}
 
+		/// <summary>
+		/// Gets or sets the cookie container used to store server cookies.
+		/// </summary>
+		/// <exception cref="ArgumentNullException">The value specified is <see langword="null"/>.</exception>
 		public CookieContainer CookieContainer
 		{
 			get => _cookieContainer ?? (_cookieContainer = new CookieContainer ());
@@ -196,21 +224,55 @@ namespace Xamarin.Android.Net
 		// NOTE: defaults here are based on:
 		// https://github.com/dotnet/runtime/blob/f3b77e64b87895aa7e697f321eb6d4151a4333df/src/libraries/Common/src/System/Net/Http/HttpHandlerDefaults.cs
 
+		/// <summary>
+		/// Gets or sets a value that indicates whether the handler uses the <see cref="CookieContainer"/>
+		/// property to store server cookies and uses these cookies when sending requests. The default value
+		/// is <see langword="true"/>.
+		/// </summary>
 		public bool UseCookies { get; set; } = true;
 
+		/// <summary>
+		/// Gets or sets a value that indicates whether the handler sends an Authorization header with the
+		/// request. The default value is <see langword="false"/>.
+		/// </summary>
 		public bool PreAuthenticate { get; set; } = false;
 
+		/// <summary>
+		/// Gets or sets a value that indicates whether the handler uses a proxy for requests. The default
+		/// value is <see langword="true"/>.
+		/// </summary>
 		public bool UseProxy { get; set; } = true;
 
+		/// <summary>
+		/// Gets or sets the proxy information used by the handler.
+		/// </summary>
 		public IWebProxy? Proxy { get; set; }
 
+		/// <summary>
+		/// Gets or sets authentication information used by this handler.
+		/// </summary>
 		public ICredentials? Credentials { get; set; }
 
+		/// <summary>
+		/// Gets or sets a value that indicates whether the handler should follow redirection responses.
+		/// The default value is <see langword="true"/>.
+		/// </summary>
 		public bool AllowAutoRedirect { get; set; } = true;
 
+		/// <summary>
+		/// Gets or sets a value that indicates how client certificates are provided. The default value is
+		/// <see cref="ClientCertificateOption.Manual"/>.
+		/// </summary>
 		public ClientCertificateOption ClientCertificateOptions { get; set; } = ClientCertificateOption.Manual;
 
 		private X509CertificateCollection? _clientCertificates;
+
+		/// <summary>
+		/// Gets or sets the collection of client certificates used by the handler to authenticate the client.
+		/// </summary>
+		/// <exception cref="InvalidOperationException">
+		/// <see cref="ClientCertificateOptions"/> is not set to <see cref="ClientCertificateOption.Manual"/>.
+		/// </exception>
 		public X509CertificateCollection? ClientCertificates
 		{
 			get
@@ -225,16 +287,35 @@ namespace Xamarin.Android.Net
 			set => _clientCertificates = value;
 		}
 
+		/// <summary>
+		/// Gets or sets the credentials to use when authenticating with the proxy.
+		/// </summary>
 		public ICredentials? DefaultProxyCredentials { get; set; }
 
+		/// <summary>
+		/// Gets or sets the maximum number of concurrent connections allowed per server. The default value
+		/// is <see cref="int.MaxValue"/>.
+		/// </summary>
 		public int MaxConnectionsPerServer { get; set; } = int.MaxValue;
 
+		/// <summary>
+		/// Gets or sets the maximum length, in kilobytes (1024 bytes), of the response headers. The default
+		/// value is 64 KB.
+		/// </summary>
 		public int MaxResponseHeadersLength { get; set; } = 64; // Units in K (1024) bytes.
 
+		/// <summary>
+		/// Gets or sets a value that indicates whether the certificate revocation list is checked during
+		/// validation. The default value is <see langword="false"/>.
+		/// </summary>
 		public bool CheckCertificateRevocationList { get; set; } = false;
 
 		ServerCertificateCustomValidator? _serverCertificateCustomValidator = null;
 
+		/// <summary>
+		/// Gets or sets a callback to validate the server certificate. When set, the callback is invoked
+		/// during the TLS handshake to perform custom certificate validation.
+		/// </summary>
 		public Func<HttpRequestMessage, X509Certificate2?, X509Chain?, SslPolicyErrors, bool>? ServerCertificateCustomValidationCallback
 		{
 			get => _serverCertificateCustomValidator?.Callback;
@@ -249,15 +330,34 @@ namespace Xamarin.Android.Net
 			}
 		}
 
+		/// <summary>
+		/// Gets or sets the TLS/SSL protocols used by the handler. The default value is
+		/// <see cref="SslProtocols.Tls13"/> | <see cref="SslProtocols.Tls12"/> on Android API 29+,
+		/// or <see cref="SslProtocols.Tls12"/> on earlier versions.
+		/// </summary>
+		/// <remarks>
+		/// See the <see href="https://developer.android.com/reference/javax/net/ssl/SSLSocket#protocols">
+		/// Android SSLSocket documentation</see> for details on supported protocols by API level.
+		/// </remarks>
 		// See: https://developer.android.com/reference/javax/net/ssl/SSLSocket#protocols
 		public SslProtocols SslProtocols { get; set; } =
 			(int)Build.VERSION.SdkInt >= 29 ?
 				SslProtocols.Tls13 | SslProtocols.Tls12 : SslProtocols.Tls12;
 
+		/// <summary>
+		/// Gets or sets a custom property collection for the handler. This can be used to pass
+		/// additional metadata or configuration to the underlying transport.
+		/// </summary>
 		public IDictionary<string, object?>? Properties { get; set; }
 
 		int maxAutomaticRedirections = 50;
 
+		/// <summary>
+		/// Gets or sets the maximum number of allowed HTTP redirects. The default value is 50.
+		/// </summary>
+		/// <exception cref="ArgumentOutOfRangeException">
+		/// The specified value is less than or equal to 0.
+		/// </exception>
 		public int MaxAutomaticRedirections
 		{
 			get => maxAutomaticRedirections;

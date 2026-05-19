@@ -147,6 +147,10 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA1039](xa1039.md): The Android Support libraries are not supported in .NET 9 and later, please migrate to AndroidX. See https://aka.ms/xamarin/androidx for more details.
 + [XA1040](xa1040.md): The NativeAOT runtime on Android is an experimental feature and not yet suitable for production use. File issues at: https://github.com/dotnet/android/issues
 + [XA1041](xa1041.md): The MSBuild property 'MonoAndroidAssetPrefix' has an invalid value of 'c:\Foo\Assets'. The value is expected to be a directory path representing the relative location of your Assets or Resources
++ [XA1044](xa1044.md): The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled.
++ [XA1045](xa1045.md): Input file `{0}` does not start with `<replacements/>`.
++ [XA1046](xa1046.md): Attribute '{0}' in element '{1}' has value '{2}' that cannot be parsed as boolean; {3} line {4}.
++ [XA1047](xa1047.md): Required attribute '{0}' missing from element '{1}'; {2} line {3}.
 
 ## XA2xxx: Linker
 
@@ -205,6 +209,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4248](xa4248.md): Could not find NuGet package '{nugetId}' version '{version}' in lock file. Ensure NuGet Restore has run since this `<PackageReference>` was added.
 + [XA4235](xa4249.md): Maven artifact specification '{artifact}' is invalid. The correct format is 'group_id:artifact_id:version'.
 + [XA4250](xa4250.md): Manifest-referenced type '{type}' was not found in any scanned assembly. It may be a framework type.
++ [XA4252](xa4252.md): Insecure HTTP Maven repository URL '{url}' is not allowed. Use an HTTPS URL, or set AllowInsecureHttp="true" metadata on the item to override this check.
 + XA4300: Native library '{library}' will not be bundled because it has an unsupported ABI.
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml\`: {ex}

@@ -79,7 +79,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetRuntime (runtime);
 			if (isRelease || !TestEnvironment.CommercialBuildAvailable) {
-				proj.SetAndroidSupportedAbis (DeviceAbi);
+				proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 			}
 			proj.SetDefaultTargetDevice ();
 			if (isRelease) {
@@ -140,7 +140,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			app.SetRuntime (runtime);
 			if (!TestEnvironment.CommercialBuildAvailable) {
-				app.SetAndroidSupportedAbis (DeviceAbi);
+				app.SetRuntimeIdentifiers (new[] { DeviceAbi });
 			}
 			app.SetDefaultTargetDevice ();
 			app.SetProperty ("AndroidEnablePreloadAssemblies", preloadAssemblies.ToString ());
@@ -259,7 +259,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 
 			proj.SetRuntime (runtime);
-			proj.SetAndroidSupportedAbis (DeviceAbi);
+			proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 			proj.SetProperty ("EmbedAssembliesIntoApk", embedAssemblies.ToString ());
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
 			proj.SetDefaultTargetDevice ();

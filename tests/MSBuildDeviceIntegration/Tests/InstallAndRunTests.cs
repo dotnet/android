@@ -624,7 +624,7 @@ namespace Xamarin.Android.Build.Tests
 
 			if (isRelease || !TestEnvironment.CommercialBuildAvailable) {
 				if (runtime == AndroidRuntime.MonoVM) {
-					proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
+					proj.SetRuntimeIdentifiers (new[] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" });
 				} else {
 					proj.SetRuntimeIdentifiers (new [] {"arm64-v8a", "x86_64"});
 				}
@@ -661,7 +661,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			};
 			proj.SetRuntime (runtime);
 			if (runtime == AndroidRuntime.MonoVM) {
-				proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
+				proj.SetRuntimeIdentifiers (new[] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" });
 			} else {
 				proj.SetRuntimeIdentifiers (new [] {"arm64-v8a", "x86_64"});
 			}
@@ -746,7 +746,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		{
 			proj = new XamarinAndroidApplicationProject ();
 			proj.SetRuntime (runtime);
-			proj.SetAndroidSupportedAbis (DeviceAbi);
+			proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
 				Android.Runtime.AndroidEnvironment.UnhandledExceptionRaiser += (sender, e) => {
@@ -773,6 +773,77 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 				MonitorAdbLogcat (CreateLineChecker (expectedRaiser),
 					logcatFilePath: Path.Combine (Root, builder.ProjectDirectory, "unhandled-logcat.log"), timeout: 60),
 				$"Output did not contain {expectedRaiser}!");
+		}
+
+		[Test]
+		public void NativeCrashProducesManagedStackTrace ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		{
+			// This test verifies that when a native crash (SIGSEGV) occurs, the .NET runtime
+			// logs a managed stack trace in logcat BEFORE Android's signal handler takes over.
+			// This is enabled by the System.Runtime.CrashReportBeforeSignalChaining config option.
+			// See: https://github.com/dotnet/android/pull/11291
+			// See: https://github.com/dotnet/runtime/pull/123735
+			// See: https://github.com/dotnet/runtime/pull/123824
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AllowUnsafeBlocks", "true");
+			proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
+
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("//${USINGS}", "using System.Runtime.InteropServices;")
+				.Replace ("//${AFTER_ONCREATE}", """
+						// Force a native crash (SIGSEGV) via P/Invoke to libc memset with a null pointer.
+						// The .NET runtime's crash reporting should log the managed stack trace before
+						// Android's signal handler aborts the process.
+						CrashHelper.ForceNativeSegfault ();
+				""")
+				.Replace ("//${AFTER_MAINACTIVITY}", """
+					static class CrashHelper
+					{
+						[DllImport ("libc", EntryPoint = "memset")]
+						static extern unsafe void MemSet (void* ptr, int value, nuint count);
+
+						public static unsafe void ForceNativeSegfault ()
+						{
+							MemSet (null, 0, (nuint)1);
+						}
+					}
+				""");
+
+			builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+			ClearAdbLogcat ();
+			AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+
+			// CoreCLR logs the managed stack trace via the DOTNET logcat tag when crash reporting
+			// runs before signal chaining. The output includes:
+			//   E DOTNET  : Got a SIGSEGV while executing native code. ...
+			//   E DOTNET  :    at <namespace>.CrashHelper.ForceNativeSegfault()
+			string logcatFile = Path.Combine (Root, builder.ProjectDirectory, "crash-logcat.log");
+			bool foundSigsegv = false;
+			bool foundManagedFrame = false;
+			Assert.IsTrue (
+				MonitorAdbLogcat (
+					(line) => {
+						if (line.Contains ("DOTNET") && line.Contains ("SIGSEGV")) {
+							foundSigsegv = true;
+						}
+						if (line.Contains ("DOTNET") && line.Contains ("ForceNativeSegfault")) {
+							foundManagedFrame = true;
+						}
+						return foundSigsegv && foundManagedFrame;
+					},
+					logcatFilePath: logcatFile,
+					timeout: 30),
+				"Crash reporting should have logged 'SIGSEGV' and a managed stack trace containing 'ForceNativeSegfault' via the DOTNET logcat tag. " +
+				"Verify the System.Runtime.CrashReportBeforeSignalChaining config option is set and the runtime supports it.");
 		}
 
 		[Test]
@@ -804,7 +875,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
-			proj.SetAndroidSupportedAbis (DeviceAbi);
+			proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 			proj.SetDefaultTargetDevice ();
 			using (var builder = CreateApkBuilder (Path.Combine (rootPath, proj.ProjectName))){
 				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
@@ -1016,7 +1087,7 @@ namespace Library1 {
 			proj.SetProperty ("NoWarn", "SYSLIB0011");
 
 			if (isRelease || !TestEnvironment.CommercialBuildAvailable) {
-				proj.SetAndroidSupportedAbis (DeviceAbi);
+				proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 			}
 
 			proj.References.Add (new BuildItem.Reference ("System.Runtime.Serialization"));
@@ -1116,7 +1187,7 @@ using System.Runtime.Serialization.Json;
 			};
 			proj.SetRuntime (runtime);
 			var abis = new string[] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
-			proj.SetAndroidSupportedAbis (abis);
+			proj.SetRuntimeIdentifiers (abis);
 			proj.SetProperty (proj.CommonProperties, "UseInterpreter", "True");
 			builder = CreateApkBuilder ();
 			builder.BuildLogFile = "install.log";
@@ -1152,7 +1223,7 @@ using System.Runtime.Serialization.Json;
 			};
 			// Mono-only test
 			proj.SetRuntime (AndroidRuntime.MonoVM);
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
+			proj.SetRuntimeIdentifiers (new[] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" });
 			proj.SetProperty ("EnableLLVM", true.ToString ());
 
 			builder = CreateApkBuilder ();
@@ -1211,7 +1282,7 @@ using System.Runtime.Serialization.Json;
 			if (testOnly)
 				proj.AndroidManifest = proj.AndroidManifest.Replace ("<application", "<application android:testOnly=\"true\"");
 
-			proj.SetAndroidSupportedAbis (DeviceAbi);
+			proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 			builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 			RunProjectAndAssert (proj, builder);
@@ -1355,7 +1426,7 @@ namespace Styleable.Library {
 				_ => throw new NotSupportedException ($"Unsupported runtime {runtime}")
 			};
 
-			proj.SetAndroidSupportedAbis (abis);
+			proj.SetRuntimeIdentifiers (abis);
 			var libBuilder = CreateDllBuilder (Path.Combine (rootPath, lib.ProjectName));
 			Assert.IsTrue (libBuilder.Build (lib), "Library should have built succeeded.");
 			builder = CreateApkBuilder (Path.Combine (rootPath, proj.ProjectName));
@@ -1397,7 +1468,7 @@ namespace Styleable.Library {
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
-			proj.SetAndroidSupportedAbis (DeviceAbi);
+			proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 			var builder = CreateApkBuilder (packageName: packageName);
 
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
@@ -1664,7 +1735,7 @@ namespace UnnamedProject
 			proj.SetRuntime (runtime);
 
 			// Requires 32-bit ABIs
-			proj.SetAndroidSupportedAbis (["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]);
+			proj.SetRuntimeIdentifiers (new[] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" });
 
 			var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
@@ -2109,7 +2180,7 @@ MONO_GC_PARAMS=bridge-implementation=new",
 				.Replace ("Icon = \"@drawable/icon\")]", "Icon = \"@drawable/icon\", Theme = \"@style/Theme.AppCompat.Light.DarkActionBar\")]")
 				.Replace ("public class MainActivity : Activity", "public class MainActivity : AndroidX.AppCompat.App.AppCompatActivity");
 			var abis = new string [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
-			proj.SetAndroidSupportedAbis (abis);
+			proj.SetRuntimeIdentifiers (abis);
 			builder = CreateApkBuilder ();
 			builder.BuildLogFile = "install.log";
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");

@@ -38,7 +38,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 			};
 			if (isRelease) {
-				proj.SetAndroidSupportedAbis (DeviceAbi);
+				proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 			}
 			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj));
@@ -68,7 +68,7 @@ namespace Xamarin.Android.Build.Tests
 			if (isRelease) {
 				// Set debuggable=true to allow run-as command usage with a release build
 				proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
-				proj.SetAndroidSupportedAbis (DeviceAbi);
+				proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 			}
 			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj));
@@ -98,7 +98,7 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject () {
 				PackageName = "com.xamarin.keytest"
 			};
-			proj.SetAndroidSupportedAbis (DeviceAbi);
+			proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 			using (var builder = CreateApkBuilder ()) {
 				// Use the default debug.keystore XA generates
 				Assert.IsTrue (builder.Install (proj), "first install should succeed.");
@@ -129,7 +129,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			// Set debuggable=true to allow run-as command usage with a release build
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
-			proj.SetAndroidSupportedAbis (DeviceAbi);
+			proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 			proj.SetProperty ("AndroidPackageFormat", "apk");
 			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj));
@@ -226,7 +226,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			// MonoVM-only test
 			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
-			proj.SetAndroidSupportedAbis (abi);
+			proj.SetRuntimeIdentifiers (new[] { abi });
 
 			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;
@@ -262,7 +262,7 @@ namespace Xamarin.Android.Build.Tests
 
 				//Now toggle FastDev to OFF
 				proj.EmbedAssembliesIntoApk = true;
-				proj.SetAndroidSupportedAbis (DeviceAbi);
+				proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 
 				Assert.IsTrue (builder.Install (proj), "Second install should have succeeded.");
 
@@ -294,7 +294,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (proj.ReleaseProperties, "AndroidKeyStore", "True");
 			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyStore", "test.keystore");
 			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyAlias", "mykey");
-			proj.SetAndroidSupportedAbis (DeviceAbi);
+			proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 			proj.SetProperty (proj.ReleaseProperties, "AndroidPackageFormat", packageFormat);
 			proj.SetProperty ("AndroidUseApkSigner", "true");
 			proj.OtherBuildItems.Add (new BuildItem (BuildActions.None, "test.keystore") {
@@ -332,7 +332,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
 			// Set debuggable=true to allow run-as command usage with a release build
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
-			proj.SetAndroidSupportedAbis (DeviceAbi);
+			proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 
 			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
@@ -426,7 +426,7 @@ namespace Xamarin.Android.Build.Tests
 				proj.SetProperty ("AndroidSigningStorePass", password);
 				proj.SetProperty ("AndroidSigningKeyPass", password);
 			}
-			proj.SetAndroidSupportedAbis (DeviceAbi);
+			proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 			proj.SetProperty ("AndroidKeyStore", androidKeyStore);
 			proj.SetProperty ("AndroidSigningKeyStore", "test.keystore");
 			proj.SetProperty ("AndroidSigningKeyAlias", "mykey");
