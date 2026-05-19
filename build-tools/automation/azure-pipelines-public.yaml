@@ -72,8 +72,9 @@ stages:
   - job: mac_build_create_installers
     displayName: macOS > Build
     pool:
-      name: Azure Pipelines
-      vmImage: $(HostedMacImage)
+      name: AcesShared
+      demands:
+      - ImageOverride -equals ACES_VM_SharedPool_Tahoe
       os: macOS
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
@@ -276,8 +277,9 @@ stages:
       parallel: 10
     displayName: macOS > Tests > MSBuild
     pool:
-      name: Azure Pipelines
-      vmImage: $(HostedMacImage)
+      name: AcesShared
+      demands:
+      - ImageOverride -equals ACES_VM_SharedPool_Tahoe
       os: macOS
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
@@ -367,8 +369,9 @@ stages:
       parallel: 8
     displayName: "macOS > Tests > MSBuild+Emulator"
     pool:
-      name: Azure Pipelines
-      vmImage: $(HostedMacImageWithEmulator)
+      name: AcesShared
+      demands:
+      - ImageOverride -equals ACES_VM_SharedPool_Tahoe
       os: macOS
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
