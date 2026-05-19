@@ -30,12 +30,13 @@
 
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" TaskFactory="TaskHostFactory" Runtime="NET" />
 
-  <Target Name="_DownloadAndroidManifest">
+  <Target Name="_DownloadAndroidManifest"
+      Inputs="$(MSBuildThisFileFullPath);..\..\Configuration.props"
+      Outputs="$(_AndroidManifestPath)">
     <DownloadFile
         SourceUrl="$(_AndroidRepositoryUrl)repository2-3.xml"
         DestinationFolder="$(AndroidToolchainCacheDirectory)"
         DestinationFileName="repository2-3.xml"
-        SkipUnchangedFiles="false"
         Retries="3"
     />
   </Target>
