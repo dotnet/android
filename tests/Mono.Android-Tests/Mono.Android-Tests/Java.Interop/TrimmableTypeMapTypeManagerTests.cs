@@ -269,6 +269,45 @@ namespace Java.InteropTests
 			Assert.AreEqual (typeof (byte[][]), jaggedByteArrayType);
 		}
 
+		[Test]
+		public void InterfaceProxyLookup_DoesNotLeakGlobalRefs ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			using var map = new JavaDictionary ();
+			map.Add ("key", "value");
+
+			EnumerateKeys (map);
+			CollectGarbage (times: 3);
+			int grefBefore = Java.Interop.Runtime.GlobalReferenceCount;
+
+			const int iterationCount = 100;
+			for (int i = 0; i < iterationCount; i++) {
+				EnumerateKeys (map);
+			}
+
+			CollectGarbage (times: 3);
+			int grefAfter = Java.Interop.Runtime.GlobalReferenceCount;
+
+			Assert.AreEqual (grefBefore, grefAfter,
+				$"Interface proxy lookup leaked global references after {iterationCount} iterations. Before={grefBefore}, After={grefAfter}");
+
+			static void EnumerateKeys (JavaDictionary map)
+			{
+				var keys = map.Keys;
+				try {
+					var enumerator = keys.GetEnumerator ();
+					try {
+						Assert.IsTrue (enumerator.MoveNext ());
+					} finally {
+						(enumerator as IDisposable)?.Dispose ();
+					}
+				} finally {
+					(keys as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
 		static ConcurrentDictionary<Type, JavaPeerProxy> GetProxyCache (TrimmableTypeMap instance)
 		{
 			var field = typeof (TrimmableTypeMap).GetField ("_proxyCache", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -310,6 +349,15 @@ namespace Java.InteropTests
 				await Task.Yield ();
 			}
 			Assert.IsTrue (predicate (), message);
+		}
+
+		static void CollectGarbage (int times)
+		{
+			for (int i = 0; i < times; i++) {
+				GC.Collect (generation: 2, mode: GCCollectionMode.Forced, blocking: true);
+				GC.WaitForPendingFinalizers ();
+				JniEnvironment.Runtime.ValueManager.CollectPeers ();
+			}
 		}
 
 		static IntPtr noPinActionPointer;
