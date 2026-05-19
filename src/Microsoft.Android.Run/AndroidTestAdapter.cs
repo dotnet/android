@@ -1,4 +1,5 @@
 using System.Xml.Linq;
+using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -83,10 +84,18 @@ class AndroidTestAdapter(
 				_ => new PassedTestNodeStateProperty (),
 			};
 
+			var properties = new List<IProperty> { stateProperty };
+
+			// Add TRX report properties required by ITrxReportCapability
+			if (!string.IsNullOrEmpty (result.ClassName))
+				properties.Add (new TrxFullyQualifiedTypeNameProperty (result.ClassName));
+			if (result.Outcome == TrxOutcome.Failed)
+				properties.Add (new TrxExceptionProperty (result.ErrorMessage, result.StackTrace));
+
 			var testNode = new TestNode {
 				Uid = new TestNodeUid (result.FullyQualifiedName),
 				DisplayName = result.TestName,
-				Properties = new PropertyBag (stateProperty),
+				Properties = new PropertyBag (properties.ToArray ()),
 			};
 
 			await context.MessageBus.PublishAsync (this, new TestNodeUpdateMessage (sessionUid, testNode));
@@ -235,18 +244,14 @@ class AndroidTestAdapter(
 					? $"{className}.{testName}"
 					: testName;
 
-				// Extract error message if present
+				// Extract error message and stack trace if present
 				string? errorMessage = null;
+				string? stackTrace = null;
 				var outputElement = unitTestResult.Element (ns + "Output");
 				var errorInfo = outputElement?.Element (ns + "ErrorInfo");
 				if (errorInfo != null) {
-					var message = errorInfo.Element (ns + "Message")?.Value;
-					var stackTrace = errorInfo.Element (ns + "StackTrace")?.Value;
-					errorMessage = message;
-					if (!string.IsNullOrEmpty (stackTrace))
-						errorMessage = string.IsNullOrEmpty (errorMessage)
-							? stackTrace
-							: $"{errorMessage}\n{stackTrace}";
+					errorMessage = errorInfo.Element (ns + "Message")?.Value;
+					stackTrace = errorInfo.Element (ns + "StackTrace")?.Value;
 				}
 
 				var trxOutcome = outcome switch {
@@ -256,7 +261,7 @@ class AndroidTestAdapter(
 					_ => TrxOutcome.Passed,
 				};
 
-				results.Add (new TrxTestResult (fullyQualifiedName, testName, trxOutcome, errorMessage));
+				results.Add (new TrxTestResult (fullyQualifiedName, testName, className, trxOutcome, errorMessage, stackTrace));
 			}
 		}
 
@@ -284,10 +289,22 @@ enum TrxOutcome
 record TrxTestResult (
 	string FullyQualifiedName,
 	string TestName,
+	string? ClassName,
 	TrxOutcome Outcome,
-	string? ErrorMessage);
+	string? ErrorMessage,
+	string? StackTrace);
 
 class AndroidTestCapabilities : ITestFrameworkCapabilities
 {
-	public IReadOnlyCollection<ITestFrameworkCapability> Capabilities { get; } = [];
+	public IReadOnlyCollection<ITestFrameworkCapability> Capabilities { get; } = [new AndroidTrxReportCapability ()];
+}
+
+class AndroidTrxReportCapability : ITrxReportCapability
+{
+	public bool IsSupported => true;
+
+	public void Enable ()
+	{
+		// No-op: TRX properties are always added to test nodes.
+	}
 }
