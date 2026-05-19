@@ -138,6 +138,7 @@
     <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerTests.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerNegotiateAuthenticationTests.cs" />
     <Compile Include="Xamarin.Android.Net\HttpClientIntegrationTests.cs" />
+    <Compile Include="Xamarin.Android.Net\TrustManagerMarshallingTests.cs" />
     <Compile Include="Xamarin.Android.RuntimeTests\MainActivity.cs" />
     <Compile Include="Xamarin.Android.RuntimeTests\MyIntent.cs" />
     <Compile Include="Xamarin.Android.RuntimeTests\NonJavaObject.cs" />
