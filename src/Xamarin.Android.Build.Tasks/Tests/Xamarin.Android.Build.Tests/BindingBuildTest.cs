@@ -835,8 +835,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
-			var path = Path.Combine ("temp", TestName);
+			var path= Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidBindingProject () {
 				IsRelease = isRelease,
 				ProjectName = "BindingsProject",
@@ -885,8 +884,10 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 					"generated", "src", "Com.Xamarin.Android.Test.Msbuildtest.IJavaSourceTestInterface.cs");
 				StringAssertEx.ContainsText (File.ReadAllLines (generatedIface), "string GreetWithQuestion (string name, global::Java.Util.Date date, string question);");
 				Assert.IsTrue (libBuilder.Build (lib), "Library build should have succeeded.");
-				Assert.IsTrue (libBuilder.Output.IsTargetSkipped ("_CompileBindingJava", defaultIfNotUsed: true), $"`_CompileBindingJava` should be skipped on second build!");
-				Assert.IsTrue (libBuilder.Output.IsTargetSkipped ("_ClearGeneratedManagedBindings", defaultIfNotUsed: true), $"`_ClearGeneratedManagedBindings` should be skipped on second build!");
+				if (TestEnvironment.CommercialBuildAvailable) {
+					Assert.IsTrue (libBuilder.Output.IsTargetSkipped ("_CompileBindingJava", defaultIfNotUsed: true), $"`_CompileBindingJava` should be skipped on second build!");
+					Assert.IsTrue (libBuilder.Output.IsTargetSkipped ("_ClearGeneratedManagedBindings", defaultIfNotUsed: true), $"`_ClearGeneratedManagedBindings` should be skipped on second build!");
+				}
 				FileAssert.Exists (generatedCode, $"'{generatedCode}' should have not be deleted on second build.");
 				Assert.IsTrue (libBuilder.DesignTimeBuild (lib, target: "UpdateGeneratedFiles"), "DTB should have succeeded.");
 				FileAssert.Exists (generatedCode, $"'{generatedCode}' should have not be deleted on DTB build.");

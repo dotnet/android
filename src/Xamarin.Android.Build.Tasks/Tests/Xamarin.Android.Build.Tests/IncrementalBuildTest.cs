@@ -703,7 +703,6 @@ namespace Lib2
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 
 			if (runtime == AndroidRuntime.NativeAOT) {
 				// Fails on NativeAOT with:
@@ -752,16 +751,18 @@ namespace Lib2
 				Assert.IsTrue (libBuilder.Build (lib, doNotCleanupOnUpdate: true, saveProject: false), "second library build should have succeeded.");
 				Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true, saveProject: false), "second app build should have succeeded.");
 
-				appBuilder.Output.AssertTargetIsSkipped ("CoreCompile");
-				appBuilder.Output.AssertTargetIsSkipped ("_BuildLibraryImportsCache");
-				appBuilder.Output.AssertTargetIsSkipped ("_ResolveLibraryProjectImports");
-				appBuilder.Output.AssertTargetIsSkipped ("_GenerateJavaStubs");
+				if (TestEnvironment.CommercialBuildAvailable) {
+					appBuilder.Output.AssertTargetIsSkipped ("CoreCompile");
+					appBuilder.Output.AssertTargetIsSkipped ("_BuildLibraryImportsCache");
+					appBuilder.Output.AssertTargetIsSkipped ("_ResolveLibraryProjectImports");
+					appBuilder.Output.AssertTargetIsSkipped ("_GenerateJavaStubs");
 
-				appBuilder.Output.AssertTargetIsPartiallyBuilt (KnownTargets.LinkAssembliesNoShrink);
+					appBuilder.Output.AssertTargetIsPartiallyBuilt (KnownTargets.LinkAssembliesNoShrink);
 
-				appBuilder.Output.AssertTargetIsNotSkipped ("_BuildApkEmbed");
-				appBuilder.Output.AssertTargetIsNotSkipped ("_CopyPackage");
-				appBuilder.Output.AssertTargetIsNotSkipped ("_Sign");
+					appBuilder.Output.AssertTargetIsNotSkipped ("_BuildApkEmbed");
+					appBuilder.Output.AssertTargetIsNotSkipped ("_CopyPackage");
+					appBuilder.Output.AssertTargetIsNotSkipped ("_Sign");
+				}
 			}
 		}
 
@@ -923,9 +924,8 @@ namespace Lib2
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 
-			var path = Path.Combine ("temp", TestName);
+			var path= Path.Combine ("temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 				ProjectName = "MyApp",
@@ -998,13 +998,15 @@ namespace Lib2
 				appBuilder.BuildLogFile = "build2.log";
 				Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true, saveProject: false), "second app build should have succeeded.");
 
-				var targetsShouldSkip = new [] {
-					"_BuildLibraryImportsCache",
-					"_ResolveLibraryProjectImports",
-					"_ConvertCustomView",
-				};
-				foreach (var target in targetsShouldSkip) {
-					Assert.IsTrue (appBuilder.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
+				if (TestEnvironment.CommercialBuildAvailable) {
+					var targetsShouldSkip = new [] {
+						"_BuildLibraryImportsCache",
+						"_ResolveLibraryProjectImports",
+						"_ConvertCustomView",
+					};
+					foreach (var target in targetsShouldSkip) {
+						Assert.IsTrue (appBuilder.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
+					}
 				}
 
 				var targetsShouldRun = new [] {
@@ -1015,16 +1017,18 @@ namespace Lib2
 					"_CopyPackage",
 					"_Sign",
 				};
-				foreach (var target in targetsShouldRun) {
-					Assert.IsFalse (appBuilder.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
-				}
+				if (TestEnvironment.CommercialBuildAvailable) {
+					foreach (var target in targetsShouldRun) {
+						Assert.IsFalse (appBuilder.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
+					}
 
-				var aapt2TargetsShouldBeSkipped = new [] {
-					"_FixupCustomViewsForAapt2",
-					"_CompileResources"
-				};
-				foreach (var target in aapt2TargetsShouldBeSkipped) {
-					Assert.IsTrue (appBuilder.Output.IsTargetSkipped (target, defaultIfNotUsed: true), $"{target} should be skipped!");
+					var aapt2TargetsShouldBeSkipped = new [] {
+						"_FixupCustomViewsForAapt2",
+						"_CompileResources"
+					};
+					foreach (var target in aapt2TargetsShouldBeSkipped) {
+						Assert.IsTrue (appBuilder.Output.IsTargetSkipped (target, defaultIfNotUsed: true), $"{target} should be skipped!");
+					}
 				}
 			}
 		}

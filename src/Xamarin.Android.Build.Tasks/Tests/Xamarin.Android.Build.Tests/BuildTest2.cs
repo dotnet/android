@@ -1143,8 +1143,7 @@ namespace Xamarin.Android.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
-			var proj = new XamarinAndroidApplicationProject () {
+			var proj= new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
@@ -1199,17 +1198,19 @@ namespace UnamedProject
 				FileAssert.Exists (designtime_build_props, "designtime/build.props should exist after the second `Build`.");
 
 				//NOTE: none of these targets should run, since we have not actually changed anything!
-				var targetsToBeSkipped = new [] {
-					//TODO: We would like for this assertion to work, but the <Compile /> item group changes between DTB and regular builds
-					//      $(IntermediateOutputPath)designtime\Resource.designer.cs -> Resources\Resource.designer.cs
-					//      And so the built assembly changes between DTB and regular build, triggering `_LinkAssembliesNoShrink`
-					//"_LinkAssembliesNoShrink",
-					"_UpdateAndroidResgen",
-					"_BuildLibraryImportsCache",
-					"_CompileJava",
-				};
-				foreach (var targetName in targetsToBeSkipped) {
-					Assert.IsTrue (b.Output.IsTargetSkipped (targetName), $"`{targetName}` should be skipped!");
+				if (TestEnvironment.CommercialBuildAvailable) {
+					var targetsToBeSkipped = new [] {
+						//TODO: We would like for this assertion to work, but the <Compile /> item group changes between DTB and regular builds
+						//      $(IntermediateOutputPath)designtime\Resource.designer.cs -> Resources\Resource.designer.cs
+						//      And so the built assembly changes between DTB and regular build, triggering `_LinkAssembliesNoShrink`
+						//"_LinkAssembliesNoShrink",
+						"_UpdateAndroidResgen",
+						"_BuildLibraryImportsCache",
+						"_CompileJava",
+					};
+					foreach (var targetName in targetsToBeSkipped) {
+						Assert.IsTrue (b.Output.IsTargetSkipped (targetName), $"`{targetName}` should be skipped!");
+					}
 				}
 
 				b.Target = "Clean";
@@ -1301,9 +1302,8 @@ namespace UnamedProject
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 
-			var start = DateTime.UtcNow.AddSeconds (-1);
+			var start= DateTime.UtcNow.AddSeconds (-1);
 			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
 
@@ -1350,13 +1350,15 @@ namespace UnamedProject
 				//One last build with no changes
 				Assert.IsTrue (b.Build (proj), "third build should have succeeded.");
 
-				// NativeAOT always runs the linking step
-				if (runtime != AndroidRuntime.NativeAOT) {
-					b.Output.AssertTargetIsSkipped (isRelease ? KnownTargets.LinkAssembliesShrink : KnownTargets.LinkAssembliesNoShrink);
+				if (TestEnvironment.CommercialBuildAvailable) {
+					// NativeAOT always runs the linking step
+					if (runtime != AndroidRuntime.NativeAOT) {
+						b.Output.AssertTargetIsSkipped (isRelease ? KnownTargets.LinkAssembliesShrink : KnownTargets.LinkAssembliesNoShrink);
+					}
+					b.Output.AssertTargetIsSkipped ("_UpdateAndroidResgen");
+					b.Output.AssertTargetIsSkipped ("_BuildLibraryImportsCache");
+					b.Output.AssertTargetIsSkipped ("_CompileJava");
 				}
-				b.Output.AssertTargetIsSkipped ("_UpdateAndroidResgen");
-				b.Output.AssertTargetIsSkipped ("_BuildLibraryImportsCache");
-				b.Output.AssertTargetIsSkipped ("_CompileJava");
 			}
 		}
 

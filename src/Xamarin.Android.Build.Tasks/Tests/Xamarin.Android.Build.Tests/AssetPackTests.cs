@@ -165,8 +165,7 @@ namespace Xamarin.Android.Build.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
-			var path = Path.Combine ("temp", TestName);
+			var path= Path.Combine ("temp", TestName);
 			var asset3 = new AndroidItem.AndroidAsset ("Assets\\asset3.txt") {
 				TextContent = () => "Asset3",
 				Encoding = Encoding.ASCII,
@@ -220,9 +219,11 @@ namespace Xamarin.Android.Build.Tests
 					Assert.IsFalse (zip.ContainsEntry ("assetpack1/resources.pb"), "aab should not contain assetpack1/resources.pb");
 				}
 				Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true, saveProject: false), $"{app.ProjectName} should succeed");
-				appBuilder.Output.AssertTargetIsSkipped ("_CreateAssetPackManifests");
-				appBuilder.Output.AssertTargetIsSkipped ("_BuildAssetPacks");
-				appBuilder.Output.AssertTargetIsSkipped ("_GenerateAndroidAssetsDir");
+				if (TestEnvironment.CommercialBuildAvailable) {
+					appBuilder.Output.AssertTargetIsSkipped ("_CreateAssetPackManifests");
+					appBuilder.Output.AssertTargetIsSkipped ("_BuildAssetPacks");
+					appBuilder.Output.AssertTargetIsSkipped ("_GenerateAndroidAssetsDir");
+				}
 				FileAssert.Exists (asset3File, $"file {asset3File} should exist.");
 				asset3.TextContent = () => "Asset3 Updated";
 				asset3.Timestamp = DateTime.UtcNow.AddSeconds(1);
