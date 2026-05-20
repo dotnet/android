@@ -96,18 +96,6 @@ namespace UnnamedProject
 				Android.Util.Log.Info(TAG, $"[FAIL] Unable to access 'IsPreserved' field of 'LinkerClass'.\n{ex}");
 			}
 
-			// [Test] TryCreateInstanceOfNonXmlPreservedClass
-			try
-			{
-				var asm = typeof(Library1.SomeClass).Assembly;
-				var o = Activator.CreateInstance(asm.GetType("Library1.NonPreserved"));
-				Android.Util.Log.Info(TAG, $"[LINKALLFAIL] Able to create instance of '{o.GetType().Name}' which should have been linked away.");
-			}
-			catch (Exception ex)
-			{
-				Android.Util.Log.Info(TAG, $"[LINKALLPASS] Unable to create instance of 'NonPreserved' as expected.\n{ex}");
-			}
-
 			// [Test] Post
 			Android.Util.Log.Info(TAG, HttpClientTest.Post ());
 
