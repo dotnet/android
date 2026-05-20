@@ -24,10 +24,10 @@
     <_TypeMapOutputDirectory>$(_TypeMapBaseOutputDir)typemap/</_TypeMapOutputDirectory>
     <_TypeMapJavaOutputDirectory>$(_TypeMapBaseOutputDir)typemap/java</_TypeMapJavaOutputDirectory>
     <_TypeMapAssembliesListFile>$(_TypeMapOutputDirectory)typemap-assemblies.txt</_TypeMapAssembliesListFile>
-    <!-- Max array rank for __ArrayMapRank{N} sentinel emission. Defaults to 3 for NativeAOT
-         (PublishAot=true, dynamic code is unavailable, so array creation uses the typemap path);
+    <!-- Max array rank for __ArrayMapRank{N} sentinel emission. Defaults to 3 when
+         dynamic code is unavailable, so array creation uses the typemap path;
          defaults to 0 otherwise, where dynamic code can use Array.CreateInstance directly. -->
-    <_AndroidTrimmableTypeMapMaxArrayRank Condition=" '$(_AndroidTrimmableTypeMapMaxArrayRank)' == '' and '$(PublishAot)' == 'true' ">3</_AndroidTrimmableTypeMapMaxArrayRank>
+    <_AndroidTrimmableTypeMapMaxArrayRank Condition=" '$(_AndroidTrimmableTypeMapMaxArrayRank)' == '' and ('$(PublishAot)' == 'true' or '$(DynamicCodeSupport)' == 'false') ">3</_AndroidTrimmableTypeMapMaxArrayRank>
     <_AndroidTrimmableTypeMapMaxArrayRank Condition=" '$(_AndroidTrimmableTypeMapMaxArrayRank)' == '' ">0</_AndroidTrimmableTypeMapMaxArrayRank>
   </PropertyGroup>
 
