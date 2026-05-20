@@ -17,12 +17,18 @@
     </PropertyGroup>
     <ItemGroup>
       <_TrimmableTypeMapIlcAssemblies Include="$(_TypeMapOutputDirectory)*.dll" />
+      <_TrimmableTypeMapFrameworkIlcAssemblies Include="@(ResolvedFrameworkAssemblies->'$(_TypeMapOutputDirectory)_%(Filename).TypeMap.dll')" />
+      <_TrimmableTypeMapFrameworkIlcAssemblies Include="@(PrivateSdkAssemblies->'$(_TypeMapOutputDirectory)_%(Filename).TypeMap.dll')" />
+      <_TrimmableTypeMapFrameworkIlcAssemblies Include="@(ReferencePath->'$(_TypeMapOutputDirectory)_%(Filename).TypeMap.dll')"
+          Condition=" '%(ReferencePath.FrameworkAssembly)' == 'true' " />
       <!-- The root assembly (_Microsoft.Android.TypeMaps) only contains TypeMapLoader.Initialize()
-           and assembly-level attributes — no types that need vtable generation.
-           All per-assembly typemap DLLs (including framework ones like _Java.Interop.TypeMap and
-           _Mono.Android.TypeMap) contain __ArrayMapRank{N} types whose vtables ILC must emit. -->
+            and assembly-level attributes — no types that need vtable generation.
+            Framework per-assembly typemap DLLs must remain IlcReference inputs so ILC can read
+            their conditional TypeMap attributes, but they must not be unmanaged-entrypoint roots. -->
       <_TrimmableTypeMapUnmanagedEntryPointAssemblies Include="@(_TrimmableTypeMapIlcAssemblies)" />
       <_TrimmableTypeMapUnmanagedEntryPointAssemblies Remove="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll" />
+      <_TrimmableTypeMapUnmanagedEntryPointAssemblies Remove="$(_TypeMapOutputDirectory)_Java.Interop.TypeMap.dll;$(_TypeMapOutputDirectory)_Mono.Android.TypeMap.dll" />
+      <_TrimmableTypeMapUnmanagedEntryPointAssemblies Remove="@(_TrimmableTypeMapFrameworkIlcAssemblies)" />
       <IlcReference Include="@(_TrimmableTypeMapIlcAssemblies)" />
       <UnmanagedEntryPointsAssembly Include="@(_TrimmableTypeMapUnmanagedEntryPointAssemblies->'%(Filename)')" />
     </ItemGroup>
