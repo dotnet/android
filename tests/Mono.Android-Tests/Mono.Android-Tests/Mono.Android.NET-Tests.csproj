@@ -65,18 +65,25 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\TestRunner.Core\TestRunner.Core.NET.csproj" />
-    <ProjectReference Include="..\..\TestRunner.NUnit\TestRunner.NUnit.NET.csproj" />
-    <ProjectReference Include="..\..\StartupHook\StartupHook.csproj" />
-    <ProjectReference Include="..\Java.Interop-Tests\Java.Interop-Tests.NET.csproj" />
-    <ProjectReference Include="..\Mono.Android-Test.Library\Mono.Android-Test.Library.NET.csproj" />
-    <ProjectReference Include="..\..\..\src\Xamarin.Android.NUnitLite\Xamarin.Android.NUnitLite.NET.csproj" />
+    <PackageReference Include="NUnit" Version="$(NUnitVersion)" />
   </ItemGroup>
 
   <ItemGroup>
-    <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="Visible" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
-    <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="Visible" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
-    <TrimmerRootAssembly Include="StartupHook" RootMode="All" Condition=" '$(StartupHookSupport)' == 'true' " />
+    <ProjectReference Include="..\..\TestRunner.Core\TestRunner.Core.NET.csproj" />
+    <ProjectReference Include="..\..\StartupHook\StartupHook.csproj" />
+    <ProjectReference Include="..\Java.Interop-Tests\Java.Interop-Tests.NET.csproj" />
+    <ProjectReference Include="..\Mono.Android-Test.Library\Mono.Android-Test.Library.NET.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- CoreCLRTrimmable intentionally runs a trimmed Release app.
+         Root the test assemblies so the unit tests themselves stay discoverable,
+         and keep any runtime-specific trim exceptions in TrimmerRoots.xml. -->
+    <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="All" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
+    <TrimmerRootAssembly Include="Mono.Android-Test.Library.NET" RootMode="All" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
+    <TrimmerRootAssembly Include="TestRunner.Core.NET" RootMode="All" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
+    <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" />
+    <TrimmerRootAssembly Include="StartupHook" RootMode="All" />
     <TrimmerRootDescriptor Include="TrimmerRoots.xml" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
     <_AndroidRemapMembers Include="Remaps.xml" />
     <_AndroidRemapMembers Include="IsAssignableFromRemaps.xml" Condition=" '$(_AndroidIsAssignableFromCheck)' == 'false' " />
@@ -139,10 +146,10 @@
     <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerNegotiateAuthenticationTests.cs" />
     <Compile Include="Xamarin.Android.Net\HttpClientIntegrationTests.cs" />
     <Compile Include="Xamarin.Android.Net\TrustManagerMarshallingTests.cs" />
-    <Compile Include="Xamarin.Android.RuntimeTests\MainActivity.cs" />
+    <Compile Include="Xamarin.Android.RuntimeTests\MyFragment.cs" />
     <Compile Include="Xamarin.Android.RuntimeTests\MyIntent.cs" />
     <Compile Include="Xamarin.Android.RuntimeTests\NonJavaObject.cs" />
-    <Compile Include="Xamarin.Android.RuntimeTests\NUnitInstrumentation.cs" />
+    <Compile Include="Xamarin.Android.RuntimeTests\TestInstrumentation.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -180,9 +187,6 @@
     <AndroidResource Include="Resources\layout\FragmentFixup.axml">
       <Link>Resources\layout\FragmentFixup.axml</Link>
     </AndroidResource>
-    <AndroidBoundLayout Include="Resources\layout\Main.axml">
-      <Link>Resources\layout\Main.axml</Link>
-    </AndroidBoundLayout>
   </ItemGroup>
 
   <ItemGroup>
@@ -237,6 +241,13 @@
     <AndroidNativeLibrary Include="..\libs\x86_64\libreuse-threads.so" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <_AndroidEnableObjectReferenceLogging>false</_AndroidEnableObjectReferenceLogging>
+    <AndroidInstrumentation>xamarin.android.runtimetests.TestInstrumentation</AndroidInstrumentation>
+    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+  </PropertyGroup>
+
   <!-- Used by AppContextTests.cs -->
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="test_bool"    Value="true" />
@@ -245,33 +256,5 @@
     <!-- Set STARTUP_HOOKS via RuntimeHostConfigurationOption for MonoVM (read via AppContext.GetData) -->
     <RuntimeHostConfigurationOption Include="STARTUP_HOOKS" Value="StartupHook" Condition=" '$(UseMonoRuntime)' == 'true' " />
   </ItemGroup>
-
-  <ItemGroup Condition=" '$(AndroidPackageFormat)' != 'aab' ">
-    <TestApk Include="$(OutputPath)$(_MonoAndroidTestPackage)-Signed.apk">
-      <Package>$(_MonoAndroidTestPackage)</Package>
-      <InstrumentationType>xamarin.android.runtimetests.NUnitInstrumentation</InstrumentationType>
-      <ResultsPath>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage).xml</ResultsPath>
-      <TimingDefinitionsFilename>$(XamarinAndroidSourcePath)build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
-      <TimingResultsFilename>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage)-times.csv</TimingResultsFilename>
-      <ApkSizesInputFilename>apk-sizes-$(_MonoAndroidTestPackage)-$(Configuration)$(TestsFlavor).txt</ApkSizesInputFilename>
-      <ApkSizesDefinitionFilename>$(XamarinAndroidSourcePath)build-tools\scripts\ApkSizesDefinitions.txt</ApkSizesDefinitionFilename>
-      <ApkSizesResultsFilename>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage)-values-$(Configuration).csv</ApkSizesResultsFilename>
-    </TestApk>
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(AndroidPackageFormat)' == 'aab' ">
-    <TestAab Include="$(OutputPath)$(_MonoAndroidTestPackage)-Signed.aab">
-      <Package>$(_MonoAndroidTestPackage)</Package>
-      <InstrumentationType>xamarin.android.runtimetests.NUnitInstrumentation</InstrumentationType>
-      <ResultsPath>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage).xml</ResultsPath>
-      <TimingDefinitionsFilename>$(XamarinAndroidSourcePath)build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
-      <TimingResultsFilename>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage)-times.csv</TimingResultsFilename>
-      <ApkSizesInputFilename>apk-sizes-$(_MonoAndroidTestPackage)-$(Configuration)$(TestsFlavor).txt</ApkSizesInputFilename>
-      <ApkSizesDefinitionFilename>$(XamarinAndroidSourcePath)build-tools\scripts\ApkSizesDefinitions.txt</ApkSizesDefinitionFilename>
-      <ApkSizesResultsFilename>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage)-values-$(Configuration).csv</ApkSizesResultsFilename>
-    </TestAab>
-  </ItemGroup>
-
-  <Import Project="$(XamarinAndroidSourcePath)build-tools\scripts\TestApks.targets" />
 
 </Project>
