@@ -30,7 +30,7 @@ public class ScannerExportShapesTests
 	static MarshalMethodInfo[] GetMarshalMethods (string javaName)
 	{
 		var fixturePath = UserTypesFixturePath;
-		var dir = Path.GetDirectoryName (fixturePath)!;
+		var dir = AssertNotNull (Path.GetDirectoryName (fixturePath));
 
 		var paths = new System.Collections.Generic.List<string> { fixturePath };
 		var monoAndroid = Path.Combine (dir, "Mono.Android.dll");
@@ -53,12 +53,17 @@ public class ScannerExportShapesTests
 
 			var peers = scanner.Scan (assemblies);
 			var peer = peers.FirstOrDefault (p => p.ManagedTypeName.EndsWith (javaName));
-			Assert.NotNull (peer);
-			return peer!.MarshalMethods.ToArray ();
+			return AssertNotNull (peer).MarshalMethods.ToArray ();
 		} finally {
 			foreach (var pe in peReaders)
 				pe.Dispose ();
 		}
+	}
+
+	static T AssertNotNull<T> (T? value) where T : class
+	{
+		Assert.NotNull (value);
+		return value ?? throw new System.InvalidOperationException ("Expected non-null value.");
 	}
 
 	static void AssertHasExport (MarshalMethodInfo[] methods, string jniName, string jniSignature)
@@ -67,11 +72,12 @@ public class ScannerExportShapesTests
 		Assert.True (match != null,
 			$"Expected [Export] marshal method '{jniName}{jniSignature}' not found. " +
 			$"Discovered: {string.Join (", ", methods.Select (m => m.JniName + m.JniSignature))}");
+		match = AssertNotNull (match);
 		// [Export] methods carry no Connector — legacy uses __export__ at runtime,
 		// trimmable wires registration via UCO fnptr. [ExportField] methods do
 		// surface the "__export__" connector by design (matches legacy
 		// CecilImporter behaviour), so accept that case too.
-		Assert.True (match!.Connector is null || match.Connector == "__export__",
+		Assert.True (match.Connector is null || match.Connector == "__export__",
 			$"Unexpected connector '{match.Connector}' on {jniName}{jniSignature}.");
 	}
 
@@ -86,8 +92,8 @@ public class ScannerExportShapesTests
 		// User-peer return type uses a CRC64-based package name; assert by prefix
 		// so the test isn't tied to the exact CRC64 hash of the assembly.
 		var getInstance = System.Array.Find (methods, m => m.JniName == "GetInstance");
-		Assert.NotNull (getInstance);
-		Assert.EndsWith ("/ExportFieldShapes;", getInstance!.JniSignature);
+		getInstance = AssertNotNull (getInstance);
+		Assert.EndsWith ("/ExportFieldShapes;", getInstance.JniSignature);
 		Assert.StartsWith ("()L", getInstance.JniSignature);
 		Assert.DoesNotContain ("Ljava/lang/Object;", getInstance.JniSignature);
 
@@ -103,15 +109,15 @@ public class ScannerExportShapesTests
 		var methods = GetMarshalMethods ("ExportThrowsShapes");
 
 		var ioCall = System.Array.Find (methods, m => m.JniName == "ioCall");
-		Assert.NotNull (ioCall);
-		Assert.NotNull (ioCall!.ThrownNames);
-		Assert.Contains ("java/io/IOException", ioCall.ThrownNames!);
+		ioCall = AssertNotNull (ioCall);
+		var ioThrownNames = AssertNotNull (ioCall.ThrownNames);
+		Assert.Contains ("java/io/IOException", ioThrownNames);
 
 		var multiThrow = System.Array.Find (methods, m => m.JniName == "multiThrow");
-		Assert.NotNull (multiThrow);
-		Assert.NotNull (multiThrow!.ThrownNames);
-		Assert.Contains ("java/io/IOException", multiThrow.ThrownNames!);
-		Assert.Contains ("java/lang/IllegalStateException", multiThrow.ThrownNames!);
+		multiThrow = AssertNotNull (multiThrow);
+		var multiThrownNames = AssertNotNull (multiThrow.ThrownNames);
+		Assert.Contains ("java/io/IOException", multiThrownNames);
+		Assert.Contains ("java/lang/IllegalStateException", multiThrownNames);
 	}
 
 	[Fact]
@@ -121,8 +127,8 @@ public class ScannerExportShapesTests
 
 		// [Register]-driven Activity override carries a connector
 		var onCreate = System.Array.Find (methods, m => m.JniName == "onCreate");
-		Assert.NotNull (onCreate);
-		Assert.False (onCreate!.Connector is null or "__export__",
+		onCreate = AssertNotNull (onCreate);
+		Assert.False (onCreate.Connector is null or "__export__",
 			$"OnCreate override should have a real Get*Handler connector, got '{onCreate.Connector}'.");
 
 		// [Export]-driven new methods carry no connector (or "__export__")
@@ -170,10 +176,10 @@ public class ScannerExportShapesTests
 	{
 		var methods = GetMarshalMethods ("ExportUserPeerArrayShapes");
 		var echoArr = System.Array.Find (methods, m => m.JniName == "echoArr");
-		Assert.NotNull (echoArr);
+		echoArr = AssertNotNull (echoArr);
 		// Both parameter and return are arrays of the user-peer UserPeerForArray.
 		// CRC64 hash is environment-dependent; assert by suffix.
-		Assert.Matches (@"^\(\[Ls?crc64[0-9a-f]{16}/UserPeerForArray;\)\[Ls?crc64[0-9a-f]{16}/UserPeerForArray;$", echoArr!.JniSignature);
+		Assert.Matches (@"^\(\[Ls?crc64[0-9a-f]{16}/UserPeerForArray;\)\[Ls?crc64[0-9a-f]{16}/UserPeerForArray;$", echoArr.JniSignature);
 	}
 
 	[Fact]
@@ -190,8 +196,8 @@ public class ScannerExportShapesTests
 		var methods = GetMarshalMethods ("ExportFieldPrimitiveShapes");
 		// [ExportField] uses the managed method name as the JNI name (not the field name).
 		var getMaxValue = System.Array.Find (methods, m => m.JniName == "GetMaxValue");
-		Assert.NotNull (getMaxValue);
-		Assert.Equal ("()I", getMaxValue!.JniSignature);
+		getMaxValue = AssertNotNull (getMaxValue);
+		Assert.Equal ("()I", getMaxValue.JniSignature);
 		Assert.Equal ("__export__", getMaxValue.Connector);
 	}
 
@@ -217,13 +223,13 @@ public class ScannerExportShapesTests
 		// AND the [Export]-driven new method (so Java callers can call the
 		// renamed method). Matches legacy CecilImporter behaviour.
 		var onCreate = System.Array.Find (methods, m => m.JniName == "onCreate");
-		Assert.NotNull (onCreate);
-		Assert.False (onCreate!.Connector is null or "__export__",
+		onCreate = AssertNotNull (onCreate);
+		Assert.False (onCreate.Connector is null or "__export__",
 			$"OnCreate override should keep its [Register]-driven Get*Handler connector, got '{onCreate.Connector}'.");
 
 		var onCreateExport = System.Array.Find (methods, m => m.JniName == "onCreateExport");
-		Assert.NotNull (onCreateExport);
-		Assert.True (onCreateExport!.Connector is null or "__export__",
+		onCreateExport = AssertNotNull (onCreateExport);
+		Assert.True (onCreateExport.Connector is null or "__export__",
 			$"[Export]-driven entry should have no real connector, got '{onCreateExport.Connector}'.");
 	}
 
