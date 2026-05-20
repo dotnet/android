@@ -1227,6 +1227,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Architecture &apos;{0}&apos; has Java types which have no counterparts in template architecture &apos;{1}&apos;: {2}.
+        /// </summary>
+        public static string XA4217 {
+            get {
+                return ResourceManager.GetString("XA4217", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to find //manifest/application/uses-library at path: {0}.
         /// </summary>
         public static string XA4218 {
@@ -1304,6 +1313,15 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA4226 {
             get {
                 return ResourceManager.GetString("XA4226", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Architecture &apos;{0}&apos; doesn&apos;t match all marshal methods in architecture &apos;{1}&apos;. Please see detailed MSBuild logs for more information..
+        /// </summary>
+        public static string XA4227 {
+            get {
+                return ResourceManager.GetString("XA4227", resourceCulture);
             }
         }
         
@@ -1505,6 +1523,15 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA4252 {
             get {
                 return ResourceManager.GetString("XA4252", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Generated Java callable wrapper code changed: &apos;{0}&apos;.
+        /// </summary>
+        public static string XA4253 {
+            get {
+                return ResourceManager.GetString("XA4253", resourceCulture);
             }
         }
 
