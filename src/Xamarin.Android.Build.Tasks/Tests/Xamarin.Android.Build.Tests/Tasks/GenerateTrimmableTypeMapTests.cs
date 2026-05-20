@@ -159,7 +159,7 @@ namespace Xamarin.Android.Build.Tests {
 			task.ApplicationRegistrationOutputFile = applicationRegistration;
 			task.PackageName = "android.app";
 			task.AndroidApiLevel = "35";
-			task.SupportedOSPlatformVersion = "21";
+			task.SupportedOSPlatformVersion = "24";
 			task.RuntimeProviderJavaName = "mono.MonoRuntimeProvider";
 			task.ManifestPlaceholders = "applicationId=android.app";
 

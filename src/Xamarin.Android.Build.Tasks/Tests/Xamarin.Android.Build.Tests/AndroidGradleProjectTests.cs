@@ -237,7 +237,7 @@ namespace Xamarin.Android.Build.Tests
 			FileAssert.Exists (outputAar);
 			var outputAarFirstWriteTime = File.GetLastWriteTime (outputAar);
 			var packagedManifestContent = System.Text.Encoding.UTF8.GetString (ZipHelper.ReadFileFromZip (outputAar, "AndroidManifest.xml"));
-			StringAssert.Contains (@"uses-sdk android:minSdkVersion=""21""", packagedManifestContent);
+			StringAssert.Contains (@"uses-sdk android:minSdkVersion=""24""", packagedManifestContent);
 
 			// Build again, _BuildAndroidGradleProjects should be skipped
 			builder.BuildLogFile = "build2.log";

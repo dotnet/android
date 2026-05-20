@@ -117,7 +117,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			var path = Path.Combine ("temp", TestName);
-			var proj = new XamarinFormsAndroidApplicationProject () {
+			var proj = new XamarinAndroidApplicationProject () {
 				ProjectName = "App1",
 				IsRelease = isRelease,
 			};
@@ -487,7 +487,7 @@ namespace Lib2
 					if (runtime == AndroidRuntime.MonoVM) {
 						// Using `SetRuntimeIdentifier` would change the intermediate path (by adding the RID component to it) and, thus, the way this test used to work.
 						// Keep it as it was.
-						app.SetAndroidSupportedAbis (abi);
+						app.SetRuntimeIdentifiers (new[] { abi });
 					} else {
 						app.SetRuntimeIdentifier (abi);
 					}
@@ -1257,7 +1257,7 @@ namespace Lib2
 			if (runtime == AndroidRuntime.MonoVM) {
 				// Using `SetRuntimeIdentifier` would change the intermediate path (by adding the RID component to it) and, thus, the way this test used to work.
 				// Keep it as it was.
-				proj.SetAndroidSupportedAbis (abi);
+				proj.SetRuntimeIdentifiers (new[] { abi });
 			} else {
 				proj.SetRuntimeIdentifier (abi);
 			}
@@ -1381,7 +1381,7 @@ namespace Lib2
 			if (aotAssemblies) {
 				targets.Add ("_AndroidAot");
 			}
-			proj.SetAndroidSupportedAbis (supportedAbis);
+			proj.SetRuntimeIdentifiers (supportedAbis.Split (';'));
 			if (!string.IsNullOrEmpty (androidAotMode))
 			    proj.SetProperty ("AndroidAotMode", androidAotMode);
 			using (var b = CreateApkBuilder (path)) {
@@ -1802,7 +1802,7 @@ namespace Lib2
 				_ => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
 			};
 
-			proj.SetAndroidSupportedAbis (supportedAbi);
+			proj.SetRuntimeIdentifiers (new[] { supportedAbi });
 			using (var b = CreateApkBuilder ()) {
 				b.Build (proj);
 				b.Build (proj, parameters: new [] { $"{KnownProperties.RuntimeIdentifier}=android-{alternativeRid}" }, doNotCleanupOnUpdate: true);

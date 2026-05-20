@@ -589,6 +589,10 @@ Modifiez la valeur dans AndroidManifest.xml pour qu’elle corresponde à la val
     <value>Impossible de lier la bibliothèque partagée native : {0}{1}</value>
     <comment>The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
   </data>
+  <data name="XA3008" xml:space="preserve">
+    <value>Failed to extract debug info from '{0}'{1}</value>
+    <comment>'{0}' is the native shared library filename. '{1}' is the full output of the failed command, starting and ending with a newline.</comment>
+  </data>
   <data name="XA4209" xml:space="preserve">
     <value>Échec de la génération du type Java pour la classe {0} en raison de {1}</value>
     <comment>{0} - The managed type name
@@ -1015,6 +1019,18 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
 </comment>
   </data>
+  <data name="XA1045" xml:space="preserve">
+    <value>Le fichier d’entrée `{0}` ne commence pas par `&lt;replacements/&gt;`.</value>
+    <comment>{0} - file path</comment>
+  </data>
+  <data name="XA1046" xml:space="preserve">
+    <value>L’attribut « {0} » dans l’élément « {1} » a une valeur « {2} » qui ne peut pas être analysée comme une valeur booléenne; {3} ligne {4}.</value>
+    <comment>{0} - attribute name; {1} - element name; {2} - attribute value; {3} - file path; {4} - line number</comment>
+  </data>
+  <data name="XA1047" xml:space="preserve">
+    <value>L'attribut requis « {0} » est absent de l'élément « {1} »; {2} ligne {3}.</value>
+    <comment>{0} - attribute name; {1} - element name; {2} - file path; {3} - line number</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>La dépendance Java « {0} » n’est pas satisfaite.</value>
     <comment>The following are literal names and should not be translated: Java.
@@ -1081,9 +1097,14 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
 {0} - Java type name from AndroidManifest.xml</comment>
   </data>
   <data name="XA4251" xml:space="preserve">
-    <value>Type '{0}' uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map. To work around this, do not target the trimmable type map (for example, by switching to the 'llvm-ir' type map implementation), and please report this scenario at https://github.com/dotnet/android/issues so the team can evaluate whether to support it.</value>
+    <value>Le type « {0} » utilise [JniAddNativeMethodRegistrationAttribute] qui n’est pas pris en charge par le mappage de type ajustable. Pour contourner ce problème, ne ciblez pas le mappage de type ajustable (par exemple, en basculant vers l’implémentation du mappage de type « llvm-ir ») et signalez ce scénario sur https://github.com/dotnet/android/issues afin que l’équipe puisse évaluer s’il faut le prendre en charge.</value>
     <comment>The following are literal names and should not be translated: JniAddNativeMethodRegistrationAttribute, llvm-ir.
 {0} - Fully-qualified managed type name</comment>
+  </data>
+  <data name="XA4252" xml:space="preserve">
+    <value>L’URL du dépôt Maven HTTP non sécurisé « {0} » n’est pas autorisée. Utilisez une URL HTTPS, ou définissez les métadonnées AllowInsecureHttp="true" sur l’élément pour ignorer cette vérification.</value>
+    <comment>The following are literal names and should not be translated: HTTP, HTTPS, Maven, AllowInsecureHttp
+{0} - The insecure HTTP URL</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>La commande « {0} » a échoué.\n{1}</value>

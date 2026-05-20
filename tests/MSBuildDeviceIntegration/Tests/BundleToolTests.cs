@@ -118,7 +118,7 @@ namespace Xamarin.Android.Build.Tests
 			//NOTE: this is here to enable adb shell run-as
 			app.AndroidManifest = app.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
 			app.SetProperty (app.ReleaseProperties, "AndroidPackageFormat", "aab");
-			app.SetAndroidSupportedAbis (Abis);
+			app.SetRuntimeIdentifiers (Abis);
 			app.SetProperty ("AndroidBundleConfigurationFile", "buildConfig.json");
 			app.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
 

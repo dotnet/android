@@ -10,7 +10,6 @@ namespace Xamarin.Android.Prepare
 
 		public static string NdkMinimumAPI => Context.Instance.Properties.GetRequiredValue (KnownProperties.AndroidMinimumDotNetApiLevel);
 		public static string NdkMinimumAPILegacy32 => NdkMinimumAPI;
-		public static string NdkMinimumNonMonoAPI => Context.Instance.Properties.GetRequiredValue (KnownProperties.AndroidMinimumNonMonoApiLevel);
 
 		public static readonly List<AndroidPlatform> AllPlatforms = new List<AndroidPlatform> {
 			new AndroidPlatform (apiName: "",                       apiLevel: 1,  platformID: "1"),

@@ -180,25 +180,9 @@ namespace Xamarin.Android.Net
 					index = i;
 					return x509TrustManager;
 				}
-
-				// On API 21-23, the default Java trust manager is TrustManagerImpl from Conscrypt. The class implements X509TrustManager
-				// but the .NET pattern matching will fail in this case and we need to cast it explicitly.
-				int apiLevel = (int)Build.VERSION.SdkInt;
-				if (apiLevel <= 23) {
-					if (IsTrustManagerImpl (trustManager)) {
-						index = i;
-						return trustManager.JavaCast<IX509TrustManager> ();
-					}
-				}
 			}
 
 			throw new InvalidOperationException($"Could not find {nameof(IX509TrustManager)} in {nameof(ITrustManager)} array.");
-
-			static bool IsTrustManagerImpl (ITrustManager trustManager)
-			{
-				var javaClassName = JNIEnv.GetClassNameFromInstance (trustManager.Handle);
-				return javaClassName.Equals ("com/android/org/conscrypt/TrustManagerImpl", StringComparison.Ordinal);
-			}
 		}
 
 		private static ITrustManager[] ModifyTrustManagersArray (ITrustManager[] trustManagers, int originalTrustManagerIndex, IX509TrustManager replacement)

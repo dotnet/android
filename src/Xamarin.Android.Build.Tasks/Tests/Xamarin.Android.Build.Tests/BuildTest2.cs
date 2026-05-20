@@ -335,7 +335,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntime (runtime);
 			proj.IsRelease = isRelease;
 			proj.AotAssemblies = false; // Release defaults to Profiled AOT for .NET 6
-			proj.SetAndroidSupportedAbis ("arm64-v8a");
+			proj.SetRuntimeIdentifiers (new[] { "arm64-v8a" });
 			proj.SetProperty ("LinkerDumpDependencies", "True");
 			proj.SetProperty ("AndroidUseAssemblyStore", "False");
 
@@ -890,16 +890,13 @@ class MemTest {
 		[Test]
 		[Category ("XamarinBuildDownload")]
 		[NonParallelizable] // parallel NuGet restore causes failures
-		public void BuildXamarinFormsMapsApplication ([Values] bool multidex, [Values] AndroidRuntime runtime)
+		public void BuildXamarinFormsMapsApplication ([Values] bool multidex, [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			if (IgnoreUnsupportedConfiguration (runtime, release: false)) {
 				return;
 			}
 
-			var proj = new XamarinFormsMapsApplicationProject {
-				IsRelease = isRelease,
-			};
+			var proj = new XamarinFormsMapsApplicationProject ();
 			proj.SetRuntime (runtime);
 
 			if (multidex)
