@@ -531,9 +531,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 
 				//Make sure the APKs are signed
 				foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
-					using (var zip = ZipHelper.OpenZip (apk)) {
-						Assert.IsTrue (zip.Any (e => e.FullName == "META-INF/MANIFEST.MF"), $"APK file `{apk}` is not signed! It is missing `META-INF/MANIFEST.MF`.");
-					}
+					AssertApkIsSigned (apk);
 				}
 
 				// Make sure the APKs have unique version codes
@@ -568,9 +566,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 
 				//Make sure the APKs are signed
 				foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
-					using (var zip = ZipHelper.OpenZip (apk)) {
-						Assert.IsTrue (zip.Any (e => e.FullName == "META-INF/MANIFEST.MF"), $"APK file `{apk}` is not signed! It is missing `META-INF/MANIFEST.MF`.");
-					}
+					AssertApkIsSigned (apk);
 				}
 			}
 
@@ -1010,7 +1006,7 @@ public class Test
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 				// This combination produces android:extractNativeLibs="false" by default
-				SupportedOSPlatformVersion = "23",
+				SupportedOSPlatformVersion = "24",
 				ManifestMerger = "manifestmerger.jar",
 			};
 			proj.SetRuntime (runtime);
