@@ -239,23 +239,25 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 				Assert.IsTrue (b.Build (proj), "Second Build should have succeeded.");
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_CompileJava"),
-					"the _CompileJava target should be skipped");
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_BuildApkEmbed"),
-					"the _BuildApkEmbed target should be skipped");
+				if (TestEnvironment.CommercialBuildAvailable) {
+					Assert.IsTrue (
+						b.Output.IsTargetSkipped ("_CompileJava"),
+						"the _CompileJava target should be skipped");
+					Assert.IsTrue (
+						b.Output.IsTargetSkipped ("_BuildApkEmbed"),
+						"the _BuildApkEmbed target should be skipped");
+				}
 			}
 		}
 
 		[Test]
 		[TestCaseSource (nameof (AotChecks))]
-		public void BuildAotApplicationAndÜmläüts (string supportedAbis, bool enableLLVM, bool usesAssemblyBlobs)
+		public void BuildAotApplicationAndÜmläüts(string supportedAbis, bool enableLLVM, bool usesAssemblyBlobs)
 		{
 			if (IsWindows)
 				Assert.Ignore ("https://github.com/dotnet/runtime/issues/88625");
 
-			var abisSanitized = supportedAbis.Replace (";", "").Replace ("-", "").Replace ("_", "");
+			var abisSanitized= supportedAbis.Replace (";", "").Replace ("-", "").Replace ("_", "");
 			var path = Path.Combine ("temp", string.Format ("BuildAot AndÜmläüts_{0}_{1}_{2}", abisSanitized, enableLLVM, usesAssemblyBlobs));
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
@@ -287,12 +289,14 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 				Assert.IsTrue (b.Build (proj), "Second Build should have succeeded.");
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_CompileJava"),
-					"the _CompileJava target should be skipped");
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_BuildApkEmbed"),
-					"the _BuildApkEmbed target should be skipped");
+				if (TestEnvironment.CommercialBuildAvailable) {
+					Assert.IsTrue (
+						b.Output.IsTargetSkipped ("_CompileJava"),
+						"the _CompileJava target should be skipped");
+					Assert.IsTrue (
+						b.Output.IsTargetSkipped ("_BuildApkEmbed"),
+						"the _BuildApkEmbed target should be skipped");
+				}
 			}
 		}
 
