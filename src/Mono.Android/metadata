@@ -312,7 +312,7 @@
   <attr path="/api/package[@name='java.lang']/class[@name='Class']/method[@name='newInstance']" name="return">java.lang.Object</attr>
   <attr path="/api/package[@name='java.lang']/class[@name='Class']/method[@name='cast']" name="return">java.lang.Object</attr>
   <attr path="/api/package[@name='java.lang']/class[@name='Object']/method[@name='finalize']" name="managedName">JavaFinalize</attr>
-  <attr path="/api/package[@name='java.lang']/class[@name='Object']/method[@name='finalize']" name="deprecated">Use the Dispose() method or the C# destructor instead. Java's Object.finalize() has been deprecated since JDK 9 and is marked for removal.</attr>
+  <attr path="/api/package[@name='java.lang']/class[@name='Object']/method[@name='finalize']" name="deprecated">Override Dispose (bool disposing) for cleanup customization, or use the C# destructor instead. Java's Object.finalize() has been deprecated since JDK 9 and is marked for removal.</attr>
   <attr path="/api/package[@name='java.lang']/class[@name='StringBuffer']/method[@name='append']" name="managedReturn">Java.Lang.IAppendable</attr>
   <attr path="/api/package[@name='java.lang']/class[@name='StringBuilder']/method[@name='append']" name="managedReturn">Java.Lang.IAppendable</attr>
   <attr path="/api/package[@name='java.lang']/interface[@name='CharSequence']" name="managedName">ICharSequence</attr>
