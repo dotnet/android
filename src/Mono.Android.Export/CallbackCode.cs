@@ -264,6 +264,8 @@ namespace Java.Interop
 					copyArrayMethod = typeof (JNIEnv).GetMethod ("CopyArray", new Type [] { type, typeof (IntPtr) });
 					break;
 				}
+				if (copyArrayMethod == null)
+					throw new NotSupportedException ($"JNIEnv.CopyArray does not support array type '{type}'.");
 				CodeBlock copyArrayBlock = new CodeBlock ();
 				copyArrayBlock.Add (new CodeMethodCall (copyArrayMethod, arg, orgArg));
 				return new CodeIf (CodeExpression.Not (arg.IsNull)) {
