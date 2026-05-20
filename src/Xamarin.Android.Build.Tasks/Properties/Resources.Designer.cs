@@ -1857,6 +1857,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to parse &apos;DescriptorIndex&apos; metadata value &apos;{0}&apos; for assembly &apos;{1}&apos;..
+        /// </summary>
+        public static string XA5303 {
+            get {
+                return ResourceManager.GetString("XA5303", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not find Android Resource &apos;{0}&apos;. Please update @(AndroidResource) to add the missing resource..
         /// </summary>
         public static string XA8000 {
