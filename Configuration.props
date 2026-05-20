@@ -106,17 +106,11 @@
     <AllSupported32BitTargetAndroidAbis>armeabi-v7a;x86</AllSupported32BitTargetAndroidAbis>
     <AllSupported64BitTargetAndroidAbis>arm64-v8a;x86_64</AllSupported64BitTargetAndroidAbis>
     <AllSupportedTargetAndroidAbis>$(AllSupported32BitTargetAndroidAbis);$(AllSupported64BitTargetAndroidAbis)</AllSupportedTargetAndroidAbis>
-    <!--
-      For some reason, the URL for platform-tools/build-tools 32.0.0 is prefixed with what appears to be a GIT commit hash or some other checksum...
-      Linux packages don't have any prefix, but this forces us to have *some* mechanism to handle this...
-    -->
-    <XABuildToolsPackagePrefixMacOS></XABuildToolsPackagePrefixMacOS>
-    <XABuildToolsPackagePrefixWindows></XABuildToolsPackagePrefixWindows>
-    <XABuildToolsPackagePrefixLinux></XABuildToolsPackagePrefixLinux>
-    <XABuildToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' ">$(XABuildToolsPackagePrefixMacOS)</XABuildToolsPackagePrefix>
-    <XABuildToolsPackagePrefix Condition=" '$(HostOS)' == 'Windows' ">$(XABuildToolsPackagePrefixWindows)</XABuildToolsPackagePrefix>
     <XABuildToolsVersion>36</XABuildToolsVersion>
     <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">36.0.0</XABuildToolsFolder>
+    <XABuildToolsHashMacOS>04E7F3A72044DE4926FA038FA0E251A37BBA1E1C3FB8BEAB6F8401BFD9EB4BF3</XABuildToolsHashMacOS>
+    <XABuildToolsHashLinux>5D9AC77FB6FF43D9DA518A337B4FCF8F9097113DF531D99CCEFE80EF7CE8250B</XABuildToolsHashLinux>
+    <XABuildToolsHashWindows>AA1095CB14D83E483818A748A2C06FAAEB8E601561B06A356A119A1B2CA280D3</XABuildToolsHashWindows>
     <XAPlatformToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' "></XAPlatformToolsPackagePrefix>
     <XAPlatformToolsVersion>36.0.0</XAPlatformToolsVersion>
     <XABundleToolVersion Condition="'$(XABundleToolVersion)' == ''">1.18.3</XABundleToolVersion>
