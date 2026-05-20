@@ -56,7 +56,9 @@
     />
   </Target>
 
-  <Target Name="_ExtractAapt2" BeforeTargets="Build" DependsOnTargets="_DownloadBuildTools">
+  <Target Name="_ExtractAapt2" BeforeTargets="Build" DependsOnTargets="_DownloadBuildTools"
+      Inputs="$(AndroidToolchainCacheDirectory)\%(_BuildTools.Identity)"
+      Outputs="$(_Destination)%(_BuildTools.HostOS)\%(_BuildTools.FilesToExtract)">
     <UnzipDirectoryChildren
         NoSubdirectory="False"
         SourceFiles="$(AndroidToolchainCacheDirectory)\%(_BuildTools.Identity)"
