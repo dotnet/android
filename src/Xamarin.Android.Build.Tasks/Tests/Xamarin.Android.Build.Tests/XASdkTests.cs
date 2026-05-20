@@ -23,7 +23,7 @@ namespace Xamarin.Android.Build.Tests
 	public class XASdkTests : BaseTest
 	{
 		[Test]
-		public void DotNetNew ([Values ("android", "androidlib", "android-bindinglib", "androidwear")] string template)
+		public void DotNetNew ([Values ("android", "androidlib", "android-bindinglib", "androidwear", "android-benchmarkdotnet")] string template)
 		{
 			var templateName = TestName.Replace ("-", "");
 			var templatePath = Path.Combine (Root, "temp", templateName);
@@ -44,6 +44,18 @@ namespace Xamarin.Android.Build.Tests
 			// Release build
 			Assert.IsTrue (dotnet.Build (parameters: new [] { "Configuration=Release", "TrimmerSingleWarn=false" }), "`dotnet build` should succeed");
 			dotnet.AssertHasNoWarnings ();
+		}
+
+		[Test]
+		public void ComputeRunArgumentsForwardsInstrumentationStartArguments ()
+		{
+			var targetsPath = Path.Combine (XABuildPaths.TopDirectory, "src", "Xamarin.Android.Build.Tasks", "Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.Application.targets");
+			var targets = XDocument.Load (targetsPath);
+			var runArguments = targets.Descendants ("RunArguments")
+				.Single (e => e.Value.Contains ("$(_AndroidRunPath)", StringComparison.Ordinal));
+
+			StringAssert.Contains ("$(StartArguments)", runArguments.Value);
+			StringAssert.Contains ("$(_AndroidRunInstrumentArg)", runArguments.Value);
 		}
 
 		static IEnumerable<object[]> Get_DotNetPack_Data ()
