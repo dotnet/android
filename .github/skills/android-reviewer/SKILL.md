@@ -19,7 +19,7 @@ Flag severity clearly in every comment:
 - ⚠️ **warning** — Should fix. Performance issues, missing validation, inconsistency with patterns.
 - 💡 **suggestion** — Consider changing. Style, readability, optional improvements.
 
-**Every review should produce at least one inline comment.** Even clean PRs have opportunities for improvement — code consolidation, missing edge-case tests, perf micro-optimizations, or documentation gaps. Use 💡 suggestions for these. A review with zero comments appears superficial and misses the chance to share knowledge. Only omit inline comments if the PR is truly trivial (e.g., a 1-line typo fix or dependency bump).
+**Every review should produce at least one inline comment.** Even clean PRs have opportunities for improvement — code consolidation, missing edge-case tests, perf micro-optimizations, or documentation gaps. Use 💡 suggestions for these. A review with zero inline comments appears superficial and misses the chance to share knowledge. Only omit inline comments if the PR is truly trivial (e.g., a 1-line typo fix or dependency bump). **Do NOT summarize suggestions only in the review body — post them as inline comments on the relevant line.** If a suggestion cannot be posted inline (e.g., it's about pre-existing code or missing code), either find the closest relevant changed line to attach it to, or omit it entirely rather than burying it in the summary.
 
 ## Workflow
 
@@ -100,6 +100,7 @@ Constraints:
 - **Don't pile on.** If the same issue appears many times, flag it once with a note listing all affected files.
 - **Don't flag what CI catches.** Skip compiler errors, formatting the linter will catch, etc.
 - **Avoid false positives.** Verify the concern actually applies given the full context. If unsure, phrase it as a question rather than a firm claim.
+- **Verify project context before applying rules.** Some rules are scoped to specific project types (e.g., `netstandard2.0` vs modern .NET, MSBuild tasks vs console apps). Check the project's `TargetFramework`, references, and available utilities before flagging a rule violation. A rule about an extension method is irrelevant if the project doesn't reference the assembly that defines it.
 
 ### 7. Post the review
 
