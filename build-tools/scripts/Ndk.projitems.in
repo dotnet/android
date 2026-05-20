@@ -25,7 +25,7 @@
       <ApiLevelNonMono>$(AndroidNdkApiLevelNonMono_Arm)</ApiLevelNonMono>
       <AndroidRID>android-arm</AndroidRID>
       <SupportMonoVM>True</SupportMonoVM>
-      <SupportCoreCLR>True</SupportCoreCLR>
+      <SupportCoreCLR>False</SupportCoreCLR>
       <SupportNativeAOT>False</SupportNativeAOT>
     </AndroidSupportedTargetJitAbi>
 
