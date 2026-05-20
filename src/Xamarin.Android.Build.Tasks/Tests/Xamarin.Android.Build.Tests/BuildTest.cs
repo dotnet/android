@@ -33,6 +33,8 @@ namespace Xamarin.Android.Build.Tests
 				ProjectName = "Test Me",
 				RootNamespace = "Test.Me",
 				EnableDefaultItems = true,
+				// androidx.lifecycle.runtime (pulled in by AppCompat 1.7.x) requires minSdk >= 23
+				MinSdkVersion = "24",
 				ExtraNuGetConfigSources = {
 					// Microsoft.AspNetCore.Components.WebView is not in dotnet-public
 					"https://api.nuget.org/v3/index.json",
