@@ -9,8 +9,6 @@ class EnvironmentBuilder
 {
 	static readonly string[] defaultLogLevel = {"MONO_LOG_LEVEL", "info"};
 	static readonly string[] defaultMonoDebug = {"MONO_DEBUG", "gen-compact-seq-points"};
-	static readonly string defaultHttpMessageHandler = "System.Net.Http.HttpClientHandler, System.Net.Http";
-
 	readonly EnvironmentFilesParser environmentParser;
 	readonly Dictionary<string, string> environmentVariables;
 	readonly Dictionary<string, string> systemProperties;

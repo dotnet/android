@@ -69,7 +69,6 @@ namespace Xamarin.Android.Tasks
 		public string? AndroidAotMode { get; set; }
 		public bool AndroidAotEnableLazyLoad { get; set; }
 		public bool EnableLLVM { get; set; }
-		public string? HttpClientHandlerType { get; set; }
 		public string? TlsProvider { get; set; }
 		public string? AndroidSequencePointsMode { get; set; }
 		public bool EnableSGenConcurrent { get; set; }
