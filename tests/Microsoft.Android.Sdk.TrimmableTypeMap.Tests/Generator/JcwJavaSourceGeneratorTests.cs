@@ -316,6 +316,39 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 			AssertContainsLine ("__md_registerNatives ();\n\t\tn_OnStart ();\n", java);
 		}
 
+		[Fact]
+		public void Generate_FinalizeMethod_HasSuppressWarningsAnnotation ()
+		{
+			var type = new JavaPeerInfo {
+				JavaName = "my/app/MyObject",
+				CompatJniName = "my/app/MyObject",
+				ManagedTypeName = "MyApp.MyObject",
+				ManagedTypeNamespace = "MyApp",
+				ManagedTypeShortName = "MyObject",
+				AssemblyName = "App",
+				BaseJavaName = "java/lang/Object",
+				MarshalMethods = new List<MarshalMethodInfo> {
+					new () {
+						JniName = "finalize",
+						JniSignature = "()V",
+						ManagedMethodName = "JavaFinalize",
+						NativeCallbackName = "n_JavaFinalize",
+						Connector = "GetJavaFinalizeHandler",
+					},
+				},
+			};
+
+			var java = GenerateToString (type);
+			AssertContainsLine ("@SuppressWarnings (\"removal\")\n\t@Override\n\tpublic void finalize ()\n", java);
+		}
+
+		[Fact]
+		public void Generate_NonFinalizeMethod_DoesNotHaveSuppressWarningsAnnotation ()
+		{
+			var java = GenerateFixture ("my/app/MainActivity");
+			Assert.DoesNotContain ("@SuppressWarnings (\"removal\")", java);
+		}
+
 	}
 
 	public class NestedType

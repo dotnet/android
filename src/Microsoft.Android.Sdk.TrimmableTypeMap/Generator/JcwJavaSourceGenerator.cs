@@ -249,10 +249,14 @@ public sealed class JcwJavaSourceGenerator
 				throwsClause = $"\n\t\tthrows {string.Join (", ", method.ThrownNames)}";
 			}
 
+			// Java's finalize() has been deprecated and marked for removal since JDK 9.
+			// Add @SuppressWarnings to avoid javac "[removal]" warnings.
+			string suppressWarnings = method.JniName == "finalize" ? "\t@SuppressWarnings (\"removal\")\n" : "";
+
 			if (method.Connector != null) {
 				writer.Write ($$"""
 
-	@Override
+{{suppressWarnings}}	@Override
 	public {{javaReturnType}} {{method.JniName}} ({{parameters}}){{throwsClause}}
 	{
 {{registerNativesLine}}		{{returnPrefix}}{{method.NativeCallbackName}} ({{args}});
@@ -264,7 +268,7 @@ public sealed class JcwJavaSourceGenerator
 				string access = method.IsExport && method.JavaAccess != null ? method.JavaAccess : "public";
 				writer.Write ($$"""
 
-	{{access}} {{javaReturnType}} {{method.JniName}} ({{parameters}}){{throwsClause}}
+{{suppressWarnings}}	{{access}} {{javaReturnType}} {{method.JniName}} ({{parameters}}){{throwsClause}}
 	{
 {{registerNativesLine}}		{{returnPrefix}}{{method.NativeCallbackName}} ({{args}});
 	}
