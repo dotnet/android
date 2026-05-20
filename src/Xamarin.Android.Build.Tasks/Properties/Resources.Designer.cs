@@ -1155,15 +1155,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Generated Java callable wrapper code changed: &apos;{0}&apos;.
-        /// </summary>
-        public static string XA4212 {
-            get {
-                return ResourceManager.GetString("XA4212", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The type &apos;{0}&apos; must provide a public default constructor.
         /// </summary>
         public static string XA4213 {
@@ -1532,6 +1523,15 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA4252 {
             get {
                 return ResourceManager.GetString("XA4252", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Generated Java callable wrapper code changed: &apos;{0}&apos;.
+        /// </summary>
+        public static string XA4253 {
+            get {
+                return ResourceManager.GetString("XA4253", resourceCulture);
             }
         }
 

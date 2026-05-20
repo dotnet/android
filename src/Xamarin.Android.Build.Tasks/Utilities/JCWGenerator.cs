@@ -107,7 +107,7 @@ class JCWGenerator
 			var changed = Files.CopyIfStreamChanged (writer.BaseStream, path);
 
 			if (changed) {
-				log.LogCodedError ("XA4212", Properties.Resources.XA4212, path);
+				log.LogCodedError ("XA4253", Properties.Resources.XA4253, path);
 			} else {
 				log.LogMessage ($"Java callable wrapper code already up to date: '{path}'");
 			}
@@ -189,7 +189,7 @@ class JCWGenerator
 
 		if (!typesSet.SetEquals (templateSet)) {
 			typesSet.ExceptWith (templateSet);
-			var typesList = string.Join (", ", typesSet);
+			var typesList = string.Join (", ", typesSet.OrderBy (t => t, StringComparer.Ordinal));
 			logger.LogCodedError ("XA4217", Properties.Resources.XA4217, state.TargetArch, templateState.TargetArch, typesList);
 		}
 	}

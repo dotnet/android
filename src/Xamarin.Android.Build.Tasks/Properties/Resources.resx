@@ -609,10 +609,6 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 {1} - The $(TargetPlatformVersion) number
 {2} - The API version number</comment>
   </data>
-  <data name="XA4212" xml:space="preserve">
-    <value>Generated Java callable wrapper code changed: '{0}'</value>
-    <comment>{0} - The path to the generated Java callable wrapper file</comment>
-  </data>
   <data name="XA4213" xml:space="preserve">
     <value>The type '{0}' must provide a public default constructor</value>
   </data>
@@ -1126,6 +1122,10 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
     <value>Insecure HTTP Maven repository URL '{0}' is not allowed. Use an HTTPS URL, or set AllowInsecureHttp="true" metadata on the item to override this check.</value>
     <comment>The following are literal names and should not be translated: HTTP, HTTPS, Maven, AllowInsecureHttp
 {0} - The insecure HTTP URL</comment>
+  </data>
+  <data name="XA4253" xml:space="preserve">
+    <value>Generated Java callable wrapper code changed: '{0}'</value>
+    <comment>{0} - The path to the generated Java callable wrapper file</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>Command '{0}' failed.\n{1}</value>
