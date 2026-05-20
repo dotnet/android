@@ -1,156 +1,159 @@
 ---
-description: Nightly scan for random code improvement opportunities, files issues assigned to Copilot
 on:
-  schedule:
-    - cron: "daily around 02:00"
   pull_request:
     paths:
-      - ".github/workflows/nightly-fix-finder.md"
-      - ".github/workflows/nightly-fix-finder.lock.yml"
+    - .github/workflows/nightly-fix-finder.md
+    - .github/workflows/nightly-fix-finder.lock.yml
+  schedule:
+  - cron: daily around 02:00
   workflow_dispatch:
     inputs:
       category:
-        description: "Category to scan (leave blank for random)"
+        description: Category to scan (leave blank for random)
+        options:
+        - ""
+        - "0 - TODO/FIXME/HACK Comments"
+        - "1 - Nullable Reference Types"
+        - "2 - Obsolete API Usage"
+        - "3 - Performance Anti-patterns"
+        - "4 - Missing XML Documentation"
+        - "5 - General Mistakes"
+        - "6 - Unused Using Directives"
+        - "7 - Error Handling"
+        - "8 - String Literals in Error Messages"
         required: false
         type: choice
-        options:
-          - ""
-          - "0 - TODO/FIXME/HACK Comments"
-          - "1 - Nullable Reference Types"
-          - "2 - Obsolete API Usage"
-          - "3 - Performance Anti-patterns"
-          - "4 - Missing XML Documentation"
-          - "5 - General Mistakes"
-          - "6 - Unused Using Directives"
-          - "7 - Error Handling"
-          - "8 - String Literals in Error Messages"
 permissions:
   contents: read
   issues: read
+network:
+  allowed:
+  - defaults
+  - github
+  - dotnet
+safe-outputs:
+  assign-to-agent:
+    github-token: ${{ secrets.ANDROID_TEAM_PAT }}
+    model: claude-opus-4.6
+    target: "*"
+  create-issue:
+    close-older-issues: false
+    expires: 7d
+    labels:
+    - automated
+    - code-quality
+    title-prefix: "[fix-finder] "
+  noop: null
+  report-failure-as-issue: false
+steps:
+- env:
+    INPUT_CATEGORY: ${{ inputs.category }}
+  name: Collect codebase metrics
+  run: |
+    mkdir -p /tmp/gh-aw/agent
+    if [ -n "$INPUT_CATEGORY" ]; then
+      CATEGORY_INDEX="${INPUT_CATEGORY%%\ *}"
+    else
+      CATEGORY_INDEX=$(( RANDOM % 9 ))
+    fi
+    {
+      echo "## Selected Category: $CATEGORY_INDEX"
+      echo ""
+    
+      case $CATEGORY_INDEX in
+        0)
+          echo "## Category 0: TODO/FIXME/HACK Comments"
+          echo "### Sample TODO/FIXME/HACK comments in src/"
+          grep -rn "TODO\|FIXME\|HACK\|XXX" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo "None found"
+          echo "### Total count"
+          grep -rn "TODO\|FIXME\|HACK\|XXX" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | wc -l || true
+          ;;
+        1)
+          echo "## Category 1: Files Missing Nullable Enable"
+          echo "### C# files in src/ without #nullable enable (sample)"
+          grep -rL '#nullable enable' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo "None found"
+          echo "### Total count"
+          grep -rL '#nullable enable' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | wc -l || true
+          ;;
+        2)
+          echo "## Category 2: Obsolete API Usage"
+          echo "### Files using [Obsolete] or #pragma warning disable CS0618 (sample)"
+          grep -rn "\[Obsolete\]\|CS0618\|CS0612" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo "None found"
+          ;;
+        3)
+          echo "## Category 3: Performance Anti-patterns"
+          echo "### String concatenation in loops (+=)"
+          grep -rn '+=' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | grep -i 'string\|str\|result\|output\|sb\|builder\|message\|msg\|text\|line\|path\|name\|value' | grep -v '//' | grep -v 'test' | shuf | head -10 || echo "None found"
+          echo ""
+          echo "### Sync-over-async (Task.Result, .Wait(), .GetAwaiter().GetResult())"
+          grep -rn 'Task\.Result\|\.Wait()\|\.GetAwaiter()\.GetResult()' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | grep -v '//\|test\|Test' | shuf | head -10 || echo "None found"
+          echo ""
+          echo "### Unnecessary LINQ allocations (.ToList(), .ToArray() that may not be needed)"
+          grep -rn '\.ToList()\|\.ToArray()' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | grep -v '//\|test\|Test' | shuf | head -10 || echo "None found"
+          echo ""
+          echo "### Repeated string.Format or interpolation in loops"
+          grep -rn 'string\.Format\|string\.Concat\|String\.Join' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | grep -v '//\|test\|Test' | shuf | head -10 || echo "None found"
+          ;;
+        4)
+          echo "## Category 4: Missing XML Documentation (src/Mono.Android/ only)"
+          echo "### Public declarations in Mono.Android (shipped product) without XML docs"
+          echo "### NOTE: Excludes Android.Runtime (plumbing), Java.Interop (bridge), and generated code"
+          grep -rn "public " --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/Mono.Android/ 2>/dev/null | grep -v "Designer.cs" | grep -v "AssemblyInfo.cs" | grep -v "Android.Runtime" | grep -v "Java.Interop" | grep -v "/obj/" | shuf | head -20 || echo "None found"
+          ;;
+        5)
+          echo "## Category 5: General Mistakes"
+          echo "### Random C# source files in src/ for general review (sample)"
+          find src -name '*.cs' -type f ! -path '*/obj/*' ! -path '*/bin/*' ! -name 'Designer.cs' ! -name 'AssemblyInfo.cs' 2>/dev/null | shuf | head -5
+          ;;
+        6)
+          echo "## Category 6: Unused Using Directives"
+          echo "### Files with many using directives (potential cleanup, sample)"
+          for f in $(find src -name '*.cs' -type f ! -path '*/obj/*' ! -path '*/bin/*' ! -name 'Designer.cs' 2>/dev/null | shuf | head -30); do
+            count=$(grep -c "^using " "$f" 2>/dev/null || true)
+            if [ "${count:-0}" -gt 10 ]; then
+              echo "  $f: $count using directives"
+            fi
+          done
+          ;;
+        7)
+          echo "## Category 7: Error Handling"
+          echo "### Bare catch blocks that may swallow exceptions (sample)"
+          grep -rnP "catch\s*\(Exception\b" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo "None found"
+          ;;
+        8)
+          echo "## Category 8: String Literals in Error Messages"
+          echo "### Hardcoded error strings that could be in Resources.resx (sample)"
+          grep -rn 'Log\.\(Error\|Warning\)\|LogError\|LogWarning\|LogCodedError\|LogCodedWarning' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | grep '"' | grep -v "Properties.Resources" | shuf | head -20 || echo "None found"
+          ;;
+      esac
+    } > /tmp/gh-aw/agent/scan-results.md
+    echo "✅ Category $CATEGORY_INDEX scan complete → /tmp/gh-aw/agent/scan-results.md"
+description: Nightly scan for random code improvement opportunities, files issues assigned to Copilot
 engine:
   id: copilot
   model: claude-opus-4.6
-network:
-  allowed:
-    - defaults
-    - github
-    - dotnet
-tools:
-  github:
-    toolsets: [repos, issues]
-    min-integrity: none
-  bash:
-    - "find src -name '*.cs' -type f"
-    - "grep:*"
-    - "wc:*"
-    - "head:*"
-    - "tail:*"
-    - "sort:*"
-    - "cat:*"
-    - "awk:*"
-    - "sed:*"
-    - "shuf:*"
-    - "date:*"
-    - "xargs:*"
-safe-outputs:
-  report-failure-as-issue: false
-  create-issue:
-    title-prefix: "[fix-finder] "
-    labels: [automated, code-quality]
-    expires: 7d
-    close-older-issues: false
-  assign-to-agent:
-    model: "claude-opus-4.6"
-    target: "*"
-    github-token: ${{ secrets.ANDROID_TEAM_PAT }}
-  noop:
-timeout-minutes: 30
 strict: true
-steps:
-  - name: Collect codebase metrics
-    env:
-      INPUT_CATEGORY: ${{ inputs.category }}
-    run: |
-      mkdir -p /tmp/gh-aw/agent
-      if [ -n "$INPUT_CATEGORY" ]; then
-        CATEGORY_INDEX="${INPUT_CATEGORY%%\ *}"
-      else
-        CATEGORY_INDEX=$(( RANDOM % 9 ))
-      fi
-      {
-        echo "## Selected Category: $CATEGORY_INDEX"
-        echo ""
-
-        case $CATEGORY_INDEX in
-          0)
-            echo "## Category 0: TODO/FIXME/HACK Comments"
-            echo "### Sample TODO/FIXME/HACK comments in src/"
-            grep -rn "TODO\|FIXME\|HACK\|XXX" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo "None found"
-            echo "### Total count"
-            grep -rn "TODO\|FIXME\|HACK\|XXX" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | wc -l || true
-            ;;
-          1)
-            echo "## Category 1: Files Missing Nullable Enable"
-            echo "### C# files in src/ without #nullable enable (sample)"
-            grep -rL '#nullable enable' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo "None found"
-            echo "### Total count"
-            grep -rL '#nullable enable' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | wc -l || true
-            ;;
-          2)
-            echo "## Category 2: Obsolete API Usage"
-            echo "### Files using [Obsolete] or #pragma warning disable CS0618 (sample)"
-            grep -rn "\[Obsolete\]\|CS0618\|CS0612" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo "None found"
-            ;;
-          3)
-            echo "## Category 3: Performance Anti-patterns"
-            echo "### String concatenation in loops (+=)"
-            grep -rn '+=' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | grep -i 'string\|str\|result\|output\|sb\|builder\|message\|msg\|text\|line\|path\|name\|value' | grep -v '//' | grep -v 'test' | shuf | head -10 || echo "None found"
-            echo ""
-            echo "### Sync-over-async (Task.Result, .Wait(), .GetAwaiter().GetResult())"
-            grep -rn 'Task\.Result\|\.Wait()\|\.GetAwaiter()\.GetResult()' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | grep -v '//\|test\|Test' | shuf | head -10 || echo "None found"
-            echo ""
-            echo "### Unnecessary LINQ allocations (.ToList(), .ToArray() that may not be needed)"
-            grep -rn '\.ToList()\|\.ToArray()' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | grep -v '//\|test\|Test' | shuf | head -10 || echo "None found"
-            echo ""
-            echo "### Repeated string.Format or interpolation in loops"
-            grep -rn 'string\.Format\|string\.Concat\|String\.Join' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | grep -v '//\|test\|Test' | shuf | head -10 || echo "None found"
-            ;;
-          4)
-            echo "## Category 4: Missing XML Documentation (src/Mono.Android/ only)"
-            echo "### Public declarations in Mono.Android (shipped product) without XML docs"
-            echo "### NOTE: Excludes Android.Runtime (plumbing), Java.Interop (bridge), and generated code"
-            grep -rn "public " --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/Mono.Android/ 2>/dev/null | grep -v "Designer.cs" | grep -v "AssemblyInfo.cs" | grep -v "Android.Runtime" | grep -v "Java.Interop" | grep -v "/obj/" | shuf | head -20 || echo "None found"
-            ;;
-          5)
-            echo "## Category 5: General Mistakes"
-            echo "### Random C# source files in src/ for general review (sample)"
-            find src -name '*.cs' -type f ! -path '*/obj/*' ! -path '*/bin/*' ! -name 'Designer.cs' ! -name 'AssemblyInfo.cs' 2>/dev/null | shuf | head -5
-            ;;
-          6)
-            echo "## Category 6: Unused Using Directives"
-            echo "### Files with many using directives (potential cleanup, sample)"
-            for f in $(find src -name '*.cs' -type f ! -path '*/obj/*' ! -path '*/bin/*' ! -name 'Designer.cs' 2>/dev/null | shuf | head -30); do
-              count=$(grep -c "^using " "$f" 2>/dev/null || true)
-              if [ "${count:-0}" -gt 10 ]; then
-                echo "  $f: $count using directives"
-              fi
-            done
-            ;;
-          7)
-            echo "## Category 7: Error Handling"
-            echo "### Bare catch blocks that may swallow exceptions (sample)"
-            grep -rnP "catch\s*\(Exception\b" --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | shuf | head -20 || echo "None found"
-            ;;
-          8)
-            echo "## Category 8: String Literals in Error Messages"
-            echo "### Hardcoded error strings that could be in Resources.resx (sample)"
-            grep -rn 'Log\.\(Error\|Warning\)\|LogError\|LogWarning\|LogCodedError\|LogCodedWarning' --include="*.cs" --exclude-dir=obj --exclude-dir=bin src/ 2>/dev/null | grep '"' | grep -v "Properties.Resources" | shuf | head -20 || echo "None found"
-            ;;
-        esac
-      } > /tmp/gh-aw/agent/scan-results.md
-      echo "✅ Category $CATEGORY_INDEX scan complete → /tmp/gh-aw/agent/scan-results.md"
+timeout-minutes: 30
+tools:
+  bash:
+  - find src -name "*.cs" -type f
+  - grep:*
+  - wc:*
+  - head:*
+  - tail:*
+  - sort:*
+  - cat:*
+  - awk:*
+  - sed:*
+  - shuf:*
+  - date:*
+  - xargs:*
+  github:
+    min-integrity: none
+    toolsets:
+    - repos
+    - issues
 ---
-
 # Nightly Fix Finder
 
 You are the Nightly Fix Finder Agent — an expert system that scans the dotnet/android repository each night for random code improvement opportunities and files actionable issues for Copilot to fix.
