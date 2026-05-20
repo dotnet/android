@@ -33,7 +33,7 @@
 
     <!-- Use $(AndroidMinimumSupportedApiLevel) for $(SupportedOSPlatformVersion) if unset -->
     <SupportedOSPlatformVersion Condition=" '$(SupportedOSPlatformVersion)' == '' ">$(AndroidMinimumSupportedApiLevel)</SupportedOSPlatformVersion>
-    <!-- $(SupportedOSPlatformVersion) must be '21.0', but we should support integer values like '21' -->
+    <!-- $(SupportedOSPlatformVersion) must be '24.0', but we should support integer values like '24' -->
     <SupportedOSPlatformVersion Condition=" '$(SupportedOSPlatformVersion)' != '' and !$(SupportedOSPlatformVersion.Contains('.')) ">$(SupportedOSPlatformVersion).0</SupportedOSPlatformVersion>
 
     <!-- Bindings properties -->

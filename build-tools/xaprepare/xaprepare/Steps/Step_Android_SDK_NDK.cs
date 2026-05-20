@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -70,10 +68,6 @@ namespace Xamarin.Android.Prepare
 
 			toolchain.Components.ForEach (c => Check (context, packageCacheDir, sdkRoot, c, toInstall, 4));
 			if (toInstall.Count == 0) {
-				if (!AcceptLicenses (context, sdkRoot)) {
-					Log.ErrorLine ("Failed to accept Android SDK licenses");
-					return false;
-				}
 				WritePackageXmls (sdkRoot);
 				return GatherNDKInfo (context);
 			}
@@ -114,59 +108,9 @@ namespace Xamarin.Android.Prepare
 				await Unpack (context, tempDir, p);
 			}
 
-			if (!AcceptLicenses (context, sdkRoot)) {
-				Log.ErrorLine ("Failed to accept Android SDK licenses");
-				return false;
-			}
-
 			WritePackageXmls (sdkRoot);
 
 			return GatherNDKInfo (context);
-		}
-
-		bool AcceptLicenses (Context context, string sdkRoot)
-		{
-			string[] sdkManagerPaths = new[]{
-				Path.Combine (sdkRoot, "cmdline-tools", context.Properties [KnownProperties.CommandLineToolsFolder] ?? String.Empty, "bin", "sdkmanager"),
-				Path.Combine (sdkRoot, "cmdline-tools", "latest", "bin", "sdkmanager"),
-			};
-			string sdkManager = "";
-			foreach (var sdkManagerPath in sdkManagerPaths) {
-				sdkManager = context.OS.Which (sdkManagerPath, required: false);
-				if (!string.IsNullOrEmpty (sdkManager))
-					break;
-			}
-			if (sdkManager.Length == 0)
-				throw new InvalidOperationException ("sdkmanager not found");
-			string jdkDir = context.OS.JavaHome;
-
-			Log.Todo ("Modify ProcessRunner to allow standard input writing and switch to it here");
-			// var runner = new ProcessRunner (sdkManager, "--licenses");
-			// runner.StartInfoCallback = (ProcessStartInfo psi) => {
-			// 	if (!String.IsNullOrEmpty (jdkDir))
-			// 		psi.EnvironmentVariables.Add ("JAVA_HOME", jdkDir);
-			// 	psi.RedirectStandardInput = true;
-			// };
-
-			var psi = new ProcessStartInfo (sdkManager, "--licenses") {
-				UseShellExecute = false,
-				RedirectStandardInput = true
-			};
-			if (!String.IsNullOrEmpty (jdkDir) && !psi.EnvironmentVariables.ContainsKey ("JAVA_HOME"))
-				psi.EnvironmentVariables.Add ("JAVA_HOME", jdkDir);
-
-			Log.DebugLine ($"Starting {psi.FileName} {psi.Arguments}");
-			Process? proc = Process.Start (psi);
-			if (proc != null) {
-				for (int i = 0; i < 10; i++)
-					proc.StandardInput.WriteLine ('y');
-
-				proc.WaitForExit ();
-			} else {
-				Log.DebugLine ("Failed to start process");
-			}
-
-			return true;
 		}
 
 		bool GatherNDKInfo (Context context)
@@ -229,27 +173,17 @@ namespace Xamarin.Android.Prepare
 				foreach (string file in ClangArchFiles) {
 					CopyFile (abi, clangArchLibPath, file);
 				}
-
-				// NativeAOT links against dotnet/runtime's libSystem.Native.a which was
-				// compiled targeting a higher API level. Copy a second set of CRT/system
-				// lib stubs from the higher API level sysroot for the NativeAOT runtime pack.
-				if (Configurables.Defaults.NativeAotSupportedAbis.Contains (abi)) {
-					string nativeAotCrtFilesPath = Path.Combine (abiDir, BuildAndroidPlatforms.NdkMinimumNonMonoAPI);
-					foreach (string file in CRTFiles) {
-						CopyFile (abi, nativeAotCrtFilesPath, file, redistDirName: "redist-nativeaot");
-					}
-				}
 			}
 
 			return true;
 
-			void CopyFile (string abi, string sourceDir, string fileName, string? redistDirName = null)
+			void CopyFile (string abi, string sourceDir, string fileName)
 			{
 				Log.StatusLine ($"  {context.Characters.Bullet} Copying NDK redistributable: ", $"{fileName} ({abi})", tailColor: ConsoleColor.White);
 				string rid = Configurables.Defaults.AbiToRID [abi];
 				string outputDir = Path.Combine (
 					context.Properties.GetRequiredValue (KnownProperties.NativeRuntimeOutputRootDir),
-					redistDirName ?? context.Properties.GetRequiredValue (KnownProperties.RuntimeRedistDirName),
+					context.Properties.GetRequiredValue (KnownProperties.RuntimeRedistDirName),
 					rid
 				);
 

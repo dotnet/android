@@ -73,6 +73,41 @@ public class MavenDownloadTests
 	}
 
 	[Test]
+	public async Task InsecureHttpRepository_Blocked ()
+	{
+		var engine = new MockBuildEngine (TestContext.Out, new List<BuildErrorEventArgs> ());
+		var task = new MavenDownload {
+			BuildEngine = engine,
+			AndroidMavenLibraries = [CreateMavenTaskItem ("com.google.android.material:material", "1.0.0", "http://repo.example.com/maven2/")],
+		};
+
+		await task.RunTaskAsync ();
+
+		Assert.AreEqual (1, engine.Errors.Count);
+		Assert.AreEqual ("Insecure HTTP Maven repository URL 'http://repo.example.com/maven2/' is not allowed. Use an HTTPS URL, or set AllowInsecureHttp=\"true\" metadata on the item to override this check.", engine.Errors [0].Message);
+	}
+
+	[Test]
+	public async Task InsecureHttpRepository_AllowedWithOptIn ()
+	{
+		var engine = new MockBuildEngine (TestContext.Out, new List<BuildErrorEventArgs> ());
+		var item = CreateMavenTaskItem ("com.example:dummy", "1.0.0", "http://repo.example.com/maven2/");
+		item.SetMetadata ("AllowInsecureHttp", "true");
+
+		var task = new MavenDownload {
+			BuildEngine = engine,
+			MavenCacheDirectory = Path.GetTempPath (),
+			AndroidMavenLibraries = [item],
+		};
+
+		await task.RunTaskAsync ();
+
+		// Should bypass the XA4252 insecure HTTP check and attempt the download, which fails with XA4236
+		Assert.AreEqual (1, engine.Errors.Count);
+		Assert.AreEqual ("XA4236", engine.Errors [0].Code, "Expected a download error (XA4236), not a security error (XA4252)");
+	}
+
+	[Test]
 	public async Task UnknownArtifact ()
 	{
 		var engine = new MockBuildEngine (TestContext.Out, new List<BuildErrorEventArgs> ());

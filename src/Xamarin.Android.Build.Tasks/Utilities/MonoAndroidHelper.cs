@@ -884,10 +884,7 @@ namespace Xamarin.Android.Tasks
 
 		public static int GetMinimumApiLevel (AndroidTargetArch arch, AndroidRuntime runtime)
 		{
-			int minValue = 0;
-
-			Dictionary<AndroidTargetArch, int> apiLevels = runtime == AndroidRuntime.MonoVM ? XABuildConfig.ArchToApiLevel : XABuildConfig.ArchToApiLevelNonMono;
-			if (!apiLevels.TryGetValue (arch, out minValue)) {
+			if (!XABuildConfig.ArchToApiLevel.TryGetValue (arch, out int minValue)) {
 				throw new InvalidOperationException ($"Unable to determine minimum API level for architecture {arch}");
 			}
 

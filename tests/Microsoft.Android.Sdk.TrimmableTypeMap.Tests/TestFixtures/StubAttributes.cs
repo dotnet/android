@@ -219,8 +219,21 @@ namespace Java.Interop
 	}
 }
 
+namespace Java.Interop
+{
+	[AttributeUsage (AttributeTargets.Method, AllowMultiple = false)]
+	public sealed class JniAddNativeMethodRegistrationAttribute : Attribute
+	{
+	}
+}
+
 namespace MyApp
 {
+	[AttributeUsage (AttributeTargets.Method, AllowMultiple = false)]
+	public sealed class JniAddNativeMethodRegistrationAttribute : Attribute
+	{
+	}
+
 	[AttributeUsage (AttributeTargets.Class)]
 	public sealed class CustomJniNameAttribute : Attribute, Java.Interop.IJniNameProviderAttribute
 	{

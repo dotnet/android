@@ -34,6 +34,8 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			logMessages.Add ($"Rooting manifest-referenced type '{javaTypeName}' ({managedTypeName}) as unconditional.");
 		public void LogManifestReferencedTypeNotFoundWarning (string javaTypeName) =>
 			warnings?.Add ($"Manifest-referenced type '{javaTypeName}' was not found in any scanned assembly. It may be a framework type.");
+		public void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName) =>
+			logMessages.Add ($"XA4251: Type '{managedTypeName}' uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map.");
 	}
 
 	[Fact]
@@ -70,6 +72,17 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.NotEmpty (result.GeneratedJavaSources);
 		Assert.Contains (result.GeneratedAssemblies, a => a.Name == "_Microsoft.Android.TypeMaps");
 		Assert.Contains (result.GeneratedAssemblies, a => a.Name == "_TestFixtures.TypeMap");
+	}
+
+	[Fact]
+	public void Execute_WithJniAddNativeMethodRegistrationAttribute_ReportsXA4251 ()
+	{
+		// TestFixtures.HandWrittenNativeRegistrationPeer carries [JniAddNativeMethodRegistrationAttribute].
+		// The trimmable typemap does not support that attribute by design — the orchestrator must
+		// emit XA4251 so MSBuild fails the build via HasLoggedErrors.
+		using var peReader = CreateTestFixturePEReader ();
+		CreateGenerator ().Execute (new List<(string, PEReader)> { ("TestFixtures", peReader) }, new Version (11, 0), new HashSet<string> ());
+		Assert.Contains (logMessages, m => m.Contains ("XA4251") && m.Contains ("HandWrittenNativeRegistrationPeer"));
 	}
 
 	[Fact]
@@ -186,7 +199,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			new ManifestConfig (
 				PackageName: "my.app",
 				AndroidApiLevel: "35",
-				SupportedOSPlatformVersion: "21",
+				SupportedOSPlatformVersion: "24",
 				RuntimeProviderJavaName: "mono.MonoRuntimeProvider",
 				ManifestPlaceholders: "applicationId=my.app"),
 			manifestTemplate);

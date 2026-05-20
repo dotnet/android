@@ -70,7 +70,7 @@ namespace Xamarin.Android.Tasks
 
 			using (var reader = XmlReader.Create (File.OpenRead (remappingXmlFilePath), readerSettings)) {
 				if (reader.MoveToContent () != XmlNodeType.Element || reader.LocalName != "replacements") {
-					Log.LogError ($"Input file `{remappingXmlFilePath}` does not start with `<replacements/>`");
+					Log.LogCodedError ("XA1045", Properties.Resources.XA1045, remappingXmlFilePath);
 				} else {
 					ReadXml (reader, typeReplacements, methodReplacements, remappingXmlFilePath);
 				}
@@ -131,7 +131,7 @@ namespace Xamarin.Android.Tasks
 					}
 
 					if (!Boolean.TryParse (targetIsStatic, out bool isStatic)) {
-						Log.LogError ($"Attribute 'target-method-instance-to-static' in element '{reader.LocalName}' value '{targetIsStatic}' cannot be parsed as boolean; {remappingXmlFilePath} line {GetCurrentLineNumber ()}");
+						Log.LogCodedError ("XA1046", Properties.Resources.XA1046, "target-method-instance-to-static", reader.LocalName, targetIsStatic, remappingXmlFilePath, GetCurrentLineNumber ());
 						continue;
 					}
 
@@ -152,7 +152,7 @@ namespace Xamarin.Android.Tasks
 					return true;
 				}
 
-				Log.LogError ($"Attribute '{attributeName}' missing from element '{reader.LocalName}'; {remappingXmlFilePath} line {GetCurrentLineNumber ()}");
+				Log.LogCodedError ("XA1047", Properties.Resources.XA1047, attributeName, reader.LocalName, remappingXmlFilePath, GetCurrentLineNumber ());
 				return false;
 			}
 

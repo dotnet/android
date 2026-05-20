@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\r8\r8.csproj" ReferenceOutputAssembly="False" />
+    <ProjectReference Include="..\androidsdk\androidsdk.csproj" ReferenceOutputAssembly="False" />
   </ItemGroup>
   
   <ItemGroup>

@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Microsoft.Testing.Extensions;
 using Mono.Options;
 using Xamarin.Android.Tools;
 
@@ -317,6 +318,13 @@ async Task<int> RunDotnetTestAsync (List<string> mtpArgs)
 	// since MTP needs them to set up the test communication channel.
 	mtpArgs.AddRange (["--server", "dotnettestcli", "--dotnet-test-pipe", validatedDotnetTestPipe]);
 
+	// MTP defaults its working directory to the DLL location (SDK tools directory),
+	// not Environment.CurrentDirectory. Pass --results-directory explicitly so TRX
+	// reports are written to the project directory, matching dotnet test conventions.
+	if (!mtpArgs.Contains ("--results-directory")) {
+		mtpArgs.AddRange (["--results-directory", Path.Combine (Environment.CurrentDirectory, "TestResults")]);
+	}
+
 	var testApplicationBuilder = await Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync (mtpArgs.ToArray ());
 
 	var adapter = new AndroidTestAdapter (
@@ -329,6 +337,8 @@ async Task<int> RunDotnetTestAsync (List<string> mtpArgs)
 	testApplicationBuilder.RegisterTestFramework (
 		_ => new AndroidTestCapabilities (),
 		(_, _) => adapter);
+
+	testApplicationBuilder.AddTrxReportProvider ();
 
 	using var testApplication = await testApplicationBuilder.BuildAsync ();
 	return await testApplication.RunAsync ();

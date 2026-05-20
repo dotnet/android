@@ -103,7 +103,7 @@ public class MainActivity : Activity
 			ProjectName = "marshal2",
 		};
 		proj.SetRuntime (runtime);
-		proj.SetAndroidSupportedAbis (DeviceAbi);
+		proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 		proj.AndroidManifest = String.Format (MarshalMethodsAppRuns_PermissionManifest, proj.PackageName);
 		proj.MainActivity = MarshalMethodsAppRuns_MainActivity;
 		proj.SetDefaultTargetDevice ();

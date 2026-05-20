@@ -16,18 +16,11 @@ namespace Xamarin.Android.Prepare
 	partial class Configurables
 	{
 		const string MicrosoftOpenJDKVersion        = "21.0.8";
-		const string MicrosoftOpenJDKRelease        = "21.0.8";
-		const string MicrosoftOpenJDKRootDirName    = "jdk-21.0.8+9";
 
 		static Context ctx => Context.Instance;
 
 		public static partial class Urls
 		{
-			// https://aka.ms/download-jdk/microsoft-jdk-17.0.11-linux-x64.tar.gz
-			// https://aka.ms/download-jdk/microsoft-jdk-17.0.11-macOS-x64.tar.gz or https://aka.ms/download-jdk/microsoft-jdk-17.0.11-macos-aarch64.pkg
-			// https://aka.ms/download-jdk/microsoft-jdk-17.0.11-windows-x64.zip
-			public static readonly Uri MicrosoftOpenJDK = new Uri ($"https://aka.ms/download-jdk/microsoft-jdk-{MicrosoftOpenJDKVersion}-{MicrosoftOpenJDKOperatingSystem}.{MicrosoftOpenJDKFileExtension}");
-
 			/// <summary>
 			///   Base URL for all Android SDK and NDK downloads. Used in <see cref="AndroidToolchain"/>
 			/// </summary>
@@ -42,8 +35,6 @@ namespace Xamarin.Android.Prepare
 
 			public static readonly Version MicrosoftMinOpenJDKVersion      = new Version (17, 0);
 			public static readonly Version MicrosoftOpenJDKVersion         = new Version (Configurables.MicrosoftOpenJDKVersion);
-			public static readonly Version MicrosoftOpenJDKRelease         = new Version (Configurables.MicrosoftOpenJDKRelease);
-			public static readonly string  MicrosoftOpenJDKRootDirName     = Configurables.MicrosoftOpenJDKRootDirName;
 
 			public const string DotNetTestRuntimeVersion                   = "3.1.11";
 
@@ -207,10 +198,6 @@ namespace Xamarin.Android.Prepare
 			public static string MonoAndroidFrameworksRootDir        => GetCachedPath (ref monoAndroidFrameworksRootDir, ()        => Path.Combine (XAInstallPrefix, MonoAndroidFrameworksSubDir));
 			public static string InstallMSBuildDir                   => GetCachedPath (ref installMSBuildDir, ()                   => ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftAndroidSdkOutDir));
 
-			// OpenJDK
-			public static string OpenJDKInstallDir                   => GetCachedPath (ref openJDKInstallDir, ()                   => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), Defaults.JdkFolder));
-			public static string OpenJDKCacheDir                     => GetCachedPath (ref openJDKCacheDir, ()                     => ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory));
-
 			// .NET 6+
 			public static string NetcoreAppRuntimeAndroidARM         => GetCachedPath (ref netcoreAppRuntimeAndroidARM, () => GetNetcoreAppRuntimePath (ctx, "arm"));
 			public static string NetcoreAppRuntimeAndroidARM64       => GetCachedPath (ref netcoreAppRuntimeAndroidARM64, () => GetNetcoreAppRuntimePath (ctx, "arm64"));
@@ -305,8 +292,6 @@ namespace Xamarin.Android.Prepare
 			static string? installMSBuildDir;
 			static string? monoAndroidFrameworksRootDir;
 			static string? externalJavaInteropDir;
-			static string? openJDKInstallDir;
-			static string? openJDKCacheDir;
 			static string? configurationPropsGeneratedPath;
 			static string? netcoreAppRuntimeAndroidARM;
 			static string? netcoreAppRuntimeAndroidARM64;

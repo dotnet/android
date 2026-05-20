@@ -135,6 +135,54 @@ public class ModelBuilderTests : FixtureTestBase
 			// Both peers get associations to alias holder
 			Assert.Equal (2, model.Associations.Count);
 		}
+
+		[Fact]
+		public void Build_AllMcwAliasGroup_BaseEntryIsConditional ()
+		{
+			// When all peers in an alias group are MCW bindings (trimmable),
+			// the base alias-holder entry should be conditional (3-arg).
+			var peers = new List<JavaPeerInfo> {
+				MakeMcwPeer ("test/AllMcw", "Test.First", "A") with { DoNotGenerateAcw = true },
+				MakeMcwPeer ("test/AllMcw", "Test.Second", "A") with { DoNotGenerateAcw = true },
+			};
+
+			var model = BuildModel (peers);
+			var baseEntry = model.Entries.Single (e => e.JniName == "test/AllMcw");
+			Assert.False (baseEntry.IsUnconditional, "All-MCW alias group base entry should be conditional");
+			Assert.NotNull (baseEntry.TargetTypeReference);
+		}
+
+		[Fact]
+		public void Build_MixedAcwMcwAliasGroup_BaseEntryIsUnconditional ()
+		{
+			// When at least one peer in an alias group is an ACW (unconditional),
+			// the base alias-holder entry should be unconditional (2-arg).
+			var peers = new List<JavaPeerInfo> {
+				MakeMcwPeer ("test/Mixed", "Test.Mcw", "A") with { DoNotGenerateAcw = true },
+				MakeAcwPeer ("test/Mixed", "Test.Acw", "A"),
+			};
+
+			var model = BuildModel (peers);
+			var baseEntry = model.Entries.Single (e => e.JniName == "test/Mixed");
+			Assert.True (baseEntry.IsUnconditional, "Mixed alias group with ACW should have unconditional base entry");
+			Assert.Null (baseEntry.TargetTypeReference);
+		}
+
+		[Fact]
+		public void Build_EssentialTypeAliasGroup_BaseEntryIsUnconditional ()
+		{
+			// Essential runtime types (java/lang/Object etc.) should always be unconditional,
+			// even when all peers are MCW bindings.
+			var peers = new List<JavaPeerInfo> {
+				MakeMcwPeer ("java/lang/Object", "Java.Lang.Object", "Mono.Android"),
+				MakeMcwPeer ("java/lang/Object", "Java.Lang.Another", "Mono.Android"),
+			};
+
+			var model = BuildModel (peers);
+			var baseEntry = model.Entries.Single (e => e.JniName == "java/lang/Object");
+			Assert.True (baseEntry.IsUnconditional, "Essential type alias group should have unconditional base entry");
+			Assert.Null (baseEntry.TargetTypeReference);
+		}
 	}
 
 	public class ConditionalAttributes
@@ -172,14 +220,12 @@ public class ModelBuilderTests : FixtureTestBase
 		public void Build_McwBinding_IsTrimmable ()
 		{
 			// MCW binding types (DoNotGenerateAcw=true) are trimmable unless essential.
-			// When ForceUnconditionalEntries is enabled (workaround for dotnet/runtime#127004),
-			// all entries become unconditional.
 			var peer = MakeMcwPeer ("android/app/Activity", "Android.App.Activity", "Mono.Android") with { DoNotGenerateAcw = true };
 			var model = BuildModel (new [] { peer });
 
 			Assert.Single (model.Entries);
-			Assert.True (model.Entries [0].IsUnconditional);
-			Assert.Null (model.Entries [0].TargetTypeReference);
+			Assert.False (model.Entries [0].IsUnconditional);
+			Assert.Equal ("Android.App.Activity, Mono.Android", model.Entries [0].TargetTypeReference);
 		}
 
 		[Fact]
@@ -248,8 +294,8 @@ public class ModelBuilderTests : FixtureTestBase
 		[Fact]
 		public void Build_SinglePeer_HasAssociation ()
 		{
-			// When ForceUnconditionalEntries is enabled, single peers emit associations
-			// so the runtime proxy type map is populated.
+			// Single peers with generated proxies emit associations so the runtime proxy
+			// type map is populated.
 			var peer = MakePeerWithActivation ("my/app/MainActivity", "MyApp.MainActivity", "App");
 			var model = BuildModel (new [] { peer }, "MyTypeMap");
 
@@ -338,8 +384,8 @@ public class ModelBuilderTests : FixtureTestBase
 			var peer = FindFixtureByJavaName (javaName);
 			Assert.True (peer.DoNotGenerateAcw);
 			var model = BuildModel (new [] { peer });
-			// ForceUnconditionalEntries workaround makes all entries unconditional
-			Assert.True (model.Entries [0].IsUnconditional);
+			Assert.False (model.Entries [0].IsUnconditional);
+			Assert.NotNull (model.Entries [0].TargetTypeReference);
 		}
 	}
 
@@ -776,7 +822,6 @@ public class ModelBuilderTests : FixtureTestBase
 		[Fact]
 		public void FullPipeline_Mixed2ArgAnd3Arg_BothSurviveRoundTrip ()
 		{
-			// With ForceUnconditionalEntries, both are emitted as 2-arg unconditional
 			var objectPeer = FindFixtureByJavaName ("java/lang/Object");
 			var activityPeer = FindFixtureByJavaName ("android/app/Activity");
 
@@ -793,7 +838,7 @@ public class ModelBuilderTests : FixtureTestBase
 
 				var activityEntry = attrs.FirstOrDefault (a => a.jniName == "android/app/Activity");
 				Assert.NotNull (activityEntry.jniName);
-				Assert.Null (activityEntry.targetRef); // unconditional due to ForceUnconditionalEntries
+				Assert.Equal ("Android.App.Activity, TestFixtures", activityEntry.targetRef);
 			});
 		}
 
@@ -818,22 +863,20 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
-		public void FullPipeline_McwBinding_Emits2ArgAttribute_WithWorkaround ()
+		public void FullPipeline_McwBinding_Emits3ArgAttribute ()
 		{
-			// With ForceUnconditionalEntries workaround for dotnet/runtime#127004,
-			// MCW bindings are emitted as 2-arg unconditional.
 			var peer = FindFixtureByJavaName ("android/app/Activity");
-			var model = BuildModel (new [] { peer }, "Blob2ArgWorkaround");
+			var model = BuildModel (new [] { peer }, "Blob3ArgConditional");
 			Assert.Single (model.Entries);
-			Assert.True (model.Entries [0].IsUnconditional);
+			Assert.False (model.Entries [0].IsUnconditional);
 
-			EmitAndVerify (model, "Blob2ArgWorkaround", (pe, reader) => {
+			EmitAndVerify (model, "Blob3ArgConditional", (pe, reader) => {
 				var (jniName, proxyRef, targetRef) = ReadFirstTypeMapAttributeBlob (reader);
 
 				Assert.Equal ("android/app/Activity", jniName);
 				Assert.NotNull (proxyRef);
 				Assert.Contains ("Android_App_Activity_Proxy", proxyRef!);
-				Assert.Null (targetRef); // unconditional due to ForceUnconditionalEntries
+				Assert.Equal ("Android.App.Activity, TestFixtures", targetRef);
 			});
 		}
 	}

@@ -150,7 +150,11 @@ namespace MonoDroid.Tuner
 				try {
 					var resolved  = Cache.Resolve (fieldRef);
 					canResolve    = resolved != null;
-				} catch (Exception) {
+				} catch (AssemblyResolutionException) {
+					// Expected when the field's declaring assembly is not available
+					LogMessage ($"   Could not resolve field reference {fieldRef.FullName} (assembly not available).");
+				} catch (Exception ex) {
+					LogMessage ($"   Unexpected error resolving field reference {fieldRef.FullName}: {ex}");
 				}
 				if (canResolve)
 					return null;
