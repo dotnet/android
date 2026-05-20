@@ -39,7 +39,8 @@ namespace Xamarin.Android.Tools
 		};
 
 		public static readonly Dictionary <AndroidTargetArch, int> ArchToApiLevelNonMono = new () {
-			{ AndroidTargetArch.Arm64, @NDK_ARM64_V8A_NONMONO_API@ },
+			{ AndroidTargetArch.Arm,    @NDK_ARMEABI_V7_NONMONO_API@ },
+			{ AndroidTargetArch.Arm64,  @NDK_ARM64_V8A_NONMONO_API@ },
 			{ AndroidTargetArch.X86_64, @NDK_X86_64_NONMONO_API@ },
 		};
 	}
