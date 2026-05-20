@@ -97,6 +97,7 @@ namespace Xamarin.Android.Build.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 
 			var targets = new List<string> {
 				"_ExportJarToXml",
@@ -834,6 +835,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidBindingProject () {
 				IsRelease = isRelease,

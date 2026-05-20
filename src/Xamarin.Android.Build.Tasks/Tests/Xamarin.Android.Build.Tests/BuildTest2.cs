@@ -896,6 +896,7 @@ class MemTest {
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 
 			var proj = new XamarinFormsMapsApplicationProject {
 				IsRelease = isRelease,
@@ -1142,6 +1143,7 @@ namespace Xamarin.Android.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
@@ -1299,6 +1301,7 @@ namespace UnamedProject
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 
 			var start = DateTime.UtcNow.AddSeconds (-1);
 			var proj = new XamarinFormsAndroidApplicationProject {

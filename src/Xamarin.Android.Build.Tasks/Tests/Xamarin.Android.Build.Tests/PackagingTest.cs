@@ -593,6 +593,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};

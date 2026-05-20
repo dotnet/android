@@ -195,6 +195,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			if (IsWindows)
 				Assert.Ignore ("https://github.com/dotnet/runtime/issues/88625");
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 
 			var abisSanitized = supportedAbis.Replace (";", "").Replace ("-", "").Replace ("_", "");
 			var path = Path.Combine ("temp", string.Format ("BuildAotNdk AndÜmläüts_{0}_{1}_{2}", abisSanitized, enableLLVM, usesAssemblyBlobs));

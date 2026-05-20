@@ -277,6 +277,7 @@ namespace Xamarin.Android.Build.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 
 			var proj = new XamarinAndroidApplicationProject  {
 				IsRelease = isRelease,
@@ -386,6 +387,7 @@ namespace Xamarin.Android.Build.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 
 			// TODO: NativeAOT fails with: 'classlibrary1.CustomTextView should have been replaced with an $(Hash).CustomTextView'
 			if (runtime == AndroidRuntime.NativeAOT) {
@@ -1145,6 +1147,7 @@ namespace Lib1 {
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 			var path = Path.Combine ("temp", TestName);
 			var appProj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
@@ -1436,6 +1439,7 @@ namespace UnnamedProject
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
@@ -1501,6 +1505,7 @@ namespace UnnamedProject
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 			BuildItem CreateItem (string include) =>
 				new AndroidItem.AndroidResource (include) {
 					TextContent = () => "",

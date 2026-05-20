@@ -36,6 +36,7 @@ namespace Xamarin.Android.Build.Tests {
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,

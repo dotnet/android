@@ -22,6 +22,7 @@ namespace Xamarin.Android.Build.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
@@ -68,6 +69,7 @@ namespace Xamarin.Android.Build.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 
 			if (runtime != AndroidRuntime.MonoVM) { // temporarily
 				Assert.Ignore ("Runtimes other than MonoVM are currently broken here.");
@@ -352,6 +354,7 @@ namespace Xamarin.Android.Build.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 
 			var app = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
@@ -532,6 +535,7 @@ namespace Lib2
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 
 			var targets = new List<(string target, bool ignoreOnNAOT)> {
 				("_GeneratePackageManagerJava", true), // TODO: NativeAOT doesn't skip this target on 3rd attempt, check if that's ok?
@@ -699,6 +703,7 @@ namespace Lib2
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 
 			if (runtime == AndroidRuntime.NativeAOT) {
 				// Fails on NativeAOT with:
@@ -849,6 +854,7 @@ namespace Lib2
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
@@ -917,6 +923,7 @@ namespace Lib2
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 
 			var path = Path.Combine ("temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
@@ -1235,6 +1242,7 @@ namespace Lib2
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 
 			// TODO: NativeAOT build doesn't add android/environment.arm64-v8a.o to file writes
 			if (runtime == AndroidRuntime.NativeAOT) {

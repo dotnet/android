@@ -214,6 +214,7 @@ namespace Xamarin.Android.Build.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 
 			var gradleProject = AndroidGradleProject.CreateDefault (GradleTestProjectDir);
 			var gradleModule = gradleProject.Modules.First ();
