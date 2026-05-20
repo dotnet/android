@@ -2504,15 +2504,21 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				StringAssert.Contains ("skipped: 1", outputText, $"Output should report 1 skipped test. See {logPath} for details.");
 
 				// Verify that a TRX file was produced by --report-trx
-				var trxFiles = Directory.GetFiles (projectDirectory, "*.trx", SearchOption.AllDirectories);
-				Assert.IsTrue (trxFiles.Length > 0, $"Expected at least one .trx file in {projectDirectory}. See {logPath} for details.");
+				// The TRX path is reported in stdout, e.g.:
+				//   In process file artifacts produced:
+				//     - /path/to/TestResults/file.trx
+				var trxPathMatch = System.Text.RegularExpressions.Regex.Match (outputText, @"^\s+-\s+(.+\.trx)\s*$", System.Text.RegularExpressions.RegexOptions.Multiline);
+				Assert.IsTrue (trxPathMatch.Success, $"Expected TRX file path in output. See {logPath} for details.");
 
-				TestContext.AddTestAttachment (trxFiles [0]);
+				var trxPath = trxPathMatch.Groups [1].Value.Trim ();
+				Assert.IsTrue (File.Exists (trxPath), $"TRX file should exist at: {trxPath}. See {logPath} for details.");
 
-				var trxDoc = XDocument.Load (trxFiles [0]);
+				TestContext.AddTestAttachment (trxPath);
+
+				var trxDoc = XDocument.Load (trxPath);
 				var trxNs = trxDoc.Root?.Name.Namespace ?? XNamespace.None;
 				var resultSummary = trxDoc.Root?.Element (trxNs + "ResultSummary");
-				Assert.IsNotNull (resultSummary, $"TRX file should contain a ResultSummary element. File: {trxFiles [0]}");
+				Assert.IsNotNull (resultSummary, $"TRX file should contain a ResultSummary element. File: {trxPath}");
 			}
 		}
 
