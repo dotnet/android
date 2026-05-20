@@ -173,7 +173,7 @@ public class ScannerExportShapesTests
 		Assert.NotNull (echoArr);
 		// Both parameter and return are arrays of the user-peer UserPeerForArray.
 		// CRC64 hash is environment-dependent; assert by suffix.
-		Assert.Matches (@"^\(\[Lcrc64[0-9a-f]{16}/UserPeerForArray;\)\[Lcrc64[0-9a-f]{16}/UserPeerForArray;$", echoArr!.JniSignature);
+		Assert.Matches (@"^\(\[Ls?crc64[0-9a-f]{16}/UserPeerForArray;\)\[Ls?crc64[0-9a-f]{16}/UserPeerForArray;$", echoArr!.JniSignature);
 	}
 
 	[Fact]

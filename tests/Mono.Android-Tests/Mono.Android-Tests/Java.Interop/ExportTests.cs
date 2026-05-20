@@ -4,6 +4,8 @@ using Android.Runtime;
 
 using Java.Interop;
 
+using Microsoft.Android.Runtime;
+
 using NUnit.Framework;
 
 namespace Java.InteropTests
@@ -27,7 +29,7 @@ namespace Java.InteropTests
 		[Test, Category ("Export")]
 		public void Export_Method_Primitive_RoundTrip ()
 		{
-			using var e = new ExportPrimitives ();
+			using var e = new ExportPrimitiveInt ();
 			var m = JNIEnv.GetMethodID (e.Class.Handle, "EchoInt", "(I)I");
 			Assert.AreNotEqual (IntPtr.Zero, m, "JNI method id for EchoInt not found");
 			int r = JNIEnv.CallIntMethod (e.Handle, m, new JValue (21));
@@ -37,7 +39,7 @@ namespace Java.InteropTests
 		[Test, Category ("Export")]
 		public void Export_Method_Bool_RoundTrip ()
 		{
-			using var e = new ExportPrimitives ();
+			using var e = new ExportPrimitiveBool ();
 			var m = JNIEnv.GetMethodID (e.Class.Handle, "EchoBool", "(Z)Z");
 			Assert.AreNotEqual (IntPtr.Zero, m, "JNI method id for EchoBool not found");
 			Assert.IsFalse (JNIEnv.CallBooleanMethod (e.Handle, m, new JValue (true)),  "EchoBool(true) should return false");
@@ -47,7 +49,7 @@ namespace Java.InteropTests
 		[Test, Category ("Export")]
 		public void Export_Method_String_RoundTrip ()
 		{
-			using var e = new ExportPrimitives ();
+			using var e = new ExportString ();
 			var m = JNIEnv.GetMethodID (e.Class.Handle, "EchoString", "(Ljava/lang/String;)Ljava/lang/String;");
 			Assert.AreNotEqual (IntPtr.Zero, m, "JNI method id for EchoString not found");
 			IntPtr argHandle = JNIEnv.NewString ("world");
@@ -67,7 +69,7 @@ namespace Java.InteropTests
 		[Test, Category ("Export")]
 		public void Export_Method_PeerArg_RoundTrip ()
 		{
-			using var e = new ExportPrimitives ();
+			using var e = new ExportPeerArg ();
 			using var arg = new Java.Lang.Integer (42);
 			var m = JNIEnv.GetMethodID (e.Class.Handle, "GetClassName", "(Ljava/lang/Object;)Ljava/lang/String;");
 			Assert.AreNotEqual (IntPtr.Zero, m, "JNI method id for GetClassName not found");
@@ -83,7 +85,7 @@ namespace Java.InteropTests
 		[Test, Category ("Export")]
 		public void Export_Method_PeerArg_NullArg_HandledGracefully ()
 		{
-			using var e = new ExportPrimitives ();
+			using var e = new ExportPeerArg ();
 			var m = JNIEnv.GetMethodID (e.Class.Handle, "GetClassName", "(Ljava/lang/Object;)Ljava/lang/String;");
 			IntPtr resultHandle = JNIEnv.CallObjectMethod (e.Handle, m, new JValue (IntPtr.Zero));
 			try {
@@ -97,7 +99,9 @@ namespace Java.InteropTests
 		[Test, Category ("Export")]
 		public void Export_Method_IntArray_RoundTrip_AndCopyBack ()
 		{
-			using var e = new ExportPrimitives ();
+			AssumeTrimmableExportArrayMarshalling ();
+
+			using var e = new ExportIntArray ();
 			var m = JNIEnv.GetMethodID (e.Class.Handle, "DoubleArray", "([I)[I");
 			Assert.AreNotEqual (IntPtr.Zero, m, "JNI method id for DoubleArray not found");
 
@@ -131,7 +135,9 @@ namespace Java.InteropTests
 		[Test, Category ("Export")]
 		public void Export_Method_PeerArray_RoundTrip ()
 		{
-			using var e = new ExportPrimitives ();
+			AssumeTrimmableExportArrayMarshalling ();
+
+			using var e = new ExportPeerArray ();
 			using var a = new Java.Lang.Integer (1);
 			using var b = new Java.Lang.Integer (2);
 			using var c = new Java.Lang.Integer (3);
@@ -173,6 +179,8 @@ namespace Java.InteropTests
 		[Test, Category ("Export")]
 		public void Export_Method_Throws_PrimitiveReturn_SurfacesAsManagedException ()
 		{
+			AssumeTrimmableExportExceptionRouting ();
+
 			using var e = new ExportThrowing ();
 			var m = JNIEnv.GetMethodID (e.Class.Handle, "Throwing", "()I");
 			Assert.AreNotEqual (IntPtr.Zero, m, "JNI method id for Throwing not found");
@@ -189,6 +197,8 @@ namespace Java.InteropTests
 		[Test, Category ("Export")]
 		public void Export_Method_Throws_ObjectReturn_SurfacesAsManagedException ()
 		{
+			AssumeTrimmableExportExceptionRouting ();
+
 			using var e = new ExportThrowing ();
 			var m = JNIEnv.GetMethodID (e.Class.Handle, "ThrowingString", "()Ljava/lang/String;");
 			Assert.AreNotEqual (IntPtr.Zero, m, "JNI method id for ThrowingString not found");
@@ -205,6 +215,8 @@ namespace Java.InteropTests
 		[Test, Category ("Export")]
 		public void Export_Method_Throws_FollowedBySecondCall_DoesNotLeakPendingException ()
 		{
+			AssumeTrimmableExportExceptionRouting ();
+
 			using var e = new ExportThrowing ();
 			var throwing = JNIEnv.GetMethodID (e.Class.Handle, "Throwing", "()I");
 			Assert.AreNotEqual (IntPtr.Zero, throwing, "JNI method id for Throwing not found");
@@ -216,7 +228,7 @@ namespace Java.InteropTests
 			// method that does NOT throw. If the previous pending exception had
 			// leaked across the JniTransition boundary, this call would either
 			// throw the stale exception or return a corrupted value.
-			using var p = new ExportPrimitives ();
+			using var p = new ExportPrimitiveInt ();
 			var echo = JNIEnv.GetMethodID (p.Class.Handle, "EchoInt", "(I)I");
 			Assert.AreNotEqual (IntPtr.Zero, echo, "JNI method id for EchoInt not found");
 			int result = JNIEnv.CallIntMethod (p.Handle, echo, new JValue (10));
@@ -226,6 +238,8 @@ namespace Java.InteropTests
 		[Test, Category ("Export")]
 		public void Export_Method_NestedJniCall_PreservesExceptionFromInnerExport ()
 		{
+			AssumeTrimmableExportExceptionRouting ();
+
 			// Outer [Export] method (ReentrantOuter) invokes Java reflection to call
 			// an inner [Export] method on the same peer (ReentrantInner) that throws.
 			// The inner throw is caught by the *inner* wrapper, set as a pending
@@ -240,6 +254,20 @@ namespace Java.InteropTests
 			Assert.That (ex, Is.Not.Null, "expected an exception from the nested call, got null");
 			Assert.That (ex.Message, Contains.Substring ("reentrant-boom"),
 				"the original inner-export exception message must propagate through both [Export] wrappers");
+		}
+
+		static void AssumeTrimmableExportExceptionRouting ()
+		{
+			if (!RuntimeFeature.TrimmableTypeMap) {
+				Assert.Ignore ("[Export] exception routing coverage is only relevant for the trimmable typemap path.");
+			}
+		}
+
+		static void AssumeTrimmableExportArrayMarshalling ()
+		{
+			if (!RuntimeFeature.TrimmableTypeMap) {
+				Assert.Ignore ("[Export] array marshalling coverage is enabled in the Mono.Android.Export stacked PR.");
+			}
 		}
 
 		// ---------------------------------------------------------------
@@ -262,20 +290,32 @@ namespace Java.InteropTests
 	// designed to exercise one corner of the marshalling matrix.
 	// ---------------------------------------------------------------
 
-	class ExportPrimitives : Java.Lang.Object
+	class ExportPrimitiveInt : Java.Lang.Object
 	{
 		[Export]
 		public int EchoInt (int x) => x * 2 + 1;
+	}
 
+	class ExportPrimitiveBool : Java.Lang.Object
+	{
 		[Export]
 		public bool EchoBool (bool x) => !x;
+	}
 
+	class ExportString : Java.Lang.Object
+	{
 		[Export]
 		public string EchoString (string x) => "<" + x + ">";
+	}
 
+	class ExportPeerArg : Java.Lang.Object
+	{
 		[Export]
 		public string GetClassName (Java.Lang.Object o) => o?.Class?.Name ?? "<null>";
+	}
 
+	class ExportIntArray : Java.Lang.Object
+	{
 		[Export]
 		public int [] DoubleArray (int [] xs)
 		{
@@ -284,7 +324,10 @@ namespace Java.InteropTests
 			}
 			return xs;
 		}
+	}
 
+	class ExportPeerArray : Java.Lang.Object
+	{
 		[Export]
 		public Java.Lang.Object [] Tail (Java.Lang.Object [] xs)
 		{
