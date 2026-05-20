@@ -163,6 +163,7 @@ namespace Xamarin.Android.Prepare
 			/// <c>build-tools/scripts/Ndk.projitems.in</c>.
 			/// </summary>
 			public static readonly HashSet<string> NativeAotSupportedAbis = new (StringComparer.Ordinal) {
+				"armeabi-v7a",
 				"arm64-v8a",
 				"x86_64",
 			};

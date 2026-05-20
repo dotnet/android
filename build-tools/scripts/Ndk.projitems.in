@@ -26,7 +26,7 @@
       <AndroidRID>android-arm</AndroidRID>
       <SupportMonoVM>True</SupportMonoVM>
       <SupportCoreCLR>True</SupportCoreCLR>
-      <SupportNativeAOT>False</SupportNativeAOT>
+      <SupportNativeAOT>True</SupportNativeAOT>
     </AndroidSupportedTargetJitAbi>
 
     <AndroidSupportedTargetJitAbi

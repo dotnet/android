@@ -185,6 +185,11 @@
         },
 
         {
+            "name": "nativeaot-default-debug-armeabi-v7a",
+            "inherits": ["nativeaot-default-common", "common-debug", "nonmono-common-armeabi-v7a"]
+        },
+
+        {
             "name": "coreclr-default-debug-armeabi-v7a",
             "inherits": ["default-common", "common-debug", "nonmono-common-armeabi-v7a"]
         },
@@ -192,6 +197,11 @@
         {
             "name": "default-release-armeabi-v7a",
             "inherits": ["default-common", "common-release", "common-armeabi-v7a"]
+        },
+
+        {
+            "name": "nativeaot-default-release-armeabi-v7a",
+            "inherits": ["nativeaot-default-common", "common-release", "nonmono-common-armeabi-v7a"]
         },
 
         {

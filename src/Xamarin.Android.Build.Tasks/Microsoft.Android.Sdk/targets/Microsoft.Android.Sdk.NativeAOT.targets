@@ -22,7 +22,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <AllowPublishAotWithoutRuntimeIdentifier Condition=" '$(AllowPublishAotWithoutRuntimeIdentifier)' == '' ">true</AllowPublishAotWithoutRuntimeIdentifier>
     <!-- NativeAOT's targets currently gives an error about cross-compilation -->
     <DisableUnsupportedError Condition=" $([MSBuild]::IsOSPlatform('windows')) and '$(DisableUnsupportedError)' == '' ">true</DisableUnsupportedError>
-    <!-- HACK: make dotnet restore include Microsoft.NETCore.App.Runtime.NativeAOT.linux-bionic-arm64 -->
+    <!-- HACK: make dotnet restore include Microsoft.NETCore.App.Runtime.NativeAOT.linux-bionic-* packs -->
     <_IsPublishing Condition=" '$(_IsPublishing)' == '' ">true</_IsPublishing>
     <!-- ResolvedFileToPublish is not populated until _AndroidComputeIlcCompileInputs, so
          proguard generation must run after that target instead of after ILLink. -->
@@ -86,9 +86,16 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <PropertyGroup>
       <_NdkAbi Condition=" '$(RuntimeIdentifier)' == 'android-arm64' ">aarch64</_NdkAbi>
       <_NdkAbi Condition=" '$(RuntimeIdentifier)' == 'android-x64' ">x86_64</_NdkAbi>
+      <_NdkAbi Condition=" '$(RuntimeIdentifier)' == 'android-arm' ">arm</_NdkAbi>
       <_NDKApiLevel Condition=" '$(RuntimeIdentifier)' == 'android-arm64' ">$(AndroidNdkApiLevel_Arm64)</_NDKApiLevel>
       <_NDKApiLevel Condition=" '$(RuntimeIdentifier)' == 'android-x64' ">$(AndroidNdkAPiLevel_X64)</_NDKApiLevel>
-      <_NdkSysrootAbi>$(_NdkAbi)-linux-android</_NdkSysrootAbi>
+      <_NDKApiLevel Condition=" '$(RuntimeIdentifier)' == 'android-arm' ">$(AndroidNdkApiLevel_Arm)</_NDKApiLevel>
+      <_NdkClangPrefix Condition=" '$(RuntimeIdentifier)' == 'android-arm64' ">aarch64-linux-android</_NdkClangPrefix>
+      <_NdkClangPrefix Condition=" '$(RuntimeIdentifier)' == 'android-x64' ">x86_64-linux-android</_NdkClangPrefix>
+      <_NdkClangPrefix Condition=" '$(RuntimeIdentifier)' == 'android-arm' ">armv7a-linux-androideabi</_NdkClangPrefix>
+      <_NdkSysrootAbi Condition=" '$(RuntimeIdentifier)' == 'android-arm64' ">aarch64-linux-android</_NdkSysrootAbi>
+      <_NdkSysrootAbi Condition=" '$(RuntimeIdentifier)' == 'android-x64' ">x86_64-linux-android</_NdkSysrootAbi>
+      <_NdkSysrootAbi Condition=" '$(RuntimeIdentifier)' == 'android-arm' ">arm-linux-androideabi</_NdkSysrootAbi>
       <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('windows')) ">windows-x86_64</_NdkPrebuiltAbi>
       <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('osx')) ">darwin-x86_64</_NdkPrebuiltAbi>
       <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('linux')) ">linux-x86_64</_NdkPrebuiltAbi>
@@ -124,8 +131,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
           application. If, for some reason, `clang++` has to be used, `<LinkerArgs>` need to be
           added to pass `-nostdlib` to it.
       -->
-      <CppCompilerAndLinker>$(_NdkAbi)-linux-android$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppCompilerAndLinker>
-      <CppLinker>$(_NdkAbi)-linux-android$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppLinker>
+      <CppCompilerAndLinker>$(_NdkClangPrefix)$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppCompilerAndLinker>
+      <CppLinker>$(_NdkClangPrefix)$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppLinker>
       <ObjCopyName>llvm-objcopy</ObjCopyName>
 
       <!-- We must ensure this is `false`, as it would interfere with statically linking libc++ -->
@@ -210,6 +217,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 
   <Target Name="_PrepareNativeAotAndroidAppInputs">
     <ItemGroup>
+      <_PrivateBuildTargetAbi Condition=" '$(RuntimeIdentifier)' == 'android-arm' " Include="armeabi-v7a" />
       <_PrivateBuildTargetAbi Condition=" '$(RuntimeIdentifier)' == 'android-arm64' " Include="arm64-v8a" />
       <_PrivateBuildTargetAbi Condition=" '$(RuntimeIdentifier)' == 'android-x64' " Include="x86_64" />
     </ItemGroup>
