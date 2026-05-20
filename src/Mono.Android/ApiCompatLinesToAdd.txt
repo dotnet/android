@@ -1,0 +1,10 @@
+MembersMustExist : Member 'public Android.App.AppFunctions.AppFunctionState Android.App.AppFunctions.AppFunctionState Android.App.AppFunctions.AppFunctionManager.AppFunctionStateDefault' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'public Android.App.AppFunctions.AppFunctionState Android.App.AppFunctions.AppFunctionState Android.App.AppFunctions.AppFunctionManager.AppFunctionStateDisabled' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'public Android.App.AppFunctions.AppFunctionState Android.App.AppFunctions.AppFunctionState Android.App.AppFunctions.AppFunctionManager.AppFunctionStateEnabled' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'public void Android.App.AppFunctions.AppFunctionManager.SetAppFunctionEnabled(System.String, Android.App.AppFunctions.AppFunctionState, Java.Util.Concurrent.IExecutor, Android.OS.IOutcomeReceiver)' does not exist in the implementation but it does exist in the contract.
+TypeCannotChangeClassification : Type 'Android.App.AppFunctions.AppFunctionState' is a 'class' in the implementation but is a 'struct' in the contract.
+MembersMustExist : Member 'public Android.App.AppFunctions.AppFunctionState Android.App.AppFunctions.AppFunctionState Android.App.AppFunctions.AppFunctionState.Default' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'public Android.App.AppFunctions.AppFunctionState Android.App.AppFunctions.AppFunctionState Android.App.AppFunctions.AppFunctionState.Disabled' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'public Android.App.AppFunctions.AppFunctionState Android.App.AppFunctions.AppFunctionState Android.App.AppFunctions.AppFunctionState.Enabled' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'public System.Int32 System.Int32 Android.App.AppFunctions.AppFunctionState.value__' does not exist in the implementation but it does exist in the contract.
+Total Issues: 9
