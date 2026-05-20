@@ -34,7 +34,8 @@ public class TrimmableTypeMapGenerator
 		ManifestConfig? manifestConfig = null,
 		XDocument? manifestTemplate = null,
 		string? packageNamingPolicy = null,
-		int maxArrayRank = 0)
+		int maxArrayRank = 0,
+		bool generateTypeMapAssemblies = true)
 	{
 		_ = assemblies ?? throw new ArgumentNullException (nameof (assemblies));
 		_ = systemRuntimeVersion ?? throw new ArgumentNullException (nameof (systemRuntimeVersion));
@@ -54,7 +55,9 @@ public class TrimmableTypeMapGenerator
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
 		PropagateCannotRegisterToDescendants (allPeers);
 
-		var generatedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, useSharedTypemapUniverse, maxArrayRank);
+		var generatedAssemblies = generateTypeMapAssemblies
+			? GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, useSharedTypemapUniverse, maxArrayRank)
+			: [];
 		var jcwPeers = allPeers.Where (p =>
 			!frameworkAssemblyNames.Contains (p.AssemblyName)
 			|| p.JavaName.StartsWith ("mono/", StringComparison.Ordinal)).ToList ();

@@ -54,6 +54,46 @@
         OutputFile="$(_ProguardProjectConfiguration)" />
   </Target>
 
+  <Target Name="_GeneratePostTrimTrimmableTypeMapJavaSources"
+      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and Exists('$(IntermediateOutputPath)linked/Link.semaphore') "
+      AfterTargets="ILLink"
+      BeforeTargets="_GenerateJavaStubs;_CompileJava;_CompileToDalvik"
+      Inputs="$(IntermediateOutputPath)linked/Link.semaphore"
+      Outputs="$(_PostTrimTrimmableTypeMapJavaStamp)">
+    <ItemGroup>
+      <_PostTrimTrimmableTypeMapInputAssemblies Include="@(ResolvedFileToPublish)"
+          Condition=" '%(Extension)' == '.dll' " />
+    </ItemGroup>
+
+    <GenerateTrimmableTypeMap
+        ResolvedAssemblies="@(_PostTrimTrimmableTypeMapInputAssemblies)"
+        FrameworkAssemblyNames="@(ResolvedFrameworkAssemblies->'%(Filename)')"
+        OutputDirectory="$(_TypeMapOutputDirectory)"
+        JavaSourceOutputDirectory="$(_PostTrimTypeMapJavaOutputDirectory)"
+        JavaSourceInputDirectory="$(_TypeMapJavaOutputDirectory)"
+        TargetFrameworkVersion="$(TargetFrameworkVersion)"
+        PackageNamingPolicy="$(_TrimmableTypeMapPackageNamingPolicy)"
+        MaxArrayRank="$(_AndroidTrimmableTypeMapMaxArrayRank)"
+        GenerateTypeMapAssemblies="false"
+        CleanJavaSourceOutputDirectory="true"
+        AcwMapOutputFile="$(IntermediateOutputPath)acw-map.txt"
+        ApplicationRegistrationOutputFile="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java">
+      <Output TaskParameter="GeneratedJavaFiles" ItemName="_PostTrimGeneratedJavaFiles" />
+    </GenerateTrimmableTypeMap>
+
+    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName('$(_PostTrimTrimmableTypeMapJavaStamp)'))" />
+    <Touch Files="$(_PostTrimTrimmableTypeMapJavaStamp)" AlwaysCreate="true" />
+
+    <ItemGroup>
+      <FileWrites Include="@(_PostTrimGeneratedJavaFiles)" />
+      <FileWrites Include="$(IntermediateOutputPath)acw-map.txt" />
+      <FileWrites Include="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java" />
+      <FileWrites Include="$(_PostTrimTrimmableTypeMapJavaStamp)" />
+      <_PostTrimTrimmableTypeMapInputAssemblies Remove="@(_PostTrimTrimmableTypeMapInputAssemblies)" />
+      <_PostTrimGeneratedJavaFiles Remove="@(_PostTrimGeneratedJavaFiles)" />
+    </ItemGroup>
+  </Target>
+
   <!-- Add TypeMap DLLs to assembly store with per-ABI metadata.
        TypeMap DLLs are ABI-agnostic (pure IL), so the same DLLs are added for every ABI.
        This target batches over @(_BuildTargetAbis) to add items per-ABI. -->
@@ -76,9 +116,10 @@
       </_TrimmableTypeMapAbi>
     </ItemGroup>
 
-    <!-- Try linked/ first (trimmed by ILLink in inner builds) -->
+    <!-- Try linked/ first (trimmed by ILLink).  Single-RID builds put linked output directly
+         under $(IntermediateOutputPath); plural-RID builds put it under the per-RID directory. -->
     <ItemGroup>
-      <_LinkedTypeMapDlls Include="$(IntermediateOutputPath)%(_TrimmableTypeMapAbi.RuntimeIdentifier)/linked/_*.TypeMap.dll;$(IntermediateOutputPath)%(_TrimmableTypeMapAbi.RuntimeIdentifier)/linked/_Microsoft.Android.TypeMap*.dll">
+      <_LinkedTypeMapDlls Include="$(IntermediateOutputPath)linked/_*.TypeMap.dll;$(IntermediateOutputPath)linked/_Microsoft.Android.TypeMap*.dll;$(IntermediateOutputPath)%(_TrimmableTypeMapAbi.RuntimeIdentifier)/linked/_*.TypeMap.dll;$(IntermediateOutputPath)%(_TrimmableTypeMapAbi.RuntimeIdentifier)/linked/_Microsoft.Android.TypeMap*.dll">
         <Abi>%(_TrimmableTypeMapAbi.Identity)</Abi>
         <RuntimeIdentifier>%(_TrimmableTypeMapAbi.RuntimeIdentifier)</RuntimeIdentifier>
         <DestinationSubPath>%(_TrimmableTypeMapAbi.Identity)/%(_LinkedTypeMapDlls.Filename)%(_LinkedTypeMapDlls.Extension)</DestinationSubPath>

@@ -23,6 +23,12 @@
     <_TypeMapBaseOutputDir>$(_TypeMapBaseOutputDir.Replace('\','/'))</_TypeMapBaseOutputDir>
     <_TypeMapOutputDirectory>$(_TypeMapBaseOutputDir)typemap/</_TypeMapOutputDirectory>
     <_TypeMapJavaOutputDirectory>$(_TypeMapBaseOutputDir)typemap/java</_TypeMapJavaOutputDirectory>
+    <_PostTrimTypeMapJavaOutputDirectory>$(_TypeMapBaseOutputDir)typemap/linked-java</_PostTrimTypeMapJavaOutputDirectory>
+    <_TypeMapJavaStubsSourceDirectory Condition=" '$(_TypeMapJavaStubsSourceDirectory)' == '' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(PublishTrimmed)' == 'true' ">$(_PostTrimTypeMapJavaOutputDirectory)</_TypeMapJavaStubsSourceDirectory>
+    <_TypeMapJavaStubsSourceDirectory Condition=" '$(_TypeMapJavaStubsSourceDirectory)' == '' ">$(_TypeMapJavaOutputDirectory)</_TypeMapJavaStubsSourceDirectory>
+    <_PostTrimTrimmableTypeMapJavaStamp>$(_TypeMapBaseOutputDir)stamp/_GeneratePostTrimTrimmableTypeMapJavaSources.stamp</_PostTrimTrimmableTypeMapJavaStamp>
+    <_TrimmableJavaSourceStamp Condition=" '$(_TrimmableJavaSourceStamp)' == '' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(PublishTrimmed)' == 'true' ">$(_PostTrimTrimmableTypeMapJavaStamp)</_TrimmableJavaSourceStamp>
+    <_TrimmableJavaSourceStamp Condition=" '$(_TrimmableJavaSourceStamp)' == '' ">$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll</_TrimmableJavaSourceStamp>
 
     <!-- Max array rank for __ArrayMapRank{N} sentinel emission. Defaults to 3 for NativeAOT
          (PublishAot=true, dynamic code is unavailable, so array creation uses the typemap path);
@@ -184,16 +190,23 @@
   -->
   <Target Name="_GenerateJavaStubs"
       DependsOnTargets="_SetLatestTargetFrameworkVersion;_CleanIntermediateIfNeeded;_PrepareAssemblies;_GetGenerateJavaStubsInputs;_DefineBuildTargetAbis;_PrepareNativeAssemblySources"
-      Inputs="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll;@(_EnvironmentFiles)"
+      Inputs="$(_TrimmableJavaSourceStamp);@(_EnvironmentFiles)"
       Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
 
     <ItemGroup>
-      <_TypeMapJavaFiles Include="$(_TypeMapJavaOutputDirectory)/**/*.java" />
+      <_TypeMapJavaFiles Include="$(_TypeMapJavaStubsSourceDirectory)/**/*.java" />
+      <_TypeMapJavaDestinationFiles Include="@(_TypeMapJavaFiles->'$(IntermediateOutputPath)android/src/%(RecursiveDir)%(Filename)%(Extension)')" />
+      <_ExistingTypeMapJavaDestinationFiles Include="$(IntermediateOutputPath)android/src/mono/**/*.java;$(IntermediateOutputPath)android/src/android/runtime/**/*.java" />
+      <_StaleTypeMapJavaDestinationFiles Include="@(_ExistingTypeMapJavaDestinationFiles)" Exclude="@(_TypeMapJavaDestinationFiles)" />
     </ItemGroup>
-    <Copy SourceFiles="@(_TypeMapJavaFiles)" DestinationFolder="$(IntermediateOutputPath)android/src/%(RecursiveDir)" />
+    <Delete Files="@(_StaleTypeMapJavaDestinationFiles)" />
+    <Copy
+        SourceFiles="@(_TypeMapJavaFiles)"
+        DestinationFiles="@(_TypeMapJavaDestinationFiles)"
+        SkipUnchangedFiles="true" />
 
     <ItemGroup>
-      <FileWrites Include="@(_TypeMapJavaFiles->'$(IntermediateOutputPath)android/src/%(RecursiveDir)%(Filename)%(Extension)')" />
+      <FileWrites Include="@(_TypeMapJavaDestinationFiles)" />
     </ItemGroup>
 
     <!-- NativeAOT bootstrap Java sources depend on environment files, so include them as inputs -->

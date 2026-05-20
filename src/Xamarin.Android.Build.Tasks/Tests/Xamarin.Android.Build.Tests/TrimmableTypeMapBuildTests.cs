@@ -128,6 +128,55 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void ReleaseCoreClrTrimmableTypeMap_SingleRuntimeIdentifier_DoesNotPackageUnlinkedTypeMapAssemblies ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				PackageName = "com.xamarin.typemapcomparison",
+				ProjectName = "TypemapComparison",
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+			proj.SetProperty ("AndroidPackageFormat", "apk");
+			proj.SetProperty (KnownProperties.AndroidLinkTool, "r8");
+			proj.SetProperty ("TrimMode", "full");
+			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+
+			using var builder = CreateApkBuilder (Path.Combine ("temp", $"TypemapComparison_trimmable_single_rid_{Guid.NewGuid ():N}"));
+			Assert.IsTrue (builder.Build (proj), "trimmable single-RID build should have succeeded.");
+
+			var apkDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath);
+			var apkPath = Directory.GetFiles (apkDirectory, "*-Signed.apk", SearchOption.AllDirectories).Single ();
+			var typeMapDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "typemap"));
+			var linkedAssemblyDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "linked"));
+			var javaSourceDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "android", "src"));
+			var acwMapPath = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "acw-map.txt"));
+			var proguardPrimaryPath = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "proguard", "proguard_project_primary.cfg"));
+
+			DirectoryAssert.Exists (typeMapDirectory, "trimmable build should generate typemap assemblies.");
+			DirectoryAssert.Exists (linkedAssemblyDirectory, "Release trimmable build should run ILLink.");
+
+			var unlinkedTypeMapAssemblies = Directory.GetFiles (typeMapDirectory, "*.dll")
+				.Where (file => !File.Exists (Path.Combine (linkedAssemblyDirectory, Path.GetFileName (file))))
+				.Select (Path.GetFileName)
+				.OrderBy (name => name, StringComparer.Ordinal)
+				.ToArray ();
+			Assert.IsNotEmpty (unlinkedTypeMapAssemblies, "Test setup should include typemap assemblies that ILLink removed.");
+
+			var packagedAssemblyNames = ReadPackagedManagedAssemblyNames (apkPath, AndroidTargetArch.Arm64);
+			var packagedUnlinkedTypeMapAssemblies = packagedAssemblyNames.Intersect (unlinkedTypeMapAssemblies, StringComparer.Ordinal).OrderBy (name => name, StringComparer.Ordinal).ToArray ();
+			Assert.IsEmpty (
+				packagedUnlinkedTypeMapAssemblies,
+				$"{apkPath} should package linked typemap assemblies, not untrimmed typemap assemblies removed by ILLink.");
+
+			AssertPostTrimR8InputsExcludeDeadFrameworkImplementor (apkPath, javaSourceDirectory, acwMapPath, proguardPrimaryPath);
+		}
+
+		[Test]
 		public void ReleaseCoreClrTrimmableTypeMap_DoesNotKeepMoreTypemapPeersThanLlvmIr ()
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
@@ -217,6 +266,64 @@ namespace Xamarin.Android.Build.Tests {
 				Assert.IsFalse (profile.ManagedAssemblyNames.Contains ("_Microsoft.Android.TypeMaps.dll"), "llvm-ir build should not package the trimmable root managed typemap assembly.");
 			}
 			return profile;
+		}
+
+		ISet<string> ReadPackagedManagedAssemblyNames (string apkPath, AndroidTargetArch targetArch)
+		{
+			(var explorers, var errorMessage) = AssemblyStoreExplorer.Open (apkPath);
+			Assert.IsNull (errorMessage, $"{apkPath} should contain readable assembly stores.");
+			Assert.IsNotNull (explorers, $"{apkPath} should contain assembly stores.");
+
+			var explorer = explorers.FirstOrDefault (e => e.TargetArch == targetArch);
+			Assert.IsNotNull (explorer, $"{apkPath} should contain an {targetArch} assembly store.");
+
+			return explorer.Assemblies
+				.Where (a => !a.Ignore && a.Name.EndsWith (".dll", StringComparison.OrdinalIgnoreCase) && !a.Name.EndsWith (".ni.dll", StringComparison.OrdinalIgnoreCase))
+				.Select (a => a.Name)
+				.ToHashSet (StringComparer.Ordinal);
+		}
+
+		void AssertPostTrimR8InputsExcludeDeadFrameworkImplementor (string apkPath, string javaSourceDirectory, string acwMapPath, string proguardPrimaryPath)
+		{
+			const string deadManagedType = "Android.Speech.IRecognitionListenerImplementor";
+			const string deadJavaName = "mono/android/speech/RecognitionListenerImplementor";
+			const string deadJavaDotName = "mono.android.speech.RecognitionListenerImplementor";
+
+			Assert.IsTrue (
+				Directory.EnumerateFiles (javaSourceDirectory, "MainActivity.java", SearchOption.AllDirectories).Any (),
+				"Post-trim Java source generation should keep the app activity JCW.");
+			FileAssert.DoesNotExist (
+				Path.Combine (javaSourceDirectory, "mono", "android", "speech", "RecognitionListenerImplementor.java"),
+				"Post-trim Java source generation should not copy framework listener implementors removed by ILLink.");
+
+			FileAssert.Exists (acwMapPath, "Post-trim scan should rewrite acw-map.txt for R8.");
+			var acwMap = File.ReadAllText (acwMapPath);
+			Assert.IsFalse (acwMap.Contains (deadManagedType, StringComparison.Ordinal), $"{acwMapPath} should be based on linked assemblies.");
+			Assert.IsFalse (acwMap.Contains (deadJavaDotName, StringComparison.Ordinal), $"{acwMapPath} should not keep removed framework listener implementors.");
+
+			FileAssert.Exists (proguardPrimaryPath, "R8 should generate a primary proguard configuration from the post-trim acw-map.");
+			Assert.IsFalse (
+				File.ReadAllText (proguardPrimaryPath).Contains (deadJavaDotName, StringComparison.Ordinal),
+				$"{proguardPrimaryPath} should not keep removed framework listener implementors.");
+
+			Assert.IsFalse (
+				ReadDexClassNames (apkPath).Contains (deadJavaName),
+				$"{apkPath} should not contain the removed framework listener implementor in classes.dex.");
+		}
+
+		ISet<string> ReadDexClassNames (string apkPath)
+		{
+			var classNames = new HashSet<string> (StringComparer.Ordinal);
+			using var zip = ZipFile.OpenRead (apkPath);
+			foreach (var entry in zip.Entries.Where (e => Regex.IsMatch (e.FullName, @"^classes(\d*)\.dex$", RegexOptions.CultureInvariant))) {
+				using var stream = entry.Open ();
+				using var memory = new MemoryStream ();
+				stream.CopyTo (memory);
+				foreach (var javaClass in DexProfileReader.Read (memory.ToArray ()).Classes) {
+					classNames.Add (javaClass.Name);
+				}
+			}
+			return classNames;
 		}
 
 		ApkComparisonProfile ReadApkProfile (string name, string apkPath, string acwMapPath, string javaSourceDirectory, string typeMapDirectory, string linkedAssemblyDirectory)
