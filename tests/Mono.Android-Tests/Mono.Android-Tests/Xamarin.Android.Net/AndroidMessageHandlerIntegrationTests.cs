@@ -1,5 +1,5 @@
 //
-// HttpClientIntegrationTests.cs
+// AndroidMessageHandlerIntegrationTests.cs
 //
 // Authors:
 //	Marek Safar  <marek.safar@gmail.com>
@@ -243,41 +243,6 @@ namespace Xamarin.Android.NetTests {
 					Assert.IsNull (failed, $"{messagePrefix}-2");
 				} finally {
 					listener.Abort ();
-					listener.Close ();
-				}
-			}
-		}
-
-		public void Send_Complete_NoContent (HttpMethod method)
-		{
-			bool? failed = null;
-			var listener = CreateListener (l => {
-					try {
-						var request = l.Request;
-
-						Assert.AreEqual (6, request.Headers.Count, $"#1-{method}");
-						Assert.AreEqual ("0", request.Headers ["Content-Length"], $"#1b-{method}");
-						Assert.AreEqual (method.Method, request.HttpMethod, $"#2-{method}");
-						Console.WriteLine ($"Asserts are fine - {method}");
-						failed = false;
-					} catch (Exception ex) {
-						failed = true;
-						Console.WriteLine (ex);
-					}
-				});
-
-			using (listener) {
-				try {
-					using (var handler = new Xamarin.Android.Net.AndroidMessageHandler ()) {
-						var client = new HttpClient (handler);
-						var request = new HttpRequestMessage (method, LocalServer);
-						var response = client.SendAsync (request, HttpCompletionOption.ResponseHeadersRead).Result;
-
-						Assert.AreEqual ("", response.Content.ReadAsStringAsync ().Result, $"#100-{method}");
-						Assert.AreEqual (HttpStatusCode.OK, response.StatusCode, $"#101-{method}");
-						Assert.AreEqual (false, failed, $"#102-{method}");
-					}
-				} finally {
 					listener.Close ();
 				}
 			}

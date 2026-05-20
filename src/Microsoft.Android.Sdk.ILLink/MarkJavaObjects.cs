@@ -28,8 +28,7 @@ namespace MonoDroid.Tuner {
 			if (MonoAndroidHelper.IsFrameworkAssembly (assembly))
 				return false;
 
-			return assembly.MainModule.HasTypeReference ("System.Net.Http.HttpMessageHandler") ||
-				assembly.MainModule.HasTypeReference ("Java.Lang.Object") ||
+			return assembly.MainModule.HasTypeReference ("Java.Lang.Object") ||
 				assembly.MainModule.HasTypeReference ("Android.Util.IAttributeSet");
 		}
 
@@ -104,21 +103,6 @@ namespace MonoDroid.Tuner {
 			PreserveAttributeSetConstructor (type);
 			PreserveInvoker (type);
 			PreserveInterfaces (type);
-		}
-
-		void PreservePublicParameterlessConstructors (TypeDefinition type)
-		{
-			if (!type.HasMethods)
-				return;
-
-			foreach (var constructor in type.Methods)
-			{
-				if (!constructor.IsConstructor || constructor.IsStatic || !constructor.IsPublic || constructor.HasParameters)
-					continue;
-
-				PreserveMethod (type, constructor);
-				break; // We can stop when found
-			}
 		}
 
 		void PreserveAttributeSetConstructor (TypeDefinition type)
