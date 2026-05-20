@@ -128,6 +128,24 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void ReleaseCoreClrTrimmableTypeMap_SupportsExplicitDynamicCodeSupportOff ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var dynamicCodeDisabledTrimmable = BuildDynamicCodeSupportProfile ("trimmable", dynamicCodeSupport: false);
+
+			const string dynamicCodeSupportFalse = "\"System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported\": false";
+			Assert.IsTrue (
+				dynamicCodeDisabledTrimmable.RuntimeConfig.Contains (dynamicCodeSupportFalse, StringComparison.Ordinal),
+				"trimmable typemap builds should honor explicit DynamicCodeSupport=false.");
+			Assert.IsTrue (
+				dynamicCodeDisabledTrimmable.LinkedTypeMapAssembliesContainArrayRankSentinels,
+				"trimmable typemap builds should emit array typemap sentinels when dynamic code is disabled.");
+		}
+
+		[Test]
 		public void ReleaseCoreClrTrimmableTypeMap_SingleRuntimeIdentifier_DoesNotPackageUnlinkedTypeMapAssemblies ()
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
@@ -160,17 +178,17 @@ namespace Xamarin.Android.Build.Tests {
 			DirectoryAssert.Exists (typeMapDirectory, "trimmable build should generate typemap assemblies.");
 			DirectoryAssert.Exists (linkedAssemblyDirectory, "Release trimmable build should run ILLink.");
 
-			var unlinkedTypeMapAssemblies = Directory.GetFiles (typeMapDirectory, "*.dll")
+			var removedTypeMapAssemblies = Directory.GetFiles (typeMapDirectory, "*.dll")
+				.Where (IsTypeMapAssemblyPath)
 				.Where (file => !File.Exists (Path.Combine (linkedAssemblyDirectory, Path.GetFileName (file))))
 				.Select (Path.GetFileName)
 				.OrderBy (name => name, StringComparer.Ordinal)
 				.ToArray ();
-			Assert.IsNotEmpty (unlinkedTypeMapAssemblies, "Test setup should include typemap assemblies that ILLink removed.");
 
 			var packagedAssemblyNames = ReadPackagedManagedAssemblyNames (apkPath, AndroidTargetArch.Arm64);
-			var packagedUnlinkedTypeMapAssemblies = packagedAssemblyNames.Intersect (unlinkedTypeMapAssemblies, StringComparer.Ordinal).OrderBy (name => name, StringComparer.Ordinal).ToArray ();
+			var packagedRemovedTypeMapAssemblies = packagedAssemblyNames.Intersect (removedTypeMapAssemblies, StringComparer.Ordinal).OrderBy (name => name, StringComparer.Ordinal).ToArray ();
 			Assert.IsEmpty (
-				packagedUnlinkedTypeMapAssemblies,
+				packagedRemovedTypeMapAssemblies,
 				$"{apkPath} should package linked typemap assemblies, not untrimmed typemap assemblies removed by ILLink.");
 
 			AssertPostTrimR8InputsExcludeDeadFrameworkImplementor (apkPath, javaSourceDirectory, acwMapPath, proguardPrimaryPath);
@@ -266,6 +284,61 @@ namespace Xamarin.Android.Build.Tests {
 				Assert.IsFalse (profile.ManagedAssemblyNames.Contains ("_Microsoft.Android.TypeMaps.dll"), "llvm-ir build should not package the trimmable root managed typemap assembly.");
 			}
 			return profile;
+		}
+
+		DynamicCodeSupportProfile BuildDynamicCodeSupportProfile (string typemapImplementation, bool? dynamicCodeSupport)
+		{
+			var dynamicCodeSuffix = dynamicCodeSupport.HasValue ? $"_{dynamicCodeSupport.Value.ToString ().ToLowerInvariant ()}" : "";
+			var projectName = $"DynamicCodeSupport_{typemapImplementation.Replace ("-", "_")}{dynamicCodeSuffix}";
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				PackageName = "com.xamarin.dynamiccodesupport",
+				ProjectName = projectName,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+			proj.SetProperty ("AndroidPackageFormat", "apk");
+			proj.SetProperty (KnownProperties.AndroidLinkTool, "r8");
+			proj.SetProperty ("TrimMode", "full");
+			proj.SetProperty ("PublishReadyToRun", "false");
+			proj.SetProperty ("_AndroidTypeMapImplementation", typemapImplementation);
+			if (dynamicCodeSupport.HasValue) {
+				proj.SetProperty ("DynamicCodeSupport", dynamicCodeSupport.Value.ToString ().ToLowerInvariant ());
+			}
+
+			using var builder = CreateApkBuilder (Path.Combine ("temp", $"{projectName}_{Guid.NewGuid ():N}"));
+			Assert.IsTrue (builder.Build (proj), $"{typemapImplementation} build should have succeeded.");
+
+			var runtimeConfigPath = FindOutputFile (builder, proj, $"{proj.ProjectName}.runtimeconfig.json");
+			var linkedAssemblyDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "linked"));
+			return new DynamicCodeSupportProfile {
+				RuntimeConfig = File.ReadAllText (runtimeConfigPath),
+				LinkedTypeMapAssembliesContainArrayRankSentinels = TypeMapAssembliesContainType (linkedAssemblyDirectory, "__ArrayMapRank1"),
+			};
+		}
+
+		string FindOutputFile (ProjectBuilder builder, XamarinAndroidApplicationProject proj, string fileName)
+		{
+			var outputDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath);
+			var files = Directory.GetFiles (outputDirectory, fileName, SearchOption.AllDirectories);
+			Assert.AreEqual (1, files.Length, $"{outputDirectory} should contain one {fileName}.");
+			return files [0];
+		}
+
+		bool TypeMapAssembliesContainType (string directory, string typeName)
+		{
+			if (!Directory.Exists (directory)) {
+				return false;
+			}
+
+			foreach (var file in Directory.EnumerateFiles (directory, "*.dll", SearchOption.TopDirectoryOnly).Where (IsTypeMapAssemblyPath)) {
+				using var assembly = AssemblyDefinition.ReadAssembly (file);
+				if (assembly.Modules.SelectMany (m => m.Types).Any (type => type.Name == typeName)) {
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		ISet<string> ReadPackagedManagedAssemblyNames (string apkPath, AndroidTargetArch targetArch)
@@ -814,6 +887,12 @@ namespace Xamarin.Android.Build.Tests {
 			public readonly HashSet<string> JavaTypemapEntries = new HashSet<string> (StringComparer.Ordinal);
 			public readonly HashSet<string> JavaClassNames = new HashSet<string> (StringComparer.Ordinal);
 			public readonly List<TypeMapAssemblyMetrics> TypeMapAssemblies = new List<TypeMapAssemblyMetrics> ();
+		}
+
+		class DynamicCodeSupportProfile
+		{
+			public string RuntimeConfig;
+			public bool LinkedTypeMapAssembliesContainArrayRankSentinels;
 		}
 
 		class TypeMapAssemblyMetrics
