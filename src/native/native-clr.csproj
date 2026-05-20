@@ -8,8 +8,10 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 
     <!-- HACK HACK: until CoreCLR exists for all the targets, work only with arm64 -->
+    <!-- armeabi-v7a is wired up elsewhere (workload manifest, Ndk.projitems, CMake presets, ArchToApiLevelNonMono) -->
+    <!-- but is excluded from the native build until the android-arm CoreCLR runtime pack ships (dotnet/runtime#127225). -->
     <AndroidSupportedTargetAotAbis>arm64:x86_64</AndroidSupportedTargetAotAbis>
-    <AndroidSupportedTargetJitAbis>armeabi-v7a:arm64-v8a:x86_64</AndroidSupportedTargetJitAbis>
+    <AndroidSupportedTargetJitAbis>arm64-v8a:x86_64</AndroidSupportedTargetJitAbis>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
