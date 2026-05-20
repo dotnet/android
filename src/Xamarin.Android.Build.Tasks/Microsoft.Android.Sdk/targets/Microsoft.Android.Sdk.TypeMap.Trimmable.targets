@@ -200,7 +200,6 @@
         OutputDirectory="$(IntermediateOutputPath)android"
         TargetName="$(TargetName)"
         Environments="@(_EnvironmentFiles)"
-        HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
         EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)" />
 
     <!-- Copy generated manifest to expected location -->
