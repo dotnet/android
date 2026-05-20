@@ -170,11 +170,11 @@ namespace Xamarin.Android.NetTests {
 		[UnconditionalSuppressMessage ("Trimming", "IL2075", Justification = "Tests private fields are preserved by other means")]
 		static Type GetInnerHandlerType (HttpClient httpClient)
 		{
-			BindingFlags bflasgs = BindingFlags.Instance | BindingFlags.NonPublic;
-			FieldInfo handlerField = typeof (HttpMessageInvoker).GetField ("_handler", bflasgs);
+			BindingFlags bflags = BindingFlags.Instance | BindingFlags.NonPublic;
+			FieldInfo handlerField = typeof (HttpMessageInvoker).GetField ("_handler", bflags);
 			Assert.IsNotNull (handlerField);
 			object handler = handlerField.GetValue (httpClient);
-			FieldInfo innerHandlerField = handler.GetType ().GetField ("_delegatingHandler", bflasgs);
+			FieldInfo innerHandlerField = handler.GetType ().GetField ("_delegatingHandler", bflags);
 			Assert.IsNotNull (handlerField);
 			object innerHandler = innerHandlerField.GetValue (handler);
 			return innerHandler.GetType ();
