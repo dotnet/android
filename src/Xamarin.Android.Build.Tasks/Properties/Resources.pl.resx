@@ -589,6 +589,10 @@ Zmień wartość w pliku AndroidManifest.xml, aby odpowiadała wartości $(Suppo
     <value>Nie można połączyć natywnej biblioteki współużytkowanej: {0}{1}</value>
     <comment>The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
   </data>
+  <data name="XA3008" xml:space="preserve">
+    <value>Failed to extract debug info from '{0}'{1}</value>
+    <comment>'{0}' is the native shared library filename. '{1}' is the full output of the failed command, starting and ending with a newline.</comment>
+  </data>
   <data name="XA4209" xml:space="preserve">
     <value>Nie można wygenerować typu języka Java dla klasy {0} z powodu wyjątku {1}</value>
     <comment>{0} - The managed type name
@@ -1016,15 +1020,15 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
 </comment>
   </data>
   <data name="XA1045" xml:space="preserve">
-    <value>Input file `{0}` does not start with `&lt;replacements/&gt;`.</value>
+    <value>Plik wejściowy `{0}` nie rozpoczyna się od elementu `&lt;replacements/&gt;`.</value>
     <comment>{0} - file path</comment>
   </data>
   <data name="XA1046" xml:space="preserve">
-    <value>Attribute '{0}' in element '{1}' has value '{2}' that cannot be parsed as boolean; {3} line {4}.</value>
+    <value>Atrybut „{0}” w elemencie „{1}” ma wartość „{2}”, która nie może być analizowana jako wartość logiczna; {3} wiersz {4}.</value>
     <comment>{0} - attribute name; {1} - element name; {2} - attribute value; {3} - file path; {4} - line number</comment>
   </data>
   <data name="XA1047" xml:space="preserve">
-    <value>Required attribute '{0}' missing from element '{1}'; {2} line {3}.</value>
+    <value>Brak wymaganego atrybutu „{0}” w elemencie „{1}”; {2} wiersza {3}.</value>
     <comment>{0} - attribute name; {1} - element name; {2} - file path; {3} - line number</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
@@ -1093,12 +1097,12 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
 {0} - Java type name from AndroidManifest.xml</comment>
   </data>
   <data name="XA4251" xml:space="preserve">
-    <value>Type '{0}' uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map. To work around this, do not target the trimmable type map (for example, by switching to the 'llvm-ir' type map implementation), and please report this scenario at https://github.com/dotnet/android/issues so the team can evaluate whether to support it.</value>
+    <value>Typ „{0}” używa [JniAddNativeMethodRegistrationAttribute], co nie jest obsługiwane przez mapę typów z możliwością przycinania. Aby obejść ten problem, nie korzystaj z mapy typów z możliwością przycinania (na przykład przez przejście na implementację mapy typów „llvm-ir”) i zgłoś ten scenariusz na https://github.com/dotnet/android/issues, aby zespół mógł ocenić, czy warto dodać dla niego obsługę.</value>
     <comment>The following are literal names and should not be translated: JniAddNativeMethodRegistrationAttribute, llvm-ir.
 {0} - Fully-qualified managed type name</comment>
   </data>
   <data name="XA4252" xml:space="preserve">
-    <value>Insecure HTTP Maven repository URL '{0}' is not allowed. Use an HTTPS URL, or set AllowInsecureHttp="true" metadata on the item to override this check.</value>
+    <value>Niezabezpieczony adres URL repozytorium HTTP Maven „{0}” jest niedozwolony. Aby pominąć tę kontrolę, należy użyć adresu URL w protokole HTTPS lub ustawić w metadanych elementu wartość AllowInsecureHttp="true".</value>
     <comment>The following are literal names and should not be translated: HTTP, HTTPS, Maven, AllowInsecureHttp
 {0} - The insecure HTTP URL</comment>
   </data>
