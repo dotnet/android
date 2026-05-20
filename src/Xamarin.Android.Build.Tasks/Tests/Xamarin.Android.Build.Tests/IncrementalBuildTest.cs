@@ -103,6 +103,57 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void JniRemappingCountsSurviveIncrementalBuild ()
+		{
+			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				OtherBuildItems = {
+					new AndroidItem._AndroidRemapMembers ("Remap.xml") {
+						Encoding = Encoding.UTF8,
+						TextContent = () => """
+<replacements>
+  <replace-type from="android/app/Activity" to="example/RemapActivity" />
+  <replace-method
+      source-type="example/RemapActivity"
+      source-method-name="onCreate"
+      target-type="example/RemapActivity"
+      target-method-name="onMyCreate"
+      target-method-instance-to-static="false" />
+</replacements>
+""",
+					},
+				},
+			};
+			proj.SetRuntime (runtime);
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "first build failed");
+				AssertJniRemappingCounts (proj, b, expectedTypeCount: 1, expectedMethodCount: 1);
+
+				proj.MainActivity += Environment.NewLine + "// Force an incremental C# rebuild.";
+				proj.Touch ("MainActivity.cs");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build failed");
+				b.Output.AssertTargetIsNotSkipped ("_GenerateAndroidRemapNativeCode");
+				AssertJniRemappingCounts (proj, b, expectedTypeCount: 1, expectedMethodCount: 1);
+			}
+		}
+
+		void AssertJniRemappingCounts (XamarinAndroidApplicationProject proj, ProjectBuilder builder, uint expectedTypeCount, uint expectedMethodCount)
+		{
+			string objDirPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+			var envFiles = EnvironmentHelper.GatherEnvironmentFiles (objDirPath, "arm64-v8a;x86_64", required: true, runtime: AndroidRuntime.CoreCLR);
+			var appConfig = (EnvironmentHelper.ApplicationConfig_CoreCLR) EnvironmentHelper.ReadApplicationConfig (envFiles, AndroidRuntime.CoreCLR);
+			Assert.AreEqual (expectedTypeCount, appConfig.jni_remapping_replacement_type_count, "jni_remapping_replacement_type_count should be preserved.");
+			Assert.AreEqual (expectedMethodCount, appConfig.jni_remapping_replacement_method_index_entry_count, "jni_remapping_replacement_method_index_entry_count should be preserved.");
+		}
+
+		[Test]
 		public void CheckNothingIsDeletedByIncrementalClean ([Values] bool enableMultiDex, [Values] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
