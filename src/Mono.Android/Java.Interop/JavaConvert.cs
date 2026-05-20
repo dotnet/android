@@ -162,6 +162,72 @@ namespace Java.Interop {
 					typeof (Func<IntPtr, JniHandleOwnership, object>), m);
 		}
 
+		internal static object? ConvertArrayElement (Array array, IntPtr handle, JniHandleOwnership transfer)
+		{
+			var elementType = array.GetType ().GetElementType ();
+			if (elementType is null || elementType == typeof (object))
+				return FromJniHandleWithRuntimeTypeMapping (handle, transfer);
+
+			if (JniHandleConverters.TryGetValue (elementType, out var converter))
+				return converter (handle, transfer);
+
+			if (elementType.IsArray)
+				return JNIEnv.GetArray (handle, transfer, elementType.GetElementType ());
+
+			if (RuntimeFeature.TrimmableTypeMap) {
+				return FromJniHandleWithTypeMapping (handle, transfer, elementType);
+			} else {
+				return ConvertLegacyArrayElement (handle, transfer, elementType);
+			}
+		}
+
+		static object? FromJniHandleWithRuntimeTypeMapping (IntPtr handle, JniHandleOwnership transfer)
+		{
+			var converter = GetJniHandleConverter (GetTypeMapping (handle));
+			if (converter != null)
+				return converter (handle, transfer);
+			return FromJniHandle (handle, transfer);
+		}
+
+		static object? FromJniHandleWithTypeMapping (IntPtr handle, JniHandleOwnership transfer, Type elementType)
+		{
+			bool consumed = false;
+			try {
+				var peeked = Java.Lang.Object.PeekObject (handle, elementType);
+				if (peeked != null) {
+					consumed = true;
+					JNIEnv.DeleteRef (handle, transfer);
+					return peeked;
+				}
+
+				if (elementType.IsGenericType) {
+					throw new NotSupportedException (
+						FormattableString.Invariant ($"Cannot convert Java collection elements to closed generic array element type '{elementType}'."));
+				}
+
+				var reference = new JniObjectReference (handle, JniObjectReferenceType.Local);
+				var peer = JniEnvironment.Runtime.ValueManager.GetPeer (reference);
+				if (peer != null) {
+					consumed = true;
+					JNIEnv.DeleteRef (handle, transfer);
+					return peer;
+				}
+
+				consumed = true;
+				return FromJniHandle (handle, transfer);
+			} finally {
+				if (!consumed) {
+					JNIEnv.DeleteRef (handle, transfer);
+				}
+			}
+		}
+
+		[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "Legacy non-trimmable typemap path preserves constructors by MarkJavaObjects.")]
+		static object? ConvertLegacyArrayElement (IntPtr handle, JniHandleOwnership transfer, Type elementType)
+		{
+			return FromJniHandle (handle, transfer, elementType);
+		}
+
 		public static T? FromJniHandle<
 				[DynamicallyAccessedMembers (Constructors)]
 				T
@@ -498,4 +564,3 @@ namespace Java.Interop {
 		}
 	}
 }
-

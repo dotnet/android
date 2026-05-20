@@ -28,6 +28,14 @@ namespace Android.Runtime {
 				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType = null)
 		{
+			return JavaConvert.FromJniHandle (
+					InternalGetJniHandle (location),
+					JniHandleOwnership.TransferLocalRef,
+					targetType);
+		}
+
+		unsafe IntPtr InternalGetJniHandle (int location)
+		{
 			const string id = "get.(I)Ljava/lang/Object;";
 			JniObjectReference obj;
 			try {
@@ -39,10 +47,7 @@ namespace Android.Runtime {
 				throw new ArgumentOutOfRangeException (ex.Message, ex);
 			}
 
-			return JavaConvert.FromJniHandle (
-					obj.Handle,
-					JniHandleOwnership.TransferLocalRef,
-					targetType);
+			return obj.Handle;
 		}
 
 		//
@@ -269,11 +274,6 @@ namespace Android.Runtime {
 
 		public void CopyTo (Array array, int array_index)
 		{
-			[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "JavaList<T> constructors are preserved by the MarkJavaObjects trimmer step.")]
-			[return: DynamicallyAccessedMembers (Constructors)]
-			static Type GetElementType (Array array) =>
-				array.GetType ().GetElementType ();
-
 			if (array == null)
 				throw new ArgumentNullException ("array");
 			if (array_index < 0)
@@ -281,10 +281,11 @@ namespace Android.Runtime {
 			if (array.Length < array_index + Count)
 				throw new ArgumentException ("array");
 
-			var targetType = GetElementType (array);
 			int c = Count;
 			for (int i = 0; i < c; i++)
-				array.SetValue (InternalGet (i, targetType), array_index + i);
+				array.SetValue (
+					JavaConvert.ConvertArrayElement (array, InternalGetJniHandle (i), JniHandleOwnership.TransferLocalRef),
+					array_index + i);
 		}
 
 		public IEnumerator GetEnumerator ()
