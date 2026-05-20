@@ -246,6 +246,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA5300](xa5300.md): The Android/Java SDK Directory could not be found.
 + [XA5301](xa5301.md): Failed to generate Java type for class: {managedType} due to MAX_PATH: {exception}
 + [XA5302](xa5302.md): Two processes may be building this project at once. Lock file exists at path: {path}
++ [XA5303](xa5303.md): Failed to parse 'DescriptorIndex' metadata value '{value}' for assembly '{assembly}'.
 
 ## XA6xxx: Internal tools
 
