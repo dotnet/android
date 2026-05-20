@@ -1,16 +1,17 @@
 <Project Sdk="Microsoft.Build.NoTargets">
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>netstandard2.0</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <OutputPath Condition="'$(OutputPath)'==''">bin\$(Configuration)</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\androidsdk\androidsdk.csproj" ReferenceOutputAssembly="False" />
+    <ProjectReference Include="..\openjdk\openjdk.csproj" ReferenceOutputAssembly="False" />
   </ItemGroup>
-  
+
   <Import Project="..\..\Configuration.props" />
-  
-  <Import Project="manifestmerger.targets" />
+  <Import Project="androidsdk.targets" />
 </Project>

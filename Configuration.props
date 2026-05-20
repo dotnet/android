@@ -123,6 +123,11 @@
     <XABundleToolHash Condition="'$(XABundleToolHash)' == ''">A099CFA1543F55593BC2ED16A70A7C67FE54B1747BB7301F37FDFD6D91028E29</XABundleToolHash>
     <XABinutilsVersion Condition="'$(XABinutilsVersion)' == ''">L_18.1.6-8.0.0-1</XABinutilsVersion>
     <XABinutilsHash Condition="'$(XABinutilsHash)' == ''">5394EA6C411DA3A08BF0E6A87E1DD1B98BD2562B896C0CACD18E29E2FD4C0660</XABinutilsHash>
+    <!-- Microsoft OpenJDK: https://learn.microsoft.com/en-us/java/openjdk/download -->
+    <MicrosoftOpenJDKVersion Condition="'$(MicrosoftOpenJDKVersion)' == ''">21.0.8</MicrosoftOpenJDKVersion>
+    <MicrosoftOpenJDKFolder Condition="'$(MicrosoftOpenJDKFolder)' == ''">jdk-21</MicrosoftOpenJDKFolder>
+    <MicrosoftOpenJDKRootDirName Condition="'$(MicrosoftOpenJDKRootDirName)' == ''">jdk-21.0.8+9</MicrosoftOpenJDKRootDirName>
+    <JavaSdkDirectory Condition=" '$(JavaSdkDirectory)' == '' ">$(AndroidToolchainDirectory)\$(MicrosoftOpenJDKFolder)</JavaSdkDirectory>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(NUGET_PACKAGES)' != ''">$(NUGET_PACKAGES)</XAPackagesDir>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(HostOS)' == 'Windows'">$(userprofile)\.nuget\packages</XAPackagesDir>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(HostOS)' != 'Windows'">$(HOME)/.nuget/packages</XAPackagesDir>
