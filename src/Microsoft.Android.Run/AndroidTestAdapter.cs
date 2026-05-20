@@ -77,9 +77,14 @@ class AndroidTestAdapter(
 
 		var testResults = ParseTrxFile (localTrxPath);
 		foreach (var result in testResults) {
+			// Build the failure message including stack trace for non-TRX consumers
+			var failureMessage = result.ErrorMessage ?? "Test failed";
+			if (!string.IsNullOrEmpty (result.StackTrace))
+				failureMessage += "\n" + result.StackTrace;
+
 			var stateProperty = result.Outcome switch {
 				TrxOutcome.Passed => (IProperty) new PassedTestNodeStateProperty (),
-				TrxOutcome.Failed => new FailedTestNodeStateProperty (result.ErrorMessage ?? "Test failed"),
+				TrxOutcome.Failed => new FailedTestNodeStateProperty (failureMessage),
 				TrxOutcome.NotExecuted => new SkippedTestNodeStateProperty (result.ErrorMessage),
 				_ => new PassedTestNodeStateProperty (),
 			};
@@ -89,7 +94,7 @@ class AndroidTestAdapter(
 			// Add TRX report properties required by ITrxReportCapability
 			if (!string.IsNullOrEmpty (result.ClassName))
 				properties.Add (new TrxFullyQualifiedTypeNameProperty (result.ClassName));
-			if (result.Outcome == TrxOutcome.Failed)
+			if (result.Outcome == TrxOutcome.Failed && (!string.IsNullOrEmpty (result.ErrorMessage) || !string.IsNullOrEmpty (result.StackTrace)))
 				properties.Add (new TrxExceptionProperty (result.ErrorMessage, result.StackTrace));
 
 			var testNode = new TestNode {
