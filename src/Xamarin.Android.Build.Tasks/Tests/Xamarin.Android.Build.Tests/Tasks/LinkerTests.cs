@@ -259,7 +259,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var app = new XamarinAndroidApplicationProject { IsRelease = isRelease };
 			app.SetRuntime (runtime);
-			app.SetAndroidSupportedAbis ("arm64-v8a");
+			app.SetRuntimeIdentifiers (new[] { "arm64-v8a" });
 			app.AddReference (lib);
 			using var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName));
 			Assert.IsTrue (libBuilder.Build (lib), "library build should have succeeded.");

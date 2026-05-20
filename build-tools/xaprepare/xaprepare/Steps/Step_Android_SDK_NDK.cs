@@ -229,27 +229,17 @@ namespace Xamarin.Android.Prepare
 				foreach (string file in ClangArchFiles) {
 					CopyFile (abi, clangArchLibPath, file);
 				}
-
-				// NativeAOT links against dotnet/runtime's libSystem.Native.a which was
-				// compiled targeting a higher API level. Copy a second set of CRT/system
-				// lib stubs from the higher API level sysroot for the NativeAOT runtime pack.
-				if (Configurables.Defaults.NativeAotSupportedAbis.Contains (abi)) {
-					string nativeAotCrtFilesPath = Path.Combine (abiDir, BuildAndroidPlatforms.NdkMinimumNonMonoAPI);
-					foreach (string file in CRTFiles) {
-						CopyFile (abi, nativeAotCrtFilesPath, file, redistDirName: "redist-nativeaot");
-					}
-				}
 			}
 
 			return true;
 
-			void CopyFile (string abi, string sourceDir, string fileName, string? redistDirName = null)
+			void CopyFile (string abi, string sourceDir, string fileName)
 			{
 				Log.StatusLine ($"  {context.Characters.Bullet} Copying NDK redistributable: ", $"{fileName} ({abi})", tailColor: ConsoleColor.White);
 				string rid = Configurables.Defaults.AbiToRID [abi];
 				string outputDir = Path.Combine (
 					context.Properties.GetRequiredValue (KnownProperties.NativeRuntimeOutputRootDir),
-					redistDirName ?? context.Properties.GetRequiredValue (KnownProperties.RuntimeRedistDirName),
+					context.Properties.GetRequiredValue (KnownProperties.RuntimeRedistDirName),
 					rid
 				);
 

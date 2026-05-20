@@ -252,7 +252,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 			};
 			proj.SetRuntime (runtime);
 			proj.PackageReferences.Add(KnownPackages.SQLitePCLRaw_Core);
-			proj.SetAndroidSupportedAbis ("x86_64");
+			proj.SetRuntimeIdentifiers (new[] { "x86_64" });
 			proj.SetProperty (proj.ReleaseProperties, "AndroidStoreUncompressedFileExtensions", compressNativeLibraries ? "" : "so");
 			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
@@ -513,7 +513,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, perAbiApk);
 			if (perAbiApk) {
 				if (runtime == AndroidRuntime.MonoVM) {
-					proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "arm64-v8a", "x86_64");
+					proj.SetRuntimeIdentifiers (new[] { "armeabi-v7a", "x86", "arm64-v8a", "x86_64" });
 				} else {
 					proj.SetRuntimeIdentifiers (AndroidTargetArch.Arm64, AndroidTargetArch.X86_64);
 				}
@@ -531,9 +531,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 
 				//Make sure the APKs are signed
 				foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
-					using (var zip = ZipHelper.OpenZip (apk)) {
-						Assert.IsTrue (zip.Any (e => e.FullName == "META-INF/MANIFEST.MF"), $"APK file `{apk}` is not signed! It is missing `META-INF/MANIFEST.MF`.");
-					}
+					AssertApkIsSigned (apk);
 				}
 
 				// Make sure the APKs have unique version codes
@@ -568,9 +566,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 
 				//Make sure the APKs are signed
 				foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
-					using (var zip = ZipHelper.OpenZip (apk)) {
-						Assert.IsTrue (zip.Any (e => e.FullName == "META-INF/MANIFEST.MF"), $"APK file `{apk}` is not signed! It is missing `META-INF/MANIFEST.MF`.");
-					}
+					AssertApkIsSigned (apk);
 				}
 			}
 
@@ -1010,7 +1006,7 @@ public class Test
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 				// This combination produces android:extractNativeLibs="false" by default
-				SupportedOSPlatformVersion = "23",
+				SupportedOSPlatformVersion = "24",
 				ManifestMerger = "manifestmerger.jar",
 			};
 			proj.SetRuntime (runtime);

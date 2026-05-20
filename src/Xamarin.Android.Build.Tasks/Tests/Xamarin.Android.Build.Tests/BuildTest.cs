@@ -167,7 +167,7 @@ namespace Xamarin.Android.Build.Tests
 			var manifest = XDocument.Load (manifestPath);
 			XNamespace ns = "http://schemas.android.com/apk/res/android";
 			var uses_sdk = manifest.Root.Element ("uses-sdk");
-			Assert.AreEqual ("21", uses_sdk.Attribute (ns + "minSdkVersion").Value);
+			Assert.AreEqual ("24", uses_sdk.Attribute (ns + "minSdkVersion").Value);
 			Assert.AreEqual (XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major.ToString (),
 				uses_sdk.Attribute (ns + "targetSdkVersion").Value);
 
@@ -256,7 +256,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (proj.ActiveConfigurationProperties, "UseInterpreter", useInterpreter.ToString ());
 
 			var abis = new [] { "armeabi-v7a", "x86" };
-			proj.SetAndroidSupportedAbis (abis);
+			proj.SetRuntimeIdentifiers (abis);
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
@@ -372,7 +372,7 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject ();
 			// MonoVM-only test
 			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
-			proj.SetAndroidSupportedAbis (supportedAbi);
+			proj.SetRuntimeIdentifiers (new[] { supportedAbi });
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugSymbols", debugSymbols);
 			if (optimize.HasValue)
 				proj.SetProperty (proj.ActiveConfigurationProperties, "Optimize", optimize.Value);

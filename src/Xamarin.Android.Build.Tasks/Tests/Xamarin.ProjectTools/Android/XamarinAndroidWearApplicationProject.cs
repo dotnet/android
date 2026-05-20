@@ -34,7 +34,7 @@ namespace Xamarin.ProjectTools
 			PackageReferences.Add (KnownPackages.XamarinAndroidXWear);
 
 			// uses-sdk:minSdkVersion 21 cannot be smaller than version 23 declared in library androidx.wear.wear.aar as the library might be using APIs not available in 21
-			SupportedOSPlatformVersion = "23";
+			SupportedOSPlatformVersion = "24";
 
 			MainActivity = default_main_activity;
 			StringsXml = default_strings_xml;
