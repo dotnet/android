@@ -214,6 +214,8 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4235](xa4249.md): Maven artifact specification '{artifact}' is invalid. The correct format is 'group_id:artifact_id:version'.
 + [XA4250](xa4250.md): Manifest-referenced type '{type}' was not found in any scanned assembly. It may be a framework type.
 + [XA4252](xa4252.md): Insecure HTTP Maven repository URL '{url}' is not allowed. Use an HTTPS URL, or set AllowInsecureHttp="true" metadata on the item to override this check.
++ [XA4253](xa4253.md): Trimmable type map Java source input directory '{input}' and output directory '{output}' must be different.
++ [XA4254](xa4254.md): Generated trimmable type map Java source '{path}' was not found.
 + XA4300: Native library '{library}' will not be bundled because it has an unsupported ABI.
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml\`: {ex}
