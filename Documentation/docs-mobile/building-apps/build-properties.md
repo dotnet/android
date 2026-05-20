@@ -602,7 +602,8 @@ The default value is `true`. When set to `false`, disables the generation of `Re
 ## AndroidHttpClientHandlerType
 
 > [!NOTE]
-> This property is no longer used in .NET 11.
+> This property is not supported in .NET 11. Remove it from your project file
+> and use `UseNativeHttpHandler` instead.
 
 ## AndroidIgnoreAllJniPreload
 
