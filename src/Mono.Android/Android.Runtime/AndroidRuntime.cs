@@ -832,7 +832,11 @@ namespace Android.Runtime {
 			return null;
 		}
 
-		public override void ActivatePeer (IJavaPeerable? self, JniObjectReference reference, ConstructorInfo cinfo, object? []? argumentValues)
+		public override void ActivatePeer (
+			JniObjectReference reference,
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type type,
+			ConstructorInfo cinfo,
+			object?[]? argumentValues)		
 		{
 			Java.Interop.TypeManager.Activate (reference.Handle, cinfo, argumentValues);
 		}
