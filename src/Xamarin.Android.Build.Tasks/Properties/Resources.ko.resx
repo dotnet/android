@@ -589,6 +589,10 @@ AndroidManifest.xml의 값을 $(SupportedOSPlatformVersion) 값에 맞도록 변
     <value>네이티브 공유 라이브러리를 연결할 수 없음: {0}{1}</value>
     <comment>The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
   </data>
+  <data name="XA3008" xml:space="preserve">
+    <value>Failed to extract debug info from '{0}'{1}</value>
+    <comment>'{0}' is the native shared library filename. '{1}' is the full output of the failed command, starting and ending with a newline.</comment>
+  </data>
   <data name="XA4209" xml:space="preserve">
     <value>클래스의 Java 형식({0})을 생성하지 못했습니다(원인: {1}).</value>
     <comment>{0} - The managed type name

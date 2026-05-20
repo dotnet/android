@@ -589,6 +589,10 @@ Zmień wartość w pliku AndroidManifest.xml, aby odpowiadała wartości $(Suppo
     <value>Nie można połączyć natywnej biblioteki współużytkowanej: {0}{1}</value>
     <comment>The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
   </data>
+  <data name="XA3008" xml:space="preserve">
+    <value>Failed to extract debug info from '{0}'{1}</value>
+    <comment>'{0}' is the native shared library filename. '{1}' is the full output of the failed command, starting and ending with a newline.</comment>
+  </data>
   <data name="XA4209" xml:space="preserve">
     <value>Nie można wygenerować typu języka Java dla klasy {0} z powodu wyjątku {1}</value>
     <comment>{0} - The managed type name

@@ -589,6 +589,10 @@ Altere o valor no AndroidManifest.xml para corresponder ao valor $(SupportedOSPl
     <value>Não foi possível vincular a biblioteca compartilhada nativa: {0}{1}</value>
     <comment>The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
   </data>
+  <data name="XA3008" xml:space="preserve">
+    <value>Failed to extract debug info from '{0}'{1}</value>
+    <comment>'{0}' is the native shared library filename. '{1}' is the full output of the failed command, starting and ending with a newline.</comment>
+  </data>
   <data name="XA4209" xml:space="preserve">
     <value>Falha ao gerar o tipo Java para a classe: {0} devido a {1}</value>
     <comment>{0} - The managed type name
