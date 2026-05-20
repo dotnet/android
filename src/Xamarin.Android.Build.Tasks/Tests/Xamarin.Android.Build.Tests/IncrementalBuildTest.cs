@@ -670,6 +670,7 @@ namespace Lib2
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
@@ -1028,6 +1029,7 @@ namespace Lib2
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 
 			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
@@ -1669,6 +1671,7 @@ namespace Lib2
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};

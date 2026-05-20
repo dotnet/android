@@ -220,6 +220,7 @@ namespace Bug12935
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 				ManifestMerger = "manifestmerger.jar",
