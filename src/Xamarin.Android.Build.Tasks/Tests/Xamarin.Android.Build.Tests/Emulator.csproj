@@ -4,5 +4,8 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
   <Import Project="$(MSBuildThisFileDirectory)..\..\..\..\Configuration.props" />
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\..\..\..\src\androidsdk\androidsdk.csproj" ReferenceOutputAssembly="False" />
+  </ItemGroup>
   <Import Project="$(MSBuildThisFileDirectory)..\..\..\..\build-tools\scripts\TestApks.targets" />
 </Project>

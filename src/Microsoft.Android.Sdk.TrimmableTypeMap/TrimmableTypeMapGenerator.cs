@@ -141,7 +141,7 @@ public class TrimmableTypeMapGenerator
 
 	(List<JavaPeerInfo> peers, AssemblyManifestInfo manifestInfo) ScanAssemblies (IReadOnlyList<(string Name, PEReader Reader)> assemblies, string? packageNamingPolicy)
 	{
-		using var scanner = new JavaPeerScanner (packageNamingPolicy);
+		using var scanner = new JavaPeerScanner (packageNamingPolicy, logger);
 		var peers = scanner.Scan (assemblies);
 		var manifestInfo = scanner.ScanAssemblyManifestInfo ();
 		logger.LogJavaPeerScanInfo (assemblies.Count, peers.Count);

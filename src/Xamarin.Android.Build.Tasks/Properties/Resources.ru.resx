@@ -589,6 +589,10 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>Не удалось связать платформенную общую библиотеку: {0}{1}</value>
     <comment>The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
   </data>
+  <data name="XA3008" xml:space="preserve">
+    <value>Failed to extract debug info from '{0}'{1}</value>
+    <comment>'{0}' is the native shared library filename. '{1}' is the full output of the failed command, starting and ending with a newline.</comment>
+  </data>
   <data name="XA4209" xml:space="preserve">
     <value>Не удалось создать тип Java для класса {0}, так как возникло исключение {1}</value>
     <comment>{0} - The managed type name
@@ -1015,6 +1019,18 @@ In this message, the term "handheld app" means "app for handheld devices."
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
 </comment>
   </data>
+  <data name="XA1045" xml:space="preserve">
+    <value>Входной файл `{0}` не начинается с `&lt;replacements/&gt;`.</value>
+    <comment>{0} - file path</comment>
+  </data>
+  <data name="XA1046" xml:space="preserve">
+    <value>Атрибут "{0}" в элементе "{1}" использует значение "{2}", которое невозможно проанализировать как логическое; {3} строка {4}.</value>
+    <comment>{0} - attribute name; {1} - element name; {2} - attribute value; {3} - file path; {4} - line number</comment>
+  </data>
+  <data name="XA1047" xml:space="preserve">
+    <value>Необходимый атрибут "{0}" отсутствует в элементе "{1}"; {2} строка {3}.</value>
+    <comment>{0} - attribute name; {1} - element name; {2} - file path; {3} - line number</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>Зависимость Java "{0}" не удовлетворена.</value>
     <comment>The following are literal names and should not be translated: Java.
@@ -1079,6 +1095,16 @@ In this message, the term "handheld app" means "app for handheld devices."
     <value>Тип "{0}", на который ссылается Manifest, не найден ни в одной из отсканированных сборок. Возможно, это тип framework.</value>
     <comment>The following are literal names and should not be translated: Manifest, framework.
 {0} - Java type name from AndroidManifest.xml</comment>
+  </data>
+  <data name="XA4251" xml:space="preserve">
+    <value>В типе"{0}" используется атрибут [JniAddNativeMethodRegistrationAttribute], который не поддерживается картой типов с возможностью обрезки. Чтобы обойти эту проблему, не нацеливайтесь на карту типов с возможностью обрезки (например, переключившись на реализацию карты типа "llvm-ir"), и сообщите об этом случае на странице https://github.com/dotnet/android/issues, чтобы команда разработчиков могла решить, стоит ли добавлять поддержку этой функции.</value>
+    <comment>The following are literal names and should not be translated: JniAddNativeMethodRegistrationAttribute, llvm-ir.
+{0} - Fully-qualified managed type name</comment>
+  </data>
+  <data name="XA4252" xml:space="preserve">
+    <value>Небезопасный URL-адрес репозитория Maven HTTP "{0}" не допускается. Используйте URL-адрес HTTPS или задайте для элемента метаданные AllowInsecureHttp="true", чтобы переопределить эту проверку.</value>
+    <comment>The following are literal names and should not be translated: HTTP, HTTPS, Maven, AllowInsecureHttp
+{0} - The insecure HTTP URL</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>Не удалось выполнить команду "{0}".\n{1}</value>

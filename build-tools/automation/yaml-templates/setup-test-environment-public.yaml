@@ -5,7 +5,7 @@ parameters:
   configuration: $(XA.Build.Configuration)
   xaSourcePath: $(System.DefaultWorkingDirectory)
   jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
-  useAgentJdkPath: true
+  useAgentJdkPath: false
   remove_dotnet: false
   dotnetVersion: $(DotNetSdkVersion)
   dotnetQuality: $(DotNetSdkQuality)

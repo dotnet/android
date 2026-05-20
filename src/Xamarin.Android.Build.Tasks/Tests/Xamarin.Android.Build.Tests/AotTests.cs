@@ -399,7 +399,7 @@ namespace "+ libName + @" {
 			proj.SetRuntime (AndroidRuntime.MonoVM);
 
 			var supportedAbi = "arm64-v8a";
-			proj.SetAndroidSupportedAbis (supportedAbi);
+			proj.SetRuntimeIdentifiers (new[] { supportedAbi });
 			proj.SetProperty ("EnableLLVM", true.ToString ());
 
 			var xaAssemblySize = 0;
@@ -440,7 +440,7 @@ namespace "+ libName + @" {
 			};
 			// Mono-only test
 			proj.SetRuntime (AndroidRuntime.MonoVM);
-			proj.SetAndroidSupportedAbis (supportedAbis);
+			proj.SetRuntimeIdentifiers (supportedAbis.Split (';'));
 			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.RunTarget (proj, target: "Build"));
 
@@ -475,7 +475,7 @@ namespace "+ libName + @" {
 			proj.SetProperty ("EnableLLVM", "True");
 
 			var abis = new [] { "arm64-v8a", "x86_64" };
-			proj.SetAndroidSupportedAbis (abis);
+			proj.SetRuntimeIdentifiers (abis);
 
 			var libPaths = new List<string> ();
 			libPaths.Add (Path.Combine ("android-arm64", "aot", "Mono.Android.dll.so"));

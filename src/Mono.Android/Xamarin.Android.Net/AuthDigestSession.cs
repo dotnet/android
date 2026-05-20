@@ -113,10 +113,8 @@ namespace Xamarin.Android.Net
 		{
 			var uri = new Uri (webRequest.URL?.ToString ()!);
 			string ha2 = $"{webRequest.RequestMethod}:{uri.PathAndQuery}";
-			if (QOP == "auth-int") {
-				// TODO
-				// ha2 += String.Format (":{0}", hentity);
-			}
+			// Note: auth-int QOP (RFC 7616) is not supported; it would require
+			// hashing the entity body which is not available here.
 			return HashToHexString (ha2);
 		}
 

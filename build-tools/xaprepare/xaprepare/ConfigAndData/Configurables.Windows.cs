@@ -5,15 +5,6 @@ namespace Xamarin.Android.Prepare
 {
 	partial class Configurables
 	{
-		const string AdoptOpenJDKUpdate = "345";
-		const string AdoptOpenJDKBuild = "b01";
-
-		const string JetBrainsOpenJDKOperatingSystem = "windows-x64";
-		const string MicrosoftOpenJDKOperatingSystem = "windows-x64";
-		const string MicrosoftOpenJDKFileExtension   = "zip";
-		const string AdoptOpenJDKOperatingSystem     = "x64_windows";
-		const string AdoptOpenJDKArchiveExtension    = "zip";
-
 		partial class Defaults
 		{
 			public const string NativeLibraryExtension = ".dll";

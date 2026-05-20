@@ -39,6 +39,7 @@ namespace Xamarin.Android.Tasks {
 		static readonly XNamespace androidNs = AndroidXmlNamespace;
 		static readonly XNamespace androidToolsNs = AndroidXmlToolsNamespace;
 		static readonly XName versionCodeAttributeName = androidNs + "versionCode";
+		static readonly Regex versionCodeRegex = new Regex ("\\{(?<key>([A-Za-z]+)):?[D0-9]*[\\}]", RegexOptions.Compiled);
 
 		XDocument doc;
 
@@ -1113,7 +1114,6 @@ namespace Xamarin.Android.Tasks {
 
 		public void CalculateVersionCode (string currentAbi, string versionCodePattern, string versionCodeProperties)
 		{
-			var regex = new Regex ("\\{(?<key>([A-Za-z]+)):?[D0-9]*[\\}]");
 			var kvp = new Dictionary<string, int> ();
 			foreach (var item in versionCodeProperties?.Split (new char [] { ';', ':' }) ?? []) {
 				var keyValue = item.Split (new char [] { '=' });
@@ -1135,15 +1135,15 @@ namespace Xamarin.Android.Tasks {
 					int.TryParse (GetMinimumSdk (), out var minSdk)) {
 				kvp.Add ("minSDK", minSdk);
 			}
-			var versionCode = String.Empty;
-			foreach (Match match in regex.Matches (versionCodePattern)) {
+			var versionCode = new StringBuilder ();
+			foreach (Match match in versionCodeRegex.Matches (versionCodePattern)) {
 				var key = match.Groups ["key"].Value;
 				var format = match.Value.Replace (key, "0");
 				if (!kvp.ContainsKey (key))
 					continue;
-				versionCode += string.Format (format, kvp [key]);
+				versionCode.AppendFormat (format, kvp [key]);
 			}
-			VersionCode = versionCode.TrimStart ('0');
+			VersionCode = versionCode.ToString ().TrimStart ('0');
 		}
 	}
 

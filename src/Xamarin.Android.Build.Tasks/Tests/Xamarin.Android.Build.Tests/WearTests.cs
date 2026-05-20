@@ -72,7 +72,7 @@ namespace Xamarin.Android.Build.Tests
 					new Package { Id = "Xamarin.AndroidX.PercentLayout", Version = "1.0.0.14" },
 					new Package { Id = "Xamarin.AndroidX.Legacy.Support.Core.UI", Version = "1.0.0.14" },
 				},
-				SupportedOSPlatformVersion = "23",
+				SupportedOSPlatformVersion = "24",
 			};
 			proj.SetRuntime (runtime);
 			var builder = CreateApkBuilder ();

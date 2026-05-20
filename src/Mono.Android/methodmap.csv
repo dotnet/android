@@ -4100,7 +4100,7 @@
 36,android.app.appfunctions,AppFunctionException,getErrorCategory,return,Android.App.AppFunctions.AppFunctionErrorCategory
 36,android.app.appfunctions,AppFunctionException,getErrorCode,return,Android.App.AppFunctions.AppFunctionError
 36,android.app.appfunctions,AppFunctionException,writeToParcel,flags,Android.OS.ParcelableWriteFlags
-36,android.app.appfunctions,AppFunctionManager,setAppFunctionEnabled,newEnabledState,Android.App.AppFunctions.AppFunctionState
+36,android.app.appfunctions,AppFunctionManager,setAppFunctionEnabled,newEnabledState,Android.App.AppFunctions.AppFunctionEnabledState
 36,android.app.appfunctions,ExecuteAppFunctionRequest,writeToParcel,flags,Android.OS.ParcelableWriteFlags
 36,android.app.appfunctions,ExecuteAppFunctionResponse,writeToParcel,flags,Android.OS.ParcelableWriteFlags
 36,android.app,ApplicationStartInfo,getStartComponent,return,Android.App.ApplicationStartInfoStartComponent

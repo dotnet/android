@@ -19,11 +19,9 @@ namespace Xamarin.Android.Prepare
 				throw new ArgumentNullException (nameof (context));
 
 			Steps.Add (new Step_InstallDotNetPreview ());
-			Steps.Add (new Step_InstallMicrosoftOpenJDK ());
 			Steps.Add (new Step_Android_SDK_NDK ());
 			Steps.Add (new Step_GenerateFiles (atBuildStart: true));
 			Steps.Add (new Step_PrepareProps ());
-			Steps.Add (new Step_InstallGNUBinutils ());
 			Steps.Add (new Step_GenerateCGManifest ());
 			Steps.Add (new Step_Get_Android_BuildTools ());
 		}

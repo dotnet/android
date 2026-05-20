@@ -589,6 +589,10 @@ Bitte ändern Sie den Wert in einen Assembly-basierten Typnamen, der von "System
     <value>Die native freigegebene Bibliothek konnte nicht verknüpft werden: {0}{1}</value>
     <comment>The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
   </data>
+  <data name="XA3008" xml:space="preserve">
+    <value>Failed to extract debug info from '{0}'{1}</value>
+    <comment>'{0}' is the native shared library filename. '{1}' is the full output of the failed command, starting and ending with a newline.</comment>
+  </data>
   <data name="XA4209" xml:space="preserve">
     <value>Fehler beim Generieren des Java-Typs für die Klasse "{0}". Ursache: {1}</value>
     <comment>{0} - The managed type name
@@ -1015,6 +1019,18 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
 </comment>
   </data>
+  <data name="XA1045" xml:space="preserve">
+    <value>Die Eingabedatei `{0}` beginnt nicht mit `&lt;replacements/&gt;`.</value>
+    <comment>{0} - file path</comment>
+  </data>
+  <data name="XA1046" xml:space="preserve">
+    <value>Das Attribut „{0}“ im Element „{1}“ hat den Wert „{2}“, der nicht als Boolescher Wert ausgewertet werden kann; {3} Zeile {4}.</value>
+    <comment>{0} - attribute name; {1} - element name; {2} - attribute value; {3} - file path; {4} - line number</comment>
+  </data>
+  <data name="XA1047" xml:space="preserve">
+    <value>Das erforderliche Attribut „{0}“ fehlt im Element „{1}“; {2} Zeile {3}.</value>
+    <comment>{0} - attribute name; {1} - element name; {2} - file path; {3} - line number</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>Java-Abhängigkeit „{0}“ wurde nicht erfüllt.</value>
     <comment>The following are literal names and should not be translated: Java.
@@ -1079,6 +1095,16 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
     <value>Der Typ „{0}“ mit Manifestverweis wurde in keinem gescannten Assembly gefunden. Es handelt sich möglicherweise um einen Frameworktyp.</value>
     <comment>The following are literal names and should not be translated: Manifest, framework.
 {0} - Java type name from AndroidManifest.xml</comment>
+  </data>
+  <data name="XA4251" xml:space="preserve">
+    <value>Der Typ „{0}“ verwendet [JniAddNativeMethodRegistrationAttribute], was von der trimmbaren Typzuordnung nicht unterstützt wird. Um dies zu umgehen, verwenden Sie nicht die trimmbare Typzuordnung (z. B. durch Wechseln zur Implementierung der LLVM-IR-Typzuordnung), und melden Sie dieses Szenario unter https://github.com/dotnet/android/issues, damit das Team auswerten kann, ob dies unterstützt wird.</value>
+    <comment>The following are literal names and should not be translated: JniAddNativeMethodRegistrationAttribute, llvm-ir.
+{0} - Fully-qualified managed type name</comment>
+  </data>
+  <data name="XA4252" xml:space="preserve">
+    <value>Die unsichere HTTP-Maven-Repository-URL „{0}“ ist nicht zulässig. Verwenden Sie eine HTTPS-URL oder legen Sie die Metadaten „AllowInsecureHttp=„WAHR““ für das Element fest, um diese Überprüfung zu umgehen.</value>
+    <comment>The following are literal names and should not be translated: HTTP, HTTPS, Maven, AllowInsecureHttp
+{0} - The insecure HTTP URL</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>Befehl „{0}“ fehlgeschlagen.\n{1}</value>
