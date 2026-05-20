@@ -124,7 +124,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			var inputDirectory = Path.GetFullPath (JavaSourceInputDirectory);
 			var outputDirectory = Path.GetFullPath (JavaSourceOutputDirectory);
 			if (string.Equals (inputDirectory, outputDirectory, StringComparison.OrdinalIgnoreCase)) {
-				Log.LogError ($"{nameof (JavaSourceInputDirectory)} and {nameof (JavaSourceOutputDirectory)} must be different when {nameof (CleanJavaSourceOutputDirectory)} is true.");
+				Log.LogCodedError ("XA4254", Properties.Resources.XA4254, inputDirectory, outputDirectory);
 				return false;
 			}
 		}
@@ -273,7 +273,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		foreach (var source in javaSources) {
 			string inputPath = Path.Combine (JavaSourceInputDirectory ?? "", source.RelativePath);
 			if (!File.Exists (inputPath)) {
-				Log.LogError ($"Generated Java source '{inputPath}' was not found.");
+				Log.LogCodedError ("XA4255", Properties.Resources.XA4255, inputPath);
 				continue;
 			}
 

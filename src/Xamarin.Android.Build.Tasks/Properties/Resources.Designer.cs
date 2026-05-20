@@ -1507,6 +1507,24 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Trimmable type map Java source input directory &apos;{0}&apos; and output directory &apos;{1}&apos; must be different..
+        /// </summary>
+        public static string XA4254 {
+            get {
+                return ResourceManager.GetString("XA4254", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Generated trimmable type map Java source &apos;{0}&apos; was not found..
+        /// </summary>
+        public static string XA4255 {
+            get {
+                return ResourceManager.GetString("XA4255", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Native library &apos;{0}&apos; will not be bundled because it has an unsupported ABI. Move this file to a directory with a valid Android ABI name such as &apos;libs/armeabi-v7a/&apos;..
         /// </summary>
         public static string XA4300 {
