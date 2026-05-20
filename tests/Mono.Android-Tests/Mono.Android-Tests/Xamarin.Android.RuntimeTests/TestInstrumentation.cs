@@ -89,6 +89,11 @@ namespace Xamarin.Android.RuntimeTests
 			}
 		}
 
+		protected override void PreloadNativeLibraries ()
+		{
+			Java.Lang.JavaSystem.LoadLibrary ("reuse-threads");
+		}
+
 		protected override IEnumerable<Assembly> GetTestAssemblies ()
 		{
 			return [

@@ -7,12 +7,10 @@ using System.Threading;
 using Android.App;
 using Android.Graphics;
 using Android.Runtime;
-using Android.Content;
 
 using Java.Interop;
 
 using NUnit.Framework;
-using Android.OS;
 
 namespace Java.InteropTests
 {
@@ -40,24 +38,9 @@ namespace Java.InteropTests
 		[DllImport ("reuse-threads")]
 		static extern int rt_invoke_callback_on_new_thread (CB cb);
 
-		/// <summary>
-		/// Loads a native library using the full path from ApplicationInfo.NativeLibraryDir.
-		/// This avoids needing a Java ClassLoader (which may not be available on NUnit worker threads).
-		/// </summary>
-		static void LoadNativeLibraryByPath (string libraryName)
-		{
-			var context = Application.Context;
-			var nativeLibDir = context.ApplicationInfo?.NativeLibraryDir;
-			if (nativeLibDir is null)
-				throw new InvalidOperationException ("NativeLibraryDir is not available");
-			var fullPath = System.IO.Path.Combine (nativeLibDir, $"lib{libraryName}.so");
-			System.Runtime.InteropServices.NativeLibrary.Load (fullPath);
-		}
-
 		[Test]
 		public void RegisterTypeOnNewNativeThread ()
 		{
-			LoadNativeLibraryByPath ("reuse-threads");
 			int ret = rt_register_type_on_new_thread ("from.NewNativeThreadOne", Application.Context.ClassLoader.Handle);
 			Assert.AreEqual (0, ret, $"Java type registration on a new thread failed with code {ret}");
 		}
@@ -91,7 +74,6 @@ namespace Java.InteropTests
 		[Test]
 		public void ThreadReuse ()
 		{
-			LoadNativeLibraryByPath ("reuse-threads");
 			CB cb = (env, instance) => {
 				Console.WriteLine ("CrossThreadObjectInteractions: JNIEnv.Handle={0} env={1}, instance={2}",
 						JNIEnv.Handle.ToString ("x"), env.ToString ("x"), instance.ToString ("x"));

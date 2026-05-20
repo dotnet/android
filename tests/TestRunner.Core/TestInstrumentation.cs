@@ -43,9 +43,18 @@ public abstract class TestInstrumentation : Instrumentation
 		Start ();
 	}
 
+	/// <summary>
+	/// Override to preload native libraries before tests run.
+	/// Called on the instrumentation thread which has a valid Java ClassLoader.
+	/// </summary>
+	protected virtual void PreloadNativeLibraries ()
+	{
+	}
+
 	public override void OnStart ()
 	{
 		base.OnStart ();
+		PreloadNativeLibraries ();
 
 		var bundle = new Bundle ();
 		try {
