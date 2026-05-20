@@ -217,6 +217,32 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
+		public void Build_FrameworkAcwType_IsTrimmable ()
+		{
+			var peer = MakeAcwPeer ("mono/android/view/View_OnClickListenerImplementor", "Android.Views.View+IOnClickListenerImplementor", "Mono.Android") with {
+				IsFrameworkAssembly = true,
+			};
+			var model = BuildModel (new [] { peer });
+
+			var entry = model.Entries.First (e => e.JniName == "mono/android/view/View_OnClickListenerImplementor");
+			Assert.False (entry.IsUnconditional);
+			Assert.Equal ("Android.Views.View+IOnClickListenerImplementor, Mono.Android", entry.TargetTypeReference);
+		}
+
+		[Fact]
+		public void Build_FrameworkAcwType_MarkedUnconditional_IsUnconditional ()
+		{
+			var peer = MakeAcwPeer ("mono/android/app/ApplicationRegistration", "Android.App.ApplicationRegistration", "Mono.Android") with {
+				IsFrameworkAssembly = true,
+				IsUnconditional = true,
+			};
+			var model = BuildModel (new [] { peer });
+
+			Assert.True (model.Entries [0].IsUnconditional);
+			Assert.Null (model.Entries [0].TargetTypeReference);
+		}
+
+		[Fact]
 		public void Build_McwBinding_IsTrimmable ()
 		{
 			// MCW binding types (DoNotGenerateAcw=true) are trimmable unless essential.
