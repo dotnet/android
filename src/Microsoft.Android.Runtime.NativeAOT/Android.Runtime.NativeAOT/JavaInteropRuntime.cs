@@ -61,6 +61,7 @@ static partial class JavaInteropRuntime
 			var settings    = new DiagnosticSettings ();
 			settings.AddDebugDotnetLog ();
 
+			InitializeTrimmableTypeMapData ();
 			var typeManager = CreateTypeManager ();
 
 			var options = new NativeAotRuntimeOptions {
@@ -75,11 +76,14 @@ static partial class JavaInteropRuntime
 
 			// Entry point into Mono.Android.dll. Log categories are initialized in JNI_OnLoad.
 			JNIEnvInit.InitializeJniRuntime (runtime, initArgs);
+			RegisterTrimmableTypeMapNativeMethods ();
 
 			transition  = new JniTransition (jnienv);
 
-			var handler = Java.Lang.Thread.DefaultUncaughtExceptionHandler;
-			Java.Lang.Thread.DefaultUncaughtExceptionHandler = new UncaughtExceptionMarshaler (handler);
+			if (!RuntimeFeature.TrimmableTypeMap) {
+				var handler = Java.Lang.Thread.DefaultUncaughtExceptionHandler;
+				Java.Lang.Thread.DefaultUncaughtExceptionHandler = new UncaughtExceptionMarshaler (handler);
+			}
 		}
 		catch (Exception e) {
 			AndroidLog.Print (AndroidLogLevel.Error, "JavaInteropRuntime", $"JavaInteropRuntime.init: error: {e}");
@@ -95,5 +99,22 @@ static partial class JavaInteropRuntime
 		}
 
 		return new ManagedTypeManager ();
+	}
+
+	// Separate method so non-trimmable builds don't try to resolve TypeMapLoader
+	// from the generated _Microsoft.Android.TypeMaps.dll.
+	[MethodImpl (MethodImplOptions.NoInlining)]
+	static void InitializeTrimmableTypeMapData ()
+	{
+		if (RuntimeFeature.TrimmableTypeMap) {
+			TypeMapLoader.Initialize ();
+		}
+	}
+
+	static void RegisterTrimmableTypeMapNativeMethods ()
+	{
+		if (RuntimeFeature.TrimmableTypeMap) {
+			TrimmableTypeMap.RegisterNativeMethods ();
+		}
 	}
 }

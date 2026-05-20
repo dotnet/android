@@ -1,3 +1,6 @@
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <limits>
 #include <string_view>
 
@@ -36,15 +39,18 @@ AndroidSystem::monodroid__system_property_get (std::string_view const& name, cha
 	char *buf = nullptr;
 	if (sp_value_len < Constants::PROPERTY_VALUE_BUFFER_LEN) {
 		size_t alloc_size = Helpers::add_with_overflow_check<size_t> (Constants::PROPERTY_VALUE_BUFFER_LEN, 1uz);
-		log_warn (LOG_DEFAULT, "Buffer to store system property may be too small, will copy only {} bytes", sp_value_len);
-		buf = new char [alloc_size];
+		char message[128];
+		snprintf (message, sizeof (message), "Buffer to store system property may be too small, will copy only %zu bytes", sp_value_len);
+		log_write (LOG_DEFAULT, LogLevel::Warn, message);
+		buf = static_cast<char*> (std::malloc (alloc_size));
+		abort_unless (buf != nullptr, "Failed to allocate system property buffer");
 	}
 
 	int len = __system_property_get (name.data (), buf ? buf : sp_value);
 	if (buf != nullptr) {
 		strncpy (sp_value, buf, sp_value_len);
 		sp_value [sp_value_len] = '\0';
-		delete[] buf;
+		std::free (buf);
 	}
 
 	return len;
@@ -81,10 +87,14 @@ AndroidSystem::get_max_gref_count_from_system () noexcept -> long
 		}
 
 		if (*e) {
-			log_warn (LOG_GC, "Unsupported '{}' value '{}'.", Constants::DEBUG_MONO_MAX_GREFC.data (), override.get ());
+			char message[256];
+			snprintf (message, sizeof (message), "Unsupported '%s' value '%s'.", Constants::DEBUG_MONO_MAX_GREFC.data (), override.get ());
+			log_write (LOG_GC, LogLevel::Warn, message);
 		}
 
-		log_warn (LOG_GC, "Overriding max JNI Global Reference count to {}", max);
+		char message[128];
+		snprintf (message, sizeof (message), "Overriding max JNI Global Reference count to %ld", max);
+		log_write (LOG_GC, LogLevel::Warn, message);
 	}
 
 	return max;

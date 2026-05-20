@@ -1,3 +1,7 @@
+#include <cerrno>
+#include <cstdio>
+#include <cstdlib>
+
 #include <host/gc-bridge.hh>
 #include <host/bridge-processing.hh>
 #include <host/os-bridge.hh>
@@ -45,7 +49,7 @@ void GCBridge::trigger_java_gc (JNIEnv *env) noexcept
 
 	env->ExceptionDescribe ();
 	env->ExceptionClear ();
-	log_error (LOG_DEFAULT, "Java GC failed");
+	log_write (LOG_DEFAULT, LogLevel::Error, "Java GC failed");
 }
 
 void GCBridge::mark_cross_references (MarkCrossReferencesArgs *args) noexcept
@@ -55,8 +59,9 @@ void GCBridge::mark_cross_references (MarkCrossReferencesArgs *args) noexcept
 	abort_unless (args->CrossReferences != nullptr || args->CrossReferenceCount == 0, "CrossReferences must not be null if CrossReferenceCount is greater than 0");
 	log_mark_cross_references_args_if_enabled (args);
 
-	shared_args.store (args);
-	shared_args_semaphore.release ();
+	__atomic_store_n (&shared_args, args, __ATOMIC_RELEASE);
+	int ret = sem_post (&shared_args_semaphore);
+	abort_unless (ret == 0, "Failed to release GC bridge semaphore");
 }
 
 void GCBridge::bridge_processing () noexcept
@@ -66,8 +71,13 @@ void GCBridge::bridge_processing () noexcept
 
 	while (true) {
 		// wait until mark cross references args are set by the GC callback
-		shared_args_semaphore.acquire ();
-		MarkCrossReferencesArgs *args = shared_args.load ();
+		int ret;
+		do {
+			ret = sem_wait (&shared_args_semaphore);
+		} while (ret == -1 && errno == EINTR);
+		abort_unless (ret == 0, "Failed to acquire GC bridge semaphore");
+
+		MarkCrossReferencesArgs *args = __atomic_load_n (&shared_args, __ATOMIC_ACQUIRE);
 
 		bridge_processing_started_callback (args);
 
@@ -78,6 +88,12 @@ void GCBridge::bridge_processing () noexcept
 	}
 }
 
+auto GCBridge::bridge_processing_thread_entry ([[maybe_unused]] void *arg) noexcept -> void*
+{
+	bridge_processing ();
+	return nullptr;
+}
+
 [[gnu::always_inline]]
 void GCBridge::log_mark_cross_references_args_if_enabled (MarkCrossReferencesArgs *args) noexcept
 {
@@ -85,13 +101,16 @@ void GCBridge::log_mark_cross_references_args_if_enabled (MarkCrossReferencesArg
 		return;
 	}
 
-	log_info (LOG_GC, "cross references callback invoked with {} sccs and {} xrefs.", args->ComponentCount, args->CrossReferenceCount);
+	char message[128];
+	snprintf (message, sizeof (message), "cross references callback invoked with %zu sccs and %zu xrefs.", args->ComponentCount, args->CrossReferenceCount);
+	log_write (LOG_GC, LogLevel::Info, message);
 
 	JNIEnv *env = OSBridge::ensure_jnienv ();
 	
 	for (size_t i = 0; i < args->ComponentCount; ++i) {
 		const StronglyConnectedComponent &scc = args->Components [i];
-		log_info (LOG_GC, "group {} with {} objects", i, scc.Count);
+		snprintf (message, sizeof (message), "group %zu with %zu objects", i, scc.Count);
+		log_write (LOG_GC, LogLevel::Info, message);
 		for (size_t j = 0; j < scc.Count; ++j) {
 			log_handle_context (env, scc.Contexts [j]);
 		}
@@ -104,7 +123,9 @@ void GCBridge::log_mark_cross_references_args_if_enabled (MarkCrossReferencesArg
 	for (size_t i = 0; i < args->CrossReferenceCount; ++i) {
 		size_t source_index = args->CrossReferences [i].SourceGroupIndex;
 		size_t dest_index = args->CrossReferences [i].DestinationGroupIndex;
-		log_info_nocheck_fmt (LOG_GC, "xref [{}] {} -> {}", i, source_index, dest_index);
+		char xref_message[128];
+		snprintf (xref_message, sizeof (xref_message), "xref [%zu] %zu -> %zu", i, source_index, dest_index);
+		log_write (LOG_GC, LogLevel::Info, xref_message);
 	}
 }
 
@@ -118,9 +139,13 @@ void GCBridge::log_handle_context (JNIEnv *env, HandleContext *ctx) noexcept
 	jclass java_class = env->GetObjectClass (handle);
 	if (java_class != nullptr) {
 		char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
-		log_info (LOG_GC, "gref {:#x} [{}]", reinterpret_cast<intptr_t> (handle), class_name);
+		char message[256];
+		snprintf (message, sizeof (message), "gref %p [%s]", reinterpret_cast<void*>(handle), optional_string (class_name));
+		log_write (LOG_GC, LogLevel::Info, message);
 		free (class_name);
 	} else {
-		log_info (LOG_GC, "gref {:#x} [unknown class]", reinterpret_cast<intptr_t> (handle));
+		char message[128];
+		snprintf (message, sizeof (message), "gref %p [unknown class]", reinterpret_cast<void*>(handle));
+		log_write (LOG_GC, LogLevel::Info, message);
 	}
 }

@@ -1,7 +1,9 @@
 #pragma once
 
 #include <array>
+#include <cstdio>
 #include <limits>
+#include <span>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -18,6 +20,7 @@ struct BundledProperty;
 namespace xamarin::android {
 	class AndroidSystem
 	{
+#if !defined(XA_HOST_NATIVEAOT)
 		// This optimizes things a little bit. The array is allocated at build time, so we pay no cost for its
 		// allocation and at run time it allows us to skip dynamic memory allocation.
 		inline static std::array<std::string, 1> single_app_lib_directory{};
@@ -35,6 +38,7 @@ namespace xamarin::android {
 			std::string_view { "x86_64" },      // CPU_KIND_X86_64
 			std::string_view { "riscv" },       // CPU_KIND_RISCV
 		};
+#endif
 
 	public:
 		static auto get_gref_gc_threshold () noexcept -> long
@@ -60,16 +64,28 @@ namespace xamarin::android {
 			running_in_emulator = yesno;
 		}
 
+#if defined(XA_HOST_NATIVEAOT)
+		static auto get_primary_override_dir () noexcept -> const char*
+		{
+			return primary_override_dir;
+		}
+#else
 		static auto get_primary_override_dir () noexcept -> std::string const&
 		{
 			return primary_override_dir;
 		}
+#endif
 
 		static void set_primary_override_dir (jstring_wrapper& home) noexcept
 		{
+#if defined(XA_HOST_NATIVEAOT)
+			determine_primary_override_dir (home, primary_override_dir, sizeof (primary_override_dir));
+#else
 			primary_override_dir = determine_primary_override_dir (home);
+#endif
 		}
 
+#if !defined(XA_HOST_NATIVEAOT)
 		static auto get_native_libraries_dir () noexcept -> std::string const&
 		{
 			return native_libraries_dir;
@@ -94,6 +110,7 @@ namespace xamarin::android {
 			log_debug (LOG_DEFAULT, "Creating public update directory: `{}`", override_dir);
 			Util::create_public_directory (override_dir);
 		}
+#endif
 
 		static auto is_embedded_dso_mode_enabled () noexcept -> bool
 		{
@@ -129,6 +146,18 @@ namespace xamarin::android {
 			embedded_dso_mode_enabled = yesno;
 		}
 
+#if defined(XA_HOST_NATIVEAOT)
+		static void determine_primary_override_dir (jstring_wrapper &home, char *buffer, size_t buffer_size) noexcept
+		{
+			dynamic_local_string<SENSIBLE_PATH_MAX> name { home.get_cstr () };
+			name.append ("/")
+				.append (Constants::OVERRIDE_DIRECTORY_NAME)
+				.append ("/")
+				.append (Constants::android_lib_abi);
+
+			snprintf (buffer, buffer_size, "%s", name.get ());
+		}
+#else
 		static auto determine_primary_override_dir (jstring_wrapper &home) noexcept -> std::string
 		{
 			dynamic_local_string<SENSIBLE_PATH_MAX> name { home.get_cstr () };
@@ -139,16 +168,21 @@ namespace xamarin::android {
 
 			return {name.get (), name.length ()};
 		}
+#endif
 
 	private:
 		static inline long max_gref_count = 0;
 		static inline bool running_in_emulator = false;
 		static inline bool embedded_dso_mode_enabled = false;
+#if defined(XA_HOST_NATIVEAOT)
+		static inline char primary_override_dir[SENSIBLE_PATH_MAX] {};
+#else
 		static inline std::string primary_override_dir;
 		static inline std::string native_libraries_dir;
 
 #if defined (DEBUG)
 		static inline std::unordered_map<std::string, std::string> bundled_properties;
+#endif
 #endif
 	};
 }

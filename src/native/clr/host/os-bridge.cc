@@ -1,4 +1,6 @@
-#include <ranges>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #include <host/os-bridge.hh>
 #include <host/runtime-util.hh>
@@ -7,6 +9,10 @@
 #include <shared/helpers.hh>
 
 using namespace xamarin::android;
+
+namespace {
+	constexpr size_t LOG_LINE_BUFFER_SIZE = 512;
+}
 
 void OSBridge::initialize_on_onload (JavaVM *vm, JNIEnv *env) noexcept
 {
@@ -90,38 +96,60 @@ auto OSBridge::_monodroid_weak_gref_dec () noexcept -> int
 void OSBridge::_write_stack_trace (FILE *to, const char *const from, LogCategories category) noexcept
 {
 	if (from == nullptr) [[unlikely]] {
-		log_warn (category, "Unable to write stack trace, managed runtime passed a NULL string.");
+		log_write (category, LogLevel::Warn, "Unable to write stack trace, managed runtime passed a NULL string.");
 		return;
 	}
 
-	const std::string_view trace { from };
-	if (trace.empty ()) [[unlikely]] {
-		log_warn (category, "Empty stack trace passed by the managed runtime.");
+	if (*from == '\0') [[unlikely]] {
+		log_write (category, LogLevel::Warn, "Empty stack trace passed by the managed runtime.");
 		return;
 	}
 
-	for (const auto segment : std::views::split (trace, '\n')) {
-		const std::string_view line { segment };
+	const char *line = from;
+	while (line != nullptr && *line != '\0') {
+		const char *newline = strchr (line, '\n');
+		size_t line_len = newline == nullptr ? strlen (line) : static_cast<size_t>(newline - line);
 
 		if ((category == LOG_GREF && Logger::gref_to_logcat ()) ||
 			(category == LOG_LREF && Logger::lref_to_logcat ())) {
-				log_debug (category, "{}"sv, line);
+			char local_buffer[LOG_LINE_BUFFER_SIZE];
+			char *message = local_buffer;
+
+			if (line_len >= sizeof (local_buffer)) {
+				message = static_cast<char*>(malloc (line_len + 1));
+				if (message == nullptr) {
+					log_write (category, LogLevel::Debug, "<out of memory>");
+				}
+			}
+
+			if (message != nullptr) {
+				memcpy (message, line, line_len);
+				message [line_len] = '\0';
+				log_write (category, LogLevel::Debug, message);
+			}
+
+			if (message != nullptr && message != local_buffer) {
+				free (message);
+			}
 		}
 
-		if (to == nullptr) {
-			continue;
+		if (to != nullptr) {
+			fwrite (line, sizeof (char), line_len, to);
+			fputc ('\n', to);
+			fflush (to);
 		}
 
-		fwrite (line.data (), sizeof (std::string_view::value_type), line.length (), to);
-		fputc ('\n', to);
-		fflush (to);
+		if (newline == nullptr) {
+			break;
+		}
+		line = newline + 1;
 	}
 }
 
 void OSBridge::_monodroid_gref_log (const char *message) noexcept
 {
 	if (Logger::gref_to_logcat ()) {
-		log_debug (LOG_GREF, "{}"sv, optional_string (message));
+		log_write (LOG_GREF, LogLevel::Debug, optional_string (message));
 	}
 
 	if (Logger::gref_log () == nullptr) {
@@ -133,7 +161,7 @@ void OSBridge::_monodroid_gref_log (const char *message) noexcept
 }
 
 [[gnu::always_inline, gnu::flatten]]
-void OSBridge::log_it (LogCategories category, std::string const& line, FILE *to, const char *const from, bool logcat_enabled) noexcept
+void OSBridge::log_it (LogCategories category, const char *line, FILE *to, const char *const from, bool logcat_enabled) noexcept
 {
 	log_write (category, LogLevel::Info, line);
 
@@ -146,7 +174,7 @@ void OSBridge::log_it (LogCategories category, std::string const& line, FILE *to
 		return;
 	}
 
-	fwrite (line.c_str (), sizeof (std::string::value_type), line.length (), to);
+	fwrite (line, sizeof (char), strlen (line), to);
 	fputc ('\n', to);
 
 	_write_stack_trace (to, from, category);
@@ -161,8 +189,11 @@ auto OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject
 	}
 
 	int wc = __atomic_load_n (&gc_weak_gref_count, __ATOMIC_RELAXED);
-	const std::string log_line = std::format (
-		"+g+ grefc {} gwrefc {} obj-handle {:p}/{} -> new-handle {:p}/{} from thread '{}'({})"sv,
+	char log_line[LOG_LINE_BUFFER_SIZE];
+	snprintf (
+		log_line,
+		sizeof (log_line),
+		"+g+ grefc %d gwrefc %d obj-handle %p/%c -> new-handle %p/%c from thread '%s'(%d)",
 		c,
 		wc,
 		reinterpret_cast<void*>(curHandle),
@@ -185,8 +216,11 @@ void OSBridge::_monodroid_gref_log_delete (jobject handle, char type, const char
 	}
 
 	int wc = __atomic_load_n (&gc_weak_gref_count, __ATOMIC_RELAXED);
-	const std::string log_line = std::format (
-		"-g- grefc {} gwrefc {} handle {:p}/{} from thread '{}'({})"sv,
+	char log_line[LOG_LINE_BUFFER_SIZE];
+	snprintf (
+		log_line,
+		sizeof (log_line),
+		"-g- grefc %d gwrefc %d handle %p/%c from thread '%s'(%d)",
 		c,
 		wc,
 		reinterpret_cast<void*>(handle),
@@ -206,8 +240,11 @@ void OSBridge::_monodroid_weak_gref_new (jobject curHandle, char curType, jobjec
 	}
 
 	int gc = __atomic_load_n (&gc_gref_count, __ATOMIC_RELAXED);
-	const std::string log_line = std::format (
-		"+w+ grefc {} gwrefc {} obj-handle {:p}/{} -> new-handle {:p}/{} from thread '{}'({})"sv,
+	char log_line[LOG_LINE_BUFFER_SIZE];
+	snprintf (
+		log_line,
+		sizeof (log_line),
+		"+w+ grefc %d gwrefc %d obj-handle %p/%c -> new-handle %p/%c from thread '%s'(%d)",
 		gc,
 		c,
 		reinterpret_cast<void*>(curHandle),
@@ -228,8 +265,11 @@ OSBridge::_monodroid_lref_log_new (int lrefc, jobject handle, char type, const c
 		return;
 	}
 
-	const std::string log_line = std::format (
-		"+l+ lrefc {} handle {:p}/{} from thread '{}'({})"sv,
+	char log_line[LOG_LINE_BUFFER_SIZE];
+	snprintf (
+		log_line,
+		sizeof (log_line),
+		"+l+ lrefc %d handle %p/%c from thread '%s'(%d)",
 		lrefc,
 		reinterpret_cast<void*>(handle),
 		type,
@@ -248,8 +288,11 @@ void OSBridge::_monodroid_weak_gref_delete (jobject handle, char type, const cha
 	}
 
 	int gc = __atomic_load_n (&gc_gref_count, __ATOMIC_RELAXED);
-	const std::string log_line = std::format (
-		"-w- grefc {} gwrefc {} handle {:p}/{} from thread '{}'({})"sv,
+	char log_line[LOG_LINE_BUFFER_SIZE];
+	snprintf (
+		log_line,
+		sizeof (log_line),
+		"-w- grefc %d gwrefc %d handle %p/%c from thread '%s'(%d)",
 		gc,
 		c,
 		reinterpret_cast<void*>(handle),
@@ -267,8 +310,11 @@ void OSBridge::_monodroid_lref_log_delete (int lrefc, jobject handle, char type,
 		return;
 	}
 
-	const std::string log_line = std::format (
-		"-l- lrefc {} handle {:p}/{} from thread '{}'({})"sv,
+	char log_line[LOG_LINE_BUFFER_SIZE];
+	snprintf (
+		log_line,
+		sizeof (log_line),
+		"-l- lrefc %d handle %p/%c from thread '%s'(%d)",
 		lrefc,
 		reinterpret_cast<void*>(handle),
 		type,

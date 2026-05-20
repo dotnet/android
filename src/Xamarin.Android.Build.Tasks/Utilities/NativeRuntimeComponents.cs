@@ -129,10 +129,6 @@ class NativeRuntimeComponents
 			new AndroidArchive ("libxa-shared-bits-release.a"),
 			new AndroidArchive ("libxamarin-startup-release.a"),
 
-			// C++ standard library
-			new CplusPlusArchive ("libc++_static.a"),
-			new CplusPlusArchive ("libc++abi.a"),
-
 			// LLVM clang built-ins archives
 			new ClangBuiltinsArchive ("aarch64"),
 			new ClangBuiltinsArchive ("arm"),

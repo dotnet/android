@@ -5,13 +5,12 @@ using namespace xamarin::android;
 
 namespace {
 	[[gnu::noreturn]]
-	void pinvoke_unreachable (std::source_location sloc = std::source_location::current ())
+	void pinvoke_unreachable ()
 	{
 		Helpers::abort_application (
 			LOG_DEFAULT,
-			"The p/invoke is not implemented. This is a stub and should not be called."sv,
-			true, // log_location
-			sloc
+			"The p/invoke is not implemented. This is a stub and should not be called.",
+			false // log_location
 		);
 	}
 }

@@ -17,10 +17,8 @@ namespace Android.Runtime
 		{
 			if (RuntimeFeature.IsMonoRuntime) {
 				mono_unhandled_exception = MonoUnhandledException;
-			} else if (RuntimeFeature.IsCoreClrRuntime) {
-				mono_unhandled_exception = CoreClrUnhandledException;
 			} else {
-				throw new NotSupportedException ("Internal error: unknown runtime not supported");
+				mono_unhandled_exception = CoreClrUnhandledException;
 			}
 		}
 

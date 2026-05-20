@@ -1,4 +1,5 @@
 #include <cstdarg>
+#include <cstdio>
 #include <cstring>
 #include <android/set_abort_message.h>
 
@@ -11,7 +12,7 @@ using namespace xamarin::android;
 Helpers::abort_application (LogCategories category, const char *message, bool log_location, std::source_location sloc) noexcept
 {
 	// Log it, but also...
-	log_fatal (category, "{}", message);
+	log_write (category, LogLevel::Fatal, message);
 
 	// ...let android include it in the tombstone, debuggerd output, stack trace etc
 	android_set_abort_message (message);
@@ -33,14 +34,17 @@ Helpers::abort_application (LogCategories category, const char *message, bool lo
 			}
 		}
 
-		log_fatal (
-			category,
-			"Abort at {}:{}:{} ('{}')",
+		char location_message[512];
+		snprintf (
+			location_message,
+			sizeof (location_message),
+			"Abort at %s:%u:%u ('%s')",
 			file_name,
 			sloc.line (),
 			sloc.column (),
 			sloc.function_name ()
 		);
+		log_write (category, LogLevel::Fatal, location_message);
 	}
 	std::abort ();
 }

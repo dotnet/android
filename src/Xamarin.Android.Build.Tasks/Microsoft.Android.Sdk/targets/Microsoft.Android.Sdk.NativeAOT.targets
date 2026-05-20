@@ -128,7 +128,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <CppLinker>$(_NdkAbi)-linux-android$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppLinker>
       <ObjCopyName>llvm-objcopy</ObjCopyName>
 
-      <!-- We must ensure this is `false`, as it would interfere with statically linking libc++ -->
+      <!-- NativeAOT Android links without the C++ standard library.
+           Minimal C++ runtime shims are provided by cxx-shims.cc in the runtime. -->
       <LinkStandardCPlusPlusLibrary>false</LinkStandardCPlusPlusLibrary>
     </PropertyGroup>
 
@@ -193,13 +194,9 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 
       <_NdkLibs Include="@(RuntimePackAsset->WithMetadataValue('Filename', 'libnaot-android.$(Configuration.ToLower())-static-$(Configuration.ToLower())'))" />
 
-      <!-- Include libc++ -->
-      <_NdkLibs Include="$(_NdkSysrootDir)libc++_static.a" />
-      <_NdkLibs Include="$(_NdkSysrootDir)libc++abi.a" />
-
       <LinkerArg Include="&quot;%(_NdkLibs.Identity)&quot;" />
 
-      <!-- This library conflicts with static libc++ -->
+      <!-- libstdc++compat.a brings in libc++ symbols; NativeAOT Android links without the C++ stdlib. -->
       <NativeLibrary Remove="$(IlcSdkPath)libstdc++compat.a" />
       <LinkerArg Remove="$(IlcSdkPath)libstdc++compat.a" />
 
