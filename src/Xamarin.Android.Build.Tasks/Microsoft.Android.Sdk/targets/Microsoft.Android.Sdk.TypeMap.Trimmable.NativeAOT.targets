@@ -12,9 +12,6 @@
   <Target Name="_AddTrimmableTypeMapAssembliesToIlc"
       BeforeTargets="_AndroidComputeIlcCompileInputs"
       DependsOnTargets="_ReadGeneratedTrimmableTypeMapAssemblies">
-    <PropertyGroup>
-      <TypeMapEntryAssembly>$(_TypeMapAssemblyName)</TypeMapEntryAssembly>
-    </PropertyGroup>
     <ItemGroup>
       <_TrimmableTypeMapIlcAssemblies Include="@(_GeneratedTypeMapAssembliesFromList)" />
       <_TrimmableTypeMapFrameworkIlcAssemblies Include="@(ResolvedFrameworkAssemblies->'$(_TypeMapOutputDirectory)_%(Filename).TypeMap.dll')" />
