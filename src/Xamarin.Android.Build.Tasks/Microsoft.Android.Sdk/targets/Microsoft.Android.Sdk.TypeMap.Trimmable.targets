@@ -22,6 +22,7 @@
     <_TypeMapBaseOutputDir>$(_TypeMapBaseOutputDir.Replace('\','/'))</_TypeMapBaseOutputDir>
     <_TypeMapOutputDirectory>$(_TypeMapBaseOutputDir)typemap/</_TypeMapOutputDirectory>
     <_TypeMapJavaOutputDirectory>$(_TypeMapBaseOutputDir)typemap/java</_TypeMapJavaOutputDirectory>
+    <_TypeMapAssembliesListFile>$(_TypeMapOutputDirectory)typemap-assemblies.txt</_TypeMapAssembliesListFile>
     <!-- Max array rank for __ArrayMapRank{N} sentinel emission. Defaults to 3 for NativeAOT
          (PublishAot=true, dynamic code is unavailable, so array creation uses the typemap path);
          defaults to 0 otherwise, where dynamic code can use Array.CreateInstance directly. -->
@@ -65,7 +66,7 @@
       Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '@(ReferencePath->Count())' != '0' and '$(_OuterIntermediateOutputPath)' == '' "
       AfterTargets="CoreCompile"
       Inputs="@(ReferencePath);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs)"
-      Outputs="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll">
+      Outputs="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll;$(_TypeMapAssembliesListFile)">
 
     <ItemGroup>
       <_TypeMapInputAssemblies Include="@(ReferencePath)" />
@@ -98,6 +99,7 @@
         ManifestPlaceholders="$(AndroidManifestPlaceholders)"
         CheckedBuild="$(_AndroidCheckedBuild)"
         ApplicationJavaClass="$(AndroidApplicationJavaClass)"
+        GeneratedAssembliesListFile="$(_TypeMapAssembliesListFile)"
         AcwMapOutputFile="$(IntermediateOutputPath)acw-map.txt"
         ApplicationRegistrationOutputFile="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java">
       <Output TaskParameter="GeneratedAssemblies" ItemName="_GeneratedTypeMapAssemblies" />
@@ -108,10 +110,25 @@
     <ItemGroup>
       <FileWrites Include="@(_GeneratedTypeMapAssemblies)" />
       <FileWrites Include="@(_GeneratedJavaFiles)" />
+      <FileWrites Include="$(_TypeMapAssembliesListFile)" />
       <FileWrites Include="$(_TypeMapBaseOutputDir)AndroidManifest.xml" />
       <FileWrites Include="$(IntermediateOutputPath)acw-map.txt" />
       <FileWrites Include="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java" />
     </ItemGroup>
+  </Target>
+
+  <Target Name="_ReadGeneratedTrimmableTypeMapAssemblies"
+      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' "
+      DependsOnTargets="_GenerateTrimmableTypeMap">
+    <Error
+        Condition=" !Exists('$(_TypeMapAssembliesListFile)') "
+        Text="Trimmable typemap assembly list '$(_TypeMapAssembliesListFile)' was not found." />
+    <ItemGroup>
+      <_GeneratedTypeMapAssembliesFromList Remove="@(_GeneratedTypeMapAssembliesFromList)" />
+    </ItemGroup>
+    <ReadLinesFromFile File="$(_TypeMapAssembliesListFile)">
+      <Output TaskParameter="Lines" ItemName="_GeneratedTypeMapAssembliesFromList" />
+    </ReadLinesFromFile>
   </Target>
 
   <!--
@@ -122,10 +139,11 @@
   -->
   <Target Name="_PrepareTrimmableNativeConfigAssemblies"
       Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' "
-      BeforeTargets="_GeneratePackageManagerJava">
+      BeforeTargets="_GeneratePackageManagerJava"
+      DependsOnTargets="_ReadGeneratedTrimmableTypeMapAssemblies">
     <ItemGroup>
       <_AdditionalNativeConfigResolvedAssemblies Remove="@(_AdditionalNativeConfigResolvedAssemblies)" />
-      <_AdditionalNativeConfigResolvedAssemblies Include="$(_TypeMapOutputDirectory)*.dll" />
+      <_AdditionalNativeConfigResolvedAssemblies Include="@(_GeneratedTypeMapAssembliesFromList)" />
     </ItemGroup>
   </Target>
 
@@ -138,7 +156,7 @@
   <Target Name="_PrepareTrimmableTypeMapAssemblies"
       Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' "
       BeforeTargets="_CollectAssembliesToCompress;_GeneratePackageManagerJava;_RemoveRegisterAttribute"
-      DependsOnTargets="_GenerateTrimmableTypeMap;_DefineBuildTargetAbis">
+      DependsOnTargets="_ReadGeneratedTrimmableTypeMapAssemblies;_DefineBuildTargetAbis">
     <PropertyGroup>
       <_TypeMapFirstAbi Condition=" '$(AndroidSupportedAbis)' != '' ">$([System.String]::Copy('$(AndroidSupportedAbis)').Split(';')[0])</_TypeMapFirstAbi>
       <_TypeMapFirstAbi Condition=" '$(_TypeMapFirstAbi)' == '' ">arm64-v8a</_TypeMapFirstAbi>
@@ -153,13 +171,13 @@
          included in the assembly store hash table, and keep _RemoveRegisterAttribute
          source/destination counts in sync. -->
     <ItemGroup>
-      <_ResolvedAssemblies Include="$(_TypeMapOutputDirectory)*.dll">
+      <_ResolvedAssemblies Include="@(_GeneratedTypeMapAssembliesFromList)">
         <Abi>$(_TypeMapFirstAbi)</Abi>
         <RuntimeIdentifier>$(_TypeMapFirstRid)</RuntimeIdentifier>
         <DestinationSubPath>$(_TypeMapFirstAbi)/%(Filename)%(Extension)</DestinationSubPath>
         <DestinationSubDirectory>$(_TypeMapFirstAbi)/</DestinationSubDirectory>
       </_ResolvedAssemblies>
-      <_ShrunkAssemblies Include="$(_TypeMapOutputDirectory)*.dll">
+      <_ShrunkAssemblies Include="@(_GeneratedTypeMapAssembliesFromList)">
         <Abi>$(_TypeMapFirstAbi)</Abi>
         <RuntimeIdentifier>$(_TypeMapFirstRid)</RuntimeIdentifier>
         <DestinationSubPath>$(_TypeMapFirstAbi)/%(Filename)%(Extension)</DestinationSubPath>

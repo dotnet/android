@@ -110,6 +110,35 @@ namespace Xamarin.Android.Build.Tests {
 				"Typemap assembly should NOT be rewritten when content hasn't changed.");
 		}
 
+		[Test]
+		public void Execute_WritesGeneratedAssembliesListFile ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+			var listFile = Path.Combine (outputDir, "typemap-assemblies.txt");
+			var staleAssembly = Path.Combine (outputDir, "_Stale.TypeMap.dll");
+
+			var monoAndroidItem = FindMonoAndroidDll ();
+			if (monoAndroidItem is null) {
+				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				return;
+			}
+
+			Directory.CreateDirectory (outputDir);
+			File.WriteAllText (staleAssembly, "stale");
+
+			var task = CreateTask (new [] { monoAndroidItem }, outputDir, javaDir);
+			task.GeneratedAssembliesListFile = listFile;
+
+			Assert.IsTrue (task.Execute (), "Task should succeed.");
+
+			var generatedAssemblies = task.GeneratedAssemblies.Select (i => i.ItemSpec).ToArray ();
+			var listedAssemblies = File.ReadAllLines (listFile);
+			CollectionAssert.AreEqual (generatedAssemblies, listedAssemblies);
+			CollectionAssert.DoesNotContain (listedAssemblies, staleAssembly);
+		}
+
 		[TestCase ("v11.0")]
 		[TestCase ("v10.0")]
 		[TestCase ("11.0")]

@@ -57,6 +57,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 	public string? ApplicationRegistrationOutputFile { get; set; }
 
+	public string? GeneratedAssembliesListFile { get; set; }
+
 	public string? ManifestTemplate { get; set; }
 
 	public string? MergedAndroidManifestOutput { get; set; }
@@ -159,6 +161,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				maxArrayRank: MaxArrayRank);
 
 			GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyInputs.Select (i => i.Path).ToList ());
+			WriteGeneratedAssembliesListFile (GeneratedAssemblies);
 			GeneratedJavaFiles = WriteJavaSourcesToDisk (result.GeneratedJavaSources);
 
 			// Write manifest to disk if generated
@@ -216,6 +219,23 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	static bool IsFrameworkAssemblyItem (ITaskItem item) =>
 		string.Equals (item.GetMetadata ("FrameworkAssembly"), bool.TrueString, StringComparison.OrdinalIgnoreCase) ||
 		MonoAndroidHelper.IsFrameworkAssembly (item);
+
+	void WriteGeneratedAssembliesListFile (IReadOnlyList<ITaskItem> assemblies)
+	{
+		if (GeneratedAssembliesListFile.IsNullOrEmpty ()) {
+			return;
+		}
+
+		var directory = Path.GetDirectoryName (GeneratedAssembliesListFile);
+		if (!directory.IsNullOrEmpty ()) {
+			Directory.CreateDirectory (directory);
+		}
+
+		var text = assemblies.Count == 0
+			? ""
+			: string.Join (Environment.NewLine, assemblies.Select (a => a.ItemSpec)) + Environment.NewLine;
+		Files.CopyIfStringChanged (text, GeneratedAssembliesListFile);
+	}
 
 	ITaskItem [] WriteAssembliesToDisk (IReadOnlyList<GeneratedAssembly> assemblies, IReadOnlyList<string> assemblyPaths)
 	{

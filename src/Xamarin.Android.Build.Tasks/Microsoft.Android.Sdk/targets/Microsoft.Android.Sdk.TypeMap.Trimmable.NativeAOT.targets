@@ -11,12 +11,12 @@
        whose trimTarget types were removed. -->
   <Target Name="_AddTrimmableTypeMapAssembliesToIlc"
       BeforeTargets="_AndroidComputeIlcCompileInputs"
-      DependsOnTargets="_GenerateTrimmableTypeMap">
+      DependsOnTargets="_ReadGeneratedTrimmableTypeMapAssemblies">
     <PropertyGroup>
       <TypeMapEntryAssembly>$(_TypeMapAssemblyName)</TypeMapEntryAssembly>
     </PropertyGroup>
     <ItemGroup>
-      <_TrimmableTypeMapIlcAssemblies Include="$(_TypeMapOutputDirectory)*.dll" />
+      <_TrimmableTypeMapIlcAssemblies Include="@(_GeneratedTypeMapAssembliesFromList)" />
       <_TrimmableTypeMapFrameworkIlcAssemblies Include="@(ResolvedFrameworkAssemblies->'$(_TypeMapOutputDirectory)_%(Filename).TypeMap.dll')" />
       <_TrimmableTypeMapFrameworkIlcAssemblies Include="@(PrivateSdkAssemblies->'$(_TypeMapOutputDirectory)_%(Filename).TypeMap.dll')" />
       <_TrimmableTypeMapFrameworkIlcAssemblies Include="@(ReferencePath->'$(_TypeMapOutputDirectory)_%(Filename).TypeMap.dll')"
