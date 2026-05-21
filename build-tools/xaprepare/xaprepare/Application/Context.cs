@@ -278,11 +278,6 @@ namespace Xamarin.Android.Prepare
 		}
 
 		/// <summary>
-		///   Collection of programs or dependencies which should be reinstalled.
-		/// </summary>
-		public RefreshableComponent ComponentsToRefresh { get; set; }
-
-		/// <summary>
 		///   Path to a local .NET SDK archive to use instead of downloading.
 		/// </summary>
 		public string? LocalDotNetSdkArchive { get; set; }

@@ -135,6 +135,13 @@
     <XAAndroidM2RepositoryHash>A3F91808DCE50C1717737DE90C18479ED3A78B147E06985247D138E7AB5123D0</XAAndroidM2RepositoryHash>
     <XAAndroidDocsHash>68DB2690CB92E4EE5373AC9B792642C90717D8F417D83ECCEA48781171B3182A</XAAndroidDocsHash>
     <XAAndroidSourcesHash>BD97900346A70C784AC8B15C809539DDEF34ED3B5BE1DF8A9A89CF298BE93798</XAAndroidSourcesHash>
+    <!-- Android NDK: per-host zips. Use a private property name; the public
+         $(AndroidNdkVersion) is set to the pkg revision in Common.props.in. -->
+    <_XAAndroidNdkRelease>28c</_XAAndroidNdkRelease>
+    <_XAAndroidNdkPkgRevision>28.2.13676358</_XAAndroidNdkPkgRevision>
+    <XAAndroidNdkHashMacOS>0D4599E8BBF1A1668A0D51A541729B2246360F350018A2081D0B302DBB594F2A</XAAndroidNdkHashMacOS>
+    <XAAndroidNdkHashLinux>DFB20D396DF28CA02A8C708314B814A4D961DC9074F9A161932746F815AA552F</XAAndroidNdkHashLinux>
+    <XAAndroidNdkHashWindows>6BEC98AC2354D8A919760889A1A41D020132E5E8CFA1B1FE51610A72C36A466B</XAAndroidNdkHashWindows>
     <XABundleToolVersion Condition="'$(XABundleToolVersion)' == ''">1.18.3</XABundleToolVersion>
     <XABundleToolHash Condition="'$(XABundleToolHash)' == ''">A099CFA1543F55593BC2ED16A70A7C67FE54B1747BB7301F37FDFD6D91028E29</XABundleToolHash>
     <XABinutilsVersion Condition="'$(XABinutilsVersion)' == ''">L_18.1.6-8.0.0-1</XABinutilsVersion>

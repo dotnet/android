@@ -37,10 +37,22 @@
     <_InstallAllPlatforms Condition=" '$(AndroidSdkPlatforms.ToLower())' == 'all' ">true</_InstallAllPlatforms>
     <_InstallLatestPlatformOnly Condition=" '$(AndroidSdkPlatforms.ToLower())' == 'latest' ">true</_InstallLatestPlatformOnly>
     <_RequestedApiLevels>;$(AndroidSdkPlatforms.Replace(',', ';'));</_RequestedApiLevels>
+
+    <!-- NDK toolchain dir name inside `<NDK>/toolchains/llvm/prebuilt/`. -->
+    <_NdkToolchainOSTag Condition=" '$(HostOS)' == 'Linux'   ">linux-x86_64</_NdkToolchainOSTag>
+    <_NdkToolchainOSTag Condition=" '$(HostOS)' == 'Darwin'  ">darwin-x86_64</_NdkToolchainOSTag>
+    <_NdkToolchainOSTag Condition=" '$(HostOS)' == 'Windows' ">windows-x86_64</_NdkToolchainOSTag>
+    <_NdkHostTag Condition=" '$(HostOS)' == 'Linux'   ">linux</_NdkHostTag>
+    <_NdkHostTag Condition=" '$(HostOS)' == 'Darwin'  ">darwin</_NdkHostTag>
+    <_NdkHostTag Condition=" '$(HostOS)' == 'Windows' ">windows</_NdkHostTag>
+    <_NdkHostHash Condition=" '$(HostOS)' == 'Linux'   ">$(XAAndroidNdkHashLinux)</_NdkHostHash>
+    <_NdkHostHash Condition=" '$(HostOS)' == 'Darwin'  ">$(XAAndroidNdkHashMacOS)</_NdkHostHash>
+    <_NdkHostHash Condition=" '$(HostOS)' == 'Windows' ">$(XAAndroidNdkHashWindows)</_NdkHostHash>
   </PropertyGroup>
 
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren"      TaskFactory="TaskHostFactory" Runtime="NET" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateAndroidPackageXml" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.CopyNdkRedistributables"  TaskFactory="TaskHostFactory" Runtime="NET" />
 
   <!--
     Catalog of platform APIs. Each item is downloaded as `<Identity>.zip`.
@@ -211,6 +223,16 @@
     </_AndroidSdkPackage>
 
     <!--
+      Android NDK: single per-host zip. The zip contains an `android-ndk-r<ver>/`
+      top-level directory which `UnzipDirectoryChildren` strips by default, so
+      the extracted contents land directly in $(AndroidNdkDirectory).
+    -->
+    <_AndroidSdkPackage Include="android-ndk-r$(_XAAndroidNdkRelease)-$(_NdkHostTag).zip">
+      <Hash>$(_NdkHostHash)</Hash>
+      <Destination>$(AndroidNdkDirectory)</Destination>
+    </_AndroidSdkPackage>
+
+    <!--
       Platform APIs filtered by $(AndroidSdkPlatforms): default 'latest' installs
       only IsLatestStable entries; 'all' installs everything; comma-separated list
       installs the matching ApiLevels. Filter happens in a BeforeTargets target
@@ -299,8 +321,26 @@
 
   <Target Name="_InstallAndroidSdkComponents"
       BeforeTargets="Build"
-      DependsOnTargets="_ExtractAndroidSdkPackages;_GenerateAndroidPackageXmls"
+      DependsOnTargets="_ExtractAndroidSdkPackages;_GenerateAndroidPackageXmls;_CopyNdkRedistributables"
   />
+
+  <!--
+    Copy NDK redistributable files (CRT, libc++, libunwind, libclang_rt.builtins)
+    for every supported ABI from the extracted NDK into the runtime redist directory.
+    MSBuild port of `Step_Android_SDK_NDK.CopyRedistributableFiles ()` in xaprepare.
+  -->
+  <Target Name="_CopyNdkRedistributables"
+      DependsOnTargets="_ExtractAndroidSdkPackages"
+      Inputs="$(AndroidNdkDirectory)\source.properties"
+      Outputs="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\.ndk-redist-copied">
+    <CopyNdkRedistributables
+        AndroidNdkDirectory="$(AndroidNdkDirectory)"
+        NdkToolchainOSTag="$(_NdkToolchainOSTag)"
+        MinimumApiLevel="$(AndroidMinimumDotNetApiLevel)"
+        OutputDirectory="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)"
+    />
+    <Touch Files="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\.ndk-redist-copied" AlwaysCreate="true" />
+  </Target>
 
   <Target Name="_AcceptAndroidSdkLicenses"
       BeforeTargets="Build"
