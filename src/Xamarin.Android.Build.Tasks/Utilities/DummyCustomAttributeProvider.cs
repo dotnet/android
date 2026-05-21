@@ -27,7 +27,7 @@ namespace Xamarin.Android.Tasks
 
 		public object? GetTypeFromReference (MetadataReader reader, TypeReferenceHandle handle, byte rawTypeKind) => null;
 
-		public object? GetTypeFromSerializedName (string name) => name;
+		public object? GetTypeFromSerializedName (string name) => null;
 
 		public PrimitiveTypeCode GetUnderlyingEnumType (object? type) => default (PrimitiveTypeCode);
 

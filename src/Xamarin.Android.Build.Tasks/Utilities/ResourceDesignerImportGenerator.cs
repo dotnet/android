@@ -92,21 +92,38 @@ namespace Xamarin.Android.Tasks
 				var attribute = reader.GetCustomAttribute (handle);
 				var fullName = reader.GetCustomAttributeFullName (attribute, Log);
 				if (fullName == "Android.Runtime.ResourceDesignerAttribute") {
-					var values = attribute.GetCustomAttributeArguments ();
+					var values = attribute.DecodeValue (ResourceDesignerAttributeTypeProvider.Instance);
 					foreach (var arg in values.NamedArguments) {
 						// application resource IDs are constants, cannot merge.
 						if (arg.Name == "IsApplication" && arg.Value is bool isApplication && isApplication) {
 							return null;
 						}
 					}
-					return values.FixedArguments.First ().Value switch {
-						Type type => type.FullName ?? type.Name,
-						string name => name,
-						_ => null,
-					};
+					return values.FixedArguments.First ().Value as string;
 				}
 			}
 			return null;
+		}
+
+		sealed class ResourceDesignerAttributeTypeProvider : ICustomAttributeTypeProvider<object?>
+		{
+			public static readonly ResourceDesignerAttributeTypeProvider Instance = new ResourceDesignerAttributeTypeProvider ();
+
+			public object? GetPrimitiveType (PrimitiveTypeCode typeCode) => null;
+
+			public object? GetSystemType () => null;
+
+			public object? GetSZArrayType (object? elementType) => null;
+
+			public object? GetTypeFromDefinition (MetadataReader reader, TypeDefinitionHandle handle, byte rawTypeKind) => null;
+
+			public object? GetTypeFromReference (MetadataReader reader, TypeReferenceHandle handle, byte rawTypeKind) => null;
+
+			public object? GetTypeFromSerializedName (string name) => name;
+
+			public PrimitiveTypeCode GetUnderlyingEnumType (object? type) => default (PrimitiveTypeCode);
+
+			public bool IsSystemType (object? type) => false;
 		}
 
 		void CreateImportFor (string declaringTypeFullName, TypeDefinition type, CodeMemberMethod method, MetadataReader reader, bool hasAlias)
