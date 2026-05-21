@@ -1972,6 +1972,9 @@ Android.Ranging.Wifi.Rtt.RttRangingParams.IsPeriodicRangingHwFeatureEnabled.get 
 Android.Ranging.Wifi.Rtt.RttRangingParams.RangingUpdateRate.get -> Android.Ranging.Raw.RangingDeviceUpdateRate
 Android.Ranging.Wifi.Rtt.RttRangingParams.ServiceName.get -> string!
 Android.Ranging.Wifi.Rtt.RttRangingParams.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.Runtime.ResourceDesignerAttribute.ResourceDesignerAttribute(System.Type! resourceType) -> void
+Android.Runtime.ResourceDesignerAttribute.ResourceType.get -> System.Type?
+Android.Runtime.ResourceDesignerAttribute.ResourceType.set -> void
 Android.Security.AdvancedProtection.AdvancedProtectionManager
 Android.Security.AdvancedProtection.AdvancedProtectionManager.ICallback
 Android.Security.AdvancedProtection.AdvancedProtectionManager.ICallback.OnAdvancedProtectionChanged(bool enabled) -> void

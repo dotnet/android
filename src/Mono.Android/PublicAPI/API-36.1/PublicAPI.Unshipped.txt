@@ -1,3 +1,6 @@
 #nullable enable
 Android.App.ApplicationAttribute.EnableOnBackInvokedCallback.get -> bool
 Android.App.ApplicationAttribute.EnableOnBackInvokedCallback.set -> void
+Android.Runtime.ResourceDesignerAttribute.ResourceDesignerAttribute(System.Type! resourceType) -> void
+Android.Runtime.ResourceDesignerAttribute.ResourceType.get -> System.Type?
+Android.Runtime.ResourceDesignerAttribute.ResourceType.set -> void

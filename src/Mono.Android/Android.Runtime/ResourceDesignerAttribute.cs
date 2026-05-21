@@ -8,13 +8,24 @@ namespace Android.Runtime
 	{
 		public ResourceDesignerAttribute (
 				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
-				string fullName)
+				Type resourceType)
+		{
+			if (resourceType == null)
+				throw new ArgumentNullException (nameof (resourceType));
+
+			ResourceType = resourceType;
+			FullName = resourceType.FullName ?? resourceType.Name;
+		}
+
+		public ResourceDesignerAttribute (string fullName)
 		{
 			FullName = fullName;
 		}
 
-		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
 		public string FullName { get; set; }
+
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
+		public Type? ResourceType { get; set; }
 
 		public bool IsApplication { get; set; }
 	}
