@@ -218,7 +218,7 @@ sealed class LlvmIrInstructions
 
 			if (function.Signature.ReturnType != typeof(void)) {
 				if (result == null) {
-					throw new ArgumentNullException ($"Internal error: function '{function.Signature.Name}' returns '{function.Signature.ReturnType}' and thus requires a result variable", nameof (result));
+					throw new ArgumentNullException (nameof (result), $"Internal error: function '{function.Signature.Name}' returns '{function.Signature.ReturnType}' and thus requires a result variable");
 				}
 			} else if (result != null) {
 				throw new ArgumentException ($"Internal error: function '{function.Signature.Name}' returns no value and yet a result variable was provided", nameof (result));
@@ -227,7 +227,7 @@ sealed class LlvmIrInstructions
 			int argCount = function.Signature.Parameters.Count;
 			if (argCount != 0) {
 				if (arguments == null) {
-					throw new ArgumentNullException ($"Internal error: function '{function.Signature.Name}' requires {argCount} arguments", nameof (arguments));
+					throw new ArgumentNullException (nameof (arguments), $"Internal error: function '{function.Signature.Name}' requires {argCount} arguments");
 				}
 
 				if (function.UsesVarArgs) {
