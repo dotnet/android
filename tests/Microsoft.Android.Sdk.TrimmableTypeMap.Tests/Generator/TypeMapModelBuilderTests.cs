@@ -1285,8 +1285,15 @@ public class ModelBuilderTests : FixtureTestBase
 		{
 			var peer = MakeAcwPeer ("my/app/Baz", "MyApp.Baz", "App") with {
 				JavaConstructors = new List<JavaConstructorInfo> {
-					new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V" },
-					new JavaConstructorInfo { ConstructorIndex = 1, JniSignature = "(Landroid/content/Context;)V" },
+					new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V", HasMatchingManagedCtor = true },
+					new JavaConstructorInfo {
+						ConstructorIndex = 1,
+						JniSignature = "(Landroid/content/Context;)V",
+						HasMatchingManagedCtor = true,
+						ManagedParameterTypes = [
+							new TypeRefData { ManagedTypeName = "Android.Content.Context", AssemblyName = "Mono.Android" },
+						],
+					},
 				},
 			};
 			var model = BuildModel (new [] { peer });
@@ -1301,6 +1308,19 @@ public class ModelBuilderTests : FixtureTestBase
 			var peer = MakeMcwPeer ("test/NoActivation", "Test.NoActivation", "Asm");
 			var model = BuildModel (new [] { peer });
 			Assert.Empty (model.ProxyTypes);
+		}
+
+		[Fact]
+		public void Build_ExportConstructorWithoutMatchingManagedCtor_Throws ()
+		{
+			var peer = MakeAcwPeer ("my/app/MissingCtor", "MyApp.MissingCtor", "App") with {
+				JavaConstructors = new List<JavaConstructorInfo> {
+					new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V", HasMatchingManagedCtor = false, SuperArgumentsString = "" },
+				},
+			};
+			var ex = Assert.Throws<InvalidOperationException> (() => BuildModel (new [] { peer }));
+			Assert.Contains ("no matching user-visible managed constructor", ex.Message);
+			Assert.Contains ("MyApp.MissingCtor", ex.Message);
 		}
 	}
 
@@ -1322,7 +1342,7 @@ public class ModelBuilderTests : FixtureTestBase
 					},
 				},
 				JavaConstructors = new List<JavaConstructorInfo> {
-					new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V" },
+					new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V", HasMatchingManagedCtor = true },
 				},
 			};
 			var model = BuildModel (new [] { peer });
@@ -1376,6 +1396,58 @@ public class ModelBuilderTests : FixtureTestBase
 			var proxy = model.ProxyTypes.FirstOrDefault ();
 			Assert.NotNull (proxy);
 			Assert.True (proxy.UcoMethods.Count >= 2, "TouchHandler should have multiple UCO methods");
+		}
+
+		[Fact]
+		public void Fixture_ExportExample_UsesExportMethodDispatch ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/ExportExample");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault ();
+			Assert.NotNull (proxy);
+			var exportUco = Assert.Single (proxy.UcoMethods);
+			var exportDispatch = exportUco.ExportMethodDispatch;
+			Assert.True (exportUco.UsesExportMethodDispatch);
+			Assert.NotNull (exportDispatch);
+			Assert.Equal ("MyExportedMethod", exportDispatch.ManagedMethodName);
+		}
+
+		[Fact]
+		public void Fixture_StaticExportExample_UsesStaticExportMethodDispatch ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/StaticExportExample");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault ();
+			Assert.NotNull (proxy);
+			var exportUco = Assert.Single (proxy.UcoMethods);
+			var exportDispatch = exportUco.ExportMethodDispatch;
+			Assert.True (exportUco.UsesExportMethodDispatch);
+			Assert.NotNull (exportDispatch);
+			Assert.True (exportDispatch.IsStatic);
+			Assert.Equal ("ComputeLabel", exportDispatch.ManagedMethodName);
+		}
+
+		[Fact]
+		public void Fixture_ExportMarshallingShapes_PropagatesExactManagedTypeMetadata ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/ExportMarshallingShapes");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = model.ProxyTypes.FirstOrDefault ();
+			Assert.NotNull (proxy);
+
+			var xmlUco = proxy.UcoMethods.First (u => u.ExportMethodDispatch?.ManagedMethodName == "ReadXml");
+			var xmlDispatch = xmlUco.ExportMethodDispatch;
+			Assert.NotNull (xmlDispatch);
+			Assert.Equal ("System.Xml.XmlReader", xmlDispatch.ParameterTypes [0].ManagedTypeName);
+			Assert.Equal ("System.Xml.ReaderWriter", xmlDispatch.ParameterTypes [0].AssemblyName);
+			Assert.Equal (ExportParameterKindInfo.XmlPullParser, xmlDispatch.ParameterKinds [0]);
+			Assert.Equal (ExportParameterKindInfo.XmlPullParser, xmlDispatch.ReturnKind);
+
+			var resourceXmlUco = proxy.UcoMethods.First (u => u.ExportMethodDispatch?.ManagedMethodName == "ReadResourceXml");
+			var resourceXmlDispatch = resourceXmlUco.ExportMethodDispatch;
+			Assert.NotNull (resourceXmlDispatch);
+			Assert.Equal (ExportParameterKindInfo.XmlResourceParser, resourceXmlDispatch.ParameterKinds [0]);
+			Assert.Equal (ExportParameterKindInfo.XmlResourceParser, resourceXmlDispatch.ReturnKind);
 		}
 
 		[Fact]

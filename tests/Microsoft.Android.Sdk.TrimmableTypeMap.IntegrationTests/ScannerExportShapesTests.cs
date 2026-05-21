@@ -1,0 +1,263 @@
+using System.IO;
+using System.Linq;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
+using Xunit;
+
+namespace Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests;
+
+/// <summary>
+/// Integration coverage for the trimmable scanner's [Export] handling on
+/// shapes that the legacy JCW emitter (CecilImporter.GetJniSignature) cannot
+/// encode: enum-typed parameters / returns, ICharSequence, and non-generic
+/// IList / IDictionary / ICollection. ScannerComparisonTests.RunLegacy falls
+/// back to direct [Register] extraction for these types (yields no entries),
+/// so legacy↔new comparison is intentionally skipped — these tests assert
+/// the new scanner produces the right JNI signatures end-to-end.
+/// </summary>
+public class ScannerExportShapesTests
+{
+	static string UserTypesFixturePath {
+		get {
+			var testDir = Path.GetDirectoryName (typeof (ScannerExportShapesTests).Assembly.Location)
+				?? throw new System.InvalidOperationException ("Could not determine test assembly directory.");
+			var path = Path.Combine (testDir, "UserTypesFixture.dll");
+			Assert.True (File.Exists (path), $"UserTypesFixture.dll not found at '{path}'.");
+			return path;
+		}
+	}
+
+	static MarshalMethodInfo[] GetMarshalMethods (string javaName)
+	{
+		var fixturePath = UserTypesFixturePath;
+		var dir = AssertNotNull (Path.GetDirectoryName (fixturePath));
+
+		var paths = new System.Collections.Generic.List<string> { fixturePath };
+		var monoAndroid = Path.Combine (dir, "Mono.Android.dll");
+		var javaInterop = Path.Combine (dir, "Java.Interop.dll");
+		if (File.Exists (monoAndroid))
+			paths.Add (monoAndroid);
+		if (File.Exists (javaInterop))
+			paths.Add (javaInterop);
+
+		using var scanner = new JavaPeerScanner ();
+		var peReaders = new System.Collections.Generic.List<PEReader> ();
+		try {
+			var assemblies = new System.Collections.Generic.List<(string Name, PEReader Reader)> ();
+			foreach (var p in paths) {
+				var pe = new PEReader (File.OpenRead (p));
+				peReaders.Add (pe);
+				var md = pe.GetMetadataReader ();
+				assemblies.Add ((md.GetString (md.GetAssemblyDefinition ().Name), pe));
+			}
+
+			var peers = scanner.Scan (assemblies);
+			var peer = peers.FirstOrDefault (p => p.ManagedTypeName.EndsWith (javaName));
+			return AssertNotNull (peer).MarshalMethods.ToArray ();
+		} finally {
+			foreach (var pe in peReaders)
+				pe.Dispose ();
+		}
+	}
+
+	static T AssertNotNull<T> (T? value) where T : class
+	{
+		Assert.NotNull (value);
+		return value ?? throw new System.InvalidOperationException ("Expected non-null value.");
+	}
+
+	static void AssertHasExport (MarshalMethodInfo[] methods, string jniName, string jniSignature)
+	{
+		var match = methods.FirstOrDefault (m => m.JniName == jniName && m.JniSignature == jniSignature);
+		Assert.True (match != null,
+			$"Expected [Export] marshal method '{jniName}{jniSignature}' not found. " +
+			$"Discovered: {string.Join (", ", methods.Select (m => m.JniName + m.JniSignature))}");
+		match = AssertNotNull (match);
+		// [Export] methods carry no Connector — legacy uses __export__ at runtime,
+		// trimmable wires registration via UCO fnptr. [ExportField] methods do
+		// surface the "__export__" connector by design (matches legacy
+		// CecilImporter behaviour), so accept that case too.
+		Assert.True (match.Connector is null || match.Connector == "__export__",
+			$"Unexpected connector '{match.Connector}' on {jniName}{jniSignature}.");
+	}
+
+	[Fact]
+	public void ExportField_RegistersGetterAsMarshalMethod ()
+	{
+		var methods = GetMarshalMethods ("ExportFieldShapes");
+
+		// [ExportField] uses the managed method name as the JNI method name
+		// (legacy Mono.Android.Export does the same thing). The signatures
+		// below match the underlying CLR method shape.
+		// User-peer return type uses a CRC64-based package name; assert by prefix
+		// so the test isn't tied to the exact CRC64 hash of the assembly.
+		var getInstance = System.Array.Find (methods, m => m.JniName == "GetInstance");
+		getInstance = AssertNotNull (getInstance);
+		Assert.EndsWith ("/ExportFieldShapes;", getInstance.JniSignature);
+		Assert.StartsWith ("()L", getInstance.JniSignature);
+		Assert.DoesNotContain ("Ljava/lang/Object;", getInstance.JniSignature);
+
+		AssertHasExport (methods, "GetValue", "()Ljava/lang/String;");
+		AssertHasExport (methods, "GetCount", "()I");
+	}
+
+	// === Phase A: dispatch & declaration shapes ===
+
+	[Fact]
+	public void Export_WithThrowsClause_SurfacesDeclaredExceptions ()
+	{
+		var methods = GetMarshalMethods ("ExportThrowsShapes");
+
+		var ioCall = System.Array.Find (methods, m => m.JniName == "ioCall");
+		ioCall = AssertNotNull (ioCall);
+		var ioThrownNames = AssertNotNull (ioCall.ThrownNames);
+		Assert.Contains ("java/io/IOException", ioThrownNames);
+
+		var multiThrow = System.Array.Find (methods, m => m.JniName == "multiThrow");
+		multiThrow = AssertNotNull (multiThrow);
+		var multiThrownNames = AssertNotNull (multiThrow.ThrownNames);
+		Assert.Contains ("java/io/IOException", multiThrownNames);
+		Assert.Contains ("java/lang/IllegalStateException", multiThrownNames);
+	}
+
+	[Fact]
+	public void MixedRegisterAndExport_BothPathsSurface ()
+	{
+		var methods = GetMarshalMethods ("MixedRegisterAndExport");
+
+		// [Register]-driven Activity override carries a connector
+		var onCreate = System.Array.Find (methods, m => m.JniName == "onCreate");
+		onCreate = AssertNotNull (onCreate);
+		Assert.False (onCreate.Connector is null or "__export__",
+			$"OnCreate override should have a real Get*Handler connector, got '{onCreate.Connector}'.");
+
+		// [Export]-driven new methods carry no connector (or "__export__")
+		AssertHasExport (methods, "doWork", "()V");
+		AssertHasExport (methods, "compute", "(I)I");
+	}
+
+	[Fact]
+	public void VirtualExport_TopMostDeclarationRegisters ()
+	{
+		var baseMethods = GetMarshalMethods ("VirtualExportBase");
+		AssertHasExport (baseMethods, "ping", "()I");
+
+		var derivedMethods = GetMarshalMethods ("VirtualExportDerived");
+		// Derived class doesn't re-declare [Export]; only the base [Export] applies,
+		// so the derived peer should NOT add a duplicate marshal-method entry of its
+		// own. (Legacy CecilImporter walks up the inheritance chain and registers
+		// the [Export] on the topmost declaring type.)
+		var derivedPing = System.Array.FindAll (derivedMethods, m => m.JniName == "ping");
+		Assert.True (derivedPing.Length <= 1,
+			$"Derived peer should not duplicate base's [Export] entry, found {derivedPing.Length}.");
+	}
+
+	[Fact]
+	public void Export_CustomJniName_NotIdentityMappedFromMethodName ()
+	{
+		var methods = GetMarshalMethods ("ExportRenameShapes");
+
+		// JNI name comes from [Export("javaSideName")], not from "CSharpSideName".
+		Assert.Contains (methods, m => m.JniName == "javaSideName" && m.JniSignature == "()V");
+		Assert.DoesNotContain (methods, m => m.JniName == "CSharpSideName");
+	}
+
+	// === Phase B: edge marshalling ===
+
+	[Fact]
+	public void Export_JavaLangObjectExplicitly_KeepsObjectDescriptor ()
+	{
+		var methods = GetMarshalMethods ("ExportObjectShapes");
+		AssertHasExport (methods, "any", "(Ljava/lang/Object;)Ljava/lang/Object;");
+	}
+
+	[Fact]
+	public void Export_ArrayOfUserPeerType_RecursesUserPeerResolver ()
+	{
+		var methods = GetMarshalMethods ("ExportUserPeerArrayShapes");
+		var echoArr = System.Array.Find (methods, m => m.JniName == "echoArr");
+		echoArr = AssertNotNull (echoArr);
+		// Both parameter and return are arrays of the user-peer UserPeerForArray.
+		// CRC64 hash is environment-dependent; assert by suffix.
+		Assert.Matches (@"^\(\[Ls?crc64[0-9a-f]{16}/UserPeerForArray;\)\[Ls?crc64[0-9a-f]{16}/UserPeerForArray;$", echoArr.JniSignature);
+	}
+
+	[Fact]
+	public void Export_ProtectedAndPrivateVisibility_BothSurface ()
+	{
+		var methods = GetMarshalMethods ("ExportVisibilityShapes");
+		AssertHasExport (methods, "doProtected", "()V");
+		AssertHasExport (methods, "doPrivate", "()V");
+	}
+
+	[Fact]
+	public void ExportField_ReturningPrimitive ()
+	{
+		var methods = GetMarshalMethods ("ExportFieldPrimitiveShapes");
+		// [ExportField] uses the managed method name as the JNI name (not the field name).
+		var getMaxValue = System.Array.Find (methods, m => m.JniName == "GetMaxValue");
+		getMaxValue = AssertNotNull (getMaxValue);
+		Assert.Equal ("()I", getMaxValue.JniSignature);
+		Assert.Equal ("__export__", getMaxValue.Connector);
+	}
+
+	[Fact]
+	public void Export_OverloadsWithSameJavaName_RegisterDistinctly ()
+	{
+		var methods = GetMarshalMethods ("ExportOverloadShapes");
+		var calls = System.Array.FindAll (methods, m => m.JniName == "call");
+		Assert.Equal (2, calls.Length);
+		Assert.Contains (calls, m => m.JniSignature == "(I)V");
+		Assert.Contains (calls, m => m.JniSignature == "(Ljava/lang/String;)V");
+	}
+
+	[Fact]
+	public void Export_OnRegisterOverride_RegisterPathWins ()
+	{
+		var methods = GetMarshalMethods ("ExportOverridingRegisterShape");
+
+		// The Activity.OnCreate override carries [Register]-driven dispatch
+		// (real Get*Handler connector). Putting [Export] on top of an override
+		// of a [Register]'d base means BOTH entries are registered: the
+		// [Register]-driven override (so Activity.onCreate dispatch still works)
+		// AND the [Export]-driven new method (so Java callers can call the
+		// renamed method). Matches legacy CecilImporter behaviour.
+		var onCreate = System.Array.Find (methods, m => m.JniName == "onCreate");
+		onCreate = AssertNotNull (onCreate);
+		Assert.False (onCreate.Connector is null or "__export__",
+			$"OnCreate override should keep its [Register]-driven Get*Handler connector, got '{onCreate.Connector}'.");
+
+		var onCreateExport = System.Array.Find (methods, m => m.JniName == "onCreateExport");
+		onCreateExport = AssertNotNull (onCreateExport);
+		Assert.True (onCreateExport.Connector is null or "__export__",
+			$"[Export]-driven entry should have no real connector, got '{onCreateExport.Connector}'.");
+	}
+
+	// === Phase D: [Export] on a [Register]'d-interface implementation ===
+
+	[Fact]
+	public void Export_OnInterfaceImpl_RegistersOnImplementor ()
+	{
+		// IOnClickListener.OnClick is declared with [Register("onClick", "(Landroid/view/View;)V", "...")]
+		// on the interface itself. The implementor adds [Export("onClick")] to its
+		// OnClick override. The trimmable scanner must surface a UCO marshal-method
+		// entry on the implementor type so the [UnmanagedCallersOnly] wrapper gets
+		// generated alongside the interface-invoker path. Without this entry, the
+		// trimmable build silently relies on the legacy Invoker for dispatch, which
+		// defeats the user's explicit [Export] opt-in.
+		var methods = GetMarshalMethods ("ExportInterfaceImplShape");
+		AssertHasExport (methods, "onClick", "(Landroid/view/View;)V");
+	}
+
+	[Fact]
+	public void Export_OnInterfaceImpl_WithRenamedJniName_RegistersExportName ()
+	{
+		// User implements IOnClickListener.OnClick but with [Export("onClickRenamed")].
+		// The [Export] attribute opts the method into JCW/UCO dispatch under a
+		// different JNI name from the interface contract. Assert that the renamed
+		// entry is present — the scanner must NOT collapse it into the interface's
+		// "onClick" name nor drop it because of the contract mismatch.
+		var methods = GetMarshalMethods ("ExportInterfaceRenameShape");
+		Assert.Contains (methods, m => m.JniName == "onClickRenamed" && m.JniSignature == "(Landroid/view/View;)V");
+	}
+}

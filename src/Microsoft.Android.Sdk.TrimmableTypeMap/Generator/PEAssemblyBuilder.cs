@@ -488,6 +488,20 @@ sealed class PEAssemblyBuilder
 			}
 		}
 
+		public void BranchPreservingStack (ILOpCode code, LabelHandle label)
+		{
+			switch (code) {
+			case ILOpCode.Br:
+			case ILOpCode.Br_s:
+				// Unconditional branches preserve the current stack; Branch() rejects
+				// them because most callers need stack-depth tracking to change.
+				Encoder.Branch (code, label);
+				break;
+			default:
+				throw new NotSupportedException ($"Branch opcode '{code}' does not preserve the evaluation stack.");
+			}
+		}
+
 		public void LoadArgument (int argumentIndex)
 		{
 			Encoder.LoadArgument (argumentIndex);
@@ -622,8 +636,11 @@ sealed class PEAssemblyBuilder
 			Encoder.OpCode (code);
 			switch (code) {
 			case ILOpCode.Add:
+			case ILOpCode.Cgt_un:
 			case ILOpCode.Mul:
 				Pop (1);
+				break;
+			case ILOpCode.Conv_u1:
 				break;
 			case ILOpCode.Dup:
 				Push (1);
