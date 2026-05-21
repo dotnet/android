@@ -50,7 +50,6 @@
     <_NdkHostHash Condition=" '$(HostOS)' == 'Windows' ">$(XAAndroidNdkHashWindows)</_NdkHostHash>
   </PropertyGroup>
 
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren"      TaskFactory="TaskHostFactory" Runtime="NET" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateAndroidPackageXml" TaskFactory="TaskHostFactory" Runtime="NET" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.CopyNdkRedistributables"  TaskFactory="TaskHostFactory" Runtime="NET" />
 
@@ -94,7 +93,7 @@
       Url                 - full URL relative to $(_AndroidRepositoryUrl) (defaults to Identity)
       Hash                - expected SHA-256 (hex, uppercase)
       Destination         - directory to extract into (absolute, under $(AndroidSdkFullPath))
-      NoSubdirectory      - if "true", do not strip the zip's top-level directory
+      StripComponents     - number of leading path components to strip (default 1)
       GeneratePackageXml  - if "true", write a `package.xml` next to the extracted source.properties
   -->
   <ItemGroup>
@@ -147,17 +146,17 @@
     <_AndroidSdkPackage Include="cmake-$(AndroidCmakeVersion)-darwin.zip" Condition=" '$(HostOS)' == 'Darwin' ">
       <Hash>$(XACmakeHashMacOS)</Hash>
       <Destination>$(AndroidSdkFullPath)\cmake\$(AndroidCmakeVersionPath)</Destination>
-      <NoSubdirectory>true</NoSubdirectory>
+      <StripComponents>0</StripComponents>
     </_AndroidSdkPackage>
     <_AndroidSdkPackage Include="cmake-$(AndroidCmakeVersion)-linux.zip" Condition=" '$(HostOS)' == 'Linux' ">
       <Hash>$(XACmakeHashLinux)</Hash>
       <Destination>$(AndroidSdkFullPath)\cmake\$(AndroidCmakeVersionPath)</Destination>
-      <NoSubdirectory>true</NoSubdirectory>
+      <StripComponents>0</StripComponents>
     </_AndroidSdkPackage>
     <_AndroidSdkPackage Include="cmake-$(AndroidCmakeVersion)-windows.zip" Condition=" '$(HostOS)' == 'Windows' ">
       <Hash>$(XACmakeHashWindows)</Hash>
       <Destination>$(AndroidSdkFullPath)\cmake\$(AndroidCmakeVersionPath)</Destination>
-      <NoSubdirectory>true</NoSubdirectory>
+      <StripComponents>0</StripComponents>
     </_AndroidSdkPackage>
 
     <!-- emulator: per-HostOS (and per-arch on Darwin); emits a synthetic package.xml afterwards. -->
@@ -224,20 +223,12 @@
 
     <!--
       Android NDK: single per-host zip. The zip contains an `android-ndk-r<ver>/`
-      top-level directory which `UnzipDirectoryChildren` strips by default, so
-      the extracted contents land directly in $(AndroidNdkDirectory).
-
-      On Unix, LibZipSharp's `SetFileProperties` chokes on the NDK's many
-      symlinks (e.g. `clang++ -> clang`, `x86_64-linux-android24-clang -> clang`)
-      and either crashes with EPERM or silently materializes them as zero-byte
-      files (which then fail to exec with "Exec format error"). Use the system
-      `unzip` binary on Unix; UnzipDirectoryChildren handles the Windows NDK
-      zip (no symlinks, just `.exe` files) just fine.
+      top-level directory which is stripped via `strip-components=1`, so the
+      extracted contents land directly in $(AndroidNdkDirectory).
     -->
     <_AndroidSdkPackage Include="android-ndk-r$(_XAAndroidNdkRelease)-$(_NdkHostTag).zip">
       <Hash>$(_NdkHostHash)</Hash>
       <Destination>$(AndroidNdkDirectory)</Destination>
-      <ExtractWithSystemUnzip>true</ExtractWithSystemUnzip>
     </_AndroidSdkPackage>
 
     <!--
@@ -297,41 +288,25 @@
   </Target>
 
   <!--
-    Extract every downloaded package into its destination. `source.properties`
-    is the sentinel used by the SDK manager - present in every component zip -
-    so it doubles as an incremental-build skip target.
+    Extract every downloaded package into its destination. Uses system `tar`
+    (bsdtar / libarchive) which is available on Windows 10+, Linux, and macOS,
+    handles `.zip` natively, and preserves symlinks correctly (the NDK zip
+    contains many symlinks that LibZipSharp's `UnzipDirectoryChildren` cannot
+    handle on Unix). `source.properties` is the sentinel used by the SDK
+    manager - present in every component zip - so it doubles as an
+    incremental-build skip target.
   -->
   <Target Name="_ExtractAndroidSdkPackages"
-      DependsOnTargets="_DownloadAndroidSdkPackages;_ExtractAndroidNdkOnUnix"
+      DependsOnTargets="_DownloadAndroidSdkPackages"
       Inputs="$(AndroidToolchainCacheDirectory)\%(_AndroidSdkPackage.Identity)"
       Outputs="%(_AndroidSdkPackage.Destination)\source.properties">
-    <UnzipDirectoryChildren
-        Condition=" '%(_AndroidSdkPackage.ExtractWithSystemUnzip)' != 'true' or '$(HostOS)' == 'Windows' "
-        NoSubdirectory="%(_AndroidSdkPackage.NoSubdirectory)"
-        SourceFiles="$(AndroidToolchainCacheDirectory)\%(_AndroidSdkPackage.Identity)"
-        DestinationFolder="%(_AndroidSdkPackage.Destination)"
-    />
-  </Target>
-
-  <!--
-    On Unix, the NDK zip contains symlinks that LibZipSharp can't handle. Use
-    the system `unzip` binary, then move the extracted `android-ndk-r<ver>/`
-    contents into $(AndroidNdkDirectory).
-  -->
-  <Target Name="_ExtractAndroidNdkOnUnix"
-      Condition=" '$(HostOS)' != 'Windows' "
-      DependsOnTargets="_DownloadAndroidSdkPackages"
-      Inputs="$(AndroidToolchainCacheDirectory)/android-ndk-r$(_XAAndroidNdkRelease)-$(_NdkHostTag).zip"
-      Outputs="$(AndroidNdkDirectory)/source.properties">
     <PropertyGroup>
-      <_NdkZipPath>$(AndroidToolchainCacheDirectory)/android-ndk-r$(_XAAndroidNdkRelease)-$(_NdkHostTag).zip</_NdkZipPath>
-      <_NdkParentDir>$([System.IO.Path]::GetDirectoryName('$(AndroidNdkDirectory)'))</_NdkParentDir>
-      <_NdkExtractedDir>$(_NdkParentDir)/android-ndk-r$(_XAAndroidNdkRelease)</_NdkExtractedDir>
+      <_StripComponents>%(_AndroidSdkPackage.StripComponents)</_StripComponents>
+      <_StripComponents Condition=" '$(_StripComponents)' == '' ">1</_StripComponents>
     </PropertyGroup>
-    <RemoveDir Directories="$(AndroidNdkDirectory);$(_NdkExtractedDir)" />
-    <MakeDir Directories="$(_NdkParentDir)" />
-    <Exec Command="unzip -q &quot;$(_NdkZipPath)&quot; -d &quot;$(_NdkParentDir)&quot;" />
-    <Exec Command="mv &quot;$(_NdkExtractedDir)&quot; &quot;$(AndroidNdkDirectory)&quot;" />
+    <RemoveDir Directories="%(_AndroidSdkPackage.Destination)" />
+    <MakeDir Directories="%(_AndroidSdkPackage.Destination)" />
+    <Exec Command="tar -xf &quot;$(AndroidToolchainCacheDirectory)\%(_AndroidSdkPackage.Identity)&quot; -C &quot;%(_AndroidSdkPackage.Destination)&quot; --strip-components=$(_StripComponents)" />
   </Target>
 
   <!--
