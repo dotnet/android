@@ -285,6 +285,7 @@ static class ModelBuilder
 			},
 			IsAcw = isAcw,
 			IsGenericDefinition = peer.IsGenericDefinition,
+			CannotRegisterInStaticConstructor = peer.CannotRegisterInStaticConstructor,
 		};
 
 		if (peer.InvokerTypeName != null) {
@@ -333,6 +334,14 @@ static class ModelBuilder
 					AssemblyName = !mm.DeclaringAssemblyName.IsNullOrEmpty () ? mm.DeclaringAssemblyName : peer.AssemblyName,
 				},
 				JniSignature = mm.JniSignature,
+				ExportMethodDispatch = mm.IsExport ? new ExportMethodDispatchData {
+					ManagedMethodName = mm.ManagedMethodName,
+					ParameterTypes = mm.ManagedParameterTypes,
+					ParameterKinds = mm.ManagedParameterExportKinds,
+					ReturnType = mm.ManagedReturnType,
+					ReturnKind = mm.ManagedReturnExportKind,
+					IsStatic = mm.IsStatic,
+				} : null,
 			});
 			ucoIndex++;
 		}
@@ -345,6 +354,10 @@ static class ModelBuilder
 		}
 
 		foreach (var ctor in peer.JavaConstructors) {
+			if (ctor.SuperArgumentsString != null && !ctor.HasMatchingManagedCtor) {
+				throw new InvalidOperationException (
+					$"Trimmable typemap cannot generate Java constructor wrapper '{ctor.JniSignature}' for '{peer.ManagedTypeName}' because no matching user-visible managed constructor was found.");
+			}
 			proxy.UcoConstructors.Add (new UcoConstructorData {
 				WrapperName = $"nctor_{ctor.ConstructorIndex}_uco",
 				JniSignature = ctor.JniSignature,
@@ -353,7 +366,7 @@ static class ModelBuilder
 					AssemblyName = peer.AssemblyName,
 				},
 				ManagedParameterTypes = ctor.ManagedParameterTypes,
-				HasManagedConstructor = ctor.HasManagedConstructor,
+				HasMatchingManagedCtor = ctor.HasMatchingManagedCtor,
 			});
 		}
 	}

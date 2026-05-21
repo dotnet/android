@@ -8,7 +8,7 @@ namespace Xamarin.Android.Prepare
 		protected override AndroidToolchainComponentType AndroidSdkNdkType => AndroidToolchainComponentType.CoreDependency | AndroidToolchainComponentType.EmulatorDependency;
 
 		public Scenario_EmulatorTestDependencies () 
-			: base ("EmulatorTestDependencies", "Install Android SDK (with emulator), OpenJDK, and .NET preview test dependencies.")
+			: base ("EmulatorTestDependencies", "Install Android SDK (with emulator) and .NET preview test dependencies.")
 		{}
 	}
 }

@@ -179,8 +179,17 @@ namespace Xamarin.Android.Tasks
 				}
 			};
 
+			static bool ShouldSkipAssembly (ITaskItem assembly)
+			{
+				return assembly.GetMetadataOrDefault ("AndroidSkipAddToPackage", false);
+			}
+
 			if (SatelliteAssemblies != null) {
 				foreach (ITaskItem assembly in SatelliteAssemblies) {
+					if (ShouldSkipAssembly (assembly)) {
+						continue;
+					}
+
 					updateNameWidth (assembly);
 					updateAssemblyCount (assembly);
 				}
@@ -190,6 +199,10 @@ namespace Xamarin.Android.Tasks
 			int jnienv_initialize_method_token = -1;
 			int jnienv_registerjninatives_method_token = -1;
 			foreach (var assembly in ResolvedAssemblies) {
+				if (ShouldSkipAssembly (assembly)) {
+					continue;
+				}
+
 				updateNameWidth (assembly);
 				updateAssemblyCount (assembly);
 

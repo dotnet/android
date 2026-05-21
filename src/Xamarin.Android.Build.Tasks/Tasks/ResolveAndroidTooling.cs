@@ -90,11 +90,17 @@ namespace Xamarin.Android.Tasks
 				AndroidApiLevel = GetMaxStableApiLevel ().ToString ();
 			}
 
+			var androidSdk = MonoAndroidHelper.AndroidSdk;
+			if (androidSdk == null || AndroidSdkPath.IsNullOrEmpty ()) {
+				Log.LogCodedError ("XA5300", Properties.Resources.XA5300_Android_SDK);
+				return false;
+			}
+
 			string toolsZipAlignPath = Path.Combine (AndroidSdkPath, "tools", ZipAlign);
 			bool findZipAlign = (ZipAlignPath.IsNullOrEmpty () || !Directory.Exists (ZipAlignPath)) && !File.Exists (toolsZipAlignPath);
 
-			var lintPaths = MonoAndroidHelper.AndroidSdk.GetCommandLineToolsPaths (CommandLineToolsVersion ?? "")
-				.SelectMany (p => new[]{
+			var lintPaths = androidSdk.GetCommandLineToolsPaths (CommandLineToolsVersion ?? "")
+				.SelectMany (p => new [] {
 					p,
 					Path.Combine (p, "bin"),
 				});
@@ -107,7 +113,7 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			foreach (var dir in MonoAndroidHelper.AndroidSdk.GetBuildToolsPaths (AndroidSdkBuildToolsVersion ?? "")) {
+			foreach (var dir in androidSdk.GetBuildToolsPaths (AndroidSdkBuildToolsVersion ?? "")) {
 				Log.LogDebugMessage ("Trying build-tools path: {0}", dir);
 				if (dir == null || !Directory.Exists (dir))
 					continue;

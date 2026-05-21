@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -149,6 +151,170 @@ namespace Xamarin.Android.Build.Tests {
 				FileAssert.Exists (Path.Combine (toolsDir, file), $"{file} should exist in the SDK pack.");
 			}
 
+		}
+
+		// T1: end-to-end build coverage for [Export] and [ExportField] under trimmable.
+		// The trimmable typemap path emits a per-assembly typemap DLL and JCW Java
+		// sources for user peer types. This test confirms that, for a project that
+		// uses both [Export] (instance method) and [ExportField] (static getter),
+		// the JCW Java file the build generates contains the expected `native`
+		// method declaration AND a static field declaration referencing the field
+		// initializer method. If either side regresses, the runtime would silently
+		// fail to wire up the user's exports.
+		[Test]
+		public void Build_WithExportAndExportField_GeneratesJcwAndTypeMap ()
+		{
+			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = false,
+				References = {
+					new BuildItem.Reference ("Mono.Android.Export"),
+				},
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.Sources.Add (new BuildItem.Source ("ExportShapes.cs") {
+				TextContent = () => @"using System;
+using Java.Interop;
+
+namespace UnnamedProject {
+	class ExportShapes : Java.Lang.Object {
+		[Export]
+		public string EchoString (string x) => ""<"" + x + "">"";
+
+		[ExportField (""FOO"")]
+		public static int InitialFoo () => 42;
+	}
+}"
+			});
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+
+			var javaDir = Path.Combine (builder.Output.GetIntermediaryPath ("typemap"), "java");
+			DirectoryAssert.Exists (javaDir, "Trimmable JCW Java output directory should exist.");
+
+			var allJavaFiles = Directory.GetFiles (javaDir, "*.java", SearchOption.AllDirectories);
+			Assert.IsNotEmpty (allJavaFiles, "At least one JCW Java source file should be generated.");
+
+			// The JCW Java file for ExportShapes lives under a crc64<hash>/ECDH directory
+			// matching the CRC64 hash of the type. Search by content (one of the method
+			// names that must appear in the generated source) rather than by filename
+			// to avoid coupling to the hash.
+			string? exportShapesJava = null;
+			string? exportShapesText = null;
+			foreach (var f in allJavaFiles) {
+				var text = File.ReadAllText (f);
+				if (text.Contains ("EchoString") && text.Contains ("InitialFoo")) {
+					exportShapesJava = f;
+					exportShapesText = text;
+					break;
+				}
+			}
+			Assert.IsNotNull (exportShapesJava,
+				$"Could not find a generated JCW Java file referencing both EchoString and InitialFoo under {javaDir}.");
+			Assert.IsNotNull (exportShapesText,
+				$"Could not find a generated JCW Java file referencing both EchoString and InitialFoo under {javaDir}.");
+			var javaText = exportShapesText;
+
+			// [Export] EchoString — Java side must declare a `native` method matching
+			// the C# signature (String -> String). The trimmable emitter generates
+			// `public native` for instance [Export] methods.
+			StringAssert.Contains ("native", javaText,
+				"Generated JCW should contain a native method declaration for [Export].");
+			StringAssert.Contains ("EchoString", javaText,
+				"Generated JCW should contain the [Export] method name.");
+
+			// [ExportField] FOO — Java side must declare a static field initialized
+			// by calling the C# initializer method (`InitialFoo`). Without this,
+			// the [ExportField] is silently dropped and Java callers see no FOO.
+			StringAssert.Contains ("FOO", javaText,
+				"Generated JCW should contain the [ExportField] declaration.");
+			StringAssert.Contains ("InitialFoo", javaText,
+				"Generated JCW should reference the [ExportField] initializer method.");
+
+			// A per-assembly typemap DLL should be present (named after the app
+			// assembly + .TypeMap suffix). We only check that *some* user typemap
+			// assembly was produced — the exact name varies based on app assembly.
+			var typemapDir = builder.Output.GetIntermediaryPath ("typemap");
+			var typemapDlls = Directory.GetFiles (typemapDir, "*.TypeMap.dll");
+			Assert.IsNotEmpty (typemapDlls, "Trimmable typemap should produce at least one *.TypeMap.dll.");
+		}
+
+		// T6: trim-warning baseline for [Export] under trimmable.
+		// The trimmable [Export] code generator emits IL that reaches into
+		// Mono.Android via [IgnoresAccessChecksTo] and dispatches through
+		// member references built from System.Reflection.Metadata. If the
+		// emitter starts producing reflection-style patterns that the trim
+		// analyzer cannot track (e.g. missing [DynamicallyAccessedMembers] on
+		// helper signatures), IL2xxx / IL3xxx warnings will appear pointing
+		// at the generated `_<App>.TypeMap.dll` or at the user's [Export]
+		// source. The baseline is: zero such warnings reference either of
+		// those locations. This is a targeted assertion (not a full no-IL-warnings
+		// guarantee), so unrelated framework warnings don't fail the test.
+		[Test]
+		public void Build_WithExport_ProducesNoTrimWarningsTargetingExportCodegen ()
+		{
+			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				References = {
+					new BuildItem.Reference ("Mono.Android.Export"),
+				},
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("TrimMode", "full");
+			proj.SetProperty ("TrimmerSingleWarn", "false");
+			proj.Sources.Add (new BuildItem.Source ("ExportShapes.cs") {
+				TextContent = () => @"using System;
+using Java.Interop;
+
+namespace UnnamedProject {
+	class ExportShapes : Java.Lang.Object {
+		[Export]
+		public string EchoString (string x) => ""<"" + x + "">"";
+
+		[ExportField (""FOO"")]
+		public static int InitialFoo () => 42;
+	}
+}"
+			});
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+
+			// Match actual IL2xxx and IL3xxx warning lines (trim + AOT analysis), then
+			// keep only those whose message text references either the generated
+			// trimmable typemap assembly or the [Export] source file.
+			// The regex requires ": warning IL" to avoid matching CSC command lines
+			// that mention IL codes in /nowarn switches.
+			// Exclude IL2026 about ExportAttribute/ExportFieldAttribute constructors
+			// themselves — those are expected (the attributes carry [RequiresUnreferencedCode]).
+			var ilWarningRegex = new Regex (@":\s*warning\s+(IL[23]\d{3})\b", RegexOptions.Compiled);
+			var offending = new List<string> ();
+			foreach (var line in builder.LastBuildOutput) {
+				if (!ilWarningRegex.IsMatch (line)) {
+					continue;
+				}
+				if (line.Contains ("ExportAttribute", StringComparison.Ordinal)
+						&& line.Contains ("RequiresUnreferencedCode", StringComparison.Ordinal)) {
+					continue;
+				}
+				bool mentionsTypeMap = line.Contains (".TypeMap.dll", StringComparison.OrdinalIgnoreCase)
+					|| line.Contains ("_Microsoft.Android.TypeMaps", StringComparison.OrdinalIgnoreCase);
+				bool mentionsExportSource = line.Contains ("ExportShapes.cs", StringComparison.OrdinalIgnoreCase);
+				if (mentionsTypeMap || mentionsExportSource) {
+					offending.Add (line.Trim ());
+				}
+			}
+
+			Assert.IsEmpty (offending,
+				"Trimmable [Export] codegen should not introduce IL2xxx / IL3xxx warnings against the generated typemap " +
+				"assembly or the user's [Export] source. Offending warning lines:\n  " +
+				string.Join ("\n  ", offending));
 		}
 	}
 }
