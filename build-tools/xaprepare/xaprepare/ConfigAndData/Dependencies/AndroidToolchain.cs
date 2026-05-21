@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices;
 
 namespace Xamarin.Android.Prepare
 {
@@ -16,10 +15,6 @@ namespace Xamarin.Android.Prepare
 			string AndroidNdkVersion       = BuildAndroidPlatforms.AndroidNdkVersion;
 			string AndroidPkgRevision      = BuildAndroidPlatforms.AndroidNdkPkgRevision;
 			string AndroidNdkDirectory     = GetRequiredProperty (KnownProperties.AndroidNdkDirectory);
-			string EmulatorVersion         = GetRequiredProperty (KnownProperties.EmulatorVersion);
-			string EmulatorPkgRevision     = GetRequiredProperty (KnownProperties.EmulatorPkgRevision);bool isArm64Apple = Context.Instance.OS.Flavor == "macOS" && RuntimeInformation.OSArchitecture == Architecture.Arm64;
-			string emulatorArch = isArm64Apple ? "aarch64" : "x64";
-			string systemImageArch = isArm64Apple ? "arm64-v8a" : "x86_64";
 
 			// Upstream manifests with version information:
 			//
@@ -38,68 +33,14 @@ namespace Xamarin.Android.Prepare
 			//  https://dl-ssl.google.com/android/repository/sys-img/google_apis/sys-img2-1.xml
 			//    * system images
 			//
-			// Note "isLatestStable" is a bad name, it's actually "xaprepare should install this API by default"
+			// Everything that lives under $(AndroidSdkDirectory) is downloaded by
+			// `src/androidsdk/androidsdk.targets`. Only the NDK remains here.
 			Components = new List<AndroidToolchainComponent> {
-				new AndroidPlatformComponent ("android-2.3.3_r02", apiLevel: "10", pkgRevision: "2"),
-				new AndroidPlatformComponent ("android-15_r05",    apiLevel: "15", pkgRevision: "5"),
-				new AndroidPlatformComponent ("android-16_r05",    apiLevel: "16", pkgRevision: "5"),
-				new AndroidPlatformComponent ("android-17_r03",    apiLevel: "17", pkgRevision: "3"),
-				new AndroidPlatformComponent ("android-18_r03",    apiLevel: "18", pkgRevision: "3"),
-				new AndroidPlatformComponent ("android-19_r04",    apiLevel: "19", pkgRevision: "4"),
-				new AndroidPlatformComponent ("android-20_r02",    apiLevel: "20", pkgRevision: "2"),
-				new AndroidPlatformComponent ("android-21_r02",    apiLevel: "21", pkgRevision: "2"),
-				new AndroidPlatformComponent ("android-22_r02",    apiLevel: "22", pkgRevision: "2"),
-				new AndroidPlatformComponent ("platform-23_r03",   apiLevel: "23", pkgRevision: "3"),
-				new AndroidPlatformComponent ("platform-24_r02",   apiLevel: "24", pkgRevision: "3"), // Local package revision is actually .3
-				new AndroidPlatformComponent ("platform-25_r03",   apiLevel: "25", pkgRevision: "3"),
-				new AndroidPlatformComponent ("platform-26_r02",   apiLevel: "26", pkgRevision: "2"),
-				new AndroidPlatformComponent ("platform-27_r03",   apiLevel: "27", pkgRevision: "3"),
-				new AndroidPlatformComponent ("platform-28_r04",   apiLevel: "28", pkgRevision: "4"),
-				new AndroidPlatformComponent ("platform-29_r01",   apiLevel: "29", pkgRevision: "1"),
-				new AndroidPlatformComponent ("platform-30_r01",   apiLevel: "30", pkgRevision: "1"),
-				new AndroidPlatformComponent ("platform-31_r01",   apiLevel: "31", pkgRevision: "1"),
-				new AndroidPlatformComponent ("platform-32_r01",   apiLevel: "32", pkgRevision: "1"),
-				new AndroidPlatformComponent ("platform-33-ext3_r03",   apiLevel: "33", pkgRevision: "3"),
-				new AndroidPlatformComponent ("platform-34-ext7_r02",   apiLevel: "34", pkgRevision: "2"),
-				new AndroidPlatformComponent ("platform-35_r02",   apiLevel: "35", pkgRevision: "2"),
-				new AndroidPlatformComponent ("platform-36_r02",   apiLevel: "36", pkgRevision: "2"),
-				new AndroidPlatformComponent ("platform-36.1_r01", apiLevel: "36.1",    pkgRevision: "1"),
-				new AndroidPlatformComponent ("platform-37.0_r01", apiLevel: "37.0",    pkgRevision: "1", isLatestStable: true),
-
-				new AndroidToolchainComponent ("source-36_r01",
-					destDir: Path.Combine ("sources", "android-36"),
-					pkgRevision: "1",
-					dependencyType: AndroidToolchainComponentType.BuildDependency,
-					buildToolVersion: "36.1"
-				),
-				new AndroidToolchainComponent ("docs-24_r01",
-					destDir: "docs",
-					pkgRevision: "1",
-					dependencyType: AndroidToolchainComponentType.BuildDependency,
-					buildToolVersion: "24.1"
-				),
-				new AndroidToolchainComponent ("android_m2repository_r47",
-					destDir: Path.Combine ("extras", "android", "m2repository"),
-					pkgRevision: "47.0.0",
-					dependencyType: AndroidToolchainComponentType.BuildDependency,
-					buildToolVersion: "47.0.0"
-				),
-				new AndroidToolchainComponent (isArm64Apple ? $"{systemImageArch}-29_r08" : $"{systemImageArch}-29_r08-{osTag}",
-					destDir: Path.Combine ("system-images", "android-29", "default", systemImageArch),
-					relativeUrl: new Uri ("sys-img/android/", UriKind.Relative),
-					pkgRevision: "8",
-					dependencyType: AndroidToolchainComponentType.EmulatorDependency
-				),
 				new AndroidToolchainComponent ($"android-ndk-r{AndroidNdkVersion}-{osTag}",
 					destDir: AndroidNdkDirectory,
 					pkgRevision: AndroidPkgRevision,
 					buildToolName: $"android-ndk-r{AndroidNdkVersion}",
 					buildToolVersion: AndroidPkgRevision
-				),
-				new AndroidToolchainComponent ($"emulator-{osTag}_{emulatorArch}-{EmulatorVersion}",
-					destDir: "emulator",
-					pkgRevision: EmulatorPkgRevision,
-					dependencyType: AndroidToolchainComponentType.EmulatorDependency
 				),
 			};
 		}
