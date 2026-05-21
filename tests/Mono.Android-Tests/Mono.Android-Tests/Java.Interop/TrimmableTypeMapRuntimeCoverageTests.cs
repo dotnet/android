@@ -123,6 +123,56 @@ namespace Java.InteropTests
 			}
 		}
 
+		[Test]
+		public void NonGenericCollections_CopyTo_UseTrimmableTypeMapForArrayElementConversion ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			using (var view = new View (Android.App.Application.Context))
+			using (var arrayList = new Java.Util.ArrayList ()) {
+				arrayList.Add (view);
+
+				using (var collection = new JavaCollection (arrayList.Handle, JniHandleOwnership.DoNotTransfer)) {
+					var values = new View [1];
+					collection.CopyTo (values, 0);
+					Assert.AreEqual (view.Handle, values [0].Handle);
+				}
+
+				using (var list = new JavaList (arrayList.Handle, JniHandleOwnership.DoNotTransfer)) {
+					var values = new View [1];
+					list.CopyTo (values, 0);
+					Assert.AreEqual (view.Handle, values [0].Handle);
+				}
+			}
+
+			using (var arrayList = new Java.Util.ArrayList ()) {
+				arrayList.Add (42);
+				arrayList.Add (null);
+				using (var collection = new JavaCollection (arrayList.Handle, JniHandleOwnership.DoNotTransfer)) {
+					var values = new object [2];
+					collection.CopyTo (values, 0);
+					Assert.AreEqual (42, values [0]);
+					Assert.IsNull (values [1]);
+				}
+
+				using (var list = new JavaList (arrayList.Handle, JniHandleOwnership.DoNotTransfer)) {
+					var values = new object [2];
+					list.CopyTo (values, 0);
+					Assert.AreEqual (42, values [0]);
+					Assert.IsNull (values [1]);
+				}
+			}
+
+			using (var arrayList = new Java.Util.ArrayList ()) {
+				arrayList.Add ("alpha");
+				using (var collection = new JavaCollection (arrayList.Handle, JniHandleOwnership.DoNotTransfer)) {
+					var values = new string [1];
+					collection.CopyTo (values, 0);
+					Assert.AreEqual ("alpha", values [0]);
+				}
+			}
+		}
+
 		static T CreateFromJava<T> ()
 			where T : Java.Lang.Object
 		{

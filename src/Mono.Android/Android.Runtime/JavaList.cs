@@ -267,13 +267,8 @@ namespace Android.Runtime {
 			}
 		}
 
-		public void CopyTo (Array array, int array_index)
+		public unsafe void CopyTo (Array array, int array_index)
 		{
-			[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "JavaList<T> constructors are preserved by the MarkJavaObjects trimmer step.")]
-			[return: DynamicallyAccessedMembers (Constructors)]
-			static Type GetElementType (Array array) =>
-				array.GetType ().GetElementType ();
-
 			if (array == null)
 				throw new ArgumentNullException ("array");
 			if (array_index < 0)
@@ -281,10 +276,21 @@ namespace Android.Runtime {
 			if (array.Length < array_index + Count)
 				throw new ArgumentException ("array");
 
-			var targetType = GetElementType (array);
+			var converter = new JavaConvert.ArrayElementConverter (array);
+			const string id = "get.(I)Ljava/lang/Object;";
 			int c = Count;
-			for (int i = 0; i < c; i++)
-				array.SetValue (InternalGet (i, targetType), array_index + i);
+			for (int i = 0; i < c; i++) {
+				JniObjectReference obj;
+				try {
+					JniArgumentValue* parameters = stackalloc JniArgumentValue [1] {
+						new JniArgumentValue (i),
+					};
+					obj = list_members.InstanceMethods.InvokeAbstractObjectMethod (id, this, parameters);
+				} catch (Java.Lang.IndexOutOfBoundsException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new ArgumentOutOfRangeException (ex.Message, ex);
+				}
+				array.SetValue (converter.FromJniHandle (obj.Handle, JniHandleOwnership.TransferLocalRef), array_index + i);
+			}
 		}
 
 		public IEnumerator GetEnumerator ()
