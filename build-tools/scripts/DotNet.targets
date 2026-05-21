@@ -21,9 +21,7 @@
          before Java.Interop's Prepare target scans for a JDK. Otherwise its JdkInfo task
          falls back to a system-installed JDK (e.g. the JDK 25 preinstalled on hosted
          macOS images), which can be incompatible with our Gradle version. -->
-    <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; build $(_Root)src\openjdk\openjdk.csproj -c $(Configuration) -bl:$(_BinlogPathPrefix)-prepare-openjdk.binlog"
-    />
+    <MSBuild Projects="$(_Root)src\openjdk\openjdk.csproj" Properties="Configuration=$(Configuration)" />
   </Target>
 
   <Target Name="PrepareJavaInterop"
