@@ -7,7 +7,7 @@ namespace Android.Runtime
 	[AttributeUsage (AttributeTargets.Assembly)]
 	public class ResourceDesignerAttribute : Attribute
 	{
-		const string UseResourceTypeConstructor = "Resource designer lookup by name requires dynamic code. Use ResourceDesignerAttribute(Type) instead.";
+		const string UseResourceTypeConstructor = "Resource designer lookup by name requires unreferenced code. Use ResourceDesignerAttribute(Type) instead.";
 
 		readonly Type? resourceType;
 
@@ -22,7 +22,7 @@ namespace Android.Runtime
 			FullName = resourceType.FullName ?? resourceType.Name;
 		}
 
-		[RequiresDynamicCode (UseResourceTypeConstructor)]
+		[RequiresUnreferencedCode (UseResourceTypeConstructor)]
 		public ResourceDesignerAttribute (string fullName)
 		{
 			FullName = fullName;
@@ -37,7 +37,7 @@ namespace Android.Runtime
 				return assembly == resourceType.Assembly ? resourceType : null;
 			}
 
-			const string legacyLookup = "The legacy string-based ResourceDesignerAttribute constructor requires dynamic code.";
+			const string legacyLookup = "The legacy string-based ResourceDesignerAttribute constructor requires unreferenced code.";
 
 			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = legacyLookup)]
 			[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = legacyLookup)]
