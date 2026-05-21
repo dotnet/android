@@ -160,7 +160,7 @@ sealed class LlvmIrInstructions
 			: base (OpName)
 		{
 			if (cond.Type != typeof(bool)) {
-				throw new ArgumentException ($"Internal error: condition must refer to a variable of type 'bool', was 'cond.Type' instead", nameof (cond));
+				throw new ArgumentException ($"Internal error: condition must refer to a variable of type 'bool', was '{cond.Type}' instead", nameof (cond));
 			}
 
 			this.cond = cond;
@@ -218,7 +218,7 @@ sealed class LlvmIrInstructions
 
 			if (function.Signature.ReturnType != typeof(void)) {
 				if (result == null) {
-					throw new ArgumentNullException ($"Internal error: function '{function.Signature.Name}' returns '{function.Signature.ReturnType} and thus requires a result variable", nameof (result));
+					throw new ArgumentNullException ($"Internal error: function '{function.Signature.Name}' returns '{function.Signature.ReturnType}' and thus requires a result variable", nameof (result));
 				}
 			} else if (result != null) {
 				throw new ArgumentException ($"Internal error: function '{function.Signature.Name}' returns no value and yet a result variable was provided", nameof (result));
