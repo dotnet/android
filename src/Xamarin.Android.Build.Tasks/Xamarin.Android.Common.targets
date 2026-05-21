@@ -1631,7 +1631,9 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_GenerateEmptyAndroidRemapNativeCode"
         DependsOnTargets="_PrepareAndroidRemapNativeAssemblySources"
-        Condition=" '@(_AndroidRemapMembers->Count())' == '0' ">
+        Condition=" '@(_AndroidRemapMembers->Count())' == '0' "
+        Inputs="$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
+        Outputs="@(_AndroidRemapAssemblySource)">
   <GenerateJniRemappingNativeCode
       OutputDirectory="$(_NativeAssemblySourceDir)"
       GenerateEmptyCode="True"
