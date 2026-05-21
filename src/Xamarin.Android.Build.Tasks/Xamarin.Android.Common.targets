@@ -1658,7 +1658,6 @@ because xbuild doesn't support framework reference assemblies.
       RemappingXmlFilePath="$(_XARemapMembersFilePath)"
       SupportedAbis="@(_BuildTargetAbis)"
       />
-  <Touch Files="@(_AndroidRemapAssemblySource)" />
 </Target>
 
 <Target Name="_RunAotForAllRIDs"

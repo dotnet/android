@@ -135,11 +135,13 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build failed");
 				AssertJniRemappingCounts (proj, b, expectedTypeCount: 1, expectedMethodCount: 1);
+				var remapSourceTimestamps = GetJniRemappingSourceTimestamps (proj, b);
 
 				proj.MainActivity += Environment.NewLine + "// Force an incremental C# rebuild.";
 				proj.Touch ("MainActivity.cs");
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build failed");
 				AssertJniRemappingCounts (proj, b, expectedTypeCount: 1, expectedMethodCount: 1);
+				AssertJniRemappingSourceTimestamps (remapSourceTimestamps);
 			}
 		}
 
@@ -150,6 +152,29 @@ namespace Xamarin.Android.Build.Tests
 			var appConfig = (EnvironmentHelper.ApplicationConfig_CoreCLR) EnvironmentHelper.ReadApplicationConfig (envFiles, AndroidRuntime.CoreCLR);
 			Assert.AreEqual (expectedTypeCount, appConfig.jni_remapping_replacement_type_count, "jni_remapping_replacement_type_count should be preserved.");
 			Assert.AreEqual (expectedMethodCount, appConfig.jni_remapping_replacement_method_index_entry_count, "jni_remapping_replacement_method_index_entry_count should be preserved.");
+		}
+
+		Dictionary<string, DateTime> GetJniRemappingSourceTimestamps (XamarinAndroidApplicationProject proj, ProjectBuilder builder)
+		{
+			string objDirPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android");
+			var timestamps = new Dictionary<string, DateTime> (StringComparer.Ordinal);
+			foreach (string abi in new [] { "arm64-v8a", "x86_64" }) {
+				string path = Path.Combine (objDirPath, $"jni_remap.{abi}.ll");
+				FileAssert.Exists (path);
+				timestamps.Add (path, File.GetLastWriteTimeUtc (path));
+			}
+			return timestamps;
+		}
+
+		void AssertJniRemappingSourceTimestamps (Dictionary<string, DateTime> expectedTimestamps)
+		{
+			foreach (var expectedTimestamp in expectedTimestamps) {
+				Assert.AreEqual (
+					expectedTimestamp.Value,
+					File.GetLastWriteTimeUtc (expectedTimestamp.Key),
+					$"{expectedTimestamp.Key} should not be touched when regenerated with unchanged contents."
+				);
+			}
 		}
 
 		[Test]
