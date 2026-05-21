@@ -319,7 +319,7 @@
     </PropertyGroup>
     <RemoveDir Directories="%(_AndroidSdkPackage.Destination)" />
     <MakeDir Directories="%(_AndroidSdkPackage.Destination)" />
-    <Exec Command="tar -xf &quot;$(AndroidToolchainCacheDirectory)\%(_AndroidSdkPackage.Identity)&quot; -C &quot;%(_AndroidSdkPackage.Destination)&quot; --strip-components=$(_StripComponents)" />
+    <Exec Command="tar -xf &quot;$([System.IO.Path]::Combine('$(AndroidToolchainCacheDirectory)', '%(_AndroidSdkPackage.Identity)'))&quot; -C &quot;%(_AndroidSdkPackage.Destination)&quot; --strip-components=$(_StripComponents)" />
   </Target>
 
   <!--
