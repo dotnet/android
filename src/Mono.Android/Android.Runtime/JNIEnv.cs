@@ -695,11 +695,21 @@ namespace Android.Runtime {
 					AssertIsJavaObject (type);
 
 					IntPtr elem = GetObjectArrayElement (source, index);
-					return Java.Lang.Object.GetObject (elem, JniHandleOwnership.TransferLocalRef, type);
+					return GetObject (elem, type);
+
+					// DAM annotations cannot flow through delegate-based dispatch; suppress trimmer warning for this known-safe call.
+					[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "Type is propagated through dictionary-based dispatch; callers ensure constructors are preserved.")]
+					static object? GetObject (IntPtr e, Type? t) =>
+						Java.Lang.Object.GetObject (e, JniHandleOwnership.TransferLocalRef, t);
 				} },
 				{ typeof (Array), (type, source, index) => {
 					IntPtr  elem      = GetObjectArrayElement (source, index);
-					return GetArray (elem, JniHandleOwnership.TransferLocalRef, type);
+					return GetArrayForType (elem, type);
+
+					// DAM annotations cannot flow through delegate-based dispatch; suppress trimmer warning for this known-safe call.
+					[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "Type is propagated through dictionary-based dispatch; callers ensure constructors are preserved.")]
+					static Array? GetArrayForType (IntPtr e, Type? t) =>
+						GetArray (e, JniHandleOwnership.TransferLocalRef, t);
 				} },
 			};
 		}
@@ -813,10 +823,14 @@ namespace Android.Runtime {
 					IntPtr a = GetObjectArrayElement (src, i);
 					try {
 						var d = (Array?) dest.GetValue (i);
+						// Type.GetElementType() does not preserve DAM annotations; suppress since elementType
+						// already has [DAM(Constructors)] and its element type will have the same preservation.
+#pragma warning disable IL2072
 						if (d == null)
 							dest.SetValue (GetArray (a, JniHandleOwnership.DoNotTransfer, elementType.GetElementType ()), i);
 						else
 							CopyArray (a, d, elementType.GetElementType ());
+#pragma warning restore IL2072
 					} finally {
 						DeleteLocalRef (a);
 					}
@@ -1070,13 +1084,23 @@ namespace Android.Runtime {
 				} },
 				{ typeof (IJavaObject), (type, source, len) => {
 					var r = ArrayCreateInstance (type!, len);
-					CopyArray (source, r, type);
+					CopyArrayForType (source, r, type);
 					return r;
+
+					// DAM annotations cannot flow through delegate-based dispatch; suppress trimmer warning for this known-safe call.
+					[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "Type is propagated through dictionary-based dispatch; callers ensure constructors are preserved.")]
+					static void CopyArrayForType (IntPtr s, Array d, Type? t) =>
+						CopyArray (s, d, t);
 				} },
 				{ typeof (Array), (type, source, len) => {
 					var r = ArrayCreateInstance (type!, len);
-					CopyArray (source, r, type);
+					CopyArrayForType (source, r, type);
 					return r;
+
+					// DAM annotations cannot flow through delegate-based dispatch; suppress trimmer warning for this known-safe call.
+					[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "Type is propagated through dictionary-based dispatch; callers ensure constructors are preserved.")]
+					static void CopyArrayForType (IntPtr s, Array d, Type? t) =>
+						CopyArray (s, d, t);
 				} },
 			};
 		}
@@ -1106,7 +1130,6 @@ namespace Android.Runtime {
 
 		public static object?[]? GetObjectArray (
 				IntPtr array_ptr,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type[] element_types)
 		{
 			if (array_ptr == IntPtr.Zero)
@@ -1122,8 +1145,12 @@ namespace Android.Runtime {
 
 			for (int i = 0; i < cnt; i++) {
 				Type? targetType	= (element_types != null && i < element_types.Length) ? element_types [i] : null;
+				// The converter is retrieved from a dictionary; the trimmer cannot statically determine
+				// that the delegate's [DAM] parameter requirement is satisfied.
+#pragma warning disable IL2062
 				object? value    = converter ((targetType == null || targetType.IsValueType) ? null : targetType,
 						array_ptr, i);
+#pragma warning restore IL2062
 
 				ret [i] = value;
 				ret [i] = targetType == null || targetType.IsInstanceOfType (value)

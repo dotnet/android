@@ -186,7 +186,10 @@ namespace Java.Lang {
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
-		public T[]? ToArray<T>()
+		public T[]? ToArray<
+				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+				T
+		>()
 		{
 			return JNIEnv.GetArray<T>(Handle);
 		}

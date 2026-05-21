@@ -79,7 +79,11 @@ namespace Java.Interop {
 			if (JniHandleConverters.TryGetValue (target, out var converter))
 				return converter;
 			if (target.IsArray)
+				// Type.GetElementType() does not preserve DAM annotations; the actual element type's
+				// constructors are preserved through the type hierarchy at the call site.
+#pragma warning disable IL2072
 				return (h, t) => JNIEnv.GetArray (h, t, target.GetElementType ());
+#pragma warning restore IL2072
 
 			if (RuntimeFeature.TrimmableTypeMap) {
 				var factoryConverter = TryGetFactoryBasedConverter (target);
