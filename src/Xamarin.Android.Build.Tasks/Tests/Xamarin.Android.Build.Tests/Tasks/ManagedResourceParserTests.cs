@@ -469,6 +469,8 @@ int xml myxml 0x7f140000
 			Assert.IsTrue (mapTask.Execute (), "Map Task should have executed successfully.");
 
 			var libraryPath = Path.Combine (path, "Library");
+			// BuildLibraryWithResources() generates a library Resource.designer.cs with:
+			// [assembly: ResourceDesignerAttribute(typeof(Library.Resource), IsApplication=false)]
 			BuildLibraryWithResources (libraryPath, AndroidRuntime.MonoVM);
 
 			var task = CreateTask (path);
@@ -480,6 +482,8 @@ int xml myxml 0x7f140000
 
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 			var designer = File.ReadAllText (task.NetResgenOutputFile);
+			// The import generator can only emit this assignment if it decoded the
+			// typeof(Library.Resource) attribute argument back to "Library.Resource".
 			StringAssert.Contains ("global::Library.Resource.Animator.slide_in_bottom = global::Foo.Foo.Resource.Animator.slide_in_bottom;", designer);
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
