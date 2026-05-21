@@ -107,7 +107,7 @@ class JCWGenerator
 			var changed = Files.CopyIfStreamChanged (writer.BaseStream, path);
 
 			if (changed) {
-				log.LogError ($"Generated Java callable wrapper code changed: '{path}' ");
+				log.LogCodedError ("XA4253", Properties.Resources.XA4253, path);
 			} else {
 				log.LogMessage ($"Java callable wrapper code already up to date: '{path}'");
 			}
@@ -188,12 +188,9 @@ class JCWGenerator
 		}
 
 		if (!typesSet.SetEquals (templateSet)) {
-			logger.LogError ($"Architecture '{state.TargetArch}' has Java types which have no counterparts in template architecture '{templateState.TargetArch}':");
-
 			typesSet.ExceptWith (templateSet);
-
-			foreach (var type in typesSet)
-				logger.LogError ($"  {type}");
+			var typesList = string.Join (", ", typesSet.OrderBy (t => t, StringComparer.Ordinal));
+			logger.LogCodedError ("XA4217", Properties.Resources.XA4217, state.TargetArch, templateState.TargetArch, typesList);
 		}
 	}
 
@@ -268,7 +265,7 @@ class JCWGenerator
 			return;
 		}
 
-		logger.LogError ($"Architecture '{state.TargetArch}' doesn't match all marshal methods in architecture '{templateState.TargetArch}'. Please see detailed MSBuild logs for more information.");
+		logger.LogCodedError ("XA4227", Properties.Resources.XA4227, state.TargetArch, templateState.TargetArch);
 	}
 
 	static bool CheckWhetherMethodsMatch (TaskLoggingHelper logger, MarshalMethodEntry templateMethod, AndroidTargetArch templateArch, MarshalMethodEntry method, AndroidTargetArch arch)

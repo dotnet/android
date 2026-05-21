@@ -651,6 +651,12 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 {0} - The target SDK version number
 {1} - The API version number</comment>
   </data>
+  <data name="XA4217" xml:space="preserve">
+    <value>Architecture '{0}' has Java types which have no counterparts in template architecture '{1}': {2}</value>
+    <comment>{0} - The target architecture name
+{1} - The template architecture name
+{2} - Comma-separated list of Java type names that have no counterparts</comment>
+  </data>
   <data name="XA4218" xml:space="preserve">
     <value>Unable to find //manifest/application/uses-library at path: {0}</value>
     <comment>The following are literal names and should not be translated: //manifest/application/uses-library</comment>
@@ -701,6 +707,11 @@ In this mesage, the term "layout" means an Android UI layout.
     <value>Resource item '{0}' does not have the required metadata item '{1}'.</value>
     <comment>{0} - The name of the Android layout resource file
 {1} - The name of the metadata item</comment>
+  </data>
+  <data name="XA4227" xml:space="preserve">
+    <value>Architecture '{0}' doesn't match all marshal methods in architecture '{1}'. Please see detailed MSBuild logs for more information.</value>
+    <comment>{0} - The target architecture name
+{1} - The template architecture name</comment>
   </data>
   <data name="XA4228" xml:space="preserve">
     <value>Unable to find specified //activity-alias/@android:targetActivity: '{0}'</value>
@@ -1111,6 +1122,10 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
     <value>Insecure HTTP Maven repository URL '{0}' is not allowed. Use an HTTPS URL, or set AllowInsecureHttp="true" metadata on the item to override this check.</value>
     <comment>The following are literal names and should not be translated: HTTP, HTTPS, Maven, AllowInsecureHttp
 {0} - The insecure HTTP URL</comment>
+  </data>
+  <data name="XA4253" xml:space="preserve">
+    <value>Generated Java callable wrapper code changed: '{0}'</value>
+    <comment>{0} - The path to the generated Java callable wrapper file</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>Command '{0}' failed.\n{1}</value>
