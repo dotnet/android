@@ -9,44 +9,49 @@ namespace Android.Runtime
 	{
 		const string UseResourceTypeConstructor = "Resource designer lookup by name requires unreferenced code. Use ResourceDesignerAttribute(Type) instead.";
 
-		readonly Type? resourceType;
+		readonly IResourceTypeProvider provider;
 
 		public ResourceDesignerAttribute (
-				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
-				Type resourceType)
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
+			Type resourceType)
 		{
-			if (resourceType == null)
-				throw new ArgumentNullException (nameof (resourceType));
-
-			this.resourceType = resourceType;
-			FullName = resourceType.FullName ?? resourceType.Name;
+			provider = new TypeResourceTypeProvider (resourceType);
 		}
 
 		[RequiresUnreferencedCode (UseResourceTypeConstructor)]
 		public ResourceDesignerAttribute (string fullName)
 		{
-			FullName = fullName;
+			provider = new StringResourceTypeProvider (fullName);
 		}
 
-		public string FullName { get; set; }
-
-		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
-		internal Type? GetResourceTypeFromAssembly (Assembly assembly)
+		public string FullName
 		{
-			if (resourceType != null) {
-				return assembly == resourceType.Assembly ? resourceType : null;
-			}
-
-			const string legacyLookup = "The legacy string-based ResourceDesignerAttribute constructor requires unreferenced code.";
-
-			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = legacyLookup)]
-			[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = legacyLookup)]
-			[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
-			static Type? AssemblyGetType (Assembly assembly, string name) => assembly.GetType (name);
-
-			return AssemblyGetType (assembly, FullName);
+			get => provider.FullName;
+			set => throw new NotSupportedException ("Resource designer lookup by name does not support setting the full name.");
 		}
+
+		[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
+		internal Type? GetResourceTypeFromAssembly (Assembly assembly) => provider.GetResourceTypeFromAssembly (assembly);
 
 		public bool IsApplication { get; set; }
+
+		private interface IResourceTypeProvider
+		{
+			Type? GetResourceTypeFromAssembly (Assembly assembly);
+			string FullName { get; }
+		}
+
+		private sealed class TypeResourceTypeProvider([DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)] Type resourceType) : IResourceTypeProvider
+		{
+			public Type? GetResourceTypeFromAssembly (Assembly assembly) => assembly == resourceType.Assembly ? resourceType : null;
+			public string FullName => resourceType.FullName ?? resourceType.Name;
+		}
+
+		[RequiresUnreferencedCode (UseResourceTypeConstructor)]
+		private sealed class StringResourceTypeProvider(string fullName) : IResourceTypeProvider
+		{
+			public Type? GetResourceTypeFromAssembly (Assembly assembly) => assembly.GetType (fullName);
+			public string FullName => fullName;
+		}
 	}
 }
