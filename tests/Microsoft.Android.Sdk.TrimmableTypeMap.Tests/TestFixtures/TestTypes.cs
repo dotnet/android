@@ -175,6 +175,55 @@ namespace Android.Widget
 	}
 }
 
+namespace Javax.Net.Ssl
+{
+	[Register ("javax/net/ssl/HostnameVerifier", DoNotGenerateAcw = true)]
+	public interface IHostnameVerifier
+	{
+	}
+
+	[Register ("javax/net/ssl/TrustManager", DoNotGenerateAcw = true)]
+	public interface ITrustManager
+	{
+	}
+
+	[Register ("javax/net/ssl/X509TrustManager", DoNotGenerateAcw = true)]
+	public interface IX509TrustManager : ITrustManager
+	{
+	}
+
+	[Register ("javax/net/ssl/SSLSession", DoNotGenerateAcw = true)]
+	public interface ISSLSession
+	{
+	}
+}
+
+namespace Xamarin.Android.Net
+{
+	internal sealed class ServerCertificateCustomValidator
+	{
+		private sealed class TrustManager : Java.Lang.Object, Javax.Net.Ssl.IX509TrustManager
+		{
+			public TrustManager () { }
+
+			private sealed class FakeSSLSession : Java.Lang.Object, Javax.Net.Ssl.ISSLSession
+			{
+				public FakeSSLSession () { }
+			}
+		}
+
+		private sealed class AlwaysAcceptingHostnameVerifier : Java.Lang.Object, Javax.Net.Ssl.IHostnameVerifier
+		{
+			public AlwaysAcceptingHostnameVerifier () { }
+		}
+
+		private sealed class NonRequiredFrameworkAcw : Java.Lang.Object
+		{
+			public NonRequiredFrameworkAcw () { }
+		}
+	}
+}
+
 namespace MyApp
 {
 	[Activity (MainLauncher = true, Label = "My App", Name = "my.app.MainActivity")]

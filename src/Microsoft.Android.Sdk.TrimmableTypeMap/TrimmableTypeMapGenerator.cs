@@ -18,6 +18,9 @@ public class TrimmableTypeMapGenerator
 
 	static readonly HashSet<string> RequiredFrameworkJcwTypes = new (StringComparer.Ordinal) {
 		"Android.Runtime.JavaProxyThrowable",
+		"Xamarin.Android.Net.ServerCertificateCustomValidator+TrustManager",
+		"Xamarin.Android.Net.ServerCertificateCustomValidator+TrustManager+FakeSSLSession",
+		"Xamarin.Android.Net.ServerCertificateCustomValidator+AlwaysAcceptingHostnameVerifier",
 	};
 
 	public TrimmableTypeMapGenerator (ITrimmableTypeMapLogger logger)
