@@ -252,7 +252,7 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 	public override void ActivatePeer (JniObjectReference reference, [DynamicallyAccessedMembers (Constructors)] Type type, ConstructorInfo cinfo, object?[]? argumentValues)
 	{
 		if (RuntimeFeature.TrimmableTypeMap)
-			throw new PlatformNotSupportedException ("Activating Java peers is not supported when trimming is enabled.");
+			throw new PlatformNotSupportedException ("Activating Java peers is not supported when TrimmableTypeMap is enabled.");
 
 		base.ActivatePeer (reference, type, cinfo, argumentValues);
 	}
