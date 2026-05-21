@@ -836,7 +836,7 @@ namespace Android.Runtime {
 			JniObjectReference reference,
 			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type type,
 			ConstructorInfo cinfo,
-			object?[]? argumentValues)		
+			object?[]? argumentValues)
 		{
 			Java.Interop.TypeManager.Activate (reference.Handle, cinfo, argumentValues);
 		}
