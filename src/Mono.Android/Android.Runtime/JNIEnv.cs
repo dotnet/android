@@ -624,8 +624,14 @@ namespace Android.Runtime {
 				dest [i] = GetString (GetObjectArrayElement (src, i), JniHandleOwnership.TransferLocalRef)!;
 		}
 
-		static Dictionary<Type, Func<Type?, IntPtr, int, object?>>? nativeArrayElementToManaged;
-		static Dictionary<Type, Func<Type?, IntPtr, int, object?>> NativeArrayElementToManaged {
+		delegate object? NativeArrayElementToManagedConverter (
+				[DynamicallyAccessedMembers (Constructors)]
+				Type? type,
+				IntPtr source,
+				int index);
+
+		static Dictionary<Type, NativeArrayElementToManagedConverter>? nativeArrayElementToManaged;
+		static Dictionary<Type, NativeArrayElementToManagedConverter> NativeArrayElementToManaged {
 			get {
 				if (nativeArrayElementToManaged != null)
 					return nativeArrayElementToManaged;
@@ -636,9 +642,9 @@ namespace Android.Runtime {
 			}
 		}
 
-		static Dictionary<Type, Func<Type?, IntPtr, int, object?>> CreateNativeArrayElementToManaged ()
+		static Dictionary<Type, NativeArrayElementToManagedConverter> CreateNativeArrayElementToManaged ()
 		{
-			return new Dictionary<Type, Func<Type?, IntPtr, int, object?>> () {
+			return new Dictionary<Type, NativeArrayElementToManagedConverter> () {
 				{ typeof (bool), (type, source, index) => {
 					var r = new bool [1];
 					_GetBooleanArrayRegion (source, index, 1, r);
@@ -689,13 +695,7 @@ namespace Android.Runtime {
 					AssertIsJavaObject (type);
 
 					IntPtr elem = GetObjectArrayElement (source, index);
-					return GetObject (elem, type);
-
-					// FIXME: Since a Dictionary<Type, Func> is used here, the trimmer will not be able to properly analyze `Type t`
-					// error IL2111: Method 'lambda expression' with parameters or return value with `DynamicallyAccessedMembersAttribute` is accessed via reflection. Trimmer can't guarantee availability of the requirements of the method.
-					[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "FIXME: https://github.com/xamarin/xamarin-android/issues/8724")]
-					static object? GetObject (IntPtr e, Type t) =>
-						Java.Lang.Object.GetObject (e, JniHandleOwnership.TransferLocalRef, t);
+					return Java.Lang.Object.GetObject (elem, JniHandleOwnership.TransferLocalRef, type);
 				} },
 				{ typeof (Array), (type, source, index) => {
 					IntPtr  elem      = GetObjectArrayElement (source, index);
@@ -795,7 +795,11 @@ namespace Android.Runtime {
 		}
 
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-		public static void CopyArray (IntPtr src, Array dest, Type? elementType = null)
+		public static void CopyArray (
+				IntPtr src,
+				Array dest,
+				[DynamicallyAccessedMembers (Constructors)]
+				Type? elementType = null)
 #pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 		{
 			if (dest == null)
@@ -832,7 +836,10 @@ namespace Android.Runtime {
 				throw new NotSupportedException ("Don't know how to convert type '" + targetType.FullName + "' to an Android.Runtime.IJavaObject.");
 		}
 
-		public static void CopyArray<T> (IntPtr src, T[] dest)
+		public static void CopyArray<
+				[DynamicallyAccessedMembers (Constructors)]
+				T
+		> (IntPtr src, T[] dest)
 		{
 			if (dest == null)
 				throw new ArgumentNullException ("dest");
@@ -960,7 +967,11 @@ namespace Android.Runtime {
 			CopyArray (src, typeof (T), dest);
 		}
 
-		public static Array? GetArray (IntPtr array_ptr, JniHandleOwnership transfer, Type? element_type = null)
+		public static Array? GetArray (
+				IntPtr array_ptr,
+				JniHandleOwnership transfer,
+				[DynamicallyAccessedMembers (Constructors)]
+				Type? element_type = null)
 		{
 			try {
 				return _GetArray (array_ptr, element_type);
@@ -970,8 +981,14 @@ namespace Android.Runtime {
 			}
 		}
 
-		static Dictionary<Type, Func<Type?, IntPtr, int, Array>>? nativeArrayToManaged;
-		static Dictionary<Type, Func<Type?, IntPtr, int, Array>> NativeArrayToManaged {
+		delegate Array NativeArrayToManagedConverter (
+				[DynamicallyAccessedMembers (Constructors)]
+				Type? type,
+				IntPtr source,
+				int length);
+
+		static Dictionary<Type, NativeArrayToManagedConverter>? nativeArrayToManaged;
+		static Dictionary<Type, NativeArrayToManagedConverter> NativeArrayToManaged {
 			get {
 				if (nativeArrayToManaged != null)
 					return nativeArrayToManaged;
@@ -982,9 +999,9 @@ namespace Android.Runtime {
 			}
 		}
 
-		static Dictionary<Type, Func<Type?, IntPtr, int, Array>> CreateNativeArrayToManaged ()
+		static Dictionary<Type, NativeArrayToManagedConverter> CreateNativeArrayToManaged ()
 		{
-			return new Dictionary<Type, Func<Type?, IntPtr, int, Array>> () {
+			return new Dictionary<Type, NativeArrayToManagedConverter> () {
 				{ typeof (bool), (type, source, len) => {
 					var r = new bool [len];
 					CopyArray (source, r);
@@ -1064,7 +1081,10 @@ namespace Android.Runtime {
 			};
 		}
 
-		static Array? _GetArray (IntPtr array_ptr, Type? element_type)
+		static Array? _GetArray (
+				IntPtr array_ptr,
+				[DynamicallyAccessedMembers (Constructors)]
+				Type? element_type)
 		{
 			if (array_ptr == IntPtr.Zero)
 				return null;
@@ -1084,7 +1104,10 @@ namespace Android.Runtime {
 			return JniEnvironment.Arrays.GetArrayLength (new JniObjectReference (array_ptr));
 		}
 
-		public static object?[]? GetObjectArray (IntPtr array_ptr, Type[] element_types)
+		public static object?[]? GetObjectArray (
+				IntPtr array_ptr,
+				[DynamicallyAccessedMembers (Constructors)]
+				Type[] element_types)
 		{
 			if (array_ptr == IntPtr.Zero)
 				return null;
@@ -1111,7 +1134,10 @@ namespace Android.Runtime {
 			return ret;
 		}
 
-		public static T[]? GetArray<T> (IntPtr array_ptr)
+		public static T[]? GetArray<
+				[DynamicallyAccessedMembers (Constructors)]
+				T
+		> (IntPtr array_ptr)
 		{
 			if (array_ptr == IntPtr.Zero)
 				return null;
@@ -1138,7 +1164,10 @@ namespace Android.Runtime {
 			return ret;
 		}
 
-		public static T GetArrayItem<T> (IntPtr array_ptr, int index)
+		public static T GetArrayItem<
+				[DynamicallyAccessedMembers (Constructors)]
+				T
+		> (IntPtr array_ptr, int index)
 		{
 			if (array_ptr == IntPtr.Zero)
 				throw new ArgumentException ("array_ptr");
