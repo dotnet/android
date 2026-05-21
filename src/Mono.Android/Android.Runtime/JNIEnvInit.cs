@@ -58,7 +58,7 @@ namespace Android.Runtime
 		}
 
 		[UnmanagedCallersOnly]
-		[RequiresUnreferendedCode ("Uses reflection to load types and register native methods, which may require access to members that could be trimmed. Ensure the necessary types and members are preserved.")]
+		[RequiresUnreferencedCode ("Uses reflection to load types and register native methods, which may require access to members that could be trimmed. Ensure the necessary types and members are preserved.")]
 		static unsafe void RegisterJniNatives (IntPtr typeName_ptr, int typeName_len, IntPtr jniClass, IntPtr methods_ptr, int methods_len)
 		{
 			string typeName = new string ((char*) typeName_ptr, 0, typeName_len);
