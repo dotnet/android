@@ -34,3 +34,5 @@ static Java.Interop.JniEnvironment.InstanceFields.GetFieldID(Java.Interop.JniObj
 static Java.Interop.JniEnvironment.InstanceMethods.GetMethodID(Java.Interop.JniObjectReference type, System.ReadOnlySpan<byte> name, System.ReadOnlySpan<byte> signature) -> Java.Interop.JniMethodInfo!
 static Java.Interop.JniEnvironment.StaticFields.GetStaticFieldID(Java.Interop.JniObjectReference type, System.ReadOnlySpan<byte> name, System.ReadOnlySpan<byte> signature) -> Java.Interop.JniFieldInfo!
 static Java.Interop.JniEnvironment.StaticMethods.GetStaticMethodID(Java.Interop.JniObjectReference type, System.ReadOnlySpan<byte> name, System.ReadOnlySpan<byte> signature) -> Java.Interop.JniMethodInfo!
+*REMOVED*abstract Java.Interop.JniRuntime.JniValueManager.ActivatePeer(Java.Interop.IJavaPeerable? self, Java.Interop.JniObjectReference reference, System.Reflection.ConstructorInfo! cinfo, object?[]? argumentValues) -> void
+virtual Java.Interop.JniRuntime.JniValueManager.ActivatePeer(Java.Interop.JniObjectReference reference, System.Type! type, System.Reflection.ConstructorInfo! cinfo, object?[]? argumentValues) -> void

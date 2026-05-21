@@ -2,7 +2,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -88,7 +90,29 @@ namespace Java.Interop
 
 			public abstract List<JniSurfacedPeerInfo>   GetSurfacedPeers ();
 
-			public abstract void ActivatePeer (IJavaPeerable? self, JniObjectReference reference, ConstructorInfo cinfo, object? []? argumentValues);
+			public virtual void ActivatePeer (
+				JniObjectReference reference,
+				[DynamicallyAccessedMembers (Constructors)] Type type,
+				ConstructorInfo cinfo,
+				object?[]? argumentValues)
+			{
+				try {
+					var self = (IJavaPeerable) RuntimeHelpers.GetUninitializedObject (type);
+					self.SetPeerReference (reference);
+					cinfo.Invoke (self, argumentValues);
+				} catch (Exception e) {
+					var m = string.Format (
+							CultureInfo.InvariantCulture,
+							"Could not activate {{ PeerReference={0} IdentityHashCode=0x{1} Java.Type={2} }} for managed type '{3}'.",
+							reference,
+							GetJniIdentityHashCode (reference).ToString ("x", CultureInfo.InvariantCulture),
+							JniEnvironment.Types.GetJniTypeNameFromInstance (reference),
+							type.FullName);
+					Debug.WriteLine (m);
+
+					throw new NotSupportedException (m, e);
+				}
+			}
 
 			public void ConstructPeer (IJavaPeerable peer, ref JniObjectReference reference, JniObjectReferenceOptions options)
 			{
@@ -294,6 +318,7 @@ namespace Java.Interop
 				return CreatePeer (ref reference, JniObjectReferenceOptions.Copy, targetType);
 			}
 
+			// This base method implementation is NOT reachable in trimmable typemap - it is featureswitch guarded
 			public virtual IJavaPeerable? CreatePeer (
 					ref JniObjectReference reference,
 					JniObjectReferenceOptions transfer,
@@ -709,7 +734,7 @@ namespace Java.Interop
 
 				// FIXME: https://github.com/dotnet/java-interop/issues/1192
 				[UnconditionalSuppressMessage ("Trimming", "IL2060", Justification = makeGenericMethodMessage)]
-				[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = makeGenericMethodMessage)]
+				[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = makeGenericMethodMessage)]
 				static MethodInfo MakeGenericMethod (MethodInfo method, Type type) =>
 					method.MakeGenericMethod (type);
 
@@ -964,4 +989,3 @@ namespace Java.Interop
 		}
 	}
 }
-

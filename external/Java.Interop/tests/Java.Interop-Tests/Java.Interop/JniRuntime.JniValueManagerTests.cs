@@ -60,11 +60,6 @@ namespace Java.InteropTests {
 			{
 				return null;
 			}
-
-			public override void ActivatePeer (IJavaPeerable self, JniObjectReference reference, ConstructorInfo cinfo, object [] argumentValues)
-			{
-				throw new NotImplementedException ();
-			}
 		}
 
 		[Test]

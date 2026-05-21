@@ -198,41 +198,6 @@ namespace Java.Interop {
 			value.Finalized ();
 		}
 
-		public override void ActivatePeer (IJavaPeerable? self, JniObjectReference reference, ConstructorInfo cinfo, object?[]? argumentValues)
-		{
-			var runtime = JniEnvironment.Runtime;
-
-			try {
-				ActivateViaReflection (reference, cinfo, argumentValues);
-			} catch (Exception e) {
-				var m = string.Format ("Could not activate {{ PeerReference={0} IdentityHashCode=0x{1} Java.Type={2} }} for managed type '{3}'.",
-						reference,
-						runtime.ValueManager.GetJniIdentityHashCode (reference).ToString ("x"),
-						JniEnvironment.Types.GetJniTypeNameFromInstance (reference),
-						cinfo.DeclaringType?.FullName);
-				Debug.WriteLine (m);
-
-				throw new NotSupportedException (m, e);
-			}
-		}
-
-		void ActivateViaReflection (JniObjectReference reference, ConstructorInfo cinfo, object?[]? argumentValues)
-		{
-			var declType  = cinfo.DeclaringType ?? throw new NotSupportedException ("Do not know the type to create!");
-
-			var self      = GetUninitializedObject (declType);
-			self.SetPeerReference (reference);
-
-			cinfo.Invoke (self, argumentValues);
-
-			// FIXME: https://github.com/dotnet/java-interop/issues/1192
-			const string getUninitializedObject = "This code path is not used in Android projects.";
-			[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = getUninitializedObject)]
-			[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = getUninitializedObject)]
-			static IJavaPeerable GetUninitializedObject (Type type) =>
-				(IJavaPeerable) System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject (type);
-		}
-
 		public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
 		{
 			if (RegisteredInstances == null)

@@ -119,7 +119,7 @@ namespace Java.Interop {
 					return;
 				}
 
-				JniEnvironment.Runtime.ValueManager.ActivatePeer (self, new JniObjectReference (n_self), cinfo, pvalues);
+				JniEnvironment.Runtime.ValueManager.ActivatePeer (new JniObjectReference (n_self), type, cinfo, pvalues);
 			}
 			catch (Exception e) {
 				__r?.OnUserUnhandledException (ref envp, e);
