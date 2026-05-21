@@ -28,14 +28,6 @@ namespace Android.Runtime {
 				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType = null)
 		{
-			return JavaConvert.FromJniHandle (
-					InternalGetJniHandle (location),
-					JniHandleOwnership.TransferLocalRef,
-					targetType);
-		}
-
-		unsafe IntPtr InternalGetJniHandle (int location)
-		{
 			const string id = "get.(I)Ljava/lang/Object;";
 			JniObjectReference obj;
 			try {
@@ -47,7 +39,10 @@ namespace Android.Runtime {
 				throw new ArgumentOutOfRangeException (ex.Message, ex);
 			}
 
-			return obj.Handle;
+			return JavaConvert.FromJniHandle (
+					obj.Handle,
+					JniHandleOwnership.TransferLocalRef,
+					targetType);
 		}
 
 		//
@@ -272,7 +267,7 @@ namespace Android.Runtime {
 			}
 		}
 
-		public void CopyTo (Array array, int array_index)
+		public unsafe void CopyTo (Array array, int array_index)
 		{
 			if (array == null)
 				throw new ArgumentNullException ("array");
@@ -281,11 +276,21 @@ namespace Android.Runtime {
 			if (array.Length < array_index + Count)
 				throw new ArgumentException ("array");
 
+			var converter = new JavaConvert.ArrayElementConverter (array);
+			const string id = "get.(I)Ljava/lang/Object;";
 			int c = Count;
-			for (int i = 0; i < c; i++)
-				array.SetValue (
-					JavaConvert.ConvertArrayElement (array, InternalGetJniHandle (i), JniHandleOwnership.TransferLocalRef),
-					array_index + i);
+			for (int i = 0; i < c; i++) {
+				JniObjectReference obj;
+				try {
+					JniArgumentValue* parameters = stackalloc JniArgumentValue [1] {
+						new JniArgumentValue (i),
+					};
+					obj = list_members.InstanceMethods.InvokeAbstractObjectMethod (id, this, parameters);
+				} catch (Java.Lang.IndexOutOfBoundsException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new ArgumentOutOfRangeException (ex.Message, ex);
+				}
+				array.SetValue (converter.FromJniHandle (obj.Handle, JniHandleOwnership.TransferLocalRef), array_index + i);
+			}
 		}
 
 		public IEnumerator GetEnumerator ()

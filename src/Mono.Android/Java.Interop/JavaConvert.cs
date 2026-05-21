@@ -162,22 +162,48 @@ namespace Java.Interop {
 					typeof (Func<IntPtr, JniHandleOwnership, object>), m);
 		}
 
-		internal static object? ConvertArrayElement (Array array, IntPtr handle, JniHandleOwnership transfer)
+		internal readonly struct ArrayElementConverter
 		{
-			var elementType = array.GetType ().GetElementType ();
-			if (elementType is null || elementType == typeof (object))
-				return FromJniHandleWithRuntimeTypeMapping (handle, transfer);
+			readonly Type? elementType;
+			readonly Func<IntPtr, JniHandleOwnership, object>? converter;
+			readonly bool useRuntimeTypeMapping;
 
-			if (JniHandleConverters.TryGetValue (elementType, out var converter))
-				return converter (handle, transfer);
+			public ArrayElementConverter (Array array)
+			{
+				elementType = array.GetType ().GetElementType ();
+				converter = elementType != null ? GetJniHandleConverter (elementType) : null;
+				useRuntimeTypeMapping = elementType is null || elementType == typeof (object);
+			}
 
-			if (elementType.IsArray)
-				return JNIEnv.GetArray (handle, transfer, elementType.GetElementType ());
+			public object? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+			{
+				if (useRuntimeTypeMapping)
+					return FromJniHandleWithRuntimeTypeMapping (handle, transfer);
 
-			if (RuntimeFeature.TrimmableTypeMap) {
-				return FromJniHandleWithTypeMapping (handle, transfer, elementType);
-			} else {
-				return ConvertLegacyArrayElement (handle, transfer, elementType);
+				if (elementType != null) {
+					var peeked = Java.Lang.Object.PeekObject (handle, elementType);
+					if (peeked != null) {
+						JNIEnv.DeleteRef (handle, transfer);
+						return peeked;
+					}
+				}
+
+				if (converter != null)
+					return converter (handle, transfer);
+
+				if (elementType != null && elementType.IsArray)
+					return JNIEnv.GetArray (handle, transfer, elementType.GetElementType ());
+
+				if (elementType != null && typeof (IJavaPeerable).IsAssignableFrom (elementType)) {
+					if (RuntimeFeature.TrimmableTypeMap)
+						return FromJniHandleWithTrimmableTypeMapping (handle, transfer, elementType);
+					return Java.Lang.Object.GetObject (handle, transfer, elementType);
+				}
+
+				var value = FromJniHandleWithRuntimeTypeMapping (handle, transfer);
+				if (value == null || elementType == null || elementType.IsAssignableFrom (value.GetType ()))
+					return value;
+				return Convert.ChangeType (value, elementType, CultureInfo.InvariantCulture);
 			}
 		}
 
@@ -189,7 +215,7 @@ namespace Java.Interop {
 			return FromJniHandle (handle, transfer);
 		}
 
-		static object? FromJniHandleWithTypeMapping (IntPtr handle, JniHandleOwnership transfer, Type elementType)
+		static object? FromJniHandleWithTrimmableTypeMapping (IntPtr handle, JniHandleOwnership transfer, Type elementType)
 		{
 			bool consumed = false;
 			try {
@@ -213,19 +239,13 @@ namespace Java.Interop {
 					return peer;
 				}
 
-				consumed = true;
-				return FromJniHandle (handle, transfer);
+				throw new NotSupportedException (
+					FormattableString.Invariant ($"Cannot convert Java collection element to array element type '{elementType}' using the trimmable type map."));
 			} finally {
 				if (!consumed) {
 					JNIEnv.DeleteRef (handle, transfer);
 				}
 			}
-		}
-
-		[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "Legacy non-trimmable typemap path preserves constructors by MarkJavaObjects.")]
-		static object? ConvertLegacyArrayElement (IntPtr handle, JniHandleOwnership transfer, Type elementType)
-		{
-			return FromJniHandle (handle, transfer, elementType);
 		}
 
 		public static T? FromJniHandle<

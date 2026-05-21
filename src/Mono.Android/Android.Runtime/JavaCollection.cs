@@ -158,11 +158,11 @@ namespace Android.Runtime {
 			if (id_toArray == IntPtr.Zero)
 				id_toArray = JNIEnv.GetMethodID (collection_class, "toArray", "()[Ljava/lang/Object;");
 
+			var converter = new JavaConvert.ArrayElementConverter (array);
 			IntPtr lrefArray = JNIEnv.CallObjectMethod (Handle, id_toArray);
 			for (int i = 0; i < Count; i++)
 				array.SetValue (
-						JavaConvert.ConvertArrayElement (
-							array,
+						converter.FromJniHandle (
 							JNIEnv.GetObjectArrayElement (lrefArray, i),
 							JniHandleOwnership.TransferLocalRef),
 						array_index + i);
