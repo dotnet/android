@@ -202,9 +202,7 @@ namespace Xamarin.Android.Tasks
 
 				var resgenatt = new CodeAttributeDeclaration (new CodeTypeReference ("Android.Runtime.ResourceDesignerAttribute", CodeTypeReferenceOptions.GlobalReference));
 				var resourceType = new CodeTypeReference (namespaceName.Length > 0 ? namespaceName + ".Resource" : "Resource", CodeTypeReferenceOptions.GlobalReference);
-				resgenatt.Arguments.Add (new CodeAttributeArgument (IsApplication
-					? new CodeTypeOfExpression (resourceType)
-					: new CodePrimitiveExpression (resourceType.BaseType)));
+				resgenatt.Arguments.Add (new CodeAttributeArgument (new CodeTypeOfExpression (resourceType)));
 				resgenatt.Arguments.Add (new CodeAttributeArgument ("IsApplication", new CodePrimitiveExpression (IsApplication)));
 				unit.AssemblyCustomAttributes.Add (resgenatt);
 

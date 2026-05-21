@@ -6,6 +6,8 @@ namespace Android.Runtime
 	[AttributeUsage (AttributeTargets.Assembly)]
 	public class ResourceDesignerAttribute : Attribute
 	{
+		const string UseResourceTypeConstructor = "Resource designer lookup by name requires dynamic code. Use ResourceDesignerAttribute(Type) instead.";
+
 		public ResourceDesignerAttribute (
 				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
 				Type resourceType)
@@ -17,6 +19,7 @@ namespace Android.Runtime
 			FullName = resourceType.FullName ?? resourceType.Name;
 		}
 
+		[RequiresDynamicCode (UseResourceTypeConstructor)]
 		public ResourceDesignerAttribute (string fullName)
 		{
 			FullName = fullName;

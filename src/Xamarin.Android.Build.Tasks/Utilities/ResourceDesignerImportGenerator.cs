@@ -84,6 +84,7 @@ namespace Xamarin.Android.Tasks
 		string? GetResourceDesignerClass (MetadataReader reader)
 		{
 			// Looking for library assemblies:
+			// [assembly: Android.Runtime.ResourceDesignerAttribute(typeof(MyLibrary.Resource), IsApplication=false)]
 			// [assembly: Android.Runtime.ResourceDesignerAttribute("MyLibrary.Resource", IsApplication=false)]
 
 			var assembly = reader.GetAssemblyDefinition ();
@@ -98,7 +99,7 @@ namespace Xamarin.Android.Tasks
 							return null;
 						}
 					}
-					return (string?) values.FixedArguments.First ().Value;
+					return values.FixedArguments.First ().Value as string;
 				}
 			}
 			return null;
