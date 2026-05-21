@@ -16,7 +16,18 @@
     />
   </Target>
 
-  <Target Name="PrepareJavaInterop">
+  <Target Name="PrepareOpenJDK">
+    <!-- Ensure the Microsoft OpenJDK is downloaded and extracted into $(JavaSdkDirectory)
+         before Java.Interop's Prepare target scans for a JDK. Otherwise its JdkInfo task
+         falls back to a system-installed JDK (e.g. the JDK 25 preinstalled on hosted
+         macOS images), which can be incompatible with our Gradle version. -->
+    <Exec
+        Command="&quot;$(DotNetPreviewTool)&quot; build $(_Root)src\openjdk\openjdk.csproj -c $(Configuration) -bl:$(_BinlogPathPrefix)-prepare-openjdk.binlog"
+    />
+  </Target>
+
+  <Target Name="PrepareJavaInterop"
+      DependsOnTargets="PrepareOpenJDK">
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; build -t:Prepare Java.Interop.sln -c $(Configuration) -p:JdksRoot=$(JavaSdkDirectory) -p:DotnetToolPath=$(DotNetPreviewTool) -bl:$(_BinlogPathPrefix)-prepare-java-interop.binlog"
         WorkingDirectory="$(_Root)external\Java.Interop"
