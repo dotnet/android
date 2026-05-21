@@ -16,6 +16,10 @@ public class TrimmableTypeMapGenerator
 		"android/app/Instrumentation",
 	};
 
+	static readonly HashSet<string> RequiredFrameworkJcwTypes = new (StringComparer.Ordinal) {
+		"Android.Runtime.JavaProxyThrowable",
+	};
+
 	public TrimmableTypeMapGenerator (ITrimmableTypeMapLogger logger)
 	{
 		this.logger = logger ?? throw new ArgumentNullException (nameof (logger));
@@ -60,7 +64,8 @@ public class TrimmableTypeMapGenerator
 			maxArrayRank);
 		var jcwPeers = allPeers.Where (p =>
 			!frameworkAssemblyNames.Contains (p.AssemblyName)
-			|| p.JavaName.StartsWith ("mono/", StringComparison.Ordinal)).ToList ();
+			|| p.JavaName.StartsWith ("mono/", StringComparison.Ordinal)
+			|| RequiredFrameworkJcwTypes.Contains (p.ManagedTypeName)).ToList ();
 		logger.LogGeneratingJcwFilesInfo (jcwPeers.Count, allPeers.Count);
 		var generatedJavaSources = GenerateJcwJavaSources (jcwPeers);
 

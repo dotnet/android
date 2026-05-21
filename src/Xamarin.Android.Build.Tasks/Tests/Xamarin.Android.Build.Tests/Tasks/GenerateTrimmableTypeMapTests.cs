@@ -139,6 +139,33 @@ namespace Xamarin.Android.Build.Tests {
 			CollectionAssert.DoesNotContain (listedAssemblies, staleAssembly);
 		}
 
+		[Test]
+		public void Execute_GeneratesRequiredFrameworkJcws ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+
+			var monoAndroidItem = FindMonoAndroidDll ();
+			if (monoAndroidItem is null) {
+				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				return;
+			}
+
+			var task = CreateTask (new [] { monoAndroidItem }, outputDir, javaDir);
+			task.ResolvedFrameworkAssemblies = new [] { monoAndroidItem };
+
+			Assert.IsTrue (task.Execute (), "Task should succeed.");
+
+			var generatedJavaFiles = task.GeneratedJavaFiles.Select (i => i.ItemSpec).ToArray ();
+			CollectionAssert.Contains (
+				generatedJavaFiles,
+				Path.Combine (javaDir, "android/runtime/JavaProxyThrowable.java"));
+			CollectionAssert.DoesNotContain (
+				generatedJavaFiles,
+				Path.Combine (javaDir, "android/app/Activity.java"));
+		}
+
 		[TestCase ("v11.0")]
 		[TestCase ("v10.0")]
 		[TestCase ("11.0")]
