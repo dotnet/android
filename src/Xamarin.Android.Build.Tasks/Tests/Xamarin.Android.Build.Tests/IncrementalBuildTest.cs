@@ -925,7 +925,7 @@ namespace Lib2
 				return;
 			}
 
-			var path= Path.Combine ("temp", TestName);
+			var path = Path.Combine ("temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 				ProjectName = "MyApp",

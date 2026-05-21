@@ -388,7 +388,7 @@ namespace Xamarin.Android.Build.Tests
 				return;
 			}
 
-			// TODO:NativeAOT fails with: 'classlibrary1.CustomTextView should have been replaced with an $(Hash).CustomTextView'
+			// TODO: NativeAOT fails with: 'classlibrary1.CustomTextView should have been replaced with an $(Hash).CustomTextView'
 			if (runtime == AndroidRuntime.NativeAOT) {
 				Assert.Ignore ("NativeAOT fails here atm");
 			}
@@ -1032,7 +1032,7 @@ namespace Lib1 {
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			var path= Path.Combine ("temp", TestName);
+			var path = Path.Combine ("temp", TestName);
 			var target = "_CreateAar";
 			var foo = new BuildItem.Source ("Foo.cs") {
 				TextContent = () => @"using System;
@@ -1151,7 +1151,7 @@ namespace Lib1 {
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			var path= Path.Combine ("temp", TestName);
+			var path = Path.Combine ("temp", TestName);
 			var appProj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 				ProjectName = "App1",
@@ -1446,7 +1446,7 @@ namespace UnnamedProject
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			var proj= new XamarinAndroidApplicationProject {
+			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
@@ -1513,7 +1513,7 @@ namespace UnnamedProject
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			BuildItem CreateItem(string include) =>
+			BuildItem CreateItem (string include) =>
 				new AndroidItem.AndroidResource (include) {
 					TextContent = () => "",
 				};

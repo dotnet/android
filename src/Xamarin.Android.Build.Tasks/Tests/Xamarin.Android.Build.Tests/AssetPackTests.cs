@@ -165,7 +165,7 @@ namespace Xamarin.Android.Build.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			var path= Path.Combine ("temp", TestName);
+			var path = Path.Combine ("temp", TestName);
 			var asset3 = new AndroidItem.AndroidAsset ("Assets\\asset3.txt") {
 				TextContent = () => "Asset3",
 				Encoding = Encoding.ASCII,

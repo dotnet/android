@@ -1143,7 +1143,7 @@ namespace Xamarin.Android.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			var proj= new XamarinAndroidApplicationProject () {
+			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
@@ -1303,7 +1303,7 @@ namespace UnamedProject
 				return;
 			}
 
-			var start= DateTime.UtcNow.AddSeconds (-1);
+			var start = DateTime.UtcNow.AddSeconds (-1);
 			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
 
