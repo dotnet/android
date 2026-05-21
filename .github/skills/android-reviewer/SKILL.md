@@ -10,6 +10,8 @@ description: >-
 
 Review PRs against guidelines distilled from past reviews by senior maintainers of dotnet/android.
 
+This skill is **offline-only**. It analyzes pull requests and prepares review findings, but it must not post GitHub comments, submit pull request reviews, or call write-capable GitHub tools directly. If an agentic workflow invokes this skill, the workflow is responsible for publishing the prepared findings through its configured safe-output tools.
+
 ## Review Mindset
 
 Be polite but skeptical. Prioritize bugs, performance regressions, safety issues, and pattern violations over style nitpicks. **3 important comments > 15 nitpicks.**
@@ -101,16 +103,47 @@ Constraints:
 - **Don't flag what CI catches.** Skip compiler errors, formatting the linter will catch, etc.
 - **Avoid false positives.** Verify the concern actually applies given the full context. If unsure, phrase it as a question rather than a firm claim.
 
-### 7. Post the review
+### 7. Prepare the review output
 
-Post your findings directly:
+Prepare findings for the caller to publish or inspect:
 
-- **Inline comments** on specific lines of the diff with the severity, category, and explanation.
+- **Inline findings** for specific lines of the diff with the severity, category, and explanation.
 - **Review summary** with the overall verdict (✅ LGTM, ⚠️ Needs Changes, or ❌ Reject), issue counts by severity, and positive callouts.
 
-If no issues found **and CI is green**, submit with at most one or two 💡 suggestions and a positive summary. Truly trivial PRs (dependency bumps, 1-line typo fixes) may have no inline comments.
+If no issues are found **and CI is green**, include at most one or two 💡 suggestions and a positive summary. Truly trivial PRs (dependency bumps, 1-line typo fixes) may have no inline findings.
 
-**Copilot-authored PRs:** If the PR author is `Copilot` (the GitHub Copilot coding agent) and the verdict is ⚠️ Needs Changes or ❌ Reject, prefix the review summary with `@copilot ` so the comment automatically triggers Copilot to address the feedback. Do NOT add the prefix for ✅ LGTM verdicts.
+For interactive CLI/chat use, present the review in readable Markdown:
+
+```markdown
+**Verdict:** ⚠️ Needs Changes
+
+Brief summary of the review, including issue counts, positive callouts, and CI status.
+
+**Findings:**
+- `path/to/file.cs:42` — 🤖 ⚠️ **Category** — Explain the issue and what to do instead.
+```
+
+If an agentic workflow or other automation needs machine-readable output, return the same information in this shape so the caller can publish it through its configured mechanisms:
+
+```json
+{
+  "verdict": "LGTM | Needs Changes | Reject",
+  "summary": "Overall review summary with issue counts and positive callouts.",
+  "copilot_pr_summary_prefix_required": false,
+  "findings": [
+    {
+      "path": "src/Example.cs",
+      "line": 42,
+      "side": "RIGHT",
+      "severity": "error | warning | suggestion",
+      "category": "Correctness",
+      "body": "🤖 ⚠️ **Correctness** — Explain the issue and what to do instead.\n\n_{Rule: Brief name (Postmortem `#N`)}_"
+    }
+  ]
+}
+```
+
+**Copilot-authored PRs:** If the PR author is `Copilot` (the GitHub Copilot coding agent) and the verdict is ⚠️ Needs Changes or ❌ Reject, set `copilot_pr_summary_prefix_required` to `true` so a publishing workflow can prefix the review summary with `@copilot `. Do NOT request that prefix for ✅ LGTM verdicts.
 
 ## Comment format
 
