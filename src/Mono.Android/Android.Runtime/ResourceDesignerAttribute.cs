@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
@@ -35,8 +34,7 @@ namespace Android.Runtime
 		internal Type? GetResourceTypeFromAssembly (Assembly assembly)
 		{
 			if (resourceType != null) {
-				Debug.Assert (assembly == resourceType.Assembly);
-				return resourceType;
+				return assembly == resourceType.Assembly ? resourceType : null;
 			}
 
 			const string legacyLookup = "The legacy string-based ResourceDesignerAttribute constructor requires dynamic code.";
