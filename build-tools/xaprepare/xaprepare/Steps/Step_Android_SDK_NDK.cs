@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using Kajabity.Tools.Java;
 
 namespace Xamarin.Android.Prepare
@@ -68,7 +67,6 @@ namespace Xamarin.Android.Prepare
 
 			toolchain.Components.ForEach (c => Check (context, packageCacheDir, sdkRoot, c, toInstall, 4));
 			if (toInstall.Count == 0) {
-				WritePackageXmls (sdkRoot);
 				return GatherNDKInfo (context);
 			}
 
@@ -107,8 +105,6 @@ namespace Xamarin.Android.Prepare
 			foreach (AndroidPackage p in toInstall) {
 				await Unpack (context, tempDir, p);
 			}
-
-			WritePackageXmls (sdkRoot);
 
 			return GatherNDKInfo (context);
 		}
@@ -287,12 +283,6 @@ namespace Xamarin.Android.Prepare
 				return;
 			}
 
-			// If only specific Android SDK platforms were requested, ignore ones that were not requested
-			if (component is AndroidPlatformComponent apc && !ShouldInstall (apc, context)) {
-				LogStatus ($"skipping, not requested", padLeft, Log.InfoColor);
-				return;
-			}
-
 			if (missing)
 				LogStatus (statusMissing, padLeft, ConsoleColor.Magenta);
 			else
@@ -308,22 +298,6 @@ namespace Xamarin.Android.Prepare
 			};
 
 			toInstall.Add (pkg);
-		}
-
-		bool ShouldInstall (AndroidPlatformComponent component, Context context)
-		{
-			var platforms = context.AndroidSdkPlatforms;
-
-			// If no specific platforms were requested, install everything
-			if (!platforms.Any () || platforms.Contains ("all"))
-				return true;
-
-			// If "latest" was requested, install the highest available stable version and any preview versions
-			if (platforms.Contains ("latest") && (component.IsLatestStable || component.IsPreview))
-				return true;
-
-			// Check if this is a user-requested platform
-			return context.AndroidSdkPlatforms.Contains (component.ApiLevel);
 		}
 
 		bool IsInstalled (AndroidToolchainComponent component, string path, out bool missing)
@@ -388,61 +362,6 @@ namespace Xamarin.Android.Prepare
 		bool IsNdk (AndroidToolchainComponent component)
 		{
 			return component.Name.StartsWith ("android-ndk", StringComparison.OrdinalIgnoreCase);
-		}
-
-		static  readonly    XNamespace  AndroidRepositoryCommon     = "http://schemas.android.com/repository/android/common/01";
-		static  readonly    XNamespace  AndroidRepositoryGeneric    = "http://schemas.android.com/repository/android/generic/01";
-
-		void WritePackageXmls (string sdkRoot)
-		{
-			string[] packageXmlDirs = new[]{
-				Path.Combine (sdkRoot, "emulator"),
-			};
-			foreach (var path in packageXmlDirs) {
-				var properties = ReadSourceProperties (path);
-				if (properties == null)
-					continue;
-				string packageXml = Path.Combine (path, "package.xml");
-				Log.DebugLine ($"Writing '{packageXml}'");
-				var doc = new XDocument(
-						new XElement (AndroidRepositoryCommon + "repository",
-							new XAttribute (XNamespace.Xmlns + "ns2", AndroidRepositoryCommon.NamespaceName),
-							new XAttribute (XNamespace.Xmlns + "ns3", AndroidRepositoryGeneric.NamespaceName),
-							new XElement ("localPackage",
-								new XAttribute ("path", properties ["Pkg.Path"]),
-								new XAttribute ("obsolete", "false"),
-								new XElement ("revision", GetRevision (properties ["Pkg.Revision"])),
-								new XElement ("display-name", properties ["Pkg.Desc"]))));
-				doc.Save (packageXml, SaveOptions.None);
-			}
-		}
-
-		Dictionary<string, string>? ReadSourceProperties (string dir)
-		{
-			var path = Path.Combine (dir, "source.properties");
-			if (!File.Exists (path))
-				return null;
-			var dict = new Dictionary<string, string> ();
-			foreach (var line in File.ReadLines (path)) {
-				if (line.Length == 0)
-					continue;
-				var entry = line.Split (new[]{'='}, 2, StringSplitOptions.None);
-				if (entry.Length != 2)
-					continue;
-				dict.Add (entry [0], entry [1]);
-			}
-			return dict;
-		}
-
-		IEnumerable<XElement> GetRevision (string revision)
-		{
-			var parts = revision.Split ('.');
-			if (parts.Length > 0)
-				yield return new XElement ("major", parts [0]);
-			if (parts.Length > 1)
-				yield return new XElement ("minor", parts [1]);
-			if (parts.Length > 2)
-				yield return new XElement ("micro", parts [2]);
 		}
 	}
 }

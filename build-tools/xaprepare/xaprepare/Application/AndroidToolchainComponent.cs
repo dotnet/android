@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 
 namespace Xamarin.Android.Prepare
 {
@@ -39,21 +38,6 @@ namespace Xamarin.Android.Prepare
 			if (!string.IsNullOrEmpty (BuildToolName) && !string.IsNullOrEmpty (BuildToolVersion) && !Context.Instance.BuildToolsInventory.ContainsKey (BuildToolName)) {
 				Context.Instance.BuildToolsInventory.Add (BuildToolName, BuildToolVersion);
 			}
-		}
-	}
-
-	class AndroidPlatformComponent : AndroidToolchainComponent
-	{
-		public string ApiLevel { get; }
-		public bool IsLatestStable { get; }
-		public bool IsPreview { get; }
-
-		public AndroidPlatformComponent (string name, string apiLevel, string pkgRevision, bool isLatestStable = false, bool isPreview = false)
-			: base (name, Path.Combine ("platforms", $"android-{apiLevel}"), pkgRevision: pkgRevision, buildToolName: $"android-sdk-{name}", buildToolVersion: $"{apiLevel}.{pkgRevision}")
-		{
-			ApiLevel = apiLevel;
-			IsLatestStable = isLatestStable;
-			IsPreview = isPreview;
 		}
 	}
 

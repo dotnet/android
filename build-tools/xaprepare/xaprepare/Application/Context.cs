@@ -283,11 +283,6 @@ namespace Xamarin.Android.Prepare
 		public RefreshableComponent ComponentsToRefresh { get; set; }
 
 		/// <summary>
-		///   Collection of Android SDK platform levels to be installed.
-		/// </summary>
-		public IEnumerable<string> AndroidSdkPlatforms { get; set; } = Enumerable.Empty<string> ();
-
-		/// <summary>
 		///   Path to a local .NET SDK archive to use instead of downloading.
 		/// </summary>
 		public string? LocalDotNetSdkArchive { get; set; }
