@@ -99,7 +99,11 @@ namespace Xamarin.Android.Tasks
 							return null;
 						}
 					}
-					return values.FixedArguments.First ().Value as string;
+					return values.FixedArguments.First ().Value switch {
+						Type type => type.FullName ?? type.Name,
+						string name => name,
+						_ => null,
+					};
 				}
 			}
 			return null;
