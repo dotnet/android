@@ -1051,7 +1051,6 @@ public sealed class JavaPeerScanner : IDisposable
 		string managedName = index.Reader.GetString (methodDef.Name);
 		var managedSig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
 		string jniSignature = registerInfo.Signature ?? "()V";
-		var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
 
 		// Only decode TypeRefData signatures for [Export] methods — they need precise
 		// managed type + assembly metadata for direct dispatch IL generation.
@@ -1931,6 +1930,8 @@ public sealed class JavaPeerScanner : IDisposable
 			if (!ManagedConstructorParametersMatchJniSignature (sig.ParameterTypes, jniParams)) {
 				continue;
 			}
+			// If multiple overloads with the same JNI-compatible signature exist, match
+			// the first public constructor in metadata order, like TypeManager.Activate.
 			return [.. sig.ParameterTypes];
 		}
 		return null;

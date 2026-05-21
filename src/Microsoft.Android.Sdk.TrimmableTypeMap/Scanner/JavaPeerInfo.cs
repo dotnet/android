@@ -227,17 +227,17 @@ public sealed record MarshalMethodInfo
 	/// <summary>
 	/// Managed method parameter types, in declaration order.
 	/// </summary>
-	public IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = [];
+	internal IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = [];
 
 	/// <summary>
 	/// Per-parameter [ExportParameter] kinds for legacy callback marshalling.
 	/// </summary>
-	public IReadOnlyList<ExportParameterKindInfo> ManagedParameterExportKinds { get; init; } = [];
+	internal IReadOnlyList<ExportParameterKindInfo> ManagedParameterExportKinds { get; init; } = [];
 
 	/// <summary>
 	/// Managed return type, including the defining assembly.
 	/// </summary>
-	public TypeRefData ManagedReturnType { get; init; } = new () {
+	internal TypeRefData ManagedReturnType { get; init; } = new () {
 		ManagedTypeName = "System.Void",
 		AssemblyName = "System.Runtime",
 	};
@@ -245,7 +245,7 @@ public sealed record MarshalMethodInfo
 	/// <summary>
 	/// [ExportParameter] kind applied to the return value, if any.
 	/// </summary>
-	public ExportParameterKindInfo ManagedReturnExportKind { get; init; }
+	internal ExportParameterKindInfo ManagedReturnExportKind { get; init; }
 
 	/// <summary>
 	/// Whether the managed target method is static.
@@ -299,7 +299,7 @@ public sealed record JavaConstructorInfo
 	/// <summary>
 	/// Managed constructor parameter types, in declaration order.
 	/// </summary>
-	public IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = [];
+	internal IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = [];
 
 	/// <summary>
 	/// True when this Java constructor has a matching public managed constructor on the target type.

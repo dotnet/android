@@ -173,7 +173,7 @@ sealed class JavaPeerProxyData
 /// <summary>
 /// A cross-assembly type reference (assembly name + full managed type name).
 /// </summary>
-public sealed record TypeRefData
+sealed record TypeRefData
 {
 	/// <summary>
 	/// Full managed type name, e.g., "Android.App.Activity" or "MyApp.Outer+Inner".

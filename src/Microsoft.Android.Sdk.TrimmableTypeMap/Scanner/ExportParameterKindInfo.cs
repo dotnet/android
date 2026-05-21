@@ -4,7 +4,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// Identifies a special [ExportParameter] marshalling kind applied to
 /// a parameter or return value of an [Export] method.
 /// </summary>
-public enum ExportParameterKindInfo
+enum ExportParameterKindInfo
 {
 	Unspecified = 0,
 	InputStream = 1,

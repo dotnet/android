@@ -39,17 +39,6 @@ sealed class ExportMethodDispatchEmitter
 				}
 			});
 
-		// Callback member reference: uses MCW n_* types (sbyte for boolean)
-		Action<BlobEncoder> encodeCallbackSig = sig => sig.MethodSignature ().Parameters (paramCount,
-			rt => { if (isVoid) rt.Void (); else JniSignatureHelper.EncodeClrTypeForCallback (rt.Type (), returnKind); },
-			p => {
-				p.AddParameter ().Type ().IntPtr ();
-				p.AddParameter ().Type ().IntPtr ();
-				for (int j = 0; j < jniParams.Count; j++) {
-					JniSignatureHelper.EncodeClrTypeForCallback (p.AddParameter ().Type (), jniParams [j]);
-				}
-			});
-
 		var callbackTypeHandle = _pe.ResolveTypeRef (uco.CallbackType);
 		var callbackRef = AddExportMethodDispatchRef (uco, callbackTypeHandle);
 
@@ -499,17 +488,20 @@ sealed class ExportMethodDispatchEmitter
 
 	void EmitManagedObjectArgument (TrackedInstructionEncoder encoder, TypeRefData managedType, int argumentIndex)
 	{
+		EntityHandle managedTypeHandle = default;
+		if (managedType.ManagedTypeName != "System.Object") {
+			managedTypeHandle = ResolveManagedTypeHandle (managedType);
+		}
 		encoder.LoadArgument (argumentIndex);
 		encoder.LoadConstantI4 (0);
 		if (managedType.ManagedTypeName == "System.Object") {
 			encoder.OpCode (ILOpCode.Ldnull);
 		} else {
-			EmitManagedTypeToken (encoder, ResolveManagedTypeHandle (managedType));
+			EmitManagedTypeToken (encoder, managedTypeHandle);
 		}
 		encoder.Call (_context.JavaLangObjectGetObjectRef, parameterCount: 3, returnsValue: true);
 
 		if (managedType.ManagedTypeName != "System.Object") {
-			var managedTypeHandle = ResolveManagedTypeHandle (managedType);
 			encoder.CastClass (managedTypeHandle);
 		}
 	}
