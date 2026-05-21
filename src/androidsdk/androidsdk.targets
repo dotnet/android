@@ -51,7 +51,6 @@
   </PropertyGroup>
 
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateAndroidPackageXml" TaskFactory="TaskHostFactory" Runtime="NET" />
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.CopyNdkRedistributables"  TaskFactory="TaskHostFactory" Runtime="NET" />
 
   <!--
     Catalog of platform APIs. Each item is downloaded as `<Identity>.zip`.
@@ -334,17 +333,63 @@
     for every supported ABI from the extracted NDK into the runtime redist directory.
     MSBuild port of `Step_Android_SDK_NDK.CopyRedistributableFiles ()` in xaprepare.
   -->
+  <ItemGroup>
+    <_NdkAbi Include="armeabi-v7a">
+      <ToolchainPrefix>arm-linux-androideabi</ToolchainPrefix>
+      <ClangArch>arm</ClangArch>
+      <UnwindArchDir>arm</UnwindArchDir>
+      <Rid>android-arm</Rid>
+    </_NdkAbi>
+    <_NdkAbi Include="arm64-v8a">
+      <ToolchainPrefix>aarch64-linux-android</ToolchainPrefix>
+      <ClangArch>aarch64</ClangArch>
+      <UnwindArchDir>aarch64</UnwindArchDir>
+      <Rid>android-arm64</Rid>
+    </_NdkAbi>
+    <_NdkAbi Include="x86">
+      <ToolchainPrefix>i686-linux-android</ToolchainPrefix>
+      <ClangArch>i686</ClangArch>
+      <UnwindArchDir>i386</UnwindArchDir>
+      <Rid>android-x86</Rid>
+    </_NdkAbi>
+    <_NdkAbi Include="x86_64">
+      <ToolchainPrefix>x86_64-linux-android</ToolchainPrefix>
+      <ClangArch>x86_64</ClangArch>
+      <UnwindArchDir>x86_64</UnwindArchDir>
+      <Rid>android-x64</Rid>
+    </_NdkAbi>
+    <_NdkCrtFile      Include="crtbegin_so.o;crtend_so.o;libc.so;libdl.so;liblog.so;libm.so;libz.so" />
+    <_NdkCppAbiFile   Include="libc++_static.a;libc++abi.a" />
+  </ItemGroup>
+
   <Target Name="_CopyNdkRedistributables"
       DependsOnTargets="_ExtractAndroidSdkPackages"
       Inputs="$(AndroidNdkDirectory)\source.properties"
-      Outputs="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\.ndk-redist-copied">
-    <CopyNdkRedistributables
-        AndroidNdkDirectory="$(AndroidNdkDirectory)"
-        NdkToolchainOSTag="$(_NdkToolchainOSTag)"
-        MinimumApiLevel="$(AndroidMinimumDotNetApiLevel)"
-        OutputDirectory="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)"
-    />
-    <Touch Files="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\.ndk-redist-copied" AlwaysCreate="true" />
+      Outputs="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\%(_NdkAbi.Rid)\.ndk-redist-copied">
+    <PropertyGroup>
+      <_NdkToolchainRoot>$(AndroidNdkDirectory)\toolchains\llvm\prebuilt\$(_NdkToolchainOSTag)</_NdkToolchainRoot>
+      <_NdkSysrootLib>$(_NdkToolchainRoot)\sysroot\usr\lib</_NdkSysrootLib>
+      <!-- AndroidVersion.txt starts with the full LLVM version e.g. "19.0.1\n". -->
+      <_NdkVersionFileContent>$([System.IO.File]::ReadAllText('$(_NdkToolchainRoot)\AndroidVersion.txt'))</_NdkVersionFileContent>
+      <_NdkLlvmMajor>$(_NdkVersionFileContent.Substring(0, $(_NdkVersionFileContent.IndexOf('.'))))</_NdkLlvmMajor>
+      <_NdkClangLibLinux>$(_NdkToolchainRoot)\lib\clang\$(_NdkLlvmMajor)\lib\linux</_NdkClangLibLinux>
+      <!-- Per-ABI properties (batched via Outputs="...%(_NdkAbi.Rid)..."). -->
+      <_AbiPrefixDir>$(_NdkSysrootLib)\%(_NdkAbi.ToolchainPrefix)</_AbiPrefixDir>
+      <_AbiOutputDir>$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\%(_NdkAbi.Rid)</_AbiOutputDir>
+      <_AbiClangArch>%(_NdkAbi.ClangArch)</_AbiClangArch>
+      <_AbiUnwindArchDir>%(_NdkAbi.UnwindArchDir)</_AbiUnwindArchDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <_NdkRedist Include="@(_NdkCrtFile    -> '$(_AbiPrefixDir)\$(AndroidMinimumDotNetApiLevel)\%(Identity)')" />
+      <_NdkRedist Include="@(_NdkCppAbiFile -> '$(_AbiPrefixDir)\%(Identity)')" />
+      <_NdkRedist Include="$(_NdkClangLibLinux)\libclang_rt.builtins-$(_AbiClangArch)-android.a" />
+      <_NdkRedist Include="$(_NdkClangLibLinux)\$(_AbiUnwindArchDir)\libunwind.a" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_NdkRedist)" DestinationFolder="$(_AbiOutputDir)" />
+    <Touch Files="$(_AbiOutputDir)\.ndk-redist-copied" AlwaysCreate="true" />
+    <ItemGroup>
+      <_NdkRedist Remove="@(_NdkRedist)" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_AcceptAndroidSdkLicenses"
