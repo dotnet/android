@@ -57,6 +57,32 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void Build_WithTrimmableTypeMap_ArrayRankChangeRegeneratesTypeMap ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("_AndroidTrimmableTypeMapMaxArrayRank", "0");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateTrimmableTypeMap");
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "Second build should have succeeded.");
+			builder.Output.AssertTargetIsSkipped ("_GenerateTrimmableTypeMap");
+
+			proj.SetProperty ("_AndroidTrimmableTypeMapMaxArrayRank", "3");
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "Array rank change build should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateTrimmableTypeMap");
+		}
+
+		[Test]
 		public void Build_WithTrimmableTypeMap_DoesNotHitCopyIfChangedMismatch ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			var proj = new XamarinAndroidApplicationProject {
@@ -115,6 +141,57 @@ namespace Xamarin.Android.Build.Tests {
 					Is.GreaterThan (maxMappingIndex),
 					$"{Path.GetFileName (environmentFile)} should allocate enough runtime slots for {Path.GetFileName (manifestFile)}.");
 			}
+		}
+
+		[Test]
+		public void NativeAotTrimmableTypeMap_DoesNotExportFrameworkTypeMaps ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.NativeAOT, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+
+			var ridIntermediateDir = builder.Output.GetIntermediaryPath ("android-arm64");
+			var rspFiles = Directory.GetFiles (ridIntermediateDir, "*.ilc.rsp", SearchOption.AllDirectories);
+			Assert.IsNotEmpty (rspFiles, $"{ridIntermediateDir} should contain an ILC response file.");
+
+			var rspText = File.ReadAllText (rspFiles [0]);
+			StringAssert.Contains ("_Java.Interop.TypeMap.dll", rspText);
+			StringAssert.Contains ("_Mono.Android.TypeMap.dll", rspText);
+			StringAssert.DoesNotContain ("--generateunmanagedentrypoints:_Java.Interop.TypeMap", rspText);
+			StringAssert.DoesNotContain ("--generateunmanagedentrypoints:_Mono.Android.TypeMap", rspText);
+			StringAssert.Contains ($"--generateunmanagedentrypoints:_{proj.ProjectName}.TypeMap", rspText);
+		}
+
+		[Test]
+		public void CoreClrTrimmableTypeMap_PackagesJavaProxyThrowable ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+
+			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+			FileAssert.Exists (dexFile);
+			Assert.IsTrue (
+				DexUtils.ContainsClassWithMethod ("Landroid/runtime/JavaProxyThrowable;", "<init>", "(Ljava/lang/String;)V", dexFile, AndroidSdkPath),
+				$"`{dexFile}` should include `android.runtime.JavaProxyThrowable`.");
 		}
 
 		[Test]

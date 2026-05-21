@@ -44,6 +44,16 @@ public sealed record JavaPeerInfo
 	public required string AssemblyName { get; init; }
 
 	/// <summary>
+	/// True when the type belongs to a framework assembly.
+	/// </summary>
+	public bool IsFrameworkAssembly { get; init; }
+
+	/// <summary>
+	/// True when per-rank array typemap entries should be generated for this peer.
+	/// </summary>
+	public bool GenerateArrayEntries { get; set; } = true;
+
+	/// <summary>
 	/// JNI name of the base Java type, e.g., "android/app/Activity" for a type
 	/// that extends Activity. Null for java/lang/Object or types without a Java base.
 	/// Needed by JCW Java source generation ("extends" clause).
