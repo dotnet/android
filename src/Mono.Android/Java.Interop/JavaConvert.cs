@@ -222,13 +222,6 @@ namespace Java.Interop {
 		{
 			bool consumed = false;
 			try {
-				var peeked = Java.Lang.Object.PeekObject (handle, elementType);
-				if (peeked != null) {
-					consumed = true;
-					JNIEnv.DeleteRef (handle, transfer);
-					return peeked;
-				}
-
 				if (elementType.IsGenericType) {
 					throw new NotSupportedException (
 						FormattableString.Invariant ($"Cannot convert Java collection elements to closed generic array element type '{elementType}'."));

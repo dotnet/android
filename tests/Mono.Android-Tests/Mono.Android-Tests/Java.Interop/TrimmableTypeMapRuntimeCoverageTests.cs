@@ -170,6 +170,12 @@ namespace Java.InteropTests
 					collection.CopyTo (values, 0);
 					Assert.AreEqual ("alpha", values [0]);
 				}
+
+				using (var list = new JavaList (arrayList.Handle, JniHandleOwnership.DoNotTransfer)) {
+					var values = new string [1];
+					list.CopyTo (values, 0);
+					Assert.AreEqual ("alpha", values [0]);
+				}
 			}
 		}
 
