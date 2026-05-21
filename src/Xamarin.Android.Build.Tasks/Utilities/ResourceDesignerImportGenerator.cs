@@ -92,12 +92,9 @@ namespace Xamarin.Android.Tasks
 				var attribute = reader.GetCustomAttribute (handle);
 				var fullName = reader.GetCustomAttributeFullName (attribute, Log);
 				if (fullName == "Android.Runtime.ResourceDesignerAttribute") {
-					var values = attribute.GetCustomAttributeArguments ();
-					foreach (var arg in values.NamedArguments) {
-						// application resource IDs are constants, cannot merge.
-						if (arg.Name == "IsApplication" && arg.Value is bool isApplication && isApplication) {
-							return null;
-						}
+					// application resource IDs are constants, cannot merge.
+					if (IsApplicationResourceDesigner (reader, attribute)) {
+						return null;
 					}
 					return GetResourceDesignerTypeName (reader, attribute);
 				}
@@ -114,6 +111,35 @@ namespace Xamarin.Android.Tasks
 			// ResourceDesignerAttribute has one fixed argument. In a custom attribute blob,
 			// both string arguments and System.Type arguments are encoded as a SerString.
 			return attributeValue.ReadSerializedString ();
+		}
+
+		static bool IsApplicationResourceDesigner (MetadataReader reader, CustomAttribute attribute)
+		{
+			var attributeValue = reader.GetBlobReader (attribute.Value);
+			if (attributeValue.ReadUInt16 () != 1)
+				return false;
+
+			attributeValue.ReadSerializedString ();
+			var namedArgumentCount = attributeValue.ReadUInt16 ();
+			for (int i = 0; i < namedArgumentCount; i++) {
+				const byte Field = 0x53;
+				const byte Property = 0x54;
+				const byte Boolean = 0x02;
+
+				var memberKind = attributeValue.ReadByte ();
+				if (memberKind != Field && memberKind != Property)
+					return false;
+
+				var memberType = attributeValue.ReadByte ();
+				if (memberType != Boolean)
+					return false;
+
+				var memberName = attributeValue.ReadSerializedString ();
+				var memberValue = attributeValue.ReadByte () != 0;
+				if (memberName == "IsApplication")
+					return memberValue;
+			}
+			return false;
 		}
 
 		void CreateImportFor (string declaringTypeFullName, TypeDefinition type, CodeMemberMethod method, MetadataReader reader, bool hasAlias)
