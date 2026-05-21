@@ -147,10 +147,19 @@ namespace Java.InteropTests
 
 			using (var arrayList = new Java.Util.ArrayList ()) {
 				arrayList.Add (42);
+				arrayList.Add (null);
 				using (var collection = new JavaCollection (arrayList.Handle, JniHandleOwnership.DoNotTransfer)) {
-					var values = new object [1];
+					var values = new object [2];
 					collection.CopyTo (values, 0);
 					Assert.AreEqual (42, values [0]);
+					Assert.IsNull (values [1]);
+				}
+
+				using (var list = new JavaList (arrayList.Handle, JniHandleOwnership.DoNotTransfer)) {
+					var values = new object [2];
+					list.CopyTo (values, 0);
+					Assert.AreEqual (42, values [0]);
+					Assert.IsNull (values [1]);
 				}
 			}
 

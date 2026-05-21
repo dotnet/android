@@ -177,6 +177,9 @@ namespace Java.Interop {
 
 			public object? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 			{
+				if (handle == IntPtr.Zero)
+					return null;
+
 				if (useRuntimeTypeMapping)
 					return FromJniHandleWithRuntimeTypeMapping (handle, transfer);
 
