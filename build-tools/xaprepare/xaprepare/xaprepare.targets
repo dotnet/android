@@ -42,9 +42,6 @@
       <Replacement Include="@_CLRRuntimeFlavorDirName@=$(_CLRRuntimeFlavorDirName)" />
       <Replacement Include="@_MonoRuntimeFlavorDirName@=$(_MonoRuntimeFlavorDirName)" />
       <Replacement Include="@AndroidLatestStableFrameworkVersion@=$(AndroidLatestStableFrameworkVersion)" />
-      <Replacement Include="@AndroidCmakeUrlPrefix@=$(AndroidCmakeUrlPrefix)" />
-      <Replacement Include="@AndroidCmakeVersion@=$(AndroidCmakeVersion)" />
-      <Replacement Include="@AndroidCmakeVersionPath@=$(AndroidCmakeVersionPath)" />
       <Replacement Include="@AndroidMinimumDotNetApiLevel@=$(AndroidMinimumDotNetApiLevel)" />
       <Replacement Include="@AndroidDefaultTargetDotnetApiLevel@=$(AndroidDefaultTargetDotnetApiLevel)" />
       <Replacement Include="@AndroidLatestStableApiLevel@=$(AndroidLatestStableApiLevel)" />

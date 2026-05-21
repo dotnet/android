@@ -10,6 +10,7 @@
     <_CmdlineToolsDestination>$(AndroidSdkFullPath)\cmdline-tools\$(CommandLineToolsFolder)</_CmdlineToolsDestination>
     <_PlatformToolsDestination>$(AndroidSdkFullPath)\platform-tools</_PlatformToolsDestination>
     <_BuildToolsDestination>$(AndroidSdkFullPath)\build-tools\$(XABuildToolsFolder)</_BuildToolsDestination>
+    <_CmakeDestination>$(AndroidSdkFullPath)\cmake\$(AndroidCmakeVersionPath)</_CmakeDestination>
   </PropertyGroup>
 
   <!--
@@ -63,6 +64,20 @@
         Condition=" '$(HostOS)' == 'Windows' ">
       <Hash>$(XABuildToolsHashWindows)</Hash>
     </_FullBuildToolsZip>
+
+    <!-- cmake: one zip per HostOS; zip has no top-level subdirectory -->
+    <_CmakeZip Include="cmake-$(AndroidCmakeVersion)-darwin.zip"
+        Condition=" '$(HostOS)' == 'Darwin' ">
+      <Hash>$(XACmakeHashMacOS)</Hash>
+    </_CmakeZip>
+    <_CmakeZip Include="cmake-$(AndroidCmakeVersion)-linux.zip"
+        Condition=" '$(HostOS)' == 'Linux' ">
+      <Hash>$(XACmakeHashLinux)</Hash>
+    </_CmakeZip>
+    <_CmakeZip Include="cmake-$(AndroidCmakeVersion)-windows.zip"
+        Condition=" '$(HostOS)' == 'Windows' ">
+      <Hash>$(XACmakeHashWindows)</Hash>
+    </_CmakeZip>
   </ItemGroup>
 
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" TaskFactory="TaskHostFactory" Runtime="NET" />
@@ -169,9 +184,43 @@
     />
   </Target>
 
+  <!-- cmake: download + extract (zip has no top-level subdirectory) -->
+  <Target Name="_DownloadCmake"
+      Inputs="$(MSBuildThisFileFullPath);$(MSBuildProjectFullPath);..\..\Configuration.props"
+      Outputs="$(AndroidToolchainCacheDirectory)\%(_CmakeZip.Identity)">
+    <DownloadFile
+        SourceUrl="$(_AndroidRepositoryUrl)%(_CmakeZip.Identity)"
+        DestinationFolder="$(AndroidToolchainCacheDirectory)"
+        DestinationFileName="%(_CmakeZip.Identity)"
+        Retries="3"
+    />
+    <GetFileHash Files="$(AndroidToolchainCacheDirectory)\%(_CmakeZip.Identity)" Algorithm="SHA256">
+      <Output TaskParameter="Hash" PropertyName="_ActualHash" />
+    </GetFileHash>
+    <Delete
+        Condition=" '$(_ActualHash)' != '%(_CmakeZip.Hash)' "
+        Files="$(AndroidToolchainCacheDirectory)\%(_CmakeZip.Identity)"
+    />
+    <Error
+        Condition=" '$(_ActualHash)' != '%(_CmakeZip.Hash)' "
+        Text="SHA256 mismatch for %(_CmakeZip.Identity). Expected: %(_CmakeZip.Hash) Actual: $(_ActualHash)"
+    />
+  </Target>
+
+  <Target Name="_ExtractCmake"
+      DependsOnTargets="_DownloadCmake"
+      Inputs="$(AndroidToolchainCacheDirectory)\%(_CmakeZip.Identity)"
+      Outputs="$(_CmakeDestination)\source.properties">
+    <UnzipDirectoryChildren
+        NoSubdirectory="True"
+        SourceFiles="$(AndroidToolchainCacheDirectory)\%(_CmakeZip.Identity)"
+        DestinationFolder="$(_CmakeDestination)"
+    />
+  </Target>
+
   <Target Name="_InstallAndroidSdkComponents"
       BeforeTargets="Build"
-      DependsOnTargets="_ExtractCmdlineTools;_ExtractPlatformTools;_ExtractFullBuildTools"
+      DependsOnTargets="_ExtractCmdlineTools;_ExtractPlatformTools;_ExtractFullBuildTools;_ExtractCmake"
   />
 
   <Target Name="_AcceptAndroidSdkLicenses"
@@ -201,7 +250,7 @@
 
   <Target Name="_CleanAndroidSdkComponents" BeforeTargets="Clean">
     <Delete Files="$(_LicensesAcceptedFile)" />
-    <RemoveDir Directories="$(_CmdlineToolsDestination);$(_PlatformToolsDestination);$(_BuildToolsDestination)" />
+    <RemoveDir Directories="$(_CmdlineToolsDestination);$(_PlatformToolsDestination);$(_BuildToolsDestination);$(_CmakeDestination)" />
   </Target>
 
 </Project>

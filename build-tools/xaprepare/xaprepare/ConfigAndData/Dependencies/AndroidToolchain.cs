@@ -16,12 +16,8 @@ namespace Xamarin.Android.Prepare
 			string AndroidNdkVersion       = BuildAndroidPlatforms.AndroidNdkVersion;
 			string AndroidPkgRevision      = BuildAndroidPlatforms.AndroidNdkPkgRevision;
 			string AndroidNdkDirectory     = GetRequiredProperty (KnownProperties.AndroidNdkDirectory);
-			string AndroidCmakeUrlPrefix   = Context.Instance.Properties.GetValue (KnownProperties.AndroidCmakeUrlPrefix) ?? String.Empty;
-			string AndroidCmakeVersion     = GetRequiredProperty (KnownProperties.AndroidCmakeVersion);
-			string AndroidCmakeVersionPath = GetRequiredProperty (KnownProperties.AndroidCmakeVersionPath);
 			string EmulatorVersion         = GetRequiredProperty (KnownProperties.EmulatorVersion);
-			string EmulatorPkgRevision     = GetRequiredProperty (KnownProperties.EmulatorPkgRevision);
-			bool isArm64Apple = Context.Instance.OS.Flavor == "macOS" && RuntimeInformation.OSArchitecture == Architecture.Arm64;
+			string EmulatorPkgRevision     = GetRequiredProperty (KnownProperties.EmulatorPkgRevision);bool isArm64Apple = Context.Instance.OS.Flavor == "macOS" && RuntimeInformation.OSArchitecture == Architecture.Arm64;
 			string emulatorArch = isArm64Apple ? "aarch64" : "x64";
 			string systemImageArch = isArm64Apple ? "arm64-v8a" : "x86_64";
 
@@ -104,14 +100,6 @@ namespace Xamarin.Android.Prepare
 					destDir: "emulator",
 					pkgRevision: EmulatorPkgRevision,
 					dependencyType: AndroidToolchainComponentType.EmulatorDependency
-				),
-				new AndroidToolchainComponent ($"{AndroidCmakeUrlPrefix}cmake-{AndroidCmakeVersion}-{osTag}",
-					destDir: Path.Combine ("cmake", AndroidCmakeVersionPath),
-					isMultiVersion: true,
-					noSubdirectory: true,
-					pkgRevision: AndroidCmakeVersion,
-					buildToolName: "android-sdk-cmake",
-					buildToolVersion: AndroidCmakeVersion
 				),
 			};
 		}
