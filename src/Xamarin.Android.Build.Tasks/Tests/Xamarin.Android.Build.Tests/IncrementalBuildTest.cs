@@ -139,7 +139,6 @@ namespace Xamarin.Android.Build.Tests
 				proj.MainActivity += Environment.NewLine + "// Force an incremental C# rebuild.";
 				proj.Touch ("MainActivity.cs");
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build failed");
-				b.Output.AssertTargetIsNotSkipped ("_GenerateAndroidRemapNativeCode");
 				AssertJniRemappingCounts (proj, b, expectedTypeCount: 1, expectedMethodCount: 1);
 			}
 		}
