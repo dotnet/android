@@ -1,14 +1,182 @@
 <Project>
 
   <PropertyGroup>
+    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+    <_AndroidRepositoryUrl>https://dl.google.com/android/repository/</_AndroidRepositoryUrl>
     <_SdkManagerDir>$(AndroidSdkFullPath)\cmdline-tools\$(CommandLineToolsFolder)\bin</_SdkManagerDir>
     <_SdkManagerPath Condition=" '$(HostOS)' == 'Windows' ">$(_SdkManagerDir)\sdkmanager.bat</_SdkManagerPath>
     <_SdkManagerPath Condition=" '$(HostOS)' != 'Windows' ">$(_SdkManagerDir)\sdkmanager</_SdkManagerPath>
     <_LicensesAcceptedFile>$(AndroidSdkFullPath)\licenses\.licenses-accepted</_LicensesAcceptedFile>
+    <_CmdlineToolsDestination>$(AndroidSdkFullPath)\cmdline-tools\$(CommandLineToolsFolder)</_CmdlineToolsDestination>
+    <_PlatformToolsDestination>$(AndroidSdkFullPath)\platform-tools</_PlatformToolsDestination>
+    <_BuildToolsDestination>$(AndroidSdkFullPath)\build-tools\$(XABuildToolsFolder)</_BuildToolsDestination>
   </PropertyGroup>
+
+  <!--
+    Google's SDK manifest only provides SHA-1 checksums, but MSBuild's
+    GetFileHash task only supports SHA-256 and above. Hashes for each
+    component are hardcoded in Configuration.props.
+  -->
+  <ItemGroup>
+    <!-- commandlinetools: one zip per HostOS -->
+    <_CmdlineToolsZip Include="commandlinetools-mac-$(CommandLineToolsVersion).zip"
+        Condition=" '$(HostOS)' == 'Darwin' ">
+      <Hash>$(XACmdlineToolsHashMacOS)</Hash>
+    </_CmdlineToolsZip>
+    <_CmdlineToolsZip Include="commandlinetools-linux-$(CommandLineToolsVersion).zip"
+        Condition=" '$(HostOS)' == 'Linux' ">
+      <Hash>$(XACmdlineToolsHashLinux)</Hash>
+    </_CmdlineToolsZip>
+    <_CmdlineToolsZip Include="commandlinetools-win-$(CommandLineToolsVersion).zip"
+        Condition=" '$(HostOS)' == 'Windows' ">
+      <Hash>$(XACmdlineToolsHashWindows)</Hash>
+    </_CmdlineToolsZip>
+
+    <!-- platform-tools: one zip per HostOS -->
+    <_PlatformToolsZip Include="platform-tools_r$(XAPlatformToolsVersion)-darwin.zip"
+        Condition=" '$(HostOS)' == 'Darwin' ">
+      <Hash>$(XAPlatformToolsHashMacOS)</Hash>
+    </_PlatformToolsZip>
+    <_PlatformToolsZip Include="platform-tools_r$(XAPlatformToolsVersion)-linux.zip"
+        Condition=" '$(HostOS)' == 'Linux' ">
+      <Hash>$(XAPlatformToolsHashLinux)</Hash>
+    </_PlatformToolsZip>
+    <_PlatformToolsZip Include="platform-tools_r$(XAPlatformToolsVersion)-win.zip"
+        Condition=" '$(HostOS)' == 'Windows' ">
+      <Hash>$(XAPlatformToolsHashWindows)</Hash>
+    </_PlatformToolsZip>
+
+    <!--
+      build-tools full extract: same zips that aapt2.targets downloads (single
+      shared cache), but here we extract the entire directory contents into
+      $(AndroidSdkDirectory)/build-tools/$(XABuildToolsFolder)/.
+    -->
+    <_FullBuildToolsZip Include="build-tools_r$(XABuildToolsVersion)_macosx.zip"
+        Condition=" '$(HostOS)' == 'Darwin' ">
+      <Hash>$(XABuildToolsHashMacOS)</Hash>
+    </_FullBuildToolsZip>
+    <_FullBuildToolsZip Include="build-tools_r$(XABuildToolsVersion)_linux.zip"
+        Condition=" '$(HostOS)' == 'Linux' ">
+      <Hash>$(XABuildToolsHashLinux)</Hash>
+    </_FullBuildToolsZip>
+    <_FullBuildToolsZip Include="build-tools_r$(XABuildToolsVersion)_windows.zip"
+        Condition=" '$(HostOS)' == 'Windows' ">
+      <Hash>$(XABuildToolsHashWindows)</Hash>
+    </_FullBuildToolsZip>
+  </ItemGroup>
+
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" TaskFactory="TaskHostFactory" Runtime="NET" />
+
+  <!-- commandlinetools: download + extract -->
+  <Target Name="_DownloadCmdlineTools"
+      Inputs="$(MSBuildThisFileFullPath);$(MSBuildProjectFullPath);..\..\Configuration.props"
+      Outputs="$(AndroidToolchainCacheDirectory)\%(_CmdlineToolsZip.Identity)">
+    <DownloadFile
+        SourceUrl="$(_AndroidRepositoryUrl)%(_CmdlineToolsZip.Identity)"
+        DestinationFolder="$(AndroidToolchainCacheDirectory)"
+        DestinationFileName="%(_CmdlineToolsZip.Identity)"
+        Retries="3"
+    />
+    <GetFileHash Files="$(AndroidToolchainCacheDirectory)\%(_CmdlineToolsZip.Identity)" Algorithm="SHA256">
+      <Output TaskParameter="Hash" PropertyName="_ActualHash" />
+    </GetFileHash>
+    <Delete
+        Condition=" '$(_ActualHash)' != '%(_CmdlineToolsZip.Hash)' "
+        Files="$(AndroidToolchainCacheDirectory)\%(_CmdlineToolsZip.Identity)"
+    />
+    <Error
+        Condition=" '$(_ActualHash)' != '%(_CmdlineToolsZip.Hash)' "
+        Text="SHA256 mismatch for %(_CmdlineToolsZip.Identity). Expected: %(_CmdlineToolsZip.Hash) Actual: $(_ActualHash)"
+    />
+  </Target>
+
+  <Target Name="_ExtractCmdlineTools"
+      DependsOnTargets="_DownloadCmdlineTools"
+      Inputs="$(AndroidToolchainCacheDirectory)\%(_CmdlineToolsZip.Identity)"
+      Outputs="$(_CmdlineToolsDestination)\source.properties">
+    <UnzipDirectoryChildren
+        NoSubdirectory="False"
+        SourceFiles="$(AndroidToolchainCacheDirectory)\%(_CmdlineToolsZip.Identity)"
+        DestinationFolder="$(_CmdlineToolsDestination)"
+    />
+  </Target>
+
+  <!-- platform-tools: download + extract -->
+  <Target Name="_DownloadPlatformTools"
+      Inputs="$(MSBuildThisFileFullPath);$(MSBuildProjectFullPath);..\..\Configuration.props"
+      Outputs="$(AndroidToolchainCacheDirectory)\%(_PlatformToolsZip.Identity)">
+    <DownloadFile
+        SourceUrl="$(_AndroidRepositoryUrl)%(_PlatformToolsZip.Identity)"
+        DestinationFolder="$(AndroidToolchainCacheDirectory)"
+        DestinationFileName="%(_PlatformToolsZip.Identity)"
+        Retries="3"
+    />
+    <GetFileHash Files="$(AndroidToolchainCacheDirectory)\%(_PlatformToolsZip.Identity)" Algorithm="SHA256">
+      <Output TaskParameter="Hash" PropertyName="_ActualHash" />
+    </GetFileHash>
+    <Delete
+        Condition=" '$(_ActualHash)' != '%(_PlatformToolsZip.Hash)' "
+        Files="$(AndroidToolchainCacheDirectory)\%(_PlatformToolsZip.Identity)"
+    />
+    <Error
+        Condition=" '$(_ActualHash)' != '%(_PlatformToolsZip.Hash)' "
+        Text="SHA256 mismatch for %(_PlatformToolsZip.Identity). Expected: %(_PlatformToolsZip.Hash) Actual: $(_ActualHash)"
+    />
+  </Target>
+
+  <Target Name="_ExtractPlatformTools"
+      DependsOnTargets="_DownloadPlatformTools"
+      Inputs="$(AndroidToolchainCacheDirectory)\%(_PlatformToolsZip.Identity)"
+      Outputs="$(_PlatformToolsDestination)\source.properties">
+    <UnzipDirectoryChildren
+        NoSubdirectory="False"
+        SourceFiles="$(AndroidToolchainCacheDirectory)\%(_PlatformToolsZip.Identity)"
+        DestinationFolder="$(_PlatformToolsDestination)"
+    />
+  </Target>
+
+  <!-- build-tools full extract into $(AndroidSdkDirectory)/build-tools/$(XABuildToolsFolder) -->
+  <Target Name="_DownloadFullBuildTools"
+      Inputs="$(MSBuildThisFileFullPath);$(MSBuildProjectFullPath);..\..\Configuration.props"
+      Outputs="$(AndroidToolchainCacheDirectory)\%(_FullBuildToolsZip.Identity)">
+    <DownloadFile
+        SourceUrl="$(_AndroidRepositoryUrl)%(_FullBuildToolsZip.Identity)"
+        DestinationFolder="$(AndroidToolchainCacheDirectory)"
+        DestinationFileName="%(_FullBuildToolsZip.Identity)"
+        Retries="3"
+    />
+    <GetFileHash Files="$(AndroidToolchainCacheDirectory)\%(_FullBuildToolsZip.Identity)" Algorithm="SHA256">
+      <Output TaskParameter="Hash" PropertyName="_ActualHash" />
+    </GetFileHash>
+    <Delete
+        Condition=" '$(_ActualHash)' != '%(_FullBuildToolsZip.Hash)' "
+        Files="$(AndroidToolchainCacheDirectory)\%(_FullBuildToolsZip.Identity)"
+    />
+    <Error
+        Condition=" '$(_ActualHash)' != '%(_FullBuildToolsZip.Hash)' "
+        Text="SHA256 mismatch for %(_FullBuildToolsZip.Identity). Expected: %(_FullBuildToolsZip.Hash) Actual: $(_ActualHash)"
+    />
+  </Target>
+
+  <Target Name="_ExtractFullBuildTools"
+      DependsOnTargets="_DownloadFullBuildTools"
+      Inputs="$(AndroidToolchainCacheDirectory)\%(_FullBuildToolsZip.Identity)"
+      Outputs="$(_BuildToolsDestination)\source.properties">
+    <UnzipDirectoryChildren
+        NoSubdirectory="False"
+        SourceFiles="$(AndroidToolchainCacheDirectory)\%(_FullBuildToolsZip.Identity)"
+        DestinationFolder="$(_BuildToolsDestination)"
+    />
+  </Target>
+
+  <Target Name="_InstallAndroidSdkComponents"
+      BeforeTargets="Build"
+      DependsOnTargets="_ExtractCmdlineTools;_ExtractPlatformTools;_ExtractFullBuildTools"
+  />
 
   <Target Name="_AcceptAndroidSdkLicenses"
       BeforeTargets="Build"
+      DependsOnTargets="_ExtractCmdlineTools"
       Inputs="$(MSBuildThisFileFullPath);$(MSBuildProjectFullPath);..\..\Configuration.props"
       Outputs="$(_LicensesAcceptedFile)">
     <Error
@@ -31,8 +199,9 @@
     <Touch Files="$(_LicensesAcceptedFile)" AlwaysCreate="true" />
   </Target>
 
-  <Target Name="_CleanAndroidSdkLicenses" BeforeTargets="Clean">
+  <Target Name="_CleanAndroidSdkComponents" BeforeTargets="Clean">
     <Delete Files="$(_LicensesAcceptedFile)" />
+    <RemoveDir Directories="$(_CmdlineToolsDestination);$(_PlatformToolsDestination);$(_BuildToolsDestination)" />
   </Target>
 
 </Project>

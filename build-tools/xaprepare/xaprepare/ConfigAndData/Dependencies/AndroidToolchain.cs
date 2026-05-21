@@ -19,14 +19,8 @@ namespace Xamarin.Android.Prepare
 			string AndroidCmakeUrlPrefix   = Context.Instance.Properties.GetValue (KnownProperties.AndroidCmakeUrlPrefix) ?? String.Empty;
 			string AndroidCmakeVersion     = GetRequiredProperty (KnownProperties.AndroidCmakeVersion);
 			string AndroidCmakeVersionPath = GetRequiredProperty (KnownProperties.AndroidCmakeVersionPath);
-			string CommandLineToolsVersion = GetRequiredProperty (KnownProperties.CommandLineToolsVersion);
-			string CommandLineToolsFolder  = GetRequiredProperty (KnownProperties.CommandLineToolsFolder);
 			string EmulatorVersion         = GetRequiredProperty (KnownProperties.EmulatorVersion);
 			string EmulatorPkgRevision     = GetRequiredProperty (KnownProperties.EmulatorPkgRevision);
-			string XABuildToolsFolder      = GetRequiredProperty (KnownProperties.XABuildToolsFolder);
-			string XABuildToolsVersion         = GetRequiredProperty (KnownProperties.XABuildToolsVersion);
-			string XAPlatformToolsVersion  = GetRequiredProperty (KnownProperties.XAPlatformToolsVersion);
-			string XAPlatformToolsPackagePrefix = Context.Instance.Properties [KnownProperties.XAPlatformToolsPackagePrefix] ?? String.Empty;
 			bool isArm64Apple = Context.Instance.OS.Flavor == "macOS" && RuntimeInformation.OSArchitecture == Architecture.Arm64;
 			string emulatorArch = isArm64Apple ? "aarch64" : "x64";
 			string systemImageArch = isArm64Apple ? "arm64-v8a" : "x86_64";
@@ -105,24 +99,6 @@ namespace Xamarin.Android.Prepare
 					pkgRevision: AndroidPkgRevision,
 					buildToolName: $"android-ndk-r{AndroidNdkVersion}",
 					buildToolVersion: AndroidPkgRevision
-				),
-				new AndroidToolchainComponent ($"build-tools_r{XABuildToolsVersion}_{altOsTag}",
-					destDir: Path.Combine ("build-tools", XABuildToolsFolder),
-					isMultiVersion: true,
-					buildToolName: "android-sdk-build-tools",
-					buildToolVersion: $"{XABuildToolsVersion}"
-				),
-				new AndroidToolchainComponent ($"commandlinetools-{cltOsTag}-{CommandLineToolsVersion}",
-					destDir: Path.Combine ("cmdline-tools", CommandLineToolsFolder),
-					isMultiVersion: true,
-					buildToolName: "android-sdk-cmdline-tools",
-					buildToolVersion: $"{CommandLineToolsFolder}.{CommandLineToolsVersion}"
-				),
-				new AndroidToolchainComponent ($"{XAPlatformToolsPackagePrefix}platform-tools_r{XAPlatformToolsVersion}-{pltOsTag}",
-					destDir: "platform-tools",
-					pkgRevision: XAPlatformToolsVersion,
-					buildToolName: "android-sdk-platform-tools",
-					buildToolVersion: XAPlatformToolsVersion
 				),
 				new AndroidToolchainComponent ($"emulator-{osTag}_{emulatorArch}-{EmulatorVersion}",
 					destDir: "emulator",
