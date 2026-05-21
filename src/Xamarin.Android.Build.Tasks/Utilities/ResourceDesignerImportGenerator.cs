@@ -107,10 +107,13 @@ namespace Xamarin.Android.Tasks
 
 		static string? GetResourceDesignerTypeName (MetadataReader reader, CustomAttribute attribute)
 		{
-			var value = reader.GetBlobReader (attribute.Value);
-			if (value.ReadUInt16 () != 1)
+			var attributeValue = reader.GetBlobReader (attribute.Value);
+			if (attributeValue.ReadUInt16 () != 1)
 				return null;
-			return value.ReadSerializedString ();
+
+			// ResourceDesignerAttribute has one fixed argument. In a custom attribute blob,
+			// both string arguments and System.Type arguments are encoded as a SerString.
+			return attributeValue.ReadSerializedString ();
 		}
 
 		void CreateImportFor (string declaringTypeFullName, TypeDefinition type, CodeMemberMethod method, MetadataReader reader, bool hasAlias)
