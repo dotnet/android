@@ -461,6 +461,30 @@ int xml myxml 0x7f140000
 		}
 
 		[Test]
+		public void ResourceDesignerImportGeneratorHandlesTypeResourceDesignerAttribute ()
+		{
+			var path = Path.Combine ("temp", TestName + " Some Space");
+			CreateResourceDirectory (path);
+			var mapTask = CreateCaseMapTask (path);
+			Assert.IsTrue (mapTask.Execute (), "Map Task should have executed successfully.");
+
+			var libraryPath = Path.Combine (path, "Library");
+			BuildLibraryWithResources (libraryPath, AndroidRuntime.MonoVM);
+
+			var task = CreateTask (path);
+			task.RTxtFile = Path.Combine (Root, path, "R.txt");
+			File.WriteAllText (task.RTxtFile, Rtxt);
+			task.References = new TaskItem [] {
+				new TaskItem (Path.Combine (Root, libraryPath, "bin", "Debug", "Library.dll"))
+			};
+
+			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
+			var designer = File.ReadAllText (task.NetResgenOutputFile);
+			StringAssert.Contains ("global::Library.Resource.Animator.slide_in_bottom = global::Foo.Foo.Resource.Animator.slide_in_bottom;", designer);
+			Directory.Delete (Path.Combine (Root, path), recursive: true);
+		}
+
+		[Test]
 		public void GenerateDesignerFileFromEmptyRtxt ()
 		{
 			var path = Path.Combine ("temp", TestName + " Some Space");
