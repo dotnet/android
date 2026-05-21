@@ -36,7 +36,9 @@ namespace Android.Runtime
 		{
 			foreach (var customAttribute in assembly.GetCustomAttributes (typeof (ResourceDesignerAttribute), true)) {
 				if (customAttribute is ResourceDesignerAttribute resourceDesignerAttribute && resourceDesignerAttribute.IsApplication) {
-					return resourceDesignerAttribute.GetResourceTypeFromAssembly (assembly);
+					var type = resourceDesignerAttribute.GetResourceTypeFromAssembly (assembly);
+					if (type != null)
+						return type;
 				}
 			}
 			return null;
