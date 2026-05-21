@@ -27,6 +27,7 @@
       <_TrimmableTypeMapUnmanagedEntryPointAssemblies Remove="$(_TypeMapOutputDirectory)_Java.Interop.TypeMap.dll;$(_TypeMapOutputDirectory)_Mono.Android.TypeMap.dll" />
       <_TrimmableTypeMapUnmanagedEntryPointAssemblies Remove="@(_TrimmableTypeMapFrameworkIlcAssemblies)" />
       <IlcReference Include="@(_TrimmableTypeMapIlcAssemblies)" />
+      <IlcArg Include="--typemap-entry-assembly:$(_TypeMapAssemblyName)" />
       <UnmanagedEntryPointsAssembly Include="@(_TrimmableTypeMapUnmanagedEntryPointAssemblies->'%(Filename)')" />
     </ItemGroup>
   </Target>
