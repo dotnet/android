@@ -65,7 +65,7 @@
   <Target Name="_GenerateTrimmableTypeMap"
       Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '@(ReferencePath->Count())' != '0' and '$(_OuterIntermediateOutputPath)' == '' "
       AfterTargets="CoreCompile"
-      Inputs="@(ReferencePath);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs)"
+      Inputs="@(ReferencePath);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache)"
       Outputs="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll;$(_TypeMapAssembliesListFile)">
 
     <ItemGroup>

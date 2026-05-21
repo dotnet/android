@@ -57,6 +57,32 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void Build_WithTrimmableTypeMap_ArrayRankChangeRegeneratesTypeMap ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("_AndroidTrimmableTypeMapMaxArrayRank", "0");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateTrimmableTypeMap");
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "Second build should have succeeded.");
+			builder.Output.AssertTargetIsSkipped ("_GenerateTrimmableTypeMap");
+
+			proj.SetProperty ("_AndroidTrimmableTypeMapMaxArrayRank", "3");
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "Array rank change build should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateTrimmableTypeMap");
+		}
+
+		[Test]
 		public void Build_WithTrimmableTypeMap_DoesNotHitCopyIfChangedMismatch ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			var proj = new XamarinAndroidApplicationProject {
