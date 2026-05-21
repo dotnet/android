@@ -21,7 +21,7 @@
          before Java.Interop's Prepare target scans for a JDK. Otherwise its JdkInfo task
          falls back to a system-installed JDK (e.g. the JDK 25 preinstalled on hosted
          macOS images), which can be incompatible with our Gradle version. -->
-    <MSBuild Projects="$(_Root)src\openjdk\openjdk.csproj" Properties="Configuration=$(Configuration)" />
+    <MSBuild Projects="$(_Root)src\openjdk\openjdk.csproj" Properties="Configuration=$(Configuration)" Targets="Restore;Build" />
   </Target>
 
   <Target Name="PrepareJavaInterop"
