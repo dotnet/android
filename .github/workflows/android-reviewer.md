@@ -30,8 +30,6 @@ tools:
     # The /review command is gated to maintainers, so only trusted users can trigger it.
     min-integrity: none
 safe-outputs:
-  add-comment:
-    max: 1
   create-pull-request-review-comment:
     max: 50
   submit-pull-request-review:
@@ -54,7 +52,6 @@ A maintainer commented `/review` on this pull request. Perform a thorough code r
    - Check CI status
    - Analyze the diff against the review rules
 3. Publish the prepared findings through safe-output tools:
-   - Use `add_comment` once to post a terse PR conversation comment stating that the `/review` run completed and that detailed findings are in the submitted review.
    - Use `create_pull_request_review_comment` for each inline finding.
    - Use `submit_pull_request_review` once with the overall review summary. Use `COMMENT` for clean or informational reviews and `REQUEST_CHANGES` when blocking issues are found.
 
