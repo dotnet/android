@@ -1002,7 +1002,9 @@ namespace Xamarin.Android.Net
 					redirectUrl = new Uri (location!, UriKind.RelativeOrAbsolute);
 					if (!redirectUrl.IsAbsoluteUri) {
 						redirectUrl = new Uri (baseUrl, location);
-					} else if (redirectUrl.Scheme != baseUrl.Scheme) {
+					} else if (string.Equals (baseUrl.Scheme, "https", StringComparison.OrdinalIgnoreCase)
+           				&& !string.Equals (redirectUrl.Scheme, "https", StringComparison.OrdinalIgnoreCase)) {
+
 						disposeRet = false; // let the client decide what to do next
 						return true;
 					}
