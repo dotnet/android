@@ -9,7 +9,7 @@ namespace Android.Runtime
 	{
 		const string UseResourceTypeConstructor = "Resource designer lookup by name requires unreferenced code. Use ResourceDesignerAttribute(Type) instead.";
 
-		readonly IResourceTypeProvider provider;
+		IResourceTypeProvider provider;
 
 		public ResourceDesignerAttribute (
 			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
@@ -29,7 +29,8 @@ namespace Android.Runtime
 		public string FullName
 		{
 			get => provider.FullName;
-			set => throw new NotSupportedException ("Resource designer lookup by name does not support setting the full name.");
+			[RequiresUnreferencedCode (UseResourceTypeConstructor)]
+			set => provider = new StringResourceTypeProvider (value);
 		}
 
 		[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]

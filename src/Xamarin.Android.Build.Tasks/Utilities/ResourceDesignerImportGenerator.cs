@@ -93,29 +93,29 @@ namespace Xamarin.Android.Tasks
 				var fullName = reader.GetCustomAttributeFullName (attribute, Log);
 				if (fullName == "Android.Runtime.ResourceDesignerAttribute") {
 					// application resource IDs are constants, cannot merge.
-					if (IsApplicationResourceDesigner (reader, attribute)) {
+					if (IsApplicationResourceDesigner (reader.GetBlobReader (attribute.Value))) {
 						return null;
 					}
-					return GetResourceDesignerTypeName (reader, attribute);
+					return GetResourceDesignerTypeName (reader.GetBlobReader (attribute.Value));
 				}
 			}
 			return null;
 		}
 
-		static string? GetResourceDesignerTypeName (MetadataReader reader, CustomAttribute attribute)
+		static string? GetResourceDesignerTypeName (BlobReader attributeValue)
 		{
-			var attributeValue = reader.GetBlobReader (attribute.Value);
 			if (attributeValue.ReadUInt16 () != 1)
 				return null;
 
 			// ResourceDesignerAttribute has one fixed argument. In a custom attribute blob,
 			// both string arguments and System.Type arguments are encoded as a SerString.
+			// For System.Type in the same assembly, that string is namespace-qualified
+			// instead of assembly-qualified, matching the resource designer type name.
 			return attributeValue.ReadSerializedString ();
 		}
 
-		static bool IsApplicationResourceDesigner (MetadataReader reader, CustomAttribute attribute)
+		static bool IsApplicationResourceDesigner (BlobReader attributeValue)
 		{
-			var attributeValue = reader.GetBlobReader (attribute.Value);
 			if (attributeValue.ReadUInt16 () != 1)
 				return false;
 
