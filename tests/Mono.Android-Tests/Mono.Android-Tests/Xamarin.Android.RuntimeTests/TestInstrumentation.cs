@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Android.App;
+using Android.OS;
 using Android.Runtime;
 using Xamarin.Android.UnitTests;
 
@@ -87,6 +88,12 @@ namespace Xamarin.Android.RuntimeTests
 					"Xamarin.Android.RuntimeTests.CustomWidgetTests.InflateCustomView_ShouldNotLeakGlobalRefs",
 				};
 			}
+		}
+
+		public override void OnCreate (Bundle? arguments)
+		{
+			Java.Lang.JavaSystem.LoadLibrary ("reuse-threads");
+			base.OnCreate (arguments);
 		}
 
 		protected override IEnumerable<Assembly> GetTestAssemblies ()
