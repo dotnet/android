@@ -9,8 +9,6 @@ class EnvironmentBuilder
 {
 	static readonly string[] defaultLogLevel = {"MONO_LOG_LEVEL", "info"};
 	static readonly string[] defaultMonoDebug = {"MONO_DEBUG", "gen-compact-seq-points"};
-	static readonly string defaultHttpMessageHandler = "System.Net.Http.HttpClientHandler, System.Net.Http";
-
 	readonly EnvironmentFilesParser environmentParser;
 	readonly Dictionary<string, string> environmentVariables;
 	readonly Dictionary<string, string> systemProperties;
@@ -84,19 +82,6 @@ class EnvironmentBuilder
 		}
 
 		AddEnvironmentVariable (defaultMonoDebug[0], defaultMonoDebug[1]);
-	}
-
-	public void AddHttpClientHandlerType (string? handlerType)
-	{
-		if (environmentParser.HaveHttpMessageHandler) {
-			return;
-		}
-
-		if (String.IsNullOrEmpty (handlerType)) {
-			handlerType = defaultHttpMessageHandler;
-		}
-
-		AddEnvironmentVariable ("XA_HTTP_CLIENT_HANDLER_TYPE", handlerType!.Trim ());
 	}
 
 	public void AddMonoGcParams (bool enableSgenConcurrent)

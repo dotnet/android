@@ -935,9 +935,6 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 					new BuildItem.Source ("SomeClass.cs") {
 						TextContent = () => "namespace Library1 { public class SomeClass { } }"
 					},
-					new BuildItem.Source ("NonPreserved.cs") {
-						TextContent = () => "namespace Library1 { public class NonPreserved { } }"
-					},
 					new BuildItem.Source ("LinkerClass.cs") {
 						TextContent = () => @"
 namespace Library1 {

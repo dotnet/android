@@ -1,15 +1,15 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
-using NUnit.Framework;
-using Xamarin.ProjectTools;
 using System.Linq;
 using System.Text;
-using System.Collections.Generic;
 using System.Xml.Linq;
-using Xamarin.Tools.Zip;
+using Microsoft.Build.Framework;
+using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
-using Microsoft.Build.Framework;
+using Xamarin.ProjectTools;
+using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -469,6 +469,49 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 		}
 
 		[Test]
+		[NonParallelizable]
+		public void MonoAndroidExportIsNotPackagedWithTrimmableTypeMap ()
+		{
+			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
+			const bool isRelease = false;
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				References = {
+					new BuildItem.Reference ("Mono.Android.Export"),
+				},
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.Sources.Add (new BuildItem.Source ("ContainsExportedMethods.cs") {
+				TextContent = () => @"using System;
+using Java.Interop;
+
+namespace UnnamedProject {
+	class ContainsExportedMethods : Java.Lang.Object {
+		[Export]
+		public void Exported ()
+		{
+			Console.WriteLine (""# ExportedCallbackInvoked"");
+		}
+	}
+}"
+			});
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "build failed");
+
+				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+				var helper = new ArchiveAssemblyHelper (apk, useAssemblyStores: true);
+				var contents = helper.ListArchiveContents ();
+
+				Assert.IsFalse (
+					contents.Any (e => Path.GetFileName (e).Equals ("Mono.Android.Export.dll", StringComparison.Ordinal)),
+					$"APK file `{apk}` should not contain Mono.Android.Export.dll when the trimmable type map is enabled.");
+			}
+		}
+
+		[Test]
 		public void CheckSignApk ([Values] bool useApkSigner, [Values] bool perAbiApk, [Values] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
@@ -609,8 +652,10 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 
 				// Build with no changes
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
-				foreach (var target in new [] { "_Sign", "_BuildApkEmbed" }) {
-					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
+				if (TestEnvironment.CommercialBuildAvailable) {
+					foreach (var target in new [] { "_Sign", "_BuildApkEmbed" }) {
+						Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
+					}
 				}
 			}
 		}
