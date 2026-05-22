@@ -92,31 +92,23 @@ namespace Xamarin.Android.Tasks
 				var attribute = reader.GetCustomAttribute (handle);
 				var fullName = reader.GetCustomAttributeFullName (attribute, Log);
 				if (fullName == "Android.Runtime.ResourceDesignerAttribute") {
-					// application resource IDs are constants, cannot merge.
-					if (IsApplicationResourceDesigner (reader.GetBlobReader (attribute.Value))) {
-						return null;
+					var values = attribute.GetCustomAttributeArguments ();
+					foreach (var arg in values.NamedArguments) {
+						// application resource IDs are constants, cannot merge.
+						if (arg.Name == "IsApplication" && arg.Value is bool isApplication && isApplication) {
+							return null;
+						}
 					}
-					return GetResourceDesignerTypeName (reader.GetBlobReader (attribute.Value));
+					var typeName = (string?) values.FixedArguments.First ().Value;
+					return GetTypeFullNameFromAssemblyQualifiedName (typeName);
 				}
 			}
 			return null;
 		}
 
-		static string? GetResourceDesignerTypeName (BlobReader attributeValue)
-		{
-			if (attributeValue.ReadUInt16 () != 1)
-				return null;
-
-			// ResourceDesignerAttribute has one fixed argument. In a custom attribute blob,
-			// both string arguments and System.Type arguments are encoded as a SerString.
-			// New assemblies use an assembly-qualified name, but we compare against metadata
-			// type full names, so strip the assembly name before matching.
-			return GetTypeFullNameFromAssemblyQualifiedName (attributeValue.ReadSerializedString ());
-		}
-
 		internal static string? GetTypeFullNameFromAssemblyQualifiedName (string? typeName)
 		{
-			if (typeName is null || typeName.Length == 0)
+			if (typeName is null)
 				return typeName;
 
 			int assemblySeparator = typeName.IndexOf (',');
@@ -124,34 +116,6 @@ namespace Xamarin.Android.Tasks
 				return typeName;
 
 			return typeName.Substring (0, assemblySeparator).Trim ();
-		}
-
-		static bool IsApplicationResourceDesigner (BlobReader attributeValue)
-		{
-			if (attributeValue.ReadUInt16 () != 1)
-				return false;
-
-			attributeValue.ReadSerializedString ();
-			var namedArgumentCount = attributeValue.ReadUInt16 ();
-			for (int i = 0; i < namedArgumentCount; i++) {
-				const byte Field = 0x53;
-				const byte Property = 0x54;
-				const byte Boolean = 0x02;
-
-				var memberKind = attributeValue.ReadByte ();
-				if (memberKind != Field && memberKind != Property)
-					return false;
-
-				var memberType = attributeValue.ReadByte ();
-				if (memberType != Boolean)
-					return false;
-
-				var memberName = attributeValue.ReadSerializedString ();
-				var memberValue = attributeValue.ReadByte () != 0;
-				if (memberName == "IsApplication")
-					return memberValue;
-			}
-			return false;
 		}
 
 		void CreateImportFor (string declaringTypeFullName, TypeDefinition type, CodeMemberMethod method, MetadataReader reader, bool hasAlias)
