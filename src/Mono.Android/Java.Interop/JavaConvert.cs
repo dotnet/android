@@ -227,8 +227,7 @@ namespace Java.Interop {
 						FormattableString.Invariant ($"Cannot convert Java collection elements to closed generic array element type '{elementType}'."));
 				}
 
-				var reference = new JniObjectReference (handle, JniObjectReferenceType.Local);
-				var peer = JniEnvironment.Runtime.ValueManager.GetPeer (reference);
+				var peer = TrimmableTypeMap.Instance.CreateInstance (handle, elementType);
 				if (peer != null) {
 					consumed = true;
 					JNIEnv.DeleteRef (handle, transfer);

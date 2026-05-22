@@ -128,17 +128,25 @@ namespace Java.InteropTests
 		{
 			AssumeTrimmableTypeMapEnabled ();
 
-			using (var view = new View (Android.App.Application.Context))
 			using (var arrayList = new Java.Util.ArrayList ()) {
-				arrayList.Add (view);
+				var viewClass = JniEnvironment.Types.FindClass ("android/view/View");
+				var viewHandle = IntPtr.Zero;
+				try {
+					var constructor = JNIEnv.GetMethodID (viewClass.Handle, "<init>", "(Landroid/content/Context;)V");
+					viewHandle = JNIEnv.NewObject (viewClass.Handle, constructor, new JValue (Android.App.Application.Context.Handle));
+					AddToJavaCollection (arrayList, viewHandle);
 
-				var values = new View [1];
-				CopyToJavaCollection (arrayList, values);
-				Assert.AreEqual (view.Handle, values [0].Handle);
+					var values = new View [1];
+					CopyToJavaCollection (arrayList, values);
+					Assert.IsTrue (JNIEnv.IsSameObject (viewHandle, values [0].Handle));
 
-				values = new View [1];
-				CopyToJavaList (arrayList, values);
-				Assert.AreEqual (view.Handle, values [0].Handle);
+					values = new View [1];
+					CopyToJavaList (arrayList, values);
+					Assert.IsTrue (JNIEnv.IsSameObject (viewHandle, values [0].Handle));
+				} finally {
+					JNIEnv.DeleteLocalRef (viewHandle);
+					JniObjectReference.Dispose (ref viewClass);
+				}
 			}
 		}
 
@@ -193,6 +201,12 @@ namespace Java.InteropTests
 			using (var list = new JavaList (arrayList.Handle, JniHandleOwnership.DoNotTransfer)) {
 				list.CopyTo (values, 0);
 			}
+		}
+
+		static void AddToJavaCollection (Java.Util.ArrayList arrayList, IntPtr handle)
+		{
+			var add = JNIEnv.GetMethodID (arrayList.Class.Handle, "add", "(Ljava/lang/Object;)Z");
+			JNIEnv.CallBooleanMethod (arrayList.Handle, add, new JValue (handle));
 		}
 
 		static T CreateFromJava<T> ()

@@ -520,21 +520,8 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 				var resolvedTargetType = ResolvePeerType (targetType);
 
 				var typeMap = TrimmableTypeMap.Instance;
-				var proxy = typeMap.GetProxyForJavaObject (reference.Handle, resolvedTargetType);
-
-				// Open-generic proxies cannot instantiate closed targets.
-				IJavaPeerable? peer;
-				if (ShouldActivateClosedGenericTarget (proxy, resolvedTargetType)) {
-					peer = ActivateUsingReflection (resolvedTargetType, reference.Handle, JniHandleOwnership.DoNotTransfer);
-				} else {
-					peer = proxy?.CreateInstance (reference.Handle, JniHandleOwnership.DoNotTransfer);
-				}
+				var peer = typeMap.CreateInstance (reference.Handle, resolvedTargetType);
 				if (peer is not null) {
-					var peerState = peer.JniManagedPeerState | JniManagedPeerStates.Replaceable;
-					if (global::Java.Interop.Runtime.IsGCUserPeer (peer.PeerReference.Handle)) {
-						peerState |= JniManagedPeerStates.Activatable;
-					}
-					peer.SetJniManagedPeerState (peerState);
 					return peer;
 				}
 
@@ -581,31 +568,6 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 			return typeof (JavaException);
 		}
 		return type;
-	}
-
-	static bool ShouldActivateClosedGenericTarget (
-			[NotNullWhen (true)] JavaPeerProxy? proxy,
-			[NotNullWhen (true)] Type? resolvedTargetType)
-	{
-		return proxy is not null &&
-			proxy.TargetType.IsGenericTypeDefinition &&
-			resolvedTargetType is not null &&
-			resolvedTargetType.IsGenericType &&
-			!resolvedTargetType.IsGenericTypeDefinition;
-	}
-
-	static IJavaPeerable? ActivateUsingReflection (
-			[DynamicallyAccessedMembers (Constructors)]
-			Type closedType,
-			IntPtr handle,
-			JniHandleOwnership transfer)
-	{
-		var ctor = closedType.GetConstructor (ActivationConstructorBindingFlags, null, XAConstructorSignature, null);
-		if (ctor is null) {
-			return null;
-		}
-
-		return (IJavaPeerable) ctor.Invoke ([handle, transfer]);
 	}
 
 	/// <summary>
