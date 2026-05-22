@@ -8,7 +8,7 @@ namespace Xamarin.Android.Tools.Aidl_Tests
 {
 	// Tests targeting specific code paths of Xamarin.Android.Tools.Aidl.CSharpCodeGenerator.
 	// These exist so we don't need to go through the MSBuild integration tests in AidlTest.cs
-	// to validate generator behavior. See https://github.com/dotnet/android/issues/...
+	// to validate generator behavior.
 	[TestFixture]
 	public class CSharpCodeGeneratorTests : AidlCompilerTestBase
 	{
