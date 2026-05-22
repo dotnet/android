@@ -398,6 +398,10 @@ namespace UnnamedProject {
 		[Test]
 		public void Build_WithTrimmableTypeMap_AbstractTypeWithProtectedCtor_Succeeds ()
 		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.NativeAOT, release: true)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 			};
