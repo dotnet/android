@@ -54,10 +54,15 @@ public abstract class TestInstrumentation : Instrumentation
 	public override void OnStart ()
 	{
 		base.OnStart ();
-		PreloadNativeLibraries ();
 
 		var bundle = new Bundle ();
 		try {
+			try {
+				PreloadNativeLibraries ();
+			} catch (Exception ex) {
+				Log.Warn (LogTag, $"PreloadNativeLibraries failed (continuing anyway): {ex}");
+			}
+
 			var writeablePath = Application.Context.GetExternalFilesDir (null)?.AbsolutePath ?? Path.GetTempPath ();
 			var resultsDir = Path.Combine (writeablePath, "TestResults");
 			Directory.CreateDirectory (resultsDir);
