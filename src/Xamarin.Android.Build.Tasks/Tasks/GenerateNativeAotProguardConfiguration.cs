@@ -73,6 +73,7 @@ namespace Xamarin.Android.Tasks
 			var typeKeys = new HashSet<string> (StringComparer.Ordinal);
 			using var reader = XmlReader.Create (NativeAotDgmlFile, new XmlReaderSettings {
 				DtdProcessing = DtdProcessing.Prohibit,
+				XmlResolver = null,
 			});
 
 			while (reader.Read ()) {
