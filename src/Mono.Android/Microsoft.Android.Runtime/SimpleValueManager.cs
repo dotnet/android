@@ -207,41 +207,6 @@ class SimpleValueManager : JniRuntime.JniValueManager
 		value.Finalized ();
 	}
 
-	public override void ActivatePeer (IJavaPeerable? self, JniObjectReference reference, ConstructorInfo cinfo, object?[]? argumentValues)
-	{
-		try {
-			ActivateViaReflection (reference, cinfo, argumentValues);
-		} catch (Exception e) {
-			var m = string.Format (
-					CultureInfo.InvariantCulture,
-					"Could not activate {{ PeerReference={0} IdentityHashCode=0x{1} Java.Type={2} }} for managed type '{3}'.",
-					reference,
-					GetJniIdentityHashCode (reference).ToString ("x", CultureInfo.InvariantCulture),
-					JniEnvironment.Types.GetJniTypeNameFromInstance (reference),
-					cinfo.DeclaringType?.FullName);
-			Debug.WriteLine (m);
-
-			throw new NotSupportedException (m, e);
-		}
-	}
-
-	void ActivateViaReflection (JniObjectReference reference, ConstructorInfo cinfo, object?[]? argumentValues)
-	{
-		var declType  = GetDeclaringType (cinfo);
-
-#pragma warning disable IL2072
-		var self      = (IJavaPeerable) System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject (declType);
-#pragma warning restore IL2072
-		self.SetPeerReference (reference);
-
-		cinfo.Invoke (self, argumentValues);
-
-		[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "🤷‍♂️")]
-		[return: DynamicallyAccessedMembers (Constructors)]
-		Type GetDeclaringType (ConstructorInfo cinfo) =>
-			cinfo.DeclaringType ?? throw new NotSupportedException ("Do not know the type to create!");
-	}
-
 	public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
 	{
 		if (RegisteredInstances == null)
