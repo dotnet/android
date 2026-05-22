@@ -236,12 +236,22 @@
 
     <!--
       Android NDK: single per-host zip. The zip contains an `android-ndk-r<ver>/`
-      top-level directory which is stripped via `strip-components=1`, so the
-      extracted contents land directly in $(AndroidNdkDirectory).
+      top-level directory which is stripped via `strip-components=1` (Windows)
+      or by post-extraction `mv` (Unix), so the extracted contents land directly
+      in $(AndroidNdkDirectory).
+
+      Unix uses the system `unzip` binary (not `tar -xf`) because bsdtar on
+      macOS does not preserve symlinks (`clang++ -> clang` etc) from `.zip`
+      archives - it materializes them as zero-byte files which then fail with
+      `posix_spawn: Exec format error` when clang tries to invoke them.
+      `unzip` preserves them correctly. The Windows NDK zip has no symlinks
+      (`.exe` files only) so `tar -xf` works.
     -->
     <_AndroidSdkPackage Include="android-ndk-r$(_XAAndroidNdkRelease)-$(_NdkHostTag).zip">
       <Hash>$(_NdkHostHash)</Hash>
       <Destination>$(AndroidNdkDirectory)</Destination>
+      <UseUnzipOnUnix>true</UseUnzipOnUnix>
+      <UnzipSubdir>android-ndk-r$(_XAAndroidNdkRelease)</UnzipSubdir>
     </_AndroidSdkPackage>
 
     <!--
@@ -303,11 +313,14 @@
   <!--
     Extract every downloaded package into its destination. Uses system `tar`
     (bsdtar / libarchive) which is available on Windows 10+, Linux, and macOS,
-    handles `.zip` natively, and preserves symlinks correctly (the NDK zip
-    contains many symlinks that LibZipSharp's `UnzipDirectoryChildren` cannot
-    handle on Unix). `source.properties` is the sentinel used by the SDK
-    manager - present in every component zip - so it doubles as an
-    incremental-build skip target.
+    handles `.zip` natively, and supports `--strip-components`. `source.properties`
+    is the sentinel used by the SDK manager - present in every component zip -
+    so it doubles as an incremental-build skip target.
+
+    Items can set `UseUnzipOnUnix=true` + `UnzipSubdir=...` to opt into the
+    system `unzip` binary on Unix instead of `tar`. This is needed for archives
+    containing symlinks (e.g. the NDK), which bsdtar's `.zip` reader on macOS
+    silently turns into zero-byte files.
   -->
   <Target Name="_ExtractAndroidSdkPackages"
       DependsOnTargets="_DownloadAndroidSdkPackages"
@@ -316,10 +329,28 @@
     <PropertyGroup>
       <_StripComponents>%(_AndroidSdkPackage.StripComponents)</_StripComponents>
       <_StripComponents Condition=" '$(_StripComponents)' == '' ">1</_StripComponents>
+      <_UseUnzip Condition=" '$(HostOS)' != 'Windows' and '%(_AndroidSdkPackage.UseUnzipOnUnix)' == 'true' ">true</_UseUnzip>
+      <_ZipPath>$([System.IO.Path]::Combine('$(AndroidToolchainCacheDirectory)', '%(_AndroidSdkPackage.Identity)'))</_ZipPath>
+      <_DestParentDir Condition=" '$(_UseUnzip)' == 'true' ">$([System.IO.Path]::GetDirectoryName('%(_AndroidSdkPackage.Destination)'))</_DestParentDir>
     </PropertyGroup>
     <RemoveDir Directories="%(_AndroidSdkPackage.Destination)" />
     <MakeDir Directories="%(_AndroidSdkPackage.Destination)" />
-    <Exec Command="tar -xf &quot;$([System.IO.Path]::Combine('$(AndroidToolchainCacheDirectory)', '%(_AndroidSdkPackage.Identity)'))&quot; -C &quot;%(_AndroidSdkPackage.Destination)&quot; --strip-components=$(_StripComponents)" />
+    <Exec
+        Condition=" '$(_UseUnzip)' != 'true' "
+        Command="tar -xf &quot;$(_ZipPath)&quot; -C &quot;%(_AndroidSdkPackage.Destination)&quot; --strip-components=$(_StripComponents)"
+    />
+    <!--
+      Unix unzip path: unzip into the parent dir (which yields PARENT/UnzipSubdir/...),
+      then replace the (empty) Destination with the extracted subdir.
+    -->
+    <Exec
+        Condition=" '$(_UseUnzip)' == 'true' "
+        Command="unzip -q -o &quot;$(_ZipPath)&quot; -d &quot;$(_DestParentDir)&quot;"
+    />
+    <Exec
+        Condition=" '$(_UseUnzip)' == 'true' "
+        Command="rmdir &quot;%(_AndroidSdkPackage.Destination)&quot; &amp;&amp; mv &quot;$(_DestParentDir)/%(_AndroidSdkPackage.UnzipSubdir)&quot; &quot;%(_AndroidSdkPackage.Destination)&quot;"
+    />
   </Target>
 
   <!--
