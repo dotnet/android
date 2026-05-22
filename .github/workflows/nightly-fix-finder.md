@@ -131,6 +131,25 @@ Using the script's guidance and pre-collected sample data, pick **one specific, 
 4. **Scope it appropriately** — one issue should be completable in a single PR
 5. **Check for duplicates** — search existing issues for similar titles before proceeding
 
+### Phase 2.5: TFM / Language-Version Sanity Check (MANDATORY)
+
+Before writing any code into the issue's `Suggested Fix`, locate the **owning `*.csproj`** for the file you intend to change (walk up parent directories until you find one) and read its `<TargetFramework>` / `<TargetFrameworks>` and `<LangVersion>` values. The emitted code MUST compile against every TFM in that list. The following APIs have non-obvious version floors and are the most common compile-break sources:
+
+| API / syntax | Minimum TFM / LangVersion | Safe fallback for older TFMs |
+|---|---|---|
+| `ArgumentNullException.ThrowIfNull (x)` | `net6.0` | `if (x == null) throw new ArgumentNullException (nameof (x));` |
+| `ObjectDisposedException.ThrowIf (...)` | `net7.0` | explicit `if` + `throw new ObjectDisposedException (...)` |
+| `ArgumentException.ThrowIfNullOrEmpty (x)` | `net7.0` | explicit `if` + `throw new ArgumentException (...)` |
+| `string.Contains (char)` | `netstandard2.1` / `net5.0` | `string.IndexOf (char) >= 0` or `string.Contains (char.ToString ())` |
+| `string.Split (char, ...)` overloads | `netstandard2.1` / `net5.0` | `string.Split (new[] { ch }, ...)` |
+| Collection expressions `[]`, spread `..` | C# 12 (`<LangVersion>12</LangVersion>` or implicit on `net8.0+`) | `Array.Empty<T> ()`, `new List<T> ()` |
+| `required` members, `init`, primary constructors | C# 11 / 12 — varies | explicit constructor / `set` |
+| `Span<T>` / `Memory<T>` on `string` ↔ `char[]` interop | mostly fine on `netstandard2.0` **but** `MemoryExtensions.AsSpan` overloads differ | check the specific overload exists |
+
+If **any** TFM in the owning project is below the required floor for an API you wanted to use, **use the fallback instead**. If the project multi-targets, the code must compile against the *lowest* TFM. When in doubt, prefer the explicit two-line form — it works on every TFM.
+
+This step exists because PR #11455 emitted `ArgumentNullException.ThrowIfNull` into a `netstandard2.0` project and broke the build. Do not repeat that mistake.
+
 ## Phase 3: Score Against Confidence Rubric
 
 Before filing, score the proposed fix on a 0–30 scale across three dimensions. Be honest — under-scoring is far cheaper than filing a bad issue.
