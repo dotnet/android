@@ -23,26 +23,29 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/List.html?hl=en#get(int)
 		//
-		internal unsafe object? InternalGet (
+		internal object? InternalGet (
 				int location,
 				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType = null)
 		{
-			const string id = "get.(I)Ljava/lang/Object;";
-			JniObjectReference obj;
-			try {
-				JniArgumentValue* parameters = stackalloc JniArgumentValue [1] {
-					new JniArgumentValue (location),
-				};
-				obj = list_members.InstanceMethods.InvokeAbstractObjectMethod (id, this, parameters);
-			} catch (Java.Lang.IndexOutOfBoundsException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new ArgumentOutOfRangeException (ex.Message, ex);
-			}
-
+			var obj = InternalGetReference (location);
 			return JavaConvert.FromJniHandle (
 					obj.Handle,
 					JniHandleOwnership.TransferLocalRef,
 					targetType);
+		}
+
+		internal unsafe JniObjectReference InternalGetReference (int location)
+		{
+			const string id = "get.(I)Ljava/lang/Object;";
+			try {
+				JniArgumentValue* parameters = stackalloc JniArgumentValue [1] {
+					new JniArgumentValue (location),
+				};
+				return list_members.InstanceMethods.InvokeAbstractObjectMethod (id, this, parameters);
+			} catch (Java.Lang.IndexOutOfBoundsException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+				throw new ArgumentOutOfRangeException (ex.Message, ex);
+			}
 		}
 
 		//
@@ -277,18 +280,9 @@ namespace Android.Runtime {
 				throw new ArgumentException ("array");
 
 			var converter = new JavaConvert.ArrayElementConverter (array);
-			const string id = "get.(I)Ljava/lang/Object;";
 			int c = Count;
 			for (int i = 0; i < c; i++) {
-				JniObjectReference obj;
-				try {
-					JniArgumentValue* parameters = stackalloc JniArgumentValue [1] {
-						new JniArgumentValue (i),
-					};
-					obj = list_members.InstanceMethods.InvokeAbstractObjectMethod (id, this, parameters);
-				} catch (Java.Lang.IndexOutOfBoundsException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new ArgumentOutOfRangeException (ex.Message, ex);
-				}
+				var obj = InternalGetReference (i);
 				array.SetValue (converter.FromJniHandle (obj.Handle, JniHandleOwnership.TransferLocalRef), array_index + i);
 			}
 		}
@@ -743,19 +737,9 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/List.html?hl=en#get(int)
 		//
-		internal unsafe T? InternalGet (int location)
+		internal T? InternalGet (int location)
 		{
-			const string id = "get.(I)Ljava/lang/Object;";
-			JniObjectReference obj;
-			try {
-				JniArgumentValue* parameters = stackalloc JniArgumentValue [1] {
-					new JniArgumentValue (location),
-				};
-				obj = list_members.InstanceMethods.InvokeAbstractObjectMethod (id, this, parameters);
-			} catch (Java.Lang.IndexOutOfBoundsException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new ArgumentOutOfRangeException (ex.Message, ex);
-			}
-
+			var obj = InternalGetReference (location);
 			return JavaConvert.FromJniHandle<T> (
 					obj.Handle,
 					JniHandleOwnership.TransferLocalRef);
