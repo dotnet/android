@@ -15,31 +15,22 @@ namespace Android.Runtime
 		}
 
 		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
-		public string FullName
-		{
-			get;
-			set
-			{
-				resourceType = null;
-				field = value;
-			}
-		}
+		public string FullName { get; set; }
 
 		public bool IsApplication { get; set; }
-
-		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
-		private Type? resourceType;
 
 		[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
 		internal Type? GetResourceTypeFromAssembly (Assembly assembly)
 		{
-			resourceType ??= Type.GetType (FullName, throwOnError: false);
-			if (resourceType is not null)
-			{
-				if (resourceType.Assembly == assembly) {
-					return resourceType;
-				} else {
-					return null; // no need to fallback to the assembly lookup if the type is found but in a different assembly
+			// Primary scenario: FullName is an assembly-qualified name
+			if (FullName.IndexOf (',') > 0) {
+			        var resourceType = Type.GetType (FullName);
+				if (resourceType is not null) {
+					if (resourceType.Assembly == assembly) {
+						return resourceType;
+					} else {
+						return null; // no need to fallback to the assembly lookup if the type is found but in a different assembly
+					}
 				}
 			}
 
