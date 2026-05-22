@@ -16,13 +16,6 @@ public class TrimmableTypeMapGenerator
 		"android/app/Instrumentation",
 	};
 
-	static readonly HashSet<string> RequiredFrameworkJcwTypes = new (StringComparer.Ordinal) {
-		"Android.Runtime.JavaProxyThrowable",
-		"Xamarin.Android.Net.ServerCertificateCustomValidator+TrustManager",
-		"Xamarin.Android.Net.ServerCertificateCustomValidator+TrustManager+FakeSSLSession",
-		"Xamarin.Android.Net.ServerCertificateCustomValidator+AlwaysAcceptingHostnameVerifier",
-	};
-
 	public TrimmableTypeMapGenerator (ITrimmableTypeMapLogger logger)
 	{
 		this.logger = logger ?? throw new ArgumentNullException (nameof (logger));
@@ -65,10 +58,7 @@ public class TrimmableTypeMapGenerator
 			systemRuntimeVersion,
 			useSharedTypemapUniverse,
 			maxArrayRank);
-		var jcwPeers = allPeers.Where (p =>
-			!frameworkAssemblyNames.Contains (p.AssemblyName)
-			|| p.JavaName.StartsWith ("mono/", StringComparison.Ordinal)
-			|| RequiredFrameworkJcwTypes.Contains (p.ManagedTypeName)).ToList ();
+		var jcwPeers = allPeers.Where (ShouldGenerateJcw).ToList ();
 		logger.LogGeneratingJcwFilesInfo (jcwPeers.Count, allPeers.Count);
 		var generatedJavaSources = GenerateJcwJavaSources (jcwPeers);
 
@@ -109,6 +99,24 @@ public class TrimmableTypeMapGenerator
 		}
 
 		return appRegTypes;
+	}
+
+	static bool ShouldGenerateJcw (JavaPeerInfo peer)
+	{
+		if (peer.DoNotGenerateAcw || peer.IsInterface) {
+			return false;
+		}
+
+		return HasNonEmptyJniNameSegments (peer.JavaName);
+	}
+
+	static bool HasNonEmptyJniNameSegments (string jniName)
+	{
+		if (jniName.Length == 0 || jniName [0] == '/' || jniName [jniName.Length - 1] == '/') {
+			return false;
+		}
+
+		return !jniName.Contains ("//", StringComparison.Ordinal);
 	}
 
 	GeneratedManifest GenerateManifest (List<JavaPeerInfo> allPeers, AssemblyManifestInfo assemblyManifestInfo,

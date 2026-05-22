@@ -140,7 +140,7 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
-		public void Execute_GeneratesRequiredFrameworkJcws ()
+		public void Execute_GeneratesFrameworkJcws ()
 		{
 			var path = Path.Combine ("temp", TestName);
 			var outputDir = Path.Combine (Root, path, "typemap");
@@ -161,6 +161,15 @@ namespace Xamarin.Android.Build.Tests {
 			CollectionAssert.Contains (
 				generatedJavaFiles,
 				Path.Combine (javaDir, "android/runtime/JavaProxyThrowable.java"));
+			CollectionAssert.Contains (
+				generatedJavaFiles,
+				Path.Combine (javaDir, "xamarin/android/net/ServerCertificateCustomValidator_TrustManager.java"));
+			CollectionAssert.Contains (
+				generatedJavaFiles,
+				Path.Combine (javaDir, "xamarin/android/net/ServerCertificateCustomValidator_TrustManager_FakeSSLSession.java"));
+			CollectionAssert.Contains (
+				generatedJavaFiles,
+				Path.Combine (javaDir, "xamarin/android/net/ServerCertificateCustomValidator_AlwaysAcceptingHostnameVerifier.java"));
 			CollectionAssert.DoesNotContain (
 				generatedJavaFiles,
 				Path.Combine (javaDir, "android/app/Activity.java"));

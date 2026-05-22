@@ -179,7 +179,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Execute_FrameworkAssembly_GeneratesRequiredFrameworkJcwTypes ()
+	public void Execute_FrameworkAssembly_GeneratesFrameworkJcwTypes ()
 	{
 		using var peReader = CreateTestFixturePEReader ();
 		var result = CreateGenerator ().Execute (
@@ -190,7 +190,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.Contains (result.GeneratedJavaSources, s => s.RelativePath == "xamarin/android/net/ServerCertificateCustomValidator_TrustManager.java");
 		Assert.Contains (result.GeneratedJavaSources, s => s.RelativePath == "xamarin/android/net/ServerCertificateCustomValidator_TrustManager_FakeSSLSession.java");
 		Assert.Contains (result.GeneratedJavaSources, s => s.RelativePath == "xamarin/android/net/ServerCertificateCustomValidator_AlwaysAcceptingHostnameVerifier.java");
-		Assert.DoesNotContain (result.GeneratedJavaSources, s => s.RelativePath == "xamarin/android/net/ServerCertificateCustomValidator_NonRequiredFrameworkAcw.java");
+		Assert.Contains (result.GeneratedJavaSources, s => s.RelativePath == "xamarin/android/net/ServerCertificateCustomValidator_NonRequiredFrameworkAcw.java");
 	}
 
 	[Fact]
