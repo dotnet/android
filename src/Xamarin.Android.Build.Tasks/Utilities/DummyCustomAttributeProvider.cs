@@ -16,31 +16,31 @@ namespace Xamarin.Android.Tasks
 	public class DummyCustomAttributeProvider : ICustomAttributeTypeProvider<object?>
 	{
 		public static readonly DummyCustomAttributeProvider Instance = new DummyCustomAttributeProvider ();
-		static readonly object systemTypeSentinel = new object ();
+		static readonly object systemType = new object ();
 
 		public object? GetPrimitiveType (PrimitiveTypeCode typeCode) => null;
 
-		public object? GetSystemType () => systemTypeSentinel;
+		public object? GetSystemType () => systemType;
 
 		public object? GetSZArrayType (object? elementType) => null;
 
 		public object? GetTypeFromDefinition (MetadataReader reader, TypeDefinitionHandle handle, byte rawTypeKind)
 		{
 			var type = reader.GetTypeDefinition (handle);
-			return IsSystemType (reader.GetString (type.Namespace), reader.GetString (type.Name)) ? systemTypeSentinel : null;
+			return IsSystemType (reader.GetString (type.Namespace), reader.GetString (type.Name)) ? systemType : null;
 		}
 
 		public object? GetTypeFromReference (MetadataReader reader, TypeReferenceHandle handle, byte rawTypeKind)
 		{
 			var type = reader.GetTypeReference (handle);
-			return IsSystemType (reader.GetString (type.Namespace), reader.GetString (type.Name)) ? systemTypeSentinel : null;
+			return IsSystemType (reader.GetString (type.Namespace), reader.GetString (type.Name)) ? systemType : null;
 		}
 
 		public object? GetTypeFromSerializedName (string name) => name;
 
 		public PrimitiveTypeCode GetUnderlyingEnumType (object? type) => default (PrimitiveTypeCode);
 
-		public bool IsSystemType (object? type) => type == systemTypeSentinel;
+		public bool IsSystemType (object? type) => type == systemType;
 
 		static bool IsSystemType (string ns, string name) => ns == "System" && name == "Type";
 	}
