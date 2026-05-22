@@ -7,6 +7,7 @@
   <PropertyGroup>
     <_TrimmableRuntimeProviderJavaName Condition=" '$(_TrimmableRuntimeProviderJavaName)' == '' ">net.dot.jni.nativeaot.NativeAotRuntimeProvider</_TrimmableRuntimeProviderJavaName>
     <IlcGenerateDgmlFile Condition=" '$(AndroidLinkTool)' != '' and '$(IlcGenerateDgmlFile)' == '' ">true</IlcGenerateDgmlFile>
+    <_UseTrimmableNativeAotProguardConfiguration>true</_UseTrimmableNativeAotProguardConfiguration>
   </PropertyGroup>
 
   <!-- Before ILC input computation, add generated assemblies to ILC inputs.
