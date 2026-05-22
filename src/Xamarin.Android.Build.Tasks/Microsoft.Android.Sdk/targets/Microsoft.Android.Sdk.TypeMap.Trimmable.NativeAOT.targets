@@ -2,7 +2,7 @@
      Adds generated typemap assemblies to ILC inputs. -->
 <Project>
 
-  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateProguardConfiguration" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotProguardConfiguration" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <PropertyGroup>
     <_TrimmableRuntimeProviderJavaName Condition=" '$(_TrimmableRuntimeProviderJavaName)' == '' ">net.dot.jni.nativeaot.NativeAotRuntimeProvider</_TrimmableRuntimeProviderJavaName>
@@ -41,7 +41,7 @@
       Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
       Inputs="$(NativeIntermediateOutputPath)$(TargetName).scan.dgml.xml;$(IntermediateOutputPath)acw-map.txt"
       Outputs="$(_ProguardProjectConfiguration)">
-    <GenerateProguardConfiguration
+    <GenerateNativeAotProguardConfiguration
         NativeAotDgmlFile="$(NativeIntermediateOutputPath)$(TargetName).scan.dgml.xml"
         AcwMapFile="$(IntermediateOutputPath)acw-map.txt"
         OutputFile="$(_ProguardProjectConfiguration)" />
