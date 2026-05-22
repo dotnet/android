@@ -1,4 +1,28 @@
 #nullable enable
+REMOVED Xamarin.Android.Net.AndroidClientHandler
+REMOVED Xamarin.Android.Net.AndroidClientHandler.AndroidClientHandler() -> void
+REMOVED Xamarin.Android.Net.AndroidClientHandler.AssertSelf() -> void
+REMOVED Xamarin.Android.Net.AndroidClientHandler.ConnectTimeout.get -> System.TimeSpan
+REMOVED Xamarin.Android.Net.AndroidClientHandler.ConnectTimeout.set -> void
+REMOVED Xamarin.Android.Net.AndroidClientHandler.PreAuthenticationData.get -> Xamarin.Android.Net.AuthenticationData?
+REMOVED Xamarin.Android.Net.AndroidClientHandler.PreAuthenticationData.set -> void
+REMOVED Xamarin.Android.Net.AndroidClientHandler.ProxyAuthenticationRequested.get -> bool
+REMOVED Xamarin.Android.Net.AndroidClientHandler.ReadTimeout.get -> System.TimeSpan
+REMOVED Xamarin.Android.Net.AndroidClientHandler.ReadTimeout.set -> void
+REMOVED Xamarin.Android.Net.AndroidClientHandler.RequestedAuthentication.get -> System.Collections.Generic.IList<Xamarin.Android.Net.AuthenticationData!>?
+REMOVED Xamarin.Android.Net.AndroidClientHandler.RequestNeedsAuthorization.get -> bool
+REMOVED Xamarin.Android.Net.AndroidClientHandler.TrustedCerts.get -> System.Collections.Generic.IList<Java.Security.Cert.Certificate!>?
+REMOVED Xamarin.Android.Net.AndroidClientHandler.TrustedCerts.set -> void
+REMOVED override Xamarin.Android.Net.AndroidClientHandler.Dispose(bool disposing) -> void
+REMOVED override Xamarin.Android.Net.AndroidClientHandler.SendAsync(System.Net.Http.HttpRequestMessage! request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Net.Http.HttpResponseMessage!>!
+REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.ConfigureCustomSSLSocketFactory(Javax.Net.Ssl.HttpsURLConnection! connection) -> Javax.Net.Ssl.SSLSocketFactory?
+REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.ConfigureKeyManagerFactory(Java.Security.KeyStore? keyStore) -> Javax.Net.Ssl.KeyManagerFactory?
+REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.ConfigureKeyStore(Java.Security.KeyStore? keyStore) -> Java.Security.KeyStore?
+REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.ConfigureTrustManagerFactory(Java.Security.KeyStore? keyStore) -> Javax.Net.Ssl.TrustManagerFactory?
+REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.GetJavaProxy(System.Uri! destination, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Java.Net.Proxy?>!
+REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.GetSSLHostnameVerifier(Javax.Net.Ssl.HttpsURLConnection! connection) -> Javax.Net.Ssl.IHostnameVerifier?
+REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.SetupRequest(System.Net.Http.HttpRequestMessage! request, Java.Net.HttpURLConnection! conn) -> System.Threading.Tasks.Task!
+REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.WriteRequestContentToOutput(System.Net.Http.HttpRequestMessage! request, Java.Net.HttpURLConnection! httpConnection, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 abstract Android.App.AppFunctions.AppFunctionService.OnExecuteFunction(Android.App.AppFunctions.ExecuteAppFunctionRequest! request, string! callingPackage, Android.Content.PM.SigningInfo! callingPackageSigningInfo, Android.OS.CancellationSignal! cancellationSignal, Android.OS.IOutcomeReceiver! callback) -> void
 abstract Android.Media.TV.Ads.TvAdService.OnCreateSession(string! serviceId, string! type) -> Android.Media.TV.Ads.TvAdService.Session?
 abstract Android.Media.TV.Ads.TvAdService.Session.OnRelease() -> void

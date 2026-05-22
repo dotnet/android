@@ -14,7 +14,6 @@ public class GenerateNativeAotEnvironmentAssemblerSources : AndroidTask
 	[Required]
 	public string RID { get; set; } = "";
 	public ITaskItem[]? Environments { get; set; }
-	public string? HttpClientHandlerType { get; set; }
 
 	public override bool RunTask ()
 	{

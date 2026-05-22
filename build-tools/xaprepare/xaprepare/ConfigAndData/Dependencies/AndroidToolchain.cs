@@ -25,7 +25,6 @@ namespace Xamarin.Android.Prepare
 			string EmulatorPkgRevision     = GetRequiredProperty (KnownProperties.EmulatorPkgRevision);
 			string XABuildToolsFolder      = GetRequiredProperty (KnownProperties.XABuildToolsFolder);
 			string XABuildToolsVersion         = GetRequiredProperty (KnownProperties.XABuildToolsVersion);
-			string XABuildToolsPackagePrefix   = Context.Instance.Properties [KnownProperties.XABuildToolsPackagePrefix] ?? String.Empty;
 			string XAPlatformToolsVersion  = GetRequiredProperty (KnownProperties.XAPlatformToolsVersion);
 			string XAPlatformToolsPackagePrefix = Context.Instance.Properties [KnownProperties.XAPlatformToolsPackagePrefix] ?? String.Empty;
 			bool isArm64Apple = Context.Instance.OS.Flavor == "macOS" && RuntimeInformation.OSArchitecture == Architecture.Arm64;
@@ -107,7 +106,7 @@ namespace Xamarin.Android.Prepare
 					buildToolName: $"android-ndk-r{AndroidNdkVersion}",
 					buildToolVersion: AndroidPkgRevision
 				),
-				new AndroidToolchainComponent ($"{XABuildToolsPackagePrefix}build-tools_r{XABuildToolsVersion}_{altOsTag}",
+				new AndroidToolchainComponent ($"build-tools_r{XABuildToolsVersion}_{altOsTag}",
 					destDir: Path.Combine ("build-tools", XABuildToolsFolder),
 					isMultiVersion: true,
 					buildToolName: "android-sdk-build-tools",
