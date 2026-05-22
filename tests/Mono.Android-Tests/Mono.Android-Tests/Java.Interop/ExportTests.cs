@@ -99,8 +99,6 @@ namespace Java.InteropTests
 		[Test, Category ("Export")]
 		public void Export_Method_IntArray_RoundTrip_AndCopyBack ()
 		{
-			AssumeTrimmableExportArrayMarshalling ();
-
 			using var e = new ExportIntArray ();
 			var m = JNIEnv.GetMethodID (e.Class.Handle, "DoubleArray", "([I)[I");
 			Assert.AreNotEqual (IntPtr.Zero, m, "JNI method id for DoubleArray not found");
@@ -135,8 +133,6 @@ namespace Java.InteropTests
 		[Test, Category ("Export")]
 		public void Export_Method_PeerArray_RoundTrip ()
 		{
-			AssumeTrimmableExportArrayMarshalling ();
-
 			using var e = new ExportPeerArray ();
 			using var a = new Java.Lang.Integer (1);
 			using var b = new Java.Lang.Integer (2);
@@ -260,13 +256,6 @@ namespace Java.InteropTests
 		{
 			if (!RuntimeFeature.TrimmableTypeMap) {
 				Assert.Ignore ("[Export] exception routing coverage is only relevant for the trimmable typemap path.");
-			}
-		}
-
-		static void AssumeTrimmableExportArrayMarshalling ()
-		{
-			if (!RuntimeFeature.TrimmableTypeMap) {
-				Assert.Ignore ("[Export] array marshalling coverage is enabled in the Mono.Android.Export stacked PR.");
 			}
 		}
 
