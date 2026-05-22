@@ -46,6 +46,21 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Scan_MarksFrameworkAssemblyPeers ()
+	{
+		using var peReader = new PEReader (File.OpenRead (TestFixtureAssemblyPath));
+		var reader = peReader.GetMetadataReader ();
+		var assemblyName = reader.GetString (reader.GetAssemblyDefinition ().Name);
+		using var scanner = new JavaPeerScanner (frameworkAssemblyNames: new HashSet<string> (StringComparer.OrdinalIgnoreCase) { assemblyName });
+
+		var peers = scanner.Scan (new List<(string, PEReader)> { (assemblyName, peReader) });
+
+		Assert.NotEmpty (peers);
+		Assert.All (peers, p => Assert.True (p.IsFrameworkAssembly, $"{p.ManagedTypeName} should be marked as a framework peer."));
+		Assert.All (peers, p => Assert.False (p.GenerateArrayEntries, $"{p.ManagedTypeName} should not emit array entries unless referenced from a non-framework assembly."));
+	}
+
+	[Fact]
 	public void Scan_JniAddNativeMethodRegistrationAttribute_LogsError ()
 	{
 		// The trimmable typemap refuses to support [JniAddNativeMethodRegistrationAttribute]

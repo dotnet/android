@@ -25,6 +25,9 @@ static class ModelBuilder
 		"java/lang/RuntimeException",
 		"java/lang/Error",
 		"java/lang/Thread",
+		// Queried during NativeAOT JavaInteropRuntime.init before user code can
+		// reference the managed interface, so the managed→JNI mapping must survive.
+		"java/lang/Thread$UncaughtExceptionHandler",
 	};
 
 	/// <summary>
@@ -226,7 +229,7 @@ static class ModelBuilder
 
 		// User-defined ACW types (not MCW bindings, not interfaces) are unconditional
 		// because Android can instantiate them from Java at any time.
-		if (!peer.DoNotGenerateAcw && !peer.IsInterface) {
+		if (!peer.IsFrameworkAssembly && !peer.DoNotGenerateAcw && !peer.IsInterface) {
 			return true;
 		}
 
@@ -438,6 +441,9 @@ static class ModelBuilder
 		}
 
 		var peer = peersForName [0];
+		if (!peer.GenerateArrayEntries) {
+			return;
+		}
 		if (peer.IsGenericDefinition) {
 			return;
 		}

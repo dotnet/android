@@ -179,6 +179,21 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Execute_FrameworkAssembly_GeneratesFrameworkJcwTypes ()
+	{
+		using var peReader = CreateTestFixturePEReader ();
+		var result = CreateGenerator ().Execute (
+			new List<(string, PEReader)> { ("Mono.Android", peReader) },
+			new Version (11, 0),
+			new HashSet<string> (StringComparer.OrdinalIgnoreCase) { "Mono.Android" });
+
+		Assert.Contains (result.GeneratedJavaSources, s => s.RelativePath == "xamarin/android/net/ServerCertificateCustomValidator_TrustManager.java");
+		Assert.Contains (result.GeneratedJavaSources, s => s.RelativePath == "xamarin/android/net/ServerCertificateCustomValidator_TrustManager_FakeSSLSession.java");
+		Assert.Contains (result.GeneratedJavaSources, s => s.RelativePath == "xamarin/android/net/ServerCertificateCustomValidator_AlwaysAcceptingHostnameVerifier.java");
+		Assert.Contains (result.GeneratedJavaSources, s => s.RelativePath == "xamarin/android/net/ServerCertificateCustomValidator_NonRequiredFrameworkAcw.java");
+	}
+
+	[Fact]
 	public void Execute_ManifestPlaceholdersAreResolvedBeforeRooting ()
 	{
 		using var peReader = CreateTestFixturePEReader ();
