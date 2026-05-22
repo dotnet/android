@@ -10,9 +10,20 @@ on:
   workflow_dispatch:
     inputs:
       script:
-        description: Script name to run (without .sh, e.g. "00-todo-fixme-hack"). Leave blank for random.
+        description: Script to run (leave blank for random)
+        options:
+        - ""
+        - "00-todo-fixme-hack"
+        - "01-nullable-reference-types"
+        - "02-obsolete-api-usage"
+        - "03-performance-antipatterns"
+        - "04-missing-xml-docs"
+        - "05-general-mistakes"
+        - "06-unused-using-directives"
+        - "07-error-handling"
+        - "08-string-literal-error-messages"
         required: false
-        type: string
+        type: choice
 permissions:
   contents: read
   issues: read
