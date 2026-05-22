@@ -1727,6 +1727,33 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Specified input file &apos;{0}&apos; does not exist. Ignoring..
+        /// </summary>
+        public static string XA4316 {
+            get {
+                return ResourceManager.GetString("XA4316", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Input file &apos;{0}&apos; does not start with &apos;&lt;replacements/&gt;&apos;. Skipping..
+        /// </summary>
+        public static string XA4317 {
+            get {
+                return ResourceManager.GetString("XA4317", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Input file &apos;{0}&apos; could not be read: {1}. Skipping..
+        /// </summary>
+        public static string XA4318 {
+            get {
+                return ResourceManager.GetString("XA4318", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Missing Android NDK toolchains directory &apos;{0}&apos;. Please install the Android NDK..
         /// </summary>
         public static string XA5101 {
