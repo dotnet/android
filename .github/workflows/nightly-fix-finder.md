@@ -211,11 +211,12 @@ Example call sequence:
 The fix-finder is intentionally easy to extend:
 
 1. Drop a new `NN-name.sh` file into `.github/workflows/nightly-fix-finder/`
-2. Print a `GUIDANCE` heredoc first (what to look for / how to fix / what NOT to flag)
-3. Print `## Scan Data` followed by your grep/find output
-4. Run `gh aw compile` to regenerate `nightly-fix-finder.lock.yml`
+2. Add the script name (without `.sh`) to the `workflow_dispatch` → `script` → `options` list at the top of this file so it appears in the GitHub Actions UI dropdown
+3. Print a `GUIDANCE` heredoc first (what to look for / how to fix / what NOT to flag)
+4. Print `## Scan Data` followed by your grep/find output
+5. Run `gh aw compile` to regenerate `nightly-fix-finder.lock.yml`
 
-No other files need to change — `shuf` picks up the new script automatically.
+The nightly `shuf` picks up the new script automatically; updating the dropdown is only needed for manual dispatch.
 
 ## Important
 
