@@ -61,12 +61,16 @@ steps:
       fi
     else
       SCRIPT_PATH=$(find "$SCRIPT_DIR" -maxdepth 1 -name '*.sh' -type f | shuf -n 1)
+      if [ -z "$SCRIPT_PATH" ]; then
+        echo "❌ No scripts found in $SCRIPT_DIR — nothing to run." >&2
+        exit 1
+      fi
     fi
     SCRIPT_NAME=$(basename "$SCRIPT_PATH" .sh)
     {
       echo "## Selected Script: $SCRIPT_NAME"
       echo ""
-      bash "$SCRIPT_PATH"
+      bash -o pipefail "$SCRIPT_PATH"
     } > /tmp/gh-aw/agent/scan-results.md
     echo "✅ Script $SCRIPT_NAME complete → /tmp/gh-aw/agent/scan-results.md"
 description: Nightly scan for random code improvement opportunities, files issues assigned to Copilot
@@ -91,7 +95,6 @@ tools:
   - date:*
   - xargs:*
   - basename:*
-  - bash:*
   github:
     min-integrity: none
     toolsets:
