@@ -13,7 +13,7 @@ namespace Xamarin.Android.Tools.Aidl_Tests
 {
 	public class AidlCompilerTestBase
 	{
-		protected void RunTest (string name)
+		protected void RunTest (string name, ParcelableHandling parcelableHandling = ParcelableHandling.Ignore)
 		{
 			var root = Path.GetDirectoryName (Assembly.GetExecutingAssembly ().Location);
 			var file = Path.Combine (root, "TestData", name + ".txt");
@@ -22,7 +22,7 @@ namespace Xamarin.Android.Tools.Aidl_Tests
 			(var input, var expected_output) = SplitTestFile (text);
 
 			var compiler = new AidlCompiler ();
-			var results = compiler.Run (input, out var output);
+			var results = compiler.Run (input, out var output, parcelableHandling: parcelableHandling);
 
 			Assert.False (results.LogMessages.Any ());
 
