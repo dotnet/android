@@ -124,7 +124,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void NonGenericCollections_CopyTo_UseTrimmableTypeMapForArrayElementConversion ()
+		public void NonGenericCollection_CopyTo_ViewArray_UsesTrimmableTypeMapForArrayElementConversion ()
 		{
 			AssumeTrimmableTypeMapEnabled ();
 
@@ -132,50 +132,66 @@ namespace Java.InteropTests
 			using (var arrayList = new Java.Util.ArrayList ()) {
 				arrayList.Add (view);
 
-				using (var collection = new JavaCollection (arrayList.Handle, JniHandleOwnership.DoNotTransfer)) {
-					var values = new View [1];
-					collection.CopyTo (values, 0);
-					Assert.AreEqual (view.Handle, values [0].Handle);
-				}
+				var values = new View [1];
+				CopyToJavaCollection (arrayList, values);
+				Assert.AreEqual (view.Handle, values [0].Handle);
 
-				using (var list = new JavaList (arrayList.Handle, JniHandleOwnership.DoNotTransfer)) {
-					var values = new View [1];
-					list.CopyTo (values, 0);
-					Assert.AreEqual (view.Handle, values [0].Handle);
-				}
+				values = new View [1];
+				CopyToJavaList (arrayList, values);
+				Assert.AreEqual (view.Handle, values [0].Handle);
 			}
+		}
+
+		[Test]
+		public void NonGenericCollection_CopyTo_ObjectArray_PreservesNullElement ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
 
 			using (var arrayList = new Java.Util.ArrayList ()) {
 				arrayList.Add (42);
 				arrayList.Add (null);
-				using (var collection = new JavaCollection (arrayList.Handle, JniHandleOwnership.DoNotTransfer)) {
-					var values = new object [2];
-					collection.CopyTo (values, 0);
-					Assert.AreEqual (42, values [0]);
-					Assert.IsNull (values [1]);
-				}
 
-				using (var list = new JavaList (arrayList.Handle, JniHandleOwnership.DoNotTransfer)) {
-					var values = new object [2];
-					list.CopyTo (values, 0);
-					Assert.AreEqual (42, values [0]);
-					Assert.IsNull (values [1]);
-				}
+				var values = new object [2];
+				CopyToJavaCollection (arrayList, values);
+				Assert.AreEqual (42, values [0]);
+				Assert.IsNull (values [1]);
+
+				values = new object [2];
+				CopyToJavaList (arrayList, values);
+				Assert.AreEqual (42, values [0]);
+				Assert.IsNull (values [1]);
 			}
+		}
+
+		[Test]
+		public void NonGenericCollection_CopyTo_StringArray_ConvertsJavaString ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
 
 			using (var arrayList = new Java.Util.ArrayList ()) {
 				arrayList.Add ("alpha");
-				using (var collection = new JavaCollection (arrayList.Handle, JniHandleOwnership.DoNotTransfer)) {
-					var values = new string [1];
-					collection.CopyTo (values, 0);
-					Assert.AreEqual ("alpha", values [0]);
-				}
 
-				using (var list = new JavaList (arrayList.Handle, JniHandleOwnership.DoNotTransfer)) {
-					var values = new string [1];
-					list.CopyTo (values, 0);
-					Assert.AreEqual ("alpha", values [0]);
-				}
+				var values = new string [1];
+				CopyToJavaCollection (arrayList, values);
+				Assert.AreEqual ("alpha", values [0]);
+
+				values = new string [1];
+				CopyToJavaList (arrayList, values);
+				Assert.AreEqual ("alpha", values [0]);
+			}
+		}
+
+		static void CopyToJavaCollection (Java.Util.ArrayList arrayList, Array values)
+		{
+			using (var collection = new JavaCollection (arrayList.Handle, JniHandleOwnership.DoNotTransfer)) {
+				collection.CopyTo (values, 0);
+			}
+		}
+
+		static void CopyToJavaList (Java.Util.ArrayList arrayList, Array values)
+		{
+			using (var list = new JavaList (arrayList.Handle, JniHandleOwnership.DoNotTransfer)) {
+				list.CopyTo (values, 0);
 			}
 		}
 
