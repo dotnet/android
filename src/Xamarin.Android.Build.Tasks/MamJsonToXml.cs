@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.IO;
 
@@ -15,7 +16,7 @@ namespace Xamarin.Android.Tasks
 		public  ITaskItem[] MappingFiles        { get; set; } = [];
 
 		[Required]
-		public  ITaskItem   XmlMappingOutput    { get; set; } = null!; // NRT - guarded by [Required]
+		public  ITaskItem   XmlMappingOutput    { get; set; } = new TaskItem ();
 
 		public override bool RunTask ()
 		{
