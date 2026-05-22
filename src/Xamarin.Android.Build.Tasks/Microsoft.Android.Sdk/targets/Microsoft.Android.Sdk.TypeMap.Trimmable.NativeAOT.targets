@@ -2,8 +2,11 @@
      Adds generated typemap assemblies to ILC inputs. -->
 <Project>
 
+  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateProguardConfiguration" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+
   <PropertyGroup>
     <_TrimmableRuntimeProviderJavaName Condition=" '$(_TrimmableRuntimeProviderJavaName)' == '' ">net.dot.jni.nativeaot.NativeAotRuntimeProvider</_TrimmableRuntimeProviderJavaName>
+    <IlcGenerateDgmlFile Condition=" '$(AndroidLinkTool)' != '' and '$(IlcGenerateDgmlFile)' == '' ">true</IlcGenerateDgmlFile>
   </PropertyGroup>
 
   <!-- Before ILC input computation, add generated assemblies to ILC inputs.
@@ -29,6 +32,23 @@
       <IlcReference Include="@(_TrimmableTypeMapIlcAssemblies)" />
       <IlcArg Include="--typemap-entry-assembly:$(_TypeMapAssemblyName)" />
       <UnmanagedEntryPointsAssembly Include="@(_TrimmableTypeMapUnmanagedEntryPointAssemblies->'%(Filename)')" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_GenerateTrimmableNativeAotProguardConfiguration"
+      AfterTargets="IlcCompile"
+      BeforeTargets="_CompileToDalvik"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
+      Inputs="$(NativeIntermediateOutputPath)$(TargetName).scan.dgml.xml;$(IntermediateOutputPath)acw-map.txt"
+      Outputs="$(_ProguardProjectConfiguration)">
+    <GenerateProguardConfiguration
+        NativeAotDgmlFile="$(NativeIntermediateOutputPath)$(TargetName).scan.dgml.xml"
+        AcwMapFile="$(IntermediateOutputPath)acw-map.txt"
+        OutputFile="$(_ProguardProjectConfiguration)" />
+    <ItemGroup>
+      <FileWrites Include="$(_ProguardProjectConfiguration)" />
+      <FileWrites Include="$(NativeIntermediateOutputPath)$(TargetName).scan.dgml.xml" />
+      <FileWrites Include="$(NativeIntermediateOutputPath)$(TargetName).codegen.dgml.xml" />
     </ItemGroup>
   </Target>
 

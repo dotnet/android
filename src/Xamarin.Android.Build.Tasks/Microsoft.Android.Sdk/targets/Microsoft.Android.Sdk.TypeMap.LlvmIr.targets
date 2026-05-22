@@ -412,7 +412,7 @@
 
   <Target Name="_PrepareLinkedAssembliesForProguard"
       AfterTargets="$(_GenerateProguardAfterTargets)"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' ">
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' and '$(_SkipLinkedAssemblyProguardConfiguration)' != 'true' ">
     <ItemGroup>
       <_LinkedAssemblyForProguard Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
     </ItemGroup>
@@ -420,7 +420,7 @@
 
   <Target Name="_GenerateProguardConfiguration"
       AfterTargets="_PrepareLinkedAssembliesForProguard"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' and '$(_SkipLinkedAssemblyProguardConfiguration)' != 'true' "
       Inputs="@(_LinkedAssemblyForProguard)"
       Outputs="$(_ProguardProjectConfiguration)">
     <GenerateProguardConfiguration

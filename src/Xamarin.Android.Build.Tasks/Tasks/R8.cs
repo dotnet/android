@@ -35,6 +35,7 @@ namespace Xamarin.Android.Tasks
 		public string? ProguardCommonXamarinConfiguration { get; set; }
 		public string? ProguardMappingFileOutput { get; set; }
 		public string []? ProguardConfigurationFiles { get; set; }
+		public bool UseTrimmableNativeAotProguardConfiguration { get; set; }
 
 		protected override string MainClass => "com.android.tools.r8.R8";
 
@@ -95,7 +96,9 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (EnableShrinking) {
-				if (!AcwMapFile.IsNullOrEmpty ()) {
+				if (UseTrimmableNativeAotProguardConfiguration && !ProguardGeneratedApplicationConfiguration.IsNullOrEmpty ()) {
+					File.WriteAllText (ProguardGeneratedApplicationConfiguration, "# ACW keep rules are generated from NativeAOT ILC metadata.\n");
+				} else if (!AcwMapFile.IsNullOrEmpty ()) {
 					var acwMap      = MonoAndroidHelper.LoadMapFile (BuildEngine4, Path.GetFullPath (AcwMapFile), StringComparer.OrdinalIgnoreCase);
 					var javaTypes   = new List<string> (acwMap.Values.Count);
 					foreach (var v in acwMap.Values) {
@@ -110,7 +113,11 @@ namespace Xamarin.Android.Tasks
 				}
 				if (!ProguardCommonXamarinConfiguration.IsNullOrWhiteSpace ()) {
 					using (var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration)) {
-						GetType ().Assembly.GetManifestResourceStream ("proguard_xamarin.cfg").CopyTo (xamcfg.BaseStream);
+						if (UseTrimmableNativeAotProguardConfiguration) {
+							WriteTrimmableNativeAotCommonConfiguration (xamcfg);
+						} else {
+							GetType ().Assembly.GetManifestResourceStream ("proguard_xamarin.cfg").CopyTo (xamcfg.BaseStream);
+						}
 						if (IgnoreWarnings) {
 							xamcfg.WriteLine ("-ignorewarnings");
 						}
@@ -157,6 +164,25 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return responseFile;
+		}
+
+		static void WriteTrimmableNativeAotCommonConfiguration (TextWriter writer)
+		{
+			writer.WriteLine ("# Xamarin.Android NativeAOT trimmable typemap configuration.");
+			writer.WriteLine ();
+			writer.WriteLine ("-dontobfuscate");
+			writer.WriteLine ();
+			writer.WriteLine ("-keep class net.dot.jni.** { *; <init>(...); }");
+			writer.WriteLine ("-keep class net.dot.android.crypto.** { *; <init>(...); }");
+			writer.WriteLine ();
+			writer.WriteLine ("-keepclassmembers class * extends android.view.View {");
+			writer.WriteLine ("   *** set*(...);");
+			writer.WriteLine ("}");
+			writer.WriteLine ();
+			writer.WriteLine ("-keepclassmembers class * extends android.view.View {");
+			writer.WriteLine ("   <init>(android.content.Context,android.util.AttributeSet);");
+			writer.WriteLine ("   <init>(android.content.Context,android.util.AttributeSet,int);");
+			writer.WriteLine ("}");
 		}
 
 		// Note: We do not want to call the base.LogEventsFromTextOutput as it will incorrectly identify
