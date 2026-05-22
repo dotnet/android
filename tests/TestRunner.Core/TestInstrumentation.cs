@@ -61,14 +61,7 @@ public abstract class TestInstrumentation : Instrumentation
 			foreach (var assembly in GetTestAssemblies ()) {
 				Log.Info (LogTag, $"Loading tests from: {assembly.GetName ().Name}");
 				var runner = new NUnitTestAssemblyRunner (new AndroidTestAssemblyBuilder ());
-				// FrameworkPackageSettings.NumberOfTestWorkers = "NumberOfTestWorkers"
-				// 0 forces SimpleWorkItemDispatcher which runs tests synchronously on the
-				// calling (instrumentation) thread, preserving the Java ClassLoader so
-				// tests can call JavaSystem.LoadLibrary() etc.
-				var settings = new Dictionary<string, object> {
-					["NumberOfTestWorkers"] = 0,
-				};
-				runner.Load (assembly, settings);
+				runner.Load (assembly, new Dictionary<string, object> ());
 
 				var result = runner.Run (listener, filter);
 				CountResults (result, ref passed, ref failed, ref skipped);

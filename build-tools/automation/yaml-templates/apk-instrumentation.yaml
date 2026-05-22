@@ -59,6 +59,19 @@ steps:
   condition: ne(variables['Agent.JobStatus'], 'Succeeded')
   continueOnError: true
 
+  # Always capture full device logcat so we can diagnose native library load
+  # failures, JNI crashes, instrumentation errors, etc. The Android-side
+  # instrumentation output (Log.Info/Log.Error from TestInstrumentation) and
+  # any UnsatisfiedLinkError / dlopen messages only appear in logcat.
+- script: >
+    DEST="$(Build.StagingDirectory)/Test${{ parameters.configuration }}/${{ parameters.artifactFolder }}/" &&
+    mkdir -p "$DEST" &&
+    adb logcat -d > "$DEST/logcat-${{ parameters.testName }}.txt" ||
+    echo "logcat capture failed"
+  displayName: capture logcat ${{ parameters.testName }}
+  condition: ${{ parameters.condition }}
+  continueOnError: true
+
 - task: PublishTestResults@2
   displayName: publish ${{ parameters.testName }} results
   inputs:
