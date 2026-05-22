@@ -227,7 +227,12 @@ namespace Java.Interop {
 						FormattableString.Invariant ($"Cannot convert Java collection elements to closed generic array element type '{elementType}'."));
 				}
 
-				var peer = TrimmableTypeMap.Instance.CreateInstance (handle, elementType);
+				// This path intentionally avoids the reflection fallback used by TrimmableTypeMap.CreateInstance ()
+				// because passing array element types there would require DAM annotations.  Closed generic element
+				// types cannot be supported without that fallback: creating a non-generic base peer would not be
+				// assignable to the requested closed generic array element type.  If the requested element type is
+				// already a non-generic base type, the typemap lookup can still select that base mapping.
+				var peer = TrimmableTypeMap.Instance.CreateInstanceWithoutReflectionFallback (handle, elementType);
 				if (peer != null) {
 					consumed = true;
 					JNIEnv.DeleteRef (handle, transfer);
