@@ -84,7 +84,7 @@ namespace Xamarin.Android.Tasks
 		string? GetResourceDesignerClass (MetadataReader reader)
 		{
 			// Looking for library assemblies:
-			// [assembly: Android.Runtime.ResourceDesignerAttribute(typeof(MyLibrary.Resource), IsApplication=false)]
+			// [assembly: Android.Runtime.ResourceDesignerAttribute("MyLibrary.Resource, MyLibrary", IsApplication=false)]
 			// [assembly: Android.Runtime.ResourceDesignerAttribute("MyLibrary.Resource", IsApplication=false)]
 
 			var assembly = reader.GetAssemblyDefinition ();
@@ -109,9 +109,21 @@ namespace Xamarin.Android.Tasks
 
 			// ResourceDesignerAttribute has one fixed argument. In a custom attribute blob,
 			// both string arguments and System.Type arguments are encoded as a SerString.
-			// For System.Type in the same assembly, that string is namespace-qualified
-			// instead of assembly-qualified, matching the resource designer type name.
-			return attributeValue.ReadSerializedString ();
+			// New assemblies use an assembly-qualified name, but we compare against metadata
+			// type full names, so strip the assembly name before matching.
+			return GetTypeFullNameFromAssemblyQualifiedName (attributeValue.ReadSerializedString ());
+		}
+
+		internal static string? GetTypeFullNameFromAssemblyQualifiedName (string? typeName)
+		{
+			if (typeName is null || typeName.Length == 0)
+				return typeName;
+
+			int assemblySeparator = typeName.IndexOf (',');
+			if (assemblySeparator < 0)
+				return typeName;
+
+			return typeName.Substring (0, assemblySeparator).Trim ();
 		}
 
 		static bool IsApplicationResourceDesigner (BlobReader attributeValue)

@@ -25,6 +25,8 @@ namespace Android.Runtime
 			}
 		}
 
+		public bool IsApplication { get; set; }
+
 		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
 		private Type? resourceType;
 
@@ -41,7 +43,7 @@ namespace Android.Runtime
 				}
 			}
 
-			// Fallback for when the type name is not an assembly-qualified name. If an AQN is passed to the constructor,
+			// Fallback for when the type name is not an assembly-qualified name. If a non-AQN is passed to the constructor,
 			// the trimmer will report the following warning:
 			//
 			//   warning IL2122: Type 'XYZ' is not assembly qualified. Type name strings used for dynamically accessing a type should be assembly qualified

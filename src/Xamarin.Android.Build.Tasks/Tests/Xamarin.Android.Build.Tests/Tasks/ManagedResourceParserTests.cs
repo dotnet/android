@@ -384,6 +384,7 @@ int xml myxml 0x7f140000
 			task.UseManagedResourceGenerator = true;
 			task.DesignTimeBuild = true;
 			task.Namespace = "Foo.Foo";
+			task.AssemblyName = "Foo";
 			task.NetResgenOutputFile = Path.Combine (Root, path, "Resource.designer.cs");
 			task.DesignTimeOutputFile = Path.Combine (Root, path, "designtime", "Resource.designer.cs");
 			task.ProjectDir = Path.Combine (Root, path);
@@ -461,7 +462,7 @@ int xml myxml 0x7f140000
 		}
 
 		[Test]
-		public void ResourceDesignerImportGeneratorHandlesTypeResourceDesignerAttribute ()
+		public void ResourceDesignerImportGeneratorHandlesAssemblyQualifiedResourceDesignerAttribute ()
 		{
 			var path = Path.Combine ("temp", TestName + " Some Space");
 			CreateResourceDirectory (path);
@@ -470,7 +471,7 @@ int xml myxml 0x7f140000
 
 			var libraryPath = Path.Combine (path, "Library");
 			// BuildLibraryWithResources() generates a library Resource.designer.cs with:
-			// [assembly: ResourceDesignerAttribute(typeof(Library.Resource), IsApplication=false)]
+			// [assembly: ResourceDesignerAttribute("Library.Resource, Library", IsApplication=false)]
 			BuildLibraryWithResources (libraryPath, AndroidRuntime.MonoVM);
 
 			var task = CreateTask (path);
@@ -483,7 +484,7 @@ int xml myxml 0x7f140000
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 			var designer = File.ReadAllText (task.NetResgenOutputFile);
 			// The import generator can only emit this assignment if it decoded the
-			// typeof(Library.Resource) attribute argument back to "Library.Resource".
+			// assembly-qualified attribute argument back to "Library.Resource".
 			StringAssert.Contains ("global::Library.Resource.Animator.slide_in_bottom = global::Foo.Foo.Resource.Animator.slide_in_bottom;", designer);
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
@@ -517,6 +518,7 @@ int xml myxml 0x7f140000
 			task.UseManagedResourceGenerator = true;
 			task.DesignTimeBuild = true;
 			task.Namespace = "Foo.Foo";
+			task.AssemblyName = "Foo";
 			task.NetResgenOutputFile = Path.Combine (Root, path, "Resource.designer.cs");
 			task.ProjectDir = Path.Combine (Root, path);
 			task.ResourceDirectory = Path.Combine (Root, path, "res") + Path.DirectorySeparatorChar;
@@ -635,6 +637,7 @@ int xml myxml 0x7f140000
 			task.UseManagedResourceGenerator = true;
 			task.DesignTimeBuild = false;
 			task.Namespace = "MonoAndroidApplication4.MonoAndroidApplication4";
+			task.AssemblyName = "MonoAndroidApplication4";
 			task.NetResgenOutputFile = Path.Combine (Root, path, "Resource.designer.aapt2.cs");
 			task.ProjectDir = Path.Combine (Root, path);
 			task.CaseMapFile = Path.Combine (Root, path, "case_map.txt");
@@ -754,6 +757,7 @@ int styleable ElevenAttributes_attr10 10";
 			task.UseManagedResourceGenerator = true;
 			task.DesignTimeBuild = true;
 			task.Namespace = "Foo.Foo";
+			task.AssemblyName = "Foo";
 			task.NetResgenOutputFile = Path.Combine (Root, path, "Resource.designer.cs");
 			task.ProjectDir = Path.Combine (Root, path);
 			task.CaseMapFile = Path.Combine (Root, path, "case_map.txt");
