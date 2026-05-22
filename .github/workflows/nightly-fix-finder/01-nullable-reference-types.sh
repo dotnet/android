@@ -5,9 +5,15 @@ cat << 'GUIDANCE'
 ## Category: Files Missing #nullable enable
 
 ### What to look for
-C# files in `src/` without `#nullable enable` that are good candidates for
-opting in to nullable reference types. Prefer files in
-`src/Xamarin.Android.Build.Tasks/` as they follow clear patterns.
+C# files in shipped product code under `src/` without `#nullable enable` that
+are good candidates for opting in to nullable reference types. Prefer files in
+`src/Xamarin.Android.Build.Tasks/` (excluding its `Tests/` subtree) as they
+follow clear patterns.
+
+**Scope: shipped code only.** The scan deliberately excludes test
+infrastructure (`/Tests/`, `/Test/`, `*Test.cs`, `*Tests.cs`) because we don't
+spend cycles enabling NRT in non-shipped code. If you can't find a shipped-code
+candidate in the scan data, call `noop` — do NOT file an issue for a test file.
 
 ### ⚠️ CRITICAL — Check the owning csproj TargetFramework FIRST
 
@@ -51,7 +57,9 @@ echo "## Scan Data"
 CANDIDATES=$(grep -rL '#nullable enable' \
     --include='*.cs' \
     --exclude-dir=obj --exclude-dir=bin \
+    --exclude-dir=Tests --exclude-dir=Test --exclude-dir=tests \
     --exclude='*.generated.cs' --exclude='*.Designer.cs' \
+    --exclude='*Test.cs' --exclude='*Tests.cs' \
     src/ 2>/dev/null | shuf | head -20)
 
 echo "### C# files in src/ without #nullable enable (sample, with owning csproj TFM)"
@@ -86,9 +94,11 @@ else
     done <<< "$CANDIDATES"
 fi
 echo ""
-echo "### Total count of files missing #nullable enable"
+echo "### Total count of shipped-code files missing #nullable enable"
 grep -rL '#nullable enable' \
     --include='*.cs' \
     --exclude-dir=obj --exclude-dir=bin \
+    --exclude-dir=Tests --exclude-dir=Test --exclude-dir=tests \
     --exclude='*.generated.cs' --exclude='*.Designer.cs' \
+    --exclude='*Test.cs' --exclude='*Tests.cs' \
     src/ 2>/dev/null | wc -l || true
