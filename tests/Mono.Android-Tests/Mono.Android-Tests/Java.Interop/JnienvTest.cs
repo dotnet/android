@@ -43,6 +43,7 @@ namespace Java.InteropTests
 		[Test]
 		public void RegisterTypeOnNewNativeThread ()
 		{
+			Java.Lang.JavaSystem.LoadLibrary ("reuse-threads");
 			int ret = rt_register_type_on_new_thread ("from.NewNativeThreadOne", Application.Context.ClassLoader.Handle);
 			Assert.AreEqual (0, ret, $"Java type registration on a new thread failed with code {ret}");
 		}
@@ -76,6 +77,7 @@ namespace Java.InteropTests
 		[Test]
 		public void ThreadReuse ()
 		{
+			Java.Lang.JavaSystem.LoadLibrary ("reuse-threads");
 			CB cb = (env, instance) => {
 				Console.WriteLine ("CrossThreadObjectInteractions: JNIEnv.Handle={0} env={1}, instance={2}",
 						JNIEnv.Handle.ToString ("x"), env.ToString ("x"), instance.ToString ("x"));
