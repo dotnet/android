@@ -114,7 +114,7 @@ namespace Xamarin.Android.Tasks
 				if (!ProguardCommonXamarinConfiguration.IsNullOrWhiteSpace ()) {
 					using (var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration)) {
 						if (UseTrimmableNativeAotProguardConfiguration) {
-							WriteTrimmableNativeAotCommonConfiguration (xamcfg);
+							GetType ().Assembly.GetManifestResourceStream ("proguard_trimmable_nativeaot.cfg").CopyTo (xamcfg.BaseStream);
 						} else {
 							GetType ().Assembly.GetManifestResourceStream ("proguard_xamarin.cfg").CopyTo (xamcfg.BaseStream);
 						}
@@ -164,25 +164,6 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return responseFile;
-		}
-
-		static void WriteTrimmableNativeAotCommonConfiguration (TextWriter writer)
-		{
-			writer.WriteLine ("# Xamarin.Android NativeAOT trimmable typemap configuration.");
-			writer.WriteLine ();
-			writer.WriteLine ("-dontobfuscate");
-			writer.WriteLine ();
-			writer.WriteLine ("-keep class net.dot.jni.** { *; <init>(...); }");
-			writer.WriteLine ("-keep class net.dot.android.crypto.** { *; <init>(...); }");
-			writer.WriteLine ();
-			writer.WriteLine ("-keepclassmembers class * extends android.view.View {");
-			writer.WriteLine ("   *** set*(...);");
-			writer.WriteLine ("}");
-			writer.WriteLine ();
-			writer.WriteLine ("-keepclassmembers class * extends android.view.View {");
-			writer.WriteLine ("   <init>(android.content.Context,android.util.AttributeSet);");
-			writer.WriteLine ("   <init>(android.content.Context,android.util.AttributeSet,int);");
-			writer.WriteLine ("}");
 		}
 
 		// Note: We do not want to call the base.LogEventsFromTextOutput as it will incorrectly identify

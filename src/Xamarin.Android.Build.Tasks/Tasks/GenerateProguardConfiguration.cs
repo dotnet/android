@@ -13,6 +13,7 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "GPC";
 
+		[Required]
 		public ITaskItem[] LinkedAssemblies { get; set; } = [];
 
 		[Required]

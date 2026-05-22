@@ -51,9 +51,9 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		SortedSet<string> LoadJavaTypesFromAcwMap (HashSet<string> retainedTypeKeys)
+		List<string> LoadJavaTypesFromAcwMap (HashSet<string> retainedTypeKeys)
 		{
-			var javaTypes = new SortedSet<string> (StringComparer.Ordinal);
+			var javaTypes = new List<string> ();
 			foreach (var line in File.ReadLines (AcwMapFile)) {
 				var separator = line.IndexOf (';');
 				if (separator <= 0 || separator == line.Length - 1) {
@@ -61,7 +61,7 @@ namespace Xamarin.Android.Tasks
 				}
 				var managedTypeName = line.Substring (0, separator);
 				var javaTypeName = line.Substring (separator + 1);
-				if (retainedTypeKeys.Contains (managedTypeName)) {
+				if (retainedTypeKeys.Contains (managedTypeName) && !javaTypes.Contains (javaTypeName)) {
 					javaTypes.Add (javaTypeName);
 				}
 			}

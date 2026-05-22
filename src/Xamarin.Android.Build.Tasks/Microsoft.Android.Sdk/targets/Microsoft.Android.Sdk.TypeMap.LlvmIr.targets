@@ -400,32 +400,27 @@
   </Target>
 
   <!-- In the non-NativeAOT path, ResolvedFileToPublish is populated by the ILLink target
-       (via the SDK's ComputeResolvedFilesToPublishList), so linked-assembly ProGuard generation
-       runs after ILLink. -->
-  <Target Name="_PrepareLinkedAssembliesForProguard"
-      AfterTargets="ILLink"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' and '$(_AndroidRuntimePackRuntime)' != 'NativeAOT' ">
-    <ItemGroup>
-      <_LinkedAssemblyForProguard Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
-    </ItemGroup>
-  </Target>
-
-  <!-- In NativeAOT, ResolvedFileToPublish remains empty after ILLink because the ILC package's
+       (via the SDK's ComputeResolvedFilesToPublishList), so we run proguard generation after ILLink.
+       In NativeAOT, ResolvedFileToPublish remains empty after ILLink because the ILC package's
        _ComputeManagedAssemblyForILLink replaces ManagedAssemblyToLink after _LinkedResolvedFileToPublishCandidate
        is computed, so the ILLink target's ResolvedFileToPublish rewrite adds nothing.
-       Instead, _AndroidComputeIlcCompileInputs populates ResolvedFileToPublish. Trimmable NativeAOT
-       generates its ProGuard configuration from ILC DGML in Microsoft.Android.Sdk.TypeMap.Trimmable.NativeAOT.targets. -->
-  <Target Name="_PrepareNativeAotLinkedAssembliesForProguard"
-      AfterTargets="_AndroidComputeIlcCompileInputs"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' and '$(_AndroidRuntimePackRuntime)' == 'NativeAOT' and '$(_AndroidTypeMapImplementation)' != 'trimmable' ">
+       Instead, _AndroidComputeIlcCompileInputs populates ResolvedFileToPublish, so NativeAOT.targets
+       sets _GenerateProguardAfterTargets to run these targets after that. -->
+  <PropertyGroup>
+    <_GenerateProguardAfterTargets Condition=" '$(_GenerateProguardAfterTargets)' == '' ">ILLink</_GenerateProguardAfterTargets>
+  </PropertyGroup>
+
+  <Target Name="_PrepareLinkedAssembliesForProguard"
+      AfterTargets="$(_GenerateProguardAfterTargets)"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' ">
     <ItemGroup>
       <_LinkedAssemblyForProguard Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
     </ItemGroup>
   </Target>
 
   <Target Name="_GenerateProguardConfiguration"
-      AfterTargets="_PrepareLinkedAssembliesForProguard;_PrepareNativeAotLinkedAssembliesForProguard"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' and '@(_LinkedAssemblyForProguard)' != '' "
+      AfterTargets="_PrepareLinkedAssembliesForProguard"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
       Inputs="@(_LinkedAssemblyForProguard)"
       Outputs="$(_ProguardProjectConfiguration)">
     <GenerateProguardConfiguration

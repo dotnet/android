@@ -36,7 +36,7 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="_GenerateTrimmableNativeAotProguardConfiguration"
+  <Target Name="_GenerateTrimmableTypeMapProguardConfiguration"
       AfterTargets="IlcCompile"
       BeforeTargets="_CompileToDalvik"
       Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
@@ -48,8 +48,6 @@
         OutputFile="$(_ProguardProjectConfiguration)" />
     <ItemGroup>
       <FileWrites Include="$(_ProguardProjectConfiguration)" />
-      <FileWrites Include="$(NativeIntermediateOutputPath)$(TargetName).scan.dgml.xml" />
-      <FileWrites Include="$(NativeIntermediateOutputPath)$(TargetName).codegen.dgml.xml" />
     </ItemGroup>
   </Target>
 
