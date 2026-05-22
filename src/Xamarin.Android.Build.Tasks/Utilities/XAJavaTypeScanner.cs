@@ -105,8 +105,10 @@ class XAJavaTypeScanner
 
 	public void AddJavaType (TypeDefinition type, List<TypeDefinition> types)
 	{
-		ArgumentNullException.ThrowIfNull (type);
-		ArgumentNullException.ThrowIfNull (types);
+		if (type == null)
+			throw new ArgumentNullException (nameof (type));
+		if (types == null)
+			throw new ArgumentNullException (nameof (types));
 
 		if (type.HasJavaPeer (cache)) {
 			// For subclasses of e.g. Android.App.Activity.
