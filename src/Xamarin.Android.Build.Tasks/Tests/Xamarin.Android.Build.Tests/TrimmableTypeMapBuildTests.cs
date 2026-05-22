@@ -394,5 +394,32 @@ namespace UnnamedProject {
 				"assembly or the user's [Export] source. Offending warning lines:\n  " +
 				string.Join ("\n  ", offending));
 		}
+
+		[Test]
+		public void Build_WithTrimmableTypeMap_AbstractTypeWithProtectedCtor_Succeeds ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.Sources.Add (new BuildItem.Source ("AbstractProvider.cs") {
+				TextContent = () => @"
+namespace UnnamedProject {
+	public abstract class AbstractProvider : Java.Lang.Object {
+		protected AbstractProvider (Android.Content.Context context) { }
+		public abstract string GetData ();
+	}
+
+	public class ConcreteProvider : AbstractProvider {
+		public ConcreteProvider (Android.Content.Context context) : base (context) { }
+		public override string GetData () => ""hello"";
+	}
+}"
+			});
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded — abstract types with protected ctors should not cause XAGTT7009.");
+		}
 	}
 }
