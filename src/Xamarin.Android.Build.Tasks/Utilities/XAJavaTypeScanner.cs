@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -90,7 +91,7 @@ class XAJavaTypeScanner
 		}
 
 		string? hasMonoAndroidReferenceMetadata = assembly.GetMetadata ("HasMonoAndroidReference");
-		if (String.IsNullOrEmpty (hasMonoAndroidReferenceMetadata)) {
+		if (hasMonoAndroidReferenceMetadata.IsNullOrEmpty ()) {
 			return true; // Just in case - the metadata missing might be a false negative
 		}
 
@@ -104,6 +105,9 @@ class XAJavaTypeScanner
 
 	public void AddJavaType (TypeDefinition type, List<TypeDefinition> types)
 	{
+		ArgumentNullException.ThrowIfNull (type);
+		ArgumentNullException.ThrowIfNull (types);
+
 		if (type.HasJavaPeer (cache)) {
 			// For subclasses of e.g. Android.App.Activity.
 			types.Add (type);
