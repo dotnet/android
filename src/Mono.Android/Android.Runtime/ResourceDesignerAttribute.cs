@@ -7,60 +7,52 @@ namespace Android.Runtime
 	[AttributeUsage (AttributeTargets.Assembly)]
 	public class ResourceDesignerAttribute : Attribute
 	{
-		const string UseResourceTypeConstructor = "Resource designer lookup by name requires unreferenced code. Use ResourceDesignerAttribute(Type) instead.";
-
-		IResourceTypeProvider provider;
-
-		public ResourceDesignerAttribute (
-			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
-			Type resourceType)
-		{
-			provider = new TypeResourceTypeProvider (resourceType);
-		}
-
-		// Legacy bindings can pass namespace-qualified names such as "Xamarin.Kotlin.Resource",
-		// so the string value cannot satisfy DynamicallyAccessedMembers unless it is assembly-qualified.
-		[RequiresUnreferencedCode (UseResourceTypeConstructor)]
 		public ResourceDesignerAttribute (
 				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
 				string fullName)
 		{
-			provider = new StringResourceTypeProvider (fullName);
+			FullName = fullName;
 		}
 
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
 		public string FullName
 		{
-			get => provider.FullName;
-			[RequiresUnreferencedCode (UseResourceTypeConstructor)]
-			set => provider = new StringResourceTypeProvider (value);
+			get;
+			set
+			{
+				resourceType = null;
+				field = value;
+			}
 		}
+
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
+		private Type? resourceType;
 
 		[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
-		internal Type? GetResourceTypeFromAssembly (Assembly assembly) => provider.GetResourceTypeFromAssembly (assembly);
-
-		public bool IsApplication { get; set; }
-
-		private interface IResourceTypeProvider
+		internal Type? GetResourceTypeFromAssembly (Assembly assembly)
 		{
-			[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
-			Type? GetResourceTypeFromAssembly (Assembly assembly);
-			string FullName { get; }
-		}
+			resourceType ??= Type.GetType (FullName, throwOnError: false);
+			if (resourceType is not null)
+			{
+				if (resourceType.Assembly == assembly) {
+					return resourceType;
+				} else {
+					return null; // no need to fallback to the assembly lookup if the type is found but in a different assembly
+				}
+			}
 
-		private sealed class TypeResourceTypeProvider([DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)] Type resourceType) : IResourceTypeProvider
-		{
+			// Fallback for when the type name is not an assembly-qualified name. If an AQN is passed to the constructor,
+			// the trimmer will report the following warning:
+			//
+			//   warning IL2122: Type 'XYZ' is not assembly qualified. Type name strings used for dynamically accessing a type should be assembly qualified
+			//
+			// Since there is already a build warning, we can suppress the fallback warning.
+			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Fallback for non-assembly-qualified type names. Warning is already emitted for non-AQN type names used in the constructor.")]
+			[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "Fallback for non-assembly-qualified type names. Warning is already emitted for non-AQN type names used in the constructor.")]
 			[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
-			public Type? GetResourceTypeFromAssembly (Assembly assembly) => assembly == resourceType.Assembly ? resourceType : null;
-			public string FullName => resourceType.FullName ?? resourceType.Name;
-		}
+			static Type? FallbackAssemblyGetType (Assembly a, string name) => a.GetType (name);
 
-		[RequiresUnreferencedCode (UseResourceTypeConstructor)]
-		private sealed class StringResourceTypeProvider(string fullName) : IResourceTypeProvider
-		{
-			[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
-			public Type? GetResourceTypeFromAssembly (Assembly assembly) => assembly.GetType (fullName);
-
-			public string FullName => fullName;
+			return FallbackAssemblyGetType (assembly, FullName);
 		}
 	}
 }
