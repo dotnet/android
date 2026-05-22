@@ -538,6 +538,9 @@ namespace Xamarin.Android.Build.Tests
 					Environment.GetEnvironmentVariable ("RUNNINGONCI");
 				if (runningOnCI == "true") {
 					Console.WriteLine ("CodeBehindTests: using NativeAOT and running on CI, disabling warnings.");
+					// Transitive AndroidX bindings can still reference ResourceDesignerAttribute(string);
+					// this is expected until those libraries rebuild with the Type constructor.
+					noWarn.Add ("IL2026");
 					noWarn.Add ("IL2091");
 					noWarn.Add ("IL2104");
 					noWarn.Add ("IL3053");

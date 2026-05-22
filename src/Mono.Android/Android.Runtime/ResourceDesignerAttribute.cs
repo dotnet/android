@@ -18,6 +18,8 @@ namespace Android.Runtime
 			provider = new TypeResourceTypeProvider (resourceType);
 		}
 
+		// Legacy bindings can pass namespace-qualified names such as "Xamarin.Kotlin.Resource",
+		// so the string value cannot satisfy DynamicallyAccessedMembers unless it is assembly-qualified.
 		[RequiresUnreferencedCode (UseResourceTypeConstructor)]
 		public ResourceDesignerAttribute (
 				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
