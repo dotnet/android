@@ -31,7 +31,7 @@
     <!-- TODO: https://github.com/dotnet/android/issues/10069 -->
     <ExcludeCategories Condition=" '$(UseMonoRuntime)' != 'true' and '$(_AndroidTypeMapImplementation)' != 'trimmable' ">$(ExcludeCategories):CoreCLRIgnore:NTLM</ExcludeCategories>
     <!-- TODO: https://github.com/dotnet/android/issues/10079 -->
-    <ExcludeCategories Condition=" '$(PublishAot)' == 'true' ">$(ExcludeCategories):NativeAOTIgnore:SSL:NTLM:AndroidClientHandler:Export:NativeTypeMap</ExcludeCategories>
+    <ExcludeCategories Condition=" '$(PublishAot)' == 'true' ">$(ExcludeCategories):NativeAOTIgnore:SSL:NTLM:Export:NativeTypeMap</ExcludeCategories>
     <!-- FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190 -->
     <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):LLVMIgnore</ExcludeCategories>
     <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):InetAccess:NetworkInterfaces</ExcludeCategories>
@@ -94,7 +94,6 @@
     <Compile Include="Android.Graphics\NinePatchTests.cs" />
     <Compile Include="Android.OS\BundleTest.cs" />
     <Compile Include="Android.OS\HandlerTest.cs" />
-    <Compile Include="Android.Runtime\AndroidEnvironmentTest.cs" />
     <Compile Include="Android.Runtime\CharSequenceTest.cs" />
     <Compile Include="Android.Runtime\InputStreamInvokerTest.cs" />
     <Compile Include="Android.Runtime\JavaCollectionTest.cs" />
@@ -137,10 +136,10 @@
     <Compile Include="System.Text.Json\JsonSerializerTest.cs" />
     <Compile Include="System.Threading\InterlockedTest.cs" />
     <Compile Include="System.Xml\XmlSerializer.cs" />
-    <Compile Include="Xamarin.Android.Net\AndroidClientHandlerTests.cs" />
+    <Compile Include="Xamarin.Android.Net\AndroidHandlerTestBase.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerTests.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerNegotiateAuthenticationTests.cs" />
-    <Compile Include="Xamarin.Android.Net\HttpClientIntegrationTests.cs" />
+    <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerIntegrationTests.cs" />
     <Compile Include="Xamarin.Android.Net\TrustManagerMarshallingTests.cs" />
     <Compile Include="Xamarin.Android.RuntimeTests\MainActivity.cs" />
     <Compile Include="Xamarin.Android.RuntimeTests\MyIntent.cs" />

@@ -124,19 +124,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void DetectsHttpMessageHandler ()
-		{
-			var envFile = CreateEnvFile ("XA_HTTP_CLIENT_HANDLER_TYPE=Xamarin.Android.Net.AndroidClientHandler");
-			var parser = new EnvironmentFilesParser ();
-			var engine = new MockBuildEngine (TestContext.Out);
-			var log = new TaskLoggingHelper (engine, "Test");
-
-			parser.Parse (new [] { envFile }, SequencePointsMode.None, log);
-
-			Assert.IsTrue (parser.HaveHttpMessageHandler, "HaveHttpMessageHandler should be true");
-		}
-
-		[Test]
 		public void AssemblyPreload_SetsFlag_AndExcludesLine ()
 		{
 			var envFile = CreateEnvFile ("mono.enable_assembly_preload=1");
