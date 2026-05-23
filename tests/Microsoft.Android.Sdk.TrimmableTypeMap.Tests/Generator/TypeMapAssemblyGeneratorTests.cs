@@ -1000,6 +1000,40 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.Contains (MetadataTokens.GetToken (baseUcoHandle), ReadLdftnTokens (ilBytes));
 	}
 
+	[Fact]
+	public void Generate_InheritedVirtualOverride_BaseProxyLater_RegisterNativesUsesBaseUcoMethod ()
+	{
+		var derivedPeer = MakeInheritedOverridePeer ("aaa/app/Concrete", "MyApp.Concrete");
+		var basePeer = MakeAcwPeer ("zzz/app/AbstractBase", "MyApp.AbstractBase", "App") with {
+			MarshalMethods = [
+				new MarshalMethodInfo {
+					JniName = "<init>", NativeCallbackName = "n_ctor",
+					JniSignature = "()V", ManagedMethodName = ".ctor",
+					IsConstructor = true,
+				},
+				new MarshalMethodInfo {
+					JniName = "doWork", NativeCallbackName = "n_DoWork",
+					JniSignature = "()V", ManagedMethodName = "DoWork",
+				},
+			],
+		};
+
+		using var stream = GenerateAssembly ([derivedPeer, basePeer], "InheritedOverrideUcoBaseLater");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var baseProxy = FindProxyType (reader, "MyApp_AbstractBase_Proxy");
+		var derivedProxy = FindProxyType (reader, "MyApp_Concrete_Proxy");
+		var baseUcoHandle = FindMethodDefinition (reader, baseProxy, "n_doWork_uco_0");
+		Assert.Empty (FindMethodDefinitions (reader, derivedProxy, "n_doWork_uco_0"));
+
+		var derivedRegisterNatives = reader.GetMethodDefinition (FindMethodDefinition (reader, derivedProxy, "RegisterNatives"));
+		var body = pe.GetMethodBody (derivedRegisterNatives.RelativeVirtualAddress);
+		var ilBytes = body.GetILBytes ();
+		Assert.NotNull (ilBytes);
+		Assert.Contains (MetadataTokens.GetToken (baseUcoHandle), ReadLdftnTokens (ilBytes));
+	}
+
 	static MemberReference FindCallbackMemberRef (MetadataReader reader, string methodName)
 	{
 		var refs = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))

@@ -206,7 +206,7 @@ sealed class TypeMapAssemblyEmitter
 		// Track wrapper targets → handles for RegisterNatives.
 		var wrapperHandles = new Dictionary<UcoWrapperTargetData, MethodDefinitionHandle> ();
 
-		foreach (var proxy in model.ProxyTypes) {
+		foreach (var proxy in OrderProxiesForWrapperTargets (model.ProxyTypes)) {
 			EmitProxyType (proxy, wrapperHandles);
 		}
 
@@ -223,6 +223,52 @@ sealed class TypeMapAssemblyEmitter
 		}
 
 		_pe.EmitIgnoresAccessChecksToAttribute (model.IgnoresAccessChecksTo);
+	}
+
+	static List<JavaPeerProxyData> OrderProxiesForWrapperTargets (IReadOnlyList<JavaPeerProxyData> proxies)
+	{
+		var proxyByType = new Dictionary<(string Namespace, string TypeName), JavaPeerProxyData> ();
+		foreach (var proxy in proxies) {
+			proxyByType [(proxy.Namespace, proxy.TypeName)] = proxy;
+		}
+
+		var ordered = new List<JavaPeerProxyData> (proxies.Count);
+		var states = new Dictionary<JavaPeerProxyData, int> ();
+
+		foreach (var proxy in proxies) {
+			Visit (proxy);
+		}
+
+		return ordered;
+
+		void Visit (JavaPeerProxyData proxy)
+		{
+			if (states.TryGetValue (proxy, out int state)) {
+				if (state == 2) {
+					return;
+				}
+
+				// A cycle would indicate invalid wrapper-target data. Avoid recursing
+				// forever and keep the original relative order for the cyclic edge.
+				return;
+			}
+
+			states [proxy] = 1;
+
+			foreach (var registration in proxy.NativeRegistrations) {
+				var target = registration.WrapperTarget;
+				if (target.TypeNamespace == proxy.Namespace && target.TypeName == proxy.TypeName) {
+					continue;
+				}
+
+				if (proxyByType.TryGetValue ((target.TypeNamespace, target.TypeName), out var targetProxy)) {
+					Visit (targetProxy);
+				}
+			}
+
+			states [proxy] = 2;
+			ordered.Add (proxy);
+		}
 	}
 
 	void EmitTypeReferences ()
