@@ -135,8 +135,8 @@ namespace UnnamedProject
 
 		protected UcoOverrideBase (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 
-		[Register (""doWork"", ""()I"", """")]
-		public abstract int DoWork ();
+		[Register (""hashCode"", ""()I"", """")]
+		public abstract override int GetHashCode ();
 	}
 
 	[Register (""my/app/UcoOverrideOne"")]
@@ -152,7 +152,7 @@ namespace UnnamedProject
 
 		protected UcoOverrideOne (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 
-		public override int DoWork ()
+		public override int GetHashCode ()
 		{
 			Calls++;
 			return value + 100;
@@ -172,7 +172,7 @@ namespace UnnamedProject
 
 		protected UcoOverrideTwo (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 
-		public override int DoWork ()
+		public override int GetHashCode ()
 		{
 			Calls++;
 			return value + 200;
@@ -188,8 +188,8 @@ namespace UnnamedProject
 
 		protected UcoOverrideHiddenBase (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 
-		[Register (""doHiddenWork"", ""()I"", """")]
-		public virtual int DoHiddenWork ()
+		[Register (""hashCode"", ""()I"", """")]
+		public override int GetHashCode ()
 		{
 			Calls++;
 			return 300;
@@ -204,8 +204,8 @@ namespace UnnamedProject
 		protected UcoOverrideHiddenIntermediate (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 
 		// Deliberately hide the base virtual slot while reusing the same JNI signature.
-		[Register (""doHiddenWork"", ""()I"", """")]
-		public new virtual int DoHiddenWork ()
+		[Register (""hashCode"", ""()I"", """")]
+		public new virtual int GetHashCode ()
 		{
 			return 400;
 		}
@@ -224,8 +224,8 @@ namespace UnnamedProject
 
 		protected UcoOverrideHiddenLeaf (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 
-		[Register (""doHiddenWork"", ""()I"", """")]
-		public override int DoHiddenWork ()
+		[Register (""hashCode"", ""()I"", """")]
+		public override int GetHashCode ()
 		{
 			Calls++;
 			return value + 400;
@@ -250,12 +250,12 @@ if (oneResult != 107 || twoResult != 211 || UcoOverrideOne.Calls != 1 || UcoOver
 
 static int InvokeDoWork (Java.Lang.Object instance)
 {
-	return InvokeIntMethod (instance, ""doWork"");
+	return InvokeIntMethod (instance, ""hashCode"");
 }
 
 static int InvokeDoHiddenWork (Java.Lang.Object instance)
 {
-	return InvokeIntMethod (instance, ""doHiddenWork"");
+	return InvokeIntMethod (instance, ""hashCode"");
 }
 
 static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
