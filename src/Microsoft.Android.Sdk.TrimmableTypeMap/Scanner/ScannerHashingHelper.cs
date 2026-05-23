@@ -13,7 +13,7 @@ internal static class ScannerHashingHelper
 		int byteCount = GetNamespaceAssemblyUtf8ByteCount (ns, assemblyName);
 		byte[] rented = ArrayPool<byte>.Shared.Rent (byteCount);
 		try {
-			int bytesWritten = GetNamespaceAssemblyUtf8Bytes (ns, assemblyName, rented.AsSpan (0, byteCount));
+			int bytesWritten = GetNamespaceAssemblyUtf8Bytes (ns, assemblyName, rented);
 			ulong crc = ulong.MaxValue;
 			ulong length = 0;
 			Crc64Helper.HashCore (rented, 0, bytesWritten, ref crc, ref length);
@@ -27,18 +27,18 @@ internal static class ScannerHashingHelper
 
 	internal static string ToCrc64 (string ns, string assemblyName)
 	{
-		const int stackallocThresholdBytes = 256;
 		int byteCount = GetNamespaceAssemblyUtf8ByteCount (ns, assemblyName);
-		Span<byte> utf8Buffer = byteCount <= stackallocThresholdBytes
-			? stackalloc byte [stackallocThresholdBytes]
-			: new byte [byteCount];
-
-		int bytesWritten = GetNamespaceAssemblyUtf8Bytes (ns, assemblyName, utf8Buffer.Slice (0, byteCount));
-		Span<byte> hash = stackalloc byte [8];
-		System.IO.Hashing.Crc64.Hash (utf8Buffer.Slice (0, bytesWritten), hash);
-		ulong hashValue = BinaryPrimitives.ReadUInt64LittleEndian (hash);
-		BinaryPrimitives.WriteUInt64LittleEndian (hash, hashValue ^ (ulong) bytesWritten);
-		return ToHexString (hash);
+		byte[] rented = ArrayPool<byte>.Shared.Rent (byteCount);
+		try {
+			int bytesWritten = GetNamespaceAssemblyUtf8Bytes (ns, assemblyName, rented);
+			Span<byte> hash = stackalloc byte [8];
+			System.IO.Hashing.Crc64.Hash (rented.AsSpan (0, bytesWritten), hash);
+			ulong hashValue = BinaryPrimitives.ReadUInt64LittleEndian (hash);
+			BinaryPrimitives.WriteUInt64LittleEndian (hash, hashValue ^ (ulong) bytesWritten);
+			return ToHexString (hash);
+		} finally {
+			ArrayPool<byte>.Shared.Return (rented);
+		}
 	}
 
 	static int GetNamespaceAssemblyUtf8ByteCount (string ns, string assemblyName)
@@ -46,17 +46,13 @@ internal static class ScannerHashingHelper
 		return System.Text.Encoding.UTF8.GetByteCount (ns) + 1 + System.Text.Encoding.UTF8.GetByteCount (assemblyName);
 	}
 
-	static int GetNamespaceAssemblyUtf8Bytes (string ns, string assemblyName, Span<byte> destination)
+	static int GetNamespaceAssemblyUtf8Bytes (string ns, string assemblyName, byte[] destination)
 	{
-		byte[] nsBytes = Encoding.UTF8.GetBytes (ns);
-		nsBytes.AsSpan ().CopyTo (destination);
-		int bytesWritten = nsBytes.Length;
+		int bytesWritten = Encoding.UTF8.GetBytes (ns, 0, ns.Length, destination, 0);
 
 		destination [bytesWritten++] = (byte) ':';
 
-		byte[] assemblyNameBytes = Encoding.UTF8.GetBytes (assemblyName);
-		assemblyNameBytes.AsSpan ().CopyTo (destination.Slice (bytesWritten));
-		bytesWritten += assemblyNameBytes.Length;
+		bytesWritten += Encoding.UTF8.GetBytes (assemblyName, 0, assemblyName.Length, destination, bytesWritten);
 
 		return bytesWritten;
 	}
