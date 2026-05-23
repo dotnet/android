@@ -62,7 +62,10 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 ///         JniNativeMethod* methods = stackalloc JniNativeMethod[2];
 ///         methods[0] = new JniNativeMethod(&amp;__utf8_0, &amp;__utf8_1, &amp;n_OnCreate_uco_0);
 ///         methods[1] = new JniNativeMethod(&amp;__utf8_2, &amp;__utf8_3, &amp;nctor_0_uco);
-///         JniEnvironment.Types.RegisterNatives(jniType.PeerReference, new ReadOnlySpan&lt;JniNativeMethod&gt;(methods, 2));
+///         unsafe {
+///             // SAFETY: methods points to the stackalloc buffer filled above; the UTF-8 fields and UCO entry points are module-lifetime data.
+///             JniEnvironment.Types.RegisterNatives(jniType.PeerReference, new ReadOnlySpan&lt;JniNativeMethod&gt;(methods, 2));
+///         }
 ///     }
 /// }
 ///

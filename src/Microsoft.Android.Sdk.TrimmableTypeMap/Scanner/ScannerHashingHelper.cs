@@ -1,6 +1,7 @@
 using System;
 using System.Buffers;
 using System.Buffers.Binary;
+using System.Text;
 using Java.Interop.Tools.JavaCallableWrappers;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
@@ -45,20 +46,17 @@ internal static class ScannerHashingHelper
 		return System.Text.Encoding.UTF8.GetByteCount (ns) + 1 + System.Text.Encoding.UTF8.GetByteCount (assemblyName);
 	}
 
-	static unsafe int GetNamespaceAssemblyUtf8Bytes (string ns, string assemblyName, Span<byte> destination)
+	static int GetNamespaceAssemblyUtf8Bytes (string ns, string assemblyName, Span<byte> destination)
 	{
-		int bytesWritten = 0;
-		fixed (char* nsPtr = ns)
-		fixed (byte* destinationPtr = destination) {
-			bytesWritten += System.Text.Encoding.UTF8.GetBytes (nsPtr, ns.Length, destinationPtr, destination.Length);
-		}
+		byte[] nsBytes = Encoding.UTF8.GetBytes (ns);
+		nsBytes.AsSpan ().CopyTo (destination);
+		int bytesWritten = nsBytes.Length;
 
 		destination [bytesWritten++] = (byte) ':';
 
-		fixed (char* assemblyNamePtr = assemblyName)
-		fixed (byte* destinationPtr = destination) {
-			bytesWritten += System.Text.Encoding.UTF8.GetBytes (assemblyNamePtr, assemblyName.Length, destinationPtr + bytesWritten, destination.Length - bytesWritten);
-		}
+		byte[] assemblyNameBytes = Encoding.UTF8.GetBytes (assemblyName);
+		assemblyNameBytes.AsSpan ().CopyTo (destination.Slice (bytesWritten));
+		bytesWritten += assemblyNameBytes.Length;
 
 		return bytesWritten;
 	}
