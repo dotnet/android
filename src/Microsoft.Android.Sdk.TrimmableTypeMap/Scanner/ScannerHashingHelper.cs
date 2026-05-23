@@ -59,10 +59,10 @@ internal static class ScannerHashingHelper
 	/// </safety>
 	static unsafe int GetNamespaceAssemblyUtf8Bytes (string ns, string assemblyName, Span<byte> destination)
 	{
-		int bytesWritten = 0;
+		int bytesWritten;
 		fixed (char* nsPtr = ns)
 		fixed (byte* destinationPtr = destination) {
-			bytesWritten += System.Text.Encoding.UTF8.GetBytes (nsPtr, ns.Length, destinationPtr, destination.Length);
+			bytesWritten = System.Text.Encoding.UTF8.GetBytes (nsPtr, ns.Length, destinationPtr, destination.Length);
 		}
 
 		destination [bytesWritten++] = (byte) ':';
