@@ -1148,8 +1148,8 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		var leafProxy = FindProxyType (reader, "MyApp_Leaf_Proxy");
 		var rootBaseUcoHandle = FindMethodDefinition (reader, rootBaseProxy, "n_doWork_uco_0");
 		var leafUcoHandle = FindMethodDefinition (reader, leafProxy, "n_doWork_uco_0");
-		var rootBaseCallback = FindCallbackMemberRef (reader, "n_DoWork", "MyApp", "RootBase");
-		var intermediateCallback = FindCallbackMemberRef (reader, "n_DoWork", "MyApp", "HiddenIntermediate");
+		var rootBaseCallback = FindCallbackMemberRefHandle (reader, "n_DoWork", "MyApp", "RootBase");
+		var intermediateCallback = FindCallbackMemberRefHandle (reader, "n_DoWork", "MyApp", "HiddenIntermediate");
 
 		var leafUco = reader.GetMethodDefinition (leafUcoHandle);
 		var leafUcoBody = pe.GetMethodBody (leafUco.RelativeVirtualAddress);
@@ -1178,7 +1178,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		return refs [0];
 	}
 
-	static MemberReferenceHandle FindCallbackMemberRef (MetadataReader reader, string methodName, string parentNamespace, string parentName)
+	static MemberReferenceHandle FindCallbackMemberRefHandle (MetadataReader reader, string methodName, string parentNamespace, string parentName)
 	{
 		var refs = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
 			.Select (MetadataTokens.MemberReferenceHandle)
@@ -1218,25 +1218,19 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 	static List<int> ReadLdftnTokens (byte [] ilBytes)
 	{
-		var tokens = new List<int> ();
-		for (int i = 0; i < ilBytes.Length - 5; i++) {
-			if (ilBytes [i] != 0xFE || ilBytes [i + 1] != 0x06) {
-				continue;
-			}
-
-			tokens.Add (ilBytes [i + 2] |
-				(ilBytes [i + 3] << 8) |
-				(ilBytes [i + 4] << 16) |
-				(ilBytes [i + 5] << 24));
-		}
-		return tokens;
+		return ReadInlineMethodTokens (ilBytes, 0xFE, 0x06);
 	}
 
 	static List<int> ReadCallTokens (byte [] ilBytes)
 	{
+		return ReadInlineMethodTokens (ilBytes, 0x28);
+	}
+
+	static List<int> ReadInlineMethodTokens (byte [] ilBytes, byte opcode)
+	{
 		var tokens = new List<int> ();
 		for (int i = 0; i < ilBytes.Length - 4; i++) {
-			if (ilBytes [i] != 0x28) {
+			if (ilBytes [i] != opcode) {
 				continue;
 			}
 
@@ -1244,6 +1238,22 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 				(ilBytes [i + 2] << 8) |
 				(ilBytes [i + 3] << 16) |
 				(ilBytes [i + 4] << 24));
+		}
+		return tokens;
+	}
+
+	static List<int> ReadInlineMethodTokens (byte [] ilBytes, byte opcodePrefix, byte opcode)
+	{
+		var tokens = new List<int> ();
+		for (int i = 0; i < ilBytes.Length - 5; i++) {
+			if (ilBytes [i] != opcodePrefix || ilBytes [i + 1] != opcode) {
+				continue;
+			}
+
+			tokens.Add (ilBytes [i + 2] |
+				(ilBytes [i + 3] << 8) |
+				(ilBytes [i + 4] << 16) |
+				(ilBytes [i + 5] << 24));
 		}
 		return tokens;
 	}
