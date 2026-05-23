@@ -1390,6 +1390,39 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
+		public void Build_InheritedVirtualOverride_ThroughIntermediate_ReuseRootBaseUcoMethod ()
+		{
+			var rootBase = MakeAcwPeer ("my/app/C", "MyApp.C", "App") with {
+				MarshalMethods = [
+					new MarshalMethodInfo {
+						JniName = "<init>", NativeCallbackName = "n_ctor",
+						JniSignature = "()V", ManagedMethodName = ".ctor",
+						IsConstructor = true,
+					},
+					new MarshalMethodInfo {
+						JniName = "doWork", NativeCallbackName = "n_DoWork",
+						JniSignature = "()V", ManagedMethodName = "DoWork",
+					},
+				],
+			};
+			var intermediate = MakeAcwPeer ("my/app/B", "MyApp.B", "App");
+			var leaf = MakeInheritedOverridePeer ("my/app/A", "MyApp.A", declaringTypeName: "MyApp.C");
+
+			var model = BuildModel ([leaf, intermediate, rootBase]);
+			var rootBaseProxy = model.ProxyTypes.Single (p => p.TargetType.ManagedTypeName == "MyApp.C");
+			var intermediateProxy = model.ProxyTypes.Single (p => p.TargetType.ManagedTypeName == "MyApp.B");
+			var leafProxy = model.ProxyTypes.Single (p => p.TargetType.ManagedTypeName == "MyApp.A");
+
+			Assert.Single (rootBaseProxy.UcoMethods);
+			Assert.Empty (intermediateProxy.UcoMethods);
+			Assert.Empty (leafProxy.UcoMethods);
+
+			var rootBaseRegistration = rootBaseProxy.NativeRegistrations.Single (r => r.JniMethodName == "n_DoWork");
+			var leafRegistration = leafProxy.NativeRegistrations.Single (r => r.JniMethodName == "n_DoWork");
+			Assert.Equal (rootBaseRegistration.WrapperTarget, leafRegistration.WrapperTarget);
+		}
+
+		[Fact]
 		public void Build_InheritedVirtualOverride_TargetUnavailable_FallsBackToLocalUcoMethod ()
 		{
 			var derived = MakeInheritedOverridePeer ("my/app/Concrete", "MyApp.Concrete");
@@ -1437,7 +1470,8 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		static JavaPeerInfo MakeInheritedOverridePeer (string jniName, string managedName,
-			string jniSignature = "()V", bool isExport = false, bool isGeneric = false)
+			string jniSignature = "()V", bool isExport = false, bool isGeneric = false,
+			string declaringTypeName = "MyApp.AbstractBase")
 		{
 			return MakeAcwPeer (jniName, managedName, "App") with {
 				IsGenericDefinition = isGeneric,
@@ -1450,7 +1484,7 @@ public class ModelBuilderTests : FixtureTestBase
 					new MarshalMethodInfo {
 						JniName = "doWork", NativeCallbackName = "n_DoWork",
 						JniSignature = jniSignature, ManagedMethodName = "DoWork",
-						DeclaringTypeName = "MyApp.AbstractBase",
+						DeclaringTypeName = declaringTypeName,
 						DeclaringAssemblyName = "App",
 						IsExport = isExport,
 					},

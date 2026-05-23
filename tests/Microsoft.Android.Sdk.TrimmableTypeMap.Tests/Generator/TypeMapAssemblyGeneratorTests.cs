@@ -1034,6 +1034,43 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.Contains (MetadataTokens.GetToken (baseUcoHandle), ReadLdftnTokens (ilBytes));
 	}
 
+	[Fact]
+	public void Generate_InheritedVirtualOverride_ThroughIntermediate_RegisterNativesUsesRootBaseUcoMethod ()
+	{
+		var rootBasePeer = MakeAcwPeer ("my/app/C", "MyApp.C", "App") with {
+			MarshalMethods = [
+				new MarshalMethodInfo {
+					JniName = "<init>", NativeCallbackName = "n_ctor",
+					JniSignature = "()V", ManagedMethodName = ".ctor",
+					IsConstructor = true,
+				},
+				new MarshalMethodInfo {
+					JniName = "doWork", NativeCallbackName = "n_DoWork",
+					JniSignature = "()V", ManagedMethodName = "DoWork",
+				},
+			],
+		};
+		var intermediatePeer = MakeAcwPeer ("my/app/B", "MyApp.B", "App");
+		var leafPeer = MakeInheritedOverridePeer ("my/app/A", "MyApp.A", declaringTypeName: "MyApp.C");
+
+		using var stream = GenerateAssembly ([leafPeer, intermediatePeer, rootBasePeer], "InheritedOverrideUcoIntermediate");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var rootBaseProxy = FindProxyType (reader, "MyApp_C_Proxy");
+		var intermediateProxy = FindProxyType (reader, "MyApp_B_Proxy");
+		var leafProxy = FindProxyType (reader, "MyApp_A_Proxy");
+		var rootBaseUcoHandle = FindMethodDefinition (reader, rootBaseProxy, "n_doWork_uco_0");
+		Assert.Empty (FindMethodDefinitions (reader, intermediateProxy, "n_doWork_uco_0"));
+		Assert.Empty (FindMethodDefinitions (reader, leafProxy, "n_doWork_uco_0"));
+
+		var leafRegisterNatives = reader.GetMethodDefinition (FindMethodDefinition (reader, leafProxy, "RegisterNatives"));
+		var body = pe.GetMethodBody (leafRegisterNatives.RelativeVirtualAddress);
+		var ilBytes = body.GetILBytes ();
+		Assert.NotNull (ilBytes);
+		Assert.Contains (MetadataTokens.GetToken (rootBaseUcoHandle), ReadLdftnTokens (ilBytes));
+	}
+
 	static MemberReference FindCallbackMemberRef (MetadataReader reader, string methodName)
 	{
 		var refs = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
@@ -1081,7 +1118,8 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		return tokens;
 	}
 
-	static JavaPeerInfo MakeInheritedOverridePeer (string jniName, string managedName)
+	static JavaPeerInfo MakeInheritedOverridePeer (string jniName, string managedName,
+		string declaringTypeName = "MyApp.AbstractBase")
 	{
 		return MakeAcwPeer (jniName, managedName, "App") with {
 			MarshalMethods = [
@@ -1093,7 +1131,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 				new MarshalMethodInfo {
 					JniName = "doWork", NativeCallbackName = "n_DoWork",
 					JniSignature = "()V", ManagedMethodName = "DoWork",
-					DeclaringTypeName = "MyApp.AbstractBase",
+					DeclaringTypeName = declaringTypeName,
 					DeclaringAssemblyName = "App",
 				},
 			],
