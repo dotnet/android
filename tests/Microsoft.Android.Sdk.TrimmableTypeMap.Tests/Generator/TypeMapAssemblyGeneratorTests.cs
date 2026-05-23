@@ -1122,6 +1122,52 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.Contains (MetadataTokens.GetToken (intermediateUcoHandle), ldftnTokens);
 	}
 
+	[Fact]
+	public void Generate_InheritedVirtualOverride_MissingIntermediateProxy_LocalUcoMethodCallsIntermediateCallback ()
+	{
+		var rootBasePeer = MakeAcwPeer ("my/app/RootBase", "MyApp.RootBase", "App") with {
+			MarshalMethods = [
+				new MarshalMethodInfo {
+					JniName = "<init>", NativeCallbackName = "n_ctor",
+					JniSignature = "()V", ManagedMethodName = ".ctor",
+					IsConstructor = true,
+				},
+				new MarshalMethodInfo {
+					JniName = "doWork", NativeCallbackName = "n_DoWork",
+					JniSignature = "()V", ManagedMethodName = "DoWork",
+				},
+			],
+		};
+		var leafPeer = MakeInheritedOverridePeer ("my/app/Leaf", "MyApp.Leaf", declaringTypeName: "MyApp.HiddenIntermediate");
+
+		using var stream = GenerateAssembly ([leafPeer, rootBasePeer], "InheritedOverrideMissingIntermediate");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var rootBaseProxy = FindProxyType (reader, "MyApp_RootBase_Proxy");
+		var leafProxy = FindProxyType (reader, "MyApp_Leaf_Proxy");
+		var rootBaseUcoHandle = FindMethodDefinition (reader, rootBaseProxy, "n_doWork_uco_0");
+		var leafUcoHandle = FindMethodDefinition (reader, leafProxy, "n_doWork_uco_0");
+		var rootBaseCallback = FindCallbackMemberRef (reader, "n_DoWork", "MyApp", "RootBase");
+		var intermediateCallback = FindCallbackMemberRef (reader, "n_DoWork", "MyApp", "HiddenIntermediate");
+
+		var leafUco = reader.GetMethodDefinition (leafUcoHandle);
+		var leafUcoBody = pe.GetMethodBody (leafUco.RelativeVirtualAddress);
+		var leafUcoBytes = leafUcoBody.GetILBytes ();
+		Assert.NotNull (leafUcoBytes);
+		var leafUcoCallTokens = ReadCallTokens (leafUcoBytes);
+		Assert.DoesNotContain (MetadataTokens.GetToken (rootBaseCallback), leafUcoCallTokens);
+		Assert.Contains (MetadataTokens.GetToken (intermediateCallback), leafUcoCallTokens);
+
+		var leafRegisterNatives = reader.GetMethodDefinition (FindMethodDefinition (reader, leafProxy, "RegisterNatives"));
+		var registerBody = pe.GetMethodBody (leafRegisterNatives.RelativeVirtualAddress);
+		var registerBytes = registerBody.GetILBytes ();
+		Assert.NotNull (registerBytes);
+		var ldftnTokens = ReadLdftnTokens (registerBytes);
+		Assert.DoesNotContain (MetadataTokens.GetToken (rootBaseUcoHandle), ldftnTokens);
+		Assert.Contains (MetadataTokens.GetToken (leafUcoHandle), ldftnTokens);
+	}
+
 	static MemberReference FindCallbackMemberRef (MetadataReader reader, string methodName)
 	{
 		var refs = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
@@ -1130,6 +1176,23 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			.ToList ();
 		Assert.Single (refs);
 		return refs [0];
+	}
+
+	static MemberReferenceHandle FindCallbackMemberRef (MetadataReader reader, string methodName, string parentNamespace, string parentName)
+	{
+		var refs = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
+			.Select (MetadataTokens.MemberReferenceHandle)
+			.Where (h => {
+				var member = reader.GetMemberReference (h);
+				if (reader.GetString (member.Name) != methodName || member.Parent.Kind != HandleKind.TypeReference)
+					return false;
+
+				var parent = reader.GetTypeReference ((TypeReferenceHandle) member.Parent);
+				return reader.GetString (parent.Namespace) == parentNamespace &&
+					reader.GetString (parent.Name) == parentName;
+			})
+			.ToList ();
+		return Assert.Single (refs);
 	}
 
 	static TypeDefinition FindProxyType (MetadataReader reader, string typeName)
@@ -1165,6 +1228,22 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 				(ilBytes [i + 3] << 8) |
 				(ilBytes [i + 4] << 16) |
 				(ilBytes [i + 5] << 24));
+		}
+		return tokens;
+	}
+
+	static List<int> ReadCallTokens (byte [] ilBytes)
+	{
+		var tokens = new List<int> ();
+		for (int i = 0; i < ilBytes.Length - 4; i++) {
+			if (ilBytes [i] != 0x28) {
+				continue;
+			}
+
+			tokens.Add (ilBytes [i + 1] |
+				(ilBytes [i + 2] << 8) |
+				(ilBytes [i + 3] << 16) |
+				(ilBytes [i + 4] << 24));
 		}
 		return tokens;
 	}

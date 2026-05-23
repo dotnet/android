@@ -107,9 +107,9 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void TrimmableTypeMapInheritedVirtualOverrideUsesBaseUco ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		public void TrimmableTypeMapInheritedVirtualOverrideUsesCorrectUco ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			const string expectedLogcatOutput = "UCO_OVERRIDE_REUSE_RESULTS 107:211:1:1";
+			const string expectedLogcatOutput = "UCO_OVERRIDE_REUSE_RESULTS 107:211:1:1:405:1:0";
 
 			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
 				return;
@@ -178,6 +178,59 @@ namespace UnnamedProject
 			return value + 200;
 		}
 	}
+
+	[Register (""my/app/UcoOverrideHiddenBase"")]
+	public class UcoOverrideHiddenBase : Java.Lang.Object
+	{
+		public static int Calls;
+
+		public UcoOverrideHiddenBase () { }
+
+		protected UcoOverrideHiddenBase (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Register (""doHiddenWork"", ""()I"", """")]
+		public virtual int DoHiddenWork ()
+		{
+			Calls++;
+			return 300;
+		}
+	}
+
+	[Register (""my/app/UcoOverrideHiddenIntermediate"")]
+	public class UcoOverrideHiddenIntermediate : UcoOverrideHiddenBase
+	{
+		public UcoOverrideHiddenIntermediate () { }
+
+		protected UcoOverrideHiddenIntermediate (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		// Deliberately hide the base virtual slot while reusing the same JNI signature.
+		[Register (""doHiddenWork"", ""()I"", """")]
+		public new virtual int DoHiddenWork ()
+		{
+			return 400;
+		}
+	}
+
+	[Register (""my/app/UcoOverrideHiddenLeaf"")]
+	public class UcoOverrideHiddenLeaf : UcoOverrideHiddenIntermediate
+	{
+		readonly int value;
+		public static new int Calls;
+
+		public UcoOverrideHiddenLeaf (int value)
+		{
+			this.value = value;
+		}
+
+		protected UcoOverrideHiddenLeaf (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Register (""doHiddenWork"", ""()I"", """")]
+		public override int DoHiddenWork ()
+		{
+			Calls++;
+			return value + 400;
+		}
+	}
 }
 ",
 			});
@@ -187,15 +240,28 @@ namespace UnnamedProject
 var two = new UcoOverrideTwo (11);
 int oneResult = InvokeDoWork (one);
 int twoResult = InvokeDoWork (two);
-Console.WriteLine ($""# UCO_OVERRIDE_REUSE_RESULTS {oneResult}:{twoResult}:{UcoOverrideOne.Calls}:{UcoOverrideTwo.Calls}"");
-if (oneResult != 107 || twoResult != 211 || UcoOverrideOne.Calls != 1 || UcoOverrideTwo.Calls != 1) {
+var leaf = new UcoOverrideHiddenLeaf (5);
+int leafResult = InvokeDoHiddenWork (leaf);
+Console.WriteLine ($""# UCO_OVERRIDE_REUSE_RESULTS {oneResult}:{twoResult}:{UcoOverrideOne.Calls}:{UcoOverrideTwo.Calls}:{leafResult}:{UcoOverrideHiddenLeaf.Calls}:{UcoOverrideHiddenBase.Calls}"");
+if (oneResult != 107 || twoResult != 211 || UcoOverrideOne.Calls != 1 || UcoOverrideTwo.Calls != 1 ||
+		leafResult != 405 || UcoOverrideHiddenLeaf.Calls != 1 || UcoOverrideHiddenBase.Calls != 0) {
 	throw new InvalidOperationException (""Unexpected UCO override dispatch result."");
 }
 
 static int InvokeDoWork (Java.Lang.Object instance)
 {
+	return InvokeIntMethod (instance, ""doWork"");
+}
+
+static int InvokeDoHiddenWork (Java.Lang.Object instance)
+{
+	return InvokeIntMethod (instance, ""doHiddenWork"");
+}
+
+static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
+{
 	IntPtr klass = global::Android.Runtime.JNIEnv.GetObjectClass (instance.Handle);
-	IntPtr method = global::Android.Runtime.JNIEnv.GetMethodID (klass, ""doWork"", ""()I"");
+	IntPtr method = global::Android.Runtime.JNIEnv.GetMethodID (klass, methodName, ""()I"");
 	try {
 		return global::Android.Runtime.JNIEnv.CallIntMethod (instance.Handle, method);
 	} finally {
