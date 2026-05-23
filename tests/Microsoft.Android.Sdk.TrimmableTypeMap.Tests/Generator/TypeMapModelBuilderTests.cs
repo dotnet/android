@@ -1369,6 +1369,26 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.Contains ("no matching user-visible managed constructor", ex.Message);
 			Assert.Contains ("MyApp.MissingCtor", ex.Message);
 		}
+
+		[Fact]
+		public void Build_AbstractTypeWithProtectedCtor_NoUcoConstructors ()
+		{
+			var peer = MakeAcwPeer ("my/app/AbstractAdapter", "MyApp.AbstractAdapter", "App") with {
+				IsAbstract = true,
+				JavaConstructors = new List<JavaConstructorInfo> {
+					new JavaConstructorInfo {
+						ConstructorIndex = 0,
+						JniSignature = "(Landroid/content/Context;)V",
+						HasMatchingManagedCtor = false,
+						SuperArgumentsString = "p0",
+					},
+				},
+			};
+			var model = BuildModel (new [] { peer });
+			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName.Contains ("AbstractAdapter"));
+			Assert.NotNull (proxy);
+			Assert.Empty (proxy.UcoConstructors);
+		}
 	}
 
 	public class NativeRegistrations
