@@ -1423,6 +1423,53 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
+		public void Build_InheritedVirtualOverride_IntermediateCallbackOwner_ReuseIntermediateUcoMethod ()
+		{
+			var rootBase = MakeAcwPeer ("my/app/C", "MyApp.C", "App") with {
+				MarshalMethods = [
+					new MarshalMethodInfo {
+						JniName = "<init>", NativeCallbackName = "n_ctor",
+						JniSignature = "()V", ManagedMethodName = ".ctor",
+						IsConstructor = true,
+					},
+					new MarshalMethodInfo {
+						JniName = "doWork", NativeCallbackName = "n_DoWork",
+						JniSignature = "()V", ManagedMethodName = "DoWork",
+					},
+				],
+			};
+			var intermediate = MakeAcwPeer ("my/app/B", "MyApp.B", "App") with {
+				MarshalMethods = [
+					new MarshalMethodInfo {
+						JniName = "<init>", NativeCallbackName = "n_ctor",
+						JniSignature = "()V", ManagedMethodName = ".ctor",
+						IsConstructor = true,
+					},
+					new MarshalMethodInfo {
+						JniName = "doWork", NativeCallbackName = "n_DoWork",
+						JniSignature = "()V", ManagedMethodName = "DoWork",
+					},
+				],
+			};
+			var leaf = MakeInheritedOverridePeer ("my/app/A", "MyApp.A", declaringTypeName: "MyApp.B");
+
+			var model = BuildModel ([leaf, rootBase, intermediate]);
+			var rootBaseProxy = model.ProxyTypes.Single (p => p.TargetType.ManagedTypeName == "MyApp.C");
+			var intermediateProxy = model.ProxyTypes.Single (p => p.TargetType.ManagedTypeName == "MyApp.B");
+			var leafProxy = model.ProxyTypes.Single (p => p.TargetType.ManagedTypeName == "MyApp.A");
+
+			Assert.Single (rootBaseProxy.UcoMethods);
+			Assert.Single (intermediateProxy.UcoMethods);
+			Assert.Empty (leafProxy.UcoMethods);
+
+			var rootBaseRegistration = rootBaseProxy.NativeRegistrations.Single (r => r.JniMethodName == "n_DoWork");
+			var intermediateRegistration = intermediateProxy.NativeRegistrations.Single (r => r.JniMethodName == "n_DoWork");
+			var leafRegistration = leafProxy.NativeRegistrations.Single (r => r.JniMethodName == "n_DoWork");
+			Assert.NotEqual (rootBaseRegistration.WrapperTarget, leafRegistration.WrapperTarget);
+			Assert.Equal (intermediateRegistration.WrapperTarget, leafRegistration.WrapperTarget);
+		}
+
+		[Fact]
 		public void Build_InheritedVirtualOverride_TargetUnavailable_FallsBackToLocalUcoMethod ()
 		{
 			var derived = MakeInheritedOverridePeer ("my/app/Concrete", "MyApp.Concrete");

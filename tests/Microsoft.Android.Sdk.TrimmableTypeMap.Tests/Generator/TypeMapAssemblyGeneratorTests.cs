@@ -1071,6 +1071,57 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.Contains (MetadataTokens.GetToken (rootBaseUcoHandle), ReadLdftnTokens (ilBytes));
 	}
 
+	[Fact]
+	public void Generate_InheritedVirtualOverride_IntermediateCallbackOwner_RegisterNativesUsesIntermediateUcoMethod ()
+	{
+		var rootBasePeer = MakeAcwPeer ("my/app/C", "MyApp.C", "App") with {
+			MarshalMethods = [
+				new MarshalMethodInfo {
+					JniName = "<init>", NativeCallbackName = "n_ctor",
+					JniSignature = "()V", ManagedMethodName = ".ctor",
+					IsConstructor = true,
+				},
+				new MarshalMethodInfo {
+					JniName = "doWork", NativeCallbackName = "n_DoWork",
+					JniSignature = "()V", ManagedMethodName = "DoWork",
+				},
+			],
+		};
+		var intermediatePeer = MakeAcwPeer ("my/app/B", "MyApp.B", "App") with {
+			MarshalMethods = [
+				new MarshalMethodInfo {
+					JniName = "<init>", NativeCallbackName = "n_ctor",
+					JniSignature = "()V", ManagedMethodName = ".ctor",
+					IsConstructor = true,
+				},
+				new MarshalMethodInfo {
+					JniName = "doWork", NativeCallbackName = "n_DoWork",
+					JniSignature = "()V", ManagedMethodName = "DoWork",
+				},
+			],
+		};
+		var leafPeer = MakeInheritedOverridePeer ("my/app/A", "MyApp.A", declaringTypeName: "MyApp.B");
+
+		using var stream = GenerateAssembly ([leafPeer, rootBasePeer, intermediatePeer], "InheritedOverrideUcoIntermediateOwner");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var rootBaseProxy = FindProxyType (reader, "MyApp_C_Proxy");
+		var intermediateProxy = FindProxyType (reader, "MyApp_B_Proxy");
+		var leafProxy = FindProxyType (reader, "MyApp_A_Proxy");
+		var rootBaseUcoHandle = FindMethodDefinition (reader, rootBaseProxy, "n_doWork_uco_0");
+		var intermediateUcoHandle = FindMethodDefinition (reader, intermediateProxy, "n_doWork_uco_0");
+		Assert.Empty (FindMethodDefinitions (reader, leafProxy, "n_doWork_uco_0"));
+
+		var leafRegisterNatives = reader.GetMethodDefinition (FindMethodDefinition (reader, leafProxy, "RegisterNatives"));
+		var body = pe.GetMethodBody (leafRegisterNatives.RelativeVirtualAddress);
+		var ilBytes = body.GetILBytes ();
+		Assert.NotNull (ilBytes);
+		var ldftnTokens = ReadLdftnTokens (ilBytes);
+		Assert.DoesNotContain (MetadataTokens.GetToken (rootBaseUcoHandle), ldftnTokens);
+		Assert.Contains (MetadataTokens.GetToken (intermediateUcoHandle), ldftnTokens);
+	}
+
 	static MemberReference FindCallbackMemberRef (MetadataReader reader, string methodName)
 	{
 		var refs = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
