@@ -966,6 +966,40 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.Equal (new byte [] { 0x01, 0x00, 0x00, 0x00 }, reader.GetBlobBytes (ucoAttr.Value));
 	}
 
+	[Fact]
+	public void Generate_InheritedVirtualOverride_RegisterNativesUsesBaseUcoMethod ()
+	{
+		var basePeer = MakeAcwPeer ("my/app/AbstractBase", "MyApp.AbstractBase", "App") with {
+			MarshalMethods = [
+				new MarshalMethodInfo {
+					JniName = "<init>", NativeCallbackName = "n_ctor",
+					JniSignature = "()V", ManagedMethodName = ".ctor",
+					IsConstructor = true,
+				},
+				new MarshalMethodInfo {
+					JniName = "doWork", NativeCallbackName = "n_DoWork",
+					JniSignature = "()V", ManagedMethodName = "DoWork",
+				},
+			],
+		};
+		var derivedPeer = MakeInheritedOverridePeer ("my/app/Concrete", "MyApp.Concrete");
+
+		using var stream = GenerateAssembly ([basePeer, derivedPeer], "InheritedOverrideUco");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var baseProxy = FindProxyType (reader, "MyApp_AbstractBase_Proxy");
+		var derivedProxy = FindProxyType (reader, "MyApp_Concrete_Proxy");
+		var baseUcoHandle = FindMethodDefinition (reader, baseProxy, "n_doWork_uco_0");
+		Assert.Empty (FindMethodDefinitions (reader, derivedProxy, "n_doWork_uco_0"));
+
+		var derivedRegisterNatives = reader.GetMethodDefinition (FindMethodDefinition (reader, derivedProxy, "RegisterNatives"));
+		var body = pe.GetMethodBody (derivedRegisterNatives.RelativeVirtualAddress);
+		var ilBytes = body.GetILBytes ();
+		Assert.NotNull (ilBytes);
+		Assert.Contains (MetadataTokens.GetToken (baseUcoHandle), ReadLdftnTokens (ilBytes));
+	}
+
 	static MemberReference FindCallbackMemberRef (MetadataReader reader, string methodName)
 	{
 		var refs = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
@@ -974,6 +1008,62 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			.ToList ();
 		Assert.Single (refs);
 		return refs [0];
+	}
+
+	static TypeDefinition FindProxyType (MetadataReader reader, string typeName)
+	{
+		return reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Single (t =>
+				reader.GetString (t.Namespace) == "_TypeMap.Proxies" &&
+				reader.GetString (t.Name) == typeName);
+	}
+
+	static MethodDefinitionHandle FindMethodDefinition (MetadataReader reader, TypeDefinition type, string methodName)
+	{
+		return FindMethodDefinitions (reader, type, methodName).Single ();
+	}
+
+	static List<MethodDefinitionHandle> FindMethodDefinitions (MetadataReader reader, TypeDefinition type, string methodName)
+	{
+		return type.GetMethods ()
+			.Where (h => reader.GetString (reader.GetMethodDefinition (h).Name) == methodName)
+			.ToList ();
+	}
+
+	static List<int> ReadLdftnTokens (byte [] ilBytes)
+	{
+		var tokens = new List<int> ();
+		for (int i = 0; i < ilBytes.Length - 5; i++) {
+			if (ilBytes [i] != 0xFE || ilBytes [i + 1] != 0x06) {
+				continue;
+			}
+
+			tokens.Add (ilBytes [i + 2] |
+				(ilBytes [i + 3] << 8) |
+				(ilBytes [i + 4] << 16) |
+				(ilBytes [i + 5] << 24));
+		}
+		return tokens;
+	}
+
+	static JavaPeerInfo MakeInheritedOverridePeer (string jniName, string managedName)
+	{
+		return MakeAcwPeer (jniName, managedName, "App") with {
+			MarshalMethods = [
+				new MarshalMethodInfo {
+					JniName = "<init>", NativeCallbackName = "n_ctor",
+					JniSignature = "()V", ManagedMethodName = ".ctor",
+					IsConstructor = true,
+				},
+				new MarshalMethodInfo {
+					JniName = "doWork", NativeCallbackName = "n_DoWork",
+					JniSignature = "()V", ManagedMethodName = "DoWork",
+					DeclaringTypeName = "MyApp.AbstractBase",
+					DeclaringAssemblyName = "App",
+				},
+			],
+		};
 	}
 
 	[Theory]

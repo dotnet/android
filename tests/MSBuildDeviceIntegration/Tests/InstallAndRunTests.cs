@@ -107,6 +107,112 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void TrimmableTypeMapInheritedVirtualOverrideUsesBaseUco ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		{
+			const string expectedLogcatOutput = "UCO_OVERRIDE_REUSE_RESULTS 107:211:1:1";
+
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime, "ucoverride")) {
+				IsRelease = true,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
+			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetDefaultTargetDevice ();
+			proj.Sources.Add (new BuildItem.Source ("UcoOverrideTypes.cs") {
+				TextContent = () => @"using System;
+using Android.Runtime;
+
+namespace UnnamedProject
+{
+	[Register (""my/app/UcoOverrideBase"")]
+	public abstract class UcoOverrideBase : Java.Lang.Object
+	{
+		public UcoOverrideBase () { }
+
+		protected UcoOverrideBase (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Register (""doWork"", ""()I"", """")]
+		public abstract int DoWork ();
+	}
+
+	[Register (""my/app/UcoOverrideOne"")]
+	public class UcoOverrideOne : UcoOverrideBase
+	{
+		readonly int value;
+		public static int Calls;
+
+		public UcoOverrideOne (int value)
+		{
+			this.value = value;
+		}
+
+		protected UcoOverrideOne (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public override int DoWork ()
+		{
+			Calls++;
+			return value + 100;
+		}
+	}
+
+	[Register (""my/app/UcoOverrideTwo"")]
+	public class UcoOverrideTwo : UcoOverrideBase
+	{
+		readonly int value;
+		public static int Calls;
+
+		public UcoOverrideTwo (int value)
+		{
+			this.value = value;
+		}
+
+		protected UcoOverrideTwo (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public override int DoWork ()
+		{
+			Calls++;
+			return value + 200;
+		}
+	}
+}
+",
+			});
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"//${AFTER_ONCREATE}",
+				@"var one = new UcoOverrideOne (7);
+var two = new UcoOverrideTwo (11);
+int oneResult = InvokeDoWork (one);
+int twoResult = InvokeDoWork (two);
+Console.WriteLine ($""# UCO_OVERRIDE_REUSE_RESULTS {oneResult}:{twoResult}:{UcoOverrideOne.Calls}:{UcoOverrideTwo.Calls}"");
+if (oneResult != 107 || twoResult != 211 || UcoOverrideOne.Calls != 1 || UcoOverrideTwo.Calls != 1) {
+	throw new InvalidOperationException (""Unexpected UCO override dispatch result."");
+}
+
+static int InvokeDoWork (Java.Lang.Object instance)
+{
+	IntPtr klass = global::Android.Runtime.JNIEnv.GetObjectClass (instance.Handle);
+	IntPtr method = global::Android.Runtime.JNIEnv.GetMethodID (klass, ""doWork"", ""()I"");
+	try {
+		return global::Android.Runtime.JNIEnv.CallIntMethod (instance.Handle, method);
+	} finally {
+		global::Android.Runtime.JNIEnv.DeleteLocalRef (klass);
+	}
+}");
+			using var builder = CreateApkBuilder ();
+			Assert.True (builder.Install (proj), "Project should have installed.");
+			RunProjectAndAssert (proj, builder, doNotCleanupOnUpdate: true);
+			Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
+			Assert.IsTrue (MonitorAdbLogcat ((line) => line.Contains (expectedLogcatOutput),
+				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 45), $"Output did not contain {expectedLogcatOutput}!");
+			Assert.True (builder.Uninstall (proj), "Project should have uninstalled.");
+		}
+
+		[Test]
 		public void DotNetRunWaitForExit ()
 		{
 			AssertCommercialBuild (); //FIXME: https://github.com/dotnet/android/issues/10832

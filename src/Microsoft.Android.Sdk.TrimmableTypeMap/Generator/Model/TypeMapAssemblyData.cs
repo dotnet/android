@@ -165,7 +165,7 @@ sealed class JavaPeerProxyData
 	public List<UcoConstructorData> UcoConstructors { get; } = new ();
 
 	/// <summary>
-	/// RegisterNatives registrations (method name, JNI signature, wrapper name).
+	/// RegisterNatives registrations (method name, JNI signature, wrapper target).
 	/// </summary>
 	public List<NativeRegistrationData> NativeRegistrations { get; } = new ();
 }
@@ -230,6 +230,24 @@ sealed record UcoMethodData
 	/// True when this wrapper performs the static [Export] direct-dispatch path.
 	/// </summary>
 	public bool UsesExportMethodDispatch => ExportMethodDispatch != null;
+}
+
+sealed record UcoWrapperTargetData
+{
+	/// <summary>
+	/// Namespace of the generated proxy type containing the wrapper method.
+	/// </summary>
+	public required string TypeNamespace { get; init; }
+
+	/// <summary>
+	/// Name of the generated proxy type containing the wrapper method.
+	/// </summary>
+	public required string TypeName { get; init; }
+
+	/// <summary>
+	/// Name of the UCO wrapper method whose function pointer to register.
+	/// </summary>
+	public required string MethodName { get; init; }
 }
 
 sealed record ExportMethodDispatchData
@@ -329,6 +347,13 @@ sealed record NativeRegistrationData
 	/// Name of the UCO wrapper method whose function pointer to register.
 	/// </summary>
 	public required string WrapperMethodName { get; init; }
+
+	/// <summary>
+	/// Generated proxy wrapper target to register. This may point at a wrapper
+	/// emitted for a different proxy when inherited virtual overrides share the
+	/// same base callback.
+	/// </summary>
+	public required UcoWrapperTargetData WrapperTarget { get; init; }
 }
 
 /// <summary>

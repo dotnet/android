@@ -203,8 +203,8 @@ sealed class TypeMapAssemblyEmitter
 		EmitRankSentinels (model);
 		EmitMemberReferences ();
 
-		// Track wrapper method names → handles for RegisterNatives
-		var wrapperHandles = new Dictionary<string, MethodDefinitionHandle> ();
+		// Track wrapper targets → handles for RegisterNatives.
+		var wrapperHandles = new Dictionary<UcoWrapperTargetData, MethodDefinitionHandle> ();
 
 		foreach (var proxy in model.ProxyTypes) {
 			EmitProxyType (proxy, wrapperHandles);
@@ -598,7 +598,7 @@ sealed class TypeMapAssemblyEmitter
 		return _exportMethodDispatchEmitter;
 	}
 
-	void EmitProxyType (JavaPeerProxyData proxy, Dictionary<string, MethodDefinitionHandle> wrapperHandles)
+	void EmitProxyType (JavaPeerProxyData proxy, Dictionary<UcoWrapperTargetData, MethodDefinitionHandle> wrapperHandles)
 	{
 		if (proxy.IsAcw) {
 			// RegisterNatives uses RVA-backed UTF-8 fields under <PrivateImplementationDetails>.
@@ -693,12 +693,12 @@ sealed class TypeMapAssemblyEmitter
 			var handle = uco.UsesExportMethodDispatch
 				? GetExportMethodDispatchEmitter ().EmitUcoMethod (uco)
 				: EmitUcoMethod (uco, proxy);
-			wrapperHandles [uco.WrapperName] = handle;
+			wrapperHandles [CreateWrapperTarget (proxy, uco.WrapperName)] = handle;
 		}
 
 		foreach (var uco in proxy.UcoConstructors) {
 			var handle = EmitUcoConstructor (uco, proxy);
-			wrapperHandles [uco.WrapperName] = handle;
+			wrapperHandles [CreateWrapperTarget (proxy, uco.WrapperName)] = handle;
 		}
 
 		// RegisterNatives
@@ -1565,14 +1565,23 @@ sealed class TypeMapAssemblyEmitter
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (targetTypeRef));
 	}
 
+	static UcoWrapperTargetData CreateWrapperTarget (JavaPeerProxyData proxy, string methodName)
+	{
+		return new UcoWrapperTargetData {
+			TypeNamespace = proxy.Namespace,
+			TypeName = proxy.TypeName,
+			MethodName = methodName,
+		};
+	}
+
 	void EmitRegisterNatives (JavaPeerProxyData proxy,
-		Dictionary<string, MethodDefinitionHandle> wrapperHandles)
+		Dictionary<UcoWrapperTargetData, MethodDefinitionHandle> wrapperHandles)
 	{
 		// Filter to only registrations that have corresponding wrapper methods
 		var registrations = proxy.NativeRegistrations;
 		var validRegs = new List<(NativeRegistrationData Reg, MethodDefinitionHandle Wrapper)> (registrations.Count);
 		foreach (var reg in registrations) {
-			if (wrapperHandles.TryGetValue (reg.WrapperMethodName, out var wrapperHandle)) {
+			if (wrapperHandles.TryGetValue (reg.WrapperTarget, out var wrapperHandle)) {
 				validRegs.Add ((reg, wrapperHandle));
 			}
 		}
