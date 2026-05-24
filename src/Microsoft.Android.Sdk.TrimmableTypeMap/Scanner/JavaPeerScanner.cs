@@ -1931,8 +1931,7 @@ public sealed class JavaPeerScanner : IDisposable
 				continue;
 			}
 			// Try to find a managed ctor whose signature matches the JNI ctor.
-			// Unsupported managed parameter shapes fail in model building for [Export]
-			// constructors; non-[Export] registrations keep the legacy activation fallback.
+			// Unsupported managed parameter shapes keep the legacy activation fallback.
 			var managedParams = TryGetMatchingPublicConstructorParameterTypes (typeDef, mm.JniSignature, index);
 			ctors.Add (new JavaConstructorInfo {
 				JniSignature = mm.JniSignature,
