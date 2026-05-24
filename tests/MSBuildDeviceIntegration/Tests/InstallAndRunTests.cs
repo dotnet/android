@@ -124,19 +124,21 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetDefaultTargetDevice ();
 			proj.Sources.Add (new BuildItem.Source ("UcoOverrideTypes.cs") {
 				TextContent = () => @"using System;
+using Android.Content;
 using Android.Runtime;
+using Android.Views;
 
 namespace UnnamedProject
 {
 	[Register (""my/app/UcoOverrideBase"")]
-	public abstract class UcoOverrideBase : Java.Lang.Object
+	public abstract class UcoOverrideBase : View
 	{
-		public UcoOverrideBase () { }
+		public UcoOverrideBase (Context context) : base (context) { }
 
 		protected UcoOverrideBase (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 
-		[Register (""hashCode"", ""()I"", """")]
-		public abstract override int GetHashCode ();
+		[Register (""getSolidColor"", ""()I"", ""GetGetSolidColorHandler"")]
+		public abstract override int SolidColor { get; }
 	}
 
 	[Register (""my/app/UcoOverrideOne"")]
@@ -145,17 +147,18 @@ namespace UnnamedProject
 		readonly int value;
 		public static int Calls;
 
-		public UcoOverrideOne (int value)
+		public UcoOverrideOne (Context context, int value) : base (context)
 		{
 			this.value = value;
 		}
 
 		protected UcoOverrideOne (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 
-		public override int GetHashCode ()
-		{
-			Calls++;
-			return value + 100;
+		public override int SolidColor {
+			get {
+				Calls++;
+				return value + 100;
+			}
 		}
 	}
 
@@ -165,49 +168,52 @@ namespace UnnamedProject
 		readonly int value;
 		public static int Calls;
 
-		public UcoOverrideTwo (int value)
+		public UcoOverrideTwo (Context context, int value) : base (context)
 		{
 			this.value = value;
 		}
 
 		protected UcoOverrideTwo (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 
-		public override int GetHashCode ()
-		{
-			Calls++;
-			return value + 200;
+		public override int SolidColor {
+			get {
+				Calls++;
+				return value + 200;
+			}
 		}
 	}
 
 	[Register (""my/app/UcoOverrideHiddenBase"")]
-	public class UcoOverrideHiddenBase : Java.Lang.Object
+	public class UcoOverrideHiddenBase : View
 	{
 		public static int Calls;
 
-		public UcoOverrideHiddenBase () { }
+		public UcoOverrideHiddenBase (Context context) : base (context) { }
 
 		protected UcoOverrideHiddenBase (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 
-		[Register (""hashCode"", ""()I"", """")]
-		public override int GetHashCode ()
-		{
-			Calls++;
-			return 300;
+		[Register (""getSolidColor"", ""()I"", ""GetGetSolidColorHandler"")]
+		public override int SolidColor {
+			get {
+				Calls++;
+				return 300;
+			}
 		}
 	}
 
 	[Register (""my/app/UcoOverrideHiddenIntermediate"")]
 	public class UcoOverrideHiddenIntermediate : UcoOverrideHiddenBase
 	{
-		public UcoOverrideHiddenIntermediate () { }
+		public UcoOverrideHiddenIntermediate (Context context) : base (context) { }
 
 		protected UcoOverrideHiddenIntermediate (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 
 		// Deliberately hide the base virtual slot while reusing the same JNI signature.
-		[Register (""hashCode"", ""()I"", """")]
-		public new virtual int GetHashCode ()
-		{
-			return 400;
+		[Register (""getSolidColor"", ""()I"", ""GetGetSolidColorHandler"")]
+		public new virtual int SolidColor {
+			get {
+				return 400;
+			}
 		}
 	}
 
@@ -217,18 +223,19 @@ namespace UnnamedProject
 		readonly int value;
 		public static new int Calls;
 
-		public UcoOverrideHiddenLeaf (int value)
+		public UcoOverrideHiddenLeaf (Context context, int value) : base (context)
 		{
 			this.value = value;
 		}
 
 		protected UcoOverrideHiddenLeaf (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 
-		[Register (""hashCode"", ""()I"", """")]
-		public override int GetHashCode ()
-		{
-			Calls++;
-			return value + 400;
+		[Register (""getSolidColor"", ""()I"", ""GetGetSolidColorHandler"")]
+		public override int SolidColor {
+			get {
+				Calls++;
+				return value + 400;
+			}
 		}
 	}
 }
@@ -236,11 +243,11 @@ namespace UnnamedProject
 			});
 			proj.MainActivity = proj.DefaultMainActivity.Replace (
 				"//${AFTER_ONCREATE}",
-				@"var one = new UcoOverrideOne (7);
-var two = new UcoOverrideTwo (11);
+				@"var one = new UcoOverrideOne (this, 7);
+var two = new UcoOverrideTwo (this, 11);
 int oneResult = InvokeDoWork (one);
 int twoResult = InvokeDoWork (two);
-var leaf = new UcoOverrideHiddenLeaf (5);
+var leaf = new UcoOverrideHiddenLeaf (this, 5);
 int leafResult = InvokeDoHiddenWork (leaf);
 Console.WriteLine ($""# UCO_OVERRIDE_REUSE_RESULTS {oneResult}:{twoResult}:{UcoOverrideOne.Calls}:{UcoOverrideTwo.Calls}:{leafResult}:{UcoOverrideHiddenLeaf.Calls}:{UcoOverrideHiddenBase.Calls}"");
 if (oneResult != 107 || twoResult != 211 || UcoOverrideOne.Calls != 1 || UcoOverrideTwo.Calls != 1 ||
@@ -250,12 +257,12 @@ if (oneResult != 107 || twoResult != 211 || UcoOverrideOne.Calls != 1 || UcoOver
 
 static int InvokeDoWork (Java.Lang.Object instance)
 {
-	return InvokeIntMethod (instance, ""hashCode"");
+	return InvokeIntMethod (instance, ""getSolidColor"");
 }
 
 static int InvokeDoHiddenWork (Java.Lang.Object instance)
 {
-	return InvokeIntMethod (instance, ""hashCode"");
+	return InvokeIntMethod (instance, ""getSolidColor"");
 }
 
 static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
