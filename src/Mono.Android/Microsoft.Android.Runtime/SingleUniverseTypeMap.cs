@@ -45,15 +45,16 @@ sealed class SingleUniverseTypeMap : ITypeMap
 		_arrayMapsByUniverseAndRank = arrayMapsByUniverseAndRank ?? [];
 	}
 
-	public IEnumerable<Type> GetProxyTypes (string jniName)
+	public IEnumerable<JavaPeerProxy> GetProxies (string jniName)
 	{
 		if (!_typeMap.TryGetValue (jniName, out var mappedType)) {
 			yield break;
 		}
 
 		// Fast path: non-alias entry
-		if (mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false) is not null) {
-			yield return mappedType;
+		var proxy = mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+		if (proxy is not null) {
+			yield return proxy;
 			yield break;
 		}
 
@@ -65,22 +66,22 @@ sealed class SingleUniverseTypeMap : ITypeMap
 
 		foreach (var key in aliases.Aliases) {
 			if (_typeMap.TryGetValue (key, out var aliasEntryType) &&
-				aliasEntryType.GetCustomAttribute<JavaPeerProxy> (inherit: false) is not null) {
-				yield return aliasEntryType;
+				aliasEntryType.GetCustomAttribute<JavaPeerProxy> (inherit: false) is { } aliasProxy) {
+				yield return aliasProxy;
 			}
 		}
 	}
 
-	public bool TryGetProxyType (Type managedType, [NotNullWhen (true)] out Type? proxyType)
+	public bool TryGetProxy (Type managedType, [NotNullWhen (true)] out JavaPeerProxy? proxy)
 	{
 		if (!_proxyTypeMap.TryGetValue (managedType, out var mappedProxyType)) {
-			proxyType = null;
+			proxy = null;
 			return false;
 		}
 
 		// Fast path: direct proxy
-		if (mappedProxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false) is not null) {
-			proxyType = mappedProxyType;
+		proxy = mappedProxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+		if (proxy is not null) {
 			return true;
 		}
 
@@ -91,14 +92,14 @@ sealed class SingleUniverseTypeMap : ITypeMap
 				if (_typeMap.TryGetValue (key, out var aliasProxyType)) {
 					var aliasProxy = aliasProxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
 					if (aliasProxy is not null && TrimmableTypeMap.TargetTypeMatches (managedType, aliasProxy.TargetType)) {
-						proxyType = aliasProxyType;
+						proxy = aliasProxy;
 						return true;
 					}
 				}
 			}
 		}
 
-		proxyType = null;
+		proxy = null;
 		return false;
 	}
 
