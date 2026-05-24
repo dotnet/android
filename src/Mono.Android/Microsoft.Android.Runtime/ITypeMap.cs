@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Java.Interop;
 
 namespace Microsoft.Android.Runtime;
 
@@ -16,14 +15,15 @@ namespace Microsoft.Android.Runtime;
 interface ITypeMap
 {
 	/// <summary>
-	/// Returns all proxies mapped to a JNI name, resolving alias holders.
+	/// Returns all proxy types mapped to a JNI name, resolving alias holders.
 	/// </summary>
-	IEnumerable<JavaPeerProxy> GetProxies (string jniName);
+	IEnumerable<Type> GetProxyTypes (string jniName);
 
 	/// <summary>
-	/// Resolves a managed type to its proxy.
+	/// Resolves a managed type to its proxy type (the generated type that
+	/// carries the <see cref="JavaPeerProxy"/> attribute).
 	/// </summary>
-	bool TryGetProxy (Type managedType, [NotNullWhen (true)] out JavaPeerProxy? proxy);
+	bool TryGetProxyType (Type managedType, [NotNullWhen (true)] out Type? proxyType);
 
 	/// <summary>
 	/// Resolves a JNI leaf name and 0-based array rank index to a managed array type.

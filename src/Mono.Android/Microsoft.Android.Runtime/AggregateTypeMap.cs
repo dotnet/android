@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Java.Interop;
 
 namespace Microsoft.Android.Runtime;
 
@@ -22,24 +21,24 @@ sealed class AggregateTypeMap : ITypeMap
 		_universes = universes;
 	}
 
-	public IEnumerable<JavaPeerProxy> GetProxies (string jniName)
+	public IEnumerable<Type> GetProxyTypes (string jniName)
 	{
 		foreach (var universe in _universes) {
-			foreach (var proxy in universe.GetProxies (jniName)) {
-				yield return proxy;
+			foreach (var type in universe.GetProxyTypes (jniName)) {
+				yield return type;
 			}
 		}
 	}
 
-	public bool TryGetProxy (Type managedType, [NotNullWhen (true)] out JavaPeerProxy? proxy)
+	public bool TryGetProxyType (Type managedType, [NotNullWhen (true)] out Type? proxyType)
 	{
 		// First-wins: each managed type exists in exactly one assembly
 		foreach (var universe in _universes) {
-			if (universe.TryGetProxy (managedType, out proxy)) {
+			if (universe.TryGetProxyType (managedType, out proxyType)) {
 				return true;
 			}
 		}
-		proxy = null;
+		proxyType = null;
 		return false;
 	}
 
