@@ -51,12 +51,17 @@ namespace Xamarin.Android.Build.Tests {
 
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
 			DirectoryAssert.Exists (intermediateDir);
+			var typemapDlls = Directory.GetFiles (intermediateDir, "*.dll");
+			Assert.IsNotEmpty (typemapDlls, "First build should generate trimmable typemap assemblies.");
 
 			Assert.IsTrue (builder.Build (proj), "Second build should have succeeded.");
 
 			Assert.IsTrue (
 				builder.Output.IsTargetSkipped ("_GenerateJavaStubs"),
 				"_GenerateJavaStubs should be skipped on incremental build.");
+			foreach (var typemapDll in typemapDlls) {
+				FileAssert.Exists (typemapDll, $"No-op builds should preserve generated typemap assembly {typemapDll} when _GenerateTrimmableTypeMap is skipped.");
+			}
 		}
 
 		[Test]
