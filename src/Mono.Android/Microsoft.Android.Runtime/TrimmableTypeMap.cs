@@ -180,11 +180,8 @@ public class TrimmableTypeMap
 	{
 		return _jniProxyCache.GetOrAdd (jniName, static (name, self) => {
 			var result = new List<JavaPeerProxy> ();
-			foreach (var type in self._typeMap.GetProxyTypes (name)) {
-				var proxy = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-				if (proxy is not null) {
-					result.Add (proxy);
-				}
+			foreach (var proxy in self._typeMap.GetProxies (name)) {
+				result.Add (proxy);
 			}
 			return result.Count > 0 ? result.ToArray () : [];
 		}, this);
@@ -218,11 +215,11 @@ public class TrimmableTypeMap
 		}
 
 		var proxy = _proxyCache.GetOrAdd (managedType, static (type, self) => {
-			if (!self._typeMap.TryGetProxyType (type, out var proxyType)) {
+			if (!self._typeMap.TryGetProxy (type, out var resolvedProxy)) {
 				return s_noPeerSentinel;
 			}
 
-			return proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false) ?? s_noPeerSentinel;
+			return resolvedProxy;
 		}, this);
 		return ReferenceEquals (proxy, s_noPeerSentinel) ? null : proxy;
 	}
