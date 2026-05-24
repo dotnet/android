@@ -198,6 +198,40 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void CoreClrTrimmableTypeMap_PackagesReadyToRunTypeMap ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("RuntimeIdentifier", "android-arm64");
+			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+
+			var r2rTypeMap = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "R2R", "_Microsoft.Android.TypeMaps.dll"));
+			FileAssert.Exists (r2rTypeMap, "ReadyToRun should compile the generated TypeMap entry assembly.");
+			using (var r2rStream = File.OpenRead (r2rTypeMap)) {
+				using var r2rReader = new System.Reflection.PortableExecutable.PEReader (r2rStream);
+				Assert.IsTrue (
+					r2rReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size > 0,
+					"ReadyToRun output for _Microsoft.Android.TypeMaps.dll should have a managed native header.");
+			}
+
+			var apk = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, "android-arm64", $"{proj.PackageName}-Signed.apk");
+			FileAssert.Exists (apk);
+
+			var helper = new ArchiveAssemblyHelper (apk, useAssemblyStores: true);
+			Assert.IsTrue (helper.Exists ("assemblies/arm64-v8a/_Microsoft.Android.TypeMaps.dll"), "_Microsoft.Android.TypeMaps.dll should exist in the APK.");
+		}
+
+		[Test]
 		public void TrimmableTypeMap_PreserveLists_ArePackagedInSdk ()
 		{
 			foreach (var file in new [] {
