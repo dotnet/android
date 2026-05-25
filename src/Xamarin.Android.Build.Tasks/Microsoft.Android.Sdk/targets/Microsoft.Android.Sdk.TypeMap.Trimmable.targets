@@ -33,6 +33,10 @@
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap"
         Value="true" Trim="true" />
+    <!-- The feature switch is defined in Java.Interop, but trimmable app builds
+         own the runtimeconfig value that lets ILLink substitute it. -->
+    <RuntimeHostConfigurationOption Include="Java.Interop.RuntimeFeature.ManagedPeerNativeRegistration"
+        Value="false" Trim="true" />
     <RuntimeHostConfigurationOption Include="System.Runtime.InteropServices.TypeMappingEntryAssembly"
         Value="$(_TypeMapAssemblyName)" />
     <!-- [Export] metadata is still needed at compile time, but the legacy runtime helper

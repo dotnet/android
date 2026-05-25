@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
+using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Build.Tests {
 	[TestFixture]
@@ -229,6 +231,15 @@ namespace Xamarin.Android.Build.Tests {
 				FileAssert.Exists (Path.Combine (toolsDir, file), $"{file} should exist in the SDK pack.");
 			}
 
+			var trimmableJar = Path.Combine (toolsDir, "java_runtime_trimmable.jar");
+			using (var zip = ZipArchive.Open (trimmableJar, FileMode.Open)) {
+				zip.AssertDoesNotContainEntry (trimmableJar, "net/dot/jni/ManagedPeer.class");
+			}
+
+			var trimmableDex = Path.Combine (toolsDir, "java_runtime_trimmable.dex");
+			Assert.IsFalse (
+				FileContainsAscii (trimmableDex, "Lnet/dot/jni/ManagedPeer;"),
+				"java_runtime_trimmable.dex should not contain the Java ManagedPeer type descriptor.");
 		}
 
 		// T1: end-to-end build coverage for [Export] and [ExportField] under trimmable.
@@ -284,10 +295,11 @@ namespace UnnamedProject {
 			string? exportShapesText = null;
 			foreach (var f in allJavaFiles) {
 				var text = File.ReadAllText (f);
-				if (text.Contains ("EchoString") && text.Contains ("InitialFoo")) {
+				StringAssert.DoesNotContain ("net.dot.jni.ManagedPeer", text,
+					$"Trimmable generated Java source should not reference net.dot.jni.ManagedPeer: {f}");
+				if (exportShapesJava == null && text.Contains ("EchoString") && text.Contains ("InitialFoo")) {
 					exportShapesJava = f;
 					exportShapesText = text;
-					break;
 				}
 			}
 			Assert.IsNotNull (exportShapesJava,
@@ -318,6 +330,9 @@ namespace UnnamedProject {
 			var typemapDir = builder.Output.GetIntermediaryPath ("typemap");
 			var typemapDlls = Directory.GetFiles (typemapDir, "*.TypeMap.dll");
 			Assert.IsNotEmpty (typemapDlls, "Trimmable typemap should produce at least one *.TypeMap.dll.");
+
+			var apk = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+			AssertApkDexDoesNotContain (apk, "Lnet/dot/jni/ManagedPeer;");
 		}
 
 		// T6: trim-warning baseline for [Export] under trimmable.
@@ -424,6 +439,53 @@ namespace UnnamedProject {
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded — abstract types with protected ctors should not cause XAGTT7009.");
+		}
+
+		static void AssertApkDexDoesNotContain (string apk, string value)
+		{
+			FileAssert.Exists (apk);
+			using var zip = ZipArchive.Open (apk, FileMode.Open);
+			var dexEntries = zip
+				.Where (entry => entry.FullName.StartsWith ("classes", StringComparison.Ordinal) &&
+					entry.FullName.EndsWith (".dex", StringComparison.Ordinal))
+				.ToArray ();
+			Assert.IsNotEmpty (dexEntries, $"{apk} should contain at least one dex file.");
+
+			foreach (var entry in dexEntries) {
+				Assert.IsFalse (
+					EntryContainsAscii (entry, value),
+					$"{entry.FullName} should not contain {value}.");
+			}
+		}
+
+		static bool EntryContainsAscii (ZipEntry entry, string value)
+		{
+			using var stream = new MemoryStream ();
+			entry.Extract (stream);
+			return ContainsAscii (stream.ToArray (), value);
+		}
+
+		static bool FileContainsAscii (string file, string value)
+		{
+			return ContainsAscii (File.ReadAllBytes (file), value);
+		}
+
+		static bool ContainsAscii (byte [] data, string value)
+		{
+			var pattern = Encoding.ASCII.GetBytes (value);
+			for (int i = 0; i <= data.Length - pattern.Length; i++) {
+				bool found = true;
+				for (int j = 0; j < pattern.Length; j++) {
+					if (data [i + j] != pattern [j]) {
+						found = false;
+						break;
+					}
+				}
+				if (found) {
+					return true;
+				}
+			}
+			return false;
 		}
 	}
 }
