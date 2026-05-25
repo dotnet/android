@@ -386,7 +386,7 @@ static class ModelBuilder
 
 				var reuseKey = CreateUcoWrapperReuseKey (uco);
 				if (!sharedWrapperTargets.ContainsKey (reuseKey)) {
-					sharedWrapperTargets.Add (reuseKey, CreateWrapperTarget (proxy, uco.WrapperName));
+					sharedWrapperTargets.Add (reuseKey, UcoWrapperTargetData.From (proxy, uco.WrapperName));
 				}
 			}
 		}
@@ -395,7 +395,7 @@ static class ModelBuilder
 			var reusedUcoMethods = new HashSet<UcoMethodData> ();
 
 			foreach (var uco in proxy.UcoMethods) {
-				var wrapperTarget = CreateWrapperTarget (proxy, uco.WrapperName);
+				var wrapperTarget = UcoWrapperTargetData.From (proxy, uco.WrapperName);
 				if (CanReuseUcoWrapper (proxy, uco) &&
 				    sharedWrapperTargets.TryGetValue (CreateUcoWrapperReuseKey (uco), out var sharedWrapperTarget)) {
 					wrapperTarget = sharedWrapperTarget;
@@ -420,7 +420,7 @@ static class ModelBuilder
 					jniName = jniName.Substring (0, ucoSuffix);
 				}
 
-				var wrapperTarget = CreateWrapperTarget (proxy, uco.WrapperName);
+				var wrapperTarget = UcoWrapperTargetData.From (proxy, uco.WrapperName);
 				proxy.NativeRegistrations.Add (new NativeRegistrationData {
 					JniMethodName = jniName,
 					JniSignature = uco.JniSignature,
@@ -433,29 +433,25 @@ static class ModelBuilder
 
 	static bool CanShareUcoWrapper (JavaPeerProxyData proxy, UcoMethodData uco)
 	{
-		return !uco.UsesExportMethodDispatch &&
-			!proxy.IsGenericDefinition &&
-			!uco.CallbackType.ManagedTypeName.Contains ('`') &&
-			string.Equals (uco.CallbackType.ManagedTypeName, proxy.TargetType.ManagedTypeName, StringComparison.Ordinal) &&
-			string.Equals (uco.CallbackType.AssemblyName, proxy.TargetType.AssemblyName, StringComparison.Ordinal);
+		return IsUcoWrapperReuseCandidate (proxy, uco) && IsCallbackOwnedByProxy (proxy, uco);
 	}
 
 	static bool CanReuseUcoWrapper (JavaPeerProxyData proxy, UcoMethodData uco)
 	{
-		return !uco.UsesExportMethodDispatch &&
-			!proxy.IsGenericDefinition &&
-			!uco.CallbackType.ManagedTypeName.Contains ('`') &&
-			(!string.Equals (uco.CallbackType.ManagedTypeName, proxy.TargetType.ManagedTypeName, StringComparison.Ordinal) ||
-			 !string.Equals (uco.CallbackType.AssemblyName, proxy.TargetType.AssemblyName, StringComparison.Ordinal));
+		return IsUcoWrapperReuseCandidate (proxy, uco) && !IsCallbackOwnedByProxy (proxy, uco);
 	}
 
-	static UcoWrapperTargetData CreateWrapperTarget (JavaPeerProxyData proxy, string methodName)
+	static bool IsUcoWrapperReuseCandidate (JavaPeerProxyData proxy, UcoMethodData uco)
 	{
-		return new UcoWrapperTargetData {
-			TypeNamespace = proxy.Namespace,
-			TypeName = proxy.TypeName,
-			MethodName = methodName,
-		};
+		return !uco.UsesExportMethodDispatch &&
+			!proxy.IsGenericDefinition &&
+			!uco.CallbackType.ManagedTypeName.Contains ('`');
+	}
+
+	static bool IsCallbackOwnedByProxy (JavaPeerProxyData proxy, UcoMethodData uco)
+	{
+		return string.Equals (uco.CallbackType.ManagedTypeName, proxy.TargetType.ManagedTypeName, StringComparison.Ordinal) &&
+			string.Equals (uco.CallbackType.AssemblyName, proxy.TargetType.AssemblyName, StringComparison.Ordinal);
 	}
 
 	static UcoWrapperReuseKey CreateUcoWrapperReuseKey (UcoMethodData uco)

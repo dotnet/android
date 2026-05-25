@@ -236,6 +236,15 @@ sealed record UcoMethodData
 
 sealed record UcoWrapperTargetData
 {
+	public static UcoWrapperTargetData From (JavaPeerProxyData proxy, string methodName)
+	{
+		return new UcoWrapperTargetData {
+			TypeNamespace = proxy.Namespace,
+			TypeName = proxy.TypeName,
+			MethodName = methodName,
+		};
+	}
+
 	/// <summary>
 	/// Namespace of the generated proxy type containing the wrapper method.
 	/// </summary>

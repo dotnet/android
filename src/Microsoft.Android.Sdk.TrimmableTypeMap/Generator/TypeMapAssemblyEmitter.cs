@@ -739,12 +739,12 @@ sealed class TypeMapAssemblyEmitter
 			var handle = uco.UsesExportMethodDispatch
 				? GetExportMethodDispatchEmitter ().EmitUcoMethod (uco)
 				: EmitUcoMethod (uco, proxy);
-			wrapperHandles [CreateWrapperTarget (proxy, uco.WrapperName)] = handle;
+			wrapperHandles [UcoWrapperTargetData.From (proxy, uco.WrapperName)] = handle;
 		}
 
 		foreach (var uco in proxy.UcoConstructors) {
 			var handle = EmitUcoConstructor (uco, proxy);
-			wrapperHandles [CreateWrapperTarget (proxy, uco.WrapperName)] = handle;
+			wrapperHandles [UcoWrapperTargetData.From (proxy, uco.WrapperName)] = handle;
 		}
 
 		// RegisterNatives
@@ -1609,15 +1609,6 @@ sealed class TypeMapAssemblyEmitter
 		// local 4: target type (class)
 		blob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (targetTypeRef));
-	}
-
-	static UcoWrapperTargetData CreateWrapperTarget (JavaPeerProxyData proxy, string methodName)
-	{
-		return new UcoWrapperTargetData {
-			TypeNamespace = proxy.Namespace,
-			TypeName = proxy.TypeName,
-			MethodName = methodName,
-		};
 	}
 
 	void EmitRegisterNatives (JavaPeerProxyData proxy,
