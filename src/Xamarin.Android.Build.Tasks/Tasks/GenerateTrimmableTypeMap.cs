@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Text;
-using System.Xml.Linq;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Android.Sdk.TrimmableTypeMap;
 using Microsoft.Build.Framework;
@@ -145,9 +144,9 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 			var generator = new TrimmableTypeMapGenerator (new MSBuildTrimmableTypeMapLogger (Log));
 
-			XDocument? manifestTemplate = null;
+			ManifestDocument? manifestTemplate = null;
 			if (!ManifestTemplate.IsNullOrEmpty () && File.Exists (ManifestTemplate)) {
-				manifestTemplate = XDocument.Load (ManifestTemplate);
+				manifestTemplate = ManifestDocument.Load (ManifestTemplate);
 			}
 
 			result = generator.Execute (

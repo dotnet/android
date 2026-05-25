@@ -197,7 +197,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	public void Execute_ManifestPlaceholdersAreResolvedBeforeRooting ()
 	{
 		using var peReader = CreateTestFixturePEReader ();
-		var manifestTemplate = System.Xml.Linq.XDocument.Parse ("""
+		var manifestTemplate = ManifestDocument.Parse ("""
 			<?xml version="1.0" encoding="utf-8"?>
 			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="${applicationId}">
 			  <application>
@@ -254,7 +254,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			},
 		};
 
-		var doc = System.Xml.Linq.XDocument.Parse ($$"""
+		var doc = ManifestDocument.Parse ($$"""
 			<?xml version="1.0" encoding="utf-8"?>
 			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="{{packageName}}">
 			  <application>
@@ -287,7 +287,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			},
 		};
 
-		var doc = System.Xml.Linq.XDocument.Parse ("""
+		var doc = ManifestDocument.Parse ("""
 			<?xml version="1.0" encoding="utf-8"?>
 			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example">
 			  <application android:name=".MyApplication" />
@@ -327,7 +327,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		};
 		var peers = new List<JavaPeerInfo> { basePeer, midPeer, leafPeer };
 
-		var doc = System.Xml.Linq.XDocument.Parse ("""
+		var doc = ManifestDocument.Parse ("""
 			<?xml version="1.0" encoding="utf-8"?>
 			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example">
 			  <instrumentation android:name="crc64ccc.NUnitInstrumentation" />
@@ -361,7 +361,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			},
 		};
 
-		var doc = System.Xml.Linq.XDocument.Parse ("""
+		var doc = ManifestDocument.Parse ("""
 			<?xml version="1.0" encoding="utf-8"?>
 			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example">
 			  <application>
@@ -388,7 +388,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			},
 		};
 
-		var doc = System.Xml.Linq.XDocument.Parse ("""
+		var doc = ManifestDocument.Parse ("""
 			<?xml version="1.0" encoding="utf-8"?>
 			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example">
 			  <application>
@@ -415,7 +415,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			},
 		};
 
-		var doc = System.Xml.Linq.XDocument.Parse ("""
+		var doc = ManifestDocument.Parse ("""
 			<?xml version="1.0" encoding="utf-8"?>
 			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example">
 			</manifest>
@@ -622,7 +622,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			},
 		};
 
-		var doc = System.Xml.Linq.XDocument.Parse ("""
+		var doc = ManifestDocument.Parse ("""
 			<?xml version="1.0" encoding="utf-8"?>
 			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example">
 			  <application>
@@ -650,7 +650,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			},
 		};
 
-		var doc = System.Xml.Linq.XDocument.Parse ("""
+		var doc = ManifestDocument.Parse ("""
 			<?xml version="1.0" encoding="utf-8"?>
 			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="my.app">
 			  <application>
@@ -676,7 +676,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			},
 		};
 
-		var doc = System.Xml.Linq.XDocument.Parse ("""
+		var doc = ManifestDocument.Parse ("""
 			<?xml version="1.0" encoding="utf-8"?>
 			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example">
 			  <application>

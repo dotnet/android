@@ -1,7 +1,6 @@
 using System;
 using System.Globalization;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -10,10 +9,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// </summary>
 static class ComponentElementBuilder
 {
-	static readonly XNamespace AndroidNs = ManifestConstants.AndroidNs;
-	static readonly XName AttName = ManifestConstants.AttName;
-
-	internal static XElement? CreateComponentElement (JavaPeerInfo peer, string jniName)
+	internal static ManifestElement? CreateComponentElement (JavaPeerInfo peer, string jniName)
 	{
 		var component = peer.ComponentAttribute;
 		if (component is null) {
@@ -28,7 +24,8 @@ static class ComponentElementBuilder
 			_ => throw new NotSupportedException ($"Unsupported component kind: {component.Kind}"),
 		};
 
-		var element = new XElement (elementName, new XAttribute (AttName, jniName));
+		var element = new ManifestElement (elementName);
+		element.SetAndroidAttribute (ManifestConstants.AttributeName, jniName);
 
 		// Map known properties to android: attributes
 		PropertyMapper.MapComponentProperties (element, component);
@@ -51,47 +48,55 @@ static class ComponentElementBuilder
 		return element;
 	}
 
-	internal static void AddLauncherIntentFilter (XElement activity)
+	internal static void AddLauncherIntentFilter (ManifestElement activity)
 	{
 		// Check if there's already a launcher intent filter
 		if (activity.Elements ("intent-filter").Any (f =>
-			f.Elements ("action").Any (a => (string?)a.Attribute (AttName) == "android.intent.action.MAIN") &&
-			f.Elements ("category").Any (c => (string?)c.Attribute (AttName) == "android.intent.category.LAUNCHER"))) {
+			f.Elements ("action").Any (a => a.AndroidAttribute (ManifestConstants.AttributeName) == "android.intent.action.MAIN") &&
+			f.Elements ("category").Any (c => c.AndroidAttribute (ManifestConstants.AttributeName) == "android.intent.category.LAUNCHER"))) {
 			return;
 		}
 
 		// Add android:exported="true" if not already present
-		if (activity.Attribute (AndroidNs + "exported") is null) {
-			activity.Add (new XAttribute (AndroidNs + "exported", "true"));
+		if (!activity.HasAttribute (ManifestConstants.AndroidNamespace, "exported")) {
+			activity.SetAndroidAttribute ("exported", "true");
 		}
 
-		var filter = new XElement ("intent-filter",
-			new XElement ("action", new XAttribute (AttName, "android.intent.action.MAIN")),
-			new XElement ("category", new XAttribute (AttName, "android.intent.category.LAUNCHER")));
+		var filter = new ManifestElement ("intent-filter");
+		var action = new ManifestElement ("action");
+		action.SetAndroidAttribute (ManifestConstants.AttributeName, "android.intent.action.MAIN");
+		var category = new ManifestElement ("category");
+		category.SetAndroidAttribute (ManifestConstants.AttributeName, "android.intent.category.LAUNCHER");
+		filter.Add (action);
+		filter.Add (category);
 		activity.AddFirst (filter);
 	}
 
-	internal static XElement CreateIntentFilterElement (IntentFilterInfo intentFilter)
+	internal static ManifestElement CreateIntentFilterElement (IntentFilterInfo intentFilter)
 	{
-		var filter = new XElement ("intent-filter");
+		var filter = new ManifestElement ("intent-filter");
 
 		foreach (var action in intentFilter.Actions) {
-			filter.Add (new XElement ("action", new XAttribute (AttName, action)));
+			var element = new ManifestElement ("action");
+			element.SetAndroidAttribute (ManifestConstants.AttributeName, action);
+			filter.Add (element);
 		}
 
 		foreach (var category in intentFilter.Categories) {
-			filter.Add (new XElement ("category", new XAttribute (AttName, category)));
+			var element = new ManifestElement ("category");
+			element.SetAndroidAttribute (ManifestConstants.AttributeName, category);
+			filter.Add (element);
 		}
 
 		// Map IntentFilter properties to XML attributes
 		if (intentFilter.Properties.TryGetValue ("Label", out var label) && label is string labelStr) {
-			filter.SetAttributeValue (AndroidNs + "label", labelStr);
+			filter.SetAndroidAttribute ("label", labelStr);
 		}
 		if (intentFilter.Properties.TryGetValue ("Icon", out var icon) && icon is string iconStr) {
-			filter.SetAttributeValue (AndroidNs + "icon", iconStr);
+			filter.SetAndroidAttribute ("icon", iconStr);
 		}
 		if (intentFilter.Properties.TryGetValue ("Priority", out var priority) && priority is int priorityInt) {
-			filter.SetAttributeValue (AndroidNs + "priority", priorityInt.ToString (CultureInfo.InvariantCulture));
+			filter.SetAndroidAttribute ("priority", priorityInt.ToString (CultureInfo.InvariantCulture));
 		}
 
 		// Data elements
@@ -100,37 +105,37 @@ static class ComponentElementBuilder
 		return filter;
 	}
 
-	internal static void AddIntentFilterDataElement (XElement filter, IntentFilterInfo intentFilter)
+	internal static void AddIntentFilterDataElement (ManifestElement filter, IntentFilterInfo intentFilter)
 	{
-		var dataElement = new XElement ("data");
+		var dataElement = new ManifestElement ("data");
 		bool hasData = false;
 
 		if (intentFilter.Properties.TryGetValue ("DataScheme", out var scheme) && scheme is string schemeStr) {
-			dataElement.SetAttributeValue (AndroidNs + "scheme", schemeStr);
+			dataElement.SetAndroidAttribute ("scheme", schemeStr);
 			hasData = true;
 		}
 		if (intentFilter.Properties.TryGetValue ("DataHost", out var host) && host is string hostStr) {
-			dataElement.SetAttributeValue (AndroidNs + "host", hostStr);
+			dataElement.SetAndroidAttribute ("host", hostStr);
 			hasData = true;
 		}
 		if (intentFilter.Properties.TryGetValue ("DataPath", out var path) && path is string pathStr) {
-			dataElement.SetAttributeValue (AndroidNs + "path", pathStr);
+			dataElement.SetAndroidAttribute ("path", pathStr);
 			hasData = true;
 		}
 		if (intentFilter.Properties.TryGetValue ("DataPathPattern", out var pattern) && pattern is string patternStr) {
-			dataElement.SetAttributeValue (AndroidNs + "pathPattern", patternStr);
+			dataElement.SetAndroidAttribute ("pathPattern", patternStr);
 			hasData = true;
 		}
 		if (intentFilter.Properties.TryGetValue ("DataPathPrefix", out var prefix) && prefix is string prefixStr) {
-			dataElement.SetAttributeValue (AndroidNs + "pathPrefix", prefixStr);
+			dataElement.SetAndroidAttribute ("pathPrefix", prefixStr);
 			hasData = true;
 		}
 		if (intentFilter.Properties.TryGetValue ("DataMimeType", out var mime) && mime is string mimeStr) {
-			dataElement.SetAttributeValue (AndroidNs + "mimeType", mimeStr);
+			dataElement.SetAndroidAttribute ("mimeType", mimeStr);
 			hasData = true;
 		}
 		if (intentFilter.Properties.TryGetValue ("DataPort", out var port) && port is string portStr) {
-			dataElement.SetAttributeValue (AndroidNs + "port", portStr);
+			dataElement.SetAndroidAttribute ("port", portStr);
 			hasData = true;
 		}
 
@@ -139,24 +144,24 @@ static class ComponentElementBuilder
 		}
 	}
 
-	internal static XElement CreateMetaDataElement (MetaDataInfo meta)
+	internal static ManifestElement CreateMetaDataElement (MetaDataInfo meta)
 	{
-		var element = new XElement ("meta-data",
-			new XAttribute (AndroidNs + "name", meta.Name));
+		var element = new ManifestElement ("meta-data");
+		element.SetAndroidAttribute ("name", meta.Name);
 
 		if (meta.Value is not null) {
-			element.SetAttributeValue (AndroidNs + "value", meta.Value);
+			element.SetAndroidAttribute ("value", meta.Value);
 		}
 		if (meta.Resource is not null) {
-			element.SetAttributeValue (AndroidNs + "resource", meta.Resource);
+			element.SetAndroidAttribute ("resource", meta.Resource);
 		}
 		return element;
 	}
 
-	internal static void UpdateApplicationElement (XElement app, JavaPeerInfo peer)
+	internal static void UpdateApplicationElement (ManifestElement app, JavaPeerInfo peer)
 	{
 		string jniName = JniSignatureHelper.JniNameToJavaName (peer.JavaName);
-		app.SetAttributeValue (AttName, jniName);
+		app.SetAndroidAttribute (ManifestConstants.AttributeName, jniName);
 
 		var component = peer.ComponentAttribute;
 		if (component is null) {
@@ -165,11 +170,11 @@ static class ComponentElementBuilder
 		PropertyMapper.ApplyMappings (app, component.Properties, PropertyMapper.ApplicationElementMappings);
 	}
 
-	internal static void AddInstrumentation (XElement manifest, JavaPeerInfo peer, string packageName)
+	internal static void AddInstrumentation (ManifestElement manifest, JavaPeerInfo peer, string packageName)
 	{
 		string jniName = JniSignatureHelper.JniNameToJavaName (peer.JavaName);
-		var element = new XElement ("instrumentation",
-			new XAttribute (AttName, jniName));
+		var element = new ManifestElement ("instrumentation");
+		element.SetAndroidAttribute (ManifestConstants.AttributeName, jniName);
 
 		var component = peer.ComponentAttribute;
 		if (component is null) {
@@ -178,8 +183,8 @@ static class ComponentElementBuilder
 		PropertyMapper.ApplyMappings (element, component.Properties, PropertyMapper.InstrumentationMappings);
 
 		// Default targetPackage to the app package name, matching legacy ManifestDocument behavior
-		if (element.Attribute (AndroidNs + "targetPackage") is null) {
-			element.SetAttributeValue (AndroidNs + "targetPackage", packageName);
+		if (!element.HasAttribute (ManifestConstants.AndroidNamespace, "targetPackage")) {
+			element.SetAndroidAttribute ("targetPackage", packageName);
 		}
 
 		manifest.Add (element);

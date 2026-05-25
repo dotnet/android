@@ -22,7 +22,7 @@ public class ManifestGeneratorTests
 		RuntimeProviderJavaName = "mono.MonoRuntimeProvider",
 	};
 
-	static XDocument ParseTemplate (string xml) => XDocument.Parse (xml);
+	static ManifestDocument ParseTemplate (string xml) => ManifestDocument.Parse (xml);
 
 	static JavaPeerInfo CreatePeer (
 		string javaName,
@@ -46,12 +46,12 @@ public class ManifestGeneratorTests
 		ManifestGenerator gen,
 		IReadOnlyList<JavaPeerInfo>? peers = null,
 		AssemblyManifestInfo? assemblyInfo = null,
-		XDocument? template = null)
+		ManifestDocument? template = null)
 	{
 		peers ??= [];
 		assemblyInfo ??= new AssemblyManifestInfo ();
 		var (doc, _) = gen.Generate (template, peers, assemblyInfo);
-		return doc;
+		return XDocument.Parse (doc.ToXmlString ());
 	}
 
 	[Fact]

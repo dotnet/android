@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Xml.Linq;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -11,8 +10,6 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// </summary>
 static class PropertyMapper
 {
-	static readonly XNamespace AndroidNs = ManifestConstants.AndroidNs;
-
 	internal enum MappingKind { String, Bool, Enum }
 
 	internal readonly struct PropertyMapping
@@ -124,34 +121,34 @@ static class PropertyMapper
 		new ("RestoreAnyVersion", "restoreAnyVersion", MappingKind.Bool),
 	];
 
-	internal static void ApplyMappings (XElement element, IReadOnlyDictionary<string, object?> properties, PropertyMapping[] mappings, bool skipExisting = false)
+	internal static void ApplyMappings (ManifestElement element, IReadOnlyDictionary<string, object?> properties, PropertyMapping[] mappings, bool skipExisting = false)
 	{
 		foreach (var m in mappings) {
 			if (!properties.TryGetValue (m.PropertyName, out var value) || value is null) {
 				continue;
 			}
-			if (skipExisting && element.Attribute (AndroidNs + m.XmlAttributeName) is not null) {
+			if (skipExisting && element.HasAttribute (ManifestConstants.AndroidNamespace, m.XmlAttributeName)) {
 				continue;
 			}
 			switch (m.Kind) {
 			case MappingKind.String when value is string s && !string.IsNullOrEmpty (s):
-				element.SetAttributeValue (AndroidNs + m.XmlAttributeName, s);
+				element.SetAndroidAttribute (m.XmlAttributeName, s);
 				break;
 			case MappingKind.Bool when value is bool b:
-				element.SetAttributeValue (AndroidNs + m.XmlAttributeName, b ? "true" : "false");
+				element.SetAndroidAttribute (m.XmlAttributeName, b ? "true" : "false");
 				break;
 			case MappingKind.Enum when m.EnumConverter is not null:
 				int intValue = value switch { int i => i, long l => (int)l, short s => s, byte b => b, _ => 0 };
 				var strValue = m.EnumConverter (intValue);
 				if (strValue is not null) {
-					element.SetAttributeValue (AndroidNs + m.XmlAttributeName, strValue);
+					element.SetAndroidAttribute (m.XmlAttributeName, strValue);
 				}
 				break;
 			}
 		}
 	}
 
-	internal static void MapComponentProperties (XElement element, ComponentInfo component)
+	internal static void MapComponentProperties (ManifestElement element, ComponentInfo component)
 	{
 		ApplyMappings (element, component.Properties, CommonMappings);
 
@@ -167,18 +164,18 @@ static class PropertyMapper
 
 		// Handle InitOrder for ContentProvider (int, not a standard mapping)
 		if (component.Kind == ComponentKind.ContentProvider && component.Properties.TryGetValue ("InitOrder", out var initOrder) && initOrder is int order) {
-			element.SetAttributeValue (AndroidNs + "initOrder", order.ToString (CultureInfo.InvariantCulture));
+			element.SetAndroidAttribute ("initOrder", order.ToString (CultureInfo.InvariantCulture));
 		}
 	}
 
-	internal static void MapDictionaryProperties (XElement element, IReadOnlyDictionary<string, object?> props, string propertyName, string xmlAttrName)
+	internal static void MapDictionaryProperties (ManifestElement element, IReadOnlyDictionary<string, object?> props, string propertyName, string xmlAttrName)
 	{
 		if (props.TryGetValue (propertyName, out var value) && value is string s && !string.IsNullOrEmpty (s)) {
-			element.SetAttributeValue (AndroidNs + xmlAttrName, s);
+			element.SetAndroidAttribute (xmlAttrName, s);
 		}
 	}
 
-	internal static void MapDictionaryEnumProperty (XElement element, IReadOnlyDictionary<string, object?> props, string propertyName, string xmlAttrName, Func<int, string?> converter)
+	internal static void MapDictionaryEnumProperty (ManifestElement element, IReadOnlyDictionary<string, object?> props, string propertyName, string xmlAttrName, Func<int, string?> converter)
 	{
 		if (!props.TryGetValue (propertyName, out var value)) {
 			return;
@@ -192,7 +189,7 @@ static class PropertyMapper
 		};
 		var strValue = converter (intValue);
 		if (strValue is not null) {
-			element.SetAttributeValue (AndroidNs + xmlAttrName, strValue);
+			element.SetAndroidAttribute (xmlAttrName, strValue);
 		}
 	}
 }

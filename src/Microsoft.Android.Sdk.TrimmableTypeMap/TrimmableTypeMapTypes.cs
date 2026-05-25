@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.IO;
-using System.Xml.Linq;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -28,7 +27,7 @@ public record GeneratedJavaSource (string RelativePath, string Content);
 /// The in-memory result of manifest generation: the merged document and
 /// any additional content provider class names for ApplicationRegistration.java.
 /// </summary>
-public record GeneratedManifest (XDocument Document, string[] AdditionalProviderSources);
+public record GeneratedManifest (ManifestDocument Document, string[] AdditionalProviderSources);
 
 /// <summary>
 /// Configuration values for manifest generation. Passed from MSBuild properties.

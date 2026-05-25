@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -12,8 +11,6 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// </summary>
 class ManifestGenerator
 {
-	static readonly XNamespace AndroidNs = ManifestConstants.AndroidNs;
-	static readonly XName AttName = ManifestConstants.AttName;
 	static readonly char [] PlaceholderSeparators = [';'];
 	static readonly HashSet<string> ComponentElementNames = new (StringComparer.Ordinal) {
 		"application",
@@ -46,12 +43,12 @@ class ManifestGenerator
 	/// Generates the merged manifest from an optional pre-loaded template and writes it to <paramref name="outputPath"/>.
 	/// Returns the list of additional content provider names (for ApplicationRegistration.java).
 	/// </summary>
-	public (XDocument Document, IList<string> ProviderNames) Generate (
-		XDocument? manifestTemplate,
+	public (ManifestDocument Document, IList<string> ProviderNames) Generate (
+		ManifestDocument? manifestTemplate,
 		IReadOnlyList<JavaPeerInfo> allPeers,
 		AssemblyManifestInfo assemblyInfo)
 	{
-		var doc = manifestTemplate ?? CreateDefaultManifest ();
+		var doc = manifestTemplate ?? ManifestDocument.CreateDefault (PackageName);
 		var manifest = doc.Root;
 		if (manifest is null) {
 			throw new InvalidOperationException ("Manifest document has no root element.");
@@ -72,7 +69,7 @@ class ManifestGenerator
 		var existingTypes = new HashSet<string> (
 			app.Descendants ()
 				.Where (IsComponentElement)
-				.Select (a => (string?) a.Attribute (AttName))
+				.Select (a => a.AndroidAttribute (ManifestConstants.AttributeName))
 				.OfType<string> (),
 			StringComparer.Ordinal);
 
@@ -111,19 +108,20 @@ class ManifestGenerator
 		var providerNames = AddRuntimeProviders (app);
 
 		// Set ApplicationJavaClass
-		if (!string.IsNullOrEmpty (ApplicationJavaClass) && app.Attribute (AttName) is null) {
-			app.SetAttributeValue (AttName, ApplicationJavaClass);
+		var applicationJavaClass = ApplicationJavaClass;
+		if (applicationJavaClass is not null && applicationJavaClass.Length > 0 && !app.HasAttribute (ManifestConstants.AndroidNamespace, ManifestConstants.AttributeName)) {
+			app.SetAndroidAttribute (ManifestConstants.AttributeName, applicationJavaClass);
 		}
 
 		// Handle debuggable
-		bool needDebuggable = Debug && app.Attribute (AndroidNs + "debuggable") is null;
+		bool needDebuggable = Debug && !app.HasAttribute (ManifestConstants.AndroidNamespace, "debuggable");
 		if (ForceDebuggable || needDebuggable) {
-			app.SetAttributeValue (AndroidNs + "debuggable", "true");
+			app.SetAndroidAttribute ("debuggable", "true");
 		}
 
 		// Handle extractNativeLibs
 		if (ForceExtractNativeLibs) {
-			app.SetAttributeValue (AndroidNs + "extractNativeLibs", "true");
+			app.SetAndroidAttribute ("extractNativeLibs", "true");
 		}
 
 		// Add internet permission for debug
@@ -137,22 +135,13 @@ class ManifestGenerator
 		return (doc, providerNames);
 	}
 
-	XDocument CreateDefaultManifest ()
-	{
-		return new XDocument (
-			new XDeclaration ("1.0", "utf-8", null),
-			new XElement ("manifest",
-				new XAttribute (XNamespace.Xmlns + "android", AndroidNs.NamespaceName),
-				new XAttribute ("package", PackageName)));
-	}
-
 	/// <summary>
 	/// Manifest templates may use compat JNI names (e.g., "android.apptests.App")
 	/// but the trimmable path generates JCWs with hashed package names (e.g., "crc64.../App").
 	/// This method rewrites any compat name references to the actual JCW name so the
 	/// Android runtime can find the class.
 	/// </summary>
-	void RewriteCompatNames (XElement manifest, IReadOnlyList<JavaPeerInfo> allPeers)
+	void RewriteCompatNames (ManifestElement manifest, IReadOnlyList<JavaPeerInfo> allPeers)
 	{
 		// Build mapping: fully-qualified compat Java name → CRC Java name
 		var compatToCrc = new Dictionary<string, string> (allPeers.Count, StringComparer.Ordinal);
@@ -175,44 +164,44 @@ class ManifestGenerator
 		//   - bare, with no '.' at all ("MainActivity"), also relative to the package
 		// Resolve to the fully-qualified form before the lookup, then write the CRC
 		// name back so duplicate detection later in the pipeline works correctly.
-		var packageName = (string?) manifest.Attribute ("package") ?? "";
+		var packageName = manifest.Attribute ("package") ?? "";
 
 		foreach (var element in manifest.DescendantsAndSelf ()) {
 			if (!IsComponentElement (element)) {
 				continue;
 			}
 
-			var nameAttr = element.Attribute (AttName);
-			if (nameAttr is null) {
+			var name = element.AndroidAttribute (ManifestConstants.AttributeName);
+			if (name is null) {
 				continue;
 			}
-			var resolved = ManifestNameResolver.Resolve (nameAttr.Value, packageName);
+			var resolved = ManifestNameResolver.Resolve (name, packageName);
 			if (compatToCrc.TryGetValue (resolved, out var crcName)) {
-				nameAttr.Value = crcName;
+				element.SetAndroidAttribute (ManifestConstants.AttributeName, crcName);
 			}
 		}
 	}
 
-	static bool IsComponentElement (XElement element)
+	static bool IsComponentElement (ManifestElement element)
 	{
-		return element.Name.NamespaceName.Length == 0 && ComponentElementNames.Contains (element.Name.LocalName);
+		return element.NamespaceName.Length == 0 && ComponentElementNames.Contains (element.LocalName);
 	}
 
-	void EnsureManifestAttributes (XElement manifest)
+	void EnsureManifestAttributes (ManifestElement manifest)
 	{
-		manifest.SetAttributeValue (XNamespace.Xmlns + "android", AndroidNs.NamespaceName);
+		manifest.SetNamespaceDeclaration ("android", ManifestConstants.AndroidNamespace);
 
-		if (string.IsNullOrEmpty ((string?)manifest.Attribute ("package"))) {
-			manifest.SetAttributeValue ("package", PackageName);
+		if (string.IsNullOrEmpty (manifest.Attribute ("package"))) {
+			manifest.SetAttribute ("package", PackageName);
 		}
 
-		if (manifest.Attribute (AndroidNs + "versionCode") is null) {
-			manifest.SetAttributeValue (AndroidNs + "versionCode",
+		if (!manifest.HasAttribute (ManifestConstants.AndroidNamespace, "versionCode")) {
+			manifest.SetAndroidAttribute ("versionCode",
 				string.IsNullOrEmpty (VersionCode) ? "1" : VersionCode);
 		}
 
-		if (manifest.Attribute (AndroidNs + "versionName") is null) {
-			manifest.SetAttributeValue (AndroidNs + "versionName",
+		if (!manifest.HasAttribute (ManifestConstants.AndroidNamespace, "versionName")) {
+			manifest.SetAndroidAttribute ("versionName",
 				string.IsNullOrEmpty (VersionName) ? "1.0" : VersionName);
 		}
 
@@ -224,28 +213,29 @@ class ManifestGenerator
 			if (TargetSdkVersion.IsNullOrEmpty ()) {
 				throw new InvalidOperationException ("TargetSdkVersion must be provided by MSBuild.");
 			}
-			manifest.AddFirst (new XElement ("uses-sdk",
-				new XAttribute (AndroidNs + "minSdkVersion", MinSdkVersion),
-				new XAttribute (AndroidNs + "targetSdkVersion", TargetSdkVersion)));
+			var usesSdk = new ManifestElement ("uses-sdk");
+			usesSdk.SetAndroidAttribute ("minSdkVersion", MinSdkVersion);
+			usesSdk.SetAndroidAttribute ("targetSdkVersion", TargetSdkVersion);
+			manifest.AddFirst (usesSdk);
 		}
 	}
 
-	XElement EnsureApplicationElement (XElement manifest)
+	ManifestElement EnsureApplicationElement (ManifestElement manifest)
 	{
 		var app = manifest.Element ("application");
 		if (app is null) {
-			app = new XElement ("application");
+			app = new ManifestElement ("application");
 			manifest.Add (app);
 		}
 
-		if (app.Attribute (AndroidNs + "label") is null && !string.IsNullOrEmpty (ApplicationLabel)) {
-			app.SetAttributeValue (AndroidNs + "label", ApplicationLabel);
+		if (!app.HasAttribute (ManifestConstants.AndroidNamespace, "label") && !string.IsNullOrEmpty (ApplicationLabel)) {
+			app.SetAndroidAttribute ("label", ApplicationLabel);
 		}
 
 		return app;
 	}
 
-	IList<string> AddRuntimeProviders (XElement app)
+	IList<string> AddRuntimeProviders (ManifestElement app)
 	{
 		if (RuntimeProviderJavaName.IsNullOrEmpty ()) {
 			throw new InvalidOperationException ("RuntimeProviderJavaName must be provided by MSBuild.");
@@ -261,39 +251,38 @@ class ManifestGenerator
 		// Check if runtime provider already exists in template
 		string runtimeProviderName = RuntimeProviderJavaName;
 		if (!app.Elements ("provider").Any (p => {
-			var name = (string?)p.Attribute (ManifestConstants.AttName);
+			var name = p.AndroidAttribute (ManifestConstants.AttributeName);
 			return name == runtimeProviderName ||
-				((string?)p.Attribute (AndroidNs.GetName ("authorities")))?.EndsWith (".__mono_init__", StringComparison.Ordinal) == true;
+				p.AndroidAttribute ("authorities")?.EndsWith (".__mono_init__", StringComparison.Ordinal) == true;
 		})) {
 			app.Add (CreateRuntimeProvider (runtimeProviderName, null, --appInitOrder));
 		}
 
 		var providerNames = new List<string> ();
-		var processAttrName = AndroidNs.GetName ("process");
 		var procs = new List<string> ();
 
-		foreach (var el in app.Elements ()) {
-			var proc = el.Attribute (processAttrName);
-			if (proc is null || procs.Contains (proc.Value)) {
+		foreach (var el in app.Elements ().ToList ()) {
+			var proc = el.AndroidAttribute ("process");
+			if (proc is null || procs.Contains (proc)) {
 				continue;
 			}
-			if (el.Name.NamespaceName != "") {
+			if (el.NamespaceName != "") {
 				continue;
 			}
-			switch (el.Name.LocalName) {
+			switch (el.LocalName) {
 			case "provider":
-				var autho = el.Attribute (AndroidNs.GetName ("authorities"));
-				if (autho is not null && autho.Value.EndsWith (".__mono_init__", StringComparison.Ordinal)) {
+				var autho = el.AndroidAttribute ("authorities");
+				if (autho is not null && autho.EndsWith (".__mono_init__", StringComparison.Ordinal)) {
 					continue;
 				}
 				goto case "activity";
 			case "activity":
 			case "receiver":
 			case "service":
-				procs.Add (proc.Value);
+				procs.Add (proc);
 				string providerName = $"{className}_{procs.Count}";
 				providerNames.Add (providerName);
-				app.Add (CreateRuntimeProvider ($"{packageName}.{providerName}", proc.Value, --appInitOrder));
+				app.Add (CreateRuntimeProvider ($"{packageName}.{providerName}", proc, --appInitOrder));
 				break;
 			}
 		}
@@ -301,21 +290,24 @@ class ManifestGenerator
 		return providerNames;
 	}
 
-	XElement CreateRuntimeProvider (string name, string? processName, int initOrder)
+	ManifestElement CreateRuntimeProvider (string name, string? processName, int initOrder)
 	{
-		return new XElement ("provider",
-			new XAttribute (AndroidNs + "name", name),
-			new XAttribute (AndroidNs + "exported", "false"),
-			new XAttribute (AndroidNs + "initOrder", initOrder),
-			processName is not null ? new XAttribute (AndroidNs + "process", processName) : null,
-			new XAttribute (AndroidNs + "authorities", PackageName + "." + name + ".__mono_init__"));
+		var provider = new ManifestElement ("provider");
+		provider.SetAndroidAttribute ("name", name);
+		provider.SetAndroidAttribute ("exported", "false");
+		provider.SetAndroidAttribute ("initOrder", initOrder.ToString (System.Globalization.CultureInfo.InvariantCulture));
+		if (processName is not null) {
+			provider.SetAndroidAttribute ("process", processName);
+		}
+		provider.SetAndroidAttribute ("authorities", PackageName + "." + name + ".__mono_init__");
+		return provider;
 	}
 
 	/// <summary>
 	/// Replaces ${key} placeholders in all attribute values throughout the document.
 	/// Placeholder format: "key1=value1;key2=value2"
 	/// </summary>
-	internal static void ApplyPlaceholders (XDocument doc, string? placeholders)
+	internal static void ApplyPlaceholders (ManifestDocument doc, string? placeholders)
 	{
 		if (placeholders.IsNullOrEmpty ()) {
 			return;
@@ -335,8 +327,12 @@ class ManifestGenerator
 			return;
 		}
 
-		foreach (var element in doc.Descendants ()) {
-			foreach (var attr in element.Attributes ()) {
+		if (doc.Root is null) {
+			return;
+		}
+
+		foreach (var element in doc.Root.DescendantsAndSelf ()) {
+			foreach (var attr in element.Attributes) {
 				var val = attr.Value;
 				foreach (var kvp in replacements) {
 					if (val.Contains (kvp.Key)) {

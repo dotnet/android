@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -12,26 +11,24 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// </summary>
 static class AssemblyLevelElementBuilder
 {
-	static readonly XNamespace AndroidNs = ManifestConstants.AndroidNs;
-	static readonly XName AttName = ManifestConstants.AttName;
-
-	internal static void AddAssemblyLevelElements (XElement manifest, XElement app, AssemblyManifestInfo info)
+	internal static void AddAssemblyLevelElements (ManifestElement manifest, ManifestElement app, AssemblyManifestInfo info)
 	{
 		var existingPermissions = new HashSet<string> (
-			manifest.Elements ("permission").Select (e => (string?)e.Attribute (AttName)).OfType<string> ());
+			manifest.Elements ("permission").Select (e => e.AndroidAttribute (ManifestConstants.AttributeName)).OfType<string> ());
 		var existingPermissionGroups = new HashSet<string> (
-			manifest.Elements ("permission-group").Select (e => (string?)e.Attribute (AttName)).OfType<string> ());
+			manifest.Elements ("permission-group").Select (e => e.AndroidAttribute (ManifestConstants.AttributeName)).OfType<string> ());
 		var existingPermissionTrees = new HashSet<string> (
-			manifest.Elements ("permission-tree").Select (e => (string?)e.Attribute (AttName)).OfType<string> ());
+			manifest.Elements ("permission-tree").Select (e => e.AndroidAttribute (ManifestConstants.AttributeName)).OfType<string> ());
 		var existingUsesPermissions = new HashSet<string> (
-			manifest.Elements ("uses-permission").Select (e => (string?)e.Attribute (AttName)).OfType<string> ());
+			manifest.Elements ("uses-permission").Select (e => e.AndroidAttribute (ManifestConstants.AttributeName)).OfType<string> ());
 
 		// <permission> elements
 		foreach (var perm in info.Permissions) {
 			if (string.IsNullOrEmpty (perm.Name) || !existingPermissions.Add (perm.Name)) {
 				continue;
 			}
-			var element = new XElement ("permission", new XAttribute (AttName, perm.Name));
+			var element = new ManifestElement ("permission");
+			element.SetAndroidAttribute (ManifestConstants.AttributeName, perm.Name);
 			PropertyMapper.MapDictionaryProperties (element, perm.Properties, "Label", "label");
 			PropertyMapper.MapDictionaryProperties (element, perm.Properties, "Description", "description");
 			PropertyMapper.MapDictionaryProperties (element, perm.Properties, "Icon", "icon");
@@ -46,7 +43,8 @@ static class AssemblyLevelElementBuilder
 			if (string.IsNullOrEmpty (pg.Name) || !existingPermissionGroups.Add (pg.Name)) {
 				continue;
 			}
-			var element = new XElement ("permission-group", new XAttribute (AttName, pg.Name));
+			var element = new ManifestElement ("permission-group");
+			element.SetAndroidAttribute (ManifestConstants.AttributeName, pg.Name);
 			PropertyMapper.MapDictionaryProperties (element, pg.Properties, "Label", "label");
 			PropertyMapper.MapDictionaryProperties (element, pg.Properties, "Description", "description");
 			PropertyMapper.MapDictionaryProperties (element, pg.Properties, "Icon", "icon");
@@ -59,7 +57,8 @@ static class AssemblyLevelElementBuilder
 			if (string.IsNullOrEmpty (pt.Name) || !existingPermissionTrees.Add (pt.Name)) {
 				continue;
 			}
-			var element = new XElement ("permission-tree", new XAttribute (AttName, pt.Name));
+			var element = new ManifestElement ("permission-tree");
+			element.SetAndroidAttribute (ManifestConstants.AttributeName, pt.Name);
 			PropertyMapper.MapDictionaryProperties (element, pt.Properties, "Label", "label");
 			PropertyMapper.MapDictionaryProperties (element, pt.Properties, "Icon", "icon");
 			PropertyMapper.MapDictionaryProperties (element, pt.Properties, "RoundIcon", "roundIcon");
@@ -71,31 +70,33 @@ static class AssemblyLevelElementBuilder
 			if (string.IsNullOrEmpty (up.Name) || !existingUsesPermissions.Add (up.Name)) {
 				continue;
 			}
-			var element = new XElement ("uses-permission", new XAttribute (AttName, up.Name));
+			var element = new ManifestElement ("uses-permission");
+			element.SetAndroidAttribute (ManifestConstants.AttributeName, up.Name);
 			if (up.MaxSdkVersion.HasValue) {
-				element.SetAttributeValue (AndroidNs + "maxSdkVersion", up.MaxSdkVersion.Value.ToString (CultureInfo.InvariantCulture));
+				element.SetAndroidAttribute ("maxSdkVersion", up.MaxSdkVersion.Value.ToString (CultureInfo.InvariantCulture));
 			}
-			if (!string.IsNullOrEmpty (up.UsesPermissionFlags)) {
-				element.SetAttributeValue (AndroidNs + "usesPermissionFlags", up.UsesPermissionFlags);
+			var usesPermissionFlags = up.UsesPermissionFlags;
+			if (usesPermissionFlags is not null && usesPermissionFlags.Length > 0) {
+				element.SetAndroidAttribute ("usesPermissionFlags", usesPermissionFlags);
 			}
 			manifest.Add (element);
 		}
 
 		// <uses-feature> elements
 		var existingFeatures = new HashSet<string> (
-			manifest.Elements ("uses-feature").Select (e => (string?)e.Attribute (AttName)).OfType<string> ());
+			manifest.Elements ("uses-feature").Select (e => e.AndroidAttribute (ManifestConstants.AttributeName)).OfType<string> ());
 		foreach (var uf in info.UsesFeatures) {
 			if (uf.Name is not null && existingFeatures.Add (uf.Name)) {
-				var element = new XElement ("uses-feature",
-					new XAttribute (AttName, uf.Name),
-					new XAttribute (AndroidNs + "required", uf.Required ? "true" : "false"));
+				var element = new ManifestElement ("uses-feature");
+				element.SetAndroidAttribute (ManifestConstants.AttributeName, uf.Name);
+				element.SetAndroidAttribute ("required", uf.Required ? "true" : "false");
 				manifest.Add (element);
 			} else if (uf.GLESVersion != 0) {
 				var versionStr = $"0x{uf.GLESVersion:X8}";
-				if (!manifest.Elements ("uses-feature").Any (e => (string?)e.Attribute (AndroidNs + "glEsVersion") == versionStr)) {
-					var element = new XElement ("uses-feature",
-						new XAttribute (AndroidNs + "glEsVersion", versionStr),
-						new XAttribute (AndroidNs + "required", uf.Required ? "true" : "false"));
+				if (!manifest.Elements ("uses-feature").Any (e => e.AndroidAttribute ("glEsVersion") == versionStr)) {
+					var element = new ManifestElement ("uses-feature");
+					element.SetAndroidAttribute ("glEsVersion", versionStr);
+					element.SetAndroidAttribute ("required", uf.Required ? "true" : "false");
 					manifest.Add (element);
 				}
 			}
@@ -106,10 +107,11 @@ static class AssemblyLevelElementBuilder
 			if (string.IsNullOrEmpty (ul.Name)) {
 				continue;
 			}
-			if (!app.Elements ("uses-library").Any (e => (string?)e.Attribute (AttName) == ul.Name)) {
-				app.Add (new XElement ("uses-library",
-					new XAttribute (AttName, ul.Name),
-					new XAttribute (AndroidNs + "required", ul.Required ? "true" : "false")));
+			if (!app.Elements ("uses-library").Any (e => e.AndroidAttribute (ManifestConstants.AttributeName) == ul.Name)) {
+				var element = new ManifestElement ("uses-library");
+				element.SetAndroidAttribute (ManifestConstants.AttributeName, ul.Name);
+				element.SetAndroidAttribute ("required", ul.Required ? "true" : "false");
+				app.Add (element);
 			}
 		}
 
@@ -118,7 +120,7 @@ static class AssemblyLevelElementBuilder
 			if (string.IsNullOrEmpty (md.Name)) {
 				continue;
 			}
-			if (!app.Elements ("meta-data").Any (e => (string?)e.Attribute (AndroidNs + "name") == md.Name)) {
+			if (!app.Elements ("meta-data").Any (e => e.AndroidAttribute ("name") == md.Name)) {
 				app.Add (ComponentElementBuilder.CreateMetaDataElement (md));
 			}
 		}
@@ -128,14 +130,14 @@ static class AssemblyLevelElementBuilder
 			if (string.IsNullOrEmpty (prop.Name)) {
 				continue;
 			}
-			if (!app.Elements ("property").Any (e => (string?)e.Attribute (AndroidNs + "name") == prop.Name)) {
-				var element = new XElement ("property",
-					new XAttribute (AndroidNs + "name", prop.Name));
+			if (!app.Elements ("property").Any (e => e.AndroidAttribute ("name") == prop.Name)) {
+				var element = new ManifestElement ("property");
+				element.SetAndroidAttribute ("name", prop.Name);
 				if (prop.Value is not null) {
-					element.SetAttributeValue (AndroidNs + "value", prop.Value);
+					element.SetAndroidAttribute ("value", prop.Value);
 				}
 				if (prop.Resource is not null) {
-					element.SetAttributeValue (AndroidNs + "resource", prop.Resource);
+					element.SetAndroidAttribute ("resource", prop.Resource);
 				}
 				app.Add (element);
 			}
@@ -143,37 +145,39 @@ static class AssemblyLevelElementBuilder
 
 		// <uses-configuration> elements
 		foreach (var uc in info.UsesConfigurations) {
-			var element = new XElement ("uses-configuration");
+			var element = new ManifestElement ("uses-configuration");
 			if (uc.ReqFiveWayNav) {
-				element.SetAttributeValue (AndroidNs + "reqFiveWayNav", "true");
+				element.SetAndroidAttribute ("reqFiveWayNav", "true");
 			}
 			if (uc.ReqHardKeyboard) {
-				element.SetAttributeValue (AndroidNs + "reqHardKeyboard", "true");
+				element.SetAndroidAttribute ("reqHardKeyboard", "true");
 			}
 			if (uc.ReqKeyboardType is not null) {
-				element.SetAttributeValue (AndroidNs + "reqKeyboardType", uc.ReqKeyboardType);
+				element.SetAndroidAttribute ("reqKeyboardType", uc.ReqKeyboardType);
 			}
 			if (uc.ReqNavigation is not null) {
-				element.SetAttributeValue (AndroidNs + "reqNavigation", uc.ReqNavigation);
+				element.SetAndroidAttribute ("reqNavigation", uc.ReqNavigation);
 			}
 			if (uc.ReqTouchScreen is not null) {
-				element.SetAttributeValue (AndroidNs + "reqTouchScreen", uc.ReqTouchScreen);
+				element.SetAndroidAttribute ("reqTouchScreen", uc.ReqTouchScreen);
 			}
 			manifest.Add (element);
 		}
 
 		// <supports-gl-texture> elements
 		var existingGLTextures = new HashSet<string> (
-			manifest.Elements ("supports-gl-texture").Select (e => (string?)e.Attribute (AttName)).OfType<string> ());
+			manifest.Elements ("supports-gl-texture").Select (e => e.AndroidAttribute (ManifestConstants.AttributeName)).OfType<string> ());
 		foreach (var gl in info.SupportsGLTextures) {
 			if (existingGLTextures.Add (gl.Name)) {
-				manifest.Add (new XElement ("supports-gl-texture", new XAttribute (AttName, gl.Name)));
+				var element = new ManifestElement ("supports-gl-texture");
+				element.SetAndroidAttribute (ManifestConstants.AttributeName, gl.Name);
+				manifest.Add (element);
 			}
 		}
 	}
 
 	internal static void ApplyApplicationProperties (
-		XElement app,
+		ManifestElement app,
 		Dictionary<string, object?> properties,
 		IReadOnlyList<JavaPeerInfo> allPeers,
 		Action<string>? warn = null)
@@ -186,14 +190,14 @@ static class AssemblyLevelElementBuilder
 	}
 
 	static void ApplyTypeProperty (
-		XElement app,
+		ManifestElement app,
 		Dictionary<string, object?> properties,
 		IReadOnlyList<JavaPeerInfo> allPeers,
 		string propertyName,
 		string xmlAttrName,
 		Action<string>? warn)
 	{
-		if (app.Attribute (AndroidNs + xmlAttrName) is not null) {
+		if (app.HasAttribute (ManifestConstants.AndroidNamespace, xmlAttrName)) {
 			return;
 		}
 		if (!properties.TryGetValue (propertyName, out var value) || value is not string managedName || managedName.Length == 0) {
@@ -208,7 +212,7 @@ static class AssemblyLevelElementBuilder
 
 		foreach (var peer in allPeers) {
 			if (peer.ManagedTypeName == managedName) {
-				app.SetAttributeValue (AndroidNs + xmlAttrName, peer.JavaName.Replace ('/', '.'));
+				app.SetAndroidAttribute (xmlAttrName, peer.JavaName.Replace ('/', '.'));
 				return;
 			}
 		}
@@ -216,12 +220,13 @@ static class AssemblyLevelElementBuilder
 		warn?.Invoke ($"Could not resolve {propertyName} type '{managedName}' to a Java peer for android:{xmlAttrName}.");
 	}
 
-	internal static void AddInternetPermission (XElement manifest)
+	internal static void AddInternetPermission (ManifestElement manifest)
 	{
 		if (!manifest.Elements ("uses-permission").Any (p =>
-			(string?)p.Attribute (AndroidNs + "name") == "android.permission.INTERNET")) {
-			manifest.Add (new XElement ("uses-permission",
-				new XAttribute (AndroidNs + "name", "android.permission.INTERNET")));
+			p.AndroidAttribute ("name") == "android.permission.INTERNET")) {
+			var element = new ManifestElement ("uses-permission");
+			element.SetAndroidAttribute ("name", "android.permission.INTERNET");
+			manifest.Add (element);
 		}
 	}
 }

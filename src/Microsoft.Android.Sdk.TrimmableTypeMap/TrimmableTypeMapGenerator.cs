@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection.PortableExecutable;
-using System.Xml.Linq;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -32,7 +31,7 @@ public class TrimmableTypeMapGenerator
 		HashSet<string> frameworkAssemblyNames,
 		bool useSharedTypemapUniverse = false,
 		ManifestConfig? manifestConfig = null,
-		XDocument? manifestTemplate = null,
+		ManifestDocument? manifestTemplate = null,
 		string? packageNamingPolicy = null,
 		int maxArrayRank = 0)
 	{
@@ -120,7 +119,7 @@ public class TrimmableTypeMapGenerator
 	}
 
 	GeneratedManifest GenerateManifest (List<JavaPeerInfo> allPeers, AssemblyManifestInfo assemblyManifestInfo,
-		ManifestConfig config, XDocument? manifestTemplate)
+		ManifestConfig config, ManifestDocument? manifestTemplate)
 	{
 		string minSdk = config.SupportedOSPlatformVersion ?? throw new InvalidOperationException ("SupportedOSPlatformVersion must be provided by MSBuild.");
 		if (Version.TryParse (minSdk, out var sopv)) {
@@ -288,32 +287,30 @@ public class TrimmableTypeMapGenerator
 		return sources.ToList ();
 	}
 
-	internal void RootManifestReferencedTypes (List<JavaPeerInfo> allPeers, XDocument? doc)
+	internal void RootManifestReferencedTypes (List<JavaPeerInfo> allPeers, ManifestDocument? doc)
 	{
 		if (doc?.Root is not { } root) {
 			return;
 		}
 
-		XNamespace androidNs = "http://schemas.android.com/apk/res/android";
-		XName attName = androidNs + "name";
-		var packageName = (string?) root.Attribute ("package") ?? "";
+		var packageName = root.Attribute ("package") ?? "";
 
 		var componentNames = new HashSet<string> (StringComparer.Ordinal);
 		var deferredRegistrationNames = new HashSet<string> (StringComparer.Ordinal);
 		foreach (var element in root.Descendants ()) {
-			switch (element.Name.LocalName) {
+			switch (element.LocalName) {
 			case "application":
 			case "activity":
 			case "instrumentation":
 			case "service":
 			case "receiver":
 			case "provider":
-				var name = (string?) element.Attribute (attName);
+				var name = element.AndroidAttribute (ManifestConstants.AttributeName);
 				if (name is not null) {
 					var resolvedName = ManifestNameResolver.Resolve (name, packageName);
 					componentNames.Add (resolvedName);
 
-					if (element.Name.LocalName is "application" or "instrumentation") {
+					if (element.LocalName is "application" or "instrumentation") {
 						deferredRegistrationNames.Add (resolvedName);
 					}
 				}
@@ -435,18 +432,15 @@ public class TrimmableTypeMapGenerator
 		list.Add (peer);
 	}
 
-	static XDocument? PrepareManifestForRooting (XDocument? manifestTemplate, ManifestConfig? manifestConfig)
+	static ManifestDocument? PrepareManifestForRooting (ManifestDocument? manifestTemplate, ManifestConfig? manifestConfig)
 	{
 		if (manifestTemplate is null && manifestConfig is null) {
 			return null;
 		}
 
 		var doc = manifestTemplate is not null
-			? new XDocument (manifestTemplate)
-			: new XDocument (
-				new XElement (
-					"manifest",
-					new XAttribute (XNamespace.Xmlns + "android", ManifestConstants.AndroidNs.NamespaceName)));
+			? manifestTemplate.Clone ()
+			: ManifestDocument.CreateDefault ("");
 
 		if (doc.Root is not { } root) {
 			return doc;
@@ -456,8 +450,8 @@ public class TrimmableTypeMapGenerator
 			return doc;
 		}
 
-		if (((string?) root.Attribute ("package")).IsNullOrEmpty () && !manifestConfig.PackageName.IsNullOrEmpty ()) {
-			root.SetAttributeValue ("package", manifestConfig.PackageName);
+		if (root.Attribute ("package").IsNullOrEmpty () && !manifestConfig.PackageName.IsNullOrEmpty ()) {
+			root.SetAttribute ("package", manifestConfig.PackageName);
 		}
 
 		ManifestGenerator.ApplyPlaceholders (doc, manifestConfig.ManifestPlaceholders);
@@ -465,12 +459,12 @@ public class TrimmableTypeMapGenerator
 		if (!manifestConfig.ApplicationJavaClass.IsNullOrEmpty ()) {
 			var app = root.Element ("application");
 			if (app is null) {
-				app = new XElement ("application");
+				app = new ManifestElement ("application");
 				root.Add (app);
 			}
 
-			if (app.Attribute (ManifestConstants.AttName) is null) {
-				app.SetAttributeValue (ManifestConstants.AttName, manifestConfig.ApplicationJavaClass);
+			if (!app.HasAttribute (ManifestConstants.AndroidNamespace, ManifestConstants.AttributeName)) {
+				app.SetAndroidAttribute (ManifestConstants.AttributeName, manifestConfig.ApplicationJavaClass);
 			}
 		}
 
