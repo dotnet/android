@@ -478,24 +478,24 @@ namespace Java.InteropTests
 			Assert.IsNull (ignore_t2, string.Format ("No exception should be thrown [t2]! Got: {0}", ignore_t2));
 		}
 
-		[Test, Category ("NativeTypeMap")]
+		[Test]
 		public void JavaToManagedTypeMapping ()
 		{
-			Type m = Java.Interop.TypeManager.GetJavaToManagedType ("android/content/res/Resources");
+			Type m = JniRuntime.CurrentRuntime.TypeManager.GetType (new JniTypeSignature ("android/content/res/Resources"));
 			Assert.AreNotEqual (null, m);
-			m = Java.Interop.TypeManager.GetJavaToManagedType ("this/type/does/not/exist");
+			m = JniRuntime.CurrentRuntime.TypeManager.GetType (new JniTypeSignature ("this/type/does/not/exist"));
 			Assert.AreEqual (null, m);
 		}
 
-		[Test, Category ("NativeTypeMap")]
+		[Test]
 		public void ManagedToJavaTypeMapping ()
 		{
 			Type type = typeof(Activity);
-			string m = JNIEnv.TypemapManagedToJava (type);
+			string m = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (type).SimpleReference;
 			Assert.AreNotEqual (null, m, "`Activity` subclasses Java.Lang.Object, it should be in the typemap!");
 
 			type = typeof (JnienvTest);
-			m = JNIEnv.TypemapManagedToJava (type);
+			m = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (type).SimpleReference;
 			Assert.AreEqual (null, m, "`JnienvTest` does *not* subclass Java.Lang.Object, it should *not* be in the typemap!");
 		}
 
