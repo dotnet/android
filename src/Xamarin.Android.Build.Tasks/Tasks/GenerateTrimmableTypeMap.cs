@@ -9,6 +9,7 @@ using Microsoft.Android.Build.Tasks;
 using Microsoft.Android.Sdk.TrimmableTypeMap;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using TrimmableManifestDocument = Microsoft.Android.Sdk.TrimmableTypeMap.ManifestDocument;
 
 namespace Xamarin.Android.Tasks;
 
@@ -144,9 +145,9 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 			var generator = new TrimmableTypeMapGenerator (new MSBuildTrimmableTypeMapLogger (Log));
 
-			ManifestDocument? manifestTemplate = null;
+			TrimmableManifestDocument? manifestTemplate = null;
 			if (!ManifestTemplate.IsNullOrEmpty () && File.Exists (ManifestTemplate)) {
-				manifestTemplate = ManifestDocument.Load (ManifestTemplate);
+				manifestTemplate = TrimmableManifestDocument.Load (ManifestTemplate);
 			}
 
 			result = generator.Execute (
