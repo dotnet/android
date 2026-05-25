@@ -76,7 +76,7 @@ static class AssemblyLevelElementBuilder
 				element.SetAndroidAttribute ("maxSdkVersion", up.MaxSdkVersion.Value.ToString (CultureInfo.InvariantCulture));
 			}
 			var usesPermissionFlags = up.UsesPermissionFlags;
-			if (usesPermissionFlags is not null && usesPermissionFlags.Length > 0) {
+			if (!usesPermissionFlags.IsNullOrEmpty ()) {
 				element.SetAndroidAttribute ("usesPermissionFlags", usesPermissionFlags);
 			}
 			manifest.Add (element);

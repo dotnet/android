@@ -109,7 +109,7 @@ class ManifestGenerator
 
 		// Set ApplicationJavaClass
 		var applicationJavaClass = ApplicationJavaClass;
-		if (applicationJavaClass is not null && applicationJavaClass.Length > 0 && !app.HasAttribute (ManifestConstants.AndroidNamespace, ManifestConstants.AttributeName)) {
+		if (!applicationJavaClass.IsNullOrEmpty () && !app.HasAttribute (ManifestConstants.AndroidNamespace, ManifestConstants.AttributeName)) {
 			app.SetAndroidAttribute (ManifestConstants.AttributeName, applicationJavaClass);
 		}
 
@@ -261,6 +261,7 @@ class ManifestGenerator
 		var providerNames = new List<string> ();
 		var procs = new List<string> ();
 
+		// Adding runtime providers mutates the application children, so enumerate over a snapshot.
 		foreach (var el in app.Elements ().ToList ()) {
 			var proc = el.AndroidAttribute ("process");
 			if (proc is null || procs.Contains (proc)) {
