@@ -873,7 +873,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		// Regression test: the UCO wrapper must use byte (unsigned, JNI ABI) for boolean,
 		// but the callback MemberRef must use sbyte (signed, MCW convention).
 		// A mismatch caused ILLink to fail resolving the member reference and trim n_* methods.
-		var peer = FindFixtureByJavaName ("my/app/TouchHandler");
+		var peer = MakeTouchHandlerCallbackDispatchPeer ();
 		using var stream = GenerateAssembly (new [] { peer }, "BoolReturnTest");
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
@@ -896,7 +896,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	public void Generate_UcoMethod_BooleanParam_WrapperUsesByte_CallbackUsesSByte ()
 	{
 		// Regression test: boolean parameters must also use the correct encoding.
-		var peer = FindFixtureByJavaName ("my/app/TouchHandler");
+		var peer = MakeTouchHandlerCallbackDispatchPeer ();
 		using var stream = GenerateAssembly (new [] { peer }, "BoolParamTest");
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
@@ -1166,6 +1166,18 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		var ldftnTokens = ReadLdftnTokens (registerBytes);
 		Assert.DoesNotContain (MetadataTokens.GetToken (rootBaseUcoHandle), ldftnTokens);
 		Assert.Contains (MetadataTokens.GetToken (leafUcoHandle), ldftnTokens);
+	}
+
+	JavaPeerInfo MakeTouchHandlerCallbackDispatchPeer ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/TouchHandler");
+		return peer with {
+			MarshalMethods = peer.MarshalMethods.Select (m => m with {
+				DeclaringTypeName = m.IsConstructor ? "" : "MyApp.TouchHandler",
+				DeclaringAssemblyName = m.IsConstructor ? "" : "TestFixtures",
+				CallManagedMethodDirectly = false,
+			}).ToList (),
+		};
 	}
 
 	static MemberReference FindCallbackMemberRef (MetadataReader reader, string methodName)

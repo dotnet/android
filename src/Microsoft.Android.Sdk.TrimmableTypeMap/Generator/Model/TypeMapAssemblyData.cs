@@ -196,7 +196,9 @@ sealed record TypeRefData
 /// <summary>
 /// An [UnmanagedCallersOnly] static wrapper for a marshal method.
 /// Body: either forward to an existing n_* callback or dispatch directly to the
-/// managed export target when the trimmable path can avoid dynamic callback generation.
+/// managed target. Direct dispatch avoids inherited n_* callbacks that can route
+/// through the wrong managed virtual slot for hidden/new-slot members sharing the
+/// same JNI method.
 /// </summary>
 sealed record UcoMethodData
 {
@@ -221,13 +223,13 @@ sealed record UcoMethodData
 	public required string JniSignature { get; init; }
 
 	/// <summary>
-	/// Optional [Export]-only metadata for wrappers that dispatch directly to the
-	/// managed export target instead of forwarding to a generated n_* callback.
+	/// Optional metadata for wrappers that dispatch directly to the managed target
+	/// instead of forwarding to a generated n_* callback.
 	/// </summary>
 	public ExportMethodDispatchData? ExportMethodDispatch { get; init; }
 
 	/// <summary>
-	/// True when this wrapper performs the static [Export] direct-dispatch path.
+	/// True when this wrapper performs the managed direct-dispatch path.
 	/// </summary>
 	public bool UsesExportMethodDispatch => ExportMethodDispatch != null;
 }

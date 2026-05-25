@@ -338,7 +338,7 @@ static class ModelBuilder
 					AssemblyName = !mm.DeclaringAssemblyName.IsNullOrEmpty () ? mm.DeclaringAssemblyName : peer.AssemblyName,
 				},
 				JniSignature = mm.JniSignature,
-				ExportMethodDispatch = mm.IsExport ? new ExportMethodDispatchData {
+				ExportMethodDispatch = (mm.IsExport || mm.CallManagedMethodDirectly) ? new ExportMethodDispatchData {
 					ManagedMethodName = mm.ManagedMethodName,
 					ParameterTypes = mm.ManagedParameterTypes,
 					ParameterKinds = mm.ManagedParameterExportKinds,

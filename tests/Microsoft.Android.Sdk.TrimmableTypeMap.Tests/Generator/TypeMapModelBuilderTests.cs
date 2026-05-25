@@ -1470,6 +1470,40 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
+		public void Build_DirectRegisteredMethod_UsesLocalManagedDispatchWrapper ()
+		{
+			var peer = MakeAcwPeer ("my/app/DirectRegister", "MyApp.DirectRegister", "App") with {
+				MarshalMethods = [
+					new MarshalMethodInfo {
+						JniName = "<init>", NativeCallbackName = "n_ctor",
+						JniSignature = "()V", ManagedMethodName = ".ctor",
+						IsConstructor = true,
+					},
+					new MarshalMethodInfo {
+						JniName = "getValue", NativeCallbackName = "n_GetValue",
+						JniSignature = "()I", ManagedMethodName = "get_Value",
+						CallManagedMethodDirectly = true,
+						ManagedReturnType = new TypeRefData {
+							ManagedTypeName = "System.Int32",
+							AssemblyName = "System.Runtime",
+						},
+					},
+				],
+			};
+
+			var model = BuildModel ([peer]);
+			var proxy = model.ProxyTypes.Single (p => p.TargetType.ManagedTypeName == "MyApp.DirectRegister");
+			var uco = Assert.Single (proxy.UcoMethods);
+			Assert.True (uco.UsesExportMethodDispatch);
+			Assert.Equal ("get_Value", uco.ExportMethodDispatch?.ManagedMethodName);
+
+			var registration = proxy.NativeRegistrations.Single (r => r.JniMethodName == "n_GetValue");
+			Assert.Equal (proxy.Namespace, registration.WrapperTarget.TypeNamespace);
+			Assert.Equal (proxy.TypeName, registration.WrapperTarget.TypeName);
+			Assert.Equal (uco.WrapperName, registration.WrapperTarget.MethodName);
+		}
+
+		[Fact]
 		public void Build_InheritedVirtualOverride_TargetUnavailable_FallsBackToLocalUcoMethod ()
 		{
 			var derived = MakeInheritedOverridePeer ("my/app/Concrete", "MyApp.Concrete");
