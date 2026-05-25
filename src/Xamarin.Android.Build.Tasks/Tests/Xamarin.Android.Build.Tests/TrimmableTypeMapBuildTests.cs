@@ -473,19 +473,7 @@ namespace UnnamedProject {
 		static bool ContainsAscii (byte [] data, string value)
 		{
 			var pattern = Encoding.ASCII.GetBytes (value);
-			for (int i = 0; i <= data.Length - pattern.Length; i++) {
-				bool found = true;
-				for (int j = 0; j < pattern.Length; j++) {
-					if (data [i + j] != pattern [j]) {
-						found = false;
-						break;
-					}
-				}
-				if (found) {
-					return true;
-				}
-			}
-			return false;
+			return data.AsSpan ().IndexOf (pattern) >= 0;
 		}
 	}
 }
