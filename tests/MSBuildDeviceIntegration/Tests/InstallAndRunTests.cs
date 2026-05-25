@@ -58,6 +58,7 @@ namespace Xamarin.Android.Build.Tests
 
 			AddTestData (true, "trimmable", AndroidRuntime.CoreCLR);
 			AddTestData (false, "trimmable", AndroidRuntime.CoreCLR);
+			AddTestData (true, "trimmable", AndroidRuntime.NativeAOT);
 
 			return ret;
 
