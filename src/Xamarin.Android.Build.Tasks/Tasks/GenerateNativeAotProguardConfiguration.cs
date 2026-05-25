@@ -14,7 +14,7 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "GNAPC";
 
 		[Required]
-		public string NativeAotDgmlFile { get; set; } = "";
+		public ITaskItem [] NativeAotDgmlFiles { get; set; } = [];
 
 		[Required]
 		public string AcwMapFile { get; set; } = "";
@@ -29,13 +29,19 @@ namespace Xamarin.Android.Tasks
 				Directory.CreateDirectory (dir);
 			}
 
-			if (!File.Exists (NativeAotDgmlFile)) {
-				Log.LogError ("NativeAOT DGML file '{0}' was not found.", NativeAotDgmlFile);
+			if (NativeAotDgmlFiles.Length == 0) {
+				Log.LogError ("No NativeAOT DGML files were provided.");
 				return false;
 			}
 			if (!File.Exists (AcwMapFile)) {
 				Log.LogError ("ACW map file '{0}' was not found.", AcwMapFile);
 				return false;
+			}
+			foreach (var dgmlFile in NativeAotDgmlFiles) {
+				if (!File.Exists (dgmlFile.ItemSpec)) {
+					Log.LogError ("NativeAOT DGML file '{0}' was not found.", dgmlFile.ItemSpec);
+					return false;
+				}
 			}
 
 			var retainedTypeKeys = LoadRetainedTypeKeysFromDgml ();
@@ -47,7 +53,7 @@ namespace Xamarin.Android.Tasks
 				writer.WriteLine ($"-keep class {javaTypeName} {{ *; }}");
 			}
 
-			Log.LogMessage (MessageImportance.Low, $"Generated {javaTypes.Count} NativeAOT trimmable typemap ProGuard rules from '{NativeAotDgmlFile}'.");
+			Log.LogMessage (MessageImportance.Low, $"Generated {javaTypes.Count} NativeAOT trimmable typemap ProGuard rules from {NativeAotDgmlFiles.Length} DGML file(s).");
 			return !Log.HasLoggedErrors;
 		}
 
@@ -71,31 +77,33 @@ namespace Xamarin.Android.Tasks
 		HashSet<string> LoadRetainedTypeKeysFromDgml ()
 		{
 			var typeKeys = new HashSet<string> (StringComparer.Ordinal);
-			using var reader = XmlReader.Create (NativeAotDgmlFile, new XmlReaderSettings {
-				DtdProcessing = DtdProcessing.Prohibit,
-				XmlResolver = null,
-			});
+			foreach (var dgmlFile in NativeAotDgmlFiles) {
+				using var reader = XmlReader.Create (dgmlFile.ItemSpec, new XmlReaderSettings {
+					DtdProcessing = DtdProcessing.Prohibit,
+					XmlResolver = null,
+				});
 
-			while (reader.Read ()) {
-				if (reader.NodeType != XmlNodeType.Element || reader.LocalName != "Node") {
-					continue;
+				while (reader.Read ()) {
+					if (reader.NodeType != XmlNodeType.Element || reader.LocalName != "Node") {
+						continue;
+					}
+
+					var label = reader.GetAttribute ("Label");
+					if (label.IsNullOrEmpty () || !label.StartsWith ("Type metadata: [", StringComparison.Ordinal)) {
+						continue;
+					}
+
+					var assemblyStart = "Type metadata: [".Length;
+					var assemblyEnd = label.IndexOf (']', assemblyStart);
+					if (assemblyEnd < 0 || assemblyEnd == label.Length - 1) {
+						continue;
+					}
+
+					var assemblyName = label.Substring (assemblyStart, assemblyEnd - assemblyStart);
+					var managedTypeName = label.Substring (assemblyEnd + 1);
+					typeKeys.Add (managedTypeName);
+					typeKeys.Add ($"{managedTypeName}, {assemblyName}");
 				}
-
-				var label = reader.GetAttribute ("Label");
-				if (label.IsNullOrEmpty () || !label.StartsWith ("Type metadata: [", StringComparison.Ordinal)) {
-					continue;
-				}
-
-				var assemblyStart = "Type metadata: [".Length;
-				var assemblyEnd = label.IndexOf (']', assemblyStart);
-				if (assemblyEnd < 0 || assemblyEnd == label.Length - 1) {
-					continue;
-				}
-
-				var assemblyName = label.Substring (assemblyStart, assemblyEnd - assemblyStart);
-				var managedTypeName = label.Substring (assemblyEnd + 1);
-				typeKeys.Add (managedTypeName);
-				typeKeys.Add ($"{managedTypeName}, {assemblyName}");
 			}
 
 			return typeKeys;

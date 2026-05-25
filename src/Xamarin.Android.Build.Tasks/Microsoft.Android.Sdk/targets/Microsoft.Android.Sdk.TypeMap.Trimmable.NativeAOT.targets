@@ -40,14 +40,27 @@
     </ItemGroup>
   </Target>
 
+  <Target Name="_CollectTrimmableNativeAotDgmlFiles"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' ">
+    <ItemGroup>
+      <_TrimmableNativeAotRuntimeIdentifiers Remove="@(_TrimmableNativeAotRuntimeIdentifiers)" />
+      <_TrimmableNativeAotDgmlFiles Remove="@(_TrimmableNativeAotDgmlFiles)" />
+      <_TrimmableNativeAotRuntimeIdentifiers Include="$(RuntimeIdentifier)" Condition=" '$(RuntimeIdentifier)' != '' " />
+      <_TrimmableNativeAotRuntimeIdentifiers Include="$(RuntimeIdentifiers)" Condition=" '$(RuntimeIdentifier)' == '' and '$(RuntimeIdentifiers)' != '' " />
+      <_TrimmableNativeAotDgmlFiles Include="$(NativeIntermediateOutputPath)$(TargetName).scan.dgml.xml" Condition=" '@(_TrimmableNativeAotRuntimeIdentifiers)' == '' " />
+      <_TrimmableNativeAotDgmlFiles Include="$(NativeIntermediateOutputPath)$(TargetName).scan.dgml.xml" Condition=" '$(RuntimeIdentifier)' != '' " />
+      <_TrimmableNativeAotDgmlFiles Include="$(IntermediateOutputPath)%(_TrimmableNativeAotRuntimeIdentifiers.Identity)\native\$(TargetName).scan.dgml.xml" Condition=" '$(RuntimeIdentifier)' == '' and '@(_TrimmableNativeAotRuntimeIdentifiers)' != '' " />
+    </ItemGroup>
+  </Target>
+
   <Target Name="_GenerateTrimmableTypeMapProguardConfiguration"
-      AfterTargets="IlcCompile"
       BeforeTargets="_CompileToDalvik"
+      DependsOnTargets="_CollectTrimmableNativeAotDgmlFiles"
       Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
-      Inputs="$(NativeIntermediateOutputPath)$(TargetName).scan.dgml.xml;$(IntermediateOutputPath)acw-map.txt"
+      Inputs="@(_TrimmableNativeAotDgmlFiles);$(IntermediateOutputPath)acw-map.txt"
       Outputs="$(_ProguardProjectConfiguration)">
     <GenerateNativeAotProguardConfiguration
-        NativeAotDgmlFile="$(NativeIntermediateOutputPath)$(TargetName).scan.dgml.xml"
+        NativeAotDgmlFiles="@(_TrimmableNativeAotDgmlFiles)"
         AcwMapFile="$(IntermediateOutputPath)acw-map.txt"
         OutputFile="$(_ProguardProjectConfiguration)" />
     <ItemGroup>
