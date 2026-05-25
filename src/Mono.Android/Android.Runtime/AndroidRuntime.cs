@@ -110,6 +110,7 @@ namespace Android.Runtime {
 			TypeManager             = typeManager;
 			ValueManager            = valueManager;
 			JniAddNativeMethodRegistrationAttributePresent = jniAddNativeMethodRegistrationAttributePresent;
+			ManagedPeerNativeRegistration = !RuntimeFeature.TrimmableTypeMap;
 		}
 	}
 
