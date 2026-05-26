@@ -5,10 +5,6 @@
     <_TrimmableRuntimeProviderJavaName Condition=" '$(_TrimmableRuntimeProviderJavaName)' == '' ">mono.MonoRuntimeProvider</_TrimmableRuntimeProviderJavaName>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <_GenerateProguardAfterTargets Condition=" '$(_GenerateProguardAfterTargets)' == '' ">ILLink</_GenerateProguardAfterTargets>
-  </PropertyGroup>
-
   <!-- Add TypeMap DLLs to ILLink input. ILLink natively understands TypeMapAttribute<T>. -->
   <Target Name="_AddTrimmableTypeMapToLinker"
       BeforeTargets="PrepareForILLink;_RunILLink"
@@ -16,7 +12,6 @@
     <ItemGroup>
       <ManagedAssemblyToLink Include="$(_TypeMapOutputDirectory)*.dll">
         <DestinationSubPath>%(Filename)%(Extension)</DestinationSubPath>
-        <IsTrimmable>true</IsTrimmable>
       </ManagedAssemblyToLink>
     </ItemGroup>
   </Target>
@@ -25,33 +20,9 @@
   <Target Name="_ConfigureTrimmableTypeMapForLinker"
       BeforeTargets="PrepareForILLink;_RunILLink"
       DependsOnTargets="_GenerateTrimmableTypeMap">
-    <ItemGroup>
-      <_TrimmableTypeMapEntryAssemblies Include="$(_TypeMapOutputDirectory)*.dll" />
-    </ItemGroup>
     <PropertyGroup>
-      <_ExtraTrimmerArgs>@(_TrimmableTypeMapEntryAssemblies->'--typemap-entry-assembly %(Filename)', ' ') $(_ExtraTrimmerArgs)</_ExtraTrimmerArgs>
+      <_ExtraTrimmerArgs>--typemap-entry-assembly $(_TypeMapAssemblyName) $(_ExtraTrimmerArgs)</_ExtraTrimmerArgs>
     </PropertyGroup>
-    <ItemGroup>
-      <_TrimmableTypeMapEntryAssemblies Remove="@(_TrimmableTypeMapEntryAssemblies)" />
-    </ItemGroup>
-  </Target>
-
-  <Target Name="_PrepareLinkedAssembliesForProguard"
-      AfterTargets="$(_GenerateProguardAfterTargets)"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' ">
-    <ItemGroup>
-      <_LinkedAssemblyForProguard Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
-    </ItemGroup>
-  </Target>
-
-  <Target Name="_GenerateProguardConfiguration"
-      AfterTargets="_PrepareLinkedAssembliesForProguard"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
-      Inputs="@(_LinkedAssemblyForProguard)"
-      Outputs="$(_ProguardProjectConfiguration)">
-    <GenerateProguardConfiguration
-        LinkedAssemblies="@(_LinkedAssemblyForProguard)"
-        OutputFile="$(_ProguardProjectConfiguration)" />
   </Target>
 
   <!-- Add TypeMap DLLs to assembly store with per-ABI metadata.
