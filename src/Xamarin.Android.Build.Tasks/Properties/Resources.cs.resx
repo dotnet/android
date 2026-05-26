@@ -566,7 +566,7 @@ Buď změňte hodnotu v souboru AndroidManifest.xml tak, aby odpovídala hodnot�
     <comment>The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
   </data>
   <data name="XA3008" xml:space="preserve">
-    <value>Failed to extract debug info from '{0}'{1}</value>
+    <value>Nepovedlo se extrahovat ladicí informace z: „{0}“{1}</value>
     <comment>'{0}' is the native shared library filename. '{1}' is the full output of the failed command, starting and ending with a newline.</comment>
   </data>
   <data name="XA4209" xml:space="preserve">
@@ -812,6 +812,22 @@ Odeberte z projektu odkaz na {0} a místo toho přidejte balíček NuGet{1}.
   <data name="XA4315" xml:space="preserve">
     <value>Ignoruje se: {0}. Manifest nemá požadovaný atribut package v elementu manifestu.</value>
     <comment>{0} - The path the the file.
+</comment>
+  </data>
+  <data name="XA4316" xml:space="preserve">
+    <value>Specified input file '{0}' does not exist. Ignoring.</value>
+    <comment>{0} - The path to the file.
+</comment>
+  </data>
+  <data name="XA4317" xml:space="preserve">
+    <value>Input file '{0}' does not start with '&lt;replacements/&gt;'. Skipping.</value>
+    <comment>{0} - The path to the file.
+</comment>
+  </data>
+  <data name="XA4318" xml:space="preserve">
+    <value>Input file '{0}' could not be read: {1}. Skipping.</value>
+    <comment>{0} - The path to the file.
+{1} - The exception message.
 </comment>
   </data>
   <data name="XA5101" xml:space="preserve">
