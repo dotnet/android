@@ -16,6 +16,11 @@ Important startup spans:
 
 Lookup and steady-state spans:
 
+- `typemap.llvm.lookup.jni_name`
+- `typemap.llvm.lookup.jni_name.uncached`
+- `typemap.llvm.peer.create`
+- `typemap.llvm.proxy.create`
+- `typemap.llvm.activation`
 - `typemap.lookup.jni_name`
 - `typemap.lookup.jni_name.uncached`
 - `typemap.lookup.managed_type`
@@ -55,6 +60,15 @@ Run from this directory:
 export PATH="$HOME/.dotnet/tools:$PATH"
 ASPIRE_ALLOW_UNSECURED_TRANSPORT=true \
 ASPIRE_DASHBOARD_OTLP_HTTP_ENDPOINT_URL=http://localhost:4318 \
+aspire run --detach --non-interactive
+```
+
+By default the AppHost launches Release/CoreCLR/trimmable. Override the type map to compare against LLVM-IR:
+
+```bash
+ASPIRE_ALLOW_UNSECURED_TRANSPORT=true \
+ASPIRE_DASHBOARD_OTLP_HTTP_ENDPOINT_URL=http://localhost:4318 \
+HELLOWORLD_ANDROID_TYPEMAP=llvm-ir \
 aspire run --detach --non-interactive
 ```
 

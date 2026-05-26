@@ -132,6 +132,7 @@ namespace Java.Interop {
 		[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type.GetType() can never statically know the string value from parameter 'typename_ptr'.")]
 		static void n_Activate (IntPtr jnienv, IntPtr jclass, IntPtr typename_ptr, IntPtr signature_ptr, IntPtr jobject, IntPtr parameters_ptr)
 		{
+			using var operation = TrimmableTypeMapTelemetry.StartOperation ("typemap.llvm.activation");
 			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return;
 
@@ -152,6 +153,9 @@ namespace Java.Interop {
 				}
 
 				Type type = Type.GetType (JNIEnv.GetString (typename_ptr, JniHandleOwnership.DoNotTransfer)!, throwOnError:true)!;
+				if (operation.IsActive) {
+					operation.SetTag ("managed.type", type.FullName);
+				}
 				if (type.IsGenericTypeDefinition) {
 					throw new NotSupportedException (
 							"Constructing instances of generic types from Java is not supported, as the type parameters cannot be determined.",
@@ -264,8 +268,20 @@ namespace Java.Interop {
 
 		static Type? GetJavaToManagedTypeCore (string class_name)
 		{
+			using var operation = TrimmableTypeMapTelemetry.StartOperation ("typemap.llvm.lookup.jni_name");
+			if (operation.IsActive) {
+				operation.SetTag ("jni.name", class_name);
+			}
 			if (TypeManagerMapDictionaries.JniToManaged.TryGetValue (class_name, out Type? type)) {
+				if (operation.IsActive) {
+					operation.SetTag ("cache.hit", true);
+					operation.SetTag ("managed.type", type.FullName);
+				}
 				return type;
+			}
+
+			if (operation.IsActive) {
+				operation.SetTag ("cache.hit", false);
 			}
 
 			if (RuntimeFeature.TrimmableTypeMap) {
@@ -274,14 +290,33 @@ namespace Java.Interop {
 					$"{nameof (RuntimeFeature.TrimmableTypeMap)} is enabled. The trimmable path should resolve " +
 					$"types through {nameof (TrimmableTypeMapTypeManager)}.");
 			} else if (RuntimeFeature.IsMonoRuntime) {
+				using var uncachedOperation = TrimmableTypeMapTelemetry.StartOperation ("typemap.llvm.lookup.jni_name.uncached");
+				if (uncachedOperation.IsActive) {
+					uncachedOperation.SetTag ("jni.name", class_name);
+					uncachedOperation.SetTag ("runtime", "monovm");
+				}
 				type = monovm_typemap_java_to_managed (class_name);
+				if (uncachedOperation.IsActive) {
+					uncachedOperation.SetTag ("managed.type", type?.FullName);
+				}
 			} else if (RuntimeFeature.IsCoreClrRuntime) {
+				using var uncachedOperation = TrimmableTypeMapTelemetry.StartOperation ("typemap.llvm.lookup.jni_name.uncached");
+				if (uncachedOperation.IsActive) {
+					uncachedOperation.SetTag ("jni.name", class_name);
+					uncachedOperation.SetTag ("runtime", "coreclr");
+				}
 				type = clr_typemap_java_to_managed (class_name);
+				if (uncachedOperation.IsActive) {
+					uncachedOperation.SetTag ("managed.type", type?.FullName);
+				}
 			} else {
 				throw new NotSupportedException ("Internal error: unknown runtime not supported");
 			}
 
 			if (type != null) {
+				if (operation.IsActive) {
+					operation.SetTag ("managed.type", type.FullName);
+				}
 				TypeManagerMapDictionaries.JniToManaged.Add (class_name, type);
 				return type;
 			}
@@ -301,9 +336,16 @@ namespace Java.Interop {
 		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "TypeManager.CreateProxy() does not statically know the value of the 'type' local variable.")]
 		internal static IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer, Type? targetType)
 		{
+			using var operation = TrimmableTypeMapTelemetry.StartOperation ("typemap.llvm.peer.create");
+			if (operation.IsActive) {
+				operation.SetTag ("target.type", targetType?.FullName);
+			}
 			Type? type = null;
 			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
 			string? class_name = GetClassName (class_ptr);
+			if (operation.IsActive) {
+				operation.SetTag ("jni.name", class_name);
+			}
 			lock (TypeManagerMapDictionaries.AccessLock) {
 				while (class_ptr != IntPtr.Zero) {
 					type = GetJavaToManagedTypeCore (class_name);
@@ -331,6 +373,9 @@ namespace Java.Interop {
 					 !targetType.IsAssignableFrom (type))) {
 				type = targetType;
 			}
+			if (operation.IsActive) {
+				operation.SetTag ("managed.type", type?.FullName);
+			}
 
 			if (type == null) {
 				class_name = JNIEnv.GetClassNameFromInstance (handle);
@@ -346,6 +391,9 @@ namespace Java.Interop {
 					throw new NotSupportedException ("Unable to find Invoker for type '" + type.FullName + "'. Was it linked away?",
 							CreateJavaLocationException ());
 				type = invokerType;
+				if (operation.IsActive) {
+					operation.SetTag ("invoker.type", type.FullName);
+				}
 			}
 
 			var typeSig  = JNIEnvInit.androidRuntime?.TypeManager.GetTypeSignature (type) ?? default;
@@ -383,6 +431,9 @@ namespace Java.Interop {
 
 			try {
 				result = (IJavaPeerable) CreateProxy (type, handle, transfer);
+				if (operation.IsActive) {
+					operation.SetTag ("created", true);
+				}
 				if (Runtime.IsGCUserPeer (result.PeerReference.Handle)) {
 					result.SetJniManagedPeerState (JniManagedPeerStates.Replaceable | JniManagedPeerStates.Activatable);
 				}
@@ -404,17 +455,27 @@ namespace Java.Interop {
 				IntPtr handle,
 				JniHandleOwnership transfer)
 		{
+			using var operation = TrimmableTypeMapTelemetry.StartOperation ("typemap.llvm.proxy.create");
+			if (operation.IsActive) {
+				operation.SetTag ("managed.type", type.FullName);
+			}
 			// Skip Activator.CreateInstance() as that requires public constructors,
 			// and we want to hide some constructors for sanity reasons.
 			var peer = GetUninitializedObject (type);
 			BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 			var c = type.GetConstructor (flags, null, XAConstructorSignature, null);
 			if (c != null) {
+				if (operation.IsActive) {
+					operation.SetTag ("constructor.signature", "IntPtr,JniHandleOwnership");
+				}
 				c.Invoke (peer, new object[] { handle, transfer });
 				return peer;
 			}
 			c = type.GetConstructor (flags, null, JIConstructorSignature, null);
 			if (c != null) {
+				if (operation.IsActive) {
+					operation.SetTag ("constructor.signature", "JniObjectReference,JniObjectReferenceOptions");
+				}
 				JniObjectReference          r = new JniObjectReference (handle);
 				JniObjectReferenceOptions   o = JniObjectReferenceOptions.Copy;
 				c.Invoke (peer, new object [] { r, o });

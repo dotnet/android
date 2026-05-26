@@ -174,3 +174,25 @@ Raw artifacts:
 | Host elapsed us | 10 | 624504.0 | 661617.0 | 746665.0 | 667727.7 |
 | `jnienv.initialize` us | 10 | 96694.2 | 99591.25 | 122651.1 | 101759.32 |
 | `typemap.data.initialize` us | 10 | 60933.0 | 62103.2 | 82455.6 | 64033.28 |
+
+## LLVM-IR comparison smoke data
+
+After adding LLVM-IR lookup instrumentation, the same Aspire sample was relaunched with:
+
+```bash
+HELLOWORLD_ANDROID_TYPEMAP=llvm-ir
+```
+
+The resource environment confirmed `HELLOWORLD_ANDROID_TYPEMAP=llvm-ir`, and `aspire otel spans --format Json` returned the following comparison spans:
+
+| Span | Duration ms | `duration.us` | Notes |
+| --- | ---: | ---: | --- |
+| `jnienv.initialize` | 47 | 47354.8 | Buffered startup span |
+| `typemap.llvm.activation` | 11 | 10888.9 | Buffered activation path |
+| `typemap.llvm.lookup.jni_name` | 1 | 1493.2 | Buffered JNI-name lookup |
+| `typemap.llvm.lookup.jni_name.uncached` | 1 | 1487.4 | Buffered native typemap lookup |
+| `typemap.llvm.lookup.jni_name` | 0 | 235.3 | Steady-state lookup for `android/widget/Button`, `cache.hit=false` |
+| `typemap.llvm.lookup.jni_name.uncached` | 0 | 128.6 | Steady-state CoreCLR lookup for `android/widget/Button` |
+| `typemap.llvm.activation` | 0 | 23 | Steady-state activation path |
+
+This gives direct side-by-side OTEL coverage for LLVM-IR typemap lookups and the trimmable typemap lookup paths in the same Aspire workflow.
