@@ -133,7 +133,6 @@ namespace Java.Interop {
 					{"java/lang/String", typeof (string)},
 					{"net/dot/jni/internal/JavaProxyObject",    typeof (JavaProxyObject)},
 					{"net/dot/jni/internal/JavaProxyThrowable", typeof (JavaProxyThrowable)},
-					{"net/dot/jni/ManagedPeer",                 typeof (ManagedPeer)},
 					{"V", typeof (void)},
 					{"Z", typeof (Boolean)},
 					{"java/lang/Boolean", typeof (Boolean?)},

@@ -235,7 +235,9 @@ namespace Java.Interop
 			}
 
 #if !XA_JI_EXCLUDE
-			ManagedPeer.Init ();
+			if (RuntimeFeature.ManagedPeerNativeRegistration) {
+				ManagedPeer.Init ();
+			}
 #endif  // !XA_JI_EXCLUDE
 		}
 

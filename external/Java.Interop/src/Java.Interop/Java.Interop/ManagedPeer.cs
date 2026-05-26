@@ -346,4 +346,3 @@ namespace Java.Interop {
 		}
 	}
 }
-

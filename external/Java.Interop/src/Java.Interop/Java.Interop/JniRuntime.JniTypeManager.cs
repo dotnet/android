@@ -372,6 +372,9 @@ namespace Java.Interop {
 				if (JniBuiltinSimpleReferenceToType.Value.TryGetValue (jniSimpleReference, out var ret)) {
 					yield return ret;
 				}
+				if (RuntimeFeature.ManagedPeerNativeRegistration && jniSimpleReference == ManagedPeer.JniTypeName) {
+					yield return typeof (ManagedPeer);
+				}
 				yield break;
 			}
 
@@ -605,4 +608,3 @@ namespace Java.Interop {
 		}
 	}
 }
-
