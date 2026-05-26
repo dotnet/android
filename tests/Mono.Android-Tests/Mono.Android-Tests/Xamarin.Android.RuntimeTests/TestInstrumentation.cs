@@ -83,9 +83,6 @@ namespace Xamarin.Android.RuntimeTests
 
 					// Instance identity after JNI round-trip
 					"Java.LangTests.ObjectTest.JnienvCreateInstance_RegistersMultipleInstances",
-
-					// Global ref leak when inflating custom views
-					"Xamarin.Android.RuntimeTests.CustomWidgetTests.InflateCustomView_ShouldNotLeakGlobalRefs",
 				};
 			}
 		}
