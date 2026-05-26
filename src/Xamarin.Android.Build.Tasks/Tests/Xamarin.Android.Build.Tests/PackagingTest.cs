@@ -652,8 +652,10 @@ namespace UnnamedProject {
 
 				// Build with no changes
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
-				foreach (var target in new [] { "_Sign", "_BuildApkEmbed" }) {
-					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
+				if (TestEnvironment.CommercialBuildAvailable) {
+					foreach (var target in new [] { "_Sign", "_BuildApkEmbed" }) {
+						Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
+					}
 				}
 			}
 		}

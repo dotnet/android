@@ -828,44 +828,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The &apos;AndroidHttpClientHandlerType&apos; property value &apos;{0}&apos; must derive from &apos;{1}&apos;.
-        ///Please change the value to an assembly-qualifed type name which inherits from &apos;{1}&apos; or remove the property completely..
-        /// </summary>
-        public static string XA1031 {
-            get {
-                return ResourceManager.GetString("XA1031", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The &apos;AndroidHttpClientHandlerType&apos; property value &apos;{0}&apos; must not derive from &apos;System.Net.Htt.HttpClientHandler&apos;.
-        ///Please change the value to an assembly-qualifed type name which inherits from &apos;System.Net.Http.HttpMessageHandler&apos; or remove the property completely..
-        /// </summary>
-        public static string XA1031_HCH {
-            get {
-                return ResourceManager.GetString("XA1031_HCH", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to resolve &apos;{0}&apos; from &apos;{1}&apos;. Please check your `AndroidHttpClientHandlerType` setting..
-        /// </summary>
-        public static string XA1032 {
-            get {
-                return ResourceManager.GetString("XA1032", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Could not resolve &apos;{0}&apos;. Please check your `AndroidHttpClientHandlerType` setting..
-        /// </summary>
-        public static string XA1033 {
-            get {
-                return ResourceManager.GetString("XA1033", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Your project references &apos;{0}&apos; which uses the `_Microsoft.Android.Resource.Designer` assembly, but you do not have this feature enabled. Please set the `AndroidUseDesignerAssembly` MSBuild property to `true` in your project file..
         /// </summary>
         public static string XA1034 {
@@ -1723,6 +1685,33 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA4315 {
             get {
                 return ResourceManager.GetString("XA4315", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specified input file &apos;{0}&apos; does not exist. Ignoring..
+        /// </summary>
+        public static string XA4316 {
+            get {
+                return ResourceManager.GetString("XA4316", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Input file &apos;{0}&apos; does not start with &apos;&lt;replacements/&gt;&apos;. Skipping..
+        /// </summary>
+        public static string XA4317 {
+            get {
+                return ResourceManager.GetString("XA4317", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Input file &apos;{0}&apos; could not be read: {1}. Skipping..
+        /// </summary>
+        public static string XA4318 {
+            get {
+                return ResourceManager.GetString("XA4318", resourceCulture);
             }
         }
         

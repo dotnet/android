@@ -478,30 +478,6 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>'RunAOTCompilation' MSBuild 속성은 트리밍이 활성화된 경우에만 지원됩니다. 텍스트 편집기에서 프로젝트 파일을 편집하여 이 빌드 구성에 대해 'PublishTrimmed'를 'true'로 설정합니다.</value>
     <comment>The following are literal names and should not be translated: 'RunAOTCompilation', 'PublishTrimmed'</comment>
   </data>
-  <data name="XA1031" xml:space="preserve">
-    <value>`AndroidHttpClientHandlerType` 속성 값 '{0}'은(는) '{1}'에서 파생되어야 합니다.
-값을 '{1}'에서 상속하는 정규화된 어셈블리 형식 이름으로 변경하거나 속성을 완전히 제거하세요.</value>
-    <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',
-{0} - The value of the property.
-{1} - A type from which the AndroidHttpClientHandlerType should derive .</comment>
-  </data>
-  <data name="XA1031_HCH" xml:space="preserve">
-    <value>'AndroidHttpClientHandlerType' 속성 값 '{0}'은(는) 'System.Net.Htt.HttpClientHandler'에서 파생되어서는 안됩니다.
-값을 'System.Net.Http.Http.HttpMessageHandler'에서 상속하는 어셈블리 형식 이름으로 변경하거나 속성을 완전히 제거하세요.</value>
-    <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType', 'System.Net.Htt.HttpClientHandler', 'System.Net.Http.HttpMessageHandler',
-{0} - The value of the property.</comment>
-  </data>
-  <data name="XA1032" xml:space="preserve">
-    <value>'{1}'에서 '{0}'을(를) 확인하지 못했습니다. `AndroidHttpClientHandlerType` 설정을 확인하세요.</value>
-    <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',
-{0} - The value of the property.
-{1} - The name of the assembly.</comment>
-  </data>
-  <data name="XA1033" xml:space="preserve">
-    <value>'{0}'을(를) 확인할 수 없습니다. `AndroidHttpClientHandlerType` 설정을 확인하세요.</value>
-    <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',
-{0} - The value of the property.</comment>
-  </data>
   <data name="XA1034" xml:space="preserve">
     <value>프로젝트에서 `_Microsoft.Android.Resource.Designer` 어셈블리를 사용하는 '{0}'을(를) 참조하지만 이 기능이 활성화되지 않았습니다. 프로젝트 파일에서 `AndroidUseDesignerAssembly` MSBuild 속성을 `true`로 설정하세요.</value>
     <comment>The following are literal names and should not be translated: '_Microsoft.Android.Resource.Desinger', 'AndroidUseDesignerAssembly', 'true'
@@ -590,7 +566,7 @@ AndroidManifest.xml의 값을 $(SupportedOSPlatformVersion) 값에 맞도록 변
     <comment>The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
   </data>
   <data name="XA3008" xml:space="preserve">
-    <value>Failed to extract debug info from '{0}'{1}</value>
+    <value>'{0}'{1}에서 디버그 정보를 추출하지 못함</value>
     <comment>'{0}' is the native shared library filename. '{1}' is the full output of the failed command, starting and ending with a newline.</comment>
   </data>
   <data name="XA4209" xml:space="preserve">
@@ -651,6 +627,12 @@ AndroidManifest.xml의 값을 $(SupportedOSPlatformVersion) 값에 맞도록 변
 {0} - The target SDK version number
 {1} - The API version number</comment>
   </data>
+  <data name="XA4217" xml:space="preserve">
+    <value>Architecture '{0}' has Java types which have no counterparts in template architecture '{1}': {2}</value>
+    <comment>{0} - The target architecture name
+{1} - The template architecture name
+{2} - Comma-separated list of Java type names that have no counterparts</comment>
+  </data>
   <data name="XA4218" xml:space="preserve">
     <value>{0} 경로에서 //manifest/application/uses-library를 찾을 수 없습니다.</value>
     <comment>The following are literal names and should not be translated: //manifest/application/uses-library</comment>
@@ -701,6 +683,11 @@ In this mesage, the term "layout" means an Android UI layout.
     <value>리소스 항목 '{0}'에 필수 메타데이터 항목 '{1}'이(가) 없습니다.</value>
     <comment>{0} - The name of the Android layout resource file
 {1} - The name of the metadata item</comment>
+  </data>
+  <data name="XA4227" xml:space="preserve">
+    <value>Architecture '{0}' doesn't match all marshal methods in architecture '{1}'. Please see detailed MSBuild logs for more information.</value>
+    <comment>{0} - The target architecture name
+{1} - The template architecture name</comment>
   </data>
   <data name="XA4228" xml:space="preserve">
     <value>지정한 //activity-alias/@android:targetActivity를 찾을 수 없음: '{0}'</value>
@@ -825,6 +812,22 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
   <data name="XA4315" xml:space="preserve">
     <value>'{0}'를 무시합니다. 매니페스트에 매니페스트 요소에 필요한 'package' 특성이 없습니다.</value>
     <comment>{0} - The path the the file.
+</comment>
+  </data>
+  <data name="XA4316" xml:space="preserve">
+    <value>Specified input file '{0}' does not exist. Ignoring.</value>
+    <comment>{0} - The path to the file.
+</comment>
+  </data>
+  <data name="XA4317" xml:space="preserve">
+    <value>Input file '{0}' does not start with '&lt;replacements/&gt;'. Skipping.</value>
+    <comment>{0} - The path to the file.
+</comment>
+  </data>
+  <data name="XA4318" xml:space="preserve">
+    <value>Input file '{0}' could not be read: {1}. Skipping.</value>
+    <comment>{0} - The path to the file.
+{1} - The exception message.
 </comment>
   </data>
   <data name="XA5101" xml:space="preserve">
@@ -1111,6 +1114,10 @@ In this message, the term "handheld app" means "app for handheld devices."
     <value>안전하지 않은 HTTP Maven 리포지토리 URL '{0}'은(는) 허용되지 않습니다. HTTPS URL을 사용하거나 항목에 AllowInsecureHttp="true" 메타데이터를 설정하여 이 검사를 재정의하세요.</value>
     <comment>The following are literal names and should not be translated: HTTP, HTTPS, Maven, AllowInsecureHttp
 {0} - The insecure HTTP URL</comment>
+  </data>
+  <data name="XA4253" xml:space="preserve">
+    <value>Generated Java callable wrapper code changed: '{0}'</value>
+    <comment>{0} - The path to the generated Java callable wrapper file</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>'{0}' 명령이 실패했습니다.\n{1}</value>

@@ -38,7 +38,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CalculateLayoutCodeBehind" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CalculateProjectDependencies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckForInvalidResourceFileNames" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CheckClientHandlerType" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectAssemblyFilesToCompress" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectDalvikFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectJarContentFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -479,11 +478,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_CheckAndroidHttpClientHandlerType"
-    Condition=" '$(AndroidHttpClientHandlerType)' != '' And '$(AndroidHttpClientHandlerType)' != 'Xamarin.Android.Net.AndroidMessageHandler' And '$(AndroidApplication)' == 'True' ">
-  <CheckClientHandlerType
-    ClientHandlerType="$(AndroidHttpClientHandlerType)"
-    ResolvedAssemblies="$(OutDir)$(TargetFileName);@(ReferencePath);@(ReferenceDependencyPaths)"
-  />
+    Condition=" '$(AndroidHttpClientHandlerType)' != '' ">
+  <Error Text="The AndroidHttpClientHandlerType property is not supported anymore. Please remove it from your project file. Use %24(UseNativeHttpHandler) with values 'true' (AndroidMessageHandler) or 'false' (SocketsHttpHandler) instead." />
 </Target>
 
 <Target Name="_CheckUnsupportedPackages" AfterTargets="ResolvePackageAssets">
@@ -994,6 +990,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="ProjectFullPath=$(MSBuildProjectFullPath)" />
 		<_PropertyCacheItems Include="AndroidUseDesignerAssembly=$(AndroidUseDesignerAssembly)" />
 		<_PropertyCacheItems Include="_AndroidTypeMapImplementation=$(_AndroidTypeMapImplementation)" />
+		<_PropertyCacheItems Include="_AndroidTrimmableTypeMapMaxArrayRank=$(_AndroidTrimmableTypeMapMaxArrayRank)" />
 		<_PropertyCacheItems Include="_AndroidUseMarshalMethods=$(_AndroidUseMarshalMethods)" />
 		<_PropertyCacheItems Include="_AndroidJcwCodegenTarget=$(_AndroidJcwCodegenTarget)" />
 	</ItemGroup>
@@ -1048,6 +1045,7 @@ because xbuild doesn't support framework reference assemblies.
 		JavaResgenInputFile="$(_GeneratedPrimaryJavaResgenFile)"
 		RTxtFile="$(IntermediateOutputPath)R.txt"
 		Namespace="$(AndroidResgenNamespace)"
+		AssemblyName="$(AssemblyName)"
 		ProjectDir="$(ProjectDir)"
 		Resources="@(AndroidResource);@(AndroidBoundLayout)"
 		ResourceDirectory="$(MonoAndroidResourcePrefix)"
@@ -1304,6 +1302,7 @@ because xbuild doesn't support framework reference assemblies.
 		JavaResgenInputFile="$(_GeneratedPrimaryJavaResgenFile)"
 		RTxtFile="$(IntermediateOutputPath)R.txt"
 		Namespace="$(AndroidResgenNamespace)"
+		AssemblyName="$(AssemblyName)"
 		ProjectDir="$(ProjectDir)"
 		Resources="@(_AndroidResourceDest)"
 		ResourceDirectory="$(MonoAndroidResDirIntermediate)"
@@ -1646,21 +1645,22 @@ because xbuild doesn't support framework reference assemblies.
   <_GenerateAndroidRemapNativeCodeDependsOn>
     _ConvertAndroidMamMappingFileToXml;
     _CollectAndroidRemapMembers;
-    _PrepareAndroidRemapNativeAssemblySources
+    _PrepareAndroidRemapNativeAssemblySources;
+    _GetGeneratePackageManagerJavaInputs
   </_GenerateAndroidRemapNativeCodeDependsOn>
 </PropertyGroup>
 
 <Target Name="_GenerateAndroidRemapNativeCode"
         DependsOnTargets="$(_GenerateAndroidRemapNativeCodeDependsOn)"
         Condition=" '@(_AndroidRemapMembers->Count())' != '0' "
-        Inputs="$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects);$(_XARemapMembersFilePath)"
-        Outputs="@(_AndroidRemapAssemblySource)">
+        Inputs="@(_GeneratePackageManagerJavaInputs);$(_XARemapMembersFilePath)"
+        Outputs="$(_AndroidStampDirectory)_GenerateAndroidRemapNativeCode.stamp">
   <GenerateJniRemappingNativeCode
       OutputDirectory="$(_NativeAssemblySourceDir)"
       RemappingXmlFilePath="$(_XARemapMembersFilePath)"
       SupportedAbis="@(_BuildTargetAbis)"
       />
-  <Touch Files="@(_AndroidRemapAssemblySource)" />
+  <Touch Files="$(_AndroidStampDirectory)_GenerateAndroidRemapNativeCode.stamp" AlwaysCreate="True" />
 </Target>
 
 <Target Name="_RunAotForAllRIDs"
@@ -1696,6 +1696,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_GetGeneratePackageManagerJavaInputs">
   <ItemGroup>
     <_GeneratePackageManagerJavaInputs Include="@(_GenerateJavaStubsInputs)" />
+    <_GeneratePackageManagerJavaInputs Include="$(_XARemapMembersFilePath)" Condition=" '@(_AndroidRemapMembers->Count())' != '0' " />
   </ItemGroup>
 </Target>
 
@@ -1750,7 +1751,6 @@ because xbuild doesn't support framework reference assemblies.
       AndroidAotMode="$(AndroidAotMode)"
       AndroidAotEnableLazyLoad="$(AndroidAotEnableLazyLoad)"
       EnableLLVM="$(EnableLLVM)"
-      HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
       TlsProvider="$(AndroidTlsProvider)"
       Debug="$(AndroidIncludeDebugSymbols)"
       AndroidSequencePointsMode="$(_SequencePointsMode)"

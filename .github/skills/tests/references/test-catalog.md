@@ -122,7 +122,7 @@ Device: **Yes**
 | Test Area | Project | Notes |
 |-----------|---------|-------|
 | **runtime** (all) | `tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj` | Core runtime tests |
-| **networking** | Same project — tests in `Xamarin.Android.Net/` and `System.Net/` | `AndroidMessageHandlerTests`, `AndroidClientHandlerTests`, `HttpClientIntegrationTests` |
+| **networking** | Same project — tests in `Xamarin.Android.Net/` and `System.Net/` | `AndroidMessageHandlerTests`, `AndroidMessageHandlerIntegrationTests` |
 | **java interop (on-device)** | Same project — tests in `Java.Interop/` | `JnienvTest`, `JavaListTest` |
 | **android app** | Same project — tests in `Android.App/` | `Application`, `Activity` tests |
 | **android views** | Same project — tests in `Android.Views/` | Layout inflater, view tests |
@@ -138,10 +138,10 @@ Device: **Yes**
 
 The `Mono.Android.NET-Tests.csproj` dynamically excludes categories based on runtime:
 - **CoreCLR runtime**: Excludes `CoreCLRIgnore`, `NTLM`
-- **NativeAOT runtime**: Excludes `NativeAOTIgnore`, `SSL`, `NTLM`, `AndroidClientHandler`, `Export`, `NativeTypeMap`
+- **NativeAOT runtime**: Excludes `NativeAOTIgnore`, `SSL`, `NTLM`, `Export`, `NativeTypeMap`
 - **LLVM**: Excludes `LLVMIgnore`, `InetAccess`, `NetworkInterfaces`
 
-Other categories: `SSL`, `InetAccess`, `AndroidClientHandler`, `JavaList`, `RuntimeConfig`, `Intune`, `NTLM`
+Other categories: `SSL`, `InetAccess`, `JavaList`, `RuntimeConfig`, `Intune`, `NTLM`
 
 Command:
 ```bash
