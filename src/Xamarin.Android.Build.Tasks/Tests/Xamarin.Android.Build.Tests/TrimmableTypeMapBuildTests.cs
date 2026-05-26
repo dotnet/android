@@ -29,7 +29,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
-			DirectoryAssert.Exists (intermediateDir);
+			AssertTrimmableTypeMapOutputs (intermediateDir);
 		}
 
 		[Test]
@@ -50,7 +50,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
 
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
-			DirectoryAssert.Exists (intermediateDir);
+			AssertTrimmableTypeMapOutputs (intermediateDir);
 
 			Assert.IsTrue (builder.Build (proj), "Second build should have succeeded.");
 
@@ -393,6 +393,50 @@ namespace UnnamedProject {
 				"Trimmable [Export] codegen should not introduce IL2xxx / IL3xxx warnings against the generated typemap " +
 				"assembly or the user's [Export] source. Offending warning lines:\n  " +
 				string.Join ("\n  ", offending));
+		}
+
+		[Test]
+		public void Build_WithTrimmableTypeMap_AbstractTypeWithProtectedCtor_Succeeds ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.NativeAOT, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.Sources.Add (new BuildItem.Source ("AbstractProvider.cs") {
+				TextContent = () => @"
+namespace UnnamedProject {
+	public abstract class AbstractProvider : Java.Lang.Object {
+		protected AbstractProvider (Android.Content.Context context) { }
+		public abstract string GetData ();
+	}
+
+	public class ConcreteProvider : AbstractProvider {
+		public ConcreteProvider (Android.Content.Context context) : base (context) { }
+		public override string GetData () => ""hello"";
+	}
+}"
+			});
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded — abstract types with protected ctors should not cause XAGTT7009.");
+		}
+
+		static void AssertTrimmableTypeMapOutputs (string typemapDir)
+		{
+			DirectoryAssert.Exists (typemapDir);
+			FileAssert.Exists (Path.Combine (typemapDir, "_Microsoft.Android.TypeMaps.dll"));
+			FileAssert.Exists (Path.Combine (typemapDir, "_Mono.Android.TypeMap.dll"));
+
+			var javaDir = Path.Combine (typemapDir, "java");
+			DirectoryAssert.Exists (javaDir, "Trimmable JCW Java output directory should exist.");
+
+			var javaFiles = Directory.GetFiles (javaDir, "*.java", SearchOption.AllDirectories);
+			Assert.IsNotEmpty (javaFiles, "At least one trimmable JCW Java source file should be generated.");
 		}
 	}
 }

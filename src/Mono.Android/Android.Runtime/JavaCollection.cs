@@ -148,11 +148,6 @@ namespace Android.Runtime {
 		//
 		public void CopyTo (Array array, int array_index)
 		{
-			[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "JavaCollection<T> constructors are preserved by the MarkJavaObjects trimmer step.")]
-			[return: DynamicallyAccessedMembers (Constructors)]
-			static Type GetElementType (Array array) =>
-				array.GetType ().GetElementType ();
-
 			if (array == null)
 				throw new ArgumentNullException ("array");
 			if (array_index < 0)
@@ -163,13 +158,13 @@ namespace Android.Runtime {
 			if (id_toArray == IntPtr.Zero)
 				id_toArray = JNIEnv.GetMethodID (collection_class, "toArray", "()[Ljava/lang/Object;");
 
+			var converter = new JavaConvert.ArrayElementConverter (array);
 			IntPtr lrefArray = JNIEnv.CallObjectMethod (Handle, id_toArray);
 			for (int i = 0; i < Count; i++)
 				array.SetValue (
-						JavaConvert.FromJniHandle (
+						converter.FromJniHandle (
 							JNIEnv.GetObjectArrayElement (lrefArray, i),
-							JniHandleOwnership.TransferLocalRef,
-							GetElementType (array)),
+							JniHandleOwnership.TransferLocalRef),
 						array_index + i);
 			JNIEnv.DeleteLocalRef (lrefArray);
 		}
