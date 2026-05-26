@@ -26,11 +26,13 @@ public sealed class JavaPeerScanner : IDisposable
 	readonly Dictionary<(string typeName, string assemblyName), ActivationCtorInfo> activationCtorCache = new ();
 	readonly ITrimmableTypeMapLogger? logger;
 	readonly HashedPackageNamingPolicy packageNamingPolicy;
+	readonly HashSet<string> frameworkAssemblyNames;
 
-	public JavaPeerScanner (string? packageNamingPolicy = null, ITrimmableTypeMapLogger? logger = null)
+	public JavaPeerScanner (string? packageNamingPolicy = null, ITrimmableTypeMapLogger? logger = null, HashSet<string>? frameworkAssemblyNames = null)
 	{
 		this.packageNamingPolicy = ParsePackageNamingPolicy (packageNamingPolicy);
 		this.logger = logger;
+		this.frameworkAssemblyNames = frameworkAssemblyNames ?? new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 	}
 
 	/// <summary>
@@ -108,7 +110,31 @@ public sealed class JavaPeerScanner : IDisposable
 			ScanAssembly (index, resultsByQualifiedName);
 		}
 		ForceUnconditionalCrossReferences (resultsByQualifiedName, assemblyCache);
+		MarkFrameworkArrayEntryPeers (resultsByQualifiedName.Values);
 		return new List<JavaPeerInfo> (resultsByQualifiedName.Values);
+	}
+
+	void MarkFrameworkArrayEntryPeers (IEnumerable<JavaPeerInfo> peers)
+	{
+		var referencedFrameworkTypes = new HashSet<string> (StringComparer.Ordinal);
+		foreach (var index in assemblyCache.Values) {
+			if (frameworkAssemblyNames.Contains (index.AssemblyName)) {
+				continue;
+			}
+			foreach (var frameworkAssemblyName in frameworkAssemblyNames) {
+				if (index.ReferencedTypeNamesByAssembly.TryGetValue (frameworkAssemblyName, out var typeNames)) {
+					referencedFrameworkTypes.UnionWith (typeNames);
+				}
+			}
+		}
+
+		foreach (var peer in peers) {
+			if (!peer.IsFrameworkAssembly) {
+				continue;
+			}
+
+			peer.GenerateArrayEntries = referencedFrameworkTypes.Contains (peer.ManagedTypeName);
+		}
 	}
 
 	/// <summary>
@@ -280,6 +306,8 @@ public sealed class JavaPeerScanner : IDisposable
 				ManagedTypeNamespace = ExtractNamespace (fullName),
 				ManagedTypeShortName = ExtractShortName (fullName),
 				AssemblyName = index.AssemblyName,
+				IsFrameworkAssembly = frameworkAssemblyNames.Contains (index.AssemblyName),
+				GenerateArrayEntries = !frameworkAssemblyNames.Contains (index.AssemblyName),
 				BaseJavaName = baseJavaName,
 				ImplementedInterfaceJavaNames = implementedInterfaces,
 				IsInterface = isInterface,

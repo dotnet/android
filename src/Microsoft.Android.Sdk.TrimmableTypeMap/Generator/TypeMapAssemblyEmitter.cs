@@ -308,7 +308,7 @@ sealed class TypeMapAssemblyEmitter
 	}
 
 	/// <summary>
-	/// Emits private <c>__ArrayMapRank{N}</c> classes used as group type parameters
+	/// Emits <c>__ArrayMapRank{N}</c> classes used as group type parameters
 	/// for array <c>TypeMap&lt;T&gt;</c> entries. Each per-assembly typemap owns its
 	/// rank anchors so array maps stay scoped to the generated assembly.
 	/// </summary>

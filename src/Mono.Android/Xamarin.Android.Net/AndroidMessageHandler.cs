@@ -466,7 +466,7 @@ namespace Xamarin.Android.Net
 		/// native Java client defaults are used.
 		/// </para>
 		/// <para>
-		/// The default value is <c>120</c> seconds.
+		/// The default value is <c>24</c> hours, same as <see cref="ReadTimeout"/>.
 		/// </para>
 		/// </summary>
 		public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromHours (24);
@@ -520,9 +520,6 @@ namespace Xamarin.Android.Net
 		{
 			return _serverCertificateCustomValidator?.HostnameVerifier;
 		}
-
-		internal IHostnameVerifier? GetSSLHostnameVerifierInternal (HttpsURLConnection connection)
-			=> GetSSLHostnameVerifier (connection);
 
 		/// <summary>
 		/// Creates, configures and processes an asynchronous request to the indicated resource.
@@ -614,9 +611,6 @@ namespace Xamarin.Android.Net
 			}
 		}
 
-		internal Task <HttpResponseMessage> SendAsyncInternal (HttpRequestMessage request, CancellationToken cancellationToken)
-			=> SendAsync (request, cancellationToken);
-
 		protected virtual async Task <Java.Net.Proxy?> GetJavaProxy (Uri destination, CancellationToken cancellationToken)
 		{
 			var proxy = Java.Net.Proxy.NoProxy;
@@ -638,9 +632,6 @@ namespace Xamarin.Android.Net
 
 			return proxy;
 		}
-
-		internal Task <Java.Net.Proxy?> GetJavaProxyInternal (Uri destination, CancellationToken cancellationToken)
-			=> GetJavaProxy (destination, cancellationToken);
 
 		Task <HttpResponseMessage?> ProcessRequest (HttpRequestMessage request, URL javaUrl, HttpURLConnection httpConnection, CancellationToken cancellationToken, RequestRedirectionState redirectState)
 		{
@@ -714,9 +705,6 @@ namespace Xamarin.Android.Net
 					stream.Seek (0, SeekOrigin.Begin);
 			}
 		}
-
-		internal Task WriteRequestContentToOutputInternal (HttpRequestMessage request, HttpURLConnection httpConnection, CancellationToken cancellationToken)
-			=> WriteRequestContentToOutput (request, httpConnection, cancellationToken);
 
 		async Task <HttpResponseMessage?> DoProcessRequest (HttpRequestMessage request, URL javaUrl, HttpURLConnection httpConnection, CancellationToken cancellationToken, RequestRedirectionState redirectState)
 		{
@@ -1012,8 +1000,14 @@ namespace Xamarin.Android.Net
 					// meant. The fix doesn't belong here, but rather in the Uri class. So we'll throw...
 
 					redirectUrl = new Uri (location!, UriKind.RelativeOrAbsolute);
-					if (!redirectUrl.IsAbsoluteUri)
+					if (!redirectUrl.IsAbsoluteUri) {
 						redirectUrl = new Uri (baseUrl, location);
+					} else if (string.Equals (baseUrl.Scheme, "https", StringComparison.OrdinalIgnoreCase)
+           				&& !string.Equals (redirectUrl.Scheme, "https", StringComparison.OrdinalIgnoreCase)) {
+
+						disposeRet = false; // let the client decide what to do next
+						return true;
+					}
 				}
 
 				if (Logger.LogNet)
@@ -1146,9 +1140,6 @@ namespace Xamarin.Android.Net
 			return Task.CompletedTask;
 		}
 
-		internal Task SetupRequestInternal (HttpRequestMessage request, HttpURLConnection conn)
-			=> SetupRequest (request, conn);
-
 		/// <summary>
 		/// Configures the key store. The <paramref name="keyStore"/> parameter is set to instance of <see cref="KeyStore"/>
 		/// created using the <see cref="KeyStore.DefaultType"/> type and with populated with certificates provided in the <see cref="TrustedCerts"/>
@@ -1162,9 +1153,6 @@ namespace Xamarin.Android.Net
 
 			return keyStore;
 		}
-
-		internal KeyStore? ConfigureKeyStoreInternal (KeyStore? keyStore)
-			=> ConfigureKeyStore (keyStore);
 
 		/// <summary>
 		/// Create and configure an instance of <see cref="KeyManagerFactory"/>. The <paramref name="keyStore"/> parameter is set to the
@@ -1182,9 +1170,6 @@ namespace Xamarin.Android.Net
 			return null;
 		}
 
-		internal KeyManagerFactory? ConfigureKeyManagerFactoryInternal (KeyStore? keyStore)
-			=> ConfigureKeyManagerFactoryInternal (keyStore);
-
 		/// <summary>
 		/// Create and configure an instance of <see cref="TrustManagerFactory"/>. The <paramref name="keyStore"/> parameter is set to the
 		/// return value of the <see cref="ConfigureKeyStore"/> method, so it might be null if the application overrode the method and provided
@@ -1201,9 +1186,6 @@ namespace Xamarin.Android.Net
 
 			return null;
 		}
-
-		internal TrustManagerFactory? ConfigureTrustManagerFactoryInternal (KeyStore? keyStore)
-			=> ConfigureTrustManagerFactory (keyStore);
 
 		async Task <HttpURLConnection> SetupRequestInternal (HttpRequestMessage request, URLConnection conn)
 		{
@@ -1257,9 +1239,6 @@ namespace Xamarin.Android.Net
 		{
 			return null;
 		}
-
-		internal SSLSocketFactory? ConfigureCustomSSLSocketFactoryInternal (HttpsURLConnection connection)
-			=> ConfigureCustomSSLSocketFactoryInternal (connection);
 
 		void SetupSSL (HttpsURLConnection? httpsConnection, HttpRequestMessage requestMessage)
 		{

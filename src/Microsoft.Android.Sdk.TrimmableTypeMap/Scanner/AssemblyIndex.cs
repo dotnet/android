@@ -34,6 +34,11 @@ sealed class AssemblyIndex : IDisposable
 	public Dictionary<TypeDefinitionHandle, TypeAttributeInfo> AttributesByType { get; } = new ();
 
 	/// <summary>
+	/// Type references grouped by referenced assembly name.
+	/// </summary>
+	public Dictionary<string, HashSet<string>> ReferencedTypeNamesByAssembly { get; } = new (StringComparer.OrdinalIgnoreCase);
+
+	/// <summary>
 	/// True iff the assembly's metadata mentions
 	/// <c>Java.Interop.JniAddNativeMethodRegistrationAttribute</c> (as a
 	/// TypeReference or TypeDefinition). The trimmable typemap forbids that
@@ -69,9 +74,17 @@ sealed class AssemblyIndex : IDisposable
 		// The per-method attribute walk in the scanner can then skip entirely for
 		// the common case where the attribute is neither imported nor declared here.
 		foreach (var trHandle in Reader.TypeReferences) {
-			if (IsTypeReferenceMatch (Reader.GetTypeReference (trHandle), Reader, JavaInteropNamespace, JniAddNativeMethodRegistrationAttribute)) {
+			var typeReference = Reader.GetTypeReference (trHandle);
+			if (TryGetTypeReferenceAssemblyName (typeReference, out var assemblyName)) {
+				if (!ReferencedTypeNamesByAssembly.TryGetValue (assemblyName, out var typeNames)) {
+					typeNames = new HashSet<string> (StringComparer.Ordinal);
+					ReferencedTypeNamesByAssembly [assemblyName] = typeNames;
+				}
+				typeNames.Add (MetadataTypeNameResolver.GetTypeFromReference (Reader, trHandle, rawTypeKind: 0));
+			}
+
+			if (IsTypeReferenceMatch (typeReference, Reader, JavaInteropNamespace, JniAddNativeMethodRegistrationAttribute)) {
 				MayUseJniAddNativeMethodRegistrationAttribute = true;
-				break;
 			}
 		}
 
@@ -100,6 +113,22 @@ sealed class AssemblyIndex : IDisposable
 				RegisterInfoByType [typeHandle] = registerInfo;
 			}
 		}
+	}
+
+	bool TryGetTypeReferenceAssemblyName (TypeReference typeReference, [NotNullWhen (true)] out string? assemblyName)
+	{
+		var scope = typeReference.ResolutionScope;
+		while (scope.Kind == HandleKind.TypeReference) {
+			scope = Reader.GetTypeReference ((TypeReferenceHandle) scope).ResolutionScope;
+		}
+		if (scope.Kind == HandleKind.AssemblyReference) {
+			var assemblyReference = Reader.GetAssemblyReference ((AssemblyReferenceHandle) scope);
+			assemblyName = Reader.GetString (assemblyReference.Name);
+			return true;
+		}
+
+		assemblyName = null;
+		return false;
 	}
 
 	(RegisterInfo? register, TypeAttributeInfo? attrs) ParseAttributes (TypeDefinition typeDef)

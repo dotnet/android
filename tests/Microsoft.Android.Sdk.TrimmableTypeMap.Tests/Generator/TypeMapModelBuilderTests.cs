@@ -240,6 +240,23 @@ public class ModelBuilderTests : FixtureTestBase
 
 			Assert.True (model.Entries [0].IsUnconditional);
 		}
+
+		[Fact]
+		public void Build_FrameworkAcwType_IsConditional ()
+		{
+			var frameworkAcwPeer = MakeAcwPeer ("mono/android/view/View_ClickEventDispatcher", "Android.Views.View_ClickEventDispatcher", "Mono.Android") with {
+				IsFrameworkAssembly = true,
+			};
+			var appAcwPeer = MakeAcwPeer ("my/app/MyActivity", "MyApp.MyActivity", "MyApp");
+
+			Assert.False (
+				BuildModel ([frameworkAcwPeer]).Entries.Single ().IsUnconditional,
+				"Framework ACWs should not unconditionally root their proxy types.");
+			Assert.True (
+				BuildModel ([appAcwPeer]).Entries.Single ().IsUnconditional,
+				"Application ACWs must remain unconditional because Java can instantiate them.");
+		}
+
 	}
 
 	public class Aliases
@@ -1009,6 +1026,28 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
+		public void Build_EmitArrayEntries_FrameworkPeer_Skipped ()
+		{
+			var frameworkPeer = MakeMcwPeer ("android/widget/Button", "Android.Widget.Button", "Mono.Android")
+				with { IsFrameworkAssembly = true, GenerateArrayEntries = false };
+			var model = BuildModelWithArrays (new [] { frameworkPeer });
+
+			Assert.DoesNotContain (model.Entries, e => e.AnchorRank is not null);
+		}
+
+		[Fact]
+		public void Build_EmitArrayEntries_ReferencedFrameworkPeer_Emitted ()
+		{
+			var frameworkPeer = MakeMcwPeer ("android/widget/Button", "Android.Widget.Button", "Mono.Android")
+				with { IsFrameworkAssembly = true, GenerateArrayEntries = true };
+			var model = BuildModelWithArrays (new [] { frameworkPeer });
+
+			var arrayEntries = model.Entries.Where (e => e.AnchorRank is not null).ToList ();
+			Assert.Equal (3, arrayEntries.Count);
+			Assert.All (arrayEntries, e => Assert.Equal ("android/widget/Button", e.JniName));
+		}
+
+		[Fact]
 		public void Build_EmitArrayEntries_AliasGroup_Skipped ()
 		{
 			// Alias groups (multiple peers sharing one JNI name) would produce duplicate
@@ -1065,7 +1104,7 @@ public class ModelBuilderTests : FixtureTestBase
 	public class ArrayEntriesPeBlob
 	{
 		[Fact]
-		public void FullPipeline_ArrayEntries_DefinesPrivateRankAnchors ()
+		public void FullPipeline_ArrayEntries_DefinesInternalRankAnchors ()
 		{
 			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
 			var outputPath = Path.Combine (Path.GetTempPath (), "ArrSentinels.dll");
@@ -1079,6 +1118,14 @@ public class ModelBuilderTests : FixtureTestBase
 				Assert.Contains ("__ArrayMapRank1", typeDefNames);
 				Assert.Contains ("__ArrayMapRank2", typeDefNames);
 				Assert.Contains ("__ArrayMapRank3", typeDefNames);
+
+				var rankTypeDefs = reader.TypeDefinitions
+					.Select (h => reader.GetTypeDefinition (h))
+					.Where (t => reader.GetString (t.Name).StartsWith ("__ArrayMapRank", StringComparison.Ordinal))
+					.ToList ();
+				Assert.All (rankTypeDefs, t => Assert.Equal (
+					System.Reflection.TypeAttributes.NotPublic,
+					t.Attributes & System.Reflection.TypeAttributes.VisibilityMask));
 
 				var rankTypeRefs = reader.TypeReferences
 					.Select (h => reader.GetTypeReference (h))
@@ -1321,6 +1368,26 @@ public class ModelBuilderTests : FixtureTestBase
 			var ex = Assert.Throws<InvalidOperationException> (() => BuildModel (new [] { peer }));
 			Assert.Contains ("no matching user-visible managed constructor", ex.Message);
 			Assert.Contains ("MyApp.MissingCtor", ex.Message);
+		}
+
+		[Fact]
+		public void Build_AbstractTypeWithProtectedCtor_NoUcoConstructors ()
+		{
+			var peer = MakeAcwPeer ("my/app/AbstractAdapter", "MyApp.AbstractAdapter", "App") with {
+				IsAbstract = true,
+				JavaConstructors = new List<JavaConstructorInfo> {
+					new JavaConstructorInfo {
+						ConstructorIndex = 0,
+						JniSignature = "(Landroid/content/Context;)V",
+						HasMatchingManagedCtor = false,
+						SuperArgumentsString = "p0",
+					},
+				},
+			};
+			var model = BuildModel (new [] { peer });
+			var proxy = model.ProxyTypes.FirstOrDefault (p => p.TypeName.Contains ("AbstractAdapter"));
+			Assert.NotNull (proxy);
+			Assert.Empty (proxy.UcoConstructors);
 		}
 	}
 

@@ -27,14 +27,12 @@ public sealed class GenerateNativeAotBootstrapSources : AndroidTask
 
 	public ITaskItem []? Environments { get; set; }
 
-	public string? HttpClientHandlerType { get; set; }
-
 	public bool EnableSGenConcurrent { get; set; }
 
 	public override bool RunTask ()
 	{
 		GenerateAdditionalProviderSources.GenerateNativeAotBootstrapFiles (
-			Log, OutputDirectory, TargetName, Environments, HttpClientHandlerType, EnableSGenConcurrent);
+			Log, OutputDirectory, TargetName, Environments, EnableSGenConcurrent);
 
 		return !Log.HasLoggedErrors;
 	}

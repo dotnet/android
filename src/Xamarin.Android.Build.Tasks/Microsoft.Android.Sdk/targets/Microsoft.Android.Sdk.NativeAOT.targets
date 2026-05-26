@@ -52,6 +52,10 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
         Value="false"
         Trim="true"
     />
+    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.IsNativeAotRuntime"
+        Value="true"
+        Trim="true"
+    />
   </ItemGroup>
 
   <!-- Make IlcCompile depend on the trimmer -->
@@ -264,7 +268,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 
     <GenerateNativeAotEnvironmentAssemblerSources
         Environments="@(AndroidEnvironment);@(LibraryEnvironments)"
-        HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
         OutputSources="@(_PrivateEnvironmentAssemblySource)"
         RID="$(RuntimeIdentifier)" />
 

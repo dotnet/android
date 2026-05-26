@@ -478,30 +478,6 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>Właściwość „RunAOTCompilation” programu MSBuild jest obsługiwana tylko wtedy, gdy jest włączone przycinanie. Edytuj plik projektu w edytorze tekstu, aby ustawić właściwość „PublishTrimmed” na wartość „true” dla tej konfiguracji kompilacji.</value>
     <comment>The following are literal names and should not be translated: 'RunAOTCompilation', 'PublishTrimmed'</comment>
   </data>
-  <data name="XA1031" xml:space="preserve">
-    <value>Wartość właściwości „AndroidHttpClientHandlerType” „{0}” musi pochodzić od „{1}”.
-Zmień wartość na nazwę typu kwalifikowalnego zestawu, która dziedziczy po „{1}” lub całkowicie usuń właściwość.</value>
-    <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',
-{0} - The value of the property.
-{1} - A type from which the AndroidHttpClientHandlerType should derive .</comment>
-  </data>
-  <data name="XA1031_HCH" xml:space="preserve">
-    <value>Wartość właściwości 'AndroidHttpClientHandlerType' „{0}” nie może pochodzić od właściwości 'System.Net.Htt.HttpClientHandler'.
-Zmień wartość na nazwę typu zgodną z zestawem, która dziedziczy z elementu „System.Net.Http.HttpMessageHandler” lub całkowicie usuń tę właściwość.</value>
-    <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType', 'System.Net.Htt.HttpClientHandler', 'System.Net.Http.HttpMessageHandler',
-{0} - The value of the property.</comment>
-  </data>
-  <data name="XA1032" xml:space="preserve">
-    <value>Nie można rozpoznać elementu „{0}” z „{1}”. Sprawdź ustawienie „AndroidHttpClientHandlerType”.</value>
-    <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',
-{0} - The value of the property.
-{1} - The name of the assembly.</comment>
-  </data>
-  <data name="XA1033" xml:space="preserve">
-    <value>Nie można rozpoznać elementu „{0}”. Sprawdź ustawienie „AndroidHttpClientHandlerType”.</value>
-    <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',
-{0} - The value of the property.</comment>
-  </data>
   <data name="XA1034" xml:space="preserve">
     <value>Projekt odwołuje się do elementu „{0}”, który używa zestawu „_Microsoft.Android.Resource.Designer”, ale ta funkcja nie jest włączona. Ustaw właściwość MSBuild „AndroidUseDesignerAssembly” na wartość „true” w pliku projektu.</value>
     <comment>The following are literal names and should not be translated: '_Microsoft.Android.Resource.Desinger', 'AndroidUseDesignerAssembly', 'true'
@@ -590,7 +566,7 @@ Zmień wartość w pliku AndroidManifest.xml, aby odpowiadała wartości $(Suppo
     <comment>The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
   </data>
   <data name="XA3008" xml:space="preserve">
-    <value>Failed to extract debug info from '{0}'{1}</value>
+    <value>Nie można wyodrębnić informacji debugowania z elementu '{0}'{1}</value>
     <comment>'{0}' is the native shared library filename. '{1}' is the full output of the failed command, starting and ending with a newline.</comment>
   </data>
   <data name="XA4209" xml:space="preserve">
@@ -651,6 +627,12 @@ Zmień wartość w pliku AndroidManifest.xml, aby odpowiadała wartości $(Suppo
 {0} - The target SDK version number
 {1} - The API version number</comment>
   </data>
+  <data name="XA4217" xml:space="preserve">
+    <value>Architecture '{0}' has Java types which have no counterparts in template architecture '{1}': {2}</value>
+    <comment>{0} - The target architecture name
+{1} - The template architecture name
+{2} - Comma-separated list of Java type names that have no counterparts</comment>
+  </data>
   <data name="XA4218" xml:space="preserve">
     <value>Nie można znaleźć elementu //manifest/application/uses-library w ścieżce: {0}</value>
     <comment>The following are literal names and should not be translated: //manifest/application/uses-library</comment>
@@ -701,6 +683,11 @@ In this mesage, the term "layout" means an Android UI layout.
     <value>Element zasobu „{0}” nie ma wymaganego elementu metadanych „{1}”.</value>
     <comment>{0} - The name of the Android layout resource file
 {1} - The name of the metadata item</comment>
+  </data>
+  <data name="XA4227" xml:space="preserve">
+    <value>Architecture '{0}' doesn't match all marshal methods in architecture '{1}'. Please see detailed MSBuild logs for more information.</value>
+    <comment>{0} - The target architecture name
+{1} - The template architecture name</comment>
   </data>
   <data name="XA4228" xml:space="preserve">
     <value>Nie można znaleźć określonego elementu //activity-alias/@android:targetActivity: „{0}”</value>
@@ -825,6 +812,22 @@ Usuń odwołanie „{0}” z projektu i zamiast niego dodaj pakiet NuGet „{1}�
   <data name="XA4315" xml:space="preserve">
     <value>Trwa ignorowanie „{0}”. Manifest nie ma wymaganego atrybutu „package” w elemencie manifestu.</value>
     <comment>{0} - The path the the file.
+</comment>
+  </data>
+  <data name="XA4316" xml:space="preserve">
+    <value>Specified input file '{0}' does not exist. Ignoring.</value>
+    <comment>{0} - The path to the file.
+</comment>
+  </data>
+  <data name="XA4317" xml:space="preserve">
+    <value>Input file '{0}' does not start with '&lt;replacements/&gt;'. Skipping.</value>
+    <comment>{0} - The path to the file.
+</comment>
+  </data>
+  <data name="XA4318" xml:space="preserve">
+    <value>Input file '{0}' could not be read: {1}. Skipping.</value>
+    <comment>{0} - The path to the file.
+{1} - The exception message.
 </comment>
   </data>
   <data name="XA5101" xml:space="preserve">
@@ -1111,6 +1114,10 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
     <value>Niezabezpieczony adres URL repozytorium HTTP Maven „{0}” jest niedozwolony. Aby pominąć tę kontrolę, należy użyć adresu URL w protokole HTTPS lub ustawić w metadanych elementu wartość AllowInsecureHttp="true".</value>
     <comment>The following are literal names and should not be translated: HTTP, HTTPS, Maven, AllowInsecureHttp
 {0} - The insecure HTTP URL</comment>
+  </data>
+  <data name="XA4253" xml:space="preserve">
+    <value>Generated Java callable wrapper code changed: '{0}'</value>
+    <comment>{0} - The path to the generated Java callable wrapper file</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>Wykonanie polecenia „{0}” nie powiodło się.\n{1}</value>
