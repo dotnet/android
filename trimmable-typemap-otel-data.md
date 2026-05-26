@@ -235,3 +235,45 @@ The detailed LLVM instrumentation now includes spans for activation sub-steps su
 | `jnienv.initialize` us | 10 | 37423.2 | 38970.45 | 40533.8 | 39009.79 |
 | `typemap.llvm.activation` us | 10 | 900.6 | 986.5 | 1096.3 | 994.73 |
 | `typemap.llvm.lookup_jni_name.uncached` us | 10 | 78.7 | 93.3 | 127.9 | 99.24 |
+
+## Trimmable vs LLVM-IR paired comparison
+
+The directly paired startup boundary is `jnienv.initialize`. Trimmable is slower by about **60.6 ms** median, and `typemap.data.initialize` accounts for about **62.1 ms** median. That means the measured trimmable startup regression is almost entirely explained by generated typemap data initialization.
+
+| Metric | Trimmable median | LLVM-IR median | Delta | Ratio |
+| --- | ---: | ---: | ---: | ---: |
+| `TotalTime` | 544.5 ms | 480.5 ms | +64.0 ms | 1.13x |
+| `WaitTime` | 549.5 ms | 485.0 ms | +64.5 ms | 1.13x |
+| Host elapsed | 661,617 us | 605,775 us | +55,842 us | 1.09x |
+| `jnienv.initialize` | 99,591.25 us | 38,970.45 us | +60,620.8 us | 2.56x |
+
+### Paired / analogous spans
+
+| Concept | Trimmable span | Trimmable median | LLVM-IR span | LLVM-IR median | Notes |
+| --- | --- | ---: | --- | ---: | --- |
+| JNI runtime init boundary | `jnienv.initialize` | 99,591.25 us | `jnienv.initialize` | 38,970.45 us | Directly comparable boundary. |
+| Typemap data setup | `typemap.data.initialize` | 62,103.2 us | none | - | LLVM-IR has no managed generated typemap assembly load equivalent. This is the main trimmable-only cost. |
+| Runtime typemap object setup | `typemap.initialize` | 4,249.3 us | none | - | Trimmable wraps generated dictionaries in runtime lookup structures. |
+| Native registration setup | `typemap.register_native_methods` | 169.9 us | built-in/native typemap path | - | Not currently separated in LLVM-IR; native path is implicit. |
+| Java object -> managed peer creation | `typemap.peer.create` | 1,005.4 us | `typemap.llvm.activation` | 986.5 us | Similar order of magnitude for first activity-related activation. |
+| Java object lookup | `typemap.lookup.java_object` | 583.95 us | `typemap.llvm.activation.peek_object` + activation subspans | 8.3 us for `peek_object`; 986.5 us full activation | Trimmable lookup includes more proxy resolution work; LLVM activation breakdown is more granular. |
+| JNI-name lookup | `typemap.lookup.jni_name` | 74.25 us | `typemap.llvm.lookup.jni_name` | 201.1 us | Direct lookup concept, but implementation differs. LLVM-IR calls into native typemap metadata; trimmable uses managed dictionaries/proxy attributes. |
+| Uncached JNI-name lookup | `typemap.lookup.jni_name.uncached` | 64.95 us | `typemap.llvm.lookup.jni_name.uncached` | 93.3 us | Directly comparable cache-miss path. |
+| Managed-type lookup | `typemap.lookup.managed_type` | 63.2 us | no direct measured equivalent yet | - | LLVM-IR managed-to-Java lookup exists elsewhere (`clr_typemap_managed_to_java`) and should be instrumented separately if needed. |
+| Uncached managed-type lookup | `typemap.lookup.managed_type.uncached` | 57.55 us | no direct measured equivalent yet | - | Same as above. |
+| Register natives for generated proxy | `typemap.on_register_natives` | 844.55 us | no direct measured equivalent | - | Trimmable-specific native registration callback. |
+
+### LLVM-IR activation breakdown
+
+| LLVM-IR span | Median |
+| --- | ---: |
+| `typemap.llvm.activation` | 986.5 us |
+| `typemap.llvm.activation.peek_object` | 8.3 us |
+| `typemap.llvm.activation.resolve_type` | 114.7 us |
+| `typemap.llvm.activation.get_parameter_types` | 0.9 us |
+| `typemap.llvm.activation.get_object_array` | 172.2 us |
+| `typemap.llvm.activation.constructor_lookup` | 1,182.8 us |
+| `typemap.llvm.activation.activate_uninitialized` | 7,673.05 us |
+| `typemap.llvm.activation.invoke_constructor` | 6,402.65 us |
+
+Some nested activation spans exceed the parent `typemap.llvm.activation` median in the cumulative Aspire snapshots, which means the per-run “latest span by name” extraction is not a perfect tree reconstruction. The direction is still useful: LLVM-IR lookup cache misses are sub-millisecond, and the major cross-implementation startup difference is not lookup; it is trimmable-only typemap data initialization.
