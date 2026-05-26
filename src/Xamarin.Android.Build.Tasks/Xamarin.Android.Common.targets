@@ -934,6 +934,7 @@ because xbuild doesn't support framework reference assemblies.
 	<_AndroidApkPerAbiFlagFile>$(IntermediateOutputPath)android\bin\apk_per_abi.flag</_AndroidApkPerAbiFlagFile>
 	<_AndroidDebugKeyStoreFlag>$(IntermediateOutputPath)android_debug_keystore.flag</_AndroidDebugKeyStoreFlag>
 	<_AdditionalPostLinkerStepsFlag>$(_AndroidStampDirectory)_AdditionalPostLinkerSteps.stamp</_AdditionalPostLinkerStepsFlag>
+	<_AfterILLinkOutputDir>$(IntermediateOutputPath)afterlink\</_AfterILLinkOutputDir>
 	<_AcwMapFile>$(IntermediateOutputPath)acw-map.txt</_AcwMapFile>
 	<_CustomViewMapFile>$(IntermediateOutputPath)customview-map.txt</_CustomViewMapFile>
 	<AndroidResgenNamespace Condition="'$(AndroidResgenNamespace)'==''" >$(RootNamespace)</AndroidResgenNamespace>
@@ -1465,16 +1466,17 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <!-- Runs additional steps after ILLink runs (_LinkAssemblies) -->
-<Target Name="_AfterILLinkAdditionalSteps"
+<Target Name="_RunAfterILLinkAdditionalSteps"
     DependsOnTargets="_LinkAssembliesNoShrinkInputs"
     Condition="'$(PublishTrimmed)' == 'true' and '$(_AndroidTypeMapImplementation)' != 'trimmable'"
     Inputs="$(_AndroidLinkFlag)"
     Outputs="$(_AdditionalPostLinkerStepsFlag)">
+  <MakeDir Directories="$(_AfterILLinkOutputDir)" />
   <AssemblyModifierPipeline
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
       CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
       Debug="$(AndroidIncludeDebugSymbols)"
-      DestinationFiles="@(ResolvedAssemblies)"
+      DestinationFiles="@(ResolvedAssemblies->'$(_AfterILLinkOutputDir)%(Filename)%(Extension)')"
       Deterministic="$(Deterministic)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
       ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
@@ -1485,8 +1487,31 @@ because xbuild doesn't support framework reference assemblies.
       SourceFiles="@(ResolvedAssemblies)"
       TargetName="$(TargetName)">
   </AssemblyModifierPipeline>
-
   <Touch Files="$(_AdditionalPostLinkerStepsFlag)" AlwaysCreate="true" />
+  <ItemGroup>
+    <FileWrites Include="$(_AfterILLinkOutputDir)**" />
+  </ItemGroup>
+</Target>
+
+<!-- Updates assembly itemgroups to point to afterlink/ outputs.
+     Runs even when _RunAfterILLinkAdditionalSteps is skipped for incrementalism,
+     so downstream targets always see the correct paths. -->
+<Target Name="_AfterILLinkAdditionalSteps"
+    DependsOnTargets="_RunAfterILLinkAdditionalSteps"
+    Condition="'$(PublishTrimmed)' == 'true' and '$(_AndroidTypeMapImplementation)' != 'trimmable'">
+  <ItemGroup>
+    <_OrigResolvedAssemblies Include="@(ResolvedAssemblies)" />
+    <ResolvedAssemblies Remove="@(ResolvedAssemblies)" />
+    <ResolvedAssemblies Include="@(_OrigResolvedAssemblies->'$(_AfterILLinkOutputDir)%(Filename)%(Extension)')" />
+
+    <_OrigResolvedUserAssemblies Include="@(ResolvedUserAssemblies)" />
+    <ResolvedUserAssemblies Remove="@(ResolvedUserAssemblies)" />
+    <ResolvedUserAssemblies Include="@(_OrigResolvedUserAssemblies->'$(_AfterILLinkOutputDir)%(Filename)%(Extension)')" />
+
+    <_OrigResolvedFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies)" />
+    <ResolvedFrameworkAssemblies Remove="@(ResolvedFrameworkAssemblies)" />
+    <ResolvedFrameworkAssemblies Include="@(_OrigResolvedFrameworkAssemblies->'$(_AfterILLinkOutputDir)%(Filename)%(Extension)')" />
+  </ItemGroup>
 </Target>
 
 <!-- _PrepareAssemblies lives in Microsoft.Android.Sdk.AssemblyResolution.targets -->
