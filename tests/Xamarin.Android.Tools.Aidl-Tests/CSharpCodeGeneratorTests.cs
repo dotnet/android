@@ -33,11 +33,13 @@ parcelable MyData;
 
 		// NOTE: This test intentionally snapshots the *current* generator behavior for `oneway` methods.
 		// The generated Proxy still allocates a reply Parcel and calls `__reply.ReadException ()`, which
-		// does not match true AIDL oneway semantics. This is a pre-existing quirk in CSharpCodeGenerator,
-		// not a desired behavior — fixing it is a separate change that would need its own compat review.
+		// does not match true AIDL oneway semantics. Tracked by https://github.com/dotnet/android/issues/11507.
 		[Test]
 		public void OnewayMethods () => RunTest (nameof (OnewayMethods));
 
+		// NOTE: The golden output for this test also captures a pre-existing bug where the generated
+		// Proxy void method allocates `__reply` but never recycles it, leaking Parcel instances.
+		// Tracked by https://github.com/dotnet/android/issues/11508.
 		[Test]
 		public void IBinderTypes () => RunTest (nameof (IBinderTypes));
 
