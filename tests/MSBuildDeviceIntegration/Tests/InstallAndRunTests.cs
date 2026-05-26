@@ -93,6 +93,10 @@ namespace Xamarin.Android.Build.Tests
 				Assert.Ignore ("NativeAOT doesn't work with LLVM-IR typemaps");
 			}
 
+			if (runtime == AndroidRuntime.CoreCLR && isRelease && typemapImplementation == "trimmable") {
+				Assert.Ignore ("dotnet run --no-build is currently failing for Release CoreCLR trimmable typemap");
+			}
+
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease
 			};
