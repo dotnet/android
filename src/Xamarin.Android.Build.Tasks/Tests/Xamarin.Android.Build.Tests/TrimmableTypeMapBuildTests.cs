@@ -29,7 +29,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
-			DirectoryAssert.Exists (intermediateDir);
+			AssertTrimmableTypeMapOutputs (intermediateDir);
 		}
 
 		[Test]
@@ -50,7 +50,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
 
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
-			DirectoryAssert.Exists (intermediateDir);
+			AssertTrimmableTypeMapOutputs (intermediateDir);
 
 			Assert.IsTrue (builder.Build (proj), "Second build should have succeeded.");
 
@@ -424,6 +424,19 @@ namespace UnnamedProject {
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded — abstract types with protected ctors should not cause XAGTT7009.");
+		}
+
+		static void AssertTrimmableTypeMapOutputs (string typemapDir)
+		{
+			DirectoryAssert.Exists (typemapDir);
+			FileAssert.Exists (Path.Combine (typemapDir, "_Microsoft.Android.TypeMaps.dll"));
+			FileAssert.Exists (Path.Combine (typemapDir, "_Mono.Android.TypeMap.dll"));
+
+			var javaDir = Path.Combine (typemapDir, "java");
+			DirectoryAssert.Exists (javaDir, "Trimmable JCW Java output directory should exist.");
+
+			var javaFiles = Directory.GetFiles (javaDir, "*.java", SearchOption.AllDirectories);
+			Assert.IsNotEmpty (javaFiles, "At least one trimmable JCW Java source file should be generated.");
 		}
 	}
 }
