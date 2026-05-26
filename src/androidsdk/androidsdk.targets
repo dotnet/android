@@ -313,7 +313,7 @@
   <!--
     Extract every downloaded package into its destination. Uses system `tar`
     (bsdtar / libarchive) which is available on Windows 10+, Linux, and macOS,
-    handles `.zip` natively, and supports `--strip-components`. `source.properties`
+    handles `.zip` natively, and supports `strip-components`. `source.properties`
     is the sentinel used by the SDK manager - present in every component zip -
     so it doubles as an incremental-build skip target.
 
