@@ -26,9 +26,11 @@ GUIDANCE
 
 echo ""
 echo "## Scan Data"
-echo "### Bare catch blocks that may swallow exceptions (sample)"
+echo "### Bare catch blocks in shipped code that may swallow exceptions (sample)"
 grep -rnP 'catch\s*\(Exception\b' \
     --include='*.cs' \
     --exclude-dir=obj --exclude-dir=bin \
+    --exclude-dir=Tests --exclude-dir=Test --exclude-dir=tests \
     --exclude='*.generated.cs' --exclude='*.Designer.cs' \
+    --exclude='*Test.cs' --exclude='*Tests.cs' \
     src/ 2>/dev/null | shuf | head -20 || echo "None found"

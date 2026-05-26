@@ -21,10 +21,12 @@ GUIDANCE
 
 echo ""
 echo "## Scan Data"
-echo "### Files with many using directives (potential cleanup, sample)"
+echo "### Files with many using directives in shipped code (potential cleanup, sample)"
 for f in $(find src -name '*.cs' -type f \
         ! -path '*/obj/*' ! -path '*/bin/*' \
+        ! -path '*/Tests/*' ! -path '*/Test/*' ! -path '*/tests/*' \
         ! -name '*.generated.cs' ! -name '*.Designer.cs' \
+        ! -name '*Test.cs' ! -name '*Tests.cs' \
         2>/dev/null | shuf | head -30); do
     count=$(grep -c '^using ' "$f" 2>/dev/null || true)
     if [ "${count:-0}" -gt 10 ]; then

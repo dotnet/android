@@ -30,39 +30,47 @@ GUIDANCE
 
 echo ""
 echo "## Scan Data"
-echo "### String concatenation in loops (+=)"
+echo "### String concatenation in loops (+=) [shipped code only]"
 grep -rn '+=' \
     --include='*.cs' \
     --exclude-dir=obj --exclude-dir=bin \
+    --exclude-dir=Tests --exclude-dir=Test --exclude-dir=tests \
     --exclude='*.generated.cs' --exclude='*.Designer.cs' \
+    --exclude='*Test.cs' --exclude='*Tests.cs' \
     src/ 2>/dev/null \
     | grep -i 'string\|str\|result\|output\|sb\|builder\|message\|msg\|text\|line\|path\|name\|value' \
-    | grep -v '//' | grep -v -i 'test' \
+    | grep -v '//' \
     | shuf | head -10 || echo "None found"
 echo ""
-echo "### Sync-over-async (Task.Result, .Wait(), .GetAwaiter().GetResult())"
+echo "### Sync-over-async (Task.Result, .Wait(), .GetAwaiter().GetResult()) [shipped code only]"
 grep -rn 'Task\.Result\|\.Wait()\|\.GetAwaiter()\.GetResult()' \
     --include='*.cs' \
     --exclude-dir=obj --exclude-dir=bin \
+    --exclude-dir=Tests --exclude-dir=Test --exclude-dir=tests \
     --exclude='*.generated.cs' --exclude='*.Designer.cs' \
+    --exclude='*Test.cs' --exclude='*Tests.cs' \
     src/ 2>/dev/null \
-    | grep -v '//' | grep -v -i 'test' \
+    | grep -v '//' \
     | shuf | head -10 || echo "None found"
 echo ""
-echo "### Unnecessary LINQ allocations (.ToList(), .ToArray() that may not be needed)"
+echo "### Unnecessary LINQ allocations (.ToList(), .ToArray() that may not be needed) [shipped code only]"
 grep -rn '\.ToList()\|\.ToArray()' \
     --include='*.cs' \
     --exclude-dir=obj --exclude-dir=bin \
+    --exclude-dir=Tests --exclude-dir=Test --exclude-dir=tests \
     --exclude='*.generated.cs' --exclude='*.Designer.cs' \
+    --exclude='*Test.cs' --exclude='*Tests.cs' \
     src/ 2>/dev/null \
-    | grep -v '//' | grep -v -i 'test' \
+    | grep -v '//' \
     | shuf | head -10 || echo "None found"
 echo ""
-echo "### Repeated string.Format / string.Concat / String.Join (potential in loops)"
+echo "### Repeated string.Format / string.Concat / String.Join (potential in loops) [shipped code only]"
 grep -rn 'string\.Format\|string\.Concat\|String\.Join' \
     --include='*.cs' \
     --exclude-dir=obj --exclude-dir=bin \
+    --exclude-dir=Tests --exclude-dir=Test --exclude-dir=tests \
     --exclude='*.generated.cs' --exclude='*.Designer.cs' \
+    --exclude='*Test.cs' --exclude='*Tests.cs' \
     src/ 2>/dev/null \
-    | grep -v '//' | grep -v -i 'test' \
+    | grep -v '//' \
     | shuf | head -10 || echo "None found"

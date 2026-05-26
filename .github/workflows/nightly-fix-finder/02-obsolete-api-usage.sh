@@ -23,9 +23,11 @@ GUIDANCE
 
 echo ""
 echo "## Scan Data"
-echo "### Files using [Obsolete] or #pragma warning disable CS0618/CS0612 (sample)"
+echo "### Files using [Obsolete] or #pragma warning disable CS0618/CS0612 (sample, shipped code only)"
 grep -rn '\[Obsolete\]\|CS0618\|CS0612' \
     --include='*.cs' \
     --exclude-dir=obj --exclude-dir=bin \
+    --exclude-dir=Tests --exclude-dir=Test --exclude-dir=tests \
     --exclude='*.generated.cs' --exclude='*.Designer.cs' \
+    --exclude='*Test.cs' --exclude='*Tests.cs' \
     src/ 2>/dev/null | shuf | head -20 || echo "None found"

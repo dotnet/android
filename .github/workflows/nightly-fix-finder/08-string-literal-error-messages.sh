@@ -28,11 +28,13 @@ GUIDANCE
 
 echo ""
 echo "## Scan Data"
-echo "### Hardcoded error strings that could be in Resources.resx (sample)"
+echo "### Hardcoded error strings in shipped code that could be in Resources.resx (sample)"
 grep -rn 'Log\.\(Error\|Warning\)\|LogError\|LogWarning\|LogCodedError\|LogCodedWarning' \
     --include='*.cs' \
     --exclude-dir=obj --exclude-dir=bin \
+    --exclude-dir=Tests --exclude-dir=Test --exclude-dir=tests \
     --exclude='*.generated.cs' --exclude='*.Designer.cs' \
+    --exclude='*Test.cs' --exclude='*Tests.cs' \
     src/ 2>/dev/null \
     | grep '"' \
     | grep -v 'Properties\.Resources' \

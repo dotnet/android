@@ -26,8 +26,10 @@ GUIDANCE
 
 echo ""
 echo "## Scan Data"
-echo "### Random C# source files in src/ for general review (sample)"
+echo "### Random C# source files in shipped code under src/ for general review (sample)"
 find src -name '*.cs' -type f \
     ! -path '*/obj/*' ! -path '*/bin/*' \
+    ! -path '*/Tests/*' ! -path '*/Test/*' ! -path '*/tests/*' \
     ! -name '*.generated.cs' ! -name '*.Designer.cs' ! -name 'AssemblyInfo.cs' \
+    ! -name '*Test.cs' ! -name '*Tests.cs' \
     2>/dev/null | shuf | head -5
