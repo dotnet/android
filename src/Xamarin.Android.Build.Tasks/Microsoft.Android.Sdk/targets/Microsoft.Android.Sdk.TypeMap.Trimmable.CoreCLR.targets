@@ -25,15 +25,9 @@
   <Target Name="_ConfigureTrimmableTypeMapForLinker"
       BeforeTargets="PrepareForILLink;_RunILLink"
       DependsOnTargets="_GenerateTrimmableTypeMap">
-    <ItemGroup>
-      <_TrimmableTypeMapEntryAssemblies Include="$(_TypeMapOutputDirectory)*.TypeMap.dll" />
-    </ItemGroup>
     <PropertyGroup>
-      <_ExtraTrimmerArgs>@(_TrimmableTypeMapEntryAssemblies->'--typemap-entry-assembly %(Filename)', ' ') $(_ExtraTrimmerArgs)</_ExtraTrimmerArgs>
+      <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --typemap-entry-assembly "$(_TypeMapAssemblyName)"</_ExtraTrimmerArgs>
     </PropertyGroup>
-    <ItemGroup>
-      <_TrimmableTypeMapEntryAssemblies Remove="@(_TrimmableTypeMapEntryAssemblies)" />
-    </ItemGroup>
   </Target>
 
   <Target Name="_PrepareLinkedAssembliesForProguard"
