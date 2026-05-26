@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using Xamarin.Android.Tools.Aidl;
@@ -32,6 +31,10 @@ parcelable MyData;
 		[Test]
 		public void MultipleInterfaces () => RunTest (nameof (MultipleInterfaces));
 
+		// NOTE: This test intentionally snapshots the *current* generator behavior for `oneway` methods.
+		// The generated Proxy still allocates a reply Parcel and calls `__reply.ReadException ()`, which
+		// does not match true AIDL oneway semantics. This is a pre-existing quirk in CSharpCodeGenerator,
+		// not a desired behavior — fixing it is a separate change that would need its own compat review.
 		[Test]
 		public void OnewayMethods () => RunTest (nameof (OnewayMethods));
 
