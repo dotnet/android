@@ -1,0 +1,16 @@
+[build] Resolve _SupportLicense lazily inside _CopyExtractedMultiDexJar
+
+Now that the Android SDK is extracted by `src/androidsdk` as part of the
+same MSBuild invocation, the `Exists()`-conditioned `<_SupportLicense>`
+property defined at file-load time resolves to empty on a clean build:
+the m2repository directory does not exist yet when MSBuild evaluates
+`Xamarin.Android.Build.Tasks.targets`. The downstream `<Copy>` then
+silently no-ops on an empty SourceFiles and the following `<Touch>`
+fails with MSB3375.
+
+Move the `Exists()` check into `_CopyExtractedMultiDexJar` itself so it
+runs after `src/androidsdk` has extracted the m2repository zip, and add
+an explicit `<Error>` if the NOTICE.txt is genuinely missing instead of
+silently producing an empty MULTIDEX_JAR_LICENSE later.
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
