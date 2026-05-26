@@ -48,7 +48,6 @@ public class TrimmableTypeMapGenerator
 			logger.LogNoJavaPeerTypesFound ();
 			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
-		MarkFrameworkAssemblyPeers (allPeers, frameworkAssemblyNames);
 
 		RootManifestReferencedTypes (allPeers, PrepareManifestForRooting (manifestTemplate, manifestConfig));
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
@@ -211,15 +210,6 @@ public class TrimmableTypeMapGenerator
 		logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);
 		logger.LogGeneratedTypeMapAssembliesInfo (generatedAssemblies.Count);
 		return generatedAssemblies;
-	}
-
-	static void MarkFrameworkAssemblyPeers (List<JavaPeerInfo> allPeers, HashSet<string> frameworkAssemblyNames)
-	{
-		foreach (var peer in allPeers) {
-			if (frameworkAssemblyNames.Contains (peer.AssemblyName)) {
-				peer.IsFrameworkAssembly = true;
-			}
-		}
 	}
 
 	/// <summary>

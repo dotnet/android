@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Mono.Cecil;
 using NUnit.Framework;
@@ -269,9 +270,18 @@ namespace Xamarin.Android.Build.Tests {
 
 			var dynamicCodeDisabledTrimmable = BuildDynamicCodeSupportProfile ("trimmable", dynamicCodeSupport: false);
 
-			const string dynamicCodeSupportFalse = "\"System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported\": false";
+			using var runtimeConfigJson = JsonDocument.Parse (dynamicCodeDisabledTrimmable.RuntimeConfig);
 			Assert.IsTrue (
-				dynamicCodeDisabledTrimmable.RuntimeConfig.Contains (dynamicCodeSupportFalse, StringComparison.Ordinal),
+				runtimeConfigJson.RootElement.TryGetProperty ("runtimeOptions", out var runtimeOptions),
+				"runtimeconfig.json should include runtimeOptions.");
+			Assert.IsTrue (
+				runtimeOptions.TryGetProperty ("configProperties", out var configProperties),
+				"runtimeconfig.json should include runtimeOptions.configProperties.");
+			Assert.IsTrue (
+				configProperties.TryGetProperty ("System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported", out var dynamicCodeSupportProperty),
+				"runtimeconfig.json should include RuntimeFeature.IsDynamicCodeSupported.");
+			Assert.IsFalse (
+				dynamicCodeSupportProperty.GetBoolean (),
 				"trimmable typemap builds should honor explicit DynamicCodeSupport=false.");
 			Assert.IsTrue (
 				dynamicCodeDisabledTrimmable.LinkedTypeMapAssembliesContainArrayRankSentinels,
