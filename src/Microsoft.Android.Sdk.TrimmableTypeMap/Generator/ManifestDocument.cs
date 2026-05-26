@@ -277,6 +277,26 @@ sealed class ManifestElement : ManifestNode
 		return Elements ().Where (e => e.NamespaceName.Length == 0 && e.LocalName == localName);
 	}
 
+	public IEnumerable<string> GetElementAttributeValues (string elementLocalName, string attributeLocalName)
+	{
+		foreach (var element in Elements (elementLocalName)) {
+			var value = element.AndroidAttribute (attributeLocalName);
+			if (value is not null) {
+				yield return value;
+			}
+		}
+	}
+
+	public bool HasElementWithAndroidAttribute (string elementLocalName, string attributeLocalName, string value)
+	{
+		foreach (var element in Elements (elementLocalName)) {
+			if (element.AndroidAttribute (attributeLocalName) == value) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public ManifestElement? Element (string localName)
 	{
 		return Elements (localName).FirstOrDefault ();

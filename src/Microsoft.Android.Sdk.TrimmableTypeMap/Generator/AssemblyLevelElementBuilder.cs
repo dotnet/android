@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -14,13 +13,13 @@ static class AssemblyLevelElementBuilder
 	internal static void AddAssemblyLevelElements (ManifestElement manifest, ManifestElement app, AssemblyManifestInfo info)
 	{
 		var existingPermissions = new HashSet<string> (
-			manifest.Elements ("permission").Select (e => e.AndroidAttribute (ManifestConstants.AttributeName)).OfType<string> ());
+			manifest.GetElementAttributeValues ("permission", ManifestConstants.AttributeName));
 		var existingPermissionGroups = new HashSet<string> (
-			manifest.Elements ("permission-group").Select (e => e.AndroidAttribute (ManifestConstants.AttributeName)).OfType<string> ());
+			manifest.GetElementAttributeValues ("permission-group", ManifestConstants.AttributeName));
 		var existingPermissionTrees = new HashSet<string> (
-			manifest.Elements ("permission-tree").Select (e => e.AndroidAttribute (ManifestConstants.AttributeName)).OfType<string> ());
+			manifest.GetElementAttributeValues ("permission-tree", ManifestConstants.AttributeName));
 		var existingUsesPermissions = new HashSet<string> (
-			manifest.Elements ("uses-permission").Select (e => e.AndroidAttribute (ManifestConstants.AttributeName)).OfType<string> ());
+			manifest.GetElementAttributeValues ("uses-permission", ManifestConstants.AttributeName));
 
 		// <permission> elements
 		foreach (var perm in info.Permissions) {
@@ -84,7 +83,7 @@ static class AssemblyLevelElementBuilder
 
 		// <uses-feature> elements
 		var existingFeatures = new HashSet<string> (
-			manifest.Elements ("uses-feature").Select (e => e.AndroidAttribute (ManifestConstants.AttributeName)).OfType<string> ());
+			manifest.GetElementAttributeValues ("uses-feature", ManifestConstants.AttributeName));
 		foreach (var uf in info.UsesFeatures) {
 			if (uf.Name is not null && existingFeatures.Add (uf.Name)) {
 				var element = new ManifestElement ("uses-feature");
@@ -93,7 +92,7 @@ static class AssemblyLevelElementBuilder
 				manifest.Add (element);
 			} else if (uf.GLESVersion != 0) {
 				var versionStr = $"0x{uf.GLESVersion:X8}";
-				if (!manifest.Elements ("uses-feature").Any (e => e.AndroidAttribute ("glEsVersion") == versionStr)) {
+				if (!manifest.HasElementWithAndroidAttribute ("uses-feature", "glEsVersion", versionStr)) {
 					var element = new ManifestElement ("uses-feature");
 					element.SetAndroidAttribute ("glEsVersion", versionStr);
 					element.SetAndroidAttribute ("required", uf.Required ? "true" : "false");
@@ -107,7 +106,7 @@ static class AssemblyLevelElementBuilder
 			if (string.IsNullOrEmpty (ul.Name)) {
 				continue;
 			}
-			if (!app.Elements ("uses-library").Any (e => e.AndroidAttribute (ManifestConstants.AttributeName) == ul.Name)) {
+			if (!app.HasElementWithAndroidAttribute ("uses-library", ManifestConstants.AttributeName, ul.Name)) {
 				var element = new ManifestElement ("uses-library");
 				element.SetAndroidAttribute (ManifestConstants.AttributeName, ul.Name);
 				element.SetAndroidAttribute ("required", ul.Required ? "true" : "false");
@@ -120,7 +119,7 @@ static class AssemblyLevelElementBuilder
 			if (string.IsNullOrEmpty (md.Name)) {
 				continue;
 			}
-			if (!app.Elements ("meta-data").Any (e => e.AndroidAttribute ("name") == md.Name)) {
+			if (!app.HasElementWithAndroidAttribute ("meta-data", "name", md.Name)) {
 				app.Add (ComponentElementBuilder.CreateMetaDataElement (md));
 			}
 		}
@@ -130,7 +129,7 @@ static class AssemblyLevelElementBuilder
 			if (string.IsNullOrEmpty (prop.Name)) {
 				continue;
 			}
-			if (!app.Elements ("property").Any (e => e.AndroidAttribute ("name") == prop.Name)) {
+			if (!app.HasElementWithAndroidAttribute ("property", "name", prop.Name)) {
 				var element = new ManifestElement ("property");
 				element.SetAndroidAttribute ("name", prop.Name);
 				if (prop.Value is not null) {
@@ -166,7 +165,7 @@ static class AssemblyLevelElementBuilder
 
 		// <supports-gl-texture> elements
 		var existingGLTextures = new HashSet<string> (
-			manifest.Elements ("supports-gl-texture").Select (e => e.AndroidAttribute (ManifestConstants.AttributeName)).OfType<string> ());
+			manifest.GetElementAttributeValues ("supports-gl-texture", ManifestConstants.AttributeName));
 		foreach (var gl in info.SupportsGLTextures) {
 			if (existingGLTextures.Add (gl.Name)) {
 				var element = new ManifestElement ("supports-gl-texture");
@@ -222,8 +221,7 @@ static class AssemblyLevelElementBuilder
 
 	internal static void AddInternetPermission (ManifestElement manifest)
 	{
-		if (!manifest.Elements ("uses-permission").Any (p =>
-			p.AndroidAttribute ("name") == "android.permission.INTERNET")) {
+		if (!manifest.HasElementWithAndroidAttribute ("uses-permission", "name", "android.permission.INTERNET")) {
 			var element = new ManifestElement ("uses-permission");
 			element.SetAndroidAttribute ("name", "android.permission.INTERNET");
 			manifest.Add (element);
