@@ -21,6 +21,10 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 
 	protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
 	{
+		using var operation = TrimmableTypeMapTelemetry.StartOperation ("typemap.type_manager.get_types_for_simple_reference");
+		if (operation.IsActive) {
+			operation.SetTag ("jni.name", jniSimpleReference);
+		}
 		foreach (var t in base.GetTypesForSimpleReference (jniSimpleReference)) {
 			yield return t;
 		}
@@ -34,12 +38,20 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 
 	protected override string? GetSimpleReference (Type type)
 	{
+		using var operation = TrimmableTypeMapTelemetry.StartOperation ("typemap.type_manager.get_simple_reference");
+		if (operation.IsActive) {
+			operation.SetTag ("managed.type", type.FullName);
+		}
 		var simpleReference = _simpleReferenceCache.GetOrAdd (type, GetSimpleReferenceUncached);
 		return simpleReference == NoSimpleReference ? null : simpleReference;
 	}
 
 	string GetSimpleReferenceUncached (Type type)
 	{
+		using var operation = TrimmableTypeMapTelemetry.StartOperation ("typemap.type_manager.get_simple_reference.uncached");
+		if (operation.IsActive) {
+			operation.SetTag ("managed.type", type.FullName);
+		}
 		if (TrimmableTypeMap.Instance.TryGetJniNameForManagedType (type, out var jniName)) {
 			return jniName;
 		}
@@ -61,6 +73,10 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 
 	protected override IEnumerable<string> GetSimpleReferences (Type type)
 	{
+		using var operation = TrimmableTypeMapTelemetry.StartOperation ("typemap.type_manager.get_simple_references");
+		if (operation.IsActive) {
+			operation.SetTag ("managed.type", type.FullName);
+		}
 		if (TrimmableTypeMap.Instance.TryGetJniNameForManagedType (type, out var jniName)) {
 			yield return jniName;
 			yield break;
@@ -85,6 +101,10 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 			Type type)
 	{
+		using var operation = TrimmableTypeMapTelemetry.StartOperation ("typemap.type_manager.get_invoker_type");
+		if (operation.IsActive) {
+			operation.SetTag ("managed.type", type.FullName);
+		}
 		var invokerType = TrimmableTypeMap.Instance.GetInvokerType (type);
 		if (invokerType != null) {
 			return invokerType;

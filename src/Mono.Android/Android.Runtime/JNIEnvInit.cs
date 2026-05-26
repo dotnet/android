@@ -125,6 +125,7 @@ namespace Android.Runtime
 		[UnmanagedCallersOnly]
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
 		{
+			using var operation = TrimmableTypeMapTelemetry.StartOperation ("jnienv.initialize");
 			if (RuntimeFeature.IsNativeAotRuntime) {
 				throw new NotSupportedException ("JNIEnvInit.Initialize cannot be used to initialize NativeAOT.");
 			}
@@ -232,6 +233,7 @@ namespace Android.Runtime
 		[MethodImpl (MethodImplOptions.NoInlining)]
 		static void InitializeTrimmableTypeMapData ()
 		{
+			using var operation = TrimmableTypeMapTelemetry.StartOperation ("typemap.data.initialize");
 			TypeMapLoader.Initialize ();
 		}
 

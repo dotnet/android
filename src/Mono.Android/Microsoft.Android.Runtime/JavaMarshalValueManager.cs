@@ -486,14 +486,24 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 		}
 
 		if (RuntimeFeature.TrimmableTypeMap) {
+			using var operation = TrimmableTypeMapTelemetry.StartOperation ("typemap.peer.create");
+			if (operation.IsActive) {
+				operation.SetTag ("target.type", targetType?.FullName);
+			}
 			try {
 				// Mirror legacy GetPeerType: callers commonly request universal
 				// interfaces / boxes (IJavaPeerable, object, Exception) — map these
 				// to a concrete peer type so the proxy lookup can succeed.
 				var resolvedTargetType = ResolvePeerType (targetType);
+				if (operation.IsActive) {
+					operation.SetTag ("resolved.target.type", resolvedTargetType?.FullName);
+				}
 
 				var typeMap = TrimmableTypeMap.Instance;
 				var proxy = typeMap.GetProxyForJavaObject (reference.Handle, resolvedTargetType);
+				if (operation.IsActive) {
+					operation.SetTag ("proxy.target.type", proxy?.TargetType.FullName);
+				}
 
 				// Open-generic proxies cannot instantiate closed targets.
 				IJavaPeerable? peer;
@@ -508,7 +518,13 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 						peerState |= JniManagedPeerStates.Activatable;
 					}
 					peer.SetJniManagedPeerState (peerState);
+					if (operation.IsActive) {
+						operation.SetTag ("created", true);
+					}
 					return peer;
+				}
+				if (operation.IsActive) {
+					operation.SetTag ("created", false);
 				}
 
 				// Disambiguate the failure — match the contract of the base

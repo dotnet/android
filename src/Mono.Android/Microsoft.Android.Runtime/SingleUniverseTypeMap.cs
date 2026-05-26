@@ -47,6 +47,10 @@ sealed class SingleUniverseTypeMap : ITypeMap
 
 	public IEnumerable<Type> GetProxyTypes (string jniName)
 	{
+		using var operation = TrimmableTypeMapTelemetry.StartOperation ("typemap.universe.get_proxy_types");
+		if (operation.IsActive) {
+			operation.SetTag ("jni.name", jniName);
+		}
 		if (!_typeMap.TryGetValue (jniName, out var mappedType)) {
 			yield break;
 		}
@@ -73,6 +77,10 @@ sealed class SingleUniverseTypeMap : ITypeMap
 
 	public bool TryGetProxyType (Type managedType, [NotNullWhen (true)] out Type? proxyType)
 	{
+		using var operation = TrimmableTypeMapTelemetry.StartOperation ("typemap.universe.try_get_proxy_type");
+		if (operation.IsActive) {
+			operation.SetTag ("managed.type", managedType.FullName);
+		}
 		if (!_proxyTypeMap.TryGetValue (managedType, out var mappedProxyType)) {
 			proxyType = null;
 			return false;

@@ -62,6 +62,7 @@ public class TrimmableTypeMap
 	{
 		ArgumentNullException.ThrowIfNull (typeMap);
 		ArgumentNullException.ThrowIfNull (proxyMap);
+		TrimmableTypeMapTelemetry.RecordEntries ("universe", 1);
 		InitializeCore (new SingleUniverseTypeMap (typeMap, proxyMap, arrayMapsByRank));
 	}
 
@@ -75,6 +76,7 @@ public class TrimmableTypeMap
 	{
 		ArgumentNullException.ThrowIfNull (typeMap);
 		ArgumentNullException.ThrowIfNull (proxyMap);
+		TrimmableTypeMapTelemetry.RecordEntries ("universe", 1);
 		InitializeCore (new SingleUniverseTypeMap (typeMap, proxyMap, arrayMapsByUniverseAndRank));
 	}
 
@@ -111,6 +113,7 @@ public class TrimmableTypeMap
 			throw new ArgumentException ($"arrayMapsByUniverseAndRank.Length ({arrayMapsByUniverseAndRank.Length}) must equal typeMaps.Length ({typeMaps.Length}).", nameof (arrayMapsByUniverseAndRank));
 		}
 
+		TrimmableTypeMapTelemetry.RecordEntries ("universe", typeMaps.Length);
 		var universes = new SingleUniverseTypeMap [typeMaps.Length];
 		for (int i = 0; i < typeMaps.Length; i++) {
 			universes [i] = new SingleUniverseTypeMap (typeMaps [i], proxyMaps [i], arrayMapsByUniverseAndRank? [i]);
@@ -120,6 +123,7 @@ public class TrimmableTypeMap
 
 	static void InitializeCore (ITypeMap typeMap)
 	{
+		using var operation = TrimmableTypeMapTelemetry.StartOperation ("typemap.initialize");
 		lock (s_initLock) {
 			if (s_instance is not null) {
 				throw new InvalidOperationException ("TrimmableTypeMap has already been initialized.");
@@ -131,6 +135,7 @@ public class TrimmableTypeMap
 
 	internal static unsafe void RegisterNativeMethods ()
 	{
+		using var operation = TrimmableTypeMapTelemetry.StartOperation ("typemap.register_native_methods");
 		lock (s_initLock) {
 			if (s_nativeMethodsRegistered) {
 				throw new InvalidOperationException ("TrimmableTypeMap native methods have already been registered.");
@@ -178,7 +183,15 @@ public class TrimmableTypeMap
 	/// </summary>
 	JavaPeerProxy[] GetProxiesForJniName (string jniName)
 	{
+		using var operation = TrimmableTypeMapTelemetry.StartOperation ("typemap.lookup.jni_name");
+		if (operation.IsActive) {
+			operation.SetTag ("jni.name", jniName);
+		}
 		return _jniProxyCache.GetOrAdd (jniName, static (name, self) => {
+			using var uncachedOperation = TrimmableTypeMapTelemetry.StartOperation ("typemap.lookup.jni_name.uncached");
+			if (uncachedOperation.IsActive) {
+				uncachedOperation.SetTag ("jni.name", name);
+			}
 			var result = new List<JavaPeerProxy> ();
 			foreach (var type in self._typeMap.GetProxyTypes (name)) {
 				var proxy = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
@@ -213,11 +226,19 @@ public class TrimmableTypeMap
 	}
 	JavaPeerProxy? GetProxyForManagedType (Type managedType)
 	{
+		using var operation = TrimmableTypeMapTelemetry.StartOperation ("typemap.lookup.managed_type");
+		if (operation.IsActive) {
+			operation.SetTag ("managed.type", managedType.FullName);
+		}
 		if (managedType.IsGenericType && !managedType.IsGenericTypeDefinition) {
 			managedType = managedType.GetGenericTypeDefinition ();
 		}
 
 		var proxy = _proxyCache.GetOrAdd (managedType, static (type, self) => {
+			using var uncachedOperation = TrimmableTypeMapTelemetry.StartOperation ("typemap.lookup.managed_type.uncached");
+			if (uncachedOperation.IsActive) {
+				uncachedOperation.SetTag ("managed.type", type.FullName);
+			}
 			if (!self._typeMap.TryGetProxyType (type, out var proxyType)) {
 				return s_noPeerSentinel;
 			}
@@ -235,6 +256,10 @@ public class TrimmableTypeMap
 
 	internal JavaPeerProxy? GetProxyForJavaObject (IntPtr handle, Type? targetType = null)
 	{
+		using var operation = TrimmableTypeMapTelemetry.StartOperation ("typemap.lookup.java_object");
+		if (operation.IsActive) {
+			operation.SetTag ("target.type", targetType?.FullName);
+		}
 		if (handle == IntPtr.Zero) {
 			return null;
 		}
@@ -283,9 +308,21 @@ public class TrimmableTypeMap
 
 		static JavaPeerProxy? GetProxyForJavaInterfaces (TrimmableTypeMap self, JniObjectReference jniClass, string className, Type targetType)
 		{
+			using var operation = TrimmableTypeMapTelemetry.StartOperation ("typemap.lookup.java_interfaces");
+			if (operation.IsActive) {
+				operation.SetTag ("jni.name", className);
+				operation.SetTag ("target.type", targetType.FullName);
+			}
 			var proxy = self._interfaceProxyCache.GetOrAdd (
 				(className, targetType),
-				_ => TryMatchInterfaces (self, jniClass, targetType) ?? s_noPeerSentinel);
+				_ => {
+					using var uncachedOperation = TrimmableTypeMapTelemetry.StartOperation ("typemap.lookup.java_interfaces.uncached");
+					if (uncachedOperation.IsActive) {
+						uncachedOperation.SetTag ("jni.name", className);
+						uncachedOperation.SetTag ("target.type", targetType.FullName);
+					}
+					return TryMatchInterfaces (self, jniClass, targetType) ?? s_noPeerSentinel;
+				});
 			return ReferenceEquals (proxy, s_noPeerSentinel) ? null : proxy;
 		}
 
@@ -347,6 +384,10 @@ public class TrimmableTypeMap
 
 		static JavaPeerProxy? TryGetProxyFromTargetType (TrimmableTypeMap self, IntPtr handle, Type? targetType)
 		{
+			using var operation = TrimmableTypeMapTelemetry.StartOperation ("typemap.lookup.target_type_fallback");
+			if (operation.IsActive) {
+				operation.SetTag ("target.type", targetType?.FullName);
+			}
 			if (targetType is null) {
 				return null;
 			}
@@ -506,6 +547,7 @@ public class TrimmableTypeMap
 	[UnmanagedCallersOnly]
 	static void OnRegisterNatives (IntPtr jnienv, IntPtr klass, IntPtr nativeClassHandle)
 	{
+		using var operation = TrimmableTypeMapTelemetry.StartOperation ("typemap.on_register_natives");
 		string? className = null;
 		try {
 			if (s_instance is null) {
@@ -517,8 +559,14 @@ public class TrimmableTypeMap
 			if (className is null) {
 				return;
 			}
+			if (operation.IsActive) {
+				operation.SetTag ("jni.name", className);
+			}
 
 			var proxies = s_instance.GetProxiesForJniName (className);
+			if (operation.IsActive) {
+				operation.SetTag ("proxy.count", proxies.Length);
+			}
 			if (proxies.Length == 0) {
 				return;
 			}

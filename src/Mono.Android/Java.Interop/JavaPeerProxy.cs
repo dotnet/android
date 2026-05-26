@@ -3,6 +3,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using Android.Runtime;
+using Microsoft.Android.Runtime;
 
 namespace Java.Interop
 {
@@ -94,23 +95,39 @@ namespace Java.Interop
 		/// </summary>
 		public static bool ShouldSkipActivation (IntPtr jniSelf)
 		{
+			using var operation = TrimmableTypeMapTelemetry.StartOperation ("typemap.activation.should_skip");
 			var reference = new JniObjectReference (jniSelf, JniObjectReferenceType.Invalid);
 			var peer = JniEnvironment.Runtime.ValueManager.PeekPeer (reference);
 			if (peer != null && !IsActivationPeer (peer)) {
+				if (operation.IsActive) {
+					operation.SetTag ("skip", true);
+					operation.SetTag ("reason", "existing-peer");
+				}
 				return true;
 			}
-			return JniEnvironment.WithinNewObjectScope;
+			var skip = JniEnvironment.WithinNewObjectScope;
+			if (operation.IsActive) {
+				operation.SetTag ("skip", skip);
+				operation.SetTag ("reason", skip ? "new-object-scope" : "activate");
+			}
+			return skip;
 		}
 
 		public static IJavaPeerable? GetActivationPeer (IntPtr jniSelf)
 		{
+			using var operation = TrimmableTypeMapTelemetry.StartOperation ("typemap.activation.get_peer");
 			var reference = new JniObjectReference (jniSelf, JniObjectReferenceType.Invalid);
 			var peer = JniEnvironment.Runtime.ValueManager.PeekPeer (reference);
-			return peer != null && IsActivationPeer (peer) ? peer : null;
+			var activationPeer = peer != null && IsActivationPeer (peer) ? peer : null;
+			if (operation.IsActive) {
+				operation.SetTag ("found", activationPeer is not null);
+			}
+			return activationPeer;
 		}
 
 		public static void SetActivationPeerReference (IJavaPeerable peer, IntPtr jniSelf)
 		{
+			using var operation = TrimmableTypeMapTelemetry.StartOperation ("typemap.activation.set_peer_reference");
 			var reference = new JniObjectReference (jniSelf, JniObjectReferenceType.Invalid);
 			peer.SetPeerReference (reference);
 			peer.SetJniIdentityHashCode (JniEnvironment.References.GetIdentityHashCode (reference));
@@ -118,12 +135,19 @@ namespace Java.Interop
 
 		public static void MarkActivationPeerReplaceable (IntPtr jniSelf)
 		{
+			using var operation = TrimmableTypeMapTelemetry.StartOperation ("typemap.activation.mark_replaceable");
 			var reference = new JniObjectReference (jniSelf, JniObjectReferenceType.Invalid);
 			var peer = JniEnvironment.Runtime.ValueManager.PeekPeer (reference);
 			if (peer == null) {
+				if (operation.IsActive) {
+					operation.SetTag ("found", false);
+				}
 				return;
 			}
 
+			if (operation.IsActive) {
+				operation.SetTag ("found", true);
+			}
 			peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable);
 		}
 
