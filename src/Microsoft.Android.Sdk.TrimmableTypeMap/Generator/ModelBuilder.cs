@@ -25,6 +25,9 @@ static class ModelBuilder
 		"java/lang/RuntimeException",
 		"java/lang/Error",
 		"java/lang/Thread",
+		// Queried during NativeAOT JavaInteropRuntime.init before user code can
+		// reference the managed interface, so the managed→JNI mapping must survive.
+		"java/lang/Thread$UncaughtExceptionHandler",
 	};
 
 	/// <summary>
@@ -226,7 +229,7 @@ static class ModelBuilder
 
 		// User-defined ACW types (not MCW bindings, not interfaces) are unconditional
 		// because Android can instantiate them from Java at any time.
-		if (!peer.DoNotGenerateAcw && !peer.IsInterface) {
+		if (!peer.IsFrameworkAssembly && !peer.DoNotGenerateAcw && !peer.IsInterface) {
 			return true;
 		}
 
@@ -285,6 +288,7 @@ static class ModelBuilder
 			},
 			IsAcw = isAcw,
 			IsGenericDefinition = peer.IsGenericDefinition,
+			CannotRegisterInStaticConstructor = peer.CannotRegisterInStaticConstructor,
 		};
 
 		if (peer.InvokerTypeName != null) {
@@ -333,6 +337,14 @@ static class ModelBuilder
 					AssemblyName = !mm.DeclaringAssemblyName.IsNullOrEmpty () ? mm.DeclaringAssemblyName : peer.AssemblyName,
 				},
 				JniSignature = mm.JniSignature,
+				ExportMethodDispatch = mm.IsExport ? new ExportMethodDispatchData {
+					ManagedMethodName = mm.ManagedMethodName,
+					ParameterTypes = mm.ManagedParameterTypes,
+					ParameterKinds = mm.ManagedParameterExportKinds,
+					ReturnType = mm.ManagedReturnType,
+					ReturnKind = mm.ManagedReturnExportKind,
+					IsStatic = mm.IsStatic,
+				} : null,
 			});
 			ucoIndex++;
 		}
@@ -344,7 +356,18 @@ static class ModelBuilder
 			return;
 		}
 
+		// Abstract types are never directly instantiated from Java — the ACW
+		// constructor's getClass() guard prevents activation. Skip generating
+		// UCO constructor wrappers for them.
+		if (peer.IsAbstract) {
+			return;
+		}
+
 		foreach (var ctor in peer.JavaConstructors) {
+			if (ctor.SuperArgumentsString != null && !ctor.HasMatchingManagedCtor) {
+				throw new InvalidOperationException (
+					$"Trimmable typemap cannot generate Java constructor wrapper '{ctor.JniSignature}' for '{peer.ManagedTypeName}' because no matching user-visible managed constructor was found.");
+			}
 			proxy.UcoConstructors.Add (new UcoConstructorData {
 				WrapperName = $"nctor_{ctor.ConstructorIndex}_uco",
 				JniSignature = ctor.JniSignature,
@@ -353,7 +376,7 @@ static class ModelBuilder
 					AssemblyName = peer.AssemblyName,
 				},
 				ManagedParameterTypes = ctor.ManagedParameterTypes,
-				HasManagedConstructor = ctor.HasManagedConstructor,
+				HasMatchingManagedCtor = ctor.HasMatchingManagedCtor,
 			});
 		}
 	}
@@ -425,6 +448,9 @@ static class ModelBuilder
 		}
 
 		var peer = peersForName [0];
+		if (!peer.GenerateArrayEntries) {
+			return;
+		}
 		if (peer.IsGenericDefinition) {
 			return;
 		}

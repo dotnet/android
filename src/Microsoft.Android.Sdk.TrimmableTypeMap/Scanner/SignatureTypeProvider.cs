@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Reflection.Metadata;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
@@ -63,4 +64,67 @@ sealed class SignatureTypeProvider : ISignatureTypeProvider<string, object?>
 	public string GetGenericMethodParameter (object? genericContext, int index) => $"!!{index}";
 
 	public string GetFunctionPointerType (MethodSignature<string> signature) => "delegate*";
+}
+
+sealed class TypeRefSignatureTypeProvider : ISignatureTypeProvider<TypeRefData, AssemblyIndex>
+{
+	public static readonly TypeRefSignatureTypeProvider Instance = new ();
+
+	public TypeRefData GetPrimitiveType (PrimitiveTypeCode typeCode) => new () {
+		ManagedTypeName = SignatureTypeProvider.Instance.GetPrimitiveType (typeCode),
+		AssemblyName = "System.Runtime",
+	};
+
+	public TypeRefData GetTypeFromDefinition (MetadataReader reader, TypeDefinitionHandle handle, byte rawTypeKind)
+		=> MetadataTypeNameResolver.GetTypeRefFromDefinition (reader, handle, reader.GetString (reader.GetAssemblyDefinition ().Name), rawTypeKind);
+
+	public TypeRefData GetTypeFromReference (MetadataReader reader, TypeReferenceHandle handle, byte rawTypeKind)
+		=> MetadataTypeNameResolver.GetTypeRefFromReference (reader, handle, reader.GetString (reader.GetAssemblyDefinition ().Name), rawTypeKind);
+
+	public TypeRefData GetTypeFromSpecification (MetadataReader reader, AssemblyIndex genericContext, TypeSpecificationHandle handle, byte rawTypeKind)
+	{
+		var typeSpec = reader.GetTypeSpecification (handle);
+		return typeSpec.DecodeSignature (this, genericContext);
+	}
+
+	public TypeRefData GetSZArrayType (TypeRefData elementType) => elementType with {
+		ManagedTypeName = $"{elementType.ManagedTypeName}[]",
+	};
+
+	public TypeRefData GetArrayType (TypeRefData elementType, ArrayShape shape) => elementType with {
+		ManagedTypeName = $"{elementType.ManagedTypeName}[{new string (',', shape.Rank - 1)}]",
+	};
+
+	public TypeRefData GetByReferenceType (TypeRefData elementType) => elementType with {
+		ManagedTypeName = $"{elementType.ManagedTypeName}&",
+	};
+
+	public TypeRefData GetPointerType (TypeRefData elementType) => elementType with {
+		ManagedTypeName = $"{elementType.ManagedTypeName}*",
+	};
+
+	public TypeRefData GetPinnedType (TypeRefData elementType) => elementType;
+	public TypeRefData GetModifiedType (TypeRefData modifier, TypeRefData unmodifiedType, bool isRequired) => unmodifiedType;
+
+	public TypeRefData GetGenericInstantiation (TypeRefData genericType, ImmutableArray<TypeRefData> typeArguments)
+	{
+		return genericType with {
+			ManagedTypeName = $"{genericType.ManagedTypeName}<{string.Join (",", typeArguments.Select (t => t.ManagedTypeName))}>",
+		};
+	}
+
+	public TypeRefData GetGenericTypeParameter (AssemblyIndex genericContext, int index) => new () {
+		ManagedTypeName = $"!{index}",
+		AssemblyName = genericContext.AssemblyName,
+	};
+
+	public TypeRefData GetGenericMethodParameter (AssemblyIndex genericContext, int index) => new () {
+		ManagedTypeName = $"!!{index}",
+		AssemblyName = genericContext.AssemblyName,
+	};
+
+	public TypeRefData GetFunctionPointerType (MethodSignature<TypeRefData> signature) => new () {
+		ManagedTypeName = "delegate*",
+		AssemblyName = "System.Runtime",
+	};
 }

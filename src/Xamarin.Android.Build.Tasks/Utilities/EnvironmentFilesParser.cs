@@ -12,7 +12,6 @@ namespace Xamarin.Android.Tasks
 	class EnvironmentFilesParser
 	{
 		public bool BrokenExceptionTransitions       { get; set; }
-		public bool HaveHttpMessageHandler           { get; private set; }
 		public bool HaveLogLevel                     { get; private set; }
 		public bool HaveMonoDebug                    { get; private set; }
 		public bool HaveMonoGCParams                 { get; private set; }
@@ -51,8 +50,6 @@ namespace Xamarin.Android.Tasks
 						if (sequencePointsMode != SequencePointsMode.None && !lineToWrite.Contains ("gen-compact-seq-points"))
 							lineToWrite = line  + ",gen-compact-seq-points";
 					}
-					if (lineToWrite.StartsWith ("XA_HTTP_CLIENT_HANDLER_TYPE=", StringComparison.Ordinal))
-						HaveHttpMessageHandler = true;
 
 					if (lineToWrite.StartsWith ("mono.enable_assembly_preload=", StringComparison.Ordinal)) {
 						int idx = lineToWrite.IndexOf ('=');

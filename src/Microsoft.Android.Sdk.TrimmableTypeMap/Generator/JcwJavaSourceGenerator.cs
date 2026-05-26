@@ -249,7 +249,7 @@ public sealed class JcwJavaSourceGenerator
 				throwsClause = $"\n\t\tthrows {string.Join (", ", method.ThrownNames)}";
 			}
 
-			if (method.Connector != null) {
+			if (method.Connector != null && !method.IsExport) {
 				writer.Write ($$"""
 
 	@Override
@@ -262,13 +262,14 @@ public sealed class JcwJavaSourceGenerator
 """);
 			} else {
 				string access = method.IsExport && method.JavaAccess != null ? method.JavaAccess : "public";
+				string staticKeyword = method.IsStatic ? "static " : "";
 				writer.Write ($$"""
 
-	{{access}} {{javaReturnType}} {{method.JniName}} ({{parameters}}){{throwsClause}}
+	{{access}} {{staticKeyword}}{{javaReturnType}} {{method.JniName}} ({{parameters}}){{throwsClause}}
 	{
 {{registerNativesLine}}		{{returnPrefix}}{{method.NativeCallbackName}} ({{args}});
 	}
-	{{access}} native {{javaReturnType}} {{method.NativeCallbackName}} ({{parameters}});
+	{{access}} {{staticKeyword}}native {{javaReturnType}} {{method.NativeCallbackName}} ({{parameters}});
 
 """);
 			}

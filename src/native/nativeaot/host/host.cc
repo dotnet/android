@@ -68,5 +68,28 @@ void Host::OnInit (jstring language, jstring filesDir, jstring cacheDir, JnienvI
 
 	// We expect the struct to be initialized by the managed land the way it sees fit, we set only the
 	// fields we support.
+	// NativeAOT initializes Mono.Android's common JNI state before creating the JniRuntime,
+	// so the Java peer marker classes must be provided by the host instead of being looked
+	// up later from mono.android.Runtime static fields like MonoVM/CoreCLR.
+	jclass lrefIGCUserPeer = env->FindClass ("mono/android/IGCUserPeer");
+	if (lrefIGCUserPeer == nullptr) [[unlikely]] {
+		env->ExceptionDescribe ();
+		env->ExceptionClear ();
+		abort_unless (false, "Failed to load mono/android/IGCUserPeer class");
+	}
+
+	jclass lrefGCUserPeerable = env->FindClass ("net/dot/jni/GCUserPeerable");
+	if (lrefGCUserPeerable == nullptr) [[unlikely]] {
+		env->ExceptionDescribe ();
+		env->ExceptionClear ();
+		abort_unless (false, "Failed to load net/dot/jni/GCUserPeerable class");
+	}
+
 	initArgs->logCategories = log_categories;
+	initArgs->grefGcThreshold = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());
+	initArgs->grefIGCUserPeer = env->NewGlobalRef (lrefIGCUserPeer);
+	initArgs->grefGCUserPeerable = env->NewGlobalRef (lrefGCUserPeerable);
+
+	env->DeleteLocalRef (lrefIGCUserPeer);
+	env->DeleteLocalRef (lrefGCUserPeerable);
 }

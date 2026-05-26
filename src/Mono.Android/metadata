@@ -388,7 +388,7 @@
 	<attr path="/api/package[@name='android.widget']/class[@name='TextView']/method[@name='getShadowColor']" name="return" api-since="16">Android.Graphics.Color</attr>
 
 	<attr api-since="36.1" path="/api/package[@name='android.graphics.pdf.component']/*/method[
-	    starts-with(@jni-signature='(I)') and (
+	    starts-with(@jni-signature, '(I)') and (
 	    @name='setTextColor'
 	    or @name='setBackgroundColor'
 	    or @name='setColor'

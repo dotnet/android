@@ -12,6 +12,7 @@
     <!-- There isn't an actual dependency here, but we can only build one 'gradlew' project
          at a time, and adding <ProjectReference> between them ensures they run sequentially. -->
     <ProjectReference Include="..\manifestmerger\manifestmerger.csproj" ReferenceOutputAssembly="False" />
+    <ProjectReference Include="..\androidsdk\androidsdk.csproj" ReferenceOutputAssembly="False" />
   </ItemGroup>
 
   <Import Project="..\..\Configuration.props" />

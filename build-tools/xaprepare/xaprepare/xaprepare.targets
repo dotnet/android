@@ -90,10 +90,6 @@
       <Replacement Include="@TestOutputDirectory@=$(TestOutputDirectory)" />
       <Replacement Include="@XABuildToolsFolder@=$(XABuildToolsFolder)" />
       <Replacement Include="@XABuildToolsVersion@=$(XABuildToolsVersion)" />
-      <Replacement Include="@XABuildToolsPackagePrefixMacOS@=$(XABuildToolsPackagePrefixMacOS)" />
-      <Replacement Include="@XABuildToolsPackagePrefixWindows@=$(XABuildToolsPackagePrefixWindows)" />
-      <Replacement Include="@XABuildToolsPackagePrefixLinux@=$(XABuildToolsPackagePrefixLinux)" />
-      <Replacement Include="@XABuildToolsPackagePrefix@=$(XABuildToolsPackagePrefix)" />
       <Replacement Include="@XAPlatformToolsVersion@=$(XAPlatformToolsVersion)" />
       <Replacement Include="@XAInstallPrefix@=$(XAInstallPrefix)" />
       <Replacement Include="@XABinRelativeInstallPrefix@=$(_XABinRelativeInstallPrefix)" />

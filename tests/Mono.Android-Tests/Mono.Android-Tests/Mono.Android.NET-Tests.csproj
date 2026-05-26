@@ -29,18 +29,17 @@
         NetworkInterfaces excluded: https://github.com/dotnet/runtime/issues/75155
     -->
     <!-- TODO: https://github.com/dotnet/android/issues/10069 -->
-    <ExcludeCategories Condition=" '$(UseMonoRuntime)' != 'true' ">$(ExcludeCategories):CoreCLRIgnore:NTLM</ExcludeCategories>
+    <ExcludeCategories Condition=" '$(UseMonoRuntime)' != 'true' and '$(_AndroidTypeMapImplementation)' != 'trimmable' ">$(ExcludeCategories):CoreCLRIgnore:NTLM</ExcludeCategories>
     <!-- TODO: https://github.com/dotnet/android/issues/10079 -->
-    <ExcludeCategories Condition=" '$(PublishAot)' == 'true' ">$(ExcludeCategories):NativeAOTIgnore:SSL:NTLM:AndroidClientHandler:Export:NativeTypeMap</ExcludeCategories>
+    <ExcludeCategories Condition=" '$(PublishAot)' == 'true' ">$(ExcludeCategories):NativeAOTIgnore:SSL:NTLM:Export</ExcludeCategories>
     <!-- FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190 -->
     <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):LLVMIgnore</ExcludeCategories>
     <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):InetAccess:NetworkInterfaces</ExcludeCategories>
   </PropertyGroup>
 
   <PropertyGroup>
-    <UseMonoRuntime Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(UseMonoRuntime)' == '' and '$(PublishAot)' != 'true' ">false</UseMonoRuntime>
+    <UseMonoRuntime Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishAot)' != 'true' ">false</UseMonoRuntime>
     <TestsFlavor Condition=" '$(TestsFlavor)' == '' and '$(_AndroidTypeMapImplementation)' == 'trimmable' ">CoreCLRTrimmable</TestsFlavor>
-    <ExcludeCategories Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">$(ExcludeCategories):NativeTypeMap:Export</ExcludeCategories>
   </PropertyGroup>
 
   <ItemGroup>
@@ -71,11 +70,13 @@
     <ProjectReference Include="..\Java.Interop-Tests\Java.Interop-Tests.NET.csproj" />
     <ProjectReference Include="..\Mono.Android-Test.Library\Mono.Android-Test.Library.NET.csproj" />
     <ProjectReference Include="..\..\..\src\Xamarin.Android.NUnitLite\Xamarin.Android.NUnitLite.NET.csproj" />
+    <!-- Required for [Export] / [ExportField] runtime support (ExportTests.cs) on the LLVM-IR typemap path -->
+    <Reference Include="Mono.Android.Export" Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' " />
   </ItemGroup>
 
   <ItemGroup>
-    <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="Visible" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
-    <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="Visible" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
+    <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="All" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
+    <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
     <TrimmerRootAssembly Include="StartupHook" RootMode="All" Condition=" '$(StartupHookSupport)' == 'true' " />
     <TrimmerRootDescriptor Include="TrimmerRoots.xml" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
     <_AndroidRemapMembers Include="Remaps.xml" />
@@ -92,7 +93,6 @@
     <Compile Include="Android.Graphics\NinePatchTests.cs" />
     <Compile Include="Android.OS\BundleTest.cs" />
     <Compile Include="Android.OS\HandlerTest.cs" />
-    <Compile Include="Android.Runtime\AndroidEnvironmentTest.cs" />
     <Compile Include="Android.Runtime\CharSequenceTest.cs" />
     <Compile Include="Android.Runtime\InputStreamInvokerTest.cs" />
     <Compile Include="Android.Runtime\JavaCollectionTest.cs" />
@@ -103,6 +103,7 @@
     <Compile Include="Android.Widget\AdapterTests.cs" />
     <Compile Include="Android.Widget\CustomWidgetTests.cs" />
     <Compile Include="Java.Interop\ConstructorActivationTests.cs" />
+    <Compile Include="Java.Interop\ExportTests.cs" />
     <Compile Include="Java.Interop\JavaConvertTest.cs" />
     <Compile Include="Java.Interop\JavaListTest.cs" />
     <Compile Include="Java.Interop\JavaObjectExtensionsTests.cs" />
@@ -134,10 +135,10 @@
     <Compile Include="System.Text.Json\JsonSerializerTest.cs" />
     <Compile Include="System.Threading\InterlockedTest.cs" />
     <Compile Include="System.Xml\XmlSerializer.cs" />
-    <Compile Include="Xamarin.Android.Net\AndroidClientHandlerTests.cs" />
+    <Compile Include="Xamarin.Android.Net\AndroidHandlerTestBase.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerTests.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerNegotiateAuthenticationTests.cs" />
-    <Compile Include="Xamarin.Android.Net\HttpClientIntegrationTests.cs" />
+    <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerIntegrationTests.cs" />
     <Compile Include="Xamarin.Android.Net\TrustManagerMarshallingTests.cs" />
     <Compile Include="Xamarin.Android.RuntimeTests\MainActivity.cs" />
     <Compile Include="Xamarin.Android.RuntimeTests\MyIntent.cs" />
