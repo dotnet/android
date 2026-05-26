@@ -92,15 +92,6 @@ public sealed class ManifestDocument
 			case XmlNodeType.Element:
 				element.Add (ReadElement (reader));
 				break;
-			case XmlNodeType.Text:
-				element.Add (new ManifestText (reader.Value, false));
-				break;
-			case XmlNodeType.CDATA:
-				element.Add (new ManifestText (reader.Value, true));
-				break;
-			case XmlNodeType.Comment:
-				element.Add (new ManifestComment (reader.Value));
-				break;
 			case XmlNodeType.EndElement:
 				return element;
 			}
@@ -136,56 +127,10 @@ public sealed class ManifestDocument
 	}
 }
 
-abstract class ManifestNode
-{
-	public abstract ManifestNode CloneNode ();
-	internal abstract void WriteTo (XmlWriter writer);
-}
-
-sealed class ManifestText : ManifestNode
-{
-	readonly string value;
-	readonly bool cdata;
-
-	public ManifestText (string value, bool cdata)
-	{
-		this.value = value;
-		this.cdata = cdata;
-	}
-
-	public override ManifestNode CloneNode () => new ManifestText (value, cdata);
-
-	internal override void WriteTo (XmlWriter writer)
-	{
-		if (cdata) {
-			writer.WriteCData (value);
-		} else {
-			writer.WriteString (value);
-		}
-	}
-}
-
-sealed class ManifestComment : ManifestNode
-{
-	readonly string value;
-
-	public ManifestComment (string value)
-	{
-		this.value = value;
-	}
-
-	public override ManifestNode CloneNode () => new ManifestComment (value);
-
-	internal override void WriteTo (XmlWriter writer)
-	{
-		writer.WriteComment (value);
-	}
-}
-
-sealed class ManifestElement : ManifestNode
+sealed class ManifestElement
 {
 	readonly List<ManifestAttribute> attributes = [];
-	readonly List<ManifestNode> children = [];
+	readonly List<ManifestElement> children = [];
 
 	public string LocalName { get; }
 	public string NamespaceName { get; }
@@ -257,19 +202,19 @@ sealed class ManifestElement : ManifestNode
 		attributes.Add (new ManifestAttribute (localName, value, namespaceName, prefix));
 	}
 
-	public void Add (ManifestNode node)
+	public void Add (ManifestElement element)
 	{
-		children.Add (node);
+		children.Add (element);
 	}
 
-	public void AddFirst (ManifestNode node)
+	public void AddFirst (ManifestElement element)
 	{
-		children.Insert (0, node);
+		children.Insert (0, element);
 	}
 
 	public IEnumerable<ManifestElement> Elements ()
 	{
-		return children.OfType<ManifestElement> ();
+		return children;
 	}
 
 	public IEnumerable<ManifestElement> Elements (string localName)
@@ -304,7 +249,7 @@ sealed class ManifestElement : ManifestNode
 
 	public IEnumerable<ManifestElement> Descendants ()
 	{
-		foreach (var child in children.OfType<ManifestElement> ()) {
+		foreach (var child in children) {
 			yield return child;
 			foreach (var descendant in child.Descendants ()) {
 				yield return descendant;
@@ -327,14 +272,12 @@ sealed class ManifestElement : ManifestNode
 			clone.attributes.Add (attribute.Clone ());
 		}
 		foreach (var child in children) {
-			clone.children.Add (child.CloneNode ());
+			clone.children.Add (child.Clone ());
 		}
 		return clone;
 	}
 
-	public override ManifestNode CloneNode () => Clone ();
-
-	internal override void WriteTo (XmlWriter writer)
+	internal void WriteTo (XmlWriter writer)
 	{
 		writer.WriteStartElement (Prefix.Length == 0 ? null : Prefix, LocalName, NamespaceName.Length == 0 ? null : NamespaceName);
 		foreach (var attribute in attributes) {
