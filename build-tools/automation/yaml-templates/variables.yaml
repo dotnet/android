@@ -42,7 +42,7 @@ variables:
 - name: SharedMacName
   value: Sequoia
 - name: SharedMacArch
-  value: arm64
+  value: x64
 - name: HostedWinImage
   value: windows-2022
 - name: WindowsPoolImage1ESPT
