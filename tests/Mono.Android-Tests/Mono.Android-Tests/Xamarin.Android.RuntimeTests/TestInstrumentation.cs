@@ -45,44 +45,15 @@ namespace Xamarin.Android.RuntimeTests
 				// trimmable typemap. These cannot use [Category] because we don't control
 				// that assembly — they must be excluded by name here.
 				return new [] {
-					// net.dot.jni.test.CallVirtualFromConstructorDerived Java class not in APK
+					// Known limitation: [JniAddNativeMethodRegistrationAttribute] is not
+					// supported by design under the trimmable typemap. This Java.Interop-Tests
+					// fixture uses that attribute to register native callbacks on a hand-written
+					// Java peer (an obsolete code path whose primary consumer, jnimarshalmethod-gen,
+					// was removed in dotnet/java-interop#1405). The trimmable typemap generator
+					// emits XA4251 when it encounters the attribute and instructs users to either
+					// avoid it or switch off the trimmable typemap.
+					// See https://github.com/dotnet/android/issues/11170.
 					"Java.InteropTests.InvokeVirtualFromConstructorTests",
-
-					// net.dot.jni.internal.JavaProxyObject.<clinit> calls
-					// net.dot.jni.ManagedPeer.registerNativeMembers, which the trimmable
-					// typemap path rejects. See https://github.com/dotnet/android/issues/11170.
-					"Java.InteropTests.JavaObjectArray_object_ContractTest",
-					"Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateArgumentState",
-					"Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateGenericArgumentState",
-					"Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateGenericObjectReferenceArgumentState",
-					"Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateGenericValue",
-					"Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateObjectReferenceArgumentState",
-					"Java.InteropTests.JniValueMarshaler_object_ContractTests.JniValueMarshalerContractTests`1.CreateValue",
-					"Java.InteropTests.JniValueMarshaler_object_ContractTests.SpecificTypesAreUsed",
-
-					// net.dot.jni.test.GetThis static init — same JavaProxy* root cause
-					"Java.InteropTests.JavaObjectTest.DisposeAccessesThis",
-
-					// net.dot.jni.internal.JavaProxyThrowable static init — same root cause
-					"Java.InteropTests.JavaExceptionTests.InnerExceptionIsNotAProxy",
-
-					// JNI method remapping not supported in trimmable typemap
-					"Java.InteropTests.JniPeerMembersTests.ReplaceInstanceMethodName",
-					"Java.InteropTests.JniPeerMembersTests.ReplaceInstanceMethodWithStaticMethod",
-					"Java.InteropTests.JniPeerMembersTests.ReplacementTypeUsedForMethodLookup",
-					"Java.InteropTests.JniPeerMembersTests.ReplaceStaticMethodName",
-
-					// net.dot.jni.test.GenericHolder Java class not in APK
-					"Java.InteropTests.JniTypeManagerTests.CannotCreateGenericHolderFromJava",
-
-					// Open generic type handling differs from non-trimmable
-					"Java.InteropTests.JnienvTest.NewOpenGenericTypeThrows",
-
-					// Throwable subclass registration
-					"Java.InteropTests.JnienvTest.ActivatedDirectThrowableSubclassesShouldBeRegistered",
-
-					// Instance identity after JNI round-trip
-					"Java.LangTests.ObjectTest.JnienvCreateInstance_RegistersMultipleInstances",
 				};
 			}
 		}
