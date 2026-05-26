@@ -196,3 +196,42 @@ The resource environment confirmed `HELLOWORLD_ANDROID_TYPEMAP=llvm-ir`, and `as
 | `typemap.llvm.activation` | 0 | 23 | Steady-state activation path |
 
 This gives direct side-by-side OTEL coverage for LLVM-IR typemap lookups and the trimmable typemap lookup paths in the same Aspire workflow.
+
+## Detailed LLVM-IR 10x launch log collection
+
+After adding nested LLVM-IR activation and peer-creation spans, collected 10 Release/CoreCLR/LLVM-IR launches of `com.xamarin.android.helloworld/example.MainActivity`.
+
+Raw artifacts:
+
+- Directory: `/Users/simonrozsival/Projects/dotnet/android-typemap-otel/artifacts/llvm-typemap-otel-runs/20260526-130206`
+- Per run: `run-N/am-start.txt`, `run-N/host-timing.txt`, `run-N/pid.txt`, `run-N/logcat-all.txt`, `run-N/logcat-filtered.txt`, `run-N/aspire-traces.json`, `run-N/aspire-spans.json`
+- Aggregate files: `summary.csv`, `stats.csv`, `final-aspire-traces.json`, `final-aspire-spans.json`
+
+The detailed LLVM instrumentation now includes spans for activation sub-steps such as `peek_object`, `resolve_type`, `get_parameter_types`, `get_object_array`, `constructor_lookup`, `activate_uninitialized`, `set_peer_reference`, and `invoke_constructor`, plus peer-creation internals such as class lookup, superclass walk, type signature lookup, and assignability checks.
+
+### LLVM-IR 10x summary
+
+| Run | Total ms | Wait ms | Host elapsed us | PID | Trace count | Span count | LLVM span count | `jnienv.initialize` us | `typemap.llvm.activation` us | `typemap.llvm.lookup_jni_name.uncached` us |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 484 | 486 | 757226 | 13942 | 22 | 42 | 36 | 37423.2 | 1096.3 | 111.1 |
+| 2 | 492 | 494 | 607194 | 14044 | 37 | 42 | 36 | 37423.2 | 1096.3 | 111.1 |
+| 3 | 483 | 489 | 635163 | 14130 | 67 | 76 | 66 | 40533.8 | 1000.2 | 84 |
+| 4 | 485 | 487 | 594269 | 14222 | 67 | 93 | 81 | 39809.8 | 1040.6 | 82.1 |
+| 5 | 470 | 480 | 604356 | 14313 | 97 | 110 | 96 | 38548.6 | 900.6 | 78.7 |
+| 6 | 478 | 484 | 577463 | 14399 | 112 | 127 | 111 | 39392.3 | 912.5 | 83 |
+| 7 | 478 | 482 | 747416 | 14487 | 112 | 144 | 126 | 38329.9 | 986.5 | 93.3 |
+| 8 | 478 | 483 | 586199 | 14575 | 127 | 144 | 126 | 38329.9 | 986.5 | 93.3 |
+| 9 | 471 | 473 | 593723 | 14662 | 127 | 161 | 141 | 40153.6 | 963.9 | 127.9 |
+| 10 | 483 | 486 | 653005 | 14749 | 142 | 161 | 141 | 40153.6 | 963.9 | 127.9 |
+
+### LLVM-IR 10x stats
+
+| Metric | Count | Min | Median | Max | Mean |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `TotalTime` ms | 10 | 470.0 | 480.5 | 492.0 | 480.2 |
+| `WaitTime` ms | 10 | 473.0 | 485.0 | 494.0 | 484.4 |
+| Host elapsed us | 10 | 577463.0 | 605775.0 | 757226.0 | 635601.4 |
+| LLVM span count | 10 | 36.0 | 103.5 | 141.0 | 96.0 |
+| `jnienv.initialize` us | 10 | 37423.2 | 38970.45 | 40533.8 | 39009.79 |
+| `typemap.llvm.activation` us | 10 | 900.6 | 986.5 | 1096.3 | 994.73 |
+| `typemap.llvm.lookup_jni_name.uncached` us | 10 | 78.7 | 93.3 | 127.9 | 99.24 |

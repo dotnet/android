@@ -119,12 +119,24 @@ namespace Java.Interop {
 		[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type.GetType() can never statically know the string value from parameter 'signature'.")]
 		static Type[] GetParameterTypes (string? signature)
 		{
+			using var operation = TrimmableTypeMapTelemetry.StartOperation ("typemap.llvm.activation.get_parameter_types");
 			if (String.IsNullOrEmpty (signature))
 				return Array.Empty<Type> ();
 			string[] typenames = signature!.Split (':');
+			if (operation.IsActive) {
+				operation.SetTag ("parameter.count", typenames.Length);
+			}
 			Type[] result = new Type [typenames.Length];
-			for (int i = 0; i < typenames.Length; i++)
+			for (int i = 0; i < typenames.Length; i++) {
+				using var resolveOperation = TrimmableTypeMapTelemetry.StartOperation ("typemap.llvm.activation.resolve_parameter_type");
+				if (resolveOperation.IsActive) {
+					resolveOperation.SetTag ("managed.type.name", typenames [i]);
+				}
 				result [i] = Type.GetType (typenames [i], throwOnError:true)!;
+				if (resolveOperation.IsActive) {
+					resolveOperation.SetTag ("managed.type", result [i].FullName);
+				}
+			}
 			return result;
 		}
 
@@ -137,22 +149,51 @@ namespace Java.Interop {
 				return;
 
 			try {
-				var o   = Java.Lang.Object.PeekObject (jobject);
-				var ex  = o as IJavaPeerable;
+				IJavaPeerable? o;
+				using (var peekOperation = TrimmableTypeMapTelemetry.StartOperation ("typemap.llvm.activation.peek_object")) {
+					o = Java.Lang.Object.PeekObject (jobject);
+					if (peekOperation.IsActive) {
+						peekOperation.SetTag ("has.peer", o is not null);
+						peekOperation.SetTag ("peer.type", o?.GetType ().FullName);
+					}
+				}
+				var ex  = o;
 				if (ex != null) {
 					var state = ex.JniManagedPeerState;
-					if (!state.HasFlag (JniManagedPeerStates.Activatable) && !state.HasFlag (JniManagedPeerStates.Replaceable))
+					if (operation.IsActive) {
+						operation.SetTag ("peer.state", state.ToString ());
+					}
+					if (!state.HasFlag (JniManagedPeerStates.Activatable) && !state.HasFlag (JniManagedPeerStates.Replaceable)) {
+						if (operation.IsActive) {
+							operation.SetTag ("skip", true);
+							operation.SetTag ("reason", "existing-peer-not-activatable");
+						}
 						return;
+					}
 				}
 				if (!ActivationEnabled) {
 					if (Logger.LogGlobalRef) {
 						Logger.Log (LogLevel.Info, "monodroid-gref",
 							FormattableString.Invariant ($"warning: Skipping managed constructor invocation for handle 0x{jobject:x} (key_handle 0x{JNIEnv.IdentityHash (jobject):x}). Please use JNIEnv.StartCreateInstance() + JNIEnv.FinishCreateInstance() instead of JNIEnv.NewObject() and/or JNIEnv.CreateInstance()."));
 					}
+					if (operation.IsActive) {
+						operation.SetTag ("skip", true);
+						operation.SetTag ("reason", "activation-disabled");
+					}
 					return;
 				}
 
-				Type type = Type.GetType (JNIEnv.GetString (typename_ptr, JniHandleOwnership.DoNotTransfer)!, throwOnError:true)!;
+				Type type;
+				using (var typeOperation = TrimmableTypeMapTelemetry.StartOperation ("typemap.llvm.activation.resolve_type")) {
+					var typeName = JNIEnv.GetString (typename_ptr, JniHandleOwnership.DoNotTransfer);
+					if (typeOperation.IsActive) {
+						typeOperation.SetTag ("managed.type.name", typeName);
+					}
+					type = Type.GetType (typeName!, throwOnError:true)!;
+					if (typeOperation.IsActive) {
+						typeOperation.SetTag ("managed.type", type.FullName);
+					}
+				}
 				if (operation.IsActive) {
 					operation.SetTag ("managed.type", type.FullName);
 				}
@@ -162,12 +203,32 @@ namespace Java.Interop {
 							CreateJavaLocationException ());
 				}
 				Type[] ptypes = GetParameterTypes (JNIEnv.GetString (signature_ptr, JniHandleOwnership.DoNotTransfer));
-				var parms = JNIEnv.GetObjectArray (parameters_ptr, ptypes);
-				var cinfo = type.GetConstructor (ptypes);
+				object? []? parms;
+				using (var parametersOperation = TrimmableTypeMapTelemetry.StartOperation ("typemap.llvm.activation.get_object_array")) {
+					if (parametersOperation.IsActive) {
+						parametersOperation.SetTag ("parameter.count", ptypes.Length);
+					}
+					parms = JNIEnv.GetObjectArray (parameters_ptr, ptypes);
+				}
+				ConstructorInfo? cinfo;
+				using (var constructorOperation = TrimmableTypeMapTelemetry.StartOperation ("typemap.llvm.activation.constructor_lookup")) {
+					if (constructorOperation.IsActive) {
+						constructorOperation.SetTag ("managed.type", type.FullName);
+						constructorOperation.SetTag ("parameter.count", ptypes.Length);
+					}
+					cinfo = type.GetConstructor (ptypes);
+					if (constructorOperation.IsActive) {
+						constructorOperation.SetTag ("found", cinfo is not null);
+					}
+				}
 				if (cinfo == null) {
 					throw CreateMissingConstructorException (type, ptypes);
 				}
 				if (o != null) {
+					using var invokeOperation = TrimmableTypeMapTelemetry.StartOperation ("typemap.llvm.activation.invoke_existing_peer");
+					if (invokeOperation.IsActive) {
+						invokeOperation.SetTag ("managed.type", type.FullName);
+					}
 					cinfo.Invoke (o, parms);
 					return;
 				}
@@ -184,12 +245,29 @@ namespace Java.Interop {
 		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "RuntimeHelpers.GetUninitializedObject() does not statically know the return value from ConstructorInfo.DeclaringType.")]
 		internal static void Activate (IntPtr jobject, ConstructorInfo cinfo, object? []? parms)
 		{
+			using var operation = TrimmableTypeMapTelemetry.StartOperation ("typemap.llvm.activation.activate_uninitialized");
+			if (operation.IsActive) {
+				operation.SetTag ("managed.type", cinfo.DeclaringType?.FullName);
+				operation.SetTag ("parameter.count", parms?.Length ?? 0);
+			}
 			try {
 				var newobj = RuntimeHelpers.GetUninitializedObject (cinfo.DeclaringType!);
+				if (operation.IsActive) {
+					operation.SetTag ("created.uninitialized", true);
+				}
 				if (newobj is IJavaPeerable peer) {
-					peer.SetPeerReference (new JniObjectReference (jobject));
+					using (var peerOperation = TrimmableTypeMapTelemetry.StartOperation ("typemap.llvm.activation.set_peer_reference")) {
+						if (peerOperation.IsActive) {
+							peerOperation.SetTag ("managed.type", cinfo.DeclaringType?.FullName);
+						}
+						peer.SetPeerReference (new JniObjectReference (jobject));
+					}
 				} else {
 					throw new InvalidOperationException ($"Unsupported type: '{newobj}'");
+				}
+				using var invokeOperation = TrimmableTypeMapTelemetry.StartOperation ("typemap.llvm.activation.invoke_constructor");
+				if (invokeOperation.IsActive) {
+					invokeOperation.SetTag ("managed.type", cinfo.DeclaringType?.FullName);
 				}
 				cinfo.Invoke (newobj, parms);
 			} catch (Exception e) {
@@ -341,25 +419,64 @@ namespace Java.Interop {
 				operation.SetTag ("target.type", targetType?.FullName);
 			}
 			Type? type = null;
-			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
-			string? class_name = GetClassName (class_ptr);
+			IntPtr class_ptr;
+			using (var classOperation = TrimmableTypeMapTelemetry.StartOperation ("typemap.llvm.peer.get_object_class")) {
+				class_ptr = JNIEnv.GetObjectClass (handle);
+				if (classOperation.IsActive) {
+					classOperation.SetTag ("class.handle", class_ptr);
+				}
+			}
+			string? class_name;
+			using (var nameOperation = TrimmableTypeMapTelemetry.StartOperation ("typemap.llvm.peer.get_class_name")) {
+				class_name = GetClassName (class_ptr);
+				if (nameOperation.IsActive) {
+					nameOperation.SetTag ("jni.name", class_name);
+				}
+			}
 			if (operation.IsActive) {
 				operation.SetTag ("jni.name", class_name);
 			}
 			lock (TypeManagerMapDictionaries.AccessLock) {
+				int depth = 0;
 				while (class_ptr != IntPtr.Zero) {
-					type = GetJavaToManagedTypeCore (class_name);
-					if (type != null) {
-						break;
+					using (var resolveOperation = TrimmableTypeMapTelemetry.StartOperation ("typemap.llvm.peer.resolve_class")) {
+						if (resolveOperation.IsActive) {
+							resolveOperation.SetTag ("jni.name", class_name);
+							resolveOperation.SetTag ("depth", depth);
+						}
+						type = GetJavaToManagedTypeCore (class_name);
+						if (resolveOperation.IsActive) {
+							resolveOperation.SetTag ("managed.type", type?.FullName);
+							resolveOperation.SetTag ("resolved", type is not null);
+						}
+						if (type != null) {
+							break;
+						}
 					}
 
-					IntPtr super_class_ptr = JNIEnv.GetSuperclass (class_ptr);
+					IntPtr super_class_ptr;
+					using (var superOperation = TrimmableTypeMapTelemetry.StartOperation ("typemap.llvm.peer.get_superclass")) {
+						if (superOperation.IsActive) {
+							superOperation.SetTag ("jni.name", class_name);
+							superOperation.SetTag ("depth", depth);
+						}
+						super_class_ptr = JNIEnv.GetSuperclass (class_ptr);
+						if (superOperation.IsActive) {
+							superOperation.SetTag ("has.superclass", super_class_ptr != IntPtr.Zero);
+						}
+					}
 					JNIEnv.DeleteLocalRef (class_ptr);
 					class_name = null;
 					class_ptr = super_class_ptr;
 					if (class_ptr != IntPtr.Zero) {
+						using var superclassNameOperation = TrimmableTypeMapTelemetry.StartOperation ("typemap.llvm.peer.get_superclass_name");
 						class_name = GetClassName (class_ptr);
+						if (superclassNameOperation.IsActive) {
+							superclassNameOperation.SetTag ("jni.name", class_name);
+							superclassNameOperation.SetTag ("depth", depth + 1);
+						}
 					}
+					depth++;
 				}
 			}
 
@@ -396,7 +513,17 @@ namespace Java.Interop {
 				}
 			}
 
-			var typeSig  = JNIEnvInit.androidRuntime?.TypeManager.GetTypeSignature (type) ?? default;
+			JniTypeSignature typeSig;
+			using (var signatureOperation = TrimmableTypeMapTelemetry.StartOperation ("typemap.llvm.peer.get_type_signature")) {
+				if (signatureOperation.IsActive) {
+					signatureOperation.SetTag ("managed.type", type.FullName);
+				}
+				typeSig  = JNIEnvInit.androidRuntime?.TypeManager.GetTypeSignature (type) ?? default;
+				if (signatureOperation.IsActive) {
+					signatureOperation.SetTag ("jni.simple_reference", typeSig.SimpleReference);
+					signatureOperation.SetTag ("valid", typeSig.IsValid);
+				}
+			}
 			if (!typeSig.IsValid || typeSig.SimpleReference == null) {
 				throw new ArgumentException ($"Could not determine Java type corresponding to `{type.AssemblyQualifiedName}`.", nameof (targetType));
 			}
@@ -405,6 +532,10 @@ namespace Java.Interop {
 			JniObjectReference handleClass = default;
 			try {
 				try {
+					using var findClassOperation = TrimmableTypeMapTelemetry.StartOperation ("typemap.llvm.peer.find_type_class");
+					if (findClassOperation.IsActive) {
+						findClassOperation.SetTag ("jni.name", typeSig.SimpleReference);
+					}
 					typeClass = JniEnvironment.Types.FindClass (typeSig.SimpleReference);
 				} catch (Exception e) {
 					throw new ArgumentException ($"Could not find Java class `{typeSig.SimpleReference}`.",
@@ -412,8 +543,21 @@ namespace Java.Interop {
 							e);
 				}
 
-				handleClass = JniEnvironment.Types.GetObjectClass (new JniObjectReference (handle));
-				if (!JniEnvironment.Types.IsAssignableFrom (handleClass, typeClass)) {
+				using (var handleClassOperation = TrimmableTypeMapTelemetry.StartOperation ("typemap.llvm.peer.get_handle_class")) {
+					handleClass = JniEnvironment.Types.GetObjectClass (new JniObjectReference (handle));
+				}
+				bool isAssignable;
+				using (var assignabilityOperation = TrimmableTypeMapTelemetry.StartOperation ("typemap.llvm.peer.assignability_check")) {
+					if (assignabilityOperation.IsActive) {
+						assignabilityOperation.SetTag ("managed.type", type.FullName);
+						assignabilityOperation.SetTag ("jni.simple_reference", typeSig.SimpleReference);
+					}
+					isAssignable = JniEnvironment.Types.IsAssignableFrom (handleClass, typeClass);
+					if (assignabilityOperation.IsActive) {
+						assignabilityOperation.SetTag ("assignable", isAssignable);
+					}
+				}
+				if (!isAssignable) {
 					if (Logger.LogAssembly) {
 						var message = $"Handle 0x{handle:x} is of type '{JNIEnv.GetClassNameFromInstance (handle)}' which is not assignable to '{typeSig.SimpleReference}'";
 						Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
