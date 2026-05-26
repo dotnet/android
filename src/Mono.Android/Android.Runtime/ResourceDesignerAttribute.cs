@@ -24,7 +24,7 @@ namespace Android.Runtime
 		{
 			// Primary scenario: FullName is an assembly-qualified name
 			if (FullName.IndexOf (',') > 0) {
-			        var resourceType = Type.GetType (FullName);
+				var resourceType = Type.GetType (FullName);
 				if (resourceType is not null) {
 					if (resourceType.Assembly == assembly) {
 						return resourceType;
