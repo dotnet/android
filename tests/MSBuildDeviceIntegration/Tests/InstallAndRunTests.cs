@@ -94,7 +94,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			if (runtime == AndroidRuntime.CoreCLR && isRelease && typemapImplementation == "trimmable") {
-				Assert.Ignore ("dotnet run --no-build is currently failing for Release CoreCLR trimmable typemap");
+				Assert.Ignore ("TODO: re-enable when dotnet run --no-build succeeds for Release CoreCLR trimmable typemap in MSBuildDeviceIntegration");
 			}
 
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
