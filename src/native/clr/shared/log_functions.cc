@@ -128,4 +128,23 @@ namespace xamarin::android {
 
 		__android_log_write (priority, category_name (category), message);
 	}
+
+	void
+	log_writef (LogCategories category, LogLevel level, const char *format, ...) noexcept
+	{
+		size_t map_index = static_cast<size_t>(level);
+		android_LogPriority priority;
+
+		if (map_index > loglevel_map_max_index) {
+			priority = DEFAULT_PRIORITY;
+		} else {
+			priority = loglevel_map[map_index];
+		}
+
+		va_list args;
+		const char *safe_format = format == nullptr ? "<null>" : format;
+		va_start (args, format);
+		__android_log_vprint (priority, category_name (category), safe_format, args);
+		va_end (args);
+	}
 }

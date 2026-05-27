@@ -101,16 +101,13 @@ void GCBridge::log_mark_cross_references_args_if_enabled (MarkCrossReferencesArg
 		return;
 	}
 
-	char message[128];
-	snprintf (message, sizeof (message), "cross references callback invoked with %zu sccs and %zu xrefs.", args->ComponentCount, args->CrossReferenceCount);
-	log_write (LOG_GC, LogLevel::Info, message);
+	log_writef (LOG_GC, LogLevel::Info, "cross references callback invoked with %zu sccs and %zu xrefs.", args->ComponentCount, args->CrossReferenceCount);
 
 	JNIEnv *env = OSBridge::ensure_jnienv ();
 	
 	for (size_t i = 0; i < args->ComponentCount; ++i) {
 		const StronglyConnectedComponent &scc = args->Components [i];
-		snprintf (message, sizeof (message), "group %zu with %zu objects", i, scc.Count);
-		log_write (LOG_GC, LogLevel::Info, message);
+		log_writef (LOG_GC, LogLevel::Info, "group %zu with %zu objects", i, scc.Count);
 		for (size_t j = 0; j < scc.Count; ++j) {
 			log_handle_context (env, scc.Contexts [j]);
 		}
@@ -123,9 +120,7 @@ void GCBridge::log_mark_cross_references_args_if_enabled (MarkCrossReferencesArg
 	for (size_t i = 0; i < args->CrossReferenceCount; ++i) {
 		size_t source_index = args->CrossReferences [i].SourceGroupIndex;
 		size_t dest_index = args->CrossReferences [i].DestinationGroupIndex;
-		char xref_message[128];
-		snprintf (xref_message, sizeof (xref_message), "xref [%zu] %zu -> %zu", i, source_index, dest_index);
-		log_write (LOG_GC, LogLevel::Info, xref_message);
+		log_writef (LOG_GC, LogLevel::Info, "xref [%zu] %zu -> %zu", i, source_index, dest_index);
 	}
 }
 
@@ -139,13 +134,9 @@ void GCBridge::log_handle_context (JNIEnv *env, HandleContext *ctx) noexcept
 	jclass java_class = env->GetObjectClass (handle);
 	if (java_class != nullptr) {
 		char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
-		char message[256];
-		snprintf (message, sizeof (message), "gref %p [%s]", reinterpret_cast<void*>(handle), optional_string (class_name));
-		log_write (LOG_GC, LogLevel::Info, message);
+		log_writef (LOG_GC, LogLevel::Info, "gref %p [%s]", reinterpret_cast<void*>(handle), optional_string (class_name));
 		free (class_name);
 	} else {
-		char message[128];
-		snprintf (message, sizeof (message), "gref %p [unknown class]", reinterpret_cast<void*>(handle));
-		log_write (LOG_GC, LogLevel::Info, message);
+		log_writef (LOG_GC, LogLevel::Info, "gref %p [unknown class]", reinterpret_cast<void*>(handle));
 	}
 }

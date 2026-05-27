@@ -9,6 +9,19 @@
 using namespace xamarin::android;
 
 [[noreturn]] void
+Helpers::abort_applicationf (LogCategories category, std::source_location sloc, const char *format, ...) noexcept
+{
+	char message[512];
+	va_list args;
+	const char *safe_format = format == nullptr ? "<null>" : format;
+	va_start (args, format);
+	vsnprintf (message, sizeof (message), safe_format, args);
+	va_end (args);
+
+	abort_application (category, message, true, sloc);
+}
+
+[[noreturn]] void
 Helpers::abort_application (LogCategories category, const char *message, bool log_location, std::source_location sloc) noexcept
 {
 	// Log it, but also...
@@ -34,17 +47,15 @@ Helpers::abort_application (LogCategories category, const char *message, bool lo
 			}
 		}
 
-		char location_message[512];
-		snprintf (
-			location_message,
-			sizeof (location_message),
+		log_writef (
+			category,
+			LogLevel::Fatal,
 			"Abort at %s:%u:%u ('%s')",
 			file_name,
 			sloc.line (),
 			sloc.column (),
 			sloc.function_name ()
 		);
-		log_write (category, LogLevel::Fatal, location_message);
 	}
 	std::abort ();
 }

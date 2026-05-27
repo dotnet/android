@@ -43,9 +43,7 @@ namespace xamarin::android {
 		{
 			// TODO: should we **actually** try to set the system property here? Would that even work? Needs testing
 			if ((log_categories & LOG_DEFAULT) != 0) {
-				char message[512];
-				snprintf (message, sizeof (message), " System property %s = '%s'", optional_string (name), optional_string (value));
-				log_write (LOG_DEFAULT, LogLevel::Debug, message);
+				log_writef (LOG_DEFAULT, LogLevel::Debug, " System property %s = '%s'", optional_string (name), optional_string (value));
 			}
 		}
 
@@ -93,15 +91,11 @@ namespace xamarin::android {
 			Util::path_combine (dir, home.get_string_view (), relative_path);
 
 			if ((log_categories & LOG_DEFAULT) != 0) {
-				char message[512];
-				snprintf (message, sizeof (message), "Creating XDG directory: %s", optional_string (dir.get ()));
-				log_write (LOG_DEFAULT, LogLevel::Debug, message);
+				log_writef (LOG_DEFAULT, LogLevel::Debug, "Creating XDG directory: %s", optional_string (dir.get ()));
 			}
 			int rv = Util::create_directory (dir.get (), Constants::DEFAULT_DIRECTORY_MODE);
 			if (rv < 0 && errno != EEXIST) {
-				char message[512];
-				snprintf (message, sizeof (message), "Failed to create XDG directory %s. %s", optional_string (dir.get ()), strerror (errno));
-				log_write (LOG_DEFAULT, LogLevel::Warn, message);
+				log_writef (LOG_DEFAULT, LogLevel::Warn, "Failed to create XDG directory %s. %s", optional_string (dir.get ()), strerror (errno));
 			}
 
 			if (!environment_variable_name.empty ()) {

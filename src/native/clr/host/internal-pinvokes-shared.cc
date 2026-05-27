@@ -6,7 +6,6 @@
 #include <runtime-base/cpu-arch.hh>
 #include <runtime-base/internal-pinvokes.hh>
 #include <runtime-base/jni-remapping.hh>
-#include <shared/helpers.hh>
 
 using namespace xamarin::android;
 
@@ -27,7 +26,7 @@ int _monodroid_gref_dec () noexcept
 
 void _monodroid_gref_log (const char *message) noexcept
 {
-	OSBridge::_monodroid_gref_log ("%s", optional_string (message));
+	OSBridge::_monodroid_gref_log (message);
 }
 
 int _monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, [[maybe_unused]] int from_writable) noexcept

@@ -361,9 +361,7 @@ void BridgeProcessingShared::log_missing_add_references_method ([[maybe_unused]]
 	}
 
 	char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
-	char message[256];
-	snprintf (message, sizeof (message), "Missing monodroidAddReferences method for object of class %s", optional_string (class_name));
-	log_write (LOG_GC, LogLevel::Error, message);
+	log_writef (LOG_GC, LogLevel::Error, "Missing monodroidAddReferences method for object of class %s", optional_string (class_name));
 	free (class_name);
 #endif
 }
@@ -379,9 +377,7 @@ void BridgeProcessingShared::log_missing_clear_references_method ([[maybe_unused
 	}
 
 	char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
-	char message[256];
-	snprintf (message, sizeof (message), "Missing monodroidClearReferences method for object of class %s", optional_string (class_name));
-	log_write (LOG_GC, LogLevel::Error, message);
+	log_writef (LOG_GC, LogLevel::Error, "Missing monodroidClearReferences method for object of class %s", optional_string (class_name));
 	free (class_name);
 #endif
 }
@@ -400,6 +396,10 @@ void BridgeProcessingShared::log_weak_to_gref (jobject weak, jobject handle) noe
 		}
 	}
 
+	if (!Logger::gref_log ()) [[likely]] {
+		return;
+	}
+
 	OSBridge::_monodroid_gref_log ("take_global_ref wref=%p -> handle=%p\n", reinterpret_cast<void*>(weak), reinterpret_cast<void*>(handle));
 }
 
@@ -416,6 +416,10 @@ void BridgeProcessingShared::log_weak_ref_collected (jobject weak) noexcept
 [[gnu::always_inline]]
 void BridgeProcessingShared::log_take_weak_global_ref (jobject handle) noexcept
 {
+	if (!Logger::gref_log ()) [[likely]] {
+		return;
+	}
+
 	OSBridge::_monodroid_gref_log ("take_weak_global_ref handle=%p\n", reinterpret_cast<void*>(handle));
 }
 
@@ -477,7 +481,5 @@ void BridgeProcessingShared::log_gc_summary () noexcept
 		}
 	}
 
-	char message[128];
-	snprintf (message, sizeof (message), "GC cleanup summary: %zu objects tested - resurrecting %zu.", total, alive);
-	log_write (LOG_GC, LogLevel::Info, message);
+	log_writef (LOG_GC, LogLevel::Info, "GC cleanup summary: %zu objects tested - resurrecting %zu.", total, alive);
 }

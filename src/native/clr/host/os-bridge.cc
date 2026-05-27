@@ -35,6 +35,20 @@ namespace {
 			free (buffer);
 		}
 	}
+
+	void write_gref_message (const char *message, FILE *gref_log) noexcept
+	{
+		if (Logger::gref_to_logcat ()) {
+			log_write (LOG_GREF, LogLevel::Debug, optional_string (message));
+		}
+
+		if (gref_log == nullptr) {
+			return;
+		}
+
+		fputs (optional_string (message), gref_log);
+		fflush (gref_log);
+	}
 }
 
 void OSBridge::initialize_on_onload (JavaVM *vm, JNIEnv *env) noexcept
@@ -151,6 +165,16 @@ void OSBridge::_write_stack_trace (FILE *to, const char *const from, LogCategori
 	}
 }
 
+void OSBridge::_monodroid_gref_log (const char *message) noexcept
+{
+	FILE *gref_log = Logger::gref_log ();
+	if (!Logger::gref_to_logcat () && gref_log == nullptr) {
+		return;
+	}
+
+	write_gref_message (message, gref_log);
+}
+
 void OSBridge::_monodroid_gref_log (const char *format, ...) noexcept
 {
 	FILE *gref_log = Logger::gref_log ();
@@ -164,16 +188,7 @@ void OSBridge::_monodroid_gref_log (const char *format, ...) noexcept
 	vsnprintf (message, sizeof (message), optional_string (format), args);
 	va_end (args);
 
-	if (Logger::gref_to_logcat ()) {
-		log_write (LOG_GREF, LogLevel::Debug, message);
-	}
-
-	if (gref_log == nullptr) {
-		return;
-	}
-
-	fputs (message, gref_log);
-	fflush (gref_log);
+	write_gref_message (message, gref_log);
 }
 
 [[gnu::always_inline, gnu::flatten]]
@@ -197,6 +212,21 @@ void OSBridge::log_it (LogCategories category, const char *line, FILE *to, const
 	fflush (to);
 }
 
+void OSBridge::log_itf (LogCategories category, FILE *to, const char *from, bool logcat_enabled, const char *format, ...) noexcept
+{
+	if (!logcat_enabled && to == nullptr) {
+		return;
+	}
+
+	char log_line[LOG_LINE_BUFFER_SIZE];
+	va_list args;
+	va_start (args, format);
+	vsnprintf (log_line, sizeof (log_line), optional_string (format), args);
+	va_end (args);
+
+	log_it (category, log_line, to, from, logcat_enabled);
+}
+
 auto OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from) noexcept -> int
 {
 	int c = _monodroid_gref_inc ();
@@ -205,10 +235,11 @@ auto OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject
 	}
 
 	int wc = __atomic_load_n (&gc_weak_gref_count, __ATOMIC_RELAXED);
-	char log_line[LOG_LINE_BUFFER_SIZE];
-	snprintf (
-		log_line,
-		sizeof (log_line),
+	log_itf (
+		LOG_GREF,
+		Logger::gref_log (),
+		from,
+		Logger::gref_to_logcat (),
 		"+g+ grefc %d gwrefc %d obj-handle %p/%c -> new-handle %p/%c from thread '%s'(%d)",
 		c,
 		wc,
@@ -220,7 +251,6 @@ auto OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject
 		threadId
 	);
 
-	log_it (LOG_GREF, log_line, Logger::gref_log (), from, Logger::gref_to_logcat ());
 	return c;
 }
 
@@ -232,10 +262,11 @@ void OSBridge::_monodroid_gref_log_delete (jobject handle, char type, const char
 	}
 
 	int wc = __atomic_load_n (&gc_weak_gref_count, __ATOMIC_RELAXED);
-	char log_line[LOG_LINE_BUFFER_SIZE];
-	snprintf (
-		log_line,
-		sizeof (log_line),
+	log_itf (
+		LOG_GREF,
+		Logger::gref_log (),
+		from,
+		Logger::gref_to_logcat (),
 		"-g- grefc %d gwrefc %d handle %p/%c from thread '%s'(%d)",
 		c,
 		wc,
@@ -244,8 +275,6 @@ void OSBridge::_monodroid_gref_log_delete (jobject handle, char type, const char
 		optional_string (threadName),
 		threadId
 	);
-
-	log_it (LOG_GREF, log_line, Logger::gref_log (), from, Logger::gref_to_logcat ());
 }
 
 void OSBridge::_monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from)
@@ -256,10 +285,11 @@ void OSBridge::_monodroid_weak_gref_new (jobject curHandle, char curType, jobjec
 	}
 
 	int gc = __atomic_load_n (&gc_gref_count, __ATOMIC_RELAXED);
-	char log_line[LOG_LINE_BUFFER_SIZE];
-	snprintf (
-		log_line,
-		sizeof (log_line),
+	log_itf (
+		LOG_GREF,
+		Logger::gref_log (),
+		from,
+		Logger::gref_to_logcat (),
 		"+w+ grefc %d gwrefc %d obj-handle %p/%c -> new-handle %p/%c from thread '%s'(%d)",
 		gc,
 		c,
@@ -270,8 +300,6 @@ void OSBridge::_monodroid_weak_gref_new (jobject curHandle, char curType, jobjec
 		optional_string (threadName),
 		threadId
 	);
-
-	log_it (LOG_GREF, log_line, Logger::gref_log (), from, Logger::gref_to_logcat ());
 }
 
 void
@@ -281,10 +309,11 @@ OSBridge::_monodroid_lref_log_new (int lrefc, jobject handle, char type, const c
 		return;
 	}
 
-	char log_line[LOG_LINE_BUFFER_SIZE];
-	snprintf (
-		log_line,
-		sizeof (log_line),
+	log_itf (
+		LOG_LREF,
+		Logger::lref_log (),
+		from,
+		Logger::lref_to_logcat (),
 		"+l+ lrefc %d handle %p/%c from thread '%s'(%d)",
 		lrefc,
 		reinterpret_cast<void*>(handle),
@@ -292,8 +321,6 @@ OSBridge::_monodroid_lref_log_new (int lrefc, jobject handle, char type, const c
 		optional_string (threadName),
 		threadId
 	);
-
-	log_it (LOG_LREF, log_line, Logger::lref_log (), from, Logger::lref_to_logcat ());
 }
 
 void OSBridge::_monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from)
@@ -304,10 +331,11 @@ void OSBridge::_monodroid_weak_gref_delete (jobject handle, char type, const cha
 	}
 
 	int gc = __atomic_load_n (&gc_gref_count, __ATOMIC_RELAXED);
-	char log_line[LOG_LINE_BUFFER_SIZE];
-	snprintf (
-		log_line,
-		sizeof (log_line),
+	log_itf (
+		LOG_GREF,
+		Logger::gref_log (),
+		from,
+		Logger::gref_to_logcat (),
 		"-w- grefc %d gwrefc %d handle %p/%c from thread '%s'(%d)",
 		gc,
 		c,
@@ -316,8 +344,6 @@ void OSBridge::_monodroid_weak_gref_delete (jobject handle, char type, const cha
 		optional_string (threadName),
 		threadId
 	);
-
-	log_it (LOG_GREF, log_line, Logger::gref_log (), from, Logger::gref_to_logcat ());
 }
 
 void OSBridge::_monodroid_lref_log_delete (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from)
@@ -326,10 +352,11 @@ void OSBridge::_monodroid_lref_log_delete (int lrefc, jobject handle, char type,
 		return;
 	}
 
-	char log_line[LOG_LINE_BUFFER_SIZE];
-	snprintf (
-		log_line,
-		sizeof (log_line),
+	log_itf (
+		LOG_LREF,
+		Logger::lref_log (),
+		from,
+		Logger::lref_to_logcat (),
 		"-l- lrefc %d handle %p/%c from thread '%s'(%d)",
 		lrefc,
 		reinterpret_cast<void*>(handle),
@@ -337,6 +364,4 @@ void OSBridge::_monodroid_lref_log_delete (int lrefc, jobject handle, char type,
 		optional_string (threadName),
 		threadId
 	);
-
-	log_it (LOG_LREF, log_line, Logger::lref_log (), from, Logger::lref_to_logcat ());
 }

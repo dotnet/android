@@ -60,6 +60,7 @@ namespace xamarin::android {
 	// A slightly faster alternative to other log functions as it doesn't parse the message
 	// for format placeholders nor it uses variable arguments
 	void log_write (LogCategories category, LogLevel level, const char *message) noexcept;
+	void log_writef (LogCategories category, LogLevel level, const char *format, ...) noexcept __attribute__ ((format (printf, 3, 4)));
 
 	[[gnu::always_inline]]
 	static inline void log_write (LogCategories category, LogLevel level, std::string_view const& message) noexcept
