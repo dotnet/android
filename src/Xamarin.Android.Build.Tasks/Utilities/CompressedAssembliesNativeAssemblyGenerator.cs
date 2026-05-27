@@ -134,6 +134,24 @@ namespace Xamarin.Android.Tasks
 			);
 
 			if (archData.Count == 0) {
+				var emptyCountVar = new LlvmIrGlobalVariable (typeof(uint), CompressedAssemblyCountSymbolName) {
+					Options = LlvmIrVariableOptions.GlobalConstant,
+					Value = 0u,
+				};
+				module.Add (emptyCountVar);
+
+				var emptyDescriptorsVar = new LlvmIrGlobalVariable (typeof(List<StructureInstance<CompressedAssemblyDescriptor>>), DescriptorsArraySymbolName) {
+					Options = LlvmIrVariableOptions.GlobalWritable,
+					Value = new List<StructureInstance<CompressedAssemblyDescriptor>> (),
+				};
+				module.Add (emptyDescriptorsVar);
+
+				var emptyBufferSizeVar = new LlvmIrGlobalVariable (typeof(uint), UncompressedAssembliesBufferSizeSymbolName) {
+					Options = LlvmIrVariableOptions.GlobalConstant,
+					Value = 0u,
+				};
+				module.Add (emptyBufferSizeVar);
+
 				var emptyBufferVar = new LlvmIrGlobalVariable (typeof(List<byte>), UncompressedAssembliesBufferSymbolName, LlvmIrVariableOptions.GlobalWritable) {
 					ArrayItemCount = 0,
 					ZeroInitializeArray = true,

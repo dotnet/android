@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
+using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests {
@@ -195,6 +196,62 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (
 				DexUtils.ContainsClassWithMethod ("Landroid/runtime/JavaProxyThrowable;", "<init>", "(Ljava/lang/String;)V", dexFile, AndroidSdkPath),
 				$"`{dexFile}` should include `android.runtime.JavaProxyThrowable`.");
+		}
+
+		[Test]
+		public void CoreClrTrimmableTypeMap_PackagesReadyToRunTypeMap ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("RuntimeIdentifier", "android-arm64");
+			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+
+			var r2rTypeMap = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "R2R", "_Microsoft.Android.TypeMaps.dll"));
+			FileAssert.Exists (r2rTypeMap, "ReadyToRun should compile the generated TypeMap entry assembly.");
+			using (var r2rStream = File.OpenRead (r2rTypeMap)) {
+				using var r2rReader = new System.Reflection.PortableExecutable.PEReader (r2rStream);
+				Assert.IsTrue (
+					r2rReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size > 0,
+					"ReadyToRun output for _Microsoft.Android.TypeMaps.dll should have a managed native header.");
+			}
+
+			var apk = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, "android-arm64", $"{proj.PackageName}-Signed.apk");
+			FileAssert.Exists (apk);
+
+			var helper = new ArchiveAssemblyHelper (apk, useAssemblyStores: true);
+			var packagedTypeMapEntries = helper.ListArchiveContents ("lib/", arch: AndroidTargetArch.Arm64)
+				.Where (entry => entry.StartsWith ("lib/arm64-v8a/lib__", StringComparison.Ordinal) &&
+					entry.EndsWith (".dll.so", StringComparison.Ordinal) &&
+					!entry.EndsWith (".ni.dll.so", StringComparison.Ordinal) &&
+					entry.Contains ("TypeMap", StringComparison.Ordinal))
+				.ToArray ();
+			Assert.AreEqual (
+				packagedTypeMapEntries.Distinct ().Count (),
+				packagedTypeMapEntries.Length,
+				"TypeMap assemblies should be packaged only once; do not include both linked IL and ReadyToRun copies.");
+			Assert.AreEqual (
+				1,
+				packagedTypeMapEntries.Count (entry => entry == "lib/arm64-v8a/lib__Microsoft.Android.TypeMaps.dll.so"),
+				"_Microsoft.Android.TypeMaps.dll should be packaged only once.");
+
+			Assert.IsTrue (helper.Exists ("assemblies/arm64-v8a/_Microsoft.Android.TypeMaps.dll"), "_Microsoft.Android.TypeMaps.dll should exist in the APK.");
+			using (var packagedTypeMap = helper.ReadEntry ("assemblies/arm64-v8a/_Microsoft.Android.TypeMaps.dll", AndroidTargetArch.Arm64)) {
+				Assert.IsNotNull (packagedTypeMap, "_Microsoft.Android.TypeMaps.dll should be readable from the APK.");
+				using var packagedReader = new System.Reflection.PortableExecutable.PEReader (packagedTypeMap);
+				Assert.IsTrue (
+					packagedReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size > 0,
+					"Packaged _Microsoft.Android.TypeMaps.dll should be the ReadyToRun image, not the linked IL image.");
+			}
 		}
 
 		[Test]
