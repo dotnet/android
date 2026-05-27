@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdarg>
 #include <cstdint>
 #if !defined(XA_HOST_NATIVEAOT)
 #include <format>
@@ -67,36 +68,6 @@ namespace xamarin::android {
 	static inline void log_write (LogCategories category, LogLevel level, std::string_view const& message) noexcept
 	{
 		log_write (category, level, message.data ());
-	}
-
-	[[gnu::always_inline]]
-	static inline void (log_debug) (LogCategories category, const char *message) noexcept
-	{
-		log_write (category, LogLevel::Debug, message);
-	}
-
-	[[gnu::always_inline]]
-	static inline void (log_info) (LogCategories category, const char *message) noexcept
-	{
-		log_write (category, LogLevel::Info, message);
-	}
-
-	[[gnu::always_inline]]
-	static inline void (log_warn) (LogCategories category, const char *message) noexcept
-	{
-		log_write (category, LogLevel::Warn, message);
-	}
-
-	[[gnu::always_inline]]
-	static inline void (log_error) (LogCategories category, const char *message) noexcept
-	{
-		log_write (category, LogLevel::Error, message);
-	}
-
-	[[gnu::always_inline]]
-	static inline void (log_fatal) (LogCategories category, const char *message) noexcept
-	{
-		log_write (category, LogLevel::Fatal, message);
 	}
 
 	void log_debug_fmt (LogCategories category, const char *format, ...) noexcept __attribute__ ((format (printf, 2, 3)));

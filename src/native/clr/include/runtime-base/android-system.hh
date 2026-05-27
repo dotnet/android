@@ -63,25 +63,14 @@ namespace xamarin::android {
 			running_in_emulator = yesno;
 		}
 
-#if defined(XA_HOST_NATIVEAOT)
 		static auto get_primary_override_dir () noexcept -> const char*
 		{
 			return primary_override_dir;
 		}
-#else
-		static auto get_primary_override_dir () noexcept -> std::string const&
-		{
-			return primary_override_dir;
-		}
-#endif
 
 		static void set_primary_override_dir (jstring_wrapper& home) noexcept
 		{
-#if defined(XA_HOST_NATIVEAOT)
 			determine_primary_override_dir (home, primary_override_dir, sizeof (primary_override_dir));
-#else
-			primary_override_dir = determine_primary_override_dir (home);
-#endif
 		}
 
 #if !defined(XA_HOST_NATIVEAOT)
@@ -90,7 +79,7 @@ namespace xamarin::android {
 			return native_libraries_dir;
 		}
 
-		static void create_update_dir (std::string const& override_dir) noexcept
+		static void create_update_dir (const char *override_dir) noexcept
 		{
 			if constexpr (Constants::is_release_build) {
 				/*
@@ -106,7 +95,7 @@ namespace xamarin::android {
 				}
 			}
 
-			log_debug (LOG_DEFAULT, "Creating public update directory: `{}`", override_dir);
+			log_debug (LOG_DEFAULT, "Creating public update directory: `{}`", optional_string (override_dir));
 			Util::create_public_directory (override_dir);
 		}
 #endif
@@ -145,7 +134,6 @@ namespace xamarin::android {
 			embedded_dso_mode_enabled = yesno;
 		}
 
-#if defined(XA_HOST_NATIVEAOT)
 		static void determine_primary_override_dir (jstring_wrapper &home, char *buffer, size_t buffer_size) noexcept
 		{
 			dynamic_local_string<SENSIBLE_PATH_MAX> name { home.get_cstr () };
@@ -156,27 +144,13 @@ namespace xamarin::android {
 
 			snprintf (buffer, buffer_size, "%s", name.get ());
 		}
-#else
-		static auto determine_primary_override_dir (jstring_wrapper &home) noexcept -> std::string
-		{
-			dynamic_local_string<SENSIBLE_PATH_MAX> name { home.get_cstr () };
-			name.append ("/")
-				.append (Constants::OVERRIDE_DIRECTORY_NAME)
-				.append ("/")
-				.append (Constants::android_lib_abi);
-
-			return {name.get (), name.length ()};
-		}
-#endif
 
 	private:
 		static inline long max_gref_count = 0;
 		static inline bool running_in_emulator = false;
 		static inline bool embedded_dso_mode_enabled = false;
-#if defined(XA_HOST_NATIVEAOT)
 		static inline char primary_override_dir[SENSIBLE_PATH_MAX] {};
-#else
-		static inline std::string primary_override_dir;
+#if !defined(XA_HOST_NATIVEAOT)
 		static inline std::string native_libraries_dir;
 
 #if defined (DEBUG)

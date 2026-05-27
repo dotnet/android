@@ -18,9 +18,9 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 {
 	size = 0;
 
-	std::string const& override_dir_path = AndroidSystem::get_primary_override_dir ();
+	const char *override_dir_path = AndroidSystem::get_primary_override_dir ();
 	if (!Util::dir_exists (override_dir_path)) [[unlikely]] {
-		log_debug (LOG_ASSEMBLY, "Override directory '{}' does not exist"sv, override_dir_path);
+		log_debug (LOG_ASSEMBLY, "Override directory '{}' does not exist"sv, optional_string (override_dir_path));
 		return nullptr;
 	}
 
@@ -29,9 +29,9 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 	if (override_dir_fd < 0) [[unlikely]] {
 		std::lock_guard dir_lock { override_dir_lock };
 		if (override_dir_fd < 0) [[likely]] {
-			override_dir = opendir (override_dir_path.c_str ());
+			override_dir = opendir (override_dir_path);
 			if (override_dir == nullptr) [[unlikely]] {
-				log_warn (LOG_ASSEMBLY, "Failed to open override dir '{}'. {}"sv, override_dir_path, strerror (errno));
+				log_warn (LOG_ASSEMBLY, "Failed to open override dir '{}'. {}"sv, optional_string (override_dir_path), strerror (errno));
 				return nullptr;
 			}
 			override_dir_fd = dirfd (override_dir);
@@ -42,7 +42,7 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 		LOG_ASSEMBLY,
 		"Attempting to load FastDev assembly '{}' from override directory '{}'"sv,
 		name,
-		override_dir_path
+		optional_string (override_dir_path)
 	);
 
 	if (!Util::file_exists (override_dir_fd, name)) {

@@ -49,7 +49,7 @@ void GCBridge::trigger_java_gc (JNIEnv *env) noexcept
 
 	env->ExceptionDescribe ();
 	env->ExceptionClear ();
-	(xamarin::android::log_error) (LOG_DEFAULT, "Java GC failed");
+	(log_error) (LOG_DEFAULT, "Java GC failed");
 }
 
 void GCBridge::mark_cross_references (MarkCrossReferencesArgs *args) noexcept
@@ -101,13 +101,13 @@ void GCBridge::log_mark_cross_references_args_if_enabled (MarkCrossReferencesArg
 		return;
 	}
 
-	xamarin::android::log_info_fmt (LOG_GC, "cross references callback invoked with %zu sccs and %zu xrefs.", args->ComponentCount, args->CrossReferenceCount);
+	log_info_fmt (LOG_GC, "cross references callback invoked with %zu sccs and %zu xrefs.", args->ComponentCount, args->CrossReferenceCount);
 
 	JNIEnv *env = OSBridge::ensure_jnienv ();
 	
 	for (size_t i = 0; i < args->ComponentCount; ++i) {
 		const StronglyConnectedComponent &scc = args->Components [i];
-		xamarin::android::log_info_fmt (LOG_GC, "group %zu with %zu objects", i, scc.Count);
+		log_info_fmt (LOG_GC, "group %zu with %zu objects", i, scc.Count);
 		for (size_t j = 0; j < scc.Count; ++j) {
 			log_handle_context (env, scc.Contexts [j]);
 		}
@@ -120,7 +120,7 @@ void GCBridge::log_mark_cross_references_args_if_enabled (MarkCrossReferencesArg
 	for (size_t i = 0; i < args->CrossReferenceCount; ++i) {
 		size_t source_index = args->CrossReferences [i].SourceGroupIndex;
 		size_t dest_index = args->CrossReferences [i].DestinationGroupIndex;
-		xamarin::android::log_info_fmt (LOG_GC, "xref [%zu] %zu -> %zu", i, source_index, dest_index);
+		log_info_fmt (LOG_GC, "xref [%zu] %zu -> %zu", i, source_index, dest_index);
 	}
 }
 
@@ -134,9 +134,9 @@ void GCBridge::log_handle_context (JNIEnv *env, HandleContext *ctx) noexcept
 	jclass java_class = env->GetObjectClass (handle);
 	if (java_class != nullptr) {
 		char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
-		xamarin::android::log_info_fmt (LOG_GC, "gref %p [%s]", reinterpret_cast<void*>(handle), optional_string (class_name));
+		log_info_fmt (LOG_GC, "gref %p [%s]", reinterpret_cast<void*>(handle), optional_string (class_name));
 		free (class_name);
 	} else {
-		xamarin::android::log_info_fmt (LOG_GC, "gref %p [unknown class]", reinterpret_cast<void*>(handle));
+		log_info_fmt (LOG_GC, "gref %p [unknown class]", reinterpret_cast<void*>(handle));
 	}
 }
