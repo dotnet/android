@@ -28,6 +28,10 @@
          defaults to 0 otherwise, where dynamic code can use Array.CreateInstance directly. -->
     <_AndroidTrimmableTypeMapMaxArrayRank Condition=" '$(_AndroidTrimmableTypeMapMaxArrayRank)' == '' and '$(PublishAot)' == 'true' ">3</_AndroidTrimmableTypeMapMaxArrayRank>
     <_AndroidTrimmableTypeMapMaxArrayRank Condition=" '$(_AndroidTrimmableTypeMapMaxArrayRank)' == '' ">0</_AndroidTrimmableTypeMapMaxArrayRank>
+    <IncrementalCleanDependsOn>
+      _RecordTrimmableTypeMapFileWrites;
+      $(IncrementalCleanDependsOn);
+    </IncrementalCleanDependsOn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -146,8 +150,7 @@
     before packaging target inputs are evaluated.
   -->
   <Target Name="_RecordTrimmableTypeMapFileWrites"
-      Condition=" '$(_OuterIntermediateOutputPath)' == '' and Exists('$(_TypeMapAssembliesListFile)') "
-      BeforeTargets="_CleanGetCurrentAndPriorFileWrites">
+      Condition=" '$(_OuterIntermediateOutputPath)' == '' and Exists('$(_TypeMapAssembliesListFile)') ">
     <ItemGroup>
       <_GeneratedTypeMapAssembliesForFileWrites Remove="@(_GeneratedTypeMapAssembliesForFileWrites)" />
       <_TypeMapJavaFilesForFileWrites Remove="@(_TypeMapJavaFilesForFileWrites)" />
