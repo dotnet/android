@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 using Java.Interop;
@@ -70,7 +71,7 @@ namespace Java.InteropTests
 		public void BuiltInSimpleReferenceMap_ContainsManagedPeerByDefault ()
 		{
 			var types = JniRuntime.CurrentRuntime.TypeManager.GetTypes (new JniTypeSignature (ManagedPeer.JniTypeName));
-			CollectionAssert.Contains (types, typeof (ManagedPeer));
+			Assert.IsTrue (types.Contains (typeof (ManagedPeer)));
 		}
 
 #if !__ANDROID__
