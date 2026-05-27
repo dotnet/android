@@ -175,7 +175,7 @@ void OSBridge::_monodroid_gref_log (const char *message) noexcept
 	write_gref_message (message, gref_log);
 }
 
-void OSBridge::_monodroid_gref_log (const char *format, ...) noexcept
+void OSBridge::_monodroid_gref_log_fmt (const char *format, ...) noexcept
 {
 	FILE *gref_log = Logger::gref_log ();
 	if (!Logger::gref_to_logcat () && gref_log == nullptr) {

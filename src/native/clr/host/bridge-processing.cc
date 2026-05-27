@@ -87,11 +87,13 @@ void BridgeProcessingShared::prepare_scc_for_java_collection (size_t scc_index, 
 {
 	// Count == 0 case: Some SCCs might have no IGCUserPeers associated with them, so we must create one
 	if (scc.Count == 0) {
-		auto [peer_entry, inserted] = temporary_peers.emplace (scc_index, nullptr);
-		abort_unless (inserted, "Temporary peer must not already exist");
+		abort_unless (temporary_peers.find (scc_index) == temporary_peers.end (), "Temporary peer must not already exist");
 
-		peer_entry->second = env->NewObject (GCUserPeer_class, GCUserPeer_ctor);
-		abort_unless (peer_entry->second != nullptr, "Failed to create GC bridge temporary peer");
+		jobject temporary_peer = env->NewObject (GCUserPeer_class, GCUserPeer_ctor);
+		abort_unless (temporary_peer != nullptr, "Failed to create GC bridge temporary peer");
+
+		auto [peer_entry, inserted] = temporary_peers.emplace (scc_index, temporary_peer);
+		abort_unless (inserted, "Temporary peer must not already exist");
 		return;
 	}
 
