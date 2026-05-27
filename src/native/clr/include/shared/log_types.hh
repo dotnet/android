@@ -48,19 +48,20 @@
 #define log_info(_category_, _fmt_, ...) DO_LOG_FMT (info, (_category_), (_fmt_) __VA_OPT__(,) __VA_ARGS__)
 
 // NOTE: _fmt_ takes arguments in the std::format style not the POSIX printf style
-#define log_warn(_category_, _fmt_, ...) log_warn_fmt ((_category_), (_fmt_) __VA_OPT__(,) __VA_ARGS__)
+#define log_warn(_category_, _fmt_, ...) ::log_warn_fmt ((_category_), (_fmt_) __VA_OPT__(,) __VA_ARGS__)
 
 // NOTE: _fmt_ takes arguments in the std::format style not the POSIX printf style
-#define log_error(_category_, _fmt_, ...) log_error_fmt ((_category_), (_fmt_) __VA_OPT__(,) __VA_ARGS__)
+#define log_error(_category_, _fmt_, ...) ::log_error_fmt ((_category_), (_fmt_) __VA_OPT__(,) __VA_ARGS__)
 
 // NOTE: _fmt_ takes arguments in the std::format style not the POSIX printf style
-#define log_fatal(_category_, _fmt_, ...) log_fatal_fmt ((_category_), (_fmt_) __VA_OPT__(,) __VA_ARGS__)
+#define log_fatal(_category_, _fmt_, ...) ::log_fatal_fmt ((_category_), (_fmt_) __VA_OPT__(,) __VA_ARGS__)
 
 namespace xamarin::android {
 	// A slightly faster alternative to other log functions as it doesn't parse the message
 	// for format placeholders nor it uses variable arguments
 	void log_write (LogCategories category, LogLevel level, const char *message) noexcept;
-	void log_writef (LogCategories category, LogLevel level, const char *format, ...) noexcept __attribute__ ((format (printf, 3, 4)));
+	void log_writev (LogCategories category, LogLevel level, const char *format, va_list args) noexcept;
+	void log_write_fmt (LogCategories category, LogLevel level, const char *format, ...) noexcept __attribute__ ((format (printf, 3, 4)));
 
 	[[gnu::always_inline]]
 	static inline void log_write (LogCategories category, LogLevel level, std::string_view const& message) noexcept
@@ -68,13 +69,42 @@ namespace xamarin::android {
 		log_write (category, level, message.data ());
 	}
 
-#if !defined(XA_HOST_NATIVEAOT)
-	template<typename ...Args> [[gnu::always_inline]]
-	static inline constexpr void log_write_fmt (LogCategories category, LogLevel level, std::format_string<Args...> fmt, Args&& ...args)
+	[[gnu::always_inline]]
+	static inline void (log_debug) (LogCategories category, const char *message) noexcept
 	{
-		log_write (category, level, std::format (fmt, std::forward<Args>(args)...).c_str ());
+		log_write (category, LogLevel::Debug, message);
 	}
-#endif
+
+	[[gnu::always_inline]]
+	static inline void (log_info) (LogCategories category, const char *message) noexcept
+	{
+		log_write (category, LogLevel::Info, message);
+	}
+
+	[[gnu::always_inline]]
+	static inline void (log_warn) (LogCategories category, const char *message) noexcept
+	{
+		log_write (category, LogLevel::Warn, message);
+	}
+
+	[[gnu::always_inline]]
+	static inline void (log_error) (LogCategories category, const char *message) noexcept
+	{
+		log_write (category, LogLevel::Error, message);
+	}
+
+	[[gnu::always_inline]]
+	static inline void (log_fatal) (LogCategories category, const char *message) noexcept
+	{
+		log_write (category, LogLevel::Fatal, message);
+	}
+
+	void log_debug_fmt (LogCategories category, const char *format, ...) noexcept __attribute__ ((format (printf, 2, 3)));
+	void log_info_fmt (LogCategories category, const char *format, ...) noexcept __attribute__ ((format (printf, 2, 3)));
+	void log_warn_fmt (LogCategories category, const char *format, ...) noexcept __attribute__ ((format (printf, 2, 3)));
+	void log_error_fmt (LogCategories category, const char *format, ...) noexcept __attribute__ ((format (printf, 2, 3)));
+	void log_fatal_fmt (LogCategories category, const char *format, ...) noexcept __attribute__ ((format (printf, 2, 3)));
+
 }
 
 #if !defined(XA_HOST_NATIVEAOT)

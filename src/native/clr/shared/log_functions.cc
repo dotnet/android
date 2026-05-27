@@ -130,7 +130,7 @@ namespace xamarin::android {
 	}
 
 	void
-	log_writef (LogCategories category, LogLevel level, const char *format, ...) noexcept
+	log_writev (LogCategories category, LogLevel level, const char *format, va_list args) noexcept
 	{
 		size_t map_index = static_cast<size_t>(level);
 		android_LogPriority priority;
@@ -141,10 +141,61 @@ namespace xamarin::android {
 			priority = loglevel_map[map_index];
 		}
 
-		va_list args;
 		const char *safe_format = format == nullptr ? "<null>" : format;
-		va_start (args, format);
 		__android_log_vprint (priority, category_name (category), safe_format, args);
+	}
+
+	void
+	log_write_fmt (LogCategories category, LogLevel level, const char *format, ...) noexcept
+	{
+		va_list args;
+		va_start (args, format);
+		log_writev (category, level, format, args);
+		va_end (args);
+	}
+
+	void
+	log_debug_fmt (LogCategories category, const char *format, ...) noexcept
+	{
+		va_list args;
+		va_start (args, format);
+		log_writev (category, LogLevel::Debug, format, args);
+		va_end (args);
+	}
+
+	void
+	log_info_fmt (LogCategories category, const char *format, ...) noexcept
+	{
+		va_list args;
+		va_start (args, format);
+		log_writev (category, LogLevel::Info, format, args);
+		va_end (args);
+	}
+
+	void
+	log_warn_fmt (LogCategories category, const char *format, ...) noexcept
+	{
+		va_list args;
+		va_start (args, format);
+		log_writev (category, LogLevel::Warn, format, args);
+		va_end (args);
+	}
+
+	void
+	log_error_fmt (LogCategories category, const char *format, ...) noexcept
+	{
+		va_list args;
+		va_start (args, format);
+		log_writev (category, LogLevel::Error, format, args);
+		va_end (args);
+	}
+
+	void
+	log_fatal_fmt (LogCategories category, const char *format, ...) noexcept
+	{
+		va_list args;
+		va_start (args, format);
+		log_writev (category, LogLevel::Fatal, format, args);
 		va_end (args);
 	}
 }

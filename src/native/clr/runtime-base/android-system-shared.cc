@@ -39,7 +39,7 @@ AndroidSystem::monodroid__system_property_get (std::string_view const& name, cha
 	char *buf = nullptr;
 	if (sp_value_len < Constants::PROPERTY_VALUE_BUFFER_LEN) {
 		size_t alloc_size = Helpers::add_with_overflow_check<size_t> (Constants::PROPERTY_VALUE_BUFFER_LEN, 1uz);
-		log_writef (LOG_DEFAULT, LogLevel::Warn, "Buffer to store system property may be too small, will copy only %zu bytes", sp_value_len);
+		log_write_fmt (LOG_DEFAULT, LogLevel::Warn, "Buffer to store system property may be too small, will copy only %zu bytes", sp_value_len);
 		buf = static_cast<char*> (std::malloc (alloc_size));
 		abort_unless (buf != nullptr, "Failed to allocate system property buffer");
 	}
@@ -85,10 +85,10 @@ AndroidSystem::get_max_gref_count_from_system () noexcept -> long
 		}
 
 		if (*e) {
-			log_writef (LOG_GC, LogLevel::Warn, "Unsupported '%s' value '%s'.", Constants::DEBUG_MONO_MAX_GREFC.data (), override.get ());
+			log_write_fmt (LOG_GC, LogLevel::Warn, "Unsupported '%s' value '%s'.", Constants::DEBUG_MONO_MAX_GREFC.data (), override.get ());
 		}
 
-		log_writef (LOG_GC, LogLevel::Warn, "Overriding max JNI Global Reference count to %ld", max);
+		log_write_fmt (LOG_GC, LogLevel::Warn, "Overriding max JNI Global Reference count to %ld", max);
 	}
 
 	return max;

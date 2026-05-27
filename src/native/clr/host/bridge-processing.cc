@@ -37,15 +37,11 @@ BridgeProcessingShared::BridgeProcessingShared (MarkCrossReferencesArgs *args, c
 		Helpers::abort_application (LOG_GC, "CrossReferences member of the cross references arguments structure is NULL"sv);
 	}
 
-	if (args->ComponentCount > 0) {
-		temporary_peers = static_cast<jobject*>(calloc (args->ComponentCount, sizeof (jobject)));
-		abort_unless (temporary_peers != nullptr, "Failed to allocate GC bridge temporary peer array");
-	}
 }
 
 BridgeProcessingShared::~BridgeProcessingShared () noexcept
 {
-	free (temporary_peers);
+	release_temporary_peers ();
 }
 
 void BridgeProcessingShared::process () noexcept
@@ -73,12 +69,7 @@ void BridgeProcessingShared::prepare_for_java_collection () noexcept
 	}
 
 	// With cross references processed, the temporary peer list can be released
-	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
-		if (temporary_peers[i] != nullptr) {
-			env->DeleteLocalRef (temporary_peers[i]);
-			temporary_peers[i] = nullptr;
-		}
-	}
+	release_temporary_peers ();
 
 	// Switch global to weak references
 	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
@@ -96,8 +87,11 @@ void BridgeProcessingShared::prepare_scc_for_java_collection (size_t scc_index, 
 {
 	// Count == 0 case: Some SCCs might have no IGCUserPeers associated with them, so we must create one
 	if (scc.Count == 0) {
-		abort_unless (temporary_peers != nullptr, "Temporary peer array must be allocated");
-		temporary_peers[scc_index] = env->NewObject (GCUserPeer_class, GCUserPeer_ctor);
+		auto [peer_entry, inserted] = temporary_peers.emplace (scc_index, nullptr);
+		abort_unless (inserted, "Temporary peer must not already exist");
+
+		peer_entry->second = env->NewObject (GCUserPeer_class, GCUserPeer_ctor);
+		abort_unless (peer_entry->second != nullptr, "Failed to create GC bridge temporary peer");
 		return;
 	}
 
@@ -116,13 +110,25 @@ CrossReferenceTarget BridgeProcessingShared::select_cross_reference_target (size
 	const StronglyConnectedComponent &scc = cross_refs->Components [scc_index];
 
 	if (scc.Count == 0) {
-		abort_unless (temporary_peers != nullptr, "Temporary peer array must be allocated");
-		abort_unless (temporary_peers[scc_index] != nullptr, "Temporary peer must be found in the array");
-		return { .is_temporary_peer = true, .temporary_peer = temporary_peers[scc_index] };
+		auto peer_entry = temporary_peers.find (scc_index);
+		abort_unless (peer_entry != temporary_peers.end (), "Temporary peer must be found in the map");
+		abort_unless (peer_entry->second != nullptr, "Temporary peer must not be null");
+		return { .is_temporary_peer = true, .temporary_peer = peer_entry->second };
 	}
 
 	abort_unless (scc.Contexts [0] != nullptr, "SCC must have at least one context");
 	return { .is_temporary_peer = false, .context = scc.Contexts [0] };
+}
+
+void BridgeProcessingShared::release_temporary_peers () noexcept
+{
+	for (const auto &entry : temporary_peers) {
+		jobject temporary_peer = entry.second;
+		if (temporary_peer != nullptr) {
+			env->DeleteLocalRef (temporary_peer);
+		}
+	}
+	temporary_peers.clear ();
 }
 
 // caller must ensure that scc.Count > 1
@@ -353,7 +359,7 @@ void CrossReferenceTarget::mark_refs_added_if_needed () noexcept
 [[gnu::always_inline]]
 void BridgeProcessingShared::log_missing_add_references_method ([[maybe_unused]] jclass java_class) noexcept
 {
-	log_write (LOG_DEFAULT, LogLevel::Error, "Failed to find monodroidAddReferences method");
+	(xamarin::android::log_error) (LOG_DEFAULT, "Failed to find monodroidAddReferences method");
 #if DEBUG
 	abort_if_invalid_pointer_argument (java_class, "java_class");
 	if (!Logger::gc_spew_enabled ()) [[likely]] {
@@ -361,7 +367,7 @@ void BridgeProcessingShared::log_missing_add_references_method ([[maybe_unused]]
 	}
 
 	char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
-	log_writef (LOG_GC, LogLevel::Error, "Missing monodroidAddReferences method for object of class %s", optional_string (class_name));
+	xamarin::android::log_error_fmt (LOG_GC, "Missing monodroidAddReferences method for object of class %s", optional_string (class_name));
 	free (class_name);
 #endif
 }
@@ -369,7 +375,7 @@ void BridgeProcessingShared::log_missing_add_references_method ([[maybe_unused]]
 [[gnu::always_inline]]
 void BridgeProcessingShared::log_missing_clear_references_method ([[maybe_unused]] jclass java_class) noexcept
 {
-	log_write (LOG_DEFAULT, LogLevel::Error, "Failed to find monodroidClearReferences method");
+	(xamarin::android::log_error) (LOG_DEFAULT, "Failed to find monodroidClearReferences method");
 #if DEBUG
 	abort_if_invalid_pointer_argument (java_class, "java_class");
 	if (!Logger::gc_spew_enabled ()) [[likely]] {
@@ -377,7 +383,7 @@ void BridgeProcessingShared::log_missing_clear_references_method ([[maybe_unused
 	}
 
 	char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
-	log_writef (LOG_GC, LogLevel::Error, "Missing monodroidClearReferences method for object of class %s", optional_string (class_name));
+	xamarin::android::log_error_fmt (LOG_GC, "Missing monodroidClearReferences method for object of class %s", optional_string (class_name));
 	free (class_name);
 #endif
 }
@@ -481,5 +487,5 @@ void BridgeProcessingShared::log_gc_summary () noexcept
 		}
 	}
 
-	log_writef (LOG_GC, LogLevel::Info, "GC cleanup summary: %zu objects tested - resurrecting %zu.", total, alive);
+	xamarin::android::log_info_fmt (LOG_GC, "GC cleanup summary: %zu objects tested - resurrecting %zu.", total, alive);
 }

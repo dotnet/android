@@ -140,7 +140,7 @@ namespace xamarin::android {
 		{
 			struct stat sbuf;
 			if (fstatat (dirfd, file_name, &sbuf, 0) == -1) {
-				log_writef (LOG_ASSEMBLY, LogLevel::Warn, "Failed to stat file '%s': %s", file_name, std::strerror (errno));
+				log_write_fmt (LOG_ASSEMBLY, LogLevel::Warn, "Failed to stat file '%s': %s", file_name, std::strerror (errno));
 				return std::nullopt;
 			}
 
@@ -156,10 +156,10 @@ namespace xamarin::android {
 		static void set_environment_variable (const char *name, const char *value) noexcept
 		{
 			if (should_log (LOG_DEFAULT)) {
-				log_writef (LOG_DEFAULT, LogLevel::Debug, "Setting environment variable %s = '%s'", optional_string (name), optional_string (value));
+				log_write_fmt (LOG_DEFAULT, LogLevel::Debug, "Setting environment variable %s = '%s'", optional_string (name), optional_string (value));
 			}
 			if (::setenv (name, value, 1) < 0) {
-				log_writef (LOG_DEFAULT, LogLevel::Warn, "Failed to set environment variable '%s': %s", optional_string (name), ::strerror (errno));
+				log_write_fmt (LOG_DEFAULT, LogLevel::Warn, "Failed to set environment variable '%s': %s", optional_string (name), ::strerror (errno));
 			}
 		}
 
@@ -181,7 +181,7 @@ namespace xamarin::android {
 			if (createDirectory) {
 				int rv = create_directory (value.get_cstr (), mode);
 				if (rv < 0 && errno != EEXIST) {
-					log_writef (LOG_DEFAULT, LogLevel::Warn, "Failed to create directory '%s' for environment variable '%s'. %s", optional_string (value.get_cstr ()), name.data (), strerror (errno));
+					log_write_fmt (LOG_DEFAULT, LogLevel::Warn, "Failed to create directory '%s' for environment variable '%s'. %s", optional_string (value.get_cstr ()), name.data (), strerror (errno));
 				}
 			}
 			set_environment_variable (name, value);
@@ -226,7 +226,7 @@ namespace xamarin::android {
 			file_info.size = size;
 
 			if (should_log (LOG_ASSEMBLY)) {
-				log_writef (
+				log_write_fmt (
 					LOG_ASSEMBLY,
 					LogLevel::Info,
 					"  mmap_start: %-8p; mmap_end: %-8p	 mmap_len: %-12zu  file_start: %-8p  file_end: %-8p	 file_len: %-12zu	  apk descriptor: %d  file: %s",
@@ -262,7 +262,7 @@ namespace xamarin::android {
 					elf_header->e_ident[EI_MAG2] != ELFMAG2 ||
 					elf_header->e_ident[EI_MAG3] != ELFMAG3) {
 						if (should_log (LOG_ASSEMBLY)) {
-							log_writef (LOG_ASSEMBLY, LogLevel::Debug, "Not an ELF image: %s", file_name.data ());
+							log_write_fmt (LOG_ASSEMBLY, LogLevel::Debug, "Not an ELF image: %s", file_name.data ());
 						}
 						// Not an ELF image, just return what we mmapped before
 						return { map_info.area, map_info.size };

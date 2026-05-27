@@ -47,7 +47,7 @@ Helpers::abort_application (LogCategories category, const char *message, bool lo
 			}
 		}
 
-		log_writef (
+		log_write_fmt (
 			category,
 			LogLevel::Fatal,
 			"Abort at %s:%u:%u ('%s')",

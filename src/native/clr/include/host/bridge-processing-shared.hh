@@ -1,6 +1,32 @@
 #pragma once
 
+#include <cstddef>
+
 #include <jni.h>
+
+// NDEBUG causes robin_map.h not to include <iostream> which, in turn, prevents indirect inclusion of <mutex>. <mutex>
+// conflicts with our std::mutex definition in cppcompat.hh
+#if !defined (NDEBUG)
+#define NDEBUG
+#define NDEBUG_UNDEFINE
+#endif
+
+// hush some compiler warnings
+#if defined (__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
+#endif // __clang__
+
+#include <tsl/robin_map.h>
+
+#if defined (__clang__)
+#pragma clang diagnostic pop
+#endif // __clang__
+
+#if defined (NDEBUG_UNDEFINE)
+#undef NDEBUG
+#undef NDEBUG_UNDEFINE
+#endif
 
 #include <host/gc-bridge.hh>
 #include <host/os-bridge.hh>
@@ -28,6 +54,8 @@ struct BridgeProcessingCallbacks
 
 class BridgeProcessingShared
 {
+	using temporary_peer_map = tsl::robin_map<size_t, jobject>;
+
 public:
 	explicit BridgeProcessingShared (MarkCrossReferencesArgs *args, const BridgeProcessingCallbacks *callbacks = nullptr) noexcept;
 	~BridgeProcessingShared () noexcept;
@@ -37,7 +65,7 @@ public:
 private:
 	JNIEnv* env;
 	MarkCrossReferencesArgs *cross_refs;
-	jobject *temporary_peers = nullptr;
+	temporary_peer_map temporary_peers;
 	BridgeProcessingCallbacks callbacks;
 
 	static inline jclass GCUserPeer_class = nullptr;
@@ -45,6 +73,7 @@ private:
 
 	void prepare_for_java_collection () noexcept;
 	void prepare_scc_for_java_collection (size_t scc_index, const StronglyConnectedComponent &scc) noexcept;
+	void release_temporary_peers () noexcept;
 	void take_weak_global_ref (const HandleContext &context) noexcept;
 
 	void add_circular_references (const StronglyConnectedComponent &scc) noexcept;
