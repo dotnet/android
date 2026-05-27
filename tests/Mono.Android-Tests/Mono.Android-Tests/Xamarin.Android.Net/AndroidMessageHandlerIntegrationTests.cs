@@ -219,7 +219,7 @@ namespace Xamarin.Android.NetTests {
 		}
 
 		[Test]
-		void UrlEscaping_Bug43411 ()
+		public void UrlEscaping_Bug43411 ()
 		{
 			UrlEscaping_TestUrl ($"http://{TestHost}/?example=value%20_value", "#1");
 			UrlEscaping_TestUrl ($"http://{TestHost}/?query=anna%20%26%20lotte&param2=true", "#2");

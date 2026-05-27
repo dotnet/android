@@ -61,7 +61,24 @@ public abstract class TestInstrumentation : Instrumentation
 			foreach (var assembly in GetTestAssemblies ()) {
 				Log.Info (LogTag, $"Loading tests from: {assembly.GetName ().Name}");
 				var runner = new NUnitTestAssemblyRunner (new AndroidTestAssemblyBuilder ());
-				runner.Load (assembly, new Dictionary<string, object> ());
+				// NumberOfTestWorkers=0 forces NUnit to use SimpleWorkItemDispatcher
+				// (synchronous, on the calling thread) instead of ParallelWorkItemDispatcher
+				// (worker threads from a thread pool).
+				//
+				// This is critical on Android: instrumentation runs on a thread with a
+				// valid Java context (ClassLoader, attached JNIEnv). NUnit's worker
+				// threads are raw .NET threads with no Java attachment, so any test
+				// that crosses the JNI boundary from a worker thread (e.g. ThreadReuse,
+				// RegisterTypeOnNewNativeThread in JnienvTest) will SIGABRT in native
+				// code, killing the process before Finish() can report results — every
+				// subsequent test config then shows "0 tests ran".
+				//
+				// The historical NUnitLite runner always ran synchronously on the
+				// calling thread, which is why these tests worked. Match that behavior.
+				var settings = new Dictionary<string, object> {
+					["NumberOfTestWorkers"] = 0,
+				};
+				runner.Load (assembly, settings);
 
 				var result = runner.Run (listener, filter);
 				CountResults (result, ref passed, ref failed, ref skipped);
