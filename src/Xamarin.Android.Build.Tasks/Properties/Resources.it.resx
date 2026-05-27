@@ -628,7 +628,7 @@ Modificare il valore in AndroidManifest.xml in modo che corrisponda al valore $(
 {1} - The API version number</comment>
   </data>
   <data name="XA4217" xml:space="preserve">
-    <value>Architecture '{0}' has Java types which have no counterparts in template architecture '{1}': {2}</value>
+    <value>L'architettura ''{0}'' ha tipi Java privi di controparti nell'architettura del modello ''{1}'': {2}</value>
     <comment>{0} - The target architecture name
 {1} - The template architecture name
 {2} - Comma-separated list of Java type names that have no counterparts</comment>
@@ -685,7 +685,7 @@ In this mesage, the term "layout" means an Android UI layout.
 {1} - The name of the metadata item</comment>
   </data>
   <data name="XA4227" xml:space="preserve">
-    <value>Architecture '{0}' doesn't match all marshal methods in architecture '{1}'. Please see detailed MSBuild logs for more information.</value>
+    <value>L'architettura ''{0}' 'non corrisponde a tutti i metodi di marshalling nell'architettura ''{1}''. Per altre informazioni, vedere i log dettagliati di MSBuild.</value>
     <comment>{0} - The target architecture name
 {1} - The template architecture name</comment>
   </data>
@@ -815,17 +815,17 @@ Rimuovere il riferimento '{0}' dal progetto e aggiungere invece il pacchetto NuG
 </comment>
   </data>
   <data name="XA4316" xml:space="preserve">
-    <value>Specified input file '{0}' does not exist. Ignoring.</value>
+    <value>Il file di input specificato ''{0}'' non esiste. Azione ignorata.</value>
     <comment>{0} - The path to the file.
 </comment>
   </data>
   <data name="XA4317" xml:space="preserve">
-    <value>Input file '{0}' does not start with '&lt;replacements/&gt;'. Skipping.</value>
+    <value>Il file di input ''{0}'' non inizia con ''&lt;replacements/&gt;''. L'operazione verrà ignorata.</value>
     <comment>{0} - The path to the file.
 </comment>
   </data>
   <data name="XA4318" xml:space="preserve">
-    <value>Input file '{0}' could not be read: {1}. Skipping.</value>
+    <value>Non è possibile leggere il file di input ''{0}'': {1}. L'operazione verrà ignorata.</value>
     <comment>{0} - The path to the file.
 {1} - The exception message.
 </comment>
@@ -928,7 +928,7 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
     <value>Due processi possono compilare il progetto contemporaneamente. Il file di blocco si trova nel percorso: {0}</value>
   </data>
   <data name="XA5303" xml:space="preserve">
-    <value>Failed to parse 'DescriptorIndex' metadata value '{0}' for assembly '{1}'.</value>
+    <value>Non è possibile analizzare il valore dei metadati ''DescriptorIndex'' ''{0}'' per l'assembly ''{1}''.</value>
     <comment>
 {0} - The DescriptorIndex metadata value that could not be parsed
 {1} - The assembly ItemSpec</comment>
@@ -1116,7 +1116,7 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
 {0} - The insecure HTTP URL</comment>
   </data>
   <data name="XA4253" xml:space="preserve">
-    <value>Generated Java callable wrapper code changed: '{0}'</value>
+    <value>Codice generato del wrapper Java callable modificato: ''{0}''</value>
     <comment>{0} - The path to the generated Java callable wrapper file</comment>
   </data>
   <data name="XA0142" xml:space="preserve">

@@ -628,7 +628,7 @@ Altere o valor no AndroidManifest.xml para corresponder ao valor $(SupportedOSPl
 {1} - The API version number</comment>
   </data>
   <data name="XA4217" xml:space="preserve">
-    <value>Architecture '{0}' has Java types which have no counterparts in template architecture '{1}': {2}</value>
+    <value>A arquitetura '{0}' tem tipos Java que não têm contrapartes na arquitetura de modelo '{1}': {2}</value>
     <comment>{0} - The target architecture name
 {1} - The template architecture name
 {2} - Comma-separated list of Java type names that have no counterparts</comment>
@@ -685,7 +685,7 @@ In this mesage, the term "layout" means an Android UI layout.
 {1} - The name of the metadata item</comment>
   </data>
   <data name="XA4227" xml:space="preserve">
-    <value>Architecture '{0}' doesn't match all marshal methods in architecture '{1}'. Please see detailed MSBuild logs for more information.</value>
+    <value>A arquitetura '{0}' não corresponde a todos os métodos de realizar marshaling na arquitetura '{1}'. Consulte os logs detalhados do MSBuild para obter mais informações.</value>
     <comment>{0} - The target architecture name
 {1} - The template architecture name</comment>
   </data>
@@ -815,17 +815,17 @@ Remover a referência '{0}' de seu projeto e adicionar o pacote NuGet '{1}' em v
 </comment>
   </data>
   <data name="XA4316" xml:space="preserve">
-    <value>Specified input file '{0}' does not exist. Ignoring.</value>
+    <value>O arquivo de entrada especificado '{0}' não existe. Ignorando.</value>
     <comment>{0} - The path to the file.
 </comment>
   </data>
   <data name="XA4317" xml:space="preserve">
-    <value>Input file '{0}' does not start with '&lt;replacements/&gt;'. Skipping.</value>
+    <value>O arquivo de entrada '{0}' não começa com '&lt;replacements/&gt;'. Ignorando.</value>
     <comment>{0} - The path to the file.
 </comment>
   </data>
   <data name="XA4318" xml:space="preserve">
-    <value>Input file '{0}' could not be read: {1}. Skipping.</value>
+    <value>O arquivo de entrada '{0}' não pôde ser lido: {1}. Ignorando.</value>
     <comment>{0} - The path to the file.
 {1} - The exception message.
 </comment>
@@ -928,7 +928,7 @@ Para usar um caminho JDK personalizado para um build de linha de comando, defina
     <value>Dois processos podem estar criando este projeto ao mesmo tempo. O arquivo de bloqueio existe no caminho: {0}</value>
   </data>
   <data name="XA5303" xml:space="preserve">
-    <value>Failed to parse 'DescriptorIndex' metadata value '{0}' for assembly '{1}'.</value>
+    <value>Falha ao analisar o valor de metadados 'DescriptorIndex' '{0}' para o assembly '{1}'.</value>
     <comment>
 {0} - The DescriptorIndex metadata value that could not be parsed
 {1} - The assembly ItemSpec</comment>
@@ -1116,7 +1116,7 @@ Para usar um caminho JDK personalizado para um build de linha de comando, defina
 {0} - The insecure HTTP URL</comment>
   </data>
   <data name="XA4253" xml:space="preserve">
-    <value>Generated Java callable wrapper code changed: '{0}'</value>
+    <value>Alterações no código do wrapper chamável em Java gerado: '{0}'</value>
     <comment>{0} - The path to the generated Java callable wrapper file</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
