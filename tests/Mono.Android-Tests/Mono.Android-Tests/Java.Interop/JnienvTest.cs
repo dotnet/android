@@ -509,13 +509,24 @@ namespace Java.InteropTests
 			Assert.IsTrue (surfaced.All (s => s.Target != null), "#1");
 
 			WeakReference r = null;
+			Exception threadException = null;
 			var t = new Thread (() => {
-				var c = new MyCb ();
-				Assert.AreEqual (startCount + 1, Runtime.GetSurfacedObjects ().Count, "#2");
-				r = new WeakReference (c);
+				try {
+					var c = new MyCb ();
+					Assert.AreEqual (startCount + 1, Runtime.GetSurfacedObjects ().Count, "#2");
+					r = new WeakReference (c);
+				} catch (Exception e) {
+					// NUnit 3: an unhandled exception on a background thread terminates the process,
+					// which causes the entire test run to be reported as "0 tests ran". Capture and
+					// rethrow on the main test thread so this surfaces as a normal test failure.
+					threadException = e;
+				}
 			});
 			t.Start ();
 			t.Join ();
+
+			if (threadException != null)
+				throw threadException;
 
 			GC.Collect ();
 			GC.WaitForPendingFinalizers ();
