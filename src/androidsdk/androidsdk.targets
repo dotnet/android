@@ -50,6 +50,8 @@
     <_NdkHostHash Condition=" '$(HostOS)' == 'Windows' ">$(XAAndroidNdkHashWindows)</_NdkHostHash>
   </PropertyGroup>
 
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" TaskFactory="TaskHostFactory" Runtime="NET" />
+
   <!--
     Catalog of platform APIs. Each item is downloaded as `<Identity>.zip`.
     `IsLatestStable=true` is the API installed by default; `ApiLevel`
@@ -306,8 +308,11 @@
   <!--
     Extract every downloaded package into its destination.
 
-      * Windows: `tar -xf` (bsdtar / libarchive ships with Windows 10+, reads
-        `.zip` natively with `strip-components` support).
+      * Windows: `UnzipDirectoryChildren` (LibZipSharp) - bsdtar on Windows
+        refuses to extract through symlinks, and `C:\Android\android-sdk`
+        on the CI image is a junction, so `tar -xf` fails there. The
+        Windows SDK zips have no symlinks of their own, so LibZipSharp is
+        fine. `NoSubdirectory=true` strips the single top-level dir.
       * Unix (Linux + macOS): `unzip` into a sibling `.staging` directory
         followed by `find ... -exec mv` to emulate `strip-components`. GNU
         tar on Linux cannot read `.zip` at all, and bsdtar on macOS silently
@@ -329,13 +334,17 @@
       <_StagingDir>%(_AndroidSdkPackage.Destination).staging</_StagingDir>
       <_FindMinDepth Condition=" '$(_StripComponents)' == '1' ">2</_FindMinDepth>
       <_FindMinDepth Condition=" '$(_StripComponents)' == '0' ">1</_FindMinDepth>
+      <_NoSubdirectory Condition=" '$(_StripComponents)' == '1' ">false</_NoSubdirectory>
+      <_NoSubdirectory Condition=" '$(_StripComponents)' == '0' ">true</_NoSubdirectory>
     </PropertyGroup>
     <RemoveDir Directories="%(_AndroidSdkPackage.Destination)" />
     <MakeDir Directories="%(_AndroidSdkPackage.Destination)" />
-    <!-- Windows: bsdtar handles .zip natively with strip-components support. -->
-    <Exec
+    <!-- Windows: LibZipSharp via UnzipDirectoryChildren BootstrapTask. -->
+    <UnzipDirectoryChildren
         Condition=" '$(HostOS)' == 'Windows' "
-        Command="tar -xf &quot;$(_ZipPath)&quot; -C &quot;%(_AndroidSdkPackage.Destination)&quot; --strip-components=$(_StripComponents)"
+        SourceFiles="$(_ZipPath)"
+        DestinationFolder="%(_AndroidSdkPackage.Destination)"
+        NoSubdirectory="$(_NoSubdirectory)"
     />
     <!--
       Unix: extract into a sibling .staging directory, then `find ... mv` the
