@@ -43,7 +43,7 @@ sealed class ExportMethodDispatchEmitter
 		var callbackRef = AddExportMethodDispatchRef (uco, callbackTypeHandle);
 
 		// Wrap the dispatch in the standard BeginMarshalMethod/try/catch/finally pattern so
-		// managed exceptions thrown from the [Export] body are routed through
+		// managed exceptions thrown from the method body are routed through
 		// JniRuntime.OnUserUnhandledException — matching the legacy LLVM-IR contract
 		// (Mono.Android.Export/CallbackCode.cs) and the trimmable UCO ctor wrapper.
 		var handle = _pe.EmitBody (uco.WrapperName,

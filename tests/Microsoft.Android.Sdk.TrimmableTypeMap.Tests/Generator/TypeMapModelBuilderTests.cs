@@ -1323,6 +1323,255 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.Single (model.ProxyTypes);
 			Assert.False (model.ProxyTypes [0].IsAcw);
 		}
+
+		[Fact]
+		public void Build_InheritedVirtualOverrides_ReuseBaseUcoMethod ()
+		{
+			var basePeer = MakeAcwPeer ("my/app/AbstractBase", "MyApp.AbstractBase", "App") with {
+				MarshalMethods = [
+					new MarshalMethodInfo {
+						JniName = "<init>", NativeCallbackName = "n_ctor",
+						JniSignature = "()V", ManagedMethodName = ".ctor",
+						IsConstructor = true,
+					},
+					new MarshalMethodInfo {
+						JniName = "doWork", NativeCallbackName = "n_DoWork",
+						JniSignature = "()V", ManagedMethodName = "DoWork",
+					},
+				],
+			};
+			var derivedOne = MakeInheritedOverridePeer ("my/app/ConcreteOne", "MyApp.ConcreteOne");
+			var derivedTwo = MakeInheritedOverridePeer ("my/app/ConcreteTwo", "MyApp.ConcreteTwo");
+
+			var model = BuildModel ([basePeer, derivedOne, derivedTwo]);
+			var baseProxy = model.ProxyTypes.Single (p => p.TargetType.ManagedTypeName == "MyApp.AbstractBase");
+			var concreteOneProxy = model.ProxyTypes.Single (p => p.TargetType.ManagedTypeName == "MyApp.ConcreteOne");
+			var concreteTwoProxy = model.ProxyTypes.Single (p => p.TargetType.ManagedTypeName == "MyApp.ConcreteTwo");
+
+			Assert.Single (baseProxy.UcoMethods);
+			Assert.Empty (concreteOneProxy.UcoMethods);
+			Assert.Empty (concreteTwoProxy.UcoMethods);
+
+			var baseWrapperTarget = baseProxy.NativeRegistrations.Single (r => r.JniMethodName == "n_DoWork").WrapperTarget;
+			Assert.Equal (baseProxy.Namespace, baseWrapperTarget.TypeNamespace);
+			Assert.Equal (baseProxy.TypeName, baseWrapperTarget.TypeName);
+			Assert.Equal (baseProxy.UcoMethods [0].WrapperName, baseWrapperTarget.MethodName);
+
+			Assert.Equal (baseWrapperTarget, concreteOneProxy.NativeRegistrations.Single (r => r.JniMethodName == "n_DoWork").WrapperTarget);
+			Assert.Equal (baseWrapperTarget, concreteTwoProxy.NativeRegistrations.Single (r => r.JniMethodName == "n_DoWork").WrapperTarget);
+		}
+
+		[Fact]
+		public void Build_InheritedVirtualOverride_BaseProxyLater_ReuseBaseUcoMethod ()
+		{
+			var derived = MakeInheritedOverridePeer ("aaa/app/Concrete", "MyApp.Concrete");
+			var basePeer = MakeAcwPeer ("zzz/app/AbstractBase", "MyApp.AbstractBase", "App") with {
+				MarshalMethods = [
+					new MarshalMethodInfo {
+						JniName = "<init>", NativeCallbackName = "n_ctor",
+						JniSignature = "()V", ManagedMethodName = ".ctor",
+						IsConstructor = true,
+					},
+					new MarshalMethodInfo {
+						JniName = "doWork", NativeCallbackName = "n_DoWork",
+						JniSignature = "()V", ManagedMethodName = "DoWork",
+					},
+				],
+			};
+
+			var model = BuildModel ([derived, basePeer]);
+			var baseProxy = model.ProxyTypes.Single (p => p.TargetType.ManagedTypeName == "MyApp.AbstractBase");
+			var derivedProxy = model.ProxyTypes.Single (p => p.TargetType.ManagedTypeName == "MyApp.Concrete");
+
+			Assert.Empty (derivedProxy.UcoMethods);
+			var baseRegistration = baseProxy.NativeRegistrations.Single (r => r.JniMethodName == "n_DoWork");
+			var registration = derivedProxy.NativeRegistrations.Single (r => r.JniMethodName == "n_DoWork");
+			Assert.Equal (baseRegistration.WrapperTarget, registration.WrapperTarget);
+		}
+
+		[Fact]
+		public void Build_InheritedVirtualOverride_ThroughIntermediate_ReuseRootBaseUcoMethod ()
+		{
+			var rootBase = MakeAcwPeer ("my/app/C", "MyApp.C", "App") with {
+				MarshalMethods = [
+					new MarshalMethodInfo {
+						JniName = "<init>", NativeCallbackName = "n_ctor",
+						JniSignature = "()V", ManagedMethodName = ".ctor",
+						IsConstructor = true,
+					},
+					new MarshalMethodInfo {
+						JniName = "doWork", NativeCallbackName = "n_DoWork",
+						JniSignature = "()V", ManagedMethodName = "DoWork",
+					},
+				],
+			};
+			var intermediate = MakeAcwPeer ("my/app/B", "MyApp.B", "App");
+			var leaf = MakeInheritedOverridePeer ("my/app/A", "MyApp.A", declaringTypeName: "MyApp.C");
+
+			var model = BuildModel ([leaf, intermediate, rootBase]);
+			var rootBaseProxy = model.ProxyTypes.Single (p => p.TargetType.ManagedTypeName == "MyApp.C");
+			var intermediateProxy = model.ProxyTypes.Single (p => p.TargetType.ManagedTypeName == "MyApp.B");
+			var leafProxy = model.ProxyTypes.Single (p => p.TargetType.ManagedTypeName == "MyApp.A");
+
+			Assert.Single (rootBaseProxy.UcoMethods);
+			Assert.Empty (intermediateProxy.UcoMethods);
+			Assert.Empty (leafProxy.UcoMethods);
+
+			var rootBaseRegistration = rootBaseProxy.NativeRegistrations.Single (r => r.JniMethodName == "n_DoWork");
+			var leafRegistration = leafProxy.NativeRegistrations.Single (r => r.JniMethodName == "n_DoWork");
+			Assert.Equal (rootBaseRegistration.WrapperTarget, leafRegistration.WrapperTarget);
+		}
+
+		[Fact]
+		public void Build_InheritedVirtualOverride_IntermediateCallbackOwner_ReuseIntermediateUcoMethod ()
+		{
+			var rootBase = MakeAcwPeer ("my/app/C", "MyApp.C", "App") with {
+				MarshalMethods = [
+					new MarshalMethodInfo {
+						JniName = "<init>", NativeCallbackName = "n_ctor",
+						JniSignature = "()V", ManagedMethodName = ".ctor",
+						IsConstructor = true,
+					},
+					new MarshalMethodInfo {
+						JniName = "doWork", NativeCallbackName = "n_DoWork",
+						JniSignature = "()V", ManagedMethodName = "DoWork",
+					},
+				],
+			};
+			var intermediate = MakeAcwPeer ("my/app/B", "MyApp.B", "App") with {
+				MarshalMethods = [
+					new MarshalMethodInfo {
+						JniName = "<init>", NativeCallbackName = "n_ctor",
+						JniSignature = "()V", ManagedMethodName = ".ctor",
+						IsConstructor = true,
+					},
+					new MarshalMethodInfo {
+						JniName = "doWork", NativeCallbackName = "n_DoWork",
+						JniSignature = "()V", ManagedMethodName = "DoWork",
+					},
+				],
+			};
+			var leaf = MakeInheritedOverridePeer ("my/app/A", "MyApp.A", declaringTypeName: "MyApp.B");
+
+			var model = BuildModel ([leaf, rootBase, intermediate]);
+			var rootBaseProxy = model.ProxyTypes.Single (p => p.TargetType.ManagedTypeName == "MyApp.C");
+			var intermediateProxy = model.ProxyTypes.Single (p => p.TargetType.ManagedTypeName == "MyApp.B");
+			var leafProxy = model.ProxyTypes.Single (p => p.TargetType.ManagedTypeName == "MyApp.A");
+
+			Assert.Single (rootBaseProxy.UcoMethods);
+			Assert.Single (intermediateProxy.UcoMethods);
+			Assert.Empty (leafProxy.UcoMethods);
+
+			var rootBaseRegistration = rootBaseProxy.NativeRegistrations.Single (r => r.JniMethodName == "n_DoWork");
+			var intermediateRegistration = intermediateProxy.NativeRegistrations.Single (r => r.JniMethodName == "n_DoWork");
+			var leafRegistration = leafProxy.NativeRegistrations.Single (r => r.JniMethodName == "n_DoWork");
+			Assert.NotEqual (rootBaseRegistration.WrapperTarget, leafRegistration.WrapperTarget);
+			Assert.Equal (intermediateRegistration.WrapperTarget, leafRegistration.WrapperTarget);
+		}
+
+		[Fact]
+		public void Build_DirectRegisteredMethod_UsesLocalManagedDispatchWrapper ()
+		{
+			var peer = MakeAcwPeer ("my/app/DirectRegister", "MyApp.DirectRegister", "App") with {
+				MarshalMethods = [
+					new MarshalMethodInfo {
+						JniName = "<init>", NativeCallbackName = "n_ctor",
+						JniSignature = "()V", ManagedMethodName = ".ctor",
+						IsConstructor = true,
+					},
+					new MarshalMethodInfo {
+						JniName = "getValue", NativeCallbackName = "n_GetValue",
+						JniSignature = "()I", ManagedMethodName = "get_Value",
+						CallManagedMethodDirectly = true,
+						ManagedReturnType = new TypeRefData {
+							ManagedTypeName = "System.Int32",
+							AssemblyName = "System.Runtime",
+						},
+					},
+				],
+			};
+
+			var model = BuildModel ([peer]);
+			var proxy = model.ProxyTypes.Single (p => p.TargetType.ManagedTypeName == "MyApp.DirectRegister");
+			var uco = Assert.Single (proxy.UcoMethods);
+			Assert.True (uco.UsesExportMethodDispatch);
+			Assert.Equal ("get_Value", uco.ExportMethodDispatch?.ManagedMethodName);
+
+			var registration = proxy.NativeRegistrations.Single (r => r.JniMethodName == "n_GetValue");
+			Assert.Equal (proxy.Namespace, registration.WrapperTarget.TypeNamespace);
+			Assert.Equal (proxy.TypeName, registration.WrapperTarget.TypeName);
+			Assert.Equal (uco.WrapperName, registration.WrapperTarget.MethodName);
+		}
+
+		[Fact]
+		public void Build_InheritedVirtualOverride_TargetUnavailable_FallsBackToLocalUcoMethod ()
+		{
+			var derived = MakeInheritedOverridePeer ("my/app/Concrete", "MyApp.Concrete");
+
+			var model = BuildModel ([derived]);
+			var derivedProxy = model.ProxyTypes.Single (p => p.TargetType.ManagedTypeName == "MyApp.Concrete");
+
+			Assert.Single (derivedProxy.UcoMethods);
+			var registration = derivedProxy.NativeRegistrations.Single (r => r.JniMethodName == "n_DoWork");
+			Assert.Equal (derivedProxy.Namespace, registration.WrapperTarget.TypeNamespace);
+			Assert.Equal (derivedProxy.TypeName, registration.WrapperTarget.TypeName);
+			Assert.Equal (derivedProxy.UcoMethods [0].WrapperName, registration.WrapperTarget.MethodName);
+		}
+
+		[Theory]
+		[InlineData ("(I)V", false, false)]
+		[InlineData ("()V", true, false)]
+		[InlineData ("()V", false, true)]
+		public void Build_UnsafeInheritedVirtualOverride_FallsBackToLocalUcoMethod (string jniSignature, bool isExport, bool isGeneric)
+		{
+			var basePeer = MakeAcwPeer ("my/app/AbstractBase", "MyApp.AbstractBase", "App") with {
+				MarshalMethods = [
+					new MarshalMethodInfo {
+						JniName = "<init>", NativeCallbackName = "n_ctor",
+						JniSignature = "()V", ManagedMethodName = ".ctor",
+						IsConstructor = true,
+					},
+					new MarshalMethodInfo {
+						JniName = "doWork", NativeCallbackName = "n_DoWork",
+						JniSignature = "()V", ManagedMethodName = "DoWork",
+					},
+				],
+			};
+			var derived = MakeInheritedOverridePeer ("my/app/Concrete", isGeneric ? "MyApp.Concrete`1" : "MyApp.Concrete",
+				jniSignature, isExport, isGeneric);
+
+			var model = BuildModel ([basePeer, derived]);
+			var derivedProxy = model.ProxyTypes.Single (p => p.TargetType.ManagedTypeName == derived.ManagedTypeName);
+
+			Assert.Single (derivedProxy.UcoMethods);
+			var registration = derivedProxy.NativeRegistrations.Single (r => r.JniMethodName == "n_DoWork");
+			Assert.Equal (derivedProxy.Namespace, registration.WrapperTarget.TypeNamespace);
+			Assert.Equal (derivedProxy.TypeName, registration.WrapperTarget.TypeName);
+			Assert.Equal (derivedProxy.UcoMethods [0].WrapperName, registration.WrapperTarget.MethodName);
+		}
+
+		static JavaPeerInfo MakeInheritedOverridePeer (string jniName, string managedName,
+			string jniSignature = "()V", bool isExport = false, bool isGeneric = false,
+			string declaringTypeName = "MyApp.AbstractBase")
+		{
+			return MakeAcwPeer (jniName, managedName, "App") with {
+				IsGenericDefinition = isGeneric,
+				MarshalMethods = [
+					new MarshalMethodInfo {
+						JniName = "<init>", NativeCallbackName = "n_ctor",
+						JniSignature = "()V", ManagedMethodName = ".ctor",
+						IsConstructor = true,
+					},
+					new MarshalMethodInfo {
+						JniName = "doWork", NativeCallbackName = "n_DoWork",
+						JniSignature = jniSignature, ManagedMethodName = "DoWork",
+						DeclaringTypeName = declaringTypeName,
+						DeclaringAssemblyName = "App",
+						IsExport = isExport,
+					},
+				],
+			};
+		}
 	}
 
 	public class UcoConstructors

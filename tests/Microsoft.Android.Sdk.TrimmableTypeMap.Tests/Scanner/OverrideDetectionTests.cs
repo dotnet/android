@@ -47,6 +47,12 @@ public class OverrideDetectionTests : FixtureTestBase
 		Assert.Contains ("customMethod", marshalNames);
 		var marshalKeys = peer.MarshalMethods.Select (m => $"{m.JniName}:{m.JniSignature}").ToList ();
 		Assert.Equal (marshalKeys.Count, marshalKeys.Distinct ().Count ());
+
+		var customMethod = Assert.Single (peer.MarshalMethods, m => m.JniName == "customMethod");
+		Assert.True (customMethod.CallManagedMethodDirectly);
+
+		var onCreate = Assert.Single (peer.MarshalMethods, m => m.JniName == "onCreate");
+		Assert.False (onCreate.CallManagedMethodDirectly);
 	}
 
 	[Fact]
@@ -68,7 +74,8 @@ public class OverrideDetectionTests : FixtureTestBase
 	public void DirectRegister_StillWorksForMainActivity ()
 	{
 		var peer = FindFixtureByJavaName ("my/app/MainActivity");
-		Assert.Contains (peer.MarshalMethods, m => m.JniName == "onCreate");
+		var onCreate = Assert.Single (peer.MarshalMethods, m => m.JniName == "onCreate");
+		Assert.True (onCreate.CallManagedMethodDirectly);
 	}
 
 	[Fact]
