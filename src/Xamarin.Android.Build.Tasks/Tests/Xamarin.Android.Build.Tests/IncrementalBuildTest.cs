@@ -1963,11 +1963,15 @@ namespace Lib2
 				b.Output.AssertTargetIsNotSkipped ("_RunAfterILLinkAdditionalSteps");
 				b.Output.AssertTargetIsNotSkipped ("_AfterILLinkAdditionalSteps");
 
-				// Verify afterlink/ output directory was created with assemblies
+				// Verify afterlink/ output directory was created with per-ABI subdirectories containing assemblies
 				var afterlinkDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "afterlink");
 				Assert.IsTrue (Directory.Exists (afterlinkDir), "afterlink/ directory should exist after first build");
-				var afterlinkFiles = Directory.GetFiles (afterlinkDir, "*.dll");
-				Assert.IsTrue (afterlinkFiles.Length > 0, "afterlink/ directory should contain assemblies");
+				var abiDirs = Directory.GetDirectories (afterlinkDir);
+				Assert.IsTrue (abiDirs.Length > 0, "afterlink/ should contain ABI subdirectories");
+				foreach (var abiDir in abiDirs) {
+					var afterlinkFiles = Directory.GetFiles (abiDir, "*.dll");
+					Assert.IsTrue (afterlinkFiles.Length > 0, $"afterlink/{Path.GetFileName (abiDir)}/ should contain assemblies");
+				}
 
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build should succeed");
 				b.Output.AssertTargetIsSkipped ("_RunAfterILLinkAdditionalSteps");

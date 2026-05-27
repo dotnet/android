@@ -1476,7 +1476,7 @@ because xbuild doesn't support framework reference assemblies.
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
       CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
       Debug="$(AndroidIncludeDebugSymbols)"
-      DestinationFiles="@(ResolvedAssemblies->'$(_AfterILLinkOutputDir)%(Filename)%(Extension)')"
+      DestinationFiles="@(ResolvedAssemblies->'$(_AfterILLinkOutputDir)%(DestinationSubPath)')"
       Deterministic="$(Deterministic)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
       ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
@@ -1502,15 +1502,15 @@ because xbuild doesn't support framework reference assemblies.
   <ItemGroup>
     <_OrigResolvedAssemblies Include="@(ResolvedAssemblies)" />
     <ResolvedAssemblies Remove="@(ResolvedAssemblies)" />
-    <ResolvedAssemblies Include="@(_OrigResolvedAssemblies->'$(_AfterILLinkOutputDir)%(Filename)%(Extension)')" />
+    <ResolvedAssemblies Include="@(_OrigResolvedAssemblies->'$(_AfterILLinkOutputDir)%(DestinationSubPath)')" />
 
     <_OrigResolvedUserAssemblies Include="@(ResolvedUserAssemblies)" />
     <ResolvedUserAssemblies Remove="@(ResolvedUserAssemblies)" />
-    <ResolvedUserAssemblies Include="@(_OrigResolvedUserAssemblies->'$(_AfterILLinkOutputDir)%(Filename)%(Extension)')" />
+    <ResolvedUserAssemblies Include="@(_OrigResolvedUserAssemblies->'$(_AfterILLinkOutputDir)%(DestinationSubPath)')" />
 
     <_OrigResolvedFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies)" />
     <ResolvedFrameworkAssemblies Remove="@(ResolvedFrameworkAssemblies)" />
-    <ResolvedFrameworkAssemblies Include="@(_OrigResolvedFrameworkAssemblies->'$(_AfterILLinkOutputDir)%(Filename)%(Extension)')" />
+    <ResolvedFrameworkAssemblies Include="@(_OrigResolvedFrameworkAssemblies->'$(_AfterILLinkOutputDir)%(DestinationSubPath)')" />
   </ItemGroup>
 </Target>
 
