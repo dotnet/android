@@ -56,7 +56,7 @@
   </Target>
 
   <Target Name="_GenerateTrimmableTypeMapProguardConfiguration"
-      DependsOnTargets="IlcCompile;_CollectTrimmableNativeAotDgmlFiles"
+      DependsOnTargets="_CollectTrimmableNativeAotDgmlFiles"
       Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
       Inputs="@(_TrimmableNativeAotDgmlFiles);$(IntermediateOutputPath)acw-map.txt"
       Outputs="$(_ProguardProjectConfiguration)">
