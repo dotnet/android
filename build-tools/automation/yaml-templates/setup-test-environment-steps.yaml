@@ -60,7 +60,7 @@ steps:
     displayName: install OpenJDK and accept Android SDK licenses
     xaSourcePath: ${{ parameters.xaSourcePath }}
     project: ${{ parameters.xaSourcePath }}/src/androidsdk/androidsdk.csproj
-    arguments: -c ${{ parameters.configuration }} -p:AndroidSdkPlatforms="${{ parameters.androidSdkPlatforms }}" -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/androidsdk.binlog
+    arguments: -c ${{ parameters.configuration }} '-p:AndroidSdkPlatforms=${{ parameters.androidSdkPlatforms }}' -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/androidsdk.binlog
     continueOnError: false
 
 - task: DotNetCoreCLI@2
