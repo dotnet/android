@@ -48,7 +48,7 @@ namespace MonoDroid.Tuner  {
 						{
 							if (p.Name == "IsApplication" && (bool)p.Argument.Value == (mainApplication ? mainApplication : (bool)p.Argument.Value))
 							{
-								designerFullName = attribute.ConstructorArguments[0].Value.ToString ();
+								designerFullName = ResourceDesignerImportGenerator.GetTypeFullNameFromAssemblyQualifiedName (attribute.ConstructorArguments[0].Value.ToString ());
 								break;
 							}
 						}
