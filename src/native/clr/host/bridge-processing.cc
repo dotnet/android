@@ -400,13 +400,7 @@ void BridgeProcessingShared::log_weak_to_gref (jobject weak, jobject handle) noe
 		}
 	}
 
-	if (!Logger::gref_log ()) [[likely]] {
-		return;
-	}
-
-	char message[128];
-	snprintf (message, sizeof (message), "take_global_ref wref=%p -> handle=%p\n", reinterpret_cast<void*>(weak), reinterpret_cast<void*>(handle));
-	OSBridge::_monodroid_gref_log (message);
+	OSBridge::_monodroid_gref_log ("take_global_ref wref=%p -> handle=%p\n", reinterpret_cast<void*>(weak), reinterpret_cast<void*>(handle));
 }
 
 [[gnu::always_inline]]
@@ -416,21 +410,13 @@ void BridgeProcessingShared::log_weak_ref_collected (jobject weak) noexcept
 		return;
 	}
 
-	char message[128];
-	snprintf (message, sizeof (message), "handle %p/W; was collected by a Java GC", reinterpret_cast<void*>(weak));
-	OSBridge::_monodroid_gref_log (message);
+	OSBridge::_monodroid_gref_log ("handle %p/W; was collected by a Java GC", reinterpret_cast<void*>(weak));
 }
 
 [[gnu::always_inline]]
 void BridgeProcessingShared::log_take_weak_global_ref (jobject handle) noexcept
 {
-	if (!Logger::gref_log ()) [[likely]] {
-		return;
-	}
-
-	char message[128];
-	snprintf (message, sizeof (message), "take_weak_global_ref handle=%p\n", reinterpret_cast<void*>(handle));
-	OSBridge::_monodroid_gref_log (message);
+	OSBridge::_monodroid_gref_log ("take_weak_global_ref handle=%p\n", reinterpret_cast<void*>(handle));
 }
 
 [[gnu::always_inline]]

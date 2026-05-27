@@ -1,3 +1,4 @@
+#include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -150,18 +151,29 @@ void OSBridge::_write_stack_trace (FILE *to, const char *const from, LogCategori
 	}
 }
 
-void OSBridge::_monodroid_gref_log (const char *message) noexcept
+void OSBridge::_monodroid_gref_log (const char *format, ...) noexcept
 {
-	if (Logger::gref_to_logcat ()) {
-		log_write (LOG_GREF, LogLevel::Debug, optional_string (message));
-	}
-
-	if (Logger::gref_log () == nullptr) {
+	FILE *gref_log = Logger::gref_log ();
+	if (!Logger::gref_to_logcat () && gref_log == nullptr) {
 		return;
 	}
 
-	fprintf (Logger::gref_log (), "%s", optional_string (message));
-	fflush (Logger::gref_log ());
+	char message[LOG_LINE_BUFFER_SIZE];
+	va_list args;
+	va_start (args, format);
+	vsnprintf (message, sizeof (message), optional_string (format), args);
+	va_end (args);
+
+	if (Logger::gref_to_logcat ()) {
+		log_write (LOG_GREF, LogLevel::Debug, message);
+	}
+
+	if (gref_log == nullptr) {
+		return;
+	}
+
+	fputs (message, gref_log);
+	fflush (gref_log);
 }
 
 [[gnu::always_inline, gnu::flatten]]
