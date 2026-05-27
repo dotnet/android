@@ -134,8 +134,8 @@ extends:
           parameters:
             xaSourcePath: $(Build.SourcesDirectory)/android
             androidSdkPlatforms: $(DefaultTestSdkPlatforms)
-            dotnetVersion: $(DotNetPreviewSdkVersion)
-            dotnetQuality: $(DotNetPreviewSdkQuality)
+            dotnetVersion: $(DotNetSdkVersion)
+            dotnetQuality: $(DotNetSdkQuality)
 
         - task: NuGetAuthenticate@1
           displayName: authenticate with azure artifacts
@@ -353,8 +353,8 @@ extends:
 
         - template: /build-tools/automation/yaml-templates/use-dot-net.yaml@self
           parameters:
-            version: $(DotNetPreviewSdkVersion)
-            quality: $(DotNetPreviewSdkQuality)
+            version: $(DotNetSdkVersion)
+            quality: $(DotNetSdkQuality)
 
         # Download symbols to be published to the symbols artifact drop declared above
         - task: DownloadPipelineArtifact@2
