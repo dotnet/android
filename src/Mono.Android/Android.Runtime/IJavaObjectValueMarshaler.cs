@@ -49,6 +49,9 @@ namespace Android.Runtime
 		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type? targetType)
 		{
+			if (targetType == null)
+				throw new ArgumentNullException (nameof (targetType));
+
 			var r   = Expression.Variable (targetType, sourceValue.Name + "_val");
 			context.LocalVariables.Add (r);
 			context.CreationStatements.Add (

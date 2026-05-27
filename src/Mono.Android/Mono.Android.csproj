@@ -10,7 +10,7 @@
     <RootNamespace>Android</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <NoWarn>0618;0809;0108;0114;0465;0169;0436;0649;8321;8600;8602;8603;8604;8609;8610;8614;8617;8613;8618;8619;8625;8764;8765;8766;8767;8768;CA1422;RS0025;RS0041</NoWarn>
+    <NoWarn>0618;0809;0108;0114;0465;8609;8610;8614;8617;8613;8764;8765;8766;8767;RS0041</NoWarn>
     <WarningsAsErrors>$(WarningsAsErrors);CS2002</WarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>$(DefineConstants);JAVA_INTEROP</DefineConstants>
@@ -95,6 +95,7 @@
     <Compile Include="Android.App\UsesFeatureAttribute.Partial.cs" />
     <Compile Include="Android.App\UsesLibraryAttribute.Partial.cs" />
     <Compile Include="Android.App\UsesPermissionAttribute.Partial.cs" />
+    <Compile Include="GlobalUsings.cs" />
     <Compile Include="Android.Content.PM\PackageManager.cs" />
     <Compile Include="Android.Graphics\PathIterator.cs" />
     <Compile Include="Android.Hardware\HardwareBuffer.cs" />

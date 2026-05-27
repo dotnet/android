@@ -3,7 +3,11 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Microsoft.Android.Runtime;
 
+#if INSIDE_MONO_ANDROID_RUNTIME
 static class RuntimeFeature
+#else
+static class AndroidRuntimeFeature
+#endif
 {
 	const bool ManagedTypeMapEnabledByDefault = false;
 	const bool IsMonoRuntimeEnabledByDefault = true;

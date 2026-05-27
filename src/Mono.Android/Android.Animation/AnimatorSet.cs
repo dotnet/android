@@ -6,7 +6,7 @@ namespace Android.Animation
 {
 	public partial class AnimatorSet
 	{
-		static Delegate cb_setDuration_SetDuration_J_Landroid_animation_Animator_;
+		static Delegate? cb_setDuration_SetDuration_J_Landroid_animation_Animator_;
 
 		[Register ("setDuration", "(J)Landroid/animation/Animator;", "GetSetDuration_JHandler")]
 		public override unsafe Android.Animation.Animator SetDuration (long duration)
@@ -16,7 +16,7 @@ namespace Android.Animation
 				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 				__args [0] = new JniArgumentValue (duration);
 				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, __args);
-				return global::Java.Lang.Object.GetObject<Android.Animation.Animator> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+				return global::Java.Lang.Object.GetObject<Android.Animation.Animator> (__rm.Handle, JniHandleOwnership.TransferLocalRef)!;
 			} finally {
 			}
 		}
@@ -35,7 +35,7 @@ namespace Android.Animation
 
 			try {
 				var __this = global::Java.Lang.Object.GetObject<Android.Animation.AnimatorSet> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-				return JNIEnv.ToLocalJniHandle (__this.SetDuration (duration));
+				return JNIEnv.ToLocalJniHandle (__this!.SetDuration (duration));
 			} catch (global::System.Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;

@@ -202,7 +202,7 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 
 			for (int i = peers.Count - 1; i >= 0; i--) {
 				ReferenceTrackingHandle peer = peers [i];
-				IJavaPeerable target = peer.Target;
+				IJavaPeerable? target = peer.Target;
 				if (ReferenceEquals (value, target)) {
 					peers.RemoveAt (i);
 					peer.Dispose ();
@@ -303,7 +303,9 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 
 			GCHandle handle = HandleContext.GetAssociatedGCHandle (_context);
 			HandleContext.Free (ref _context);
+#pragma warning disable CS8625 // Clear the weak reference target after the native control block has been freed.
 			_weakReference.SetTarget (null);
+#pragma warning restore CS8625
 			if (handle.IsAllocated) {
 				handle.Free ();
 			}
@@ -335,6 +337,8 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 		}
 
 		// This is an internal mirror of the Java.Interop.JniObjectReferenceControlBlock
+		// whose fields are written by Java.Interop native memory.
+#pragma warning disable CS0649
 		private struct JniObjectReferenceControlBlock
 		{
 			public IntPtr handle;
@@ -342,6 +346,7 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 			public IntPtr weak_handle;
 			public int refs_added;
 		}
+#pragma warning restore CS0649
 
 		public static GCHandle GetAssociatedGCHandle (HandleContext* context)
 		{

@@ -1,0 +1,7 @@
+# Generated binding code mirrors Android platform API shapes and nullable metadata.
+[obj/**/mcw/*.cs]
+dotnet_diagnostic.CS0169.severity = none
+dotnet_diagnostic.CS8603.severity = none
+dotnet_diagnostic.CS8604.severity = none
+dotnet_diagnostic.CS8625.severity = none
+dotnet_diagnostic.CS8768.severity = none

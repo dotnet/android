@@ -238,7 +238,10 @@ namespace Java.Interop {
 				return null;
 			}
 
-			string managedAssemblyName = Marshal.PtrToStringAnsi (managedAssemblyNamePointer);
+			string? managedAssemblyName = Marshal.PtrToStringAnsi (managedAssemblyNamePointer);
+			if (managedAssemblyName == null) {
+				return null;
+			}
 			Assembly assembly = Assembly.Load (managedAssemblyName);
 			Type? ret = null;
 			foreach (Module module in assembly.Modules) {
@@ -304,8 +307,12 @@ namespace Java.Interop {
 			Type? type = null;
 			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
 			string? class_name = GetClassName (class_ptr);
+			if (class_name == null) {
+				JNIEnv.DeleteLocalRef (class_ptr);
+				return null;
+			}
 			lock (TypeManagerMapDictionaries.AccessLock) {
-				while (class_ptr != IntPtr.Zero) {
+				while (class_ptr != IntPtr.Zero && class_name != null) {
 					type = GetJavaToManagedTypeCore (class_name);
 					if (type != null) {
 						break;

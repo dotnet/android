@@ -165,7 +165,7 @@ namespace Java.Interop {
 		internal readonly struct ArrayElementConverter
 		{
 			readonly Type? elementType;
-			readonly Func<IntPtr, JniHandleOwnership, object>? converter;
+			readonly Func<IntPtr, JniHandleOwnership, object?>? converter;
 			readonly bool useRuntimeTypeMapping;
 
 			public ArrayElementConverter (Array array)
@@ -348,7 +348,9 @@ namespace Java.Interop {
 		{
 			var lref = JniEnvironment.Types.GetObjectClass (new JniObjectReference (handle));
 			try {
-				string className = JniEnvironment.Types.GetJniTypeNameFromClass (lref);
+				string? className = JniEnvironment.Types.GetJniTypeNameFromClass (lref);
+				if (className == null)
+					return null;
 				if (TypeMappings.TryGetValue (className, out var match))
 					return match;
 				if (JniEnvironment.Types.IsAssignableFrom (lref, new JniObjectReference (JavaDictionary.map_class)))

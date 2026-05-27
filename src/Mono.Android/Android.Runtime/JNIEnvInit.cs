@@ -9,8 +9,6 @@ using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
 
 using Microsoft.Android.Runtime;
-using RuntimeFeature = Microsoft.Android.Runtime.RuntimeFeature;
-
 namespace Android.Runtime
 {
 	static internal partial class JNIEnvInit
@@ -63,7 +61,7 @@ namespace Android.Runtime
 			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
 			[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type should be preserved by the MarkJavaObjects trimmer step.")]
 			[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes)]
-			static Type TypeGetType (string typeName) =>
+			static Type? TypeGetType (string typeName) =>
 				Type.GetType (typeName, throwOnError: false);
 
 			string typeName = new string ((char*) typeName_ptr, 0, typeName_len);

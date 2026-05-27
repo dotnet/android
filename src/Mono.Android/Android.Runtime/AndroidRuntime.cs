@@ -344,7 +344,9 @@ namespace Android.Runtime {
 		protected override IEnumerable<string> GetSimpleReferences (Type type)
 		{
 			string? j = JNIEnv.TypemapManagedToJava (type);
-			j   = GetReplacementTypeCore (j) ?? j;
+			if (j != null) {
+				j = GetReplacementTypeCore (j) ?? j;
+			}
 
 			if (j != null) {
 				return new[]{j};
@@ -579,14 +581,6 @@ namespace Android.Runtime {
 				JniEnvironment.Runtime.RaisePendingException (e);
 			}
 
-			bool ShouldRegisterDynamically (string callbackTypeName, string callbackString, string typeName, string callbackName)
-			{
-				if (String.Compare (typeName, callbackTypeName, StringComparison.Ordinal) != 0) {
-					return false;
-				}
-
-				return String.Compare (callbackName, callbackString, StringComparison.Ordinal) == 0;
-			}
 		}
 
 		static int CountMethods (ReadOnlySpan<char> methodsSpan)

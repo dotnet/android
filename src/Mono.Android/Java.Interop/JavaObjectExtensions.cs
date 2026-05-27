@@ -81,7 +81,7 @@ namespace Java.Interop {
 			if (instance.Handle == IntPtr.Zero)
 				throw new ObjectDisposedException (instance.GetType ().FullName);
 
-			return (TResult) Java.Lang.Object.GetObject (instance.Handle, JniHandleOwnership.DoNotTransfer, typeof (TResult)) ??
+			return (TResult?) Java.Lang.Object.GetObject (instance.Handle, JniHandleOwnership.DoNotTransfer, typeof (TResult)) ??
 				throw new InvalidCastException (
 					FormattableString.Invariant ($"Unable to convert instance of type '{instance.GetType ().FullName}' to type '{typeof (TResult).FullName}'."));
 		}

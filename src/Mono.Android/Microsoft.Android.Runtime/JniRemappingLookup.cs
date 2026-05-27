@@ -10,12 +10,15 @@ namespace Microsoft.Android.Runtime;
 
 static class JniRemappingLookup
 {
+	// Filled by native memory; managed code only reads the fields.
+#pragma warning disable CS0649
 	struct JniRemappingReplacementMethod
 	{
 		public string? target_type;
 		public string? target_name;
 		public bool    is_static;
 	}
+#pragma warning restore CS0649
 
 	internal static IReadOnlyList<string> GetStaticMethodFallbackTypes (string jniSimpleReference, bool useReplacementTypes)
 	{

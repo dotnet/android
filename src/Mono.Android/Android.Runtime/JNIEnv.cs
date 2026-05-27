@@ -443,7 +443,7 @@ namespace Android.Runtime {
 
 		public static string GetClassNameFromInstance (IntPtr jobject)
 		{
-			return JniEnvironment.Types.GetJniTypeNameFromInstance (new JniObjectReference (jobject));
+			return JniEnvironment.Types.GetJniTypeNameFromInstance (new JniObjectReference (jobject))!;
 		}
 
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
@@ -494,7 +494,11 @@ namespace Android.Runtime {
 				if (RuntimeFeature.IsMonoRuntime) {
 					ret = monovm_typemap_managed_to_java (type, mvidptr);
 				} else if (RuntimeFeature.IsCoreClrRuntime) {
-					ret = RuntimeNativeMethods.clr_typemap_managed_to_java (type.FullName, (IntPtr)mvidptr);
+					string? fullName = type.FullName;
+					if (fullName == null) {
+						return null;
+					}
+					ret = RuntimeNativeMethods.clr_typemap_managed_to_java (fullName, (IntPtr)mvidptr);
 				} else {
 					throw new NotSupportedException ("Internal error: unknown runtime not supported");
 				}
@@ -691,6 +695,8 @@ namespace Android.Runtime {
 					AssertIsJavaObject (type);
 
 					IntPtr elem = GetObjectArrayElement (source, index);
+					if (type == null)
+						return Java.Lang.Object.GetObject (elem, JniHandleOwnership.TransferLocalRef);
 					return GetObject (elem, type);
 
 					// FIXME: Since a Dictionary<Type, Func> is used here, the trimmer will not be able to properly analyze `Type t`
