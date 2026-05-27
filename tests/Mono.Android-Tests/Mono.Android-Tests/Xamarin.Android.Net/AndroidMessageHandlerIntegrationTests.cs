@@ -219,7 +219,7 @@ namespace Xamarin.Android.NetTests {
 		}
 
 		[Test]
-		void UrlEscaping_Bug43411 ()
+		public void UrlEscaping_Bug43411 ()
 		{
 			UrlEscaping_TestUrl ($"http://{TestHost}/?example=value%20_value", "#1");
 			UrlEscaping_TestUrl ($"http://{TestHost}/?query=anna%20%26%20lotte&param2=true", "#2");
@@ -239,7 +239,10 @@ namespace Xamarin.Android.NetTests {
 					var request = new HttpRequestMessage (HttpMethod.Get, url);
 
 					client.SendAsync (request, HttpCompletionOption.ResponseHeadersRead).Wait ();
-					Assert.AreEqual (url, request.RequestUri.ToString (), $"{messagePrefix}-1");
+					// Use AbsoluteUri rather than ToString(): ToString() returns the
+					// "human-readable" form and unescapes safe characters like %20,
+					// while AbsoluteUri preserves the canonical percent-encoding.
+					Assert.AreEqual (url, request.RequestUri.AbsoluteUri, $"{messagePrefix}-1");
 					Assert.IsNull (failed, $"{messagePrefix}-2");
 				} finally {
 					listener.Abort ();
