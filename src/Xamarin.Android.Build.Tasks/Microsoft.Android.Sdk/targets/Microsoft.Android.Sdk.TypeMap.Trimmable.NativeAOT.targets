@@ -47,6 +47,7 @@
       <_TrimmableNativeAotDgmlFiles Remove="@(_TrimmableNativeAotDgmlFiles)" />
       <_TrimmableNativeAotRuntimeIdentifiers Include="$(RuntimeIdentifier)" Condition=" '$(RuntimeIdentifier)' != '' " />
       <_TrimmableNativeAotRuntimeIdentifiers Include="$(RuntimeIdentifiers)" Condition=" '$(RuntimeIdentifier)' == '' and '$(RuntimeIdentifiers)' != '' " />
+      <!-- RuntimeIdentifier, RuntimeIdentifiers, and no-RID publishes place ILC DGML under different intermediate paths. -->
       <_TrimmableNativeAotDgmlFiles Include="$(NativeIntermediateOutputPath)$(TargetName).scan.dgml.xml" Condition=" '@(_TrimmableNativeAotRuntimeIdentifiers)' == '' " />
       <_TrimmableNativeAotDgmlFiles Include="$(NativeIntermediateOutputPath)$(TargetName).scan.dgml.xml" Condition=" '$(RuntimeIdentifier)' != '' " />
       <_TrimmableNativeAotDgmlFiles Include="$(IntermediateOutputPath)%(_TrimmableNativeAotRuntimeIdentifiers.Identity)\native\$(TargetName).scan.dgml.xml" Condition=" '$(RuntimeIdentifier)' == '' and '@(_TrimmableNativeAotRuntimeIdentifiers)' != '' " />

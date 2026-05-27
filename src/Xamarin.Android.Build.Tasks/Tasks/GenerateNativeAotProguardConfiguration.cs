@@ -55,13 +55,13 @@ namespace Xamarin.Android.Tasks
 				writer.WriteLine ($"-keep class {javaTypeName} {{ *; }}");
 			}
 
-			Log.LogMessage (MessageImportance.Low, $"Generated {javaTypes.Count} NativeAOT trimmable typemap ProGuard rules from {NativeAotDgmlFiles.Length} DGML file(s).");
+			Log.LogMessage (MessageImportance.Low, "Generated {0} NativeAOT trimmable typemap ProGuard rules from {1} DGML file(s).", javaTypes.Count, NativeAotDgmlFiles.Length);
 			return !Log.HasLoggedErrors;
 		}
 
 		List<string> LoadJavaTypesFromAcwMap (HashSet<string> retainedTypeKeys)
 		{
-			var javaTypes = new List<string> ();
+			var javaTypes = new List<string> (retainedTypeKeys.Count);
 			var seenJavaTypes = new HashSet<string> (StringComparer.Ordinal);
 			foreach (var line in File.ReadLines (AcwMapFile)) {
 				var separator = line.IndexOf (';');
@@ -104,6 +104,8 @@ namespace Xamarin.Android.Tasks
 
 					var assemblyName = label.Substring (assemblyStart, assemblyEnd - assemblyStart);
 					var managedTypeName = label.Substring (assemblyEnd + 1);
+					// ILC DGML labels contain the managed type name without assembly qualification,
+					// while acw-map.txt can disambiguate duplicate type names with the assembly-qualified form.
 					typeKeys.Add (managedTypeName);
 					typeKeys.Add ($"{managedTypeName}, {assemblyName}");
 				}

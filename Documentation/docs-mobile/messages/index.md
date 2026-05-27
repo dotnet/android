@@ -233,6 +233,9 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4316](xa4316.md): Specified input file '{file}' does not exist. Ignoring.
 + [XA4317](xa4317.md): Input file '{file}' does not start with `<replacements/>`. Skipping.
 + [XA4318](xa4318.md): Input file '{file}' could not be read: {message}. Skipping.
++ [XA4319](xa4319.md): No NativeAOT DGML files were provided.
++ [XA4320](xa4320.md): ACW map file '{file}' was not found.
++ [XA4321](xa4321.md): NativeAOT DGML file '{file}' was not found.
 
 ## XA5xxx: GCC and toolchain
 
