@@ -1000,6 +1000,24 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to load assembly &apos;{0}&apos;..
+        /// </summary>
+        public static string XA2024 {
+            get {
+                return ResourceManager.GetString("XA2024", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assembly {0} does not exist..
+        /// </summary>
+        public static string XA2025 {
+            get {
+                return ResourceManager.GetString("XA2025", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not resolve reference to &apos;{0}&apos; (defined in assembly &apos;{1}&apos;) with scope &apos;{2}&apos;. When the scope is different from the defining assembly, it usually means that the type is forwarded..
         /// </summary>
         public static string XA2006 {

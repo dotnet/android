@@ -73,7 +73,7 @@ namespace Xamarin.Android.Tasks
 
 					var fi = new FileInfo (assembly.ItemSpec);
 					if (!fi.Exists) {
-						Log.LogError ($"Assembly {assembly.ItemSpec} does not exist");
+						Log.LogCodedError ("XA2025", Properties.Resources.XA2025, assembly.ItemSpec);
 						continue;
 					}
 
