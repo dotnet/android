@@ -1944,5 +1944,37 @@ namespace Lib2
 			}
 		}
 
+		[Test]
+		public void AfterILLinkAdditionalStepsIsSkippedOnSecondBuild ([Values] AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("PublishTrimmed", "true");
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "first build should succeed");
+				b.Output.AssertTargetIsNotSkipped ("_RunAfterILLinkAdditionalSteps");
+				b.Output.AssertTargetIsNotSkipped ("_AfterILLinkAdditionalSteps");
+
+				// Verify afterlink/ output directory was created with assemblies
+				var afterlinkDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "afterlink");
+				Assert.IsTrue (Directory.Exists (afterlinkDir), "afterlink/ directory should exist after first build");
+				var afterlinkFiles = Directory.GetFiles (afterlinkDir, "*.dll");
+				Assert.IsTrue (afterlinkFiles.Length > 0, "afterlink/ directory should contain assemblies");
+
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build should succeed");
+				b.Output.AssertTargetIsSkipped ("_RunAfterILLinkAdditionalSteps");
+				// The outer target must always run to update assembly itemgroups for downstream targets
+				b.Output.AssertTargetIsNotSkipped ("_AfterILLinkAdditionalSteps");
+			}
+		}
+
 	}
 }
