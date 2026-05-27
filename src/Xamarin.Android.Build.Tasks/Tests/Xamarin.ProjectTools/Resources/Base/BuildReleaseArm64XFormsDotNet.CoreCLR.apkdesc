@@ -5,10 +5,10 @@
       "Size": 6652
     },
     "classes.dex": {
-      "Size": 9444112
+      "Size": 9411640
     },
     "classes2.dex": {
-      "Size": 156448
+      "Size": 157320
     },
     "kotlin/annotation/annotation.kotlin_builtins": {
       "Size": 928
@@ -32,16 +32,16 @@
       "Size": 2396
     },
     "lib/arm64-v8a/libassembly-store.so": {
-      "Size": 14076232
+      "Size": 14097528
     },
     "lib/arm64-v8a/libclrjit.so": {
-      "Size": 3223752
+      "Size": 3222704
     },
     "lib/arm64-v8a/libcoreclr.so": {
-      "Size": 5771784
+      "Size": 5757272
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 1366648
+      "Size": 1257880
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
       "Size": 72344
@@ -50,13 +50,13 @@
       "Size": 1280336
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 100552
+      "Size": 101872
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
       "Size": 162000
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 147264
+      "Size": 147584
     },
     "META-INF/androidx.activity_activity.version": {
       "Size": 6
@@ -208,12 +208,6 @@
     "META-INF/androidx.viewpager2_viewpager2.version": {
       "Size": 6
     },
-    "META-INF/BNDLTOOL.RSA": {
-      "Size": 1221
-    },
-    "META-INF/BNDLTOOL.SF": {
-      "Size": 90142
-    },
     "META-INF/com.android.tools/proguard/coroutines.pro": {
       "Size": 1345
     },
@@ -237,9 +231,6 @@
     },
     "META-INF/kotlinx_coroutines_core.version": {
       "Size": 5
-    },
-    "META-INF/MANIFEST.MF": {
-      "Size": 90015
     },
     "META-INF/maven/com.google.guava/listenablefuture/pom.properties": {
       "Size": 96
@@ -478,9 +469,6 @@
     "res/color-night-v8/material_timepicker_modebutton_tint.xml": {
       "Size": 340
     },
-    "res/color-v21/abc_btn_colored_borderless_text_material.xml": {
-      "Size": 464
-    },
     "res/color-v23/abc_btn_colored_borderless_text_material.xml": {
       "Size": 500
     },
@@ -514,9 +502,6 @@
     "res/color/abc_background_cache_hint_selector_material_light.xml": {
       "Size": 468
     },
-    "res/color/abc_btn_colored_text_material.xml": {
-      "Size": 604
-    },
     "res/color/abc_hint_foreground_material_dark.xml": {
       "Size": 564
     },
@@ -543,24 +528,6 @@
     },
     "res/color/abc_secondary_text_material_light.xml": {
       "Size": 464
-    },
-    "res/color/abc_tint_btn_checkable.xml": {
-      "Size": 728
-    },
-    "res/color/abc_tint_default.xml": {
-      "Size": 1224
-    },
-    "res/color/abc_tint_edittext.xml": {
-      "Size": 772
-    },
-    "res/color/abc_tint_seek_thumb.xml": {
-      "Size": 604
-    },
-    "res/color/abc_tint_spinner.xml": {
-      "Size": 772
-    },
-    "res/color/abc_tint_switch_track.xml": {
-      "Size": 768
     },
     "res/color/checkbox_themeable_attribute_color.xml": {
       "Size": 464
@@ -1699,9 +1666,6 @@
     "res/drawable/mtrl_ic_error.xml": {
       "Size": 644
     },
-    "res/drawable/mtrl_popupmenu_background_dark.xml": {
-      "Size": 740
-    },
     "res/drawable/mtrl_popupmenu_background.xml": {
       "Size": 740
     },
@@ -1798,15 +1762,6 @@
     "res/layout-v21/notification_template_icon_group.xml": {
       "Size": 988
     },
-    "res/layout-v22/abc_alert_dialog_button_bar_material.xml": {
-      "Size": 1584
-    },
-    "res/layout-v22/material_timepicker_dialog.xml": {
-      "Size": 3184
-    },
-    "res/layout-v22/mtrl_alert_dialog_actions.xml": {
-      "Size": 1764
-    },
     "res/layout-v26/abc_screen_toolbar.xml": {
       "Size": 1560
     },
@@ -1844,7 +1799,7 @@
       "Size": 1684
     },
     "res/layout/abc_alert_dialog_button_bar_material.xml": {
-      "Size": 1536
+      "Size": 1584
     },
     "res/layout/abc_alert_dialog_material.xml": {
       "Size": 2648
@@ -2009,7 +1964,7 @@
       "Size": 1208
     },
     "res/layout/material_timepicker_dialog.xml": {
-      "Size": 3132
+      "Size": 3184
     },
     "res/layout/material_timepicker_textinput_display.xml": {
       "Size": 684
@@ -2018,7 +1973,7 @@
       "Size": 1136
     },
     "res/layout/mtrl_alert_dialog_actions.xml": {
-      "Size": 1620
+      "Size": 1764
     },
     "res/layout/mtrl_alert_dialog_title.xml": {
       "Size": 956
@@ -2276,8 +2231,8 @@
       "Size": 268
     },
     "resources.arsc": {
-      "Size": 812848
+      "Size": 794696
     }
   },
-  "PackageSize": 21263139
+  "PackageSize": 21143117
 }
