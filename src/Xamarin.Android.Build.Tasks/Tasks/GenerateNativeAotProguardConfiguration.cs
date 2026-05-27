@@ -105,9 +105,6 @@ public class GenerateNativeAotProguardConfiguration : AndroidTask
 
 				var assemblyName = label.Substring (assemblyStart, assemblyEnd - assemblyStart);
 				var managedTypeName = label.Substring (assemblyEnd + 1);
-				// ILC DGML labels contain the managed type name without assembly qualification,
-				// while acw-map.txt can disambiguate duplicate type names with the assembly-qualified form.
-				typeKeys.Add (managedTypeName);
 				typeKeys.Add ($"{managedTypeName}, {assemblyName}");
 			}
 		}
