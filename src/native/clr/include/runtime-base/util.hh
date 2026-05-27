@@ -9,6 +9,7 @@
 #include <cstring>
 #include <concepts>
 #include <cstdio>
+#include <limits>
 #include <optional>
 #include <string_view>
 
@@ -42,6 +43,17 @@ namespace xamarin::android {
 			void   *area;
 			size_t	size;
 		};
+
+		static constexpr auto printf_precision (std::string_view const& value) noexcept -> int
+		{
+			constexpr size_t max_precision = static_cast<size_t>(std::numeric_limits<int>::max ());
+			return value.length () > max_precision ? std::numeric_limits<int>::max () : static_cast<int>(value.length ());
+		}
+
+		static constexpr auto printf_string (std::string_view const& value) noexcept -> const char*
+		{
+			return value.data () == nullptr ? "" : value.data ();
+		}
 	}
 
 	class Util
@@ -214,10 +226,11 @@ namespace xamarin::android {
 				Helpers::abort_applicationf (
 					LOG_ASSEMBLY,
 					std::source_location::current (),
-					"Could not mmap APK fd %d: %s; File=%s",
+					"Could not mmap APK fd %d: %s; File=%.*s",
 					fd,
 					strerror (errno),
-					filename.data ()
+					detail::printf_precision (filename),
+					detail::printf_string (filename)
 				);
 			}
 
@@ -229,7 +242,7 @@ namespace xamarin::android {
 				log_write_fmt (
 					LOG_ASSEMBLY,
 					LogLevel::Info,
-					"  mmap_start: %-8p; mmap_end: %-8p	 mmap_len: %-12zu  file_start: %-8p  file_end: %-8p	 file_len: %-12zu	  apk descriptor: %d  file: %s",
+					"  mmap_start: %-8p; mmap_end: %-8p	 mmap_len: %-12zu  file_start: %-8p  file_end: %-8p	 file_len: %-12zu	  apk descriptor: %d  file: %.*s",
 					mmap_info.area,
 					pointer_add (mmap_info.area, mmap_info.size),
 					mmap_info.size,
@@ -237,7 +250,8 @@ namespace xamarin::android {
 					pointer_add (file_info.area, file_info.size),
 					file_info.size,
 					fd,
-					filename.data ()
+					detail::printf_precision (filename),
+					detail::printf_string (filename)
 				);
 			}
 
@@ -262,7 +276,7 @@ namespace xamarin::android {
 					elf_header->e_ident[EI_MAG2] != ELFMAG2 ||
 					elf_header->e_ident[EI_MAG3] != ELFMAG3) {
 						if (should_log (LOG_ASSEMBLY)) {
-							log_write_fmt (LOG_ASSEMBLY, LogLevel::Debug, "Not an ELF image: %s", file_name.data ());
+							log_write_fmt (LOG_ASSEMBLY, LogLevel::Debug, "Not an ELF image: %.*s", detail::printf_precision (file_name), detail::printf_string (file_name));
 						}
 						// Not an ELF image, just return what we mmapped before
 						return { map_info.area, map_info.size };
