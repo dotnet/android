@@ -114,9 +114,11 @@ namespace Xamarin.Android.Tasks
 				if (!ProguardCommonXamarinConfiguration.IsNullOrWhiteSpace ()) {
 					using (var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration)) {
 						if (UseTrimmableNativeAotProguardConfiguration) {
-							GetType ().Assembly.GetManifestResourceStream ("proguard_trimmable_nativeaot.cfg").CopyTo (xamcfg.BaseStream);
+							using var stream = GetEmbeddedResourceStream ("proguard_trimmable_nativeaot.cfg");
+							stream.CopyTo (xamcfg.BaseStream);
 						} else {
-							GetType ().Assembly.GetManifestResourceStream ("proguard_xamarin.cfg").CopyTo (xamcfg.BaseStream);
+							using var stream = GetEmbeddedResourceStream ("proguard_xamarin.cfg");
+							stream.CopyTo (xamcfg.BaseStream);
 						}
 						if (IgnoreWarnings) {
 							xamcfg.WriteLine ("-ignorewarnings");
@@ -164,6 +166,15 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return responseFile;
+		}
+
+		Stream GetEmbeddedResourceStream (string resourceName)
+		{
+			var stream = GetType ().Assembly.GetManifestResourceStream (resourceName);
+			if (stream == null) {
+				throw new InvalidOperationException ($"Missing embedded resource '{resourceName}'.");
+			}
+			return stream;
 		}
 
 		// Note: We do not want to call the base.LogEventsFromTextOutput as it will incorrectly identify

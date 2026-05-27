@@ -5,7 +5,7 @@
     <_TrimmableRuntimeProviderJavaName Condition=" '$(_TrimmableRuntimeProviderJavaName)' == '' ">mono.MonoRuntimeProvider</_TrimmableRuntimeProviderJavaName>
   </PropertyGroup>
 
-  <!-- TODO: Generate a focused ProGuard configuration from the ILLink-trimmed typemap. -->
+  <!-- TODO: Generate a focused ProGuard configuration from the ILLink-trimmed typemap. https://github.com/dotnet/android/issues/11052 -->
   <Target Name="_GenerateTrimmableTypeMapProguardConfiguration"
       BeforeTargets="_CompileToDalvik"
       Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' " />

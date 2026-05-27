@@ -11,6 +11,8 @@ namespace Xamarin.Android.Tasks
 {
 	public class GenerateNativeAotProguardConfiguration : AndroidTask
 	{
+		const string TypeMetadataPrefix = "Type metadata: [";
+
 		public override string TaskPrefix => "GNAPC";
 
 		[Required]
@@ -30,16 +32,16 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (NativeAotDgmlFiles.Length == 0) {
-				Log.LogError ("No NativeAOT DGML files were provided.");
+				Log.LogCodedError ("XA4319", Properties.Resources.XA4319);
 				return false;
 			}
 			if (!File.Exists (AcwMapFile)) {
-				Log.LogError ("ACW map file '{0}' was not found.", AcwMapFile);
+				Log.LogCodedError ("XA4320", Properties.Resources.XA4320, AcwMapFile);
 				return false;
 			}
 			foreach (var dgmlFile in NativeAotDgmlFiles) {
 				if (!File.Exists (dgmlFile.ItemSpec)) {
-					Log.LogError ("NativeAOT DGML file '{0}' was not found.", dgmlFile.ItemSpec);
+					Log.LogCodedError ("XA4321", Properties.Resources.XA4321, dgmlFile.ItemSpec);
 					return false;
 				}
 			}
@@ -60,6 +62,7 @@ namespace Xamarin.Android.Tasks
 		List<string> LoadJavaTypesFromAcwMap (HashSet<string> retainedTypeKeys)
 		{
 			var javaTypes = new List<string> ();
+			var seenJavaTypes = new HashSet<string> (StringComparer.Ordinal);
 			foreach (var line in File.ReadLines (AcwMapFile)) {
 				var separator = line.IndexOf (';');
 				if (separator <= 0 || separator == line.Length - 1) {
@@ -67,7 +70,7 @@ namespace Xamarin.Android.Tasks
 				}
 				var managedTypeName = line.Substring (0, separator);
 				var javaTypeName = line.Substring (separator + 1);
-				if (retainedTypeKeys.Contains (managedTypeName) && !javaTypes.Contains (javaTypeName)) {
+				if (retainedTypeKeys.Contains (managedTypeName) && seenJavaTypes.Add (javaTypeName)) {
 					javaTypes.Add (javaTypeName);
 				}
 			}
@@ -89,11 +92,11 @@ namespace Xamarin.Android.Tasks
 					}
 
 					var label = reader.GetAttribute ("Label");
-					if (label.IsNullOrEmpty () || !label.StartsWith ("Type metadata: [", StringComparison.Ordinal)) {
+					if (label.IsNullOrEmpty () || !label.StartsWith (TypeMetadataPrefix, StringComparison.Ordinal)) {
 						continue;
 					}
 
-					var assemblyStart = "Type metadata: [".Length;
+					var assemblyStart = TypeMetadataPrefix.Length;
 					var assemblyEnd = label.IndexOf (']', assemblyStart);
 					if (assemblyEnd < 0 || assemblyEnd == label.Length - 1) {
 						continue;
