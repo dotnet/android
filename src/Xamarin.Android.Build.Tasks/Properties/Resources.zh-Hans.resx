@@ -628,7 +628,7 @@ In this message, the term "binding" means a piece of generated code that makes i
 {1} - The API version number</comment>
   </data>
   <data name="XA4217" xml:space="preserve">
-    <value>Architecture '{0}' has Java types which have no counterparts in template architecture '{1}': {2}</value>
+    <value>体系结构“{0}”具有在模板体系结构“{1}”中没有对应项的 Java 类型: {2}</value>
     <comment>{0} - The target architecture name
 {1} - The template architecture name
 {2} - Comma-separated list of Java type names that have no counterparts</comment>
@@ -685,7 +685,7 @@ In this mesage, the term "layout" means an Android UI layout.
 {1} - The name of the metadata item</comment>
   </data>
   <data name="XA4227" xml:space="preserve">
-    <value>Architecture '{0}' doesn't match all marshal methods in architecture '{1}'. Please see detailed MSBuild logs for more information.</value>
+    <value>体系结构“{0}”与体系结构“{1}”的所有封送方法均不匹配。有关详细信息，请参阅详细的 MSBuild 日志。</value>
     <comment>{0} - The target architecture name
 {1} - The template architecture name</comment>
   </data>
@@ -815,17 +815,17 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 </comment>
   </data>
   <data name="XA4316" xml:space="preserve">
-    <value>Specified input file '{0}' does not exist. Ignoring.</value>
+    <value>指定的输入文件“{0}”不存在。正在忽略。</value>
     <comment>{0} - The path to the file.
 </comment>
   </data>
   <data name="XA4317" xml:space="preserve">
-    <value>Input file '{0}' does not start with '&lt;replacements/&gt;'. Skipping.</value>
+    <value>输入文件 “{0}“ 没有以 '&lt;replacements/&gt;' 开头。正在跳过。</value>
     <comment>{0} - The path to the file.
 </comment>
   </data>
   <data name="XA4318" xml:space="preserve">
-    <value>Input file '{0}' could not be read: {1}. Skipping.</value>
+    <value>无法读取输入文件“{0}”: {1}。正在跳过。</value>
     <comment>{0} - The path to the file.
 {1} - The exception message.
 </comment>
@@ -928,7 +928,7 @@ In this message, the term "handheld app" means "app for handheld devices."
     <value>可同时生成此项目的两个进程。以下路径中存在锁定文件: {0}</value>
   </data>
   <data name="XA5303" xml:space="preserve">
-    <value>Failed to parse 'DescriptorIndex' metadata value '{0}' for assembly '{1}'.</value>
+    <value>未能分析程序集“{1}”的 'DescriptorIndex' 元数据值“{0}”。</value>
     <comment>
 {0} - The DescriptorIndex metadata value that could not be parsed
 {1} - The assembly ItemSpec</comment>
@@ -1116,7 +1116,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 {0} - The insecure HTTP URL</comment>
   </data>
   <data name="XA4253" xml:space="preserve">
-    <value>Generated Java callable wrapper code changed: '{0}'</value>
+    <value>生成的 Java 可调用包装器代码已更改:“{0}”</value>
     <comment>{0} - The path to the generated Java callable wrapper file</comment>
   </data>
   <data name="XA0142" xml:space="preserve">

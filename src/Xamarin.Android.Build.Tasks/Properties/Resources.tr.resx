@@ -628,7 +628,7 @@ AndroidManifest.xml dosyasındaki değeri $(SupportedOSPlatformVersion) değeriy
 {1} - The API version number</comment>
   </data>
   <data name="XA4217" xml:space="preserve">
-    <value>Architecture '{0}' has Java types which have no counterparts in template architecture '{1}': {2}</value>
+    <value>'{0}' mimarisinin, '{1}' şablon mimarisinde karşılığı olmayan Java türleri var: {2}</value>
     <comment>{0} - The target architecture name
 {1} - The template architecture name
 {2} - Comma-separated list of Java type names that have no counterparts</comment>
@@ -685,7 +685,7 @@ In this mesage, the term "layout" means an Android UI layout.
 {1} - The name of the metadata item</comment>
   </data>
   <data name="XA4227" xml:space="preserve">
-    <value>Architecture '{0}' doesn't match all marshal methods in architecture '{1}'. Please see detailed MSBuild logs for more information.</value>
+    <value>'{0}' mimarisi, '{1}' mimarisindeki tüm hazırlama yöntemleriyle eşleşmiyor. Daha fazla bilgi için lütfen ayrıntılı MSBuild günlüklerine bakın.</value>
     <comment>{0} - The target architecture name
 {1} - The template architecture name</comment>
   </data>
@@ -815,17 +815,17 @@ Projenizden '{0}' başvurusunu kaldırın ve yerine '{1}' NuGet paketini ekleyin
 </comment>
   </data>
   <data name="XA4316" xml:space="preserve">
-    <value>Specified input file '{0}' does not exist. Ignoring.</value>
+    <value>Belirtilen '{0}' giriş dosyası yok. Yoksayılıyor.</value>
     <comment>{0} - The path to the file.
 </comment>
   </data>
   <data name="XA4317" xml:space="preserve">
-    <value>Input file '{0}' does not start with '&lt;replacements/&gt;'. Skipping.</value>
+    <value>'{0}' giriş dosyası '&lt;replacements/&gt;' ile başlamıyor. Atlanıyor.</value>
     <comment>{0} - The path to the file.
 </comment>
   </data>
   <data name="XA4318" xml:space="preserve">
-    <value>Input file '{0}' could not be read: {1}. Skipping.</value>
+    <value>'{0}' giriş dosyası okunamadı: {1}. Atlanıyor.</value>
     <comment>{0} - The path to the file.
 {1} - The exception message.
 </comment>
@@ -928,7 +928,7 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
     <value>Bu proje aynı anda iki işlemde derleniyor olabilir. Yolda kilit dosyası var: {0}</value>
   </data>
   <data name="XA5303" xml:space="preserve">
-    <value>Failed to parse 'DescriptorIndex' metadata value '{0}' for assembly '{1}'.</value>
+    <value>'{1}' derlemesi için 'DescriptorIndex' meta veri değeri '{0}' ayrıştırılamadı.</value>
     <comment>
 {0} - The DescriptorIndex metadata value that could not be parsed
 {1} - The assembly ItemSpec</comment>
@@ -1116,7 +1116,7 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
 {0} - The insecure HTTP URL</comment>
   </data>
   <data name="XA4253" xml:space="preserve">
-    <value>Generated Java callable wrapper code changed: '{0}'</value>
+    <value>Oluşturulan Java çağrılabilir sarmalayıcı kodu değiştirildi: '{0}'</value>
     <comment>{0} - The path to the generated Java callable wrapper file</comment>
   </data>
   <data name="XA0142" xml:space="preserve">

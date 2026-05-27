@@ -628,7 +628,7 @@ In this message, the term "binding" means a piece of generated code that makes i
 {1} - The API version number</comment>
   </data>
   <data name="XA4217" xml:space="preserve">
-    <value>Architecture '{0}' has Java types which have no counterparts in template architecture '{1}': {2}</value>
+    <value>Архитектура "{0}" содержит типы Java, для которых нет соответствий в архитектуре шаблона "{1}": {2}</value>
     <comment>{0} - The target architecture name
 {1} - The template architecture name
 {2} - Comma-separated list of Java type names that have no counterparts</comment>
@@ -685,7 +685,7 @@ In this mesage, the term "layout" means an Android UI layout.
 {1} - The name of the metadata item</comment>
   </data>
   <data name="XA4227" xml:space="preserve">
-    <value>Architecture '{0}' doesn't match all marshal methods in architecture '{1}'. Please see detailed MSBuild logs for more information.</value>
+    <value>Архитектура "{0}" не соответствует всем методам маршалирования в архитектуре "{1}". Дополнительные сведения см. в подробных журналах MSBuild.</value>
     <comment>{0} - The target architecture name
 {1} - The template architecture name</comment>
   </data>
@@ -815,17 +815,17 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 </comment>
   </data>
   <data name="XA4316" xml:space="preserve">
-    <value>Specified input file '{0}' does not exist. Ignoring.</value>
+    <value>Указанный входной файл "{0}" не существует. Игнорируется.</value>
     <comment>{0} - The path to the file.
 </comment>
   </data>
   <data name="XA4317" xml:space="preserve">
-    <value>Input file '{0}' does not start with '&lt;replacements/&gt;'. Skipping.</value>
+    <value>Входной файл "{0}" не начинается с "&lt;replacements/&gt;". Пропускается.</value>
     <comment>{0} - The path to the file.
 </comment>
   </data>
   <data name="XA4318" xml:space="preserve">
-    <value>Input file '{0}' could not be read: {1}. Skipping.</value>
+    <value>Не удалось прочитать входной файл "{0}": {1}. Пропускается.</value>
     <comment>{0} - The path to the file.
 {1} - The exception message.
 </comment>
@@ -928,7 +928,7 @@ In this message, the term "handheld app" means "app for handheld devices."
     <value>Сборка этого проекта может одновременно осуществляться двумя процессами. Файл блокировки находится по следующему пути: {0}</value>
   </data>
   <data name="XA5303" xml:space="preserve">
-    <value>Failed to parse 'DescriptorIndex' metadata value '{0}' for assembly '{1}'.</value>
+    <value>Не удалось проанализировать значение метаданных DescriptorIndex "{0}" для сборки "{1}".</value>
     <comment>
 {0} - The DescriptorIndex metadata value that could not be parsed
 {1} - The assembly ItemSpec</comment>
@@ -1116,7 +1116,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 {0} - The insecure HTTP URL</comment>
   </data>
   <data name="XA4253" xml:space="preserve">
-    <value>Generated Java callable wrapper code changed: '{0}'</value>
+    <value>Сгенерированный код вызываемой программы-оболочки Java изменен: "{0}"</value>
     <comment>{0} - The path to the generated Java callable wrapper file</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
