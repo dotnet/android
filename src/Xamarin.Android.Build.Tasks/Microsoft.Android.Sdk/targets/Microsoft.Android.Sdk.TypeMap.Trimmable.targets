@@ -169,7 +169,6 @@
       <FileWrites Include="$(IntermediateOutputPath)AndroidManifest.xml" Condition="Exists('$(IntermediateOutputPath)AndroidManifest.xml')" />
       <FileWrites Include="$(IntermediateOutputPath)acw-map.txt" Condition="Exists('$(IntermediateOutputPath)acw-map.txt')" />
       <FileWrites Include="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java" Condition="Exists('$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java')" />
-      <FileWrites Include="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" Condition="Exists('$(_AndroidStampDirectory)_GenerateJavaStubs.stamp')" />
     </ItemGroup>
   </Target>
 

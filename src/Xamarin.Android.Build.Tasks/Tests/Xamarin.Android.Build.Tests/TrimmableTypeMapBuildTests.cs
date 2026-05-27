@@ -52,6 +52,7 @@ namespace Xamarin.Android.Build.Tests {
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
 			AssertTrimmableTypeMapOutputs (intermediateDir);
 			var typemapDlls = Directory.GetFiles (intermediateDir, "*.dll");
+			Assert.IsNotEmpty (typemapDlls, "First build should have generated typemap DLL(s).");
 
 			Assert.IsTrue (builder.Build (proj), "Second build should have succeeded.");
 
