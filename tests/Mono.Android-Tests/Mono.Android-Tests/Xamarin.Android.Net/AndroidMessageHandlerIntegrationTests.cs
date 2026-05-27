@@ -219,7 +219,6 @@ namespace Xamarin.Android.NetTests {
 		}
 
 		[Test]
-		[Ignore ("Has been silently skipped historically (non-public on main); Uri.ToString unescapes %20 → assertion fails. https://github.com/dotnet/android/issues/...")]
 		public void UrlEscaping_Bug43411 ()
 		{
 			UrlEscaping_TestUrl ($"http://{TestHost}/?example=value%20_value", "#1");
@@ -240,7 +239,9 @@ namespace Xamarin.Android.NetTests {
 					var request = new HttpRequestMessage (HttpMethod.Get, url);
 
 					client.SendAsync (request, HttpCompletionOption.ResponseHeadersRead).Wait ();
-					Assert.AreEqual (url, request.RequestUri.ToString (), $"{messagePrefix}-1");
+					// Use AbsoluteUri to preserve percent-encoding; Uri.ToString() returns the
+					// "human-readable" form and unescapes %20 → space (per .NET docs).
+					Assert.AreEqual (url, request.RequestUri.AbsoluteUri, $"{messagePrefix}-1");
 					Assert.IsNull (failed, $"{messagePrefix}-2");
 				} finally {
 					listener.Abort ();
