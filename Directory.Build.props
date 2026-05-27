@@ -51,6 +51,7 @@
     <NuGetApiPackageVersion>5.4.0</NuGetApiPackageVersion>
     <LZ4PackageVersion>1.3.6</LZ4PackageVersion>
     <MicrosoftTestingPlatformVersion>2.2.1</MicrosoftTestingPlatformVersion>
+    <MSBuildPackageReferenceVersion>18.6.3</MSBuildPackageReferenceVersion>
     <MonoOptionsVersion>6.12.0.148</MonoOptionsVersion>
     <SystemCollectionsImmutableVersion>8.0.0</SystemCollectionsImmutableVersion>
     <SystemRuntimeCompilerServicesUnsafeVersion>6.0.0</SystemRuntimeCompilerServicesUnsafeVersion>
@@ -78,5 +79,9 @@
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.ProjectTools.csproj' ">true</_AllowProjectWarnings>
     <TreatWarningsAsErrors Condition=" ('$(RunningOnCI)' == 'true' OR '$(_AndroidTreatWarningsAsErrors)' == 'true') AND '$(_AllowProjectWarnings)' != 'true' ">true</TreatWarningsAsErrors>
   </PropertyGroup>
+
+  <ItemGroup Condition=" '$(MSBuildProjectName)' == 'Microsoft.Android.Build.BaseTasks' ">
+    <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataPackageVersion)" />
+  </ItemGroup>
 
 </Project>
