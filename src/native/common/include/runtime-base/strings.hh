@@ -12,6 +12,7 @@
 #include <unistd.h>
 
 #include <shared/helpers.hh>
+#include <shared/log_level.hh>
 
 #if defined(XA_HOST_MONOVM)
 #include <runtime-base/shared-constants.hh>
@@ -22,6 +23,8 @@ using Constants = xamarin::android::internal::SharedConstants;
 #endif
 
 namespace xamarin::android {
+	void log_write (LogCategories category, LogLevel level, const char *message) noexcept;
+
 	static constexpr size_t SENSIBLE_TYPE_NAME_LENGTH = 128uz;
 	static constexpr size_t SENSIBLE_PATH_MAX = 256uz;
 
