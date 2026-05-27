@@ -585,6 +585,33 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Attempt to check whether &apos;{0}&apos; is a correctly aligned ELF file failed with exception, ignoring alignment check for the file..
+        /// </summary>
+        public static string XA0146 {
+            get {
+                return ResourceManager.GetString("XA0146", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Attempt to check whether &apos;{0}&apos; is a valid ELF file failed with exception, ignoring AOT check for the file..
+        /// </summary>
+        public static string XA0147 {
+            get {
+                return ResourceManager.GetString("XA0147", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Attempt to check whether &apos;{0}&apos; is a valid ELF file failed with exception, ignoring symbol &apos;{1}@{2}&apos; check for the file..
+        /// </summary>
+        public static string XA0148 {
+            get {
+                return ResourceManager.GetString("XA0148", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}.
         /// </summary>
         public static string XA1000 {

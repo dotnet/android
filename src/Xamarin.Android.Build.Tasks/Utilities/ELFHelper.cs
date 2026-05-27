@@ -42,7 +42,7 @@ namespace Xamarin.Android.Tasks
 				using IELF elf = ELFReader.Load (path);
 				AssertValidLibraryAlignment (log, MonoAndroidHelper.ZipAlignmentToPageSize (alignmentInPages), path, elf, item);
 			} catch (Exception ex) {
-				log.LogWarning ($"Attempt to check whether '{path}' is a correctly aligned ELF file failed with exception, ignoring alignment check for the file.");
+				log.LogCodedWarning ("XA0146", Properties.Resources.XA0146, path);
 				log.LogWarningFromException (ex, showStackTrace: true);
 			}
 		}
@@ -128,7 +128,7 @@ namespace Xamarin.Android.Tasks
 				using IELF elf = ELFReader.Load (path);
 				return IsEmptyAOTLibrary (log, path, elf);
 			} catch (Exception ex) {
-				log.LogWarning ($"Attempt to check whether '{path}' is a valid ELF file failed with exception, ignoring AOT check for the file.");
+				log.LogCodedWarning ("XA0147", Properties.Resources.XA0147, path);
 				log.LogWarningFromException (ex, showStackTrace: true);
 				return false;
 			}
@@ -167,7 +167,7 @@ namespace Xamarin.Android.Tasks
 				using IELF elf = ELFReader.Load (elfPath);
 				return HasSymbol (elf, sectionName, symbolName, symbolType);
 			} catch (Exception ex) {
-				log.LogWarning ($"Attempt to check whether '{elfPath}' is a valid ELF file failed with exception, ignoring symbol '{symbolName}@{sectionName}' check for the file.");
+				log.LogCodedWarning ("XA0148", Properties.Resources.XA0148, elfPath, symbolName, sectionName);
 				log.LogWarningFromException (ex, showStackTrace: true);
 				return false;
 			}
