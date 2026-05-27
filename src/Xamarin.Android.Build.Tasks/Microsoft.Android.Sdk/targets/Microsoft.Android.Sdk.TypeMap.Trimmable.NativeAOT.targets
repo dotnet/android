@@ -12,6 +12,7 @@
     <AndroidCreateProguardMappingFile Condition=" '$(AndroidCreateProguardMappingFile)' == '' and '$(AndroidLinkTool)' == 'r8' ">True</AndroidCreateProguardMappingFile>
     <IlcGenerateDgmlFile Condition=" '$(AndroidLinkTool)' != '' and '$(IlcGenerateDgmlFile)' == '' ">true</IlcGenerateDgmlFile>
     <_UseTrimmableNativeAotProguardConfiguration>true</_UseTrimmableNativeAotProguardConfiguration>
+    <_CompileToDalvikDependsOnTargets>$(_CompileToDalvikDependsOnTargets);_GenerateTrimmableTypeMapProguardConfiguration</_CompileToDalvikDependsOnTargets>
   </PropertyGroup>
 
   <!-- Before ILC input computation, add generated assemblies to ILC inputs.
@@ -55,8 +56,7 @@
   </Target>
 
   <Target Name="_GenerateTrimmableTypeMapProguardConfiguration"
-      BeforeTargets="_CompileToDalvik"
-      DependsOnTargets="_CollectTrimmableNativeAotDgmlFiles"
+      DependsOnTargets="IlcCompile;_CollectTrimmableNativeAotDgmlFiles"
       Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
       Inputs="@(_TrimmableNativeAotDgmlFiles);$(IntermediateOutputPath)acw-map.txt"
       Outputs="$(_ProguardProjectConfiguration)">
