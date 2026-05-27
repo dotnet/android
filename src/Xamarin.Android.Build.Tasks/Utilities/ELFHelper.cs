@@ -1,8 +1,6 @@
 #nullable enable
 using System;
-using System.Collections.Concurrent;
 using System.IO;
-using System.Text;
 
 using ELFSharp;
 using ELFSharp.ELF;
