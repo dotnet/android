@@ -1,0 +1,14 @@
+[build] Always use unzip for non-Windows hosts
+
+GNU tar (Linux default) cannot read `.zip` archives. bsdtar (macOS) can,
+but it silently turns symlinks in `.zip` into zero-byte files which then
+fail as `posix_spawn: Exec format error` (the NDK has many symlinks).
+Both problems are avoided by simply using `unzip` everywhere on Unix.
+
+Drop the `UseUnzipOnUnix` per-item opt-in metadata and key the extraction
+strategy purely on `HostOS`:
+
+  * Windows: `tar -xf` (bsdtar handles .zip with `--strip-components`).
+  * Unix:    `unzip` into a sibling `.staging` directory + `find ... mv`.
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>

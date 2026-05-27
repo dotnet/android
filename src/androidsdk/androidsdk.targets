@@ -236,21 +236,15 @@
 
     <!--
       Android NDK: single per-host zip. The zip contains an `android-ndk-r<ver>/`
-      top-level directory which is stripped via `strip-components=1` (Windows tar)
-      or by post-extraction `mv` (Unix unzip), so the extracted contents land
-      directly in $(AndroidNdkDirectory).
-
-      `UseUnzipOnUnix=true` forces the Unix `unzip` path (instead of the macOS
-      `tar` path) because bsdtar's `.zip` reader on macOS silently materializes
-      symlinks (`clang++ -> clang` etc) as zero-byte files, which then fail with
-      `posix_spawn: Exec format error` when clang tries to invoke them. `unzip`
-      preserves them correctly. (Linux already uses unzip for every package
-      because GNU tar cannot read `.zip` archives at all.)
+      top-level directory which is stripped via `strip-components=1` on Windows
+      (bsdtar) or by post-extraction `mv` on Unix (`unzip`), so the extracted
+      contents land directly in $(AndroidNdkDirectory). On macOS this also
+      matters because bsdtar's `.zip` reader silently turns symlinks
+      (`clang++ -> clang` etc) into zero-byte files; `unzip` preserves them.
     -->
     <_AndroidSdkPackage Include="android-ndk-r$(_XAAndroidNdkRelease)-$(_NdkHostTag).zip">
       <Hash>$(_NdkHostHash)</Hash>
       <Destination>$(AndroidNdkDirectory)</Destination>
-      <UseUnzipOnUnix>true</UseUnzipOnUnix>
     </_AndroidSdkPackage>
 
     <!--
@@ -312,20 +306,17 @@
   <!--
     Extract every downloaded package into its destination.
 
-    Strategy by host OS:
-      * Windows: `tar -xf` (bsdtar / libarchive ships with Windows 10+ and reads
+      * Windows: `tar -xf` (bsdtar / libarchive ships with Windows 10+, reads
         `.zip` natively with `strip-components` support).
-      * macOS:   `tar -xf` for most packages (bsdtar reads `.zip`); items that
-        contain symlinks (e.g. the NDK) set `UseUnzipOnUnix=true` and use the
-        system `unzip` binary instead, because bsdtar's `.zip` reader silently
-        turns symlinks into zero-byte files.
-      * Linux:   `unzip` for every package, because GNU tar cannot read `.zip`
-        archives.
+      * Unix (Linux + macOS): `unzip` into a sibling `.staging` directory
+        followed by `find ... -exec mv` to emulate `strip-components`. GNU
+        tar on Linux cannot read `.zip` at all, and bsdtar on macOS silently
+        drops symlinks from `.zip` archives - the NDK has many symlinks
+        (`clang++ -> clang` etc) which then fail with
+        `posix_spawn: Exec format error`. `unzip` handles both cleanly.
 
-    The `unzip` path extracts into a sibling `.staging` directory and then
-    `find ... -exec mv` emulates `strip-components`. `source.properties` is
-    the sentinel produced by every component zip and doubles as an
-    incremental-build skip target.
+    `source.properties` is the sentinel produced by every component zip and
+    doubles as an incremental-build skip target.
   -->
   <Target Name="_ExtractAndroidSdkPackages"
       DependsOnTargets="_DownloadAndroidSdkPackages"
@@ -334,7 +325,6 @@
     <PropertyGroup>
       <_StripComponents>%(_AndroidSdkPackage.StripComponents)</_StripComponents>
       <_StripComponents Condition=" '$(_StripComponents)' == '' ">1</_StripComponents>
-      <_UseUnzip Condition=" '$(HostOS)' == 'Linux' or ('$(HostOS)' == 'Darwin' and '%(_AndroidSdkPackage.UseUnzipOnUnix)' == 'true') ">true</_UseUnzip>
       <_ZipPath>$([System.IO.Path]::Combine('$(AndroidToolchainCacheDirectory)', '%(_AndroidSdkPackage.Identity)'))</_ZipPath>
       <_StagingDir>%(_AndroidSdkPackage.Destination).staging</_StagingDir>
       <_FindMinDepth Condition=" '$(_StripComponents)' == '1' ">2</_FindMinDepth>
@@ -342,27 +332,27 @@
     </PropertyGroup>
     <RemoveDir Directories="%(_AndroidSdkPackage.Destination)" />
     <MakeDir Directories="%(_AndroidSdkPackage.Destination)" />
-    <!-- Windows / macOS-without-symlinks: bsdtar handles .zip natively. -->
+    <!-- Windows: bsdtar handles .zip natively with strip-components support. -->
     <Exec
-        Condition=" '$(_UseUnzip)' != 'true' "
+        Condition=" '$(HostOS)' == 'Windows' "
         Command="tar -xf &quot;$(_ZipPath)&quot; -C &quot;%(_AndroidSdkPackage.Destination)&quot; --strip-components=$(_StripComponents)"
     />
     <!--
-      Unix unzip path: extract into a sibling .staging dir, then `find ... mv` the
+      Unix: extract into a sibling .staging directory, then `find ... mv` the
       contents at depth StripComponents+1 into Destination so we don't depend on
       knowing the top-level subdirectory name per package.
     -->
-    <RemoveDir Condition=" '$(_UseUnzip)' == 'true' " Directories="$(_StagingDir)" />
-    <MakeDir Condition=" '$(_UseUnzip)' == 'true' " Directories="$(_StagingDir)" />
+    <RemoveDir Condition=" '$(HostOS)' != 'Windows' " Directories="$(_StagingDir)" />
+    <MakeDir Condition=" '$(HostOS)' != 'Windows' " Directories="$(_StagingDir)" />
     <Exec
-        Condition=" '$(_UseUnzip)' == 'true' "
+        Condition=" '$(HostOS)' != 'Windows' "
         Command="unzip -q -o &quot;$(_ZipPath)&quot; -d &quot;$(_StagingDir)&quot;"
     />
     <Exec
-        Condition=" '$(_UseUnzip)' == 'true' "
+        Condition=" '$(HostOS)' != 'Windows' "
         Command="find &quot;$(_StagingDir)&quot; -mindepth $(_FindMinDepth) -maxdepth $(_FindMinDepth) -exec mv {} &quot;%(_AndroidSdkPackage.Destination)&quot;/ \;"
     />
-    <RemoveDir Condition=" '$(_UseUnzip)' == 'true' " Directories="$(_StagingDir)" />
+    <RemoveDir Condition=" '$(HostOS)' != 'Windows' " Directories="$(_StagingDir)" />
   </Target>
 
   <!--
