@@ -10,6 +10,7 @@ parameters:
   continueOnError: true
   retryCountOnTaskFailure: 0
   taskTimeoutInMinutes: 0
+  env: {}
 
 steps:
 - powershell: |
@@ -33,3 +34,4 @@ steps:
   continueOnError: ${{ parameters.continueOnError }}
   retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
   timeoutInMinutes: ${{ parameters.taskTimeoutInMinutes }}
+  env: ${{ parameters.env }}

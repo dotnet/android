@@ -60,8 +60,10 @@ steps:
     displayName: install OpenJDK and accept Android SDK licenses
     xaSourcePath: ${{ parameters.xaSourcePath }}
     project: ${{ parameters.xaSourcePath }}/src/androidsdk/androidsdk.csproj
-    arguments: -c ${{ parameters.configuration }} -p:AndroidSdkPlatforms=${{ replace(parameters.androidSdkPlatforms, ',', '%2C') }} -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/androidsdk.binlog
+    arguments: -c ${{ parameters.configuration }} -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/androidsdk.binlog
     continueOnError: false
+    env:
+      AndroidSdkPlatforms: ${{ parameters.androidSdkPlatforms }}
 
 - task: DotNetCoreCLI@2
   displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
