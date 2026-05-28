@@ -48,7 +48,7 @@ struct MarkCrossReferencesArgs
 };
 
 using BridgeProcessingStartedFtn = void (*)(MarkCrossReferencesArgs*);
-using BridgeProcessingFinishedFtn = void (*)(MarkCrossReferencesArgs*);
+using BridgeProcessingFinishedFtn = void (*)(intptr_t, MarkCrossReferencesArgs*);
 using BridgeProcessingFtn = void (*)(MarkCrossReferencesArgs*);
 
 namespace xamarin::android {
@@ -59,6 +59,7 @@ namespace xamarin::android {
 		static void initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass) noexcept;
 
 		static BridgeProcessingFtn initialize_callback (
+			intptr_t java_marshal_value_manager,
 			BridgeProcessingStartedFtn bridge_processing_started,
 			BridgeProcessingFinishedFtn bridge_processing_finished) noexcept
 		{
@@ -67,6 +68,7 @@ namespace xamarin::android {
 			abort_unless (GCBridge::bridge_processing_started_callback == nullptr, "GC bridge processing started callback is already set");
 			abort_unless (GCBridge::bridge_processing_finished_callback == nullptr, "GC bridge processing finished callback is already set");
 
+			GCBridge::java_marshal_value_manager_handle = java_marshal_value_manager;
 			GCBridge::bridge_processing_started_callback = bridge_processing_started;
 			GCBridge::bridge_processing_finished_callback = bridge_processing_finished;
 
@@ -92,6 +94,7 @@ namespace xamarin::android {
 		static inline jobject Runtime_instance = nullptr;
 		static inline jmethodID Runtime_gc = nullptr;
 
+		static inline intptr_t java_marshal_value_manager_handle;
 		static inline BridgeProcessingStartedFtn bridge_processing_started_callback = nullptr;
 		static inline BridgeProcessingFinishedFtn bridge_processing_finished_callback = nullptr;
 
