@@ -99,6 +99,7 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 				if (JarFiles != null) {
+					var seenJarPaths = new HashSet<string> (StringComparer.Ordinal);
 					foreach (var jar in JarFiles) {
 						var pack = jar.GetMetadata ("Pack");
 						if (string.Equals (pack, "false", StringComparison.OrdinalIgnoreCase)) {
@@ -106,6 +107,14 @@ namespace Xamarin.Android.Tasks
 							continue;
 						}
 						var archivePath = $"libs/{GetHashedFileName (jar)}.jar";
+						// @(AndroidJavaLibrary) and @(EmbeddedJar) can overlap (e.g. the binding
+						// classes zip is added to both by _CompileBindingJava), and either group
+						// can accumulate duplicates across target invocations. Skip duplicates
+						// rather than letting libzipsharp add multiple entries with the same name.
+						if (!seenJarPaths.Add (archivePath)) {
+							Log.LogDebugMessage ($"Skipping duplicate jar '{jar.ItemSpec}' (archive path '{archivePath}')");
+							continue;
+						}
 						aar.AddStream (File.OpenRead (jar.ItemSpec), archivePath);
 						existingEntries.Remove (archivePath);
 					}
