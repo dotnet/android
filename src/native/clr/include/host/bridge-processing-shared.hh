@@ -4,32 +4,6 @@
 
 #include <jni.h>
 
-#if !defined (XA_HOST_NATIVEAOT)
-// NDEBUG causes robin_map.h not to include <iostream> which, in turn, prevents indirect inclusion of <mutex>. <mutex>
-// conflicts with our std::mutex definition in cppcompat.hh
-#if !defined (NDEBUG)
-#define NDEBUG
-#define NDEBUG_UNDEFINE
-#endif
-
-// hush some compiler warnings
-#if defined (__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-parameter"
-#endif // __clang__
-
-#include <tsl/robin_map.h>
-
-#if defined (__clang__)
-#pragma clang diagnostic pop
-#endif // __clang__
-
-#if defined (NDEBUG_UNDEFINE)
-#undef NDEBUG
-#undef NDEBUG_UNDEFINE
-#endif
-#endif // !defined (XA_HOST_NATIVEAOT)
-
 #include <host/gc-bridge.hh>
 #include <host/os-bridge.hh>
 #include <shared/cpp-util.hh>
@@ -56,7 +30,6 @@ struct BridgeProcessingCallbacks
 
 class BridgeProcessingShared
 {
-#if defined (XA_HOST_NATIVEAOT)
 	struct TemporaryPeer
 	{
 		size_t scc_index;
@@ -69,9 +42,6 @@ class BridgeProcessingShared
 		size_t count;
 		size_t capacity;
 	};
-#else
-	using temporary_peer_map = tsl::robin_map<size_t, jobject>;
-#endif
 
 public:
 	explicit BridgeProcessingShared (MarkCrossReferencesArgs *args, const BridgeProcessingCallbacks *callbacks = nullptr) noexcept;
