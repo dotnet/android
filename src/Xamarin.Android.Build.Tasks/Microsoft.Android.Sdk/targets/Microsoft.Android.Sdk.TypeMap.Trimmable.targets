@@ -28,6 +28,10 @@
          defaults to 0 otherwise, where dynamic code can use Array.CreateInstance directly. -->
     <_AndroidTrimmableTypeMapMaxArrayRank Condition=" '$(_AndroidTrimmableTypeMapMaxArrayRank)' == '' and '$(PublishAot)' == 'true' ">3</_AndroidTrimmableTypeMapMaxArrayRank>
     <_AndroidTrimmableTypeMapMaxArrayRank Condition=" '$(_AndroidTrimmableTypeMapMaxArrayRank)' == '' ">0</_AndroidTrimmableTypeMapMaxArrayRank>
+    <IncrementalCleanDependsOn>
+      _RecordTrimmableTypeMapFileWrites;
+      $(IncrementalCleanDependsOn);
+    </IncrementalCleanDependsOn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -139,6 +143,38 @@
   </Target>
 
   <!--
+    The TypeMap generator has dynamic outputs: the set of generated assemblies
+    and Java files comes from scanning references.  FileWrites entries in the
+    generating targets are correct for builds that run those targets, but
+    skipped targets do not execute their ItemGroup bodies on no-op builds.
+    Re-emit the previous dynamic outputs before MSBuild's IncrementalClean
+    reads FileWrites, otherwise those outputs look orphaned and can be deleted
+    before packaging target inputs are evaluated.
+  -->
+  <Target Name="_RecordTrimmableTypeMapFileWrites"
+      Condition=" '$(_OuterIntermediateOutputPath)' == '' and Exists('$(_TypeMapAssembliesListFile)') ">
+    <ItemGroup>
+      <_GeneratedTypeMapAssembliesForFileWrites Remove="@(_GeneratedTypeMapAssembliesForFileWrites)" />
+      <_TypeMapJavaFilesForFileWrites Remove="@(_TypeMapJavaFilesForFileWrites)" />
+    </ItemGroup>
+    <ReadLinesFromFile File="$(_TypeMapAssembliesListFile)">
+      <Output TaskParameter="Lines" ItemName="_GeneratedTypeMapAssembliesForFileWrites" />
+    </ReadLinesFromFile>
+    <ItemGroup>
+      <_TypeMapJavaFilesForFileWrites Include="$(_TypeMapJavaOutputDirectory)/**/*.java" />
+
+      <FileWrites Include="@(_GeneratedTypeMapAssembliesForFileWrites)" />
+      <FileWrites Include="@(_TypeMapJavaFilesForFileWrites)" />
+      <FileWrites Include="@(_TypeMapJavaFilesForFileWrites->'$(IntermediateOutputPath)android/src/%(RecursiveDir)%(Filename)%(Extension)')" />
+      <FileWrites Include="$(_TypeMapAssembliesListFile)" />
+      <FileWrites Include="$(_TypeMapBaseOutputDir)AndroidManifest.xml" Condition="Exists('$(_TypeMapBaseOutputDir)AndroidManifest.xml')" />
+      <FileWrites Include="$(IntermediateOutputPath)AndroidManifest.xml" Condition="Exists('$(IntermediateOutputPath)AndroidManifest.xml')" />
+      <FileWrites Include="$(IntermediateOutputPath)acw-map.txt" Condition="Exists('$(IntermediateOutputPath)acw-map.txt')" />
+      <FileWrites Include="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java" Condition="Exists('$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java')" />
+    </ItemGroup>
+  </Target>
+
+  <!--
     Populates @(_AdditionalNativeConfigResolvedAssemblies) with the trimmable TypeMap DLLs
     so that GenerateNativeApplicationConfigSources (in _GeneratePackageManagerJava) accounts
     for them.  This must NOT live inside _GenerateJavaStubs because that target can be
@@ -178,18 +214,15 @@
          included in the assembly store hash table, and keep _RemoveRegisterAttribute
          source/destination counts in sync. -->
     <ItemGroup>
-      <_ResolvedAssemblies Include="@(_GeneratedTypeMapAssembliesFromList)">
+      <_TrimmableTypeMapResolvedAssemblies Remove="@(_TrimmableTypeMapResolvedAssemblies)" />
+      <_TrimmableTypeMapResolvedAssemblies Include="@(_GeneratedTypeMapAssembliesFromList)">
         <Abi>$(_TypeMapFirstAbi)</Abi>
         <RuntimeIdentifier>$(_TypeMapFirstRid)</RuntimeIdentifier>
         <DestinationSubPath>$(_TypeMapFirstAbi)/%(Filename)%(Extension)</DestinationSubPath>
         <DestinationSubDirectory>$(_TypeMapFirstAbi)/</DestinationSubDirectory>
-      </_ResolvedAssemblies>
-      <_ShrunkAssemblies Include="@(_GeneratedTypeMapAssembliesFromList)">
-        <Abi>$(_TypeMapFirstAbi)</Abi>
-        <RuntimeIdentifier>$(_TypeMapFirstRid)</RuntimeIdentifier>
-        <DestinationSubPath>$(_TypeMapFirstAbi)/%(Filename)%(Extension)</DestinationSubPath>
-        <DestinationSubDirectory>$(_TypeMapFirstAbi)/</DestinationSubDirectory>
-      </_ShrunkAssemblies>
+      </_TrimmableTypeMapResolvedAssemblies>
+      <_ResolvedAssemblies Include="@(_TrimmableTypeMapResolvedAssemblies)" />
+      <_ShrunkAssemblies Include="@(_TrimmableTypeMapResolvedAssemblies)" />
     </ItemGroup>
   </Target>
 

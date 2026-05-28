@@ -466,7 +466,7 @@ namespace Xamarin.Android.Net
 		/// native Java client defaults are used.
 		/// </para>
 		/// <para>
-		/// The default value is <c>120</c> seconds.
+		/// The default value is <c>24</c> hours, same as <see cref="ReadTimeout"/>.
 		/// </para>
 		/// </summary>
 		public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromHours (24);
