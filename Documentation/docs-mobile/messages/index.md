@@ -107,6 +107,9 @@ or 'Help->Report a Problem' in Visual Studio for Mac.
 + [XA0140](xa0140.md):
 + [XA0141](xa0141.md): NuGet package '{0}' version '{1}' contains a shared library '{2}' which is not correctly aligned. See https://developer.android.com/guide/practices/page-sizes for more details
 + [XA0142](xa0142.md): Command '{0}' failed.\n{1}
++ [XA0146](xa0146.md): Attempt to check whether '{0}' is a correctly aligned ELF file failed with exception, ignoring alignment check for the file.
++ [XA0147](xa0147.md): Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring AOT check for the file.
++ [XA0148](xa0148.md): Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring symbol '{1}@{2}' check for the file.
 
 ## XA1xxx: Project related
 
@@ -157,6 +160,8 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA2000](xa2000.md): Use of AppDomain.CreateDomain() detected in assembly: {assembly}. .NET 6 will only support a single AppDomain, so this API will no longer be available in .NET for Android once .NET 6 is released.
 + [XA2001](xa2001.md): Source file '{filename}' could not be found.
 + [XA2002](xa2002.md): Can not resolve reference: \`{missing}\`, referenced by {assembly}. Perhaps it doesn't exist in the .NET for Android profile?
++ [XA2024](xa2024.md): Unable to load assembly '{assembly}'.
++ [XA2025](xa2025.md): Assembly {assembly} does not exist.
 + XA2006: Could not resolve reference to '{member}' (defined in assembly '{assembly}') with scope '{scope}'. When the scope is different from the defining assembly, it usually means that the type is forwarded.
 + XA2007: Exception while loading assemblies: {exception}
 + XA2008: In referenced assembly {assembly}, Java.Interop.DoNotPackageAttribute requires non-null file name.

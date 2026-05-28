@@ -516,6 +516,14 @@ Modifiez la valeur dans AndroidManifest.xml pour qu’elle corresponde à la val
 {1} -  The chain of references that causes a reference to the missing assembly, with &gt; as the separator between items. Example: `System.Memory` &gt; `System.Buffers`
 {2} - The name of the first assembly in the chain of references. Example: System.Memory</comment>
   </data>
+  <data name="XA2024" xml:space="preserve">
+    <value>Unable to load assembly '{0}'.</value>
+    <comment>{0} - The path to the assembly that could not be loaded.</comment>
+  </data>
+  <data name="XA2025" xml:space="preserve">
+    <value>Assembly {0} does not exist.</value>
+    <comment>{0} - The path to the assembly that does not exist.</comment>
+  </data>
   <data name="XA2006" xml:space="preserve">
     <value>Impossible de résoudre la référence à '{0}' (définie dans l'assembly '{1}') avec l'étendue '{2}'. Quand l'étendue est différente de l'assembly de définition, cela signifie généralement que le type est transmis.</value>
     <comment>{0} - The member name, such as a class name
@@ -566,7 +574,7 @@ Modifiez la valeur dans AndroidManifest.xml pour qu’elle corresponde à la val
     <comment>The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
   </data>
   <data name="XA3008" xml:space="preserve">
-    <value>Failed to extract debug info from '{0}'{1}</value>
+    <value>Échec de l’extraction des informations de débogage depuis « {0} »{1}</value>
     <comment>'{0}' is the native shared library filename. '{1}' is the full output of the failed command, starting and ending with a newline.</comment>
   </data>
   <data name="XA4209" xml:space="preserve">
@@ -628,7 +636,7 @@ Modifiez la valeur dans AndroidManifest.xml pour qu’elle corresponde à la val
 {1} - The API version number</comment>
   </data>
   <data name="XA4217" xml:space="preserve">
-    <value>Architecture '{0}' has Java types which have no counterparts in template architecture '{1}': {2}</value>
+    <value>L’architecture « {0} » a des types Java qui n’ont pas d’équivalents dans l’architecture de modèle « {1} » : {2}</value>
     <comment>{0} - The target architecture name
 {1} - The template architecture name
 {2} - Comma-separated list of Java type names that have no counterparts</comment>
@@ -685,7 +693,7 @@ In this mesage, the term "layout" means an Android UI layout.
 {1} - The name of the metadata item</comment>
   </data>
   <data name="XA4227" xml:space="preserve">
-    <value>Architecture '{0}' doesn't match all marshal methods in architecture '{1}'. Please see detailed MSBuild logs for more information.</value>
+    <value>L’architecture « {0} » ne correspond pas à toutes les méthodes marshaler de l’architecture « {1} ». Veuillez consulter les journaux MSBuild détaillés pour découvrir plus d’informations.</value>
     <comment>{0} - The target architecture name
 {1} - The template architecture name</comment>
   </data>
@@ -814,6 +822,22 @@ Supprimez la référence de '{0}' de votre projet et ajoutez plutôt le '{1}'.pa
     <comment>{0} - The path the the file.
 </comment>
   </data>
+  <data name="XA4316" xml:space="preserve">
+    <value>Le fichier d’entrée « {0} » spécifié n’existe pas. Action ignorée.</value>
+    <comment>{0} - The path to the file.
+</comment>
+  </data>
+  <data name="XA4317" xml:space="preserve">
+    <value>Le fichier d’entrée « {0} » ne commence pas par « &lt;replacements/&gt; ». Action ignorée.</value>
+    <comment>{0} - The path to the file.
+</comment>
+  </data>
+  <data name="XA4318" xml:space="preserve">
+    <value>Nous n’avons pas pu lire le fichier d’entrée « {0} » : {1}. Action ignorée.</value>
+    <comment>{0} - The path to the file.
+{1} - The exception message.
+</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Répertoire de chaînes d'outils du kit Android NDK manquant '{0}'. Installez le kit Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
@@ -912,7 +936,7 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
     <value>Deux processus génèrent peut-être ce projet en même temps. Il existe un fichier de verrouillage dans le chemin suivant : {0}</value>
   </data>
   <data name="XA5303" xml:space="preserve">
-    <value>Failed to parse 'DescriptorIndex' metadata value '{0}' for assembly '{1}'.</value>
+    <value>Nous n’avons pas pu analyser la valeur de métadonnées « DescriptorIndex » « {0} » pour l’assembly « {1} ».</value>
     <comment>
 {0} - The DescriptorIndex metadata value that could not be parsed
 {1} - The assembly ItemSpec</comment>
@@ -1100,7 +1124,7 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
 {0} - The insecure HTTP URL</comment>
   </data>
   <data name="XA4253" xml:space="preserve">
-    <value>Generated Java callable wrapper code changed: '{0}'</value>
+    <value>Code de wrapper joignable Java généré modifié : « {0} »</value>
     <comment>{0} - The path to the generated Java callable wrapper file</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
@@ -1123,6 +1147,20 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
     <comment>The following is a literal name and should not be translated: BootTimeoutSeconds
 {0} - The AVD name.
 {1} - The timeout in seconds.</comment>
+  </data>
+  <data name="XA0146" xml:space="preserve">
+    <value>Attempt to check whether '{0}' is a correctly aligned ELF file failed with exception, ignoring alignment check for the file.</value>
+    <comment>{0} - The file path.</comment>
+  </data>
+  <data name="XA0147" xml:space="preserve">
+    <value>Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring AOT check for the file.</value>
+    <comment>{0} - The file path.</comment>
+  </data>
+  <data name="XA0148" xml:space="preserve">
+    <value>Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring symbol '{1}@{2}' check for the file.</value>
+    <comment>{0} - The file path.
+{1} - The symbol name.
+{2} - The section name.</comment>
   </data>
   <data name="XAGRDL1000" xml:space="preserve">
     <value>L’exécutable « gradlew » est introuvable dans le répertoire du projet « {0} ». Veuillez vérifier que le chemin d’accès au dossier de votre projet Gradle est correct et qu’il contient des scripts Wrapper Gradle.</value>

@@ -1112,19 +1112,22 @@ public sealed class JavaPeerScanner : IDisposable
 		var managedSig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
 		string jniSignature = registerInfo.Signature ?? "()V";
 
-		// Only decode TypeRefData signatures for [Export] methods — they need precise
-		// managed type + assembly metadata for direct dispatch IL generation.
-		var managedTypeSig = isExport
-			? methodDef.DecodeSignature (TypeRefSignatureTypeProvider.Instance, index)
-			: default;
-		var parameterKinds = exportInfo?.ParameterKinds ?? CreateDefaultExportKinds (managedSig.ParameterTypes.Length);
-
 		string declaringTypeName = "";
 		string declaringAssemblyName = "";
 		ParseConnectorDeclaringType (registerInfo.Connector, out declaringTypeName, out declaringAssemblyName);
 
+		bool mayCallManagedMethodDirectly = ShouldCallManagedMethodDirectly (isConstructor, isExport, declaringTypeName);
+
+		// Only decode TypeRefData signatures for methods that need direct dispatch IL
+		// generation; static n_* callback forwarders already encode from the JNI signature.
+		var managedTypeSig = mayCallManagedMethodDirectly
+			? methodDef.DecodeSignature (TypeRefSignatureTypeProvider.Instance, index)
+			: default;
+		bool callManagedMethodDirectly = isExport || (mayCallManagedMethodDirectly && SupportsDirectManagedMethodCall (managedTypeSig));
+		var parameterKinds = exportInfo?.ParameterKinds ?? CreateDefaultExportKinds (managedSig.ParameterTypes.Length);
+
 		var managedParameterTypes = new List<TypeRefData> ();
-		if (isExport) {
+		if (callManagedMethodDirectly) {
 			foreach (var parameterType in managedTypeSig.ParameterTypes) {
 				managedParameterTypes.Add (EnrichTypeRefWithEnumInfo (parameterType));
 			}
@@ -1140,7 +1143,7 @@ public sealed class JavaPeerScanner : IDisposable
 			NativeCallbackName = GetNativeCallbackName (registerInfo.Connector, managedName, isConstructor),
 			ManagedParameterTypes = managedParameterTypes,
 			ManagedParameterExportKinds = parameterKinds,
-			ManagedReturnType = isExport ? EnrichTypeRefWithEnumInfo (managedTypeSig.ReturnType) : new TypeRefData {
+			ManagedReturnType = callManagedMethodDirectly ? EnrichTypeRefWithEnumInfo (managedTypeSig.ReturnType) : new TypeRefData {
 				ManagedTypeName = managedSig.ReturnType,
 				AssemblyName = "System.Runtime",
 			},
@@ -1152,7 +1155,55 @@ public sealed class JavaPeerScanner : IDisposable
 			JavaAccess = isExport ? GetJavaAccess (methodDef.Attributes & MethodAttributes.MemberAccessMask) : null,
 			ThrownNames = exportInfo?.ThrownNames,
 			SuperArgumentsString = exportInfo?.SuperArgumentsString,
+			CallManagedMethodDirectly = callManagedMethodDirectly,
 		});
+	}
+
+	static bool ShouldCallManagedMethodDirectly (bool isConstructor, bool isExport, string declaringTypeName)
+	{
+		if (isExport) {
+			return true;
+		}
+
+		if (isConstructor) {
+			return false;
+		}
+
+		// Direct [Register] methods have no connector-declared callback owner, so forwarding
+		// through n_* may bind to an inherited callback. If the type hides a base virtual
+		// member with "new virtual" but keeps the same JNI method, that inherited callback
+		// dispatches through the base slot instead of the scanned method. Calling the managed
+		// method body directly keeps the wrapper tied to this managed method.
+		return declaringTypeName.IsNullOrEmpty ();
+	}
+
+	static bool SupportsDirectManagedMethodCall (MethodSignature<TypeRefData> managedTypeSig)
+	{
+		if (!SupportsDirectManagedMethodCall (managedTypeSig.ReturnType)) {
+			return false;
+		}
+
+		foreach (var parameterType in managedTypeSig.ParameterTypes) {
+			if (!SupportsDirectManagedMethodCall (parameterType)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	static bool SupportsDirectManagedMethodCall (TypeRefData type)
+	{
+		var typeName = type.ManagedTypeName;
+		if (typeName.EndsWith ("&", StringComparison.Ordinal) || typeName.EndsWith ("*", StringComparison.Ordinal)) {
+			return false;
+		}
+
+		while (typeName.EndsWith ("[]", StringComparison.Ordinal)) {
+			typeName = typeName.Substring (0, typeName.Length - 2);
+		}
+
+		return !typeName.StartsWith ("!", StringComparison.Ordinal) && typeName.IndexOf ('<') < 0;
 	}
 
 	static string GetJavaAccess (MethodAttributes access)
