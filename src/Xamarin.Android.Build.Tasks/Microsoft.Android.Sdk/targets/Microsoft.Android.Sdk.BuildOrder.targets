@@ -176,7 +176,6 @@ properties that determine build ordering.
       _CheckForDeletedResourceFile;
       _ComputeAndroidResourcePaths;
       _UpdateAndroidResgen;
-      _CreateAar;
     </_UpdateAndroidResourcesDependsOn>
     <CompileDependsOn>
       _SetupMSBuildAllProjects;
