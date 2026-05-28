@@ -34,4 +34,5 @@ steps:
   continueOnError: ${{ parameters.continueOnError }}
   retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
   timeoutInMinutes: ${{ parameters.taskTimeoutInMinutes }}
-  env: ${{ parameters.env }}
+  ${{ if parameters.env }}:
+    env: ${{ parameters.env }}
