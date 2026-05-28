@@ -63,9 +63,10 @@ void TemporaryPeerMap::initialize_on_runtime_init (JNIEnv *env, jclass runtimeCl
 	abort_if_invalid_pointer_argument (runtimeClass, "runtimeClass");
 
 	peer_class = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "mono_android_GCUserPeer", true);
-	peer_ctor = env->GetMethodID (peer_class, "<init>", "()V");
+	abort_unless (peer_class != nullptr, "Failed to load mono.android.GCUserPeer!");
 
-	abort_unless (peer_class != nullptr && peer_ctor != nullptr, "Failed to load mono.android.GCUserPeer!");
+	peer_ctor = env->GetMethodID (peer_class, "<init>", "()V");
+	abort_unless (peer_ctor != nullptr, "Failed to load mono.android.GCUserPeer constructor!");
 }
 
 void TemporaryPeerMap::add (StronglyConnectedComponent &scc) noexcept
