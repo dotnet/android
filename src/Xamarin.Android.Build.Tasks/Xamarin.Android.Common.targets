@@ -1511,6 +1511,10 @@ because xbuild doesn't support framework reference assemblies.
     <_OrigResolvedFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies)" />
     <ResolvedFrameworkAssemblies Remove="@(ResolvedFrameworkAssemblies)" />
     <ResolvedFrameworkAssemblies Include="@(_OrigResolvedFrameworkAssemblies->'$(_AfterILLinkOutputDir)%(DestinationSubPath)')" />
+
+    <_OrigResolvedAssemblies Remove="@(_OrigResolvedAssemblies)" />
+    <_OrigResolvedUserAssemblies Remove="@(_OrigResolvedUserAssemblies)" />
+    <_OrigResolvedFrameworkAssemblies Remove="@(_OrigResolvedFrameworkAssemblies)" />
   </ItemGroup>
 </Target>
 
