@@ -11,7 +11,7 @@ using namespace xamarin::android;
 Helpers::abort_application (LogCategories category, const char *message, bool log_location, std::source_location sloc) noexcept
 {
 	// Log it, but also...
-	log_fatal (category, "{}", message);
+	log_fatal (category, "%s", message);
 
 	// ...let android include it in the tombstone, debuggerd output, stack trace etc
 	android_set_abort_message (message);
@@ -35,7 +35,7 @@ Helpers::abort_application (LogCategories category, const char *message, bool lo
 
 		log_fatal (
 			category,
-			"Abort at {}:{}:{} ('{}')",
+			"Abort at %s:%u:%u ('%s')",
 			file_name,
 			sloc.line (),
 			sloc.column (),

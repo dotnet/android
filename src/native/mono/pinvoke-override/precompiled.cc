@@ -22,12 +22,12 @@ PinvokeOverride::monodroid_pinvoke_override (const char *library_name, const cha
 		PinvokeEntry *entry = find_pinvoke_address (entrypoint_hash, internal_pinvokes.data (), internal_pinvokes_count);
 
 		if (entry == nullptr) [[unlikely]] {
-			log_fatal (LOG_ASSEMBLY, "Internal p/invoke symbol '{} @ {}' (hash: {:x}) not found in compile-time map.",
-									 optional_string (library_name), optional_string (entrypoint_name), entrypoint_hash);
+			log_fatal (LOG_ASSEMBLY, "Internal p/invoke symbol '%s @ %s' (hash: %zx) not found in compile-time map.",
+									 optional_string (library_name), optional_string (entrypoint_name), static_cast<size_t>(entrypoint_hash));
 			log_fatal (LOG_ASSEMBLY, "compile-time map contents:"sv);
 			for (size_t i = 0uz; i < internal_pinvokes_count; i++) {
 				PinvokeEntry const& e = internal_pinvokes[i];
-				log_fatal (LOG_ASSEMBLY, "\t'{}'={:p} (hash: {:x})", optional_string (e.name), e.func, e.hash);
+				log_fatal (LOG_ASSEMBLY, "\t'%s'=%p (hash: %zx)", optional_string (e.name), reinterpret_cast<void*>(e.func), static_cast<size_t>(e.hash));
 			}
 			Helpers::abort_application (
 				LOG_ASSEMBLY,
@@ -68,7 +68,7 @@ PinvokeOverride::monodroid_pinvoke_override (const char *library_name, const cha
 
 			load_library_entry (library_name, entrypoint_name, *entry, dotnet_dso_handle);
 			if (entry->func == nullptr) {
-				log_fatal (LOG_ASSEMBLY, "Failed to load symbol '{}' from shared library '{}'",
+				log_fatal (LOG_ASSEMBLY, "Failed to load symbol '%s' from shared library '%s'",
 										 optional_string (entrypoint_name), optional_string (library_name));
 				return nullptr; // let Mono deal with the fallout
 			}
@@ -77,7 +77,7 @@ PinvokeOverride::monodroid_pinvoke_override (const char *library_name, const cha
 		}
 
 		// It's possible we don't have an entry for some `dotnet` p/invoke, fall back to the slow path below
-		log_debug (LOG_ASSEMBLY, "Symbol '{}' in library '{}' not found in the generated tables, falling back to slow path",
+		log_debug (LOG_ASSEMBLY, "Symbol '%s' in library '%s' not found in the generated tables, falling back to slow path",
 								 optional_string (entrypoint_name), optional_string (library_name));
 	}
 

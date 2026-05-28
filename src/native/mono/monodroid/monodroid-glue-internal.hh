@@ -127,7 +127,7 @@ namespace xamarin::android::internal
 			void *symptr = MonodroidDl::monodroid_dlsym (handle, name, &err, nullptr);
 
 			if (symptr == nullptr) {
-				log_warn (LOG_DEFAULT, "Failed to load symbol '{}' library with handle {}. {}", name, handle, err == nullptr ? "Unknown error"sv : err);
+				log_warn (LOG_DEFAULT, "Failed to load symbol '%s' library with handle %p. %s", optional_string (name), handle, err == nullptr ? "Unknown error" : err);
 				fnptr = nullptr;
 				return;
 			}

@@ -5,6 +5,7 @@
 
 #include <cerrno>
 #include <cstring>
+#include <format>
 #include <limits>
 
 #include <constants.hh>
@@ -20,7 +21,7 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 
 	const char *override_dir_path = AndroidSystem::get_primary_override_dir ();
 	if (!Util::dir_exists (override_dir_path)) [[unlikely]] {
-		log_debug (LOG_ASSEMBLY, "Override directory '{}' does not exist"sv, optional_string (override_dir_path));
+		log_debug (LOG_ASSEMBLY, "Override directory '%s' does not exist", optional_string (override_dir_path));
 		return nullptr;
 	}
 
@@ -31,7 +32,7 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 		if (override_dir_fd < 0) [[likely]] {
 			override_dir = opendir (override_dir_path);
 			if (override_dir == nullptr) [[unlikely]] {
-				log_warn (LOG_ASSEMBLY, "Failed to open override dir '{}'. {}"sv, optional_string (override_dir_path), strerror (errno));
+				log_warn (LOG_ASSEMBLY, "Failed to open override dir '%s'. %s", optional_string (override_dir_path), strerror (errno));
 				return nullptr;
 			}
 			override_dir_fd = dirfd (override_dir);
@@ -40,20 +41,21 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 
 	log_debug (
 		LOG_ASSEMBLY,
-		"Attempting to load FastDev assembly '{}' from override directory '{}'"sv,
-		name,
+		"Attempting to load FastDev assembly '%.*s' from override directory '%s'",
+		static_cast<int>(name.length ()),
+		name.data (),
 		optional_string (override_dir_path)
 	);
 
 	if (!Util::file_exists (override_dir_fd, name)) {
-		log_warn (LOG_ASSEMBLY, "FastDev assembly '{}' not found."sv, name);
+		log_warn (LOG_ASSEMBLY, "FastDev assembly '%.*s' not found.", static_cast<int>(name.length ()), name.data ());
 		return nullptr;
 	}
-	log_debug (LOG_ASSEMBLY, "Found FastDev assembly '{}'"sv, name);
+	log_debug (LOG_ASSEMBLY, "Found FastDev assembly '%.*s'", static_cast<int>(name.length ()), name.data ());
 
 	auto file_size = Util::get_file_size_at (override_dir_fd, name);
 	if (!file_size) [[unlikely]] {
-		log_warn (LOG_ASSEMBLY, "Unable to determine FastDev assembly '{}' file size"sv, name);
+		log_warn (LOG_ASSEMBLY, "Unable to determine FastDev assembly '%.*s' file size", static_cast<int>(name.length ()), name.data ());
 		return nullptr;
 	}
 
@@ -74,8 +76,9 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 	if (asm_fd < 0) {
 		log_warn (
 			LOG_ASSEMBLY,
-			"Failed to open FastDev assembly '{}' for reading. {}"sv,
-			name,
+			"Failed to open FastDev assembly '%.*s' for reading. %s",
+			static_cast<int>(name.length ()),
+			name.data (),
 			strerror (errno)
 		);
 
@@ -99,15 +102,16 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 
 		log_warn (
 			LOG_ASSEMBLY,
-			"Failed to read FastDev assembly '{}' data. {}"sv,
-			name,
+			"Failed to read FastDev assembly '%.*s' data. %s",
+			static_cast<int>(name.length ()),
+			name.data (),
 			strerror (errno)
 		);
 
 		size = 0;
 		return nullptr;
 	}
-	log_debug (LOG_ASSEMBLY, "Read {} bytes of FastDev assembly '{}'"sv, nread, name);
+	log_debug (LOG_ASSEMBLY, "Read %zd bytes of FastDev assembly '%.*s'", nread, static_cast<int>(name.length ()), name.data ());
 
 	return reinterpret_cast<void*>(buffer);
 }

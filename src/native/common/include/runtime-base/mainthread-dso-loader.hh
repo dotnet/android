@@ -74,7 +74,7 @@ namespace xamarin::android {
 			if (!undecorated_library_name.empty ()) [[unlikely]] {
 				Helpers::abort_application ("Main thread DSO loader object reused! DO NOT DO THAT!"sv);
 			}
-			log_debug (LOG_ASSEMBLY, "Running DSO loader on thread {}, dispatching to main thread"sv, gettid ());
+			log_debug (LOG_ASSEMBLY, "Running DSO loader on thread %d, dispatching to main thread", gettid ());
 
 			undecorated_library_name = undecorated_name;
 			load_success = false;
@@ -83,7 +83,7 @@ namespace xamarin::android {
 			if (nbytes == -1) {
 				log_warn (
 					LOG_ASSEMBLY,
-					"Write failure when posting a DSO load event to main thread. {}"sv,
+					"Write failure when posting a DSO load event to main thread. %s",
 					strerror (errno)
 				);
 				return false;
@@ -95,7 +95,7 @@ namespace xamarin::android {
 			// We'll wait for up to 3s, it should be more than enough time for the library to load
 			bool success = load_complete_sem.try_acquire_for (3s);
 			if (!success) {
-				log_warn (LOG_ASSEMBLY, "Timeout while waiting for shared library '{}' to load."sv, full_name);
+				log_warn (LOG_ASSEMBLY, "Timeout while waiting for shared library '%.*s' to load.", static_cast<int>(full_name.length ()), full_name.data ());
 				return false;
 			}
 
@@ -136,9 +136,10 @@ namespace xamarin::android {
 
 			log_debug (
 				LOG_ASSEMBLY,
-				"Looper CB called on thread {}. Will attempt to load DSO '{}'"sv,
+				"Looper CB called on thread %d. Will attempt to load DSO '%.*s'",
 				gettid (),
-				self->undecorated_library_name
+				static_cast<int>(self->undecorated_library_name.length ()),
+				self->undecorated_library_name.data ()
 			);
 
 			self->load_success = SystemLoadLibraryWrapper::load (main_thread_jni_env /* RuntimeEnvironment::get_jnienv () */, self->undecorated_library_name);

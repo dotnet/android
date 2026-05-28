@@ -149,7 +149,7 @@ Util::create_public_directory (const char *dir)
 {
 	int ret = create_directory (dir, 0777);
 	if (ret < 0) {
-		log_warn (LOG_DEFAULT, "Failed to create directory '{}'. {}", dir, std::strerror (errno));
+		log_warn (LOG_DEFAULT, "Failed to create directory '%s'. %s", dir, std::strerror (errno));
 	}
 }
 
@@ -196,7 +196,7 @@ Util::set_world_accessable ([[maybe_unused]] const char *path)
 	} while (r == -1 && errno == EINTR);
 
 	if (r == -1) {
-		log_error (LOG_DEFAULT, "chmod(\"{}\", 0664) failed: {}", path, strerror (errno));
+		log_error (LOG_DEFAULT, "chmod(\"%s\", 0664) failed: %s", path, strerror (errno));
 	}
 }
 
@@ -209,7 +209,7 @@ Util::set_world_accessible (int fd) noexcept -> bool
   } while (r == -1 && errno == EINTR);
 
   if (r == -1) {
-	log_error (LOG_DEFAULT, "fchmod() failed: {}", strerror (errno));
+	log_error (LOG_DEFAULT, "fchmod() failed: %s", strerror (errno));
 	return false;
   }
 
@@ -225,7 +225,7 @@ Util::set_user_executable ([[maybe_unused]] const char *path)
 	} while (r == -1 && errno == EINTR);
 
 	if (r == -1) {
-		log_error (LOG_DEFAULT, "chmod(\"{}\") failed: {}", path, strerror (errno));
+		log_error (LOG_DEFAULT, "chmod(\"%s\") failed: %s", path, strerror (errno));
 	}
 }
 
@@ -312,7 +312,7 @@ Util::monodroid_fopen (const char *filename, const char *mode)
 	 */
 	ret = fopen (filename, mode);
 	if (ret == nullptr) {
-		log_error (LOG_DEFAULT, "fopen failed for file {}: {}", filename, strerror (errno));
+		log_error (LOG_DEFAULT, "fopen failed for file %s: %s", filename, strerror (errno));
 		return nullptr;
 	}
 

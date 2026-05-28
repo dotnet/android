@@ -89,7 +89,7 @@ namespace xamarin::android
 		{
 			struct stat sbuf;
 			if (fstatat (dirfd, file_name, &sbuf, 0) == -1) {
-				log_warn (LOG_ASSEMBLY, "Failed to stat file '{}': {}", file_name, std::strerror (errno));
+				log_warn (LOG_ASSEMBLY, "Failed to stat file '%s': %s", optional_string (file_name), std::strerror (errno));
 				return std::nullopt;
 			}
 
@@ -100,7 +100,7 @@ namespace xamarin::android
 		{
 			int fd =  openat (dirfd, file_name, O_RDONLY);
 			if (fd < 0) {
-				log_error (LOG_ASSEMBLY, "Failed to open file '{}' for reading: {}", file_name, std::strerror (errno));
+				log_error (LOG_ASSEMBLY, "Failed to open file '%s' for reading: %s", optional_string (file_name), std::strerror (errno));
 				return std::nullopt;
 			}
 

@@ -5,12 +5,12 @@
 #include <expected>
 #include <limits>
 #include <cstdlib>
-#include <cstdio>
 #include <string>
 #include <string_view>
 #include <type_traits>
 #include <unistd.h>
 
+#include "java-interop-logger.h"
 #include <shared/helpers.hh>
 #include <shared/log_level.hh>
 
@@ -23,7 +23,7 @@ using Constants = xamarin::android::internal::SharedConstants;
 #endif
 
 namespace xamarin::android {
-	void log_write (LogCategories category, LogLevel level, const char *message) noexcept;
+	void log_write_fmt (LogCategories category, LogLevel level, const char *format, ...) noexcept __attribute__ ((format (printf, 3, 4)));
 
 	static constexpr size_t SENSIBLE_TYPE_NAME_LENGTH = 128uz;
 	static constexpr size_t SENSIBLE_PATH_MAX = 256uz;
@@ -209,9 +209,7 @@ namespace xamarin::android {
 			}
 
 			if (!can_access (start_index)) {
-				char message[128];
-				snprintf (message, sizeof (message), "Cannot convert string to integer, index %zu is out of range", start_index);
-				log_write (LOG_DEFAULT, LogLevel::Error, message);
+				log_write_fmt (LOG_DEFAULT, LogLevel::Error, "Cannot convert string to integer, index %zu is out of range", start_index);
 				return false;
 			}
 
@@ -235,23 +233,24 @@ namespace xamarin::android {
 			}
 
 			if (out_of_range || errno == ERANGE) {
-				char message[256];
-				snprintf (message, sizeof (message), "Value %s is out of range of this type (%lld..%llu)", reinterpret_cast<char*>(s), static_cast<long long>(min), static_cast<unsigned long long>(max));
-				log_write (LOG_DEFAULT, LogLevel::Error, message);
+				log_write_fmt (
+					LOG_DEFAULT,
+					LogLevel::Error,
+					"Value %s is out of range of this type (%lld..%llu)",
+					reinterpret_cast<char*>(s),
+					static_cast<long long>(min),
+					static_cast<unsigned long long>(max)
+				);
 				return false;
 			}
 
 			if (endp == s) {
-				char message[256];
-				snprintf (message, sizeof (message), "Value %s does not represent a base %d integer", reinterpret_cast<char*>(s), base);
-				log_write (LOG_DEFAULT, LogLevel::Error, message);
+				log_write_fmt (LOG_DEFAULT, LogLevel::Error, "Value %s does not represent a base %d integer", reinterpret_cast<char*>(s), base);
 				return false;
 			}
 
 			if (*endp != '\0') {
-				char message[256];
-				snprintf (message, sizeof (message), "Value %s has non-numeric characters at the end", reinterpret_cast<char*>(s));
-				log_write (LOG_DEFAULT, LogLevel::Error, message);
+				log_write_fmt (LOG_DEFAULT, LogLevel::Error, "Value %s has non-numeric characters at the end", reinterpret_cast<char*>(s));
 				return false;
 			}
 

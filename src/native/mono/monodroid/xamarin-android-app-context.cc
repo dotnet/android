@@ -15,7 +15,7 @@ MonodroidRuntime::get_method_name (uint32_t mono_image_index, uint32_t method_to
 {
 	uint64_t id = (static_cast<uint64_t>(mono_image_index) << 32) | method_token;
 
-	log_debug (LOG_ASSEMBLY, "MM: looking for name of method with id {:x}, in mono image at index {}", id, mono_image_index);
+	log_debug (LOG_ASSEMBLY, "MM: looking for name of method with id %llx, in mono image at index %u", static_cast<unsigned long long>(id), mono_image_index);
 	size_t i = 0uz;
 	while (mm_method_names[i].id != 0) {
 		if (mm_method_names[i].id == id) {
@@ -43,7 +43,7 @@ MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t clas
 {
 	log_debug (
 		LOG_ASSEMBLY,
-		"MM: Trying to look up pointer to method '{}' (token {:x}) in class '{}' (index {})",
+		"MM: Trying to look up pointer to method '%s' (token %x) in class '%s' (index %u)",
 		optional_string (get_method_name (mono_image_index, method_token)), method_token,
 		optional_string (get_class_name (class_index)), class_index
 	);
@@ -80,7 +80,7 @@ MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t clas
 
 		log_debug (
 			LOG_ASSEMBLY,
-			"Loaded pointer to method {} ({:p}) (mono_image_index == {}; class_index == {}; method_token == {:x})",
+			"Loaded pointer to method %s (%p) (mono_image_index == %u; class_index == %u; method_token == %x)",
 			optional_string (mono_method_full_name (method, true)),
 			ret,
 			mono_image_index,
@@ -92,14 +92,14 @@ MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t clas
 
 	log_fatal (
 		LOG_DEFAULT,
-		"Failed to obtain function pointer to method '{}' in class '{}'",
+		"Failed to obtain function pointer to method '%s' in class '%s'",
 		optional_string (get_method_name (mono_image_index, method_token)),
 		optional_string (get_class_name (class_index))
 	);
 
 	log_fatal (
 		LOG_DEFAULT,
-		"Looked for image index {}, class index {}, method token {:x}",
+		"Looked for image index %u, class index %u, method token %x",
 		mono_image_index,
 		class_index,
 		method_token

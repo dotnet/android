@@ -325,7 +325,7 @@ bool BridgeProcessingShared::maybe_call_gc_user_peerable_add_managed_reference (
 		return false;
 	}
 
-	return callbacks.maybe_call_gc_user_peerable_add_managed_reference (callbacks.context, jni_env, from, to);
+	return callbacks.maybe_call_gc_user_peerable_add_managed_reference (jni_env, from, to);
 }
 
 bool BridgeProcessingShared::maybe_call_gc_user_peerable_clear_managed_references (JNIEnv *jni_env, jobject handle) noexcept
@@ -334,7 +334,7 @@ bool BridgeProcessingShared::maybe_call_gc_user_peerable_clear_managed_reference
 		return false;
 	}
 
-	return callbacks.maybe_call_gc_user_peerable_clear_managed_references (callbacks.context, jni_env, handle);
+	return callbacks.maybe_call_gc_user_peerable_clear_managed_references (jni_env, handle);
 }
 
 void BridgeProcessingShared::take_global_ref (HandleContext &context) noexcept

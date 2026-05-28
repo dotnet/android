@@ -23,9 +23,8 @@ struct CrossReferenceTarget
 
 struct BridgeProcessingCallbacks
 {
-	void *context;
-	bool (*maybe_call_gc_user_peerable_add_managed_reference) (void *context, JNIEnv *env, jobject from, jobject to) noexcept;
-	bool (*maybe_call_gc_user_peerable_clear_managed_references) (void *context, JNIEnv *env, jobject handle) noexcept;
+	bool (*maybe_call_gc_user_peerable_add_managed_reference) (JNIEnv *env, jobject from, jobject to) noexcept;
+	bool (*maybe_call_gc_user_peerable_clear_managed_references) (JNIEnv *env, jobject handle) noexcept;
 };
 
 class TemporaryPeerMap

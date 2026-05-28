@@ -3,7 +3,6 @@
 #include <atomic>
 #include <cerrno>
 #include <chrono>
-#include <cstdio>
 #include <ctime>
 #include <expected>
 #include <functional>
@@ -261,9 +260,7 @@ namespace xamarin::android {
 					// likely we'll run out of memory way, way, way before that happens
 					size_t old_size = events.capacity ();
 					events.reserve (old_size << 1);
-					char message[128];
-					snprintf (message, sizeof (message), "Reallocated timing event buffer from %zu to %zu", old_size, events.size ());
-					log_write (LOG_TIMING, LogLevel::Warn, message);
+					log_write_fmt (LOG_TIMING, LogLevel::Warn, "Reallocated timing event buffer from %zu to %zu", old_size, events.size ());
 				}
 			}
 
@@ -288,7 +285,7 @@ namespace xamarin::android {
 			}
 
 			if (!index.has_value ()) [[unlikely]] {
-				log_warn (LOG_TIMING, "FastTiming::end_event called without prior FastTiming::start_event called"sv);
+				log_warn (LOG_TIMING, "FastTiming::end_event called without prior FastTiming::start_event called");
 				return;
 			}
 
@@ -304,7 +301,7 @@ namespace xamarin::android {
 		{
 			auto index = pop_valid_sequence_index ();
 			if (!index.has_value ()) [[unlikely]] {
-				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called"sv);
+				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called");
 				return;
 			}
 
@@ -317,7 +314,7 @@ namespace xamarin::android {
 		{
 			auto index = pop_valid_sequence_index ();
 			if (!index.has_value ()) [[unlikely]] {
-				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called"sv);
+				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called");
 				return;
 			}
 
@@ -330,7 +327,7 @@ namespace xamarin::android {
 		{
 			auto index = pop_valid_sequence_index ();
 			if (!index.has_value ()) [[unlikely]] {
-				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called"sv);
+				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called");
 				return;
 			}
 
@@ -381,9 +378,7 @@ namespace xamarin::android {
 		{
 			struct timespec t;
 			if (clock_gettime (CLOCK_MONOTONIC_RAW, &t) != 0) [[unlikely]] {
-				char message[128];
-				snprintf (message, sizeof (message), "clock_gettime failed for CLOCK_MONOTONIC_RAW: %s", optional_string (strerror (errno)));
-				log_write (LOG_TIMING, LogLevel::Warn, message);
+				log_write_fmt (LOG_TIMING, LogLevel::Warn, "clock_gettime failed for CLOCK_MONOTONIC_RAW: %s", optional_string (strerror (errno)));
 				return {}; // Results will be nonsensical, but no point in aborting the app
 			}
 			return time_point (chrono::seconds (t.tv_sec) + chrono::nanoseconds (t.tv_nsec));
@@ -499,9 +494,7 @@ namespace xamarin::android {
 					return;
 			}
 
-			char warning[128];
-			snprintf (warning, sizeof (warning), "Unknown event kind '%u' logged", static_cast<unsigned int>(kind));
-			log_write (LOG_TIMING, LogLevel::Warn, warning);
+			log_write_fmt (LOG_TIMING, LogLevel::Warn, "Unknown event kind '%u' logged", static_cast<unsigned int>(kind));
 			append_desc ("unknown event kind"sv);
 		}
 
@@ -513,9 +506,7 @@ namespace xamarin::android {
 		auto is_valid_event_index (size_t index, std::source_location sloc = std::source_location::current ()) const noexcept -> bool
 		{
 			if (index >= events.capacity ()) [[unlikely]] {
-				char message[256];
-				snprintf (message, sizeof (message), "Invalid event index passed to method '%s'", sloc.function_name ());
-				log_write (LOG_TIMING, LogLevel::Warn, message);
+				log_write_fmt (LOG_TIMING, LogLevel::Warn, "Invalid event index passed to method '%s'", sloc.function_name ());
 				return false;
 			}
 

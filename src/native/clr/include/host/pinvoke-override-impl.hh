@@ -34,7 +34,7 @@ namespace xamarin::android {
 					short_library_name.append (Constants::dso_suffix);
 				}
 
-				log_debug (LOG_ASSEMBLY, "Modified p/invoke library name to '{}'", short_library_name.get ());
+				log_debug (LOG_ASSEMBLY, "Modified p/invoke library name to '%s'", short_library_name.get ());
 				lib_handle = MonodroidDl::monodroid_dlopen<PREFER_AOT_CACHE> (short_library_name.get (), microsoft::java_interop::JAVA_INTEROP_LIB_LOAD_LOCALLY);
 			}
 
@@ -43,21 +43,21 @@ namespace xamarin::android {
 			}
 
 			if (lib_handle == nullptr) {
-				log_warn (LOG_ASSEMBLY, "Shared library '{}' not loaded, p/invoke '{}' may fail", library_name, symbol_name);
+				log_warn (LOG_ASSEMBLY, "Shared library '%.*s' not loaded, p/invoke '%.*s' may fail", static_cast<int>(library_name.length ()), library_name.data (), static_cast<int>(symbol_name.length ()), symbol_name.data ());
 				return nullptr;
 			}
 
 			if (dso_handle != nullptr) {
 				void *expected_null = nullptr;
 				if (!__atomic_compare_exchange (dso_handle, &expected_null, &lib_handle, false /* weak */, __ATOMIC_ACQUIRE /* success_memorder */, __ATOMIC_RELAXED /* xxxfailure_memorder */)) {
-					log_debug (LOG_ASSEMBLY, "Library '{}' handle already cached by another thread", library_name);
+					log_debug (LOG_ASSEMBLY, "Library '%.*s' handle already cached by another thread", static_cast<int>(library_name.length ()), library_name.data ());
 				}
 			}
 		}
 
 		void *entry_handle = MonodroidDl::monodroid_dlsym (lib_handle, symbol_name);
 		if (entry_handle == nullptr) {
-			log_warn (LOG_ASSEMBLY, "Symbol '{}' not found in shared library '{}', p/invoke may fail", symbol_name, library_name);
+			log_warn (LOG_ASSEMBLY, "Symbol '%.*s' not found in shared library '%.*s', p/invoke may fail", static_cast<int>(symbol_name.length ()), symbol_name.data (), static_cast<int>(library_name.length ()), library_name.data ());
 			return nullptr;
 		}
 
@@ -79,7 +79,7 @@ namespace xamarin::android {
 			return nullptr;
 		}
 
-		log_debug (LOG_ASSEMBLY, "Caching p/invoke entry {} @ {}", library_name, entrypoint_name);
+		log_debug (LOG_ASSEMBLY, "Caching p/invoke entry %s @ %s", library_name.c_str (), entrypoint_name.c_str ());
 		(*api_map)[entrypoint_name] = entry_handle;
 		return entry_handle;
 	}
@@ -100,7 +100,7 @@ namespace xamarin::android {
 		);
 
 		if (already_loaded) {
-			log_debug (LOG_ASSEMBLY, "Entry '{}' from library '{}' already loaded by another thread", entrypoint_name, library_name);
+			log_debug (LOG_ASSEMBLY, "Entry '%.*s' from library '%.*s' already loaded by another thread", static_cast<int>(entrypoint_name.length ()), entrypoint_name.data (), static_cast<int>(library_name.length ()), library_name.data ());
 		}
 	}
 
@@ -165,7 +165,7 @@ namespace xamarin::android {
 			handle = fetch_or_create_pinvoke_map_entry (lib_name, entry_name, entrypoint_name_hash, lib_map, /* need_lock */ false);
 		} else {
 			if (iter->second == nullptr) [[unlikely]] {
-				log_warn (LOG_ASSEMBLY, "Internal error: null entry in p/invoke map for key '{}'", library_name);
+				log_warn (LOG_ASSEMBLY, "Internal error: null entry in p/invoke map for key '%.*s'", static_cast<int>(library_name.length ()), library_name.data ());
 				return nullptr; // fall back to `monodroid_dlopen`
 			}
 

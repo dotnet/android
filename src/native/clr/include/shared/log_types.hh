@@ -2,11 +2,7 @@
 
 #include <cstdarg>
 #include <cstdint>
-#if !defined(XA_HOST_NATIVEAOT)
-#include <format>
 #include <string>
-#include <utility>
-#endif
 #include <string_view>
 
 #include "java-interop-logger.h"
@@ -21,41 +17,27 @@
 #undef log_info
 #endif
 
-#if defined(XA_HOST_NATIVEAOT)
-#define DO_LOG_FMT(_level, _category_, _fmt_, ...)                   \
-	do {                                                            \
-		static_assert (sizeof (#__VA_ARGS__) == 1, "NativeAOT logging must use preformatted messages"); \
-		if ((log_categories & ((_category_))) != 0) {               \
-			::log_ ## _level ## _nocheck ((_category_), _fmt_);     \
-		}                                                           \
-	} while (0)
-#else
 #define DO_LOG_FMT(_level, _category_, _fmt_, ...)                   \
 	do {                                                            \
 		if ((log_categories & ((_category_))) != 0) {               \
-			::log_ ## _level ## _nocheck_fmt ((_category_), _fmt_ __VA_OPT__(,) __VA_ARGS__); \
+			::xamarin::android::log_ ## _level ## _fmt ((_category_), _fmt_ __VA_OPT__(,) __VA_ARGS__); \
 		}                                                           \
 	} while (0)
-#endif
 
-//
-// For std::format spec, see https://en.cppreference.com/w/cpp/utility/format/spec
-//
-
-// NOTE: _fmt_ takes arguments in the std::format style not the POSIX printf style
+// NOTE: _fmt_ takes arguments in POSIX printf style.
 #define log_debug(_category_, _fmt_, ...) DO_LOG_FMT (debug, (_category_), (_fmt_) __VA_OPT__(,) __VA_ARGS__)
 
-// NOTE: _fmt_ takes arguments in the std::format style not the POSIX printf style
+// NOTE: _fmt_ takes arguments in POSIX printf style.
 #define log_info(_category_, _fmt_, ...) DO_LOG_FMT (info, (_category_), (_fmt_) __VA_OPT__(,) __VA_ARGS__)
 
-// NOTE: _fmt_ takes arguments in the std::format style not the POSIX printf style
-#define log_warn(_category_, _fmt_, ...) ::log_warn_fmt ((_category_), (_fmt_) __VA_OPT__(,) __VA_ARGS__)
+// NOTE: _fmt_ takes arguments in POSIX printf style.
+#define log_warn(_category_, _fmt_, ...) ::xamarin::android::log_warn_fmt ((_category_), (_fmt_) __VA_OPT__(,) __VA_ARGS__)
 
-// NOTE: _fmt_ takes arguments in the std::format style not the POSIX printf style
-#define log_error(_category_, _fmt_, ...) ::log_error_fmt ((_category_), (_fmt_) __VA_OPT__(,) __VA_ARGS__)
+// NOTE: _fmt_ takes arguments in POSIX printf style.
+#define log_error(_category_, _fmt_, ...) ::xamarin::android::log_error_fmt ((_category_), (_fmt_) __VA_OPT__(,) __VA_ARGS__)
 
-// NOTE: _fmt_ takes arguments in the std::format style not the POSIX printf style
-#define log_fatal(_category_, _fmt_, ...) ::log_fatal_fmt ((_category_), (_fmt_) __VA_OPT__(,) __VA_ARGS__)
+// NOTE: _fmt_ takes arguments in POSIX printf style.
+#define log_fatal(_category_, _fmt_, ...) ::xamarin::android::log_fatal_fmt ((_category_), (_fmt_) __VA_OPT__(,) __VA_ARGS__)
 
 namespace xamarin::android {
 	// A slightly faster alternative to other log functions as it doesn't parse the message
@@ -76,98 +58,95 @@ namespace xamarin::android {
 	void log_error_fmt (LogCategories category, const char *format, ...) noexcept __attribute__ ((format (printf, 2, 3)));
 	void log_fatal_fmt (LogCategories category, const char *format, ...) noexcept __attribute__ ((format (printf, 2, 3)));
 
-}
+	[[gnu::always_inline]]
+	static inline void log_debug_fmt (LogCategories category, std::string_view const& message) noexcept
+	{
+		log_write (category, LogLevel::Debug, message);
+	}
 
-#if !defined(XA_HOST_NATIVEAOT)
-template<typename ...Args> [[gnu::always_inline]]
-static inline constexpr void log_debug_nocheck_fmt (LogCategories category, std::format_string<Args...> fmt, Args&& ...args)
-{
-	log_write (category, xamarin::android::LogLevel::Debug, std::format (fmt, std::forward<Args>(args)...).c_str ());
+	[[gnu::always_inline]]
+	static inline void log_info_fmt (LogCategories category, std::string_view const& message) noexcept
+	{
+		log_write (category, LogLevel::Info, message);
+	}
+
+	[[gnu::always_inline]]
+	static inline void log_warn_fmt (LogCategories category, std::string_view const& message) noexcept
+	{
+		log_write (category, LogLevel::Warn, message);
+	}
+
+	[[gnu::always_inline]]
+	static inline void log_error_fmt (LogCategories category, std::string_view const& message) noexcept
+	{
+		log_write (category, LogLevel::Error, message);
+	}
+
+	[[gnu::always_inline]]
+	static inline void log_fatal_fmt (LogCategories category, std::string_view const& message) noexcept
+	{
+		log_write (category, LogLevel::Fatal, message);
+	}
+
+	[[gnu::always_inline]]
+	static inline void log_debug_fmt (LogCategories category, std::string const& message) noexcept
+	{
+		log_debug_fmt (category, std::string_view { message });
+	}
+
+	[[gnu::always_inline]]
+	static inline void log_info_fmt (LogCategories category, std::string const& message) noexcept
+	{
+		log_info_fmt (category, std::string_view { message });
+	}
+
+	[[gnu::always_inline]]
+	static inline void log_warn_fmt (LogCategories category, std::string const& message) noexcept
+	{
+		log_warn_fmt (category, std::string_view { message });
+	}
+
+	[[gnu::always_inline]]
+	static inline void log_error_fmt (LogCategories category, std::string const& message) noexcept
+	{
+		log_error_fmt (category, std::string_view { message });
+	}
+
+	[[gnu::always_inline]]
+	static inline void log_fatal_fmt (LogCategories category, std::string const& message) noexcept
+	{
+		log_fatal_fmt (category, std::string_view { message });
+	}
 }
 
 [[gnu::always_inline]]
 static inline constexpr void log_debug_nocheck (LogCategories category, std::string_view const& message) noexcept
 {
-	log_write (category, xamarin::android::LogLevel::Debug, message.data ());
-}
-
-template<typename ...Args> [[gnu::always_inline]]
-static inline constexpr void log_info_nocheck_fmt (LogCategories category, std::format_string<Args...> fmt, Args&& ...args)
-{
-	log_write (category, xamarin::android::LogLevel::Info, std::format (fmt, std::forward<Args>(args)...).c_str ());
+	xamarin::android::log_write (category, xamarin::android::LogLevel::Debug, message.data ());
 }
 
 [[gnu::always_inline]]
 static inline constexpr void log_info_nocheck (LogCategories category, std::string_view const& message) noexcept
 {
-	log_write (category, xamarin::android::LogLevel::Info, message.data ());
+	xamarin::android::log_write (category, xamarin::android::LogLevel::Info, message.data ());
 }
 
-template<typename ...Args> [[gnu::always_inline]]
-static inline constexpr void log_warn_fmt (LogCategories category, std::format_string<Args...> fmt, Args&& ...args) noexcept
+static inline void log_debug_nocheck_fmt (LogCategories category, const char *format, ...) noexcept __attribute__ ((format (printf, 2, 3)));
+static inline void log_debug_nocheck_fmt (LogCategories category, const char *format, ...) noexcept
 {
-	log_write (category, xamarin::android::LogLevel::Warn, std::format (fmt, std::forward<Args>(args)...).c_str ());
+	va_list args;
+	va_start (args, format);
+	xamarin::android::log_writev (category, xamarin::android::LogLevel::Debug, format, args);
+	va_end (args);
 }
 
-[[gnu::always_inline]]
-static inline constexpr void log_warn_fmt (LogCategories category, std::string_view const& message) noexcept
+static inline void log_info_nocheck_fmt (LogCategories category, const char *format, ...) noexcept __attribute__ ((format (printf, 2, 3)));
+static inline void log_info_nocheck_fmt (LogCategories category, const char *format, ...) noexcept
 {
-	log_write (category, xamarin::android::LogLevel::Warn, message.data ());
+	va_list args;
+	va_start (args, format);
+	xamarin::android::log_writev (category, xamarin::android::LogLevel::Info, format, args);
+	va_end (args);
 }
-
-template<typename ...Args> [[gnu::always_inline]]
-static inline constexpr void log_error_fmt (LogCategories category, std::format_string<Args...> fmt, Args&& ...args) noexcept
-{
-	log_write (category, xamarin::android::LogLevel::Error, std::format (fmt, std::forward<Args>(args)...).c_str ());
-}
-
-[[gnu::always_inline]]
-static inline constexpr void log_error_fmt (LogCategories category, std::string_view const& message) noexcept
-{
-	log_write (category, xamarin::android::LogLevel::Error, message.data ());
-}
-
-template<typename ...Args> [[gnu::always_inline]]
-static inline constexpr void log_fatal_fmt (LogCategories category, std::format_string<Args...> fmt, Args&& ...args) noexcept
-{
-	log_write (category, xamarin::android::LogLevel::Fatal, std::format (fmt, std::forward<Args>(args)...).c_str ());
-}
-
-[[gnu::always_inline]]
-static inline constexpr void log_fatal_fmt (LogCategories category, std::string_view const& message) noexcept
-{
-	log_write (category, xamarin::android::LogLevel::Fatal, message.data ());
-}
-#else
-[[gnu::always_inline]]
-static inline constexpr void log_debug_nocheck (LogCategories category, std::string_view const& message) noexcept
-{
-	log_write (category, xamarin::android::LogLevel::Debug, message.data ());
-}
-
-[[gnu::always_inline]]
-static inline constexpr void log_info_nocheck (LogCategories category, std::string_view const& message) noexcept
-{
-	log_write (category, xamarin::android::LogLevel::Info, message.data ());
-}
-
-[[gnu::always_inline]]
-static inline constexpr void log_warn_fmt (LogCategories category, std::string_view const& message) noexcept
-{
-	log_write (category, xamarin::android::LogLevel::Warn, message.data ());
-}
-
-[[gnu::always_inline]]
-static inline constexpr void log_error_fmt (LogCategories category, std::string_view const& message) noexcept
-{
-	log_write (category, xamarin::android::LogLevel::Error, message.data ());
-}
-
-[[gnu::always_inline]]
-static inline constexpr void log_fatal_fmt (LogCategories category, std::string_view const& message) noexcept
-{
-	log_write (category, xamarin::android::LogLevel::Fatal, message.data ());
-}
-#endif
 
 extern unsigned int log_categories;

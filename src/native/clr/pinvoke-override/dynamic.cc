@@ -24,7 +24,7 @@ extern "C" {
 [[gnu::flatten]]
 auto PinvokeOverride::monodroid_pinvoke_override (const char *library_name, const char *entrypoint_name) noexcept -> void*
 {
-	log_debug (LOG_ASSEMBLY, "library_name == '{}'; entrypoint_name == '{}'"sv, optional_string (library_name), optional_string (entrypoint_name));
+	log_debug (LOG_ASSEMBLY, "library_name == '%s'; entrypoint_name == '%s'", optional_string (library_name), optional_string (entrypoint_name));
 
 	if (library_name == nullptr || entrypoint_name == nullptr) [[unlikely]] {
 		Helpers::abort_application (
@@ -39,12 +39,12 @@ auto PinvokeOverride::monodroid_pinvoke_override (const char *library_name, cons
 
 	hash_t library_name_hash = xxhash::hash (library_name, strlen (library_name));
 	hash_t entrypoint_hash = xxhash::hash (entrypoint_name, strlen (entrypoint_name));
-	log_debug (LOG_ASSEMBLY, "library_name_hash == 0x{:x}; entrypoint_hash == 0x{:x}"sv, library_name_hash, entrypoint_hash);
+	log_debug (LOG_ASSEMBLY, "library_name_hash == 0x%zx; entrypoint_hash == 0x%zx", static_cast<size_t>(library_name_hash), static_cast<size_t>(entrypoint_hash));
 
 	bool known_library = true;
 	void *pinvoke_ptr = find_pinvoke (library_name_hash, entrypoint_hash, known_library);
 	if (pinvoke_ptr != nullptr) [[likely]] {
-		log_debug (LOG_ASSEMBLY, "pinvoke_ptr == {:p}"sv, pinvoke_ptr);
+		log_debug (LOG_ASSEMBLY, "pinvoke_ptr == %p", pinvoke_ptr);
 		return pinvoke_ptr;
 	}
 
@@ -70,7 +70,7 @@ auto PinvokeOverride::monodroid_pinvoke_override (const char *library_name, cons
 
 	log_debug (LOG_ASSEMBLY, "p/invoke not from a known library, slow path taken."sv);
 	pinvoke_ptr = handle_other_pinvoke_request (library_name, library_name_hash, entrypoint_name, entrypoint_hash);
-	log_debug (LOG_ASSEMBLY, "foreign library pinvoke_ptr == {:p}"sv, pinvoke_ptr);
+	log_debug (LOG_ASSEMBLY, "foreign library pinvoke_ptr == %p", pinvoke_ptr);
 	return pinvoke_ptr;
 }
 
@@ -96,8 +96,8 @@ void PinvokeOverride::handle_jni_on_load (JavaVM *vm, void *reserved) noexcept
 
 const void* Host::clr_pinvoke_override (const char *library_name, const char *entry_point_name) noexcept
 {
-	log_debug (LOG_ASSEMBLY, "[dynamic] clr_pinvoke_override (\"{}\", \"{}\")"sv, optional_string (library_name), optional_string (entry_point_name));
+	log_debug (LOG_ASSEMBLY, "[dynamic] clr_pinvoke_override (\"%s\", \"%s\")", optional_string (library_name), optional_string (entry_point_name));
 	void *ret = PinvokeOverride::monodroid_pinvoke_override (library_name, entry_point_name);
-	log_debug (LOG_DEFAULT, "[dynamic] p/invoke {}found", ret == nullptr ? "not "sv : ""sv);
+	log_debug (LOG_DEFAULT, "[dynamic] p/invoke %sfound", ret == nullptr ? "not " : "");
 	return ret;
 }

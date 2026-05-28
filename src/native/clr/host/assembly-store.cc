@@ -1,3 +1,4 @@
+#include <format>
 #include <string>
 
 #if defined (HAVE_LZ4)
@@ -29,7 +30,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 #if defined (HAVE_LZ4) && defined (RELEASE)
 	auto header = reinterpret_cast<const CompressedAssemblyHeader*>(e.image_data);
 	if (header->magic == COMPRESSED_DATA_MAGIC) {
-		log_debug (LOG_ASSEMBLY, "Decompressing assembly '{}' from the assembly store"sv, name);
+		log_debug (LOG_ASSEMBLY, "Decompressing assembly '%.*s' from the assembly store", static_cast<int>(name.length ()), name.data ());
 
 		if (FastTiming::enabled ()) [[unlikely]] {
 			internal_timing.start_event (TimingEventKind::AssemblyDecompression);
@@ -108,7 +109,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 						)
 					);
 				} else {
-					log_debug (LOG_ASSEMBLY, "Compressed assembly '{}' is smaller than when the application was built. Adjusting accordingly."sv, name);
+					log_debug (LOG_ASSEMBLY, "Compressed assembly '%.*s' is smaller than when the application was built. Adjusting accordingly.", static_cast<int>(name.length ()), name.data ());
 				}
 				cad.uncompressed_file_size = header->uncompressed_length;
 			}
@@ -149,7 +150,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 	} else
 #endif // def HAVE_LZ4 && def RELEASE
 	{
-		log_debug (LOG_ASSEMBLY, "Assembly '{}' is not compressed in the assembly store"sv, name);
+		log_debug (LOG_ASSEMBLY, "Assembly '%.*s' is not compressed in the assembly store", static_cast<int>(name.length ()), name.data ());
 
 		// HACK! START
 		// Currently, MAUI crashes when we return a pointer to read-only data, so we must copy
@@ -199,7 +200,7 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 	if constexpr (Constants::is_debug_build) {
 		// In fastdev mode we might not have any assembly store.
 		if (assembly_store_hashes == nullptr) {
-			log_warn (LOG_ASSEMBLY, "Assembly store not registered. Unable to look up assembly '{}'"sv, name);
+			log_warn (LOG_ASSEMBLY, "Assembly store not registered. Unable to look up assembly '%.*s'", static_cast<int>(name.length ()), name.data ());
 			return nullptr;
 		}
 	}
@@ -207,13 +208,13 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 	const AssemblyStoreIndexEntry *hash_entry = find_assembly_store_entry (name_hash, assembly_store_hashes, assembly_store.index_entry_count);
 	if (hash_entry == nullptr) [[unlikely]] {
 		size = 0;
-		log_warn (LOG_ASSEMBLY, "Assembly '{}' (hash 0x{:x}) not found"sv, name, name_hash);
+		log_warn (LOG_ASSEMBLY, "Assembly '%.*s' (hash 0x%zx) not found", static_cast<int>(name.length ()), name.data (), static_cast<size_t>(name_hash));
 		return nullptr;
 	}
 
 	if (hash_entry->ignore != 0) {
 		size = 0;
-		log_debug (LOG_ASSEMBLY, "Assembly '{}' ignored"sv, name);
+		log_debug (LOG_ASSEMBLY, "Assembly '%.*s' ignored", static_cast<int>(name.length ()), name.data ());
 		return nullptr;
 	}
 
@@ -242,7 +243,7 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 
 		log_debug (
 			LOG_ASSEMBLY,
-			"Mapped: image_data == {:p}; debug_info_data == {:p}; config_data == {:p}; descriptor == {:p}; data size == {}; debug data size == {}; config data size == {}; name == '{}'"sv,
+			"Mapped: image_data == %p; debug_info_data == %p; config_data == %p; descriptor == %p; data size == %u; debug data size == %u; config data size == %u; name == '%.*s'",
 			static_cast<void*>(assembly_runtime_info.image_data),
 			static_cast<void*>(assembly_runtime_info.debug_info_data),
 			static_cast<void*>(assembly_runtime_info.config_data),
@@ -250,7 +251,8 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 			assembly_runtime_info.descriptor->data_size,
 			assembly_runtime_info.descriptor->debug_data_size,
 			assembly_runtime_info.descriptor->config_data_size,
-			name
+			static_cast<int>(name.length ()),
+			name.data ()
 		);
 	}
 
@@ -264,7 +266,7 @@ void AssemblyStore::map (int fd, std::string_view const& apk_path, std::string_v
 	detail::mmap_info assembly_store_map = Util::mmap_file (fd, offset, size, store_path);
 
 	auto [payload_start, payload_size] = Util::get_wrapper_dso_payload_pointer_and_size (assembly_store_map, store_path);
-	log_debug (LOG_ASSEMBLY, "Adjusted assembly store pointer: {:p}; size: {}"sv, payload_start, payload_size);
+	log_debug (LOG_ASSEMBLY, "Adjusted assembly store pointer: %p; size: %zu", payload_start, payload_size);
 	auto header = static_cast<AssemblyStoreHeader*>(payload_start);
 
 	auto get_full_store_path = [&apk_path, &store_path]() -> std::string {
@@ -312,5 +314,5 @@ void AssemblyStore::map (int fd, std::string_view const& apk_path, std::string_v
 	assembly_store.assemblies = reinterpret_cast<AssemblyStoreEntryDescriptor*>(assembly_store.data_start + header_size + header->index_size);
 	assembly_store_hashes = reinterpret_cast<AssemblyStoreIndexEntry*>(assembly_store.data_start + header_size);
 
-	log_debug (LOG_ASSEMBLY, "Mapped assembly store {}"sv, get_full_store_path ());
+	log_debug (LOG_ASSEMBLY, "Mapped assembly store %s", get_full_store_path ().c_str ());
 }

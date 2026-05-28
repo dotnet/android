@@ -5,7 +5,6 @@
 using namespace xamarin::android;
 
 const BridgeProcessingCallbacks BridgeProcessing::bridge_processing_callbacks {
-	.context = nullptr,
 	.maybe_call_gc_user_peerable_add_managed_reference = &BridgeProcessing::maybe_call_gc_user_peerable_add_managed_reference,
 	.maybe_call_gc_user_peerable_clear_managed_references = &BridgeProcessing::maybe_call_gc_user_peerable_clear_managed_references,
 };
@@ -41,7 +40,7 @@ void BridgeProcessing::naot_initialize_on_runtime_init (JNIEnv *env) noexcept
 	}
 }
 
-bool BridgeProcessing::maybe_call_gc_user_peerable_add_managed_reference ([[maybe_unused]] void *context, JNIEnv *env, jobject from, jobject to) noexcept
+bool BridgeProcessing::maybe_call_gc_user_peerable_add_managed_reference (JNIEnv *env, jobject from, jobject to) noexcept
 {
 	if (!env->IsInstanceOf (from, GCUserPeerable_class)) {
 		return false;
@@ -51,7 +50,7 @@ bool BridgeProcessing::maybe_call_gc_user_peerable_add_managed_reference ([[mayb
 	return true;
 }
 
-bool BridgeProcessing::maybe_call_gc_user_peerable_clear_managed_references ([[maybe_unused]] void *context, JNIEnv *env, jobject handle) noexcept
+bool BridgeProcessing::maybe_call_gc_user_peerable_clear_managed_references (JNIEnv *env, jobject handle) noexcept
 {
 	if (!env->IsInstanceOf (handle, GCUserPeerable_class)) {
 		return false;

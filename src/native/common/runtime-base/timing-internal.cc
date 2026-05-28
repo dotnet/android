@@ -63,7 +63,7 @@ void FastTiming::parse_options (dynamic_local_property_string const& value) noex
 
 		if (param.starts_with (OPT_DURATION)) {
 			if (!param.to_integer (duration_ms, OPT_DURATION.length ())) {
-				log_warn (LOG_TIMING, "Failed to parse duration in milliseconds from '%s'"sv, param.start ());
+				log_warn (LOG_TIMING, "Failed to parse duration in milliseconds from '%s'", param.start ());
 				duration_ms = default_duration_milliseconds;
 			}
 			continue;
@@ -200,16 +200,16 @@ void FastTiming::dump_to_file (size_t entries) noexcept
 
 	FILE *timing_log = Util::monodroid_fopen (timing_log_path.get (), "w");
 	if (timing_log == nullptr) {
-		log_error (LOG_TIMING, "[2/2] Unable to create the performance measurements file '{}'"sv, timing_log_path.get ());
+		log_error (LOG_TIMING, "[2/2] Unable to create the performance measurements file '%s'", timing_log_path.get ());
 		return;
 	}
 
 	if (!Util::set_world_accessible (fileno (timing_log))) {
-		log_warn (LOG_TIMING, "[2/2] Failed to make performance measurements file '{}' world-readable"sv, timing_log_path.get ());
+		log_warn (LOG_TIMING, "[2/2] Failed to make performance measurements file '%s' world-readable", timing_log_path.get ());
 		return;
 	}
 
-	log_info (LOG_TIMING, "[2/2] Performance measurement results logged to file: {}"sv, timing_log_path.get ());
+	log_info (LOG_TIMING, "[2/2] Performance measurement results logged to file: %s", timing_log_path.get ());
 
 	auto line_writer = [=](std::string_view const& msg) {
 		if (!msg.empty ()) {

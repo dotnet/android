@@ -11,9 +11,14 @@
 #include <type_traits>
 
 #include <semaphore.h>
-#include <android/log.h>
 
+#include "java-interop-logger.h"
 #include <shared/helpers.hh>
+#include <shared/log_level.hh>
+
+namespace xamarin::android {
+	void log_write_fmt (LogCategories category, LogLevel level, const char *format, ...) noexcept __attribute__ ((format (printf, 3, 4)));
+}
 
 namespace xamarin::android::detail {
 	[[gnu::always_inline, gnu::flatten]]
@@ -96,9 +101,7 @@ abort_if_negative_integer_argument (int arg, const char *arg_name, std::source_l
 [[gnu::always_inline]]
 inline void pd_log_location (std::source_location sloc = std::source_location::current ()) noexcept
 {
-	char message[512];
-	snprintf (message, sizeof (message), "loc: %s:%u ('%s')", sloc.file_name (), sloc.line (), sloc.function_name ());
-	__android_log_write (ANDROID_LOG_WARN, "monodroid", message);
+	xamarin::android::log_write_fmt (LOG_DEFAULT, xamarin::android::LogLevel::Warn, "loc: %s:%u ('%s')", sloc.file_name (), sloc.line (), sloc.function_name ());
 }
 
 namespace xamarin::android

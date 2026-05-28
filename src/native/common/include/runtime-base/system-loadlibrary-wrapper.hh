@@ -32,7 +32,7 @@ namespace xamarin::android {
 			// std::string is needed because we must pass a NUL-terminated string to Java, otherwise
 			// strange things happen (and std::string_view is not necessarily such a string)
 			const std::string lib_name { undecorated_lib_name };
-			log_debug (LOG_ASSEMBLY, "Undecorated library name: {}", lib_name);
+			log_debug (LOG_ASSEMBLY, "Undecorated library name: %s", lib_name.c_str ());
 
 			jstring java_lib_name = jni_env->NewStringUTF (lib_name.c_str ());
 			if (java_lib_name == nullptr) [[unlikely]] {

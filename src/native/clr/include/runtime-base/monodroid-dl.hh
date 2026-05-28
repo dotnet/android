@@ -41,11 +41,11 @@ namespace xamarin::android
 			size_t arr_size;
 
 			if constexpr (WhichCache == CacheKind::AOT) {
-				log_debug (LOG_ASSEMBLY, "Looking for hash {:x} in AOT cache", hash);
+				log_debug (LOG_ASSEMBLY, "Looking for hash %zx in AOT cache", static_cast<size_t>(hash));
 				arr = aot_dso_cache;
 				arr_size = application_config.number_of_aot_cache_entries;
 			} else if constexpr (WhichCache == CacheKind::DSO) {
-				log_debug (LOG_ASSEMBLY, "Looking for hash {:x} in DSO cache", hash);
+				log_debug (LOG_ASSEMBLY, "Looking for hash %zx in DSO cache", static_cast<size_t>(hash));
 				arr = dso_cache;
 				arr_size = application_config.number_of_dso_cache_entries;
 			}
@@ -104,23 +104,24 @@ namespace xamarin::android
 		[[gnu::flatten]]
 		static auto monodroid_dlopen (DSOCacheEntry *dso, std::string_view const& name, int flags) noexcept -> void*
 		{
-			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash match {}found, DSO name is '{}'", dso == nullptr ? "not "sv : ""sv, get_dso_name (dso));
+			std::string_view dso_name = get_dso_name (dso);
+			std::string_view match_status = dso == nullptr ? "not "sv : ""sv;
+			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash match %.*sfound, DSO name is '%.*s'", static_cast<int>(match_status.length ()), match_status.data (), static_cast<int>(dso_name.length ()), dso_name.data ());
 
 			if (dso == nullptr) {
 				// DSO not known at build time, try to load it. Since we don't know whether or not the library uses
 				// JNI, we're going to assume it does and thus use System.loadLibrary eventually.
 				return DsoLoader::load (name, flags, true /* is_jni */);
 			} else if (dso->handle != nullptr) {
-				log_debug (LOG_ASSEMBLY, "monodroid_dlopen: library {} already loaded, returning handle {:p}", name, dso->handle);
+				log_debug (LOG_ASSEMBLY, "monodroid_dlopen: library %.*s already loaded, returning handle %p", static_cast<int>(name.length ()), name.data (), dso->handle);
 				return dso->handle;
 			}
 
 			if (dso->ignore) {
-				log_info (LOG_ASSEMBLY, "Request to load '{}' ignored, it is known not to exist", get_dso_name (dso));
+				log_info (LOG_ASSEMBLY, "Request to load '%.*s' ignored, it is known not to exist", static_cast<int>(dso_name.length ()), dso_name.data ());
 				return nullptr;
 			}
 
-			std::string_view dso_name = get_dso_name (dso);
 			StartupAwareLock lock (dso_handle_write_lock);
 #if defined (RELEASE)
 			if (AndroidSystem::is_embedded_dso_mode_enabled ()) {
@@ -153,7 +154,7 @@ namespace xamarin::android
 			}
 
 			hash_t name_hash = xxhash::hash (name.data (), name.size ());
-			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash for name '{}' is {:x}", name, name_hash);
+			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash for name '%.*s' is %zx", static_cast<int>(name.length ()), name.data (), static_cast<size_t>(name_hash));
 
 			DSOCacheEntry *dso = nullptr;
 			if constexpr (PREFER_AOT_CACHE) {
@@ -194,8 +195,9 @@ namespace xamarin::android
 			if (s == nullptr) {
 				log_error (
 					LOG_ASSEMBLY,
-					"Could not find symbol '{}': {}",
-					name,
+					"Could not find symbol '%.*s': %s",
+					static_cast<int>(name.length ()),
+					name.data (),
 					optional_string (e)
 				);
 			}

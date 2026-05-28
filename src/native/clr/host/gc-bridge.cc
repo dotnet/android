@@ -59,9 +59,26 @@ void GCBridge::mark_cross_references (MarkCrossReferencesArgs *args) noexcept
 	abort_unless (args->CrossReferences != nullptr || args->CrossReferenceCount == 0, "CrossReferences must not be null if CrossReferenceCount is greater than 0");
 	log_mark_cross_references_args_if_enabled (args);
 
+	send_and_signal (args);
+}
+
+void GCBridge::send_and_signal (MarkCrossReferencesArgs *args) noexcept
+{
 	__atomic_store_n (&shared_args, args, __ATOMIC_RELEASE);
 	int ret = sem_post (&shared_args_semaphore);
 	abort_unless (ret == 0, "Failed to release GC bridge semaphore");
+}
+
+auto GCBridge::enter_bridge_processing () noexcept -> MarkCrossReferencesArgs*
+{
+	// wait until mark cross references args are set by the GC callback
+	int ret;
+	do {
+		ret = sem_wait (&shared_args_semaphore);
+	} while (ret == -1 && errno == EINTR);
+	abort_unless (ret == 0, "Failed to acquire GC bridge semaphore");
+
+	return __atomic_load_n (&shared_args, __ATOMIC_ACQUIRE);
 }
 
 void GCBridge::process_bridge_args (MarkCrossReferencesArgs *args) noexcept
@@ -78,15 +95,7 @@ void GCBridge::bridge_processing () noexcept
 	abort_unless (bridge_processing_finished_callback != nullptr, "GC bridge processing finished callback is not set");
 
 	while (true) {
-		// wait until mark cross references args are set by the GC callback
-		int ret;
-		do {
-			ret = sem_wait (&shared_args_semaphore);
-		} while (ret == -1 && errno == EINTR);
-		abort_unless (ret == 0, "Failed to acquire GC bridge semaphore");
-
-		MarkCrossReferencesArgs *args = __atomic_load_n (&shared_args, __ATOMIC_ACQUIRE);
-
+		MarkCrossReferencesArgs *args = enter_bridge_processing ();
 		bridge_processing_started_callback (args);
 		process_bridge_args (args);
 		bridge_processing_finished_callback (args);
