@@ -61,8 +61,3 @@ stages:
         xaSourcePath: ${{ parameters.xaSourcePath }}
         nugetArtifactName: ${{ parameters.nugetArtifactName }}
         use1ESTemplate: ${{ parameters.use1ESTemplate }}
-
-    - ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
-      - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
-        workingDirectory: ${{ parameters.xaSourcePath }}
-        displayName: make prepare-external-git-dependencies

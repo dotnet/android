@@ -92,11 +92,6 @@ stages:
         buildResultArtifactName: ${{ parameters.buildResultArtifactName }}
         use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
-    - ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
-      - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
-        workingDirectory: ${{ parameters.xaSourcePath }}
-        displayName: make prepare-external-git-dependencies
-
     - task: CodeQL3000Finalize@0
       displayName: CodeQL 3000 Finalize
       condition: and(succeededOrFailed(), eq(variables['Codeql.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
