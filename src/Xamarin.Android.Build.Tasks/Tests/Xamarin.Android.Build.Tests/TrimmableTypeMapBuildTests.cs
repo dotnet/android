@@ -553,10 +553,9 @@ namespace UnnamedProject {
 
 			var runtimeConfigPath = FindOutputFile (builder, proj, $"{proj.ProjectName}.runtimeconfig.json");
 			var linkedAssemblyDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "linked"));
-			return new DynamicCodeSupportProfile {
-				RuntimeConfig = File.ReadAllText (runtimeConfigPath),
-				LinkedTypeMapAssembliesContainArrayRankSentinels = TypeMapAssembliesContainType (linkedAssemblyDirectory, "__ArrayMapRank1"),
-			};
+			return new DynamicCodeSupportProfile (
+				File.ReadAllText (runtimeConfigPath),
+				TypeMapAssembliesContainType (linkedAssemblyDirectory, "__ArrayMapRank1"));
 		}
 
 		string FindOutputFile (ProjectBuilder builder, XamarinAndroidApplicationProject proj, string fileName)
@@ -590,10 +589,8 @@ namespace UnnamedProject {
 				fileName.StartsWith ("_Microsoft.Android.TypeMap", StringComparison.Ordinal);
 		}
 
-		class DynamicCodeSupportProfile
-		{
-			public string RuntimeConfig;
-			public bool LinkedTypeMapAssembliesContainArrayRankSentinels;
-		}
+		sealed record DynamicCodeSupportProfile (
+			string RuntimeConfig,
+			bool LinkedTypeMapAssembliesContainArrayRankSentinels);
 	}
 }
