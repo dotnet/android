@@ -1,5 +1,5 @@
 {
-    "msbuild-sdks": {
-        "Microsoft.DotNet.Arcade.Sdk": "6.0.0-beta.20615.1"
-    }
+  "msbuild-sdks": {
+    "Microsoft.DotNet.Arcade.Sdk": "6.0.0-beta.26072.1"
+  }
 }
