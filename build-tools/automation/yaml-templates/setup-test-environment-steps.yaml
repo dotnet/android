@@ -55,6 +55,12 @@ steps:
     arguments: --s=${{ parameters.xaprepareScenario }}
     xaSourcePath: ${{ parameters.xaSourcePath }}
 
+- task: DotNetCoreCLI@2
+  displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
+  inputs:
+    projects: ${{ parameters.xaSourcePath }}/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+    arguments: -c ${{ parameters.configuration }} -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/BootstrapTasks.binlog
+
 - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
   parameters:
     displayName: install OpenJDK and accept Android SDK licenses
@@ -64,12 +70,6 @@ steps:
     continueOnError: false
     env:
       AndroidSdkPlatforms: ${{ parameters.androidSdkPlatforms }}
-
-- task: DotNetCoreCLI@2
-  displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
-  inputs:
-    projects: ${{ parameters.xaSourcePath }}/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
-    arguments: -c ${{ parameters.configuration }} -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/BootstrapTasks.binlog
 
 # Download and install .NET nupkgs
 - task: DownloadPipelineArtifact@2
