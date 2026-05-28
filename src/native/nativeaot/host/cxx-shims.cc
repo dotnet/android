@@ -4,6 +4,9 @@
 #include <new>
 
 namespace std {
+	// NativeAOT is built without libc++ and with -fno-cxx-exceptions.  Provide
+	// only the allocation/nothrow symbols needed by the runtime pack, and abort
+	// instead of throwing on allocation failure.
 	const nothrow_t nothrow {};
 }
 
