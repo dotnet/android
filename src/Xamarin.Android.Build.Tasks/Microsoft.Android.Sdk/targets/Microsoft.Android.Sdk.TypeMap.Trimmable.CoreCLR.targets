@@ -5,6 +5,10 @@
     <_TrimmableRuntimeProviderJavaName Condition=" '$(_TrimmableRuntimeProviderJavaName)' == '' ">mono.MonoRuntimeProvider</_TrimmableRuntimeProviderJavaName>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <_GenerateProguardAfterTargets Condition=" '$(_GenerateProguardAfterTargets)' == '' ">ILLink</_GenerateProguardAfterTargets>
+  </PropertyGroup>
+
   <!-- Add TypeMap DLLs to ILLink input. ILLink natively understands TypeMapAttribute<T>. -->
   <Target Name="_AddTrimmableTypeMapToLinker"
       BeforeTargets="PrepareForILLink;_RunILLink"
@@ -12,6 +16,7 @@
     <ItemGroup>
       <ManagedAssemblyToLink Include="$(_TypeMapOutputDirectory)*.dll">
         <DestinationSubPath>%(Filename)%(Extension)</DestinationSubPath>
+        <IsTrimmable>true</IsTrimmable>
       </ManagedAssemblyToLink>
     </ItemGroup>
   </Target>
@@ -21,8 +26,26 @@
       BeforeTargets="PrepareForILLink;_RunILLink"
       DependsOnTargets="_GenerateTrimmableTypeMap">
     <PropertyGroup>
-      <_ExtraTrimmerArgs>--typemap-entry-assembly $(_TypeMapAssemblyName) $(_ExtraTrimmerArgs)</_ExtraTrimmerArgs>
+      <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --typemap-entry-assembly "$(_TypeMapAssemblyName)"</_ExtraTrimmerArgs>
     </PropertyGroup>
+  </Target>
+
+  <Target Name="_PrepareLinkedAssembliesForProguard"
+      AfterTargets="$(_GenerateProguardAfterTargets)"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' ">
+    <ItemGroup>
+      <_LinkedAssemblyForProguard Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_GenerateProguardConfiguration"
+      AfterTargets="_PrepareLinkedAssembliesForProguard"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
+      Inputs="@(_LinkedAssemblyForProguard)"
+      Outputs="$(_ProguardProjectConfiguration)">
+    <GenerateProguardConfiguration
+        LinkedAssemblies="@(_LinkedAssemblyForProguard)"
+        OutputFile="$(_ProguardProjectConfiguration)" />
   </Target>
 
   <!-- Add linked TypeMap DLLs to the normal publish assembly pipeline.  The SDK R2R

@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Text.RegularExpressions;
+using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
@@ -260,6 +262,33 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void ReleaseCoreClrTrimmableTypeMap_SupportsExplicitDynamicCodeSupportOff ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var dynamicCodeDisabledTrimmable = BuildDynamicCodeSupportProfile ("trimmable", dynamicCodeSupport: false);
+
+			using var runtimeConfigJson = JsonDocument.Parse (dynamicCodeDisabledTrimmable.RuntimeConfig);
+			Assert.IsTrue (
+				runtimeConfigJson.RootElement.TryGetProperty ("runtimeOptions", out var runtimeOptions),
+				"runtimeconfig.json should include runtimeOptions.");
+			Assert.IsTrue (
+				runtimeOptions.TryGetProperty ("configProperties", out var configProperties),
+				"runtimeconfig.json should include runtimeOptions.configProperties.");
+			Assert.IsTrue (
+				configProperties.TryGetProperty ("System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported", out var dynamicCodeSupportProperty),
+				"runtimeconfig.json should include RuntimeFeature.IsDynamicCodeSupported.");
+			Assert.IsFalse (
+				dynamicCodeSupportProperty.GetBoolean (),
+				"trimmable typemap builds should honor explicit DynamicCodeSupport=false.");
+			Assert.IsTrue (
+				dynamicCodeDisabledTrimmable.LinkedTypeMapAssembliesContainArrayRankSentinels,
+				"trimmable typemap builds should emit array typemap sentinels when dynamic code is disabled.");
+		}
+
+		[Test]
 		public void TrimmableTypeMap_PreserveLists_ArePackagedInSdk ()
 		{
 			foreach (var file in new [] {
@@ -290,7 +319,6 @@ namespace Xamarin.Android.Build.Tests {
 			}) {
 				FileAssert.Exists (Path.Combine (toolsDir, file), $"{file} should exist in the SDK pack.");
 			}
-
 		}
 
 		// T1: end-to-end build coverage for [Export] and [ExportField] under trimmable.
@@ -500,5 +528,69 @@ namespace UnnamedProject {
 			var javaFiles = Directory.GetFiles (javaDir, "*.java", SearchOption.AllDirectories);
 			Assert.IsNotEmpty (javaFiles, "At least one trimmable JCW Java source file should be generated.");
 		}
+		DynamicCodeSupportProfile BuildDynamicCodeSupportProfile (string typemapImplementation, bool? dynamicCodeSupport)
+		{
+			var dynamicCodeSuffix = dynamicCodeSupport.HasValue ? $"_{dynamicCodeSupport.Value.ToString ().ToLowerInvariant ()}" : "";
+			var projectName = $"DynamicCodeSupport_{typemapImplementation.Replace ("-", "_")}{dynamicCodeSuffix}";
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				PackageName = "com.xamarin.dynamiccodesupport",
+				ProjectName = projectName,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+			proj.SetProperty ("AndroidPackageFormat", "apk");
+			proj.SetProperty (KnownProperties.AndroidLinkTool, "r8");
+			proj.SetProperty ("TrimMode", "full");
+			proj.SetProperty ("PublishReadyToRun", "false");
+			proj.SetProperty ("_AndroidTypeMapImplementation", typemapImplementation);
+			if (dynamicCodeSupport.HasValue) {
+				proj.SetProperty ("DynamicCodeSupport", dynamicCodeSupport.Value.ToString ().ToLowerInvariant ());
+			}
+
+			using var builder = CreateApkBuilder (Path.Combine ("temp", $"{projectName}_{Guid.NewGuid ():N}"));
+			Assert.IsTrue (builder.Build (proj), $"{typemapImplementation} build should have succeeded.");
+
+			var runtimeConfigPath = FindOutputFile (builder, proj, $"{proj.ProjectName}.runtimeconfig.json");
+			var linkedAssemblyDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "linked"));
+			return new DynamicCodeSupportProfile (
+				File.ReadAllText (runtimeConfigPath),
+				TypeMapAssembliesContainType (linkedAssemblyDirectory, "__ArrayMapRank1"));
+		}
+
+		string FindOutputFile (ProjectBuilder builder, XamarinAndroidApplicationProject proj, string fileName)
+		{
+			var outputDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath);
+			var files = Directory.GetFiles (outputDirectory, fileName, SearchOption.AllDirectories);
+			Assert.AreEqual (1, files.Length, $"{outputDirectory} should contain one {fileName}.");
+			return files [0];
+		}
+
+		bool TypeMapAssembliesContainType (string directory, string typeName)
+		{
+			if (!Directory.Exists (directory)) {
+				return false;
+			}
+
+			foreach (var file in Directory.EnumerateFiles (directory, "*.dll", SearchOption.TopDirectoryOnly).Where (IsTypeMapAssemblyPath)) {
+				using var assembly = AssemblyDefinition.ReadAssembly (file);
+				if (assembly.Modules.SelectMany (m => m.Types).Any (type => type.Name == typeName)) {
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		bool IsTypeMapAssemblyPath (string file)
+		{
+			var fileName = Path.GetFileName (file);
+			return fileName.EndsWith (".TypeMap.dll", StringComparison.Ordinal) ||
+				fileName.StartsWith ("_Microsoft.Android.TypeMap", StringComparison.Ordinal);
+		}
+
+		sealed record DynamicCodeSupportProfile (
+			string RuntimeConfig,
+			bool LinkedTypeMapAssembliesContainArrayRankSentinels);
 	}
 }
