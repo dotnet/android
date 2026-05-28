@@ -83,22 +83,15 @@ namespace Java.InteropTests
 				// up the current TestExecutionContext on every write; from an unknown
 				// thread that NREs (AdhocContext ctor → MethodWrapper.get_Name on null).
 				// Use Android.Util.Log here to bypass the Console redirection.
-				try {
-					Android.Util.Log.Info ("ThreadReuse",
-							"CrossThreadObjectInteractions: JNIEnv.Handle={0} env={1}, instance={2}",
-							JNIEnv.Handle.ToString ("x"), env.ToString ("x"), instance.ToString ("x"));
-					if (env != JNIEnv.Handle)
-						Android.Util.Log.Info ("ThreadReuse", "GOOD: they should differ (on the second call)....");
-					if (instance == IntPtr.Zero)
-						return;
-					using (var o = Java.Lang.Object.GetObject<Java.Lang.Object>(env, instance, JniHandleOwnership.DoNotTransfer)) {
-						Android.Util.Log.Info ("ThreadReuse", "CrossThreadObjectInteractions: o.Handle={0}", o.Handle.ToString ("x"));
-					}
-				} catch (Exception e) {
-					// Swallow: an unhandled exception on this native thread aborts the
-					// entire process, which causes the test host to report "0 tests ran"
-					// for the whole assembly. Surface via logcat instead.
-					Android.Util.Log.Error ("ThreadReuse", "Callback threw: {0}", e);
+				Android.Util.Log.Info ("ThreadReuse",
+						"CrossThreadObjectInteractions: JNIEnv.Handle={0} env={1}, instance={2}",
+						JNIEnv.Handle.ToString ("x"), env.ToString ("x"), instance.ToString ("x"));
+				if (env != JNIEnv.Handle)
+					Android.Util.Log.Info ("ThreadReuse", "GOOD: they should differ (on the second call)....");
+				if (instance == IntPtr.Zero)
+					return;
+				using (var o = Java.Lang.Object.GetObject<Java.Lang.Object>(env, instance, JniHandleOwnership.DoNotTransfer)) {
+					Android.Util.Log.Info ("ThreadReuse", "CrossThreadObjectInteractions: o.Handle={0}", o.Handle.ToString ("x"));
 				}
 			};
 			rt_invoke_callback_on_new_thread (cb);
