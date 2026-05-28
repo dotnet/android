@@ -35,7 +35,7 @@ void GCBridge::initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass) noe
 	abort_if_invalid_pointer_argument (env, "env");
 	abort_if_invalid_pointer_argument (runtimeClass, "runtimeClass");
 
-	BridgeProcessing::initialize_on_runtime_init (env, runtimeClass);
+	TemporaryPeerMap::initialize_on_runtime_init (env, runtimeClass);
 }
 
 void GCBridge::trigger_java_gc (JNIEnv *env) noexcept
@@ -64,6 +64,14 @@ void GCBridge::mark_cross_references (MarkCrossReferencesArgs *args) noexcept
 	abort_unless (ret == 0, "Failed to release GC bridge semaphore");
 }
 
+void GCBridge::process_bridge_args (MarkCrossReferencesArgs *args) noexcept
+{
+	// Bridge processing temporarily mutates args while it owns them. Make sure any
+	// changes are reverted before returning args to the GC bridge finish callback.
+	BridgeProcessing bridge_processing {args};
+	bridge_processing.process ();
+}
+
 void GCBridge::bridge_processing () noexcept
 {
 	abort_unless (bridge_processing_started_callback != nullptr, "GC bridge processing started callback is not set");
@@ -80,10 +88,7 @@ void GCBridge::bridge_processing () noexcept
 		MarkCrossReferencesArgs *args = __atomic_load_n (&shared_args, __ATOMIC_ACQUIRE);
 
 		bridge_processing_started_callback (args);
-
-		BridgeProcessing bridge_processing {args};
-		bridge_processing.process ();
-
+		process_bridge_args (args);
 		bridge_processing_finished_callback (args);
 	}
 }

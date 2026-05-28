@@ -1,5 +1,3 @@
-#include <cstdio>
-
 #include <host/bridge-processing.hh>
 #include <runtime-base/logger.hh>
 #include <shared/helpers.hh>
@@ -33,18 +31,12 @@ void BridgeProcessing::naot_initialize_on_runtime_init (JNIEnv *env) noexcept
 	if (GCUserPeerable_jiAddManagedReference == nullptr || GCUserPeerable_jiClearManagedReferences == nullptr) [[unlikely]] {
 		constexpr char ABSENT[] = "absent";
 		constexpr char PRESENT[] = "present";
-		char message[128];
-		snprintf (
-			message,
-			sizeof (message),
+		Helpers::abort_applicationf (
+			LOG_DEFAULT,
+			std::source_location::current (),
 			"Failed to find GCUserPeerable method(s): jiAddManagedReference (%s); jiClearManagedReferences (%s)",
 			GCUserPeerable_jiAddManagedReference == nullptr ? ABSENT : PRESENT,
 			GCUserPeerable_jiClearManagedReferences == nullptr ? ABSENT : PRESENT
-		);
-
-		Helpers::abort_application (
-			LOG_DEFAULT,
-			message
 		);
 	}
 }

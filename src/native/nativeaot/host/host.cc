@@ -1,5 +1,3 @@
-#include <cstdio>
-
 #include <host/bridge-processing.hh>
 #include <host/gc-bridge.hh>
 #include <host/host-environment-naot.hh>
@@ -36,15 +34,13 @@ auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, void *reserved) noexcept -> jint
 	if (__jni_on_load_handler_count > 0) {
 		for (uint32_t i = 0; i < __jni_on_load_handler_count; i++) {
 			if ((log_categories & LOG_ASSEMBLY) != 0) {
-				char message[256];
-				snprintf (
-					message,
-					sizeof (message),
+				log_write_fmt (
+					LOG_ASSEMBLY,
+					LogLevel::Debug,
 					"Calling JNI on-load init func '%s' (%p)",
 					optional_string (__jni_on_load_handler_names[i]),
 					reinterpret_cast<void*>(__jni_on_load_handlers[i])
 				);
-				log_write (LOG_ASSEMBLY, LogLevel::Debug, message);
 			}
 			__jni_on_load_handlers[i] (vm, reserved);
 		}

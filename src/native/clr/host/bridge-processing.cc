@@ -1,4 +1,3 @@
-#include <cstdio>
 #include <cstdlib>
 
 #include <host/bridge-processing.hh>
@@ -9,15 +8,107 @@
 
 using namespace xamarin::android;
 
-void BridgeProcessingShared::initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass) noexcept
+TemporaryPeerMap::TemporaryPeerMap (JNIEnv *jni_env, MarkCrossReferencesArgs *args) noexcept
+	: env{ jni_env },
+	  cross_refs{ args }
+{
+	size_t map_capacity = 0;
+	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
+		const StronglyConnectedComponent &scc = cross_refs->Components [i];
+		abort_unless (!is_temporary_peer_index (scc.Count), "SCC count must not use the temporary peer marker bit");
+		if (scc.Count == 0) {
+			map_capacity++;
+		}
+	}
+
+	if (map_capacity == 0) {
+		return;
+	}
+
+	capacity = map_capacity;
+	peers = static_cast<jobject*> (std::calloc (capacity, sizeof (jobject)));
+	abort_unless (peers != nullptr, "Failed to allocate GC bridge temporary peer map");
+}
+
+TemporaryPeerMap::~TemporaryPeerMap () noexcept
+{
+	if (peers == nullptr) {
+		return;
+	}
+
+	for (size_t i = 0; i < count; i++) {
+		jobject temporary_peer = peers [i];
+		if (temporary_peer != nullptr) {
+			env->DeleteLocalRef (temporary_peer);
+			peers [i] = nullptr;
+		}
+	}
+
+	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
+		StronglyConnectedComponent &scc = cross_refs->Components [i];
+		if (is_temporary_peer_index (scc.Count)) {
+			scc.Count = 0;
+		}
+	}
+
+	count = 0;
+	std::free (peers);
+	peers = nullptr;
+	capacity = 0;
+}
+
+void TemporaryPeerMap::initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass) noexcept
 {
 	abort_if_invalid_pointer_argument (env, "env");
 	abort_if_invalid_pointer_argument (runtimeClass, "runtimeClass");
 
-	GCUserPeer_class = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "mono_android_GCUserPeer", true);
-	GCUserPeer_ctor = env->GetMethodID (GCUserPeer_class, "<init>", "()V");
+	peer_class = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "mono_android_GCUserPeer", true);
+	peer_ctor = env->GetMethodID (peer_class, "<init>", "()V");
 
-	abort_unless (GCUserPeer_class != nullptr && GCUserPeer_ctor != nullptr, "Failed to load mono.android.GCUserPeer!");
+	abort_unless (peer_class != nullptr && peer_ctor != nullptr, "Failed to load mono.android.GCUserPeer!");
+}
+
+void TemporaryPeerMap::add (StronglyConnectedComponent &scc) noexcept
+{
+	abort_unless (peers != nullptr, "Temporary peer map must not be null");
+	abort_unless (count < capacity, "Temporary peer map must not be full");
+
+	jobject temporary_peer = env->NewObject (peer_class, peer_ctor);
+	abort_unless (temporary_peer != nullptr, "Failed to create GC bridge temporary peer");
+
+	size_t temporary_peer_index = count++;
+	peers [temporary_peer_index] = temporary_peer;
+	scc.Count = encode_temporary_peer_index (temporary_peer_index);
+}
+
+bool TemporaryPeerMap::has_temporary_peer (const StronglyConnectedComponent &scc) const noexcept
+{
+	return is_temporary_peer_index (scc.Count);
+}
+
+jobject TemporaryPeerMap::get (const StronglyConnectedComponent &scc) const noexcept
+{
+	size_t temporary_peer_index = decode_temporary_peer_index (scc.Count);
+	abort_unless (temporary_peer_index < count, "Temporary peer index must be in range");
+
+	return peers [temporary_peer_index];
+}
+
+bool TemporaryPeerMap::is_temporary_peer_index (size_t count) noexcept
+{
+	return (count & temporary_peer_index_sign_bit) != 0;
+}
+
+size_t TemporaryPeerMap::encode_temporary_peer_index (size_t index) noexcept
+{
+	abort_unless (!is_temporary_peer_index (index), "Temporary peer index is too large");
+	return ~index;
+}
+
+size_t TemporaryPeerMap::decode_temporary_peer_index (size_t count) noexcept
+{
+	abort_unless (is_temporary_peer_index (count), "Temporary peer index must be negative");
+	return ~count;
 }
 
 BridgeProcessingShared::BridgeProcessingShared (MarkCrossReferencesArgs *args, const BridgeProcessingCallbacks *host_callbacks) noexcept
@@ -36,24 +127,6 @@ BridgeProcessingShared::BridgeProcessingShared (MarkCrossReferencesArgs *args, c
 	if (args->CrossReferenceCount > 0 && args->CrossReferences == nullptr) [[unlikely]] {
 		Helpers::abort_application (LOG_GC, "CrossReferences member of the cross references arguments structure is NULL"sv);
 	}
-
-	for (size_t i = 0; i < args->ComponentCount; i++) {
-		const StronglyConnectedComponent &scc = args->Components [i];
-		if (scc.Count == 0) {
-			temporary_peers.capacity++;
-		}
-	}
-
-	if (temporary_peers.capacity > 0) {
-		temporary_peers.peers = static_cast<TemporaryPeer*> (std::calloc (temporary_peers.capacity, sizeof (TemporaryPeer)));
-		abort_unless (temporary_peers.peers != nullptr, "Failed to allocate GC bridge temporary peer map");
-	}
-}
-
-BridgeProcessingShared::~BridgeProcessingShared () noexcept
-{
-	release_temporary_peers ();
-	free_temporary_peer_map ();
 }
 
 void BridgeProcessingShared::process () noexcept
@@ -66,23 +139,9 @@ void BridgeProcessingShared::process () noexcept
 
 void BridgeProcessingShared::prepare_for_java_collection () noexcept
 {
-	// Before looking at xrefs, scan the SCCs. During collection, an SCC has to behave like a
-	// single object. If the number of objects in the SCC is anything other than 1, the SCC
-	// must be doctored to mimic that one-object nature.
-	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
-		const StronglyConnectedComponent &scc = cross_refs->Components [i];
-		prepare_scc_for_java_collection (i, scc);
-	}
+	prepare_sccs_and_cross_references_for_java_collection ();
 
-	// Add the cross scc refs
-	for (size_t i = 0; i < cross_refs->CrossReferenceCount; i++) {
-		const ComponentCrossReference &xref = cross_refs->CrossReferences [i];
-		add_cross_reference (xref.SourceGroupIndex, xref.DestinationGroupIndex);
-	}
-
-	// With cross references processed, the temporary peer list can be released
-	release_temporary_peers ();
-
+	// Temporary peer indexes have been reset, so SCC counts are safe to use normally again.
 	// Switch global to weak references
 	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
 		const StronglyConnectedComponent &scc = cross_refs->Components [i];
@@ -95,16 +154,32 @@ void BridgeProcessingShared::prepare_for_java_collection () noexcept
 	}
 }
 
-void BridgeProcessingShared::prepare_scc_for_java_collection (size_t scc_index, const StronglyConnectedComponent &scc) noexcept
+void BridgeProcessingShared::prepare_sccs_and_cross_references_for_java_collection () noexcept
 {
-	// Count == 0 case: Some SCCs might have no IGCUserPeers associated with them, so we must create one
+	TemporaryPeerMap temporary_peers { env, cross_refs };
+
+	// Before looking at xrefs, scan the SCCs. During collection, an SCC has to behave like a
+	// single object. If the number of objects in the SCC is anything other than 1, the SCC
+	// must be doctored to mimic that one-object nature.
+	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
+		const StronglyConnectedComponent &scc = cross_refs->Components [i];
+		prepare_scc_for_java_collection (i, scc, temporary_peers);
+	}
+
+	// Add the cross scc refs
+	for (size_t i = 0; i < cross_refs->CrossReferenceCount; i++) {
+		const ComponentCrossReference &xref = cross_refs->CrossReferences [i];
+		add_cross_reference (xref.SourceGroupIndex, xref.DestinationGroupIndex, temporary_peers);
+	}
+}
+
+void BridgeProcessingShared::prepare_scc_for_java_collection (size_t scc_index, const StronglyConnectedComponent &scc, TemporaryPeerMap &temporary_peers) noexcept
+{
+	// Before looking at xrefs, scan the SCCs. During collection, an SCC has to behave like a
+	// single object. If the number of objects in the SCC is anything other than 1, the SCC
+	// must be doctored to mimic that one-object nature.
 	if (scc.Count == 0) {
-		abort_unless (!has_temporary_peer (scc_index), "Temporary peer must not already exist");
-
-		jobject temporary_peer = env->NewObject (GCUserPeer_class, GCUserPeer_ctor);
-		abort_unless (temporary_peer != nullptr, "Failed to create GC bridge temporary peer");
-
-		add_temporary_peer (scc_index, temporary_peer);
+		temporary_peers.add (cross_refs->Components [scc_index]);
 		return;
 	}
 
@@ -118,77 +193,18 @@ void BridgeProcessingShared::prepare_scc_for_java_collection (size_t scc_index, 
 	add_circular_references (scc);
 }
 
-CrossReferenceTarget BridgeProcessingShared::select_cross_reference_target (size_t scc_index) noexcept
+CrossReferenceTarget BridgeProcessingShared::select_cross_reference_target (size_t scc_index, TemporaryPeerMap &temporary_peers) noexcept
 {
 	const StronglyConnectedComponent &scc = cross_refs->Components [scc_index];
 
-	if (scc.Count == 0) {
-		jobject temporary_peer = get_temporary_peer (scc_index);
+	if (temporary_peers.has_temporary_peer (scc)) {
+		jobject temporary_peer = temporary_peers.get (scc);
 		abort_unless (temporary_peer != nullptr, "Temporary peer must not be null");
 		return { .is_temporary_peer = true, .temporary_peer = temporary_peer };
 	}
 
 	abort_unless (scc.Contexts [0] != nullptr, "SCC must have at least one context");
 	return { .is_temporary_peer = false, .context = scc.Contexts [0] };
-}
-
-bool BridgeProcessingShared::has_temporary_peer (size_t scc_index) noexcept
-{
-	for (size_t i = 0; i < temporary_peers.count; i++) {
-		if (temporary_peers.peers [i].scc_index == scc_index) {
-			return true;
-		}
-	}
-
-	return false;
-}
-
-void BridgeProcessingShared::add_temporary_peer (size_t scc_index, jobject temporary_peer) noexcept
-{
-	abort_unless (temporary_peers.peers != nullptr, "Temporary peer map must not be null");
-	abort_unless (temporary_peers.count < temporary_peers.capacity, "Temporary peer map must not be full");
-
-	TemporaryPeer &entry = temporary_peers.peers [temporary_peers.count++];
-	entry.scc_index = scc_index;
-	entry.peer = temporary_peer;
-}
-
-jobject BridgeProcessingShared::get_temporary_peer (size_t scc_index) noexcept
-{
-	// If this lookup ever shows up in profiles, we can try storing the peer-list index in the
-	// empty SCC's Count field as a negative value. Keep the bridge input immutable for now.
-	for (size_t i = 0; i < temporary_peers.count; i++) {
-		TemporaryPeer &entry = temporary_peers.peers [i];
-		if (entry.scc_index == scc_index) {
-			return entry.peer;
-		}
-	}
-
-	abort_unless (false, "Temporary peer must be found in the map");
-	return nullptr;
-}
-
-void BridgeProcessingShared::release_temporary_peers () noexcept
-{
-	if (temporary_peers.peers == nullptr) {
-		return;
-	}
-
-	for (size_t i = 0; i < temporary_peers.count; i++) {
-		TemporaryPeer &entry = temporary_peers.peers [i];
-		jobject temporary_peer = entry.peer;
-		if (temporary_peer != nullptr) {
-			env->DeleteLocalRef (temporary_peer);
-			entry.peer = nullptr;
-		}
-	}
-	temporary_peers.count = 0;
-}
-
-void BridgeProcessingShared::free_temporary_peer_map () noexcept
-{
-	std::free (temporary_peers.peers);
-	temporary_peers = {};
 }
 
 // caller must ensure that scc.Count > 1
@@ -226,10 +242,10 @@ void BridgeProcessingShared::add_circular_references (const StronglyConnectedCom
 	}
 }
 
-void BridgeProcessingShared::add_cross_reference (size_t source_index, size_t dest_index) noexcept
+void BridgeProcessingShared::add_cross_reference (size_t source_index, size_t dest_index, TemporaryPeerMap &temporary_peers) noexcept
 {
-	CrossReferenceTarget from = select_cross_reference_target (source_index);
-	CrossReferenceTarget to = select_cross_reference_target (dest_index);
+	CrossReferenceTarget from = select_cross_reference_target (source_index, temporary_peers);
+	CrossReferenceTarget to = select_cross_reference_target (dest_index, temporary_peers);
 
 	if (add_reference (from.get_handle(), to.get_handle())) {
 		from.mark_refs_added_if_needed ();

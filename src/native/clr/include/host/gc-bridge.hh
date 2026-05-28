@@ -98,6 +98,7 @@ namespace xamarin::android {
 		static void bridge_processing () noexcept;
 		static auto bridge_processing_thread_entry (void *arg) noexcept -> void*;
 		static void mark_cross_references (MarkCrossReferencesArgs *args) noexcept;
+		static void process_bridge_args (MarkCrossReferencesArgs *args) noexcept;
 		
 		static void log_mark_cross_references_args_if_enabled (MarkCrossReferencesArgs *args) noexcept;
 		static void log_handle_context (JNIEnv *env, HandleContext *ctx) noexcept;
