@@ -11,7 +11,6 @@ using System.Text;
 using Xamarin.Tools.Zip;
 using Microsoft.Build.Utilities;
 using System.Threading;
-using System.Reflection.Metadata;
 using System.Runtime.InteropServices;
 using System.Collections;
 
