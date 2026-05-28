@@ -55,13 +55,6 @@ stages:
     #  https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
     - checkout: maui
 
-    - ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
-      - checkout: android-platform-support
-        clean: true
-        submodules: recursive
-        path: s/android/external/android-platform-support
-        persistCredentials: true
-
     - template: /build-tools/automation/yaml-templates/build-linux-steps.yaml
       parameters:
         buildResultArtifactName: ${{ parameters.buildResultArtifactName }}

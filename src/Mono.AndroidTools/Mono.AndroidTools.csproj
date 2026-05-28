@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="$(MSBuildThisFileDirectory)..\..\Configuration.props" />
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);CA1305</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>12</LangVersion>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AssemblyName>$(VendorPrefix)Mono.AndroidTools$(VendorSuffix)</AssemblyName>
+    <SignAssembly>true</SignAssembly>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyOriginatorKeyFile>Mono.AndroidTools.snk</AssemblyOriginatorKeyFile>
+    <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
+  </PropertyGroup>
+  <Import Project="..\..\build-tools\android-platform-support\AndroidTools.GitInfo.targets" />
+  <ItemGroup>
+    <Compile Remove="AdbOperations\**" />
+    <EmbeddedResource Remove="AdbOperations\**" />
+    <None Remove="AdbOperations\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <FilesToSign Include="$(OutDir)\$(AssemblyName).dll">
+      <Authenticode>Microsoft400</Authenticode>
+    </FilesToSign>
+  </ItemGroup>
+  <ItemGroup Condition=" '$(Configuration)' == 'Release' Or '$(Configuration)' == 'ReleaseWindows'">
+    <NuGetFilesToSign Include="$(PkgProtobuf-net)\lib\*\protobuf-net.dll">
+      <Authenticode>3PartySHA2</Authenticode>
+    </NuGetFilesToSign>
+    <NuGetFilesToSign Include="$(Pkgprotobuf-net_Core)\lib\*\protobuf-net.Core.dll">
+      <Authenticode>3PartySHA2</Authenticode>
+    </NuGetFilesToSign>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="GitInfo" Version="$(GitInfoVersion)" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Win32.Registry" Version="$(MicrosoftWin32RegistryVersion)" />
+    <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
+    <PackageReference Include="protobuf-net" Version="$(ProtobufNetVersion)" GeneratePathProperty="true" />
+    <PackageReference Include="protobuf-net.Core" Version="$(ProtobufNetCoreVersion)" GeneratePathProperty="true" />
+
+    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(MicroBuildCoreVersion)">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+</Project>

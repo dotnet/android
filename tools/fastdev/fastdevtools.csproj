@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.Build.NoTargets">
+  <Import Project="$(MSBuildThisFileDirectory)..\..\Configuration.props" />
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);CA1305</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <LangVersion>12</LangVersion>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <OutputPath>$(MicrosoftAndroidSdkOutDir)lib</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <!-- DebuggingToolsOutputDirectory is referenced by fastdevtools.projitems; alias to MicrosoftAndroidSdkOutDir for the in-tree build. -->
+    <DebuggingToolsOutputDirectory Condition=" '$(DebuggingToolsOutputDirectory)' == '' ">$(MicrosoftAndroidSdkOutDir.TrimEnd('\\').TrimEnd('/'))</DebuggingToolsOutputDirectory>
+  </PropertyGroup>
+
+  <Import Project="fastdevtools.targets" />
+
+</Project>

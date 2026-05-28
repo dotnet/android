@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+	<UsingTask AssemblyFile="Xamarin.Installer.Build.Tasks.dll" TaskName="Xamarin.Installer.Build.Tasks.InstallAndroidDependencies" />
+	<PropertyGroup>
+		<BuildDependsOn Condition="'$(AndroidRestoreOnBuild)' == 'True'">
+			InstallAndroidDependencies;
+			$(BuildDependsOn);
+		</BuildDependsOn>
+		<AndroidDependencyInstallationTimeout Condition=" '$(AndroidDependencyInstallationTimeout)' == '' ">10</AndroidDependencyInstallationTimeout>
+	</PropertyGroup>
+
+	<Target Name="_SetAndroidInstallJavaDependencies">
+		<PropertyGroup>
+			<AndroidInstallJavaDependencies Condition=" '$(AndroidInstallJavaDependencies)' == '' ">true</AndroidInstallJavaDependencies>
+		</PropertyGroup>
+	</Target>
+
+	<Target Name="InstallAndroidDependencies" DependsOnTargets="_SetAndroidInstallJavaDependencies;GetAndroidDependencies">
+		<InstallAndroidDependencies 
+				Dependencies="@(AndroidDependency)"
+				JavaDependencies="@(JavaDependency)"
+				AndroidSdkPath="$(AndroidSdkDirectory)"
+				JavaSdkPath="$(JavaSdkDirectory)"
+				AcceptAndroidSDKLicenses="$(AcceptAndroidSDKLicenses)"
+				ManifestType="$(AndroidManifestType)"
+				TimeoutInMinutes="$(AndroidDependencyInstallationTimeout)"
+				InstallJavaDependencies="$(AndroidInstallJavaDependencies)"
+			>
+		</InstallAndroidDependencies>
+	</Target>
+</Project>
