@@ -119,7 +119,6 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		foreach (var assemblyName in FrameworkAssemblyNames) {
 			frameworkAssemblyNames.Add (assemblyName);
 		}
-
 		if (CleanJavaSourceOutputDirectory && !JavaSourceInputDirectory.IsNullOrEmpty ()) {
 			var inputDirectory = Path.GetFullPath (JavaSourceInputDirectory);
 			var outputDirectory = Path.GetFullPath (JavaSourceOutputDirectory);

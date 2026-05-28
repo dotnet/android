@@ -566,7 +566,7 @@ Cambie el valor de AndroidManifest.xml para que coincida con el valor $(Supporte
     <comment>The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
   </data>
   <data name="XA3008" xml:space="preserve">
-    <value>Failed to extract debug info from '{0}'{1}</value>
+    <value>No se pudo extraer la información de depuración de "{0}"{1}</value>
     <comment>'{0}' is the native shared library filename. '{1}' is the full output of the failed command, starting and ending with a newline.</comment>
   </data>
   <data name="XA4209" xml:space="preserve">
@@ -628,7 +628,7 @@ Cambie el valor de AndroidManifest.xml para que coincida con el valor $(Supporte
 {1} - The API version number</comment>
   </data>
   <data name="XA4217" xml:space="preserve">
-    <value>Architecture '{0}' has Java types which have no counterparts in template architecture '{1}': {2}</value>
+    <value>La arquitectura "{0}" tiene tipos de Java que no tienen homólogos en la arquitectura de plantilla "{1}": {2}</value>
     <comment>{0} - The target architecture name
 {1} - The template architecture name
 {2} - Comma-separated list of Java type names that have no counterparts</comment>
@@ -685,7 +685,7 @@ In this mesage, the term "layout" means an Android UI layout.
 {1} - The name of the metadata item</comment>
   </data>
   <data name="XA4227" xml:space="preserve">
-    <value>Architecture '{0}' doesn't match all marshal methods in architecture '{1}'. Please see detailed MSBuild logs for more information.</value>
+    <value>La arquitectura "{0}" no coincide con todos los métodos de serialización de la arquitectura "{1}". Consulte los registros detallados de MSBuild para obtener más información.</value>
     <comment>{0} - The target architecture name
 {1} - The template architecture name</comment>
   </data>
@@ -814,6 +814,22 @@ Quite la referencia de "{0}" del proyecto y agregue el paquete NuGet "{1}".
     <comment>{0} - The path the the file.
 </comment>
   </data>
+  <data name="XA4316" xml:space="preserve">
+    <value>El archivo de entrada especificado "{0}" no existe. Omitiendo.</value>
+    <comment>{0} - The path to the file.
+</comment>
+  </data>
+  <data name="XA4317" xml:space="preserve">
+    <value>El archivo de entrada "{0}" no empieza por "&lt;replacements/&gt;". Omitiendo.</value>
+    <comment>{0} - The path to the file.
+</comment>
+  </data>
+  <data name="XA4318" xml:space="preserve">
+    <value>No se pudo leer el archivo de entrada "{0}": {1}. Omitiendo.</value>
+    <comment>{0} - The path to the file.
+{1} - The exception message.
+</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Falta el directorio de cadenas de herramientas de Android NDK "{0}". Instale Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
@@ -912,7 +928,7 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
     <value>Puede que haya dos procesos compilando este proyecto a la vez. El archivo de bloqueo existe en la ruta de acceso {0}</value>
   </data>
   <data name="XA5303" xml:space="preserve">
-    <value>Failed to parse 'DescriptorIndex' metadata value '{0}' for assembly '{1}'.</value>
+    <value>No se pudo analizar el valor de metadatos 'DescriptorIndex' '{0}' para el ensamblado '{1}'.</value>
     <comment>
 {0} - The DescriptorIndex metadata value that could not be parsed
 {1} - The assembly ItemSpec</comment>
@@ -1100,7 +1116,7 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
 {0} - The insecure HTTP URL</comment>
   </data>
   <data name="XA4253" xml:space="preserve">
-    <value>Generated Java callable wrapper code changed: '{0}'</value>
+    <value>Código contenedor Java invocable generado cambiado: "{0}"</value>
     <comment>{0} - The path to the generated Java callable wrapper file</comment>
   </data>
   <data name="XA0142" xml:space="preserve">

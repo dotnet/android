@@ -148,6 +148,14 @@ namespace Xamarin.Android.Build.Tests
 			using var peReader = new System.Reflection.PortableExecutable.PEReader (stream);
 			Assert.IsTrue (peReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size > 0,
 				$"ReadyToRun image not found in {assemblyName}.dll! ManagedNativeHeaderDirectory should not be empty!");
+
+			var compressedAssembliesSource = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, rid, "android", $"compressed_assemblies.{abi}.ll");
+			FileAssert.Exists (compressedAssembliesSource);
+			var compressedAssembliesSourceText = File.ReadAllText (compressedAssembliesSource);
+			StringAssert.Contains ("@compressed_assembly_count = dso_local local_unnamed_addr constant i32 0, align 4", compressedAssembliesSourceText);
+			StringAssert.Contains ("@compressed_assembly_descriptors = dso_local local_unnamed_addr global [0 x %struct.CompressedAssemblyDescriptor] zeroinitializer, align 4", compressedAssembliesSourceText);
+			StringAssert.Contains ("@uncompressed_assemblies_data_size = dso_local local_unnamed_addr constant i32 0, align 4", compressedAssembliesSourceText);
+			StringAssert.Contains ("@uncompressed_assemblies_data_buffer = dso_local local_unnamed_addr global [0 x i8] zeroinitializer, align 1", compressedAssembliesSourceText);
 		}
 
 		[Test]

@@ -566,7 +566,7 @@ AndroidManifest.xml의 값을 $(SupportedOSPlatformVersion) 값에 맞도록 변
     <comment>The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
   </data>
   <data name="XA3008" xml:space="preserve">
-    <value>Failed to extract debug info from '{0}'{1}</value>
+    <value>'{0}'{1}에서 디버그 정보를 추출하지 못함</value>
     <comment>'{0}' is the native shared library filename. '{1}' is the full output of the failed command, starting and ending with a newline.</comment>
   </data>
   <data name="XA4209" xml:space="preserve">
@@ -628,7 +628,7 @@ AndroidManifest.xml의 값을 $(SupportedOSPlatformVersion) 값에 맞도록 변
 {1} - The API version number</comment>
   </data>
   <data name="XA4217" xml:space="preserve">
-    <value>Architecture '{0}' has Java types which have no counterparts in template architecture '{1}': {2}</value>
+    <value>아키텍처 '{0}'에 템플릿 아키텍처 '{1}'에 대응되는 Java 형식이 없는 Java 형식이 있습니다. {2}</value>
     <comment>{0} - The target architecture name
 {1} - The template architecture name
 {2} - Comma-separated list of Java type names that have no counterparts</comment>
@@ -685,7 +685,7 @@ In this mesage, the term "layout" means an Android UI layout.
 {1} - The name of the metadata item</comment>
   </data>
   <data name="XA4227" xml:space="preserve">
-    <value>Architecture '{0}' doesn't match all marshal methods in architecture '{1}'. Please see detailed MSBuild logs for more information.</value>
+    <value>아키텍처 '{0}'가 아키텍처 '{1}'의 모든 마샬 메서드와 일치하지 않습니다. 자세한 내용은 MSBuild 로그를 확인하세요.</value>
     <comment>{0} - The target architecture name
 {1} - The template architecture name</comment>
   </data>
@@ -814,6 +814,22 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <comment>{0} - The path the the file.
 </comment>
   </data>
+  <data name="XA4316" xml:space="preserve">
+    <value>지정한 입력 파일 '{0}'이(가) 없습니다. 무시하는 중입니다.</value>
+    <comment>{0} - The path to the file.
+</comment>
+  </data>
+  <data name="XA4317" xml:space="preserve">
+    <value>입력 파일 '{0}'이(가) '&lt;replacements/&gt;'로 시작하지 않습니다. 건너뛰는 중입니다.</value>
+    <comment>{0} - The path to the file.
+</comment>
+  </data>
+  <data name="XA4318" xml:space="preserve">
+    <value>입력 파일 '{0}'을(를) 읽을 수 없습니다. {1} 건너뛰는 중입니다.</value>
+    <comment>{0} - The path to the file.
+{1} - The exception message.
+</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Android NDK 도구 체인 디렉터리 '{0}'이(가) 없습니다. Android NDK를 설치하세요.</value>
     <comment>{0} - The path of the missing directory</comment>
@@ -912,7 +928,7 @@ In this message, the term "handheld app" means "app for handheld devices."
     <value>두 프로세스에서 이 프로젝트를 동시에 빌드할 수 있습니다. 잠금 파일은 {0} 경로에 있습니다.</value>
   </data>
   <data name="XA5303" xml:space="preserve">
-    <value>Failed to parse 'DescriptorIndex' metadata value '{0}' for assembly '{1}'.</value>
+    <value>어셈블리 '{0}'에 대해 'DescriptorIndex' 메타데이터 값 '{1}'을(를) 구문 분석하지 못했습니다.</value>
     <comment>
 {0} - The DescriptorIndex metadata value that could not be parsed
 {1} - The assembly ItemSpec</comment>
@@ -1100,7 +1116,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 {0} - The insecure HTTP URL</comment>
   </data>
   <data name="XA4253" xml:space="preserve">
-    <value>Generated Java callable wrapper code changed: '{0}'</value>
+    <value>생성된 Java 호출 가능 래퍼 코드가 변경되었습니다. '{0}'</value>
     <comment>{0} - The path to the generated Java callable wrapper file</comment>
   </data>
   <data name="XA0142" xml:space="preserve">

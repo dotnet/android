@@ -25,15 +25,9 @@
   <Target Name="_ConfigureTrimmableTypeMapForLinker"
       BeforeTargets="PrepareForILLink;_RunILLink"
       DependsOnTargets="_GenerateTrimmableTypeMap">
-    <ItemGroup>
-      <_TrimmableTypeMapEntryAssemblies Include="$(_TypeMapOutputDirectory)*.TypeMap.dll" />
-    </ItemGroup>
     <PropertyGroup>
-      <_ExtraTrimmerArgs>@(_TrimmableTypeMapEntryAssemblies->'--typemap-entry-assembly %(Filename)', ' ') $(_ExtraTrimmerArgs)</_ExtraTrimmerArgs>
+      <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --typemap-entry-assembly "$(_TypeMapAssemblyName)"</_ExtraTrimmerArgs>
     </PropertyGroup>
-    <ItemGroup>
-      <_TrimmableTypeMapEntryAssemblies Remove="@(_TrimmableTypeMapEntryAssemblies)" />
-    </ItemGroup>
   </Target>
 
   <Target Name="_PrepareLinkedAssembliesForProguard"
@@ -94,67 +88,39 @@
     </ItemGroup>
   </Target>
 
-  <!-- Add TypeMap DLLs to assembly store with per-ABI metadata.
-       TypeMap DLLs are ABI-agnostic (pure IL), so the same DLLs are added for every ABI.
-       This target batches over @(_BuildTargetAbis) to add items per-ABI. -->
-  <Target Name="_AddTrimmableTypeMapAssembliesToStore"
-      BeforeTargets="_BuildApkEmbed"
-      DependsOnTargets="_PrepareTrimmableTypeMapAssemblies;_DefineBuildTargetAbis">
+  <!-- Add linked TypeMap DLLs to the normal publish assembly pipeline.  The SDK R2R
+       target only compiles ResolvedFileToPublish items with PostprocessAssembly=true. -->
+  <Target Name="_AddTrimmableTypeMapToResolvedFileToPublish"
+      Condition=" '$(RuntimeIdentifier)' != '' "
+      AfterTargets="ILLink"
+      BeforeTargets="CreateReadyToRunImages"
+      DependsOnTargets="_ReadGeneratedTrimmableTypeMapAssemblies">
     <ItemGroup>
-      <_TrimmableTypeMapAbi Include="@(_BuildTargetAbis)" />
-      <_TrimmableTypeMapAbi Update="@(_TrimmableTypeMapAbi)" Condition=" '%(_TrimmableTypeMapAbi.Identity)' == 'arm64-v8a' ">
-        <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
-      </_TrimmableTypeMapAbi>
-      <_TrimmableTypeMapAbi Update="@(_TrimmableTypeMapAbi)" Condition=" '%(_TrimmableTypeMapAbi.Identity)' == 'armeabi-v7a' ">
-        <RuntimeIdentifier>android-arm</RuntimeIdentifier>
-      </_TrimmableTypeMapAbi>
-      <_TrimmableTypeMapAbi Update="@(_TrimmableTypeMapAbi)" Condition=" '%(_TrimmableTypeMapAbi.Identity)' == 'x86_64' ">
-        <RuntimeIdentifier>android-x64</RuntimeIdentifier>
-      </_TrimmableTypeMapAbi>
-      <_TrimmableTypeMapAbi Update="@(_TrimmableTypeMapAbi)" Condition=" '%(_TrimmableTypeMapAbi.Identity)' == 'x86' ">
-        <RuntimeIdentifier>android-x86</RuntimeIdentifier>
-      </_TrimmableTypeMapAbi>
+      <_TrimmableTypeMapLinkedAssemblies Include="$(IntermediateOutputPath)linked\_*.TypeMap.dll;$(IntermediateOutputPath)linked\_Microsoft.Android.TypeMap*.dll" />
+      <_TrimmableTypeMapAssembliesToPublish Include="@(_TrimmableTypeMapLinkedAssemblies)" />
+      <_TrimmableTypeMapAssembliesToPublish Include="@(_GeneratedTypeMapAssembliesFromList)" Condition=" '@(_TrimmableTypeMapLinkedAssemblies->Count())' == '0' " />
+      <ResolvedFileToPublish Include="@(_TrimmableTypeMapAssembliesToPublish)">
+        <RelativePath>%(Filename)%(Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <PostprocessAssembly>true</PostprocessAssembly>
+        <RuntimeIdentifier>$(RuntimeIdentifier)</RuntimeIdentifier>
+      </ResolvedFileToPublish>
     </ItemGroup>
+  </Target>
 
-    <!-- Try linked/ first (trimmed by ILLink).  Single-RID builds put linked output directly
-         under $(IntermediateOutputPath); plural-RID builds put it under the per-RID directory. -->
+  <Target Name="_UseReadyToRunTrimmableTypeMapAssembliesForPublish"
+      Condition=" '$(RuntimeIdentifier)' != '' and '$(PublishReadyToRun)' == 'true' "
+      AfterTargets="CreateReadyToRunImages">
     <ItemGroup>
-      <_LinkedTypeMapDlls Include="$(IntermediateOutputPath)linked/_*.TypeMap.dll;$(IntermediateOutputPath)linked/_Microsoft.Android.TypeMap*.dll;$(IntermediateOutputPath)%(_TrimmableTypeMapAbi.RuntimeIdentifier)/linked/_*.TypeMap.dll;$(IntermediateOutputPath)%(_TrimmableTypeMapAbi.RuntimeIdentifier)/linked/_Microsoft.Android.TypeMap*.dll">
-        <Abi>%(_TrimmableTypeMapAbi.Identity)</Abi>
-        <RuntimeIdentifier>%(_TrimmableTypeMapAbi.RuntimeIdentifier)</RuntimeIdentifier>
-        <DestinationSubPath>%(_TrimmableTypeMapAbi.Identity)/%(_LinkedTypeMapDlls.Filename)%(_LinkedTypeMapDlls.Extension)</DestinationSubPath>
-        <DestinationSubDirectory>%(_TrimmableTypeMapAbi.Identity)/</DestinationSubDirectory>
-      </_LinkedTypeMapDlls>
-    </ItemGroup>
-    <ItemGroup Condition=" '@(_LinkedTypeMapDlls->Count())' != '0' ">
-      <_BuildApkResolvedUserAssemblies Include="@(_LinkedTypeMapDlls)">
-        <Abi>%(_LinkedTypeMapDlls.Abi)</Abi>
-        <RuntimeIdentifier>%(_LinkedTypeMapDlls.RuntimeIdentifier)</RuntimeIdentifier>
-        <DestinationSubPath>%(_LinkedTypeMapDlls.DestinationSubPath)</DestinationSubPath>
-        <DestinationSubDirectory>%(_LinkedTypeMapDlls.DestinationSubDirectory)</DestinationSubDirectory>
-      </_BuildApkResolvedUserAssemblies>
-    </ItemGroup>
-    <!-- Fallback: use untrimmed TypeMap DLLs when linked/ is empty (Debug builds without ILLink). -->
-    <ItemGroup Condition=" '@(_LinkedTypeMapDlls->Count())' == '0' and '@(_TrimmableTypeMapAbi)' != '' ">
-      <_TypeMapDlls Include="$(_TypeMapOutputDirectory)*.dll">
-        <Abi>%(_TrimmableTypeMapAbi.Identity)</Abi>
-        <RuntimeIdentifier>%(_TrimmableTypeMapAbi.RuntimeIdentifier)</RuntimeIdentifier>
-        <DestinationSubPath>%(_TrimmableTypeMapAbi.Identity)/%(_TypeMapDlls.Filename)%(_TypeMapDlls.Extension)</DestinationSubPath>
-        <DestinationSubDirectory>%(_TrimmableTypeMapAbi.Identity)/</DestinationSubDirectory>
-      </_TypeMapDlls>
-    </ItemGroup>
-    <ItemGroup Condition=" '@(_LinkedTypeMapDlls->Count())' == '0' ">
-      <_BuildApkResolvedUserAssemblies Include="@(_TypeMapDlls)">
-        <Abi>%(_TypeMapDlls.Abi)</Abi>
-        <RuntimeIdentifier>%(_TypeMapDlls.RuntimeIdentifier)</RuntimeIdentifier>
-        <DestinationSubPath>%(_TypeMapDlls.DestinationSubPath)</DestinationSubPath>
-        <DestinationSubDirectory>%(_TypeMapDlls.DestinationSubDirectory)</DestinationSubDirectory>
-      </_BuildApkResolvedUserAssemblies>
-    </ItemGroup>
-    <ItemGroup>
-      <_LinkedTypeMapDlls Remove="@(_LinkedTypeMapDlls)" />
-      <_TypeMapDlls Remove="@(_TypeMapDlls)" />
-      <_TrimmableTypeMapAbi Remove="@(_TrimmableTypeMapAbi)" />
+      <_TrimmableTypeMapLinkedAssemblies Include="$(IntermediateOutputPath)linked\_*.TypeMap.dll;$(IntermediateOutputPath)linked\_Microsoft.Android.TypeMap*.dll" />
+      <_TrimmableTypeMapReadyToRunAssemblies Include="$(IntermediateOutputPath)R2R\_*.TypeMap.dll;$(IntermediateOutputPath)R2R\_Microsoft.Android.TypeMap*.dll" />
+      <ResolvedFileToPublish Remove="@(_TrimmableTypeMapLinkedAssemblies)" />
+      <ResolvedFileToPublish Remove="@(_TrimmableTypeMapReadyToRunAssemblies)" />
+      <ResolvedFileToPublish Include="@(_TrimmableTypeMapReadyToRunAssemblies)">
+        <RelativePath>%(Filename)%(Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <RuntimeIdentifier>$(RuntimeIdentifier)</RuntimeIdentifier>
+      </ResolvedFileToPublish>
     </ItemGroup>
   </Target>
 

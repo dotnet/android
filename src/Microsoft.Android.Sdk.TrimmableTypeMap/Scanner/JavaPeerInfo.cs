@@ -269,6 +269,15 @@ public sealed record MarshalMethodInfo
 	/// (Pass 4: CollectInterfaceMethodImplementations), not from the type itself.
 	/// </summary>
 	public bool IsInterfaceImplementation { get; init; }
+
+	/// <summary>
+	/// True when the generated UCO wrapper should dispatch directly to the managed method
+	/// instead of forwarding to an existing static n_* callback. This is needed for
+	/// direct registered methods because an inherited callback can dispatch through a
+	/// different managed virtual slot when a derived type hides a base member with
+	/// <c>new virtual</c> while reusing the same JNI name and signature.
+	/// </summary>
+	public bool CallManagedMethodDirectly { get; init; }
 }
 
 /// <summary>
