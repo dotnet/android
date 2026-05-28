@@ -106,7 +106,6 @@ macro(lib_target_options TARGET_NAME)
     ${TARGET_NAME} BEFORE
     PRIVATE
     ${EXTERNAL_DIR}
-    ${ROBIN_MAP_DIR}/include
   )
 
   target_include_directories(

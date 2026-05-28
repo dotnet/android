@@ -4,6 +4,7 @@
 
 #include <jni.h>
 
+#if !defined (XA_HOST_NATIVEAOT)
 // NDEBUG causes robin_map.h not to include <iostream> which, in turn, prevents indirect inclusion of <mutex>. <mutex>
 // conflicts with our std::mutex definition in cppcompat.hh
 #if !defined (NDEBUG)
@@ -27,6 +28,7 @@
 #undef NDEBUG
 #undef NDEBUG_UNDEFINE
 #endif
+#endif // !defined (XA_HOST_NATIVEAOT)
 
 #include <host/gc-bridge.hh>
 #include <host/os-bridge.hh>
@@ -54,7 +56,11 @@ struct BridgeProcessingCallbacks
 
 class BridgeProcessingShared
 {
+#if defined (XA_HOST_NATIVEAOT)
+	using temporary_peer_map = jobject*;
+#else
 	using temporary_peer_map = tsl::robin_map<size_t, jobject>;
+#endif
 
 public:
 	explicit BridgeProcessingShared (MarkCrossReferencesArgs *args, const BridgeProcessingCallbacks *callbacks = nullptr) noexcept;
@@ -65,7 +71,7 @@ public:
 private:
 	JNIEnv* env;
 	MarkCrossReferencesArgs *cross_refs;
-	temporary_peer_map temporary_peers;
+	temporary_peer_map temporary_peers {};
 	BridgeProcessingCallbacks callbacks;
 
 	static inline jclass GCUserPeer_class = nullptr;
@@ -73,7 +79,11 @@ private:
 
 	void prepare_for_java_collection () noexcept;
 	void prepare_scc_for_java_collection (size_t scc_index, const StronglyConnectedComponent &scc) noexcept;
+	bool has_temporary_peer (size_t scc_index) noexcept;
+	void add_temporary_peer (size_t scc_index, jobject temporary_peer) noexcept;
+	jobject get_temporary_peer (size_t scc_index) noexcept;
 	void release_temporary_peers () noexcept;
+	void free_temporary_peer_map () noexcept;
 	void take_weak_global_ref (const HandleContext &context) noexcept;
 
 	void add_circular_references (const StronglyConnectedComponent &scc) noexcept;
