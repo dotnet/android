@@ -245,6 +245,7 @@ properties that determine build ordering.
     <_IncludeAarInNuGetPackageDependsOn>
       _BuildAndroidGradleProjects;
       _CategorizeAndroidLibraries;
+      _CreateAar;
     </_IncludeAarInNuGetPackageDependsOn>
   </PropertyGroup>
 
