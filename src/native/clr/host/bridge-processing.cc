@@ -38,9 +38,16 @@ BridgeProcessingShared::BridgeProcessingShared (MarkCrossReferencesArgs *args, c
 	}
 
 #if defined (XA_HOST_NATIVEAOT)
-	if (args->ComponentCount > 0) {
-		temporary_peers = static_cast<jobject*> (std::calloc (args->ComponentCount, sizeof (jobject)));
-		abort_unless (temporary_peers != nullptr, "Failed to allocate GC bridge temporary peer map");
+	for (size_t i = 0; i < args->ComponentCount; i++) {
+		const StronglyConnectedComponent &scc = args->Components [i];
+		if (scc.Count == 0) {
+			temporary_peers.capacity++;
+		}
+	}
+
+	if (temporary_peers.capacity > 0) {
+		temporary_peers.peers = static_cast<TemporaryPeer*> (std::calloc (temporary_peers.capacity, sizeof (TemporaryPeer)));
+		abort_unless (temporary_peers.peers != nullptr, "Failed to allocate GC bridge temporary peer map");
 	}
 #endif
 }
@@ -130,9 +137,13 @@ CrossReferenceTarget BridgeProcessingShared::select_cross_reference_target (size
 bool BridgeProcessingShared::has_temporary_peer (size_t scc_index) noexcept
 {
 #if defined (XA_HOST_NATIVEAOT)
-	abort_unless (scc_index < cross_refs->ComponentCount, "Temporary peer index must be in range");
-	abort_unless (temporary_peers != nullptr, "Temporary peer map must not be null");
-	return temporary_peers [scc_index] != nullptr;
+	for (size_t i = 0; i < temporary_peers.count; i++) {
+		if (temporary_peers.peers [i].scc_index == scc_index) {
+			return true;
+		}
+	}
+
+	return false;
 #else
 	return temporary_peers.find (scc_index) != temporary_peers.end ();
 #endif
@@ -141,10 +152,12 @@ bool BridgeProcessingShared::has_temporary_peer (size_t scc_index) noexcept
 void BridgeProcessingShared::add_temporary_peer (size_t scc_index, jobject temporary_peer) noexcept
 {
 #if defined (XA_HOST_NATIVEAOT)
-	abort_unless (scc_index < cross_refs->ComponentCount, "Temporary peer index must be in range");
-	abort_unless (temporary_peers != nullptr, "Temporary peer map must not be null");
-	abort_unless (temporary_peers [scc_index] == nullptr, "Temporary peer must not already exist");
-	temporary_peers [scc_index] = temporary_peer;
+	abort_unless (temporary_peers.peers != nullptr, "Temporary peer map must not be null");
+	abort_unless (temporary_peers.count < temporary_peers.capacity, "Temporary peer map must not be full");
+
+	TemporaryPeer &entry = temporary_peers.peers [temporary_peers.count++];
+	entry.scc_index = scc_index;
+	entry.peer = temporary_peer;
 #else
 	auto [peer_entry, inserted] = temporary_peers.emplace (scc_index, temporary_peer);
 	abort_unless (inserted, "Temporary peer must not already exist");
@@ -154,11 +167,15 @@ void BridgeProcessingShared::add_temporary_peer (size_t scc_index, jobject tempo
 jobject BridgeProcessingShared::get_temporary_peer (size_t scc_index) noexcept
 {
 #if defined (XA_HOST_NATIVEAOT)
-	abort_unless (scc_index < cross_refs->ComponentCount, "Temporary peer index must be in range");
-	abort_unless (temporary_peers != nullptr, "Temporary peer map must not be null");
-	jobject temporary_peer = temporary_peers [scc_index];
-	abort_unless (temporary_peer != nullptr, "Temporary peer must be found in the map");
-	return temporary_peer;
+	for (size_t i = 0; i < temporary_peers.count; i++) {
+		TemporaryPeer &entry = temporary_peers.peers [i];
+		if (entry.scc_index == scc_index) {
+			return entry.peer;
+		}
+	}
+
+	abort_unless (false, "Temporary peer must be found in the map");
+	return nullptr;
 #else
 	auto peer_entry = temporary_peers.find (scc_index);
 	abort_unless (peer_entry != temporary_peers.end (), "Temporary peer must be found in the map");
@@ -169,17 +186,19 @@ jobject BridgeProcessingShared::get_temporary_peer (size_t scc_index) noexcept
 void BridgeProcessingShared::release_temporary_peers () noexcept
 {
 #if defined (XA_HOST_NATIVEAOT)
-	if (temporary_peers == nullptr) {
+	if (temporary_peers.peers == nullptr) {
 		return;
 	}
 
-	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
-		jobject temporary_peer = temporary_peers [i];
+	for (size_t i = 0; i < temporary_peers.count; i++) {
+		TemporaryPeer &entry = temporary_peers.peers [i];
+		jobject temporary_peer = entry.peer;
 		if (temporary_peer != nullptr) {
 			env->DeleteLocalRef (temporary_peer);
-			temporary_peers [i] = nullptr;
+			entry.peer = nullptr;
 		}
 	}
+	temporary_peers.count = 0;
 #else
 	for (const auto &entry : temporary_peers) {
 		jobject temporary_peer = entry.second;
@@ -194,8 +213,8 @@ void BridgeProcessingShared::release_temporary_peers () noexcept
 void BridgeProcessingShared::free_temporary_peer_map () noexcept
 {
 #if defined (XA_HOST_NATIVEAOT)
-	std::free (temporary_peers);
-	temporary_peers = nullptr;
+	std::free (temporary_peers.peers);
+	temporary_peers = {};
 #endif
 }
 

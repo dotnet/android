@@ -57,7 +57,18 @@ struct BridgeProcessingCallbacks
 class BridgeProcessingShared
 {
 #if defined (XA_HOST_NATIVEAOT)
-	using temporary_peer_map = jobject*;
+	struct TemporaryPeer
+	{
+		size_t scc_index;
+		jobject peer;
+	};
+
+	struct temporary_peer_map
+	{
+		TemporaryPeer *peers;
+		size_t count;
+		size_t capacity;
+	};
 #else
 	using temporary_peer_map = tsl::robin_map<size_t, jobject>;
 #endif
